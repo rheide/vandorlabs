@@ -1,0 +1,23 @@
+package com.vandorlabs.client;
+import com.google.gson.*;
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import com.vandorlabs.redstone.*;
+import net.minecraft.block.Block;
+import net.minecraft.nbt.*;
+import net.minecraft.util.math.BlockPos;
+/** Actual server row edits: index-based bank inheritance, type changes, invalid drafts and slot capacity. */
+public final class ScreenRowEditsLegacyChecks {
+ private static final int A=73261,B=73262,C=73263,D=73264;private static final BlockPos POS=new BlockPos(0,80,0);
+ public static void main(String[] args)throws Exception{net.minecraft.init.Bootstrap.register();JsonArray output=new JsonArray();for(String id:ScreenFamilyLegacyChecks.IDS){Block block=null;for(Block candidate:ModBlocks.BLOCKS)if(candidate.getRegistryName().getResourcePath().equals(id))block=candidate;for(int slot=0;slot<2;slot++)if(RedstoneScreenInteractions.supportsSlot(block,slot)){
+  NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);world.time=100;world.setBlockState(POS,block.getDefaultState(),2);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(POS);RedstoneScreenContents controls=tile.redstoneScreen(slot);int capacity=RedstoneScreenInteractions.half(block,slot)?4:8;
+  for(int step=0;step<14;step++){String action="edit";NBTTagList rows=rows();String title=" Bank ";boolean accepted=true;int arg=0;
+   if(step==1){action="toggle";arg=1;controls.toggleRow(arg);}else if(step==2){action="pulse";controls.pulseRow(0);}else if(step==3){action="slider";arg=2;controls.selectSegment(2,arg);}else if(step==8){action="disable";controls.setEnabled(false);}else{
+    if(step>=4){title=" Edited ";rows.getCompoundTagAt(0).setString("Label"," Press ");}if(step>=5)rows.getCompoundTagAt(1).setIntArray("RedstoneChannels",new int[]{A,C});if(step>=6){rows.getCompoundTagAt(0).setBoolean("Pulse",false);rows.getCompoundTagAt(0).setString("Label","Toggle A");}if(step>=7){rows.getCompoundTagAt(2).setBoolean("Slider",false);rows.getCompoundTagAt(2).setBoolean("Pulse",true);}if(step==10)rows.getCompoundTagAt(0).setString("Label","bad\nlabel");if(step==11){rows.getCompoundTagAt(0).setBoolean("Pulse",true);rows.getCompoundTagAt(0).setBoolean("Slider",true);}if(step==12){rows=new NBTTagList();for(int i=0;i<capacity+1;i++)rows.appendTag(row("Extra "+i,new int[]{D},false,false));}if(step==13){rows=new NBTTagList();title="Clear";}accepted=controls.applyRowConfiguration(title,rows);if(accepted!=(step<10||step==13))throw new AssertionError("Actual edit validation "+id+" slot="+slot+" step="+step);
+   }
+   JsonObject line=new JsonObject();line.addProperty("id",id);line.addProperty("slot",slot);line.addProperty("step",step);line.addProperty("action",action);line.addProperty("arg",arg);line.addProperty("title",title);line.addProperty("rows",rows.toString());line.addProperty("accepted",accepted);line.addProperty("saved",controls.writeToNBT(new NBTTagCompound()).toString());JsonArray levels=new JsonArray();for(int channel:new int[]{A,B,C,D})levels.add(RedstoneChannels.level(world,POS,channel));line.add("levels",levels);output.add(line);
+  }controls.invalidate();
+ }}String serialized=output.toString();java.security.MessageDigest hash=java.security.MessageDigest.getInstance("SHA-256");StringBuilder digest=new StringBuilder();for(byte value:hash.digest(serialized.getBytes("UTF-8")))digest.append(String.format("%02x",value&255));if(!digest.toString().equals("59307828c1a968a1343011e722051bfaff30511f650fcc6a28c473a24e897f9f"))throw new AssertionError("Actual row edits changed "+digest);JsonObject root=new JsonObject();root.addProperty("sha256",digest.toString());root.add("cases",output);java.nio.file.Path path=java.nio.file.Paths.get("build/test-artifacts/screen-row-edits-reference.json");java.nio.file.Files.createDirectories(path.getParent());java.nio.file.Files.write(path,root.toString().getBytes("UTF-8"));System.out.println("Actual Screen row edits reference PASS cases="+output.size()+" sha256="+digest);}
+ private static NBTTagCompound row(String label,int[] channels,boolean pulse,boolean slider){NBTTagCompound row=new NBTTagCompound();row.setString("Label",label);row.setIntArray("RedstoneChannels",channels);row.setBoolean("Pulse",pulse);row.setBoolean("Slider",slider);row.setInteger("Min",2);row.setInteger("Max",13);return row;}
+ private static NBTTagList rows(){NBTTagList rows=new NBTTagList();rows.appendTag(row("Pulse",new int[]{A,B},true,false));rows.appendTag(row("Toggle",new int[]{B},false,false));rows.appendTag(row("Slider",new int[]{C},false,true));return rows;}
+}
