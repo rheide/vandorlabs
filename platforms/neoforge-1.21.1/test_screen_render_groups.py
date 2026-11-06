@@ -28,6 +28,7 @@ def main():
    check_log(out/'client.log','[vandorlabs][screen-prepared-power-client] PASS')
    check_log(out/'client.log','[vandorlabs][screen-power-lease-client] PASS')
    check_log(out/'client.log','[vandorlabs][screen-render-groups-client] PASS')
+   check_log(out/'client.log','[vandorlabs][screen-render-query-client] PASS')
   finally:stop(process)
   deadline=time.monotonic()+30
   while '[vandorlabs][screen-power-client] logout PASS' not in server_log.read_text(errors='replace'):
