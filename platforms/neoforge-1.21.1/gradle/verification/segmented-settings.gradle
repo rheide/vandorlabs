@@ -1,0 +1,5 @@
+tasks.register('testNativeSegmentedSettings', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.segmented.SegmentedSettingsChecks'
+}
