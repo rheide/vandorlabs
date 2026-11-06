@@ -11,6 +11,8 @@ import net.minecraft.client.renderer.block.model.*;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.item.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -23,12 +25,17 @@ public final class NativeTrapdoorItemModel extends BakedModelWrapper<BakedModel>
     private static final Direction[] FACES={null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST};
     private record Surface(TextureAtlasSprite sprite,float u,float v){}
     private final ToIntFunction<ItemStack> choice;
+    private final Cache<CustomData,Integer> choices=CacheBuilder.newBuilder().weakKeys().maximumSize(256).build();
     private final Function<String,TextureAtlasSprite> sprites;
     private final Cache<Surface,Selected> meshes=CacheBuilder.newBuilder().maximumWeight(BUDGET)
         .weigher((Surface key,Selected value)->value.bytes).build();
     private final ItemOverrides selector=new ItemOverrides(){
         @Override public BakedModel resolve(BakedModel original,ItemStack stack,net.minecraft.client.multiplayer.ClientLevel level,net.minecraft.world.entity.LivingEntity entity,int seed){
-            return selected(choice.applyAsInt(stack));
+            var component=stack.get(DataComponents.BLOCK_ENTITY_DATA);
+            if(component==null)component=stack.get(DataComponents.CUSTOM_DATA);
+            Integer selected=component==null?null:choices.getIfPresent(component);
+            if(selected==null){selected=choice.applyAsInt(stack);if(component!=null)choices.put(component,selected);}
+            return selected(selected);
         }
     };
     public NativeTrapdoorItemModel(BakedModel source,ToIntFunction<ItemStack> choice,Function<String,TextureAtlasSprite> sprites){
