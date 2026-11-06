@@ -728,13 +728,9 @@ public class ModBlocks {
                 com.vandorlabs.persistence.SpaceDoorData.read(
                         new com.vandorlabs.persistence.NbtPrimitiveData(
                                 tag == null ? new net.minecraft.nbt.NBTTagCompound() : tag));
-        String model = com.vandorlabs.tiles.TileEntitySpaceDoor.modelId(
-                data.design, data.sliding, data.framed) + "_left_leaf"
-                + (!data.sliding && !data.hinges ? "_no_hinges" : "");
-        if(stack.getItem() instanceof com.vandorlabs.items.ItemLargeProgrammableDoor)model="large_"+model;
-        return new ModelResourceLocation(VandorLabs.MODID + ":detailed_doors/"
-                + com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS[data.detail]
-                + "/" + model, "inventory");
+        return new ModelResourceLocation(VandorLabs.MODID + ":"
+                + com.vandorlabs.render.SpaceDoorModels.itemModel(data,
+                        stack.getItem() instanceof com.vandorlabs.items.ItemLargeProgrammableDoor), "inventory");
     }
 
     @SubscribeEvent

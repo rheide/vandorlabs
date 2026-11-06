@@ -11,6 +11,10 @@ public final class SpaceDoorModels {
         String family=DESIGNS[design];String prefix="space_"+("reactor".equals(family)?"reactor_service":family)+(sliding?"_sliding":"_rotating");
         return prefix+(design<5?"_door_":"_")+(framed?"framed":"bare");
     }
+    /** Actual configured-item selector; detail1/2 intentionally share the low artwork. */
+    public static String itemModel(com.vandorlabs.persistence.SpaceDoorData data,boolean large){
+        return "detailed_doors/"+DETAILS[data.detail]+"/"+(large?"large_":"")+modelId(data.design,data.sliding,data.framed)+"_left_leaf"+(!data.sliding&&!data.hinges?"_no_hinges":"");
+    }
     public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part){return (design<15?1+design*72:4321+(design-15)*72)+(detail*2+(framed?1:0))*12+(paired?6:0)+part*2+(right?1:0);}
     public static int metadata(int design,int detail,boolean framed,boolean paired,boolean right,int part,boolean sliding){return metadata(design,detail,framed,paired,right,part)+(sliding?1080:0);}
 }
