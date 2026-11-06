@@ -52,3 +52,9 @@ neoForge.runs.configureEach {
         systemProperty 'screenRenderGroupsReference',file('../../testclient/fixtures/screen-render-groups-reference.json.gz').absolutePath
     }
 }
+tasks.register('testNativeScreenRowsMatrices', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeScreenRowsMatrixChecks'
+    args file('../../testclient/fixtures/screen-control-overlay-reference.json.gz').absolutePath
+}
