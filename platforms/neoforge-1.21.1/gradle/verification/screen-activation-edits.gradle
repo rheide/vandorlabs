@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenActivationEdits', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenActivationEditChecks'
+ systemProperty 'screenActivationEditsReference',file(project.findProperty('screenActivationEditsReference') ?: '../../build/test-artifacts/screen-activation-edits-reference.json').absolutePath
+}
