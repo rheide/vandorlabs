@@ -1,0 +1,11 @@
+def doorRuntimePython = project.findProperty('pythonExecutable') ?: (
+    System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/door-runtime-resources')
+tasks.register('generateDoorRuntimeResources', Exec) {
+    workingDir projectDir
+    commandLine doorRuntimePython, 'generate_door_runtime_resources.py'
+    inputs.file('generate_door_runtime_resources.py')
+    inputs.files('../../src/main/resources/assets/vandorlabs/recipes/programmable_door.json', '../../src/main/resources/assets/vandorlabs/recipes/large_programmable_door.json')
+    outputs.dir('build/generated/door-runtime-resources')
+}
+tasks.named('processResources') { dependsOn 'generateDoorRuntimeResources' }
