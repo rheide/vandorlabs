@@ -31,6 +31,7 @@ public final class NativeLightItemModelChecks {
         int oak=NativeMaterialRegistry.snapshot().samples().get(net.minecraft.world.level.block.Blocks.OAK_DOOR);
         for(int family=0;family<3;family++){
             var fallback=mc.getModelManager().getModel(id(model(family,0,true)));
+            if(family==0)dynamicSource(fallback,name->atlas.apply(ResourceLocation.parse(name)));
             var wrapper=new NativeLightItemModel(fallback,NativeLightBlock.Kind.values()[family],name->mc.getModelManager().getModel(id(name)),name->atlas.apply(ResourceLocation.parse(name)));
             for(int style=0;style<6;style++)for(boolean lit:new boolean[]{false,true}){
                 var source=mc.getModelManager().getModel(id(model(family,style,lit)));need(source!=mc.getModelManager().getMissingModel(),"authored template "+model(family,style,lit));variants++;
@@ -51,6 +52,17 @@ public final class NativeLightItemModelChecks {
             }
         }
         System.out.println("[vandorlabs][trapdoor-render] Light inventory atlas PASS templates="+variants+" vertexFields="+checks+" materialKinds=3 padded GUI transforms/component identity/reload");
+    }
+    private static void dynamicSource(BakedModel source,java.util.function.Function<String,net.minecraft.client.renderer.texture.TextureAtlasSprite> atlas){
+        boolean[] visible={false};
+        var dynamic=new net.neoforged.neoforge.client.model.BakedModelWrapper<BakedModel>(source){
+            @Override public java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> getQuads(net.minecraft.world.level.block.state.BlockState state,Direction side,RandomSource random,ModelData data,net.minecraft.client.renderer.RenderType layer){return visible[0]?source.getQuads(state,side,random,data,layer):java.util.List.of();}
+        };
+        var wrapper=new NativeLightItemModel(source,NativeLightBlock.Kind.FULL,name->dynamic,atlas);
+        var stack=new ItemStack(Items.STONE);var selected=wrapper.getOverrides().resolve(wrapper,stack,null,null,0);
+        need(selected.getQuads(null,null,RandomSource.create(0),ModelData.EMPTY,null).isEmpty(),"dynamic source initial state");
+        visible[0]=true;int total=0;for(int face=-1;face<6;face++)total+=selected.getQuads(null,face<0?null:Direction.values()[face],RandomSource.create(0),ModelData.EMPTY,null).size();
+        need(total>0,"dynamic resource model is not frozen at selection time");
     }
     private static void padded(BakedModel model){
         var gui=model.getTransforms().gui;double limit=15/32D;

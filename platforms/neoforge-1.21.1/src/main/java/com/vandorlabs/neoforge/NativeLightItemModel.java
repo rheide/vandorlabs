@@ -28,7 +28,7 @@ public final class NativeLightItemModel extends BakedModelWrapper<BakedModel> {
         @Override public int hashCode(){return System.identityHashCode(source)*31+Objects.hashCode(surface);}
         @Override public boolean equals(Object other){return other instanceof Key key&&source==key.source&&Objects.equals(surface,key.surface);}
     }
-    private record Selection(NativeLightItemStyle style,Selected model){}
+    private record Selection(NativeLightItemStyle style,java.lang.ref.WeakReference<Selected> model){}
     private final BakedModel[] sources=new BakedModel[12];private final Set<TextureAtlasSprite> lamps;
     private final Function<String,TextureAtlasSprite> atlas;
     private final Cache<CustomData,Selection> components=CacheBuilder.newBuilder().weakKeys().maximumSize(256).build();
@@ -48,32 +48,39 @@ public final class NativeLightItemModel extends BakedModelWrapper<BakedModel> {
     }
     private Selected selected(NativeLightItemStyle style,BakedModel source){
         Surface surface=null;if(style.faceTexture()>=0){var custom=NativeBlockMaterials.material(style.faceTexture());var entry=ModernFinishCatalog.entry(style.faceTexture());surface=new Surface(custom==null?atlas.apply(entry.texture()):custom.lower(),custom==null?entry.u():1,custom==null?entry.v():1);}
-        var key=new Key(source,surface);var result=meshes.getIfPresent(key);if(result==null){result=new Selected(source,surface);if(result.bytes<=BUDGET)meshes.put(key,result);}return result;
+        var key=new Key(source,surface);var result=meshes.getIfPresent(key);if(result==null){result=new Selected(source,surface,style);if(result.bytes<=BUDGET)meshes.put(key,result);}return result;
     }
-    private Selection selection(ItemStack stack){
+    private Selected selection(ItemStack stack){
         var component=stack.get(DataComponents.BLOCK_ENTITY_DATA);if(component==null)component=stack.get(DataComponents.CUSTOM_DATA);
-        if(component==null){if(empty==null)empty=new Selection(NativeLightItemStyle.DEFAULT,selected(NativeLightItemStyle.DEFAULT,sources[1]));return empty;}
-        var result=components.getIfPresent(component);if(result==null){NativeLightItemStyle style;try{style=NativeLightItemStyle.read(NativeLightItem.configuration(stack));}catch(IllegalArgumentException malformed){style=NativeLightItemStyle.DEFAULT;}result=new Selection(style,selected(style,sources[style.modelKey()]));components.put(component,result);}return result;
+        var result=component==null?empty:components.getIfPresent(component);
+        NativeLightItemStyle style;
+        if(result!=null){var found=result.model().get();if(found!=null)return found;style=result.style();}
+        else{try{style=NativeLightItemStyle.read(NativeLightItem.configuration(stack));}catch(IllegalArgumentException malformed){style=NativeLightItemStyle.DEFAULT;}}
+        var model=selected(style,sources[style.modelKey()]);result=new Selection(style,new java.lang.ref.WeakReference<>(model));
+        if(component==null)empty=result;else components.put(component,result);return model;
     }
+
     private final ItemOverrides selector=new ItemOverrides(){
-        @Override public BakedModel resolve(BakedModel original,ItemStack stack,net.minecraft.client.multiplayer.ClientLevel level,net.minecraft.world.entity.LivingEntity entity,int seed){var selection=selection(stack);var source=selection.model().original();var resolved=source.getOverrides().resolve(source,stack,level,entity,seed);return resolved==null||resolved==source?selection.model():selected(selection.style(),resolved);}
+        @Override public BakedModel resolve(BakedModel original,ItemStack stack,net.minecraft.client.multiplayer.ClientLevel level,net.minecraft.world.entity.LivingEntity entity,int seed){var base=selection(stack);var source=base.original();var resolved=source.getOverrides().resolve(source,stack,level,entity,seed);return resolved==null||resolved==source?base:selected(base.style,resolved);}
     };
     @Override public ItemOverrides getOverrides(){return selector;}
     private final class Selected extends BakedModelWrapper<BakedModel> {
-        private final List<BakedQuad>[] faces;private final ItemTransforms transforms;private final Surface surface;private final int bytes;private final List<BakedModel> passes=List.of(this);
-        @SuppressWarnings("unchecked") Selected(BakedModel source,Surface surface){
-            super(source);this.surface=surface;faces=new List[FACES.length];long cost=512;
-            for(int side=0;side<FACES.length;side++){var quads=new ArrayList<BakedQuad>();for(var quad:source.getQuads(null,FACES[side],RandomSource.create(42),ModelData.EMPTY,null)){var changed=surface!=null&&lamps.contains(quad.getSprite())?NativeItemQuads.retexture(quad,surface.sprite(),surface.u(),surface.v()):quad;quads.add(changed);cost+=96L+changed.getVertices().length*4L;}faces[side]=List.copyOf(quads);}
+        private final NativeLightItemStyle style;private final List<BakedQuad>[] faces;private final ItemTransforms transforms;private final Surface surface;private final int bytes;private final List<BakedModel> passes=List.of(this);
+        @SuppressWarnings("unchecked") Selected(BakedModel source,Surface surface,NativeLightItemStyle style){
+            super(source);this.surface=surface;this.style=style;faces=NativeDoorArtwork.isStatic(source)?new List[FACES.length]:null;long cost=512;
+            if(faces!=null)for(int side=0;side<FACES.length;side++){var quads=new ArrayList<BakedQuad>();for(var quad:source.getQuads(null,FACES[side],RandomSource.create(42),ModelData.EMPTY,null)){var changed=surface!=null&&lamps.contains(quad.getSprite())?NativeItemQuads.retexture(quad,surface.sprite(),surface.u(),surface.v()):quad;quads.add(changed);cost+=96L+changed.getVertices().length*4L;}faces[side]=List.copyOf(quads);}
             bytes=(int)Math.min(Integer.MAX_VALUE,cost);transforms=NativeItemPadding.fit(this,source.getTransforms());
         }
         BakedModel original(){return originalModel;}
-        @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return faces[side==null?0:side.ordinal()+1];}
-        @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){return getQuads(state,side,random);}
+        @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return getQuads(state,side,random,ModelData.EMPTY,null);}
+        @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){if(faces!=null)return faces[side==null?0:side.ordinal()+1];
+            var source=originalModel.getQuads(state,side,random,data,layer);if(surface==null)return source;
+            var changed=new ArrayList<BakedQuad>(source.size());for(var quad:source)changed.add(lamps.contains(quad.getSprite())?NativeItemQuads.retexture(quad,surface.sprite(),surface.u(),surface.v()):quad);return List.copyOf(changed);}
         @Override public ItemTransforms getTransforms(){return transforms;}
         @Override public BakedModel applyTransform(ItemDisplayContext context,com.mojang.blaze3d.vertex.PoseStack pose,boolean left){transforms.getTransform(context).apply(left,pose);return this;}
         @Override public TextureAtlasSprite getParticleIcon(){return surface==null?originalModel.getParticleIcon():surface.sprite();}
         @Override public TextureAtlasSprite getParticleIcon(ModelData data){return surface==null?originalModel.getParticleIcon(data):surface.sprite();}
-        @Override public List<BakedModel> getRenderPasses(ItemStack stack,boolean fabulous){return passes;}
+        @Override public List<BakedModel> getRenderPasses(ItemStack stack,boolean fabulous){if(faces!=null)return passes;var source=originalModel.getRenderPasses(stack,fabulous);if(source.size()==1&&source.get(0)==originalModel)return passes;var result=new ArrayList<BakedModel>(source.size());for(var model:source)result.add(model==originalModel?this:selected(style,model));return List.copyOf(result);}
         @Override public ItemOverrides getOverrides(){return ItemOverrides.EMPTY;}
     }
 }
