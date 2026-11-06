@@ -1,0 +1,6 @@
+task exportDoorItemReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorItemLegacyChecks'
+    systemProperty 'vandorlabs.doorItemReference', file(project.findProperty('doorItemReference') ?: 'build/test-artifacts/door-item-forge.json').absolutePath
+}
