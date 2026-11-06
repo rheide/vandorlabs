@@ -1,0 +1,5 @@
+tasks.register('testNativeScreenFamily', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenFamilyChecks'
+}
