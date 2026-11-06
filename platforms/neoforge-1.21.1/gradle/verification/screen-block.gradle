@@ -1,3 +1,4 @@
 neoForge.runs.configureEach {
+ systemProperty 'screenRowEditsReference',file(project.findProperty('screenRowEditsReference') ?: '../../build/test-artifacts/screen-row-edits-reference.json').absolutePath
  systemProperty 'screenGeometryReference',file(project.findProperty('screenGeometryReference') ?: '../../build/test-artifacts/screen-geometry-reference.json').absolutePath
 }
