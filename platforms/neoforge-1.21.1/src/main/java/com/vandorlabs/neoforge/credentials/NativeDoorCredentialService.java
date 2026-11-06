@@ -22,6 +22,8 @@ public final class NativeDoorCredentialService {
     }
     public record Side(NativeTokenReader.Visual visual,NativeTokenReader.Motion motion){}
     public record Projection(Side front,Side rear){public Side side(int side){return side==1?rear:front;}}
+    private static final Side EMPTY_SIDE=new Side(new NativeTokenReader.Visual(false,0,0,false,0,false),new NativeTokenReader.Motion(0,20,false,0));
+    public static final Projection EMPTY=new Projection(EMPTY_SIDE,EMPTY_SIDE);
     private static final String[] KEYS={"DoorKeyReader","DoorRearKeyReader"};
     private final Host host;
     private final NativeTokenReader[] readers=new NativeTokenReader[2];
@@ -45,6 +47,7 @@ public final class NativeDoorCredentialService {
         for(int side=0;side<2;side++){
             var key=KEYS[side];opaqueReaders[side]=tag.contains(key)&&!tag.contains(key,Tag.TAG_COMPOUND)?tag.get(key).copy():null;
             readers[side].read(tag.getCompound(key),registries);
+            if(readers[side].opaqueOccupied())opaqueReaders[side]=tag.getCompound(key).copy();
             int mask=tag.contains(key,Tag.TAG_COMPOUND)?readers[side].effectiveAllowed():CredentialCatalog.singleCompany(fallbackAllowed);
             readers[side].configureLocal(false,mask,NativeDoorSettings.securityBehavior(securityMode));
         }
@@ -73,6 +76,6 @@ public final class NativeDoorCredentialService {
     public static void writeProjection(CompoundTag out,Projection projection){
         for(int i=0;i<2;i++){var side=projection.side(i);var v=side.visual();var m=side.motion();var tag=new CompoundTag();tag.putBoolean("Chip",v.chip());tag.putInt("Company",v.company());tag.putInt("Logo",v.logo());tag.putBoolean("Icon",v.icon());tag.putInt("Output",v.output());tag.putBoolean("Occupied",v.occupied());tag.putLong("Sequence",m.sequence());tag.putInt("Age",m.age());tag.putBoolean("Returning",m.returning());tag.putInt("Rejected",m.rejectedFor());tag.putLong("RejectionDeadline",m.rejectionDeadline());out.put("DoorReaderVisual"+i,tag);}
     }
-    public static Projection readProjection(CompoundTag tag){return new Projection(readSide(tag.getCompound("DoorReaderVisual0")),readSide(tag.getCompound("DoorReaderVisual1")));}
+    public static Projection readProjection(CompoundTag tag){if(!tag.contains("DoorReaderVisual0")&&!tag.contains("DoorReaderVisual1"))return EMPTY;return new Projection(readSide(tag.getCompound("DoorReaderVisual0")),readSide(tag.getCompound("DoorReaderVisual1")));}
     private static Side readSide(CompoundTag tag){return new Side(new NativeTokenReader.Visual(tag.getBoolean("Chip"),Math.max(0,Math.min(6,tag.getInt("Company"))),Math.max(-1,Math.min(6,tag.getInt("Logo"))),tag.getBoolean("Icon"),Math.max(0,Math.min(15,tag.getInt("Output"))),tag.getBoolean("Occupied")),new NativeTokenReader.Motion(tag.getLong("Sequence"),Math.max(0,Math.min(20,tag.getInt("Age"))),tag.getBoolean("Returning"),Math.max(0,Math.min(12,tag.getInt("Rejected"))),tag.getLong("RejectionDeadline")));}
 }

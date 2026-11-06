@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.door;
 
 import com.vandorlabs.neoforge.ModernHousingTags;
+import com.vandorlabs.neoforge.credentials.*;
 import com.vandorlabs.neoforge.fluid.*;
 import com.vandorlabs.persistence.RedstoneData;
 import com.vandorlabs.redstone.ChannelList;
@@ -13,10 +14,16 @@ import net.neoforged.neoforge.client.model.data.*;
 
 /** Inactive native door storage/session host. Registration awaits actual linked-part, motion and reader lifecycle. */
 public class NativeProgrammableDoorEntity extends BlockEntity implements com.vandorlabs.neoforge.redstone.NativeChannelMember, ContainedFluidHost {
-    public record Visual(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,boolean large,boolean recovery){}
+    public record Visual(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,boolean large,boolean recovery,NativeDoorCredentialService.Projection readers){
+        public Visual(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,boolean large,boolean recovery){this(settings,state,side,large,recovery,NativeDoorCredentialService.EMPTY);}
+    }
     public static final ModelProperty<NativeDoorSettings> SETTINGS=new ModelProperty<>();
     public static final ModelProperty<Visual> VISUAL=new ModelProperty<>();
     private volatile Visual visual;
+    private final NativeDoorCredentialService credentials;
+    private volatile NativeDoorCredentialService.Projection readerProjection=NativeDoorCredentialService.EMPTY;
+    private long nextCredentialTick=Long.MAX_VALUE;
+    private boolean receivingProjection;
     private final NativeFluidSlots fluids=new NativeFluidSlots();
     private static final NativeFluidVolume NO_FLUID_VOLUME=NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),NativeFluidVolume.SINGLE_SIDE);
     private record FluidKey(boolean sliding,boolean framed,boolean hinges,int depth,Direction face,boolean open,boolean left,boolean paired){}
@@ -40,7 +47,16 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     public final int waterOutlets(){return waterOutlets;}
     final void setWaterOutlets(int mask){if(waterOutlets!=(mask&255)){waterOutlets=mask&255;setChanged();}}
     private boolean localDirty=true,membershipDirty;
-    public NativeProgrammableDoorEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean large,boolean slidingModel){super(type,pos,state);this.large=large;settings=NativeDoorSettings.fresh(large,slidingModel);visual=new Visual(settings,state,com.vandorlabs.render.SpaceDoorControlPanel.Side.NONE,large,false);lastRawState=state;}
+    public NativeProgrammableDoorEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean large,boolean slidingModel){super(type,pos,state);this.large=large;settings=NativeDoorSettings.fresh(large,slidingModel);
+        credentials=new NativeDoorCredentialService(new NativeDoorCredentialService.Host(){
+            public BlockEntity owner(){return NativeProgrammableDoorEntity.this;}
+            public boolean usable(net.minecraft.server.level.ServerPlayer player){return NativeDoorLifecycle.root(level,worldPosition)==NativeProgrammableDoorEntity.this&&com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player,NativeProgrammableDoorEntity.this);}
+            public void changed(){credentialsChanged();}
+            public void schedule(int ticks){if(level instanceof net.minecraft.server.level.ServerLevel server)nextCredentialTick=Math.min(nextCredentialTick,server.getGameTime()+Math.max(1,ticks));}
+            public boolean securityToggled(){return securityToggled;}
+            public void flipSecurityToggle(){flipCredentialToggle();}
+        });
+        visual=new Visual(settings,state,com.vandorlabs.render.SpaceDoorControlPanel.Side.NONE,large,false,readerProjection);lastRawState=state;}
     public final boolean large(){return large;}
     public final NativeDoorSettings settings(){return settings;}
     final NativeDoorSettings placementSettings(){migrateSavedModel();return settings;}
@@ -51,19 +67,24 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     @Override public ModelData getModelData(){var snapshot=visual;return ModelData.builder().with(SETTINGS,snapshot.settings()).with(VISUAL,snapshot).with(NativeFluidRenderSnapshot.DATA,fluidRender).build();}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);waterGushDirty=true;waterOutlets=tag.getInt("DoorWaterOutlets")&255;fluids.read(tag,registries);NativeFluidWorld.queue(this);placementRecovery=tag.getBoolean("DoorPlacementRecovery");retained=tag.copy();for(String key:java.util.List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retained.remove(key);
-        settings=NativeDoorSettings.read(tag);ChannelList fallback=ChannelList.of(Math.max(0,tag.getInt("RedstoneChannel")));
+        settings=NativeDoorSettings.read(tag);
+        if(receivingProjection)readerProjection=NativeDoorCredentialService.readProjection(tag);
+        else{credentials.read(tag,registries,settings.securityMode(),settings.securityAllowed());nextCredentialTick=0;}
+        ChannelList fallback=ChannelList.of(Math.max(0,tag.getInt("RedstoneChannel")));
         try{channels=tag.contains("RedstoneChannels",Tag.TAG_INT_ARRAY)?ChannelList.of(tag.getIntArray("RedstoneChannels")):fallback;}catch(IllegalArgumentException malformed){channels=fallback;}
-        channelSignal=tag.getBoolean("RedstoneSignal");securityToggled=tag.getBoolean("DoorSecurityToggled");legacyMotionPending=!tag.contains("SpaceDoorSchema");localDirty=true;visualDirty=true;publishLocalVisual();requestModelDataUpdate();if(level!=null&&!level.isClientSide&&getBlockState().getBlock() instanceof NativeProgrammableDoorBlock)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);
+        channelSignal=tag.getBoolean("RedstoneSignal");securityToggled=tag.getBoolean("DoorSecurityToggled");if(!receivingProjection)refreshReaderProjection();legacyMotionPending=!tag.contains("SpaceDoorSchema");localDirty=true;visualDirty=true;publishLocalVisual();requestModelDataUpdate();if(level!=null&&!level.isClientSide&&getBlockState().getBlock() instanceof NativeProgrammableDoorBlock)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);
     }
-    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.merge(retained);tag.putInt("DoorWaterOutlets",waterOutlets);fluids.write(tag);writePublicSettings(tag);tag.putBoolean("DoorSecurityToggled",securityToggled);if(placementRecovery)tag.putBoolean("DoorPlacementRecovery",true);else tag.remove("DoorPlacementRecovery");}
+    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);tag.merge(retained);credentials.write(tag,registries);tag.putInt("DoorWaterOutlets",waterOutlets);fluids.write(tag);writePublicSettings(tag);tag.putBoolean("DoorSecurityToggled",securityToggled);if(placementRecovery)tag.putBoolean("DoorPlacementRecovery",true);else tag.remove("DoorPlacementRecovery");}
     private void writePublicSettings(CompoundTag tag){settings.write(tag);tag.putIntArray("RedstoneChannels",channels.toArray());new RedstoneData.Member(channels.first(),channelSignal).write(new ModernHousingTags(tag));}
     /** Explicit projection: opaque retained data, reader inventories and foreign capabilities never enter a menu/update packet. */
-    @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){CompoundTag tag=new CompoundTag();writePublicSettings(tag);fluids.write(tag);tag.putBoolean("DoorSecurityToggled",securityToggled);if(placementRecovery)tag.putBoolean("DoorPlacementRecovery",true);return tag;}
+    @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){CompoundTag tag=new CompoundTag();writePublicSettings(tag);fluids.write(tag);credentials.writeProjection(tag,level==null?0:level.getGameTime());tag.putBoolean("DoorSecurityToggled",securityToggled);if(placementRecovery)tag.putBoolean("DoorPlacementRecovery",true);return tag;}
+    @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){receivingProjection=true;try{loadWithComponents(tag,registries);}finally{receivingProjection=false;}}
+    @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registries){handleUpdateTag(packet.getTag(),registries);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     /** Configured items contain choices/channels only, matching legacy itemSettings rather than a world snapshot. */
     public final CompoundTag itemSettings(){CompoundTag tag=new CompoundTag();settings.write(tag);tag.putInt("SpaceDoorChannel",channels.first());tag.putIntArray("RedstoneChannels",channels.toArray());return tag;}
     private boolean placementRecovery;
-    final void installPlacement(NativeDoorSettings next,ChannelList bank){settings=next;channels=bank;legacyMotionPending=false;membershipDirty=true;}
+    final void installPlacement(NativeDoorSettings next,ChannelList bank){settings=next;channels=bank;credentials.configureLocal(next.securityMode(),next.securityAllowed());refreshReaderProjection();legacyMotionPending=false;membershipDirty=true;publishLocalVisual();}
     final void retainPlacementRecovery(){placementRecovery=true;publishLocalVisual();setChanged();requestModelDataUpdate();}
     public final boolean placementRecovery(){return placementRecovery;}
     public static boolean validFrames(com.vandorlabs.persistence.FrameSettings f){return f!=null&&NativeDoorSettings.frame(f.front)&&NativeDoorSettings.surface(f.interior)&&NativeDoorSettings.surface(f.exterior)&&(f.artworkVersion==0||f.artworkVersion==1)&&(f.splitTop==-1||com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(f.splitTop))&&(f.splitBottom==-1||com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(f.splitBottom));}
@@ -74,12 +95,8 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
         NativeDoorSettings updated=edit.apply(settings);boolean changed=!settings.same(updated)||!channels.equals(next);
         if(!changed)return false;
         if(settings.securityMode()!=updated.securityMode()||settings.securityAllowed()!=updated.securityAllowed())securityToggled=false;
-        int previousBehavior=NativeDoorSettings.securityBehavior(settings.securityMode());settings=updated;membershipDirty|=!channels.equals(next);channels=next;legacyMotionPending=false;
-        for(String key:java.util.List.of("DoorKeyReader","DoorRearKeyReader"))if(retained.contains(key,Tag.TAG_COMPOUND)){
-            CompoundTag reader=retained.getCompound(key);boolean any=updated.securityAllowed()==127;int behavior=NativeDoorSettings.securityBehavior(updated.securityMode());
-            if(NativeDoorSettings.readerCompany(reader)!=updated.securityAllowed()||previousBehavior!=behavior){reader.putLong("TokenPulseUntil",0);reader.putBoolean("TokenToggled",false);}
-            reader.putBoolean("AnyToken",any);reader.putInt("AllowedTokens",updated.securityAllowed());reader.putInt("TokenBehavior",behavior);
-        }
+        settings=updated;membershipDirty|=!channels.equals(next);channels=next;legacyMotionPending=false;
+        credentials.configureLocal(updated.securityMode(),updated.securityAllowed());refreshReaderProjection();
         refreshVisual(false);return true;
     }
     final void publish(){queueFluidParts();refreshVisual(false);setChanged();requestModelDataUpdate();if(level!=null&&!level.isClientSide){level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);if(membershipDirty&&isChannelMemberActive())com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.channelsChanged(this);membershipDirty=false;localInputChanged();}}
@@ -88,22 +105,34 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     @Override public int localSignalLevel(int channel){return isChannelMemberActive()?NativeDoorLifecycle.localPower(level,worldPosition):0;}
     @Override public void setChannelLevel(int value){boolean next=value>0;if(channelSignal==next)return;channelSignal=next;NativeDoorLifecycle.updatePower(this);}
     public final void localInputChanged(){localDirty=true;if(level!=null&&!level.isClientSide)tickDoor();}
-    private void publishLocalVisual(){visual=new Visual(settings,getBlockState(),visual==null?com.vandorlabs.render.SpaceDoorControlPanel.Side.NONE:visual.side(),large,placementRecovery);lastRawState=getBlockState();}
+    private void publishLocalVisual(){visual=new Visual(settings,getBlockState(),visual==null?com.vandorlabs.render.SpaceDoorControlPanel.Side.NONE:visual.side(),large,placementRecovery,readerProjection);lastRawState=getBlockState();}
     public final void markVisualDirty(){visualDirty=true;}
     public final void refreshVisual(){refreshVisual(true);}
     private void refreshVisual(boolean notify){
-        visualDirty=false;lastRawState=getBlockState();if(level==null||NativeDoorLifecycle.root(level,worldPosition)!=this){if(visual.settings()!=settings||visual.state()!=getBlockState()||visual.recovery()!=placementRecovery)publishLocalVisual();return;}
+        visualDirty=false;lastRawState=getBlockState();if(level==null||NativeDoorLifecycle.root(level,worldPosition)!=this){if(visual.settings()!=settings||visual.state()!=getBlockState()||visual.recovery()!=placementRecovery||visual.readers()!=readerProjection)publishLocalVisual();return;}
         var block=(NativeProgrammableDoorBlock)getBlockState().getBlock();var state=block.resolved(level,worldPosition,getBlockState());var side=NativeDoorLifecycle.panelSide(this,state);var old=visual;
-        visualDirty=false;if(old.settings()==settings&&old.state()==state&&old.side()==side)return;visual=new Visual(settings,state,side,large,placementRecovery);if(notify)requestModelDataUpdate();
+        visualDirty=false;if(old.settings()==settings&&old.state()==state&&old.side()==side&&old.readers()==readerProjection)return;visual=new Visual(settings,state,side,large,placementRecovery,readerProjection);if(notify)requestModelDataUpdate();
         if(notify&&level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
     }
     public final void tickWaterGush(){if(level!=null&&!level.isClientSide&&getBlockState().getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER&&(waterGushDirty||level.getGameTime()>=nextWaterGushTick))NativeDoorWaterGush.update(this,false);}
     public final void tickDoor(){if(getBlockState()!=lastRawState){visualDirty=true;localDirty=true;NativeFluidWorld.queue(this);}if(level==null)return;if(getBlockState().getBlock() instanceof NativeProgrammableDoorBlock&&getBlockState().getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER){visualDirty=false;localDirty=false;lastRawState=getBlockState();return;}if(level.isClientSide){if(visualDirty)refreshVisual();return;}if(!visualDirty&&!localDirty)return;if(!isChannelMemberActive()){visualDirty=false;localDirty=false;lastRawState=getBlockState();return;}if(visualDirty)refreshVisual();if(placementRecovery||!localDirty)return;localDirty=false;migrateSavedModel();NativeDoorLifecycle.updatePower(this);}
-    @Override public void beforeChannelRegistration(){migrateSavedModel();localDirty=true;tickDoor();}
+    public final NativeDoorCredentialService.Projection readerProjection(){return readerProjection;}
+    private void refreshReaderProjection(){readerProjection=credentials.projection(level==null?0:level.getGameTime());}
+    private NativeProgrammableDoorEntity credentialMate(){if(level==null||!(getBlockState().getBlock() instanceof NativeProgrammableDoorBlock block))return null;var other=NativeDoorLifecycle.mate(level,worldPosition,block);return other==null?null:NativeDoorLifecycle.root(level,other);}
+    private void credentialsChanged(){refreshReaderProjection();publish();var other=credentialMate();if(other!=null)other.localInputChanged();}
+    private void flipCredentialToggle(){securityToggled=!securityToggled;var other=credentialMate();if(other!=null&&other.settings.securityMode()==4){other.securityToggled=securityToggled;other.credentialsChanged();}}
+    public final boolean securityOpen(){if(level==null||NativeDoorLifecycle.root(level,worldPosition)!=this)return false;long now=level.getGameTime();if(credentials.readerOpen(settings.panelMode(),now))return true;var other=credentialMate();return other!=null&&other.settings.securityMode()>0&&other.credentials.readerOpen(other.settings.panelMode(),now);}
+    public final boolean holdingCredential(net.minecraft.server.level.ServerPlayer player,net.minecraft.world.InteractionHand hand){return level!=null&&NativeDoorLifecycle.root(level,worldPosition)==this&&credentials.holdingCredential(player,hand);}
+    public final boolean interactCredential(int side,net.minecraft.server.level.ServerPlayer player,net.minecraft.world.InteractionHand hand){return level!=null&&NativeDoorLifecycle.root(level,worldPosition)==this&&settings.securityMode()>0&&credentials.interact(side,player,hand);}
+    public final net.minecraft.world.item.ItemStack takeCredentialForDrop(int side){return credentials.takeForDrop(side);}
+    public final boolean opaqueCredential(int side){return credentials.opaqueOccupied(side);}
+    public final CompoundTag credentialRecovery(HolderLookup.Provider registries){return credentials.rawRecovery(registries);}
+    public final void tickCredentialReaders(){if(!(level instanceof net.minecraft.server.level.ServerLevel server)||server.getGameTime()<nextCredentialTick||NativeDoorLifecycle.root(level,worldPosition)!=this)return;nextCredentialTick=Long.MAX_VALUE;credentials.scheduledTick();}
+    @Override public void beforeChannelRegistration(){migrateSavedModel();credentials.resume();refreshReaderProjection();localDirty=true;tickDoor();}
     private void migrateSavedModel(){if(!legacyMotionPending||!(getBlockState().getBlock() instanceof NativeProgrammableDoorBlock block))return;var old=settings;var data=old.door();boolean sliding=block.slidingModel();var migrated=new com.vandorlabs.persistence.SpaceDoorData(data.design,data.detail,data.framed,data.direction,sliding||data.middle,sliding,data.hinges,data.trigger,data.panel);settings=new NativeDoorSettings(migrated,old.faceTexture(),old.rawLayout(),old.tileTexture(),sliding?0:old.depth(),old.rawPanelMode(),old.securityMode(),old.securityAllowed(),old.frames(),old.glass());legacyMotionPending=false;publishLocalVisual();visualDirty=true;if(level!=null&&!level.isClientSide)setChanged();}
-    @Override public void onLoad(){super.onLoad();waterGushDirty=true;NativeFluidWorld.queue(this);localDirty=true;visualDirty=true;if(level!=null){if(level.isClientSide)migrateSavedModel();else if(getBlockState().getBlock() instanceof NativeProgrammableDoorBlock&&getBlockState().getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}}
-    @Override public void setRemoved(){NativeFluidWorld.removed(this);com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
-    @Override public void onChunkUnloaded(){NativeFluidWorld.unloaded(this);com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
+    @Override public void onLoad(){super.onLoad();NativeDoorTargets.add(this);waterGushDirty=true;NativeFluidWorld.queue(this);localDirty=true;visualDirty=true;if(level!=null){if(level.isClientSide)migrateSavedModel();else if(getBlockState().getBlock() instanceof NativeProgrammableDoorBlock&&getBlockState().getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}}
+    @Override public void setRemoved(){NativeDoorTargets.remove(this);NativeFluidWorld.removed(this);com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
+    @Override public void onChunkUnloaded(){NativeDoorTargets.remove(this);NativeFluidWorld.unloaded(this);com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
     /** Per-part slots are intentionally independent, including the upper part of a linked door. */
     @Override public BlockEntity fluidOwner(){return this;}
     @Override public NativeFluidSlots containedFluids(){return fluids;}
