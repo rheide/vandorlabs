@@ -11,5 +11,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativeScreenPickBindings {
  private NativeScreenPickBindings(){}
- @SubscribeEvent public static void pick(InputEvent.InteractionKeyMappingTriggered event){if(!event.isPickBlock())return;var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null||mc.gameMode==null||mc.screen!=null||!mc.gameMode.getPlayerMode().isCreative()||mc.getCameraEntity()!=mc.player||mc.player.containerMenu!=mc.player.inventoryMenu||!(mc.hitResult instanceof BlockHitResult hit)||!mc.level.hasChunkAt(hit.getBlockPos())||!(mc.level.getBlockState(hit.getBlockPos()).getBlock() instanceof NativeScreenBlock))return;event.setCanceled(true);PacketDistributor.sendToServer(new ScreenPickPayload(hit.getBlockPos(),mc.player.getInventory().selected,mc.player.inventoryMenu.getStateId()));}
+ @SubscribeEvent public static void pick(InputEvent.InteractionKeyMappingTriggered event){if(!event.isPickBlock())return;var mc=Minecraft.getInstance();if(mc.player==null||mc.level==null||mc.gameMode==null||mc.screen!=null||!mc.gameMode.getPlayerMode().isCreative()||mc.getCameraEntity()!=mc.player||mc.player.containerMenu!=mc.player.inventoryMenu||!(mc.hitResult instanceof BlockHitResult hit)||!mc.level.hasChunkAt(hit.getBlockPos())||!(mc.level.getBlockState(hit.getBlockPos()).getBlock() instanceof NativeScreenBlock))return;event.setCanceled(true);
+  // Input can arrive before the ordinary client tick publishes a fresh turn or hotbar scroll.
+  mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket(mc.player.getInventory().selected));
+  mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Rot(mc.player.getYRot(),mc.player.getXRot(),mc.player.onGround()));
+  PacketDistributor.sendToServer(new ScreenPickPayload(hit.getBlockPos(),mc.player.getInventory().selected,mc.player.inventoryMenu.getStateId()));}
 }
