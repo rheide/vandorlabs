@@ -42,7 +42,7 @@ public class NativeScreenBlock extends BaseEntityBlock {
  @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return shapes(state,level,pos).outline;}
  @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return shapes(state,level,pos).collision;}
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
- @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){if(level.getBlockEntity(pos) instanceof NativeScreenEntity owner&&owner.family()==family)return owner.visual().appearance().light;return family.keyboard||family==ScreenFamily.HALF_CONSOLE||family==ScreenFamily.HALF_DIAGONAL?0:11;}
+ @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){if(level.getBlockEntity(pos) instanceof NativeScreenEntity owner&&owner.family()==family){NativeScreenPowerService.queryLight(owner);return owner.visual().appearance().light;}return family.keyboard||family==ScreenFamily.HALF_CONSOLE||family==ScreenFamily.HALF_DIAGONAL?0:11;}
  @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block neighbor,BlockPos from,boolean moving){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeScreenEntity owner)owner.localInputChanged();}
  @Override protected boolean isSignalSource(BlockState state){return true;}
  @Override protected int getSignal(BlockState state,BlockGetter level,BlockPos pos,Direction face){return level.getBlockEntity(pos) instanceof NativeScreenEntity owner?owner.localOutput():0;}
