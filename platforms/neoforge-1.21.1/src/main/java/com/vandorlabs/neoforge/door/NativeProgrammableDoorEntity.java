@@ -26,7 +26,7 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     private boolean receivingProjection;
     private net.minecraft.world.item.ItemStack removalDrop=net.minecraft.world.item.ItemStack.EMPTY,creativeRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;
     final void prepareRemovalDrop(net.minecraft.world.item.ItemStack stack){removalDrop=stack.copy();}
-    final net.minecraft.world.item.ItemStack takeRemovalDrop(){var result=removalDrop;removalDrop=net.minecraft.world.item.ItemStack.EMPTY;return result;}
+    final net.minecraft.world.item.ItemStack removalDropCopy(){return removalDrop.copy();}
     final void prepareCreativeRecoveryDrop(net.minecraft.world.item.ItemStack stack){creativeRecoveryDrop=stack.copy();}
     final net.minecraft.world.item.ItemStack takeCreativeRecoveryDrop(){var result=creativeRecoveryDrop;creativeRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;return result;}
     private final NativeFluidSlots fluids=new NativeFluidSlots();

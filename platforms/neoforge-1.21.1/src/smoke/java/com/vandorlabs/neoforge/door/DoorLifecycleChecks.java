@@ -35,9 +35,13 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class DoorLifecycleChecks {
     private static Block observer;private static BlockPos publicationRoot;private static boolean publicationFault;private static FixtureDoor block;private static NativeDoorItem item;private static BlockEntityType<NativeProgrammableDoorEntity> type;private static MenuType<NativeDoorMenu> menus;
-    private static BlockPos missingFactory;
+    private static BlockPos missingFactory,vanishingFactory;
+    private static int vanishingFactoryCalls;
+    static void vanishingFactory(BlockPos pos){vanishingFactory=pos;vanishingFactoryCalls=0;}
     static void missingFactory(BlockPos pos){missingFactory=pos;}
     static void placementFault(int mode,BlockPos pos){fault=mode;faultRoot=pos;}
+    private static boolean lootPreview;
+    static void lootPreview(boolean value){lootPreview=value;}
     private static boolean credentialPanel;
     static void credentialPanel(boolean value){credentialPanel=value;}
     private static int checks,fault,dropCount;private static BlockPos trackedDrop;private static BlockPos faultRoot;private static final BlockPos BASE=new BlockPos(3300,110,3300),SAVED=BASE.east(10);
@@ -54,7 +58,7 @@ public final class DoorLifecycleChecks {
     }
     private static final class FixtureDoor extends NativeProgrammableDoorBlock {
         FixtureDoor(){super(Properties.of().noOcclusion().dynamicShape(),()->type,()->menus,()->item,true);}
-        @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return pos.equals(missingFactory)?null:new Counting(pos,state);}
+        @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return pos.equals(missingFactory)||pos.equals(vanishingFactory)&&++vanishingFactoryCalls>1?null:new Counting(pos,state);}
         @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
         // The fixture checks inventory/structure/menu behavior, not the separately owned authored shapes.
         @Override protected VoxelShape orphanShape(BlockState state,boolean collision){return Block.box(0,0,5,16,16,11);}
@@ -62,6 +66,7 @@ public final class DoorLifecycleChecks {
         @Override protected boolean controlPanelHit(NativeDoorSettings settings,BlockState state,com.vandorlabs.render.SpaceDoorControlPanel.Side side,BlockHitResult hit,BlockPos lower){return credentialPanel;}
         @Override protected boolean securityOpen(NativeProgrammableDoorEntity host){return host.securityOpen();}
         @Override protected InteractionResult credentialInteraction(NativeProgrammableDoorEntity host,Player player,InteractionHand hand,BlockHitResult hit,boolean panelHit){return player instanceof net.minecraft.server.level.ServerPlayer server&&host.interactCredential(0,server,hand)?InteractionResult.CONSUME:InteractionResult.FAIL;}
+        @Override public BlockState playerWillDestroy(net.minecraft.world.level.Level level,BlockPos pos,BlockState state,Player player){var result=super.playerWillDestroy(level,pos,state,player);if(lootPreview&&level instanceof ServerLevel server){var first=Block.getDrops(result,server,pos,level.getBlockEntity(pos),player,player.getMainHandItem());var second=Block.getDrops(result,server,pos,level.getBlockEntity(pos),player,player.getMainHandItem());need(first.size()==1&&second.size()==1&&ItemStack.isSameItemSameComponents(first.get(0),second.get(0)),"repeated preview loot queries retain identical prepared ownership");}return result;}
         @Override protected boolean stagePart(net.minecraft.world.level.Level level,BlockPos pos,BlockState state){if(fault!=0&&pos.equals(faultRoot.above())){if(fault==2||fault==3)super.stagePart(level,pos,state);if(fault==3)throw new IllegalStateException("fixture stage after actual upper publication");return false;}return super.stagePart(level,pos,state);}
         @Override protected boolean restorePart(net.minecraft.world.level.Level level,BlockPos pos,BlockState old){if(fault==4&&pos.equals(faultRoot))return false;return super.restorePart(level,pos,old);}
     }

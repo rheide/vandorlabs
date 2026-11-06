@@ -106,7 +106,7 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         super.onRemove(state,level,pos,next,moving);
     }
     @Override protected List<ItemStack> getDrops(BlockState state,LootParams.Builder context){
-        var captured=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);if(captured instanceof NativeProgrammableDoorEntity host){var prepared=host.takeRemovalDrop();if(!prepared.isEmpty())return List.of(prepared);}
+        var captured=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);if(captured instanceof NativeProgrammableDoorEntity host){var prepared=host.removalDropCopy();if(!prepared.isEmpty())return List.of(prepared);}
         var origin=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN);var level=context.getLevel();NativeProgrammableDoorEntity owner=null;
         if(origin!=null){var lower=NativeDoorLifecycle.lower(state,BlockPos.containing(origin));if(NativeDoorLifecycle.loaded(level,lower)&&level.getBlockState(lower).is(this)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity host)owner=host;}
         if(state.getValue(HALF)==DoubleBlockHalf.UPPER&&owner==null)return List.of();

@@ -40,6 +40,11 @@ final class NativeDoorPlacement {
             Throwable rollback=null;
             try{
                 if(!success){for(int i=1;i>=0;i--){BlockPos pos=i==0?root:root.above();try{if(level.getBlockState(pos).is(block)&&(installed[i]==null||level.getBlockEntity(pos)==installed[i])){if(!block.restorePart(level,pos,old[i])&&level.getBlockState(pos)!=old[i])throw new IllegalStateException("Refused door placement rollback at "+pos);}}catch(RuntimeException|Error failure){if(rollback==null)rollback=failure;else rollback.addSuppressed(failure);}}
+                    // No block entity means no saved place for opaque ownership. Retry the native old state
+                    // after a refused custom rollback; the caller keeps its item unless a real owner exists.
+                    if(recovery!=null&&!recovery.isEmpty()&&level.getBlockState(root)==state&&level.getBlockEntity(root)==null){
+                        try{if(!level.setBlock(root,old[0],Block.UPDATE_CLIENTS)&&level.getBlockState(root)!=old[0])throw new IllegalStateException("Ownerless recovery placement remains at "+root);}catch(RuntimeException|Error failure){if(rollback==null)rollback=failure;else rollback.addSuppressed(failure);}
+                    }
                     if(level.getBlockState(root).is(block)&&level.getBlockEntity(root) instanceof NativeProgrammableDoorEntity owner&&(owner==installed[0]||installed[0]==null&&level.getBlockState(root)==state)){if(installed[0]==null&&prepared!=null){owner.installPlacement(prepared,preparedChannels);if(recovery!=null&&!owner.restoreOpaqueCredentialRecovery(recovery,level.registryAccess()))throw new IllegalStateException("Opaque reader recovery refused on retained root");}owner.retainPlacementRecovery();}
                 }
             }finally{if(previous==null)ACTIVE.remove();else ACTIVE.set(previous);}

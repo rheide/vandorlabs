@@ -35,6 +35,8 @@ public final class NativeDoorItem extends BlockItem {
         if(level.isClientSide)return InteractionResult.SUCCESS;
         Ownership ownership=new Ownership(player,stack);boolean success=false;try{success=NativeDoorPlacement.install(context,block,state,configured,recovery,depth,ownership);}finally{
             boolean ownsRoot=level.getBlockState(root).is(block)&&level.getBlockState(root).getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER&&(level.getBlockEntity(root) instanceof NativeProgrammableDoorEntity owner?owner.placementRecovery():level.getBlockState(root)==state);
+            // A bare surviving state cannot own opaque inventory bytes if its factory vanished after probing.
+            if(recovery!=null&&!recovery.isEmpty()&&(!(level.getBlockEntity(root) instanceof NativeProgrammableDoorEntity owner)||!owner.opaqueCredentialRecovery().equals(recovery)))ownsRoot=false;
             if(success||ownsRoot){ownership.run();if(!success&&level.getBlockEntity(root) instanceof NativeProgrammableDoorEntity retained)retained.retainPlacementRecovery();}
         }
         if(!success)return InteractionResult.FAIL;var sound=state.getSoundType(level,root,player);level.playSound(null,root,sound.getPlaceSound(),SoundSource.BLOCKS,(sound.getVolume()+1)/2,sound.getPitch()*.8f);return InteractionResult.CONSUME;
