@@ -15,9 +15,9 @@ public final class DoorTargetClientChecks {
     private static int ticks,stage,wait,renderTargets;
     private static void need(boolean pass,String message){if(!pass)throw new IllegalStateException("Door target client stage="+stage+": "+message);}
     private static void click(Minecraft mc){try{var method=Minecraft.class.getDeclaredMethod("startUseItem");method.setAccessible(true);method.invoke(mc);}catch(ReflectiveOperationException failure){throw new IllegalStateException("Real Minecraft use entry",failure);}}
-    @SubscribeEvent public static void frame(net.neoforged.neoforge.client.event.RenderFrameEvent.Post event){if(!DoorTargetClientFixture.enabled()||stage!=0)return;var mc=Minecraft.getInstance();if(mc.hitResult instanceof BlockHitResult hit&&hit.getBlockPos().equals(DoorTargetClientFixture.POS.above())&&hit.getLocation().z<0)renderTargets++;}
+    @SubscribeEvent public static void frame(net.neoforged.neoforge.client.event.RenderFrameEvent.Post event){if(!DoorTargetClientFixture.targeting()||stage!=0)return;var mc=Minecraft.getInstance();if(mc.hitResult instanceof BlockHitResult hit&&hit.getBlockPos().equals(DoorTargetClientFixture.POS.above())&&hit.getLocation().z<0)renderTargets++;}
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
-        if(!DoorTargetClientFixture.enabled())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
+        if(!DoorTargetClientFixture.targeting())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
         if(stage==9&&mc.level==null){System.out.println("[vandorlabs][door-target-client] client PASS actual survival moved upper-half hover/key/9byte intent/occlusion; Door body rendering separate");mc.stop();stage=10;return;}
         if(mc.player==null||mc.level==null||mc.gameMode==null||mc.screen!=null)return;
         need(++ticks<1500,"timeout mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" pos="+mc.player.position()+" hit="+mc.hitResult);

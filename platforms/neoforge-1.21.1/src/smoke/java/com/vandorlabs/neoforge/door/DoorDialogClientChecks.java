@@ -1,0 +1,38 @@
+package com.vandorlabs.neoforge.door;
+
+import com.vandorlabs.neoforge.*;
+import com.vandorlabs.neoforge.client.*;
+import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
+import com.vandorlabs.ui.*;
+import net.minecraft.client.Minecraft;
+import net.minecraft.world.phys.BlockHitResult;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ClientTickEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+/** Actual production Door dialog/widgets and bounded editor packets on a disposable dedicated connection. */
+@EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
+public final class DoorDialogClientChecks {
+    private static int stage,ticks,wait;
+    private static void need(boolean value,String message){if(!value)throw new IllegalStateException("Door dialog stage="+stage+": "+message);}
+    @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
+    public static final class Screens {
+        @SubscribeEvent public static void register(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event){if(DoorTargetClientFixture.dialog())event.<NativeDoorMenu,NativeDoorScreen>register(DoorTargetClientFixture.menu(),(menu,inventory,title)->new NativeDoorScreen(menu,inventory,title,new NativeCredentialFilterPicker(NativeCredentialItems::accessCard,false)));}
+    }
+    private static void click(NativeDoorScreen screen,int id,int button){var widget=screen.button(id);need(widget!=null&&widget.active,"missing enabled button "+id);need(screen.mouseClicked(widget.getX()+widget.getWidth()/2D,widget.getY()+widget.getHeight()/2D,button),"button input "+id);}
+    private static void tab(NativeDoorScreen screen,int page){var pages=SpaceDoorDialog.pages(screen.edit().design());int index=-1;for(int i=0;i<pages.length;i++)if(pages[i]==page)index=i;need(index>=0,"tab unavailable "+page);var panel=screen.panel();int width=(panel.width-22)/pages.length;need(screen.mouseClicked(panel.left+12+index*width+width/2D,panel.top+37,0)&&screen.page()==page,"actual tab click "+page);}
+    private static int design(int wanted){for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++){var d=ModernFinishCatalog.ENTRIES.get(i).door();if(d!=null&&d.design()==wanted&&d.detail()==0)return i;}throw new IllegalStateException("Door artwork fixture absent");}
+    @SubscribeEvent public static void tick(ClientTickEvent.Post event){
+        if(!DoorTargetClientFixture.dialog())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
+        if(stage==9&&mc.level==null){System.out.println("[vandorlabs][door-dialog-client] client PASS actual Configurizer/dedicated dialog/options/reverse cycling/invalid draft/company picker/frames/glass/bounded packets");mc.stop();stage=10;return;}
+        if(mc.player==null||mc.level==null||mc.gameMode==null)return;need(++ticks<1800,"timeout mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" screen="+mc.screen);
+        if(stage==0){if(ticks<80||mc.gameMode.getPlayerMode()!=net.minecraft.world.level.GameType.SURVIVAL||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())||mc.player.getZ()>=0)return;var target=NativeDoorSelection.update(1);if(target==null)return;try{var method=Minecraft.class.getDeclaredMethod("startUseItem");method.setAccessible(true);method.invoke(mc);}catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}stage=1;
+        }else if(stage==1){if(!(mc.screen instanceof NativeDoorScreen screen))return;need(screen.edit().detail()==0,"detail resets when dialog opens");var original=screen.edit();click(screen,SpaceDoorDialog.MOTION,1);need(screen.edit().sliding()!=original.sliding()||screen.edit().direction()!=original.direction(),"right click selects previous motion");
+            screen.activePicker().searchField().setValue("pinnacle");need(screen.activePicker().rows().stream().anyMatch(id->ModernFinishCatalog.option(id).category().startsWith("Doors/Pinnacle")),"company Door subgroup selectable");screen.activePicker().searchField().setValue("");screen.choose(design(15));tab(screen,2);screen.channelField().setValue("31,");need(!screen.button(1).active,"invalid bank disables Done");click(screen,SpaceDoorDialog.TRIGGER,1);need(screen.channelField().getValue().equals("31,")&&!screen.button(1).active,"appearance preview retains invalid channel draft");screen.channelField().setValue("31, 32");need(screen.button(1).active,"valid bank enables Done");tab(screen,3);click(screen,SpaceDoorDialog.SECURITY,1);need(screen.edit().securityMode()==1,"reverse security wraps to return pulse");click(screen,SpaceDoorDialog.SECURITY,1);need(screen.edit().securityMode()==4,"reverse security advances to return toggle");var panel=screen.panel();need(screen.mouseClicked(panel.controlsX+144,panel.top+144,1)&&screen.edit().allowed()==64,"credential company reverse cycle");tab(screen,1);click(screen,3008,0);need(!screen.edit().framed(),"Frame page controls main framed setting");tab(screen,4);screen.choose(PortholeDialog.shadeChoice(18));click(screen,SpaceDoorDialog.GLASS_TINT,1);stage=2;wait=ticks;
+        }else if(stage==2&&ticks>wait+30){var host=(NativeProgrammableDoorEntity)mc.level.getBlockEntity(DoorTargetClientFixture.POS);need(host.getRedstoneChannels().equals(com.vandorlabs.redstone.ChannelList.of(31,32))&&host.settings().securityMode()==4&&host.settings().securityAllowed()==64&&!host.settings().door().framed&&host.settings().glass().shade==18&&host.settings().glass().tint==0,"actual server settings visible in client snapshot");need(mc.player.getInventory().getItem(7).getCount()==3,"credential sample did not consume inventory");click((NativeDoorScreen)mc.screen,1,0);stage=3;wait=ticks;
+        }else if(stage==3&&mc.screen==null&&ticks>wait+10){PacketDistributor.sendToServer(new DoorTargetClientFixture.Mode(10));stage=4;wait=ticks;
+        }else if(stage==4&&ticks>wait+20){mc.level.disconnect();mc.disconnect();stage=9;}
+    }
+}

@@ -38,6 +38,7 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
     }
     private static int doorChoice(int design,int detail){for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++){var metadata=ModernFinishCatalog.ENTRIES.get(i).door();if(metadata!=null&&metadata.design()==design&&metadata.detail()==Math.min(detail,1))return i;}return 0;}
     private static String securityLabel(int mode){return mode==0?"Security: Off":new String[]{"","Return After Open: Pulse","Stay Inserted","Stay Inserted: Pulse","Return After Open: Toggle"}[mode];}
+    public ProgrammableDialogLayout panel(){return panel;}public NativeMaterialPicker activePicker(){return picker;}
     public int page(){return page;}public NativeDoorEdit edit(){return new NativeDoorEdit(design,detail,framed,motion.direction,depth,motion.sliding,hinges,trigger,panelMode>0,panelMode,securityMode,allowed,faceTexture,layout);}
     public EditBox channelField(){return channels;}public Button button(int id){return buttons.get(id);}
     private int selected(){return page==4?glass.material==DoorGlassData.ORIGINAL?-1:glass.material<0?PortholeDialog.shadeChoice(glass.shade):glass.material:page==1?frameFace==0?frameDraft.front:frameDraft.interior:faceTexture>=0?faceTexture:doorChoice(design,detail);}
