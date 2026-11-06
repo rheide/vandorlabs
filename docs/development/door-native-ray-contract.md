@@ -7,3 +7,11 @@ The inactive native Door geometry adapter preserves the released Forge selection
 `exportDoorRayReference` records actual `BlockConfigurableSpaceDoor.collisionRayTrace` results and asserts the released result digest. `testNativeDoorRays` compares the native adapter against those records, including both halves, cardinal facings, motion/hinge/frame/depth combinations, paired doors, panel modes, security padding and stale states after lower removal. Targeted rays prove the farther control-face priority. The Forge exporter also compares the scalar kernel with the actual legacy AABB method on deterministic arbitrary boxes and segments.
 
 These are focused geometry checks. Door registration, world interaction routing, authored mesh emission and rendered acceptance remain separate requirements.
+
+## Mesh emission boundary
+
+`DoorMeshTransform` preserves the released CPU batch arithmetic and keeps complete caller-owned vertex records intact. The native `NativeDoorMesh` backend retains immutable authored records, applies live motion without rebuilding the model, preserves diffuse groups, and emits body or pane vertices into the caller's selected render layer. Native model preparation can reuse the authored float correction when element data is supplied. Full-height artwork uses the padded sprite's content UV descriptor. Each bake owns a cache bounded by retained bytes; resource reload replaces or clears the bake.
+
+`DoorControlPadMesh` emits the six numeric-pad faces used by both Forge's regular renderer and its opaque batch. Far-edge placement changes the geometry without shifting the wall artwork's authored UV region. Enlarged pads retain their established vertical centering. Native mirrored rear pads and security-reader contents still require the corresponding world renderer transforms.
+
+`testDoorMeshTransform` freezes the actual Forge CPU batch records across 480 poses. `testDoorControlPadMesh` freezes actual numeric-pad emission across all eight motion/depth/hand combinations. `testNativeDoorMesh` checks native consumer positions, colors, UVs, light, overlay, normals, diffuse grouping and immutable source records. These checks do not establish final world rendering, material overrides, X-panel clipping, reader contents or shader-pack acceptance.

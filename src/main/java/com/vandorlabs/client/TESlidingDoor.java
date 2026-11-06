@@ -344,41 +344,21 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 .getAtlasSprite("vandorlabs:blocks/control_buttons");
         TextureAtlasSprite wall=Minecraft.getMinecraft().getTextureMapBlocks()
                 .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
-        float x0=(float)SpaceDoorControlPanel.x0(side),x1=(float)SpaceDoorControlPanel.x1(side);
-        float y0=(float)SpaceDoorControlPanel.Y0,y1=(float)SpaceDoorControlPanel.Y1;
-        float z0=(float)SpaceDoorControlPanel.z0(sliding,farEdge),
-                z1=(float)SpaceDoorControlPanel.z1(sliding,farEdge);
-        float u0=buttons.getInterpolatedU(0),u1=buttons.getInterpolatedU(16);
-        float v0=buttons.getInterpolatedV(0),v1=buttons.getInterpolatedV(16);
-        // Match the Programmable Console's deck-side housing: U follows
-        // depth and V follows the local height, using the native atlas pixels.
-        // Keep UVs in the original sprite even when the far-edge pad's local
-        // model coordinates extend beyond 16 before the placement offset.
-        double textureZ0=SpaceDoorControlPanel.z0(sliding),
-                textureZ1=SpaceDoorControlPanel.z1(sliding);
-        float sideU0=wall.getInterpolatedU(textureZ0),sideU1=wall.getInterpolatedU(textureZ1);
-        float sideV0=wall.getInterpolatedV(32-y1),sideV1=wall.getInterpolatedV(32-y0);
-        float topV0=wall.getInterpolatedV(textureZ0),topV1=wall.getInterpolatedV(textureZ1);
-        float wallX0=wall.getInterpolatedU(x0),wallX1=wall.getInterpolatedU(x1);
-        if (side==SpaceDoorControlPanel.Side.LEFT) {
-            quad(buf,x1,y1,z1,x1,y0,z1,x1,y0,z0,x1,y1,z0,
-                    u0,v0,u0,v1,u1,v1,u1,v0);
-            quad(buf,x0,y1,z0,x0,y0,z0,x0,y0,z1,x0,y1,z1,
-                    sideU0,sideV0,sideU0,sideV1,sideU1,sideV1,sideU1,sideV0);
-        } else {
-            quad(buf,x0,y1,z0,x0,y0,z0,x0,y0,z1,x0,y1,z1,
-                    u0,v0,u0,v1,u1,v1,u1,v0);
-            quad(buf,x1,y1,z1,x1,y0,z1,x1,y0,z0,x1,y1,z0,
-                    sideU1,sideV0,sideU1,sideV1,sideU0,sideV1,sideU0,sideV0);
-        }
-        quad(buf,x0,y1,z0,x0,y1,z1,x1,y1,z1,x1,y1,z0,
-                wallX0,topV0,wallX0,topV1,wallX1,topV1,wallX1,topV0);
-        quad(buf,x0,y0,z1,x0,y0,z0,x1,y0,z0,x1,y0,z1,
-                wallX0,topV1,wallX0,topV0,wallX1,topV0,wallX1,topV1);
-        quad(buf,x0,y1,z1,x0,y0,z1,x1,y0,z1,x1,y1,z1,
-                wallX0,sideV0,wallX0,sideV1,wallX1,sideV1,wallX1,sideV0);
-        quad(buf,x1,y1,z0,x1,y0,z0,x0,y0,z0,x0,y1,z0,
-                wallX1,sideV0,wallX1,sideV1,wallX0,sideV1,wallX0,sideV0);
+        panelGeometry(buf,sliding,farEdge,side,buttons,wall);
+    }
+    static void panelGeometry(BufferBuilder buf,boolean sliding,boolean farEdge,SpaceDoorControlPanel.Side side,TextureAtlasSprite buttons,TextureAtlasSprite wall) {
+        PadEmitter emitter=PAD_EMITTER.get();emitter.buffer=buf;emitter.buttons.sprite=buttons;emitter.wall.sprite=wall;
+        try{com.vandorlabs.render.DoorControlPadMesh.emit(sliding,farEdge,side,emitter.buttons,emitter.wall,emitter);}finally{emitter.buffer=null;emitter.buttons.sprite=null;emitter.wall.sprite=null;}
+    }
+    private static final ThreadLocal<PadEmitter> PAD_EMITTER=ThreadLocal.withInitial(PadEmitter::new);
+    private static final class PadUV implements com.vandorlabs.render.DoorControlPadMesh.UV {
+        TextureAtlasSprite sprite;
+        public float u(double pixels){return sprite.getInterpolatedU(pixels);}
+        public float v(double pixels){return sprite.getInterpolatedV(pixels);}
+    }
+    private static final class PadEmitter implements com.vandorlabs.render.DoorControlPadMesh.Sink {
+        BufferBuilder buffer;final PadUV buttons=new PadUV(),wall=new PadUV();
+        public void quad(float x0,float y0,float z0,float x1,float y1,float z1,float x2,float y2,float z2,float x3,float y3,float z3,float u0,float v0,float u1,float v1,float u2,float v2,float u3,float v3){TESlidingDoor.quad(buffer,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3,u0,v0,u1,v1,u2,v2,u3,v3);}
     }
 
     private static void orientDetailedDoor(EnumFacing facing) {

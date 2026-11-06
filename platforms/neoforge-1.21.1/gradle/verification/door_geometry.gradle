@@ -14,3 +14,10 @@ tasks.register('testNativeDoorRays', JavaExec) {
     args project.findProperty('doorRayReference') ?: '../../build/test-artifacts/door-rays-forge.jsonl'
     maxHeapSize = '1g'
 }
+
+tasks.register('testNativeDoorMesh', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeDoorMeshChecks'
+}

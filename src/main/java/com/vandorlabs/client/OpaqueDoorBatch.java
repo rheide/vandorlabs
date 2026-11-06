@@ -122,25 +122,8 @@ public final class OpaqueDoorBatch {
         Mesh(int[] source,boolean panel){this.source=source;this.panel=panel;work=ThreadLocal.withInitial(()->source.clone());}
         void draw(BufferBuilder buffer,EnumFacing facing,double x,double y,double z,double depth,int light,
                 double shiftX,double shiftY,double pivotX,double pivotZ,double angle,double size,double leafOffset) {
-            int[] out=work.get();double radians=Math.toRadians(angle),cos=Math.cos(radians),sin=Math.sin(radians);
-            // Keep the panel's existing lightmap convention; item leaves use constant block/sky coordinates.
-            int packed=panel?(light>>>16)|(light<<16):light;
-            for(int i=0;i<source.length;i+=7){
-                double px=Float.intBitsToFloat(source[i]),py=Float.intBitsToFloat(source[i+1]),pz=Float.intBitsToFloat(source[i+2]);
-                px*=size;py*=size;
-                if(panel)py+=SpaceDoorControlPanel.verticalOffset(size);
-                double dx=px-pivotX,dz=pz-pivotZ;
-                px=cos*dx+sin*dz+pivotX+shiftX+leafOffset;pz=-sin*dx+cos*dz+pivotZ+depth;py+=shiftY;
-                double worldX,worldZ;
-                switch(facing){
-                    case NORTH:worldX=1-px;worldZ=1-pz;break;
-                    case EAST:worldX=pz;worldZ=1-px;break;
-                    case WEST:worldX=1-pz;worldZ=px;break;
-                    default:worldX=px;worldZ=pz;
-                }
-                out[i]=Float.floatToRawIntBits((float)(worldX+x));out[i+1]=Float.floatToRawIntBits((float)(py+y));
-                out[i+2]=Float.floatToRawIntBits((float)(worldZ+z));out[i+6]=packed;
-            }
+            int[] out=work.get();
+            com.vandorlabs.render.DoorMeshTransform.write(source,7,out,panel,true,facing.getIndex(),x,y,z,depth,light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
             buffer.addVertexData(out);
         }
     }
