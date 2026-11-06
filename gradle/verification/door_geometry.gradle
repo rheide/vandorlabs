@@ -55,3 +55,11 @@ task exportDoorPixelsReference(type: JavaExec) {
     args file('platforms/neoforge-1.21.1/build/generated/door-resources/assets/vandorlabs/data/door_artwork.json').absolutePath,
          file('platforms/neoforge-1.21.1/reference/door-artwork-pixels.json').absolutePath
 }
+
+task exportDoorXMeshReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorXMeshLegacyChecks'
+    args file(project.findProperty('doorXMeshReference') ?: 'build/test-artifacts/door-xmesh-forge.jsonl').absolutePath
+}

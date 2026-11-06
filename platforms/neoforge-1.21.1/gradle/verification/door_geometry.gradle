@@ -32,3 +32,11 @@ tasks.register('testNativeDoorVisualMotion', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeDoorVisualMotionChecks'
 }
+
+tasks.register('testNativeDoorXMesh', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeDoorXMeshChecks'
+    args project.findProperty('doorXMeshReference') ?: '../../build/test-artifacts/door-xmesh-forge.jsonl'
+}

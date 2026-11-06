@@ -31,3 +31,12 @@ Each resource generation owns byte-bounded source, material-part and visual-snap
 `testNativeDoorVisualMotion` checks the local timelines and owner lifetime. The title-only `test_door_render.py` fixture draws twelve asserted cases through the production orchestration, compares numeric panels with an absent-panel control, compares a fresh rejection glyph with its nonrejected reader, checks visible recovery housing and verifies that changing the pose does not rebuild material meshes. It retains a rendered image. Actual placed-block lifecycle, interaction and shader-pack acceptance remain distinct checks.
 
 Late model-bake completion cannot replace a newer published generation. Static resource-pack element changes bypass canonical float correction. A dynamic external model that cannot be frozen falls back to this family's authored geometry for the current generation, retaining visible ownership rather than failing each render frame. The focused title fixture exercises that fallback in addition to its ordinary material cases.
+
+The Large draw path reuses the ordinary bake, material mapping, layer emission and
+reader clock. Each root emits two paired leaves at scale 1.5; member tiles do not
+emit another body. X panels are clipped before the per-frame transform, including
+the diagonal opaque caps. `exportDoorXMeshReference` captures the released Forge
+`StaticSurfaceMesh.xPanels` vertex buffers; `testNativeDoorXMesh` compares native
+positions, UVs and normal bytes exactly for both hands, inset variants and cap
+policies. The native draw uses the released GL path's normalized X travel; the
+separate legacy opaque fast path's progress arithmetic is unchanged.
