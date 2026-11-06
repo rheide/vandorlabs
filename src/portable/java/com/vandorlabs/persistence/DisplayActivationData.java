@@ -15,6 +15,7 @@ public final class DisplayActivationData {
   for(int i=0;i<4;i++)if(!valid(mode,i,textures[i],playback[i],speeds[i],valid))return LEGACY;
   int[] t=textures.clone();for(int i=0;i<4;i++)t[i]=t[i]<0?-1:canonical.applyAsInt(t[i]);return new DisplayActivationData(mode,t,playback.clone(),speeds.clone());
  }
+ public DisplayActivationData withMode(int next){if(next<0||next>2)throw new IllegalArgumentException("Display mode");return next==mode?this:new DisplayActivationData(next,textures,playback,speeds);}
  public DisplayActivationData configure(int mode,int state,int texture,int playback,int speed,IntPredicate material){
   if(!valid(mode,state,texture,playback,speed,material))throw new IllegalArgumentException("Invalid display activation");
   int[] t=textures.clone(),p=this.playback.clone(),s=speeds.clone();t[state]=texture;p[state]=playback;s[state]=speed;return new DisplayActivationData(mode,t,p,s);

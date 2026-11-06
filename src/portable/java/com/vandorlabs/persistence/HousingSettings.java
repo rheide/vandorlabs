@@ -20,6 +20,7 @@ public final class HousingSettings {
         this.tileSides=tileSides;this.facesEnabled=facesEnabled;
         this.faces=faces;
     }
+    public HousingSettings withMainTexture(int main){return main==mainTexture?this:new HousingSettings(main,sideTexture,rawLayout,tileSides,facesEnabled,faces.clone());}
     public int layout(){return rawLayout<0?(tileSides?TextureLayoutMode.TILE:TextureLayoutMode.STRETCH):rawLayout;}
     public int[] faces(){return faces.clone();}
     public static HousingSettings read(HousingTags data,int previousMain,boolean previousTileSides,

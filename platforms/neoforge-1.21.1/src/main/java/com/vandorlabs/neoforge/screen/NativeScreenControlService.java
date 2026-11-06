@@ -28,6 +28,7 @@ public final class NativeScreenControlService {
  private void withdraw(Collection<Row> old){for(Row row:old){registered.remove(row);if(level()!=null){NativeRedstoneChannels.unregister(row);if(owner.isChannelMemberActive())for(Row remaining:registeredRows())refresh(remaining);}}}
  void stop(){initialized=false;disarm();withdraw(registeredRows());}
  private void publish(int slot,boolean notify){if(configuring){pendingSlots|=1<<slot;return;}List<NativeScreenControls.Row> values=new ArrayList<>();for(Row row:rows.get(slot))values.add(row.snapshot());NativeScreenControls next=new NativeScreenControls(headers[slot].enabled(),headers[slot].title(),values);headers[slot]=next;owner.installControlData(slot,next,notify);}
+ boolean editing(){return editing;}
  private boolean valid(int slot,int index){return !editing&&live()&&slot>=0&&slot<2&&headers[slot].enabled()&&index>=0&&index<rows.get(slot).size();}
  private void refresh(Row row){int received=0;for(int c=0;c<row.channels.size();c++)received=Math.max(received,NativeRedstoneChannels.level(level(),owner.getBlockPos(),row.channels.get(c)));row.setChannelLevel(received);}
  boolean configure(int slot,NativeScreenRowEdit edit){

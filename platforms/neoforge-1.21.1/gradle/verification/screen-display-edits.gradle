@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenDisplayEdits', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenDisplayEditChecks'
+ systemProperty 'screenDisplayEditsReference',file(project.findProperty('screenDisplayEditsReference') ?: '../../build/test-artifacts/screen-display-edits-reference.json').absolutePath
+}
