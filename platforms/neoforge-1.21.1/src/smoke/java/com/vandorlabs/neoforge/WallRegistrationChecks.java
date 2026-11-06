@@ -20,7 +20,13 @@ public final class WallRegistrationChecks {
     private static void require(boolean value,String message){checks++;if(!value)throw new IllegalStateException("Native wall registration: "+message);}
     @SubscribeEvent public static void start(ServerStartedEvent event){
         if(!System.getProperty("vandorlabs.transmitterPhase","").equals("wall-registration"))return;
-        var level=event.getServer().overworld();var pos=new BlockPos(2800,100,2800);level.getChunkAt(pos);var block=VandorLabsBootstrap.PROGRAMMABLE_WALL.get();int cases=0;
+        var level=event.getServer().overworld();
+        // The released shared type must still instantiate every existing shape through vanilla reload.
+        for(Block existing:java.util.List.of(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get(),VandorLabsBootstrap.PROGRAMMABLE_SLAB.get(),VandorLabsBootstrap.PROGRAMMABLE_STAIRS.get(),VandorLabsBootstrap.PROGRAMMABLE_WALL.get(),VandorLabsBootstrap.PROGRAMMABLE_PORTHOLE_WALL.get(),VandorLabsBootstrap.PROGRAMMABLE_DIAGONAL_WALL.get(),VandorLabsBootstrap.PROGRAMMABLE_DIAGONAL_PORTHOLE.get(),VandorLabsBootstrap.PROGRAMMABLE_DIAGONAL_GLASS.get(),VandorLabsBootstrap.PROGRAMMABLE_PORTHOLE_BLOCK.get())){
+            var state=existing.defaultBlockState();var at=new BlockPos(2790,100,2790);var factory=VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get().create(at,state);var placed=((EntityBlock)existing).newBlockEntity(at,state);require(factory!=null&&placed!=null&&factory.getClass()==placed.getClass(),"shared type and placed factory agree: "+existing);
+            var saved=factory.saveWithFullMetadata(level.registryAccess());require(saved.getString("id").equals("vandorlabs:programmable_viewscreen"),"released shared identity: "+existing);var loaded=net.minecraft.world.level.block.entity.BlockEntity.loadStatic(at,state,saved,level.registryAccess());require(loaded!=null&&loaded.getClass()==factory.getClass()&&loaded.getType()==factory.getType(),"vanilla shared-type reload: "+existing);require(loaded.saveWithFullMetadata(level.registryAccess()).equals(saved),"unchanged shared-type saved settings: "+existing);
+        }
+        var pos=new BlockPos(2800,100,2800);level.getChunkAt(pos);var block=VandorLabsBootstrap.PROGRAMMABLE_WALL.get();int cases=0;
         for(Direction facing:Direction.Plane.HORIZONTAL)for(int depth=0;depth<3;depth++)for(boolean inverted:new boolean[]{false,true}){
             var state=block.defaultBlockState().setValue(NativeFlatWallBlock.FACING,facing).setValue(NativeFlatWallBlock.DEPTH,depth).setValue(NativeFlatWallBlock.INVERTED,inverted);level.setBlock(pos,state,3);
             var tile=(NativeWallEntity)level.getBlockEntity(pos);require(tile!=null&&tile.getType()==VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),"canonical shared BE factory");require(tile.settings().layout==0&&!tile.isPorthole(),"current Stretch factory default");tile.refreshFluidGeometry();

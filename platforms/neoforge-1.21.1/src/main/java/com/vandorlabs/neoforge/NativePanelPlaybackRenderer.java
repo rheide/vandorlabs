@@ -20,7 +20,7 @@ import net.neoforged.neoforge.client.event.ModelEvent;
 
 /** Direct source textures keep per-host Off/static/animated glazing out of global atlas animation. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
-public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<ProgrammableBlockEntity> {
+public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<net.minecraft.world.level.block.entity.BlockEntity> {
     // The subclass is only a namespace for vanilla's protected state shards; it is never instantiated.
     private static final class Types extends RenderType {
         private Types(){super("vandorlabs_glazing",com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK,com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS,1536,false,false,()->{},()->{});}
@@ -49,12 +49,12 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<Pr
     static RenderType frameRenderType(){return BodyLayer.VALUE;}
     static RenderType frameRenderType(boolean cull){return cull?BodyLayer.CULLED:BodyLayer.VALUE;}
     private static final class BodyLayer {static final RenderType VALUE=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true),CULLED=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true,true);}
-    @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(ProgrammableBlockEntity tile){return tile instanceof NativeWallEntity wall?wall.renderBounds():new net.minecraft.world.phys.AABB(tile.getBlockPos());}
-    @Override public boolean shouldRender(ProgrammableBlockEntity tile,Vec3 camera){
+    @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(net.minecraft.world.level.block.entity.BlockEntity tile){return tile instanceof NativeWallEntity wall?wall.renderBounds():new net.minecraft.world.phys.AABB(tile.getBlockPos());}
+    @Override public boolean shouldRender(net.minecraft.world.level.block.entity.BlockEntity tile,Vec3 camera){
         if(!(tile instanceof NativeWallEntity wall))return false;var snapshot=wall.wallAppearance();boolean body=snapshot.geometry().diagonal()&&!snapshot.chunkBody();if(!body&&!wall.isPorthole()&&!wall.isGlass())return false;
         var current=active;if(current==null)return false;var pos=tile.getBlockPos();double x=camera.x-(pos.getX()+.5D),y=camera.y-(pos.getY()+.5D),z=camera.z-(pos.getZ()+.5D),range=getViewDistance();return x*x+y*y+z*z<range*range;
     }
-    @Override public void render(ProgrammableBlockEntity tile,float partialTick,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
+    @Override public void render(net.minecraft.world.level.block.entity.BlockEntity tile,float partialTick,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
         if(!(tile instanceof NativeWallEntity wall))return;var current=active;if(current==null)return;
         var appearance=wall.wallAppearance();
         if(appearance.geometry().diagonal()&&!appearance.chunkBody())emit(current.bake.bodyProjection(appearance),current.bake.surfaces.get(0),null,PanelPlayback.DEFAULT,0,poses.last(),buffers.getBuffer(BodyLayer.VALUE),light,overlay);
