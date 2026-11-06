@@ -5,11 +5,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 
 /** Native NBT adapter, retaining the legacy tag types and spellings. */
-public final class ModernHousingTags implements HousingTags,com.vandorlabs.persistence.FrameSettings.Tag,com.vandorlabs.persistence.TriggerState.Tag,com.vandorlabs.persistence.ControlLatchData.Tag {
+public final class ModernHousingTags implements com.vandorlabs.screen.ScreenArtworkMigration.Tag,HousingTags,com.vandorlabs.persistence.FrameSettings.Tag,com.vandorlabs.persistence.TriggerState.Tag,com.vandorlabs.persistence.ControlLatchData.Tag {
     private final CompoundTag tag;
     public ModernHousingTags(CompoundTag tag){this.tag=java.util.Objects.requireNonNull(tag);}
     public void remove(String key){tag.remove(key);}
     public boolean contains(String key){return tag.contains(key);}
+    public boolean containsString(String key){return tag.contains(key,Tag.TAG_STRING);}
     public boolean containsInt(String key){return tag.contains(key,Tag.TAG_INT);}
     public boolean containsIntArray(String key){return tag.contains(key,Tag.TAG_INT_ARRAY);}
     public boolean containsBoolean(String key){return tag.contains(key,Tag.TAG_BYTE);}

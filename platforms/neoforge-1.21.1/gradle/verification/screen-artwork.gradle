@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenArtwork', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenArtworkChecks'
+ systemProperty 'screenArtworkReference',file(project.findProperty('screenArtworkReference') ?: '../../build/test-artifacts/screen-artwork-reference.json').absolutePath
+}
