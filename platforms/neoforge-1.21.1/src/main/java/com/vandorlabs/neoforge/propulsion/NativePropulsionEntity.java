@@ -1,0 +1,51 @@
+package com.vandorlabs.neoforge.propulsion;
+
+import com.vandorlabs.neoforge.*;
+import com.vandorlabs.neoforge.redstone.*;
+import com.vandorlabs.neoforge.screen.NativeScreenTransmissionMigration;
+import com.vandorlabs.persistence.RedstoneLightData;
+import com.vandorlabs.propulsion.PropulsionDefinition;
+import com.vandorlabs.redstone.*;
+import net.minecraft.core.*;
+import net.minecraft.nbt.*;
+import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockState;
+
+/** Inactive placed-engine authority. Carried propulsion is deliberately outside this host. */
+public class NativePropulsionEntity extends BlockEntity implements NativeChannelMember {
+ public record Part(int size,int x,int y){public static final Part SINGLE=new Part(1,0,0);public Part{if(size<1||size>8||x<0||y<0||x>=size||y>=size)throw new IllegalArgumentException("Propulsion partition");}}
+ public record Visual(PropulsionDefinition definition,Direction facing,boolean powered,int brightness,int sideTexture,int particleLevel,boolean selected,boolean join,Part part,boolean inert){}
+ public static final net.neoforged.neoforge.client.model.data.ModelProperty<Visual> VISUAL=new net.neoforged.neoforge.client.model.data.ModelProperty<>();
+ private static final NativeRedstoneLightSettings FRESH=NativeRedstoneLightSettings.read(new CompoundTag());
+ private NativeRedstoneLightSettings settings=FRESH;private CompoundTag retained=new CompoundTag();private boolean inert,unloading,dirty=true;private int physical;
+ private volatile Visual visual;private volatile net.neoforged.neoforge.client.model.data.ModelData modelData;
+ public NativePropulsionEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);publish(project(0,Part.SINGLE));}
+ public final NativeRedstoneLightSettings settings(){return settings;}public final Visual visual(){return visual;}public final boolean inert(){return inert;}public final boolean available(){return !inert&&!unloading&&!isRemoved();}
+ private PropulsionDefinition definition(){return ((NativePropulsionBlock)getBlockState().getBlock()).definition();}
+ private Visual project(int physical,Part part){var d=settings.data();return new Visual(definition(),getBlockState().getValue(NativePropulsionBlock.FACING),!inert&&d.powered(physical),inert?0:d.brightness(physical),d.sideTexture,d.particleLevel,!inert&&d.particles(physical),d.join,part,inert);}
+ final Visual stage(){physical=inert?0:NativeLoadedRedstonePower.level(level,worldPosition);var v=project(physical,Part.SINGLE);return level!=null&&level.isClientSide?new Visual(v.definition,v.facing,!inert&&getBlockState().getValue(NativePropulsionBlock.POWERED),v.brightness,v.sideTexture,v.particleLevel,v.selected,v.join,v.part,inert):v;}
+ final void publish(Visual next){if(next.equals(visual))return;visual=next;modelData=net.neoforged.neoforge.client.model.data.ModelData.builder().with(VISUAL,next).build();}
+ final boolean needsNotification(){return dirty;}
+ final void notifyPublication(){dirty=false;if(level==null)return;requestModelDataUpdate();if(level instanceof ServerLevel){var state=getBlockState();if(state.getValue(NativePropulsionBlock.POWERED)!=visual.powered())level.setBlock(worldPosition,state.setValue(NativePropulsionBlock.POWERED,visual.powered()),2);var light=((ServerLevel)level).getAuxLightManager(worldPosition);if(light!=null&&light.getLightAt(worldPosition)!=(visual.powered()?visual.brightness():0))light.setLightAt(worldPosition,visual.powered()?visual.brightness():0);setChanged();}level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}
+ @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){return modelData;}
+ @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){var original=tag.copy();try{NativePlatformComponents.requireSupported(original,registries);if(tag.contains("NativePropulsionSchema")&&(!tag.contains("NativePropulsionSchema",Tag.TAG_INT)||tag.getInt("NativePropulsionSchema")!=1))throw new IllegalArgumentException("Future propulsion schema");var normalized=NativeScreenTransmissionMigration.read(tag).install();var next=NativeRedstoneLightSettings.read(normalized);try(var platform=NativePlatformComponents.guardLoad(this)){super.loadAdditional(normalized.copy(),registries);platform.requireSuccessful();}settings=next;retained=normalized;inert=level!=null&&level.isClientSide&&tag.getBoolean("NativePropulsionInert");if(!inert)NativePlatformComponents.forgetLoadedFields(retained);}catch(RuntimeException failed){settings=FRESH;retained=original;inert=true;}physical=0;dirty=true;publish(project(0,Part.SINGLE));if(level!=null&&level.isClientSide&&tag.contains("PropulsionEffective",Tag.TAG_COMPOUND)&&!inert){var e=tag.getCompound("PropulsionEffective");int brightness=e.getInt("Brightness");if(brightness<0||brightness>15){inert=true;publish(project(0,Part.SINGLE));}else{var v=visual;publish(new Visual(v.definition,v.facing,e.getBoolean("Powered"),brightness,v.sideTexture,v.particleLevel,e.getBoolean("Selected"),v.join,Part.SINGLE,false));}}NativePropulsionService.queue(this);}
+ @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);settings.write(tag);tag.putInt("NativePropulsionSchema",1);}
+ @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();settings.write(tag);tag.putBoolean("NativePropulsionInert",inert);var effective=new CompoundTag();effective.putBoolean("Powered",visual.powered);effective.putBoolean("Selected",visual.selected);effective.putInt("Brightness",visual.brightness);tag.put("PropulsionEffective",effective);return tag;}
+ @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
+ public final CompoundTag recoverySnapshot(){return retained.copy();}
+ public final void installSettings(NativeRedstoneLightSettings next){if(!available())throw new IllegalStateException("Inert propulsion owner");settings=java.util.Objects.requireNonNull(next);settings=settings.capture(getBlockState().getValue(NativePropulsionBlock.POWERED));if(level instanceof ServerLevel)NativeRedstoneChannels.channelsChanged(this);NativePropulsionService.queue(this);}
+ final void manualMode(int mode){settings=new NativeRedstoneLightSettings(settings.data().manual(mode),settings.channels());}
+ public final boolean manualUse(net.minecraft.world.entity.player.Player player){if(!(level instanceof ServerLevel)||!available()||!NativePropulsionService.installed(this)||player.level()!=level||!player.isAlive()||player.isSpectator()||!level.mayInteract(player,worldPosition))return false;return NativePropulsionService.manual(this);}
+ private void channel(int value){settings=new NativeRedstoneLightSettings(settings.data().channelLevel(value),settings.channels());}
+ @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:settings.channels();}@Override public boolean isChannelMemberActive(){return available()&&NativePropulsionService.installed(this);}@Override public int localSignalLevel(int channel){return NativeLoadedRedstonePower.level(level,worldPosition);}
+ private CompoundTag transmission(){return retained.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main");}
+ @Override public int transmissionRange(){var t=transmission();return transmission().isEmpty()?-1:TransmissionSettings.readRange(t.contains("Range",Tag.TAG_INT),t.getInt("Range"),true);}
+ @Override public ChannelList transmittedChannels(){var t=transmission();return TransmissionSettings.readChannels(t.contains("Channels",Tag.TAG_INT_ARRAY),t.getIntArray("Channels"),ChannelList.EMPTY);}
+ @Override public void setChannelLevel(int value){if(!(level instanceof ServerLevel)||!isChannelMemberActive()||value<0||value>15||settings.data().channelLevel==value)return;channel(value);NativePropulsionService.changedChannel(this);}
+ @Override public void beforeChannelRegistration(){NativePropulsionService.queue(this);}
+ @Override public void onLoad(){super.onLoad();unloading=false;dirty=true;if(!inert)settings=settings.capture(getBlockState().getValue(NativePropulsionBlock.POWERED));if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);NativePropulsionService.queue(this);}
+ @Override public void setRemoved(){unloading=true;if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);NativePropulsionService.retire(this);super.setRemoved();}
+ @Override public void onChunkUnloaded(){unloading=true;if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);NativePropulsionService.retire(this);super.onChunkUnloaded();}
+}
