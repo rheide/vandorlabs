@@ -58,7 +58,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
             if(diagonal())option(9,x,y,w,TrapdoorOptions.rotationLabel(settings.rotationFlipped()),!c.sliding);
             picker.layout(panel.listX,panel.top+64,panel.listWidth,Math.max(2,(panel.height-92)/ProgrammableDialogLayout.ROW_HEIGHT),center);addRenderableWidget(picker.searchField());
         }
-        channels=new EditBox(font,panel.left+12,panel.top+68,panel.width-24,18,Component.literal("Redstone channels"));channels.setMaxLength(256);channels.setValue(draft);channels.visible=channels.active=page==1;channels.setResponder(value->{draft=value;apply();});addRenderableWidget(channels);
+        channels=new EditBox(font,panel.left+12,panel.top+68,panel.width-24,18,Component.literal("Redstone channels"));channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);channels.setValue(draft);channels.visible=channels.active=page==1;channels.setResponder(value->{draft=value;apply();});addRenderableWidget(channels);
         if(page==1)option(3,panel.left+12,panel.top+96,panel.width-24,"Activation: "+com.vandorlabs.ui.RedstoneActivation.label(c.trigger),true);
         option(4,panel.controlsX,panel.top+panel.height-26,154,Component.translatable("gui.done").getString(),true);validate();
     }
