@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenAppearance', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenAppearanceChecks'
+ systemProperty 'screenAppearanceReference',file(project.findProperty('screenAppearanceReference') ?: '../../build/test-artifacts/screen-appearance-reference.json').absolutePath
+}
