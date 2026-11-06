@@ -39,6 +39,9 @@ public final class NativeLargeDoorGeometry {
     }
     /** Source Large rays compare every full box in original order; no ordinary-pad priority rule applies. */
     public static LegacyBoxTrace.Hit trace(Snapshot s,double sx,double sy,double sz,double ex,double ey,double ez){LegacyBoxTrace.Hit best=null;for(var b:s.boxes){var hit=LegacyBoxTrace.clip(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,sx,sy,sz,ex,ey,ez);if(hit!=null&&(best==null||hit.distance(sx,sy,sz)<best.distance(sx,sy,sz)))best=hit;}return best;}
+    /** Same physical owner selection as released MovedDoorInteractions, including negative-width edge ownership. */
+    public static BlockPos owner(Snapshot s,double x,double y,double z){Direction width=s.key.face().getCounterClockWise();double column=(x-s.root.getX())*width.getStepX()+(z-s.root.getZ())*width.getStepZ();if(width.getStepX()<0||width.getStepZ()<0)column+=1;return s.root.relative(width,Math.max(0,Math.min(2,(int)Math.floor(column)))).above(Math.max(0,Math.min(2,(int)Math.floor(y-s.root.getY()))));}
+    public static void appendCollisions(Snapshot s,AABB query,List<AABB> output){for(var box:s.boxes)if(box.intersects(query)&&!output.contains(box))output.add(box);}
     public static boolean panelContains(NativeDoorSettings settings,double normal,double y){return NativeDoorGeometry.panelContains(settings,normal,y,1.5);}
     static long retainedBytes(){synchronized(CACHE){return retained+128L;}}static int entries(){synchronized(CACHE){return CACHE.size();}}static void clear(){synchronized(CACHE){CACHE.clear();retained=0;}}
 }
