@@ -19,6 +19,7 @@ public record NativeTrapdoorLinks(BlockPos partner,BlockPos square,List<BlockPos
     public static BlockPos releasedPosition(long value){return new BlockPos(LegacyBlockPosition.x(value),LegacyBlockPosition.y(value),LegacyBlockPosition.z(value));}
     public static long releasedPosition(BlockPos pos){return LegacyBlockPosition.pack(pos.getX(),pos.getY(),pos.getZ());}
     private static BlockPos position(CompoundTag tag,String key,boolean modern){return !tag.contains(key,Tag.TAG_LONG)?null:modern?BlockPos.of(tag.getLong(key)):releasedPosition(tag.getLong(key));}
+    public static NativeTrapdoorLinks read(CompoundTag tag,boolean diagonal){var links=read(tag);return diagonal?links:new NativeTrapdoorLinks(links.partner,links.square,links.assembly,links.hinge,links.travel,Direction.SOUTH,false,false,links.channelSignal,links.powerKnown,links.lastPower);}
     public static NativeTrapdoorLinks read(CompoundTag tag){
         if(tag.contains(NATIVE)&&(!tag.contains(NATIVE,Tag.TAG_INT)||tag.getInt(NATIVE)!=1))throw new IllegalArgumentException("Future trapdoor coordinate schema");boolean modern=tag.getInt(NATIVE)==1;var members=tag.getList("TrapdoorAssembly",Tag.TAG_LONG);List<BlockPos> cells=new ArrayList<>();
         if(members.size()<=64)for(Tag member:members){long packed=((LongTag)member).getAsLong();cells.add(modern?BlockPos.of(packed):releasedPosition(packed));}
@@ -27,6 +28,8 @@ public record NativeTrapdoorLinks(BlockPos partner,BlockPos square,List<BlockPos
             Direction.from2DDataValue(Math.abs(tag.getInt("DiagonalGroupFacing")%4)),tag.getBoolean("DiagonalReverse"),tag.getBoolean("DiagonalInverted"),
             tag.getBoolean("ChannelSignal"),tag.getBoolean("TrapdoorPowerKnown"),tag.getBoolean("TrapdoorLastPower"));
     }
+    public NativeTrapdoorLinks relations(BlockPos nextPartner,BlockPos nextSquare,List<BlockPos> nextAssembly){return new NativeTrapdoorLinks(nextPartner,nextSquare,nextAssembly,hinge,travel,groupFacing,reverse,inverted,channelSignal,powerKnown,lastPower);}
+    public NativeTrapdoorLinks power(boolean signal,boolean known,boolean powered){return new NativeTrapdoorLinks(partner,square,assembly,hinge,travel,groupFacing,reverse,inverted,signal,known,powered);}
     public void write(CompoundTag tag){
         tag.putInt(NATIVE,1);if(partner==null)tag.remove("TrapdoorPartner");else tag.putLong("TrapdoorPartner",partner.asLong());
         if(square==null)tag.remove("TrapdoorSquare");else tag.putLong("TrapdoorSquare",square.asLong());

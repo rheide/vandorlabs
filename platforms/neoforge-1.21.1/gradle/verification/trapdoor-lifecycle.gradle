@@ -4,3 +4,7 @@ tasks.register('testNativeTrapdoorLinks', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.trapdoor.TrapdoorLinksChecks'
     args rootProject.file('../../build/test-artifacts/trapdoor-lifecycle-forge.json').absolutePath
 }
+
+neoForge.runs.configureEach {
+    if(project.hasProperty("trapdoorLifecycleReference"))systemProperty "vandorlabs.trapdoorLifecycleReference",file(project.property("trapdoorLifecycleReference")).absolutePath
+}
