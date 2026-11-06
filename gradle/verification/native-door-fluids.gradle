@@ -1,0 +1,7 @@
+task exportDoorFluidReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorFluidLegacyChecks'
+    maxHeapSize = '1G'
+    systemProperty 'vandorlabs.doorFluidReference', file(project.findProperty('doorFluidReference') ?: 'build/test-artifacts/door-fluid-forge.jsonl').absolutePath
+}
