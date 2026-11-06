@@ -21,6 +21,7 @@ public final class NativePropulsionService {
  private static boolean open(Level world){return world!=null&&!CLOSED.contains(world)&&(!(world instanceof ServerLevel server)||NativeRedstoneChannels.open(server));}
  static boolean loaded(Level world,BlockPos p){return world!=null&&!world.isOutsideBuildHeight(p)&&world.getChunkSource().getChunkNow(p.getX()>>4,p.getZ()>>4)!=null;}
  public static boolean installed(NativePropulsionEntity owner){var world=owner.getLevel();return open(world)&&loaded(world,owner.getBlockPos())&&world.getBlockEntity(owner.getBlockPos())==owner&&world.getBlockState(owner.getBlockPos()).getBlock() instanceof NativePropulsionBlock;}
+ public static boolean hasPending(Level world){return PENDING.containsKey(world);}
  public static void queue(NativePropulsionEntity owner){var world=owner.getLevel();if(open(world))PENDING.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>())).add(owner);}
  public static void queue(Level world,BlockPos pos){if(open(world)&&loaded(world,pos)&&world.getBlockEntity(pos) instanceof NativePropulsionEntity owner)queue(owner);}
  static void retire(NativePropulsionEntity owner){if(NativePropulsionShape.mutating(owner.getLevel(),owner.getBlockPos()))return;queue(owner);if(owner.getLevel() instanceof ServerLevel world&&open(world)&&loaded(world,owner.getBlockPos())){var light=world.getAuxLightManager(owner.getBlockPos());if(light!=null)light.removeLightAt(owner.getBlockPos());}}
