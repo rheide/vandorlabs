@@ -27,11 +27,14 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
     private record Key(Object geometry,int main,int interior,int exterior,int mode){}
     private record ApertureKey(Object geometry,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,int main,int interior,int exterior,int mode){}
     private record PaneKey(Object geometry,com.vandorlabs.neoforge.shape.NativePortholeLayout aperture,int material,int shade,int tint,int layout,boolean standalone){}
+    private record GlassKey(NativeDiagonalWallGeometry.Pose pose,NativeDiagonalGlassLayout layout,int material,int shade,int tint,int mode,boolean standalone){}
+    private record GlassFrameKey(NativeDiagonalWallGeometry.Pose pose,int mask,int material,int shade,int front,int interior,int exterior){}
     private record ItemKey(BakedModel source,int main,boolean custom,Direction side){}
     static final class Bake {
         final Map<Integer,ProgrammableModel.MaterialSnapshot> surfaces;
         final Map<Integer,NativePanelQuads.Material> interiors;
-        final NativePanelQuads.Material originalMetal;
+        final NativePanelQuads.Material originalMetal,originalGlassRail;
+        final Map<Integer,NativePanelQuads.Material> glassRails;
         private final NativePanelQuads.Material[][] palette=new NativePanelQuads.Material[com.vandorlabs.tiles.GlassTextures.IDS.length][4];
         private final com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material[] playback;
         // Snapshot keys contain only immutable scalar settings and <=3 flat AABBs, never worlds/tiles.
@@ -56,6 +59,11 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
                 var sprite=textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.fromNamespaceAndPath("vandorlabs","glass-palette/"+name)));
                 palette[shade][tint]=new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(sprite,1,1));
             }
+            Map<Integer,NativePanelQuads.Material> rails=new HashMap<>();for(var entry:mapped.entrySet()){
+                var frame=entry.getKey()<ModernFinishCatalog.ENTRIES.size()?ModernFinishCatalog.ENTRIES.get(entry.getKey()).frame():null;var material=entry.getValue();
+                rails.put(entry.getKey(),new NativePanelQuads.Material(material.edges().isEmpty()?material.surface():material.edges().getFirst(),material.edges(),frame!=null&&frame.authoredRail()));
+            }
+            glassRails=Map.copyOf(rails);originalGlassRail=new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse("vandorlabs:frame-default/double_frame_metal"))),1,1));
             interiors=Map.copyOf(mapped);originalMetal=new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse("vandorlabs:frame-default/metal_side"))),1,1));
         }
         BakedModel wrap(BakedModel original,boolean item){return wrap(original,item,false);}
@@ -72,7 +80,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         synchronized PaneProjection paneProjection(NativeWallEntity.WallAppearance appearance){
             var found=playbackPanes.get(appearance);if(found!=null)return found;var display=playback(appearance.glass().material);
             var geometry=appearance.geometry();
-            found=new PaneProjection(pane(appearance,geometry,display!=null),display,surfaces.get(0),com.vandorlabs.render.GlassRenderPolicy.opaque(appearance.glass().tint));
+            found=new PaneProjection(appearance.kind()==NativePanelKind.GLASS?glassPane(appearance,display!=null):pane(appearance,geometry,display!=null),display,surfaces.get(0),com.vandorlabs.render.GlassRenderPolicy.opaque(appearance.glass().tint));
             int cost=3072;for(var quad:found.quads())cost+=96+quad.getVertices().length*4;
             while(playbackBytes+cost>4*1024*1024&&!playbackOrder.isEmpty()){var oldest=playbackOrder.removeFirst();playbackPanes.remove(oldest.key);playbackBytes-=oldest.cost;}
             if(cost<=4*1024*1024){playbackPanes.put(appearance,found);playbackOrder.addLast(new SnapshotEntry(appearance,cost));playbackBytes+=cost;}return found;
@@ -82,7 +90,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         private int bodyBytes;
         synchronized List<BakedQuad> bodyProjection(NativeWallEntity.WallAppearance appearance){
             var found=bodies.get(appearance);if(found!=null)return found;
-            var geometry=appearance.geometry();found=appearance.kind()==NativePanelKind.PORTHOLE?aperture(appearance,geometry):body(geometry,appearance.base().housing().mainTexture,appearance.frames().interior,appearance.frames().exteriorChoice(),appearance.base().housing().layout);
+            var geometry=appearance.geometry();found=appearance.kind()==NativePanelKind.GLASS?glassFrame(appearance):appearance.kind()==NativePanelKind.PORTHOLE?aperture(appearance,geometry):body(geometry,appearance.base().housing().mainTexture,appearance.frames().interior,appearance.frames().exteriorChoice(),appearance.base().housing().layout);
             // Precharge both possible lazy analytic surface tables as well as boxes and snapshot settings.
             int cost=65536+96*(geometry.boxes().size()+geometry.fluidBoxes().size());for(var quad:found)cost+=96+quad.getVertices().length*4;
             while(bodyBytes+cost>4*1024*1024&&!bodyOrder.isEmpty()){var oldest=bodyOrder.removeFirst();bodies.remove(oldest.key);bodyBytes-=oldest.cost;}
@@ -125,6 +133,17 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             quads.put(key,found);return found;
         }
 
+        private NativePanelQuads.Material glassMaterial(NativeWallEntity.WallAppearance appearance,boolean standalone){var glass=appearance.glass();return glass.material<0?palette[glass.shade][glass.tint]:new NativePanelQuads.Material(surfaces.get(standalone?0:index(glass.material)));}
+        List<BakedQuad> glassPane(NativeWallEntity.WallAppearance appearance,boolean standalone){
+            var pose=((NativeDiagonalWallGeometry.Geometry)appearance.geometry()).pose();var glass=appearance.glass();var descriptor=appearance.diagonalGlass();int visual=glass.material<0?-1:standalone?ModernFinishCatalog.storedChoice(glass.material):index(glass.material),mode=glass.material<0?0:glass.textureLayout();
+            var key=new GlassKey(pose,descriptor,visual,glass.shade,glass.tint,mode,standalone);var found=quads.getIfPresent(key);if(found!=null)return found;var display=playback(glass.material);
+            found=NativePanelQuads.diagonalGlassBody(pose,glassMaterial(appearance,standalone),mode,glass.material<0?NativePanelLayout.UNIT:descriptor.group(),descriptor.hideMask(),com.vandorlabs.render.GlassRenderPolicy.opacity(glass.material,glass.tint),standalone&&display!=null?display.aspect():0);quads.put(key,found);return found;
+        }
+        List<BakedQuad> glassFrame(NativeWallEntity.WallAppearance appearance){
+            if(!appearance.glass().framed)return List.of();var pose=((NativeDiagonalWallGeometry.Geometry)appearance.geometry()).pose();var frames=appearance.frames();int front=frames.front<0?-1:index(frames.front),inner=frames.interior<0?-1:index(frames.interior),outer=frames.exteriorChoice()<0?-1:index(frames.exteriorChoice());
+            var key=new GlassFrameKey(pose,appearance.diagonalGlass().hideMask(),appearance.glass().material<0?-1:index(appearance.glass().material),appearance.glass().shade,front,inner,outer);var found=quads.getIfPresent(key);if(found!=null)return found;
+            found=NativePanelQuads.diagonalGlassFrame(pose,glassMaterial(appearance,false),front<0?originalGlassRail:glassRails.get(front),material(inner),material(outer),appearance.diagonalGlass().hideMask());quads.put(key,found);return found;
+        }
         List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int mode){return body(geometry,main,interior,interior,mode);}
         List<BakedQuad> body(NativeWallGeometry geometry,int main,int interior,int exterior,int mode){
             var owner=geometry instanceof NativeFlatWallGeometry.Geometry flat?NativeFlatBarOwner.from(flat):null;
@@ -140,7 +159,7 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             }else throw new IllegalArgumentException("Unknown panel geometry");
             quads.put(key,result);return result;
         }
-        private static int keyCost(Object key){Object descriptor=key instanceof Key value?value.geometry:key instanceof ApertureKey value?value.geometry:key instanceof PaneKey value?value.geometry:null;return descriptor instanceof NativeDiagonalWallGeometry.Pose pose?1024+pose.clip().size()*8:384;}
+        private static int keyCost(Object key){Object descriptor=key instanceof Key value?value.geometry:key instanceof ApertureKey value?value.geometry:key instanceof PaneKey value?value.geometry:key instanceof GlassKey value?value.pose:key instanceof GlassFrameKey value?value.pose:null;return descriptor instanceof NativeDiagonalWallGeometry.Pose pose?1024+pose.clip().size()*8:384;}
         int index(int choice){return ProgrammableModel.renderIndex(surfaces,choice);}
     }
     private static final class Defaults {
@@ -167,7 +186,8 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return getQuads(state,side,random,ModelData.EMPTY,null);}
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){
         if(item)return itemQuads(state,side,random,data,layer);if(side!=null)return List.of();var appearance=data.get(NativeWallEntity.WALL_APPEARANCE);
-        if(state.getBlock() instanceof NativeDiagonalWallBlock){
+        if(state.getBlock() instanceof NativeDiagonalWallBlock block){
+            if(block.isGlass())return List.of();
             NativeWallGeometry geometry=appearance!=null&&appearance.geometry() instanceof NativeDiagonalWallGeometry.Geometry?appearance.geometry():NativeDiagonalWallGeometry.build(NativeDiagonalWallTopology.initial(state,0));
             if(appearance!=null&&!appearance.chunkBody())return List.of();
             if(porthole){var snapshot=appearance==null?Defaults.diagonal(geometry):appearance;return bake.aperture(snapshot,geometry);}

@@ -49,14 +49,14 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<Pr
     private static final class BodyLayer {static final RenderType VALUE=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true);}
     @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(ProgrammableBlockEntity tile){return tile instanceof NativeWallEntity wall?wall.renderBounds():new net.minecraft.world.phys.AABB(tile.getBlockPos());}
     @Override public boolean shouldRender(ProgrammableBlockEntity tile,Vec3 camera){
-        if(!(tile instanceof NativeWallEntity wall))return false;var snapshot=wall.wallAppearance();boolean body=snapshot.geometry().diagonal()&&!snapshot.chunkBody();if(!body&&!wall.isPorthole())return false;
+        if(!(tile instanceof NativeWallEntity wall))return false;var snapshot=wall.wallAppearance();boolean body=snapshot.geometry().diagonal()&&!snapshot.chunkBody();if(!body&&!wall.isPorthole()&&!wall.isGlass())return false;
         var current=active;if(current==null)return false;var pos=tile.getBlockPos();double x=camera.x-(pos.getX()+.5D),y=camera.y-(pos.getY()+.5D),z=camera.z-(pos.getZ()+.5D),range=getViewDistance();return x*x+y*y+z*z<range*range;
     }
     @Override public void render(ProgrammableBlockEntity tile,float partialTick,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
         if(!(tile instanceof NativeWallEntity wall))return;var current=active;if(current==null)return;
         var appearance=wall.wallAppearance();
         if(appearance.geometry().diagonal()&&!appearance.chunkBody())emit(current.bake.bodyProjection(appearance),current.bake.surfaces.get(0),null,PanelPlayback.DEFAULT,0,poses.last(),buffers.getBuffer(BodyLayer.VALUE),light,overlay);
-        if(!wall.isPorthole())return;
+        if(!wall.isPorthole()&&!wall.isGlass())return;
         var pane=current.bake.paneProjection(appearance);if(pane==null||pane.quads().isEmpty())return;
         var playback=appearance.playback();var target=buffers.getBuffer(pane.renderType(playback.mode()));
         emit(pane.quads(),pane.source(),pane.material(),playback,NativeMaterialPlayback.tick(),poses.last(),target,light,overlay);

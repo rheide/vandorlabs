@@ -43,7 +43,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private volatile AABB renderBounds;
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){this(type,pos,state,porthole?NativePanelKind.PORTHOLE:NativePanelKind.WALL);}
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,NativePanelKind kind){
-        super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.kind=Objects.requireNonNull(kind);walls=new WallSettings(false,false,0,0,isPorthole(),0);
+        super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.kind=Objects.requireNonNull(kind);if(isGlass())glass=new PanelGlassSettings(0,-1,-1,false,1,true,true);walls=new WallSettings(false,false,0,0,isPorthole(),0);
         geometry=initialGeometry(state);aperture=NativePortholeLayout.unit(0,geometry.fullDepth()?1:0);partition=geometry::side;renderBounds=geometry.renderBounds().move(pos);publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
@@ -75,7 +75,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     public long modelDataRevision(){return modelRevision;}
     public final long topologyRevision(){return topologyRevision;}
     public final AABB renderBounds(){return renderBounds;}
-    private boolean chunkBody(){var state=getBlockState();return !(state.getBlock() instanceof NativeDiagonalWallBlock)||settings().layout==0&&com.vandorlabs.render.DiagonalChunkPolicy.contained(worldPosition.getX(),worldPosition.getY(),worldPosition.getZ(),state.getValue(NativeDiagonalWallBlock.FACING).get3DDataValue(),state.getValue(NativeDiagonalWallBlock.INVERTED),walls.halfHeight,walls.fullWidth);}
+    private boolean chunkBody(){if(isGlass())return false;var state=getBlockState();return !(state.getBlock() instanceof NativeDiagonalWallBlock)||settings().layout==0&&com.vandorlabs.render.DiagonalChunkPolicy.contained(worldPosition.getX(),worldPosition.getY(),worldPosition.getZ(),state.getValue(NativeDiagonalWallBlock.FACING).get3DDataValue(),state.getValue(NativeDiagonalWallBlock.INVERTED),walls.halfHeight,walls.fullWidth);}
     private void publishWallAppearance(){modelRevision++;wallAppearance=new WallAppearance(appearance(),walls,frames,glass,geometry,aperture,playback,chunkBody(),kind,diagonalGlass);}
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
@@ -146,7 +146,7 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     @Override public Direction[] fluidPlacementFaces(){return geometry.placementFaces();}
     @Override public int containedFluidSide(double x,double y,double z){return geometry.side(x,y,z);}
     private static int frameLight(int choice){if(choice<0)return 0;var frame=ModernFinishCatalog.option(choice).frame();return frame==null?0:Math.max(0,Math.min(5,frame.light()));}
-    @Override public int intrinsicContainedLight(){return Math.max(isPorthole()||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}
+    @Override public int intrinsicContainedLight(){if(isGlass()&&!glass.framed)return 0;return Math.max(isPorthole()||frames.bare?0:frameLight(frames.front),Math.max(frameLight(frames.interior),frameLight(frames.exteriorChoice())));}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         NativeWallLayouts.invalidate(this);
         playback=PanelPlayback.read(tag);

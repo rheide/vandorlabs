@@ -104,7 +104,7 @@ public final class VandorLabsBootstrap {
             }).build());
     }
     private static ProgrammableBlockEntity programmableEntity(net.minecraft.core.BlockPos pos,net.minecraft.world.level.block.state.BlockState state){
-        if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock wall)return new com.vandorlabs.neoforge.shape.NativeWallEntity(PROGRAMMABLE_ENTITY.get(),pos,state,wall.isPorthole());
+        if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock wall)return new com.vandorlabs.neoforge.shape.NativeWallEntity(PROGRAMMABLE_ENTITY.get(),pos,state,wall.panelKind());
         if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallBlock wall)return new com.vandorlabs.neoforge.shape.NativeWallEntity(PROGRAMMABLE_ENTITY.get(),pos,state,wall.isPorthole());
         if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableSlab)return new com.vandorlabs.neoforge.shape.ProgrammableShapeEntity(PROGRAMMABLE_ENTITY.get(),pos,state,false);
         if(state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs)return new com.vandorlabs.neoforge.shape.ProgrammableShapeEntity(PROGRAMMABLE_ENTITY.get(),pos,state,true);

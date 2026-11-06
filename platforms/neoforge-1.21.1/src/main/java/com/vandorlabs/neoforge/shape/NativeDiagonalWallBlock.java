@@ -29,7 +29,7 @@ public final class NativeDiagonalWallBlock extends NativePanelBlock {
     @Override protected MapCodec<? extends HorizontalDirectionalBlock> codec(){return codec;}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,INVERTED);}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeWallEntity(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,kind);}
-    private boolean continuation(BlockState other){return other.is(this)||kind==NativePanelKind.WALL&&other.getBlock() instanceof NativeDiagonalWallBlock block&&block.kind==NativePanelKind.WALL;}
+    private boolean continuation(BlockState other){return other.is(this)||!isPorthole()&&other.getBlock() instanceof NativeDiagonalWallBlock block&&!block.isPorthole();}
     static boolean configured(ItemStack stack){
         if(stack.has(DataComponents.BLOCK_ENTITY_DATA))return true;
         var custom=stack.get(DataComponents.CUSTOM_DATA);return custom!=null&&custom.copyTag().contains("BlockEntityTag",10);
@@ -63,6 +63,7 @@ public final class NativeDiagonalWallBlock extends NativePanelBlock {
     @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return getShape(state,level,pos,context);}
     @Override protected VoxelShape getOcclusionShape(BlockState state,BlockGetter level,BlockPos pos){return getShape(state,level,pos,CollisionContext.empty());}
     @Override protected VoxelShape getBlockSupportShape(BlockState state,BlockGetter level,BlockPos pos){return Shapes.empty();}
-    @Override protected boolean useShapeForLightOcclusion(BlockState state){return true;}
+    @Override protected boolean useShapeForLightOcclusion(BlockState state){return !isGlass();}
+    @Override protected int getLightBlock(BlockState state,BlockGetter level,BlockPos pos){return isGlass()?0:super.getLightBlock(state,level,pos);}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(level,pos);}
 }
