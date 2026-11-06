@@ -13,16 +13,18 @@ import net.minecraft.world.level.material.Fluids;
 public final class NativeDoorWaterGush {
     private NativeDoorWaterGush(){}
     public static void update(NativeProgrammableDoorEntity owner,boolean stop){
-        Level level=owner.getLevel();if(level==null||level.isClientSide||owner.large())return;
+        Level level=owner.getLevel();if(level==null||level.isClientSide)return;
         BlockPos lower=owner.getBlockPos();var base=owner.getBlockState();
-        if(!(base.getBlock() instanceof NativeProgrammableDoorBlock block)||base.getValue(NativeProgrammableDoorBlock.HALF)!=DoubleBlockHalf.LOWER)return;
-        if(!stop&&(!NativeFluidWorld.installed(owner)||!NativeDoorLifecycle.complete(level,lower,block)||owner.placementRecovery()))return;
+        Block block=base.getBlock();boolean large=block instanceof NativeLargeDoorBlock;
+        if((!large&&!(block instanceof NativeProgrammableDoorBlock))||base.getValue(NativeProgrammableDoorBlock.HALF)!=DoubleBlockHalf.LOWER)return;
+        var root=large?NativeLargeDoorLifecycle.root(level,lower):owner;
+        if(!stop&&(!NativeFluidWorld.installed(owner)||root==null||(large?!NativeLargeDoorLifecycle.complete(level,(NativeLargeDoorEntity)root):!NativeDoorLifecycle.complete(level,lower,(NativeProgrammableDoorBlock)block))||root.placementRecovery()))return;
         if(!owner.beginWaterGush())return;try{
         int previous=owner.waterOutlets(),retained=0;boolean supplying=false;
         if(!stop&&base.getValue(NativeProgrammableDoorBlock.OPEN))for(int half=0;half<2;half++){
             BlockPos pos=lower.above(half);if(!NativeFluidWorld.loaded(level,pos)||!level.getBlockState(pos).is(block)||!(level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity part))continue;
             var data=part.containedFluids().snapshot();var first=data.side(0).fluid();var second=data.side(1).fluid();int wet=DoorWaterOutlets.wetSide(first.is(Fluids.WATER),second.is(Fluids.WATER),!first.isEmpty(),!second.isEmpty());if(wet<0)continue;supplying=true;
-            Direction face=base.getValue(NativeProgrammableDoorBlock.FACING);Direction exit=wet==0?face:face.getOpposite();int bit=1<<(half*4+exit.get2DDataValue());BlockPos out=pos.relative(exit);
+            Direction face=(large&&root!=null?root.getBlockState():base).getValue(NativeProgrammableDoorBlock.FACING);Direction exit=wet==0?face:face.getOpposite();int bit=1<<(half*4+exit.get2DDataValue());BlockPos out=pos.relative(exit);
             if(!NativeFluidWorld.loaded(level,out)){retained|=previous&bit;continue;}
             var target=level.getBlockState(out);boolean water=target.getBlock() instanceof LiquidBlock&&target.getFluidState().is(FluidTags.WATER);int action=DoorWaterOutlets.supply((previous&bit)!=0,true,water,water&&target.getFluidState().isSource(),!target.getFluidState().isEmpty(),!water&&target.getFluidState().isEmpty()&&target.canBeReplaced());
             if(action==DoorWaterOutlets.RETAIN)retained|=bit;

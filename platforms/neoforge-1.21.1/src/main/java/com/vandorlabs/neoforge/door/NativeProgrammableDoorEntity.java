@@ -46,6 +46,7 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     private ChannelList channels=ChannelList.EMPTY;
     private boolean channelSignal,securityToggled,legacyMotionPending;
     private int waterOutlets;private boolean waterGushUpdating,waterGushDirty=true;private long nextWaterGushTick=Long.MAX_VALUE;
+    protected final void markWaterGushDirty(){waterGushDirty=true;}
     final void scheduleWaterGush(boolean active){waterGushDirty=false;nextWaterGushTick=active&&level!=null?level.getGameTime()+5:Long.MAX_VALUE;}
     final boolean beginWaterGush(){if(waterGushUpdating)return false;waterGushUpdating=true;return true;}
     final void endWaterGush(){waterGushUpdating=false;}
