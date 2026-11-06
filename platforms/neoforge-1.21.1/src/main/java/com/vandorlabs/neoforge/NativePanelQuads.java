@@ -8,8 +8,9 @@ import net.minecraft.core.Direction;
 
 /** Native records from the current shared polygon, vertex, frame and repeated-UV kernels. */
 final class NativePanelQuads {
-    record Material(ProgrammableModel.MaterialSnapshot surface,List<ProgrammableModel.MaterialSnapshot> edges){
+    record Material(ProgrammableModel.MaterialSnapshot surface,List<ProgrammableModel.MaterialSnapshot> edges,boolean authoredOutline){
         Material(ProgrammableModel.MaterialSnapshot surface){this(surface,List.of());}
+        Material(ProgrammableModel.MaterialSnapshot surface,List<ProgrammableModel.MaterialSnapshot> edges){this(surface,edges,false);}
         Material{edges=List.copyOf(edges);if(!edges.isEmpty()&&edges.size()!=4)throw new IllegalArgumentException("Four directional frame edges required");}
         Material mapped(double[][] points){if(edges.isEmpty())return this;int edge=FrameEdgeMapping.edge(points);FrameEdgeMapping.map(edge,points);return new Material(edges.get(edge));}
     }
@@ -61,14 +62,39 @@ final class NativePanelQuads {
     };
     static List<BakedQuad> flat(Direction facing,double near,PanelCornerGeometry.FlatCorner corner,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.flat(EMITTER,context,wall,metal,near,corner);return context.finish();}
     static List<BakedQuad> diagonal(Direction facing,boolean inverted,PanelCornerGeometry.Corner corner,double span,int fill,double low,double high,double halfOffset,double lower,double upper,boolean hideLower,boolean hideUpper,double[] clip,Material wall,Material metal,int mode,NativePanelLayout group){Context context=new Context(facing,wall,mode,group);PanelMeshEmitter.diagonal(EMITTER,context,wall,metal,inverted,corner,span,fill,low,high,halfOffset,lower,upper,hideLower,hideUpper,clip);return context.finish();}
-    static List<BakedQuad> diagonalArms(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material wall,Material outer,int mode,NativePanelLayout group){
+    private static Mesh diagonalSource(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material wall,Material outer){
         boolean half=pose.mode()==2;var join=pose.join();Context capture=new Context(pose.facing(),wall,0,NativePanelLayout.UNIT,false,0,0,0,1,0,true);
         PanelMeshEmitter.diagonal(EMITTER,capture,wall,outer,pose.inverted(),join==null?null:join.corner(),pose.mode()==1?16:8,pose.fill(),half&&pose.inverted()?-8:0,half&&pose.inverted()?8:16,half?(pose.inverted()?8:0):Double.NaN,pose.lowerEnd()*16,pose.upperEnd()*16,pose.hideLower(),pose.hideUpper(),pose.clip().scaled(16));
-        Mesh source=capture.captured();Context target=new Context(pose.facing(),wall,mode,group);
+        return capture.captured();
+    }
+    static List<BakedQuad> diagonalArms(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material wall,Material outer,int mode,NativePanelLayout group){
+        Mesh source=diagonalSource(pose,wall,outer);Context target=new Context(pose.facing(),wall,mode,group);
         for(int q=0;q<source.vertices.length;q+=32)if(PanelMeshTransform.diagonalArm(source.vertices,q,pose.mode(),pose.inverted(),pose.lowerEnd(),pose.upperEnd())){
             Material material=source.materials.get(q/32);for(int v=0;v<4;v++){int p=q+v*8;target.source(material,source.vertices[p],source.vertices[p+1],source.vertices[p+2],source.vertices[p+3],source.vertices[p+4],source.vertices[p+5],source.vertices[p+6],source.vertices[p+7]);}
         }
         return target.finish();
+    }
+    private static float[] diagonalGlassSource(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material glass,int hideMask){
+        if((hideMask&~63)!=0)throw new IllegalArgumentException("Glass boundary mask");float[] source=diagonalSource(pose,glass,glass).vertices;
+        if((hideMask&1)!=0)source=PanelMeshTransform.withoutPlane(source,0,0);if((hideMask&2)!=0)source=PanelMeshTransform.withoutPlane(source,0,16);
+        if((hideMask&4)!=0)source=PanelMeshTransform.withoutPlane(source,2,0);if((hideMask&8)!=0)source=PanelMeshTransform.withoutPlane(source,2,16);return source;
+    }
+    static List<BakedQuad> diagonalGlassBody(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material glass,int mode,NativePanelLayout group,int hideMask){return diagonalGlassBody(pose,glass,mode,group,hideMask,1,0);}
+    static List<BakedQuad> diagonalGlassBody(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material glass,int mode,NativePanelLayout group,int hideMask,float opacity,double aspect){
+        float[] source=diagonalGlassSource(pose,glass,hideMask);Context target=new Context(pose.facing(),glass,mode,group,false,0,0,0,opacity,aspect);
+        for(int p=0;p<source.length;p+=8)target.source(glass,source[p],source[p+1],source[p+2],source[p+3],source[p+4],source[p+5],source[p+6],source[p+7]);return target.finish();
+    }
+    private static double unAtlas(Material material,float value,boolean u){var sprite=material.surface.sprite();float low=u?sprite.getU0():sprite.getV0(),high=u?sprite.getU1():sprite.getV1(),used=u?material.surface.usedU():material.surface.usedV();float contentHigh=low+(high-low)*used;return (value-low)/(contentHigh-low)*16;}
+    private static final PanelOutlineFrame.Textures<Material> FRAME_TEXTURES=new PanelOutlineFrame.Textures<>(){
+        public Material edge(Material original,double[] a,double[] b){return original.edges.isEmpty()?original:new Material(original.edges.get(FrameEdgeMapping.edge(a,b)));}
+        public boolean authored(Material original,Material edge){return original.authoredOutline||edge.surface.sprite()!=original.surface.sprite()||original.surface.sprite().contents().name().getPath().contains("/frames/");}
+        public Material map(Material material,double[][] points){return material.mapped(points);}
+        public double unU(Material material,float u){return unAtlas(material,u,true);}
+        public double unV(Material material,float v){return unAtlas(material,v,false);}
+    };
+    static List<BakedQuad> diagonalGlassFrame(com.vandorlabs.neoforge.shape.NativeDiagonalWallGeometry.Pose pose,Material glass,Material rail,Material inner,Material outer,int hideMask){
+        float[] source=diagonalGlassSource(pose,glass,hideMask);Context target=new Context(pose.facing(),rail,0,NativePanelLayout.UNIT);
+        PanelOutlineFrame.emit(CAP,target,FRAME_TEXTURES,source,rail,glass,inner,outer,(hideMask&1)!=0,(hideMask&2)!=0,(hideMask&4)!=0,(hideMask&8)!=0,(hideMask&16)!=0,(hideMask&32)!=0,pose.mode()==2?2:1,false);return target.finish();
     }
     private static final PanelApertureEmitter.Sink<Context,Material,Void> APERTURE=(context,material,ignored,reverse,a,b,c,d)->{if(context.projection==null)EMITTER.quad(context,material,reverse,a,b,c,d);else DiagonalPortholeProjection.quad(EMITTER,context,material,context.projection,reverse,a,b,c,d);};
     static List<BakedQuad> aperture(Direction facing,double near,NativePanelSlice opening,

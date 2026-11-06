@@ -15,7 +15,7 @@ public final class DiagonalGlassFrameChecks {
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();Field data=StaticSurfaceMesh.class.getDeclaredField("vertices");data.setAccessible(true);Constructor<BlockProgrammableWall.Corner> ctor=BlockProgrammableWall.Corner.class.getDeclaredConstructor(Boolean.class,Boolean.class,boolean.class,boolean.class);ctor.setAccessible(true);
         TextureAtlasSprite pane=sprite("frame_pane",0),plain=sprite("frame_rail",16),authored=sprite("reference/frames/authored",16),inner=sprite("frame_inner",32),outer=sprite("frame_outer",48);MessageDigest hash=MessageDigest.getInstance("SHA-256"),capHash=MessageDigest.getInstance("SHA-256");int cases=0,values=0,capCases=0,capValues=0;StaticSurfaceMesh measured=null;
-        java.io.PrintWriter export=null;String exportPath=System.getProperty("vandorlabs.diagonalGlassReference");if(exportPath!=null){java.io.File file=new java.io.File(exportPath);file.getAbsoluteFile().getParentFile().mkdirs();export=new java.io.PrintWriter(file,"UTF-8");}
+        java.io.PrintWriter export=null;String exportPath=System.getProperty("vandorlabs.diagonalGlassMeshReference");if(exportPath!=null){java.io.File file=new java.io.File(exportPath);file.getAbsoluteFile().getParentFile().mkdirs();export=new java.io.PrintWriter(file,"UTF-8");}
         com.google.gson.Gson gson=new com.google.gson.Gson();
         Boolean[][] corners={{null,null},{true,null},{false,null},{true,true},{true,false},{false,true}};
         for(boolean inverted:new boolean[]{false,true})for(int mode=0;mode<3;mode++)for(int fill=0;fill<4;fill++)for(int ci=0;ci<corners.length;ci++)for(int end=0;end<2;end++){
@@ -29,7 +29,7 @@ public final class DiagonalGlassFrameChecks {
                 }
             }
         }
-        if(export!=null)export.close();
+        if(export!=null){export.close();DiagonalGlassEdgeReferences.write(exportPath+".edges.jsonl");}
         if(Boolean.getBoolean("vandorlabs.diagonalFrameProfile")){
             com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long id=Thread.currentThread().getId();
             for(int i=0;i<5000;i++)blackhole=measured.outlineFrame(authored,pane,inner,outer,false,false,false,false,false,false,1);

@@ -403,3 +403,12 @@ neoForge.runs.configureEach {
 neoForge.runs.configureEach {
     if (project.hasProperty('diagonalPortholeReference')) systemProperty 'vandorlabs.diagonalPortholeReference', file(project.property('diagonalPortholeReference')).absolutePath
 }
+
+tasks.register('testNativeDiagonalGlassMeshes', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeDiagonalGlassMeshChecks'
+    maxHeapSize = '1G'
+    args project.findProperty('diagonalGlassMeshReference') ?: '../../build/test-artifacts/diagonal-glass-mesh-forge.jsonl'
+}
