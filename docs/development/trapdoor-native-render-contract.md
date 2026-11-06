@@ -43,8 +43,9 @@ operation order. Both emit through primitive sinks with caller-owned scratch arr
 Door artwork mapping, group extents and world-coordinate rounding.
 `NativeTrapdoorMesh` streams through the active vertex consumer, applying atlas UVs,
 explicit white RGBA, light and overlay without retaining frame state. It is inactive
-until the host renderer bridge is supplied. The generic thin leaf edges and material
-selection remain orchestration responsibilities; no translucent pane is invented.
+until the host renderer bridge is supplied. `TrapdoorRigidEdges` streams the remaining native metal faces with the released
+regular/tall/shallow thickness UVs. Material selection remains an orchestration
+responsibility; no translucent pane is invented.
 
 Focused evidence includes 4,800 released surface/frame profiles and 588,800 vertices
 with byte-identical shared output, plus 36,864 artwork-coordinate profiles with exact
