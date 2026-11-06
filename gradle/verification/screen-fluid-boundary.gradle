@@ -1,0 +1,7 @@
+task exportScreenFluidBoundaryReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenFluidBoundaryLegacyChecks'
+    args file('build/test-artifacts/screen-fluid-boundary-forge.jsonl').absolutePath
+}

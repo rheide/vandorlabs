@@ -1,0 +1,7 @@
+# Screen fluid compatibility boundary
+
+The released Screen tile shares saved fluid storage with other programmable blocks. That storage does not make its Screen families waterloggable. `WaterloggedParts.supports` accepts programmable slabs, stairs, wall/glass panels and opening blocks; the Screen families fall outside that predicate. The Screen tile renderer also requires this predicate before drawing stored fluid.
+
+The actual source comparison covers all 82 valid states of the seven canonical Screen families and the old diagonal half-console class. For each state it loads empty storage, tagged water, tagged lava, unresolved fluid, the legacy water alias, a future slot representation and a future envelope representation. Across these 574 cases and 6,888 bucket-listener calls, Screens do not expose contained-fluid contacts, liquid intersections or rendering. Filled and empty buckets on all six faces pass through the contained-fluid listener without interception or inventory/storage changes. Stored lava does not change the block's display-derived emitted light.
+
+Native Screen hosts therefore retain original fluid fields as opaque saved data. They must not acquire contained-fluid rendering, bucket handling, sponge drainage, placement capture or outlets merely because the common legacy tile had fluid fields. Fluid behavior of programmable walls, slabs, stairs and opening blocks remains separate from this Screen boundary.
