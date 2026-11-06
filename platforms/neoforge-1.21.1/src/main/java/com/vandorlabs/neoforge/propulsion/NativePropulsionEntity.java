@@ -22,7 +22,7 @@ public class NativePropulsionEntity extends BlockEntity implements NativeChannel
  private NativeRedstoneLightSettings settings=FRESH;private CompoundTag retained=new CompoundTag();private boolean inert,unloading,dirty=true;private int physical;
  private net.minecraft.world.item.ItemStack forcedRemoval=net.minecraft.world.item.ItemStack.EMPTY;
  private volatile Visual visual;private volatile net.neoforged.neoforge.client.model.data.ModelData modelData;
- public NativePropulsionEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);publish(project(0,Part.SINGLE));}
+ public NativePropulsionEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);var initial=project(0,Part.SINGLE);publish(new Visual(initial.definition,initial.facing,state.getValue(NativePropulsionBlock.POWERED),initial.brightness,initial.sideTexture,initial.particleLevel,false,initial.join,Part.SINGLE,false));}
  public final NativeRedstoneLightSettings settings(){return settings;}public final Visual visual(){return visual;}public final boolean inert(){return inert;}public final boolean available(){return !inert&&!unloading&&!isRemoved();}
  private PropulsionDefinition definition(){return ((NativePropulsionBlock)getBlockState().getBlock()).definition();}
  private Visual project(int physical,Part part){var d=settings.data();return new Visual(definition(),getBlockState().getValue(NativePropulsionBlock.FACING),!inert&&d.powered(physical),inert?0:d.brightness(physical),d.sideTexture,d.particleLevel,!inert&&d.particles(physical),d.join,part,inert);}
@@ -56,6 +56,7 @@ public class NativePropulsionEntity extends BlockEntity implements NativeChannel
  @Override public ChannelList transmittedChannels(){var t=transmission();return TransmissionSettings.readChannels(t.contains("Channels",Tag.TAG_INT_ARRAY),t.getIntArray("Channels"),ChannelList.EMPTY);}
  @Override public void setChannelLevel(int value){if(!(level instanceof ServerLevel)||!isChannelMemberActive()||value<0||value>15||settings.data().channelLevel==value)return;channel(value);NativePropulsionService.changedChannel(this);}
  @Override public void beforeChannelRegistration(){NativePropulsionService.queue(this);}
+ @Override public void setBlockState(BlockState state){super.setBlockState(state);if(settings!=null&&(visual==null||state.getBlock() instanceof NativePropulsionBlock block&&block.definition()!=visual.definition()||state.getValue(NativePropulsionBlock.FACING)!=visual.facing()||state.getValue(NativePropulsionBlock.POWERED)!=visual.powered())){dirty=true;NativePropulsionService.queue(this);}}
  @Override public void onLoad(){super.onLoad();unloading=false;dirty=true;if(!inert)settings=settings.capture(getBlockState().getValue(NativePropulsionBlock.POWERED));if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);NativePropulsionService.queue(this);}
  @Override public void setRemoved(){if(NativePropulsionShape.mutating(level,worldPosition)){super.setRemoved();return;}unloading=true;if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);NativePropulsionService.retire(this);super.setRemoved();}
  @Override public void onChunkUnloaded(){unloading=true;if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);NativePropulsionService.retire(this);super.onChunkUnloaded();}
