@@ -35,7 +35,7 @@ public final class LightHostChecks {
     private static void write(ServerLevel world)throws Exception{
         placement(world);wireless(world);
         var a=put(world,BASE,0,choice(true,false,0));var b=put(world,BASE.east(),0,choice(true,false,0));NativeLightService.refresh(a);
-        need(!a.inert()&&a.inheritedSettings().housing().mainTexture==0&&a.visual().on()&&a.visual().emitted()==11,"fresh Light-specific housing and own defaults");need(NativeLightService.members(a,true).equals(java.util.List.of(BASE,BASE.east())),"ordered exact-identity group");
+        need(!a.inert()&&a.inheritedSettings().housing().mainTexture==0&&a.visual().on()&&a.visual().emitted()==11,"fresh Light-specific housing and own defaults");need(NativeLightService.members(a,true).equals(java.util.List.of(BASE,BASE.east())),"ordered exact-identity group");LightProjectionHostChecks.run(a,b);
         var player=actor(world,BASE);watch=true;try{need(player.gameMode.useItemOn(player,world,ItemStack.EMPTY,InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(BASE),Direction.NORTH,BASE,false)).consumesAction(),"real game mode manual interaction");}finally{watch=false;}need(!a.visual().on()&&!b.visual().on()&&a.visual().level()==11&&a.visual().emitted()==0,"manual switches group; configured level remains");
         long publishes=a.lightPublications();var visual=a.visual();for(int i=0;i<100;i++)NativeLightService.refresh(a);need(a.lightPublications()==publishes&&a.visual()==visual,"unchanged refresh reuses immutable visual and avoids light-engine updates");
         need(a.manualUse(player)&&a.visual().on()&&b.visual().on(),"manual restores both");
