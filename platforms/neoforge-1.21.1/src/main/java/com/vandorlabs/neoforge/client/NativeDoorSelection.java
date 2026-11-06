@@ -14,6 +14,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativeDoorSelection {
     private NativeDoorSelection(){}
+    /** Called after vanilla publishes its ray, before tick-time continuous attack captures that result. */
+    public static void refreshPick(float partialTick){update(partialTick);}
     public static NativeDoorTargets.Target update(float partialTick){
         var mc=Minecraft.getInstance();if(mc.level==null||mc.player==null||mc.gameMode==null||mc.player.isSpectator()||mc.getCameraEntity()!=mc.player)return null;
         double reach=mc.player.blockInteractionRange();if(!Double.isFinite(reach)||reach<=0||reach>64)return null;
