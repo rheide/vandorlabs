@@ -55,15 +55,19 @@ public final class NativeDoorGeometry {
         int key=2048|face(face)|(d.sliding?4:0)|(framed?8:0)|(hinges?16:0)|(dep<<5)|(side==SpaceDoorControlPanel.Side.RIGHT?128:0)|(settings.securityMode()>0?256:0)|(upper?512:0)|(mirrored?1024:0);return entry(key).bounds;
     }
     public static boolean panelContains(NativeDoorSettings settings,double normalZ,double lowerY,double scale){var d=settings.door();return SpaceDoorControlPanel.containsConfigured(d.sliding,settings.depth()==2,settings.panelMode(),settings.securityMode(),SpaceDoorData.positionOffset(d.sliding,d.framed,d.hinges,settings.depth()),normalZ,lowerY,scale);}
-    private static com.vandorlabs.render.LegacyBoxTrace.Hit clip(AABB b,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){return com.vandorlabs.render.LegacyBoxTrace.clip(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,start.x,start.y,start.z,end.x,end.y,end.z);}
+    private static com.vandorlabs.render.LegacyBoxTrace.Hit clip(AABB b,double sx,double sy,double sz,double ex,double ey,double ez){return com.vandorlabs.render.LegacyBoxTrace.clip(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ,sx,sy,sz,ex,ey,ez);}
     /** Local coordinates relative to the queried half. Pad-facing hits intentionally override nearer leaves. */
     public static com.vandorlabs.render.LegacyBoxTrace.Hit trace(NativeDoorSettings settings,boolean slidingPrototype,Direction face,boolean open,boolean hingeLeft,boolean paired,SpaceDoorControlPanel.Side side,boolean upper,boolean missingLower,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){
-        var hit=clip(settings==null||missingLower?orphanOutline(slidingPrototype,face,open,hingeLeft,paired):outline(settings,face,open,hingeLeft,paired),start,end);
+        return trace(settings,slidingPrototype,face,open,hingeLeft,paired,side,upper,missingLower,start.x,start.y,start.z,end.x,end.y,end.z);
+    }
+    /** Scalar adapter avoids creating local-coordinate vectors for every indexed owner. */
+    public static com.vandorlabs.render.LegacyBoxTrace.Hit trace(NativeDoorSettings settings,boolean slidingPrototype,Direction face,boolean open,boolean hingeLeft,boolean paired,SpaceDoorControlPanel.Side side,boolean upper,boolean missingLower,double sx,double sy,double sz,double ex,double ey,double ez){
+        var hit=clip(settings==null||missingLower?orphanOutline(slidingPrototype,face,open,hingeLeft,paired):outline(settings,face,open,hingeLeft,paired),sx,sy,sz,ex,ey,ez);
         if(missingLower||settings==null||side==SpaceDoorControlPanel.Side.NONE)return hit;
         int priority=(side==SpaceDoorControlPanel.Side.RIGHT?face.getClockWise():face.getCounterClockWise()).get3DDataValue();
         for(int index=0;index<(settings.panelMode()==2?2:1);index++){
-            var candidate=clip(panel(settings,face,side,upper,index!=0),start,end);if(candidate==null)continue;
-            if(candidate.face==priority||hit==null||candidate.distance(start.x,start.y,start.z)<hit.distance(start.x,start.y,start.z))hit=candidate;
+            var candidate=clip(panel(settings,face,side,upper,index!=0),sx,sy,sz,ex,ey,ez);if(candidate==null)continue;
+            if(candidate.face==priority||hit==null||candidate.distance(sx,sy,sz)<hit.distance(sx,sy,sz))hit=candidate;
         }return hit;
     }
     static long retainedBytes(){synchronized(CACHE){return FIXED_BYTES+(long)retained;}}
