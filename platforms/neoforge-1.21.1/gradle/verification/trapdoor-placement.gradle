@@ -1,0 +1,8 @@
+tasks.register('testNativeTrapdoorPlacement', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.trapdoor.TrapdoorPlacementChecks'
+    args file('../../build/test-artifacts/trapdoor-placement-forge.json').absolutePath,
+         file('../../build/test-artifacts/trapdoor-contact-placement-forge.jsonl').absolutePath
+}

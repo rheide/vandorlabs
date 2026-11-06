@@ -5,3 +5,19 @@ task exportTrapdoorPlacementReference(type: JavaExec) {
     main = 'com.vandorlabs.client.TrapdoorPlacementLegacyOracle'
     args file(project.findProperty('trapdoorPlacementReference') ?: 'build/test-artifacts/trapdoor-placement-forge.json').absolutePath
 }
+task exportTrapdoorFormationReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorFormationLegacyOracle'
+    maxHeapSize = '2G'
+    args file(project.findProperty('trapdoorFormationReference') ?: 'build/test-artifacts/trapdoor-formation-forge.jsonl').absolutePath
+}
+task exportTrapdoorContactPlacementReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorContactPlacementLegacyOracle'
+    maxHeapSize = '1G'
+    args file(project.findProperty('trapdoorContactPlacementReference') ?: 'build/test-artifacts/trapdoor-contact-placement-forge.jsonl').absolutePath
+}
