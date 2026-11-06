@@ -45,8 +45,8 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         event.getModels().replaceAll((id,model) -> {
-            if(NativeDoorClientBindings.ordinary(id.id())){
-                if(id.getVariant().equals("inventory"))return NativeDoorItemModel.wrap(model,false,name->event.getModels().get(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(name))));
+            if(NativeDoorClientBindings.ordinary(id.id())||NativeDoorClientBindings.large(id.id())){
+                if(id.getVariant().equals("inventory"))return NativeDoorItemModel.wrap(model,NativeDoorClientBindings.large(id.id()),name->event.getModels().get(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(name))));
                 return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());
             }
             if(id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_wall"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_porthole_block"))||id.id().equals(ResourceLocation.parse("vandorlabs:programmable_diagonal_porthole")))return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(wallBake.wrap(model,id.getVariant().equals("inventory"),true),event.getTextureGetter());

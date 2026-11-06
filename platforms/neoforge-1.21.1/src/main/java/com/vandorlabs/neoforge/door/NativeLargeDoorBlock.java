@@ -14,8 +14,8 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.level.storage.loot.LootParams;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
-/** Unregistered Large geometry/fluid adapter. Rendering and control/contents services remain activation prerequisites. */
-public abstract class NativeLargeDoorBlock extends BaseEntityBlock implements SimpleWaterloggedBlock,NativeDoorLinks {
+/** Nine-part Large Door with shared authenticated controls and contained-fluid geometry. */
+public class NativeLargeDoorBlock extends BaseEntityBlock implements SimpleWaterloggedBlock,NativeDoorLinks {
     public static final DirectionProperty FACING=NativeProgrammableDoorBlock.FACING;public static final BooleanProperty OPEN=NativeProgrammableDoorBlock.OPEN,POWERED=NativeProgrammableDoorBlock.POWERED,PAIRED=NativeProgrammableDoorBlock.PAIRED;
     public static final EnumProperty<DoubleBlockHalf> HALF=NativeProgrammableDoorBlock.HALF;public static final EnumProperty<DoorHingeSide> HINGE=NativeProgrammableDoorBlock.HINGE;
     private final Supplier<BlockEntityType<NativeLargeDoorEntity>> entities;private final Supplier<Item> canonical;private final Supplier<net.minecraft.world.inventory.MenuType<NativeDoorMenu>> menus;
@@ -46,7 +46,8 @@ public abstract class NativeLargeDoorBlock extends BaseEntityBlock implements Si
     public final net.minecraft.world.InteractionResult useTarget(Player player,net.minecraft.world.InteractionHand hand,BlockHitResult hit){return interact(player.level(),hit.getBlockPos(),player,hand,hit);}
     @Override protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return interact(level,pos,player,net.minecraft.world.InteractionHand.MAIN_HAND,hit);}
     @Override protected net.minecraft.world.ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,net.minecraft.world.InteractionHand hand,BlockHitResult hit){return switch(interact(level,pos,player,hand,hit)){case SUCCESS,CONSUME,CONSUME_PARTIAL->net.minecraft.world.ItemInteractionResult.SUCCESS;case FAIL->net.minecraft.world.ItemInteractionResult.FAIL;default->net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;};}
-    @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.ENTITYBLOCK_ANIMATED;}
+    @Override protected com.mojang.serialization.MapCodec<? extends BaseEntityBlock> codec(){return com.mojang.serialization.MapCodec.unit(this);}
+    @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
     @Override protected VoxelShape getShape(BlockState state,BlockGetter getter,BlockPos pos,CollisionContext context){return getter instanceof Level level?largeShape(level,pos,false):Shapes.empty();}
     @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter getter,BlockPos pos,CollisionContext context){return getter instanceof Level level?largeShape(level,pos,true):Shapes.empty();}
     @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block changed,BlockPos from,boolean moving){com.vandorlabs.neoforge.fluid.NativeFluidWorld.queueAt(level,pos);NativeLargeDoorLifecycle.neighbor(level,pos,this);}
