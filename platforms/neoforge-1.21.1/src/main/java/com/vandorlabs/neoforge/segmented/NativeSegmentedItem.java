@@ -18,8 +18,7 @@ import java.util.*;
 /** Single stationary segment placement. Configured items carry choices, never world ownership. */
 public class NativeSegmentedItem extends BlockItem {
  public static final String CONFIGURATION="BlockEntityTag",RECOVERY="SegmentedPlacementRecovery";
- private record Scope(Level level,BlockPos pos){}private static final ThreadLocal<Scope> ACTIVE=new ThreadLocal<>();
- public static boolean mutating(Level level,BlockPos pos){var scope=ACTIVE.get();return scope!=null&&scope.level==level&&scope.pos.equals(pos);}
+ public static boolean mutating(Level level,BlockPos pos){return com.vandorlabs.neoforge.placement.NativeStationaryPlacement.mutating(level,pos);}
  public NativeSegmentedItem(NativeSegmentedDoorBlock block,Properties properties){super(block,properties);}
  public static ItemStack pick(Item item,NativeSegmentedDoorEntity tile){ItemStack stack=new ItemStack(item);if(tile!=null){CompoundTag root=new CompoundTag();root.put(CONFIGURATION,tile.itemSettings());stack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));}return stack;}
  /** Placement-only normalization; callers rendering items should cache by immutable component identity. */
@@ -37,7 +36,6 @@ public class NativeSegmentedItem extends BlockItem {
  }
  protected boolean stage(Level level,BlockPos pos,BlockState state){return level.setBlock(pos,state,Block.UPDATE_KNOWN_SHAPE);}
  protected boolean restore(Level level,BlockPos pos,BlockState old){return level.setBlock(pos,old,Block.UPDATE_KNOWN_SHAPE);}
- private static void transfer(net.minecraft.world.entity.player.Player player,ItemStack stack){if(!player.getAbilities().instabuild)stack.shrink(1);}
  private static NativeSegmentedDoorEntity recovery(Level level,BlockPos pos,NativeSegmentedDoorBlock block,BlockState state,Choices choices){
   if(level.getBlockState(pos)!=state)return null;var raw=level.getBlockEntity(pos);NativeSegmentedDoorEntity owner=raw instanceof NativeSegmentedDoorEntity tile?tile:null;
   if(owner==null){owner=new NativeSegmentedDoorEntity(block.entityType(),pos,state);level.setBlockEntity(owner);if(level.getBlockEntity(pos)!=owner)return null;}
@@ -49,17 +47,12 @@ public class NativeSegmentedItem extends BlockItem {
   if(level instanceof net.minecraft.server.level.ServerLevel server&&!NativeRedstoneChannels.open(server))return InteractionResult.FAIL;
   BlockState old=level.getBlockState(pos);if(old.hasBlockEntity()||level.getBlockEntity(pos)!=null||!old.canBeReplaced(context)||!block.canAdd(level,pos))return InteractionResult.FAIL;
   BlockState state=block.getStateForPlacement(context);if(state==null||!canPlace(context,state))return InteractionResult.FAIL;Choices choices=choices(stack);if(level.isClientSide)return InteractionResult.SUCCESS;
-  ItemStack placedStack=stack.copy();Scope prior=ACTIVE.get();ACTIVE.set(new Scope(level,pos));NativeSegmentedDoorEntity owner=null;boolean committed=false,owned=false;Throwable original=null;
-  try{
-   if(!stage(level,pos,state)||level.getBlockState(pos)!=state||!(level.getBlockEntity(pos) instanceof NativeSegmentedDoorEntity tile))return InteractionResult.FAIL;owner=tile;choices.install(owner);owner.capturePlacementFluids(old);owner.setChanged();transfer(player,stack);owned=committed=true;
-  }catch(RuntimeException|Error failure){original=failure;throw failure;}finally{
-   Throwable rollback=null;try{if(!committed&&level.getBlockState(pos)==state&&(owner==null||level.getBlockEntity(pos)==owner)){
-    try{restore(level,pos,old);if(level.getBlockState(pos)!=old)throw new IllegalStateException("Refused Segmented placement rollback");}catch(RuntimeException|Error failed){rollback=failed;}
-    if(level.getBlockState(pos)==state){try{var retained=recovery(level,pos,block,state,choices);if(retained!=null){if(!owned){transfer(player,stack);owned=true;}level.sendBlockUpdated(pos,state,state,Block.UPDATE_CLIENTS);}}catch(RuntimeException|Error failed){if(rollback==null)rollback=failed;else rollback.addSuppressed(failed);}}
-   }}finally{if(prior==null)ACTIVE.remove();else ACTIVE.set(prior);}
-   if(rollback!=null){if(original!=null)original.addSuppressed(rollback);else throw new IllegalStateException("Segmented placement rollback failed; native owner retained",rollback);}
-  }
-  if(!committed)return InteractionResult.FAIL;
+  ItemStack placedStack=stack.copy();boolean committed=com.vandorlabs.neoforge.placement.NativeStationaryPlacement.commit(level,pos,old,state,player,stack,new com.vandorlabs.neoforge.placement.NativeStationaryPlacement.Hooks<NativeSegmentedDoorEntity>(){
+   public boolean stage(){return NativeSegmentedItem.this.stage(level,pos,state);}public boolean restore(){return NativeSegmentedItem.this.restore(level,pos,old);}
+   public NativeSegmentedDoorEntity owner(){return level.getBlockEntity(pos) instanceof NativeSegmentedDoorEntity tile?tile:null;}
+   public void install(NativeSegmentedDoorEntity owner){choices.install(owner);owner.capturePlacementFluids(old);}
+   public NativeSegmentedDoorEntity retainRecovery(){return recovery(level,pos,block,state,choices);}public String label(){return "Segmented";}
+  });if(!committed)return InteractionResult.FAIL;
   // All settings and owned fluid slots exist before vanilla observers can see the new segment.
   level.markAndNotifyBlock(pos,level.getChunkAt(pos),old,state,Block.UPDATE_ALL,512);block.setPlacedBy(level,pos,state,player,placedStack);var sound=state.getSoundType(level,pos,player);level.playSound(null,pos,sound.getPlaceSound(),SoundSource.BLOCKS,(sound.getVolume()+1)/2,sound.getPitch()*.8F);level.gameEvent(player,GameEvent.BLOCK_PLACE,pos);if(player instanceof ServerPlayer server)net.minecraft.advancements.CriteriaTriggers.PLACED_BLOCK.trigger(server,pos,placedStack);return InteractionResult.CONSUME;
  }
