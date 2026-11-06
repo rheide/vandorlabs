@@ -8,7 +8,7 @@ public final class TrapdoorSurfaceLayout {
  private final Face[] faces; private final int points;
  private TrapdoorSurfaceLayout(Face[] faces,int points){this.faces=faces;this.points=points;}
  public int points(){return points;}
- public long retainedBytes(){return 64L+faces.length*32L+points*48L;}
+ public long retainedBytes(){return 64L+faces.length*64L+points*48L;}
  public static TrapdoorSurfaceLayout build(double[][] uv,int first,int end,boolean tiled,boolean mirror,boolean customDoor) {
   if(uv.length!=8||first<0||end>6||first>=end)throw new IllegalArgumentException("leaf UV faces");
   for(double[] row:uv){if(row.length!=3)throw new IllegalArgumentException("leaf UV row");for(double value:row)if(!Double.isFinite(value)||Math.abs(value)>64)throw new IllegalArgumentException("bounded leaf UV");}
