@@ -37,3 +37,6 @@ tasks.register('testNativePropulsionControls', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionControlChecks'
     args file('../../build/test-artifacts/propulsion-control-forge.jsonl').absolutePath
 }
+neoForge.runs.configureEach {
+    if(project.hasProperty('propulsionShapeReference'))systemProperty 'vandorlabs.propulsionShapeReference',file(project.property('propulsionShapeReference')).absolutePath
+}
