@@ -12,7 +12,7 @@ def main():
  for name in ['mineable/pickaxe','needs_stone_tool']:
   tag=pack/('data/minecraft/tags/block/'+name+'.json');tag.parent.mkdir(parents=True,exist_ok=True);tag.write_text('{"replace":false,"values":['+','.join('{"id":"vandorlabs:light_item_fixture_'+str(i)+'","required":false}' for i in range(3))+']}')
  for phase in ['write','read']:
-  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=light-item-'+phase,'-PlightPlacementReference='+str(ROOT/'build/test-artifacts/light-placement-forge.jsonl')),output/(phase+'.log'),'[vandorlabs][light-item] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=light-item-'+phase,'-PlightEditReference='+str(ROOT/'build/test-artifacts/light-edit-forge.json'),'-PlightPlacementReference='+str(ROOT/'build/test-artifacts/light-placement-forge.jsonl')),output/(phase+'.log'),'[vandorlabs][light-item] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
   check_log(saved/'logs/latest.log','All dimensions are saved')
  evidence=[]
  for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge/light').glob('NativeLight*.class')):
