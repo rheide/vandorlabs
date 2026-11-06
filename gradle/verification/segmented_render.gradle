@@ -6,3 +6,10 @@ task exportSegmentedMeshReference(type: JavaExec) {
     main = 'com.vandorlabs.client.SegmentedMeshLegacyChecks'
     args file(project.findProperty('segmentedMeshReference') ?: 'build/test-artifacts/segmented-mesh-forge.jsonl').absolutePath
 }
+task exportSegmentedPanelReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedPanelLegacyChecks'
+    args file(project.findProperty('segmentedPanelReference') ?: 'build/test-artifacts/segmented-panels-forge.jsonl').absolutePath
+}
