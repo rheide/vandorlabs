@@ -37,7 +37,16 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
     public BlockPos position(){return worldPosition;}public boolean diagonal(){return settings.diagonal();}public boolean cover(){return settings.choices().cover;}public int geometryPosition(){return settings.choices().position;}public boolean sliding(){return settings.choices().sliding;}public int trigger(){return settings.choices().trigger;}
     public boolean open(){return pendingOpen;}public boolean inverted(){return diagonal()&&projectionInverted;}
     public Direction facing(){return projectionFacing;}
-    public CompoundTag itemSettings(){boolean offset=canOffsetClosedLeaf()||placementRecovery();if(offset&&level!=null&&level.getBlockState(worldPosition).getBlock() instanceof NativeTrapdoorBlock)cachedItemFacing=level.getBlockState(worldPosition).getValue(NativeTrapdoorBlock.FACING);return new NativeTrapdoorSettings(settings.choices(),settings.channels(),cachedItemFacing.get2DDataValue(),settings.hingeSide(),settings.rotationFlipped(),diagonal()).item(offset);}
+    public CompoundTag itemSettings(){
+        boolean offset=canOffsetClosedLeaf()||placementRecovery();
+        if(offset&&level!=null){
+            // Serialization may run after the chunk detached; never request that unloading chunk again.
+            var chunk=level.getChunkSource().getChunkNow(worldPosition.getX()>>4,worldPosition.getZ()>>4);
+            var state=chunk==null?null:chunk.getBlockState(worldPosition);
+            if(state!=null&&state.getBlock() instanceof NativeTrapdoorBlock)cachedItemFacing=state.getValue(NativeTrapdoorBlock.FACING);
+        }
+        return new NativeTrapdoorSettings(settings.choices(),settings.channels(),cachedItemFacing.get2DDataValue(),settings.hingeSide(),settings.rotationFlipped(),diagonal()).item(offset);
+    }
     public boolean placementRecovery(){return inert&&retained.getBoolean(NativeTrapdoorItem.RECOVERY);}
     public void installItemChoices(NativeTrapdoorSettings next){if(next.diagonal()!=diagonal())throw new IllegalArgumentException("Trapdoor item family");settings=next;projectionFacing=getBlockState().getValue(NativeTrapdoorBlock.FACING);projectionInverted=getBlockState().getValue(NativeTrapdoorBlock.HALF)==net.minecraft.world.level.block.state.properties.Half.TOP;pendingOpen=getBlockState().getValue(NativeTrapdoorBlock.OPEN);cachedItemFacing=Direction.from2DDataValue(next.facing());links=new NativeTrapdoorLinks(null,null,List.of(),1D/16,15D/16,diagonal()?Direction.NORTH:Direction.SOUTH,false,diagonal()&&projectionInverted,false,false,false);retained=new CompoundTag();inert=false;failure="";itemInstalled=true;publishSingle();scheduleRefresh();}
     public void retainPlacementRecovery(){retained=saveWithoutMetadata(level.registryAccess());retained.putBoolean(NativeTrapdoorItem.RECOVERY,true);retained.putBoolean("TrapdoorInert",true);inert=true;publication=null;}
