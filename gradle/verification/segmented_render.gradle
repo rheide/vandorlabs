@@ -20,3 +20,10 @@ task exportSegmentedHeaderReference(type: JavaExec) {
     main = 'com.vandorlabs.client.SegmentedPanelLegacyChecks'
     args file(project.findProperty('segmentedHeaderReference') ?: 'build/test-artifacts/segmented-headers-forge.jsonl').absolutePath, 'header'
 }
+task exportSegmentedFastReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedPanelLegacyChecks'
+    args file(project.findProperty('segmentedFastReference') ?: 'build/test-artifacts/segmented-fast-forge.jsonl').absolutePath, 'fast'
+}
