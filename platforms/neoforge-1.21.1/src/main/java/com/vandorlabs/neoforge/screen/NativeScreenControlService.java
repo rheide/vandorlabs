@@ -60,6 +60,12 @@ public final class NativeScreenControlService {
   }
   return true;
  }
+ void transmissionChanged(){
+  if(editing||!live())throw new IllegalStateException("Screen transmission owner unavailable");
+  editing=configuring=true;
+  try{mutate(()->{withdraw(registeredRows());NativeRedstoneChannels.unregister(owner);NativeRedstoneChannels.channelsChanged(owner);initialized=true;registerCurrent();for(var side:rows)for(Row row:side)refresh(row);});}
+  finally{configuring=false;pendingSlots=0;try{publish(0,false);publish(1,false);owner.reconcileControlOutput();}finally{editing=false;arm();}}
+ }
  boolean toggle(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(row.channels.isEmpty()||row.slider)return false;if(row.pulse)return pulse(slot,index);boolean all=true;ServerLevel world=level();for(int i=0;i<row.channels.size();i++)if(NativeRedstoneChannels.level(world,owner.getBlockPos(),row.channels.get(i))==0){all=false;break;}NativeRedstoneChannels.latchLevelChanged(row,all?0:15);return true;}
  boolean select(int slot,int index,int segment){if(!valid(slot,index)||segment<0||segment>3)return false;Row row=rows.get(slot).get(index);if(!row.slider)return false;NativeRedstoneChannels.latchLevelChanged(row,SignalControlData.levelForStep(segment,row.min,row.max));return true;}
  boolean pulse(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(!row.pulse||row.channels.isEmpty())return false;row.until=level().getGameTime()+20;row.dirty=true;mutate(()->{publish(slot,true);NativeRedstoneChannels.outputChanged(row);});arm();return true;}
