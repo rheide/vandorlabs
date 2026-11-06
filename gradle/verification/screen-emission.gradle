@@ -23,3 +23,10 @@ task screenRoleOracleJar(type: Jar) {
     }
 }
 reobf { screenRoleOracleJar {} }
+
+task testScreenRenderPose(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenRenderPoseChecks'
+}
