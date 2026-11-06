@@ -5,3 +5,11 @@ task exportScreenEmissionReference(type: JavaExec) {
     main = 'com.vandorlabs.client.ScreenEmissionLegacyOracle'
     args file('build/test-artifacts/screen-emission-forge.jsonl').absolutePath
 }
+
+task testScreenSharedEmission(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenEmissionLegacyOracle'
+    args file('build/test-artifacts/screen-emission-shared.jsonl').absolutePath, 'shared'
+}
