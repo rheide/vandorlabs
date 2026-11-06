@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenGeometry', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenGeometryChecks'
+ systemProperty 'screenGeometryReference',file(project.findProperty('screenGeometryReference') ?: '../../build/test-artifacts/screen-geometry-reference.json').absolutePath
+}
