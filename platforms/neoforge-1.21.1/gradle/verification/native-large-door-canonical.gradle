@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+    if (project.hasProperty('largeDoorSavedReference')) systemProperty 'vandorlabs.largeDoorSavedReference', file(project.property('largeDoorSavedReference')).absolutePath
+}
