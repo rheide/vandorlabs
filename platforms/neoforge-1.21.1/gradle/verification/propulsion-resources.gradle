@@ -11,3 +11,9 @@ tasks.register('generatePropulsionResources', Exec) {
     outputs.dir('build/generated/propulsion-resources')
 }
 tasks.named('processResources') { dependsOn 'generatePropulsionResources' }
+tasks.register('testPropulsionResourceProjection', Exec) {
+    group = 'verification'
+    dependsOn 'generatePropulsionResources'
+    workingDir projectDir
+    commandLine propulsionResourcePython, 'test_propulsion_resources.py'
+}
