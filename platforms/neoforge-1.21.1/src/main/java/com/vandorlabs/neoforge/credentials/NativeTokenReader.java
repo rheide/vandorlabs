@@ -94,7 +94,7 @@ public final class NativeTokenReader {
     private void schedule(int ticks){if(installed()!=null)host.schedule(Math.max(1,ticks));}
     private void publish(boolean inserted){
         var level=installed();if(level==null)return;if(inserted){insertStarted=level.getGameTime();insertionSequence++;if(matches()&&behavior==1){pulseUntil=level.getGameTime()+host.returnPulseTicks();schedule(host.returnPulseTicks());}}
-        if(token.isEmpty()&&behavior==1)pulseUntil=0;host.changed();
+        if(token.isEmpty()&&behavior==1)pulseUntil=0;boolean previous=acting;acting=true;try{host.changed();}finally{acting=previous;}
     }
     private static void sync(ServerPlayer player){player.getInventory().setChanged();player.inventoryMenu.broadcastChanges();}
     private ItemStack inventoryCredential(ServerPlayer player){for(var stack:player.getInventory().items)if(authorized(stack))return stack;var off=player.getOffhandItem();return authorized(off)?off:null;}

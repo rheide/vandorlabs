@@ -29,7 +29,7 @@ public final class CredentialReaderChecks {
   }
   var unknown=new CompoundTag();var payload=new CompoundTag();payload.putString("id","unknown:credential");payload.putInt("count",1);unknown.put("InsertedToken",payload);var reader=new NativeTokenReader(local,false);reader.read(unknown,registries);need(reader.opaqueOccupied()&&!reader.matches()&&reader.write(registries).getCompound("InsertedToken").equals(payload),"unknown ownership inert and retained");
   interactions(event);
-  System.out.println("[vandorlabs][credential-reader] dedicated PASS actualForgeCases="+cases+" checks="+checks+"; local-only policy/load, owned opaque recovery; interaction acceptance separate");event.getServer().halt(false);
+  System.out.println("[vandorlabs][credential-reader] dedicated PASS actualForgeCases="+cases+" checks="+checks+"; local-only policy/load, owned opaque recovery; owned-server interactions/timelines/reload/reentrancy; client rendering separate");event.getServer().halt(false);
  }
  private static void interactions(ServerStartedEvent event){
   var world=event.getServer().overworld();var pos=new net.minecraft.core.BlockPos(2700,90,2700);world.getChunkAt(pos);world.setBlock(pos,net.minecraft.world.level.block.Blocks.CHEST.defaultBlockState(),3);var owner=world.getBlockEntity(pos);
@@ -43,6 +43,9 @@ public final class CredentialReaderChecks {
    player.getInventory().clearContent();
   }
   var reader=new NativeTokenReader(host,false);service[0]=reader;reader.configureLocal(false,2,0);player.setItemInHand(hand,NativeCredentialItems.accessCard(3));reader.interact(player,hand,false);need(!reader.occupied()&&player.getMainHandItem().getCount()==1&&reader.motion(world.getGameTime()).rejectedFor()==12,"unauthorized stays player-owned and flashes");
+  player.getInventory().clearContent();reader=new NativeTokenReader(host,false);service[0]=reader;reader.configureLocal(true,127,2);player.setGameMode(net.minecraft.world.level.GameType.CREATIVE);player.setItemInHand(hand,NativeCredentialItems.accessCard(1));reader.interact(player,hand,false);need(player.getMainHandItem().isEmpty()&&reader.occupied(),"creative return mode borrows physical item");long start=world.getGameTime();
+  for(int i=0;i<player.getInventory().items.size();i++)player.getInventory().items.set(i,new net.minecraft.world.item.ItemStack(net.minecraft.world.item.Items.STONE,64));reader.expire(start+20);need(reader.returning()&&reader.tokenCopy().getCount()==1,"full inventory retains sole item");player.getInventory().items.set(1,net.minecraft.world.item.ItemStack.EMPTY);reader.expire(start+21);need(reader.returning(),"failed return retries only every twenty ticks");reader.expire(start+40);need(!reader.occupied()&&player.getInventory().countItem(NativeCredentialItems.ACCESS_CARD.get())==1,"retry publishes exactly one usable item");
+  player.getInventory().clearContent();reader=new NativeTokenReader(host,false);service[0]=reader;reader.configureLocal(true,127,0);player.setItemInHand(hand,NativeCredentialItems.accessCard(1));reader.interact(player,hand,false);need(player.getMainHandItem().getCount()==1&&reader.occupied(),"creative stay preserves authored duplication semantics");reader.takeForDrop();
   player.getInventory().clearContent();service[0]=null;world.removeBlock(pos,false);
  }
 
