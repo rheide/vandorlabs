@@ -92,19 +92,9 @@ public final class SpaceDoorTextures {
                 pixels[level] = new int[width * height];
                 for (int y = 0; y < height; y++) {
                     for (int x = 0; x < width; x++) {
-                        int a = 0, r = 0, g = 0, b = 0;
-                        for (int dy = 0; dy < 2; dy++) {
-                            for (int dx = 0; dx < 2; dx++) {
-                                int c = previous[(y * 2 + dy) * (width * 2) + x * 2 + dx];
-                                int alpha = c >>> 24;
-                                a += alpha;
-                                r += ((c >> 16) & 255) * alpha;
-                                g += ((c >> 8) & 255) * alpha;
-                                b += (c & 255) * alpha;
-                            }
-                        }
-                        pixels[level][y * width + x] = a == 0 ? 0
-                                : (a / 4 << 24) | (r / a << 16) | (g / a << 8) | b / a;
+                        pixels[level][y*width+x]=com.vandorlabs.render.TranslucentMip.average(
+                                previous[(y*2)*(width*2)+x*2],previous[(y*2)*(width*2)+x*2+1],
+                                previous[(y*2+1)*(width*2)+x*2],previous[(y*2+1)*(width*2)+x*2+1]);
                     }
                 }
             }
