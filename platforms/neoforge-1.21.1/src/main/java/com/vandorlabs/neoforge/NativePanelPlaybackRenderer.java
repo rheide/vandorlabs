@@ -24,9 +24,10 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<Pr
     // The subclass is only a namespace for vanilla's protected state shards; it is never instantiated.
     private static final class Types extends RenderType {
         private Types(){super("vandorlabs_glazing",com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK,com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS,1536,false,false,()->{},()->{});}
-        static RenderType pane(net.minecraft.resources.ResourceLocation texture,boolean opaque,boolean frame){
+        static RenderType pane(net.minecraft.resources.ResourceLocation texture,boolean opaque,boolean frame){return pane(texture,opaque,frame,false);}
+        static RenderType pane(net.minecraft.resources.ResourceLocation texture,boolean opaque,boolean frame,boolean cull){
             return RenderType.create("vandorlabs_glazing",com.mojang.blaze3d.vertex.DefaultVertexFormat.BLOCK,com.mojang.blaze3d.vertex.VertexFormat.Mode.QUADS,1536,true,!opaque,
-                    CompositeState.builder().setShaderState(new ShaderStateShard(()->frame?frameShader:shader)).setTextureState(new TextureStateShard(texture,false,false)).setTransparencyState(opaque?NO_TRANSPARENCY:TRANSLUCENT_TRANSPARENCY).setCullState(NO_CULL).setLightmapState(LIGHTMAP).setWriteMaskState(opaque?COLOR_DEPTH_WRITE:COLOR_WRITE).setOutputState(opaque?MAIN_TARGET:TRANSLUCENT_TARGET).createCompositeState(false));
+                    CompositeState.builder().setShaderState(new ShaderStateShard(()->frame?frameShader:shader)).setTextureState(new TextureStateShard(texture,false,false)).setTransparencyState(opaque?NO_TRANSPARENCY:TRANSLUCENT_TRANSPARENCY).setCullState(cull?CULL:NO_CULL).setLightmapState(LIGHTMAP).setWriteMaskState(opaque?COLOR_DEPTH_WRITE:COLOR_WRITE).setOutputState(opaque?MAIN_TARGET:TRANSLUCENT_TARGET).createCompositeState(false));
         }
     }
     static RenderType renderType(net.minecraft.resources.ResourceLocation texture,boolean opaque){return Types.pane(texture,opaque,false);}
@@ -46,7 +47,8 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<Pr
     private static synchronized void publish(Object bakery){var prepared=PENDING.getIfPresent(bakery);PENDING.invalidate(bakery);if(prepared!=null&&(active==null||prepared.generation>active.generation))active=prepared;}
     @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event){if(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_porthole_wall")))event.registerBlockEntityRenderer(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),ignored->new NativePanelPlaybackRenderer());}
     static RenderType frameRenderType(){return BodyLayer.VALUE;}
-    private static final class BodyLayer {static final RenderType VALUE=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true);}
+    static RenderType frameRenderType(boolean cull){return cull?BodyLayer.CULLED:BodyLayer.VALUE;}
+    private static final class BodyLayer {static final RenderType VALUE=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true),CULLED=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true,true);}
     @Override public net.minecraft.world.phys.AABB getRenderBoundingBox(ProgrammableBlockEntity tile){return tile instanceof NativeWallEntity wall?wall.renderBounds():new net.minecraft.world.phys.AABB(tile.getBlockPos());}
     @Override public boolean shouldRender(ProgrammableBlockEntity tile,Vec3 camera){
         if(!(tile instanceof NativeWallEntity wall))return false;var snapshot=wall.wallAppearance();boolean body=snapshot.geometry().diagonal()&&!snapshot.chunkBody();if(!body&&!wall.isPorthole()&&!wall.isGlass())return false;

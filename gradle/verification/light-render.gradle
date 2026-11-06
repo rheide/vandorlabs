@@ -13,3 +13,11 @@ task testLightSharedRender(type: JavaExec) {
     main = 'com.vandorlabs.client.LightRenderLegacyOracle'
     args file('build/test-artifacts/light-render-shared.jsonl').absolutePath, 'shared'
 }
+
+task exportLightArtworkReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightArtworkLegacyOracle'
+    args file('build/test-artifacts/light-artwork-forge.json').absolutePath
+}

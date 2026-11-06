@@ -1,0 +1,15 @@
+tasks.register('testNativeLightMesh', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeLightMeshChecks'
+    args file('../../build/test-artifacts/light-render-forge.jsonl').absolutePath
+}
+
+tasks.register('testNativeLightArtwork', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.light.NativeLightArtworkChecks'
+    args file('../../build/test-artifacts/light-artwork-forge.json').absolutePath
+}
