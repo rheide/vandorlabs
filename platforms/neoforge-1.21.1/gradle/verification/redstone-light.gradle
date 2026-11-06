@@ -5,3 +5,11 @@ tasks.register('testNativeRedstoneLightSettings', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.propulsion.RedstoneLightSettingsChecks'
     args file('../../build/test-artifacts/redstone-light-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativePropulsionPlacement', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.propulsion.PropulsionPlacementChecks'
+    args file('../../build/test-artifacts/propulsion-placement-forge.jsonl').absolutePath
+}
