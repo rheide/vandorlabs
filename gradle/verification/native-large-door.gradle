@@ -29,3 +29,11 @@ task exportLargeDoorGushReference(type: JavaExec) {
     maxHeapSize = '1G'
     systemProperty 'vandorlabs.largeDoorGushReference', file('build/test-artifacts/large-door-gush-forge.jsonl').absolutePath
 }
+
+task exportLargeDoorSavedReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LargeDoorSavedLegacyChecks'
+    maxHeapSize = '512M'
+    systemProperty 'vandorlabs.largeDoorSavedReference', file('build/test-artifacts/large-door-saved-forge.json').absolutePath
+}
