@@ -7,7 +7,12 @@ import net.minecraft.world.phys.AABB;
 /** Local stationary collision/fluid housing; animated panel selection is resolved separately. */
 public final class NativeSegmentedGeometry {
     private NativeSegmentedGeometry(){}
-    public record Snapshot(com.vandorlabs.physics.RigidTransform transform,AABB bounds,AABB header){
+    public static final class Snapshot {
+        private final com.vandorlabs.physics.RigidTransform transform;
+        private final AABB bounds,header;
+        private Snapshot(com.vandorlabs.physics.RigidTransform transform,AABB bounds,AABB header){this.transform=transform;this.bounds=bounds;this.header=header;}
+        public AABB bounds(){return bounds;}public AABB header(){return header;}
+        public double[] matrix(){return transform.columnMajor();}
         public com.vandorlabs.render.LegacyBoxTrace.Hit trace(double sx,double sy,double sz,double ex,double ey,double ez){
             var body=com.vandorlabs.segmented.SegmentedHitGeometry.trace(transform,sx,sy,sz,ex,ey,ez);
             var fixed=header==null?null:com.vandorlabs.render.LegacyBoxTrace.clip(header.minX,header.minY,header.minZ,header.maxX,header.maxY,header.maxZ,sx,sy,sz,ex,ey,ez);

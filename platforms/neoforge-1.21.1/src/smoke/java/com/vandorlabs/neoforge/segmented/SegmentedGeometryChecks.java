@@ -13,7 +13,7 @@ public final class SegmentedGeometryChecks {
             var row=JsonParser.parseString(line).getAsJsonObject();int height=i(row,"height"),width=i(row,"width"),column=i(row,"column"),part=i(row,"row"),direction=i(row,"direction"),position=i(row,"position");
             var origin=row.getAsJsonArray("origin");var root=new BlockPos(origin.get(0).getAsInt(),origin.get(1).getAsInt(),origin.get(2).getAsInt());var face=Direction.from3DDataValue(i(row,"face"));double progress=row.get("progress").getAsDouble();
             var snapshot=NativeSegmentedGeometry.snapshot(root,face,position,part,height,column,width,progress,direction,row.get("straight").getAsBoolean());
-            equal(row.getAsJsonArray("matrix"),snapshot.transform().columnMajor(),"matrix "+profiles);box(row.getAsJsonArray("bounds"),snapshot.bounds(),"bounds "+profiles);
+            equal(row.getAsJsonArray("matrix"),snapshot.matrix(),"matrix "+profiles);box(row.getAsJsonArray("bounds"),snapshot.bounds(),"bounds "+profiles);
             if(row.has("header"))box(row.getAsJsonArray("header"),snapshot.header(),"header "+profiles);else if(snapshot.header()!=null)throw new AssertionError("Unexpected header "+profiles);
             List<AABB> collision=new ArrayList<>();if(progress==0)collision.add(NativeSegmentedGeometry.closedPanel(face,position).move(root.getX(),root.getY()-part,root.getZ()));if(snapshot.header()!=null)collision.add(snapshot.header());
             var expectedBoxes=row.getAsJsonArray("collisions");if(expectedBoxes.size()!=collision.size())throw new AssertionError("Collision count "+profiles);for(int n=0;n<collision.size();n++)box(expectedBoxes.get(n).getAsJsonArray(),collision.get(n),"collision "+profiles);
