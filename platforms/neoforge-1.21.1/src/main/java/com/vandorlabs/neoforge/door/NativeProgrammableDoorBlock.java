@@ -50,7 +50,7 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
     @Override protected float getShadeBrightness(BlockState state,BlockGetter level,BlockPos pos){return 1;}
     @Override protected VoxelShape getOcclusionShape(BlockState state,BlockGetter level,BlockPos pos){return Shapes.empty();}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeProgrammableDoorEntity(entities.get(),pos,state,false,slidingModel);}
-    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return createTickerHelper(type,entities.get(),(world,pos,current,host)->{host.tickDoor();host.tickWaterGush();});}
+    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return createTickerHelper(type,entities.get(),(world,pos,current,host)->{host.tickDoor();host.tickCredentialReaders();host.tickWaterGush();});}
     private NativeDoorSettings settings(BlockGetter world,BlockPos pos,BlockState state){return (!(world instanceof ServerLevel server)||com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server))&&world.getBlockEntity(NativeDoorLifecycle.lower(state,pos)) instanceof NativeProgrammableDoorEntity host?host.settings():null;}
     public final BlockState resolved(LevelReader level,BlockPos pos,BlockState state){BlockState actual=NativeDoorLifecycle.resolved(level,pos,state);return actual.setValue(PAIRED,level instanceof Level world&&NativeDoorLifecycle.mate(world,NativeDoorLifecycle.lower(state,pos),this)!=null);}
     @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){var data=settings(level,pos,state);var resolved=level instanceof LevelReader reader?resolved(reader,pos,state):state;return data==null?orphanShape(resolved,false):doorShape(data,resolved,false);}
@@ -67,7 +67,8 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         if(player instanceof ServerPlayer server)server.openMenu(new SimpleMenuProvider((id,inventory,ignored)->new NativeDoorMenu(menus.get(),id,root),getName()),b->b.writeBlockPos(root.getBlockPos()));return true;
     }
     private InteractionResult interact(BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){
-        var root=NativeDoorLifecycle.root(level,pos);if(root==null)return InteractionResult.FAIL;var actual=resolved(level,pos,state);boolean tool=NativeConfigurationAccess.canConfigure(player)&&!player.isCreative();boolean panelHit=controlPanelHit(root.settings(),actual,NativeDoorLifecycle.panelSide(root,actual),hit,root.getBlockPos());
+        var root=NativeDoorLifecycle.root(level,pos);if(root==null)return InteractionResult.FAIL;var actual=resolved(level,pos,state);boolean tool=player.getItemInHand(hand).is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get());boolean panelHit=controlPanelHit(root.settings(),actual,NativeDoorLifecycle.panelSide(root,actual),hit,root.getBlockPos());
+        if(root.settings().securityMode()>0&&!player.isShiftKeyDown()&&!tool)return credentialInteraction(root,player,hand,hit,panelHit);
         if(hand==InteractionHand.MAIN_HAND&&(tool||player.isCreative()&&(player.isShiftKeyDown()||panelHit)))return openConfiguration(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.FAIL;
         if(player.isShiftKeyDown())return InteractionResult.FAIL;
         if(root.settings().securityMode()>0)return credentialInteraction(root,player,hand,hit,panelHit);
