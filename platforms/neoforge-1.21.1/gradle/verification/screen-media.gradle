@@ -45,3 +45,10 @@ tasks.register('testNativeScreenRenderGroups', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.screen.ScreenRenderGroupChecks'
     args file('../../testclient/fixtures/screen-render-groups-reference.json.gz').absolutePath
 }
+
+neoForge.runs.configureEach {
+    if(project.hasProperty('screenRenderGroupsCheck')) {
+        systemProperty 'vandorlabs.screenRenderGroupsCheck','true'
+        systemProperty 'screenRenderGroupsReference',file('../../testclient/fixtures/screen-render-groups-reference.json.gz').absolutePath
+    }
+}
