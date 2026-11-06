@@ -5,3 +5,10 @@ tasks.register('testNativeSegmentedEdit', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.segmented.SegmentedEditChecks'
     args file('../../build/test-artifacts/segmented-edit-forge.json').absolutePath
 }
+tasks.register('testNativeSegmentedMaterials', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.segmented.SegmentedMaterialsChecks'
+    args file('../../build/test-artifacts/segmented-materials-forge.json').absolutePath
+}
