@@ -358,17 +358,12 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         ChannelList previousChannels=channels;
         int old=channel;super.readFromNBT(tag);fluids.read(tag);
-        texture=tag.hasKey("housingTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("housingTexture")):ScreenHousingTextures.DEFAULT_TRAPDOOR;
-        position=Math.max(0,Math.min(2,tag.getInteger("TrapdoorPosition")));
-        tileTexture=!tag.hasKey("TrapdoorTileTexture",1) || tag.getBoolean("TrapdoorTileTexture");
-        textureLayout=tag.hasKey("TrapdoorTextureLayout",3) && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("TrapdoorTextureLayout"))?tag.getInteger("TrapdoorTextureLayout"):-1;
-        cover=tag.getBoolean("TrapdoorCover") && !(this instanceof TileEntityProgrammableDiagonalTrapdoor);
+        com.vandorlabs.persistence.TrapdoorData choices=com.vandorlabs.persistence.TrapdoorData.read(
+                new com.vandorlabs.persistence.NbtPrimitiveData(tag),this instanceof TileEntityProgrammableDiagonalTrapdoor,
+                ScreenHousingTextures.DEFAULT_TRAPDOOR,ScreenHousingTextures::clamp);
+        texture=choices.texture;position=choices.position;tileTexture=choices.tileTexture;textureLayout=choices.rawLayout;
+        cover=choices.cover;sliding=choices.sliding;slideIntoWall=choices.intoWall;slideOverSurface=choices.overSurface;trigger=choices.trigger;
         coverFacing=EnumFacing.getHorizontal(tag.getInteger("TrapdoorCoverFacing"));
-        sliding=tag.getBoolean("TrapdoorSliding");
-        slideIntoWall=this instanceof TileEntityProgrammableDiagonalTrapdoor && tag.getBoolean("TrapdoorSlideIntoWall");
-        slideOverSurface=!(this instanceof TileEntityProgrammableDiagonalTrapdoor) && tag.getBoolean("TrapdoorSlideOverSurface");
-        int saved=tag.hasKey("TrapdoorTrigger",3)?tag.getInteger("TrapdoorTrigger"):SpaceDoorData.TRIGGER_REDSTONE_ON;
-        trigger=SpaceDoorData.validTrigger(saved)?saved:SpaceDoorData.TRIGGER_REDSTONE_ON;
         channel=Math.max(0,tag.getInteger("RedstoneChannel"));channels=ChannelData.read(tag,channel);channel=channels.first();channelSignal=tag.getBoolean("ChannelSignal");
         powerKnown=tag.getBoolean("TrapdoorPowerKnown");lastPower=tag.getBoolean("TrapdoorLastPower");
         partner=tag.hasKey("TrapdoorPartner",4)?BlockPos.fromLong(tag.getLong("TrapdoorPartner")):null;
