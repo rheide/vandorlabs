@@ -7,6 +7,8 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
  base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='trapdoor-load-guard-',dir=base));saved=out/'saved-world';world(saved,0)
+ pack=saved/'world/datapacks/trapdoor-guard-tools';pack.mkdir(parents=True);(pack/'pack.mcmeta').write_text('{"pack":{"pack_format":48,"description":"Trapdoor recovery harvest tools"}}')
+ tag=pack/'data/minecraft/tags/block/mineable/pickaxe.json';tag.parent.mkdir(parents=True,exist_ok=True);tag.write_text('{"replace":false,"values":[{"id":"vandorlabs:trapdoor_guard_fixture_0","required":false},{"id":"vandorlabs:trapdoor_guard_fixture_1","required":false}]}')
  for phase in ['write','read']:
   run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=trapdoor-load-guard-'+phase),out/(phase+'.log'),'[vandorlabs][trapdoor-load-guard] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
   check_log(saved/'logs/latest.log','All dimensions are saved')

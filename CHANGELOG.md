@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Retain failed native platform snapshots through component/attachment decode failures and Trapdoor mining. Opaque recovery items preserve their original data and refuse ordinary placement.
+
 - Enable regular and diagonal Trapdoors in the experimental native build with dedicated editing, configured items, source-matched assemblies, moved-leaf interactions and contained-fluid rendering.
 
 - Share Programmable Light save, signal policy and cached housing meshes between versions while preserving Forge defaults, lazy input sampling, artwork and existing lighting.

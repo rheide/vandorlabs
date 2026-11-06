@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ systemProperty 'screenJoinedPowerReference',file(project.findProperty('screenJoinedPowerReference') ?: '../../build/test-artifacts/screen-joined-power-reference.json').absolutePath
+}

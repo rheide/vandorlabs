@@ -47,6 +47,11 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
         }
         return new NativeTrapdoorSettings(settings.choices(),settings.channels(),cachedItemFacing.get2DDataValue(),settings.hingeSide(),settings.rotationFlipped(),diagonal()).item(offset);
     }
+    public boolean opaqueRecoveryRequired(){return inert&&!placementRecovery();}
+    public CompoundTag recoverySnapshot(){return retained.copy();}
+    private net.minecraft.world.item.ItemStack forcedRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;
+    void prepareRecoveryDrop(net.minecraft.world.item.ItemStack stack){forcedRecoveryDrop=stack.copy();}
+    net.minecraft.world.item.ItemStack takeRecoveryDrop(){var result=forcedRecoveryDrop;forcedRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;return result;}
     public boolean placementRecovery(){return inert&&retained.getBoolean(NativeTrapdoorItem.RECOVERY);}
     public void installItemChoices(NativeTrapdoorSettings next){if(next.diagonal()!=diagonal())throw new IllegalArgumentException("Trapdoor item family");settings=next;projectionFacing=getBlockState().getValue(NativeTrapdoorBlock.FACING);projectionInverted=getBlockState().getValue(NativeTrapdoorBlock.HALF)==net.minecraft.world.level.block.state.properties.Half.TOP;pendingOpen=getBlockState().getValue(NativeTrapdoorBlock.OPEN);cachedItemFacing=Direction.from2DDataValue(next.facing());links=new NativeTrapdoorLinks(null,null,List.of(),1D/16,15D/16,diagonal()?Direction.NORTH:Direction.SOUTH,false,diagonal()&&projectionInverted,false,false,false);retained=new CompoundTag();inert=false;failure="";itemInstalled=true;publishSingle();scheduleRefresh();}
     public void retainPlacementRecovery(){retained=saveWithoutMetadata(level.registryAccess());retained.putBoolean(NativeTrapdoorItem.RECOVERY,true);retained.putBoolean("TrapdoorInert",true);inert=true;publication=null;}
@@ -129,27 +134,28 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
         return new NativeTrapdoorVisual(settings,pose,new NativeTrapdoorVisual.ArtworkBounds(minU,minV,maxU,maxV),joins,pendingOpen);
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        retained=tag.copy();for(String key:List.of("id","x","y","z"))retained.remove(key);
+        forcedRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;retained=tag.copy();for(String key:List.of("id","x","y","z"))retained.remove(key);
         try{
+            com.vandorlabs.neoforge.NativePlatformComponents.requireSupported(tag,registries);
             boolean diagonal=getBlockState().getBlock() instanceof NativeTrapdoorBlock block&&block.diagonal();
             var next=NativeTrapdoorSettings.read(tag,diagonal);var relation=NativeTrapdoorLinks.read(tag,diagonal);
             if(!Double.isFinite(relation.hinge())||!Double.isFinite(relation.travel()))throw new IllegalArgumentException("Nonfinite Trapdoor motion");
             boolean nextInert=tag.getBoolean("TrapdoorInert");
             var visual=!nextInert&&tag.contains("TrapdoorProjection",Tag.TAG_COMPOUND)?readProjection(next,tag.getCompound("TrapdoorProjection")):null;
             // Platform code may retain mutable nested tags or fail after partially loading them.
-            if(!nextInert)super.loadAdditional(tag.copy(),registries);
+            if(!nextInert)try(var platform=com.vandorlabs.neoforge.NativePlatformComponents.guardLoad(this)){super.loadAdditional(tag.copy(),registries);platform.requireSuccessful();}
             fluidState.read(tag.copy(),registries);
             settings=next;cachedItemFacing=Direction.from2DDataValue(next.facing());links=relation;
             projectionFacing=getBlockState().getValue(NativeTrapdoorBlock.FACING);projectionInverted=getBlockState().getValue(NativeTrapdoorBlock.HALF)==net.minecraft.world.level.block.state.properties.Half.TOP;pendingOpen=getBlockState().getValue(NativeTrapdoorBlock.OPEN);
             projectedCanOffset=tag.contains("TrapdoorProjection",Tag.TAG_COMPOUND)?tag.getBoolean("CanOffsetClosedLeaf"):null;itemInstalled=false;inert=nextInert;failure="";
             if(!inert){if(visual!=null)installProjection(visual);else publishSingle();}
             if(inert){publication=null;fluidState.disable();NativeTrapdoorTargets.remove(this);}
-            else for(String key:List.of("components","NeoForgeData","neoforge:attachments"))retained.remove(key);
+            else com.vandorlabs.neoforge.NativePlatformComponents.forgetLoadedFields(retained);
             registrationResetPending=inert;
         }catch(RuntimeException failure){inert=true;registrationResetPending=true;this.failure=failure.toString();publication=null;fluidState.disable();NativeTrapdoorTargets.remove(this);}
         scheduleRefresh();fluidState.localChanged();
     }
-    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert)return;super.saveAdditional(tag,registries);tag.merge(itemSettings());if(!canOffsetClosedLeaf())tag.remove("TrapdoorCoverFacing");links.write(tag);if(diagonal()){tag.putBoolean("DiagonalInverted",inverted());tag.putInt("DiagonalFacing",facing().get2DDataValue());}tag.putInt("TrapdoorSchema",1);fluidState.write(tag);}
+    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){com.vandorlabs.neoforge.NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);tag.merge(itemSettings());if(!canOffsetClosedLeaf())tag.remove("TrapdoorCoverFacing");links.write(tag);if(diagonal()){tag.putBoolean("DiagonalInverted",inverted());tag.putInt("DiagonalFacing",facing().get2DDataValue());}tag.putInt("TrapdoorSchema",1);fluidState.write(tag);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();var visual=trapdoorVisual();if(inert||visual==null){tag.putBoolean("TrapdoorInert",true);return tag;}tag.merge(itemSettings());tag.putBoolean("CanOffsetClosedLeaf",canOffsetClosedLeaf());tag.put("TrapdoorProjection",writeProjection(visual));fluidState.writePublic(tag,registries);return tag;}
     private static CompoundTag writeProjection(NativeTrapdoorVisual visual){var tag=new CompoundTag();var p=visual.pose();tag.putBoolean("Inverted",p.inverted);tag.putBoolean("Reverse",p.reverse);tag.putBoolean("ClosedReverse",p.closedReverse);tag.putInt("Turns",p.turns);tag.putInt("Lift",p.lift);tag.putDouble("Hinge",p.hinge);tag.putDouble("Travel",p.travel);tag.putDouble("Overhang",p.overhang);tag.putInt("Joins",visual.frameJoins());tag.putBoolean("Open",visual.open());tag.putDouble("MinU",visual.artwork().minU());tag.putDouble("MinV",visual.artwork().minV());tag.putDouble("MaxU",visual.artwork().maxU());tag.putDouble("MaxV",visual.artwork().maxV());return tag;}
     private static NativeTrapdoorVisual readProjection(NativeTrapdoorSettings settings,CompoundTag tag){var data=settings.choices();var pose=new TrapdoorLeafPose(settings.diagonal(),data.position,tag.getInt("Turns"),tag.getBoolean("Inverted"),data.sliding,data.cover,data.overSurface,data.intoWall,tag.getBoolean("Reverse"),tag.getBoolean("ClosedReverse"),tag.getInt("Lift"),tag.getDouble("Hinge"),tag.getDouble("Travel"),tag.getDouble("Overhang"));return new NativeTrapdoorVisual(settings,pose,new NativeTrapdoorVisual.ArtworkBounds(tag.getDouble("MinU"),tag.getDouble("MinV"),tag.getDouble("MaxU"),tag.getDouble("MaxV")),tag.getInt("Joins"),tag.getBoolean("Open"));}

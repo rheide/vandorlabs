@@ -37,13 +37,18 @@ public final class NativeLightRenderer {
         Bake(NativeFlatWallModel.Bake source){this(new NativeLightMaterials(source));}
         private Draw draw(NativeLightEntity.Visual visual,NativeLightRenderProjection projection,BlockPos owner){var found=draws.get(owner);if(found!=null&&found.matches(visual,projection))return found;var next=new Draw(visual,projection,materials);builds++;if(found!=null){draws.remove(owner);bytes-=found.bytes();}if(next.bytes()<=BUDGET){draws.put(owner.immutable(),next);bytes+=next.bytes();while(bytes>BUDGET){var iterator=draws.values().iterator();bytes-=iterator.next().bytes();iterator.remove();}}return next;}
         public long retainedBytes(){return bytes;}public long meshBuilds(){return builds;}
+        private void clearWorld(){draws.clear();bytes=0;}
     }
     private record Prepared(long generation,Bake bake){}
     private static final AtomicLong GENERATION=new AtomicLong();
     private static final com.google.common.cache.Cache<Object,Prepared> PENDING=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(2).build();
     private static volatile Prepared active;
+    static Bake currentBake(){var current=active;return current==null?null:current.bake;}
     static void prepare(Object bakery,NativeFlatWallModel.Bake source){PENDING.put(bakery,new Prepared(GENERATION.incrementAndGet(),new Bake(source)));}
     @SubscribeEvent public static synchronized void completed(ModelEvent.BakingCompleted event){var next=PENDING.getIfPresent(event.getModelBakery());PENDING.invalidate(event.getModelBakery());if(next!=null&&(active==null||next.generation>active.generation))active=next;}
+    @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT) public static final class WorldLifetime {
+        @SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel().isClientSide()){var current=active;if(current!=null)current.bake.clearWorld();}}
+    }
     public static void render(NativeLightEntity.Visual visual,NativeLightRenderProjection projection,BlockPos owner,PoseStack poses,MultiBufferSource buffers,int packedNeighborLight,int overlay){var current=active;if(current==null)return;renderAt(current.bake,visual,projection,owner,poses,buffers,packedNeighborLight,overlay);}
     public static void renderAt(Bake bake,NativeLightEntity.Visual visual,NativeLightRenderProjection projection,BlockPos owner,PoseStack poses,MultiBufferSource buffers,int packedNeighborLight,int overlay){emitAt(bake,visual,projection,owner,poses.last(),buffers.getBuffer(NativePanelPlaybackRenderer.frameRenderType(true)),packedNeighborLight,overlay);}
     public static void emitAt(Bake bake,NativeLightEntity.Visual visual,NativeLightRenderProjection projection,BlockPos owner,PoseStack.Pose pose,VertexConsumer target,int packedNeighborLight,int overlay){var draw=bake.draw(visual,projection,owner);draw.housing.emit(pose,target,packedNeighborLight,overlay);if(draw.face!=null)draw.face.emit(pose,target,packedNeighborLight,overlay);}
