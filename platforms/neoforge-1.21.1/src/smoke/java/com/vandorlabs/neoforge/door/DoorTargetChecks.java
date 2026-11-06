@@ -14,6 +14,17 @@ public final class DoorTargetChecks {
     private static int checks;
     private static void need(boolean pass,String message){checks++;if(!pass)throw new AssertionError("Door target: "+message);}
     private static double probe(double min,double max){return min<0?(min+Math.min(0,max))*.5:max>1?(Math.max(1,min)+max)*.5:(min+max)*.5;}
+    private static void powerBoundary(ServerLevel level,BlockPos root){
+        var oldProbe=new BlockPos(((root.getX()+1024)&~15)+8,root.getY(),((root.getZ()+1024)&~15)+15);
+        level.getChunkAt(oldProbe);int x=oldProbe.getX()>>4,z=(oldProbe.getZ()>>4)+1;
+        need(level.getChunkSource().getChunkNow(x,z)==null,"vanilla power baseline begins at a genuinely cold adjacent chunk");
+        level.hasNeighborSignal(oldProbe);
+        need(level.getChunkSource().getChunkNow(x,z)!=null,"vanilla neighbor sampler reproduces the forced cold-chunk read");
+        var safeProbe=oldProbe.east(128);level.getChunkAt(safeProbe);x=safeProbe.getX()>>4;
+        need(level.getChunkSource().getChunkNow(x,z)==null,"bounded power sample begins at a fresh cold boundary");
+        need(com.vandorlabs.neoforge.redstone.NativeLoadedRedstonePower.level(level,safeProbe)==0
+                &&level.getChunkSource().getChunkNow(x,z)==null,"shared power sampler ignores the cold boundary without loading it");
+    }
     public static void run(ServerLevel level,NativeProgrammableDoorEntity prototype){
         var root=prototype.getBlockPos().east(64);level.getChunkAt(root);level.setBlockAndUpdate(root.below(),Blocks.STONE.defaultBlockState());
         var block=(NativeProgrammableDoorBlock)prototype.getBlockState().getBlock();var base=block.defaultBlockState();
@@ -49,6 +60,7 @@ public final class DoorTargetChecks {
             level.setBlock(root.south(),Blocks.STONE.defaultBlockState(),Block.UPDATE_CLIENTS);need(DoorUsePayload.apply(actor,intent),"solid block behind leaf does not occlude it");level.removeBlock(root.south(),false);
             actor.setPos(root.getX()+.5,actor.getY(),root.getZ()-10);need(!DoorUsePayload.apply(actor,intent),"out-of-reach intent refused");
             NativeDoorTargets.remove(host);need(NativeDoorTargets.trace(level,new Vec3(root.getX()-2,root.getY()+.5,root.getZ()+.5),new Vec3(root.getX()+2,root.getY()+.5,root.getZ()+.5))==null,"removed owner cannot be routed");
+            powerBoundary(level,root);
             System.out.println("[vandorlabs][door-target] dedicated PASS checks="+checks+" outsideOwnerRays="+outside+" installed two-half routing; client/occlusion/packets separate");
         }finally{NativeDoorTargets.remove(host);level.removeBlock(root,false);level.removeBlock(root.above(),false);}
     }
