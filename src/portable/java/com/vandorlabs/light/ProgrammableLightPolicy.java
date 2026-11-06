@@ -15,4 +15,7 @@ public final class ProgrammableLightPolicy {
     public static boolean litArtwork(boolean on,int level){return on&&level>0;}
     /** Numeric brightness does not disable the source's manual-state write. */
     public static boolean manualToggleAllowed(int trigger){return trigger==SpaceDoorData.TRIGGER_DISABLED;}
+    public static boolean consumesInteraction(boolean mainHand,boolean sneaking,boolean creative){return !mainHand||!sneaking||creative;}
+    public static boolean opensConfiguration(boolean authoritative,boolean mainHand,boolean sneaking,boolean creative){return authoritative&&mainHand&&sneaking&&creative;}
+    public static boolean togglesInteraction(boolean authoritative,boolean mainHand,boolean sneaking,int trigger){return authoritative&&mainHand&&!sneaking&&manualToggleAllowed(trigger);}
 }
