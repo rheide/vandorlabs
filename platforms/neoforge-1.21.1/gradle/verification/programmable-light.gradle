@@ -13,3 +13,9 @@ tasks.register('testNativeLightJoining', JavaExec) {
     maxHeapSize = '1G'
     args rootProject.file('../../build/test-artifacts/light-joining-forge.jsonl').absolutePath
 }
+tasks.register('testNativeLightGeometry', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.light.LightGeometryChecks'
+    args rootProject.file('../../build/test-artifacts/light-geometry-forge.jsonl').absolutePath
+}
