@@ -26,6 +26,7 @@ def main():
    if code:raise RuntimeError('Screen projection client exit '+str(code)+': '+str(out/'client.log'))
    check_log(out/'client.log','[vandorlabs][screen-power-client] client PASS')
    check_log(out/'client.log','[vandorlabs][screen-prepared-power-client] PASS')
+   check_log(out/'client.log','[vandorlabs][screen-power-lease-client] PASS')
   finally:stop(process)
   deadline=time.monotonic()+30
   while '[vandorlabs][screen-power-client] logout PASS' not in server_log.read_text(errors='replace'):
