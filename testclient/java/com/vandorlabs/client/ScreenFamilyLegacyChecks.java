@@ -1,0 +1,17 @@
+package com.vandorlabs.client;
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import net.minecraft.block.*;
+import net.minecraft.block.state.*;
+import net.minecraft.nbt.*;
+/** Actual public family state domains and placed block-entity factory choices. */
+public final class ScreenFamilyLegacyChecks {
+ public static final String[] IDS={"programmable_viewscreen","programmable_console","programmable_half_console","programmable_half_input","programmable_input","programmable_diagonal_screen","programmable_diagonal_half_screen"};
+ public static void main(String[] args)throws Exception{net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new net.minecraft.util.ResourceLocation("minecraft:screen_family_reference"));java.security.MessageDigest hash=java.security.MessageDigest.getInstance("SHA-256");int cases=0;
+  for(String id:IDS){Block found=null;for(Block block:ModBlocks.BLOCKS)if(block.getRegistryName().getResourcePath().equals(id))found=block;if(found==null)throw new AssertionError("Missing actual canonical "+id);BlockAnimatedScreenSelector block=(BlockAnimatedScreenSelector)found;TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)block.createNewTileEntity(null,0);NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);net.minecraft.util.math.BlockPos pos=new net.minecraft.util.math.BlockPos(0,80,0);world.states.put(pos,block.getDefaultState());tile.setWorld(world);tile.setPos(pos);world.tiles.put(pos,tile);NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());StringBuilder text=new StringBuilder(id);text.append(':').append(block.getBlockState().getValidStates().size()).append(':').append(tile.activationSurfaceSlot());
+   // Dispatch against the actual canonical block and its locally attached factory tile.
+   for(int slot=0;slot<2;slot++)text.append(':').append(RedstoneScreenInteractions.supportsSlot(block,slot)).append(',').append(RedstoneScreenInteractions.half(block,slot));
+   text.append(':').append(FrameAppearance.displayBlock(block));for(String key:new String[]{"housingTexture","displayMode","animationSpeedIndex","framed","FrameFront","DisplayArtworkVersion"})text.append(':').append(key).append('=').append(saved.hasKey(key)?saved.getTag(key):"absent");
+   for(int meta=0;meta<16;meta++){IBlockState state=block.getStateFromMeta(meta);text.append(':').append(meta).append('=').append(block.getMetaFromState(state));for(net.minecraft.block.properties.IProperty<?> property:new java.util.TreeSet<net.minecraft.block.properties.IProperty<?>>((a,b)->a.getName().compareTo(b.getName())){{addAll(state.getPropertyKeys());}})text.append(',').append(property.getName()).append('=').append(state.getValue(property));cases++;}hash.update(text.toString().getBytes("UTF-8"));
+  }StringBuilder out=new StringBuilder();for(byte b:hash.digest())out.append(String.format("%02x",b&255));if(!out.toString().equals("c9f2a139f52e08833a1cadd3524ebe26e3d28245a5fcbef234055331d2f962f7"))throw new AssertionError("Actual screen factories changed "+out);System.out.println("Actual Screen family reference PASS cases="+cases+" sha256="+out);}
+}
