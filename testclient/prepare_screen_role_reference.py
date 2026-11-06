@@ -30,6 +30,17 @@ def write_geometry(directory,target):
  with open(target,'wb') as raw:
   with gzip.GzipFile(filename='',mode='wb',fileobj=raw,mtime=0) as compressed:compressed.write(payload)
 
+def write_lighting(directory,target):
+ directory=Path(directory);cases={}
+ for line in (directory/'screen-role-gl.jsonl').read_text().splitlines():
+  row=json.loads(line);key=(row['id'],row['mode'],row['variant'],row['frame']);value=dict(id=key[0],mode=key[1],variant=key[2],frame=key[3],owner=row['draws'][0]['vertices'][6],lights=[draw['vertices'][6] for draw in row['draws'] if draw['vertexCount']])
+  if key in cases and cases[key]!=value:raise AssertionError('Released light depends on metadata: '+str(key))
+  cases[key]=value
+ if len(cases)!=126:raise AssertionError('Released light coverage changed')
+ payload=json.dumps(dict(captureSha256=(directory/'reference.sha256').read_text().strip(),cases=[cases[key] for key in sorted(cases)]),separators=(',',':')).encode()
+ with open(target,'wb') as raw:
+  with gzip.GzipFile(filename='',mode='wb',fileobj=raw,mtime=0) as compressed:compressed.write(payload)
+
 def compact(directory):
  directory=Path(directory);rows=[json.loads(line) for line in (directory/'screen-role-gl.jsonl').read_text().splitlines()];poses={};requests={}
  for row in rows:
@@ -57,5 +68,6 @@ def verify(actual,reference,exact=False):
 
 if __name__=='__main__':
  import argparse
- parser=argparse.ArgumentParser();parser.add_argument('capture',type=Path);parser.add_argument('output',type=Path);parser.add_argument('--geometry',type=Path);args=parser.parse_args();args.output.write_text(json.dumps(compact(args.capture),separators=(',',':'))+'\n')
+ parser=argparse.ArgumentParser();parser.add_argument('capture',type=Path);parser.add_argument('output',type=Path);parser.add_argument('--geometry',type=Path);parser.add_argument('--lighting',type=Path);args=parser.parse_args();args.output.write_text(json.dumps(compact(args.capture),separators=(',',':'))+'\n')
  if args.geometry:write_geometry(args.capture,args.geometry)
+ if args.lighting:write_lighting(args.capture,args.lighting)
