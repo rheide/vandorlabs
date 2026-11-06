@@ -1,0 +1,20 @@
+package com.vandorlabs.neoforge.door;
+import com.vandorlabs.render.PanelDepthPolicy;
+import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.*;
+import net.minecraft.sounds.SoundSource;
+import net.minecraft.world.InteractionResult;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.context.BlockPlaceContext;
+/** Inactive Large item: clicked bottom center, three supports, all nine edit checks. */
+public final class NativeLargeDoorItem extends BlockItem {
+ public NativeLargeDoorItem(NativeLargeDoorBlock block,Properties properties){super(block,properties);}
+ @Override public InteractionResult place(BlockPlaceContext context){
+  var level=context.getLevel();var player=context.getPlayer();var stack=context.getItemInHand();var block=(NativeLargeDoorBlock)getBlock();BlockPos center=context.getClickedPos();Direction face=context.getHorizontalDirection().getOpposite(),width=face.getCounterClockWise();BlockPos anchor=center.relative(width,-1);
+  if(player==null||stack.isEmpty()||!context.canPlace()||!NativeLargeDoorLifecycle.loaded(level,center)||anchor.getY()<level.getMinBuildHeight()+1||anchor.getY()+2>=level.getMaxBuildHeight()||!NativeLargeDoorLifecycle.supported(level,anchor,face))return InteractionResult.FAIL;
+  for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos cell=anchor.relative(width,x).above(y);if(!NativeLargeDoorLifecycle.loaded(level,cell)||!level.getBlockState(cell).canBeReplaced(context)||level.getBlockState(cell).hasBlockEntity()||level.getBlockEntity(cell)!=null||!level.mayInteract(player,cell)||!player.mayUseItemAt(cell,context.getClickedFace(),stack))return InteractionResult.FAIL;}
+  CompoundTag configured=null;var custom=stack.get(DataComponents.CUSTOM_DATA);if(custom!=null){var tag=custom.copyTag();if(tag.contains("SpaceDoorSettings",Tag.TAG_COMPOUND))configured=tag.getCompound("SpaceDoorSettings");}var hit=context.getClickLocation().subtract(center.getX(),center.getY(),center.getZ());int depth=PanelDepthPolicy.fromHit(face.get3DDataValue(),(float)hit.x,(float)hit.z);NativeDoorSettings settings;try{settings=NativeLargeDoorPlacement.choices(configured,depth);}catch(IllegalArgumentException malformed){return InteractionResult.FAIL;}var channels=NativeLargeDoorPlacement.channels(configured);if(level.isClientSide)return InteractionResult.SUCCESS;
+  boolean[] transferred={false};Runnable transfer=()->{if(!transferred[0]){transferred[0]=true;stack.shrink(1);}};boolean success=false;try{success=NativeLargeDoorPlacement.install(context,block,anchor,face,settings,channels,transfer);}finally{if(success||level.getBlockState(anchor).is(block)&&level.getBlockEntity(anchor) instanceof NativeLargeDoorEntity root&&root.placementRecovery())transfer.run();}if(!success)return InteractionResult.FAIL;var sound=block.defaultBlockState().getSoundType(level,anchor,player);level.playSound(player,center,sound.getPlaceSound(),SoundSource.BLOCKS,1,.8F);return InteractionResult.CONSUME;
+ }
+}
