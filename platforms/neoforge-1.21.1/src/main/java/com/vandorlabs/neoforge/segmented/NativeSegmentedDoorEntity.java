@@ -70,7 +70,7 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
   for(var t:all)t.setChanged();for(var t:all)if(!rootsOnly||t.topOffset==0)t.publicationChanged();
  }
  protected void publicationChanged(){if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);}
- private Publication project(List<NativeSegmentedDoorSettings> rows,List<SegmentedWindowLayout> windows){return new Publication(new NativeSegmentedVisual(columns,height,column,facing(),texture,settings,rows,windows,!inert&&formed&&level!=null,false,false,false),new NativeSegmentedVisual.Motion(identity,motionIdentity,sequence,targetOpen,from,ticksPerSection,started,duration));}
+ private Publication project(List<NativeSegmentedDoorSettings> rows,List<SegmentedWindowLayout> windows){return new Publication(new NativeSegmentedVisual(columns,height,column,facing(),texture,settings,rows,windows,!inert&&formed&&level!=null,false,false,false),new NativeSegmentedVisual.Motion(identity,motionIdentity,sequence,targetOpen,pose(0),ticksPerSection,started,duration));}
  void publishLocal(){List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();for(int row=0;row<height;row++){rows.add(settings);windows.add(SegmentedWindowLayout.SINGLE);}publication=project(rows,windows);fluidState.localChanged();}
 
  @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return channels;}@Override public void setChannelLevel(int level){boolean next=level>0;if(channelSignal!=next){channelSignal=next;powerPending=true;root().powerPending=true;}}
