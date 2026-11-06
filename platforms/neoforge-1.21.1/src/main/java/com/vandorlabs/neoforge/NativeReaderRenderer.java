@@ -11,6 +11,8 @@ import java.util.*;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.resources.model.Material;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
@@ -21,18 +23,19 @@ public final class NativeReaderRenderer {
  private NativeReaderRenderer(){}
  public static final class Bake {
   private final Map<String,NativeDoorMesh> frames;
-  public Bake(java.util.function.Function<String,BakedModel> lookup){
+  public Bake(java.util.function.Function<String,BakedModel> lookup){this(lookup,material->Minecraft.getInstance().getTextureAtlas(material.atlasLocation()).apply(material.texture()));}
+  public Bake(java.util.function.Function<String,BakedModel> lookup,java.util.function.Function<Material,TextureAtlasSprite> textures){
    var meshes=new NativeDoorMesh.Bake();var frames=new HashMap<String,NativeDoorMesh>();
    for(String id:NativeReaderAssets.models()){
     var path="/assets/vandorlabs/models/"+id.split(":",2)[1]+".json";
     try(var reader=new InputStreamReader(Objects.requireNonNull(NativeReaderRenderer.class.getResourceAsStream(path),path),StandardCharsets.UTF_8)){
-     var mesh=meshes.prepare(Objects.requireNonNull(lookup.apply(id),id),JsonParser.parseReader(reader).getAsJsonObject().getAsJsonArray("elements"));if(mesh==null)throw new IllegalArgumentException("Unsupported authored reader model "+id);frames.put(id,mesh);
+     var original=Objects.requireNonNull(lookup.apply(id),id);boolean canonical=NativeDoorArtwork.canonicalGeometry(id,Minecraft.getInstance().getResourceManager());if(!NativeDoorArtwork.isStatic(original)){original=NativeDoorCanonicalBake.model(id,textures);canonical=true;}var mesh=meshes.prepare(original,canonical?JsonParser.parseReader(reader).getAsJsonObject().getAsJsonArray("elements"):null);frames.put(id,Objects.requireNonNull(mesh,id));
     }catch(java.io.IOException failure){throw new IllegalStateException("Reader frame resource "+id,failure);}
    }this.frames=Map.copyOf(frames);
   }
   /** The supplied pose already contains any host/half-scale transforms. */
   public void frame(boolean chip,Direction face,int rotation,PoseStack.Pose pose,VertexConsumer target,int light,int overlay,boolean diffuse){
-   var mesh=frames.get(NativeReaderAssets.model(chip,face.getSerializedName(),rotation));mesh.emit(pose,target,Direction.SOUTH,0,light,overlay,0,0,0,0,0,1,0,1,diffuse);
+   var mesh=frames.get(NativeReaderAssets.model(chip,face.getSerializedName(),rotation));if(mesh.hasDiffuse(diffuse))mesh.emit(pose,target,Direction.SOUTH,0,light,overlay,0,0,0,0,0,1,0,1,diffuse);
   }
   public long retainedBytes(){return frames.values().stream().mapToLong(NativeDoorMesh::retainedBytes).sum();}
  }
