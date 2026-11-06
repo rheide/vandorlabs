@@ -1,0 +1,11 @@
+# Native programmable Light foundation
+
+The full, frame and slab Light families have an inactive scalar foundation. It does not register native blocks, items, entities, screens or renderers.
+
+The actual source corpus distinguishes fresh construction from typed loading and records the complete saved tag and configured-item projection for each family. Its 771 settings cases include integer, byte, short, long, fractional numeric, string, compound and array representations. Light-owned fields use `LightData`; inherited housing, channel, frame, artwork and transmission fields retain their existing shared adapters and separate authorities. A positive first saved channel selects the legacy redstone-on trigger only when an integer Light trigger is absent. Invalid integer triggers normalize to manual mode.
+
+A further 66,816 actual-source evaluations cover all three emitted-light implementations. `ProgrammableLightPolicy` keeps configured brightness, direct numeric power, joined numeric power and joined boolean power distinct. Numeric brightness uses the selected signal level plus the clamped offset and ignores both the trigger and saved manual-on value. The manual click path can still change its saved manual-on value when the trigger is disabled. Outside numeric mode, the configured level remains readable even while the light is off; emitted light is zero while off, and lit artwork additionally requires a positive level.
+
+Loaded joining, actual channel/physical sampling and configured-item installation remain separate acceptance boundaries. The source grouping code requires the same block class, facing and effective face artwork, matching slab half and join eligibility; manual membership also matches current on state. Power reconciliation deliberately groups without that final on-state comparison. Small frame lights remain independent. No eager world scan, new native host or public interaction is introduced by this scalar foundation.
+
+Future propulsion adapters may reuse scalar signal inputs and clamping only after auditing their own source behavior. Particle thresholds, propulsion activation, moving-world authority and Vehicle Mode are outside this foundation. The Light evaluator therefore accepts sampled numeric and boolean inputs and retains no world, tile or channel-service reference.

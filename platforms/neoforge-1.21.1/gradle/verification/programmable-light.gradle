@@ -1,0 +1,7 @@
+tasks.register('testNativeLightFoundation', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.light.LightFoundationChecks'
+    args rootProject.file('../../build/test-artifacts/programmable-light-settings-forge.jsonl').absolutePath,
+         rootProject.file('../../build/test-artifacts/programmable-light-policy-forge.jsonl').absolutePath
+}
