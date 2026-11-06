@@ -30,7 +30,11 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     public final int column(){return column;}public final int row(){return row;}
     public final BlockPos anchorPos(){return level==null||!(getBlockState().getBlock() instanceof NativeLargeDoorBlock)?worldPosition:worldPosition.relative(getBlockState().getValue(NativeLargeDoorBlock.FACING).getCounterClockWise(),-column).below(row);}
     private void writeRole(CompoundTag tag){tag.putBoolean("LargeDoorAssigned",assigned);tag.putInt("LargeDoorColumn",column);tag.putInt("LargeDoorRow",row);}
-    @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){assigned=tag.getBoolean("LargeDoorAssigned");column=tag.getInt("LargeDoorColumn");row=tag.getInt("LargeDoorRow");if(column<0||column>2||row<0||row>2)assigned=false;super.loadAdditional(tag,registries);NativeLargeDoorTargets.add(this);}
+    @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
+        // Released Large parts all use the rotating block prototype when the motion schema is absent.
+        // Normalize locally before publishing; followers deliberately never enter the channel-registration hook.
+        if(!tag.contains("SpaceDoorSchema")&&getBlockState().getBlock() instanceof NativeLargeDoorBlock){tag=tag.copy();tag.putBoolean("SpaceDoorSliding",false);tag.putInt("SpaceDoorSchema",2);}
+        assigned=tag.getBoolean("LargeDoorAssigned");column=tag.getInt("LargeDoorColumn");row=tag.getInt("LargeDoorRow");if(column<0||column>2||row<0||row>2)assigned=false;super.loadAdditional(tag,registries);NativeLargeDoorTargets.add(this);}
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);writeRole(tag);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=super.getUpdateTag(registries);writeRole(tag);return tag;}
     private synchronized void publishProjection(NativeDoorSettings settings,BlockState raw,BlockPos anchor,NativeLargeDoorGeometry.Snapshot geometry){
