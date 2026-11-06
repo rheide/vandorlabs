@@ -7,3 +7,12 @@ task testDoorGeometryAdapters(type: JavaExec) {
     if (project.hasProperty('doorBoundsReference')) systemProperty 'vandorlabs.doorBoundsReference', file(project.property('doorBoundsReference')).absolutePath
 }
 check.dependsOn testDoorGeometryAdapters
+
+task exportDoorRayReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorRayLegacyChecks'
+    args file(project.findProperty('doorRayReference') ?: 'build/test-artifacts/door-rays-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
