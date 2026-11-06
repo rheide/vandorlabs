@@ -37,3 +37,11 @@ task exportPropulsionControlReference(type: JavaExec) {
     main = 'com.vandorlabs.client.PropulsionControlLegacyOracle'
     args file('build/test-artifacts/propulsion-control-forge.jsonl').absolutePath
 }
+
+task exportPropulsionShapeReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionShapeLegacyOracle'
+    args file('build/test-artifacts/propulsion-shape-forge.jsonl').absolutePath
+}
