@@ -100,3 +100,12 @@ task exportPropulsionParticleBillboardReference(type: JavaExec) {
     main = 'com.vandorlabs.client.PropulsionParticleBillboardLegacyOracle'
     args file('build/test-artifacts/propulsion-particle-billboard-forge.jsonl').absolutePath
 }
+
+task exportPropulsionParticleSpritesReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionParticleSpritesLegacyOracle'
+    args((project.findProperty('vanillaParticleArchive') ?: new File(gradle.gradleUserHomeDir,'caches/forge_gradle/minecraft_repo/versions/1.12.2/client-extra.jar')).toString(),
+         file('build/test-artifacts/propulsion-particle-sprites-forge.json').absolutePath)
+}
