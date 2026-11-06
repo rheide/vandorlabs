@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Fix screen pulses remaining on after their control artwork is hidden and restored. Restored pulses keep their original expiry time.
+
 - Share Programmable Screen activation and legacy artwork migration while preserving existing Forge dialogs, saved control rows and joined power behavior. Native screen-family foundations remain unregistered.
 - Preserve native Segmented Door legacy water through opposite-side edits and complete drainage, preventing lost or recreated water after reload.
 
