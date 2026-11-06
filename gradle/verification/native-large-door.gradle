@@ -1,0 +1,7 @@
+task exportLargeDoorReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LargeDoorLegacyChecks'
+    maxHeapSize = '512M'
+    systemProperty 'vandorlabs.largeDoorReference', file(project.findProperty('largeDoorReference') ?: 'build/test-artifacts/large-door-forge.json').absolutePath
+}
