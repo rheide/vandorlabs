@@ -25,6 +25,8 @@ tasks.register('generateSegmentedResources', Exec) {
     workingDir projectDir
     commandLine segmentedPython, 'generate_segmented_resources.py'
     inputs.file('generate_segmented_resources.py')
+    inputs.file('../../src/main/resources/assets/vandorlabs/models/item/segmented_door.json')
+    inputs.file('../../src/main/resources/assets/vandorlabs/recipes/segmented_door.json')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/segmented/segmented_panel.png')
     outputs.dir('build/generated/segmented-resources')
 }

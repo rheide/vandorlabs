@@ -24,6 +24,9 @@ public final class NativeDoorSelection {
     @SubscribeEvent public static void render(RenderLevelStageEvent event){if(event.getStage()==RenderLevelStageEvent.Stage.AFTER_ENTITIES)update(event.getPartialTick().getGameTimeDeltaPartialTick(true));}
     @SubscribeEvent public static void input(InputEvent.InteractionKeyMappingTriggered event){
         var target=update(1);if(target==null||!event.isUseItem())return;
+        var mc=Minecraft.getInstance();var part=com.vandorlabs.neoforge.segmented.NativeSegmentedTargets.loaded(mc.level,target.hit().getBlockPos());
+        if(part!=null){if(event.getHand()!=net.minecraft.world.InteractionHand.MAIN_HAND||mc.player.getMainHandItem().getItem() instanceof net.minecraft.world.item.BlockItem)return;var root=part.root();var publication=root.publication();if(publication==null)return;
+            event.setCanceled(true);PacketDistributor.sendToServer(new com.vandorlabs.neoforge.segmented.SegmentedUsePayload(part.getBlockPos(),target.hit().getLocation(),publication.motion().identity(),root.sequence(),com.vandorlabs.neoforge.segmented.NativeSegmentedTargets.pose(root)));return;}
         event.setCanceled(true);PacketDistributor.sendToServer(new DoorUsePayload(target.root(),event.getHand()));
     }
 }
