@@ -10,7 +10,7 @@ import net.minecraft.client.renderer.blockentity.*;
 import net.minecraft.core.*;
 import net.minecraft.world.level.*;
 
-/** Inactive BER adapter. Topology and artwork are prepared; only six loaded-neighbour light samples are live. */
+/** Light BER adapter. Topology and artwork are prepared; only six loaded-neighbour light samples are live. */
 public final class NativeLightBlockEntityRenderer implements BlockEntityRenderer<NativeLightEntity> {
     private static final Direction[] SIDES=Direction.values();
     private static final ThreadLocal<BlockPos.MutableBlockPos> POSITION=ThreadLocal.withInitial(BlockPos.MutableBlockPos::new);

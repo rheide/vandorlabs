@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
 
-/** Unregistered Light housing and lifecycle. Renderer, item ownership and menu binding remain separate. */
+/** Light housing and deferred lifecycle, with explicit renderer, item and menu bindings. */
 public class NativeLightBlock extends BaseEntityBlock {
     public enum Kind {FULL,FRAME,SLAB}
     public static final DirectionProperty FACING=BlockStateProperties.FACING;

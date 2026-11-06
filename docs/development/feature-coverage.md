@@ -18,7 +18,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Glass, canopy and cockpit glass | pending | unimplemented | non-vehicle first |
 | Programmable and large doors (Segmented Doors tracked separately) | partial (ordinary and Large Doors enabled) | unimplemented | non-vehicle first |
 | Trapdoors and diagonal trapdoors | partial (both enabled) | unimplemented | non-vehicle first |
-| Programmable lights and propulsion | pending | unimplemented | non-vehicle first |
+| Programmable lights and propulsion | partial (full/frame/slab Lights enabled; propulsion pending) | unimplemented | non-vehicle first |
 | Chairs and seats | pending | unimplemented | non-vehicle first |
 | Triggers, buttons, rockers, levers and throttles | partial (Trigger and mounted control families) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
@@ -91,3 +91,5 @@ Segmented Doors are enabled with canonical topology, authoritative controls, per
 Programmable Screen foundations now include shared activation and artwork migration, exact seven-role factory defaults, saved row controls and guarded legacy transmitter migration. An unregistered native host retains failed snapshots, filters public updates and queues channel registration and physical sampling after loading. Standalone capacities remain eight/four rows; cockpit capacities remain six/three and their vehicle-specific behavior is deferred. The historical diagonal half-console ID resolves to the current diagonal half-screen role. These foundations do not enable native screens. Focused Forge display-activation and pulse checks preserve the current player path; restoring hidden control artwork now resumes its pending pulse deadline instead of leaving an output on.
 
 Unregistered native Screen foundations now include the production artwork catalog, numeric control-row service, separate-process pulse expiry and loaded-source retirement. Immutable bounds and collision/picking match all 2,240 source role configurations and 60,480 rays. Canonical blocks, editor, surface rendering and actual player interactions remain pending. Screens retain opaque saved fluid data while refusing waterlogging, matching the source.
+
+Programmable Light, Light Frame and Light Slab are enabled with a shared canonical entity ID, source-matched grouping, configured items and dedicated ON/OFF/Sides/Redstone editing. Focused canonical checks cover recipes, Survival interactions, exact saved owners, production item/world models, neighbor lighting, reload and recovery of failed component/attachment data. Standalone propulsion and particle families remain in conversion. These focused checks do not establish the deferred full non-Vehicle release gate or hardware shader acceptance.

@@ -19,7 +19,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
-/** Inactive bake-owned selector. Source inventory artwork uses manual saved state, independent of world power. */
+/** Bake-owned selector. Source inventory artwork uses manual saved state, independent of world power. */
 public final class NativeLightItemModel extends BakedModelWrapper<BakedModel> {
     private static final int BUDGET=4*1024*1024;
     private static final Direction[] FACES={null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST};

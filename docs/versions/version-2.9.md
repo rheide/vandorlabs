@@ -39,7 +39,7 @@ Screen pulse expiry now survives switching control artwork away and back: restor
 
 Native flat and diagonal wall/porthole placement now preserves original clicked-face coordinates. Focused source comparisons and actual Survival uses cover depth, anchoring and replaceable target cells.
 
-Programmable Lights now share save decoding, brightness/activation policy and cached housing meshes across versions. Forge artwork, lighting and saved defaults remain unchanged. Housing emission reuses immutable pixel-space geometry within a bounded cache and retires atlas references after each draw; the native Light host and player-facing integration are still under development.
+Programmable Lights now share save decoding, brightness/activation policy and cached housing meshes across versions. Forge artwork, lighting and saved defaults remain unchanged. Housing emission reuses immutable pixel-space geometry within a bounded cache and retires atlas references after each draw; Programmable Light, Light Frame and Light Slab are enabled in the experimental native build with dedicated editing, configured items and source-matched grouping. Focused canonical recipe, Survival, restart, editor and production-render checks pass. Standalone propulsion and particle families remain in conversion; broader native release acceptance is still pending.
 
 Ordinary and Large native Doors also use original clicked-face coordinates for depth and hinge choice, including legacy float half-click ties. Frozen actual item callbacks, real Survival placement and focused ordinary/Large client checks preserve the existing player paths.
 

@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable Programmable Light, Light Frame and Light Slab in the experimental native build with source-matched grouping, configured items and dedicated ON/OFF/Sides/Redstone editing.
+
 - Retain failed native platform snapshots through component/attachment decode failures and Trapdoor mining. Opaque recovery items preserve their original data and refuse ordinary placement.
 
 - Enable regular and diagonal Trapdoors in the experimental native build with dedicated editing, configured items, source-matched assemblies, moved-leaf interactions and contained-fluid rendering.

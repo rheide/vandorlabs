@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
-/** Inactive canonical definitions. Loading this class must precede deferred-register attachment. */
+/** Canonical definitions. Loading this class must precede deferred-register attachment. */
 public final class NativeLightRegistrations {
     public static final String ID="programmable_light", FRAME_ID="programmable_light_frame", SLAB_ID="programmable_light_slab";
     public static final DeferredHolder<Block,NativeLightBlock> BLOCK=VandorLabsBootstrap.BLOCKS.register(ID,()->block(NativeLightBlock.Kind.FULL));

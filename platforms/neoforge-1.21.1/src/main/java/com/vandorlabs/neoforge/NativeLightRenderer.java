@@ -13,7 +13,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ModelEvent;
 
-/** Inactive Light backend. Host supplies one immutable publication and prepared packed neighbour light. */
+/** Bake-owned Light backend. Host supplies one immutable publication and prepared packed neighbour light. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeLightRenderer {
     private NativeLightRenderer(){}

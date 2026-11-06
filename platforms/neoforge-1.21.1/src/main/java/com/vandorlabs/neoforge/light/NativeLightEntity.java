@@ -18,7 +18,7 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.Half;
 import java.util.*;
 
-/** Unregistered Light authority. Only immutable prepared choices and effective output reach model workers. */
+/** Light authority. Only immutable prepared choices and effective output reach model workers. */
 public class NativeLightEntity extends BlockEntity implements NativeChannelMember {
     public record Transmission(ChannelList channels,int range,boolean local){public Transmission{Objects.requireNonNull(channels);if(!TransmissionSettings.validRange(range))throw new IllegalArgumentException("Light transmission range");}}
     record Profile(NativeLightSettings light,NativeScreenSettings inherited,FrameSettings frames,PanelGlassSettings glass,PanelPlayback playback,Transmission transmission,boolean transmissionPresent){}

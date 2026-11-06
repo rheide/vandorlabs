@@ -8,7 +8,7 @@ import net.minecraft.server.level.*;
 import net.minecraft.world.entity.player.*;
 import net.minecraft.world.inventory.*;
 import net.minecraft.world.item.ItemStack;
-/** Unregistered dedicated editor; loaded owner/window identity and present held tool authorize every edit. */
+/** Dedicated editor; loaded owner/window identity and present held tool authorize every edit. */
 public final class NativeLightMenu extends AbstractContainerMenu {
  public final NativeLightEntity tile;private final NativeLightBlock block;
  public NativeLightMenu(MenuType<?> type,int id,NativeLightEntity tile){super(type,id);this.tile=java.util.Objects.requireNonNull(tile);if(!(tile.getBlockState().getBlock() instanceof NativeLightBlock owner))throw new IllegalArgumentException("Missing Light family");block=owner;}

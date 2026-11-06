@@ -329,7 +329,7 @@
       "id": "lighting_propulsion",
       "label": "Programmable lights and propulsion",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "antigravity_plate",
         "impulse_engine",
@@ -363,18 +363,19 @@
         "vertical_hover_thruster"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native shape/light adapters",
-        "joined light/channel policy",
-        "particle and propulsion behavior",
-        "live parity"
+        "Standalone propulsion and redstone-light adapters, connected shapes, particles and dedicated controls",
+        "Broader external-material/copy workflows and saved-world acceptance",
+        "Hardware/shader-pack acceptance and final non-Vehicle release gate"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "implemented": [
-        "Shared Forge/native Light save and signal policy retains typed defaults, item projections and lazy input sampling; focused Forge lighting and frozen source comparisons pass",
-        "Unregistered full/frame/slab host with exact bounded geometry, loaded-only grouping, immutable public visuals and auxiliary light; placed-world authority and separate-process restart checked"
+        "Shared Forge/native Light save, signal policy and immutable housing emission preserve defaults, lazy Forge input sampling and frozen emitted geometry",
+        "Canonical Programmable Light, Light Frame and Light Slab share the released programmable_light entity ID with configured items, dedicated editor, loaded-only grouping and auxiliary light",
+        "Canonical recipes, Survival placement/harvest, save/restart, actual editor and all 36 inventory variants pass focused checks",
+        "Production world rendering passes source UV/visibility, real group toggles, neighbor lighting, material edits, reload and disabled-renderer comparisons with bounded caches",
+        "Platform components and attachments retain live edits through items and preserve failed snapshots through scoped decode failure and process restart"
       ]
     },
     {

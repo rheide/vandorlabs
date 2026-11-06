@@ -64,6 +64,9 @@ public final class NativeLightItemModelChecks {
             for(int side=-1;side<6;side++)for(var quad:selected.getQuads(null,side<0?null:Direction.values()[side],RandomSource.create(42),ModelData.EMPTY,null))if(quad.getSprite()==expected)lamps++;
             need(lamps>0,"production selector lamp "+family+"/"+style+"/"+lit);padded(selected);variants++;
         }
+        String[] named={"programmable_light","programmable_light_frame","programmable_light_slab","programmable_trapdoor","programmable_diagonal_trapdoor"};
+        String[] labels={"Programmable Light","Programmable Light Frame","Programmable Light Slab","Programmable Trapdoor","Programmable Diagonal Trapdoor"};
+        for(int index=0;index<named.length;index++){var item=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",named[index]));need(new ItemStack(item).getHoverName().getString().equals(labels[index]),"canonical translated item name "+named[index]);}
         System.out.println("[vandorlabs][light-editor-client] canonical inventory PASS actual ItemRenderer variants="+variants);
     }
     private static void dynamicSource(BakedModel source,java.util.function.Function<String,net.minecraft.client.renderer.texture.TextureAtlasSprite> atlas){
