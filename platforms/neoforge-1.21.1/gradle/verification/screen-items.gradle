@@ -1,3 +1,4 @@
 neoForge.runs.configureEach {
+    if(project.hasProperty('screenConfiguredPlacementReference')) systemProperty 'vandorlabs.screenConfiguredPlacementReference',file(project.property('screenConfiguredPlacementReference')).absolutePath
     if(project.hasProperty('screenItemReference')) systemProperty 'vandorlabs.screenItemReference',file(project.property('screenItemReference')).absolutePath
 }

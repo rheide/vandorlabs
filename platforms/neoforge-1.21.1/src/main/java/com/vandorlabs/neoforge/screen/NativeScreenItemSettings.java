@@ -2,6 +2,7 @@ package com.vandorlabs.neoforge.screen;
 
 import com.vandorlabs.persistence.SaveSchema;
 import com.vandorlabs.screen.ScreenFamily;
+import com.vandorlabs.screen.ScreenPlacement;
 import net.minecraft.core.*;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.*;
@@ -31,9 +32,11 @@ public final class NativeScreenItemSettings {
         var stack=new ItemStack(item);if(owner!=null){var root=new CompoundTag();root.put(CONFIGURATION,choices(owner,registries));stack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));}return stack;
     }
     public static final class Prepared {
-        private final CompoundTag snapshot;private final HolderLookup.Provider registries;private final ScreenFamily family;
-        private Prepared(NativeScreenEntity owner,HolderLookup.Provider registries){snapshot=owner.saveWithoutMetadata(registries).copy();this.registries=registries;family=owner.family();}
+        private final CompoundTag snapshot;private final HolderLookup.Provider registries;private final ScreenFamily family;private final BlockEntityType<?> type;
+        private Prepared(NativeScreenEntity owner,HolderLookup.Provider registries){snapshot=owner.saveWithoutMetadata(registries).copy();this.registries=registries;family=owner.family();type=owner.getType();}
+        private Prepared(Prepared previous,CompoundTag next){snapshot=next.copy();registries=previous.registries;family=previous.family;type=previous.type;}
         public CompoundTag snapshot(){return snapshot.copy();}
+        BlockEntityType<?> type(){return type;}HolderLookup.Provider registries(){return registries;}ScreenFamily family(){return family;}
     }
     public static Prepared prepare(BlockEntityType<?> type,BlockPos pos,BlockState state,ScreenFamily family,CompoundTag raw,HolderLookup.Provider registries){
         var draft=new NativeScreenEntity(type,pos,state,family,NativeScreenCatalog.INSTANCE);var merged=draft.saveWithoutMetadata(registries);
@@ -44,6 +47,16 @@ public final class NativeScreenItemSettings {
         draft.loadWithComponents(merged.copy(),registries);if(draft.inert())throw new IllegalArgumentException("Unsupported Screen item ownership");
         return new Prepared(draft,registries);
     }
+    /** Input items always replace the ceiling flag; other saved mount slots change only in Source callbacks. */
+    public static Prepared mounting(Prepared prepared,ScreenPlacement.Result placement){
+        var tag=prepared.snapshot.copy();var family=prepared.family;
+        if(family.keyboard){tag.putBoolean("CeilingMounted",placement.ceilingMounted);if(placement.ceilingMounted)tag.putInt("CeilingPosition",placement.ceilingPosition);if(placement.wallPosition>=0)tag.putInt("wallPosition",placement.wallPosition);}
+        else if(family==ScreenFamily.HALF_CONSOLE&&placement.ceilingMounted){tag.putBoolean("CeilingMounted",true);tag.putInt("CeilingPosition",placement.ceilingPosition);}
+        return new Prepared(prepared,tag);
+    }
+    private static final java.util.Set<NativeScreenEntity> FORCED_DROPS=java.util.Collections.newSetFromMap(new java.util.WeakHashMap<>());
+    static void prepareRecoveryDrop(NativeScreenEntity owner,boolean needed){if(needed&&owner.inert())FORCED_DROPS.add(owner);else FORCED_DROPS.remove(owner);}
+    static ItemStack takeRecoveryDrop(Item item,NativeScreenEntity owner,HolderLookup.Provider registries){return FORCED_DROPS.remove(owner)&&owner.inert()?pick(item,owner,registries):ItemStack.EMPTY;}
     public static void install(NativeScreenEntity owner,Prepared prepared){
         if(owner.family()!=prepared.family)throw new IllegalArgumentException("Screen item family mismatch");
         owner.loadWithComponents(prepared.snapshot.copy(),prepared.registries);if(owner.inert())throw new IllegalArgumentException("Prepared Screen platform data failed installation");
