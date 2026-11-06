@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenOwnership', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.screen.ScreenOwnershipChecks'
+ systemProperty 'screenOwnershipReference',file(project.findProperty('screenOwnershipReference') ?: '../../build/test-artifacts/screen-ownership-reference.json').absolutePath
+}
