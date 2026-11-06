@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Bake settled native Segmented Door bodies into chunk meshes after confirmed uploads, retaining visible animated fallbacks during rebuilds and removal.
+
 - Fix screen pulses remaining on after their control artwork is hidden and restored. Restored pulses keep their original expiry time.
 
 - Share Programmable Screen activation and legacy artwork migration while preserving existing Forge dialogs, saved control rows and joined power behavior. Native screen-family foundations remain unregistered.

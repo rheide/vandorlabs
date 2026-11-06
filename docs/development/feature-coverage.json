@@ -892,7 +892,6 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Closed terrain-render eligibility, asynchronous upload handoff and performance parity",
         "Broader external-material/copy-tool workflows; hardware/shader and standalone native release validation"
       ],
       "implemented": [
@@ -900,7 +899,8 @@
         "Shared panel/window/border kernels, bounded column renderer, pause-aware animation and global moved-panel targeting with authenticated sequenced interactions",
         "Dedicated per-section Door/Glass/Redstone editor with shared material picker, reverse cycling, safe public settings projection and bounded operation codec",
         "Stationary contained-fluid ownership, source-matched four-bit outlets and loaded-neighbor notifications; real leading-client empty-hand and bucket interactions",
-        "Real client acceptance covers eight direction/angle profiles, survival sneak and Configurizer menus, invalid drafts, stale identities/sequences, nearer walls, section-boundary culling, resource reload and mining"
+        "Real client acceptance covers eight direction/angle profiles, survival sneak and Configurizer menus, invalid drafts, stale identities/sequences, nearer walls, section-boundary culling, resource reload and mining",
+        "Closed terrain bodies with current-generation asynchronous upload acknowledgement, visible fallback during delayed rebuilds and bounded submission; rendered pixel and large-fixture renderer-cost checks pass"
       ]
     },
     {
