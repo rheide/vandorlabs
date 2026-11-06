@@ -43,9 +43,9 @@ operation order. Both emit through primitive sinks with caller-owned scratch arr
 Door artwork mapping, group extents and world-coordinate rounding.
 `NativeTrapdoorMesh` streams through the active vertex consumer, applying atlas UVs,
 explicit white RGBA, light and overlay without retaining frame state. It is inactive
-until the host renderer bridge is supplied. `TrapdoorRigidEdges` streams the remaining native metal faces with the released
-regular/tall/shallow thickness UVs. Material selection remains an orchestration
-responsibility; no translucent pane is invented.
+until the host renderer bridge is supplied. `TrapdoorRigidEdges` streams the remaining
+native metal faces with the released regular/tall/shallow thickness UVs.
+No translucent pane is invented.
 
 Focused evidence includes 4,800 released surface/frame profiles and 588,800 vertices
 with byte-identical shared output, plus 36,864 artwork-coordinate profiles with exact
@@ -53,13 +53,46 @@ double-bit agreement. A warmed 4,096-draw surface probe emits 393,216 identical 
 the released cache-hit path allocates 98,304 bytes and the extracted path allocates zero.
 This is an emission allocation measurement, not a frame-rate claim.
 
-The small native title check covers regular, sliding, mirrored tile and all diagonal
-modes, asymmetric frame apertures and omitted joined rails across resource reload.
-Its frame/full-leaf negative control tests the open center. It uses explicit asymmetric
-border fractions to isolate strip behavior; active resource-pack border discovery and
-world-host acceptance are separate requirements.
+`NativeTrapdoorMaterials` selects complete authored Door artwork, distinct custom
+Door halves and the existing metal edge sprite. Custom Fit uses the physical aspect
+of the lower sprite, as the released path does. `NativeTrapdoorFrameBorders` reads
+active resource pixels once per material generation. All 70 Frame choices match the
+released loader exactly: 62 have borders and eight remain solid leaves.
+
+`NativeTrapdoorRenderer.Bake` caches pose-independent layouts by owner position and
+material/geometry facts within a conservative 16 MiB budget. OPEN changes do not
+invalidate layouts. Live corners and frame scratch arrays are reused. The renderer
+uses the existing unlit body layer to preserve the released disabled-lighting path;
+contained fluid remains the host's chunk-model responsibility. Resource publication
+uses monotonically increasing generations, so an older completed bakery cannot
+replace the active newer cache.
+
+The complete native dispatcher matches 10,368 actual released `drawConfiguredLeaf`
+profiles and 1,102,560 vertices, including covers, opposing seams, grouped artwork,
+custom Door halves, both frame aspects, solid Frame choices, all layout/tile flag
+combinations, joined rails and large world coordinates. The source emitter remains
+unchanged. Native positions, UVs, quantized normals and light match its records;
+overlay and explicit RGBA use the active consumer.
+
+The small native title check exercises the complete inactive dispatcher across
+resource reload: regular/sliding leaves, full Door artwork, tiled surfaces, all
+diagonal modes, custom Oak Door artwork, active-pixel frame apertures and omitted
+joined rails. Its frame/full-leaf negative control tests the open center. A warmed
+361-sample full stroke emits 11,552 vertices with zero new meshes and zero allocated
+bytes. Reusable transform vectors avoid depending on escape analysis of the default
+consumer matrix overloads. This is software-rendered backend evidence; world-host
+acceptance remains separate.
 
 `NativeTrapdoorVisualClock` samples one pause-aware frame clock and retains nine-tick
 reversible `DoorAnimation` state by world/position, bounded to 1,024 positions per world.
 Repeated observations and tile replacement preserve the sampled pose; world unload
 clears the retained state. Authoritative collision uses the host's endpoint state.
+
+The root bridge supplies `NativeTrapdoorRenderer.prepare(bakery, textureGetter,
+wallBake, resourceManager)` during the shared model bake. Its block-entity adapter
+calls `render(visual, world, owner, poses, buffers, light, overlay)` with the host's
+coherent `NativeTrapdoorVisual`. `renderAt` accepts an explicit cosmetic pose for
+previews, and `emitAt` accepts an already selected active consumer. Neither entry
+point discovers membership, reads tiles, selects a controller or changes collision.
+The released tile's culling box is owner-relative (-8,-8,-8) through (+9,+9,+9),
+with unrestricted tile render distance; host registration must preserve that scope.
