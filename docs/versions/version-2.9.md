@@ -42,3 +42,5 @@ Native flat and diagonal wall/porthole placement now preserves original clicked-
 Programmable Lights now share save decoding, brightness/activation policy and cached housing meshes across versions. Forge artwork, lighting and saved defaults remain unchanged. Housing emission reuses immutable pixel-space geometry within a bounded cache and retires atlas references after each draw; the native Light host and player-facing integration are still under development.
 
 Ordinary and Large native Doors also use original clicked-face coordinates for depth and hinge choice, including legacy float half-click ties. Frozen actual item callbacks, real Survival placement and focused ordinary/Large client checks preserve the existing player paths.
+
+Native failed-load recovery preserves original component and attachment envelopes, including unknown types and decoders that return no value or fail internally. Inert Trapdoor picks and mining retain the complete failed snapshot in an opaque recovery item. Its ordinary placement is refused without consuming it; normal configured Trapdoors keep their existing placement and harvest behavior.

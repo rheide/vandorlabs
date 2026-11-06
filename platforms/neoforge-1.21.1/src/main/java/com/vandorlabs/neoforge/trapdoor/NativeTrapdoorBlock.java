@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.shapes.*;
 
-/** Unregistered host housing; no public registry, item, dialog or global moved-leaf routing is installed here. */
+/** Programmable Trapdoor housing, interactions, collision and configured-item recovery. */
 public abstract class NativeTrapdoorBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
     public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty OPEN=BlockStateProperties.OPEN;
@@ -23,6 +23,10 @@ public abstract class NativeTrapdoorBlock extends BaseEntityBlock implements Sim
     @Override public BlockState getStateForPlacement(net.minecraft.world.item.context.BlockPlaceContext context){return NativeTrapdoorPlacement.state(this,context);}
     @Override public void setPlacedBy(Level level,BlockPos pos,BlockState state,net.minecraft.world.entity.LivingEntity placer,net.minecraft.world.item.ItemStack stack){var raw=level.getBlockEntity(pos);if(!(raw instanceof NativeTrapdoorEntity tile)||tile.inert())return;if(!tile.itemInstalled()){var configuration=NativeTrapdoorItem.configuration(stack);int position=diagonal?NativeTrapdoorPlacement.diagonalMode(configuration,0):state.getValue(HALF)==Half.TOP?2:0;tile.installItemChoices(NativeTrapdoorItem.choices(configuration,diagonal,position,tile.itemSettings()).settings());}NativeTrapdoorFormation.placed(tile,placer,stack);}
     @Override public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state,net.minecraft.world.phys.HitResult hit,LevelReader level,BlockPos pos,net.minecraft.world.entity.player.Player player){return NativeTrapdoorItem.pick(asItem(),level.getBlockEntity(pos) instanceof NativeTrapdoorEntity tile?tile:null);}
+    @Override public BlockState playerWillDestroy(Level level,BlockPos pos,BlockState state,net.minecraft.world.entity.player.Player player){
+        if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeTrapdoorEntity tile)tile.prepareRecoveryDrop(tile.opaqueRecoveryRequired()&&(player.isCreative()||!state.canHarvestBlock(level,pos,player))?NativeTrapdoorItem.pick(asItem(),tile):net.minecraft.world.item.ItemStack.EMPTY);
+        return super.playerWillDestroy(level,pos,state,player);
+    }
     @Override protected java.util.List<net.minecraft.world.item.ItemStack> getDrops(BlockState state,net.minecraft.world.level.storage.loot.LootParams.Builder builder){var raw=builder.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);return java.util.List.of(NativeTrapdoorItem.pick(asItem(),raw instanceof NativeTrapdoorEntity tile?tile:null));}
     private net.minecraft.world.InteractionResult interact(Level level,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.InteractionHand hand,Direction face){
         if(hand!=net.minecraft.world.InteractionHand.MAIN_HAND)return net.minecraft.world.InteractionResult.PASS;
@@ -47,7 +51,7 @@ public abstract class NativeTrapdoorBlock extends BaseEntityBlock implements Sim
     @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return geometry(state,level,pos).outlineShape();}
     @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){var raw=level.getBlockEntity(pos);if(raw instanceof NativeTrapdoorEntity tile&&!tile.inert()&&tile.geometry()!=null)return tile.collisionShape();return NativeTrapdoorEntity.localCollisionShape(geometry(state,level,pos));}
     @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block source,BlockPos from,boolean moving){com.vandorlabs.neoforge.fluid.NativeFluidWorld.queueAt(level,pos);var tile=NativeTrapdoorEntity.at(level,pos);if(tile!=null)tile.scheduleRefresh();}
-    @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){var raw=level.getBlockEntity(pos);if(!state.is(next.getBlock())&&!level.isClientSide&&!NativeTrapdoorItem.mutating(level,pos)&&raw instanceof NativeTrapdoorEntity old&&!old.inert())NativeTrapdoorFormation.unpair(old,true);super.onRemove(state,level,pos,next,moving);}
+    @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){var raw=level.getBlockEntity(pos);if(!state.is(next.getBlock())&&!level.isClientSide&&!NativeTrapdoorItem.mutating(level,pos)&&raw instanceof NativeTrapdoorEntity old){if(!old.inert())NativeTrapdoorFormation.unpair(old,true);var recovery=old.takeRecoveryDrop();if(old.opaqueRecoveryRequired()&&!recovery.isEmpty())Block.popResource(level,pos,recovery);}super.onRemove(state,level,pos,next,moving);}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return Math.max(state.getLightEmission(),com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(level,pos));}
     @Override public boolean canPlaceLiquid(net.minecraft.world.entity.player.Player player,BlockGetter level,BlockPos pos,BlockState state,net.minecraft.world.level.material.Fluid fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.canPlaceLiquid(level,pos,fluid);}
     @Override public boolean placeLiquid(LevelAccessor level,BlockPos pos,BlockState state,net.minecraft.world.level.material.FluidState fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.placeLiquid(level,pos,fluid);}
