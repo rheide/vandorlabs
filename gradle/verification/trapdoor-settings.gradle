@@ -1,0 +1,7 @@
+task exportTrapdoorSettingsReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.TrapdoorSettingsLegacyChecks'
+    args file(project.findProperty('trapdoorSettingsReference') ?: 'build/test-artifacts/trapdoor-settings-forge.json').absolutePath
+}
