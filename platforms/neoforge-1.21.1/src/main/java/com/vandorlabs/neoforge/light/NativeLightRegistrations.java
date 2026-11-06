@@ -34,5 +34,7 @@ public final class NativeLightRegistrations {
         RegisteredSlab(Properties properties){super(Kind.SLAB,properties);}
         @Override protected void createBlockStateDefinition(net.minecraft.world.level.block.state.StateDefinition.Builder<Block,net.minecraft.world.level.block.state.BlockState> builder){super.createBlockStateDefinition(builder);builder.add(HALF);}
     }
+    /** Called before the deferred registries attach to the mod bus. */
+    public static void initialize(){}
     private NativeLightRegistrations(){}
 }
