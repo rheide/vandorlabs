@@ -13,3 +13,11 @@ task exportPropulsionPlacementReference(type: JavaExec) {
     main = 'com.vandorlabs.client.PropulsionPlacementLegacyOracle'
     args file('build/test-artifacts/propulsion-placement-forge.jsonl').absolutePath
 }
+
+task exportPropulsionEmissionReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PropulsionEmissionLegacyOracle'
+    args file('build/test-artifacts/propulsion-emission-forge.jsonl').absolutePath
+}
