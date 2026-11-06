@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+    if(project.hasProperty('screenItemReference')) systemProperty 'vandorlabs.screenItemReference',file(project.property('screenItemReference')).absolutePath
+}
