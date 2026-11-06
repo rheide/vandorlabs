@@ -88,7 +88,18 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         if(state.getValue(HALF)==DoubleBlockHalf.LOWER&&level.hasChunkAt(pos.below())&&!NativeDoorLifecycle.supported(level,pos)){level.destroyBlock(pos,true);return;}
         var root=NativeDoorLifecycle.root(level,pos);if(root!=null)root.localInputChanged();
     }
-    @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())&&!NativeDoorPlacement.mutating(level,pos)){BlockPos lower=NativeDoorLifecycle.lower(state,pos);if(level.hasChunkAt(lower)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity owner)NativeDoorWaterGush.update(owner,true);BlockPos other=state.getValue(HALF)==DoubleBlockHalf.LOWER?pos.above():pos.below();if(level.hasChunkAt(other)&&level.getBlockState(other).is(this))level.removeBlock(other,moving);}super.onRemove(state,level,pos,next,moving);}
+    @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){
+        if(!state.is(next.getBlock())&&!NativeDoorPlacement.mutating(level,pos)){
+            if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity owner){
+                for(int side=0;side<2;side++){var token=owner.takeCredentialForDrop(side);if(!token.isEmpty())Block.popResource(level,pos,token);}
+            }
+            BlockPos lower=NativeDoorLifecycle.lower(state,pos);
+            if(level.hasChunkAt(lower)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity owner)NativeDoorWaterGush.update(owner,true);
+            BlockPos other=state.getValue(HALF)==DoubleBlockHalf.LOWER?pos.above():pos.below();
+            if(level.hasChunkAt(other)&&level.getBlockState(other).is(this))level.removeBlock(other,moving);
+        }
+        super.onRemove(state,level,pos,next,moving);
+    }
     @Override protected List<ItemStack> getDrops(BlockState state,LootParams.Builder context){
         if(state.getValue(HALF)==DoubleBlockHalf.UPPER){var origin=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN);if(origin==null)return List.of();var lower=BlockPos.containing(origin).below();var level=context.getLevel();if(!NativeDoorLifecycle.loaded(level,lower)||!level.getBlockState(lower).is(this)||level.getBlockState(lower).getValue(HALF)!=DoubleBlockHalf.LOWER)return List.of();}
         // The queried part owns the sole block drop; counterpart removal never drops a second item.
