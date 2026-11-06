@@ -24,6 +24,7 @@ public final class NativeDoorCredentialService {
     public record Projection(Side front,Side rear){public Side side(int side){return side==1?rear:front;}}
     private static final Side EMPTY_SIDE=new Side(new NativeTokenReader.Visual(false,0,0,false,0,false),new NativeTokenReader.Motion(0,20,false,0));
     public static final Projection EMPTY=new Projection(EMPTY_SIDE,EMPTY_SIDE);
+    public static final String RECOVERY_KEY="DoorCredentialRecovery";
     private static final String[] KEYS={"DoorKeyReader","DoorRearKeyReader"};
     private final Host host;
     private final NativeTokenReader[] readers=new NativeTokenReader[2];
@@ -55,6 +56,23 @@ public final class NativeDoorCredentialService {
     /** Opaque reader and stack ownership belongs only to saved/recovery data. */
     public void write(CompoundTag tag,HolderLookup.Provider registries){for(int side=0;side<2;side++)tag.put(KEYS[side],opaqueReaders[side]!=null?opaqueReaders[side].copy():readers[side].write(registries));}
     public CompoundTag rawRecovery(HolderLookup.Provider registries){var tag=new CompoundTag();write(tag,registries);return tag;}
+    /** Item recovery excludes every currently decodable physical stack. */
+    public void writeOpaqueRecovery(CompoundTag out){for(int side=0;side<2;side++)if(opaqueReaders[side]!=null)out.put(KEYS[side],opaqueReaders[side].copy());}
+    public static boolean validOpaqueRecovery(CompoundTag recovery,HolderLookup.Provider registries){
+        for(String key:recovery.getAllKeys())if(!key.equals(KEYS[0])&&!key.equals(KEYS[1]))return false;
+        for(String key:KEYS)if(recovery.contains(key)){
+            Tag raw=recovery.get(key);if(raw instanceof CompoundTag reader){if(!reader.contains("InsertedToken"))return false;if(reader.contains("InsertedToken",Tag.TAG_COMPOUND)&&!NativeCredentialItems.readStack(reader.getCompound("InsertedToken"),registries).isEmpty())return false;}
+        }
+        return true;
+    }
+    /** Local staging only, before item ownership transfers to the complete two-part placement. */
+    public boolean restoreOpaqueRecovery(CompoundTag recovery,HolderLookup.Provider registries,int mode,int allowed){
+        if(!validOpaqueRecovery(recovery,registries))return false;
+        for(int side=0;side<2;side++)if(recovery.contains(KEYS[side])&&(opaqueReaders[side]!=null||readers[side].occupied()))return false;
+        for(int side=0;side<2;side++)if(recovery.contains(KEYS[side])){var raw=recovery.get(KEYS[side]);opaqueReaders[side]=raw.copy();readers[side].read(raw instanceof CompoundTag compound?compound:new CompoundTag(),registries);readers[side].configureLocal(false,allowed,NativeDoorSettings.securityBehavior(mode));}
+        return true;
+    }
+
     public void configureLocal(int securityMode,int allowed){for(var reader:readers)reader.configureLocal(false,allowed,NativeDoorSettings.securityBehavior(securityMode));}
     public int effectiveAllowed(int side){return readers[index(side)].effectiveAllowed();}
     /** Caller resolves the exact installed lower owner before invoking any action. */

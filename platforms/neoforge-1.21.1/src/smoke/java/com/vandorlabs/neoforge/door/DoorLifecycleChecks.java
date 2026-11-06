@@ -35,6 +35,9 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class DoorLifecycleChecks {
     private static Block observer;private static BlockPos publicationRoot;private static boolean publicationFault;private static FixtureDoor block;private static NativeDoorItem item;private static BlockEntityType<NativeProgrammableDoorEntity> type;private static MenuType<NativeDoorMenu> menus;
+    private static BlockPos missingFactory;
+    static void missingFactory(BlockPos pos){missingFactory=pos;}
+    static void placementFault(int mode,BlockPos pos){fault=mode;faultRoot=pos;}
     private static boolean credentialPanel;
     static void credentialPanel(boolean value){credentialPanel=value;}
     private static int checks,fault,dropCount;private static BlockPos trackedDrop;private static BlockPos faultRoot;private static final BlockPos BASE=new BlockPos(3300,110,3300),SAVED=BASE.east(10);
@@ -51,7 +54,7 @@ public final class DoorLifecycleChecks {
     }
     private static final class FixtureDoor extends NativeProgrammableDoorBlock {
         FixtureDoor(){super(Properties.of().noOcclusion().dynamicShape(),()->type,()->menus,()->item,true);}
-        @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new Counting(pos,state);}
+        @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return pos.equals(missingFactory)?null:new Counting(pos,state);}
         @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
         // The fixture checks inventory/structure/menu behavior, not the separately owned authored shapes.
         @Override protected VoxelShape orphanShape(BlockState state,boolean collision){return Block.box(0,0,5,16,16,11);}
@@ -94,6 +97,8 @@ public final class DoorLifecycleChecks {
         BlockPos post=BASE.south(25);clear(level,post);publicationRoot=post;level.setBlock(post.north(),observer.defaultBlockState(),Block.UPDATE_CLIENTS);publicationFault=true;held=new ItemStack(item,2);boolean observerThrew=false;try{place(level,actor,post,held,.5);}catch(RuntimeException expected){Throwable cause=expected;while(cause.getCause()!=null)cause=cause.getCause();need(cause.getMessage().contains("fixture observer"),"original external observer failure retained");observerThrew=true;}finally{publicationFault=false;}need(observerThrew&&held.getCount()==1&&NativeDoorLifecycle.complete(level,post,block),"complete native ownership transfers before throwing external observer");trackedDrop=post;dropCount=0;level.destroyBlock(post,true,actor);need(dropCount==1&&held.getCount()==1,"post-publication observer failure cannot duplicate held/native ownership");trackedDrop=null;
         clear(level,SAVED);held=new ItemStack(item,2);need(place(level,actor,SAVED,held,.5).consumesAction(),"saved actor placement");var savedHost=host(level,SAVED);var tag=savedHost.saveWithoutMetadata(level.registryAccess());tag.putInt("SpaceDesign",15);tag.putIntArray("RedstoneChannels",new int[]{77101});var opaque=new CompoundTag();opaque.putString("owner","foreign:door");tag.put("ForgeCaps",opaque);savedHost.loadWithComponents(tag,level.registryAccess());
         DoorTargetChecks.run(level,first);
+        DoorDropChecks.run(level,first);
+        DoorRecoveryChecks.run(level,first);
         DoorCredentialHostChecks.run(level,first,actor,menus);
         DoorFluidHostChecks.run(level,first);
         DoorGushChecks.run(level,first);

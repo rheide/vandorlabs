@@ -24,12 +24,16 @@ public final class NativeDoorItem extends BlockItem {
         if(player==null||!context.canPlace()||!level.hasChunkAt(root)||!level.hasChunkAt(root.above())||root.getY()<level.getMinBuildHeight()||root.getY()+1>=level.getMaxBuildHeight()||!NativeDoorLifecycle.supported(level,root))return InteractionResult.FAIL;
         for(BlockPos pos:new BlockPos[]{root,root.above()})if(!level.getBlockState(pos).canBeReplaced(context)||level.getBlockState(pos).hasBlockEntity()||level.getBlockEntity(pos)!=null||!level.mayInteract(player,pos)||!player.mayUseItemAt(pos,context.getClickedFace(),stack))return InteractionResult.FAIL;
         BlockState state=block.getStateForPlacement(context);if(state==null||!canPlace(context,state))return InteractionResult.FAIL;
-        CompoundTag configured=null;var custom=stack.get(DataComponents.CUSTOM_DATA);if(custom!=null){var tag=custom.copyTag();if(tag.contains("SpaceDoorSettings",Tag.TAG_COMPOUND))configured=tag.getCompound("SpaceDoorSettings");}
+        CompoundTag configured=null,recovery=null;var custom=stack.get(DataComponents.CUSTOM_DATA);if(custom!=null){var tag=custom.copyTag();if(tag.contains("SpaceDoorSettings",Tag.TAG_COMPOUND))configured=tag.getCompound("SpaceDoorSettings");if(tag.contains(com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.RECOVERY_KEY)){if(!tag.contains(com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.RECOVERY_KEY,Tag.TAG_COMPOUND))return InteractionResult.FAIL;recovery=tag.getCompound(com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.RECOVERY_KEY);if(!com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.validOpaqueRecovery(recovery,level.registryAccess()))return InteractionResult.FAIL;}}
         var hit=context.getClickLocation().subtract(root.getX(),root.getY(),root.getZ());int depth=PanelDepthPolicy.fromHit(state.getValue(NativeProgrammableDoorBlock.FACING).get3DDataValue(),(float)hit.x,(float)hit.z);
         // Validate malformed item choices before staging any native state.
         try{NativeDoorPlacement.choices(NativeDoorSettings.fresh(false,block.slidingModel()),configured,null,depth);}catch(IllegalArgumentException malformed){return InteractionResult.FAIL;}
+        if(recovery!=null&&!recovery.isEmpty()){
+            // Opaque ownership cannot be published into a block whose local factory is unavailable.
+            try{for(int half=0;half<2;half++)if(!(block.newBlockEntity(half==0?root:root.above(),state.setValue(NativeProgrammableDoorBlock.HALF,half==0?net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER:net.minecraft.world.level.block.state.properties.DoubleBlockHalf.UPPER)) instanceof NativeProgrammableDoorEntity))return InteractionResult.FAIL;}catch(RuntimeException unavailable){return InteractionResult.FAIL;}
+        }
         if(level.isClientSide)return InteractionResult.SUCCESS;
-        Ownership ownership=new Ownership(player,stack);boolean success=false;try{success=NativeDoorPlacement.install(context,block,state,configured,depth,ownership);}finally{
+        Ownership ownership=new Ownership(player,stack);boolean success=false;try{success=NativeDoorPlacement.install(context,block,state,configured,recovery,depth,ownership);}finally{
             boolean ownsRoot=level.getBlockState(root).is(block)&&level.getBlockState(root).getValue(NativeProgrammableDoorBlock.HALF)==net.minecraft.world.level.block.state.properties.DoubleBlockHalf.LOWER&&(level.getBlockEntity(root) instanceof NativeProgrammableDoorEntity owner?owner.placementRecovery():level.getBlockState(root)==state);
             if(success||ownsRoot){ownership.run();if(!success&&level.getBlockEntity(root) instanceof NativeProgrammableDoorEntity retained)retained.retainPlacementRecovery();}
         }

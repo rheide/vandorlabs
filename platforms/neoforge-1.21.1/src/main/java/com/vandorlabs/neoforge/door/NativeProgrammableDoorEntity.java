@@ -24,6 +24,11 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     private volatile NativeDoorCredentialService.Projection readerProjection=NativeDoorCredentialService.EMPTY;
     private long nextCredentialTick=Long.MAX_VALUE;
     private boolean receivingProjection;
+    private net.minecraft.world.item.ItemStack removalDrop=net.minecraft.world.item.ItemStack.EMPTY,creativeRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;
+    final void prepareRemovalDrop(net.minecraft.world.item.ItemStack stack){removalDrop=stack.copy();}
+    final net.minecraft.world.item.ItemStack takeRemovalDrop(){var result=removalDrop;removalDrop=net.minecraft.world.item.ItemStack.EMPTY;return result;}
+    final void prepareCreativeRecoveryDrop(net.minecraft.world.item.ItemStack stack){creativeRecoveryDrop=stack.copy();}
+    final net.minecraft.world.item.ItemStack takeCreativeRecoveryDrop(){var result=creativeRecoveryDrop;creativeRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;return result;}
     private final NativeFluidSlots fluids=new NativeFluidSlots();
     private static final NativeFluidVolume NO_FLUID_VOLUME=NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),NativeFluidVolume.SINGLE_SIDE);
     private record FluidKey(boolean sliding,boolean framed,boolean hinges,int depth,Direction face,boolean open,boolean left,boolean paired){}
@@ -57,6 +62,7 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
             public void flipSecurityToggle(){flipCredentialToggle();}
         });
         visual=new Visual(settings,state,com.vandorlabs.render.SpaceDoorControlPanel.Side.NONE,large,false,readerProjection);lastRawState=state;}
+    public final Visual doorVisual(){return visual;}
     public final boolean large(){return large;}
     public final NativeDoorSettings settings(){return settings;}
     final NativeDoorSettings placementSettings(){migrateSavedModel();return settings;}
@@ -66,7 +72,7 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     public final boolean legacyMotionPending(){return legacyMotionPending;}
     @Override public ModelData getModelData(){var snapshot=visual;return ModelData.builder().with(SETTINGS,snapshot.settings()).with(VISUAL,snapshot).with(NativeFluidRenderSnapshot.DATA,fluidRender).build();}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        super.loadAdditional(tag,registries);waterGushDirty=true;waterOutlets=tag.getInt("DoorWaterOutlets")&255;fluids.read(tag,registries);NativeFluidWorld.queue(this);placementRecovery=tag.getBoolean("DoorPlacementRecovery");retained=tag.copy();for(String key:java.util.List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retained.remove(key);
+        super.loadAdditional(tag,registries);removalDrop=net.minecraft.world.item.ItemStack.EMPTY;creativeRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;waterGushDirty=true;waterOutlets=tag.getInt("DoorWaterOutlets")&255;fluids.read(tag,registries);NativeFluidWorld.queue(this);placementRecovery=tag.getBoolean("DoorPlacementRecovery");retained=tag.copy();for(String key:java.util.List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retained.remove(key);
         settings=NativeDoorSettings.read(tag);
         if(receivingProjection)readerProjection=NativeDoorCredentialService.readProjection(tag);
         else{credentials.read(tag,registries,settings.securityMode(),settings.securityAllowed());nextCredentialTick=0;}
@@ -127,6 +133,10 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     public final net.minecraft.world.item.ItemStack takeCredentialForDrop(int side){return credentials.takeForDrop(side);}
     public final boolean opaqueCredential(int side){return credentials.opaqueOccupied(side);}
     public final CompoundTag credentialRecovery(HolderLookup.Provider registries){return credentials.rawRecovery(registries);}
+    public final CompoundTag opaqueCredentialRecovery(){var tag=new CompoundTag();credentials.writeOpaqueRecovery(tag);return tag;}
+    public final net.minecraft.world.item.ItemStack attachOpaqueCredentialRecovery(net.minecraft.world.item.ItemStack stack){var recovery=opaqueCredentialRecovery();if(!recovery.isEmpty()){var custom=stack.getOrDefault(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.EMPTY).copyTag();custom.put(NativeDoorCredentialService.RECOVERY_KEY,recovery);stack.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(custom));}return stack;}
+    final boolean restoreOpaqueCredentialRecovery(CompoundTag recovery,HolderLookup.Provider registries){boolean restored=credentials.restoreOpaqueRecovery(recovery,registries,settings.securityMode(),settings.securityAllowed());if(restored){refreshReaderProjection();publishLocalVisual();}return restored;}
+
     public final void tickCredentialReaders(){if(!(level instanceof net.minecraft.server.level.ServerLevel server)||server.getGameTime()<nextCredentialTick||NativeDoorLifecycle.root(level,worldPosition)!=this)return;nextCredentialTick=Long.MAX_VALUE;credentials.scheduledTick();}
     @Override public void beforeChannelRegistration(){migrateSavedModel();credentials.resume();refreshReaderProjection();localDirty=true;tickDoor();}
     private void migrateSavedModel(){if(!legacyMotionPending||!(getBlockState().getBlock() instanceof NativeProgrammableDoorBlock block))return;var old=settings;var data=old.door();boolean sliding=block.slidingModel();var migrated=new com.vandorlabs.persistence.SpaceDoorData(data.design,data.detail,data.framed,data.direction,sliding||data.middle,sliding,data.hinges,data.trigger,data.panel);settings=new NativeDoorSettings(migrated,old.faceTexture(),old.rawLayout(),old.tileTexture(),sliding?0:old.depth(),old.rawPanelMode(),old.securityMode(),old.securityAllowed(),old.frames(),old.glass());legacyMotionPending=false;publishLocalVisual();visualDirty=true;if(level!=null&&!level.isClientSide)setChanged();}

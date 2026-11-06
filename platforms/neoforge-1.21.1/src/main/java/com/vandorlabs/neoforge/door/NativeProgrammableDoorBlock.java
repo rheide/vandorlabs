@@ -88,9 +88,14 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         if(state.getValue(HALF)==DoubleBlockHalf.LOWER&&level.hasChunkAt(pos.below())&&!NativeDoorLifecycle.supported(level,pos)){level.destroyBlock(pos,true);return;}
         var root=NativeDoorLifecycle.root(level,pos);if(root!=null)root.localInputChanged();
     }
+    @Override public BlockState playerWillDestroy(Level level,BlockPos pos,BlockState state,Player player){
+        if(!level.isClientSide){var lower=NativeDoorLifecycle.lower(state,pos);if(NativeDoorLifecycle.loaded(level,lower)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity owner){var drop=owner.attachOpaqueCredentialRecovery(new ItemStack(canonicalItem.get()));if(level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity clicked)clicked.prepareRemovalDrop(player.isCreative()?ItemStack.EMPTY:drop);owner.prepareCreativeRecoveryDrop(player.isCreative()&&!owner.opaqueCredentialRecovery().isEmpty()?drop:ItemStack.EMPTY);}}
+        return super.playerWillDestroy(level,pos,state,player);
+    }
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){
         if(!state.is(next.getBlock())&&!NativeDoorPlacement.mutating(level,pos)){
             if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity owner){
+                var recovery=owner.takeCreativeRecoveryDrop();if(!recovery.isEmpty())Block.popResource(level,pos,recovery);
                 for(int side=0;side<2;side++){var token=owner.takeCredentialForDrop(side);if(!token.isEmpty())Block.popResource(level,pos,token);}
             }
             BlockPos lower=NativeDoorLifecycle.lower(state,pos);
@@ -101,9 +106,11 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         super.onRemove(state,level,pos,next,moving);
     }
     @Override protected List<ItemStack> getDrops(BlockState state,LootParams.Builder context){
-        if(state.getValue(HALF)==DoubleBlockHalf.UPPER){var origin=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN);if(origin==null)return List.of();var lower=BlockPos.containing(origin).below();var level=context.getLevel();if(!NativeDoorLifecycle.loaded(level,lower)||!level.getBlockState(lower).is(this)||level.getBlockState(lower).getValue(HALF)!=DoubleBlockHalf.LOWER)return List.of();}
-        // The queried part owns the sole block drop; counterpart removal never drops a second item.
-        return List.of(new ItemStack(canonicalItem.get()));
+        var captured=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);if(captured instanceof NativeProgrammableDoorEntity host){var prepared=host.takeRemovalDrop();if(!prepared.isEmpty())return List.of(prepared);}
+        var origin=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.ORIGIN);var level=context.getLevel();NativeProgrammableDoorEntity owner=null;
+        if(origin!=null){var lower=NativeDoorLifecycle.lower(state,BlockPos.containing(origin));if(NativeDoorLifecycle.loaded(level,lower)&&level.getBlockState(lower).is(this)&&level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity host)owner=host;}
+        if(state.getValue(HALF)==DoubleBlockHalf.UPPER&&owner==null)return List.of();
+        ItemStack drop=new ItemStack(canonicalItem.get());if(owner!=null)owner.attachOpaqueCredentialRecovery(drop);return List.of(drop);
     }
     @Override public ItemStack getCloneItemStack(BlockState state,HitResult hit,LevelReader level,BlockPos pos,Player player){ItemStack stack=new ItemStack(canonicalItem.get());BlockPos lower=NativeDoorLifecycle.lower(state,pos);if(level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity root){var custom=new net.minecraft.nbt.CompoundTag();custom.put("SpaceDoorSettings",root.itemSettings());stack.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));}return stack;}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(level,pos);}

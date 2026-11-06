@@ -1,0 +1,49 @@
+package com.vandorlabs.neoforge.door;
+
+import com.vandorlabs.neoforge.credentials.*;
+import com.vandorlabs.redstone.ChannelList;
+import java.util.*;
+import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.*;
+import net.minecraft.server.level.*;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.item.context.UseOnContext;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
+import net.minecraft.world.phys.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+
+/** Actual mining/item placement preserves unknown reader bytes without manufacturing decoded physical tokens. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class DoorRecoveryChecks {
+    private static BlockPos tracked;private static final List<ItemEntity> joined=new ArrayList<>();private static int checks;
+    private static void need(boolean pass,String message){checks++;if(!pass)throw new AssertionError("Door opaque recovery: "+message);}
+    @SubscribeEvent public static void joined(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){if(tracked!=null&&!event.isCanceled()&&event.getEntity() instanceof ItemEntity item&&item.position().distanceToSqr(Vec3.atCenterOf(tracked))<16)joined.add(item);}
+    private static CompoundTag opaque(){var raw=new CompoundTag();var token=new CompoundTag();token.putString("id","future:credential");token.putInt("count",1);var payload=new CompoundTag();payload.putString("Opaque","full unknown reader/stack payload");token.put("ForgeCaps",payload);raw.put("InsertedToken",token);raw.putString("FutureReader","unchanged");raw.putLong("TokenReturnToMost",76);raw.putLong("TokenReturnToLeast",91);return raw;}
+    private static CompoundTag recovery(ItemStack stack){return stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag().getCompound(NativeDoorCredentialService.RECOVERY_KEY);}
+    private static ItemStack pickup(ItemEntity entity){var stack=entity.getItem().copy();entity.setItem(ItemStack.EMPTY);entity.discard();return stack;}
+    private static int count(Item item){return joined.stream().filter(entity->entity.getItem().is(item)).mapToInt(entity->entity.getItem().getCount()).sum();}
+    private static ItemEntity door(Item item){return joined.stream().filter(entity->entity.getItem().is(item)).findFirst().orElseThrow();}
+    private static net.minecraft.world.InteractionResult place(ServerLevel level,ServerPlayer actor,BlockPos pos){level.getChunkAt(pos);level.setBlock(pos.below(),Blocks.STONE.defaultBlockState(),2);actor.setPos(pos.getX()+.5,pos.getY(),pos.getZ()-2);return actor.getMainHandItem().useOn(new UseOnContext(actor,InteractionHand.MAIN_HAND,new BlockHitResult(new Vec3(pos.getX()+.5,pos.getY(),pos.getZ()+.5),Direction.UP,pos.below(),false)));}
+    public static void run(ServerLevel level,NativeProgrammableDoorEntity prototype){
+        var block=(NativeProgrammableDoorBlock)prototype.getBlockState().getBlock();var item=block.asItem();var root=prototype.getBlockPos().east(96);level.getChunkAt(root);level.setBlock(root.below(),Blocks.STONE.defaultBlockState(),2);var actor=net.neoforged.neoforge.common.util.FakePlayerFactory.get(level,new com.mojang.authlib.GameProfile(java.util.UUID.fromString("ad4d6012-b661-4ec2-8c5c-e5f2bf6edf47"),"DoorRecoveryFixture"));ItemStack last=ItemStack.EMPTY;
+        try{
+            for(boolean creative:new boolean[]{false,true})for(int half=0;half<2;half++){
+                actor.setGameMode(creative?GameType.CREATIVE:GameType.SURVIVAL);actor.getInventory().clearContent();actor.setPos(root.getX()+.5,root.getY(),root.getZ()-2);var state=block.defaultBlockState();level.setBlock(root,state,2);level.setBlock(root.above(),state.setValue(NativeProgrammableDoorBlock.HALF,DoubleBlockHalf.UPPER),2);var host=(NativeProgrammableDoorEntity)level.getBlockEntity(root);host.installPlacement(NativeDoorSettings.fresh(false,block.slidingModel()),ChannelList.EMPTY);var saved=host.saveWithoutMetadata(level.registryAccess());saved.put("DoorKeyReader",opaque());var known=new CompoundTag();known.put("InsertedToken",NativeCredentialItems.writeStack(NativeCredentialItems.accessCard(2),level.registryAccess()));saved.put("DoorRearKeyReader",known);host.loadWithComponents(saved,level.registryAccess());
+                var pick=block.getCloneItemStack(state,new BlockHitResult(Vec3.atCenterOf(root),Direction.NORTH,root,false),level,root,actor);need(!pick.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag().contains(NativeDoorCredentialService.RECOVERY_KEY),"ordinary configured pick excludes physical recovery");tracked=root;joined.clear();need(actor.gameMode.destroyBlock(half==0?root:root.above()),"actual opaque mining succeeds creative="+creative+" half="+half);need(level.getBlockState(root).isAir()&&level.getBlockState(root.above()).isAir()&&count(item)==1&&count(NativeCredentialItems.ACCESS_CARD.get())==1,"one recovery Door and one known physical credential creative="+creative+" half="+half+" doors="+count(item)+" cards="+count(NativeCredentialItems.ACCESS_CARD.get()));var dropped=door(item);var data=recovery(dropped.getItem());need(data.getAllKeys().size()==1&&data.getCompound("DoorKeyReader").equals(opaque())&&!data.contains("DoorRearKeyReader"),"drop carries exact opaque side only, never known credential bytes");last=pickup(dropped);tracked=null;
+                if(!creative&&half==0){var target=root.east(4);actor.setItemInHand(InteractionHand.MAIN_HAND,last);need(place(level,actor,target).consumesAction()&&actor.getMainHandItem().isEmpty(),"actual recovery item placement transfers one source item");var restored=NativeDoorLifecycle.root(level,target);need(restored!=null&&restored.opaqueCredential(0)&&restored.opaqueCredentialRecovery().equals(data)&&!restored.credentialRecovery(level.registryAccess()).getCompound("DoorRearKeyReader").contains("InsertedToken")&&!restored.securityOpen(),"placed recovery remains opaque/inert and creates no known stack");tracked=target;joined.clear();need(actor.gameMode.destroyBlock(target)&&count(item)==1&&count(NativeCredentialItems.ACCESS_CARD.get())==0&&recovery(door(item).getItem()).equals(data),"second mining retains bytes without duplicating former known stack");last=pickup(door(item));tracked=null;}
+            }
+            actor.setGameMode(GameType.SURVIVAL);var target=root.east(8);var forged=new ItemStack(item);var bank=new CompoundTag();var reader=new CompoundTag();reader.put("InsertedToken",NativeCredentialItems.writeStack(NativeCredentialItems.accessCard(3),level.registryAccess()));bank.put("DoorKeyReader",reader);var custom=new CompoundTag();custom.put(NativeDoorCredentialService.RECOVERY_KEY,bank);forged.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));actor.setItemInHand(InteractionHand.MAIN_HAND,forged);need(!place(level,actor,target).consumesAction()&&forged.getCount()==1&&level.getBlockState(target).isAir()&&level.getBlockState(target.above()).isAir(),"known stack recovery bytes are refused before any native publication");
+            actor.setItemInHand(InteractionHand.MAIN_HAND,last);DoorLifecycleChecks.missingFactory(target.above());try{need(!place(level,actor,target).consumesAction()&&last.getCount()==1&&level.getBlockState(target).isAir()&&recovery(last).getCompound("DoorKeyReader").equals(opaque()),"missing upper factory preserves original recovery item and untouched world");}finally{DoorLifecycleChecks.missingFactory(null);}
+            DoorLifecycleChecks.placementFault(1,target);try{need(!place(level,actor,target).consumesAction()&&last.getCount()==1&&level.getBlockState(target).isAir()&&level.getBlockState(target.above()).isAir(),"refused upper stage rolls opaque ownership back to original item");}finally{DoorLifecycleChecks.placementFault(0,target);}
+            boolean threw=false;DoorLifecycleChecks.placementFault(4,target);try{place(level,actor,target);}catch(RuntimeException expected){threw=true;}finally{DoorLifecycleChecks.placementFault(0,target);}var retained=(NativeProgrammableDoorEntity)level.getBlockEntity(target);need(threw&&last.isEmpty()&&retained!=null&&retained.placementRecovery()&&NativeDoorLifecycle.root(level,target)==null&&retained.opaqueCredentialRecovery().getCompound("DoorKeyReader").equals(opaque()),"failed rollback retains sole inert native owner and consumes recovery item once");tracked=target;joined.clear();need(actor.gameMode.destroyBlock(target)&&count(item)==1&&recovery(door(item).getItem()).getCompound("DoorKeyReader").equals(opaque()),"mining inert failed-placement root recovers sole opaque owner");
+            System.out.println("[vandorlabs][door-opaque-recovery] dedicated PASS checks="+checks+" actual survival/creative lower/upper mine, opaque-only item transfer, factory/preflight/rollback ownership");
+        }finally{tracked=null;DoorLifecycleChecks.missingFactory(null);DoorLifecycleChecks.placementFault(0,root);actor.getInventory().clearContent();for(var entity:joined)entity.discard();level.removeBlock(root,false);level.removeBlock(root.above(),false);level.removeBlock(root.east(4),false);level.removeBlock(root.east(4).above(),false);level.removeBlock(root.east(8),false);level.removeBlock(root.east(8).above(),false);}
+    }
+}
