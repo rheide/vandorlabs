@@ -1,4 +1,5 @@
 neoForge.runs.configureEach {
+    if (project.hasProperty('largeDoorControlsReference')) systemProperty 'vandorlabs.largeDoorControlsReference', file(project.property('largeDoorControlsReference')).absolutePath
     if (project.hasProperty('largeDoorReference')) systemProperty 'vandorlabs.largeDoorReference', file(project.property('largeDoorReference')).absolutePath
 }
 

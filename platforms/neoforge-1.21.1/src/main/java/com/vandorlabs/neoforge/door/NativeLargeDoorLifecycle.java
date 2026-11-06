@@ -27,7 +27,7 @@ public final class NativeLargeDoorLifecycle {
     public static void neighbor(Level level,BlockPos pos,NativeLargeDoorBlock block){
         if(level.isClientSide||removing(level)||NativeLargeDoorPlacement.mutating(level,pos))return;var root=root(level,pos);if(root==null){if(level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part&&loaded(level,part.anchorPos()))level.removeBlock(pos,false);return;}
         BlockPos anchor=root.getBlockPos();Direction width=root.getBlockState().getValue(NativeLargeDoorBlock.FACING).getCounterClockWise();for(int x=0;x<3;x++)for(int y=-1;y<3;y++)if(!loaded(level,anchor.relative(width,x).above(y)))return;
-        if(!complete(level,root)||!supported(level,anchor,root.getBlockState().getValue(NativeLargeDoorBlock.FACING)))level.destroyBlock(anchor,true);
+        if(!complete(level,root)||!supported(level,anchor,root.getBlockState().getValue(NativeLargeDoorBlock.FACING))){level.destroyBlock(anchor,true);return;}root.localInputChanged();
     }
     /** Shared structural OPEN/POWERED state; trigger and credential decisions remain outside this foundation. */
     public static boolean setState(Level level,NativeLargeDoorEntity root,boolean powered,boolean open){
@@ -36,5 +36,10 @@ public final class NativeLargeDoorLifecycle {
         for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(level.getBlockEntity(anchor.relative(width,x).above(y)) instanceof NativeLargeDoorEntity part)part.refreshFluidGeometry();
         if(changed)level.playSound(null,anchor,open?net.minecraft.sounds.SoundEvents.IRON_DOOR_OPEN:net.minecraft.sounds.SoundEvents.IRON_DOOR_CLOSE,net.minecraft.sounds.SoundSource.BLOCKS,1,1);return true;
     }
+
+    public static int localPower(Level level,NativeLargeDoorEntity root){if(!root.isAnchor())return 0;int result=0;Direction width=root.getBlockState().getValue(NativeLargeDoorBlock.FACING).getCounterClockWise();for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos cell=root.getBlockPos().relative(width,x).above(y);if(loaded(level,cell))result=Math.max(result,NativeDoorLifecycle.power(level,cell));}return result;}
+    public static void updatePower(NativeLargeDoorEntity root){Level level=root.getLevel();if(level==null||level.isClientSide||root(level,root.getBlockPos())!=root||!complete(level,root)||root.placementRecovery())return;boolean powered=root.channelSignal()||root.controlLocalSignal()>0;var settings=root.settings();boolean open=settings.securityMode()>0?root.securityOpen():settings.door().trigger==com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED?root.getBlockState().getValue(NativeLargeDoorBlock.OPEN):com.vandorlabs.persistence.SpaceDoorData.openForSignal(settings.door().trigger,powered);setState(level,root,powered,open);}
+    public static boolean authorized(Level level,NativeLargeDoorEntity root,net.minecraft.world.entity.player.Player player){if(root.placementRecovery()||!complete(level,root)||!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player,root))return false;Direction width=root.getBlockState().getValue(NativeLargeDoorBlock.FACING).getCounterClockWise();for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos cell=root.getBlockPos().relative(width,x).above(y);if(!loaded(level,cell)||!level.mayInteract(player,cell)||!player.mayUseItemAt(cell,Direction.UP,player.getMainHandItem()))return false;}return true;}
+    public static void toggle(Level level,BlockPos pos){var root=root(level,pos);if(root==null||root.settings().securityMode()!=0||root.settings().door().trigger!=com.vandorlabs.persistence.SpaceDoorData.TRIGGER_DISABLED)return;setState(level,root,root.getBlockState().getValue(NativeLargeDoorBlock.POWERED),!root.getBlockState().getValue(NativeLargeDoorBlock.OPEN));}
 
 }
