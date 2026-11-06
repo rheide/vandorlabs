@@ -19,3 +19,10 @@ task testLightInputSampling(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.LightSamplingChecks'
 }
+task exportLightGeometryReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightGeometryLegacyChecks'
+    args file('build/test-artifacts/light-geometry-forge.jsonl').absolutePath
+}
