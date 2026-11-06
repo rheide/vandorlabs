@@ -10,13 +10,11 @@ public final class SegmentedDoorInteractions {
     private static final AxisAlignedBB PANEL=new AxisAlignedBB(0,-.5,-SegmentedDoorGeometry.HALF_THICKNESS,1,.5,SegmentedDoorGeometry.HALF_THICKNESS);
     public static RigidTransform transform(SegmentedDoorTile tile){return transform(tile,com.vandorlabs.VandorLabs.proxy.segmentedSelectionPose(tile.root()));}
     public static RigidTransform transform(SegmentedDoorTile tile,double progress){
-        SegmentedDoorTile root=tile.root();double[] pose=new double[6];SegmentedDoorGeometry.panel(tile.topOffset,tile.height,tile.column,tile.columns,progress,root.settings.direction,root.settings.straight,pose);pose[2]+=root.settings.depthOffset();
-        double angle=Math.toDegrees(Math.atan2(pose[3],pose[4]));
-        RigidTransform panel=pose[5]!=0?RigidTransform.translation(0,pose[1],pose[2]).then(RigidTransform.rotation(1,0,0,angle)):RigidTransform.translation(pose[0],pose[1],pose[2]).then(RigidTransform.rotation(0,1,0,-angle)).then(RigidTransform.translation(-.5,0,0));
-        int rotation=((int)(180-tile.facing().getHorizontalAngle())/90)&3;
-        return RigidTransform.translation(root.getPos().getX()+.5,root.getPos().getY(),root.getPos().getZ()+.5).then(RigidTransform.rotation(0,1,0,rotation*90)).then(RigidTransform.translation(-.5,0,-.5)).then(panel);
+        SegmentedDoorTile root=tile.root();int rotation=((int)(180-tile.facing().getHorizontalAngle())/90)&3;
+        return SegmentedHitGeometry.transform(root.getPos().getX(),root.getPos().getY(),root.getPos().getZ(),rotation,
+                tile.topOffset,tile.height,tile.column,tile.columns,progress,root.settings.direction,root.settings.straight,root.settings.depthOffset());
     }
-    public static AxisAlignedBB bounds(SegmentedDoorTile tile){RigidTransform t=transform(tile);double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;for(int n=0;n<8;n++){double[] p=t.point((n&1)==0?0:1,(n&2)==0?-.5:.5,(n&4)==0?-SegmentedDoorGeometry.HALF_THICKNESS:SegmentedDoorGeometry.HALF_THICKNESS);minX=Math.min(minX,p[0]);minY=Math.min(minY,p[1]);minZ=Math.min(minZ,p[2]);maxX=Math.max(maxX,p[0]);maxY=Math.max(maxY,p[1]);maxZ=Math.max(maxZ,p[2]);}return new AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ);}
+    public static AxisAlignedBB bounds(SegmentedDoorTile tile){double[] b=new double[6];SegmentedHitGeometry.bounds(transform(tile),b);return new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]);}
     public static RayTraceResult hit(SegmentedDoorTile tile,Vec3d start,Vec3d end){return hit(tile,start,end,com.vandorlabs.VandorLabs.proxy.segmentedSelectionPose(tile.root()));}
     public static RayTraceResult hit(SegmentedDoorTile tile,Vec3d start,Vec3d end,double progress){
         RigidTransform t=transform(tile,progress);double[] a=t.inverse(start.x,start.y,start.z),b=t.inverse(end.x,end.y,end.z);
