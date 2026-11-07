@@ -1,0 +1,7 @@
+tasks.register('testRampSettingsReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampSettingsChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-settings-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
