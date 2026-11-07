@@ -50,6 +50,7 @@ public final class ProgrammerClientChecks {
     }
     /** Render each real slot separately so another occupied pad cannot conceal a missing token. */
     private static void retainedTokens(Minecraft mc,File output)throws Exception{
+        try(ProgrammerDockCapture capture=new ProgrammerDockCapture(mc,output)){
         net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:data_chip_programmer");
         net.minecraft.util.math.BlockPos root=new net.minecraft.util.math.BlockPos(2,0,2);int cases=0;
         for(EnumFacing facing:EnumFacing.HORIZONTALS){
@@ -62,7 +63,7 @@ public final class ProgrammerClientChecks {
             for(boolean chip:new boolean[]{false,true}){
                 for(int slot=0;slot<3;slot++){
                     tile.clear();tile.setInventorySlotContents(slot,new ItemStack(chip?com.vandorlabs.items.ModItems.DATA_CHIP:com.vandorlabs.items.ModItems.ACCESS_CARD,1,slot+1));
-                    java.awt.image.BufferedImage occupied=console(mc,tile);java.awt.Rectangle pad=pad(tile,slot);int changed=0,outside=0;
+                    ProgrammerDockCapture.select(facing,chip,slot);java.awt.image.BufferedImage occupied=console(mc,tile);ProgrammerDockCapture.select(null,false,0);java.awt.Rectangle pad=pad(tile,slot);int changed=0,outside=0;
                     for(int y=0;y<empty.getHeight();y++)for(int x=0;x<empty.getWidth();x++)if((empty.getRGB(x,y)&0xffffff)!=(occupied.getRGB(x,y)&0xffffff)){if(pad.contains(x,y))changed++;else outside++;}
                     if(changed<25||outside>Math.max(15,changed/12)){
                         javax.imageio.ImageIO.write(occupied,"png",new File(output,"shot_programmer_failed_"+facing+"_"+(chip?"chip":"card")+"_"+slot+".png"));
@@ -76,6 +77,7 @@ public final class ProgrammerClientChecks {
             world.update(com.vandorlabs.vehicle.VehicleStructure.display(java.util.Collections.emptyList()));require(ink(console(mc,tile))==0,"removed owner draws neither casing nor retained tokens");
         }
         System.out.println("[vandorlabs][reprolab] programmer-retained-render PASS isolated-slots="+cases+" four facings cards chips authored pad pixel bounds removed-owner negative controls");
+        }
     }
     private static final int WIDTH=768,HEIGHT=640,BACKGROUND=0x203040;
     private static int missingPixels(java.awt.image.BufferedImage image){int count=0;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++){int rgb=image.getRGB(x,y),r=rgb>>16&255,g=rgb>>8&255,b=rgb&255;if(r>190&&g<35&&b>190)count++;}return count;}
@@ -100,7 +102,7 @@ public final class ProgrammerClientChecks {
         try(com.vandorlabs.client.TurntableRenderState saved=new com.vandorlabs.client.TurntableRenderState()){
             frame.bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.depthMask(true);net.minecraft.client.renderer.GlStateManager.clearColor(32/255F,48/255F,64/255F,1);net.minecraft.client.renderer.GlStateManager.clear(16640);net.minecraft.client.renderer.GlStateManager.enableDepth();net.minecraft.client.renderer.GlStateManager.enableTexture2D();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableBlend();net.minecraft.client.renderer.GlStateManager.enableAlpha();net.minecraft.client.renderer.GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER,.1F);net.minecraft.client.renderer.GlStateManager.color(1,1,1,1);
             net.minecraft.client.renderer.GlStateManager.rotate(50,1,0,0);net.minecraft.client.renderer.GlStateManager.rotate(tile.getProgrammerFacing().getHorizontalAngle(),0,1,0);net.minecraft.util.math.BlockPos p=tile.getProgrammerOrigin();boolean wide=tile.getProgrammerFacing().getAxis()==EnumFacing.Axis.Z;net.minecraft.client.renderer.GlStateManager.translate(-p.getX()-(wide?1:.5),-p.getY()-.9,-p.getZ()-(wide?.5:1));
-            new ProgrammerRenderer().render(tile,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ(),0,-1,1);org.lwjgl.opengl.GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(WIDTH,HEIGHT,frame);
+            ProgrammerDockCapture.base(tile);new ProgrammerRenderer().render(tile,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ(),0,-1,1);org.lwjgl.opengl.GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(WIDTH,HEIGHT,frame);
         }finally{net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_PROJECTION);net.minecraft.client.renderer.GlStateManager.popMatrix();net.minecraft.client.renderer.GlStateManager.matrixMode(org.lwjgl.opengl.GL11.GL_MODELVIEW);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
     }
 
