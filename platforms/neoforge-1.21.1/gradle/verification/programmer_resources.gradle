@@ -12,3 +12,9 @@ tasks.register('generateProgrammerResources', Exec) {
 }
 sourceSets.main.resources.srcDir('build/generated/programmer-resources')
 tasks.named('processResources') { dependsOn 'generateProgrammerResources' }
+tasks.register('testNativeProgrammerArtwork', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava'),tasks.named('processResources')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.programmer.ProgrammerArtworkChecks'
+ args rootProject.file('../../build/test-artifacts/programmer-artwork-forge.jsonl').absolutePath
+}
