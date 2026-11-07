@@ -150,7 +150,7 @@ public class TileEntityControlledRamp extends TileEntity {
         if (!(state.getBlock() instanceof BlockControlledRamp)) return java.util.Collections.emptyList();
         EnumFacing face=state.getValue(BlockVandorDirectional.FACING);
         if(verticalLayout&&!moat)return verticalGeometry(face,partial);
-        if(escalator!=0 && !moving && pose(partial)>=1) {
+        if(com.vandorlabs.ramp.RampBeltPolicy.eligible(escalator,moving) && pose(partial)>=1) {
             double distance=beltDistance(partial);
             if(distance==cachedBeltDistance && cachedBeltGeometry!=null)return cachedBeltGeometry;
             List<RampGeometry.Box> boxes=new ArrayList<>();
@@ -181,7 +181,7 @@ public class TileEntityControlledRamp extends TileEntity {
         return result;
     }
     private List<RampGeometry.Box> verticalGeometry(EnumFacing face,double partial){
-        double pose=pose(partial);boolean belt=escalator!=0&&!moving&&pose>=1;
+        double pose=pose(partial);boolean belt=com.vandorlabs.ramp.RampBeltPolicy.deployed(escalator,moving,pose);
         double distance=belt?beltDistance(partial):0;
         if(belt&&distance==cachedBeltDistance&&cachedBeltGeometry!=null)return cachedBeltGeometry;
         if(!belt&&!moving&&cachedGeometryKey!=null&&cachedGeometryKey.matches(this,face,pose))return cachedGeometry;
@@ -271,7 +271,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public double[] textureShift(RampGeometry.Box box,double partial) {
         if(verticalLayout&&!moat){BlockPos origin=originFor(box,partial);double[] d=moatTextureOffsets.get(box);return new double[]{pos.getX()-origin.getX()-(d==null?0:d[0]),pos.getZ()-origin.getZ()-(d==null?0:d[2])};}
         if(usesNativeMoatGeometry()){BlockPos origin=originFor(box,partial);double[] d=moatTextureOffsets.get(box);return d==null?new double[]{0,0}:new double[]{pos.getX()-origin.getX()-d[0],pos.getZ()-origin.getZ()-d[2]};}
-        if(escalator!=0 && !moving && pose(partial)>=1) {
+        if(com.vandorlabs.ramp.RampBeltPolicy.eligible(escalator,moving) && pose(partial)>=1) {
             BlockPos origin=originFor(box,partial);
             EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
             double along=(pos.getX()+(box.minX+box.maxX)*.5)*face.getFrontOffsetX()
@@ -317,7 +317,7 @@ public class TileEntityControlledRamp extends TileEntity {
     public double sideTextureV(RampGeometry.Box box,double localY,double partial) {
         if(verticalLayout&&!moat){double[] d=moatTextureOffsets.get(box);return ControllerPlatform.sideTextureV(pos.getY(),localY,originFor(box,partial).getY(),d==null?0:d[1]);}
         if(usesNativeMoatGeometry()){double[] d=moatTextureOffsets.get(box);return d==null?1-localY:ControllerPlatform.sideTextureV(pos.getY(),localY,originFor(box,partial).getY(),d[1]);}
-        if(escalator!=0 && !moving && pose(partial)>=1)return 1-(localY-beltTops.getOrDefault(box,box.maxY)+high);
+        if(com.vandorlabs.ramp.RampBeltPolicy.eligible(escalator,moving) && pose(partial)>=1)return 1-(localY-beltTops.getOrDefault(box,box.maxY)+high);
         if (extendSegments) return 1-localY;
         EnumFacing face=world.getBlockState(pos).getValue(BlockVandorDirectional.FACING);
         int step=RampGeometry.segmentAtPixels(direction(face),box,treadPixels,elevator);
