@@ -64,7 +64,9 @@ public final class NativeCanopyEntity extends BlockEntity {
     @Override public void setRemoved(){unloading=true;pending=false;super.setRemoved();}
     @Override public void onChunkUnloaded(){unloading=true;pending=false;super.onChunkUnloaded();}
     @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){pending=true;publishUnresolved();}}
-    void markRemoving(){removing=true;publishUnresolved();}
+    void markRemoving(){removing(true);}
+    void removing(boolean value){removing=value;publishUnresolved();}
+    void helperOf(NativeCanopyEntity parent){settings=parent.settings;links=new NativeCanopyLinks(parent.getBlockPos(),null,1,parent.links.centered(),parent.links.hollow(),null,java.util.Set.of(),false,false,0,false,false,false);pending=true;publishUnresolved();}
     void stageLinks(NativeCanopyLinks next){links=next;pending=true;publishUnresolved();}
     void notifyChanged(){setChanged();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}
     boolean pending(){return pending;}

@@ -31,5 +31,7 @@ public record NativeCanopyLinks(BlockPos anchor,BlockPos pair,int joinedWidth,bo
     }
     public NativeCanopyLinks withPair(BlockPos next,int width){return new NativeCanopyLinks(anchor,next,width,centered,hollow,footprint,released,waiting,open,progress,powerKnown,lastPower,lastPolarity);}
     public NativeCanopyLinks unpairedClosed(){return new NativeCanopyLinks(anchor,null,1,centered,hollow,footprint,released,waiting,false,0,powerKnown,lastPower,lastPolarity);}
+    public NativeCanopyLinks withReleased(Set<Integer> next){return new NativeCanopyLinks(anchor,pair,joinedWidth,centered,hollow,footprint,next,waiting,open,progress,powerKnown,lastPower,lastPolarity);}
+    public NativeCanopyLinks withMotion(float next,boolean target,boolean wait){if(!Float.isFinite(next)||next<0||next>1)throw new IllegalArgumentException("Canopy motion");return new NativeCanopyLinks(anchor,pair,joinedWidth,centered,hollow,footprint,released,wait,target,next,powerKnown,lastPower,lastPolarity);}
     public boolean savedFootprint(){return footprint!=null&&!footprint.isEmpty();}
 }

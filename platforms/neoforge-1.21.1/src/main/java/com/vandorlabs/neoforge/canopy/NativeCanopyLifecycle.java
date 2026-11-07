@@ -36,7 +36,7 @@ public final class NativeCanopyLifecycle {
         var member=constituent(host);var pair=member.links().pair();if(pair==null||pair.equals(member.getBlockPos()))return member;var candidate=at(member.getLevel(),pair);return sameBlock(member,candidate)?candidate:member;
     }
     private static boolean sameBlock(NativeCanopyEntity a,NativeCanopyEntity b){return b!=null&&a.getBlockState().is(b.getBlockState().getBlock());}
-    private static List<NativeCanopyEntity> members(NativeCanopyEntity host){
+    static List<NativeCanopyEntity> members(NativeCanopyEntity host){
         var root=owner(host);List<NativeCanopyEntity> result=new ArrayList<>();int width=root.links().pair()==null?1:root.links().joinedWidth();
         for(int i=0;i<width;i++){var member=at(root.getLevel(),root.getBlockPos().relative(root.facing().getClockWise(),i));if(sameBlock(root,member)&&constituent(member)==member&&(member==root||root.getBlockPos().equals(member.links().pair())))result.add(member);}return result;
     }

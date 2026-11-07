@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """Private standalone canopy host, guarded save and complete process restart."""
-import os,hashlib,subprocess,time
+import os,hashlib,subprocess,time,argparse
 from pathlib import Path
 from test_transmitter import ROOT,command,run,world,check_log,jdk_home
 from native_test_artifacts import artifact_directory,retain_artifacts
-def await_exit(phase):
+def await_exit(phase,kind):
  deadline=time.monotonic()+60
- marker="-Dvandorlabs.transmitterPhase=canopy-host-"+phase
+ marker="-Dvandorlabs.transmitterPhase="+kind+phase
  while True:
   running=subprocess.check_output([str(jdk_home(21)/"bin"/("jps.exe" if os.name=="nt" else "jps")),"-lv"],text=True)
   if marker not in running:return
@@ -14,11 +14,12 @@ def await_exit(phase):
   time.sleep(.25)
 @retain_artifacts
 def main():
+ options=argparse.ArgumentParser();options.add_argument("--reservations",action="store_true");args=options.parse_args();kind="canopy-host-reservations-" if args.reservations else "canopy-host-"
  output=Path(artifact_directory(prefix='canopy-host-native-',dir=ROOT/'build/test-artifacts'));saved=output/'saved-world';world(saved,0)
  for phase in ['write','read']:
-  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=canopy-host-'+phase),output/(phase+'.log'),'[vandorlabs][canopy-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_CANOPY_JOINED_REFERENCE=str(ROOT/"build/test-artifacts/canopy-joined-forge.jsonl")))
+  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+kind+phase),output/(phase+'.log'),'[vandorlabs][canopy-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_CANOPY_JOINED_REFERENCE=str(ROOT/"build/test-artifacts/canopy-joined-forge.jsonl"),VANDOR_CANOPY_RESERVATION_REFERENCE=str(ROOT/"build/test-artifacts/canopy-reservations-forge.jsonl")))
   check_log(saved/'logs/latest.log','All dimensions are saved')
-  await_exit(phase)
+  await_exit(phase,kind)
  evidence=[]
  for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge/canopy').glob('*.class')):evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name)
  (output/'classes.sha256').write_text('\n'.join(evidence)+'\n');print('Native Canopy host focused PASS: '+str(output),flush=True)
