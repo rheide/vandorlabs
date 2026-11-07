@@ -1,0 +1,11 @@
+tasks.register('testNativeCopifierConnected', JavaExec) {
+ group = 'verification'
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.copifier.NativeCopifierConnectedChecks'
+ maxHeapSize = '512m'
+ args file('../../testclient/fixtures/copifier-connected-source.json.gz').absolutePath
+}
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierConnectedReference'))systemProperty 'vandorlabs.copifierConnectedReference',file(project.property('copifierConnectedReference')).absolutePath
+}

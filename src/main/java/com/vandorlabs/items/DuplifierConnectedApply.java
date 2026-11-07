@@ -1,9 +1,5 @@
 package com.vandorlabs.items;
 
-import java.util.ArrayDeque;
-import java.util.HashSet;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.ItemStack;
@@ -15,7 +11,7 @@ import net.minecraft.world.World;
 
 /** Discover the original matching region before applying any copied settings. */
 public final class DuplifierConnectedApply {
-    public static final int MAX_CELLS = 4096;
+    public static final int MAX_CELLS = ConnectedCopySelection.MAX_CELLS;
 
     private DuplifierConnectedApply() { }
 
@@ -43,14 +39,7 @@ public final class DuplifierConnectedApply {
                     ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile)
                             .getFaceTextures().choices());
         if (settings != null && ignoreDirectionality) {
-            settings.removeTag(ProgrammableSettings.SWITCH_ROTATION);
-            settings.removeTag(ProgrammableSettings.RAMP_DIRECTION);
-            settings.removeTag(ProgrammableSettings.STAIR_ROLL);
-            settings.removeTag(ProgrammableSettings.TRAPDOOR_COVER_FACING);
-            settings.removeTag(ProgrammableSettings.TRAPDOOR_ROTATION_FLIPPED);
-            settings.removeTag("placement_ceiling");
-            settings.removeTag("placement_ceiling_position");
-            settings.removeTag("placement_wall_position");
+            CopiedDirectionality.strip(settings::removeTag);
         }
         return settings;
     }
@@ -59,11 +48,9 @@ public final class DuplifierConnectedApply {
         if (original.getBlock() != candidate.getBlock()) return false;
         for (net.minecraft.block.properties.IProperty<?> property : original.getPropertyKeys()) {
             String name = property.getName();
-            if (ignoreDirectionality && (property.getValueClass()==EnumFacing.class
-                    || property.getValueClass()==EnumFacing.Axis.class
-                    || name.equals("facing") || name.equals("rotation") || name.equals("rotated")
-                    || name.equals("hinge") || name.equals("inverted")
-                    || name.equals("half"))) continue;
+            if (ignoreDirectionality && CopiedDirectionality.ignoreProperty(name,
+                    property.getValueClass()==EnumFacing.class,
+                    property.getValueClass()==EnumFacing.Axis.class)) continue;
             if (!original.getValue(property).equals(candidate.getValue(property))) return false;
         }
         return true;
@@ -79,32 +66,21 @@ public final class DuplifierConnectedApply {
         boolean ignoreDirectionality=DuplifierApplyOptions.ignoreDirectionality(tool);
         NBTTagCompound originalSettings = configuration(world, origin,ignoreDirectionality);
         if (originalSettings == null) return 0;
-        Set<BlockPos> visited = new HashSet<>();
-        Set<BlockPos> targets = new LinkedHashSet<>();
-        ArrayDeque<BlockPos> pending = new ArrayDeque<>();
-        pending.add(clicked.toImmutable());
-        pending.add(origin.toImmutable());
-        int cells = 0;
-        while (!pending.isEmpty()) {
-            BlockPos cell = pending.removeFirst();
-            if (!visited.add(cell) || !editable(world, cell, player, face, tool)) continue;
-            BlockPos root = ProgrammableTarget.settingsPos(world, cell);
-            if (!editable(world, root, player, face, tool)
-                    || !matchingState(originalState, world.getBlockState(root),ignoreDirectionality)
-                    || !originalSettings.equals(configuration(world, root,ignoreDirectionality))) continue;
-            if (++cells > MAX_CELLS) return -1;
-            targets.add(root.toImmutable());
-            // Walk physical cells so the upper half of a door or seat can
-            // connect to another matching object. Apply to each root once.
-            // Face, edge and corner contact all connect the selected region.
-            for (int dx = -1; dx <= 1; dx++)
-                for (int dy = -1; dy <= 1; dy++)
-                    for (int dz = -1; dz <= 1; dz++)
-                        if (dx != 0 || dy != 0 || dz != 0)
-                            pending.add(cell.add(dx, dy, dz));
-        }
+        ConnectedCopySelection.Result<BlockPos> selected=ConnectedCopySelection.discover(
+                clicked.toImmutable(),origin.toImmutable(),new ConnectedCopySelection.Access<BlockPos>() {
+            public BlockPos matchingOwner(BlockPos cell) {
+                if(!editable(world,cell,player,face,tool))return null;
+                BlockPos root=ProgrammableTarget.settingsPos(world,cell);
+                return editable(world,root,player,face,tool)
+                        && matchingState(originalState,world.getBlockState(root),ignoreDirectionality)
+                        && originalSettings.equals(configuration(world,root,ignoreDirectionality))
+                        ?root.toImmutable():null;
+            }
+            public BlockPos offset(BlockPos cell,int x,int y,int z){return cell.add(x,y,z);}
+        });
+        if(selected.exceeded)return -1;
         int applied = 0;
-        for (BlockPos target : targets) {
+        for (BlockPos target : selected.owners) {
             if (editable(world, target, player, face, tool)
                     && world.getBlockState(target).getBlock() == originalState.getBlock()
                     && ItemDuplifier.applyTo(world, target, tool, player)) applied++;

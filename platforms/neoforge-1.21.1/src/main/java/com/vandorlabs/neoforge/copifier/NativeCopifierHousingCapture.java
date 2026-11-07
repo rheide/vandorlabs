@@ -9,7 +9,7 @@ import com.vandorlabs.persistence.*;
 import com.vandorlabs.redstone.*;
 import net.minecraft.nbt.*;
 
-/** Inactive saved-data projection. Installed-host authorization and capture/apply remain separate. */
+/** Saved-data housing projection for copy payloads and connected-selection equality. */
 public final class NativeCopifierHousingCapture {
     public enum Family {
         CUBE("programmable_block",true,false,false,false,false,false),
@@ -49,6 +49,17 @@ public final class NativeCopifierHousingCapture {
         if(channels.size()<=1)out.putInt("redstone_channel",channels.first());else out.putIntArray("redstone_channel",channels.toArray());
         var main=tag.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main");var transmission=new CompoundTag();
         transmission.putInt("Range",TransmissionSettings.readRange(main.contains("Range",Tag.TAG_INT),main.getInt("Range"),true));transmission.putBoolean("Local",TransmissionSettings.readLocal(main.contains("Local",Tag.TAG_BYTE),main.getBoolean("Local"),false));transmission.putIntArray("Channels",TransmissionSettings.readChannels(main.contains("Channels",Tag.TAG_INT_ARRAY),main.getIntArray("Channels"),ChannelList.EMPTY).toArray());out.put("Transmission",transmission);
+        return out;
+    }
+    /** Selection includes dormant choices and placement fields omitted from ordinary copy payloads. */
+    public static CompoundTag connected(Family family,CompoundTag saved,boolean ignoreDirectionality){
+        var out=capture(family,saved);var access=new ModernHousingTags(saved);
+        out.putBoolean("placement_ceiling",saved.getBoolean("CeilingMounted"));
+        out.putInt("placement_ceiling_position",saved.contains("CeilingPosition",Tag.TAG_INT)?Math.max(0,Math.min(2,saved.getInt("CeilingPosition"))):-1);
+        int wall=access.contains(SaveSchema.Screen.WALL_POSITION)?access.getInt(SaveSchema.Screen.WALL_POSITION):-1;
+        out.putInt("placement_wall_position",wall<0?-1:Math.min(2,wall));
+        if(family.faces)out.getCompound("face_textures").putIntArray("choices",HousingSettings.read(access,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).faces());
+        if(ignoreDirectionality)com.vandorlabs.items.CopiedDirectionality.strip(out::remove);
         return out;
     }
     private NativeCopifierHousingCapture(){}
