@@ -7,6 +7,8 @@ import com.vandorlabs.neoforge.storage.*;
 import com.vandorlabs.neoforge.screen.*;
 import com.vandorlabs.neoforge.trapdoor.*;
 import com.vandorlabs.neoforge.NativeCopiedHousingMetadata;
+import com.vandorlabs.neoforge.NativeTriggerBlock;
+import com.vandorlabs.persistence.HousingSettings;
 import com.vandorlabs.neoforge.ModernHousingTags;
 import com.vandorlabs.screen.ScreenFamily;
 import com.vandorlabs.persistence.ProgrammableGlassSettings;
@@ -26,7 +28,7 @@ public final class NativeCopifierCraftingItems {
         var id=BuiltInRegistries.BLOCK.getKey(item.getBlock());
         if(!id.getNamespace().equals("vandorlabs"))return ItemStack.EMPTY;
         NativeCopifierHousingCapture.Family family=null;
-        try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(item.getBlock() instanceof NativeStorageBlock)family=NativeCopifierHousingCapture.Family.CUBE;else if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock)&&ScreenFamily.fromId(id.getPath())==null&&!(item.getBlock() instanceof NativeTrapdoorBlock))return ItemStack.EMPTY;}
+        try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(item.getBlock() instanceof NativeStorageBlock)family=NativeCopifierHousingCapture.Family.CUBE;else if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock)&&ScreenFamily.fromId(id.getPath())==null&&!(item.getBlock() instanceof NativeTrapdoorBlock)&&!(item.getBlock() instanceof NativeTriggerBlock))return ItemStack.EMPTY;}
         if(!(item.getBlock() instanceof EntityBlock factory))return ItemStack.EMPTY;
         var state=item.getBlock().defaultBlockState();var properties=input.get(DataComponents.BLOCK_STATE);
         if(properties!=null)state=properties.apply(state);
@@ -44,7 +46,10 @@ public final class NativeCopifierCraftingItems {
         }
         final CompoundTag fields;
         try{
-            if(item.getBlock() instanceof NativeTrapdoorBlock trapdoor){
+            if(item.getBlock() instanceof NativeTriggerBlock){
+                var plan=NativeCopifierTriggerEdit.prepare(current,values);if(!plan.applicable())return ItemStack.EMPTY;fields=plan.metadata().fields();fields.putInt(HousingSettings.MAIN,plan.off());plan.trigger().write(new ModernHousingTags(fields));
+            }
+            else if(item.getBlock() instanceof NativeTrapdoorBlock trapdoor){
                 if(current.contains(NativeTrapdoorItem.RECOVERY)||current.contains(NativeTrapdoorItem.OPAQUE_RECOVERY))return ItemStack.EMPTY;
                 var links=NativeTrapdoorLinks.read(current,trapdoor.diagonal());var offset=!trapdoor.diagonal()&&links.partner()==null&&links.square()==null&&links.assembly().isEmpty();
                 if(links.partner()!=null||links.square()!=null||!links.assembly().isEmpty())return ItemStack.EMPTY;
