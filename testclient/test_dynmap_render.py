@@ -173,6 +173,27 @@ def place_segmented_doors(command, labels):
                 labels.append(dict(x=x,y=12+row,z=z,block='segmented_door',facing=facing,opened=opened,row=row))
 
 
+def place_segmented_supplied(command, labels, jar):
+    """Actual saved model choices use authored material patches, not their picker thumbnails."""
+    import json
+    with ZipFile(jar) as archive:
+        entries=json.loads(archive.read('assets/vandorlabs/data/unified_textures.json'))
+        legacy=len(json.loads(archive.read('assets/vandorlabs/data/dynmap_material_aspects.json')))-len(entries)
+    choices={entry['id']:legacy+i for i,entry in enumerate(entries)}
+    names=('picket','industrial','lattice')
+    if not any('segmented_gate_'+name in choices for name in names):return
+    occupied={(label['x'],label['y'],label['z']) for label in labels}
+    for style,name in enumerate(names):
+        selected=choices['segmented_gate_'+name]
+        for column in range(3):
+            for row in range(3):
+                x,y,z=-16+style*5+column,12+row,72
+                assert (x,y,z) not in occupied,'Supplied gate fixture overlaps another assembly'
+                tag=f'{{SegmentedTopOffset:{2-row},SegmentedHeight:3,SegmentedColumn:{column},SegmentedColumns:3,SegmentedFormed:1b,SegmentedConfigured:1b,SegmentedTexture:{selected},SegmentedOpen:0b,SegmentedFrom:0d,SegmentedLocalRedstone:0b,SegmentedSlide:0,SegmentedWindow:1b,SegmentedShape:2,SegmentedJoin:1b,SegmentedSettings:{{Direction:0,Straight:0b,Layout:1,Activation:0,Window:1b,Shape:2,Join:1b}}}}'
+                command(f'setblock {x} {y} {z} vandorlabs:segmented_door facing=north replace '+tag)
+                labels.append(dict(x=x,y=y,z=z,block='segmented_door',facing='north',opened=False,row=row,supplied=name,choice=selected))
+
+
 def validate_fixture_matrix(labels):
     """Fail before launching a map if any authored group or drive state is absent."""
     from collections import Counter
@@ -189,7 +210,7 @@ def validate_fixture_matrix(labels):
         for facing in ('north','east','south','west'):
             for active in (False,True):
                 assert drives[(family,facing,active)]==1, (family,facing,active)
-    segmenteds=Counter((v.get("facing"),v.get("opened")) for v in labels if v["block"]=="segmented_door")
+    segmenteds=Counter((v.get("facing"),v.get("opened")) for v in labels if v["block"]=="segmented_door" and "supplied" not in v)
     assert len(segmenteds)==8 and all(n==5 for n in segmenteds.values()), "Segmented endpoint/facing coverage missing"
     positions=[(label['x'],label['y'],label['z']) for label in labels]
     assert len(set(positions))==len(positions), 'Overlapping Dynmap fixtures hide coverage'
@@ -277,6 +298,7 @@ def run_fixture(args,root,output,artifact):
                     place_material_finishes(command,labels,args.jar)
                     place_utility_doors(command,labels,args.jar)
                     place_segmented_doors(command,labels)
+                    place_segmented_supplied(command,labels,args.jar)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')
                     content=logpath.read_text(errors='replace')

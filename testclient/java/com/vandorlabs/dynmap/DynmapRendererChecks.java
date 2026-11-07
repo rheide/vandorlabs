@@ -4,6 +4,7 @@ import java.lang.reflect.Proxy;
 import java.util.*;
 import org.dynmap.renderer.*;
 import com.vandorlabs.tiles.ScreenHousingTextures;
+import com.vandorlabs.tiles.GlassTextures;
 
 /** Exercises adapter output against the published Dynmap API, without a client or world. */
 public final class DynmapRendererChecks {
@@ -97,9 +98,26 @@ public final class DynmapRendererChecks {
         }
         System.out.println("Segmented Dynmap PASS heights=1,5,32 all-sections closed/open root-headers directional/window variants="+variants);
     }
+    private static void segmentedGates(){
+        SegmentedDoorMapRenderer renderer=new SegmentedDoorMapRenderer();int profiles=0,base=ScreenHousingTextures.BUILTIN_COUNT*2+21+GlassTextures.IDS.length*GlassTextures.TINT_COUNT;
+        for(int kind=0;kind<3;kind++){
+            int selected=-1;for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(com.vandorlabs.segmented.SegmentedArtworkPolicy.gateId(kind).equals(ScreenHousingTextures.IDS[i]))selected=i;
+            if(selected<0)continue;final int material=selected;
+            for(int rotation=0;rotation<4;rotation++)for(int direction=0;direction<4;direction++)for(int position=0;position<3;position++)for(boolean straight:new boolean[]{false,true})for(boolean open:new boolean[]{false,true})for(int mask=0;mask<16;mask++){
+                final int rot=rotation,joins=mask,rx=rotation==0?1:rotation==2?-1:0,rz=rotation==1?-1:rotation==3?1:0;
+                Context context=new Context("vandorlabs:segmented_door","facing="+new String[]{"north","west","south","east"}[rotation]){
+                    @Override public Object getBlockTileEntityFieldAt(String name,int x,int y,int z){int column=1+x*rx+z*rz,row=1-y;if(name.equals("SegmentedColumn"))return column;if(name.equals("SegmentedTopOffset"))return row;if(name.equals("SegmentedTexture")){boolean horizontal=column==1||column==0&&(joins&1)!=0||column==2&&(joins&2)!=0,vertical=row==1||row==2&&(joins&4)!=0||row==0&&(joins&8)!=0;return horizontal&&vertical?material:-1;}return data.get(name);}
+                };
+                context.data.put("SegmentedTexture",selected);context.data.put("SegmentedTopOffset",1);context.data.put("SegmentedHeight",3);context.data.put("SegmentedColumn",1);context.data.put("SegmentedColumns",3);context.data.put("SegmentedOpen",(byte)(open?1:0));context.data.put("SegmentedSlide",direction);context.data.put("SegmentedPosition",position);context.data.put("SegmentedStraight",(byte)(straight?1:0));context.data.put("SegmentedWindow",(byte)1);context.data.put("SegmentedJoin",(byte)1);
+                RenderPatch[] patches=valid(renderer,context);boolean authored=false;for(RenderPatch patch:patches){int texture=patch.getTextureIndex();authored|=texture>=base&&texture<base+7;require(texture>=base&&texture<base+7||texture==2*ScreenHousingTextures.BUILTIN_COUNT+2,"Gate map uses authored materials/opaque header, never picker preview or latent glass");}require(authored&&patches.length>20,"Gate map emits authored bars");profiles++;
+            }
+        }
+        require(profiles==9216,"All supplied map gate profiles present");require(SegmentedGateMapMeshes.retainedBytes()<=4*1024*1024,"Gate map retained-byte bound");
+        System.out.println("Segmented gate Dynmap PASS profiles="+profiles+" authoredMaterials/allMasks/facings/directions/positions/endpoints/latentWindow/bytes="+SegmentedGateMapMeshes.retainedBytes());
+    }
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();
-        surfaces();trapdoorFrames();segmented();
+        surfaces();trapdoorFrames();segmented();segmentedGates();
         FrameMachineMapChecks.run();
         UtilityMapChecks.run();SurfaceMapChecks.run();HexThrusterMapChecks.run();
         ProgrammableSlabRenderer slab=new ProgrammableSlabRenderer();
