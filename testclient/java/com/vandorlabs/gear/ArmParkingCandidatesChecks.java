@@ -28,7 +28,7 @@ public final class ArmParkingCandidatesChecks {
     private static void set(GearTileEntity arm,String key,Object value)throws Exception{Field field=GearTileEntity.class.getDeclaredField(key);field.setAccessible(true);field.set(arm,value);}
     private static ArmPayload payload(List<VehicleStructure.Cell> cells,int height)throws Exception{return constructor.newInstance(VehicleStructure.display(cells),new BlockPos(2,-height,1),false,BlockPos.ORIGIN);}
     private static Probe arm(GearMotion.Mode mode,EnumFacing mount,int size,GearMotion.Direction direction,int height,double first,double last,ArmPayload payload)throws Exception{
-        Probe arm=new Probe();arm.setPos(new BlockPos(11,97,-17));arm.mount=mount;arm.size=size;arm.swing=mode!=GearMotion.Mode.EXTEND;
+        Probe arm=new Probe();arm.setPos(new BlockPos(60,60,60));arm.mount=mount;arm.size=size;arm.swing=mode!=GearMotion.Mode.EXTEND;
         set(arm,"assembly",GearTopology.validate(height,GearTopology.FootKind.NONE,Collections.singleton(new GearTopology.Cell(0,-height,0))).assembly());set(arm,"operational",true);set(arm,"mode",mode);set(arm,"direction",direction);set(arm,"activeAngle",first);set(arm,"startAngle",last);set(arm,"payload",payload);set(arm,"progress",.4D);return arm;
     }
     private static String key(ArmGridMapping map){StringBuilder out=new StringBuilder(map.cell(BlockPos.ORIGIN).toString());for(int x:map.basis())out.append('/').append(x);return out.toString();}
@@ -91,6 +91,17 @@ public final class ArmParkingCandidatesChecks {
             arm.block=blocks[size-1];ArmParkingCandidates.Candidate zero=null,middle=null;for(ArmParkingCandidates.Candidate candidate:result.candidates){if(candidate.phase==0)zero=candidate;if(candidate.phase>0&&candidate.phase<1)middle=candidate;}need(zero!=null&&middle!=null,"Actual legal end/intermediate candidates available for displacement policy");
             BlockPos nativePos=arm.getPos().add(relative);NBTTagCompound nativeData=data.copy();nativeData.setInteger("x",nativePos.getX());nativeData.setInteger("y",nativePos.getY());nativeData.setInteger("z",nativePos.getZ());VehicleStructure.Cell nativeSection=new VehicleStructure.Cell(nativePos,blocks[size-1].getDefaultState(),nativeData);
             need(ArmParkingMaterialization.mayDisplace(arm,zero,nativeSection),"New native own-section displacement uses exact phase-zero Source policy");need(!ArmParkingMaterialization.mayDisplace(arm,middle,nativeSection),"Intermediate NEW displacement remains unavailable pending lifecycle proof");need(ArmParkingMaterialization.mayRetainStored(arm,middle,cell),"Existing proven stored ownership may remain at an intermediate chosen pose");
+            NBTTagCompound rootData=new NBTTagCompound();rootData.setString("id","vandorlabs:modular_gear");rootData.setString("FutureArmChoice","keep");rootData.setTag("ForgeCaps",opaque.copy());
+            VehicleStructure source=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(arm.getPos(),arm.block.getDefaultState(),rootData)));NBTTagCompound sourceBefore=source.write(),payloadBefore=arm.payload().write();
+            for(ArmParkingCandidates.Candidate chosen:result.candidates){
+                ArmParkingMaterialization.Plan plan=ArmParkingMaterialization.prepare(source,arm,chosen);NBTTagCompound out=plan.rootData();
+                need(out.getString("FutureArmChoice").equals("keep")&&out.getCompoundTag("ForgeCaps").equals(opaque),"Chosen root preserves unknown own fields and opaque capabilities");
+                need(out.getBoolean("GearParkingHold")&&out.getDouble("GearProgress")==chosen.phase&&out.getBoolean("GearTargetDeployed")==arm.target(),"Chosen pose holds without changing target intent");
+                need(plan.payloadCells.size()==stone.size()&&plan.removedSourcePositions.isEmpty(),"Captured payload produces one detached native owner");
+                need(plan.restoredSectionCells.size()+(out.hasKey("ArmStoredSections",10)?1:0)==1,"Each previous arm section is restored or retained exactly once");
+                out.setString("FutureArmChoice","mutated");need(plan.rootData().getString("FutureArmChoice").equals("keep"),"Plan root data is defensive");
+            }
+            need(sourceBefore.equals(source.write())&&payloadBefore.equals(arm.payload().write())&&arm.storedSections==original,"Chosen composition leaves source and prepared ownership untouched");
             long owner=data.getLong("GearOwnerOffset");data.setLong("GearOwnerOffset",0);CountedTag.copies=0;need(ArmParkingCandidates.inspect(arm).status==ArmParkingCandidates.Status.INCOMPLETE&&CountedTag.copies==0,"Foreign section owner refused read-only");data.setLong("GearOwnerOffset",owner);
             data.setInteger("GearOwnerOffset",(int)owner);need(ArmParkingCandidates.inspect(arm).status==ArmParkingCandidates.Status.INCOMPLETE,"Wrong owner-offset NBT type refused");data.setLong("GearOwnerOffset",owner);
             data.setString("ArmPayload","malformed retained owner");need(ArmParkingCandidates.inspect(arm).status==ArmParkingCandidates.Status.INCOMPLETE,"Nested retained ownership refused regardless of envelope type");data.removeTag("ArmPayload");

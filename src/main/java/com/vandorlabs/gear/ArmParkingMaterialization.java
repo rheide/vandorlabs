@@ -3,6 +3,9 @@ package com.vandorlabs.gear;
 import com.vandorlabs.gear.core.*;
 import com.vandorlabs.vehicle.VehicleStructure;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.nbt.NBTTagCompound;
+import com.vandorlabs.vehicle.VehicleTileData;
+import java.util.*;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 
@@ -30,6 +33,51 @@ public final class ArmParkingMaterialization {
         if(arm==null||selected==null||storedSection==null||!arm.isOperational()||arm.storedSections==null||arm.mode()!=GearMotion.Mode.EXTEND||arm.isSwingArmController())return false;
         BlockPos relative=storedSection.pos;
         return !relative.equals(BlockPos.ORIGIN)&&arm.storedSections.at(relative)==storedSection&&arm.members().contains(arm.getPos().add(relative))&&!arm.columns().contains(relative)&&section(arm,storedSection,relative);
+    }
+    /** A detached patch, not a whole-layout overlap verdict or an ownership publication. */
+    public static final class Plan {
+        public final List<VehicleStructure.Cell> payloadCells,restoredSectionCells;
+        public final Set<BlockPos> removedSourcePositions;
+        public final VehicleStructure.Cell updatedRootCell;
+        private Plan(List<VehicleStructure.Cell> payload,List<VehicleStructure.Cell> restored,Set<BlockPos> removed,VehicleStructure.Cell root){
+            payloadCells=Collections.unmodifiableList(new ArrayList<>(payload));restoredSectionCells=Collections.unmodifiableList(new ArrayList<>(restored));
+            removedSourcePositions=Collections.unmodifiableSet(new LinkedHashSet<>(removed));updatedRootCell=root;
+        }
+        public NBTTagCompound rootData(){return updatedRootCell.tileData();}
+    }
+    /** Clones ownership data only for the selected candidate. No world access, factories or journals. */
+    public static Plan prepare(VehicleStructure source,GearTileEntity arm,ArmParkingCandidates.Candidate selected){
+        if(source==null||arm==null||selected==null||!arm.isOperational()||arm.hasFailedArmSnapshot()||arm.payload()==null||arm.payload().hasOwnershipJournal())throw new IllegalArgumentException("Arm snapshot unavailable");
+        VehicleStructure.Cell root=source.at(arm.getPos());if(root==null||!root.hasTileData()||root.state.getBlock()!=arm.getBlockType())throw new IllegalArgumentException("Arm root changed");
+        ArmPayload payload=arm.payload();ArmGridMapping mapping=payload.gridMapping(arm,selected.phase);
+        if(mapping==null)throw new IllegalArgumentException("Selected arm phase is no longer grid aligned");
+        for(VehicleStructure.Cell cell:payload.blocks.cells)if(!mapping.cell(cell.pos).equals(selected.mapping().cell(cell.pos))||mapping.state(cell)!=selected.mapping().state(cell))throw new IllegalArgumentException("Selected arm mapping changed");
+        ArmGridPlacement placement=payload.gridPlacement(arm,selected.phase);if(placement==null)throw new IllegalArgumentException("Selected arm tiles cannot be mapped");
+        Set<BlockPos> removed=new LinkedHashSet<>(),occupied=new HashSet<>();
+        if(payload.materialized())for(int i=0;i<payload.blocks.cells.size();i++){
+            BlockPos at=payload.placedCellPosition(arm,i);VehicleStructure.Cell before=source.at(at);
+            if(before==null||before.state!=payload.placedCellState(i)||!removed.add(at))throw new IllegalArgumentException("Materialized arm ownership changed");
+        }
+        for(VehicleStructure.Cell cell:placement.cells)if(!occupied.add(cell.pos)||cell.pos.equals(arm.getPos()))throw new IllegalArgumentException("Duplicate or root payload overlap");
+        List<VehicleStructure.Cell> restored=new ArrayList<>(),stored=new ArrayList<>();Set<BlockPos> retained=new HashSet<>();
+        for(VehicleStructure.Cell old:arm.storedSectionCells()){
+            if(!mayRetainStored(arm,selected,old))throw new IllegalArgumentException("Stored arm ownership changed");
+            BlockPos at=arm.getPos().add(old.pos);
+            if(occupied.contains(at)){stored.add(old);retained.add(at);}else{
+                if(source.at(at)!=null&&!removed.contains(at))throw new IllegalArgumentException("Stored arm restoration is occupied");
+                restored.add(new VehicleStructure.Cell(at,old.state,VehicleTileData.translated(old.tileData(),arm.getPos())));
+            }
+        }
+        for(VehicleStructure.Cell cell:placement.cells){VehicleStructure.Cell before=source.at(cell.pos);
+            if(before==null||removed.contains(cell.pos)||retained.contains(cell.pos))continue;
+            if(!mayDisplace(arm,selected,before))throw new IllegalArgumentException("Payload overlaps another native owner");
+            BlockPos relative=before.pos.subtract(arm.getPos());stored.add(new VehicleStructure.Cell(relative,before.state,VehicleTileData.translated(before.tileData(),BlockPos.ORIGIN.subtract(arm.getPos()))));removed.add(before.pos);
+        }
+        NBTTagCompound data=arm.currentData(root.tileData());data.setTag("ArmPayload",placement.payloadTag());
+        if(stored.isEmpty())data.removeTag("ArmStoredSections");else data.setTag("ArmStoredSections",ArmStoredSections.detachedTag(stored));
+        data.setDouble("GearProgress",selected.phase);data.setInteger("GearRevision",data.getInteger("GearRevision")+1);data.setBoolean("GearParkingHold",true);data.setBoolean("GearSignalKnown",false);data.setBoolean("GearBlocked",false);data.setString("GearError","");
+        if(selected.phase==0||selected.phase==1)data.removeTag("SurfaceDepartureActive");
+        return new Plan(placement.cells,restored,removed,new VehicleStructure.Cell(root.pos,root.state,data));
     }
     private ArmParkingMaterialization(){}
 }
