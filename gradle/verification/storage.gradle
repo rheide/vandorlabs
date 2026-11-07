@@ -38,3 +38,11 @@ task exportStorageModulesSourceReference(type: JavaExec) {
     main = 'com.vandorlabs.client.StorageModulesLegacyChecks'
     maxHeapSize = '1G'
 }
+
+task exportStorageModelSourceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StorageModelLegacyOracle'
+    maxHeapSize = '1G'
+}
