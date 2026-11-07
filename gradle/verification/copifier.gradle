@@ -1,0 +1,11 @@
+task testCopifierHousingReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'copifier-housing'
+    maxHeapSize = '1g'
+    systemProperty 'vandorlabs.copifierHousingReference', file("$buildDir/test-artifacts/copifier-housing-source.json").absolutePath
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}

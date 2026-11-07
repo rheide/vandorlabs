@@ -45,6 +45,7 @@ public final class NonRenderingChecks {
         if(args.length>0 && args[0].equals("vehicle-world")){vehicleWorldCompatibility();return;}
         if(args.length>0 && args[0].equals("housing-lighting")){HousingFaceLightingChecks.run();return;}
         if(args.length>0 && args[0].equals("door-material")){DoorFrameMaterialChecks.run();DoorGlassDataChecks.run();return;}
+        if(args.length>0 && args[0].equals("copifier-housing")){CopifierHousingLegacyChecks.run();return;}
         if(args.length>0 && args[0].equals("duplifier-selection")){DuplifierSelectionChecks.run();return;}
         if(args.length>0 && args[0].equals("duplifier-mask")){DuplifierMaskChecks.run();return;}
         if(args.length>0 && args[0].equals("duplifier-direction")){DuplifierDirectionChecks.run();contiguous();return;}
