@@ -63,8 +63,8 @@ def main():
     if off_pixels<5:raise AssertionError('Actual Survival row-toggle capture unchanged: '+str(off_pixels))
     with (output/'renderer-report.txt').open('a') as report:report.write('Changed pixels after actual Survival row toggle: '+str(off_pixels)+'\n')
     print('Actual row-toggle mask PASS pixels='+str(off_pixels),flush=True)
-    print('Private Screen renderer mask PASS pixels='+str(pixels),flush=True)
-    print('Native private Screen world client focused checks PASS (development classpath/software rendering): '+str(output),flush=True)
+    print(('Canonical' if args.canonical else 'Private')+' Screen renderer mask PASS pixels='+str(pixels),flush=True)
+    print('Native '+('canonical' if args.canonical else 'private')+' Screen world client focused checks PASS (development classpath/software rendering): '+str(output),flush=True)
 
 
 if __name__=='__main__':main()
