@@ -38,6 +38,13 @@ public final class NativeCopifierHousingWorld {
             NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
         }
     }
+    private record Reader(com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity tile) implements Target {
+        public CompoundTag capture(){return NativeCopifierReaderEdit.capture(tile);}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            try{if(!NativeCopifierReaderEdit.prepare(tile.copiedSettings(),values).applicable())return false;}catch(IllegalArgumentException malformed){return false;}
+            NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
+        }
+    }
     private record Segmented(com.vandorlabs.neoforge.segmented.NativeSegmentedDoorEntity tile) implements Target {
         public CompoundTag capture(){return NativeCopifierSegmentedEdit.capture(tile.copiedState());}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -94,6 +101,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity reader)return !reader.inert()&&reader.isChannelMemberActive()?new Reader(reader):null;
         if(tile instanceof com.vandorlabs.neoforge.segmented.NativeSegmentedDoorEntity segmented)return segmented.copiedAvailable()?new Segmented(segmented):null;
         if(tile instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionEntity propulsion)return propulsion.available()&&com.vandorlabs.neoforge.propulsion.NativePropulsionService.installed(propulsion)?new Propulsion(propulsion):null;
         if(tile instanceof com.vandorlabs.neoforge.NativeTriggerBlockEntity trigger&&id.getPath().equals("programmable_trigger_block"))return trigger.isChannelMemberActive()?new Trigger(trigger):null;
