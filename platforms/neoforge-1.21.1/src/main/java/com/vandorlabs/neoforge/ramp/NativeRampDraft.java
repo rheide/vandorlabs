@@ -10,7 +10,7 @@ public record NativeRampDraft(NativeRampSettings settings,Direction scanFacing,D
   if(!horizontalFacing.getAxis().isHorizontal())throw new IllegalArgumentException("Horizontal Ramp travel fallback");
   if(!settings.hasDirection())settings=copy(settings,settings.startHalf(),settings.powerOn(),settings.elevator(),settings.extend(),settings.speed(),settings.matchTextures(),settings.interpolation(),settings.escalator(),settings.moat(),settings.verticalLayout(),settings.travelAxis(),Direction.from3DDataValue(settings.resolvedDirection(horizontalFacing.get3DDataValue())).get2DDataValue(),settings.analogDeployment());
  }
- public int mode(){var s=settings;return s.moat()?6:s.escalator()!=0?s.escalator()+3:s.elevator()?(s.extend()?3:2):(s.extend()?1:0);}
+ public int mode(){return settings.mode();}
  private static int cycle(int value,int count,int direction){return Math.floorMod(value+(direction<0?-1:1),count);}
  private static NativeRampSettings copy(NativeRampSettings s,int start,boolean power,boolean lift,boolean extend,int speed,boolean match,int interpolation,int escalator,boolean moat,boolean vertical,int travel,int face,boolean analog){return new NativeRampSettings(start,s.endHalf(),s.treadPixels(),power,lift,extend,speed,match,interpolation,escalator,moat,vertical,travel,true,face,analog,s.channels());}
  public NativeRampDraft action(int id,int direction){var s=settings;int start=s.startHalf(),speed=s.speed(),interpolation=s.interpolation(),escalator=s.escalator(),travel=s.travelAxis(),face=s.direction();boolean power=s.powerOn(),lift=s.elevator(),extend=s.extend(),match=s.matchTextures(),moat=s.moat(),vertical=s.verticalLayout(),analog=s.analogDeployment();
