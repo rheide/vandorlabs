@@ -54,6 +54,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> storedSectionCells(){return storedSections==null?java.util.Collections.emptyList():storedSections.cells;}
     private java.util.UUID operator;
     private boolean recoveryDropped;
+    public boolean hasFailedArmSnapshot(){return failedPayload!=null||failedStoredSections!=null;}
     public boolean hasRetainedPayload(){return taxiState!=null||hasStoredSections()||failedPayload!=null||payload!=null&&!payload.materialized();}
     public boolean recoveryDropped(){return recoveryDropped;}
     public void recoverOnBreak(net.minecraft.block.Block block){
