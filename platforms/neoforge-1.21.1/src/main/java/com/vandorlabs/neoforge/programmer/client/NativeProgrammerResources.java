@@ -17,6 +17,9 @@ public final class NativeProgrammerResources implements net.minecraft.client.ren
  @Override public net.minecraft.client.renderer.texture.atlas.SpriteSourceType type(){return TYPE;}
  @Override public void run(net.minecraft.server.packs.resources.ResourceManager manager,Output output){if(!active())return;for(String name:NativeProgrammerAssets.textures().keySet()){var id=ResourceLocation.parse(name);var path=ResourceLocation.fromNamespaceAndPath(id.getNamespace(),"textures/"+id.getPath()+".png");var resource=manager.getResource(path).orElseThrow(()->new IllegalStateException("Missing authored Programmer sprite "+path));output.add(id,loader->loader.loadSprite(id,resource,(sprite,size,image,metadata)->new net.minecraft.client.renderer.texture.SpriteContents(sprite,size,image,metadata)));}}
 
- public static boolean active(){return Boolean.getBoolean("vandorlabs.programmerRenderCheck")||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","data_chip_programmer"));}
+ private static volatile NativeProgrammerBake bake;
+ public static NativeProgrammerBake currentBake(){return bake;}
+ @SubscribeEvent public static void completed(ModelEvent.BakingCompleted event){if(!active())return;var mc=net.minecraft.client.Minecraft.getInstance();var prepared=new NativeProgrammerBake(event.getModels(),material->mc.getTextureAtlas(material.atlasLocation()).apply(material.texture()),mc.getResourceManager());bake=prepared;}
+ public static boolean active(){return Boolean.getBoolean("vandorlabs.programmerWorldCheck")||Boolean.getBoolean("vandorlabs.programmerRenderCheck")||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs","data_chip_programmer"));}
  @SubscribeEvent public static void models(ModelEvent.RegisterAdditional event){if(active())for(String model:NativeProgrammerAssets.models())event.register(ModelResourceLocation.standalone(ResourceLocation.parse(model)));}
 }
