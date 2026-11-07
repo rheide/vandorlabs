@@ -139,6 +139,14 @@ public final class ArmPayload {
         try(java.io.DataInputStream input=new java.io.DataInputStream(new java.io.ByteArrayInputStream(encoded))){CompressedStreamTools.read(input,new NBTSizeTracker(2L*1024*1024-65536));}
         catch(RuntimeException tooLarge){throw new java.io.IOException("Attachment exceeds tile-update capacity",tooLarge);}
     }
+    /** Complete chosen root must fit the existing tile update budget before publication. */
+    static void validateRootSyncBudget(NBTTagCompound root){
+        try{
+            final java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();
+            java.io.OutputStream bounded=new java.io.OutputStream(){int size;public void write(int value)throws java.io.IOException{if(++size>VehicleStructure.MAX_NBT_BYTES)throw new java.io.IOException("Arm root exceeds snapshot budget");bytes.write(value);}public void write(byte[] data,int offset,int length)throws java.io.IOException{if(length>VehicleStructure.MAX_NBT_BYTES-size)throw new java.io.IOException("Arm root exceeds snapshot budget");size+=length;bytes.write(data,offset,length);}};
+            CompressedStreamTools.write(root,new java.io.DataOutputStream(bounded));validateSyncBudget(bytes.toByteArray());
+        }catch(java.io.IOException failure){throw new IllegalArgumentException("Arm root exceeds tile-update capacity",failure);}
+    }
     /** Integer endpoint mapping; discovery is bounded by the original tip/platform plane. */
     static final class Endpoint {
         private final GearTileEntity arm;
