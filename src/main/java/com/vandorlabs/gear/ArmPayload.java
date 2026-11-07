@@ -96,6 +96,17 @@ public final class ArmPayload {
         if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
     }
+    /** Detached release preparation only: preserve the requested/input fields while changing this head's latch. */
+    public ArmPayload releaseCoupler(BlockPos originalCell,boolean locked,NBTTagCompound knownFields){
+        ArmPayload edited=withCouplerData(originalCell,knownFields);
+        List<VehicleStructure.Cell> next=new ArrayList<>(edited.blocks.cells),placedNext=edited.placedBlocks==null?null:new ArrayList<>(edited.placedBlocks.cells);
+        for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){
+            VehicleStructure.Cell cell=next.get(i);NBTTagCompound retained=cell.tileData();retained.setBoolean("VehicleArmCouplerReleased",true);
+            next.set(i,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),retained));
+            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=retained.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),mapped));}
+        }
+        ArmPayload result=edited.preserveAlignment(new ArmPayload(VehicleStructure.display(next),edited.offset,false,edited.placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);return result;
+    }
     private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
