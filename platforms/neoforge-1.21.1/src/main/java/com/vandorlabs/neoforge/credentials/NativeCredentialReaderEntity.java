@@ -16,7 +16,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 
-/** Unregistered standalone host. Physical ownership never enters its public projection or configured pick. */
+/** Standalone host. Physical ownership never enters its public projection or configured pick. */
 public class NativeCredentialReaderEntity extends BlockEntity implements NativeChannelMember,net.minecraft.world.Container {
     private static final List<String> READER_FIELDS=List.of("TokenLogo","TokenRejectedUntil","ChipSlot","AnyToken","AllowedTokens","TokenBehavior","TokenPulseUntil","TokenToggled","TokenToggleApplied","TokenInsertStarted","TokenInsertionSequence","TokenReturnTo","TokenReturnToMost","TokenReturnToLeast","InsertedToken");
     public record Visual(ControlMountSettings mount,int rotation,int allowed,NativeTokenReader.Visual contents,NativeTokenReader.Motion motion,boolean inert,int behavior,NativeScreenChipView chipView){}
@@ -70,6 +70,15 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     ItemStack takeForRemoval(){removing=true;return takeForDrop();}
     public ItemStack takeForDrop(){return inert?ItemStack.EMPTY:reader.takeForDrop();}
     public ItemStack recoveryForRemoval(net.minecraft.world.item.Item item){if(!inert||recoveryTaken||retained.isEmpty())return ItemStack.EMPTY;recoveryTaken=true;var result=new ItemStack(item);var tag=new CompoundTag();tag.put("NativeReaderRecovery",retained.copy());result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(tag));return result;}
+    /** Bounded main-thread copied choices; credentials and return ownership never enter this value. */
+    public com.vandorlabs.neoforge.copifier.NativeCopifierReaderEdit.Settings copiedSettings(){if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Reader copy requires owning thread");return new com.vandorlabs.neoforge.copifier.NativeCopifierReaderEdit.Settings(mount,rotation,channels,transmission,range,local,outputLevel()>0);}
+    /** The outer copied-target/session layer authorizes the actor; no editor-distance check is added here. */
+    public boolean configureCopied(CompoundTag values){
+        if(publishing||inert||removing||!(level instanceof ServerLevel server)||!server.getServer().isSameThread()||!NativeRedstoneChannels.open(server)||!isChannelMemberActive())return false;
+        com.vandorlabs.neoforge.copifier.NativeCopifierReaderEdit.Plan plan;try{plan=com.vandorlabs.neoforge.copifier.NativeCopifierReaderEdit.prepare(copiedSettings(),values);}catch(IllegalArgumentException refused){return false;}if(!plan.applicable())return false;var next=plan.settings();
+        CompoundTag nextRetained=retained;if(values.contains("Transmission",Tag.TAG_COMPOUND)){nextRetained=retained.copy();var forge=nextRetained.getCompound("ForgeData").copy();var all=forge.getCompound(TransmissionSettings.SETTINGS).copy();var main=all.getCompound("main").copy();main.putIntArray("Channels",next.outputs().toArray());main.putInt("Range",next.range());main.putBoolean("Local",next.local());all.put("main",main);forge.put(TransmissionSettings.SETTINGS,all);nextRetained.put("ForgeData",forge);}var staged=nextRetained;
+        NativeRedstoneChannels.batch(server,()->{retained=staged;mount=next.mount();rotation=next.rotation();channels=next.channels();transmission=next.outputs();range=next.range();local=next.local();publish();NativeRedstoneChannels.channelsChanged(this);});return true;
+    }
     public boolean configure(ServerPlayer player,boolean any,int allowed,int behavior,ControlMountSettings next){
         if(publishing||!usable(player)||next==null||!ControlMountSettings.valid(next.height,next.tilt,next.direction)||behavior<0||behavior>3)return false;
         boolean changed=reader.configureLocal(any,allowed,behavior)||mount.height!=next.height||mount.tilt!=next.tilt||mount.direction!=next.direction||!channels.equals(transmission);
