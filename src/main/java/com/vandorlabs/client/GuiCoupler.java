@@ -7,8 +7,8 @@ import net.minecraft.client.gui.inventory.GuiContainer;
 
 /** Standard compact channel dialog; right click cycles the lock behavior in reverse. */
 public final class GuiCoupler extends GuiContainer {
-    private final TileCoupler tile;private GuiTextField channels;private boolean inverted,articulation;
-    public GuiCoupler(ContainerCoupler container){super(container);tile=container.tile;inverted=tile.inverted();articulation=tile.articulation();xSize=260;ySize=218;}
+    private final CouplerControl tile;private GuiTextField channels;private boolean inverted,articulation;
+    public GuiCoupler(ContainerCoupler container){super(container);tile=container.control;inverted=tile.inverted();articulation=tile.articulation();xSize=260;ySize=218;}
     @Override public void initGui(){String value=channels==null?ChannelFields.text(tile.getRedstoneChannels()):channels.getText();super.initGui();org.lwjgl.input.Keyboard.enableRepeatEvents(true);channels=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+72,xSize-24,18);channels.setMaxStringLength(com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH);channels.setText(value);buttonList.clear();GuiButton tab=new DialogTabButton(100,guiLeft+12,guiTop+32,112,20,"Redstone");tab.enabled=false;buttonList.add(tab);buttonList.add(new RedstoneActivationButton(1,guiLeft+12,guiTop+102,xSize-24,inverted?2:1));buttonList.add(new GuiButton(3,guiLeft+12,guiTop+126,xSize-24,20,"Articulation: "+(articulation?"Yes":"No")));buttonList.add(new GuiButton(2,guiLeft+12,guiTop+188,xSize-24,20,"Done"));}
     private void save(){com.vandorlabs.redstone.ChannelList list=com.vandorlabs.redstone.ChannelList.parse(channels.getText());channels.setTextColor(list==null?0xff7777:0xe0e0e0);if(list!=null)com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new MessageCoupler(inventorySlots.windowId,list.toString(),inverted,articulation));}
     @Override protected void actionPerformed(GuiButton button){if(button.id==1){inverted=!inverted;save();initGui();}else if(button.id==3){articulation=!articulation;save();initGui();}else if(button.id==2){save();mc.player.closeScreen();}}

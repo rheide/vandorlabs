@@ -17,7 +17,7 @@ public final class MessageCoupler implements IMessage {
             if(!(actor.openContainer instanceof ContainerCoupler)||actor.openContainer.windowId!=message.window)return;
             ContainerCoupler container=(ContainerCoupler)actor.openContainer;
             com.vandorlabs.redstone.ChannelList list=com.vandorlabs.redstone.ChannelList.parse(message.channels);
-            if(list!=null&&container.canInteractWith(actor)){if(container.tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)container.tile.getWorld()).craft;if(craft==null)return;if(message.articulation!=null&&!craft.articulation.canConfigure(container.tile.getPos(),message.articulation)){container.tile.status("Straighten this joint before disabling articulation");return;}craft.authorizeCouplingGui(actor,container.tile);}container.tile.authorize(actor);container.tile.configure(list,message.inverted,message.articulation==null?container.tile.articulation():message.articulation);}
+            if(list!=null&&container.canInteractWith(actor))container.configure(actor,list,message.inverted,message.articulation);
         });return null;}
     }
 }

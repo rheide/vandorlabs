@@ -42,6 +42,7 @@ public final class ItemConfigurizer extends Item {
     }
     private static void configureCraft(net.minecraft.entity.player.EntityPlayerMP player,com.vandorlabs.vehicle.EntityGroundVehicle craft){
         com.vandorlabs.vehicle.VehicleInteraction.Target target=com.vandorlabs.vehicle.VehicleInteraction.pointed(player);
+        if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.COUPLER){com.vandorlabs.vehicle.VehicleInteraction.activate(player,target);return;}
         if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.COCKPIT){com.vandorlabs.tiles.TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(craft.view,target.hit.cell.pos);if(cockpit!=null)com.vandorlabs.container.ContainerCockpit.open(player,cockpit);return;}
         if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.BOARD){
             BlockPos seat=target.hit.cell.state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER)?target.hit.cell.pos.down():target.hit.cell.pos;com.vandorlabs.vehicle.VehicleService.previewSeat(player,craft,seat);
