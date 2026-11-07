@@ -40,5 +40,5 @@ def main():
   for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge').glob(pattern)):evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+str(path.relative_to(ROOT)))
  for path in sorted((ROOT/'testclient/fixtures').glob('storage*reference.json.gz')):evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+str(path.relative_to(ROOT)))
  (out/'classes-and-reference.sha256').write_text('\n'.join(evidence)+'\n')
- print('Actual private Storage editor PASS (renderer acceptance separate): '+str(out),flush=True)
+ print(('Actual canonical' if options.canonical else 'Actual private')+' Storage editor PASS (renderer acceptance separate): '+str(out),flush=True)
 if __name__=='__main__':main()

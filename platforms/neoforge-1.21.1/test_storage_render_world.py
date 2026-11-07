@@ -56,5 +56,5 @@ def main():
   if path.is_file():evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+str(path.relative_to(ROOT)))
  evidence.append(hashlib.sha256(reference.read_bytes()).hexdigest()+'  actual-source-cube-reference.json')
  (out/'classes-and-reference.sha256').write_text('\n'.join(evidence)+'\n')
- print('Actual private Storage renderer/picker/restart PASS: '+str(out),flush=True)
+ print(('Actual canonical' if options.canonical else 'Actual private')+' Storage renderer/picker/restart PASS: '+str(out),flush=True)
 if __name__=='__main__':main()

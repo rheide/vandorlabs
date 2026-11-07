@@ -1,6 +1,6 @@
 # Programmable Storage foundation
 
-Programmable Storage is an independent 27-slot inventory. Adjacent blocks do not merge. It exposes the same inventory through the item-handler capability on every face, uses the vanilla chest menu and comparator calculation, and emits no block light. Its Source subclass suppresses inherited deferred redstone-channel behavior; shared Screen defaults and services must not be installed as Storage behavior.
+Programmable Storage is an independent 27-slot inventory. Focused canonical dedicated and real-client acceptance is complete for the native activation candidate; promotion remains a separate checkpoint. Adjacent blocks do not merge. It exposes the same inventory through the item-handler capability on every face, uses the vanilla chest menu and comparator calculation, and emits no block light. Its Source subclass suppresses inherited deferred redstone-channel behavior; shared Screen defaults and services must not be installed as Storage behavior.
 
 ## Released behavior reference
 
@@ -134,3 +134,12 @@ The future public model hook should prepare one `NativeStorageModel.Bake` from t
 Canonical Storage definitions now preserve the `programmable_storage` block/item/entity identity, horizontal metadata mapping, five hardness, six effective blast resistance, metal sound and stone-pickaxe requirement. Their capability binds the existing guarded 27-slot handler. The dedicated material menu, bounded payload and screen use the same path as the private adapters; ordinary inventory remains the vanilla three-row menu. Registry initialization is still gated by one explicit Bootstrap call.
 
 Generated Cabinet block/item models, unrotated horizontal state variants and the conditional released chest-plus-programmable-block recipe are available before activation. The central language and optional tool tags include the canonical ID. Global model hooks are conditional on an installed Storage block and preserve the existing ordinary Glass path. Canonical dedicated and actual-player client acceptance remain separate from these inactive definitions.
+
+
+## Canonical acceptance
+
+The separate activation candidate enables only the prepared registration call. Actual public `programmable_storage` factories pass 286 dedicated write checks and eleven process-restart checks: released recipe and properties, all 32 metadata values, four configured Survival placements, all six capability faces, dedicated and ordinary menus, stale windows, Source inventory-free configured picks, and eight proper/wrong-tool/Creative mining combinations with exactly one recovery owner for unsupported snapshots. Saved canonical IDs, private fields, platform persistence, live inventory and the old unversioned palette default survive restart.
+
+Three sequential canonical clients reuse the production registry, menu/payload and global model hooks. The item client repeats both 964-case reference generations, sixteen padded icons, resource reload and the zero-byte multi-icon selector batch. The editor passes 55 actual widget/authorization/inventory checks. The placed-world client passes 756 checks and a saved-world restart, including both existing cube golden generations. It measures 13,376 changed pixels against the production chunk-model-disabled control, zero after resource reload and 109 after the actual picker edit.
+
+The same world client synchronizes both game modes, selected slot, both hands and position before placing the actual public item in Survival. Two held items become one, the exact canonical factory receives the selected settings and an empty inventory, and real attack input with an iron pickaxe removes that block. The server observes exactly one configured Storage drop and seven separately owned diamonds; the configured item contains no `Items`. Runtime finalization waits for the complete restart suite and retains compact logs, hashes and captures. These are focused development/software checks, not a full release gate, abrupt-termination journal proof or hardware/shader acceptance. Source production code and Vehicle conversion are unchanged.
