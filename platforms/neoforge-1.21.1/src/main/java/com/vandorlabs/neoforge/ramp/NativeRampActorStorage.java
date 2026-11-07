@@ -12,7 +12,7 @@ import net.minecraft.world.level.chunk.storage.*;
 
 /** Inactive startup-only raw storage bridge. Recovery policy owns actor projection and cross-chunk intent. */
 final class NativeRampActorStorage {
- static final int MAX_RAW_BYTES=4*1024*1024,MAX_PREPARED_BYTES=32*1024*1024,MAX_PENDING_READS=8,MAX_CHUNKS=512;
+ static final int MAX_RAW_BYTES=4*1024*1024,MAX_PREPARED_BYTES=32*1024*1024,MAX_PENDING_READS=8,MAX_PENDING_WRITES=8,MAX_WRITE_BYTES=16*1024*1024,MAX_CHUNKS=512;
  private static final Map<ServerLevel,Permit> LIVE=new IdentityHashMap<>();
  enum Status {PENDING,REFUSED,SUBMITTED}
  record Commit(Status status,CompletableFuture<Void> completion,String reason){}
@@ -27,7 +27,7 @@ final class NativeRampActorStorage {
  }
  static final class Permit implements AutoCloseable {
   private final ServerLevel level;private final NativeRampEntityManagerAccess manager;private final NativeRampEntityStorageAccess entityStorage;private final SimpleRegionStorage regions;
-  private final Set<ChunkPos> touched=new LinkedHashSet<>();private final Map<ChunkPos,Long> revisions=new HashMap<>();private final Set<Prepared> prepared=Collections.newSetFromMap(new IdentityHashMap<>());private final List<CompletableFuture<Void>> writes=new ArrayList<>();private final AtomicInteger reads=new AtomicInteger();
+  private final Set<ChunkPos> touched=new LinkedHashSet<>();private final Map<ChunkPos,Long> revisions=new HashMap<>();private final Set<Prepared> prepared=Collections.newSetFromMap(new IdentityHashMap<>());private final List<CompletableFuture<Void>> writes=new ArrayList<>();private final AtomicInteger reads=new AtomicInteger(),writingCount=new AtomicInteger(),writingBytes=new AtomicInteger();
   private int stagedBytes;private long writeSequence;private final AtomicLong durableSequence=new AtomicLong();private boolean closed;
   private Permit(ServerLevel level,NativeRampEntityManagerAccess manager,NativeRampEntityStorageAccess storage){this.level=level;this.manager=manager;entityStorage=storage;regions=storage.vandorlabs$rampActorRegions();}
   private void active(){requireStartup(level);if(closed||LIVE.get(level)!=this)throw new IllegalStateException("Ramp actor storage scope expired");}
@@ -61,7 +61,10 @@ final class NativeRampActorStorage {
    if(consumed)throw new IllegalStateException("Ramp actor prepared write consumed");permit.fresh(chunk);if(!verification.isDone())return new Commit(Status.PENDING,null,"");
    try{if(permit.revisions.getOrDefault(chunk,0L)!=revision||!verification.join()){release();return new Commit(Status.REFUSED,null,"Actor chunk changed since its expected raw record");}
     // Startup admission prevents normal main-thread entity stores between comparison and this enqueue.
-    var writing=permit.regions.write(chunk,replacement);permit.writes.add(writing);permit.writeSequence++;permit.revisions.merge(chunk,1L,Long::sum);permit.entityStorage.vandorlabs$rampActorEmptyChunks().remove(chunk.toLong());release();return new Commit(Status.SUBMITTED,writing,"");
+    int queuedBytes=replacement.sizeInBytes()+256;if(permit.writingCount.get()>=MAX_PENDING_WRITES||(long)permit.writingBytes.get()+queuedBytes>MAX_WRITE_BYTES)return new Commit(Status.PENDING,null,"Waiting for actor storage write capacity");
+    permit.writingCount.incrementAndGet();permit.writingBytes.addAndGet(queuedBytes);CompletableFuture<Void> writing;
+    try{writing=permit.regions.write(chunk,replacement).whenComplete((ignored,failure)->{permit.writingCount.decrementAndGet();permit.writingBytes.addAndGet(-queuedBytes);});}catch(RuntimeException failure){permit.writingCount.decrementAndGet();permit.writingBytes.addAndGet(-queuedBytes);throw failure;}
+    permit.writes.add(writing);permit.writeSequence++;permit.revisions.merge(chunk,1L,Long::sum);permit.entityStorage.vandorlabs$rampActorEmptyChunks().remove(chunk.toLong());release();return new Commit(Status.SUBMITTED,writing,"");
    }catch(RuntimeException failure){release();return new Commit(Status.REFUSED,null,message(failure));}
   }
   private void release(){if(consumed)return;consumed=true;expected=Optional.empty();replacement=null;if(permit.prepared.remove(this))permit.stagedBytes-=bytes;}
