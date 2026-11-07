@@ -49,7 +49,7 @@ public final class ArmParkingCandidatesChecks {
     }
     private static void profile(Probe arm)throws Exception{
         NBTTagCompound before=arm.payload().write();double progress=arm.progress();ArmParkingCandidates.Result result=ArmParkingCandidates.inspect(arm);need(result.completeForDistinctGridMappings(),"Complete supported arm-only curve");Set<String> found=new HashSet<>();
-        for(ArmParkingCandidates.Candidate candidate:result.candidates){ArmGridMapping mapping=arm.payload().gridMapping(arm,candidate.phase);need(mapping!=null&&key(mapping).equals(key(candidate)),"Scalar metadata equals actual Source grid mapping");found.add(key(candidate));if(candidate.phase>0&&candidate.phase<1)intermediate++;}
+        for(ArmParkingCandidates.Candidate candidate:result.candidates){ArmGridMapping mapping=arm.payload().gridMapping(arm,candidate.phase);need(mapping!=null&&key(mapping).equals(key(candidate)),"Scalar metadata equals actual Source grid mapping");need(candidate.mapping()==candidate.mapping()&&key(candidate.mapping()).equals(key(mapping)),"Candidate reuses its exact immutable verified mapping");found.add(key(candidate));if(candidate.phase>0&&candidate.phase<1)intermediate++;}
         need(found.equals(oracle(arm)),"Complete independent actual-transform root set mode="+arm.mode()+" mount="+arm.mount+" first="+arm.pose(0).angleDegrees()+" last="+arm.pose(1).angleDegrees()+" found="+found);
         need(result.testedPhases<=68&&result.transformQueries<=4*result.testedPhases+3,"Geometry cost bound");need(result.stateChecks<=24*arm.payload().blocks.cells.size(),"One typed scan per distinct proper basis");need(progress==arm.progress()&&before.equals(arm.payload().write()),"Read-only original snapshot and live phase");profiles++;
     }

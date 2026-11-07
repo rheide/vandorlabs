@@ -57,7 +57,7 @@ final class VehicleArmParkingGeometry {
                         if((long)points+arm.options.candidates.size()>MAX_POINTS)throw new IllegalArgumentException("Too many arm parking contact choices");
                         choices=new Point[arm.options.candidates.size()];
                         for(int option=0;option<choices.length;option++){
-                            ArmGridMapping mapping=arm.payload.gridMapping(arm.owner,arm.options.candidates.get(option).phase);if(mapping==null)throw new IllegalArgumentException("Arm parking mapping changed");
+                            ArmGridMapping mapping=arm.options.candidates.get(option).mapping();
                             IBlockState state=mapping.state(original);if(state==null)throw new IllegalArgumentException("Arm parking contact cannot become a native block");choices[option]=new Point(mapping.cell(original.pos),state);
                         }
                     }
