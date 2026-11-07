@@ -26,10 +26,12 @@ public final class ArmPayload {
     public int collisionBoxCount(GearTileEntity arm){return materialized?0:localCollision(arm).size();}
     private List<AxisAlignedBB> localCollision(GearTileEntity arm){if(localCollision==null){List<AxisAlignedBB> result=new ArrayList<>();int[] ends=new int[blocks.cells.size()];VehicleWorld view=view(arm);for(int i=0;i<blocks.cells.size();i++){VehicleStructure.Cell cell=blocks.cells.get(i);cell.state.addCollisionBoxToList(view,cell.pos,new AxisAlignedBB(cell.pos).grow(2),result,null,false);ends[i]=result.size();}collisionCellEnds=ends;localCollision=Collections.unmodifiableList(result);}return localCollision;}
     /** Original immutable cell for an existing collision-box index; no geometry/NBT is rebuilt on a hit. */
-    public VehicleStructure.Cell collisionCell(GearTileEntity arm,int boxIndex){
+    public VehicleStructure.Cell collisionCell(GearTileEntity arm,int boxIndex){return blocks.cells.get(collisionCellIndex(arm,boxIndex));}
+    /** Ordered original-cell index for correspondence with the last materialized endpoint. */
+    public int collisionCellIndex(GearTileEntity arm,int boxIndex){
         if(materialized)throw new IllegalArgumentException("Native endpoint cells own their own collisions");
         List<AxisAlignedBB> boxes=localCollision(arm);if(boxIndex<0||boxIndex>=boxes.size())throw new IndexOutOfBoundsException("Attachment collision index");
-        int low=0,high=collisionCellEnds.length;while(low<high){int middle=(low+high)>>>1;if(collisionCellEnds[middle]<=boxIndex)low=middle+1;else high=middle;}return blocks.cells.get(low);
+        int low=0,high=collisionCellEnds.length;while(low<high){int middle=(low+high)>>>1;if(collisionCellEnds[middle]<=boxIndex)low=middle+1;else high=middle;}return low;
     }
     private boolean materialized;
     private boolean gridAligned=true;
