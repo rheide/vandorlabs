@@ -1,0 +1,7 @@
+task exportProgrammableGlassReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammableGlassLegacyOracle'
+    args file('build/test-artifacts/programmable-glass-forge.jsonl').absolutePath
+}
