@@ -23,8 +23,8 @@ final class VehicleArmParkingGeometry {
         }
     }
     static final class Arm {
-        final GearTileEntity owner;final ArmPayload payload;final ArmParkingCandidates.Result options;final int body;
-        Arm(GearTileEntity owner,ArmParkingCandidates.Result options,int body){this.owner=owner;payload=owner.payload();this.options=options;this.body=body;}
+        final GearTileEntity owner;final ArmPayload payload,originalPayload;final ArmParkingSource prepared;final ArmParkingCandidates.Result options;final int body;
+        Arm(GearTileEntity owner,ArmParkingCandidates.Result options,int body,ArmParkingSource prepared){this.owner=owner;originalPayload=owner.payload();this.prepared=prepared;payload=prepared==null?originalPayload:prepared.payload();this.options=options;this.body=body;}
     }
     static final class Port {
         final VehicleArmCouplers.Address address;final int body,variable;final Point[] choices;
@@ -41,12 +41,16 @@ final class VehicleArmParkingGeometry {
     }
     /** Loaded ownership was admitted by the phase enumerator before this scalar projection. */
     static VehicleArmParkingGeometry project(VehicleStructure source,VehicleWorld view,VehicleCouplerTopology topology,Map<BlockPos,ArmParkingCandidates.Result> candidates){
+        return project(source,view,topology,candidates,Collections.emptyMap());
+    }
+    static VehicleArmParkingGeometry project(VehicleStructure source,VehicleWorld view,VehicleCouplerTopology topology,Map<BlockPos,ArmParkingCandidates.Result> candidates,Map<BlockPos,ArmParkingSource> prepared){
         if(view==null||view.structure!=source||topology==null||topology.sections.size()>MAX_BODIES||candidates.size()>MAX_ARMS)throw new IllegalArgumentException("Arm parking layout exceeds its search bounds");
         List<Arm> arms=new ArrayList<>();Map<BlockPos,Integer> variables=new LinkedHashMap<>();
         for(Map.Entry<BlockPos,ArmParkingCandidates.Result> entry:candidates.entrySet()){
             TileEntity raw=view.tiles.get(entry.getKey());Integer body=topology.section.get(entry.getKey());ArmParkingCandidates.Result options=entry.getValue();
             if(!(raw instanceof GearTileEntity)||((GearTileEntity)raw).payload()==null||body==null||options==null||options.status!=ArmParkingCandidates.Status.COMPLETE||options.candidates.isEmpty())throw new IllegalArgumentException("No complete native arm parking choices");
-            variables.put(entry.getKey(),arms.size());arms.add(new Arm((GearTileEntity)raw,options,body));
+            ArmParkingSource token=prepared.get(entry.getKey());if(token!=null&&(token.source()!=source||token.owner()!=raw||!token.stillOwned()))throw new IllegalArgumentException("Prepared arm parking source changed");
+            variables.put(entry.getKey(),arms.size());arms.add(new Arm((GearTileEntity)raw,options,body,token));
         }
         Map<VehicleArmCouplers.Address,Integer> indexes=new LinkedHashMap<>();List<Port> ports=new ArrayList<>();int[][] links=new int[topology.links.size()][2];int points=0,index=0;
         for(VehicleCouplerTopology.Link link:topology.links){

@@ -55,12 +55,14 @@ public final class VehicleArmCouplers {
         final Address address;final BlockPos carrier;
         MaterializedHead(Address address,BlockPos carrier){this.address=address;this.carrier=carrier;}
     }
-    static Snapshot observe(VehicleStructure structure,VehicleWorld view){
+    static Snapshot observe(VehicleStructure structure,VehicleWorld view){return observe(structure,view,Collections.emptyMap());}
+    /** Parking may refresh materialized source state once, without replacing the live owner. */
+    static Snapshot observe(VehicleStructure structure,VehicleWorld view,Map<BlockPos,ArmPayload> prepared){
         List<Head> heads=new ArrayList<>();Set<Address> addresses=new HashSet<>();
         Map<BlockPos,MaterializedHead> endpointHeads=new HashMap<>();Set<BlockPos> endpointRoots=new HashSet<>();
         for(VehicleStructure.Cell cell:structure.cells){
             if(!(cell.state.getBlock() instanceof GearBlock))continue;TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof GearTileEntity))throw new IllegalArgumentException("Arm data is unavailable at "+cell.pos);GearTileEntity gear=((GearTileEntity)raw).loadedController();if(gear==null)throw new IllegalArgumentException("Arm membership is unavailable at "+cell.pos);if(!endpointRoots.add(gear.getPos()))continue;
-            ArmPayload payload=gear.payload();if(payload==null||!payload.materialized())continue;
+            ArmPayload payload=prepared.getOrDefault(gear.getPos(),gear.payload());if(payload==null||!payload.materialized())continue;
             if(payload.hasOwnershipJournal()||!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");
             for(int i=0;i<payload.blocks.cells.size();i++){
                 VehicleStructure.Cell original=payload.blocks.cells.get(i);if(!(original.state.getBlock() instanceof BlockCoupler))continue;
@@ -76,7 +78,7 @@ public final class VehicleArmCouplers {
         if(!endpointHeads.isEmpty())throw new IllegalArgumentException("Materialized Coupler cells are unavailable");
         Set<BlockPos> roots=new HashSet<>();int arms=0;
         for(VehicleStructure.Cell cell:structure.cells){if(!(cell.state.getBlock() instanceof GearBlock))continue;TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof GearTileEntity))throw new IllegalArgumentException("Arm data is unavailable at "+cell.pos);GearTileEntity gear=((GearTileEntity)raw).loadedController();if(gear==null)throw new IllegalArgumentException("Arm membership is unavailable at "+cell.pos);if(!roots.add(gear.getPos()))continue;
-            ArmPayload payload=gear.payload();if(payload==null){if(gear.hasFailedArmSnapshot()||gear.hasTaxiData()&&!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");continue;}if(payload.materialized())continue;
+            ArmPayload payload=prepared.getOrDefault(gear.getPos(),gear.payload());if(payload==null){if(gear.hasFailedArmSnapshot()||gear.hasTaxiData()&&!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");continue;}if(payload.materialized())continue;
             if(payload.hasOwnershipJournal()||!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");
             // Nested moving mechanisms need an explicit frame hierarchy; do not quietly fold them rigid.
             for(VehicleStructure.Cell nested:payload.blocks.cells)if(nested.state.getBlock() instanceof GearBlock)throw new IllegalArgumentException("Nested arm Coupler frames are not supported yet");

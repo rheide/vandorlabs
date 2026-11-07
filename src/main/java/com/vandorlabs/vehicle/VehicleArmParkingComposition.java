@@ -27,8 +27,9 @@ final class VehicleArmParkingComposition {
         if(budget<1)throw new IllegalArgumentException("Composition slice budget");if(result!=null)return true;
         if(stage==0){
             if(index<geometry.arms.size()){
-                VehicleArmParkingGeometry.Arm arm=geometry.arms.get(index);if(arm.owner.payload()!=arm.payload)throw new IllegalArgumentException("Chosen arm owner changed");
-                ArmParkingMaterialization.Plan patch=ArmParkingMaterialization.prepare(source,arm.owner,arm.options.candidates.get(pose.option(index++)));
+                VehicleArmParkingGeometry.Arm arm=geometry.arms.get(index);if(arm.owner.payload()!=arm.originalPayload||arm.prepared!=null&&!arm.prepared.stillOwned())throw new IllegalArgumentException("Chosen arm owner changed");
+                ArmParkingCandidates.Candidate selected=arm.options.candidates.get(pose.option(index++));
+                ArmParkingMaterialization.Plan patch=arm.prepared==null?ArmParkingMaterialization.prepare(source,arm.owner,selected):ArmParkingMaterialization.prepare(arm.prepared,selected);
                 if(roots.put(patch.updatedRootCell.pos,patch.updatedRootCell)!=null)throw new IllegalArgumentException("Duplicate chosen arm root");
                 for(BlockPos at:patch.removedSourcePositions)if(!removed.add(at))throw new IllegalArgumentException("Two arms claim one removed source cell");patches.add(patch);return false;
             }

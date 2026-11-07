@@ -38,6 +38,13 @@ public final class ArmParkingCandidates {
     public static Result enumerate(GearTileEntity arm){return admitted(arm,false,null);}
     /** Admit only the exact current phase; never adjust the arm to another grid pose. */
     public static Result current(GearTileEntity arm){return admitted(arm,true,null);}
+    /** Uses the once-refreshed source for typed admission; enumeration itself never clones NBT. */
+    public static Result enumeratePrepared(ArmParkingSource source){return prepared(source,false);}
+    public static Result currentPrepared(ArmParkingSource source){return prepared(source,true);}
+    private static Result prepared(ArmParkingSource source,boolean currentOnly){
+        if(source==null||!source.stillOwned())return refuse(Status.INCOMPLETE,currentOnly?Scope.CURRENT:Scope.CURVE);
+        return admitted(source.owner(),currentOnly,source.payload());
+    }
     private static Result admitted(GearTileEntity arm,boolean currentOnly,ArmPayload prepared){
         Scope scope=currentOnly?Scope.CURRENT:Scope.CURVE;
         if(arm==null||arm.getWorld()==null)return refuse(Status.INCOMPLETE,scope);
