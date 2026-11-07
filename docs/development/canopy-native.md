@@ -101,3 +101,14 @@ The software-rendered check establishes these paths, not hardware frame rates.
 It installs a gallery directly and does not establish item placement, automatic
 motion, canonical registration, or membership repair. The runner waits for the
 actual tagged JVMs to exit before whole-suite artifact retention finalizes.
+
+### Normal mechanism ticking
+
+The block ticker now enters the real loaded Ramp/journal close-admission service
+and authoritative controller. Client physical poses advance by the released
+1/16 step when an installed drawing owner is not waiting; cosmetic interpolation
+continues to use the pause-aware visual clock. The placed-world follow-up asserts
+an automatic opening endpoint, partial closing pose, reversal, and both client
+and server returned-open endpoints. Its body/terrain pixel controls are unchanged.
+Local neighbor power uses the same owner refresh path as channel callbacks, so an
+unchanged input does not override a manual command.
