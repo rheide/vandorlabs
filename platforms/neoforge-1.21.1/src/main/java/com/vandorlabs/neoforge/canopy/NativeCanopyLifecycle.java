@@ -18,6 +18,8 @@ public final class NativeCanopyLifecycle {
     /** Client binding only; the common lifecycle never loads a renderer or a client clock class. */
     public static void clientRetirement(java.util.function.BiConsumer<Level,BlockPos> retire){CLIENT_RETIRE=java.util.Objects.requireNonNull(retire);}
     static void retireClientRoot(NativeCanopyEntity host){var world=host.getLevel();if(world==null||!world.isClientSide)return;var links=host.links();if(links.anchor()!=null&&!links.anchor().equals(host.getBlockPos()))return;CLIENT_RETIRE.accept(world,links.pair()==null?host.getBlockPos():links.pair());CLIENT_RETIRE.accept(world,host.getBlockPos());}
+    /** Client block callbacks do not run on palette replacement; BE retirement still distinguishes a real block removal. */
+    static void clientRemoving(NativeCanopyEntity host){var level=host.getLevel();if(level==null||!level.isClientSide)return;var pos=host.getBlockPos();var chunk=level.getChunkSource().getChunk(pos.getX()>>4,pos.getZ()>>4,ChunkStatus.FULL,false);if(chunk instanceof LevelChunk full&&!full.getBlockState(pos).is(host.getBlockState().getBlock()))retireClientRoot(host);}
     private static final Map<Level,NativeCanopyGeometry.Cache> PHYSICAL=Collections.synchronizedMap(new WeakHashMap<>());
     public static NativeCanopyEntity at(Level level,BlockPos pos){
         if(level==null)return null;if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Canopy preparation requires owning thread");

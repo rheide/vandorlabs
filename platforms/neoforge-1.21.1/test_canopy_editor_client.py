@@ -7,10 +7,10 @@ from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--motion-packets',action='store_true');args=parser.parse_args()
  if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  platform=Path(__file__).resolve().parent
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.canopyEditorWorldCheck=true')
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.canopyEditorWorldCheck=true'+(' -Dvandorlabs.canopyMotionPacketCheck=true' if args.motion_packets else ''))
  subprocess.run(command('compileSmokeJava'),cwd=platform,env=env,check=True)
  out=Path(artifact_directory(prefix='canopy-editor-world-',dir=ROOT/'build/test-artifacts'))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
