@@ -18,7 +18,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Glass, canopy and cockpit glass | pending | unimplemented | non-vehicle first |
 | Programmable and large doors (Segmented Doors tracked separately) | partial (ordinary and Large Doors enabled) | unimplemented | non-vehicle first |
 | Trapdoors and diagonal trapdoors | partial (both enabled) | unimplemented | non-vehicle first |
-| Programmable lights and propulsion | partial (full/frame/slab Lights enabled; propulsion pending) | unimplemented | non-vehicle first |
+| Programmable lights and propulsion | partial (Lights and standalone propulsion enabled) | unimplemented | non-vehicle first |
 | Chairs and seats | pending | unimplemented | non-vehicle first |
 | Triggers, buttons, rockers, levers and throttles | partial (Trigger and mounted control families) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |

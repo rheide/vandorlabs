@@ -2,6 +2,9 @@
 
 ## 2.9 (development)
 
+- Enable standalone propulsion and redstone-light families in the experimental native build: original block identities, seven catalog items and recipes, connected authored shapes, dedicated controls, particles and configured Survival placement/harvest. Vehicle effects remain deferred.
+- Correct native position-dependent light-source discovery and client light withdrawal while preserving failed-reader snapshot recovery.
+
 - Enable Programmable Light, Light Frame and Light Slab in the experimental native build with source-matched grouping, configured items and dedicated ON/OFF/Sides/Redstone editing.
 
 - Retain failed native platform snapshots through component/attachment decode failures and Trapdoor mining. Opaque recovery items preserve their original data and refuse ordinary placement.

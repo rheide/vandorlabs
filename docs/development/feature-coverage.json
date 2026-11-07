@@ -371,7 +371,6 @@
         "vertical_hover_thruster"
       ],
       "remaining": [
-        "Standalone propulsion and redstone-light adapters, connected shapes, particles and dedicated controls",
         "Broader external-material/copy workflows and saved-world acceptance",
         "Hardware/shader-pack acceptance and final non-Vehicle release gate"
       ],
@@ -383,7 +382,10 @@
         "Canonical Programmable Light, Light Frame and Light Slab share the released programmable_light entity ID with configured items, dedicated editor, loaded-only grouping and auxiliary light",
         "Canonical recipes, Survival placement/harvest, save/restart, actual editor and all 36 inventory variants pass focused checks",
         "Production world rendering passes source UV/visibility, real group toggles, neighbor lighting, material edits, reload and disabled-renderer comparisons with bounded caches",
-        "Platform components and attachments retain live edits through items and preserve failed snapshots through scoped decode failure and process restart"
+        "Platform components and attachments retain live edits through items and preserve failed snapshots through scoped decode failure and process restart",
+        "Canonical standalone propulsion preserves 27 Source block IDs, seven catalog items and recipes, shared redstone_light entity identity, configured Survival placement and one-drop stone-tool harvesting.",
+        "Authored square/hexagonal/wedge shapes, dedicated controls, natural client particles and all 21 padded item variants pass focused canonical world and independent restart checks.",
+        "Prepared auxiliary-light publication supports source discovery and real client Off/On withdrawal; Vehicle/carried effects remain excluded."
       ]
     },
     {
