@@ -40,6 +40,7 @@ public final class NativeScreenChipInteractions {
   else{
    if(family!=ScreenFamily.SCREEN)return false;var group=NativeScreenChipGroups.group(owner);if(group==null)return false;display=screen(level,group.owner());if(display==null)return false;contents=reader(level,group.reader());column=group.column(owner.getBlockPos(),column);
   }
+  contents=display.chipDisplay(contents); // Source materializes even an empty/master display before refusing a page click.
   if(contents==null||contents.journal==null)return false;
   return level.isClientSide||display.chips().navigate(actor,owner,contents,column<64?-1:1);
  }
