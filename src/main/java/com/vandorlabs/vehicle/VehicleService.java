@@ -446,15 +446,19 @@ public final class VehicleService {
     /** Destination checks shared by ordinary parking and Creative Safe Park. */
     static void validatePreparedParking(EntityPlayerMP player,EntityGroundVehicle entity,VehicleStructure placed,BlockPos origin) {
         VehicleWorld parkedView=new VehicleWorld(player.world,placed);VehicleCollision parkedGeometry=VehicleTransfer.geometry(player.world,placed);
-        for(VehicleStructure.Cell cell:placed.cells) {
-            BlockPos p=origin.add(cell.pos);permission(player,p);require(player.world.isAirBlock(p)&&player.world.getTileEntity(p)==null,"Parking is blocked at "+p);
+        for(BlockPos cell:parkingTargets(parkedView)){
+            BlockPos p=origin.add(cell);permission(player,p);require(player.world.isAirBlock(p)&&player.world.getTileEntity(p)==null,placed.at(cell)==null?"Parking blocks a ramp recovery source at "+p:"Parking is blocked at "+p);
         }
-        for(net.minecraft.tileentity.TileEntity raw:parkedView.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityRampController)
-            for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)raw).vehicleSources())if(placed.at(source)==null){permission(player,origin.add(source));require(player.world.isAirBlock(origin.add(source)),"Parking blocks a ramp recovery source at "+origin.add(source));}
         java.util.List<Entity> passengers=new ArrayList<>(entity.getPassengers());passengers.add(player);
         require(clearOfPeople(player.world,parkedGeometry,origin,passengers.toArray(new Entity[0])),"The parking area is occupied.");
         for(AxisAlignedBB box:parkedGeometry.boxes)
             require(player.world.getCollisionBoxes(entity,box.offset(origin).shrink(1e-6)).isEmpty(),"Snapped craft geometry overlaps an obstacle.");
+    }
+    /** Native publication cells and empty cells required by a carried Ramp's later recovery. */
+    static java.util.Set<BlockPos> parkingTargets(VehicleWorld view){
+        java.util.Set<BlockPos> result=new java.util.LinkedHashSet<>();for(VehicleStructure.Cell cell:view.structure.cells)result.add(cell.pos);
+        for(net.minecraft.tileentity.TileEntity raw:view.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityRampController)for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)raw).vehicleSources()){result.add(source.toImmutable());if(result.size()>65536)throw new IllegalArgumentException("Parking recovery footprint is too large");}
+        return result;
     }
     static Entity[] assemblyAllowed(World world,VehicleStructure structure,BlockPos origin,Entity actor){
         java.util.List<Entity> allowed=new ArrayList<>();allowed.add(actor);

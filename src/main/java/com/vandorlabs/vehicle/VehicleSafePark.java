@@ -1,6 +1,5 @@
 package com.vandorlabs.vehicle;
 
-import java.util.ArrayList;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.*;
 import net.minecraft.world.WorldServer;
@@ -11,7 +10,7 @@ final class VehicleSafePark {
     static void submit(EntityPlayerMP player,EntityGroundVehicle craft,BlockPos selected){
         WorldServer world=player.getServerWorld();
         VehicleTransfer.submit(world,new VehicleTransfer.Action(){
-            private VehicleStructure source;private VehicleRotation.Plan plan;private VehicleSafeParkSearch search,verification;private int turns,slices;
+            private VehicleStructure source;private VehicleRotation.Plan plan;private VehicleWorld placedView;private VehicleRotation.Validation validation;private boolean validated;private VehicleSafeParkSearch search,verification;private int turns,slices;
             public void run()throws Exception {
                 if(++slices>1200)throw new IllegalArgumentException("Safe Park timed out; craft preserved. Move the craft closer to a clear, flat area and try again.");
                 if(player.world!=world||craft.world!=world)throw new IllegalArgumentException("Craft changed dimension during Safe Park.");
@@ -25,9 +24,10 @@ final class VehicleSafePark {
                     VehicleTransfer.holdForPreflight(craft);
                 }
                 if(craft.structure!=source)throw new IllegalArgumentException("Craft changed during Safe Park; inspect it again.");
+                if(validation==null){placedView=new VehicleWorld(world,plan.structure);validation=new VehicleRotation.Validation(plan.structure,placedView);}
+                if(!validated){validated=validation.step(256,System.nanoTime()+2_000_000L);if(!validated){VehicleTransfer.deferPreflight();return;}}
                 VehicleCollision geometry=VehicleTransfer.geometry(world,plan.structure);
-                if(search==null){ArrayList<BlockPos> cells=new ArrayList<>();for(VehicleStructure.Cell cell:plan.structure.cells)cells.add(cell.pos);
-                    search=new VehicleSafeParkSearch(cells,geometry.boxes,plan.origin,16,world.getHeight(),VehicleSafeParkSearch.access(world,craft,player));}
+                if(search==null)search=new VehicleSafeParkSearch(VehicleService.parkingTargets(placedView),geometry.boxes,plan.origin,16,world.getHeight(),VehicleSafeParkSearch.access(world,craft,player));
                 if(!search.step(256,System.nanoTime()+2_000_000L)){VehicleTransfer.deferPreflight();return;}
                 BlockPos origin=search.result();
                 if(origin==null)throw new IllegalArgumentException("No loaded, flat area fits this craft within 16 horizontal blocks. Craft preserved.");
