@@ -25,11 +25,13 @@ public final class VehicleArmCouplers {
     /** Immutable scalar geometry and settings: no tile/world, stack or snapshot-NBT references. */
     public static final class Head {
         public final Address address;public final BlockPos carrier;
+        /** Present only while this head has an installed native cell in the carried structure. */
+        public final BlockPos nativeCell;
         public final boolean articulated,requested,locked;
         public final double x,y,z,nx,ny,nz;
-        private Head(Address address,BlockPos carrier,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){this(address,carrier,address.cell,state,articulated,requested,transform);}
-        private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){
-            this.address=address;this.carrier=carrier.toImmutable();this.articulated=articulated;this.requested=requested;locked=state.getValue(BlockCoupler.LOCKED);EnumFacing face=state.getValue(BlockCoupler.FACING);BlockPos cell=geometryCell;
+        private Head(Address address,BlockPos carrier,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){this(address,carrier,address.cell,state,articulated,requested,transform,address.arm==null?address.cell:null);}
+        private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform,BlockPos nativeCell){
+            this.address=address;this.carrier=carrier.toImmutable();this.nativeCell=nativeCell==null?null:nativeCell.toImmutable();this.articulated=articulated;this.requested=requested;locked=state.getValue(BlockCoupler.LOCKED);EnumFacing face=state.getValue(BlockCoupler.FACING);BlockPos cell=geometryCell;
             double px=cell.getX()+.5+face.getFrontOffsetX()*.5,py=face.getAxis()==EnumFacing.Axis.Y?cell.getY()+.5+face.getFrontOffsetY()*.5:cell.getY()+BlockCoupler.couplingHeight(state),pz=cell.getZ()+.5+face.getFrontOffsetZ()*.5;
             double[] m=transform.r;x=transform.x+m[0]*px+m[1]*py+m[2]*pz;y=transform.y+m[3]*px+m[4]*py+m[5]*pz;z=transform.z+m[6]*px+m[7]*py+m[8]*pz;int dx=face.getFrontOffsetX(),dy=face.getFrontOffsetY(),dz=face.getFrontOffsetZ();nx=m[0]*dx+m[1]*dy+m[2]*dz;ny=m[3]*dx+m[4]*dy+m[5]*dz;nz=m[6]*dx+m[7]*dy+m[8]*dz;
             if(!finite(x)||!finite(y)||!finite(z)||!Double.isFinite(nx)||!Double.isFinite(ny)||!Double.isFinite(nz)||Math.abs(nx*nx+ny*ny+nz*nz-1)>1e-7)throw new IllegalArgumentException("Invalid carried Coupler head transform");
@@ -37,7 +39,7 @@ public final class VehicleArmCouplers {
     }
     public static final class Snapshot {
         public final List<Head> heads;public final int capturedArms;public final long retainedBytes;
-        private Snapshot(List<Head> heads,int capturedArms){this.heads=Collections.unmodifiableList(new ArrayList<>(heads));this.capturedArms=capturedArms;retainedBytes=64L+heads.size()*192L;}
+        private Snapshot(List<Head> heads,int capturedArms){this.heads=Collections.unmodifiableList(new ArrayList<>(heads));this.capturedArms=capturedArms;retainedBytes=64L+heads.size()*224L;}
     }
     /** Main server thread; every observation comes from installed local views, never chunk discovery. */
     public static Snapshot observe(EntityGroundVehicle craft){
@@ -65,7 +67,7 @@ public final class VehicleArmCouplers {
         }
         for(VehicleStructure.Cell cell:structure.couplers){TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof TileCoupler))throw new IllegalArgumentException("Coupler data is unavailable at "+cell.pos);TileCoupler tile=(TileCoupler)raw;MaterializedHead owner=endpointHeads.remove(cell.pos);
             if(owner==null)add(heads,addresses,head(Address.nativeCell(cell.pos),cell.pos,cell.state,tile,RigidTransform.IDENTITY));
-            else{validate(cell.state);add(heads,addresses,new Head(owner.address,owner.carrier,cell.pos,cell.state,tile.articulation(),tile.requested(),RigidTransform.IDENTITY));}
+            else{validate(cell.state);add(heads,addresses,new Head(owner.address,owner.carrier,cell.pos,cell.state,tile.articulation(),tile.requested(),RigidTransform.IDENTITY,cell.pos));}
         }
         if(!endpointHeads.isEmpty())throw new IllegalArgumentException("Materialized Coupler cells are unavailable");
         Set<BlockPos> roots=new HashSet<>();int arms=0;
