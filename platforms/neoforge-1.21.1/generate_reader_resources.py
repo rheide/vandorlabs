@@ -15,7 +15,7 @@ ASSETS = OUT / 'assets/vandorlabs'
 def generate():
     if OUT.exists():
         shutil.rmtree(OUT)
-    textures, models, faces = {}, [], {}
+    textures, models, items, faces = {}, [], [], {}
     def texture(name):
         if name == 'minecraft:blocks/concrete_black':
             return 'minecraft:block/black_concrete'
@@ -57,9 +57,16 @@ def generate():
             name = 'vandorlabs:block/token_slots/' + source.stem
             models.append(name)
             faces[name] = sum(len(element['faces']) for element in value['elements'])
+        source = ROOT / 'src/main/resources/assets/vandorlabs/models/item' / (kind + '_slot.json')
+        value = json.loads(source.read_text())
+        value['textures'] = {key: texture(item) for key, item in value['textures'].items()}
+        destination = ASSETS / 'models/item' / source.name
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        destination.write_text(json.dumps(value, separators=(',', ':')) + '\n')
+        items.append('vandorlabs:item/' + kind + '_slot')
     for company in companies(ROOT):
         texture('vandorlabs:blocks/access_reader/logos/' + company)
-    manifest = dict(models=models, textures=list(textures.values()), faces=faces)
+    manifest = dict(models=models, items=items, textures=list(textures.values()), faces=faces)
     (ASSETS / 'data').mkdir(parents=True, exist_ok=True)
     (ASSETS / 'data/reader_artwork.json').write_text(json.dumps(manifest, separators=(',', ':')) + '\n')
     print('Authored reader resources: ' + str(len(models)) + ' exact frame models, ' + str(len(textures)) + ' unchanged standard square sprites')
