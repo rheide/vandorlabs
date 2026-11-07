@@ -7,6 +7,7 @@ import com.vandorlabs.neoforge.storage.*;
 import com.vandorlabs.neoforge.screen.*;
 import com.vandorlabs.neoforge.trapdoor.*;
 import com.vandorlabs.neoforge.segmented.*;
+import com.vandorlabs.neoforge.canopy.*;
 import com.vandorlabs.neoforge.NativePlatformComponents;
 import com.vandorlabs.neoforge.NativeCopiedHousingMetadata;
 import com.vandorlabs.neoforge.NativeTriggerBlock;
@@ -32,16 +33,31 @@ public final class NativeCopifierCraftingItems {
         var id=BuiltInRegistries.BLOCK.getKey(item.getBlock());
         if(!id.getNamespace().equals("vandorlabs"))return ItemStack.EMPTY;
         NativeCopifierHousingCapture.Family family=null;
-        try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(item.getBlock() instanceof NativeStorageBlock)family=NativeCopifierHousingCapture.Family.CUBE;else if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock)&&ScreenFamily.fromId(id.getPath())==null&&!(item.getBlock() instanceof NativeTrapdoorBlock)&&!(item.getBlock() instanceof NativeTriggerBlock)&&!(item.getBlock() instanceof NativeSegmentedDoorBlock))return ItemStack.EMPTY;}
+        try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(item.getBlock() instanceof NativeStorageBlock)family=NativeCopifierHousingCapture.Family.CUBE;else if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock)&&ScreenFamily.fromId(id.getPath())==null&&!(item.getBlock() instanceof NativeTrapdoorBlock)&&!(item.getBlock() instanceof NativeTriggerBlock)&&!(item.getBlock() instanceof NativeSegmentedDoorBlock)&&!(item.getBlock() instanceof NativeCanopyBlock))return ItemStack.EMPTY;}
         if(!(item.getBlock() instanceof EntityBlock factory))return ItemStack.EMPTY;
         var state=item.getBlock().defaultBlockState();var properties=input.get(DataComponents.BLOCK_STATE);
         if(properties!=null)state=properties.apply(state);
         var draft=factory.newBlockEntity(BlockPos.ZERO,state);if(draft==null)return ItemStack.EMPTY;
+        if(draft instanceof NativeCanopyEntity)draft.loadWithComponents(new CompoundTag(),registries);
         var current=draft.saveWithoutMetadata(registries);
         var root=input.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();
         var supplied=input.get(DataComponents.BLOCK_ENTITY_DATA);
         if(supplied!=null)current=supplied.copyTag();
         else if(root.contains("BlockEntityTag")){if(!root.contains("BlockEntityTag",Tag.TAG_COMPOUND))return ItemStack.EMPTY;current=root.getCompound("BlockEntityTag").copy();}
+
+        if(item.getBlock() instanceof NativeCanopyBlock canopy){
+            // The released recipe reads the outer Canopy envelope even when a generic one exists.
+            // Validate that discarded generic data does not contain a retained physical owner first.
+            try{
+                for(String key:new String[]{"ForgeCaps","components","NeoForgeData","neoforge:attachments"})if(current.contains(key)&&(!current.contains(key,Tag.TAG_COMPOUND)||!current.getCompound(key).isEmpty()))return ItemStack.EMPTY;
+                draft.loadWithComponents(current,registries);
+                if(((NativeCanopyEntity)draft).inert()||root.contains(NativeCanopyEntity.RECOVERY)||root.contains(NativeCanopyEntity.PLACEMENT_ITEM)||root.contains(NativeCanopyEntity.UNINITIALIZED))return ItemStack.EMPTY;
+                var before=input.has(DataComponents.CUSTOM_DATA)?NativeCanopySettings.read(root):NativeCanopySettings.fresh();
+                var plan=NativeCopifierCanopyEdit.prepare(canopy.kind(),before,values);if(!plan.applicable())return ItemStack.EMPTY;
+                plan.settings().write(root);root.remove("BlockEntityTag");
+                var output=input.copyWithCount(1);output.remove(DataComponents.BLOCK_ENTITY_DATA);output.set(DataComponents.CUSTOM_DATA,CustomData.of(root));return output;
+            }catch(IllegalArgumentException unsupported){return ItemStack.EMPTY;}
+        }
 
         if(item.getBlock() instanceof NativeStorageBlock){
             // The released recipe omits inventory. Refuse a physical owner rather than silently discard it.

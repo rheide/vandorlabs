@@ -18,7 +18,16 @@ The [coverage inventory](feature-coverage.md) distinguishes integrated slices fr
 
 Start from `master`, not the old conversion branch. Use `feature/neoforge-1.21.1` as a historical reference; its slabs, walls, screens and fluid code predate current Forge behavior. Additional historical references are `wip/industrial-table-port` and `wip/wall-item-goldens`. Review and adapt their behavior rather than merging them wholesale.
 
-Current active conversion is the seven-role Screen family, standalone propulsion effects and standalone credential readers. Screen bodies, rows, editor, configured items and picking have private adapters; chip display/interaction and public activation remain pending. Standalone propulsion is now publicly registered after canonical placement, rendering, control, lighting, particle and independent restart checks; Vehicle/carried effects remain deferred.
+The current conversion stopping point is limited to four families. Finish and integrate these, then pause for user testing before starting another family. The full release gate is deferred; use the applicable focused checks while these adapters change. Vehicle Mode remains excluded.
+
+| Family | Integrated state | Remaining acceptance |
+| --- | --- | --- |
+| Card Chip Programmer | Canonical public block, item, menu and rendering; construction guide; focused player, mining and restart acceptance | User testing |
+| Canopies | Shared settings and animation; private placement, configuration, motion, rendering and constituent teardown | Dedicated editor, runtime/contact integration, placed-client visibility and ordered updates, canonical activation |
+| Ramp Controllers | Shared settings/admission; private durable journal, before-images and partial-save recovery | Held-owner integration, generation and motion, item/editor/rendering paths, canonical activation |
+| Copifier | Private held-tool options, connected settings and Undo across converted targets; copied-settings crafting and three-state artwork | Canopy/Ramp target integration, final crafting/player acceptance and canonical activation |
+
+Screens, standalone propulsion and standalone credential readers are already publicly registered. Their focused acceptance is recorded below and in the family contracts. Vehicle/carried effects remain deferred.
 
 Building-family foundations now include stationary contained fluids and native block/entity/model/dialog adapters. The shared artwork policy preserves current scalar arithmetic without adding per-quad arrays or point wrappers. An opt-in `stair-settings` check (`VANDOR_LABS_SHAPE_TEXTURE_CHECKS=true`) covers 4,920 actual world models and 440 item models, including rectangular artwork, disabled face overrides, unavailable IDs and malformed saved fields; `VANDOR_LABS_SHAPE_TEXTURE_EXPECTED_HASH` checks the emitted reference against a frozen baseline. Preserve these audited distinctions:
 
