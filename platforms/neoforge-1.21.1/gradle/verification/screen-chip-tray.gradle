@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ systemProperty 'screenChipTrayReference',file('../../testclient/fixtures/screen-chip-tray-gl.jsonl.gz').absolutePath
+}
