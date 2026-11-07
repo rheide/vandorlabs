@@ -20,6 +20,12 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
  private static final int SHAPE_BUDGET=4*1024*1024;
  private volatile Publication publication;
  public NativeRampPartEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);}
+ /** Build a complete detached value; no world access, ownership change or notifications. */
+ final Publication preparePublication(NativeRampPartData data,long revision,long tick){if(level!=null)throw new IllegalStateException("Ramp staging requires a detached part");if(getBlockState().hasProperty(NativeRampPartBlock.FACING)&&getBlockState().getValue(NativeRampPartBlock.FACING)!=data.spec().facing())throw new IllegalArgumentException("Ramp staged facing");return build(data,data.motion().observed(),data.belt().observed(),revision,tick);}
+ /** Initialize a detached factory result before the caller installs it in the world. */
+ final void stagePublication(UUID operation,BlockPos root,Publication prepared){
+  if(level!=null||isRemoved()||ownershipKnown()||publication!=null)throw new IllegalStateException("Ramp part already initialized");Objects.requireNonNull(prepared);if(!prepared.data.spec().cell().equals(worldPosition)||root==null||Math.abs((long)root.getX()-worldPosition.getX())>64||Math.abs((long)root.getY()-worldPosition.getY())>64||Math.abs((long)root.getZ()-worldPosition.getZ())>64)throw new IllegalArgumentException("Ramp staged owner/cell");install(operation,root);publication=prepared;
+ }
  public final Publication publication(){return publication;}
  /** Ordering is per operation: a fresh operation deliberately starts a new cosmetic identity. */
  public final boolean acceptsObservation(UUID operation,long revision,long tick){var previous=publication;return revision>=0&&(previous==null||!Objects.equals(operation,operationId())||revision>previous.revision||revision==previous.revision&&tick>=previous.observationTick);}
