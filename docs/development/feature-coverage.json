@@ -161,14 +161,14 @@
       "id": "viewscreens",
       "label": "Programmable viewscreens",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_viewscreen"
       ],
       "remaining": [
-        "Canonical block/item integration and actual player-path host, publication and control-row acceptance",
-        "Dedicated screen editor, shared surface renderer, per-role placement/hit mapping and configured items",
-        "External-material and resource reload acceptance; full mount/facing and native release checks",
+        "Public canonical registration and complete placed-world renderer/editor acceptance across all seven roles",
+        "Integrated chip tray hits, placed-world journal rendering/navigation, adjacent readers and joined chip-display groups",
+        "Remaining optional-material, resource-pack, copy-tool and exact native release acceptance",
         "Vehicle/cockpit and carried-specific integration remains deferred"
       ],
       "historical_neoforge_1_21_1": "partial",
@@ -192,14 +192,18 @@
         "Shared activation/artwork extractions preserve the Forge player path through focused display-activation client acceptance",
         "Unregistered host and numeric row-bank service pass separate-process persistence, original pulse expiry, partial-overlap feedback and loaded-member retirement checks",
         "Production catalog preserves actual artwork names, aliases, pairs and timing; immutable role bounds, collision and picking match 2240 source configurations and 60480 rays",
-        "Source fluid applicability remains unchanged: Screens preserve opaque saved fluid data without waterlogging gameplay"
+        "Source fluid applicability remains unchanged: Screens preserve opaque saved fluid data without waterlogging gameplay",
+        "Private seven-role Screen blocks, dedicated editor and bounded server-owned material, activation, frame, layout, control-row and transmission edits; public catalog registration remains disabled.",
+        "Shared source-verified control projection and pixel artwork, native normal-media and row consumers, weighted display-only font/body caches, explicit resource retirement and conditional physical-power preparation.",
+        "Source-exact authored wide-picker policy, configured item meshes, Survival placement/harvest and authoritative Creative/Survival picking; Survival picking only selects or swaps an existing exact item.",
+        "Hidden embedded chip ownership, original item-envelope retention, passive reader inventory adapter and bounded journal/name/master-chip projection; selected chip surfaces remain refused until their full route is ready."
       ]
     },
     {
       "id": "console_input_variants",
       "label": "Console, input and diagonal screen variants",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_console",
         "programmable_diagonal_half_console",
@@ -210,9 +214,9 @@
         "programmable_diagonal_half_screen"
       ],
       "remaining": [
-        "Canonical block/item integration and actual player-path host, publication and control-row acceptance",
-        "Dedicated screen editor, shared surface renderer, per-role placement/hit mapping and configured items",
-        "External-material and resource reload acceptance; full mount/facing and native release checks",
+        "Public canonical registration and complete placed-world renderer/editor acceptance across all seven roles",
+        "Integrated chip tray hits, placed-world journal rendering/navigation, adjacent readers and joined chip-display groups",
+        "Remaining optional-material, resource-pack, copy-tool and exact native release acceptance",
         "Vehicle/cockpit and carried-specific integration remains deferred"
       ],
       "historical_neoforge_1_21_1": "partial",
@@ -238,7 +242,11 @@
         "Shared activation/artwork extractions preserve the Forge player path through focused display-activation client acceptance",
         "Unregistered host and numeric row-bank service pass separate-process persistence, original pulse expiry, partial-overlap feedback and loaded-member retirement checks",
         "Production catalog preserves actual artwork names, aliases, pairs and timing; immutable role bounds, collision and picking match 2240 source configurations and 60480 rays",
-        "Source fluid applicability remains unchanged: Screens preserve opaque saved fluid data without waterlogging gameplay"
+        "Source fluid applicability remains unchanged: Screens preserve opaque saved fluid data without waterlogging gameplay",
+        "Private seven-role Screen blocks, dedicated editor and bounded server-owned material, activation, frame, layout, control-row and transmission edits; public catalog registration remains disabled.",
+        "Shared source-verified control projection and pixel artwork, native normal-media and row consumers, weighted display-only font/body caches, explicit resource retirement and conditional physical-power preparation.",
+        "Source-exact authored wide-picker policy, configured item meshes, Survival placement/harvest and authoritative Creative/Survival picking; Survival picking only selects or swaps an existing exact item.",
+        "Hidden embedded chip ownership, original item-envelope retention, passive reader inventory adapter and bounded journal/name/master-chip projection; selected chip surfaces remain refused until their full route is ready."
       ]
     },
     {

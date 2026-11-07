@@ -13,8 +13,8 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Programmable cube and matter block | partial (cube and plain matter) | partial | non-vehicle first |
 | Slabs and stairs | partial | partial | non-vehicle first |
 | Walls, portholes and diagonals | partial (all six wall/porthole/diagonal blocks enabled) | partial | non-vehicle first |
-| Programmable viewscreens | pending | partial | non-vehicle first |
-| Console, input and diagonal screen variants | pending | partial | non-vehicle first |
+| Programmable viewscreens | partial (private foundations; public registry disabled) | partial | non-vehicle first |
+| Console, input and diagonal screen variants | partial (private foundations; public registry disabled) | partial | non-vehicle first |
 | Glass, canopy and cockpit glass | pending | unimplemented | non-vehicle first |
 | Programmable and large doors (Segmented Doors tracked separately) | partial (ordinary and Large Doors enabled) | unimplemented | non-vehicle first |
 | Trapdoors and diagonal trapdoors | partial (both enabled) | unimplemented | non-vehicle first |

@@ -7,3 +7,6 @@ neoForge.runs.configureEach {
         systemProperty 'vandorlabs.journalOverlayReference',file('../../testclient/fixtures/screen-journal-overlay-reference.json.gz').absolutePath
     }
 }
+neoForge.runs.configureEach {
+    if(project.hasProperty('screenJournalRenderCheck')) systemProperty 'vandorlabs.journalOverlayReference',file('../../testclient/fixtures/screen-journal-overlay-reference.json.gz').absolutePath
+}
