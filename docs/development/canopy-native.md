@@ -128,3 +128,25 @@ window refusal pass. These checks still precede public activation and anchored
 membership repair acceptance.
 
 An independent released repair corpus now contains 520 targeted `repairMembership` callbacks after actual specialized placements. It covers missing/wrong/helper ownership, foreign blocks, missing tiles, released cells, 68 cold-chunk cases and 48 joined-pair scenes, recording complete before/after palettes and saved data. Source removes a selected owner/helper in 332 cases. Eighty cases deliberately remove the root's own anchor field: the accepted native legacy-root exception must preserve those layouts instead of copying Source's destructive result. Native failed-load/inert-owner protection remains an additional boundary. This corpus freezes one selected callback, not an entire world tick or disk preservation of unloaded payloads; native automatic repair and restart acceptance are separate checks.
+### Loaded membership repair
+
+Normal server ticks now run the released membership repair every twenty ticks.
+An independent 520-callback Source corpus covers anchored roots, helpers, joined
+columns, missing/wrong members, released cells and cold boundaries. The native
+world replay passes 51,593 assertions, including 68 scenes with actual absent
+chunks before and after the callback. Cold cells are not installed by that
+replay; it establishes loaded outcomes and refusal to load, not preservation of
+a cold disk payload. Cold helpers retain the decoded width hint: the released
+snapshot was captured with its owner warmed again, while native serialization
+continues to derive current width only from loaded ownership.
+
+The eighty marked absent-root legacy cases deliberately preserve the pre-repair
+layout instead of reproducing destructive legacy deletion. Inert failed-load
+parents and helpers likewise cannot prove missing ownership. Root removal uses
+the existing exact-identity teardown and does not erase foreign replacements.
+The canonical placed-world follow-up removes a live helper entity, observes the
+normal twenty-tick owner teardown on both sides, and confirms the leftover
+factory-missing helper revives uninitialized and yields no usable item. All
+eleven body scenes, motion/reversal, reload and pixel controls still pass after
+Canopy emission delegates the shared prepared-vertex primitive. This remains
+focused software-rendered acceptance, not a release gate or hardware benchmark.

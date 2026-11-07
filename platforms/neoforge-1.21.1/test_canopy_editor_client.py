@@ -5,6 +5,14 @@ from pathlib import Path
 from test_cube import ROOT,command,launch,stop,check_log,jdk_home
 from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
+def await_exit():
+ deadline=time.monotonic()+60
+ marker='-Dvandorlabs.transmitterPhase=canopy-editor-world-client'
+ while True:
+  running=subprocess.check_output([str(jdk_home(21)/'bin'/('jps.exe' if os.name=='nt' else 'jps')),'-lv'],text=True)
+  if marker not in running:return
+  if time.monotonic()>=deadline:raise RuntimeError('Canopy editor JVM did not exit: '+running)
+  time.sleep(.25)
 @retain_artifacts
 def main():
  parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--motion-packets',action='store_true');parser.add_argument('--canonical',action='store_true');args=parser.parse_args()
@@ -36,7 +44,9 @@ def main():
   for marker in ('setup','server','logout'):check_log(server_log,'[vandorlabs][canopy-editor-world] '+marker+' PASS')
   for name in ['canopy-editor-player-0.png','canopy-editor-player-4.png']:
    if not (client/'screenshots'/name).is_file():raise AssertionError('Missing actual Canopy editor capture '+name)
- finally:stop(server)
+ finally:
+  stop(server)
+  await_exit()
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
  check_log(saved/'logs/latest.log','All dimensions are saved')

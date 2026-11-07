@@ -36,7 +36,7 @@ public final class NativeCanopyCloseService {
     }
     /** Normal server tick entry point, deliberately separate from client cosmetic preparation. */
     public static void retire(NativeCanopyEntity host){if(host.getLevel() instanceof ServerLevel world&&world.getServer().isSameThread()){var state=WORLDS.get(world);if(state!=null){state.waits.remove(host.getBlockPos());state.retry.remove(host.getBlockPos());}}}
-    public static void tick(NativeCanopyEntity host){if(host.links().open())retire(host);if(host.getLevel() instanceof ServerLevel)NativeCanopyControl.tick(host,WORLD);else {
+    public static void tick(NativeCanopyEntity host){if(host.getLevel() instanceof ServerLevel world&&world.getGameTime()%20==0&&NativeCanopyMembership.repair(host))return;if(host.links().open())retire(host);if(host.getLevel() instanceof ServerLevel)NativeCanopyControl.tick(host,WORLD);else {
             // Released Source advances local physical pose by the same 1/16 step.
             // Cosmetic interpolation remains on the independent pause-aware clock.
             var publication=host.publication();var links=host.links();

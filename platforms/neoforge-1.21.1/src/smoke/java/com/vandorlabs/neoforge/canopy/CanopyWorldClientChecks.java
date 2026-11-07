@@ -64,7 +64,8 @@ public final class CanopyWorldClientChecks {
             case 13->{if(!marker(mc,14))return;var moving=(NativeCanopyEntity)mc.level.getBlockEntity(CanopyWorldFixture.root(2));if(moving==null||!moving.links().open()||moving.links().progress()!=1)return;need(moving.publication().progress()==1,"automatic client physical opening endpoint");next(15);stage=14;}
             case 14->{if(!marker(mc,15))return;var moving=(NativeCanopyEntity)mc.level.getBlockEntity(CanopyWorldFixture.root(2));if(moving==null||moving.links().open()||moving.links().progress()>.65F||moving.links().progress()<=0)return;need(moving.publication().progress()>0,"actual partial client closing pose");next(16);stage=15;}
             case 15->{if(!marker(mc,16))return;var moving=(NativeCanopyEntity)mc.level.getBlockEntity(CanopyWorldFixture.root(2));if(moving==null||!moving.links().open()||moving.links().progress()!=1)return;next(17);stage=16;}
-            case 16->{if(!marker(mc,17))return;System.out.println("[vandorlabs][canopy-world] client PASS checks="+checks+" actualrootculling/chunkBERnegatives/11kinds/reload");mc.stop();stage=17;}
+            case 16->{if(!marker(mc,17)||!mc.level.getBlockState(CanopyWorldFixture.root(3)).isAir())return;need(mc.level.getBlockEntity(CanopyWorldFixture.root(3))==null,"normal membership repair retires actual client owner");next(18);stage=17;}
+            case 17->{if(!marker(mc,18))return;System.out.println("[vandorlabs][canopy-world] client PASS checks="+checks+" actualrootculling/chunkBERnegatives/11kinds/reload");mc.stop();stage=18;}
         }
     }
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event){if(!CanopyWorldFixture.enabled()||capture==null||++frames<8)return;var mc=Minecraft.getInstance();String name=capture;capture=null;Screenshot.grab(mc.gameDirectory,name,mc.getMainRenderTarget(),ignored->{captured=true;});}
