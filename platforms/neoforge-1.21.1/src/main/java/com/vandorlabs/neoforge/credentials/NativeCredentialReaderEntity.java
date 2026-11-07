@@ -26,7 +26,7 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     private ChannelList channels=ChannelList.EMPTY,transmission=ChannelList.EMPTY;
     private ControlMountSettings mount=ControlMountSettings.of(0,0,0);
     private int rotation,range=16;
-    private boolean inert,local=true,pending=true,publishing,recoveryTaken,initialized,projectionOnly;
+    private boolean inert,local=true,pending=true,publishing,recoveryTaken,initialized,projectionOnly,removing;
     private volatile Visual visual;
     private volatile net.neoforged.neoforge.client.model.data.ModelData modelData=net.neoforged.neoforge.client.model.data.ModelData.EMPTY;
     @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){return modelData;}
@@ -39,7 +39,7 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
         public BlockEntity owner(){return NativeCredentialReaderEntity.this;}
         public boolean usable(ServerPlayer player){return NativeCredentialReaderEntity.this.usable(player);}
         public void changed(){publish();}
-        public void schedule(int ticks){if(level instanceof ServerLevel server&&!inert)server.scheduleTick(worldPosition,getBlockState().getBlock(),Math.max(1,ticks));}
+        public void schedule(int ticks){if(level instanceof ServerLevel server&&!inert&&!removing)server.scheduleTick(worldPosition,getBlockState().getBlock(),Math.max(1,ticks));}
         public boolean chip(boolean ignored){return chip;}
     },chip);}
     public boolean chip(){return chip;}
@@ -51,11 +51,12 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     public int mountRotation(){return rotation;}
     public int behavior(){return visual.behavior;}
     public boolean localRedstone(){return local;}
-    public boolean usable(ServerPlayer player){return !inert&&level instanceof ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&NativeConfigurationAccess.canEditDialog(player,this);}
-    public int outputLevel(){return inert?0:reader.outputLevel(level==null?0:level.getGameTime());}
+    public boolean usable(ServerPlayer player){return !inert&&!removing&&level instanceof ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&NativeConfigurationAccess.canEditDialog(player,this);}
+    public int outputLevel(){return inert||removing?0:reader.outputLevel(level==null?0:level.getGameTime());}
     public int physicalLevel(){return local?outputLevel():0;}
     public boolean interact(ServerPlayer player,InteractionHand hand){return usable(player)&&reader.interact(player,hand,false);}
     public boolean holdingCredential(ServerPlayer player,InteractionHand hand){return reader.holdingCredential(player,hand,false);}
+    ItemStack takeForRemoval(){removing=true;return takeForDrop();}
     public ItemStack takeForDrop(){return inert?ItemStack.EMPTY:reader.takeForDrop();}
     public ItemStack recoveryForRemoval(net.minecraft.world.item.Item item){if(!inert||recoveryTaken||retained.isEmpty())return ItemStack.EMPTY;recoveryTaken=true;var result=new ItemStack(item);var tag=new CompoundTag();tag.put("NativeReaderRecovery",retained.copy());result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(tag));return result;}
     public boolean configure(ServerPlayer player,boolean any,int allowed,int behavior,ControlMountSettings next){
@@ -85,7 +86,7 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
         }finally{publishing=false;}
     }
     @Override public BlockEntity channelBlockEntity(){return this;}
-    @Override public boolean isChannelMemberActive(){return !inert&&NativeChannelMember.super.isChannelMemberActive();}
+    @Override public boolean isChannelMemberActive(){return !removing&&!inert&&NativeChannelMember.super.isChannelMemberActive();}
     @Override public ChannelList getRedstoneChannels(){return channels;}
     @Override public ChannelList transmittedChannels(){return transmission;}
     @Override public int transmissionRange(){return range;}
