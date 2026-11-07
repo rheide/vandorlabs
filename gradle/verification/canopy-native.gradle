@@ -128,3 +128,23 @@ task exportCanopyEditorReference(type: JavaExec) {
     args file('build/test-artifacts/canopy-editor-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+
+task exportCanopySweepReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopySweepLegacyOracle'
+    args file('build/test-artifacts/canopy-sweep-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
+
+task exportCanopyRampSweepReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyRampSweepLegacyOracle'
+    args file('build/test-artifacts/canopy-sweep-forge.jsonl').absolutePath,
+        (file('testclient/fixtures/ramp-generation-source.jsonl.gz').exists() ? file('testclient/fixtures/ramp-generation-source.jsonl.gz') : file('build/test-artifacts/ramp-generation-source.jsonl.gz')).absolutePath,
+        file('build/test-artifacts/canopy-ramp-sweep-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}

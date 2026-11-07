@@ -78,3 +78,12 @@ tasks.register('testNativeCanopyEditorWire', JavaExec) {
     args file('../../build/test-artifacts/canopy-editor-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+
+tasks.register('testNativeCanopySweep', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.canopy.CanopySweepChecks'
+    args file('../../build/test-artifacts/canopy-sweep-forge.jsonl').absolutePath, file('../../build/test-artifacts/canopy-sweep-inputs-forge.jsonl').absolutePath, file('../../build/test-artifacts/canopy-ramp-sweep-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
