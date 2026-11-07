@@ -21,7 +21,9 @@ public final class ModularGearVehicles {
             if(!arm.validateParkingHoldInstalled())continue;arm.input();if(arm.parkingHeld())continue;if(arm.latchRetractionStroke())craft.signals.persist();if(GearMotion.advance(arm.progress(),arm.target(),1,GearTileEntity.ANIMATION_TICKS)==arm.progress())continue;
             com.vandorlabs.gear.ArmPayload payload=arm.payload();
             try{
+                craft.signals.persist();VehicleStructure source=craft.structure;
                 if(payload==null)payload=com.vandorlabs.gear.ArmPayload.discover(arm,null);
+                if(payload!=null&&payload.materialized())payload=payload.snapshotPlaced(arm,source);
                 if(payload==null&&arm.hasStoredSections()){
                     if(arm.storedSectionCells().isEmpty())throw new IllegalArgumentException("Stored arm sections are unavailable");
                     List<VehicleStructure.Cell> next=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){if(cell.pos.equals(arm.getPos())){NBTTagCompound data=arm.currentData(cell.tileData());data.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,data));}else next.add(cell);}
@@ -29,7 +31,6 @@ public final class ModularGearVehicles {
                     VehicleStructureEdits.install(craft,next,"Arm sections");return true;
                 }
                 if(payload==null||!payload.materialized())continue;
-                if(!payload.matchesPlaced(arm))payload=payload.refreshPlaced(arm,null);
                 Set<BlockPos> removed=payload.placedCells(arm);List<VehicleStructure.Cell> next=new ArrayList<>();
                 for(VehicleStructure.Cell cell:craft.structure.cells){
                     if(removed.contains(cell.pos))continue;
