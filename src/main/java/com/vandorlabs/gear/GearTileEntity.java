@@ -64,6 +64,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
     public void quarantinePayload(){if(payload!=null){failedPayload=payload.write();payload=null;}operational=false;motionBlocked=true;lastError="Attachment unavailable; original snapshot retained";sync();}
     public ArmPayload payload(){return payload;}
+    /** Installed carried-control publication, without nested tile/capability construction. */
+    public void installCapturedCoupler(ArmPayload expected,ArmPayload next){
+        if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)world).parent.isRemote||world.getTileEntity(pos)!=this||payload!=expected||next==null||next.materialized())throw new IllegalArgumentException("Captured arm owner changed");payload=next;
+    }
+
     void removePayloadCell(BlockPos cell){if(payload==null||payload.materialized())throw new IllegalArgumentException("Payload is no longer captured");payload=payload.without(cell);sync();GearGeometry.register(this);}
     public void operator(net.minecraft.entity.player.EntityPlayer player){if(player!=null){operator=player.getUniqueID();com.vandorlabs.tiles.WorldActionAuthorization.authorize(this,player);markDirty();}}
     public boolean preparePayloadMotion(){
@@ -677,8 +682,14 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
 
     @Override
-    public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+    public NBTTagCompound writeToNBT(NBTTagCompound tag) {super.writeToNBT(tag);return writeOwnData(tag);}
+    /** Merge only known arm fields into the retained physical snapshot; never serialize its capabilities. */
+    public NBTTagCompound currentData(NBTTagCompound original){
+        net.minecraft.util.ResourceLocation expected=TileEntity.getKey(GearTileEntity.class);if(original==null||expected==null||!expected.toString().equals(original.getString("id")))throw new IllegalArgumentException("Original arm identity unavailable");
+        NBTTagCompound result=original.copy();for(String key:new String[]{"ArmOperatorMost","ArmOperatorLeast","ArmStoredSections","ArmPayload",GearTaxiState.KEY,"ArmJoinEnabled","ArmJoinRange","ArmCarryLoad","ArmLoadHeight","TrackRetractingStroke","ArmRetractingStroke","GearOwnerOffset","GearHeight","GearKind","GearFootFacing","GearFeet","GearTrackContact"})result.removeTag(key);
+        result.setInteger("x",pos.getX());result.setInteger("y",pos.getY());result.setInteger("z",pos.getZ());return writeOwnData(result);
+    }
+    private NBTTagCompound writeOwnData(NBTTagCompound tag){
         if(operator!=null)tag.setUniqueId("ArmOperator",operator);
         if(failedStoredSections!=null)tag.setTag("ArmStoredSections",failedStoredSections.copy());else if(storedSections!=null)tag.setTag("ArmStoredSections",storedSections.write());
         if(failedPayload!=null)tag.setTag("ArmPayload",failedPayload.copy());else if(payload!=null)tag.setTag("ArmPayload",payload.write());

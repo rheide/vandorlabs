@@ -243,7 +243,7 @@ public final class VehicleSignals {
         Map<BlockPos,NBTTagCompound> saved=new HashMap<>();boolean fullSnapshot=false;
         for(BlockPos pos:new ArrayList<>(dirty)){
             TileEntity tile=craft.view.getTileEntity(pos);if(tile==null)continue;
-            VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=VehicleTileData.retainCapabilities(original==null?null:original.tileData(),tile.writeToNBT(new NBTTagCompound()));
+            VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=tile instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)tile).currentData(original==null?null:original.tileData()):VehicleTileData.retainCapabilities(original==null?null:original.tileData(),tile.writeToNBT(new NBTTagCompound()));
             // Height/settings packets already published this exact seat snapshot.
             // A redundant notification must not invalidate its open preview.
             if(tile instanceof TileEntityPilotSeat && craft.structure.at(pos)!=null
