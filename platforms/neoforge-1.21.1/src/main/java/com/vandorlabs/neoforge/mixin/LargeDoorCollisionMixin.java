@@ -16,6 +16,6 @@ import com.llamalad7.mixinextras.injector.ModifyReturnValue;
 public interface LargeDoorCollisionMixin {
     @ModifyReturnValue(method="getBlockCollisions",at=@At("RETURN"),require=1)
     private Iterable<VoxelShape> vandorlabs$largePanels(Iterable<VoxelShape> vanilla,Entity entity,AABB query){
-        return (Object)this instanceof Level level?com.vandorlabs.neoforge.canopy.NativeCanopyTargets.blockCollisions(level,query,NativeTrapdoorTargets.blockCollisions(level,query,NativeLargeDoorTargets.blockCollisions(level,query,vanilla))):vanilla;
+        return (Object)this instanceof Level level?com.vandorlabs.neoforge.ramp.NativeRampRiders.recentCollisions(level,entity,com.vandorlabs.neoforge.canopy.NativeCanopyTargets.blockCollisions(level,query,NativeTrapdoorTargets.blockCollisions(level,query,NativeLargeDoorTargets.blockCollisions(level,query,vanilla)))):vanilla;
     }
 }

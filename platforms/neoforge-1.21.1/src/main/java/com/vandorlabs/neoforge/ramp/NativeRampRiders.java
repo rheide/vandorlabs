@@ -32,6 +32,31 @@ public final class NativeRampRiders {
         if(!available(entity))return box;requireThread(entity.level());var recent=support(entity).get(entity);if(recent==null||recent.level.get()!=entity.level()||!PlatformSupportPolicy.recent(true,entity.level().getGameTime()-recent.tick,entity.getX(),entity.getZ(),recent.x,recent.z)||!PlatformSupportPolicy.provenFloor(box.minX,box.maxX,box.minZ,box.maxZ,box.maxY,recent.x,recent.z,recent.height))return box;
         double feet=entity.getBoundingBox().minY;if(!(box.maxY>feet&&box.maxY-feet<=.5))return box;double top=PlatformSupportPolicy.supportTop(box.minY,box.maxY,feet);return Double.isNaN(top)?null:new AABB(box.minX,box.minY,box.minZ,box.maxX,top,box.maxZ);
     }
+    /** No wrapper/allocation for ordinary queries without a live recent support record. */
+    public static Iterable<net.minecraft.world.phys.shapes.VoxelShape> recentCollisions(Level level,Entity entity,Iterable<net.minecraft.world.phys.shapes.VoxelShape> shapes){
+        if(!available(entity)||entity.level()!=level)return shapes;
+        if(level instanceof ServerLevel server?!server.getServer().isSameThread():!clientThread.getAsBoolean())return shapes;
+        var recent=support(entity).get(entity);
+        if(recent==null||recent.level.get()!=level||!PlatformSupportPolicy.recent(true,level.getGameTime()-recent.tick,entity.getX(),entity.getZ(),recent.x,recent.z))return shapes;
+        return ()->new Iterator<>(){
+            private final Iterator<net.minecraft.world.phys.shapes.VoxelShape> source=shapes.iterator();
+            public boolean hasNext(){return source.hasNext();}
+            public net.minecraft.world.phys.shapes.VoxelShape next(){return recentShape(source.next(),entity);}
+        };
+    }
+    public static List<net.minecraft.world.phys.shapes.VoxelShape> recentEntityCollisions(Level level,Entity entity,List<net.minecraft.world.phys.shapes.VoxelShape> shapes){
+        var corrected=recentCollisions(level,entity,shapes);if(corrected==shapes)return shapes;
+        ArrayList<net.minecraft.world.phys.shapes.VoxelShape> result=null;int index=0;
+        for(var shape:corrected){if(result==null&&shape!=shapes.get(index)){result=new ArrayList<>(shapes.size());result.addAll(shapes.subList(0,index));}if(result!=null)result.add(shape);index++;}
+        return result==null?shapes:List.copyOf(result);
+    }
+    private static net.minecraft.world.phys.shapes.VoxelShape recentShape(net.minecraft.world.phys.shapes.VoxelShape original,Entity entity){
+        // Complex foreign shapes retain their solid collision rather than expanding an unbounded grid.
+        long coordinates=1;for(var axis:net.minecraft.core.Direction.Axis.values()){coordinates*=original.getCoords(axis).size();if(coordinates>4096)return original;}
+        var boxes=original.toAabbs();if(boxes.size()>64)return original;ArrayList<AABB> clipped=null;
+        for(int i=0;i<boxes.size();i++){var box=boxes.get(i);var next=recentCollision(box,entity);if(next!=box&&clipped==null){clipped=new ArrayList<>(boxes.size());for(int j=0;j<i;j++)clipped.add(boxes.get(j));}if(clipped!=null&&next!=null)clipped.add(next);}
+        return clipped==null?original:com.vandorlabs.neoforge.NativeVoxelShapes.union(clipped,1024*1024,0);
+    }
     @FunctionalInterface public interface Sync {void send(net.minecraft.server.level.ServerPlayer player,NativeRampMotionPayload payload);}
     public record Transport(int entity,Vec3 displacement,double supportDisplacement,NativeRampMotionPayload correction){}
     public static Transport move(Entity entity,double dx,double dy,double dz,Sync sync){return move(entity,dx,dy,dz,dy,sync);}
@@ -62,7 +87,7 @@ public final class NativeRampRiders {
         if((long)(maxX-minX+1)*(maxZ-minZ+1)>64)throw new IllegalArgumentException("Ramp rider query work budget");
         for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++)if(server.getChunkSource().getChunkNow(x,z)==null)throw new IllegalArgumentException("Ramp rider clearance waits for loaded chunks");
         var previous=CARRYING.get();CARRYING.set(new Carrying(level,root.immutable()));
-        try{var result=new ArrayList<AABB>();for(var shape:level.getCollisions(rider,swept))for(var box:shape.toAabbs()){if(result.size()>=131072)throw new IllegalArgumentException("Ramp rider obstacle budget");result.add(box);}return List.copyOf(result);}
+        try{var result=new ArrayList<AABB>();for(var shape:level.getCollisions(rider,swept))for(var box:shape.toAabbs()){if(result.size()>=131072)throw new IllegalArgumentException("Ramp rider obstacle budget");var corrected=recentCollision(box,rider);if(corrected!=null)result.add(corrected);}return List.copyOf(result);}
         finally{if(previous==null)CARRYING.remove();else CARRYING.set(previous);}
     }
     /** Vanilla old AABB order is Y, then X, then Z; preserve exact strict overlap tests. */

@@ -10,6 +10,7 @@
     "EntityContainedFluidMixin",
     "ContainedFluidBucketMixin",
     "LargeDoorCollisionMixin",
+    "NativeRampEntityCollisionMixin",
     "NativeAttachmentTypeAccess",
     "NativeAttachmentDecodeMixin",
     "NativeGlassRayMixin",

@@ -28,7 +28,7 @@ public final class NativeRampRiderWorldChecks {
         Probe(boolean own){super(BlockBehaviour.Properties.of().strength(1).dynamicShape().noOcclusion());this.own=own;}
         @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter view,BlockPos pos,CollisionContext context){
             if(view instanceof ServerLevel world&&NativeRampRiders.carrying(world,own?ROOT:OTHER)){
-                if(own){ownCalls++;if(fail)throw new IllegalStateException("fixture collision failure");if(nested&&!inside){inside=true;try{need(NativeRampRiders.obstacles(world,OTHER,actor,new AABB(BASE.east(3)).inflate(.01)).isEmpty(),"nested foreign-root suppression while inner iterable consumed");need(NativeRampRiders.carrying(world,ROOT)&&!NativeRampRiders.carrying(world,OTHER),"outer scope restored after nested query");}finally{inside=false;nested=false;}}}
+                if(own){ownCalls++;if(fail)throw new IllegalStateException("fixture collision failure");if(nested&&!inside){inside=true;try{var inner=NativeRampRiders.obstacles(world,OTHER,actor,new AABB(BASE.east(3)).inflate(.01));need(inner.isEmpty(),"nested foreign-root suppression while inner iterable consumed: "+inner);need(NativeRampRiders.carrying(world,ROOT)&&!NativeRampRiders.carrying(world,OTHER),"outer scope restored after nested query");}finally{inside=false;nested=false;}}}
                 else foreignCalls++;
                 return Shapes.empty();
             }
@@ -41,6 +41,9 @@ public final class NativeRampRiderWorldChecks {
     private static void run(ServerLevel world){
         actor=new net.neoforged.neoforge.common.util.FakePlayer(world,new com.mojang.authlib.GameProfile(new UUID(0,290712),"RampRider"));actor.setGameMode(GameType.SURVIVAL);
         for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++)world.getChunkAt(BASE.offset(x*16,0,z*16));
+        // The server runner uses an ordinary random-seed world; isolate only this fixture's volume.
+        for(var position:BlockPos.betweenClosed(BASE.offset(-2,-2,-2),BASE.offset(13,5,2)))world.setBlock(position,Blocks.AIR.defaultBlockState(),18);
+        for(var entity:world.getEntities((net.minecraft.world.entity.Entity)null,new AABB(BASE.getX()-2,BASE.getY()-2,BASE.getZ()-2,BASE.getX()+14,BASE.getY()+6,BASE.getZ()+3)))entity.discard();
         world.setBlock(BASE,BLOCKS[0].defaultBlockState(),18);world.setBlock(BASE.east(3),BLOCKS[1].defaultBlockState(),18);actor.setPos(BASE.getX()+.5,BASE.getY()+1,BASE.getZ()+.5);
         var query=new AABB(BASE.getX()-.1,BASE.getY()-.1,BASE.getZ()-.1,BASE.getX()+4.1,BASE.getY()+2,BASE.getZ()+1.1);nested=true;
         var obstacles=NativeRampRiders.obstacles(world,ROOT,actor,query);
@@ -69,6 +72,12 @@ public final class NativeRampRiderWorldChecks {
         var floor=new AABB(item.getX()-.5,item.getBoundingBox().minY-.5,item.getZ()-.5,item.getX()+.5,item.getBoundingBox().minY,item.getZ()+.5);NativeRampRiders.supported(item);item.setPos(item.getX(),item.getY()-.0001,item.getZ());
         need(NativeRampRiders.recentCollision(floor,item).maxY==item.getBoundingBox().minY,"recent proven support permits shallow overlap");
         var foreignFloor=floor.move(0,.01,0);need(NativeRampRiders.recentCollision(foreignFloor,item)==foreignFloor,"recent support never clips a different floor height");
+        var slabPos=BASE.east(7);world.setBlock(slabPos,Blocks.OAK_SLAB.defaultBlockState(),18);item.setPos(slabPos.getX()+.5,slabPos.getY()+.5,slabPos.getZ()+.5);NativeRampRiders.supported(item);item.setPos(item.getX(),item.getY()-.0001,item.getZ());
+        double actualFloor=Double.NEGATIVE_INFINITY;for(var shape:world.getBlockCollisions(item,item.getBoundingBox().inflate(.01)))for(var box:shape.toAabbs())if(box.minX<item.getX()&&box.maxX>item.getX()&&box.minZ<item.getZ()&&box.maxZ>item.getZ())actualFloor=Math.max(actualFloor,box.maxY);
+        need(actualFloor==item.getBoundingBox().minY,"actual vanilla materialized slab clips recent proven support floor");
+        boat.setPos(BASE.getX()+10.5,BASE.getY()+1,BASE.getZ()+.5);need(world.addFreshEntity(boat),"real support hull added");actor.setPos(boat.getX(),boat.getBoundingBox().maxY,boat.getZ());NativeRampRiders.supported(actor);actor.setPos(actor.getX(),actor.getY()-.0001,actor.getZ());
+        var hulls=world.getEntityCollisions(actor,actor.getBoundingBox().inflate(.1));need(!hulls.isEmpty(),"real entity support hull enumerated");for(var hull:hulls)need(hull.max(Direction.Axis.Y)==actor.getBoundingBox().minY,"actual entity hull clips recent proven support floor");boat.discard();
+        var plain=List.of(Shapes.block());need(NativeRampRiders.recentCollisions(world,new ItemEntity(world,0,0,0,new ItemStack(Items.STONE)),plain)==plain,"unsupported query retains exact original iterable");
         var memo=new NativeEntityMemo<String>(2);var sameId=new ItemEntity(world,0,0,0,new ItemStack(Items.STONE));sameId.setId(item.getId());memo.put(item,"original");memo.put(sameId,"other");need(memo.get(item).equals("original")&&memo.get(sameId).equals("other"),"weak entity identity does not alias reused numeric IDs");memo.get(item);memo.put(actor,"actor");need(memo.size()==2&&memo.get(sameId)==null&&memo.get(item).equals("original"),"bounded least-recent entry eviction");memo.clearWorld(world);need(memo.size()==0,"world unload removes live weak entries");
         for(int i=0;i<20000;i++)NativeRampRiders.supported(item);
         var allocations=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();long thread=Thread.currentThread().threadId(),start=allocations.getThreadAllocatedBytes(thread);for(int i=0;i<10000;i++)NativeRampRiders.supported(item);long allocated=allocations.getThreadAllocatedBytes(thread)-start;
