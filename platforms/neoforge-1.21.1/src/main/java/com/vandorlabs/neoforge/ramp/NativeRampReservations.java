@@ -18,7 +18,7 @@ public final class NativeRampReservations {
  public static BiConsumer<ServerLevel,BlockPos> bindChanged(BiConsumer<ServerLevel,BlockPos> next){var previous=listener;listener=next;return previous;}
  static void changed(ServerLevel level,BlockPos root){var callback=listener;if(callback!=null)callback.accept(level,root);}
  public static Result prepareClose(ServerLevel level,BlockPos canopyRoot,ChannelList canopyChannels,AABB conservativeArea,SweepQuery sweep){
-  if(!level.getServer().isSameThread())return new Result(Status.REFUSED,Set.of(),Set.of());Objects.requireNonNull(canopyRoot);Objects.requireNonNull(canopyChannels);Objects.requireNonNull(sweep);if(!ROOTS.hasMembers(level)&&!PARTS.hasMembers(level))return CLEAR;
+  if(!level.getServer().isSameThread())return new Result(Status.REFUSED,Set.of(),Set.of());Objects.requireNonNull(canopyRoot);Objects.requireNonNull(canopyChannels);Objects.requireNonNull(sweep);if(!ROOTS.hasMembers(level)&&!PARTS.hasMembers(level))return NativeRampJournal.publishingInArea(level,conservativeArea)?new Result(Status.PENDING,Set.of(),Set.of()):CLEAR;
   var blocked=new LinkedHashSet<BlockPos>();var partners=new LinkedHashSet<BlockPos>();var candidates=PARTS.query(level,conservativeArea.inflate(1));var roots=new LinkedHashSet<>(ROOTS.query(level,conservativeArea));boolean unknown=false;
   for(var part:candidates){var pos=part.controller();var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);var owner=chunk==null?null:chunk.getBlockEntities().get(pos);if(owner instanceof NativeRampEntity root)roots.add(root);else unknown=true;}
   for(var root:roots)if(root.inert()){blocked.add(root.getBlockPos());return new Result(Status.REFUSED,blocked,Set.of());}
