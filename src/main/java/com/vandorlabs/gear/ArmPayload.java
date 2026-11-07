@@ -345,6 +345,20 @@ public final class ArmPayload {
     static FailureInjector failureInjector;
     private static void failure(String stage,BlockPos at){if(failureInjector!=null&&System.getProperty("vandorlabs.reprolab")!=null)failureInjector.check(stage,at);}
     /** Adopt edits to the already materialized cells without expanding their authorized footprint. */
+    /** Chosen-only refresh from the authoritative detached snapshot; never serializes a live tile. */
+    ArmPayload snapshotPlaced(GearTileEntity arm,VehicleStructure source){
+        if(!materialized)return this;if(hasOwnershipJournal())throw new IllegalArgumentException("Attachment recovery pending");
+        List<VehicleStructure.Cell> original=new ArrayList<>(),nativeRows=new ArrayList<>();
+        for(int i=0;i<blocks.cells.size();i++){
+            VehicleStructure.Cell old=blocks.cells.get(i),placed=placed().cells.get(i);BlockPos at=placedCellPosition(arm,i);VehicleStructure.Cell current=source.at(at);IBlockState expected=placed.state;
+            if(current!=null&&expected.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&current.state.getBlock()==expected.getBlock())expected=expected.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,current.state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
+            if(current==null||placedBlocks!=null&&(current.state!=expected||current.hasTileData()!=old.hasTileData())||current.state.getMaterial().isLiquid()||current.state.getMaterial()==net.minecraft.block.material.Material.AIR)throw new IllegalArgumentException("Native attachment snapshot changed orientation or ownership");
+            IBlockState originalState=placedBlocks==null?current.state:old.state;if(originalState.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)originalState=originalState.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,current.state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
+            NBTTagCompound data=current.tileData();original.add(new VehicleStructure.Cell(old.pos,originalState,data==null?null:VehicleTileData.translated(data,old.pos.subtract(at))));
+            if(placedBlocks!=null)nativeRows.add(new VehicleStructure.Cell(placed.pos,current.state,data==null?null:VehicleTileData.translated(data,placed.pos.subtract(at))));
+        }
+        ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(original),offset,true,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(nativeRows);return next;
+    }
     public ArmPayload refreshPlaced(GearTileEntity arm,EntityPlayerMP actor){
         if(hasOwnershipJournal())throw new IllegalArgumentException("Original attachment cells need recovery");
         if(!materialized)return this;if(placedBlocks!=null){if(!matchesPlaced(arm))throw new IllegalArgumentException("Restore the rotated attachment before replacing its blocks");return this;}World world=arm.getWorld();BlockPos origin=arm.getPos().add(placedOffset);List<VehicleStructure.Cell> refreshed=new ArrayList<>();
