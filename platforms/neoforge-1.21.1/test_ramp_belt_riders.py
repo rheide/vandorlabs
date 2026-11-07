@@ -11,10 +11,15 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 def main():
     output=Path(artifact_directory(prefix='ramp-belt-native-',dir=ROOT/'build/test-artifacts'))
     saved=output/'saved-world';world(saved,0)
-    run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-belt-world'),output/'server.log','[vandorlabs][ramp-belt-world] PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
-    match=re.search(r'actual server PID=(\d+)',(output/'server.log').read_text(errors='replace'))
-    if not match:raise RuntimeError("Actual server PID missing")
-    await_shutdown(saved,int(match.group(1)))
+    for phase,marker,name in [('ramp-belt-world','[vandorlabs][ramp-belt-world] PASS','write'),('ramp-belt-world-read','[vandorlabs][ramp-belt-world] restart PASS','read')]:
+        log=output/(name+'.log')
+        match=None
+        try:
+            run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase),log,marker,dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+        finally:
+            match=re.search(r'actual server PID=(\d+)',log.read_text(errors='replace')) if log.exists() else None
+            if match:await_shutdown(saved,int(match.group(1)))
+        if not match:raise RuntimeError('Actual server PID missing')
     print('Private Ramp belt world PASS '+str(output),flush=True)
 
 if __name__=='__main__':main()
