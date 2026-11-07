@@ -6,3 +6,10 @@ task exportCopifierLightSourceReference(type: JavaExec) {
     args file("$buildDir/test-artifacts/copifier-light-source.jsonl").absolutePath
     maxHeapSize = '1G'
 }
+task testCopifierLightTransmissionSource(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CopifierLightTransmissionLegacyChecks'
+ maxHeapSize='1G'
+}
