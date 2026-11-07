@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 
 /** Unregistered standalone host. Physical ownership never enters its public projection or configured pick. */
-public class NativeCredentialReaderEntity extends BlockEntity implements NativeChannelMember {
+public class NativeCredentialReaderEntity extends BlockEntity implements NativeChannelMember,net.minecraft.world.Container {
     private static final List<String> READER_FIELDS=List.of("TokenLogo","TokenRejectedUntil","ChipSlot","AnyToken","AllowedTokens","TokenBehavior","TokenPulseUntil","TokenToggled","TokenToggleApplied","TokenInsertStarted","TokenInsertionSequence","TokenReturnTo","TokenReturnToMost","TokenReturnToLeast","InsertedToken");
     public record Visual(ControlMountSettings mount,int rotation,int allowed,NativeTokenReader.Visual contents,NativeTokenReader.Motion motion,boolean inert,int behavior,NativeScreenChipView chipView){}
     private final boolean chip;
@@ -56,6 +56,17 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     public int physicalLevel(){return local?outputLevel():0;}
     public boolean interact(ServerPlayer player,InteractionHand hand){return usable(player)&&reader.interact(player,hand,false);}
     public boolean holdingCredential(ServerPlayer player,InteractionHand hand){return reader.holdingCredential(player,hand,false);}
+    private boolean inventoryActive(){return !inert&&!removing&&level instanceof ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&isChannelMemberActive();}
+    @Override public int getContainerSize(){return 1;}
+    @Override public int getMaxStackSize(){return 1;}
+    @Override public boolean isEmpty(){return !inventoryActive()||reader.inventoryStack().isEmpty();}
+    @Override public ItemStack getItem(int slot){return slot==0&&inventoryActive()?reader.inventoryStack():ItemStack.EMPTY;}
+    @Override public ItemStack removeItem(int slot,int count){return slot==0&&count>0&&inventoryActive()&&!publishing?reader.takeFromInventory():ItemStack.EMPTY;}
+    @Override public ItemStack removeItemNoUpdate(int slot){return removeItem(slot,1);}
+    @Override public void setItem(int slot,ItemStack stack){if(slot==0&&inventoryActive()&&!publishing)reader.setFromInventory(stack);}
+    @Override public boolean canPlaceItem(int slot,ItemStack stack){return slot==0&&inventoryActive()&&reader.behavior()<2&&!reader.returning()&&reader.authorized(stack);}
+    @Override public void clearContent(){if(inventoryActive()&&!publishing)reader.takeFromInventory();}
+    @Override public boolean stillValid(net.minecraft.world.entity.player.Player player){return player instanceof ServerPlayer server&&usable(server);}
     ItemStack takeForRemoval(){removing=true;return takeForDrop();}
     public ItemStack takeForDrop(){return inert?ItemStack.EMPTY:reader.takeForDrop();}
     public ItemStack recoveryForRemoval(net.minecraft.world.item.Item item){if(!inert||recoveryTaken||retained.isEmpty())return ItemStack.EMPTY;recoveryTaken=true;var result=new ItemStack(item);var tag=new CompoundTag();tag.put("NativeReaderRecovery",retained.copy());result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(tag));return result;}
