@@ -84,7 +84,26 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
     public boolean requestOpen(Player player,boolean value){return requestOpen(player,value,Direction.UP);}
     public boolean requestOpen(Player player,boolean value,Direction face){if(!canUse(player,face))return false;requestOpen(value);return true;}
     public void requestOpen(boolean value){if(!installed()||level.isClientSide)return;var all=group();for(var tile:all)tile.pendingOpen=value;publish(all);}
-    /** The caller supplies choices, never world relations; every member passes authorization before installation. */
+    /** Bounded copied choices require the owning server thread and exact installed identity. */
+    public final boolean copiedAvailable(){return level instanceof net.minecraft.server.level.ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&installed();}
+    public final com.vandorlabs.neoforge.copifier.NativeCopifierTrapdoorEdit.State copiedState(){
+        if(!copiedAvailable())throw new IllegalArgumentException("Unavailable copied Trapdoor leaf");
+        var current=new NativeTrapdoorSettings(settings.choices(),settings.channels(),facing().get2DDataValue(),settings.hingeSide(),settings.rotationFlipped(),diagonal());
+        return new com.vandorlabs.neoforge.copifier.NativeCopifierTrapdoorEdit.State(current,canOffsetClosedLeaf());
+    }
+    /** Copied settings preserve Source partial-setter semantics; editor validation is deliberately separate. */
+    public final boolean configureCopied(CompoundTag values,Player actor){
+        if(!copiedAvailable()||actor==null||actor.level()!=level||!actor.isAlive()||actor.isSpectator())return false;
+        try{if(!com.vandorlabs.neoforge.copifier.NativeCopifierTrapdoorEdit.prepare(copiedState(),values,true).applicable())return false;}catch(IllegalArgumentException malformed){return false;}
+        var all=group();var plans=new LinkedHashMap<NativeTrapdoorEntity,com.vandorlabs.neoforge.copifier.NativeCopifierTrapdoorEdit.Plan>();
+        for(var tile:all){
+            if(!tile.copiedAvailable()||!level.mayInteract(actor,tile.worldPosition)||!actor.mayUseItemAt(tile.worldPosition,Direction.UP,actor.getMainHandItem()))return false;
+            try{plans.put(tile,com.vandorlabs.neoforge.copifier.NativeCopifierTrapdoorEdit.prepare(tile.copiedState(),values,tile==this));}catch(IllegalArgumentException malformed){return false;}
+        }
+        for(var entry:plans.entrySet()){var tile=entry.getKey();var plan=entry.getValue();if(plan.unpair())tile.links=tile.links.relations(null,null,List.of());tile.settings=plan.state().settings();tile.projectionFacing=Direction.from2DDataValue(tile.settings.facing());tile.powerPending=false;}
+        publish(all);var server=(net.minecraft.server.level.ServerLevel)level;NativeRedstoneChannels.batch(server,()->{for(var tile:all)NativeRedstoneChannels.channelsChanged(tile);});
+        Set<NativeTrapdoorEntity> changed=new LinkedHashSet<>(all);for(var tile:all)for(var leaf:NativeTrapdoorLifecycle.evaluatePower(tile,access(),true,item->((NativeTrapdoorEntity)item).localPower()))changed.add((NativeTrapdoorEntity)leaf);publish(changed);return true;
+    }
     public boolean configure(Player player,NativeTrapdoorSettings next){return configure(player,next,inverted(),null);}
     public boolean configure(Player player,NativeTrapdoorSettings next,boolean requestedInverted,Direction hingeFacing){if(next==null||next.choices().texture<0||!ModernFinishCatalog.validChoice(next.choices().texture)||next.diagonal()!=diagonal()||!installed()||level.isClientSide)return false;var all=group();if(all.stream().anyMatch(tile->!tile.usable(player)))return false;
         boolean flip=diagonal()&&inverted()!=requestedInverted;

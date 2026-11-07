@@ -1,0 +1,12 @@
+tasks.register('testNativeCopifierTrapdoor', JavaExec) {
+ group='verification'
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierTrapdoorEditChecks'
+ args file('../../testclient/fixtures/copifier-trapdoor-source.json.gz').absolutePath
+ maxHeapSize='512m'
+}
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierTrapdoorReference'))systemProperty 'vandorlabs.copifierTrapdoorReference',file(project.property('copifierTrapdoorReference')).absolutePath
+ if(project.hasProperty('copifierTrapdoorGroupReference'))systemProperty 'vandorlabs.copifierTrapdoorGroupReference',file(project.property('copifierTrapdoorGroupReference')).absolutePath
+}

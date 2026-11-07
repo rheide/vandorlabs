@@ -1,0 +1,16 @@
+task exportCopifierTrapdoorReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierTrapdoorLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-trapdoor-source.json").absolutePath
+ maxHeapSize = '1g'
+}
+task exportCopifierTrapdoorGroupReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierTrapdoorGroupLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-trapdoor-groups.json").absolutePath
+ maxHeapSize = '1g'
+}
