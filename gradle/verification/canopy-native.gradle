@@ -55,3 +55,11 @@ task exportCanopyPhysicsReference(type: JavaExec) {
     args file('build/test-artifacts/canopy-physics-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportCanopyReservationReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyReservationLegacyOracle'
+    args file('build/test-artifacts/canopy-reservations-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
