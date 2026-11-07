@@ -15,3 +15,10 @@ task exportPlatformMotionReference(type: JavaExec) {
     args file('build/test-artifacts/platform-motion-source.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportRampRiderSelectionReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.RampRiderSelectionLegacyOracle'
+ maxHeapSize = '1g'
+ args file('build/test-artifacts/ramp-rider-selection-source.jsonl').absolutePath
+}

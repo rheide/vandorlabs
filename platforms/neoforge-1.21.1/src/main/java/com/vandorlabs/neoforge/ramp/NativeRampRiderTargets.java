@@ -1,0 +1,53 @@
+package com.vandorlabs.neoforge.ramp;
+
+import com.vandorlabs.ramp.*;
+import java.util.*;
+import net.minecraft.world.phys.*;
+
+/** World-free released ordinary/stair/sideways rider selection. No ownership publication. */
+public final class NativeRampRiderTargets {
+    public record Candidate(int key,AABB body,boolean player,boolean available,double motionY){}
+    public static Map<Candidate,Vec3> select(NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal,List<Candidate> candidates){
+        if(spec.verticalLayout()||spec.moat())throw new IllegalArgumentException("Separate vertical/Moat rider adapter required");
+        if(!Double.isFinite(previous)||!Double.isFinite(current)||previous<0||previous>1||current<0||current>1||candidates.size()>8192)throw new IllegalArgumentException("Ramp rider selection bounds");
+        var result=new LinkedHashMap<Candidate,Vec3>();if(spec.extend())return result;
+        long work=0;for(var source:spec.origins())work+=(long)(shaped?source.shapes().size():1)*(spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels()))*candidates.size();if(work>16777216)throw new IllegalArgumentException("Ramp rider selection work budget");
+        var direction=RampGeometry.Direction.valueOf(spec.facing().name());int count=spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels());
+        for(var origin:spec.origins()){
+            var source=origin.position();int row=source.getX()*spec.facing().getStepX()+source.getZ()*spec.facing().getStepZ()-spec.minimumAlong();
+            if(shaped){
+                var before=treads(spec,origin,row,previous,fromOriginal);var after=treads(spec,origin,row,current,toOriginal);
+                for(int i=0;i<before.size();i++){var a=before.get(i);var b=after.get(i);
+                    for(var actor:candidates){var body=actor.body();if(!actor.available()||actor.motionY()>.1||!body.intersects(a.inflate(0,.2,0))||body.maxX<=a.minX+1e-7||body.minX>=a.maxX-1e-7||body.maxZ<=a.minZ+1e-7||body.minZ>=a.maxZ-1e-7||Math.abs(body.minY-a.maxY)>.15)continue;
+                        var delta=new Vec3(b.minX-a.minX,b.maxY-body.minY,b.minZ-a.minZ);var existing=result.get(actor);if(existing==null||delta.y>existing.y)result.put(actor,delta);
+                    }
+                }continue;
+            }
+            for(int step=0;step<count;step++){
+                double before=ControllerPlatform.offsetPixels(row,step,spec.length(),spec.treadPixels(),spec.start(),spec.end(),previous,spec.elevator(),spec.fast(),spec.interpolation());
+                double after=ControllerPlatform.offsetPixels(row,step,spec.length(),spec.treadPixels(),spec.start(),spec.end(),current,spec.elevator(),spec.fast(),spec.interpolation());
+                if(spec.travel()!=RampGeometry.VERTICAL){
+                    var moved=RampGeometry.movingTread(direction,source.getX(),source.getY(),source.getZ(),spec.low(),spec.high(),row,spec.length(),spec.start(),spec.end(),spec.treadPixels(),step,previous,previous,spec.elevator(),spec.travel(),false,spec.fast(),spec.interpolation());var tread=box(moved);
+                    var side=spec.travel()==RampGeometry.LEFT?spec.facing().getCounterClockWise():spec.facing().getClockWise();double delta=after-before;
+                    for(var actor:candidates){var body=actor.body();if(!actor.available()||!body.intersects(tread.inflate(0,.2,0))||Math.abs(body.minY-tread.maxY)>.25||!body.intersects(tread.inflate(0,.25,0)))continue;if(Math.abs(delta)>1e-9)result.put(actor,new Vec3(side.getStepX()*delta,0,side.getStepZ()*delta));}
+                }else{
+                    double minY=source.getY()+spec.high()+Math.min(0,Math.min(spec.start(),spec.end()))-.2,maxY=source.getY()+spec.high()+Math.max(0,Math.max(spec.start(),spec.end()))+.2;
+                    var query=new AABB(source.getX(),minY,source.getZ(),source.getX()+1,maxY,source.getZ()+1);var local=RampGeometry.footprintPixels(direction,step,spec.elevator()?16:spec.treadPixels(),minY,maxY);var tread=new AABB(source.getX()+local.minX,local.minY,source.getZ()+local.minZ,source.getX()+local.maxX,local.maxY,source.getZ()+local.maxZ);
+                    double oldTop=source.getY()+spec.high()+(fromOriginal?0:before),newTop=source.getY()+spec.high()+(toOriginal?0:after);
+                    for(var actor:candidates){var body=actor.body();if(!actor.available()||actor.motionY()>.1||!body.intersects(query)||!body.deflate(1e-7).intersects(tread))continue;double target=RampGeometry.riderTarget(oldTop,newTop,body.minY,actor.player()?.5:.15);if(!Double.isNaN(target)){var existing=result.get(actor);double delta=target-body.minY;if(existing==null||delta>existing.y)result.put(actor,new Vec3(0,delta,0));}}
+                }
+            }
+        }
+        return result;
+    }
+    static List<AABB> treads(NativeRampFootprint.Spec s,NativeRampGeometry.Origin origin,int row,double pose,boolean nativeEndpoint){
+        var result=new ArrayList<AABB>();var face=RampGeometry.Direction.valueOf(s.facing().name());var p=origin.position();
+        for(var shape:origin.shapes())for(int step=0;step<(s.elevator()?1:ControllerPlatform.treadCount(s.treadPixels()));step++){
+            var f=RampGeometry.footprintPixels(face,step,s.elevator()?16:s.treadPixels(),shape.minY,shape.maxY);double x=Math.max(shape.minX,f.minX),y=Math.max(shape.minY,f.minY),z=Math.max(shape.minZ,f.minZ),X=Math.min(shape.maxX,f.maxX),Y=Math.min(shape.maxY,f.maxY),Z=Math.min(shape.maxZ,f.maxZ);if(X-x<=1e-8||Y-y<=1e-8||Z-z<=1e-8)continue;
+            var moved=RampGeometry.movingTread(face,p.getX(),p.getY(),p.getZ(),shape.minY,shape.maxY,row,s.length(),nativeEndpoint?0:s.start(),nativeEndpoint?0:s.end(),s.treadPixels(),step,pose,pose,s.elevator(),s.travel(),false,s.fast(),s.interpolation());
+            result.add(new AABB(moved.minX+x-f.minX,moved.minY,moved.minZ+z-f.minZ,moved.maxX+X-f.maxX,moved.maxY,moved.maxZ+Z-f.maxZ));
+        }return result;
+    }
+    private static AABB box(RampGeometry.Box b){return new AABB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
+    private NativeRampRiderTargets(){}
+}
