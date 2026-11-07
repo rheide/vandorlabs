@@ -19,7 +19,7 @@ import net.minecraft.util.math.*;
 public final class CanopyMeshLegacyOracle {
     private static final BlockPos ROOT=new BlockPos(8,80,8);
     private static Field field(Class<?> type,String name)throws Exception {Field f=type.getDeclaredField(name);f.setAccessible(true);return f;}
-    private static NBTTagCompound input(int profile) {
+    static NBTTagCompound input(int profile) {
         NBTTagCompound tag=new NBTTagCompound();
         tag.setInteger("CanopyMount",profile%4);tag.setInteger("CanopyDepth",new int[]{16,0,17,80,24,1}[profile]);
         tag.setInteger("CanopyScale",new int[]{71,10,90,100,71,50}[profile]);tag.setInteger("CanopyShade",profile%3);

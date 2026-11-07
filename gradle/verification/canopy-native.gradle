@@ -29,3 +29,11 @@ task exportCanopyPoseReference(type: JavaExec) {
     args file('build/test-artifacts/canopy-pose-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportFixedCanopyReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FixedCanopyLegacyOracle'
+    args file('build/test-artifacts/fixed-canopy-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
