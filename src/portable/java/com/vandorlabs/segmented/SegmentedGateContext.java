@@ -2,13 +2,16 @@ package com.vandorlabs.segmented;
 
 /** Immutable prepared row styles. World adapters establish loaded identity and common motion/settings first. */
 public final class SegmentedGateContext {
-    private final int height,width,column,direction,compatible;
+    private final int height,width,column,direction,compatible,movingCompatible;
     private final boolean straight,motionKnown;
     private final double depth;
     private final int[] own,left,right;
     public SegmentedGateContext(int height,int width,int column,int direction,boolean straight,double depth,boolean motionKnown,int compatible,int[] own,int[] left,int[] right){
-        if(height<1||height>32||width<1||width>32||column<0||column>=width||direction<0||direction>3||Double.isNaN(depth)||Double.isInfinite(depth)||Math.abs(depth)>.5||(compatible&~3)!=0)throw new IllegalArgumentException("Gate row context");
-        this.height=height;this.width=width;this.column=column;this.direction=direction;this.straight=straight;this.depth=depth;this.motionKnown=motionKnown;this.compatible=compatible;this.own=styles(own,height);this.left=left==null?null:styles(left,height);this.right=right==null?null:styles(right,height);
+        this(height,width,column,direction,straight,depth,motionKnown,compatible,compatible,own,left,right);
+    }
+    public SegmentedGateContext(int height,int width,int column,int direction,boolean straight,double depth,boolean motionKnown,int compatible,int movingCompatible,int[] own,int[] left,int[] right){
+        if(height<1||height>32||width<1||width>32||column<0||column>=width||direction<0||direction>3||Double.isNaN(depth)||Double.isInfinite(depth)||Math.abs(depth)>.5||(compatible&~3)!=0||(movingCompatible&~compatible)!=0)throw new IllegalArgumentException("Gate row context");
+        this.height=height;this.width=width;this.column=column;this.direction=direction;this.straight=straight;this.depth=depth;this.motionKnown=motionKnown;this.compatible=compatible;this.movingCompatible=movingCompatible;this.own=styles(own,height);this.left=left==null?null:styles(left,height);this.right=right==null?null:styles(right,height);
         if((compatible&1)!=0&&(column==0||left==null)||(compatible&2)!=0&&(column==width-1||right==null))throw new IllegalArgumentException("Gate context neighbour boundary");
     }
     private static int[] styles(int[] source,int height){if(source==null||source.length!=height)throw new IllegalArgumentException("Gate row style count");int[] copy=source.clone();for(int style:copy)if(style< -1||style>2)throw new IllegalArgumentException("Gate row style");return copy;}
@@ -22,14 +25,21 @@ public final class SegmentedGateContext {
     }
     /** Pose calculations are arithmetic only; no model/world access or allocation. */
     public int mask(int row,double progress,int rotation,Scratch scratch){
+        return mask(row,progress,progress,progress,rotation,scratch);
+    }
+    /** Missing weak peer clocks are represented by NaN and cannot contribute a join. */
+    public int mask(int row,double progress,double leftProgress,double rightProgress,int rotation,Scratch scratch){
         if(row<0||row>=height||rotation<0||rotation>3||scratch==null||Double.isNaN(progress)||Double.isInfinite(progress))throw new IllegalArgumentException("Gate row pose");
-        if(own[row]<0||progress>0&&progress<1&&!motionKnown)return 0;int sides=compatible;
+        if(own[row]<0||progress>0&&progress<1&&!motionKnown)return 0;int sides=compatible;if(!finite(leftProgress)||((moving(progress)||moving(leftProgress))&&(movingCompatible&1)==0))sides&=~1;if(!finite(rightProgress)||((moving(progress)||moving(rightProgress))&&(movingCompatible&2)==0))sides&=~2;
         scratch.kinds[0]=own[row];scratch.kinds[1]=left==null?-1:left[row];scratch.kinds[2]=right==null?-1:right[row];scratch.kinds[3]=row+1<height?own[row+1]:-1;scratch.kinds[4]=row>0?own[row-1]:-1;
-        write(row,column,0,progress,rotation,scratch,0);if((sides&1)!=0)write(row,column-1,-1,progress,rotation,scratch,1);if((sides&2)!=0)write(row,column+1,1,progress,rotation,scratch,2);
+        write(row,column,0,progress,rotation,scratch,0);if((sides&1)!=0)write(row,column-1,-1,leftProgress,rotation,scratch,1);if((sides&2)!=0)write(row,column+1,1,rightProgress,rotation,scratch,2);
         if(row+1<height){sides|=4;write(row+1,column,0,progress,rotation,scratch,3);}if(row>0){sides|=8;write(row-1,column,0,progress,rotation,scratch,4);}
         return SegmentedGateJoin.mask(scratch.kinds,sides,scratch.frames);
     }
-    public void prepare(double progress,int rotation,Scratch scratch){if(scratch==null)throw new IllegalArgumentException("Gate context scratch");scratch.prepared=null;for(int row=0;row<height;row++)scratch.masks[row]=mask(row,progress,rotation,scratch);scratch.prepared=this;}
+    private static boolean moving(double progress){return progress>0&&progress<1;}
+    private static boolean finite(double value){return !Double.isNaN(value)&&!Double.isInfinite(value);}
+    public void prepare(double progress,int rotation,Scratch scratch){prepare(progress,progress,progress,rotation,scratch);}
+    public void prepare(double progress,double leftProgress,double rightProgress,int rotation,Scratch scratch){if(scratch==null)throw new IllegalArgumentException("Gate context scratch");scratch.prepared=null;for(int row=0;row<height;row++)scratch.masks[row]=mask(row,progress,leftProgress,rightProgress,rotation,scratch);scratch.prepared=this;}
     public int preparedMask(int row,Scratch scratch){if(row<0||row>=height||scratch==null||scratch.prepared!=this)throw new IllegalStateException("Gate context was not prepared");return scratch.masks[row];}
     private void write(int row,int col,int offset,double progress,int rotation,Scratch scratch,int slot){
         SegmentedDoorGeometry.panel(row,height,col,width,progress,direction,straight,scratch.pose);scratch.pose[2]+=depth;frame(scratch.pose,offset,rotation,scratch.frames[slot]);

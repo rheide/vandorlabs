@@ -12,6 +12,16 @@ public final class SegmentedGateContextTest {
             int turning=closed.mask(1,.5,rotation,scratch);need(turning==(direction<2?3:12),"turning sections join only along compatible plane");
             SegmentedGateContext unknown=new SegmentedGateContext(3,3,1,direction,false,0,false,3,all,all,all);need(unknown.mask(1,.5,rotation,scratch)==0&&unknown.mask(1,0,rotation,scratch)==15,"unknown moving identity cannot extend posts");
         }
+        for(int direction=0;direction<4;direction++)for(int rotation=0;rotation<4;rotation++){
+            SegmentedGateContext peers=new SegmentedGateContext(3,3,1,direction,true,0,true,3,3,all,all,all);
+            need((peers.mask(1,.5,.25,.5,rotation,scratch)&1)==0,"independent left pose cannot join a separated plane");
+            need((peers.mask(1,.5,.5,.75,rotation,scratch)&2)==0,"independent right pose cannot join a separated plane");
+            need(peers.mask(1,.5,Double.NaN,Double.NaN,rotation,scratch)==12,"retired peer clocks cannot contribute horizontal joins");
+            SegmentedGateContext unrelated=new SegmentedGateContext(3,3,1,direction,true,0,true,3,0,all,all,all);
+            need(unrelated.mask(1,0,0,0,rotation,scratch)==15,"independent drivers can join coincident closed endpoints");
+            need(unrelated.mask(1,.5,.5,.5,rotation,scratch)==12,"coincident moving sections require a shared motion driver");
+            peers.prepare(.5,.25,.75,rotation,scratch);for(int row=0;row<3;row++)need(peers.preparedMask(row,scratch)==peers.mask(row,.5,.25,.75,rotation,scratch),"independent peer poses survive batched preparation");
+        }
         SegmentedGateContext mixed=new SegmentedGateContext(3,3,1,0,false,0,true,3,new int[]{0,0,1},new int[]{0,1,0},all);need(mixed.mask(1,0,0,scratch)==10,"mixed styles refuse individual neighbour edges");all[1]=2;need(mixed.kind(1)==0,"prepared styles are owned immutable copies");
         mixed.prepare(.5,0,scratch);for(int row=0;row<3;row++)need(mixed.preparedMask(row,scratch)==mixed.mask(row,.5,0,scratch),"batched immutable neighbour masks");
         boolean badPose=false,staleMask=false;try{mixed.prepare(Double.NaN,0,scratch);}catch(IllegalArgumentException expected){badPose=true;}try{mixed.preparedMask(1,scratch);}catch(IllegalStateException expected){staleMask=true;}need(badPose&&staleMask,"failed preparation cannot expose previous row masks");
