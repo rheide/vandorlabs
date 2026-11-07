@@ -5,3 +5,6 @@ tasks.register('testCopifierTriggerReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/copifier-trigger-source.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierTriggerReference'))systemProperty 'vandorlabs.copifierTriggerReference',file(project.property('copifierTriggerReference')).absolutePath
+}

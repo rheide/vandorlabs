@@ -34,6 +34,15 @@ public final class NativeTriggerBlockEntity extends ProgrammableBlockEntity impl
         visual=new ProgrammableBlockDialog.State(main,settings().layout,trigger.frontOnly,faces,-1);
         refresh();
     }
+    /** No inventory/platform serialization is needed to capture Trigger choices. */
+    public CompoundTag copiedSettings(){var fields=copiedHousingFields();trigger.write(new ModernHousingTags(fields));fields.putIntArray("RedstoneChannels",channels.toArray());fields.putInt("RedstoneChannel",channels.first());return fields;}
+    /** Caller has authorized the selected installed target before this typed copied commit. */
+    public boolean configureCopied(CompoundTag values){
+        if(!(level instanceof net.minecraft.server.level.ServerLevel world)||!world.getServer().isSameThread()||!NativeRedstoneChannels.open(world)||isRemoved()||!level.hasChunkAt(worldPosition)||level.getBlockEntity(worldPosition)!=this)return false;
+        com.vandorlabs.neoforge.copifier.NativeCopifierTriggerEdit.Plan plan;try{plan=com.vandorlabs.neoforge.copifier.NativeCopifierTriggerEdit.prepare(copiedSettings(),values);}catch(IllegalArgumentException refused){return false;}if(!plan.applicable())return false;
+        var metadata=plan.metadata();if(!installCopiedMetadata(metadata.frames(),metadata.channels(),metadata.transmissionRange(),metadata.localRedstone(),metadata.transmittedChannels()))return false;
+        NativeRedstoneChannels.batch(world,()->{boolean changed=!channels.equals(metadata.channels());trigger=plan.trigger();channels=metadata.channels();updateSettings(new ProgrammableBlockDialog.State(plan.off(),settings().layout,settings().facesEnabled,settings().faces(),-1));if(changed)NativeRedstoneChannels.channelsChanged(this);com.vandorlabs.neoforge.redstone.NativeSignalUpdateBatch.afterSignals(this,this::publishVisual);});return true;
+    }
     public boolean configure(int off,TriggerState next,ChannelList bank){
         if(bank==null||next==null||next.exact< -1||next.exact>15||!TriggerState.validArtwork(next.artworkModes(),next.artworkSpeeds()))return false;
         for(int choice:new int[]{off,next.on,next.low,next.medium,next.sides})if(!ModernFinishCatalog.validChoice(choice))return false;
