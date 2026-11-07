@@ -23,11 +23,13 @@ The current conversion stopping point is limited to four families. Finish and in
 | Family | Integrated state | Remaining acceptance |
 | --- | --- | --- |
 | Card Chip Programmer | Canonical public block, item, menu and rendering; construction guide; focused player, mining and restart acceptance | User testing |
-| Canopies | Shared settings and animation; private placement, configuration, motion, rendering and constituent teardown | Dedicated editor, runtime/contact integration, placed-client visibility and ordered updates, canonical activation |
+| Canopies | Shared settings and animation; private placement, configuration, motion, rendering, constituent teardown and dedicated editor; real editor packet acceptance | Runtime/contact integration, placed-client visibility and ordered updates, canonical activation |
 | Ramp Controllers | Shared settings/admission; private durable journal, before-images and partial-save recovery | Held-owner integration, generation and motion, item/editor/rendering paths, canonical activation |
 | Copifier | Canonical public tool, dedicated options, connected settings and Undo across converted targets; actual copied-settings recipes and three-state artwork | Final Canopy/Ramp integration and combined player acceptance |
 
 Screens, standalone propulsion and standalone credential readers are already publicly registered. Their focused acceptance is recorded below and in the family contracts. Vehicle/carried effects remain deferred.
+
+The current shared Canopy sweep additions build with the standard Forge 1.12.2 JAR and pass dedicated-server linkage across 1,388 shared classes and 132,064 references. Installed Canopy copying also matches 176 actual Source scenarios, including grouped owners, physical resize and Undo; this caught and corrected fixed-glass clipboard channel projection. These are focused compatibility checks. The final release gate remains deferred until after the requested user-testing stop.
 
 Building-family foundations now include stationary contained fluids and native block/entity/model/dialog adapters. The shared artwork policy preserves current scalar arithmetic without adding per-quad arrays or point wrappers. An opt-in `stair-settings` check (`VANDOR_LABS_SHAPE_TEXTURE_CHECKS=true`) covers 4,920 actual world models and 440 item models, including rectangular artwork, disabled face overrides, unavailable IDs and malformed saved fields; `VANDOR_LABS_SHAPE_TEXTURE_EXPECTED_HASH` checks the emitted reference against a frozen baseline. Preserve these audited distinctions:
 

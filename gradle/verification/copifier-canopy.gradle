@@ -1,0 +1,8 @@
+task exportCopifierCanopyReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CopifierCanopyLegacyOracle'
+ args file("$buildDir/test-artifacts/copifier-canopy-source.json").absolutePath
+ maxHeapSize='768m'
+}

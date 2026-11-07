@@ -13,7 +13,7 @@ public final class NativeCopifierCanopyEdit {
     public static CompoundTag capture(String kind,NativeCanopySettings settings){
         var d=settings.data();var out=new CompoundTag();out.putInt("glass_shade",d.shade);out.putInt("glass_tint",d.tint);out.putInt("glass_material",d.material);var layout=new CompoundTag();layout.putBoolean("Tile",d.tileMaterial);layout.putInt("Mode",d.textureLayout());out.put("glass_layout",layout);
         var config=new CompoundTag();if(CanopySettingsData.supports(kind)){config.putInt("CanopyDepth",d.depth);config.putInt("CanopyScale",d.scale);config.putInt("CanopyHinge",d.hinge);config.putBoolean("CanopyOpenable",d.openable);}if(opening(kind)){config.putInt("CanopyMotion",d.motion);config.putBoolean("CanopySlideForward",d.slideForward);config.putInt("CanopyAngle",d.angle);}if(!config.isEmpty())out.put("block_configuration",config);
-        if(CanopySettingsData.supports(kind)||opening(kind)){out.putInt("redstone_trigger",!d.redstone?0:d.activateOnPower?1:2);out.putIntArray("redstone_channel",d.channels.toArray());}return out;
+        if(CanopySettingsData.supports(kind)||opening(kind)){out.putInt("redstone_trigger",!d.redstone?0:d.activateOnPower?1:2);out.putIntArray("redstone_channel",d.channels.toArray());}else if(d.channels.size()>1)out.putIntArray("redstone_channel",d.channels.toArray());else out.putInt("redstone_channel",d.channels.first());return out;
     }
     public static Plan prepare(String kind,NativeCanopySettings current,CompoundTag values){
         if(!NativeCopiedSettingsValidation.valid(values))throw new IllegalArgumentException("Invalid Canopy clipboard");boolean configurable=CanopySettingsData.supports(kind)||opening(kind);

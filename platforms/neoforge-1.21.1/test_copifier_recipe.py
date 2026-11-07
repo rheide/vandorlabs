@@ -16,7 +16,8 @@ def main():
     saved = out/'saved-world'
     fixture_world(saved, 0)
     reference = ROOT/('testclient/fixtures/copifier-recipe-configured-source.json.gz' if configured else 'testclient/fixtures/copifier-recipe-source.json.gz')
-    run(command('runServer', '-PmodernServerRunDirectory='+str(saved), '-PtransmitterPhase=copifier-crafting', '-PcopifierRecipeReference='+str(reference), '-PcopifierRecipeConfigured='+str(configured).lower()), out/'server.log', '[vandorlabs][copifier-crafting] PASS', dict(os.environ, JAVA_HOME=str(jdk_home(21))))
+    canopy = ROOT/'testclient/fixtures/copifier-canopy-source.json.gz'
+    run(command('runServer', '-PmodernServerRunDirectory='+str(saved), '-PtransmitterPhase=copifier-crafting', '-PcopifierRecipeReference='+str(reference), '-PcopifierRecipeConfigured='+str(configured).lower(), '-PcopifierCanopyReference='+str(canopy)), out/'server.log', '[vandorlabs][copifier-crafting] PASS', dict(os.environ, JAVA_HOME=str(jdk_home(21))))
     print('Native copied recipe PASS: '+str(out), flush=True)
 
 if __name__ == '__main__':
