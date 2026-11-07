@@ -1,0 +1,7 @@
+// Geometry-only admission; does not change existing arm endpoint ownership.
+task testArmGridMapping(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmGridMappingChecks'
+ maxHeapSize = '512m'
+}
