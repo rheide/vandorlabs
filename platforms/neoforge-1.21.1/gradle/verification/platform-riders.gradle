@@ -37,3 +37,11 @@ tasks.register('testNativeMoatRampRiderSelection', JavaExec) {
     args file('../../testclient/fixtures/moat-ramp-rider-selection-source.jsonl.gz').absolutePath
     maxHeapSize = '512m'
 }
+
+tasks.register('testNativeRampBeltSelection', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.ramp.NativeRampBeltSelectionChecks'
+    args file('../../testclient/fixtures/ramp-belt-riders-source.jsonl.gz').absolutePath
+    maxHeapSize = '512m'
+}

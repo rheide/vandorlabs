@@ -1,0 +1,7 @@
+# Native belt rider planning
+
+The horizontal selector consumes immutable actor snapshots, captured source shapes and explicit foreign obstacles. It reuses the same authored whole-assembly belt emitter as cell rendering. Selection preserves Source acquisition tolerances, known-item upward/no-clip exceptions, the strict 0.75-block history anchor radius, lower landing steps, Y/X/Z clearance order, downward floor clipping, side-wall clipping and wrap detachment.
+
+The frozen actual `stepEscalator` corpus contains 13,824 callbacks. Native selection matches all accepted actor positions/bounds, momentum, grounding/fall, saved history, no-clip flags and committed distance bit for bit (763,656 assertions). The accepted changed-state count is 12,012. Entity bounds in the replay use the released float dimensions rather than recovering an imprecise double width by subtracting translated endpoints.
+
+There is a deliberate fail-atomic safety difference: Source changes actor state in 24 of its 84 refused steps and changes history in 12. The native selector returns a refusal without applying its proposed anchors or pruning history. Those Source-only refused mutations are counted explicitly, separately from accepted parity. A world planner must preflight every rider and publication before committing any anchor, movement or history update. Planner/state/reset and actual-world acceptance remain separate work; no public belt runtime is enabled by this selector.
