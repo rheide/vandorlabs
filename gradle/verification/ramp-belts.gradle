@@ -12,6 +12,6 @@ task exportRampBeltDeploymentReference(type: JavaExec) {
  dependsOn compileNonRenderingChecks
  classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
  main='com.vandorlabs.client.RampBeltDeploymentLegacyOracle'
- args file("$buildDir/test-artifacts/ramp-belt-deployment-source.jsonl").absolutePath
+ args file("$buildDir/test-artifacts/ramp-belt-deployment-source.jsonl").absolutePath,file("$buildDir/test-artifacts/ramp-belt-deployment-reads.csv").absolutePath
  maxHeapSize='1g'
 }

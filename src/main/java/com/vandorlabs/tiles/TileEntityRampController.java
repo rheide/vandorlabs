@@ -628,11 +628,11 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
     }
 
     private RampGeometry.Box treadBox(BlockPos source,int row,int step,double from,double to) {
-        if(verticalLayout&&!moat)return com.vandorlabs.ramp.VerticalRampGeometry.sweep(rampDirection(facing),source.getX(),source.getY(),source.getZ(),low,high,sourceBaseY(),length,treadPixels,step,startOffsetValue(),endOffsetValue(),from,to,elevator,travelAxis,extendSegments,speed==0,interpolation,escalator!=0&&from>=1&&to>=1);
+        if(verticalLayout&&!moat)return com.vandorlabs.ramp.VerticalRampGeometry.sweep(rampDirection(facing),source.getX(),source.getY(),source.getZ(),low,high,sourceBaseY(),length,treadPixels,step,startOffsetValue(),endOffsetValue(),from,to,elevator,travelAxis,extendSegments,speed==0,interpolation,com.vandorlabs.ramp.RampBeltPolicy.reservations(escalator,from,to));
         if(moat&&verticalMoatSources)return com.vandorlabs.ramp.RigidMoatGeometry.swept(rampDirection(facing),minAlong,sourceBaseY(),length,treadPixels,low,high,startOffsetValue(),endOffsetValue(),from,to,speed==0,source.getX(),source.getY(),source.getZ());
         if(moat && !verticalMoatSources)return com.vandorlabs.ramp.LegacyMoatGeometry.swept(rampDirection(facing),minAlong,sourceBaseY(),low,high,startOffsetValue(),endOffsetValue(),from,to,speed==0,source.getX(),source.getY(),source.getZ());
 
-        if(escalator!=0 && from>=1 && to>=1) {
+        if(com.vandorlabs.ramp.RampBeltPolicy.reservations(escalator,from,to)) {
             double pitch=treadPixels/16D;
             RampGeometry.Box fp=RampGeometry.footprintPixels(rampDirection(facing),step,treadPixels,low,high);
             double a=com.vandorlabs.ramp.EscalatorGeometry.height(row+step*pitch,length,treadPixels,endOffsetValue(),interpolation);
