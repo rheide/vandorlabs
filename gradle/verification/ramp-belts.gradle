@@ -6,3 +6,12 @@ task exportRampBeltReference(type: JavaExec) {
  args file("$buildDir/test-artifacts/ramp-belt-source.jsonl").absolutePath
  maxHeapSize='1g'
 }
+
+task exportRampBeltDeploymentReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.RampBeltDeploymentLegacyOracle'
+ args file("$buildDir/test-artifacts/ramp-belt-deployment-source.jsonl").absolutePath
+ maxHeapSize='1g'
+}
