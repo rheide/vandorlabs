@@ -1,0 +1,11 @@
+# Prepared Ramp part publication
+
+`NativeRampPartPublisher` prepares every detached generated-part entity and its immutable collision/render projection before changing world blocks. It bounds cell count, checks assembly membership and factory identity, and charges a conservative aggregate 64 MiB candidate budget without serializing each body. Projection values contain material choices and geometry, never physical source inventories or ownership snapshots.
+
+Installation is a single attempt in the same server tick. Every target must first pass the journal's exact durable operation/root/frozen-cell scope and loaded-chunk checks. Targets may be empty AIR without a live or pending tile, or a complete older part belonging to the same operation. A pending tile envelope is not empty AIR and is preserved without instantiation. Existing parts order by control revision followed by observation tick, allowing phase advancement without inventing new control commands.
+
+Only after all targets pass does installation replace blocks and install the prebuilt bodies. It suppresses client and neighbor notifications and never forwards controller interactions. The journal must notify observers only after all bodies are installed. Prepared entities and the level reference are released after the attempt. Worker calls, stale candidates, duplicate tuples, wrong operations and foreign targets refuse before replacement.
+
+This helper is not a durable transaction or rollback implementation. The journal must own the before images before removing sources, vacate all source cells that become parts, protect the mutation scope, and recover partial installation failures. Its source-to-part publication and abrupt-restart acceptance remain separate integration work.
+
+The dedicated two-process focus exercises real asynchronous journal preparation and ARM, scoped AIR and same-operation installation, factory and worker refusal, a foreign later target refusing the whole set, pending-envelope retention, duplicate revisions, single use, expiry on an actual next world tick, and same-control/newer-observation replacement. The fixture then completes journal recovery and verifies the restored sources after a fresh process restart. These are prepared-body mechanics checks; they do not establish a public controller runtime.
