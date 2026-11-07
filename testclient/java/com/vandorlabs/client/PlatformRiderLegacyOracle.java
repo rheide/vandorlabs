@@ -53,6 +53,12 @@ public final class PlatformRiderLegacyOracle {
                 JsonObject row=new JsonObject();row.addProperty("kind","clear");row.add("body",box(body));row.add("delta",vector(dx,dy,dz));row.add("obstacles",boxes);row.add("clipped",vector(x,y,z));row.addProperty("clear",PlatformRiders.clear(entity,new Vec3d(dx,dy,dz),obstacles));out(output,row);clear++;
             }
         }
+        // Outside the golden: allocation baseline for the released support publication path.
+        NonRenderingChecks.MemoryWorld costWorld=new NonRenderingChecks.MemoryWorld(false);Entity costEntity=entity(costWorld,1);
+        for(int i=0;i<20000;i++)PlatformRiders.supported(costEntity);
+        com.sun.management.ThreadMXBean allocations=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();long thread=Thread.currentThread().getId(),start=allocations.getThreadAllocatedBytes(thread);
+        for(int i=0;i<10000;i++)PlatformRiders.supported(costEntity);
+        System.out.println("Platform Source support publication 10000 calls allocatedBytes="+(allocations.getThreadAllocatedBytes(thread)-start));
         SegmentedReferenceGolden.check(target.toFile(),"79dfbdeaefef0ed5eb70e523a04afe51b59ff6cd4ea1dcb613ba9ba1b7040ae7");
         StringBuilder hash=new StringBuilder();for(byte b:java.security.MessageDigest.getInstance("SHA-256").digest(Files.readAllBytes(target)))hash.append(String.format(Locale.ROOT,"%02x",b&255));System.out.println("Platform Source rider reference PASS support="+collision+" recent="+recent+" clear="+clear+" total="+count+" sha256="+hash);
     }

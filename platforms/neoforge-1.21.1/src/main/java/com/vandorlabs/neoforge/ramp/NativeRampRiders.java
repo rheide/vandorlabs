@@ -12,8 +12,38 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.*;
 
 /** Source support/carrying primitives. Controller-specific selection and motion remain separate. */
+@net.neoforged.fml.common.EventBusSubscriber(modid="vandorlabs")
 public final class NativeRampRiders {
     private record Carrying(Level level,BlockPos root){}
+    /** Mutable only on the owning world thread; values never retain an entity or world. */
+    private static final class Support {
+        java.lang.ref.WeakReference<Level> level;long tick;double x,z,height;
+        void update(Entity entity){if(level==null||level.get()!=entity.level())level=new java.lang.ref.WeakReference<>(entity.level());tick=entity.level().getGameTime();x=entity.getX();z=entity.getZ();height=entity.getBoundingBox().minY;}
+    }
+    private static final NativeEntityMemo<Support> SERVER_SUPPORT=new NativeEntityMemo<>(8192),CLIENT_SUPPORT=new NativeEntityMemo<>(8192);
+    private static final class Sequence {long value;}
+    private static final NativeEntityMemo<Sequence> SENT=new NativeEntityMemo<>(8192);
+    private static java.util.function.BooleanSupplier clientThread=()->false;
+    public static void bindClientThread(java.util.function.BooleanSupplier check){clientThread=Objects.requireNonNull(check);}
+    public static void requireThread(Level level){if(level instanceof ServerLevel server){if(!server.getServer().isSameThread())throw new IllegalStateException("Ramp support requires server thread");}else if(!level.isClientSide||!clientThread.getAsBoolean())throw new IllegalStateException("Ramp support requires client thread");}
+    private static NativeEntityMemo<Support> support(Entity entity){return entity.level().isClientSide?CLIENT_SUPPORT:SERVER_SUPPORT;}
+    public static void supported(Entity entity){requireThread(entity.level());var memo=support(entity);var recent=memo.get(entity);if(recent==null){recent=new Support();recent.update(entity);memo.put(entity,recent);}else recent.update(entity);}
+    public static AABB recentCollision(AABB box,Entity entity){
+        if(!available(entity))return box;requireThread(entity.level());var recent=support(entity).get(entity);if(recent==null||recent.level.get()!=entity.level()||!PlatformSupportPolicy.recent(true,entity.level().getGameTime()-recent.tick,entity.getX(),entity.getZ(),recent.x,recent.z)||!PlatformSupportPolicy.provenFloor(box.minX,box.maxX,box.minZ,box.maxZ,box.maxY,recent.x,recent.z,recent.height))return box;
+        double feet=entity.getBoundingBox().minY;if(!(box.maxY>feet&&box.maxY-feet<=.5))return box;double top=PlatformSupportPolicy.supportTop(box.minY,box.maxY,feet);return Double.isNaN(top)?null:new AABB(box.minX,box.minY,box.minZ,box.maxX,top,box.maxZ);
+    }
+    @FunctionalInterface public interface Sync {void send(net.minecraft.server.level.ServerPlayer player,NativeRampMotionPayload payload);}
+    public record Transport(int entity,Vec3 displacement,double supportDisplacement,NativeRampMotionPayload correction){}
+    public static Transport move(Entity entity,double dx,double dy,double dz,Sync sync){return move(entity,dx,dy,dz,dy,sync);}
+    public static Transport move(Entity entity,double dx,double dy,double dz,double supportDy,Sync sync){
+        if(!(entity.level() instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp transport requires server thread");
+        if(!Double.isFinite(dx)||!Double.isFinite(dy)||!Double.isFinite(dz)||!Double.isFinite(supportDy))throw new IllegalArgumentException("Ramp transport delta");
+        NativeRampMotionPayload packet=null;if(entity instanceof net.minecraft.server.level.ServerPlayer player){Objects.requireNonNull(sync);var sequence=SENT.get(player);if(sequence==null){sequence=new Sequence();SENT.put(player,sequence);}double feet=player.getBoundingBox().minY;packet=new NativeRampMotionPayload(server.dimension().location(),++sequence.value,player.getX(),player.getZ(),feet+dy-supportDy,feet+dy,dx,dz);}
+        entity.setPos(entity.getX()+dx,entity.getY()+dy,entity.getZ()+dz);entity.setOnGround(true);entity.fallDistance=0;var velocity=entity.getDeltaMovement();entity.setDeltaMovement(velocity.x,0,velocity.z);supported(entity);
+        if(packet!=null)sync.send((net.minecraft.server.level.ServerPlayer)entity,packet);return new Transport(entity.getId(),new Vec3(dx,dy,dz),supportDy,packet);
+    }
+    public static Transport moveBelt(Entity entity,double dx,double dy,double dz,Sync sync){var result=move(entity,dx,dy,dz,sync);if(entity instanceof ItemEntity item){item.noPhysics=false;item.setDeltaMovement(Vec3.ZERO);item.hasImpulse=true;((ServerLevel)item.level()).getChunkSource().broadcastAndSend(item,new net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket(item));}return result;}
+    @net.neoforged.bus.api.SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel() instanceof Level level){SERVER_SUPPORT.clearWorld(level);CLIENT_SUPPORT.clearWorld(level);SENT.clearWorld(level);NativeRampMotionPayload.unload(level);}}
     private static final ThreadLocal<Carrying> CARRYING=new ThreadLocal<>();
     public static boolean available(Entity entity){return entity!=null&&PlatformSupportPolicy.available(entity.isRemoved(),entity.noPhysics,entity.isPassenger(),entity instanceof Player player&&player.getAbilities().flying);}
     public static boolean eligible(Entity entity){return entity!=null&&PlatformSupportPolicy.eligible(available(entity),entity.getDeltaMovement().y);}
