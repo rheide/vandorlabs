@@ -27,7 +27,7 @@ final class Utility26FocusedChecks {
             splitLive=true;return false;
         }
         if("true".equals(System.getenv("VANDOR_PROGRAMMER_ONLY"))){
-            mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.programmer.ProgrammerRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),new BlockPos(500,104,120));return null;}).get();
+            mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.programmer.ProgrammerRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),new BlockPos(500,104,120));com.vandorlabs.programmer.ProgrammerMiningSourceChecks.run(mc.getIntegratedServer().getWorld(0),new BlockPos(800,110,120),output);return null;}).get();
             com.vandorlabs.programmer.client.ProgrammerClientChecks.run(mc,output);
             System.out.println("[vandorlabs][reprolab] utility26-focused PASS programmer-only");return true;
         }
