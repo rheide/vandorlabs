@@ -12,6 +12,7 @@ Proper-tool mining produces one configured Screen item containing the embedded c
 
 | Runner | Player path and assertions |
 | --- | --- |
+| `test_screen_fluid_protection.py` | Real canonical water/lava replacement predicates, bucket calls, actual flowing ticks, every logical block state, no dropped duplicate owner and complete restart with private chip ownership. |
 | `test_screen_canonical_items.py` | Canonical item placement and mounting against 1,890 released Source cases; configured pick, proper-tool mining, failed-load recovery, one embedded owner, item replacement and full process restart for all seven roles. Uses production harvest tags. |
 | `test_screen_editor_player.py --canonical --xvfb` | Actual Configurizer and Creative sneak openings for seven roles, actual CHIP widget selection on four integrated roles, current-window commands and stale-window rejection. |
 | `test_screen_pick_client.py --canonical --xvfb` | Actual middle-click input: 28 Creative and 21 Survival cases, private imported chip/capability preservation, inventory multiset checks and current actor/window/reach authorization. |
@@ -27,3 +28,5 @@ The focused software-rendered canonical acceptance ran ordinary-media and CHIP s
 | CHIP + ROWS | 0 allocated bytes total | 2,408,448 | 214,952 |
 
 Both batches stayed within the 1,024-byte fixed batch allowance; these totals do not imply per-draw allocation. Reload changed no pixels above the 12/255 RGB threshold. Exact ordinary-media comparison changed 6,219 pixels by at most 1/255; exact CHIP comparison changed 76,673 pixels by at most 7/255. The separate whole-render Source CHIP corpus retains 432 profiles for body, base-pose tray, inset deck and UV behavior. These checks do not establish hardware FPS, shader-pack behavior or a full release gate.
+
+The released Screen fluid boundary is frozen independently across 224 actual metadata/fluid cases: all seven roles reject bucket replacement and flowing-water/lava eligibility. An initial canonical native matrix reproduced bucket replacement for all seven roles and flowing replacement for the five partial roles; full Screen/Console collision happened to block that flow path. Native Screen construction now preserves the Source metal solid-material flag independently of dynamic collision and occlusion. The same canonical fixture passes 155 write and 29 restart assertions, with unchanged private chip ownership and no duplicate dropped item. The actual Survival tray/page client and its process restart also pass after the change.

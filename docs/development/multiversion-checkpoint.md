@@ -255,3 +255,6 @@ The Copifier dialog catalog is now shared: five pages, all 74 append-only choice
 
 
 Copifier semantic-field filtering now also uses a shared kernel. Both actual platform tag adapters preserve the original 2,045-case digest, including incomplete masks, absent/mistyped parent fields and unknown nested extensions. The same Forge dialog/apply/undo client focus passes on the built artifact after extraction. Standard Java 8 assemble and dedicated linkage pass (1,321 shared classes, 129,398 references). This adds no native gameplay registration and does not replace the deferred release gate.
+
+
+Canonical Screens now preserve Source metal fluid blocking independently of their dynamic shapes. The actual released getter/bucket reference covers 224 cases; the new native negative reproduced bucket replacement in all seven roles and real water/lava flow replacement in five partial roles. Restoring the logical solid flag leaves authored collision and occlusion policies intact. The same canonical fluid/ownership fixture now passes all water/lava paths, every native state and restart (155 write/29 read assertions), with no dropped duplicate owner. Actual Survival chip insertion/removal, joined navigation and saved-world replay also pass after the fix. No Forge production code or production-server state changed.

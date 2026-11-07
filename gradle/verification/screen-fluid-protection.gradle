@@ -1,0 +1,8 @@
+task testScreenFluidProtectionReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenFluidPropertiesLegacyChecks'
+    maxHeapSize = '1g'
+    systemProperty 'vandorlabs.screenFluidReference', file("$buildDir/test-artifacts/screen-fluid-protection-source.json").absolutePath
+}

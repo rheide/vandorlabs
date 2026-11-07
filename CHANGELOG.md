@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Prevent native Programmable Screens from being replaced by buckets or flowing water/lava, preserving their configured settings and embedded chips.
+
 - Share Copifier option-mask migration across platform adapters while preserving existing saved choices, option indices, reverse cycling and apply/undo behavior in Forge.
 
 - Enable standalone propulsion and redstone-light families in the experimental native build: original block identities, seven catalog items and recipes, connected authored shapes, dedicated controls, particles and configured Survival placement/harvest. Vehicle effects remain deferred.
