@@ -6,7 +6,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import java.util.*;
 
-/** Actual per-owner BER preparation cost; reflection observes the production atlas bake only. */
+/** Actual per-owner BER preparation cost; uses the production atlas bake; reflection reads retained-byte counters only. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class DenseWallClientChecks {
  private static int stage,ticks,settle;
@@ -18,8 +18,7 @@ public final class DenseWallClientChecks {
   for(int role=0;role<2;role++)for(int i=0;i<512;i++)if(!(mc.level.getBlockEntity(DenseWallFixture.pos(role,i)) instanceof NativeWallEntity))return;
   for(int i=0;i<512;i++)if(!(mc.level.getBlockEntity(DenseWallFixture.pos(2,i)) instanceof com.vandorlabs.neoforge.glass.NativeGlassEntity))return;
   if(++settle<80)return;
-  var field=NativePanelPlaybackRenderer.class.getDeclaredField("active");field.setAccessible(true);var active=field.get(null);if(active==null)return;
-  var accessor=active.getClass().getDeclaredMethod("bake");accessor.setAccessible(true);var bake=(NativeFlatWallModel.Bake)accessor.invoke(active);
+  var bake=NativePanelPlaybackRenderer.currentBake();if(bake==null)return;
   for(int role=0;role<2;role++)measure(mc,bake,role);measureFlat(mc);
   mc.disconnect();stage=90;
  }
