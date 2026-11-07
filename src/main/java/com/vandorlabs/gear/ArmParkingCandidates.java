@@ -14,8 +14,10 @@ public final class ArmParkingCandidates {
     public static final class Candidate {
         public final double phase;public final int x,y,z;
         public final boolean tileValidationDeferred,storedSectionValidationDeferred;
-        private final int[] basis;
-        Candidate(double phase,ArmGridMapping mapping,boolean deferred,boolean sections){this.phase=phase;tileValidationDeferred=deferred;storedSectionValidationDeferred=sections;BlockPos zero=mapping.cell(BlockPos.ORIGIN);x=zero.getX();y=zero.getY();z=zero.getZ();basis=mapping.basis();}
+        private final int[] basis;private final ArmGridMapping mapping;
+        Candidate(double phase,ArmGridMapping mapping,boolean deferred,boolean sections){this.mapping=mapping;this.phase=phase;tileValidationDeferred=deferred;storedSectionValidationDeferred=sections;BlockPos zero=mapping.cell(BlockPos.ORIGIN);x=zero.getX();y=zero.getY();z=zero.getZ();basis=mapping.basis();}
+        /** The immutable exact mapping already verified by enumeration. */
+        public ArmGridMapping mapping(){return mapping;}
         public int basis(int row,int column){if(row<0||row>2||column<0||column>2)throw new IndexOutOfBoundsException();return basis[row*3+column];}
         private boolean same(Candidate other){return x==other.x&&y==other.y&&z==other.z&&Arrays.equals(basis,other.basis);}
     }
