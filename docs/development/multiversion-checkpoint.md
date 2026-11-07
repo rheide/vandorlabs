@@ -369,3 +369,8 @@ The shared native journal renderer now accepts immutable prepared contents and a
 
 
 The private Copifier now supports canonical Triggers through the same installed-target authorization, connected selection and undo service. Source validation completes before dormant metadata installation; typed Trigger/housing values and the immutable visual are staged before publication. Bounded capture preserves retained playback data and avoids serializing unrelated ownership/platform payloads. The actual 1,064-case Source matrix passes through the installed common target (8,521 write/three restart checks), with unsupported-module, worker/stale and opaque-data safeguards. A 1,000-read batch allocates 2,296,000 bytes through bounded choices versus 68,552,080 bytes through full-save reads. The actual Survival client captures configured band/front/sides artwork, applies it to two connected Triggers and restores both with the real Undo button. Public Copifier activation remains deferred.
+
+
+### Placed propulsion copied targets
+
+Placed propulsion fixtures now enter the private tool through the common installed-target authorization, capture, connected selection and undo services. The full 8,694-case Source matrix and 72 joined cases pass through common capture/application (62,181 write assertions and three after process restart). The actual Survival client captures a configured engine, enables Connected through the shared editor, applies side artwork, manual state, particle level and join settings to two targets, and restores both with the real Undo button. This client check keeps shape unchanged; as in Source, undo refuses an operation whose block type changed. Vehicle work and public tool activation remain deferred.
