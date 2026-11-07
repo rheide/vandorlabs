@@ -1,0 +1,7 @@
+tasks.register('testNativeChannelInputRange',JavaExec) {
+ group='verification'
+ dependsOn tasks.named('smokeClasses')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.redstone.NativeChannelInputRangeChecks'
+ maxHeapSize='1g'
+}

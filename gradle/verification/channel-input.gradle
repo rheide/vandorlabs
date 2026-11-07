@@ -1,0 +1,7 @@
+task testChannelInputRange(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.ChannelInputRangeChecks'
+ maxHeapSize='1G'
+}

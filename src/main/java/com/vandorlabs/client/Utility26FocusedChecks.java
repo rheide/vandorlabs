@@ -14,6 +14,11 @@ final class Utility26FocusedChecks {
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if(ticks!=80)return false;
+        if("true".equals(System.getenv("VANDOR_CHANNEL_INPUT_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);CopyChannelChecks.run();com.vandorlabs.copier.CopyPlanRuntimeChecks.run(world,actor);com.vandorlabs.copier.CopyRuntimeChecks.channelRangeFocus(world,actor);com.vandorlabs.vehicle.VehicleCouplingTransferChecks.channelRangeFocus(world,actor);return null;}).get();
+            ChannelInputClientChecks.run(mc,output);
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS channel-input-only");return true;
+        }
         if(Boolean.getBoolean("vandorlabs.couplingChecksOnly")){
             if(!Boolean.getBoolean("vandorlabs.splitClientOnly"))mc.getIntegratedServer().callFromMainThread(()->{
                 net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);

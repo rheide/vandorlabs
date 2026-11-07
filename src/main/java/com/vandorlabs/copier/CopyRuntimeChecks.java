@@ -52,6 +52,17 @@ public final class CopyRuntimeChecks {
         }finally{CopyTransactions.fault=null;world.disableLevelSaving=saving;actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(x,y,z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}
         System.out.println("[vandorlabs][reprolab] copy-controller PASS assertions="+assertions+" exact Survival contents rollback durable journals restart proxies hopper checkpoint/publish faults");
     }
+    /** Actual queued copies through the widened channel address space, with source ownership unchanged. */
+    public static void channelRangeFocus(WorldServer world,EntityPlayerMP actor)throws Exception{
+        assertions=0;BlockPos base=new BlockPos(2260,110,2140);boolean creative=actor.capabilities.isCreativeMode;net.minecraft.util.math.Vec3d at=actor.getPositionVector();
+        try{actor.capabilities.isCreativeMode=true;for(int channel:new int[]{65535,67002,Integer.MAX_VALUE-1}){
+            Fixture f=new Fixture(world,actor,base,EnumFacing.NORTH,1);f.tile.settings(1,1,0,ChannelList.of(Integer.MAX_VALUE));world.setBlockState(f.source(),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector source=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(f.source());source.setRedstoneChannels(ChannelList.of(channel));NBTTagCompound before=source.writeToNBT(new NBTTagCompound());f.copy();
+            require(!f.tile.busy()&&CopyTransactions.pendingCount(world)==0,"high-ID copy retires actual async journal");require(world.getTileEntity(f.source())==source&&source.writeToNBT(new NBTTagCompound()).equals(before),"high-ID copy leaves original owner exact");
+            require(world.getTileEntity(f.target()) instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector,"high-ID target factory");com.vandorlabs.tiles.TileEntityAnimatedScreenSelector target=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)world.getTileEntity(f.target());require(target.getRedstoneChannels().equals(ChannelList.of(channel+1)),"actual published high-ID copy channel "+channel);NBTTagCompound saved=target.writeToNBT(new NBTTagCompound());com.vandorlabs.tiles.TileEntityAnimatedScreenSelector restored=new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();restored.readFromNBT(saved);require(restored.getRedstoneChannels().equals(target.getRedstoneChannels()),"high-ID copied tile save/read exact");
+        }}finally{CopyTransactions.fault=null;actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(at.x,at.y,at.z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}
+        System.out.println("[vandorlabs][reprolab] copy-channel-range-live PASS assertions="+assertions+" 65535/67002/MAXminus1 actualQueuedJournal/publish/sourceExact/saveRead");
+    }
     public static void transmitterOwnershipFocus(WorldServer world,EntityPlayerMP actor)throws Exception{BlockPos base=new BlockPos(2260,110,2100);boolean creative=actor.capabilities.isCreativeMode;net.minecraft.util.math.Vec3d position=actor.getPositionVector();try{transmitterOwnership(world,actor,base);}finally{actor.capabilities.isCreativeMode=creative;actor.setPositionAndUpdate(position.x,position.y,position.z);if(CopyTransactions.pendingCount(world)==0)clear(world,base);}}
     private static void transmitterOwnership(WorldServer world,EntityPlayerMP actor,BlockPos base)throws Exception{
         actor.capabilities.isCreativeMode=false;
