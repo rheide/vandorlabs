@@ -26,6 +26,7 @@ public final class NativeCanopyRenderer {
     private static final com.google.common.cache.Cache<Object,Publication> PENDING=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(2).build();
     private static volatile Publication active;
     public static void prepare(Object bakery,NativeFlatWallModel.Bake materials,Function<Material,TextureAtlasSprite> textures){PENDING.put(bakery,new Publication(GENERATION.incrementAndGet(),new Bake(materials,textures)));}
+    public static net.minecraft.client.resources.model.BakedModel terrain(Object bakery,net.minecraft.client.resources.model.BakedModel empty){var publication=PENDING.getIfPresent(bakery);if(publication==null)throw new IllegalStateException("Canopy terrain bake not prepared");return new NativeCanopyTerrainModel(empty,publication.bake());}
     public static Bake currentBake(){Publication found=active;return found==null?null:found.bake;}
     @SubscribeEvent public static synchronized void completed(ModelEvent.BakingCompleted event){Publication found=PENDING.getIfPresent(event.getModelBakery());PENDING.invalidate(event.getModelBakery());if(found!=null&&(active==null||found.generation>active.generation)){if(active!=null)active.bake.clear();active=found;}}
     @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)

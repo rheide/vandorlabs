@@ -88,3 +88,16 @@ The actual native world reconstructs all 197,376 released normalized contact obs
 Canonical definitions are staged independently of public activation: eleven retained block/item IDs, the shared `canopy` entity and dedicated menu, both existing payload routes, exact Source labels and all eleven original recipes. Empty block models/state variants are generated for later terrain/backend binding. Conditional recipe loading prevents absent inactive items from producing parse errors. The block properties retain actual Source hardness/resistance 1.5, glass sound, zero light blocking and no required harvest tool; no pickaxe tag is added. Inventory/render codecs share a side-effect-free kind list instead of referencing registration definitions.
 
 A private construction-phase fixture exercises the real deferred definitions without adding a default bootstrap call. All eleven specialized Survival item placements and configured owners, recipe results, shared entity identity and Source properties pass (100 write assertions); complete process restart retains the owners (89 read assertions). A separate default-run check confirms all eleven blocks/items/recipes and the owner/menu IDs remain inactive (23 assertions). These definition checks do not replace canonical client rendering, automatic motion or repair acceptance.
+### Placed body and terrain boundary
+
+The private placed-world check now exercises all eleven exact native host kinds,
+the regular-glass pending-bakery terrain wrapper, and a resource reload. Its
+camera excludes the complete owner section while retaining the overhang inside
+the renderer bounds. The existing dispatcher still submitted the body in this
+case, so this evidence does not justify changing offscreen dispatch. Disabling
+the actual BER changed 532,588 pixels; disabling the regular-glass chunk model
+changed 40,708 pixels. Regular glass submitted no duplicate BER vertices.
+The software-rendered check establishes these paths, not hardware frame rates.
+It installs a gallery directly and does not establish item placement, automatic
+motion, canonical registration, or membership repair. The runner waits for the
+actual tagged JVMs to exit before whole-suite artifact retention finalizes.
