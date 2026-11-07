@@ -5,3 +5,6 @@ tasks.register('testRampSettingsReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/ramp-settings-source.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+neoForge.runs.configureEach {
+ if(project.hasProperty('rampSettingsReference'))systemProperty 'vandorlabs.rampSettingsReference',file(project.property('rampSettingsReference')).absolutePath
+}
