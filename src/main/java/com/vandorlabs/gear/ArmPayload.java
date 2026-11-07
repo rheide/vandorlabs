@@ -478,8 +478,12 @@ public final class ArmPayload {
         return result;
     }
     private Vec3d rawTransform(GearTileEntity arm,double progress,double x,double y,double z){
+        return rawTransform(arm,arm.pose(progress),x,y,z);
+    }
+    /** Read-only geometry query; does not install a view or inspect tile data. */
+    Vec3d rawTransform(GearTileEntity arm,com.vandorlabs.gear.core.GearMotion.Pose pose,double x,double y,double z){
         Vec3d local=ArmOrientation.vector(inverseFace(arm.mountDirection()),x+offset.getX()-.5,y+offset.getY()-.5,z+offset.getZ()-.5).addVector(.5,.5,.5);
-        com.vandorlabs.gear.core.GearMotion.Vec moved=arm.pose(progress).transformFootVertex(local.x,local.y,local.z);
+        com.vandorlabs.gear.core.GearMotion.Vec moved=pose.transformFootVertex(local.x,local.y,local.z);
         return ArmOrientation.point(arm.mountDirection(),moved.x,moved.y,moved.z);
     }
     private static EnumFacing inverseFace(EnumFacing face){switch(face){case EAST:return EnumFacing.WEST;case WEST:return EnumFacing.EAST;case NORTH:return EnumFacing.SOUTH;case SOUTH:return EnumFacing.NORTH;default:return face;}}

@@ -1,0 +1,6 @@
+// Read-only Safe Park prerequisite; no gameplay binding or release gate.
+task testArmParkingPhases(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath = files("$buildDir/portable-tests")
+ main = 'com.vandorlabs.gear.core.ArmParkingPhasesTest'
+}
