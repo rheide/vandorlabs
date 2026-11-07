@@ -6,6 +6,7 @@ tasks.register('testRampSettingsReference',JavaExec) {
  maxHeapSize='1g'
 }
 neoForge.runs.configureEach {
+ if(project.hasProperty('rampGenerationReference'))systemProperty 'vandorlabs.rampGenerationReference',file(project.property('rampGenerationReference')).absolutePath
  if(project.hasProperty('rampSettingsReference'))systemProperty 'vandorlabs.rampSettingsReference',file(project.property('rampSettingsReference')).absolutePath
 }
 tasks.register('testRampAdmissionReference',JavaExec) {

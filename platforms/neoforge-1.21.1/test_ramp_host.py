@@ -9,7 +9,7 @@ def main():
  base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
  output=Path(artifact_directory(prefix='ramp-host-native-',dir=base));saved=output/'saved-world';world(saved,0)
  for phase in ['write','read']:
-  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-host-'+phase,'-PrampSettingsReference='+str(ROOT/'testclient/fixtures/ramp-settings-source.jsonl.gz')),output/(phase+'.log'),'[vandorlabs][ramp-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-host-'+phase,'-PrampSettingsReference='+str(ROOT/'testclient/fixtures/ramp-settings-source.jsonl.gz'),'-PrampGenerationReference='+str(ROOT/'testclient/fixtures/ramp-generation-source.jsonl.gz')),output/(phase+'.log'),'[vandorlabs][ramp-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
   check_log(saved/'logs/latest.log','All dimensions are saved')
  evidence=[]
  for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge/ramp').glob('NativeRamp*.class')):
