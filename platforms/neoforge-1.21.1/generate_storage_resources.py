@@ -39,5 +39,11 @@ def main():
         descriptors.append(dict(id='vandorlabs:blocks/'+name,width=w,height=h,canvas=canvas,u=w/canvas,v=h/canvas,rgba=hashlib.sha256(content.tobytes()).hexdigest()))
     result=dict(schema=1,textures=descriptors,sets=[dict(choice=choice,front='vandorlabs:blocks/'+e['source'],side='vandorlabs:blocks/'+e['side'],top='vandorlabs:blocks/'+e['top']) for choice,e in sets])
     target=ASSETS/'data/storage_artwork.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(result,indent=2)+'\n')
+    model={'parent':'minecraft:block/orientable','textures':{'front':'vandorlabs:blocks/storage/cabinet_front','side':'vandorlabs:blocks/storage/cabinet_side','top':'vandorlabs:blocks/storage/cabinet_top','particle':'vandorlabs:blocks/storage/cabinet_front'}}
+    for kind in ['block','item']:
+        target=ASSETS/('models/'+kind+'/programmable_storage.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(model,indent=2)+'\n')
+    target=ASSETS/'blockstates/programmable_storage.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps({'variants':{'facing='+facing:{'model':'vandorlabs:block/programmable_storage'} for facing in ['north','south','west','east']}},indent=2)+'\n')
+    recipe=json.loads((ROOT/'src/main/resources/assets/vandorlabs/recipes/programmable_storage.json').read_text());recipe['result']['id']=recipe['result'].pop('item');recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:programmable_storage'}]
+    target=OUT/'data/vandorlabs/recipe/programmable_storage.json';target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe,indent=2)+'\n')
     print('Native Storage artwork:',len(sets),'sets,',len(descriptors),'Source-named sprites; inactive until a Storage host exists')
 if __name__=='__main__':main()
