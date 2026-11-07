@@ -5,7 +5,9 @@ tasks.register('generateCanopyResources', Exec) {
     commandLine canopyPython, 'generate_canopy_resources.py'
     inputs.file('generate_canopy_resources.py')
     inputs.file('../../src/main/resources/assets/vandorlabs/data/canopy_meshes.json')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/recipes') { include '*canopy*.json'; include '*visor*.json'; include '*angled_front*.json' })
     inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/canopy') { include '*.png' })
     outputs.dir('build/generated/canopy-resources')
 }
 tasks.named('processResources') { dependsOn tasks.named('generateCanopyResources') }
+tasks.named('generateMatterResources') { inputs.file('generate_canopy_resources.py') }
