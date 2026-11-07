@@ -253,7 +253,7 @@
       "id": "glass_canopies",
       "label": "Glass, canopy and cockpit glass",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "angled_front_1x1",
         "angled_front_1x2",
@@ -284,7 +284,12 @@
         "Private installed Glass host passes 24,192 cross-family contact profiles, saved restart, failed snapshot retention, legacy absent-size migration and cold nonloading boundaries.",
         "Registered common ray hook preserves the union outline while tracing actual component boxes: a real ServerLevel.clip union-corner negative is fixed, with 43 inside/tie/neighbor/fluid-context/worker checks.",
         "Actual Source/native fluid probes preserve Glass material solidity: 152 profiles match, and flowing host replacements fall from 144 to zero.",
-        "Existing wall geometry and shared collision-cache checks remain green; 100,000 actual worker reads of prepared geometry allocate zero measured bytes. Ordinary Glass remains unregistered."
+        "Existing wall geometry and shared collision-cache checks remain green; 100,000 actual worker reads of prepared geometry allocate zero measured bytes. Canonical ordinary Glass is now enabled with its original block/item/entity/menu identities.",
+        "Canonical ordinary Glass recipes, Survival placement/harvest, two-sided fluids, dedicated editor, chunk/pane rendering, all304 padded item variants and actual pick/reload/restart paths pass focused checks."
+      ],
+      "acceptance_limits": [
+        "Standalone canopy and cockpit glass remain pending; Vehicle integration is deferred.",
+        "Focused development-classpath software checks do not establish complete native release or hardware shader acceptance."
       ]
     },
     {

@@ -50,3 +50,6 @@ Standalone propulsion and redstone-light blocks are enabled in the experimental 
 The experimental native build now registers all seven standalone Programmable Screen roles, including their dedicated editor, configured items, joined displays and non-Vehicle Chip content. Vehicle Mode remains deferred.
 
 The experimental native build also enables standalone Card and Data Chip readers, including their dedicated configuration, credential inventory and authored mounted artwork. The Card / Chip Programmer remains in progress.
+
+
+Ordinary Programmable Glass is enabled in the experimental native build with its original recipe, configured variants, dedicated Glass/Frame/Redstone editing and two-sided contained fluids. Its connected geometry, actual picking, world and item artwork, resource reload and saved restart have focused checks. The diagonal-glass recipe uses this original ingredient. Canopy and cockpit glass remain separate conversion work.

@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable ordinary Programmable Glass in the experimental native build with original recipes, configured variants, dedicated editing, two-sided fluids and source-matched world/item artwork. Canopy and cockpit glass remain in conversion.
+
 - Enable standalone Card and Data Chip readers in the experimental native build with source-matched mounts, dedicated editing, inventory/hopper behavior and credential recovery.
 
 - Prevent native Programmable Screens, metal switches, numeric controls, Lights and propulsion blocks from being replaced by buckets or flowing water/lava. Preserve their settings and owned items while retaining the intentional fluid behavior of power levers.
