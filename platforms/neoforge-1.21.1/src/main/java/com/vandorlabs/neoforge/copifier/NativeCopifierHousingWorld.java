@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.copifier;
 
 import com.vandorlabs.neoforge.NativeConfigurationAccess;
+import com.vandorlabs.neoforge.ramp.NativeRampHeldOwners;
 import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import net.minecraft.core.*;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -142,8 +143,9 @@ public final class NativeCopifierHousingWorld {
     }
     private static Target target(ServerLevel level,BlockPos pos,ServerPlayer actor,Direction face){return target(level,pos,actor,face,true);}
     static Target target(ServerLevel level,BlockPos pos,ServerPlayer actor,Direction face,boolean requireReach){
-        if(!level.getServer().isSameThread()||actor==null||face==null||!(requireReach?NativeConfigurationAccess.canEditDialog(actor,level,pos,face):actor.isAlive()&&!actor.isSpectator()&&actor.level()==level&&level.hasChunkAt(pos)&&level.mayInteract(actor,pos)&&actor.mayUseItemAt(pos,face,actor.getMainHandItem())))return null;
+        if(!level.getServer().isSameThread()||actor==null||face==null||NativeRampHeldOwners.blocked(level,pos)||!(requireReach?NativeConfigurationAccess.canEditDialog(actor,level,pos,face):actor.isAlive()&&!actor.isSpectator()&&actor.level()==level&&level.hasChunkAt(pos)&&level.mayInteract(actor,pos)&&actor.mayUseItemAt(pos,face,actor.getMainHandItem())))return null;
         var target=installed(level,pos);if(target==null)return null;var owner=target.tile().getBlockPos();
+        if(NativeRampHeldOwners.blocked(level,owner))return null;
         if(!owner.equals(pos)&&(!level.hasChunkAt(owner)||!level.mayInteract(actor,owner)||!actor.mayUseItemAt(owner,face,actor.getMainHandItem())))return null;
         return target;
     }
@@ -157,7 +159,7 @@ public final class NativeCopifierHousingWorld {
         return apply(level,pos,target,values,actor);
     }
     static boolean apply(ServerLevel level,BlockPos pos,Target target,CompoundTag values,ServerPlayer actor){
-        if(values==null||values.isEmpty())return false;
+        if(values==null||values.isEmpty()||target==null||NativeRampHeldOwners.blocked(level,pos)||NativeRampHeldOwners.blocked(level,target.tile().getBlockPos()))return false;
         return target.apply(level,target.tile().getBlockPos(),values,actor);
     }
     private static boolean applyHousing(ServerLevel level,BlockPos pos,Housing target,CompoundTag values,ServerPlayer actor){
