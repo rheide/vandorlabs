@@ -18,7 +18,7 @@ public final class NativeCanopyPlacement {
     public static Prepared prepare(NativeCanopyBlock block,BlockPos pos,BlockState state,CompoundTag generic,CompoundTag outer,int mount,HolderLookup.Provider registries){
         pos=pos.immutable();if(outer!=null&&outer.contains(NativeCanopyEntity.RECOVERY))throw new IllegalArgumentException("Retained canopy item owner");
         if(mount<0||mount>3)throw new IllegalArgumentException("Canopy placement mount");
-        var candidate=(NativeCanopyEntity)block.newBlockEntity(pos,state);var merged=candidate.saveWithoutMetadata(registries);if(generic!=null)merged.merge(generic.copy());merged.putInt("x",pos.getX());merged.putInt("y",pos.getY());merged.putInt("z",pos.getZ());
+        var candidate=(NativeCanopyEntity)block.newBlockEntity(pos,state);candidate.loadWithComponents(new CompoundTag(),registries);var merged=candidate.saveWithoutMetadata(registries);if(generic!=null)merged.merge(generic.copy());merged.putInt("x",pos.getX());merged.putInt("y",pos.getY());merged.putInt("z",pos.getZ());
         candidate.loadWithComponents(merged,registries);if(candidate.inert())throw new IllegalArgumentException("Unsupported canopy item owner");
         var configured=outer==null?new CompoundTag():outer.copy();configured.putInt("CanopyMount",mount);var settings=NativeCanopySettings.read(configured);
         // Keep the established preflight in addition to all cells the merged callback will install.
