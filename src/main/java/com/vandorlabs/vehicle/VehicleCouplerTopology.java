@@ -49,6 +49,7 @@ public final class VehicleCouplerTopology {
     public static VehicleCouplerTopology of(VehicleStructure structure){
         if(structure.couplerTopology!=null)return structure.couplerTopology;
         VehicleWorld view=structure.componentView();if(view==null)return null;
+        if(VehicleArmCouplers.hasPayloadHeads(view)){VehicleWorld current=view.structure==structure?view:new VehicleWorld(view.parent,structure);return structure.couplerTopology=withArmPairs(structure,current,VehicleArmCouplerPairs.discover(VehicleArmCouplers.observe(structure,current)));}
         return structure.couplerTopology=new VehicleCouplerTopology(structure,view.structure==structure?view:new VehicleWorld(view.parent,structure));
     }
     public boolean sufficientLift(VehicleStructure structure){
