@@ -110,7 +110,7 @@ public class BlockGlassWall extends Block {
         // The baked glass model rotates 90 degrees about Y for the X plane.
         float normalHit = rotated ? 1F - hitX : hitZ;
         return getDefaultState().withProperty(ROTATED, rotated)
-                .withProperty(DEPTH, PanelDepth.fromHit(normalHit));
+                .withProperty(DEPTH, clicked.getBlock().isReplaceable(world,pos.offset(side.getOpposite())) ? PanelDepth.fromHit(normalHit) : com.vandorlabs.render.PanelDepthPolicy.fromPlacement((rotated?EnumFacing.EAST:EnumFacing.NORTH).getIndex(),side.getIndex(),hitX,hitZ));
     }
 
     protected boolean canConnectTo(net.minecraft.block.Block other) { return other==this; }

@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Place flat Programmable Walls, Glass and Porthole Walls against the clicked support when using a horizontal normal face, rather than on the far edge of the next cell. Preserve top/bottom and tangent-plane continuation.
+
 - Align redstone channel validation with the existing positive 32-bit range. Copy Controllers accept wide channel increments and check translated IDs before copying; Coupler and Segmented Door fields retain complete 64-channel banks, and saved cockpit/coupling channels no longer truncate valid high IDs.
 
 - Enable the Duplifier in the experimental native build with its original recipe, dedicated Apply Settings window, connected application, settings-only Undo and three-state item artwork. Copied-settings crafting supports converted building, Door, Trapdoor, Light and Screen families; Ramp integration is still in progress.
