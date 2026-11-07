@@ -103,3 +103,11 @@ task testCanopyStoredFootprintPreflight(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.CanopyStoredFootprintPreflightChecks'
 }
+task exportCanopyApplyReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyApplyLegacyOracle'
+    args file('build/test-artifacts/canopy-apply-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
