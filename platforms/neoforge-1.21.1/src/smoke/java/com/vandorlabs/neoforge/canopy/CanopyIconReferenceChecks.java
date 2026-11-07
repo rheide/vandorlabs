@@ -31,6 +31,6 @@ public final class CanopyIconReferenceChecks {
             String hash=packed.finish();if(!hash.equals(row.get("sha256").getAsString())||packed.count!=row.get("quads").getAsInt())throw new AssertionError("Source Icon emission "+kind+" profile="+row.get("profile")+" aspect="+row.get("aspect")+" quads="+packed.count+" expected="+row.get("quads")+" sha="+hash+" expectedSha="+row.get("sha256"));
             if(!sourceName(faces.getFirst().material).equals(row.get("particle").getAsString()))throw new AssertionError("Source particle "+kind);float[] fit=packed.bounds.fit();var gui=row.getAsJsonObject("transforms").getAsJsonArray("GUI");for(int i=0;i<9;i++)if(Float.floatToRawIntBits(fit[i])!=gui.get(i).getAsInt())throw new AssertionError("Source GUI fit "+kind+" profile="+row.get("profile")+" field="+i+" actual="+fit[i]+" expected="+Float.intBitsToFloat(gui.get(i).getAsInt()));count++;quads+=packed.count;
         }
-        if(count!=176)throw new AssertionError("Source Icon coverage="+count);System.out.println("Canopy Icon reference PASS Source="+count+" quads="+quads+" raw geometry/triangles/alpha/packed normals/UVs/particle/GUI fit; actual item binding and hands pending");
+        if(count!=176)throw new AssertionError("Source Icon coverage="+count);System.out.println("Canopy Icon reference PASS Source="+count+" quads="+quads+" raw geometry/triangles/alpha/packed normals/UVs/particle/GUI fit; actual binding and hands covered separately by the rendered item focus");
     }
 }

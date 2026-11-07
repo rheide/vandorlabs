@@ -1,0 +1,7 @@
+tasks.register('testCanopyContactReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.canopy.CanopyContactReferenceChecks'
+ args rootProject.file('../../testclient/fixtures/canopy-contact-source.jsonl.gz').absolutePath
+ maxHeapSize='768m'
+}
