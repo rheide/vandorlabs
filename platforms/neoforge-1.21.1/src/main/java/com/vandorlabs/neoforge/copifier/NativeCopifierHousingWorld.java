@@ -31,6 +31,13 @@ public final class NativeCopifierHousingWorld {
             NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
         }
     }
+    private record Door(com.vandorlabs.neoforge.door.NativeProgrammableDoorEntity tile) implements Target {
+        public CompoundTag capture(){return NativeCopifierDoorEdit.capture(tile.copiedState());}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            try{if(!NativeCopifierDoorEdit.prepare(tile.copiedState(),false,values).applicable())return false;}catch(IllegalArgumentException malformed){return false;}
+            NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
+        }
+    }
     private record Storage(com.vandorlabs.neoforge.storage.NativeStorageEntity tile) implements Target {
         private static final NativeCopifierHousingCapture.Family FAMILY=NativeCopifierHousingCapture.Family.CUBE;
         private CompoundTag saved(){return tile.copiedConfiguration();}
@@ -65,6 +72,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile.getBlockState().getBlock() instanceof com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock){var root=com.vandorlabs.neoforge.door.DoorConfiguration.root(level,pos);return root!=null&&root.isChannelMemberActive()?new Door(root):null;}
         if(tile instanceof com.vandorlabs.neoforge.light.NativeLightEntity light&&java.util.Set.of("programmable_light","programmable_light_frame","programmable_light_slab").contains(id.getPath()))return light.available()&&com.vandorlabs.neoforge.light.NativeLightService.installed(light)?new Light(light):null;
         if(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity storage&&id.getPath().equals("programmable_storage"))return storage.available()?new Storage(storage):null;
         if(tile instanceof com.vandorlabs.neoforge.NativeBinaryControlBlockEntity control&&control.isChannelMemberActive()||tile instanceof com.vandorlabs.neoforge.NativeWirelessRedstoneBlockEntity wireless&&wireless.isChannelMemberActive())return new Control(tile);
@@ -75,7 +83,9 @@ public final class NativeCopifierHousingWorld {
     private static Target target(ServerLevel level,BlockPos pos,ServerPlayer actor,Direction face){return target(level,pos,actor,face,true);}
     static Target target(ServerLevel level,BlockPos pos,ServerPlayer actor,Direction face,boolean requireReach){
         if(!level.getServer().isSameThread()||actor==null||face==null||!(requireReach?NativeConfigurationAccess.canEditDialog(actor,level,pos,face):actor.isAlive()&&!actor.isSpectator()&&actor.level()==level&&level.hasChunkAt(pos)&&level.mayInteract(actor,pos)&&actor.mayUseItemAt(pos,face,actor.getMainHandItem())))return null;
-        return installed(level,pos);
+        var target=installed(level,pos);if(target==null)return null;var owner=target.tile().getBlockPos();
+        if(!owner.equals(pos)&&(!level.hasChunkAt(owner)||!level.mayInteract(actor,owner)||!actor.mayUseItemAt(owner,face,actor.getMainHandItem())))return null;
+        return target;
     }
     public static CompoundTag capture(ServerLevel level,BlockPos pos,ServerPlayer actor,Direction face){
         var target=target(level,pos,actor,face);if(target==null)return null;
@@ -88,7 +98,7 @@ public final class NativeCopifierHousingWorld {
     }
     static boolean apply(ServerLevel level,BlockPos pos,Target target,CompoundTag values,ServerPlayer actor){
         if(values==null||values.isEmpty())return false;
-        return target.apply(level,pos,values,actor);
+        return target.apply(level,target.tile().getBlockPos(),values,actor);
     }
     private static boolean applyHousing(ServerLevel level,BlockPos pos,Housing target,CompoundTag values,ServerPlayer actor){
         var tile=target.tile;final NativeCopifierHousingEdit.Plan plan;

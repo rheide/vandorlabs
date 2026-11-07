@@ -66,6 +66,22 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     public final Visual doorVisual(){return visual;}
     public final boolean large(){return large;}
     public final NativeDoorSettings settings(){return settings;}
+    /** Owning-thread bounded clipboard view; legacy model migration uses the installed ordinary role. */
+    public final com.vandorlabs.neoforge.copifier.NativeCopifierDoorEdit.State copiedState(){
+        if(!(level instanceof net.minecraft.server.level.ServerLevel server)||!server.getServer().isSameThread()||!isChannelMemberActive()||controlRoot()!=this)throw new IllegalArgumentException("Unavailable copied Door owner");
+        migrateSavedModel();return new com.vandorlabs.neoforge.copifier.NativeCopifierDoorEdit.State(settings,channels);
+    }
+    /** Selected logical leaf only. Reader contents, opaque platform data, fluids and timelines stay installed. */
+    public final boolean configureCopied(CompoundTag values){
+        if(!(level instanceof net.minecraft.server.level.ServerLevel server)||!server.getServer().isSameThread()||!isChannelMemberActive()||controlRoot()!=this)return false;
+        final com.vandorlabs.neoforge.copifier.NativeCopifierDoorEdit.Plan plan;try{plan=com.vandorlabs.neoforge.copifier.NativeCopifierDoorEdit.prepare(copiedState(),large,values);}catch(IllegalArgumentException malformed){return false;}if(!plan.applicable())return false;
+        com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.batch(server,()->{
+            var next=plan.state();membershipDirty|=!channels.equals(next.channels());settings=next.settings();channels=next.channels();legacyMotionPending=false;
+            if(plan.resetSecurity())securityToggled=false;
+            if(values.contains("door_security",net.minecraft.nbt.Tag.TAG_COMPOUND)){credentials.configureLocal(settings.securityMode(),settings.securityAllowed());refreshReaderProjection();}
+            visualDirty=true;localDirty=true;publish();
+        });return true;
+    }
     final NativeDoorSettings placementSettings(){migrateSavedModel();return settings;}
     public final ChannelList getRedstoneChannels(){return channels;}
     public final boolean channelSignal(){return channelSignal;}

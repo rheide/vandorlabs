@@ -1,0 +1,11 @@
+tasks.register('testNativeCopifierDoor', JavaExec) {
+ group='verification'
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierDoorEditChecks'
+ args file('../../testclient/fixtures/copifier-door-source.json.gz').absolutePath
+ maxHeapSize='512m'
+}
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierDoorReference'))systemProperty 'vandorlabs.copifierDoorReference',file(project.property('copifierDoorReference')).absolutePath
+}
