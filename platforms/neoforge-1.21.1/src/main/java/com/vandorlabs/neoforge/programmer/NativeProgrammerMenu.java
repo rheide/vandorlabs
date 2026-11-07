@@ -16,7 +16,7 @@ public final class NativeProgrammerMenu extends AbstractContainerMenu {
     public NativeProgrammerMenu(MenuType<?> type,int id,Inventory inventory,NativeProgrammerEntity tile) {
         super(type,id);this.tile=java.util.Objects.requireNonNull(tile);
         if(!(tile.getBlockState().getBlock() instanceof NativeProgrammerBlock owner))throw new IllegalArgumentException("Missing Programmer root");
-        block=owner;contents=inventory.player.level().isClientSide?new SimpleContainer(3):tile;
+        block=owner;contents=inventory.player==null||inventory.player.level().isClientSide?new SimpleContainer(3):tile;
         for(int i=0;i<3;i++){final int slot=i;addSlot(new Slot(contents,i,18+i*90,38){
             @Override public boolean mayPlace(ItemStack stack){return NativeProgrammerRules.validSlot(slot,stack)&&(!(tile.getLevel() instanceof ServerLevel)||tile.canPlaceItem(slot,stack));}
             @Override public int getMaxStackSize(){return 1;}
@@ -31,11 +31,11 @@ public final class NativeProgrammerMenu extends AbstractContainerMenu {
     }
     private void addPlayerSlot(Inventory inventory,int index,int x,int y){addSlot(new Slot(inventory,index,x,y){@Override public boolean isActive(){return !journalPage;}});}
     /** Local visibility only; fixed slot indices and server inventory ownership never change. */
-    public void journalPage(boolean journal){if(tile.getLevel()!=null&&tile.getLevel().isClientSide)journalPage=journal;}
+    public void journalPage(boolean journal){if(contents!=tile)journalPage=journal;}
     public Container contents(){return contents;}
     @Override public boolean stillValid(Player player){
         if(tile.getBlockState().getBlock()!=block)return false;
-        if(tile.getLevel() instanceof ServerLevel)return tile.usable(player);
+        if(tile.getLevel() instanceof ServerLevel)return contents==tile&&tile.usable(player);
         return !tile.inert()&&com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player,tile);
     }
     @Override public ItemStack quickMoveStack(Player player,int index){
