@@ -15,6 +15,7 @@ final class Utility26FocusedChecks {
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if("true".equals(System.getenv("VANDOR_WALL_PLACEMENT_ONLY")))return WallAgainstPlacementChecks.tick(mc);
         if("true".equals(System.getenv("VANDOR_TAXI_HOVER_GESTURE_ONLY"))){if(ticks<80)return false;return TaxiHoverGestureChecks.tick(mc);}
+        if("true".equals(System.getenv("VANDOR_DENSE_GLASS_CACHE_ONLY")))return DenseGlassCacheChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_SEGMENTED_DENSITY_ONLY")))return SegmentedDoorDensityChecks.run(mc,output);
         if("true".equals(System.getenv("VANDOR_SEGMENTED_GATES_ONLY")))return SegmentedGateLiveChecks.tick(mc,output);
         if(ticks!=80)return false;
