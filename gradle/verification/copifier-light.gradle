@@ -1,0 +1,8 @@
+task exportCopifierLightSourceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CopifierLightLegacyOracle'
+    args file("$buildDir/test-artifacts/copifier-light-source.jsonl").absolutePath
+    maxHeapSize = '1G'
+}
