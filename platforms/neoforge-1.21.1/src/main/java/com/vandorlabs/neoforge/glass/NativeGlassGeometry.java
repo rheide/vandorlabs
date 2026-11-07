@@ -12,6 +12,7 @@ public final class NativeGlassGeometry {
  public record Snapshot(FlatGlassGeometry.Snapshot scalar,List<AABB> boxes,AABB bounds,NativeFluidVolume fluids){
   public Snapshot {boxes=List.copyOf(boxes);}
   public int side(double x,double y,double z){return scalar.side(x,y,z);}
+  public net.minecraft.world.phys.shapes.VoxelShape collision(){return com.vandorlabs.neoforge.shape.NativeFlatWallGeometry.collision(boxes);}
  }
  public static Snapshot build(Direction facing,double near,PanelCornerGeometry.FlatCorner contact){
   var scalar=FlatGlassGeometry.build(facing.get3DDataValue(),near,contact);
