@@ -53,3 +53,10 @@ task exportProgrammerRaysReference(type: JavaExec) {
     main = 'com.vandorlabs.client.ProgrammerRaysLegacyChecks'
     systemProperty 'vandorlabs.programmerRaysReference', file(project.findProperty('programmerRaysReference') ?: 'build/test-artifacts/programmer-rays-forge.jsonl').absolutePath
 }
+
+task testProgrammerPickingCost(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammerPickingCostChecks'
+}
