@@ -22,6 +22,11 @@ public final class SegmentedGateModels {
     public static List<SegmentedGateShape.Connector> connectors(int kind,int mask,int peerMask,boolean above){
         kind(kind);int part=part(mask),peer=part(peerMask);return (mask&(above?8:4))==0?Collections.emptyList():CONNECTORS[kind][part][peer][above?1:0];
     }
+    /** Cold canonical artwork consumers receive an owned document, including generated-parent elements. */
+    public static JsonObject document(int kind,int mask){
+        kind(kind);String path="/assets/vandorlabs/models/"+SegmentedGateJoin.model(kind,mask).substring("vandorlabs:".length())+".json";
+        try{JsonObject root=raw(path);if(!root.has("elements"))root.add("elements",elements(path,0).get("elements"));return root;}catch(IOException failure){throw new IllegalStateException("Cannot read canonical gate artwork "+path,failure);}
+    }
     private static float[] vector(JsonObject object,String name){JsonArray values=object.getAsJsonArray(name);if(values==null||values.size()!=3)throw new IllegalArgumentException("Gate vector "+name);return new float[]{values.get(0).getAsFloat(),values.get(1).getAsFloat(),values.get(2).getAsFloat()};}
     private static SegmentedGateShape.Model read(int kind,int part){
         String[] styles={"picket","industrial","lattice"},parts={"single","left","middle","right"};String path="/assets/vandorlabs/models/block/segmented_gates/"+styles[kind]+"_"+parts[part]+".json";
@@ -37,15 +42,17 @@ public final class SegmentedGateModels {
             return new SegmentedGateShape.Model(kind,prepared);
         }catch(IOException|RuntimeException failure){throw new IllegalStateException("Cannot prepare canonical gate geometry "+path,failure);}
     }
-    private static JsonObject elements(String path,int depth)throws IOException{
-        if(depth>=16)throw new IOException("Gate parent depth");
+    private static JsonObject raw(String path)throws IOException{
         try(InputStream stream=SegmentedGateModels.class.getResourceAsStream(path)){
             if(stream==null)throw new IOException("Missing canonical gate model "+path);ByteArrayOutputStream bytes=new ByteArrayOutputStream();byte[] chunk=new byte[4096];int count;
             while((count=stream.read(chunk))!=-1){if(bytes.size()+count>MAX_MODEL_BYTES)throw new IOException("Oversized canonical gate model "+path);bytes.write(chunk,0,count);}
-            JsonObject root=new JsonParser().parse(new String(bytes.toByteArray(),StandardCharsets.UTF_8)).getAsJsonObject();if(root.has("elements"))return root;
-            if(!root.has("parent"))throw new IOException("Missing gate elements");String parent=root.get("parent").getAsString();if(!parent.matches("vandorlabs:[a-z0-9_/]+"))throw new IOException("Invalid canonical gate parent");
-            return elements("/assets/vandorlabs/models/"+parent.substring("vandorlabs:".length())+".json",depth+1);
+            return new JsonParser().parse(new String(bytes.toByteArray(),StandardCharsets.UTF_8)).getAsJsonObject();
         }
+    }
+    private static JsonObject elements(String path,int depth)throws IOException{
+        if(depth>=16)throw new IOException("Gate parent depth");JsonObject root=raw(path);if(root.has("elements"))return root;
+        if(!root.has("parent"))throw new IOException("Missing gate elements");String parent=root.get("parent").getAsString();if(!parent.matches("vandorlabs:[a-z0-9_/]+"))throw new IOException("Invalid canonical gate parent");
+        return elements("/assets/vandorlabs/models/"+parent.substring("vandorlabs:".length())+".json",depth+1);
     }
     private SegmentedGateModels(){}
 }
