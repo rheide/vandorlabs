@@ -5,3 +5,11 @@ tasks.register('testNativeGlassPolicy', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.glass.GlassPolicyChecks'
     args file('../../build/test-artifacts/programmable-glass-forge.jsonl').absolutePath
 }
+tasks.register('testNativeGlassAssets', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.glass.GlassAssetChecks'
+    args file('../../build/test-artifacts/flat-glass-selection-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/flat-glass-artwork-forge.jsonl').absolutePath
+}
