@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Select artwork for individual Segmented Door cells in both versions. The dedicated dialog distinguishes This segment from All segments, supports resetting to shared artwork, and retains local choices through configured picking, copied settings, recipes and reload.
+
 - Enable all eleven standalone Canopy and cockpit-glass components in the experimental native build with original recipes, configured placement, dedicated editing, joined shells, pause-aware motion, source-matched terrain/transparent artwork and safe loaded membership repair. Add staged native construction images. Vehicle/carried integration remains deferred.
 - Keep Segmented Door Tile artwork continuous across solid and Window segments in both versions. Make segment bodies two pixels thick while retaining four-pixel top borders, matching selection, collision, fluids and settled terrain rendering.
 
