@@ -19,3 +19,14 @@ tasks.register('testNativeCanopyPose', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.canopy.CanopyPoseChecks'
     args file('../../build/test-artifacts/canopy-pose-forge.jsonl').absolutePath
 }
+tasks.register('testNativeCanopyDrawing', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.canopy.CanopyDrawingChecks'
+    args file('../../build/test-artifacts/canopy-mesh-inputs-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/canopy-mesh-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/fixed-canopy-inputs-forge.jsonl').absolutePath,
+         file('../../build/test-artifacts/fixed-canopy-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}

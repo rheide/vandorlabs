@@ -39,13 +39,14 @@ public final class CanopyMeshLegacyOracle {
         TECanopy renderer=new TECanopy();TextureAtlasSprite sprite=new TextureAtlasSprite("canopy-source-reference"){};
         sprite.setIconWidth(64);sprite.setIconHeight(64);sprite.initSprite(256,256,64,128,false);
         File file=new File(args[0]);file.getAbsoluteFile().getParentFile().mkdirs();Gson gson=new Gson();int profiles=0;long emitted=0;
-        try(PrintWriter out=new PrintWriter(file,"UTF-8")) {
+        try(PrintWriter out=new PrintWriter(file,"UTF-8");PrintWriter inputs=args.length>1?new PrintWriter(args[1],"UTF-8"):null) {
             for(BlockCanopy block:blocks)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int profile=0;profile<6;profile++)for(double progress:new double[]{0,.0625,.5,.9375,1}) {
                 final double aspect=profile==4?2:profile==5?.5:1;
                 com.vandorlabs.VandorLabs.proxy=new com.vandorlabs.CommonProxy(){@Override public double materialAspect(int ignored){return aspect;}};
                 CanopyPlacementLegacyOracle.World world=new CanopyPlacementLegacyOracle.World();world.setBlockState(ROOT,block.getDefaultState().withProperty(BlockCanopy.FACING,facing),2);
                 TileEntityCanopy tile=(TileEntityCanopy)world.getTileEntity(ROOT);tile.anchor=ROOT;tile.centeredPlacement=CanopyVariants.centered(block.kind);tile.hollowPlacement=tile.resizable();NBTTagCompound input=input(profile);tile.large.read(input);
                 List<CanopyMesh.Face> base=tile.baseFaces();
+                if(facing==EnumFacing.SOUTH&&progress==0)CanopyMeshInputsLegacy.write(inputs,block.kind+":"+profile,tile,sprite);
                 List<CanopyMesh.Face> posed=new CanopyRenderGeometry(base).posed(block.kind,tile.width(),tile.large,tile.opening()?progress:0,tile.centeredPlacement);
                 List<Object> opaque=new ArrayList<>(),glass=new ArrayList<>();JsonArray materials=new JsonArray();
                 for(CanopyMesh.Face face:posed){sprites.put(face.material,sprite);Object d=constructor.newInstance();source.set(d,face);vertices.set(d,new Vec3d[face.vertices.length]);opacity.setFloat(d,CanopyFinishes.opacity(face,tile.large.material,tile.large.tint));(CanopyFinishes.translucent(face,tile.large.material,tile.large.tint)?glass:opaque).add(d);JsonObject material=new JsonObject();material.addProperty("material",face.material);material.addProperty("base",face.baseMaterial);material.addProperty("group",face.group);material.addProperty("glazing",face.glazing);material.addProperty("tiled",face.tiled);material.addProperty("double",face.doubleSided);material.addProperty("points",face.vertices.length);materials.add(material);}
@@ -63,6 +64,7 @@ public final class CanopyMeshLegacyOracle {
             }
         }
         SegmentedReferenceGolden.check(file,"e6049daaafd96c9e9765fe03a61f4f8a60f5d84b9049439473007111b818fcb1");
+        if(args.length>1)SegmentedReferenceGolden.check(new File(args[1]),"fc5b7dfdcfd9964515bb6149829259e3cab87fcaed2c6fc174f2bff976065e05");
         System.out.println("Actual standalone canopy final mesh PASS profiles="+profiles+" vertices="+emitted+" file="+file);
     }
 }

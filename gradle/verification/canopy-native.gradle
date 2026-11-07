@@ -18,7 +18,8 @@ task exportCanopyMeshReference(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.CanopyMeshLegacyOracle'
-    args file('build/test-artifacts/canopy-mesh-forge.jsonl').absolutePath
+    args file('build/test-artifacts/canopy-mesh-forge.jsonl').absolutePath,
+         file('build/test-artifacts/canopy-mesh-inputs-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
 task exportCanopyPoseReference(type: JavaExec) {
@@ -34,6 +35,7 @@ task exportFixedCanopyReference(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.FixedCanopyLegacyOracle'
-    args file('build/test-artifacts/fixed-canopy-forge.jsonl').absolutePath
+    args file('build/test-artifacts/fixed-canopy-forge.jsonl').absolutePath,
+         file('build/test-artifacts/fixed-canopy-inputs-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
