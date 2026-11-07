@@ -168,6 +168,10 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             &&joinEnabled==other.joinEnabled&&joinRange==other.joinRange&&carryLoad==other.carryLoad&&loadHeight==other.loadHeight
             &&legacyAnyChannels==other.legacyAnyChannels&&channels.equals(other.channels);}
     public double minimumExtension(){return assembly==null||assembly.columnHeight()==1?-.5:1-assembly.columnHeight();}
+    /** Preserve the native first-retraction curve before forecasting or committing a carried step. */
+    public boolean latchRetractionStroke(){
+        if(assembly!=null&&progress==1&&!deployedTarget&&assembly.kind()==GearTopology.FootKind.NONE&&!armRetractingStroke){armRetractingStroke=true;sync();return true;}return false;
+    }
     public double activeExtension(){if(assembly!=null&&!isSwingArmController()&&!isFixedMount()){if(isExtendedTrackStroke()&&!trackRetractingStroke)return assembly.columnHeight();if(assembly.kind()==GearTopology.FootKind.NONE)return progress==1||armRetractingStroke?minimumExtension():assembly.columnHeight();if(isExtendedTrackStroke())return minimumExtension();}return activeExtension;}
 
     private GearMotion.Mode mode = GearMotion.Mode.EXTEND;
@@ -447,7 +451,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             input();
             if(parkingHold){motionBlocked=false;return;}
             // Older in-flight snapshots finish their original stroke before adopting retraction.
-            if(progress==1&&!deployedTarget&&assembly.kind()==GearTopology.FootKind.NONE&&!armRetractingStroke){armRetractingStroke=true;sync();}
+            latchRetractionStroke();
             double before = progress;
             double next=GearMotion.advance(progress,deployedTarget,1,ANIMATION_TICKS);
             boolean hadPayload=payload!=null,wasMaterialized=hadPayload&&payload.materialized();
