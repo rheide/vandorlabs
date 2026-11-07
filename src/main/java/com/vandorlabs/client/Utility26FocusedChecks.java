@@ -15,6 +15,7 @@ final class Utility26FocusedChecks {
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if("true".equals(System.getenv("VANDOR_WALL_PLACEMENT_ONLY")))return WallAgainstPlacementChecks.tick(mc);
         if(ticks!=80)return false;
+        if("true".equals(System.getenv("VANDOR_SEGMENTED_TILE_ONLY"))){SegmentedTileModeChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS segmented-tile-only");return true;}
         if("true".equals(System.getenv("VANDOR_CHANNEL_INPUT_ONLY"))){
             mc.getIntegratedServer().callFromMainThread(()->{net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);CopyChannelChecks.run();com.vandorlabs.copier.CopyPlanRuntimeChecks.run(world,actor);com.vandorlabs.copier.CopyRuntimeChecks.channelRangeFocus(world,actor);com.vandorlabs.vehicle.VehicleCouplingTransferChecks.channelRangeFocus(world,actor);return null;}).get();
             ChannelInputClientChecks.run(mc,output);
