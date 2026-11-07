@@ -5,3 +5,9 @@ task testArmGridMapping(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmGridMappingChecks'
  maxHeapSize = '512m'
 }
+
+task testCouplerLineConstraint(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath = files("$buildDir/portable-tests")
+ main = 'com.vandorlabs.physics.CouplerLineConstraintTest'
+}
