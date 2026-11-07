@@ -1,5 +1,7 @@
 # Vandor Labs 2.9 development
 
+The native ordinary Glass renderer now shares prepared geometry between equivalent blocks, reducing repeated mesh construction and retained data in dense builds. Lighting and placement remain individual to each block.
+
 Creative Configurizer dialogs now offer **Safe Park** for captured vehicles. It aligns the vehicle and its existing articulated sections, finds a fitting flat area within sixteen horizontal blocks without loading chunks, and restores native blocks through the normal durable transfer. Recovery preserves the original Hover mode and target height. Fractional arm-pose resolution remains in progress; retract or fully extend those payloads before using Safe Park.
 
 Version 2.9 begins incremental multiversion integration while retaining Forge 1.12.2 as the default and behavioral reference. NeoForge 1.21.1 is under development; the version bump does not establish modern feature parity or release readiness.

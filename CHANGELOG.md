@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Share prepared ordinary Glass geometry between equivalent native tile publications, with allocation-free warmed lookup, bounded retained data and exact rebuilds after eviction or reload.
+
 - Add Creative Configurizer Safe Park for existing articulated vehicle layouts, using a nearby loaded flat area and the durable parking transfer. Preserve original Hover mode and target height during recovery. Fractional arm-pose resolution remains in progress.
 
 - Keep centered vertical articulated couplers facing consistently while the parent turns in Forge 1.12.2. Preserve existing saved joint poses and packet fields.
