@@ -349,6 +349,10 @@ public final class VehicleTransfer {
     }
     /** Same durable ownership transfer, with a separately validated immutable destination recipe. */
     static void parkPrepared(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated,VehicleStructure placed,int parkingTurns)throws Exception {
+        parkPrepared(world,entity,origin,player,keepSeated,placed,parkingTurns,Collections.emptyMap());
+    }
+    /** Exact seat locations are needed when independently translated sections are aligned. */
+    static void parkPrepared(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated,VehicleStructure placed,int parkingTurns,Map<BlockPos,BlockPos> seatPositions)throws Exception {
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
         if(parkingTurns<0||parkingTurns>3)throw new IllegalArgumentException("Invalid parking rotation");
         // Include newly extended gear cells in the final check before journaling or writing.
@@ -358,6 +362,9 @@ public final class VehicleTransfer {
         }
         Map<net.minecraft.entity.Entity,BlockPos> passengers=new LinkedHashMap<>();
         for(net.minecraft.entity.Entity rider:entity.getPassengers())passengers.put(rider,entity.seatForPassenger(rider));
+        if(keepSeated&&!seatPositions.isEmpty()){
+            validateParkedSeats(entity.structure,placed,seatPositions,passengers.values());
+        }
         Work work=ACTIVE.get();hold(work,entity);
         NBTTagCompound undo=record(entity.structure,origin,entity,true);undo.setTag("ParkedCraft",placed.write());write(world,undo);
         entity.setTransferInProgress(true);Transaction transaction=new Transaction(world);
@@ -376,9 +383,12 @@ public final class VehicleTransfer {
             for(net.minecraft.entity.Entity rider:passengers.keySet())rider.dismountRidingEntity();
             entity.setDead();
             if(keepSeated)for(Map.Entry<net.minecraft.entity.Entity,BlockPos> rider:passengers.entrySet()){
-                BlockPos local=VehicleRotation.cell(rider.getValue(),(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns);
-                // Parking can rebase the hull when extending landing gear.
-                local=local.add(placed.seat.subtract(VehicleRotation.cell(entity.structure.seat,(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns)));
+                BlockPos local=seatPositions.get(rider.getValue());
+                if(local==null){
+                    local=VehicleRotation.cell(rider.getValue(),(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns);
+                    // Parking can rebase the hull when extending landing gear.
+                    local=local.add(placed.seat.subtract(VehicleRotation.cell(entity.structure.seat,(int)entity.structure.bounds.maxX,(int)entity.structure.bounds.maxZ,parkingTurns)));
+                }
                 BlockPos at=origin.add(local);
                 com.vandorlabs.entity.EntityChairSeat seat=new com.vandorlabs.entity.EntityChairSeat(world,at,VehicleSeats.height(world,at));
                 seat.rotationYaw=world.getBlockState(at).getValue(com.vandorlabs.blocks.BlockPilotSeat.FACING).getHorizontalAngle();
@@ -392,6 +402,12 @@ public final class VehicleTransfer {
                 ((EntityGroundVehicle)restored).assignSeat(rider.getKey(),rider.getValue());rider.getKey().startRiding(restored,true);
             }
             throw failure;}finally{entity.setTransferInProgress(work!=null&&!entity.isDead);transaction.close();}
+    }
+    /** Pure pre-journal check; every original seat must retain one distinct native destination. */
+    static void validateParkedSeats(VehicleStructure source,VehicleStructure placed,Map<BlockPos,BlockPos> seatPositions,Collection<BlockPos> occupied){
+        Set<BlockPos> originalSeats=new HashSet<>(source.passengerSeats()),nativeSeats=new HashSet<>(placed.passengerSeats());
+        if(seatPositions.size()!=originalSeats.size()||!seatPositions.keySet().equals(originalSeats)||!nativeSeats.containsAll(seatPositions.values())||new HashSet<>(seatPositions.values()).size()!=seatPositions.size())throw new IllegalArgumentException("Prepared parking seat ownership changed");
+        for(BlockPos seat:occupied)if(!seatPositions.containsKey(seat))throw new IllegalArgumentException("A passenger seat is missing from prepared parking");
     }
     public static void recover(WorldServer world)throws Exception {
         if(!pending(world))return;

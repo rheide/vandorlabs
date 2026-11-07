@@ -16,7 +16,14 @@ public final class VehicleRotation {
     public static final class Plan {
         public final VehicleStructure structure;
         public final BlockPos origin;
-        Plan(VehicleStructure s,BlockPos p){structure=s;origin=p;}
+        /** Optional exact mapping from original carried seats to final native lower-seat cells. */
+        public final Map<BlockPos,BlockPos> seatPositions;
+        Plan(VehicleStructure s,BlockPos p){this(s,p,Collections.emptyMap());}
+        Plan(VehicleStructure s,BlockPos p,Map<BlockPos,BlockPos> seats){
+            structure=s;origin=p;
+            if(seats.isEmpty())seatPositions=Collections.emptyMap();
+            else{Map<BlockPos,BlockPos> owned=new LinkedHashMap<>();for(Map.Entry<BlockPos,BlockPos> entry:seats.entrySet())owned.put(entry.getKey().toImmutable(),entry.getValue().toImmutable());seatPositions=Collections.unmodifiableMap(owned);}
+        }
     }
     public static int turns(float yaw) {
         int nearest=Math.round(yaw/90F);
