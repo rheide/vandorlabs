@@ -14,4 +14,6 @@ public record PanelPlayback(int mode,int speed) {
     public PanelPlayback{if(!GlassPlaybackData.valid(mode)||!GlassPlaybackData.valid(speed))throw new IllegalArgumentException("Invalid panel playback");}
     public static PanelPlayback read(CompoundTag tag){int mode=GlassPlaybackData.read(tag.contains(GlassPlaybackData.MODE,Tag.TAG_BYTE),tag.getByte(GlassPlaybackData.MODE)),speed=GlassPlaybackData.read(tag.contains(GlassPlaybackData.SPEED,Tag.TAG_BYTE),tag.getByte(GlassPlaybackData.SPEED));return mode==1&&speed==1?DEFAULT:new PanelPlayback(mode,speed);}
     public void write(CompoundTag tag){GlassPlaybackData.write(TAG,tag,mode,speed);}
+    /** Semantic copy/editor payloads retain both default bytes, unlike compact saves. */
+    public void writeSettings(CompoundTag tag){GlassPlaybackData.writeSettings(TAG,tag,mode,speed);}
 }

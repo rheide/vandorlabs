@@ -258,3 +258,6 @@ Copifier semantic-field filtering now also uses a shared kernel. Both actual pla
 
 
 Canonical Screens now preserve Source metal fluid blocking independently of their dynamic shapes. The actual released getter/bucket reference covers 224 cases; the new native negative reproduced bucket replacement in all seven roles and real water/lava flow replacement in five partial roles. Restoring the logical solid flag leaves authored collision and occlusion policies intact. The same canonical fluid/ownership fixture now passes all water/lava paths, every native state and restart (155 write/29 read assertions), with no dropped duplicate owner. Actual Survival chip insertion/removal, joined navigation and saved-world replay also pass after the fix. No Forge production code or production-server state changed.
+
+
+Native housing-family saved-data copy capture now matches the 1,296 actual Forge captures across nine building families and leaves each input unchanged. Existing shared settings/codecs provide the scalar policy; the copy payload now explicitly retains default glass playback bytes through the existing shared writer. Native installed-host capture/apply and the Copifier item/menu remain pending. This is focused Java 21 callback/codec evidence, with no production Forge changes or full release gate.

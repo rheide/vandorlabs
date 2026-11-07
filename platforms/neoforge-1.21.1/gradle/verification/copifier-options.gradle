@@ -14,3 +14,12 @@ tasks.register('testNativeCopifierSelection', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.copifier.NativeCopifierSelectionChecks'
     maxHeapSize = '512m'
 }
+
+tasks.register('testNativeCopifierHousingCapture', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.copifier.NativeCopifierHousingChecks'
+    maxHeapSize = '512m'
+    args file('../../testclient/fixtures/copifier-housing-source.json.gz').absolutePath
+}
