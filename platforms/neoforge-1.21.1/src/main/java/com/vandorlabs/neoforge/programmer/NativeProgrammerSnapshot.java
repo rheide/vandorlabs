@@ -38,5 +38,6 @@ public final class NativeProgrammerSnapshot {
  public ProgrammerStatus status(){return writing>0?ProgrammerStatus.WRITING:complete>0?ProgrammerStatus.COMPLETE:ProgrammerStatus.READY;}
  public CompoundTag original(){return original.copy();}
  /** Caller owns live platform serialization; this replaces only the known programmer fields. */
- public void writeKnownInto(CompoundTag destination,HolderLookup.Provider registries){var entries=new ListTag();for(int slot=0;slot<3;slot++)if(!items[slot].isEmpty()){var entry=NativeInventoryItems.write(items[slot],registries);entry.putByte("Slot",(byte)slot);entries.add(entry);}destination.putInt(VERSION,1);destination.put("Items",entries);draft.write(destination);destination.putInt("Writing",writing);destination.putInt("Complete",complete);destination.remove("JournalDisplayPage");}
+ public void writeKnownInto(CompoundTag destination,HolderLookup.Provider registries){writeKnownInto(destination,registries,items,draft,writing,complete);}
+ static void writeKnownInto(CompoundTag destination,HolderLookup.Provider registries,ItemStack[] items,NativeProgrammerDraft draft,int writing,int complete){var entries=new ListTag();for(int slot=0;slot<3;slot++)if(!items[slot].isEmpty()){var entry=NativeInventoryItems.write(items[slot],registries);entry.putByte("Slot",(byte)slot);entries.add(entry);}destination.putInt(VERSION,1);destination.put("Items",entries);draft.write(destination);destination.putInt("Writing",writing);destination.putInt("Complete",complete);destination.remove("JournalDisplayPage");}
 }
