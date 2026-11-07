@@ -19,7 +19,7 @@ public final class NativeRampRiderPlan {
     /** Null denotes an obstructed rider. Cold queries and unsupported profiles refuse explicitly. */
     public static NativeRampRiderPlan prepare(ServerLevel level,NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal){
         NativeRampRiders.requireThread(level);
-        if(spec.moat()||spec.verticalLayout())throw new IllegalArgumentException("Separate vertical/Moat rider plan required");
+        if(spec.moat())throw new IllegalArgumentException("Separate Moat rider plan required");
         if(!Double.isFinite(previous)||!Double.isFinite(current)||previous<0||previous>1||current<0||current>1)throw new IllegalArgumentException("Ramp rider poses");
         if(spec.extend())return new NativeRampRiderPlan(level,List.of());
         long work=0;for(var origin:spec.origins())work+=(long)(shaped?origin.shapes().size():1)*(spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels()));if(work>131072)throw new IllegalArgumentException("Ramp rider query geometry budget");
@@ -39,10 +39,11 @@ public final class NativeRampRiderPlan {
     private static AABB query(NativeRampFootprint.Spec s,boolean shaped,double previous,boolean fromOriginal){
         AABB bounds=null;var direction=RampGeometry.Direction.valueOf(s.facing().name());
         for(var origin:s.origins()){var p=origin.position();int row=p.getX()*s.facing().getStepX()+p.getZ()*s.facing().getStepZ()-s.minimumAlong();
+            if(s.verticalLayout()){for(var piece:NativeRampRiderTargets.verticalPieces(s,origin,previous,fromOriginal,false,0)){var b=piece.box;var query=new AABB(b.minX,b.maxY-.15,b.minZ,b.maxX,b.maxY+.5,b.maxZ);bounds=bounds==null?query:bounds.minmax(query);}continue;}
             if(shaped){for(var box:NativeRampRiderTargets.treads(s,origin,row,previous,fromOriginal)){var query=box.inflate(0,.2,0);bounds=bounds==null?query:bounds.minmax(query);}continue;}
             if(s.travel()==RampGeometry.VERTICAL){var query=new AABB(p.getX(),p.getY()+s.high()+Math.min(0,Math.min(s.start(),s.end()))-.2,p.getZ(),p.getX()+1,p.getY()+s.high()+Math.max(0,Math.max(s.start(),s.end()))+.2,p.getZ()+1);bounds=bounds==null?query:bounds.minmax(query);}
             else for(int step=0;step<(s.elevator()?1:ControllerPlatform.treadCount(s.treadPixels()));step++){var box=RampGeometry.movingTread(direction,p.getX(),p.getY(),p.getZ(),s.low(),s.high(),row,s.length(),s.start(),s.end(),s.treadPixels(),step,previous,previous,s.elevator(),s.travel(),false,s.fast(),s.interpolation());var query=new AABB(box.minX,box.minY-.2,box.minZ,box.maxX,box.maxY+.2,box.maxZ);bounds=bounds==null?query:bounds.minmax(query);}
         }if(bounds==null)throw new IllegalArgumentException("Empty Ramp rider query");return bounds;
     }
-    private static void loaded(ServerLevel level,AABB bounds){int x0=Mth.floor(bounds.minX)>>4,x1=Mth.floor(bounds.maxX)>>4,z0=Mth.floor(bounds.minZ)>>4,z1=Mth.floor(bounds.maxZ)>>4;if((long)(x1-x0+1)*(z1-z0+1)>64)throw new IllegalArgumentException("Ramp rider query work budget");for(int x=x0;x<=x1;x++)for(int z=z0;z<=z1;z++)if(level.getChunkSource().getChunkNow(x,z)==null)throw new IllegalArgumentException("Ramp rider selection waits for loaded chunks");}
+    private static void loaded(ServerLevel level,AABB bounds){for(double value:new double[]{bounds.minX,bounds.minY,bounds.minZ,bounds.maxX,bounds.maxY,bounds.maxZ})if(!Double.isFinite(value)||Math.abs(value)>30000001)throw new IllegalArgumentException("Ramp rider query bounds");int x0=Mth.floor(bounds.minX)>>4,x1=Mth.floor(bounds.maxX)>>4,z0=Mth.floor(bounds.minZ)>>4,z1=Mth.floor(bounds.maxZ)>>4;if((long)(x1-x0+1)*(z1-z0+1)>64)throw new IllegalArgumentException("Ramp rider query work budget");for(int x=x0;x<=x1;x++)for(int z=z0;z<=z1;z++)if(level.getChunkSource().getChunkNow(x,z)==null)throw new IllegalArgumentException("Ramp rider selection waits for loaded chunks");}
 }

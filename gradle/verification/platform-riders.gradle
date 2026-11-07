@@ -22,3 +22,11 @@ task exportRampRiderSelectionReference(type: JavaExec) {
  maxHeapSize = '1g'
  args file('build/test-artifacts/ramp-rider-selection-source.jsonl').absolutePath
 }
+
+task exportVerticalRampRiderSelectionReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.RampRiderSelectionLegacyOracle'
+ maxHeapSize = '1g'
+ args file('build/test-artifacts/vertical-ramp-rider-selection-source.jsonl').absolutePath,'--vertical'
+}

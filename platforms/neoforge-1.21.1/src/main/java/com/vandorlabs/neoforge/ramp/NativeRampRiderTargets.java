@@ -8,10 +8,11 @@ import net.minecraft.world.phys.*;
 public final class NativeRampRiderTargets {
     public record Candidate(int key,AABB body,boolean player,boolean available,double motionY){}
     public static Map<Candidate,Vec3> select(NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal,List<Candidate> candidates){
-        if(spec.verticalLayout()||spec.moat())throw new IllegalArgumentException("Separate vertical/Moat rider adapter required");
+        if(spec.moat())throw new IllegalArgumentException("Separate Moat rider adapter required");
         if(!Double.isFinite(previous)||!Double.isFinite(current)||previous<0||previous>1||current<0||current>1||candidates.size()>8192)throw new IllegalArgumentException("Ramp rider selection bounds");
         var result=new LinkedHashMap<Candidate,Vec3>();if(spec.extend())return result;
         long work=0;for(var source:spec.origins())work+=(long)(shaped?source.shapes().size():1)*(spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels()))*candidates.size();if(work>16777216)throw new IllegalArgumentException("Ramp rider selection work budget");
+        if(spec.verticalLayout())return vertical(spec,previous,current,fromOriginal,toOriginal,false,0,0,candidates);
         var direction=RampGeometry.Direction.valueOf(spec.facing().name());int count=spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels());
         for(var origin:spec.origins()){
             var source=origin.position();int row=source.getX()*spec.facing().getStepX()+source.getZ()*spec.facing().getStepZ()-spec.minimumAlong();
@@ -39,6 +40,18 @@ public final class NativeRampRiderTargets {
             }
         }
         return result;
+    }
+    static List<VerticalRampGeometry.Piece> verticalPieces(NativeRampFootprint.Spec s,NativeRampGeometry.Origin origin,double pose,boolean nativeEndpoint,boolean belt,double distance){
+        var pieces=new ArrayList<VerticalRampGeometry.Piece>();var face=RampGeometry.Direction.valueOf(s.facing().name());var p=origin.position();for(var b:origin.shapes())pieces.addAll(VerticalRampGeometry.pieces(face,p.getX(),p.getY(),p.getZ(),new RampGeometry.Box(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ),s.sourceY(),s.length(),s.treadPixels(),nativeEndpoint?0:s.start(),nativeEndpoint?0:s.end(),pose,s.elevator(),s.travel(),s.extend(),s.fast(),s.interpolation(),belt&&!nativeEndpoint,distance));return pieces;
+    }
+    static Map<Candidate,Vec3> vertical(NativeRampFootprint.Spec spec,double previous,double current,boolean fromOriginal,boolean toOriginal,boolean belt,double beforeDistance,double afterDistance,List<Candidate> candidates){
+        var result=new LinkedHashMap<Candidate,Vec3>();for(var origin:spec.origins()){
+            var before=verticalPieces(spec,origin,previous,fromOriginal,belt,beforeDistance);var after=verticalPieces(spec,origin,current,toOriginal,belt,afterDistance);
+            for(var old:before){VerticalRampGeometry.Piece next=null;double best=Double.POSITIVE_INFINITY;for(var candidate:after){if(candidate.step!=old.step)continue;double difference=Math.abs(candidate.box.minY-old.box.minY);if(difference<best){best=difference;next=candidate;}}if(next==null||belt&&best>.5)continue;
+                var b=old.box;var n=next.box;var support=new AABB(b.minX,b.maxY-.15,b.minZ,b.maxX,b.maxY+.5,b.maxZ);var delta=new Vec3(next.dx-old.dx,n.maxY-b.maxY,next.dz-old.dz);
+                for(var actor:candidates){var body=actor.body();if(!actor.available()||actor.motionY()>.1||!body.intersects(support)||Math.abs(body.minY-b.maxY)>.15||body.maxX<=b.minX||body.minX>=b.maxX||body.maxZ<=b.minZ||body.minZ>=b.maxZ)continue;result.putIfAbsent(actor,delta);}
+            }
+        }return result;
     }
     static List<AABB> treads(NativeRampFootprint.Spec s,NativeRampGeometry.Origin origin,int row,double pose,boolean nativeEndpoint){
         var result=new ArrayList<AABB>();var face=RampGeometry.Direction.valueOf(s.facing().name());var p=origin.position();
