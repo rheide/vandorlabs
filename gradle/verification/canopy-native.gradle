@@ -1,0 +1,7 @@
+task exportCanopySettingsReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopySettingsLegacyOracle'
+    args file('build/test-artifacts/canopy-settings-forge.jsonl').absolutePath
+}
