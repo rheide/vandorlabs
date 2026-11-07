@@ -17,6 +17,8 @@ public final class CustomMaterialIdentityTest {
         String[] nativeNames={"minecraft:stone","minecraft:stone_slab","minecraft:stone_stairs","minecraft:pumpkin","minecraft:oak_door","minecraft:dispenser","example:machine_panel"};
         int[] nativeExpected={0x33dd5f15,0x28f93e8c,0x2a31cf48,0x2454070c,0x2b0026ff,0x33afe215,0x2706c693};
         for(int i=0;i<nativeNames.length;i++)if(CustomMaterialIdentity.flattenedBlockIdentifier(nativeNames[i])!=nativeExpected[i])throw new AssertionError("Flattened default-state identity golden "+nativeNames[i]);
-        System.out.println("Custom material identity PASS: 15 literal legacy saved-ID + 7 flattened domain goldens, UTF-8 and unnormalized metadata/null-string compatibility");
+        java.util.Map<String,String> properties=new java.util.LinkedHashMap<String,String>();properties.put("axis","x");if(CustomMaterialIdentity.flattenedStateIdentifier("minecraft:oak_log",properties)!=0x3c622350)throw new AssertionError("explicit log axis x");properties.put("axis","z");if(CustomMaterialIdentity.flattenedStateIdentifier("minecraft:oak_log",properties)!=0x2e5441d2)throw new AssertionError("explicit log axis z");
+        properties.clear();properties.put("waterlogged","false");properties.put("shape","straight");properties.put("half","top");properties.put("facing","east");if(CustomMaterialIdentity.flattenedStateIdentifier("minecraft:oak_stairs",properties)!=0x2049d3c9)throw new AssertionError("property order changed native state identity");properties.put("bad,key","value");boolean refused=false;try{CustomMaterialIdentity.flattenedStateIdentifier("minecraft:oak_stairs",properties);}catch(IllegalArgumentException expected){refused=true;}if(!refused)throw new AssertionError("ambiguous canonical property token");
+        System.out.println("Custom material identity PASS: 15 literal legacy saved-ID + 7 default + 3 explicit-state goldens, UTF-8 and unnormalized metadata/null-string compatibility");
     }
 }

@@ -79,6 +79,13 @@ public final class SampledMaterialClientChecks {
         require(world(model,SampledMaterialRuntimeChecks.UNAVAILABLE,Direction.NORTH).getSprite()==world(model,0,Direction.NORTH).getSprite(),"unavailable saved ID did not use fallback");
         CubeReferenceChecks.run(mc);System.out.println("[vandorlabs][sampled-material] model PASS seven legacy/default conflicts, configured items unchanged, door halves, unavailable fallback and independent Forge oracle");
     }
+    private static void explicit(Minecraft mc){
+        var lamp=net.minecraft.world.level.block.Blocks.REDSTONE_LAMP;var wheat=net.minecraft.world.level.block.Blocks.WHEAT;
+        net.minecraft.world.level.block.state.BlockState[] states={lamp.defaultBlockState(),lamp.defaultBlockState().setValue(net.minecraft.world.level.block.state.properties.BlockStateProperties.LIT,true),wheat.defaultBlockState(),wheat.defaultBlockState().setValue(net.minecraft.world.level.block.CropBlock.AGE,7)};
+        String[] expected={"redstone_lamp","redstone_lamp_on","wheat_stage0","wheat_stage7"};var model=mc.getBlockRenderer().getBlockModel(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState());
+        for(int i=0;i<states.length;i++){int choice=NativeMaterialRegistry.snapshot().stateSamples().get(states[i]);var material=NativeBlockMaterials.material(choice);require(material!=null&&material.lower().contents().name().toString().equals("minecraft:block/"+expected[i]),"explicit vanilla state sprite "+states[i]);require(world(model,choice,Direction.NORTH).getSprite()==material.lower(),"actual housing model selects explicit-state artwork");var stack=configured(choice);var before=stack.copy();var item=mc.getItemRenderer().getModel(stack,mc.level,mc.player,0);require(item.getQuads(null,Direction.NORTH,RandomSource.create(0)).getFirst().getSprite()==material.lower()&&ItemStack.matches(before,stack),"configured item explicit artwork/payload");}
+        System.out.println("[vandorlabs][sampled-material] explicit-state PASS lamp off/on, crop ages, actual housing/item, saved choice unchanged");
+    }
     private static void remember(Minecraft mc){
         oldWorld=mc.getBlockRenderer().getBlockModel(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState());oldWorldQuad=world(oldWorld,STONE,Direction.NORTH);oldWorldVertices=oldWorldQuad.getVertices().clone();
         oldItem=mc.getItemRenderer().getModel(configured(STONE),mc.level,mc.player,0);oldItemQuad=oldItem.getQuads(null,Direction.NORTH,RandomSource.create(0)).getFirst();oldItemVertices=oldItemQuad.getVertices().clone();
@@ -99,7 +106,7 @@ public final class SampledMaterialClientChecks {
         if(stage==0){
             if(ticks<100||!(mc.level.getBlockEntity(SampledMaterialRuntimeChecks.POS) instanceof ProgrammableBlockEntity)||mc.player.getInventory().getItem(1).getCount()!=7)return;
             require(mc.gameMode.getPlayerMode()==GameType.SURVIVAL&&mc.player.getInventory().selected==0&&mc.player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get()),"survival mode/slot/tool not synchronized");
-            scene(mc);inventory=new ArrayList<>();for(int i=0;i<36;i++)inventory.add(mc.player.getInventory().getItem(i).copy());conflicts(mc);open(mc);stage=1;wait=ticks;
+            scene(mc);inventory=new ArrayList<>();for(int i=0;i<36;i++)inventory.add(mc.player.getInventory().getItem(i).copy());conflicts(mc);explicit(mc);open(mc);stage=1;wait=ticks;
         }else if(stage==1){
             if(!(mc.screen instanceof NativeCubeScreen screen))return;picker=screen;custom(screen);sample(screen,1,1);require(screen.inventoryPicker()!=null&&screen.editingState().mainTexture==0,"right click selected sample");sample(screen,5,0);require(screen.inventoryPicker()!=null&&screen.editingState().mainTexture==0,"non-block sample accepted");sample(screen,1,0);stage=2;wait=ticks;
         }else if(stage==2&&ticks>wait+15){
@@ -129,7 +136,7 @@ public final class SampledMaterialClientChecks {
             var material=NativeBlockMaterials.material(STONE);var model=mc.getBlockRenderer().getBlockModel(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState());require(material.lower().contents().name().toString().equals(ModernFinishCatalog.entry(0).texture())&&world(model,STONE,Direction.NORTH).getSprite()==material.lower(),"missing source did not rebake sampled fallback");
             Files.delete(override(mc));reload=mc.reloadResourcePacks();stage=10;wait=ticks;
         }else if(stage==10&&reload.isDone()&&mc.getOverlay()==null&&ticks>wait+10){
-            reload.join();oldUnchanged();require(NativeBlockMaterials.material(STONE).lower().contents().name().toString().equals("minecraft:block/stone"),"source restore did not rebake sample");checkInventory(mc);scene(mc);CubeReferenceChecks.run(mc);picker.onClose();capture("sampled-material-world.png");stage=11;wait=ticks;
+            reload.join();oldUnchanged();require(NativeBlockMaterials.material(STONE).lower().contents().name().toString().equals("minecraft:block/stone"),"source restore did not rebake sample");checkInventory(mc);scene(mc);explicit(mc);CubeReferenceChecks.run(mc);picker.onClose();capture("sampled-material-world.png");stage=11;wait=ticks;
         }else if(stage==11&&captured&&ticks>wait+10){
             require(current(mc)==SampledMaterialRuntimeChecks.NEW,"final saved sample");System.out.println("[vandorlabs][sampled-material] client PASS survival Configurizer real inventory clicks, nonconsumption, invalid/right input, configured legacy ID, nested item NBT, reopen, custom face/dormant override, compact wheel/back, both door halves, immutable old models/global availability, missing/restore reload and independent Forge oracle");mc.stop();stage=99;
         }
