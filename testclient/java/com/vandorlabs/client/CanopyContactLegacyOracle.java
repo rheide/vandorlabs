@@ -11,7 +11,7 @@ import net.minecraft.util.math.BlockPos;
 
 /** Actual released world callbacks; scalar observations follow the platform's constituent resolution. */
 public final class CanopyContactLegacyOracle {
-    private static final class World extends CanopyPlacementLegacyOracle.World {
+    static class World extends CanopyPlacementLegacyOracle.World {
         private final Map<Long,net.minecraft.world.chunk.Chunk> chunks=new HashMap<>();
         private net.minecraft.world.chunk.IChunkProvider cached;
         @Override public net.minecraft.world.chunk.IChunkProvider getChunkProvider(){

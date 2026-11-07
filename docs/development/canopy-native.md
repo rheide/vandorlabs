@@ -126,3 +126,5 @@ menu, screen and payload registrations: all six ordinary/Configurizer routes,
 mode and held-stack synchronization, live edit, blocked resize reply and stale
 window refusal pass. These checks still precede public activation and anchored
 membership repair acceptance.
+
+An independent released repair corpus now contains 520 targeted `repairMembership` callbacks after actual specialized placements. It covers missing/wrong/helper ownership, foreign blocks, missing tiles, released cells, 68 cold-chunk cases and 48 joined-pair scenes, recording complete before/after palettes and saved data. Source removes a selected owner/helper in 332 cases. Eighty cases deliberately remove the root's own anchor field: the accepted native legacy-root exception must preserve those layouts instead of copying Source's destructive result. Native failed-load/inert-owner protection remains an additional boundary. This corpus freezes one selected callback, not an entire world tick or disk preservation of unloaded payloads; native automatic repair and restart acceptance are separate checks.
