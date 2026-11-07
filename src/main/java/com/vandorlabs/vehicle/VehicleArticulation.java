@@ -331,18 +331,23 @@ public final class VehicleArticulation {
     /** Re-root joint angles; small residual tilts require a separately checked settling sweep. */
     NBTTagCompound splitPose(EntityGroundVehicle source,BlockPos origin){
         bind();NBTTagCompound out=new NBTTagCompound(),saved=new NBTTagCompound();NBTTagList rows=new NBTTagList();saved.setInteger("Version",1);
-        for(Joint joint:joints){RigidTransform a=source.articulation.body(source.articulation.bodyAt(joint.a.add(origin)),1),b=source.articulation.body(source.articulation.bodyAt(joint.b.add(origin)),1);double[] r=new double[9];for(int i=0;i<3;i++)for(int j=0;j<3;j++)for(int k=0;k<3;k++)r[i*3+j]+=a.r[k*3+i]*b.r[k*3+j];
+        for(Joint joint:joints){RigidTransform a=source.articulation.body(source.articulation.bodyAt((joint.parentHead==null?joint.a:joint.parentHead.carrier).add(origin)),1),b=source.articulation.body(source.articulation.bodyAt((joint.childHead==null?joint.b:joint.childHead.carrier).add(origin)),1);double[] r=new double[9];for(int i=0;i<3;i++)for(int j=0;j<3;j++)for(int k=0;k<3;k++)r[i*3+j]+=a.r[k*3+i]*b.r[k*3+j];
             double p=Math.toDegrees(Math.atan2(r[3]*joint.hx+r[5]*joint.hz,r[4]));RigidTransform tilt=RigidTransform.rotation(-joint.hz,0,joint.hx,p);double r0=0,r6=0;for(int k=0;k<3;k++){r0+=r[k]*tilt.r[k];r6+=r[6+k]*tilt.r[k];}double y=Math.toDegrees(Math.atan2(r6,r0));RigidTransform test=RigidTransform.joint(0,0,0,joint.hx,joint.hz,y,p);double trace=0;for(int i=0;i<9;i++)trace+=test.r[i]*r[i];VehicleCouplingPlan.require(Math.toDegrees(Math.acos(MathHelper.clamp((trace-1)/2,-1,1)))<=3,"Level the detached driver's segment before separating this tilted joint");
             if(Math.abs(y)+Math.abs(p)>1e-8){NBTTagCompound row=new NBTTagCompound();row.setLong("A",joint.a.toLong());row.setLong("B",joint.b.toLong());row.setDouble("Yaw",y);row.setDouble("Pitch",p);rows.appendTag(row);}
         }
         saved.setTag("Joints",rows);if(rows.tagCount()>0)out.setTag("CouplerJointPose",saved);return out;
     }
     /** A small suspension tilt may settle into a new vehicle frame, with the full swept hull checked. */
-    void alignSplit(EntityGroundVehicle target,BlockPos origin,BlockPos head){
+    void alignSplit(EntityGroundVehicle target,BlockPos origin,BlockPos head){alignSplit(target,origin,head,null);}
+    void alignSplit(EntityGroundVehicle target,BlockPos origin,VehicleArmCouplerReleaseContact contact){if(contact==null)throw new IllegalArgumentException("Missing captured release contact");alignSplit(target,origin,null,contact);}
+    private void alignSplit(EntityGroundVehicle target,BlockPos origin,BlockPos head,VehicleArmCouplerReleaseContact contact){
         bind();captureShapes();VehicleCouplingPlan.require(base==null,"Finish vehicle movement before separating");
         Frame savedBase=base;int savedWork=stepWork;boolean savedLimited=stepLimited;RigidTransform[] start=new RigidTransform[matrices.length];RigidTransform oldRoot=root();for(int i=0;i<start.length;i++)start[i]=oldRoot.then(matrices[i]);
         Map<Integer,Integer> moved=new HashMap<>();for(VehicleStructure.Cell cell:target.structure.cells)moved.put(bodyAt(cell.pos.add(origin)),target.articulation.bodyAt(cell.pos));
-        BlockPos other=head.offset(craft.structure.at(head).state.getValue(BlockCoupler.FACING));BlockPos fixed=moved.containsKey(bodyAt(head))?other:head;EnumFacing face=craft.structure.at(fixed).state.getValue(BlockCoupler.FACING);double[] away=start[bodyAt(fixed)].vector(face.getFrontOffsetX(),face.getFrontOffsetY(),face.getFrontOffsetZ());double x=target.posX,y=target.posY,z=target.posZ;
+        BlockPos other=null;double[] away;
+        if(contact==null){other=head.offset(craft.structure.at(head).state.getValue(BlockCoupler.FACING));BlockPos fixed=moved.containsKey(bodyAt(head))?other:head;EnumFacing face=craft.structure.at(fixed).state.getValue(BlockCoupler.FACING);away=start[bodyAt(fixed)].vector(face.getFrontOffsetX(),face.getFrontOffsetY(),face.getFrontOffsetZ());}
+        else{VehicleCouplingPlan.require(bodyAt(contact.firstCarrier)==contact.firstBody&&bodyAt(contact.secondCarrier)==contact.secondBody,"Captured release body mapping changed");boolean first=moved.containsKey(contact.firstBody),second=moved.containsKey(contact.secondBody);VehicleCouplingPlan.require(first!=second,"Released section must contain exactly one contact body");away=first?new double[]{contact.secondNx,contact.secondNy,contact.secondNz}:new double[]{contact.nx,contact.ny,contact.nz};}
+        double x=target.posX,y=target.posY,z=target.posZ;
         base=new Frame(yaw,pitch,matrices);stepWork=0;stepLimited=false;terrain.clear();
         try{
             VehicleCouplingPlan.require(safe(new Frame(yaw,pitch,start),RigidTransform.IDENTITY),"Clear the vehicle's existing terrain collision before separating");
@@ -356,7 +361,7 @@ public final class VehicleArticulation {
                 }
                 if(!bounded||distance>6.4)continue;boolean clear=true;int steps=Math.max(1,(int)Math.ceil(distance/.025));
                 for(int step=1;step<=steps;step++){double t=(double)step/steps;RigidTransform[] trial=start.clone();for(int body:moved.keySet())trial[body]=between(start[body],end[body],t);if(!safe(new Frame(yaw,pitch,trial),RigidTransform.IDENTITY)){clear=false;break;}}
-                if(clear&&splitHeadsClear(end,head,other)){target.hoverTarget=target.posY;return;}
+                if(clear&&(contact==null?splitHeadsClear(end,head,other):splitHeadsClear(end,contact))){target.hoverTarget=target.posY;return;}
             }
             throw new IllegalArgumentException("Clear space around the detached section before separating; its small leveling motion is blocked");
         }finally{base=savedBase;stepWork=savedWork;stepLimited=savedLimited;terrain.clear();}
@@ -364,6 +369,7 @@ public final class VehicleArticulation {
     private RigidTransform[] splitWorldFrames(EntityGroundVehicle target,BlockPos origin,RigidTransform[] start,Map<Integer,Integer> moved){RigidTransform[] result=start.clone();RigidTransform root=target.articulation.root();for(Map.Entry<Integer,Integer> e:moved.entrySet())result[e.getKey()]=root.then(target.articulation.body(e.getValue(),1)).then(RigidTransform.translation(-origin.getX(),-origin.getY(),-origin.getZ()));return result;}
     private double shapeRadius(int body){double radius=0;for(Shape shape:shapes.get(body)){AxisAlignedBB b=shape.box;double x=Math.max(Math.abs(b.minX),Math.abs(b.maxX)),y=Math.max(Math.abs(b.minY),Math.abs(b.maxY)),z=Math.max(Math.abs(b.minZ),Math.abs(b.maxZ));radius=Math.max(radius,Math.sqrt(x*x+y*y+z*z));}return radius;}
     private boolean splitHeadsClear(RigidTransform[] frame,BlockPos a,BlockPos b){int first=bodyAt(a),second=bodyAt(b);for(Shape one:shapes.get(first))if(a.equals(one.coupler))for(Shape two:shapes.get(second))if(b.equals(two.coupler)){if(!spend(8))return false;AxisAlignedBB p=one.box,q=two.box;if(new OrientedBounds(p.minX,p.minY,p.minZ,p.maxX,p.maxY,p.maxZ,frame[first]).intersects(new OrientedBounds(q.minX,q.minY,q.minZ,q.maxX,q.maxY,q.maxZ,frame[second])))return false;}return true;}
+    private boolean splitHeadsClear(RigidTransform[] frame,VehicleArmCouplerReleaseContact contact){boolean first=false,second=false;for(Shape one:shapes.get(contact.firstBody))if(contact.firstAlias.equals(one.coupler)){first=true;for(Shape two:shapes.get(contact.secondBody))if(contact.secondAlias.equals(two.coupler)){second=true;if(!spend(8))return false;AxisAlignedBB p=one.box,q=two.box;if(new OrientedBounds(p.minX,p.minY,p.minZ,p.maxX,p.maxY,p.maxZ,frame[contact.firstBody]).intersects(new OrientedBounds(q.minX,q.minY,q.minZ,q.maxX,q.maxY,q.maxZ,frame[contact.secondBody])))return false;}}return first&&second;}
     private static double rotationDistance(RigidTransform a,RigidTransform b){double trace=0;for(int i=0;i<9;i++)trace+=a.r[i]*b.r[i];return Math.acos(MathHelper.clamp((trace-1)/2,-1,1));}
     private static RigidTransform between(RigidTransform a,RigidTransform b,double t){if(t>=1)return b;double angle=rotationDistance(a,b);RigidTransform rotation=a;if(angle>1e-8){double[] r=new double[9];for(int i=0;i<3;i++)for(int j=0;j<3;j++)for(int k=0;k<3;k++)r[i*3+j]+=a.r[k*3+i]*b.r[k*3+j];rotation=a.then(RigidTransform.rotation(r[7]-r[5],r[2]-r[6],r[3]-r[1],Math.toDegrees(angle)*t));}return new RigidTransform(rotation.r,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,a.z+(b.z-a.z)*t);}
     public void retain(NBTTagCompound tag){retained=tag.hasKey("CouplerJointPose",10)?tag.getCompoundTag("CouplerJointPose").copy():null;}
