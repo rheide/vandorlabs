@@ -15,6 +15,9 @@ public class NativeRampEntity extends BlockEntity implements NativeChannelMember
  public NativeRampEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean slab){super(type,pos,state);this.slab=slab;retained.putString("Status","Retracted");retained.putInt("Duration",60);retained.putInt("Length",1);retained.putInt("Facing",2);publish();}
  public final NativeRampSettings settings(){return settings;}public final Visual visual(){return visual;}public final boolean inert(){return inert;}public final boolean slab(){return slab;}
  public static final String PLACEMENT_RECOVERY="NativeRampPlacementRecovery",ITEM_RECOVERY="RampRecoverySnapshot";
+ private net.minecraft.world.item.ItemStack recoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;
+ final void prepareRecoveryDrop(net.minecraft.world.item.ItemStack stack){if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp recovery drop authority");recoveryDrop=stack.copy();}
+ final net.minecraft.world.item.ItemStack takeRecoveryDrop(){var result=recoveryDrop;recoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;return result;}
  /** Configured items carry choices only, never a journal, reservation or location authorization. */
  public final CompoundTag itemSettings(){if(inert)throw new IllegalStateException("Inert Ramp has no ordinary item choices");return settings.itemChoices(horizontalFacing().get3DDataValue());}
  public final CompoundTag recoverySnapshot(){if(!inert)throw new IllegalStateException("Healthy Ramp has no recovery snapshot");return retained.copy();}
@@ -24,7 +27,8 @@ public class NativeRampEntity extends BlockEntity implements NativeChannelMember
   if(chunk==null||chunk.getBlockEntities().get(worldPosition)!=this)throw new IllegalStateException("Ramp item installation on replaced owner");
  }
  public final void installItemChoices(NativeRampSettings next){requirePlacementMutation();if(inert)throw new IllegalStateException("Inert Ramp item installation");settings=java.util.Objects.requireNonNull(next);received=physical=0;reservationView=null;publish();setChanged();queueInputRefresh();}
- public final void retainPlacementRecovery(CompoundTag prepared){requirePlacementMutation();retained=java.util.Objects.requireNonNull(prepared).copy();retained.putBoolean(PLACEMENT_RECOVERY,true);inert=true;settings=NativeRampSettings.defaults();received=physical=0;reservationView=null;NativeRedstoneChannels.unregister(this);publish();setChanged();}
+ public final void installItemSnapshot(CompoundTag prepared,HolderLookup.Provider registries){requirePlacementMutation();if(inert)throw new IllegalStateException("Inert Ramp item installation");loadWithComponents(prepared.copy(),registries);if(inert)throw new IllegalArgumentException("Prepared Ramp item failed installation");received=physical=0;reservationView=null;publish();setChanged();queueInputRefresh();}
+ public final void retainPlacementRecovery(CompoundTag prepared){requirePlacementMutation();NativeRampAuthorization.revoke(this);retained=java.util.Objects.requireNonNull(prepared).copy();retained.putBoolean(PLACEMENT_RECOVERY,true);inert=true;settings=NativeRampSettings.defaults();received=physical=0;reservationView=null;NativeRedstoneChannels.unregister(this);publish();setChanged();}
  public final net.minecraft.core.Direction horizontalFacing(){return getBlockState().hasProperty(NativeRampBlock.FACING)?getBlockState().getValue(NativeRampBlock.FACING):net.minecraft.core.Direction.NORTH;}
  public final net.minecraft.core.Direction scanFacing(){return getBlockState().getBlock() instanceof NativeRampBlock?NativeRampBlock.scanFacing(getBlockState()):horizontalFacing();}
  public final NativeRampReservations.View reservationView(){return reservationView;}
