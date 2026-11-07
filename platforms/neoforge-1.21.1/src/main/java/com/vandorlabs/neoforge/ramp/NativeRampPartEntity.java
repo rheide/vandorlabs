@@ -19,13 +19,14 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
  }
  private static final int SHAPE_BUDGET=4*1024*1024;
  private volatile Publication publication;
- public NativeRampPartEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);}
+ public NativeRampPartEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);getPersistentData();}
  /** Build a complete detached value; no world access, ownership change or notifications. */
  final Publication preparePublication(NativeRampPartData data,long revision,long tick){if(level!=null)throw new IllegalStateException("Ramp staging requires a detached part");if(getBlockState().hasProperty(NativeRampPartBlock.FACING)&&getBlockState().getValue(NativeRampPartBlock.FACING)!=data.spec().facing())throw new IllegalArgumentException("Ramp staged facing");return build(data,data.motion().observed(),data.belt().observed(),revision,tick);}
  /** Initialize a detached factory result before the caller installs it in the world. */
  final void stagePublication(UUID operation,BlockPos root,Publication prepared){
-  if(level!=null||isRemoved()||ownershipKnown()||publication!=null)throw new IllegalStateException("Ramp part already initialized");Objects.requireNonNull(prepared);if(!prepared.data.spec().cell().equals(worldPosition)||root==null||Math.abs((long)root.getX()-worldPosition.getX())>64||Math.abs((long)root.getY()-worldPosition.getY())>64||Math.abs((long)root.getZ()-worldPosition.getZ())>64)throw new IllegalArgumentException("Ramp staged owner/cell");install(operation,root);publication=prepared;
+  if(level!=null||isRemoved()||ownershipKnown()||publication!=null||!NativeRampPartEnvelope.live(this))throw new IllegalStateException("Ramp part already initialized");Objects.requireNonNull(prepared);if(!prepared.data.spec().cell().equals(worldPosition)||root==null||Math.abs((long)root.getX()-worldPosition.getX())>64||Math.abs((long)root.getY()-worldPosition.getY())>64||Math.abs((long)root.getZ()-worldPosition.getZ())>64)throw new IllegalArgumentException("Ramp staged owner/cell");install(operation,root);publication=prepared;
  }
+ @Override public final boolean ownershipKnown(){return super.ownershipKnown()&&NativeRampPartEnvelope.live(this);}
  public final Publication publication(){return publication;}
  /** Ordering is per operation: a fresh operation deliberately starts a new cosmetic identity. */
  public final boolean acceptsObservation(UUID operation,long revision,long tick){var previous=publication;return revision>=0&&(previous==null||!Objects.equals(operation,operationId())||revision>previous.revision||revision==previous.revision&&tick>=previous.observationTick);}
@@ -65,16 +66,17 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
   var original=tag.copy();try{
    long revision=number(tag,"NativeRampPublicationRevision"),observationTick=number(tag,"NativeRampObservationTick");var previous=publication;
    if(level!=null&&level.isClientSide&&previous!=null&&tag.hasUUID("Operation")&&!acceptsObservation(tag.getUUID("Operation"),revision,observationTick))return;
+   NativeRampPartEnvelope.require(tag);
    if(!tag.contains("NativeRampPartData",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Missing Ramp part body");
    var data=NativeRampPartData.read(tag.getCompound("NativeRampPartData"),worldPosition,registries);
    var next=build(data,data.motion().observed(),data.belt().observed(),revision,observationTick);
-   super.loadAdditional(tag,registries);if(!ownershipKnown())throw new IllegalArgumentException("Unknown Ramp part owner");publication=next;
+   super.loadAdditional(tag,registries);if(!super.ownershipKnown())throw new IllegalArgumentException("Unknown Ramp part owner");publication=next;
   }catch(RuntimeException failure){publication=null;refuseSnapshot(original);}
  }
  private static long number(CompoundTag tag,String key){if(!tag.contains(key))return 0;if(!tag.contains(key,Tag.TAG_LONG))throw new IllegalArgumentException("Ramp observation field type");return tag.getLong(key);}
  private static NativeRampPartData observed(Publication value,long tick){var data=value.data.observed(tick);var belt=data.belt();if(belt.mode()!=0){double distance=belt.distance()+(belt.running()?((double)tick-belt.tick())*belt.velocity(data.spec()):0);data=data.withBelt(new NativeRampPartData.Belt(belt.mode(),belt.speed(),belt.distance(),belt.tick(),belt.running(),distance));}return data;}
  private static void writeProjection(CompoundTag tag,Publication value,long tick){tag.putLong("NativeRampPublicationRevision",value.revision);tag.putLong("NativeRampObservationTick",tick);tag.put("NativeRampPartData",observed(value,tick).write());}
- @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);var value=publication;if(ownershipKnown()&&value!=null)writeProjection(tag,value,value.observationTick);}
+ @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);var value=publication;if(value!=null)writeProjection(tag,value,value.observationTick);}
  @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=super.getUpdateTag(registries);var value=publication;if(ownershipKnown()&&value!=null)writeProjection(tag,value,level==null?value.observationTick:level.getGameTime());return tag;}
  private boolean staleUpdate(CompoundTag tag){if(!tag.hasUUID("Operation"))return false;try{return !acceptsObservation(tag.getUUID("Operation"),number(tag,"NativeRampPublicationRevision"),number(tag,"NativeRampObservationTick"));}catch(IllegalArgumentException malformed){return false;}}
  // Vanilla installs components after loadAdditional, so admission must wrap the whole load.
