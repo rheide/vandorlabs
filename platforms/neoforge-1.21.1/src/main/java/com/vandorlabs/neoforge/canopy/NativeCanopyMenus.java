@@ -17,6 +17,9 @@ public final class NativeCanopyMenus {
     private NativeCanopyMenus(){}
     public static boolean usable(Player player,NativeCanopyEntity owner){
         var level=owner.getLevel();
+        if(level instanceof ServerLevel server&&!server.getServer().isSameThread())return false;
+        // Source selectionBounds computes current geometry. Prepare only the pending local publication.
+        if(level instanceof ServerLevel&&owner.available()&&NativeCanopyLifecycle.installed(owner))NativeCanopyLifecycle.prepare(owner);
         if(level==null||player.level()!=level||!player.isAlive()||player.isSpectator()||!owner.available()
             ||!NativeCanopyLifecycle.installed(owner)||NativeCanopyLifecycle.owner(owner)!=owner
             ||!owner.publication().draws()||owner.publication().geometry()==null)return false;
