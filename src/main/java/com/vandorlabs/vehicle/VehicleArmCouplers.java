@@ -27,8 +27,9 @@ public final class VehicleArmCouplers {
         public final Address address;public final BlockPos carrier;
         public final boolean articulated,requested,locked;
         public final double x,y,z,nx,ny,nz;
-        private Head(Address address,BlockPos carrier,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){
-            this.address=address;this.carrier=carrier.toImmutable();this.articulated=articulated;this.requested=requested;locked=state.getValue(BlockCoupler.LOCKED);EnumFacing face=state.getValue(BlockCoupler.FACING);BlockPos cell=address.cell;
+        private Head(Address address,BlockPos carrier,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){this(address,carrier,address.cell,state,articulated,requested,transform);}
+        private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){
+            this.address=address;this.carrier=carrier.toImmutable();this.articulated=articulated;this.requested=requested;locked=state.getValue(BlockCoupler.LOCKED);EnumFacing face=state.getValue(BlockCoupler.FACING);BlockPos cell=geometryCell;
             double px=cell.getX()+.5+face.getFrontOffsetX()*.5,py=face.getAxis()==EnumFacing.Axis.Y?cell.getY()+.5+face.getFrontOffsetY()*.5:cell.getY()+BlockCoupler.couplingHeight(state),pz=cell.getZ()+.5+face.getFrontOffsetZ()*.5;
             double[] m=transform.r;x=transform.x+m[0]*px+m[1]*py+m[2]*pz;y=transform.y+m[3]*px+m[4]*py+m[5]*pz;z=transform.z+m[6]*px+m[7]*py+m[8]*pz;int dx=face.getFrontOffsetX(),dy=face.getFrontOffsetY(),dz=face.getFrontOffsetZ();nx=m[0]*dx+m[1]*dy+m[2]*dz;ny=m[3]*dx+m[4]*dy+m[5]*dz;nz=m[6]*dx+m[7]*dy+m[8]*dz;
             if(!finite(x)||!finite(y)||!finite(z)||!Double.isFinite(nx)||!Double.isFinite(ny)||!Double.isFinite(nz)||Math.abs(nx*nx+ny*ny+nz*nz-1)>1e-7)throw new IllegalArgumentException("Invalid carried Coupler head transform");
@@ -44,9 +45,29 @@ public final class VehicleArmCouplers {
         if(craft.isDead||craft.structure==null||craft.view==null||craft.view.craft!=craft||craft.view.structure!=craft.structure)throw new IllegalArgumentException("Vehicle attachment owner is unavailable");
         return observe(craft.structure,craft.view);
     }
+    private static final class MaterializedHead {
+        final Address address;final BlockPos carrier;
+        MaterializedHead(Address address,BlockPos carrier){this.address=address;this.carrier=carrier;}
+    }
     static Snapshot observe(VehicleStructure structure,VehicleWorld view){
         List<Head> heads=new ArrayList<>();Set<Address> addresses=new HashSet<>();
-        for(VehicleStructure.Cell cell:structure.couplers){TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof TileCoupler))throw new IllegalArgumentException("Coupler data is unavailable at "+cell.pos);TileCoupler tile=(TileCoupler)raw;add(heads,addresses,head(Address.nativeCell(cell.pos),cell.pos,cell.state,tile,RigidTransform.IDENTITY));}
+        Map<BlockPos,MaterializedHead> endpointHeads=new HashMap<>();Set<BlockPos> endpointRoots=new HashSet<>();
+        for(VehicleStructure.Cell cell:structure.cells){
+            if(!(cell.state.getBlock() instanceof GearBlock))continue;TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof GearTileEntity))throw new IllegalArgumentException("Arm data is unavailable at "+cell.pos);GearTileEntity gear=((GearTileEntity)raw).loadedController();if(gear==null)throw new IllegalArgumentException("Arm membership is unavailable at "+cell.pos);if(!endpointRoots.add(gear.getPos()))continue;
+            ArmPayload payload=gear.payload();if(payload==null||!payload.materialized())continue;
+            if(payload.hasOwnershipJournal()||!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");
+            for(int i=0;i<payload.blocks.cells.size();i++){
+                VehicleStructure.Cell original=payload.blocks.cells.get(i);if(!(original.state.getBlock() instanceof BlockCoupler))continue;
+                BlockPos at=payload.placedCellPosition(gear,i);IBlockState expected=payload.placedCellState(i);VehicleStructure.Cell installed=structure.at(at);
+                if(installed==null||installed.state.getBlock()!=expected.getBlock()||installed.state.withProperty(BlockCoupler.LOCKED,expected.getValue(BlockCoupler.LOCKED))!=expected)throw new IllegalArgumentException("Materialized Coupler correspondence is unavailable at "+at);
+                if(endpointHeads.size()>=MAX_HEADS||endpointHeads.put(at,new MaterializedHead(Address.payloadCell(gear.getPos(),original.pos),gear.getPos()))!=null)throw new IllegalArgumentException("Multiple arms claim the same Coupler at "+at);
+            }
+        }
+        for(VehicleStructure.Cell cell:structure.couplers){TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof TileCoupler))throw new IllegalArgumentException("Coupler data is unavailable at "+cell.pos);TileCoupler tile=(TileCoupler)raw;MaterializedHead owner=endpointHeads.remove(cell.pos);
+            if(owner==null)add(heads,addresses,head(Address.nativeCell(cell.pos),cell.pos,cell.state,tile,RigidTransform.IDENTITY));
+            else{validate(cell.state);add(heads,addresses,new Head(owner.address,owner.carrier,cell.pos,cell.state,tile.articulation(),tile.requested(),RigidTransform.IDENTITY));}
+        }
+        if(!endpointHeads.isEmpty())throw new IllegalArgumentException("Materialized Coupler cells are unavailable");
         Set<BlockPos> roots=new HashSet<>();int arms=0;
         for(VehicleStructure.Cell cell:structure.cells){if(!(cell.state.getBlock() instanceof GearBlock))continue;TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof GearTileEntity))throw new IllegalArgumentException("Arm data is unavailable at "+cell.pos);GearTileEntity gear=((GearTileEntity)raw).loadedController();if(gear==null)throw new IllegalArgumentException("Arm membership is unavailable at "+cell.pos);if(!roots.add(gear.getPos()))continue;
             ArmPayload payload=gear.payload();if(payload==null){if(gear.hasRetainedPayload())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");continue;}if(payload.materialized())continue;
