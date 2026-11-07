@@ -17,7 +17,7 @@ public final class ArmParkingMaterialization {
         return id!=null&&cell.state.getBlock() instanceof GearBlock&&((GearBlock)cell.state.getBlock()).kind()==GearBlock.Kind.EXTENDER
                 &&cell.hasTileData()&&cell.hasTileKey("x",99)&&cell.hasTileKey("y",99)&&cell.hasTileKey("z",99)&&cell.tileInteger("x")==cell.pos.getX()&&cell.tileInteger("y")==cell.pos.getY()&&cell.tileInteger("z")==cell.pos.getZ()&&id.toString().equals(cell.tileString("id"))&&!cell.tileBoolean("GearController")
                 &&cell.hasTileKey("GearOwnerOffset",4)&&cell.tileLong("GearOwnerOffset")==BlockPos.ORIGIN.subtract(relative).toLong()
-                &&!anyKey(cell,"ArmPayload")&&!anyKey(cell,"ArmStoredSections")&&!anyKey(cell,GearTaxiState.KEY);
+                &&!anyKey(cell,"ArmPayload")&&!anyKey(cell,"ArmStoredSections")&&!anyKey(cell,GearTaxiState.KEY)&&!anyKey(cell,"GearParkingHold");
     }
     /** Source canStore policy at the chosen pose: NEW displaced sections are admitted only at phase zero.
      * nativeSection positions are in the containing snapshot frame, not relative to the controller. */

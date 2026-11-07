@@ -50,7 +50,7 @@ public final class ArmStoredSections {
         for(VehicleStructure.Cell cell:stored.cells){
             if(!(cell.state.getBlock() instanceof GearBlock)||((GearBlock)cell.state.getBlock()).kind()!=GearBlock.Kind.EXTENDER||!cell.hasTileData()||!(TileEntity.create(null,cell.tileData()) instanceof GearTileEntity)
                     ||cell.pos.equals(BlockPos.ORIGIN)||Math.abs((long)cell.pos.getX())>80||Math.abs((long)cell.pos.getY())>80||Math.abs((long)cell.pos.getZ())>80
-                    ||cell.tileData().getBoolean("GearController")||!cell.tileData().hasKey("GearOwnerOffset",4)||!BlockPos.fromLong(cell.tileData().getLong("GearOwnerOffset")).equals(BlockPos.ORIGIN.subtract(cell.pos))||cell.tileData().hasKey("ArmStoredSections")||cell.tileData().hasKey("ArmPayload"))throw new IllegalArgumentException("Invalid stored arm section");
+                    ||cell.tileData().getBoolean("GearController")||!cell.tileData().hasKey("GearOwnerOffset",4)||!BlockPos.fromLong(cell.tileData().getLong("GearOwnerOffset")).equals(BlockPos.ORIGIN.subtract(cell.pos))||cell.tileData().hasKey("ArmStoredSections")||cell.tileData().hasKey("ArmPayload")||cell.tileData().hasKey("GearParkingHold"))throw new IllegalArgumentException("Invalid stored arm section");
         }return stored;
     }
     static Set<BlockPos> positions(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();if(arm.storedSections!=null)for(VehicleStructure.Cell cell:arm.storedSections.cells)result.add(arm.getPos().add(cell.pos));return result;}

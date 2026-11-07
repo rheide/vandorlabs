@@ -22,3 +22,9 @@ task testArmParkingHold(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmParkingHoldChecks'
  maxHeapSize = '1g'
 }
+task testArmParkingVisualHold(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.client.ArmParkingVisualHoldChecks'
+ maxHeapSize = '1g'
+}
