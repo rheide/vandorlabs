@@ -11,6 +11,8 @@ import org.joml.Matrix4f;
 /** Standalone contents only: the mounted terrain model owns the authored frame and pedestal. */
 public final class NativeCredentialReaderRenderer implements BlockEntityRenderer<NativeCredentialReaderEntity> {
     private final Matrix4f[] mounts=new Matrix4f[3072];
+    private final PoseStack scratch=new PoseStack();
+    private boolean rendering;
     public NativeCredentialReaderRenderer(BlockEntityRendererProvider.Context context){}
     private Matrix4f mount(NativeCredentialReaderEntity tile,NativeCredentialReaderEntity.Visual visual){
         var settings=visual.mount();if(settings.height==0&&settings.tilt==0)return null;
@@ -20,9 +22,9 @@ public final class NativeCredentialReaderRenderer implements BlockEntityRenderer
         cached=new Matrix4f((float)x.x,(float)x.y,(float)x.z,0,(float)y.x,(float)y.y,(float)y.z,0,(float)z.x,(float)z.y,(float)z.z,0,(float)origin.x,(float)origin.y,(float)origin.z,1);mounts[key]=cached;return cached;
     }
     @Override public void render(NativeCredentialReaderEntity tile,float partial,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
-        var visual=tile.visual();if(visual.inert()||tile.getLevel()==null)return;var state=tile.getBlockState();if(!(state.getBlock() instanceof NativeCredentialReaderBlock))return;
+        com.mojang.blaze3d.systems.RenderSystem.assertOnRenderThread();var visual=tile.visual();if(visual.inert()||tile.getLevel()==null)return;var state=tile.getBlockState();if(!(state.getBlock() instanceof NativeCredentialReaderBlock))return;
         var clock=NativeReaderVisualClock.sample(tile.getLevel(),tile.getBlockPos(),0,visual.contents(),visual.motion());var matrix=mount(tile,visual);
-        poses.pushPose();try{if(matrix!=null)poses.mulPose(matrix);NativeReaderRenderer.contents(visual.contents(),visual.motion(),clock.age(),clock.rejected(),state.getValue(NativeMountedSwitchBlock.FACING),visual.rotation(),poses,buffers,light,overlay);}finally{poses.popPose();}
+        if(rendering)throw new IllegalStateException("Reentrant standalone reader draw");rendering=true;try{scratch.last().pose().set(poses.last().pose());scratch.last().normal().set(poses.last().normal());if(matrix!=null)scratch.mulPose(matrix);NativeReaderRenderer.contents(visual.contents(),visual.motion(),clock.age(),clock.rejected(),state.getValue(NativeMountedSwitchBlock.FACING),visual.rotation(),scratch,buffers,light,overlay);}finally{rendering=false;}
     }
     @Override public AABB getRenderBoundingBox(NativeCredentialReaderEntity tile){var p=tile.getBlockPos();return new AABB(p.getX()-.4,p.getY()-.4,p.getZ()-.4,p.getX()+1.4,p.getY()+1.4,p.getZ()+1.4);}
 }

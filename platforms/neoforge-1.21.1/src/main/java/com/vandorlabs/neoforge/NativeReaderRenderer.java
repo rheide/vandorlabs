@@ -59,7 +59,7 @@ public final class NativeReaderRenderer {
  public static void contents(NativeTokenReader.Visual visual,NativeTokenReader.Motion motion,float age,boolean rejected,Direction face,int rotation,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
   var basis=ReaderVisualMesh.basis(face.get3DDataValue(),rotation);var out=EMITTER.get();out.pose=poses.last();out.light=light;out.overlay=overlay;
   try{
-   if(!rejected&&!visual.occupied()&&visual.logo()>=0){var id=LOGOS[visual.logo()];var sprite=Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(id);out.texture=true;out.target=buffers.getBuffer(NativePanelPlaybackRenderer.frameRenderType());ReaderVisualMesh.logo(basis,sprite.getU0(),sprite.getU1(),sprite.getV0(),sprite.getV1(),out);}
+   if(!rejected&&!visual.occupied()&&visual.logo()>=0){var id=LOGOS[visual.logo()];var sprite=Minecraft.getInstance().getModelManager().getAtlas(TextureAtlas.LOCATION_BLOCKS).getSprite(id);out.texture=true;out.target=buffers.getBuffer(NativePanelPlaybackRenderer.frameRenderType());ReaderVisualMesh.logo(basis,sprite.getU0(),sprite.getU1(),sprite.getV0(),sprite.getV1(),out);}
    out.texture=false;out.target=buffers.getBuffer(Layers.COLOR);ReaderVisualMesh.overlays(basis,visual.chip(),rejected,visual.output()>0,out);
   }finally{out.pose=null;out.target=null;}
   if(visual.occupied()&&visual.icon()){
