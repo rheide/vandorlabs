@@ -224,6 +224,12 @@ public final class VehicleArticulation {
         return true;
     }
     public void requireParkable(){if(!parkable())throw new IllegalArgumentException("Straighten trailers before parking (within 5 degrees yaw, 3 degrees pitch and 0.75 block of the grid)");}
+    /** Arm parking solves integer body translations separately; angular straightening still applies. */
+    public void requireArmParkable(){
+        if(!active())return;captureShapes();
+        for(int i=0;i<yaw.length;i++)if(Math.abs(yaw[i])>5||Math.abs(pitch[i])>3)throw new IllegalArgumentException("Straighten articulated sections before parking (within 5 degrees yaw and 3 degrees pitch)");
+        for(int body=1;body<bodyBounds.length;body++)if(matrices[body].angle()>7.5)throw new IllegalArgumentException("Straighten articulated sections before parking (within 7.5 degrees of the grid)");
+    }
     public boolean canConfigure(BlockPos at,boolean value){if(value||!active())return true;for(int i=0;i<joints.size();i++){Joint j=joints.get(i);if(at.equals(j.a)||at.equals(j.b)){TileEntity other=craft.view.getTileEntity(at.equals(j.a)?j.b:j.a);if(other instanceof TileCoupler&&((TileCoupler)other).articulation())return true;if(Math.abs(yaw[i])>.25||Math.abs(pitch[i])>.25)return false;}}return true;}
     public boolean begin(){if(!active())return false;captureShapes();stepWork=0;stepLimited=false;base=new Frame(yaw.clone(),pitch.clone(),matrices);baseRoot=root();baseX=craft.posX;baseY=craft.posY;baseZ=craft.posZ;baseYaw=craft.rotationYaw;terrain.clear();return true;}
     private double ground(double x,double y,double z){
