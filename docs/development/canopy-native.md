@@ -84,3 +84,17 @@ Contact membership now has a separate scalar policy after platform lookup and co
 Native contact publication now consumes the independently frozen shared rules and resolves only loaded direct, constituent and released-rear cells. Released lookup preserves the original SOUTH/WEST/NORTH/EAST priority and two-cell bound. Structural changes coalesce by section behind an empty-world/spatial preflight; no render worker discovers neighbors. The pending section set is capped at 8,192, with a one-shot loaded-index refresh on overflow. Settled preparation returns without neighbor queries. Saved mask hints are provisional; owning-thread preparation publishes current immutable mask/roof facts and fixed-glass model data.
 
 The actual native world reconstructs all 197,376 released normalized contact observations, including helper normalization and released proxies. Removal invalidation replaces fixed-glass chunk model data; local chunk unload removes target membership and reload restores it. The suite passes 525,903 assertions and a warmed 10,000-call settled prepare/model-data batch allocates zero bytes. This supplies the contact-publication bridge; placed chunk/BER rendering and automatic motion acceptance remain separate.
+
+### Placed body and terrain boundary
+
+The private placed-world check now exercises all eleven exact native host kinds,
+the regular-glass pending-bakery terrain wrapper, and a resource reload. Its
+camera excludes the complete owner section while retaining the overhang inside
+the renderer bounds. The existing dispatcher still submitted the body in this
+case, so this evidence does not justify changing offscreen dispatch. Disabling
+the actual BER changed 532,588 pixels; disabling the regular-glass chunk model
+changed 40,708 pixels. Regular glass submitted no duplicate BER vertices.
+The software-rendered check establishes these paths, not hardware frame rates.
+It installs a gallery directly and does not establish item placement, automatic
+motion, canonical registration, or membership repair. The runner waits for the
+actual tagged JVMs to exit before whole-suite artifact retention finalizes.
