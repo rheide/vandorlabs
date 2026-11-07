@@ -50,11 +50,13 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
         var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModelBakery(),event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
+        var propulsionBake=NativePropulsionModel.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         // Selectors retain only bake-owned model/sprite snapshots, never the mutable bake event.
         java.util.Map<String,BakedModel> lightItemModels=new java.util.HashMap<>();
         event.getModels().forEach((id,model)->{if(id.getVariant().equals("standalone")&&id.id().getNamespace().equals("vandorlabs")&&id.id().getPath().startsWith("item/configured/programmable_light_"))lightItemModels.put(id.id().toString(),model);});
         var lightItemSources=java.util.Map.copyOf(lightItemModels);
         event.getModels().replaceAll((id,model) -> {
+            if(propulsionBake!=null&&NativePropulsionClientBindings.engine(id.id()))return id.getVariant().equals("inventory")?new NativePropulsionItemModel(model,id.id().getPath(),propulsionBake):NativePropulsionModel.wrap(model,propulsionBake);
             var lightKind=NativeLightClientBindings.kind(id.id());
             if(lightKind!=null&&id.getVariant().equals("inventory"))return new NativeLightItemModel(model,lightKind,lightItemSources::get,name->trapdoorItemAtlas.getOrDefault(name,itemFallback));
             if(NativeTrapdoorClientBindings.trapdoor(id.id()))return id.getVariant().equals("inventory")?new NativeTrapdoorItemModel(model,com.vandorlabs.neoforge.trapdoor.NativeTrapdoorItem::housingTexture,name->trapdoorItemAtlas.getOrDefault(name,itemFallback)):com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());

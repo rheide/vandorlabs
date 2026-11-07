@@ -107,6 +107,17 @@ def main():
         variants[name]=entries
         item=next((base/'models/item'/(name+'.json') for base in SOURCES if (base/'models/item'/(name+'.json')).is_file()),None)
         if item is not None:items[name]={'model':model('vandorlabs:item/'+name),'x':0,'y':0,'transform':None}
+    # Canonical terrain is supplied by the immutable ModelData wrapper, not a second housing.
+    write(ASSETS/'models/block/propulsion_empty.json',{'textures':{'particle':'vandorlabs:blocks/thrusters/side'},'elements':[]})
+    for name in variants:
+        write(ASSETS/'blockstates'/(name+'.json'),{'variants':{'':{'model':'vandorlabs:block/propulsion_empty'}}})
+    public=['rocket_thruster','ion_drive','plasma_vent','impulse_engine','antigravity_plate','repulsor_array','vertical_hover_thruster']
+    for name in public:
+        write(ASSETS/'models/item'/(name+'.json'),{'parent':items[name]['model']})
+    centers=['minecraft:furnace','minecraft:end_rod','minecraft:blaze_rod','minecraft:piston','minecraft:ender_pearl','minecraft:iron_block','minecraft:furnace']
+    sides=['minecraft:blaze_powder','minecraft:lapis_lazuli','minecraft:glowstone_dust','minecraft:quartz','minecraft:feather','minecraft:piston','minecraft:feather']
+    for name,center,side in zip(public,centers,sides):
+        write(OUT/'data/vandorlabs/recipe'/(name+'.json'),{'type':'minecraft:crafting_shaped','category':'redstone','pattern':['ARA','SCS','ARA'],'key':{'A':{'item':'vandorlabs:industrial_alloy_ingot'},'R':{'item':'minecraft:redstone'},'S':{'item':side},'C':{'item':center}},'result':{'id':'vandorlabs:'+name,'count':1}})
     write(ASSETS/'data/propulsion_artwork.json',dict(blocks=variants,items=items,models=models,textures=textures))
     print('Native propulsion resources PASS blocks='+str(len(variants))+' models='+str(len(models))+' variants='+str(sum(map(len,variants.values())))+' sprites='+str(len(textures))+' exactSource JSON/OBJ/MTL geometry; no emissive-Ka or automatic-cull substitution')
 if __name__=='__main__':main()
