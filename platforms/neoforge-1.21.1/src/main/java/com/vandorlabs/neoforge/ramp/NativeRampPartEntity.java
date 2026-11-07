@@ -69,5 +69,9 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
  private static void writeProjection(CompoundTag tag,Publication value,long tick){tag.putLong("NativeRampPublicationRevision",value.revision);tag.putLong("NativeRampObservationTick",tick);tag.put("NativeRampPartData",observed(value,tick).write());}
  @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);var value=publication;if(ownershipKnown()&&value!=null)writeProjection(tag,value,value.observationTick);}
  @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=super.getUpdateTag(registries);var value=publication;if(ownershipKnown()&&value!=null)writeProjection(tag,value,level==null?value.observationTick:level.getGameTime());return tag;}
+ private boolean staleUpdate(CompoundTag tag){if(!tag.hasUUID("Operation"))return false;try{return !acceptsObservation(tag.getUUID("Operation"),number(tag,"NativeRampPublicationRevision"),number(tag,"NativeRampObservationTick"));}catch(IllegalArgumentException malformed){return false;}}
+ // Vanilla installs components after loadAdditional, so admission must wrap the whole load.
+ @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registries){var tag=packet.getTag();if(!tag.isEmpty()&&!staleUpdate(tag))loadWithComponents(tag,registries);}
+ @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){if(!staleUpdate(tag))loadWithComponents(tag,registries);}
  @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
 }
