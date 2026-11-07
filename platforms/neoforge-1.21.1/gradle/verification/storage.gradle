@@ -11,3 +11,27 @@ neoForge.runs.configureEach {
     systemProperty 'vandorlabs.storageReference',rootProject.file('../../testclient/fixtures/storage-source-reference.json.gz').absolutePath
     systemProperty 'vandorlabs.storageItemReference',rootProject.file('../../testclient/fixtures/storage-items-source-reference.json.gz').absolutePath
 }
+
+def storagePython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/storage-resources')
+tasks.register('generateStorageResources', Exec) {
+    workingDir projectDir
+    commandLine storagePython, 'generate_storage_resources.py'
+    inputs.files('generate_storage_resources.py','generate_cube_resources.py','../../tools/compact_runtime_assets.py','../../src/portable/java/com/vandorlabs/tiles/HousingFinishCatalog.java','../../generated-resources/assets/vandorlabs/data/unified_textures.json')
+    ['../../texture-packs/additional','../../texture-packs/default','../../src/main/resources'].each { directory -> inputs.files(fileTree(directory) { include '**/textures/blocks/storage/**' }) }
+    outputs.dir('build/generated/storage-resources')
+}
+tasks.named('processResources') { dependsOn 'generateStorageResources' }
+tasks.register('testStorageResourceProjection', Exec) {
+    dependsOn 'generateStorageResources'
+    workingDir projectDir
+    commandLine storagePython, 'test_storage_resources.py'
+    inputs.files('test_storage_resources.py','../../testclient/fixtures/storage-source-reference.json.gz')
+}
+
+tasks.register('testNativeStorageModel', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeStorageModelChecks'
+    args rootProject.file('../../testclient/fixtures/storage-model-source-reference.jsonl.gz').absolutePath
+}
