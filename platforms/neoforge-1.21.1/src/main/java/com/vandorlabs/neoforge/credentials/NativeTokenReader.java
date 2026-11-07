@@ -126,6 +126,20 @@ public final class NativeTokenReader {
     public void reject(){var level=installed();if(level!=null){long next=level.getGameTime()+12;if(rejectedUntil!=next){rejectedUntil=next;publish(false);}}}
     public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){if(logo!=candidate){logo=candidate;publish(false);}return;}}}
     public ItemStack remove(){return returning()?ItemStack.EMPTY:takeForDrop();}
+    /** Private Container bridge: never used by public projections or renderers. */
+    ItemStack inventoryStack(){return token;}
+    boolean setFromInventory(ItemStack stack){
+        if(acting||installed()==null||opaqueToken!=null||returning()||!stack.isEmpty()&&(!authorized(stack)||behavior>=2))return false;
+        boolean inserted=!stack.isEmpty()&&(token.isEmpty()||!ItemStack.matches(token,stack));
+        boolean changed=!ItemStack.matches(token,stack)||token.isEmpty()&&behavior==1&&pulseUntil!=0;
+        token=stack.isEmpty()?ItemStack.EMPTY:NativeCredentialItems.ownedCopy(stack).copyWithCount(1);returnTo=null;
+        if(changed){contentsRevision++;publish(inserted);}return true;
+    }
+    ItemStack takeFromInventory(){
+        if(acting||installed()==null||opaqueToken!=null||returning())return ItemStack.EMPTY;
+        if(token.isEmpty()){if(behavior==1&&pulseUntil!=0){pulseUntil=0;publish(false);}return ItemStack.EMPTY;}
+        return takeForDrop();
+    }
     /** Unknown raw contents are never cleared when no real droppable stack exists. */
     public ItemStack takeForDrop(){if(installed()==null||opaqueToken!=null||token.isEmpty())return ItemStack.EMPTY;var result=token;token=ItemStack.EMPTY;contentsRevision++;returnTo=null;publish(false);return result;}
     private static boolean hasRoom(ServerPlayer player,ItemStack token){

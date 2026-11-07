@@ -46,7 +46,7 @@ public final class StandaloneReaderGeometryChecks {
     @SubscribeEvent public static void started(ServerStartedEvent event)throws Exception {
         if(System.getProperty("vandorlabs.transmitterPhase","").startsWith("standalone-reader-host-")){
             if(System.getProperty("vandorlabs.transmitterPhase").endsWith("read")){var level=event.getServer().overworld();for(int kind=0;kind<2;kind++){var pos=new net.minecraft.core.BlockPos(5150+kind*3,90,5150);level.setChunkForced(pos.getX()>>4,pos.getZ()>>4,true);level.getChunkAt(pos);level.getBlockEntity(pos);}readPending=true;return;}
-            StandaloneReaderEditorChecks.run(event.getServer().overworld(),card,MENU);StandaloneReaderItemChecks.run(event.getServer().overworld(),card,chip);StandaloneReaderChipViewChecks.run(event.getServer().overworld(),card,chip);StandaloneReaderHostChecks.run(event.getServer().overworld(),card,chip,false);event.getServer().halt(false);return;
+            StandaloneReaderEditorChecks.run(event.getServer().overworld(),card,MENU);StandaloneReaderItemChecks.run(event.getServer().overworld(),card,chip);StandaloneReaderChipViewChecks.run(event.getServer().overworld(),card,chip);StandaloneReaderInventoryChecks.run(event.getServer().overworld(),card,chip);StandaloneReaderHostChecks.run(event.getServer().overworld(),card,chip,false);event.getServer().halt(false);return;
         }
         if(!System.getProperty("vandorlabs.transmitterPhase","").equals("standalone-reader-geometry"))return;
         JsonObject root;try(var input=Files.newBufferedReader(Path.of(System.getProperty("vandorlabs.standaloneReaderReference")))){root=JsonParser.parseReader(input).getAsJsonObject();}
