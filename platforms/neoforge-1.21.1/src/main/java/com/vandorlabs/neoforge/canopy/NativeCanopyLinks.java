@@ -16,7 +16,7 @@ public record NativeCanopyLinks(BlockPos anchor,BlockPos pair,int joinedWidth,bo
         BlockPos anchor=tag.contains("AnchorOffset")?pos.offset(decode(tag.getLong("AnchorOffset"))):tag.contains("Anchor")?decode(tag.getLong("Anchor")):null;
         BlockPos pair=tag.contains("PairOffset")?pos.offset(decode(tag.getLong("PairOffset"))):tag.contains("Pair")?decode(tag.getLong("Pair")):null;
         int width=tag.contains("CanopyWidth",Tag.TAG_INT)?Math.max(1,Math.min(9,tag.getInt("CanopyWidth"))):pair==null?1:2;
-        List<BlockPos> footprint=null;int[] raw=tag.getIntArray("CanopyFootprint");if(raw.length>0&&raw.length<=3000&&raw.length%3==0){footprint=new ArrayList<>();for(int i=0;i<raw.length;i+=3)if(Math.abs((long)raw[i])<=8&&Math.abs((long)raw[i+1])<=8&&Math.abs((long)raw[i+2])<=8)footprint.add(pos.offset(raw[i],raw[i+1],raw[i+2]));}
+        List<BlockPos> footprint=null;var stored=com.vandorlabs.persistence.CanopyFootprintData.decode(tag.getIntArray("CanopyFootprint"));if(stored!=null){footprint=new ArrayList<>();for(int i=0;i<stored.size();i++)footprint.add(pos.offset(stored.x(i),stored.y(i),stored.z(i)));}
         Set<Integer> released=new HashSet<>();for(int index:tag.getIntArray("CanopyReleasedHelpers"))if(index>=0&&index<1000)released.add(index);
         float progress=tag.getFloat("Progress");progress=Float.isFinite(progress)?Math.max(0,Math.min(1,progress)):0;
         return new NativeCanopyLinks(anchor,pair,width,tag.getBoolean("CenteredPlacement"),tag.getBoolean("HollowPlacement"),footprint,released,tag.getBoolean("CanopyWaitingForReservations"),tag.getBoolean("Open"),progress,tag.getBoolean("CanopyPowerKnown"),tag.getBoolean("CanopyLastPower"),tag.getBoolean("CanopyLastPolarity"));

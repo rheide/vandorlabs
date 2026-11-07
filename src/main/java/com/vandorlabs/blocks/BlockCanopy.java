@@ -354,7 +354,7 @@ public class BlockCanopy extends Block {
             // The clicked wall supports the rear of a long nose, rather than its front.
             if((cockpit==null||clickedCanopy!=null) && !large && (b.kind.startsWith("angled_") || b.opening()) && side.getAxis().isHorizontal() && side==facing)dest=dest.offset(facing,b.length-1);
             for(BlockPos cell:com.vandorlabs.canopy.LargeCanopyOwnership.itemCells(b,dest,facing,configured))
-                if(!w.isBlockModifiable(player,cell) || !player.canPlayerEdit(cell,side,held))return EnumActionResult.FAIL;
+                if(!w.isBlockLoaded(cell) || !w.isBlockModifiable(player,cell) || !player.canPlayerEdit(cell,side,held))return EnumActionResult.FAIL;
             if(!com.vandorlabs.canopy.LargeCanopyOwnership.fitsItem(b,w,dest,facing,configured))return EnumActionResult.FAIL;
             IBlockState state=b.getDefaultState().withProperty(FACING,facing);
             if(held.isEmpty() || !placeBlockAt(configured,player,w,dest,side,x,y,z,state))return EnumActionResult.FAIL;

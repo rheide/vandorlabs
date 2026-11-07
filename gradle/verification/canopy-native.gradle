@@ -86,6 +86,7 @@ task exportCanopyConfiguredItemReference(type: JavaExec) {
     main = 'com.vandorlabs.client.CanopyConfiguredItemLegacyOracle'
     args file('build/test-artifacts/canopy-configured-item-forge.jsonl').absolutePath
     maxHeapSize = '1g'
+    systemProperty 'vandorlabs.canopyItemSafety', 'true'
 }
 task testCanopyConfiguredItemSafety(type: JavaExec) {
     group = 'verification'
@@ -95,4 +96,10 @@ task testCanopyConfiguredItemSafety(type: JavaExec) {
     args file('build/test-artifacts/canopy-configured-item-safety-forge.jsonl').absolutePath
     systemProperty 'vandorlabs.canopyItemSafety', 'true'
     maxHeapSize = '1g'
+}
+task testCanopyStoredFootprintPreflight(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyStoredFootprintPreflightChecks'
 }

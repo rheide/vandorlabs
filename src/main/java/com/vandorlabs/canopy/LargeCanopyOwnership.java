@@ -14,7 +14,12 @@ public final class LargeCanopyOwnership {
         int depth=LargeCanopySettings.supports(block.kind)?settings.length():block.length;
         // New two-wide Visors are centered within three reserved cells; old tile NBT keeps its own footprint.
         int occupiedWidth=block.kind.equals("space_visor_2x1")?3:block.width;
-        return LargeCanopySettings.supports(block.kind)?shellCells(block,pos,facing,settings):block.cells(pos,facing,depth,occupiedWidth);
+        List<BlockPos> cells=LargeCanopySettings.supports(block.kind)?shellCells(block,pos,facing,settings):block.cells(pos,facing,depth,occupiedWidth);
+        // ItemBlock installs this generic owner snapshot before onBlockPlacedBy reads its stored cells.
+        // Validate both the established item footprint and every additional cell that callback may write.
+        if(!stack.hasTagCompound()||!stack.getTagCompound().hasKey("BlockEntityTag",10))return cells;
+        com.vandorlabs.persistence.CanopyFootprintData.Offsets stored=com.vandorlabs.persistence.CanopyFootprintData.decode(stack.getTagCompound().getCompoundTag("BlockEntityTag").getIntArray("CanopyFootprint"));
+        if(stored==null)return cells;Set<BlockPos> checked=new LinkedHashSet<>(cells);for(int i=0;i<stored.size();i++)checked.add(pos.add(stored.x(i),stored.y(i),stored.z(i)));return new ArrayList<>(checked);
     }
     /** Reserve only surface cells so hollow space remains available to other blocks. */
     public static List<BlockPos> shellCells(BlockCanopy block,BlockPos pos,EnumFacing facing,LargeCanopySettings settings){return shellCells(block,pos,facing,settings,true);}

@@ -8,6 +8,8 @@ Historical native implementations are integration references. Each family still 
 
 Connected Duplifier Undo now captures all selected blocks before applying the first change. This fixes linked settings such as Segmented Door direction, layout, speed and channels being left at their copied values after Undo. Physical contents remain outside settings history.
 
+Forge canopy placement also validates stored custom footprints before changing blocks. Foreign blocks and supports remain intact when placement is refused, and the held stack keeps its data. This safety correction does not activate the native canopy family.
+
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
 The experimental native build includes the plain matter block, matter/alloy ingots, and the programmable cube with its Appearance editor, six face overrides and bounded joined images. Creative shift-click and the main-hand Configurizer share the authenticated cube dialog. Configured items retain their settings, and native geometry is compared with the actual Forge renderer.
