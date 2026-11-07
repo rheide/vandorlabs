@@ -18,7 +18,7 @@ public final class ModularGearVehicles {
     private static boolean captureAttachment(EntityGroundVehicle craft){
         for(TileEntity raw:new ArrayList<TileEntity>(craft.view.tiles.values()))if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){
             GearTileEntity arm=(GearTileEntity)raw;if(!arm.isOperational()||arm.isLandingAssembly()||arm.isFixedMount())continue;
-            if(!arm.validateParkingHoldInstalled())continue;arm.input();if(arm.parkingHeld())continue;if(GearMotion.advance(arm.progress(),arm.target(),1,GearTileEntity.ANIMATION_TICKS)==arm.progress())continue;
+            if(!arm.validateParkingHoldInstalled())continue;arm.input();if(arm.parkingHeld())continue;if(arm.latchRetractionStroke())craft.signals.persist();if(GearMotion.advance(arm.progress(),arm.target(),1,GearTileEntity.ANIMATION_TICKS)==arm.progress())continue;
             com.vandorlabs.gear.ArmPayload payload=arm.payload();
             try{
                 if(payload==null)payload=com.vandorlabs.gear.ArmPayload.discover(arm,null);
@@ -49,7 +49,7 @@ public final class ModularGearVehicles {
         Map<BlockPos,Double> desired=new LinkedHashMap<>();Set<BlockPos> notify=new LinkedHashSet<>();VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
         Map<BlockPos,Correction> corrected=craft.world.isRemote?corrections.get(craft):null;
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational()||gear.taxiPhase()==1)continue;double before=gear.progress();
-            if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;double next=GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
+            if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
             if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision())next=correction.progress;else if(gear.motionBlocked())next=before;}
             if(gear.isLandingAssembly()&&!craft.hover&&next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
             if(craft.world.isRemote&&gear.taxiPhase()>=0&&!gear.target()){double maximum=gear.pose(0).footOffsetY(),rise=gear.taxiAmount();if(maximum>0){double smooth=Math.max(0,Math.min(1,1-rise/maximum));double endpoint=.5-Math.sin(Math.asin(1-2*smooth)/3);next=Math.max(endpoint,next);}}
