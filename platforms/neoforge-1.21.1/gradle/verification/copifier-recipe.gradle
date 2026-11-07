@@ -1,3 +1,4 @@
 neoForge.runs.configureEach {
+ if(project.hasProperty('copifierRecipeConfigured'))systemProperty 'vandorlabs.copifierRecipeConfigured',project.property('copifierRecipeConfigured')
  if(project.hasProperty('copifierRecipeReference'))systemProperty 'vandorlabs.copifierRecipeReference',file(project.property('copifierRecipeReference')).absolutePath
 }

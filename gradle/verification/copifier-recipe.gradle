@@ -6,3 +6,12 @@ task exportCopifierRecipeReference(type: JavaExec) {
  args file("$buildDir/test-artifacts/copifier-recipe-source.json").absolutePath
  maxHeapSize = '1g'
 }
+
+task exportCopifierConfiguredRecipeReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierRecipeLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-recipe-configured-source.json").absolutePath, 'configured'
+ maxHeapSize = '1g'
+}
