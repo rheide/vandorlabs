@@ -204,7 +204,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public boolean motionBlocked(){return motionBlocked;}
     private void releaseParkingHold(){parkingHold=false;parkingHoldNeedsGeometry=false;}
     private static NBTTagCompound exactInto(NBTTagCompound target,NBTTagCompound source){for(String key:new java.util.ArrayList<String>(target.getKeySet()))target.removeTag(key);for(String key:source.getKeySet())target.setTag(key,source.getTag(key).copy());return target;}
-    private void quarantineParking(NBTTagCompound original){parkingQuarantine=original.copy();parkingHold=false;parkingHoldNeedsGeometry=false;operational=false;assembly=null;owner=null;payload=null;storedSections=null;clearPoses();lastError="Arm parking snapshot retained; incompatible stationary ownership";}
+    private void quarantineParking(NBTTagCompound original){parkingQuarantine=original.copy();parkingHold=false;parkingHoldNeedsGeometry=false;operational=false;assembly=null;owner=null;payload=null;storedSections=null;failedPayload=null;failedStoredSections=null;taxiState=null;members.clear();columns.clear();clearPoses();GearGeometry.remove(this);lastError="Arm parking snapshot retained; incompatible stationary ownership";}
     /** Installed main-thread preflight; load callbacks never invoke this query. */
     public boolean validateParkingHoldInstalled(){
         if(world==null||parkingQuarantine!=null)return false;
