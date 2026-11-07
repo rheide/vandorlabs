@@ -50,7 +50,7 @@ public final class NativeSegmentedTerrainModel extends BakedModelWrapper<BakedMo
             headerSprite=originals.isEmpty()?shared.edgeSprite():originals.getFirst().getSprite();
             headerTexture=texture(headerSprite);edge=shared.edge();if(bakery!=null)PENDING.put(bakery,this);
         }
-        private List<BakedQuad> quads(NativeSegmentedTerrainSnapshot snapshot){
+        List<BakedQuad> quads(NativeSegmentedTerrainSnapshot snapshot){
             var key=new Key(snapshot.facing(),snapshot.texture(),canonical&&snapshot.header(),snapshot.body(),snapshot.top(),snapshot.bottom(),snapshot.body()?SegmentedPanelMesh.tilePhase(snapshot.column(),snapshot.row(),shared.artwork(snapshot.texture()).surface().aspect):0);
             try{return quads.get(key,()->build(key));}catch(java.util.concurrent.ExecutionException failure){throw new IllegalStateException("Segmented terrain mesh",failure.getCause());}
         }

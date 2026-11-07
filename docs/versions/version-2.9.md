@@ -67,3 +67,5 @@ Ordinary Programmable Glass is enabled in the experimental native build with its
 
 
 Programmable Storage is enabled in the experimental native build with its original recipe, independent 27-slot inventory, ordinary inventory menu and dedicated material editor. Configured placement and mining preserve settings while keeping stored items separately owned. Source-matched world and padded item artwork, automation, resource reload and saved restart have focused canonical checks.
+
+Segmented Door Tile artwork now retains the same physical scale and phase across solid and Window segments in both versions. Segment bodies are two pixels thick; the top border remains four pixels. Selection, collision, fluid regions, moving models and settled terrain use the shared geometry. Existing settings, registry IDs and control indices are unchanged.
