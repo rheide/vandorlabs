@@ -12,6 +12,7 @@ public class NativeRampJournalPart extends BlockEntity {
  public final void install(UUID operation,BlockPos root){this.operation=java.util.Objects.requireNonNull(operation);this.root=root.immutable();inert=false;NativeRampReservations.add(this);}
  public final boolean ownershipKnown(){return !inert&&operation!=null;}
  public final boolean belongs(UUID id,BlockPos owner){return !inert&&id.equals(operation)&&root.equals(owner);}
+ public final UUID operationId(){return ownershipKnown()?operation:null;}
  public final BlockPos controller(){return root;}
  /** Real geometry implementations override this with an immutable world-space projection. */
  public java.util.List<net.minecraft.world.phys.AABB> physicalBounds(){return null;}
