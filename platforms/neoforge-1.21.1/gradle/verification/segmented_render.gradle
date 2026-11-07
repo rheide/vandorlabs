@@ -28,6 +28,9 @@ tasks.register('generateSegmentedResources', Exec) {
     inputs.file('../../src/main/resources/assets/vandorlabs/models/item/segmented_door.json')
     inputs.file('../../src/main/resources/assets/vandorlabs/recipes/segmented_door.json')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/segmented/segmented_panel.png')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/segmented_gates')
+    inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/blocks/segmented_gates')
+    inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/blocks/segmented_doors')
     outputs.dir('build/generated/segmented-resources')
 }
 sourceSets.main.resources.srcDir('build/generated/segmented-resources')
@@ -53,4 +56,12 @@ tasks.register('testNativeSegmentedDoorArtwork', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.NativeSegmentedPanelChecks'
     args file('../../build/test-artifacts/segmented-door-artwork-forge.jsonl').absolutePath
+}
+
+tasks.register('testNativeSegmentedGateFacts', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedGateFactsChecks'
+    args file('../../build/test-artifacts/segmented-gate-forge.jsonl').absolutePath
 }

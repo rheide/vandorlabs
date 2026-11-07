@@ -30,6 +30,10 @@ The actual Forge-baked vertices agree with the shared corners for all twelve mod
 
 `SegmentedGateConnectorUV` extends the prepared upright faces with their authored UV gradient instead of fitting the complete texture onto each short extension. It clips and wraps at normalized sprite boundaries before atlas mapping, preventing neighbour-sprite sampling. Preparation is bounded to 128 texture cells per face and accepts only axis-aligned post faces inside the cell envelope. Every connector is exercised with its actual Forge-baked source faces: 83,592 combined geometry/UV assertions. Independent Java 8/21 checks also verify unscaled density, clipping area and wrapped bounds (10,062 assertions each). No per-frame subdivision is intended; these connector meshes will be prepared once per resource generation and horizontal variant pair. Render emission and physical adapters remain pending; these geometry checks do not establish player-path integration. Precise model rays/collision must not turn the hover outline into hundreds of individual box wires; its displayed bounds remain cheap and bounded.
 
+## Native resource and scalar adapter
+
+The native generator copies the same twelve model JSONs and ten 128×128 images, retaining their namespace paths and bytes. These models are not yet added to active world meshes or selectable catalogs. `NativeSegmentedGateModels` is a thin Gson/resource adapter over the same immutable shape and connector policy. Its fixed models are replayed against all 48 actual Forge orientation records: 3,040 quads, 12,160 vertices and 16,786 checks, including stable prepared-list identities. The Source reference hash is checked before replay.
+
 ## Integration boundaries
 
 The existing dark/light panel IDs and default `-1` remain stable. Their visible names/category will become Dark Segmented Panel and Light Segmented Panel under Doors/Segmented. Existing general-material eligibility must be preserved despite that category change. The duplicate default dark row may be hidden only in the Segmented-specific picker after actual artwork equivalence is established.
