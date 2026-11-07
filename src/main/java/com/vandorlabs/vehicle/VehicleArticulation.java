@@ -107,6 +107,9 @@ public final class VehicleArticulation {
         final double[] yaw,pitch;final RigidTransform[] bodies;
         Frame(double[] yaw,double[] pitch,RigidTransform[] bodies){this.yaw=yaw;this.pitch=pitch;this.bodies=bodies;}
     }
+    private VehicleArmCouplerControls capturedControls;
+    VehicleArmCouplerControls capturedControls(){if(capturedControls==null)capturedControls=new VehicleArmCouplerControls(craft);return capturedControls;}
+    void tickCapturedControls(){if(VehicleArmCouplers.runtime())capturedControls().tick();}
     public VehicleArticulation(EntityGroundVehicle craft){this.craft=craft;}
     private static long mix(long h,long value){return (h^value)*1099511628211L;}
     public void bind(){
@@ -166,6 +169,8 @@ public final class VehicleArticulation {
     private RigidTransform[] build(double[] ys,double[] ps,VehicleWorld view,Map<BlockPos,? extends Number> desired){RigidTransform[] result=new RigidTransform[graph==null?1:graph.bodies];Arrays.fill(result,RigidTransform.IDENTITY);for(int i=0;i<joints.size();i++){Joint j=joints.get(i);RigidTransform relative;if(dynamic(j)){VehicleArmCouplers.point(j.parentHead,view,desired,j.armParent);VehicleArmCouplers.point(j.childHead,view,desired,j.armChild);RigidTransform rotation=RigidTransform.joint(0,0,0,j.hx,j.hz,ys[i],ps[i]);double[] r=rotation.r;relative=new RigidTransform(r,j.armParent[0]-r[0]*j.armChild[0]-r[1]*j.armChild[1]-r[2]*j.armChild[2],j.armParent[1]-r[3]*j.armChild[0]-r[4]*j.armChild[1]-r[5]*j.armChild[2],j.armParent[2]-r[6]*j.armChild[0]-r[7]*j.armChild[1]-r[8]*j.armChild[2]);}else relative=RigidTransform.joint(j.px,j.py,j.pz,j.hx,j.hz,ys[i],ps[i]);result[j.child]=result[j.parent].then(relative);}return result;}
     private static boolean dynamic(Joint joint){return joint.parentHead!=null&&(joint.parentHead.address.arm!=null||joint.childHead.address.arm!=null);}
     public boolean constrainsArm(BlockPos root){if(!VehicleArmCouplers.runtime())return false;bind();for(Joint joint:joints)if(dynamic(joint)&&(root.equals(joint.parentHead.address.arm)||root.equals(joint.childHead.address.arm)))return true;return false;}
+    public VehicleArmCouplers.Address capturedPartner(VehicleArmCouplers.Address address){if(!VehicleArmCouplers.runtime())return null;bind();for(Joint joint:joints)if(dynamic(joint)){if(joint.parentHead.address.equals(address))return joint.childHead.address;if(joint.childHead.address.equals(address))return joint.parentHead.address;}return null;}
+    public boolean capturedClosed(BlockPos nativeCell){if(!VehicleArmCouplers.runtime())return false;for(Joint joint:joints)if(dynamic(joint)&&(nativeCell.equals(joint.a)||nativeCell.equals(joint.b)))return VehicleArmCouplers.locked(craft,joint.parentHead.address)&&VehicleArmCouplers.locked(craft,joint.childHead.address);return false;}
     public boolean capturedPair(BlockPos nativeCell){if(!VehicleArmCouplers.runtime())return false;for(Joint joint:joints)if(dynamic(joint)&&(nativeCell.equals(joint.a)||nativeCell.equals(joint.b)))return true;return false;}
     public void armPosesCommitted(){if(!VehicleArmCouplers.runtime())return;for(Joint joint:joints)if(dynamic(joint)){matrices=build(yaw,pitch);visualMatrices=null;collisionMatrices=null;observedCollision=null;break;}}
 

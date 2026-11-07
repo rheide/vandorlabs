@@ -31,7 +31,7 @@ public final class ContainerCoupler extends net.minecraft.inventory.Container {
         player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_COUPLER,craft.world,craft.getEntityId(),CouplerGuiAddress.root(root),CouplerGuiAddress.cellZ(cell));
     }
     public void configure(EntityPlayer player,com.vandorlabs.redstone.ChannelList channels,boolean inverted,Boolean articulation){
-        if(!canInteractWith(player))return;EntityGroundVehicle craft=captured!=null?captured.craft:tile.getWorld() instanceof VehicleWorld?((VehicleWorld)tile.getWorld()).craft:null;BlockPos at=captured!=null?captured.address.arm:tile.getPos();
+        if(!canInteractWith(player))return;EntityGroundVehicle craft=captured!=null?captured.craft:tile.getWorld() instanceof VehicleWorld?((VehicleWorld)tile.getWorld()).craft:null;BlockPos at=captured!=null?captured.alias():tile.getPos();
         if(craft!=null&&articulation!=null&&!craft.articulation.canConfigure(at,articulation)){control.status("Straighten this joint before disabling articulation");return;}
         if(craft!=null&&captured==null)craft.authorizeCouplingGui((net.minecraft.entity.player.EntityPlayerMP)player,tile);control.authorize(player);control.configure(channels,inverted,articulation==null?control.articulation():articulation);
     }

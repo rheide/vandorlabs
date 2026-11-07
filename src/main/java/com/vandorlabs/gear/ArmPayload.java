@@ -20,7 +20,10 @@ public final class ArmPayload {
     public final VehicleStructure blocks;
     /** Construction origin relative to the arm; cell positions are normalized. */
     public final BlockPos offset;
+    /** Immutable opaque header shared by detached revisions. */
+    private NBTTagCompound retainedHeader;
     private VehicleWorld view;
+    private com.vandorlabs.vehicle.VehicleArmCouplerPower couplerPower;
     private List<AxisAlignedBB> localCollision;
     private int[] collisionCellEnds;
     public int collisionBoxCount(GearTileEntity arm){return materialized?0:localCollision(arm).size();}
@@ -73,6 +76,11 @@ public final class ArmPayload {
 
     private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
     ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
+    /** Read-only known-producer sampling, without constructing a nested tile/capability view. */
+    public Boolean snapshotCouplerPower(GearTileEntity arm,BlockPos originalCell){
+        VehicleStructure.Cell selected=blocks.at(originalCell);if(materialized||selected==null||!(selected.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Captured Coupler source unavailable");
+        if(couplerPower==null)couplerPower=new com.vandorlabs.vehicle.VehicleArmCouplerPower(blocks);return couplerPower.powered(originalCell);
+    }
     /** Typed captured Coupler edit; untouched cells, opaque data and endpoint correspondence remain retained. */
     public ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data){
         if(materialized||hasOwnershipJournal())throw new IllegalArgumentException("Captured Coupler ownership is unavailable");
@@ -86,9 +94,9 @@ public final class ArmPayload {
         NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
         next.set(found,new VehicleStructure.Cell(before.pos,before.state,data));
         if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
-        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);return result;
+        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
     }
-    private ArmPayload preserveAlignment(ArmPayload next){next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
+    private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
     Set<BlockPos> placedSurfaceCells(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();BlockPos origin=materializedOrigin(arm);for(VehicleStructure.Cell cell:placed().cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(origin.add(cell.pos));return result;}
@@ -120,7 +128,7 @@ public final class ArmPayload {
         }
         BlockPos origin=mapping.rotates()?new BlockPos(minX,minY,minZ):mapping.cell(BlockPos.ORIGIN),relative=origin.subtract(arm.getPos());
         if(Math.abs((long)relative.getX())>80||Math.abs((long)relative.getY())>80||Math.abs((long)relative.getZ())>80)return null;
-        ArmPayload detached=new ArmPayload(blocks,offset,true,relative);detached.gridAligned=gridAligned;
+        ArmPayload detached=new ArmPayload(blocks,offset,true,relative);detached.retainedHeader=retainedHeader;detached.gridAligned=gridAligned;
         if(mapping.rotates()){
             List<VehicleStructure.Cell> normalized=new ArrayList<>(mapped.size());
             for(VehicleStructure.Cell cell:mapped){NBTTagCompound data=cell.tileData();normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,data==null?null:VehicleTileData.translated(data,BlockPos.ORIGIN.subtract(origin))));}
@@ -536,7 +544,7 @@ public final class ArmPayload {
         BlockPos zero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.blocks.bounds.maxX,(int)before.blocks.bounds.maxZ,turns);
         ArmPayload result=before.preserveAlignment(new ArmPayload(after,yaw(before.offset,turns).subtract(zero),before.materialized,yaw(before.placedOffset,turns).subtract(zero)));if(before.placedBlocks!=null){BlockPos placedZero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.placedBlocks.bounds.maxX,(int)before.placedBlocks.bounds.maxZ,turns);result.placedBlocks=VehicleRotation.rotate(before.placedBlocks,new VehicleWorld(parent,before.placedBlocks),turns);result.placedOffset=yaw(before.placedOffset,turns).subtract(placedZero);}if(before.gridTileBasis!=null){result.gridTileBasis=ArmGridTiles.yawBasis(before.gridTileBasis,turns);ArmGridTiles.validate(result.blocks,result.placedBlocks,result.gridTileBasis);}return result.write();
     }
-    public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setTag("Blocks",blocks.write());tag.setLong("Offset",offset.toLong());tag.setLong("PlacedOffset",placedOffset.toLong());tag.setBoolean("Materialized",materialized);if(gridAligned)tag.setBoolean("GridAligned",true);if(placedBlocks!=null)tag.setTag("PlacedBlocks",placedBlocks.write());if(gridTileBasis!=null){tag.setInteger("GridTileMapping",1);tag.setIntArray("GridTileBasis",gridTileBasis.clone());}
+    public NBTTagCompound write(){NBTTagCompound tag=retainedHeader==null?new NBTTagCompound():retainedHeader.copy();tag.setTag("Blocks",blocks.write());tag.setLong("Offset",offset.toLong());tag.setLong("PlacedOffset",placedOffset.toLong());tag.setBoolean("Materialized",materialized);if(gridAligned)tag.setBoolean("GridAligned",true);if(placedBlocks!=null)tag.setTag("PlacedBlocks",placedBlocks.write());if(gridTileBasis!=null){tag.setInteger("GridTileMapping",1);tag.setIntArray("GridTileBasis",gridTileBasis.clone());}
         if(hasOwnershipJournal()){tag.setInteger("OwnershipDimension",journalDimension);net.minecraft.nbt.NBTTagList list=new net.minecraft.nbt.NBTTagList();for(Map.Entry<Integer,BlockPos> entry:ownershipJournal.entrySet()){NBTTagCompound cell=new NBTTagCompound();cell.setInteger("Cell",entry.getKey());cell.setLong("Pos",entry.getValue().toLong());list.appendTag(cell);}tag.setTag("OwnershipJournal",list);}
         return tag;}
     public static ArmPayload read(NBTTagCompound tag){
@@ -559,6 +567,9 @@ public final class ArmPayload {
         }
         payload.gridAligned=tag.getBoolean("GridAligned");
         if(payload.hasOwnershipJournal())payload.materialized=false;
+        for(String key:tag.getKeySet())if(!knownHeader(key)){if(payload.retainedHeader==null)payload.retainedHeader=new NBTTagCompound();payload.retainedHeader.setTag(key,tag.getTag(key).copy());}
         return payload;
     }
+    private static boolean knownHeader(String key){switch(key){case "Blocks":case "Offset":case "PlacedOffset":case "Materialized":case "GridAligned":case "PlacedBlocks":case "GridTileMapping":case "GridTileBasis":case "OwnershipDimension":case "OwnershipJournal":return true;default:return false;}}
+
 }
