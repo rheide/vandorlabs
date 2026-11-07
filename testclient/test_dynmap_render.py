@@ -9,6 +9,9 @@ import socket
 import subprocess
 import tempfile
 import time
+import sys
+sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'tools'))
+from test_artifacts import ArtifactRun
 from zipfile import ZipFile
 
 def validate_render(output):
@@ -48,6 +51,20 @@ def place_material_finishes(command, labels, jar):
         assert (x,y,z) not in occupied,'Material fixture overlaps another assembly'
         command(f'setblock {x} {y} {z} vandorlabs:programmable_block 0 replace {{housingTexture:{choice},HousingTextureVersion:1}}')
         labels.append(dict(x=x,y=y,z=z,block='programmable_block',material=name,choice=choice))
+
+
+def place_utility_doors(command,labels,jar):
+    import json
+    with ZipFile(jar) as archive:
+        entries=json.loads(archive.read('assets/vandorlabs/data/unified_textures.json'))
+        legacy=len(json.loads(archive.read('assets/vandorlabs/data/dynmap_material_aspects.json')))-len(entries)
+    utilities=[(legacy+i,e) for i,e in enumerate(entries) if e['id'].startswith('utility_door_')]
+    assert len(utilities)==12,'Incomplete Utility Door map corpus'
+    for i,(choice,entry) in enumerate(utilities):
+        x,y,z=30+3*i,12,-8
+        command(f'setblock {x} {y} {z} vandorlabs:programmable_door facing=south,half=lower,hinge=left,open=false replace {{SpaceDesign:2,SpaceFramed:1b,DoorFaceTexture:{choice}}}')
+        command(f'setblock {x} {y+1} {z} vandorlabs:programmable_door facing=south,half=upper,hinge=left,open=false replace')
+        labels.append(dict(x=x,y=y,z=z,block='programmable_door',utility=entry['id'],choice=choice))
 
 
 def place_utility_models(command, labels):
@@ -189,6 +206,11 @@ def main():
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
     output=Path(tempfile.mkdtemp(prefix='dynmap-render-',dir=root/'build'))
+    artifact=ArtifactRun(output,disposable_paths=('mods','world','dynmap','logs','config'))
+    with artifact:
+        run_fixture(args,root,output,artifact)
+
+def run_fixture(args,root,output,artifact):
     print('Isolated Dynmap fixture:',output,flush=True)
     (output/'mods').mkdir();(output/'dynmap').mkdir()
     for mod in (args.jar,args.dynmap,*args.mod):shutil.copyfile(mod,output/'mods'/mod.name)
@@ -218,6 +240,7 @@ def main():
         logpath=output/(phase+'.log')
         with logpath.open('w') as log:
             process=subprocess.Popen([args.java,'-Xmx2G','-jar',str(args.forge.resolve()),'nogui'],cwd=output,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
+            artifact.track_process(process)
             def command(line):process.stdin.write(line+'\n');process.stdin.flush()
             def wait(marker,timeout=180):
                 deadline=time.monotonic()+timeout
@@ -252,6 +275,7 @@ def main():
                     place_utility_models(command,labels)
                     place_frame_machines(command,labels,root)
                     place_material_finishes(command,labels,args.jar)
+                    place_utility_doors(command,labels,args.jar)
                     place_segmented_doors(command,labels)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')

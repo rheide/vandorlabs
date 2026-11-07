@@ -156,6 +156,9 @@ public final class DynmapRendererChecks {
                 require(found,"Authored door leaf retains selected material");
             }
         }
+        int utilities=0;for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(ScreenHousingTextures.IDS[choice].startsWith("utility_door_")){
+            utilities++;for(boolean large:new boolean[]{false,true}){Context door=new Context(large?"vandorlabs:large_programmable_door":"vandorlabs:programmable_door","facing=south,half=lower,hinge=right,open=false");door.data.put("SpaceDesign",2);door.data.put("DoorFaceTexture",choice);door.data.put("LargeDoorColumn",0);door.data.put("LargeDoorRow",0);boolean selected=false;for(RenderPatch patch:valid(large?new LargeProgrammableDoorRenderer():new ProgrammableDoorRenderer(),door))selected|=patch.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT+choice;require(selected,"Utility full artwork map material ordinary/Large "+choice);}
+        }require(utilities==12,"Utility Door map choices");
         System.out.println("Dynmap renderer checks PASS ("+checks+" assertions)");
     }
 }
