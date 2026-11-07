@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actual canonical diagonal Glass/Porthole density preparation and emission."""
+"""Actual canonical flat/diagonal Glass and Porthole preparation/emission."""
 import argparse,os,socket,time,re,hashlib
 from pathlib import Path
 from test_cube import ROOT,command,run,launch,stop,check_log,jdk_home
@@ -30,6 +30,6 @@ def main():
   if pid is not None:await_shutdown(saved,pid)
  check_log(saved/'logs/latest.log','All dimensions are saved');check_log(log,'[vandorlabs][dense-wall] logout PASS')
  classes=ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge'
- (out/'artifact.sha256').write_text('\n'.join(hashlib.sha256((classes/name).read_bytes()).hexdigest()+'  '+name for name in ['NativeFlatWallModel.class','NativePanelPlaybackRenderer.class'])+'\n')
- print('Canonical diagonal Glass/Porthole density PASS '+str(out.relative_to(ROOT)),flush=True)
+ (out/'artifact.sha256').write_text('\n'.join(hashlib.sha256((classes/name).read_bytes()).hexdigest()+'  '+name for name in ['NativeFlatWallModel.class','NativePanelPlaybackRenderer.class','NativeFlatGlassRenderer.class'])+'\n')
+ print('Canonical Glass/Porthole density PASS '+str(out.relative_to(ROOT)),flush=True)
 if __name__=='__main__':main()
