@@ -88,3 +88,10 @@ task exportCouplerInputSource(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.CouplerInputSourceChecks'
  maxHeapSize = '512m'
 }
+
+task testCouplerInput(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.CouplerInputChecks'
+ maxHeapSize = '256m'
+}
