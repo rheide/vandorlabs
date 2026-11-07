@@ -29,6 +29,16 @@ public final class GlassWorldClientChecks {
   @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){if(GlassWorldFixture.enabled())e.registerBlockEntityRenderer(GlassWorldFixture.TYPE,context->{var delegate=new NativeGlassBlockEntityRenderer(context);return (owner,partial,pose,buffers,light,overlay)->{if(panes){draws++;delegate.render(owner,partial,pose,buffers,light,overlay);}};});}
   @SubscribeEvent(priority=EventPriority.LOWEST)public static void models(ModelEvent.ModifyBakingResult e){if(!GlassWorldFixture.enabled())return;var bake=NativeFlatGlassRenderer.prepare(e.getModelBakery(),e.getModels(),e.getTextureGetter(),null,Minecraft.getInstance().getResourceManager());need(bake!=null,"private authored bake");var missing=e.getModels().get(ModelBakery.MISSING_MODEL_VARIANT);if(missing==null)missing=e.getModels().values().iterator().next();var model=new Gate(NativeFluidModel.wrap(new NativeFlatGlassModel(new Empty(missing),bake),e.getTextureGetter()));for(var state:GlassWorldFixture.BLOCK.getStateDefinition().getPossibleStates())e.getModels().put(BlockModelShaper.stateToModelLocation(state),model);}
  }
+ private static void pick(Minecraft mc,net.minecraft.world.phys.Vec3 eye,float pitch){mc.player.moveTo(eye.x,eye.y-mc.player.getEyeHeight(),eye.z,0,pitch);mc.gameRenderer.pick(1F);}
+ private static void corners(Minecraft mc){
+  for(var pos:new net.minecraft.core.BlockPos[]{GlassWorldFixture.L,GlassWorldFixture.T}){var owner=(NativeGlassEntity)mc.level.getBlockEntity(pos);need(owner!=null&&owner.visual().contact()!=null,"actual prepared bent publication "+pos);var geometry=owner.publication().geometry();net.minecraft.world.phys.Vec3 gap=null;
+   for(int x=1;x<20&&gap==null;x++)for(int z=1;z<20;z++){double px=x/20D,pz=z/20D;var from=new net.minecraft.world.phys.Vec3(pos.getX()+px,pos.getY()+2.5,pos.getZ()+pz);if(geometry.scalar().trace(px,2.5,pz,px,-2,pz)==null&&geometry.selection().clip(from,from.add(0,-4.5,0),pos)!=null){gap=from;break;}}
+   need(gap!=null,"union-only gap negative exists "+pos);pick(mc,gap,90);need(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit&&!hit.getBlockPos().equals(pos)&&hit.getBlockPos().getY()==79,"actual GameRenderer.pick traverses empty union corner to floor "+pos+" got="+mc.hitResult);
+   var box=geometry.boxes().getFirst();double x=(box.minX+box.maxX)/2,z=(box.minZ+box.maxZ)/2;var above=new net.minecraft.world.phys.Vec3(pos.getX()+x,pos.getY()+2.5,pos.getZ()+z);pick(mc,above,90);need(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit&&hit.getBlockPos().equals(pos)&&hit.getDirection()==Direction.UP,"actual primitive upper face pick "+pos+" got="+mc.hitResult);
+   var inside=new net.minecraft.world.phys.Vec3(pos.getX()+x,pos.getY()+(box.minY+box.maxY)/2,pos.getZ()+z);pick(mc,inside,-90);need(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit&&hit.getBlockPos().equals(pos)&&hit.getDirection()==Direction.UP&&!hit.isInside(),"legacy starts-inside exits primitive face "+pos+" got="+mc.hitResult);
+  }
+  var t=((NativeGlassEntity)mc.level.getBlockEntity(GlassWorldFixture.T)).visual();var c=t.contact();need(c.frontArm()!=null&&c.backArm()!=null&&Math.abs(c.frontArm()-c.backArm())<1E-7&&c.straightLeft()!=c.straightRight(),"actual eligible T-bar");need(t.contactFacing()==Direction.SOUTH&&t.facing()==Direction.NORTH&&t.layout().columns()==2&&t.materialLayout().column()==1-t.layout().column(),"actual opposite-facing joined material column");System.out.println("[vandorlabs][glass-world] picks PASS actualL/T unionGap/primitiveFace/inside/oppositeJoinedUV");
+ }
  private static void snapshot(String name){capture=name;captured=false;wait=0;}
  @SubscribeEvent public static void tick(ClientTickEvent.Post e){if(!GlassWorldFixture.enabled()||stage==99)return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen s){s.onClose();return;}
   if(stage==90&&mc.level==null){need(NativeFlatGlassRenderer.currentBake().retainedBytes()==0,"world unload retires draw cache");System.out.println("[vandorlabs][glass-world] client PASS checks="+checks+" actualChunk/BER/joined/selected/opaque/bare/reload/unload; private software only");stage=99;mc.stop();return;}
@@ -38,7 +48,7 @@ public final class GlassWorldClientChecks {
    case 1->{panes=false;mc.levelRenderer.allChanged();snapshot("glass-world-no-ber.png");stage=2;}
    case 2->{panes=true;terrain=false;mc.levelRenderer.allChanged();snapshot("glass-world-no-terrain.png");stage=3;}
    case 3->{terrain=true;mc.reloadResourcePacks();capture=null;captured=false;wait=0;stage=4;}
-   case 5->{mc.disconnect();stage=90;}
+   case 5->{corners(mc);mc.disconnect();stage=90;}
   }
  }
  @SubscribeEvent public static void frame(RenderFrameEvent.Post e){if(!GlassWorldFixture.enabled())return;var mc=Minecraft.getInstance();if(stage==4&&mc.level!=null&&mc.getOverlay()==null&&++wait>60){snapshot("glass-world-reload.png");stage=5;}if(capture==null||++wait<45)return;String name=capture;capture=null;Screenshot.grab(mc.gameDirectory,name,mc.getMainRenderTarget(),message->captured=true);}

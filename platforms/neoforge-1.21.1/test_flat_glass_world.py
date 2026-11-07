@@ -25,6 +25,7 @@ def main():
   task=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
   if args.xvfb:task=['xvfb-run','-a','-s','-screen 0 1280x720x24']+task;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
   run(task,out/'client.log','[vandorlabs][glass-world] client PASS',env)
+  check_log(out/'client.log','[vandorlabs][glass-world] picks PASS')
  finally:
   stop(server)
   if pid is not None:await_shutdown(saved,pid)

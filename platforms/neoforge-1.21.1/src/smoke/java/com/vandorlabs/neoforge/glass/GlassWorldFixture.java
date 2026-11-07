@@ -15,7 +15,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 @EventBusSubscriber(modid="vandorlabs")
 public final class GlassWorldFixture {
  public static NativeGlassBlock BLOCK;public static BlockEntityType<NativeGlassEntity> TYPE;
- public static final BlockPos BASE=new BlockPos(0,80,0);
+ public static final BlockPos BASE=new BlockPos(0,80,0),L=BASE.offset(-4,0,3),T=BASE.offset(-7,0,3);
  public static boolean enabled(){return "flat-glass-world-client".equals(System.getProperty("vandorlabs.transmitterPhase",""));}
  @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration {
   @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent e){if(!enabled())return;
@@ -24,16 +24,21 @@ public final class GlassWorldFixture {
   }
  }
  private static void put(ServerLevel w,BlockPos p,int material,int tint,boolean framed,int interior){
-  w.setBlock(p,BLOCK.defaultBlockState(),18);var t=new CompoundTag();t.putInt("GlassSize",1);t.putInt("GlassMaterial",material);t.putInt("GlassTint",tint);t.putBoolean("GlassFramed",framed);t.putBoolean("GlassJoin",true);if(interior>=0)t.putInt("FrameInterior",interior);
+  putPose(w,p,material,tint,framed,interior,false,Direction.NORTH);
+ }
+ private static void putPose(ServerLevel w,BlockPos p,int material,int tint,boolean framed,int interior,boolean rotated,Direction facing){
+  w.setBlock(p,BLOCK.defaultBlockState().setValue(NativeGlassBlock.ROTATED,rotated),18);var t=new CompoundTag();t.putInt("GlassSize",1);t.putInt("GlassPanelFacing",facing.get2DDataValue());t.putInt("GlassMaterial",material);t.putInt("GlassTint",tint);t.putBoolean("GlassFramed",framed);t.putBoolean("GlassJoin",true);if(interior>=0)t.putInt("FrameInterior",interior);
   ((NativeGlassEntity)w.getBlockEntity(p)).loadWithComponents(t,w.registryAccess());
  }
  @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent e){if(!enabled())return;var w=e.getServer().overworld();System.out.println("[vandorlabs][glass-world] actual server PID="+ProcessHandle.current().pid());
   w.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false,w.getServer());w.setDayTime(6000);w.setWeatherParameters(6000,0,false,false);
-  for(int x=-4;x<12;x++)for(int z=-8;z<4;z++){w.setBlock(new BlockPos(x,79,z),Blocks.STONE.defaultBlockState(),18);for(int y=80;y<85;y++)w.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),18);}
+  for(int x=-10;x<12;x++)for(int z=-8;z<8;z++){w.setBlock(new BlockPos(x,79,z),Blocks.STONE.defaultBlockState(),18);for(int y=80;y<85;y++)w.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),18);}
   for(int x=0;x<3;x++)for(int y=0;y<2;y++)put(w,BASE.offset(x,y,0),-1,1,true,-1);
   put(w,BASE.east(4),0,1,true,0);put(w,BASE.east(5),0,3,true,0);put(w,BASE.east(6),-1,1,false,-1);
   for(int x=0;x<7;x++)w.setBlock(BASE.offset(x,0,2),Blocks.RED_CONCRETE.defaultBlockState(),18);
-  System.out.println("[vandorlabs][glass-world] setup PASS actual9hosts/defaultJoined/selected/opaque/bare");
+  putPose(w,L,64,1,true,-1,false,Direction.NORTH);putPose(w,L.north(),64,1,true,-1,true,Direction.EAST);
+  putPose(w,T,64,1,true,-1,false,Direction.SOUTH);putPose(w,T.east(),64,1,true,-1,false,Direction.SOUTH);putPose(w,T.north(),64,1,true,-1,true,Direction.EAST);putPose(w,T.south(),64,1,true,-1,true,Direction.EAST);
+  System.out.println("[vandorlabs][glass-world] setup PASS actual15hosts/defaultJoined/selected/opaque/bare/L/T/oppositeFacing");
  }
  @SubscribeEvent public static void login(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent e){if(!enabled()||!(e.getEntity() instanceof ServerPlayer p))return;p.setGameMode(GameType.SURVIVAL);p.setNoGravity(true);p.teleportTo(3.5,80,-7);p.connection.teleport(3.5,80,-7,0,5);}
  @SubscribeEvent public static void logout(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedOutEvent e){if(enabled()&&e.getEntity() instanceof ServerPlayer p){System.out.println("[vandorlabs][glass-world] logout PASS");p.getServer().halt(false);}}
