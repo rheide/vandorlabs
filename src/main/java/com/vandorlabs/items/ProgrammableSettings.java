@@ -109,6 +109,14 @@ public final class ProgrammableSettings {
 
     public static final String SEGMENTED_DOOR="segmented_door";
 
+    private static final CopiedSettingsValidation.Access<NBTTagCompound> COPY_TAGS=new CopiedSettingsValidation.Access<NBTTagCompound>(){
+        public boolean contains(NBTTagCompound tag,String key){return tag.hasKey(key);}
+        public boolean type(NBTTagCompound tag,String key,int type){return tag.hasKey(key,type);}
+        public int integer(NBTTagCompound tag,String key){return tag.getInteger(key);}
+        public byte numberByte(NBTTagCompound tag,String key){return tag.getByte(key);}
+        public int[] integers(NBTTagCompound tag,String key){return tag.getIntArray(key);}
+        public NBTTagCompound compound(NBTTagCompound tag,String key){return tag.getCompoundTag(key);}
+    };
     private ProgrammableSettings() { }
 
     private static boolean isPorthole(Block block) {
@@ -402,16 +410,9 @@ public final class ProgrammableSettings {
     private static boolean applyToTile(World world, BlockPos pos, NBTTagCompound values,
             EntityPlayer player, TileEntity tile, Block block) {
         if (tile == null || values == null || values.hasNoTags()) return false;
-        for(String key:new String[]{TEXTURE_LAYOUT,DOOR_TEXTURE_LAYOUT,TRAPDOOR_TEXTURE_LAYOUT})if(values.hasKey(key,3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getInteger(key)))return false;
-        if(values.hasKey(GLASS_LAYOUT,10)){NBTTagCompound layout=values.getCompoundTag(GLASS_LAYOUT);for(String key:new String[]{"GlassPlaybackMode","GlassPlaybackSpeed"})if(layout.hasKey(key)&&(!layout.hasKey(key,1)||!com.vandorlabs.tiles.GlassPlayback.valid(layout.getByte(key))))return false;}
-        if(values.hasKey(GLASS_LAYOUT,10) && values.getCompoundTag(GLASS_LAYOUT).hasKey("Mode",3) && !com.vandorlabs.render.TextureLayoutMode.valid(values.getCompoundTag(GLASS_LAYOUT).getInteger("Mode")))return false;
-        if(values.hasKey(STAIR_TREAD,3)&&!com.vandorlabs.ramp.ControllerPlatform.validTreadPixels(values.getInteger(STAIR_TREAD)))return false;
-        if(values.hasKey(STAIR_ROLL,3)&&(values.getInteger(STAIR_ROLL)<0||values.getInteger(STAIR_ROLL)>2))return false;
-        NBTTagCompound transmission=values.getCompoundTag("Transmission");ChannelList transmissionChannels=null;
-        if(values.hasKey("Transmission",10)){
-            if(!transmission.hasKey("Channels",11)||!transmission.hasKey("Range",3)||!transmission.hasKey("Local",1)||!com.vandorlabs.redstone.TransmitterSlots.validRange(transmission.getInteger("Range")))return false;
-            try{transmissionChannels=ChannelList.of(transmission.getIntArray("Channels"));}catch(IllegalArgumentException invalid){return false;}
-        }
+        if(!CopiedSettingsValidation.valid(values,COPY_TAGS))return false;
+        NBTTagCompound transmission=values.getCompoundTag("Transmission");
+        ChannelList transmissionChannels=values.hasKey("Transmission",10)?ChannelList.of(transmission.getIntArray("Channels")):null;
         boolean applicable = false;
         if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile && values.hasKey(SEGMENTED_DOOR,10)){
             com.vandorlabs.segmented.SegmentedDoorTile door=(com.vandorlabs.segmented.SegmentedDoorTile)tile,selected=new com.vandorlabs.segmented.SegmentedDoorTile();selected.applyItemConfiguration(values.getCompoundTag(SEGMENTED_DOOR),channels(values,door));

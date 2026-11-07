@@ -18,3 +18,17 @@ task testCopifierClipboardReference(type: JavaExec) {
     maxHeapSize = '1g'
     systemProperty 'vandorlabs.copifierClipboardReference', file("$buildDir/test-artifacts/copifier-clipboard-source.json").absolutePath
 }
+
+task testCopifierPreflightReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'copifier-preflight'
+    maxHeapSize = '1g'
+    systemProperty 'vandorlabs.copifierPreflightReference', file("$buildDir/test-artifacts/copifier-preflight-source.json").absolutePath
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
+check.dependsOn testCopifierPreflightReference
