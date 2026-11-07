@@ -190,6 +190,7 @@ public final class VehicleSignals {
         for(BlockPos pos:new ArrayList<>(releases.keySet()))if(craft.world.getTotalWorldTime()>=releases.get(pos)){
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
         }
+        craft.articulation.tickCapturedControls();
         flush();
     }
     public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();}

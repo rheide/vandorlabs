@@ -73,7 +73,7 @@ public final class VehicleInteraction {
         EntityPlayerMP server=(EntityPlayerMP)player;
         if(target.hit.action==VehicleSelection.Action.CHEST)return VehicleChests.open(server,craft,target.hit.cell.pos);
         if(target.hit.action==VehicleSelection.Action.COUPLER){
-            if(target.hit.capturedCoupler!=null){VehicleArmCouplerControl control=VehicleArmCouplerControl.resolve(craft,target.hit.capturedCoupler.arm,target.hit.capturedCoupler.cell);if(control!=null&&(player.isSneaking()||player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER))com.vandorlabs.coupler.ContainerCoupler.openCaptured(player,control);return true;}
+            if(target.hit.capturedCoupler!=null){VehicleArmCouplerControl control=VehicleArmCouplerControl.resolve(craft,target.hit.capturedCoupler.arm,target.hit.capturedCoupler.cell);if(control!=null){if(player.isSneaking()||player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER)com.vandorlabs.coupler.ContainerCoupler.openCaptured(player,control);else control.toggleManual(player);}return true;}
             BlockPos at=target.hit.cell.pos;
             if(player.isSneaking()||player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER)com.vandorlabs.coupler.ContainerCoupler.open(player,craft.view,at);
             else if(com.vandorlabs.coupler.ContainerCoupler.resolve(player,craft.view,at)!=null){net.minecraft.tileentity.TileEntity tile=craft.view.getTileEntity(at);if(tile instanceof com.vandorlabs.coupler.TileCoupler)((com.vandorlabs.coupler.TileCoupler)tile).toggleManual(player);}

@@ -42,7 +42,7 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
             if(craft==null||!(actor instanceof net.minecraft.entity.player.EntityPlayerMP))return;
             craft.authorizeCouplingGui((net.minecraft.entity.player.EntityPlayerMP)actor,this);
         }
-        authorize(actor);com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;boolean paired=com.vandorlabs.vehicle.VehicleCouplings.hasPair(craft,pos);boolean closed=paired&&(connected()&&craft.view.getBlockState(pos.offset(world.getBlockState(pos).getValue(BlockCoupler.FACING))).getValue(BlockCoupler.LOCKED));input.manual(closed?false:!requested);if(closed)com.vandorlabs.vehicle.VehicleCouplings.requestRelease(craft,pos);sample();
+        authorize(actor);com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;boolean closed=com.vandorlabs.vehicle.VehicleCouplings.pairedClosed(craft,pos);input.manual(closed?false:!requested);if(closed)com.vandorlabs.vehicle.VehicleCouplings.requestRelease(craft,pos);sample();
     }
     public void sample(){
         boolean carried=world instanceof com.vandorlabs.vehicle.VehicleWorld;

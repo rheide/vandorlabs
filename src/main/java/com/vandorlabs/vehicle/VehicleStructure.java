@@ -30,6 +30,8 @@ public final class VehicleStructure {
             this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(BuildingBlockCompat.canonical(state,com.vandorlabs.redstone.TransmitterSlots.normalize(tile.copy())));
         }
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
+        NBTTagCompound tileFields(String[] names){NBTTagCompound result=new NBTTagCompound();if(tile!=null)for(String name:names)if(tile.hasKey(name))result.setTag(name,tile.getTag(name).copy());return result;}
+
         public boolean hasTileData(){return tile!=null;}
         public boolean sameTileData(Cell other){return Objects.equals(tile,other.tile);}
         /** Pose and input edges do not change the assembled gear's baked block model. */

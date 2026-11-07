@@ -23,6 +23,7 @@ public final class ArmPayload {
     /** Owned immutable opaque header fields; shared only between detached payload revisions. */
     private NBTTagCompound retainedHeader;
     private VehicleWorld view;
+    private com.vandorlabs.vehicle.VehicleArmCouplerPower couplerPower;
     private List<AxisAlignedBB> localCollision;
     private int[] collisionCellEnds;
     public int collisionBoxCount(GearTileEntity arm){return materialized?0:localCollision(arm).size();}
@@ -75,6 +76,11 @@ public final class ArmPayload {
 
     private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
     ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
+    /** Read-only known-producer sampling, without constructing a nested tile/capability view. */
+    public Boolean snapshotCouplerPower(GearTileEntity arm,BlockPos originalCell){
+        VehicleStructure.Cell selected=blocks.at(originalCell);if(materialized||selected==null||!(selected.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Captured Coupler source unavailable");
+        if(couplerPower==null)couplerPower=new com.vandorlabs.vehicle.VehicleArmCouplerPower(blocks);return couplerPower.powered(originalCell);
+    }
     /** Typed captured Coupler edit; untouched cells, opaque data and endpoint correspondence remain retained. */
     public ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data){
         if(materialized||hasOwnershipJournal())throw new IllegalArgumentException("Captured Coupler ownership is unavailable");
@@ -88,7 +94,7 @@ public final class ArmPayload {
         NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
         next.set(found,new VehicleStructure.Cell(before.pos,before.state,data));
         if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
-        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);return result;
+        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
     }
     private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
