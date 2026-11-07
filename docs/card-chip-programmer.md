@@ -1,5 +1,7 @@
 # Card / Chip Programmer
 
+For NeoForge 1.21.1, see the [native construction and use guide](card-chip-programmer-neoforge.md).
+
 Place the programmer with two blocks of width and two blocks of height clear. The console faces the player. All four occupied cells share one inventory. Breaking any occupied cell dismantles the console and releases its three retained items once.
 
 Right-click the actual **Master**, **Input**, or **Output** pad or socket with a suitable held item to insert one item without opening the dialog. Use an empty hand on an occupied pad to remove its item. Master accepts a company Access Card or Master Data Chip; Input and Output accept Access Cards and Data Chips. Other console surfaces open the standard dark dialog, except the Journal display's page controls. Items stay inserted when the dialog closes or the world saves, and their actual models appear in the sockets.

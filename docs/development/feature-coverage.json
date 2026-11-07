@@ -562,8 +562,7 @@
         "data_chip_programmer"
       ],
       "remaining": [
-        "Card / Chip Programmer block, inventory and journal-programming dialog",
-        "Broader copy-tool, optional-component, resource-pack and final native release acceptance",
+        "Broader optional-component and final native release acceptance",
         "Vehicle-specific credential/display integration remains deferred"
       ],
       "legacy_item_ids": [
@@ -578,7 +577,14 @@
         "Source-exact inventory/Forge wrapper/hopper behavior, credential ownership, private public-data projection, bounded configuration and opaque refused-snapshot recovery.",
         "Actual canonical dedicated checks cover 48 real placements, 12 mining/recovery modes and full process restart; actual canonical client checks cover both IDs, 12 real Survival actions, ordinary/tool editing, production bindings and positive mounted rendering.",
         "Source-authored configured models, resource overrides and padded icons; warmed empty reader drawing measures zero allocation in the focused software-rendered checks.",
-        "Logical Iron material protection preserves credentials under direct water/lava buckets and actual fluid ticks independently of the authored collision shape."
+        "Logical Iron material protection preserves credentials under direct water/lava buckets and actual fluid ticks independently of the authored collision shape.",
+        "Canonical data_chip_programmer retains original four-cell metadata, one three-slot owner, dedicated Master/Journal editor, Program/Copy and direct socket/page interactions. Actual public player checks cover Program/Copy, quick-move/throw, complete returns, Configurizer normal/sneak routes, production shared-bake reload and a staged construction guide.",
+        "Source 64-case actual harvest and 384-case decorative-contact cases match installed native behavior; nine partial rollback/retry layouts and frozen/5TPS counters survive independent-process restart with exact complete item ownership. Source-authored 21 models, 24 dock poses and padded item/resource replacements pass focused GPU checks."
+      ],
+      "modern_registered_block_ids": [
+        "access_card_slot",
+        "data_chip_slot",
+        "data_chip_programmer"
       ]
     },
     {
