@@ -133,3 +133,10 @@ task testArmParkingCurrent(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.ArmParkingCurrentChecks'
  maxHeapSize = '512m'
 }
+
+task testVehicleBodyPoseCodec(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.VehicleBodyPoseCodecChecks'
+ maxHeapSize = '512m'
+}

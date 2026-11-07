@@ -26,6 +26,7 @@ public final class VehicleNetwork {
         public long jointTopology;
         public short[] jointAngles=new short[0];
         public VehicleArmMotionFrame armMotion=VehicleArmMotionFrame.NONE;
+        public VehicleBodyPoseFrame bodyPose=VehicleBodyPoseFrame.NONE;
         public double x,y,z,dy,speed;public float yaw,steering;
         public Packet(){}
         public Packet(int type){this.type=type;}
@@ -34,18 +35,19 @@ public final class VehicleNetwork {
             if(type==STATE){b.writeBoolean(flag);writeState(b);return;}
             b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);
         }
-        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);}
+        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);}
         public void fromBytes(ByteBuf b){
-            valid=false;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;
+            valid=false;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;
             try{
                 type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();
                 if(type==STATE){
                     flag=b.readBoolean();serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();
-                    boolean joints=false,arms=false;
+                    boolean joints=false,arms=false,bodies=false;
                     while(b.isReadable()){
                         if(b.readableBytes()<4)return;int marker=b.readInt();
-                        if(marker==0x4A4F494E&&!joints&&!arms){if(b.readableBytes()<10)return;joints=true;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()<count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}}
-                        else if(marker==VehicleArmMotionFrame.MAGIC&&!arms){arms=true;armMotion=VehicleArmMotionFrame.read(b);}
+                        if(marker==0x4A4F494E&&!joints&&!arms&&!bodies){if(b.readableBytes()<10)return;joints=true;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()<count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}}
+                        else if(marker==VehicleArmMotionFrame.MAGIC&&!arms&&!bodies){arms=true;armMotion=VehicleArmMotionFrame.read(b);}
+                        else if(marker==VehicleBodyPoseFrame.MAGIC&&!bodies){bodies=true;bodyPose=VehicleBodyPoseFrame.read(b);}
                         else return;
                     }
                     valid=!b.isReadable()&&Double.isFinite(x)&&Double.isFinite(y)&&Double.isFinite(z)&&Double.isFinite(dy)&&Double.isFinite(speed)&&Float.isFinite(yaw)&&Float.isFinite(steering);return;
