@@ -22,6 +22,8 @@ A collinear multi-pair constraint must retain its free line axis rather than ent
 
 Grid parking requires the complete transformed payload to have integer cell centers, cardinal block-state orientation, no duplicate destinations, and an admitted ownership transaction. Integral intermediate strokes may qualify; fractional poses refuse ordinary parking. Safe Park can request a separately checked grid-alignment result through a shared resolver. Recovery must preserve opaque capability data and original failed-load snapshots, and pending asynchronous preparation must remain pending.
 
+Detached parking geometry now keeps all parallel constraints and gives each arm one shared phase domain across its heads. Contact choices use the exact eventual native state and cell, including slab quarter-height pivots, rather than the current animated contact point. Scalar projection is bounded to 64 arms, 128 sections, 512 contacts and 65,536 contact choices. Focused checks compare these points with actual detached native publications, all six full-Coupler faces and both horizontal slab halves while retaining the original opaque snapshot. This is a solver prerequisite; whole-layout search, collision admission and Safe Park publication remain separate.
+
 ## Validation order
 
 First freeze vertical full/slab coupler placement, actual section topology, loaded and saved poses, driven turning and lift, connection-point continuity, collision, and driver admission. A passing current case remains documented as passing; a changed behavior requires its failing-before reproduction.
