@@ -12,6 +12,12 @@ import net.minecraft.nbt.NBTTagCompound;
 final class DuplifierMaskChecks {
     static void run(){
         try {
+            String catalog=new com.google.gson.Gson().toJson(new Object[]{DuplifierApplyOptions.PAGES,DuplifierApplyOptions.OPTIONS});
+            String reference=System.getProperty("vandorlabs.optionCatalogReference");
+            if(reference!=null)try{java.nio.file.Files.write(java.nio.file.Paths.get(reference),catalog.getBytes(StandardCharsets.UTF_8));}catch(java.io.IOException e){throw new AssertionError(e);}
+            MessageDigest catalogDigest=MessageDigest.getInstance("SHA-256");StringBuilder catalogHash=new StringBuilder();for(byte b:catalogDigest.digest(catalog.getBytes(StandardCharsets.UTF_8)))catalogHash.append(String.format(java.util.Locale.ROOT,"%02x",b&255));
+            require(catalogHash.toString().equals("4cdbe5b5de9eaabeeefdb18d190074935fbe888bd83764455d2b3f057ae007da"),"Source option catalog changed: "+catalogHash);
+            System.out.println("Duplifier catalog Source sha256="+catalogHash);
             MessageDigest digest=MessageDigest.getInstance("SHA-256");int cases=0;
             long[] lows={0,-1,Long.MIN_VALUE,Long.MAX_VALUE,0x123456789abcdef0L};
             int[] counts={-1,0,1,55,56,63,64,65,72,128,Integer.MAX_VALUE};

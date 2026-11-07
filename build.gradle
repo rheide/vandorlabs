@@ -1563,8 +1563,22 @@ task testDuplifierMask(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.NonRenderingChecks'
     args 'duplifier-mask'
+    systemProperty 'vandorlabs.optionCatalogReference', file("$buildDir/test-artifacts/copifier-option-catalog-source.json").absolutePath
+    doFirst { file("$buildDir/test-artifacts").mkdirs() }
     maxHeapSize = '1g'
     workingDir = file("$buildDir/non-rendering-checks")
     doFirst { workingDir.mkdirs() }
 }
 check.dependsOn testDuplifierMask
+
+task testDuplifierSelection(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'duplifier-selection'
+    maxHeapSize = '1g'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testDuplifierSelection

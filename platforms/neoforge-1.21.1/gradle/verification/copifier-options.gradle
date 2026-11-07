@@ -1,0 +1,8 @@
+tasks.register('testNativeCopifierOptions', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.copifier.NativeCopifierOptionsChecks'
+    maxHeapSize = '512m'
+    args file('../../testclient/fixtures/copifier-option-catalog-source.json').absolutePath
+}

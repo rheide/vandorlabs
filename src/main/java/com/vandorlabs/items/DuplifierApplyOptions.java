@@ -9,7 +9,7 @@ public final class DuplifierApplyOptions {
     private static final String COUNT_TAG = "DuplifierApplyOptionCount";
     public static final String CONNECTED_TAG = "DuplifierConnected";
     public static final String IGNORE_DIRECTION_TAG = "DuplifierIgnoreDirectionality";
-    public static final String[] PAGES = {"Common", "Displays", "Blocks", "Doors", "Ramps"};
+    public static final String[] PAGES = DuplifierOptionCatalog.pages();
 
     public static final class Option {
         public final String key;
@@ -23,90 +23,13 @@ public final class DuplifierApplyOptions {
         }
     }
 
-    private static Option option(String key, String label, int page) {
-        return new Option(key, label, page);
+    private static Option[] options(){
+        DuplifierOptionCatalog.Option[] catalog=DuplifierOptionCatalog.options();
+        Option[] options=new Option[catalog.length];
+        for(int i=0;i<catalog.length;i++)options[i]=new Option(catalog[i].key,catalog[i].label,catalog[i].page);
+        return options;
     }
-
-    public static final Option[] OPTIONS = {
-            option(ProgrammableSettings.PRIMARY_TEXTURE, "Primary Texture", 0),
-            option(ProgrammableSettings.WALL_TEXTURE, "Wall Texture", 0),
-            option(ProgrammableSettings.JOIN, "Join", 0),
-            option(ProgrammableSettings.CHANNEL, "Redstone Channels", 0),
-            option(ProgrammableSettings.TRIGGER, "Redstone Trigger", 0),
-            option(ProgrammableSettings.ACTIVE, "Active State", 0),
-            option(ProgrammableSettings.PARTICLES, "Particle Stream", 0),
-            option(ProgrammableSettings.FRAMED, "Frame", 0),
-            option(ProgrammableSettings.GLASS_SHADE, "Glass Shade", 0),
-            option(ProgrammableSettings.LIGHT_LEVEL, "Light Level", 0),
-
-            option(ProgrammableSettings.DISPLAY_MODE, "Display Mode", 1),
-            option(ProgrammableSettings.ANIMATION_SPEED, "Animation Speed", 1),
-            option(ProgrammableSettings.INPUT_PANEL, "Input Panel", 1),
-            option(ProgrammableSettings.SECONDARY_INPUT_PANEL, "Second Input Panel", 1),
-            option(ProgrammableSettings.SMALL_INPUT, "Small Input", 1),
-            option(ProgrammableSettings.WALL_POSITION, "Wall Pos", 1),
-            option(ProgrammableSettings.TRIGGER_ON_TEXTURE, "Trigger On Texture", 1),
-
-            option(ProgrammableSettings.PROPULSION_SHAPE, "Thruster Shape", 2),
-            option(ProgrammableSettings.PORTHOLE_SHAPE, "Porthole Shape", 2),
-            option(ProgrammableSettings.GLASS_SIZE, "Glass Size", 2),
-            option(ProgrammableSettings.SIDE_TEXTURE,"Side Texture",2),
-            option(ProgrammableSettings.SLAB_TILE_SIDES, "Texture Layout", 2),
-            option(ProgrammableSettings.CHAIR_STYLE, "Chair Style", 2),
-            option(ProgrammableSettings.CHAIR_HEIGHT, "Chair Height", 2),
-            option(ProgrammableSettings.SWITCH_ROTATION, "Switch Rotation", 2),
-
-            option(ProgrammableSettings.DOOR_DESIGN, "Door Design", 3),
-            option(ProgrammableSettings.DOOR_DETAIL, "Door Detail", 3),
-            option(ProgrammableSettings.DOOR_SLIDE_DIRECTION, "Slide Direction", 3),
-            option(ProgrammableSettings.DOOR_MIDDLE, "Middle Door", 3),
-            option(ProgrammableSettings.DOOR_SLIDING, "Door / Trapdoor Movement", 3),
-            option(ProgrammableSettings.DOOR_HINGES, "Door Hinges", 3),
-            option(ProgrammableSettings.DOOR_PANEL, "Door Panel", 3),
-            option(ProgrammableSettings.DOOR_DEPTH, "Door Depth", 3),
-
-            option(ProgrammableSettings.RAMP_START, "Start Offset", 4),
-            option(ProgrammableSettings.RAMP_END, "End Offset", 4),
-            option(ProgrammableSettings.RAMP_TREAD_PIXELS, "Tread Size", 4),
-            option(ProgrammableSettings.RAMP_SPEED, "Ramp Speed", 4),
-            option(ProgrammableSettings.RAMP_LIFT, "Lift Mode", 4),
-            option(ProgrammableSettings.RAMP_EXTEND, "Extend Mode", 4),
-            option(ProgrammableSettings.RAMP_DIRECTION, "Ramp Direction", 4),
-            option(ProgrammableSettings.RAMP_TRAVEL, "Travel Direction", 4),
-            option(ProgrammableSettings.FACE_TEXTURES, "Face Overrides", 2),
-            option(ProgrammableSettings.DIAGONAL_GEOMETRY, "Diagonal Geometry", 2),
-            option(ProgrammableSettings.RAMP_MATCH_TEXTURES, "Match Textures", 4),
-            option(ProgrammableSettings.GEAR_SIZE, "Gear Size", 2),
-            option(ProgrammableSettings.GEAR_LENGTH, "Gear Extension", 2),
-            option(ProgrammableSettings.GEAR_MODE, "Gear Redstone Mode", 2),
-            option(ProgrammableSettings.TRAPDOOR_POSITION, "Trapdoor Pos", 3),
-            option(ProgrammableSettings.TRAPDOOR_COVER, "Next-block Leaf", 3),
-            option(ProgrammableSettings.PRIMARY_SURFACE, "Static Surface Texture", 1),
-            option(ProgrammableSettings.SECONDARY_SURFACE, "Second Static Texture", 1),
-            option(ProgrammableSettings.LIGHT_FACE_TEXTURE, "Light Face Texture", 0),
-            option(ProgrammableSettings.DOOR_FACE_TEXTURE, "Door Face Texture", 3),
-            option(ProgrammableSettings.DOOR_TILE_TEXTURE, "Door Face Layout", 3),
-            option(ProgrammableSettings.TRAPDOOR_TILE_TEXTURE, "Trapdoor Face Layout", 3),
-            option(ProgrammableSettings.TRAPDOOR_COVER_FACING, "Trapdoor Hinge Direction", 3),
-            option(ProgrammableSettings.REDSTONE_ROWS,"Redstone Screen Items",1),
-            option(ProgrammableSettings.RAMP_INTERPOLATION,"Ramp Interpolation",4),
-            option(ProgrammableSettings.SIGNAL_SETTINGS,"Signal Levels",0),
-            option(DuplifierArmorTextures.KEY,"Armor Texture",0),
-            option(ProgrammableSettings.RAMP_ESCALATOR,"Escalator Mode",4),
-            option(ProgrammableSettings.GLASS_TINT,"Glass Tint",2),
-            option(ProgrammableSettings.GLASS_MATERIAL,"Glass Material / Layout",0),
-            option(ProgrammableSettings.BLOCK_CONFIGURATION,"Canopy / Pilot Settings",2),
-            option("MoatMode","Moat Mode",4),
-            option(ProgrammableSettings.DOOR_SECURITY,"Door Security",3),
-            option(ProgrammableSettings.STAIR_TREAD, "Stair step size", 2),
-            option(ProgrammableSettings.STAIR_ROLL, "Stair orientation", 2),
-            option("FrameAppearance", "Frame Finishes", 0),
-            option(ProgrammableSettings.DOOR_GLASS,"Door Glass",3),
-            option(ProgrammableSettings.MODULAR_ARM_SETTINGS,"Arm / Track Settings",2),
-            option(ProgrammableSettings.CHAIR_ANGLE,"Chair Angle",2),
-            option(ProgrammableSettings.RAMP_VERTICAL_LAYOUT,"Vertical Ramp Layout",4),
-            option(ProgrammableSettings.SEGMENTED_DOOR,"Segmented Door Settings",3)
-    };
+    public static final Option[] OPTIONS=options();
 
     /** Legacy API covers the original first word; option indices are append-only. */
     private static final DuplifierOptionMask MASK = new DuplifierOptionMask(OPTIONS.length);
