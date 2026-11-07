@@ -20,7 +20,8 @@ public final class NativeConfigurationAccess {
     }
     /** Tool interactions retain the actual clicked face for Adventure permissions. */
     public static boolean canEditDialog(Player player,Level level,BlockPos pos,Direction face) {
-        return player.isAlive() && !player.isSpectator()
+        return !com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,pos)
+            && player.isAlive() && !player.isSpectator()
             && player.level()==level && level.hasChunkAt(pos)
             && player.distanceToSqr(pos.getCenter())<=64 && level.mayInteract(player,pos)
             && player.mayUseItemAt(pos,face,player.getMainHandItem());
