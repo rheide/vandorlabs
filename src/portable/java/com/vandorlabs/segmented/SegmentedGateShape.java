@@ -67,6 +67,30 @@ public final class SegmentedGateShape {
         public int count(){return elements.length;}public Element element(int index){return elements[index];}
         public boolean contains(double x,double y,double z,Hit scratch){if(!bounds.contains(x,y,z))return false;for(Element e:elements)if(e.contains(x,y,z,scratch.scratch))return true;return false;}
         public boolean ray(double ax,double ay,double az,double bx,double by,double bz,Hit hit){hit.t=Double.POSITIVE_INFINITY;hit.element=hit.face=-1;if(!(finite(ax)&&finite(ay)&&finite(az)&&finite(bx)&&finite(by)&&finite(bz))||!bounds.overlapsSegment(ax,ay,az,bx,by,bz))return false;for(int i=0;i<elements.length;i++)elements[i].ray(ax,ay,az,bx,by,bz,i,hit);if(hit.element<0)return false;hit.x=ax+(bx-ax)*hit.t;hit.y=ay+(by-ay)*hit.t;hit.z=az+(bz-az)*hit.t;elements[hit.element].normal(hit.face,hit.scratch,0);hit.nx=hit.scratch[0];hit.ny=hit.scratch[1];hit.nz=hit.scratch[2];return true;}
+        /** Includes already prepared vertical extensions without allocating or rebuilding authored elements. */
+        public boolean ray(double ax,double ay,double az,double bx,double by,double bz,List<Connector> below,List<Connector> above,Hit hit){
+            if(below==null||above==null||below.size()>256||above.size()>256)throw new IllegalArgumentException("Gate ray connector capacity");
+            ray(ax,ay,az,bx,by,bz,hit);
+            if(!(finite(ax)&&finite(ay)&&finite(az)&&finite(bx)&&finite(by)&&finite(bz)))return false;
+            connectorRays(ax,ay,az,bx,by,bz,below,hit);connectorRays(ax,ay,az,bx,by,bz,above,hit);
+            if(hit.element<0)return false;hit.x=ax+(bx-ax)*hit.t;hit.y=ay+(by-ay)*hit.t;hit.z=az+(bz-az)*hit.t;
+            elements[hit.element].normal(hit.face,hit.scratch,0);hit.nx=hit.scratch[0];hit.ny=hit.scratch[1];hit.nz=hit.scratch[2];return true;
+        }
+        private void connectorRays(double ax,double ay,double az,double bx,double by,double bz,List<Connector> connectors,Hit hit){
+            for(int index=0;index<connectors.size();index++){
+                Connector connector=connectors.get(index);Box box=connector.bounds;Element element=elements[connector.element];
+                if(!box.overlapsSegment(ax,ay,az,bx,by,bz))continue;
+                for(int face=0;face<6;face++){
+                    if((element.faces&(1<<face))==0)continue;int axis=face<2?1:face<4?2:0;
+                    double a=axis==0?ax:axis==1?ay:az,b=axis==0?bx:axis==1?by:bz,delta=b-a;
+                    if(Math.abs(delta)<1e-12)continue;
+                    double edge=axis==0?((face&1)==0?box.x0:box.x1):axis==1?((face&1)==0?box.y0:box.y1):((face&1)==0?box.z0:box.z1),t=(edge-a)/delta;
+                    if(t< -EPS||t>1+EPS||t>=hit.t)continue;
+                    double x=ax+t*(bx-ax),y=ay+t*(by-ay),z=az+t*(bz-az);
+                    if(box.contains(x,y,z)){hit.t=Math.max(0,Math.min(1,t));hit.element=connector.element;hit.face=face;}
+                }
+            }
+        }
         private List<Cap> caps(boolean upper){
             List<Cap> result=new ArrayList<>();for(Element seed:elements){if(seed.axis>=0||seed.hi[1]-seed.lo[1]<.25-EPS||seed.hi[0]-seed.lo[0]>.125+EPS||seed.hi[2]-seed.lo[2]>.125+EPS)continue;
                 double end=upper?seed.hi[1]:seed.lo[1];for(Element e:elements)if(e.axis<0&&overlap(seed.lo[0],seed.hi[0],e.lo[0],e.hi[0])&&overlap(seed.lo[2],seed.hi[2],e.lo[2],e.hi[2]))end=upper?Math.max(end,e.hi[1]):Math.min(end,e.lo[1]);
