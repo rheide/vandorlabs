@@ -1,0 +1,7 @@
+package com.vandorlabs.neoforge;
+import java.util.List;
+import net.minecraft.world.phys.AABB;
+/** Existing threshold unchanged; authored Ramp clipping retains exact accepted tiny components. */
+public final class NativeVoxelThresholdChecks {
+ public static void main(String[] args){int checks=0;for(double width:new double[]{1e-9,1e-8,Math.nextUp(1e-8),5e-8,1e-7,.5}){var box=new AABB(0,0,0,width,1,1);var old=NativeVoxelShapes.union(List.of(box),1024*1024);var ramp=NativeVoxelShapes.union(List.of(box),1024*1024,1e-8);if(old.isEmpty()!=(width<1e-7)||ramp.isEmpty()!=(width<=1e-8))throw new AssertionError("Voxel threshold "+width);if(!ramp.isEmpty()&&ramp.bounds().maxX!=width)throw new AssertionError("Ramp edge widened");checks+=3;}for(double threshold:new double[]{Double.NaN,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY,-1}){try{NativeVoxelShapes.union(List.of(new AABB(0,0,0,1,1,1)),1024*1024,threshold);throw new AssertionError("Invalid edge threshold");}catch(IllegalArgumentException expected){checks++;}}var boxes=List.of(new AABB(0,0,0,.5,1,1),new AABB(.5,0,0,1,.5,1));if(!NativeVoxelShapes.union(boxes,1024*1024).toAabbs().equals(NativeVoxelShapes.union(boxes,1024*1024,1e-8).toAabbs()))throw new AssertionError("Adjacent regular union changed");System.out.println("Native voxel edge thresholds PASS checks="+(checks+1)+" exact Ramp edges/no widening, existing default unchanged");}
+}
