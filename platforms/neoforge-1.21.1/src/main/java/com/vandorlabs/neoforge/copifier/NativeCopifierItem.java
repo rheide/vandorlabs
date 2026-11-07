@@ -14,7 +14,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
-/** Inactive ordinary item route. Connected/crafting/undo and other target adapters remain separate. */
+/** Inactive ordinary item route. Crafting/undo and other target adapters remain separate. */
 public class NativeCopifierItem extends Item implements NativeOwnsBlockInteraction {
     private final Supplier<MenuType<NativeCopifierMenu>> menus;
     public NativeCopifierItem(Properties properties,Supplier<MenuType<NativeCopifierMenu>> menus){super(properties.stacksTo(1));this.menus=java.util.Objects.requireNonNull(menus);}
@@ -31,9 +31,12 @@ public class NativeCopifierItem extends Item implements NativeOwnsBlockInteracti
             var captured=NativeCopifierHousingWorld.capture(level,pos,player,context.getClickedFace());if(captured==null)return InteractionResult.FAIL;
             store(player,stack,NativeCopifierClipboard.copied(root,captured,level.getBlockState(pos).getBlock().getDescriptionId()));return InteractionResult.CONSUME;
         }
-        if(NativeCopifierOptions.connected(root)||!NativeCopifierClipboard.hasCopy(root))return InteractionResult.FAIL;
+        if(!NativeCopifierClipboard.hasCopy(root))return InteractionResult.FAIL;
         var selected=NativeCopifierOptions.selected(NativeCopifierClipboard.settings(root),NativeCopifierOptions.maskWords(root));
-        return NativeCopifierHousingWorld.applySingle(level,pos,player,context.getClickedFace(),selected)?InteractionResult.CONSUME:InteractionResult.FAIL;
+        boolean applied=NativeCopifierOptions.connected(root)
+            ?NativeCopifierHousingConnected.apply(level,pos,player,context.getClickedFace(),selected,NativeCopifierOptions.ignoreDirectionality(root))>0
+            :NativeCopifierHousingWorld.applySingle(level,pos,player,context.getClickedFace(),selected);
+        return applied?InteractionResult.CONSUME:InteractionResult.FAIL;
     }
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         var stack=player.getItemInHand(hand);if(hand!=InteractionHand.MAIN_HAND||player.isSpectator())return InteractionResultHolder.pass(stack);
