@@ -8,7 +8,7 @@ import net.minecraft.nbt.*;
 public final class CanopySettingsChecks {
     private static int checks;
     private static void need(boolean value,String message) { checks++; if(!value)throw new AssertionError(message); }
-    private static CompoundTag tags(JsonObject input)throws Exception {
+    static CompoundTag tags(JsonObject input)throws Exception {
         CompoundTag tag=new CompoundTag();
         for(var entry:input.entrySet()) {
             var value=entry.getValue().getAsJsonObject(); int type=value.get("type").getAsInt();
