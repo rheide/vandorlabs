@@ -39,7 +39,7 @@ final class VehicleArmParkingSearch {
     }
     VehicleArmParkingGeometry geometry(){if(!done)throw new IllegalStateException("Arm parking search is pending");requireStable();return geometry;}
     GridCouplerParking.Result result(){if(!done)throw new IllegalStateException("Arm parking search is pending");requireStable();return search.result();}
-    private void requireStable(){
+    void requireStable(){
         if(craft.isDead||craft.ownershipBlocked||!craft.transferInProgress||craft.structure!=source||craft.view!=view||view.structure!=source)throw new IllegalArgumentException("Vehicle changed during arm parking preparation");
         for(int i=0;i<roots.size();i++){GearTileEntity arm=roots.get(i);if(view.tiles.get(arm.getPos())!=arm||arm.payload()!=payloads.get(i)||arm.motionRevision()!=revisions[i])throw new IllegalArgumentException("Arm changed during parking preparation");}
     }

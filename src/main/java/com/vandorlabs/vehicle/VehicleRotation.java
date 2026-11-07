@@ -58,6 +58,18 @@ public final class VehicleRotation {
         double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
         return VehicleLandingGear.parking(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
     }
+    /** Final cardinal preparation of an already solved native arm layout. No live pose is changed. */
+    static Plan safePlan(EntityGroundVehicle craft,int turns,VehicleStructure aligned,Map<BlockPos,BlockPos> seats){
+        TaxiModularGear.requireParkable(craft);
+        if(aligned==null||turns<0||turns>3||!Double.isFinite(craft.posX)||!Double.isFinite(craft.posY)||!Double.isFinite(craft.posZ))throw new IllegalArgumentException("Invalid prepared arm parking pose");
+        VehicleStructure rotated=rotate(aligned,new VehicleWorld(craft.world,aligned),turns);
+        double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
+        Plan parking=VehicleLandingGear.parking(rotated,new BlockPos(Math.round(centerX-rotated.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-rotated.bounds.maxZ/2)));
+        BlockPos rebase=parking.structure.seat.subtract(rotated.seat);Map<BlockPos,BlockPos> mapped=new LinkedHashMap<>();
+        for(Map.Entry<BlockPos,BlockPos> entry:seats.entrySet())mapped.put(entry.getKey(),cell(entry.getValue(),(int)aligned.bounds.maxX,(int)aligned.bounds.maxZ,turns).add(rebase));
+        VehicleTransfer.validateParkedSeats(craft.structure,parking.structure,mapped,Collections.emptyList());
+        return new Plan(parking.structure,parking.origin,mapped);
+    }
     public static BlockPos cell(BlockPos p,int width,int depth,int turns) {
         switch(Math.floorMod(turns,4)) {
             case 1:return new BlockPos(depth-1-p.getZ(),p.getY(),p.getX());
