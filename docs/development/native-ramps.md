@@ -272,3 +272,5 @@ The dedicated write/restart case proves wrong-actor and worker refusal, disabled
 ### Frozen original-space alignment
 
 Each assembly derives an original-space proxy recipe from its own immutable captured shapes and material projections. It retains no second inventory or source NBT. All 612 capture profiles reproduce the exact original local boxes and source-cell set. The extra index is included in the assembly retained-memory budget. The paired frame publisher accepts this transition only to that assembly’s own derived recipe, and verifies that its staged frozen rollback reproduces the installed spec, materials, source state and geometry. This provides a reset prerequisite; it does not install live originals, return actors or enable controller commands by itself.
+
+Frame admission also rechecks disabled saving immediately before installation, after detached factories have run. A factory that disables saving during preparation leaves every existing frame body unchanged and returns pending; the generated rollback and candidate staging are discarded without source transfer.
