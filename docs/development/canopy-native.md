@@ -123,3 +123,26 @@ menu, screen and payload registrations: all six ordinary/Configurizer routes,
 mode and held-stack synchronization, live edit, blocked resize reply and stale
 window refusal pass. These checks still precede public activation and anchored
 membership repair acceptance.
+
+### Loaded membership repair
+
+Normal server ticks now run the released membership repair every twenty ticks.
+An independent 520-callback Source corpus covers anchored roots, helpers, joined
+columns, missing/wrong members, released cells and cold boundaries. The native
+world replay passes 51,593 assertions, including 68 scenes with actual absent
+chunks before and after the callback. Cold cells are not installed by that
+replay; it establishes loaded outcomes and refusal to load, not preservation of
+a cold disk payload. Cold helpers retain the decoded width hint: the released
+snapshot was captured with its owner warmed again, while native serialization
+continues to derive current width only from loaded ownership.
+
+The eighty marked absent-root legacy cases deliberately preserve the pre-repair
+layout instead of reproducing destructive legacy deletion. Inert failed-load
+parents and helpers likewise cannot prove missing ownership. Root removal uses
+the existing exact-identity teardown and does not erase foreign replacements.
+The canonical placed-world follow-up removes a live helper entity, observes the
+normal twenty-tick owner teardown on both sides, and confirms the leftover
+factory-missing helper revives uninitialized and yields no usable item. All
+eleven body scenes, motion/reversal, reload and pixel controls still pass after
+Canopy emission delegates the shared prepared-vertex primitive. This remains
+focused software-rendered acceptance, not a release gate or hardware benchmark.
