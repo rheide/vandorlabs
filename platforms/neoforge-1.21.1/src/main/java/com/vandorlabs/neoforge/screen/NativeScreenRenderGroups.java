@@ -68,5 +68,6 @@ public final class NativeScreenRenderGroups {
   av=prepared(a,queries,NativeScreenClientPower.ANIMATION_SPEED);bv=prepared(b,queries,NativeScreenClientPower.ANIMATION_SPEED);return av.appearance().animationSpeed==bv.appearance().animationSpeed;
  }
  private static NativeScreenEntity.Visual prepared(NativeScreenEntity tile,IdentityHashMap<NativeScreenEntity,Integer> queries,int mask){queries.merge(tile,mask,(a,b)->a|b);if(queries.size()>4096)throw new IllegalStateException("Screen render getter member bound exceeded");return NativeScreenClientPower.prepare(tile,mask);}
+ public static boolean installed(NativeScreenEntity tile){thread();var level=tile.getLevel();return level!=null&&installed(level,tile);}
  private static boolean installed(Level level,NativeScreenEntity tile){if(level!=Minecraft.getInstance().level||tile.isRemoved()||tile.inert()||tile.getLevel()!=level)return false;var pos=tile.getBlockPos();var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);return chunk!=null&&chunk.getBlockEntities().get(pos)==tile&&chunk.getBlockState(pos)==tile.getBlockState()&&tile.getBlockState().getBlock() instanceof NativeScreenBlock block&&block.family()==tile.family();}
 }
