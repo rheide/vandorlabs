@@ -24,7 +24,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class ProgrammerWorldFixture {
  static final BlockPos SUPPORT=new BlockPos(0,96,0),ROOT=SUPPORT.north(),ACK=SUPPORT.east(4);
  static int step,checks;private static java.util.UUID actor;private static boolean toolObserved,toolSneak;
- static boolean enabled(){return Boolean.getBoolean("vandorlabs.programmerWorldCheck");}
+ static boolean enabled(){return Boolean.getBoolean("vandorlabs.programmerWorldCheck")&&!Boolean.getBoolean("vandorlabs.programmerRenderMatrixCheck");}
  static void need(boolean ok,String why){checks++;if(!ok)throw new AssertionError("Programmer world step="+step+": "+why);}
  public record Ack(int step)implements CustomPacketPayload{static final Type<Ack> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:programmer_world_ack"));public Type<? extends CustomPacketPayload> type(){return TYPE;}}
  @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration{

@@ -1,0 +1,39 @@
+package com.vandorlabs.neoforge.programmer;
+import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
+import net.minecraft.core.*;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.*;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.*;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+/** Separate passive render matrix: one real installed inventory owner per isolated slot image. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class ProgrammerRenderWorldFixture {
+ static final BlockPos ROOT=new BlockPos(0,96,-1),UPPER=new BlockPos(0,111,-1),ACK=new BlockPos(5,96,0),HIGH=ACK.east();
+ static final int FINAL=52;static int stage,checks;private static java.util.UUID actor;private static CompoundTag journalBefore,upperBefore;
+ static boolean enabled(){return Boolean.getBoolean("vandorlabs.programmerRenderMatrixCheck");}
+ static Direction face(int stage){return stage<48?Direction.from2DDataValue(stage/12):Direction.NORTH;}
+ static int slot(int stage){return stage/2%3;}static boolean chip(int stage){return stage/2%6>=3;}
+ static Vec3 eye(int stage){if(stage>=50)return new Vec3(1,112.7,-1.8);var layout=NativeProgrammerLayout.of(face(stage));return new Vec3(ROOT.getX()+layout.originX()+layout.transform().x(1,-3),ROOT.getY()+3.4,ROOT.getZ()+layout.originZ()+layout.transform().z(1,-3));}
+ static void need(boolean ok,String why){checks++;if(!ok)throw new AssertionError("Programmer render world stage="+stage+": "+why);}
+ public record Ack(int stage)implements CustomPacketPayload{static final Type<Ack> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:programmer_render_ack"));public Type<? extends CustomPacketPayload> type(){return TYPE;}}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration{@SubscribeEvent public static void payload(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(!enabled())return;event.registrar("1").playToServer(Ack.TYPE,new StreamCodec<RegistryFriendlyByteBuf,Ack>(){public Ack decode(RegistryFriendlyByteBuf b){if(b.readableBytes()!=1)throw new IllegalArgumentException("Programmer render ack length");int value=b.readUnsignedByte();if(value>=FINAL)throw new IllegalArgumentException("Programmer render stage");return new Ack(value);}public void encode(RegistryFriendlyByteBuf b,Ack value){b.writeByte(value.stage);}},(value,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player)ack(player,value.stage);}));}}
+ static NativeProgrammerEntity owner(ServerLevel level,BlockPos root){return level.getBlockEntity(root) instanceof NativeProgrammerEntity owner?owner:null;}
+ static NativeProgrammerEntity seed(ServerLevel level,BlockPos root,Direction face){var previous=owner(level,root);if(previous!=null)previous.clearContent();level.removeBlock(root,false);for(int part=0;part<4;part++){var pos=NativeProgrammerBlock.cell(root,face,part);level.getChunkAt(pos);level.setBlock(pos,ProgrammerHostChecks.block().defaultBlockState().setValue(NativeProgrammerBlock.FACING,face).setValue(NativeProgrammerBlock.PART,part),3);}var result=owner(level,root);need(result!=null&&!result.inert(),"fresh sole root");return result;}
+ static void journal(NativeProgrammerEntity owner,String title){var draft=new NativeProgrammerDraft(false,true,title,java.util.List.of("W".repeat(512)));owner.setItem(0,NativeCredentialItems.dataChip(4));owner.setItem(2,NativeProgrammerRules.programmedCopy(NativeCredentialItems.dataChip(4),NativeCredentialItems.dataChip(0),draft));}
+ @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event){if(!enabled()||!(event.getEntity() instanceof ServerPlayer player))return;actor=player.getUUID();var level=player.serverLevel();level.getGameRules().getRule(GameRules.RULE_DAYLIGHT).set(false,player.getServer());level.getGameRules().getRule(GameRules.RULE_DOMOBSPAWNING).set(false,player.getServer());level.setDayTime(6000);level.setWeatherParameters(20000,0,false,false);for(int x=-8;x<=8;x++)for(int z=-8;z<=8;z++){level.setBlock(new BlockPos(x,95,z),Blocks.STONE.defaultBlockState(),3);for(int y=96;y<100;y++)level.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);}setup(player);System.out.println("[vandorlabs][programmer-render-world] setup PASS");}
+ static void marker(ServerLevel level){level.setBlock(ACK,Blocks.NOTE_BLOCK.defaultBlockState().setValue(NoteBlock.NOTE,stage%25),3);level.setBlock(HIGH,Blocks.NOTE_BLOCK.defaultBlockState().setValue(NoteBlock.NOTE,stage/25),3);}
+ static void setup(ServerPlayer player){var level=player.serverLevel();if(stage<48){if(stage%2==0)seed(level,ROOT,face(stage));else owner(level,ROOT).setItem(slot(stage),chip(stage)?NativeCredentialItems.dataChip(slot(stage)+1):NativeCredentialItems.accessCard(slot(stage)+1));}else if(stage==48){journal(seed(level,ROOT,Direction.NORTH),"Reload journal");journalBefore=owner(level,ROOT).saveWithoutMetadata(level.registryAccess());}else if(stage==49){journal(seed(level,UPPER,Direction.NORTH),"Upper visible");upperBefore=owner(level,UPPER).saveWithoutMetadata(level.registryAccess());}
+  if(stage%2==0||stage>=48&&stage!=49&&stage!=51){player.setGameMode(GameType.CREATIVE);player.getInventory().clearContent();player.getInventory().selected=0;player.setItemInHand(InteractionHand.MAIN_HAND,net.minecraft.world.item.ItemStack.EMPTY);player.setItemInHand(InteractionHand.OFF_HAND,net.minecraft.world.item.ItemStack.EMPTY);player.setShiftKeyDown(false);player.getAbilities().flying=true;player.setNoGravity(true);player.onUpdateAbilities();Vec3 eye=eye(stage),target;if(stage>=50)target=new Vec3(1,112.7,0);else{var layout=NativeProgrammerLayout.of(face(stage));target=new Vec3(ROOT.getX()+layout.originX()+layout.transform().x(1,.5),97,ROOT.getZ()+layout.originZ()+layout.transform().z(1,.5));}double dx=target.x-eye.x,dy=target.y-eye.y,dz=target.z-eye.z;player.connection.teleport(eye.x,eye.y-player.getEyeHeight(),eye.z,(float)-Math.toDegrees(Math.atan2(dx,dz)),(float)-Math.toDegrees(Math.atan2(dy,Math.sqrt(dx*dx+dz*dz))));player.setDeltaMovement(Vec3.ZERO);player.connection.send(new net.minecraft.network.protocol.game.ClientboundSetCarriedItemPacket(0));player.inventoryMenu.broadcastChanges();}marker(level);
+ }
+ static void ack(ServerPlayer player,int received){need(player.getUUID().equals(actor)&&received==stage&&player.isCreative(),"exact current actor/stage/render mode");var level=player.serverLevel();var owner=owner(level,stage>=49?UPPER:ROOT);need(owner!=null&&!owner.inert(),"installed current owner");if(stage<48){need(owner.getBlockState().getValue(NativeProgrammerBlock.FACING)==face(stage),"native facing");for(int slot=0;slot<3;slot++)need(stage%2==0||slot!=slot(stage)?owner.getItem(slot).isEmpty():owner.getItem(slot).getCount()==1&&NativeProgrammerRules.kind(owner.getItem(slot))==(chip(stage)?2:1)&&NativeCredentialItems.company(owner.getItem(slot))==slot+1,"one isolated physical token");}else need(owner.saveWithoutMetadata(level.registryAccess()).equals(stage==48?journalBefore:upperBefore),"render/reload preserves exact private ownership");stage++;if(stage<FINAL)setup(player);else{marker(level);System.out.println("[vandorlabs][programmer-render-world] server PASS checks="+checks);}}
+ @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event){if(enabled()&&actor!=null&&event.getEntity().getUUID().equals(actor)){need(stage==FINAL,"all dock/reload/upper phases");System.out.println("[vandorlabs][programmer-render-world] logout PASS");}}
+}
