@@ -9,10 +9,12 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 /** Inactive standalone owner foundation. Loading does not discover neighbors or prepare dense geometry. */
-public final class NativeCanopyEntity extends BlockEntity {
+public final class NativeCanopyEntity extends BlockEntity implements com.vandorlabs.neoforge.redstone.NativeChannelMember {
     public static final String RECOVERY="CanopyRecoverySnapshot", UNINITIALIZED="CanopyUninitialized", PLACEMENT_ITEM="CanopyPlacementItem";
     public record Publication(NativeCanopyRenderSnapshot visual,NativeCanopyGeometry.Snapshot geometry,
             float progress,boolean targetOpen,boolean waiting,boolean draws,boolean resolved,boolean inert){}
+    final NativeCanopyControl.State control=new NativeCanopyControl.State();
+    boolean channelPowered;
     private final String kind;
     private NativeCanopySettings settings=NativeCanopySettings.fresh();
     private NativeCanopyLinks links;
@@ -39,7 +41,7 @@ public final class NativeCanopyEntity extends BlockEntity {
         publication=new Publication(visual,null,links.progress(),links.open(),links.waiting(),localDraws(),false,inert);
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        var original=tag.copy();initialized=!tag.getBoolean(UNINITIALIZED);try{
+        control.reset();channelPowered=false;var original=tag.copy();initialized=!tag.getBoolean(UNINITIALIZED);try{
             NativePlatformComponents.requireSupported(original,registries);
             if(!initialized||tag.contains("NeoForgeData")&&!tag.contains("NeoForgeData",Tag.TAG_COMPOUND)||tag.contains(RECOVERY)||tag.contains("NativeCanopySchema")&&(!tag.contains("NativeCanopySchema",Tag.TAG_INT)||tag.getInt("NativeCanopySchema")!=1))throw new IllegalArgumentException("Unsupported canopy owner");
             var nextSettings=NativeCanopySettings.read(tag);var nextLinks=NativeCanopyLinks.read(tag,worldPosition);
@@ -60,10 +62,16 @@ public final class NativeCanopyEntity extends BlockEntity {
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();writeOwn(tag);tag.putBoolean("NativeCanopyInert",inert);return tag;}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     /** Local-only lifecycle hooks; installed-thread preparation is deliberately separate. */
-    @Override public void onLoad(){super.onLoad();unloading=false;pending=true;}
-    @Override public void setRemoved(){unloading=true;pending=false;super.setRemoved();}
-    @Override public void onChunkUnloaded(){unloading=true;pending=false;super.onChunkUnloaded();}
+    @Override public void onLoad(){super.onLoad();unloading=false;pending=true;if(level!=null&&!level.isClientSide)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}
+    @Override public void setRemoved(){unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
+    @Override public void onChunkUnloaded(){unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
     @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){pending=true;publishUnresolved();}}
+    @Override public BlockEntity channelBlockEntity(){return this;}
+    @Override public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return available()&&publication.draws()&&NativeCanopyControl.opening(this)&&settings.data().redstone?settings.data().channels:com.vandorlabs.redstone.ChannelList.EMPTY;}
+    @Override public boolean isChannelMemberActive(){return available()&&NativeCanopyLifecycle.installed(this);}
+    @Override public int localSignalLevel(int channel){return NativeCanopyControl.localPower(this);}
+    @Override public void setChannelLevel(int value){channelPowered=value>0;NativeCanopyControl.refreshPower(this);}
+    @Override public void beforeChannelRegistration(){NativeCanopyControl.refreshPower(this);}
     void markRemoving(){removing(true);}
     void removing(boolean value){removing=value;publishUnresolved();}
     void installItem(NativeCanopyPlacement.Prepared prepared){unloading=false;removing=false;clearRemoved();setBlockState(prepared.state());loadWithComponents(prepared.initialSnapshot(),level.registryAccess());if(inert)throw new IllegalArgumentException("Failed canopy platform installation");placementChoices(prepared.settings());}

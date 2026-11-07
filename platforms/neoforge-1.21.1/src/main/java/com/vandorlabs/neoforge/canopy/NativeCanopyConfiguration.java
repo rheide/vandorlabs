@@ -24,7 +24,7 @@ public final class NativeCanopyConfiguration {
     private static boolean paint(NativeCanopyEntity owner,Player player,NativeCanopySettings next,Access access,boolean joined){
         var members=new ArrayList<NativeCanopyEntity>();var columns=joined?NativeCanopyLifecycle.members(owner):List.of(owner);if(joined&&columns.size()!=owner.width()/NativeCanopyModels.builtin().dimensions(owner.kind()).width())return false;
         for(var column:columns)for(var cell:NativeCanopyFootprint.reserved(cells(column),column.links().released())){var member=access.entity(owner,cell);if(member==null||member.inert()||!access.editable(owner,player,cell)||(joined?NativeCanopyLifecycle.owner(member)!=owner:NativeCanopyLifecycle.constituent(member)!=owner))return false;members.add(member);}
-        for(var member:members)member.stageSettings(next);for(var member:members)member.notifyChanged();return true;
+        for(var member:members)member.stageSettings(next);for(var member:members)member.notifyChanged();NativeCanopyControl.settingsChanged(owner);return true;
     }
     public static boolean apply(NativeCanopyEntity owner,Player player,NativeCanopySettings next){return apply(owner,player,next,WORLD);}
     public static boolean apply(NativeCanopyEntity owner,Player player,NativeCanopySettings next,Access access){
@@ -48,7 +48,7 @@ public final class NativeCanopyConfiguration {
             for(var cell:desired){if(!old.contains(cell)&&!access.write(owner,cell,owner.getBlockState()))throw new IllegalStateException("Canopy expansion refused");var member=access.entity(owner,cell);if(member==null)throw new IllegalStateException("Canopy expansion factory missing");if(old.contains(cell)){if(member!=originals.get(cell))throw new IllegalStateException("Canopy owner identity changed");}else{if(member.initialized())throw new IllegalStateException("Foreign canopy expansion owner");staged.put(cell,member);}member.configurationRole(owner);}
             for(var cell:old)if(!desired.contains(cell)){var member=access.entity(owner,cell);if(member!=originals.get(cell))throw new IllegalStateException("Canopy contraction owner changed");member.removing(true);if(!access.write(owner,cell,Blocks.AIR.defaultBlockState()))throw new IllegalStateException("Canopy contraction refused");}
             owner.configurationFootprint(desired);owner.stageSettings(next);for(var cell:desired){var member=access.entity(owner,cell);member.configurationSettings(next);}
-            owner.removing(false);for(var cell:desired)access.entity(owner,cell).notifyChanged();server.updateNeighborsAt(owner.getBlockPos(),owner.getBlockState().getBlock());return true;
+            owner.removing(false);for(var cell:desired)access.entity(owner,cell).notifyChanged();NativeCanopyControl.settingsChanged(owner);server.updateNeighborsAt(owner.getBlockPos(),owner.getBlockState().getBlock());return true;
         }catch(RuntimeException failed){
             // Retain exact prior owner components; do not erase a foreign replacement during rollback.
             for(var cell:affected){var member=access.entity(owner,cell);if(member!=null&&(member==originals.get(cell)||member==staged.get(cell)))member.removing(true);}
