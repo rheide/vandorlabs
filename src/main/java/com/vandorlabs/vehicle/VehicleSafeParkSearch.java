@@ -22,6 +22,9 @@ final class VehicleSafeParkSearch {
     private final int minimumX,minimumZ,maximumX,maximumZ,worldHeight,floorOffset;
     private SafeParkCandidates.Candidate candidate;private BlockPos origin,result;private int stage,index,boxIndex;private AxisAlignedBB box;private double sx,sy,sz;private boolean done;
     VehicleSafeParkSearch(Collection<BlockPos> targets,List<AxisAlignedBB> boxes,BlockPos preferred,int radius,int worldHeight,Access access){
+        this(targets,boxes,preferred,radius,worldHeight,access,false);
+    }
+    private VehicleSafeParkSearch(Collection<BlockPos> targets,List<AxisAlignedBB> boxes,BlockPos preferred,int radius,int worldHeight,Access access,boolean exact){
         if(targets.isEmpty()||targets.size()>65536||boxes.isEmpty()||boxes.size()>65536||worldHeight<1||worldHeight>512)throw new IllegalArgumentException("Safe Park volume bounds");
         this.access=Objects.requireNonNull(access);this.targets=new ArrayList<>();int minimumCellY=Integer.MAX_VALUE,maximumCellY=Integer.MIN_VALUE;
         for(BlockPos target:targets){if(target==null||Math.abs((long)target.getX())>2048||Math.abs((long)target.getY())>2048||Math.abs((long)target.getZ())>2048)throw new IllegalArgumentException("Safe Park local target bounds");this.targets.add(target.toImmutable());minimumCellY=Math.min(minimumCellY,target.getY());maximumCellY=Math.max(maximumCellY,target.getY());}
@@ -37,7 +40,9 @@ final class VehicleSafeParkSearch {
         }
         if(footprint.isEmpty())throw new IllegalArgumentException("Safe Park empty footprint");columns=new ArrayList<>(footprint);minimumX=x0-1;maximumX=x1+1;minimumZ=z0-1;maximumZ=z1+1;floorOffset=MathHelper.floor(low+1e-7);
         int minimumY=Math.max(Math.max(-minimumCellY,MathHelper.ceil(-low)),1-floorOffset),maximumY=Math.min(worldHeight-1-maximumCellY,MathHelper.floor(worldHeight-high));
-        if(maximumY<minimumY)throw new IllegalArgumentException("Craft is too tall for a flat parking area");candidates=new SafeParkCandidates(preferred.getX(),preferred.getY(),preferred.getZ(),radius,minimumY,maximumY);
+        if(maximumY<minimumY)throw new IllegalArgumentException("Craft is too tall for a flat parking area");
+        if(exact){if(preferred.getY()<minimumY||preferred.getY()>maximumY)throw new IllegalArgumentException("Parking origin is outside the loaded world");minimumY=maximumY=preferred.getY();radius=0;}
+        candidates=new SafeParkCandidates(preferred.getX(),preferred.getY(),preferred.getZ(),radius,minimumY,maximumY);
     }
     boolean step(int budget,long deadline){
         if(budget<1||budget>4096)throw new IllegalArgumentException("Safe Park slice budget");
@@ -53,6 +58,7 @@ final class VehicleSafeParkSearch {
     }
     private void reject(){candidate=null;origin=null;box=null;}
     BlockPos result(){return result;}
+    VehicleSafeParkSearch recheck(){if(result==null)throw new IllegalStateException("No parking result");return new VehicleSafeParkSearch(targets,boxes,result,0,worldHeight,access,true);}
     static Access access(WorldServer world,EntityGroundVehicle craft,EntityPlayerMP player){
         Set<Entity> allowed=Collections.newSetFromMap(new IdentityHashMap<Entity,Boolean>());allowed.add(craft);allowed.add(player);allowed.addAll(craft.getPassengers());
         return new Access(){

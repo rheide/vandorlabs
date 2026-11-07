@@ -264,6 +264,7 @@ public final class VehicleClient {
             sent=controller()?key(com.vandorlabs.redstone.ChannelData.read(settings,0)):"";sentModes=savedModes();
         }
         private boolean controller(){return data.header.forward==1;}
+        private boolean canSafePark(){return data.header.entity>=0&&mc.player!=null&&mc.player.capabilities.isCreativeMode&&mc.player.getHeldItemMainhand().getItem() instanceof com.vandorlabs.items.ItemConfigurizer;}
         private boolean hasSettings(){return data.structure!=null||data.controlData!=null;}
         private net.minecraft.util.math.BlockPos settingsPos(){return data.structure==null?data.header.origin:settingsCell().pos;}
         private VehicleStructure.Cell settingsCell(){VehicleStructure.Cell control=data.structure.controller();return controller()&&control!=null?control:data.structure.at(data.structure.seat);}
@@ -281,7 +282,9 @@ public final class VehicleClient {
             if(!controller()){
                 buttonList.add(new GuiButton(5,left()+14,top()+48,126,20,heightLabel()));
                 buttonList.add(new GuiButton(2,left()+14,top()+76,126,20,"Taxi Mode: "+(taxiDraft?"ON":"OFF")));
-                buttonList.add(new GuiButton(1,left()+14,top()+112,126,20,"Done"));return;
+                int footer=canSafePark()?132:112;
+                buttonList.add(new GuiButton(1,left()+14,top()+footer,126,20,"Done"));
+                if(canSafePark())buttonList.add(new GuiButton(33,left()+148,top()+footer,94,20,"Safe Park"));return;
             }
             int x=panelLeft()+14,t=panelTop(),w=panelWidth()-28;
             int tabWidth=(w-8)/3;
@@ -303,7 +306,8 @@ public final class VehicleClient {
                 }
                 observed=draftKey();
             }
-            buttonList.add(new GuiButton(1,x,t+panelHeight()-28,w,20,"Done"));
+            buttonList.add(new GuiButton(1,x,t+panelHeight()-28,canSafePark()?w/2-4:w,20,"Done"));
+            if(canSafePark())buttonList.add(new GuiButton(33,x+w/2+4,t+panelHeight()-28,w/2-4,20,"Safe Park"));
             org.lwjgl.input.Keyboard.enableRepeatEvents(true);refreshButtons();
         }
 
@@ -318,7 +322,7 @@ public final class VehicleClient {
         private String designKey(){return vehicleName.getText()+"|"+security+"|"+acceptedCard;}
         private String heightLabel(){return "Height: "+(pilotHeight==0?"Base":"+"+(pilotHeight*2)+" px");}
         @Override public boolean doesGuiPauseGame(){return false;}
-        private void refreshButtons(){for(GuiButton b:buttonList){if(b.id>=10&&b.id<=12){int mode=b.id-10;b.enabled=data.structure!=null&&mode!=data.header.strafe&&!inFlight&&(mode!=0||data.header.sequence!=-1)&&(mode!=1||!data.structure.hasNonWheeledGear);b.visible=page==0;b.displayString=new String[]{"Park","Taxi","Hover"}[mode]+(mode==data.header.strafe?" (current)":"");}if(b.id==4){((RedstoneActivationButton)b).setMode(pilotMode);b.visible=page==1;}if(b.id>=90&&b.id<=92)b.enabled=b.id!=90+page;if(b.id==31){b.visible=page==0&&hasMount(true);b.enabled=data.structure!=null&&!inFlight;}if(b.id==32){b.visible=page==2;b.displayString="Security: "+(security?"ON":"OFF");b.enabled=hasMount(false)||security;}if(b.id==5)b.displayString=heightLabel();if(b.id==2)b.displayString="Taxi Mode: "+(taxiDraft?"ON":"OFF");}}
+        private void refreshButtons(){for(GuiButton b:buttonList){if(b.id==33){b.visible=canSafePark()&&(!controller()||page==0);b.enabled=!inFlight;}if(b.id>=10&&b.id<=12){int mode=b.id-10;b.enabled=data.structure!=null&&mode!=data.header.strafe&&!inFlight&&(mode!=0||data.header.sequence!=-1)&&(mode!=1||!data.structure.hasNonWheeledGear);b.visible=page==0;b.displayString=new String[]{"Park","Taxi","Hover"}[mode]+(mode==data.header.strafe?" (current)":"");}if(b.id==4){((RedstoneActivationButton)b).setMode(pilotMode);b.visible=page==1;}if(b.id>=90&&b.id<=92)b.enabled=b.id!=90+page;if(b.id==31){b.visible=page==0&&hasMount(true);b.enabled=data.structure!=null&&!inFlight;}if(b.id==32){b.visible=page==2;b.displayString="Security: "+(security?"ON":"OFF");b.enabled=hasMount(false)||security;}if(b.id==5)b.displayString=heightLabel();if(b.id==2)b.displayString="Taxi Mode: "+(taxiDraft?"ON":"OFF");}}
         private void failed(String message){inFlight=false;error=message;if(vehicleName!=null)sentDesign=designKey();if(controller()&&channels!=null){com.vandorlabs.redstone.ChannelList value=ChannelFields.parse(channels);if(value!=null)sent=key(value);}else sent=pilotHeight!=settingsData().getInteger("PilotHeight")?"H|"+pilotHeight:"T|"+taxiDraft;closing=false;selectedMode=-1;sentModes=modeChannels[0]==null?savedModes():modeChannels[0].getText()+"|"+modeChannels[1].getText()+"|"+modeChannels[2].getText();}
         private void apply(boolean controls){
             if(inFlight||!hasSettings())return;
@@ -352,7 +356,7 @@ public final class VehicleClient {
             if(vehicleName!=null){vehicleName.setVisible(page==0);vehicleName.updateCursorCounter();}
             if(channels!=null){channels.updateCursorCounter();for(GuiTextField f:modeChannels)f.updateCursorCounter();String current=draftKey()+(vehicleName==null?"":designKey());if(!current.equals(observed)){observed=current;delay=6;error="";}if(delay>0)delay--;else apply(false);}
             else if(!controller())apply(false);
-            refreshButtons();if(closing||selectedMode>=0){apply(true);if(!inFlight){if(selectedMode>=0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.MODE_SELECT);p.token=data.header.token;p.entity=data.header.entity;p.origin=settingsPos();p.sequence=selectedMode;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}}
+            refreshButtons();if(closing||selectedMode>=0){apply(true);if(!inFlight){if(selectedMode>=0){VehicleNetwork.Packet p=new VehicleNetwork.Packet(selectedMode==3?VehicleNetwork.SAFE_PARK:VehicleNetwork.MODE_SELECT);p.token=data.header.token;p.entity=data.header.entity;p.origin=settingsPos();p.sequence=selectedMode;PacketHandler.INSTANCE.sendToServer(p);}mc.displayGuiScreen(null);}}
         }
         @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,4,5))return;super.mouseClicked(x,y,button);if(vehicleName!=null&&page==0)vehicleName.mouseClicked(x,y,button);if(channels!=null&&page==1){channels.mouseClicked(x,y,button);for(GuiTextField f:modeChannels)f.mouseClicked(x,y,button);}}
         @Override protected void keyTyped(char key,int code)throws java.io.IOException{if(code==1){closing=true;apply(true);return;}boolean used=vehicleName!=null&&page==0&&vehicleName.textboxKeyTyped(key,code);used|=channels!=null&&page==1&&channels.textboxKeyTyped(key,code);if(channels!=null&&page==1)for(GuiTextField f:modeChannels)used|=f.textboxKeyTyped(key,code);if(!used)super.keyTyped(key,code);}
@@ -390,6 +394,7 @@ public final class VehicleClient {
             super.drawScreen(x,y,partial);if(vehicleName!=null)vehicleName.drawTextBox();if(channels!=null){channels.drawTextBox();for(GuiTextField f:modeChannels)f.drawTextBox();}
         }
         @Override protected void actionPerformed(GuiButton button){
+            if(button.id==33&&button.enabled&&canSafePark()){selectedMode=3;return;}
             if(button.id>=90&&button.id<=92){page=button.id-90;initGui();return;}
             if(button.id==31&&button.enabled){apply(true);if(!inFlight){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.DESIGN);p.sequence=1;p.token=data.header.token;p.entity=data.header.entity;p.origin=settingsPos();inFlight=true;PacketHandler.INSTANCE.sendToServer(p);}return;}
             if(button.id==32){security=!security;apply(true);refreshButtons();return;}

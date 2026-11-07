@@ -6,11 +6,25 @@ export VANDOR_LABS_TEST_SKIP_BUILD=true
 export VANDOR_LABS_TEST_HEAP=${VANDOR_LABS_TEST_HEAP:-4G}
 RESTART_ROOT=${VANDOR_LABS_RECOVERY_RUN_ROOT:-$ROOT/testclient}
 mkdir -p "$RESTART_ROOT"
-for phase in ${VANDOR_LABS_ARM_RECOVERY_CASES:-prepared detach detach-partial restore-partial restore-endpoint-partial detach-endpoint-partial harvest-prepared harvest-partial harvest-committed push-prepared push-partial painting-before-journal painting-assemble-partial painting-park-partial coupling-attach-partial coupling-detach-partial coupling-rollback-partial coupling-latch-committed coupling-split-partial coupling-split-rollback-partial coupling-split-committed}; do
+active_fixture=
+active_lease=
+finish_recovery_artifacts() {
+    local result=$?
+    trap - EXIT
+    if [ -n "$active_fixture" ]; then
+        python3 "$ROOT/tools/test_artifacts.py" finish --run-dir "$active_fixture" --lease "$active_lease" --exit-code "$result" || \
+            echo "Recovery artifact retention failed; preserved run: $active_fixture" >&2
+    fi
+    exit "$result"
+}
+trap finish_recovery_artifacts EXIT
+for phase in ${VANDOR_LABS_ARM_RECOVERY_CASES:-prepared detach detach-partial restore-partial restore-endpoint-partial detach-endpoint-partial harvest-prepared harvest-partial harvest-committed push-prepared push-partial painting-before-journal painting-assemble-partial painting-park-partial coupling-attach-partial coupling-detach-partial coupling-rollback-partial coupling-latch-committed coupling-split-partial coupling-split-rollback-partial coupling-split-committed safe-park-partial}; do
     fixture=$(mktemp -d "$RESTART_ROOT/arm-restart.XXXXXX")
+    active_fixture=$fixture
+    active_lease=$(python3 "$ROOT/tools/test_artifacts.py" begin --run-dir "$fixture" --pid "$$" --disposable game)
     export VANDOR_LABS_TEST_GAME_DIR="$fixture/game"
     export VANDOR_LABS_ARM_RECOVERY_PHASE="$phase"
-    bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/crash.log" 2>&1 &
+    python3 "$ROOT/tools/test_artifacts.py" run --run-dir "$fixture" --lease "$active_lease" -- bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/crash.log" 2>&1 &
     runner=$!
     marker="$fixture/game/saves/arm-recovery/arm-crash-ready.txt"
     for attempt in $(seq 1 180); do
@@ -41,7 +55,10 @@ PYVERIFY
     fi
     rm "$marker"
     export VANDOR_LABS_ARM_RECOVERY_PHASE="verify-$phase"
-    bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/restart.log" 2>&1
+    python3 "$ROOT/tools/test_artifacts.py" run --run-dir "$fixture" --lease "$active_lease" -- bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/restart.log" 2>&1
     cat "$fixture/restart.log"
     echo "Arm durable recovery $phase passed: $fixture"
+    python3 "$ROOT/tools/test_artifacts.py" finish --run-dir "$fixture" --lease "$active_lease" --exit-code 0
+    active_fixture=
+    active_lease=
 done

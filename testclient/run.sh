@@ -50,6 +50,7 @@ CAPTURE_JVM+=("-Dvandorlabs.rampAxisChecksOnly=${VANDOR_LABS_RAMP_AXIS_CHECKS_ON
 CAPTURE_JVM+=("-Dvandorlabs.rftoolsBuilderChecksOnly=${VANDOR_LABS_RFTOOLS_BUILDER_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.furnitureChecksOnly=${VANDOR_LABS_FURNITURE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.screenChipChecksOnly=${VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.vehicleSafeParkChecksOnly=${VANDOR_LABS_VEHICLE_SAFE_PARK_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleDesignChecksOnly=${VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleRenderCostChecksOnly=${VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.segmentedDoorBenchmarkOnly=${VANDOR_LABS_SEGMENTED_DOOR_BENCHMARK_ONLY:-false}")

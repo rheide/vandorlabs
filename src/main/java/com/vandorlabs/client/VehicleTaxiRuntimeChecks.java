@@ -182,7 +182,7 @@ public final class VehicleTaxiRuntimeChecks {
         List<GuiButton> controls=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");
         require(controls.stream().noneMatch(b->"Save".equalsIgnoreCase(b.displayString)),"preview applies valid changes without a Save button");
         boolean seatOnly=controls.stream().anyMatch(b->b.id==5);
-        if(seatOnly){require(controls.size()==3&&controls.stream().allMatch(b->b.id==1||b.id==2||b.id==5),"compact seat dialog contains Height, Taxi and Done");}
+        if(seatOnly){boolean safe=controls.stream().anyMatch(b->b.id==33);require(controls.size()==(safe?4:3)&&controls.stream().allMatch(b->b.id==1||b.id==2||b.id==5||b.id==33),"compact seat dialog contains Height, Taxi, Done and optional Creative Safe Park");for(int id:new int[]{1,2,5})require(controls.stream().anyMatch(b->b.id==id),"seat control retained: "+id);if(safe){Minecraft mc=Minecraft.getMinecraft();require(mc.player.capabilities.isCreativeMode&&mc.player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER,"Safe Park offered only to Creative Configurizer user");}}
 
         for(GuiButton b:controls)if(b.visible){
             require(b.x>=0&&b.y>=0&&b.x+b.width<=gui.width&&b.y+b.height<=gui.height,"visible control fits screen: "+b.displayString);

@@ -236,6 +236,18 @@ public final class VehicleService {
             preview.controlData=raw.writeToNBT(new net.minecraft.nbt.NBTTagCompound());open(player,preview);
         }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
+    /** Creative recovery is authorized against the same expiring preview as its configuration dialog. */
+    public static void safePark(EntityPlayerMP player,VehicleNetwork.Packet packet){
+        try{
+            Preview current=previews.get(player.getUniqueID());require(current!=null,"Vehicle settings expired; inspect again.");
+            Preview preview=current.controller?controllerPreview(player,packet.token,packet.entity,packet.origin):seatPreview(player,packet.token,packet.entity,packet.origin);
+            require(preview.entity!=null&&validCaptured(player,preview.entity),"Inspect a vehicle in Taxi or Hover Mode.");
+            if(preview.controller)editableController(player,preview);else editableSeat(player,preview);
+            VehicleSafePark.requireAuthorized(player,preview.entity,preview.selected);
+            require(!preview.entity.transferInProgress,"Wait for the current vehicle transfer.");
+            previews.remove(player.getUniqueID());VehicleSafePark.submit(player,preview.entity,preview.selected);
+        }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage()==null?"Safe Park unavailable.":denied.getMessage());}
+    }
     /** Mode buttons use the same authenticated controller preview as settings. */
     public static void selectMode(EntityPlayerMP player,VehicleNetwork.Packet packet){
         try{
@@ -429,12 +441,16 @@ public final class VehicleService {
         require(entity.stopped(),"Stop before parking.");
         VehicleRotation.Plan plan=VehicleRotation.plan(entity);
         require(plan.origin.equals(origin),"Craft moved; open a new parking preview.");
-        VehicleWorld parkedView=new VehicleWorld(player.world,plan.structure);VehicleCollision parkedGeometry=VehicleTransfer.geometry(player.world,plan.structure);
-        for(VehicleStructure.Cell cell:plan.structure.cells) {
-            BlockPos p=origin.add(cell.pos);permission(player,p);require(player.world.isAirBlock(p),"Parking is blocked at "+p);
+        validatePreparedParking(player,entity,plan.structure,origin);
+    }
+    /** Destination checks shared by ordinary parking and Creative Safe Park. */
+    static void validatePreparedParking(EntityPlayerMP player,EntityGroundVehicle entity,VehicleStructure placed,BlockPos origin) {
+        VehicleWorld parkedView=new VehicleWorld(player.world,placed);VehicleCollision parkedGeometry=VehicleTransfer.geometry(player.world,placed);
+        for(VehicleStructure.Cell cell:placed.cells) {
+            BlockPos p=origin.add(cell.pos);permission(player,p);require(player.world.isAirBlock(p)&&player.world.getTileEntity(p)==null,"Parking is blocked at "+p);
         }
         for(net.minecraft.tileentity.TileEntity raw:parkedView.tiles.values())if(raw instanceof com.vandorlabs.tiles.TileEntityRampController)
-            for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)raw).vehicleSources())if(plan.structure.at(source)==null){permission(player,origin.add(source));require(player.world.isAirBlock(origin.add(source)),"Parking blocks a ramp recovery source at "+origin.add(source));}
+            for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)raw).vehicleSources())if(placed.at(source)==null){permission(player,origin.add(source));require(player.world.isAirBlock(origin.add(source)),"Parking blocks a ramp recovery source at "+origin.add(source));}
         java.util.List<Entity> passengers=new ArrayList<>(entity.getPassengers());passengers.add(player);
         require(clearOfPeople(player.world,parkedGeometry,origin,passengers.toArray(new Entity[0])),"The parking area is occupied.");
         for(AxisAlignedBB box:parkedGeometry.boxes)

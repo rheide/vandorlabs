@@ -37,6 +37,20 @@ public final class VehicleRotation {
         int supportedY=(int)Math.round(craft.posY+craft.collision.bounds.minY-extended.bounds.minY);
         return new Plan(parking.structure,new BlockPos(parking.origin.getX(),Math.max(parking.origin.getY(),supportedY),parking.origin.getZ()));
     }
+    /** Align a copy of the canonical body layout, retaining the live articulated pose for rollback. */
+    static Plan safePlan(EntityGroundVehicle craft,int turns) {
+        TaxiModularGear.requireParkable(craft);
+        // Until the complete arm-layout resolver is admitted, do not call an unresolved pose aligned.
+        for(TileEntity tile:craft.view.tiles.values())if(tile instanceof com.vandorlabs.gear.GearTileEntity){
+            com.vandorlabs.gear.GearTileEntity arm=(com.vandorlabs.gear.GearTileEntity)tile;
+            if(arm.hasRetainedPayload()&&arm.payload()==null)throw new IllegalArgumentException("An arm payload needs recovery before parking.");
+            if(arm.payload()!=null&&(arm.progress()!=0&&arm.progress()!=1||arm.payload().gridMapping(arm,arm.progress())==null))throw new IllegalArgumentException("Retract or fully extend arm payloads before Safe Park.");
+        }
+        if(turns<0||turns>3||!Double.isFinite(craft.posX)||!Double.isFinite(craft.posY)||!Double.isFinite(craft.posZ))throw new IllegalArgumentException("Invalid craft pose");
+        VehicleStructure placed=rotate(craft.structure,craft.view,turns);
+        double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
+        return VehicleLandingGear.parking(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
+    }
     public static BlockPos cell(BlockPos p,int width,int depth,int turns) {
         switch(Math.floorMod(turns,4)) {
             case 1:return new BlockPos(depth-1-p.getZ(),p.getY(),p.getX());
