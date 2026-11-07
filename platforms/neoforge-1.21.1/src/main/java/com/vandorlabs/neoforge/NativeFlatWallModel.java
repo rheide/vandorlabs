@@ -37,10 +37,28 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
         final Map<Integer,NativePanelQuads.Material> glassRails;
         private final NativePanelQuads.Material[][] palette=new NativePanelQuads.Material[com.vandorlabs.tiles.GlassTextures.IDS.length][4];
         private final com.vandorlabs.neoforge.client.NativeMaterialPlayback.Material[] playback;
-        // Snapshot keys contain only immutable scalar settings and <=3 flat AABBs, never worlds/tiles.
-        // Identity/FIFO avoids Guava's 24-byte access-queue node on each weighted-cache hit.
-        private record SnapshotEntry(NativeWallEntity.WallAppearance key,int cost){}
-        private final java.util.IdentityHashMap<NativeWallEntity.WallAppearance,PaneProjection> playbackPanes=new java.util.IdentityHashMap<>();
+        // Value keys retain render descriptors only, never owner snapshots or analytic collision tables.
+        // FIFO hits do not create Guava access-queue nodes. Both preparation methods own the probe lock.
+        private static final class ProjectionKey {
+            Object geometry;NativePortholeLayout aperture;NativeDiagonalGlassLayout diagonal;NativePanelKind kind;
+            int main,side,layout,front,interior,exterior,material,shade,tint,glassLayout,hash;boolean framed;
+            ProjectionKey(){}
+            ProjectionKey(ProjectionKey source){geometry=source.geometry;aperture=source.aperture;diagonal=source.diagonal;kind=source.kind;main=source.main;side=source.side;layout=source.layout;front=source.front;interior=source.interior;exterior=source.exterior;material=source.material;shade=source.shade;tint=source.tint;glassLayout=source.glassLayout;framed=source.framed;hash=source.hash;}
+            void set(NativeWallEntity.WallAppearance appearance){
+                geometry=descriptor(appearance.geometry());aperture=appearance.aperture();diagonal=appearance.diagonalGlass();kind=appearance.kind();
+                var housing=appearance.base().housing();var frames=appearance.frames();var glass=appearance.glass();
+                main=housing.mainTexture;side=appearance.base().sideTexture();layout=housing.layout;front=frames.front;interior=frames.interior;exterior=frames.exteriorChoice();material=glass.material;shade=glass.shade;tint=glass.tint;glassLayout=glass.textureLayout();framed=glass.framed;
+                int h=Objects.hashCode(geometry);h=31*h+Objects.hashCode(aperture);h=31*h+Objects.hashCode(diagonal);h=31*h+Objects.hashCode(kind);
+                h=31*h+main;h=31*h+side;h=31*h+layout;h=31*h+front;h=31*h+interior;h=31*h+exterior;h=31*h+material;h=31*h+shade;h=31*h+tint;h=31*h+glassLayout;hash=31*h+(framed?1:0);
+            }
+            void clear(){geometry=null;aperture=null;diagonal=null;kind=null;}
+            int cost(){return geometry instanceof NativeDiagonalWallGeometry.Pose pose?1024+pose.clip().size()*8:geometry instanceof NativeFlatWallGeometry.Geometry flat?512+flat.boxes().size()*96:512;}
+            @Override public int hashCode(){return hash;}
+            @Override public boolean equals(Object other){if(!(other instanceof ProjectionKey key))return false;return main==key.main&&side==key.side&&layout==key.layout&&front==key.front&&interior==key.interior&&exterior==key.exterior&&material==key.material&&shade==key.shade&&tint==key.tint&&glassLayout==key.glassLayout&&framed==key.framed&&kind==key.kind&&Objects.equals(geometry,key.geometry)&&Objects.equals(aperture,key.aperture)&&Objects.equals(diagonal,key.diagonal);}
+        }
+        private final ProjectionKey lookup=new ProjectionKey();
+        private record SnapshotEntry(ProjectionKey key,int cost){}
+        private final Map<ProjectionKey,PaneProjection> playbackPanes=new HashMap<>();
         private final java.util.ArrayDeque<SnapshotEntry> playbackOrder=new java.util.ArrayDeque<>();
         private int playbackBytes;
         final com.google.common.cache.Cache<Object,List<BakedQuad>> quads=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(16*1024*1024)
@@ -79,23 +97,27 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             RenderType renderType(int mode){var found=renderTypes;if(found==null){synchronized(this){found=renderTypes;if(found==null){boolean opaque=opaque();if(material==null){var atlas=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,opaque);found=new RenderType[]{atlas,atlas,atlas};}else found=new RenderType[]{NativePanelPlaybackRenderer.renderType(material.texture(0),opaque),NativePanelPlaybackRenderer.renderType(material.texture(1),opaque),NativePanelPlaybackRenderer.renderType(material.texture(2),opaque)};renderTypes=found;}}}return found[mode];}
         }
         synchronized PaneProjection paneProjection(NativeWallEntity.WallAppearance appearance){
-            var found=playbackPanes.get(appearance);if(found!=null)return found;var display=playback(appearance.glass().material);
+            try{
+            lookup.set(appearance);var found=playbackPanes.get(lookup);if(found!=null)return found;var key=new ProjectionKey(lookup);var display=playback(appearance.glass().material);
             var geometry=appearance.geometry();
             found=new PaneProjection(appearance.kind()==NativePanelKind.GLASS?glassPane(appearance,display!=null):pane(appearance,geometry,display!=null),display,surfaces.get(0),com.vandorlabs.render.GlassRenderPolicy.opaque(appearance.glass().tint));
-            int cost=3072;for(var quad:found.quads())cost+=96+quad.getVertices().length*4;
+            int cost=3072+key.cost();for(var quad:found.quads())cost+=96+quad.getVertices().length*4;
             while(playbackBytes+cost>4*1024*1024&&!playbackOrder.isEmpty()){var oldest=playbackOrder.removeFirst();playbackPanes.remove(oldest.key);playbackBytes-=oldest.cost;}
-            if(cost<=4*1024*1024){playbackPanes.put(appearance,found);playbackOrder.addLast(new SnapshotEntry(appearance,cost));playbackBytes+=cost;}return found;
+            if(cost<=4*1024*1024){playbackPanes.put(key,found);playbackOrder.addLast(new SnapshotEntry(key,cost));playbackBytes+=cost;}return found;
+            }finally{lookup.clear();}
         }
-        private final java.util.IdentityHashMap<NativeWallEntity.WallAppearance,List<BakedQuad>> bodies=new java.util.IdentityHashMap<>();
+        private final Map<ProjectionKey,List<BakedQuad>> bodies=new HashMap<>();
         private final java.util.ArrayDeque<SnapshotEntry> bodyOrder=new java.util.ArrayDeque<>();
         private int bodyBytes;
         synchronized List<BakedQuad> bodyProjection(NativeWallEntity.WallAppearance appearance){
-            var found=bodies.get(appearance);if(found!=null)return found;
+            try{
+            lookup.set(appearance);var found=bodies.get(lookup);if(found!=null)return found;var key=new ProjectionKey(lookup);
             var geometry=appearance.geometry();found=appearance.kind()==NativePanelKind.GLASS?glassFrame(appearance):appearance.kind()==NativePanelKind.PORTHOLE?aperture(appearance,geometry):body(geometry,appearance.base().housing().mainTexture,appearance.frames().interior,appearance.frames().exteriorChoice(),appearance.base().housing().layout);
-            // Precharge both possible lazy analytic surface tables as well as boxes and snapshot settings.
-            int cost=65536+96*(geometry.boxes().size()+geometry.fluidBoxes().size());for(var quad:found)cost+=96+quad.getVertices().length*4;
+            // The key retains a Pose, not Geometry's lazy fluid/collision tables.
+            int cost=512+key.cost();for(var quad:found)cost+=96+quad.getVertices().length*4;
             while(bodyBytes+cost>4*1024*1024&&!bodyOrder.isEmpty()){var oldest=bodyOrder.removeFirst();bodies.remove(oldest.key);bodyBytes-=oldest.cost;}
-            if(cost<=4*1024*1024){bodies.put(appearance,found);bodyOrder.addLast(new SnapshotEntry(appearance,cost));bodyBytes+=cost;}return found;
+            if(cost<=4*1024*1024){bodies.put(key,found);bodyOrder.addLast(new SnapshotEntry(key,cost));bodyBytes+=cost;}return found;
+            }finally{lookup.clear();}
         }
         private NativePanelQuads.Material material(int index){return index<0?originalMetal:interiors.get(index);}
         List<BakedQuad> aperture(NativeWallEntity.WallAppearance appearance,NativeWallGeometry geometry){
