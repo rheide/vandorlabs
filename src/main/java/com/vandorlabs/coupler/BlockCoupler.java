@@ -28,6 +28,8 @@ public class BlockCoupler extends BlockVandor {
     @Override public BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing side){return BlockFaceShape.UNDEFINED;}
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return CouplerShape.getBounds(state.getValue(FACING),state.getValue(LOCKED));}
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> out,net.minecraft.entity.Entity entity,boolean actual){for(AxisAlignedBB box:collisionBoxes(state))addCollisionBoxToList(pos,query,out,box);}
+    /** Pure emitted component boxes for retained captured geometry; never reads a tile or world. */
+    public void appendCollisionBoxes(IBlockState state,BlockPos pos,java.util.List<AxisAlignedBB> out){for(AxisAlignedBB box:collisionBoxes(state))out.add(box.offset(pos));}
     protected AxisAlignedBB[] collisionBoxes(IBlockState state){return CouplerShape.getBoxes(state.getValue(FACING),state.getValue(LOCKED));}
     @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){RayTraceResult closest=null;double distance=Double.POSITIVE_INFINITY;for(AxisAlignedBB box:collisionBoxes(state)){RayTraceResult hit=box.offset(pos).calculateIntercept(start,end);if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);closest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}}return closest;}
     public static double couplingHeight(IBlockState state){return state.getBlock() instanceof BlockCouplerSlab?(state.getValue(BlockCouplerSlab.HALF)==BlockSlab.EnumBlockHalf.TOP?.75:.25):.5;}
