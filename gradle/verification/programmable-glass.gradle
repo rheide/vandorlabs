@@ -45,3 +45,11 @@ task exportFlatGlassContactReference(type: JavaExec) {
     main = 'com.vandorlabs.client.FlatGlassContactLegacyOracle'
     args file('build/test-artifacts/flat-glass-contact-forge.jsonl').absolutePath
 }
+
+task exportFlatGlassItemReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassItemLegacyOracle'
+    args file('build/test-artifacts/flat-glass-item-forge.jsonl').absolutePath
+}
