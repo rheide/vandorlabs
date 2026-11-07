@@ -292,3 +292,8 @@ Native single-target housing copy now applies through existing typed installed-h
 
 
 The private native held Copifier route now passes 18 actual server GameMode housing capture/apply cases across Survival and Creative. It shares exact held-object/menu-preview authentication with the existing transmitter. The 22-byte options payload is bounded before allocation and validates flags/mask bits; item, packet and authorization fixtures pass 1,075 checks. Connected mode currently refuses without mutation. Dedicated menu-provider checks do not establish native client-screen acceptance, and there is no public Copifier registration yet.
+
+
+`CopifierDialog` now shares the released five-page geometry, labels, ordered option IDs and button eligibility between Forge and the inactive native screen. Forge retains its existing packet/actions and passes the real dialog, reverse-cycle, saved-mask, connected-apply and undo client focus after extraction. Java 8 standard assembly and dedicated-server linkage pass (1,328 shared classes, 129,483 references).
+
+The private native editor passes actual Survival air-use opening, synchronized preview initialization, controls on all five pages, reverse clicks, appended bit 64, real 22-byte C2S and preview S2C, non-transferable preview quick-move, exact-object replacement closing and stale-window rejection. The dialog lowers GUI scale 3 to 2 when needed and restores 3 on close; all controls fit the viewport. Native undo is visibly disabled until implemented. These focused checks do not activate a public Copifier or establish connected, undo, crafting or other target-family parity; the full release gate remains deferred.

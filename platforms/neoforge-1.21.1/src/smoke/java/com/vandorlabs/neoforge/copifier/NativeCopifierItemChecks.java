@@ -25,11 +25,11 @@ import net.neoforged.neoforge.event.server.ServerStartedEvent;
 /** Actual server GameMode held-item dispatch, using a private item and canonical housing targets. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCopifierItemChecks {
- private static NativeCopifierItem ITEM;private static MenuType<NativeCopifierMenu> MENU;private static int checks;
+ static NativeCopifierItem ITEM;static MenuType<NativeCopifierMenu> MENU;private static int checks;
  private static boolean enabled(){return System.getProperty("vandorlabs.transmitterPhase","").equals("copifier-item");}
  private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Copifier item: "+why);}
  @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration {
-  @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;var id=ResourceLocation.parse("vandorlabs:copifier_item_fixture");event.register(Registries.ITEM,h->{ITEM=new NativeCopifierItem(new Item.Properties(),()->MENU);h.register(id,ITEM);});event.register(Registries.MENU,h->{MENU=new MenuType<>((window,inventory)->new NativeCopifierMenu(MENU,window,inventory),net.minecraft.world.flag.FeatureFlags.VANILLA_SET);h.register(id,MENU);});}
+  @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled()&&!CopifierEditorClientFixture.enabled())return;var id=ResourceLocation.parse("vandorlabs:copifier_item_fixture");event.register(Registries.ITEM,h->{ITEM=new NativeCopifierItem(new Item.Properties(),()->MENU);h.register(id,ITEM);});event.register(Registries.MENU,h->{MENU=new MenuType<>((window,inventory)->new NativeCopifierMenu(MENU,window,inventory),net.minecraft.world.flag.FeatureFlags.VANILLA_SET);h.register(id,MENU);});}
  }
  private static final class Actor extends net.neoforged.neoforge.common.util.FakePlayer {
   Actor(ServerLevel level){super(level,new com.mojang.authlib.GameProfile(new UUID(0,1873),"CopifierItem"));}

@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.container.ContainerDuplifier;
 import com.vandorlabs.items.DuplifierApplyOptions;
+import com.vandorlabs.ui.CopifierDialog;
 import com.vandorlabs.network.MessageDuplifierOptions;
 import com.vandorlabs.network.PacketHandler;
 import net.minecraft.client.gui.GuiButton;
@@ -17,13 +18,8 @@ public final class GuiDuplifier extends GuiContainer {
 
     public GuiDuplifier(InventoryPlayer inventory) {
         super(new ContainerDuplifier(inventory));
-        xSize = 420;
-        int rows=0;
-        for(int page=0;page<DuplifierApplyOptions.PAGES.length;page++) {
-            int options=0;for(DuplifierApplyOptions.Option option:DuplifierApplyOptions.OPTIONS)if(option.page==page)options++;
-            rows=Math.max(rows,(options+1)/2);
-        }
-        ySize = Math.max(234,82+rows*21+40);
+        xSize = CopifierDialog.WIDTH;
+        ySize = CopifierDialog.height();
     }
 
     @Override public void initGui() {
@@ -63,28 +59,14 @@ public final class GuiDuplifier extends GuiContainer {
 
     private void showPage() {
         buttonList.clear();
-        buttonList.add(new GuiButton(98, guiLeft + 14, guiTop + 26,
-                190, 18, connectedLabel()));
-        buttonList.add(new GuiButton(96,guiLeft+214,guiTop+26,190,18,directionLabel()));
-        for (int i = 0; i < DuplifierApplyOptions.PAGES.length; i++) {
-            GuiButton tab = new DialogTabButton(i, guiLeft + 10 + i * 80, guiTop + 48,
-                    76, 18, DuplifierApplyOptions.PAGES[i]);
-            tab.enabled = i != page;
-            buttonList.add(tab);
+        for(CopifierDialog.Control control:CopifierDialog.controls(guiLeft,guiTop,page,
+                DuplifierApplyOptions.maskWords(tool()),DuplifierApplyOptions.connected(tool()),
+                DuplifierApplyOptions.ignoreDirectionality(tool()),"Done")) {
+            GuiButton button=control.tab?new DialogTabButton(control.id,control.x,control.y,
+                    control.width,control.height,control.label):new GuiButton(control.id,control.x,
+                    control.y,control.width,control.height,control.label);
+            button.enabled=control.enabled;buttonList.add(button);
         }
-        int indexOnPage = 0;
-        for (int i = 0; i < DuplifierApplyOptions.OPTIONS.length; i++) {
-            if (DuplifierApplyOptions.OPTIONS[i].page != page) continue;
-            int column = indexOnPage % 2;
-            int row = indexOnPage / 2;
-            buttonList.add(new GuiButton(OPTION_START + i,
-                    guiLeft + 14 + column * 200, guiTop + 82 + row * 21,
-                    190, 18, optionLabel(i)));
-            indexOnPage++;
-        }
-        buttonList.add(new GuiButton(97,guiLeft+14,guiTop+ySize-28,132,18,"Undo last application"));
-        buttonList.add(new GuiButton(99, guiLeft + 162, guiTop + ySize - 28,
-                96, 18, "Done"));
     }
 
     @Override protected void actionPerformed(GuiButton button) {
