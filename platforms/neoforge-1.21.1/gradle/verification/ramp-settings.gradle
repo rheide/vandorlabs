@@ -39,3 +39,10 @@ tasks.register('testRampSourceShapeReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/ramp-source-shapes.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+tasks.register('testRampFootprintReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampFootprintChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-generation-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
