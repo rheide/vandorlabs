@@ -13,9 +13,9 @@ import net.minecraft.world.phys.*;
 /** Same-tick all-rider preflight. The owner must preflight physical publication before commit. */
 public final class NativeRampRiderPlan {
     private record Entry(Entity entity,Vec3 position,AABB body,Vec3 velocity,Vec3 delta){}
-    private final ServerLevel level;private final BlockPos root;private final long tick;private final List<Entry> entries;private boolean consumed;
+    private final ServerLevel level;private final BlockPos root;private final long tick;private final List<Entry> entries;private boolean consumed;private int correctionFailures;
     private NativeRampRiderPlan(ServerLevel level,BlockPos root,List<Entry> entries){this.level=level;this.root=root.immutable();tick=level.getGameTime();this.entries=List.copyOf(entries);}
-    public int size(){return entries.size();}
+    public int size(){return entries.size();}public int correctionFailures(){return correctionFailures;}
     /** Null denotes an obstructed rider. Cold queries and unsupported profiles refuse explicitly. */
     public static NativeRampRiderPlan prepare(ServerLevel level,NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal){
         NativeRampRiders.requireThread(level);
@@ -35,7 +35,7 @@ public final class NativeRampRiderPlan {
     /** Single use; no rider moves if any prepared entity changed during command preparation. */
     public boolean commit(NativeRampRiders.Sync sync){
         if(!ready())return false;for(var entry:entries)if(entry.entity instanceof ServerPlayer)Objects.requireNonNull(sync,"Ramp player correction sender");consumed=true;
-        for(var entry:entries)NativeRampRiders.move(entry.entity,entry.delta.x,entry.delta.y,entry.delta.z,sync);return true;
+        var steps=new ArrayList<NativeRampRiderBatch.Step>(entries.size());for(var entry:entries)steps.add(new NativeRampRiderBatch.Step(entry.entity,entry.delta,false));correctionFailures=NativeRampRiderBatch.commit(level,steps,sync);return true;
     }
     private static AABB query(NativeRampFootprint.Spec s,boolean shaped,double previous,boolean fromOriginal){
         AABB bounds=null;var direction=RampGeometry.Direction.valueOf(s.facing().name());

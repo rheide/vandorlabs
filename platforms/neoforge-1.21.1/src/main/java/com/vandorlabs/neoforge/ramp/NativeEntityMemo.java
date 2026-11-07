@@ -17,6 +17,7 @@ final class NativeEntityMemo<V> {
     NativeEntityMemo(int limit){this.limit=limit;}
     private void drain(){for(var ref=queue.poll();ref!=null;ref=queue.poll())rows.remove(ref);}
     synchronized V get(Entity entity){drain();lookup.entity=entity;try{return rows.get(lookup);}finally{lookup.entity=null;}}
+    synchronized void remove(Entity entity){drain();lookup.entity=entity;try{rows.remove(lookup);}finally{lookup.entity=null;}}
     synchronized void put(Entity entity,V value){drain();rows.put(new Key(entity,queue),value);while(rows.size()>limit){var iterator=rows.keySet().iterator();iterator.next();iterator.remove();}}
     synchronized void clearWorld(Level level){drain();rows.keySet().removeIf(key->{var entity=((Key)key).get();return entity==null||entity.level()==level;});}
     synchronized int size(){drain();return rows.size();}
