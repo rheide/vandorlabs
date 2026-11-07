@@ -74,7 +74,7 @@ public final class VehicleArmCouplers {
         if(!endpointHeads.isEmpty())throw new IllegalArgumentException("Materialized Coupler cells are unavailable");
         Set<BlockPos> roots=new HashSet<>();int arms=0;
         for(VehicleStructure.Cell cell:structure.cells){if(!(cell.state.getBlock() instanceof GearBlock))continue;TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof GearTileEntity))throw new IllegalArgumentException("Arm data is unavailable at "+cell.pos);GearTileEntity gear=((GearTileEntity)raw).loadedController();if(gear==null)throw new IllegalArgumentException("Arm membership is unavailable at "+cell.pos);if(!roots.add(gear.getPos()))continue;
-            ArmPayload payload=gear.payload();if(payload==null){if(gear.hasRetainedPayload())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");continue;}if(payload.materialized())continue;
+            ArmPayload payload=gear.payload();if(payload==null){if(gear.hasFailedArmSnapshot()||gear.hasTaxiData()&&!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");continue;}if(payload.materialized())continue;
             if(payload.hasOwnershipJournal()||!gear.isOperational())throw new IllegalArgumentException("Arm snapshot requires recovery before coupling");
             // Nested moving mechanisms need an explicit frame hierarchy; do not quietly fold them rigid.
             for(VehicleStructure.Cell nested:payload.blocks.cells)if(nested.state.getBlock() instanceof GearBlock)throw new IllegalArgumentException("Nested arm Coupler frames are not supported yet");
