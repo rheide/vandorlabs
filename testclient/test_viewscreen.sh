@@ -537,8 +537,12 @@ PYIMAGE
         exit 0
     fi
     if [ "$TARGET" = coupler-articulation ]; then
-        grep -q "coupler-articulation-live PASS" "$RUN_OUT/client.log"
-        grep -q "vehicle-terrain-access PASS" "$RUN_OUT/client.log"
+        if [ "${VANDOR_LABS_COUPLER_ARM_ONLY:-0}" = 1 ]; then
+            grep -q "carried-arm-coupler-live PASS" "$RUN_OUT/client.log"
+        else
+            grep -q "coupler-articulation-live PASS" "$RUN_OUT/client.log"
+            grep -q "vehicle-terrain-access PASS" "$RUN_OUT/client.log"
+        fi
         echo "Coupler articulation live checks passed: $RUN_OUT"
         exit 0
     fi
