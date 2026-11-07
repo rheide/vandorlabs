@@ -12,3 +12,10 @@ tasks.register('testNativeCanopyPlacement', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.canopy.CanopyPlacementChecks'
     args file('../../build/test-artifacts/canopy-placement-forge.jsonl').absolutePath
 }
+tasks.register('testNativeCanopyPose', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.canopy.CanopyPoseChecks'
+    args file('../../build/test-artifacts/canopy-pose-forge.jsonl').absolutePath
+}
