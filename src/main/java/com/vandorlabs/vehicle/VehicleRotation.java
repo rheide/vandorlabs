@@ -50,7 +50,7 @@ public final class VehicleRotation {
         // Until the complete arm-layout resolver is admitted, do not call an unresolved pose aligned.
         for(TileEntity tile:craft.view.tiles.values())if(tile instanceof com.vandorlabs.gear.GearTileEntity){
             com.vandorlabs.gear.GearTileEntity arm=(com.vandorlabs.gear.GearTileEntity)tile;
-            if(arm.hasRetainedPayload()&&arm.payload()==null)throw new IllegalArgumentException("An arm payload needs recovery before parking.");
+            if(arm.hasFailedArmSnapshot()||arm.hasRetainedPayload()&&arm.payload()==null&&!arm.validTaxiState())throw new IllegalArgumentException("An arm payload needs recovery before parking.");
             if(arm.payload()!=null&&(arm.progress()!=0&&arm.progress()!=1||arm.payload().gridMapping(arm,arm.progress())==null))throw new IllegalArgumentException("Retract or fully extend arm payloads before Safe Park.");
         }
         if(turns<0||turns>3||!Double.isFinite(craft.posX)||!Double.isFinite(craft.posY)||!Double.isFinite(craft.posZ))throw new IllegalArgumentException("Invalid craft pose");
@@ -100,6 +100,8 @@ public final class VehicleRotation {
                 }
                 try{
                     TileEntity tile=view.getTileEntity(cell.pos);
+                    if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).parkingHeld()
+                            &&!((com.vandorlabs.gear.GearTileEntity)tile).validateParkingHoldInstalled(true))throw new IllegalArgumentException("Prepared arm parking ownership is incomplete or incompatible.");
                     if(!MovingBlockSupport.supported(cell,tile))throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
                     if(cell.state.getMaterial().isLiquid()||cell.state.getBlockHardness(view,cell.pos)<0&&!(cell.state.getBlock() instanceof BlockControlledRamp))throw new IllegalArgumentException("Unsupported moving block: "+cell.state.getBlock().getRegistryName());
                     MovingBlockSupport.requireExactTileData(cell,tile);

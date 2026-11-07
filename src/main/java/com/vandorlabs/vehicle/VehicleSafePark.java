@@ -11,6 +11,7 @@ final class VehicleSafePark {
         WorldServer world=player.getServerWorld();
         VehicleTransfer.submit(world,new VehicleTransfer.Action(){
             private VehicleStructure source;private VehicleRotation.Plan plan;private VehicleWorld placedView;private VehicleRotation.Validation validation;private boolean validated;private VehicleSafeParkSearch search,verification;private int turns,slices;
+            private VehicleArmParkingSearch arms;private VehicleArmParkingComposition composition;
             public void run()throws Exception {
                 if(++slices>1200)throw new IllegalArgumentException("Safe Park timed out; craft preserved. Move the craft closer to a clear, flat area and try again.");
                 if(player.world!=world||craft.world!=world)throw new IllegalArgumentException("Craft changed dimension during Safe Park.");
@@ -20,10 +21,20 @@ final class VehicleSafePark {
                     if(!Float.isFinite(craft.rotationYaw))throw new IllegalArgumentException("Invalid craft heading");
                     craft.signals.persist();
                     turns=Math.floorMod(Math.round(MathHelper.wrapDegrees(craft.rotationYaw)/90F),4);
-                    plan=VehicleRotation.safePlan(craft,turns);source=craft.structure;
                     VehicleTransfer.holdForPreflight(craft);
+                    craft.signals.persist();source=craft.structure;
+                    boolean payload=false;for(net.minecraft.tileentity.TileEntity tile:craft.view.tiles.values())if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).payload()!=null){payload=true;break;}
+                    if(payload)arms=new VehicleArmParkingSearch(craft,com.vandorlabs.gear.ArmParkingMaterialization::mayDisplace);
+                    else plan=VehicleRotation.safePlan(craft,turns);
                 }
                 if(craft.structure!=source)throw new IllegalArgumentException("Craft changed during Safe Park; inspect it again.");
+                if(plan==null){
+                    arms.requireStable();
+                    if(composition==null){if(!arms.step(256,System.nanoTime()+2_000_000L)){VehicleTransfer.deferPreflight();return;}composition=new VehicleArmParkingComposition(source,arms.geometry(),arms.result());}
+                    if(!composition.step(256,System.nanoTime()+2_000_000L)){VehicleTransfer.deferPreflight();return;}
+                    arms.requireStable();plan=VehicleRotation.safePlan(craft,turns,composition.result(),composition.seatMap());
+                }
+                if(arms!=null)arms.requireStable();
                 if(validation==null){placedView=new VehicleWorld(world,plan.structure);validation=new VehicleRotation.Validation(plan.structure,placedView);}
                 if(!validated){validated=validation.step(256,System.nanoTime()+2_000_000L);if(!validated){VehicleTransfer.deferPreflight();return;}}
                 VehicleCollision geometry=VehicleTransfer.geometry(world,plan.structure);
@@ -35,7 +46,7 @@ final class VehicleSafePark {
                 if(!verification.step(256,System.nanoTime()+2_000_000L)){VehicleTransfer.deferPreflight();return;}
                 if(verification.result()==null)throw new IllegalArgumentException("The Safe Park area changed; craft preserved. Try again.");
                 VehicleService.validatePreparedParking(player,craft,plan.structure,origin);
-                try{VehicleTransfer.parkPrepared(world,craft,origin,player,true,plan.structure,turns);}
+                try{VehicleTransfer.parkPrepared(world,craft,origin,player,true,plan.structure,turns,plan.seatPositions);}
                 finally{verification=null;} // Disk preparation can yield: recheck the complete destination before committing.
                 player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Safe Park: craft aligned and restored as blocks."),true);
             }
