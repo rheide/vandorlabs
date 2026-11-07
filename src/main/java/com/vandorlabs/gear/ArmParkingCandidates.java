@@ -19,13 +19,13 @@ public final class ArmParkingCandidates {
     }
     public static final class Result {
         public final Status status;public final List<Candidate> candidates;
-        public final int testedPhases,transformQueries,stateChecks;
-        Result(Status status,List<Candidate> candidates,int phases,int transforms,int checks){this.status=status;this.candidates=Collections.unmodifiableList(new ArrayList<>(candidates));testedPhases=phases;transformQueries=transforms;stateChecks=checks;}
+        public final int testedPhases,transformQueries,stateChecks,typedStateQueries;
+        Result(Status status,List<Candidate> candidates,int phases,int transforms,int checks,int typed){this.status=status;this.candidates=Collections.unmodifiableList(new ArrayList<>(candidates));testedPhases=phases;transformQueries=transforms;stateChecks=checks;typedStateQueries=typed;}
         public boolean completeForDistinctGridMappings(){return status==Status.COMPLETE;}
         public boolean tileValidationDeferred(){for(Candidate candidate:candidates)if(candidate.tileValidationDeferred)return true;return false;}
     }
     private static final class Admission {final boolean allowed,deferred;Admission(boolean allowed,boolean deferred){this.allowed=allowed;this.deferred=deferred;}}
-    private static Result refuse(Status status){return new Result(status,Collections.emptyList(),0,0,0);}
+    private static Result refuse(Status status){return new Result(status,Collections.emptyList(),0,0,0,0);}
     /** Main-thread loaded exact owner only. Never rebuilds gear or creates a payload view. */
     public static Result enumerate(GearTileEntity arm){
         if(arm==null||arm.getWorld()==null)return refuse(Status.INCOMPLETE);
@@ -54,11 +54,12 @@ public final class ArmParkingCandidates {
         ArmPayload payload=arm.payload();
         if(!arm.isOperational()||arm.assembly()==null||payload==null||payload.hasOwnershipJournal()||arm.hasStoredSections()||arm.hasTaxiData()||arm.recoveryDropped()||arm.assembly().kind()!=GearTopology.FootKind.NONE)return refuse(Status.INCOMPLETE);
         GearMotion.Mode mode=arm.mode();if(mode!=GearMotion.Mode.EXTEND&&mode!=GearMotion.Mode.ROTATE&&mode!=GearMotion.Mode.ROTATE_LEVEL||mode==GearMotion.Mode.EXTEND&&arm.isSwingArmController()||mode!=GearMotion.Mode.EXTEND&&!arm.isSwingArmController())return refuse(Status.UNSUPPORTED);
-        if(payload.blocks.cells.isEmpty()||payload.blocks.cells.size()>ArmPayload.MAX_BLOCKS)return refuse(Status.BOUNDED_REFUSAL);
+        if(payload.blocks.cells.isEmpty())return refuse(Status.INCOMPLETE);
+        if(payload.blocks.cells.size()>ArmPayload.MAX_BLOCKS)return refuse(Status.BOUNDED_REFUSAL);
         // Identity tile envelopes remain untouched and require chosen-candidate factory validation.
         // Missing own tile data cannot describe a complete owner.
         for(VehicleStructure.Cell cell:payload.blocks.cells)if(cell.state.getBlock().hasTileEntity(cell.state)&&!cell.hasTileData())return refuse(Status.UNSUPPORTED);
-        int transforms=0,checks=0,tested=0;List<Candidate> result=new ArrayList<>();Map<Integer,Admission> admissible=new HashMap<>();
+        int transforms=0,checks=0,tested=0,typed=0;List<Candidate> result=new ArrayList<>();Map<Integer,Admission> admissible=new HashMap<>();
         try{
             double[] phases;
             if(mode==GearMotion.Mode.EXTEND){Vec3d a=payload.transform(arm,0,0,0,0),b=payload.transform(arm,1,0,0,0);transforms+=2;phases=ArmParkingPhases.linear(vector(a),vector(b));}
@@ -74,11 +75,23 @@ public final class ArmParkingCandidates {
                 }
             }
             for(double phase:phases){tested++;ArmGridMapping mapping=payload.gridMapping(arm,phase);transforms+=4;if(mapping==null)continue;int[] basis=mapping.basis();int key=0;for(int v:basis)key=key*3+v+1;Admission admission=admissible.get(key);
-                if(admission==null){boolean allowed=true,deferred=false;for(VehicleStructure.Cell cell:payload.blocks.cells){checks++;if(mapping.rotates()){if(ArmGridTiles.state(cell,basis)==null){allowed=false;break;}}else if(cell.hasTileData())deferred=true;}admission=new Admission(allowed,deferred);admissible.put(key,admission);}
+                if(admission==null){
+                    boolean allowed=true,deferred=false;IdentityHashMap<net.minecraft.block.state.IBlockState,Boolean> tileFree=null;
+                    for(VehicleStructure.Cell cell:payload.blocks.cells){
+                        checks++;boolean ownsTile=cell.hasTileData();
+                        if(mapping.rotates()){
+                            Boolean valid=null;
+                            if(!ownsTile){if(tileFree==null)tileFree=new IdentityHashMap<>();valid=tileFree.get(cell.state);}
+                            if(valid==null){typed++;valid=ArmGridTiles.state(cell,basis)!=null;if(!ownsTile)tileFree.put(cell.state,valid);}
+                            if(!valid){allowed=false;break;}
+                        }else if(ownsTile)deferred=true;
+                    }
+                    admission=new Admission(allowed,deferred);admissible.put(key,admission);
+                }
                 if(!admission.allowed)continue;Candidate candidate=new Candidate(phase,mapping,admission.deferred);boolean duplicate=false;for(Candidate previous:result)if(candidate.same(previous)){duplicate=true;break;}if(!duplicate)result.add(candidate);
             }
-            return new Result(Status.COMPLETE,result,tested,transforms,checks);
-        }catch(IllegalArgumentException|ArithmeticException bounded){return new Result(Status.BOUNDED_REFUSAL,Collections.emptyList(),tested,transforms,checks);}
+            return new Result(Status.COMPLETE,result,tested,transforms,checks,typed);
+        }catch(IllegalArgumentException|ArithmeticException bounded){return new Result(Status.BOUNDED_REFUSAL,Collections.emptyList(),tested,transforms,checks,typed);}
     }
     private static double[] vector(Vec3d v){return new double[]{v.x,v.y,v.z};}
     private ArmParkingCandidates(){}
