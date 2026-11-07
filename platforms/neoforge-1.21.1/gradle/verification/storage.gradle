@@ -1,0 +1,6 @@
+tasks.register('testNativeStorageSettings', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.storage.StorageSettingsChecks'
+    args rootProject.file('../../testclient/fixtures/storage-source-reference.json.gz').absolutePath
+}

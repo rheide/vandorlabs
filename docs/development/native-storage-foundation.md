@@ -15,3 +15,9 @@ Missing or incorrectly typed `Items` does not clear an existing inventory. A pre
 Configured drops, pick-block and copied item settings exclude `Items`. Breaking the block ejects the inventory separately and empties its old slots. Applying appearance settings preserves the target inventory. A disabled face-override source also preserves the target's stored face choices. Storage inheritance uses each set's matching front, side and top artwork; explicit face overrides use the selected front artwork.
 
 Ordinary main-hand activation opens inventory. Creative sneak activation and the Configurizer use the shared material configuration path. Offhand activation is refused. Inventory usability requires the installed tile identity and distance at most eight blocks. The native adapter will reuse existing housing settings, material picker and configuration authorization, with a separate inventory codec and no public registry hooks until private ownership and saved-world checks pass.
+
+## Inactive native settings
+
+`NativeStorageSettings` composes the existing `HousingSettings` and material catalog, without installing Screen display defaults or behavior. Its factory and raw-snapshot readers preserve the distinct versioned and legacy default paths. Item settings first merge into a fresh versioned housing save, matching the actual ItemBlock observations. The saved-settings wrapper owns a defensive original copy; appearance edits preserve `Items` and opaque sibling fields.
+
+`testNativeStorageSettings` compares all 39 snapshot and 192 placement cases against the frozen Source reference and checks defensive retention. It passes 1,812 assertions. This is settings parity only: inventory codec, private host, menu, ownership recovery and rendered acceptance remain separate prerequisites for public registration.
