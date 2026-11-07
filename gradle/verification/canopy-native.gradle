@@ -148,3 +148,12 @@ task exportCanopyRampSweepReference(type: JavaExec) {
         file('build/test-artifacts/canopy-ramp-sweep-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+
+task exportCanopyJoinedRayReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyJoinedRayLegacyOracle'
+    args file('build/test-artifacts/canopy-joined-ray-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
