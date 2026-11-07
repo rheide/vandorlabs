@@ -22,6 +22,10 @@ public record NativeRampPartMaterial(BlockState state,int mainTexture,int sideTe
             &&rotation==other.rotation&&stairs==other.stairs&&facesEnabled==other.facesEnabled
             &&Arrays.equals(faces,other.faces);
     }
-    @Override public int hashCode(){return 31*Objects.hash(state,mainTexture,sideTexture,layout,rotation,stairs,facesEnabled)+Arrays.hashCode(faces);}
+    @Override public int hashCode(){
+        int hash=state.hashCode();hash=31*hash+mainTexture;hash=31*hash+sideTexture;
+        hash=31*hash+layout;hash=31*hash+rotation;hash=31*hash+(stairs?1:0);
+        hash=31*hash+(facesEnabled?1:0);return 31*hash+Arrays.hashCode(faces);
+    }
     public long retainedBytes(){return 128;}
 }
