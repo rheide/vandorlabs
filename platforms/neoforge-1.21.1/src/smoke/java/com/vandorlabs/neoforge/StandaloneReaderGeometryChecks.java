@@ -21,6 +21,7 @@ public final class StandaloneReaderGeometryChecks {
     private static int readTicks;
     private static boolean readPending;
     private static net.minecraft.world.level.block.entity.BlockEntityType<com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity> TYPE;
+    static net.minecraft.world.level.block.entity.BlockEntityType<com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity> fixtureType(){return TYPE;}
     static net.minecraft.world.inventory.MenuType<com.vandorlabs.neoforge.credentials.NativeCredentialReaderMenu> MENU;
     static com.vandorlabs.neoforge.credentials.NativeCredentialReaderBlock fixture(boolean isChip){return isChip?chip:card;}
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
