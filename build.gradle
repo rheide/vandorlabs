@@ -1555,3 +1555,16 @@ task testDiagonalGlassDialogLegacy(type: JavaExec) {
 
 // Isolated feature checks can be integrated without competing append edits in this build file.
 fileTree('gradle/verification').matching { include '*.gradle' }.files.sort().each { apply from: it }
+
+// Exact legacy item-NBT mask migration before sharing the Copifier option policy.
+task testDuplifierMask(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NonRenderingChecks'
+    args 'duplifier-mask'
+    maxHeapSize = '1g'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testDuplifierMask

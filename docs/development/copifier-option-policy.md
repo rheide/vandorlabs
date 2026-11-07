@@ -1,0 +1,7 @@
+# Copifier option-mask compatibility
+
+The released Copifier stores append-only choices in `DuplifierApplyMask`, `DuplifierApplyMaskWords` and `DuplifierApplyOptionCount`. The first long remains readable by old callers. Multiword data stores each long as low/high integer pairs; incomplete trailing pairs are ignored. Missing or incorrectly typed first-word tags select all choices. A missing or incorrectly typed count means the original 56 choices; appended options start enabled. Updating the first word preserves newer disabled choices.
+
+`DuplifierOptionMask` shares decoding, trimming, validation, encoding and bit selection without depending on Minecraft item or NBT classes. The Forge adapter retains exact typed-tag checks and its existing option labels, indices, item state and settings-selection policy. Platform adapters must check tag types before passing scalar data to this class. This extraction does not register a native Copifier or implement capture/apply, connected selection or undo there.
+
+`testDuplifierMask` freezes 3,080 actual legacy ItemStack/NBT combinations before extraction, including wrong tag types, old counts, short/odd word arrays, reload and first-word updates. The frozen SHA-256 is `fa562397c27a9532dfc0eb43d7936b26e20719cc407623e93de0a2eb66d845c8`. The portable fixture reproduces that digest on Java 8 and Java 21 and separately checks catalog growth across 64-bit word boundaries. The focused `duplifier-direction` client covers actual dialog packets, reverse clicks, five pages, saved choices and apply/undo regressions.
