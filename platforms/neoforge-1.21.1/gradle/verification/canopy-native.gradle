@@ -63,3 +63,9 @@ tasks.register('testNativeCanopyExistingItem', JavaExec) {
     args file('../../build/test-artifacts/canopy-existing-item-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+tasks.register('testNativeCanopyAnimation', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.canopy.CanopyAnimationChecks'
+}
