@@ -60,3 +60,11 @@ task testProgrammerPickingCost(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ProgrammerPickingCostChecks'
 }
+
+task exportProgrammerWireReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.programmer.ProgrammerWireLegacyChecks'
+    systemProperty 'vandorlabs.programmerWireReference', file(project.findProperty('programmerWireReference') ?: 'build/test-artifacts/programmer-wire-forge.json').absolutePath
+}
