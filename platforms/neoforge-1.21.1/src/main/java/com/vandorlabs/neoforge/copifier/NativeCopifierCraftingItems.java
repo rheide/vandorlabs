@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.copifier;
 import com.vandorlabs.neoforge.light.NativeLightBlock;
 import com.vandorlabs.neoforge.door.*;
 import com.vandorlabs.neoforge.glass.*;
+import com.vandorlabs.neoforge.storage.*;
 import com.vandorlabs.persistence.ProgrammableGlassSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
@@ -13,14 +14,14 @@ import net.minecraft.world.item.*;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.block.EntityBlock;
 
-/** Item-only copied housing edits. No world, registry lookup of clipboard IDs or physical publication. */
+/** Typed copied-settings item edits. No world, registry lookup of clipboard IDs or physical publication. */
 public final class NativeCopifierCraftingItems {
     public static ItemStack apply(ItemStack input,CompoundTag values,HolderLookup.Provider registries){
         if(!(input.getItem() instanceof BlockItem item)||input.isEmpty())return ItemStack.EMPTY;
         var id=BuiltInRegistries.BLOCK.getKey(item.getBlock());
         if(!id.getNamespace().equals("vandorlabs"))return ItemStack.EMPTY;
         NativeCopifierHousingCapture.Family family=null;
-        try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock))return ItemStack.EMPTY;}
+        try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(item.getBlock() instanceof NativeStorageBlock)family=NativeCopifierHousingCapture.Family.CUBE;else if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock))return ItemStack.EMPTY;}
         if(!(item.getBlock() instanceof EntityBlock factory))return ItemStack.EMPTY;
         var state=item.getBlock().defaultBlockState();var properties=input.get(DataComponents.BLOCK_STATE);
         if(properties!=null)state=properties.apply(state);
@@ -31,6 +32,11 @@ public final class NativeCopifierCraftingItems {
         if(supplied!=null)current=supplied.copyTag();
         else if(root.contains("BlockEntityTag")){if(!root.contains("BlockEntityTag",Tag.TAG_COMPOUND))return ItemStack.EMPTY;current=root.getCompound("BlockEntityTag").copy();}
 
+        if(item.getBlock() instanceof NativeStorageBlock){
+            // The released recipe omits inventory. Refuse a physical owner rather than silently discard it.
+            if(current.contains("Items")&&(!(current.get("Items") instanceof ListTag items)||!items.isEmpty()))return ItemStack.EMPTY;
+            try{NativeStorageItemSettings.prepare(draft.getType(),BlockPos.ZERO,state,current,registries);NativeStorageSettings.read(current).write(current);}catch(IllegalArgumentException unsupported){return ItemStack.EMPTY;}
+        }
         final CompoundTag fields;
         try{
             if(item.getBlock() instanceof NativeGlassBlock){
@@ -54,6 +60,7 @@ public final class NativeCopifierCraftingItems {
             else {var plan=NativeCopifierHousingEdit.prepare(family,current,values);if(!plan.applicable())return ItemStack.EMPTY;fields=plan.fields();}
         }catch(IllegalArgumentException unsupported){return ItemStack.EMPTY;}
         current.merge(fields);for(String key:new String[]{"id","x","y","z"})current.remove(key);
+        if(item.getBlock() instanceof NativeStorageBlock){current.remove("Items");current.remove(NativeStorageInventory.SCHEMA);current.remove(NativeStorageInventory.DATA_VERSION);}
         root.put("BlockEntityTag",current);
         var output=input.copyWithCount(1);output.remove(DataComponents.BLOCK_ENTITY_DATA);output.set(DataComponents.CUSTOM_DATA,CustomData.of(root));return output;
     }
