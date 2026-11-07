@@ -42,8 +42,25 @@ final class DuplifierDirectionLiveChecks {
         if(phase==4){check(mc,true);click(gui,96,1);}
         if(phase==5){check(mc,false);mc.player.closeScreen();mc.playerController.processRightClick(mc.player,mc.world,EnumHand.MAIN_HAND);}
         if(phase==6){require(button(gui,96).displayString.endsWith("Off"),"reopened direction option lost state");snapshot(mc,gui,output,"duplifier-direction-off");click(gui,96,1);}
-        if(phase==7){check(mc,true);mc.player.closeScreen();server(mc,()->{DuplifierRuntimeChecks.run(player(mc));worldChecks(player(mc));segmentedUndo(player(mc));});DuplifierMaskRuntimeChecks.run();System.out.println("[vandorlabs][reprolab] duplifier-direction-live PASS real item opening held/container packets toggle persistence reverse clicks five rendered pages cube/slab/stairs strict/ignored mounting data undo adjacent connected regressions");return true;}
+        if(phase==7){check(mc,true);mc.player.closeScreen();server(mc,()->{DuplifierRuntimeChecks.run(player(mc));worldChecks(player(mc));segmentedUndo(player(mc));crafting(player(mc));});DuplifierMaskRuntimeChecks.run();System.out.println("[vandorlabs][reprolab] duplifier-direction-live PASS real item opening held/container packets toggle persistence reverse clicks five rendered pages cube/slab/stairs strict/ignored mounting data undo adjacent connected regressions");return true;}
         phase++;return false;
+    }
+    private static void crafting(EntityPlayerMP player){
+        player.inventory.clear();player.inventory.setItemStack(ItemStack.EMPTY);
+        net.minecraft.inventory.ContainerPlayer container=(net.minecraft.inventory.ContainerPlayer)player.inventoryContainer;
+        ItemStack tool=new ItemStack(ModItems.DUPLIFIER);NBTTagCompound values=new NBTTagCompound();values.setInteger(ProgrammableSettings.WALL_TEXTURE,7);tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,values);tool.setTagInfo("PrivateTool",new net.minecraft.nbt.NBTTagString("retained"));NBTTagCompound original=tool.writeToNBT(new NBTTagCompound());
+        container.craftMatrix.setInventorySlotContents(0,tool);container.craftMatrix.setInventorySlotContents(1,new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK,17));
+        require(!container.craftResult.getStackInSlot(0).isEmpty(),"registered copied-settings recipe result");
+        container.slotClick(0,0,net.minecraft.inventory.ClickType.PICKUP,player);
+        require(player.inventory.getItemStack().getCount()==1&&container.craftMatrix.getStackInSlot(1).getCount()==16,"ordinary crafting consumes one source");
+        require(original.equals(container.craftMatrix.getStackInSlot(0).writeToNBT(new NBTTagCompound())),"ordinary crafting retains complete tool");
+        player.inventory.setInventorySlotContents(8,player.inventory.getItemStack());player.inventory.setItemStack(ItemStack.EMPTY);
+        container.slotClick(0,0,net.minecraft.inventory.ClickType.QUICK_MOVE,player);
+        require(container.craftMatrix.getStackInSlot(1).isEmpty(),"shift crafting consumes remaining stack");
+        require(original.equals(container.craftMatrix.getStackInSlot(0).writeToNBT(new NBTTagCompound())),"shift crafting retains complete tool");
+        int count=0;for(int i=0;i<player.inventory.getSizeInventory();i++){ItemStack stack=player.inventory.getStackInSlot(i);if(!stack.isEmpty()){require(stack.getItem()==net.minecraft.item.Item.getItemFromBlock(ModBlocks.PROGRAMMABLE_BLOCK),"unexpected crafting owner");require(stack.getSubCompound("BlockEntityTag").getInteger("housingTexture")==7,"crafted housing choice");count+=stack.getCount();}}
+        require(count==17,"exact crafted output count="+count);container.craftMatrix.clear();player.inventory.clear();player.inventory.setItemStack(ItemStack.EMPTY);container.detectAndSendChanges();
+        System.out.println("[vandorlabs][reprolab] duplifier-crafting PASS actual registered ContainerPlayer pickup and quick-move consumption=17 complete tool remainder");
     }
     private static void worldChecks(EntityPlayerMP player){
         World world=player.world;BlockPos origin=new BlockPos(240,100,240);

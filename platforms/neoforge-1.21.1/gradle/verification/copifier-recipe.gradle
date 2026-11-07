@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierRecipeReference'))systemProperty 'vandorlabs.copifierRecipeReference',file(project.property('copifierRecipeReference')).absolutePath
+}

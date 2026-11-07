@@ -18,15 +18,16 @@ public final class RecipeCopiedSettings extends IForgeRegistryEntry.Impl<IRecipe
     public RecipeCopiedSettings() { setRegistryName(VandorLabs.MODID,"copied_settings"); }
     public boolean matches(InventoryCrafting inventory,World world) { return !getCraftingResult(inventory).isEmpty(); }
     public ItemStack getCraftingResult(InventoryCrafting inventory) {
-        ItemStack tool=ItemStack.EMPTY, input=ItemStack.EMPTY;
-        for (int i=0;i<inventory.getSizeInventory();i++) {
+        CopiedSettingsRecipeSlots.Selection slots=CopiedSettingsRecipeSlots.find(inventory.getSizeInventory(),i->{
             ItemStack stack=inventory.getStackInSlot(i);
-            if (stack.isEmpty()) continue;
-            if (stack.getItem()==ModItems.DUPLIFIER && tool.isEmpty()) tool=stack;
-            else if (input.isEmpty() && (stack.getItem() instanceof net.minecraft.item.ItemBlock || stack.getItem() instanceof ItemProgrammableArmor)) input=stack;
-            else return ItemStack.EMPTY;
-        }
-        if (tool.isEmpty() || input.isEmpty() || !ItemDuplifier.hasCopy(tool)) return ItemStack.EMPTY;
+            if(stack.isEmpty())return CopiedSettingsRecipeSlots.EMPTY;
+            if(stack.getItem()==ModItems.DUPLIFIER)return CopiedSettingsRecipeSlots.TOOL;
+            return stack.getItem() instanceof net.minecraft.item.ItemBlock || stack.getItem() instanceof ItemProgrammableArmor
+                    ?CopiedSettingsRecipeSlots.INPUT:CopiedSettingsRecipeSlots.OTHER;
+        });
+        if(slots==null)return ItemStack.EMPTY;
+        ItemStack tool=inventory.getStackInSlot(slots.tool),input=inventory.getStackInSlot(slots.input);
+        if (!ItemDuplifier.hasCopy(tool)) return ItemStack.EMPTY;
         if(input.getItem() instanceof net.minecraft.item.ItemBlock
                 && !com.vandorlabs.config.BlockAvailability.enabled(((net.minecraft.item.ItemBlock)input.getItem()).getBlock()))return ItemStack.EMPTY;
         net.minecraft.nbt.NBTTagCompound settings=DuplifierApplyOptions.selected(
