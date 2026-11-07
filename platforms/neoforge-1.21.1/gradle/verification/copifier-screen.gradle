@@ -1,0 +1,7 @@
+tasks.register('testCopifierScreenReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierScreenEditChecks'
+ args rootProject.file('../../testclient/fixtures/copifier-screen-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
