@@ -736,7 +736,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.furnitureChecksOnly")){try{if(FurnitureLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Furniture live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.screenChipChecksOnly")){try{if(ScreenChipLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Screen chip live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleDesignChecksOnly")){try{if(VehicleDesignRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle design live checks",failure);}return;}
-        if(Boolean.getBoolean("vandorlabs.vehicleSafeParkChecksOnly")){try{if(VehicleSafeParkLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Safe Park live checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.vehicleSafeParkChecksOnly")){try{if("1".equals(System.getenv("VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_ONLY"))?VehicleSafeParkArmLiveChecks.tick(mc,outDir):VehicleSafeParkLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Safe Park live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleControllerChecksOnly")) {
             try {if(VehicleControllerRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle Controller live checks",failure);}
             return;
