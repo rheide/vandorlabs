@@ -91,7 +91,7 @@ public final class NativeFluidWorld {
         Revision next=new Revision(host.effectiveFluidSnapshot().revision,host.fluidGeometryRevision(),host.modelDataRevision());
         Revision before=PUBLISHED.put(host,next);
         if(next.neighborsChanged(before))queueNeighbors(level,owner.getBlockPos());
-        int light=Math.max(0,Math.min(15,host.intrinsicContainedLight()));for(int side=0;side<2;side++){var fluid=host.containedFluids().get(side);if(!fluid.isEmpty())light=Math.max(light,fluid.getFluidType().getLightLevel(fluid));}var manager=level.getAuxLightManager(owner.getBlockPos());if(manager!=null&&manager.getLightAt(owner.getBlockPos())!=light){manager.setLightAt(owner.getBlockPos(),light);}if(level.isClientSide)net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new NativeFluidEvents.Updated(host,next.modelChanged(before)));}
+        int light=Math.max(0,Math.min(15,host.intrinsicContainedLight()));for(int side=0;side<2;side++){var fluid=host.containedFluids().get(side);if(!fluid.isEmpty())light=Math.max(light,fluid.getFluidType().getLightLevel(fluid));}com.vandorlabs.neoforge.NativeAuxiliaryLight.publish(level,owner.getBlockPos(),light);if(level.isClientSide)net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(new NativeFluidEvents.Updated(host,next.modelChanged(before)));}
     /** Block callbacks only enqueue an already-installed loaded host. */
     public static void queueAt(net.minecraft.world.level.LevelAccessor accessor,BlockPos pos){if(accessor instanceof Level level&&loaded(level,pos)&&level.getBlockEntity(pos) instanceof ContainedFluidHost host)queue(host);}
     public static void blockChanged(Level level,BlockPos pos){if(!open(level))return;queueAt(level,pos);queueNeighbors(level,pos);}
@@ -103,7 +103,7 @@ public final class NativeFluidWorld {
         }
     }
     /** Lighting threads read the auxiliary manager. Callers must advertise hasDynamicLightEmission for chunk source discovery. */
-    public static int light(BlockGetter level,BlockPos pos){var manager=level.getAuxLightManager(pos);return manager==null?0:manager.getLightAt(pos);}
+    public static int light(BlockGetter level,BlockPos pos){return com.vandorlabs.neoforge.NativeAuxiliaryLight.read(level,pos);}
     public static boolean gaseous(FluidStack fluid){return !fluid.isEmpty()&&(fluid.is(Tags.Fluids.GASEOUS)||fluid.getFluidType().getDensity(fluid)<=0);}
     public static FluidStack fromState(FluidState state){if(state.isEmpty())return FluidStack.EMPTY;var fluid=state.getType();if(fluid instanceof FlowingFluid flowing)fluid=flowing.getSource();return new FluidStack(fluid,1000);}
     public static FluidStack atPoint(Level level,Vec3 point){if(!open(level))return FluidStack.EMPTY;var contacts=CONTACTS.get(level);if(contacts==null)return FluidStack.EMPTY;BlockPos pos=BlockPos.containing(point);var host=contacts.get(pos.asLong());if(host==null||!installed(host))return FluidStack.EMPTY;int side=host.fluidVolumeSnapshot().sideAt(point.x-pos.getX(),point.y-pos.getY(),point.z-pos.getZ());return side<0?FluidStack.EMPTY:host.effectiveFluidSnapshot().side(side).fluid();}
