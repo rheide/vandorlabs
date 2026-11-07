@@ -1,0 +1,8 @@
+task exportCopifierPropulsionSourceReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CopifierPropulsionLegacyOracle'
+ args file("$buildDir/test-artifacts/copifier-propulsion-source.jsonl").absolutePath
+ maxHeapSize='1G'
+}
