@@ -25,7 +25,8 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     private volatile Publication publication;
     private volatile long motionRevision;
     private boolean revisionKnown;
-    private boolean inert=true,initialized,unloading,removing,pending=true,announceLoad=true;
+    private boolean inert=true,initialized,unloading,removing,pending=true,announceLoad=true,topologyPending=true;
+    private int contacts,roofContacts;
     public NativeCanopyEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,String kind){
         super(type,pos,state);this.kind=kind;NativeCanopyModels.builtin().dimensions(kind);links=NativeCanopyLinks.read(new CompoundTag(),pos);publishUnresolved();
     }
@@ -43,7 +44,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     public int width(){if(level!=null){var owner=NativeCanopyLifecycle.owner(this);if(owner!=this)return owner.localWidth();}return localWidth();}
     private boolean localDraws(){return !removing&&(links.anchor()==null||links.anchor().equals(worldPosition))&&(links.pair()==null||links.pair().equals(worldPosition));}
     private void publishUnresolved(){
-        int width=localWidth();NativeCanopyRenderSnapshot visual=new NativeCanopyRenderSnapshot(kind,facing().get3DDataValue(),Math.min(9,width),0,0,links.centered(),settings);
+        int width=localWidth();NativeCanopyRenderSnapshot visual=new NativeCanopyRenderSnapshot(kind,facing().get3DDataValue(),Math.min(9,width),contacts,roofContacts,links.centered(),settings);
         publication=new Publication(visual,null,links.progress(),links.open(),links.waiting(),localDraws(),false,inert);modelData=kind.equals("regular_canopy_glass")&&publication.draws()?net.neoforged.neoforge.client.model.data.ModelData.builder().with(TERRAIN,visual).build():net.neoforged.neoforge.client.model.data.ModelData.EMPTY;
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
@@ -56,7 +57,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
             try(var platform=NativePlatformComponents.guardLoad(this)){super.loadAdditional(tag.copy(),registries);platform.requireSuccessful();}
             motionRevision=tag.getLong(MOTION_REVISION);revisionKnown=tag.contains(MOTION_REVISION,Tag.TAG_LONG);settings=nextSettings;links=nextLinks;retained=original;NativePlatformComponents.forgetLoadedFields(retained);inert=level!=null&&level.isClientSide&&tag.getBoolean("NativeCanopyInert");
         }catch(RuntimeException failure){retained=original;settings=NativeCanopySettings.fresh();links=NativeCanopyLinks.read(new CompoundTag(),worldPosition);inert=true;}
-        pending=true;publishUnresolved();
+        contacts=tag.contains("CanopyMask",Tag.TAG_INT)?tag.getInt("CanopyMask")&15:0;roofContacts=tag.contains("CanopyRoofMask",Tag.TAG_INT)?tag.getInt("CanopyRoofMask")&contacts:contacts;topologyPending=true;pending=true;publishUnresolved();
     }
     private void writeOwn(CompoundTag tag){
         // Null optional live fields must not inherit stale values from an earlier valid retained save.
@@ -73,10 +74,10 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registries){var tag=packet.getTag();if(!tag.isEmpty()&&!staleUpdate(tag))loadWithComponents(tag,registries);}
     @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){if(!staleUpdate(tag))loadWithComponents(tag,registries);}
     /** Local-only lifecycle hooks; installed-thread preparation is deliberately separate. */
-    @Override public void onLoad(){super.onLoad();NativeCanopyTargets.add(this);announceLoad=true;unloading=false;pending=true;if(level!=null&&!level.isClientSide)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}
-    @Override public void setRemoved(){NativeCanopyNotifications.changed(this);NativeCanopyLifecycle.clientRemoving(this);NativeCanopyTargets.remove(this);NativeCanopySweeps.retire(this);NativeCanopyCloseService.retire(this);unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
-    @Override public void onChunkUnloaded(){NativeCanopyNotifications.changed(this);unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
-    @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){pending=true;publishUnresolved();}}
+    @Override public void onLoad(){super.onLoad();NativeCanopyTargets.add(this);NativeCanopyTopology.queue(level,worldPosition);announceLoad=true;unloading=false;pending=true;if(level!=null&&!level.isClientSide)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}
+    @Override public void setRemoved(){NativeCanopyTopology.queue(level,worldPosition);NativeCanopyNotifications.changed(this);NativeCanopyLifecycle.clientRemoving(this);NativeCanopyTargets.remove(this);NativeCanopySweeps.retire(this);NativeCanopyCloseService.retire(this);unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
+    @Override public void onChunkUnloaded(){NativeCanopyTopology.queue(level,worldPosition);NativeCanopyTargets.remove(this);NativeCanopySweeps.retire(this);NativeCanopyCloseService.retire(this);NativeCanopyNotifications.changed(this);unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
+    @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){topologyPending=true;NativeCanopyTopology.queue(level,worldPosition);pending=true;publishUnresolved();}}
     @Override public BlockEntity channelBlockEntity(){return this;}
     @Override public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return available()&&publication.draws()&&NativeCanopyControl.opening(this)&&settings.data().redstone?settings.data().channels:com.vandorlabs.redstone.ChannelList.EMPTY;}
     @Override public boolean isChannelMemberActive(){return available()&&NativeCanopyLifecycle.installed(this);}
@@ -94,17 +95,20 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
         var fresh=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),centered,hollow,links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());
         var cells=NativeCanopyFootprint.cells(kind,worldPosition,facing(),settings,fresh);links=new NativeCanopyLinks(cells.contains(worldPosition)?worldPosition:fresh.anchor(),fresh.pair(),fresh.joinedWidth(),centered,hollow,cells,java.util.Set.of(),fresh.waiting(),fresh.open(),fresh.progress(),fresh.powerKnown(),fresh.lastPower(),fresh.lastPolarity());pending=true;publishUnresolved();
     }
-    void helperOf(NativeCanopyEntity parent){initialized=true;inert=false;settings=parent.settings;links=new NativeCanopyLinks(parent.getBlockPos(),null,1,parent.links.centered(),parent.links.hollow(),null,java.util.Set.of(),false,false,0,false,false,false);pending=true;publishUnresolved();}
-    void stageSettings(NativeCanopySettings next){settings=next;pending=true;publishUnresolved();}
+    void helperOf(NativeCanopyEntity parent){topologyPending=true;initialized=true;inert=false;settings=parent.settings;links=new NativeCanopyLinks(parent.getBlockPos(),null,1,parent.links.centered(),parent.links.hollow(),null,java.util.Set.of(),false,false,0,false,false,false);pending=true;publishUnresolved();}
+    void stageSettings(NativeCanopySettings next){topologyPending=true;settings=next;pending=true;publishUnresolved();}
     void configurationRole(NativeCanopyEntity owner){initialized=true;inert=false;links=new NativeCanopyLinks(owner.getBlockPos(),links.pair(),links.joinedWidth(),owner.links().centered(),links.hollow(),links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
     void configurationFootprint(java.util.List<BlockPos> cells){links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),links.hollow(),java.util.List.copyOf(cells),java.util.Set.of(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
-    void configurationSettings(NativeCanopySettings next){settings=next;links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),true,links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
+    void configurationSettings(NativeCanopySettings next){topologyPending=true;settings=next;links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),true,links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
     void retainConfigurationRecovery(CompoundTag snapshot){retained=snapshot.copy();if(!retained.contains(RECOVERY))retained.put(RECOVERY,snapshot.copy());initialized=true;links=NativeCanopyLinks.read(new CompoundTag(),worldPosition);inert=true;pending=true;publishUnresolved();setChanged();}
     /** Full retained item is the sole recoverable owner after a consumed placement failure. */
     public net.minecraft.world.item.ItemStack placementRecoveryItem(){if(!retained.contains(PLACEMENT_ITEM,Tag.TAG_COMPOUND)||level==null)return net.minecraft.world.item.ItemStack.EMPTY;try{return com.vandorlabs.neoforge.inventory.NativeInventoryItems.modern(retained.getCompound(PLACEMENT_ITEM),level.registryAccess());}catch(RuntimeException failure){return net.minecraft.world.item.ItemStack.EMPTY;}}
     public boolean initialized(){return initialized;}
-    void stageLinks(NativeCanopyLinks next){links=next;pending=true;publishUnresolved();}
-    void notifyChanged(){if(level!=null&&!level.isClientSide){motionRevision++;revisionKnown=true;}setChanged();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);NativeCanopyNotifications.changed(this);}
+    void stageLinks(NativeCanopyLinks next){if(!java.util.Objects.equals(links.anchor(),next.anchor())||!java.util.Objects.equals(links.pair(),next.pair())||links.joinedWidth()!=next.joinedWidth()||!links.released().equals(next.released()))topologyPending=true;links=next;pending=true;publishUnresolved();}
+    void notifyChanged(){NativeCanopyTopology.queue(level,worldPosition);if(level!=null&&!level.isClientSide){motionRevision++;revisionKnown=true;}setChanged();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);NativeCanopyNotifications.changed(this);}
+    void topologyDirty(){topologyPending=true;pending=true;}
+    boolean topologyPending(){return topologyPending;}
+    void contacts(NativeCanopyTopology.Masks next){topologyPending=false;if(contacts!=next.mask()||roofContacts!=next.roof()){contacts=next.mask();roofContacts=next.roof();publishUnresolved();}}
     boolean pending(){return pending;}
     void prepared(Publication next){publication=next;pending=false;if(announceLoad){announceLoad=false;NativeCanopyNotifications.changed(this);}if(kind.equals("regular_canopy_glass")&&level!=null&&level.isClientSide){requestModelDataUpdate();level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}}
 }
