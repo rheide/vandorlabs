@@ -24,6 +24,19 @@ public final class NativeCopifierHousingWorld {
             com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.batch(level,()->NativeCopifierControlEdit.apply(tile,values));return true;
         }
     }
+    private record Storage(com.vandorlabs.neoforge.storage.NativeStorageEntity tile) implements Target {
+        private static final NativeCopifierHousingCapture.Family FAMILY=NativeCopifierHousingCapture.Family.CUBE;
+        private CompoundTag saved(){return tile.copiedConfiguration();}
+        public CompoundTag capture(){return NativeCopifierHousingCapture.capture(FAMILY,saved());}
+        public CompoundTag undo(){return NativeCopifierHousingCapture.undo(FAMILY,saved());}
+        public CompoundTag configuration(boolean ignore){return NativeCopifierHousingCapture.connected(FAMILY,saved(),ignore);}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            final NativeCopifierHousingEdit.Plan plan;try{plan=NativeCopifierHousingEdit.prepare(FAMILY,saved(),values);}catch(IllegalArgumentException unsupported){return false;}
+            if(!plan.applicable()||!plan.appearance().valid()||!com.vandorlabs.neoforge.NativeCopiedHousingMetadata.valid(plan.frames(),plan.channels(),plan.transmissionRange(),plan.transmittedChannels()))return false;
+            NativeCopifierUndo.before(actor,level,pos);
+            return tile.configureCopied(new com.vandorlabs.neoforge.storage.NativeStorageSettings(plan.housingSettings()),plan.frames(),plan.channels(),plan.transmissionRange(),plan.localRedstone(),plan.transmittedChannels());
+        }
+    }
     private record Housing(ProgrammableBlockEntity tile,NativeCopifierHousingCapture.Family family) implements Target {
         public CompoundTag capture(){return NativeCopifierHousingCapture.capture(family,tile.saveWithoutMetadata(tile.getLevel().registryAccess()));}
         public CompoundTag undo(){return NativeCopifierHousingCapture.undo(family,tile.saveWithoutMetadata(tile.getLevel().registryAccess()));}
@@ -45,6 +58,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity storage&&id.getPath().equals("programmable_storage"))return storage.available()?new Storage(storage):null;
         if(tile instanceof com.vandorlabs.neoforge.NativeBinaryControlBlockEntity control&&control.isChannelMemberActive()||tile instanceof com.vandorlabs.neoforge.NativeWirelessRedstoneBlockEntity wireless&&wireless.isChannelMemberActive())return new Control(tile);
         if(tile instanceof com.vandorlabs.neoforge.glass.NativeGlassEntity glass&&id.getPath().equals("programmable_glass"))return glass.available()&&com.vandorlabs.neoforge.fluid.NativeFluidWorld.installed(glass)?new Glass(glass):null;
         if(tile instanceof ProgrammableBlockEntity housing)try{return new Housing(housing,NativeCopifierHousingCapture.Family.of(id.getPath()));}catch(IllegalArgumentException unsupported){return null;}
