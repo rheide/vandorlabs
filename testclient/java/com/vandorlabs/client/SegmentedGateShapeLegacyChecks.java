@@ -1,0 +1,31 @@
+package com.vandorlabs.client;
+import com.vandorlabs.segmented.*;
+import java.util.*;
+import net.minecraft.client.renderer.block.model.*;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.util.EnumFacing;
+/** Shared model facts/physical gaps against independently baked authored Forge faces. */
+public final class SegmentedGateShapeLegacyChecks {
+ private static int checks;private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError(why);}
+ private static double cross(double ax,double ay,double bx,double by,double cx,double cy){return (bx-ax)*(cy-ay)-(by-ay)*(cx-ax);}
+ private static boolean triangle(double x,double y,double[] p,int a,int b,int c){double area=cross(p[a],p[a+1],p[b],p[b+1],p[c],p[c+1]);if(Math.abs(area)<1e-12)return false;double u=cross(x,y,p[b],p[b+1],p[c],p[c+1])/area,v=cross(p[a],p[a+1],x,y,p[c],p[c+1])/area,w=1-u-v;return u>=-1e-7&&v>=-1e-7&&w>=-1e-7;}
+ private static double reference(List<double[]> quads,double x,double y,boolean reverse){double best=Double.POSITIVE_INFINITY;for(double[] p:quads){double t=reverse?(2-p[2])/3:(p[2]+1)/3;if(t>=0&&t<=1&&t<best&&(triangle(x,y,p,0,3,6)||triangle(x,y,p,0,6,9)))best=t;}return best;}
+ public static void main(String[] args)throws Exception{
+  net.minecraft.init.Bootstrap.register();FaceBakery bakery=new FaceBakery();TextureAtlasSprite sprite=new TextureAtlasSprite("gate_shape_reference"){};sprite.setIconWidth(128);sprite.setIconHeight(128);sprite.initSprite(512,512,128,128,false);SegmentedGateShape.Model[][] models=new SegmentedGateShape.Model[3][4];String[] styles={"picket","industrial","lattice"},parts={"single","left","middle","right"};int rays=0,connectors=0;double[] corner=new double[3];SegmentedGateShape.Hit hit=new SegmentedGateShape.Hit();
+  for(int kind=0;kind<3;kind++)for(int part=0;part<4;part++){
+   String id="vandorlabs:block/segmented_gates/"+styles[kind]+"_"+parts[part];ModelBlock authored=DoorArtworkLegacyChecks.load(id);List<SegmentedGateShape.Element> elements=new ArrayList<>();List<double[]> fronts=new ArrayList<>();
+   for(BlockPart e:authored.getElements()){
+    int mask=0;for(EnumFacing face:e.mapFaces.keySet())mask|=1<<face.getIndex();BlockPartRotation r=e.partRotation;float[] origin=r==null?null:new float[]{r.origin.x*16,r.origin.y*16,r.origin.z*16};SegmentedGateShape.Element shape=new SegmentedGateShape.Element(new float[]{e.positionFrom.x,e.positionFrom.y,e.positionFrom.z},new float[]{e.positionTo.x,e.positionTo.y,e.positionTo.z},r==null?-1:r.axis==EnumFacing.Axis.X?0:r.axis==EnumFacing.Axis.Y?1:2,r==null?0:r.angle,origin,r!=null&&r.rescale,mask);elements.add(shape);
+    for(Map.Entry<EnumFacing,BlockPartFace> face:e.mapFaces.entrySet()){
+     BakedQuad q=bakery.makeBakedQuad(e.positionFrom,e.positionTo,face.getValue(),sprite,face.getKey(),ModelRotation.X0_Y0,e.partRotation,false,e.shade);int[] raw=q.getVertexData();int stride=raw.length/4;double[] points=new double[12];boolean flat=true;for(int v=0;v<4;v++){for(int a=0;a<3;a++)points[v*3+a]=Float.intBitsToFloat(raw[v*stride+a]);flat&=Math.abs(points[v*3+2]-points[2])<1e-8;boolean found=false;for(int at=0;at<8;at++){shape.corner(at,corner,0);found|=Math.abs(corner[0]-points[v*3])<1e-6&&Math.abs(corner[1]-points[v*3+1])<1e-6&&Math.abs(corner[2]-points[v*3+2])<1e-6;}need(found,"actual Forge vertex differs from shared element "+id);}if(flat)fronts.add(points);
+    }
+   }
+   SegmentedGateShape.Model model=new SegmentedGateShape.Model(kind,elements.toArray(new SegmentedGateShape.Element[0]));models[kind][part]=model;need(model.bounds.x0>=-1e-6&&model.bounds.x1<=1+1e-6&&model.bounds.y0>=-1e-6&&model.bounds.y1<=1+1e-6&&model.bounds.z0>=7D/16-1e-6&&model.bounds.z1<=9D/16+1e-6,"posed authored envelope "+id);
+   for(int row=0;row<32;row++)for(int col=0;col<32;col++)for(boolean reverse:new boolean[]{false,true}){double x=(col+.5)/32,y=(row+.5)/32,expected=reference(fronts,x,y,reverse);boolean actual=model.ray(x,y,reverse?2:-1,x,y,reverse?-1:2,hit);need(actual==Double.isFinite(expected),"actual authored ray gap "+id+" xy="+x+","+y+" reverse="+reverse);if(actual)need(Math.abs(hit.t-expected)<1e-6,"actual authored nearest face "+id);rays++;}
+  }
+  for(int kind=0;kind<3;kind++)for(int part=0;part<4;part++)for(int peer=0;peer<4;peer++)for(boolean above:new boolean[]{false,true}){
+   SegmentedGateShape.Model model=models[kind][part],other=models[kind][peer];List<SegmentedGateShape.Connector> joined=SegmentedGateShape.connectors(model,other,above,above?8:4);need(!above||!joined.isEmpty(),"same-style upright continuity "+styles[kind]+" "+parts[part]+"/"+parts[peer]);for(SegmentedGateShape.Connector c:joined){SegmentedGateShape.Box box=c.bounds;need(box.x0>=0&&box.x1<=1&&box.y0>=0&&box.y1<=1&&box.z0>=7D/16&&box.z1<=9D/16,"connector stays in two-pixel cell");need(box.y1-box.y0<=.25+1e-7,"short connector");need(!model.contains((box.x0+box.x1)/2,(box.y0+box.y1)/2,(box.z0+box.z1)/2,hit),"connector overlaps existing authored bars");double cx=(box.x0+box.x1)/2,cz=(box.z0+box.z1)/2,edge=above?0:1;boolean anchored=other.contains(cx,edge,cz,hit);for(SegmentedGateShape.Connector mate:SegmentedGateShape.connectors(other,model,!above,above?4:8))anchored|=mate.bounds.contains(cx,edge,cz);need(anchored,"paired connector has a matching upright boundary");connectors++;}
+  }
+  System.out.println("Actual Segmented gate shared facts PASS models=12 rays="+rays+" connectors="+connectors+" checks="+checks+" Forge vertices/gaps/nearest faces/all variant pairs");
+ }
+}

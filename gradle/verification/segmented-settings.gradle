@@ -32,3 +32,9 @@ task exportSegmentedGateModelReference(type: JavaExec) {
  maxHeapSize = '1g'
  systemProperty 'vandorlabs.segmentedGateReference',file(project.findProperty('segmentedGateReference') ?: 'build/test-artifacts/segmented-gate-forge.jsonl').absolutePath
 }
+task testSegmentedGateShapeLegacy(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.SegmentedGateShapeLegacyChecks'
+ maxHeapSize = '1g'
+}
