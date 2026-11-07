@@ -29,6 +29,8 @@ public final class VehicleScan {
     private final Set<BlockPos> expandedHigherSupports=new HashSet<>();
     private final Map<BlockPos,BlockPos> supportOwners=new HashMap<>();
     private final Map<BlockPos,Set<BlockPos>> contactLinks=new HashMap<>();
+    /** Ownership connectivity only; never an ordinary contact or a rigid-section edge. */
+    private final Map<BlockPos,Set<BlockPos>> roleLinks=new HashMap<>();
     private int contactChecks;
     private boolean membershipOnly;
     private Set<BlockPos> primaryPositions;
@@ -113,7 +115,7 @@ public final class VehicleScan {
                 if(block instanceof BlockVehicleController){group.controllers++;group.controller=at;}
                 if(block instanceof BlockPilotSeat&&!cell.state.getValue(BlockPilotSeat.UPPER)){group.pilots++;if(group.pilot==null||at.equals(start))group.pilot=at;}
                 TileEntity tile=world.getTileEntity(at);if(tile instanceof TileEntityAutopilot&&!(tile instanceof TileEntityWaypoint))group.autopilots++;
-                Set<BlockPos> next=new LinkedHashSet<>();for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);if(cells.containsKey(other)&&!supportCut(at,other)&&(touches(world,at,cell.state,side)||membershipOnly&&ownedCoupler(cell.state,cells.get(other).state,side)))next.add(other);}next.addAll(contactLinks.getOrDefault(at,Collections.emptySet()));
+                Set<BlockPos> next=new LinkedHashSet<>();for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);if(cells.containsKey(other)&&!supportCut(at,other)&&(touches(world,at,cell.state,side)||membershipOnly&&ownedCoupler(cell.state,cells.get(other).state,side)))next.add(other);}next.addAll(contactLinks.getOrDefault(at,Collections.emptySet()));next.addAll(roleLinks.getOrDefault(at,Collections.emptySet()));
                 for(BlockPos other:next)if(cells.containsKey(other)&&!owners.containsKey(other)){owners.put(other,group);pending.add(other);}
             }
         }
@@ -177,7 +179,15 @@ public final class VehicleScan {
         }
         return graph;
     }
-    static Set<BlockPos> activeCells(VehicleWorld view){VehicleScan graph=membershipGraph(view);graph.roles();return graph.primaryPositions;}
+    static Set<BlockPos> activeCells(VehicleWorld view){
+        VehicleScan graph=membershipGraph(view);
+        if(VehicleArmCouplers.hasPayloadHeads(view))for(VehicleArmCouplerPairs.Pair pair:VehicleArmCouplerPairs.discover(VehicleArmCouplers.observe(view.structure,view)).pairs){
+            if(pair.first.address.arm==null&&pair.second.address.arm==null)continue;
+            BlockPos a=pair.first.carrier,b=pair.second.carrier;if(!graph.cells.containsKey(a)||!graph.cells.containsKey(b))throw new IllegalArgumentException("Closed arm Coupler ownership carrier is unavailable");
+            if(!a.equals(b)){graph.roleLinks.computeIfAbsent(a,k->new HashSet<>()).add(b);graph.roleLinks.computeIfAbsent(b,k->new HashSet<>()).add(a);}
+        }
+        graph.roles();return graph.primaryPositions;
+    }
     /** Physical sections, cutting mating heads while keeping supported cargo and owned mechanisms rigid. */
     static List<Set<BlockPos>> couplerSections(VehicleWorld view){
         VehicleScan graph=membershipGraph(view);Map<BlockPos,Set<BlockPos>> extra=new HashMap<>();
