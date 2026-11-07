@@ -30,7 +30,8 @@ public class NativeStorageBlock extends BaseEntityBlock {
  @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return 0;}
  @Override protected boolean hasAnalogOutputSignal(BlockState state){return true;}
  @Override protected int getAnalogOutputSignal(BlockState state,Level level,BlockPos pos){return level.getBlockEntity(pos) instanceof NativeStorageEntity owner?owner.comparator():0;}
- protected boolean openConfiguration(Player player,Level level,BlockPos pos){return false;}
+ protected net.minecraft.world.inventory.MenuType<NativeStorageMenu> menuType(){return null;}
+ public final boolean openConfiguration(Player player,Level level,BlockPos pos){return NativeStorageConfiguration.open(player,level,pos,menuType());}
  private InteractionResult inventory(Player player,Level level,BlockPos pos){if(level.isClientSide)return InteractionResult.SUCCESS;if(!(player instanceof ServerPlayer actor)||!(level.getBlockEntity(pos) instanceof NativeStorageEntity owner)||!owner.stillValid(actor))return InteractionResult.FAIL;actor.openMenu(owner);return InteractionResult.CONSUME;}
  @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){if(hand!=InteractionHand.MAIN_HAND)return ItemInteractionResult.FAIL;if(stack.is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return openConfiguration(player,level,pos)?ItemInteractionResult.SUCCESS:ItemInteractionResult.FAIL;return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;}
  @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){if(player.isCreative()&&player.isShiftKeyDown())return openConfiguration(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.FAIL;return inventory(player,level,pos);}
