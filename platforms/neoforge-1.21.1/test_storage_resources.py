@@ -12,6 +12,11 @@ def main():
     assert data['schema']==1 and len(entries)==14 and len(textures)==42
     for row in reference['materials']:
         e=entries[row['choice']];assert row['faces']==[e['top'],e['top'],e['front'],e['side'],e['side'],e['side']]
+    block=json.loads((ASSETS/'models/block/programmable_storage.json').read_text());item=json.loads((ASSETS/'models/item/programmable_storage.json').read_text())
+    assert block==item and block['parent']=='minecraft:block/orientable' and block['textures']=={'front':'vandorlabs:blocks/storage/cabinet_front','side':'vandorlabs:blocks/storage/cabinet_side','top':'vandorlabs:blocks/storage/cabinet_top','particle':'vandorlabs:blocks/storage/cabinet_front'}
+    states=json.loads((ASSETS/'blockstates/programmable_storage.json').read_text())['variants'];assert set(states)=={'facing='+f for f in ['north','south','east','west']}
+    assert all(row=={'model':'vandorlabs:block/programmable_storage'} for row in states.values())
+    recipe=json.loads((ASSETS.parent.parent/'data/vandorlabs/recipe/programmable_storage.json').read_text());assert recipe['ingredients']==[{'item':'minecraft:chest'},{'item':'vandorlabs:programmable_block'}] and recipe['result']=={'id':'vandorlabs:programmable_storage'} and recipe['neoforge:conditions']==[{'type':'neoforge:item_exists','item':'vandorlabs:programmable_storage'}]
     jar=zipfile.ZipFile(options.jar) if options.jar else None
     try:
         for name,e in textures.items():
