@@ -6,3 +6,12 @@ task exportPlatformRiderReference(type: JavaExec) {
     args file('build/test-artifacts/platform-riders-source.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+
+task exportPlatformMotionReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PlatformMotionLegacyOracle'
+    args file('build/test-artifacts/platform-motion-source.jsonl').absolutePath
+    maxHeapSize = '1g'
+}

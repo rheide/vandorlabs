@@ -8,4 +8,6 @@ The private native obstacle adapter consumes the complete lazy collision iterato
 
 The dedicated world focus checks actual lazy block-shape calls, nested carrying roots, retained foreign collisions, exception cleanup, cold queries without loading, worker refusal, real Player/Item shallow support and vanilla Boat/Minecart eligibility. Transport packets, recent-floor integration after materialization and moving-world acceptance remain pending.
 
+Transport admission has an independent 14,483-case actual Forge packet-handler reference, expanded SHA-256 `8651842fa51549993a15cca2fb2085eefbb232e101157f7089253af8f52b9ca3`. The shared correction policy matches every position, momentum, grounding and ordering result, including consuming a newer sequence before rejecting a physical correction. The ordinary released packet is sixty bytes. Native wire encoding, real transport and client interpolation are separate work; this reference alone does not establish a network implementation.
+
 Ramp controller queries use broad Entity selection; vanilla boats and minecarts are not blanket-excluded. The separate arm vehicle predicate must not be substituted for those controller-specific filters. Native Vandor Vehicle Mode remains deferred.

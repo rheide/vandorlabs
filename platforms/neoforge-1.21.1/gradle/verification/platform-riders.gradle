@@ -5,3 +5,11 @@ tasks.register('testNativeRampRiderPolicy', JavaExec) {
     args file('../../testclient/fixtures/platform-riders-source.jsonl.gz').absolutePath
     maxHeapSize = '512m'
 }
+
+tasks.register('testNativePlatformMotionPolicy', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.ramp.NativePlatformMotionPolicyChecks'
+    args file('../../testclient/fixtures/platform-motion-source.jsonl.gz').absolutePath
+    maxHeapSize = '512m'
+}
