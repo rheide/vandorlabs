@@ -28,6 +28,7 @@ public final class NativeDoorSelection {
         if(part!=null){if(event.getHand()!=net.minecraft.world.InteractionHand.MAIN_HAND||mc.player.getMainHandItem().getItem() instanceof net.minecraft.world.item.BlockItem)return;var root=part.root();var publication=root.publication();if(publication==null)return;
             event.setCanceled(true);PacketDistributor.sendToServer(new com.vandorlabs.neoforge.segmented.SegmentedUsePayload(part.getBlockPos(),target.hit().getLocation(),publication.motion().identity(),root.sequence(),com.vandorlabs.neoforge.segmented.NativeSegmentedTargets.pose(root)));return;}
         if(com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity.at(mc.level,target.hit().getBlockPos())!=null){event.setCanceled(true);PacketDistributor.sendToServer(new com.vandorlabs.neoforge.trapdoor.TrapdoorUsePayload(target.root(),event.getHand()));return;}
+        if(com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.at(mc.level,target.hit().getBlockPos())!=null){event.setCanceled(true);PacketDistributor.sendToServer(new com.vandorlabs.neoforge.canopy.CanopyUsePayload(target.root(),event.getHand()));return;}
         event.setCanceled(true);PacketDistributor.sendToServer(new DoorUsePayload(target.root(),event.getHand()));
     }
 }

@@ -17,6 +17,9 @@ public final class NativeCanopyGeometry {
         private final int facing,x,y,z;
         private final AABB bounds;
         private final VoxelShape outline;
+        private final VoxelShape[] memberOutlines=new VoxelShape[64];
+        private final int[] memberOrigins=new int[64*3];
+        private int memberOutlineCount;
         private final long retainedBytes;
         private Snapshot(NativeCanopyRenderSnapshot visual,double progress,int x,int y,int z){
             this.x=x;this.y=y;this.z=z;facing=visual.facing();
@@ -27,11 +30,13 @@ public final class NativeCanopyGeometry {
             collision=new AABB[scalar.size()];for(int i=0;i<collision.length;i++){var b=scalar.get(i);collision[i]=new AABB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
             boxes=Collections.unmodifiableList(Arrays.asList(collision));var b=CanopyPhysics.bounds(scalar,x,y,z);bounds=new AABB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
             outline=Shapes.create(bounds.move(-x,-y,-z));
-            long bytes=1024L+collision.length*80L;for(var face:faces)bytes+=256L+face.points()*128L;retainedBytes=bytes;
+            long bytes=1024L+64*1024L+collision.length*80L;for(var face:faces)bytes+=256L+face.points()*128L;retainedBytes=bytes;
         }
         public AABB bounds(){return bounds;}
         /** One bounding cuboid, independent of the dense physical approximation. */
         public VoxelShape outline(){return outline;}
+        /** Selected helpers/columns outline the same owner, without allocating or unioning faces per query. */
+        public synchronized VoxelShape outlineAt(int px,int py,int pz){if(px==x&&py==y&&pz==z)return outline;for(int i=0;i<memberOutlineCount;i++){int at=i*3;if(memberOrigins[at]==px&&memberOrigins[at+1]==py&&memberOrigins[at+2]==pz)return memberOutlines[i];}var shape=Shapes.create(bounds.move(-px,-py,-pz));if(memberOutlineCount<memberOutlines.length){int at=memberOutlineCount*3;memberOrigins[at]=px;memberOrigins[at+1]=py;memberOrigins[at+2]=pz;memberOutlines[memberOutlineCount++]=shape;}return shape;}
         public List<AABB> boxes(){return boxes;}
         public long retainedBytes(){return retainedBytes;}
         /** Appends existing immutable boxes; callers may reuse their output buffer. */

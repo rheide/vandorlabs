@@ -65,8 +65,8 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();writeOwn(tag);tag.putBoolean("NativeCanopyInert",inert);tag.putBoolean(UNINITIALIZED,!initialized);return tag;}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     /** Local-only lifecycle hooks; installed-thread preparation is deliberately separate. */
-    @Override public void onLoad(){super.onLoad();unloading=false;pending=true;if(level!=null&&!level.isClientSide)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}
-    @Override public void setRemoved(){NativeCanopySweeps.retire(this);NativeCanopyCloseService.retire(this);unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
+    @Override public void onLoad(){super.onLoad();NativeCanopyTargets.add(this);unloading=false;pending=true;if(level!=null&&!level.isClientSide)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}
+    @Override public void setRemoved(){NativeCanopyTargets.remove(this);NativeCanopySweeps.retire(this);NativeCanopyCloseService.retire(this);unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
     @Override public void onChunkUnloaded(){unloading=true;pending=false;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
     @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){pending=true;publishUnresolved();}}
     @Override public BlockEntity channelBlockEntity(){return this;}
