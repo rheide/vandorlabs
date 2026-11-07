@@ -15,6 +15,8 @@ public final class NativeChipJournal {
         return root.contains("ChipType")?root:root.getCompound(NativeCredentialItems.LEGACY_KEY).getCompound("tag");
     }
     public static boolean journal(ItemStack stack){return !stack.isEmpty()&&stack.is(NativeCredentialItems.DATA_CHIP.get())&&"journal".equals(data(stack).getString("ChipType"));}
+    /** Exact current/imported type precedence; used only to refuse unavailable mutation paths. */
+    public static boolean vehicle(ItemStack stack){return !stack.isEmpty()&&stack.is(NativeCredentialItems.DATA_CHIP.get())&&"vehicle".equals(data(stack).getString("ChipType"));}
     public static boolean master(ItemStack stack){return NativeCredentialItems.accepts(stack,true)&&NativeCredentialItems.company(stack)>0&&!journal(stack)&&!"vehicle".equals(data(stack).getString("ChipType"));}
     public static JournalText view(ItemStack stack){
         return viewText(textData(stack));
