@@ -22,7 +22,7 @@ public final class NativeRampAuthorization {
  private static final Set<NativeRampEntity> UNLOADED=Collections.synchronizedSet(Collections.newSetFromMap(new WeakHashMap<>()));
  // Load events can run on a worker. Values contain only bounded scalars; no retained level/provider lambda.
  private static final Map<LevelChunk,Map<Long,UUID>> LOADED=Collections.synchronizedMap(new WeakHashMap<>());
- private static boolean main(NativeRampEntity owner){return owner.getLevel() instanceof ServerLevel level&&level.getServer().isSameThread();}
+ private static boolean main(NativeRampEntity owner){return owner!=null&&owner.getLevel() instanceof ServerLevel level&&level.getServer().isSameThread();}
  private static boolean installed(NativeRampEntity owner){if(!main(owner)||owner.inert()||owner.isRemoved())return false;var level=(ServerLevel)owner.getLevel();var pos=owner.getBlockPos();var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);return chunk!=null&&chunk.getBlockEntities().get(pos)==owner;}
  private static Data data(ServerLevel level){return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(Data::new,Data::load,null),FILE);}
  public static boolean authorize(NativeRampEntity owner,ServerPlayer actor){
