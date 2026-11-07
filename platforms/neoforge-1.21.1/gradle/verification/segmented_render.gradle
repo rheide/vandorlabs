@@ -65,3 +65,10 @@ tasks.register('testNativeSegmentedGateFacts', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.NativeSegmentedGateFactsChecks'
     args file('../../build/test-artifacts/segmented-gate-forge.jsonl').absolutePath
 }
+tasks.register('testNativeSegmentedGateMeshes', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeSegmentedGateMeshChecks'
+    args file('../../build/test-artifacts/segmented-gate-forge.jsonl').absolutePath
+}
