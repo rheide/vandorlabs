@@ -27,9 +27,9 @@ final class VehicleArmParkingCurrent {
     VehicleRotation.Plan plan(EntityGroundVehicle craft,int rotation){
         long px=Double.doubleToLongBits(craft.posX),py=Double.doubleToLongBits(craft.posY),pz=Double.doubleToLongBits(craft.posZ);
         if(cardinal==null||turns!=rotation||x!=px||y!=py||z!=pz){
-            cardinal=VehicleRotation.safePlan(craft,rotation,structure,seats);
-            VehicleRotation.validate(cardinal.structure,new VehicleWorld(craft.world,cardinal.structure));
-            turns=rotation;x=px;y=py;z=pz;
+            VehicleRotation.Plan prepared=VehicleRotation.safePlan(craft,rotation,structure,seats);
+            VehicleRotation.validate(prepared.structure,new VehicleWorld(craft.world,prepared.structure));
+            cardinal=prepared;turns=rotation;x=px;y=py;z=pz;
         }
         return cardinal;
     }
