@@ -1,0 +1,7 @@
+# Programmable Trigger copied settings
+
+The inactive Trigger adapter uses actual released `ProgrammableSettings.capture/apply` observations. `exportCopifierTriggerSourceReference` freezes 1,064 memory-world cases: 128 full copies covering every metadata value and eight saved/factory profiles, plus 936 partial edits. The expanded `testclient/fixtures/copifier-trigger-source.jsonl.gz` is 2,363,232 bytes with SHA-256 `aa1e1e9ef45e94a511d6586f3ba5b15be4d695847d1f6e4ad4f331bad16187be`.
+
+The Trigger branch validates all artwork choices, exact level and playback arrays before committing, and refuses invalid settings before the generic frame/transmission tail. Typed nested fields differ from numeric NBT getters. Recognized wrong-type outer keys may still invoke configuration using current scalar values. Trigger getters always expose static artwork and speed one; historical playback arrays remain saved until an applicable Trigger configuration replaces them. Frame-only or transmission-only edits preserve those retained arrays. Clipboard data and placement metadata remain unchanged.
+
+These checks invoke actual Source callbacks in a memory world; they do not establish player authorization, packets, real native world callbacks or restart safety. Deferred and channel caches are retired via actual unload callbacks after each case. Public Copifier target dispatch remains unchanged.
