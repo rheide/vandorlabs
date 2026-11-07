@@ -17,6 +17,7 @@ public final class DenseWallFixture {
  static BlockPos pos(int role,int index){return BASE.offset(role*30+(index&7)*3,((index>>6)&7)*3,((index>>3)&7)*3);}
  @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent event){
   if(!enabled())return;var level=event.getServer().overworld();
+  level.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false,event.getServer());level.setDayTime(6000);level.setWeatherParameters(6000,0,false,false);
   for(int role=0;role<IDS.length;role++){
    var id=ResourceLocation.fromNamespaceAndPath("vandorlabs",IDS[role]);
    if(!BuiltInRegistries.BLOCK.containsKey(id))throw new AssertionError("Missing canonical "+id);

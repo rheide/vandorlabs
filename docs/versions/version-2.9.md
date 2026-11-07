@@ -95,3 +95,5 @@ Moving and windowed Segmented Doors now share prepared render descriptors across
 Dense Forge diagonal Glass and Porthole layouts now share identical prepared geometry. Flat Glass frame lookups also reuse their warmed cache keys; contact trimming and live lighting remain unchanged.
 
 Programmable Lights now reuse housing lookups when mixed designs are drawn together. The warmed mixed-housing test emits identical vertices without the previous temporary allocations, and the cache retains its memory bound and reload cleanup.
+
+Native diagonal Glass and Porthole rendering also reuses equivalent prepared projections, with bounded retention and allocation-free warmed renderer submission. Geometry, materials and atlas reload behavior remain unchanged.
