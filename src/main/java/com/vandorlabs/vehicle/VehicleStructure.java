@@ -13,7 +13,7 @@ import java.util.*;
 public final class VehicleStructure {
     public static final int MAX_BLOCKS=32768, MAX_AXIS=64, MAX_NBT_BYTES=4*1024*1024;
     public static final int SCHEMA=1;
-    private static final Set<String> GEAR_POSE_KEYS=new HashSet<>(Arrays.asList("GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision","SurfaceDepartureActive"));
+    private static final Set<String> GEAR_POSE_KEYS=new HashSet<>(Arrays.asList("GearProgress","GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal","GearRevision","SurfaceDepartureActive","GearParkingHold"));
     private static final Set<String> TAXI_POSE_KEYS=new HashSet<>(Arrays.asList("Level","Expand","Settle"));
     private static boolean sameGearField(String key,NBTBase before,NBTBase after){
         if(!key.equals(com.vandorlabs.gear.GearTaxiState.KEY)||!(before instanceof NBTTagCompound)||!(after instanceof NBTTagCompound))return Objects.equals(before,after);
@@ -38,6 +38,7 @@ public final class VehicleStructure {
             NBTTagCompound pose=gear.currentPoseData(),next=new NBTTagCompound();
             if(!pose.hasKey("GearProgress",6)||!Double.isFinite(pose.getDouble("GearProgress"))||pose.getDouble("GearProgress")<0||pose.getDouble("GearProgress")>1||!pose.hasKey("GearRevision",3))throw new IllegalArgumentException("Invalid gear pose scalars");
             for(String key:new String[]{"GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal"})if(!pose.hasKey(key,1))throw new IllegalArgumentException("Invalid gear pose flag");
+            if(pose.hasKey("GearParkingHold")&&!pose.hasKey("GearParkingHold",1))throw new IllegalArgumentException("Invalid parking hold flag");
             if(pose.hasKey("SurfaceDepartureActive")&&!pose.hasKey("SurfaceDepartureActive",1))throw new IllegalArgumentException("Invalid surface departure flag");
             for(String key:tile.getKeySet())if(!GEAR_POSE_KEYS.contains(key))next.setTag(key,tile.getTag(key));
             for(String key:pose.getKeySet()){if(!GEAR_POSE_KEYS.contains(key))throw new IllegalArgumentException("Unexpected gear pose field");next.setTag(key,pose.getTag(key).copy());}
