@@ -66,5 +66,6 @@ public final class NativeCanopySweeps {
             catch(ExecutionException|CancellationException failure){pending.failed=true;System.getLogger(NativeCanopySweeps.class.getName()).log(System.Logger.Level.ERROR,"Canopy close geometry failed; retaining safe pose",failure);NativeCanopyControl.retryClose(pending.owner);}
         }
     }
+    public static void retire(NativeCanopyEntity owner){if(owner.getLevel() instanceof ServerLevel world&&world.getServer().isSameThread()){var state=WORLDS.get(world);if(state!=null){var pending=state.pending.get(owner.getBlockPos());if(pending!=null&&pending.owner==owner){state.pending.remove(owner.getBlockPos());cancel(pending);}}}}
     @SubscribeEvent public static void unload(LevelEvent.Unload event){if(event.getLevel() instanceof ServerLevel world){var state=WORLDS.remove(world);if(state!=null)for(var pending:state.pending.values())cancel(pending);}}
 }
