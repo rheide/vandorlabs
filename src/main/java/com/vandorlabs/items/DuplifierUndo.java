@@ -21,23 +21,17 @@ public final class DuplifierUndo {
         Operation(World world){this.world=world;}
     }
     private static final Map<EntityPlayer,Operation> history=new WeakHashMap<>(),pending=new WeakHashMap<>();
-    private static final long PLAYER_BYTES=16L*1024*1024,TOTAL_BYTES=64L*1024*1024;
+    private static final long PLAYER_BYTES=CopiedSettingsMemory.PLAYER_BYTES,TOTAL_BYTES=CopiedSettingsMemory.TOTAL_BYTES;
     private static long nextOrder;
     private DuplifierUndo(){}
-    /** Conservative retained-tree estimate, including map entries, strings and array storage.
-     * Keys may be shared by NBT copies; charging them again keeps this an upper estimate. */
-    private static long bytes(net.minecraft.nbt.NBTBase tag){
-        if(tag instanceof NBTTagCompound){NBTTagCompound compound=(NBTTagCompound)tag;long size=128;
-            for(String key:compound.getKeySet())size+=112L+2L*key.length()+bytes(compound.getTag(key));return size;}
-        if(tag instanceof net.minecraft.nbt.NBTTagList){net.minecraft.nbt.NBTTagList list=(net.minecraft.nbt.NBTTagList)tag;long size=80L+8L*list.tagCount();for(int i=0;i<list.tagCount();i++)size+=bytes(list.get(i));return size;}
-        if(tag instanceof net.minecraft.nbt.NBTTagString)return 64L+2L*((net.minecraft.nbt.NBTTagString)tag).getString().length();
-        if(tag instanceof net.minecraft.nbt.NBTTagIntArray)return 40L+4L*((net.minecraft.nbt.NBTTagIntArray)tag).getIntArray().length;
-        if(tag instanceof net.minecraft.nbt.NBTTagByteArray)return 40L+((net.minecraft.nbt.NBTTagByteArray)tag).getByteArray().length;
-        // Captured settings contain no long arrays; reject unsupported future types
-        // by exhausting the budget rather than retaining an unmeasured payload.
-        if(tag.getId()==12)return PLAYER_BYTES+1;
-        return 32;
-    }
+    private static final CopiedSettingsMemory.Tags<net.minecraft.nbt.NBTBase> MEMORY=new CopiedSettingsMemory.Tags<net.minecraft.nbt.NBTBase>() {
+        public int type(net.minecraft.nbt.NBTBase tag){return tag.getId();}
+        public Iterable<String> keys(net.minecraft.nbt.NBTBase tag){return ((NBTTagCompound)tag).getKeySet();}
+        public net.minecraft.nbt.NBTBase member(net.minecraft.nbt.NBTBase tag,String key){return ((NBTTagCompound)tag).getTag(key);}
+        public net.minecraft.nbt.NBTBase element(net.minecraft.nbt.NBTBase tag,int index){return ((net.minecraft.nbt.NBTTagList)tag).get(index);}
+        public int length(net.minecraft.nbt.NBTBase tag){switch(tag.getId()){case 9:return ((net.minecraft.nbt.NBTTagList)tag).tagCount();case 8:return ((net.minecraft.nbt.NBTTagString)tag).getString().length();case 11:return ((net.minecraft.nbt.NBTTagIntArray)tag).getIntArray().length;case 7:return ((net.minecraft.nbt.NBTTagByteArray)tag).getByteArray().length;default:return 0;}}
+    };
+    private static long bytes(net.minecraft.nbt.NBTBase tag){return CopiedSettingsMemory.estimate(tag,MEMORY);}
     private static long totalBytes(){long total=0;for(Operation op:history.values())total+=op.bytes;for(Operation op:pending.values())total+=op.bytes;return total;}
     private static void discard(EntityPlayer player,Operation operation){operation.entries.clear();operation.bytes=0;operation.complete=false;history.remove(player);}
     private static boolean reserve(EntityPlayer player,Operation operation,long amount,long playerLimit,long totalLimit){

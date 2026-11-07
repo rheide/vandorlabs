@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.copifier;
 
 import java.util.*;
+import com.vandorlabs.items.CopiedSettingsMemory;
 import net.minecraft.core.*;
 import net.minecraft.nbt.*;
 import net.minecraft.server.level.*;
@@ -11,19 +12,19 @@ import net.neoforged.fml.common.EventBusSubscriber;
 /** One bounded, settings-only operation per player. Physical inventories are never restored. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCopifierUndo {
- private static final long PLAYER_BYTES=16L*1024*1024,TOTAL_BYTES=64L*1024*1024;
+ private static final long PLAYER_BYTES=CopiedSettingsMemory.PLAYER_BYTES,TOTAL_BYTES=CopiedSettingsMemory.TOTAL_BYTES;
  private static long nextOrder;
  private static final class Entry {final Block block;final CompoundTag before;CompoundTag after;Entry(Block block,CompoundTag before){this.block=block;this.before=before.copy();}}
  private static final class Operation {final ServerLevel world;final Map<BlockPos,Entry> entries=new LinkedHashMap<>();final long order=nextOrder++;long bytes;boolean complete=true;Operation(ServerLevel world){this.world=world;}}
  private static final Map<ServerPlayer,Operation> history=new WeakHashMap<>(),pending=new WeakHashMap<>();
- private static long bytes(Tag tag){
-  if(tag instanceof CompoundTag compound){long size=128;for(String key:compound.getAllKeys())size+=112L+2L*key.length()+bytes(compound.get(key));return size;}
-  if(tag instanceof ListTag list){long size=80L+8L*list.size();for(Tag value:list)size+=bytes(value);return size;}
-  if(tag instanceof StringTag text)return 64L+2L*text.getAsString().length();
-  if(tag instanceof IntArrayTag array)return 40L+4L*array.getAsIntArray().length;
-  if(tag instanceof ByteArrayTag array)return 40L+array.getAsByteArray().length;
-  return tag.getId()==Tag.TAG_LONG_ARRAY?PLAYER_BYTES+1:32;
- }
+ private static final CopiedSettingsMemory.Tags<Tag> MEMORY=new CopiedSettingsMemory.Tags<>() {
+  public int type(Tag tag){return tag.getId();}
+  public Iterable<String> keys(Tag tag){return ((CompoundTag)tag).getAllKeys();}
+  public Tag member(Tag tag,String key){return ((CompoundTag)tag).get(key);}
+  public Tag element(Tag tag,int index){return ((ListTag)tag).get(index);}
+  public int length(Tag tag){return switch(tag.getId()){case Tag.TAG_LIST->((ListTag)tag).size();case Tag.TAG_STRING->tag.getAsString().length();case Tag.TAG_INT_ARRAY->((IntArrayTag)tag).getAsIntArray().length;case Tag.TAG_BYTE_ARRAY->((ByteArrayTag)tag).getAsByteArray().length;default->0;};}
+ };
+ private static long bytes(Tag tag){return CopiedSettingsMemory.estimate(tag,MEMORY);}
  private static long totalBytes(){long total=0;for(var operation:history.values())total+=operation.bytes;for(var operation:pending.values())total+=operation.bytes;return total;}
  private static void discard(ServerPlayer player,Operation operation){operation.entries.clear();operation.bytes=0;operation.complete=false;history.remove(player);}
  private static boolean reserve(ServerPlayer player,Operation operation,long amount){
