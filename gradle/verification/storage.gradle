@@ -30,3 +30,11 @@ task exportStorageDialogSourceReference(type: JavaExec) {
     main = 'com.vandorlabs.client.StorageDialogLegacyChecks'
     maxHeapSize = '1G'
 }
+
+task exportStorageModulesSourceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StorageModulesLegacyChecks'
+    maxHeapSize = '1G'
+}

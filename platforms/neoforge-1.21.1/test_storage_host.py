@@ -18,10 +18,11 @@ def main():
   if phase=='write':
    check_log(output/'write.log','[vandorlabs][storage-editor] PASS')
    check_log(output/'write.log','[vandorlabs][storage-item-envelope] PASS')
+  check_log(output/(phase+'.log'),'[vandorlabs][storage-modules] '+phase+' PASS')
  evidence=[]
  for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge/storage').glob('NativeStorage*.class')):
   evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name)
- for name in ['storage-source-reference.json','storage-items-source-reference.json','storage-duplicate-source-reference.json','storage-dialog-source-reference.json']:
+ for name in ['storage-source-reference.json','storage-items-source-reference.json','storage-duplicate-source-reference.json','storage-dialog-source-reference.json','storage-modules-source-reference.json']:
   path=ROOT/'build/test-artifacts'/name
   if path.is_file():evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+name)
  (output/'classes-and-reference.sha256').write_text('\n'.join(evidence)+'\n')
