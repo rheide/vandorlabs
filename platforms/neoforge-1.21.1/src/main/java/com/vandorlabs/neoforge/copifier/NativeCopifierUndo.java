@@ -34,9 +34,8 @@ public final class NativeCopifierUndo {
   operation.bytes+=amount;return true;
  }
  private static CompoundTag capture(ServerLevel world,BlockPos pos){
-  if(!world.hasChunkAt(pos)||!(world.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.ProgrammableBlockEntity tile)||tile.isRemoved()||tile.getLevel()!=world||tile.getBlockState()!=world.getBlockState(pos))return null;
-  var id=net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
-  try{return NativeCopifierHousingCapture.undo(NativeCopifierHousingCapture.Family.of(id.getPath()),tile.saveWithoutMetadata(world.registryAccess()));}catch(IllegalArgumentException unsupported){return null;}
+  var target=NativeCopifierHousingWorld.installed(world,pos);if(target==null)return null;
+  try{return target.undo();}catch(IllegalArgumentException unsupported){return null;}
  }
  public static void begin(ServerPlayer player,ServerLevel world){if(world.getServer().isSameThread()&&player.level()==world)pending.put(player,new Operation(world));}
  static void before(ServerPlayer player,ServerLevel world,BlockPos pos){

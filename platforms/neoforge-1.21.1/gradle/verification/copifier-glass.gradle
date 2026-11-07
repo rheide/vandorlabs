@@ -1,0 +1,11 @@
+tasks.register('testNativeCopifierGlass', JavaExec) {
+ group = 'verification'
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.copifier.NativeCopifierGlassChecks'
+ maxHeapSize = '512m'
+ args file('../../testclient/fixtures/copifier-glass-source.json.gz').absolutePath
+}
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierGlassReference'))systemProperty 'vandorlabs.copifierGlassReference',file(project.property('copifierGlassReference')).absolutePath
+}

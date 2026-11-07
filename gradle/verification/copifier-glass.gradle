@@ -1,0 +1,11 @@
+task testCopifierGlassReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.NonRenderingChecks'
+ args 'copifier-glass'
+ maxHeapSize = '1g'
+ systemProperty 'vandorlabs.copifierGlassReference', file("$buildDir/test-artifacts/copifier-glass-source.json").absolutePath
+ workingDir = file("$buildDir/non-rendering-checks")
+ doFirst { workingDir.mkdirs() }
+}
