@@ -50,11 +50,21 @@ public class ProgrammableBlockEntity extends BlockEntity {
         if(settings.layout!=value.layout){rawLayout=value.layout;tileSides=value.layout==1;}
         settings=new ProgrammableBlockDialog.State(main,value.layout,value.facesEnabled,faces,-1);return true;
     }
-    /** Preserve dormant Source configuration without reloading physical/platform data or tile identity. */
-    public final boolean configureCopiedMetadata(com.vandorlabs.persistence.FrameSettings frames,com.vandorlabs.redstone.ChannelList channels,int range,boolean local,com.vandorlabs.redstone.ChannelList transmitted){
+    /** Bounded live choices; never serialize platform attachments, inventories or unrelated retained fields. */
+    protected final CompoundTag copiedHousingFields(){
+        var fields=new CompoundTag();HousingSettings.write(new ModernHousingTags(fields),settings.mainTexture,sideTexture,rawLayout,tileSides,settings.facesEnabled,settings.faces());
+        var housing=HousingSettings.read(new ModernHousingTags(fields),settings.mainTexture,tileSides,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);
+        return NativeCopiedHousingMetadata.snapshot(housing,retainedSettings);
+    }
+    /** Validate and install dormant metadata locally, allowing a family to publish one coherent projection. */
+    protected final boolean installCopiedMetadata(com.vandorlabs.persistence.FrameSettings frames,com.vandorlabs.redstone.ChannelList channels,int range,boolean local,com.vandorlabs.redstone.ChannelList transmitted){
         if(!(level instanceof net.minecraft.server.level.ServerLevel server)||!server.getServer().isSameThread()||!level.hasChunkAt(worldPosition)||level.getBlockEntity(worldPosition)!=this||isRemoved()||!NativeCopiedHousingMetadata.valid(frames,channels,range,transmitted))return false;
         try{retainedSettings=NativeCopiedHousingMetadata.edit(retainedSettings,frames,channels,range,local,transmitted);}catch(IllegalArgumentException unsupported){return false;}
-        setChanged();return true;
+        return true;
+    }
+    /** Preserve dormant Source configuration without reloading physical/platform data or tile identity. */
+    public final boolean configureCopiedMetadata(com.vandorlabs.persistence.FrameSettings frames,com.vandorlabs.redstone.ChannelList channels,int range,boolean local,com.vandorlabs.redstone.ChannelList transmitted){
+        if(!installCopiedMetadata(frames,channels,range,local,transmitted))return false;setChanged();return true;
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);
