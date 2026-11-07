@@ -15,9 +15,9 @@ public final class NativeRampAssembly {
  private static final int[] NONE={-1,-1,-1,-1,-1,-1};
  private final NativeRampFootprint.Spec footprint;private final NativeRampSettings settings;private final BlockState original;
  private final NativeRampSourceIndex index;private final Map<BlockPos,NativeRampPartData.Origin> sources;private final Map<Integer,List<NativeRampPartData.Origin>> columns;
- private final Set<BlockPos> potential,beltCells;private final long retainedBytes;
+ private final Set<BlockPos> potential,beltCells;private final long retainedBytes;private final NativeRampAssembly alignedFrom,alignment;
  private NativeRampAssembly(BlockPos root,NativeRampSettings settings,NativeRampCapture.Plan plan,Map<BlockPos,CompoundTag> snapshots){
-  this.settings=Objects.requireNonNull(settings);footprint=NativeRampClearance.footprint(root,settings,plan);original=NativeRampPartData.storedState(plan.sources().getFirst().state());
+  alignedFrom=null;this.settings=Objects.requireNonNull(settings);footprint=NativeRampClearance.footprint(root,settings,plan);original=NativeRampPartData.storedState(plan.sources().getFirst().state());
   var origins=new LinkedHashMap<BlockPos,NativeRampPartData.Origin>();var columnLists=new HashMap<Integer,ArrayList<NativeRampPartData.Origin>>();long bytes=512;
   for(var source:plan.sources()){
    var state=source.state();var tag=snapshots.get(source.position());boolean housing=state.getBlock().getClass()==ProgrammableBlock.class||state.getBlock() instanceof NativeProgrammableSlab||state.getBlock() instanceof NativeProgrammableStairs;boolean stairs=state.getBlock() instanceof NativeProgrammableStairs;int packed=8;
@@ -26,8 +26,16 @@ public final class NativeRampAssembly {
    var origin=new NativeRampPartData.Origin(source.position(),packed,material);if(!origin.geometry().shapes().equals(source.shapes()))throw new IllegalArgumentException("Staged Ramp shape changed");if(origins.put(source.position(),origin)!=null)throw new IllegalArgumentException("Duplicate Ramp source");columnLists.computeIfAbsent(column(source.position()),unused->new ArrayList<>()).add(origin);bytes+=320+80L*source.shapes().size();
   }
   sources=Collections.unmodifiableMap(origins);var frozen=new HashMap<Integer,List<NativeRampPartData.Origin>>();for(var entry:columnLists.entrySet())frozen.put(entry.getKey(),List.copyOf(entry.getValue()));columns=Map.copyOf(frozen);
-  index=NativeRampSourceIndex.prepare(footprint);bytes+=index.retainedBytes();beltCells=settings.escalator()==0?Set.of():NativeRampBeltGeometry.cells(footprint);var cells=new HashSet<>(index.cells());cells.addAll(beltCells);if(cells.size()>8192)throw new IllegalArgumentException("Ramp assembly cell budget");potential=Set.copyOf(cells);bytes+=96L*potential.size()+48L*columns.size();if(bytes>12L*1024*1024)throw new IllegalArgumentException("Ramp assembly retained budget");retainedBytes=bytes;
+  index=NativeRampSourceIndex.prepare(footprint);bytes+=index.retainedBytes();beltCells=settings.escalator()==0?Set.of():NativeRampBeltGeometry.cells(footprint);var cells=new HashSet<>(index.cells());cells.addAll(beltCells);if(cells.size()>8192)throw new IllegalArgumentException("Ramp assembly cell budget");potential=Set.copyOf(cells);bytes+=96L*potential.size()+48L*columns.size();alignment=new NativeRampAssembly(this);bytes+=alignment.retainedBytes();if(bytes>12L*1024*1024)throw new IllegalArgumentException("Ramp assembly retained budget");retainedBytes=bytes;
  }
+ /** Original-space proxies reuse the immutable captured materials, never a second source snapshot. */
+ private NativeRampAssembly(NativeRampAssembly source){
+  alignedFrom=source;alignment=this;original=source.original;sources=source.sources;columns=source.columns;var old=source.settings;settings=new NativeRampSettings(0,0,16,old.powerOn(),false,false,1,old.matchTextures(),0,0,false,false,0,old.hasDirection(),old.direction(),false,old.channels());
+  int minimum=Integer.MAX_VALUE,maximum=Integer.MIN_VALUE,minY=Integer.MAX_VALUE;for(var origin:source.footprint.origins()){var pos=origin.position();int along=pos.getX()*source.footprint.facing().getStepX()+pos.getZ()*source.footprint.facing().getStepZ();minimum=Math.min(minimum,along);maximum=Math.max(maximum,along);minY=Math.min(minY,pos.getY());}
+  footprint=new NativeRampFootprint.Spec(source.footprint.root(),source.footprint.facing(),minY,minimum,maximum-minimum+1,source.footprint.low(),source.footprint.high(),0,0,16,false,0,false,false,0,false,false,source.footprint.origins());index=NativeRampSourceIndex.prepare(footprint);beltCells=Set.of();potential=index.cells();if(!potential.equals(sources.keySet()))throw new IllegalArgumentException("Ramp original alignment escaped captured sources");retainedBytes=512+index.retainedBytes()+96L*potential.size();
+ }
+ public NativeRampAssembly originalAlignment(){return alignment;}
+ boolean isOriginalAlignmentOf(NativeRampAssembly source){return alignedFrom==source;}
  /** Snapshot tags are inspected only during construction and are never retained. */
  public static NativeRampAssembly prepare(BlockPos root,NativeRampSettings settings,NativeRampCapture.Plan plan,Map<BlockPos,CompoundTag> stagedSources){return new NativeRampAssembly(root,settings,plan,stagedSources);}
  public NativeRampFootprint.Spec footprint(){return footprint;}public NativeRampSettings settings(){return settings;}public BlockState original(){return original;}public Set<BlockPos> potential(){return potential;}public long retainedBytes(){return retainedBytes;}

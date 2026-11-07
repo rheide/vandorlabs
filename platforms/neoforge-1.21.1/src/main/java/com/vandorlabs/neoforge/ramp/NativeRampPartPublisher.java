@@ -16,6 +16,11 @@ public final class NativeRampPartPublisher {
         private ServerLevel level;private final UUID operation;private final BlockPos root;private final BlockState proxy;private final long tick,revision,retainedBytes;private final Set<BlockPos> cells;private List<Entry> entries;private boolean consumed;
         private Prepared(ServerLevel level,UUID operation,BlockPos root,BlockState proxy,long revision,List<Entry> entries,long bytes){this.level=level;this.operation=operation;this.root=root.immutable();this.proxy=proxy;this.revision=revision;this.entries=List.copyOf(entries);tick=level.getGameTime();retainedBytes=bytes;var cells=new LinkedHashSet<BlockPos>();for(var entry:entries)cells.add(entry.position);this.cells=Collections.unmodifiableSet(cells);}
         public Set<BlockPos> cells(){return cells;}public long preparedBytes(){return retainedBytes;}
+        /** World-free proof that frozen rollback bodies represent the installed recipe and geometry. */
+        boolean matchesInstalled(Map<BlockPos,NativeRampPartEntity> owners){
+            if(consumed||owners.size()!=entries.size())return false;
+            for(var entry:entries){var owner=owners.get(entry.position);var actual=owner==null?null:owner.publication();var staged=entry.entity.publication();if(actual==null||staged==null||actual.data().original()!=staged.data().original()||!actual.data().spec().equals(staged.data().spec())||!actual.data().materials().equals(staged.data().materials())||actual.pose()!=staged.pose()||actual.stationaryTop()!=staged.stationaryTop()||!actual.geometry().pieces().equals(staged.geometry().pieces()))return false;if((actual.beltGeometry()==null)!=(staged.beltGeometry()==null))return false;if(actual.beltGeometry()!=null&&(actual.beltGeometry().distance()!=staged.beltGeometry().distance()||!actual.beltGeometry().frames().equals(staged.beltGeometry().frames())))return false;}return true;
+        }
         /** Single attempt. No notification is sent; the caller must recover any partial installation. */
         public void install(){
             if(consumed)throw new IllegalStateException("Ramp publication already consumed");var world=level;NativeRampRiders.requireThread(world);
