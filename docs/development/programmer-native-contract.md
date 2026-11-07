@@ -1,0 +1,13 @@
+# Card / Chip Programmer conversion contract
+
+The released block and shared inventory owner both use `data_chip_programmer`. Four reserved cells form a two-wide, two-high console, with one controller at part zero. Horizontal facing and part occupy the original four metadata bits. The native family remains inactive while source references and portable adapters are prepared.
+
+The physical inventory has three slots, each limited to one item: Master, Input and Output. Company cards or non-Journal, non-Vehicle company Master Data Chips authorize the Master slot. Input and Output accept valid Access Cards or Data Chips with companies zero through six. Invalid saved stacks are not permission to discard their original ownership data.
+
+Program consumes the sole Input, producing one Output and retaining Master. A selected company Master rebrands the result; otherwise the existing nonzero company remains. Journal programming edits bounded plain text, preserving unrelated item data. Copy requires one matching base item in each of Input and Output, then replaces the existing Output from the complete committed Input. It neither consumes Input nor commits the editor's draft. A missing or incompatible material item refuses the operation.
+
+The first actual source corpus freezes 21,904 descriptor/authorization decisions and 392 programming/copy results, including exact retained item NBT, draft state and writing status. Its SHA-256 is `ef75c4ffecd2e1b4c7b4ce4fb50c4bbf6894dc8ccd51e3202e2342e7476a9ce2`. The fresh save contains three empty slots, false Journal mode, an empty title, eight empty entries and zero Writing/Complete counters. Titles are bounded to 40 characters and each entry to 512 characters. Successful operations enter 20 ticks of Writing, then 60 ticks of Complete.
+
+Draft, Program and Copy retain wire operation indices zero, one and two. Vehicle draft/program indices three and four remain unavailable in native conversion; imported Vehicle envelopes remain opaque and must not be destructively reprogrammed through ordinary actions. The later host will reuse the shared inventory-item decoder and credential/journal codecs rather than introduce independent ownership decoding.
+
+Controller lifecycle, four-cell placement rollback, mining/recovery, authorization through real menus, authored models, resource overrides, item padding and pause-aware visual status require subsequent focused references and acceptance before activation. There is no native registration or global client binding in this foundation checkpoint.

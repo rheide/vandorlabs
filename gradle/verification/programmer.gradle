@@ -1,0 +1,7 @@
+task exportProgrammerReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammerLegacyChecks'
+    systemProperty 'vandorlabs.programmerReference', file(project.findProperty('programmerReference') ?: 'build/test-artifacts/programmer-forge.json').absolutePath
+}
