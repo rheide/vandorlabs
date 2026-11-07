@@ -23,6 +23,8 @@ public final class VehicleClient {
     private static Preview preview;
     private static int sequence,ticks,lastJump=-100;
     private static boolean jumpDown;
+    private static Entity jumpPlayer,jumpVehicle;
+    private static void clearJumpGesture(){jumpDown=false;lastJump=-100;}
     @SubscribeEvent public void hoverSneak(net.minecraftforge.client.event.InputUpdateEvent event){
         Minecraft mc=Minecraft.getMinecraft();
         if(event.getEntityPlayer()==mc.player && mc.player.getRidingEntity() instanceof EntityGroundVehicle
@@ -149,7 +151,10 @@ public final class VehicleClient {
     @SubscribeEvent public void tick(TickEvent.ClientTickEvent event) {
         if(event.phase!=TickEvent.Phase.START)return;Minecraft mc=Minecraft.getMinecraft();
         RenderGroundVehicle.cleanup(mc.world);
-        if(mc.world!=lastWorld){incoming.clear();for(Incoming pending:completed.values())if(pending.parsed!=null)pending.parsed.cancel(false);completed.clear();deferred.clear();GearMotionClient.clear();latestPreview=null;preview=null;lastWorld=mc.world;sequence=0;}
+        if(mc.world!=lastWorld){incoming.clear();for(Incoming pending:completed.values())if(pending.parsed!=null)pending.parsed.cancel(false);completed.clear();deferred.clear();GearMotionClient.clear();latestPreview=null;preview=null;lastWorld=mc.world;sequence=0;clearJumpGesture();jumpPlayer=jumpVehicle=null;}
+        Entity riding=mc.player==null?null:mc.player.getRidingEntity();
+        if(jumpPlayer!=mc.player || jumpVehicle!=riding || mc.currentScreen!=null || !(riding instanceof EntityGroundVehicle) || riding.getControllingPassenger()!=mc.player)clearJumpGesture();
+        jumpPlayer=mc.player;jumpVehicle=riding;
         PlacedSeatCamera.tick(mc);
         if(mc.world==null || mc.player==null)return;apply(mc);
         Iterator<Map.Entry<UUID,ArrayDeque<VehicleNetwork.Packet>>> delayed=deferred.entrySet().iterator();
@@ -166,7 +171,8 @@ public final class VehicleClient {
         if(mc.currentScreen==null){p.forward=(byte)((mc.gameSettings.keyBindForward.isKeyDown()?1:0)-(mc.gameSettings.keyBindBack.isKeyDown()?1:0));p.strafe=(byte)((mc.gameSettings.keyBindRight.isKeyDown()?1:0)-(mc.gameSettings.keyBindLeft.isKeyDown()?1:0));p.flag=mc.gameSettings.keyBindJump.isKeyDown();}
         else p.flag=true;
         boolean jump=mc.currentScreen==null && mc.gameSettings.keyBindJump.isKeyDown();
-        boolean toggle=jump && !jumpDown && mc.player.ticksExisted-lastJump<=7;
+        int jumpInterval=mc.player.ticksExisted-lastJump;
+        boolean toggle=jump && !jumpDown && jumpInterval>=0 && jumpInterval<=7;
         if(jump && !jumpDown)lastJump=toggle?-100:mc.player.ticksExisted;
         jumpDown=jump;
         VehicleNetwork.Packet flight=new VehicleNetwork.Packet(VehicleNetwork.FLIGHT);flight.entity=p.entity;flight.token=p.token;
