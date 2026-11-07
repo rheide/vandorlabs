@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ systemProperty 'screenChipInteractionReference',file('../../testclient/fixtures/screen-chip-interaction-reference.json.gz').absolutePath
+}
