@@ -46,6 +46,13 @@ public class NativePropulsionEntity extends BlockEntity implements NativeChannel
  final void prepareRecoveryDrop(net.minecraft.world.item.ItemStack stack){forcedRemoval=stack.copy();}
  final net.minecraft.world.item.ItemStack takeRecoveryDrop(){var stack=forcedRemoval;forcedRemoval=net.minecraft.world.item.ItemStack.EMPTY;return stack;}
  public final CompoundTag recoverySnapshot(){return retained.copy();}
+ /** Authorized copied target: shape conversion precedes the selected leaf's scalar settings. */
+ public final boolean configureCopied(CompoundTag values,net.minecraft.world.entity.player.Player actor){
+  if(!(level instanceof ServerLevel world)||!world.getServer().isSameThread()||!NativeRedstoneChannels.open(world)||!available()||!NativePropulsionService.installed(this)||actor==null||actor.level()!=world||!actor.isAlive()||actor.isSpectator())return false;
+  com.vandorlabs.neoforge.copifier.NativeCopifierPropulsionEdit.Plan plan;int face=getBlockState().getValue(NativePropulsionBlock.FACING).get3DDataValue();try{plan=com.vandorlabs.neoforge.copifier.NativeCopifierPropulsionEdit.prepare(definition(),face,settings,values);}catch(IllegalArgumentException refused){return false;}if(!plan.applicable())return false;
+  boolean converted=plan.definition()!=definition();if(converted){if(!NativePropulsionShape.configure(this,plan.definition().shape,actor))return false;plan=com.vandorlabs.neoforge.copifier.NativeCopifierPropulsionEdit.prepare(definition(),face,settings,values);}
+  if(!settings.equals(plan.settings())){var next=plan.settings();NativeRedstoneChannels.batch(world,()->{installSettings(next);com.vandorlabs.neoforge.redstone.NativeSignalUpdateBatch.afterSignals(this,()->NativePropulsionService.flush(world));});}else if(converted)NativePropulsionService.refresh(this);return true;
+ }
  public final void installSettings(NativeRedstoneLightSettings next){if(!available())throw new IllegalStateException("Inert propulsion owner");settings=java.util.Objects.requireNonNull(next);settings=settings.capture(getBlockState().getValue(NativePropulsionBlock.POWERED));if(level instanceof ServerLevel)NativeRedstoneChannels.channelsChanged(this);NativePropulsionService.queue(this);}
  final void manualMode(int mode){settings=new NativeRedstoneLightSettings(settings.data().manual(mode),settings.channels());}
  public final boolean manualUse(net.minecraft.world.entity.player.Player player){if(!(level instanceof ServerLevel)||!available()||!NativePropulsionService.installed(this)||player.level()!=level||!player.isAlive()||player.isSpectator()||!level.mayInteract(player,worldPosition))return false;return NativePropulsionService.manual(this);}
