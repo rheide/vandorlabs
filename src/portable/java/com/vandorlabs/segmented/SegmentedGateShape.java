@@ -38,6 +38,7 @@ public final class SegmentedGateShape {
             double a=x,b=y,d=z;if(axis==0){b=c*y-sine*z;d=sine*y+c*z;}else if(axis==1){a=c*x+sine*z;d=-sine*x+c*z;}else{a=c*x-sine*y;b=sine*x+c*y;}
             if(!inverse){if(axis!=0)a*=scale;if(axis!=1)b*=scale;if(axis!=2)d*=scale;}out[at]=a+origin[0];out[at+1]=b+origin[1];out[at+2]=d+origin[2];
         }
+        public int faceMask(){return faces;}
         public void corner(int corner,double[] out,int at){if(corner<0||corner>7||out==null||at<0||out.length-at<3)throw new IllegalArgumentException("Gate corner output");point((corner&4)==0?lo[0]:hi[0],(corner&2)==0?lo[1]:hi[1],(corner&1)==0?lo[2]:hi[2],out,at,false);}
         public void normal(int face,double[] out,int at){if(face<0||face>5||out==null||at<0||out.length-at<3)throw new IllegalArgumentException("Gate normal output");int direction=face<2?1:face<4?2:0;double sign=(face&1)==0?-1:1,x=direction==0?sign:0,y=direction==1?sign:0,z=direction==2?sign:0,a=x,b=y,d=z;if(axis==0){b=c*y-s*z;d=s*y+c*z;}else if(axis==1){a=c*x+s*z;d=-s*x+c*z;}else if(axis==2){a=c*x-s*y;b=s*x+c*y;}if(axis>=0){if(axis!=0)a/=scale;if(axis!=1)b/=scale;if(axis!=2)d/=scale;}double length=Math.sqrt(a*a+b*b+d*d);out[at]=a/length;out[at+1]=b/length;out[at+2]=d/length;}
         private boolean contains(double x,double y,double z,double[] scratch){point(x,y,z,scratch,0,true);for(int a=0;a<3;a++)if(scratch[a]<lo[a]-EPS||scratch[a]>hi[a]+EPS)return false;return true;}
