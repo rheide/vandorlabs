@@ -57,6 +57,11 @@ def main():
   for shade in shades:
    for tint in range(4):
     for frame in range(2):items.append(model(f'vandorlabs:item/configured/glass_regular_{size}_{shade}_t{tint}_f{frame}'))
+ write(ASSETS/'models/block/flat_glass_empty.json',{'parent':'minecraft:block/block','ambientocclusion':False,'textures':{'particle':'vandorlabs:frame-default/double_frame_metal'},'elements':[]})
+ write(ASSETS/'blockstates/programmable_glass.json',{'variants':{'':{'model':'vandorlabs:block/flat_glass_empty'}}})
+ write(ASSETS/'models/item/programmable_glass.json',{'parent':items[((len(shades)*4+1)*2)+1]})
+ recipe=json.loads(source('recipes','programmable_glass.json').read_text());recipe['result']['id']=recipe['result'].pop('item');recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:programmable_glass'}]
+ write(OUT/'data/vandorlabs/recipe/programmable_glass.json',recipe)
  write(ASSETS/'data/flat_glass_artwork.json',{'models':models,'textures':aliases,'rules':rules,'items':items})
  print('Native flat glass resources PASS models='+str(len(models))+' itemVariants='+str(len(items))+' multipartRules='+str(len(rules))+' existing full-content Door/frame/palette sources')
 if __name__=='__main__':main()

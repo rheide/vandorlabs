@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.client.resources.model.BakedModel;
 import net.minecraft.client.resources.model.Material;
+import net.minecraft.client.resources.model.ModelResourceLocation;
 import net.minecraft.core.Direction;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.util.RandomSource;
@@ -52,12 +53,14 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
         var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
         var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModelBakery(),event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
+        var glassBake=NativeGlassClientBindings.installed()?NativeFlatGlassRenderer.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake,net.minecraft.client.Minecraft.getInstance().getResourceManager()):null;
         var propulsionBake=NativePropulsionModel.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         // Selectors retain only bake-owned model/sprite snapshots, never the mutable bake event.
         java.util.Map<String,BakedModel> lightItemModels=new java.util.HashMap<>();
         event.getModels().forEach((id,model)->{if(id.getVariant().equals("standalone")&&id.id().getNamespace().equals("vandorlabs")&&id.id().getPath().startsWith("item/configured/programmable_light_"))lightItemModels.put(id.id().toString(),model);});
         var lightItemSources=java.util.Map.copyOf(lightItemModels);
         event.getModels().replaceAll((id,model) -> {
+            if(glassBake!=null&&NativeGlassClientBindings.glass(id.id()))return id.getVariant().equals("inventory")?new NativeGlassItemModel(model,name->event.getModels().get(ModelResourceLocation.standalone(ResourceLocation.parse(name))),net.minecraft.client.Minecraft.getInstance().getResourceManager()):com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(new NativeFlatGlassModel(model,glassBake),event.getTextureGetter());
             if(propulsionBake!=null&&NativePropulsionClientBindings.engine(id.id()))return id.getVariant().equals("inventory")?new NativePropulsionItemModel(model,id.id().getPath(),propulsionBake):NativePropulsionModel.wrap(model,propulsionBake);
             var screenFamily=NativeScreenClientBindings.family(id.id());
             if(screenFamily!=null&&id.getVariant().equals("inventory"))return new NativeScreenItemModel(model,screenFamily,screenItemAtlas::get);
