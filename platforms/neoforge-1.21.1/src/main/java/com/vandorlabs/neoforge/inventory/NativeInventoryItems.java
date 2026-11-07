@@ -32,6 +32,11 @@ public final class NativeInventoryItems {
  public static boolean ownershipBearing(ItemStack stack){
   if(stack.isEmpty())return false;
   if(stack.is(NativeCredentialItems.ACCESS_CARD.get())||stack.is(NativeCredentialItems.DATA_CHIP.get()))return true;
+  return containedOwnership(stack);
+ }
+ /** Any nested physical contents, distinct from the credential itself being an owner. */
+ public static boolean containedOwnership(ItemStack stack){
+  if(stack.isEmpty())return false;
   var container=stack.get(DataComponents.CONTAINER);if(container!=null&&container.nonEmptyItems().iterator().hasNext())return true;
   var bundle=stack.get(DataComponents.BUNDLE_CONTENTS);if(bundle!=null&&!bundle.isEmpty())return true;
   var projectiles=stack.get(DataComponents.CHARGED_PROJECTILES);return projectiles!=null&&!projectiles.isEmpty();
