@@ -13,6 +13,7 @@
 - Remove repeated allocation from Forge Glass/Porthole UV-cache hits, bound retained source/mapped geometry by bytes and clear old atlas entries on resource reload and world unload.
 - Prepare native Light facing and atlas coordinates once per cached mesh, reduce retained vertex storage and reuse the common prepared-vertex emitter while preserving live lighting and reload behavior.
 
+- Add three supplied Segmented Door panel textures and Picket, Industrial and Lattice gate models in both versions. Preserve authored bars, compatible horizontal/vertical joins, translucent glazing and latent window settings; use exact gap-aware interactions and bounded prepared rendering. Group these choices and the renamed Dark/Light panels under Doors / Segmented while preserving saved IDs and existing general-material uses.
 - Select artwork for individual Segmented Door cells in both versions. The dedicated dialog distinguishes This segment from All segments, supports resetting to shared artwork, and retains local choices through configured picking, copied settings, recipes and reload.
 - Add twelve native-resolution Utility Door artwork choices for ordinary and Large Doors in both versions. Group Dark, Slim and White Glass designs under Doors / Glass; preserve existing saved choices and geometry indices. Update the shared browser, collages and Dynmap palette.
 

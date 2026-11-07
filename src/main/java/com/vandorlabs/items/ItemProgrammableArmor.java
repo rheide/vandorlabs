@@ -55,6 +55,7 @@ public final class ItemProgrammableArmor extends ItemArmor {
         int index=ScreenHousingTextures.localIndex(choice);
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(index);
         if(entry!=null&&entry.has("detail")&&entry.get("detail").getAsInt()>0)return false;
+        if(ScreenHousingTextures.generalTexture(index))return true;
         String category=ScreenHousingTextures.category(index);
         return !category.equals("Screens") && !com.vandorlabs.tiles.HousingCategoryPolicy.door(category) && !com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(category);
     }
