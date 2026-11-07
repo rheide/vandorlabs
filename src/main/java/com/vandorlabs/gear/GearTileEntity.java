@@ -729,6 +729,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         NBTTagCompound result=original.copy();for(String key:new String[]{"GearParkingHold","ArmOperatorMost","ArmOperatorLeast","ArmStoredSections","ArmPayload",GearTaxiState.KEY,"ArmJoinEnabled","ArmJoinRange","ArmCarryLoad","ArmLoadHeight","TrackRetractingStroke","ArmRetractingStroke","GearOwnerOffset","GearHeight","GearKind","GearFootFacing","GearFeet","GearTrackContact"})result.removeTag(key);
         result.setInteger("x",pos.getX());result.setInteger("y",pos.getY());result.setInteger("z",pos.getZ());return writeOwnData(result);
     }
+    /** Small current pose projection; retained payloads and capability trees are deliberately absent. */
+    public NBTTagCompound currentPoseData(){
+        NBTTagCompound tag=new NBTTagCompound();tag.setInteger("GearRevision",motionRevision);tag.setBoolean("GearBlocked",motionBlocked);tag.setBoolean("GearTargetDeployed",deployedTarget);tag.setBoolean("GearSignalKnown",signalKnown);tag.setBoolean("GearLastSignal",lastSignal);tag.setDouble("GearProgress",progress);
+        rememberSurfaceEndpoint();if(surfaceDepartureSaved&&progress>0&&progress<1)tag.setBoolean("SurfaceDepartureActive",surfaceDepartureActive);return tag;
+    }
     private NBTTagCompound writeOwnData(NBTTagCompound tag){
         if(parkingHold)tag.setBoolean("GearParkingHold",true);else tag.removeTag("GearParkingHold");
         if(operator!=null)tag.setUniqueId("ArmOperator",operator);
