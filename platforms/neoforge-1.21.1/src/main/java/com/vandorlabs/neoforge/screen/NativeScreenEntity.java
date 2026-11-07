@@ -58,11 +58,15 @@ public class NativeScreenEntity extends BlockEntity implements NativeChannelMemb
  @Override public void beforeChannelRegistration(){controlService.finishLoading();localInputChanged();}
  public final void localInputChanged(){serverThread();if(inert||!(level instanceof ServerLevel)||!isChannelMemberActive())return;NativeScreenPowerService.refresh(this);}
  void reconcileControlOutput(){if(level instanceof ServerLevel&&isChannelMemberActive()&&localOutput()!=notifiedOutput)changed(false);}
+ NativeScreenSurfaceEdit.Result planSurface(NativeScreenSurfaceEdit edit){return edit.apply(family,snapshot.settings,catalog);}
+ void installSurface(NativeScreenSurfaceEdit.Result next,int slot){if(next.settings()==snapshot.settings&&controls(slot).enabled()==next.rowsEnabled())return;geometryRevision++;snapshot=new Snapshot(next.settings(),snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);publishLocal();controlService.setEnabled(slot,next.rowsEnabled());changed(false);}
  boolean applySurface(NativeScreenSurfaceEdit edit){
-  serverThread();if(editing()||edit==null||inert||!(level instanceof ServerLevel server)||!NativeRedstoneChannels.open(server)||!isChannelMemberActive())return false;
-  var next=edit.apply(family,snapshot.settings,catalog);if(next==null)return false;if(next.settings()==snapshot.settings&&controls(edit.slot()).enabled()==next.rowsEnabled())return true;
-  NativeScreenPowerService.queueTopology(this);editingDisplay=true;try{NativeRedstoneChannels.batch(server,()->{geometryRevision++;snapshot=new Snapshot(next.settings(),snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);publishLocal();controlService.setEnabled(edit.slot(),next.rowsEnabled());NativeScreenPowerService.refresh(this);changed(false);});}finally{editingDisplay=false;}return true;
+  serverThread();if(!activationEditAllowed()||edit==null)return false;
+  if(edit.choice()==-4&&!NativeScreenChipInteractions.available(this,edit.slot()))return false;
+  var next=planSurface(edit);if(next==null)return false;
+  NativeScreenPowerService.queueTopology(this);editingDisplay=true;try{NativeRedstoneChannels.batch((ServerLevel)level,()->{installSurface(next,edit.slot());NativeScreenPowerService.refresh(this);});}finally{editingDisplay=false;}return true;
  }
+
  boolean applyDisplay(NativeScreenDisplayEdit edit){
   serverThread();if(editing()||edit==null||inert||!(level instanceof ServerLevel server)||!NativeRedstoneChannels.open(server)||!isChannelMemberActive())return false;
   NativeScreenSettings old=snapshot.settings,next=edit.apply(family,old,catalog);if(next==null)return false;if(next==old)return true;

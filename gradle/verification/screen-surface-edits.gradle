@@ -1,5 +1,6 @@
 task testScreenSurfaceEditsReference(type: JavaExec) {
  dependsOn compileNonRenderingChecks
  classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ maxHeapSize = '1g'
  main = 'com.vandorlabs.client.ScreenSurfaceEditsLegacyChecks'
 }
