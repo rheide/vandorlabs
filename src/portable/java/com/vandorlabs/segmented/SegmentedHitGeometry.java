@@ -45,6 +45,19 @@ public final class SegmentedHitGeometry {
                 t.y+t.r[3]*local.x+t.r[4]*local.y+t.r[5]*local.z,
                 t.z+t.r[6]*local.x+t.r[7]*local.y+t.r[8]*local.z,face);
     }
+    /** Authored model coordinates are centered on the same two-pixel section midplane. */
+    public static LegacyBoxTrace.Hit traceGate(RigidTransform t,SegmentedGateShape.Model model,
+            java.util.List<SegmentedGateShape.Connector> below,java.util.List<SegmentedGateShape.Connector> above,
+            SegmentedGateShape.Hit scratch,double sx,double sy,double sz,double ex,double ey,double ez){
+        double ax=sx-t.x,ay=sy-t.y,az=sz-t.z,bx=ex-t.x,by=ey-t.y,bz=ez-t.z;
+        if(!model.ray(t.r[0]*ax+t.r[3]*ay+t.r[6]*az,t.r[1]*ax+t.r[4]*ay+t.r[7]*az+.5,t.r[2]*ax+t.r[5]*ay+t.r[8]*az+.5,
+                t.r[0]*bx+t.r[3]*by+t.r[6]*bz,t.r[1]*bx+t.r[4]*by+t.r[7]*bz+.5,t.r[2]*bx+t.r[5]*by+t.r[8]*bz+.5,below,above,scratch))return null;
+        double x=scratch.x,y=scratch.y-.5,z=scratch.z-.5;
+        int face=face((float)(t.r[0]*scratch.nx+t.r[1]*scratch.ny+t.r[2]*scratch.nz),
+                (float)(t.r[3]*scratch.nx+t.r[4]*scratch.ny+t.r[5]*scratch.nz),
+                (float)(t.r[6]*scratch.nx+t.r[7]*scratch.ny+t.r[8]*scratch.nz));
+        return new LegacyBoxTrace.Hit(t.x+t.r[0]*x+t.r[1]*y+t.r[2]*z,t.y+t.r[3]*x+t.r[4]*y+t.r[5]*z,t.z+t.r[6]*x+t.r[7]*y+t.r[8]*z,face);
+    }
     private static int face(float x,float y,float z){
         int best=2;float largest=Float.MIN_VALUE;
         for(int face=0;face<6;face++){

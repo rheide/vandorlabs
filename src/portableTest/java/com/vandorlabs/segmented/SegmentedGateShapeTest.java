@@ -15,6 +15,14 @@ public final class SegmentedGateShapeTest {
   }
   need(post.ray(2.5/16,-1,.5,2.5/16,2,.5,bottom,top,scratch)&&scratch.face==0&&scratch.y==0,"connector wins nearest hit ahead of base");
   need(!post.ray(Double.NaN,0,0,1,1,1,bottom,top,scratch)&&scratch.element==-1,"nonfinite ray cannot retain a prior hit");
+  for(int rotation=0;rotation<4;rotation++)for(int direction=0;direction<4;direction++)for(double progress:new double[]{0,.25,.5,1}){
+   com.vandorlabs.physics.RigidTransform transform=SegmentedHitGeometry.transform(8,70,-4,rotation,1,3,1,3,progress,direction,false,13D/32);
+   double[] a=transform.point(2.5/16,0,-1),b=transform.point(2.5/16,0,1),expected=transform.point(2.5/16,0,-1D/16);
+   com.vandorlabs.render.LegacyBoxTrace.Hit hit=SegmentedHitGeometry.traceGate(transform,post,bottom,top,scratch,a[0],a[1],a[2],b[0],b[1],b[2]);
+   need(hit!=null&&Math.abs(hit.x-expected[0])<1e-8&&Math.abs(hit.y-expected[1])<1e-8&&Math.abs(hit.z-expected[2])<1e-8,"authored model ray follows section pose and all facings");
+   a=transform.point(.5,0,-1);b=transform.point(.5,0,1);
+   need(SegmentedHitGeometry.traceGate(transform,post,bottom,top,scratch,a[0],a[1],a[2],b[0],b[1],b[2])==null,"posed gate gap stays ray transparent");
+  }
   SegmentedGateShape.Model corner=new SegmentedGateShape.Model(0,new SegmentedGateShape.Element[]{box(3,1,7,4,15,9)});need(SegmentedGateShape.connectors(post,corner,true,8).isEmpty(),"corner-only post contact refused");need(SegmentedGateShape.connectors(post,new SegmentedGateShape.Model(1,new SegmentedGateShape.Element[]{box(2,1,7,3,15,9)}),true,8).isEmpty(),"different style refused");need(SegmentedGateShape.connectors(post,post,true,0).isEmpty(),"absent prepared join refused");
   SegmentedGateShape.Model spear=new SegmentedGateShape.Model(0,new SegmentedGateShape.Element[]{box(2,1,7,3,13,9),box(0,13,7,16,14,9),box(2.2F,14,7.2F,2.8F,15,8.8F)});List<SegmentedGateShape.Connector> tips=SegmentedGateShape.connectors(spear,spear,true,8);need(tips.size()==1&&Math.abs(tips.get(0).bounds.x0-2.2F/16)<1e-9&&tips.get(0).bounds.y0==15D/16,"spear tip stays unscaled with matching narrow connector");
   SegmentedGateShape.Element diagonal=new SegmentedGateShape.Element(new float[]{2,7.5F,7},new float[]{14,8.5F,9},2,45,new float[]{8,8,8},false,63);SegmentedGateShape.Model tilted=new SegmentedGateShape.Model(2,new SegmentedGateShape.Element[]{diagonal});need(tilted.ray(.5,.5,-1,.5,.5,2,scratch),"rotated bar ray");need(!tilted.ray(.65,.35,-1,.65,.35,2,scratch),"rotated bar bounding-box void");
