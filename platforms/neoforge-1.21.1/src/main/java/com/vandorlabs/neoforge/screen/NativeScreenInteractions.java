@@ -19,6 +19,7 @@ public final class NativeScreenInteractions {
         if(level instanceof ServerLevel server&&!NativeRedstoneChannels.open(server))return false;
         if(!(level.getBlockEntity(pos) instanceof NativeScreenEntity owner)||owner.inert()||owner.isRemoved()||owner.getLevel()!=level||!(owner.getBlockState().getBlock() instanceof NativeScreenBlock block)||block.family()!=owner.family())return false;
         Vec3 start=player.getEyePosition().subtract(Vec3.atLowerCornerOf(pos));double reach=Math.min(8,player.blockInteractionRange());Vec3 end=start.add(Vec3.directionFromRotation(player.getXRot(),player.getYRot()).scale(reach));
+        if(NativeScreenChipInteractions.activate(owner,player,hand,start,end))return true;
         for(int slot=0;slot<2;slot++)if(owner.family().supportsSlot(slot)){
             var visual=NativeScreenPowerViews.prepare(owner,slot==0?ScreenPowerQueries.SURFACE_0:ScreenPowerQueries.SURFACE_1);
             if(visual.inert()||visual.appearance().surface(slot)!=-2)continue;var settings=visual.settings();var data=settings.scalar();
