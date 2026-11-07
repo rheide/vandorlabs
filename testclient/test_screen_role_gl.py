@@ -28,7 +28,7 @@ def stop(process):
   process.wait(timeout=10)
 
 def main():
- p=argparse.ArgumentParser();p.add_argument('--xvfb',action='store_true');p.add_argument('--rows',action='store_true');p.add_argument('--journal',action='store_true');p.add_argument('--chip-tray',action='store_true');p.add_argument('--skip-build',action='store_true');p.add_argument('--capture-only',action='store_true');p.add_argument('--valid-activation',action='store_true');p.add_argument('--runtime',type=Path);a=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--xvfb',action='store_true');p.add_argument('--rows',action='store_true');p.add_argument('--journal',action='store_true');p.add_argument('--chip-tray',action='store_true');p.add_argument('--joined-journal',action='store_true');p.add_argument('--skip-build',action='store_true');p.add_argument('--capture-only',action='store_true');p.add_argument('--valid-activation',action='store_true');p.add_argument('--runtime',type=Path);a=p.parse_args()
  if a.xvfb and os.name=='nt':p.error('--xvfb requires Linux')
  runtime=a.runtime or ROOT/'testclient/runtime'
  if not (runtime/'cp.txt').is_file():
@@ -54,6 +54,7 @@ def main():
    if found:cp.append(str(found[0]))
   # A warmed final singleton getter can inline the original Tessellator and silently bypass capture.
   oracle_flags=['-XX:CompileCommand='+policy+',net/minecraft/client/renderer/Tessellator.'+method for policy in ['exclude','dontinline'] for method in ['getInstance','func_178181_a']]
+  if a.joined_journal:oracle_flags.append('-Dvandorlabs.screenJoinedJournalOracle=true')
   if a.chip_tray:oracle_flags.append('-Dvandorlabs.screenChipTrayOracle=true')
   if a.journal:oracle_flags.append('-Dvandorlabs.screenJournalOracle=true')
   if a.rows:oracle_flags.append('-Dvandorlabs.screenRowsOracle=true')
@@ -64,8 +65,16 @@ def main():
    process=subprocess.Popen(command,cwd=runtime,env=env,stdout=log,stderr=subprocess.STDOUT,start_new_session=os.name!='nt');lease.track_process(process)
    try:result=process.wait(timeout=240)
    finally:stop(process)
-  marker='[vandorlabs][screen-chip-tray-source] PASS' if a.chip_tray else '[vandorlabs][screen-journal-source] PASS' if a.journal else '[vandorlabs][screen-rows-source] PASS' if a.rows else '[vandorlabs][screen-role-gl] PASS'
+  marker='[vandorlabs][screen-joined-journal-source] PASS' if a.joined_journal else '[vandorlabs][screen-chip-tray-source] PASS' if a.chip_tray else '[vandorlabs][screen-journal-source] PASS' if a.journal else '[vandorlabs][screen-rows-source] PASS' if a.rows else '[vandorlabs][screen-role-gl] PASS'
   if result or 'CompilerOracle: unrecognized line' in (out/'client.log').read_text(errors='replace') or marker not in (out/'client.log').read_text(errors='replace'):raise RuntimeError('Source Screen role GL capture failed: '+str(out/'client.log'))
+  if a.joined_journal:
+   captured=game/'screen-joined-journal-gl.jsonl'
+   if not captured.is_file() or captured.stat().st_size>16*1024*1024:raise RuntimeError('Missing or oversized joined journal capture')
+   rows=[json.loads(line) for line in captured.read_text().splitlines()]
+   if len(rows)!=144 or any(row['submissions']!=1 or not row['text'] for row in rows):raise RuntimeError('Actual joined journal coverage/owner-only submission')
+   shutil.copy2(captured,out/'screen-joined-journal-gl.jsonl');(out/'reference.sha256').write_text(hashlib.sha256(captured.read_bytes()).hexdigest()+'\n')
+   if hashlib.sha256(production.read_bytes()).hexdigest()!=digest:raise RuntimeError('Source standard JAR changed during joined capture')
+   success=True;print('Actual Source joined Screen journal PASS: '+str(out),flush=True);return
   if a.chip_tray:
    captured=game/'screen-chip-tray-gl.jsonl'
    if not captured.is_file() or captured.stat().st_size>16*1024*1024:raise RuntimeError('Missing or oversized actual tray capture')

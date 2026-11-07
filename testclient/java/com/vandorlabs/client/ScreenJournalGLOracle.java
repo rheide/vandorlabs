@@ -16,15 +16,15 @@ import org.lwjgl.BufferUtils;
 import org.lwjgl.opengl.GL11;
 /** Actual released non-Vehicle journal canvas and font fitting; final submissions only are intercepted. */
 final class ScreenJournalGLOracle {
-    private static final class Capture extends BufferBuilder {
+    static final class Capture extends BufferBuilder {
         final List<JsonObject> draws=new ArrayList<>();final FloatBuffer matrix=BufferUtils.createFloatBuffer(16);
         Capture(){super(1<<17);}
         @Override public void begin(int mode,net.minecraft.client.renderer.vertex.VertexFormat format){matrix.clear();GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX,matrix);super.begin(mode,format);}
         void finish(){finishDrawing();if(getVertexCount()==0)return;JsonObject draw=new JsonObject();draw.addProperty("stride",getVertexFormat().getNextOffset());draw.addProperty("vertices",getVertexCount());draw.add("matrix",matrix(matrix));JsonArray raw=new JsonArray();for(int i=0;i<getVertexCount()*getVertexFormat().getNextOffset();i+=4)raw.add(getByteBuffer().getInt(i));draw.add("data",raw);draws.add(draw);}
     }
     private static JsonArray matrix(FloatBuffer values){JsonArray result=new JsonArray();for(int i=0;i<16;i++)result.add(Float.floatToRawIntBits(values.get(i)));return result;}
-    private static final class CpuTessellator extends Tessellator {final Capture buffer;CpuTessellator(Capture buffer){super(16);this.buffer=buffer;}@Override public BufferBuilder getBuffer(){return buffer;}@Override public void draw(){buffer.finish();}}
-    private static final class SpyFont extends FontRenderer {
+    static final class CpuTessellator extends Tessellator {final Capture buffer;CpuTessellator(Capture buffer){super(16);this.buffer=buffer;}@Override public BufferBuilder getBuffer(){return buffer;}@Override public void draw(){buffer.finish();}}
+    static final class SpyFont extends FontRenderer {
         final FontRenderer original;final List<JsonObject> text=new ArrayList<>();final FloatBuffer matrix=BufferUtils.createFloatBuffer(16);
         SpyFont(Minecraft mc,FontRenderer original){super(mc.gameSettings,new ResourceLocation("textures/font/ascii.png"),mc.getTextureManager(),false);this.original=original;}
         @Override public int getStringWidth(String value){return original.getStringWidth(value);}
