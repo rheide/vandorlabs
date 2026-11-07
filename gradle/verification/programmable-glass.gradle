@@ -13,3 +13,11 @@ task exportFlatGlassMeshReference(type: JavaExec) {
     main = 'com.vandorlabs.client.FlatGlassMeshLegacyOracle'
     args file('build/test-artifacts/flat-glass-mesh-forge.jsonl').absolutePath
 }
+
+task testSharedFlatGlassMesh(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassMeshLegacyOracle'
+    args file('build/test-artifacts/flat-glass-mesh-shared.jsonl').absolutePath, 'shared'
+}
