@@ -10,6 +10,8 @@ import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
 /** Inactive standalone owner foundation. Loading does not discover neighbors or prepare dense geometry. */
 public final class NativeCanopyEntity extends BlockEntity implements com.vandorlabs.neoforge.redstone.NativeChannelMember {
+    public static final net.neoforged.neoforge.client.model.data.ModelProperty<NativeCanopyRenderSnapshot> TERRAIN=new net.neoforged.neoforge.client.model.data.ModelProperty<>();
+    private volatile net.neoforged.neoforge.client.model.data.ModelData modelData=net.neoforged.neoforge.client.model.data.ModelData.EMPTY;
     public static final String RECOVERY="CanopyRecoverySnapshot", UNINITIALIZED="CanopyUninitialized", PLACEMENT_ITEM="CanopyPlacementItem";
     public record Publication(NativeCanopyRenderSnapshot visual,NativeCanopyGeometry.Snapshot geometry,
             float progress,boolean targetOpen,boolean waiting,boolean draws,boolean resolved,boolean inert){}
@@ -24,6 +26,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     public NativeCanopyEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,String kind){
         super(type,pos,state);this.kind=kind;NativeCanopyModels.builtin().dimensions(kind);links=NativeCanopyLinks.read(new CompoundTag(),pos);publishUnresolved();
     }
+    @Override public net.neoforged.neoforge.client.model.data.ModelData getModelData(){return modelData;}
     public String kind(){return kind;}
     public NativeCanopySettings settings(){return settings;}
     public NativeCanopyLinks links(){return links;}
@@ -38,7 +41,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     private boolean localDraws(){return !removing&&(links.anchor()==null||links.anchor().equals(worldPosition))&&(links.pair()==null||links.pair().equals(worldPosition));}
     private void publishUnresolved(){
         int width=localWidth();NativeCanopyRenderSnapshot visual=new NativeCanopyRenderSnapshot(kind,facing().get3DDataValue(),Math.min(9,width),0,0,links.centered(),settings);
-        publication=new Publication(visual,null,links.progress(),links.open(),links.waiting(),localDraws(),false,inert);
+        publication=new Publication(visual,null,links.progress(),links.open(),links.waiting(),localDraws(),false,inert);modelData=kind.equals("regular_canopy_glass")&&publication.draws()?net.neoforged.neoforge.client.model.data.ModelData.builder().with(TERRAIN,visual).build():net.neoforged.neoforge.client.model.data.ModelData.EMPTY;
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         control.reset();channelPowered=false;var original=tag.copy();initialized=!tag.getBoolean(UNINITIALIZED);try{
@@ -93,5 +96,5 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     void stageLinks(NativeCanopyLinks next){links=next;pending=true;publishUnresolved();}
     void notifyChanged(){setChanged();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}
     boolean pending(){return pending;}
-    void prepared(Publication next){publication=next;pending=false;}
+    void prepared(Publication next){publication=next;pending=false;if(kind.equals("regular_canopy_glass")&&level!=null&&level.isClientSide){requestModelDataUpdate();level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}}
 }

@@ -7,6 +7,8 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.concurrent.atomic.AtomicLong;
 import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.core.Direction;
 import net.minecraft.client.renderer.texture.*;
 import net.minecraft.client.resources.model.Material;
 import net.minecraft.resources.ResourceLocation;
@@ -34,19 +36,22 @@ public final class NativeCanopyRenderer {
     private static final class Scratch {final org.joml.Vector3f point=new org.joml.Vector3f(),normal=new org.joml.Vector3f();}
     private static final ThreadLocal<Scratch> SCRATCH=ThreadLocal.withInitial(Scratch::new);
     public static final class Mesh implements CanopyEmission.Sink {
-        private final float[] data;private final int[] colors;private int count;
-        private Mesh(int count){data=new float[count*8];colors=new int[count];}
+        private final float[] data;private final int[] colors;private final TextureAtlasSprite[] sprites;private final int[] directions;private TextureAtlasSprite sprite;private int count;
+        private Mesh(int count,boolean chunk){data=new float[count*8];colors=new int[count];sprites=chunk?new TextureAtlasSprite[count/4]:null;directions=chunk?new int[count/4]:null;}
         public int vertices(){return count;}
-        private int bytes(){return 64+data.length*4+colors.length*4;}
-        @Override public void quad(int direction){}
+        private int bytes(){return 96+data.length*4+colors.length*4+(sprites==null?0:64+sprites.length*16);}
+        @Override public void quad(int direction){if(sprites!=null){sprites[count/4]=sprite;directions[count/4]=direction;}}
         @Override public void vertex(float x,float y,float z,float u,float v,int color,float nx,float ny,float nz){int at=count*8;data[at]=x;data[at+1]=y;data[at+2]=z;data[at+3]=u;data[at+4]=v;data[at+5]=nx;data[at+6]=ny;data[at+7]=nz;colors[count++]=color;}
+        private List<BakedQuad> quads(){if(sprites==null||count==0)return List.of();var result=new ArrayList<BakedQuad>(count/4);for(int q=0;q<count/4;q++){int[] packed=new int[32];for(int vertex=0;vertex<4;vertex++){int source=(q*4+vertex)*8,at=vertex*8;packed[at]=Float.floatToRawIntBits(data[source]);packed[at+1]=Float.floatToRawIntBits(data[source+1]);packed[at+2]=Float.floatToRawIntBits(data[source+2]);packed[at+3]=colors[q*4+vertex];packed[at+4]=Float.floatToRawIntBits(data[source+3]);packed[at+5]=Float.floatToRawIntBits(data[source+4]);packed[at+7]=((byte)(data[source+5]*127)&255)|(((byte)(data[source+6]*127)&255)<<8)|(((byte)(data[source+7]*127)&255)<<16);}result.add(new BakedQuad(packed,-1,Direction.from3DDataValue(directions[q]),sprites[q],false,false));}return List.copyOf(result);}
         private void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){Scratch s=SCRATCH.get();for(int i=0;i<count;i++){int at=i*8,color=colors[i];pose.pose().transformPosition(data[at],data[at+1],data[at+2],s.point);pose.transformNormal(data[at+5],data[at+6],data[at+7],s.normal);target.addVertex(s.point.x,s.point.y,s.point.z).setColor(color&255,(color>>>8)&255,(color>>>16)&255,color>>>24).setUv(data[at+3],data[at+4]).setOverlay(overlay).setLight(light).setNormal(s.normal.x,s.normal.y,s.normal.z);}}
     }
     public static final class Draw {
-        private final Mesh body,pane;
-        private Draw(Mesh body,Mesh pane){this.body=body;this.pane=pane;}
+        private final Mesh body,pane;private final List<BakedQuad> solid,glass,all;
+        private Draw(Mesh body,Mesh pane){this.body=body;this.pane=pane;solid=body.quads();glass=pane.quads();var combined=new ArrayList<BakedQuad>(solid.size()+glass.size());combined.addAll(solid);combined.addAll(glass);all=List.copyOf(combined);}
+        public List<BakedQuad> terrain(boolean pane){return pane?glass:solid;}
+        public List<BakedQuad> terrain(){return all;}
         public int bodyVertices(){return body.vertices();}public int paneVertices(){return pane.vertices();}
-        public int bytes(){return 64+body.bytes()+pane.bytes();}
+        public int bytes(){return 128+body.bytes()+pane.bytes()+all.size()*672;}
         public double[] bounds(){double[] b={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};for(Mesh mesh:new Mesh[]{body,pane})for(int i=0;i<mesh.count;i++)for(int a=0;a<3;a++){double v=mesh.data[i*8+a];b[a]=Math.min(b[a],v);b[a+3]=Math.max(b[a+3],v);}return b;}
         public void emit(PoseStack.Pose pose,MultiBufferSource target,int light,int overlay,boolean body,boolean pane){if(body&&this.body.count>0)this.body.emit(pose,target.getBuffer(NativePanelPlaybackRenderer.frameRenderType(true)),light,overlay);if(pane&&this.pane.count>0)this.pane.emit(pose,target.getBuffer(NativePanelPlaybackRenderer.frameRenderType(true,false)),light,overlay);}
     }
@@ -85,8 +90,8 @@ public final class NativeCanopyRenderer {
                 var faces=new CanopyDrawingGeometry(base,visual.kind(),visual.width(),s).posed(progress,visual.centered());
                 List<CanopyEmission.Prepared> body=new ArrayList<>(),pane=new ArrayList<>();
                 for(var face:faces){var prepared=new CanopyEmission.Prepared(face,visual.facing(),CanopyEmission.opacity(face,s.material,s.tint));(CanopyEmission.translucent(face,s.material,s.tint)?pane:body).add(prepared);}
-                Mesh a=new Mesh(body.stream().mapToInt(CanopyEmission.Prepared::vertexCount).sum()),b=new Mesh(pane.stream().mapToInt(CanopyEmission.Prepared::vertexCount).sum());
-                boolean chunk=visual.kind().equals("regular_canopy_glass");for(var face:body)CanopyEmission.emit(face,sprite(surface(face.source,s.material)),chunk,a);for(var face:pane)CanopyEmission.emit(face,sprite(surface(face.source,s.material)),chunk,b);
+                boolean chunk=visual.kind().equals("regular_canopy_glass");Mesh a=new Mesh(body.stream().mapToInt(CanopyEmission.Prepared::vertexCount).sum(),chunk),b=new Mesh(pane.stream().mapToInt(CanopyEmission.Prepared::vertexCount).sum(),chunk);
+                for(var face:body){var material=surface(face.source,s.material);a.sprite=material.sprite();CanopyEmission.emit(face,sprite(material),chunk,a);}for(var face:pane){var material=surface(face.source,s.material);b.sprite=material.sprite();CanopyEmission.emit(face,sprite(material),chunk,b);}
                 draw=new Draw(a,b);builds++;if(draw.bytes()+128<=LIMIT){draws.put(key,draw);bytes+=draw.bytes()+128;}
             }
             if(binding==null){binding=new Binding(pose,key,512+s.channels.size()*32+visual.kind().length()*2);bindings.put(visual,binding);bindingOrder.addLast(visual);bindingBytes+=binding.bytes;}else{binding.pose=pose;binding.key=key;}
