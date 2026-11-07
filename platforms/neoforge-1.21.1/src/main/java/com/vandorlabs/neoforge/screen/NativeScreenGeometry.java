@@ -4,7 +4,8 @@ import com.vandorlabs.render.InputSurfaceLayout;
 import net.minecraft.world.phys.AABB;
 import java.util.*;
 /** Immutable block geometry. Build on settings/state changes and retain with the host projection. */
-public record NativeScreenGeometry(AABB bounds,List<AABB> collision) {
+public record NativeScreenGeometry(AABB bounds,List<AABB> collision,AABB readerPick) {
+ public NativeScreenGeometry(AABB bounds,List<AABB> collision){this(bounds,collision,null);}
  public NativeScreenGeometry {Objects.requireNonNull(bounds);collision=List.copyOf(collision);}
  public static NativeScreenGeometry of(ScreenFamily family,ScreenFamily.State state,NativeScreenSettings settings){return of(family,state,settings.scalar().smallInput,settings.scalar().wallPosition,settings.ceilingMounted(),settings.ceilingPosition());}
  public static NativeScreenGeometry of(ScreenFamily family,ScreenFamily.State state,boolean small,int wall,boolean ceiling,int ceilingPosition){
@@ -16,6 +17,14 @@ public record NativeScreenGeometry(AABB bounds,List<AABB> collision) {
   if(family==ScreenFamily.DIAGONAL||family==ScreenFamily.HALF_DIAGONAL){int steps=family==ScreenFamily.DIAGONAL?16:8;boolean upper=family==ScreenFamily.DIAGONAL?state.inverted:state.upper;for(int i=0;i<steps;i++){double height=(i+1)/16D,z=(i+(steps==8?8:0))/16D;collision.add(rotate(new AABB(0,upper?1-height:0,z,1,upper?1:height,z+1D/16),state.facing));}}
   else collision.add(bounds);
   return new NativeScreenGeometry(bounds,collision);
+ }
+ /** Only Half Diagonal adds physical boxes; the full incline adds a selection ray box. */
+ public static NativeScreenGeometry of(ScreenFamily family,ScreenFamily.State state,boolean small,int wall,boolean ceiling,int ceilingPosition,boolean chip){
+  var base=of(family,state,small,wall,ceiling,ceilingPosition);if(!chip||!com.vandorlabs.screen.ScreenChipMount.integrated(family))return base;
+  var frame=com.vandorlabs.screen.ScreenChipMount.frame(family,state.facing,family==ScreenFamily.DIAGONAL?state.inverted:state.upper,ceiling,ceilingPosition<0?1:ceilingPosition);var reader=new AABB(frame.bound(0),frame.bound(1),frame.bound(2),frame.bound(3),frame.bound(4),frame.bound(5));
+  if(family==ScreenFamily.DIAGONAL)return new NativeScreenGeometry(base.bounds,base.collision,reader);
+  if(family!=ScreenFamily.HALF_DIAGONAL)return base;
+  var tray=rotate(new AABB(0,state.upper?15D/16:0,0,1,state.upper?1:1D/16,.5),state.facing);var collision=new ArrayList<AABB>(base.collision.size()+2);collision.add(reader);collision.add(tray);collision.addAll(base.collision);return new NativeScreenGeometry(base.bounds.minmax(reader).minmax(tray),collision);
  }
  private static AABB rotate(AABB b,int facing){return switch(facing){case 5->new AABB(1-b.maxZ,b.minY,b.minX,1-b.minZ,b.maxY,b.maxX);case 3->new AABB(1-b.maxX,b.minY,1-b.maxZ,1-b.minX,b.maxY,1-b.minZ);case 4->new AABB(b.minZ,b.minY,1-b.maxX,b.maxZ,b.maxY,1-b.minX);default->b;};}
 }

@@ -1,5 +1,14 @@
 task testScreenGeometryReference(type: JavaExec) {
  dependsOn compileNonRenderingChecks
  classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ maxHeapSize = '1g'
  main = 'com.vandorlabs.client.ScreenGeometryLegacyChecks'
+}
+
+task testScreenChipGeometryReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ maxHeapSize = '1g'
+ main = 'com.vandorlabs.client.ScreenGeometryLegacyChecks'
+ systemProperty 'vandorlabs.screenChipGeometry','true'
 }
