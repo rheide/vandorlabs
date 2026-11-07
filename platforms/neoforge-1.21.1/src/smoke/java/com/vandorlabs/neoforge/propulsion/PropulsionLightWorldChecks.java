@@ -1,0 +1,17 @@
+package com.vandorlabs.neoforge.propulsion;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockBehaviour;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+/** Actual world/state/auxiliary-light contract; no public engine registry or client-only class. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class PropulsionLightWorldChecks {
+ private static NativePropulsionBlock BLOCK;private static BlockEntityType<NativePropulsionEntity> TYPE;
+ private static boolean enabled(){return "propulsion-light-write".equals(System.getProperty("vandorlabs.transmitterPhase"));}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration{@SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;event.register(Registries.BLOCK,h->{BLOCK=new NativePropulsionBlock("rocket_thruster",BlockBehaviour.Properties.of().strength(5,10),()->TYPE);h.register(ResourceLocation.parse("vandorlabs:propulsion_light_fixture"),BLOCK);});event.register(Registries.BLOCK_ENTITY_TYPE,h->{TYPE=BlockEntityType.Builder.of((pos,state)->new NativePropulsionEntity(TYPE,pos,state),BLOCK).build(null);h.register(ResourceLocation.parse("vandorlabs:propulsion_light_fixture"),TYPE);});}}
+ @SubscribeEvent public static void started(net.neoforged.neoforge.event.server.ServerStartedEvent event){if(!enabled())return;try{var world=event.getServer().overworld();var pos=new BlockPos(7768,90,7768);world.getChunkAt(pos);world.setBlock(pos,BLOCK.defaultBlockState(),18);var owner=(NativePropulsionEntity)world.getBlockEntity(pos);var tag=new CompoundTag();tag.putBoolean("LightInitialized",true);tag.putBoolean("ManualOn",true);owner.loadWithComponents(tag,world.registryAccess());NativePropulsionService.refresh(owner);var state=world.getBlockState(pos);int actual=state.getLightEmission(world,pos),aux=world.getAuxLightManager(pos).getLightAt(pos);int[] sources={0};world.getChunkAt(pos).findBlockLightSources((at,found)->{if(at.equals(pos)&&found.getBlock()==BLOCK)sources[0]++;});System.out.println("[vandorlabs][propulsion-light] actual emission="+actual+" aux="+aux+" dynamic="+BLOCK.hasDynamicLightEmission(state)+" discovered="+sources[0]);if(aux!=15||actual!=15||!BLOCK.hasDynamicLightEmission(state)||sources[0]!=1)throw new AssertionError("Position-aware engine light must bypass vanilla state emission cache");owner.manualMode(0);NativePropulsionService.refresh(owner);if(world.getBlockState(pos).getLightEmission(world,pos)!=0||world.getAuxLightManager(pos).getLightAt(pos)!=0)throw new AssertionError("Off engine retains emission");sources[0]=0;world.getChunkAt(pos).findBlockLightSources((at,found)->{if(at.equals(pos)&&found.getBlock()==BLOCK)sources[0]++;});if(sources[0]!=0)throw new AssertionError("Off engine remains in chunk source discovery");System.out.println("[vandorlabs][propulsion-light] write PASS actualWorld/on15/off0/dynamicEmission/noClientTicker");}catch(Throwable failure){System.err.println("[vandorlabs][propulsion-light] FAIL "+failure);failure.printStackTrace();}finally{event.getServer().saveEverything(true,true,true);event.getServer().halt(false);}}
+}
