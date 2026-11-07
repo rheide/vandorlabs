@@ -23,6 +23,7 @@ task screenRoleOracleJar(type: Jar) {
         include 'com/vandorlabs/client/ScreenRowsGLOracle*.class'
         include 'com/vandorlabs/client/ScreenJournalGLOracle*.class'
         include 'com/vandorlabs/client/ScreenChipTrayGLOracle*.class'
+        include 'com/vandorlabs/client/ScreenJoinedJournalGLOracle*.class'
     }
 }
 reobf { screenRoleOracleJar {} }
