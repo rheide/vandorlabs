@@ -14,10 +14,11 @@ public record NativeSegmentedTerrainSnapshot(Direction facing,int texture,boolea
         if(facing==null||facing.getAxis().isVertical()||revision<0||column<0||column>=32||row<0||row>=32)throw new IllegalArgumentException("Segmented terrain publication");
     }
     public static boolean eligible(NativeSegmentedVisual visual){
-        if(visual.settings().direction!=0||visual.settings().position!=0||visual.settings().straight
-                ||visual.texture()>=ModernFinishCatalog.ENTRIES.size())return false;
-        if(visual.texture()>=0){String category=ModernFinishCatalog.option(visual.texture()).category();int slash=category.indexOf('/');if(slash>=0)category=category.substring(0,slash);if(category.equals("Frame")||category.equals("Frames"))return false;}
-        for(var row:visual.rows())if(!row.nativePanel())return false;
+        if(visual.settings().direction!=0||visual.settings().position!=0||visual.settings().straight)return false;
+        for(int row=0;row<visual.height();row++){
+            int choice=visual.texture(row);if(choice>=ModernFinishCatalog.ENTRIES.size()||!visual.rows().get(row).nativePanel())return false;
+            if(choice>=0){String category=ModernFinishCatalog.option(choice).category();int slash=category.indexOf('/');if(slash>=0)category=category.substring(0,slash);if(category.equals("Frame")||category.equals("Frames"))return false;}
+        }
         return true;
     }
     public static NativeSegmentedTerrainSnapshot cell(NativeSegmentedVisual visual,int row,int texture,boolean body,long revision){

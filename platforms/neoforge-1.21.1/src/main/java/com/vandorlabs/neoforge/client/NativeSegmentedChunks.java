@@ -63,7 +63,7 @@ public final class NativeSegmentedChunks {
         release(column.pending);long next=++revision;var affected=new LinkedHashSet<BlockPos>();
         boolean oldHeader=column.root.clientTerrain().headerTerrain()||column.root.clientTerrain().terrain().header();
         for(int row=0;row<column.members.size();row++){
-            var tile=column.members.get(row);var snapshot=NativeSegmentedTerrainSnapshot.cell(visual,row,tile.texture(),body,next);
+            var tile=column.members.get(row);var snapshot=NativeSegmentedTerrainSnapshot.cell(visual,row,tile.effectiveTexture(),body,next);
             tile.clientTerrain(new NativeSegmentedTerrainSnapshot.ClientProjection(snapshot,row==0&&gate,row==0&&keepSuppressed,row==0&&oldHeader,next));publications++;
             affected.add(new BlockPos(tile.getBlockPos().getX()&~15,tile.getBlockPos().getY()&~15,tile.getBlockPos().getZ()&~15));
         }
@@ -76,7 +76,7 @@ public final class NativeSegmentedChunks {
         var root=column.root;var visual=NativeSegmentedBlockRenderer.visual(root);if(visual==null||!visual.ready()||!members(column,visual))return false;
         boolean eligible=!root.inert()&&NativeSegmentedTerrainSnapshot.eligible(visual);
         boolean body=eligible&&!root.targetOpen()&&(root.clientTerrain().awaitingChunk()||NativeSegmentedBlockRenderer.selectionPoseWithoutPolling(root)==0);
-        boolean changedBody=false,changed=false;for(int row=0;row<column.members.size();row++){var tile=column.members.get(row);var previous=tile.clientTerrain().terrain();var next=NativeSegmentedTerrainSnapshot.cell(visual,row,tile.texture(),body,0);changedBody|=previous.body()!=body;changed|=!same(previous,next);}
+        boolean changedBody=false,changed=false;for(int row=0;row<column.members.size();row++){var tile=column.members.get(row);var previous=tile.clientTerrain().terrain();var next=NativeSegmentedTerrainSnapshot.cell(visual,row,tile.effectiveTexture(),body,0);changedBody|=previous.body()!=body;changed|=!same(previous,next);}
         if(changed||column.force||column.pending!=null&&column.pending.body!=body)begin(column,visual,body,changedBody);
         return column.pending==null&&(root.targetOpen()||root.clientTerrain().suppressed()||!eligible);
     }

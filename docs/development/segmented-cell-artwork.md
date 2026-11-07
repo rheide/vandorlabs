@@ -8,6 +8,12 @@ Existing saves without this field keep their artwork. The existing 15-byte setti
 
 Moving columns need immutable effective artwork per row. Settled terrain consumes the same per-cell effective choice and the existing global column/row UV phase. Window geometry continues to use its existing connected Window layout; selecting a different image does not rescale the physical panel or change the aperture grouping.
 
-Configured picking, Programmer settings, Duplifier capture/application and copied-item recipes must retain the optional local override whenever they retain existing Segmented Door configuration. Shared default changes must not discard explicit local choices. Dedicated configuration and Configurizer use continue through the same menu and authorization path.
+Configured picking, Programmer settings, Duplifier capture/application and copied-item recipes must retain the optional local override whenever they retain existing Segmented Door configuration. Unrelated settings edits retain local choices. An explicit All segments artwork action intentionally clears overrides, preserving the existing whole-door application behavior; resetting This segment restores inheritance. Dedicated configuration and Configurizer use continue through the same menu and authorization path.
 
 The first portable scalar checkpoint verifies inherited versus explicit default choices and invalid-material refusal on Java 8 and Java 21. Host, transport, rendering and player acceptance are pending; this document does not claim those paths are implemented.
+
+## Transport bounds
+
+Operations 0–5 retain their original encodings. Operation 6 sets the current menu cell override and uses 12 + 4N bytes; operation 7 resets it to inheritance and uses 8 + 4N bytes, for N channels (0–64). The existing combined settings command uses 27 + 4N bytes. No grid-sized allocation is accepted by the new operations; decoders reject extra bytes and validate the single material against the existing catalog predicate. Both versions round-trip the appended commands and retain the original 4,672-profile settings digest.
+
+Implementation is staged on the feature branch. Persistence, configured choices, appended commands and artwork-aware moving/terrain projections are present; actual placed-player editing, copy/recipe round trips, reload rendering and allocation acceptance remain pending.

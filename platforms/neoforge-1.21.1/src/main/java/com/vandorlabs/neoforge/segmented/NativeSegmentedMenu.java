@@ -36,6 +36,7 @@ public final class NativeSegmentedMenu extends AbstractContainerMenu {
             case 1,2 -> tile.operate(player,edit.operation()==1);
             case 3 -> tile.configureTexture(player,edit.texture());
             case 4 -> tile.configureAll(player,edit.channels(),edit.ticks(),edit.local(),edit.opens(),edit.texture(),edit.settings());
+            case 6,7 -> tile.configureCellTexture(player,edit.texture(),edit.operation()==7);
             case 5 -> tile.configurePart(player,edit.channels(),edit.ticks(),edit.local(),edit.opens(),edit.texture(),edit.settings());
             default -> throw new IllegalArgumentException("Unknown Segmented Door operation");
         }

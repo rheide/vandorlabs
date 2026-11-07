@@ -12,6 +12,7 @@ public final class SegmentedCellArtworkChecks {
   NBTTagCompound saved=old.writeToNBT(new NBTTagCompound());SegmentedDoorTile reload=new SegmentedDoorTile();reload.readFromNBT(saved);if(!reload.cellArtwork.equals(old.cellArtwork))throw new AssertionError("saved override lost");checks++;
   reload.applyItemConfiguration(plain,ChannelList.EMPTY);if(reload.cellArtwork.overridden||reload.configuration().hasKey(SegmentedCellArtwork.FIELD))throw new AssertionError("inherited reset lost");checks++;
   NBTTagCompound wrong=item.copy();wrong.setString(SegmentedCellArtwork.FIELD,"-1");try{fresh.applyItemConfiguration(wrong,ChannelList.EMPTY);throw new AssertionError("wrong type accepted");}catch(IllegalArgumentException expected){checks++;}
+  for(boolean inherit:new boolean[]{false,true}){io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();try{new SegmentedDoorMessage(1,0,10,true,true,ChannelList.EMPTY).cellTexture(-1,inherit).toBytes(bytes);if(bytes.readableBytes()!=(inherit?8:12))throw new AssertionError("bounded cell command bytes");new SegmentedDoorMessage().fromBytes(bytes.duplicate());checks++;bytes.writeByte(0);try{new SegmentedDoorMessage().fromBytes(bytes.duplicate());throw new AssertionError("trailing cell command byte accepted");}catch(IllegalArgumentException expected){checks++;}}finally{bytes.release();}}
   System.out.println("Actual Segmented cell artwork persistence PASS "+checks+" checks");
  }
 }

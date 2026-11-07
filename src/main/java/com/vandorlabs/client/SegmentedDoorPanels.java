@@ -18,7 +18,7 @@ public final class SegmentedDoorPanels {
     private static final class Key {
         final SegmentedDoorSettings settings;final int texture,column,row,width,height,pass,wc,wr,ww,wh,nativeKind;
         Key(SegmentedDoorTile t,int row,int pass){this(t,row,pass,0);}
-        Key(SegmentedDoorTile t,int row,int pass,int nativeKind){this.nativeKind=nativeKind;settings=t.panel(row).settings;texture=t.texture;column=t.column;this.row=row;width=t.columns;height=t.height;this.pass=pass;SegmentedDoorWindows.Layout window=SegmentedDoorWindows.layout(t.panel(row));wc=window.column;wr=window.row;ww=window.width;wh=window.height;}
+        Key(SegmentedDoorTile t,int row,int pass,int nativeKind){this.nativeKind=nativeKind;settings=t.panel(row).settings;texture=t.panel(row).effectiveTexture();column=t.column;this.row=row;width=t.columns;height=t.height;this.pass=pass;SegmentedDoorWindows.Layout window=SegmentedDoorWindows.layout(t.panel(row));wc=window.column;wr=window.row;ww=window.width;wh=window.height;}
         public int hashCode(){return Objects.hash(settings,texture,column,row,width,height,pass,wc,wr,ww,wh,nativeKind);}
         public boolean equals(Object value){if(!(value instanceof Key))return false;Key k=(Key)value;return settings.equals(k.settings)&&texture==k.texture&&column==k.column&&row==k.row&&width==k.width&&height==k.height&&pass==k.pass&&wc==k.wc&&wr==k.wr&&ww==k.ww&&wh==k.wh&&nativeKind==k.nativeKind;}
     }
