@@ -17,3 +17,9 @@ task testVehicleArmConstraintFrame(type: JavaExec) {
  main='com.vandorlabs.vehicle.VehicleArmConstraintFrameChecks'
  maxHeapSize='1g'
 }
+task testGearFootProjection(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath=files(compilePortableTests.destinationDir)
+ main='com.vandorlabs.physics.GearFootProjectionTest'
+ maxHeapSize='512m'
+}
