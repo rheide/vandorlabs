@@ -32,7 +32,7 @@ public final class NativeSegmentedTerrainModel extends BakedModelWrapper<BakedMo
     private static volatile Bake active;
     public static long activeGeneration(){var value=active;return value==null?0:value.generation;}
     @SubscribeEvent public static synchronized void completed(net.neoforged.neoforge.client.event.ModelEvent.BakingCompleted event){var next=PENDING.getIfPresent(event.getModelBakery());PENDING.invalidate(event.getModelBakery());if(next!=null&&next.wrapped&&(active==null||next.generation>active.generation))active=next;}
-    private record Key(Direction facing,int texture,boolean header,boolean body,boolean top,boolean bottom){}
+    private record Key(Direction facing,int texture,boolean header,boolean body,boolean top,boolean bottom,long phase){}
     public static final class Bake {
         private final long generation=GENERATIONS.incrementAndGet();private volatile boolean wrapped;
         private final NativeSegmentedRenderer.Bake shared;
@@ -51,14 +51,14 @@ public final class NativeSegmentedTerrainModel extends BakedModelWrapper<BakedMo
             headerTexture=texture(headerSprite);edge=shared.edge();if(bakery!=null)PENDING.put(bakery,this);
         }
         private List<BakedQuad> quads(NativeSegmentedTerrainSnapshot snapshot){
-            var key=new Key(snapshot.facing(),snapshot.texture(),canonical&&snapshot.header(),snapshot.body(),snapshot.top(),snapshot.bottom());
+            var key=new Key(snapshot.facing(),snapshot.texture(),canonical&&snapshot.header(),snapshot.body(),snapshot.top(),snapshot.bottom(),snapshot.body()?SegmentedPanelMesh.tilePhase(snapshot.column(),snapshot.row(),shared.artwork(snapshot.texture()).surface().aspect):0);
             try{return quads.get(key,()->build(key));}catch(java.util.concurrent.ExecutionException failure){throw new IllegalStateException("Segmented terrain mesh",failure.getCause());}
         }
         private List<BakedQuad> build(Key key){
             var out=new ArrayList<BakedQuad>();var material=shared.artwork(key.texture);int rotation=rotation(key.facing);
-            if(key.header)SegmentedTerrainQuads.build(rotation,true,false,key.top,key.bottom,material.surface().lower,headerTexture,
+            if(key.header)SegmentedTerrainQuads.build(rotation,true,false,key.top,key.bottom,material.surface(),headerTexture,0L,
                     (direction,headerFace,shade,data)->out.add(new BakedQuad(data,-1,Direction.from3DDataValue(direction),headerSprite,shade,header.useAmbientOcclusion()&&!key.body)));
-            if(key.body)SegmentedTerrainQuads.build(rotation,false,true,key.top,key.bottom,material.surface().lower,edge,(direction,headerFace,shade,data)->{
+            if(key.body)SegmentedTerrainQuads.build(rotation,false,true,key.top,key.bottom,material.surface(),edge,key.phase,(direction,headerFace,shade,data)->{
                 boolean front=key.facing.getAxis()==Direction.Axis.Z?direction==2||direction==3:direction==4||direction==5;
                 out.add(new BakedQuad(data,-1,Direction.from3DDataValue(direction),front?material.lowerSprite():shared.edgeSprite(),false,false));
             });

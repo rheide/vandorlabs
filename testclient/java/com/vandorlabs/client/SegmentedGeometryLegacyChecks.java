@@ -8,7 +8,7 @@ import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import java.io.*;
 
-/** Frozen actual rigid transforms, panel/header rays and world bounds before native targeting. */
+/** Actual rigid transforms, two-pixel panel/header rays and world bounds for native targeting. */
 public final class SegmentedGeometryLegacyChecks {
     private static double selectedPose;
     public static void main(String[] args)throws Exception {
@@ -27,7 +27,7 @@ public final class SegmentedGeometryLegacyChecks {
                 record.add("rays",rays);out.println(gson.toJson(record));cases++;
             }
         }
-        SegmentedReferenceGolden.check(file,"999f5ff21f32b772a6abf31aec1bea31a7a054e6b4433ea09be8c66f61390585");
+        SegmentedReferenceGolden.check(file,"6ead83660b533edeca426e9768a64cfa82c1e5260814b8dd2f671bd7d0c8b771");
         System.out.println("Actual Segmented geometry PASS profiles="+cases+" rays="+(cases*9)+" complete transforms bounds header ordering and far-world arithmetic");
     }
     private static JsonArray vector(double... values){JsonArray result=new JsonArray();for(double v:values)result.add(v);return result;}

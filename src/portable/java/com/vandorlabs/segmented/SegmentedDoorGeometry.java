@@ -2,7 +2,7 @@ package com.vandorlabs.segmented;
 
 /** Rigid sections rise, turn over the header, then travel along the overhead track. */
 public final class SegmentedDoorGeometry {
-    public static final double HALF_THICKNESS=3D/32,TURN=.5,ARC=Math.PI/4;
+    public static final double HALF_THICKNESS=1D/16,TURN=.5,ARC=Math.PI/4;
     /** Writes centre Y/Z and sin/cos of the section angle; no per-frame objects. */
     public static void section(int row,int height,double progress,double[] pose){
         double p=Math.max(0,Math.min(1,progress)),travel=p*(height+ARC-.5),t=.5-row+travel;
