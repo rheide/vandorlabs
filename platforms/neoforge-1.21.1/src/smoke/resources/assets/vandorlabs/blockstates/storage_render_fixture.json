@@ -1,0 +1,16 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:block/storage_render_fixture"
+    },
+    "facing=south": {
+      "model": "vandorlabs:block/storage_render_fixture"
+    },
+    "facing=east": {
+      "model": "vandorlabs:block/storage_render_fixture"
+    },
+    "facing=west": {
+      "model": "vandorlabs:block/storage_render_fixture"
+    }
+  }
+}
