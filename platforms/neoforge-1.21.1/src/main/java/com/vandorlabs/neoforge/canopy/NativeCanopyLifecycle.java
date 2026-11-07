@@ -29,7 +29,7 @@ public final class NativeCanopyLifecycle {
     public static boolean installed(NativeCanopyEntity host){return at(host.getLevel(),host.getBlockPos())==host;}
     /** Called after chunk installation, never from onLoad or a render/shape query. */
     public static void prepare(NativeCanopyEntity host){
-        if(!host.pending()||!installed(host))return;var previous=host.publication();
+        if(!host.pending()||!installed(host))return;if(host.topologyPending()&&host.available()&&host.publication().draws())host.contacts(NativeCanopyTopology.resolve(host));var previous=host.publication();
         if(!host.available()||!previous.draws()){host.prepared(new NativeCanopyEntity.Publication(previous.visual(),null,previous.progress(),previous.targetOpen(),previous.waiting(),previous.draws(),true,host.inert()));return;}
         var pos=host.getBlockPos();var cache=PHYSICAL.computeIfAbsent(host.getLevel(),unused->new NativeCanopyGeometry.Cache(16*1024*1024));
         var geometry=cache.prepare(previous.visual(),previous.progress(),pos.getX(),pos.getY(),pos.getZ());

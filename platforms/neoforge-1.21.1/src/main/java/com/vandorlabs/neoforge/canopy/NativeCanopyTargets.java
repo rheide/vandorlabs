@@ -26,6 +26,9 @@ public final class NativeCanopyTargets {
     private NativeCanopyTargets(){}
     public static void add(NativeCanopyEntity host){INDEX.add(host);}
     public static void remove(NativeCanopyEntity host){INDEX.remove(host);}
+    static void visit(Level level,AABB bounds,Consumer<NativeCanopyEntity> visitor){INDEX.visit(level,bounds,null,visitor);}
+    static boolean hasMembers(Level level){return INDEX.hasMembers(level);}
+    static boolean nearby(Level level,AABB bounds){return INDEX.hasNearbyBuckets(level,bounds,8);}
     private static boolean finite(Vec3 p){return p!=null&&Double.isFinite(p.x)&&Double.isFinite(p.y)&&Double.isFinite(p.z);}
     /** Exact authored surface hit with the released joined-opening constituent selection. */
     public static BlockHitResult traceOwner(NativeCanopyEntity owner,Vec3 start,Vec3 end){
