@@ -1,0 +1,3 @@
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierStorageReference'))systemProperty 'vandorlabs.copifierStorageReference',file(project.property('copifierStorageReference')).absolutePath
+}

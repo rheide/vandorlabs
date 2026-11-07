@@ -45,6 +45,14 @@ public class NativeStorageEntity extends BlockEntity implements Container,MenuPr
  @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();var view=visual;view.settings.write(tag);tag.putBoolean("NativeStorageInert",view.inert);return tag;}
  @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
  public final boolean configure(Player player,NativeStorageSettings next){if(next==null||!installed()||!NativeConfigurationAccess.canEdit(player,this))return false;var before=new CompoundTag();settings.write(before);var after=new CompoundTag();next.write(after);if(before.equals(after))return true;settings=next;publish();super.setChanged();level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);return true;}
+ public final CompoundTag copiedConfiguration(){if(!installed())throw new IllegalStateException("Unavailable Storage configuration owner");return NativeCopiedHousingMetadata.snapshot(settings.housing(),retained);}
+ /** Typed copy commit. Its caller authenticates the held tool; no inventory or platform reload occurs. */
+ public final boolean configureCopied(NativeStorageSettings next,com.vandorlabs.persistence.FrameSettings frames,com.vandorlabs.redstone.ChannelList channels,int range,boolean local,com.vandorlabs.redstone.ChannelList transmitted){
+  if(next==null||!installed()||!NativeCopiedHousingMetadata.valid(frames,channels,range,transmitted))return false;
+  final CompoundTag metadata;try{metadata=NativeCopiedHousingMetadata.edit(retained,frames,channels,range,local,transmitted);}catch(IllegalArgumentException unsupported){return false;}
+  var before=new CompoundTag();settings.write(before);var after=new CompoundTag();next.write(after);if(before.equals(after)&&retained.equals(metadata))return true;
+  settings=next;retained=metadata;publish();super.setChanged();level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);return true;
+ }
  @Override public int getContainerSize(){return NativeStorageSettings.SLOTS;}@Override public int getMaxStackSize(){return NativeStorageSettings.STACK_LIMIT;}
  @Override public boolean isEmpty(){if(inert||loading)return true;for(var stack:items)if(!stack.isEmpty())return false;return true;}
  @Override public ItemStack getItem(int slot){return inert||loading?ItemStack.EMPTY:items.get(slot);}

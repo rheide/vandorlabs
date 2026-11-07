@@ -14,7 +14,8 @@ public final class NativeCopifierHousingEdit {
         private Plan(NativeCopifierHousingCapture.Family family,CompoundTag fields,boolean applicable){this.family=family;this.fields=fields;this.applicable=applicable;}
         public boolean applicable(){return applicable;}
         public CompoundTag capture(){return NativeCopifierHousingCapture.capture(family,fields);}
-        public ProgrammableShapeEntity.Appearance appearance(){var h=HousingSettings.read(new ModernHousingTags(fields),0,family.faces,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);return new ProgrammableShapeEntity.Appearance(new com.vandorlabs.ui.ProgrammableBlockDialog.State(h.mainTexture,h.layout(),h.facesEnabled,h.faces(),-1),h.sideTexture,StairState.read(new ModernHousingTags(fields)));}
+        public HousingSettings housingSettings(){return HousingSettings.read(new ModernHousingTags(fields),0,family.faces,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);}
+        public ProgrammableShapeEntity.Appearance appearance(){var h=housingSettings();return new ProgrammableShapeEntity.Appearance(new com.vandorlabs.ui.ProgrammableBlockDialog.State(h.mainTexture,h.layout(),h.facesEnabled,h.faces(),-1),h.sideTexture,StairState.read(new ModernHousingTags(fields)));}
         public WallSettings walls(){return WallSettings.read(new ModernHousingTags(fields));}
         public FrameSettings frames(){return FrameSettings.read(new ModernHousingTags(fields),NativeWallEntity::validFrame,NativeWallEntity::validSurface,ModernFinishCatalog::validChoice);}
         public PanelGlassSettings glass(){return PanelGlassSettings.read(new ModernHousingTags(fields),NativeCopifierHousingEdit::material);}
