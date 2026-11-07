@@ -1,0 +1,6 @@
+tasks.register('testNativeScreenJoinedJournalAffine', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.NativeScreenJoinedJournalChecks'
+ systemProperty 'screenJoinedJournalReference',file('../../testclient/fixtures/screen-joined-journal-gl.jsonl.gz').absolutePath
+}
