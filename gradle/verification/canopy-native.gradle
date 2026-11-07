@@ -71,3 +71,11 @@ task exportCanopySavedReference(type: JavaExec) {
     args file('build/test-artifacts/canopy-saved-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportCanopyExistingItemReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyExistingItemLegacyOracle'
+    args file('build/test-artifacts/canopy-existing-item-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}

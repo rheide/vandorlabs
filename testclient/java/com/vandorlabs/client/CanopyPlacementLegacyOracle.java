@@ -24,7 +24,7 @@ public final class CanopyPlacementLegacyOracle {
     private static JsonArray pos(BlockPos p) {
         JsonArray out=new JsonArray(); out.add(p.getX());out.add(p.getY());out.add(p.getZ());return out;
     }
-    private static NBTTagCompound input(int profile) {
+    static NBTTagCompound input(int profile) {
         if(profile==0)return null;
         NBTTagCompound tag=new NBTTagCompound();
         if(profile==2){tag.setInteger("CanopyDepth",17);tag.setInteger("CanopyScale",90);tag.setInteger("CanopyShade",2);tag.setInteger("CanopyTint",3);tag.setInteger("CanopyTextureLayout",2);tag.setBoolean("CanopyTileMaterial",true);tag.setIntArray("CanopyChannels",new int[]{7,3,7});tag.setBoolean("CanopyOpenable",true);}
