@@ -199,3 +199,6 @@ The unbound `Cell.withGearPose` alternative copies only the seven approved scala
 
 
 The per-progress carried-arm snapshot now uses the immutable pose overlay; configuration, capture and ownership paths retain the full writer. The existing exact built-JAR player fixture passes 877 assertions after this binding, including complete stroke, reversal, moving saved replacement, dedicated dialog and parent-channel/manual behavior. Compact motion remains unchanged. This acceptance precedes the new parking-hold integration and does not cover that separate input/progression gate. Collision-description serialization remains a separate optimization pending focused proof.
+
+
+After parking-hold integration, carried progression validates installed ownership before input, samples the input and then freezes while the hold remains active on both server and client. The scalar overlay includes the optional hold marker and removes stale true markers after release. Thirty-two phase/input/blocked/hold combinations at all three payload sizes compare exactly with the complete writer. The independent 720-case hold corpus, Java 8 assemble and dedicated linkage also pass. Actual held recapture in a carried vehicle remains a separate acceptance boundary; native held-world checks alone do not establish it.

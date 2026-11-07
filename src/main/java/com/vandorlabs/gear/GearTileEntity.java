@@ -731,7 +731,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
     /** Small current pose projection; retained payloads and capability trees are deliberately absent. */
     public NBTTagCompound currentPoseData(){
-        NBTTagCompound tag=new NBTTagCompound();tag.setInteger("GearRevision",motionRevision);tag.setBoolean("GearBlocked",motionBlocked);tag.setBoolean("GearTargetDeployed",deployedTarget);tag.setBoolean("GearSignalKnown",signalKnown);tag.setBoolean("GearLastSignal",lastSignal);tag.setDouble("GearProgress",progress);
+        NBTTagCompound tag=new NBTTagCompound();if(parkingHold)tag.setBoolean("GearParkingHold",true);tag.setInteger("GearRevision",motionRevision);tag.setBoolean("GearBlocked",motionBlocked);tag.setBoolean("GearTargetDeployed",deployedTarget);tag.setBoolean("GearSignalKnown",signalKnown);tag.setBoolean("GearLastSignal",lastSignal);tag.setDouble("GearProgress",progress);
         rememberSurfaceEndpoint();if(surfaceDepartureSaved&&progress>0&&progress<1)tag.setBoolean("SurfaceDepartureActive",surfaceDepartureActive);return tag;
     }
     private NBTTagCompound writeOwnData(NBTTagCompound tag){
