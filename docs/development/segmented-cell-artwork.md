@@ -2,7 +2,7 @@
 
 A segment is one existing cell in the segment/window grid. Each cell already owns its local Window, Shape and Glass choices; individual artwork follows that same ownership rather than defining a second coordinate system.
 
-The existing `SegmentedTexture` remains the shared default. An optional integer `SegmentedCellTexture` selects a cell override. Absence inherits the shared default; an explicit `-1` selects the existing default artwork and is distinct from inheritance. Material validity uses the existing Segmented Door catalog/custom-material predicate. No sentinel is reserved from the custom material namespace.
+The existing `SegmentedTexture` remains the shared default. An optional integer `SegmentedCellTexture` selects a cell override. Absence inherits the shared default; an explicit `-1` selects the existing default artwork and is distinct from inheritance. Material validity uses the existing Segmented Door catalog/custom-material predicate. No sentinel is reserved from the custom material namespace. Source world loads retain an unsupported or malformed cell-artwork field unchanged and draw inherited artwork; explicit local/reset/all edits replace that field. Configured-item and command decoders refuse unsupported values. Native failed-load snapshots retain their existing inert recovery behavior.
 
 Existing saves without this field keep their artwork. The existing 15-byte settings body and legacy 14-byte decode remain unchanged. The new cell-artwork operation is appended after operations 0–5 and carries one bounded choice for the currently authorized menu cell, rather than accepting an arbitrary coordinate list. Saved/projected grids remain bounded by the existing 32×32 topology.
 
