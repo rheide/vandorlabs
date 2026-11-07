@@ -23,7 +23,8 @@ public final class NativeDoorArtwork {
   try(var reader=new InputStreamReader(input,StandardCharsets.UTF_8)){var object=JsonParser.parseReader(reader).getAsJsonObject();return object.has("elements")?object.getAsJsonArray("elements"):elements(object.get("parent").getAsString(),depth+1);}catch(java.io.IOException failure){throw new IllegalStateException("Door model "+model,failure);}
  }
  /** Compare active inherited geometry before applying builtin float correction to pack models. */
- public static boolean canonicalGeometry(String model,net.minecraft.server.packs.resources.ResourceManager resources){try{return elements(model).equals(activeElements(model,resources,0));}catch(java.io.IOException|RuntimeException unavailable){return false;}}
+ public static boolean canonicalGeometry(String model,net.minecraft.server.packs.resources.ResourceManager resources){return canonicalGeometry(model,model,resources);}
+ public static boolean canonicalGeometry(String builtin,String active,net.minecraft.server.packs.resources.ResourceManager resources){try{return elements(builtin).equals(activeElements(active,resources,0));}catch(java.io.IOException|RuntimeException unavailable){return false;}}
  private static JsonArray activeElements(String model,net.minecraft.server.packs.resources.ResourceManager resources,int depth)throws java.io.IOException{
   if(depth>16)throw new IllegalArgumentException("Cyclic active Door model");var id=net.minecraft.resources.ResourceLocation.parse(model);var resource=resources.getResource(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath(id.getNamespace(),"models/"+id.getPath()+".json")).orElseThrow();
   try(var reader=resource.openAsReader()){var object=JsonParser.parseReader(reader).getAsJsonObject();if(object.has("elements"))return object.getAsJsonArray("elements");return object.has("parent")?activeElements(object.get("parent").getAsString(),resources,depth+1):new JsonArray();}
