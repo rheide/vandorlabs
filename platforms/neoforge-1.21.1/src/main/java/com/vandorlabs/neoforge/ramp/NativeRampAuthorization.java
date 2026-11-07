@@ -26,7 +26,10 @@ public final class NativeRampAuthorization {
  private static boolean installed(NativeRampEntity owner){if(!main(owner)||owner.inert()||owner.isRemoved())return false;var level=(ServerLevel)owner.getLevel();var pos=owner.getBlockPos();var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);return chunk!=null&&chunk.getBlockEntities().get(pos)==owner;}
  private static Data data(ServerLevel level){return level.getDataStorage().computeIfAbsent(new SavedData.Factory<>(Data::new,Data::load,null),FILE);}
  public static boolean authorize(NativeRampEntity owner,ServerPlayer actor){
-  if(!installed(owner)||actor==null||actor.level()!=owner.getLevel()||!actor.isAlive()||actor.isSpectator()||!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(actor,owner))return false;
+  if(!installed(owner)||actor==null||!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(actor,owner))return false;return grant(owner,actor);
+ }
+ static boolean grantInstalled(NativeRampEntity owner,ServerPlayer actor){return installed(owner)&&com.vandorlabs.neoforge.placement.NativeStationaryPlacement.mutating(owner.getLevel(),owner.getBlockPos())&&grant(owner,actor);}
+ private static boolean grant(NativeRampEntity owner,ServerPlayer actor){if(!installed(owner)||actor==null||actor.level()!=owner.getLevel()||!actor.isAlive()||actor.isSpectator())return false;
   var store=data((ServerLevel)owner.getLevel());if(store.opaque!=null||!store.rows.containsKey(owner.getBlockPos().asLong())&&store.rows.size()>=MAX_RECEIPTS)return false;
   var receipt=new Receipt(actor.getUUID(),UUID.randomUUID(),type(owner));store.rows.put(owner.getBlockPos().asLong(),receipt);store.setDirty();BOUND.put(owner,receipt.nonce);PENDING.remove(owner);UNLOADED.remove(owner);owner.setChanged();return true;
  }
