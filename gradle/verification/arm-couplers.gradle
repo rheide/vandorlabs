@@ -74,3 +74,10 @@ task testCouplerGuiAddress(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.CouplerGuiAddressChecks'
  maxHeapSize = '256m'
 }
+
+task exportCouplerInputSource(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.CouplerInputSourceChecks'
+ maxHeapSize = '512m'
+}
