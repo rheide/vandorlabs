@@ -5,3 +5,6 @@ tasks.register('testCopifierReaderReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/copifier-reader-source.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierReaderReference'))systemProperty 'vandorlabs.copifierReaderReference',file(project.property('copifierReaderReference')).absolutePath
+}
