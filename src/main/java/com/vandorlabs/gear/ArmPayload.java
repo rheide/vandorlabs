@@ -597,7 +597,10 @@ public final class ArmPayload {
         int depth=READ_DEPTH.get();if(depth>=8)throw new IllegalArgumentException("Arm payload nesting exceeds eight snapshots");READ_DEPTH.set(depth+1);
         try{return readBounded(tag);}finally{READ_DEPTH.set(depth);}
     }
+    private static void headerType(NBTTagCompound tag,String key,int type){if(tag.hasKey(key)&&!tag.hasKey(key,type))throw new IllegalArgumentException("Invalid attachment header type: "+key);}
     private static ArmPayload readBounded(NBTTagCompound tag){
+        headerType(tag,"Materialized",1);headerType(tag,"GridAligned",1);headerType(tag,"Offset",4);headerType(tag,"PlacedOffset",4);headerType(tag,"PlacedBlocks",10);headerType(tag,"OwnershipDimension",3);headerType(tag,"OwnershipJournal",9);
+        if(tag.hasKey("OwnershipJournal",9)){net.minecraft.nbt.NBTTagList entries=(net.minecraft.nbt.NBTTagList)tag.getTag("OwnershipJournal");if(entries.tagCount()>0&&entries.getTagType()!=10)throw new IllegalArgumentException("Invalid attachment journal entry type");}
         VehicleStructure structure=VehicleStructure.readDisplay(tag.getCompoundTag("Blocks"));if(structure.cells.isEmpty()||structure.cells.size()>MAX_BLOCKS)throw new IllegalArgumentException("Oversized arm payload");
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&TileEntity.create(null,cell.tileData())==null)throw new IllegalArgumentException("Attachment tile cannot be loaded; original snapshot retained");
         BlockPos offset=BlockPos.fromLong(tag.getLong("Offset")),placed=BlockPos.fromLong(tag.getLong("PlacedOffset"));
@@ -605,7 +608,7 @@ public final class ArmPayload {
         ArmPayload payload=new ArmPayload(structure,offset,tag.getBoolean("Materialized"),placed);
         net.minecraft.nbt.NBTTagList journal=tag.getTagList("OwnershipJournal",10);if(journal.tagCount()>structure.cells.size())throw new IllegalArgumentException("Invalid attachment ownership journal");
         payload.journalDimension=tag.getInteger("OwnershipDimension");
-        for(int i=0;i<journal.tagCount();i++){NBTTagCompound entry=journal.getCompoundTagAt(i);int cell=entry.getInteger("Cell");if(cell<0||cell>=structure.cells.size()||!entry.hasKey("Pos",4)||payload.ownershipJournal.put(cell,BlockPos.fromLong(entry.getLong("Pos")))!=null)throw new IllegalArgumentException("Invalid attachment ownership entry");}
+        for(int i=0;i<journal.tagCount();i++){NBTTagCompound entry=journal.getCompoundTagAt(i);for(String key:entry.getKeySet())if(!key.equals("Cell")&&!key.equals("Pos"))throw new IllegalArgumentException("Unknown attachment ownership entry field");if(!entry.hasKey("Cell",3))throw new IllegalArgumentException("Invalid attachment ownership index");int cell=entry.getInteger("Cell");if(cell<0||cell>=structure.cells.size()||!entry.hasKey("Pos",4)||payload.ownershipJournal.put(cell,BlockPos.fromLong(entry.getLong("Pos")))!=null)throw new IllegalArgumentException("Invalid attachment ownership entry");}
         if(tag.hasKey("PlacedBlocks",10)){payload.placedBlocks=VehicleStructure.readDisplay(tag.getCompoundTag("PlacedBlocks"));if(payload.placedBlocks.cells.size()!=structure.cells.size())throw new IllegalArgumentException("Invalid rotated attachment mapping");if(!tag.hasKey("GridTileMapping"))for(VehicleStructure.Cell cell:payload.placedBlocks.cells)if(cell.hasTileData())throw new IllegalArgumentException("Unsupported rotated attachment tile");}
         if(tag.hasKey("GridTileMapping")||tag.hasKey("GridTileBasis")){
             if(!tag.hasKey("GridTileMapping",3)||tag.getInteger("GridTileMapping")!=1||!tag.hasKey("GridTileBasis",11)||payload.placedBlocks==null)throw new IllegalArgumentException("Invalid typed attachment mapping");
