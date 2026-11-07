@@ -97,6 +97,7 @@ public final class ScreenHousingTextures {
         if(lightOnly(choice))return false;
         com.google.gson.JsonObject entry=entry(choice);
         if(entry!=null && entry.has("detail") && entry.get("detail").getAsInt()>0)return false;
+        if(entry!=null&&entry.has("generalMaterial")&&entry.get("generalMaterial").getAsBoolean())return true;
         String category=category(choice);
         return !category.equals("Frame") && !category.equals("Screens") && !category.equals("Lights") && !HousingCategoryPolicy.door(category) && !HousingCategoryPolicy.doubleDoor(category);
     }

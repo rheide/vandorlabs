@@ -28,6 +28,7 @@ public final class NativeDoorAssets {
     /** Door previews retain complete1:2 artwork instead of the cube catalog's lower face crop. */
     /** Catalog category paths include company submenus while artwork-detail filtering stays unchanged. */
     public static boolean selectable(ModernFinishCatalog.Entry entry,boolean large,int detail){
+        if(com.vandorlabs.segmented.SegmentedArtworkPolicy.segmentedOnly(entry.id()))return false;
         String category=entry.category();boolean door=com.vandorlabs.tiles.HousingCategoryPolicy.door(category)||large&&com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(category);
         return entry.general()||door&&(entry.door()==null||entry.door().detail()==detail);
     }

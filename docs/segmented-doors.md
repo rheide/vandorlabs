@@ -32,7 +32,7 @@ Craft eight sections from six iron ingots, two pistons and one redstone dust. Mi
 
 ## Rendering and saved state
 
-Closed, settled plain tiled panels render in Minecraft's chunk geometry. Window panels and other layout modes retain cached per-column geometry. Moving panels share the atlas batch and reuse bounded geometry templates at a 120 Hz animation cadence. Raised panels use the same template cache. The cache retains vertex-format information and clears on atlas reload or a format change.
+Closed, settled plain tiled panels render in Minecraft's chunk geometry. Window panels and other layout modes retain cached per-column geometry. Moving panels share the atlas batch and reuse bounded geometry templates at a 120 Hz animation cadence. Raised panels use the same template cache. The cache retains vertex-format information and clears on atlas reload or a format change. Authored gate models and fractional-alpha image rows stream their fixed prepared meshes at the pause-aware presentation pose; they do not require a mesh for every animation sample.
 
 The client retains closed fallback panels until all affected chunk sections finish uploading their replacement mesh. Off-screen sections are queued asynchronously through Minecraft's chunk dispatcher, with duplicate sections combined and at most eight submissions per client tick. Opening begins after the closed terrain panels are removed; closing switches back to terrain only after the closed panels have uploaded. All columns and rows in one opening or closing operation share the same server start, phase, duration and speed, including columns with different saved speed histories. Their client motion also shares one pause-aware clock, including delayed column updates. Repeated or older motion packets do not restart it.
 
@@ -40,9 +40,18 @@ The server owns collision and the saved motion timeline. Sections remain native 
 
 ## Panel artwork
 
-Open **Door** to select general materials, Frame, Trapdoors, Doors or Large Doors artwork. Use **Custom...** to sample a block from your inventory without consuming it. Custom artwork is not reflected across neighbouring segments. **Texture: Tile / Stretch / Fit (aspect)** uses the same layout choices as Programmable Door. **Artwork: This segment** changes only the block whose dialog you opened. Select **All segments** to replace artwork across the linked door and clear individual overrides. **Use shared artwork** resets the selected block to the shared choice. Old doors without overrides keep their original artwork. The original dark slatted panel remains the default; **Industrial → Segmented Panel** and **Segmented Panel Light Grey** expose its two finishes to other programmable blocks too. The original artwork is the standalone `segmented/segmented_panel.png` texture. Changing artwork preserves the door’s channels, motion and saved section ownership.
+Open **Door** to select general materials, Frame, Trapdoors, Doors or Large Doors artwork. Use **Custom...** to sample a block from your inventory without consuming it. Custom artwork is not reflected across neighbouring segments. **Texture: Tile / Stretch / Fit (aspect)** uses the same layout choices as Programmable Door. **Artwork: This segment** changes only the block whose dialog you opened. Select **All segments** to replace artwork across the linked door and clear individual overrides. **Use shared artwork** resets the selected block to the shared choice. Old doors without overrides keep their original artwork. The original dark slatted panel remains the default; **Doors → Segmented → Dark Segmented Panel / Light Segmented Panel** exposes its two finishes. Their saved choices and general-material availability remain unchanged. The original artwork is the standalone `segmented/segmented_panel.png` texture. Changing artwork preserves the door’s channels, motion and saved section ownership.
 
 ![Segmented Door artwork and window controls](images/segmented-door-window-settings.png)
+
+**Doors → Segmented** also contains **Raised Black Panels**, **Ribbed Blue Steel**, **Spiral Aluminum Glazing**, and the **Picket**, **Industrial** and **Lattice** gate models. These choices work with both artwork scopes and retain their choice through configured picking and copied settings. Spiral Aluminum Glazing blends its authored translucent panes while keeping the section edges opaque.
+
+![Three supplied gate styles and Spiral Aluminum Glazing on existing sections](images/segmented-supplied-artwork.png)
+
+Gate models replace the panel/window faces with their authored bars. Matching neighbouring models join only where their posed edges meet; different styles, mounting planes or incompatible motion stay separate. Bars keep their authored scale. The gate choice hides inapplicable window, shape and image-layout controls, while preserving those settings for a later return to panel artwork. Motion, speed, position and artwork scope remain available. Sections retain the same two-pixel collision/fluid envelope and a single selection outline; precise interaction rays pass through the authored openings.
+
+![Gate artwork with the dedicated motion and scope controls](images/segmented-gate-settings.png)
+
 
 ## Window segments
 

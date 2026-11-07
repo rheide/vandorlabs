@@ -10,6 +10,7 @@ public final class SegmentedArtworkPolicy {
     public static String tileId(int kind){if(kind<0||kind>=TILES.length)throw new IllegalArgumentException("Segmented tile kind");return TILES[kind];}
     public static int gate(String id){for(int kind=0;kind<GATES.length;kind++)if(GATES[kind].equals(id))return kind;return SegmentedGateJoin.NONE;}
     public static boolean translucent(String id){return TILES[2].equals(id);}
+    public static boolean segmentedOnly(String id){if(gate(id)>=0)return true;for(String tile:TILES)if(tile.equals(id))return true;return false;}
     public static boolean complex(String id){return gate(id)>=0||translucent(id);}
     /** Category moves must not narrow the established general-material eligibility of these saved IDs. */
     public static boolean legacyGeneral(String id){return "segmented_door_panel".equals(id)||"segmented_door_panel_light".equals(id);}

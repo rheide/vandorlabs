@@ -18,6 +18,7 @@ public final class NavigationScreenSettings {
         if(ScreenHousingTextures.lightOnly(choice))return false;
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
         if(entry!=null&&entry.has("detail")&&entry.get("detail").getAsInt()>0)return false;
+        if(ScreenHousingTextures.generalTexture(choice))return true;
         String category=ScreenHousingTextures.category(choice);
         if(com.vandorlabs.tiles.HousingCategoryPolicy.door(category)||com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(category)||category.equals("Lights"))return false;
         return !category.equals("Screens")||entry!=null&&entry.has("source");

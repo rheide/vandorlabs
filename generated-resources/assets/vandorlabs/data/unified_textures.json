@@ -6965,15 +6965,17 @@
   },
   {
     "id": "segmented_door_panel",
-    "label": "Segmented Panel",
-    "category": "Industrial",
-    "source": "segmented/segmented_panel"
+    "label": "Dark Segmented Panel",
+    "category": "Doors/Segmented",
+    "source": "segmented/segmented_panel",
+    "generalMaterial": true
   },
   {
     "id": "segmented_door_panel_light",
-    "label": "Segmented Panel Light Grey",
-    "category": "Industrial",
-    "source": "segmented/segmented_panel_light"
+    "label": "Light Segmented Panel",
+    "category": "Doors/Segmented",
+    "source": "segmented/segmented_panel_light",
+    "generalMaterial": true
   },
   {
     "id": "company_door_pinnacle_standard",
@@ -7214,5 +7216,41 @@
     "source": "utility_doors/warehouse_door_futuristic",
     "rectangular": true,
     "doorArtwork": true
+  },
+  {
+    "id": "segmented_tile_raised_black_panels",
+    "label": "Raised Black Panels",
+    "category": "Doors/Segmented",
+    "source": "segmented_doors/raised_black_panels"
+  },
+  {
+    "id": "segmented_tile_ribbed_blue_steel",
+    "label": "Ribbed Blue Steel",
+    "category": "Doors/Segmented",
+    "source": "segmented_doors/ribbed_blue_steel"
+  },
+  {
+    "id": "segmented_tile_spiral_aluminum_glazing",
+    "label": "Spiral Aluminum Glazing",
+    "category": "Doors/Segmented",
+    "source": "segmented_doors/spiral_aluminum_glazing"
+  },
+  {
+    "id": "segmented_gate_picket",
+    "label": "Picket Gate",
+    "category": "Doors/Segmented",
+    "source": "segmented_gates/previews/picket"
+  },
+  {
+    "id": "segmented_gate_industrial",
+    "label": "Industrial Gate",
+    "category": "Doors/Segmented",
+    "source": "segmented_gates/previews/industrial"
+  },
+  {
+    "id": "segmented_gate_lattice",
+    "label": "Lattice Gate",
+    "category": "Doors/Segmented",
+    "source": "segmented_gates/previews/lattice"
   }
 ]

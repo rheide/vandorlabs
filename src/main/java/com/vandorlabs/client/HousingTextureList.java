@@ -172,6 +172,7 @@ final class HousingTextureList {
     private static HousingTextureList forDoorOptions(int detail,int x,int y,int width,int selected,boolean large,boolean glassLeaves,boolean frames) {
         return new HousingTextureList(x,y,width,selected,8,null,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
+            if(choice>=0&&choice<ScreenHousingTextures.IDS.length&&com.vandorlabs.segmented.SegmentedArtworkPolicy.segmentedOnly(ScreenHousingTextures.IDS[choice]))return false;
             if(!glassLeaves && entry!=null && entry.has("design") && (entry.get("design").getAsInt()==15 || entry.get("design").getAsInt()==16))return false;
             return frames && frameAllowed(choice,false) || (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || (com.vandorlabs.tiles.HousingCategoryPolicy.door(ScreenHousingTextures.category(choice)) || large && com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(ScreenHousingTextures.category(choice)))
                     && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
