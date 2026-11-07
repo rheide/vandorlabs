@@ -60,3 +60,11 @@ tasks.register('testRampPartCollisionReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/ramp-generation-source.jsonl.gz').absolutePath,'--collision'
  maxHeapSize='1g'
 }
+
+tasks.register('testRampPartSupportReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampGeometryChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-support-source.jsonl.gz').absolutePath,'--support'
+ maxHeapSize='1g'
+}
