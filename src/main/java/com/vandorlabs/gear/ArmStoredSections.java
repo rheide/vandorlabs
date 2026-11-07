@@ -36,6 +36,12 @@ public final class ArmStoredSections {
             cells.add(new VehicleStructure.Cell(at.subtract(arm.getPos()),world.getBlockState(at),VehicleTileData.translated(world.getTileEntity(at).writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(arm.getPos()))));}
         return cells.isEmpty()?null:new ArmStoredSections(cells);
     }
+    /** Writer-only chosen-candidate path; validation belongs to the read-only composition preflight. */
+    static NBTTagCompound detachedTag(List<VehicleStructure.Cell> relative){
+        if(relative.isEmpty()||relative.size()>512)throw new IllegalArgumentException("Invalid stored arm sections");
+        Set<BlockPos> positions=new HashSet<>();for(VehicleStructure.Cell cell:relative)if(!positions.add(cell.pos))throw new IllegalArgumentException("Duplicate stored arm section");
+        return new ArmStoredSections(relative).write();
+    }
     public static NBTTagCompound retain(java.util.List<VehicleStructure.Cell> relative){return read(new ArmStoredSections(relative).write()).write();}
     public static java.util.List<VehicleStructure.Cell> retained(NBTTagCompound tag){return read(tag).cells;}
     static ArmStoredSections read(NBTTagCompound tag){
