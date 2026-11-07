@@ -3,7 +3,7 @@
 import hashlib
 import json
 from PIL import Image
-from generate_reader_resources import ROOT, ASSETS
+from generate_reader_resources import ROOT, ASSETS, OUT
 
 
 def main():
@@ -31,6 +31,10 @@ def main():
             raise AssertionError('Reader standard pixels changed ' + entry['id'])
     if len(manifest['models']) != 24 or len(manifest.get('items', [])) != 2 or len(manifest['textures']) != 8 or quads != 576:
         raise AssertionError('Incomplete reader inventory ' + str((len(manifest['models']), len(manifest['textures']), quads)))
+    for kind in ('access_card_slot','data_chip_slot'):
+        loot=json.loads((OUT/'data/vandorlabs/loot_table/blocks'/str(kind+'.json')).read_text())
+        if loot['pools'][0]['entries'][0]['name']!='vandorlabs:'+kind or loot['pools'][0]['rolls']!=1:raise AssertionError('Canonical reader loot identity '+kind)
+        if (ROOT/'src/main/resources/assets/vandorlabs/recipes'/str(kind+'.json')).exists():raise AssertionError('Reader recipe boundary changed; freeze actual Source before projection')
     print('Reader resources source PASS models=24 items=2 sprites=8 frameQuads=576 exact authored geometry/materials/source RGBA and item transforms; actual native baking checked separately')
 
 

@@ -64,6 +64,8 @@ def generate():
         destination.parent.mkdir(parents=True, exist_ok=True)
         destination.write_text(json.dumps(value, separators=(',', ':')) + '\n')
         items.append('vandorlabs:item/' + kind + '_slot')
+        loot=OUT/'data/vandorlabs/loot_table/blocks'/str(kind+'_slot.json');loot.parent.mkdir(parents=True,exist_ok=True)
+        loot.write_text(json.dumps({'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+kind+'_slot'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]},separators=(',',':'))+'\n')
     for company in companies(ROOT):
         texture('vandorlabs:blocks/access_reader/logos/' + company)
     manifest = dict(models=models, items=items, textures=list(textures.values()), faces=faces)
