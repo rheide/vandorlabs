@@ -14,6 +14,10 @@ import net.neoforged.neoforge.event.level.LevelEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCanopyLifecycle {
     private NativeCanopyLifecycle(){}
+    private static java.util.function.BiConsumer<Level,BlockPos> CLIENT_RETIRE=(world,pos)->{};
+    /** Client binding only; the common lifecycle never loads a renderer or a client clock class. */
+    public static void clientRetirement(java.util.function.BiConsumer<Level,BlockPos> retire){CLIENT_RETIRE=java.util.Objects.requireNonNull(retire);}
+    static void retireClientRoot(NativeCanopyEntity host){var world=host.getLevel();if(world==null||!world.isClientSide)return;var links=host.links();if(links.anchor()!=null&&!links.anchor().equals(host.getBlockPos()))return;CLIENT_RETIRE.accept(world,links.pair()==null?host.getBlockPos():links.pair());CLIENT_RETIRE.accept(world,host.getBlockPos());}
     private static final Map<Level,NativeCanopyGeometry.Cache> PHYSICAL=Collections.synchronizedMap(new WeakHashMap<>());
     public static NativeCanopyEntity at(Level level,BlockPos pos){
         if(level==null)return null;if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Canopy preparation requires owning thread");
