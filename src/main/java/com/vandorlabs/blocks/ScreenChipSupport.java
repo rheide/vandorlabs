@@ -32,12 +32,16 @@ public final class ScreenChipSupport {
     public static ItemStack stack(TileEntityAnimatedScreenSelector tile){TileEntityTokenSlot reader=reader(tile);return reader==null?ItemStack.EMPTY:reader.getStackInSlot(0);}
     /** Console openings face the player; the full Diagonal Screen retains its sideways opening. */
     public static MachineMountSurface localMount(IBlockState state,TileEntityAnimatedScreenSelector tile){
-        Block block=state.getBlock();Vec3d center,normal;
-        if(block instanceof BlockDiagonalHalfConsole){boolean upper=state.getValue(BlockDiagonalHalfConsole.UPPER);center=new Vec3d(.5,upper?.937:.063,.25);normal=new Vec3d(0,upper?-1:1,0);}
-        else if(block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole){center=new Vec3d(.22,.068,.24+(tile.isCeilingMounted()?com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,tile.getCeilingPosition(1))/16:0));normal=new Vec3d(0,1,0);}
-        else{boolean upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);center=new Vec3d(.5,upper?.86:.14,.14);normal=new Vec3d(0,upper?-1:1,-1).normalize();}
-        Vec3d v=block instanceof BlockProgrammableDiagonalScreen?new Vec3d(1,0,0):new Vec3d(0,0,-1),u=normal.crossProduct(v);return new MachineMountSurface(center,u,v,normal,.34,.34);
+        Block block=state.getBlock();com.vandorlabs.screen.ScreenFamily family;boolean upper=false;
+        if(block instanceof BlockDiagonalHalfConsole){family=com.vandorlabs.screen.ScreenFamily.HALF_DIAGONAL;upper=state.getValue(BlockDiagonalHalfConsole.UPPER);}
+        else if(block instanceof BlockProgrammableHalfConsole)family=com.vandorlabs.screen.ScreenFamily.HALF_CONSOLE;
+        else if(block instanceof BlockProgrammableConsole)family=com.vandorlabs.screen.ScreenFamily.CONSOLE;
+        else{family=com.vandorlabs.screen.ScreenFamily.DIAGONAL;upper=state.getValue(BlockProgrammableDiagonalScreen.INVERTED);}
+        com.vandorlabs.screen.ScreenChipMount.Frame frame=com.vandorlabs.screen.ScreenChipMount.local(family,upper,tile.isCeilingMounted(),tile.getCeilingPosition(1));
+        return new MachineMountSurface(vector(frame.center),vector(frame.u),vector(frame.v),vector(frame.normal),frame.width,frame.height);
     }
+    private static Vec3d vector(com.vandorlabs.screen.ScreenChipMount.Point point){return new Vec3d(point.x,point.y,point.z);}
+
     private static final java.util.Map<IBlockState,MachineMountSurface[]> FRAMES=new java.util.HashMap<>();
     public static synchronized MachineMountSurface mount(IBlockState state,TileEntityAnimatedScreenSelector tile){int slot=state.getBlock() instanceof BlockProgrammableHalfConsole&&tile.isCeilingMounted()?tile.getCeilingPosition(1):1;MachineMountSurface[] frames=FRAMES.computeIfAbsent(state,key->new MachineMountSurface[3]);if(frames[slot]==null){MachineMountSurface local=localMount(state,tile);EnumFacing facing=RedstoneScreenInteractions.facing(state);frames[slot]=new MachineMountSurface(rotate(local.center,facing),direction(local.u,facing),direction(local.v,facing),direction(local.normal,facing),local.width,local.height);}return frames[slot];}
     private static Vec3d direction(Vec3d v,EnumFacing f){return rotate(v.addVector(.5,.5,.5),f).subtract(.5,.5,.5);}

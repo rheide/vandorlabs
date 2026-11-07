@@ -32,12 +32,20 @@ public final class ScreenChipMount {
     public static synchronized Frame frame(ScreenFamily family,int facing,boolean upper,boolean ceiling,int position){
         if(!integrated(family)||facing<0||facing>5||position<0||position>2)throw new IllegalArgumentException("Unsupported chip mounting pose");
         int key=((((family.ordinal()*6+facing)*2+(upper?1:0))*2+(ceiling?1:0))*3+position);Frame cached=FRAMES[key];if(cached!=null)return cached;
+        Frame local=local(family,upper,ceiling,position);
+        return FRAMES[key]=new Frame(rotate(local.center,facing),direction(local.u,facing),direction(local.v,facing),direction(local.normal,facing));
+    }
+    private static final Frame[] LOCAL=new Frame[7*2*2*3];
+    /** Authored North-local values, before the released world-facing arithmetic. */
+    public static synchronized Frame local(ScreenFamily family,boolean upper,boolean ceiling,int position){
+        if(!integrated(family)||position<0||position>2)throw new IllegalArgumentException("Unsupported local chip mounting pose");
+        int key=((family.ordinal()*2+(upper?1:0))*2+(ceiling?1:0))*3+position;Frame cached=LOCAL[key];if(cached!=null)return cached;
         Point center,normal,v;
         if(family==ScreenFamily.HALF_DIAGONAL){center=new Point(.5,upper?.937:.063,.25);normal=new Point(0,upper?-1:1,0);}
         else if(family==ScreenFamily.CONSOLE||family==ScreenFamily.HALF_CONSOLE){center=new Point(.22,.068,.24+(ceiling?com.vandorlabs.render.InputSurfaceLayout.ceilingStart(16,position)/16:0));normal=new Point(0,1,0);}
         else{center=new Point(.5,upper?.86:.14,.14);/* 1.12 Vec3d.normalize uses MathHelper.sqrt, which returns float. */double length=(double)(float)Math.sqrt(2);normal=new Point(0,(upper?-1D:1D)/length,-1D/length);}
         v=family==ScreenFamily.DIAGONAL?new Point(1,0,0):new Point(0,0,-1);Point u=new Point(normal.y*v.z-normal.z*v.y,normal.z*v.x-normal.x*v.z,normal.x*v.y-normal.y*v.x);
-        return FRAMES[key]=new Frame(rotate(center,facing),direction(u,facing),direction(v,facing),direction(normal,facing));
+        return LOCAL[key]=new Frame(center,u,v,normal);
     }
     private static Point direction(Point p,int facing){Point q=rotate(new Point(p.x+.5,p.y+.5,p.z+.5),facing);return new Point(q.x-.5,q.y-.5,q.z-.5);}
     private static Point rotate(Point p,int facing){double x=p.x-.5,y=p.y-.5,z=p.z-.5;switch(facing){case 5:return new Point(.5-z,p.y,.5+x);case 3:return new Point(.5-x,p.y,.5-z);case 4:return new Point(.5+z,p.y,.5-x);case 1:return new Point(.5-x,.5-z,.5-y);case 0:return new Point(p.x,.5+z,.5-y);default:return p;}}
