@@ -9,7 +9,8 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 /** Native adapter for the legacy configurizer and held-item adventure permissions. */
 public final class NativeConfigurationAccess {
     public static boolean canConfigure(Player player) {
-        return player.isCreative() || player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get());
+        return !(player.getMainHandItem().getItem() instanceof NativeOwnsBlockInteraction)
+            && (player.isCreative() || player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get()));
     }
     public static boolean canEdit(Player player, Level level, BlockPos pos) {
         return canConfigure(player) && canEditDialog(player,level,pos);

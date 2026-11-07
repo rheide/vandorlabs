@@ -289,3 +289,6 @@ The private Storage host now passes Source inventory/comparator/automation, vani
 
 
 Native single-target housing copy now applies through existing typed installed-host setters. All 81 canonical family/profile results match the independent Source post-apply captures while retaining entity identity, orientation, unrelated saved data and the clipboard. Malformed/spectator requests refuse before changing the target. Copied material and transmission metadata survive a fresh process, including a proven old transmitter module that is retired once rather than overriding the new range again. No whole tile/platform/inventory reload is used for the copy operation. The actual Copifier item/menu route, connected behavior, crafting and undo remain pending.
+
+
+The private native held Copifier route now passes 18 actual server GameMode housing capture/apply cases across Survival and Creative. It shares exact held-object/menu-preview authentication with the existing transmitter. The 22-byte options payload is bounded before allocation and validates flags/mask bits; item, packet and authorization fixtures pass 1,075 checks. Connected mode currently refuses without mutation. Dedicated menu-provider checks do not establish native client-screen acceptance, and there is no public Copifier registration yet.
