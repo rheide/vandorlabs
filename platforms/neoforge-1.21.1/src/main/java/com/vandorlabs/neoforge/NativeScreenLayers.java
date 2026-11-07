@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.resources.ResourceLocation;
 import net.neoforged.neoforge.client.event.RegisterShadersEvent;
 
-/** Explicit opt-in shader hook; no client/global registration is installed by this inactive backend. */
+/** Screen shader backend; canonical client bindings own registration and program lifetime. */
 public final class NativeScreenLayers {
  private static ShaderInstance content,frame;
  private static final Map<Key,RenderType> TYPES=new LinkedHashMap<>(32,.75F,true){protected boolean removeEldestEntry(Map.Entry<Key,RenderType> entry){return size()>4096;}};private record Key(ResourceLocation texture,boolean frame,boolean bias){}

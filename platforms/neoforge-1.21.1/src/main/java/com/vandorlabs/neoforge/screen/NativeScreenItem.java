@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 
-/** Inactive specialized configured Screen placement; all choices precede inventory transfer and observers. */
+/** Configured Screen placement; all choices precede inventory transfer and observers. */
 public class NativeScreenItem extends BlockItem {
     public NativeScreenItem(NativeScreenBlock block,Properties properties){super(block,properties);}
     public static boolean mutating(Level level,BlockPos pos){return NativeStationaryPlacement.mutating(level,pos);}

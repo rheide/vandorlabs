@@ -19,7 +19,7 @@
 
 - Fix screen pulses remaining on after their control artwork is hidden and restored. Restored pulses keep their original expiry time.
 
-- Share Programmable Screen activation and legacy artwork migration while preserving existing Forge dialogs, saved control rows and joined power behavior. Native screen-family foundations remain unregistered.
+- Share Programmable Screen activation and legacy artwork migration while preserving existing Forge dialogs, saved control rows and joined power behavior. Enable the seven original standalone Screen roles in the experimental native build with dedicated editing, authored configured items, joined media/rows and non-Vehicle Chip displays.
 - Preserve native Segmented Door legacy water through opposite-side edits and complete drainage, preventing lost or recreated water after reload.
 
 - Enable the native ordinary and Large programmable Doors with shared authored geometry, reversible motion, full company artwork, padded configured icons and the dedicated Door/Frame/Redstone/Security/Glass editor. Preserve paired controls, channel banks and credential ownership through restart and mining. Large Doors preserve nine-part placement, old-schema follower defaults, per-part water outlet ownership and credential recovery when mining any part.

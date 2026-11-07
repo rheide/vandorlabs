@@ -26,7 +26,7 @@ public final class NativeScreenItemModelChecks {
     private static void need(boolean value,String why){if(!value)throw new AssertionError("Screen inventory: "+why);}
     @SubscribeEvent public static void additional(ModelEvent.RegisterAdditional event){if(active())for(String name:NAMES)event.register(id(name));}
     static BakedModel[] run(){
-        var mc=Minecraft.getInstance();var atlas=mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);var result=new BakedModel[8];int fields=0;
+        var mc=Minecraft.getInstance();var atlas=mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS);var result=new BakedModel[8];var canonical=new BakedModel[8];int fields=0;
         com.google.gson.JsonObject materials;try(var reader=new java.io.InputStreamReader(NativeScreenItemModelChecks.class.getResourceAsStream("/assets/vandorlabs/data/screen_item_sprites.json"),java.nio.charset.StandardCharsets.UTF_8)){materials=com.google.gson.JsonParser.parseReader(reader).getAsJsonObject();}catch(java.io.IOException failure){throw new IllegalStateException(failure);}
         var regions=new java.util.IdentityHashMap<net.minecraft.client.renderer.texture.TextureAtlasSprite,float[]>();for(var member:materials.entrySet()){var value=member.getValue().getAsJsonObject();regions.put(atlas.apply(ResourceLocation.parse(value.get("texture").getAsString())),new float[]{value.get("u").getAsFloat(),value.get("v").getAsFloat()});}
         for(int family=0;family<7;family++){
@@ -35,6 +35,11 @@ public final class NativeScreenItemModelChecks {
             for(boolean enabled:new boolean[]{false,true}){
                 var stack=new ItemStack(Items.STONE);var tag=new CompoundTag();var row=new CompoundTag();row.putBoolean("Enabled",enabled);tag.put("RedstonePrimary",row);tag.putString("selectedScreen","unrelated");tag.putInt("housingTexture",14);stack.set(DataComponents.BLOCK_ENTITY_DATA,CustomData.of(tag));
                 var selected=wrapper.getOverrides().resolve(wrapper,stack,null,null,0);need(selected.getRenderPasses(stack,false).getFirst()==selected,"selected item pass");padded(selected);
+                if(NativeScreenClientBindings.installed()){
+                    var actualStack=new ItemStack(com.vandorlabs.neoforge.screen.NativeScreenRegistrations.ITEMS.get(ScreenFamily.values()[family]).get());actualStack.set(DataComponents.BLOCK_ENTITY_DATA,CustomData.of(tag));var actual=mc.getItemRenderer().getModel(actualStack,null,null,0);padded(actual);
+                    for(int side=-1;side<6;side++){var direction=side<0?null:Direction.values()[side];var expected=selected.getQuads(null,direction,RandomSource.create(42),ModelData.EMPTY,null);var emitted=actual.getQuads(null,direction,RandomSource.create(42),ModelData.EMPTY,null);need(expected.size()==emitted.size(),"canonical ItemRenderer uses accepted authored mesh");for(int q=0;q<expected.size();q++)need(java.util.Arrays.equals(expected.get(q).getVertices(),emitted.get(q).getVertices())&&expected.get(q).getSprite()==emitted.get(q).getSprite(),"canonical item positions/colors/normals/atlas crop family="+family+" controls="+enabled+" side="+side+" quad="+q);}
+                    canonical[family==5&&enabled?7:family]=actual;
+                }
                 int count=0;for(int side=-1;side<6;side++)for(var quad:selected.getQuads(null,side<0?null:Direction.values()[side],RandomSource.create(42),ModelData.EMPTY,null)){count++;need(!quad.getSprite().contents().name().getPath().equals("missingno"),"stitched authored sprite");}
                 need(count>0,"visible authored quads");
                 if(family!=5)for(int side=-1;side<6;side++){var direction=side<0?null:Direction.values()[side];var before=source.getQuads(null,direction,RandomSource.create(42),ModelData.EMPTY,null);var after=selected.getQuads(null,direction,RandomSource.create(42),ModelData.EMPTY,null);need(before.size()==after.size(),"authored static quad count");for(int q=0;q<before.size();q++){var old=before.get(q);var fraction=regions.get(old.getSprite());var expected=fraction==null?old:NativeItemQuads.retexture(old,old.getSprite(),fraction[0],fraction[1]);need(java.util.Arrays.equals(expected.getVertices(),after.get(q).getVertices()),"authored static positions/colors/normals/cropped UV");fields+=expected.getVertices().length;}}
@@ -44,7 +49,7 @@ public final class NativeScreenItemModelChecks {
                 for(int repeat=0;repeat<100;repeat++)need(wrapper.getOverrides().resolve(wrapper,stack,null,null,0)==selected,"stable immutable component/model");
             }
         }
-        System.out.println("[vandorlabs][screen-item-render] atlas PASS seven authored models/eight variants source position fields="+fields+" selected passes/components/padding");return result;
+        System.out.println("[vandorlabs][screen-item-render] atlas PASS seven authored models/eight variants source position fields="+fields+" selected passes/components/padding; canonical="+NativeScreenClientBindings.installed());return NativeScreenClientBindings.installed()?canonical:result;
     }
     private static void padded(BakedModel model){
         var gui=model.getTransforms().gui;double limit=15/32D;

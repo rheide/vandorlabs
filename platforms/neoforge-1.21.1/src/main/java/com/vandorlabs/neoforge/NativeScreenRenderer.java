@@ -9,7 +9,7 @@ import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.packs.resources.ResourceManager;
 
-/** Inactive normal-media backend. Callers prepare coherent power and layouts on the client thread. */
+/** Prepared normal-media backend. Callers prepare coherent power and layouts on the client thread. */
 public final class NativeScreenRenderer {
  private NativeScreenRenderer(){}
  private static final long WORLD_BUDGET=4L*1024*1024;

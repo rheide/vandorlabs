@@ -12,7 +12,7 @@ import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import java.util.*;
-/** Unregistered screen authority. Saved envelopes stay private; visual/editor data is explicitly projected. */
+/** Standalone Screen authority. Saved envelopes stay private; visual/editor data is explicitly projected. */
 public class NativeScreenEntity extends BlockEntity implements NativeChannelMember {
  public interface Catalog extends NativeScreenDisplayEdit.Catalog,ScreenArtworkMigration.Catalog {int defaultHousing();boolean validFrame(int choice);boolean validFrameSurface(int choice);int screenArtwork(String id);int inputArtwork(String id);}
  public record Transmission(int range,boolean local,ChannelList channels){public Transmission{Objects.requireNonNull(channels);if(!TransmissionSettings.validRange(range))throw new IllegalArgumentException("Screen range");}}

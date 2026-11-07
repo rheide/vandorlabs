@@ -44,6 +44,8 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         java.util.Map<String,TextureAtlasSprite> trapdoorItemSprites=new java.util.HashMap<>();
         for(var choice:ModernFinishCatalog.choicesForBake())trapdoorItemSprites.put(choice.entry().texture(),sprites.get(choice.choice()).sprite());
         var trapdoorItemAtlas=java.util.Map.copyOf(trapdoorItemSprites);
+        var screenSprites=new java.util.HashMap<String,TextureAtlasSprite>();for(String name:NativeScreenItemModel.textures())screenSprites.put(name,event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(name))));
+        var screenItemAtlas=java.util.Map.copyOf(screenSprites);
         TextureAtlasSprite itemFallback=sprites.get(0).sprite();
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
@@ -58,7 +60,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         event.getModels().replaceAll((id,model) -> {
             if(propulsionBake!=null&&NativePropulsionClientBindings.engine(id.id()))return id.getVariant().equals("inventory")?new NativePropulsionItemModel(model,id.id().getPath(),propulsionBake):NativePropulsionModel.wrap(model,propulsionBake);
             var screenFamily=NativeScreenClientBindings.family(id.id());
-            if(screenFamily!=null&&id.getVariant().equals("inventory"))return new NativeScreenItemModel(model,screenFamily,name->trapdoorItemAtlas.getOrDefault(name,itemFallback));
+            if(screenFamily!=null&&id.getVariant().equals("inventory"))return new NativeScreenItemModel(model,screenFamily,screenItemAtlas::get);
             var lightKind=NativeLightClientBindings.kind(id.id());
             if(lightKind!=null&&id.getVariant().equals("inventory"))return new NativeLightItemModel(model,lightKind,lightItemSources::get,name->trapdoorItemAtlas.getOrDefault(name,itemFallback));
             if(NativeTrapdoorClientBindings.trapdoor(id.id()))return id.getVariant().equals("inventory")?new NativeTrapdoorItemModel(model,com.vandorlabs.neoforge.trapdoor.NativeTrapdoorItem::housingTexture,name->trapdoorItemAtlas.getOrDefault(name,itemFallback)):com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());

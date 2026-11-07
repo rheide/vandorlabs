@@ -18,12 +18,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.BakedModelWrapper;
 import net.neoforged.neoforge.client.model.data.ModelData;
 
-/** Inactive inventory adapter: six authored static templates and the released diagonal control variant. */
+/** Inventory adapter: six authored static templates and the released diagonal control variant. */
 public final class NativeScreenItemModel extends BakedModelWrapper<BakedModel> {
     private record Material(String texture,float u,float v){}
     private record Region(TextureAtlasSprite sprite,float u,float v){}
     private static final Map<String,Material> MATERIALS=materials();
     private static Map<String,Material> materials(){var stream=NativeScreenItemModel.class.getResourceAsStream("/assets/vandorlabs/data/screen_item_sprites.json");if(stream==null)throw new IllegalStateException("Missing Screen item sprite mapping");try(var reader=new java.io.InputStreamReader(stream,java.nio.charset.StandardCharsets.UTF_8)){java.lang.reflect.Type type=new com.google.gson.reflect.TypeToken<Map<String,Material>>(){}.getType();return Map.copyOf(new com.google.gson.Gson().fromJson(reader,type));}catch(java.io.IOException failure){throw new ExceptionInInitializerError(failure);}}
+    /** Complete atlas dependencies include the authored side sprite and vanilla diagonal accents. */
+    static Set<String> textures(){var names=new HashSet<String>();for(var material:MATERIALS.values())names.add(material.texture());for(boolean controls:new boolean[]{false,true})for(var quad:ScreenDiagonalItemMesh.quads(controls))if(quad.texture.startsWith("minecraft:blocks/concrete_"))names.add("minecraft:block/"+quad.texture.substring("minecraft:blocks/concrete_".length())+"_concrete");return Set.copyOf(names);}
     private static final Direction[] SIDES={null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST};
     private final boolean diagonal;private final Function<String,TextureAtlasSprite> atlas;private final Map<TextureAtlasSprite,Region> regions;
     private final com.google.common.cache.Cache<CustomData,Boolean> choices=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(256).build();

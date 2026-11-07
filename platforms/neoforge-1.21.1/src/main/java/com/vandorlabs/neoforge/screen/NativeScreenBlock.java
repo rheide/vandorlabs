@@ -14,7 +14,7 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
 import java.util.function.Supplier;
-/** Unregistered state/geometry foundation. Configured item ownership and player menus bind separately. */
+/** Standalone Screen state and geometry; configured ownership and dedicated menus use shared adapters. */
 public class NativeScreenBlock extends BaseEntityBlock {
  public static final DirectionProperty FACING=BlockStateProperties.FACING,HORIZONTAL_FACING=BlockStateProperties.HORIZONTAL_FACING;
  public static final BooleanProperty KEYBOARD=BooleanProperty.create("keyboard"),UPPER=BooleanProperty.create("upper"),INVERTED=BooleanProperty.create("inverted");
