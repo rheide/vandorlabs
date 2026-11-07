@@ -24,7 +24,7 @@ public final class ModularGearVehicles {
                 if(payload==null)payload=com.vandorlabs.gear.ArmPayload.discover(arm,null);
                 if(payload==null&&arm.hasStoredSections()){
                     if(arm.storedSectionCells().isEmpty())throw new IllegalArgumentException("Stored arm sections are unavailable");
-                    List<VehicleStructure.Cell> next=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){if(cell.pos.equals(arm.getPos())){NBTTagCompound data=arm.writeToNBT(new NBTTagCompound());data.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,data));}else next.add(cell);}
+                    List<VehicleStructure.Cell> next=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){if(cell.pos.equals(arm.getPos())){NBTTagCompound data=arm.currentData(cell.tileData());data.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,data));}else next.add(cell);}
                     for(VehicleStructure.Cell cell:arm.storedSectionCells()){BlockPos at=arm.getPos().add(cell.pos);if(craft.structure.at(at)!=null)throw new IllegalArgumentException("Clear the arm section before extending");next.add(new VehicleStructure.Cell(at,cell.state,VehicleTileData.translated(cell.tileData(),arm.getPos())));}
                     VehicleStructureEdits.install(craft,next,"Arm sections");return true;
                 }
@@ -33,7 +33,7 @@ public final class ModularGearVehicles {
                 Set<BlockPos> removed=payload.placedCells(arm);List<VehicleStructure.Cell> next=new ArrayList<>();
                 for(VehicleStructure.Cell cell:craft.structure.cells){
                     if(removed.contains(cell.pos))continue;
-                    if(cell.pos.equals(arm.getPos())){NBTTagCompound tag=arm.writeToNBT(new NBTTagCompound());tag.setTag("ArmPayload",payload.capturedCopy().write());tag.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,tag));}
+                    if(cell.pos.equals(arm.getPos())){NBTTagCompound tag=arm.currentData(cell.tileData());tag.setTag("ArmPayload",payload.capturedCopy().write());tag.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,tag));}
                     else next.add(cell);
                 }
                 for(VehicleStructure.Cell cell:arm.storedSectionCells()){BlockPos at=arm.getPos().add(cell.pos);if(craft.structure.at(at)!=null&&!removed.contains(at))throw new IllegalArgumentException("Clear the arm section before extending");next.add(new VehicleStructure.Cell(at,cell.state,VehicleTileData.translated(cell.tileData(),arm.getPos())));}
@@ -54,9 +54,9 @@ public final class ModularGearVehicles {
             if(gear.isLandingAssembly()&&!craft.hover&&next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
             if(craft.world.isRemote&&gear.taxiPhase()>=0&&!gear.target()){double maximum=gear.pose(0).footOffsetY(),rise=gear.taxiAmount();if(maximum>0){double smooth=Math.max(0,Math.min(1,1-rise/maximum));double endpoint=.5-Math.sin(Math.asin(1-2*smooth)/3);next=Math.max(endpoint,next);}}
             if(next==before){gear.captureProgress(before);continue;}
-            if(!craft.world.isRemote){List<AxisAlignedBB> old=GearGeometry.boxes(gear,before),after=GearGeometry.boxes(gear,next);boolean blocked=false;
+            if(!craft.world.isRemote){List<AxisAlignedBB> old=GearGeometry.boxes(gear,before),after=GearGeometry.boxes(gear,next);boolean blocked=false,constrained=craft.articulation.constrainsArm(gear.getPos());
                 for(int i=0;i<after.size()&&!blocked;i++){if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;AxisAlignedBB swept=GearGeometry.swept(gear,i,old.get(i),after.get(i),before,next);
-                    if(!craft.articulation.constrainsArm(gear.getPos())&&!GearGeometry.foreign(craft.view,gear,swept).isEmpty()){blocked=true;break;}
+                    if(!constrained&&!GearGeometry.foreign(craft.view,gear,swept).isEmpty()){blocked=true;break;}
                     AxisAlignedBB at=pose.world(swept,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
                     if(!craft.world.isAreaLoaded(new BlockPos(at.minX,at.minY,at.minZ),new BlockPos(at.maxX,at.maxY,at.maxZ),false)||!craft.world.getCollisionBoxes(craft,at).isEmpty())blocked=true;
                 }if(gear.captureBlocked(blocked))notify.add(gear.getPos());
@@ -71,7 +71,7 @@ public final class ModularGearVehicles {
         for(Map.Entry<BlockPos,Double> entry:desired.entrySet())((GearTileEntity)craft.view.getTileEntity(entry.getKey())).captureProgress(entry.getValue());
         craft.articulation.armPosesCommitted();
         if(craft.world.isRemote)corrections.remove(craft);
-        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound())):cell);
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,((GearTileEntity)craft.view.getTileEntity(cell.pos)).currentData(cell.tileData())):cell);
         craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
         if(!craft.world.isRemote)com.vandorlabs.network.MessageGearMotion.send(craft,desired.keySet());
     }

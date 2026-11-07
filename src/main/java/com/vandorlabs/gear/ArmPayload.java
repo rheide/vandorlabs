@@ -73,6 +73,21 @@ public final class ArmPayload {
 
     private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
     ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
+    /** Typed captured Coupler edit; untouched cells, opaque data and endpoint correspondence remain retained. */
+    public ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data){
+        if(materialized||hasOwnershipJournal())throw new IllegalArgumentException("Captured Coupler ownership is unavailable");
+        List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);int found=-1;
+        for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){found=i;break;}
+        if(found<0||!(next.get(found).state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Captured Coupler changed");
+        VehicleStructure.Cell before=next.get(found);NBTTagCompound old=before.tileData();
+        if(data==null||!old.getString("id").equals(data.getString("id")))throw new IllegalArgumentException("Captured Coupler tile identity changed");
+        String identity="CouplerControlIdentity";if((data.hasKey(identity+"Most")||data.hasKey(identity+"Least"))&&!data.hasUniqueId(identity))throw new IllegalArgumentException("Malformed captured Coupler identity");
+        if((old.hasKey(identity+"Most")||old.hasKey(identity+"Least"))&&(!old.hasUniqueId(identity)||!data.hasUniqueId(identity)||!old.getUniqueId(identity).equals(data.getUniqueId(identity))))throw new IllegalArgumentException("Captured Coupler lifetime changed");
+        NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
+        next.set(found,new VehicleStructure.Cell(before.pos,before.state,data));
+        if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
+        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);return result;
+    }
     private ArmPayload preserveAlignment(ArmPayload next){next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
