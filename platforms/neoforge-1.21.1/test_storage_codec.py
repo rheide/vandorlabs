@@ -7,7 +7,8 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
     output=Path(artifact_directory(prefix='storage-codec-native-',dir=ROOT/'build/test-artifacts'));saved=output/'server';world(saved,0)
-    run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=storage-codec'),output/'run.log','[vandorlabs][storage-codec] PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+    run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=storage-codec'),output/'run.log','[vandorlabs][storage-inventory-codec] PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+    check_log(output/'run.log','[vandorlabs][storage-codec] PASS')
     check_log(saved/'logs/latest.log','All dimensions are saved')
     print('Native Storage actual item codec PASS: '+str(output),flush=True)
 if __name__=='__main__':main()
