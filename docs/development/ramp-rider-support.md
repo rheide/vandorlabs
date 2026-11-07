@@ -6,4 +6,6 @@ The independent Forge reference captures 18,400 support profiles, 28,800 recent-
 
 The private native obstacle adapter consumes the complete lazy collision iterator inside the own-root carrying scope, restores an enclosing scope even after failure, and refuses oversized or cold queries before traversal. Source selection and original ownership remain the controller's responsibility. These APIs are not public Ramp activation or a completed rider implementation.
 
+The dedicated world focus checks actual lazy block-shape calls, nested carrying roots, retained foreign collisions, exception cleanup, cold queries without loading, worker refusal, real Player/Item shallow support and vanilla Boat/Minecart eligibility. Transport packets, recent-floor integration after materialization and moving-world acceptance remain pending.
+
 Ramp controller queries use broad Entity selection; vanilla boats and minecarts are not blanket-excluded. The separate arm vehicle predicate must not be substituted for those controller-specific filters. Native Vandor Vehicle Mode remains deferred.
