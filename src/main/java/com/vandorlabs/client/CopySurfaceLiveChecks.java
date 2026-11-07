@@ -23,7 +23,7 @@ import net.minecraft.world.*;
 final class CopySurfaceLiveChecks {
     private static final BlockPos CONTROL=new BlockPos(-80,83,179);
     private static int fixture,stage,ticks;
-    private static boolean clicked;
+    private static boolean clicked,claimedCaptured;
     private static BlockPos removed;
     private static List<BlockPos> original;
     private static NBTTagCompound pickedAppearance;
@@ -35,12 +35,14 @@ final class CopySurfaceLiveChecks {
     private static void appearance(World world){for(Map.Entry<BlockPos,String> entry:artwork.entrySet()){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(entry.getKey());require(tile!=null&&entry.getValue().equals(choices(tile)),"per-cell chosen artwork retained "+entry.getKey());for(BlockPos cell:tile.appearanceLayout().cells){TileEntityTurntableSurface member=(TileEntityTurntableSurface)world.getTileEntity(cell);require(member!=null&&tile.sameArtwork(member)&&tile.textureLayout==member.textureLayout,"drawing group never borrows different artwork "+cell);}}}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("copy-surfaces fixture="+fixture+" stage="+stage+" tick="+ticks+": "+why);}
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(!SurfaceWandLiveChecks.tick(mc))return false;
-        if(fixture>=2)return CopySurfaceOrientationChecks.tick(mc,output);
+        boolean mixedOnly="true".equals(System.getenv("VANDOR_COPY_MIXED_ONLY"));
+        if(!mixedOnly&&!SurfaceWandLiveChecks.tick(mc))return false;
+        if(fixture>=2){if(!mixedOnly)return CopySurfaceOrientationChecks.tick(mc,output);System.out.println("[vandorlabs] copy-surfaces PASS mixed-only claimed-artwork/mining/reform/settled");return true;}
         mc.displayGuiScreen(null);
         if(stage==1&&ticks>20&&!clicked&&mc.playerController.getCurrentGameType()==GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getHeldItemMainhand().isEmpty()
                 &&mc.player.getDistanceSq(removed.getX()+.5,86,removed.getZ()+.5)<.05&&mc.world.getBlockState(removed).getBlock() instanceof BlockTurntableSurface){
             require(mc.objectMouseOver!=null&&removed.equals(mc.objectMouseOver.getBlockPos()),"real ray selects saved surface");
+            if(!claimedCaptured){claimedArtwork(mc,output);claimedCaptured=true;}
             mc.playerController.clickBlock(removed,EnumFacing.UP);clicked=true;
         }
         boolean done=mc.getIntegratedServer().callFromMainThread(()->step(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
@@ -74,7 +76,7 @@ final class CopySurfaceLiveChecks {
             for(SquareLayout area:new SquareLayout[]{copier.input,copier.output})for(BlockPos at:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(at);boolean alternate=((at.getX()+at.getZ())&1)!=0;NBTTagCompound appearance=tile.writeToNBT(new NBTTagCompound());appearance.setString("SurfaceOn",alternate?"stone_iron":"rotary_deck");appearance.setString("SurfaceOff",alternate?"basalt":"graphite_ivory");appearance.setBoolean("SurfaceAppearanceConfigured",true);tile.readFromNBT(appearance);}
             copier.refreshPads(player);
             require(copier.input.size==5&&copier.output.size==5,"mixed selected artwork retains complete five-block squares");original=new ArrayList<>(copier.output.cells);artwork.clear();for(BlockPos at:original)artwork.put(at,choices((TileEntityTurntableSurface)world.getTileEntity(at)));removed=fixture==0?copier.output.root:new BlockPos(-81,83,180);
-            player.setGameType(GameType.CREATIVE);player.capabilities.isFlying=true;player.sendPlayerAbilities();player.inventory.currentItem=0;player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.inventoryContainer.detectAndSendChanges();player.connection.setPlayerLocation(removed.getX()+.5,86,removed.getZ()+.5,0,90);
+            player.setGameType(GameType.CREATIVE);player.capabilities.isFlying=true;player.sendPlayerAbilities();player.inventory.currentItem=0;player.connection.sendPacket(new net.minecraft.network.play.server.SPacketHeldItemChange(0));player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.inventoryContainer.detectAndSendChanges();player.connection.setPlayerLocation(removed.getX()+.5,86,removed.getZ()+.5,0,90);
             stage=1;ticks=0;return false;
         }
         CopyControllerTile copier=(CopyControllerTile)world.getTileEntity(CONTROL);
@@ -87,8 +89,15 @@ final class CopySurfaceLiveChecks {
         if(stage==11){if(ticks<30)return false;require(copier.input==stableInput&&copier.output==stableOutput,"settled pads do not continually rescan");appearance(world);for(BlockPos at:stableAppearance.keySet())require(((TileEntityTurntableSurface)world.getTileEntity(at)).appearanceLayout()==stableAppearance.get(at),"settled appearance snapshot reused");require(SquareLayout.discoveryScans()==stableScans&&SquareLayout.discoveryReads()==stableReads,"settled pads perform zero discovery scans/reads");System.out.println("[vandorlabs] copy-surface discovery-cost fixture="+fixture+" settledTicks="+ticks+" scans=0 reads=0 coldCumulativeScans="+stableScans+" coldCumulativeReads="+stableReads);require(player.interactionManager.tryHarvestBlock(new BlockPos(-80,83,180)),"remove controller-adjacent seed");stage=8;ticks=0;return false;}
         if(stage==8){if(ticks<30)return false;require(copier.input==null&&copier.output==null,"missing seed invalidates copy area");place(world,player,new BlockPos(-80,83,180),surfaceStack(world,player,original.stream().filter(p->!p.equals(new BlockPos(-80,83,180))).findFirst().get()));stage=9;ticks=0;return false;}
         if(stage==9){if(ticks<30)return false;require(copier.input!=null&&copier.output!=null&&copier.output.size==7,"seed replacement restores expanded pair");require(player.interactionManager.tryHarvestBlock(CONTROL),"remove idle controller");stage=10;ticks=0;return false;}
-        if(stage==10){if(ticks<30)return false;for(BlockPos p:original){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);require(tile.claimedOwner()==null&&!tile.locked()&&tile.appearanceLayout().cells.contains(p),"controller removal leaves ordinary visible complete surface");}appearance(world);System.out.println("[vandorlabs] copy-surface lifecycle PASS fixture="+fixture+" mixedArtworkPreserved");if(++fixture==2)return true;stage=ticks=0;clicked=false;return false;}
+        if(stage==10){if(ticks<30)return false;for(BlockPos p:original){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);require(tile.claimedOwner()==null&&!tile.locked()&&tile.appearanceLayout().cells.contains(p),"controller removal leaves ordinary visible complete surface");}appearance(world);System.out.println("[vandorlabs] copy-surface lifecycle PASS fixture="+fixture+" mixedArtworkPreserved");if(++fixture==2)return true;stage=ticks=0;clicked=claimedCaptured=false;return false;}
         return false;
+    }
+    private static void claimedArtwork(Minecraft mc,File output)throws Exception{
+        Map<String,Integer> pixels=new HashMap<>();
+        for(BlockPos at:original){TileEntity raw=mc.world.getTileEntity(at);require(raw instanceof TileEntityTurntableSurface,"claimed artwork tile reaches client "+at);TileEntityTurntableSurface tile=(TileEntityTurntableSurface)raw;require(artwork.get(at).equals(choices(tile)),"claimed per-cell choices reach client "+at);require(tile.claimedOwner() instanceof CopyControllerTile&&tile.appearanceLayout().cells.size()==1,"checkerboard claimed appearance remains per-cell "+at);
+            String texture=tile.selectedTexture();if(pixels.containsKey(texture))continue;BufferedImage frame=SurfaceClientChecks.damagedFace(mc,tile,EnumFacing.UP);int[] data=frame.getRGB(0,0,64,64,null,0,64);int visible=0;for(int color:data)if((color&0xffffff)!=0x203040)visible++;require(visible>1800,"claimed chosen artwork is opaque "+texture);pixels.put(texture,Arrays.hashCode(data));javax.imageio.ImageIO.write(frame,"png",new File(output,"shot_copy_mixed_claimed_"+fixture+"_"+pixels.size()+".png"));
+        }
+        require(pixels.size()==2&&new HashSet<>(pixels.values()).size()==2,"distinct claimed textures retain distinct actual pixels");System.out.println("[vandorlabs] copy-mixed-claimed-artwork PASS fixture="+fixture+" checkedCells="+original.size()+" actualFBOsamples="+pixels.size()+" distinctPixels/selectedChoices/clientGroups");
     }
     private static ItemStack surfaceStack(WorldServer world,EntityPlayerMP player,BlockPos at){return world.getBlockState(at).getBlock().getPickBlock(world.getBlockState(at),null,world,at,player);}
     private static void grow(WorldServer world,EntityPlayerMP player,int z0,int z1){ItemStack appearance=null;for(int x=-83;x<=-77&&appearance==null;x++)for(int z=z0;z<=z1;z++){BlockPos p=new BlockPos(x,83,z);if(world.getBlockState(p).getBlock() instanceof BlockTurntableSurface){appearance=surfaceStack(world,player,p);break;}}require(appearance!=null,"growth has an existing artwork sample");for(int x=-83;x<=-77;x++)for(int z=z0;z<=z1;z++){BlockPos p=new BlockPos(x,83,z);if(!(world.getBlockState(p).getBlock() instanceof BlockTurntableSurface)){if(!world.isAirBlock(p))require(player.interactionManager.tryHarvestBlock(p),"remove existing border before expansion");place(world,player,p,appearance.copy());}}}
