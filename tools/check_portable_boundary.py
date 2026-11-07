@@ -46,6 +46,12 @@ def jdk_home(version):
     raise RuntimeError("Set VANDOR_JAVA%d_HOME or JAVA%d_HOME to a Java %d JDK" % (version, version, version))
 
 
+def lint_flags(home):
+    # Java 8 needs strictfp for reproducible floating-point fixtures. Java 21
+    # always evaluates strictly and otherwise warns about that necessary keyword.
+    return "-Xlint:all,-options" if matches_jdk(home, 8) else "-Xlint:all,-options,-strictfp"
+
+
 def check_boundary(home, output):
     sources = sorted(SOURCE.rglob("*.java"))
     if not sources:
@@ -58,7 +64,7 @@ def check_boundary(home, output):
     # No dependency JAR or precompiled output is on the classpath. This checks
     # same-package inheritance and fully qualified references, not only imports.
     subprocess.run([str(executable(home, "javac")), "-source", "8", "-target", "8",
-                    "-Xlint:all,-options", "-Werror", "-encoding", "UTF-8",
+                    lint_flags(home), "-Werror", "-encoding", "UTF-8",
                     "-classpath", str(output), "-sourcepath", str(SOURCE),
                     "-d", str(output)] + [str(p) for p in sources], check=True, cwd=ROOT)
     return len(sources)

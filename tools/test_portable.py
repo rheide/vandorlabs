@@ -8,7 +8,7 @@ import re
 import subprocess
 import tempfile
 
-from check_portable_boundary import ROOT, check_boundary, executable, jdk_home
+from check_portable_boundary import ROOT, check_boundary, executable, jdk_home, lint_flags
 
 
 def source_fingerprint():
@@ -30,7 +30,7 @@ def run_fixtures(version):
         output = Path(directory) / "classes"
         count = check_boundary(home, output)
         subprocess.run([str(executable(home, "javac")), "-source", "8", "-target", "8",
-                        "-Xlint:all,-options", "-Werror", "-encoding", "UTF-8",
+                        lint_flags(home), "-Werror", "-encoding", "UTF-8",
                         "-classpath", str(output), "-sourcepath", str(ROOT / "src/portableTest/java"),
                         "-d", str(output)] + [str(p) for p in tests], check=True, cwd=ROOT)
         results = {}
