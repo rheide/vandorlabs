@@ -79,6 +79,7 @@ public final class ArmParkingMaterialization {
         if(stored.isEmpty())data.removeTag("ArmStoredSections");else data.setTag("ArmStoredSections",ArmStoredSections.detachedTag(stored));
         data.setDouble("GearProgress",selected.phase);data.setInteger("GearRevision",data.getInteger("GearRevision")+1);data.setBoolean("GearParkingHold",true);data.setBoolean("GearSignalKnown",false);data.setBoolean("GearBlocked",false);data.setString("GearError","");
         if(selected.phase==0||selected.phase==1)data.removeTag("SurfaceDepartureActive");
+        ArmPayload.validateRootSyncBudget(data);
         return new Plan(placement.cells,restored,removed,new VehicleStructure.Cell(root.pos,root.state,data));
     }
     private ArmParkingMaterialization(){}
