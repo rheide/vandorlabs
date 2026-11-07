@@ -1,0 +1,7 @@
+tasks.register('testCopifierLightReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierLightEditChecks'
+ args rootProject.file('../../testclient/fixtures/copifier-light-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}

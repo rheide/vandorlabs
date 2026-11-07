@@ -1,0 +1,11 @@
+package com.vandorlabs.neoforge.copifier;
+import com.google.gson.*;
+import com.vandorlabs.neoforge.light.NativeLightBlock;
+import java.nio.file.*;
+import java.io.*;
+import java.util.zip.GZIPInputStream;
+import net.minecraft.nbt.*;
+/** Actual Source callback captures, replayed without installing any world owner. */
+public final class NativeCopifierLightEditChecks {
+ public static void main(String[] args)throws Exception{int count=0;try(var lines=new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(Path.of(args[0]))),java.nio.charset.StandardCharsets.UTF_8))){String line;while((line=lines.readLine())!=null){var row=JsonParser.parseString(line).getAsJsonObject();String id=row.get("block").getAsString();var kind=id.endsWith("_frame")?NativeLightBlock.Kind.FRAME:id.endsWith("_slab")?NativeLightBlock.Kind.SLAB:NativeLightBlock.Kind.FULL;var current=TagParser.parseTag(row.get("target").getAsString());var values=TagParser.parseTag(row.get("values").getAsString());var original=current.copy();var clipboard=values.copy();var before=NativeCopifierLightEdit.capture(kind,current);var expectedBefore=TagParser.parseTag(row.get("before").getAsString());if(!before.equals(expectedBefore))throw new AssertionError("Before row"+count+" expected="+expectedBefore+" actual="+before);boolean accepted=false;CompoundTag after=before;try{var plan=NativeCopifierLightEdit.prepare(kind,current,values);accepted=plan.applicable();after=NativeCopifierLightEdit.capture(kind,plan.fields());}catch(IllegalArgumentException refused){}var expected=TagParser.parseTag(row.get("after").getAsString());if(accepted!=row.get("applied").getAsBoolean()||!expected.equals(after))throw new AssertionError("After row"+count+" kind="+row.get("kind")+" values="+values+" expected="+expected+" actual="+after+" applicable="+accepted);if(!current.equals(original)||!values.equals(clipboard))throw new AssertionError("Mutated caller");count++;}}if(count!=2919)throw new AssertionError("Corpus count");System.out.println("Native Light clipboard PASS actual Source cases="+count+" caller immutability/typed applicability/recapture");}
+}
