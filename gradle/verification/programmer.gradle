@@ -37,3 +37,11 @@ task exportProgrammerSavedReference(type: JavaExec) {
     main = 'com.vandorlabs.client.ProgrammerSavedLegacyChecks'
     systemProperty 'vandorlabs.programmerSavedReference', file(project.findProperty('programmerSavedReference') ?: 'build/test-artifacts/programmer-saved-forge.json').absolutePath
 }
+
+task exportProgrammerPropertiesReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammerPropertiesLegacyChecks'
+    systemProperty 'vandorlabs.programmerPropertiesReference', file(project.findProperty('programmerPropertiesReference') ?: 'build/test-artifacts/programmer-properties-forge.json').absolutePath
+}
