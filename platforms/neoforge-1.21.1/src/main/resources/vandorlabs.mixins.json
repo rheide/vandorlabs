@@ -17,6 +17,9 @@
     "NativeGlassRayMixin",
     "ProgrammerConnectionMixin",
     "NativeRampChunkStorageAccess",
+    "NativeRampEntityLevelAccess",
+    "NativeRampEntityManagerAccess",
+    "NativeRampEntityStorageAccess",
     "NativeRampHopperGuard",
     "NativeRampInventoryGuard",
     "NativeRampLevelGuard"
