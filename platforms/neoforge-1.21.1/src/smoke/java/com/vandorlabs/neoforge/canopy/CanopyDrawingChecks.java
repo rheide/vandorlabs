@@ -2,6 +2,7 @@ package com.vandorlabs.neoforge.canopy;
 
 import com.google.gson.*;
 import com.vandorlabs.canopy.*;
+import com.vandorlabs.neoforge.ModernFinishCatalog;
 import java.nio.*;
 import java.nio.file.*;
 import java.util.*;
@@ -11,13 +12,14 @@ public final class CanopyDrawingChecks {
     private record Basis(String kind,int width,boolean centered,NativeCanopySettings settings,CanopyEmission.Sprite sprite,CanopyDrawingGeometry geometry){}
     private static long checks,vertices,quads;
     private static void need(boolean yes,String message){checks++;if(!yes)throw new AssertionError(message);}
-    private static double value(JsonArray data,int i){return Double.longBitsToDouble(data.get(i).getAsLong());}
     private static Map<String,Basis> inputs(Path file)throws Exception {
         Map<String,Basis> values=new HashMap<>();
-        try(var reader=Files.newBufferedReader(file)){for(String line;(line=reader.readLine())!=null;){var row=JsonParser.parseString(line).getAsJsonObject();List<CanopyFace> faces=new ArrayList<>();
-            for(var raw:row.getAsJsonArray("faces")){var face=raw.getAsJsonObject();var data=face.getAsJsonArray("points");CanopyPoint[] points=new CanopyPoint[data.size()/5];double[][] uv=new double[points.length][2];for(int i=0;i<points.length;i++){points[i]=new CanopyPoint(value(data,i*5),value(data,i*5+1),value(data,i*5+2));uv[i][0]=value(data,i*5+3);uv[i][1]=value(data,i*5+4);}faces.add(new CanopyFace(points,uv,face.get("material").getAsString(),face.get("base").getAsString(),face.get("group").getAsString(),face.get("double").getAsBoolean(),face.get("glazing").getAsBoolean(),face.get("tiled").getAsBoolean()));}
+        try(var reader=Files.newBufferedReader(file)){for(String line;(line=reader.readLine())!=null;){var row=JsonParser.parseString(line).getAsJsonObject();
             var atlas=row.getAsJsonArray("atlas");float[] edge=new float[4];for(int i=0;i<4;i++)edge[i]=Float.intBitsToFloat(atlas.get(i).getAsInt());
             var settings=NativeCanopySettings.read(CanopySettingsChecks.tags(row.getAsJsonObject("settings")));String kind=row.get("id").getAsString();int width=row.get("width").getAsInt();
+            String key=row.get("key").getAsString();String[] parts=key.split(":");int mask=parts.length==4?Integer.parseInt(parts[1]):0,roof=parts.length==4?Integer.parseInt(parts[2]):0;
+            double aspect=key.endsWith(":4")?2:key.endsWith(":5")?.5:1;
+            List<CanopyFace> faces=NativeCanopyModels.builtin().base(kind,width,mask,roof,row.get("centered").getAsBoolean(),settings.data(),aspect,choice->"vandorlabs:blocks/"+ModernFinishCatalog.option(choice).id());
             Basis basis=new Basis(kind,width,row.get("centered").getAsBoolean(),settings,new CanopyEmission.Sprite(edge[0],edge[1],edge[2],edge[3]),new CanopyDrawingGeometry(faces,kind,width,settings.data()));
             need(values.put(row.get("key").getAsString(),basis)==null,"unique Source base input");
         }}return values;
@@ -64,6 +66,6 @@ public final class CanopyDrawingChecks {
     }
     public static void main(String[] args)throws Exception {
         int dynamic=dynamic(Path.of(args[0]),Path.of(args[1])),fixed=fixed(Path.of(args[2]),Path.of(args[3]));need(dynamic==1320&&fixed==1944,"Source drawing coverage");
-        System.out.println("[vandorlabs][canopy-drawing] PASS SourceTESR="+dynamic+" SourceChunk="+fixed+" exactVertices="+vertices+" exactQuads="+quads+" fields="+checks+" authoredBaseGenerationPending");
+        System.out.println("[vandorlabs][canopy-drawing] PASS SourceTESR="+dynamic+" SourceChunk="+fixed+" exactVertices="+vertices+" exactQuads="+quads+" fields="+checks+" nativeAuthoredBases");
     }
 }
