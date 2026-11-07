@@ -26,10 +26,10 @@ public final class VehicleArmCouplerPairs {
     private static Snapshot discover(VehicleArmCouplers.Snapshot observations,boolean savedAliases){
         if(observations==null||observations.heads.size()>VehicleArmCouplers.MAX_HEADS)throw new IllegalArgumentException("Invalid Coupler observations");
         Map<Key,List<VehicleArmCouplers.Head>> buckets=new HashMap<>();
-        for(VehicleArmCouplers.Head head:observations.heads){if(!head.locked)continue;Key key=key(head);List<VehicleArmCouplers.Head> list=buckets.computeIfAbsent(key,k->new ArrayList<>());if(list.size()>=MAX_BUCKET)throw new IllegalArgumentException("Ambiguous coincident Coupler head budget");list.add(head);}
-        Map<net.minecraft.util.math.BlockPos,List<VehicleArmCouplers.Head>> aliases=new HashMap<>();if(savedAliases)for(VehicleArmCouplers.Head head:observations.heads)if(head.locked){List<VehicleArmCouplers.Head> list=aliases.computeIfAbsent(head.legacyCell,k->new ArrayList<>());if(list.size()>=MAX_BUCKET)throw new IllegalArgumentException("Ambiguous saved Coupler alias budget");list.add(head);}
+        for(VehicleArmCouplers.Head head:observations.heads){if(!head.locked||head.released)continue;Key key=key(head);List<VehicleArmCouplers.Head> list=buckets.computeIfAbsent(key,k->new ArrayList<>());if(list.size()>=MAX_BUCKET)throw new IllegalArgumentException("Ambiguous coincident Coupler head budget");list.add(head);}
+        Map<net.minecraft.util.math.BlockPos,List<VehicleArmCouplers.Head>> aliases=new HashMap<>();if(savedAliases)for(VehicleArmCouplers.Head head:observations.heads)if(head.locked&&!head.released){List<VehicleArmCouplers.Head> list=aliases.computeIfAbsent(head.legacyCell,k->new ArrayList<>());if(list.size()>=MAX_BUCKET)throw new IllegalArgumentException("Ambiguous saved Coupler alias budget");list.add(head);}
         Map<VehicleArmCouplers.Address,VehicleArmCouplers.Head> partners=new HashMap<>();Key probe=new Key(0,0,0);
-        for(VehicleArmCouplers.Head head:observations.heads){if(!head.locked)continue;Key base=key(head);VehicleArmCouplers.Head partner=null;
+        for(VehicleArmCouplers.Head head:observations.heads){if(!head.locked||head.released)continue;Key base=key(head);VehicleArmCouplers.Head partner=null;
             for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++)for(int dz=-1;dz<=1;dz++){
                 probe.x=base.x+dx;probe.y=base.y+dy;probe.z=base.z+dz;List<VehicleArmCouplers.Head> candidates=buckets.get(probe);if(candidates==null)continue;
                 for(VehicleArmCouplers.Head other:candidates){if(head==other||!matching(head,other))continue;if(partner!=null&&partner!=other)throw new IllegalArgumentException("Several Coupler heads occupy the same pair");partner=other;}
