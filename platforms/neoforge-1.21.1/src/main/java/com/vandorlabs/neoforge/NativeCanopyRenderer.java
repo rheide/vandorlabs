@@ -34,8 +34,6 @@ public final class NativeCanopyRenderer {
         @SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel().isClientSide()){Bake found=currentBake();if(found!=null)found.clear();}}
     }
     private record Key(String kind,int facing,int width,int mask,int roof,boolean centered,int depth,int scale,int shade,int tint,int mount,int motion,int hinge,int angle,int material,int layout,boolean openable,boolean slide,double aspect,long pose){}
-    private static final class Scratch {final org.joml.Vector3f point=new org.joml.Vector3f(),normal=new org.joml.Vector3f();}
-    private static final ThreadLocal<Scratch> SCRATCH=ThreadLocal.withInitial(Scratch::new);
     public static final class Mesh implements CanopyEmission.Sink {
         private final float[] data;private final int[] colors;private final TextureAtlasSprite[] sprites;private final int[] directions;private TextureAtlasSprite sprite;private int count;
         private Mesh(int count,boolean chunk){data=new float[count*8];colors=new int[count];sprites=chunk?new TextureAtlasSprite[count/4]:null;directions=chunk?new int[count/4]:null;}
@@ -44,7 +42,7 @@ public final class NativeCanopyRenderer {
         @Override public void quad(int direction){if(sprites!=null){sprites[count/4]=sprite;directions[count/4]=direction;}}
         @Override public void vertex(float x,float y,float z,float u,float v,int color,float nx,float ny,float nz){int at=count*8;data[at]=x;data[at+1]=y;data[at+2]=z;data[at+3]=u;data[at+4]=v;data[at+5]=nx;data[at+6]=ny;data[at+7]=nz;colors[count++]=color;}
         private List<BakedQuad> quads(){if(sprites==null||count==0)return List.of();var result=new ArrayList<BakedQuad>(count/4);for(int q=0;q<count/4;q++){int[] packed=new int[32];for(int vertex=0;vertex<4;vertex++){int source=(q*4+vertex)*8,at=vertex*8;packed[at]=Float.floatToRawIntBits(data[source]);packed[at+1]=Float.floatToRawIntBits(data[source+1]);packed[at+2]=Float.floatToRawIntBits(data[source+2]);packed[at+3]=colors[q*4+vertex];packed[at+4]=Float.floatToRawIntBits(data[source+3]);packed[at+5]=Float.floatToRawIntBits(data[source+4]);packed[at+7]=((byte)(data[source+5]*127)&255)|(((byte)(data[source+6]*127)&255)<<8)|(((byte)(data[source+7]*127)&255)<<16);}result.add(new BakedQuad(packed,-1,Direction.from3DDataValue(directions[q]),sprites[q],false,false));}return List.copyOf(result);}
-        private void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){Scratch s=SCRATCH.get();for(int i=0;i<count;i++){int at=i*8,color=colors[i];pose.pose().transformPosition(data[at],data[at+1],data[at+2],s.point);pose.transformNormal(data[at+5],data[at+6],data[at+7],s.normal);target.addVertex(s.point.x,s.point.y,s.point.z).setColor(color&255,(color>>>8)&255,(color>>>16)&255,color>>>24).setUv(data[at+3],data[at+4]).setOverlay(overlay).setLight(light).setNormal(s.normal.x,s.normal.y,s.normal.z);}}
+        private void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){NativePreparedVertices.emit(data,colors,count,pose,target,light,overlay);}
     }
     public static final class Draw {
         private final Mesh body,pane;private final List<BakedQuad> solid,glass,all;
