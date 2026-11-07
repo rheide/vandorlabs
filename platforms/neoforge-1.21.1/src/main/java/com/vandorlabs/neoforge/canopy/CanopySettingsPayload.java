@@ -29,15 +29,18 @@ public record CanopySettingsPayload(NativeCanopyEdit edit) implements CustomPack
     private static java.util.function.Consumer<Result> RESULTS=value->{};
     /** Client binding supplies only the currently open screen dispatcher. */
     public static void bindResults(java.util.function.Consumer<Result> receiver){RESULTS=java.util.Objects.requireNonNull(receiver);}
+    /** Shared installed-session dispatch; null means the request has no authorized current editor. */
+    public static Result apply(ServerPlayer player,NativeCanopyEdit edit){
+        if(!player.getServer().isSameThread()||!(player.containerMenu instanceof NativeCanopyMenu menu)
+            ||menu.containerId!=edit.window()||!menu.tile.getBlockPos().equals(edit.pos())||!menu.stillValid(player)
+            ||!com.vandorlabs.neoforge.NativeConfigurationAccess.canConfigure(player))return null;
+        boolean applied=menu.apply(player,edit.window(),edit.pos(),edit.settings());
+        return new Result(new NativeCanopyEdit(edit.pos(),edit.window(),edit.request(),menu.tile.settings()),applied);
+    }
     public static void register(RegisterPayloadHandlersEvent event){
         var registrar=event.registrar("1");
         registrar.playToServer(TYPE,CODEC,(packet,context)->context.enqueueWork(()->{
-            if(!(context.player() instanceof ServerPlayer player)||!(player.containerMenu instanceof NativeCanopyMenu menu))return;
-            var edit=packet.edit;
-            if(menu.containerId!=edit.window()||!menu.tile.getBlockPos().equals(edit.pos())||!menu.stillValid(player)
-                ||!com.vandorlabs.neoforge.NativeConfigurationAccess.canConfigure(player))return;
-            boolean applied=menu.apply(player,edit.window(),edit.pos(),edit.settings());
-            PacketDistributor.sendToPlayer(player,new Result(new NativeCanopyEdit(edit.pos(),edit.window(),edit.request(),menu.tile.settings()),applied));
+            if(context.player() instanceof ServerPlayer player){var result=apply(player,packet.edit);if(result!=null)PacketDistributor.sendToPlayer(player,result);}
         }));
         registrar.playToClient(Result.TYPE,Result.CODEC,(packet,context)->context.enqueueWork(()->RESULTS.accept(packet)));
     }
