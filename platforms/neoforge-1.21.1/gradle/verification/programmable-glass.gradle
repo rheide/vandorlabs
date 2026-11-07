@@ -47,4 +47,5 @@ tasks.register('testNativeGlassEditorWire', JavaExec) {
     dependsOn tasks.named('smokeClasses')
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.glass.GlassEditorWireChecks'
+    args file('../../build/test-artifacts/glass-editor-wire-forge.jsonl').absolutePath
 }
