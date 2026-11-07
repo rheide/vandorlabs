@@ -18,7 +18,7 @@ import net.minecraft.world.storage.MapStorage;
 /** Actual apply/reshape callbacks: ownership, open-pose restrictions, released cells and rollback. */
 public final class CanopyApplyLegacyOracle {
     private static final BlockPos ROOT=new BlockPos(8,80,8);
-    private static final class World extends CanopyPlacementLegacyOracle.World {
+    static class World extends CanopyPlacementLegacyOracle.World {
         final MapStorage storage=new MapStorage(null);BlockPos denied;boolean applying,triggered;int fault,writes,removals;
         @Override public MapStorage getPerWorldStorage(){return storage;}
         @Override public boolean isBlockModifiable(EntityPlayer player,BlockPos pos){return !pos.equals(denied);}
@@ -31,7 +31,7 @@ public final class CanopyApplyLegacyOracle {
     }
     private static JsonArray pos(BlockPos p){JsonArray out=new JsonArray();out.add(p.getX());out.add(p.getY());out.add(p.getZ());return out;}
     private static LargeCanopySettings copy(LargeCanopySettings source){NBTTagCompound tag=new NBTTagCompound();source.write(tag);LargeCanopySettings next=new LargeCanopySettings();next.read(tag);return next;}
-    private static TileEntityCanopy setup(World world,BlockCanopy block,EnumFacing facing,int mount,boolean fresh,int columns,float progress,boolean release){
+    static TileEntityCanopy setup(World world,BlockCanopy block,EnumFacing facing,int mount,boolean fresh,int columns,float progress,boolean release){
         LargeCanopySettings initial=new LargeCanopySettings();initial.mount=mount;initial.openable=block.opening()||LargeCanopySettings.supports(block.kind);
         for(int column=0;column<columns;column++){
             BlockPos anchor=ROOT.offset(facing.rotateY(),column);IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);world.setBlockState(anchor,state,2);TileEntityCanopy root=TileEntityCanopy.at(world,anchor);root.anchor=anchor;root.centeredPlacement=fresh&&CanopyVariants.centered(block.kind);root.hollowPlacement=fresh&&root.resizable();initial.shade=column%3;NBTTagCompound settings=new NBTTagCompound();initial.write(settings);root.large.read(settings);List<BlockPos> cells=new ArrayList<>(root.cells());
