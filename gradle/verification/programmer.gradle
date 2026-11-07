@@ -84,3 +84,11 @@ task exportProgrammerJournalReference(type: JavaExec) {
     main = 'com.vandorlabs.client.ProgrammerJournalLegacyChecks'
     systemProperty 'vandorlabs.programmerJournalReference', file(project.findProperty('programmerJournalReference') ?: 'build/test-artifacts/programmer-journal-forge.json').absolutePath
 }
+
+task exportProgrammerJournalMatrixReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammerJournalMatrixLegacyChecks'
+    systemProperty 'vandorlabs.programmerJournalMatrixReference', file(project.findProperty('programmerJournalMatrixReference') ?: 'build/test-artifacts/programmer-journal-matrix-forge.json').absolutePath
+}
