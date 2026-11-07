@@ -159,3 +159,10 @@ then opens it with an empty hand and checks the configured pick. The same run
 retains all body, terrain, reload, reversal and membership controls. Construction
 captures in the player guide come from those actual placement/opening stages.
 Vehicle/cockpit sharing and carried behavior remain outside this conversion.
+
+The configured Copifier suite now requires the production Canopy block/item and
+shared owner type; its obsolete recipe-runtime fallback registrations are
+removed. It passes all 7,872 configured Source recipes, 83,999 recipe assertions,
+132 crafted placement/capture/apply/Connected/Undo/recovery assertions across all
+eleven roles, and 6,957 installed-world assertions against 176 released Source
+scenes. Original 2×2/3×3 pickup and quick-move ownership checks remain green.
