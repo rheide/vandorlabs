@@ -1,0 +1,8 @@
+task exportPlatformRiderReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PlatformRiderLegacyOracle'
+    args file('build/test-artifacts/platform-riders-source.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
