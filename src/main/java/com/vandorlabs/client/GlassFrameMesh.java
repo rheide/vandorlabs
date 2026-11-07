@@ -9,15 +9,27 @@ import java.util.*;
 
 /** Authored frame widths keep opaque inner sides aligned with the front opening. */
 final class GlassFrameMesh {
-    private static final Map<Key,StaticSurfaceMesh> CACHE=new LinkedHashMap<Key,StaticSurfaceMesh>(64,.75F,true){protected boolean removeEldestEntry(Map.Entry<Key,StaticSurfaceMesh> e){return size()>256;}};
-    private static final class Key{final TextureAtlasSprite front,inner,outer;final int mask,choice,columns,rows;Key(TextureAtlasSprite f,TextureAtlasSprite i,TextureAtlasSprite o,int m,int c,int w,int h){front=f;inner=i;outer=o;mask=m;choice=c;columns=w;rows=h;}public int hashCode(){return Objects.hash(System.identityHashCode(front),System.identityHashCode(inner),System.identityHashCode(outer),mask,choice,columns,rows);}public boolean equals(Object o){if(!(o instanceof Key))return false;Key k=(Key)o;return front==k.front&&inner==k.inner&&outer==k.outer&&mask==k.mask&&choice==k.choice&&columns==k.columns&&rows==k.rows;}}
+    private static final long MAX_BYTES=8L*1024*1024;
+    private static long retainedBytes;
+    private static final Map<Key,StaticSurfaceMesh> CACHE=new LinkedHashMap<>(64,.75F,true);
+    static void clear(){CACHE.clear();retainedBytes=0;}
+    static long retainedBytes(){return retainedBytes;}
+    // Render-thread-only mutable probe; retained keys are owned immutable copies.
+    private static final Key PROBE=new Key();
+    private static final class Key{
+        TextureAtlasSprite front,inner,outer;int mask,choice,columns,rows;
+        Key(){}Key(Key source){set(source.front,source.inner,source.outer,source.mask,source.choice,source.columns,source.rows);}
+        Key set(TextureAtlasSprite f,TextureAtlasSprite i,TextureAtlasSprite o,int m,int c,int w,int h){front=f;inner=i;outer=o;mask=m;choice=c;columns=w;rows=h;return this;}
+        public int hashCode(){int h=System.identityHashCode(front);h=31*h+System.identityHashCode(inner);h=31*h+System.identityHashCode(outer);h=31*h+mask;h=31*h+choice;h=31*h+columns;return 31*h+rows;}
+        public boolean equals(Object o){if(!(o instanceof Key))return false;Key k=(Key)o;return front==k.front&&inner==k.inner&&outer==k.outer&&mask==k.mask&&choice==k.choice&&columns==k.columns&&rows==k.rows;}
+    }
     private static final GlassSurfaceGroups.Layout UNIT=new GlassSurfaceGroups.Layout(0,0,1,1);
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile){return get(tile,UNIT);}
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
         net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
         int mask=GlassSurfaceGroups.frameMask(tile);
-        Key key=new Key(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),mask,tile.frameAppearance.front,layout.columns,layout.rows);
-        StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
+        Key key=PROBE.set(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),mask,tile.frameAppearance.front,layout.columns,layout.rows);
+        StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;key=new Key(key);StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
         double[] widths=ScreenFrameBorders.get(key.choice);
         double left=(mask&1)!=0?(key.choice<0?1:widths[0]*16):0;
         double right=(mask&2)!=0?(key.choice<0?1:widths[1]*16):0;
@@ -30,7 +42,10 @@ final class GlassFrameMesh {
             box(b,key,rightCorner?16-w:0,topCorner?16-h:0,rightCorner?16:w,topCorner?16:h);
         }
         if(key.choice>=0&&FrameAppearance.border(key.choice))front(b,key,atlas.getAtlasSprite(ScreenHousingTextures.texture(key.choice)),widths);
-        mesh=b.finish();CACHE.put(key,mesh);return mesh;
+        mesh=b.finish();long cost=128+mesh.cacheRetainedBytes();
+        if(cost<=MAX_BYTES){CACHE.put(key,mesh);retainedBytes+=cost;
+            while(CACHE.size()>256||retainedBytes>MAX_BYTES){Key oldest=CACHE.keySet().iterator().next();retainedBytes-=128+CACHE.remove(oldest).cacheRetainedBytes();}}
+        return mesh;
     }
     private static void front(StaticSurfaceMesh.Capture b,Key key,TextureAtlasSprite sprite,double[] border){
         double l=(key.mask&1)!=0?border[0]:0,r=(key.mask&2)!=0?border[1]:0;

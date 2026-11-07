@@ -13,7 +13,8 @@ import java.util.*;
 
 /** Bounded wall geometry cache; porthole slice identity also tracks distant group changes. */
 public final class DiagonalWallMeshCache {
-    static final int MAX_ENTRIES=4096,MAX_VERTICES=524288; // At most 16 MiB of vertex payload per world.
+    static final int MAX_ENTRIES=4096,MAX_VERTICES=524288;
+    static final long MAX_BYTES=16L*1024*1024; // Includes shared lazy vertex formats and owner/index overhead.
     private static final Map<World,WorldCache> WORLDS=new WeakHashMap<>();
     private DiagonalWallMeshCache() { }
 
@@ -35,7 +36,9 @@ public final class DiagonalWallMeshCache {
     private static Entry entry(TileEntityAnimatedScreenSelector tile,IBlockState state,
             TextureAtlasSprite wall,TextureAtlasSprite metal,PortholeHex.Slice slice) {
         World world=tile.getWorld();WorldCache cache=WORLDS.get(world);
-        if(cache==null) { cache=new WorldCache();WORLDS.put(world,cache);world.addEventListener(cache); }
+        if(cache==null) {
+            cache=new WorldCache();WORLDS.put(world,cache);world.addEventListener(cache);
+        }
         int settings=(tile.isDiagonalHalfHeight()?1:0)|(tile.isDiagonalFullWidth()?2:0)|(tile.getDiagonalFill()<<2)|(tile.isGlassFramed()?128:0);
         Entry entry=cache.entries.get(tile.getPos());
         if(entry!=null && entry.tile.get()==tile && entry.state==state && entry.settings==settings
@@ -94,13 +97,14 @@ public final class DiagonalWallMeshCache {
                     TEAnimatedScreenSelector.portholeMesh(tile,state));
             glass=capture.finish();
         }
+        mesh=cache.acquire(mesh);glass=cache.acquire(glass);frame=cache.acquire(frame);
         Entry built=new Entry(tile,state,settings,wall,metal,mesh,glass,frame,slice);
         if(built.vertices()<=MAX_VERTICES) {
             cache.entries.put(tile.getPos().toImmutable(),built);
-            cache.vertices+=built.vertices();
-            while(cache.entries.size()>MAX_ENTRIES || cache.vertices>MAX_VERTICES)
+            cache.vertices+=built.vertices();cache.bytes+=512;
+            while(cache.entries.size()>MAX_ENTRIES || cache.bytes>MAX_BYTES)
                 cache.remove(cache.entries.keySet().iterator().next());
-        }
+        }else {cache.release(mesh);cache.release(glass);cache.release(frame);}
         return built;
     }
 
@@ -108,13 +112,15 @@ public final class DiagonalWallMeshCache {
         WorldCache cache=WORLDS.get(world);if(cache!=null)cache.invalidate(x1,y1,z1,x2,y2,z2);
     }
     static int entryCount(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.entries.size(); }
+    static long retainedBytes(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.bytes; }
+    static int sharedCount(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.shared.size(); }
     static int vertexCount(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.vertices; }
     private static void unload(World world) {
         WorldCache cache=WORLDS.remove(world);if(cache!=null)world.removeEventListener(cache);
     }
     public static void clear() {
         for(Map.Entry<World,WorldCache> entry:WORLDS.entrySet())entry.getKey().removeEventListener(entry.getValue());
-        WORLDS.clear();
+        WORLDS.clear();GlassFrameMesh.clear();
     }
 
     private static final class Entry {
@@ -132,10 +138,34 @@ public final class DiagonalWallMeshCache {
             this.wall=wall;this.metal=metal;this.mesh=mesh;this.glass=glass;this.frame=frame;this.slice=slice;
         }
     }
+    /** Exact emitted float records are the sharing key, including atlas UVs and normals.
+     * Local contacts and authored clipping are resolved before interning. */
+    private static final class MeshKey {
+        final StaticSurfaceMesh mesh;final int hash;
+        MeshKey(StaticSurfaceMesh mesh){this.mesh=mesh;hash=mesh.geometryHash();}
+        @Override public int hashCode(){return hash;}
+        @Override public boolean equals(Object other){return other instanceof MeshKey&&mesh.sameGeometry(((MeshKey)other).mesh);}
+    }
+    private static final class SharedMesh {
+        final StaticSurfaceMesh mesh;int references;
+        SharedMesh(StaticSurfaceMesh mesh){this.mesh=mesh;}
+    }
     private static final class WorldCache extends WorldRenderListener {
         final LinkedHashMap<BlockPos,Entry> entries=new LinkedHashMap<>(64,.75F,true);
-        int vertices;
-        void remove(BlockPos pos) { Entry removed=entries.remove(pos);if(removed!=null)vertices-=removed.vertices(); }
+        final Map<MeshKey,SharedMesh> shared=new HashMap<>();
+        int vertices;long bytes;
+        StaticSurfaceMesh acquire(StaticSurfaceMesh mesh){
+            if(mesh==null)return null;MeshKey key=new MeshKey(mesh);SharedMesh found=shared.get(key);
+            if(found==null){found=new SharedMesh(mesh);shared.put(key,found);bytes+=192+mesh.cacheRetainedBytes();}
+            found.references++;return found.mesh;
+        }
+        void release(StaticSurfaceMesh mesh){
+            if(mesh==null)return;MeshKey key=new MeshKey(mesh);SharedMesh found=shared.get(key);
+            if(found==null)throw new IllegalStateException("Untracked wall mesh");
+            if(--found.references==0){shared.remove(key);bytes-=192+mesh.cacheRetainedBytes();}
+        }
+        void removed(Entry entry){vertices-=entry.vertices();bytes-=512;release(entry.mesh);release(entry.glass);release(entry.frame);}
+        void remove(BlockPos pos) { Entry removed=entries.remove(pos);if(removed!=null)removed(removed); }
         void invalidate(int x1,int y1,int z1,int x2,int y2,int z2) {
             if(entries.isEmpty())return;
             int minX=Math.min(x1,x2)-1,maxX=Math.max(x1,x2)+1;
@@ -152,7 +182,7 @@ public final class DiagonalWallMeshCache {
             while(it.hasNext()) {
                 Map.Entry<BlockPos,Entry> entry=it.next();BlockPos pos=entry.getKey();
                 if(pos.getX()>=minX && pos.getX()<=maxX && pos.getY()>=minY && pos.getY()<=maxY
-                        && pos.getZ()>=minZ && pos.getZ()<=maxZ) { vertices-=entry.getValue().vertices();it.remove(); }
+                        && pos.getZ()>=minZ && pos.getZ()<=maxZ) { removed(entry.getValue());it.remove(); }
             }
         }
         @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags) {
