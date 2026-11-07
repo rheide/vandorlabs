@@ -30,7 +30,7 @@ final class VehicleArmReleaseRuntime {
     static void request(EntityGroundVehicle c,VehicleArmCouplers.Address head){
         if(!VehicleArmCouplers.runtime()||!installed(c)||c.transferInProgress||VehicleCouplingTransfer.busy(c))return;
         if(!requests.containsKey(c)&&!jobs.containsKey(c)&&requests.size()>=128){status(c,head,"Release queue is busy; original sections retained");return;}
-        if(!requests.containsKey(c)&&!jobs.containsKey(c))requests.put(c,new Request(c,head));visuals.computeIfAbsent(c,k->new VisualHold(c));VehicleCouplings.wake(c);
+        if(!requests.containsKey(c)&&!jobs.containsKey(c))requests.put(c,new Request(c,head));visuals.computeIfAbsent(c,k->new VisualHold(c)).retiring=false;VehicleCouplings.wake(c);
     }
     /** Returns true only when the captured-pair path owns this admission attempt. */
     static boolean start(EntityGroundVehicle c){
@@ -48,7 +48,7 @@ final class VehicleArmReleaseRuntime {
     static void tick(WorldServer world){
         int budget=1024;for(Map.Entry<EntityGroundVehicle,Job> item:new ArrayList<>(jobs.entrySet())){
             if(budget<256)break;EntityGroundVehicle c=item.getKey();Job job=item.getValue();if(c.world!=world)continue;budget-=256;
-            try{if(!installed(c)||world.getTotalWorldTime()-job.request.tick>200)throw new IllegalArgumentException("Release preparation expired; original sections retained");pollInputs(c);VehicleArmCouplerReleasePlan.Status state=job.prepared.step(256);if(state==VehicleArmCouplerReleasePlan.Status.PENDING)continue;if(state!=VehicleArmCouplerReleasePlan.Status.READY)throw new IllegalArgumentException(job.prepared.error());if(!job.prepared.recheck())throw new IllegalArgumentException(job.prepared.error());VehicleCouplingPlan plan=job.prepared.couplingPlan();
+            try{if(!installed(c)||world.getTotalWorldTime()-job.request.tick>200)throw new IllegalArgumentException("Release preparation expired; original sections retained");pollInputs(c);VehicleArmCouplerReleasePlan.Status state=job.prepared.step(System.getProperty("vandorlabs.reprolab")!=null&&Boolean.getBoolean("vandorlabs.armReleaseSlowChecks")?3:256);if(state==VehicleArmCouplerReleasePlan.Status.PENDING)continue;if(state!=VehicleArmCouplerReleasePlan.Status.READY)throw new IllegalArgumentException(job.prepared.error());if(!job.prepared.recheck())throw new IllegalArgumentException(job.prepared.error());VehicleCouplingPlan plan=job.prepared.couplingPlan();
                 VehicleCouplingTransfer.submit(job.actor,plan,()->{retire(c);status(c,job.request.head,"Separated into two vehicles");},failure->cancel(c,"Coupling recovery: "+message(failure)));
                 jobs.remove(c);requests.remove(c); // Existing transfer owns the uninterrupted hold from this point.
             }catch(Exception|LinkageError failure){cancel(c,message(failure));}
@@ -64,7 +64,7 @@ final class VehicleArmReleaseRuntime {
     }
     static void controlChanged(EntityGroundVehicle c){if(preparing(c))cancel(c,"Controls changed; original sections retained");}
     private static void retire(EntityGroundVehicle c){requests.remove(c);jobs.remove(c);VisualHold hold=visuals.get(c);if(hold!=null)hold.retiring=true;}
-    private static void cancel(EntityGroundVehicle c,String reason){Request r=requests.get(c);Job job=jobs.get(c);VehicleArmCouplers.Address head=r!=null?r.head:job==null?null:job.request.head;retire(c);if(installed(c)&&head!=null)status(c,head,"Section retained: "+reason);}
+    private static void cancel(EntityGroundVehicle c,String reason){Request r=requests.get(c);Job job=jobs.get(c);VehicleArmCouplers.Address head=r!=null?r.head:job==null?null:job.request.head;retire(c);if(installed(c)){VehicleCouplings.delayArmRelease(c);if(head!=null)status(c,head,"Section retained: "+reason);}}
     private static List<BlockPos> roots(EntityGroundVehicle c){List<BlockPos> result=new ArrayList<>();for(TileEntity raw:c.view.tiles.values())if(raw instanceof GearTileEntity&&((GearTileEntity)raw).isController())result.add(raw.getPos());return result;}
     private static void status(EntityGroundVehicle c,VehicleArmCouplers.Address head,String text){if(text==null)text="Release unavailable";if(text.length()>256)text=text.substring(0,256);if(head.arm==null){TileEntity raw=c.view.tiles.get(head.cell);if(raw instanceof TileCoupler)((TileCoupler)raw).status(text);}else{VehicleArmCouplerControl control=VehicleArmCouplerControl.resolve(c,head.arm,head.cell);if(control!=null)control.status(text);}}
     static void unload(net.minecraft.world.World world){requests.keySet().removeIf(c->c.world==world);jobs.keySet().removeIf(c->c.world==world);visuals.keySet().removeIf(c->c.world==world);}
