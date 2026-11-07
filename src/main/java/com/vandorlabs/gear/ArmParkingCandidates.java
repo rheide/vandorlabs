@@ -9,6 +9,7 @@ import net.minecraft.util.math.*;
  * Identity tile envelopes defer deeper factory validation to the final chosen candidate. */
 public final class ArmParkingCandidates {
     public enum Status { COMPLETE, INCOMPLETE, UNSUPPORTED, BOUNDED_REFUSAL }
+    public enum Scope { CURVE, CURRENT }
     /** Integer cell-index map: a local cell maps to (x,y,z)+basis*local.
      * The origin is the minimum corner of the transformed local origin unit cell, not a vertex origin. */
     public static final class Candidate {
@@ -22,29 +23,35 @@ public final class ArmParkingCandidates {
         private boolean same(Candidate other){return x==other.x&&y==other.y&&z==other.z&&Arrays.equals(basis,other.basis);}
     }
     public static final class Result {
-        public final Status status;public final List<Candidate> candidates;
+        public final Status status;public final Scope scope;public final List<Candidate> candidates;
         public final int testedPhases,transformQueries,stateChecks,typedStateQueries,storedSectionCount;
-        Result(Status status,List<Candidate> candidates,int phases,int transforms,int checks,int typed,int sections){this.status=status;this.candidates=Collections.unmodifiableList(new ArrayList<>(candidates));testedPhases=phases;transformQueries=transforms;stateChecks=checks;typedStateQueries=typed;storedSectionCount=sections;}
-        public boolean completeForDistinctGridMappings(){return status==Status.COMPLETE;}
+        Result(Status status,List<Candidate> candidates,int phases,int transforms,int checks,int typed,int sections){this(status,candidates,phases,transforms,checks,typed,sections,Scope.CURVE);}
+        Result(Status status,List<Candidate> candidates,int phases,int transforms,int checks,int typed,int sections,Scope scope){this.scope=scope;this.status=status;this.candidates=Collections.unmodifiableList(new ArrayList<>(candidates));testedPhases=phases;transformQueries=transforms;stateChecks=checks;typedStateQueries=typed;storedSectionCount=sections;}
+        public boolean completeForDistinctGridMappings(){return status==Status.COMPLETE&&scope==Scope.CURVE;}
+        public boolean completeForCurrentPose(){return status==Status.COMPLETE&&scope==Scope.CURRENT;}
         public boolean storedSectionValidationDeferred(){return storedSectionCount>0;}
         public boolean tileValidationDeferred(){for(Candidate candidate:candidates)if(candidate.tileValidationDeferred)return true;return false;}
     }
     private static final class Admission {final boolean allowed,deferred;Admission(boolean allowed,boolean deferred){this.allowed=allowed;this.deferred=deferred;}}
-    private static Result refuse(Status status){return new Result(status,Collections.emptyList(),0,0,0,0,0);}
+    private static Result refuse(Status status,Scope scope){return new Result(status,Collections.emptyList(),0,0,0,0,0,scope);}
     /** Main-thread loaded exact owner only. Never rebuilds gear or creates a payload view. */
-    public static Result enumerate(GearTileEntity arm){
-        if(arm==null||arm.getWorld()==null)return refuse(Status.INCOMPLETE);
+    public static Result enumerate(GearTileEntity arm){return admitted(arm,false,null);}
+    /** Admit only the exact current phase; never adjust the arm to another grid pose. */
+    public static Result current(GearTileEntity arm){return admitted(arm,true,null);}
+    private static Result admitted(GearTileEntity arm,boolean currentOnly,ArmPayload prepared){
+        Scope scope=currentOnly?Scope.CURRENT:Scope.CURVE;
+        if(arm==null||arm.getWorld()==null)return refuse(Status.INCOMPLETE,scope);
         net.minecraft.world.World world=arm.getWorld(),physical=world;int depth=0;
-        while(physical instanceof com.vandorlabs.vehicle.VehicleWorld){if(++depth>8)return refuse(Status.INCOMPLETE);physical=((com.vandorlabs.vehicle.VehicleWorld)physical).parent;}
-        if(physical==null||physical.isRemote||physical.getMinecraftServer()==null||!physical.getMinecraftServer().isCallingFromMinecraftThread()||cachedTile(world,arm.getPos())!=arm||arm.owner()==null||!arm.owner().equals(arm.getPos()))return refuse(Status.INCOMPLETE);
-        if(!validStoredSections(arm))return refuse(Status.INCOMPLETE);
-        if(arm.members().isEmpty()||arm.members().size()>ArmPayload.MAX_BLOCKS)return refuse(Status.INCOMPLETE);
+        while(physical instanceof com.vandorlabs.vehicle.VehicleWorld){if(++depth>8)return refuse(Status.INCOMPLETE,scope);physical=((com.vandorlabs.vehicle.VehicleWorld)physical).parent;}
+        if(physical==null||physical.isRemote||physical.getMinecraftServer()==null||!physical.getMinecraftServer().isCallingFromMinecraftThread()||cachedTile(world,arm.getPos())!=arm||arm.owner()==null||!arm.owner().equals(arm.getPos()))return refuse(Status.INCOMPLETE,scope);
+        if(!validStoredSections(arm))return refuse(Status.INCOMPLETE,scope);
+        if(arm.members().isEmpty()||arm.members().size()>ArmPayload.MAX_BLOCKS)return refuse(Status.INCOMPLETE,scope);
         for(BlockPos member:arm.members()){
             if(arm.storedSections!=null&&arm.storedSections.at(member.subtract(arm.getPos()))!=null)continue;
             net.minecraft.tileentity.TileEntity tile=cachedTile(world,member);
-            if(!(tile instanceof GearTileEntity)||tile.getWorld()!=world||!arm.getPos().equals(((GearTileEntity)tile).owner()))return refuse(Status.INCOMPLETE);
+            if(!(tile instanceof GearTileEntity)||tile.getWorld()!=world||!arm.getPos().equals(((GearTileEntity)tile).owner()))return refuse(Status.INCOMPLETE,scope);
         }
-        return inspect(arm);
+        return inspect(arm,currentOnly,prepared);
     }
     private static boolean anyKey(VehicleStructure.Cell cell,String key){for(int type=1;type<=12;type++)if(cell.hasTileKey(key,type))return true;return false;}
     /** Existing displaced section ownership, checked without ArmStoredSections.read or a tile factory. */
@@ -60,7 +67,7 @@ public final class ArmParkingCandidates {
                     ||!(cell.state.getBlock() instanceof GearBlock)||((GearBlock)cell.state.getBlock()).kind()!=GearBlock.Kind.EXTENDER||((GearBlock)cell.state.getBlock()).sizeClass()!=size
                     ||!cell.hasTileData()||!gearId.equals(cell.tileString("id"))||cell.tileBoolean("GearController")||!cell.hasTileKey("GearOwnerOffset",4)||cell.tileLong("GearOwnerOffset")!=BlockPos.ORIGIN.subtract(at).toLong()
                     ||!cell.hasTileKey("x",99)||!cell.hasTileKey("y",99)||!cell.hasTileKey("z",99)||cell.tileInteger("x")!=at.getX()||cell.tileInteger("y")!=at.getY()||cell.tileInteger("z")!=at.getZ()
-                    ||anyKey(cell,"ArmPayload")||anyKey(cell,"ArmStoredSections")||anyKey(cell,GearTaxiState.KEY))return false;
+                    ||anyKey(cell,"ArmPayload")||anyKey(cell,"ArmStoredSections")||anyKey(cell,GearTaxiState.KEY)||anyKey(cell,"GearParkingHold"))return false;
         }
         return true;
     }
@@ -75,21 +82,24 @@ public final class ArmParkingCandidates {
         return tile==null||tile.isInvalid()?null:tile;
     }
     /** Package seam for actual-transform CPU oracles, with no fake world/capability construction. */
-    static Result inspect(GearTileEntity arm){
-        ArmPayload payload=arm.payload();
-        if(!arm.isOperational()||arm.assembly()==null||payload==null||payload.hasOwnershipJournal()||arm.hasTaxiData()||arm.recoveryDropped()||arm.assembly().kind()!=GearTopology.FootKind.NONE)return refuse(Status.INCOMPLETE);
-        if(!validStoredSections(arm))return refuse(Status.INCOMPLETE);
+    static Result inspect(GearTileEntity arm){return inspect(arm,false,null);}
+    static Result inspectCurrent(GearTileEntity arm){return inspect(arm,true,null);}
+    private static Result inspect(GearTileEntity arm,boolean currentOnly,ArmPayload prepared){
+        Scope scope=currentOnly?Scope.CURRENT:Scope.CURVE;ArmPayload payload=prepared==null?arm.payload():prepared;
+        if(!arm.isOperational()||arm.assembly()==null||payload==null||payload.hasOwnershipJournal()||arm.hasTaxiData()||arm.recoveryDropped()||arm.assembly().kind()!=GearTopology.FootKind.NONE)return refuse(Status.INCOMPLETE,scope);
+        if(!validStoredSections(arm))return refuse(Status.INCOMPLETE,scope);
         int sections=arm.storedSectionCells().size();
-        GearMotion.Mode mode=arm.mode();if(mode!=GearMotion.Mode.EXTEND&&mode!=GearMotion.Mode.ROTATE&&mode!=GearMotion.Mode.ROTATE_LEVEL||mode==GearMotion.Mode.EXTEND&&arm.isSwingArmController()||mode!=GearMotion.Mode.EXTEND&&!arm.isSwingArmController())return refuse(Status.UNSUPPORTED);
-        if(payload.blocks.cells.isEmpty())return refuse(Status.INCOMPLETE);
-        if(payload.blocks.cells.size()>ArmPayload.MAX_BLOCKS)return refuse(Status.BOUNDED_REFUSAL);
+        GearMotion.Mode mode=arm.mode();if(mode!=GearMotion.Mode.EXTEND&&mode!=GearMotion.Mode.ROTATE&&mode!=GearMotion.Mode.ROTATE_LEVEL||mode==GearMotion.Mode.EXTEND&&arm.isSwingArmController()||mode!=GearMotion.Mode.EXTEND&&!arm.isSwingArmController())return refuse(Status.UNSUPPORTED,scope);
+        if(payload.blocks.cells.isEmpty())return refuse(Status.INCOMPLETE,scope);
+        if(payload.blocks.cells.size()>ArmPayload.MAX_BLOCKS)return refuse(Status.BOUNDED_REFUSAL,scope);
         // Identity tile envelopes remain untouched and require chosen-candidate factory validation.
         // Missing own tile data cannot describe a complete owner.
-        for(VehicleStructure.Cell cell:payload.blocks.cells)if(cell.state.getBlock().hasTileEntity(cell.state)&&!cell.hasTileData())return refuse(Status.UNSUPPORTED);
+        for(VehicleStructure.Cell cell:payload.blocks.cells)if(cell.state.getBlock().hasTileEntity(cell.state)&&!cell.hasTileData())return refuse(Status.UNSUPPORTED,scope);
         int transforms=0,checks=0,tested=0,typed=0;List<Candidate> result=new ArrayList<>();Map<Integer,Admission> admissible=new HashMap<>();
         try{
             double[] phases;
-            if(mode==GearMotion.Mode.EXTEND){Vec3d a=payload.transform(arm,0,0,0,0),b=payload.transform(arm,1,0,0,0);transforms+=2;phases=ArmParkingPhases.linear(vector(a),vector(b));}
+            if(currentOnly)phases=new double[]{arm.progress()};
+            else if(mode==GearMotion.Mode.EXTEND){Vec3d a=payload.transform(arm,0,0,0,0),b=payload.transform(arm,1,0,0,0);transforms+=2;phases=ArmParkingPhases.linear(vector(a),vector(b));}
             else{
                 double a=arm.pose(0).angleDegrees(),b=arm.pose(1).angleDegrees();
                 if(mode==GearMotion.Mode.ROTATE)phases=ArmParkingPhases.rotating(a,b);
@@ -117,8 +127,8 @@ public final class ArmParkingCandidates {
                 }
                 if(!admission.allowed)continue;Candidate candidate=new Candidate(phase,mapping,admission.deferred,sections>0);boolean duplicate=false;for(Candidate previous:result)if(candidate.same(previous)){duplicate=true;break;}if(!duplicate)result.add(candidate);
             }
-            return new Result(Status.COMPLETE,result,tested,transforms,checks,typed,sections);
-        }catch(IllegalArgumentException|ArithmeticException bounded){return new Result(Status.BOUNDED_REFUSAL,Collections.emptyList(),tested,transforms,checks,typed,sections);}
+            return new Result(Status.COMPLETE,result,tested,transforms,checks,typed,sections,scope);
+        }catch(IllegalArgumentException|ArithmeticException bounded){return new Result(Status.BOUNDED_REFUSAL,Collections.emptyList(),tested,transforms,checks,typed,sections,scope);}
     }
     private static double[] vector(Vec3d v){return new double[]{v.x,v.y,v.z};}
     private ArmParkingCandidates(){}

@@ -45,7 +45,7 @@ final class VehicleArmParkingGeometry {
         List<Arm> arms=new ArrayList<>();Map<BlockPos,Integer> variables=new LinkedHashMap<>();
         for(Map.Entry<BlockPos,ArmParkingCandidates.Result> entry:candidates.entrySet()){
             TileEntity raw=view.tiles.get(entry.getKey());Integer body=topology.section.get(entry.getKey());ArmParkingCandidates.Result options=entry.getValue();
-            if(!(raw instanceof GearTileEntity)||((GearTileEntity)raw).payload()==null||body==null||options==null||!options.completeForDistinctGridMappings()||options.candidates.isEmpty())throw new IllegalArgumentException("No complete native arm parking choices");
+            if(!(raw instanceof GearTileEntity)||((GearTileEntity)raw).payload()==null||body==null||options==null||options.status!=ArmParkingCandidates.Status.COMPLETE||options.candidates.isEmpty())throw new IllegalArgumentException("No complete native arm parking choices");
             variables.put(entry.getKey(),arms.size());arms.add(new Arm((GearTileEntity)raw,options,body));
         }
         Map<VehicleArmCouplers.Address,Integer> indexes=new LinkedHashMap<>();List<Port> ports=new ArrayList<>();int[][] links=new int[topology.links.size()][2];int points=0,index=0;
