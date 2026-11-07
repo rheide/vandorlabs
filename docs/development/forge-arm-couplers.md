@@ -27,3 +27,9 @@ Grid parking requires the complete transformed payload to have integer cell cent
 First freeze vertical full/slab coupler placement, actual section topology, loaded and saved poses, driven turning and lift, connection-point continuity, collision, and driver admission. A passing current case remains documented as passing; a changed behavior requires its failing-before reproduction.
 
 Then cover arbitrary-mounted arms and captured coupler heads, all six mounting directions, regular and Large/joined arms, integral intermediate strokes, fractional refusal, moving body constraints, and collinear multi-pair limits. Reuse previous-release NBT and saved coupling/split fixtures, actual arm endpoint/recovery paths, Taxi/Hover and parking checks, and dedicated-server linkage. Focused checks do not constitute a release gate or authorize production-server changes.
+
+## Vertical centered-axle correction
+
+The released proposal reproduced a wrong-direction turn for a centered vertical hitch: a saved −20° joint with a −4° parent turn became −24° instead of −16°. The axle's horizontal displacement is zero, so using its point to derive heading amplified floating-point noise. The corrected degenerate branch derives heading from the previous child orientation in the new parent frame. It reuses the existing transform and scalar matrix entries; ordinary nondegenerate trailer proposals are unchanged.
+
+The focused actual Forge client passes all four saved ±20° / parent ±4° cases, exact version-one snapshot/pose round trips, coincident head centers, collision checks, and integrated-server driver input through the normal vehicle update. This first 36-assertion check covers the existing vertical joint, not arm-mounted couplers or a new network format. Dedicated-server linkage also passes.

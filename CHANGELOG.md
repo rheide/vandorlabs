@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Keep centered vertical articulated couplers facing consistently while the parent turns in Forge 1.12.2. Preserve existing saved joint poses and packet fields.
+
 - Keep Taxi/Hover double-jump taps within the current driving context. Opening a dialog, changing vehicle/player/world or losing the driver role clears a pending tap; single presses and held jump keep their existing behavior.
 
 - Remove repeated allocation from Forge Glass/Porthole UV-cache hits, bound retained source/mapped geometry by bytes and clear old atlas entries on resource reload and world unload.

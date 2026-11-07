@@ -212,10 +212,18 @@ public final class VehicleArticulation {
         if(!spend(joints.size()*16))return null;
         double[] ys=base.yaw.clone(),ps=base.pitch.clone();RigidTransform[] next=build(ys,ps);
         for(int i=0;i<joints.size();i++){
-            Joint j=joints.get(i);RigidTransform parent=newRoot.then(next[j.parent]);double[] pivot=parent.point(j.px,j.py,j.pz),old=baseRoot.then(base.bodies[j.child]).point(j.axle[0],j.axle[1],j.axle[2]),neutral=parent.point(j.axle[0],j.axle[1],j.axle[2]);
+            Joint j=joints.get(i);RigidTransform parent=newRoot.then(next[j.parent]),oldBody=baseRoot.then(base.bodies[j.child]);double[] pivot=parent.point(j.px,j.py,j.pz),old=oldBody.point(j.axle[0],j.axle[1],j.axle[2]),neutral=parent.point(j.axle[0],j.axle[1],j.axle[2]);
             double targetY=craft.hover?old[1]+(neutral[1]-old[1])*.35:ground(old[0],old[1],old[2]);if(!Double.isFinite(targetY))return null;
             double[] target=parent.inverse(old[0],targetY,old[2]);double lx=j.axle[0]-j.px,ly=j.axle[1]-j.py,lz=j.axle[2]-j.pz;
-            double desiredYaw=Math.toDegrees(Math.atan2(target[2]-j.pz,target[0]-j.px)-Math.atan2(lz,lx));desiredYaw=MathHelper.wrapDegrees(desiredYaw);desiredYaw=approach(base.yaw[i],desiredYaw,4);
+            double desiredYaw;
+            if(Math.hypot(lx,lz)<=.01){
+                // A centered vertical axle has no horizontal direction. Use the previous
+                // child heading rather than amplifying rounding noise from atan2(0,0).
+                double ox=oldBody.r[0]*j.hx+oldBody.r[2]*j.hz,oy=oldBody.r[3]*j.hx+oldBody.r[5]*j.hz,oz=oldBody.r[6]*j.hx+oldBody.r[8]*j.hz;
+                double hx=parent.r[0]*ox+parent.r[3]*oy+parent.r[6]*oz,hz=parent.r[2]*ox+parent.r[5]*oy+parent.r[8]*oz;
+                desiredYaw=Math.hypot(hx,hz)<1e-9?base.yaw[i]:Math.toDegrees(Math.atan2(hz,hx)-Math.atan2(j.hz,j.hx));
+            }else desiredYaw=Math.toDegrees(Math.atan2(target[2]-j.pz,target[0]-j.px)-Math.atan2(lz,lx));
+            desiredYaw=MathHelper.wrapDegrees(desiredYaw);desiredYaw=approach(base.yaw[i],desiredYaw,4);
             double[] h=RigidTransform.rotation(0,1,0,-desiredYaw).vector(j.hx,0,j.hz),wh=parent.vector(h[0],h[1],h[2]),up=parent.vector(0,1,0);double length=Math.hypot(lx,lz),a=wh[1]*length+up[1]*ly,b=-wh[1]*ly+up[1]*length,r=Math.hypot(a,b);
             double desiredPitch=r<1e-9?base.pitch[i]:Math.toDegrees(Math.asin(MathHelper.clamp((targetY-pivot[1])/r,-1,1))-Math.atan2(a,b));desiredPitch=approach(base.pitch[i],MathHelper.wrapDegrees(desiredPitch),4);double[] limited=RigidTransform.limitedAngles(desiredYaw,desiredPitch,MAX_ANGLE);ys[i]=limited[0];ps[i]=limited[1];next[j.child]=next[j.parent].then(RigidTransform.joint(j.px,j.py,j.pz,j.hx,j.hz,ys[i],ps[i]));
         }
