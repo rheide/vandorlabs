@@ -62,7 +62,7 @@ public final class NativeRampPartBlockRenderer implements BlockEntityRenderer<Na
         if(generation!=bake){WORLDS.clear();generation=bake;}
         var cache=world(level);var entry=presentation(cache,tile.getBlockPos());var data=publication.data();
         if(entry.spec!=data.spec()||entry.choices!=data.materials())bind(entry,data,level);
-        var motion=NativeRampPartVisualClock.sample(level,tile.getBlockPos(),operation,publication.revision(),data);
+        var motion=NativeRampPartVisualClock.sample(level,tile.controller(),operation,publication.revision(),data);
         boolean belt=publication.beltGeometry()!=null;
         if(entry.draw==null||(belt?entry.distance!=motion.distance():entry.pose!=motion.pose())||belt!=(entry.belt!=null)){
             entry.pose=motion.pose();entry.distance=motion.distance();
