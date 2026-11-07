@@ -21,3 +21,19 @@ task testSharedFlatGlassMesh(type: JavaExec) {
     main = 'com.vandorlabs.client.FlatGlassMeshLegacyOracle'
     args file('build/test-artifacts/flat-glass-mesh-shared.jsonl').absolutePath, 'shared'
 }
+
+task exportFlatGlassArtworkReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassArtworkLegacyOracle'
+    args file('build/test-artifacts/flat-glass-artwork-forge.jsonl').absolutePath
+}
+
+task exportFlatGlassSelectionReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassSelectionLegacyOracle'
+    args file('build/test-artifacts/flat-glass-selection-forge.jsonl').absolutePath
+}

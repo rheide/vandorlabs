@@ -1,0 +1,18 @@
+def flatGlassPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/flat-glass-resources')
+tasks.register('generateFlatGlassResources', Exec) {
+    dependsOn tasks.named('generateDoorResources')
+    workingDir projectDir
+    commandLine flatGlassPython, 'generate_flat_glass_resources.py'
+    inputs.file('generate_flat_glass_resources.py')
+    inputs.file('../../tools/compact_runtime_assets.py')
+    inputs.file('../../generated-resources/assets/vandorlabs/data/unified_textures.json')
+    inputs.file('../../generated-resources/assets/vandorlabs/blockstates/programmable_glass.json')
+    inputs.file('../../src/portable/java/com/vandorlabs/tiles/GlassTextures.java')
+    inputs.file('build/generated/door-resources/assets/vandorlabs/data/door_artwork.json')
+    ['../../generated-resources/assets/vandorlabs/models','../../src/main/resources/assets/vandorlabs/models'].each { directory ->
+        inputs.files(fileTree(directory) { include 'block/detailed_doors/**/space_glass_medium_*.json','item/configured/glass_regular_*.json' })
+    }
+    outputs.dir('build/generated/flat-glass-resources')
+}
+tasks.named('processResources') { dependsOn tasks.named('generateFlatGlassResources') }
