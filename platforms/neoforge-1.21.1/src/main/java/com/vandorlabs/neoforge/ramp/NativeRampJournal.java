@@ -42,7 +42,7 @@ public final class NativeRampJournal {
  private static final String MARKER="VandorRampJournal";
  private static final ThreadPoolExecutor IO=new ThreadPoolExecutor(1,1,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(8),task->{var t=new Thread(task,"Vandor native Ramp journals");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy());
  static volatile java.util.function.Consumer<String> testFault;
- private static void fault(String stage){var callback=testFault;if(callback!=null&&System.getProperty("vandorlabs.transmitterPhase","").startsWith("ramp-journal-"))callback.accept(stage);}
+ private static void fault(String stage){var callback=testFault;if(callback!=null){String phase=System.getProperty("vandorlabs.transmitterPhase","");if(phase.startsWith("ramp-journal-")||phase.startsWith("ramp-held-physics-"))callback.accept(stage);}}
  private static void thread(ServerLevel level){if(!level.getServer().isSameThread())throw new IllegalStateException("Ramp ownership requires server thread");}
  private static boolean loaded(ServerLevel level,BlockPos pos){return !level.isOutsideBuildHeight(pos)&&level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4)!=null;}
  private static Path directory(ServerLevel level){var key=level.dimension().location();return level.getServer().getWorldPath(LevelResource.ROOT).resolve("vandorlabs/ramp-journals").resolve(HexFormat.of().formatHex(key.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8)));}
