@@ -1,0 +1,41 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.gear.*;
+import com.vandorlabs.vehicle.*;
+import java.lang.reflect.*;
+import java.util.*;
+import net.minecraft.init.Blocks;
+import net.minecraft.nbt.*;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.*;
+import net.minecraft.util.*;
+import net.minecraft.util.math.BlockPos;
+
+/** Source-token pointer/data contracts; the parent world supplies an actual server-thread identity check. */
+public final class ArmParkingSourceChecks {
+    private static int checks;
+    public static final class CountedChest extends TileEntityChest {static int constructions;public CountedChest(){constructions++;}}
+    private static final class CountedTag extends NBTTagCompound {static int copies;@Override public NBTTagCompound copy(){copies++;return super.copy();}}
+    private static final class Parent extends NonRenderingChecks.MemoryWorld {
+        final MinecraftServer server;Parent(MinecraftServer server){super(false);this.server=server;}
+        @Override public MinecraftServer getMinecraftServer(){return server;}
+    }
+    private static int ownedBatch(ArmParkingSource token){int owned=0;for(int i=0;i<10000;i++)if(token.stillOwned())owned++;return owned;}
+    private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Arm parking source: "+why);}
+    private static NBTTagCompound data(String id,BlockPos at){NBTTagCompound tag=new NBTTagCompound();tag.setString("id",id);tag.setInteger("x",at.getX());tag.setInteger("y",at.getY());tag.setInteger("z",at.getZ());return tag;}
+    public static void main(String[] args)throws Exception{
+        net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(GearTileEntity.class,new ResourceLocation("vandorlabs:modular_gear"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(CountedChest.class,new ResourceLocation("test:parking_source_chest"));GearBlock block=new GearBlock("parking_source_arm",GearBlock.Kind.EXTENDER);net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(block);
+        Field unsafeField=sun.misc.Unsafe.class.getDeclaredField("theUnsafe");unsafeField.setAccessible(true);sun.misc.Unsafe unsafe=(sun.misc.Unsafe)unsafeField.get(null);MinecraftServer server=(MinecraftServer)unsafe.allocateInstance(net.minecraft.server.dedicated.DedicatedServer.class);for(Field field:MinecraftServer.class.getDeclaredFields())if(field.getType()==Thread.class){field.setAccessible(true);field.set(server,Thread.currentThread());}need(server.isCallingFromMinecraftThread(),"Physical parent uses actual MinecraftServer thread check");Parent parent=new Parent(server);
+        BlockPos root=new BlockPos(10,20,10),offset=new BlockPos(0,-3,0),leaf=root.add(offset);NBTTagCompound old=data("test:parking_source_chest",BlockPos.ORIGIN);old.setString("CustomName","Old cargo");NBTTagCompound payload=new NBTTagCompound();payload.setTag("Blocks",VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.CHEST.getDefaultState(),old))).write());payload.setLong("Offset",offset.toLong());payload.setLong("PlacedOffset",offset.toLong());payload.setBoolean("Materialized",true);
+        NBTTagCompound gear=data("vandorlabs:modular_gear",root);gear.setTag("ArmPayload",payload);gear.setBoolean("GearController",true);gear.setBoolean("GearOperational",true);gear.setInteger("GearHeight",3);gear.setString("GearKind","NONE");NBTTagList feet=new NBTTagList();feet.appendTag(new NBTTagIntArray(new int[]{0,-3,0}));gear.setTag("GearFeet",feet);gear.setString("GearMode","EXTEND");gear.setString("ArmMountDirection","DOWN");gear.setDouble("GearProgress",1);gear.setInteger("GearRevision",4);gear.setBoolean("GearTargetDeployed",true);
+        List<VehicleStructure.Cell> cells=new ArrayList<>();cells.add(new VehicleStructure.Cell(root,block.getDefaultState(),gear));for(int n=1;n<3;n++){BlockPos at=root.down(n);NBTTagCompound member=data("vandorlabs:modular_gear",at);member.setLong("GearOwnerOffset",root.subtract(at).toLong());member.setString("ArmMountDirection","DOWN");cells.add(new VehicleStructure.Cell(at,block.getDefaultState(),member));}
+        NBTTagCompound current=data("test:parking_source_chest",leaf);current.setString("CustomName","Current cargo");NBTTagCompound caps=new NBTTagCompound();caps.setLong("OpaqueInventory",12345);current.setTag("ForgeCaps",caps);cells.add(new VehicleStructure.Cell(leaf,Blocks.CHEST.getDefaultState(),current));VehicleStructure source=VehicleStructure.display(cells);VehicleWorld view=new VehicleWorld(parent,source);GearTileEntity owner=(GearTileEntity)view.tiles.get(root);need(owner!=null&&owner.isOperational()&&owner.owner().equals(root),"Prepared exact cached owner");
+        Field raw=VehicleStructure.Cell.class.getDeclaredField("tile");raw.setAccessible(true);CountedTag counted=new CountedTag();counted.merge(current);raw.set(source.at(leaf),counted);CountedTag.copies=0;int constructions=CountedChest.constructions;
+        ArmParkingSource token=ArmParkingSource.capture(source,owner);need(token.stillOwned()&&token.owner()==owner&&token.source()==source&&token.originalPayload()==owner.payload()&&token.payload()!=owner.payload(),"Materialized source refreshed into independent prepared payload");need(CountedTag.copies==1&&CountedChest.constructions==constructions,"Exactly one source tile copy and no factories/capability construction");need(token.payload().blocks.cells.get(0).tileString("CustomName").equals("Current cargo")&&token.payload().blocks.cells.get(0).tileData().getCompoundTag("ForgeCaps").equals(caps)&&owner.payload().blocks.cells.get(0).tileString("CustomName").equals("Old cargo"),"Prepared current cargo/caps without changing original owner");
+        ArmParkingCandidates.Result result=ArmParkingCandidates.enumerate(owner);ArmParkingCandidates.Candidate chosen=null;for(ArmParkingCandidates.Candidate candidate:result.candidates)if(candidate.phase==1)chosen=candidate;need(chosen!=null,"Actual exact current candidate");ArmParkingMaterialization.Plan plan=ArmParkingMaterialization.prepare(token,chosen);need(plan.payloadCells.get(0).tileString("CustomName").equals("Current cargo")&&CountedTag.copies==1&&CountedChest.constructions==constructions,"Chosen token composition does not refresh source twice or construct tiles");
+        for(int i=0;i<20;i++)need(ownedBatch(token)==10000,"Warm owned token");com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().getId(),before=bean.getThreadAllocatedBytes(thread),start=System.nanoTime();int owned=ownedBatch(token);long nanos=System.nanoTime()-start,bytes=bean.getThreadAllocatedBytes(thread)-before;need(owned==10000&&bytes==0&&CountedTag.copies==1,"Warm identity admission allocates/clones nothing owned="+owned+" bytes="+bytes+" copies="+CountedTag.copies);
+        owner.correctProgress(.75);need(!token.stillOwned(),"Progress change without revision retires token");owner.correctProgress(1);owner.triggerMode=1;need(!token.stillOwned(),"Control change without revision retires token");owner.triggerMode=0;view.tiles.remove(root);need(!token.stillOwned(),"Cached owner replacement retires token");view.tiles.put(root,owner);VehicleStructure replacement=VehicleStructure.display(cells);view.structure=replacement;need(!token.stillOwned(),"Source snapshot replacement retires token");view.structure=source;
+        java.util.concurrent.atomic.AtomicBoolean refused=new java.util.concurrent.atomic.AtomicBoolean();Thread worker=new Thread(()->{try{ArmParkingSource.capture(source,owner);}catch(IllegalArgumentException expected){refused.set(true);}});worker.start();worker.join();need(refused.get()&&CountedTag.copies==1,"Worker capture refuses before cloning or registry work");
+        System.out.println("Arm parking source PASS checks="+checks+" refreshCopies="+CountedTag.copies+" factories="+(CountedChest.constructions-constructions)+" warmCalls=10000 allocatedBytes="+bytes+" nanos="+nanos+" edited native cargo/caps/current/revisionless progress/source and owner replacement/worker refusal; no gameplay binding");
+    }
+}

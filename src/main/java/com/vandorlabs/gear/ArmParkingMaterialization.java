@@ -47,10 +47,19 @@ public final class ArmParkingMaterialization {
         public NBTTagCompound rootData(){return updatedRootCell.tileData();}
     }
     /** Clones ownership data only for the selected candidate. No world access, factories or journals. */
+    public static Plan prepare(ArmParkingSource source,ArmParkingCandidates.Candidate selected){
+        if(source==null||!source.stillOwned())throw new IllegalArgumentException("Arm parking source changed");
+        Plan plan=compose(source.source(),source.owner(),selected,source.payload());
+        if(!source.stillOwned())throw new IllegalArgumentException("Arm parking source changed during composition");return plan;
+    }
     public static Plan prepare(VehicleStructure source,GearTileEntity arm,ArmParkingCandidates.Candidate selected){
+        if(source==null||arm==null||arm.payload()==null)throw new IllegalArgumentException("Arm snapshot unavailable");
+        return compose(source,arm,selected,arm.payload().snapshotPlaced(arm,source));
+    }
+    private static Plan compose(VehicleStructure source,GearTileEntity arm,ArmParkingCandidates.Candidate selected,ArmPayload payload){
         if(source==null||arm==null||selected==null||!arm.isOperational()||arm.hasFailedArmSnapshot()||arm.payload()==null||arm.payload().hasOwnershipJournal())throw new IllegalArgumentException("Arm snapshot unavailable");
         VehicleStructure.Cell root=source.at(arm.getPos());if(root==null||!root.hasTileData()||root.state.getBlock()!=arm.getBlockType())throw new IllegalArgumentException("Arm root changed");
-        ArmPayload payload=arm.payload().snapshotPlaced(arm,source);ArmGridMapping mapping=payload.gridMapping(arm,selected.phase);
+        ArmGridMapping mapping=payload.gridMapping(arm,selected.phase);
         if(mapping==null)throw new IllegalArgumentException("Selected arm phase is no longer grid aligned");
         for(VehicleStructure.Cell cell:payload.blocks.cells)if(!mapping.cell(cell.pos).equals(selected.mapping().cell(cell.pos)))throw new IllegalArgumentException("Selected arm mapping changed");
         for(int row=0;row<3;row++)for(int col=0;col<3;col++)if(mapping.basis()[row*3+col]!=selected.basis(row,col))throw new IllegalArgumentException("Selected arm basis changed");

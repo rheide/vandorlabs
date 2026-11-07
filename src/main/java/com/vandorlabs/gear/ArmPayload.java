@@ -354,7 +354,7 @@ public final class ArmPayload {
     private static void failure(String stage,BlockPos at){if(failureInjector!=null&&System.getProperty("vandorlabs.reprolab")!=null)failureInjector.check(stage,at);}
     /** Adopt edits to the already materialized cells without expanding their authorized footprint. */
     /** Chosen-only refresh from the authoritative detached snapshot; never serializes a live tile. */
-    ArmPayload snapshotPlaced(GearTileEntity arm,VehicleStructure source){
+    public ArmPayload snapshotPlaced(GearTileEntity arm,VehicleStructure source){
         if(!materialized)return this;if(hasOwnershipJournal())throw new IllegalArgumentException("Attachment recovery pending");
         List<VehicleStructure.Cell> original=new ArrayList<>(),nativeRows=new ArrayList<>();
         for(int i=0;i<blocks.cells.size();i++){
