@@ -128,6 +128,7 @@ public final class VandorLabsBootstrap {
         com.vandorlabs.neoforge.propulsion.NativePropulsionRegistrations.register(bus);
         com.vandorlabs.neoforge.screen.NativeScreenRegistrations.register(bus);
         com.vandorlabs.neoforge.credentials.NativeReaderRegistrations.register(bus);
+        com.vandorlabs.neoforge.glass.NativeGlassRegistrations.register(bus);
         BLOCKS.register(bus); ITEMS.register(bus);com.vandorlabs.neoforge.credentials.NativeCredentialItems.register(bus); TABS.register(bus);ENTITIES.register(bus);MENUS.register(bus);bus.addListener(WirelessPayload::register);bus.addListener(WirelessTransmissionPayload::register);bus.addListener(SignalControlPayload::register);bus.addListener(PowerLeverPayload::register);bus.addListener(BinaryControlPayload::register);bus.addListener(BinaryTransmissionPayload::register);bus.addListener(FinishPayload::register);bus.addListener(com.vandorlabs.neoforge.shape.ShapeAppearancePayload::register);bus.addListener(com.vandorlabs.neoforge.shape.WallAppearancePayload::register);bus.addListener(com.vandorlabs.neoforge.shape.PortholeGlassPayload::register);bus.addListener(com.vandorlabs.neoforge.shape.DiagonalGeometryPayload::register);bus.addListener(TriggerPayload::register);bus.addListener(com.vandorlabs.neoforge.redstone.TransmitterPayload::register);bus.addListener(NativeMaterialRegistry::commonSetup);
     }
 }
