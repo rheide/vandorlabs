@@ -40,6 +40,11 @@ public final class NativeRampHeldOwners {
   if(container instanceof BlockEntity tile&&tile.getLevel() instanceof ServerLevel world&&blocked(world,tile.getBlockPos()))return true;
   var bypass=MUTATION.get();for(var hold:holds)if(hold.world.get()!=null&&hold.operation!=bypass)for(var ref:hold.containers){var owner=ref.get();if(owner!=null&&(owner==container||container instanceof CompoundContainer compound&&compound.contains(owner)))return true;}return false;
  }
+ /** Exact live transaction and frozen coordinate, without block/tile reads. */
+ static boolean mutationAllows(ServerLevel world,UUID operation,BlockPos root,BlockPos pos){
+  if(!world.getServer().isSameThread())return false;var current=MUTATION.get();if(current==null||!current.mutationArmed()||!current.id().equals(operation)||!current.root().equals(root)||!current.containsPotential(pos))return false;
+  var snapshot=holds;for(int i=0;i<snapshot.size();i++){var hold=snapshot.get(i);if(hold.world.get()==world&&hold.operation==current)return true;}return false;
+ }
  static Scope mutate(NativeRampJournal.Operation operation){var previous=MUTATION.get();if(previous!=null&&previous!=operation)throw new IllegalStateException("Nested foreign Ramp mutation");MUTATION.set(operation);return new Scope(previous);}
  static final class Scope implements AutoCloseable {private final NativeRampJournal.Operation previous;private Scope(NativeRampJournal.Operation previous){this.previous=previous;}public void close(){if(previous==null)MUTATION.remove();else MUTATION.set(previous);}}
  private NativeRampHeldOwners(){}
