@@ -67,3 +67,10 @@ task testArmCouplerPrivatePairs(type: JavaExec) {
  jvmArgs '-Dvandorlabs.armCouplerRuntime=true', '-Dvandorlabs.reprolab=true'
  maxHeapSize = '1g'
 }
+
+task testCouplerGuiAddress(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.CouplerGuiAddressChecks'
+ maxHeapSize = '256m'
+}

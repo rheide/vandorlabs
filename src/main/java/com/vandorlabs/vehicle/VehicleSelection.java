@@ -15,13 +15,16 @@ public final class VehicleSelection {
     public static final class Hit {
         public final VehicleStructure.Cell cell;
         public final RayTraceResult local;
-        public final Action action;
+        public final Action action;public final VehicleArmCouplers.Address capturedCoupler;
         public final double distanceSq;
         private Hit(VehicleStructure.Cell cell, RayTraceResult local, double distanceSq) {
             this.cell = cell;
             this.local = local;
             this.distanceSq = distanceSq;
-            action = cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPeripheral ? Action.COCKPIT
+            VehicleArmCouplers.Address captured=null;
+            if(VehicleArmCouplers.runtime()&&local.hitInfo instanceof com.vandorlabs.gear.ArmPayloadHarvest.Target){com.vandorlabs.gear.ArmPayloadHarvest.Target target=(com.vandorlabs.gear.ArmPayloadHarvest.Target)local.hitInfo;captured=VehicleArmCouplers.Address.payloadCell(target.root,target.cell);}
+            capturedCoupler=captured;
+            action = captured!=null?Action.COUPLER:cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpit || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPeripheral ? Action.COCKPIT
                     : cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController ? Action.CONTROLLER
                     : VehicleChests.supports(cell) ? Action.CHEST
                     : cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler ? Action.COUPLER
@@ -70,6 +73,8 @@ public final class VehicleSelection {
                 if (hit != null) hit = new RayTraceResult(hit.hitVec, hit.sideHit, selected.pos);
             }
             if (hit == null || !finite(hit.hitVec)) continue;
+            if(hit.hitInfo instanceof com.vandorlabs.gear.ArmPayloadHarvest.Target){com.vandorlabs.gear.ArmPayloadHarvest.Target captured=(com.vandorlabs.gear.ArmPayloadHarvest.Target)hit.hitInfo;net.minecraft.tileentity.TileEntity raw=view.getTileEntity(captured.root);if(raw instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.ArmPayload payload=((com.vandorlabs.gear.GearTileEntity)raw).payload();VehicleStructure.Cell original=payload==null?null:payload.blocks.at(captured.cell);if(original==null||!(original.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))hit.hitInfo=null;}}
+
             if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCockpitPart){com.vandorlabs.tiles.TileEntityCockpit root=com.vandorlabs.cockpit.CockpitAssembly.root(view,cell.pos);if(root==null)continue;selected=structure.at(root.getPos());if(selected==null)continue;}
             Vec3d posed=craft!=null&&craft.articulation.active()?craft.articulation.point(hit.hitVec,selected.pos,1):hit.hitVec;
             double distance = start.squareDistanceTo(posed);
