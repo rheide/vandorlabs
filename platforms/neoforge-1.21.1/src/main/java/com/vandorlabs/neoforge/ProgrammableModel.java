@@ -93,6 +93,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         NativeTrapdoorRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         NativeCanopyRenderer.prepare(event.getModelBakery(),wallBake,event.getTextureGetter());
         NativeCanopyItemModel.prepare(event.getModels(),wallBake,event.getTextureGetter());
+        NativeRampPartRenderer.prepare(event.getModelBakery(),wallBake);
         NativeReaderClientBindings.prepare(event.getModels());
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
