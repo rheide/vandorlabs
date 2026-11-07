@@ -9,6 +9,8 @@ import net.minecraft.util.math.*;
  * Identity tile envelopes defer deeper factory validation to the final chosen candidate. */
 public final class ArmParkingCandidates {
     public enum Status { COMPLETE, INCOMPLETE, UNSUPPORTED, BOUNDED_REFUSAL }
+    /** Integer cell-index map: a local cell maps to (x,y,z)+basis*local.
+     * The origin is the minimum corner of the transformed local origin unit cell, not a vertex origin. */
     public static final class Candidate {
         public final double phase;public final int x,y,z;
         public final boolean tileValidationDeferred,storedSectionValidationDeferred;
@@ -38,7 +40,7 @@ public final class ArmParkingCandidates {
         for(BlockPos member:arm.members()){
             if(arm.storedSections!=null&&arm.storedSections.at(member.subtract(arm.getPos()))!=null)continue;
             net.minecraft.tileentity.TileEntity tile=cachedTile(world,member);
-            if(!(tile instanceof GearTileEntity)||!arm.getPos().equals(((GearTileEntity)tile).owner()))return refuse(Status.INCOMPLETE);
+            if(!(tile instanceof GearTileEntity)||tile.getWorld()!=world||!arm.getPos().equals(((GearTileEntity)tile).owner()))return refuse(Status.INCOMPLETE);
         }
         return inspect(arm);
     }
@@ -56,7 +58,7 @@ public final class ArmParkingCandidates {
                     ||!(cell.state.getBlock() instanceof GearBlock)||((GearBlock)cell.state.getBlock()).kind()!=GearBlock.Kind.EXTENDER||((GearBlock)cell.state.getBlock()).sizeClass()!=size
                     ||!cell.hasTileData()||!gearId.equals(cell.tileString("id"))||cell.tileBoolean("GearController")||!cell.hasTileKey("GearOwnerOffset",4)||cell.tileLong("GearOwnerOffset")!=BlockPos.ORIGIN.subtract(at).toLong()
                     ||!cell.hasTileKey("x",99)||!cell.hasTileKey("y",99)||!cell.hasTileKey("z",99)||cell.tileInteger("x")!=at.getX()||cell.tileInteger("y")!=at.getY()||cell.tileInteger("z")!=at.getZ()
-                    ||anyKey(cell,"ArmPayload")||anyKey(cell,"ArmStoredSections"))return false;
+                    ||anyKey(cell,"ArmPayload")||anyKey(cell,"ArmStoredSections")||anyKey(cell,GearTaxiState.KEY))return false;
         }
         return true;
     }
