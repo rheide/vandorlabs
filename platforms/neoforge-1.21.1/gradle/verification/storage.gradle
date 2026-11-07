@@ -5,6 +5,7 @@ tasks.register('testNativeStorageSettings', JavaExec) {
     args rootProject.file('../../testclient/fixtures/storage-source-reference.json.gz').absolutePath
 }
 neoForge.runs.configureEach {
+    systemProperty 'vandorlabs.storageDuplicateReference',rootProject.file('../../testclient/fixtures/storage-duplicate-source-reference.json.gz').absolutePath
     systemProperty 'vandorlabs.storageReference',rootProject.file('../../testclient/fixtures/storage-source-reference.json.gz').absolutePath
     systemProperty 'vandorlabs.storageItemReference',rootProject.file('../../testclient/fixtures/storage-items-source-reference.json.gz').absolutePath
 }

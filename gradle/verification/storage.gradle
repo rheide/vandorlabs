@@ -13,3 +13,12 @@ task exportStorageItemSourceReference(type: JavaExec) {
     main = 'com.vandorlabs.client.StorageItemLegacyChecks'
     maxHeapSize = '1G'
 }
+
+// Separate corpus preserves the accepted baseline reference hashes.
+task exportStorageDuplicateSourceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StorageDuplicateLegacyChecks'
+    maxHeapSize = '1G'
+}
