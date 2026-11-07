@@ -39,6 +39,7 @@ public final class NativeTokenReader {
     private final Host host;
     private CompoundTag retained=new CompoundTag();
     private ItemStack token=ItemStack.EMPTY;
+    private long contentsRevision;
     private Tag opaqueToken;
     private boolean chip,any=true,toggled,toggleApplied;
     private int allowed=127,behavior,logo;
@@ -55,6 +56,8 @@ public final class NativeTokenReader {
     public boolean opaqueOccupied(){return opaqueToken!=null;}
     public boolean returning(){return returnTo!=null&&!token.isEmpty();}
     public ItemStack tokenCopy(){return NativeCredentialItems.ownedCopy(token);}
+    /** Local cache stamp only: changes with physical ownership, never pulse/logo/rejection publication. */
+    public long contentsRevision(){return contentsRevision;}
     public boolean accepts(ItemStack stack){return NativeCredentialItems.accepts(stack,chip());}
     public boolean authorized(ItemStack stack){return NativeCredentialItems.authorized(stack,chip(),effectiveAllowed());}
     public boolean matches(){return authorized(token);}
@@ -69,7 +72,7 @@ public final class NativeTokenReader {
         Tag unresolved=decoded.isEmpty()&&next.contains("InsertedToken")?next.get("InsertedToken"):null;
         UUID owner=next.contains("TokenReturnToMost",Tag.TAG_ANY_NUMERIC)&&next.contains("TokenReturnToLeast",Tag.TAG_ANY_NUMERIC)?new UUID(next.getLong("TokenReturnToMost"),next.getLong("TokenReturnToLeast")):next.hasUUID("TokenReturnTo")?next.getUUID("TokenReturnTo"):null;
         boolean nextAny=!next.contains("AnyToken")||next.getBoolean("AnyToken");int nextAllowed=CredentialCatalog.singleCompany(nextAny?127:next.contains("AllowedTokens")?next.getInt("AllowedTokens"):127);
-        retained=next;retained.remove("InsertedToken");token=decoded.isEmpty()?ItemStack.EMPTY:decoded.copyWithCount(1);opaqueToken=unresolved;
+        retained=next;retained.remove("InsertedToken");token=decoded.isEmpty()?ItemStack.EMPTY:decoded.copyWithCount(1);opaqueToken=unresolved;contentsRevision++;
         returnTo=token.isEmpty()&&opaqueToken==null?null:owner;chip=next.getBoolean("ChipSlot");any=nextAllowed==127;allowed=nextAllowed;behavior=CredentialCatalog.behavior(next.getInt("TokenBehavior"));logo=Math.max(0,Math.min(6,next.getInt("TokenLogo")));
         rejectedUntil=next.getLong("TokenRejectedUntil");pulseUntil=next.getLong("TokenPulseUntil");toggled=next.getBoolean("TokenToggled");toggleApplied=next.getBoolean("TokenToggleApplied");insertStarted=next.getLong("TokenInsertStarted");insertionSequence=next.getLong("TokenInsertionSequence");
     }
@@ -114,17 +117,17 @@ public final class NativeTokenReader {
             if(!occupied())cycleLogo();else{var removed=remove();if(!removed.isEmpty()&&!player.getInventory().add(removed)&&!removed.isEmpty())player.drop(removed,false);}sync(player);return true;
         }
         if(!accepts(held))return inventoryFallback;if(!authorized(held)){reject();return true;}if(occupied())return true;
-        if(behavior>=2)insertToggle(player,held);else{token=NativeCredentialItems.ownedCopy(held).copyWithCount(1);if(!player.isCreative())held.shrink(1);publish(true);}sync(player);return true;
+        if(behavior>=2)insertToggle(player,held);else{token=NativeCredentialItems.ownedCopy(held).copyWithCount(1);contentsRevision++;if(!player.isCreative())held.shrink(1);publish(true);}sync(player);return true;
     }
     private boolean insertToggle(ServerPlayer player,ItemStack held){
         var level=installed();if(level==null||(behavior!=2&&behavior!=3)||occupied()||!host.usable(player)||!authorized(held))return false;
-        token=NativeCredentialItems.ownedCopy(held).copyWithCount(1);held.shrink(1);returnTo=player.getUUID();insertStarted=level.getGameTime();insertionSequence++;toggleApplied=false;publish(false);sound(SoundEvents.IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
+        token=NativeCredentialItems.ownedCopy(held).copyWithCount(1);contentsRevision++;held.shrink(1);returnTo=player.getUUID();insertStarted=level.getGameTime();insertionSequence++;toggleApplied=false;publish(false);sound(SoundEvents.IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
     }
     public void reject(){var level=installed();if(level!=null){long next=level.getGameTime()+12;if(rejectedUntil!=next){rejectedUntil=next;publish(false);}}}
     public void cycleLogo(){int mask=effectiveAllowed();if((mask&1)!=0)return;for(int i=1;i<=7;i++){int candidate=(logoDesign()+i)%7;if((mask&(1<<candidate))!=0){if(logo!=candidate){logo=candidate;publish(false);}return;}}}
     public ItemStack remove(){return returning()?ItemStack.EMPTY:takeForDrop();}
     /** Unknown raw contents are never cleared when no real droppable stack exists. */
-    public ItemStack takeForDrop(){if(installed()==null||opaqueToken!=null||token.isEmpty())return ItemStack.EMPTY;var result=token;token=ItemStack.EMPTY;returnTo=null;publish(false);return result;}
+    public ItemStack takeForDrop(){if(installed()==null||opaqueToken!=null||token.isEmpty())return ItemStack.EMPTY;var result=token;token=ItemStack.EMPTY;contentsRevision++;returnTo=null;publish(false);return result;}
     private static boolean hasRoom(ServerPlayer player,ItemStack token){
         for(var slot:player.getInventory().items)if(slot.isEmpty()||ItemStack.isSameItemSameComponents(slot,token)&&slot.getCount()<Math.min(slot.getMaxStackSize(),player.getInventory().getMaxStackSize()))return true;
         for(var slot:player.getInventory().offhand)if(!slot.isEmpty()&&ItemStack.isSameItemSameComponents(slot,token)&&slot.getCount()<Math.min(slot.getMaxStackSize(),player.getInventory().getMaxStackSize()))return true;return false;
@@ -138,7 +141,7 @@ public final class NativeTokenReader {
             if(!toggleApplied&&now>=insertStarted+8){toggleApplied=true;if((behavior==2||behavior==3)&&matches()){if(behavior==2)toggled=host.flipToggle(toggled);else pulseUntil=now+host.returnPulseTicks();sound(SoundEvents.UI_BUTTON_CLICK.value(),toggled?1.4F:.8F);}dirty=true;}
             if(installed()!=null&&now>=insertStarted+20&&now>=nextReturnAttempt&&returning()){
                 nextReturnAttempt=now+20;var player=host.returnPlayer(level,returnTo);if(player!=null&&player.isAlive()&&hasRoom(player,token)){
-                    var returned=NativeCredentialItems.ownedCopy(token);if(player.getInventory().add(returned)&&returned.isEmpty()){token=ItemStack.EMPTY;returnTo=null;sync(player);sound(SoundEvents.IRON_TRAPDOOR_CLOSE,1.6F);dirty=true;}
+                    var returned=NativeCredentialItems.ownedCopy(token);if(player.getInventory().add(returned)&&returned.isEmpty()){token=ItemStack.EMPTY;contentsRevision++;returnTo=null;sync(player);sound(SoundEvents.IRON_TRAPDOOR_CLOSE,1.6F);dirty=true;}
                 }
             }
         }
