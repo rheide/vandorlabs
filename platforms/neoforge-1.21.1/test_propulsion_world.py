@@ -16,18 +16,35 @@ def await_shutdown(saved,pid):
   if exited and 'All dimensions are saved' in text:return
   time.sleep(.1)
  raise RuntimeError('Actual server process/save completion not established PID='+str(pid))
+def inventory_pixels(path):
+ from PIL import Image
+ image=Image.open(path).convert('RGB');scale=image.width/640
+ if scale!=int(scale):raise AssertionError('Unexpected GUI capture scale')
+ scale=int(scale);total=0
+ for index in range(21):
+  x=(30+index%7*70)*scale;y=(50+index//7*60)*scale
+  ink=sum(image.getpixel((x+dx,y+dy))!=(0,0,0) for dx in range(16*scale) for dy in range(16*scale))
+  if ink<8:raise AssertionError('Actual ItemRenderer slot empty '+str(index))
+  for dx in range(-scale,17*scale):
+   for dy in [-scale,17*scale-1]:
+    if image.getpixel((x+dx,y+dy))!=(0,0,0):raise AssertionError('Inventory horizontal padding '+str(index))
+  for dy in range(-scale,17*scale):
+   for dx in [-scale,17*scale-1]:
+    if image.getpixel((x+dx,y+dy))!=(0,0,0):raise AssertionError('Inventory vertical padding '+str(index))
+  total+=ink
+ return total
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--xvfb',action='store_true');args=parser.parse_args()
+ parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--xvfb',action='store_true');parser.add_argument('--canonical',action='store_true');args=parser.parse_args()
  if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_PROPULSION_WORLD_CHECK='true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='propulsion-world-private-',dir=base))
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_PROPULSION_WORLD_CHECK='true',VANDOR_PROPULSION_CANONICAL_CHECK=str(args.canonical).lower());base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='propulsion-world-private-',dir=base))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
  server_pid=None;saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';phase='propulsion-world-client';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase),server_log,env)
  try:
   deadline=time.monotonic()+120
   while True:
    text=server_log.read_text(errors='replace');pid=re.search(r'actual server PID=(\d+)',text)
-   if 'Done (' in text and pid:server_pid=int(pid.group(1));break
+   if 'Done (' in text and pid and 'settled gallery READY' in text:server_pid=int(pid.group(1));break
    if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Private engine server startup failed: '+str(server_log))
    time.sleep(.5)
   client=out/'client';client.mkdir();(client/'options.txt').write_text('guiScale:2\ntutorialStep:none\nrenderDistance:3\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
@@ -55,5 +72,6 @@ def main():
  particles,particle_diff=changed(image('propulsion-world-stream.png'),image('propulsion-world-no-particles.png'),8)
  if particles<30:raise AssertionError('Actual native engine particle queue negative empty: '+str(particles))
  body_diff.save(out/'body-negative.png');particle_diff.save(out/'particle-negative.png');(out/'renderer-report.txt').write_text('Terrain body negative pixels='+str(body)+'\nStable reload changed pixels='+str(reload)+'\nActual particle-engine negative pixels='+str(particles)+'\n')
- print('Private propulsion world software PASS body='+str(body)+' particles='+str(particles)+' reload='+str(reload)+' '+str(out),flush=True)
+ if args.canonical:print('Canonical inventory software PASS slots=21 paddedPixels='+str(inventory_pixels(client/'screenshots/propulsion-world-inventory.png')),flush=True)
+ print(('Canonical' if args.canonical else 'Private')+' propulsion world software PASS body='+str(body)+' particles='+str(particles)+' reload='+str(reload)+' '+str(out),flush=True)
 if __name__=='__main__':main()
