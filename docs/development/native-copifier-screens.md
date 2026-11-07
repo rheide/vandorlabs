@@ -1,0 +1,9 @@
+# Programmable Screen copied settings
+
+`exportCopifierScreenSourceReference` freezes 5,866 actual released `ProgrammableSettings.capture/apply` observations for all seven Screen roles: 896 full copies across metadata/factory/saved profiles, 4,872 partial edits and 98 row-configuration cases. The expanded `testclient/fixtures/copifier-screen-source.jsonl.gz` is 31,388,880 bytes, SHA-256 `47cb5d0364cfe991f3fdc9f156552fe1a271d991e8a80b30f09d5c37c086859f`.
+
+The copier calls the raw Screen setters rather than the dedicated editor transaction. Activation is a wrapped `DisplayActivation` compound, applied before the legacy trigger setter. Surface changes can enable/disable row headers before copied row configuration. Explicit surface layout takes precedence over the old tile flag. Raw secondary/small settings remain stored even when dormant on a particular role. Frame artwork version is forced to one on the Source display-artwork roles. Copied row configuration validates both headers, truncates to each role's four/eight row capacity and preserves target bank state by index while resetting the copied pulse configuration. Invalid row configuration can be ignored while earlier valid scalar edits remain applicable.
+
+Direct CHIP selection does not use the editor's reader-availability check. Embedded physical chips and runtime journal pages remain local; the oracle checks their unchanged reader payload and page field after every callback, and the clipboard excludes both. Saved page presence still follows the released selected-surface writer. Vehicle surfaces, carried controls and propulsion simulation are excluded.
+
+These are actual callbacks in a fixed-clock memory world. They establish setter order and serialization policy, not native commit, player/packet authorization or restart. Deferred and channel state is retired through actual unload callbacks. Public Copifier dispatch remains unchanged.
