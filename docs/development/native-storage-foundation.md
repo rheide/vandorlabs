@@ -20,7 +20,7 @@ Ordinary main-hand activation opens inventory. Creative sneak activation and the
 
 `NativeStorageSettings` composes the existing `HousingSettings` and material catalog, without installing Screen display defaults or behavior. Its factory and raw-snapshot readers preserve the distinct versioned and legacy default paths. Item settings first merge into a fresh versioned housing save, matching the actual ItemBlock observations. The saved-settings wrapper owns a defensive original copy; appearance edits preserve `Items` and opaque sibling fields.
 
-`testNativeStorageSettings` compares all 39 snapshot and 192 placement cases against the frozen Source reference and checks defensive retention. It passes 1,812 assertions. This is settings parity only: inventory codec, private host, menu, ownership recovery and rendered acceptance remain separate prerequisites for public registration.
+`testNativeStorageSettings` compares all 39 snapshot and 192 placement cases against the frozen Source reference and checks defensive retention. It passes 1,812 assertions. This proves settings parity only; inventory decoding, ownership and menu behavior are verified separately below, and rendered acceptance remains a prerequisite for public registration.
 
 ## Item envelope staging
 
@@ -50,7 +50,7 @@ Configured pick and normal block drops exclude inventory. Actual mining ejects n
 
 The private `test_storage_host.py` dedicated focus passes 2,078 write checks and four complete-process restart checks. It replays all 252 released comparator profiles, 180 inventory operations, 36 automation profiles and all typed/repeated inventory snapshots. It additionally exercises the actual registered item capability, vanilla chest quick-move in both directions, all-slot publication ordering, private-update/pick boundaries, real `ServerPlayerGameMode` placement/mining, late-slot refusal, rollback faults, stale unloaded capability access and specific cold-neighbor boundaries. This uses server-side test players, not a live client packet or renderer. The runtime is retired only after both processes, retaining logs and class/reference hashes.
 
-The material-dialog hook is deliberately unbound. Public registry, capability registration, client model/material rendering, ordinary/Configurizer dialog parity and canonical live-client acceptance remain prerequisites for activation. Storage receives no Screen channel service or embedded-reader implementation.
+The dedicated material dialog now has opt-in bindings, as described below. Public registry, capability registration, client model/material rendering and canonical live-client acceptance remain prerequisites for activation. Storage receives no Screen channel service or embedded-reader implementation.
 
 ## Ambiguous duplicate ownership
 
@@ -61,3 +61,15 @@ The native decoder preserves ordinary vanilla last-wins behavior. An ambiguous d
 An actual placed-owner negative reproduced the earlier opaque-credential loss before the guard. The same focus now replays the Source duplicate reference and retains refused originals exactly, including opaque capability bytes, while the ordinary duplicate controls still match Source. This is intentional recovery behavior for ambiguous snapshots rather than a change to released Source production code.
 
 Here `ownershipBearing` means a nonempty Access Card or Data Chip, or a stack with a nonempty container, bundle or charged-projectile component. It does not classify an empty container or ordinary scalar stack as nested ownership. The final dedicated host replay passes 2,089 write checks and four restart checks; the existing shared item/inventory codec focus still passes 1,952 assertions. Both complete runtimes are pruned through the shared helper after their final phase.
+
+## Dedicated material editor
+
+Storage's material dialog reuses `ProgrammableBlockDialog` and `NativeMaterialPicker`; ordinary inventory access continues to use the vanilla chest screen. The separate actual Source `GuiProgrammableWall.initGui` reference freezes 48 layouts across both viewport sizes, texture layouts, face-override states and every face target. Its SHA-256 is `82e538c1f6c4294887dcdddea6290ea5a777178c7cd25e3b2d32332c714386fc`. The headless oracle installs an empty localization table, so the Done label is compared as a localization key. It does not draw a Source window.
+
+`NativeStorageMenu` binds edits to the exact installed owner and current window. Every edit rechecks the current held Configurizer or Creative permission, loaded identity, range and edit authorization. The fixed settings body is 42 bytes including position, window and six face choices; it never accepts inventory or arbitrary NBT. Length and scalar checks precede face-array allocation. Layout/face changes preserve the stored side material, all slots and unrelated private state. A face/main edit also preserves a legacy side-layout flag when the effective layout did not change, matching the released setter's no-op behavior. The dedicated opener is shared by Configurizer and Creative sneak interaction.
+
+The private dedicated focus passes 781 editor assertions in addition to the 2,089 owner assertions and four restart assertions. It compares all Source controls/list bounds, validates codec round trips and malformed input, rejects stale/replaced owners and wrong tools/windows, and exercises the block's actual GameMode routing with a test menu-provider adapter. That adapter intentionally replaces FakePlayer's no-op menu methods; it does not establish client networking.
+
+The separate private client focus establishes the actual player path: 55 checks cover synchronized Survival mode, selected slot, both hands and position before opening; real native menu/widgets and material-row selection; wheel and scrollbar drag; previous-value right click; settings C2S/S2C; rejected packets after tool removal or window closure; and ordinary vanilla inventory opening with the seven saved diamonds in slot 26. The server also verifies independent adjacent inventory and unchanged private ownership. The 42-byte figure is the settings body, excluding Minecraft framing and fixture acknowledgements.
+
+Bindings remain explicit: a block overrides `menuType()`, the chosen menu factory constructs `NativeStorageMenu(type, window, inventory, buffer.readBlockPos())`, `StorageSettingsPayload.register` installs the transport, and `NativeStorageScreen.register` installs its client screen. None is wired into public Bootstrap. The private world uses a fixture block without a production housing model; this UI proof does not establish Storage rendering, production translations or canonical registry/item acceptance. Runtime retention waits for both JVMs to exit and the server save to complete.
