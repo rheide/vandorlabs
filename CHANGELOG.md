@@ -4,6 +4,8 @@
 
 - Share moving Segmented Door render descriptors across equivalent columns and account for their retained cache memory.
 
+- Share identical Forge diagonal Glass/Porthole meshes after contact trimming and remove allocation from warmed flat Glass frame lookups, with retained-byte limits and atlas retirement.
+
 - Share prepared ordinary Glass geometry between equivalent native tile publications, with allocation-free warmed lookup, bounded retained data and exact rebuilds after eviction or reload.
 
 - Add Creative Configurizer Safe Park for existing articulated vehicle layouts, using a nearby loaded flat area and the durable parking transfer. Preserve original Hover mode and target height during recovery. Fractional arm-pose resolution remains in progress.

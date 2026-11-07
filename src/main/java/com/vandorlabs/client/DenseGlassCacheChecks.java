@@ -51,6 +51,20 @@ public final class DenseGlassCacheChecks {
             if(ticks<40)return false;
             DiagonalWallMeshCache.clear();
             for(int role=0;role<IDS.length;role++)measure(mc,role);
+            if("true".equals(System.getenv("VANDOR_DENSE_GLASS_CACHE_SHARED"))){
+                for(int role=1;role<3;role++){
+                    StaticSurfaceMesh before=mesh(mc,role,0);BlockPos pos=POS[role][0];
+                    DiagonalWallMeshCache.invalidate(mc.world,pos.getX(),pos.getY(),pos.getZ(),pos.getX(),pos.getY(),pos.getZ());
+                    StaticSurfaceMesh rebuilt=mesh(mc,role,0);
+                    if(!before.sameGeometry(rebuilt)||before!=rebuilt)throw new AssertionError("Exact local rebuild must reuse surviving shared records "+IDS[role]);
+                }
+                long bytes=DiagonalWallMeshCache.retainedBytes(mc.world);
+                if(bytes>DiagonalWallMeshCache.MAX_BYTES||GlassFrameMesh.retainedBytes()>8L*1024*1024)throw new AssertionError("Retained geometry byte bound");
+                System.out.println("[vandorlabs][dense-glass] totalWorldRetainedBytes="+bytes+" sharedMeshes="+DiagonalWallMeshCache.sharedCount(mc.world));
+                mc.refreshResources();
+                if(DiagonalWallMeshCache.entryCount(mc.world)!=0||GlassFrameMesh.retainedBytes()!=0)throw new AssertionError("Atlas reload must retire all prepared geometry");
+                for(int role=0;role<IDS.length;role++)measure(mc,role);
+            }
             System.out.println("[vandorlabs][reprolab] utility26-focused PASS dense-glass-cache-only");stage=2;return true;
         }
         return true;
@@ -80,6 +94,6 @@ public final class DenseGlassCacheChecks {
         int emitted=buffer.getVertexCount();buffer.finishDrawing();long emitBytes=bean.getThreadAllocatedBytes(thread)-before;buffer.reset();
         if(emitted!=vertices)throw new AssertionError("Dense emitted vertex mismatch "+IDS[role]);
         System.out.println("[vandorlabs][dense-glass] role="+IDS[role]+" owners=512 uniqueMeshes="+unique.size()+" retainedBytes="+retained+" warmLookup2048Bytes="+lookupBytes+" emittedVertices="+emitted+" lookupAndEmissionBytes="+emitBytes);
-        if(Boolean.getBoolean("vandorlabs.denseGlassRequireShared")&&unique.size()!=1)throw new AssertionError("Equivalent owners must share immutable geometry "+IDS[role]);
+        if("true".equals(System.getenv("VANDOR_DENSE_GLASS_CACHE_SHARED"))&&unique.size()!=1)throw new AssertionError("Equivalent owners must share immutable geometry "+IDS[role]);
     }
 }
