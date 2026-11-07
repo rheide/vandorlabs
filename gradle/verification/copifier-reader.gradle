@@ -1,0 +1,8 @@
+task exportCopifierReaderSourceReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CopifierReaderLegacyOracle'
+ args file("$buildDir/test-artifacts/copifier-reader-source.jsonl").absolutePath
+ maxHeapSize='1G'
+}
