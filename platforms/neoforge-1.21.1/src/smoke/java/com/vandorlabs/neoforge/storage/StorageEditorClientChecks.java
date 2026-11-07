@@ -17,7 +17,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class StorageEditorClientChecks {
  private static int stage,ticks,wait,checks;private static NativeStorageEdit stale;
- @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(StorageEditorClientFixture.enabled())NativeStorageScreen.register(event,StorageEditorClientFixture.menu);}}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(StorageEditorClientFixture.enabled()&&!StorageEditorClientFixture.canonical())NativeStorageScreen.register(event,StorageEditorClientFixture.menu);}}
  private static void need(boolean yes,String why){checks++;if(!yes)throw new IllegalStateException("Storage editor client stage="+stage+": "+why);}
  private static void mode(int operation){PacketDistributor.sendToServer(new StorageEditorClientFixture.Mode(operation));}
  private static void click(NativeStorageScreen screen,int id,int button){var control=screen.controls().stream().filter(c->c.id==id).findFirst().orElseThrow();need(control.enabled&&screen.mouseClicked(control.x+control.width/2D,control.y+7,button),"actual control="+id);}
