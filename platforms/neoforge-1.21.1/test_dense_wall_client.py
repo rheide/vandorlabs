@@ -19,7 +19,7 @@ def main():
   while True:
    text=log.read_text(errors='replace');found=re.search(r'actual server PID=(\d+)',text)
    if 'Done (' in text and found and '[vandorlabs][dense-wall] setup PASS' in text:pid=int(found.group(1));break
-   if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Private Glass startup failed: '+str(log))
+   if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Canonical density startup failed: '+str(log))
    time.sleep(.5)
   client=out/'client';client.mkdir();(client/'options.txt').write_text('guiScale:2\ntutorialStep:none\nrenderDistance:3\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
   task=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
@@ -29,5 +29,7 @@ def main():
   stop(server)
   if pid is not None:await_shutdown(saved,pid)
  check_log(saved/'logs/latest.log','All dimensions are saved');check_log(log,'[vandorlabs][dense-wall] logout PASS')
+ classes=ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge'
+ (out/'artifact.sha256').write_text('\n'.join(hashlib.sha256((classes/name).read_bytes()).hexdigest()+'  '+name for name in ['NativeFlatWallModel.class','NativePanelPlaybackRenderer.class'])+'\n')
  print('Canonical diagonal Glass/Porthole density PASS '+str(out.relative_to(ROOT)),flush=True)
 if __name__=='__main__':main()
