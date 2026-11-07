@@ -15,3 +15,10 @@ tasks.register('testRampAdmissionReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/ramp-admission-source.jsonl.gz').absolutePath,rootProject.file('../../testclient/fixtures/ramp-callbacks-source.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+tasks.register('testRampGeometryReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampGeometryChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-generation-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
