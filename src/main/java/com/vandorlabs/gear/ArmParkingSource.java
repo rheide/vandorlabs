@@ -27,7 +27,7 @@ public final class ArmParkingSource {
         this.source=source;this.owner=owner;this.view=view;this.original=original;this.payload=payload;
         position=owner.getPos().toImmutable();revision=owner.motionRevision();progress=Double.doubleToLongBits(owner.progress());target=owner.target();held=owner.parkingHeld();materialized=original.materialized();assembly=owner.assembly();mode=owner.mode();direction=owner.direction();mount=owner.mountDirection();size=owner.armSize();angle=Double.doubleToLongBits(owner.activeAngle());start=Double.doubleToLongBits(owner.physicalStartAngle());extension=Double.doubleToLongBits(owner.activeExtension());trigger=owner.triggerMode;channels=owner.getRedstoneChannels();rotate=owner.rotatePayload();push=owner.pushBlocks();join=owner.joinEnabled();range=owner.joinRange();carry=owner.carryLoad();height=owner.loadHeight();
     }
-    private static boolean serverThread(World world){
+    static boolean serverThread(World world){
         int depth=0;while(world instanceof VehicleWorld){if(++depth>8)return false;world=((VehicleWorld)world).parent;}
         return world!=null&&!world.isRemote&&world.getMinecraftServer()!=null&&world.getMinecraftServer().isCallingFromMinecraftThread();
     }

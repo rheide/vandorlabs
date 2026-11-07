@@ -170,11 +170,12 @@ public final class ArmPayload {
         private final ArmPayload mapping;
         private final double progress;
         private final Vec3d zero;
-        private final Vec3d[] axes,inverse;
+        private final Vec3d[] axes;
+        private final ArmEndpointTiles states;
         private final boolean turns;
         private Endpoint(GearTileEntity arm,ArmPayload mapping,double progress,Vec3d zero,Vec3d[] axes){
             this.arm=arm;this.mapping=mapping;this.progress=progress;this.zero=zero;this.axes=axes;
-            inverse=new Vec3d[]{new Vec3d(axes[0].x,axes[1].x,axes[2].x),new Vec3d(axes[0].y,axes[1].y,axes[2].y),new Vec3d(axes[0].z,axes[1].z,axes[2].z)};
+            states=new ArmEndpointTiles(axes);
             turns=axes[0].squareDistanceTo(new Vec3d(1,0,0))+axes[1].squareDistanceTo(new Vec3d(0,1,0))+axes[2].squareDistanceTo(new Vec3d(0,0,1))>1e-12;
         }
         BlockPos placed(BlockPos construction){
@@ -188,10 +189,13 @@ public final class ArmPayload {
         }
         ArmPayload capture(EntityPlayerMP actor){
             World world=arm.getWorld();boolean joined=arm.joinEnabled()&&arm.columns().size()>1;
+            VehicleWorld sourceView=world instanceof VehicleWorld?(VehicleWorld)world:null;VehicleStructure source=sourceView==null?null:sourceView.structure;
+            if(sourceView!=null&&(!ArmParkingSource.serverThread(world)||sourceView.tiles.get(arm.getPos())!=arm))throw new IllegalArgumentException("Prepared server attachment source required");
+            ArmPayload previous=arm.payload();int revision=arm.motionRevision();double phase=arm.progress();List<TileEntity> sourceTiles=sourceView==null?null:new ArrayList<>();
             Set<BlockPos> positions;
             if(joined){
                 if(arm.carryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");
-                positions=expandSurfaceLayers(arm,JoinedArms.platform(arm,this::placed));for(BlockPos member:arm.members())VehicleService.permission(actor,member);
+                positions=expandSurfaceLayers(arm,JoinedArms.platform(arm,this::placed));if(sourceView==null)for(BlockPos member:arm.members())VehicleService.permission(actor,member);
             }
             else{
                 BlockPos tip=placed(arm.localCell(0,-arm.assembly().columnHeight(),0));
@@ -212,16 +216,19 @@ public final class ArmPayload {
                 if(physicalMember(arm,at))throw new IllegalArgumentException("The attachment overlaps an arm section");
                 IBlockState state=world.getBlockState(at);
                 if(state.getMaterial().isLiquid()||state.getBlockHardness(world,at)<0)throw new IllegalArgumentException("Unsupported arm attachment: "+state.getBlock().getLocalizedName());
-                VehicleService.permission(actor,at);
-                if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
-                TileEntity tile=world.getTileEntity(at);
-                if(tile instanceof net.minecraft.tileentity.TileEntityPiston||state.getBlock().hasTileEntity(state)&&tile==null)throw new IllegalArgumentException("Attachment block data is unavailable or moving");
-                IBlockState rest=state;
-                if(turns){if(tile!=null||!state.isFullCube()||(rest=rotateState(state,inverse))==null||rotateState(rest,axes)!=state)throw new IllegalArgumentException("This block cannot rotate back from the attachment endpoint");}
-                BlockPos source=construction(at);NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
-                original.add(new VehicleStructure.Cell(source,rest,data==null?null:VehicleTileData.translated(data,source.subtract(at))));
-                nativeCells.add(new VehicleStructure.Cell(at,state,data));
-                origin=minimum(origin,source);installed=minimum(installed,at);
+                if(sourceView==null){if(actor==null)throw new IllegalArgumentException("Use the Configurizer before moving the attachment");VehicleService.permission(actor,at);
+                    if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");}
+                TileEntity tile=sourceView==null?world.getTileEntity(at):sourceView.tiles.get(at);
+                if(tile instanceof net.minecraft.tileentity.TileEntityPiston||state.getBlock().hasTileEntity(state)&&tile==null||tile!=null&&(tile.isInvalid()||tile.getWorld()!=world||!tile.getPos().equals(at)))throw new IllegalArgumentException("Attachment block data is unavailable or moving");
+                if(turns&&tile!=null&&(!(state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)||!(tile instanceof com.vandorlabs.coupler.TileCoupler)))throw new IllegalArgumentException("This block cannot rotate back from the attachment endpoint");
+                NBTTagCompound data;
+                if(sourceView!=null){VehicleStructure.Cell authoritative=source.at(at);if(authoritative==null||authoritative.state!=state||authoritative.hasTileData()!=(tile!=null))throw new IllegalArgumentException("Attachment source state or identity changed");data=authoritative.tileData();sourceTiles.add(tile);}
+                else data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
+                VehicleStructure.Cell nativeCell=new VehicleStructure.Cell(at,state,data);IBlockState rest=turns?states.constructionState(nativeCell):state;
+                if(rest==null)throw new IllegalArgumentException("This block cannot rotate back from the attachment endpoint");
+                BlockPos construction=construction(at);
+                original.add(new VehicleStructure.Cell(construction,rest,data==null?null:VehicleTileData.translated(data,construction.subtract(at))));nativeCells.add(nativeCell);
+                origin=minimum(origin,construction);installed=minimum(installed,at);
             }
             List<VehicleStructure.Cell> normalized=new ArrayList<>(),placed=new ArrayList<>();
             for(int i=0;i<original.size();i++){
@@ -232,9 +239,11 @@ public final class ArmPayload {
             VehicleStructure structure=VehicleStructure.display(normalized);
             try{validateSyncBudget(structure.encode());}catch(java.io.IOException tooLarge){throw new IllegalArgumentException("Attachment too large; reduce platform size",tooLarge);}
             ArmPayload result=new ArmPayload(structure,origin.subtract(arm.getPos()),true,installed.subtract(arm.getPos()));
-            result.gridAligned=mapping.gridAligned;
-            if(turns)result.placedBlocks=VehicleStructure.display(placed);
-            if(!result.matchesPlaced(arm))throw new IllegalArgumentException("Attachment endpoint changed before capture");
+            result.gridAligned=mapping.gridAligned;result.retainedHeader=previous==null?null:previous.retainedHeader;
+            if(turns){result.placedBlocks=VehicleStructure.display(placed);result.gridTileBasis=states.basis();ArmGridTiles.validate(result.blocks,result.placedBlocks,result.gridTileBasis);}
+            if(arm.payload()!=previous||arm.motionRevision()!=revision||arm.progress()!=phase)throw new IllegalArgumentException("Attachment owner changed before capture");
+            if(sourceView!=null){if(sourceView.structure!=source||sourceView.tiles.get(arm.getPos())!=arm)throw new IllegalArgumentException("Attachment source changed before capture");for(int i=0;i<nativeCells.size();i++)if(sourceView.tiles.get(nativeCells.get(i).pos)!=sourceTiles.get(i))throw new IllegalArgumentException("Attachment cached tile changed before capture");}
+            else if(!result.matchesPlaced(arm))throw new IllegalArgumentException("Attachment endpoint changed before capture");
             return result;
         }
         private static BlockPos minimum(BlockPos a,BlockPos b){return a==null?b:new BlockPos(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ()));}
@@ -472,9 +481,9 @@ public final class ArmPayload {
         if(hasOwnershipJournal())return false;
         if(materialized)return true;
         com.vandorlabs.gear.core.GearMotion.Pose pose=arm.pose(progress);
-        VehicleStructure destination=blocks;BlockPos target;
+        VehicleStructure destination=blocks;BlockPos target;int[] placementBasis=null;
         if(Math.abs(pose.angleDegrees())>1e-8&&pose.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL){
-            Placement placement=rotatedPlacement(arm,progress);if(placement==null)return false;destination=placement.blocks;target=placement.origin;
+            Placement placement=rotatedPlacement(arm,progress);if(placement==null)return false;destination=placement.blocks;target=placement.origin;placementBasis=placement.basis;
         }else{
             Vec3d displacement=transform(arm,progress,0,0,0).subtract(new Vec3d(offset));
             if(Math.abs(displacement.x-Math.rint(displacement.x))>1e-8||Math.abs(displacement.y-Math.rint(displacement.y))>1e-8||Math.abs(displacement.z-Math.rint(displacement.z))>1e-8)return false;
@@ -490,7 +499,7 @@ public final class ArmPayload {
         for(VehicleStructure.Cell cell:destination.cells)VehicleService.permission(authorizer,origin.add(cell.pos));
         Map<VehicleStructure.Cell,TileEntity> prepared=prepareTiles(world,origin,destination);
         MovingBlockSupport.validate(blocks,view(arm));java.util.List<BlockPos> targets=new java.util.ArrayList<>();for(VehicleStructure.Cell cell:destination.cells)targets.add(origin.add(cell.pos));if(!ArmTransactions.ready(arm,"restore",targets))return false;
-        placedBlocks=destination==blocks?null:destination;gridTileBasis=null;
+        placedBlocks=destination==blocks?null:destination;gridTileBasis=placementBasis;
         arm.storedSections=stored;
         List<VehicleStructure.Cell> installed=new ArrayList<>();
         try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
@@ -504,9 +513,11 @@ public final class ArmPayload {
         if(world instanceof net.minecraft.world.WorldServer)com.vandorlabs.tiles.WorldActionAuthorization.installed((net.minecraft.world.WorldServer)world,destination,origin,authorizer.getUniqueID());
         placedOffset=target;materialized=true;ArmTransactions.applied(arm);return true;
     }
-    private static final class Placement {final VehicleStructure blocks;final BlockPos origin;Placement(VehicleStructure blocks,BlockPos origin){this.blocks=blocks;this.origin=origin;}}
+    private static final class Placement {final VehicleStructure blocks;final BlockPos origin;final int[] basis;Placement(VehicleStructure blocks,BlockPos origin){this(blocks,origin,null);}Placement(VehicleStructure blocks,BlockPos origin,int[] basis){this.blocks=blocks;this.origin=origin;this.basis=basis;}}
     /** General quarter-turn placement for representable, tile-free full blocks. Other payloads stay retained. */
     @SuppressWarnings({"rawtypes","unchecked"}) private Placement rotatedPlacement(GearTileEntity arm,double progress){
+        boolean typed=false;for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()){if(!(cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))return null;typed=true;}
+        if(typed){ArmGridPlacement mapped=gridPlacement(arm,progress);if(mapped==null)return null;int x=Integer.MAX_VALUE,y=x,z=x;for(VehicleStructure.Cell cell:mapped.cells){x=Math.min(x,cell.pos.getX());y=Math.min(y,cell.pos.getY());z=Math.min(z,cell.pos.getZ());}BlockPos origin=new BlockPos(x,y,z);List<VehicleStructure.Cell> normalized=new ArrayList<>();for(VehicleStructure.Cell cell:mapped.cells)normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),BlockPos.ORIGIN.subtract(origin)):null));return new Placement(VehicleStructure.display(normalized),origin.subtract(arm.getPos()),gridMapping(arm,progress).basis());}
         Vec3d zero=transform(arm,progress,0,0,0);Vec3d[] axes={transform(arm,progress,1,0,0).subtract(zero),transform(arm,progress,0,1,0).subtract(zero),transform(arm,progress,0,0,1).subtract(zero)};
         for(Vec3d axis:axes)if(Math.abs(Math.abs(axis.x)+Math.abs(axis.y)+Math.abs(axis.z)-1)>1e-8)return null;
         List<VehicleStructure.Cell> transformed=new ArrayList<>();int minX=Integer.MAX_VALUE,minY=minX,minZ=minX;
