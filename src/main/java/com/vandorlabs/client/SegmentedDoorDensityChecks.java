@@ -34,6 +34,7 @@ final class SegmentedDoorDensityChecks {
    System.out.println("[vandorlabs][reprolab] segmented-density owners="+count+" maxDescriptors="+maximumDescriptors+" fourFrameAllocatedBytes="+bytes+" emittedVertices="+vertices+" retainedBytes="+SegmentedDoorRenderer.retainedBytes());
    need(maximumDescriptors<=4,"equivalent moving owners must share immutable descriptors, got "+maximumDescriptors);need(SegmentedDoorRenderer.retainedBytes()<=18*1024*1024,"bounded renderer retention");
    SegmentedDoorBenchmark.contracts(mc,output);
+   SegmentedDoorRenderChecks.run(mc,output);
    System.out.println("[vandorlabs][reprolab] utility26-focused PASS segmented-density-only");return true;
   }finally{SegmentedDoorVisuals.authored=authored;}
  }

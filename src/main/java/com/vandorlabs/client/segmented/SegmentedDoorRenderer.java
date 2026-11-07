@@ -51,7 +51,7 @@ public final class SegmentedDoorRenderer extends TileEntitySpecialRenderer<Segme
     private static final class Column {
         long key=-1,rawKey,revision=-1,origin,dynamic=-1;int phase;int vehicleRevision;java.lang.ref.WeakReference<Object> structure;final java.lang.ref.WeakReference<SegmentedDoorTile> tile;
         final int pass;Config config;Column(SegmentedDoorTile tile,int pass){this.tile=new java.lang.ref.WeakReference<>(tile);this.pass=pass;}double x=Double.NaN,y,z;int[] data;final int[] lights=new int[SegmentedDoorTile.MAX_HEIGHT];
-        int bytes(){return data.length*4+528;}
+        int bytes(){return data.length*4+528+(config==null?0:config.retainedBytes());}
     }
     private static LightChanges lightChanges(net.minecraft.world.World world){
         while(world instanceof com.vandorlabs.vehicle.VehicleWorld)world=((com.vandorlabs.vehicle.VehicleWorld)world).parent;
@@ -61,19 +61,25 @@ public final class SegmentedDoorRenderer extends TileEntitySpecialRenderer<Segme
 
     /** Hash lookup plus exact descriptor equality prevents atlas cache aliasing. */
     private static final class Config {
-        final com.vandorlabs.segmented.SegmentedDoorWindows.Layout[] windows;final com.vandorlabs.segmented.SegmentedDoorSettings settings;final com.vandorlabs.segmented.SegmentedDoorSettings[] panels;final int[] artwork;final int texture,height,column,columns,frame,steps,pass,face;final long key;
-        Config(SegmentedDoorTile t,int frame,int steps,int pass){artwork=new int[t.height];settings=t.settings;windows=new com.vandorlabs.segmented.SegmentedDoorWindows.Layout[t.height];panels=new com.vandorlabs.segmented.SegmentedDoorSettings[t.height];for(int row=0;row<t.height;row++){SegmentedDoorTile member=t.panel(row);artwork[row]=member.effectiveTexture();windows[row]=com.vandorlabs.segmented.SegmentedDoorWindows.layout(member);panels[row]=member.settings;}texture=t.texture;height=t.height;column=t.column;columns=t.columns;this.frame=frame;this.steps=steps;this.pass=pass;face=t.facing().getIndex();long h=1469598103934665603L;for(int value:new int[]{settings.hashCode(),texture,height,column,columns,frame,steps,pass,face})h=(h^value)*1099511628211L;for(int choice:artwork)h=(h^choice)*1099511628211L;for(com.vandorlabs.segmented.SegmentedDoorSettings panel:panels)h=(h^panel.hashCode())*1099511628211L;for(com.vandorlabs.segmented.SegmentedDoorWindows.Layout window:windows)h=(h^window.hashCode())*1099511628211L;key=h|Long.MIN_VALUE;}
-        boolean matches(SegmentedDoorTile t,int frame,int steps,int pass){for(int row=0;row<t.height;row++){SegmentedDoorTile member=t.panel(row);if(row>=panels.length||artwork[row]!=member.effectiveTexture()||!panels[row].equals(member.settings)||!windows[row].equals(com.vandorlabs.segmented.SegmentedDoorWindows.layout(member)))return false;}return this.frame==frame&&this.steps==steps&&this.pass==pass&&texture==t.texture&&height==t.height&&column==t.column&&columns==t.columns&&face==t.facing().getIndex()&&settings.equals(t.settings);}
+        final com.vandorlabs.segmented.SegmentedDoorWindows.Layout[] windows;com.vandorlabs.segmented.SegmentedDoorSettings settings;final com.vandorlabs.segmented.SegmentedDoorSettings[] panels;final int[] artwork;int texture,height,column,columns,frame,steps,pass,face;long key;
+        Config(){windows=new com.vandorlabs.segmented.SegmentedDoorWindows.Layout[SegmentedDoorTile.MAX_HEIGHT];panels=new com.vandorlabs.segmented.SegmentedDoorSettings[SegmentedDoorTile.MAX_HEIGHT];artwork=new int[SegmentedDoorTile.MAX_HEIGHT];}
+        Config(Config probe){windows=java.util.Arrays.copyOf(probe.windows,probe.height);panels=java.util.Arrays.copyOf(probe.panels,probe.height);artwork=java.util.Arrays.copyOf(probe.artwork,probe.height);settings=probe.settings;texture=probe.texture;height=probe.height;column=probe.column;columns=probe.columns;frame=probe.frame;steps=probe.steps;pass=probe.pass;face=probe.face;key=probe.key;}
+        Config load(SegmentedDoorTile t,int frame,int steps,int pass){settings=t.settings;for(int row=0;row<t.height;row++){SegmentedDoorTile member=t.panel(row);artwork[row]=member.effectiveTexture();windows[row]=com.vandorlabs.segmented.SegmentedDoorWindows.layout(member);panels[row]=member.settings;}texture=t.texture;height=t.height;column=t.column;columns=t.columns;this.frame=frame;this.steps=steps;this.pass=pass;face=t.facing().getIndex();long h=1469598103934665603L;h=mix(h,settings.hashCode());h=mix(h,texture);h=mix(h,height);h=mix(h,column);h=mix(h,columns);h=mix(h,frame);h=mix(h,steps);h=mix(h,pass);h=mix(h,face);for(int row=0;row<height;row++)h=mix(h,artwork[row]);for(int row=0;row<height;row++)h=mix(h,panels[row].hashCode());for(int row=0;row<height;row++)h=mix(h,windows[row].hashCode());key=h|Long.MIN_VALUE;return this;}
+        private static long mix(long hash,int value){return (hash^value)*1099511628211L;}
+        int retainedBytes(){return 256+height*192;}
+        boolean matches(SegmentedDoorTile t,int frame,int steps,int pass){if(this.frame!=frame||this.steps!=steps||this.pass!=pass||texture!=t.texture||height!=t.height||column!=t.column||columns!=t.columns||face!=t.facing().getIndex()||!settings.equals(t.settings))return false;for(int row=0;row<height;row++){SegmentedDoorTile member=t.panel(row);if(artwork[row]!=member.effectiveTexture()||!panels[row].equals(member.settings)||!windows[row].equals(com.vandorlabs.segmented.SegmentedDoorWindows.layout(member)))return false;}return true;}
         public int hashCode(){return (int)(key^(key>>>32));}
-        public boolean equals(Object o){if(!(o instanceof Config))return false;Config c=(Config)o;return java.util.Arrays.equals(artwork,c.artwork)&&java.util.Arrays.equals(panels,c.panels)&&java.util.Arrays.equals(windows,c.windows)&&key==c.key&&texture==c.texture&&height==c.height&&column==c.column&&columns==c.columns&&frame==c.frame&&steps==c.steps&&pass==c.pass&&face==c.face&&settings.equals(c.settings);}
+        public boolean equals(Object o){if(this==o)return true;if(!(o instanceof Config))return false;Config c=(Config)o;if(key!=c.key||texture!=c.texture||height!=c.height||column!=c.column||columns!=c.columns||frame!=c.frame||steps!=c.steps||pass!=c.pass||face!=c.face||!settings.equals(c.settings))return false;for(int row=0;row<height;row++)if(artwork[row]!=c.artwork[row]||!panels[row].equals(c.panels[row])||!windows[row].equals(c.windows[row]))return false;return true;}
     }
+    // This bounded scratch descriptor never enters a column or retained template.
+    private final Config lookupConfig=new Config();
     private static final class Capture extends BufferBuilder {
         int row;byte[] rows=new byte[SegmentedDoorTile.MAX_HEIGHT*24];
         Capture(){super(SegmentedDoorTile.MAX_HEIGHT*24*16);}
         @Override public void endVertex(){if(getVertexCount()==rows.length)rows=java.util.Arrays.copyOf(rows,rows.length*2);rows[getVertexCount()]=(byte)row;super.endVertex();}
     }
     private static final class Template {
-        final int[] data;final byte[] rows;final int stride,lightOffset,bytes;Config config;long rawKey;int phase;
+        final int[] data;final byte[] rows;final int stride,lightOffset;int bytes;Config config;long rawKey;int phase;
         Template(Capture b){data=b.getVertexState().getRawBuffer();rows=java.util.Arrays.copyOf(b.rows,b.getVertexCount());stride=b.getVertexFormat().getIntegerSize();lightOffset=b.getVertexFormat().getUvOffsetById(1)/4;bytes=data.length*4+rows.length+272;}
     }
     private static void clearTemplates(){com.vandorlabs.client.SegmentedDoorPanels.clear();TEMPLATES.clear();templateFormat=null;retained=0;COLUMNS.clear();COLUMN_LRU.clear();columnBytes=0;}
@@ -85,7 +91,7 @@ public final class SegmentedDoorRenderer extends TileEntitySpecialRenderer<Segme
         double aspect=nativePanel&&pass==0?com.vandorlabs.client.SegmentedDoorPanels.aspect(tile.effectiveTexture()):1;int phase=aspect>1?(int)(com.vandorlabs.segmented.SegmentedPanelMesh.tilePhase(tile.column,0,aspect)>>>32):0;
         long key=phase==0?rawKey:((rawKey*1099511628211L)^phase)&Long.MAX_VALUE;
         Column[] passes=COLUMNS.get(tile);if(passes==null){passes=new Column[2];COLUMNS.put(tile,passes);}Column column=passes[pass];if(column==null){column=new Column(tile,pass);passes[pass]=column;}
-        boolean features=!nativePanel||!tile.uniformArtwork()||pass!=0;Config config=null;if(features){config=column.config;if(config==null||!config.matches(tile,frame,steps,pass)){config=new Config(tile,frame,steps,pass);}key=config.key;}
+        boolean features=!nativePanel||!tile.uniformArtwork()||pass!=0;Config config=null;if(features){config=column.config;if(config==null||!config.matches(tile,frame,steps,pass)){config=lookupConfig.load(tile,frame,steps,pass);}key=config.key;}
         COLUMN_LRU.put(column,Boolean.TRUE);
         LightChanges changes=lightChanges(tile.getWorld());long origin=0;int vehicleRevision=0;Object structure=null;
         if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld vehicle=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();origin=vehicle.origin.toLong();vehicleRevision=vehicle.tileRevision;structure=vehicle.structure;}
@@ -93,12 +99,13 @@ public final class SegmentedDoorRenderer extends TileEntitySpecialRenderer<Segme
         boolean geometry=column.key!=key||column.x!=x||column.y!=y||column.z!=z||!java.util.Objects.equals(column.config,config)||!features&&(column.rawKey!=rawKey||column.phase!=phase);
         Template mesh=null;
         if(geometry){
+            int oldBytes=column.data==null?0:column.bytes();
             mesh=TEMPLATES.get(key);
-            if(mesh==null||!java.util.Objects.equals(mesh.config,config)||!features&&(mesh.rawKey!=rawKey||mesh.phase!=phase)){if(mesh!=null){TEMPLATES.remove(key);retained-=mesh.bytes;}capture.begin(GL11.GL_QUADS,templateFormat);emit(tile,0,0,0,capture,progress,true,pass);capture.finishDrawing();mesh=new Template(capture);mesh.config=config;mesh.rawKey=rawKey;mesh.phase=phase;while(!TEMPLATES.isEmpty()&&retained+mesh.bytes>CACHE_BYTES){java.util.Iterator<Template> it=TEMPLATES.values().iterator();Template old=it.next();it.remove();retained-=old.bytes;}TEMPLATES.put(key,mesh);retained+=mesh.bytes;}
-            if(column.data==null||column.data.length!=mesh.data.length){if(column.data!=null)columnBytes-=column.bytes();column.data=new int[mesh.data.length];columnBytes+=column.bytes();lighting=true;}
+            if(mesh==null||!java.util.Objects.equals(mesh.config,config)||!features&&(mesh.rawKey!=rawKey||mesh.phase!=phase)){if(mesh!=null){TEMPLATES.remove(key);retained-=mesh.bytes;}capture.begin(GL11.GL_QUADS,templateFormat);emit(tile,0,0,0,capture,progress,true,pass);capture.finishDrawing();mesh=new Template(capture);mesh.config=config==lookupConfig?new Config(lookupConfig):config;mesh.bytes+=mesh.config==null?0:mesh.config.retainedBytes();mesh.rawKey=rawKey;mesh.phase=phase;while(!TEMPLATES.isEmpty()&&retained+mesh.bytes>CACHE_BYTES){java.util.Iterator<Template> it=TEMPLATES.values().iterator();Template old=it.next();it.remove();retained-=old.bytes;}if(mesh.bytes<=CACHE_BYTES){TEMPLATES.put(key,mesh);retained+=mesh.bytes;}}
+            if(column.data==null||column.data.length!=mesh.data.length){column.data=new int[mesh.data.length];lighting=true;}
             System.arraycopy(mesh.data,0,column.data,0,mesh.data.length);
             for(int v=0;v<mesh.rows.length;v++){int at=v*mesh.stride;column.data[at]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(column.data[at])+x));column.data[at+1]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(column.data[at+1])+y));column.data[at+2]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(column.data[at+2])+z));}
-            column.key=key;column.rawKey=rawKey;column.phase=phase;column.config=config;column.x=x;column.y=y;column.z=z;
+            column.key=key;column.rawKey=rawKey;column.phase=phase;column.config=mesh.config;column.x=x;column.y=y;column.z=z;columnBytes+=column.bytes()-oldBytes;
         }
         if(lighting){for(int row=0;row<tile.height;row++){lightSamples++;int light=tile.getWorld().getCombinedLight(lightPos.setPos(tile.getPos().getX(),tile.getPos().getY()-row,tile.getPos().getZ()),0);column.lights[row]=light;}column.dynamic=dynamicRevision;column.revision=changes.revision;column.origin=origin;column.vehicleRevision=vehicleRevision;column.structure=structure==null?null:new java.lang.ref.WeakReference<>(structure);}
         if(geometry||lighting){if(mesh==null)mesh=TEMPLATES.get(key);if(mesh==null){column.key=-1;cached(tile,x,y,z,buffer,progress,pass);return;}for(int v=0;v<mesh.rows.length;v++)column.data[v*mesh.stride+mesh.lightOffset]=column.lights[mesh.rows[v]];}
