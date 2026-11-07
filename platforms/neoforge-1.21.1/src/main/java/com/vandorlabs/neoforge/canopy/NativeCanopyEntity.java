@@ -16,7 +16,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     public record Publication(NativeCanopyRenderSnapshot visual,NativeCanopyGeometry.Snapshot geometry,
             float progress,boolean targetOpen,boolean waiting,boolean draws,boolean resolved,boolean inert){}
     final NativeCanopyControl.State control=new NativeCanopyControl.State();
-    boolean channelPowered;
+    boolean channelPowered,suppressHarvest;
     private final String kind;
     private NativeCanopySettings settings=NativeCanopySettings.fresh();
     private NativeCanopyLinks links;
@@ -44,7 +44,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
         publication=new Publication(visual,null,links.progress(),links.open(),links.waiting(),localDraws(),false,inert);modelData=kind.equals("regular_canopy_glass")&&publication.draws()?net.neoforged.neoforge.client.model.data.ModelData.builder().with(TERRAIN,visual).build():net.neoforged.neoforge.client.model.data.ModelData.EMPTY;
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        control.reset();channelPowered=false;var original=tag.copy();initialized=!tag.getBoolean(UNINITIALIZED);try{
+        control.reset();channelPowered=false;suppressHarvest=false;var original=tag.copy();initialized=!tag.getBoolean(UNINITIALIZED);try{
             NativePlatformComponents.requireSupported(original,registries);
             if(!initialized||tag.contains("NeoForgeData")&&!tag.contains("NeoForgeData",Tag.TAG_COMPOUND)||tag.contains(RECOVERY)||tag.contains("NativeCanopySchema")&&(!tag.contains("NativeCanopySchema",Tag.TAG_INT)||tag.getInt("NativeCanopySchema")!=1))throw new IllegalArgumentException("Unsupported canopy owner");
             var nextSettings=NativeCanopySettings.read(tag);var nextLinks=NativeCanopyLinks.read(tag,worldPosition);
@@ -76,6 +76,8 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     @Override public void setChannelLevel(int value){channelPowered=value>0;NativeCanopyControl.refreshPower(this);}
     @Override public void beforeChannelRegistration(){NativeCanopyControl.refreshPower(this);}
     void markRemoving(){removing(true);}
+    boolean removing(){return removing;}
+    void uninitializedRemnant(){var original=saveWithoutMetadata(level.registryAccess());initialized=false;inert=true;retained=original;retained.putBoolean(UNINITIALIZED,true);links=NativeCanopyLinks.read(new CompoundTag(),worldPosition);publishUnresolved();setChanged();}
     void removing(boolean value){removing=value;publishUnresolved();}
     void installItem(NativeCanopyPlacement.Prepared prepared){unloading=false;removing=false;clearRemoved();setBlockState(prepared.state());loadWithComponents(prepared.initialSnapshot(),level.registryAccess());if(inert)throw new IllegalArgumentException("Failed canopy platform installation");placementChoices(prepared.settings());}
     void retainPlacementRecovery(NativeCanopyPlacement.Prepared prepared,CompoundTag item){initialized=true;unloading=false;removing=false;clearRemoved();retained=prepared.snapshot();retained.put(RECOVERY,prepared.snapshot());retained.put(PLACEMENT_ITEM,item.copy());settings=NativeCanopySettings.fresh();links=NativeCanopyLinks.read(new CompoundTag(),worldPosition);inert=true;pending=true;publishUnresolved();}
@@ -89,7 +91,7 @@ public final class NativeCanopyEntity extends BlockEntity implements com.vandorl
     void configurationRole(NativeCanopyEntity owner){initialized=true;inert=false;links=new NativeCanopyLinks(owner.getBlockPos(),links.pair(),links.joinedWidth(),owner.links().centered(),links.hollow(),links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
     void configurationFootprint(java.util.List<BlockPos> cells){links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),links.hollow(),java.util.List.copyOf(cells),java.util.Set.of(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
     void configurationSettings(NativeCanopySettings next){settings=next;links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),true,links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
-    void retainConfigurationRecovery(CompoundTag snapshot){retained=snapshot.copy();retained.put(RECOVERY,snapshot.copy());inert=true;pending=true;publishUnresolved();setChanged();}
+    void retainConfigurationRecovery(CompoundTag snapshot){retained=snapshot.copy();if(!retained.contains(RECOVERY))retained.put(RECOVERY,snapshot.copy());initialized=true;links=NativeCanopyLinks.read(new CompoundTag(),worldPosition);inert=true;pending=true;publishUnresolved();setChanged();}
     /** Full retained item is the sole recoverable owner after a consumed placement failure. */
     public net.minecraft.world.item.ItemStack placementRecoveryItem(){if(!retained.contains(PLACEMENT_ITEM,Tag.TAG_COMPOUND)||level==null)return net.minecraft.world.item.ItemStack.EMPTY;try{return com.vandorlabs.neoforge.inventory.NativeInventoryItems.modern(retained.getCompound(PLACEMENT_ITEM),level.registryAccess());}catch(RuntimeException failure){return net.minecraft.world.item.ItemStack.EMPTY;}}
     public boolean initialized(){return initialized;}
