@@ -7,13 +7,13 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--xvfb',action='store_true');args=parser.parse_args()
+ parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--xvfb',action='store_true');parser.add_argument('--canonical',action='store_true');args=parser.parse_args()
  if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='flat-glass-icons-',dir=base));game=out/'client';game.mkdir();(game/'options.txt').write_text('onboardAccessibility:false\ntutorialStep:none\nrenderDistance:2\nmaxFps:60\nguiScale:1\n')
  generated=ROOT/'platforms/neoforge-1.21.1/build/generated/flat-glass-resources';relative=Path('assets/vandorlabs/models/item/flat-glass-authored/configured/glass_regular_0_clear_t0_f0.json');source=generated/relative
  if not source.is_file():raise RuntimeError('generateFlatGlassResources output required')
  pack=game/'resourcepacks/glass-item-tiny';target=pack/relative;target.parent.mkdir(parents=True);(pack/'pack.mcmeta').write_text(json.dumps({'pack':{'pack_format':34,'description':'Glass Source geometry preservation fixture'}}));body=json.loads(source.read_text());body['elements'][0]['from'][0]+=0.00001;target.write_text(json.dumps(body))
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_FLAT_GLASS_ITEM_CHECK='true');task=command('runClient','-PreaderRenderCheck','-PmodernClientRunDirectory='+str(game))
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_FLAT_GLASS_ITEM_CHECK='true',VANDOR_FLAT_GLASS_CANONICAL_CHECK=str(args.canonical).lower());task=command('runClient','-PreaderRenderCheck','-PmodernClientRunDirectory='+str(game))
  if args.xvfb:task=['xvfb-run','-a','-s','-screen 0 1280x720x24']+task;env['LIBGL_ALWAYS_SOFTWARE']='1'
  run(task,out/'client.log','[vandorlabs][glass-item-model] title PASS',env)
  from PIL import Image
