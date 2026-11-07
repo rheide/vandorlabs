@@ -17,7 +17,12 @@ import net.neoforged.neoforge.event.tick.LevelTickEvent;
 public final class NativeCanopySweeps {
     private static final long BUDGET=8L*1024*1024;
     private static final ThreadPoolExecutor WORKER=new ThreadPoolExecutor(1,1,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(4),task->{var thread=new Thread(task,"Vandor native canopy closure");thread.setDaemon(true);return thread;},new ThreadPoolExecutor.AbortPolicy());
-    public record Input(NativeCanopyRenderSnapshot visual,int x,int y,int z){}
+    public record Input(NativeCanopyRenderSnapshot visual,int x,int y,int z){
+        public Input {Objects.requireNonNull(visual);}
+        /** Packet decoding creates fresh settings wrappers; geometry identity is their scalar value. */
+        @Override public boolean equals(Object other){if(this==other)return true;if(!(other instanceof Input b))return false;var a=visual;var v=b.visual;var s=a.settings().data();var t=v.settings().data();return x==b.x&&y==b.y&&z==b.z&&a.kind().equals(v.kind())&&a.facing()==v.facing()&&a.width()==v.width()&&a.mask()==v.mask()&&a.roof()==v.roof()&&a.centered()==v.centered()&&s.depth==t.depth&&s.scale==t.scale&&s.mount==t.mount&&s.motion==t.motion&&s.hinge==t.hinge&&s.angle==t.angle&&s.openable==t.openable&&s.slideForward==t.slideForward;}
+        @Override public int hashCode(){var s=visual.settings().data();int h=visual.kind().hashCode();h=31*h+x;h=31*h+y;h=31*h+z;h=31*h+visual.facing();h=31*h+visual.width();h=31*h+visual.mask();h=31*h+visual.roof();h=31*h+(visual.centered()?1:0);h=31*h+s.depth;h=31*h+s.scale;h=31*h+s.mount;h=31*h+s.motion;h=31*h+s.hinge;h=31*h+s.angle;h=31*h+(s.openable?1:0);h=31*h+(s.slideForward?1:0);return h;}
+    }
     private static final class Pending {
         final Input input;final NativeCanopyEntity owner;Future<CanopyBoundsIndex> future;boolean failed;
         Pending(Input input,NativeCanopyEntity owner){this.input=input;this.owner=owner;}
@@ -30,7 +35,7 @@ public final class NativeCanopySweeps {
     private static final Map<ServerLevel,State> WORLDS=new WeakHashMap<>();
     private NativeCanopySweeps(){}
     private static Input input(NativeCanopyEntity owner){var p=owner.getBlockPos();return new Input(owner.publication().visual(),p.getX(),p.getY(),p.getZ());}
-    private static boolean installed(NativeCanopyEntity owner){return owner.getLevel() instanceof ServerLevel world&&world.getServer().isSameThread()&&owner.available()&&NativeCanopyLifecycle.installed(owner);}
+    private static boolean installed(NativeCanopyEntity owner){return owner.getLevel() instanceof ServerLevel world&&world.getServer().isSameThread()&&com.vandorlabs.neoforge.fluid.NativeFluidWorld.open(world)&&owner.available()&&NativeCanopyLifecycle.installed(owner);}
     /** Pure CPU operation; full-open to closed is the released conservative close interval. */
     public static CanopyBoundsIndex build(Input input){
         var v=input.visual();var context=new CanopySweepBounds.Context(v.kind(),v.width(),v.settings().data(),1,0);
