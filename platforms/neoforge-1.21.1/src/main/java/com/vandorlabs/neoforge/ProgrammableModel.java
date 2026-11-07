@@ -51,7 +51,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         TextureAtlasSprite margin=event.getTextureGetter().apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.withDefaultNamespace("block/black_concrete")));
         var shapeBake=new ProgrammableShapeModel.Bake(sprites);
         var wallBake=new NativeFlatWallModel.Bake(sprites,event.getTextureGetter());
-        var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake);
+        var segmentedBake=NativeSegmentedRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake,event.getModels(),net.minecraft.client.Minecraft.getInstance().getResourceManager());
         var segmentedTerrain=new NativeSegmentedTerrainModel.Bake(event.getModelBakery(),event.getModels(),segmentedBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
         var glassBake=NativeGlassClientBindings.installed()?NativeFlatGlassRenderer.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake,net.minecraft.client.Minecraft.getInstance().getResourceManager()):null;
         var programmerBake=com.vandorlabs.neoforge.programmer.client.NativeProgrammerResources.prepare(event);
