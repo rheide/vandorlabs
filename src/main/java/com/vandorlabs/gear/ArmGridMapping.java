@@ -29,4 +29,7 @@ public final class ArmGridMapping {
     public EnumFacing facing(EnumFacing local){int x=local.getFrontOffsetX(),y=local.getFrontOffsetY(),z=local.getFrontOffsetZ();return EnumFacing.getFacingFromVector(axes[0]*x+axes[1]*y+axes[2]*z,axes[3]*x+axes[4]*y+axes[5]*z,axes[6]*x+axes[7]*y+axes[8]*z);}
     int[] basis(){return axes.clone();}
     public boolean rotates(){return axes[0]!=1||axes[4]!=1||axes[8]!=1;}
+    /** The exact native state used by final publication; null means this basis is unsupported.
+     * No tile data is cloned, installed or interpreted beyond the existing typed mapping policy. */
+    public net.minecraft.block.state.IBlockState state(com.vandorlabs.vehicle.VehicleStructure.Cell cell){return rotates()?ArmGridTiles.state(cell,axes):cell.state;}
 }

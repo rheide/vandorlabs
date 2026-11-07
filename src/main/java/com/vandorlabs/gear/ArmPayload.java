@@ -98,7 +98,7 @@ public final class ArmPayload {
         List<VehicleStructure.Cell> mapped=new ArrayList<>(blocks.cells.size());
         int minX=Integer.MAX_VALUE,minY=minX,minZ=minX;
         for(VehicleStructure.Cell cell:blocks.cells){
-            IBlockState state=mapping.rotates()?ArmGridTiles.state(cell,mapping.basis()):cell.state;if(state==null)return null;
+            IBlockState state=mapping.state(cell);if(state==null)return null;
             BlockPos at=mapping.cell(cell.pos);NBTTagCompound data=cell.tileData();
             if(data!=null)data=VehicleTileData.translated(data,at.subtract(cell.pos));
             mapped.add(new VehicleStructure.Cell(at,state,data));minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());
