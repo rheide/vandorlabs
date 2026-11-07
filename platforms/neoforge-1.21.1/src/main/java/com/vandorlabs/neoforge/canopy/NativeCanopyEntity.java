@@ -18,7 +18,7 @@ public final class NativeCanopyEntity extends BlockEntity {
     private NativeCanopyLinks links;
     private CompoundTag retained=new CompoundTag();
     private volatile Publication publication;
-    private boolean inert,unloading,pending=true;
+    private boolean inert,unloading,removing,pending=true;
     public NativeCanopyEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,String kind){
         super(type,pos,state);this.kind=kind;NativeCanopyModels.builtin().dimensions(kind);links=NativeCanopyLinks.read(new CompoundTag(),pos);publishUnresolved();
     }
@@ -27,13 +27,15 @@ public final class NativeCanopyEntity extends BlockEntity {
     public NativeCanopyLinks links(){return links;}
     public Publication publication(){return publication;}
     public boolean inert(){return inert;}
-    public boolean available(){return !inert&&!unloading&&!isRemoved();}
+    public boolean available(){return !inert&&!unloading&&!removing&&!isRemoved();}
     public CompoundTag recoverySnapshot(){return retained.copy();}
     public Direction facing(){return getBlockState().hasProperty(BlockStateProperties.HORIZONTAL_FACING)?getBlockState().getValue(BlockStateProperties.HORIZONTAL_FACING):Direction.NORTH;}
-    public int width(){return NativeCanopyModels.builtin().dimensions(kind).width()*(links.pair()==null?1:links.joinedWidth());}
-    private boolean localDraws(){return (links.anchor()==null||links.anchor().equals(worldPosition))&&(links.pair()==null||links.pair().equals(worldPosition));}
+    private int localWidth(){return NativeCanopyModels.builtin().dimensions(kind).width()*(links.pair()==null?1:links.joinedWidth());}
+    /** Owning-thread Source ownership getter; worker/render consumers use the immutable publication. */
+    public int width(){if(level!=null){var owner=NativeCanopyLifecycle.owner(this);if(owner!=this)return owner.localWidth();}return localWidth();}
+    private boolean localDraws(){return !removing&&(links.anchor()==null||links.anchor().equals(worldPosition))&&(links.pair()==null||links.pair().equals(worldPosition));}
     private void publishUnresolved(){
-        int width=width();NativeCanopyRenderSnapshot visual=new NativeCanopyRenderSnapshot(kind,facing().get3DDataValue(),Math.min(9,width),0,0,links.centered(),settings);
+        int width=localWidth();NativeCanopyRenderSnapshot visual=new NativeCanopyRenderSnapshot(kind,facing().get3DDataValue(),Math.min(9,width),0,0,links.centered(),settings);
         publication=new Publication(visual,null,links.progress(),links.open(),links.waiting(),localDraws(),false,inert);
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
@@ -62,6 +64,9 @@ public final class NativeCanopyEntity extends BlockEntity {
     @Override public void setRemoved(){unloading=true;pending=false;super.setRemoved();}
     @Override public void onChunkUnloaded(){unloading=true;pending=false;super.onChunkUnloaded();}
     @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){pending=true;publishUnresolved();}}
+    void markRemoving(){removing=true;publishUnresolved();}
+    void stageLinks(NativeCanopyLinks next){links=next;pending=true;publishUnresolved();}
+    void notifyChanged(){setChanged();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}
     boolean pending(){return pending;}
     void prepared(Publication next){publication=next;pending=false;}
 }

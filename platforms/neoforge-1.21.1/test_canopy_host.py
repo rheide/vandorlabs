@@ -16,7 +16,7 @@ def await_exit(phase):
 def main():
  output=Path(artifact_directory(prefix='canopy-host-native-',dir=ROOT/'build/test-artifacts'));saved=output/'saved-world';world(saved,0)
  for phase in ['write','read']:
-  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=canopy-host-'+phase),output/(phase+'.log'),'[vandorlabs][canopy-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+  run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=canopy-host-'+phase),output/(phase+'.log'),'[vandorlabs][canopy-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_CANOPY_JOINED_REFERENCE=str(ROOT/"build/test-artifacts/canopy-joined-forge.jsonl")))
   check_log(saved/'logs/latest.log','All dimensions are saved')
   await_exit(phase)
  evidence=[]
