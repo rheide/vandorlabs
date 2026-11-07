@@ -1,0 +1,7 @@
+// Pure fixed-point finite-domain prerequisite; no world or vehicle mutation.
+task testGridCouplerParking(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath=files(compilePortableTests.destinationDir)
+ main='com.vandorlabs.physics.GridCouplerParkingTest'
+ maxHeapSize='512m'
+}
