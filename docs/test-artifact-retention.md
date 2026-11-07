@@ -1,5 +1,7 @@
 # Test artifact retention
 
+The legacy viewscreen harness resolves custom run roots to absolute paths before launching the client, whose working directory differs from the outer suite. This keeps copied mods, captured output and disposable game files in the same owned runtime.
+
 The legacy viewscreen harness and native focused launchers automatically reclaim their generated game/server payloads after the **whole suite** completes. Restart phases and nested checks keep their shared worlds until the outer launcher finishes.
 
 Set `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` before launching to keep full runtime directories. This opt-out is recorded in the run metadata and survives later cleanup sweeps. Use it when a test world must be reopened manually.

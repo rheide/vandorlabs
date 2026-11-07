@@ -314,7 +314,9 @@ esac
 ROOT=$(cd "$(dirname "$0")/.." && pwd)
 JAVA8=/usr/lib/jvm/java-8-openjdk-amd64
 RUN_ROOT=${VANDOR_LABS_TEST_RUN_ROOT:-"$ROOT/testclient"}
+# The client launcher changes directory; every owned runtime path must stay absolute.
 mkdir -p "$RUN_ROOT"
+RUN_ROOT=$(cd "$RUN_ROOT" && pwd)
 RUN_OUT=$(mktemp -d "$RUN_ROOT/render-run.XXXXXX")
 
 # Claim only this fresh run and its generated default game directory. Custom
