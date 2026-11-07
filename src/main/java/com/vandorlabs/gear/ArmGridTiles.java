@@ -18,8 +18,11 @@ final class ArmGridTiles {
         Vec3d[] out={new Vec3d(m[0],m[3],m[6]),new Vec3d(m[1],m[4],m[7]),new Vec3d(m[2],m[5],m[8])};
         if(ArmGridMapping.of(BlockPos.ORIGIN,Vec3d.ZERO,out)==null)throw new IllegalArgumentException("Invalid attachment basis");return out;
     }
-    static IBlockState state(VehicleStructure.Cell cell,int[] basis){
-        Vec3d[] axes=axes(basis);IBlockState state=cell.state;
+    static IBlockState state(VehicleStructure.Cell cell,int[] basis){return state(cell,cell.state,basis);}
+    /** Same typed policy for inverse mapping; the tile still belongs to this exact block type. */
+    static IBlockState state(VehicleStructure.Cell cell,IBlockState state,int[] basis){
+        if(state.getBlock()!=cell.state.getBlock())return null;
+        Vec3d[] axes=axes(basis);
         if(!(state.getBlock() instanceof BlockCoupler))return cell.hasTileData()||!state.isFullCube()?null:ArmPayload.rotateState(state,axes);
         if(state.getPropertyKeys().size()!=(state.getBlock() instanceof BlockCouplerSlab?3:2))return null;
         ResourceLocation id=TileEntity.getKey(TileCoupler.class);
