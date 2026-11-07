@@ -43,7 +43,7 @@ public final class ModularGearVehicles {
         return false;
     }
     public static void tick(EntityGroundVehicle craft){
-        if(craft.view==null||craft.transferInProgress||craft.ownershipBlocked)return;
+        if(craft.view==null||craft.transferInProgress||craft.ownershipBlocked||VehicleCouplings.preparingArmRelease(craft))return;
         if(!craft.world.isRemote&&TaxiModularGear.tick(craft))return;
         if(!craft.world.isRemote&&captureAttachment(craft))return;
         Map<BlockPos,Double> desired=new LinkedHashMap<>();Set<BlockPos> notify=new LinkedHashSet<>();VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);

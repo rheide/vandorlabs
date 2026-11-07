@@ -25,10 +25,13 @@ public final class MessageGearMotion implements IMessage {
         MessageGearMotion packet=new MessageGearMotion();packet.dimension=gear.getWorld().provider.getDimension();packet.tick=gear.getWorld().getTotalWorldTime();packet.poses.add(new Pose(gear));
         BlockPos p=gear.getPos();PacketHandler.INSTANCE.sendToAllAround(packet,new NetworkRegistry.TargetPoint(packet.dimension,p.getX()+.5,p.getY()+.5,p.getZ()+.5,256));
     }
-    public static void send(EntityGroundVehicle craft,Collection<BlockPos> positions){
+    public static void send(EntityGroundVehicle craft,Collection<BlockPos> positions){send(craft,positions,false);}
+    /** Cosmetic pause only; authoritative blocked state and packet layout remain unchanged. */
+    public static void sendHeld(EntityGroundVehicle craft,Collection<BlockPos> positions){send(craft,positions,true);}
+    private static void send(EntityGroundVehicle craft,Collection<BlockPos> positions,boolean held){
         if(craft.world.isRemote||positions.isEmpty())return;
         MessageGearMotion packet=new MessageGearMotion();packet.dimension=craft.dimension;packet.entity=craft.getEntityId();packet.craft=craft.getUniqueID();packet.tick=craft.world.getTotalWorldTime();
-        for(BlockPos pos:positions){TileEntity tile=craft.view.getTileEntity(pos);if(tile instanceof GearTileEntity)packet.poses.add(new Pose((GearTileEntity)tile));
+        for(BlockPos pos:positions){TileEntity tile=craft.view.getTileEntity(pos);if(tile instanceof GearTileEntity){Pose pose=new Pose((GearTileEntity)tile);if(held)pose.blocked=true;packet.poses.add(pose);}
             if(packet.poses.size()==64){publish(craft,packet);packet=new MessageGearMotion();packet.dimension=craft.dimension;packet.entity=craft.getEntityId();packet.craft=craft.getUniqueID();packet.tick=craft.world.getTotalWorldTime();}}
         if(!packet.poses.isEmpty())publish(craft,packet);
     }

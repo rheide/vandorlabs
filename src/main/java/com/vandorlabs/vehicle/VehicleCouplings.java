@@ -18,7 +18,11 @@ import net.minecraftforge.fml.common.gameevent.TickEvent;
 public final class VehicleCouplings {
     private static final Map<EntityGroundVehicle,Job> JOBS=new IdentityHashMap<>();
     private static final Map<EntityGroundVehicle,BlockPos> RELEASE=new WeakHashMap<>();
-    public static void requestRelease(EntityGroundVehicle craft,BlockPos at){if(craft!=null){RELEASE.put(craft,at.toImmutable());wake(craft);}}
+    public static void requestRelease(EntityGroundVehicle craft,BlockPos at){if(craft!=null){if(VehicleArmReleaseRuntime.requestNative(craft,at))return;RELEASE.put(craft,at.toImmutable());wake(craft);}}
+    public static void requestRelease(EntityGroundVehicle craft,VehicleArmCouplers.Address at){VehicleArmReleaseRuntime.request(craft,at);}
+    public static boolean preparingArmRelease(EntityGroundVehicle craft){return VehicleArmReleaseRuntime.preparing(craft);}
+    static void pollArmReleaseInputs(EntityGroundVehicle craft){VehicleArmReleaseRuntime.pollInputs(craft);}
+    static void releaseControlsChanged(EntityGroundVehicle craft){VehicleArmReleaseRuntime.controlChanged(craft);}
     private static final Map<EntityGroundVehicle,Long> NEXT=new WeakHashMap<>();
     public static void wake(EntityGroundVehicle craft){if(craft!=null)NEXT.remove(craft);}
     private static final class Job {
@@ -41,6 +45,7 @@ public final class VehicleCouplings {
     private static void status(EntityGroundVehicle craft,BlockPos at,String text){TileCoupler tile=craft.view==null?null:tile(craft,at);if(tile!=null)tile.status(text);}
     private static void start(EntityGroundVehicle craft){
         if(craft.structure==null||craft.view==null||craft.isDead||craft.ownershipBlocked||craft.transferInProgress||VehicleCouplingTransfer.busy(craft))return;
+        if(VehicleArmReleaseRuntime.start(craft))return;
         BlockPos release=null;List<BlockPos> candidates=new ArrayList<>();
         for(VehicleStructure.Cell cell:craft.structure.couplers){TileCoupler tile=tile(craft,cell.pos);if(tile==null)continue;tile.sample();
             if(hasPair(craft,cell.pos)){TileCoupler other=tile(craft,cell.pos.offset(cell.state.getValue(BlockCoupler.FACING)));if(other!=null&&(!tile.requested()||!other.requested())&&(cell.state.getValue(BlockCoupler.LOCKED)&&craft.structure.at(other.getPos()).state.getValue(BlockCoupler.LOCKED)))release=cell.pos;}
@@ -80,7 +85,8 @@ public final class VehicleCouplings {
     }
     private static void physical(EntityGroundVehicle craft,VehicleStructure proposed){for(VehicleStructure.Cell cell:proposed.cells)if(cell.state.getBlock() instanceof BlockCoupler){TileCoupler coupler=tile(craft,cell.pos);if(coupler!=null)craft.signals.couplerState(coupler,cell.state.getValue(BlockCoupler.LOCKED));}}
     public static void tick(WorldServer world){
-        for(EntityGroundVehicle craft:new ArrayList<>(VehicleLookup.loaded(world))){if(JOBS.containsKey(craft)||world.getTotalWorldTime()<NEXT.getOrDefault(craft,0L))continue;NEXT.put(craft,world.getTotalWorldTime()+20);start(craft);}
+        for(EntityGroundVehicle craft:new ArrayList<>(VehicleLookup.loaded(world))){if(JOBS.containsKey(craft)||VehicleArmReleaseRuntime.hasJob(craft)||world.getTotalWorldTime()<NEXT.getOrDefault(craft,0L))continue;NEXT.put(craft,world.getTotalWorldTime()+20);start(craft);}
+        VehicleArmReleaseRuntime.tick(world);
         int budget=1024;Iterator<Map.Entry<EntityGroundVehicle,Job>> iterator=JOBS.entrySet().iterator();
         while(iterator.hasNext()&&budget>0){Job job=iterator.next().getValue();if(job.craft.world!=world)continue;budget-=256;
             try{
@@ -97,6 +103,6 @@ public final class VehicleCouplings {
         }
     }
     @SubscribeEvent public static void tick(TickEvent.WorldTickEvent event){if(event.phase==TickEvent.Phase.END&&event.world instanceof WorldServer)tick((WorldServer)event.world);}
-    @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){JOBS.entrySet().removeIf(e->e.getKey().world==event.getWorld());NEXT.keySet().removeIf(e->e.world==event.getWorld());RELEASE.keySet().removeIf(e->e.world==event.getWorld());}
+    @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){VehicleArmReleaseRuntime.unload(event.getWorld());JOBS.entrySet().removeIf(e->e.getKey().world==event.getWorld());NEXT.keySet().removeIf(e->e.world==event.getWorld());RELEASE.keySet().removeIf(e->e.world==event.getWorld());}
     private VehicleCouplings(){}
 }
