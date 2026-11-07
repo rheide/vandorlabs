@@ -85,3 +85,11 @@ task exportFlatGlassContactSymmetryReference(type: JavaExec) {
     main = 'com.vandorlabs.client.FlatGlassContactSymmetryLegacyOracle'
     args file('build/test-artifacts/flat-glass-contact-symmetry-forge.jsonl').absolutePath
 }
+
+task exportFlatGlassFluidReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassFluidLegacyOracle'
+    args file('build/test-artifacts/flat-glass-fluid-forge.jsonl').absolutePath
+}
