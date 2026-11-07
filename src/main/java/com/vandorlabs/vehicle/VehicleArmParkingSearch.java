@@ -52,7 +52,9 @@ final class VehicleArmParkingSearch {
     GridCouplerParking.Result result(){if(!done)throw new IllegalStateException("Arm parking search is pending");requireStable();return search.result();}
     void requireStable(){
         if(craft.isDead||craft.ownershipBlocked||requireHold&&!craft.transferInProgress||craft.structure!=source||craft.view!=view||view.structure!=source||view.craft!=craft||view.parent!=craft.world)throw new IllegalArgumentException("Vehicle changed during arm parking preparation");
-        for(int i=0;i<roots.size();i++){GearTileEntity arm=roots.get(i);if(view.tiles.get(arm.getPos())!=arm||arm.payload()!=payloads.get(i)||arm.motionRevision()!=revisions[i])throw new IllegalArgumentException("Arm changed during parking preparation");}
-        for(ArmParkingSource token:prepared.values())if(!token.stillOwned())throw new IllegalArgumentException("Prepared arm source changed during parking preparation");
+        for(int i=0;i<roots.size();i++){
+            GearTileEntity arm=roots.get(i);if(view.tiles.get(arm.getPos())!=arm||arm.payload()!=payloads.get(i)||arm.motionRevision()!=revisions[i])throw new IllegalArgumentException("Arm changed during parking preparation");
+            ArmParkingSource token=prepared.get(arm.getPos());if(token!=null&&!token.stillOwned())throw new IllegalArgumentException("Prepared arm source changed during parking preparation");
+        }
     }
 }
