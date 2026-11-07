@@ -5,3 +5,19 @@ task exportProgrammerReference(type: JavaExec) {
     main = 'com.vandorlabs.client.ProgrammerLegacyChecks'
     systemProperty 'vandorlabs.programmerReference', file(project.findProperty('programmerReference') ?: 'build/test-artifacts/programmer-forge.json').absolutePath
 }
+
+task exportProgrammerPlacementReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammerPlacementLegacyChecks'
+    systemProperty 'vandorlabs.programmerPlacementReference', file(project.findProperty('programmerPlacementReference') ?: 'build/test-artifacts/programmer-placement-forge.json').absolutePath
+}
+
+task exportProgrammerArtworkReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.programmer.client.ProgrammerArtworkLegacyChecks'
+    systemProperty 'vandorlabs.programmerArtworkReference', file(project.findProperty('programmerArtworkReference') ?: 'build/test-artifacts/programmer-artwork-forge.jsonl').absolutePath
+}
