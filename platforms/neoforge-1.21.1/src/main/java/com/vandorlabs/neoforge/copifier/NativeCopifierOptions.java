@@ -25,6 +25,12 @@ public final class NativeCopifierOptions {
     public static boolean ignoreDirectionality(CompoundTag root){return root!=null&&root.getBoolean(IGNORE_DIRECTION);}
     public static CompoundTag withConnected(CompoundTag original,boolean value){CompoundTag root=copy(original);root.putBoolean(CONNECTED,value);return root;}
     public static CompoundTag withIgnoreDirectionality(CompoundTag original,boolean value){CompoundTag root=copy(original);root.putBoolean(IGNORE_DIRECTION,value);return root;}
+    public static CompoundTag selected(CompoundTag captured,long[] words){
+        if(captured==null)return null;
+        CompoundTag selected=captured.copy();
+        com.vandorlabs.items.DuplifierSettingSelection.prune(words,selected::contains,selected::remove);
+        return selected;
+    }
     private static CompoundTag copy(CompoundTag original){return original==null?new CompoundTag():original.copy();}
     private NativeCopifierOptions(){}
 }

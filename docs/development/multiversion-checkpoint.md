@@ -252,3 +252,6 @@ Copifier option masks now share an item/NBT-independent append-only policy. The 
 
 
 The Copifier dialog catalog is now shared: five pages, all 74 append-only choices and exact Source labels/keys. Both Java versions compare the complete captured catalog; the native CompoundTag option adapter matches the 3,080 real Forge item-NBT masks and checks opaque sibling retention/copy isolation. The actual Forge dialog/apply client focus passes after extraction, with its runtime pruned. Standard Java 8 assemble and dedicated linkage pass (1,320 shared classes, 129,403 references). An additional 2,045-case actual Forge reference freezes settings-filter dependency and unknown-key behavior ahead of native capture/apply; native copy gameplay remains pending.
+
+
+Copifier semantic-field filtering now also uses a shared kernel. Both actual platform tag adapters preserve the original 2,045-case digest, including incomplete masks, absent/mistyped parent fields and unknown nested extensions. The same Forge dialog/apply/undo client focus passes on the built artifact after extraction. Standard Java 8 assemble and dedicated linkage pass (1,321 shared classes, 129,398 references). This adds no native gameplay registration and does not replace the deferred release gate.
