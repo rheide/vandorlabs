@@ -16,12 +16,21 @@ public final class SegmentedDoorPanels {
     private static final int MATERIAL_BASE=16+MATERIALS.length*8;
     private static int materialBytes=MATERIAL_BASE;
     private static final class Key {
-        final SegmentedDoorSettings settings;final int texture,column,row,width,height,pass,wc,wr,ww,wh,nativeKind;
+        final SegmentedDoorSettings settings;final int texture,column,row,width,height,pass,wc,wr,ww,wh,nativeKind,components,hash;
         Key(SegmentedDoorTile t,int row,int pass){this(t,row,pass,0);}
-        Key(SegmentedDoorTile t,int row,int pass,int nativeKind){this.nativeKind=nativeKind;settings=t.panel(row).settings;texture=t.panel(row).effectiveTexture();column=t.column;this.row=row;width=t.columns;height=t.height;this.pass=pass;SegmentedDoorWindows.Layout window=SegmentedDoorWindows.layout(t.panel(row));wc=window.column;wr=window.row;ww=window.width;wh=window.height;}
-        public int hashCode(){return Objects.hash(settings,texture,column,row,width,height,pass,wc,wr,ww,wh,nativeKind);}
-        public boolean equals(Object value){if(!(value instanceof Key))return false;Key k=(Key)value;return settings.equals(k.settings)&&texture==k.texture&&column==k.column&&row==k.row&&width==k.width&&height==k.height&&pass==k.pass&&wc==k.wc&&wr==k.wr&&ww==k.ww&&wh==k.wh&&nativeKind==k.nativeKind;}
+        Key(SegmentedDoorTile t,int row,int pass,int nativeKind){this(t.panel(row).settings,t.panel(row).effectiveTexture(),t.column,row,t.columns,t.height,pass,SegmentedDoorWindows.layout(t.panel(row)),nativeKind,3);}
+        Key(SegmentedDoorSettings settings,int texture,int column,int row,int width,int height,int pass,SegmentedDoorWindows.Layout window,int nativeKind,int components){this.nativeKind=nativeKind;this.settings=settings;this.texture=texture;this.column=column;this.row=row;this.width=width;this.height=height;this.pass=pass;this.components=components;wc=window.column;wr=window.row;ww=window.width;wh=window.height;hash=Objects.hash(settings,texture,column,row,width,height,pass,wc,wr,ww,wh,nativeKind,components);}
+        public int hashCode(){return hash;}
+        public boolean equals(Object value){if(!(value instanceof Key))return false;Key k=(Key)value;return settings.equals(k.settings)&&texture==k.texture&&column==k.column&&row==k.row&&width==k.width&&height==k.height&&pass==k.pass&&wc==k.wc&&wr==k.wr&&ww==k.ww&&wh==k.wh&&nativeKind==k.nativeKind&&components==k.components;}
     }
+    /** World-free row keys, prepared once; mesh ownership remains in the byte-bounded shared cache. */
+    public static final class Prepared {
+        private final Key solid,body,pane;private final int alpha;
+        private Prepared(SegmentedDoorSettings settings,int texture,int column,int row,int width,int height,SegmentedDoorWindows.Layout window){boolean translucent=SegmentedArtwork.translucent(texture);solid=new Key(settings,texture,column,row,width,height,0,window,0,3);body=translucent?new Key(settings,texture,column,row,width,height,1,window,0,1):null;pane=new Key(settings,texture,column,row,width,height,1,window,0,translucent?2:3);alpha=Math.round(255*GlassMaterials.opacity(settings.glass.material,settings.glass.tint));}
+        public int retainedBytes(){return 512;}
+        public void emit(int pass,BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light){if(pass==0)mesh(solid).drawSection(buffer,x,y,z,pose,rotation,light,255);else{if(body!=null)mesh(body).drawSection(buffer,x,y,z,pose,rotation,light,255);mesh(pane).drawSection(buffer,x,y,z,pose,rotation,light,alpha);}}
+    }
+    public static Prepared prepare(SegmentedDoorSettings settings,int texture,int column,int row,int width,int height,SegmentedDoorWindows.Layout window){return new Prepared(settings,texture,column,row,width,height,window);}
     public static void clear(){CACHE.clear();Arrays.fill(MATERIALS,null);retained=0;materialBytes=MATERIAL_BASE;}
     public static int retainedBytes(){return retained+materialBytes;}
     public static void emit(SegmentedDoorTile tile,int row,int pass,BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light){
@@ -41,7 +50,7 @@ public final class SegmentedDoorPanels {
         if(k.nativeKind!=0){SegmentedNativePanelMesh.build(k.row,k.height,k.column,k.nativeKind==2,surface(k.texture,null),texture(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side")),(x,y,z,u,v,nx,ny,nz)->out.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex());return out.finish();}
         PortholeHex.Slice slice=null;if(s.window){PortholeHex outline=PortholeGeometryCache.outline(k.ww,k.wh,s.shape,0);slice=PortholeGeometryCache.slice(k.ww,k.wh,s.shape,0,k.wc,k.wr,outline);}
         TextureAtlasSprite nativeSprite=glass&&s.glass.material<0?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(-1,s.glass.shade,1,s.glass.tint)):null;
-        com.vandorlabs.segmented.SegmentedPanelMesh.build(s.window,s.shape,s.layout,k.column,k.row,k.width,k.height,k.wc,k.wr,k.ww,k.wh,s.glass.layout,opaque,k.pass,k.pass==0?surface(k.texture,null):null,glass?surface(s.glass.material,nativeSprite):null,k.pass==0?texture(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side")):null,(x,y,z,u,v,nx,ny,nz)->out.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex(),slice);
+        com.vandorlabs.segmented.SegmentedPanelMesh.buildLayered(s.window,s.shape,s.layout,k.column,k.row,k.width,k.height,k.wc,k.wr,k.ww,k.wh,s.glass.layout,opaque,k.pass,k.pass==0||SegmentedArtwork.translucent(k.texture)?surface(k.texture,null):null,glass?surface(s.glass.material,nativeSprite):null,k.pass==0?texture(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side")):null,(x,y,z,u,v,nx,ny,nz)->out.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex(),slice,SegmentedArtwork.translucent(k.texture),k.components);
         return out.finish();
     }
     private SegmentedDoorPanels(){}

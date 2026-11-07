@@ -41,6 +41,14 @@ public final class NativeSegmentedTargets {
     public static NativeSegmentedGeometry.Snapshot geometry(NativeSegmentedDoorEntity tile,double progress){
         var root=tile.root();int row=tile.topOffset();if(row<0||row>=root.height())return null;return column(root,progress).row(row);
     }
+    private static final ThreadLocal<int[]> GATE_MASKS=ThreadLocal.withInitial(()->new int[32]);
+    private static final ThreadLocal<com.vandorlabs.segmented.SegmentedGateShape.Hit> GATE_HIT=ThreadLocal.withInitial(com.vandorlabs.segmented.SegmentedGateShape.Hit::new);
+    public static com.vandorlabs.render.LegacyBoxTrace.Hit hit(NativeSegmentedDoorEntity tile,double progress,Vec3 start,Vec3 end){
+        var snapshot=geometry(tile,progress);if(snapshot==null)return null;var root=tile.root();int row=tile.topOffset();int kind=NativeSegmentedArtwork.gate(root.publication().visual().texture(row));
+        if(kind<0)return snapshot.trace(start.x,start.y,start.z,end.x,end.y,end.z);
+        int[] masks=GATE_MASKS.get();NativeSegmentedGateRays.masks(root,progress,masks);
+        return snapshot.traceGate(kind,masks[row],row+1<root.height()?masks[row+1]:0,row>0?masks[row-1]:0,GATE_HIT.get(),start.x,start.y,start.z,end.x,end.y,end.z);
+    }
     public static NativeSegmentedDoorEntity loaded(Level level,BlockPos pos){
         if(!NativeFluidWorld.open(level))return null;var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);if(chunk==null)return null;
         var raw=chunk.getBlockEntities().get(pos);return raw instanceof NativeSegmentedDoorEntity tile&&!tile.isRemoved()&&!tile.inert()?tile:null;
@@ -61,7 +69,7 @@ public final class NativeSegmentedTargets {
             if(column.direction>=2){var top=column.row(0).bounds();if(top.maxX<=ray.minX||top.minX>=ray.maxX||top.maxZ<=ray.minZ||top.minZ>=ray.maxZ||top.maxY<=ray.minY||top.minY+1-column.height>=ray.maxY)return;}
             for(int row=0;row<column.height;row++){
                 var part=loaded(level,column.positions[row]);if(part==null||part.topOffset()!=row||part.height()!=column.height||part.facing()!=column.facing)continue;
-                var hit=column.row(row).trace(start.x,start.y,start.z,end.x,end.y,end.z);if(hit==null)continue;double d=hit.distance(start.x,start.y,start.z);
+                var hit=hit(part,progress,start,end);if(hit==null)continue;double d=hit.distance(start.x,start.y,start.z);
                 if(d<distance){distance=d;best=new Target(root.getBlockPos(),new BlockHitResult(new Vec3(hit.x,hit.y,hit.z),Direction.from3DDataValue(hit.face),column.positions[row],false));}
             }
         }

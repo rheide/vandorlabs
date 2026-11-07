@@ -7,6 +7,8 @@ import com.vandorlabs.physics.RigidTransform;
 /** A bounded loaded-tile search reaches panels whose stationary cell is now empty. */
 public final class SegmentedDoorInteractions {
     public static final com.vandorlabs.world.LoadedTileIndex<SegmentedDoorTile> INDEX=new com.vandorlabs.world.LoadedTileIndex<>(SegmentedDoorTile.class);
+    private static final ThreadLocal<int[]> GATE_MASKS=ThreadLocal.withInitial(()->new int[32]);
+    private static final ThreadLocal<SegmentedGateShape.Hit> GATE_HIT=ThreadLocal.withInitial(SegmentedGateShape.Hit::new);
     private static final AxisAlignedBB PANEL=new AxisAlignedBB(0,-.5,-SegmentedDoorGeometry.HALF_THICKNESS,1,.5,SegmentedDoorGeometry.HALF_THICKNESS);
     public static RigidTransform transform(SegmentedDoorTile tile){return transform(tile,com.vandorlabs.VandorLabs.proxy.segmentedSelectionPose(tile.root()));}
     public static RigidTransform transform(SegmentedDoorTile tile,double progress){
@@ -19,6 +21,11 @@ public final class SegmentedDoorInteractions {
     public static RayTraceResult hit(SegmentedDoorTile tile,Vec3d start,Vec3d end,double progress){
         RigidTransform t=transform(tile,progress);double[] a=t.inverse(start.x,start.y,start.z),b=t.inverse(end.x,end.y,end.z);
         RayTraceResult local=PANEL.calculateIntercept(new Vec3d(a[0],a[1],a[2]),new Vec3d(b[0],b[1],b[2])),hit=null;
+        int gate=SegmentedArtwork.gate(tile.effectiveTexture());
+        if(gate>=0){int[] masks=GATE_MASKS.get();com.vandorlabs.VandorLabs.proxy.segmentedGateMasks(tile.root(),progress,masks);int row=tile.topOffset,mask=masks[row];
+            com.vandorlabs.render.LegacyBoxTrace.Hit exact=SegmentedHitGeometry.traceGate(t,SegmentedGateModels.model(gate,mask),SegmentedGateModels.connectors(gate,mask,row+1<tile.height?masks[row+1]:0,false),SegmentedGateModels.connectors(gate,mask,row>0?masks[row-1]:0,true),GATE_HIT.get(),start.x,start.y,start.z,end.x,end.y,end.z);
+            local=null;if(exact!=null)hit=new RayTraceResult(new Vec3d(exact.x,exact.y,exact.z),net.minecraft.util.EnumFacing.getFront(exact.face),tile.getPos());
+        }
         if(local!=null){double[] p=t.point(local.hitVec.x,local.hitVec.y,local.hitVec.z),normal=t.vector(local.sideHit.getFrontOffsetX(),local.sideHit.getFrontOffsetY(),local.sideHit.getFrontOffsetZ());hit=new RayTraceResult(new Vec3d(p[0],p[1],p[2]),net.minecraft.util.EnumFacing.getFacingFromVector((float)normal[0],(float)normal[1],(float)normal[2]),tile.getPos());}
         AxisAlignedBB header=SegmentedDoorBlock.headerBounds(tile);RayTraceResult fixed=header==null?null:header.calculateIntercept(start,end);
         return fixed!=null&&(hit==null||start.squareDistanceTo(fixed.hitVec)<start.squareDistanceTo(hit.hitVec))?new RayTraceResult(fixed.hitVec,fixed.sideHit,tile.getPos()):hit;

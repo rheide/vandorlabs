@@ -13,6 +13,11 @@ public final class NativeSegmentedGeometry {
         private Snapshot(com.vandorlabs.physics.RigidTransform transform,AABB bounds,AABB header){this.transform=transform;this.bounds=bounds;this.header=header;}
         public AABB bounds(){return bounds;}public AABB header(){return header;}
         public double[] matrix(){return transform.columnMajor();}
+        public com.vandorlabs.render.LegacyBoxTrace.Hit traceGate(int kind,int mask,int belowMask,int aboveMask,com.vandorlabs.segmented.SegmentedGateShape.Hit scratch,double sx,double sy,double sz,double ex,double ey,double ez){
+            var body=com.vandorlabs.segmented.SegmentedHitGeometry.traceGate(transform,NativeSegmentedGateModels.model(kind,mask),NativeSegmentedGateModels.connectors(kind,mask,belowMask,false),NativeSegmentedGateModels.connectors(kind,mask,aboveMask,true),scratch,sx,sy,sz,ex,ey,ez);
+            var fixed=header==null?null:com.vandorlabs.render.LegacyBoxTrace.clip(header.minX,header.minY,header.minZ,header.maxX,header.maxY,header.maxZ,sx,sy,sz,ex,ey,ez);
+            return fixed!=null&&(body==null||fixed.distance(sx,sy,sz)<body.distance(sx,sy,sz))?fixed:body;
+        }
         public com.vandorlabs.render.LegacyBoxTrace.Hit trace(double sx,double sy,double sz,double ex,double ey,double ez){
             var body=com.vandorlabs.segmented.SegmentedHitGeometry.trace(transform,sx,sy,sz,ex,ey,ez);
             var fixed=header==null?null:com.vandorlabs.render.LegacyBoxTrace.clip(header.minX,header.minY,header.minZ,header.maxX,header.maxY,header.maxZ,sx,sy,sz,ex,ey,ez);

@@ -43,7 +43,7 @@ public record SegmentedUsePayload(BlockPos pos,Vec3 point,UUID identity,long seq
                 ||!poseAllowed(intent.pose,root.pose(0),intent.sequence,level.getGameTime(),root.started(),root.duration()))return false;
         double reach=player.blockInteractionRange();var eye=player.getEyePosition();if(!Double.isFinite(reach)||reach<=0||reach>64||eye.distanceToSqr(intent.point)>(reach+.25)*(reach+.25))return false;
         var end=eye.add(intent.point.subtract(eye).normalize().scale(reach+.25));var geometry=NativeSegmentedTargets.geometry(tile,intent.pose);if(geometry==null)return false;
-        var hit=geometry.trace(eye.x,eye.y,eye.z,end.x,end.y,end.z);if(hit==null||new Vec3(hit.x,hit.y,hit.z).distanceToSqr(intent.point)>.05*.05)return false;
+        var hit=NativeSegmentedTargets.hit(tile,intent.pose,eye,end);if(hit==null||new Vec3(hit.x,hit.y,hit.z).distanceToSqr(intent.point)>.05*.05)return false;
         var visibleEnd=new Vec3(hit.x,hit.y,hit.z);
         boolean unloaded=BlockGetter.traverseBlocks(eye,visibleEnd,level,(world,pos)->world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4)==null?Boolean.TRUE:null,world->Boolean.FALSE);
         if(unloaded)return false;
