@@ -79,3 +79,20 @@ task exportCanopyExistingItemReference(type: JavaExec) {
     args file('build/test-artifacts/canopy-existing-item-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportCanopyConfiguredItemReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyConfiguredItemLegacyOracle'
+    args file('build/test-artifacts/canopy-configured-item-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
+task testCanopyConfiguredItemSafety(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyConfiguredItemLegacyOracle'
+    args file('build/test-artifacts/canopy-configured-item-safety-forge.jsonl').absolutePath
+    systemProperty 'vandorlabs.canopyItemSafety', 'true'
+    maxHeapSize = '1g'
+}
