@@ -18,7 +18,7 @@ The [coverage inventory](feature-coverage.md) distinguishes integrated slices fr
 
 Start from `master`, not the old conversion branch. Use `feature/neoforge-1.21.1` as a historical reference; its slabs, walls, screens and fluid code predate current Forge behavior. Additional historical references are `wip/industrial-table-port` and `wip/wall-item-goldens`. Review and adapt their behavior rather than merging them wholesale.
 
-The current conversion stopping point is limited to four families. Finish and integrate these, then pause for user testing before starting another family. The full release gate is deferred; use the applicable focused checks while these adapters change. Vehicle Mode remains excluded.
+The original native conversion stopping point covers four families below. Additional [2.9 feature follow-ups](2.9-feature-followups.md) are also in scope before the testing handoff, including Forge-only Vehicle improvements; native Vehicle Mode remains deferred. The full release gate waits until after user testing. Use applicable focused checks while adapters change. If the remaining quota reaches 25%, defer full Ramp support and retain a stable integrated subset with unfinished work preserved remotely.
 
 | Family | Integrated state | Remaining acceptance |
 | --- | --- | --- |
