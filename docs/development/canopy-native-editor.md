@@ -1,0 +1,11 @@
+# Native Canopy editor contract
+
+The dedicated Canopy menu uses the same entry point for ordinary configuration and Configurizer use. It resolves the installed loaded owner, checks configuration authorization, edit permission and the current menu session, and measures eight-block reach from the player's eyes to the selection bounds. Large or overhanging canopies therefore remain editable near their visible surface even when the anchor is farther away.
+
+The Canopy page retains the released material list, glass shades, tint and texture layout. Resizable front canopies additionally expose depth, inner size, openability and hinge. Opening canopies expose sliding/rear hinge, slide direction and front angle. Opening and resizable variants have a Redstone page with the channel bank and three activation modes. Right-click cycles to the previous option. Slider changes coalesce at two client-tick intervals and flush on release. Invalid channel drafts refuse publication.
+
+Settings edits contain no inventory, private block data or arbitrary NBT. The native request carries the owner position, menu window, request identity and bounded scalar settings, with at most 64 canonical channels. Rejection replies include the request identity and authoritative settings; stale replies cannot replace a newer draft, and replies wait until a slider drag has ended before rebuilding widgets.
+
+The released encoder/decoder corpus contains 456 settings profiles. Its requests measure 329–341 bytes each, totalling 152,760 bytes. The same settings use 55–67 native bytes, totalling 27,816 bytes (81.8% fewer payload bytes), including the new window and request identifiers. The native maximum with all 64 channels is 311 bytes. Message counts are unchanged: one request and one result per submitted edit. These are payload measurements, excluding transport framing; complete result-packet sizes have not been compared. The focused codec check preserves every released settings field through a round trip and rejects malformed lengths, flags and channel banks before variable allocation.
+
+The menu and transport remain opt-in until the Canopy family binding is accepted. Codec and title-widget checks do not establish placed-player authorization or footprint mutation acceptance; those use the installed host and configuration transaction fixtures.
