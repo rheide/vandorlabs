@@ -69,3 +69,12 @@ tasks.register('testNativeCanopyAnimation', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.canopy.CanopyAnimationChecks'
 }
+
+tasks.register('testNativeCanopyEditorWire', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.canopy.CanopyEditorWireChecks'
+    args file('../../build/test-artifacts/canopy-editor-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
