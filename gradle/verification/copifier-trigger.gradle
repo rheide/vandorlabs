@@ -1,0 +1,8 @@
+task exportCopifierTriggerSourceReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CopifierTriggerLegacyOracle'
+ args file("$buildDir/test-artifacts/copifier-trigger-source.jsonl").absolutePath
+ maxHeapSize='1G'
+}
