@@ -97,6 +97,7 @@ public class TEAnimatedScreenSelector
         ScreenSurfaceGroups.unload(world);
         VehicleShapeRenderer.clear();
         LightHousingMeshes.clear();
+        GlassSurfaceMapping.clear();
         if(lightCacheWorld==world) {
             LIGHT_GROUPS.clear();lightCacheWorld=null;
             lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
@@ -1456,6 +1457,7 @@ public class TEAnimatedScreenSelector
     public static synchronized void clearCache() {
         VehicleShapeRenderer.clear();
         LightHousingMeshes.clear();
+        GlassSurfaceMapping.clear();
         for(AnimData data:ANIM_CACHE.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(data.texture);
         ANIM_CACHE.clear();
     }

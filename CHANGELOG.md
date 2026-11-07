@@ -2,6 +2,7 @@
 
 ## 2.9 (development)
 
+- Remove repeated allocation from Forge Glass/Porthole UV-cache hits, bound retained source/mapped geometry by bytes and clear old atlas entries on resource reload and world unload.
 - Prepare native Light facing and atlas coordinates once per cached mesh, reduce retained vertex storage and reuse the common prepared-vertex emitter while preserving live lighting and reload behavior.
 - Enable all eleven standalone Canopy and cockpit-glass components in the experimental native build with original recipes, configured placement, dedicated editing, joined shells, pause-aware motion, source-matched terrain/transparent artwork and safe loaded membership repair. Add staged native construction images. Vehicle/carried integration remains deferred.
 - Keep Segmented Door Tile artwork continuous across solid and Window segments in both versions. Make segment bodies two pixels thick while retaining four-pixel top borders, matching selection, collision, fluids and settled terrain rendering.

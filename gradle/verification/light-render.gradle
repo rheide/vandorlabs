@@ -6,6 +6,14 @@ task exportLightRenderReference(type: JavaExec) {
     args file('build/test-artifacts/light-render-forge.jsonl').absolutePath
 }
 
+task testGlassMappingCache(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassMappingCacheChecks'
+    if (project.hasProperty('glassMappingBaseline')) args 'baseline'
+}
+
 task testLightSharedRender(type: JavaExec) {
     group = 'verification'
     dependsOn compileNonRenderingChecks

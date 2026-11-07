@@ -73,3 +73,5 @@ Programmable Storage is enabled in the experimental native build with its origin
 Segmented Door Tile artwork now retains the same physical scale and phase across solid and Window segments in both versions. Segment bodies are two pixels thick; the top border remains four pixels. Selection, collision, fluid regions, moving models and settled terrain use the shared geometry. Existing settings, registry IDs and control indices are unchanged.
 
 Experimental native Lights now prepare fixed facing and atlas coordinates once per cached mesh, reducing retained vertex storage while preserving their rendered output. Live lighting and resource reload still update independently of that static preparation.
+
+Forge Glass and Porthole UV-cache hits now reuse scalar lookups without allocating temporary strings or boxed values. The cache also bounds retained geometry by bytes and retires old atlas entries on reload and world unload.

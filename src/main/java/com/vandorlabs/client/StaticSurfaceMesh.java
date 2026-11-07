@@ -23,6 +23,8 @@ final class StaticSurfaceMesh {
         float[] data=new float[vertices.length];for(int q=0;q<vertices.length;q+=32)for(int v=0;v<4;v++){int from=q+(3-v)*8,to=q+v*8;System.arraycopy(vertices,from,data,to,8);data[to]=(float)(centerSum-data[to]);data[to+5]=-data[to+5];}return new StaticSurfaceMesh(data);
     }
     int vertexCount() { return vertices.length/8; }
+    /** Include float records and reserve both lazy packed batch arrays on the render thread. */
+    long cacheRetainedBytes() { return 256L+vertexCount()*88L; }
     StaticSurfaceMesh glassTexture(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,GlassSurfaceGroups.Layout layout,boolean raw,double borderX,double borderY){
         float[] data=vertices.clone();double width=layout.columns-2*borderX,height=layout.rows-2*borderY;
         for(int i=0;i<data.length;i+=8){
