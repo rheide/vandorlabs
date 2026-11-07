@@ -149,7 +149,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public void authoritative(VehicleNetwork.Packet p) {
         if(p.serverTick<=lastServerTick)return;
-        if(p.jointAngles.length>0)articulation.receive(p.jointTopology,p.jointAngles,localDriver);
+        receiveGeneralPose(p.bodyPose);
+        if(p.jointAngles.length>0&&(generalBodyPose==null||!generalBodyPose.usesGeneral()))articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
@@ -189,6 +190,25 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte[] encoded;
     private VehicleStructure rotationSource,rotatedSnapshot;private int rotationTurns;
     VehicleArmParkingCurrent armParkingPreview;
+    private VehicleBodyPoseState generalBodyPose;
+    private VehicleBodyPoseState.Receiver generalBodyPoseReceiver;
+    VehicleBodyPoseFrame currentGeneralPose(){return generalBodyPose==null?VehicleBodyPoseFrame.NONE:generalBodyPose.current();}
+    boolean generalPoseReady(){return generalBodyPose==null||generalBodyPose.ready();}
+    /** Runtime calls only after the complete layout/pose has passed its ordinary collision admission. */
+    VehicleBodyPoseFrame commitGeneralPose(long layout,java.util.List<VehicleBodyPoseFrame.Body> bodies){
+        if(world==null||world.isRemote||world.getMinecraftServer()==null||!world.getMinecraftServer().isCallingFromMinecraftThread()||structure==null||ownershipBlocked)throw new IllegalStateException("Accepted server body pose required");
+        if(generalBodyPose==null&&layout==0&&bodies!=null&&bodies.isEmpty())return VehicleBodyPoseFrame.NONE;
+        VehicleBodyPoseState state=generalBodyPose==null?new VehicleBodyPoseState():generalBodyPose;
+        VehicleBodyPoseFrame frame=state.commit(layout,bodies);generalBodyPose=state;return frame;
+    }
+    void generalPoseReceiver(VehicleBodyPoseState.Receiver receiver){generalBodyPoseReceiver=receiver;applyPendingGeneralPose();}
+    boolean applyPendingGeneralPose(){return generalBodyPose!=null&&generalBodyPose.applyPending(generalBodyPoseReceiver,localDriver);}
+    private void receiveGeneralPose(VehicleBodyPoseFrame frame){
+        if(!frame.present())return;if(generalBodyPose==null)generalBodyPose=new VehicleBodyPoseState();
+        generalBodyPose.receive(frame,generalBodyPoseReceiver,localDriver);
+    }
+    private void writeGeneralPose(NBTTagCompound tag){if(generalBodyPose==null)tag.removeTag(VehicleBodyPoseFrame.NBT_KEY);else generalBodyPose.write(tag);}
+
     public VehicleStructure rotatedSnapshot(int turns) {
         articulation.requireParkable();
         if(turns==0)return structure;
@@ -252,8 +272,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
-    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
-    @Override protected void readEntityFromNBT(NBTTagCompound tag){articulation.retain(tag);dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);autopilot.read(tag.getCompoundTag("AutopilotNavigation"));for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception | LinkageError e){articulation.retain(tag);signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;}
+    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);writeGeneralPose(tag);if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
+    @Override protected void readEntityFromNBT(NBTTagCompound tag){generalBodyPose=VehicleBodyPoseState.retain(tag.getTag(VehicleBodyPoseFrame.NBT_KEY));articulation.retain(tag);dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);if(generalBodyPose!=null)generalBodyPose.readRetained();autopilot.read(tag.getCompoundTag("AutopilotNavigation"));if(generalBodyPose!=null&&generalBodyPose.usesGeneral()&&!applyPendingGeneralPose()&&!world.isRemote)throw new IllegalArgumentException("Saved general body pose has no matching runtime layout");for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception | LinkageError e){articulation.retain(tag);signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;}
     @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(articulation!=null&&articulation.active()?articulation.worldBounds(x,y,z,rotationYaw):collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
         if(transferInProgress || getControllingPassenger()!=player)return;

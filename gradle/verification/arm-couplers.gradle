@@ -140,3 +140,10 @@ task testVehicleBodyPoseCodec(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.VehicleBodyPoseCodecChecks'
  maxHeapSize = '512m'
 }
+
+task testVehicleBodyPoseState(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.VehicleBodyPoseStateChecks'
+ maxHeapSize = '512m'
+}

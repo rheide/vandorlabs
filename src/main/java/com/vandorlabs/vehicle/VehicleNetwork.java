@@ -89,6 +89,7 @@ public final class VehicleNetwork {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
         p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
+        p.bodyPose=e.currentGeneralPose();
         if(VehicleNetworkLab.state(p,e))return;
         PacketHandler.INSTANCE.sendToAllTracking(p,e);
         if(e.getControllingPassenger() instanceof EntityPlayerMP)PacketHandler.INSTANCE.sendTo(p,(EntityPlayerMP)e.getControllingPassenger());
