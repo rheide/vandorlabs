@@ -8,5 +8,10 @@ import net.neoforged.neoforge.client.event.RenderFrameEvent;
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativePropulsionClient {
  private NativePropulsionClient(){}
- @SubscribeEvent public static void frame(RenderFrameEvent.Pre event){var level=Minecraft.getInstance().level;if(level!=null&&NativePropulsionService.hasPending(level))NativePropulsionService.flush(level);}
+ private static void flush(){var level=Minecraft.getInstance().level;if(level!=null&&NativePropulsionService.hasPending(level))NativePropulsionService.flush(level);}
+ @SubscribeEvent public static void frame(RenderFrameEvent.Pre event){flush();}
+ @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Pre event){flush();}
+ @SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel().isClientSide())NativePropulsionParticles.clear();}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Setup{@SubscribeEvent public static void client(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event){event.enqueueWork(()->NativePropulsionTicks.installClient(NativePropulsionParticles::tick));}}
+
 }
