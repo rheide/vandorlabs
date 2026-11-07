@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Add bounded read-only parking-phase planning for regular/Large Arms, preserving opaque identity-tile data and deferring whole-layout Safe Park integration.
+
 - Remove warmed allocation when rendering mixed Programmable Light housings, retaining exact vertices and a bounded cache.
 
 - Share moving Segmented Door render descriptors across equivalent columns and account for their retained cache memory.
