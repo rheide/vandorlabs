@@ -41,16 +41,18 @@ public final class CanopyBoundsIndex {
     /** Conservative retained-memory accounting for the immutable index and owned box list. */
     public long retainedBytes(){return 128L+72L*boxes.size()+(offsets==null?0:16L+4L*offsets.length)+(references==null?0:16L+4L*references.length)+(oversized==null?0:16L+4L*oversized.length);}
     /** Allocation-free existence query for canopy sweeps; touching faces remain clear. */
-    public boolean intersects(Box query){
-        if(bounds==null||!intersects(bounds,query))return false;
-        if(offsets==null){for(Box box:boxes)if(intersects(box,query))return true;return false;}
-        int ax=Math.max(0,cell(query.minX)-minX),bx=Math.min(nx-1,cell(query.maxX)-minX),ay=Math.max(0,cell(query.minY)-minY),by=Math.min(ny-1,cell(query.maxY)-minY),az=Math.max(0,cell(query.minZ)-minZ),bz=Math.min(nz-1,cell(query.maxZ)-minZ);
+    public boolean intersects(Box query){return intersects(query.minX,query.minY,query.minZ,query.maxX,query.maxY,query.maxZ);}
+    public boolean intersects(double minX,double minY,double minZ,double maxX,double maxY,double maxZ){
+        if(bounds==null||!intersects(bounds,minX,minY,minZ,maxX,maxY,maxZ))return false;
+        if(offsets==null){for(int i=0;i<boxes.size();i++)if(intersects(boxes.get(i),minX,minY,minZ,maxX,maxY,maxZ))return true;return false;}
+        int ax=Math.max(0,cell(minX)-this.minX),bx=Math.min(nx-1,cell(maxX)-this.minX),ay=Math.max(0,cell(minY)-this.minY),by=Math.min(ny-1,cell(maxY)-this.minY),az=Math.max(0,cell(minZ)-this.minZ),bz=Math.min(nz-1,cell(maxZ)-this.minZ);
         for(int z=az;z<=bz;z++)for(int y=ay;y<=by;y++)for(int x=ax;x<=bx;x++){
             int bucket=(z*ny+y)*nx+x;
-            for(int at=offsets[bucket];at<offsets[bucket+1];at++)if(intersects(boxes.get(references[at]),query))return true;
+            for(int at=offsets[bucket];at<offsets[bucket+1];at++)if(intersects(boxes.get(references[at]),minX,minY,minZ,maxX,maxY,maxZ))return true;
         }
-        for(int index:oversized)if(intersects(boxes.get(index),query))return true;
+        for(int index:oversized)if(intersects(boxes.get(index),minX,minY,minZ,maxX,maxY,maxZ))return true;
         return false;
     }
+    private static boolean intersects(Box a,double minX,double minY,double minZ,double maxX,double maxY,double maxZ){return a.minX<maxX&&a.maxX>minX&&a.minY<maxY&&a.maxY>minY&&a.minZ<maxZ&&a.maxZ>minZ;}
     public static boolean intersects(Box a,Box b){return a.minX<b.maxX&&a.maxX>b.minX&&a.minY<b.maxY&&a.maxY>b.minY&&a.minZ<b.maxZ&&a.maxZ>b.minZ;}
 }
