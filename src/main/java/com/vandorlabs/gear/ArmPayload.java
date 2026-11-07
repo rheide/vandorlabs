@@ -28,6 +28,7 @@ public final class ArmPayload {
     private boolean gridAligned=true;
     private BlockPos placedOffset;
     private VehicleStructure placedBlocks;
+    private int[] gridTileBasis;
     private VehicleStructure placed(){return placedBlocks==null?blocks:placedBlocks;}
     // Absolute cells that may still hold copied contents after a failed rollback.
     // These links deliberately do not translate with a dropped recovery item.
@@ -63,7 +64,7 @@ public final class ArmPayload {
 
     private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
     ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
-    private ArmPayload preserveAlignment(ArmPayload next){next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;return next;}
+    private ArmPayload preserveAlignment(ArmPayload next){next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
     Set<BlockPos> placedSurfaceCells(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();BlockPos origin=materializedOrigin(arm);for(VehicleStructure.Cell cell:placed().cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(origin.add(cell.pos));return result;}
@@ -80,20 +81,27 @@ public final class ArmPayload {
     }
     /** Geometry only: intermediate grid alignment does not bypass ownership/state validation. */
     public ArmGridMapping gridMapping(GearTileEntity arm,double progress){return ArmGridMapping.resolve(this,arm,progress);}
-    /** Detached translation-aligned publication candidate; never restores or retires world cells. */
+    /** Detached representable grid publication candidate; never restores or retires world cells. */
     public ArmGridPlacement gridPlacement(GearTileEntity arm,double progress){
         if(hasOwnershipJournal())throw new IllegalArgumentException("Reconcile attachment ownership before grid publication");
         ArmGridMapping mapping=gridMapping(arm,progress);
-        if(mapping==null||mapping.rotates())return null;
-        BlockPos origin=mapping.cell(BlockPos.ORIGIN),relative=origin.subtract(arm.getPos());
-        if(Math.abs((long)relative.getX())>80||Math.abs((long)relative.getY())>80||Math.abs((long)relative.getZ())>80)return null;
+        if(mapping==null)return null;
         List<VehicleStructure.Cell> mapped=new ArrayList<>(blocks.cells.size());
+        int minX=Integer.MAX_VALUE,minY=minX,minZ=minX;
         for(VehicleStructure.Cell cell:blocks.cells){
+            IBlockState state=mapping.rotates()?ArmGridTiles.state(cell,mapping.basis()):cell.state;if(state==null)return null;
             BlockPos at=mapping.cell(cell.pos);NBTTagCompound data=cell.tileData();
             if(data!=null)data=VehicleTileData.translated(data,at.subtract(cell.pos));
-            mapped.add(new VehicleStructure.Cell(at,cell.state,data));
+            mapped.add(new VehicleStructure.Cell(at,state,data));minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());
         }
+        BlockPos origin=mapping.rotates()?new BlockPos(minX,minY,minZ):mapping.cell(BlockPos.ORIGIN),relative=origin.subtract(arm.getPos());
+        if(Math.abs((long)relative.getX())>80||Math.abs((long)relative.getY())>80||Math.abs((long)relative.getZ())>80)return null;
         ArmPayload detached=new ArmPayload(blocks,offset,true,relative);detached.gridAligned=gridAligned;
+        if(mapping.rotates()){
+            List<VehicleStructure.Cell> normalized=new ArrayList<>(mapped.size());
+            for(VehicleStructure.Cell cell:mapped){NBTTagCompound data=cell.tileData();normalized.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,data==null?null:VehicleTileData.translated(data,BlockPos.ORIGIN.subtract(origin))));}
+            detached.placedBlocks=VehicleStructure.display(normalized);detached.gridTileBasis=mapping.basis();ArmGridTiles.validate(blocks,detached.placedBlocks,detached.gridTileBasis);
+        }
         return new ArmGridPlacement(mapped,detached.write());
     }
     public boolean materialized(){return materialized;}
@@ -405,7 +413,7 @@ public final class ArmPayload {
         for(VehicleStructure.Cell cell:destination.cells)VehicleService.permission(authorizer,origin.add(cell.pos));
         Map<VehicleStructure.Cell,TileEntity> prepared=prepareTiles(world,origin,destination);
         MovingBlockSupport.validate(blocks,view(arm));java.util.List<BlockPos> targets=new java.util.ArrayList<>();for(VehicleStructure.Cell cell:destination.cells)targets.add(origin.add(cell.pos));if(!ArmTransactions.ready(arm,"restore",targets))return false;
-        placedBlocks=destination==blocks?null:destination;
+        placedBlocks=destination==blocks?null:destination;gridTileBasis=null;
         arm.storedSections=stored;
         List<VehicleStructure.Cell> installed=new ArrayList<>();
         try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
@@ -434,7 +442,7 @@ public final class ArmPayload {
     }
     /** The same representable block-state rotation is used for publication and endpoint edits. */
     @SuppressWarnings({"rawtypes","unchecked"})
-    private static IBlockState rotateState(IBlockState state,Vec3d[] axes){
+    static IBlockState rotateState(IBlockState state,Vec3d[] axes){
         for(net.minecraft.block.properties.IProperty property:state.getPropertyKeys()){
             Comparable value=state.getValue(property),next=value;
             if(value instanceof EnumFacing){net.minecraft.util.math.Vec3i vector=((EnumFacing)value).getDirectionVec();Vec3d out=axes[0].scale(vector.getX()).add(axes[1].scale(vector.getY())).add(axes[2].scale(vector.getZ()));next=EnumFacing.getFacingFromVector((float)out.x,(float)out.y,(float)out.z);}
@@ -499,9 +507,9 @@ public final class ArmPayload {
     public static NBTTagCompound rotate(NBTTagCompound tag,int turns,World parent){
         ArmPayload before=read(tag);if(before.hasOwnershipJournal())throw new IllegalArgumentException("Reconcile attachment ownership before rotating the craft");VehicleStructure after=VehicleRotation.rotate(before.blocks,new VehicleWorld(parent,before.blocks),turns);
         BlockPos zero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.blocks.bounds.maxX,(int)before.blocks.bounds.maxZ,turns);
-        ArmPayload result=before.preserveAlignment(new ArmPayload(after,yaw(before.offset,turns).subtract(zero),before.materialized,yaw(before.placedOffset,turns).subtract(zero)));if(before.placedBlocks!=null){BlockPos placedZero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.placedBlocks.bounds.maxX,(int)before.placedBlocks.bounds.maxZ,turns);result.placedBlocks=VehicleRotation.rotate(before.placedBlocks,new VehicleWorld(parent,before.placedBlocks),turns);result.placedOffset=yaw(before.placedOffset,turns).subtract(placedZero);}return result.write();
+        ArmPayload result=before.preserveAlignment(new ArmPayload(after,yaw(before.offset,turns).subtract(zero),before.materialized,yaw(before.placedOffset,turns).subtract(zero)));if(before.placedBlocks!=null){BlockPos placedZero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.placedBlocks.bounds.maxX,(int)before.placedBlocks.bounds.maxZ,turns);result.placedBlocks=VehicleRotation.rotate(before.placedBlocks,new VehicleWorld(parent,before.placedBlocks),turns);result.placedOffset=yaw(before.placedOffset,turns).subtract(placedZero);}if(before.gridTileBasis!=null){result.gridTileBasis=ArmGridTiles.yawBasis(before.gridTileBasis,turns);ArmGridTiles.validate(result.blocks,result.placedBlocks,result.gridTileBasis);}return result.write();
     }
-    public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setTag("Blocks",blocks.write());tag.setLong("Offset",offset.toLong());tag.setLong("PlacedOffset",placedOffset.toLong());tag.setBoolean("Materialized",materialized);if(gridAligned)tag.setBoolean("GridAligned",true);if(placedBlocks!=null)tag.setTag("PlacedBlocks",placedBlocks.write());
+    public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setTag("Blocks",blocks.write());tag.setLong("Offset",offset.toLong());tag.setLong("PlacedOffset",placedOffset.toLong());tag.setBoolean("Materialized",materialized);if(gridAligned)tag.setBoolean("GridAligned",true);if(placedBlocks!=null)tag.setTag("PlacedBlocks",placedBlocks.write());if(gridTileBasis!=null){tag.setInteger("GridTileMapping",1);tag.setIntArray("GridTileBasis",gridTileBasis.clone());}
         if(hasOwnershipJournal()){tag.setInteger("OwnershipDimension",journalDimension);net.minecraft.nbt.NBTTagList list=new net.minecraft.nbt.NBTTagList();for(Map.Entry<Integer,BlockPos> entry:ownershipJournal.entrySet()){NBTTagCompound cell=new NBTTagCompound();cell.setInteger("Cell",entry.getKey());cell.setLong("Pos",entry.getValue().toLong());list.appendTag(cell);}tag.setTag("OwnershipJournal",list);}
         return tag;}
     public static ArmPayload read(NBTTagCompound tag){
@@ -517,7 +525,11 @@ public final class ArmPayload {
         net.minecraft.nbt.NBTTagList journal=tag.getTagList("OwnershipJournal",10);if(journal.tagCount()>structure.cells.size())throw new IllegalArgumentException("Invalid attachment ownership journal");
         payload.journalDimension=tag.getInteger("OwnershipDimension");
         for(int i=0;i<journal.tagCount();i++){NBTTagCompound entry=journal.getCompoundTagAt(i);int cell=entry.getInteger("Cell");if(cell<0||cell>=structure.cells.size()||!entry.hasKey("Pos",4)||payload.ownershipJournal.put(cell,BlockPos.fromLong(entry.getLong("Pos")))!=null)throw new IllegalArgumentException("Invalid attachment ownership entry");}
-        if(tag.hasKey("PlacedBlocks",10)){payload.placedBlocks=VehicleStructure.readDisplay(tag.getCompoundTag("PlacedBlocks"));if(payload.placedBlocks.cells.size()!=structure.cells.size())throw new IllegalArgumentException("Invalid rotated attachment mapping");for(VehicleStructure.Cell cell:payload.placedBlocks.cells)if(cell.hasTileData())throw new IllegalArgumentException("Unsupported rotated attachment tile");}
+        if(tag.hasKey("PlacedBlocks",10)){payload.placedBlocks=VehicleStructure.readDisplay(tag.getCompoundTag("PlacedBlocks"));if(payload.placedBlocks.cells.size()!=structure.cells.size())throw new IllegalArgumentException("Invalid rotated attachment mapping");if(!tag.hasKey("GridTileMapping"))for(VehicleStructure.Cell cell:payload.placedBlocks.cells)if(cell.hasTileData())throw new IllegalArgumentException("Unsupported rotated attachment tile");}
+        if(tag.hasKey("GridTileMapping")||tag.hasKey("GridTileBasis")){
+            if(!tag.hasKey("GridTileMapping",3)||tag.getInteger("GridTileMapping")!=1||!tag.hasKey("GridTileBasis",11)||payload.placedBlocks==null)throw new IllegalArgumentException("Invalid typed attachment mapping");
+            payload.gridTileBasis=tag.getIntArray("GridTileBasis").clone();ArmGridTiles.validate(structure,payload.placedBlocks,payload.gridTileBasis);
+        }
         payload.gridAligned=tag.getBoolean("GridAligned");
         if(payload.hasOwnershipJournal())payload.materialized=false;
         return payload;

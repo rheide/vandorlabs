@@ -61,3 +61,11 @@ Saved local-view checks pass 1,080 profiles and 14,041 assertions covering all s
 This API remains unbound. It starts no arm restoration journal and does not authorize parking or publish blocks. A complete coupled layout must enter the existing vehicle transfer journal as one ownership transaction. Actual endpoint/mining, client ownership and abrupt cross-chunk tests remain required at that binding boundary.
 
 Focused checks pass 15,552 mapping profiles / 131,909 assertions and 1,080 loaded-head profiles / 15,769 assertions after adding candidate comparisons, defensive output edits and exact Coupler tile preservation. These are detached candidate checks, not world publication acceptance.
+
+## Typed rotated Coupler candidates
+
+Rotated candidates now admit tile-free full blocks through the existing representable state mapper, full six-facing Couplers, and slab Couplers only while their half-height axis remains vertical. Half inversion is mapped explicitly; the existing slab metadata is unchanged. Other tiles and unrepresentable states refuse. This is still an unbound candidate builder, not a new runtime admission path.
+
+A new optional `GridTileMapping=1` / signed-permutation `GridTileBasis` describes ordered `PlacedBlocks`. Decode validates a proper cardinal basis, every corresponding cell/state, exact Coupler tile identity, and the complete original tile tree after only the known x/y/z shift. Unknown own fields and Forge capabilities are not interpreted. Missing legacy markers retain the previous rule that rotated placed blocks cannot contain tiles. Unknown versions, mistyped/missing fields, altered opaque data, mismatched state/order and reflected bases refuse. Cardinal craft rotation conjugates the mapping basis and revalidates it; original construction cells remain separate.
+
+Focused checks cover all 24 proper cardinal bases across 12 full and 16 slab metadata states (672 profiles: 416 representable, 256 explicit slab refusals), actual authored bounds, ordered two-cell identity, and unknown tile refusal. Loaded saved-arm checks also exercise the new marker, malformed data, opaque tree equality and all four cardinal craft rotations. Whole-layout solving, publication and player/endpoints/restart acceptance remain pending.
