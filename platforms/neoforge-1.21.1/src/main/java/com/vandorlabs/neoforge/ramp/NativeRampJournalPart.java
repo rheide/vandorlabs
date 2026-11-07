@@ -15,6 +15,8 @@ public class NativeRampJournalPart extends BlockEntity {
  public final BlockPos controller(){return root;}
  /** Real geometry implementations override this with an immutable world-space projection. */
  public java.util.List<net.minecraft.world.phys.AABB> physicalBounds(){return null;}
+ /** Subclasses must quarantine the complete incoming envelope if their own body fails. */
+ protected final void refuseSnapshot(CompoundTag original){retained=original.copy();operation=null;inert=true;}
  @Override public void onLoad(){super.onLoad();NativeRampReservations.add(this);}
  @Override public void setRemoved(){NativeRampReservations.remove(this);super.setRemoved();}
  @Override public void onChunkUnloaded(){NativeRampReservations.remove(this);super.onChunkUnloaded();}
