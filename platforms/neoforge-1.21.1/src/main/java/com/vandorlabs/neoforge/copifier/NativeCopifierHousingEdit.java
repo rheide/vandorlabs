@@ -19,6 +19,10 @@ public final class NativeCopifierHousingEdit {
         public FrameSettings frames(){return FrameSettings.read(new ModernHousingTags(fields),NativeWallEntity::validFrame,NativeWallEntity::validSurface,ModernFinishCatalog::validChoice);}
         public PanelGlassSettings glass(){return PanelGlassSettings.read(new ModernHousingTags(fields),NativeCopifierHousingEdit::material);}
         public PanelPlayback playback(){return PanelPlayback.read(fields);}
+        public ChannelList channels(){return ChannelList.of(fields.getIntArray("RedstoneChannels"));}
+        public int transmissionRange(){return fields.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main").getInt("Range");}
+        public boolean localRedstone(){return fields.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main").getBoolean("Local");}
+        public ChannelList transmittedChannels(){return ChannelList.of(fields.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main").getIntArray("Channels"));}
     }
     private static int material(int value){return value==-1||ModernFinishCatalog.validChoice(value)?value:-1;}
     private static int number(CompoundTag tag,String key,int fallback){return tag.contains(key,Tag.TAG_INT)?tag.getInt(key):fallback;}

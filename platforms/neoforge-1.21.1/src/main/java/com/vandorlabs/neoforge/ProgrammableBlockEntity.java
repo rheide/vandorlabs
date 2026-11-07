@@ -50,6 +50,14 @@ public class ProgrammableBlockEntity extends BlockEntity {
         if(settings.layout!=value.layout){rawLayout=value.layout;tileSides=value.layout==1;}
         settings=new ProgrammableBlockDialog.State(main,value.layout,value.facesEnabled,faces,-1);return true;
     }
+    /** Preserve dormant Source configuration without reloading physical/platform data or tile identity. */
+    public final boolean configureCopiedMetadata(com.vandorlabs.persistence.FrameSettings frames,com.vandorlabs.redstone.ChannelList channels,int range,boolean local,com.vandorlabs.redstone.ChannelList transmitted){
+        if(!(level instanceof net.minecraft.server.level.ServerLevel server)||!server.getServer().isSameThread()||!level.hasChunkAt(worldPosition)||level.getBlockEntity(worldPosition)!=this||isRemoved()||!com.vandorlabs.neoforge.shape.NativeWallEntity.valid(frames)||channels==null||transmitted==null||!com.vandorlabs.redstone.TransmissionSettings.validRange(range))return false;
+        var migration=com.vandorlabs.neoforge.redstone.NativeTransmissionMigration.read(retainedSettings);if(!migration.installable())return false;var next=migration.install();
+        frames.write(new ModernHousingTags(next));next.putInt("RedstoneChannel",channels.first());next.putIntArray("RedstoneChannels",channels.toArray());
+        var forge=next.getCompound("ForgeData");var settings=forge.getCompound(com.vandorlabs.redstone.TransmissionSettings.SETTINGS);var main=new CompoundTag();main.putInt("Range",range);main.putBoolean("Local",local);main.putIntArray("Channels",transmitted.toArray());settings.put("main",main);forge.put(com.vandorlabs.redstone.TransmissionSettings.SETTINGS,settings);next.put("ForgeData",forge);retainedSettings=next;
+        setChanged();return true;
+    }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);
         retainedSettings=tag.copy();for(String key:java.util.List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retainedSettings.remove(key);
