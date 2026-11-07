@@ -64,6 +64,8 @@ public final class NativeDoorRenderer implements BlockEntityRenderer<NativeProgr
  }
  private record Prepared(long generation,Bake bake){}
  private static final java.util.concurrent.atomic.AtomicLong GENERATION=new java.util.concurrent.atomic.AtomicLong();
+ /** Shared reader frames follow the completed atlas generation, including resource reload. */
+ public static NativeReaderRenderer.Bake currentReaderBake(){var current=active;return current==null?null:current.bake.readers;}
  private static final com.google.common.cache.Cache<Object,Prepared> PENDING=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(2).build();private static volatile Prepared active;
  static void prepare(Object bakery,Map<ModelResourceLocation,BakedModel> models,Function<Material,TextureAtlasSprite> textures,NativeFlatWallModel.Bake materials){if(!BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs",NativeDoorSettings.ORDINARY_ID))&&!BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs",NativeDoorSettings.LARGE_ID))&&!"true".equals(System.getenv("VANDOR_DOOR_RENDER_CHECK"))&&!"true".equals(System.getenv("VANDOR_LARGE_DOOR_RENDER_CHECK")))return;PENDING.put(bakery,new Prepared(GENERATION.incrementAndGet(),new Bake(id->models.get(ModelResourceLocation.standalone(ResourceLocation.parse(id))),textures,materials)));}
  @SubscribeEvent public static synchronized void completed(ModelEvent.BakingCompleted event){var prepared=PENDING.getIfPresent(event.getModelBakery());PENDING.invalidate(event.getModelBakery());if(prepared!=null&&(active==null||prepared.generation>active.generation))active=prepared;}

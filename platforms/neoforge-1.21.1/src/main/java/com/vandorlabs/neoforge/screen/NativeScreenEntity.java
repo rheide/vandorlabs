@@ -41,6 +41,7 @@ public class NativeScreenEntity extends BlockEntity implements NativeChannelMemb
   visual=new Visual(family,snapshot.settings,snapshot.frames,snapshot.glass,snapshot.controls,power,inert?0:physicalPower,inert,geometryRevision,appearance,chipService.view(),chipService.page());
  }
  public final NativeScreenChipView chipView(){return chipService.view();}
+ public final NativeScreenChipView chipDisplay(NativeScreenChipView contents){return chipService.display(contents);}
  public final int chipPage(){return chipService.page();}
  final NativeScreenChipService chips(){return chipService;}
  void chipChanged(){changed(false);}

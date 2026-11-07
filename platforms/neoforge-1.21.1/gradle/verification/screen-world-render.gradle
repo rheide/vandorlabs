@@ -14,5 +14,6 @@ tasks.register('generateScreenWorldSmokeResources') {
 tasks.named('processSmokeResources') { dependsOn tasks.named('generateScreenWorldSmokeResources') }
 neoForge.runs.configureEach {
     if(project.hasProperty('screenRenderWorldCheck')) { systemProperty 'vandorlabs.screenRenderWorldCheck','true'; systemProperty 'vandorlabs.screenRenderBoundsReference',rootProject.file('../../testclient/fixtures/screen-render-bounds-reference.json.gz').absolutePath }
+    if(project.hasProperty('screenChipRenderWorldCheck')) systemProperty 'vandorlabs.screenChipRenderWorldCheck','true'
     if(project.hasProperty('screenRenderWorldRead')) systemProperty 'vandorlabs.screenRenderWorldRead','true'
 }

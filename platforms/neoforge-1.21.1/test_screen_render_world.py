@@ -14,11 +14,12 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
+    parser.add_argument('--chips',action='store_true',help='Add embedded trays and a joined reader-backed journal')
     args=parser.parse_args()
-    canonical_args=['-PscreenRenderWorldCheck']
+    canonical_args=['-PscreenRenderWorldCheck']+(['-PscreenChipRenderWorldCheck'] if args.chips else [])
     phase='screen-render-world-client'
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
-    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
+    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),**({'VANDOR_READER_SCREEN_CHECK':'true'} if args.chips else {}))
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
     output=Path(artifact_directory(prefix='screen-render-world-private-',dir=base))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
