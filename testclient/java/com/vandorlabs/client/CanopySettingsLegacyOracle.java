@@ -13,16 +13,33 @@ public final class CanopySettingsLegacyOracle {
         "CanopySlideForward", "CanopyTileMaterial", "CanopyTextureLayout", "CanopyOpenable",
         "CanopyRedstone", "CanopyActivateOnPower", "CanopyChannels"};
 
-    private static JsonObject tags(NBTTagCompound tag) {
+    static JsonObject tags(NBTTagCompound tag) {
         JsonObject out = new JsonObject();
         for (String key : new TreeSet<>(tag.getKeySet())) {
             NBTBase value = tag.getTag(key);
             JsonObject scalar = new JsonObject();
             scalar.addProperty("type", value.getId());
-            scalar.addProperty("snbt", value.toString());
+            scalar.addProperty("snbt", canonical(value));
             out.add(key, scalar);
         }
         return out;
+    }
+
+    private static String canonical(NBTBase value) {
+        if (value instanceof NBTTagCompound) {
+            NBTTagCompound compound=(NBTTagCompound)value;
+            StringJoiner result=new StringJoiner(",","{","}");
+            for(String key:new TreeSet<>(compound.getKeySet()))
+                result.add(new NBTTagString(key).toString()+":"+canonical(compound.getTag(key)));
+            return result.toString();
+        }
+        if (value instanceof NBTTagList) {
+            NBTTagList list=(NBTTagList)value;
+            StringJoiner result=new StringJoiner(",","[","]");
+            for(int i=0;i<list.tagCount();i++)result.add(canonical(list.get(i)));
+            return result.toString();
+        }
+        return value.toString();
     }
 
     private static JsonObject state(LargeCanopySettings settings) {

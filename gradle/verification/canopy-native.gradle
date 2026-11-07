@@ -5,3 +5,11 @@ task exportCanopySettingsReference(type: JavaExec) {
     main = 'com.vandorlabs.client.CanopySettingsLegacyOracle'
     args file('build/test-artifacts/canopy-settings-forge.jsonl').absolutePath
 }
+task exportCanopyPlacementReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyPlacementLegacyOracle'
+    args file('build/test-artifacts/canopy-placement-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
