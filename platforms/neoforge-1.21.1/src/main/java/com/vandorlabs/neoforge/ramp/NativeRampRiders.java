@@ -57,6 +57,9 @@ public final class NativeRampRiders {
         for(int i=0;i<boxes.size();i++){var box=boxes.get(i);var next=recentCollision(box,entity);if(next!=box&&clipped==null){clipped=new ArrayList<>(boxes.size());for(int j=0;j<i;j++)clipped.add(boxes.get(j));}if(clipped!=null&&next!=null)clipped.add(next);}
         return clipped==null?original:com.vandorlabs.neoforge.NativeVoxelShapes.union(clipped,1024*1024,0);
     }
+    record SupportState(java.lang.ref.WeakReference<Level> level,long tick,double x,double z,double height){}
+    static SupportState captureSupport(Entity entity){requireThread(entity.level());var value=support(entity).get(entity);return value==null?null:new SupportState(value.level,value.tick,value.x,value.z,value.height);}
+    static void restoreSupport(Entity entity,SupportState previous){requireThread(entity.level());var memo=support(entity);if(previous==null){memo.remove(entity);return;}var value=memo.get(entity);if(value==null){value=new Support();memo.put(entity,value);}value.level=previous.level;value.tick=previous.tick;value.x=previous.x;value.z=previous.z;value.height=previous.height;}
     @FunctionalInterface public interface Sync {void send(net.minecraft.server.level.ServerPlayer player,NativeRampMotionPayload payload);}
     public record Transport(int entity,Vec3 displacement,double supportDisplacement,NativeRampMotionPayload correction){}
     public static Transport move(Entity entity,double dx,double dy,double dz,Sync sync){return move(entity,dx,dy,dz,dy,sync);}
@@ -67,7 +70,9 @@ public final class NativeRampRiders {
         entity.setPos(entity.getX()+dx,entity.getY()+dy,entity.getZ()+dz);entity.setOnGround(true);entity.fallDistance=0;var velocity=entity.getDeltaMovement();entity.setDeltaMovement(velocity.x,0,velocity.z);supported(entity);
         if(packet!=null)sync.send((net.minecraft.server.level.ServerPlayer)entity,packet);return new Transport(entity.getId(),new Vec3(dx,dy,dz),supportDy,packet);
     }
-    public static Transport moveBelt(Entity entity,double dx,double dy,double dz,Sync sync){var result=move(entity,dx,dy,dz,sync);if(entity instanceof ItemEntity item){item.noPhysics=false;item.setDeltaMovement(Vec3.ZERO);item.hasImpulse=true;((ServerLevel)item.level()).getChunkSource().broadcastAndSend(item,new net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket(item));}return result;}
+    static void beltItemState(Entity entity){if(entity instanceof ItemEntity item){item.noPhysics=false;item.setDeltaMovement(Vec3.ZERO);item.hasImpulse=true;}}
+    static void beltItemTracking(Entity entity){if(entity instanceof ItemEntity item)((ServerLevel)item.level()).getChunkSource().broadcastAndSend(item,new net.minecraft.network.protocol.game.ClientboundTeleportEntityPacket(item));}
+    public static Transport moveBelt(Entity entity,double dx,double dy,double dz,Sync sync){var result=move(entity,dx,dy,dz,sync);beltItemState(entity);beltItemTracking(entity);return result;}
     @net.neoforged.bus.api.SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel() instanceof Level level){SERVER_SUPPORT.clearWorld(level);CLIENT_SUPPORT.clearWorld(level);SENT.clearWorld(level);NativeRampMotionPayload.unload(level);}}
     private static final ThreadLocal<Carrying> CARRYING=new ThreadLocal<>();
     public static boolean available(Entity entity){return entity!=null&&PlatformSupportPolicy.available(entity.isRemoved(),entity.noPhysics,entity.isPassenger(),entity instanceof Player player&&player.getAbilities().flying);}
