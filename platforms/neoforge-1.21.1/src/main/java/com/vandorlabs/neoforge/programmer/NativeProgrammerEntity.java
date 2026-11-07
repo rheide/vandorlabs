@@ -38,6 +38,8 @@ public class NativeProgrammerEntity extends BlockEntity implements Container {
  private boolean current(){return serverThread()&&!NativeProgrammerItem.mutating(level,worldPosition)&&!inert&&!projectionOnly&&!removing&&!isRemoved()&&NativeRedstoneChannels.open((ServerLevel)level)&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this&&getBlockState().getBlock() instanceof NativeProgrammerBlock&&getBlockState().getValue(NativeProgrammerBlock.PART)==0;}
  private boolean removalAccess(){return serverThread()&&removing&&!isRemoved();}
  public boolean inert(){return inert||projectionOnly&&level instanceof ServerLevel;}
+ /** Interaction-only selection; rendering will consume a prepared bounded journal projection. */
+ public boolean hasJournal(){return current()&&(service.localItem(1).is(NativeCredentialItems.DATA_CHIP.get())&&service.draft().journal()||com.vandorlabs.neoforge.screen.NativeChipJournal.journal(service.localItem(2)));}
  public boolean usable(Player player){return current()&&NativeConfigurationAccess.canEditDialog(player,level,worldPosition);}
  public Visual visual(){return visual;}
  public NativeProgrammerDraft draft(){return projectionOnly?visual.draft():service.draft();}

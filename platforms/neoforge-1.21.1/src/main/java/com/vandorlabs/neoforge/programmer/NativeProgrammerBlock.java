@@ -22,7 +22,7 @@ import net.minecraft.world.level.storage.loot.parameters.LootContextParams;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.*;
 
-/** Inactive four-cell block foundation; authored picking, editor routes and placement adapter follow. */
+/** Inactive four-cell block. Physical ownership and authored interaction geometry stay separate. */
 public class NativeProgrammerBlock extends BaseEntityBlock implements com.vandorlabs.neoforge.NativeAuthoredBlockRay {
  public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
  public static final IntegerProperty PART=IntegerProperty.create("part",0,3);
@@ -32,6 +32,23 @@ public class NativeProgrammerBlock extends BaseEntityBlock implements com.vandor
  public NativeProgrammerBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammerEntity>> entities,Supplier<com.vandorlabs.programmer.ProgrammerPicking.Mesh> geometry){super(properties.forceSolidOn().noOcclusion().dynamicShape().isSuffocating((s,w,p)->false).isViewBlocking((s,w,p)->false).isRedstoneConductor((s,w,p)->false));this.entities=entities;this.geometry=java.util.Objects.requireNonNull(geometry);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(PART,0));}
  public NativeProgrammerPicking.Hit trace(BlockPos pos,BlockState state,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){return NativeProgrammerPicking.trace(geometry.get(),root(pos,state),state.getValue(FACING),state.getValue(PART),start,end);}
  @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){var hit=trace(pos,state,start,end);return hit==null?null:hit.blockHit();}
+ protected net.minecraft.world.inventory.MenuType<NativeProgrammerMenu> menuType(){return null;}
+ /** Configurizer keeps the same authored socket/body precedence as an ordinary activation. */
+ public boolean openConfiguration(Player player,Level level,BlockPos pos){return activate(level,pos,player,InteractionHand.MAIN_HAND);}
+ public NativeProgrammerEntity installed(Level level,BlockPos pos){
+  if(level instanceof ServerLevel server&&!server.getServer().isSameThread())return null;if(!level.hasChunkAt(pos)||!level.getBlockState(pos).is(this))return null;var state=level.getBlockState(pos);var root=root(pos,state);if(!level.hasChunkAt(root))return null;var lower=level.getBlockState(root);
+  return lower.is(this)&&lower.getValue(PART)==0&&lower.getValue(FACING)==state.getValue(FACING)&&level.getBlockEntity(root) instanceof NativeProgrammerEntity owner&&!owner.isRemoved()?owner:null;
+ }
+ private boolean activate(Level level,BlockPos pos,Player player,InteractionHand hand){
+  if(level instanceof ServerLevel server&&!server.getServer().isSameThread())return false;var owner=installed(level,pos);if(owner==null)return false;if(level.isClientSide)return true;if(!(player instanceof net.minecraft.server.level.ServerPlayer actor)||!owner.usable(player))return true;
+  var start=player.getEyePosition();var end=start.add(player.getLookAngle().scale(Math.min(8,player.blockInteractionRange())));var hit=trace(pos,level.getBlockState(pos),start,end);
+  if(hit!=null&&hit.slot()>=0&&hit.slot()<3){owner.socket(actor,hand,hit.slot());return true;}
+  // The journal surface consumes its own clicks; bounded navigation binds with its prepared view.
+  if(hit!=null&&hit.slot()==3&&owner.hasJournal())return true;
+  NativeProgrammerConfiguration.open(actor,(ServerLevel)level,owner.getBlockPos(),menuType());return true;
+ }
+ @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){return activate(level,pos,player,hand)?ItemInteractionResult.sidedSuccess(level.isClientSide):ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;}
+ @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return activate(level,pos,player,InteractionHand.MAIN_HAND)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.PASS;}
  @Override protected MapCodec<? extends BaseEntityBlock> codec(){throw new UnsupportedOperationException("Registry supplied programmer");}
  @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,PART);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return state.getValue(PART)==0?new NativeProgrammerEntity(entities.get(),pos,state):null;}
