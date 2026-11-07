@@ -239,12 +239,18 @@ public final class VehicleSignals {
         else {tile.setLocalOn(true);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,true));RedstoneChannels.inputChanged(link);releases.put(pos,craft.world.getTotalWorldTime()+20);}
         dirty.add(pos);flush();return true;
     }
+    /** Current known controls over the immutable source envelope; no synthetic capability serialization. */
+    static NBTTagCompound snapshotData(TileEntity tile,NBTTagCompound original){
+        if(tile instanceof com.vandorlabs.gear.GearTileEntity)return ((com.vandorlabs.gear.GearTileEntity)tile).currentData(original);
+        if(tile instanceof com.vandorlabs.coupler.TileCoupler)return ((com.vandorlabs.coupler.TileCoupler)tile).currentData(original);
+        return VehicleTileData.retainCapabilities(original,tile.writeToNBT(new NBTTagCompound()));
+    }
     private void flush(){
         if(dirty.isEmpty())return;
         Map<BlockPos,NBTTagCompound> saved=new HashMap<>();boolean fullSnapshot=false;
         for(BlockPos pos:new ArrayList<>(dirty)){
             TileEntity tile=craft.view.getTileEntity(pos);if(tile==null)continue;
-            VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=tile instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)tile).currentData(original==null?null:original.tileData()):VehicleTileData.retainCapabilities(original==null?null:original.tileData(),tile.writeToNBT(new NBTTagCompound()));
+            VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=snapshotData(tile,original==null?null:original.tileData());
             // Height/settings packets already published this exact seat snapshot.
             // A redundant notification must not invalidate its open preview.
             if(tile instanceof TileEntityPilotSeat && craft.structure.at(pos)!=null
