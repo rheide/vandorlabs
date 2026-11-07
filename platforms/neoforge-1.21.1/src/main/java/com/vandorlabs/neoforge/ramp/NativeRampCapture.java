@@ -51,7 +51,7 @@ public final class NativeRampCapture {
   int min=Integer.MAX_VALUE,max=Integer.MIN_VALUE,minY=Integer.MAX_VALUE,maxY=Integer.MIN_VALUE,minX=Integer.MAX_VALUE,maxX=Integer.MIN_VALUE,minZ=Integer.MAX_VALUE,maxZ=Integer.MIN_VALUE;
   var sources=new ArrayList<Source>(selected.size());double low=0,high=1;
   for(var cell:selected){var pos=new BlockPos(cell.x,cell.y,cell.z);var current=state(level,pos);
-   if(NativeRampHeldOwners.blocked(level,pos)||!level.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,owner.scanFacing(),actor.getMainHandItem()))return refused("You cannot modify the platform here");
+   if(NativeRampHeldOwners.blocked(level,pos)||!level.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,Direction.UP,actor.getMainHandItem()))return refused("You cannot modify the platform here");
    if(known&&(!(tile(level,pos) instanceof ProgrammableBlockEntity)||block instanceof NativeProgrammableStairs&&!(tile(level,pos) instanceof ProgrammableShapeEntity)))return refused("Programmable source tile is missing");
    List<AABB> boxes;
    if(block instanceof NativeProgrammableStairs){var shape=(ProgrammableShapeEntity)tile(level,pos);boxes=NativeProgrammableStairs.solidBoxes(current,shape.stairState().packed());}
