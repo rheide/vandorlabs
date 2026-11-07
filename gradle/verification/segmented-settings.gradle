@@ -20,3 +20,8 @@ task exportSegmentedItemReference(type: JavaExec) {
  main = 'com.vandorlabs.client.SegmentedItemLegacyChecks'
  systemProperty 'vandorlabs.segmentedItemReference',file(project.findProperty('segmentedItemReference') ?: 'build/test-artifacts/segmented-item-forge.jsonl').absolutePath
 }
+task testSegmentedCellArtwork(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.SegmentedCellArtworkChecks'
+}
