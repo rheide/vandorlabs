@@ -80,6 +80,22 @@ public final class ArmPayload {
     }
     /** Geometry only: intermediate grid alignment does not bypass ownership/state validation. */
     public ArmGridMapping gridMapping(GearTileEntity arm,double progress){return ArmGridMapping.resolve(this,arm,progress);}
+    /** Detached translation-aligned publication candidate; never restores or retires world cells. */
+    public ArmGridPlacement gridPlacement(GearTileEntity arm,double progress){
+        if(hasOwnershipJournal())throw new IllegalArgumentException("Reconcile attachment ownership before grid publication");
+        ArmGridMapping mapping=gridMapping(arm,progress);
+        if(mapping==null||mapping.rotates())return null;
+        BlockPos origin=mapping.cell(BlockPos.ORIGIN),relative=origin.subtract(arm.getPos());
+        if(Math.abs((long)relative.getX())>80||Math.abs((long)relative.getY())>80||Math.abs((long)relative.getZ())>80)return null;
+        List<VehicleStructure.Cell> mapped=new ArrayList<>(blocks.cells.size());
+        for(VehicleStructure.Cell cell:blocks.cells){
+            BlockPos at=mapping.cell(cell.pos);NBTTagCompound data=cell.tileData();
+            if(data!=null)data=VehicleTileData.translated(data,at.subtract(cell.pos));
+            mapped.add(new VehicleStructure.Cell(at,cell.state,data));
+        }
+        ArmPayload detached=new ArmPayload(blocks,offset,true,relative);detached.gridAligned=gridAligned;
+        return new ArmGridPlacement(mapped,detached.write());
+    }
     public boolean materialized(){return materialized;}
     public boolean isSurfaceLayer(){for(VehicleStructure.Cell cell:blocks.cells)if(!(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface))return false;return !blocks.cells.isEmpty();}
     static void validateSyncBudget(byte[] encoded)throws java.io.IOException{

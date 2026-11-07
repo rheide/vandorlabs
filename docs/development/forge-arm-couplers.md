@@ -53,3 +53,11 @@ The isolated mathematical check passes 34,068 assertions on both Java 8 and Java
 Native settings read current installed `TileCoupler` fields. Captured settings read the committed payload's immutable cell headers, without constructing a nested `VehicleWorld` or deserializing its capabilities. Subsequent captured edits must publish a typed updated payload before a runtime consumes those settings; this observation layer does not yet implement editing or actuation.
 
 Saved local-view checks pass 1,080 profiles and 14,041 assertions covering all six arm mounts and head facings, current stroke/rotation geometry, absent legacy input defaults, stable addresses, missing-data refusal, unchanged opaque snapshots, and no nested factory construction. A separate getter check records zero bytes for 10,000 scalar header reads; 32 defensive copies of the same 512 KiB opaque payload allocate 16,792,608 bytes. This is the header-read boundary, not full adapter or per-tick performance acceptance. Standard Java 8 assembly and dedicated-server linkage pass.
+
+## Detached translated payload candidate
+
+`ArmPayload.gridPlacement` builds an immutable ordered native-cell list and a defensive materialized payload tag for an integral translation, including intermediate Extender strokes. The original construction snapshot and live arm are unchanged. Mapped cells may lie outside the current craft box; the enclosing layout resolver must normalize all bodies together before journal publication. Existing known tile-coordinate translation is reused, while Coupler settings, unknown fields and opaque capabilities remain intact. Ownership journals refuse; fractional or rotated bases return no candidate. Rotated typed tile mappings are a separate extension.
+
+This API remains unbound. It starts no arm restoration journal and does not authorize parking or publish blocks. A complete coupled layout must enter the existing vehicle transfer journal as one ownership transaction. Actual endpoint/mining, client ownership and abrupt cross-chunk tests remain required at that binding boundary.
+
+Focused checks pass 15,552 mapping profiles / 131,909 assertions and 1,080 loaded-head profiles / 15,769 assertions after adding candidate comparisons, defensive output edits and exact Coupler tile preservation. These are detached candidate checks, not world publication acceptance.
