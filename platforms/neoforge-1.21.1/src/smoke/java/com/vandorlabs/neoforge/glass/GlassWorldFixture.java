@@ -16,9 +16,11 @@ import net.neoforged.fml.common.EventBusSubscriber;
 public final class GlassWorldFixture {
  public static NativeGlassBlock BLOCK;public static BlockEntityType<NativeGlassEntity> TYPE;
  public static final BlockPos BASE=new BlockPos(0,80,0),L=BASE.offset(-4,0,3),T=BASE.offset(-7,0,3);
+ public static boolean canonical(){return "true".equals(System.getenv("VANDOR_FLAT_GLASS_CANONICAL_CHECK"));}
+ public static void bind(){if(canonical()){BLOCK=NativeGlassRegistrations.BLOCK.get();TYPE=NativeGlassRegistrations.ENTITY.get();}}
  public static boolean enabled(){return "flat-glass-world-client".equals(System.getProperty("vandorlabs.transmitterPhase",""));}
  @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration {
-  @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent e){if(!enabled())return;
+  @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent e){if(!enabled()||canonical())return;
    e.register(Registries.BLOCK,h->{BLOCK=new NativeGlassBlock(Block.Properties.of().strength(.5F,1.2F).sound(SoundType.GLASS),()->TYPE);h.register(ResourceLocation.parse("vandorlabs:flat_glass_world_fixture"),BLOCK);});
    e.register(Registries.BLOCK_ENTITY_TYPE,h->{TYPE=BlockEntityType.Builder.of((p,s)->new NativeGlassEntity(TYPE,p,s),BLOCK).build(null);h.register(ResourceLocation.parse("vandorlabs:flat_glass_world_fixture"),TYPE);});
   }
@@ -30,7 +32,7 @@ public final class GlassWorldFixture {
   w.setBlock(p,BLOCK.defaultBlockState().setValue(NativeGlassBlock.ROTATED,rotated),18);var t=new CompoundTag();t.putInt("GlassSize",1);t.putInt("GlassPanelFacing",facing.get2DDataValue());t.putInt("GlassMaterial",material);t.putInt("GlassTint",tint);t.putBoolean("GlassFramed",framed);t.putBoolean("GlassJoin",true);if(interior>=0)t.putInt("FrameInterior",interior);
   ((NativeGlassEntity)w.getBlockEntity(p)).loadWithComponents(t,w.registryAccess());
  }
- @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent e){if(!enabled())return;var w=e.getServer().overworld();System.out.println("[vandorlabs][glass-world] actual server PID="+ProcessHandle.current().pid());
+ @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent e){if(!enabled())return;bind();var w=e.getServer().overworld();System.out.println("[vandorlabs][glass-world] actual server PID="+ProcessHandle.current().pid());
   w.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false,w.getServer());w.setDayTime(6000);w.setWeatherParameters(6000,0,false,false);
   for(int x=-10;x<12;x++)for(int z=-8;z<8;z++){w.setBlock(new BlockPos(x,79,z),Blocks.STONE.defaultBlockState(),18);for(int y=80;y<85;y++)w.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),18);}
   for(int x=0;x<3;x++)for(int y=0;y<2;y++)put(w,BASE.offset(x,y,0),-1,1,true,-1);
