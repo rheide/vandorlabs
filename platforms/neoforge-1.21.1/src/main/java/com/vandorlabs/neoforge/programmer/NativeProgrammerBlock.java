@@ -23,16 +23,15 @@ import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.*;
 
 /** Inactive four-cell block foundation; authored picking, editor routes and placement adapter follow. */
-public class NativeProgrammerBlock extends BaseEntityBlock {
+public class NativeProgrammerBlock extends BaseEntityBlock implements com.vandorlabs.neoforge.NativeAuthoredBlockRay {
  public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
  public static final IntegerProperty PART=IntegerProperty.create("part",0,3);
  private final Supplier<BlockEntityType<NativeProgrammerEntity>> entities;
  private final Supplier<com.vandorlabs.programmer.ProgrammerPicking.Mesh> geometry;
- private final VoxelShape[][] picking=new VoxelShape[4][4];
  public NativeProgrammerBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammerEntity>> entities){this(properties,entities,NativeProgrammerPicking::authored);}
- public NativeProgrammerBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammerEntity>> entities,Supplier<com.vandorlabs.programmer.ProgrammerPicking.Mesh> geometry){super(properties.forceSolidOn().noOcclusion().dynamicShape().isSuffocating((s,w,p)->false).isViewBlocking((s,w,p)->false).isRedstoneConductor((s,w,p)->false));this.entities=entities;this.geometry=java.util.Objects.requireNonNull(geometry);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(PART,0));for(var facing:Direction.Plane.HORIZONTAL)for(int part=0;part<4;part++)picking[facing.get2DDataValue()][part]=new NativeProgrammerPickShape(geometry,facing,part);}
+ public NativeProgrammerBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammerEntity>> entities,Supplier<com.vandorlabs.programmer.ProgrammerPicking.Mesh> geometry){super(properties.forceSolidOn().noOcclusion().dynamicShape().isSuffocating((s,w,p)->false).isViewBlocking((s,w,p)->false).isRedstoneConductor((s,w,p)->false));this.entities=entities;this.geometry=java.util.Objects.requireNonNull(geometry);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(PART,0));}
  public NativeProgrammerPicking.Hit trace(BlockPos pos,BlockState state,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){return NativeProgrammerPicking.trace(geometry.get(),root(pos,state),state.getValue(FACING),state.getValue(PART),start,end);}
- private VoxelShape pickShape(BlockState state){return picking[state.getValue(FACING).get2DDataValue()][state.getValue(PART)];}
+ @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){var hit=trace(pos,state,start,end);return hit==null?null:hit.blockHit();}
  @Override protected MapCodec<? extends BaseEntityBlock> codec(){throw new UnsupportedOperationException("Registry supplied programmer");}
  @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,PART);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return state.getValue(PART)==0?new NativeProgrammerEntity(entities.get(),pos,state):null;}
@@ -40,8 +39,8 @@ public class NativeProgrammerBlock extends BaseEntityBlock {
  @Override public BlockState getStateForPlacement(BlockPlaceContext context){var stack=context.getItemInHand();var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();if(stack.has(DataComponents.BLOCK_ENTITY_DATA)||tag.contains("BlockEntityTag")||tag.contains("ProgrammerPlacementRecovery"))return null;return defaultBlockState().setValue(FACING,context.getHorizontalDirection().getOpposite());}
  public static BlockPos root(BlockPos pos,BlockState state){var cell=NativeProgrammerLayout.of(state.getValue(FACING)).cells().get(state.getValue(PART));return pos.offset(-cell.x(),-cell.y(),-cell.z());}
  public static BlockPos cell(BlockPos root,Direction facing,int part){var cell=NativeProgrammerLayout.of(facing).cells().get(part);return root.offset(cell.x(),cell.y(),cell.z());}
- @Override protected VoxelShape getShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context){return pickShape(state);}
- @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context){return pickShape(state);}
+ @Override protected VoxelShape getShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context){return Shapes.block();}
+ @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context){return Shapes.block();}
  @Override protected VoxelShape getBlockSupportShape(BlockState state,BlockGetter world,BlockPos pos){return Shapes.empty();}
  @Override protected float getShadeBrightness(BlockState state,BlockGetter world,BlockPos pos){return 1F;}
  @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}

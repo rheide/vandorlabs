@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.shapes.*;
 
 /** Inactive ordinary glass block; original palette properties remain independently loadable. */
-public class NativeGlassBlock extends Block implements EntityBlock {
+public class NativeGlassBlock extends Block implements EntityBlock,com.vandorlabs.neoforge.NativeAuthoredBlockRay {
  public static final BooleanProperty ROTATED=BooleanProperty.create("rotated"),TOP=BooleanProperty.create("top"),BOTTOM=BooleanProperty.create("bottom"),LEFT=BooleanProperty.create("left"),RIGHT=BooleanProperty.create("right"),INNER_TL=BooleanProperty.create("inner_tl"),INNER_TR=BooleanProperty.create("inner_tr"),INNER_BL=BooleanProperty.create("inner_bl"),INNER_BR=BooleanProperty.create("inner_br");
  public static final IntegerProperty DEPTH=IntegerProperty.create("depth",0,2),SIZE=IntegerProperty.create("size",0,2);
  private final Supplier<BlockEntityType<?>> type;private final MapCodec<NativeGlassBlock> codec;
@@ -28,6 +28,7 @@ public class NativeGlassBlock extends Block implements EntityBlock {
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeGlassEntity(entityType(),pos,state);}
  @Override public BlockState getStateForPlacement(BlockPlaceContext context){return NativeGlassService.placement(this,context);}
  public static NativeGlassGeometry.Snapshot geometry(BlockState state,BlockGetter level,BlockPos pos){return level.getBlockEntity(pos) instanceof NativeGlassEntity host?host.publication().geometry():NativeGlassGeometry.straight(state.getValue(ROTATED),state.getValue(DEPTH));}
+ @Override public net.minecraft.world.phys.BlockHitResult traceAuthored(BlockState state,BlockGetter level,BlockPos pos,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){var hit=geometry(state,level,pos).scalar().trace(start.x-pos.getX(),start.y-pos.getY(),start.z-pos.getZ(),end.x-pos.getX(),end.y-pos.getY(),end.z-pos.getZ());return hit==null?null:new net.minecraft.world.phys.BlockHitResult(new net.minecraft.world.phys.Vec3(hit.x+pos.getX(),hit.y+pos.getY(),hit.z+pos.getZ()),Direction.from3DDataValue(hit.face),pos,false);}
  @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return geometry(state,level,pos).selection();}
  @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return geometry(state,level,pos).collision();}
  @Override protected VoxelShape getOcclusionShape(BlockState state,BlockGetter level,BlockPos pos){return Shapes.empty();}
