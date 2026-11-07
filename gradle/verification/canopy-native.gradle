@@ -39,3 +39,11 @@ task exportFixedCanopyReference(type: JavaExec) {
          file('build/test-artifacts/fixed-canopy-inputs-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportCanopyJoinedReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyJoinedLegacyOracle'
+    args file('build/test-artifacts/canopy-joined-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
