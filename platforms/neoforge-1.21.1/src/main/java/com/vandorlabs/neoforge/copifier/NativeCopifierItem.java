@@ -20,7 +20,8 @@ public class NativeCopifierItem extends Item implements NativeOwnsBlockInteracti
     public NativeCopifierItem(Properties properties,Supplier<MenuType<NativeCopifierMenu>> menus){super(properties.stacksTo(1));this.menus=java.util.Objects.requireNonNull(menus);}
     public static CompoundTag data(ItemStack stack){return stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();}
     private static void store(ServerPlayer player,ItemStack stack,CompoundTag root){if(root==null)stack.remove(DataComponents.CUSTOM_DATA);else stack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));player.getInventory().setChanged();player.inventoryMenu.broadcastChanges();}
-    @Override public Component getName(ItemStack stack){var base=super.getName(stack);var root=data(stack);String source=root.getString(NativeCopifierClipboard.SOURCE);if(source.isEmpty())return base;return base.copy().append(" - ").append(source.startsWith("block.vandorlabs.")?Component.translatable(source):Component.literal(source));}
+    // Component-owned data is read only here; naming must not clone the entire clipboard each frame.
+    @Override public Component getName(ItemStack stack){var base=super.getName(stack);String source=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).getUnsafe().getString(NativeCopifierClipboard.SOURCE);if(source.isEmpty())return base;return base.copy().append(" - ").append(source.startsWith("block.")?Component.translatable(source):Component.literal(source));}
     @Override public InteractionResult onItemUseFirst(ItemStack stack,UseOnContext context){return useOn(context);}
     @Override public InteractionResult useOn(UseOnContext context){
         if(context.getHand()!=InteractionHand.MAIN_HAND||context.getPlayer()==null)return InteractionResult.PASS;
@@ -28,7 +29,7 @@ public class NativeCopifierItem extends Item implements NativeOwnsBlockInteracti
         if(!(context.getPlayer() instanceof ServerPlayer player)||player.isSpectator()||!player.isAlive()||!player.getServer().isSameThread()||context.getLevel()!=player.level()||context.getItemInHand().getItem()!=this||context.getItemInHand()!=player.getMainHandItem()||context.getItemInHand().getCount()!=1)return InteractionResult.FAIL;
         var level=player.serverLevel();var pos=context.getClickedPos();var stack=context.getItemInHand();var root=data(stack);
         if(player.isShiftKeyDown()){
-            var captured=NativeCopifierHousingWorld.capture(level,pos,player,context.getClickedFace());if(captured==null)return InteractionResult.FAIL;
+            var captured=NativeCopifierHousingWorld.capture(level,pos,player,context.getClickedFace());if(captured==null)captured=NativeVanillaMaterialCapture.capture(level,pos,player,context.getClickedFace());if(captured==null)return InteractionResult.FAIL;
             store(player,stack,NativeCopifierClipboard.copied(root,captured,level.getBlockState(pos).getBlock().getDescriptionId()));return InteractionResult.CONSUME;
         }
         if(!NativeCopifierClipboard.hasCopy(root))return InteractionResult.FAIL;
