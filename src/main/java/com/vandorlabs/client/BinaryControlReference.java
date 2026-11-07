@@ -16,8 +16,10 @@ import java.nio.charset.StandardCharsets;
 /** Optional actual legacy renderer reference for the independent native binary-control adapter. */
 final class BinaryControlReference {
     static void export(Minecraft mc){
-        String output=System.getenv("VANDOR_BINARY_REFERENCE");if(output==null||output.isEmpty())return;JsonObject root=new JsonObject(),world=new JsonObject(),items=new JsonObject();root.addProperty("format",1);root.add("world",world);root.add("items",items);
+        String output=System.getenv("VANDOR_BINARY_REFERENCE");if(output==null||output.isEmpty())return;
         boolean readersOnly="true".equals(System.getenv("VANDOR_BINARY_READER_REFERENCE_ONLY"));
+        if(readersOnly){exportReaders(mc,output);return;}
+        JsonObject root=new JsonObject(),world=new JsonObject(),items=new JsonObject();root.addProperty("format",1);root.add("world",world);root.add("items",items);
         for(String id:readersOnly?new String[]{"data_chip_slot","access_card_slot"}:new String[]{"push_button","rocker_switch"}){
             Block block=Block.getBlockFromName("vandorlabs:"+id);
             for(EnumFacing face:EnumFacing.values())for(int rotation=0;rotation<(face.getAxis()==EnumFacing.Axis.Y?4:1);rotation++)for(boolean on:new boolean[]{false,true}){
@@ -36,5 +38,17 @@ final class BinaryControlReference {
         JsonObject row=new JsonObject();row.addProperty("sprite",q.getSprite().getIconName());row.addProperty("face",q.getFace().getName());row.addProperty("shade",q.shouldApplyDiffuseLighting());JsonArray points=new JsonArray();int[] raw=q.getVertexData();int stride=raw.length/4;for(int i=0;i<4;i++){JsonArray p=new JsonArray();for(int axis=0;axis<3;axis++)p.add(Float.intBitsToFloat(raw[i*stride+axis]));p.add((Float.intBitsToFloat(raw[i*stride+4])-q.getSprite().getMinU())/(q.getSprite().getMaxU()-q.getSprite().getMinU()));p.add((Float.intBitsToFloat(raw[i*stride+5])-q.getSprite().getMinV())/(q.getSprite().getMaxV()-q.getSprite().getMinV()));points.add(p);}row.add("points",points);result.add(row);
     }return result;}
     private BinaryControlReference(){}
+    /** Keep only one pose in memory; the mounted-model audit already occupies the client heap. */
+    private static void exportReaders(Minecraft mc,String output){
+        try{java.security.MessageDigest digest=java.security.MessageDigest.getInstance("SHA-256");java.security.DigestOutputStream bytes=new java.security.DigestOutputStream(new FileOutputStream(output),digest);Gson gson=new Gson();int worlds=0,icons=0;
+            try(com.google.gson.stream.JsonWriter writer=new com.google.gson.stream.JsonWriter(new OutputStreamWriter(bytes,StandardCharsets.UTF_8))){writer.beginObject();writer.name("format").value(1);writer.name("world").beginObject();
+                for(String id:new String[]{"data_chip_slot","access_card_slot"}){Block block=Block.getBlockFromName("vandorlabs:"+id);for(EnumFacing face:EnumFacing.values())for(int rotation=0;rotation<(face.getAxis()==EnumFacing.Axis.Y?4:1);rotation++)for(boolean on:new boolean[]{false,true}){
+                    IBlockState state=block.getDefaultState().withProperty(BlockVandorSwitch.FACING,face).withProperty(BlockVandorSwitch.ROTATION,rotation).withProperty(BlockVandorSwitch.ON,on);IBakedModel model=mc.getBlockRendererDispatcher().getBlockModelShapes().getModelForState(state);for(int mount=0;mount<64;mount++){writer.name(id+"/"+face.getName()+"/"+rotation+"/"+on+"/"+mount);gson.toJson(quads(model,((IExtendedBlockState)state).withProperty(MountedControlGeometry.MOUNT,mount)),writer);worlds++;}}
+                }writer.endObject();writer.name("items").beginObject();
+                for(String id:new String[]{"data_chip_slot","access_card_slot"}){Block block=Block.getBlockFromName("vandorlabs:"+id);for(int mount=0;mount<64;mount++){ItemStack stack=new ItemStack(block);NBTTagCompound tag=new NBTTagCompound();tag.setInteger("ControlMountVersion",2);tag.setInteger("BaseHeight",mount%4);tag.setInteger("BaseTilt",mount/4%4);tag.setInteger("TiltDirection",mount/16);stack.setTagInfo("RedstoneChannelSettings",tag);IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(stack,mc.world,mc.player);writer.name(id+"/"+mount).beginObject();writer.name("quads");gson.toJson(quads(model,null),writer);writer.name("gui").beginArray();ItemTransformVec3f gui=model.getItemCameraTransforms().gui;for(float value:new float[]{gui.rotation.x,gui.rotation.y,gui.rotation.z,gui.translation.x,gui.translation.y,gui.translation.z,gui.scale.x,gui.scale.y,gui.scale.z})writer.value(value);writer.endArray().endObject();icons++;}}
+                writer.endObject();writer.flush();digest.update((byte)'}');StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format("%02x",b&255));bytes.on(false);writer.name("golden").value(hash.toString());writer.endObject();System.out.println("[vandorlabs][reprolab] standalone-reader-render-reference PASS world="+worlds+" items="+icons+" sha256="+hash);
+            }System.out.println("[vandorlabs][reprolab] binary-control-reference PASS world="+worlds+" items="+icons);
+        }catch(IOException|java.security.NoSuchAlgorithmException failure){throw new IllegalStateException("Cannot stream reader render reference",failure);}
+    }
     private static String sha256(String value){try{StringBuilder hash=new StringBuilder();for(byte b:java.security.MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)))hash.append(String.format("%02x",b&255));return hash.toString();}catch(java.security.NoSuchAlgorithmException impossible){throw new IllegalStateException(impossible);}}
 }
