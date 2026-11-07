@@ -19,7 +19,7 @@ public final class GuiCopyController extends GuiContainer {
     public GuiCopyController(CopyControllerContainer container){super(container);tile=container.tile;mode=tile.triggerMode;scanHeight=tile.height;xSize=340;ySize=228;}
     @Override public void initGui(){
         xSize=Math.min(400,width-12);super.initGui();buttonList.clear();
-        increment=new GuiTextField(1,fontRenderer,guiLeft+12,guiTop+78,xSize-24,18);increment.setMaxStringLength(6);increment.setText(Integer.toString(tile.channelIncrement));
+        increment=new GuiTextField(1,fontRenderer,guiLeft+12,guiTop+78,xSize-24,18);increment.setMaxStringLength(com.vandorlabs.redstone.ChannelRange.INCREMENT_TEXT_LENGTH);increment.setText(Integer.toString(tile.channelIncrement));
         channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+144,xSize-24,18);channels.setMaxStringLength(ChannelList.MAX_TEXT_LENGTH);channels.setText(tile.channels.toString());
         buttonList.add(new RedstoneActivationButton(0,guiLeft+12,guiTop+104,xSize-24,mode));
         int w=(xSize-28)/3;for(int i=0;i<3;i++)buttonList.add(new GuiButton(i+1,guiLeft+12+i*(w+2),guiTop+202,w,20,new String[]{"Copy","Check areas","Done"}[i]));
@@ -29,7 +29,7 @@ public final class GuiCopyController extends GuiContainer {
     }
     private boolean hasChipMount(){return com.vandorlabs.vehicle.VehicleMounts.find(tile.getWorld(),tile.getPos(),true)!=null;}
     private void labels(){((RedstoneActivationButton)buttonList.get(0)).setMode(mode);for(GuiButton button:buttonList){if(button.id!=3)button.enabled=!tile.busy();if(button.id==11){button.displayString="Source: "+(tile.useChip?(hasChipMount()?"Vehicle Chip":"Vehicle Chip (attach Data Chip Mount)"):"Input Surface");button.visible=tile.useChip||hasChipMount();}}increment.setEnabled(!tile.busy());channels.setEnabled(!tile.busy());}
-    private void submit(int operation){try{int h=scanHeight,delta=Integer.parseInt(increment.getText());ChannelList list=ChannelList.parse(channels.getText());if(h<1||h>16||delta < -65534||delta > 65534||list==null)throw new IllegalArgumentException();error="";PacketHandler.INSTANCE.sendToServer(new CopyMessage(inventorySlots.windowId,operation,h,delta,mode,list));}catch(IllegalArgumentException invalid){error="Channel increment must be -65534 to 65534";}}
+    private void submit(int operation){try{int h=scanHeight,delta=Integer.parseInt(increment.getText());ChannelList list=ChannelList.parse(channels.getText());if(h<1||h>16||!com.vandorlabs.redstone.ChannelRange.validIncrement(delta)||list==null)throw new IllegalArgumentException();error="";PacketHandler.INSTANCE.sendToServer(new CopyMessage(inventorySlots.windowId,operation,h,delta,mode,list));}catch(IllegalArgumentException invalid){error="Channel increment must be -"+com.vandorlabs.redstone.ChannelRange.MAX_INCREMENT+" to "+com.vandorlabs.redstone.ChannelRange.MAX_INCREMENT;}}
     @Override protected void actionPerformed(GuiButton button){if(button.id==10)return;if(button.id==11){submit(3);return;}if(button.id==3){mc.player.closeScreen();return;}if(button.id==0){mode=GuiOptionCycle.next(mode,3);submit(0);labels();}else submit(button.id);}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee18212c);}
     @Override protected void drawGuiContainerForegroundLayer(int x,int y){
