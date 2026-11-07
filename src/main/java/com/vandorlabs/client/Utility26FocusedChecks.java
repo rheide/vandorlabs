@@ -13,6 +13,7 @@ final class Utility26FocusedChecks {
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
+        if("true".equals(System.getenv("VANDOR_ARM_ENDPOINT_COUPLER_ONLY")))return com.vandorlabs.gear.ArmEndpointCouplerLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_ARM_PARKING_HOLD_ONLY")))return ArmParkingHoldLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_WALL_PLACEMENT_ONLY")))return WallAgainstPlacementChecks.tick(mc);
         if("true".equals(System.getenv("VANDOR_TAXI_HOVER_GESTURE_ONLY"))){if(ticks<80)return false;return TaxiHoverGestureChecks.tick(mc);}
