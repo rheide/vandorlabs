@@ -202,3 +202,6 @@ The per-progress carried-arm snapshot now uses the immutable pose overlay; confi
 
 
 After parking-hold integration, carried progression validates installed ownership before input, samples the input and then freezes while the hold remains active on both server and client. The scalar overlay includes the optional hold marker and removes stale true markers after release. Thirty-two phase/input/blocked/hold combinations at all three payload sizes compare exactly with the complete writer. The independent 720-case hold corpus, Java 8 assemble and dedicated linkage also pass. Actual held recapture in a carried vehicle remains a separate acceptance boundary; native held-world checks alone do not establish it.
+
+
+Pose-only revisions also invalidate cached encoded length without eagerly recounting complete old/new payload trees. The next actual encode still performs exact bounded serialization. With an already known encoded length, 100 pose-inheritance calls allocate 11.2 KiB at all three payload sizes; the former recount path allocates approximately 20.29 / 22.31 / 99.90 MB. Exact on-demand byte lengths match that former calculation, and the encoded scalar/opaque snapshot round-trips unchanged. No parent-cell chain is retained.

@@ -107,7 +107,7 @@ public final class VehicleStructure {
     void inheritEncodedLength(VehicleStructure before) {
         if(before.encodedLength<0||before.cells.size()!=cells.size()||before.gearCount!=gearCount||before.facing!=facing||!before.seat.equals(seat)||before.displayOnly!=displayOnly)return;
         Map<BlockPos,NBTTagCompound> changed=new LinkedHashMap<>();
-        for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state)return;if(!cell.sameTileData(old))changed.put(cell.pos,cell.tile);}
+        for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state)return;if(cell!=old&&cell.gearConfigurationIdentity!=null&&cell.gearConfigurationIdentity==old.gearConfigurationIdentity)return;/* Pose revisions leave exact encoding on demand; never recount opaque payload bytes here. */if(!cell.sameTileData(old))changed.put(cell.pos,cell.tile);}
         try{encodedLength=before.lengthWithTiles(changed);}catch(IOException invalid){encodedLength=-1;}
     }
     void componentView(VehicleWorld view){if(componentView==null){componentView=view;activeFootKinds=-1;activePropulsion=-1;}}
