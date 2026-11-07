@@ -31,6 +31,13 @@ public final class NativeCopifierHousingWorld {
             NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
         }
     }
+    private record Trigger(com.vandorlabs.neoforge.NativeTriggerBlockEntity tile) implements Target {
+        public CompoundTag capture(){return NativeCopifierTriggerEdit.capture(tile.copiedSettings());}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            try{if(!NativeCopifierTriggerEdit.prepare(tile.copiedSettings(),values).applicable())return false;}catch(IllegalArgumentException malformed){return false;}
+            NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
+        }
+    }
     private record Door(com.vandorlabs.neoforge.door.NativeProgrammableDoorEntity tile) implements Target {
         public CompoundTag capture(){return NativeCopifierDoorEdit.capture(tile.copiedState());}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -72,6 +79,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.NativeTriggerBlockEntity trigger&&id.getPath().equals("programmable_trigger_block"))return trigger.isChannelMemberActive()?new Trigger(trigger):null;
         if(tile.getBlockState().getBlock() instanceof com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock){var root=com.vandorlabs.neoforge.door.DoorConfiguration.root(level,pos);return root!=null&&root.isChannelMemberActive()?new Door(root):null;}
         if(tile instanceof com.vandorlabs.neoforge.light.NativeLightEntity light&&java.util.Set.of("programmable_light","programmable_light_frame","programmable_light_slab").contains(id.getPath()))return light.available()&&com.vandorlabs.neoforge.light.NativeLightService.installed(light)?new Light(light):null;
         if(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity storage&&id.getPath().equals("programmable_storage"))return storage.available()?new Storage(storage):null;
