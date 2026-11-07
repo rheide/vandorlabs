@@ -163,6 +163,10 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public boolean isLandingAssembly(){return assembly!=null&&assembly.kind()!=GearTopology.FootKind.NONE;}
     public boolean rotatePayload(){return rotatePayload;}
     public double activeAngle(){return activeAngle;}
+    /** Raw configured geometry; unlike activeExtension(), these never depend on the current phase. */
+    public double configuredActiveExtension(){return activeExtension;}
+    public boolean armRetractionStroke(){return armRetractingStroke;}
+    public boolean trackRetractionStroke(){return trackRetractingStroke;}
     boolean sameJoinConfiguration(GearTileEntity other){return triggerMode==other.triggerMode&&direction==other.direction
             &&pushBlocks==other.pushBlocks&&rotatePayload==other.rotatePayload&&activeAngle==other.activeAngle&&startAngle==other.startAngle&&activeExtension==other.activeExtension
             &&joinEnabled==other.joinEnabled&&joinRange==other.joinRange&&carryLoad==other.carryLoad&&loadHeight==other.loadHeight

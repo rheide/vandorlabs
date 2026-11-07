@@ -14,7 +14,7 @@ import net.minecraft.world.World;
 public final class VehicleArmConstraintFrame {
  private final CouplerGraphConstraint.Graph graph;private final VehicleArmConstraintModel model;private final List<BlockPos> roots;private final int[] sectionBody;
  private VehicleArmConstraintFrame(CouplerGraphConstraint.Graph graph,VehicleArmConstraintModel model,List<BlockPos> roots,int[] sectionBody){this.graph=graph;this.model=model;this.roots=Collections.unmodifiableList(new ArrayList<>(roots));this.sectionBody=sectionBody.clone();}
- public CouplerGraphConstraint.Graph graph(){return graph;}public VehicleArmConstraintModel model(){return model;}public int arms(){return roots.size();}public BlockPos arm(int index){return roots.get(index);}public int sectionBody(int section){return sectionBody[section];}
+ public CouplerGraphConstraint.Graph graph(){return graph;}public VehicleArmConstraintModel model(){return model;}public int arms(){return roots.size();}public BlockPos arm(int index){return roots.get(index);}public int sections(){return sectionBody.length;}public int sectionBody(int section){return sectionBody[section];}
  /** Call again for changed settings/controls; carried motionRevision alone is not a freshness key. */
  public static VehicleArmConstraintFrame prepare(VehicleStructure source,VehicleWorld view,VehicleCouplerTopology topology,List<BlockPos> armRoots){
   if(source==null||view==null||view.structure!=source||topology==null||armRoots==null||topology.sections.isEmpty()||topology.sections.size()>CouplerGraphConstraint.MAX_BODIES||topology.links.size()>CouplerGraphConstraint.MAX_LINKS||armRoots.size()>CouplerGraphConstraint.MAX_ARMS)throw new IllegalArgumentException("Constraint frame bounds/identity");
