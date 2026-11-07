@@ -30,11 +30,11 @@ public final class NativeRampHeldOwners {
  /** Candidate cells are not reserved: only this operation's installed/pending markers are held.
   * A durable motion header and reconciliation must precede callers enabling this scope. */
  static void movingCandidates(ServerLevel world,NativeRampJournal.Operation operation,Collection<BlockPos> positions,net.minecraft.world.level.block.Block partBlock){
-  if(!world.getServer().isSameThread()||operation.phase()!=NativeRampJournal.Phase.APPLIED||positions.size()>8192||partBlock==null)throw new IllegalStateException("Ramp moving-candidate admission");
+  if(!world.getServer().isSameThread()||positions.size()>8192||partBlock==null)throw new IllegalStateException("Ramp moving-candidate admission");
   var candidates=new HashSet<BlockPos>();for(var pos:positions){if(Math.abs((long)pos.getX()-operation.root().getX())>64||Math.abs((long)pos.getY()-operation.root().getY())>64||Math.abs((long)pos.getZ()-operation.root().getZ())>64)throw new IllegalArgumentException("Ramp candidate bounds");candidates.add(pos.immutable());}
   var next=new ArrayList<Hold>();boolean found=false;for(var hold:holds){if(hold.world.get()==null)continue;if(hold.world.get()==world&&hold.operation==operation){next.add(new Hold(hold.world,operation,hold.positions,hold.containers,Set.copyOf(candidates),partBlock));found=true;}else next.add(hold);}if(!found)throw new IllegalStateException("Ramp operation not held");holds=List.copyOf(next);
  }
- public static boolean blocked(Level world,BlockPos pos){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();for(var hold:holds)if(hold.world.get()==world&&hold.operation!=bypass){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)){var state=NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root());if(state!=NativeRampPartOwnership.State.OTHER)return true;}}return false;}
+ public static boolean blocked(Level world,BlockPos pos){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();var current=holds;for(int i=0;i<current.size();i++){var hold=current.get(i);if(hold.world.get()==world&&hold.operation!=bypass){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)){var state=NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root());if(state!=NativeRampPartOwnership.State.OTHER)return true;}}}return false;}
  public static boolean blocked(Container container){
   if(holds.isEmpty())return false;
   if(container instanceof BlockEntity tile&&tile.getLevel() instanceof ServerLevel world&&blocked(world,tile.getBlockPos()))return true;
