@@ -55,16 +55,18 @@ public final class NativeFlatWallGeometry {
         case WEST->new AABB(b.minZ,b.minY,1-b.maxX,b.maxZ,b.maxY,1-b.minX);
         default->b;
     };}
-    public static VoxelShape collision(NativeWallGeometry geometry){
-        VoxelShape found=SHAPES.get(geometry.boxes());if(found!=null)return found;
+    public static VoxelShape collision(NativeWallGeometry geometry){return collision(geometry.boxes());}
+    /** Shared exact box union; callers keep their own immutable publication contracts. */
+    public static VoxelShape collision(List<AABB> boxes){
+        VoxelShape found=SHAPES.get(boxes);if(found!=null)return found;
         synchronized(COSTS){
-            found=SHAPES.get(geometry.boxes());if(found!=null)return found;
-            VoxelShape built=NativeVoxelShapes.union(geometry.boxes(),BUDGET-256);
-            int cost=NativeVoxelShapes.retainedCost(built,geometry.boxes().size())+256;
+            found=SHAPES.get(boxes);if(found!=null)return found;
+            VoxelShape built=NativeVoxelShapes.union(boxes,BUDGET-256);
+            int cost=NativeVoxelShapes.retainedCost(built,boxes.size())+256;
             while(retainedBytes+cost>BUDGET&&!COSTS.isEmpty()){
                 var oldest=COSTS.entrySet().iterator().next();retainedBytes-=oldest.getValue();SHAPES.remove(oldest.getKey());COSTS.remove(oldest.getKey());
             }
-            COSTS.put(geometry.boxes(),cost);SHAPES.put(geometry.boxes(),built);retainedBytes+=cost;return built;
+            COSTS.put(boxes,cost);SHAPES.put(boxes,built);retainedBytes+=cost;return built;
         }
     }
     private NativeFlatWallGeometry(){}
