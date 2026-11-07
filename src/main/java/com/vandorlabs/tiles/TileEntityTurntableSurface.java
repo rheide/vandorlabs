@@ -50,7 +50,7 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
     private EnumFacing normal(){return world!=null&&world.isBlockLoaded(pos)&&world.getBlockState(pos).getBlock() instanceof BlockTurntableSurface?world.getBlockState(pos).getValue(BlockTurntableSurface.FACING):EnumFacing.UP;}
     public SquareLayout appearanceLayout(){SquareLayout layout=joinedLayout();return textureLayout==2&&layout.width!=layout.height?SquareLayout.single(pos,normal()):layout;}
     private SquareLayout joinedLayout(){
-        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled)return SquareLayout.single(pos,normal());SquareLayout claimed=controller==null?null:controller.surfaceLayout(pos);if(claimed!=null)return availableRoot(claimed);
+        SurfaceController controller=claimedOwner();if(controller instanceof TileEntityTurntableController&&!((TileEntityTurntableController)controller).enabled)return SquareLayout.single(pos,normal());SquareLayout claimed=controller==null||controller instanceof com.vandorlabs.copier.CopyControllerTile?null:controller.surfaceLayout(pos);if(claimed!=null)return availableRoot(claimed);
         if(cachedGroup==null){
             EnumFacing face=EnumFacing.getFront(groupNormal);if(face!=normal())return SquareLayout.single(pos,normal());
             com.vandorlabs.turntable.TurntableGeometry.Face basis=com.vandorlabs.turntable.TurntableGeometry.Face.valueOf(face.name());BlockPos origin=pos.add(groupOffset);Set<BlockPos> cells=new HashSet<>();
@@ -92,25 +92,32 @@ public final class TileEntityTurntableSurface extends TileEntity implements net.
                 for(EnumFacing side:EnumFacing.values())if(side.getAxis()!=normal().getAxis()){
                     BlockPos next=pos.offset(side);if(!world.isBlockLoaded(next)||!copier.sameSurfaceSide(pos,next))continue;
                     IBlockState state=world.getBlockState(next);TileEntity raw=world.getTileEntity(next);
-                    if(state.getBlock() instanceof BlockTurntableSurface&&state.getValue(BlockTurntableSurface.FACING)==normal()&&raw instanceof TileEntityTurntableSurface&&sameArtwork(raw)&&((TileEntityTurntableSurface)raw).claimedOwner()==null){copier.surfaceChanged();return;}
+                    if(state.getBlock() instanceof BlockTurntableSurface&&state.getValue(BlockTurntableSurface.FACING)==normal()&&raw instanceof TileEntityTurntableSurface&&((TileEntityTurntableSurface)raw).claimedOwner()==null){copier.surfaceChanged();return;}
                 }
+                try{Set<BlockPos> artwork=SquareLayout.connected(world,pos,p->{if(!copier.ownsSurface(p))return false;TileEntity raw=world.getTileEntity(p);return raw instanceof TileEntityTurntableSurface&&((TileEntityTurntableSurface)raw).textureLayout==textureLayout;});applyAppearanceGroup(artwork);}catch(IllegalArgumentException unavailable){setGroup(SquareLayout.single(pos,normal()));}
+                return;
             }
             SquareLayout layout=controller.surfaceLayout(pos);if(layout!=null)setGroup(layout);return;
         }
-        Set<BlockPos> members;
-        try{members=SquareLayout.connected(world,pos,p->{if(!world.isBlockLoaded(p))return true;TileEntity raw=world.getTileEntity(p);return !(raw instanceof TileEntityTurntableSurface)||((TileEntityTurntableSurface)raw).claimedOwner()==null;});}catch(IllegalArgumentException unloaded){return;}
+        Set<BlockPos> members,topology;
+        java.util.function.Predicate<BlockPos> unclaimed=p->{if(!world.isBlockLoaded(p))return true;TileEntity raw=world.getTileEntity(p);return !(raw instanceof TileEntityTurntableSurface)||((TileEntityTurntableSurface)raw).claimedOwner()==null;};
+        try{members=SquareLayout.connected(world,pos,unclaimed);}catch(IllegalArgumentException unloaded){return;}
+        try{topology=SquareLayout.connectedAnyArtwork(world,pos,unclaimed);}catch(IllegalArgumentException unavailableBoundary){topology=members;}
         // Unclaimed/incomplete pads still reach their adjacent Copy Controller.
         // This makes later additions and seed replacements discoverable after a
         // failed scan released the previous claims. Group work stays deferred
         // and is coalesced across the connected component below.
         Set<com.vandorlabs.copier.CopyControllerTile> copiers=new HashSet<>();
-        for(BlockPos cell:members)for(EnumFacing side:EnumFacing.values()){
+        for(BlockPos cell:topology)for(EnumFacing side:EnumFacing.values()){
             BlockPos at=cell.offset(side);if(!world.isBlockLoaded(at))continue;TileEntity raw=world.getTileEntity(at);
             if(raw instanceof com.vandorlabs.copier.CopyControllerTile&&((com.vandorlabs.copier.CopyControllerTile)raw).surfaceSeed(cell))copiers.add((com.vandorlabs.copier.CopyControllerTile)raw);
         }
         for(com.vandorlabs.copier.CopyControllerTile copier:copiers)copier.surfaceChanged();
-        SquareLayout layout=null;try{layout=SquareLayout.rectangle(members,normal());}catch(IllegalArgumentException irregular){}
         com.vandorlabs.gear.ArmSurfaceActivity.surfaceChanged(world,members);
+        applyAppearanceGroup(members);
+    }
+    private void applyAppearanceGroup(Set<BlockPos> members){
+        SquareLayout layout=null;try{layout=SquareLayout.rectangle(members,normal());}catch(IllegalArgumentException irregular){}
         for(BlockPos cell:members){TileEntity raw=world.getTileEntity(cell);if(raw instanceof TileEntityTurntableSurface){TileEntityTurntableSurface surface=(TileEntityTurntableSurface)raw;surface.groupPending=false;surface.setGroup(layout==null?SquareLayout.single(cell,normal()):layout);}}
     }
     public void configure(String on,String off,int mode,net.minecraft.entity.player.EntityPlayerMP actor){

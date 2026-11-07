@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Let Forge Copy Controller pads contain connected Surface blocks with different selected artwork. Keep each cell’s appearance and preserve artwork-sensitive Turntable discovery.
+
 - Align redstone channel validation with the existing positive 32-bit range. Copy Controllers accept wide channel increments and check translated IDs before copying; Coupler and Segmented Door fields retain complete 64-channel banks, and saved cockpit/coupling channels no longer truncate valid high IDs.
 
 - Enable the Duplifier in the experimental native build with its original recipe, dedicated Apply Settings window, connected application, settings-only Undo and three-state item artwork. Copied-settings crafting supports converted building, Door, Trapdoor, Light and Screen families; Ramp integration is still in progress.

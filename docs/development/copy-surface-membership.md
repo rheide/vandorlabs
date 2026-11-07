@@ -1,0 +1,13 @@
+# Copy Controller surface membership
+
+Copy Controller pad membership now follows connected, same-facing Surface topology independently of selected artwork. Both pads must still be complete, loaded rectangles with equal dimensions, within the existing 32 × 32 limit, on their respective controller sides and available for the same authorized claim. Stored inventories and copy transactions are unchanged.
+
+Default `SquareLayout.scan`, `connected` and `rectangle` retain their artwork-sensitive behavior for Turntables and other consumers. The Copy Controller uses a separate artwork-independent rectangle scan. Surface appearance snapshots remain grouped by matching active/inactive artwork and layout within the Copy claim; irregular appearance components draw independently. Claiming a pad never replaces its saved artwork.
+
+Adding a differently textured Surface beside a claimed Copy pad now invalidates that membership. Deferred discovery of incomplete or unclaimed components also reaches the adjacent controller across artwork boundaries, so filling a hole or completing the second pad can reform the full pair. Work remains event-driven and coalesced; render getters consume prepared appearance snapshots.
+
+The saved five-block-square regression reproduces the old failure with alternating active/inactive artwork: the controller selects only a partial pad. Its fixed replay covers root/member mining, opaque surviving faces, configured replacement, unequal growth, expansion to seven-block squares, seed and controller removal, and per-cell artwork preservation. Discovery counters enabled only in the focused fixture check that settled controller and appearance snapshots retain identity and perform zero discovery scans or scanner-owned world reads over 30 ticks. These counters do not measure unrelated world access or hardware rendering speed.
+
+The native Copy Controller remains unconverted. This Source-only change does not enable that family or constitute a release gate.
+
+Focused acceptance passes both saved mixed-art lifecycles, 24 controller/surface orientations with 72 opaque surviving faces, six real rectangular copies with asynchronous journal completion and inventory reload, plus the shared six-axis Turntable/discovery/migration and Surface editor/render checks. Both mixed seven-block-square fixtures retain their controller and appearance snapshots over 30 settled ticks with zero additional discovery scans and scanner-owned reads. The direct loaded-pad scan median is 59 μs for 256 cells and 227 μs for 1,024 cells in this run; these CPU figures do not establish hardware FPS. Dedicated-server linkage passes independently.

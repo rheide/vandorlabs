@@ -45,11 +45,11 @@ public final class CopyControllerTile extends TileEntity implements ITickable,Su
         for(BlockPos p:cells){TileEntity raw=world.getTileEntity(p);if(!(raw instanceof TileEntityTurntableSurface)||!((TileEntityTurntableSurface)raw).canClaim(pos,key))throw new IllegalArgumentException("A surface belongs to another controller");if(player!=null)com.vandorlabs.vehicle.VehicleService.permission(player,p);}
         SquareLayout oldInput=input,oldOutput=output;input=left;output=target;
         releaseCells(oldInput,oldOutput,cells);
-        for(SquareLayout area:new SquareLayout[]{input,output})if(area!=null)for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);if(!pos.equals(tile.owner)||!key.equals(tile.ownerKey))tile.bind(pos,key);tile.setGroup(area);}
+        for(SquareLayout area:new SquareLayout[]{input,output})if(area!=null)for(BlockPos p:area.cells){TileEntityTurntableSurface tile=(TileEntityTurntableSurface)world.getTileEntity(p);if(!pos.equals(tile.owner)||!key.equals(tile.ownerKey))tile.bind(pos,key);tile.scheduleGroup();}
         refresh=false;error="";status="Ready: "+target.width+" x "+target.height+", height "+height;changed();
     }
     private SquareLayout scanPad(BlockPos seed,java.util.function.Predicate<BlockPos> half,String label){
-        try{return SquareLayout.rectangle(world,seed,half);}catch(IllegalArgumentException invalid){throw new IllegalArgumentException(label+" pad at "+seed.getX()+", "+seed.getY()+", "+seed.getZ()+": "+invalid.getMessage()+". Place a filled rectangle touching that side of the controller"+(useChip?"":"; input and output dimensions must match (Chip mode needs only output)"));}
+        try{return SquareLayout.rectangleAnyArtwork(world,seed,half);}catch(IllegalArgumentException invalid){throw new IllegalArgumentException(label+" pad at "+seed.getX()+", "+seed.getY()+", "+seed.getZ()+": "+invalid.getMessage()+". Place a filled rectangle touching that side of the controller"+(useChip?"":"; input and output dimensions must match (Chip mode needs only output)"));}
     }
     private int side(BlockPos p,EnumFacing right){return (p.getX()-pos.getX())*right.getFrontOffsetX()+(p.getZ()-pos.getZ())*right.getFrontOffsetZ();}
     /** Invalid geometry stops owning pads immediately; remaining cells regain independent artwork. */
