@@ -49,7 +49,7 @@ public class NativeScreenBlock extends BaseEntityBlock {
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
  @Override public boolean hasDynamicLightEmission(BlockState state){return true;}
  @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return NativeScreenLight.read(state,level,pos);}
- @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block neighbor,BlockPos from,boolean moving){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeScreenEntity owner)owner.localInputChanged();}
+ @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block neighbor,BlockPos from,boolean moving){NativeScreenChipGroups.changed(level,pos);if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeScreenEntity owner)owner.localInputChanged();}
  @Override protected boolean isSignalSource(BlockState state){return true;}
  @Override protected int getSignal(BlockState state,BlockGetter level,BlockPos pos,Direction face){return level.getBlockEntity(pos) instanceof NativeScreenEntity owner?owner.localOutput():0;}
  @Override protected int getDirectSignal(BlockState state,BlockGetter level,BlockPos pos,Direction face){return getSignal(state,level,pos,face);}

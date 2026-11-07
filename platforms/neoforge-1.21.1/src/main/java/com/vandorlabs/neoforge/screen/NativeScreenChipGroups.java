@@ -10,7 +10,10 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 
 /** Loaded, Source-authored regular-Screen chip rectangles. No inventory or host enters cached values. */
+@net.neoforged.fml.common.EventBusSubscriber(modid="vandorlabs")
 public final class NativeScreenChipGroups {
+ static {NativeCredentialReaderViews.bindChanged(owner->changed(owner.getLevel(),owner.getBlockPos()));}
+ @net.neoforged.bus.api.SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel() instanceof Level level)clear(level);}
  private NativeScreenChipGroups(){}
  /** NONE, EMPTY or OCCUPIED; implementations must use only an installed loaded-local reader. */
  @FunctionalInterface public interface ReaderLookup {int at(Level level,BlockPos position,Direction outward);}
