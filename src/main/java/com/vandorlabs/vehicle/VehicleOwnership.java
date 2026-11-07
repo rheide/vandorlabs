@@ -39,6 +39,7 @@ public final class VehicleOwnership {
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(next,bytes);
         try(FileOutputStream out=new FileOutputStream(tmp.toFile())){out.write(bytes.toByteArray());out.getFD().sync();}
         Files.move(tmp,file,StandardCopyOption.REPLACE_EXISTING,StandardCopyOption.ATOMIC_MOVE);
+        com.vandorlabs.persistence.JournalFiles.syncDirectory(file.getParent());
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void joining(net.minecraftforge.event.entity.EntityJoinWorldEvent event) {
         if(event.getWorld().isRemote || !(event.getEntity() instanceof EntityGroundVehicle))return;

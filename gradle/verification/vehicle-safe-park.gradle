@@ -10,3 +10,10 @@ task testVehicleSafeParkSearch(type: JavaExec) {
     main = 'com.vandorlabs.vehicle.VehicleSafeParkSearchChecks'
     maxHeapSize = '512m'
 }
+task testVehicleSafeParkJournal(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.vehicle.VehicleSafeParkJournalChecks'
+    maxHeapSize = '512m'
+}

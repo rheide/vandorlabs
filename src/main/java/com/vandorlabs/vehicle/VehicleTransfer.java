@@ -103,8 +103,11 @@ public final class VehicleTransfer {
         if(work.ownership==null||!work.journalReady||work.world!=world||!work.ownership.id.equals(id)||work.ownership.active!=active)throw new IOException("Transfer ownership does not match its durable preparation.");
         work.ownership.publish(world);return work.ownership.epoch;
     }
-    private static void retire(WorldServer world)throws IOException{Work work=ACTIVE.get();if(work==null)Files.deleteIfExists(journal(world));else work.committed=true;}
+    private static void retire(WorldServer world)throws IOException{Work work=ACTIVE.get();if(work==null)deleteJournal(journal(world));else work.committed=true;}
     private static void hold(Work work,EntityGroundVehicle entity){if(work!=null){if(work.held==null){work.beforeStructure=entity.structure;work.beforeCollision=entity.collision;}work.held=entity;entity.setTransferInProgress(true);}}
+    /** Keep a queued read-only parking preflight stable; release follows the existing queue lifecycle. */
+    static void holdForPreflight(EntityGroundVehicle entity){Work work=ACTIVE.get();if(work==null)throw new IllegalStateException("Parking preflight requires a queued transfer");hold(work,entity);}
+    static void deferPreflight(){throw DEFERRED;}
     private static void release(Work work){
         TransferCoordinator.release(work.world,work);
         if(VehicleDiagnostics.ENABLED&&work.validationBuilds>0)System.out.println("[vandorlabs] vehicle-preflight views="+work.validationBuilds+" reused="+work.validationReuses+" cached="+REUSE_ASSEMBLY_PREFLIGHT);
@@ -123,7 +126,7 @@ public final class VehicleTransfer {
         try{
             if(work.preparation!=null&&work.geometry==null){work.geometry=work.preparation.poll();if(work.geometry==null)return;}
             if(work.io!=null){if(!work.io.isDone())return;work.io.get();work.io=null;if(work.retiring||work.aborting){release(work);queue.remove();return;}work.journalReady=true;}
-            if(work.aborting){try{work.io=IO.submit(()->{work.ownership.restore();Files.deleteIfExists(work.journal);return null;});}catch(RejectedExecutionException busy){}return;}
+            if(work.aborting){try{work.io=IO.submit(()->{work.ownership.restore();deleteJournal(work.journal);return null;});}catch(RejectedExecutionException busy){}return;}
             if(work.committed){
                 if(!work.updates.isEmpty()){
                     long deadline=System.nanoTime()+2_000_000L;
@@ -140,7 +143,7 @@ public final class VehicleTransfer {
                     work.checkpoint=new TransferCheckpoint(world,chunks);
                 }
                 if(!work.checkpointReady){if(!work.checkpoint.step())return;work.checkpointReady=true;}
-                try{work.io=IO.submit(()->{if(work.rolledBack)work.ownership.restore();Files.deleteIfExists(work.journal);return null;});work.retiring=true;}catch(RejectedExecutionException busy){}
+                try{work.io=IO.submit(()->{if(work.rolledBack)work.ownership.restore();deleteJournal(work.journal);return null;});work.retiring=true;}catch(RejectedExecutionException busy){}
                 return;
             }
             ACTIVE.set(work);try{work.action.run();if(work.undo==null){release(work);queue.remove();}else work.committed=true;}finally{ACTIVE.remove();}
@@ -155,7 +158,7 @@ public final class VehicleTransfer {
             if(work.committed||work.mutated){com.vandorlabs.VandorLabs.logger.error("Vehicle checkpoint failed; craft held and recovery journal retained",failure);work.failed.accept(new IOException("Vehicle checkpoint failed; craft held for recovery.",failure));release(work);if(work.held!=null)work.held.ownershipBlocked=true;queue.remove();return;}
             work.failed.accept(failure);
             if(work.undo!=null&&work.ownership!=null){
-                try{work.io=IO.submit(()->{work.ownership.restore();Files.deleteIfExists(work.journal);return null;});work.aborting=true;}catch(RejectedExecutionException busy){/* Retry cleanup without mutating the world. */work.aborting=true;}
+                try{work.io=IO.submit(()->{work.ownership.restore();deleteJournal(work.journal);return null;});work.aborting=true;}catch(RejectedExecutionException busy){/* Retry cleanup without mutating the world. */work.aborting=true;}
             }else{release(work);queue.remove();}
         }
     }
@@ -205,11 +208,13 @@ public final class VehicleTransfer {
         writeFile(journal(world),tag);
         timing("journal",began);
     }
+    private static void deleteJournal(Path path)throws IOException{if(Files.deleteIfExists(path))com.vandorlabs.persistence.JournalFiles.syncDirectory(path.getParent());}
     private static void writeFile(Path path,NBTTagCompound tag)throws IOException{
         Path temp=path.resolveSibling(path.getFileName()+".tmp");Files.createDirectories(path.getParent());
         ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(tag,bytes);
         try(FileOutputStream stream=new FileOutputStream(temp.toFile())) {stream.write(bytes.toByteArray());stream.getFD().sync();}
         Files.move(temp,path,StandardCopyOption.ATOMIC_MOVE,StandardCopyOption.REPLACE_EXISTING);
+        com.vandorlabs.persistence.JournalFiles.syncDirectory(path.getParent());
     }
     private static void flush(WorldServer world)throws Exception {
         if(ACTIVE.get()!=null)return;
@@ -220,8 +225,10 @@ public final class VehicleTransfer {
     private static void timing(String phase,long began){if(VehicleDiagnostics.ENABLED)System.out.println("[vandorlabs] vehicle-transfer phase="+phase+" elapsed-us="+(System.nanoTime()-began)/1000);}
     public static boolean pending(WorldServer world){Work work=ACTIVE.get();return (work==null||work.world!=world||work.undo==null)&&Files.exists(journal(world));}
     private static NBTTagCompound record(VehicleStructure structure,BlockPos origin,EntityGroundVehicle entity,boolean park) {
+        if(!Double.isFinite(entity.hoverTarget))throw new IllegalArgumentException("Invalid craft Hover target; parking refused.");
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Craft",structure.write());
         tag.setLong("Origin",origin.toLong());tag.setUniqueId("Entity",entity.getUniqueID());tag.setBoolean("Parking",park);
+        tag.setBoolean("HoverMode",entity.hover);tag.setDouble("HoverTarget",entity.hoverTarget);
         tag.setTag("OccupiedPilotSeats",entity.occupiedSeatAssignments());if(entity.taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",entity.taxiReturnSeat.toLong());
         tag.setBoolean("TaxiReturnPending",entity.taxiReturnPending);if(entity.taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",entity.taxiReturnActor);
         if(entity.couplingActor()!=null)tag.setUniqueId("CouplingActor",entity.couplingActor());tag.setTag("AutopilotNavigation",entity.autopilot.write());
@@ -338,7 +345,12 @@ public final class VehicleTransfer {
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated)throws Exception {
         if(entity.hover && !VehicleFlight.canParkHover(entity))throw new IOException("Extend the landing gear and descend within three blocks of ground before parking.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
-        VehicleStructure placed=VehicleRotation.plan(entity).structure;
+        parkPrepared(world,entity,origin,player,keepSeated,VehicleRotation.plan(entity).structure,VehicleRotation.turns(entity.rotationYaw));
+    }
+    /** Same durable ownership transfer, with a separately validated immutable destination recipe. */
+    static void parkPrepared(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated,VehicleStructure placed,int parkingTurns)throws Exception {
+        if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
+        if(parkingTurns<0||parkingTurns>3)throw new IllegalArgumentException("Invalid parking rotation");
         // Include newly extended gear cells in the final check before journaling or writing.
         for(VehicleStructure.Cell cell:placed.cells){BlockPos target=origin.add(cell.pos);
             if(target.getY()<0 || target.getY()>=world.getHeight() || !world.getWorldBorder().contains(target)
@@ -346,7 +358,6 @@ public final class VehicleTransfer {
         }
         Map<net.minecraft.entity.Entity,BlockPos> passengers=new LinkedHashMap<>();
         for(net.minecraft.entity.Entity rider:entity.getPassengers())passengers.put(rider,entity.seatForPassenger(rider));
-        int parkingTurns=VehicleRotation.turns(entity.rotationYaw);
         Work work=ACTIVE.get();hold(work,entity);
         NBTTagCompound undo=record(entity.structure,origin,entity,true);undo.setTag("ParkedCraft",placed.write());write(world,undo);
         entity.setTransferInProgress(true);Transaction transaction=new Transaction(world);
@@ -398,7 +409,7 @@ public final class VehicleTransfer {
             VehicleStructure parked=VehicleStructure.read(undo.getCompoundTag("ParkedCraft"));
             // A publication failure can leave some paintings native. Remove them before their supports.
             VehiclePaintings.remove(world,parked,origin);blocks(world,parked,origin,false);
-            entity.isDead=false;entity.install(work.beforeStructure,work.beforeCollision);entity.articulation.read(undo);
+            entity.isDead=false;restoreParkingFlight(entity,undo);entity.install(work.beforeStructure,work.beforeCollision);entity.articulation.read(undo);
             entity.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));entity.taxiReturnPending=undo.getBoolean("TaxiReturnPending");entity.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;entity.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
             entity.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;entity.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));entity.rotationYaw=undo.getFloat("Yaw");entity.setPosition(undo.getDouble("X"),undo.getDouble("Y"),undo.getDouble("Z"));
             if(!world.spawnEntity(entity))throw new IOException("Recovery vehicle spawn canceled; journal retained.");
@@ -431,7 +442,7 @@ public final class VehicleTransfer {
         if(undo.getBoolean("Parking")) {
             VehicleStructure parked=undo.hasKey("ParkedCraft",10)?VehicleStructure.read(undo.getCompoundTag("ParkedCraft")):structure;VehiclePaintings.remove(world,parked,origin);
             blocks(world,parked,origin,false);
-            EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restored.install(structure);restored.articulation.read(undo);
+            EntityGroundVehicle restored=new EntityGroundVehicle(world);restored.setUniqueId(id);restoreParkingFlight(restored,undo);restored.install(structure);restored.articulation.read(undo);
             restored.restoreSeatAssignments(undo.getCompoundTag("OccupiedPilotSeats"));restored.taxiReturnSeat=undo.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(undo.getLong("TaxiReturnSeat")):null;
             restored.taxiReturnPending=undo.getBoolean("TaxiReturnPending");restored.taxiReturnActor=undo.hasUniqueId("TaxiReturnActor")?undo.getUniqueId("TaxiReturnActor"):null;
             restored.couplingActor=undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null;restored.autopilot.read(undo.getCompoundTag("AutopilotNavigation"));
@@ -441,8 +452,15 @@ public final class VehicleTransfer {
             if(!world.spawnEntity(restored))throw new IOException("Recovery vehicle spawn cancelled; journal retained.");
             restored.signals.tick();
         }else {VehicleOwnership.update(world,id,1,false);blocks(world,undo.hasKey("AssemblyOriginal",10)?VehicleStructure.read(undo.getCompoundTag("AssemblyOriginal")):structure,undo.hasKey("AssemblyOriginalOrigin",4)?BlockPos.fromLong(undo.getLong("AssemblyOriginalOrigin")):origin,true);VehiclePaintings.publish(world,restoreSource,restoreOrigin);com.vandorlabs.tiles.WorldActionAuthorization.installed(world,restoreSource,restoreOrigin,undo.hasUniqueId("CouplingActor")?undo.getUniqueId("CouplingActor"):null);}
-        flush(world);Files.deleteIfExists(journal(world));
+        flush(world);deleteJournal(journal(world));
         }
+    }
+    /** Optional fields retain the previous schema-one interpretation when reading older journals. */
+    static void restoreParkingFlight(EntityGroundVehicle craft,NBTTagCompound tag)throws IOException {
+        if(!tag.hasKey("HoverMode",1))return;
+        double target=tag.hasKey("HoverTarget",99)?tag.getDouble("HoverTarget"):tag.getDouble("Y");
+        if(!Double.isFinite(target))throw new IOException("Invalid recovered Hover target; journal retained.");
+        craft.hover=tag.getBoolean("HoverMode");craft.hoverTarget=target;if(craft.view!=null)craft.view.hover=craft.hover;
     }
     /** A retained journal must not overwrite edits made after the original interrupted transfer. */
     static void requireUnchangedRecovery(net.minecraft.world.World world,VehicleStructure snapshot,BlockPos origin)throws IOException {
