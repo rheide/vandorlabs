@@ -24,7 +24,7 @@ import org.joml.Vector3f;
 
 /** Bake-owned inventory geometry; world contact masks and authoritative motion never enter icons. */
 public final class NativeCanopyItemModel extends BakedModelWrapper<BakedModel> {
-    public static final List<String> KINDS=List.of("angled_front_1x1","angled_front_1x2","canopy","long_canopy","regular_canopy_glass","front_canopy_glass","large_front_canopy_glass","space_visor_2x1","space_visor_3x1","space_visor_5x1","space_visor_5x1_double_height");
+    public static final List<String> KINDS=NativeCanopyKinds.IDS;
     private static final int BUDGET=8*1024*1024;
     private record Key(int depth,int scale,int shade,int tint,int angle,int material,int layout) {
         static Key of(CanopySettingsData s){return new Key(s.depth,s.scale,s.shade,s.tint,s.angle,s.material,s.textureLayout());}

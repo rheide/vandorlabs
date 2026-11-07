@@ -61,6 +61,8 @@ def main():
         raise ValueError('Missing canonical material translations')
     from generate_credential_resources import translations as credential_translations
     lang.update(credential_translations(ROOT))
+    from generate_canopy_resources import translations as canopy_translations
+    lang.update(canopy_translations(ROOT))
     write('assets/vandorlabs/lang/en_us.json', lang)
     for name in ['programmable_matter_block', 'programmable_matter_unpack', 'industrial_alloy_ingot']:
         value = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/recipes' / (name + '.json')).read_text())
