@@ -67,7 +67,7 @@ def main():
         u,v=copied[texture]
         label=original.get('label',language.get('tile.vandorlabs.'+original['id']+'.name','tile.vandorlabs.'+original['id']+'.name'))
         if 'detail' in original:label=re.sub(r' (Small|Medium|Large)$','',label)
-        general=not original.get('lightOnly',False) and original.get('detail',0)==0 and original.get('category') not in ['Frame','Screens','Lights','Doors','Double Doors']
+        general=not original.get('lightOnly',False) and original.get('detail',0)==0 and original.get('category') not in ['Frame','Screens','Lights','Doors','Double Doors'] and not original.get('category','').startswith(('Doors/','Double Doors/'))
         category=original.get('category','Materials')
         if category=='Screens':category='Controls' if 'menuGroup' not in original and original.get('source','').startswith('console_inputs/') else 'Displays'
         if 'menuGroup' in original:category+='/'+original['menuGroup']

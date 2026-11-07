@@ -14,7 +14,7 @@ tasks.register('generateDoorResources', Exec) {
     }
     ['../../texture-packs/additional', '../../texture-packs/default', '../../src/main/resources'].each { directory ->
         inputs.files(fileTree(directory) {
-            include '**/textures/blocks/space_doors/**', '**/textures/blocks/cargo_doors/**', '**/textures/blocks/glass_doors/**'
+            include '**/textures/blocks/space_doors/**', '**/textures/blocks/cargo_doors/**', '**/textures/blocks/glass_doors/**', '**/textures/blocks/company_doors/**', '**/textures/blocks/utility_doors/**'
             include '**/textures/blocks/programmable_glass/door_side.png', '**/textures/blocks/programmable_glass/metal_side.png'
             include '**/textures/blocks/dark_wall_panel.png', '**/textures/blocks/light_alloy_hull.png', '**/textures/blocks/control_buttons.png'
         })

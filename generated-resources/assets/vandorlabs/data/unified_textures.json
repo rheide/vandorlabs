@@ -2152,7 +2152,7 @@
   {
     "id": "door_white_glass_low",
     "label": "White Glass Small",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "space_doors/low/door_viewport",
     "rectangular": true,
     "crop": true,
@@ -2162,7 +2162,7 @@
   {
     "id": "door_white_glass_medium",
     "label": "White Glass Large",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
@@ -2172,7 +2172,7 @@
   {
     "id": "door_white_glass_high",
     "label": "White Glass Large",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
@@ -2184,7 +2184,7 @@
   {
     "id": "door_dark_glass_low",
     "label": "Dark Glass Small",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "space_doors/low/door_viewport",
     "rectangular": true,
     "crop": true,
@@ -2194,7 +2194,7 @@
   {
     "id": "door_dark_glass_medium",
     "label": "Dark Glass Large",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
@@ -2204,7 +2204,7 @@
   {
     "id": "door_dark_glass_high",
     "label": "Dark Glass Large",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "space_doors/medium/door_viewport",
     "rectangular": true,
     "crop": true,
@@ -2610,7 +2610,7 @@
   {
     "id": "door_slim_glass_low",
     "label": "Slim Glass Small",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "glass_doors/low/slim_glass",
     "rectangular": true,
     "crop": true,
@@ -2620,7 +2620,7 @@
   {
     "id": "door_slim_glass_medium",
     "label": "Slim Glass Large",
-    "category": "Doors",
+    "category": "Doors/Glass",
     "source": "glass_doors/medium/slim_glass",
     "rectangular": true,
     "crop": true,
@@ -7118,5 +7118,101 @@
     "menuGroup": "Vandor",
     "source": "company_doors/vandor/light",
     "rectangular": true
+  },
+  {
+    "id": "utility_door_blue",
+    "label": "Blue Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/blue_utility_door",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_blue_modern",
+    "label": "Modern Blue Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/blue_utility_door_modern",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_green",
+    "label": "Green Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/green_utility_door",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_green_modern",
+    "label": "Modern Green Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/green_utility_door_modern",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_warm",
+    "label": "Warm Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/warm_utility_door",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_warm_modern",
+    "label": "Modern Warm Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/warm_utility_door_modern",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_factory",
+    "label": "Factory",
+    "category": "Doors/Utility",
+    "source": "utility_doors/factory_door",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_industrial",
+    "label": "Industrial",
+    "category": "Doors/Utility",
+    "source": "utility_doors/industrial_door",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_industrial_modern",
+    "label": "Modern Industrial",
+    "category": "Doors/Utility",
+    "source": "utility_doors/industrial_door_modern",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_reactor",
+    "label": "Reactor",
+    "category": "Doors/Utility",
+    "source": "utility_doors/reactor_door",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_warehouse_detailed",
+    "label": "Warehouse",
+    "category": "Doors/Utility",
+    "source": "utility_doors/warehouse_door_detailed",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_warehouse_futuristic",
+    "label": "Futuristic Warehouse",
+    "category": "Doors/Utility",
+    "source": "utility_doors/warehouse_door_futuristic",
+    "rectangular": true,
+    "doorArtwork": true
   }
 ]

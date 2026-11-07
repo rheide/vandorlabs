@@ -19,7 +19,7 @@ public final class NavigationScreenSettings {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
         if(entry!=null&&entry.has("detail")&&entry.get("detail").getAsInt()>0)return false;
         String category=ScreenHousingTextures.category(choice);
-        if(category.equals("Doors")||category.equals("Double Doors")||category.equals("Lights"))return false;
+        if(com.vandorlabs.tiles.HousingCategoryPolicy.door(category)||com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(category)||category.equals("Lights"))return false;
         return !category.equals("Screens")||entry!=null&&entry.has("source");
     }
     public void write(NBTTagCompound tag){
