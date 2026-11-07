@@ -10,7 +10,7 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.material.MapColor;
 import net.neoforged.neoforge.registries.DeferredHolder;
 
-/** Inactive canonical definitions. The default bootstrap deliberately does not initialize these definitions. */
+/** Canonical standalone Canopy definitions; Vehicle and carried integration remain separate. */
 public final class NativeCanopyRegistrations {
     public static final Map<String,DeferredHolder<Block,NativeCanopyBlock>> BLOCKS=blocks();
     public static final Map<String,DeferredHolder<Item,NativeCanopyItem>> ITEMS=items();

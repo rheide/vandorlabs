@@ -5,7 +5,7 @@ import com.vandorlabs.persistence.CanopySettingsData;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 
-/** Inactive authoritative controller. Close admission is mandatory and never defaults to READY. */
+/** Authoritative standalone controller. Close admission is mandatory and never defaults to READY. */
 public final class NativeCanopyControl {
     private NativeCanopyControl(){}
     public enum Close {READY,PENDING,REFUSED}

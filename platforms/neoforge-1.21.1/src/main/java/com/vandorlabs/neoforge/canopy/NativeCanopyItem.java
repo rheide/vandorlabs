@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.gameevent.GameEvent;
 
-/** Inactive specialized item: original-cell hits and complete owner installation precede consumption. */
+/** Specialized standalone item: original-cell hits and complete owner installation precede consumption. */
 public class NativeCanopyItem extends BlockItem {
     private record Scope(Level level,Set<BlockPos> cells){}
     private static final ThreadLocal<Scope> ACTIVE=new ThreadLocal<>();

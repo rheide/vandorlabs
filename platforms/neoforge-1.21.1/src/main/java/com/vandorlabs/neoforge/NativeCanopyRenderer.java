@@ -17,7 +17,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.ModelEvent;
 
-/** Inactive authored canopy backend. Hosts supply one immutable snapshot and their cosmetic pose. */
+/** Authored standalone canopy backend. Hosts supply one immutable snapshot and their cosmetic pose. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeCanopyRenderer {
     private NativeCanopyRenderer(){}

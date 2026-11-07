@@ -6,9 +6,11 @@ The first milestone is non-vehicle parity: programmable building families, scree
 
 Historical native implementations are integration references. Each family still needs current-code persistence, permissions, runtime and rendered acceptance before support can be claimed. Existing Forge registry IDs, saved behavior and recovery guarantees must be preserved. See the [coverage inventory](../development/feature-coverage.md) for family status and the [architecture](../development/multiversion.md) for target boundaries.
 
+All eleven standalone Canopy and cockpit-glass components are now available in the experimental native build with their original recipes, configured items, dedicated editor, joined shells and authored world/item artwork. Their motion uses the pause-aware client clock while authoritative collision and reservation timing stay on the server. Loaded membership repair preserves accepted legacy absent-root saves and retained failed owners. Follow the [staged Canopy construction guide](../canopies.md#standalone-construction-in-the-experimental-native-build). Vehicle and carried integration remain deferred; this focused family acceptance is not a full release gate.
+
 Connected Duplifier Undo now captures all selected blocks before applying the first change. This fixes linked settings such as Segmented Door direction, layout, speed and channels being left at their copied values after Undo. Physical contents remain outside settings history.
 
-Forge canopy placement also validates stored custom footprints before changing blocks. Foreign blocks and supports remain intact when placement is refused, and the held stack keeps its data. This safety correction does not activate the native canopy family.
+Forge canopy placement also validates stored custom footprints before changing blocks. Foreign blocks and supports remain intact when placement is refused, and the held stack keeps its data. The native family reuses this same placement preflight.
 
 Redstone channel input keeps the shared range of 1–2,147,483,647, with zero disconnected and up to 64 channels per bank. Forge Copy Controllers now use that same range for checked channel translation; Coupler and Segmented Door fields retain full-width banks, and saved cockpit/coupling channels preserve high IDs. Converted native editors use the same int-backed policy. See the [channel input contract](../development/channel-input-range.md).
 

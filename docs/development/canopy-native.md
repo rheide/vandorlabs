@@ -146,3 +146,16 @@ factory-missing helper revives uninitialized and yields no usable item. All
 eleven body scenes, motion/reversal, reload and pixel controls still pass after
 Canopy emission delegates the shared prepared-vertex primitive. This remains
 focused software-rendered acceptance, not a release gate or hardware benchmark.
+
+### Public standalone activation
+
+The default bootstrap and creative catalog now register the eleven original
+standalone components. The current default-registration check replaces the
+historical inactive-definition assertion; default/write/restart checks pass
+23/100/89 assertions. Canonical real-player acceptance additionally places a
+configured Canopy in Survival through ordinary input, observes exact source
+count/components changing from two to one and a complete prepared footprint,
+then opens it with an empty hand and checks the configured pick. The same run
+retains all body, terrain, reload, reversal and membership controls. Construction
+captures in the player guide come from those actual placement/opening stages.
+Vehicle/cockpit sharing and carried behavior remain outside this conversion.

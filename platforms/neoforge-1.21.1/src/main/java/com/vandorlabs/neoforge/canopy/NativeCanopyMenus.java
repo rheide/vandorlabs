@@ -12,7 +12,7 @@ import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 
-/** One dedicated entry point for ordinary and Configurizer interactions. Inactive until bound. */
+/** One dedicated entry point for ordinary and Configurizer interactions. */
 public final class NativeCanopyMenus {
     private NativeCanopyMenus(){}
     public static boolean usable(Player player,NativeCanopyEntity owner){

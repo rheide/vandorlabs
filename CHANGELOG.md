@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable all eleven standalone Canopy and cockpit-glass components in the experimental native build with original recipes, configured placement, dedicated editing, joined shells, pause-aware motion, source-matched terrain/transparent artwork and safe loaded membership repair. Add staged native construction images. Vehicle/carried integration remains deferred.
+
 - Place flat Programmable Walls, Glass and Porthole Walls against the clicked support when using a horizontal normal face, rather than on the far edge of the next cell. Preserve top/bottom and tangent-plane continuation.
 
 - Align redstone channel validation with the existing positive 32-bit range. Copy Controllers accept wide channel increments and check translated IDs before copying; Coupler and Segmented Door fields retain complete 64-channel banks, and saved cockpit/coupling channels no longer truncate valid high IDs.
@@ -16,7 +18,7 @@
 
 - Enable Programmable Storage in the experimental native build with its original recipe, independent 27-slot inventory, dedicated material editor, configured items and source-matched Cabinet artwork. Mining keeps contents separate from the configured block item.
 
-- Enable ordinary Programmable Glass in the experimental native build with original recipes, configured variants, dedicated editing, two-sided fluids and source-matched world/item artwork. Canopy and cockpit glass remain in conversion.
+- Enable ordinary Programmable Glass in the experimental native build with original recipes, configured variants, dedicated editing, two-sided fluids and source-matched world/item artwork. Standalone Canopy components are now separately enabled; Vehicle integration remains deferred.
 
 - Enable standalone Card and Data Chip readers in the experimental native build with source-matched mounts, dedicated editing, inventory/hopper behavior and credential recovery.
 

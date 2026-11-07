@@ -8,7 +8,7 @@ import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 
-/** Inactive standalone owner foundation. Loading does not discover neighbors or prepare dense geometry. */
+/** Standalone owner. Loading does not discover neighbors or prepare dense geometry. */
 public final class NativeCanopyEntity extends BlockEntity implements com.vandorlabs.neoforge.redstone.NativeChannelMember {
     public static final net.neoforged.neoforge.client.model.data.ModelProperty<NativeCanopyRenderSnapshot> TERRAIN=new net.neoforged.neoforge.client.model.data.ModelProperty<>();
     private volatile net.neoforged.neoforge.client.model.data.ModelData modelData=net.neoforged.neoforge.client.model.data.ModelData.EMPTY;
