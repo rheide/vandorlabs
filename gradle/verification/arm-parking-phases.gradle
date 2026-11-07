@@ -16,3 +16,9 @@ task testArmPayloadHeaders(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmPayloadHeaderChecks'
  maxHeapSize = '1g'
 }
+task testArmParkingHold(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmParkingHoldChecks'
+ maxHeapSize = '1g'
+}
