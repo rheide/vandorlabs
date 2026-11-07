@@ -1,0 +1,34 @@
+package com.vandorlabs.gear;
+
+import com.vandorlabs.coupler.*;
+import com.vandorlabs.gear.core.GearMotion;
+import com.vandorlabs.vehicle.*;
+import java.lang.reflect.*;
+import java.util.*;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
+
+/** Opaque payload headers survive the real detached revision paths, not just one read/write. */
+public final class ArmPayloadHeaderChecks {
+    private static int checks;
+    private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Arm payload header: "+why);}
+    private static void header(ArmPayload payload,NBTTagCompound expected,String path){NBTTagCompound written=payload.write();need(written.getCompoundTag("FuturePayloadData").equals(expected),path+" opaque subtree");need(written.getByte("FutureByte")==7,path+" opaque scalar");}
+    public static void main(String[] args)throws Exception{
+        net.minecraft.init.Bootstrap.register();com.vandorlabs.VandorLabs.proxy=new com.vandorlabs.CommonProxy();
+        net.minecraftforge.fml.common.ModMetadata metadata=new net.minecraftforge.fml.common.ModMetadata();metadata.modId="vandorlabs";metadata.name="Vandor Labs";net.minecraftforge.fml.common.Loader loader=net.minecraftforge.fml.common.Loader.instance();Field controller=net.minecraftforge.fml.common.Loader.class.getDeclaredField("modController");controller.setAccessible(true);if(controller.get(loader)==null)controller.set(loader,new net.minecraftforge.fml.common.LoadController(loader));loader.setActiveModContainer(new net.minecraftforge.fml.common.DummyModContainer(metadata));
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileCoupler.class,new ResourceLocation("vandorlabs:square_coupler"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(GearTileEntity.class,new ResourceLocation("vandorlabs:modular_gear"));BlockCoupler block=new BlockCoupler();net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(block);
+        Constructor<ArmPayload> make=ArmPayload.class.getDeclaredConstructor(VehicleStructure.class,BlockPos.class,boolean.class,BlockPos.class);make.setAccessible(true);
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(int x=0;x<2;x++){NBTTagCompound tile=new NBTTagCompound();tile.setString("id","vandorlabs:square_coupler");tile.setInteger("x",x);tile.setInteger("y",0);tile.setInteger("z",0);NBTTagCompound caps=new NBTTagCompound();caps.setByteArray("opaque",new byte[]{1,2,3,-1});tile.setTag("ForgeCaps",caps);cells.add(new VehicleStructure.Cell(new BlockPos(x,0,0),block.getDefaultState(),tile));}
+        ArmPayload original=make.newInstance(VehicleStructure.display(cells),new BlockPos(2,-3,1),false,new BlockPos(2,-3,1));NBTTagCompound saved=original.write(),opaque=new NBTTagCompound();opaque.setLong("Anchor",new BlockPos(200,-30,170).toLong());opaque.setByteArray("bytes",new byte[]{7,9,-3});NBTTagCompound nested=new NBTTagCompound();nested.setString("id","foreign:private-role");nested.setLong("Pair",123456789L);opaque.setTag("ForgeCaps",nested);saved.setTag("FuturePayloadData",opaque.copy());saved.setByte("FutureByte",(byte)7);
+        ArmPayload loaded=ArmPayload.read(saved);header(loaded,opaque,"read/write");saved.getCompoundTag("FuturePayloadData").setLong("Anchor",0);header(loaded,opaque,"input defensive copy");NBTTagCompound exported=loaded.write();exported.getCompoundTag("FuturePayloadData").setString("external","changed");header(loaded,opaque,"output defensive copy");
+        ArmPayload captured=loaded.capturedCopy();header(captured,opaque,"captured revision");NBTTagCompound edited=captured.blocks.cells.get(0).tileData();edited.setString("CouplerStatus","Changed by actual typed control merger");ArmPayload controlled=captured.withCouplerData(BlockPos.ORIGIN,edited);header(controlled,opaque,"typed Coupler revision");need(controlled.blocks.cells.get(0).tileString("CouplerStatus").equals(edited.getString("CouplerStatus")),"known control edit still applied");ArmPayload mined=controlled.without(new BlockPos(1,0,0));need(mined.blocks.cells.size()==1,"normal payload mining removes only selected cell");header(mined,opaque,"mining revision");
+        Method armFactory=ArmParkingCandidatesChecks.class.getDeclaredMethod("arm",GearMotion.Mode.class,EnumFacing.class,int.class,GearMotion.Direction.class,int.class,double.class,double.class,ArmPayload.class);armFactory.setAccessible(true);GearTileEntity arm=(GearTileEntity)armFactory.invoke(null,GearMotion.Mode.EXTEND,EnumFacing.DOWN,1,GearMotion.Direction.NORTH,3,90D,0D,controlled);
+        ArmGridPlacement publication=controlled.gridPlacement(arm,1);need(publication!=null&&publication.cells.size()==2,"actual chosen native publication");header(ArmPayload.read(publication.payloadTag()),opaque,"grid publication");header(controlled,opaque,"publication source retained");
+        Constructor<?> worldConstructor=Class.forName("com.vandorlabs.client.NonRenderingChecks$MemoryWorld").getDeclaredConstructor(boolean.class);worldConstructor.setAccessible(true);World parent=(World)worldConstructor.newInstance(false);NBTTagCompound cycled=controlled.write();for(int turn=0;turn<4;turn++){cycled=ArmPayload.rotate(cycled,1,parent);header(ArmPayload.read(cycled),opaque,"cardinal rotation "+turn);}need(cycled.equals(controlled.write()),"four yaw rotations retain exact payload envelope");
+        Method tagger=ArmCouplerHeadChecks.class.getDeclaredMethod("gearTag",BlockPos.class,EnumFacing.class,GearMotion.Mode.class,double.class,NBTTagCompound.class);tagger.setAccessible(true);NBTTagCompound root=(NBTTagCompound)tagger.invoke(null,new BlockPos(12,12,12),EnumFacing.DOWN,GearMotion.Mode.EXTEND,.4D,controlled.write());GearTileEntity gear=new GearTileEntity();gear.readFromNBT(root);NBTTagCompound updated=gear.currentData(root);header(ArmPayload.read(updated.getCompoundTag("ArmPayload")),opaque,"current arm snapshot");
+        NBTTagCompound malformed=controlled.write();malformed.setString("GridTileMapping","unsupported");NBTTagCompound before=malformed.copy();boolean refused=false;try{ArmPayload.read(malformed);}catch(IllegalArgumentException expected){refused=true;}need(refused&&before.equals(malformed),"opaque preservation does not weaken malformed known-field refusal");
+        System.out.println("Arm payload opaque headers PASS checks="+checks+" defensive read/write/captured/control/mining/native grid/four yaw/current arm/malformed refusal");
+    }
+}
