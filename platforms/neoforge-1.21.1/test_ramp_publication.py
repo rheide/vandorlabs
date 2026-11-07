@@ -6,7 +6,7 @@ from test_transmitter import ROOT,command,run,world,jdk_home,launch,stop
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--case',choices=['receipt-failure','normal','arming-edit','armed','vacated','restoring','restored','factory'],default='normal');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--case',choices=['unknown-part','receipt-failure','normal','arming-edit','armed','vacated','restoring','restored','factory'],default='normal');args=parser.parse_args()
  output=Path(artifact_directory(prefix='ramp-publication-native-',dir=ROOT/'build/test-artifacts'));saved=output/'saved-world';world(saved,0)
  for phase in ['write','read']:
   if args.case=='factory' and phase=='read':
