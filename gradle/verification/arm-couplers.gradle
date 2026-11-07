@@ -11,3 +11,10 @@ task testCouplerLineConstraint(type: JavaExec) {
  classpath = files("$buildDir/portable-tests")
  main = 'com.vandorlabs.physics.CouplerLineConstraintTest'
 }
+
+task testArmCouplerHeads(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.ArmCouplerHeadChecks'
+ maxHeapSize = '1g'
+}
