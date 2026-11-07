@@ -17,7 +17,7 @@ import net.minecraft.util.math.*;
 public final class CanopyPlacementLegacyOracle {
     private static final BlockPos CLICKED=new BlockPos(8,80,8);
     private static net.minecraft.server.MinecraftServer marker;
-    private static final class World extends NonRenderingChecks.MemoryWorld {
+    static final class World extends NonRenderingChecks.MemoryWorld {
         World(){super(false);}
         @Override public net.minecraft.server.MinecraftServer getMinecraftServer(){return marker;}
     }
@@ -42,11 +42,15 @@ public final class CanopyPlacementLegacyOracle {
         if(root!=null){out.add("root",pos(root.getPos()));out.add("saved",CanopySettingsLegacyOracle.tags(root.writeToNBT(new NBTTagCompound())));out.add("pick",CanopySettingsLegacyOracle.tags(block.getPickBlock(world.getBlockState(root.getPos()),new RayTraceResult(Vec3d.ZERO,EnumFacing.NORTH,root.getPos()),world,root.getPos(),actor).serializeNBT()));if(drops!=1)throw new AssertionError("Source canopy drop ownership "+drops);}
         return out;
     }
-    public static void main(String[] args)throws Exception {
+    static List<BlockCanopy> initialize()throws Exception {
         PropulsionPlacementLegacyOracle.initialize();java.lang.reflect.Field field=sun.misc.Unsafe.class.getDeclaredField("theUnsafe");field.setAccessible(true);marker=(net.minecraft.server.MinecraftServer)((sun.misc.Unsafe)field.get(null)).allocateInstance(net.minecraft.server.dedicated.DedicatedServer.class);
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityCanopy.class,new ResourceLocation("vandorlabs","canopy"));
         List<BlockCanopy> blocks=new ArrayList<>();for(Block block:ModBlocks.BLOCKS)if(block instanceof BlockCanopy){blocks.add((BlockCanopy)block);net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(block);net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.register(new BlockCanopy.CanopyItem((BlockCanopy)block).setRegistryName(block.getRegistryName()));}
         if(blocks.size()!=11)throw new AssertionError("Source canopy catalog "+blocks.size());
+        return blocks;
+    }
+    public static void main(String[] args)throws Exception {
+        List<BlockCanopy> blocks=initialize();
         File file=new File(args[0]);file.getAbsoluteFile().getParentFile().mkdirs();Gson gson=new Gson();int callbacks=0,successes=0;
         try(PrintWriter out=new PrintWriter(file,"UTF-8")) {
             for(BlockCanopy block:blocks)for(EnumFacing facing:EnumFacing.HORIZONTALS)for(EnumFacing side:EnumFacing.values())for(int profile=0;profile<4;profile++) {
