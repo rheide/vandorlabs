@@ -161,7 +161,7 @@ public final class VehicleService {
     private static final class Preview {
         final UUID token=UUID.randomUUID();final WorldServer world;VehicleStructure structure;final BlockPos origin;final EntityGroundVehicle entity;final long expires;
         final int turns;final boolean controller;final BlockPos selected;final String status;
-        net.minecraft.nbt.NBTTagCompound controlData;
+        net.minecraft.nbt.NBTTagCompound controlData;BlockPos displayedSelected;
         final Set<BlockPos> airBoundary=new HashSet<>();
         Preview(WorldServer world,VehicleStructure structure,BlockPos origin,EntityGroundVehicle entity,String status,boolean controller,BlockPos selected){
             this.world=world;this.structure=structure;this.origin=origin;this.entity=entity;this.status=status;this.controller=controller;this.selected=selected.toImmutable();
@@ -228,7 +228,12 @@ public final class VehicleService {
         if(!preview.controller){VehicleStructure.Cell seat=preview.structure.at(preview.selected);return singleSeat(seat.state,seat.tileData(),BlockPos.ORIGIN.subtract(preview.selected));}
         return preview.entity==null || !preview.status.isEmpty()?preview.structure:VehicleRotation.plan(preview.entity).structure;
     }
-    private static void open(EntityPlayerMP player,Preview preview){Job previous=jobs.remove(player.getUniqueID());if(previous!=null)previous.finish();previews.put(player.getUniqueID(),preview);if(preview.structure==null){VehicleNetwork.controllerInspection(player,preview.origin,preview.status,preview.token,preview.controlData);return;}VehicleNetwork.send(player,display(preview),preview.entity==null?-1:preview.entity.getEntityId(),preview.token,preview.origin,true,preview.entity!=null,preview.status,preview.controller);}
+    private static void open(EntityPlayerMP player,Preview preview){
+        Job previous=jobs.remove(player.getUniqueID());if(previous!=null)previous.finish();previews.put(player.getUniqueID(),preview);
+        if(preview.structure==null){preview.displayedSelected=preview.origin;VehicleNetwork.controllerInspection(player,preview.origin,preview.status,preview.token,preview.controlData);return;}
+        VehicleStructure displayed=display(preview);preview.displayedSelected=preview.controller?VehicleControlSettings.position(displayed):BlockPos.ORIGIN;
+        VehicleNetwork.send(player,displayed,preview.entity==null?-1:preview.entity.getEntityId(),preview.token,preview.origin,true,preview.entity!=null,preview.status,preview.controller);
+    }
     private static void standaloneController(EntityPlayerMP player,BlockPos pos,String status){
         try{require(!player.isDead&&!player.isSpectator()&&player.world.isBlockLoaded(pos)&&player.getDistanceSqToCenter(pos)<=64,"Move closer to the Vehicle Controller.");permission(player,pos);
             net.minecraft.tileentity.TileEntity raw=player.world.getTileEntity(pos);require(raw instanceof com.vandorlabs.tiles.TileEntityVehicleController,"Vehicle Controller missing.");
@@ -242,7 +247,9 @@ public final class VehicleService {
             Preview current=previews.get(player.getUniqueID());require(current!=null,"Vehicle settings expired; inspect again.");
             Preview preview=current.controller?controllerPreview(player,packet.token,packet.entity,packet.origin):seatPreview(player,packet.token,packet.entity,packet.origin);
             require(preview.entity!=null&&validCaptured(player,preview.entity),"Inspect a vehicle in Taxi or Hover Mode.");
-            if(preview.controller)editableController(player,preview);else editableSeat(player,preview);
+            // Recovery plans the current held source rather than applying the old hull preview.
+            // Arm animation may replace that hull while the selected controller remains unchanged.
+            requireParkingSelection(preview);
             VehicleSafePark.requireAuthorized(player,preview.entity,preview.selected);
             require(!preview.entity.transferInProgress,"Wait for the current vehicle transfer.");
             previews.remove(player.getUniqueID());VehicleSafePark.submit(player,preview.entity,preview.selected);
@@ -322,7 +329,17 @@ public final class VehicleService {
         Preview preview=previews.get(player.getUniqueID());require(preview!=null && preview.token.equals(token) && !preview.controller && !player.isDead && !player.isSpectator() && preview.world==player.world && preview.expires>=player.world.getTotalWorldTime(),"Pilot Seat settings expired; inspect again.");
         require(entity==(preview.entity==null?-1:preview.entity.getEntityId()) && selected.equals(BlockPos.ORIGIN),"Pilot Seat identity changed.");return preview;
     }
-    private static BlockPos displaySelected(Preview preview){return preview.structure==null?preview.origin:preview.controller?VehicleControlSettings.position(display(preview)):BlockPos.ORIGIN;}
+    private static BlockPos displaySelected(Preview preview){
+        if(preview.displayedSelected==null)preview.displayedSelected=(preview.structure==null?preview.origin:preview.controller?VehicleControlSettings.position(display(preview)):BlockPos.ORIGIN).toImmutable();
+        return preview.displayedSelected;
+    }
+    private static void requireParkingSelection(Preview preview){
+        VehicleStructure current=preview.entity.structure;
+        VehicleStructure.Cell previous=preview.structure==null?null:preview.structure.at(preview.selected),selected=current.at(preview.selected);
+        require(previous!=null&&selected!=null&&previous.state==selected.state&&previous.sameTileData(selected),"Selected vehicle control changed; inspect again.");
+        if(preview.controller)require(preview.selected.equals(VehicleControlSettings.position(current)),"Vehicle Controller selection changed.");
+        require(preview.entity.view!=null&&preview.entity.view.structure==current&&preview.entity.view.tiles.get(preview.selected) instanceof com.vandorlabs.tiles.TileEntityPilotSeat,"Vehicle control data missing.");
+    }
     private static Preview controllerPreview(EntityPlayerMP player,UUID token,int entity,BlockPos selected){
         Preview preview=previews.get(player.getUniqueID());
         require(preview!=null && preview.token.equals(token) && preview.controller && !player.isDead && !player.isSpectator() && preview.world==player.world && preview.expires>=player.world.getTotalWorldTime(),"Vehicle Controller settings expired; inspect again.");
