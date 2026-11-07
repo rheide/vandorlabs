@@ -15,7 +15,9 @@ def main():
  for phase in ['write','read']:
   run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=storage-host-'+phase),output/(phase+'.log'),'[vandorlabs][storage-host] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
   check_log(saved/'logs/latest.log','All dimensions are saved')
-  if phase=='write':check_log(output/'write.log','[vandorlabs][storage-editor] PASS')
+  if phase=='write':
+   check_log(output/'write.log','[vandorlabs][storage-editor] PASS')
+   check_log(output/'write.log','[vandorlabs][storage-item-envelope] PASS')
  evidence=[]
  for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge/storage').glob('NativeStorage*.class')):
   evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+path.name)
