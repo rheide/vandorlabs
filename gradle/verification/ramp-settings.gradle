@@ -30,3 +30,12 @@ task exportRampGenerationSourceReference(type: JavaExec) {
  args file("$buildDir/test-artifacts/ramp-generation-source.jsonl").absolutePath
  maxHeapSize='1G'
 }
+
+task exportRampEditorSourceReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.RampEditorLegacyOracle'
+ args file("$buildDir/test-artifacts/ramp-editor-source.jsonl").absolutePath
+ maxHeapSize='1G'
+}
