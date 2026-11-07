@@ -88,3 +88,10 @@ task testCouplerInput(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.CouplerInputChecks'
  maxHeapSize = '256m'
 }
+
+task testArmParkingTopology(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.ArmParkingTopologyChecks'
+ maxHeapSize = '1g'
+}
