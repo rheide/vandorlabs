@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Actual private standalone reader placement/use/tool/menu and mounted contents client."""
-import argparse,os,socket,time
+import argparse,os,socket,time,json
+from PIL import Image
 from pathlib import Path
 from test_cube import ROOT,command,launch,stop,check_log,jdk_home
 from test_sampled_materials import fixture_world
@@ -33,8 +34,18 @@ def main():
    time.sleep(.1)
   for marker in ['setup','logout']:check_log(server_log,'[vandorlabs][reader-world] '+marker+' PASS')
   check_log(server_log,'[vandorlabs][reader-world] server PASS')
-  for name in ['reader-card-mounted-world.png','reader-chip-mounted-world.png']:
+  check_log(out/'client.log','[vandorlabs][reader-world] warm PASS')
+  for name in ['reader-card-mounted-world.png','reader-chip-mounted-world.png','reader-card-mounted-world-no-contents.png','reader-chip-mounted-world-no-contents.png']:
    if not (client/'screenshots'/name).is_file():raise AssertionError('Missing mounted reader world '+name)
+  pixels={}
+  for kind in ['card','chip']:
+   positive=Image.open(client/'screenshots'/('reader-'+kind+'-mounted-world.png')).convert('RGB');negative=Image.open(client/'screenshots'/('reader-'+kind+'-mounted-world-no-contents.png')).convert('RGB')
+   if positive.size!=(1280,720) or negative.size!=positive.size:raise AssertionError('Unexpected world capture dimensions')
+   changed=sum(max(abs(a-b) for a,b in zip(positive.getpixel((x,y)),negative.getpixel((x,y))))>=6 for y in range(307,415) for x in range(608,676))
+   dark=sum(max(negative.getpixel((x,y)))<45 for y in range(307,415) for x in range(608,676))
+   if changed<20 or dark<40:raise AssertionError('Missing contents positive/terrain-frame negative: '+str((kind,changed,dark)))
+   pixels[kind]=dict(changedContentsPixels=changed,retainedDarkFramePixels=dark)
+  (out/'world-pixels.json').write_text(json.dumps(pixels,sort_keys=True)+'\n')
  finally:stop(server)
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
