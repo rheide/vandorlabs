@@ -111,3 +111,18 @@ task testArmSnapshotCost(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmSnapshotCostChecks'
  maxHeapSize = '1g'
 }
+
+task testGearConfigurationCache(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.GearConfigurationCacheChecks'
+ maxHeapSize = '1g'
+}
+
+task testGearCollisionDescription(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.GearCollisionDescriptionChecks'
+ args Boolean.toString(project.hasProperty('gearDescribeBaseline'))
+ maxHeapSize = '1g'
+}
