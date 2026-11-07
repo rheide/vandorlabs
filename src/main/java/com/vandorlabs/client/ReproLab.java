@@ -936,6 +936,10 @@ public class ReproLab {
             case 1:
                 // Let chunks generate.
                 if (++tick > 80) {
+                    if(Boolean.getBoolean("vandorlabs.lightChecksOnly")){
+                        if(!LightOcclusionChecks.ready(mc))break;
+                        LightOcclusionChecks.run(outDir);state=999;mc.shutdown();break;
+                    }
                     build();
                     tick = 0;
                     state = 2;

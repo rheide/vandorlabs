@@ -191,7 +191,7 @@ final class CustomMaterialRuntimeChecks {
         java.util.Map<String,Integer> counts=new java.util.HashMap<>();
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(ScreenHousingTextures.visible(choice))
             counts.merge(ScreenHousingTextures.category(choice),1,Integer::sum);
-        require(counts.get("Hull")==21 && counts.get("Panels")==19 && counts.get("Industrial")==16 && counts.get("Tech")==25,"approved Hull/Panels/Industrial/Tech counts: "+counts);
+        require(counts.get("Hull")==21 && counts.get("Panels")==19 && counts.get("Industrial")==14 && counts.get("Tech")==25 && counts.get("Doors/Segmented")==8,"approved Hull/Panels/Industrial/Tech and Segmented category counts: "+counts);
         HousingTextureList moved=new HousingTextureList(0,0,180,32);
         require(moved.selected()==32 && "Heavy Bulkhead 1".equals(HousingTextureList.name(32)) && "Industrial".equals(ScreenHousingTextures.category(32)),"moved saved choice changed identity");
         try {

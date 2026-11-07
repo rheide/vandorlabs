@@ -36,3 +36,6 @@ task testLightHousingDensity(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.LightHousingDensityChecks'
 }
+
+// Preserve mixed dense-light lookup coverage when the existing render contract runs.
+testLightSharedRender.dependsOn testLightHousingDensity

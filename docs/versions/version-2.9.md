@@ -93,3 +93,5 @@ Segmented Door’s **Doors → Segmented** category now includes Raised Black Pa
 Moving and windowed Segmented Doors now share prepared render descriptors across matching columns. A 512-column render fixture measures about half the previous allocation, with unchanged emitted geometry and existing chunk rendering for eligible closed panels.
 
 Dense Forge diagonal Glass and Porthole layouts now share identical prepared geometry. Flat Glass frame lookups also reuse their warmed cache keys; contact trimming and live lighting remain unchanged.
+
+Programmable Lights now reuse housing lookups when mixed designs are drawn together. The warmed mixed-housing test emits identical vertices without the previous temporary allocations, and the cache retains its memory bound and reload cleanup.
