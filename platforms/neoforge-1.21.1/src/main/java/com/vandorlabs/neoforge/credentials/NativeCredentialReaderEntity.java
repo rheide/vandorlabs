@@ -2,6 +2,8 @@ package com.vandorlabs.neoforge.credentials;
 
 import com.vandorlabs.neoforge.*;
 import com.vandorlabs.neoforge.redstone.*;
+import com.vandorlabs.neoforge.screen.NativeChipDisplay;
+import com.vandorlabs.neoforge.screen.NativeScreenChipView;
 import com.vandorlabs.persistence.ControlMountSettings;
 import com.vandorlabs.redstone.*;
 import java.util.List;
@@ -17,15 +19,18 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Unregistered standalone host. Physical ownership never enters its public projection or configured pick. */
 public class NativeCredentialReaderEntity extends BlockEntity implements NativeChannelMember {
     private static final List<String> READER_FIELDS=List.of("TokenLogo","TokenRejectedUntil","ChipSlot","AnyToken","AllowedTokens","TokenBehavior","TokenPulseUntil","TokenToggled","TokenToggleApplied","TokenInsertStarted","TokenInsertionSequence","TokenReturnTo","TokenReturnToMost","TokenReturnToLeast","InsertedToken");
-    public record Visual(ControlMountSettings mount,int rotation,int allowed,NativeTokenReader.Visual contents,NativeTokenReader.Motion motion,boolean inert,int behavior){}
+    public record Visual(ControlMountSettings mount,int rotation,int allowed,NativeTokenReader.Visual contents,NativeTokenReader.Motion motion,boolean inert,int behavior,NativeScreenChipView chipView){}
     private final boolean chip;
     private NativeTokenReader reader;
     private CompoundTag retained=new CompoundTag();
     private ChannelList channels=ChannelList.EMPTY,transmission=ChannelList.EMPTY;
     private ControlMountSettings mount=ControlMountSettings.of(0,0,0);
     private int rotation,range=16;
-    private boolean inert,local=true,pending=true,publishing,recoveryTaken,initialized;
+    private boolean inert,local=true,pending=true,publishing,recoveryTaken,initialized,projectionOnly;
     private volatile Visual visual;
+    private NativeTokenReader displayReader;
+    private long displayRevision=Long.MIN_VALUE;
+    private NativeChipDisplay display;
     public NativeCredentialReaderEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean chip){super(type,pos,state);this.chip=chip;reader=newReader();project();}
     private NativeTokenReader newReader(){return new NativeTokenReader(new NativeTokenReader.Host(){
         public BlockEntity owner(){return NativeCredentialReaderEntity.this;}
@@ -35,8 +40,10 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
         public boolean chip(boolean ignored){return chip;}
     },chip);}
     public boolean chip(){return chip;}
-    public boolean inert(){return inert;}
+    public boolean inert(){return projectionOnly&&level!=null&&level.isClientSide?visual.inert:inert;}
     public Visual visual(){return visual;}
+    /** Bounded immutable display-only data; adjacent Screens never obtain the physical token. */
+    public NativeScreenChipView chipView(){return visual.chipView;}
     public ControlMountSettings mountSettings(){return mount;}
     public int mountRotation(){return rotation;}
     public int behavior(){return visual.behavior;}
@@ -63,7 +70,9 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
         channels=transmission=next;range=nextRange;local=nextLocal;publish();NativeRedstoneChannels.channelsChanged(this);return true;
     }
     public void scheduledTick(){if(!inert)reader.scheduledTick();}
-    private void project(){long now=level==null?0:level.getGameTime();visual=new Visual(mount,rotation,reader.effectiveAllowed(),reader.visual(now),reader.motion(now),inert,reader.behavior());}
+    private void project(){long now=level==null?0:level.getGameTime();var contents=reader.visual(now);var motion=reader.motion(now);NativeScreenChipView view=null;
+        if(chip&&!inert){long revision=reader.contentsRevision();if(displayReader!=reader||displayRevision!=revision){display=NativeChipDisplay.prepare(reader.tokenCopy());displayReader=reader;displayRevision=revision;}view=NativeScreenChipView.of(display,contents,motion,0);}else {display=null;displayReader=null;displayRevision=Long.MIN_VALUE;}visual=new Visual(mount,rotation,reader.effectiveAllowed(),contents,motion,inert,reader.behavior(),view);
+    }
     private void publish(){
         if(publishing){project();return;}publishing=true;try{
             initialized=true;project();setChanged();project();NativeCredentialReaderViews.changed(this);if(!(level instanceof ServerLevel server)||!isChannelMemberActive())return;
@@ -81,31 +90,32 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     @Override public void setChannelLevel(int ignored){} // A received signal cannot become a local reader output.
     @Override public void beforeChannelRegistration(){if(!pending||!isChannelMemberActive())return;pending=false;reader.resume(true);if(isChannelMemberActive())publish();}
     @Override public void onLoad(){super.onLoad();pending=true;NativeCredentialReaderViews.changed(this);if(level instanceof ServerLevel)NativeRedstoneChannels.queueRegistration(this);}
+    @Override public void setLevel(net.minecraft.world.level.Level level){super.setLevel(level);if(projectionOnly&&!level.isClientSide){project();NativeCredentialReaderViews.changed(this);}}
     @Override public void setRemoved(){NativeRedstoneChannels.unregister(this);super.setRemoved();NativeCredentialReaderViews.changed(this);}
     @Override public void onChunkUnloaded(){NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();NativeCredentialReaderViews.changed(this);}
     private static ChannelList readChannels(CompoundTag tag){return readChannels(tag,tag.getInt("Channel"));}
     private static ChannelList readChannels(CompoundTag tag,int legacy){ChannelList fallback=ChannelList.of(Math.max(0,legacy));if(!tag.contains("RedstoneChannels",Tag.TAG_INT_ARRAY))return fallback;try{return ChannelList.of(tag.getIntArray("RedstoneChannels"));}catch(IllegalArgumentException invalid){return fallback;}}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        CompoundTag original=tag.copy();if(tag.getBoolean("ReaderProjection")){retained=original;inert=true;reader=newReader();applyProjection(tag);return;}try(var guard=NativePlatformComponents.guardLoad(this)){
+        CompoundTag original=tag.copy();if(tag.getBoolean("ReaderProjection")){retained=original;inert=true;projectionOnly=true;reader=newReader();applyProjection(tag);if(level instanceof ServerLevel)project();return;}projectionOnly=false;try(var guard=NativePlatformComponents.guardLoad(this)){
             if(tag.contains("NativeReaderRecovery"))throw new IllegalArgumentException("Reader recovery ownership");CompoundTag prepared=original.copy();
             if(prepared.getCompound("ForgeData").contains("VandorTransmitters")){if(!prepared.getCompound("ForgeData").contains("VandorTransmitters",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Unknown reader module envelope");var migration=NativeTransmissionMigration.read(prepared);if(!migration.installable())throw new IllegalArgumentException("Unknown reader development module ownership");prepared=migration.install();}
             NativePlatformComponents.requireSupported(prepared,registries);super.loadAdditional(prepared,registries);guard.requireSuccessful();
-            NativeTokenReader next=newReader();CompoundTag data=new CompoundTag();for(String key:READER_FIELDS)if(prepared.contains(key))data.put(key,prepared.get(key).copy());next.read(data,registries);if(next.opaqueOccupied())throw new IllegalArgumentException("Unresolved physical reader owner");
+            NativeTokenReader next=newReader();CompoundTag data=new CompoundTag();for(String key:READER_FIELDS)if(prepared.contains(key))data.put(key,prepared.get(key).copy());next.read(data,registries);if(next.opaqueOccupied())throw new IllegalArgumentException("Unresolved physical reader owner");var nextDisplay=chip?NativeChipDisplay.prepare(next.tokenCopy()):null;
             var primitive=new ModernHousingTags(prepared);var source=com.vandorlabs.persistence.RedstoneData.Source.read(primitive);channels=readChannels(prepared,source.channel);var config=prepared.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main");transmission=TransmissionSettings.readChannels(config.contains("Channels",Tag.TAG_INT_ARRAY),config.getIntArray("Channels"),channels);range=TransmissionSettings.readRange(config.contains("Range",Tag.TAG_INT),config.getInt("Range"),true);local=TransmissionSettings.readLocal(config.contains("Local",Tag.TAG_BYTE),config.getBoolean("Local"),true);
-            mount=ControlMountSettings.read(primitive,0,0,0);rotation=source.mountRotation;initialized=source.initialized;reader=next;retained=prepared;for(String key:READER_FIELDS)retained.remove(key);for(String key:List.of("id","x","y","z"))retained.remove(key);NativePlatformComponents.forgetLoadedFields(retained);inert=false;
+            mount=ControlMountSettings.read(primitive,0,0,0);rotation=source.mountRotation;initialized=source.initialized;reader=next;display=nextDisplay;displayReader=next;displayRevision=next.contentsRevision();retained=prepared;for(String key:READER_FIELDS)retained.remove(key);for(String key:List.of("id","x","y","z"))retained.remove(key);NativePlatformComponents.forgetLoadedFields(retained);inert=false;
         }catch(RuntimeException failure){retained=original;inert=true;reader=newReader();channels=transmission=ChannelList.EMPTY;mount=ControlMountSettings.of(0,0,0);rotation=0;}
         recoveryTaken=false;project();NativeCredentialReaderViews.changed(this);pending=true;if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);tag.merge(reader.write(registries));var primitive=new ModernHousingTags(tag);new com.vandorlabs.persistence.RedstoneData.Source(channels.first(),outputLevel()>0,initialized,rotation).write(primitive);tag.putIntArray("RedstoneChannels",channels.toArray());int[] levels=new int[channels.size()];java.util.Arrays.fill(levels,outputLevel());tag.putIntArray("LatchedChannels",outputLevel()>0?channels.toArray():new int[0]);tag.putIntArray("LatchedLevels",levels);ControlMountSettings.write(primitive,mount.height,mount.tilt,mount.direction);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){
-        project();var out=configuration();var v=visual;out.putBoolean("ReaderProjection",true);out.putBoolean("ChipSlot",chip);out.putInt("MountRotation",rotation);out.putInt("AllowedTokens",v.allowed);out.putInt("TokenBehavior",v.behavior);out.putIntArray("TransmitChannels",transmission.toArray());out.putInt("TransmitRange",range);out.putBoolean("LocalRedstone",local);out.putBoolean("ReaderInert",inert);out.putInt("Company",v.contents.company());out.putInt("Logo",v.contents.logo());out.putBoolean("Icon",v.contents.icon());out.putInt("Output",v.contents.output());out.putBoolean("Occupied",v.contents.occupied());out.putLong("Sequence",v.motion.sequence());out.putInt("Age",v.motion.age());out.putBoolean("Returning",v.motion.returning());out.putInt("Rejected",v.motion.rejectedFor());out.putLong("RejectionDeadline",v.motion.rejectionDeadline());return out;
+        project();var out=configuration();var v=visual;out.putBoolean("ReaderProjection",true);out.putBoolean("ChipSlot",chip);out.putInt("MountRotation",rotation);out.putInt("AllowedTokens",v.allowed);out.putInt("TokenBehavior",v.behavior);out.putIntArray("TransmitChannels",transmission.toArray());out.putInt("TransmitRange",range);out.putBoolean("LocalRedstone",local);out.putBoolean("ReaderInert",inert);out.putInt("Company",v.contents.company());out.putInt("Logo",v.contents.logo());out.putBoolean("Icon",v.contents.icon());out.putInt("Output",v.contents.output());out.putBoolean("Occupied",v.contents.occupied());out.putLong("Sequence",v.motion.sequence());out.putInt("Age",v.motion.age());out.putBoolean("Returning",v.motion.returning());out.putInt("Rejected",v.motion.rejectedFor());out.putLong("RejectionDeadline",v.motion.rejectionDeadline());if(v.chipView!=null)out.put("ReaderChipView",v.chipView.write());return out;
     }
     @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){
         if(level==null||!level.isClientSide)return;
         applyProjection(tag);
     }
     private void applyProjection(CompoundTag tag){
-        try{var nextMount=ControlMountSettings.read(new ModernHousingTags(tag),0,0,0);var contents=new NativeTokenReader.Visual(chip,tag.getInt("Company"),tag.getInt("Logo"),tag.getBoolean("Icon"),tag.getInt("Output"),tag.getBoolean("Occupied"));var motion=new NativeTokenReader.Motion(tag.getLong("Sequence"),tag.getInt("Age"),tag.getBoolean("Returning"),tag.getInt("Rejected"),tag.getLong("RejectionDeadline"));int behavior=tag.getInt("TokenBehavior");if(behavior<0||behavior>3)throw new IllegalArgumentException("Reader behavior projection");var nextChannels=readChannels(tag);var nextTransmission=ChannelList.of(tag.getIntArray("TransmitChannels"));int nextRange=tag.getInt("TransmitRange");if(!TransmissionSettings.validRange(nextRange))throw new IllegalArgumentException("Reader range projection");visual=new Visual(nextMount,tag.getInt("MountRotation")&3,tag.getInt("AllowedTokens")&127,contents,motion,tag.getBoolean("ReaderInert"),behavior);mount=nextMount;rotation=visual.rotation;channels=nextChannels;transmission=nextTransmission;range=nextRange;local=tag.getBoolean("LocalRedstone");NativeCredentialReaderViews.changed(this);}catch(RuntimeException malformed){/* Keep the last coherent public projection. */}
+        boolean installed=false;try{var nextMount=ControlMountSettings.read(new ModernHousingTags(tag),0,0,0);var contents=new NativeTokenReader.Visual(chip,tag.getInt("Company"),tag.getInt("Logo"),tag.getBoolean("Icon"),tag.getInt("Output"),tag.getBoolean("Occupied"));var motion=new NativeTokenReader.Motion(tag.getLong("Sequence"),tag.getInt("Age"),tag.getBoolean("Returning"),tag.getInt("Rejected"),tag.getLong("RejectionDeadline"));int behavior=tag.getInt("TokenBehavior");if(behavior<0||behavior>3)throw new IllegalArgumentException("Reader behavior projection");var nextChannels=readChannels(tag);var nextTransmission=ChannelList.of(tag.getIntArray("TransmitChannels"));int nextRange=tag.getInt("TransmitRange");if(!TransmissionSettings.validRange(nextRange))throw new IllegalArgumentException("Reader range projection");NativeScreenChipView nextView=null;if(tag.contains("ReaderChipView")){if(!chip||tag.getBoolean("ReaderInert")||!tag.contains("ReaderChipView",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Reader chip view envelope");nextView=NativeScreenChipView.read(tag.getCompound("ReaderChipView"));if(!nextView.reader.equals(contents)||nextView.motion.sequence()!=motion.sequence()||nextView.motion.age()!=motion.age()||nextView.motion.rejectedFor()!=motion.rejectedFor()||nextView.motion.rejectionDeadline()!=motion.rejectionDeadline())throw new IllegalArgumentException("Incoherent reader chip view");}mount=nextMount;rotation=tag.getInt("MountRotation")&3;channels=nextChannels;transmission=nextTransmission;range=nextRange;local=tag.getBoolean("LocalRedstone");inert=true;projectionOnly=true;visual=new Visual(nextMount,rotation,tag.getInt("AllowedTokens")&127,contents,motion,tag.getBoolean("ReaderInert"),behavior,nextView);installed=true;}catch(RuntimeException malformed){/* Keep the last coherent public projection. */}if(installed)NativeCredentialReaderViews.changed(this);
     }
 }
