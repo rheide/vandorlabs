@@ -12,7 +12,8 @@ final class GlassFrameMesh {
     private static final long MAX_BYTES=8L*1024*1024;
     private static long retainedBytes;
     private static final Map<Key,StaticSurfaceMesh> CACHE=new LinkedHashMap<>(64,.75F,true);
-    static void clear(){CACHE.clear();retainedBytes=0;}
+    static void clear(){CACHE.clear();retainedBytes=0;PROBE.set(null,null,null,0,0,0,0);}
+    static boolean probeEmpty(){return PROBE.front==null&&PROBE.inner==null&&PROBE.outer==null;}
     static long retainedBytes(){return retainedBytes;}
     // Render-thread-only mutable probe; retained keys are owned immutable copies.
     private static final Key PROBE=new Key();
@@ -29,6 +30,7 @@ final class GlassFrameMesh {
         net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
         int mask=GlassSurfaceGroups.frameMask(tile);
         Key key=PROBE.set(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),mask,tile.frameAppearance.front,layout.columns,layout.rows);
+        try {
         StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;key=new Key(key);StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
         double[] widths=ScreenFrameBorders.get(key.choice);
         double left=(mask&1)!=0?(key.choice<0?1:widths[0]*16):0;
@@ -46,6 +48,7 @@ final class GlassFrameMesh {
         if(cost<=MAX_BYTES){CACHE.put(key,mesh);retainedBytes+=cost;
             while(CACHE.size()>256||retainedBytes>MAX_BYTES){Key oldest=CACHE.keySet().iterator().next();retainedBytes-=128+CACHE.remove(oldest).cacheRetainedBytes();}}
         return mesh;
+        }finally{PROBE.set(null,null,null,0,0,0,0);}
     }
     private static void front(StaticSurfaceMesh.Capture b,Key key,TextureAtlasSprite sprite,double[] border){
         double l=(key.mask&1)!=0?border[0]:0,r=(key.mask&2)!=0?border[1]:0;

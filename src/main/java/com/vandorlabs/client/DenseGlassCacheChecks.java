@@ -62,7 +62,7 @@ public final class DenseGlassCacheChecks {
                 if(bytes>DiagonalWallMeshCache.MAX_BYTES||GlassFrameMesh.retainedBytes()>8L*1024*1024)throw new AssertionError("Retained geometry byte bound");
                 System.out.println("[vandorlabs][dense-glass] totalWorldRetainedBytes="+bytes+" sharedMeshes="+DiagonalWallMeshCache.sharedCount(mc.world));
                 mc.refreshResources();
-                if(DiagonalWallMeshCache.entryCount(mc.world)!=0||GlassFrameMesh.retainedBytes()!=0)throw new AssertionError("Atlas reload must retire all prepared geometry");
+                if(DiagonalWallMeshCache.entryCount(mc.world)!=0||GlassFrameMesh.retainedBytes()!=0||!GlassFrameMesh.probeEmpty())throw new AssertionError("Atlas reload must retire all prepared geometry");
                 for(int role=0;role<IDS.length;role++)measure(mc,role);
             }
             System.out.println("[vandorlabs][reprolab] utility26-focused PASS dense-glass-cache-only");stage=2;return true;
@@ -71,7 +71,7 @@ public final class DenseGlassCacheChecks {
     }
     private static StaticSurfaceMesh mesh(Minecraft mc,int role,int index){
         TileEntity owner=mc.world.getTileEntity(POS[role][index]);
-        if(role==0)return GlassFrameMesh.get((TileEntityProgrammableGlass)owner);
+        if(role==0){StaticSurfaceMesh result=GlassFrameMesh.get((TileEntityProgrammableGlass)owner);if(!GlassFrameMesh.probeEmpty())throw new AssertionError("Flat frame lookup retained atlas probe");return result;}
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)owner;
         IBlockState state=mc.world.getBlockState(tile.getPos());
         TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite("minecraft:blocks/glass");
