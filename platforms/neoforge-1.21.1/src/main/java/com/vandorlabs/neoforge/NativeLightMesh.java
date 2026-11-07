@@ -7,14 +7,18 @@ import net.minecraft.core.Direction;
 
 /** Shared source records through the active consumer; cardinal transforms never capture worlds or formats. */
 public final class NativeLightMesh {
-    private final ProgrammableLightMesh mesh;private final Direction facing;private final SegmentedPanelMesh.Texture texture;
-    private static final ThreadLocal<Emission> SCRATCH=ThreadLocal.withInitial(Emission::new);
-    public NativeLightMesh(ProgrammableLightMesh mesh,Direction facing,SegmentedPanelMesh.Texture texture){this.mesh=java.util.Objects.requireNonNull(mesh);this.facing=java.util.Objects.requireNonNull(facing);this.texture=java.util.Objects.requireNonNull(texture);}
-    public long retainedBytes(){return 64+mesh.retainedBytes();}public int vertices(){return mesh.vertices();}
-    public void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){var scratch=SCRATCH.get();if(scratch.target!=null)throw new IllegalStateException("Reentrant Light emission");scratch.pose=pose;scratch.target=target;scratch.light=light;scratch.overlay=overlay;scratch.facing=facing;scratch.texture=texture;try{mesh.emit(scratch);}finally{scratch.target=null;scratch.pose=null;scratch.texture=null;scratch.facing=null;}}
-    private static final class Emission implements ProgrammableLightMesh.Sink {
-        PoseStack.Pose pose;VertexConsumer target;int light,overlay;Direction facing;SegmentedPanelMesh.Texture texture;
-        final org.joml.Vector3f position=new org.joml.Vector3f(),normal=new org.joml.Vector3f();
+    private final float[] data;private final int[] colors;
+    public NativeLightMesh(ProgrammableLightMesh mesh,Direction facing,SegmentedPanelMesh.Texture texture){
+        java.util.Objects.requireNonNull(mesh);java.util.Objects.requireNonNull(facing);java.util.Objects.requireNonNull(texture);
+        data=new float[mesh.vertices()*8];colors=new int[mesh.vertices()];java.util.Arrays.fill(colors,-1);
+        mesh.emit(new Preparation(data,facing,texture));
+    }
+    public long retainedBytes(){return 64L+data.length*4L+colors.length*4L;}public int vertices(){return colors.length;}
+    public void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){NativePreparedVertices.emit(data,colors,colors.length,pose,target,light,overlay);}
+    /** Facing and atlas coordinates are immutable within the owning bake generation. */
+    private static final class Preparation implements ProgrammableLightMesh.Sink {
+        final float[] data;final Direction facing;final SegmentedPanelMesh.Texture texture;int at;
+        Preparation(float[] data,Direction facing,SegmentedPanelMesh.Texture texture){this.data=data;this.facing=facing;this.texture=texture;}
         public void vertex(double px,double py,double pz,double u,double v,float nx,float ny,float nz){
             float x=(float)(px/16),y=(float)(py/16),z=(float)(pz/16),a=nx,b=ny,c=nz;
             switch(facing){
@@ -25,8 +29,7 @@ public final class NativeLightMesh {
                 case EAST->{x=1-(float)(pz/16);z=(float)(px/16);nx=-c;nz=a;}
                 default->{}
             }
-            pose.pose().transformPosition(x,y,z,position);pose.transformNormal(nx,ny,nz,normal);
-            target.addVertex(position.x,position.y,position.z).setColor(255,255,255,255).setUv(texture.u(u),texture.v(v)).setOverlay(overlay).setLight(light).setNormal(normal.x,normal.y,normal.z);
+            data[at++]=x;data[at++]=y;data[at++]=z;data[at++]=texture.u(u);data[at++]=texture.v(v);data[at++]=nx;data[at++]=ny;data[at++]=nz;
         }
     }
 }

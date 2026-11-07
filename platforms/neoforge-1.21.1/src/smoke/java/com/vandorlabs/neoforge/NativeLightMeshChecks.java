@@ -25,8 +25,8 @@ public final class NativeLightMeshChecks {
      case "setLight"->need((Integer)values[0]==expected.get(at+6).getAsInt(),label+" exact asymmetric light");
      case "setNormal"->{int packed=expected.get(at+7).getAsInt();float x=(byte)packed/127F,y=(byte)(packed>>>8)/127F,z=(byte)(packed>>>16)/127F;for(int a=0;a<3;a++)need((Float)values[a]==component(right,a)*x+component(up,a)*y+component(back,a)*z,label+" world normal");}
     }calls[0]++;return method.getReturnType()==VertexConsumer.class?proxy:null;
-   });float u0=32/256F,u1=48/256F,v0=64/256F,v1=(64+height)/256F;var texture=new SegmentedPanelMesh.Texture(){public float u(double p){return u0+(u1-u0)*(float)p/16F;}public float v(double p){return v0+(v1-v0)*(float)p/16F;}};
-   new NativeLightMesh(mesh,Direction.from3DDataValue(facing),texture).emit(new PoseStack().last(),target,0xD00070,123);need((vertex[0]+1)*8==expected.size()&&calls[0]==(vertex[0]+1)*6,label+" active format complete");profiles++;vertices+=vertex[0]+1;
+   });float u0=32/256F,u1=48/256F,v0=64/256F,v1=(64+height)/256F;int[] textureCalls={0};var texture=new SegmentedPanelMesh.Texture(){public float u(double p){textureCalls[0]++;return u0+(u1-u0)*(float)p/16F;}public float v(double p){textureCalls[0]++;return v0+(v1-v0)*(float)p/16F;}};
+   var prepared=new NativeLightMesh(mesh,Direction.from3DDataValue(facing),texture);need(textureCalls[0]==mesh.vertices()*2,label+" static atlas projection once");prepared.emit(new PoseStack().last(),target,0xD00070,123);need(textureCalls[0]==mesh.vertices()*2,label+" no atlas projection during drawing");need((vertex[0]+1)*8==expected.size()&&calls[0]==(vertex[0]+1)*6,label+" active format complete");profiles++;vertices+=vertex[0]+1;
   }}need(profiles==44064&&vertices==425088,"source corpus coverage");System.out.println("[vandorlabs][light-mesh] CPU PASS profiles="+profiles+" vertices="+vertices+" exact source UV/asymmetric light/source-local normals and six world rotations; active consumer format");
  }
 }
