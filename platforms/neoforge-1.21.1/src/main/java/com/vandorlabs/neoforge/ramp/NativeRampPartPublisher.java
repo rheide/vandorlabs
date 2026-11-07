@@ -38,13 +38,17 @@ public final class NativeRampPartPublisher {
         }
     }
     public static Prepared prepare(ServerLevel level,BlockState proxy,UUID operation,BlockPos root,NativeRampAssembly assembly,Set<BlockPos> targetCells,NativeRampPartData.Motion motion,NativeRampPartData.Belt belt,long revision){
+        return prepare(level,proxy,operation,root,assembly,targetCells,motion,belt,revision,RETAINED_LIMIT);
+    }
+    static Prepared prepare(ServerLevel level,BlockState proxy,UUID operation,BlockPos root,NativeRampAssembly assembly,Set<BlockPos> targetCells,NativeRampPartData.Motion motion,NativeRampPartData.Belt belt,long revision,long retainedLimit){
+        if(retainedLimit<1||retainedLimit>RETAINED_LIMIT)throw new IllegalArgumentException("Ramp prepared publication byte budget");
         NativeRampRiders.requireThread(level);Objects.requireNonNull(operation);Objects.requireNonNull(root);Objects.requireNonNull(assembly);
         if(!assembly.footprint().root().equals(root)||revision<0||!(proxy.getBlock() instanceof NativeRampPartBlock)||!(proxy.getBlock() instanceof EntityBlock factory)||targetCells.isEmpty()||targetCells.size()>8192||!assembly.potential().containsAll(targetCells))throw new IllegalArgumentException("Ramp prepared publication identity or target bounds");
         var positions=new ArrayList<BlockPos>(targetCells.size());for(var cell:targetCells)positions.add(cell.immutable());positions.sort(Comparator.<BlockPos>comparingInt(p->p.getX()).thenComparingInt(BlockPos::getY).thenComparingInt(BlockPos::getZ));var entries=new ArrayList<Entry>(positions.size());long bytes=512;
         for(var pos:positions){BlockEntity candidate=factory.newBlockEntity(pos,proxy);if(!(candidate instanceof NativeRampPartEntity part)||candidate.getLevel()!=null||!candidate.getBlockPos().equals(pos)||candidate.getBlockState()!=proxy||!candidate.getType().isValid(proxy))throw new IllegalArgumentException("Ramp part factory did not create a detached exact body");
             var data=assembly.part(pos,motion,belt);var publication=part.preparePublication(data,revision,level.getGameTime());
             bytes+=2048+(publication.beltGeometry()==null?publication.geometry().retainedBytes():publication.beltGeometry().retainedBytes())+NativeVoxelShapes.retainedCost(publication.collisionShape(),publication.geometry().pieces().size())+80L*publication.worldBoxes().size();
-            for(var origin:data.spec().origins())bytes+=512+96L*origin.shapes().size();if(bytes>RETAINED_LIMIT)throw new IllegalArgumentException("Ramp prepared publication retained-size budget");
+            for(var origin:data.spec().origins())bytes+=512+96L*origin.shapes().size();if(bytes>retainedLimit)throw new IllegalArgumentException("Ramp prepared publication retained-size budget");
             part.stagePublication(operation,root,publication);entries.add(new Entry(pos,part));
         }return new Prepared(level,operation,root,proxy,revision,entries,bytes);
     }
