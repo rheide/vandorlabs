@@ -104,6 +104,9 @@ public final class ArmPayload {
         }
         return new ArmGridPlacement(mapped,detached.write());
     }
+    /** Ordered saved endpoint correspondence; read-only even while its native cells are captured. */
+    public BlockPos placedCellPosition(GearTileEntity arm,int originalIndex){return arm.getPos().add(placedOffset).add(placed().cells.get(originalIndex).pos);}
+    public IBlockState placedCellState(int originalIndex){return placed().cells.get(originalIndex).state;}
     public boolean materialized(){return materialized;}
     public boolean isSurfaceLayer(){for(VehicleStructure.Cell cell:blocks.cells)if(!(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface))return false;return !blocks.cells.isEmpty();}
     static void validateSyncBudget(byte[] encoded)throws java.io.IOException{
