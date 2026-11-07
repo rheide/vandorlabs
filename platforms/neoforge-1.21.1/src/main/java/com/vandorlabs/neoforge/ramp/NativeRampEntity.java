@@ -14,6 +14,8 @@ public class NativeRampEntity extends BlockEntity implements NativeChannelMember
  private final boolean slab;private CompoundTag retained=new CompoundTag();private NativeRampSettings settings=NativeRampSettings.defaults();private boolean inert;private int received,physical;private volatile Visual visual;private NativeRampReservations.View reservationView;
  public NativeRampEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean slab){super(type,pos,state);this.slab=slab;retained.putString("Status","Retracted");retained.putInt("Duration",60);retained.putInt("Length",1);retained.putInt("Facing",2);publish();}
  public final NativeRampSettings settings(){return settings;}public final Visual visual(){return visual;}public final boolean inert(){return inert;}public final boolean slab(){return slab;}
+ public final net.minecraft.core.Direction horizontalFacing(){return getBlockState().hasProperty(NativeRampBlock.FACING)?getBlockState().getValue(NativeRampBlock.FACING):net.minecraft.core.Direction.NORTH;}
+ public final net.minecraft.core.Direction scanFacing(){return getBlockState().getBlock() instanceof NativeRampBlock?NativeRampBlock.scanFacing(getBlockState()):horizontalFacing();}
  public final NativeRampReservations.View reservationView(){return reservationView;}
  void installReservations(NativeRampReservations.View next){if(!authority())throw new IllegalStateException("Ramp reservation authority");reservationView=next;NativeRampReservations.changed((ServerLevel)level,worldPosition);}
  void copiedChannelFooter(ChannelList next){if(!authority())throw new IllegalStateException("Ramp channel footer authority");settings=NativeRampConfiguration.withChannels(settings,java.util.Objects.requireNonNull(next));publish();setChanged();NativeRedstoneChannels.channelsChanged(this);}
@@ -28,7 +30,7 @@ public class NativeRampEntity extends BlockEntity implements NativeChannelMember
  @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:settings.channels();}
  @Override public boolean isChannelMemberActive(){return !inert&&NativeChannelMember.super.isChannelMemberActive();}
  public final void queueInputRefresh(){if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);}
- @Override public void beforeChannelRegistration(){if(!authority())return;int next=NativeLoadedRedstonePower.level(level,worldPosition);if(next!=physical){physical=next;publish();setChanged();}}
+ @Override public void beforeChannelRegistration(){if(!authority())return;NativeRampBlock.updateModelState(this,false);int next=NativeLoadedRedstonePower.level(level,worldPosition);if(next!=physical){physical=next;publish();setChanged();}}
  @Override public int localSignalLevel(int channel){return authority()?NativeLoadedRedstonePower.level(level,worldPosition):0;}
  @Override public void setChannelLevel(int value){if(!authority())return;value=Math.max(0,Math.min(15,value));if(value==received)return;received=value;publish();setChanged();}
  @Override public void onLoad(){super.onLoad();NativeRampReservations.add(this);if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);}
