@@ -6,12 +6,14 @@ public final class SegmentedTerrainQuads {
  public interface Sink {void quad(int direction,boolean header,boolean shade,int[] vertices);}
  private static final int[][] VERTICES={{1,0,4,5},{2,3,7,6},{6,4,0,2},{3,1,5,7},{2,0,1,3},{7,5,4,6}};
  private static final int[][] NORMALS={{0,-1,0},{0,1,0},{0,0,-1},{0,0,1},{-1,0,0},{1,0,0}};
- public static void build(int rotation,boolean header,boolean body,boolean top,boolean bottom,SegmentedPanelMesh.Texture front,SegmentedPanelMesh.Texture edge,Sink out){
+ public static void build(int rotation,boolean header,boolean body,boolean top,boolean bottom,SegmentedPanelMesh.Texture front,SegmentedPanelMesh.Texture edge,Sink out){build(rotation,header,body,top,bottom,new SegmentedPanelMesh.Surface(front,front,1,false),edge,0,0,out);}
+ public static void build(int rotation,boolean header,boolean body,boolean top,boolean bottom,SegmentedPanelMesh.Surface front,SegmentedPanelMesh.Texture edge,int column,int row,Sink out){build(rotation,header,body,top,bottom,front,edge,SegmentedPanelMesh.tilePhase(column,row,front.door?.5:front.aspect),out);}
+ public static void build(int rotation,boolean header,boolean body,boolean top,boolean bottom,SegmentedPanelMesh.Surface front,SegmentedPanelMesh.Texture edge,long phase,Sink out){
   if(rotation<0||rotation>3)throw new IllegalArgumentException("Segmented terrain rotation");
   if(header)header(rotation,edge,out);
-  if(body){int height=top&&bottom?1:top||bottom?2:3,row=top?0:bottom?height-1:1;
+  if(body){
    final int[] at={0},face={0};final int[][] data={new int[32]};
-   SegmentedNativePanelMesh.build(row,height,true,front,edge,(x,y,z,u,v,nx,ny,nz)->{
+   SegmentedPanelMesh.nativeCellPhase(top,bottom,phase,front,edge,(x,y,z,u,v,nx,ny,nz)->{
     float px=(float)(x/16),py=(float)(y/16),pz=(float)(z/16+.5);int i=at[0];data[0][i]=Float.floatToRawIntBits(rx(px,pz,rotation));data[0][i+1]=Float.floatToRawIntBits(py);data[0][i+2]=Float.floatToRawIntBits(rz(px,pz,rotation));data[0][i+3]=-1;data[0][i+4]=Float.floatToRawIntBits(u);data[0][i+5]=Float.floatToRawIntBits(v);
     if(i==0)face[0]=direction(nx,ny,nz,rotation);at[0]+=8;if(at[0]==32){out.quad(face[0],false,false,data[0]);at[0]=0;data[0]=new int[32];}
    });

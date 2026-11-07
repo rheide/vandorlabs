@@ -51,7 +51,7 @@ public final class NativeSegmentedChunks {
         void releasePublication(){if(section!=null&&publication!=null)NativeSegmentedSectionUploads.remove((NativeSegmentedSectionUploads.Section)section,publication);publication=null;}
     }
     private static void release(Pending pending){if(pending==null)return;for(var section:pending.sections)if(--section.refs==0){section.releasePublication();SECTIONS.remove(section.origin);}}
-    private static boolean same(NativeSegmentedTerrainSnapshot a,NativeSegmentedTerrainSnapshot b){return a.facing()==b.facing()&&a.texture()==b.texture()&&a.header()==b.header()&&a.body()==b.body()&&a.top()==b.top()&&a.bottom()==b.bottom();}
+    private static boolean same(NativeSegmentedTerrainSnapshot a,NativeSegmentedTerrainSnapshot b){return a.facing()==b.facing()&&a.texture()==b.texture()&&a.header()==b.header()&&a.body()==b.body()&&a.top()==b.top()&&a.bottom()==b.bottom()&&a.column()==b.column()&&a.row()==b.row();}
     private static boolean members(Column column,NativeSegmentedVisual visual){
         if(!column.dirty&&column.members!=null)return true;var next=new ArrayList<NativeSegmentedDoorEntity>(visual.height());
         for(int row=0;row<visual.height();row++){samples++;var tile=loaded(column.root.getBlockPos().below(row));if(tile==null||tile.topOffset()!=row||tile.height()!=visual.height()||tile.facing()!=visual.facing()||!tile.inert()&&(tile.publication()==null||!tile.publication().visual().ready()))return false;next.add(tile);}
