@@ -1,0 +1,51 @@
+package com.vandorlabs.neoforge.segmented;
+import com.vandorlabs.neoforge.*;
+import com.vandorlabs.neoforge.client.*;
+import com.vandorlabs.segmented.SegmentedArtworkPolicy;
+import java.util.*;
+import net.minecraft.client.*;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.world.level.GameType;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.RenderFrameEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+/** Supplemental actual canonical editor and prepared BER path, sharing the real Survival placement fixture. */
+@EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
+public final class SegmentedSuppliedWorldClientChecks {
+ private static int stage,age,kind,frames,checks;private static String capture;private static boolean captured,finished;private static double beforeReverse;private static boolean sawReverse;private static Object savedRenderers;private static java.util.concurrent.CompletableFuture<Void> reload;private static NativeSegmentedGateMeshes previousBake;
+ static boolean enabled(){return "true".equals(System.getenv("VANDOR_SEGMENTED_SUPPLIED_WORLD"));}
+ private static void need(boolean ok,String why){checks++;if(!ok)throw new AssertionError("Native supplied world stage="+stage+" kind="+kind+": "+why);}
+ private static NativeSegmentedDoorEntity tile(Minecraft mc,BlockPos pos){return NativeSegmentedTargets.loaded(mc.level,pos);}
+ private static NativeSegmentedDoorEntity root(Minecraft mc){return tile(mc,SegmentedWorldClientFixture.ROOT.east());}
+ private static int choice(int style){for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++)if(SegmentedArtworkPolicy.gateId(style).equals(ModernFinishCatalog.ENTRIES.get(i).id()))return i;throw new AssertionError("Missing supplied gate");}
+ private static void click(NativeSegmentedScreen screen,int id,int mouse){var b=screen.button(id);need(b!=null&&b.active&&screen.mouseClicked(b.getX()+b.getWidth()/2D,b.getY()+b.getHeight()/2D,mouse),"actual dedicated widget "+id);}
+ private static void request(int operation){PacketDistributor.sendToServer(new SegmentedWorldClientFixture.Mode(operation));age=0;}
+ private static void capture(String name){capture=name;captured=false;frames=0;}
+ static void begin(Minecraft mc,NativeSegmentedScreen screen){need(screen.getMenu().getType()==BuiltInRegistries.MENU.get(SegmentedWorldClientFixture.ID),"actual registered dedicated menu");click(screen,9,0);click(screen,10,0);click(screen,10,0);click(screen,11,1);select(screen);stage=1;age=0;}
+ private static void select(NativeSegmentedScreen screen){var latent=screen.settings();screen.activePicker().searchField().setValue("doors/segmented");for(int i=0;i<3;i++)need(screen.activePicker().rows().contains(choice(i)),"actual picker contains supplied model "+i);screen.choose(choice(kind));need(screen.settings().equals(latent),"model selection retains latent window settings");for(int id:new int[]{8,9,10,11})need(screen.button(id)==null,"inapplicable gate control hidden "+id);need(screen.button(6)!=null&&screen.button(14)!=null,"motion and placement controls remain");click(screen,15,1);need(screen.button(15).getMessage().getString().contains("All segments"),"reverse scope clearly selects whole door");screen.choose(choice(kind));}
+ private static boolean all(Minecraft mc){for(int x=0;x<3;x++)for(int y=0;y<3;y++){var t=tile(mc,SegmentedWorldClientFixture.BASE.offset(x,y,0));if(t==null||t.effectiveTexture()!=choice(kind)||t.cellArtwork().overridden)return false;}return true;}
+ private static void warm(Minecraft mc){var owner=root(mc);var context=NativeSegmentedGateContexts.prepare(owner);need(context.context!=null&&context.context.mask(1,0,0,new com.vandorlabs.segmented.SegmentedGateContext.Scratch())==15,"all four actual prepared neighbours");for(int i=0;i<50000;i++)NativeSegmentedGateContexts.prepare(owner);var stats=NativeSegmentedGateContexts.stats();var meter=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();meter.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().threadId(),before=meter.getThreadAllocatedBytes(thread);for(int i=0;i<10000;i++)if(NativeSegmentedGateContexts.prepare(owner)!=context)throw new AssertionError("unstable warm gate context");long allocated=meter.getThreadAllocatedBytes(thread)-before;var after=NativeSegmentedGateContexts.stats();need(allocated==0&&stats.loadedRootReads()==after.loadedRootReads()&&stats.builds()==after.builds(),"warm10000 zero bytes/no neighbour discovery allocated="+allocated);need(after.retainedBytes()<=8*1024*1024+512,"bounded two-world prepared cache");System.out.println("[vandorlabs][segmented-supplied-world] warm PASS style="+kind+" bytes="+allocated+" loadedReads=0 retained="+after.retainedBytes());}
+ @SuppressWarnings("unchecked") private static void renderer(Minecraft mc,boolean enabled){try{var field=net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher.class.getDeclaredField("renderers");field.setAccessible(true);if(!enabled){savedRenderers=field.get(mc.getBlockEntityRenderDispatcher());var copy=new HashMap<>((Map<Object,Object>)savedRenderers);copy.remove(BuiltInRegistries.BLOCK_ENTITY_TYPE.get(SegmentedWorldClientFixture.ID));field.set(mc.getBlockEntityRenderDispatcher(),copy);}else{field.set(mc.getBlockEntityRenderDispatcher(),savedRenderers);savedRenderers=null;}}catch(ReflectiveOperationException error){throw new IllegalStateException(error);}}
+ private static void use(Minecraft mc){try{var method=Minecraft.class.getDeclaredMethod("startUseItem");method.setAccessible(true);method.invoke(mc);}catch(ReflectiveOperationException error){throw new IllegalStateException(error);}}
+ static boolean tick(Minecraft mc){if(stage==9&&mc.level==null){if(!finished)System.out.println("[vandorlabs][segmented-world-client] client PASS suppliedGates checks="+checks+" actualSurvival3x3/editor/allThreeStyles/allNeighbourMasks/runtimeBER/negative/frozenWorld/openReverse/reload/warm0B");finished=true;return true;}if(mc.level==null||mc.player==null)return false;need(++age<700,"timeout held="+mc.player.getMainHandItem()+" screen="+mc.screen);
+  switch(stage){
+   case 1->{if(!all(mc)||age<25)return false;need(tile(mc,SegmentedWorldClientFixture.SELECTED).settings().window&&tile(mc,SegmentedWorldClientFixture.SELECTED).settings().shape==2&&tile(mc,SegmentedWorldClientFixture.SELECTED).settings().join,"real server retains selected latent window");click((NativeSegmentedScreen)mc.screen,0,0);request(100+kind);stage=2;}
+   case 2->{if(mc.screen!=null||!mc.player.getMainHandItem().isEmpty()||mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||age<60)return false;need(mc.getBlockEntityRenderDispatcher().getRenderer(root(mc)) instanceof NativeSegmentedBlockRenderer&&NativeSegmentedRenderer.currentGateBake()!=null,"production renderer and actual gate bake");warm(mc);capture("supplied-segmented-"+kind+"-positive.png");stage=3;}
+   case 3->{if(!captured)return false;renderer(mc,false);capture("supplied-segmented-"+kind+"-negative.png");stage=4;}
+   case 4->{if(!captured)return false;renderer(mc,true);if(kind==2){request(120);stage=10;}else{kind++;request(110);stage=5;}}
+   case 5->{if(!mc.player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())||age<20)return false;if(mc.screen instanceof NativeSegmentedScreen screen){select(screen);stage=1;age=0;return false;}try{var method=Minecraft.class.getDeclaredMethod("startUseItem");method.setAccessible(true);method.invoke(mc);}catch(ReflectiveOperationException error){throw new IllegalStateException(error);}age=0;stage=50;}
+   case 50->{if(!(mc.screen instanceof NativeSegmentedScreen screen))return false;select(screen);stage=1;age=0;}
+   case 10->{if(!mc.player.getMainHandItem().isEmpty()||age<20||mc.hitResult==null)return false;use(mc);request(121);stage=11;}
+   case 11->{if(!mc.level.tickRateManager().isFrozen()||!root(mc).targetOpen())return false;double progress=NativeSegmentedTargets.pose(root(mc));if(progress<.3)return false;need(progress<.99,"cosmetic gate progress advances while world timeline is frozen");int turning=-1;double[] pose=new double[6];for(int row=0;row<3;row++){com.vandorlabs.segmented.SegmentedDoorGeometry.panel(row,3,1,3,progress,0,false,pose);if(Math.abs(pose[3])>.001&&Math.abs(pose[4])>.001)turning=row;}if(turning<0)return false;var prepared=NativeSegmentedGateContexts.prepare(root(mc));int mask=prepared.context.mask(turning,progress,prepared.leftPose(),prepared.rightPose(),0,new com.vandorlabs.segmented.SegmentedGateContext.Scratch());if((mask&3)!=3)return false;need((mask&12)==0,"a row actually turning through the arc shares horizontal joints but no vertical plane");capture("supplied-segmented-moving.png");frames=9;stage=12;}
+   case 12->{if(!captured)return false;beforeReverse=NativeSegmentedTargets.pose(root(mc));need(beforeReverse>.3&&beforeReverse<1,"intermediate visible model before reverse");use(mc);request(122);stage=13;}
+   case 13->{if(root(mc).targetOpen())return false;double progress=NativeSegmentedTargets.pose(root(mc));if(!sawReverse){need(progress>beforeReverse-.25,"reversal retains the current cosmetic pose instead of jumping to the frozen server endpoint");sawReverse=true;}if(mc.level.tickRateManager().isFrozen()||progress>.001||age<25)return false;previousBake=NativeSegmentedRenderer.currentGateBake();reload=mc.reloadResourcePacks();stage=6;age=0;}
+   case 6->{if(!reload.isDone()||mc.getOverlay()!=null)return false;reload.join();need(previousBake!=NativeSegmentedRenderer.currentGateBake(),"actual atlas reload retires old gate bake");warm(mc);capture("supplied-segmented-2-reloaded.png");stage=7;}
+   case 7->{if(!captured)return false;request(119);stage=8;}
+   case 8->{if(age<30)return false;mc.level.disconnect();mc.disconnect();stage=9;}
+  }return false;
+ }
+ @SubscribeEvent public static void frame(RenderFrameEvent.Post event){if(!enabled()||capture==null)return;var mc=Minecraft.getInstance();if(mc.getOverlay()!=null){frames=0;return;}if(++frames<10)return;String file=capture;capture=null;Screenshot.grab(mc.gameDirectory,file,mc.getMainRenderTarget(),ignored->{captured=true;});}
+}
