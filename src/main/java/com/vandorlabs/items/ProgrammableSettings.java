@@ -417,7 +417,7 @@ public final class ProgrammableSettings {
         if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile && values.hasKey(SEGMENTED_DOOR,10)){
             com.vandorlabs.segmented.SegmentedDoorTile door=(com.vandorlabs.segmented.SegmentedDoorTile)tile,selected=new com.vandorlabs.segmented.SegmentedDoorTile();selected.applyItemConfiguration(values.getCompoundTag(SEGMENTED_DOOR),channels(values,door));
             if(world==null)door.applyItemConfiguration(selected.configuration(),selected.getRedstoneChannels());
-            else {if(player==null)return false;door.configurePart(player,selected.getRedstoneChannels(),selected.ticksPerSection,selected.localRedstone,selected.signalOpens,selected.texture,selected.settings);}
+            else {if(player==null)return false;door.configurePartArtwork(player,selected.getRedstoneChannels(),selected.ticksPerSection,selected.localRedstone,selected.signalOpens,selected.texture,selected.settings,selected.cellArtwork);}
             return true;
         }
 

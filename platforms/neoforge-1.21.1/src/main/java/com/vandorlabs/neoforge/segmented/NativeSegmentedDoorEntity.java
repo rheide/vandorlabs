@@ -31,7 +31,7 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
 
  final NativeSegmentedFluids fluidState=new NativeSegmentedFluids(this);
  public NativeSegmentedDoorEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);publishLocal();}
- private com.vandorlabs.segmented.SegmentedCellArtwork cellArtwork=com.vandorlabs.segmented.SegmentedCellArtwork.INHERITED;
+ com.vandorlabs.segmented.SegmentedCellArtwork cellArtwork=com.vandorlabs.segmented.SegmentedCellArtwork.INHERITED;
  public final com.vandorlabs.segmented.SegmentedCellArtwork cellArtwork(){return cellArtwork;}
  public final int effectiveTexture(){return cellArtwork.effective(texture);}
  private void readCellArtwork(CompoundTag tag){String key=com.vandorlabs.segmented.SegmentedCellArtwork.FIELD;if(tag.contains(key)&&!tag.contains(key,Tag.TAG_INT))throw new IllegalArgumentException("Invalid segment artwork type");cellArtwork=tag.contains(key)?com.vandorlabs.segmented.SegmentedCellArtwork.explicit(tag.getInt(key),NativeSegmentedDoorEntity::validTexture):com.vandorlabs.segmented.SegmentedCellArtwork.INHERITED;}
@@ -74,6 +74,8 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  public List<NativeSegmentedDoorEntity> roots(){return NativeSegmentedDoorLifecycle.roots(this);}
  public void toggle(Player player){operate(player,!root().targetOpen);}
  public void operate(Player player,boolean open){NativeSegmentedDoorLifecycle.operate(this,player,open);}
+ public void configureCellTexture(Player player,int choice,boolean inherit){var next=inherit?com.vandorlabs.segmented.SegmentedCellArtwork.INHERITED:com.vandorlabs.segmented.SegmentedCellArtwork.explicit(choice,NativeSegmentedDoorEntity::validTexture);var all=NativeSegmentedDoorLifecycle.members(NativeSegmentedDoorLifecycle.roots(this));NativeSegmentedDoorLifecycle.permissions(this,player,all);cellArtwork=next;configured=true;publish(all);}
+ void clearCellArtwork(){cellArtwork=com.vandorlabs.segmented.SegmentedCellArtwork.INHERITED;}
  public void configureAll(Player player,ChannelList next,int ticks,boolean local,boolean opens,int texture,NativeSegmentedDoorSettings settings){NativeSegmentedDoorLifecycle.configure(this,player,next,ticks,local,opens,texture,settings,false);}
  public void configurePart(Player player,ChannelList next,int ticks,boolean local,boolean opens,int texture,NativeSegmentedDoorSettings settings){NativeSegmentedDoorLifecycle.configure(this,player,next,ticks,local,opens,texture,settings,true);}
  static void publish(List<NativeSegmentedDoorEntity> all){publish(all,false);}
@@ -82,13 +84,13 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
   if(all.isEmpty())return;var first=all.get(0).root();var right=first.facing().getClockWise();var origin=first.getBlockPos().relative(right,-first.column);Map<BlockPos,NativeSegmentedDoorEntity> grid=new HashMap<>();
   for(int x=0;x<first.columns;x++)for(int row=0;row<first.height;row++){var pos=origin.relative(right,x).below(row);var t=at(first.level,pos);if(t!=null&&t.facing()==first.facing())grid.put(pos,t);}
   var layouts=SegmentedWindowLayout.derive(first.columns,first.height,new SegmentedWindowLayout.Cells(){private NativeSegmentedDoorEntity cell(int x,int y){return grid.get(origin.relative(right,x).below(first.height-1-y));}public boolean joined(int x,int y){var t=cell(x,y);return t!=null&&t.settings.window&&t.settings.join;}public int shape(int x,int y){var t=cell(x,y);return t==null?-1:t.settings.shape;}public int facing(int x,int y){var t=cell(x,y);return t==null?-1:t.facing().get3DDataValue();}});
-  for(var t:all){List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();var owner=t.root();for(int row=0;row<t.height;row++){var part=grid.get(owner.getBlockPos().below(row));rows.add(part!=null?part.settings:t.settings);int at=(t.height-1-row)*first.columns+t.column;windows.add(at>=0&&at<layouts.length?layouts[at]:SegmentedWindowLayout.SINGLE);}t.publication=t.project(rows,windows);}
+  for(var t:all){List<Integer> artwork=new ArrayList<>();List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();var owner=t.root();for(int row=0;row<t.height;row++){var part=grid.get(owner.getBlockPos().below(row));rows.add(part!=null?part.settings:t.settings);artwork.add(part!=null?part.effectiveTexture():t.effectiveTexture());int at=(t.height-1-row)*first.columns+t.column;windows.add(at>=0&&at<layouts.length?layouts[at]:SegmentedWindowLayout.SINGLE);}t.publication=t.project(rows,windows,artwork);}
   for(var t:all){t.fluidState.localChanged();t.refreshFluidGeometry();if(rootsOnly)t.fluidState.motionChanged();}
   for(var t:all)t.setChanged();for(var t:all)if(!rootsOnly||t.topOffset==0)t.publicationChanged();
  }
  protected void publicationChanged(){notifyClientPublication();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);}
- private Publication project(List<NativeSegmentedDoorSettings> rows,List<SegmentedWindowLayout> windows){return new Publication(new NativeSegmentedVisual(columns,height,column,facing(),texture,settings,rows,windows,!inert&&formed&&level!=null,false,false,false),new NativeSegmentedVisual.Motion(identity,motionIdentity,sequence,targetOpen,pose(0),ticksPerSection,started,duration));}
- void publishLocal(){List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();for(int row=0;row<height;row++){rows.add(settings);windows.add(SegmentedWindowLayout.SINGLE);}publication=project(rows,windows);fluidState.localChanged();notifyClientPublication();}
+ private Publication project(List<NativeSegmentedDoorSettings> rows,List<SegmentedWindowLayout> windows,List<Integer> artwork){return new Publication(new NativeSegmentedVisual(columns,height,column,facing(),texture,settings,rows,windows,!inert&&formed&&level!=null,false,false,false,false,artwork),new NativeSegmentedVisual.Motion(identity,motionIdentity,sequence,targetOpen,pose(0),ticksPerSection,started,duration));}
+ void publishLocal(){List<Integer> artwork=new ArrayList<>();List<NativeSegmentedDoorSettings> rows=new ArrayList<>();List<SegmentedWindowLayout> windows=new ArrayList<>();for(int row=0;row<height;row++){rows.add(settings);artwork.add(effectiveTexture());windows.add(SegmentedWindowLayout.SINGLE);}publication=project(rows,windows,artwork);fluidState.localChanged();notifyClientPublication();}
 
  @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return channels;}@Override public void setChannelLevel(int level){boolean next=level>0;if(channelSignal!=next){channelSignal=next;powerPending=true;root().powerPending=true;}}
  @Override public boolean isChannelMemberActive(){return !inert&&NativeChannelMember.super.isChannelMemberActive();}
@@ -98,7 +100,7 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  /** Bounded choices only: fluid buffers, motion identities and retained platform data remain local. */
  public final com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.State copiedState(){
   if(!copiedAvailable())throw new IllegalArgumentException("Unavailable copied Segmented Door section");
-  return new com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.State(settings,channels,ticksPerSection,localRedstone,signalOpens,texture);
+  return new com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.State(settings,channels,ticksPerSection,localRedstone,signalOpens,texture,cellArtwork);
  }
  public final boolean configureCopied(CompoundTag values,Player actor){
   if(!copiedAvailable()||actor==null||!actor.isAlive()||actor.isSpectator()||actor.level()!=level||!level.mayInteract(actor,worldPosition)||!actor.mayUseItemAt(worldPosition,Direction.UP,actor.getMainHandItem()))return false;
@@ -106,7 +108,7 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
   try{plan=com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.prepare(copiedState(),values);}catch(IllegalArgumentException malformed){return false;}
   if(!plan.applicable())return false;var next=plan.state();
   if(plan.configuration()){
-   try{configurePart(actor,next.channels(),next.ticks(),next.local(),next.opens(),next.texture(),next.settings());}catch(IllegalArgumentException refused){return false;}
+   try{NativeSegmentedDoorLifecycle.configure(this,actor,next.channels(),next.ticks(),next.local(),next.opens(),next.texture(),next.settings(),true,next.artwork());}catch(IllegalArgumentException refused){return false;}
   }else{
    channels=next.channels();NativeRedstoneChannels.channelsChanged(this);setChanged();publicationChanged();powerPending=true;root().powerPending=true;
   }
