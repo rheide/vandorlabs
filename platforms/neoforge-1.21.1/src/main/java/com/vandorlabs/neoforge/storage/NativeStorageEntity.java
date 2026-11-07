@@ -20,7 +20,10 @@ import net.neoforged.neoforge.items.wrapper.InvWrapper;
 /** Inactive independent 27-slot owner. Public/model projections contain no inventory or platform snapshot. */
 public class NativeStorageEntity extends BlockEntity implements Container,MenuProvider {
  public static final String SCHEMA="NativeStorageSchema",RECOVERY="NativeStorageRecoverySnapshot",PLACEMENT_RECOVERY="NativeStoragePlacementRecovery",PREVIOUS="NativeStoragePreviousInventory";
- public record Visual(NativeStorageSettings settings,boolean inert,long revision){}
+ public record Visual(NativeStorageSettings settings,boolean inert,long revision,com.vandorlabs.ui.ProgrammableBlockDialog.State appearance){
+  public Visual(NativeStorageSettings settings,boolean inert,long revision){this(settings,inert,revision,project(settings));}
+  private static com.vandorlabs.ui.ProgrammableBlockDialog.State project(NativeStorageSettings settings){var h=settings.housing();return new com.vandorlabs.ui.ProgrammableBlockDialog.State(h.mainTexture,h.layout(),h.facesEnabled,h.faces(),-1);}
+ }
  public static final ModelProperty<Visual> VISUAL=new ModelProperty<>();
  private NativeStorageSettings settings=NativeStorageSettings.fresh();private NonNullList<ItemStack> items=NativeStorageInventory.empty();private CompoundTag retained=new CompoundTag();private boolean inert,loading,unloading,forcedRecovery;private int comparator;private long revision,inventoryScans;private volatile Visual visual=new Visual(settings,false,0);private volatile ModelData model=ModelData.builder().with(VISUAL,visual).build();
  private final IItemHandlerModifiable handler=new InvWrapper(this){@Override public ItemStack getStackInSlot(int slot){return installed()?super.getStackInSlot(slot):ItemStack.EMPTY;}@Override public ItemStack insertItem(int slot,ItemStack stack,boolean simulate){return installed()?super.insertItem(slot,stack,simulate):stack;}@Override public ItemStack extractItem(int slot,int amount,boolean simulate){return installed()?super.extractItem(slot,amount,simulate):ItemStack.EMPTY;}@Override public void setStackInSlot(int slot,ItemStack stack){mutation();super.setStackInSlot(slot,stack);}};

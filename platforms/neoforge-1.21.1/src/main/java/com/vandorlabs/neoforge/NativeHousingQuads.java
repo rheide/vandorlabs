@@ -11,7 +11,13 @@ import net.minecraft.world.phys.Vec3;
 final class NativeHousingQuads {
     private static final int[] LOCAL={1,0,4,5,2,3};
     static BakedQuad slab(boolean upper,Direction facing,int meshFace,int layout,ProgrammableModel.MaterialSnapshot material){
-        var mesh=ScreenHousingMesh.slab(upper,true).textureLayout(layout,material.usedU()/material.usedV());
+        return box(ScreenHousingMesh.slab(upper,true),facing,meshFace,layout,material);
+    }
+    static BakedQuad cube(Direction facing,int meshFace,int layout,ProgrammableModel.MaterialSnapshot material){
+        return box(ScreenHousingMesh.cube(),facing,meshFace,layout,material);
+    }
+    private static BakedQuad box(ScreenHousingMesh source,Direction facing,int meshFace,int layout,ProgrammableModel.MaterialSnapshot material){
+        var mesh=source.textureLayout(layout,material.usedU()/material.usedV());
         var points=mesh.quads[meshFace].vertices;int[] data=new int[32];int turns=facing==Direction.NORTH?0:facing==Direction.SOUTH?2:facing==Direction.WEST?1:3;
         Direction normal=Direction.from3DDataValue(HousingTexturePolicy.housingWorldFace(LOCAL[meshFace],facing.get3DDataValue()));
         for(int j=0;j<4;j++){
