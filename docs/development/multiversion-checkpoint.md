@@ -24,8 +24,8 @@ The original native conversion stopping point covers four families below. Additi
 | --- | --- | --- |
 | Card Chip Programmer | Canonical public block, item, menu and rendering; construction guide; focused player, mining and restart acceptance | User testing |
 | Canopies | Canonical eleven standalone components, original recipes, configured placement, dedicated editor, contacts, terrain/BER artwork, ordered motion and loaded ownership repair; actual player and restart acceptance | User testing; Vehicle/carried integration deferred |
-| Ramp Controllers | Shared settings/admission; private durable journal and held-owner gates, before-images and partial-save recovery; dedicated editor and authored controller housing/icons | Source capture authorization, generation/part rendering and motion, runtime item/editor binding, canonical activation |
-| Copifier | Canonical public tool, dedicated options, connected settings and Undo across converted targets; actual copied-settings recipes and three-state artwork | Final Canopy/Ramp integration and combined player acceptance |
+| Ramp Controllers | Shared settings/admission; private selective durable journal, held-owner gates and partial-save recovery; loaded capture, authorization, clearance and Source-equivalent geometry; dedicated editor, housing/icons and standalone part/belt rendering | Durable changing-cell ownership, installed part publication, motion/riders, runtime item/editor binding, canonical activation |
+| Copifier | Canonical public tool, dedicated options, connected settings and Undo across converted targets; actual copied-settings recipes, three-state artwork and public Canopy player acceptance | Final Ramp integration and combined user testing |
 
 Screens, standalone propulsion and standalone credential readers are already publicly registered. Their focused acceptance is recorded below and in the family contracts. Vehicle/carried effects remain deferred.
 
