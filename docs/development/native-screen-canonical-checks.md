@@ -19,4 +19,11 @@ Proper-tool mining produces one configured Screen item containing the embedded c
 
 The renderer observer delegates drawing, visibility and bounds to the installed `NativeProgrammableRenderer`; it does not substitute a private Screen renderer. Reload replaces that renderer, so observation is reattached to the new instance. The disabled control removes the actual shared-type dispatcher entry. Warm draw measurements also call the original shared renderer.
 
-The focused software-rendered canonical acceptance passed with 280 Source culling profiles, 2,970 client assertions, no changed pixels above a 12/255 RGB threshold after resource reload and zero allocated bytes across 4,096 warm CHIP/ROWS draw pairs. The separate whole-render Source CHIP corpus retains 432 profiles for body, base-pose tray, inset deck and UV behavior. These checks do not establish hardware FPS, shader-pack behavior or a full release gate.
+The focused software-rendered canonical acceptance ran ordinary-media and CHIP scenes separately. Both passed the 280-profile Source culling corpus, actual Survival row input, stored-light withdrawal and complete saved-world restart. Ordinary media covered all seven media and seven ROWS roles with 2,946 client assertions; CHIP covered four integrated trays and a four-cell reader-backed journal with 2,970 client assertions.
+
+| Warm shared-renderer batch | 4,096 paired draws | Emitted vertices | Retained backend bytes |
+| --- | --- | --- | --- |
+| Ordinary media + ROWS | 96 allocated bytes total | 1,081,344 | 148,740 |
+| CHIP + ROWS | 0 allocated bytes total | 2,408,448 | 214,952 |
+
+Both batches stayed within the 1,024-byte fixed batch allowance; these totals do not imply per-draw allocation. Reload changed no pixels above the 12/255 RGB threshold. Exact ordinary-media comparison changed 6,219 pixels by at most 1/255; exact CHIP comparison changed 76,673 pixels by at most 7/255. The separate whole-render Source CHIP corpus retains 432 profiles for body, base-pose tray, inset deck and UV behavior. These checks do not establish hardware FPS, shader-pack behavior or a full release gate.
