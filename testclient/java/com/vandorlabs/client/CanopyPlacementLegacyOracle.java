@@ -17,7 +17,7 @@ import net.minecraft.util.math.*;
 public final class CanopyPlacementLegacyOracle {
     private static final BlockPos CLICKED=new BlockPos(8,80,8);
     private static net.minecraft.server.MinecraftServer marker;
-    static final class World extends NonRenderingChecks.MemoryWorld {
+    static class World extends NonRenderingChecks.MemoryWorld {
         World(){super(false);}
         @Override public net.minecraft.server.MinecraftServer getMinecraftServer(){return marker;}
     }
