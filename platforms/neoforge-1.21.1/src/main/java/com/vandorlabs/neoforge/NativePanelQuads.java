@@ -201,5 +201,27 @@ final class NativePanelQuads {
         var corner=geometry.join().corner();Context center=new Context(Direction.NORTH,glass,mode,group,true,borderX,borderY,0,opacity,imageAspect,true);center.current=glass;pane(center,NativePanelSlice.get(aperture));
         Context target=new Context(geometry.facing(),glass,0,NativePanelLayout.UNIT,false,0,0,0,opacity,0);draw(target,center.captured(),0,PanelDepthPolicy.offset(geometry.depth()),corner.left(),(corner.right()-corner.left())/16);return target.finish();
     }
+    /** Ordinary glass has a distinct two-surface insert and saved-layout contract. */
+    static List<BakedQuad> flatGlassBuiltin(Direction facing,int depth,Material glass,float opacity){
+        Context target=new Context(facing,glass,0,NativePanelLayout.UNIT,false,0,0,PanelDepthPolicy.offset(depth),opacity,0);
+        PanelTextureMesh.Sink<Context,Material> sink=new PanelTextureMesh.Sink<>(){public void atlas(Context c,Material m,double x,double y,double z,double u,double v,float nx,float ny,float nz){throw new IllegalStateException("Builtin pane pixel UV");}public void pixel(Context c,Material m,double x,double y,double z,double u,double v,float nx,float ny,float nz){c.source(m,x*16,y*16,z*16,NativeHousingQuads.atlas(m.surface,u,true),NativeHousingQuads.atlas(m.surface,v,false),nx,ny,nz);}};
+        FlatGlassSurface.builtin(sink,target,glass,false);FlatGlassSurface.builtin(sink,target,glass,true);return target.finish();
+    }
+    static List<BakedQuad> flatGlassReplacement(Direction facing,int depth,Material glass,int mode,NativePanelLayout group,float opacity,double aspect){
+        Context target=new Context(facing,glass,mode,group,true,0,0,PanelDepthPolicy.offset(depth),opacity,aspect);float[] source=FlatGlassSurface.materialPlane();
+        for(int at=0;at<source.length;at+=8)target.source(glass,source[at],source[at+1],source[at+2],source[at+3],source[at+4],source[at+5],source[at+6],source[at+7]);return target.finish();
+    }
+    private static Mesh flatGlassSource(double near,PanelCornerGeometry.FlatCorner corner,Material glass){Context capture=new Context(Direction.NORTH,glass,0,NativePanelLayout.UNIT,false,0,0,0,1,0,true);PanelMeshEmitter.flat(EMITTER,capture,glass,glass,near,corner);return capture.captured();}
+    static List<BakedQuad> flatGlassCornerPane(Direction facing,double near,PanelCornerGeometry.FlatCorner corner,Material glass,int mode,NativePanelLayout group,float opacity,double aspect,boolean replacement){
+        float[] source=flatGlassSource(near,corner,glass).vertices;Context target=new Context(facing,glass,replacement?mode:0,replacement?group:NativePanelLayout.UNIT,false,0,0,0,opacity,aspect);
+        for(int at=0;at<source.length;at+=8){double u=source[at+3],v=source[at+4];if(replacement&&mode==0){u=unAtlas(glass,(float)u,true)/16;v=unAtlas(glass,(float)v,false)/16;if(group.flipU())u=1-u;if(group.flipV())v=1-v;u=NativeHousingQuads.atlas(glass.surface,PanelTextureMapping.stretch(u,group.column(),0,group.columns())*16,true);v=NativeHousingQuads.atlas(glass.surface,PanelTextureMapping.stretch(v,group.rows()-1-group.row(),0,group.rows())*16,false);}target.source(glass,source[at],source[at+1],source[at+2],u,v,source[at+5],source[at+6],source[at+7]);}return target.finish();
+    }
+    static List<BakedQuad> flatGlassCornerFrame(Direction facing,double near,PanelCornerGeometry.FlatCorner corner,Material pane,Material rail,Material inner,Material outer){
+        float[] source=flatGlassSource(near,corner,pane).vertices;Context target=new Context(facing,rail,0,NativePanelLayout.UNIT);PanelOutlineFrame.emit(CAP,target,FRAME_TEXTURES,source,rail,pane,inner,outer,false,false,false,false,false,false,1,true);return target.finish();
+    }
+    static List<BakedQuad> flatGlassSelectedFrame(Direction facing,int depth,int mask,boolean selected,boolean border,double[] borders,double aspect,Material rail,Material inner,Material outer,Material artwork){
+        Context target=new Context(facing,rail,0,NativePanelLayout.UNIT,false,0,0,PanelDepthPolicy.offset(depth),1,0);
+        FlatGlassFrame.emit((context,material,edge,reverse,a,b,c,d)->{if(edge)EMITTER.quad(context,material,reverse,a,b,c,d);else{context.current=material;var texture=material.surface;PanelVertexEmitter.raw(RAW,context,reverse,a[0],a[1],a[2],NativeHousingQuads.atlas(texture,a[3],true),NativeHousingQuads.atlas(texture,a[4],false),b[0],b[1],b[2],NativeHousingQuads.atlas(texture,b[3],true),NativeHousingQuads.atlas(texture,b[4],false),c[0],c[1],c[2],NativeHousingQuads.atlas(texture,c[3],true),NativeHousingQuads.atlas(texture,c[4],false),d[0],d[1],d[2],NativeHousingQuads.atlas(texture,d[3],true),NativeHousingQuads.atlas(texture,d[4],false));}},target,mask,selected,border,borders,aspect,rail,inner,outer,artwork);return target.finish();
+    }
     private NativePanelQuads(){}
 }
