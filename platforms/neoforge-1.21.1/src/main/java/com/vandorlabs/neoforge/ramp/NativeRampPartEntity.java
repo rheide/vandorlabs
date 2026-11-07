@@ -32,13 +32,17 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
  public final boolean acceptsObservation(UUID operation,long revision,long tick){var previous=publication;return revision>=0&&(previous==null||!Objects.equals(operation,operationId())||revision>previous.revision||revision==previous.revision&&tick>=previous.observationTick);}
  public final NativeRampPartData data(){var value=publication;return value==null?null:value.data;}
  private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick){return build(data,pose,distance,revision,observationTick,null);}
- private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick,Boolean stationaryTop){
+ private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick,Boolean stationaryTop){return build(worldPosition,data,pose,distance,revision,observationTick,stationaryTop);}
+ static Publication prepareValue(BlockPos cell,BlockState state,NativeRampPartData data,long revision,long tick){if(state.hasProperty(NativeRampPartBlock.FACING)&&state.getValue(NativeRampPartBlock.FACING)!=data.spec().facing())throw new IllegalArgumentException("Ramp staged facing");return build(cell,data,data.motion().observed(),data.belt().observed(),revision,tick,null);}
+ /** Same-owner immutable swap inside the publisher preflight; no observers or ownership changes. */
+ final void replacePublication(UUID operation,BlockPos root,Publication prepared){if(!installed()||level.isClientSide||!belongs(operation,root)||!NativeRampPartEnvelope.live(this)||!NativeRampHeldOwners.mutationAllows((ServerLevel)level,operation,root,worldPosition)||!prepared.data().spec().cell().equals(worldPosition))throw new IllegalStateException("Ramp retained owner changed");publication=prepared;}
+ private static Publication build(BlockPos cell,NativeRampPartData data,double pose,double distance,long revision,long observationTick,Boolean stationaryTop){
   if(revision<0)throw new IllegalArgumentException("Ramp publication revision");
-  if(!data.spec().cell().equals(worldPosition))throw new IllegalArgumentException("Ramp part cell identity");
+  if(!data.spec().cell().equals(cell))throw new IllegalArgumentException("Ramp part cell identity");
   var belt=com.vandorlabs.ramp.RampBeltPolicy.deployed(data.belt().mode(),data.motion().moving(),pose)?NativeRampBeltGeometry.snapshot(data.spec(),distance):null;
   var geometry=belt==null?NativeRampGeometry.snapshot(data.spec(),pose):belt.geometry();
   var local=new ArrayList<AABB>(geometry.pieces().size());var world=new ArrayList<AABB>(geometry.pieces().size());
-  for(var piece:geometry.pieces()){var box=piece.box();if(box.minX<0||box.minY<0||box.minZ<0||box.maxX>1||box.maxY>1||box.maxZ>1)throw new IllegalArgumentException("Ramp part escaped reserved cell");local.add(box);world.add(box.move(worldPosition));}
+  for(var piece:geometry.pieces()){var box=piece.box();if(box.minX<0||box.minY<0||box.minZ<0||box.maxX>1||box.maxY>1||box.maxZ>1)throw new IllegalArgumentException("Ramp part escaped reserved cell");local.add(box);world.add(box.move(cell));}
   var shape=NativeVoxelShapes.union(local,SHAPE_BUDGET,1e-8);
   if((belt==null?geometry.retainedBytes():belt.retainedBytes())+NativeVoxelShapes.retainedCost(shape,local.size())>SHAPE_BUDGET)throw new IllegalArgumentException("Ramp part publication budget");
   return new Publication(data,geometry,belt,pose,shape,world,revision,observationTick,stationaryTop==null?NativeRampPartSupport.stationaryTop(data.spec(),data.belt().mode()):stationaryTop);
