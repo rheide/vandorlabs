@@ -11,15 +11,15 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 
 /** Frozen Ramp transaction cells, never a lock on merely prepared sources. */
 public final class NativeRampHeldOwners {
- private record Hold(WeakReference<ServerLevel> world,NativeRampJournal.Operation operation,Set<BlockPos> positions,List<WeakReference<Container>> containers){}
+ private record Hold(WeakReference<ServerLevel> world,NativeRampJournal.Operation operation,Set<BlockPos> positions,List<WeakReference<Container>> containers,Set<BlockPos> candidates,net.minecraft.world.level.block.Block partBlock){}
  private static volatile List<Hold> holds=List.of();
  private static final ThreadLocal<NativeRampJournal.Operation> MUTATION=new ThreadLocal<>();
  static void freeze(ServerLevel world,NativeRampJournal.Operation operation,Collection<BlockPos> positions){
   if(!world.getServer().isSameThread())throw new IllegalStateException("Ramp freeze requires server thread");
-  var next=new ArrayList<Hold>();var containers=new ArrayList<WeakReference<Container>>();
-  for(var hold:holds)if(hold.world.get()!=null){if(hold.operation==operation)containers.addAll(hold.containers);else next.add(hold);}
+  var next=new ArrayList<Hold>();var containers=new ArrayList<WeakReference<Container>>();Set<BlockPos> candidates=Set.of();net.minecraft.world.level.block.Block partBlock=null;
+  for(var hold:holds)if(hold.world.get()!=null){if(hold.operation==operation){containers.addAll(hold.containers);candidates=hold.candidates;partBlock=hold.partBlock;}else next.add(hold);}
   for(var pos:positions)if(world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4)!=null&&world.getBlockEntity(pos) instanceof Container container){boolean known=false;for(var ref:containers)if(ref.get()==container){known=true;break;}if(!known)containers.add(new WeakReference<>(container));}
-  next.add(new Hold(new WeakReference<>(world),operation,Set.copyOf(positions),List.copyOf(containers)));holds=List.copyOf(next);
+  next.add(new Hold(new WeakReference<>(world),operation,Set.copyOf(positions),List.copyOf(containers),candidates,partBlock));holds=List.copyOf(next);
   for(var player:world.players())closeMenu(player);
  }
  static void closeMenu(net.minecraft.server.level.ServerPlayer player){for(var slot:player.containerMenu.slots)if(blocked(slot.container)){player.closeContainer();break;}}
@@ -27,7 +27,14 @@ public final class NativeRampHeldOwners {
  static void release(NativeRampJournal.Operation operation){holds=holds.stream().filter(hold->hold.world.get()!=null&&hold.operation!=operation).toList();}
  static void unload(ServerLevel world){holds=holds.stream().filter(hold->hold.world.get()!=null&&hold.world.get()!=world).toList();}
  public static boolean active(Level world){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;for(var hold:holds)if(hold.world.get()==world)return true;return false;}
- public static boolean blocked(Level world,BlockPos pos){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();for(var hold:holds)if(hold.world.get()==world&&hold.operation!=bypass&&hold.positions.contains(pos))return true;return false;}
+ /** Candidate cells are not reserved: only this operation's installed/pending markers are held.
+  * A durable motion header and reconciliation must precede callers enabling this scope. */
+ static void movingCandidates(ServerLevel world,NativeRampJournal.Operation operation,Collection<BlockPos> positions,net.minecraft.world.level.block.Block partBlock){
+  if(!world.getServer().isSameThread()||operation.phase()!=NativeRampJournal.Phase.APPLIED||positions.size()>8192||partBlock==null)throw new IllegalStateException("Ramp moving-candidate admission");
+  var candidates=new HashSet<BlockPos>();for(var pos:positions){if(Math.abs((long)pos.getX()-operation.root().getX())>64||Math.abs((long)pos.getY()-operation.root().getY())>64||Math.abs((long)pos.getZ()-operation.root().getZ())>64)throw new IllegalArgumentException("Ramp candidate bounds");candidates.add(pos.immutable());}
+  var next=new ArrayList<Hold>();boolean found=false;for(var hold:holds){if(hold.world.get()==null)continue;if(hold.world.get()==world&&hold.operation==operation){next.add(new Hold(hold.world,operation,hold.positions,hold.containers,Set.copyOf(candidates),partBlock));found=true;}else next.add(hold);}if(!found)throw new IllegalStateException("Ramp operation not held");holds=List.copyOf(next);
+ }
+ public static boolean blocked(Level world,BlockPos pos){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();for(var hold:holds)if(hold.world.get()==world&&hold.operation!=bypass){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)){var state=NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root());if(state!=NativeRampPartOwnership.State.OTHER)return true;}}return false;}
  public static boolean blocked(Container container){
   if(holds.isEmpty())return false;
   if(container instanceof BlockEntity tile&&tile.getLevel() instanceof ServerLevel world&&blocked(world,tile.getBlockPos()))return true;
