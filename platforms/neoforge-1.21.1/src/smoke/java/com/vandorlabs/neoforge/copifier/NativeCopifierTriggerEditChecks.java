@@ -1,0 +1,12 @@
+package com.vandorlabs.neoforge.copifier;
+import com.google.gson.*;
+import com.vandorlabs.neoforge.*;
+import com.vandorlabs.persistence.TriggerState;
+import java.nio.file.*;
+import java.io.*;
+import java.util.zip.GZIPInputStream;
+import net.minecraft.nbt.*;
+/** Actual released callbacks, including retained playback fields hidden by static capture getters. */
+public final class NativeCopifierTriggerEditChecks {
+ public static void main(String[] args)throws Exception{int count=0;try(var lines=new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(Path.of(args[0]))),java.nio.charset.StandardCharsets.UTF_8))){String line;while((line=lines.readLine())!=null){var row=JsonParser.parseString(line).getAsJsonObject();var current=TagParser.parseTag(row.get("target").getAsString());var values=TagParser.parseTag(row.get("values").getAsString());var original=current.copy();var clipboard=values.copy();var before=NativeCopifierTriggerEdit.capture(current);var expectedBefore=TagParser.parseTag(row.get("before").getAsString());if(!before.equals(expectedBefore))throw new AssertionError("Before row"+count+" expected="+expectedBefore+" actual="+before);boolean accepted=false;CompoundTag after=before;TriggerState retained=TriggerState.read(new ModernHousingTags(current),ModernFinishCatalog::storedChoice);try{var plan=NativeCopifierTriggerEdit.prepare(current,values);accepted=plan.applicable();after=plan.capture();retained=plan.trigger();}catch(IllegalArgumentException refused){}var expected=TagParser.parseTag(row.get("after").getAsString());if(accepted!=row.get("applied").getAsBoolean()||!expected.equals(after))throw new AssertionError("After row"+count+" values="+values+" expected="+expected+" actual="+after+" applicable="+accepted);var saved=TagParser.parseTag(row.get("saved").getAsString());var actualFields=new CompoundTag();retained.write(new ModernHousingTags(actualFields));var expectedFields=new CompoundTag();TriggerState.read(new ModernHousingTags(saved),ModernFinishCatalog::storedChoice).write(new ModernHousingTags(expectedFields));if(!actualFields.equals(expectedFields))throw new AssertionError("Retained playback row"+count+" expected="+expectedFields+" actual="+actualFields);if(!current.equals(original)||!values.equals(clipboard))throw new AssertionError("Mutated caller");count++;}}if(count!=1064)throw new AssertionError("Corpus count");System.out.println("Native Trigger clipboard PASS Source cases="+count+" typed applicability/recapture/retained playback/caller immutability");}
+}

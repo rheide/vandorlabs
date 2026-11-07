@@ -1,0 +1,7 @@
+tasks.register('testCopifierTriggerReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierTriggerEditChecks'
+ args rootProject.file('../../testclient/fixtures/copifier-trigger-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
