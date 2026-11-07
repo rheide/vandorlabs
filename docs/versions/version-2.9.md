@@ -13,6 +13,7 @@ Forge canopy placement also validates stored custom footprints before changing b
 Redstone channel input keeps the shared range of 1–2,147,483,647, with zero disconnected and up to 64 channels per bank. Forge Copy Controllers now use that same range for checked channel translation; Coupler and Segmented Door fields retain full-width banks, and saved cockpit/coupling channels preserve high IDs. Converted native editors use the same int-backed policy. See the [channel input contract](../development/channel-input-range.md).
 
 Flat Programmable Walls, Glass and Porthole Walls now anchor against a clicked horizontal support in both versions. Continuing a panel above, below or along its plane retains its selected depth. Full-depth Porthole Blocks keep their existing full-cell placement. See the [placement contract](../development/wall-against-placement.md).
+Forge Copy Controllers now discover complete connected Surface pads regardless of individual selected textures. Their drawing groups remain appearance-specific, and existing Turntable artwork boundaries are unchanged.
 
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 

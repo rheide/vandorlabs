@@ -51,28 +51,42 @@ public class SquareLayout {
     }
     public static SquareLayout scan(World world,BlockPos seed){return scan(world,seed,p->true);}
     public static SquareLayout scan(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){
-        return new SquareLayout(connected(world,seed,allowed),world.getBlockState(seed).getValue(BlockTurntableSurface.FACING));
+        return new SquareLayout(connected(world,seed,allowed),readState(world,seed).getValue(BlockTurntableSurface.FACING));
     }
-    public static SquareLayout rectangle(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return new SquareLayout(connected(world,seed,allowed),world.getBlockState(seed).getValue(BlockTurntableSurface.FACING),true);}
+    public static SquareLayout rectangleAnyArtwork(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return new SquareLayout(connectedAnyArtwork(world,seed,allowed),readState(world,seed).getValue(BlockTurntableSurface.FACING),true);}
+    public static SquareLayout rectangle(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return new SquareLayout(connected(world,seed,allowed),readState(world,seed).getValue(BlockTurntableSurface.FACING),true);}
     public static SquareLayout rectangle(Collection<BlockPos> cells,EnumFacing normal){return new SquareLayout(cells,normal,true);}
     public static SquareLayout of(Collection<BlockPos> members,EnumFacing normal){return new SquareLayout(members,normal);}
     public static SquareLayout single(BlockPos pos,EnumFacing normal){return new SquareLayout(Collections.singletonList(pos),normal);}
-    public static java.util.Set<BlockPos> connected(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){
+    private static final boolean TRACK_DISCOVERY=Boolean.getBoolean("vandorlabs.copySurfaceChecksOnly");
+    private static long discoveryScans,discoveryReads;
+    public static long discoveryScans(){return discoveryScans;}
+    public static long discoveryReads(){return discoveryReads;}
+    private static IBlockState readState(World world,BlockPos pos){if(TRACK_DISCOVERY)discoveryReads++;return world.getBlockState(pos);}
+    private static net.minecraft.tileentity.TileEntity readTile(World world,BlockPos pos){if(TRACK_DISCOVERY)discoveryReads++;return world.getTileEntity(pos);}
+    private static boolean readLoaded(World world,BlockPos pos){if(TRACK_DISCOVERY)discoveryReads++;return world.isBlockLoaded(pos);}
+    /** Copy ownership topology ignores artwork; drawing and Turntable discovery do not. */
+    public static java.util.Set<BlockPos> connectedAnyArtwork(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return connected(world,seed,allowed,false);}
+    public static java.util.Set<BlockPos> connected(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return connected(world,seed,allowed,true);}
+    private static java.util.Set<BlockPos> connected(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed,boolean matchingArtwork){
+        if(TRACK_DISCOVERY)discoveryScans++;
         if(!allowed.test(seed))throw new IllegalArgumentException("Surface is outside the selected pad");
-        if(!world.isBlockLoaded(seed) || !(world.getBlockState(seed).getBlock() instanceof BlockTurntableSurface))
+        if(!readLoaded(world,seed) || !(readState(world,seed).getBlock() instanceof BlockTurntableSurface))
             throw new IllegalArgumentException("Place Programmable Surface blocks in front of the controller");
-        net.minecraft.tileentity.TileEntity seedTile=world.getTileEntity(seed);
+        net.minecraft.tileentity.TileEntity seedTile=readTile(world,seed);
         if(!(seedTile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface))throw new IllegalArgumentException("Surface tile is unavailable");
         com.vandorlabs.tiles.TileEntityTurntableSurface appearance=(com.vandorlabs.tiles.TileEntityTurntableSurface)seedTile;
-        EnumFacing normal=world.getBlockState(seed).getValue(BlockTurntableSurface.FACING);
+        EnumFacing normal=readState(world,seed).getValue(BlockTurntableSurface.FACING);
         TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());
         EnumFacing u=EnumFacing.getFacingFromVector(basis.ux,basis.uy,basis.uz),v=EnumFacing.getFacingFromVector(basis.vx,basis.vy,basis.vz);
         Set<BlockPos> visited=new HashSet<>(),members=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(seed.toImmutable());
         while(!queue.isEmpty()){
             BlockPos pos=queue.removeFirst();if(!allowed.test(pos)||!visited.add(pos))continue;
-            if(!world.isBlockLoaded(pos))throw new IllegalArgumentException("Load every surface and its boundary before scanning");
-            IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof BlockTurntableSurface))continue;
-            if(!appearance.sameArtwork(world.getTileEntity(pos)))continue;
+            if(!readLoaded(world,pos))throw new IllegalArgumentException("Load every surface and its boundary before scanning");
+            IBlockState state=readState(world,pos);if(!(state.getBlock() instanceof BlockTurntableSurface))continue;
+            net.minecraft.tileentity.TileEntity tile=readTile(world,pos);
+            if(!(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)){if(matchingArtwork)continue;throw new IllegalArgumentException("Surface tile is unavailable");}
+            if(matchingArtwork&&!appearance.sameArtwork(tile))continue;
             if(state.getValue(BlockTurntableSurface.FACING)!=normal)throw new IllegalArgumentException("Connected surfaces must face the same direction");
             members.add(pos);if(members.size()>MAX_CELLS)throw new IllegalArgumentException("Programmable Surfaces are limited to 32 x 32 blocks");
             for(EnumFacing side:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})queue.add(pos.offset(side));

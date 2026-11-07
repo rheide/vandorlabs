@@ -3,6 +3,7 @@
 ## 2.9 (development)
 
 - Place flat Programmable Walls, Glass and Porthole Walls against the clicked support when using a horizontal normal face, rather than on the far edge of the next cell. Preserve top/bottom and tangent-plane continuation.
+- Let Forge Copy Controller pads contain connected Surface blocks with different selected artwork. Keep each cell’s appearance and preserve artwork-sensitive Turntable discovery.
 
 - Align redstone channel validation with the existing positive 32-bit range. Copy Controllers accept wide channel increments and check translated IDs before copying; Coupler and Segmented Door fields retain complete 64-channel banks, and saved cockpit/coupling channels no longer truncate valid high IDs.
 
