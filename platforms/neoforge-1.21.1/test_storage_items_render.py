@@ -22,5 +22,5 @@ def main():
  if args.xvfb:launch=['xvfb-run','-a','-s','-screen 0 1280x720x24']+launch;env['LIBGL_ALWAYS_SOFTWARE']='1'
  run(launch,out/'client.log','[vandorlabs][storage-item-render] title PASS',env)
  evidence(out)
- print('Private Storage item golden/actual icon PASS: '+str(out),flush=True)
+ print(('Canonical' if args.canonical else 'Private')+' Storage item golden/actual icon PASS: '+str(out),flush=True)
 if __name__=='__main__':main()
