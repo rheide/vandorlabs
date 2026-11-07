@@ -4,3 +4,9 @@ task testArmParkingPhases(type: JavaExec) {
  classpath = files("$buildDir/portable-tests")
  main = 'com.vandorlabs.gear.core.ArmParkingPhasesTest'
 }
+task testArmParkingCandidates(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmParkingCandidatesChecks'
+ maxHeapSize = '1g'
+}
