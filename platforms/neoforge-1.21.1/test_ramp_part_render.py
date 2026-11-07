@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Focused actual housing-model and item rendering; no gameplay or release gate."""
+"""Focused prepared Ramp part and belt rendering; no gameplay or release gate."""
 import argparse
 import os
 from pathlib import Path
@@ -12,6 +12,7 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--xvfb', action='store_true')
+    parser.add_argument('--belts', action='store_true')
     args = parser.parse_args()
     if args.xvfb and os.name == 'nt':
         parser.error('--xvfb requires Linux')
@@ -20,6 +21,8 @@ def main():
     game.mkdir()
     (game/'options.txt').write_text('onboardAccessibility:false\ntutorialStep:none\nguiScale:2\nmaxFps:60\nrenderDistance:2\n')
     env = dict(os.environ, JAVA_HOME=str(jdk_home(21)), JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS', '')+' -Dvandorlabs.rampPartRenderCheck=true')
+    if args.belts:
+        env['JAVA_TOOL_OPTIONS'] += ' -Dvandorlabs.rampBeltRenderCheck=true'
     launch = command('runClient', '-PmodernClientRunDirectory='+str(game))
     if args.xvfb:
         launch = ['xvfb-run', '-a', '-s', '-screen 0 1280x720x24']+launch

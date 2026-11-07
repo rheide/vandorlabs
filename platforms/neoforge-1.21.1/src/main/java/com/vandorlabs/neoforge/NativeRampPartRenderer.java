@@ -69,25 +69,27 @@ public final class NativeRampPartRenderer {
         }
     }
     private static final class Key {
-        final NativeRampGeometry.Spec spec;final NativeRampGeometry.Snapshot snapshot;final long pose;final Materials materials;final SourceFaces source;
-        Key(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,double pose,Materials materials,SourceFaces source){this.spec=spec;this.snapshot=snapshot;this.pose=Double.doubleToLongBits(pose);this.materials=materials;this.source=source;}
-        @Override public int hashCode(){int h=System.identityHashCode(spec);h=31*h+System.identityHashCode(snapshot);h=31*h+Long.hashCode(pose);h=31*h+System.identityHashCode(materials);return 31*h+System.identityHashCode(source);}
-        @Override public boolean equals(Object other){return other instanceof Key k&&matches(k.spec,k.snapshot,k.pose,k.materials,k.source);}
-        boolean matches(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,long pose,Materials materials,SourceFaces source){return this.spec==spec&&this.snapshot==snapshot&&this.pose==pose&&this.materials==materials&&this.source==source;}
-        long bytes(){long bytes=256+snapshot.retainedBytes()+materials.retainedBytes()+512;for(var origin:spec.origins())bytes+=128L+80L*origin.shapes().size();return bytes;}
+        final NativeRampGeometry.Spec spec;final NativeRampGeometry.Snapshot snapshot;final long pose;final Materials materials;final SourceFaces source;final List<NativeRampTextureCoordinates.Frame> frames;
+        Key(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,double pose,Materials materials,SourceFaces source,List<NativeRampTextureCoordinates.Frame> frames){this.frames=frames;this.spec=spec;this.snapshot=snapshot;this.pose=Double.doubleToLongBits(pose);this.materials=materials;this.source=source;}
+        @Override public int hashCode(){int h=System.identityHashCode(spec);h=31*h+System.identityHashCode(snapshot);h=31*h+Long.hashCode(pose);h=31*h+System.identityHashCode(materials);h=31*h+System.identityHashCode(source);return 31*h+System.identityHashCode(frames);}
+        @Override public boolean equals(Object other){return other instanceof Key k&&matches(k.spec,k.snapshot,k.pose,k.materials,k.source,k.frames);}
+        boolean matches(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,long pose,Materials materials,SourceFaces source,List<NativeRampTextureCoordinates.Frame> frames){return this.spec==spec&&this.snapshot==snapshot&&this.pose==pose&&this.materials==materials&&this.source==source&&this.frames==frames;}
+        long bytes(){long bytes=256+snapshot.retainedBytes()+materials.retainedBytes()+512+(frames==null?0:96L*frames.size());for(var origin:spec.origins())bytes+=128L+80L*origin.shapes().size();return bytes;}
     }
     public static final class Bake {
         private final NativeFlatWallModel.Bake materials;private final LinkedHashMap<Key,Draw> draws=new LinkedHashMap<>(16,.75F,true);private final IdentityHashMap<NativeRampGeometry.Snapshot,Key> bindings=new IdentityHashMap<>();private long retained,builds;private Key hotKey;private Draw hotDraw;
         private Bake(NativeFlatWallModel.Bake materials){this.materials=materials;}
         public synchronized void clear(){draws.clear();bindings.clear();retained=0;hotKey=null;hotDraw=null;}
-        public synchronized long retainedBytes(){return retained;}public synchronized long builds(){return builds;}
-        public synchronized Draw draw(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,double pose,Materials choices,SourceFaces source){
+        public synchronized long retainedBytes(){return retained;}public synchronized long builds(){return builds;}public synchronized int boundSnapshots(){return bindings.size();}public synchronized int cachedEntries(){return draws.size();}
+        public Draw draw(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,double pose,Materials choices,SourceFaces source){return draw(spec,snapshot,pose,choices,source,null);}
+        public Draw drawBelt(NativeRampBeltGeometry.Snapshot belt,Materials choices,SourceFaces source){return draw(belt.spec(),belt.geometry(),1,choices,source,belt.frames());}
+        private synchronized Draw draw(NativeRampGeometry.Spec spec,NativeRampGeometry.Snapshot snapshot,double pose,Materials choices,SourceFaces source,List<NativeRampTextureCoordinates.Frame> frames){
             if(!Double.isFinite(pose)||pose<0||pose>1)throw new IllegalArgumentException("Ramp cosmetic pose");Objects.requireNonNull(choices);Objects.requireNonNull(source);if(source.state!=choices.source)throw new IllegalArgumentException("Ramp fallback source mismatch");
-            if(hotKey!=null&&hotKey.matches(spec,snapshot,Double.doubleToLongBits(pose),choices,source))return hotDraw;
-            var key=bindings.get(snapshot);if(key==null||!key.matches(spec,snapshot,Double.doubleToLongBits(pose),choices,source))key=new Key(spec,snapshot,pose,choices,source);var found=draws.get(key);
-            if(found==null){var result=new Builder();for(var piece:snapshot.pieces()){var frame=NativeRampTextureCoordinates.frame(spec,piece,pose);var choice=choices.at(frame.origin());var b=piece.box();var box=new RampGeometry.Box(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
+            if(hotKey!=null&&hotKey.matches(spec,snapshot,Double.doubleToLongBits(pose),choices,source,frames))return hotDraw;
+            var key=bindings.get(snapshot);if(key==null||!key.matches(spec,snapshot,Double.doubleToLongBits(pose),choices,source,frames))key=new Key(spec,snapshot,pose,choices,source,frames);var found=draws.get(key);
+            if(found==null){var result=new Builder();int pieceIndex=0;for(var piece:snapshot.pieces()){var frame=frames==null?NativeRampTextureCoordinates.frame(spec,piece,pose):frames.get(pieceIndex++);var choice=choices.at(frame.origin());var b=piece.box();var box=new RampGeometry.Box(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);
                 for(var face:Direction.values()){int index=face.get3DDataValue(),selected=texture(choice,face);var material=selected<0?source.materials[index]:materials.surfaces.get(materials.index(selected));double aspect=material.usedU()/material.usedV();if(selected<0){var contents=material.sprite().contents();aspect=(float)contents.width()/contents.height();}double u=face.getAxis()==Direction.Axis.X?frame.vShift():frame.uShift(),v=face.getAxis()==Direction.Axis.Y?frame.vShift():0;boolean stretch=choice!=null&&choice.stairs()&&choice.layout()==0;int layout=choice==null?-1:choice.layout();RampFaceTexture.emit(box,index,aspect,stretch?1:frame.bottom(),stretch?0:frame.top(),u,v,layout,(x,y,z,tu,tv)->result.vertex(x,y,z,tu,tv,material,face,source.tints[index]));}
-            }found=new Draw(result,source.glass);builds++;long weight=key.bytes()+found.retainedBytes()+192;if(weight<=BUDGET){draws.put(key,found);retained+=weight;while(retained>BUDGET||draws.size()>1024){var old=draws.entrySet().iterator().next();retained-=old.getKey().bytes()+old.getValue().retainedBytes()+192;draws.remove(old.getKey());if(bindings.get(old.getKey().snapshot)==old.getKey())bindings.remove(old.getKey().snapshot);}}}
+            }found=new Draw(result,source.glass);builds++;long weight=key.bytes()+found.retainedBytes()+192;if(weight<=BUDGET){draws.put(key,found);retained+=weight;while(retained>BUDGET||draws.size()>1024){var old=draws.entrySet().iterator().next();retained-=old.getKey().bytes()+old.getValue().retainedBytes()+192;draws.remove(old.getKey());var binding=bindings.get(old.getKey().snapshot);if(binding!=null&&binding.equals(old.getKey()))bindings.remove(old.getKey().snapshot);}}}
             if(draws.containsKey(key)){bindings.put(snapshot,key);hotKey=key;hotDraw=found;}else{hotKey=null;hotDraw=null;}return found;
         }
     }
