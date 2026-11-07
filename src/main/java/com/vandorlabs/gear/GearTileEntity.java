@@ -206,31 +206,38 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private static NBTTagCompound exactInto(NBTTagCompound target,NBTTagCompound source){for(String key:new java.util.ArrayList<String>(target.getKeySet()))target.removeTag(key);for(String key:source.getKeySet())target.setTag(key,source.getTag(key).copy());return target;}
     private void quarantineParking(NBTTagCompound original){parkingQuarantine=original.copy();parkingHold=false;parkingHoldNeedsGeometry=false;operational=false;assembly=null;owner=null;payload=null;storedSections=null;failedPayload=null;failedStoredSections=null;taxiState=null;members.clear();columns.clear();clearPoses();GearGeometry.remove(this);lastError="Arm parking snapshot retained; incompatible stationary ownership";}
     /** Installed main-thread preflight; load callbacks never invoke this query. */
-    public boolean validateParkingHoldInstalled(){
+    public boolean validateParkingHoldInstalled(){return validateParkingHoldInstalled(false);}
+    /** Final publication rechecks native source receipts without invalidating a pending prototype. */
+    public boolean validateParkingHoldInstalled(boolean requireNativeReceipt){
         if(world==null||parkingQuarantine!=null)return false;
         if(!parkingHold&&!parkingHoldNeedsGeometry)return true;
         if(ArmTransactions.blocked(this)||com.vandorlabs.tiles.WorldActionAuthorization.awaitingLoad(this)||!GearAssembly.loaded(world,pos))return false;
         TileEntity installed=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tiles.get(pos):world.getChunkFromBlockCoords(pos).getTileEntityMap().get(pos);
         if(installed!=this||!(world.getBlockState(pos).getBlock() instanceof GearBlock))return false;
-        if(!parkingHoldNeedsGeometry)return true;
-        if(payload!=null&&payload.materialized()&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld))for(int i=0;i<payload.blocks.cells.size();i++){
+        if(!parkingHoldNeedsGeometry&&!requireNativeReceipt)return true;
+        if(payload!=null&&payload.materialized())for(int i=0;i<payload.blocks.cells.size();i++){
             BlockPos at=payload.placedCellPosition(this,i);if(!GearAssembly.loaded(world,at))return false;
-            IBlockState actual=world.getBlockState(at),expected=payload.placedCellState(i);
+            com.vandorlabs.vehicle.VehicleStructure.Cell nativeCell=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).structure.at(at):null;
+            if(world instanceof com.vandorlabs.vehicle.VehicleWorld&&nativeCell==null)return false;
+            IBlockState actual=nativeCell==null?world.getBlockState(at):nativeCell.state,expected=payload.placedCellState(i);
             if(expected.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&actual.getBlock()==expected.getBlock())expected=expected.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,actual.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
             if(actual!=expected)return false; // A partial native publication is pending, never a mining instruction.
-            if(payload.blocks.cells.get(i).hasTileData()&&world.getChunkFromBlockCoords(at).getTileEntityMap().get(at)==null)return false;
+            if(payload.blocks.cells.get(i).hasTileData()&&(world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tiles.get(at):world.getChunkFromBlockCoords(at).getTileEntityMap().get(at))==null)return false;
         }
-        return validateParkingGeometry();
+        return requireNativeReceipt?parkingGeometryCompatible():validateParkingGeometry();
     }
     private boolean validateParkingGeometry(){
         if(!parkingHoldNeedsGeometry)return parkingQuarantine==null;
-        if(!parkingHold||!isOperational()||payload==null||!payload.materialized()&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){quarantineParking(parkingOriginal);return false;}
-        ArmGridMapping mapping=payload.gridMapping(this,progress);
-        if(mapping==null){quarantineParking(parkingOriginal);return false;}
-        for(int i=0;i<payload.blocks.cells.size();i++){com.vandorlabs.vehicle.VehicleStructure.Cell cell=payload.blocks.cells.get(i);if(!mapping.cell(cell.pos).equals(payload.placedCellPosition(this,i))||mapping.state(cell)!=payload.placedCellState(i)){quarantineParking(parkingOriginal);return false;}}
+        if(!parkingGeometryCompatible()){quarantineParking(parkingOriginal);return false;}
         parkingHoldNeedsGeometry=false;
         // The validated live payload owns these bytes; keep only the retained root envelope.
         parkingOriginal.removeTag("ArmPayload");parkingOriginal.removeTag("ArmStoredSections");return true;
+    }
+    private boolean parkingGeometryCompatible(){
+        if(!parkingHold||!isOperational()||payload==null||!payload.materialized()&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld))return false;
+        ArmGridMapping mapping=payload.gridMapping(this,progress);if(mapping==null)return false;
+        for(int i=0;i<payload.blocks.cells.size();i++){com.vandorlabs.vehicle.VehicleStructure.Cell cell=payload.blocks.cells.get(i);if(!mapping.cell(cell.pos).equals(payload.placedCellPosition(this,i))||mapping.state(cell)!=payload.placedCellState(i))return false;}
+        return true;
     }
     public boolean captureBlocked(boolean value){boolean changed=motionBlocked!=value;motionBlocked=value;return changed;}
     public boolean acceptMotion(int revision,long tick,boolean target,boolean blocked){

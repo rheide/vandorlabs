@@ -356,6 +356,15 @@ public final class ArmPayload {
     /** Chosen-only refresh from the authoritative detached snapshot; never serializes a live tile. */
     public ArmPayload snapshotPlaced(GearTileEntity arm,VehicleStructure source){
         if(!materialized)return this;if(hasOwnershipJournal())throw new IllegalArgumentException("Attachment recovery pending");
+        // No owner data exists to refresh when every immutable tile-free row is unchanged.
+        // One mutable lookup key avoids rebuilding a second Cell/index tree for ordinary cargo.
+        BlockPos origin=arm.getPos().add(placedOffset);BlockPos.MutableBlockPos probe=new BlockPos.MutableBlockPos();boolean unchanged=true;
+        for(int i=0;i<blocks.cells.size();i++){
+            VehicleStructure.Cell before=placed().cells.get(i);probe.setPos(origin.getX()+before.pos.getX(),origin.getY()+before.pos.getY(),origin.getZ()+before.pos.getZ());VehicleStructure.Cell current=source.at(probe);
+            if(current==null||current.state.getMaterial().isLiquid()||current.state.getMaterial()==net.minecraft.block.material.Material.AIR)throw new IllegalArgumentException("Native attachment snapshot unavailable");
+            if(current.state!=before.state||current.hasTileData()||before.hasTileData()||blocks.cells.get(i).hasTileData()){unchanged=false;break;}
+        }
+        if(unchanged)return this;
         List<VehicleStructure.Cell> original=new ArrayList<>(),nativeRows=new ArrayList<>();
         for(int i=0;i<blocks.cells.size();i++){
             VehicleStructure.Cell old=blocks.cells.get(i),placed=placed().cells.get(i);BlockPos at=placedCellPosition(arm,i);VehicleStructure.Cell current=source.at(at);IBlockState expected=placed.state;
