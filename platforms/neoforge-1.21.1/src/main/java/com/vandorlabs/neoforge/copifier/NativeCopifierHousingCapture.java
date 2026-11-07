@@ -51,14 +51,15 @@ public final class NativeCopifierHousingCapture {
         transmission.putInt("Range",TransmissionSettings.readRange(main.contains("Range",Tag.TAG_INT),main.getInt("Range"),true));transmission.putBoolean("Local",TransmissionSettings.readLocal(main.contains("Local",Tag.TAG_BYTE),main.getBoolean("Local"),false));transmission.putIntArray("Channels",TransmissionSettings.readChannels(main.contains("Channels",Tag.TAG_INT_ARRAY),main.getIntArray("Channels"),ChannelList.EMPTY).toArray());out.put("Transmission",transmission);
         return out;
     }
+    /** Undo retains dormant face choices, without capturing physical ownership or placement. */
+    public static CompoundTag undo(Family family,CompoundTag saved){var out=capture(family,saved);if(family.faces)out.getCompound("face_textures").putIntArray("choices",HousingSettings.read(new ModernHousingTags(saved),0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).faces());return out;}
     /** Selection includes dormant choices and placement fields omitted from ordinary copy payloads. */
     public static CompoundTag connected(Family family,CompoundTag saved,boolean ignoreDirectionality){
-        var out=capture(family,saved);var access=new ModernHousingTags(saved);
+        var out=undo(family,saved);var access=new ModernHousingTags(saved);
         out.putBoolean("placement_ceiling",saved.getBoolean("CeilingMounted"));
         out.putInt("placement_ceiling_position",saved.contains("CeilingPosition",Tag.TAG_INT)?Math.max(0,Math.min(2,saved.getInt("CeilingPosition"))):-1);
         int wall=access.contains(SaveSchema.Screen.WALL_POSITION)?access.getInt(SaveSchema.Screen.WALL_POSITION):-1;
         out.putInt("placement_wall_position",wall<0?-1:Math.min(2,wall));
-        if(family.faces)out.getCompound("face_textures").putIntArray("choices",HousingSettings.read(access,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).faces());
         if(ignoreDirectionality)com.vandorlabs.items.CopiedDirectionality.strip(out::remove);
         return out;
     }

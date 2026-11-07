@@ -24,13 +24,14 @@ public final class NativeCopifierHousingWorld {
     /** Single installed target only. Caller authenticates its held tool; connected/undo routes are separate. */
     public static boolean applySingle(ServerLevel level,BlockPos pos,ServerPlayer actor,Direction face,CompoundTag values){
         if(values==null||values.isEmpty())return false;var target=target(level,pos,actor,face);if(target==null)return false;
-        return apply(level,pos,target,values);
+        return apply(level,pos,target,values,actor);
     }
-    static boolean apply(ServerLevel level,BlockPos pos,Target target,CompoundTag values){
+    static boolean apply(ServerLevel level,BlockPos pos,Target target,CompoundTag values,ServerPlayer actor){
         if(values==null||values.isEmpty())return false;
         var tile=target.tile;final NativeCopifierHousingEdit.Plan plan;
         try{plan=NativeCopifierHousingEdit.prepare(target.family,tile.saveWithoutMetadata(level.registryAccess()),values);}catch(IllegalArgumentException unsupported){return false;}
         if(!plan.applicable()||!plan.appearance().valid()||!com.vandorlabs.neoforge.shape.NativeWallEntity.valid(plan.frames())||!com.vandorlabs.neoforge.shape.NativeWallEntity.valid(plan.walls())||!com.vandorlabs.neoforge.shape.NativeWallEntity.validPanelGlass(plan.glass()))return false;
+        NativeCopifierUndo.before(actor,level,pos);
         // All target field validation completes before the existing installed-host setters publish.
         if(tile instanceof com.vandorlabs.neoforge.shape.NativeWallEntity wall){
             if(!wall.configure(plan.appearance(),plan.walls(),plan.frames()))return false;

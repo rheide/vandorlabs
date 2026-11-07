@@ -29,7 +29,7 @@ public final class NativeCopifierHousingConnected {
    public BlockPos offset(BlockPos cell,int x,int y,int z){return cell.offset(x,y,z);}
   });
   if(selection.exceeded)return -1;int applied=0;
-  for(var pos:selection.owners){var target=NativeCopifierHousingWorld.target(level,pos,actor,face,false);if(target!=null&&target.tile().getBlockState().getBlock()==state.getBlock()&&NativeCopifierHousingWorld.apply(level,pos,target,values))applied++;}
+  for(var pos:selection.owners){var target=NativeCopifierHousingWorld.target(level,pos,actor,face,false);if(target!=null&&target.tile().getBlockState().getBlock()==state.getBlock()&&NativeCopifierHousingWorld.apply(level,pos,target,values,actor))applied++;}
   return applied;
  }
  private NativeCopifierHousingConnected(){}
