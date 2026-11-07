@@ -19,14 +19,13 @@ public final class NativeRampRiderPlan {
     /** Null denotes an obstructed rider. Cold queries and unsupported profiles refuse explicitly. */
     public static NativeRampRiderPlan prepare(ServerLevel level,NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal){
         NativeRampRiders.requireThread(level);
-        if(spec.moat())throw new IllegalArgumentException("Separate Moat rider plan required");
         if(!Double.isFinite(previous)||!Double.isFinite(current)||previous<0||previous>1||current<0||current>1)throw new IllegalArgumentException("Ramp rider poses");
-        if(spec.extend())return new NativeRampRiderPlan(level,List.of());
+        if(spec.extend()&&!spec.moat())return new NativeRampRiderPlan(level,List.of());
         long work=0;for(var origin:spec.origins())work+=(long)(shaped?origin.shapes().size():1)*(spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels()));if(work>131072)throw new IllegalArgumentException("Ramp rider query geometry budget");
-        var bounds=query(spec,shaped,previous,fromOriginal);loaded(level,bounds);
+        var moat=spec.moat()?NativeRampRiderTargets.moatSurfaces(spec,previous,current,fromOriginal,toOriginal):null;var bounds=moat==null?query(spec,shaped,previous,fromOriginal):moat.bounds().inflate(0,.6,0);loaded(level,bounds);
         var entities=new ArrayList<Entity>();level.getEntities(EntityTypeTest.forClass(Entity.class),bounds,entity->!entity.isSpectator(),entities,8193);if(entities.size()>8192)throw new IllegalArgumentException("Ramp rider count budget");
-        var candidates=new ArrayList<NativeRampRiderTargets.Candidate>(entities.size());for(int i=0;i<entities.size();i++){var entity=entities.get(i);candidates.add(new NativeRampRiderTargets.Candidate(i,entity.getBoundingBox(),entity instanceof Player,NativeRampRiders.available(entity),entity.getDeltaMovement().y));}
-        var targets=NativeRampRiderTargets.select(spec,shaped,previous,current,fromOriginal,toOriginal,candidates);var entries=new ArrayList<Entry>(targets.size());
+        var candidates=new ArrayList<NativeRampRiderTargets.Candidate>(entities.size());for(int i=0;i<entities.size();i++){var entity=entities.get(i);candidates.add(new NativeRampRiderTargets.Candidate(i,entity.getBoundingBox(),entity instanceof Player,NativeRampRiders.available(entity),entity.getDeltaMovement().y,entity.isPickable()));}
+        var targets=NativeRampRiderTargets.select(spec,shaped,previous,current,fromOriginal,toOriginal,candidates,moat);if(targets==null)return null;var entries=new ArrayList<Entry>(targets.size());
         for(var entry:targets.entrySet()){var entity=entities.get(entry.getKey().key());var delta=entry.getValue();if(!NativeRampRiders.clear(entity,delta,NativeRampRiders.obstacles(level,spec.root(),entity,entity.getBoundingBox().expandTowards(delta).inflate(1e-7))))return null;entries.add(new Entry(entity,entity.position(),entity.getBoundingBox(),entity.getDeltaMovement(),delta));}
         return new NativeRampRiderPlan(level,entries);
     }

@@ -6,12 +6,16 @@ import net.minecraft.world.phys.*;
 
 /** World-free released ordinary/stair/sideways rider selection. No ownership publication. */
 public final class NativeRampRiderTargets {
-    public record Candidate(int key,AABB body,boolean player,boolean available,double motionY){}
+    public record Candidate(int key,AABB body,boolean player,boolean available,double motionY,boolean collidable){}
     public static Map<Candidate,Vec3> select(NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal,List<Candidate> candidates){
-        if(spec.moat())throw new IllegalArgumentException("Separate Moat rider adapter required");
+        return select(spec,shaped,previous,current,fromOriginal,toOriginal,candidates,null);
+    }
+    static Map<Candidate,Vec3> select(NativeRampFootprint.Spec spec,boolean shaped,double previous,double current,boolean fromOriginal,boolean toOriginal,List<Candidate> candidates,MoatSurfaces preparedMoat){
+
         if(!Double.isFinite(previous)||!Double.isFinite(current)||previous<0||previous>1||current<0||current>1||candidates.size()>8192)throw new IllegalArgumentException("Ramp rider selection bounds");
-        var result=new LinkedHashMap<Candidate,Vec3>();if(spec.extend())return result;
+        var result=new LinkedHashMap<Candidate,Vec3>();if(spec.extend()&&!spec.moat())return result;
         long work=0;for(var source:spec.origins())work+=(long)(shaped?source.shapes().size():1)*(spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels()))*candidates.size();if(work>16777216)throw new IllegalArgumentException("Ramp rider selection work budget");
+        if(spec.moat())return moat(preparedMoat==null?moatSurfaces(spec,previous,current,fromOriginal,toOriginal):preparedMoat,candidates);
         if(spec.verticalLayout())return vertical(spec,previous,current,fromOriginal,toOriginal,false,0,0,candidates);
         var direction=RampGeometry.Direction.valueOf(spec.facing().name());int count=spec.elevator()?1:ControllerPlatform.treadCount(spec.treadPixels());
         for(var origin:spec.origins()){
@@ -40,6 +44,27 @@ public final class NativeRampRiderTargets {
             }
         }
         return result;
+    }
+    record MoatSurfaces(List<AABB> before,List<AABB> after,List<AABB> sweep,AABB bounds){}
+    static MoatSurfaces moatSurfaces(NativeRampFootprint.Spec s,double previous,double current,boolean fromOriginal,boolean toOriginal){
+        var before=new ArrayList<AABB>();var after=new ArrayList<AABB>();var swept=new ArrayList<AABB>();var direction=RampGeometry.Direction.valueOf(s.facing().name());
+        for(var origin:s.origins()){var p=origin.position();for(var b:origin.shapes()){
+            var shape=new RampGeometry.Box(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);var whole=MoatGeometry.world(shape,p.getX(),p.getY(),p.getZ());
+            for(var piece:MoatGeometry.pieces(direction,shape,s.treadPixels())){
+                int step=MoatGeometry.step(direction,piece,s.treadPixels());var nativeBox=MoatGeometry.world(piece,p.getX(),p.getY(),p.getZ());var stored=MoatGeometry.storedSection(direction,nativeBox,whole);
+                var a=fromOriginal?stored:MoatGeometry.transform(direction,s.sourceY(),s.length(),s.treadPixels(),s.start(),s.end(),previous,s.fast(),s.interpolation(),p.getY(),step,nativeBox,whole);
+                var last=toOriginal?stored:MoatGeometry.transform(direction,s.sourceY(),s.length(),s.treadPixels(),s.start(),s.end(),current,s.fast(),s.interpolation(),p.getY(),step,nativeBox,whole);
+                var first=box(a);var end=box(last);before.add(first);after.add(end);var sweep=MoatGeometry.sweep(direction,s.sourceY(),s.length(),s.treadPixels(),s.start(),s.end(),previous,current,s.fast(),s.interpolation(),p.getY(),step,nativeBox,whole);swept.add(fromOriginal||toOriginal?first.minmax(end):box(sweep));
+            }
+        }}if(before.isEmpty())throw new IllegalArgumentException("Empty Ramp Moat support");var bounds=before.getFirst();for(var sweep:swept)bounds=bounds.minmax(sweep);return new MoatSurfaces(List.copyOf(before),List.copyOf(after),List.copyOf(swept),bounds);
+    }
+    /** Null denotes a collidable bystander in the sweep or an invalid destination. */
+    private static Map<Candidate,Vec3> moat(MoatSurfaces surfaces,List<Candidate> candidates){
+        var result=new LinkedHashMap<Candidate,Vec3>();for(var actor:candidates){var body=actor.body();if(!actor.available()||!actor.collidable()||!body.intersects(surfaces.bounds.inflate(0,.6,0)))continue;
+            int support=-1;double distance=Double.POSITIVE_INFINITY;for(int i=0;i<surfaces.before.size();i++){var box=surfaces.before.get(i);double dy=Math.abs(body.minY-box.maxY);if(body.maxX>box.minX+1e-7&&body.minX<box.maxX-1e-7&&body.maxZ>box.minZ+1e-7&&body.minZ<box.maxZ-1e-7&&dy<=(actor.player()?.5:.15)&&dy<distance){support=i;distance=dy;}}
+            if(support<0){for(var sweep:surfaces.sweep)if(sweep.deflate(1e-6).intersects(body))return null;continue;}
+            var a=surfaces.before.get(support);var b=surfaces.after.get(support);var delta=new Vec3(b.minX-a.minX,b.maxY-a.maxY,b.minZ-a.minZ);var destination=body.move(delta).deflate(1e-5);for(var box:surfaces.after)if(box.intersects(destination))return null;result.put(actor,delta);
+        }return result;
     }
     static List<VerticalRampGeometry.Piece> verticalPieces(NativeRampFootprint.Spec s,NativeRampGeometry.Origin origin,double pose,boolean nativeEndpoint,boolean belt,double distance){
         var pieces=new ArrayList<VerticalRampGeometry.Piece>();var face=RampGeometry.Direction.valueOf(s.facing().name());var p=origin.position();for(var b:origin.shapes())pieces.addAll(VerticalRampGeometry.pieces(face,p.getX(),p.getY(),p.getZ(),new RampGeometry.Box(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ),s.sourceY(),s.length(),s.treadPixels(),nativeEndpoint?0:s.start(),nativeEndpoint?0:s.end(),pose,s.elevator(),s.travel(),s.extend(),s.fast(),s.interpolation(),belt&&!nativeEndpoint,distance));return pieces;
