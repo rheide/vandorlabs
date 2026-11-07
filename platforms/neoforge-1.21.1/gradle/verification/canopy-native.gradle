@@ -47,3 +47,11 @@ tasks.register('testNativeCanopyPhysics', JavaExec) {
     args file('../../build/test-artifacts/canopy-physics-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+tasks.register('testNativeCanopySaved', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.canopy.CanopySavedChecks'
+    args file('../../build/test-artifacts/canopy-saved-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
