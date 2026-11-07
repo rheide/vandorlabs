@@ -26,8 +26,22 @@ public final class VehicleStructure {
         public final BlockPos pos;
         public final IBlockState state;
         private final NBTTagCompound tile;
+        private final Object gearConfigurationIdentity;
         public Cell(BlockPos pos,IBlockState state,NBTTagCompound tile) {
-            this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(BuildingBlockCompat.canonical(state,com.vandorlabs.redstone.TransmitterSlots.normalize(tile.copy())));
+            this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(BuildingBlockCompat.canonical(state,com.vandorlabs.redstone.TransmitterSlots.normalize(tile.copy())));this.gearConfigurationIdentity=state.getBlock() instanceof com.vandorlabs.gear.GearBlock?new Object():null;
+        }
+        private Cell(BlockPos pos,IBlockState state,NBTTagCompound frozen,Object identity){this.pos=pos;this.state=state;this.tile=frozen;this.gearConfigurationIdentity=identity;}
+        public Object gearConfigurationIdentity(){return gearConfigurationIdentity;}
+        /** Shares only already-private frozen children; every exported NBT tree remains a defensive copy. */
+        public Cell withGearPose(com.vandorlabs.gear.GearTileEntity gear){
+            if(!(state.getBlock() instanceof com.vandorlabs.gear.GearBlock)||tile==null||!pos.equals(gear.getPos())||!"vandorlabs:modular_gear".equals(tile.getString("id")))throw new IllegalArgumentException("Current gear pose owner changed");
+            NBTTagCompound pose=gear.currentPoseData(),next=new NBTTagCompound();
+            if(!pose.hasKey("GearProgress",6)||!Double.isFinite(pose.getDouble("GearProgress"))||pose.getDouble("GearProgress")<0||pose.getDouble("GearProgress")>1||!pose.hasKey("GearRevision",3))throw new IllegalArgumentException("Invalid gear pose scalars");
+            for(String key:new String[]{"GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal"})if(!pose.hasKey(key,1))throw new IllegalArgumentException("Invalid gear pose flag");
+            if(pose.hasKey("SurfaceDepartureActive")&&!pose.hasKey("SurfaceDepartureActive",1))throw new IllegalArgumentException("Invalid surface departure flag");
+            for(String key:tile.getKeySet())if(!GEAR_POSE_KEYS.contains(key))next.setTag(key,tile.getTag(key));
+            for(String key:pose.getKeySet()){if(!GEAR_POSE_KEYS.contains(key))throw new IllegalArgumentException("Unexpected gear pose field");next.setTag(key,pose.getTag(key).copy());}
+            return new Cell(pos,state,next,gearConfigurationIdentity);
         }
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
         NBTTagCompound tileFields(String[] names){NBTTagCompound result=new NBTTagCompound();if(tile!=null)for(String name:names)if(tile.hasKey(name))result.setTag(name,tile.getTag(name).copy());return result;}
@@ -36,6 +50,7 @@ public final class VehicleStructure {
         public boolean sameTileData(Cell other){return Objects.equals(tile,other.tile);}
         /** Pose and input edges do not change the assembled gear's baked block model. */
         public boolean sameGearConfiguration(Cell other){
+            if(gearConfigurationIdentity!=null&&gearConfigurationIdentity==other.gearConfigurationIdentity)return true;
             if(Objects.equals(tile,other.tile))return true;
             if(tile==null||other.tile==null)return false;
             for(String key:tile.getKeySet())if(!GEAR_POSE_KEYS.contains(key)&&!sameGearField(key,tile.getTag(key),other.tile.getTag(key)))return false;
