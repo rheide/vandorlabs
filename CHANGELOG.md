@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Keep Taxi/Hover double-jump taps within the current driving context. Opening a dialog, changing vehicle/player/world or losing the driver role clears a pending tap; single presses and held jump keep their existing behavior.
+
 - Remove repeated allocation from Forge Glass/Porthole UV-cache hits, bound retained source/mapped geometry by bytes and clear old atlas entries on resource reload and world unload.
 - Prepare native Light facing and atlas coordinates once per cached mesh, reduce retained vertex storage and reuse the common prepared-vertex emitter while preserving live lighting and reload behavior.
 
