@@ -36,7 +36,16 @@ public final class NativeCanopyCloseService {
     }
     /** Normal server tick entry point, deliberately separate from client cosmetic preparation. */
     public static void retire(NativeCanopyEntity host){if(host.getLevel() instanceof ServerLevel world&&world.getServer().isSameThread()){var state=WORLDS.get(world);if(state!=null){state.waits.remove(host.getBlockPos());state.retry.remove(host.getBlockPos());}}}
-    public static void tick(NativeCanopyEntity host){if(host.links().open())retire(host);if(host.getLevel() instanceof ServerLevel)NativeCanopyControl.tick(host,WORLD);else NativeCanopyLifecycle.prepare(host);}
+    public static void tick(NativeCanopyEntity host){if(host.links().open())retire(host);if(host.getLevel() instanceof ServerLevel)NativeCanopyControl.tick(host,WORLD);else {
+            // Released Source advances local physical pose by the same 1/16 step.
+            // Cosmetic interpolation remains on the independent pause-aware clock.
+            var publication=host.publication();var links=host.links();
+            if(host.available()&&NativeCanopyLifecycle.installed(host)&&publication.draws()&&NativeCanopyControl.opening(host)&&!links.waiting()){
+                float next=Math.max(0,Math.min(1,links.progress()+(links.open()?1:-1)/16F));
+                if(next!=links.progress())host.stageLinks(links.withMotion(next,links.open(),false));
+            }
+            NativeCanopyLifecycle.prepare(host);
+        }}
     @SubscribeEvent public static void neighbors(BlockEvent.NeighborNotifyEvent event){if(!(event.getLevel() instanceof ServerLevel world))return;var state=WORLDS.get(world);if(state==null)return;for(var entry:state.waits.entrySet())if(entry.getValue().cells().contains(event.getPos()))state.retry.add(entry.getKey());}
     @SubscribeEvent public static void loaded(ChunkEvent.Load event){if(!(event.getLevel() instanceof ServerLevel world))return;var state=WORLDS.get(world);if(state==null)return;var chunk=event.getChunk().getPos();for(var entry:state.waits.entrySet())for(var pos:entry.getValue().cells())if((pos.getX()>>4)==chunk.x&&(pos.getZ()>>4)==chunk.z){state.retry.add(entry.getKey());break;}}
     @SubscribeEvent public static void tick(LevelTickEvent.Post event){if(!(event.getLevel() instanceof ServerLevel world))return;var state=WORLDS.get(world);if(state==null)return;for(var pos:state.retry){var wait=state.waits.get(pos);var owner=wait==null?null:wait.owner().get();if(owner!=null&&installed(owner))NativeCanopyControl.retryClose(owner);else state.waits.remove(pos);}state.retry.clear();}

@@ -21,7 +21,12 @@ public class NativeCanopyBlock extends Block implements EntityBlock,NativeAuthor
     public String kind(){return kind;}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING);}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeCanopyEntity(type.get(),pos,state,kind);}
-    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> actual){return actual==type.get()?(world,pos,current,tile)->NativeCanopyLifecycle.prepare((NativeCanopyEntity)tile):null;}
+    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> actual){return actual==type.get()?(world,pos,current,tile)->NativeCanopyCloseService.tick((NativeCanopyEntity)tile):null;}
+    @Override protected void neighborChanged(BlockState state,Level world,BlockPos pos,Block block,BlockPos from,boolean moving){
+        if(world instanceof net.minecraft.server.level.ServerLevel server&&server.getServer().isSameThread()){
+            var host=NativeCanopyLifecycle.at(world,pos);if(host!=null)NativeCanopyControl.refreshPower(NativeCanopyLifecycle.owner(host));
+        }
+    }
     @Override protected java.util.List<net.minecraft.world.item.ItemStack> getDrops(BlockState state,net.minecraft.world.level.storage.loot.LootParams.Builder builder){var raw=builder.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);if(!(raw instanceof NativeCanopyEntity host)||host.links().anchor()!=null&&!host.getBlockPos().equals(host.links().anchor()))return java.util.List.of();var drop=NativeCanopyItem.pick(asItem(),host.inert()?host:NativeCanopyLifecycle.owner(host));return drop.isEmpty()?java.util.List.of():java.util.List.of(drop);}
     @Override public void playerDestroy(Level level,net.minecraft.world.entity.player.Player player,BlockPos pos,BlockState state,BlockEntity raw,net.minecraft.world.item.ItemStack tool){if(raw instanceof NativeCanopyEntity host&&!host.suppressHarvest){var drop=NativeCanopyItem.pick(asItem(),host);if(!drop.isEmpty())Block.popResource(level,pos,drop);}}
     @Override public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state,net.minecraft.world.phys.HitResult hit,LevelReader level,BlockPos pos,net.minecraft.world.entity.player.Player player){var raw=level.getBlockEntity(pos);return NativeCanopyItem.pick(asItem(),raw instanceof NativeCanopyEntity host?(host.inert()?host:NativeCanopyLifecycle.owner(host)):null);}
