@@ -5,3 +5,7 @@ tasks.register('testCopifierPropulsionReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/copifier-propulsion-source.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierPropulsionGroupReference'))systemProperty 'vandorlabs.copifierPropulsionGroupReference',file(project.property('copifierPropulsionGroupReference')).absolutePath
+ if(project.hasProperty('copifierPropulsionReference'))systemProperty 'vandorlabs.copifierPropulsionReference',file(project.property('copifierPropulsionReference')).absolutePath
+}
