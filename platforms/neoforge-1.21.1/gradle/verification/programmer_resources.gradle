@@ -1,0 +1,14 @@
+def programmerPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+tasks.register('generateProgrammerResources', Exec) {
+ inputs.file('generate_programmer_resources.py')
+ inputs.file('../../src/main/resources/assets/vandorlabs/data_chip_programmer/data_chip_programmer.json')
+ inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block/data_chip_programmer'))
+ inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/data_chip_programmer'))
+ inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/models/cockpits/blank.png')
+ inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/textures/blocks/data_chip_programmer'))
+ inputs.files('../../texture-packs/default/assets/vandorlabs/textures/models/cockpits/blank.png','../../src/main/resources/assets/vandorlabs/textures/models/cockpits/blank.png')
+ outputs.dir('build/generated/programmer-resources')
+ commandLine programmerPython,'generate_programmer_resources.py'
+}
+sourceSets.main.resources.srcDir('build/generated/programmer-resources')
+tasks.named('processResources') { dependsOn 'generateProgrammerResources' }
