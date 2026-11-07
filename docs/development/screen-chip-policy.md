@@ -1,6 +1,6 @@
 # Screen chip interaction reference
 
-The 1.12.2 callback reference is frozen in `testclient/fixtures/screen-chip-interaction-reference.json.gz`. Its uncompressed SHA-256 is `6df3ffbb90aff95b637d118b85433ed680a4be766758c14ed28cbbb248a02a3d`. `exportScreenChipInteractionReference` runs the actual released Screen, reader and journal methods in an in-memory world. It does not establish network delivery, vanilla block selection, claims integration, durable inventory transfer or a live player interaction.
+The 1.12.2 callback reference is frozen in `testclient/fixtures/screen-chip-interaction-reference.json.gz`. Its uncompressed SHA-256 is `e96c73f26be0835e34471f69eb05fb3af8f3a8c8a029c53d882699aa33e46cd7`. `exportScreenChipInteractionReference` runs the actual released Screen, reader and journal methods in an in-memory world. It does not establish network delivery, vanilla block selection, claims integration, durable inventory transfer or a live player interaction.
 
 The schema contains these independent observations:
 
@@ -12,7 +12,7 @@ The schema contains these independent observations:
 | `saved` | 108 | Actual tile read/write and lazy journal getter observations for empty, master and three-page journal contents |
 | `distantOwner` | 6 | Actual page callbacks with an editable clicked member and a distant, non-editable display owner |
 
-Every ray is recorded in block-local coordinates. Page-ray observations include positions outside a physical housing: they describe the callback's twelve-row policy, not proof that vanilla selection can reach each ray. The existing shared projection check supplies placement transforms; the reference does not define a second projection implementation.
+The `nbt` dictionary interns the exact initial tile and held-stack SNBT used by tray callbacks; `initial` and `heldInput` index it. Every ray is recorded in block-local coordinates. Page-ray observations include positions outside a physical housing: they describe the callback's twelve-row policy, not proof that vanilla selection can reach each ray. The existing shared projection check supplies placement transforms; the reference does not define a second projection implementation.
 
 ## Tray cases
 
