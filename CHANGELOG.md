@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Fix connected Duplifier Undo for linked settings such as Segmented Doors: record all selected blocks before the first edit changes shared settings, so Undo restores their original configuration.
+
 - Enable Programmable Storage in the experimental native build with its original recipe, independent 27-slot inventory, dedicated material editor, configured items and source-matched Cabinet artwork. Mining keeps contents separate from the configured block item.
 
 - Enable ordinary Programmable Glass in the experimental native build with original recipes, configured variants, dedicated editing, two-sided fluids and source-matched world/item artwork. Canopy and cockpit glass remain in conversion.

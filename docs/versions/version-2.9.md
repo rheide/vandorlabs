@@ -6,6 +6,8 @@ The first milestone is non-vehicle parity: programmable building families, scree
 
 Historical native implementations are integration references. Each family still needs current-code persistence, permissions, runtime and rendered acceptance before support can be claimed. Existing Forge registry IDs, saved behavior and recovery guarantees must be preserved. See the [coverage inventory](../development/feature-coverage.md) for family status and the [architecture](../development/multiversion.md) for target boundaries.
 
+Connected Duplifier Undo now captures all selected blocks before applying the first change. This fixes linked settings such as Segmented Door direction, layout, speed and channels being left at their copied values after Undo. Physical contents remain outside settings history.
+
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
 The experimental native build includes the plain matter block, matter/alloy ingots, and the programmable cube with its Appearance editor, six face overrides and bounded joined images. Creative shift-click and the main-hand Configurizer share the authenticated cube dialog. Configured items retain their settings, and native geometry is compared with the actual Forge renderer.

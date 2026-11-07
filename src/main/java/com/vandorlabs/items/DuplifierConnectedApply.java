@@ -79,6 +79,9 @@ public final class DuplifierConnectedApply {
             public BlockPos offset(BlockPos cell,int x,int y,int z){return cell.add(x,y,z);}
         });
         if(selected.exceeded)return -1;
+        // A selected section can update its linked peers. Snapshot the whole
+        // original selection before any callback changes another owner's data.
+        for (BlockPos target : selected.owners) DuplifierUndo.before(player,world,target);
         int applied = 0;
         for (BlockPos target : selected.owners) {
             if (editable(world, target, player, face, tool)

@@ -42,7 +42,7 @@ final class DuplifierDirectionLiveChecks {
         if(phase==4){check(mc,true);click(gui,96,1);}
         if(phase==5){check(mc,false);mc.player.closeScreen();mc.playerController.processRightClick(mc.player,mc.world,EnumHand.MAIN_HAND);}
         if(phase==6){require(button(gui,96).displayString.endsWith("Off"),"reopened direction option lost state");snapshot(mc,gui,output,"duplifier-direction-off");click(gui,96,1);}
-        if(phase==7){check(mc,true);mc.player.closeScreen();server(mc,()->{DuplifierRuntimeChecks.run(player(mc));worldChecks(player(mc));});DuplifierMaskRuntimeChecks.run();System.out.println("[vandorlabs][reprolab] duplifier-direction-live PASS real item opening held/container packets toggle persistence reverse clicks five rendered pages cube/slab/stairs strict/ignored mounting data undo adjacent connected regressions");return true;}
+        if(phase==7){check(mc,true);mc.player.closeScreen();server(mc,()->{DuplifierRuntimeChecks.run(player(mc));worldChecks(player(mc));segmentedUndo(player(mc));});DuplifierMaskRuntimeChecks.run();System.out.println("[vandorlabs][reprolab] duplifier-direction-live PASS real item opening held/container packets toggle persistence reverse clicks five rendered pages cube/slab/stairs strict/ignored mounting data undo adjacent connected regressions");return true;}
         phase++;return false;
     }
     private static void worldChecks(EntityPlayerMP player){
@@ -69,6 +69,21 @@ final class DuplifierDirectionLiveChecks {
             require(DuplifierUndo.undo(player),"group undo failed "+block);
             for(BlockPos pos:states.keySet()){require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getHousingTexture()==0,"group undo texture");world.setBlockToAir(pos);}
         }
+    }
+    private static void segmentedUndo(EntityPlayerMP player){
+        World world=player.world;BlockPos base=new BlockPos(240,102,250);
+        Block block=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:segmented_door"));
+        List<com.vandorlabs.segmented.SegmentedDoorTile> tiles=new ArrayList<>();List<NBTTagCompound> before=new ArrayList<>();
+        try{
+            for(int x=0;x<2;x++)for(int row=0;row<2;row++){BlockPos pos=base.east(x).down(row);world.getChunkFromBlockCoords(pos);world.setBlockState(pos,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH),2);tiles.add((com.vandorlabs.segmented.SegmentedDoorTile)world.getTileEntity(pos));}
+            for(int x=0;x<2;x++)((com.vandorlabs.segmented.SegmentedDoorTile)world.getTileEntity(base.east(x))).refreshColumn();
+            for(com.vandorlabs.segmented.SegmentedDoorTile tile:tiles)before.add(ProgrammableSettings.capture(world,tile.getPos()));
+            NBTTagCompound values=new NBTTagCompound(),configuration=new NBTTagCompound();new com.vandorlabs.segmented.SegmentedDoorSettings(3,true,2,0,true,2,true,new com.vandorlabs.tiles.DoorGlassAppearance(-1,2,1,2),2).write(configuration);configuration.setInteger("SegmentedSpeed",7);values.setTag(ProgrammableSettings.SEGMENTED_DOOR,configuration);values.setInteger(ProgrammableSettings.CHANNEL,31);
+            ItemStack tool=new ItemStack(ModItems.DUPLIFIER);tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,values);DuplifierUndo.begin(player,world);int applied;try{applied=DuplifierConnectedApply.apply(world,base,tool,player,EnumFacing.NORTH);}finally{DuplifierUndo.finish(player);}
+            require(applied==4,"Segmented connected selection="+applied);require(DuplifierUndo.undo(player),"Segmented shared-settings undo");
+            for(int i=0;i<tiles.size();i++)require(before.get(i).equals(ProgrammableSettings.capture(world,tiles.get(i).getPos())),"Segmented complete original choices section="+i);
+            System.out.println("[vandorlabs][reprolab] duplifier-segmented-undo PASS four selected sections original shared settings and local choices");
+        }finally{for(int x=0;x<2;x++)for(int row=0;row<2;row++)world.setBlockToAir(base.east(x).down(row));}
     }
     private static void check(Minecraft mc,boolean ignore)throws Exception{server(mc,()->{
         ItemStack tool=player(mc).getHeldItemMainhand();require(DuplifierApplyOptions.connected(tool)&&DuplifierApplyOptions.ignoreDirectionality(tool)==ignore,"server flag round trip");

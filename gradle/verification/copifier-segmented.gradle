@@ -1,0 +1,16 @@
+task exportCopifierSegmentedReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierSegmentedLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-segmented-source.json").absolutePath
+ maxHeapSize = '1g'
+}
+task testCopifierSegmentedConnectedUndo(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierSegmentedLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-segmented-source.json").absolutePath, 'connected'
+ maxHeapSize = '1g'
+}
