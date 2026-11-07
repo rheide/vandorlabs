@@ -9,3 +9,12 @@ task testCopifierHousingReference(type: JavaExec) {
     workingDir = file("$buildDir/non-rendering-checks")
     doFirst { workingDir.mkdirs() }
 }
+
+task testCopifierClipboardReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CopifierClipboardLegacyChecks'
+    maxHeapSize = '1g'
+    systemProperty 'vandorlabs.copifierClipboardReference', file("$buildDir/test-artifacts/copifier-clipboard-source.json").absolutePath
+}

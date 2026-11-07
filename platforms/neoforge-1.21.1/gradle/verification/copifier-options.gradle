@@ -26,3 +26,12 @@ tasks.register('testNativeCopifierHousingCapture', JavaExec) {
 neoForge.runs.configureEach {
     if (project.hasProperty('copifierHousingReference')) systemProperty 'vandorlabs.copifierHousingReference',file(project.property('copifierHousingReference')).absolutePath
 }
+
+tasks.register('testNativeCopifierClipboard', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.copifier.NativeCopifierClipboardChecks'
+    maxHeapSize = '512m'
+    args file('../../testclient/fixtures/copifier-clipboard-source.json.gz').absolutePath
+}
