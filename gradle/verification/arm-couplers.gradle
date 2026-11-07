@@ -18,3 +18,10 @@ task testArmCouplerHeads(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.ArmCouplerHeadChecks'
  maxHeapSize = '1g'
 }
+
+task testArmGridTiles(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmGridTilesChecks'
+ maxHeapSize = '512m'
+}

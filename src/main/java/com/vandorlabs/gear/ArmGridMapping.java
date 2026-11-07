@@ -27,5 +27,6 @@ public final class ArmGridMapping {
     public BlockPos cell(BlockPos local){return new BlockPos(coordinate(0,corner.getX(),local),coordinate(1,corner.getY(),local),coordinate(2,corner.getZ(),local));}
     private int coordinate(int row,int origin,BlockPos p){int at=row*3;int result=Math.addExact(origin,Math.addExact(Math.multiplyExact(axes[at],p.getX()),Math.addExact(Math.multiplyExact(axes[at+1],p.getY()),Math.multiplyExact(axes[at+2],p.getZ()))));return Math.addExact(result,Math.min(0,axes[at])+Math.min(0,axes[at+1])+Math.min(0,axes[at+2]));}
     public EnumFacing facing(EnumFacing local){int x=local.getFrontOffsetX(),y=local.getFrontOffsetY(),z=local.getFrontOffsetZ();return EnumFacing.getFacingFromVector(axes[0]*x+axes[1]*y+axes[2]*z,axes[3]*x+axes[4]*y+axes[5]*z,axes[6]*x+axes[7]*y+axes[8]*z);}
+    int[] basis(){return axes.clone();}
     public boolean rotates(){return axes[0]!=1||axes[4]!=1||axes[8]!=1;}
 }
