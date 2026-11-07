@@ -5,6 +5,7 @@ tasks.register('generateReaderResources', Exec) {
     inputs.file('../../src/portable/java/com/vandorlabs/credentials/CredentialCatalog.java')
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block/token_slots') { include '*.json' })
     inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/access_card_slot.json', '../../src/main/resources/assets/vandorlabs/blockstates/data_chip_slot.json')
+    inputs.files('../../src/main/resources/assets/vandorlabs/models/item/access_card_slot.json', '../../src/main/resources/assets/vandorlabs/models/item/data_chip_slot.json')
     inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/access_reader') { include '**/*.png' })
     inputs.file('../../texture-packs/default/assets/vandorlabs/textures/blocks/programmable_glass/door_side.png')
     outputs.dir('build/generated/reader-resources')

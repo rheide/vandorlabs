@@ -21,6 +21,6 @@ public final class NativeReaderResources implements net.minecraft.client.rendere
  }
 
  @SubscribeEvent public static void models(ModelEvent.RegisterAdditional event){
-  if(active())for(String model:NativeReaderAssets.models())event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(model)));
+  if(active()){for(String model:NativeReaderAssets.models())event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(model)));for(String model:NativeReaderAssets.itemModels())event.register(net.minecraft.client.resources.model.ModelResourceLocation.standalone(ResourceLocation.parse(model)));}
  }
 }

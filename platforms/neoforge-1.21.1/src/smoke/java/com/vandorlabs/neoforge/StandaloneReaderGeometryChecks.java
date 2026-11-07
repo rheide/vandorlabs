@@ -26,7 +26,7 @@ public final class StandaloneReaderGeometryChecks {
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
     public static final class Registration {
         @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){
-            if(!System.getProperty("vandorlabs.transmitterPhase","").startsWith("standalone-reader-")&&!"true".equals(System.getenv("VANDOR_READER_SCREEN_CHECK")))return;
+            if(!System.getProperty("vandorlabs.transmitterPhase","").startsWith("standalone-reader-")&&!"true".equals(System.getenv("VANDOR_READER_SCREEN_CHECK"))&&!"true".equals(System.getenv("VANDOR_STANDALONE_READER_MODEL_CHECK")))return;
             event.register(net.minecraft.core.registries.Registries.BLOCK,helper->{
                 card=new Reader(false);chip=new Reader(true);
                 helper.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","reader_geometry_fixture_card"),card);
