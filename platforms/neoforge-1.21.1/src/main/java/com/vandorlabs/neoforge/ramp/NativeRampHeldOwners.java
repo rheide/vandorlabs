@@ -26,6 +26,7 @@ public final class NativeRampHeldOwners {
  static boolean held(NativeRampJournal.Operation operation){for(var hold:holds)if(hold.world.get()!=null&&hold.operation==operation)return true;return false;}
  static void release(NativeRampJournal.Operation operation){holds=holds.stream().filter(hold->hold.world.get()!=null&&hold.operation!=operation).toList();}
  static void unload(ServerLevel world){holds=holds.stream().filter(hold->hold.world.get()!=null&&hold.world.get()!=world).toList();}
+ public static boolean active(Level world){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;for(var hold:holds)if(hold.world.get()==world)return true;return false;}
  public static boolean blocked(Level world,BlockPos pos){if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();for(var hold:holds)if(hold.world.get()==world&&hold.operation!=bypass&&hold.positions.contains(pos))return true;return false;}
  public static boolean blocked(Container container){
   if(holds.isEmpty())return false;
