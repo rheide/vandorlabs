@@ -164,7 +164,7 @@ public class BlockProgrammableWall extends BlockAnimatedScreenSelector {
             if(joinedDepth>=0)return getDefaultState().withProperty(FACING,clicked.getValue(FACING)).withProperty(DEPTH,joinedDepth);
             EnumFacing facing = placementFacing(world, pos, side, placer);
             return getDefaultState().withProperty(FACING, facing)
-                    .withProperty(DEPTH, PanelDepth.fromHit(facing, hitX, hitZ));
+                    .withProperty(DEPTH, clicked.getBlock().isReplaceable(world,support) ? PanelDepth.fromHit(facing,hitX,hitZ) : com.vandorlabs.render.PanelDepthPolicy.fromPlacement(facing.getIndex(),side.getIndex(),hitX,hitZ));
         }
         BlockPos support = pos.offset(side.getOpposite());
         int mode = placementGeometry(world, support, placer.getHeldItem(hand));

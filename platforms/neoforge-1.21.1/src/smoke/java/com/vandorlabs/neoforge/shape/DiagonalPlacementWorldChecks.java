@@ -53,7 +53,7 @@ public final class DiagonalPlacementWorldChecks {
                     need(context.getClickedPos().equals(TARGET),"actual target "+fixture);
                     var state=block.getStateForPlacement(context);
                     need(state.getValue(NativePanelBlock.FACING).get2DDataValue()==row.get("facing").getAsInt()&&state.getValue(NativeDiagonalWallBlock.INVERTED)==row.get("inverted").getAsBoolean(),"released callback "+fixture+" got="+state);
-                    if(family>=2)need(state.getValue(NativeFlatWallBlock.DEPTH)==row.get("depth").getAsInt(),"released flat depth "+fixture+" got="+state);
+                    if(family>=2){int expected=row.get("depth").getAsInt();if(!replacing)expected=com.vandorlabs.render.PanelDepthPolicy.fromPlacement(state.getValue(NativePanelBlock.FACING).get3DDataValue(),face.get3DDataValue(),x,z);need(state.getValue(NativeFlatWallBlock.DEPTH)==expected,"released empty-cell depth / corrected support anchor "+fixture+" got="+state);}
                     if(mode==0&&yaw==0&&(x==.1F||y==.1F||z==.1F)){
                         var result=stack.useOn(use);need(result.consumesAction()&&level.getBlockState(TARGET).equals(state)&&stack.getCount()==1,"actual survival use "+fixture+" result="+result+" held="+stack);placed++;
                     }

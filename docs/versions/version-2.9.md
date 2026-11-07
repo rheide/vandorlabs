@@ -12,6 +12,8 @@ Forge canopy placement also validates stored custom footprints before changing b
 
 Redstone channel input keeps the shared range of 1–2,147,483,647, with zero disconnected and up to 64 channels per bank. Forge Copy Controllers now use that same range for checked channel translation; Coupler and Segmented Door fields retain full-width banks, and saved cockpit/coupling channels preserve high IDs. Converted native editors use the same int-backed policy. See the [channel input contract](../development/channel-input-range.md).
 
+Flat Programmable Walls, Glass and Porthole Walls now anchor against a clicked horizontal support in both versions. Continuing a panel above, below or along its plane retains its selected depth. Full-depth Porthole Blocks keep their existing full-cell placement. See the [placement contract](../development/wall-against-placement.md).
+
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
 The experimental native build includes the plain matter block, matter/alloy ingots, and the programmable cube with its Appearance editor, six face overrides and bounded joined images. Creative shift-click and the main-hand Configurizer share the authenticated cube dialog. Configured items retain their settings, and native geometry is compared with the actual Forge renderer.
