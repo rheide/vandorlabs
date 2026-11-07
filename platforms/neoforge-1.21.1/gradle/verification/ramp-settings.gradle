@@ -46,3 +46,9 @@ tasks.register('testRampFootprintReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/ramp-generation-source.jsonl.gz').absolutePath
  maxHeapSize='1g'
 }
+tasks.register('testRampVoxelThreshold',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.NativeVoxelThresholdChecks'
+ maxHeapSize='1g'
+}

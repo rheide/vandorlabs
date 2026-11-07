@@ -14,8 +14,11 @@ public final class NativeVoxelShapes {
         return (int)Math.min(Integer.MAX_VALUE,512+FACE_VIEWS+boxes*112L+128+16*(x+y+z)+(x*y*z+7)/8);
     }
     /** Build the exact component union once, without repeatedly decomposing intermediate unions. */
-    public static VoxelShape union(List<AABB> boxes,int retainedBudget){
-        List<AABB> active=new ArrayList<>();for(AABB b:boxes)if(b.maxX-b.minX>=1e-7&&b.maxY-b.minY>=1e-7&&b.maxZ-b.minZ>=1e-7)active.add(b);if(active.isEmpty())return Shapes.empty();
+    public static VoxelShape union(List<AABB> boxes,int retainedBudget){return union(boxes,retainedBudget,1e-7,false);}
+    /** Strict edge threshold for authored families with a smaller released clipping epsilon. */
+    public static VoxelShape union(List<AABB> boxes,int retainedBudget,double minimumEdge){if(!Double.isFinite(minimumEdge)||minimumEdge<0)throw new IllegalArgumentException("Voxel edge threshold");return union(boxes,retainedBudget,minimumEdge,true);}
+    private static VoxelShape union(List<AABB> boxes,int retainedBudget,double minimumEdge,boolean strict){
+        List<AABB> active=new ArrayList<>();for(AABB b:boxes){double x=b.maxX-b.minX,y=b.maxY-b.minY,z=b.maxZ-b.minZ;if(strict?x>minimumEdge&&y>minimumEdge&&z>minimumEdge:x>=minimumEdge&&y>=minimumEdge&&z>=minimumEdge)active.add(b);}if(active.isEmpty())return Shapes.empty();
         double[][] axes=new double[3][];for(int axis=0;axis<3;axis++){double[] values=new double[active.size()*2];int n=0;for(AABB b:active){double min=axis==0?b.minX:axis==1?b.minY:b.minZ,max=axis==0?b.maxX:axis==1?b.maxY:b.maxZ;values[n++]=min==0?0:min;values[n++]=max==0?0:max;}Arrays.sort(values);int unique=0;for(double value:values)if(unique==0||value!=values[unique-1])values[unique++]=value;axes[axis]=Arrays.copyOf(values,unique);}
         int nx=axes[0].length-1,ny=axes[1].length-1,nz=axes[2].length-1;long cells=(long)nx*ny*nz,estimated=512+FACE_VIEWS+boxes.size()*112L+128+16L*(axes[0].length+axes[1].length+axes[2].length)+((long)axes[0].length*axes[1].length*axes[2].length+7)/8;if(cells>Integer.MAX_VALUE||estimated>retainedBudget)throw new IllegalStateException("Voxel grid exceeds checked retained-size budget");
         var bits=new net.minecraft.world.phys.shapes.BitSetDiscreteVoxelShape(nx,ny,nz);
