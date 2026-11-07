@@ -14,23 +14,36 @@ public final class NativeRampFramePublisher {
  static volatile java.util.function.Consumer<String> testFault;
  private static void fault(String stage){var callback=testFault;if(callback!=null&&System.getProperty("vandorlabs.transmitterPhase","").startsWith("ramp-assembly-journal-frame"))callback.accept(stage);}
  private static final long LIMIT=64L*1024*1024;
- public static final class Prepared {
-  private ServerLevel level;private NativeRampPartPublisher.Prepared candidate,rollback;private Map<BlockPos,NativeRampPartEntity> originalOwners;private final UUID operation;private final BlockPos root;private final BlockState proxy;private final Frame before,after;private final long rollbackRevision,tick,bytes;private boolean consumed;
+ public static final class Prepared implements AutoCloseable {
+  private ServerLevel level;private NativeRampPartPublisher.Prepared candidate,rollback;private Map<BlockPos,NativeRampPartEntity> originalOwners,installedOwners=Map.of();private final UUID operation;private final BlockPos root;private final BlockState proxy;private final Frame before,after;private final long rollbackRevision,tick,bytes;private boolean consumed,installed,closed;
   private Prepared(ServerLevel level,BlockState proxy,UUID operation,BlockPos root,Frame before,Frame after,long rollbackRevision,Map<BlockPos,NativeRampPartEntity> owners,NativeRampPartPublisher.Prepared candidate,NativeRampPartPublisher.Prepared rollback){this.level=level;this.proxy=proxy;this.operation=operation;this.root=root.immutable();this.before=before;this.after=after;this.rollbackRevision=rollbackRevision;originalOwners=Map.copyOf(owners);this.candidate=candidate;this.rollback=rollback;tick=level.getGameTime();bytes=candidate.preparedBytes()+rollback.preparedBytes()+overhead(before,after);}
   public long preparedBytes(){return bytes;}
   public Frame before(){return before;}public Frame after(){return after;}public long rollbackRevision(){return rollbackRevision;}
-  /** No observers run here. On failure, return the last valid frozen frame when exact ownership permits it. */
+  /** No observers run here. Successful installation retains frozen rollback until explicit completion. */
   public Result install(){
-   if(consumed)throw new IllegalStateException("Ramp frame already consumed");var world=level;NativeRampRiders.requireThread(world);boolean mutationStarted=false;
+   if(consumed||closed)throw new IllegalStateException("Ramp frame already consumed");var world=level;NativeRampRiders.requireThread(world);boolean mutationStarted=false;
    try{
     if(world.getGameTime()!=tick)throw new IllegalStateException("Ramp prepared frame expired");preflight(world);
-    mutationStarted=true;candidate.install();fault("after-candidate");for(var pos:before.cells())if(!after.cells().contains(pos))remove(world,pos,originalOwners.get(pos));fault("after-retirement");return new Result(Status.INSTALLED,"");
+    mutationStarted=true;candidate.install();var current=new LinkedHashMap<BlockPos,NativeRampPartEntity>();for(var pos:after.cells()){var owner=loaded(world,pos).getBlockEntities().get(pos);if(!(owner instanceof NativeRampPartEntity part)||!part.belongs(operation,root))throw new IllegalStateException("Ramp candidate owner unavailable");current.put(pos,part);}installedOwners=Map.copyOf(current);
+    fault("after-candidate");for(var pos:before.cells())if(!after.cells().contains(pos))remove(world,pos,originalOwners.get(pos));originalOwners=Map.of();fault("after-retirement");installed=true;return new Result(Status.INSTALLED,"");
    }catch(RuntimeException failure){
     String problem=message(failure);if(!mutationStarted)return new Result(Status.REFUSED,problem);
-    try{for(var pos:after.cells())if(!before.cells().contains(pos)){var chunk=loaded(world,pos);var state=chunk.getBlockState(pos);var owner=chunk.getBlockEntities().get(pos);if(state.isAir()&&owner==null&&chunk.getBlockEntityNbt(pos)==null)continue;if(!(owner instanceof NativeRampPartEntity part)||!state.is(proxy.getBlock())||!part.belongs(operation,root)||part.publication()==null||part.publication().revision()!=after.revision()||part.publication().observationTick()!=tick)throw new IllegalStateException("Changed Ramp candidate cannot be retired");remove(world,pos,part);}rollback.install();return new Result(Status.RESTORED,problem);
-    }catch(RuntimeException recovery){return new Result(Status.FAILED,problem+"; last frame: "+message(recovery));}
-   }finally{consumed=true;level=null;candidate=null;rollback=null;originalOwners=Map.of();}
+    try{restore(world);return new Result(Status.RESTORED,problem);}catch(RuntimeException recovery){return new Result(Status.FAILED,problem+"; last frame: "+message(recovery));}
+   }finally{consumed=true;candidate=null;if(!installed)release();}
   }
+  /** Only before actor commit. A changed candidate is retained for journal recovery, never overwritten. */
+  public Result restoreLastValid(){
+   if(closed||!installed)throw new IllegalStateException("No pending Ramp frame rollback");var world=level;NativeRampRiders.requireThread(world);
+   try{if(world.getGameTime()!=tick)throw new IllegalStateException("Ramp frame rollback expired");for(var entry:installedOwners.entrySet()){scope(world,entry.getKey());if(!loaded(world,entry.getKey()).getBlockState(entry.getKey()).is(proxy.getBlock())||loaded(world,entry.getKey()).getBlockEntities().get(entry.getKey())!=entry.getValue()||!entry.getValue().belongs(operation,root)||entry.getValue().publication()==null||entry.getValue().publication().revision()!=after.revision()||entry.getValue().publication().observationTick()!=tick)throw new IllegalStateException("Ramp installed frame changed before rollback");}for(var pos:before.cells())if(!after.cells().contains(pos)){scope(world,pos);var chunk=loaded(world,pos);if(!chunk.getBlockState(pos).isAir()||chunk.getBlockEntities().get(pos)!=null||chunk.getBlockEntityNbt(pos)!=null)throw new IllegalStateException("Ramp retired cell obstructs rollback");}restore(world);return new Result(Status.RESTORED,"");}catch(RuntimeException failure){return new Result(Status.FAILED,message(failure));}finally{release();}
+  }
+  private void restore(ServerLevel world){
+   for(var pos:after.cells())if(!before.cells().contains(pos)){var chunk=loaded(world,pos);var state=chunk.getBlockState(pos);var owner=chunk.getBlockEntities().get(pos);if(state.isAir()&&owner==null&&chunk.getBlockEntityNbt(pos)==null)continue;if(!(owner instanceof NativeRampPartEntity part)||!state.is(proxy.getBlock())||!part.belongs(operation,root)||part.publication()==null||part.publication().revision()!=after.revision()||part.publication().observationTick()!=tick)throw new IllegalStateException("Changed Ramp candidate cannot be retired");remove(world,pos,part);}rollback.install();
+  }
+  /** Release staging only. Never automatically roll blocks back after actors have committed. */
+  public void complete(){if(closed)return;NativeRampRiders.requireThread(level);release();}
+  @Override public void close(){complete();}
+  public boolean pendingRollback(){return installed&&!closed;}
+  private void release(){closed=true;installed=false;level=null;candidate=null;rollback=null;originalOwners=Map.of();installedOwners=Map.of();}
   private void preflight(ServerLevel world){
    for(var entry:originalOwners.entrySet()){var pos=entry.getKey();scope(world,pos);var chunk=loaded(world,pos);if(!chunk.getBlockState(pos).is(proxy.getBlock())||chunk.getBlockEntities().get(pos)!=entry.getValue()||!entry.getValue().belongs(operation,root)||entry.getValue().publication()==null)throw new IllegalStateException("Ramp old frame owner changed");var publication=entry.getValue().publication();if(publication.revision()!=before.revision()||publication.revision()>after.revision()||publication.revision()==after.revision()&&publication.observationTick()>=tick)throw new IllegalStateException("Ramp old frame revision changed");}
    for(var pos:after.cells()){scope(world,pos);if(before.cells().contains(pos))continue;var chunk=loaded(world,pos);if(!chunk.getBlockState(pos).isAir()||chunk.getBlockEntities().get(pos)!=null||chunk.getBlockEntityNbt(pos)!=null)throw new IllegalStateException("Ramp next frame is obstructed");}
@@ -44,7 +57,7 @@ public final class NativeRampFramePublisher {
   var owners=new LinkedHashMap<BlockPos,NativeRampPartEntity>();for(var pos:lastValid.cells()){var chunk=loaded(level,pos);var owner=chunk.getBlockEntities().get(pos);if(!chunk.getBlockState(pos).is(proxy.getBlock())||!(owner instanceof NativeRampPartEntity part)||!part.belongs(operation,root)||part.publication()==null||part.publication().revision()!=lastValid.revision())throw new IllegalArgumentException("Ramp old frame unavailable");owners.put(pos,part);}
   long available=LIMIT-overhead(lastValid,candidate);var next=NativeRampPartPublisher.prepare(level,proxy,operation,root,assembly,candidate.cells(),candidate.motion(),candidate.belt(),candidate.revision(),available);long remaining=available-next.preparedBytes();if(remaining<=0)throw new IllegalArgumentException("Ramp paired frame retained-size budget");var rollback=NativeRampPartPublisher.prepare(level,proxy,operation,root,assembly,lastValid.cells(),motion,belt,rollbackRevision,remaining);return new Prepared(level,proxy,operation,root,lastValid,candidate,rollbackRevision,owners,next,rollback);
  }
- private static long overhead(Frame before,Frame after){return 1024+192L*before.cells().size()+128L*after.cells().size();}
+ private static long overhead(Frame before,Frame after){return 1024+192L*before.cells().size()+192L*after.cells().size();}
  private static net.minecraft.world.level.chunk.LevelChunk loaded(ServerLevel level,BlockPos pos){var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);if(level.isOutsideBuildHeight(pos)||chunk==null)throw new IllegalStateException("Ramp frame waits for loaded cell");return chunk;}
  private static String message(Throwable failure){String s=failure.getMessage();return s==null?failure.getClass().getSimpleName():s.substring(0,Math.min(512,s.length()));}
  private NativeRampFramePublisher(){}
