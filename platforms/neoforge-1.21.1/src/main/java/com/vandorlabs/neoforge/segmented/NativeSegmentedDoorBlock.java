@@ -7,7 +7,7 @@ import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.item.context.BlockPlaceContext;
 /** Unregistered stationary housing; global artwork/input binding remains separate. */
-public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock implements SimpleWaterloggedBlock {
+public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock implements SimpleWaterloggedBlock,com.vandorlabs.neoforge.NativeAuthoredBlockRay {
  public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
  public static final BooleanProperty TOP=BooleanProperty.create("top"),BOTTOM=BooleanProperty.create("bottom");
  protected NativeSegmentedDoorBlock(Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(TOP,true).setValue(BOTTOM,true));}
@@ -31,6 +31,10 @@ public abstract class NativeSegmentedDoorBlock extends BaseEntityBlock implement
  @Override protected boolean propagatesSkylightDown(BlockState state,BlockGetter world,BlockPos pos){return true;}
  @Override protected float getShadeBrightness(BlockState state,BlockGetter world,BlockPos pos){return 1;}
  @Override protected net.minecraft.world.phys.shapes.VoxelShape getOcclusionShape(BlockState state,BlockGetter world,BlockPos pos){return net.minecraft.world.phys.shapes.Shapes.empty();}
+ @Override public net.minecraft.world.phys.BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){
+  if(world instanceof Level level){var tile=NativeSegmentedTargets.loaded(level,pos);if(tile!=null){var hit=NativeSegmentedTargets.hit(tile,NativeSegmentedTargets.pose(tile.root()),start,end);return hit==null?null:new net.minecraft.world.phys.BlockHitResult(new net.minecraft.world.phys.Vec3(hit.x,hit.y,hit.z),Direction.from3DDataValue(hit.face),pos,false);}}
+  return getShape(state,world,pos,net.minecraft.world.phys.shapes.CollisionContext.empty()).clip(start,end,pos);
+ }
  @Override protected net.minecraft.world.phys.shapes.VoxelShape getShape(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.shapes.CollisionContext context){
   if(world instanceof Level level){var tile=NativeSegmentedTargets.loaded(level,pos);if(tile!=null){var snapshot=NativeSegmentedTargets.geometry(tile,NativeSegmentedTargets.pose(tile.root()));if(snapshot!=null){var shape=net.minecraft.world.phys.shapes.Shapes.create(snapshot.bounds().move(-pos.getX(),-pos.getY(),-pos.getZ()));return snapshot.header()==null?shape:net.minecraft.world.phys.shapes.Shapes.or(shape,net.minecraft.world.phys.shapes.Shapes.create(snapshot.header().move(-pos.getX(),-pos.getY(),-pos.getZ())));}}}
   return net.minecraft.world.phys.shapes.Shapes.create(NativeSegmentedGeometry.closedPanel(state.getValue(FACING),0));

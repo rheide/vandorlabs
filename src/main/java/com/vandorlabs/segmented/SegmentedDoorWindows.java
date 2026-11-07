@@ -17,7 +17,7 @@ public final class SegmentedDoorWindows {
     private static final Layout SINGLE=new Layout(0,0,1,1);
     public static void invalidate(World world){if(world!=null)WORLDS.remove(world);}
     public static Layout layout(SegmentedDoorTile tile){
-        if(!tile.settings.window||!tile.settings.join||tile.getWorld()==null)return SINGLE;
+        if(SegmentedArtwork.gate(tile.effectiveTexture())>=0||!tile.settings.window||!tile.settings.join||tile.getWorld()==null)return SINGLE;
         World world=tile.getWorld();LinkedHashMap<BlockPos,Layout> cache=WORLDS.computeIfAbsent(world,w->new LinkedHashMap<>(32,.75F,true));Layout ready=cache.get(tile.getPos());if(ready!=null)return ready;
         SegmentedDoorTile root=tile.root();EnumFacing right=tile.facing().rotateY();BlockPos origin=root.getPos().offset(right,-root.column);Set<BlockPos> seen=new HashSet<>();ArrayDeque<SegmentedDoorTile> queue=new ArrayDeque<>();List<SegmentedDoorTile> group=new ArrayList<>();seen.add(tile.getPos());queue.add(tile);
         int minColumn=tile.column,maxColumn=tile.column,minY=tile.getPos().getY(),maxY=minY;
@@ -26,7 +26,7 @@ public final class SegmentedDoorWindows {
             for(EnumFacing side:new EnumFacing[]{EnumFacing.UP,EnumFacing.DOWN,right,right.getOpposite()}){
                 BlockPos p=current.getPos().offset(side);int column=(p.getX()-origin.getX())*right.getFrontOffsetX()+(p.getZ()-origin.getZ())*right.getFrontOffsetZ();
                 if(column<0||column>=root.columns||p.getY()>origin.getY()||p.getY()<=origin.getY()-root.height||!seen.add(p))continue;
-                SegmentedDoorTile next=SegmentedDoorTile.at(world,p);if(next!=null&&next.facing()==tile.facing()&&next.settings.window&&next.settings.join&&next.settings.shape==tile.settings.shape)queue.add(next);
+                SegmentedDoorTile next=SegmentedDoorTile.at(world,p);if(next!=null&&next.facing()==tile.facing()&&SegmentedArtwork.gate(next.effectiveTexture())<0&&next.settings.window&&next.settings.join&&next.settings.shape==tile.settings.shape)queue.add(next);
             }
         }
         for(SegmentedDoorTile member:group)cache.put(member.getPos().toImmutable(),new Layout(member.column-minColumn,member.getPos().getY()-minY,maxColumn-minColumn+1,maxY-minY+1));

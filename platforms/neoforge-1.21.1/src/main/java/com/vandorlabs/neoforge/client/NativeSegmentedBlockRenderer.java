@@ -27,11 +27,11 @@ public final class NativeSegmentedBlockRenderer implements BlockEntityRenderer<N
     private final int[] lights=new int[32];private final BlockPos.MutableBlockPos lightPos=new BlockPos.MutableBlockPos();
     public NativeSegmentedBlockRenderer(BlockEntityRendererProvider.Context context){}
     private static Presentation presentation(NativeSegmentedDoorEntity tile){
-        var source=tile.publication();if(source==null)return null;var client=tile.clientTerrain();var found=PRESENTATIONS.get(tile);if(found!=null&&found.source==source&&found.client==client)return found;
+        var source=tile.publication();if(source==null)return null;var client=tile.clientTerrain();var found=PRESENTATIONS.get(tile);if(found!=null&&found.source==source&&found.client==client&&found.visual.facing()==tile.facing())return found;
         var original=source.visual();NativeSegmentedVisual visual;
         if(tile.inert())visual=new NativeSegmentedVisual(1,1,0,original.facing(),-1,NativeSegmentedDoorSettings.LEGACY,List.of(NativeSegmentedDoorSettings.LEGACY),List.of(SegmentedWindowLayout.SINGLE),true,false,false,true,client.headerTerrain());
-        else visual=new NativeSegmentedVisual(original.width(),original.height(),original.column(),original.facing(),original.texture(),original.settings(),original.rows(),original.windows(),original.ready(),client.suppressed(),client.awaitingChunk(),NativeSegmentedTerrainSnapshot.eligible(original),client.headerTerrain(),original.artwork());
-        var bounds=found!=null&&found.source==source?found.bounds:NativeSegmentedRenderer.bounds(tile.getBlockPos(),visual);
+        else visual=new NativeSegmentedVisual(original.width(),original.height(),original.column(),tile.facing(),original.texture(),original.settings(),original.rows(),original.windows(),original.ready(),client.suppressed(),client.awaitingChunk(),NativeSegmentedTerrainSnapshot.eligible(original),client.headerTerrain(),original.artwork());
+        var bounds=found!=null&&found.source==source&&found.visual.facing()==tile.facing()?found.bounds:NativeSegmentedRenderer.bounds(tile.getBlockPos(),visual);
         found=new Presentation(source,client,visual,bounds,found!=null&&found.source==source?found.motion:null);PRESENTATIONS.put(tile,found);
         int retained=0;for(var value:PRESENTATIONS.values())retained+=value.bytes();var iterator=PRESENTATIONS.entrySet().iterator();while(retained>BUDGET&&iterator.hasNext()){var removed=iterator.next();retained-=removed.getValue().bytes();iterator.remove();}
         return found;
@@ -48,8 +48,9 @@ public final class NativeSegmentedBlockRenderer implements BlockEntityRenderer<N
         if(tile.clientTerrain().suppressed()&&tile.settings().direction==0&&tile.settings().position==0)return;
         var p=presentation(tile);if(p==null||!p.visual.ready())return;var pos=tile.getBlockPos();
         for(int row=0;row<p.visual.height();row++){lights[row]=LevelRenderer.getLightColor(tile.getLevel(),lightPos.set(pos.getX(),pos.getY()-row,pos.getZ()));lightSamples++;}draws++;
-        if(tile.inert()||p.visual.awaitingChunk())NativeSegmentedRenderer.renderClosed(p.visual,poses,buffers,lights,overlay);
-        else NativeSegmentedRenderer.render(p.visual,observe(tile,p),tile.getLevel(),pos,poses,buffers,lights,overlay);
+        var gates=NativeSegmentedGateContexts.prepare(tile);
+        if(tile.inert()||p.visual.awaitingChunk())NativeSegmentedRenderer.renderClosed(p.visual,poses,buffers,lights,overlay,gates.context,gates.leftPose(),gates.rightPose());
+        else NativeSegmentedRenderer.render(p.visual,observe(tile,p),tile.getLevel(),pos,poses,buffers,lights,overlay,gates.context,gates.leftPose(),gates.rightPose());
     }
     @Override public boolean shouldRenderOffScreen(NativeSegmentedDoorEntity tile){return tile.topOffset()==0;}
     @Override public int getViewDistance(){return 256;}

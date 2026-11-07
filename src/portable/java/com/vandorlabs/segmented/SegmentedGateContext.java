@@ -15,6 +15,7 @@ public final class SegmentedGateContext {
         if((compatible&1)!=0&&(column==0||left==null)||(compatible&2)!=0&&(column==width-1||right==null))throw new IllegalArgumentException("Gate context neighbour boundary");
     }
     private static int[] styles(int[] source,int height){if(source==null||source.length!=height)throw new IllegalArgumentException("Gate row style count");int[] copy=source.clone();for(int style:copy)if(style< -1||style>2)throw new IllegalArgumentException("Gate row style");return copy;}
+    public int height(){return height;}
     public int kind(int row){return own[row];}
     public int retainedBytes(){return 128+16+own.length*4+(left==null?0:16+left.length*4)+(right==null?0:16+right.length*4);}
     public static final class Scratch {

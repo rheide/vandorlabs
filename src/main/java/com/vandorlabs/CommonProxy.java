@@ -11,6 +11,8 @@ import net.minecraft.world.World;
 public class CommonProxy {
     public double segmentedSelectionPose(com.vandorlabs.segmented.SegmentedDoorTile tile){return tile.pose(0);}
     public void segmentedAppearanceChanged(com.vandorlabs.segmented.SegmentedDoorTile tile){}
+    public void segmentedGateMasks(com.vandorlabs.segmented.SegmentedDoorTile root,double pose,int[] out){com.vandorlabs.segmented.SegmentedDoorGateRays.masks(root,pose,out);}
+    public int segmentedRenderFlags(com.vandorlabs.segmented.SegmentedDoorTile tile){return -1;}
     public boolean canSampleDisplayPower(){return true;}
     public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}

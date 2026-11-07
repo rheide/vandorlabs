@@ -25,7 +25,7 @@ public final class NativeSegmentedChunks {
     private static ClientLevel world;private static long revision,bakeGeneration,requests,publications,submissions,completions,samples;
     public record Stats(long requests,long publications,long submissions,long completions,long memberSamples,int pendingColumns,int knownColumns,int sections){}
     public static Stats stats(){return new Stats(requests,publications,submissions,completions,samples,ACTIVE.size(),KNOWN.size(),SECTIONS.size());}
-    public static void changed(NativeSegmentedDoorEntity tile){synchronized(QUEUED){QUEUED.add(tile);requests++;}}
+    public static void changed(NativeSegmentedDoorEntity tile){NativeSegmentedGateContexts.changed(tile);synchronized(QUEUED){QUEUED.add(tile);requests++;}}
     private static boolean queued(){synchronized(QUEUED){return !QUEUED.isEmpty();}}
     private static NativeSegmentedDoorEntity loaded(BlockPos pos){if(world==null)return null;var chunk=world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);var raw=chunk==null?null:chunk.getBlockEntities().get(pos);return raw instanceof NativeSegmentedDoorEntity tile&&!tile.isRemoved()&&tile.getLevel()==world?tile:null;}
     private static final class Column {
