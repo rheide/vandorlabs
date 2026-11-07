@@ -578,7 +578,7 @@ PYIMAGE
         exit 0
     fi
     if [ "$TARGET" = vehicle-safe-park ]; then
-        if [ "${VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_ONLY:-}" = 1 ]; then grep -q "vehicle-safe-park-arm PASS" "$RUN_OUT/client.log"; else grep -q "vehicle-safe-park PASS" "$RUN_OUT/client.log"; fi
+        if [ "${VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_CURRENT:-}" = 1 ]; then grep -q "vehicle-safe-park-arm-current PASS" "$RUN_OUT/client.log"; elif [ "${VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_ONLY:-}" = 1 ]; then grep -q "vehicle-safe-park-arm PASS" "$RUN_OUT/client.log"; else grep -q "vehicle-safe-park PASS" "$RUN_OUT/client.log"; fi
         echo "Safe Park live checks passed: $RUN_OUT"
         exit 0
     fi
