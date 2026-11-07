@@ -25,3 +25,9 @@ task testArmGridTiles(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmGridTilesChecks'
  maxHeapSize = '512m'
 }
+
+task testCouplerArmConstraint(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath = files("$buildDir/portable-tests")
+ main = 'com.vandorlabs.physics.CouplerArmConstraintTest'
+}
