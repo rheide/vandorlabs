@@ -10,8 +10,8 @@ public class NativeRampJournalPart extends BlockEntity {
  private UUID operation;private BlockPos root=BlockPos.ZERO;private boolean inert;private CompoundTag retained=new CompoundTag();
  public NativeRampJournalPart(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);}
  public final void install(UUID operation,BlockPos root){this.operation=java.util.Objects.requireNonNull(operation);this.root=root.immutable();inert=false;NativeRampReservations.add(this);}
- public final boolean ownershipKnown(){return !inert&&operation!=null;}
- public final boolean belongs(UUID id,BlockPos owner){return !inert&&id.equals(operation)&&root.equals(owner);}
+ public boolean ownershipKnown(){return !inert&&operation!=null;}
+ public final boolean belongs(UUID id,BlockPos owner){return ownershipKnown()&&id.equals(operation)&&root.equals(owner);}
  public final UUID operationId(){return ownershipKnown()?operation:null;}
  public final BlockPos controller(){return root;}
  /** Real geometry implementations override this with an immutable world-space projection. */
