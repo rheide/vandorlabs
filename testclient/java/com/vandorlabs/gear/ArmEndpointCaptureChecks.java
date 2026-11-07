@@ -1,0 +1,45 @@
+package com.vandorlabs.gear;
+
+import com.vandorlabs.coupler.*;
+import com.vandorlabs.gear.core.GearMotion;
+import com.vandorlabs.vehicle.*;
+import java.lang.reflect.*;
+import java.util.*;
+import net.minecraft.block.BlockSlab;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.init.Blocks;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.*;
+import net.minecraft.util.math.*;
+import net.minecraft.world.World;
+import net.minecraftforge.common.capabilities.*;
+
+/** Actual endpoint wrapper over frozen local snapshots; capability serialization is deliberately divergent. */
+public final class ArmEndpointCaptureChecks {
+    private static int checks,profiles,unsupported,serializations;
+    private static final ResourceLocation CAP=new ResourceLocation("endpoint_probe:external");
+    private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Arm typed endpoint capture: "+why);}
+    public static final class Provider implements ICapabilitySerializable<NBTTagCompound>{
+        public boolean hasCapability(Capability<?> capability,EnumFacing face){return false;}
+        public <T>T getCapability(Capability<T> capability,EnumFacing face){return null;}
+        public NBTTagCompound serializeNBT(){serializations++;NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Representation",47);return tag;}
+        public void deserializeNBT(NBTTagCompound tag){}
+    }
+    private static void set(GearTileEntity arm,String key,Object value)throws Exception{Field field=GearTileEntity.class.getDeclaredField(key);field.setAccessible(true);field.set(arm,value);}
+    public static void main(String[] args)throws Exception{
+        net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(GearTileEntity.class,new ResourceLocation("vandorlabs:modular_gear"));net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileCoupler.class,new ResourceLocation("vandorlabs:square_coupler"));BlockCoupler full=new BlockCoupler();BlockCouplerSlab slab=new BlockCouplerSlab();net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(full);net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(slab);for(GearBlock block:new GearBlock[]{GearRegistry.GEAR_SWING_ARM,GearRegistry.LARGE_GEAR_SWING_ARM})net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(block);
+        Field uf=sun.misc.Unsafe.class.getDeclaredField("theUnsafe");uf.setAccessible(true);MinecraftServer server=(MinecraftServer)((sun.misc.Unsafe)uf.get(null)).allocateInstance(net.minecraft.server.dedicated.DedicatedServer.class);for(Field field:MinecraftServer.class.getDeclaredFields())if(field.getType()==Thread.class){field.setAccessible(true);field.set(server,Thread.currentThread());}Constructor<?> parentFactory=Class.forName("com.vandorlabs.client.ArmParkingSourceChecks$Parent").getDeclaredConstructor(MinecraftServer.class);parentFactory.setAccessible(true);World parent=(World)parentFactory.newInstance(server);
+        Method armFactory=ArmParkingCandidatesChecks.class.getDeclaredMethod("arm",GearMotion.Mode.class,EnumFacing.class,int.class,GearMotion.Direction.class,int.class,double.class,double.class,ArmPayload.class);armFactory.setAccessible(true);Constructor<ArmPayload> make=ArmPayload.class.getDeclaredConstructor(VehicleStructure.class,BlockPos.class,boolean.class,BlockPos.class);make.setAccessible(true);Field dispatcher=TileEntity.class.getDeclaredField("capabilities");dispatcher.setAccessible(true);Method placement=ArmPayload.class.getDeclaredMethod("rotatedPlacement",GearTileEntity.class,double.class);placement.setAccessible(true);
+        for(GearMotion.Mode mode:new GearMotion.Mode[]{GearMotion.Mode.ROTATE,GearMotion.Mode.ROTATE_LEVEL})for(EnumFacing mount:EnumFacing.values())for(int size:new int[]{1,2})for(GearMotion.Direction direction:GearMotion.Direction.values())for(double progress:new double[]{0,1}){
+            GearTileEntity prototype=(GearTileEntity)armFactory.invoke(null,mode,mount,size,direction,2,90D,0D,null);set(prototype,"progress",progress);set(prototype,"rotatePayload",mode==GearMotion.Mode.ROTATE);ArmPayload.Endpoint prototypeEndpoint=ArmPayload.endpoint(prototype,progress);if(prototypeEndpoint==null){unsupported++;continue;}BlockPos tip=prototype.localCell(0,-2,0),offset=tip.subtract(prototype.getPos());ArmPayload old=make.newInstance(VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null))),offset,false,offset);ArmGridPlacement oldNative=old.gridPlacement(prototype,progress);NBTTagCompound oldTag=oldNative.payloadTag();NBTTagCompound extra=new NBTTagCompound();extra.setByteArray("UnknownHeader",new byte[]{1,7,-5});oldTag.setTag("FutureEndpointData",extra);set(prototype,"payload",ArmPayload.read(oldTag));BlockPos nativeAt=prototypeEndpoint.placed(tip);
+            for(boolean half:new boolean[]{false,true}){
+                NBTTagCompound head=new NBTTagCompound();head.setString("id","vandorlabs:square_coupler");head.setInteger("x",nativeAt.getX());head.setInteger("y",nativeAt.getY());head.setInteger("z",nativeAt.getZ());head.setString("UnknownOwn","keep");head.setUniqueId("CouplerControlIdentity",new UUID(145,627));NBTTagCompound caps=new NBTTagCompound(),external=new NBTTagCompound();external.setInteger("Representation",22);caps.setTag(CAP.toString(),external);caps.setByteArray("OtherUnloadedProvider",new byte[1024]);head.setTag("ForgeCaps",caps);
+                IBlockState state=(half?slab:full).getDefaultState().withProperty(BlockCoupler.FACING,EnumFacing.NORTH).withProperty(BlockCoupler.LOCKED,true);if(half)state=state.withProperty(BlockCouplerSlab.HALF,BlockSlab.EnumBlockHalf.TOP);GearBlock block=size==1?GearRegistry.GEAR_SWING_ARM:GearRegistry.LARGE_GEAR_SWING_ARM;NBTTagCompound root=new NBTTagCompound();root.setString("id","vandorlabs:modular_gear");root=prototype.currentData(root);root.setString("FutureArmData","keep");VehicleStructure source=VehicleStructure.display(Arrays.asList(new VehicleStructure.Cell(prototype.getPos(),block.getDefaultState(),root),new VehicleStructure.Cell(nativeAt,state,head)));VehicleWorld view=new VehicleWorld(parent,source);GearTileEntity arm=(GearTileEntity)view.tiles.get(prototype.getPos());TileEntity tile=view.tiles.get(nativeAt);need(arm!=null&&tile instanceof TileCoupler,"actual cached typed owner/tile");dispatcher.set(tile,new CapabilityDispatcher(Collections.singletonMap(CAP,new Provider()),null));NBTTagCompound before=source.write();int serialBefore=serializations;ArmPayload.Endpoint endpoint=ArmPayload.endpoint(arm,progress);need(endpoint!=null,"source endpoint remains representable");ArmGridMapping geometry=old.gridMapping(prototype,progress);boolean allowed=!half||Math.abs(geometry.basis()[4])==1;ArmPayload captured=null;try{captured=endpoint.capture(null);}catch(IllegalArgumentException failure){need(!allowed,"supported typed endpoint refused: "+mode+" "+mount+" size"+size+" "+direction+" p"+progress+" "+failure);}
+                need((captured!=null)==allowed,"exact slab/native rotation admission");need(serializations==serialBefore&&source.write().equals(before),"capture never serializes synthetic caps or changes frozen source");if(captured==null){unsupported++;continue;}ArmGridPlacement recaptured=captured.gridPlacement(arm,progress);need(recaptured!=null&&recaptured.cells.size()==1&&recaptured.cells.get(0).pos.equals(nativeAt)&&recaptured.cells.get(0).state==state&&recaptured.cells.get(0).tileData().equals(head),"inverse capture and native publication preserve current state/full opaque NBT");need(captured.write().getCompoundTag("FutureEndpointData").equals(extra)&&root.getString("FutureArmData").equals("keep"),"unknown payload/root envelopes preserved");ArmPayload restored=ArmPayload.read(captured.write());need(restored.materialized(),"typed endpoint roundtrips materialized");Object target=placement.invoke(captured.capturedCopy(),arm,progress);need(target!=null,"next rotated placement accepts same typed mapping");Field targetBlocks=target.getClass().getDeclaredField("blocks"),targetBasis=target.getClass().getDeclaredField("basis");targetBlocks.setAccessible(true);targetBasis.setAccessible(true);ArmGridTiles.validate(captured.blocks,(VehicleStructure)targetBlocks.get(target),(int[])targetBasis.get(target));need(serializations==serialBefore,"restoration preparation does not serialize native/synthetic capability");profiles++;
+            }
+        }
+        need(profiles>100&&unsupported>0,"all mounts/sizes/modes plus unsupported native slab/fractional domains exercised");System.out.println("Arm endpoint capture Source PASS profiles="+profiles+" unsupported="+unsupported+" checks="+checks+" all6mounts regular/Large bothpayloadmodes/fourfolds/native inverse/restoration/readwrite/unknown envelopes/actual cap divergence/no serializers; no gameplay transaction bypass claimed");
+    }
+}
