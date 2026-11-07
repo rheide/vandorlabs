@@ -35,14 +35,19 @@ public final class VehicleRotation {
         TaxiModularGear.requireParkable(craft);
         craft.signals.persist();
         TaxiTelescopicGear.requireParkable(craft);
-        int turns=turns(craft.rotationYaw);VehicleStructure placed=craft.rotatedSnapshot(turns);
-        double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
-        Plan parking=VehicleLandingGear.parking(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
+        int turns=turns(craft.rotationYaw);Plan parking;
+        if(VehicleArmParkingCurrent.hasPayload(craft)){
+            craft.articulation.requireArmParkable();parking=VehicleArmParkingCurrent.get(craft).plan(craft,turns);
+        }else{
+            VehicleStructure placed=craft.rotatedSnapshot(turns);
+            double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
+            parking=VehicleLandingGear.parking(placed,new BlockPos(Math.round(centerX-placed.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-placed.bounds.maxZ/2)));
+        }
         // Retraction can lower the chassis onto the ground. Keep its support height
         // when extending the restored feet, then validate the raised hull normally.
         VehicleCollision extended=VehicleTransfer.geometry(craft.world,parking.structure);
         int supportedY=(int)Math.round(craft.posY+craft.collision.bounds.minY-extended.bounds.minY);
-        return new Plan(parking.structure,new BlockPos(parking.origin.getX(),Math.max(parking.origin.getY(),supportedY),parking.origin.getZ()));
+        return new Plan(parking.structure,new BlockPos(parking.origin.getX(),Math.max(parking.origin.getY(),supportedY),parking.origin.getZ()),parking.seatPositions);
     }
     /** Align a copy of the canonical body layout, retaining the live articulated pose for rollback. */
     static Plan safePlan(EntityGroundVehicle craft,int turns) {

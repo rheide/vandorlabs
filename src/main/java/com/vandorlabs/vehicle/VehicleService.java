@@ -78,7 +78,7 @@ public final class VehicleService {
             validateParking(player,craft,origin,true,false);
             int turns=VehicleRotation.turns(craft.rotationYaw),width=(int)craft.structure.bounds.maxX,depth=(int)craft.structure.bounds.maxZ;
             BlockPos selected=craft.taxiReturnSeat==null?craft.structure.seat:craft.taxiReturnSeat;
-            BlockPos seat=origin.add(VehicleRotation.cell(selected,width,depth,turns)).add(plan.structure.seat.subtract(VehicleRotation.cell(craft.structure.seat,width,depth,turns)));
+            BlockPos seat=plan.seatPositions.containsKey(selected)?origin.add(plan.seatPositions.get(selected)):origin.add(VehicleRotation.cell(selected,width,depth,turns)).add(plan.structure.seat.subtract(VehicleRotation.cell(craft.structure.seat,width,depth,turns)));
             VehicleTransfer.park(world,craft,origin,player,false);
             if(distance(player,craft.getEntityBoundingBox())<=64){
                 AxisAlignedBB seatArea=new AxisAlignedBB(seat).expand(0,1,0);Vec3d near=new Vec3d(seat).addVector(.5,0,.5);

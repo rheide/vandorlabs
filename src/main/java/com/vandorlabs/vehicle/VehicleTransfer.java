@@ -345,7 +345,8 @@ public final class VehicleTransfer {
     public static void park(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated)throws Exception {
         if(entity.hover && !VehicleFlight.canParkHover(entity))throw new IOException("Extend the landing gear and descend within three blocks of ground before parking.");
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
-        parkPrepared(world,entity,origin,player,keepSeated,VehicleRotation.plan(entity).structure,VehicleRotation.turns(entity.rotationYaw));
+        VehicleRotation.Plan prepared=VehicleRotation.plan(entity);
+        parkPrepared(world,entity,origin,player,keepSeated,prepared.structure,VehicleRotation.turns(entity.rotationYaw),prepared.seatPositions);
     }
     /** Same durable ownership transfer, with a separately validated immutable destination recipe. */
     static void parkPrepared(WorldServer world,EntityGroundVehicle entity,BlockPos origin,net.minecraft.entity.player.EntityPlayer player,boolean keepSeated,VehicleStructure placed,int parkingTurns)throws Exception {

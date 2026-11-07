@@ -188,6 +188,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public int acknowledgedInput(){return serverInputs.acknowledged();}
     private byte[] encoded;
     private VehicleStructure rotationSource,rotatedSnapshot;private int rotationTurns;
+    VehicleArmParkingCurrent armParkingPreview;
     public VehicleStructure rotatedSnapshot(int turns) {
         articulation.requireParkable();
         if(turns==0)return structure;
