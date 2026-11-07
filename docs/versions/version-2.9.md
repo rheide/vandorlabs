@@ -79,3 +79,5 @@ Experimental native Lights now prepare fixed facing and atlas coordinates once p
 Forge Glass and Porthole UV-cache hits now reuse scalar lookups without allocating temporary strings or boxed values. The cache also bounds retained geometry by bytes and retires old atlas entries on reload and world unload.
 
 Each Segmented Door block can now select its own artwork in both versions. Open the block’s dedicated dialog and choose **Artwork: This segment**; **All segments** replaces the linked door’s artwork and clears local overrides. **Use shared artwork** restores inheritance for that block. Existing saves retain their shared artwork, and configured picks and copied settings retain individual choices.
+
+Forge Taxi/Hover double-jump retains its existing seven-tick gesture and server requirements. Pending taps now clear across dialogs, driver/vehicle changes and world changes, preventing a later single press from toggling modes. The focused actual-client check covers both directions, held/single input, context transitions and refused requests. Native Vehicle Mode remains deferred.
