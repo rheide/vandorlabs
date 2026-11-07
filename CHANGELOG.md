@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable Programmable Storage in the experimental native build with its original recipe, independent 27-slot inventory, dedicated material editor, configured items and source-matched Cabinet artwork. Mining keeps contents separate from the configured block item.
+
 - Enable ordinary Programmable Glass in the experimental native build with original recipes, configured variants, dedicated editing, two-sided fluids and source-matched world/item artwork. Canopy and cockpit glass remain in conversion.
 
 - Enable standalone Card and Data Chip readers in the experimental native build with source-matched mounts, dedicated editing, inventory/hopper behavior and credential recovery.

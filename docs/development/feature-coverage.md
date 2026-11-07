@@ -24,7 +24,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Triggers, buttons, rockers, levers and throttles | partial (Trigger and mounted control families) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (card/chip readers enabled; programmer pending) | unimplemented | non-vehicle first |
-| Programmable storage | pending | unimplemented | non-vehicle first |
+| Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
 | Constructors, matter infuser, battery and tank | pending | unimplemented | non-vehicle first |
 | Navigation tables | pending | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |

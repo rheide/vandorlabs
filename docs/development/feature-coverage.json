@@ -585,20 +585,26 @@
       "id": "storage",
       "label": "Programmable storage",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "programmable_storage"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "inventory-preserving native menu/storage",
-        "face materials and storage model mapping",
-        "custom materials and configuration",
-        "live parity"
+        "Broader copy-tool and optional-component integration, resource-pack and final native release acceptance"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_block_ids": [
+        "programmable_storage"
+      ],
+      "implemented": [
+        "Canonical programmable_storage block/item/entity, original chest-plus-programmable-block recipe and configured Survival placement preserve the released horizontal metadata and block properties.",
+        "Independent 27-slot inventory, vanilla three-row menu, all-face item-handler capability and comparator behavior; malformed snapshots retain inert recovery ownership without copying contents into normal configured items.",
+        "Dedicated material editor, Configurizer and ordinary access share the guarded native configuration path, with bounded packets and stale-window checks.",
+        "Source-matched Cabinet and material world/item models, both authored content-aspect reference generations, sixteen padded icons, reload-safe caches and a zero-allocation warmed item selector batch.",
+        "Actual canonical dedicated and client checks cover placement consumption, proper/wrong-tool and Creative mining, separately owned contents, inventory automation, dialogs, rendering and process restart."
+      ]
     },
     {
       "id": "machines",
