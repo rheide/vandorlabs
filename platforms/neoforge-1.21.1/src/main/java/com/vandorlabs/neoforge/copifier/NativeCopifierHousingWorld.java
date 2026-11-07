@@ -38,6 +38,13 @@ public final class NativeCopifierHousingWorld {
             NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
         }
     }
+    private record Screen(com.vandorlabs.neoforge.screen.NativeScreenEntity tile) implements Target {
+        public CompoundTag capture(){return NativeCopifierScreenEdit.capture(tile);}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            try{if(!NativeCopifierScreenEdit.prepare(tile.copiedSettings(),values).applicable())return false;}catch(IllegalArgumentException malformed){return false;}
+            NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
+        }
+    }
     private record Trapdoor(com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity tile) implements Target {
         public CompoundTag capture(){return NativeCopifierTrapdoorEdit.capture(tile.copiedState());}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -108,6 +115,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)return !screen.inert()&&screen.isChannelMemberActive()?new Screen(screen):null;
         if(tile instanceof com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity trapdoor)return trapdoor.copiedAvailable()?new Trapdoor(trapdoor):null;
         if(tile instanceof com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity reader)return !reader.inert()&&reader.isChannelMemberActive()?new Reader(reader):null;
         if(tile instanceof com.vandorlabs.neoforge.segmented.NativeSegmentedDoorEntity segmented)return segmented.copiedAvailable()?new Segmented(segmented):null;

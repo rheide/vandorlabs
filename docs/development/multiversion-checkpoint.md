@@ -417,3 +417,8 @@ Placed casing and journal rendering pass a dispatched-BER disabled negative (125
 ### Trapdoor copied targets
 
 Regular and diagonal Trapdoors now pass common tool capture/Connected/Undo with Source conditional setter order, selected-only diagonal hinge choices and staged linked-leaf publication. References cover 768 single-leaf cases and 288 actually formed groups. Native checks pass 3,722 pure assertions, 6,497 single-leaf write/three restart assertions and 12,333 formed-group assertions; actual Survival clients pass 26 regular/22 diagonal checks. Opaque recovery is retained and every affected leaf is permission-checked. See [Trapdoor copied settings](native-copifier-trapdoor.md) for the independent references, Source unlink/undo scope and remaining public activation boundary. The full release gate remains deferred.
+
+
+### Screen copied targets
+
+All seven canonical Screen roles now use the common private Copifier target service. The complete 5,866-case Source matrix passes through shared installed-target capture/application, retaining 64,576 write/21 restart assertions and exact saved row runtime, chip ownership, page and privacy checks. The actual Survival client captures a configured Half Console, enables Connected in the shared editor, applies slider/toggle rows, surface/layout and channel choices to two targets, and restores their original choices with the real Undo button (23 client checks). Each target keeps its distinct embedded journal and page, and physical-reader data never enters the clipboard. Existing row-action/transmission regression remains passing (327 write/25 restart). Public tool activation and the full release gate remain deferred.
