@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.programmer;
 import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
 import com.vandorlabs.neoforge.screen.NativeChipJournal;
 import com.vandorlabs.programmer.JournalText;
+import com.vandorlabs.programmer.JournalOverlay;
 import java.util.*;
 import net.minecraft.nbt.*;
 import net.minecraft.world.item.ItemStack;
@@ -12,7 +13,8 @@ public final class NativeProgrammerJournalView {
     public final JournalText journal;
     public final int page;
     private final NativeProgrammerDraft contents;
-    private NativeProgrammerJournalView(JournalText journal,NativeProgrammerDraft contents,int page){this.journal=Objects.requireNonNull(journal);this.contents=contents;this.page=Math.max(0,Math.min(journal.pages.size()-1,page));}
+    private final JournalOverlay.Contents overlay;
+    private NativeProgrammerJournalView(JournalText journal,NativeProgrammerDraft contents,int page){this.journal=Objects.requireNonNull(journal);this.contents=contents;this.page=Math.max(0,Math.min(journal.pages.size()-1,page));overlay=new JournalOverlay.Contents(true,false,0,"",journal.title,journal.source,journal.pages.get(this.page).lines,this.page,journal.pages.size());}
     private static NativeProgrammerJournalView of(String source,NativeProgrammerDraft contents){return new NativeProgrammerJournalView(JournalText.layout(contents.title(),source,contents.entries()),contents,0);}
     public static NativeProgrammerJournalView prepare(ItemStack input,ItemStack output,NativeProgrammerDraft draft){
         if(draft.vehicle()||NativeChipJournal.vehicle(input)||NativeChipJournal.vehicle(output))return null;
@@ -22,6 +24,7 @@ public final class NativeProgrammerJournalView {
         return new NativeProgrammerJournalView(prepared,new NativeProgrammerDraft(false,true,prepared.title,pages),0);
     }
     public NativeProgrammerJournalView withPage(int page){int bounded=Math.max(0,Math.min(journal.pages.size()-1,page));return bounded==this.page?this:new NativeProgrammerJournalView(journal,contents,bounded);}
+    public JournalOverlay.Contents overlay(){return overlay;}
     public CompoundTag write(){var result=new CompoundTag();contents.write(result);result.putString("Source",journal.source);result.putInt("Page",page);return result;}
     public static NativeProgrammerJournalView read(CompoundTag tag){
         for(String key:tag.getAllKeys())if(!Set.of("Source","Page","Journal","Title","Pages").contains(key))throw new IllegalArgumentException("Unknown Programmer journal field");
