@@ -34,6 +34,8 @@ public final class NativeStorageModel extends BakedModelWrapper<BakedModel> {
    var material=set==null?general.get(index):matched?set.face(local):set.front;var built=List.of(NativeHousingQuads.cube(facing,MESH_FACE[local],state.layout,material));
    synchronized(meshes){var raced=meshes.getAndMoveToLast(key);if(raced!=null)return raced;while((meshes.size()+1L)*FACE_BYTES>MESH_BUDGET)meshes.removeFirst();meshes.putAndMoveToLast(key,built);return built;}
   }
+  int renderedChoice(int choice){int stored=ModernFinishCatalog.storedChoice(choice);return artwork.containsKey(stored)||general.containsKey(stored)?stored:0;}
+  ProgrammableModel.MaterialSnapshot itemMaterial(int choice,int local){var set=artwork.get(choice);return set==null?general.get(choice):set.face(local);}
   public long cacheBytes(){synchronized(meshes){return 8192L+meshes.size()*FACE_BYTES;}}
   public int cachedFaces(){synchronized(meshes){return meshes.size();}}
  }
