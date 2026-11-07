@@ -117,3 +117,11 @@ task exportGlassEditorWireReference(type: JavaExec) {
     main = 'com.vandorlabs.client.GlassEditorWireLegacyOracle'
     args file('build/test-artifacts/glass-editor-wire-forge.jsonl').absolutePath
 }
+
+task exportGlassFilledContactReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassFilledContactLegacyOracle'
+    args file('build/test-artifacts/glass-filled-contact-forge.jsonl').absolutePath
+}
