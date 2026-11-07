@@ -35,7 +35,7 @@ public final class NativeEmbeddedChipReader {
         if(!level.getServer().isSameThread())throw new IllegalStateException("Embedded chip action requires owning server thread");
         if(!com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(level)||owner.isRemoved()||!level.hasChunkAt(owner.getBlockPos())||level.getBlockEntity(owner.getBlockPos())!=owner||player.serverLevel()!=level||!host.usable(player))return false;
         var held=player.getItemInHand(hand);
-        if(held.isEmpty()&&!reader.occupied())return true;
+        if(held.isEmpty()&&!reader.occupied()){prepareJournal(net.minecraft.world.item.ItemStack.EMPTY);host.changed();player.getInventory().setChanged();player.inventoryMenu.broadcastChanges();return true;}
         if(!held.isEmpty()){
             if(reader.occupied()||!reader.accepts(held))return false;
             NativeCredentialItems.writeStack(NativeCredentialItems.ownedCopy(held).copyWithCount(1),level.registryAccess());

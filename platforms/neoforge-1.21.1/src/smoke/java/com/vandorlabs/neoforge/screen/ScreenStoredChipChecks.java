@@ -6,7 +6,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.server.level.ServerLevel;
 
-/** Hidden physical ownership persists privately while selected-chip geometry remains refused. */
+/** Hidden physical ownership persists privately with a separate selected-surface acceptance path. */
 final class ScreenStoredChipChecks {
     private static int checks;
     private static final BlockPos BASE=new BlockPos(5100,100,5100);
@@ -19,7 +19,7 @@ final class ScreenStoredChipChecks {
         for(ScreenFamily family:ScreenFamily.values()){var pos=BASE.east(family.ordinal()*3);level.getChunkAt(pos);
             if(!read){level.setBlock(pos,blocks.get(family).defaultBlockState(),2);var tile=(NativeScreenEntity)level.getBlockEntity(pos);var raw=original();var input=raw.copy();tile.loadWithComponents(raw,level.registryAccess());need(raw.equals(input),"load input defensive");verify(tile,level);
                 var choices=NativeScreenItemSettings.choices(tile,level.registryAccess());var prepared=NativeScreenItemSettings.prepare(tile.getType(),pos,tile.getBlockState(),family,choices,level.registryAccess());prepared.snapshot().getCompound("ScreenChipReader").remove("InsertedToken");var copy=new NativeScreenEntity(tile.getType(),pos,tile.getBlockState(),family,NativeScreenCatalog.INSTANCE);NativeScreenItemSettings.install(copy,prepared);verify(copy,level);
-                for(int failure=0;failure<3;failure++){var bad=original();if(failure==0)bad.getCompound("ScreenChipReader").putString("FutureOwner","opaque");else if(failure==1)bad.getCompound("ScreenChipReader").getCompound("InsertedToken").putString("id","future:unresolved_chip");else bad.putInt("PrimarySurfaceTexture",-4);var before=bad.copy();copy.loadWithComponents(bad,level.registryAccess());need(copy.inert()&&copy.saveWithoutMetadata(level.registryAccess()).equals(before),"unsupported reader/surface remains one original recovery owner");need(NativeScreenItemSettings.choices(copy,level.registryAccess()).contains(NativeScreenItemSettings.RECOVERY),"unsupported owner uses recovery item envelope");}
+                for(int failure=0;failure<3;failure++){var bad=original();if(failure==0)bad.getCompound("ScreenChipReader").putString("FutureOwner","opaque");else if(failure==1)bad.getCompound("ScreenChipReader").getCompound("InsertedToken").putString("id","future:unresolved_chip");else bad.putInt("PrimarySurfaceTexture",-3);var before=bad.copy();copy.loadWithComponents(bad,level.registryAccess());need(copy.inert()&&copy.saveWithoutMetadata(level.registryAccess()).equals(before),"unsupported reader/surface remains one original recovery owner");need(NativeScreenItemSettings.choices(copy,level.registryAccess()).contains(NativeScreenItemSettings.RECOVERY),"unsupported owner uses recovery item envelope");}
             }else verify((NativeScreenEntity)level.getBlockEntity(pos),level);
         }
         System.out.println("[vandorlabs][screen-stored-chip] "+(read?"read":"write")+" PASS checks="+checks+" seven roles/one physical item/private projection/prepared item/recovery");
