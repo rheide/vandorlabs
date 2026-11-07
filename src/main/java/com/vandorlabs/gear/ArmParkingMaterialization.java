@@ -46,7 +46,7 @@ public final class ArmParkingMaterialization {
         }
         public NBTTagCompound rootData(){return updatedRootCell.tileData();}
     }
-    /** Clones ownership data only for the selected candidate. No world access, factories or journals. */
+    /** Clones ownership data only for the selected candidate. No world publication, factories or journals. */
     public static Plan prepare(ArmParkingSource source,ArmParkingCandidates.Candidate selected){
         if(source==null||!source.stillOwned())throw new IllegalArgumentException("Arm parking source changed");
         Plan plan=compose(source.source(),source.owner(),selected,source.payload());
@@ -86,6 +86,9 @@ public final class ArmParkingMaterialization {
         }
         NBTTagCompound data=arm.currentData(root.tileData());data.setTag("ArmPayload",placement.payloadTag());
         if(stored.isEmpty())data.removeTag("ArmStoredSections");else data.setTag("ArmStoredSections",ArmStoredSections.detachedTag(stored));
+        // pose() derives the Extender curve from the current endpoint as well as this flag.
+        // Preserve that curve when installing an intermediate/retracted phase from deployed rest.
+        if(arm.mode()==GearMotion.Mode.EXTEND&&!arm.isSwingArmController()&&arm.assembly().kind()==GearTopology.FootKind.NONE&&arm.activeExtension()==arm.minimumExtension())data.setBoolean("ArmRetractingStroke",true);
         data.setDouble("GearProgress",selected.phase);data.setInteger("GearRevision",data.getInteger("GearRevision")+1);data.setBoolean("GearParkingHold",true);data.setBoolean("GearSignalKnown",false);data.setBoolean("GearBlocked",false);data.setString("GearError","");
         if(selected.phase==0||selected.phase==1)data.removeTag("SurfaceDepartureActive");
         ArmPayload.validateRootSyncBudget(data);
