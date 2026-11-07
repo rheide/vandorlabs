@@ -1,0 +1,23 @@
+package com.vandorlabs.neoforge.programmer;
+import com.google.gson.*;
+import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
+import com.vandorlabs.neoforge.inventory.NativeInventoryItems;
+import java.nio.file.*;
+import java.util.*;
+import net.minecraft.core.*;
+import net.minecraft.nbt.*;
+import net.minecraft.server.level.*;
+import net.minecraft.world.*;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.GameType;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+/** Installed native harvest engine versus actual released tool/member cases. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class ProgrammerMiningChecks {
+ private static boolean watch;private static final List<ItemStack> drops=new ArrayList<>();private static int checks;
+ private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Programmer mining: "+why);}
+ static void run(ServerLevel level,NativeProgrammerBlock block,ServerPlayer actor,BlockPos base)throws Exception{String path=System.getenv("VANDOR_PROGRAMMER_MINING_REFERENCE");if(path==null)throw new IllegalArgumentException("Missing frozen Source mining reference");var source=JsonParser.parseString(Files.readString(Path.of(path))).getAsJsonObject();var rows=source.getAsJsonArray("cases");need(rows.size()==64&&source.get("golden").getAsString().equals("cc2bd5a3955dd868fda4292bd02e2464bbc47111d4941baa5efb64dbecfb5884")&&java.util.HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(new Gson().toJson(rows).getBytes(java.nio.charset.StandardCharsets.UTF_8))).equals(source.get("golden").getAsString()),"unchanged actual Source coverage/digest");var templates=rows.get(0).getAsJsonObject().getAsJsonArray("credentials");need(templates.size()==3,"three actual Source inventory envelopes");int profile=0;for(var value:rows){var row=value.getAsJsonObject();int part=row.get("part").getAsInt(),mode=row.get("mode").getAsInt();var face=Direction.from3DDataValue(row.get("facing").getAsInt());var root=base.east(profile%8*6).south(profile/8*6);for(int member=0;member<4;member++){var pos=NativeProgrammerBlock.cell(root,face,member);level.getChunkAt(pos);level.setBlock(pos,block.defaultBlockState().setValue(NativeProgrammerBlock.FACING,face).setValue(NativeProgrammerBlock.PART,member),3);}var owner=(NativeProgrammerEntity)level.getBlockEntity(root);for(var template:templates){var raw=TagParser.parseTag(template.getAsString());int slot=Integer.parseInt(raw.getCompound("tag").getString("MiningOwner").substring(4));owner.setItem(slot,NativeInventoryItems.legacy(raw,level.registryAccess()));}actor.getInventory().clearContent();actor.setGameMode(mode==3?GameType.CREATIVE:GameType.SURVIVAL);actor.setPos(root.getX()+.5,root.getY(),root.getZ()-2);actor.setItemInHand(InteractionHand.MAIN_HAND,mode==0?new ItemStack(Items.WOODEN_PICKAXE):mode==2?new ItemStack(Items.WOODEN_SHOVEL):ItemStack.EMPTY);need(mode!=0||actor.hasCorrectToolForDrops(level.getBlockState(root)),"source wood-pick harvest tag installed");watch=true;drops.clear();boolean harvested;try{harvested=actor.gameMode.destroyBlock(NativeProgrammerBlock.cell(root,face,part));}finally{watch=false;}need(harvested==row.get("harvested").getAsBoolean(),"actual engine result profile="+profile);int plain=0;var actual=new ArrayList<CompoundTag>();for(var item:drops){if(item.is(block.asItem()))plain+=item.getCount();else{need(NativeProgrammerRules.kind(item)>0&&item.getCount()==1,"one complete physical credential per Source slot");actual.add(NativeCredentialItems.legacyCredentialData(item));}}need(plain==row.get("plain").getAsInt(),"Source plain drop count profile="+profile+" actual="+plain);for(var expected:row.getAsJsonArray("credentials"))need(actual.remove(TagParser.parseTag(expected.getAsString())),"complete Source credential envelope profile="+profile);need(actual.isEmpty(),"no extra credential owner");for(int member=0;member<4;member++){var cell=NativeProgrammerBlock.cell(root,face,member);need(level.getBlockState(cell).isAir()==row.getAsJsonArray("removed").get(member).getAsBoolean(),"Source whole-footprint mining profile="+profile+" part="+member);}profile++;}System.out.println("[vandorlabs][programmer-mining] PASS SourceCases="+profile+" checks="+checks+" actualGameMode/tools/creative/member/full-credential-envelopes");}
+ @SubscribeEvent public static void joined(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){if(watch&&event.getLevel() instanceof ServerLevel&&event.getEntity() instanceof ItemEntity item)drops.add(item.getItem().copy());}
+}
