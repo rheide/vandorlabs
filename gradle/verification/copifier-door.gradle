@@ -1,0 +1,8 @@
+task testCopifierDoorReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierDoorLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-door-source.json").absolutePath
+ maxHeapSize = '1g'
+}
