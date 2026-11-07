@@ -1,6 +1,5 @@
 package com.vandorlabs.neoforge.ramp;
 
-import com.mojang.serialization.MapCodec;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import java.util.*;
 import net.minecraft.core.*;
@@ -13,7 +12,6 @@ import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.*;
 import net.minecraft.world.level.block.state.properties.*;
-import net.minecraft.world.phys.shapes.*;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -28,7 +26,12 @@ public final class RampPartWorldFixture {
     public static BlockPos pos(int index){return index==9?BASE.east(14):BASE.offset(index%3*2,index/3*2,0);}
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
     public static final class Registration {
+        @SubscribeEvent public static void payload(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(!enabled())return;event.registrar("1").playToServer(CameraRequest.TYPE,net.minecraft.network.codec.StreamCodec.unit(new CameraRequest()),(packet,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player){player.teleportTo(player.serverLevel(),.5,80,-3.5,0,14.3F);System.out.println("[vandorlabs][ramp-part-world] outline camera PASS actual server teleport");}}));}
         @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled())return;var id=ResourceLocation.parse("vandorlabs:ramp_part_world_fixture");event.register(Registries.BLOCK,h->{BLOCK=new NativeRampPartBlock(BlockBehaviour.Properties.of(),()->TYPE);h.register(id,BLOCK);});event.register(Registries.BLOCK_ENTITY_TYPE,h->{TYPE=BlockEntityType.Builder.<NativeRampPartEntity>of((p,s)->new NativeRampPartEntity(TYPE,p,s),BLOCK).build(null);h.register(id,TYPE);});}
+    }
+    public record CameraRequest() implements net.minecraft.network.protocol.common.custom.CustomPacketPayload {
+        public static final Type<CameraRequest> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:ramp_part_world_camera"));
+        public Type<? extends net.minecraft.network.protocol.common.custom.CustomPacketPayload> type(){return TYPE;}
     }
     private static NativeRampPartData data(int index){
         var cell=pos(index);boolean stairs=index==2,slab=index==5,belt=index==3,moat=index==6,vertical=index==7,extend=index==8;

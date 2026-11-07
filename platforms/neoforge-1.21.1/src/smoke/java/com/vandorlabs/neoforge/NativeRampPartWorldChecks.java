@@ -2,6 +2,7 @@ package com.vandorlabs.neoforge;
 
 import com.mojang.blaze3d.vertex.*;
 import com.vandorlabs.neoforge.client.NativeRampPartBlockRenderer;
+import com.vandorlabs.neoforge.client.NativeRampPartOutline;
 import com.vandorlabs.neoforge.ramp.*;
 import java.util.*;
 import net.minecraft.client.*;
@@ -19,7 +20,8 @@ import net.neoforged.neoforge.client.event.*;
 /** Real placed private Parts/dispatcher/atlas, with strict disabled/reload controls and cost records. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativeRampPartWorldChecks {
-    private static int stage,ticks,wait,frames,checks,costFrames;
+    private static int stage,ticks,wait,frames,checks,costFrames,outlineFrames;
+    private static Object retiredWorld;
     private static String capture;
     private static volatile boolean captured;
     private static Object savedRenderers;
@@ -75,7 +77,7 @@ public final class NativeRampPartWorldChecks {
     }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
         if(!RampPartWorldFixture.enabled())return;var mc=Minecraft.getInstance();if(stage<12&&mc.screen instanceof net.minecraft.client.gui.screens.DisconnectedScreen)throw new AssertionError("Private Ramp server disconnected: inspect retained server log");if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
-        if(stage==12&&mc.level==null){need(NativeRampPartRenderer.currentBake().retainedBytes()==0,"backend retired on unload");System.out.println("[vandorlabs][ramp-part-world] client PASS checks="+checks+" placed hosts/actual packets/dispatcher/disabled/reload/unseen retirement/low update rate/moving cost/unload");mc.stop();stage=13;return;}
+        if(stage==12&&mc.level==null){need(NativeRampPartRenderer.currentBake().retainedBytes()==0,"backend retired on unload");need(NativeRampPartBlockRenderer.retainedBytes(retiredWorld)==0&&NativeRampPartVisualClock.retainedBytes(retiredWorld)==0,"all adapter and shared clock entries retired on actual world unload");retiredWorld=null;System.out.println("[vandorlabs][ramp-part-world] client PASS checks="+checks+" placed hosts/actual packets/dispatcher/disabled/reload/unseen retirement/low update rate/moving cost/unload");mc.stop();stage=13;return;}
         if(mc.level==null||mc.player==null||mc.gameMode==null)return;need(++ticks<1800,"timeout mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" position="+mc.player.position()+" screen="+mc.screen);
         switch(stage){
             case 0->{if(ticks<100||mc.gameMode.getPlayerMode()!=GameType.CREATIVE||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().isEmpty()||Math.abs(mc.player.getZ()+9)>.01||at(mc,9)==null)return;for(int i=0;i<10;i++)if(at(mc,i)==null||at(mc,i).publication()==null)return;for(int i=0;i<10;i++){var tile=at(mc,i);if(mc.level.getBrightness(net.minecraft.world.level.LightLayer.SKY,tile.getBlockPos())!=15){need(ticks<600,"settled opacity-zero owner sky light i="+i+" packed="+LevelRenderer.getLightColor(mc.level,tile.getBlockPos())+" lightBlock="+tile.getBlockState().getLightBlock(mc.level,tile.getBlockPos()));return;}}System.out.println("[vandorlabs][ramp-part-world] actual client PID="+ProcessHandle.current().pid());need(bridge(mc,at(mc,0))!=null,"actual private dispatcher renderer");NativeRampPartPacketChecks.run(mc);stationaryCost(mc);mc.options.hideGui=true;mc.options.fov().set(55);mc.options.bobView().set(false);mc.options.cloudStatus().set(CloudStatus.OFF);wait=ticks;stage=1;}
@@ -87,9 +89,19 @@ public final class NativeRampPartWorldChecks {
             case 6->{if(costFrames<60)return;endCost(mc,false);startCost(mc,true);stage=7;}
             case 7->{if(costFrames<60)return;endCost(mc,true);wait=ticks;stage=8;}
             case 8->{if(ticks<wait+20)return;capture("ramp-part-world-restored.png");stage=9;}
-            case 9->{if(!captured)return;mc.level.disconnect();mc.disconnect();stage=12;}
+            case 9->{if(!captured)return;net.neoforged.neoforge.network.PacketDistributor.sendToServer(new RampPartWorldFixture.CameraRequest());wait=ticks;stage=10;}
+            case 10->{if(ticks<wait+15||Math.abs(mc.player.getZ()+3.5)>.01||mc.gameMode.getPlayerMode()!=GameType.CREATIVE||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().isEmpty()||!mc.player.getOffhandItem().isEmpty())return;mc.options.hideGui=false;if(!(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit)||!hit.getBlockPos().equals(RampPartWorldFixture.pos(0)))return;outlineCost(mc,hit);captured=false;wait=ticks;stage=11;}
+            case 11->{if(ticks<wait+10||outlineFrames<5)return;if(capture==null&&!captured){capture("ramp-part-world-outline.png");return;}if(!captured)return;retiredWorld=mc.level;mc.level.disconnect();mc.disconnect();stage=12;}
         }
     }
+    private static void outlineCost(Minecraft mc,net.minecraft.world.phys.BlockHitResult hit){
+        var owner=at(mc,0);var geometry=owner.publication();var shape=geometry.collisionShape();
+        for(int i=0;i<20000;i++)NativeRampPartOutline.selected(owner);
+        var meter=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();meter.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().threadId(),before=meter.getThreadAllocatedBytes(thread);for(int i=0;i<100000;i++)NativeRampPartOutline.selected(owner);long bytes=meter.getThreadAllocatedBytes(thread)-before;need(bytes==0&&NativeRampPartOutline.selected(owner)==geometry.geometry().bounds(),"prepared outer highlight no union allocation="+bytes);
+        var event=new RenderHighlightEvent.Block(mc.levelRenderer,mc.gameRenderer.getMainCamera(),hit,DeltaTracker.ONE,POSE,BUFFERS);DISCARD.vertices=0;NativeRampPartOutline.render(event);need(event.isCanceled()&&DISCARD.vertices==24&&owner.publication()==geometry&&owner.publication().collisionShape()==shape,"one12edgebox24vertices leaves precise physical publication unchanged");
+        System.out.println("[vandorlabs][ramp-part-world] outline PASS selected100000allocated="+bytes+" actualLineVertices="+DISCARD.vertices);
+    }
+    @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST,receiveCanceled=true)public static void highlight(RenderHighlightEvent.Block event){if(!RampPartWorldFixture.enabled()||stage!=11||!event.getTarget().getBlockPos().equals(RampPartWorldFixture.pos(0)))return;need(event.isCanceled(),"actual gameplay highlight replaced by single outer box");outlineFrames++;}
     @SubscribeEvent public static void prepare(RenderLevelStageEvent event){if(!RampPartWorldFixture.enabled()||!measuring||event.getStage()!=RenderLevelStageEvent.Stage.AFTER_SKY)return;var mc=Minecraft.getInstance();var bridge=bridge(mc,measured);var meter=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();meter.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().threadId(),before=meter.getThreadAllocatedBytes(thread),start=System.nanoTime();bridge.render(measured,1,POSE,BUFFERS,0xf000f0,0);long nanos=System.nanoTime()-start,bytes=meter.getThreadAllocatedBytes(thread)-before;costFrames++;costBytes+=bytes;costPeak=Math.max(costPeak,bytes);costNanos+=nanos;}
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event){if(!RampPartWorldFixture.enabled()||capture==null)return;var mc=Minecraft.getInstance();if(mc.getOverlay()!=null){frames=0;return;}if(++frames<12)return;String name=capture;capture=null;Screenshot.grab(mc.gameDirectory,name,mc.getMainRenderTarget(),message->captured=true);}
 }

@@ -46,12 +46,13 @@ def main():
         cmd=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client))
         if args.xvfb:cmd=['xvfb-run','-a','-s','-screen 0 1280x720x24']+cmd;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
         run(cmd,client_log,'[vandorlabs][ramp-part-world] client PASS',env)
-        for marker in ['[vandorlabs][ramp-part-packets] PASS','stationary PASS','moving PASS belt=false','moving PASS belt=true']:check_log(client_log,marker)
+        for marker in ['[vandorlabs][ramp-part-packets] PASS','stationary PASS','moving PASS belt=false','moving PASS belt=true','outline PASS']:check_log(client_log,marker)
         deadline=time.monotonic()+30
         while '[vandorlabs][ramp-part-world] logout PASS' not in server_log.read_text(errors='replace'):
             if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Ramp Part logout missing')
             time.sleep(.1)
         check_log(server_log,'[vandorlabs][ramp-part-world] setup PASS')
+        check_log(server_log,'[vandorlabs][ramp-part-world] outline camera PASS')
     finally:
         stop(server)
         if server_pid:await_shutdown(saved,server_pid)
