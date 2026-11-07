@@ -26,6 +26,11 @@ final class Utility26FocusedChecks {
             }).get();
             splitLive=true;return false;
         }
+        if("true".equals(System.getenv("VANDOR_PROGRAMMER_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.programmer.ProgrammerRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),new BlockPos(500,104,120));return null;}).get();
+            com.vandorlabs.programmer.client.ProgrammerClientChecks.run(mc,output);
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS programmer-only");return true;
+        }
         java.util.List<Throwable> failures=mc.getIntegratedServer().callFromMainThread(()->{
             java.util.List<Throwable> problems=new java.util.ArrayList<>();
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);

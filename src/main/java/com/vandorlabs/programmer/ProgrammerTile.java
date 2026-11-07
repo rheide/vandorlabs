@@ -27,28 +27,14 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
     private ProgrammerJournalView display;
     public ProgrammerTile(){java.util.Arrays.fill(pages,"");}
     public boolean usable(EntityPlayer player){return world!=null&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this&&ConfigurationAccess.canEditDialog(player,world,pos);}
-    public static boolean token(ItemStack stack){return !stack.isEmpty()&&(stack.getItem()==ModItems.ACCESS_CARD||stack.getItem()==ModItems.DATA_CHIP)&&stack.getMetadata()>=0&&stack.getMetadata()<7;}
-    public int company(){ItemStack m=stacks.get(0);return !m.isEmpty()&&m.getMetadata()>0&&m.getMetadata()<7&&(m.getItem()==ModItems.ACCESS_CARD||ChipJournal.master(m))?m.getMetadata():0;}
+    private static int kind(ItemStack stack){return stack.isEmpty()?ProgrammerPolicy.EMPTY:stack.getItem()==ModItems.ACCESS_CARD?ProgrammerPolicy.CARD:stack.getItem()==ModItems.DATA_CHIP?ProgrammerPolicy.CHIP:ProgrammerPolicy.OTHER;}
+    public static boolean token(ItemStack stack){return ProgrammerPolicy.token(kind(stack),stack.getMetadata());}
+    public int company(){ItemStack master=stacks.get(0);return ProgrammerPolicy.company(kind(master),master.getMetadata(),ChipJournal.master(master));}
     public String problem(){return problem(journal);}
-    public String problem(boolean selectedJournal){
-        ItemStack input=stacks.get(1);
-        if(input.isEmpty())return "Insert an input card or chip";
-        if(!token(input)||input.getCount()!=1)return "Input must contain one card or chip";
-        if(!stacks.get(2).isEmpty())return "Remove the output item first";
-        int company=company();
-        if(!stacks.get(0).isEmpty()&&company==0)return "Master needs a company card or Master Data Chip";
-        if(input.getItem()==ModItems.ACCESS_CARD&&company==0&&input.getMetadata()==0)return "Insert a company master";
-        if(input.getItem()==ModItems.DATA_CHIP&&!selectedJournal&&company==0&&input.getMetadata()==0)return "Master chips require a company master";
-        return "";
-    }
+    public String problem(boolean selectedJournal){ItemStack input=stacks.get(1);return ProgrammerPolicy.problem(kind(input),input.getMetadata(),input.getCount(),!stacks.get(2).isEmpty(),!stacks.get(0).isEmpty(),company(),selectedJournal);}
     public boolean canProgram(){return canProgram(journal);}
     public boolean canProgram(boolean selectedJournal){return problem(selectedJournal).isEmpty();}
-    public String copyProblem(){
-        ItemStack source=stacks.get(1),target=stacks.get(2);
-        if(source.isEmpty()||target.isEmpty())return "Insert both Input and Output items to copy";
-        if(!token(source)||!token(target)||source.getCount()!=1||target.getCount()!=1)return "Copy requires one valid item in each slot";
-        return source.getItem()==target.getItem()?"":"Copy needs two cards or two chips";
-    }
+    public String copyProblem(){ItemStack source=stacks.get(1),target=stacks.get(2);return ProgrammerPolicy.copyProblem(kind(source),source.getMetadata(),source.getCount(),kind(target),target.getMetadata(),target.getCount());}
     public boolean canCopy(){return copyProblem().isEmpty();}
     /** Reuse the one output material item; copy actual saved source data, never pending editor fields. */
     public boolean copyInput(){
@@ -117,7 +103,7 @@ public final class ProgrammerTile extends TileEntity implements IInventory, ITic
     @Override public boolean isUsableByPlayer(EntityPlayer player){return usable(player);}
     @Override public void openInventory(EntityPlayer player){}
     @Override public void closeInventory(EntityPlayer player){}
-    @Override public boolean isItemValidForSlot(int slot,ItemStack stack){if(!token(stack))return false;return slot!=0||stack.getMetadata()>0&&(stack.getItem()==ModItems.ACCESS_CARD||ChipJournal.master(stack));}
+    @Override public boolean isItemValidForSlot(int slot,ItemStack stack){return ProgrammerPolicy.validSlot(slot,kind(stack),stack.getMetadata(),ChipJournal.master(stack));}
     @Override public int getField(int id){return 0;}
     @Override public void setField(int id,int value){}
     @Override public int getFieldCount(){return 0;}
