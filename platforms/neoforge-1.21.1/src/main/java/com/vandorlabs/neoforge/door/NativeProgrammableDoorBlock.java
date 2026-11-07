@@ -113,6 +113,7 @@ public abstract class NativeProgrammableDoorBlock extends BaseEntityBlock implem
         ItemStack drop=new ItemStack(canonicalItem.get());if(owner!=null)owner.attachOpaqueCredentialRecovery(drop);return List.of(drop);
     }
     @Override public ItemStack getCloneItemStack(BlockState state,HitResult hit,LevelReader level,BlockPos pos,Player player){ItemStack stack=new ItemStack(canonicalItem.get());BlockPos lower=NativeDoorLifecycle.lower(state,pos);if(level.getBlockEntity(lower) instanceof NativeProgrammableDoorEntity root){var custom=new net.minecraft.nbt.CompoundTag();custom.put("SpaceDoorSettings",root.itemSettings());stack.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));}return stack;}
+    @Override public boolean hasDynamicLightEmission(BlockState state){return true;}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(level,pos);}
     @Override public boolean canPlaceLiquid(Player player,BlockGetter level,BlockPos pos,BlockState state,net.minecraft.world.level.material.Fluid fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.canPlaceLiquid(level,pos,fluid);}
     @Override public boolean placeLiquid(LevelAccessor level,BlockPos pos,BlockState state,net.minecraft.world.level.material.FluidState fluid){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.placeLiquid(level,pos,fluid);}

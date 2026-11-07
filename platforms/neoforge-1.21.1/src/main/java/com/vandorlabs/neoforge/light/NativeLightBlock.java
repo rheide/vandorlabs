@@ -39,6 +39,7 @@ public class NativeLightBlock extends BaseEntityBlock {
     @Override protected VoxelShape getBlockSupportShape(BlockState state,BlockGetter world,BlockPos pos){return kind==Kind.SLAB?shape(state,world,pos):Shapes.empty();}
     @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}
     @Override protected float getShadeBrightness(BlockState state,BlockGetter world,BlockPos pos){return 1;}
+    @Override public boolean hasDynamicLightEmission(BlockState state){return true;}
     @Override public int getLightEmission(BlockState state,BlockGetter world,BlockPos pos){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(world,pos);}
     @Override public RenderShape getRenderShape(BlockState state){return RenderShape.INVISIBLE;}
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level world,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){if(hand==InteractionHand.OFF_HAND)return ItemInteractionResult.SUCCESS;if(stack.is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return openConfiguration(player,world,pos)?ItemInteractionResult.SUCCESS:ItemInteractionResult.FAIL;return ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;}

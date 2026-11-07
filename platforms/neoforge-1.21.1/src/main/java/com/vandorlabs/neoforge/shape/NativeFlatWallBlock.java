@@ -48,5 +48,6 @@ public final class NativeFlatWallBlock extends NativePanelBlock {
     @Override protected VoxelShape getOcclusionShape(BlockState state,BlockGetter level,BlockPos pos){return getShape(state,level,pos,CollisionContext.empty());}
     @Override protected VoxelShape getBlockSupportShape(BlockState state,BlockGetter level,BlockPos pos){return Shapes.empty();}
     @Override protected boolean useShapeForLightOcclusion(BlockState state){return true;}
+    @Override public boolean hasDynamicLightEmission(BlockState state){return true;}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return NativeFluidWorld.light(level,pos);}
 }

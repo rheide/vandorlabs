@@ -65,5 +65,6 @@ public final class NativeDiagonalWallBlock extends NativePanelBlock {
     @Override protected VoxelShape getBlockSupportShape(BlockState state,BlockGetter level,BlockPos pos){return Shapes.empty();}
     @Override protected boolean useShapeForLightOcclusion(BlockState state){return !isGlass();}
     @Override protected int getLightBlock(BlockState state,BlockGetter level,BlockPos pos){return isGlass()?0:super.getLightBlock(state,level,pos);}
+    @Override public boolean hasDynamicLightEmission(BlockState state){return true;}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return com.vandorlabs.neoforge.fluid.NativeFluidWorld.light(level,pos);}
 }

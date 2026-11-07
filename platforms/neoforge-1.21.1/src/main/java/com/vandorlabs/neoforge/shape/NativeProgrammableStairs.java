@@ -30,6 +30,7 @@ public final class NativeProgrammableStairs extends StairBlock implements Entity
     @Override public BlockState getStateForPlacement(BlockPlaceContext context){return super.getStateForPlacement(context).setValue(WATERLOGGED,false);}
     @Override protected VoxelShape getShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return NativeStairGeometry.shape(state.getValue(FACING),state.getValue(HALF)==Half.TOP,StairGeometry.Shape.valueOf(state.getValue(SHAPE).name()),settings(level,pos));}
     @Override protected VoxelShape getCollisionShape(BlockState state,BlockGetter level,BlockPos pos,CollisionContext context){return getShape(state,level,pos,context);}
+    @Override public boolean hasDynamicLightEmission(BlockState state){return true;}
     @Override public int getLightEmission(BlockState state,BlockGetter level,BlockPos pos){return NativeFluidWorld.light(level,pos);}
     @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return player.isShiftKeyDown()&&CubeConfiguration.open(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.PASS;}
     @Override public ItemStack getCloneItemStack(BlockState state,HitResult hit,LevelReader level,BlockPos pos,Player player){var stack=new ItemStack(this);if(level.getBlockEntity(pos) instanceof ProgrammableShapeEntity tile)tile.saveToItem(stack,level.registryAccess());return stack;}

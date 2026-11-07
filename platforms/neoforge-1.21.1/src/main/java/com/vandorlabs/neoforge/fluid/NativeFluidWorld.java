@@ -102,7 +102,7 @@ public final class NativeFluidWorld {
             if(loaded(level,neighbor)&&level.getBlockEntity(neighbor) instanceof ContainedFluidHost other)queue(other);
         }
     }
-    /** Lighting threads consult the auxiliary manager, never a block entity or neighbouring chunk. */
+    /** Lighting threads read the auxiliary manager. Callers must advertise hasDynamicLightEmission for chunk source discovery. */
     public static int light(BlockGetter level,BlockPos pos){var manager=level.getAuxLightManager(pos);return manager==null?0:manager.getLightAt(pos);}
     public static boolean gaseous(FluidStack fluid){return !fluid.isEmpty()&&(fluid.is(Tags.Fluids.GASEOUS)||fluid.getFluidType().getDensity(fluid)<=0);}
     public static FluidStack fromState(FluidState state){if(state.isEmpty())return FluidStack.EMPTY;var fluid=state.getType();if(fluid instanceof FlowingFluid flowing)fluid=flowing.getSource();return new FluidStack(fluid,1000);}
