@@ -17,8 +17,13 @@ public final class SegmentedPanelMesh {
   build(window,shape,layout,column,row,width,height,wc,wr,ww,wh,glassLayout,opaqueGlass,pass,body,pane,edge,out,window?WindowOutline.localSlice(ww,wh,shape,0,wc,wr):null);
  }
  public static void build(boolean window,int shape,int layout,int column,int row,int width,int height,int wc,int wr,int ww,int wh,int glassLayout,boolean opaqueGlass,int pass,Surface body,Surface pane,Texture edge,Sink out,WindowOutline.Slice slice){
-  if(pass==0){List<double[]> panels=window?slice.frameQuads:Collections.singletonList(new double[]{0,0,16,0,16,16,0,16});for(double[] q:panels){front(out,q,SegmentedDoorGeometry.HALF_THICKNESS*16,1,layout,column,row,width,height,body);front(out,q,-SegmentedDoorGeometry.HALF_THICKNESS*16,-1,layout,column,row,width,height,body);}edges(out,slice,edge);}
-  if(window&&(pass==1&&!opaqueGlass||pass==0&&opaqueGlass))for(double[] q:slice.glassQuads)front(out,q,0,1,glassLayout,wc,wh-1-wr,ww,wh,pane);
+  buildLayered(window,shape,layout,column,row,width,height,wc,wr,ww,wh,glassLayout,opaqueGlass,pass,body,pane,edge,out,slice,false,3);
+ }
+ /** Components: body/edges=1, window pane=2. Translucent image faces keep opaque edge geometry separate. */
+ public static void buildLayered(boolean window,int shape,int layout,int column,int row,int width,int height,int wc,int wr,int ww,int wh,int glassLayout,boolean opaqueGlass,int pass,Surface body,Surface pane,Texture edge,Sink out,WindowOutline.Slice slice,boolean translucentBody,int components){
+  if((components&~3)!=0)throw new IllegalArgumentException("Segmented layer components");
+  if((components&1)!=0){if(pass==(translucentBody?1:0)){List<double[]> panels=window?slice.frameQuads:Collections.singletonList(new double[]{0,0,16,0,16,16,0,16});for(double[] q:panels){front(out,q,SegmentedDoorGeometry.HALF_THICKNESS*16,1,layout,column,row,width,height,body);front(out,q,-SegmentedDoorGeometry.HALF_THICKNESS*16,-1,layout,column,row,width,height,body);}}if(pass==0)edges(out,slice,edge);}
+  if((components&2)!=0&&window&&(pass==1&&!opaqueGlass||pass==0&&opaqueGlass))for(double[] q:slice.glassQuads)front(out,q,0,1,glassLayout,wc,wh-1-wr,ww,wh,pane);
  }
  /** Fast rectangular sections share the exact Tile transform and clipping used by window frames. */
  public static void nativeBody(int row,int height,int column,boolean endpoint,Surface body,Texture edge,Sink out){
