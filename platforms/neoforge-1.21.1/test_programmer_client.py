@@ -8,11 +8,12 @@ from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--canonical',action='store_true');parser.add_argument('--guide',action='store_true');args=parser.parse_args()
+ if args.guide:args.canonical=True
  if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  platform=Path(__file__).resolve().parent;geometry=ROOT/'src/main/resources/assets/vandorlabs/models/block/data_chip_programmer/ready/parts'
  if not all((geometry/name).is_file() for name in ('static.obj','screen.obj')):raise AssertionError('Missing fixed authored geometry')
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_PROGRAMMER_GEOMETRY=str(geometry),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.programmerWorldCheck=true')
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_PROGRAMMER_GEOMETRY=str(geometry),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.programmerWorldCheck=true'+(' -Dvandorlabs.programmerCanonicalCheck=true' if args.canonical else '')+(' -Dvandorlabs.programmerGuideCheck=true' if args.guide else ''))
  subprocess.run(command('compileSmokeJava'),cwd=platform,env=env,check=True)
  if not (platform/'build/classes/java/smoke/com/vandorlabs/neoforge/programmer/ProgrammerWorldClientChecks.class').is_file():raise AssertionError('Missing compiled Programmer world client fixture')
  out=Path(artifact_directory(prefix='programmer-world-',dir=ROOT/'build/test-artifacts'))
@@ -37,17 +38,21 @@ def main():
    if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Programmer logout missing: '+str(server_log))
    time.sleep(.1)
   for marker in ('setup','server','logout'):check_log(server_log,'[vandorlabs][programmer-world] '+marker+' PASS')
-  positive=Image.open(client/'screenshots/programmer-placed-positive.png').convert('RGB');negative=Image.open(client/'screenshots/programmer-placed-disabled.png').convert('RGB')
-  if positive.size!=(1280,720) or negative.size!=positive.size:raise AssertionError('Unexpected world capture dimensions')
-  changed=text=0;colors={(200,238,255),(226,237,245),(166,191,208),(105,121,135)}
-  for y in range(150,650):
-   for x in range(350,950):
-    a,b=positive.getpixel((x,y)),negative.getpixel((x,y));different=max(abs(a[i]-b[i]) for i in range(3))>=10;changed+=different;text+=different and any(max(abs(a[i]-color[i]) for i in range(3))<=5 for color in colors)
-  if changed<1000 or text<20:raise AssertionError('Missing actual casing/journal or disabled negative '+str((changed,text)))
-  (out/'world-pixels.json').write_text(json.dumps(dict(changedRendererPixels=changed,journalColorPixels=text),sort_keys=True)+'\n')
+  if not args.guide:
+   positive=Image.open(client/'screenshots/programmer-placed-positive.png').convert('RGB');negative=Image.open(client/'screenshots/programmer-placed-disabled.png').convert('RGB')
+   if positive.size!=(1280,720) or negative.size!=positive.size:raise AssertionError('Unexpected world capture dimensions')
+   changed=text=0;colors={(200,238,255),(226,237,245),(166,191,208),(105,121,135)}
+   for y in range(150,650):
+    for x in range(350,950):
+     a,b=positive.getpixel((x,y)),negative.getpixel((x,y));different=max(abs(a[i]-b[i]) for i in range(3))>=10;changed+=different;text+=different and any(max(abs(a[i]-color[i]) for i in range(3))<=5 for color in colors)
+   if changed<1000 or text<20:raise AssertionError('Missing actual casing/journal or disabled negative '+str((changed,text)))
+  if args.canonical:
+   for stage in range(1,4):
+    if not (client/f'screenshots/programmer-build-{stage}.png').is_file():raise AssertionError('Missing actual canonical construction stage '+str(stage))
+  if not args.guide:(out/'world-pixels.json').write_text(json.dumps(dict(changedRendererPixels=changed,journalColorPixels=text),sort_keys=True)+'\n')
  finally:stop(server)
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
  check_log(saved/'logs/latest.log','All dimensions are saved')
- print('Actual private Programmer player/renderer PASS: '+str(out),flush=True)
+ print(('Canonical Programmer construction capture' if args.guide else 'Actual '+('canonical' if args.canonical else 'private')+' Programmer player/renderer')+' PASS: '+str(out),flush=True)
 if __name__=='__main__':main()
