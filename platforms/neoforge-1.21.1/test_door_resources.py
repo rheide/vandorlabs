@@ -47,7 +47,11 @@ def main():
         if image.size != (entry['size'], entry['size']) or image.width & (image.width - 1):
             raise AssertionError('Invalid native square sprite ' + entry['id'])
         content = image.crop((0, 0, entry['width'], entry['height']))
-        expected = reference[entry['original']]
+        if entry['original'].startswith('vandorlabs:blocks/utility_doors/'):
+            relative=entry['original'].split(':',1)[1].removeprefix('blocks/')
+            supplied=Image.open(ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks'/(relative+'.png')).convert('RGBA')
+            expected=dict(width=128,height=256,rgbaSha256=hashlib.sha256(supplied.tobytes()).hexdigest())
+        else:expected = reference[entry['original']]
         if content.size != (expected['width'], expected['height']) or hashlib.sha256(content.tobytes()).hexdigest() != expected['rgbaSha256']:
             raise AssertionError('Actual Forge content pixels changed ' + entry['original'])
         if entry['usedU'] != content.width / image.width or entry['usedV'] != content.height / image.height:
@@ -55,9 +59,9 @@ def main():
         for x, y in [(image.width-1, 0), (0, image.height-1), (image.width-1, image.height-1)]:
             if image.getpixel((x, y)) != content.getpixel((min(x, content.width-1), min(y, content.height-1))):
                 raise AssertionError('Door square padding must extend edge texels ' + entry['id'])
-    if models != 1924 or len(data['textures']) != 68 or set(reference) != {item['original'] for item in data['textures']}:
+    if models != 1924 or len(data['textures']) != 80 or set(reference) != {item['original'] for item in data['textures'] if not item['original'].startswith('vandorlabs:blocks/utility_doors/')}:
         raise AssertionError('Incomplete current authored door resource inventory')
-    print('Authored door resource projection PASS models=' + str(models) + ' sprites=68 actual standard Forge RGBA, exact inherited geometry/materials and padded content ratios; runtime baking separate')
+    print('Authored door resource projection PASS models=' + str(models) + ' sprites=80 original68 frozen Forge +12 exact supplied RGBA, exact inherited geometry/materials and padded content ratios; runtime baking separate')
 
 
 if __name__ == '__main__':

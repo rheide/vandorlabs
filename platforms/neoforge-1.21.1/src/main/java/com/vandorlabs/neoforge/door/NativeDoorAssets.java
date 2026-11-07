@@ -28,7 +28,7 @@ public final class NativeDoorAssets {
     /** Door previews retain complete1:2 artwork instead of the cube catalog's lower face crop. */
     /** Catalog category paths include company submenus while artwork-detail filtering stays unchanged. */
     public static boolean selectable(ModernFinishCatalog.Entry entry,boolean large,int detail){
-        String category=entry.category();boolean door=category.equals("Doors")||category.startsWith("Doors/")||large&&(category.equals("Double Doors")||category.startsWith("Double Doors/"));
+        String category=entry.category();boolean door=com.vandorlabs.tiles.HousingCategoryPolicy.door(category)||large&&com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(category);
         return entry.general()||door&&(entry.door()==null||entry.door().detail()==detail);
     }
     public static ModernFinishCatalog.Entry preview(int choice){

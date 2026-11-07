@@ -56,7 +56,7 @@ public final class ItemProgrammableArmor extends ItemArmor {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(index);
         if(entry!=null&&entry.has("detail")&&entry.get("detail").getAsInt()>0)return false;
         String category=ScreenHousingTextures.category(index);
-        return !category.equals("Screens") && !category.equals("Doors") && !category.equals("Double Doors");
+        return !category.equals("Screens") && !com.vandorlabs.tiles.HousingCategoryPolicy.door(category) && !com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(category);
     }
 
     /** Enforce native armor slot filtering on both the client and the server. */

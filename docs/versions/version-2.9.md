@@ -17,6 +17,8 @@ Redstone channel input keeps the shared range of 1–2,147,483,647, with zero di
 Flat Programmable Walls, Glass and Porthole Walls now anchor against a clicked horizontal support in both versions. Continuing a panel above, below or along its plane retains its selected depth. Full-depth Porthole Blocks keep their existing full-cell placement. See the [placement contract](../development/wall-against-placement.md).
 Forge Copy Controllers now discover complete connected Surface pads regardless of individual selected textures. Their drawing groups remain appearance-specific, and existing Turntable artwork boundaries are unchanged.
 
+Ordinary and Large Doors share twelve new 128×256 Utility artwork sheets in both versions, without adding or reordering geometry designs. Dark, Slim and White Glass artwork now appears in the Glass subgroup. See the [Door guide](../space-doors.md) and [texture browser](../texture-browser/).
+
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
 The experimental native build includes the plain matter block, matter/alloy ingots, and the programmable cube with its Appearance editor, six face overrides and bounded joined images. Creative shift-click and the main-hand Configurizer share the authenticated cube dialog. Configured items retain their settings, and native geometry is compared with the actual Forge renderer.

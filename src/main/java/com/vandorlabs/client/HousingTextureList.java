@@ -173,7 +173,7 @@ final class HousingTextureList {
         return new HousingTextureList(x,y,width,selected,8,null,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
             if(!glassLeaves && entry!=null && entry.has("design") && (entry.get("design").getAsInt()==15 || entry.get("design").getAsInt()==16))return false;
-            return frames && frameAllowed(choice,false) || (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || ("Doors".equals(ScreenHousingTextures.category(choice)) || large && "Double Doors".equals(ScreenHousingTextures.category(choice)))
+            return frames && frameAllowed(choice,false) || (generalTexture(choice) && (entry==null || !entry.has("textureFamily") || entry.get("detail").getAsInt()==detail)) || (com.vandorlabs.tiles.HousingCategoryPolicy.door(ScreenHousingTextures.category(choice)) || large && com.vandorlabs.tiles.HousingCategoryPolicy.doubleDoor(ScreenHousingTextures.category(choice)))
                     && (entry==null || !entry.has("detail") || entry.get("detail").getAsInt()==detail);
         },ScreenHousingTextures::menuCategory,choice->{
             com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);

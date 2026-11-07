@@ -113,7 +113,7 @@ def main():
     texture('vandorlabs:blocks/control_buttons')
     previews = {}
     for entry in catalog:
-        if ('design' in entry and entry.get('detail', 0) == 0) or entry.get('source', '').startswith('company_doors/'):
+        if ('design' in entry and entry.get('detail', 0) == 0) or entry.get('source', '').startswith('company_doors/') or entry.get('doorArtwork',False):
             previews[entry['id']] = texture('vandorlabs:blocks/' + entry['source'])
     def elements(name):
         location = name.split(':', 1)[1]
@@ -127,7 +127,7 @@ def main():
     artwork = {}
     for entry in catalog:
         source = entry.get('source', '')
-        artwork[entry['id']] = dict(mirrored=source.startswith('company_doors/'),
+        artwork[entry['id']] = dict(mirrored=source.startswith('company_doors/') or entry.get('doorArtwork',False),
                                   reversed=source.startswith(('company_doors/pinnacle/', 'company_doors/ashiro_mai/', 'company_doors/paladyne/', 'company_doors/vektor/')),
                                   light=source.startswith('company_doors/') and source.endswith('/light'))
     write(ASSETS / 'data/door_material_policy.json', artwork)

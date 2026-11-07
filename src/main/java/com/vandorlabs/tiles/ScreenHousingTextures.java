@@ -2,7 +2,7 @@ package com.vandorlabs.tiles;
 
 /** Shared menu choices and atlas names for programmable housing surfaces. */
 public final class ScreenHousingTextures {
-    public static boolean mirroredDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);return CustomBlockMaterials.isCustom(choice)||e!=null&&e.has("source")&&e.get("source").getAsString().startsWith("company_doors/");}
+    public static boolean mirroredDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);return CustomBlockMaterials.isCustom(choice)||e!=null&&e.has("source")&&(e.get("source").getAsString().startsWith("company_doors/")||e.has("doorArtwork")&&e.get("doorArtwork").getAsBoolean());}
     /** Base artwork orientation is independent of the right leaf of a paired door. */
     public static boolean reversedDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);if(e==null||!e.has("source"))return false;String source=e.get("source").getAsString();return source.startsWith("company_doors/pinnacle/")||source.startsWith("company_doors/ashiro_mai/")||source.startsWith("company_doors/paladyne/")||source.startsWith("company_doors/vektor/");}
     public static boolean doorArtworkMirror(int choice,boolean rightLeaf){return reversedDoorArtwork(choice)^(rightLeaf&&mirroredDoorArtwork(choice));}
@@ -98,7 +98,7 @@ public final class ScreenHousingTextures {
         com.google.gson.JsonObject entry=entry(choice);
         if(entry!=null && entry.has("detail") && entry.get("detail").getAsInt()>0)return false;
         String category=category(choice);
-        return !category.equals("Frame") && !category.equals("Screens") && !category.equals("Lights") && !category.equals("Doors") && !category.equals("Double Doors");
+        return !category.equals("Frame") && !category.equals("Screens") && !category.equals("Lights") && !HousingCategoryPolicy.door(category) && !HousingCategoryPolicy.doubleDoor(category);
     }
     public static boolean visible(int choice){com.google.gson.JsonObject e=menu(choice);return e==null || !e.has("hidden") || !e.get("hidden").getAsBoolean();}
     public static int screenIndex(String source){
