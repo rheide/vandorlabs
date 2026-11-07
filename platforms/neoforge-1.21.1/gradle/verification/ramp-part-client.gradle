@@ -1,0 +1,6 @@
+tasks.register('testRampPartAnimation', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.animation.RampPartAnimationChecks'
+}
