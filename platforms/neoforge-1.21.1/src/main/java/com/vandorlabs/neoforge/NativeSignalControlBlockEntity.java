@@ -38,6 +38,8 @@ public final class NativeSignalControlBlockEntity extends NativeBinaryControlBlo
     }
     /** Wire bounds are stricter than the historical saved-data predicate's overflow edge. */
     public static boolean validWireLimits(int low,int high){return low>=1&&low<=15&&high>=1&&high<=15&&SignalControlData.validLimits(low,high);}
+    /** Copied saved settings retain the historical predicate; GUI wire bounds remain stricter. */
+    public void configureCopiedLimits(int nextLow,int nextHigh){if(!SignalControlData.validLimits(nextLow,nextHigh))return;int selected=getStep();low=nextLow;high=nextHigh;setStep(selected);}
     public boolean configureSignal(ControlMountSettings mount,int nextLow,int nextHigh,int type){
         if(!supportsSignalControl()||mount==null||!ControlMountSettings.valid(mount.height,mount.tilt,mount.direction)||!validWireLimits(nextLow,nextHigh)||(isSelectableControlType()?type<0||type>2:type!=-1))return false;
         Runnable apply=()->{int selected=getStep();setMountValue(mount);low=nextLow;high=nextHigh;setStep(selected);if(isSelectableControlType())configureType(type);};

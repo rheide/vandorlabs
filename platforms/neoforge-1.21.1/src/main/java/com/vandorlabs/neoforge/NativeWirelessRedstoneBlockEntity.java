@@ -32,6 +32,17 @@ public final class NativeWirelessRedstoneBlockEntity extends BlockEntity impleme
     public ChannelList transmissionChannels(){return transmission;}
     @Override public int transmissionRange(){return range;}
     public boolean localRedstone(){return local;}
+    public int mountRotation(){return source.mountRotation;}
+    /** Copy input subscriptions and stored rotation; only transmitters publish output settings. */
+    public boolean configureCopiedMetadata(ChannelList receive,boolean replaceTransmission,ChannelList sends,int radius,boolean nativeOutput,int rotation){
+        if(receive==null||replaceTransmission&&(!transmitter()||!TransmissionSettings.validConfiguration(sends,radius)))return false;var server=server();if(server==null||!isChannelMemberActive())return false;
+        NativeRedstoneChannels.batch(server,()->{
+            NativeRedstoneChannels.unregister(this);channels=transmitter()?sends:receive;
+            source=new RedstoneData.Source(channels.first(),source.localOn,source.initialized,rotation);
+            if(replaceTransmission){transmission=sends;range=radius;local=nativeOutput;var forge=retained.getCompound("ForgeData");var all=forge.getCompound(TransmissionSettings.SETTINGS);var setting=new CompoundTag();setting.putIntArray("Channels",sends.toArray());setting.putInt("Range",radius);setting.putBoolean("Local",nativeOutput);all.put("main",setting);forge.put(TransmissionSettings.SETTINGS,all);retained.put("ForgeData",forge);}
+            NativeRedstoneChannels.channelsChanged(this);changed(true);
+        });return true;
+    }
     @Override public boolean isChannelMemberActive(){return getBlockState().getBlock() instanceof NativeWirelessRedstoneBlock&&NativeChannelMember.super.isChannelMemberActive();}
     @Override public int localSignalLevel(int channel){return transmitter()?WirelessRedstoneData.sourceLevel(analog,input):0;}
     private ServerLevel server(){if(!(level instanceof ServerLevel server))return null;if(!server.getServer().isSameThread())throw new IllegalStateException("Wireless endpoint changes require the owning server thread");return NativeRedstoneChannels.open(server)?server:null;}

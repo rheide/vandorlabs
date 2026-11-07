@@ -34,6 +34,8 @@ public class NativeBinaryControlBlockEntity extends BlockEntity implements Nativ
     public boolean localRedstone(){return local;}
     public ControlMountSettings mountSettings(){return mount;}
     public int mountRotation(){return rotation;}
+    /** Copied orientation is independent of the listed placement-facing property. */
+    public void configureCopiedRotation(int value){int next=Math.floorMod(value,4);if(rotation!=next){rotation=next;changed();}}
     private int visualSize(){return supportsPowerLeverSize()?getPowerLeverSize():0;}
     public boolean supportsSignalControl(){return false;}
     public boolean isSelectableControlType(){return false;}

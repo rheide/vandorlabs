@@ -1,0 +1,46 @@
+package com.vandorlabs.neoforge.copifier;
+import com.google.gson.*;
+import java.nio.file.*;
+import java.util.*;
+import java.util.zip.GZIPInputStream;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.*;
+import net.minecraft.world.level.block.Blocks;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+/** Installed control projection against the actual released Forge getter corpus. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class NativeCopifierControlWorldChecks {
+ private static final BlockPos POS=new BlockPos(15440,100,14640);private static int checks;
+ private static void need(boolean yes,String why){checks++;if(!yes)throw new AssertionError("Copifier controls: "+why);}
+ private static net.minecraft.world.level.block.entity.BlockEntity put(ServerLevel level,String id,int meta,CompoundTag data){level.getChunkAt(POS);level.setBlock(POS,Blocks.AIR.defaultBlockState(),18);for(var side:Direction.values())level.setBlock(POS.relative(side),Blocks.STONE.defaultBlockState(),18);var block=BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",id));need(block!=Blocks.AIR,"canonical block "+id);var state=block.defaultBlockState();
+  if(block instanceof com.vandorlabs.neoforge.NativePowerLeverBlock)state=state.setValue(com.vandorlabs.neoforge.NativePowerLeverBlock.FACING,Direction.from2DDataValue(meta&3)).setValue(com.vandorlabs.neoforge.NativePowerLeverBlock.FLOOR,(meta&8)!=0).setValue(com.vandorlabs.neoforge.NativePowerLeverBlock.POWERED,(meta&4)!=0);
+  else if(block instanceof com.vandorlabs.neoforge.NativeWirelessRedstoneBlock)state=state.setValue(com.vandorlabs.neoforge.NativeWirelessRedstoneBlock.FACING,Direction.from3DDataValue(Math.floorMod(meta,6)));
+  else if(block instanceof com.vandorlabs.neoforge.NativeSignalControlBlock)state=state.setValue(com.vandorlabs.neoforge.NativeSignalControlBlock.FACING,Direction.from3DDataValue(meta&7)).setValue(com.vandorlabs.neoforge.NativeSignalControlBlock.ON,(meta&8)!=0);
+  else state=state.setValue(com.vandorlabs.neoforge.NativeMountedSwitchBlock.FACING,Direction.from3DDataValue(meta&7)).setValue(com.vandorlabs.neoforge.NativeMountedSwitchBlock.ON,(meta&8)!=0);
+  level.setBlock(POS,state,18);var tile=level.getBlockEntity(POS);tile.loadWithComponents(data,level.registryAccess());return tile;}
+ private static void write(ServerLevel level)throws Exception{byte[] raw;try(var in=new GZIPInputStream(Files.newInputStream(Path.of(System.getProperty("vandorlabs.copifierControlReference"))))){raw=in.readAllBytes();}need(HexFormat.of().formatHex(java.security.MessageDigest.getInstance("SHA-256").digest(raw)).equals("0ebe115c8af406bb7ae897923b72528411892e364241e49777826faab9e4f250"),"frozen Source reference hash");int captures=0;
+  for(var element:JsonParser.parseString(new String(raw,java.nio.charset.StandardCharsets.UTF_8)).getAsJsonArray()){var row=element.getAsJsonObject();if(!row.has("input"))continue;var tile=put(level,row.get("block").getAsString(),row.get("meta").getAsInt(),TagParser.parseTag(row.get("input").getAsString()));var before=tile.saveWithoutMetadata(level.registryAccess());var expected=TagParser.parseTag(row.get("capture").getAsString());var actual=NativeCopifierControlEdit.capture(tile);need(expected.equals(actual),"Source capture case="+captures+" block="+row.get("block")+" expected="+expected+" actual="+actual);need(before.equals(tile.saveWithoutMetadata(level.registryAccess())),"capture leaves owner unchanged");captures++;}
+  var actor=new net.neoforged.neoforge.common.util.FakePlayer(level,new com.mojang.authlib.GameProfile(new UUID(0,1878),"CopiedControls"));actor.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);actor.setPos(POS.getX()+.5,POS.getY()+1,POS.getZ()-2);int applications=0;
+  for(var element:JsonParser.parseString(new String(raw,java.nio.charset.StandardCharsets.UTF_8)).getAsJsonArray()){
+   var row=element.getAsJsonObject();var input=TagParser.parseTag(row.get("target").getAsString());input.putString("CopifierOpaqueMarker","retained");var tile=put(level,row.get("block").getAsString(),row.get("meta").getAsInt()^3,input);var values=TagParser.parseTag(row.get("values").getAsString());var original=values.copy();var before=NativeCopifierControlEdit.capture(tile);var blockBefore=tile.getBlockState().getBlock();var stateBefore=tile.getBlockState();NativeCopifierUndo.begin(actor,level);boolean actual;try{actual=NativeCopifierHousingWorld.applySingle(level,POS,actor,Direction.NORTH,values);}finally{NativeCopifierUndo.finish(actor);}need(actual==row.get("applied").getAsBoolean(),"Source application result case="+applications+" block="+row.get("block")+" values="+values+" expected="+row.get("applied")+" actual="+actual);var expected=TagParser.parseTag(row.get("after").getAsString());var after=NativeCopifierControlEdit.capture(level.getBlockEntity(POS));need(expected.equals(after),"Source apply projection case="+applications+" block="+row.get("block")+" values="+values+" expected="+expected+" actual="+after);need(level.getBlockEntity(POS)==tile&&tile.saveWithoutMetadata(level.registryAccess()).getString("CopifierOpaqueMarker").equals("retained"),"same installed owner and opaque fields");need(BuiltInRegistries.BLOCK.getKey(level.getBlockState(POS).getBlock()).getPath().equals(row.get("afterBlock").getAsString()),"Source selectable type");need(values.equals(original),"clipboard immutable");for(var property:stateBefore.getProperties())if(property.getName().equals("facing")||property.getName().equals("floor")||property.getName().equals("rotation"))need(stateBefore.getValue(property).equals(tile.getBlockState().getValue(property)),"placement orientation retained "+property.getName());
+   if(actual&&!before.equals(after)&&blockBefore==tile.getBlockState().getBlock()){need(NativeCopifierUndo.undo(actor),"control settings undo case="+applications);need(before.equals(NativeCopifierControlEdit.capture(tile)),"exact semantic undo case="+applications);}
+   else if(actual&&blockBefore!=tile.getBlockState().getBlock())need(!NativeCopifierUndo.undo(actor),"Source undo refuses a changed block type");applications++;
+  }
+  connected(level,actor);
+  var saved=new CompoundTag();saved.putInt("MountRotation",3);saved.putInt("LowLimit",2);saved.putInt("HighLimit",12);saved.putInt("ControlStep",2);saved.putString("CopifierOpaqueMarker","restart");put(level,"thruster_lever",3,saved);var edit=new CompoundTag();edit.putInt("active",3);need(NativeCopifierHousingWorld.applySingle(level,POS,actor,Direction.NORTH,edit),"saved numeric edit");
+  need(captures==1536,"all released control captures");System.out.println("[vandorlabs][copifier-controls] write PASS captures="+captures+" applications="+applications+" checks="+checks);
+ }
+ private static void connected(ServerLevel level,ServerPlayer actor){
+  for(String id:java.util.List.of("rocker_switch","industrial_power_lever","wall_slider","redstone_receiver_block")){
+   put(level,id,0,new CompoundTag());var state=level.getBlockState(POS);var peer=POS.offset(1,1,1);for(var side:Direction.values())level.setBlock(peer.relative(side),Blocks.STONE.defaultBlockState(),18);level.setBlock(peer,state,18);var owner=level.getBlockEntity(peer);owner.loadWithComponents(new CompoundTag(),level.registryAccess());
+   var values=new CompoundTag();values.putInt("switch_rotation",3);NativeCopifierUndo.begin(actor,level);int applied;try{applied=NativeCopifierHousingConnected.apply(level,POS,actor,Direction.NORTH,values,false);}finally{NativeCopifierUndo.finish(actor);}need(applied==2,"connected "+id+" count="+applied);need(NativeCopifierControlEdit.capture(owner).getInt("switch_rotation")==3,"connected peer updated "+id);need(NativeCopifierUndo.undo(actor)&&NativeCopifierControlEdit.capture(owner).getInt("switch_rotation")==0,"connected undo "+id);level.setBlock(peer,Blocks.AIR.defaultBlockState(),18);
+  }
+ }
+ private static void read(ServerLevel level){level.getChunkAt(POS);var tile=level.getBlockEntity(POS);need(tile instanceof com.vandorlabs.neoforge.NativeSignalControlBlockEntity,"saved numeric host");var control=(com.vandorlabs.neoforge.NativeSignalControlBlockEntity)tile;need(control.getStep()==3&&control.mountRotation()==3&&control.getLowLimit()==2&&control.getHighLimit()==12,"copied detent and configuration survive restart");need(tile.saveWithoutMetadata(level.registryAccess()).getString("CopifierOpaqueMarker").equals("restart"),"opaque saved fields survive restart");System.out.println("[vandorlabs][copifier-controls] read PASS checks="+checks);}
+ @SubscribeEvent public static void started(ServerStartedEvent event){String phase=System.getProperty("vandorlabs.transmitterPhase","");if(!phase.equals("copifier-controls-write")&&!phase.equals("copifier-controls-read"))return;try{if(phase.endsWith("write"))write(event.getServer().overworld());else read(event.getServer().overworld());event.getServer().saveEverything(true,true,true);}catch(Throwable failure){failure.printStackTrace();System.out.println("[vandorlabs][copifier-controls] FAIL "+failure);}finally{event.getServer().halt(false);}}
+}
