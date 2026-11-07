@@ -25,6 +25,7 @@
   },
   "client": [
     "DoorPickMixin",
+    "NativeRampRenderPositionAccess",
     "CameraContainedFluidMixin",
     "LiquidBlockRendererContainedMixin",
     "ClientFluidNeighborMixin",

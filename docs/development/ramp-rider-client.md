@@ -1,0 +1,7 @@
+# Native Ramp rider client presentation
+
+The client consumes the existing `NativeRampMotionPayload` and delegates all dimension, sequence, physical eligibility and displacement admission to its common `apply` policy. Only accepted corrections shift vanilla position history and feed the shared `PlatformMotionSmoothing` policy. Cosmetic time uses the pause-aware local `VisualClock`; server timestamps do not drive interpolation.
+
+The Source renders temporary rider coordinates and restores them afterward, while retaining physical bounds. The native adapter follows that contract with a client-only accessor for the private immutable position vector. Render scope changes position and both history triples, leaving the bounding box and block/chunk caches untouched. This also lets ordinary picking and third-person camera obstruction use the same visible position. Render end, tick start, unload and the next frame restore the saved physical state. An external physical teleport or world replacement is never overwritten by a stale restore. Zero offset skips vector creation; active rendering uses one new immutable vector per frame.
+
+Payload registration remains private to acceptance fixtures until the controller runtime owns it. Compilation of this inactive adapter does not establish actual camera, mouseover, third-person wall behavior or world-reset acceptance; those require the focused placed-client fixture.
