@@ -272,15 +272,20 @@
         "space_visor_5x1_double_height"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native geometry/reservations",
-        "transparent and shader rendering",
-        "contact/collision and fluid behavior",
-        "live parity"
+        "Ordinary Glass configured item/placement, dedicated editor, placed-world rendering and contained-fluid bucket acceptance before canonical activation",
+        "Standalone canopy/cockpit-glass geometry, reservations, opening behavior and native bindings",
+        "Broader copy-tool, resource-pack, shader/hardware and final native release acceptance"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Inactive ordinary Glass settings, grouped panes/frames and bounded emitted geometry match actual Forge references, including L/T component contacts and independent pane/frame grouping.",
+        "Private installed Glass host passes 24,192 cross-family contact profiles, saved restart, failed snapshot retention, legacy absent-size migration and cold nonloading boundaries.",
+        "Registered common ray hook preserves the union outline while tracing actual component boxes: a real ServerLevel.clip union-corner negative is fixed, with 43 inside/tie/neighbor/fluid-context/worker checks.",
+        "Actual Source/native fluid probes preserve Glass material solidity: 152 profiles match, and flowing host replacements fall from 144 to zero.",
+        "Existing wall geometry and shared collision-cache checks remain green; 100,000 actual worker reads of prepared geometry allocate zero measured bytes. Ordinary Glass remains unregistered."
+      ]
     },
     {
       "id": "doors",
