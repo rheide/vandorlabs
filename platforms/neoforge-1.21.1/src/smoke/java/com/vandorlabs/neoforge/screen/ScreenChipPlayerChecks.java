@@ -24,7 +24,7 @@ public final class ScreenChipPlayerChecks {
  @SuppressWarnings("unchecked") private static BlockEntityType<NativeScreenEntity> type(){return (BlockEntityType<NativeScreenEntity>)(BlockEntityType<?>)BuiltInRegistries.BLOCK_ENTITY_TYPE.get(ResourceLocation.parse("vandorlabs:screen_block_fixture"));}
  @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT,bus=EventBusSubscriber.Bus.MOD) public static final class Binding {
   @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){if(ScreenChipPlayerFixture.enabled())event.registerBlockEntityRenderer(type(),NativeScreenBlockEntityRenderer::new);}
-  @SubscribeEvent public static void shaders(RegisterShadersEvent event)throws Exception{if(ScreenChipPlayerFixture.enabled())NativeScreenLayers.registerShaders(event);}
+  @SubscribeEvent public static void shaders(RegisterShadersEvent event)throws Exception{if(ScreenChipPlayerFixture.enabled()&&!NativeScreenClientBindings.installed())NativeScreenLayers.registerShaders(event);}
  }
  private static boolean actor(Minecraft mc,boolean page){var target=page?ScreenChipPlayerFixture.pageTarget():ScreenChipPlayerFixture.trayTarget();var eye=target.add(page?new Vec3(0,1.2,-2):new Vec3(0,2,0));return mc.gameMode.getPlayerMode()==GameType.SURVIVAL&&mc.player.getInventory().selected==0&&mc.player.getOffhandItem().isEmpty()&&mc.player.getEyePosition().distanceToSqr(eye)<.0025;}
  private static boolean hit(Minecraft mc,BlockPos expected){return mc.hitResult instanceof BlockHitResult result&&result.getBlockPos().equals(expected);}

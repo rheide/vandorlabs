@@ -31,12 +31,13 @@ public final class NativeScreenRenderGroups {
  /** Explicit opt-in: production client bindings remain the caller's responsibility. */
  public static void bind(){thread();if(bound)return;NativeScreenPowerViews.bindRender(tile->{var cache=CACHES.get(tile.getLevel());if(cache!=null)cache.epoch++;});bound=true;}
  public static void clear(){thread();for(var cache:CACHES.values())cache.clear();CACHES.clear();}
+ public static void clear(Level level){thread();var cache=CACHES.remove(level);if(cache!=null)cache.clear();}
  public static long retainedBytes(){thread();long bytes=0;for(var cache:CACHES.values())bytes+=BASE_BYTES+cache.bytes;return bytes;}
  private static void thread(){if(!Minecraft.getInstance().isSameThread())throw new IllegalStateException("Screen render grouping requires the client thread");}
  private static Cache cache(Level level){Cache cache=CACHES.get(level);if(cache==null){if(CACHES.size()>=2)clear();cache=new Cache();CACHES.put(level,cache);}cache.ready();return cache;}
  /** Query only the branches actually reached by the released renderer. */
  public static NativeScreenRenderProjection.Rectangle artwork(NativeScreenEntity tile){thread();return rectangle(tile,Kind.ARTWORK);}
- public static NativeScreenRenderProjection.Rectangle frame(NativeScreenEntity tile){thread();return selectedFrame(tile,rectangle(tile,Kind.FRAME));}
+ public static NativeScreenRenderProjection.Rectangle frame(NativeScreenEntity tile){thread();if(!installed(tile))return NativeScreenRenderProjection.Rectangle.SINGLE;return selectedFrame(tile,rectangle(tile,Kind.FRAME));}
  private static NativeScreenRenderProjection.Rectangle selectedFrame(NativeScreenEntity tile,NativeScreenRenderProjection.Rectangle raw){return tile.family()==ScreenFamily.SCREEN?NativeScreenRenderProjection.frameRectangle(tile.getBlockState().getValue(NativeScreenBlock.FACING).get3DDataValue(),tile.screenSettings().primarySurface()==-4&&!tile.controls(0).enabled(),raw):raw;}
  /** Convenience for callers which explicitly need both independent layouts. */
  public static NativeScreenRenderProjection projection(NativeScreenEntity tile){return projection(tile,true,true);}

@@ -166,7 +166,7 @@
         "programmable_viewscreen"
       ],
       "remaining": [
-        "Public canonical registration and complete placed-world renderer/editor acceptance across all seven roles",
+        "Complete canonical placed-world acceptance across all seven registered roles and their shared entity/menu/renderer bindings",
         "Integrated chip tray hits, placed-world journal rendering/navigation, adjacent readers and joined chip-display groups",
         "Remaining optional-material, resource-pack, copy-tool and exact native release acceptance",
         "Vehicle/cockpit and carried-specific integration remains deferred"
@@ -196,7 +196,8 @@
         "Private seven-role Screen blocks, dedicated editor and bounded server-owned material, activation, frame, layout, control-row and transmission edits; public catalog registration remains disabled.",
         "Shared source-verified control projection and pixel artwork, native normal-media and row consumers, weighted display-only font/body caches, explicit resource retirement and conditional physical-power preparation.",
         "Source-exact authored wide-picker policy, configured item meshes, Survival placement/harvest and authoritative Creative/Survival picking; Survival picking only selects or swaps an existing exact item.",
-        "Hidden embedded chip ownership, original item-envelope retention, passive reader inventory adapter and bounded journal/name/master-chip projection; selected chip surfaces remain refused until their full route is ready."
+        "Hidden embedded chip ownership, original item-envelope retention, passive reader inventory adapter and bounded journal/name/master-chip projection; selected chip surfaces remain refused until their full route is ready.",
+        "Seven canonical Screen blocks/items now use the preserved programmable_viewscreen entity type and shared editor/renderer bindings; canonical runtime acceptance is in progress."
       ]
     },
     {
@@ -214,7 +215,7 @@
         "programmable_diagonal_half_screen"
       ],
       "remaining": [
-        "Public canonical registration and complete placed-world renderer/editor acceptance across all seven roles",
+        "Complete canonical placed-world acceptance across all seven registered roles and their shared entity/menu/renderer bindings",
         "Integrated chip tray hits, placed-world journal rendering/navigation, adjacent readers and joined chip-display groups",
         "Remaining optional-material, resource-pack, copy-tool and exact native release acceptance",
         "Vehicle/cockpit and carried-specific integration remains deferred"
@@ -246,7 +247,8 @@
         "Private seven-role Screen blocks, dedicated editor and bounded server-owned material, activation, frame, layout, control-row and transmission edits; public catalog registration remains disabled.",
         "Shared source-verified control projection and pixel artwork, native normal-media and row consumers, weighted display-only font/body caches, explicit resource retirement and conditional physical-power preparation.",
         "Source-exact authored wide-picker policy, configured item meshes, Survival placement/harvest and authoritative Creative/Survival picking; Survival picking only selects or swaps an existing exact item.",
-        "Hidden embedded chip ownership, original item-envelope retention, passive reader inventory adapter and bounded journal/name/master-chip projection; selected chip surfaces remain refused until their full route is ready."
+        "Hidden embedded chip ownership, original item-envelope retention, passive reader inventory adapter and bounded journal/name/master-chip projection; selected chip surfaces remain refused until their full route is ready.",
+        "Seven canonical Screen blocks/items now use the preserved programmable_viewscreen entity type and shared editor/renderer bindings; canonical runtime acceptance is in progress."
       ]
     },
     {

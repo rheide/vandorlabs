@@ -57,6 +57,8 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         var lightItemSources=java.util.Map.copyOf(lightItemModels);
         event.getModels().replaceAll((id,model) -> {
             if(propulsionBake!=null&&NativePropulsionClientBindings.engine(id.id()))return id.getVariant().equals("inventory")?new NativePropulsionItemModel(model,id.id().getPath(),propulsionBake):NativePropulsionModel.wrap(model,propulsionBake);
+            var screenFamily=NativeScreenClientBindings.family(id.id());
+            if(screenFamily!=null&&id.getVariant().equals("inventory"))return new NativeScreenItemModel(model,screenFamily,name->trapdoorItemAtlas.getOrDefault(name,itemFallback));
             var lightKind=NativeLightClientBindings.kind(id.id());
             if(lightKind!=null&&id.getVariant().equals("inventory"))return new NativeLightItemModel(model,lightKind,lightItemSources::get,name->trapdoorItemAtlas.getOrDefault(name,itemFallback));
             if(NativeTrapdoorClientBindings.trapdoor(id.id()))return id.getVariant().equals("inventory")?new NativeTrapdoorItemModel(model,com.vandorlabs.neoforge.trapdoor.NativeTrapdoorItem::housingTexture,name->trapdoorItemAtlas.getOrDefault(name,itemFallback)):com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());

@@ -15,7 +15,7 @@ public final class NativeScreenLayers {
  private static final Map<Key,RenderType> TYPES=new LinkedHashMap<>(32,.75F,true){protected boolean removeEldestEntry(Map.Entry<Key,RenderType> entry){return size()>4096;}};private record Key(ResourceLocation texture,boolean frame,boolean bias){}
  private NativeScreenLayers(){}
  public static void registerShaders(RegisterShadersEvent event)throws java.io.IOException{
-  var resource=ResourceLocation.fromNamespaceAndPath("vandorlabs","panel_frame");event.registerShader(new ShaderInstance(event.getResourceProvider(),resource,DefaultVertexFormat.BLOCK),value->{content=value;TYPES.clear();});event.registerShader(new ShaderInstance(event.getResourceProvider(),resource,DefaultVertexFormat.BLOCK),value->{value.getUniform("AlphaCutoff").set(.01F);frame=value;TYPES.clear();});
+  var resource=ResourceLocation.fromNamespaceAndPath("vandorlabs","screen_content");event.registerShader(new ShaderInstance(event.getResourceProvider(),resource,DefaultVertexFormat.BLOCK),value->{content=value;TYPES.clear();});event.registerShader(new ShaderInstance(event.getResourceProvider(),ResourceLocation.fromNamespaceAndPath("vandorlabs","screen_frame"),DefaultVertexFormat.BLOCK),value->{value.getUniform("AlphaCutoff").set(.01F);frame=value;TYPES.clear();});
  }
  private static final class Types extends RenderType {
   private Types(){super("vandorlabs_screen",DefaultVertexFormat.BLOCK,VertexFormat.Mode.QUADS,1536,false,false,()->{},()->{});}

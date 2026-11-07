@@ -45,7 +45,7 @@ public final class NativePanelPlaybackRenderer implements BlockEntityRenderer<ne
     static void prepare(Object bakery,NativeFlatWallModel.Bake bake){PENDING.put(bakery,new Prepared(GENERATION.incrementAndGet(),bake));}
     @SubscribeEvent public static void completed(ModelEvent.BakingCompleted event){publish(event.getModelBakery());}
     private static synchronized void publish(Object bakery){var prepared=PENDING.getIfPresent(bakery);PENDING.invalidate(bakery);if(prepared!=null&&(active==null||prepared.generation>active.generation))active=prepared;}
-    @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event){if(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_porthole_wall")))event.registerBlockEntityRenderer(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),ignored->new NativePanelPlaybackRenderer());}
+    @SubscribeEvent public static void register(EntityRenderersEvent.RegisterRenderers event){if(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","programmable_porthole_wall")))event.registerBlockEntityRenderer(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),NativeProgrammableRenderer::new);}
     static RenderType frameRenderType(){return BodyLayer.VALUE;}
     static RenderType frameRenderType(boolean cull){return cull?BodyLayer.CULLED:BodyLayer.VALUE;}
     private static final class BodyLayer {static final RenderType VALUE=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true),CULLED=Types.pane(net.minecraft.client.renderer.texture.TextureAtlas.LOCATION_BLOCKS,true,true,true);}
