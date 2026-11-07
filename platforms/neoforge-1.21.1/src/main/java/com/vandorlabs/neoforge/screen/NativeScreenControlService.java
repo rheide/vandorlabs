@@ -27,12 +27,15 @@ public final class NativeScreenControlService {
  // Source settles each removal before the next; preserve dormant feedback while network publication is batched.
  private void withdraw(Collection<Row> old){for(Row row:old){registered.remove(row);if(level()!=null){NativeRedstoneChannels.unregister(row);if(owner.isChannelMemberActive())for(Row remaining:registeredRows())refresh(remaining);}}}
  void stop(){initialized=false;disarm();withdraw(registeredRows());}
- private void publish(int slot,boolean notify){if(configuring){pendingSlots|=1<<slot;return;}List<NativeScreenControls.Row> values=new ArrayList<>();for(Row row:rows.get(slot))values.add(row.snapshot());NativeScreenControls next=new NativeScreenControls(headers[slot].enabled(),headers[slot].title(),values);headers[slot]=next;owner.installControlData(slot,next,notify);}
+ private NativeScreenControls currentData(int slot){List<NativeScreenControls.Row> values=new ArrayList<>();for(Row row:rows.get(slot))values.add(row.snapshot());return new NativeScreenControls(headers[slot].enabled(),headers[slot].title(),values);}
+ private void publish(int slot,boolean notify){if(configuring){pendingSlots|=1<<slot;return;}NativeScreenControls next=currentData(slot);headers[slot]=next;owner.installControlData(slot,next,notify);}
  boolean editing(){return editing;}
  private boolean valid(int slot,int index){return !editing&&live()&&slot>=0&&slot<2&&headers[slot].enabled()&&index>=0&&index<rows.get(slot).size();}
  private void refresh(Row row){int received=0;for(int c=0;c<row.channels.size();c++)received=Math.max(received,NativeRedstoneChannels.level(level(),owner.getBlockPos(),row.channels.get(c)));row.setChannelLevel(received);}
- boolean configure(int slot,NativeScreenRowEdit edit){
-  if(editing||!live()||edit==null||slot<0||slot>1||!owner.family().supportsSlot(slot)||edit.rows().size()>owner.family().standaloneControlRows(slot))return false;
+ boolean configure(int slot,NativeScreenRowEdit edit){return configure(slot,edit,true,false);}
+ private boolean configure(int slot,NativeScreenRowEdit edit,boolean enabled,boolean copied){
+  if(editing&&!copied||!live()||edit==null||slot<0||slot>1||!copied&&!owner.family().supportsSlot(slot)||edit.rows().size()>owner.family().standaloneControlRows(slot))return false;
+  boolean nested=configuring;
   List<Row> oldRows=rows.get(slot),next=new ArrayList<>();
   for(int i=0;i<edit.rows().size();i++){
    var choice=edit.rows().get(i);Row old=i<oldRows.size()?oldRows.get(i):null;
@@ -41,30 +44,43 @@ public final class NativeScreenControlService {
   List<Row> previous=new ArrayList<>(oldRows.stream().filter(registered::contains).toList());
   editing=configuring=true;
   try{
-   rows.set(slot,next);headers[slot]=new NativeScreenControls(true,edit.title(),List.of());initialized=true;
+   rows.set(slot,next);headers[slot]=new NativeScreenControls(enabled,edit.title(),List.of());initialized=true;
    mutate(()->{
     // Match Source's two stages: transfer by index and settle old types before applying new options.
-    for(Row row:next){registered.add(row);NativeRedstoneChannels.channelsChanged(row);}
-    withdraw(previous);for(Row row:next)refresh(row);
+    if(enabled)for(Row row:next){registered.add(row);NativeRedstoneChannels.channelsChanged(row);}
+    withdraw(previous);if(enabled)for(Row row:next)refresh(row);
     for(int i=0;i<next.size();i++){
      Row row=next.get(i);NativeRedstoneChannels.unregister(row);var choice=edit.rows().get(i);
      row.pulse=choice.pulse();row.slider=!row.pulse&&choice.slider();
      if(row.pulse){row.latched=ChannelList.EMPTY;row.levels.clear();}else row.until=0;
      row.max=Math.max(3,Math.min(15,choice.max()));row.min=Math.max(1,Math.min(row.max-2,choice.min()==0?5:choice.min()));row.dirty=true;
-     NativeRedstoneChannels.channelsChanged(row);refresh(row);
+     if(enabled)NativeRedstoneChannels.channelsChanged(row);refresh(row);
     }
    });
   }finally{
-   configuring=false;pendingSlots|=1<<slot;int publish=pendingSlots;pendingSlots=0;
-   try{for(int i=0;i<2;i++)if((publish&(1<<i))!=0)publish(i,true);}finally{editing=false;arm();}
+   configuring=nested;pendingSlots|=1<<slot;if(!nested){int publish=pendingSlots;pendingSlots=0;
+   try{for(int i=0;i<2;i++)if((publish&(1<<i))!=0)publish(i,true);}finally{editing=false;arm();}}
   }
   return true;
  }
- void transmissionChanged(){
-  if(editing||!live())throw new IllegalStateException("Screen transmission owner unavailable");
+ void transmissionChanged(){transmissionChanged(false);}
+ private void transmissionChanged(boolean copied){
+  if(editing&&!copied||!live())throw new IllegalStateException("Screen transmission owner unavailable");boolean nested=configuring;
   editing=configuring=true;
   try{mutate(()->{withdraw(registeredRows());NativeRedstoneChannels.unregister(owner);NativeRedstoneChannels.channelsChanged(owner);initialized=true;registerCurrent();for(var side:rows)for(Row row:side)refresh(row);});}
-  finally{configuring=false;pendingSlots=0;try{publish(0,false);publish(1,false);owner.reconcileControlOutput();}finally{editing=false;arm();}}
+  finally{configuring=nested;if(!nested){pendingSlots=0;try{publish(0,false);publish(1,false);owner.reconcileControlOutput();}finally{editing=false;arm();}}else pendingSlots|=3;}
+ }
+ /** Ordered Source copier phases, buffering every projection until both headers and the metadata tail are installed. */
+ boolean applyCopied(com.vandorlabs.neoforge.copifier.NativeCopifierScreenEdit.Plan plan,Runnable scalar,Runnable footer,Runnable transmission,boolean changeTransmission){
+  if(editing||!live())return false;editing=configuring=true;
+  try{scalar.run();for(int slot=0;slot<2;slot++)if(slot==0?plan.surface0():plan.surface1()){
+   boolean enabled=plan.scalar().controls().get(slot).enabled();var previous=headers[slot];if(previous.enabled()==enabled)continue;headers[slot]=new NativeScreenControls(enabled,previous.title(),previous.rows());
+   if(enabled){for(Row row:rows.get(slot)){registered.add(row);NativeRedstoneChannels.channelsChanged(row);}for(Row row:rows.get(slot))refresh(row);}else withdraw(new ArrayList<>(rows.get(slot).stream().filter(registered::contains).toList()));pendingSlots|=1<<slot;
+  }
+  if(plan.rows()!=null)for(int slot=0;slot<2;slot++){var edit=plan.rows().get(slot);if(!configure(slot,edit.choices(),edit.enabled(),true))throw new IllegalStateException("Prevalidated Screen row copy refused");}
+  footer.run();transmission.run();if(changeTransmission)transmissionChanged(true);
+  return true;
+  }finally{for(int slot=0;slot<2;slot++){var data=currentData(slot);headers[slot]=data;owner.stageCopiedControls(slot,data);}configuring=editing=false;pendingSlots=0;arm();}
  }
  boolean toggle(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(row.channels.isEmpty()||row.slider)return false;if(row.pulse)return pulse(slot,index);boolean all=true;ServerLevel world=level();for(int i=0;i<row.channels.size();i++)if(NativeRedstoneChannels.level(world,owner.getBlockPos(),row.channels.get(i))==0){all=false;break;}NativeRedstoneChannels.latchLevelChanged(row,all?0:15);return true;}
  boolean select(int slot,int index,int segment){if(!valid(slot,index)||segment<0||segment>3)return false;Row row=rows.get(slot).get(index);if(!row.slider)return false;NativeRedstoneChannels.latchLevelChanged(row,SignalControlData.levelForStep(segment,row.min,row.max));return true;}
