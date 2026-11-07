@@ -6,3 +6,11 @@ task exportCopifierPropulsionSourceReference(type: JavaExec) {
  args file("$buildDir/test-artifacts/copifier-propulsion-source.jsonl").absolutePath
  maxHeapSize='1G'
 }
+task exportCopifierPropulsionGroupReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CopifierPropulsionGroupLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-propulsion-groups.jsonl").absolutePath
+ maxHeapSize='1G'
+}
