@@ -22,6 +22,7 @@ public final class VehicleCouplings {
     public static void requestRelease(EntityGroundVehicle craft,VehicleArmCouplers.Address at){VehicleArmReleaseRuntime.request(craft,at);}
     public static boolean preparingArmRelease(EntityGroundVehicle craft){return VehicleArmReleaseRuntime.preparing(craft);}
     static void pollArmReleaseInputs(EntityGroundVehicle craft){VehicleArmReleaseRuntime.pollInputs(craft);}
+    static void delayArmRelease(EntityGroundVehicle craft){NEXT.put(craft,craft.world.getTotalWorldTime()+20);}
     static void releaseControlsChanged(EntityGroundVehicle craft){VehicleArmReleaseRuntime.controlChanged(craft);}
     private static final Map<EntityGroundVehicle,Long> NEXT=new WeakHashMap<>();
     public static void wake(EntityGroundVehicle craft){if(craft!=null)NEXT.remove(craft);}
