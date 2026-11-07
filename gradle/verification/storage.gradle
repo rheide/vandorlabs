@@ -55,3 +55,13 @@ task exportStorageItemModelSourceReference(type: JavaExec) {
     args file('build/test-artifacts/storage-item-model-source-reference.jsonl').absolutePath
     maxHeapSize = '1G'
 }
+
+// Separate content-aspect corpus leaves the square-sprite selector baseline intact.
+task exportStorageItemContentSourceReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StorageItemModelLegacyOracle'
+    args file('build/test-artifacts/storage-item-content-source-reference.jsonl').absolutePath, '--content-aspects'
+    maxHeapSize = '1G'
+}
