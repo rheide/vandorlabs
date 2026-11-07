@@ -46,6 +46,7 @@ public class NativeProgrammerBlock extends BaseEntityBlock {
  @Override protected List<ItemStack> getDrops(BlockState state,LootParams.Builder builder){if(state.getValue(PART)!=0)return List.of();var tile=builder.getOptionalParameter(LootContextParams.BLOCK_ENTITY);return tile instanceof NativeProgrammerEntity owner&&owner.inert()?List.of():List.of(new ItemStack(asItem()));}
  @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState after,boolean moving){
   if(state.getBlock()==after.getBlock()){super.onRemove(state,level,pos,after,moving);return;}
+  if(NativeProgrammerItem.mutating(level,pos)){super.onRemove(state,level,pos,after,moving);return;}
   List<ItemStack> drops=List.of();CompoundTag recovery=null;var previous=level.getBlockEntity(pos);
   if(level instanceof ServerLevel&&previous instanceof NativeProgrammerEntity owner){owner.beginRemoval();recovery=owner.recovery();if(recovery==null)drops=owner.takeForDrop();}
   super.onRemove(state,level,pos,after,moving);

@@ -31,7 +31,7 @@ public class NativeProgrammerEntity extends BlockEntity implements Container {
  private Direction facing(){return getBlockState().hasProperty(NativeProgrammerBlock.FACING)?getBlockState().getValue(NativeProgrammerBlock.FACING):Direction.NORTH;}
  private Visual emptyVisual(boolean failed,long sequence){return new Visual(facing(),failed?ProgrammerStatus.BLANK:ProgrammerStatus.READY,failed,List.of(new SlotVisual(0,-1),new SlotVisual(0,-1),new SlotVisual(0,-1)),sequence);}
  private boolean serverThread(){return level instanceof ServerLevel server&&server.getServer().isSameThread();}
- private boolean current(){return serverThread()&&!inert&&!projectionOnly&&!removing&&!isRemoved()&&NativeRedstoneChannels.open((ServerLevel)level)&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this&&getBlockState().getBlock() instanceof NativeProgrammerBlock&&getBlockState().getValue(NativeProgrammerBlock.PART)==0;}
+ private boolean current(){return serverThread()&&!NativeProgrammerItem.mutating(level,worldPosition)&&!inert&&!projectionOnly&&!removing&&!isRemoved()&&NativeRedstoneChannels.open((ServerLevel)level)&&level.hasChunkAt(worldPosition)&&level.getBlockEntity(worldPosition)==this&&getBlockState().getBlock() instanceof NativeProgrammerBlock&&getBlockState().getValue(NativeProgrammerBlock.PART)==0;}
  private boolean removalAccess(){return serverThread()&&removing&&!isRemoved();}
  public boolean inert(){return inert||projectionOnly&&level instanceof ServerLevel;}
  public boolean usable(Player player){return current()&&NativeConfigurationAccess.canEditDialog(player,level,worldPosition);}
