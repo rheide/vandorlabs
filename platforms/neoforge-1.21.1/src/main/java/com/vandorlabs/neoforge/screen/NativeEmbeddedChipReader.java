@@ -11,9 +11,7 @@ public final class NativeEmbeddedChipReader {
     private static final Set<String> KEYS=Set.of("AnyToken","AllowedTokens","ChipSlot","TokenLogo","TokenBehavior","TokenPulseUntil","TokenInsertStarted","TokenRejectedUntil","TokenInsertionSequence","TokenToggleApplied","TokenToggled","TokenReturnToMost","TokenReturnToLeast","TokenReturnTo","InsertedToken");
     private final NativeTokenReader reader;
     private final NativeTokenReader.Host host;
-    private com.vandorlabs.programmer.JournalText journal;
-    private CompoundTag journalData;
-    private boolean master;private String displayName;
+    private NativeChipDisplay display;
     private static final NativeTokenReader.Host STORAGE=new NativeTokenReader.Host(){
         public net.minecraft.world.level.block.entity.BlockEntity owner(){throw new IllegalStateException("Detached chip storage has no gameplay owner");}
         public boolean usable(net.minecraft.server.level.ServerPlayer player){return false;}
@@ -30,8 +28,7 @@ public final class NativeEmbeddedChipReader {
             public boolean chip(boolean saved){return true;}
         },true);
     }
-    private static String customName(net.minecraft.world.item.ItemStack token){var name=token.get(net.minecraft.core.component.DataComponents.CUSTOM_NAME);return name==null?null:com.vandorlabs.programmer.JournalText.bounded(name.getString(),NativeScreenChipView.NAME_LIMIT);}
-    private void prepareJournal(net.minecraft.world.item.ItemStack token){journalData=NativeChipJournal.textData(token);journal=NativeChipJournal.viewText(journalData);master=NativeChipJournal.master(token);displayName=customName(token);}
+    private void prepareJournal(net.minecraft.world.item.ItemStack token){display=NativeChipDisplay.prepare(token);}
     /** Caller selected an authorized tray hit. Screen trays never search inventory or accept a second chip. */
     public boolean interact(net.minecraft.server.level.ServerPlayer player,net.minecraft.world.InteractionHand hand){
         var owner=host.owner();if(!(owner.getLevel() instanceof net.minecraft.server.level.ServerLevel level))return false;
@@ -52,17 +49,18 @@ public final class NativeEmbeddedChipReader {
         var token=raw.contains("InsertedToken",Tag.TAG_COMPOUND)?NativeCredentialItems.readStack(raw.getCompound("InsertedToken"),registries):net.minecraft.world.item.ItemStack.EMPTY;
         if(raw.contains("InsertedToken")&&token.isEmpty())throw new IllegalArgumentException("Unresolved embedded chip ownership");
         if(!token.isEmpty())NativeCredentialItems.writeStack(token.copyWithCount(1),registries);
-        var nextText=NativeChipJournal.textData(token);var nextJournal=NativeChipJournal.viewText(nextText);boolean nextMaster=NativeChipJournal.master(token);String nextName=customName(token);
-        var tag=raw.copy();tag.putBoolean("ChipSlot",true);tag.putBoolean("AnyToken",true);tag.putInt("AllowedTokens",127);tag.putInt("TokenBehavior",0);tag.remove("TokenReturnToMost");tag.remove("TokenReturnToLeast");tag.remove("TokenReturnTo");reader.read(tag,registries);journal=nextJournal;journalData=nextText;master=nextMaster;displayName=nextName;
+        var nextDisplay=NativeChipDisplay.prepare(token);
+        var tag=raw.copy();tag.putBoolean("ChipSlot",true);tag.putBoolean("AnyToken",true);tag.putInt("AllowedTokens",127);tag.putInt("TokenBehavior",0);tag.remove("TokenReturnToMost");tag.remove("TokenReturnToLeast");tag.remove("TokenReturnTo");reader.read(tag,registries);display=nextDisplay;
     }
     public CompoundTag write(HolderLookup.Provider registries){return reader.write(registries);}
     public boolean occupied(){return reader.occupied();}
     public net.minecraft.world.item.ItemStack tokenCopy(){return reader.tokenCopy();}
     public NativeTokenReader.Visual visual(long now){return reader.visual(now);}
     public NativeTokenReader.Motion motion(long now){return reader.motion(now);}
-    public boolean master(){return master;}
+    public boolean master(){return display!=null&&display.master;}
     /** Null means the consumer must localize the stock chip name. */
-    public String displayName(){return displayName;}
-    public com.vandorlabs.programmer.JournalText journal(){return journal;}
-    public CompoundTag journalData(){return journalData==null?null:journalData.copy();}
+    public String displayName(){return display==null?null:display.customName;}
+    public NativeChipDisplay display(){return display;}
+    public com.vandorlabs.programmer.JournalText journal(){return display==null?null:display.journal;}
+    public CompoundTag journalData(){return display==null?null:display.text();}
 }

@@ -16,8 +16,13 @@ public final class NativeScreenChipView {
     public final String displayName;
     public static final int NAME_LIMIT=256;
     private final CompoundTag text;
-    private NativeScreenChipView(NativeTokenReader.Visual reader,NativeTokenReader.Motion motion,CompoundTag text,int page,boolean master,String displayName){this.master=master;this.displayName=displayName;this.reader=reader;this.motion=motion;this.text=text==null?null:text.copy();journal=NativeChipJournal.viewText(this.text);this.page=journal==null?0:Math.max(0,Math.min(journal.pages.size()-1,page));}
-    public static NativeScreenChipView of(NativeEmbeddedChipReader owner,long now,int page){return new NativeScreenChipView(owner.visual(now),owner.motion(now),owner.journalData(),page,owner.master(),owner.displayName());}
+    private NativeScreenChipView(NativeTokenReader.Visual reader,NativeTokenReader.Motion motion,CompoundTag text,JournalText journal,int page,boolean master,String displayName){this.master=master;this.displayName=displayName;this.reader=reader;this.motion=motion;this.text=text;this.journal=journal;this.page=journal==null?0:Math.max(0,Math.min(journal.pages.size()-1,page));}
+    private NativeScreenChipView(NativeTokenReader.Visual reader,NativeTokenReader.Motion motion,CompoundTag text,int page,boolean master,String displayName){this(reader,motion,text==null?null:text.copy(),NativeChipJournal.viewText(text),page,master,displayName);}
+    public static NativeScreenChipView of(NativeEmbeddedChipReader owner,long now,int page){return of(owner.display(),owner.visual(now),owner.motion(now),page);}
+    /** The prepared source contains bounded display data only, shared without repaginating per update. */
+    public static NativeScreenChipView of(NativeChipDisplay display,NativeTokenReader.Visual reader,NativeTokenReader.Motion motion,int page){return new NativeScreenChipView(reader,motion,display==null?null:display.text(),display==null?null:display.journal,page,display!=null&&display.master,display==null?null:display.customName);}
+    /** Page changes share immutable prepared text and never reconstruct an inventory stack. */
+    public NativeScreenChipView withPage(int page){int bounded=journal==null?0:Math.max(0,Math.min(journal.pages.size()-1,page));return bounded==this.page?this:new NativeScreenChipView(reader,motion,text,journal,bounded,master,displayName);}
     public CompoundTag write(){
         var tag=new CompoundTag();tag.putInt("Company",reader.company());tag.putInt("Logo",reader.logo());tag.putBoolean("Icon",reader.icon());tag.putBoolean("Occupied",reader.occupied());tag.putInt("Output",reader.output());tag.putLong("Sequence",motion.sequence());tag.putInt("Age",motion.age());tag.putInt("RejectedFor",motion.rejectedFor());tag.putLong("RejectedUntil",motion.rejectionDeadline());tag.putInt("Page",page);tag.putBoolean("Master",master);if(displayName!=null)tag.putString("DisplayName",displayName);if(text!=null)tag.put("Journal",text.copy());return tag;
     }
