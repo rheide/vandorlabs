@@ -42,6 +42,7 @@ public final class NativeInventoryItems {
   var id=ResourceLocation.tryParse(name);if(id==null)throw new IllegalArgumentException("Malformed legacy Storage item identity");
   var tag=raw.getCompound("tag");if(raw.contains("tag")&&!(raw.get("tag") instanceof CompoundTag))throw new IllegalArgumentException("Malformed legacy Storage item data");
   NonNullList<ItemStack> children=null;
+  if(name.equals("minecraft:air")){if(raw.getShort("Damage")!=0||!tag.isEmpty())throw new IllegalArgumentException("Unsupported Source empty item data");return ItemStack.EMPTY;}
   if(tag.contains("EntityTag")||tag.contains("Inventory")||tag.contains("Items"))throw new IllegalArgumentException("Unsupported legacy embedded Storage owner");
   if(tag.contains("BlockEntityTag")){
    if(!(tag.get("BlockEntityTag") instanceof CompoundTag block))throw new IllegalArgumentException("Unsupported nested Storage block data");
@@ -60,6 +61,7 @@ public final class NativeInventoryItems {
  public static ItemStack modern(CompoundTag raw,HolderLookup.Provider registries){return modern(raw,registries,new Budget(),0);}
  public static ItemStack modern(CompoundTag raw,HolderLookup.Provider registries,Budget budget){return modern(raw,registries,budget,0);}
  private static ItemStack modern(CompoundTag raw,HolderLookup.Provider registries,Budget budget,int depth){
+  if(raw.isEmpty())return ItemStack.EMPTY;
   nativeTree(raw,budget,depth);
   for(String key:raw.getAllKeys())if(!MODERN_ROOT.contains(key))throw new IllegalArgumentException("Unsupported native Storage item field");
   var id=ResourceLocation.tryParse(raw.getString("id"));if(id==null||!BuiltInRegistries.ITEM.containsKey(id))throw new IllegalArgumentException("Unknown native Storage item identity");var stack=ItemStack.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE),raw).getOrThrow();if(stack.isEmpty())throw new IllegalArgumentException("Empty positive-count Storage item");return stack;
