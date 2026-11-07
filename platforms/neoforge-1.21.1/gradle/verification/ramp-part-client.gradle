@@ -4,3 +4,9 @@ tasks.register('testRampPartAnimation', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.animation.RampPartAnimationChecks'
 }
+tasks.register('testNativeRampPartClock', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeRampPartClockChecks'
+}
