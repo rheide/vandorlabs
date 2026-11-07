@@ -1,0 +1,18 @@
+def screenWorldSmoke = layout.buildDirectory.dir('generated/screen-world-smoke-resources')
+sourceSets.smoke.resources.srcDir(screenWorldSmoke)
+tasks.register('generateScreenWorldSmokeResources') {
+    outputs.dir(screenWorldSmoke)
+    doLast {
+        def root=screenWorldSmoke.get().asFile
+        ['screen','console','half_console','half_input','input','diagonal','half_diagonal'].each { family ->
+            def target=new File(root,'assets/vandorlabs/blockstates/screen_block_fixture_'+family+'.json')
+            target.parentFile.mkdirs()
+            target.text='{"variants":{"":{"model":"vandorlabs:block/native_screen_empty"}}}\n'
+        }
+    }
+}
+tasks.named('processSmokeResources') { dependsOn tasks.named('generateScreenWorldSmokeResources') }
+neoForge.runs.configureEach {
+    if(project.hasProperty('screenRenderWorldCheck')) { systemProperty 'vandorlabs.screenRenderWorldCheck','true'; systemProperty 'vandorlabs.screenRenderBoundsReference',rootProject.file('../../testclient/fixtures/screen-render-bounds-reference.json.gz').absolutePath }
+    if(project.hasProperty('screenRenderWorldRead')) systemProperty 'vandorlabs.screenRenderWorldRead','true'
+}
