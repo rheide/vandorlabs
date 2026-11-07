@@ -23,8 +23,8 @@ public final class DenseWallClientChecks {
   mc.disconnect();stage=90;
  }
  private static void measure(net.minecraft.client.Minecraft mc,NativeFlatWallModel.Bake bake,int role)throws Exception{
-  NativeWallEntity.WallAppearance[] views=new NativeWallEntity.WallAppearance[512];
-  for(int i=0;i<views.length;i++)views[i]=((NativeWallEntity)mc.level.getBlockEntity(DenseWallFixture.pos(role,i))).wallAppearance();
+  NativeWallEntity[] owners=new NativeWallEntity[512];NativeWallEntity.WallAppearance[] views=new NativeWallEntity.WallAppearance[512];
+  for(int i=0;i<views.length;i++){owners[i]=(NativeWallEntity)mc.level.getBlockEntity(DenseWallFixture.pos(role,i));views[i]=owners[i].wallAppearance();}
   Set<Object> panes=Collections.newSetFromMap(new IdentityHashMap<>()),bodies=Collections.newSetFromMap(new IdentityHashMap<>());
   for(var view:views){panes.add(bake.paneProjection(view));if(!view.chunkBody())bodies.add(bake.bodyProjection(view));}
   for(int pass=0;pass<16;pass++)for(var view:views){bake.paneProjection(view);if(!view.chunkBody())bake.bodyProjection(view);}
@@ -32,9 +32,9 @@ public final class DenseWallClientChecks {
   for(int pass=0;pass<4;pass++)for(var view:views){bake.paneProjection(view);if(!view.chunkBody())bake.bodyProjection(view);}
   long bytes=bean.getThreadAllocatedBytes(thread)-before;
   var renderer=new NativePanelPlaybackRenderer();var pose=new com.mojang.blaze3d.vertex.PoseStack();var discard=new Discard();net.minecraft.client.renderer.MultiBufferSource buffers=layer->discard;
-  for(int pass=0;pass<8;pass++)for(int i=0;i<512;i++)renderer.render(mc.level.getBlockEntity(DenseWallFixture.pos(role,i)),0,pose,buffers,15728880,0);
+  for(int pass=0;pass<8;pass++)for(int i=0;i<512;i++)renderer.render(owners[i],0,pose,buffers,15728880,0);
   discard.vertices=0;before=bean.getThreadAllocatedBytes(thread);
-  for(int i=0;i<512;i++)renderer.render(mc.level.getBlockEntity(DenseWallFixture.pos(role,i)),0,pose,buffers,15728880,0);
+  for(int i=0;i<512;i++)renderer.render(owners[i],0,pose,buffers,15728880,0);
   long emittedBytes=bean.getThreadAllocatedBytes(thread)-before;
   var bodyField=NativeFlatWallModel.Bake.class.getDeclaredField("bodyBytes");bodyField.setAccessible(true);var paneField=NativeFlatWallModel.Bake.class.getDeclaredField("playbackBytes");paneField.setAccessible(true);
   System.out.println("[vandorlabs][dense-wall] role="+DenseWallFixture.IDS[role]+" owners=512 paneProjections="+panes.size()+" bodyLists="+bodies.size()+" bodyBytes="+bodyField.getInt(bake)+" paneBytes="+paneField.getInt(bake)+" warm2048Bytes="+bytes+" emittedVertices="+discard.vertices+" fullRender512Bytes="+emittedBytes);
