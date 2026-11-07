@@ -1,0 +1,11 @@
+def canopyPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/canopy-resources')
+tasks.register('generateCanopyResources', Exec) {
+    workingDir projectDir
+    commandLine canopyPython, 'generate_canopy_resources.py'
+    inputs.file('generate_canopy_resources.py')
+    inputs.file('../../src/main/resources/assets/vandorlabs/data/canopy_meshes.json')
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/canopy') { include '*.png' })
+    outputs.dir('build/generated/canopy-resources')
+}
+tasks.named('processResources') { dependsOn tasks.named('generateCanopyResources') }
