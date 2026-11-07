@@ -12,7 +12,7 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
 
-/** Inactive standalone housing; detailed external collision routing is not installed by this class. */
+/** Standalone housing; detailed external collision routing is not installed by this class. */
 public class NativeCanopyBlock extends Block implements EntityBlock,NativeAuthoredBlockRay {
     public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
     private final String kind;private final Supplier<? extends BlockEntityType<?>> type;private final Supplier<net.minecraft.world.inventory.MenuType<NativeCanopyMenu>> menu;

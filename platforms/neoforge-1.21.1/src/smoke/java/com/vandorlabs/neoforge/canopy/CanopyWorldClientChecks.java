@@ -65,8 +65,17 @@ public final class CanopyWorldClientChecks {
             case 14->{if(!marker(mc,15))return;var moving=(NativeCanopyEntity)mc.level.getBlockEntity(CanopyWorldFixture.root(2));if(moving==null||moving.links().open()||moving.links().progress()>.65F||moving.links().progress()<=0)return;need(moving.publication().progress()>0,"actual partial client closing pose");next(16);stage=15;}
             case 15->{if(!marker(mc,16))return;var moving=(NativeCanopyEntity)mc.level.getBlockEntity(CanopyWorldFixture.root(2));if(moving==null||!moving.links().open()||moving.links().progress()!=1)return;next(17);stage=16;}
             case 16->{if(!marker(mc,17)||!mc.level.getBlockState(CanopyWorldFixture.root(3)).isAir())return;need(mc.level.getBlockEntity(CanopyWorldFixture.root(3))==null,"normal membership repair retires actual client owner");next(18);stage=17;}
-            case 17->{if(!marker(mc,18))return;System.out.println("[vandorlabs][canopy-world] client PASS checks="+checks+" actualrootculling/chunkBERnegatives/11kinds/reload");mc.stop();stage=18;}
+            case 17->{if(!marker(mc,18))return;if(CanopyWorldFixture.canonical()){watched=CanopyWorldFixture.PLACED;stage=18;wait=ticks;return;}finish(mc);}
+            case 18->{if(mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||mc.player.getInventory().selected!=0||!net.minecraft.world.item.ItemStack.matches(mc.player.getMainHandItem(),CanopyWorldFixture.placementStack())||mc.player.position().distanceToSqr(40.5,91,-6.5)>.02||ticks<wait+20)return;mc.options.keyShift.setDown(false);mc.gameRenderer.pick(1);need(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit&&hit.getBlockPos().equals(CanopyWorldFixture.SUPPORT)&&hit.getDirection()==Direction.UP,"actual Survival support ray="+mc.hitResult);use(mc);wait=ticks;stage=19;}
+            case 19->{var placed=mc.level.getBlockEntity(CanopyWorldFixture.PLACED) instanceof NativeCanopyEntity owner?owner:null;if(placed==null||placed.publication().geometry()==null||mc.player.getMainHandItem().getCount()!=1||ticks<wait+15)return;need(placed.settings().data().tint==2,"real placed client configured choice");capture("canopy-build-placed.png");stage=20;}
+            case 20->{if(!captured)return;next(19);stage=21;}
+            case 21->{if(!marker(mc,19)||!mc.player.getMainHandItem().isEmpty()||mc.player.position().distanceToSqr(42.5,91,-6.5)>.02||ticks<wait+20)return;mc.gameRenderer.pick(1);need(mc.hitResult instanceof net.minecraft.world.phys.BlockHitResult hit&&mc.level.getBlockEntity(hit.getBlockPos()) instanceof NativeCanopyEntity,"actual empty-hand canopy target");use(mc);wait=ticks;stage=22;}
+            case 22->{var placed=(NativeCanopyEntity)mc.level.getBlockEntity(CanopyWorldFixture.PLACED);if(placed==null||!placed.links().open()||placed.links().progress()!=1)return;capture("canopy-build-open.png");stage=23;}
+            case 23->{if(!captured)return;next(20);stage=24;}
+            case 24->{if(!marker(mc,20))return;finish(mc);}
         }
     }
+    private static void use(Minecraft mc){try{var method=Minecraft.class.getDeclaredMethod("startUseItem");method.setAccessible(true);method.invoke(mc);}catch(ReflectiveOperationException failure){throw new IllegalStateException("Actual Canopy player use",failure);}}
+    private static void finish(Minecraft mc){System.out.println("[vandorlabs][canopy-world] client PASS checks="+checks+" actualrootculling/chunkBERnegatives/11kinds/reload");mc.stop();stage=25;}
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event){if(!CanopyWorldFixture.enabled()||capture==null||++frames<8)return;var mc=Minecraft.getInstance();String name=capture;capture=null;Screenshot.grab(mc.gameDirectory,name,mc.getMainRenderTarget(),ignored->{captured=true;});}
 }

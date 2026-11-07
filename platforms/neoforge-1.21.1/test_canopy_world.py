@@ -53,5 +53,5 @@ def main():
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
  check_log(saved/'logs/latest.log','All dimensions are saved')
- print('Actual private placed Canopy PASS: '+str(out),flush=True)
+ print('Actual placed Canopy PASS: '+str(out),flush=True)
 if __name__=='__main__':main()

@@ -15,7 +15,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.client.event.RegisterSpriteSourceTypesEvent;
 
-/** Inactive standalone canopy sheets retain their original full UVs and low-alpha glass mipmaps. */
+/** Standalone canopy sheets retain their original full UVs and low-alpha glass mipmaps. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeCanopySpriteSource implements SpriteSource {
     public static final MapCodec<NativeCanopySpriteSource> CODEC=MapCodec.unit(NativeCanopySpriteSource::new);

@@ -2,6 +2,29 @@
 
 Build a cockpit from connected glass, angled noses, openable shells and broad front windows. Use the Configurizer, or sneak-use with configuration permission, to change settings on any occupied cell. Changes apply immediately; all settings share one screen beside a large categorized texture list.
 
+## Standalone construction in the experimental native build
+
+1. Craft a Canopy using the recipes below and choose an unobstructed support.
+   Place it on the support; one item creates its complete two-cell shell.
+   Configured items retain their chosen tint and material.
+
+   ![Native Canopy after actual Survival placement](images/native-canopies/placed.png)
+
+2. Use the Configurizer to open its dedicated Canopy window. Creative players
+   can also sneak-use it. Choose the material, tint and opening style; right-click
+   an option to select its previous value. Keep the destination clear before
+   enlarging Front Canopy Glass.
+
+3. Use an empty hand to open or close the Canopy. Its rails remain in place.
+   Place matching Canopies side by side to join them. Front Canopy Glass needs
+   its **Openable** option enabled before it can move.
+
+   ![The same native Canopy after actual empty-hand opening](images/native-canopies/open.png)
+
+These standalone blocks are available in NeoForge 1.21.1. Seat/cockpit sharing
+and carried Vehicle behavior described elsewhere on this page remain specific
+to the Forge implementation.
+
 ## Components and placement
 
 | Component | Size | Shapeless conversion from Canopy Glass |
