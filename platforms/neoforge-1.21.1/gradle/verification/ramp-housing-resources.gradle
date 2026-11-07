@@ -1,0 +1,12 @@
+def rampHousingPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/ramp-housing-resources')
+tasks.register('generateRampHousingResources',Exec) {
+ commandLine rampHousingPython,'generate_ramp_housing_resources.py'
+ inputs.file('generate_ramp_housing_resources.py')
+ inputs.file('../../tools/compact_runtime_assets.py')
+ inputs.files(fileTree('../../generated-resources/assets/vandorlabs').matching { include 'models/block/ramp_*.json'; include 'models/item/ramp_*.json'; include 'models/item/programmable_ramp*.json'; include 'blockstates/programmable_ramp*.json' })
+ inputs.files(fileTree('../../src/main/resources/assets/vandorlabs').matching { include 'models/item/ramp_*.json'; include 'models/item/programmable_ramp*.json'; include 'recipes/programmable_ramp*.json' })
+ for(pack in ['default','additional'])inputs.files(fileTree('../../texture-packs/'+pack+'/assets/vandorlabs/textures/block').matching { include 'ramp_*.png'; include 'ramp_*.png.mcmeta' })
+ outputs.dir('build/generated/ramp-housing-resources')
+}
+tasks.named('processResources') { dependsOn tasks.named('generateRampHousingResources') }
