@@ -35,7 +35,7 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
  private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick,Boolean stationaryTop){
   if(revision<0)throw new IllegalArgumentException("Ramp publication revision");
   if(!data.spec().cell().equals(worldPosition))throw new IllegalArgumentException("Ramp part cell identity");
-  var belt=data.belt().mode()==0?null:NativeRampBeltGeometry.snapshot(data.spec(),distance);
+  var belt=com.vandorlabs.ramp.RampBeltPolicy.deployed(data.belt().mode(),data.motion().moving(),pose)?NativeRampBeltGeometry.snapshot(data.spec(),distance):null;
   var geometry=belt==null?NativeRampGeometry.snapshot(data.spec(),pose):belt.geometry();
   var local=new ArrayList<AABB>(geometry.pieces().size());var world=new ArrayList<AABB>(geometry.pieces().size());
   for(var piece:geometry.pieces()){var box=piece.box();if(box.minX<0||box.minY<0||box.minZ<0||box.maxX>1||box.maxY>1||box.maxZ>1)throw new IllegalArgumentException("Ramp part escaped reserved cell");local.add(box);world.add(box.move(worldPosition));}
