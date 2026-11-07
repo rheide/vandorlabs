@@ -24,3 +24,9 @@ tasks.register('testNativeProgrammerJournalFrame', JavaExec) {
  mainClass = 'com.vandorlabs.neoforge.programmer.ProgrammerJournalFrameChecks'
  args rootProject.file('../../build/test-artifacts/programmer-journal-matrix-forge.json').absolutePath
 }
+tasks.register('testNativeProgrammerDockFrame', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.programmer.ProgrammerDockFrameChecks'
+ args rootProject.file('../../testclient/fixtures/programmer-dock-gl-reference.json.gz').absolutePath
+}
