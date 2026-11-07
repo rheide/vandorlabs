@@ -31,6 +31,7 @@ public final class CanopyHostChecks {
             event.register(Registries.BLOCK_ENTITY_TYPE,h->{TYPE=BlockEntityType.Builder.of((pos,state)->new NativeCanopyEntity(TYPE,pos,state,((NativeCanopyBlock)state.getBlock()).kind()),BLOCKS.values().toArray(Block[]::new)).build(null);h.register(ResourceLocation.parse("vandorlabs:canopy_host_fixture"),TYPE);});
         }
     }
+    static NativeCanopyBlock block(String kind){return BLOCKS.get(kind);}
     static NativeCanopyEntity put(ServerLevel world,BlockPos pos,String kind,Direction facing,CompoundTag tag){world.getChunkAt(pos);world.setBlock(pos,BLOCKS.get(kind).defaultBlockState().setValue(NativeCanopyBlock.FACING,facing),18);var host=(NativeCanopyEntity)world.getBlockEntity(pos);host.loadWithComponents(tag,world.registryAccess());return host;}
     private static volatile Object sink;
     private static void queries(ServerLevel world,NativeCanopyEntity host){
@@ -66,7 +67,7 @@ public final class CanopyHostChecks {
         }}for(var pos:installed)world.setBlock(pos,Blocks.AIR.defaultBlockState(),18);need(profiles==1440&&placements==6944,"Source joined corpus coverage placements="+placements);System.out.println("[vandorlabs][canopy-host] joined profiles="+profiles+" successfulPlacements="+placements);
     }
     private static void write(ServerLevel world)throws Exception{
-        if(phase().contains("reservations"))CanopyReservationHostChecks.run(world);else joining(world);
+        if(phase().contains("reservations"))CanopyReservationHostChecks.run(world);else if(phase().contains("placement"))CanopyPlacementHostChecks.run(world);else joining(world);
         for(String kind:KINDS)for(Direction facing:Direction.Plane.HORIZONTAL){var host=put(world,BASE,kind,facing,new CompoundTag());need(!host.inert()&&!host.publication().resolved()&&host.publication().geometry()==null,"decode is local, no dense prep "+kind);NativeCanopyLifecycle.prepare(host);need(host.publication().resolved()&&host.publication().geometry()!=null,"deferred installed preparation "+kind);need(host.settings().data().depth==16&&!host.links().centered(),"old absence defaults "+kind);need(host.saveWithoutMetadata(world.registryAccess()).getInt("CanopyWidth")==NativeCanopyModels.builtin().dimensions(kind).width(),"source dimensions "+kind);}
         var host=put(world,BASE,"angled_front_1x1",Direction.NORTH,new CompoundTag());NativeCanopyLifecycle.prepare(host);queries(world,host);
         var tag=new CompoundTag();tag.putInt("CanopyShade",2);tag.putBoolean("CenteredPlacement",true);tag.putString("ForeignCanopyData","opaque-kept");host=put(world,SAVED,"canopy",Direction.WEST,tag);need(!host.inert(),"valid saved owner");host.setChanged();
