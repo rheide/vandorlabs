@@ -51,9 +51,9 @@ def main():
       else:outside+=1
    if inside<20 or outside>max(50,inside//6):raise AssertionError('Isolated authored dock pixels '+str((profile,row,inside,outside)))
    pixels.append(dict(profile=profile,inside=inside,outside=outside))
-  crop=tuple(meta['journalBody']);baseline=Image.open(client/'screenshots/programmer-journal-before.png').crop(crop)
+  crop=tuple(meta['journalBody']);baseline=Image.open(client/'screenshots/programmer-journal-before.png').convert('RGB').crop(crop)
   for name in ('programmer-journal-material.png','programmer-journal-reloaded.png'):
-   if ImageChops.difference(baseline,Image.open(client/'screenshots'/name).crop(crop)).getbbox():raise AssertionError('Journal/casing changed during material/reload '+name)
+   if ImageChops.difference(baseline,Image.open(client/'screenshots'/name).convert('RGB').crop(crop)).getbbox():raise AssertionError('Journal/casing changed during material/reload '+name)
   proof=meta['upperOnly'];assert not proof['originSectionVisible'] and proof['ownerBoundsVisible'] and proof['draws']>0
   a=Image.open(client/'screenshots/programmer-upper-only-positive.png').convert('RGB');b=Image.open(client/'screenshots/programmer-upper-only-disabled.png').convert('RGB');changed=sum(max(abs(ca[i]-cb[i]) for i in range(3))>=10 for ca,cb in zip(a.getdata(),b.getdata()))
   if changed<1000:raise AssertionError('Upper-only disabled negative missing '+str(changed))
