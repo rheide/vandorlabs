@@ -4,3 +4,6 @@ tasks.register('testNativeStorageSettings', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.storage.StorageSettingsChecks'
     args rootProject.file('../../testclient/fixtures/storage-source-reference.json.gz').absolutePath
 }
+neoForge.runs.configureEach {
+    systemProperty 'vandorlabs.storageItemReference',rootProject.file('../../testclient/fixtures/storage-items-source-reference.json.gz').absolutePath
+}
