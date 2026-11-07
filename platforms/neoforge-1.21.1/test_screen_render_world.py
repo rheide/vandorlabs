@@ -14,9 +14,10 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
+    parser.add_argument('--canonical',action='store_true')
     parser.add_argument('--chips',action='store_true',help='Add embedded trays and a joined reader-backed journal')
     args=parser.parse_args()
-    canonical_args=['-PscreenRenderWorldCheck']+(['-PscreenChipRenderWorldCheck'] if args.chips else [])
+    canonical_args=(['-PscreenCanonical=true'] if args.canonical else [])+['-PscreenRenderWorldCheck']+(['-PscreenChipRenderWorldCheck'] if args.chips else [])
     phase='screen-render-world-client'
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),**({'VANDOR_READER_SCREEN_CHECK':'true'} if args.chips else {}))
@@ -44,7 +45,7 @@ def main():
     deadline=time.monotonic()+30
     while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
     check_log(saved/'logs/latest.log','All dimensions are saved')
-    run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase,'-PscreenRenderWorldCheck','-PscreenRenderWorldRead'),output/'read.log','[vandorlabs][screen-render-world] read PASS',env)
+    run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase,*canonical_args,'-PscreenRenderWorldRead'),output/'read.log','[vandorlabs][screen-render-world] read PASS',env)
     from PIL import Image,ImageChops
     positive=Image.open(client/'screenshots/screen-world-positive.png').convert('RGB');negative=Image.open(client/'screenshots/screen-world-disabled.png').convert('RGB')
     if positive.size!=negative.size:raise AssertionError('Renderer capture sizes differ')
