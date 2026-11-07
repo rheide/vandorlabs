@@ -1,0 +1,8 @@
+task exportRampBeltReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.RampBeltLegacyOracle'
+ args file("$buildDir/test-artifacts/ramp-belt-source.jsonl").absolutePath
+ maxHeapSize='1g'
+}

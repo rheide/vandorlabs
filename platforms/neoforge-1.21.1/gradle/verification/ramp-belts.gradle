@@ -1,0 +1,7 @@
+tasks.register('testRampBeltReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampBeltChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-belt-source.jsonl.gz').absolutePath
+ maxHeapSize='768m'
+}
