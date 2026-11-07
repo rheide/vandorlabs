@@ -63,3 +63,10 @@ task testJournalOverlay(type: JavaExec) {
     maxHeapSize = '512M'
     args file('testclient/fixtures/screen-journal-overlay-reference.json.gz').absolutePath
 }
+
+task testScreenChipBodies(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ScreenChipBodyChecks'
+}
