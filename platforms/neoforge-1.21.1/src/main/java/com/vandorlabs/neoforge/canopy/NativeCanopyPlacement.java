@@ -8,9 +8,11 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Prepares the actual merged owner before writing a cell or consuming its configured item. */
 public final class NativeCanopyPlacement {
     private NativeCanopyPlacement(){}
-    public record Prepared(BlockState state,CompoundTag snapshot,List<BlockPos> cells,List<BlockPos> admission){
-        public Prepared{snapshot=snapshot.copy();cells=cells.stream().map(BlockPos::immutable).toList();admission=admission.stream().map(BlockPos::immutable).toList();}
+    public record Prepared(BlockState state,CompoundTag snapshot,List<BlockPos> cells,List<BlockPos> admission,CompoundTag initialSnapshot,NativeCanopySettings settings){
+        public Prepared(BlockState state,CompoundTag snapshot,List<BlockPos> cells,List<BlockPos> admission){this(state,snapshot,cells,admission,snapshot,NativeCanopySettings.read(snapshot));}
+        public Prepared{snapshot=snapshot.copy();initialSnapshot=initialSnapshot.copy();cells=cells.stream().map(BlockPos::immutable).toList();admission=admission.stream().map(BlockPos::immutable).toList();}
         @Override public CompoundTag snapshot(){return snapshot.copy();}
+        @Override public CompoundTag initialSnapshot(){return initialSnapshot.copy();}
     }
     /** plan.mount has already applied clicked-face and existing-owner precedence. */
     public static Prepared prepare(NativeCanopyBlock block,BlockPos pos,BlockState state,CompoundTag generic,CompoundTag outer,int mount,HolderLookup.Provider registries){
@@ -23,6 +25,6 @@ public final class NativeCanopyPlacement {
         var fresh=new CompoundTag();fresh.putBoolean("CenteredPlacement",com.vandorlabs.persistence.CanopySettingsData.supports(block.kind())||block.kind().startsWith("space_visor_"));fresh.putBoolean("HollowPlacement",com.vandorlabs.persistence.CanopySettingsData.supports(block.kind()));
         var defaults=NativeCanopyFootprint.cells(block.kind(),pos,state.getValue(NativeCanopyBlock.FACING),settings,NativeCanopyLinks.read(fresh,pos));
         candidate.placementChoices(settings);var cells=candidate.links().footprint();var checked=new LinkedHashSet<BlockPos>(defaults);checked.addAll(cells);
-        return new Prepared(state,candidate.saveWithoutMetadata(registries),cells,new ArrayList<>(checked));
+        return new Prepared(state,candidate.saveWithoutMetadata(registries),cells,new ArrayList<>(checked),merged,settings);
     }
 }

@@ -66,6 +66,8 @@ public final class NativeCanopyEntity extends BlockEntity {
     @Override public void setBlockState(BlockState state){super.setBlockState(state);if(links!=null){pending=true;publishUnresolved();}}
     void markRemoving(){removing(true);}
     void removing(boolean value){removing=value;publishUnresolved();}
+    void installItem(NativeCanopyPlacement.Prepared prepared){unloading=false;removing=false;clearRemoved();setBlockState(prepared.state());loadWithComponents(prepared.initialSnapshot(),level.registryAccess());if(inert)throw new IllegalArgumentException("Failed canopy platform installation");placementChoices(prepared.settings());}
+    void retainPlacementRecovery(NativeCanopyPlacement.Prepared prepared){unloading=false;removing=false;clearRemoved();retained=prepared.snapshot();retained.put(RECOVERY,prepared.snapshot());settings=NativeCanopySettings.fresh();links=NativeCanopyLinks.read(new CompoundTag(),worldPosition);inert=true;pending=true;publishUnresolved();}
     void placementChoices(NativeCanopySettings next){
         settings=next;boolean centered=com.vandorlabs.persistence.CanopySettingsData.supports(kind)||kind.startsWith("space_visor_");boolean hollow=com.vandorlabs.persistence.CanopySettingsData.supports(kind);
         var fresh=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),centered,hollow,links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());
