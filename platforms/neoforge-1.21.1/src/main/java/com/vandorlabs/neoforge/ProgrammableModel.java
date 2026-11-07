@@ -84,6 +84,7 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         NativeLightRenderer.prepare(event.getModelBakery(),wallBake);
         NativeDoorRenderer.prepare(event.getModelBakery(),event.getModels(),event.getTextureGetter(),wallBake);
         NativeTrapdoorRenderer.prepare(event.getModelBakery(),event.getTextureGetter(),wallBake,net.minecraft.client.Minecraft.getInstance().getResourceManager());
+        NativeReaderClientBindings.prepare(event.getModels());
     }
     @Override public ModelData getModelData(net.minecraft.world.level.BlockAndTintGetter level,net.minecraft.core.BlockPos pos,BlockState state,ModelData data) {
         if(joining&&state!=null&&state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()))com.vandorlabs.neoforge.client.JoinedCubeSnapshots.request(pos);
