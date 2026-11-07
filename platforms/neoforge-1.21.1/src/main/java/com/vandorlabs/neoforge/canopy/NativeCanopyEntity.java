@@ -74,6 +74,11 @@ public final class NativeCanopyEntity extends BlockEntity {
         var cells=NativeCanopyFootprint.cells(kind,worldPosition,facing(),settings,fresh);links=new NativeCanopyLinks(cells.contains(worldPosition)?worldPosition:fresh.anchor(),fresh.pair(),fresh.joinedWidth(),centered,hollow,cells,java.util.Set.of(),fresh.waiting(),fresh.open(),fresh.progress(),fresh.powerKnown(),fresh.lastPower(),fresh.lastPolarity());pending=true;publishUnresolved();
     }
     void helperOf(NativeCanopyEntity parent){settings=parent.settings;links=new NativeCanopyLinks(parent.getBlockPos(),null,1,parent.links.centered(),parent.links.hollow(),null,java.util.Set.of(),false,false,0,false,false,false);pending=true;publishUnresolved();}
+    void stageSettings(NativeCanopySettings next){settings=next;pending=true;publishUnresolved();}
+    void configurationRole(NativeCanopyEntity owner){links=new NativeCanopyLinks(owner.getBlockPos(),links.pair(),links.joinedWidth(),owner.links().centered(),links.hollow(),links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
+    void configurationFootprint(java.util.List<BlockPos> cells){links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),links.hollow(),java.util.List.copyOf(cells),java.util.Set.of(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
+    void configurationSettings(NativeCanopySettings next){settings=next;links=new NativeCanopyLinks(links.anchor(),links.pair(),links.joinedWidth(),links.centered(),true,links.footprint(),links.released(),links.waiting(),links.open(),links.progress(),links.powerKnown(),links.lastPower(),links.lastPolarity());pending=true;publishUnresolved();}
+    void retainConfigurationRecovery(CompoundTag snapshot){retained=snapshot.copy();retained.put(RECOVERY,snapshot.copy());inert=true;pending=true;publishUnresolved();setChanged();}
     void stageLinks(NativeCanopyLinks next){links=next;pending=true;publishUnresolved();}
     void notifyChanged(){setChanged();if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);}
     boolean pending(){return pending;}
