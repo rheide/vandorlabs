@@ -1,0 +1,10 @@
+package com.vandorlabs.neoforge.copifier;
+import com.google.gson.*;
+import java.nio.file.*;
+import java.io.*;
+import java.util.zip.GZIPInputStream;
+import net.minecraft.nbt.*;
+/** Source callbacks supply only the actual credential-derived scalar; the plan cannot retain that owner. */
+public final class NativeCopifierReaderEditChecks {
+ public static void main(String[] args)throws Exception{int count=0;try(var lines=new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(Path.of(args[0]))),java.nio.charset.StandardCharsets.UTF_8))){String line;while((line=lines.readLine())!=null){var row=JsonParser.parseString(line).getAsJsonObject();var current=TagParser.parseTag(row.get("target").getAsString());var settings=NativeCopifierReaderEdit.read(current,row.get("outputBefore").getAsInt()>0);var values=TagParser.parseTag(row.get("values").getAsString());var original=current.copy();var clipboard=values.copy();var before=NativeCopifierReaderEdit.capture(settings);var expectedBefore=TagParser.parseTag(row.get("before").getAsString());if(!before.equals(expectedBefore))throw new AssertionError("Before row"+count+" expected="+expectedBefore+" actual="+before);boolean accepted=false;CompoundTag after=before;try{var plan=NativeCopifierReaderEdit.prepare(settings,values);accepted=plan.applicable();after=plan.capture();}catch(IllegalArgumentException refused){}var expected=TagParser.parseTag(row.get("after").getAsString());if(accepted!=row.get("applied").getAsBoolean()||!expected.equals(after))throw new AssertionError("After row"+count+" values="+values+" expected="+expected+" actual="+after+" applicable="+accepted);if(!current.equals(original)||!values.equals(clipboard))throw new AssertionError("Mutated caller");if(after.toString().contains("InsertedToken")||after.toString().contains("TokenReturnTo"))throw new AssertionError("Physical ownership in clipboard");count++;}}if(count!=3028)throw new AssertionError("Corpus count");System.out.println("Native reader clipboard PASS Source cases="+count+" mount/output-only precedence/active ignored/privacy/caller immutability");}
+}
