@@ -47,3 +47,13 @@ task exportRampSourceShapesReference(type: JavaExec) {
  args file("$buildDir/test-artifacts/ramp-source-shapes.jsonl").absolutePath
  maxHeapSize='1G'
 }
+
+task exportRampSupportSourceReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.RampGenerationLegacyOracle'
+ systemProperty 'vandorlabs.rampSupportReference','true'
+ args file("$buildDir/test-artifacts/ramp-support-source.jsonl").absolutePath
+ maxHeapSize='1G'
+}
