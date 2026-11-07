@@ -38,3 +38,10 @@ task exportMoatRampRiderSelectionReference(type: JavaExec) {
  maxHeapSize = '1g'
  args file('build/test-artifacts/moat-ramp-rider-selection-source.jsonl').absolutePath,'--moat'
 }
+task exportRampBeltRiderReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.RampBeltRiderLegacyOracle'
+ maxHeapSize = '1g'
+ args file('build/test-artifacts/ramp-belt-riders-source.jsonl').absolutePath
+}

@@ -19,16 +19,16 @@ import net.minecraft.util.math.*;
 public final class RampRiderSelectionLegacyOracle {
     private static final Gson JSON=new Gson();
     private static final BlockPos ROOT=new BlockPos(8,80,8),SOURCE=new BlockPos(0,80,0);
-    private static final class World extends NonRenderingChecks.MemoryWorld {
+    static final class World extends NonRenderingChecks.MemoryWorld {
         final List<Entity> actors=new ArrayList<>();final List<AxisAlignedBB> obstacles=new ArrayList<>();
         World(){super(false);time=100;}
         @Override public <T extends Entity> List<T> getEntitiesWithinAABB(Class<? extends T> type,AxisAlignedBB query){List<T> result=new ArrayList<>();for(Entity actor:actors)if(type.isInstance(actor)&&actor.getEntityBoundingBox().intersects(query))result.add(type.cast(actor));return result;}
         @Override public List<AxisAlignedBB> getCollisionBoxes(Entity actor,AxisAlignedBB query){List<AxisAlignedBB> result=new ArrayList<>();for(AxisAlignedBB box:obstacles)if(box.intersects(query))result.add(box);return result;}
     }
-    private static void set(TileEntityRampController tile,String name,Object value)throws Exception{Field field=TileEntityRampController.class.getDeclaredField(name);field.setAccessible(true);field.set(tile,value);}
-    private static JsonArray values(double... values){JsonArray row=new JsonArray();for(double value:values)row.add(value);return row;}
-    private static JsonArray box(AxisAlignedBB b){return values(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
-    private static JsonArray actor(Entity entity){return values(entity.posX,entity.posY,entity.posZ,entity.getEntityBoundingBox().minX,entity.getEntityBoundingBox().minY,entity.getEntityBoundingBox().minZ,entity.getEntityBoundingBox().maxX,entity.getEntityBoundingBox().maxY,entity.getEntityBoundingBox().maxZ,entity.motionX,entity.motionY,entity.motionZ,entity.onGround?1:0,entity.fallDistance);}
+    static void set(TileEntityRampController tile,String name,Object value)throws Exception{Field field=TileEntityRampController.class.getDeclaredField(name);field.setAccessible(true);field.set(tile,value);}
+    static JsonArray values(double... values){JsonArray row=new JsonArray();for(double value:values)row.add(value);return row;}
+    static JsonArray box(AxisAlignedBB b){return values(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);}
+    static JsonArray actor(Entity entity){return values(entity.posX,entity.posY,entity.posZ,entity.getEntityBoundingBox().minX,entity.getEntityBoundingBox().minY,entity.getEntityBoundingBox().minZ,entity.getEntityBoundingBox().maxX,entity.getEntityBoundingBox().maxY,entity.getEntityBoundingBox().maxZ,entity.motionX,entity.motionY,entity.motionZ,entity.onGround?1:0,entity.fallDistance);}
     public static void main(String[] args)throws Exception{
         boolean vertical=args.length>1&&args[1].equals("--vertical"),moat=args.length>1&&args[1].equals("--moat");
         net.minecraft.init.Bootstrap.register();Method carry=TileEntityRampController.class.getDeclaredMethod("carryRiders",double.class,double.class,boolean.class,boolean.class);carry.setAccessible(true);
