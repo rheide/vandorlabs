@@ -23,8 +23,9 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
  private NativeFluidRenderSnapshot fluidRender=NativeFluidRenderSnapshot.EMPTY;
  private long geometryRevision,modelRevision;
  private boolean inert,unloading;
+ private net.minecraft.world.item.ItemStack forcedRemoval=net.minecraft.world.item.ItemStack.EMPTY;
  NativeGlassService.Group group;
- public NativeGlassEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);settings=NativeGlassSettings.read(new CompoundTag()).resolveLegacySize(state.getValue(NativeGlassBlock.SIZE));publishLocal(NativeGlassService.straight(this),true);}
+ public NativeGlassEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);settings=NativeGlassSettings.read(new CompoundTag()).resolveLegacySize(1);publishLocal(NativeGlassService.straight(this),true);}
  public NativeGlassSettings settings(){return settings;}
  public Publication publication(){return publication;}
  public NativeFlatGlassVisual visual(){return publication.visual;}
@@ -36,7 +37,7 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
  public boolean configure(NativeGlassSettings next,int stateSize){if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread()||!available()||!NativeFluidWorld.installed(this)||!NativeGlassService.valid(next)||stateSize<0||stateSize>2)return false;settings(next);if(getBlockState().getValue(NativeGlassBlock.DEPTH)==0&&getBlockState().getValue(NativeGlassBlock.SIZE)!=stateSize)level.setBlock(worldPosition,getBlockState().setValue(NativeGlassBlock.SIZE,stateSize),2);refreshFluidGeometry();setChanged();level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);NativeGlassService.changed(this);return true;}
  private static void fluidsSupported(CompoundTag tag){if(tag.contains(NativeFluidSlots.KEY)&&!tag.contains(NativeFluidSlots.KEY,Tag.TAG_COMPOUND))throw new IllegalArgumentException("Unsupported glass fluid envelope");var data=tag.getCompound(NativeFluidSlots.KEY);for(String key:new String[]{"Side0","Side1"})if(data.contains(key)&&!data.contains(key,Tag.TAG_COMPOUND))throw new IllegalArgumentException("Unsupported glass fluid slot");}
  @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-  var original=tag.copy();try{
+  forcedRemoval=net.minecraft.world.item.ItemStack.EMPTY;var original=tag.copy();try{
    NativePlatformComponents.requireSupported(original,registries);fluidsSupported(original);
    if(tag.contains("NeoForgeData")&&!tag.contains("NeoForgeData",Tag.TAG_COMPOUND)||tag.contains(RECOVERY)||tag.contains(PLACEMENT_RECOVERY)||tag.contains("NativeGlassSchema")&&(!tag.contains("NativeGlassSchema",Tag.TAG_INT)||tag.getInt("NativeGlassSchema")!=1))throw new IllegalArgumentException("Retained glass owner");
    var next=NativeGlassSettings.read(tag);try(var platform=NativePlatformComponents.guardLoad(this)){super.loadAdditional(tag.copy(),registries);platform.requireSuccessful();}
@@ -49,6 +50,17 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
 
  private void writeFluids(CompoundTag tag){var extra=retained.getCompound(NativeFluidSlots.KEY).copy();extra.remove("Side0");extra.remove("Side1");fluids.write(tag);extra.merge(tag.getCompound(NativeFluidSlots.KEY));tag.put(NativeFluidSlots.KEY,extra);}
  @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);settings.write(tag);writeFluids(tag);tag.putInt("NativeGlassSchema",1);}
+ static final class Prepared {final BlockState state;final CompoundTag snapshot;Prepared(BlockState state,CompoundTag snapshot){this.state=state;this.snapshot=snapshot.copy();}}
+ static Prepared prepareItem(NativeGlassBlock block,BlockPos pos,BlockState state,CompoundTag generic,CompoundTag outer,int facing,HolderLookup.Provider registries){
+  if(outer!=null&&(outer.contains(RECOVERY)||outer.contains(PLACEMENT_RECOVERY)))throw new IllegalArgumentException("Retained glass item owner");var candidate=new NativeGlassEntity(block.entityType(),pos,state);var merged=candidate.saveWithoutMetadata(registries);if(generic!=null)merged.merge(generic.copy());candidate.loadWithComponents(merged,registries);if(candidate.inert)throw new IllegalArgumentException("Unsupported glass item owner");var result=NativeGlassPlacementPolicy.place(candidate.settings,outer,state.getValue(NativeGlassBlock.SIZE),state.getValue(NativeGlassBlock.DEPTH),facing);BlockState target=state.setValue(NativeGlassBlock.SIZE,result.stateSize());candidate.settings=result.settings();candidate.setBlockState(target);candidate.publishLocal(NativeGlassService.straight(candidate),true);return new Prepared(target,candidate.saveWithoutMetadata(registries));
+ }
+ void installItem(Prepared prepared){unloading=false;clearRemoved();setBlockState(prepared.state);loadWithComponents(prepared.snapshot.copy(),level.registryAccess());if(inert)throw new IllegalArgumentException("Failed glass platform installation");}
+ void retainPlacementRecovery(Prepared prepared){unloading=false;clearRemoved();retained=prepared.snapshot.copy();retained.put(PLACEMENT_RECOVERY,prepared.snapshot.copy());settings=NativeGlassSettings.read(new CompoundTag()).resolveLegacySize(getBlockState().getValue(NativeGlassBlock.SIZE));fluids=new NativeFluidSlots();inert=true;publishLocal(NativeGlassService.straight(this),true);}
+ void prepareRecoveryDrop(net.minecraft.world.item.ItemStack stack){forcedRemoval=stack.copy();}
+ net.minecraft.world.item.ItemStack takeRecoveryDrop(){var stack=forcedRemoval;forcedRemoval=net.minecraft.world.item.ItemStack.EMPTY;return stack;}
+ /** Placement samples the two separating sides; storage availability is independent of visible gap volume. */
+ public void capturePlacementFluids(BlockState previous){if(!available()||!NativeFluidWorld.installed(this))return;refreshFluidGeometry();var fallback=NativeFluidWorld.fromState(previous.getFluidState());net.neoforged.neoforge.fluids.FluidStack[] boundary={net.neoforged.neoforge.fluids.FluidStack.EMPTY,net.neoforged.neoforge.fluids.FluidStack.EMPTY};for(Direction direction:fluidPlacementFaces()){BlockPos next=worldPosition.relative(direction);if(!NativeFluidWorld.loaded(level,next))continue;var fluid=NativeFluidWorld.fromState(level.getFluidState(next));if(fluid.isEmpty()||NativeFluidWorld.gaseous(fluid))continue;int side=containedFluidSide(.5+direction.getStepX()*.51,.5+direction.getStepY()*.51,.5+direction.getStepZ()*.51);boundary[side]=fluid;}boolean sides=!boundary[0].isEmpty()||!boundary[1].isEmpty();for(int side=0;side<2;side++){var fluid=sides?boundary[side]:fallback;if(!fluid.isEmpty()&&!NativeFluidWorld.gaseous(fluid)&&!fluids.occupied(side))fluids.set(side,fluid,level.registryAccess());}}
+ @Override public boolean acceptsPlacementFluid(int side){return side==0||side==1;}
  @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();settings.write(tag);fluids.write(tag);tag.putBoolean("NativeGlassInert",inert);tag.putInt("NativeGlassSchema",1);return tag;}
  @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
  @Override public ModelData getModelData(){return modelData;}

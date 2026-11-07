@@ -13,7 +13,7 @@ import net.minecraft.world.level.block.state.properties.*;
 import net.minecraft.world.phys.shapes.*;
 
 /** Inactive ordinary glass block; original palette properties remain independently loadable. */
-public final class NativeGlassBlock extends Block implements EntityBlock {
+public class NativeGlassBlock extends Block implements EntityBlock {
  public static final BooleanProperty ROTATED=BooleanProperty.create("rotated"),TOP=BooleanProperty.create("top"),BOTTOM=BooleanProperty.create("bottom"),LEFT=BooleanProperty.create("left"),RIGHT=BooleanProperty.create("right"),INNER_TL=BooleanProperty.create("inner_tl"),INNER_TR=BooleanProperty.create("inner_tr"),INNER_BL=BooleanProperty.create("inner_bl"),INNER_BR=BooleanProperty.create("inner_br");
  public static final IntegerProperty DEPTH=IntegerProperty.create("depth",0,2),SIZE=IntegerProperty.create("size",0,2);
  private final Supplier<BlockEntityType<?>> type;private final MapCodec<NativeGlassBlock> codec;
@@ -34,5 +34,8 @@ public final class NativeGlassBlock extends Block implements EntityBlock {
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
  @Override protected void onPlace(BlockState state,Level level,BlockPos pos,BlockState old,boolean moving){super.onPlace(state,level,pos,old,moving);NativeFluidWorld.blockChanged(level,pos);}
  @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block block,BlockPos from,boolean moving){NativeFluidWorld.blockChanged(level,pos);}
- @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())){if(level.getBlockEntity(pos) instanceof NativeGlassEntity host)NativeGlassService.retire(host);NativeFluidWorld.blockChanged(level,pos);}super.onRemove(state,level,pos,next,moving);}
+ @Override public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state,net.minecraft.world.phys.HitResult hit,LevelReader world,BlockPos pos,net.minecraft.world.entity.player.Player player){return NativeGlassItem.pick(this,world.getBlockEntity(pos) instanceof NativeGlassEntity owner?owner:null,state);}
+ @Override protected java.util.List<net.minecraft.world.item.ItemStack> getDrops(BlockState state,net.minecraft.world.level.storage.loot.LootParams.Builder context){var raw=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);return java.util.List.of(NativeGlassItem.drop(this,raw instanceof NativeGlassEntity owner?owner:null,state));}
+ @Override public BlockState playerWillDestroy(Level world,BlockPos pos,BlockState state,net.minecraft.world.entity.player.Player player){if(!world.isClientSide&&world.getBlockEntity(pos) instanceof NativeGlassEntity owner)owner.prepareRecoveryDrop(owner.inert()&&(player.isCreative()||!state.canHarvestBlock(world,pos,player))?NativeGlassItem.pick(this,owner,state):net.minecraft.world.item.ItemStack.EMPTY);return super.playerWillDestroy(world,pos,state,player);}
+ @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())){if(level.getBlockEntity(pos) instanceof NativeGlassEntity host){if(!level.isClientSide&&!NativeGlassItem.mutating(level,pos)&&host.inert()){var recovery=host.takeRecoveryDrop();if(!recovery.isEmpty())Block.popResource(level,pos,recovery);}NativeGlassService.retire(host);}NativeFluidWorld.blockChanged(level,pos);}super.onRemove(state,level,pos,next,moving);}
 }
