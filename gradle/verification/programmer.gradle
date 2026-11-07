@@ -29,3 +29,11 @@ task exportProgrammerInventoryReference(type: JavaExec) {
     main = 'com.vandorlabs.client.ProgrammerInventoryLegacyChecks'
     systemProperty 'vandorlabs.programmerInventoryReference', file(project.findProperty('programmerInventoryReference') ?: 'build/test-artifacts/programmer-inventory-forge.json').absolutePath
 }
+
+task exportProgrammerSavedReference(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    maxHeapSize = '1g'
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ProgrammerSavedLegacyChecks'
+    systemProperty 'vandorlabs.programmerSavedReference', file(project.findProperty('programmerSavedReference') ?: 'build/test-artifacts/programmer-saved-forge.json').absolutePath
+}
