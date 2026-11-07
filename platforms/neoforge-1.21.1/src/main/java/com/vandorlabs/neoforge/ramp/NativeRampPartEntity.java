@@ -14,15 +14,18 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 /** Inactive generated-part host. All collision reads consume one immutable prepared value. */
 public class NativeRampPartEntity extends NativeRampJournalPart {
  public record Publication(NativeRampPartData data,NativeRampGeometry.Snapshot geometry,
-   NativeRampBeltGeometry.Snapshot beltGeometry,double pose,VoxelShape collisionShape,List<AABB> worldBoxes){
+   NativeRampBeltGeometry.Snapshot beltGeometry,double pose,VoxelShape collisionShape,List<AABB> worldBoxes,long revision,long observationTick){
   public Publication{worldBoxes=List.copyOf(worldBoxes);}
  }
  private static final int SHAPE_BUDGET=4*1024*1024;
  private volatile Publication publication;
  public NativeRampPartEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state);}
  public final Publication publication(){return publication;}
+ /** Ordering is per operation: a fresh operation deliberately starts a new cosmetic identity. */
+ public final boolean acceptsObservation(UUID operation,long revision,long tick){var previous=publication;return revision>=0&&(previous==null||!Objects.equals(operation,operationId())||revision>previous.revision||revision==previous.revision&&tick>=previous.observationTick);}
  public final NativeRampPartData data(){var value=publication;return value==null?null:value.data;}
- private Publication build(NativeRampPartData data,double pose,double distance){
+ private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick){
+  if(revision<0)throw new IllegalArgumentException("Ramp publication revision");
   if(!data.spec().cell().equals(worldPosition))throw new IllegalArgumentException("Ramp part cell identity");
   var belt=data.belt().mode()==0?null:NativeRampBeltGeometry.snapshot(data.spec(),distance);
   var geometry=belt==null?NativeRampGeometry.snapshot(data.spec(),pose):belt.geometry();
@@ -30,14 +33,16 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
   for(var piece:geometry.pieces()){var box=piece.box();if(box.minX<0||box.minY<0||box.minZ<0||box.maxX>1||box.maxY>1||box.maxZ>1)throw new IllegalArgumentException("Ramp part escaped reserved cell");local.add(box);world.add(box.move(worldPosition));}
   var shape=NativeVoxelShapes.union(local,SHAPE_BUDGET,1e-8);
   if((belt==null?geometry.retainedBytes():belt.retainedBytes())+NativeVoxelShapes.retainedCost(shape,local.size())>SHAPE_BUDGET)throw new IllegalArgumentException("Ramp part publication budget");
-  return new Publication(data,geometry,belt,pose,shape,world);
+  return new Publication(data,geometry,belt,pose,shape,world,revision,observationTick);
  }
  private boolean installed(){if(level==null||isRemoved())return false;if(level instanceof ServerLevel server&&!server.getServer().isSameThread())return false;var chunk=level.getChunkSource().getChunkNow(worldPosition.getX()>>4,worldPosition.getZ()>>4);return chunk!=null&&chunk.getBlockEntities().get(worldPosition)==this;}
  /** Called within the journal's exact-operation publication scope, before observers run. */
- final void installPart(UUID operation,BlockPos root,NativeRampPartData data){
+ final void installPart(UUID operation,BlockPos root,NativeRampPartData data){var previous=publication;installPart(operation,root,data,previous!=null&&belongs(operation,root)?Math.addExact(previous.revision,1):0);}
+ final void installPart(UUID operation,BlockPos root,NativeRampPartData data,long revision){
   if(!installed()||level.isClientSide)throw new IllegalStateException("Ramp part installation thread/identity");
   if(root==null||Math.abs((long)root.getX()-worldPosition.getX())>64||Math.abs((long)root.getY()-worldPosition.getY())>64||Math.abs((long)root.getZ()-worldPosition.getZ())>64)throw new IllegalArgumentException("Ramp owner bounds");
-  var next=build(data,data.motion().observed(),data.belt().observed());
+  var previous=publication;if(previous!=null&&belongs(operation,root)&&revision<=previous.revision)throw new IllegalArgumentException("Ramp control revision must advance");
+  var next=build(data,data.motion().observed(),data.belt().observed(),revision,level.getGameTime());
   install(operation,root);publication=next;setChanged();
  }
  /** The controller owns scheduling and durable changing-cell admission; this method does neither. */
@@ -46,18 +51,23 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
   var data=previous.data;double pose=data.motion().pose(tick,0),distance=data.belt().distance();
   if(data.belt().running())distance+=((double)tick-data.belt().tick())*data.belt().velocity(data.spec());
   if(pose==previous.pose&&(previous.beltGeometry==null||distance==previous.beltGeometry.distance()))return;
-  publication=build(data,pose,distance);
+  publication=build(data,pose,distance,previous.revision,tick);
  }
  @Override public List<AABB> physicalBounds(){var value=publication;return ownershipKnown()&&value!=null?value.worldBoxes:null;}
  @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
   var original=tag.copy();try{
+   long revision=number(tag,"NativeRampPublicationRevision"),observationTick=number(tag,"NativeRampObservationTick");var previous=publication;
+   if(level!=null&&level.isClientSide&&previous!=null&&tag.hasUUID("Operation")&&!acceptsObservation(tag.getUUID("Operation"),revision,observationTick))return;
    if(!tag.contains("NativeRampPartData",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Missing Ramp part body");
    var data=NativeRampPartData.read(tag.getCompound("NativeRampPartData"),worldPosition,registries);
-   var next=build(data,data.motion().observed(),data.belt().observed());
+   var next=build(data,data.motion().observed(),data.belt().observed(),revision,observationTick);
    super.loadAdditional(tag,registries);if(!ownershipKnown())throw new IllegalArgumentException("Unknown Ramp part owner");publication=next;
   }catch(RuntimeException failure){publication=null;refuseSnapshot(original);}
  }
- @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);var value=publication;if(ownershipKnown()&&value!=null)tag.put("NativeRampPartData",value.data.write());}
- @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=super.getUpdateTag(registries);var value=publication;if(ownershipKnown()&&value!=null){var data=value.data;if(level!=null)data=data.observed(level.getGameTime());if(value.beltGeometry!=null){var belt=data.belt();data=data.withBelt(new NativeRampPartData.Belt(belt.mode(),belt.speed(),belt.distance(),belt.tick(),belt.running(),value.beltGeometry.distance()));}tag.put("NativeRampPartData",data.write());}return tag;}
+ private static long number(CompoundTag tag,String key){if(!tag.contains(key))return 0;if(!tag.contains(key,Tag.TAG_LONG))throw new IllegalArgumentException("Ramp observation field type");return tag.getLong(key);}
+ private static NativeRampPartData observed(Publication value,long tick){var data=value.data.observed(tick);var belt=data.belt();if(belt.mode()!=0){double distance=belt.distance()+(belt.running()?((double)tick-belt.tick())*belt.velocity(data.spec()):0);data=data.withBelt(new NativeRampPartData.Belt(belt.mode(),belt.speed(),belt.distance(),belt.tick(),belt.running(),distance));}return data;}
+ private static void writeProjection(CompoundTag tag,Publication value,long tick){tag.putLong("NativeRampPublicationRevision",value.revision);tag.putLong("NativeRampObservationTick",tick);tag.put("NativeRampPartData",observed(value,tick).write());}
+ @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);var value=publication;if(ownershipKnown()&&value!=null)writeProjection(tag,value,value.observationTick);}
+ @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=super.getUpdateTag(registries);var value=publication;if(ownershipKnown()&&value!=null)writeProjection(tag,value,level==null?value.observationTick:level.getGameTime());return tag;}
  @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
 }
