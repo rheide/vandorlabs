@@ -39,4 +39,9 @@ public final class CanopyTransform {
         double x=vertex.x-.5,z=vertex.z-.5;
         switch(facing){case 3:return new CanopyPoint(.5-x,vertex.y,.5-z);case 5:return new CanopyPoint(.5-z,vertex.y,.5+x);case 4:return new CanopyPoint(.5+z,vertex.y,.5-x);case 2:return vertex;default:throw new IllegalArgumentException("Canopy horizontal facing");}
     }
+    public static java.util.List<CanopyFace> faces(java.util.List<CanopyFace> source,String kind,int width,CanopySettingsData settings,double progress){
+        CanopyTransform transform=new CanopyTransform(kind,width,settings,progress);java.util.List<CanopyFace> result=new java.util.ArrayList<>(source.size());
+        for(CanopyFace original:source){CanopyPoint[] vertices=new CanopyPoint[original.vertices.length];double[][] uv=original.uv;for(int i=0;i<vertices.length;i++)vertices[i]=transform.apply(original.vertices[i],original.group);if(settings.mount==1){CanopyPoint[] transformed=vertices.clone();uv=new double[vertices.length][];for(int i=0;i<vertices.length;i++){int j=vertices.length-1-i;vertices[i]=transformed[j];uv[i]=original.uv[j];}}result.add(original.posedOwned(vertices,uv));}
+        return java.util.Collections.unmodifiableList(result);
+    }
 }

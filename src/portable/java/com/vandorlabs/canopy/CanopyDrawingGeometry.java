@@ -39,7 +39,7 @@ public final class CanopyDrawingGeometry {
                 drawing=fixedClearance;
             }
             if(CanopySettingsData.supports(kind))drawing=rearClearance(drawing,settings.depth,backAnchored);
-            posed=pose(drawing,kind,width,settings,progress);
+            posed=CanopyTransform.faces(drawing,kind,width,settings,progress);
             if(separated)posed=Collections.unmodifiableList(CanopySurfaceTopology.visibleRigidParts(posed,movingPlanes));
             lastProgress=progress;
             lastBackAnchored=backAnchored;
@@ -71,16 +71,5 @@ public final class CanopyDrawingGeometry {
             result.add(original.geometryOwned(vertices,original.uv));
         }
         return result;
-    }
-    private static List<CanopyFace> pose(List<CanopyFace> source,String kind,int width,CanopySettingsData settings,double progress){
-        CanopyTransform transform=new CanopyTransform(kind,width,settings,progress);
-        List<CanopyFace> result=new ArrayList<>(source.size());
-        for(CanopyFace original:source){
-            CanopyPoint[] vertices=new CanopyPoint[original.vertices.length];double[][] uv=original.uv;
-            for(int i=0;i<vertices.length;i++)vertices[i]=transform.apply(original.vertices[i],original.group);
-            if(settings.mount==1){CanopyPoint[] transformed=vertices.clone();uv=new double[vertices.length][];for(int i=0;i<vertices.length;i++){int j=vertices.length-1-i;vertices[i]=transformed[j];uv[i]=original.uv[j];}}
-            result.add(original.posedOwned(vertices,uv));
-        }
-        return Collections.unmodifiableList(result);
     }
 }
