@@ -24,6 +24,13 @@ public final class NativeCopifierHousingWorld {
             com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.batch(level,()->NativeCopifierControlEdit.apply(tile,values));return true;
         }
     }
+    private record Light(com.vandorlabs.neoforge.light.NativeLightEntity tile) implements Target {
+        public CompoundTag capture(){return NativeCopifierLightEdit.capture(tile.kind(),tile.copiedSettings());}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            try{if(!NativeCopifierLightEdit.prepare(tile.kind(),tile.copiedSettings(),values).applicable())return false;}catch(IllegalArgumentException malformed){return false;}
+            NativeCopifierUndo.before(actor,level,pos);return tile.configureCopied(values);
+        }
+    }
     private record Storage(com.vandorlabs.neoforge.storage.NativeStorageEntity tile) implements Target {
         private static final NativeCopifierHousingCapture.Family FAMILY=NativeCopifierHousingCapture.Family.CUBE;
         private CompoundTag saved(){return tile.copiedConfiguration();}
@@ -58,6 +65,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.light.NativeLightEntity light&&java.util.Set.of("programmable_light","programmable_light_frame","programmable_light_slab").contains(id.getPath()))return light.available()&&com.vandorlabs.neoforge.light.NativeLightService.installed(light)?new Light(light):null;
         if(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity storage&&id.getPath().equals("programmable_storage"))return storage.available()?new Storage(storage):null;
         if(tile instanceof com.vandorlabs.neoforge.NativeBinaryControlBlockEntity control&&control.isChannelMemberActive()||tile instanceof com.vandorlabs.neoforge.NativeWirelessRedstoneBlockEntity wireless&&wireless.isChannelMemberActive())return new Control(tile);
         if(tile instanceof com.vandorlabs.neoforge.glass.NativeGlassEntity glass&&id.getPath().equals("programmable_glass"))return glass.available()&&com.vandorlabs.neoforge.fluid.NativeFluidWorld.installed(glass)?new Glass(glass):null;
