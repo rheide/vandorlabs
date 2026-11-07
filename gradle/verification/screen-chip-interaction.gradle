@@ -1,0 +1,6 @@
+task exportScreenChipInteractionReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.ScreenChipInteractionLegacyChecks'
+ maxHeapSize='2g'
+}
