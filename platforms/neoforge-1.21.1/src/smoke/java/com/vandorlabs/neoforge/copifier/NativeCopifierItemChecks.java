@@ -22,14 +22,14 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
-/** Actual server GameMode held-item dispatch, using a private item and canonical housing targets. */
+/** Actual server GameMode held-item dispatch, using the canonical item and housing targets. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCopifierItemChecks {
  static NativeCopifierItem ITEM;static MenuType<NativeCopifierMenu> MENU;private static int checks;
  private static boolean enabled(){return System.getProperty("vandorlabs.transmitterPhase","").equals("copifier-item");}
  private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Copifier item: "+why);}
  @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration {
-  @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){if(!enabled()&&!CopifierEditorClientFixture.enabled()&&!NativeCopifierUndoChecks.enabled()&&!NativeCopifierVanillaChecks.enabled()&&!CopifierGlassClientFixture.enabled()&&!CopifierControlClientFixture.enabled()&&!CopifierStorageClientFixture.enabled()&&!CopifierLightClientFixture.enabled()&&!CopifierDoorClientFixture.enabled()&&!CopifierTriggerClientFixture.enabled()&&!CopifierPropulsionClientFixture.enabled()&&!CopifierSegmentedClientFixture.enabled()&&!CopifierReaderClientFixture.enabled()&&!CopifierTrapdoorClientFixture.enabled()&&!CopifierScreenClientFixture.enabled())return;var id=ResourceLocation.parse("vandorlabs:copifier_item_fixture");event.register(Registries.ITEM,h->{ITEM=new NativeCopifierItem(new Item.Properties(),()->MENU);h.register(id,ITEM);});event.register(Registries.MENU,h->{MENU=new MenuType<>((window,inventory)->new NativeCopifierMenu(MENU,window,inventory),net.minecraft.world.flag.FeatureFlags.VANILLA_SET);h.register(id,MENU);});}
+  @SubscribeEvent public static void setup(net.neoforged.fml.event.lifecycle.FMLCommonSetupEvent event){ITEM=NativeCopifierRegistrations.ITEM.get();MENU=NativeCopifierRegistrations.MENU.get();}
  }
  private static final class Actor extends net.neoforged.neoforge.common.util.FakePlayer {
   Actor(ServerLevel level){super(level,new com.mojang.authlib.GameProfile(new UUID(0,1873),"CopifierItem"));}
@@ -45,6 +45,7 @@ public final class NativeCopifierItemChecks {
   }
  }
  private static void run(ServerLevel level)throws Exception{
+  need(ITEM==BuiltInRegistries.ITEM.get(ResourceLocation.parse("vandorlabs:duplifier"))&&MENU==NativeCopifierRegistrations.MENU.get()&&!BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse("vandorlabs:copifier_item_fixture")),"canonical tool/menu without private substitutes");
   var actor=new Actor(level);var pos=new BlockPos(14720,100,14640);level.getChunkAt(pos);actor.setPos(pos.getX()+.5,pos.getY()+1,pos.getZ()-2);var hit=new BlockHitResult(Vec3.atCenterOf(pos).add(0,0,-.5),Direction.NORTH,pos,false);
   JsonArray rows;try(var in=new GZIPInputStream(Files.newInputStream(Path.of(System.getProperty("vandorlabs.copifierHousingReference"))))){rows=JsonParser.parseString(new String(in.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8)).getAsJsonArray();}
   int cases=0;
@@ -60,7 +61,7 @@ public final class NativeCopifierItemChecks {
   var tool=actor.getMainHandItem();actor.setShiftKeyDown(false);need(actor.gameMode.useItem(actor,level,tool,InteractionHand.MAIN_HAND).consumesAction()&&actor.containerMenu instanceof NativeCopifierMenu,"actual air use opens options provider");var menu=(NativeCopifierMenu)actor.containerMenu;var words=NativeCopifierOptions.maskWords(NativeCopifierItem.data(tool));need(NativeCopifierPayload.apply(actor,new NativeCopifierPayload(73,words,true,true)),"authenticated settings");need(!NativeCopifierPayload.apply(actor,new NativeCopifierPayload(74,words,false,false)),"wrong window rejected");need(!NativeCopifierUndoPayload.apply(actor,new NativeCopifierUndoPayload(74)),"wrong undo window rejected");wire(level,words);need(NativeCopifierOptions.connected(NativeCopifierItem.data(tool))&&NativeCopifierOptions.ignoreDirectionality(NativeCopifierItem.data(tool)),"options stored");var before=NativeCopifierItem.data(tool);menu.clicked(0,0,ClickType.PICKUP,actor);need(menu.quickMoveStack(actor,0).isEmpty()&&before.equals(NativeCopifierItem.data(tool))&&menu.getCarried().isEmpty(),"preview cannot transfer");
   var invalid=words.clone();invalid[invalid.length-1]=Long.MIN_VALUE;need(!menu.configure(actor,invalid,false,false)&&before.equals(NativeCopifierItem.data(tool)),"invalid mask rejected");actor.getInventory().selected=1;need(!menu.configure(actor,words,false,false),"selected slot invalidates");actor.getInventory().selected=0;actor.setItemInHand(InteractionHand.MAIN_HAND,tool.copy());need(!menu.configure(actor,words,false,false),"replacement object invalidates");actor.setItemInHand(InteractionHand.MAIN_HAND,tool);actor.containerMenu=actor.inventoryMenu;need(!menu.configure(actor,words,false,false),"stale window rejected");
   actor.setShiftKeyDown(true);need(actor.gameMode.useItem(actor,level,tool,InteractionHand.MAIN_HAND).consumesAction(),"actual air clear");var cleared=NativeCopifierItem.data(tool);need(!NativeCopifierClipboard.hasCopy(cleared)&&NativeCopifierOptions.connected(cleared)&&NativeCopifierOptions.ignoreDirectionality(cleared)&&cleared.getString("ForeignToolMarker").equals("preserve"),"clear only clipboard");
-  System.out.println("[vandorlabs][copifier-item] PASS cases="+cases+" checks="+checks+" actual GameMode item dispatch; menu provider adapter; private registration only");
+  System.out.println("[vandorlabs][copifier-item] PASS cases="+cases+" checks="+checks+" actual GameMode item dispatch; menu provider adapter; canonical production item/menu");
  }
  @SubscribeEvent public static void started(ServerStartedEvent event){if(!enabled())return;try{run(event.getServer().overworld());}catch(Throwable failure){failure.printStackTrace();System.out.println("[vandorlabs][copifier-item] FAIL "+failure);}finally{event.getServer().halt(false);}}
 }

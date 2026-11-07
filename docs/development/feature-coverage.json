@@ -829,9 +829,9 @@
       "legacy_block_ids": [],
       "remaining": [
         "full Configurizer dispatch to every family",
-        "Duplifier connected copy/application",
         "matter production/core crafting chain",
-        "all target-specific resources and live parity"
+        "all target-specific resources and live parity",
+        "final Canopy/Ramp Duplifier target integration and combined player acceptance"
       ],
       "legacy_item_ids": [
         "programmable_matter_ingot",
@@ -851,11 +851,12 @@
       "implemented": [
         "Native plain programmable_matter_block, programmable_matter_ingot and industrial_alloy_ingot with canonical artwork, three recipes, tool requirements and loot.",
         "Disposable dedicated save/restart checks and native client placement/mining, emitted artwork and padded item rendering checks.",
-        "Native Configurizer uses canonical artwork/recipe and configures the programmable cube through the same dedicated menu as creative shift-click."
+        "Native Configurizer uses canonical artwork/recipe and configures the programmable cube through the same dedicated menu as creative shift-click.",
+        "Canonical Duplifier tool/menu/options/Connected/Undo and original/copying recipes; production recipe replay passes 6076 baseline and 7872 configured Source cases, with vanilla 2x2/3x3 pickup and quick-move checks."
       ],
       "acceptance_limits": [
         "Development runtime checks; exact packaged-JAR runtime and hardware acceptance remain pending.",
-        "Configurator dispatch to other families, copy tools and the production chain remain incomplete."
+        "Configuration dispatch to unconverted families, final Canopy/Ramp copy integration and the production chain remain incomplete."
       ]
     },
     {

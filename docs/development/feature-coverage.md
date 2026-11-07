@@ -1,6 +1,6 @@
 # Target feature coverage
 
-Forge 1.12.2 remains the default and behavioral reference. NeoForge 1.21.1 integration is incremental; no modern family is complete or release-ready on `master`.
+Forge 1.12.2 remains the default and behavioral reference. NeoForge 1.21.1 integration is incremental; the native conversion remains incomplete and has no release-gate acceptance on `master`.
 
 The [machine-readable inventory](feature-coverage.json) preserves historical implementation descriptions from `feature/neoforge-1.21.1` at `aa1477a3c08ab109b4bdfbada5a52ab82aeb9088`. Historical partial adapters and recorded checks belong to that branch. They do not establish integrated support or current-checkout acceptance, and no tests are claimed rerun by this inventory update.
 
@@ -33,7 +33,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Modular landing gear and wheels | pending | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | pending | unimplemented | non-vehicle first |
 | Industrial table | pending | partial | non-vehicle first |
-| Configuration/copy tools and basic materials | partial (materials only) | partial | non-vehicle first |
+| Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
 | Programmable armor | pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | pending | unimplemented | non-vehicle first |
@@ -56,7 +56,9 @@ Native cubes support installed filesystem PNG discovery at startup, stable saved
 
 Native cube inventory samples now use the shared grid without consuming items. Original vanilla material IDs resolve through actual legacy metadata normalization and Minecraft data fixers; new default-state samples use a fixed identity preimage domain, with all known collisions rejected. Door previews retain both halves. Dedicated restart, configured item/NBT, custom face/dormant overrides, survival menu input and immutable model reload checks remain distinct from exact packaged-JAR acceptance.
 
-Optional component-renderer sampling, configuration dispatch to other families, copy tools, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.
+Optional component-renderer sampling, configuration dispatch to unconverted families, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.
+
+The native Duplifier now registers its canonical tool, dedicated options menu, original shaped recipe and copied-settings recipe. Focused actual-player checks cover options transport, connected application, Undo and stale windows. Both vanilla crafting containers pass ordinary pickup and quick-move consumption with exact outputs and the complete tool remainder; loaded production-recipe replay passes all 6,076 baseline and 7,872 configured Source cases. Canopy target adapters have private placement/history checks; final public Canopy/Ramp integration remains pending. See the [crafting contract](native-copifier-crafting.md).
 
 The current control increment adds the native Trigger and four handheld transmitter tiers. Dedicated save/restart and actual chunk unload/reload fixtures cover their channel delivery and saved configuration. Subsequent increments below cover mounted controls and world endpoints; additional inline source families remain incomplete. Focused client dialog, emitted-model/reload and ordinary interaction checks also pass. These are development-classpath/software-rendered results; exact packaged-JAR and hardware shader acceptance remain separate.
 

@@ -14,7 +14,7 @@ import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 
-/** Inactive ordinary item route. Crafting and other target adapters remain separate. */
+/** Canonical held-tool route. Typed target adapters preserve each family's ownership. */
 public class NativeCopifierItem extends Item implements NativeOwnsBlockInteraction {
     private final Supplier<MenuType<NativeCopifierMenu>> menus;
     public NativeCopifierItem(Properties properties,Supplier<MenuType<NativeCopifierMenu>> menus){super(properties.stacksTo(1));this.menus=java.util.Objects.requireNonNull(menus);}

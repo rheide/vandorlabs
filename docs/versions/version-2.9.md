@@ -53,6 +53,8 @@ Standalone propulsion and redstone-light blocks are enabled in the experimental 
 
 The experimental native build now registers all seven standalone Programmable Screen roles, including their dedicated editor, configured items, joined displays and non-Vehicle Chip content. Vehicle Mode remains deferred.
 
+The Duplifier is also enabled with its original recipe, dedicated Apply Settings window, connected application, settings-only Undo and off/on/connected artwork. Both inventory and crafting-table grids support copying settings onto converted block items while retaining the tool and its saved options. Ramp integration remains in progress.
+
 The experimental native build also enables standalone Card and Data Chip readers, including their dedicated configuration, credential inventory and authored mounted artwork. The Card / Chip Programmer is also enabled with its original four-cell identity, three retained slots, dedicated Journal editor, Program/Copy operations and authored world/item artwork. Focused player and saved-world checks cover exact inventory ownership, mining, low-TPS timers, resource reload and recovery. Follow the [native construction guide](../card-chip-programmer-neoforge.md). Vehicle Chip operations remain deferred.
 
 

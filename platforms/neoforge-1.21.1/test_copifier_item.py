@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Actual held-item housing copy dispatch with private tool registration."""
+"""Actual held-item housing copy dispatch with canonical tool registration."""
 import os
 from pathlib import Path
 from test_transmitter import ROOT, command, run, world, check_log, jdk_home

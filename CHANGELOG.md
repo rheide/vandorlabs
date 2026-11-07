@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable the Duplifier in the experimental native build with its original recipe, dedicated Apply Settings window, connected application, settings-only Undo and three-state item artwork. Copied-settings crafting supports converted building, Door, Trapdoor, Light and Screen families; Ramp integration is still in progress.
+
 - Enable the canonical Card / Chip Programmer in the experimental native build with four-cell placement, dedicated Inventory/Journal editing, Program/Copy, physical sockets, padded authored artwork and saved ownership recovery. Add a native construction guide with staged player images. Vehicle Chip operations remain deferred.
 
 - Fix connected Duplifier Undo for linked settings such as Segmented Doors: record all selected blocks before the first edit changes shared settings, so Undo restores their original configuration.

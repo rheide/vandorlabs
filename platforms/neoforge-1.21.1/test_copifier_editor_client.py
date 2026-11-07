@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private actual Copifier menu/widget/C2S/S2C authorization roundtrip."""
+"""Canonical actual Copifier menu/widget/C2S/S2C authorization roundtrip."""
 import argparse,os,socket,time,hashlib
 from pathlib import Path
 from test_cube import ROOT,command,launch,stop,check_log,jdk_home
@@ -35,5 +35,5 @@ def main():
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
  check_log(saved/'logs/latest.log','All dimensions are saved')
- print('Actual private Copifier editor PASS (private tool registration): '+str(out),flush=True)
+ print('Actual canonical Copifier editor PASS: '+str(out),flush=True)
 if __name__=='__main__':main()

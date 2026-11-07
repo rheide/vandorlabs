@@ -4,6 +4,7 @@ tasks.register('generateCopifierResources',Exec) {
  commandLine copierPython,'generate_copifier_resources.py'
  inputs.file('generate_copifier_resources.py')
  inputs.file('../../tools/compact_runtime_assets.py')
+ inputs.file('../../src/main/resources/assets/vandorlabs/recipes/duplifier.json')
  inputs.files(fileTree('../../texture-packs/default/assets/vandorlabs/textures/items').matching { include 'duplifier_*.png' })
  inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/items').matching { include 'duplifier_*.png' })
  outputs.dir('build/generated/copifier-resources')

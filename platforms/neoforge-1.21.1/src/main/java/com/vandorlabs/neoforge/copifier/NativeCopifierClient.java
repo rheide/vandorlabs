@@ -21,6 +21,10 @@ public final class NativeCopifierClient {
         return !NativeCopifierClipboard.hasCopy(root)?0:NativeCopifierOptions.connected(root)?2:1;
     }
     public static void bind(Item item){ItemProperties.register(item,MODE,(stack,level,actor,seed)->mode(stack)*.5F);}
+    @SubscribeEvent public static void menus(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event){
+        if(BuiltInRegistries.ITEM.get(ResourceLocation.parse("vandorlabs:duplifier")) instanceof NativeCopifierItem)
+            com.vandorlabs.neoforge.client.NativeCopifierScreen.register(event,NativeCopifierRegistrations.MENU.get());
+    }
     @SubscribeEvent public static void setup(FMLClientSetupEvent event){event.enqueueWork(()->{
         var item=BuiltInRegistries.ITEM.get(ResourceLocation.parse("vandorlabs:duplifier"));
         if(item instanceof NativeCopifierItem)bind(item);

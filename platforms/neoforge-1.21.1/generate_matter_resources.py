@@ -51,6 +51,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('rocket_thruster', 'ion_drive', 'plasma_vent', 'impulse_engine', 'antigravity_plate', 'repulsor_array', 'vertical_hover_thruster')]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('access_card_slot','data_chip_slot')]
     wanted += ['tile.vandorlabs.programmable_glass.name','tile.vandorlabs.programmable_storage.name','tile.vandorlabs.data_chip_programmer.name']
+    wanted += ['item.vandorlabs.duplifier.name']
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         key, separator, value = line.partition('=')
         if separator and key in wanted:

@@ -35,6 +35,10 @@ def main():
         'parent': 'vandorlabs:item/duplifier_off',
         'overrides': [{'predicate': {'vandorlabs:duplifier_mode': mode}, 'model': f'vandorlabs:item/{name}'}
                       for mode, name in ((.5, 'duplifier_on'), (1, 'duplifier_multi'))]})
+    recipe = json.loads((ROOT/'src/main/resources/assets/vandorlabs/recipes/duplifier.json').read_text())
+    recipe['result']['id'] = recipe['result'].pop('item')
+    write(OUT/'data/vandorlabs/recipe/duplifier.json', recipe)
+    write(OUT/'data/vandorlabs/recipe/copied_settings.json', {'type': 'vandorlabs:copied_settings', 'category': 'misc'})
 
 
 if __name__ == '__main__':

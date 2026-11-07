@@ -16,7 +16,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class CopifierScreenClientChecks {
- @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(CopifierScreenClientFixture.enabled())NativeCopifierScreen.register(event,NativeCopifierItemChecks.MENU);}}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(CopifierScreenClientFixture.enabled()){if(NativeCopifierItemChecks.MENU!=NativeCopifierRegistrations.MENU.get())NativeCopifierScreen.register(event,NativeCopifierItemChecks.MENU);}}}
  private static final CopifierCopyClientJourney JOURNEY=new CopifierCopyClientJourney(new CopifierCopyClientJourney.Scenario(){
   public boolean enabled(){return CopifierScreenClientFixture.enabled();}public String label(){return "copifier-screen-client";}
   public net.minecraft.core.BlockPos source(){return CopifierScreenClientFixture.SOURCE;}public net.minecraft.core.BlockPos target(){return CopifierScreenClientFixture.TARGET;}public net.minecraft.core.BlockPos ack(){return CopifierScreenClientFixture.ACK;}

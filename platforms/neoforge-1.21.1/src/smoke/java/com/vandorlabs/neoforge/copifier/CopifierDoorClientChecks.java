@@ -16,7 +16,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class CopifierDoorClientChecks {
- @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(CopifierDoorClientFixture.enabled())NativeCopifierScreen.register(event,NativeCopifierItemChecks.MENU);}}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(CopifierDoorClientFixture.enabled()){if(NativeCopifierItemChecks.MENU!=NativeCopifierRegistrations.MENU.get())NativeCopifierScreen.register(event,NativeCopifierItemChecks.MENU);}}}
  private static final CopifierCopyClientJourney JOURNEY=new CopifierCopyClientJourney(new CopifierCopyClientJourney.Scenario(){
   public boolean enabled(){return CopifierDoorClientFixture.enabled();}public String label(){return "copifier-door-client";}
   public net.minecraft.core.BlockPos source(){return CopifierDoorClientFixture.SOURCE.above();}public net.minecraft.core.BlockPos target(){return CopifierDoorClientFixture.TARGET.above();}public net.minecraft.core.BlockPos ack(){return CopifierDoorClientFixture.ACK;}

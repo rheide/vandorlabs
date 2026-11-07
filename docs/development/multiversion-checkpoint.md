@@ -25,7 +25,7 @@ The current conversion stopping point is limited to four families. Finish and in
 | Card Chip Programmer | Canonical public block, item, menu and rendering; construction guide; focused player, mining and restart acceptance | User testing |
 | Canopies | Shared settings and animation; private placement, configuration, motion, rendering and constituent teardown | Dedicated editor, runtime/contact integration, placed-client visibility and ordered updates, canonical activation |
 | Ramp Controllers | Shared settings/admission; private durable journal, before-images and partial-save recovery | Held-owner integration, generation and motion, item/editor/rendering paths, canonical activation |
-| Copifier | Private held-tool options, connected settings and Undo across converted targets; copied-settings crafting and three-state artwork | Canopy/Ramp target integration, final crafting/player acceptance and canonical activation |
+| Copifier | Canonical public tool, dedicated options, connected settings and Undo across converted targets; actual copied-settings recipes and three-state artwork | Final Canopy/Ramp integration and combined player acceptance |
 
 Screens, standalone propulsion and standalone credential readers are already publicly registered. Their focused acceptance is recorded below and in the family contracts. Vehicle/carried effects remain deferred.
 

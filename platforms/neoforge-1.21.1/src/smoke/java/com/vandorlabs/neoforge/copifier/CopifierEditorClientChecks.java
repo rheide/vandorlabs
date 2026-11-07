@@ -16,7 +16,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class CopifierEditorClientChecks {
  private static int stage,ticks,wait,checks;private static NativeCopifierPayload stale;
- @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(CopifierEditorClientFixture.enabled())NativeCopifierScreen.register(event,NativeCopifierItemChecks.MENU);}}
+ @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)public static final class Registration {@SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(CopifierEditorClientFixture.enabled()){if(NativeCopifierItemChecks.MENU!=NativeCopifierRegistrations.MENU.get())NativeCopifierScreen.register(event,NativeCopifierItemChecks.MENU);}}}
  private static void need(boolean yes,String why){checks++;if(!yes)throw new IllegalStateException("Copifier editor client stage="+stage+": "+why);}
  private static void shift(Minecraft mc,boolean value){mc.player.setShiftKeyDown(value);mc.player.connection.send(new net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket(mc.player,value?net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY:net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));}
  private static void mode(int operation){PacketDistributor.sendToServer(new CopifierEditorClientFixture.Mode(operation));}

@@ -25,7 +25,7 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 
-/** Actual native dynamic recipe and independent released recipe outputs; private registration only. */
+/** Actual canonical dynamic recipe and independent released recipe outputs. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class CopifierCraftingChecks {
     private static NativeCopifierItem tool;
@@ -33,20 +33,15 @@ public final class CopifierCraftingChecks {
     private static int checks;
     private static boolean enabled(){return "copifier-crafting".equals(System.getProperty("vandorlabs.transmitterPhase"));}
     private static void need(boolean ok,String message){checks++;if(!ok)throw new AssertionError("Copied crafting: "+message);}
-    @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
-    public static final class Registration {
-        @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){
-            if(!enabled())return;var id=ResourceLocation.parse("vandorlabs:copifier_crafting_fixture");
-            event.register(Registries.ITEM,h->{tool=new NativeCopifierItem(new Item.Properties(),()->null);h.register(id,tool);});
-            event.register(Registries.RECIPE_SERIALIZER,h->{serializer=new SimpleCraftingRecipeSerializer<>(CopifierCraftingChecks::recipe);h.register(id,serializer);});
-        }
-    }
     private static NativeCopifierCraftingRecipe recipe(CraftingBookCategory category){return new NativeCopifierCraftingRecipe(category,()->serializer,NativeCopifierCraftingItems::apply);}
     private static ItemStack tool(CompoundTag data){var stack=new ItemStack(tool);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(data));return stack;}
     private static CompoundTag data(ItemStack stack){return stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();}
     private static void run(net.minecraft.server.level.ServerLevel level)throws Exception{
         JsonArray rows;try(var in=new GZIPInputStream(Files.newInputStream(Path.of(System.getProperty("vandorlabs.copifierRecipeReference"))))){rows=JsonParser.parseString(new String(in.readAllBytes(),java.nio.charset.StandardCharsets.UTF_8)).getAsJsonArray();}
-        var recipe=recipe(CraftingBookCategory.MISC);int cases=0,grids=0;
+        tool=NativeCopifierRegistrations.ITEM.get();serializer=NativeCopifierRegistrations.COPIED_SETTINGS.get();
+        var recipe=(NativeCopifierCraftingRecipe)level.getRecipeManager().byKey(ResourceLocation.parse("vandorlabs:copied_settings")).orElseThrow().value();
+        need(BuiltInRegistries.ITEM.get(ResourceLocation.parse("vandorlabs:duplifier"))==tool&&!BuiltInRegistries.ITEM.containsKey(ResourceLocation.parse("vandorlabs:copifier_crafting_fixture")),"canonical tool and loaded public recipe without fixture substitutes");
+        CopifierCraftingContainerChecks.run(level);int cases=0,grids=0;
         for(var element:rows){var row=element.getAsJsonObject();var stacks=NonNullList.withSize(row.has("grid")?4:row.get("side").getAsInt()*row.get("side").getAsInt(),ItemStack.EMPTY);
             String canopy=null;boolean segmented=false;boolean trigger=false;Boolean diagonal=null;ScreenFamily screen=null;boolean glass=false;String doorId=null;NativeLightBlock.Kind lightKind=null;NativeCopifierHousingCapture.Family family=null;ItemStack originalTool=null,originalInput=null;int toolSlot=-1,inputSlot=-1;
             if(row.has("grid")){
@@ -63,7 +58,7 @@ public final class CopifierCraftingChecks {
             if(!output.isEmpty()){need(output.getCount()==1,"one output");var selectedFamily=family==null?NativeCopifierHousingCapture.Family.CUBE:family;var actual=canopy!=null?data(output):data(output).getCompound("BlockEntityTag");var source=canopy!=null?expected.getCompound("tag"):expected.getCompound("tag").getCompound("BlockEntityTag");if(canopy!=null)need(!data(output).contains("BlockEntityTag")&&!output.has(DataComponents.BLOCK_ENTITY_DATA),"Source outer Canopy envelope");need((canopy!=null?NativeCopifierCanopyEdit.capture(canopy,NativeCanopySettings.read(source)):segmented?NativeCopifierSegmentedEdit.capture(NativeCopifierSegmentedEdit.read(source)):trigger?NativeCopifierTriggerEdit.capture(source):diagonal!=null?NativeCopifierTrapdoorEdit.capture(new NativeCopifierTrapdoorEdit.State(NativeTrapdoorSettings.read(source,diagonal),!diagonal)):screen!=null?NativeCopifierScreenEdit.capture(NativeCopifierScreenEdit.read(screen,source)):glass?NativeCopifierGlassEdit.capture(NativeGlassSettings.read(source)):doorId!=null?NativeCopifierDoorEdit.capture(NativeCopifierDoorEdit.read(doorId,source)):lightKind==null?NativeCopifierHousingCapture.capture(selectedFamily,source):NativeCopifierLightEdit.capture(lightKind,source)).equals(canopy!=null?NativeCopifierCanopyEdit.capture(canopy,NativeCanopySettings.read(actual)):segmented?NativeCopifierSegmentedEdit.capture(NativeCopifierSegmentedEdit.read(actual)):trigger?NativeCopifierTriggerEdit.capture(actual):diagonal!=null?NativeCopifierTrapdoorEdit.capture(new NativeCopifierTrapdoorEdit.State(NativeTrapdoorSettings.read(actual,diagonal),!diagonal)):screen!=null?NativeCopifierScreenEdit.capture(NativeCopifierScreenEdit.read(screen,actual)):glass?NativeCopifierGlassEdit.capture(NativeGlassSettings.read(actual)):doorId!=null?NativeCopifierDoorEdit.capture(NativeCopifierDoorEdit.read(doorId,actual)):lightKind==null?NativeCopifierHousingCapture.capture(selectedFamily,actual):NativeCopifierLightEdit.capture(lightKind,actual)),"Source resulting choices case="+cases+" family="+family+" expected="+source+" actual="+actual);if(glass)need(expected.getCompound("tag").getCompound("ProgrammableGlassSettings").equals(data(output).getCompound("ProgrammableGlassSettings")),"Source dedicated glass envelope");if(originalInput!=null)need(data(output).getString("PrivateItem").equals(data(originalInput).getString("PrivateItem")),"private outer item data retained");}
             var remaining=recipe.getRemainingItems(input);for(int i=0;i<stacks.size();i++)need(ItemStack.matches(originals.get(i),stacks.get(i)),"input unchanged");for(int i=0;i<input.size();i++){var current=input.getItem(i);need(current.getItem() instanceof NativeCopifierItem?ItemStack.matches(remaining.get(i),current)&&remaining.get(i)!=current:remaining.get(i).isEmpty(),"complete independent tool remainder");}cases++;
         }
-        ownership(level,recipe);if(Boolean.getBoolean("vandorlabs.copifierRecipeConfigured"))CopifierCanopyPlacementChecks.run(level);need(Boolean.getBoolean("vandorlabs.copifierRecipeConfigured")?grids==0&&cases>1000:grids==256&&cases==6076,"independent Source coverage");need(recipe.canCraftInDimensions(1,2)&&!recipe.canCraftInDimensions(1,1)&&recipe.getSerializer()==serializer,"native recipe identity/dimensions");System.out.println("[vandorlabs][copifier-crafting] PASS cases="+cases+" grids="+grids+" checks="+checks+" actual recipe/shared slots/Source housing choices/masks/remainders/input immutability; other item adapters and public activation pending");
+        ownership(level,recipe);if(Boolean.getBoolean("vandorlabs.copifierRecipeConfigured"))CopifierCanopyPlacementChecks.run(level);need(Boolean.getBoolean("vandorlabs.copifierRecipeConfigured")?grids==0&&cases>1000:grids==256&&cases==6076,"independent Source coverage");need(recipe.canCraftInDimensions(1,2)&&!recipe.canCraftInDimensions(1,1)&&recipe.getSerializer()==serializer,"native recipe identity/dimensions");System.out.println("[vandorlabs][copifier-crafting] PASS cases="+cases+" grids="+grids+" checks="+checks+" actual recipe/shared slots/Source housing choices/masks/remainders/input immutability; canonical loaded recipe/tool; Ramp adapters pending");
     }
     private static void ownership(net.minecraft.server.level.ServerLevel level,NativeCopifierCraftingRecipe recipe){
         canopyOwnership(level,recipe);
