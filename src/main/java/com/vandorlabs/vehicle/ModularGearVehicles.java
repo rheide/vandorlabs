@@ -56,7 +56,7 @@ public final class ModularGearVehicles {
             if(next==before){gear.captureProgress(before);continue;}
             if(!craft.world.isRemote){List<AxisAlignedBB> old=GearGeometry.boxes(gear,before),after=GearGeometry.boxes(gear,next);boolean blocked=false;
                 for(int i=0;i<after.size()&&!blocked;i++){if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;AxisAlignedBB swept=GearGeometry.swept(gear,i,old.get(i),after.get(i),before,next);
-                    if(!GearGeometry.foreign(craft.view,gear,swept).isEmpty()){blocked=true;break;}
+                    if(!craft.articulation.constrainsArm(gear.getPos())&&!GearGeometry.foreign(craft.view,gear,swept).isEmpty()){blocked=true;break;}
                     AxisAlignedBB at=pose.world(swept,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
                     if(!craft.world.isAreaLoaded(new BlockPos(at.minX,at.minY,at.minZ),new BlockPos(at.maxX,at.maxY,at.maxZ),false)||!craft.world.getCollisionBoxes(craft,at).isEmpty())blocked=true;
                 }if(gear.captureBlocked(blocked))notify.add(gear.getPos());
@@ -69,6 +69,7 @@ public final class ModularGearVehicles {
         if(!craft.collisionCache.readyForCanopyPose(craft.view,geometry))return;
         if(!craft.world.isRemote)for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){GearTileEntity gear=(GearTileEntity)craft.view.getTileEntity(entry.getKey());List<AxisAlignedBB> before=new ArrayList<>(),after=new ArrayList<>();for(AxisAlignedBB box:GearGeometry.boxes(gear,gear.progress()))before.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));for(AxisAlignedBB box:GearGeometry.boxes(gear,entry.getValue()))after.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));GearGeometry.pushEntities(craft.world,before,after,craft);}
         for(Map.Entry<BlockPos,Double> entry:desired.entrySet())((GearTileEntity)craft.view.getTileEntity(entry.getKey())).captureProgress(entry.getValue());
+        craft.articulation.armPosesCommitted();
         if(craft.world.isRemote)corrections.remove(craft);
         List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound())):cell);
         craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
