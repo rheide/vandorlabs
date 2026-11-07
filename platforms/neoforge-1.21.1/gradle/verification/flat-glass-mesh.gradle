@@ -6,3 +6,10 @@ tasks.register('testNativeFlatGlassMesh', JavaExec) {
     args file('../../build/test-artifacts/flat-glass-mesh-forge.jsonl').absolutePath,
          file('../../build/test-artifacts/trapdoor-borders-forge.jsonl').absolutePath
 }
+tasks.register('testNativeFlatGlassBar', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeFlatGlassBarChecks'
+    args file('../../build/test-artifacts/flat-glass-bar-forge.jsonl').absolutePath
+}
