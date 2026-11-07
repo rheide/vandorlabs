@@ -32,6 +32,13 @@ final class VehicleArmParkingGeometry {
     }
     final VehicleCouplerTopology topology;final List<Arm> arms;final List<Port> ports;final int[][] links;
     private VehicleArmParkingGeometry(VehicleCouplerTopology topology,List<Arm> arms,List<Port> ports,int[][] links){this.topology=topology;this.arms=Collections.unmodifiableList(new ArrayList<>(arms));this.ports=Collections.unmodifiableList(new ArrayList<>(ports));this.links=links;}
+    com.vandorlabs.physics.GridCouplerParking.Problem problem(){
+        int[] counts=new int[arms.size()];for(int i=0;i<counts.length;i++)counts[i]=arms.get(i).options.candidates.size();
+        List<com.vandorlabs.physics.GridCouplerParking.Port> projected=new ArrayList<>();
+        for(Port port:ports){com.vandorlabs.physics.GridCouplerParking.Point[] choices=new com.vandorlabs.physics.GridCouplerParking.Point[port.choices.length];for(int i=0;i<choices.length;i++){Point p=port.choices[i];choices[i]=new com.vandorlabs.physics.GridCouplerParking.Point(p.x,p.y,p.z,p.facing);}projected.add(new com.vandorlabs.physics.GridCouplerParking.Port(port.body,port.variable,choices));}
+        List<com.vandorlabs.physics.GridCouplerParking.Link> constraints=new ArrayList<>();for(int[] link:links)constraints.add(new com.vandorlabs.physics.GridCouplerParking.Link(link[0],link[1]));
+        return new com.vandorlabs.physics.GridCouplerParking.Problem(topology.sections.size(),topology.root,counts,projected,constraints);
+    }
     /** Loaded ownership was admitted by the phase enumerator before this scalar projection. */
     static VehicleArmParkingGeometry project(VehicleStructure source,VehicleWorld view,VehicleCouplerTopology topology,Map<BlockPos,ArmParkingCandidates.Result> candidates){
         if(view==null||view.structure!=source||topology==null||topology.sections.size()>MAX_BODIES||candidates.size()>MAX_ARMS)throw new IllegalArgumentException("Arm parking layout exceeds its search bounds");
