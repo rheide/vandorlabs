@@ -8,3 +8,10 @@ tasks.register('testRampSettingsReference',JavaExec) {
 neoForge.runs.configureEach {
  if(project.hasProperty('rampSettingsReference'))systemProperty 'vandorlabs.rampSettingsReference',file(project.property('rampSettingsReference')).absolutePath
 }
+tasks.register('testRampAdmissionReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampAdmissionChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-admission-source.jsonl.gz').absolutePath,rootProject.file('../../testclient/fixtures/ramp-callbacks-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
