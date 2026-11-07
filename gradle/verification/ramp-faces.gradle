@@ -1,0 +1,16 @@
+task exportRampFaceReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.RampFaceLegacyOracle'
+ args file("$buildDir/test-artifacts/ramp-face-source.jsonl").absolutePath
+ maxHeapSize='512m'
+}
+task exportRampTextureReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.RampTextureLegacyOracle'
+ args file('testclient/fixtures/ramp-generation-source.jsonl.gz').absolutePath,file("$buildDir/test-artifacts/ramp-texture-source.jsonl").absolutePath
+ maxHeapSize='1g'
+}

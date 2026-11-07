@@ -1,0 +1,14 @@
+tasks.register('testRampFaceReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampFaceChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-face-source.jsonl.gz').absolutePath
+ maxHeapSize='512m'
+}
+tasks.register('testRampTextureReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.ramp.NativeRampTextureChecks'
+ args rootProject.file('../../testclient/fixtures/ramp-texture-source.jsonl.gz').absolutePath
+ maxHeapSize='512m'
+}
