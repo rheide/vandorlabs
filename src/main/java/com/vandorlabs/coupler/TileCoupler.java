@@ -73,7 +73,16 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
     @Override public void invalidate(){RedstoneChannels.unregister(this);super.invalidate();}
     @Override public void onChunkUnload(){RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override public boolean shouldRefresh(net.minecraft.world.World w,BlockPos p,net.minecraft.block.state.IBlockState old,net.minecraft.block.state.IBlockState next){return old.getBlock()!=next.getBlock();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(articulation)tag.setBoolean("CouplerArticulation",true);else tag.removeTag("CouplerArticulation");ChannelData.write(tag,channels);tag.setBoolean("CouplerInverted",inverted);tag.setBoolean("CouplerReceived",received);tag.setBoolean("CouplerRequested",requested);if(manualOverride){tag.setBoolean("CouplerManualOverride",true);tag.setBoolean("CouplerManualRequested",manualRequested);}if(operator!=null)tag.setUniqueId("CouplerActor",operator);tag.setString("CouplerStatus",couplingStatus);return tag;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);return writeOwnData(tag);}
+    private NBTTagCompound writeOwnData(NBTTagCompound tag){if(articulation)tag.setBoolean("CouplerArticulation",true);else tag.removeTag("CouplerArticulation");ChannelData.write(tag,channels);tag.setBoolean("CouplerInverted",inverted);tag.setBoolean("CouplerReceived",received);tag.setBoolean("CouplerRequested",requested);if(manualOverride){tag.setBoolean("CouplerManualOverride",true);tag.setBoolean("CouplerManualRequested",manualRequested);}if(operator!=null)tag.setUniqueId("CouplerActor",operator);tag.setString("CouplerStatus",couplingStatus);return tag;}
+    /** Typed carried-control merge, without serializing physical capabilities or discarding future own fields. */
+    public NBTTagCompound currentData(NBTTagCompound original){
+        net.minecraft.util.ResourceLocation expected=TileEntity.getKey(TileCoupler.class);
+        if(original==null||expected==null||!original.hasKey("id",8)||!expected.toString().equals(original.getString("id")))throw new IllegalArgumentException("Original Coupler snapshot identity is unavailable");
+        NBTTagCompound result=original.copy();result.setInteger("x",getPos().getX());result.setInteger("y",getPos().getY());result.setInteger("z",getPos().getZ());
+        for(String key:new String[]{"CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast"})result.removeTag(key);
+        return writeOwnData(result);
+    }
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);articulation=tag.getBoolean("CouplerArticulation");channels=ChannelData.read(tag,0);inverted=tag.getBoolean("CouplerInverted");received=tag.getBoolean("CouplerReceived");requested=tag.hasKey("CouplerRequested",1)?tag.getBoolean("CouplerRequested"):received!=inverted;manualOverride=tag.getBoolean("CouplerManualOverride");manualRequested=tag.getBoolean("CouplerManualRequested");sampleKnown=false;operator=tag.hasUniqueId("CouplerActor")?tag.getUniqueId("CouplerActor"):null;couplingStatus=tag.hasKey("CouplerStatus",8)?tag.getString("CouplerStatus"):"Ready";}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}

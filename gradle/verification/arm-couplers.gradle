@@ -45,3 +45,17 @@ task testArmCollisionIdentity(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmCollisionIdentityChecks'
  maxHeapSize = '512m'
 }
+
+task testCouplerCurrentData(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.CouplerCurrentDataChecks'
+ maxHeapSize = '512m'
+}
+
+task testVehicleArmMotionCodec(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.VehicleArmMotionCodecChecks'
+ maxHeapSize = '512m'
+}

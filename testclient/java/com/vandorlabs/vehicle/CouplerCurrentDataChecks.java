@@ -1,0 +1,32 @@
+package com.vandorlabs.vehicle;
+
+import com.vandorlabs.coupler.TileCoupler;
+import java.util.*;
+import net.minecraft.nbt.*;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.*;
+import net.minecraft.util.math.BlockPos;
+import net.minecraftforge.common.capabilities.*;
+
+/** Actual Forge attached capability distinguishes typed own-field merge from tile reserialization. */
+public final class CouplerCurrentDataChecks {
+    private static int checks,profiles,serializations;
+    private static final ResourceLocation KEY=new ResourceLocation("snapshot_probe:external");
+    public static final class Provider implements ICapabilitySerializable<NBTTagCompound>{
+        public boolean hasCapability(Capability<?> capability,EnumFacing facing){return false;}
+        public <T>T getCapability(Capability<T> capability,EnumFacing facing){return null;}
+        public NBTTagCompound serializeNBT(){serializations++;NBTTagCompound tag=new NBTTagCompound();tag.setInteger("DifferentLiveRepresentation",47);return tag;}
+        public void deserializeNBT(NBTTagCompound tag){}
+    }
+    private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Coupler typed snapshot: "+why);}
+    public static void main(String[] args)throws Exception{
+        net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileCoupler.class,new ResourceLocation("vandorlabs:square_coupler"));
+        for(int bits=0;bits<128;bits++){
+            NBTTagCompound original=new NBTTagCompound();original.setString("id","vandorlabs:square_coupler");original.setInteger("x",3);original.setInteger("y",7);original.setInteger("z",9);original.setString("UnknownOwnField","verbatim");NBTTagCompound nested=new NBTTagCompound();nested.setLong("Anchor",new BlockPos(99,30,-41).toLong());original.setTag("UnknownOwnTree",nested);NBTTagCompound caps=new NBTTagCompound(),opaque=new NBTTagCompound();opaque.setInteger("OriginalExternalRepresentation",22);caps.setTag(KEY.toString(),opaque);caps.setByteArray("OtherUnloadedMod",new byte[8192]);original.setTag("ForgeCaps",caps);original.setBoolean("CouplerManualOverride",true);original.setBoolean("CouplerManualRequested",true);original.setUniqueId("CouplerActor",new UUID(1,2));
+            NBTTagCompound current=original.copy();current.setBoolean("CouplerArticulation",(bits&1)!=0);current.setBoolean("CouplerInverted",(bits&2)!=0);current.setBoolean("CouplerReceived",(bits&4)!=0);if((bits&8)!=0)current.setBoolean("CouplerRequested",(bits&16)!=0);else current.removeTag("CouplerRequested");if((bits&32)==0){current.removeTag("CouplerManualOverride");current.removeTag("CouplerManualRequested");}if((bits&64)==0){current.removeTag("CouplerActorMost");current.removeTag("CouplerActorLeast");}current.setIntArray("RedstoneChannels",new int[]{0,1,65535});current.setString("CouplerStatus","current status");
+            TileCoupler tile=new TileCoupler();java.lang.reflect.Field dispatcher=TileEntity.class.getDeclaredField("capabilities");dispatcher.setAccessible(true);dispatcher.set(tile,new CapabilityDispatcher(Collections.singletonMap(KEY,new Provider()),null));tile.readFromNBT(current);tile.setPos(new BlockPos(12,17,-3));int before=serializations;NBTTagCompound result=tile.currentData(original);need(serializations==before,"typed merge does not invoke installed external capability serializer");need(result.getCompoundTag("ForgeCaps").equals(original.getCompoundTag("ForgeCaps"))&&result.getTag("UnknownOwnField").equals(original.getTag("UnknownOwnField"))&&result.getTag("UnknownOwnTree").equals(original.getTag("UnknownOwnTree")),"opaque capability and future own fields remain exact");need(result.getInteger("x")==12&&result.getInteger("y")==17&&result.getInteger("z")==-3,"only known coordinates follow installed local tile");NBTTagCompound fresh=tile.writeToNBT(new NBTTagCompound());need(serializations==before+1&&!fresh.getCompoundTag("ForgeCaps").equals(original.getCompoundTag("ForgeCaps")),"actual ordinary tile serializer reproduces changed external representation before="+before+" after="+serializations+" caps="+fresh.getCompoundTag("ForgeCaps"));for(String key:fresh.getKeySet())if(!key.equals("ForgeCaps"))need(fresh.getTag(key).equals(result.getTag(key)),"current known field matches released own-field write: "+key);need(result.hasKey("CouplerManualOverride")==((bits&32)!=0)&&result.hasUniqueId("CouplerActor")==((bits&64)!=0),"cleared optional controls cannot retain stale ownership/manual fields");need(original.getInteger("x")==3&&original.getBoolean("CouplerManualOverride")&&original.hasUniqueId("CouplerActor"),"input original snapshot remains unchanged");result.getCompoundTag("ForgeCaps").setString("Mutation","private");need(!original.getCompoundTag("ForgeCaps").hasKey("Mutation"),"output envelope defensive");profiles++;
+        }
+        TileCoupler tile=new TileCoupler();boolean refused=false;try{tile.currentData(new NBTTagCompound());}catch(IllegalArgumentException expected){refused=true;}need(refused,"unidentified source snapshot refuses");
+        System.out.println("Coupler typed current-data PASS profiles="+profiles+" checks="+checks+" actual attached Forge capability serializer divergence/opaque preservation/current flags/legacy defaults/cleared optional fields; runtime unbound");
+    }
+}
