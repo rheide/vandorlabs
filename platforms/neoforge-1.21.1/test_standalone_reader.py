@@ -19,6 +19,10 @@ def main():
     saved=output/'saved-world';world(saved,0)
     run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=standalone-reader-geometry','-PstandaloneReaderReference='+str(reference)),output/'server.log','[vandorlabs][standalone-reader-geometry] dedicated PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
     check_log(saved/'logs/latest.log','All dimensions are saved')
+    for phase in ('write','read'):
+        marker='[vandorlabs][standalone-reader-host-'+phase+'] dedicated PASS'
+        run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=standalone-reader-host-'+phase),output/('host-'+phase+'.log'),marker,dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+        check_log(saved/'logs/latest.log','All dimensions are saved')
     print('Standalone reader geometry runtime PASS: '+str(output),flush=True)
 
 if __name__=='__main__':main()
