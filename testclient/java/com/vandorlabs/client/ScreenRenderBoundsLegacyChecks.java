@@ -1,0 +1,15 @@
+package com.vandorlabs.client;
+import com.google.gson.*;
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.tiles.*;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.math.BlockPos;
+/** Actual released tile culling, including inherited Forge collision bounds and ceiling override. */
+public final class ScreenRenderBoundsLegacyChecks {
+ public static void main(String[] args)throws Exception{net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new ResourceLocation("minecraft:screen_render_bounds_reference"));JsonArray cases=new JsonArray();BlockPos pos=new BlockPos(-17,80,31);
+  for(String id:ScreenFamilyLegacyChecks.IDS){BlockAnimatedScreenSelector block=null;for(Block candidate:ModBlocks.BLOCKS)if(candidate.getRegistryName().getResourcePath().equals(id))block=(BlockAnimatedScreenSelector)candidate;for(IBlockState state:block.getBlockState().getValidStates())for(int variant=0;variant<4;variant++){NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)block.createNewTileEntity(null,0);NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tag.setBoolean("CeilingMounted",variant>=2);tag.setInteger("CeilingPosition",variant==3?2:0);tag.setInteger("wallPosition",variant==1?2:0);tag.setBoolean("smallInput",variant==1);tile.readFromNBT(tag);tile.setWorld(world);tile.setPos(pos);world.states.put(pos,state);world.tiles.put(pos,tile);net.minecraft.util.math.AxisAlignedBB box=tile.getRenderBoundingBox();JsonObject row=new JsonObject();row.addProperty("id",id);row.addProperty("meta",block.getMetaFromState(state));row.addProperty("variant",variant);row.addProperty("saved",tile.writeToNBT(new NBTTagCompound()).toString());JsonArray bounds=new JsonArray();for(double value:new double[]{box.minX-pos.getX(),box.minY-pos.getY(),box.minZ-pos.getZ(),box.maxX-pos.getX(),box.maxY-pos.getY(),box.maxZ-pos.getZ()})bounds.add(value);row.add("bounds",bounds);row.addProperty("distanceSquared",tile.getMaxRenderDistanceSquared());cases.add(row);}}
+  String text=cases.toString();java.security.MessageDigest hash=java.security.MessageDigest.getInstance("SHA-256");StringBuilder digest=new StringBuilder();for(byte value:hash.digest(text.getBytes("UTF-8")))digest.append(String.format("%02x",value&255));if(!digest.toString().equals("e971775b911b4b3b6471becd7addb25f8b44f6de8148a44637d31845a86d159a"))throw new AssertionError("Released Screen render bounds changed: "+digest);JsonObject root=new JsonObject();root.addProperty("sha256",digest.toString());root.add("cases",cases);java.nio.file.Path path=java.nio.file.Paths.get("build/test-artifacts/screen-render-bounds-reference.json");java.nio.file.Files.createDirectories(path.getParent());java.nio.file.Files.write(path,root.toString().getBytes("UTF-8"));System.out.println("Actual Screen render bounds reference PASS profiles="+cases.size()+" sha256="+digest);}
+}
