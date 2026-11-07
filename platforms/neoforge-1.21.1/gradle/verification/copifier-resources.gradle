@@ -1,0 +1,11 @@
+def copierPython = project.findProperty('pythonExecutable') ?: (System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
+sourceSets.main.resources.srcDir('build/generated/copifier-resources')
+tasks.register('generateCopifierResources',Exec) {
+ commandLine copierPython,'generate_copifier_resources.py'
+ inputs.file('generate_copifier_resources.py')
+ inputs.file('../../tools/compact_runtime_assets.py')
+ inputs.files(fileTree('../../texture-packs/default/assets/vandorlabs/textures/items').matching { include 'duplifier_*.png' })
+ inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/items').matching { include 'duplifier_*.png' })
+ outputs.dir('build/generated/copifier-resources')
+}
+tasks.named('processResources') { dependsOn tasks.named('generateCopifierResources') }
