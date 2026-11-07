@@ -29,3 +29,10 @@ task exportLightArtworkReference(type: JavaExec) {
     main = 'com.vandorlabs.client.LightArtworkLegacyOracle'
     args file('build/test-artifacts/light-artwork-forge.json').absolutePath
 }
+
+task testLightHousingDensity(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightHousingDensityChecks'
+}
