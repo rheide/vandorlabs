@@ -83,6 +83,8 @@ public final class NativeRampRiders {
         return Double.isNaN(top)?null:top==box.maxY?box:new AABB(box.minX,box.minY,box.minZ,box.maxX,top,box.maxZ);
     }
     public static boolean carrying(Level level,BlockPos root){var current=CARRYING.get();return current!=null&&current.level==level&&current.root.equals(root);}
+    /** Only a durable armed operation may hide its still-native selected sources during rider preflight. */
+    public static boolean suppressOriginal(net.minecraft.world.level.BlockGetter world,BlockPos pos,net.minecraft.world.level.block.state.BlockState state){var current=CARRYING.get();return current!=null&&world==current.level&&world instanceof ServerLevel server&&NativeRampJournal.heldOriginalCollision(server,current.root,pos,state);}
     /** Materialize vanilla's lazy collision iterable while own-root suppression is still in scope. */
     public static List<AABB> obstacles(Level level,BlockPos root,Entity rider,AABB swept){
         if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp rider obstacles require server thread");
