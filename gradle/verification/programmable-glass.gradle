@@ -101,3 +101,11 @@ task exportGlassPropertiesReference(type: JavaExec) {
     main = 'com.vandorlabs.client.GlassPropertiesLegacyOracle'
     args file('build/test-artifacts/glass-properties-forge.jsonl').absolutePath
 }
+
+task exportFlatGlassPlacementFluidReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassPlacementFluidLegacyOracle'
+    args file('build/test-artifacts/flat-glass-placement-fluid-forge.jsonl').absolutePath
+}
