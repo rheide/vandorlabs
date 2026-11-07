@@ -41,3 +41,17 @@ write('data/vandorlabs/loot_table/blocks/segmented_door.json', {
         'entries': [{'type': 'minecraft:item', 'name': 'vandorlabs:segmented_door'}],
         'conditions': [{'condition': 'minecraft:survives_explosion'}]}],
 })
+
+# Supplied cell artwork remains unselected until its catalog/renderer integration lands.
+for model in sorted((ROOT / 'src/main/resources/assets/vandorlabs/models/block/segmented_gates').glob('*.json')):
+    target = OUT / 'assets/vandorlabs/models/block/segmented_gates' / model.name
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(model.read_bytes())
+for group in ('segmented_gates', 'segmented_doors'):
+    for image in sorted((ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks' / group).glob('*.png')):
+        with Image.open(image) as pixels:
+            if pixels.size != (128, 128):
+                raise ValueError('Supplied Segmented artwork dimensions changed: ' + image.name)
+        target = OUT / 'assets/vandorlabs/textures/blocks' / group / image.name
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(image.read_bytes())
