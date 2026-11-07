@@ -41,6 +41,9 @@ public final class VehicleStructure {
             return true;
         }
         public int tileInteger(String key){return tile==null?0:tile.getInteger(key);}
+        public boolean tileBoolean(String key){return tile!=null&&tile.getBoolean(key);}
+        public boolean hasTileKey(String key,int type){return tile!=null&&tile.hasKey(key,type);}
+        public String tileString(String key){return tile==null?"":tile.getString(key);}
     }
     public final List<Cell> cells;
     public final BlockPos seat;
