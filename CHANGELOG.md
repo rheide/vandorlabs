@@ -4,7 +4,7 @@
 
 - Enable standalone Card and Data Chip readers in the experimental native build with source-matched mounts, dedicated editing, inventory/hopper behavior and credential recovery.
 
-- Prevent native Programmable Screens from being replaced by buckets or flowing water/lava, preserving their configured settings and embedded chips.
+- Prevent native Programmable Screens, metal switches, numeric controls, Lights and propulsion blocks from being replaced by buckets or flowing water/lava. Preserve their settings and owned items while retaining the intentional fluid behavior of power levers.
 
 - Share Copifier option-mask migration across platform adapters while preserving existing saved choices, option indices, reverse cycling and apply/undo behavior in Forge.
 

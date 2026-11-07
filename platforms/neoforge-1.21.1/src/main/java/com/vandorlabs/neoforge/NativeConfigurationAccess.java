@@ -15,10 +15,14 @@ public final class NativeConfigurationAccess {
         return canConfigure(player) && canEditDialog(player,level,pos);
     }
     public static boolean canEditDialog(Player player, Level level, BlockPos pos) {
+        return canEditDialog(player,level,pos,Direction.UP);
+    }
+    /** Tool interactions retain the actual clicked face for Adventure permissions. */
+    public static boolean canEditDialog(Player player,Level level,BlockPos pos,Direction face) {
         return player.isAlive() && !player.isSpectator()
             && player.level()==level && level.hasChunkAt(pos)
             && player.distanceToSqr(pos.getCenter())<=64 && level.mayInteract(player,pos)
-            && player.mayUseItemAt(pos,Direction.UP,player.getMainHandItem());
+            && player.mayUseItemAt(pos,face,player.getMainHandItem());
     }
     public static boolean canEdit(Player player, BlockEntity tile) {
         Level level=tile.getLevel();
