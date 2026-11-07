@@ -48,3 +48,5 @@ Native failed-load recovery preserves original component and attachment envelope
 Standalone propulsion and redstone-light blocks are enabled in the experimental native build, including the original 27 block identities and seven catalog items/recipes. Connected square, hexagonal and wedge artwork, shape sampling, dedicated controls and natural particle effects have focused canonical player and saved-world checks. Configured Survival placement, ordinary stone-tool harvesting and all 21 padded item variants are covered. Lighting workers use prepared auxiliary data, and real Off/On interactions update stored client light. Vehicle thrust and carried effects remain deferred.
 
 The experimental native build now registers all seven standalone Programmable Screen roles, including their dedicated editor, configured items, joined displays and non-Vehicle Chip content. Vehicle Mode remains deferred.
+
+The experimental native build also enables standalone Card and Data Chip readers, including their dedicated configuration, credential inventory and authored mounted artwork. The Card / Chip Programmer remains in progress.

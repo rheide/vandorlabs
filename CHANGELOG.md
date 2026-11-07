@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Enable standalone Card and Data Chip readers in the experimental native build with source-matched mounts, dedicated editing, inventory/hopper behavior and credential recovery.
+
 - Prevent native Programmable Screens from being replaced by buckets or flowing water/lava, preserving their configured settings and embedded chips.
 
 - Share Copifier option-mask migration across platform adapters while preserving existing saved choices, option indices, reverse cycling and apply/undo behavior in Forge.

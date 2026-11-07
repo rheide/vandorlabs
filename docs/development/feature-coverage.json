@@ -545,18 +545,16 @@
       "id": "security_tokens",
       "label": "Token slots and design tokens",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "access_card_slot",
         "data_chip_slot",
         "data_chip_programmer"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "slot inventories and native token components",
-        "authorization semantics",
-        "all token designs/models",
-        "live parity"
+        "Card / Chip Programmer block, inventory and journal-programming dialog",
+        "Broader copy-tool, optional-component, resource-pack and final native release acceptance",
+        "Vehicle-specific credential/display integration remains deferred"
       ],
       "legacy_item_ids": [
         "access_card",
@@ -564,7 +562,14 @@
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Canonical access_card_slot and data_chip_slot blocks/items retain the shared token_slot entity ID, stone-tool harvest, plain block drops and the Source absence of dedicated recipes.",
+        "Source-exact inventory/Forge wrapper/hopper behavior, credential ownership, private public-data projection, bounded configuration and opaque refused-snapshot recovery.",
+        "Actual canonical dedicated checks cover 48 real placements, 12 mining/recovery modes and full process restart; actual canonical client checks cover both IDs, 12 real Survival actions, ordinary/tool editing, production bindings and positive mounted rendering.",
+        "Source-authored configured models, resource overrides and padded icons; warmed empty reader drawing measures zero allocation in the focused software-rendered checks.",
+        "Logical Iron material protection preserves credentials under direct water/lava buckets and actual fluid ticks independently of the authored collision shape."
+      ]
     },
     {
       "id": "storage",

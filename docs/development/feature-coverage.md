@@ -22,7 +22,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Chairs and seats | pending | unimplemented | non-vehicle first |
 | Triggers, buttons, rockers, levers and throttles | partial (Trigger and mounted control families) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
-| Token slots and design tokens | pending | unimplemented | non-vehicle first |
+| Token slots and design tokens | partial (card/chip readers enabled; programmer pending) | unimplemented | non-vehicle first |
 | Programmable storage | pending | unimplemented | non-vehicle first |
 | Constructors, matter infuser, battery and tank | pending | unimplemented | non-vehicle first |
 | Navigation tables | pending | unimplemented | non-vehicle first |
@@ -94,3 +94,5 @@ Focused canonical checks pass actual Configurizer/ordinary editing, current/stal
 
 
 Programmable Light, Light Frame and Light Slab are enabled with a shared canonical entity ID, source-matched grouping, configured items and dedicated ON/OFF/Sides/Redstone editing. Focused canonical checks cover recipes, Survival interactions, exact saved owners, production item/world models, neighbor lighting, reload and recovery of failed component/attachment data. Standalone propulsion and particle families are also enabled: 27 block IDs, seven catalog items/recipes and 21 configured item variants. Focused canonical checks cover saved topology, Survival placement/harvest, client ON/OFF light publication, natural particle lifetime, world rendering and resource reload. Vehicle forces remain deferred. These focused checks do not establish the deferred full non-Vehicle release gate or hardware shader acceptance.
+
+Standalone Card and Data Chip readers now register their original IDs and shared `token_slot` entity identity. The canonical dedicated/client checks cover actual placement, correct/wrong-tool and Creative mining, known/opaque ownership recovery, ordinary and Configurizer editing, private credential publication and saved restart. Source inventory/wrapper/hopper behavior and authored mounted models have separate exact references. Reader fluid material protection preserves credentials under buckets and actual water/lava flow; collision stays authored. The Card / Chip Programmer, broader workflow acceptance and final native release checks remain pending. See [reader contract and acceptance](reader-native-render-contract.md).
