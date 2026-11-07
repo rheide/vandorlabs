@@ -1,0 +1,11 @@
+tasks.register('testNativeCopifierSegmented', JavaExec) {
+ group='verification'
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEditChecks'
+ args file('../../testclient/fixtures/copifier-segmented-source.json.gz').absolutePath
+ maxHeapSize='512m'
+}
+neoForge.runs.configureEach {
+ if(project.hasProperty('copifierSegmentedReference'))systemProperty 'vandorlabs.copifierSegmentedReference',file(project.property('copifierSegmentedReference')).absolutePath
+}

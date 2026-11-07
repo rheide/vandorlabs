@@ -89,6 +89,24 @@ public class NativeSegmentedDoorEntity extends BlockEntity implements NativeChan
  @Override public boolean isChannelMemberActive(){return !inert&&NativeChannelMember.super.isChannelMemberActive();}
  public static boolean validTexture(int value){if(value==-1||com.vandorlabs.tiles.MaterialChoicePolicy.isCustom(value))return true;if(!com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(value))return false;var e=com.vandorlabs.neoforge.ModernFinishCatalog.option(value);String category=e.category();int separator=category.indexOf('/');if(separator>=0)category=category.substring(0,separator);return e.visible()&&(e.general()||category.equals("Doors")||category.equals("Double Doors")||category.equals("Frames")||category.equals("Frame"));}
  public CompoundTag configuration(){CompoundTag tag=new CompoundTag();settings.write(tag);tag.putInt("SegmentedTexture",texture);tag.putInt("SegmentedSpeed",ticksPerSection);tag.putBoolean("SegmentedLocalRedstone",localRedstone);tag.putBoolean("SegmentedSignalOpens",signalOpens);tag.putBoolean("SegmentedConfigured",true);return tag;}
+ public final boolean copiedAvailable(){return level instanceof net.minecraft.server.level.ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&installed();}
+ /** Bounded choices only: fluid buffers, motion identities and retained platform data remain local. */
+ public final com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.State copiedState(){
+  if(!copiedAvailable())throw new IllegalArgumentException("Unavailable copied Segmented Door section");
+  return new com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.State(settings,channels,ticksPerSection,localRedstone,signalOpens,texture);
+ }
+ public final boolean configureCopied(CompoundTag values,Player actor){
+  if(!copiedAvailable()||actor==null||!actor.isAlive()||actor.isSpectator()||actor.level()!=level||!level.mayInteract(actor,worldPosition)||!actor.mayUseItemAt(worldPosition,Direction.UP,actor.getMainHandItem()))return false;
+  final com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.Plan plan;
+  try{plan=com.vandorlabs.neoforge.copifier.NativeCopifierSegmentedEdit.prepare(copiedState(),values);}catch(IllegalArgumentException malformed){return false;}
+  if(!plan.applicable())return false;var next=plan.state();
+  if(plan.configuration()){
+   try{configurePart(actor,next.channels(),next.ticks(),next.local(),next.opens(),next.texture(),next.settings());}catch(IllegalArgumentException refused){return false;}
+  }else{
+   channels=next.channels();NativeRedstoneChannels.channelsChanged(this);setChanged();publicationChanged();powerPending=true;root().powerPending=true;
+  }
+  return true;
+ }
  public CompoundTag itemSettings(){CompoundTag tag=configuration();tag.putIntArray("RedstoneChannels",channels.toArray());return tag;}
  public void applyItemConfiguration(CompoundTag tag,ChannelList selected){if(selected==null)throw new IllegalArgumentException("Missing channels");settings=NativeSegmentedDoorSettings.read(tag);texture=tag.contains("SegmentedTexture",3)&&validTexture(tag.getInt("SegmentedTexture"))?tag.getInt("SegmentedTexture"):-1;ticksPerSection=clamp(tag.getInt("SegmentedSpeed"),5,30);localRedstone=tag.getBoolean("SegmentedLocalRedstone");signalOpens=tag.getBoolean("SegmentedSignalOpens");channels=selected;configured=true;publishLocal();}
  public void configure(Player player,ChannelList next,int ticks,boolean local,boolean opens){NativeSegmentedDoorLifecycle.configureLegacy(this,player,next,ticks,local,opens);}
