@@ -14,7 +14,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 /** Inactive generated-part host. All collision reads consume one immutable prepared value. */
 public class NativeRampPartEntity extends NativeRampJournalPart {
  public record Publication(NativeRampPartData data,NativeRampGeometry.Snapshot geometry,
-   NativeRampBeltGeometry.Snapshot beltGeometry,double pose,VoxelShape collisionShape,List<AABB> worldBoxes,long revision,long observationTick){
+   NativeRampBeltGeometry.Snapshot beltGeometry,double pose,VoxelShape collisionShape,List<AABB> worldBoxes,long revision,long observationTick,boolean stationaryTop){
   public Publication{worldBoxes=List.copyOf(worldBoxes);}
  }
  private static final int SHAPE_BUDGET=4*1024*1024;
@@ -24,7 +24,8 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
  /** Ordering is per operation: a fresh operation deliberately starts a new cosmetic identity. */
  public final boolean acceptsObservation(UUID operation,long revision,long tick){var previous=publication;return revision>=0&&(previous==null||!Objects.equals(operation,operationId())||revision>previous.revision||revision==previous.revision&&tick>=previous.observationTick);}
  public final NativeRampPartData data(){var value=publication;return value==null?null:value.data;}
- private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick){
+ private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick){return build(data,pose,distance,revision,observationTick,null);}
+ private Publication build(NativeRampPartData data,double pose,double distance,long revision,long observationTick,Boolean stationaryTop){
   if(revision<0)throw new IllegalArgumentException("Ramp publication revision");
   if(!data.spec().cell().equals(worldPosition))throw new IllegalArgumentException("Ramp part cell identity");
   var belt=data.belt().mode()==0?null:NativeRampBeltGeometry.snapshot(data.spec(),distance);
@@ -33,7 +34,7 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
   for(var piece:geometry.pieces()){var box=piece.box();if(box.minX<0||box.minY<0||box.minZ<0||box.maxX>1||box.maxY>1||box.maxZ>1)throw new IllegalArgumentException("Ramp part escaped reserved cell");local.add(box);world.add(box.move(worldPosition));}
   var shape=NativeVoxelShapes.union(local,SHAPE_BUDGET,1e-8);
   if((belt==null?geometry.retainedBytes():belt.retainedBytes())+NativeVoxelShapes.retainedCost(shape,local.size())>SHAPE_BUDGET)throw new IllegalArgumentException("Ramp part publication budget");
-  return new Publication(data,geometry,belt,pose,shape,world,revision,observationTick);
+  return new Publication(data,geometry,belt,pose,shape,world,revision,observationTick,stationaryTop==null?NativeRampPartSupport.stationaryTop(data.spec(),data.belt().mode()):stationaryTop);
  }
  private boolean installed(){if(level==null||isRemoved())return false;if(level instanceof ServerLevel server&&!server.getServer().isSameThread())return false;var chunk=level.getChunkSource().getChunkNow(worldPosition.getX()>>4,worldPosition.getZ()>>4);return chunk!=null&&chunk.getBlockEntities().get(worldPosition)==this;}
  /** Called within the journal's exact-operation publication scope, before observers run. */
@@ -51,7 +52,7 @@ public class NativeRampPartEntity extends NativeRampJournalPart {
   var data=previous.data;double pose=data.motion().pose(tick,0),distance=data.belt().distance();
   if(data.belt().running())distance+=((double)tick-data.belt().tick())*data.belt().velocity(data.spec());
   if(pose==previous.pose&&(previous.beltGeometry==null||distance==previous.beltGeometry.distance()))return;
-  publication=build(data,pose,distance,previous.revision,tick);
+  publication=build(data,pose,distance,previous.revision,tick,previous.stationaryTop);
  }
  @Override public List<AABB> physicalBounds(){var value=publication;return ownershipKnown()&&value!=null?value.worldBoxes:null;}
  @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
