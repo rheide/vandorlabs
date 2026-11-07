@@ -1,0 +1,7 @@
+tasks.register('testCopifierPropulsionReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.copifier.NativeCopifierPropulsionEditChecks'
+ args rootProject.file('../../testclient/fixtures/copifier-propulsion-source.jsonl.gz').absolutePath
+ maxHeapSize='1g'
+}
