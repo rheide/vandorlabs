@@ -50,6 +50,19 @@ public final class SegmentedGateJoin {
         int result=0;if(edge(center,left,-1,0))result|=LEFT;if(edge(center,right,1,0))result|=RIGHT;
         if(edge(center,below,0,-1))result|=BELOW;if(edge(center,above,0,1))result|=ABOVE;return result;
     }
+    /** Allocation-free counterpart for an already prepared compatible-mechanism context. Frame slots are centre/left/right/below/above. */
+    public static int mask(int[] kinds,int compatible,double[][] frames){
+        if(kinds==null||kinds.length!=5||frames==null||frames.length!=5||(compatible&~15)!=0)throw new IllegalArgumentException("Prepared gate neighbours");
+        for(int kind:kinds)if(kind<NONE||kind>LATTICE)throw new IllegalArgumentException("Prepared gate style");if(kinds[0]<0)return 0;int result=0;
+        for(int side=0;side<4;side++)if((compatible&(1<<side))!=0&&kinds[side+1]==kinds[0]&&preparedEdge(frames[0],frames[side+1],side==0?-1:side==1?1:0,side==2?-1:side==3?1:0))result|=1<<side;return result;
+    }
+    private static boolean preparedEdge(double[] p,double[] q,int x,int y){
+        if(p==null||q==null||p.length<9||q.length<9)throw new IllegalArgumentException("Prepared gate frame");
+        for(int at=0;at<9;at++)if(Double.isNaN(p[at])||Double.isInfinite(p[at])||Double.isNaN(q[at])||Double.isInfinite(q[at]))return false;
+        if(!unit(p)||!unit(q))return false;
+        for(int at=0;at<3;at++)if(Math.abs(p[3+at]-q[3+at])>EPS||Math.abs(p[6+at]-q[6+at])>EPS||Math.abs(p[at]+x*p[3+at]+y*p[6+at]-q[at])>EPS)return false;return true;
+    }
+    private static boolean unit(double[] frame){double rr=frame[3]*frame[3]+frame[4]*frame[4]+frame[5]*frame[5],uu=frame[6]*frame[6]+frame[7]*frame[7]+frame[8]*frame[8],ru=frame[3]*frame[6]+frame[4]*frame[7]+frame[5]*frame[8];return Math.abs(rr-1)<=EPS&&Math.abs(uu-1)<=EPS&&Math.abs(ru)<=EPS;}
     private static int variantIndex(int mask){
         if((mask&~15)!=0)throw new IllegalArgumentException("Invalid gate join mask");
         return (mask&LEFT)==0?(mask&RIGHT)==0?0:1:(mask&RIGHT)==0?3:2;
