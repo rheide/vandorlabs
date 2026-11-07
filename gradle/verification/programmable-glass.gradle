@@ -69,3 +69,11 @@ task exportFlatGlassGroupsReference(type: JavaExec) {
     main = 'com.vandorlabs.client.FlatGlassGroupsLegacyOracle'
     args file('build/test-artifacts/flat-glass-groups-forge.jsonl').absolutePath
 }
+
+task exportFlatGlassLightReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.FlatGlassLightLegacyOracle'
+    args file('build/test-artifacts/flat-glass-light-forge.jsonl').absolutePath
+}
