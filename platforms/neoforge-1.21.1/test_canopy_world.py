@@ -15,10 +15,10 @@ def await_exit():
   time.sleep(.25)
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');args=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--canonical',action='store_true');args=parser.parse_args()
  if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  platform=Path(__file__).resolve().parent
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.canopyWorldCheck=true')
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.canopyWorldCheck=true'+(' -Dvandorlabs.canopyCanonical=true' if args.canonical else ''))
  subprocess.run(command('compileSmokeJava'),cwd=platform,env=env,check=True)
  out=Path(artifact_directory(prefix='canopy-world-',dir=ROOT/'build/test-artifacts'))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]

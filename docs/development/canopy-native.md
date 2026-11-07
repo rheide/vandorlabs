@@ -112,3 +112,17 @@ an automatic opening endpoint, partial closing pose, reversal, and both client
 and server returned-open endpoints. Its body/terrain pixel controls are unchanged.
 Local neighbor power uses the same owner refresh path as channel callbacks, so an
 unchanged input does not override a manual command.
+Canonical definitions are staged independently of public activation: eleven retained block/item IDs, the shared `canopy` entity and dedicated menu, both existing payload routes, exact Source labels and all eleven original recipes. Empty block models/state variants are generated for later terrain/backend binding. Conditional recipe loading prevents absent inactive items from producing parse errors. The block properties retain actual Source hardness/resistance 1.5, glass sound, zero light blocking and no required harvest tool; no pickaxe tag is added. Inventory/render codecs share a side-effect-free kind list instead of referencing registration definitions.
+
+A private construction-phase fixture exercises the real deferred definitions without adding a default bootstrap call. All eleven specialized Survival item placements and configured owners, recipe results, shared entity identity and Source properties pass (100 write assertions); complete process restart retains the owners (89 read assertions). A separate default-run check confirms all eleven blocks/items/recipes and the owner/menu IDs remain inactive (23 assertions). These definition checks do not replace canonical client rendering, automatic motion or repair acceptance.
+
+Canonical definitions now have conditional production BER and regular-glass
+terrain bindings. Both remain inactive without registration. The placed-world
+runner's `--canonical` mode stages the actual deferred definitions and verifies
+the production dispatcher before instrumenting submissions, including after
+reload. All eleven public kinds retain the same body/terrain pixel controls and
+automatic motion checks. The editor runner's `--canonical` mode reuses the real
+menu, screen and payload registrations: all six ordinary/Configurizer routes,
+mode and held-stack synchronization, live edit, blocked resize reply and stale
+window refusal pass. These checks still precede public activation and anchored
+membership repair acceptance.
