@@ -22,14 +22,16 @@ public final class NativeDiagonalWallTopology {
         BlockState state(BlockPos pos);
         WallSettings settings(BlockPos pos);
         boolean fullBlock(BlockPos pos,BlockState state);
+        default boolean flatJoin(BlockPos pos){return true;}
         default boolean transparent(BlockPos pos,BlockState state){return false;}
     }
     private record LevelAccess(Level level) implements Access {
         public boolean loaded(BlockPos pos){return NativeFluidWorld.loaded(level,pos);}
         public BlockState state(BlockPos pos){return level.getBlockState(pos);}
         public WallSettings settings(BlockPos pos){return levelSettings(level,pos);}
-        public boolean transparent(BlockPos pos,BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock block&&block.isGlass();}
+        public boolean transparent(BlockPos pos,BlockState state){return state.getBlock() instanceof com.vandorlabs.neoforge.glass.NativeGlassBlock||state.getBlock() instanceof NativeDiagonalWallBlock block&&block.isGlass();}
         public boolean fullBlock(BlockPos pos,BlockState state){return state.isCollisionShapeFullBlock(level,pos);}
+        public boolean flatJoin(BlockPos pos){return !(level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.glass.NativeGlassEntity glass)||glass.available()&&glass.settings().glass().join;}
     }
     static Access access(Level level){return new LevelAccess(level);}
     private static WallSettings settings(Access level,BlockPos pos){return level.settings(pos);}
@@ -39,7 +41,7 @@ public final class NativeDiagonalWallTopology {
         int mode=mode(level,pos),fill=settings(level,pos).fill;
         double lower=flatEnd(level,pos,state,mode,false),upper=flatEnd(level,pos,state,mode,true);
         return new NativeDiagonalWallGeometry.Pose(state.getValue(NativePanelBlock.FACING),state.getValue(NativeDiagonalWallBlock.INVERTED),mode,fill,corner(level,pos,state,mode),lower,upper,
-                coveredEnd(level,pos,state,mode,false)||fill==0&&!Double.isNaN(lower),coveredEnd(level,pos,state,mode,true)||fill==0&&!Double.isNaN(upper),clip(level,pos,state,mode),layout);
+                coveredEnd(level,pos,state,mode,false)||fill==0&&!Double.isNaN(flatEnd(level,pos,state,mode,false,true)),coveredEnd(level,pos,state,mode,true)||fill==0&&!Double.isNaN(flatEnd(level,pos,state,mode,true,true)),clip(level,pos,state,mode),layout);
     }
     public static void refresh(NativeWallEntity host){
         if(!NativeFluidWorld.installed(host))return;Level level=host.getLevel();BlockPos pos=host.getBlockPos();BlockState state=host.getBlockState();if(!(state.getBlock() instanceof NativeDiagonalWallBlock))return;
@@ -52,7 +54,9 @@ public final class NativeDiagonalWallTopology {
         if(!(state.getBlock() instanceof NativeDiagonalWallBlock block)||!block.isPorthole()||mode(access,pos)!=1||settings(access,pos).join!=0)return false;
         var join=corner(access,pos,state,1);return join!=null&&join.frontRight()!=null&&join.backRight()!=null&&!join.frontRight().equals(join.backRight())&&join.straightLeft()!=join.straightRight();
     }
-    private static boolean flat(BlockState state){return state.getBlock() instanceof NativeFlatWallBlock;}
+    private static boolean flat(BlockState state){return state.getBlock() instanceof NativeFlatWallBlock||state.getBlock() instanceof com.vandorlabs.neoforge.glass.NativeGlassBlock;}
+    private static Direction flatFacing(BlockState state){return com.vandorlabs.neoforge.glass.NativeGlassService.canonicalFacing(state);}
+    private static int flatDepth(BlockState state){return com.vandorlabs.neoforge.glass.NativeGlassService.depth(state);}
     private static boolean diagonal(BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock;}
     private static boolean plainDiagonal(BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock block&&!block.isPorthole();}
     private static boolean enabled(Access level,BlockPos pos){return level.loaded(pos);}
@@ -68,7 +72,7 @@ public final class NativeDiagonalWallTopology {
         for(boolean front:new boolean[]{true,false}){
             BlockPos next=pos.relative(front?facing:facing.getOpposite());if(!cornerEnabled(level,next))continue;BlockState other=level.state(next);
             if(flat(other)){
-                Direction nf=other.getValue(NativePanelBlock.FACING);if(nf.getAxis()==facing.getAxis())continue;boolean right=nf==facing.getClockWise();double near=PanelDepthPolicy.start(other.getValue(NativeFlatWallBlock.DEPTH)),arm=right?12-near:near;
+                if(!level.flatJoin(next))continue;Direction nf=flatFacing(other);if(nf.getAxis()==facing.getAxis())continue;boolean right=nf==facing.getClockWise();double near=PanelDepthPolicy.start(flatDepth(other)),arm=right?12-near:near;
                 if(front){frontRight=right;frontFlat=arm;}else{backRight=right;backFlat=arm;}continue;
             }
             if(!cornerParticipant(level,next,other)||mode(level,next)!=mode||other.getValue(NativeDiagonalWallBlock.INVERTED)!=state.getValue(NativeDiagonalWallBlock.INVERTED))continue;
@@ -95,14 +99,16 @@ public final class NativeDiagonalWallTopology {
             if(DiagonalPanelContact.endsMeet(mode,state.getValue(NativeDiagonalWallBlock.INVERTED),other.getValue(NativeDiagonalWallBlock.INVERTED),nf!=facing,next.getY()-pos.getY(),axis(next.subtract(pos),facing.getOpposite()),upper))return true;
         }return false;
     }
-    private static double flatEnd(Access level,BlockPos pos,BlockState state,int mode,boolean upper){
+    public static double glassContactEnd(Level level,BlockPos pos,BlockState state,boolean upper){return flatEnd(new LevelAccess(level),pos,state,mode(level,pos),upper);}
+    private static double flatEnd(Access level,BlockPos pos,BlockState state,int mode,boolean upper){return flatEnd(level,pos,state,mode,upper,false);}
+    private static double flatEnd(Access level,BlockPos pos,BlockState state,int mode,boolean upper,boolean covering){
         if(mode==2||coveredEnd(level,pos,state,mode,upper))return Double.NaN;
-        Direction facing=state.getValue(NativePanelBlock.FACING);double expected=DiagonalWallGeometry.near(mode,state.getValue(NativeDiagonalWallBlock.INVERTED),upper?1:0),best=Double.NaN,distance=.1250001;
+        Direction facing=state.getValue(NativePanelBlock.FACING);double expected=DiagonalWallGeometry.near(mode,state.getValue(NativeDiagonalWallBlock.INVERTED),upper?1:0),best=Double.NaN,distance=.1250001;boolean hidden=false;
         for(int offset=-1;offset<=1;offset++){
-            BlockPos next=pos.relative(upper?Direction.UP:Direction.DOWN).relative(facing.getOpposite(),offset);if(!enabled(level,next))continue;BlockState other=level.state(next);if(!flat(other))continue;
-            Direction nf=other.getValue(NativePanelBlock.FACING);if(nf.getAxis()!=facing.getAxis())continue;double near=PanelDepthPolicy.start(other.getValue(NativeFlatWallBlock.DEPTH))/16D;if(nf!=facing)near=.75-near;near+=offset;
-            if(Math.abs(near-expected)<distance){best=near;distance=Math.abs(near-expected);}
-        }return best;
+            BlockPos next=pos.relative(upper?Direction.UP:Direction.DOWN).relative(facing.getOpposite(),offset);if(!enabled(level,next))continue;BlockState other=level.state(next);if(!flat(other)||!level.flatJoin(next))continue;
+            Direction nf=flatFacing(other);if(nf.getAxis()!=facing.getAxis())continue;double near=PanelDepthPolicy.start(flatDepth(other))/16D;if(nf!=facing)near=.75-near;near+=offset;
+            if(Math.abs(near-expected)<distance){best=near;distance=Math.abs(near-expected);hidden=level.transparent(pos,state)||!level.transparent(next,other);}
+        }return covering&&!hidden?Double.NaN:best;
     }
     private static NativeDiagonalWallGeometry.Clip clip(Access level,BlockPos pos,BlockState state,int mode){
         double[] bounds={-2,-2,-2,3,3,3};List<double[]> obstacles=new ArrayList<>();Direction facing=state.getValue(NativePanelBlock.FACING);boolean inverted=state.getValue(NativeDiagonalWallBlock.INVERTED);Direction[] positive={facing.getClockWise(),Direction.UP,facing.getOpposite()};
