@@ -28,10 +28,12 @@ public class NativeProgrammerBlock extends BaseEntityBlock implements com.vandor
  public static final IntegerProperty PART=IntegerProperty.create("part",0,3);
  private final Supplier<BlockEntityType<NativeProgrammerEntity>> entities;
  private final Supplier<com.vandorlabs.programmer.ProgrammerPicking.Mesh> geometry;
+ private com.vandorlabs.programmer.ProgrammerJournalPlane journalPlane;
  public NativeProgrammerBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammerEntity>> entities){this(properties,entities,NativeProgrammerPicking::authored);}
  public NativeProgrammerBlock(Properties properties,Supplier<BlockEntityType<NativeProgrammerEntity>> entities,Supplier<com.vandorlabs.programmer.ProgrammerPicking.Mesh> geometry){super(properties.forceSolidOn().noOcclusion().dynamicShape().isSuffocating((s,w,p)->false).isViewBlocking((s,w,p)->false).isRedstoneConductor((s,w,p)->false));this.entities=entities;this.geometry=java.util.Objects.requireNonNull(geometry);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(PART,0));}
  public NativeProgrammerPicking.Hit trace(BlockPos pos,BlockState state,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){return NativeProgrammerPicking.trace(geometry.get(),root(pos,state),state.getValue(FACING),state.getValue(PART),start,end);}
  @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,net.minecraft.world.phys.Vec3 start,net.minecraft.world.phys.Vec3 end){var hit=trace(pos,state,start,end);return hit==null?null:hit.blockHit();}
+ public com.vandorlabs.programmer.ProgrammerJournalPlane journalPlane(){if(journalPlane==null)journalPlane=new com.vandorlabs.programmer.ProgrammerJournalPlane(geometry.get());return journalPlane;}
  protected net.minecraft.world.inventory.MenuType<NativeProgrammerMenu> menuType(){return null;}
  /** Configurizer keeps the same authored socket/body precedence as an ordinary activation. */
  public boolean openConfiguration(Player player,Level level,BlockPos pos){return activate(level,pos,player,InteractionHand.MAIN_HAND);}
@@ -43,8 +45,10 @@ public class NativeProgrammerBlock extends BaseEntityBlock implements com.vandor
   if(level instanceof ServerLevel server&&!server.getServer().isSameThread())return false;var owner=installed(level,pos);if(owner==null)return false;if(level.isClientSide)return true;if(!(player instanceof net.minecraft.server.level.ServerPlayer actor)||!owner.usable(player))return true;
   var start=player.getEyePosition();var end=start.add(player.getLookAngle().scale(Math.min(8,player.blockInteractionRange())));var hit=trace(pos,level.getBlockState(pos),start,end);
   if(hit!=null&&hit.slot()>=0&&hit.slot()<3){owner.socket(actor,hand,hit.slot());return true;}
-  // The journal surface consumes its own clicks; bounded navigation binds with its prepared view.
-  if(hit!=null&&hit.slot()==3&&owner.hasJournal())return true;
+  if(hit!=null&&hit.slot()==3&&owner.hasJournal()){
+   if(hand==InteractionHand.MAIN_HAND){var visibleEnd=start.add(hit.point().subtract(start).scale(1.000001));boolean unavailable=BlockGetter.traverseBlocks(start,visibleEnd,(ServerLevel)level,(world,cell)->world.getChunkSource().getChunkNow(cell.getX()>>4,cell.getZ()>>4)==null?Boolean.TRUE:null,world->Boolean.FALSE);if(!unavailable){var first=level.clip(new net.minecraft.world.level.ClipContext(start,visibleEnd,net.minecraft.world.level.ClipContext.Block.OUTLINE,net.minecraft.world.level.ClipContext.Fluid.NONE,player));if(first.getType()==net.minecraft.world.phys.HitResult.Type.BLOCK&&installed(level,first.getBlockPos())==owner){var selected=trace(first.getBlockPos(),level.getBlockState(first.getBlockPos()),start,end);if(selected!=null&&selected.slot()==3){var layout=NativeProgrammerLayout.of(owner.getBlockState().getValue(FACING));var root=owner.getBlockPos();var pixels=journalPlane().hit(layout.transform(),root.getX()+layout.originX(),root.getY(),root.getZ()+layout.originZ(),start.x,start.y,start.z,end.x,end.y,end.z);if(pixels!=null&&pixels.action()!=0)owner.turnJournalPage(actor,pixels.action());}}}}
+   return true;
+  }
   NativeProgrammerConfiguration.open(actor,(ServerLevel)level,owner.getBlockPos(),menuType());return true;
  }
  @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){return activate(level,pos,player,hand)?ItemInteractionResult.sidedSuccess(level.isClientSide):ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;}
