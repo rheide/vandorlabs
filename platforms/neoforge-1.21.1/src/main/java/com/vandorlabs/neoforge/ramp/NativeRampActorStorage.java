@@ -58,7 +58,7 @@ final class NativeRampActorStorage {
   private Prepared(Permit permit,ChunkPos chunk,Optional<CompoundTag> expected,CompoundTag replacement,CompletableFuture<Boolean> verification,int bytes,long revision){this.permit=permit;this.chunk=chunk;this.expected=expected;this.replacement=replacement;this.verification=verification;this.bytes=bytes;this.revision=revision;}
   boolean ready(){permit.active();return verification.isDone();}
   Commit commit(){
-   if(consumed)throw new IllegalStateException("Ramp actor prepared write consumed");permit.fresh(chunk);if(!verification.isDone())return new Commit(Status.PENDING,null,"");
+   if(consumed)throw new IllegalStateException("Ramp actor prepared write consumed");permit.fresh(chunk);if(permit.level.noSave)return new Commit(Status.PENDING,null,"Saving is disabled");if(!verification.isDone())return new Commit(Status.PENDING,null,"");
    try{if(permit.revisions.getOrDefault(chunk,0L)!=revision||!verification.join()){release();return new Commit(Status.REFUSED,null,"Actor chunk changed since its expected raw record");}
     // Startup admission prevents normal main-thread entity stores between comparison and this enqueue.
     int queuedBytes=replacement.sizeInBytes()+256;if(permit.writingCount.get()>=MAX_PENDING_WRITES||(long)permit.writingBytes.get()+queuedBytes>MAX_WRITE_BYTES)return new Commit(Status.PENDING,null,"Waiting for actor storage write capacity");
@@ -74,6 +74,6 @@ final class NativeRampActorStorage {
   Objects.requireNonNull(raw);if(raw.sizeInBytes()>MAX_RAW_BYTES)throw new IllegalArgumentException("Ramp actor raw chunk byte budget");if(!raw.contains("Position",Tag.TAG_INT_ARRAY)||!Arrays.equals(raw.getIntArray("Position"),new int[]{chunk.x,chunk.z})||!raw.contains("DataVersion",Tag.TAG_INT)||!raw.contains("Entities",Tag.TAG_LIST))throw new IllegalArgumentException("Unknown entity chunk envelope");var entities=(ListTag)raw.get("Entities");if(!entities.isEmpty()&&entities.getElementType()!=Tag.TAG_COMPOUND)throw new IllegalArgumentException("Unknown entity list type");return raw.copy();
  }
  private static void sameEnvelope(CompoundTag before,CompoundTag after){if(!before.getAllKeys().equals(after.getAllKeys()))throw new IllegalArgumentException("Raw actor rewrite changed unrelated chunk metadata");for(String key:before.getAllKeys())if(!key.equals("Entities")&&!Objects.equals(before.get(key),after.get(key)))throw new IllegalArgumentException("Raw actor rewrite changed unrelated chunk metadata");}
- private static String message(Throwable failure){while(failure instanceof CompletionException&&failure.getCause()!=null)failure=failure.getCause();String text=failure.getMessage();return text==null?failure.getClass().getSimpleName():text.substring(0,Math.min(512,text.length()));}
+ private static String message(Throwable failure){while(failure instanceof CompletionException&&failure.getCause()!=null)failure=failure.getCause();String text=failure.getClass().getSimpleName()+": "+String.valueOf(failure.getMessage());return text.substring(0,Math.min(512,text.length()));}
  private NativeRampActorStorage(){}
 }
