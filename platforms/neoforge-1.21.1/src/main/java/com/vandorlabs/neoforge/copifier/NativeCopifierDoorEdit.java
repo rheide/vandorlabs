@@ -6,7 +6,7 @@ import com.vandorlabs.persistence.*;
 import com.vandorlabs.redstone.ChannelList;
 import net.minecraft.nbt.*;
 
-/** Ordinary Door clipboard policy; reader inventories, timers and physical fluids stay outside the plan. */
+/** Shared ordinary/Large Door clipboard policy; reader inventories, timers and physical fluids stay outside the plan. */
 public final class NativeCopifierDoorEdit {
  public record State(NativeDoorSettings settings,ChannelList channels){}
  public record Plan(State state,boolean applicable,boolean resetSecurity){}
@@ -15,7 +15,7 @@ public final class NativeCopifierDoorEdit {
  private static boolean flag(CompoundTag tag,String key,boolean previous){return tag.contains(key,Tag.TAG_BYTE)?tag.getBoolean(key):previous;}
  private static SpaceDoorData panel(SpaceDoorData d,boolean panel){return new SpaceDoorData(d.design,d.detail,d.framed,d.direction,d.middle,d.sliding,d.hinges,d.trigger,panel);}
  public static State read(String id,CompoundTag saved){
-  var s=NativeDoorSettings.read(saved);if(!saved.contains("SpaceDoorSchema")){var d=s.door();boolean sliding=!id.equals(NativeDoorSettings.LEGACY_ROTATING_ID);d=new SpaceDoorData(d.design,d.detail,d.framed,d.direction,sliding||d.middle,sliding,d.hinges,d.trigger,d.panel);s=new NativeDoorSettings(d,s.faceTexture(),s.rawLayout(),s.tileTexture(),sliding?0:s.depth(),s.rawPanelMode(),s.securityMode(),s.securityAllowed(),s.frames(),s.glass());}
+  var s=NativeDoorSettings.read(saved);if(!saved.contains("SpaceDoorSchema")){var d=s.door();boolean sliding=!id.equals(NativeDoorSettings.LEGACY_ROTATING_ID)&&!id.equals(NativeDoorSettings.LARGE_ID);d=new SpaceDoorData(d.design,d.detail,d.framed,d.direction,sliding||d.middle,sliding,d.hinges,d.trigger,d.panel);s=new NativeDoorSettings(d,s.faceTexture(),s.rawLayout(),s.tileTexture(),sliding?0:s.depth(),s.rawPanelMode(),s.securityMode(),s.securityAllowed(),s.frames(),s.glass());}
   ChannelList channels=ChannelList.of(Math.max(0,saved.getInt("RedstoneChannel")));if(saved.contains("RedstoneChannels",Tag.TAG_INT_ARRAY))try{channels=ChannelList.of(saved.getIntArray("RedstoneChannels"));}catch(IllegalArgumentException malformed){/* Source scalar fallback. */}return new State(s,channels);
  }
  public static CompoundTag capture(State state){

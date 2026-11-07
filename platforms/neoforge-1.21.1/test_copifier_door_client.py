@@ -7,18 +7,19 @@ from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--large',action='store_true');options=parser.parse_args()
+ phase='copifier-large-door-client' if options.large else 'copifier-door-client'
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='copifier-door-client-',dir=base))
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix=phase+'-',dir=base))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
- extra=[];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=copifier-door-client',*extra),server_log,env)
+ extra=[];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase='+phase,*extra),server_log,env)
  try:
   deadline=time.monotonic()+120
   while 'Done (' not in server_log.read_text(errors='replace'):
    if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Copifier editor server startup: '+str(server_log))
    time.sleep(.5)
   client=out/'client';client.mkdir();(client/'options.txt').write_text('guiScale:3\ntutorialStep:none\nrenderDistance:2\nsimulationDistance:5\nmaxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
-  args=command('runClient','-PtransmitterPhase=copifier-door-client','-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client),*extra)
+  args=command('runClient','-PtransmitterPhase='+phase,'-PmatterClientPort='+str(port),'-PmodernClientRunDirectory='+str(client),*extra)
   if options.xvfb:args=['xvfb-run','-a','-s','-screen 0 1280x720x24']+args;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
   process=launch(args,out/'client.log',env)
   try:

@@ -6,3 +6,13 @@ task testCopifierDoorReference(type: JavaExec) {
  args file("$buildDir/test-artifacts/copifier-door-source.json").absolutePath
  maxHeapSize = '1g'
 }
+
+// Reuse the actual callback fixture with a complete nine-cell Large Door owner.
+task exportCopifierLargeDoorReference(type: JavaExec) {
+ group = 'verification'
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.CopifierDoorLegacyChecks'
+ args file("$buildDir/test-artifacts/copifier-large-door-source.json").absolutePath, 'large'
+ maxHeapSize = '1g'
+}
