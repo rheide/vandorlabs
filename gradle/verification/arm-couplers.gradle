@@ -126,3 +126,10 @@ task testGearCollisionDescription(type: JavaExec) {
  args Boolean.toString(project.hasProperty('gearDescribeBaseline'))
  maxHeapSize = '1g'
 }
+
+task testArmParkingCurrent(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.ArmParkingCurrentChecks'
+ maxHeapSize = '512m'
+}
