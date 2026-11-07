@@ -14,7 +14,10 @@
     "NativeAttachmentDecodeMixin",
     "NativeGlassRayMixin",
     "ProgrammerConnectionMixin",
-    "NativeRampChunkStorageAccess"
+    "NativeRampChunkStorageAccess",
+    "NativeRampHopperGuard",
+    "NativeRampInventoryGuard",
+    "NativeRampLevelGuard"
   ],
   "injectors": {
     "defaultRequire": 1
