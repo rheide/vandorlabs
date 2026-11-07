@@ -27,6 +27,13 @@ final class VehicleArmParkingSearch {
         this.craft=craft;source=craft.structure;view=craft.view;this.displacement=Objects.requireNonNull(displacement);this.currentOnly=currentOnly;this.requireHold=requireHold;
         for(TileEntity tile:view.tiles.values())if(tile instanceof GearTileEntity){GearTileEntity arm=(GearTileEntity)tile;if(arm.hasFailedArmSnapshot()||arm.hasTaxiData()&&!arm.isOperational()||arm.hasStoredSections()&&arm.payload()==null)throw new IllegalArgumentException("An arm payload needs recovery before parking");if(arm.payload()!=null)roots.add(arm);}
         roots.sort(Comparator.comparing(GearTileEntity::getPos));if(roots.size()>VehicleArmParkingGeometry.MAX_ARMS)throw new IllegalArgumentException("Too many arms for a bounded parking search");
+        long payloadCells=0,ownedCells=source.cells.size();
+        for(GearTileEntity arm:roots){
+            payloadCells+=arm.payload().blocks.cells.size();
+            if(!arm.payload().materialized())ownedCells+=arm.payload().blocks.cells.size();
+            ownedCells+=arm.storedSectionCells().size();
+            if(payloadCells>VehicleArmParkingCells.MAX_ENTRIES||ownedCells>VehicleArmParkingCells.MAX_ENTRIES)throw new IllegalArgumentException("Arm parking native cell budget exceeded before source preparation");
+        }
         revisions=new int[roots.size()];for(int i=0;i<roots.size();i++){payloads.add(roots.get(i).payload());revisions[i]=roots.get(i).motionRevision();}
     }
     boolean step(int trials,long deadline){

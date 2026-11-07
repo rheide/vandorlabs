@@ -9,7 +9,7 @@ import net.minecraft.util.math.BlockPos;
  * candidate still needs typed materialization, terrain/permission checks and the vehicle journal. */
 final class VehicleArmParkingCells {
     interface Displacement {boolean allowed(GearTileEntity arm,ArmParkingCandidates.Candidate selected,VehicleStructure.Cell cell);}
-    private static final int MAX_ENTRIES=VehicleStructure.MAX_BLOCKS+64*512;
+    static final int MAX_ENTRIES=VehicleStructure.MAX_BLOCKS+64*512;
     private final VehicleArmParkingGeometry geometry;
     private final int[] fixedX,fixedY,fixedZ,fixedBody,fixedOwner,zeroOption;
     private final boolean[] fixedStored;
