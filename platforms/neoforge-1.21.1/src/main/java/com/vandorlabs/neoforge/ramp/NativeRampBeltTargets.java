@@ -43,6 +43,23 @@ public final class NativeRampBeltTargets {
         }
         return new Result(next,moves);
     }
+    /** Released vertical step (reset=false) or return-to-original rider callback. */
+    public static Result transition(NativeRampFootprint.Spec spec,boolean shaped,double distance,int mode,int speed,boolean reset,List<Candidate> candidates,Obstacles obstacles){
+        profile(spec);double next=reset?distance:distance+delta(spec,mode,speed);if(!Double.isFinite(distance)||Math.abs(distance)>1e12||candidates.size()>8192)throw new IllegalArgumentException("Belt transition bounds");
+        var moves=new ArrayList<Move>();
+        if(spec.verticalLayout()){
+            long work=0;for(var origin:spec.origins())work+=(long)origin.shapes().size()*com.vandorlabs.ramp.ControllerPlatform.treadCount(spec.treadPixels())*Math.max(1,candidates.size());if(work>WORK)throw new IllegalArgumentException("Vertical belt support budget");
+            var actors=new ArrayList<NativeRampRiderTargets.Candidate>();for(var actor:candidates)actors.add(new NativeRampRiderTargets.Candidate(actor.key(),actor.body(),actor.player(),ordinary(actor),actor.velocity().y,true));
+            var targets=NativeRampRiderTargets.vertical(spec,1,reset?0:1,false,reset,true,distance,next,actors);
+            for(var target:targets.entrySet()){var actor=candidates.get(target.getKey().key());var d=target.getValue();var clipped=NativeRampRiders.clipped(actor.body(),d,obstacles.query(actor,actor.body().expandTowards(d).inflate(1e-7)));if(Math.abs(d.x-clipped.x)>1e-6||Math.abs(d.y-clipped.y)>1e-6||Math.abs(d.z-clipped.z)>1e-6)return null;moves.add(new Move(actor,null,d));}
+        }else{
+            if(!reset)throw new IllegalArgumentException("Horizontal step uses select");var surfaces=NativeRampBeltGeometry.surfaces(spec,shaped,distance);AABB bounds=surfaces.getFirst();for(var b:surfaces)bounds=bounds.minmax(b);bounds=bounds.inflate(0,.6,0);var originals=new ArrayList<AABB>();if(shaped)for(var origin:spec.origins())for(var box:origin.shapes())originals.add(box.move(origin.position()));
+            if((long)(surfaces.size()+originals.size())*candidates.size()>WORK)throw new IllegalArgumentException("Belt reset work budget");
+            for(var actor:candidates){var body=actor.body();if(!ordinary(actor)||!body.intersects(bounds)||Math.abs(body.minY-support(surfaces,body))>(actor.player()?.5:.15))continue;double target=shaped?support(originals,body):spec.sourceY()+spec.high();if(!Double.isFinite(target))continue;var d=new Vec3(0,target-body.minY,0);var clipped=NativeRampRiders.clipped(body,d,obstacles.query(actor,body.expandTowards(d).inflate(1e-7)));if(Math.abs(d.y-clipped.y)>1e-6)return null;moves.add(new Move(actor,null,d));}
+        }
+        return new Result(next,moves);
+    }
+    private static boolean ordinary(Candidate actor){return !actor.removed()&&!actor.noPhysics()&&!actor.riding()&&actor.velocity().y<=.1&&(!actor.player()||!actor.flying());}
     static double support(List<AABB> surfaces,AABB body){double top=Double.NEGATIVE_INFINITY;for(var b:surfaces)if(body.maxX>b.minX+1e-7&&body.minX<b.maxX-1e-7&&body.maxZ>b.minZ+1e-7&&body.minZ<b.maxZ-1e-7)top=Math.max(top,b.maxY);return top;}
     private static double landing(NativeRampFootprint.Spec s,Candidate actor,AABB body,AABB platform,double delta,Obstacles obstacles){
         if(!actor.player()||Math.abs(s.end())<1e-7)return 0;var previous=actor.history();double walkX=previous==null?actor.velocity().x:actor.position().x-previous.x,walkZ=previous==null?actor.velocity().z:actor.position().z-previous.z;

@@ -45,3 +45,12 @@ task exportRampBeltRiderReference(type: JavaExec) {
  maxHeapSize = '1g'
  args file('build/test-artifacts/ramp-belt-riders-source.jsonl').absolutePath
 }
+
+// Independent released vertical step and horizontal/vertical reset callbacks.
+task exportRampBeltTransitionReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.RampBeltTransitionLegacyOracle'
+ maxHeapSize = '1g'
+ args file('build/test-artifacts/ramp-belt-transitions-source.jsonl').absolutePath
+}
