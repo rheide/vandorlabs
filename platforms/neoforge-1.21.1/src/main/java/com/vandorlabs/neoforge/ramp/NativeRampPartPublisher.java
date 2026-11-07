@@ -11,7 +11,7 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Prepared bodies only; durable source ownership, rollback and notification belong to the journal. */
 public final class NativeRampPartPublisher {
     private static final long RETAINED_LIMIT=64L*1024*1024;
-    private record Entry(BlockPos position,NativeRampPartEntity entity){}
+    private record Entry(BlockPos position,NativeRampPartEntity entity,NativeRampPartEntity.Publication publication,boolean retained){}
     public static final class Prepared {
         private ServerLevel level;private final UUID operation;private final BlockPos root;private final BlockState proxy;private final long tick,revision,retainedBytes;private final Set<BlockPos> cells;private List<Entry> entries;private boolean consumed;
         private Prepared(ServerLevel level,UUID operation,BlockPos root,BlockState proxy,long revision,List<Entry> entries,long bytes){this.level=level;this.operation=operation;this.root=root.immutable();this.proxy=proxy;this.revision=revision;this.entries=List.copyOf(entries);tick=level.getGameTime();retainedBytes=bytes;var cells=new LinkedHashSet<BlockPos>();for(var entry:entries)cells.add(entry.position);this.cells=Collections.unmodifiableSet(cells);}
@@ -19,7 +19,7 @@ public final class NativeRampPartPublisher {
         /** World-free proof that frozen rollback bodies represent the installed recipe and geometry. */
         boolean matchesInstalled(Map<BlockPos,NativeRampPartEntity> owners){
             if(consumed||owners.size()!=entries.size())return false;
-            for(var entry:entries){var owner=owners.get(entry.position);var actual=owner==null?null:owner.publication();var staged=entry.entity.publication();if(actual==null||staged==null||actual.data().original()!=staged.data().original()||!actual.data().spec().equals(staged.data().spec())||!actual.data().materials().equals(staged.data().materials())||actual.pose()!=staged.pose()||actual.stationaryTop()!=staged.stationaryTop()||!actual.geometry().pieces().equals(staged.geometry().pieces()))return false;if((actual.beltGeometry()==null)!=(staged.beltGeometry()==null))return false;if(actual.beltGeometry()!=null&&(actual.beltGeometry().distance()!=staged.beltGeometry().distance()||!actual.beltGeometry().frames().equals(staged.beltGeometry().frames())))return false;}return true;
+            for(var entry:entries){var owner=owners.get(entry.position);var actual=owner==null?null:owner.publication();var staged=entry.publication;if(actual==null||staged==null||actual.data().original()!=staged.data().original()||!actual.data().spec().equals(staged.data().spec())||!actual.data().materials().equals(staged.data().materials())||actual.pose()!=staged.pose()||actual.stationaryTop()!=staged.stationaryTop()||!actual.geometry().pieces().equals(staged.geometry().pieces()))return false;if((actual.beltGeometry()==null)!=(staged.beltGeometry()==null))return false;if(actual.beltGeometry()!=null&&(actual.beltGeometry().distance()!=staged.beltGeometry().distance()||!actual.beltGeometry().frames().equals(staged.beltGeometry().frames())))return false;}return true;
         }
         /** Single attempt. No notification is sent; the caller must recover any partial installation. */
         public void install(){
@@ -29,10 +29,12 @@ public final class NativeRampPartPublisher {
                 // Check every target before touching the first one. Never load a chunk or replace a foreign owner.
                 for(var entry:entries){var pos=entry.position;if(!NativeRampHeldOwners.mutationAllows(world,operation,root,pos))throw new IllegalStateException("Ramp publication requires exact durable operation scope");
                     var chunk=world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);if(chunk==null)throw new IllegalStateException("Ramp publication waits for loaded target");var state=chunk.getBlockState(pos);var owner=chunk.getBlockEntities().get(pos);
-                    if(state.isAir()&&owner==null&&chunk.getBlockEntityNbt(pos)==null)continue;
+                    if(!entry.retained&&state.isAir()&&owner==null&&chunk.getBlockEntityNbt(pos)==null)continue;
+                    if(entry.retained&&(owner!=entry.entity||state!=proxy||entry.entity.getBlockState()!=proxy||entry.entity.getLevel()!=world||entry.entity.isRemoved()))throw new IllegalStateException("Ramp retained publication owner changed");
                     if(!state.is(proxy.getBlock())||!(owner instanceof NativeRampPartEntity part)||!part.belongs(operation,root)||part.publication()==null||(part.publication().revision()>revision||part.publication().revision()==revision&&part.publication().observationTick()>=tick))throw new IllegalStateException("Ramp publication encountered changed target");
                 }
                 for(var entry:entries){var pos=entry.position;
+                    if(entry.retained){entry.entity.replacePublication(operation,root,entry.publication);world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4).setUnsaved(true);continue;}
                     if(world.getBlockState(pos)!=proxy&&!world.setBlock(pos,proxy,Block.UPDATE_KNOWN_SHAPE))throw new IllegalStateException("Ramp part block publication refused");
                     // Replace the temporary/default tile (or an earlier same-operation body) without exposing it.
                     world.removeBlockEntity(pos);world.setBlockEntity(entry.entity);
@@ -46,15 +48,19 @@ public final class NativeRampPartPublisher {
         return prepare(level,proxy,operation,root,assembly,targetCells,motion,belt,revision,RETAINED_LIMIT);
     }
     static Prepared prepare(ServerLevel level,BlockState proxy,UUID operation,BlockPos root,NativeRampAssembly assembly,Set<BlockPos> targetCells,NativeRampPartData.Motion motion,NativeRampPartData.Belt belt,long revision,long retainedLimit){
+        return prepareRetaining(level,proxy,operation,root,assembly,targetCells,motion,belt,revision,retainedLimit,Map.of());
+    }
+    static Prepared prepareRetaining(ServerLevel level,BlockState proxy,UUID operation,BlockPos root,NativeRampAssembly assembly,Set<BlockPos> targetCells,NativeRampPartData.Motion motion,NativeRampPartData.Belt belt,long revision,long retainedLimit,Map<BlockPos,NativeRampPartEntity> retained){
         if(retainedLimit<1||retainedLimit>RETAINED_LIMIT)throw new IllegalArgumentException("Ramp prepared publication byte budget");
         NativeRampRiders.requireThread(level);Objects.requireNonNull(operation);Objects.requireNonNull(root);Objects.requireNonNull(assembly);
         if(!assembly.footprint().root().equals(root)||revision<0||!(proxy.getBlock() instanceof NativeRampPartBlock)||!(proxy.getBlock() instanceof EntityBlock factory)||targetCells.isEmpty()||targetCells.size()>8192||!assembly.potential().containsAll(targetCells))throw new IllegalArgumentException("Ramp prepared publication identity or target bounds");
         var positions=new ArrayList<BlockPos>(targetCells.size());for(var cell:targetCells)positions.add(cell.immutable());positions.sort(Comparator.<BlockPos>comparingInt(p->p.getX()).thenComparingInt(BlockPos::getY).thenComparingInt(BlockPos::getZ));var entries=new ArrayList<Entry>(positions.size());long bytes=512;
-        for(var pos:positions){BlockEntity candidate=factory.newBlockEntity(pos,proxy);if(!(candidate instanceof NativeRampPartEntity part)||candidate.getLevel()!=null||!candidate.getBlockPos().equals(pos)||candidate.getBlockState()!=proxy||!candidate.getType().isValid(proxy))throw new IllegalArgumentException("Ramp part factory did not create a detached exact body");
-            var data=assembly.part(pos,motion,belt);var publication=part.preparePublication(data,revision,level.getGameTime());
+        for(var pos:positions){var part=retained.get(pos);boolean reuse=part!=null;var data=assembly.part(pos,motion,belt);NativeRampPartEntity.Publication publication;
+            if(reuse){var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);if(chunk==null||chunk.getBlockEntities().get(pos)!=part||part.getLevel()!=level||part.isRemoved()||part.getBlockState()!=proxy||!part.belongs(operation,root)||part.publication()==null)throw new IllegalArgumentException("Ramp retained body unavailable");publication=NativeRampPartEntity.prepareValue(pos,proxy,data,revision,level.getGameTime());}
+            else{BlockEntity candidate=factory.newBlockEntity(pos,proxy);if(!(candidate instanceof NativeRampPartEntity value)||candidate.getLevel()!=null||!candidate.getBlockPos().equals(pos)||candidate.getBlockState()!=proxy||!candidate.getType().isValid(proxy))throw new IllegalArgumentException("Ramp part factory did not create a detached exact body");part=value;publication=part.preparePublication(data,revision,level.getGameTime());}
             bytes+=2048+(publication.beltGeometry()==null?publication.geometry().retainedBytes():publication.beltGeometry().retainedBytes())+NativeVoxelShapes.retainedCost(publication.collisionShape(),publication.geometry().pieces().size())+80L*publication.worldBoxes().size();
             for(var origin:data.spec().origins())bytes+=512+96L*origin.shapes().size();if(bytes>retainedLimit)throw new IllegalArgumentException("Ramp prepared publication retained-size budget");
-            part.stagePublication(operation,root,publication);entries.add(new Entry(pos,part));
+            if(!reuse)part.stagePublication(operation,root,publication);entries.add(new Entry(pos,part,publication,reuse));
         }return new Prepared(level,operation,root,proxy,revision,entries,bytes);
     }
     private NativeRampPartPublisher(){}
