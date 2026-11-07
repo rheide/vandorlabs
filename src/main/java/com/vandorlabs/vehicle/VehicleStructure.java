@@ -32,9 +32,16 @@ public final class VehicleStructure {
         }
         private Cell(BlockPos pos,IBlockState state,NBTTagCompound frozen,Object identity){this.pos=pos;this.state=state;this.tile=frozen;this.gearConfigurationIdentity=identity;}
         public Object gearConfigurationIdentity(){return gearConfigurationIdentity;}
+        NBTTagCompound gearConfigurationData(){
+            if(gearConfigurationIdentity==null||tile==null)throw new IllegalArgumentException("Gear configuration unavailable");NBTTagCompound normalized=tile.copy();for(String key:GEAR_POSE_KEYS)normalized.removeTag(key);
+            if(normalized.hasKey(com.vandorlabs.gear.GearTaxiState.KEY,10)){NBTTagCompound motion=normalized.getCompoundTag(com.vandorlabs.gear.GearTaxiState.KEY);for(String key:TAXI_POSE_KEYS)motion.removeTag(key);}return normalized;
+        }
+
         /** Shares only already-private frozen children; every exported NBT tree remains a defensive copy. */
         public Cell withGearPose(com.vandorlabs.gear.GearTileEntity gear){
             if(!(state.getBlock() instanceof com.vandorlabs.gear.GearBlock)||tile==null||!pos.equals(gear.getPos())||!"vandorlabs:modular_gear".equals(tile.getString("id")))throw new IllegalArgumentException("Current gear pose owner changed");
+            if(gear.hasFailedArmSnapshot())return new Cell(pos,state,gear.currentData(tileData()));
+            if(!tile.hasKey("x",3)||!tile.hasKey("y",3)||!tile.hasKey("z",3)||tile.getInteger("x")!=pos.getX()||tile.getInteger("y")!=pos.getY()||tile.getInteger("z")!=pos.getZ())return new Cell(pos,state,gear.currentData(tileData()));
             NBTTagCompound pose=gear.currentPoseData(),next=new NBTTagCompound();
             if(!pose.hasKey("GearProgress",6)||!Double.isFinite(pose.getDouble("GearProgress"))||pose.getDouble("GearProgress")<0||pose.getDouble("GearProgress")>1||!pose.hasKey("GearRevision",3))throw new IllegalArgumentException("Invalid gear pose scalars");
             for(String key:new String[]{"GearBlocked","GearTargetDeployed","GearSignalKnown","GearLastSignal"})if(!pose.hasKey(key,1))throw new IllegalArgumentException("Invalid gear pose flag");

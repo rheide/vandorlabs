@@ -22,6 +22,7 @@ public final class VehicleCollisionCache {
             "BlockRampController","BlockRampControllerSlab","BlockControlledRamp"));
     private final LinkedHashMap<Pose,VehicleCollision.Geometry> entries=new LinkedHashMap<>(20,.75F,true);
     private NBTTagCompound configuration;
+    private final VehicleGearConfigurationCache gearConfigurations=new VehicleGearConfigurationCache();
     private net.minecraft.world.World parent;
     private VehicleStructure warmSnapshot;
     private BlockPos warmOwner;
@@ -62,7 +63,7 @@ public final class VehicleCollisionCache {
     public long misses(){return misses;}
     public long generation(){return generation;}
     public boolean warming(){return pending!=null||warmSnapshot!=null&&nextPose<=16;}
-    public void clear(){generation++;modularHull=null;modularHullPose=null;modularOversize=false;asyncUnavailable=false;waitingSince=0;failure="";entries.clear();weight=0;configuration=null;parent=null;warmSnapshot=null;warmOwner=null;warmView=null;nextPose=17;if(pending!=null)pending.cancel(false);pending=null;pendingPose=null;}
+    public void clear(){gearConfigurations.clear();generation++;modularHull=null;modularHullPose=null;modularOversize=false;asyncUnavailable=false;waitingSince=0;failure="";entries.clear();weight=0;configuration=null;parent=null;warmSnapshot=null;warmOwner=null;warmView=null;nextPose=17;if(pending!=null)pending.cancel(false);pending=null;pendingPose=null;}
     private static boolean knownSource(Block source){String name=source.getClass().getName();return name.startsWith("net.minecraft.block.")||name.startsWith("com.vandorlabs.blocks.")&&SAFE_OWN.contains(source.getClass().getSimpleName());}
     private static boolean supported(VehicleWorld view,VehicleStructure.Cell cell,TileEntity tile){
         Block block=cell.state.getBlock();if(block.getRegistryName()==null)return false;
@@ -88,10 +89,13 @@ public final class VehicleCollisionCache {
         NBTTagList blocks=new NBTTagList();List<VehicleStructure.Cell> cells=new ArrayList<>();List<Long> poses=new ArrayList<>();BlockPos owner=null;int movingOwners=0;
         for(VehicleStructure.Cell cell:view.structure.cells){
             TileEntity tile=view.getTileEntity(cell.pos);if(requireSupported&&!supported(view,cell,tile)){bypass=String.valueOf(cell.state.getBlock().getRegistryName())+"/"+cell.state.getBlock().getClass().getSimpleName();return null;}
-            NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
-            cells.add(new VehicleStructure.Cell(cell.pos,cell.state,data));
+            com.vandorlabs.gear.GearTileEntity gear=cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&tile instanceof com.vandorlabs.gear.GearTileEntity?(com.vandorlabs.gear.GearTileEntity)tile:null;
+            VehicleStructure.Cell currentGear=gear==null?null:cell.withGearPose(gear);
+            NBTTagCompound data=gear==null&&tile!=null?tile.writeToNBT(new NBTTagCompound()):null;
+            cells.add(currentGear!=null?currentGear:new VehicleStructure.Cell(cell.pos,cell.state,data));
             NBTTagCompound entry=new NBTTagCompound();entry.setLong("Pos",cell.pos.toLong());entry.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),cell.state));
-            if(data!=null){
+            if(gear!=null){entry.setTag("Tile",gearConfigurations.configuration(currentGear));if(gear.isController())poses.add(Double.doubleToLongBits(gear.progress()));}
+            else if(data!=null){
                 NBTTagCompound normalized=data.copy();
                 if(tile instanceof TileEntityCanopy){
                     TileEntityCanopy canopy=(TileEntityCanopy)tile;

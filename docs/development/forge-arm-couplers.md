@@ -205,3 +205,10 @@ After parking-hold integration, carried progression validates installed ownershi
 
 
 Pose-only revisions also invalidate cached encoded length without eagerly recounting complete old/new payload trees. The next actual encode still performs exact bounded serialization. With an already known encoded length, 100 pose-inheritance calls allocate 11.2 KiB at all three payload sizes; the former recount path allocates approximately 20.29 / 22.31 / 99.90 MB. Exact on-demand byte lengths match that former calculation, and the encoded scalar/opaque snapshot round-trips unchanged. No parent-cell chain is retained.
+
+
+## Gear collision-description reuse
+
+Collision description now reuses only Gear configurations, keyed by the immutable cell configuration token. Other tile writers retain their existing discovery behavior. The private normalized-NBT cache is bounded to 8 MiB and 256 entries, rejects oversized retention and clears with the collision cache. It retains neither worlds nor tiles. Pose overlays still produce a current complete immutable worker snapshot; legacy coordinate mismatches and failed retained owners use the complete typed writer instead of the sharing shortcut.
+
+The actual descriptor probe installs a deliberately divergent external capability serializer. Before the change, 100 descriptions at 4 / 256 / 4,096 payload cells allocate 2.27 / 25.52 / 350.15 MB and invoke that serializer 100 times, replacing the original capability representation in the prepared snapshot. Afterward they allocate approximately 0.68 MB at every size, invoke it zero times and preserve original capabilities. Current-pose full-tree equality, reset, configuration replacement, pressure and oversized-entry tests pass; 10,000 warmed configuration lookups allocate zero bytes. Java 8 assemble and dedicated linkage pass. This establishes the descriptor/cached-tree boundary, not a zero-allocation full tick or a hardware frame-rate result. The changed descriptor's live player replay remains pending.
