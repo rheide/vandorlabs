@@ -25,3 +25,11 @@ The pre-change Source corpora were frozen before changing the emitter. The curre
 | Split Door artwork | `3c59b113276aadb83fb99bf8481ac1629b5857ea779abd81d0d2eb8e0e433a8b` | `1e2f6d2c97c554f575f3935ed19c33107c1624a995070d34b15d780d9c2f02d0` |
 
 With the retained Front/Back centers, the narrower body exposes additional valid fluid regions. The Source 17,856-profile volume corpus changes from 124,160 cells/725,120 faces to 158,976 cells/889,984 faces; native geometry matches all profiles exactly. Stored amounts and ownership are unchanged. The 28,672 opening-fill and 64,512 outlet cases retain their original results.
+
+## Focused acceptance
+
+The actual Forge atlas reproduced the defect before the change: solid panels repeated at 1.0 image per block while Window panels used 0.5 for the selected tall company artwork. The same live fixture now measures 0.5 for both, checks the two-pixel body and published terrain phase, and passes the existing 11,520 rendered transform cases and 768 edge-UV checks. The configured inventory icon retains visible padding.
+
+The native atlas fixture compares moving/window output against the actual settled-terrain quad consumer. Both resource generations have zero differing pixels; deliberately replacing each row phase with row zero changes 27,168 pixels. The item produces 318 visible pixels with padded edges. Captured images were inspected. The fixture uses an empty screen so title buttons and animated splash text cannot contaminate comparison regions.
+
+Shared Java 8/21 mapping checks cover 768 profiles and 14,412 assertions. Source/native counterparts cover 900 panel profiles, 60 eligible fast meshes, 432 headers, 1,260 split-artwork profiles, 7,200 geometry profiles and 64,800 rays. Header geometry remains byte-identical. The reached Dynmap renderer suite passes 1,464,527 assertions; dedicated-server linkage passes 1,396 classes and 132,557 references. These are focused checks, not a release gate or hardware shader/FPS acceptance.

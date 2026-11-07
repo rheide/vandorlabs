@@ -3,6 +3,7 @@
 ## 2.9 (development)
 
 - Enable all eleven standalone Canopy and cockpit-glass components in the experimental native build with original recipes, configured placement, dedicated editing, joined shells, pause-aware motion, source-matched terrain/transparent artwork and safe loaded membership repair. Add staged native construction images. Vehicle/carried integration remains deferred.
+- Keep Segmented Door Tile artwork continuous across solid and Window segments in both versions. Make segment bodies two pixels thick while retaining four-pixel top borders, matching selection, collision, fluids and settled terrain rendering.
 
 - Place flat Programmable Walls, Glass and Porthole Walls against the clicked support when using a horizontal normal face, rather than on the far edge of the next cell. Preserve top/bottom and tangent-plane continuation.
 - Let Forge Copy Controller pads contain connected Surface blocks with different selected artwork. Keep each cell’s appearance and preserve artwork-sensitive Turntable discovery.
