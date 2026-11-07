@@ -1,0 +1,53 @@
+package com.vandorlabs.neoforge.ramp;
+
+import java.util.*;
+import java.util.function.Consumer;
+import net.minecraft.core.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.*;
+import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.*;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+import net.neoforged.neoforge.network.PacketDistributor;
+
+/** Private real-player belt planner/transport checks, not controller activation. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class RampBeltClientFixture {
+    private static final BlockPos BASE=new BlockPos(0,100,0),ROOT=BASE.east(5);
+    private static Consumer<NativeRampMotionPayload> motion=p->{};private static Consumer<Reply> reply=p->{};
+    private static UUID actor;private static int next,checks,sent;private static boolean complete;private static ItemEntity item;
+    private static NativeRampBeltRiders.State state;private static double distance;
+    public static boolean enabled(){return "ramp-belt-client-world".equals(System.getProperty("vandorlabs.transmitterPhase"));}
+    public static void client(Consumer<NativeRampMotionPayload> m,Consumer<Reply> r){motion=m;reply=r;}
+    public record Action(int step) implements CustomPacketPayload {public static final Type<Action> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:ramp_belt_step"));public Type<Action> type(){return TYPE;}}
+    public record Reply(int step,int corrections,double x,double y,double z) implements CustomPacketPayload {public static final Type<Reply> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:ramp_belt_reply"));public Type<Reply> type(){return TYPE;}}
+    @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)public static final class Registration {
+        @SubscribeEvent public static void packets(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(!enabled())return;var r=event.registrar("1");r.playToClient(NativeRampMotionPayload.TYPE,NativeRampMotionPayload.CODEC,(p,c)->c.enqueueWork(()->motion.accept(p)));r.playToClient(Reply.TYPE,new StreamCodec<RegistryFriendlyByteBuf,Reply>(){public Reply decode(RegistryFriendlyByteBuf b){if(b.readableBytes()!=32)throw new IllegalArgumentException("Belt reply length");return new Reply(b.readInt(),b.readInt(),b.readDouble(),b.readDouble(),b.readDouble());}public void encode(RegistryFriendlyByteBuf b,Reply p){b.writeInt(p.step);b.writeInt(p.corrections);b.writeDouble(p.x);b.writeDouble(p.y);b.writeDouble(p.z);}},(p,c)->c.enqueueWork(()->reply.accept(p)));r.playToServer(Action.TYPE,new StreamCodec<RegistryFriendlyByteBuf,Action>(){public Action decode(RegistryFriendlyByteBuf b){if(b.readableBytes()!=1)throw new IllegalArgumentException("Belt action length");int n=b.readUnsignedByte();if(n>7)throw new IllegalArgumentException("Belt action");return new Action(n);}public void encode(RegistryFriendlyByteBuf b,Action p){b.writeByte(p.step);}},(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)try{action(player,p.step);}catch(RuntimeException|Error failure){player.connection.disconnect(net.minecraft.network.chat.Component.literal("Belt fixture failed; inspect server log"));throw failure;}}));}
+    }
+    private static void need(boolean v,String why){checks++;if(!v)throw new AssertionError("Belt player step="+next+": "+why);}
+    @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent event){if(!enabled())return;var world=event.getServer().overworld();for(var p:BlockPos.betweenClosed(BASE.offset(-5,-6,-5),BASE.offset(8,6,8)))world.setBlock(p,p.getY()==94?Blocks.STONE.defaultBlockState():Blocks.AIR.defaultBlockState(),18);System.out.println("[vandorlabs][ramp-belt-client] actual server PID="+ProcessHandle.current().pid());}
+    @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event){if(!enabled()||!(event.getEntity() instanceof ServerPlayer p))return;actor=p.getUUID();next=0;sent=0;state=new NativeRampBeltRiders.State(UUID.randomUUID());p.setGameMode(GameType.SURVIVAL);p.getInventory().clearContent();p.getInventory().selected=0;p.setItemInHand(InteractionHand.OFF_HAND,ItemStack.EMPTY);p.getAbilities().flying=false;p.onUpdateAbilities();p.teleportTo(p.serverLevel(),.5,95,.5,0,0);p.setDeltaMovement(Vec3.ZERO);p.setOnGround(true);p.serverLevel().getServer().tickRateManager().setTickRate(5);System.out.println("[vandorlabs][ramp-belt-client] setup PASS synchronized Survival/slot/empty hands");}
+    private static NativeRampFootprint.Spec spec(boolean vertical){var cube=List.of(new AABB(0,0,0,1,1,1));return new NativeRampFootprint.Spec(ROOT,Direction.SOUTH,100,vertical?100:0,2,0,1,0,-2,4,false,0,false,false,0,vertical,false,List.of(new NativeRampGeometry.Origin(BASE,cube),new NativeRampGeometry.Origin(vertical?BASE.above():BASE.south(),cube)));}
+    private static void position(ServerPlayer p,NativeRampFootprint.Spec s,double phase,boolean vertical){var world=p.serverLevel();double x=.5,z=1.5,y;if(vertical){var b=NativeRampBeltGeometry.surfaces(s,false,phase).getFirst();x=(b.minX+b.maxX)*.5;z=(b.minZ+b.maxZ)*.5;y=b.maxY;}else{var body=new AABB(x-.3,100,z-.3,x+.3,101.8,z+.3);y=NativeRampBeltTargets.support(NativeRampBeltGeometry.surfaces(s,false,phase),body);}need(Double.isFinite(y),"support exists");p.teleportTo(world,x,y,z,0,0);p.setDeltaMovement(Vec3.ZERO);p.setOnGround(true);if(item==null||item.isRemoved()){item=new ItemEntity(world,x,y,z,new ItemStack(Items.STONE));item.setNeverPickUp();need(world.addFreshEntity(item),"actual loose item installed");}item.setPos(x,y,z);if(!vertical){double itemTop=NativeRampBeltTargets.support(NativeRampBeltGeometry.surfaces(s,false,phase),item.getBoundingBox());need(Double.isFinite(itemTop),"item support exists");item.setPos(x,itemTop,z);}item.setDeltaMovement(.125,0,-.125);item.noPhysics=false;item.setOnGround(true);}
+    private static void correction(ServerPlayer player,NativeRampMotionPayload payload){need(player.getBoundingBox().minY==payload.after(),"S2C follows physical player endpoint");sent++;PacketDistributor.sendToPlayer(player,payload);}
+    private static void action(ServerPlayer p,int step){need(p.getUUID().equals(actor)&&step==next,"exact real actor/command");need(p.gameMode.getGameModeForPlayer()==GameType.SURVIVAL&&p.getInventory().selected==0&&p.getMainHandItem().isEmpty()&&p.getOffhandItem().isEmpty(),"current Survival/slot/hands mode="+p.gameMode.getGameModeForPlayer()+" slot="+p.getInventory().selected+" held="+p.getMainHandItem());var world=p.serverLevel();boolean vertical=step==3||step==4;var s=spec(vertical);
+        switch(step){
+            case 0,3,5->{distance=step==5?31.99:0;state=new NativeRampBeltRiders.State(UUID.randomUUID());position(p,s,distance,vertical);var plan=NativeRampBeltRiders.prepare(world,s,false,state,distance,step==5?2:1,0);need(plan!=null&&plan.size()==2&&plan.recheck(),"player+loose item preflight plan="+(plan==null?"blocked":plan.size())+" player="+p.position()+" item="+item.position());need(plan.commit(RampBeltClientFixture::correction)&&plan.correctionFailures()==0,"all actors committed before real TCP send");distance=plan.nextDistance();need(p.onGround()&&item.onGround(),"both supported");need(item.getDeltaMovement().equals(vertical?new Vec3(.125,0,-.125):Vec3.ZERO),"correct horizontal/vertical item momentum");if(step==5)need(distance<1,"distance wraps at belt boundary");}
+            case 1->{position(p,s,distance,false);var before=p.position();var oldItem=item.position();world.setBlock(BASE.south().above(2),Blocks.STONE.defaultBlockState(),18);var reset=NativeRampBeltRiders.prepareReset(world,s,false,state,distance,1,0);need(reset==null&&p.position().equals(before)&&item.position().equals(oldItem),"foreign ceiling refuses entire reset without partial movement");world.setBlock(BASE.south().above(2),Blocks.AIR.defaultBlockState(),18);}
+            case 2,4->{position(p,s,distance,vertical);var reset=NativeRampBeltRiders.prepareReset(world,s,false,state,distance,1,0);need(reset!=null&&reset.size()==2&&reset.recheck()&&reset.commit(RampBeltClientFixture::correction),"player+item complete reset");need(state.retainedEntries()==0&&item.getDeltaMovement().equals(new Vec3(.125,0,-.125)),"reset clears ownership history and preserves ordinary momentum");}
+            case 6->{position(p,s,distance,false);double z=1.7;var body=p.getBoundingBox().move(0,0,z-p.getZ());double top=NativeRampBeltTargets.support(NativeRampBeltGeometry.surfaces(s,false,distance),body);p.teleportTo(world,.5,top,z,0,0);p.setDeltaMovement(0,0,.1);p.setOnGround(true);world.setBlock(BASE.south(2).below(),Blocks.STONE_SLAB.defaultBlockState().setValue(net.minecraft.world.level.block.SlabBlock.TYPE,net.minecraft.world.level.block.state.properties.SlabType.TOP),18);var landing=NativeRampBeltRiders.prepare(world,s,false,state,distance,1,0);need(landing!=null&&landing.size()==2&&landing.recheck()&&landing.commit(RampBeltClientFixture::correction),"walking against belt admits actual lower landing step");need(p.getY()==100,"actual player rises to adjacent half-slab landing before="+top+" after="+p.getY()+" phase="+distance+" step="+p.maxUpStep());distance=landing.nextDistance();world.setBlock(BASE.south(2).below(),Blocks.AIR.defaultBlockState(),18);}
+            case 7->{int retained=state.retainedEntries();need(retained==2,"deployed horizontal belt tracks both actors");need(state.retainedEntries()==retained,"power stop retains history without reset");var replacement=new NativeRampBeltRiders.State(UUID.randomUUID());need(replacement.retainedEntries()==0,"fresh operation has no persisted cosmetic/history owner");item.discard();world.getServer().tickRateManager().setTickRate(20);complete=true;System.out.println("[vandorlabs][ramp-belt-client] complete PASS checks="+checks+" corrections="+sent);}
+        }
+        next++;PacketDistributor.sendToPlayer(p,new Reply(step,sent,p.getX(),p.getY(),p.getZ()));System.out.println("[vandorlabs][ramp-belt-client] action "+step+" PASS");
+    }
+    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event){if(enabled())System.out.println("[vandorlabs][ramp-belt-client] logout "+(complete?"PASS":"INCOMPLETE"));}
+}
