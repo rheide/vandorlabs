@@ -15,6 +15,15 @@ public final class ProgrammerJournalPlane {
     }
     public Point point(double u,double v){return new Point(ox+ax*(u/WIDTH)+dx*(v/HEIGHT),oy+ay*(u/WIDTH)+dy*(v/HEIGHT),oz+az*(u/WIDTH)+dz*(v/HEIGHT));}
     public Point world(ProgrammerTransform.Affine a,int originX,int originY,int originZ,double u,double v){Point p=point(u,v);return new Point(originX+a.x(p.x,p.z),originY+p.y,originZ+a.z(p.x,p.z));}
+    /** Released GL column-major pixel frame, including the small normal offset and depth scale. */
+    public void matrix(ProgrammerTransform.Affine a,float[] target){
+        if(target.length<16)throw new IllegalArgumentException("Programmer journal matrix");
+        double x=ax*(1D/WIDTH),y=ay*(1D/WIDTH),z=az*(1D/WIDTH),downX=dx*(1D/HEIGHT),downY=dy*(1D/HEIGHT),downZ=dz*(1D/HEIGHT),depth=Math.sqrt(x*x+y*y+z*z);
+        target[0]=(float)(a.xx*x+a.xz*z);target[1]=(float)y;target[2]=(float)(a.zx*x+a.zz*z);target[3]=0;
+        target[4]=(float)(a.xx*downX+a.xz*downZ);target[5]=(float)downY;target[6]=(float)(a.zx*downX+a.zz*downZ);target[7]=0;
+        target[8]=(float)((a.xx*nx+a.xz*nz)*depth);target[9]=(float)(ny*depth);target[10]=(float)((a.zx*nx+a.zz*nz)*depth);target[11]=0;
+        target[12]=(float)a.x(ox+nx*.001,oz+nz*.001);target[13]=(float)(oy+ny*.001);target[14]=(float)a.z(ox+nx*.001,oz+nz*.001);target[15]=1;
+    }
     public Hit hit(ProgrammerTransform.Affine a,int originX,int originY,int originZ,double startX,double startY,double startZ,double endX,double endY,double endZ){
         double x=startX-originX-a.offsetX,z=startZ-originZ-a.offsetZ,fx=a.xx*x+a.zx*z,fy=startY-originY,fz=a.xz*x+a.zz*z;
         x=endX-originX-a.offsetX;z=endZ-originZ-a.offsetZ;double rx=a.xx*x+a.zx*z-fx,ry=endY-originY-fy,rz=a.xz*x+a.zz*z-fz;

@@ -18,3 +18,9 @@ tasks.register('testNativeProgrammerArtwork', JavaExec) {
  mainClass = 'com.vandorlabs.neoforge.programmer.ProgrammerArtworkChecks'
  args rootProject.file('../../build/test-artifacts/programmer-artwork-forge.jsonl').absolutePath
 }
+tasks.register('testNativeProgrammerJournalFrame', JavaExec) {
+ dependsOn tasks.named('compileSmokeJava'),tasks.named('processResources')
+ classpath = sourceSets.smoke.runtimeClasspath
+ mainClass = 'com.vandorlabs.neoforge.programmer.ProgrammerJournalFrameChecks'
+ args rootProject.file('../../build/test-artifacts/programmer-journal-matrix-forge.json').absolutePath
+}
