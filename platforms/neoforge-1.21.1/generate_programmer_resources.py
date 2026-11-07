@@ -58,6 +58,8 @@ def main():
  if len(models)!=21 or len(states)!=4 or any(len(parts)!=5 for parts in states.values()):raise ValueError('Released Programmer coverage')
  write(assets/'data/programmer_artwork.json',dict(states=states,item=item,models=models,textures=textures))
  write(assets/'models/block/programmer_empty.json',{'elements':[],'textures':{'particle':'vandorlabs:blocks/data_chip_programmer/programmer_ready'}})
- # Canonical registration and item wrapping remain disabled; these assets carry no activation.
+ write(assets/'blockstates/data_chip_programmer.json',{'variants':{f'facing={face},part={part}':{'model':'vandorlabs:block/programmer_empty'} for face in ('north','south','east','west') for part in range(4)}})
+ write(assets/'models/item/data_chip_programmer.json',{'parent':'vandorlabs:block/programmer_empty'})
+ # The released Programmer has no crafting recipe; do not manufacture one here.
  print('Native Programmer resources PASS states=4 parts=20 item=1 sprites='+str(len(textures)))
 if __name__=='__main__':main()
