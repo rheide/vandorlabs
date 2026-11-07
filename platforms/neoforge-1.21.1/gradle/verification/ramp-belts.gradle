@@ -5,3 +5,6 @@ tasks.register('testRampBeltReference',JavaExec) {
  args rootProject.file('../../testclient/fixtures/ramp-belt-source.jsonl.gz').absolutePath
  maxHeapSize='768m'
 }
+neoForge.runs.configureEach {
+ if(project.hasProperty('rampBeltDeploymentReference'))systemProperty 'vandorlabs.rampBeltDeploymentReference',file(project.property('rampBeltDeploymentReference')).absolutePath
+}

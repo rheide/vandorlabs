@@ -32,7 +32,7 @@ public final class NativeRampAssembly {
  public static NativeRampAssembly prepare(BlockPos root,NativeRampSettings settings,NativeRampCapture.Plan plan,Map<BlockPos,CompoundTag> stagedSources){return new NativeRampAssembly(root,settings,plan,stagedSources);}
  public NativeRampFootprint.Spec footprint(){return footprint;}public NativeRampSettings settings(){return settings;}public BlockState original(){return original;}public Set<BlockPos> potential(){return potential;}public long retainedBytes(){return retainedBytes;}
  private int column(BlockPos pos){return footprint.facing().getAxis()==Direction.Axis.X?pos.getZ():pos.getX();}
- public Set<BlockPos> cells(double from,double to){return settings.escalator()==0?NativeRampFootprint.cells(footprint,from,to):beltCells;}
+ public Set<BlockPos> cells(double from,double to){if(!Double.isFinite(from)||!Double.isFinite(to)||from<0||from>1||to<0||to>1)throw new IllegalArgumentException("Ramp assembly pose");return com.vandorlabs.ramp.RampBeltPolicy.reservations(settings.escalator(),from,to)?beltCells:NativeRampFootprint.cells(footprint,from,to);}
  public NativeRampPartData part(BlockPos cell,NativeRampPartData.Motion motion,NativeRampPartData.Belt belt){
   if(!potential.contains(cell)||belt.mode()!=settings.escalator())throw new IllegalArgumentException("Ramp part outside prepared assembly");
   List<NativeRampPartData.Origin> selected;
