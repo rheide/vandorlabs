@@ -6,7 +6,7 @@ from test_transmitter import ROOT,command,run,world,jdk_home
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- p=argparse.ArgumentParser();p.add_argument('--case',choices=['normal','abrupt','factory','observer','root-observer','frame','frame-failure','frame-retire-failure','frame-abrupt','frame-rider-refusal','frame-rider-observer','belt-initial','frame-command','frame-original-align','frame-cost'],default='normal');args=p.parse_args()
+ p=argparse.ArgumentParser();p.add_argument('--case',choices=['normal','abrupt','factory','observer','root-observer','frame','frame-failure','frame-retire-failure','frame-abrupt','frame-rider-refusal','frame-rider-observer','belt-initial','belt-reset','frame-command','frame-original-align','frame-cost'],default='normal');args=p.parse_args()
  output=Path(artifact_directory(prefix='ramp-assembly-journal-native-',dir=ROOT/'build/test-artifacts'));saved=output/'saved-world';world(saved,0)
  for phase in ['write','read']:
   marker='abrupt' if phase=='write' and args.case in ('abrupt','frame-abrupt') else phase
