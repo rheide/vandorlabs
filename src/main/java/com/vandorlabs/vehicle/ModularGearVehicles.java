@@ -71,7 +71,7 @@ public final class ModularGearVehicles {
         for(Map.Entry<BlockPos,Double> entry:desired.entrySet())((GearTileEntity)craft.view.getTileEntity(entry.getKey())).captureProgress(entry.getValue());
         craft.articulation.armPosesCommitted();
         if(craft.world.isRemote)corrections.remove(craft);
-        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,((GearTileEntity)craft.view.getTileEntity(cell.pos)).currentData(cell.tileData())):cell);
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?cell.withGearPose((GearTileEntity)craft.view.getTileEntity(cell.pos)):cell);
         craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
         if(!craft.world.isRemote)com.vandorlabs.network.MessageGearMotion.send(craft,desired.keySet());
     }
