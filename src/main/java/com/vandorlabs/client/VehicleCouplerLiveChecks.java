@@ -4,6 +4,7 @@ import java.io.File;
 final class VehicleCouplerLiveChecks {
     private static int ticks;
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if("1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_RELEASE_ONLY")))return VehicleArmCouplerReleaseLiveChecks.tick(mc,output);
         if("1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_ONLY")))return VehicleArmCouplerLiveChecks.tick(mc,output);
         if(ticks<0){if(!VehicleTerrainAccessChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupler-articulation-live PASS "+("1".equals(System.getenv("VANDOR_LABS_COUPLER_VERTICAL_ONLY"))?"vertical topology saved-poses server-driver terrain-access":"physics rendering terrain-access"));return true;}
         mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);if(++ticks<40)return false;
