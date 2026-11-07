@@ -15,7 +15,7 @@ def main():
         target=pack/('data/minecraft/tags/block/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True)
         target.write_text('{"replace":false,"values":["vandorlabs:ramp_item_fixture_0","vandorlabs:ramp_item_fixture_1"]}')
     for phase in ('write','read'):
-        run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-item-'+phase),output/(phase+'.log'),'[vandorlabs][ramp-item] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+        run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-item-'+phase,'-PcopifierRecipeReference='+str(ROOT/'testclient/fixtures/copifier-recipe-configured-source.json.gz')),output/(phase+'.log'),'[vandorlabs][ramp-item] '+phase+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
         check_log(saved/'logs/latest.log','All dimensions are saved')
     print('Private Ramp item write/restart PASS '+str(output),flush=True)
 

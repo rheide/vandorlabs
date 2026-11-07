@@ -32,6 +32,7 @@ public final class NativeCopifierCraftingItems {
         if(!(input.getItem() instanceof BlockItem item)||input.isEmpty()||com.vandorlabs.neoforge.inventory.NativeInventoryItems.containedOwnership(input))return ItemStack.EMPTY;
         var id=BuiltInRegistries.BLOCK.getKey(item.getBlock());
         if(!id.getNamespace().equals("vandorlabs"))return ItemStack.EMPTY;
+        if(item.getBlock() instanceof com.vandorlabs.neoforge.ramp.NativeRampBlock)return com.vandorlabs.neoforge.ramp.NativeRampCopiedItem.apply(input,values,registries);
         NativeCopifierHousingCapture.Family family=null;
         try{family=NativeCopifierHousingCapture.Family.of(id.getPath());}catch(IllegalArgumentException unsupported){if(item.getBlock() instanceof NativeStorageBlock)family=NativeCopifierHousingCapture.Family.CUBE;else if(!(item.getBlock() instanceof NativeLightBlock)&&!(item.getBlock() instanceof NativeProgrammableDoorBlock)&&!(item.getBlock() instanceof NativeLargeDoorBlock)&&!(item.getBlock() instanceof NativeGlassBlock)&&ScreenFamily.fromId(id.getPath())==null&&!(item.getBlock() instanceof NativeTrapdoorBlock)&&!(item.getBlock() instanceof NativeTriggerBlock)&&!(item.getBlock() instanceof NativeSegmentedDoorBlock)&&!(item.getBlock() instanceof NativeCanopyBlock))return ItemStack.EMPTY;}
         if(!(item.getBlock() instanceof EntityBlock factory))return ItemStack.EMPTY;

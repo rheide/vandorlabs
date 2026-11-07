@@ -13,13 +13,14 @@ import net.minecraft.world.item.crafting.*;
 import net.minecraft.world.level.GameType;
 
 /** Vanilla result-slot pickup and quick-move on both actual crafting container sizes. */
-final class CopifierCraftingContainerChecks {
+public final class CopifierCraftingContainerChecks {
     private static int checks;
     private static void need(boolean ok,String why){checks++;if(!ok)throw new AssertionError("Copied crafting container: "+why);}
-    static void run(ServerLevel level){
+    static void run(ServerLevel level){runTarget(level,BuiltInRegistries.ITEM.get(ResourceLocation.parse("vandorlabs:programmable_block")));}
+    public static void runTarget(ServerLevel level,Item block){
         var actor=new net.neoforged.neoforge.common.util.FakePlayer(level,new com.mojang.authlib.GameProfile(new UUID(0,1902),"CopiedCrafting"));actor.setGameMode(GameType.SURVIVAL);
         var table=new net.minecraft.core.BlockPos(24700,100,24700);level.getChunkAt(table);level.setBlock(table,net.minecraft.world.level.block.Blocks.CRAFTING_TABLE.defaultBlockState(),18);actor.setPos(table.getX()+.5,table.getY(),table.getZ()-2);
-        var block=BuiltInRegistries.ITEM.get(ResourceLocation.parse("vandorlabs:programmable_block"));var data=new CompoundTag();var values=new CompoundTag();values.putInt("wall_texture",7);data.put("DuplifierSettings",values);data.putByteArray("OpaqueOwner",new byte[65536]);var tool=new ItemStack(NativeCopifierRegistrations.ITEM.get());tool.set(DataComponents.CUSTOM_DATA,CustomData.of(data));
+        var data=new CompoundTag();var values=new CompoundTag();values.putInt("wall_texture",7);data.put("DuplifierSettings",values);data.putByteArray("OpaqueOwner",new byte[65536]);var tool=new ItemStack(NativeCopifierRegistrations.ITEM.get());tool.set(DataComponents.CUSTOM_DATA,CustomData.of(data));
         var shaped=(CraftingRecipe)level.getRecipeManager().byKey(ResourceLocation.parse("vandorlabs:duplifier")).orElseThrow().value();var toolInput=CraftingInput.of(2,2,List.of(ItemStack.EMPTY,new ItemStack(Items.REDSTONE),new ItemStack(com.vandorlabs.neoforge.VandorLabsBootstrap.MATTER_INGOT.get()),new ItemStack(Items.REDSTONE)));need(shaped.matches(toolInput,level)&&shaped.assemble(toolInput,level.registryAccess()).is(tool.getItem()),"released shaped tool recipe");
         for(int side:new int[]{2,3}){
             actor.getInventory().clearContent();AbstractContainerMenu menu=side==2?actor.inventoryMenu:new CraftingMenu(61,actor.getInventory(),ContainerLevelAccess.create(level,table));actor.containerMenu=menu;var grid=(CraftingContainer)menu.getSlot(1).container;grid.clearContent();grid.setItem(0,tool.copy());grid.setItem(1,new ItemStack(block,17));menu.slotsChanged(grid);need(menu.getSlot(0).hasItem(),"actual public result slot side="+side);

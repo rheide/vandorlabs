@@ -63,8 +63,9 @@ public class NativeRampItem extends BlockItem {
         if(player==null||stack.isEmpty()||!context.canPlace()||!world.hasChunkAt(pos)||world.isOutsideBuildHeight(pos)||!world.mayInteract(player,pos)||!player.mayUseItemAt(pos,context.getClickedFace(),stack)||NativeRampHeldOwners.blocked(world,pos))return InteractionResult.FAIL;
         if(world instanceof ServerLevel server&&(!server.getServer().isSameThread()||!NativeRedstoneChannels.open(server)))return InteractionResult.FAIL;
         var old=world.getBlockState(pos);if(old.hasBlockEntity()||world.getBlockEntity(pos)!=null||!old.canBeReplaced(context))return InteractionResult.FAIL;
-        var state=block.getStateForPlacement(context);if(state==null||!canPlace(context,state))return InteractionResult.FAIL;
-        final Prepared prepared;try{prepared=prepare(block,pos,state,stack,world.registryAccess());}catch(IllegalArgumentException invalid){return InteractionResult.FAIL;}
+        var proposed=block.getStateForPlacement(context);if(proposed==null||!canPlace(context,proposed))return InteractionResult.FAIL;
+        final Prepared prepared;try{prepared=prepare(block,pos,proposed,stack,world.registryAccess());}catch(IllegalArgumentException invalid){return InteractionResult.FAIL;}
+        final var state=proposed.setValue(NativeRampBlock.MODE,NativeRampSettings.read(prepared.snapshot).mode());
         if(world.isClientSide)return InteractionResult.SUCCESS;if(!(player instanceof ServerPlayer actor))return InteractionResult.FAIL;
         var placed=stack.copy();var action=new PreparedCommand[1];var installed=new NativeRampEntity[1];
         boolean committed=NativeStationaryPlacement.commit(world,pos,old,state,player,stack,new NativeStationaryPlacement.Hooks<NativeRampEntity>(){
