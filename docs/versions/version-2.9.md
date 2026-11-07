@@ -19,6 +19,8 @@ Forge Copy Controllers now discover complete connected Surface pads regardless o
 
 Ordinary and Large Doors share twelve new 128×256 Utility artwork sheets in both versions, without adding or reordering geometry designs. Dark, Slim and White Glass artwork now appears in the Glass subgroup. See the [Door guide](../space-doors.md) and [texture browser](../texture-browser/).
 
+Forge 1.12.2 also corrects centered vertical articulated couplers: a parent turn retains the child’s heading instead of steering it the wrong way. Existing saved yaw/pitch poses and packet fields remain compatible. Arm-mounted coupler constraints are a separate work in progress; native Vehicle Mode remains deferred.
+
 The previous feature overview remains available in [Vandor Labs 2.8](version-2.8.md).
 
 The experimental native build includes the plain matter block, matter/alloy ingots, and the programmable cube with its Appearance editor, six face overrides and bounded joined images. Creative shift-click and the main-hand Configurizer share the authenticated cube dialog. Configured items retain their settings, and native geometry is compared with the actual Forge renderer.

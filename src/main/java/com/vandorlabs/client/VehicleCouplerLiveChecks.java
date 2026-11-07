@@ -4,7 +4,7 @@ import java.io.File;
 final class VehicleCouplerLiveChecks {
     private static int ticks;
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(ticks<0){if(!VehicleTerrainAccessChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupler-articulation-live PASS physics rendering terrain-access");return true;}
+        if(ticks<0){if(!VehicleTerrainAccessChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupler-articulation-live PASS "+("1".equals(System.getenv("VANDOR_LABS_COUPLER_VERTICAL_ONLY"))?"vertical topology saved-poses server-driver terrain-access":"physics rendering terrain-access"));return true;}
         mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);if(++ticks<40)return false;
         mc.getIntegratedServer().addScheduledTask(()->{
             net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
