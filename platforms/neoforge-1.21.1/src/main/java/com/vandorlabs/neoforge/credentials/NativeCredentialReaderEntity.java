@@ -17,7 +17,7 @@ import net.minecraft.world.level.block.state.BlockState;
 /** Unregistered standalone host. Physical ownership never enters its public projection or configured pick. */
 public class NativeCredentialReaderEntity extends BlockEntity implements NativeChannelMember {
     private static final List<String> READER_FIELDS=List.of("TokenLogo","TokenRejectedUntil","ChipSlot","AnyToken","AllowedTokens","TokenBehavior","TokenPulseUntil","TokenToggled","TokenToggleApplied","TokenInsertStarted","TokenInsertionSequence","TokenReturnTo","TokenReturnToMost","TokenReturnToLeast","InsertedToken");
-    public record Visual(ControlMountSettings mount,int rotation,int allowed,NativeTokenReader.Visual contents,NativeTokenReader.Motion motion,boolean inert){}
+    public record Visual(ControlMountSettings mount,int rotation,int allowed,NativeTokenReader.Visual contents,NativeTokenReader.Motion motion,boolean inert,int behavior){}
     private final boolean chip;
     private NativeTokenReader reader;
     private CompoundTag retained=new CompoundTag();
@@ -39,7 +39,9 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     public Visual visual(){return visual;}
     public ControlMountSettings mountSettings(){return mount;}
     public int mountRotation(){return rotation;}
-    public boolean usable(ServerPlayer player){return !inert&&level instanceof ServerLevel server&&server.getServer().isSameThread()&&NativeConfigurationAccess.canEditDialog(player,this);}
+    public int behavior(){return visual.behavior;}
+    public boolean localRedstone(){return local;}
+    public boolean usable(ServerPlayer player){return !inert&&level instanceof ServerLevel server&&server.getServer().isSameThread()&&NativeRedstoneChannels.open(server)&&NativeConfigurationAccess.canEditDialog(player,this);}
     public int outputLevel(){return inert?0:reader.outputLevel(level==null?0:level.getGameTime());}
     public int physicalLevel(){return local?outputLevel():0;}
     public boolean interact(ServerPlayer player,InteractionHand hand){return usable(player)&&reader.interact(player,hand,false);}
@@ -48,13 +50,18 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     public ItemStack recoveryForRemoval(net.minecraft.world.item.Item item){if(!inert||recoveryTaken||retained.isEmpty())return ItemStack.EMPTY;recoveryTaken=true;var result=new ItemStack(item);var tag=new CompoundTag();tag.put("NativeReaderRecovery",retained.copy());result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(tag));return result;}
     public boolean configure(ServerPlayer player,boolean any,int allowed,int behavior,ControlMountSettings next){
         if(publishing||!usable(player)||next==null||!ControlMountSettings.valid(next.height,next.tilt,next.direction)||behavior<0||behavior>3)return false;
-        boolean changed=reader.configureLocal(any,allowed,behavior)||mount.height!=next.height||mount.tilt!=next.tilt||mount.direction!=next.direction;
-        mount=next;if(changed)publish();return true;
+        boolean changed=reader.configureLocal(any,allowed,behavior)||mount.height!=next.height||mount.tilt!=next.tilt||mount.direction!=next.direction||!channels.equals(transmission);
+        mount=next;channels=transmission;if(changed){publish();NativeRedstoneChannels.channelsChanged(this);}return true;
     }
     public CompoundTag configuration(){var out=new CompoundTag();out.putInt("Channel",channels.first());out.putIntArray("RedstoneChannels",channels.toArray());ControlMountSettings.write(new ModernHousingTags(out),mount.height,mount.tilt,mount.direction);return out;}
-    public void place(CompoundTag choices,int ownRotation){if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread()||!isChannelMemberActive())return;channels=readChannels(choices);transmission=channels;rotation=ownRotation&3;mount=ControlMountSettings.read(new ModernHousingTags(choices),0,0,0);publish();NativeRedstoneChannels.channelsChanged(this);}
+    public void place(CompoundTag choices,int ownRotation){if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread()||!NativeRedstoneChannels.open(server)||!isChannelMemberActive())return;channels=readChannels(choices);transmission=channels;rotation=ownRotation&3;mount=ControlMountSettings.read(new ModernHousingTags(choices),0,0,0);publish();NativeRedstoneChannels.channelsChanged(this);}
+    public boolean configureTransmission(ServerPlayer player,ChannelList next,int nextRange,boolean nextLocal){
+        if(publishing||!usable(player)||!TransmissionSettings.validConfiguration(next,nextRange))return false;
+        var forge=retained.getCompound("ForgeData").copy();var settings=forge.getCompound(TransmissionSettings.SETTINGS).copy();var main=settings.getCompound("main").copy();main.putIntArray("Channels",next.toArray());main.putInt("Range",nextRange);main.putBoolean("Local",nextLocal);settings.put("main",main);forge.put(TransmissionSettings.SETTINGS,settings);retained.put("ForgeData",forge);
+        channels=transmission=next;range=nextRange;local=nextLocal;publish();NativeRedstoneChannels.channelsChanged(this);return true;
+    }
     public void scheduledTick(){if(!inert)reader.scheduledTick();}
-    private void project(){long now=level==null?0:level.getGameTime();visual=new Visual(mount,rotation,reader.effectiveAllowed(),reader.visual(now),reader.motion(now),inert);}
+    private void project(){long now=level==null?0:level.getGameTime();visual=new Visual(mount,rotation,reader.effectiveAllowed(),reader.visual(now),reader.motion(now),inert,reader.behavior());}
     private void publish(){
         if(publishing){project();return;}publishing=true;try{
             initialized=true;project();setChanged();if(!(level instanceof ServerLevel server)||!isChannelMemberActive())return;
@@ -87,13 +94,13 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);tag.merge(reader.write(registries));var primitive=new ModernHousingTags(tag);new com.vandorlabs.persistence.RedstoneData.Source(channels.first(),outputLevel()>0,initialized,rotation).write(primitive);tag.putIntArray("RedstoneChannels",channels.toArray());int[] levels=new int[channels.size()];java.util.Arrays.fill(levels,outputLevel());tag.putIntArray("LatchedChannels",outputLevel()>0?channels.toArray():new int[0]);tag.putIntArray("LatchedLevels",levels);ControlMountSettings.write(primitive,mount.height,mount.tilt,mount.direction);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){
-        project();var out=configuration();var v=visual;out.putBoolean("ReaderProjection",true);out.putBoolean("ChipSlot",chip);out.putInt("MountRotation",rotation);out.putInt("AllowedTokens",v.allowed);out.putBoolean("ReaderInert",inert);out.putInt("Company",v.contents.company());out.putInt("Logo",v.contents.logo());out.putBoolean("Icon",v.contents.icon());out.putInt("Output",v.contents.output());out.putBoolean("Occupied",v.contents.occupied());out.putLong("Sequence",v.motion.sequence());out.putInt("Age",v.motion.age());out.putBoolean("Returning",v.motion.returning());out.putInt("Rejected",v.motion.rejectedFor());out.putLong("RejectionDeadline",v.motion.rejectionDeadline());return out;
+        project();var out=configuration();var v=visual;out.putBoolean("ReaderProjection",true);out.putBoolean("ChipSlot",chip);out.putInt("MountRotation",rotation);out.putInt("AllowedTokens",v.allowed);out.putInt("TokenBehavior",v.behavior);out.putIntArray("TransmitChannels",transmission.toArray());out.putInt("TransmitRange",range);out.putBoolean("LocalRedstone",local);out.putBoolean("ReaderInert",inert);out.putInt("Company",v.contents.company());out.putInt("Logo",v.contents.logo());out.putBoolean("Icon",v.contents.icon());out.putInt("Output",v.contents.output());out.putBoolean("Occupied",v.contents.occupied());out.putLong("Sequence",v.motion.sequence());out.putInt("Age",v.motion.age());out.putBoolean("Returning",v.motion.returning());out.putInt("Rejected",v.motion.rejectedFor());out.putLong("RejectionDeadline",v.motion.rejectionDeadline());return out;
     }
     @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){
         if(level==null||!level.isClientSide)return;
         applyProjection(tag);
     }
     private void applyProjection(CompoundTag tag){
-        try{var nextMount=ControlMountSettings.read(new ModernHousingTags(tag),0,0,0);var contents=new NativeTokenReader.Visual(chip,tag.getInt("Company"),tag.getInt("Logo"),tag.getBoolean("Icon"),tag.getInt("Output"),tag.getBoolean("Occupied"));var motion=new NativeTokenReader.Motion(tag.getLong("Sequence"),tag.getInt("Age"),tag.getBoolean("Returning"),tag.getInt("Rejected"),tag.getLong("RejectionDeadline"));visual=new Visual(nextMount,tag.getInt("MountRotation")&3,tag.getInt("AllowedTokens")&127,contents,motion,tag.getBoolean("ReaderInert"));mount=nextMount;rotation=visual.rotation;}catch(RuntimeException malformed){/* Keep the last coherent public projection. */}
+        try{var nextMount=ControlMountSettings.read(new ModernHousingTags(tag),0,0,0);var contents=new NativeTokenReader.Visual(chip,tag.getInt("Company"),tag.getInt("Logo"),tag.getBoolean("Icon"),tag.getInt("Output"),tag.getBoolean("Occupied"));var motion=new NativeTokenReader.Motion(tag.getLong("Sequence"),tag.getInt("Age"),tag.getBoolean("Returning"),tag.getInt("Rejected"),tag.getLong("RejectionDeadline"));int behavior=tag.getInt("TokenBehavior");if(behavior<0||behavior>3)throw new IllegalArgumentException("Reader behavior projection");var nextChannels=readChannels(tag);var nextTransmission=ChannelList.of(tag.getIntArray("TransmitChannels"));int nextRange=tag.getInt("TransmitRange");if(!TransmissionSettings.validRange(nextRange))throw new IllegalArgumentException("Reader range projection");visual=new Visual(nextMount,tag.getInt("MountRotation")&3,tag.getInt("AllowedTokens")&127,contents,motion,tag.getBoolean("ReaderInert"),behavior);mount=nextMount;rotation=visual.rotation;channels=nextChannels;transmission=nextTransmission;range=nextRange;local=tag.getBoolean("LocalRedstone");}catch(RuntimeException malformed){/* Keep the last coherent public projection. */}
     }
 }

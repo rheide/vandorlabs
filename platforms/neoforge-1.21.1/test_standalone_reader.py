@@ -11,6 +11,7 @@ from test_transmitter import ROOT, command, run, world, check_log, jdk_home
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--legacy-reference',type=Path,required=True)
+    parser.add_argument('--editor-reference',type=Path)
     args=parser.parse_args();reference=args.legacy_reference.resolve()
     if not reference.is_file():parser.error('Actual Source standalone reader oracle required')
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
@@ -21,7 +22,12 @@ def main():
     check_log(saved/'logs/latest.log','All dimensions are saved')
     for phase in ('write','read'):
         marker='[vandorlabs][standalone-reader-host-'+phase+'] dedicated PASS'
-        run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=standalone-reader-host-'+phase),output/('host-'+phase+'.log'),marker,dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+        properties=[]
+        if args.editor_reference:
+            editor=args.editor_reference.resolve()
+            if not editor.is_file():parser.error('Actual Source reader editor oracle required')
+            properties.append('-PstandaloneReaderEditorReference='+str(editor))
+        run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=standalone-reader-host-'+phase,*properties),output/('host-'+phase+'.log'),marker,dict(os.environ,JAVA_HOME=str(jdk_home(21))))
         check_log(saved/'logs/latest.log','All dimensions are saved')
     print('Standalone reader geometry runtime PASS: '+str(output),flush=True)
 

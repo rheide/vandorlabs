@@ -21,10 +21,12 @@ public final class StandaloneReaderGeometryChecks {
     private static int readTicks;
     private static boolean readPending;
     private static net.minecraft.world.level.block.entity.BlockEntityType<com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity> TYPE;
+    static net.minecraft.world.inventory.MenuType<com.vandorlabs.neoforge.credentials.NativeCredentialReaderMenu> MENU;
+    static com.vandorlabs.neoforge.credentials.NativeCredentialReaderBlock fixture(boolean isChip){return isChip?chip:card;}
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
     public static final class Registration {
         @SubscribeEvent public static void register(net.neoforged.neoforge.registries.RegisterEvent event){
-            if(!System.getProperty("vandorlabs.transmitterPhase","").startsWith("standalone-reader-"))return;
+            if(!System.getProperty("vandorlabs.transmitterPhase","").startsWith("standalone-reader-")&&!"true".equals(System.getenv("VANDOR_READER_SCREEN_CHECK")))return;
             event.register(net.minecraft.core.registries.Registries.BLOCK,helper->{
                 card=new Reader(false);chip=new Reader(true);
                 helper.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","reader_geometry_fixture_card"),card);
@@ -32,17 +34,18 @@ public final class StandaloneReaderGeometryChecks {
             });
             event.register(net.minecraft.core.registries.Registries.BLOCK_ENTITY_TYPE,helper->{TYPE=net.minecraft.world.level.block.entity.BlockEntityType.Builder.of((pos,state)->new com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity(TYPE,pos,state,((Reader)state.getBlock()).chip()),card,chip).build(null);helper.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","reader_geometry_fixture"),TYPE);});
             event.register(net.minecraft.core.registries.Registries.ITEM,helper->{helper.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","reader_geometry_fixture_card"),new net.minecraft.world.item.BlockItem(card,new net.minecraft.world.item.Item.Properties()));helper.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","reader_geometry_fixture_chip"),new net.minecraft.world.item.BlockItem(chip,new net.minecraft.world.item.Item.Properties()));});
+            event.register(net.minecraft.core.registries.Registries.MENU,helper->{MENU=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,buffer)->new com.vandorlabs.neoforge.credentials.NativeCredentialReaderMenu(MENU,window,inventory,buffer.readBlockPos()));helper.register(net.minecraft.resources.ResourceLocation.fromNamespaceAndPath("vandorlabs","reader_geometry_fixture"),MENU);});
         }
     }
     private static final class Reader extends com.vandorlabs.neoforge.credentials.NativeCredentialReaderBlock {
-        Reader(boolean chip){super(Properties.of(),chip,()->TYPE);}
+        Reader(boolean chip){super(Properties.of(),chip,()->TYPE,()->MENU);}
     }
     private static AABB box(JsonArray a){return new AABB(a.get(0).getAsDouble(),a.get(1).getAsDouble(),a.get(2).getAsDouble(),a.get(3).getAsDouble(),a.get(4).getAsDouble(),a.get(5).getAsDouble());}
     private static void near(AABB actual,AABB expected,String label){double[] a={actual.minX,actual.minY,actual.minZ,actual.maxX,actual.maxY,actual.maxZ},b={expected.minX,expected.minY,expected.minZ,expected.maxX,expected.maxY,expected.maxZ};for(int i=0;i<6;i++)if(Math.abs(a[i]-b[i])>1e-12)throw new AssertionError(label+" axis="+i+" actual="+actual+" expected="+expected);}
     @SubscribeEvent public static void started(ServerStartedEvent event)throws Exception {
         if(System.getProperty("vandorlabs.transmitterPhase","").startsWith("standalone-reader-host-")){
-            if(System.getProperty("vandorlabs.transmitterPhase").endsWith("read")){var level=event.getServer().overworld();for(int kind=0;kind<2;kind++){var pos=new net.minecraft.core.BlockPos(5150+kind*3,90,5150);level.getChunkAt(pos);level.getBlockEntity(pos);}readPending=true;return;}
-            StandaloneReaderHostChecks.run(event.getServer().overworld(),card,chip,false);event.getServer().halt(false);return;
+            if(System.getProperty("vandorlabs.transmitterPhase").endsWith("read")){var level=event.getServer().overworld();for(int kind=0;kind<2;kind++){var pos=new net.minecraft.core.BlockPos(5150+kind*3,90,5150);level.setChunkForced(pos.getX()>>4,pos.getZ()>>4,true);level.getChunkAt(pos);level.getBlockEntity(pos);}readPending=true;return;}
+            StandaloneReaderEditorChecks.run(event.getServer().overworld(),card,MENU);StandaloneReaderHostChecks.run(event.getServer().overworld(),card,chip,false);event.getServer().halt(false);return;
         }
         if(!System.getProperty("vandorlabs.transmitterPhase","").equals("standalone-reader-geometry"))return;
         JsonObject root;try(var input=Files.newBufferedReader(Path.of(System.getProperty("vandorlabs.standaloneReaderReference")))){root=JsonParser.parseReader(input).getAsJsonObject();}
@@ -66,5 +69,6 @@ public final class StandaloneReaderGeometryChecks {
         }
         System.out.println("[vandorlabs][standalone-reader-geometry] dedicated PASS actualSourceCases="+cases);event.getServer().halt(false);
     }
-    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(readPending&&++readTicks>=3){readPending=false;StandaloneReaderHostChecks.run(event.getServer().overworld(),card,chip,true);event.getServer().halt(false);}}
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(!readPending)return;var level=event.getServer().overworld();if(++readTicks>400)throw new AssertionError("Reader restart deferred registration timeout");for(int kind=0;kind<2;kind++){var pos=new net.minecraft.core.BlockPos(5150+kind*3,90,5150);if(!level.areEntitiesLoaded(net.minecraft.world.level.ChunkPos.asLong(pos))||com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,pos,27)!=15)return;}readPending=false;StandaloneReaderHostChecks.run(level,card,chip,true);event.getServer().halt(false);}
+    @SubscribeEvent public static void joined(net.neoforged.neoforge.event.entity.EntityJoinLevelEvent event){StandaloneReaderHostChecks.joined(event);}
 }

@@ -25,7 +25,9 @@ import net.minecraft.world.phys.shapes.*;
 public class NativeCredentialReaderBlock extends DirectionalBlock implements EntityBlock,NativeMountedControl,NativeMountedControlGeometry.Profile {
     private final boolean chip;
     private final Supplier<? extends BlockEntityType<?>> entities;
-    public NativeCredentialReaderBlock(Properties properties,boolean chip,Supplier<? extends BlockEntityType<?>> entities){super(properties.noOcclusion().dynamicShape());this.chip=chip;this.entities=java.util.Objects.requireNonNull(entities);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(NativeMountedSwitchBlock.ON,false).setValue(NativeMountedSwitchBlock.ROTATION,0));}
+    private final Supplier<net.minecraft.world.inventory.MenuType<NativeCredentialReaderMenu>> menus;
+    public NativeCredentialReaderBlock(Properties properties,boolean chip,Supplier<? extends BlockEntityType<?>> entities){this(properties,chip,entities,()->null);}
+    public NativeCredentialReaderBlock(Properties properties,boolean chip,Supplier<? extends BlockEntityType<?>> entities,Supplier<net.minecraft.world.inventory.MenuType<NativeCredentialReaderMenu>> menus){super(properties.noOcclusion().dynamicShape());this.chip=chip;this.entities=java.util.Objects.requireNonNull(entities);this.menus=java.util.Objects.requireNonNull(menus);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(NativeMountedSwitchBlock.ON,false).setValue(NativeMountedSwitchBlock.ROTATION,0));}
     @Override protected MapCodec<? extends DirectionalBlock> codec(){return MapCodec.unit(this);}
     public boolean chip(){return chip;}
     public String mountedFamily(){return chip?"data_chip_slot":"access_card_slot";}
@@ -47,7 +49,7 @@ public class NativeCredentialReaderBlock extends DirectionalBlock implements Ent
     @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())&&!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeCredentialReaderEntity owner){var recovery=owner.recoveryForRemoval(asItem());if(!recovery.isEmpty())Block.popResource(level,pos,recovery);var token=owner.takeForDrop();if(!token.isEmpty())Block.popResource(level,pos,token);}super.onRemove(state,level,pos,next,moving);}
     @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block neighbor,BlockPos from,boolean moving){if(level instanceof ServerLevel server&&level.hasChunkAt(pos.relative(supportDirection(state)))&&!state.canSurvive(level,pos))dropUnsupported(state,server,pos);}
     /** Both Configurizer and ordinary sneaking route through this dedicated family hook. */
-    public boolean openConfiguration(Player player,Level level,BlockPos pos){return false;}
+    public boolean openConfiguration(Player player,Level level,BlockPos pos){return NativeCredentialReaderConfiguration.open(player,level,pos,menus.get());}
     private boolean activate(Level level,BlockPos pos,Player player,InteractionHand hand){
         if(!(level.getBlockEntity(pos) instanceof NativeCredentialReaderEntity owner)||!NativeConfigurationAccess.canEditDialog(player,owner))return false;
         var held=player.getItemInHand(hand);if(player.isShiftKeyDown()||held.is(VandorLabsBootstrap.CONFIGURIZER.get()))return openConfiguration(player,level,pos);
