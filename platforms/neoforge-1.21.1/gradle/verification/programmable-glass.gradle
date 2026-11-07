@@ -41,3 +41,10 @@ tasks.register('testNativeGlassLight', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.glass.GlassLightChecks'
     args file('../../build/test-artifacts/flat-glass-light-forge.jsonl').absolutePath
 }
+
+tasks.register('testNativeGlassEditorWire', JavaExec) {
+    group = 'verification'
+    dependsOn tasks.named('smokeClasses')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.glass.GlassEditorWireChecks'
+}
