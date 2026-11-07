@@ -1,0 +1,7 @@
+tasks.register('testCanopyIconReference',JavaExec) {
+ dependsOn tasks.named('compileSmokeJava')
+ classpath=sourceSets.smoke.runtimeClasspath
+ mainClass='com.vandorlabs.neoforge.canopy.CanopyIconReferenceChecks'
+ args rootProject.file('../../testclient/fixtures/canopy-item-source.json.gz').absolutePath
+ maxHeapSize='768m'
+}

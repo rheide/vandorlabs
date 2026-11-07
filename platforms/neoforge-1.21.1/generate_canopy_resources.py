@@ -15,6 +15,10 @@ def main():
     if len(models)!=39 or len(names)!=7:raise ValueError('Released canopy model/artwork coverage changed')
     (OUT/'data').mkdir(parents=True)
     shutil.copyfile(source,OUT/'data/canopy_meshes.json')
+    kinds=('angled_front_1x1','angled_front_1x2','canopy','long_canopy','regular_canopy_glass','front_canopy_glass','large_front_canopy_glass','space_visor_2x1','space_visor_3x1','space_visor_5x1','space_visor_5x1_double_height')
+    for kind in kinds:
+        item=OUT/'models/item'/f'{kind}.json';item.parent.mkdir(parents=True,exist_ok=True)
+        item.write_text(json.dumps({'parent':'minecraft:block/block','textures':{'particle':'vandorlabs:canopy/canopy_canopy_steel'}},separators=(',',':'))+'\n')
     textures=[]
     for name in names:
         original=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/canopy'/f'{name}.png'

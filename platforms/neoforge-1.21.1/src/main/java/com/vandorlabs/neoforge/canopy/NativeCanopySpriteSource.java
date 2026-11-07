@@ -21,7 +21,7 @@ public final class NativeCanopySpriteSource implements SpriteSource {
     public static final MapCodec<NativeCanopySpriteSource> CODEC=MapCodec.unit(NativeCanopySpriteSource::new);
     public static final SpriteSourceType TYPE=new SpriteSourceType(CODEC);
     @SubscribeEvent public static void register(RegisterSpriteSourceTypesEvent event){event.register(ResourceLocation.parse("vandorlabs:canopy_sprites"),TYPE);}
-    public static boolean active(){return "true".equals(System.getenv("VANDOR_CANOPY_RENDER_CHECK"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse("vandorlabs:canopy"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse("vandorlabs:regular_canopy_glass"));}
+    public static boolean active(){return Boolean.getBoolean("vandorlabs.canopyItemCheck")||Boolean.getBoolean("vandorlabs.canopyWorldCheck")||"true".equals(System.getenv("VANDOR_CANOPY_RENDER_CHECK"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse("vandorlabs:canopy"))||BuiltInRegistries.BLOCK.containsKey(ResourceLocation.parse("vandorlabs:regular_canopy_glass"));}
     @Override public SpriteSourceType type(){return TYPE;}
     @Override public void run(ResourceManager manager,Output output){
         if(!active())return;

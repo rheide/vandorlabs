@@ -1,0 +1,8 @@
+task exportCanopyIconReference(type: JavaExec) {
+ group='verification'
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.CanopyIconLegacyOracle'
+ args file("$buildDir/test-artifacts/canopy-item-source.json").absolutePath
+ maxHeapSize='768m'
+}

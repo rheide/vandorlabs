@@ -33,7 +33,7 @@ public final class CanopyEmission {
     private CanopyEmission(){}
     public static float opacity(CanopyFace face,int material,int tint){return face.glazing&&face.baseMaterial.equals("panel")?GlassRenderPolicy.opacity(material,tint):1F;}
     public static boolean translucent(CanopyFace face,int material,int tint){return face.baseMaterial.equals("glass")&&!GlassRenderPolicy.opaque(tint)||opacity(face,material,tint)<1F;}
-    private static int direction(float x,float y,float z){int best=2;float distance=Float.MIN_VALUE;for(int i=0;i<6;i++){float value=x*X[i]+y*Y[i]+z*Z[i];if(value>distance){distance=value;best=i;}}return best;}
+    static int direction(float x,float y,float z){int best=2;float distance=Float.MIN_VALUE;for(int i=0;i<6;i++){float value=x*X[i]+y*Y[i]+z*Z[i];if(value>distance){distance=value;best=i;}}return best;}
     public static void emit(Prepared draw,Sprite sprite,boolean chunk,Sink sink) {
         int n=draw.source.points();
         if(n==4){quad(draw,sprite,chunk,sink,0,1,2,3,1);if(draw.source.doubleSided)quad(draw,sprite,chunk,sink,3,2,1,0,-1);return;}
