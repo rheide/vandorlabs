@@ -25,3 +25,10 @@ task testSegmentedCellArtwork(type: JavaExec) {
  classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
  main = 'com.vandorlabs.client.SegmentedCellArtworkChecks'
 }
+task exportSegmentedGateModelReference(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.SegmentedGateModelLegacyChecks'
+ maxHeapSize = '1g'
+ systemProperty 'vandorlabs.segmentedGateReference',file(project.findProperty('segmentedGateReference') ?: 'build/test-artifacts/segmented-gate-forge.jsonl').absolutePath
+}
