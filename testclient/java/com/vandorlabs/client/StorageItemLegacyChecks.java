@@ -1,0 +1,30 @@
+package com.vandorlabs.client;
+
+import com.google.gson.*;
+import java.nio.file.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.*;
+
+/** Actual Source item envelopes and runtime data version, independent of the native DFU adapter. */
+public final class StorageItemLegacyChecks {
+ private static final String[][] CASES={
+  {"plain","{id:\"minecraft:iron_ingot\",Count:64b,Damage:0s}"},
+  {"metadata-name","{id:\"minecraft:stone\",Count:7b,Damage:1s,tag:{display:{Name:\"Legacy granite\"}}}"},
+  {"durability-enchantment","{id:\"minecraft:iron_pickaxe\",Count:1b,Damage:41s,tag:{ench:[{id:32s,lvl:3s}]}}"},
+  {"named-sword","{id:\"minecraft:diamond_sword\",Count:1b,Damage:13s,tag:{display:{Name:\"Legacy blade\",Lore:[\"First line\",\"Second line\"]},ench:[{id:16s,lvl:5s}]}}"},
+  {"written-book","{id:\"minecraft:written_book\",Count:1b,Damage:0s,tag:{title:\"Storage notes\",author:\"Archivist\",pages:[\"{\\\"text\\\":\\\"Preserved page\\\"}\"]}}"},
+  {"container","{id:\"minecraft:chest\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:chest\",Items:[{Slot:0b,id:\"minecraft:iron_ingot\",Count:9b,Damage:0s}]}}}"},
+  {"shulker-container","{id:\"minecraft:purple_shulker_box\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:shulker_box\",Items:[{Slot:26b,id:\"minecraft:diamond\",Count:3b,Damage:0s}]}}}"},
+  {"credential","{id:\"vandorlabs:data_chip\",Count:1b,Damage:2s,tag:{JournalTitle:\"Stored journal\",JournalPages:[\"Stored page\"]},ForgeCaps:{\"foreign:chip\":{Marker:5}}}"},
+  {"nested-credential","{id:\"minecraft:chest\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:chest\",Items:[{Slot:0b,id:\"vandorlabs:data_chip\",Count:1b,Damage:2s,tag:{JournalTitle:\"Nested journal\",JournalPages:[\"Nested page\"]},ForgeCaps:{\"foreign:chip\":{Marker:6}}}]}}}"},
+  {"unknown-old-vanilla-id","{id:\"minecraft:netherite_ingot\",Count:1b,Damage:0s}"},
+  {"unknown-item","{id:\"missing:owned\",Count:1b,Damage:0s}"},
+  {"item-capabilities","{id:\"minecraft:iron_ingot\",Count:1b,Damage:0s,ForgeCaps:{\"foreign:owned\":{Marker:7}}}"},
+  {"nested-unknown-item","{id:\"minecraft:chest\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:chest\",Items:[{Slot:0b,id:\"missing:owned\",Count:1b}]}}}"},
+  {"nested-item-capabilities","{id:\"minecraft:chest\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:chest\",Items:[{Slot:0b,id:\"minecraft:diamond\",Count:1b,ForgeCaps:{\"foreign:owned\":{Marker:9}}}]}}}"},
+  {"nested-block-capabilities","{id:\"minecraft:chest\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:chest\",ForgeCaps:{\"foreign:block\":{Marker:11}},Items:[]}}}"},
+  {"unknown-nested-ownership","{id:\"minecraft:chest\",Count:1b,Damage:0s,tag:{BlockEntityTag:{id:\"minecraft:chest\",UnknownInventory:{Items:[{Slot:0b,id:\"minecraft:diamond\",Count:4b}]}}}}"}
+ };
+ private static JsonObject observe(String label,NBTTagCompound raw){ItemStack stack=new ItemStack(raw.copy());JsonObject row=new JsonObject();row.addProperty("label",label);row.addProperty("raw",raw.toString());row.addProperty("saved",stack.writeToNBT(new NBTTagCompound()).toString());row.addProperty("count",stack.getCount());row.addProperty("damage",stack.getMetadata());row.addProperty("empty",stack.isEmpty());row.addProperty("name",stack.getDisplayName());return row;}
+ public static void main(String[] args)throws Exception{net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.register(com.vandorlabs.items.ModItems.DATA_CHIP);net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.register(com.vandorlabs.items.ModItems.ACCESS_CARD);NBTTagCompound versionTag=new NBTTagCompound();((net.minecraftforge.common.util.CompoundDataFixer)net.minecraft.util.datafix.DataFixesManager.createFixer()).writeVersionData(versionTag);int version=versionTag.getCompoundTag("ForgeDataVersion").getInteger("minecraft");if(version!=1343)throw new AssertionError("Source runtime data version "+version);JsonObject root=new JsonObject();root.addProperty("schema",1);root.addProperty("sourceDataVersion",version);JsonArray rows=new JsonArray();for(String[] value:CASES)rows.add(observe(value[0],JsonToNBT.getTagFromJson(value[1])));NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);net.minecraft.util.math.BlockPos pos=new net.minecraft.util.math.BlockPos(0,80,0);net.minecraft.block.Block shulker=net.minecraft.init.Blocks.PURPLE_SHULKER_BOX;world.setBlockState(pos,shulker.getDefaultState(),18);((net.minecraft.tileentity.TileEntityShulkerBox)world.getTileEntity(pos)).setInventorySlotContents(26,new ItemStack(net.minecraft.init.Items.DIAMOND,3));shulker.breakBlock(world,pos,shulker.getDefaultState());if(world.loadedEntityList.size()!=1)throw new AssertionError("Actual Source shulker drop");ItemStack dropped=((net.minecraft.entity.item.EntityItem)world.loadedEntityList.get(0)).getItem();rows.add(observe("actual-shulker-drop",dropped.writeToNBT(new NBTTagCompound())));root.add("cases",rows);java.util.TreeSet<String> vanilla=new java.util.TreeSet<>();for(net.minecraft.util.ResourceLocation id:net.minecraft.item.Item.REGISTRY.getKeys())if(id.getResourceDomain().equals("minecraft"))vanilla.add(id.toString());JsonArray ids=new JsonArray();for(String id:vanilla)ids.add(id);root.add("vanillaItems",ids);byte[] bytes=root.toString().getBytes("UTF-8");Path output=Paths.get("build/test-artifacts/storage-items-source-reference.json");Files.createDirectories(output.getParent());Files.write(output,bytes);StringBuilder hash=new StringBuilder();for(byte value:java.security.MessageDigest.getInstance("SHA-256").digest(bytes))hash.append(String.format("%02x",value&255));if(bytes.length>64*1024||!hash.toString().equals("99fb19ded8f6e18754d0acb2af238e0326db6d136ff596a310bbcec7b8c5548d"))throw new AssertionError("Storage Source item reference changed "+hash);System.out.println("Actual Storage Source items PASS cases="+rows.size()+" dataVersion="+version+" bytes="+bytes.length+" sha256="+hash);}
+}
