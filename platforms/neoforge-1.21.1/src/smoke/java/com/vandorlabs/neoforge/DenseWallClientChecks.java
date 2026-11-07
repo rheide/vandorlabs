@@ -9,7 +9,8 @@ import java.util.*;
 /** Actual per-owner BER preparation cost; uses the production atlas bake; reflection reads retained-byte counters only. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class DenseWallClientChecks {
- private static int stage,ticks,settle;
+ private static int stage,ticks,settle;private static NativeFlatWallModel.Bake previous;
+ static boolean shared(){return "true".equals(System.getenv("VANDOR_DENSE_WALL_SHARED_CHECK"));}
  @SubscribeEvent public static void tick(net.neoforged.neoforge.client.event.ClientTickEvent.Post event)throws Exception{
   if(!DenseWallFixture.enabled()||stage==99)return;var mc=net.minecraft.client.Minecraft.getInstance();
   if(stage==90&&mc.level==null){System.out.println("[vandorlabs][dense-wall] client PASS actual1536owners/preparation/emission");stage=99;mc.stop();return;}
@@ -18,24 +19,30 @@ public final class DenseWallClientChecks {
   for(int role=0;role<2;role++)for(int i=0;i<512;i++)if(!(mc.level.getBlockEntity(DenseWallFixture.pos(role,i)) instanceof NativeWallEntity))return;
   for(int i=0;i<512;i++)if(!(mc.level.getBlockEntity(DenseWallFixture.pos(2,i)) instanceof com.vandorlabs.neoforge.glass.NativeGlassEntity))return;
   if(++settle<80)return;
-  var bake=NativePanelPlaybackRenderer.currentBake();if(bake==null)return;
+  var bake=NativePanelPlaybackRenderer.currentBake();if(bake==null||mc.getOverlay()!=null||stage==1&&bake==previous)return;
   for(int role=0;role<2;role++)measure(mc,bake,role);measureFlat(mc);
-  mc.disconnect();stage=90;
+  if(shared()){
+   int generation=stage;DenseWallRenderChecks.begin(generation,()->{
+    if(generation==0){previous=bake;stage=1;settle=0;mc.setScreen(null);mc.reloadResourcePacks();}
+    else{previous=null;mc.setScreen(null);mc.disconnect();stage=90;}
+   });stage=20;
+  }else{mc.disconnect();stage=90;}
  }
  private static void measure(net.minecraft.client.Minecraft mc,NativeFlatWallModel.Bake bake,int role)throws Exception{
   NativeWallEntity[] owners=new NativeWallEntity[512];NativeWallEntity.WallAppearance[] views=new NativeWallEntity.WallAppearance[512];
   for(int i=0;i<views.length;i++){owners[i]=(NativeWallEntity)mc.level.getBlockEntity(DenseWallFixture.pos(role,i));views[i]=owners[i].wallAppearance();}
   Set<Object> panes=Collections.newSetFromMap(new IdentityHashMap<>()),bodies=Collections.newSetFromMap(new IdentityHashMap<>());
   for(var view:views){panes.add(bake.paneProjection(view));if(!view.chunkBody())bodies.add(bake.bodyProjection(view));}
-  for(int pass=0;pass<16;pass++)for(var view:views){bake.paneProjection(view);if(!view.chunkBody())bake.bodyProjection(view);}
+  for(int pass=0;pass<64;pass++)for(var view:views){bake.paneProjection(view);if(!view.chunkBody())bake.bodyProjection(view);}
   var bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long thread=Thread.currentThread().threadId(),before=bean.getThreadAllocatedBytes(thread);
   for(int pass=0;pass<4;pass++)for(var view:views){bake.paneProjection(view);if(!view.chunkBody())bake.bodyProjection(view);}
   long bytes=bean.getThreadAllocatedBytes(thread)-before;
   var renderer=new NativePanelPlaybackRenderer();var pose=new com.mojang.blaze3d.vertex.PoseStack();var discard=new Discard();net.minecraft.client.renderer.MultiBufferSource buffers=layer->discard;
-  for(int pass=0;pass<8;pass++)for(int i=0;i<512;i++)renderer.render(owners[i],0,pose,buffers,15728880,0);
+  for(int pass=0;pass<32;pass++)for(int i=0;i<512;i++)renderer.render(owners[i],0,pose,buffers,15728880,0);
   discard.vertices=0;before=bean.getThreadAllocatedBytes(thread);
   for(int i=0;i<512;i++)renderer.render(owners[i],0,pose,buffers,15728880,0);
   long emittedBytes=bean.getThreadAllocatedBytes(thread)-before;
+  if(shared()&&(panes.size()!=1||bodies.size()>1||bytes!=0||emittedBytes!=0))throw new AssertionError("Equivalent canonical projections must share and warm at0B role="+DenseWallFixture.IDS[role]+" projections="+panes.size()+" prep="+bytes+" render="+emittedBytes);
   if(discard.vertices==0)throw new AssertionError("Actual panel emitter empty "+DenseWallFixture.IDS[role]);
   var bodyField=NativeFlatWallModel.Bake.class.getDeclaredField("bodyBytes");bodyField.setAccessible(true);var paneField=NativeFlatWallModel.Bake.class.getDeclaredField("playbackBytes");paneField.setAccessible(true);
   System.out.println("[vandorlabs][dense-wall] role="+DenseWallFixture.IDS[role]+" owners=512 paneProjections="+panes.size()+" bodyLists="+bodies.size()+" bodyBytes="+bodyField.getInt(bake)+" paneBytes="+paneField.getInt(bake)+" warm2048Bytes="+bytes+" emittedVertices="+discard.vertices+" fullRender512Bytes="+emittedBytes);
@@ -44,13 +51,14 @@ public final class DenseWallClientChecks {
   var bake=NativeFlatGlassRenderer.currentBake();if(bake==null)throw new AssertionError("Canonical flat Glass atlas bake");
   var views=new com.vandorlabs.neoforge.glass.NativeFlatGlassVisual[512];Set<Object> draws=Collections.newSetFromMap(new IdentityHashMap<>());
   for(int i=0;i<512;i++){views[i]=((com.vandorlabs.neoforge.glass.NativeGlassEntity)mc.level.getBlockEntity(DenseWallFixture.pos(2,i))).visual();draws.add(bake.draw(views[i]));}
-  for(int pass=0;pass<16;pass++)for(var view:views)bake.draw(view);
+  for(int pass=0;pass<64;pass++)for(var view:views)bake.draw(view);
   var bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();long thread=Thread.currentThread().threadId(),before=bean.getThreadAllocatedBytes(thread);
   for(int pass=0;pass<4;pass++)for(var view:views)bake.draw(view);
   long bytes=bean.getThreadAllocatedBytes(thread)-before;var pose=new com.mojang.blaze3d.vertex.PoseStack();var discard=new Discard();net.minecraft.client.renderer.MultiBufferSource buffers=layer->discard;
-  for(int pass=0;pass<8;pass++)for(var view:views)NativeFlatGlassRenderer.renderAt(bake,view,pose,buffers,15728880,0);
+  for(int pass=0;pass<32;pass++)for(var view:views)NativeFlatGlassRenderer.renderAt(bake,view,pose,buffers,15728880,0);
   discard.vertices=0;before=bean.getThreadAllocatedBytes(thread);for(var view:views)NativeFlatGlassRenderer.renderAt(bake,view,pose,buffers,15728880,0);long emittedBytes=bean.getThreadAllocatedBytes(thread)-before;
   if(discard.vertices==0)throw new AssertionError("Flat Glass actual emitter empty");
+  if(shared()&&(draws.size()!=1||bytes!=0||emittedBytes!=0))throw new AssertionError("Actual flat Glass sharing regressed");
   System.out.println("[vandorlabs][dense-wall] role=programmable_glass owners=512 preparedDraws="+draws.size()+" retainedBytes="+bake.retainedBytes()+" warm2048Bytes="+bytes+" emittedVertices="+discard.vertices+" fullRender512Bytes="+emittedBytes);
  }
  private static final class Discard implements com.mojang.blaze3d.vertex.VertexConsumer {

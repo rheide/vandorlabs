@@ -2,6 +2,8 @@
 
 ## 2.9 (development)
 
+- Reuse native diagonal Glass/Porthole render projections across equivalent owners, removing repeated snapshot-cache allocation while preserving material, clipping and layout changes.
+
 - Share identical Forge diagonal Glass/Porthole meshes after contact trimming and remove allocation from warmed flat Glass frame lookups, with retained-byte limits and atlas retirement.
 
 - Share prepared ordinary Glass geometry between equivalent native tile publications, with allocation-free warmed lookup, bounded retained data and exact rebuilds after eviction or reload.
