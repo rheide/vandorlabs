@@ -30,7 +30,7 @@ public final class NativeMountedSwitchBlock extends DirectionalBlock implements 
     public static final MapCodec<NativeMountedSwitchBlock> CODEC=RecordCodecBuilder.mapCodec(instance->instance.group(propertiesCodec(),Codec.BOOL.fieldOf("momentary").forGetter(NativeMountedSwitchBlock::isMomentary)).apply(instance,NativeMountedSwitchBlock::new));
     private static final ControlMountSettings DEFAULT_MOUNT=ControlMountSettings.of(0,0,0);
     private final boolean momentary;
-    public NativeMountedSwitchBlock(BlockBehaviour.Properties properties,boolean momentary){super(properties);this.momentary=momentary;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ON,false).setValue(ROTATION,0));}
+    public NativeMountedSwitchBlock(BlockBehaviour.Properties properties,boolean momentary){super(properties.forceSolidOn());this.momentary=momentary;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ON,false).setValue(ROTATION,0));}
     public boolean isMomentary(){return momentary;}
     @Override public boolean powered(BlockState state){return state.getValue(ON);}
     @Override public BlockState withPowered(BlockState state,boolean value){return state.setValue(ON,value);}

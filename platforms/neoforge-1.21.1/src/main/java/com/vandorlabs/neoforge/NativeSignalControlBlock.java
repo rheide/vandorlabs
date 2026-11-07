@@ -30,7 +30,7 @@ public final class NativeSignalControlBlock extends DirectionalBlock implements 
     public static final MapCodec<NativeSignalControlBlock> CODEC=RecordCodecBuilder.mapCodec(instance->instance.group(propertiesCodec(),Codec.INT.fieldOf("type").forGetter(NativeSignalControlBlock::controlType),Codec.BOOL.fieldOf("selectable").forGetter(NativeSignalControlBlock::hasSelectableType)).apply(instance,NativeSignalControlBlock::new));
     private static final ControlMountSettings DEFAULT_MOUNT=ControlMountSettings.of(0,0,0);
     private final int type;private final boolean selectable;
-    public NativeSignalControlBlock(BlockBehaviour.Properties properties,int type,boolean selectable){super(properties);if(type<0||type>2||!selectable&&type!=0)throw new IllegalArgumentException("Invalid signal control family");this.type=type;this.selectable=selectable;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ON,false).setValue(ROTATION,0).setValue(LEVEL,0));}
+    public NativeSignalControlBlock(BlockBehaviour.Properties properties,int type,boolean selectable){super(properties.forceSolidOn());if(type<0||type>2||!selectable&&type!=0)throw new IllegalArgumentException("Invalid signal control family");this.type=type;this.selectable=selectable;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ON,false).setValue(ROTATION,0).setValue(LEVEL,0));}
     public int controlType(){return type;}
     public String controlKind(){return !selectable?"wall_slider":switch(type){case 0->"thruster_lever";case 1->"airliner_throttle";default->"fighter_throttle";};}
     public boolean hasSelectableType(){return selectable;}
