@@ -1,0 +1,62 @@
+package com.vandorlabs.neoforge;
+
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.vandorlabs.neoforge.glass.*;
+import com.vandorlabs.neoforge.shape.*;
+import com.vandorlabs.neoforge.client.*;
+import com.vandorlabs.render.*;
+import java.util.*;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Function;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.block.model.BakedQuad;
+import net.minecraft.client.renderer.texture.*;
+import net.minecraft.client.resources.model.*;
+import net.minecraft.core.Direction;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.packs.resources.ResourceManager;
+import net.minecraft.util.RandomSource;
+import net.neoforged.api.distmarker.Dist;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.client.event.ModelEvent;
+import net.neoforged.neoforge.client.model.data.ModelData;
+
+/** Inactive ordinary pane/selected-frame backend; authored default rails stay available to a terrain model. */
+@EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
+public final class NativeFlatGlassRenderer {
+ private static final int BUDGET=8*1024*1024;
+ private record Source(BakedModel model,List<BakedQuad> neutral){}
+  private record Owned(Object key,int bytes,boolean defaults){}
+ private record Pane(List<BakedQuad> quads,ProgrammableModel.MaterialSnapshot source,NativeMaterialPlayback.Material media,boolean opaque,RenderType staticLayer,RenderType liveLayer){}
+ private record Draw(List<BakedQuad> frame,Pane pane,int bytes,boolean glowing){}
+ public static final class Bake {
+  private final Map<String,Source> sources;private NativeFlatWallModel.Bake materials;private final Function<Material,TextureAtlasSprite> textures;private final ResourceManager resources;
+  @SuppressWarnings("unchecked")private final List<BakedQuad>[] defaults=new List[3*3*2*256];private final IdentityHashMap<NativeFlatGlassVisual,Draw> draws=new IdentityHashMap<>();private final ArrayDeque<Owned> order=new ArrayDeque<>();private int bytes;private long builds;
+  Bake(Map<ModelResourceLocation,BakedModel> models,Function<Material,TextureAtlasSprite> textures,NativeFlatWallModel.Bake materials,ResourceManager resources){this.materials=materials;this.textures=textures;this.resources=resources;var sources=new HashMap<String,Source>();for(String id:NativeFlatGlassAssets.models()){var model=Objects.requireNonNull(models.get(ModelResourceLocation.standalone(ResourceLocation.parse(id))),id);List<BakedQuad> neutral=null;if(NativeDoorArtwork.isStatic(model)){if(NativeDoorArtwork.canonicalGeometry(id,resources))neutral=NativeDoorArtwork.quads(id,model);else{var quads=new ArrayList<BakedQuad>();for(Direction side:new Direction[]{null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST})quads.addAll(model.getQuads(null,side,RandomSource.create(42),ModelData.EMPTY,null));neutral=NativeDoorArtwork.content(quads);}}sources.put(id,new Source(model,neutral));}this.sources=Map.copyOf(sources);}
+  private static int cost(List<BakedQuad> values){long cost=96;for(var q:values)cost+=96L+q.getVertices().length*4L;return (int)Math.min(Integer.MAX_VALUE,cost);}
+  private void retain(Object key,int cost,boolean defaults){bytes+=cost;order.addLast(new Owned(key,cost,defaults));while(bytes>BUDGET&&!order.isEmpty()){var old=order.removeFirst();bytes-=old.bytes;if(old.defaults)this.defaults[(Integer)old.key]=null;else draws.remove((NativeFlatGlassVisual)old.key);}}
+  private static BakedQuad rotate(BakedQuad q){int[] data=q.getVertices().clone();int stride=data.length/4;for(int v=0;v<4;v++){int at=v*stride;float x=Float.intBitsToFloat(data[at]),z=Float.intBitsToFloat(data[at+2]);data[at]=Float.floatToRawIntBits(1-z);data[at+2]=Float.floatToRawIntBits(x);int normal=data[at+7],nx=(byte)normal,nz=(byte)(normal>>>16);data[at+7]=(normal&0xff00ff00)|((-nz)&255)|((nx&255)<<16);}Direction face=q.getDirection().getAxis().isHorizontal()?q.getDirection().getClockWise():q.getDirection();return new BakedQuad(data,q.getTintIndex(),face,q.getSprite(),q.isShade(),q.hasAmbientOcclusion());}
+  public synchronized List<BakedQuad> authored(FlatGlassPolicy.Pose pose,int mask){int key=(((pose.size*3+pose.depth)*2+(pose.rotated?1:0))<<8)|mask;var found=defaults[key];if(found!=null)return found;var quads=new ArrayList<BakedQuad>();boolean cache=true;for(var part:NativeFlatGlassAssets.frame(pose,mask)){var source=sources.get(part.model());var selected=source.neutral;if(selected==null){cache=false;var values=new ArrayList<BakedQuad>();for(Direction side:new Direction[]{null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST})values.addAll(source.model.getQuads(null,side,RandomSource.create(42),ModelData.EMPTY,null));selected=NativeDoorArtwork.content(values);}for(var q:selected)quads.add(part.y()==90?rotate(q):q);}found=List.copyOf(quads);builds++;int cost=cost(found)+96;if(cache&&cost<=BUDGET){defaults[key]=found;retain(key,cost,true);}return found;}
+  private ProgrammableModel.MaterialSnapshot surface(int choice){var preview=com.vandorlabs.neoforge.door.NativeDoorAssets.preview(choice);var entry=ModernFinishCatalog.option(choice);if(preview!=entry){var sprite=textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(preview.texture())));float u=preview.u(),v=preview.v();if(sprite.contents() instanceof NativeDoorSpriteSource.Contents c){u=c.usedU();v=c.usedV();}return new ProgrammableModel.MaterialSnapshot(sprite,u,v);}var source=materials.surfaces.get(choice);if(source!=null)return source;var custom=NativeBlockMaterials.material(choice);if(custom!=null)return new ProgrammableModel.MaterialSnapshot(custom.lower(),1,1);return materials.surfaces.getOrDefault(ModernFinishCatalog.storedChoice(choice),materials.surfaces.get(0));}
+  private NativePanelQuads.Material palette(int shade,int tint){String name=com.vandorlabs.tiles.GlassTextures.texture(shade,1,tint).substring("vandorlabs:blocks/programmable_glass/low/".length());return new NativePanelQuads.Material(new ProgrammableModel.MaterialSnapshot(textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse("vandorlabs:glass-palette/"+name))),1,1));}
+  private NativePanelQuads.Material interior(int choice){if(choice<0)return materials.originalMetal;var selected=materials.interiors.get(choice);return selected==null?new NativePanelQuads.Material(surface(choice)):selected;}
+  synchronized Draw draw(NativeFlatGlassVisual visual){var found=draws.get(visual);if(found!=null)return found;var g=visual.settings().glass();var f=visual.settings().frames();var media=g.material<0?null:materials.playback(g.material);var glass=g.material<0?palette(g.shade,g.tint):new NativePanelQuads.Material(media==null?surface(g.material):materials.surfaces.get(0));var rail=f.front<0?materials.originalGlassRail:materials.glassRails.getOrDefault(f.front,new NativePanelQuads.Material(surface(f.front)));var inner=interior(f.interior);var outer=interior(f.exteriorChoice());List<BakedQuad> frame=List.of(),pane;boolean opaque=GlassRenderPolicy.opaque(g.tint);float opacity=GlassRenderPolicy.opacity(g.material,g.tint);double aspect=media==null?glass.surface().usedU()/glass.surface().usedV():media.aspect();
+   if(visual.contact()!=null){var corner=visual.contact().corner();pane=NativePanelQuads.flatGlassCornerPane(visual.contactFacing(),visual.contactNear(),corner,glass,g.material<0?0:g.textureLayout(),visual.layout(),opacity,aspect,g.material>=0);if(g.framed)frame=NativePanelQuads.flatGlassCornerFrame(visual.contactFacing(),visual.contactNear(),corner,glass,rail,inner,outer);}
+   else{pane=g.material<0?NativePanelQuads.flatGlassBuiltin(visual.facing(),visual.pose().depth,glass,opacity):NativePanelQuads.flatGlassReplacement(visual.facing(),visual.pose().depth,glass,g.textureLayout(),visual.layout(),opacity,aspect);if(g.framed&&visual.selectedFrame()){var entry=ModernFinishCatalog.option(f.front);boolean selected=f.front>=0,border=selected&&entry.frame()!=null&&entry.frame().border();double[] widths=selected?NativeTrapdoorFrameBorders.read(resources,entry).fractions():new double[]{1D/16,1D/16,1D/16,1D/16};frame=NativePanelQuads.flatGlassSelectedFrame(visual.facing(),visual.pose().depth,visual.frameMask(),selected,border,widths,selected&&entry.frame()!=null?entry.frame().aspect():1,rail,inner,outer,selected?new NativePanelQuads.Material(surface(f.front)):null);}}
+   var source=glass.surface();var projection=new Pane(pane,source,media,opaque,opaque?Layers.OPAQUE_PANE:Layers.PANE,media==null?null:NativeFlatGlassLayers.media(media.texture(visual.settings().playback().mode()),opaque));int cost=cost(frame)+cost(pane)+256;boolean glow=false;for(int choice:new int[]{f.front,f.interior,f.exteriorChoice()})if(choice>=0){var entry=ModernFinishCatalog.option(choice);glow|=entry.frame()!=null&&entry.frame().light()>0;}found=new Draw(frame,projection,cost,glow);builds++;if(cost<=BUDGET){draws.put(visual,found);retain(visual,cost,false);}return found;
+  }
+  public synchronized long retainedBytes(){return bytes;}public synchronized long builds(){return builds;}public synchronized void clear(){Arrays.fill(defaults,null);draws.clear();order.clear();bytes=0;}
+ }
+ private record Prepared(long generation,Bake bake){}
+ private static final AtomicLong GENERATION=new AtomicLong();private static final com.google.common.cache.Cache<Object,Prepared> PENDING=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(2).build();private static volatile Prepared active;
+ public static Bake prepare(Object bakery,Map<ModelResourceLocation,BakedModel> models,Function<Material,TextureAtlasSprite> textures,NativeFlatWallModel.Bake materials,ResourceManager resources){if(!NativeFlatGlassResources.active())return null;var bake=new Bake(models,textures,materials,resources);PENDING.put(bakery,new Prepared(GENERATION.incrementAndGet(),bake));return bake;}
+ @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST) public static synchronized void completed(ModelEvent.BakingCompleted event){var ready=PENDING.getIfPresent(event.getModelBakery());PENDING.invalidate(event.getModelBakery());if(ready!=null&&(active==null||ready.generation>active.generation)){if(ready.bake.materials==null)ready.bake.materials=NativePanelPlaybackRenderer.currentBake();if(ready.bake.materials!=null)active=ready;}}
+ @SubscribeEvent public static void shaders(net.neoforged.neoforge.client.event.RegisterShadersEvent event)throws java.io.IOException {if(NativeFlatGlassResources.active())NativeFlatGlassLayers.shaders(event);}
+ public static Bake currentBake(){return active==null?null:active.bake;}
+ private static final class Layers {static final RenderType PANE=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,false),OPAQUE_PANE=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,true);}
+ @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST)public static void buffers(net.neoforged.neoforge.client.event.RegisterRenderBuffersEvent event){if(NativeFlatGlassResources.active()){event.registerRenderBuffer(Layers.PANE);NativeFlatGlassLayers.buffers(event);}}
+ public static void renderAt(Bake bake,NativeFlatGlassVisual visual,PoseStack poses,MultiBufferSource buffers,int light,int overlay){var draw=bake.draw(visual);if(!draw.frame.isEmpty())NativePanelPlaybackRenderer.emit(draw.frame,bake.materials.surfaces.get(0),null,PanelPlayback.DEFAULT,0,poses.last(),buffers.getBuffer(visual.contact()==null?NativeFlatGlassLayers.FRAME:NativePanelPlaybackRenderer.frameRenderType()),draw.glowing&&visual.contact()==null?(light&0xffff0000)|240:light,overlay);var pane=draw.pane;var playback=visual.settings().playback();NativePanelPlaybackRenderer.emit(pane.quads,pane.source,pane.media,playback,NativeMaterialPlayback.tick(),poses.last(),buffers.getBuffer(pane.media!=null?pane.liveLayer:pane.staticLayer),draw.glowing&&visual.settings().glass().framed&&visual.settings().glass().material>=0&&pane.opaque?(light&0xffff0000)|240:light,overlay);}
+ @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)public static final class Lifecycle {@SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel().isClientSide()){var bake=currentBake();if(bake!=null)bake.clear();}}}
+ private NativeFlatGlassRenderer(){}
+}
