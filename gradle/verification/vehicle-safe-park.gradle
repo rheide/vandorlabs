@@ -3,3 +3,10 @@ task testSafeParkCandidates(type: Exec) {
     description = 'Check bounded nearest loaded-grid candidate ordering with Java 8 and 21.'
     commandLine 'python3', file('tools/test_safe_park_candidates.py').absolutePath
 }
+task testVehicleSafeParkSearch(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.vehicle.VehicleSafeParkSearchChecks'
+    maxHeapSize = '512m'
+}
