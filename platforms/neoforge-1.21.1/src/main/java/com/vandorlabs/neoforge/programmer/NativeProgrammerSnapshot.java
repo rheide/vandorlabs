@@ -19,7 +19,7 @@ public final class NativeProgrammerSnapshot {
  private NativeProgrammerSnapshot(CompoundTag original,ItemStack[] items,NativeProgrammerDraft draft,int writing,int complete){this.original=original;this.items=items;this.draft=draft;this.writing=writing;this.complete=complete;}
  public static NativeProgrammerSnapshot prepare(CompoundTag raw,HolderLookup.Provider registries){
   var original=raw.copy();NativePlatformComponents.requireSupported(original,registries);
-  if(original.getBoolean("ProgrammerProjection")||original.contains("ProgrammerPlacementRecovery"))throw new IllegalArgumentException("Public/recovery programmer data cannot install physical inventory");
+  if(original.getBoolean("ProgrammerProjection")||original.contains("ProgrammerPlacementRecovery")||original.contains(NativeProgrammerEntity.QUARANTINE))throw new IllegalArgumentException("Public/recovery programmer data cannot install physical inventory");
   if(original.contains("ForgeCaps")&&(!(original.get("ForgeCaps") instanceof CompoundTag caps)||!caps.isEmpty()))throw new IllegalArgumentException("Unsupported legacy programmer capability owner");
   boolean modern=original.contains(VERSION);if(modern&&(!original.contains(VERSION,Tag.TAG_INT)||original.getInt(VERSION)!=1))throw new IllegalArgumentException("Unsupported programmer inventory version");
   var staged=new ItemStack[]{ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY};var seen=new boolean[3];var budget=new NativeInventoryItems.Budget();
