@@ -111,3 +111,11 @@ task exportCanopyApplyReference(type: JavaExec) {
     args file('build/test-artifacts/canopy-apply-forge.jsonl').absolutePath
     maxHeapSize = '1g'
 }
+task exportCanopyMotionReference(type: JavaExec) {
+    group = 'verification'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.CanopyMotionLegacyOracle'
+    args file('build/test-artifacts/canopy-motion-forge.jsonl').absolutePath
+    maxHeapSize = '1g'
+}
