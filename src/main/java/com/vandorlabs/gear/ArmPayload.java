@@ -82,7 +82,13 @@ public final class ArmPayload {
         if(couplerPower==null)couplerPower=new com.vandorlabs.vehicle.VehicleArmCouplerPower(blocks);return couplerPower.powered(originalCell);
     }
     /** Typed captured Coupler edit; untouched cells, opaque data and endpoint correspondence remain retained. */
-    public ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data){
+    public ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data){return withCouplerData(originalCell,data,false);}
+    /** Chosen authenticated ownership receipt only; UI edits cannot change this envelope. */
+    public ArmPayload withCouplerAssociation(BlockPos originalCell,NBTTagCompound data){
+        com.vandorlabs.coupler.CouplerAssociation proof=data==null?null:com.vandorlabs.coupler.CouplerAssociationData.read(data);if(proof==null||!data.hasUniqueId("CouplerControlIdentity")||!proof.head.equals(data.getUniqueId("CouplerControlIdentity")))throw new IllegalArgumentException("Chosen Coupler association proof required");
+        return withCouplerData(originalCell,data,true);
+    }
+    private ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data,boolean association){
         if(materialized||hasOwnershipJournal())throw new IllegalArgumentException("Captured Coupler ownership is unavailable");
         List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);int found=-1;
         for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){found=i;break;}
@@ -91,7 +97,7 @@ public final class ArmPayload {
         if(data==null||!old.getString("id").equals(data.getString("id")))throw new IllegalArgumentException("Captured Coupler tile identity changed");
         String identity="CouplerControlIdentity";if((data.hasKey(identity+"Most")||data.hasKey(identity+"Least"))&&!data.hasUniqueId(identity))throw new IllegalArgumentException("Malformed captured Coupler identity");
         if((old.hasKey(identity+"Most")||old.hasKey(identity+"Least"))&&(!old.hasUniqueId(identity)||!data.hasUniqueId(identity)||!old.getUniqueId(identity).equals(data.getUniqueId(identity))))throw new IllegalArgumentException("Captured Coupler lifetime changed");
-        NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
+        NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:association?new String[]{com.vandorlabs.coupler.CouplerAssociationData.KEY,identity+"Most",identity+"Least"}:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
         next.set(found,new VehicleStructure.Cell(before.pos,before.state,data));
         if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
