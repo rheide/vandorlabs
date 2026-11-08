@@ -141,7 +141,11 @@ public final class VehicleSelectionChecks {
             buffer.clear();sent.type=VehicleNetwork.MODE_SELECT;sent.sequence=2;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
             require(received.valid && received.type==VehicleNetwork.MODE_SELECT && received.sequence==2
                     && received.token.equals(sent.token) && received.entity==sent.entity && received.origin.equals(position),"mode selection boundary and authenticated identity codec");
-            for(int unknownType:new int[]{VehicleNetwork.DESIGN+1,255}){
+            require(VehicleNetwork.SAFE_PARK==18,"Safe Park appends its existing wire index");
+            buffer.clear();sent.type=VehicleNetwork.SAFE_PARK;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
+            require(received.valid&&received.type==VehicleNetwork.SAFE_PARK&&received.token.equals(sent.token)
+                    &&received.entity==sent.entity&&received.origin.equals(position),"Safe Park authenticated identity codec");
+            for(int unknownType:new int[]{VehicleNetwork.SAFE_PARK+1,255}){
                 buffer.clear();sent.type=unknownType;sent.toBytes(buffer);received=new VehicleNetwork.Packet();received.fromBytes(buffer);
                 require(!received.valid,"unknown interaction packet type rejected: "+unknownType);
             }
