@@ -119,3 +119,9 @@ task testGearTileOwnership(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.GearTileOwnershipChecks'
  maxHeapSize = '1g'
 }
+task testArmCouplerRejoined(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmCouplerRejoinedChecks'
+ maxHeapSize = '1g'
+}

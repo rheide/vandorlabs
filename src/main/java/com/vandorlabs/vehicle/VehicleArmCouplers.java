@@ -31,6 +31,7 @@ public final class VehicleArmCouplers {
         public final boolean articulated,requested,locked,released;
         public final com.vandorlabs.coupler.CouplerAssociation association;
         public final double x,y,z,nx,ny,nz;
+        private Head(Head old){address=old.address;carrier=old.carrier;nativeCell=old.nativeCell;legacyCell=old.legacyCell;legacyFacing=old.legacyFacing;legacyHeight=old.legacyHeight;localX=old.localX;localY=old.localY;localZ=old.localZ;articulated=old.articulated;requested=old.requested;locked=old.locked;released=false;association=null;x=old.x;y=old.y;z=old.z;nx=old.nx;ny=old.ny;nz=old.nz;}
         private Head(Address address,BlockPos carrier,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){this(address,carrier,address.cell,state,articulated,requested,transform,address.arm==null?address.cell:null,address.cell,state);}
         private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform,BlockPos nativeCell,BlockPos legacyCell,IBlockState legacyState){this(address,carrier,geometryCell,state,articulated,requested,transform,nativeCell,legacyCell,legacyState,false);}
         private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform,BlockPos nativeCell,BlockPos legacyCell,IBlockState legacyState,boolean released){
@@ -54,6 +55,10 @@ public final class VehicleArmCouplers {
         public Snapshot ownership(java.util.UUID vehicle,java.util.UUID generation){if(vehicle==null||generation==null)throw new IllegalArgumentException("External Coupler ownership receipt required");return new Snapshot(heads,capturedArms,vehicle,generation);}
         public boolean permitsUnpaired(Head head){return head.association!=null&&head.association.permitsUnpaired(head.association.head,vehicle,generation);}
 
+    }
+    /** Geometry-only copy for physical matching; it conveys NO proof authority. */
+    static Snapshot nativeReceiptGeometry(Snapshot source){
+        List<Head> result=new ArrayList<>();for(Head old:source.heads)result.add(new Head(old));return new Snapshot(result,source.capturedArms);
     }
     /** Scalar observations at an authenticated physical ownership boundary; no vehicle scope is inferred. */
     static Snapshot nativeReceiptSnapshot(List<Head> heads,int arms){if(heads.size()>MAX_HEADS)throw new IllegalArgumentException("Native Coupler receipt exceeds head budget");return new Snapshot(heads,arms);}
