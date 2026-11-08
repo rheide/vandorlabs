@@ -639,15 +639,24 @@ public final class ArmPayload {
         if(hasOwnershipJournal()){tag.setInteger("OwnershipDimension",journalDimension);net.minecraft.nbt.NBTTagList list=new net.minecraft.nbt.NBTTagList();for(Map.Entry<Integer,BlockPos> entry:ownershipJournal.entrySet()){NBTTagCompound cell=new NBTTagCompound();cell.setInteger("Cell",entry.getKey());cell.setLong("Pos",entry.getValue().toLong());list.appendTag(cell);}tag.setTag("OwnershipJournal",list);}
         return tag;}
     public static ArmPayload read(NBTTagCompound tag){
+        return read(tag,true);
+    }
+    /** Detached chosen-recipe editing only. This parses the same bounded ownership/mapping
+     * envelope without constructing tile capabilities. It does not admit a live payload:
+     * the completed recipe must still pass the ordinary installed-world preflight. */
+    public static ArmPayload readForCouplerReceipt(NBTTagCompound tag){
+        return read(tag,false);
+    }
+    private static ArmPayload read(NBTTagCompound tag,boolean validateTiles){
         int depth=READ_DEPTH.get();if(depth>=8)throw new IllegalArgumentException("Arm payload nesting exceeds eight snapshots");READ_DEPTH.set(depth+1);
-        try{return readBounded(tag);}finally{READ_DEPTH.set(depth);}
+        try{return readBounded(tag,validateTiles);}finally{READ_DEPTH.set(depth);}
     }
     private static void headerType(NBTTagCompound tag,String key,int type){if(tag.hasKey(key)&&!tag.hasKey(key,type))throw new IllegalArgumentException("Invalid attachment header type: "+key);}
-    private static ArmPayload readBounded(NBTTagCompound tag){
+    private static ArmPayload readBounded(NBTTagCompound tag,boolean validateTiles){
         headerType(tag,"Materialized",1);headerType(tag,"GridAligned",1);headerType(tag,"Offset",4);headerType(tag,"PlacedOffset",4);headerType(tag,"PlacedBlocks",10);headerType(tag,"OwnershipDimension",3);headerType(tag,"OwnershipJournal",9);
         if(tag.hasKey("OwnershipJournal",9)){net.minecraft.nbt.NBTTagList entries=(net.minecraft.nbt.NBTTagList)tag.getTag("OwnershipJournal");if(entries.tagCount()>0&&entries.getTagType()!=10)throw new IllegalArgumentException("Invalid attachment journal entry type");}
         VehicleStructure structure=VehicleStructure.readDisplay(tag.getCompoundTag("Blocks"));if(structure.cells.isEmpty()||structure.cells.size()>MAX_BLOCKS)throw new IllegalArgumentException("Oversized arm payload");
-        for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&TileEntity.create(null,cell.tileData())==null)throw new IllegalArgumentException("Attachment tile cannot be loaded; original snapshot retained");
+        if(validateTiles)for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&TileEntity.create(null,cell.tileData())==null)throw new IllegalArgumentException("Attachment tile cannot be loaded; original snapshot retained");
         BlockPos offset=BlockPos.fromLong(tag.getLong("Offset")),placed=BlockPos.fromLong(tag.getLong("PlacedOffset"));
         for(BlockPos p:new BlockPos[]{offset,placed})if(Math.abs((long)p.getX())>80||Math.abs((long)p.getY())>80||Math.abs((long)p.getZ())>80)throw new IllegalArgumentException("Arm payload is too far from its controller");
         ArmPayload payload=new ArmPayload(structure,offset,tag.getBoolean("Materialized"),placed);

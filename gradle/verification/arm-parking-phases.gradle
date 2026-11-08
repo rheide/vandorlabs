@@ -71,6 +71,12 @@ task testArmCouplerAssociationBatch(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmCouplerAssociationBatchChecks'
  maxHeapSize = '1g'
 }
+task testArmCouplerReceiptRead(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmCouplerReceiptReadChecks'
+ maxHeapSize = '1g'
+}
 task testArmCouplerClaimEntities(type: JavaExec) {
  dependsOn compileNonRenderingChecks
  classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
