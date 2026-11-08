@@ -19,7 +19,8 @@ public final class VehicleClient {
     private static final Map<UUID,Incoming> completed=new HashMap<>();
     private static final Map<UUID,ArrayDeque<VehicleNetwork.Packet>> deferred=new HashMap<>();
     private static UUID latestPreview;
-    static boolean snapshotPending(UUID id){Incoming receiving=incoming.get(id),reading=completed.get(id);return receiving!=null&&receiving.header.type==VehicleNetwork.SNAPSHOT||reading!=null&&reading.header.type==VehicleNetwork.SNAPSHOT;}
+    private static boolean activeSnapshot(Incoming entry,long now){return entry!=null&&entry.header.type==VehicleNetwork.SNAPSHOT&&now-entry.created<=10000;}
+    public static boolean snapshotPending(UUID id){Incoming receiving=incoming.get(id),reading=completed.get(id);if(receiving==null&&reading==null)return false;long now=System.currentTimeMillis();return activeSnapshot(receiving,now)||activeSnapshot(reading,now);}
     private static Preview preview;
     private static int sequence,ticks,lastJump=-100;
     private static boolean jumpDown;
