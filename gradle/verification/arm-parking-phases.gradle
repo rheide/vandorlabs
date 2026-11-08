@@ -46,3 +46,10 @@ task testArmEndpointCapture(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmEndpointCaptureChecks'
  maxHeapSize = '1g'
 }
+
+task testCouplerAssociation(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.coupler.CouplerAssociationChecks'
+ maxHeapSize = '1g'
+}
