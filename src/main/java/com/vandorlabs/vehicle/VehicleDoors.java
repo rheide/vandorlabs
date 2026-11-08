@@ -76,7 +76,7 @@ public final class VehicleDoors {
         craft.signals.persist();java.nio.ByteBuffer patch=java.nio.ByteBuffer.allocate(desired.size()*9);
         for(Map.Entry<BlockPos,Boolean> entry:desired.entrySet()){patch.putLong(entry.getKey().toLong());patch.put((byte)(entry.getValue()?1:0));}
         if(!apply(craft,patch.array()))return false;
-        VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.DOORS);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.data=patch.array();
+        VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.DOORS);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.associationGeneration=craft.couplerAssociationGeneration();packet.data=patch.array();
         com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(packet,craft);
         if(craft.getControllingPassenger() instanceof net.minecraft.entity.player.EntityPlayerMP)
             com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)craft.getControllingPassenger());

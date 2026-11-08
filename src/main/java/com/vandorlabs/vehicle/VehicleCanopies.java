@@ -51,7 +51,7 @@ public final class VehicleCanopies {
     }
     private static void send(EntityGroundVehicle craft,TileEntityCanopy tile){
         VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.CANOPIES);
-        packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();
+        packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.associationGeneration=craft.couplerAssociationGeneration();
         packet.data=ByteBuffer.allocate(13).putLong(tile.getPos().toLong())
                 .put((byte)(tile.targetOpen?1:0)).putFloat(tile.progress).array();
         com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(packet,craft);

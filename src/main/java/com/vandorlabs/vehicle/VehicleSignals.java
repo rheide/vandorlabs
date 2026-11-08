@@ -258,7 +258,7 @@ public final class VehicleSignals {
             saved.put(pos,data);
             try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(data,bytes);
                 if(bytes.size()>VehicleNetwork.FRAGMENT){fullSnapshot=true;continue;}
-                VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.TILE);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.origin=pos;packet.data=bytes.toByteArray();packet.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(pos));
+                VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.TILE);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.associationGeneration=craft.couplerAssociationGeneration();packet.origin=pos;packet.data=bytes.toByteArray();packet.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(pos));
                 com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(packet,craft);
                 if(craft.getControllingPassenger() instanceof net.minecraft.entity.player.EntityPlayerMP)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)craft.getControllingPassenger());
             }catch(IOException error){throw new IllegalStateException("Cannot synchronize vehicle control",error);}
