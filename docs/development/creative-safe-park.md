@@ -24,4 +24,3 @@ Run only this focused case with `VANDOR_LABS_ARM_RECOVERY_CASES=safe-park-arm-pa
 
 Fixture metadata uses file fsync, atomic replacement and `JournalFiles` directory sync, preserving the Windows directory-channel distinction without suppressing Linux I/O errors.
 
-The current cold evidence establishes original pre-motion state and single ownership across two restarts. Continued motion to the retained endpoint with a durably saved external channel baseline, followed by exact stable-state replay, remains a separate pending acceptance check.
