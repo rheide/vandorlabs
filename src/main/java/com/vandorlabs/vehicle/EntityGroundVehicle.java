@@ -222,6 +222,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     /** A newer scope may precede its source on the client; freeze old-source consumers meanwhile. */
     public boolean couplerScopeReady(){return view!=null&&VehicleWorld.CouplerScope.same(currentCouplerScope(),view.couplerScope());}
 
+    public boolean acceptsCouplerUpdate(java.util.UUID generation){return couplerScopeReady()&&java.util.Objects.equals(generation,couplerAssociationGeneration);}
+
     static final class CouplerScopeSnapshot {
         private final EntityGroundVehicle owner;private final java.util.UUID generation;private final NBTTagCompound retained;
         private CouplerScopeSnapshot(EntityGroundVehicle owner){this.owner=owner;generation=owner.couplerAssociationGeneration;retained=owner.retainedCouplerAssociation==null?null:owner.retainedCouplerAssociation.copy();}

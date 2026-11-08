@@ -38,7 +38,9 @@ public final class VehicleNetwork {
             b.writeByte(type);b.writeInt(entity);b.writeLong(token.getMostSignificantBits());b.writeLong(token.getLeastSignificantBits());b.writeInt(sequence);
             if(type==STATE){b.writeBoolean(flag);writeState(b);return;}
             b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);if((type==SNAPSHOT||type==PREVIEW)&&associationGeneration!=null){if(associationOwner==null||zero(associationOwner)||zero(associationGeneration)||type==SNAPSHOT&&!associationOwner.equals(token))throw new IllegalArgumentException("Invalid snapshot ownership scope");b.writeInt(SNAPSHOT_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(serverTick);b.writeLong(associationOwner.getMostSignificantBits());b.writeLong(associationOwner.getLeastSignificantBits());b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}
+            if(scopedUpdate(type)&&associationGeneration!=null){if(zero(associationGeneration))throw new IllegalArgumentException("Empty update Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}
         }
+        private static boolean scopedUpdate(int type){return type==TILE||type==CANOPIES||type==DOORS;}
         private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);if(associationGeneration!=null){if(associationGeneration.getMostSignificantBits()==0&&associationGeneration.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}}
         public void fromBytes(ByteBuf b){
             valid=false;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;
@@ -61,9 +63,14 @@ public final class VehicleNetwork {
                 int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())return;
                 data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);
                 if(b.isReadable()){
-                    if((type!=SNAPSHOT&&type!=PREVIEW)||b.readableBytes()!=SNAPSHOT_SCOPE_BYTES||b.readInt()!=SNAPSHOT_SCOPE_MAGIC||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;
-                    serverTick=b.readLong();associationOwner=new UUID(b.readLong(),b.readLong());associationGeneration=new UUID(b.readLong(),b.readLong());
-                    if(zero(associationOwner)||zero(associationGeneration)||type==SNAPSHOT&&!associationOwner.equals(token))return;
+                    if(scopedUpdate(type)){
+                        if(b.readableBytes()!=COUPLER_SCOPE_BYTES||b.readInt()!=COUPLER_SCOPE_MAGIC||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;
+                        associationGeneration=new UUID(b.readLong(),b.readLong());if(zero(associationGeneration))return;
+                    }else{
+                        if((type!=SNAPSHOT&&type!=PREVIEW)||b.readableBytes()!=SNAPSHOT_SCOPE_BYTES||b.readInt()!=SNAPSHOT_SCOPE_MAGIC||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;
+                        serverTick=b.readLong();associationOwner=new UUID(b.readLong(),b.readLong());associationGeneration=new UUID(b.readLong(),b.readLong());
+                        if(zero(associationOwner)||zero(associationGeneration)||type==SNAPSHOT&&!associationOwner.equals(token))return;
+                    }
                 }
                 valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=SAFE_PARK;
             }catch(Exception malformed){valid=false;}

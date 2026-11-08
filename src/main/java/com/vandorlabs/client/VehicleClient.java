@@ -71,6 +71,10 @@ public final class VehicleClient {
     public static void receive(VehicleNetwork.Packet p) {
         Minecraft mc=Minecraft.getMinecraft();mc.addScheduledTask(()->{
             if(p.type==VehicleNetwork.INSPECTION)latestPreview=null;
+            if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS)){
+                Entity raw=mc.world.getEntityByID(p.entity);
+                if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&((EntityGroundVehicle)raw).couplerScopeReady()&&!((EntityGroundVehicle)raw).acceptsCouplerUpdate(p.associationGeneration))return;
+            }
             if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS||p.type==VehicleNetwork.STATE)){
                 Entity raw=mc.world.getEntityByID(p.entity);
                 if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&(((EntityGroundVehicle)raw).structure==null||!((EntityGroundVehicle)raw).couplerScopeReady()||snapshotPending(p.token))){
