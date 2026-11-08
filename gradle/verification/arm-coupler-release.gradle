@@ -4,3 +4,10 @@ task testArmCouplerReleasePatch(type: JavaExec) {
  main='com.vandorlabs.vehicle.ArmCouplerReleasePatchChecks'
  maxHeapSize='512m'
 }
+
+task testCouplingScopeRecord(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.CouplingScopeRecordChecks'
+ maxHeapSize = '1g'
+}
