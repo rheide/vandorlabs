@@ -56,12 +56,15 @@ generations, and must leave the interrupted detached UUID unusable. Across all
 usable scene owners, 48 physical cells, two chests with 18 diamonds and one
 captured arm remain exact once. Both outputs retain their released-head proofs.
 
-Two immutable Stable snapshots are recorded after 50 unchanged world ticks at
-an endpoint or an actual physical refusal. Cache preparation alone cannot pass.
-The accepted scene retained phase 0.375 with target false and the ordinary
-blocked flag set; the proposed next phase was 1/3, with articulation and cache
-readiness both true. The fixture does not force completion through that physical
-obstruction. Read-only cached articulation evidence contains the original joint
+Two immutable Stable snapshots were recorded after 50 unchanged world ticks.
+The accepted recovery scene retained phase 0.375 with target false and the
+ordinary blocked flag set; the proposed next phase was 1/3, with articulation
+and cache readiness both true. Target completion and the precise obstruction
+are not established by that flag alone. The recovery and ownership comparisons
+remain valid independently of that motion diagnostic. A stricter test-only
+prepass now uses the actual Module geometry/sweep/foreign/world callbacks and
+records up to eight rejecting boxes. Its live rerun remains pending; cache
+preparation or a stale blocked flag cannot satisfy that stricter boundary. Read-only cached articulation evidence contains the original joint
 and two body matrices, then zero joints and one body matrix per independent
 output. It never invokes the live entity serializer to collect evidence.
 
