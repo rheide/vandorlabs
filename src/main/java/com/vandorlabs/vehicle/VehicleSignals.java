@@ -286,6 +286,15 @@ public final class VehicleSignals {
         try{NBTTagCompound data=net.minecraft.nbt.CompressedStreamTools.readCompressed(new ByteArrayInputStream(packet.data));
             VehicleStructure.Cell original=craft.structure.at(packet.origin);
             if(original==null||!data.getString("id").equals(original.tileString("id")))return;
+            if(tile instanceof com.vandorlabs.gear.GearTileEntity){
+                // A full source may already contain this delta. Re-reading it would erase a
+                // newer motion packet's tick and replace its immutable configuration token.
+                if(original.state==net.minecraft.block.Block.getStateById(packet.sequence)&&original.sameTileData(data))return;
+                // Native cells and retained payload/sections must change as one source.
+                // This also covers nested Coupler edits: request the current complete recipe
+                // rather than dropping the edit or installing a partial root over old cells.
+                if(!original.sameArmOwnership(data)){VehicleNetwork.request(craft);return;}
+            }
             if(tile instanceof TileEntityLandingGear){
                 TileEntityLandingGear gear=(TileEntityLandingGear)tile;float previous=gear.progress;tile.readFromNBT(data);float authoritative=gear.progress;gear.progress=gear.previous=previous;
                 VehicleLandingGear.correct(craft,packet.origin,authoritative);
