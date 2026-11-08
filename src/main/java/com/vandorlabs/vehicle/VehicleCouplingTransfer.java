@@ -67,11 +67,16 @@ public final class VehicleCouplingTransfer {
                 throw new IllegalArgumentException("Invalid frozen coupling signal");
         }
     }
+    private static VehicleWorld.CouplerScope savedScope(NBTTagCompound tag){
+        UUID generation=EntityGroundVehicle.readCouplerGeneration(tag);if(generation==null)return null;
+        if(!tag.hasUniqueId("UUID"))throw new IllegalArgumentException("Scoped coupling snapshot has no vehicle identity");
+        return VehicleWorld.CouplerScope.external(tag.getUniqueId("UUID"),generation);
+    }
     private static void validateEntity(NBTTagCompound tag,UUID id,WorldServer world){
         if(!tag.hasUniqueId("UUID")||!tag.getUniqueId("UUID").equals(id))throw new IllegalArgumentException("Coupling vehicle UUID mismatch");
         NBTTagList pos=tag.getTagList("Pos",6),rotation=tag.getTagList("Rotation",5);if(pos.tagCount()!=3||rotation.tagCount()!=2)throw new IllegalArgumentException("Invalid coupling entity pose");
         for(int i=0;i<3;i++){double value=pos.getDoubleAt(i);if(!Double.isFinite(value)||Math.abs(value)>30_000_128D||i==1&&(value<0||value>=world.getHeight()))throw new IllegalArgumentException("Coupling entity pose outside world");}for(int i=0;i<2;i++)if(!Float.isFinite(rotation.getFloatAt(i)))throw new IllegalArgumentException("Invalid coupling orientation");
-        VehicleStructure structure=VehicleStructure.read(tag.getCompoundTag("Craft"));try{structure.encode();}catch(IOException invalid){throw new IllegalArgumentException("Coupling vehicle data exceeds save limit",invalid);}
+        EntityGroundVehicle.validateCouplerOwnershipMetadata(tag);VehicleStructure structure=VehicleStructure.read(tag.getCompoundTag("Craft"));structure.requireCouplerScope(savedScope(tag));try{structure.encode();}catch(IOException invalid){throw new IllegalArgumentException("Coupling vehicle data exceeds save limit",invalid);}
     }
     private static boolean quarantined(WorldServer world,UUID id){Set<UUID> ids=QUARANTINE.get(world);return ids!=null&&ids.contains(id);}
     private static void quarantine(WorldServer world,NBTTagCompound record){Set<UUID> ids=QUARANTINE.computeIfAbsent(world,w->new HashSet<>());if(record.hasUniqueId("Vehicle"))ids.add(record.getUniqueId("Vehicle"));for(String name:new String[]{"Before","After","Detached"}){NBTTagCompound entity=record.getCompoundTag(name);if(entity.hasUniqueId("UUID"))ids.add(entity.getUniqueId("UUID"));}}
@@ -129,7 +134,7 @@ public final class VehicleCouplingTransfer {
     private static boolean empty(Hold hold){return CopyWorld.empty(hold.world,hold.fragment,hold.origin);}
     private static Map<Integer,Integer> latchLevels(Hold hold){int[] channels=hold.record.getIntArray("HeldLatchChannels"),values=hold.record.getIntArray("HeldLatchLevels");Map<Integer,Integer> levels=new HashMap<>();for(int i=0;i<channels.length;i++)levels.put(channels[i],values[i]);return levels;}
     private static VehicleStructure latchSnapshot(Hold hold,WorldServer world,VehicleStructure source,Map<Integer,Integer> levels,NBTTagCompound entity){
-        VehicleWorld view=new VehicleWorld(world,source);Set<BlockPos> changed=new HashSet<>();
+        VehicleWorld view=entity==null?new VehicleWorld(world,source):new VehicleWorld(world,source,savedScope(entity));Set<BlockPos> changed=new HashSet<>();
         for(RedstoneChannelMember member:members(view.tiles.values()))if(member instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)member).isChannelLatch()){
             RedstoneChannelLatch latch=(RedstoneChannelLatch)member;Map<Integer,Integer> memberLevels=hold.record.hasKey("SpatialSignals",9)?spatialLevels(hold,source,member,entity):levels;Map<Integer,Integer> next=new HashMap<>();boolean selected=false;for(int channel:member.getRedstoneChannels().toArray()){selected|=memberLevels.containsKey(channel);next.put(channel,memberLevels.getOrDefault(channel,latch.latchedLevel(channel)));}if(!selected)continue;TileEntity owner=member.channelTile();
             if(owner instanceof TileEntityRedstoneChannel){NBTTagCompound data=owner.writeToNBT(new NBTTagCompound());ChannelList channels=member.getRedstoneChannels();int[] saved=new int[channels.size()];List<Integer> on=new ArrayList<>();for(int i=0;i<saved.length;i++){saved[i]=next.getOrDefault(channels.get(i),0);if(saved[i]>0)on.add(channels.get(i));}data.setIntArray("LatchedLevels",saved);data.setIntArray("LatchedChannels",on.stream().mapToInt(Integer::intValue).toArray());data.setBoolean(com.vandorlabs.persistence.SaveSchema.Redstone.LOCAL_ON,!channels.isEmpty()&&on.size()==channels.size());owner.readFromNBT(data);}else latch.applyLinkedLevels(next);changed.add(owner.getPos());
@@ -161,7 +166,7 @@ public final class VehicleCouplingTransfer {
         if(hold.splitting()&&!before){if(hold.detached==null||hold.detached.isDead){hold.detached=new EntityGroundVehicle(hold.world);hold.detached.setUniqueId(hold.detachedId);}hold.detached=installEntity(hold,hold.record.getCompoundTag("Detached"),hold.detached,hold.detachedId);}
     }
     private static EntityGroundVehicle installEntity(Hold hold,NBTTagCompound source,EntityGroundVehicle existing,UUID id)throws Exception{
-        NBTTagCompound data=source.copy();VehicleStructure snapshot=VehicleStructure.read(data.getCompoundTag("Craft"));VehicleWorld view=new VehicleWorld(hold.world,snapshot);MovingBlockSupport.validate(snapshot,view);VehicleCollision collision=new VehicleCollision(view);snapshot.encode();EntityGroundVehicle craft=existing;
+        NBTTagCompound data=source.copy();VehicleStructure snapshot=VehicleStructure.read(data.getCompoundTag("Craft"));VehicleWorld view=new VehicleWorld(hold.world,snapshot,savedScope(data));MovingBlockSupport.validate(snapshot,view);VehicleCollision collision=new VehicleCollision(view);snapshot.encode();EntityGroundVehicle craft=existing;
         if(craft==null||craft.isDead){craft=new EntityGroundVehicle(hold.world);craft.setUniqueId(id);}
         craft.signals.close();craft.readFromNBT(data);if(craft.structure==null||craft.view==null||!craft.structure.write().equals(snapshot.write()))throw new IllegalStateException("Coupled vehicle cannot be installed exactly");craft.collision=collision;craft.collisionCache.reset(craft.view,collision);craft.setTransferInProgress(true);craft.ownershipBlocked=true;craft.motionX=craft.motionY=craft.motionZ=0;craft.setPosition(craft.posX,craft.posY,craft.posZ);
         if(!hold.world.loadedEntityList.contains(craft)){SPAWNING.set(craft);try{if(!hold.world.spawnEntity(craft))throw new IOException("Coupling recovery vehicle spawn was cancelled");}finally{SPAWNING.remove();}}
