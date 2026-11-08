@@ -90,7 +90,8 @@ public final class VehicleCollisionCache {
         NBTTagList blocks=new NBTTagList();List<VehicleStructure.Cell> cells=new ArrayList<>();List<Long> poses=new ArrayList<>();BlockPos owner=null;int movingOwners=0;
         for(VehicleStructure.Cell cell:view.structure.cells){
             TileEntity tile=view.getTileEntity(cell.pos);if(requireSupported&&!supported(view,cell,tile)){bypass=String.valueOf(cell.state.getBlock().getRegistryName())+"/"+cell.state.getBlock().getClass().getSimpleName();return null;}
-            com.vandorlabs.gear.GearTileEntity gear=cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&tile instanceof com.vandorlabs.gear.GearTileEntity?(com.vandorlabs.gear.GearTileEntity)tile:null;
+            // Tracks inherit the gear base but serialize a distinct identity and topology.
+            com.vandorlabs.gear.GearTileEntity gear=cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!(cell.state.getBlock() instanceof com.vandorlabs.gear.track.TrackBlock)&&tile instanceof com.vandorlabs.gear.GearTileEntity?(com.vandorlabs.gear.GearTileEntity)tile:null;
             VehicleStructure.Cell currentGear=gear==null?null:cell.withGearPose(gear);
             NBTTagCompound data=gear==null&&tile!=null?tile.writeToNBT(new NBTTagCompound()):null;
             cells.add(currentGear!=null?currentGear:new VehicleStructure.Cell(cell.pos,cell.state,data));

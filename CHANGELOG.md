@@ -14,6 +14,10 @@
 
 ### Fixes and usability
 
+- Preserve track-specific tile data when preparing carried vehicle collision snapshots.
+
+- Avoid an old Java 8u51 C2 compiler failure in the ramp face renderer while preserving its vertex output.
+
 - Remove the duplicate Dark Segmented Panel picker row and redundant artwork scope/reset buttons; preserve saved IDs and use the Copifier for sharing.
 - Add Ramp-style Tread Px controls for 1/2/4/8/16-pixel Segmented Door bending strips, retaining sixteen-pixel motion for older saves.
 - Give custom gates usable top placement faces and select Segmented Door depth from the clicked support or neighbouring door plane.

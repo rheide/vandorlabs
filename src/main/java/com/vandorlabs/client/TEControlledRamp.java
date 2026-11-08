@@ -196,10 +196,21 @@ public class TEControlledRamp extends TileEntitySpecialRenderer<TileEntityContro
             // span several repeats, just like explicitly tiled programmable faces.
             boolean nativeUv=layout<1&&minU>=-1e-8&&maxU<=1+1e-8&&minV>=-1e-8&&maxV<=1+1e-8;
             if(nativeUv)CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,this);
-            else {
-                java.util.List<double[]> vertices=new java.util.ArrayList<>();
-                CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,(x,y,z,u,v)->vertices.add(new double[]{x,y,z,layoutU(u,uShift,box,face,sprite,layout),layoutV(v,vShift,box,face,sprite,layout,bottom,top)}));
-                for(double[] p:repeatQuads(vertices,Math.max(1,layout)))write(p[0],p[1],p[2],p[3],p[4]);
+            else emitRepeats(box,face,vBottom,vTop);
+        }
+        private RepeatCollector repeated;
+        /** Keep the captured-lambda graph out of old Java 8 C2 compilation. */
+        private void emitRepeats(RampGeometry.Box box,EnumFacing face,double vBottom,double vTop){
+            if(repeated==null)repeated=new RepeatCollector(this);repeated.vertices.clear();
+            CuboidMesh.emitFace(box,MESH_FACES[face.ordinal()],vBottom,vTop,repeated);
+            for(double[] p:repeatQuads(repeated.vertices,Math.max(1,layout)))write(p[0],p[1],p[2],p[3],p[4]);
+        }
+        private static final class RepeatCollector implements CuboidMesh.VertexConsumer {
+            private final FaceEmitter owner;
+            private final java.util.List<double[]> vertices=new java.util.ArrayList<>(4);
+            RepeatCollector(FaceEmitter owner){this.owner=owner;}
+            @Override public void vertex(double x,double y,double z,double u,double v){
+                vertices.add(new double[]{x,y,z,layoutU(u,owner.uShift,owner.box,owner.face,owner.sprite,owner.layout),layoutV(v,owner.vShift,owner.box,owner.face,owner.sprite,owner.layout,owner.bottom,owner.top)});
             }
         }
         @Override public void vertex(double x,double y,double z,double u,double v) {

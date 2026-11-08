@@ -976,7 +976,7 @@ task testShaderStartup(type: Exec) {
 task verifyRelease {
     group = 'verification'
     description = 'Validate a standard release JAR with geometry and live rendering/gameplay regressions'
-    dependsOn build, testDiagonalJoins, testNonRendering, testShaderStartup
+    dependsOn build, testDiagonalJoins, testNonRendering, testShaderStartup, 'testRampJit'
     doLast {
         def releaseJar = file("$buildDir/libs/vandorlabs-${version}.jar")
         def digest = { java.security.MessageDigest.getInstance('SHA-256').digest(releaseJar.bytes).encodeHex().toString() }

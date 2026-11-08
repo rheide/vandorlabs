@@ -36,6 +36,16 @@ public final class GearCollisionDescriptionChecks {
         }
         VehicleStructure poseSource=structure(new VehicleStructure.Cell(BlockPos.ORIGIN,GearRegistry.GEAR_EXTENDER.getDefaultState(),(NBTTagCompound)tagger.invoke(null,BlockPos.ORIGIN,EnumFacing.UP,GearMotion.Mode.EXTEND,.5D,pc.newInstance(VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,Blocks.STONE.getDefaultState(),null))),BlockPos.ORIGIN,false,BlockPos.ORIGIN).write())));
         EntityGroundVehicle craft=new EntityGroundVehicle(parent);try{craft.install(poseSource);GearTileEntity live=(GearTileEntity)craft.view.getTileEntity(BlockPos.ORIGIN);live.captureProgress(.25);List<VehicleStructure.Cell> moved=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)moved.add(cell.pos.equals(BlockPos.ORIGIN)?cell.withGearPose(live):cell);VehicleStructure updated=new VehicleStructure(moved,poseSource.seat,poseSource.facing,poseSource.gearCount);craft.updateCanopies(updated,false);if(craft.structure!=updated||craft.view.structure!=updated||!craft.couplerScopeReady()||updated.at(BlockPos.ORIGIN).tileData().getDouble("GearProgress")!=.25)throw new AssertionError("Actual pose publication lost current view or pose");}finally{craft.setDead();}
+        // Tracks inherit GearTileEntity but have their own registry identity and tile fields.
+        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(com.vandorlabs.gear.track.TrackTile.class,new ResourceLocation("vandorlabs:track"));
+        net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(com.vandorlabs.gear.track.TrackRegistry.COMPACT);
+        com.vandorlabs.gear.track.TrackTile track=new com.vandorlabs.gear.track.TrackTile();track.setPos(BlockPos.ORIGIN);
+        NBTTagCompound trackData=track.writeToNBT(new NBTTagCompound());
+        VehicleWorld trackView=new VehicleWorld(parent,structure(new VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.gear.track.TrackRegistry.COMPACT.getDefaultState(),trackData)));trackView.tiles.remove(SEAT);
+        NBTTagCompound expectedTrack=trackView.getTileEntity(BlockPos.ORIGIN).writeToNBT(new NBTTagCompound());
+        VehicleStructure trackSnapshot=(VehicleStructure)snapshot.get(describe.invoke(new VehicleCollisionCache(),trackView));
+        if(!trackSnapshot.at(BlockPos.ORIGIN).tileData().equals(expectedTrack)||!"vandorlabs:track".equals(expectedTrack.getString("id")))throw new AssertionError("Track descriptor lost its registry identity or tile data");
+        System.out.println("Track collision description identity and complete tile fields PASS");
         System.out.println("Gear actual description PASS baseline="+baseline+" actual installed divergent capabilities/current pose/reset; geometry and complete tick separate");
     }
 }

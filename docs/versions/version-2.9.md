@@ -40,6 +40,8 @@ Safe Park supplements ordinary parking; it is a Creative tool. See the [Pilot Se
 
 ## Building and control fixes
 
+Carried tracks retain their own tile identity and topology when vehicle collision snapshots are prepared.
+
 - Flat Programmable Walls, Glass and Porthole Walls anchor against a clicked horizontal support. Continuing an existing panel retains its depth; full-cell Porthole Blocks keep full-cell placement.
 - Copy Controller pads accept connected Surface blocks with different artwork. Individual finishes remain distinct, and Turntables retain their existing artwork-sensitive grouping.
 - Redstone channel editors share the positive 32-bit range: **1–2,147,483,647**, zero disconnected, and up to 64 channels per bank. Copy Controller translation checks overflow before changing blocks.
@@ -61,6 +63,8 @@ Equivalent blocks share more prepared geometry while retaining individual lighti
 - **Shared kernels:** stair collision, mounted-control transforms and panel/fluid helpers reuse scalar geometry and cached results while preserving existing UVs, lighting and saved defaults.
 
 These are allocation, geometry and focused-render measurements; they do not establish a hardware FPS gain. See the [Glass](../development/glass-render-caches.md), [Light](../development/light-render-caches.md) and [Segmented Door](../development/segmented-render-caches.md) cache notes.
+
+The ramp renderer also avoids a Java 8u51 C2 compiler failure encountered when entering a world, while preserving its rendered geometry and artwork mapping.
 
 ## Experimental Minecraft 1.21.1 conversion
 

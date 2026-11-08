@@ -1,0 +1,27 @@
+// Exercise the production renderer through C2, including legacy Java 8 when supplied.
+task testRampJit(type: JavaExec) {
+    group = 'verification'
+    description = 'Compile the ramp face emitter with C2 and preserve emitted vertices'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.RampJitStressChecks'
+    maxHeapSize = '768m'
+    ignoreExitValue = true
+    jvmArgs '-Xbatch', '-XX:+PrintCompilation', '-XX:CompileThreshold=1000'
+    def legacyJava = System.getenv('VANDOR_LABS_TEST_JAVA8_51')
+    if (legacyJava) executable = legacyJava
+    def capture = new ByteArrayOutputStream()
+    standardOutput = capture
+    errorOutput = capture
+    workingDir = file("$buildDir/test-artifacts/ramp-jit")
+    doFirst { workingDir.mkdirs() }
+    doLast {
+        def output = capture.toString('UTF-8')
+        new File(workingDir, 'compilation.log').text = output
+        if (!(output =~ /(?m)^.*\s4\s+com\.vandorlabs\.client\.TEControlledRamp[$]FaceEmitter::emit \(/) ||
+            output.contains('COMPILE SKIPPED') || !output.contains('Ramp C2 stress PASS')) {
+            throw new GradleException("Ramp C2 compilation failed; see ${workingDir}/compilation.log")
+        }
+        println 'Ramp C2 compilation and frozen vertex output PASS'
+    }
+}
