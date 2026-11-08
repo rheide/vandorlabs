@@ -17,8 +17,10 @@ public final class VehicleWorld extends World {
         public final UUID owner,generation;
         private CouplerScope(UUID owner,UUID generation){this.owner=Objects.requireNonNull(owner);this.generation=Objects.requireNonNull(generation);if(generation.getMostSignificantBits()==0&&generation.getLeastSignificantBits()==0)throw new IllegalArgumentException("Nonzero Coupler generation required");}
         public static CouplerScope external(UUID owner,UUID generation){return new CouplerScope(owner,generation);}
+        static boolean same(CouplerScope a,CouplerScope b){return a==b||a!=null&&b!=null&&a.owner.equals(b.owner)&&a.generation.equals(b.generation);}
     }
     private CouplerScope couplerScope;
+    private boolean couplerScopeExplicit;
     public CouplerScope couplerScope(){return couplerScope;}
     public VehicleStructure structure;
     public EntityGroundVehicle craft;
@@ -62,10 +64,11 @@ public final class VehicleWorld extends World {
         TileEntity raw=tiles.get(pos);
         return raw instanceof com.vandorlabs.tiles.TileEntityRedstoneLight && !((com.vandorlabs.tiles.TileEntityRedstoneLight)raw).getRedstoneChannels().isEmpty()?(com.vandorlabs.tiles.TileEntityRedstoneLight)raw:null;
     }
-    public VehicleWorld(World parent,VehicleStructure structure) {this(parent,structure,null);}
-    public VehicleWorld(World parent,VehicleStructure structure,CouplerScope scope) {
+    public VehicleWorld(World parent,VehicleStructure structure) {this(parent,structure,null,false);}
+    public VehicleWorld(World parent,VehicleStructure structure,CouplerScope scope) {this(parent,structure,scope,true);}
+    private VehicleWorld(World parent,VehicleStructure structure,CouplerScope scope,boolean explicit) {
         super(parent.getSaveHandler(),new WorldInfo(parent.getWorldInfo()),parent.provider,new net.minecraft.profiler.Profiler(),true);
-        this.parent=parent;this.couplerScope=scope; this.structure=structure; structure.componentView(this); this.chunkProvider=createChunkProvider();
+        this.parent=parent;this.couplerScope=scope;this.couplerScopeExplicit=explicit; this.structure=structure; structure.componentView(this,explicit); this.chunkProvider=createChunkProvider();
         for(VehicleStructure.Cell cell:structure.cells) if(cell.hasTileData()) {
             try {
                 TileEntity tile=localTile(cell);
@@ -121,10 +124,11 @@ public final class VehicleWorld extends World {
         return BuildingBlockCompat.createTile(cell,null,saved);
     }
     private void prepareForeignVisuals(){if(parent.isRemote&&com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.vehicleBuildingVisuals(this);}
-    public void update(VehicleStructure next) {update(next,couplerScope);}
-    public void update(VehicleStructure next,CouplerScope scope) {
-        couplerScope=scope;localLight.invalidate();
-        VehicleStructure before=structure;next.inheritComponents(before);structure=next;next.componentView(this);
+    public void update(VehicleStructure next) {update(next,couplerScope,couplerScopeExplicit);}
+    public void update(VehicleStructure next,CouplerScope scope) {update(next,scope,true);}
+    private void update(VehicleStructure next,CouplerScope scope,boolean explicit) {
+        couplerScope=scope;couplerScopeExplicit=explicit;localLight.invalidate();
+        VehicleStructure before=structure;structure=next;next.componentView(this,explicit);next.inheritComponents(before);
         if(tiles.keySet().stream().anyMatch(pos->next.at(pos)==null || !next.at(pos).hasTileData()))tileRevision++;
         tiles.keySet().removeIf(pos->next.at(pos)==null || !next.at(pos).hasTileData());
         for(VehicleStructure.Cell cell:next.cells)if(cell.hasTileData()) {
