@@ -20,6 +20,17 @@ public final class VehicleClient {
     private static final Map<UUID,ArrayDeque<VehicleNetwork.Packet>> deferred=new HashMap<>();
     private static UUID latestPreview;
     static boolean snapshotPending(UUID id){Incoming receiving=incoming.get(id),reading=completed.get(id);return receiving!=null&&receiving.header.type==VehicleNetwork.SNAPSHOT||reading!=null&&reading.header.type==VehicleNetwork.SNAPSHOT;}
+    /** Retention only: a pending header never admits a packet or changes vehicle scope. */
+    static boolean pendingSourceScope(UUID owner,UUID generation){
+        if(owner==null||generation==null)return false;
+        long now=System.currentTimeMillis();
+        return pendingSourceScope(incoming.get(owner),owner,generation,now)||pendingSourceScope(completed.get(owner),owner,generation,now);
+    }
+    private static boolean pendingSourceScope(Incoming value,UUID owner,UUID generation,long now){
+        return value!=null&&now-value.created<=10000&&value.header.type==VehicleNetwork.SNAPSHOT
+                &&owner.equals(value.header.token)&&owner.equals(value.header.associationOwner)
+                &&generation.equals(value.header.associationGeneration);
+    }
     private static Preview preview;
     private static int sequence,ticks,lastJump=-100;
     private static boolean jumpDown;
