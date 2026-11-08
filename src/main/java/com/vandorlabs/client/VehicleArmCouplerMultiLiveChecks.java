@@ -1,0 +1,79 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.blocks.*;
+import com.vandorlabs.coupler.*;
+import com.vandorlabs.gear.*;
+import com.vandorlabs.items.*;
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.tiles.*;
+import com.vandorlabs.vehicle.*;
+import java.io.File;
+import java.util.*;
+import net.minecraft.block.Block;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.settings.KeyBinding;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.*;
+import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.*;
+import net.minecraft.util.*;
+import net.minecraft.util.math.*;
+import net.minecraft.world.*;
+
+/** Real two-arm Z-line scene. No injected phase, rotation, payload or transfer state. */
+public final class VehicleArmCouplerMultiLiveChecks {
+    private static final BlockPos BASE=new BlockPos(2600,130,2600),SEAT=new BlockPos(1,2,0);
+    private static final int CHANNEL=6154081;
+    private static final BlockPos[] ARMS={new BlockPos(3,1,1),new BlockPos(3,1,5)};
+    private static int stage,frames,checks;private static VehicleScan scan;private static UUID id;
+    private static BlockPos origin,armA,armB,child;private static long commandAt,liftAt,lastObserved=-1;
+    private static double initialY,largestRoll,passiveTravel,previousRoll;private static long rollTick=-1;private static boolean rotatingNow,changedDuringLift,done;
+    private static WorldServer world(Minecraft mc){return mc.getIntegratedServer().getWorld(0);}
+    private static EntityPlayerMP actor(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);}
+    private static EntityGroundVehicle craft(Minecraft mc){return (EntityGroundVehicle)world(mc).getEntityFromUuid(id);}
+    private static GearTileEntity arm(EntityGroundVehicle c,BlockPos at){return (GearTileEntity)c.view.tiles.get(at);}
+    private static void need(boolean value,String reason){checks++;if(!value)throw new IllegalStateException("Multi-pair arm: "+reason+" stage="+stage+" frames="+frames);}
+    private static void held(EntityPlayerMP p,ItemStack stack){p.inventory.currentItem=0;p.inventory.setInventorySlotContents(0,stack);p.inventoryContainer.detectAndSendChanges();}
+    private static void place(EntityPlayerMP p,WorldServer w,BlockPos backing,EnumFacing face,Block item){held(p,new ItemStack(item));need(p.getHeldItemMainhand().getItem().onItemUse(p,w,backing,EnumHand.MAIN_HAND,face,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual item placement "+item.getRegistryName()+" at "+backing.offset(face));}
+    private static void setup(WorldServer w,EntityPlayerMP p){
+        need(VehicleArmCouplers.runtime(),"explicit private arm runtime required");p.dismountRidingEntity();p.setGameType(GameType.CREATIVE);p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();p.setSneaking(false);p.setPositionAndUpdate(BASE.getX()+1.5,BASE.getY()+3,BASE.getZ()+2.5);
+        for(BlockPos at:BlockPos.getAllInBox(BASE.add(-8,0,-8),BASE.add(20,12,14)))w.setBlockToAir(at);
+        for(BlockPos at:BlockPos.getAllInBox(BASE.add(-8,-1,-8),BASE.add(20,-1,14)))w.setBlockState(at,Blocks.STONE.getDefaultState(),2);
+        Block wheel=null;for(Block b:Block.REGISTRY)if(b instanceof BlockTelescopicLandingGear&&!(b instanceof BlockNonWheeledLandingGear)){wheel=b;break;}need(wheel!=null,"wheeled support registered");
+        for(int x0:new int[]{0,6}){
+            for(int[] offset:new int[][]{{0,0},{2,0},{1,5}}){BlockPos at=BASE.add(x0+offset[0],0,offset[1]);w.setBlockState(at,wheel.getDefaultState(),2);((TileEntityLandingGear)w.getTileEntity(at)).configure(0,0,0,0);}
+            for(int x=0;x<3;x++)for(int z=0;z<7;z++)w.setBlockState(BASE.add(x0+x,1,z),Blocks.IRON_BLOCK.getDefaultState(),2);
+            for(int x=0;x<3;x++)w.setBlockState(BASE.add(x0+x,2,2),Block.getBlockFromName("vandorlabs:repulsor_array").getDefaultState().withProperty(BlockPropulsionLight.FACING,EnumFacing.DOWN),2);
+            w.setBlockState(BASE.add(x0,2,0),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),2);
+            BlockPos seat=BASE.add(x0+1,2,0);w.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState(),2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(w,seat,w.getBlockState(seat),p,new ItemStack(ModBlocks.PILOT_SEAT));((TileEntityPilotSeat)w.getTileEntity(seat)).setTaxiMode(false);
+            w.setBlockState(BASE.add(x0+2,2,3),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState(),2);
+            place(p,w,BASE.add(x0+1,1,4),EnumFacing.UP,Blocks.CHEST);TileEntityChest cargo=(TileEntityChest)w.getTileEntity(BASE.add(x0+1,2,4));cargo.setCustomName(x0==0?"Z root cargo":"Z child cargo");cargo.setInventorySlotContents(x0==0?7:3,new ItemStack(x0==0?Items.DIAMOND:Items.EMERALD,x0==0?11:7));
+        }
+        Block coupler=Block.getBlockFromName("vandorlabs:square_coupler");
+        for(int i=0;i<2;i++){
+            BlockPos at=BASE.add(ARMS[i]);place(p,w,at.west(),EnumFacing.EAST,GearRegistry.GEAR_EXTENDER);GearTileEntity a=(GearTileEntity)w.getTileEntity(at);need(a!=null&&a.rebuild()&&a.mountDirection()==EnumFacing.EAST,"actual EAST arm forms on retained backing");a.operator(p);NBTTagCompound settings=a.settings();settings.setInteger("Trigger",1);settings.setString("Channels",Integer.toString(CHANNEL+i));settings.setDouble("ActiveExtension",1);settings.setBoolean("Deployed",true);a.configure(settings);
+            place(p,w,at,EnumFacing.EAST,coupler);place(p,w,BASE.add(6,1,ARMS[i].getZ()),EnumFacing.WEST,coupler);
+            for(int x:new int[]{4,5}){BlockPos head=BASE.add(x,1,ARMS[i].getZ());TileCoupler tile=(TileCoupler)w.getTileEntity(head);tile.configure(ChannelList.EMPTY,true,true);need(w.getBlockState(head).getValue(BlockCoupler.LOCKED),"actual articulated inverted head closes");}
+            need(a.progress()==1&&a.target(),"native construction phase retained");
+        }
+        ItemStack transmitter=new ItemStack(ModItems.REDSTONE_TRANSMITTER,1,3);ItemRedstoneTransmitter.configure(transmitter,ChannelList.of(CHANNEL));held(p,transmitter);p.connection.setPlayerLocation(BASE.getX()+1.5,BASE.getY()+3,BASE.getZ()-2,0,0);
+    }
+    private static void nativeCargo(WorldServer w){for(int x:new int[]{1,7}){TileEntity t=w.getTileEntity(BASE.add(x,2,4));need(t instanceof TileEntityChest,"native cargo survives read-only scan");ItemStack stack=((TileEntityChest)t).getStackInSlot(x==1?7:3);need(stack.getItem()==(x==1?Items.DIAMOND:Items.EMERALD)&&stack.getCount()==(x==1?11:7),"native cargo exact before admission");}}
+    private static void cargo(EntityGroundVehicle c){int root=0,other=0;for(TileEntity t:c.view.tiles.values())if(t instanceof TileEntityChest){TileEntityChest chest=(TileEntityChest)t;if(chest.getName().equals("Z root cargo")){need(chest.getStackInSlot(7).getItem()==Items.DIAMOND&&chest.getStackInSlot(7).getCount()==11,"root cargo exact");root++;}if(chest.getName().equals("Z child cargo")){need(chest.getStackInSlot(3).getItem()==Items.EMERALD&&chest.getStackInSlot(3).getCount()==7,"child cargo exact");other++;}}need(root==1&&other==1,"both independent cargo owners once");}
+    private static void contacts(EntityGroundVehicle c){VehicleArmCouplers.Snapshot snapshot=VehicleArmCouplers.observe(c);need(snapshot.heads.size()==4,"exactly four actual heads, no extra constraints");for(int row=0;row<2;row++){VehicleArmCouplers.Head first=null,second=null;BlockPos a=row==0?armA:armB,nativeFirst=BASE.add(4,1,ARMS[row].getZ()).subtract(origin),nativeSecond=BASE.add(5,1,ARMS[row].getZ()).subtract(origin);for(VehicleArmCouplers.Head h:snapshot.heads){if(a.equals(h.address.arm)||nativeFirst.equals(h.nativeCell))first=h;if(nativeSecond.equals(h.nativeCell))second=h;}need(first!=null&&second!=null,"stable actual pair "+row);Vec3d p=c.toWorld(new Vec3d(first.x,first.y,first.z),first.carrier),q=c.toWorld(new Vec3d(second.x,second.y,second.z),second.carrier);need(p.squareDistanceTo(q)<1e-12,"both real pair points coincide "+row+" "+p+" / "+q);}cargo(c);}
+    private static void diagnostic(EntityGroundVehicle c){System.out.println("[vandorlabs][reprolab] multi-pair-state A="+VehicleArmCouplerFixture.status(c,armA)+" B="+VehicleArmCouplerFixture.status(c,armB)+" rootY="+c.posY);VehicleArmCouplers.Snapshot snapshot=VehicleArmCouplers.observe(c);for(VehicleArmCouplers.Head h:snapshot.heads)System.out.println("[vandorlabs][reprolab] multi-pair-head arm="+h.address.arm+" cell="+h.address.cell+" carrier="+h.carrier+" native="+h.nativeCell+" point="+h.x+","+h.y+","+h.z+" normal="+h.nx+","+h.ny+","+h.nz);}
+    private static void transmitter(Minecraft mc)throws Exception{need(mc.currentScreen==null&&mc.playerController.getCurrentGameType()==GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getHeldItemMainhand().getItem()==ModItems.REDSTONE_TRANSMITTER&&ItemRedstoneTransmitter.channels(mc.player.getHeldItemMainhand()).equals(ChannelList.of(CHANNEL)),"client actual transmitter mode/slot/stack");mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=actor(mc);need(p.interactionManager.getGameType()==GameType.CREATIVE&&p.inventory.currentItem==0&&ItemRedstoneTransmitter.channels(p.getHeldItemMainhand()).equals(ChannelList.of(CHANNEL)),"server actual transmitter mode/slot/stack");}).get();mc.player.setSneaking(false);mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketEntityAction(mc.player,net.minecraft.network.play.client.CPacketEntityAction.Action.STOP_SNEAKING));mc.player.rotationPitch=-90;mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketHeldItemChange(0));mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.Rotation(mc.player.rotationYaw,-90,false));mc.playerController.processRightClick(mc.player,mc.world,EnumHand.MAIN_HAND);commandAt=mc.getIntegratedServer().callFromMainThread(()->world(mc).getTotalWorldTime()).get();}
+    public static boolean tick(Minecraft mc,File output)throws Exception{
+        if(done)return true;mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);need(++frames<1800,"bounded actual scene/input progress");
+        if(stage==0){mc.getIntegratedServer().addScheduledTask(()->setup(world(mc),actor(mc))).get();stage=1;frames=0;return false;}
+        if(stage==1){if(frames<30||mc.playerController.getCurrentGameType()!=GameType.CREATIVE||mc.player.inventory.currentItem!=0||mc.player.getHeldItemMainhand().getItem()!=ModItems.REDSTONE_TRANSMITTER)return false;mc.getIntegratedServer().addScheduledTask(()->scan=new VehicleScan(world(mc),BASE.add(SEAT))).get();stage=2;frames=0;return false;}
+        if(stage==2){if(!mc.getIntegratedServer().callFromMainThread(()->scan.step(256)).get())return false;mc.getIntegratedServer().addScheduledTask(()->{try{nativeCargo(world(mc));need(scan.result!=null,"actual two-pair native scan refused: "+scan.error);origin=scan.origin;armA=BASE.add(ARMS[0]).subtract(origin);armB=BASE.add(ARMS[1]).subtract(origin);child=BASE.add(6,2,0).subtract(origin);EntityGroundVehicle c=VehicleTransfer.assemble(world(mc),scan.result,origin,actor(mc));id=c.getUniqueID();for(int x:new int[]{1,7})need(world(mc).isAirBlock(BASE.add(x,2,4))&&world(mc).getTileEntity(BASE.add(x,2,4))==null,"native cargo retired after durable assembly");contacts(c);diagnostic(c);need(c.setHover(true),"both supported sections admit actual Hover");need(c.board(actor(mc)),"actual pilot boards root seat");VehicleNetwork.send(actor(mc),c.structure,c.getEntityId(),id,new BlockPos(c),false,false);VehicleNetwork.state(c);initialY=c.posY;}catch(Exception failure){throw new IllegalStateException(failure);}}).get();stage=3;frames=0;return false;}
+        if(stage==3){if(frames<20||!(mc.player.getRidingEntity() instanceof EntityGroundVehicle)||!id.equals(mc.player.getRidingEntity().getUniqueID())||((EntityGroundVehicle)mc.player.getRidingEntity()).structure==null)return false;transmitter(mc);stage=4;frames=0;return false;}
+        if(stage==4){boolean moving=mc.getIntegratedServer().callFromMainThread(()->{EntityGroundVehicle c=craft(mc);GearTileEntity a=arm(c,armA),b=arm(c,armB);long elapsed=world(mc).getTotalWorldTime()-commandAt;cargo(c);if(a.target()||a.payload()==null||a.payload().materialized()||a.progress()>=.9){if(elapsed>=160){diagnostic(c);need(false,"actual A command/capture must admit two-pair motion");}return false;}contacts(c);passiveTravel=Math.max(passiveTravel,Math.abs(b.progress()-1));need(elapsed<200,"parallel passive-stroke admission: "+VehicleArmCouplerFixture.status(c,armA));if(passiveTravel<.01)return false;liftAt=world(mc).getTotalWorldTime();return true;}).get();if(!moving)return false;KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.getKeyCode(),true);stage=5;frames=0;return false;}
+        if(stage==5){long elapsed=mc.getIntegratedServer().callFromMainThread(()->{EntityGroundVehicle c=craft(mc);contacts(c);Vec3d p=c.toWorld(new Vec3d(child).addVector(.5,.5,.5),child),q=c.toWorld(new Vec3d(child).addVector(1.5,.5,.5),child);double roll=Math.atan2(q.y-p.y,q.x-p.x);long now=world(mc).getTotalWorldTime();if(now!=rollTick){rotatingNow=rollTick>=0&&Math.abs(roll-previousRoll)>1e-5;previousRoll=roll;rollTick=now;}largestRoll=Math.max(largestRoll,Math.abs(roll));return now-liftAt;}).get();if(elapsed>=4&&!changedDuringLift&&rotatingNow&&largestRoll>Math.toRadians(.5)){transmitter(mc);changedDuringLift=true;}if(elapsed<8)return false;need(changedDuringLift,"real root lift must produce changing Z orientation before command reversal, observed="+largestRoll);KeyBinding.setKeyBindState(mc.gameSettings.keyBindJump.getKeyCode(),false);stage=6;frames=0;lastObserved=-1;return false;}
+        if(stage==6){boolean settled=mc.getIntegratedServer().callFromMainThread(()->{long now=world(mc).getTotalWorldTime();if(now==lastObserved)return false;lastObserved=now;EntityGroundVehicle c=craft(mc);contacts(c);GearTileEntity a=arm(c,armA),b=arm(c,armB);passiveTravel=Math.max(passiveTravel,Math.abs(b.progress()-1));need(b.target()&&b.getRedstoneChannels().equals(ChannelList.of(CHANNEL+1)),"untouched passive arm target/channel intent preserved");if(now-commandAt<60&&(a.progress()!=1||b.progress()!=1))return false;diagnostic(c);need(a.target()&&a.progress()==1&&b.progress()==1,"changed real command reverses complete pair");need(c.posY>initialY+.1,"real held SPACE flight input raises root");need(largestRoll>Math.toRadians(2),"actual gravity/root movement creates free world Z roll, observed="+largestRoll);need(passiveTravel>.01,"untouched arm actually telescopes to preserve both contacts");return true;}).get();if(!settled)return false;VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_multi_pair_z_line.png");done=true;System.out.println("[vandorlabs][reprolab] carried-arm-coupler-multi-live PASS checks="+checks+" actual placed two-EAST-arm Z-line supports/cargo intact real A-only command passive stroke/root SPACE lift/gravity Z-roll/change-command-during-lift roll="+largestRoll+" passive="+passiveTravel);return true;}
+        return false;
+    }
+    private VehicleArmCouplerMultiLiveChecks(){}
+}
