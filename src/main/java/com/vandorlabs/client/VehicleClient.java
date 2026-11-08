@@ -73,7 +73,7 @@ public final class VehicleClient {
             if(p.type==VehicleNetwork.INSPECTION)latestPreview=null;
             if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS)){
                 Entity raw=mc.world.getEntityByID(p.entity);
-                if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&((EntityGroundVehicle)raw).couplerScopeReady()&&!((EntityGroundVehicle)raw).acceptsCouplerUpdate(p.associationGeneration))return;
+                if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&((EntityGroundVehicle)raw).couplerScopeReady()&&!snapshotPending(p.token)&&!((EntityGroundVehicle)raw).acceptsCouplerUpdate(p.associationGeneration))return;
             }
             if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS||p.type==VehicleNetwork.STATE)){
                 Entity raw=mc.world.getEntityByID(p.entity);
