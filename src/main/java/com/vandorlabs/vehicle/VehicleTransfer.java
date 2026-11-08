@@ -39,6 +39,8 @@ public final class VehicleTransfer {
         VehicleStructure geometrySource,validationSource;VehiclePreparation preparation;VehicleCollision geometry;
         VehicleWorld validationView;boolean validationComplete;int validationBuilds,validationReuses;
         EntityGroundVehicle assembled,held;
+        UUID assemblyOwner;VehicleArmCouplerNativeReceipt.Prepared assemblyReceipt;
+        VehicleStructure assemblyOriginal;BlockPos assemblyOrigin;
         VehicleStructure beforeStructure;VehicleCollision beforeCollision;
         NBTTagCompound undo;VehicleOwnership.Update ownership;Path journal;
         Future<?> io;boolean journalReady,committed,retiring,aborting,rolledBack,rollbackNotice,mutated;
@@ -90,9 +92,11 @@ public final class VehicleTransfer {
     }
     static boolean busy(WorldServer world){ArrayDeque<Work> queue=WORK.get(world);return queue!=null&&!queue.isEmpty();}
     static boolean waitingForPersistence(WorldServer world){ArrayDeque<Work> queue=WORK.get(world);Work work=queue==null?null:queue.peek();return work!=null&&work.undo!=null&&work.io!=null&&!work.io.isDone();}
-    static VehicleCollision geometry(World world,VehicleStructure structure){
-        Work work=ACTIVE.get();if(work==null)return new VehicleCollision(new VehicleWorld(world,structure));
-        if(work.geometrySource==null){work.geometrySource=structure;work.preparation=new VehiclePreparation(new VehicleWorld(world,structure));}
+    static VehicleCollision geometry(World world,VehicleStructure structure){return geometry(world,structure,null,false);}
+    private static VehicleCollision geometry(World world,VehicleStructure structure,VehicleWorld.CouplerScope scope){return geometry(world,structure,scope,true);}
+    private static VehicleCollision geometry(World world,VehicleStructure structure,VehicleWorld.CouplerScope scope,boolean explicit){
+        Work work=ACTIVE.get();if(work==null)return new VehicleCollision(explicit?new VehicleWorld(world,structure,scope):new VehicleWorld(world,structure));
+        if(work.geometrySource==null){work.geometrySource=structure;work.preparation=new VehiclePreparation(explicit?new VehicleWorld(world,structure,scope):new VehicleWorld(world,structure));}
         else if(!work.geometrySource.sameSnapshot(structure))throw new IllegalArgumentException("Craft changed while preparing geometry; inspect it again.");
         if(work.geometry==null)try{work.geometry=work.preparation.poll();}catch(Exception failure){throw new IllegalStateException("Vehicle geometry preparation failed.",failure);}
         if(work.geometry==null)throw DEFERRED;
@@ -236,13 +240,13 @@ public final class VehicleTransfer {
     }
     static java.util.function.Consumer<String> testFault;
     private static void fault(String point){if(testFault!=null&&System.getProperty("vandorlabs.reprolab")!=null)testFault.accept(point);}
-    private static VehicleWorld assemblyView(WorldServer world,VehicleStructure structure){
+    private static VehicleWorld assemblyView(WorldServer world,VehicleStructure structure,VehicleWorld.CouplerScope scope){
         Work work=ACTIVE.get();
         if(REUSE_ASSEMBLY_PREFLIGHT&&work!=null&&work.validationView!=null){
             if(!work.validationSource.sameSnapshot(structure))throw new IllegalArgumentException("Craft changed while validating its prepared data; inspect it again.");
             return work.validationView;
         }
-        VehicleWorld view=new VehicleWorld(world,structure);
+        VehicleWorld view=new VehicleWorld(world,structure,scope);
         if(work!=null){work.validationBuilds++;if(REUSE_ASSEMBLY_PREFLIGHT){work.validationView=view;work.validationSource=structure;}}
         return view;
     }
@@ -264,28 +268,49 @@ public final class VehicleTransfer {
         if(work!=null&&REUSE_ASSEMBLY_PREFLIGHT)work.validationComplete=true;
         fault("assembly-validation-built");
     }
+    private static EntityGroundVehicle newAssemblyEntity(WorldServer world,UUID owner,UUID generation){
+        EntityGroundVehicle entity=new EntityGroundVehicle(world);entity.setUniqueId(owner);
+        if(generation!=null){NBTTagCompound metadata=new NBTTagCompound();metadata.setUniqueId(EntityGroundVehicle.COUPLER_GENERATION,generation);entity.retainCouplerOwnershipMetadata(metadata);}
+        return entity;
+    }
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin)throws Exception {return assemble(world,structure,origin,null);}
     public static EntityGroundVehicle assemble(WorldServer world,VehicleStructure structure,BlockPos origin,net.minecraft.entity.player.EntityPlayer actor)throws Exception {
         for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&MekanismTankCompat.reactorGlass(world.getTileEntity(origin.add(cell.pos))))MekanismTankCompat.required(world,origin.add(cell.pos));
         if(structure.cells.size()>com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks())throw new IllegalArgumentException("Craft exceeds the configured vehicle block limit.");
         if(!structure.hasDedicatedController())throw new IllegalArgumentException("Vehicle Controller missing");
         VehicleMounts.requireAllowed(world,origin.add(structure.controller().pos));
-        // Geometry belongs to the native block snapshot used by the player preflight.
-        // Captured paintings add controller data, but do not change block collision.
+        Work work=ACTIVE.get();VehicleStructure nativeOriginal=structure;
+        boolean ownershipBoundary=VehicleArmCouplers.runtime();
+        for(VehicleStructure.Cell cell:structure.cells)ownershipBoundary|=cell.hasCouplerClaims();
+        UUID prospectiveOwner=work==null?UUID.randomUUID():work.assemblyOwner;
+        if(prospectiveOwner==null)work.assemblyOwner=prospectiveOwner=UUID.randomUUID();
+        VehicleArmCouplerNativeReceipt.Prepared receipt=null;
+        if(ownershipBoundary){
+            if(work!=null){
+                if(work.assemblyOriginal==null){work.assemblyOriginal=nativeOriginal;work.assemblyOrigin=origin.toImmutable();}
+                else if(!work.assemblyOrigin.equals(origin)||!work.assemblyOriginal.sameSnapshot(nativeOriginal))throw new IllegalArgumentException("Native craft changed while preparing Coupler ownership; inspect it again.");
+            }
+            receipt=work==null?null:work.assemblyReceipt;
+            if(receipt==null){receipt=VehicleArmCouplerNativeReceipt.prepare(world,nativeOriginal,origin,prospectiveOwner,null);if(work!=null)work.assemblyReceipt=receipt;}
+            receipt.recheck();structure=receipt.chosenSource();
+        }
+        UUID generation=receipt==null?null:receipt.generation();
+        VehicleWorld.CouplerScope scope=generation==null?null:VehicleWorld.CouplerScope.external(prospectiveOwner,generation);
+        // Paintings alter controller data but not the chosen native block geometry.
         VehicleStructure geometrySource=structure;
         List<net.minecraft.entity.item.EntityPainting> paintings=VehiclePaintings.attached(world,structure,origin);
         structure=VehiclePaintings.capture(structure,origin,paintings);
-        VehicleWorld validationView=assemblyView(world,structure);
+        VehicleWorld validationView=assemblyView(world,structure,scope);
         boolean forceHover=structure.activeNonWheeledGear()&&!VehicleSkiTraction.canStart(world,structure,origin);
         if(forceHover)VehicleFlight.requireThruster(structure);
         if(forceHover && !VehicleFlight.canHover(structure))throw new IllegalArgumentException("Taxi requires wheels or skis over ice; other landing gear needs three lift blocks for Hover.");
         validateAssembly(structure,validationView);
         VehicleArticulation.requireAssemblyLimit(structure);
         if(pending(world))throw new IOException("A previous vehicle transfer needs recovery.");
-        Work work=ACTIVE.get();if(work!=null)VehiclePaintings.hold(work.paintings,paintings);EntityGroundVehicle entity;
+        if(work!=null)VehiclePaintings.hold(work.paintings,paintings);EntityGroundVehicle entity;
         if(work!=null&&work.assembled!=null&&!VehiclePaintings.entries(work.assembled.structure).equals(VehiclePaintings.entries(structure)))throw new IllegalArgumentException("Paintings changed while preparing the vehicle; source retained, please retry");
-        if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,geometrySource);work.assembled=new EntityGroundVehicle(world);work.assembled.install(structure,prepared);}entity=work.assembled;}
-        else{entity=new EntityGroundVehicle(world);entity.install(structure);}
+        if(work!=null){if(work.assembled==null){VehicleCollision prepared=geometry(world,geometrySource,scope);work.assembled=newAssemblyEntity(world,prospectiveOwner,generation);work.assembled.install(structure,prepared);}entity=work.assembled;}
+        else{entity=newAssemblyEntity(world,prospectiveOwner,generation);entity.install(structure);}
         entity.recordCouplingActor(actor);entity.setPosition(origin.getX(),origin.getY(),origin.getZ());
         if(forceHover && !entity.setHover(true))throw new IllegalArgumentException("Unable to enter Hover for non-wheeled landing gear.");
         Map<net.minecraft.entity.Entity,BlockPos> seated=new LinkedHashMap<>();
@@ -296,11 +321,12 @@ public final class VehicleTransfer {
         }
         oldSeats.sort(java.util.Comparator.comparingInt(net.minecraft.entity.Entity::getEntityId));
         for(com.vandorlabs.entity.EntityChairSeat chair:oldSeats)seated.put(chair.getPassengers().get(0),chair.getChairPos().subtract(origin));
-        boolean expandedEscalator=VehicleEscalators.needsExpandedSnapshot(world,structure,origin);
-        VehicleEscalators.WorldSnapshot expanded=expandedEscalator?VehicleEscalators.expandedWorldSnapshot(world,structure,origin):new VehicleEscalators.WorldSnapshot(structure,origin);
-        if(expandedEscalator)expanded=new VehicleEscalators.WorldSnapshot(VehiclePaintings.capture(expanded.structure,expanded.origin,paintings),expanded.origin);
+        boolean expandedEscalator=VehicleEscalators.needsExpandedSnapshot(world,nativeOriginal,origin);
+        VehicleEscalators.WorldSnapshot expanded=expandedEscalator?VehicleEscalators.expandedWorldSnapshot(world,nativeOriginal,origin):new VehicleEscalators.WorldSnapshot(nativeOriginal,origin);
+        if(expandedEscalator||receipt!=null&&receipt.changed())expanded=new VehicleEscalators.WorldSnapshot(VehiclePaintings.capture(expanded.structure,expanded.origin,paintings),expanded.origin);
         if(actor!=null)for(VehicleStructure.Cell cell:expanded.structure.cells){BlockPos p=expanded.origin.add(cell.pos);VehicleService.permission((net.minecraft.entity.player.EntityPlayerMP)actor,p);}
-        NBTTagCompound undo=record(structure,origin,entity,false);if(expandedEscalator){undo.setTag("AssemblyOriginal",expanded.structure.write());undo.setLong("AssemblyOriginalOrigin",expanded.origin.toLong());}fault("painting-before-journal");write(world,undo);
+        if(receipt!=null)receipt.recheck();
+        NBTTagCompound undo=record(structure,origin,entity,false);if(expandedEscalator||receipt!=null&&receipt.changed()){undo.setTag("AssemblyOriginal",expanded.structure.write());undo.setLong("AssemblyOriginalOrigin",expanded.origin.toLong());}fault("painting-before-journal");write(world,undo);
         Transaction transaction=new Transaction(world);
         try {
             if(work!=null)work.mutated=true;
