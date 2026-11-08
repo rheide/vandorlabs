@@ -1,0 +1,13 @@
+// Independently frozen actual Source math precedes the new pure admission policy.
+task exportCouplerAngularLegacy(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.vehicle.VehicleCouplerAngularLegacyReference'
+ maxHeapSize='512m'
+}
+task testCouplerAngularAdmission(type: JavaExec) {
+ dependsOn compilePortableTests, exportCouplerAngularLegacy
+ classpath=files(compilePortableTests.destinationDir)
+ main='com.vandorlabs.physics.CouplerAngularAdmissionTest'
+ maxHeapSize='512m'
+}
