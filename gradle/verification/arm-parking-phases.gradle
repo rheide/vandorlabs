@@ -65,3 +65,9 @@ task testCouplerAssociationNativeLoad(type: JavaExec) {
  main = 'com.vandorlabs.coupler.CouplerAssociationNativeLoadChecks'
  maxHeapSize = '1g'
 }
+task testArmCouplerAssociationBatch(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmCouplerAssociationBatchChecks'
+ maxHeapSize = '1g'
+}
