@@ -112,6 +112,7 @@ public final class DiagonalWallMeshCache {
         WorldCache cache=WORLDS.get(world);if(cache!=null)cache.invalidate(x1,y1,z1,x2,y2,z2);
     }
     static int entryCount(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.entries.size(); }
+    static boolean ownerCached(World world,BlockPos pos){WorldCache cache=WORLDS.get(world);return cache!=null&&cache.entries.containsKey(pos);}
     static long retainedBytes(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.bytes; }
     static int sharedCount(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.shared.size(); }
     static int vertexCount(World world) { WorldCache cache=WORLDS.get(world);return cache==null?0:cache.vertices; }

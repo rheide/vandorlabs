@@ -153,7 +153,9 @@ final class CommonRenderChecks {
             }
             require(DiagonalWallMeshCache.entryCount(world)<=DiagonalWallMeshCache.MAX_ENTRIES
                     && DiagonalWallMeshCache.vertexCount(world)<=DiagonalWallMeshCache.MAX_VERTICES,"unbounded wall cache");
-            require(oldest!=DiagonalWallMeshCache.get(first,state,wall,trim),"wall cache failed to evict oldest entry");
+            require(!DiagonalWallMeshCache.ownerCached(world,first.getPos()),"wall cache failed to evict oldest owner");
+            require(oldest==DiagonalWallMeshCache.get(first,state,wall,trim),"equivalent wall owner should reuse the surviving shared mesh");
+            require(DiagonalWallMeshCache.ownerCached(world,first.getPos())&&DiagonalWallMeshCache.retainedBytes(world)<=DiagonalWallMeshCache.MAX_BYTES,"wall owner was not republished within the byte bound");
             DiagonalWallMeshCache.clear();require(DiagonalWallMeshCache.entryCount(world)==0,"resource clear retained wall geometry");
             DiagonalWallMeshCache.get(first,state,wall,trim);world.markBlockRangeForRenderUpdate(first.getPos(),first.getPos());
             require(DiagonalWallMeshCache.entryCount(world)==0,"listener not restored after resource clear");
