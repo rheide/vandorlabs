@@ -57,6 +57,11 @@ PYVERIFY
     export VANDOR_LABS_ARM_RECOVERY_PHASE="verify-$phase"
     python3 "$ROOT/tools/test_artifacts.py" run --run-dir "$fixture" --lease "$active_lease" -- bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/restart.log" 2>&1
     cat "$fixture/restart.log"
+    if [ "$phase" = safe-park-arm-partial ]; then
+        export VANDOR_LABS_ARM_RECOVERY_PHASE="verify2-$phase"
+        python3 "$ROOT/tools/test_artifacts.py" run --run-dir "$fixture" --lease "$active_lease" -- bash testclient/test_viewscreen.sh --focus arm-recovery > "$fixture/restart2.log" 2>&1
+        cat "$fixture/restart2.log"
+    fi
     echo "Arm durable recovery $phase passed: $fixture"
     python3 "$ROOT/tools/test_artifacts.py" finish --run-dir "$fixture" --lease "$active_lease" --exit-code 0
     active_fixture=

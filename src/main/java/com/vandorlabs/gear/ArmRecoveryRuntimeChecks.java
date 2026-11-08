@@ -19,11 +19,13 @@ import java.util.*;
 public final class ArmRecoveryRuntimeChecks {
     private static final BlockPos ROOT=new BlockPos(15,100,0),PAYLOAD=ROOT.east(2);
     private static int stage,ticks;private static TransferCheckpoint checkpoint;
+    private static java.util.concurrent.Future<Boolean> armSafeParkTask;
     public static boolean paused(GearTileEntity arm){return System.getProperty("vandorlabs.reprolab")!=null&&!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty()&&arm.getPos().equals(ROOT);}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Arm recovery: "+why);}
     @SideOnly(Side.CLIENT) public static boolean tick(Minecraft mc)throws Exception{
         mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);
         if(++ticks<30)return false;require(ticks<1500,"bounded durable checkpoint/restart");String phase=System.getProperty("vandorlabs.armRecoveryPhase","");
+        if(phase.contains("safe-park-arm-")){if(mc.player.capabilities.allowFlying)mc.player.capabilities.isFlying=true;if(ticks%100==0)System.out.println("[vandorlabs] cold-arm-poll frames="+ticks+" pending="+(armSafeParkTask!=null&&!armSafeParkTask.isDone())+" gui="+(mc.currentScreen==null?"none":mc.currentScreen.getClass().getName()));if(armSafeParkTask==null){armSafeParkTask=mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase));return false;}if(!armSafeParkTask.isDone())return false;boolean complete=armSafeParkTask.get();armSafeParkTask=null;return complete;}
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase)).get();
     }
     private static boolean run(WorldServer world,EntityPlayerMP actor,String phase)throws Exception{

@@ -22,6 +22,7 @@ public final class VehicleSafeParkRecoveryChecks {
     private static NBTTagCompound read(File file)throws IOException{try(InputStream in=new FileInputStream(file)){return CompressedStreamTools.readCompressed(in);}}
     private static void write(File file,NBTTagCompound tag)throws IOException{ByteArrayOutputStream bytes=new ByteArrayOutputStream();CompressedStreamTools.writeCompressed(tag,bytes);try(FileOutputStream out=new FileOutputStream(file)){out.write(bytes.toByteArray());out.getFD().sync();}}
     public static boolean run(WorldServer world,EntityPlayerMP player,String phase)throws Exception {
+        if(phase.contains("safe-park-arm-"))return VehicleSafeParkArmRecoveryChecks.run(world,player,phase);
         need(++ticks<1500,"bounded restart fixture");
         if(phase.startsWith("verify-"))return verify(world);
         if(stage==0){
