@@ -195,9 +195,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     VehicleArmParkingCurrent armParkingPreview;
     static final String COUPLER_GENERATION="CouplerAssociationGeneration";
     private java.util.UUID couplerAssociationGeneration;
-    private long associationScopeTick=Long.MIN_VALUE;
+    private long associationScopeTick=Long.MIN_VALUE,installedCouplerSourceTick=Long.MIN_VALUE;
     private NBTTagCompound retainedCouplerAssociation;
-    java.util.UUID couplerAssociationGeneration(){return couplerAssociationGeneration;}
+    public java.util.UUID couplerAssociationGeneration(){return couplerAssociationGeneration;}
+    /** Last admitted external scope/source clock; observation only, never scope renewal. */
+    public long couplerAssociationScopeTick(){return associationScopeTick;}
+    /** Timestamp of the source actually installed, not the newest STATE observation. */
+    public long installedCouplerSourceTick(){return installedCouplerSourceTick;}
     private boolean admitCouplerScope(java.util.UUID generation,long tick){
         if(generation==null)return couplerAssociationGeneration==null;
         if(generation.getMostSignificantBits()==0&&generation.getLeastSignificantBits()==0)return false;
@@ -208,10 +212,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     /** Scope arrives with the source, before any component/role admission; old different scopes cannot replace it. */
     public boolean installScopedSnapshot(VehicleStructure next,java.util.UUID owner,java.util.UUID generation,long tick){
         if(world==null||!world.isRemote||generation!=null&&!getUniqueID().equals(owner))return false;
-        java.util.UUID previous=couplerAssociationGeneration;long previousTick=associationScopeTick;NBTTagCompound previousRetained=retainedCouplerAssociation;VehicleStructure before=structure;
+        VehicleWorld.CouplerScope installed=view==null?null:view.couplerScope();
+        if(generation!=null&&installed!=null&&generation.equals(installed.generation)&&getUniqueID().equals(installed.owner)&&tick<installedCouplerSourceTick)return false;
+        java.util.UUID previous=couplerAssociationGeneration;long previousTick=associationScopeTick,previousSourceTick=installedCouplerSourceTick;NBTTagCompound previousRetained=retainedCouplerAssociation;VehicleStructure before=structure;
         if(!admitCouplerScope(generation,tick))return false;
-        try{install(next);return true;}catch(RuntimeException|LinkageError failure){
-            couplerAssociationGeneration=previous;associationScopeTick=previousTick;retainedCouplerAssociation=previousRetained;
+        try{install(next);installedCouplerSourceTick=tick;return true;}catch(RuntimeException|LinkageError failure){
+            couplerAssociationGeneration=previous;associationScopeTick=previousTick;installedCouplerSourceTick=previousSourceTick;retainedCouplerAssociation=previousRetained;
             try{if(before!=null)install(before);else{signals.close();structure=null;view=null;collision=null;encoded=null;collisionCache.clear();VehicleLookup.remove(this);}}
             catch(RuntimeException|LinkageError rollback){failure.addSuppressed(rollback);if(before!=null)retainUnavailableSnapshot(before);}
             com.vandorlabs.VandorLabs.logger.warn("Rejected vehicle snapshot; prior client source retained",failure);return false;
@@ -220,9 +226,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
     VehicleWorld.CouplerScope currentCouplerScope(){return couplerAssociationGeneration==null?null:VehicleWorld.CouplerScope.external(getUniqueID(),couplerAssociationGeneration);}
     /** A newer scope may precede its source on the client; freeze old-source consumers meanwhile. */
-    public boolean couplerScopeReady(){return view!=null&&VehicleWorld.CouplerScope.same(currentCouplerScope(),view.couplerScope());}
+    public boolean couplerScopeReady(){if(view==null)return false;VehicleWorld.CouplerScope scope=view.couplerScope();return couplerAssociationGeneration==null?scope==null:scope!=null&&getUniqueID().equals(scope.owner)&&couplerAssociationGeneration.equals(scope.generation);}
 
     public boolean acceptsCouplerUpdate(java.util.UUID generation){return couplerScopeReady()&&java.util.Objects.equals(generation,couplerAssociationGeneration);}
+    /** A later STATE is not a source replacement and cannot obsolete a matching motion correction. */
+    public boolean acceptsCouplerMotion(java.util.UUID generation,long tick){return acceptsCouplerUpdate(generation)&&(generation==null||tick>=installedCouplerSourceTick);}
 
     static final class CouplerScopeSnapshot {
         private final EntityGroundVehicle owner;private final java.util.UUID generation;private final NBTTagCompound retained;
