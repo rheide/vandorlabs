@@ -27,6 +27,7 @@ public final class VehicleStructure {
         public final IBlockState state;
         private final NBTTagCompound tile;
         private final Object gearConfigurationIdentity;
+        private volatile List<com.vandorlabs.coupler.CouplerAssociation> couplerClaims;
         public Cell(BlockPos pos,IBlockState state,NBTTagCompound tile) {
             this.pos=pos.toImmutable();this.state=state;this.tile=tile==null?null:com.vandorlabs.ramp.RampCopyData.canonicalizeSets(BuildingBlockCompat.canonical(state,com.vandorlabs.redstone.TransmitterSlots.normalize(tile.copy())));this.gearConfigurationIdentity=state.getBlock() instanceof com.vandorlabs.gear.GearBlock?new Object():null;
         }
@@ -49,7 +50,29 @@ public final class VehicleStructure {
             if(pose.hasKey("SurfaceDepartureActive")&&!pose.hasKey("SurfaceDepartureActive",1))throw new IllegalArgumentException("Invalid surface departure flag");
             for(String key:tile.getKeySet())if(!GEAR_POSE_KEYS.contains(key))next.setTag(key,tile.getTag(key));
             for(String key:pose.getKeySet()){if(!GEAR_POSE_KEYS.contains(key))throw new IllegalArgumentException("Unexpected gear pose field");next.setTag(key,pose.getTag(key).copy());}
-            return new Cell(pos,state,next,gearConfigurationIdentity);
+            Cell result=new Cell(pos,state,next,gearConfigurationIdentity);result.couplerClaims=couplerClaims;return result;
+        }
+        /** Read only known own-data paths. Never walks provider-owned capability compounds. */
+        private List<com.vandorlabs.coupler.CouplerAssociation> couplerClaims(){
+            List<com.vandorlabs.coupler.CouplerAssociation> cached=couplerClaims;if(cached!=null)return cached;
+            if(tile==null||!(state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)&&!(state.getBlock() instanceof com.vandorlabs.gear.GearBlock)||state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&!tile.hasKey(com.vandorlabs.coupler.CouplerAssociationData.KEY)||state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!tile.hasKey("ArmPayload",10))return couplerClaims=Collections.emptyList();
+            List<com.vandorlabs.coupler.CouplerAssociation> found=new ArrayList<>();
+            if(state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)headClaims(tile,found);else gearClaims(tile,0,found);
+            return couplerClaims=found.isEmpty()?Collections.emptyList():Collections.unmodifiableList(found);
+        }
+        private static void headClaims(NBTTagCompound own,List<com.vandorlabs.coupler.CouplerAssociation> out){
+            if(!own.hasKey(com.vandorlabs.coupler.CouplerAssociationData.KEY))return;
+            if(out.size()>=2048)throw new IllegalArgumentException("Coupler claim budget exceeded");
+            com.vandorlabs.coupler.CouplerAssociation proof=com.vandorlabs.coupler.CouplerAssociationData.read(own);
+            if(!own.hasKey("CouplerControlIdentityMost",4)||!own.hasKey("CouplerControlIdentityLeast",4)||!proof.head.equals(own.getUniqueId("CouplerControlIdentity")))throw new IllegalArgumentException("Coupler association head identity changed");out.add(proof);
+        }
+        private static void gearClaims(NBTTagCompound own,int depth,List<com.vandorlabs.coupler.CouplerAssociation> out){
+            if(!own.hasKey("ArmPayload",10))return;if(depth>=8)throw new IllegalArgumentException("Coupler claim nesting exceeds eight snapshots");
+            NBTTagCompound payload=own.getCompoundTag("ArmPayload");
+            for(String field:new String[]{"Blocks","PlacedBlocks"}){
+                if(!payload.hasKey(field,10))continue;NBTTagList rows=payload.getCompoundTag(field).getTagList("Blocks",10);if(rows.tagCount()>MAX_BLOCKS)throw new IllegalArgumentException("Coupler claim snapshot exceeds block budget");
+                for(int i=0;i<rows.tagCount();i++){NBTTagCompound row=rows.getCompoundTagAt(i);if(!row.hasKey("Tile",10))continue;NBTTagCompound nested=row.getCompoundTag("Tile");String id=nested.getString("id");if("vandorlabs:square_coupler".equals(id))headClaims(nested,out);else if("vandorlabs:modular_gear".equals(id))gearClaims(nested,depth+1,out);}
+            }
         }
         public NBTTagCompound tileData(){return tile==null?null:tile.copy();}
         NBTTagCompound tileFields(String[] names){NBTTagCompound result=new NBTTagCompound();if(tile!=null)for(String name:names)if(tile.hasKey(name))result.setTag(name,tile.getTag(name).copy());return result;}
@@ -133,6 +156,8 @@ public final class VehicleStructure {
         for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state||cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!old.sameGearConfiguration(cell)||cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&!old.sameTileData(cell))return;}
         activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;activePropulsion=before.activePropulsion;
     }
+    /** Validate every known claim before a view can authorize motion, including non-articulated heads. */
+    void requireCouplerScope(VehicleWorld.CouplerScope scope){for(int i=0;i<cells.size();i++){List<com.vandorlabs.coupler.CouplerAssociation> claims=cells.get(i).couplerClaims();for(int j=0;j<claims.size();j++){com.vandorlabs.coupler.CouplerAssociation proof=claims.get(j);if(scope==null||!proof.vehicle.equals(scope.owner)||!proof.generation.equals(scope.generation))throw new IllegalArgumentException("Coupler association requires matching external ownership scope");}}}
     public boolean isActive(BlockPos pos){
         if(displayOnly||derivingComponents)return byPosition.containsKey(pos);
         if(activeCells==null){
