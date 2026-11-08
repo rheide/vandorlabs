@@ -35,6 +35,10 @@ public final class VehicleBodyPoseStateChecks {
     else{need(entity.structure==null&&entity.view==null&&entity.collision==null,"actual failed general entity load is inert variant="+variant);need(written.getCompoundTag("Craft").equals(input.getCompoundTag("Craft"))&&written.getTag(VehicleBodyPoseFrame.NBT_KEY).equals(input.getTag(VehicleBodyPoseFrame.NBT_KEY)),"actual failed entity next save retains exact Craft and general envelope variant="+variant);}
    }finally{entity.setDead();}
   }
+  for(int variant=0;variant<4;variant++){
+   NBTTagCompound input=base.copy();if(variant==0)input.setUniqueId(EntityGroundVehicle.COUPLER_GENERATION,new UUID(11,12));if(variant==1)input.setLong(EntityGroundVehicle.COUPLER_GENERATION+"Most",11);if(variant==2){input.setString(EntityGroundVehicle.COUPLER_GENERATION+"Most","wrong");input.setLong(EntityGroundVehicle.COUPLER_GENERATION+"Least",12);}if(variant==3)input.setUniqueId(EntityGroundVehicle.COUPLER_GENERATION,new UUID(0,0));EntityGroundVehicle entity=new EntityGroundVehicle(world);
+   try{entity.readEntityFromNBT(input);NBTTagCompound written=new NBTTagCompound();entity.writeEntityToNBT(written);if(variant==0)need(entity.structure!=null&&new UUID(11,12).equals(entity.couplerAssociationGeneration()),"actual valid external ownership scope loads without minting");else need(entity.structure==null&&entity.view==null&&entity.collision==null&&written.getCompoundTag("Craft").equals(input.getCompoundTag("Craft")),"malformed external ownership scope retains inert original source");for(String suffix:new String[]{"Most","Least"})need(java.util.Objects.equals(input.getTag(EntityGroundVehicle.COUPLER_GENERATION+suffix),written.getTag(EntityGroundVehicle.COUPLER_GENERATION+suffix)),"actual external scope fields retained exactly variant="+variant);}finally{entity.setDead();}
+  }
  }
 
 }
