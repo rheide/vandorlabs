@@ -81,9 +81,9 @@ public final class VehicleArmCouplers {
                 if(endpointHeads.size()>=MAX_HEADS||endpointHeads.put(at,new MaterializedHead(Address.payloadCell(gear.getPos(),original.pos),gear.getPos()))!=null)throw new IllegalArgumentException("Multiple arms claim the same Coupler at "+at);
             }
         }
-        for(VehicleStructure.Cell cell:structure.couplers){TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof TileCoupler))throw new IllegalArgumentException("Coupler data is unavailable at "+cell.pos);TileCoupler tile=(TileCoupler)raw;MaterializedHead owner=endpointHeads.remove(cell.pos);
+        for(VehicleStructure.Cell cell:structure.couplers){TileEntity raw=view.tiles.get(cell.pos);if(!(raw instanceof TileCoupler))throw new IllegalArgumentException("Coupler data is unavailable at "+cell.pos);TileCoupler tile=(TileCoupler)raw;if(tile.quarantined())throw new IllegalArgumentException("Coupler snapshot retained; association unsupported");MaterializedHead owner=endpointHeads.remove(cell.pos);
             if(owner==null)add(heads,addresses,head(Address.nativeCell(cell.pos),cell.pos,cell.state,tile,RigidTransform.IDENTITY));
-            else{validate(cell.state);add(heads,addresses,new Head(owner.address,owner.carrier,cell.pos,cell.state,tile.articulation(),tile.requested(),RigidTransform.IDENTITY,cell.pos,cell.pos,cell.state,tile.releasedArmHead()));}
+            else{validate(cell.state);add(heads,addresses,new Head(owner.address,owner.carrier,cell.pos,cell.state,tile.articulation(),tile.requested(),RigidTransform.IDENTITY,cell.pos,cell.pos,cell.state,tile.releasedArmHead(),tile.association()));}
         }
         if(!endpointHeads.isEmpty())throw new IllegalArgumentException("Materialized Coupler cells are unavailable");
         Set<BlockPos> roots=new HashSet<>();int arms=0;

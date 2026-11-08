@@ -52,6 +52,7 @@ public final class VehicleStructure {
             for(String key:pose.getKeySet()){if(!GEAR_POSE_KEYS.contains(key))throw new IllegalArgumentException("Unexpected gear pose field");next.setTag(key,pose.getTag(key).copy());}
             Cell result=new Cell(pos,state,next,gearConfigurationIdentity);result.couplerClaims=couplerClaims;return result;
         }
+        boolean hasCouplerClaims(){return !couplerClaims().isEmpty();}
         /** Read only known own-data paths. Never walks provider-owned capability compounds. */
         private List<com.vandorlabs.coupler.CouplerAssociation> couplerClaims(){
             List<com.vandorlabs.coupler.CouplerAssociation> cached=couplerClaims;if(cached!=null)return cached;

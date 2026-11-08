@@ -33,15 +33,25 @@ public final class ModularGearVehicles {
                     VehicleStructureEdits.install(craft,next,"Arm sections");return true;
                 }
                 if(payload==null||!payload.materialized())continue;
+                ArmPayload captured=payload.capturedCopy();UUID firstScope=null;
+                if(VehicleArmCouplers.runtime()&&!payload.blocks.couplers.isEmpty()){
+                    VehicleArmCouplers.Snapshot observed=VehicleArmCouplers.observe(craft);VehicleArmCouplerPairs.Snapshot pairs=VehicleArmCouplerPairs.discoverForParking(observed);
+                    if(pairs.pairs.isEmpty()){
+                        if(craft.couplerAssociationGeneration()!=null)throw new IllegalArgumentException("Scoped recapture requires a complete ownership publication receipt");
+                        craft.structure.requireCouplerScope(null);firstScope=UUID.randomUUID();Map<BlockPos,NBTTagCompound> proofs=new LinkedHashMap<>();
+                        for(VehicleStructure.Cell head:captured.blocks.couplers)proofs.put(head.pos,com.vandorlabs.coupler.CouplerAssociationData.chosenPatch(head.tileData(),craft.getUniqueID(),firstScope,com.vandorlabs.coupler.CouplerAssociation.Boundary.NEW_HEAD_INSTALLATION,true,false));
+                        captured=captured.withCouplerAssociations(proofs);
+                    }
+                }
                 Set<BlockPos> removed=payload.placedCells(arm);List<VehicleStructure.Cell> next=new ArrayList<>();
                 for(VehicleStructure.Cell cell:craft.structure.cells){
                     if(removed.contains(cell.pos))continue;
-                    if(cell.pos.equals(arm.getPos())){NBTTagCompound tag=arm.currentData(cell.tileData());tag.setTag("ArmPayload",payload.capturedCopy().write());tag.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,tag));}
+                    if(cell.pos.equals(arm.getPos())){NBTTagCompound tag=arm.currentData(cell.tileData());tag.setTag("ArmPayload",captured.write());tag.removeTag("ArmStoredSections");next.add(new VehicleStructure.Cell(cell.pos,cell.state,tag));}
                     else next.add(cell);
                 }
                 for(VehicleStructure.Cell cell:arm.storedSectionCells()){BlockPos at=arm.getPos().add(cell.pos);if(craft.structure.at(at)!=null&&!removed.contains(at))throw new IllegalArgumentException("Clear the arm section before extending");next.add(new VehicleStructure.Cell(at,cell.state,VehicleTileData.translated(cell.tileData(),arm.getPos())));}
-                VehicleStructureEdits.install(craft,next,"Arm attachment");return true;
-            }catch(IllegalArgumentException denied){arm.captureBlocked(true);return true;}
+                if(firstScope==null)VehicleStructureEdits.install(craft,next,"Arm attachment");else VehicleStructureEdits.installFirstCouplerScope(craft,next,"Unpaired arm attachment",firstScope);return true;
+            }catch(IllegalArgumentException denied){TileEntity installed=craft.view==null?null:craft.view.tiles.get(arm.getPos());if(installed instanceof GearTileEntity)((GearTileEntity)installed).captureBlocked(true);return true;}
         }
         return false;
     }
