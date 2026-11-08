@@ -1,0 +1,19 @@
+# Forge multi-pair arm player focus
+
+The private `VANDOR_LABS_COUPLER_ARM_MULTI_ONLY=1` case runs through the existing `coupler-articulation` focus with `vandorlabs.armCouplerRuntime=true`. It adds no public activation or admission exception.
+
+The physical scene has two independent regular EAST-mounted Extenders at local `(3,1,1)` and `(3,1,5)`. Their EAST-facing heads at X=4 meet WEST-facing child heads at X=5, backed by the child pad at X=6. The two contact points share X/Y and differ by four blocks in Z. The child centre lies to the positive X side of that line. Both pads retain three wheeled supports, three lift blocks, a dedicated controller, seat and thruster; the ground remains in place. Ordinary item callbacks place the arms, heads and named cargo chests.
+
+Only the first arm receives a real handheld transmitter command. Its peer keeps a separate untouched channel and target intent. Preserving both rigid child contact points requires the peer's X stroke to follow, independently of the free rotation around the Z contact line. Later stages use ordinary seated SPACE/flight packets to lift the root, observe the resulting child world basis, and reverse the real arm command only while that basis is changing. The fixture never assigns a phase, rotation matrix, payload or transfer state.
+
+## Current measured boundary
+
+The first actual baseline passed native placement, read-only scanning and durable assembly, including retirement of the original world cargo cells. Server observations contained four heads in two distinct coincident EAST/WEST pairs. The real first-arm command then advanced it to phase 0.75 with a captured payload; the untouched arm remained at phase one without a payload.
+
+The saved server snapshot retained 69 source cells. The moving arm captured exactly its own single EAST-facing locked Coupler, at payload-local `(0,0,0)` with offset `(1,0,0)`. It did not flood through the articulated contact into the child pad or other heads. Both named chests remained ordinary carried-source cells with eleven diamonds and seven emeralds respectively.
+
+The client failed during a Gear TILE correction: `VehicleSignals.apply` / `updateCanopies` reached `VehicleArmCouplerPairs.discover`, which refused several heads occupying one pair. This is a real failing boundary, not acceptance of passive stroke following or player-driven Z rotation. The later flight/gravity stages have not yet been reached. Ambiguous-pair admission remains unchanged.
+
+A diagnostic replay confirms the exact mismatch. The server installed Source has 69 cells and four observed heads; its captured arm head replaces the original native `(4,1,1)` cell. The client installed Source has 70 cells and five observed heads: it retains that old native EAST head and also installs the captured EAST head from arm `(3,1,1)`, payload cell `(0,0,0)`. Both occupy `(5,1.5,1.5)` opposite the same WEST head. Both sides have matching live/raw phase one, target false, one nonmaterialized payload cell and unchanged peer phase one/target true. Installed Source/view identities match on both sides. Thus the Gear TILE applied an ownership-bearing payload before the client Source removed its former native cell; the ambiguity guard is correct. The replay does not establish when a subsequent full Source would have arrived because the client fails at discovery.
+
+A bounded disposable-only probe records the immutable Source, direct live gear phase/target and pure payload header/snapshot, plus raw head addresses, aliases, pivots and normals immediately before discovery. It does not call the entity serializer, `toWorld` or articulation binding. At most four records per side are retained. The original uninstrumented failure remains available separately from a diagnostic replay.

@@ -53,7 +53,7 @@ public final class VehicleCouplerTopology {
         if(structure.couplerTopology!=null)return structure.couplerTopology;
         VehicleWorld view=structure.componentView();if(view==null)return null;
         VehicleWorld current=view.structure==structure?view:new VehicleWorld(view.parent,structure,structure.componentScope());
-        if(VehicleArmCouplers.hasPayloadHeads(current))return structure.couplerTopology=withArmPairs(structure,current,VehicleArmCouplerPairs.discover(VehicleArmCouplers.observe(structure,current)));
+        if(VehicleArmCouplers.hasPayloadHeads(current)){VehicleArmCouplerPairProbe.before(structure,current);return structure.couplerTopology=withArmPairs(structure,current,VehicleArmCouplerPairs.discover(VehicleArmCouplers.observe(structure,current)));}
         return structure.couplerTopology=new VehicleCouplerTopology(structure,current);
     }
     public boolean sufficientLift(VehicleStructure structure){
