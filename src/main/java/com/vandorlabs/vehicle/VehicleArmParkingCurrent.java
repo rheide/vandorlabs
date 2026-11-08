@@ -36,7 +36,7 @@ final class VehicleArmParkingCurrent {
         long px=Double.doubleToLongBits(craft.posX),py=Double.doubleToLongBits(craft.posY),pz=Double.doubleToLongBits(craft.posZ);
         if(cardinal==null||turns!=rotation||x!=px||y!=py||z!=pz){
             VehicleRotation.Plan prepared=VehicleRotation.safePlan(craft,rotation,structure,seats);
-            VehicleRotation.validate(prepared.structure,new VehicleWorld(craft.world,prepared.structure));
+            VehicleRotation.validate(prepared.structure,new VehicleWorld(craft.world,prepared.structure,craft.currentCouplerScope()));
             cardinal=prepared;turns=rotation;x=px;y=py;z=pz;
         }
         return cardinal;

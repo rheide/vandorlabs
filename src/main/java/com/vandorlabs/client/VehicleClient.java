@@ -73,7 +73,7 @@ public final class VehicleClient {
             if(p.type==VehicleNetwork.INSPECTION)latestPreview=null;
             if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS||p.type==VehicleNetwork.STATE)){
                 Entity raw=mc.world.getEntityByID(p.entity);
-                if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&(((EntityGroundVehicle)raw).structure==null||snapshotPending(p.token))){
+                if(raw instanceof EntityGroundVehicle&&raw.getUniqueID().equals(p.token)&&(((EntityGroundVehicle)raw).structure==null||!((EntityGroundVehicle)raw).couplerScopeReady()||snapshotPending(p.token))){
                     if(deferred.size()<16||deferred.containsKey(p.token)){ArrayDeque<VehicleNetwork.Packet> queue=deferred.computeIfAbsent(p.token,k->new ArrayDeque<>());if(p.type==VehicleNetwork.STATE)queue.removeIf(old->old.type==VehicleNetwork.STATE);if(queue.size()==128)queue.removeFirst();queue.addLast(p);}return;
                 }
             }
@@ -115,7 +115,7 @@ public final class VehicleClient {
             if(p.type==VehicleNetwork.TILE){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).view!=null)VehicleSignals.apply((EntityGroundVehicle)raw,p);return;}
             if(p.type==VehicleNetwork.CANOPIES){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleCanopies.apply((EntityGroundVehicle)raw,p.data);return;}
             if(p.type==VehicleNetwork.DOORS){Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)VehicleDoors.apply((EntityGroundVehicle)raw,p.data);return;}
-            if(p.type==VehicleNetwork.STATE){if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly"))VehicleNetworkRuntimeChecks.state(p);Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null)((EntityGroundVehicle)raw).authoritative(p);return;}
+            if(p.type==VehicleNetwork.STATE){if(Boolean.getBoolean("vandorlabs.vehicleNetworkChecksOnly"))VehicleNetworkRuntimeChecks.state(p);Entity raw=mc.world.getEntityByID(p.entity);if(raw instanceof EntityGroundVehicle && raw.getUniqueID().equals(p.token) && ((EntityGroundVehicle)raw).structure!=null){EntityGroundVehicle craft=(EntityGroundVehicle)raw;craft.authoritative(p);if(!craft.couplerScopeReady()){receive(p);VehicleNetwork.request(craft);}}return;}
             if(p.type!=VehicleNetwork.PREVIEW && p.type!=VehicleNetwork.SNAPSHOT)return;
             if(p.total<=0 || p.total>VehicleStructure.MAX_NBT_BYTES || p.offset<0 || p.data.length==0 || p.offset>p.total-p.data.length)return;
             incoming.values().removeIf(i->System.currentTimeMillis()-i.created>10000);
@@ -160,7 +160,7 @@ public final class VehicleClient {
         Iterator<Map.Entry<UUID,ArrayDeque<VehicleNetwork.Packet>>> delayed=deferred.entrySet().iterator();
         while(delayed.hasNext()){Map.Entry<UUID,ArrayDeque<VehicleNetwork.Packet>> entry=delayed.next();Entity raw=mc.world.getEntityByID(entry.getValue().peek().entity);
             if(!(raw instanceof EntityGroundVehicle)||!raw.getUniqueID().equals(entry.getKey())){delayed.remove();continue;}
-            if(((EntityGroundVehicle)raw).structure!=null&&!snapshotPending(entry.getKey())){delayed.remove();for(VehicleNetwork.Packet packet:entry.getValue())receive(packet);}
+            if(((EntityGroundVehicle)raw).structure!=null&&((EntityGroundVehicle)raw).couplerScopeReady()&&!snapshotPending(entry.getKey())){delayed.remove();for(VehicleNetwork.Packet packet:entry.getValue())receive(packet);}
         }
         GearMotionClient.cleanup(mc.world);
         for(Entity raw:mc.world.loadedEntityList)if(raw instanceof EntityGroundVehicle)((EntityGroundVehicle)raw).setLocalDriver(mc.player.getRidingEntity()==raw && raw.getControllingPassenger()==mc.player && !((EntityGroundVehicle)raw).hover && !((EntityGroundVehicle)raw).autopilot.enabled());
