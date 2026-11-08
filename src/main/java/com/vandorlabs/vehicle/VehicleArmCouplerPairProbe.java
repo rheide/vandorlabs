@@ -6,9 +6,14 @@ import net.minecraft.nbt.*;
 import net.minecraft.tileentity.TileEntity;
 
 /** Bounded read-only evidence for the explicitly enabled disposable multi-pair focus. */
-final class VehicleArmCouplerPairProbe {
+public final class VehicleArmCouplerPairProbe {
     private static final int[] COUNTS=new int[2];
-    static void before(VehicleStructure source,VehicleWorld view){
+    /** Scalar read-only query for this disposable consumer probe, not a gameplay admission API. */
+    public static int headCount(VehicleStructure source,VehicleWorld view){
+        if(System.getProperty("vandorlabs.reprolab")==null||!"1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_MULTI_ONLY")))throw new IllegalStateException("Read-only pair probe is not enabled");
+        return VehicleArmCouplers.observe(source,view).heads.size();
+    }
+    public static void before(VehicleStructure source,VehicleWorld view){
         String directory=System.getProperty("vandorlabs.reprolab");
         if(directory==null||!"1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_MULTI_ONLY")))return;
         net.minecraft.world.World physical=view.parent;int depth=0;while(physical instanceof VehicleWorld){if(++depth>8)return;physical=((VehicleWorld)physical).parent;}int side=physical.isRemote?1:0;if(COUNTS[side]>=4)return;int index=++COUNTS[side];
