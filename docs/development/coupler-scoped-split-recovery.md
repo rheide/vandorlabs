@@ -76,3 +76,10 @@ chunk save, identical standard JAR in all three processes, plus Java 8
 linkage/assemble. Separate direct-committed-before-kill and rollback-partial
 fault routes are implemented but remain unvalidated. A genuine non-null BEFORE
 scope also remains pending actual assembly/attach receipt coverage.
+
+All three boundary helpers now compare the actual immutable `Before` generation
+with the installed owner, preserving either legacy null or a genuine known
+scope. `-Dvandorlabs.scopedSplitKnownBefore=true` additionally refuses a null
+original, so a future receipt-binding run cannot accidentally pass through the
+legacy path. This flag asserts an existing scope; it never creates one.
+Known-before live coverage remains pending that real binding.
