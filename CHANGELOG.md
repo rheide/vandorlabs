@@ -1,139 +1,101 @@
 # Changelog
 
-## 2.9 (development)
+## 2.9
 
-- Add bounded read-only parking-phase planning for regular/Large Arms, preserving opaque identity-tile data and deferring whole-layout Safe Park integration.
+### New features and artwork
 
-- Remove warmed allocation when rendering mixed Programmable Light housings, retaining exact vertices and a bounded cache.
+- Add Creative Configurizer Safe Park for existing articulated vehicle layouts, using a nearby loaded flat area and the durable parking transfer. Preserve original Hover mode and target height during recovery. Resolve supported fractional arm endpoints before publishing native blocks.
+- Select artwork for individual Segmented Door cells; use the Copifier for sharing settings across sections. Preserve saved shared artwork, local overrides and configured picks.
+- Add three supplied Segmented Door panel textures and Picket, Industrial and Lattice gate models in both versions. Preserve authored bars, compatible horizontal/vertical joins, translucent glazing and latent window settings; use exact gap-aware interactions and bounded prepared rendering. Group these choices and the renamed Dark/Light panels under Doors / Segmented while preserving saved IDs and existing general-material uses.
+- Add twelve native-resolution Utility Door artwork choices for ordinary and Large Doors in both versions. Group Dark, Slim and White Glass designs under Doors / Glass; preserve existing saved choices and geometry indices. Update the shared browser, collages and Dynmap palette.
+- Keep Segmented Door Tile artwork continuous across solid and Window segments in both versions. Make segment bodies two pixels thick while retaining four-pixel top borders, matching selection, collision, fluids and settled terrain rendering.
+- Place flat Programmable Walls, Glass and Porthole Walls against the clicked support when using a horizontal normal face, rather than on the far edge of the next cell. Preserve top/bottom and tangent-plane continuation.
 
-- Share moving Segmented Door render descriptors across equivalent columns and account for their retained cache memory.
 
-- Reuse native diagonal Glass/Porthole render projections across equivalent owners, removing repeated snapshot-cache allocation while preserving material, clipping and layout changes.
+### Fixes and usability
 
-- Share identical Forge diagonal Glass/Porthole meshes after contact trimming and remove allocation from warmed flat Glass frame lookups, with retained-byte limits and atlas retirement.
-
-- Share prepared ordinary Glass geometry between equivalent native tile publications, with allocation-free warmed lookup, bounded retained data and exact rebuilds after eviction or reload.
-
-- Add Creative Configurizer Safe Park for existing articulated vehicle layouts, using a nearby loaded flat area and the durable parking transfer. Preserve original Hover mode and target height during recovery. Fractional arm-pose resolution remains in progress.
+- Remove the duplicate Dark Segmented Panel picker row and redundant artwork scope/reset buttons; preserve saved IDs and use the Copifier for sharing.
+- Add Ramp-style Tread Px controls for 1/2/4/8/16-pixel Segmented Door bending strips, retaining sixteen-pixel motion for older saves.
+- Give custom gates usable top placement faces and select Segmented Door depth from the clicked support or neighbouring door plane.
+- Render Spiral Aluminum Glazing with opaque metal, inner reveals and selectable glass; give Reactor Door artwork a real octagonal pane and inner border.
+- Rename Utility Modern variants consistently, including Warehouse Modern, without changing saved choices.
 
 - Keep centered vertical articulated couplers facing consistently while the parent turns in Forge 1.12.2. Preserve existing saved joint poses and packet fields.
-
 - Keep Taxi/Hover double-jump taps within the current driving context. Opening a dialog, changing vehicle/player/world or losing the driver role clears a pending tap; single presses and held jump keep their existing behavior.
+- Let Forge Copy Controller pads contain connected Surface blocks with different selected artwork. Keep each cell’s appearance and preserve artwork-sensitive Turntable discovery.
+- Align redstone channel validation with the existing positive 32-bit range. Copy Controllers accept wide channel increments and check translated IDs before copying; Coupler and Segmented Door fields retain complete 64-channel banks, and saved cockpit/coupling channels no longer truncate valid high IDs.
+- Fix connected Duplifier Undo for linked settings such as Segmented Doors: record all selected blocks before the first edit changes shared settings, so Undo restores their original configuration.
+- Validate stored Canopy Glass footprints before placement so rejected configured stacks cannot replace foreign blocks or supports.
+- Fix screen pulses remaining on after their control artwork is hidden and restored. Restored pulses keep their original expiry time.
+- Fix texture quicksearch matching the shared mod namespace. Ordinary terms search names, categories and texture filenames; explicitly qualified texture IDs remain searchable.
+- Align the Forge runtime version with the 2.9 artifact metadata, and reject mismatched version declarations during the root build.
 
+### Rendering and performance
+
+- Remove warmed allocation when rendering mixed Programmable Light housings, retaining exact vertices and a bounded cache.
+- Share moving Segmented Door render descriptors across equivalent columns and account for their retained cache memory.
+- Reuse native diagonal Glass/Porthole render projections across equivalent owners, removing repeated snapshot-cache allocation while preserving material, clipping and layout changes.
+- Share identical Forge diagonal Glass/Porthole meshes after contact trimming and remove allocation from warmed flat Glass frame lookups, with retained-byte limits and atlas retirement.
+- Share prepared ordinary Glass geometry between equivalent native tile publications, with allocation-free warmed lookup, bounded retained data and exact rebuilds after eviction or reload.
 - Remove repeated allocation from Forge Glass/Porthole UV-cache hits, bound retained source/mapped geometry by bytes and clear old atlas entries on resource reload and world unload.
 - Prepare native Light facing and atlas coordinates once per cached mesh, reduce retained vertex storage and reuse the common prepared-vertex emitter while preserving live lighting and reload behavior.
+- Share Programmable Light save, signal policy and cached housing meshes between versions while preserving Forge defaults, lazy input sampling, artwork and existing lighting.
+- Reuse physical fluid volumes when only joined panel artwork coordinates change. Preserve center-owned T-junction materials, stem caps and porthole pane deformation through shared rendering kernels.
+- Reuse current stair collision, exposed surfaces and face mapping across targets, and share slab placement/merge decisions. Preserve exact emitted geometry and configured slab behavior while reducing temporary allocations in dense stair collision construction.
+- Bound native mounted-control transformed meshes once per resource generation, sharing a 16 MiB cache across world states and configured items. Preserve source-model identity, dynamic-model bypass and immutable old reload snapshots.
+- Share the current supporting-face control transform across targets, retaining exact mounted geometry and item transforms while reducing bounds, wedge and construction allocations.
 
-- Add three supplied Segmented Door panel textures and Picket, Industrial and Lattice gate models in both versions. Preserve authored bars, compatible horizontal/vertical joins, translucent glazing and latent window settings; use exact gap-aware interactions and bounded prepared rendering. Group these choices and the renamed Dark/Light panels under Doors / Segmented while preserving saved IDs and existing general-material uses.
-- Select artwork for individual Segmented Door cells in both versions. The dedicated dialog distinguishes This segment from All segments, supports resetting to shared artwork, and retains local choices through configured picking, copied settings, recipes and reload.
-- Add twelve native-resolution Utility Door artwork choices for ordinary and Large Doors in both versions. Group Dark, Slim and White Glass designs under Doors / Glass; preserve existing saved choices and geometry indices. Update the shared browser, collages and Dynmap palette.
+### Experimental NeoForge 1.21.1 and shared refactors
+
+Forge 1.12.2 remains the release reference. Native Vehicle Mode and the remaining standalone mechanism families are incomplete; these entries do not claim full 1.21.1 parity.
+
+- Share the mounted-control height, tilt and direction save contract, preserving old preset migration, malformed-field defaults and caller-specific fallback without changing geometry or live latch state.
+- Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
+- Share saved material-ID validation while retaining unavailable custom and filesystem artwork identities.
+- Share existing layout, porthole geometry, category and glass/light material definitions between the independent Java 8 and Java 21 builds without changing their legacy behavior.
+- Share built-in transmission ranges, typed saved defaults and mounted-control settings between targets. Keep Forge migration, geometry, configured-item fields and hot-path allocation behavior unchanged.
 
 - Enable all eleven standalone Canopy and cockpit-glass components in the experimental native build with original recipes, configured placement, dedicated editing, joined shells, pause-aware motion, source-matched terrain/transparent artwork and safe loaded membership repair. Add staged native construction images. Vehicle/carried integration remains deferred.
-- Keep Segmented Door Tile artwork continuous across solid and Window segments in both versions. Make segment bodies two pixels thick while retaining four-pixel top borders, matching selection, collision, fluids and settled terrain rendering.
-
-- Place flat Programmable Walls, Glass and Porthole Walls against the clicked support when using a horizontal normal face, rather than on the far edge of the next cell. Preserve top/bottom and tangent-plane continuation.
-- Let Forge Copy Controller pads contain connected Surface blocks with different selected artwork. Keep each cell’s appearance and preserve artwork-sensitive Turntable discovery.
-
-- Align redstone channel validation with the existing positive 32-bit range. Copy Controllers accept wide channel increments and check translated IDs before copying; Coupler and Segmented Door fields retain complete 64-channel banks, and saved cockpit/coupling channels no longer truncate valid high IDs.
-
 - Enable the Duplifier in the experimental native build with its original recipe, dedicated Apply Settings window, connected application, settings-only Undo and three-state item artwork. Copied-settings crafting supports converted building, Door, Trapdoor, Light and Screen families; Ramp integration is still in progress.
-
 - Enable the canonical Card / Chip Programmer in the experimental native build with four-cell placement, dedicated Inventory/Journal editing, Program/Copy, physical sockets, padded authored artwork and saved ownership recovery. Add a native construction guide with staged player images. Vehicle Chip operations remain deferred.
-
-- Fix connected Duplifier Undo for linked settings such as Segmented Doors: record all selected blocks before the first edit changes shared settings, so Undo restores their original configuration.
-
-- Validate stored Canopy Glass footprints before placement so rejected configured stacks cannot replace foreign blocks or supports.
-
 - Enable Programmable Storage in the experimental native build with its original recipe, independent 27-slot inventory, dedicated material editor, configured items and source-matched Cabinet artwork. Mining keeps contents separate from the configured block item.
-
 - Enable ordinary Programmable Glass in the experimental native build with original recipes, configured variants, dedicated editing, two-sided fluids and source-matched world/item artwork. Standalone Canopy components are now separately enabled; Vehicle integration remains deferred.
-
 - Enable standalone Card and Data Chip readers in the experimental native build with source-matched mounts, dedicated editing, inventory/hopper behavior and credential recovery.
-
 - Prevent native Programmable Screens, metal switches, numeric controls, Lights and propulsion blocks from being replaced by buckets or flowing water/lava. Preserve their settings and owned items while retaining the intentional fluid behavior of power levers.
-
 - Share Copifier option-mask migration across platform adapters while preserving existing saved choices, option indices, reverse cycling and apply/undo behavior in Forge.
-
 - Enable standalone propulsion and redstone-light families in the experimental native build: original block identities, seven catalog items and recipes, connected authored shapes, dedicated controls, particles and configured Survival placement/harvest. Vehicle effects remain deferred.
 - Correct native position-dependent light-source discovery and client light withdrawal while preserving failed-reader snapshot recovery.
-
 - Enable Programmable Light, Light Frame and Light Slab in the experimental native build with source-matched grouping, configured items and dedicated ON/OFF/Sides/Redstone editing.
-
 - Retain failed native platform snapshots through component/attachment decode failures and Trapdoor mining. Opaque recovery items preserve their original data and refuse ordinary placement.
-
 - Enable regular and diagonal Trapdoors in the experimental native build with dedicated editing, configured items, source-matched assemblies, moved-leaf interactions and contained-fluid rendering.
-
-- Share Programmable Light save, signal policy and cached housing meshes between versions while preserving Forge defaults, lazy input sampling, artwork and existing lighting.
-
 - Preserve clicked-face coordinates when placing native walls, portholes and ordinary/Large Doors, keeping depth, anchoring and hinge choice consistent with Forge.
-
 - Bake settled native Segmented Door bodies into chunk meshes after confirmed uploads, retaining visible animated fallbacks during rebuilds and removal.
-
-- Fix screen pulses remaining on after their control artwork is hidden and restored. Restored pulses keep their original expiry time.
-
 - Share Programmable Screen activation and legacy artwork migration while preserving existing Forge dialogs, saved control rows and joined power behavior. Enable the seven original standalone Screen roles in the experimental native build with dedicated editing, authored configured items, joined media/rows and non-Vehicle Chip displays.
 - Preserve native Segmented Door legacy water through opposite-side edits and complete drainage, preventing lost or recreated water after reload.
-
 - Enable the native ordinary and Large programmable Doors with shared authored geometry, reversible motion, full company artwork, padded configured icons and the dedicated Door/Frame/Redstone/Security/Glass editor. Preserve paired controls, channel banks and credential ownership through restart and mining. Large Doors preserve nine-part placement, old-schema follower defaults, per-part water outlet ownership and credential recovery when mining any part.
 - Share Segmented Door panel, window and border kernels, typed trapdoor defaults and bounded Segmented Door settings transport. Share regular/diagonal trapdoor dialog choices, wording and reverse cycling across versions. Enable native Segmented Doors with per-section editing, moved-panel use, configured picking and stationary fluid ownership.
 - Keep the native diagonal-glass recipe conditional on its original programmable-glass ingredient becoming available.
-
 - Extend the experimental 1.21.1 build with programmable plain walls, thin porthole walls and diagonal walls. Reuse the housing editor, configured items, frame materials, contained fluids and bounded panel renderer; preserve diagonal sizes, slopes, fills and joins. Portholes support the glass palette and per-block Off/static/animated artwork. Other building variants and full native acceptance remain in progress.
-- Reuse physical fluid volumes when only joined panel artwork coordinates change. Preserve center-owned T-junction materials, stem caps and porthole pane deformation through shared rendering kernels.
-
-- Fix texture quicksearch matching the shared mod namespace. Ordinary terms search names, categories and texture filenames; explicitly qualified texture IDs remain searchable.
-
 - Fix native mounted-control hover stalls and excessive selection lines. Buttons, switches, power levers and throttles now use the same single enclosing selection box as Forge; detailed collision shapes remain separate and are not built by hovering.
-
 - Share current slab/stair artwork selection, UV calculations and immediate dialog controls while preserving existing rendered output and saved-value behavior. Add lossless native contained-fluid storage as a prerequisite for building shapes.
-
-- Align the Forge runtime version with the 2.9 artifact metadata, and reject mismatched version declarations during the root build.
-
-- Reuse current stair collision, exposed surfaces and face mapping across targets, and share slab placement/merge decisions. Preserve exact emitted geometry and configured slab behavior while reducing temporary allocations in dense stair collision construction.
-
 - Share exact stair tread/roll save and configured-item rules, including legacy 16-pixel treads and saved roll 2. Preserve invalid-edit refusal and unchanged Forge geometry, lighting and padded icons. Native slab/stair adapters are registered; broader native acceptance remains in progress.
-
 - Add native directional wireless transmitter and receiver blocks with analog/digital modes, separate On/Off levels and six-face ports. Reuse the channel host and inline transmission controls while preserving receiver maximum aggregation, plain dropped items and loaded-world lifecycle checks.
-
 - Share the current glass editor state, four tabs, option rows and reverse cycling. Preserve immediate preview, frame-face and playback panes, hidden legacy control IDs and live framing callbacks.
-
-- Bound native mounted-control transformed meshes once per resource generation, sharing a 16 MiB cache across world states and configured items. Preserve source-model identity, dynamic-model bypass and immutable old reload snapshots.
-
 - Add native Thruster Levers, Airliner and Fighter Throttles, and Wall Sliders through the shared mounted-control host, dialog and renderer. Preserve four detents, saved limits, selectable throttle types, partial channel banks and canonical configured items. Share output math, save defaults and dialog rows with Forge.
-- Share the current programmable-glass save contract while retaining frame appearance, playback, fluids, legacy size migration and typed saved defaults. Verify unchanged Forge save output and focused live glass appearance; native glass remains pending.
-
+- Share the current programmable-glass save contract while retaining frame appearance, playback, fluids, legacy size migration and typed saved defaults. Verify unchanged Forge save output and focused live glass appearance; native ordinary Glass is enabled with its dedicated editor.
 - Share wireless transmitter/receiver scalar save defaults and analog/digital level rules across targets. Preserve the existing Forge six-face sampling, strongest-input receiver behavior and separate On/Off settings; native endpoint blocks now use this policy.
-
-
 - Add native Industrial and Small Power Levers, retaining Compact and Large saved variants and canonical configured-item drops. Reuse the mounted-control dialog, latch host, activation path and renderer; share size defaults and the Size option with Forge. Preserve authored geometry and bounded shape caching.
-
 - Add native Push Buttons and Rocker Switches with authored mounted geometry, configured items, ranged inline transmission and shared latch banks. Preserve twenty-tick button pulses and publish physical redstone after linked banks settle. Reuse mount rows and one native inline transmission editor, with consistent reverse cycling and separate Done/Escape mount drafts.
-
 - Reuse mounted-control option labels and row layouts across targets, preserving existing Forge dimensions, option IDs and forward/reverse cycling.
 - Share mounted-control per-channel persistence and output rules without changing Forge latch transitions. Add the native ranged-output and latch host for subsequent control families, preserving partial banks, independent pulses and unloaded-world cleanup.
-
-- Share the current supporting-face control transform across targets, retaining exact mounted geometry and item transforms while reducing bounds, wedge and construction allocations.
-
-- Share built-in transmission ranges, typed saved defaults and mounted-control settings between targets. Keep Forge migration, geometry, configured-item fields and hot-path allocation behavior unchanged.
 - Preserve native transmitter-copy crafting: place the source in the center of a 3×3 grid and one target beside it. Copy channels while retaining the target tier and other components, and return the original source. Preserve this rule through native grid cropping and automated-crafter recipe caching.
-
-- Share the mounted-control height, tilt and direction save contract, preserving old preset migration, malformed-field defaults and caller-specific fallback without changing geometry or live latch state.
-
 - Add the native Programmable Trigger with shared saved state and dialog rules, static Off/On or signal-band artwork, exact-level matching and Front Only/Sides options. Reuse one native material picker for cube and Trigger dialogs, including independent artwork searches, inventory sampling and scrolling.
 - Add native handheld transmitter tiers with canonical recipes, stationary per-dimension sources and authenticated channel editing. Preserve exact installed receiver identity through deferred registration and chunk unload/reload. Other control and wireless families remain incomplete.
-
 - Support installed filesystem PNGs on the native programmable cube, using shared startup discovery and stable saved identifiers. Keep picker selections through missing-file and dimension reloads, refresh world/item UV snapshots coherently, and preserve separate startup-missing-client fallback. New file discovery still requires a restart; the PNG workflow remains separate from inventory block sampling.
 - Share the exact custom block material saved-ID calculation, retaining legacy caller metadata normalization and literal previous-save identity fixtures. Add an actual vanilla 1.12.2 block-registry manifest and strict native data-fixer aliases, preserving requested saved IDs while resolving the actual normalized legacy states.
-
 - Share programmable dialog panel dimensions and material-picker scrolling across block families and both targets. Cube Appearance and Trigger tabs, labels and edit transitions use common control descriptors while retaining their existing layouts, reverse cycling and immediate submissions. Share housing face-plane and packed-light calculations while preserving legacy discovery and light sampling.
-
-- Share Trigger and housing save contracts while preserving legacy missing-field defaults, material migrations, six face overrides and dormant Trigger playback data. Add a focused Trigger dialog regression without running unrelated gameplay fixtures.
-
 - Add the experimental NeoForge plain matter block and matter/alloy ingots with canonical recipes, artwork and native persistence/interaction checks. Add the native programmable cube editor with built-in material search, six face overrides, all three layouts, bounded joined images and configuration-preserving items. Creative shift-click and the main-hand Configurizer share its authenticated menu. Other programmable families and the production chain remain incomplete.
 - Add native cube inventory sampling with the shared non-consuming grid, default-state block artwork and both door preview halves. New samples use a fixed `flattened-block:` identity preimage; old vanilla aliases keep their saved appearance. Preserve configured item and face settings through reopen, restart, unavailable artwork and resource reloads. Optional component-renderer adapters remain deferred.
-- Share saved material-ID validation while retaining unavailable custom and filesystem artwork identities.
-
-- Share existing layout, porthole geometry, category and glass/light material definitions between the independent Java 8 and Java 21 builds without changing their legacy behavior.
-
 - Begin incremental integration of the historical NeoForge 1.21.1 target while preserving Forge 1.12.2 as the default and behavioral reference. Native feature parity and release readiness remain pending.
 - Track current-master families and historical native implementations separately. Prioritize non-vehicle parity, including standalone mechanisms, Copy Controllers and shared turntable infrastructure; defer vehicle-specific integration.
 

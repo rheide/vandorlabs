@@ -10,12 +10,12 @@ including valid channel edits, like the programmable-screen selector. Done or
 Escape closes the dialog; neither rolls back the live changes. Choices are saved in the
 lower tile entity and synchronized by the server. Configuring a pair applies
 to both leaves; a newly placed matching mate inherits the existing appearance.
-The **Doors / Utility** group adds twelve full-leaf material choices: classic and
-modern Blue, Green and Warm Utility doors, Factory, Industrial, Modern Industrial,
-Reactor, Warehouse and Futuristic Warehouse. They work on ordinary and Large Doors
+The **Doors / Utility** group adds twelve full-leaf material choices: Blue, Green
+and Warm Utility with their Modern variants, Factory, Industrial, Industrial Modern,
+Reactor, Warehouse and Warehouse Modern. They work on ordinary and Large Doors
 using the selected existing geometry, frame and motion. Dark, Slim and White Glass
 designs are grouped under **Doors / Glass**. Saved artwork IDs and all thirty
-geometry-design indices retain their previous meaning.
+geometry-design indices retain their previous meaning. Reactor artwork has a real octagonal opening with inner reveals; use the **Glass** tab to select its pane material and tint on ordinary and Large Doors.
 
 ![Utility Door artwork choices](texture-browser/collages/doors-utility.png)
 

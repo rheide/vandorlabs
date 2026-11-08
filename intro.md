@@ -6,10 +6,13 @@
 
 Build starships and sci-fi bases in **Minecraft Forge 1.12.2**. Vandor Labs adds
 customisable building blocks, animated displays, working mechanisms and
-redstone-controlled lighting and effects. **Version 2.7** expands Classic, Cool and
-Gold display artwork, adds independent frame finishes and configurable glazing,
-and gives transmitting blocks adjustable range and local redstone output.
+redstone-controlled lighting and effects. **Version 2.9** adds authored sliding gates, new Door and panel artwork, selectable glazing and Creative vehicle Safe Park, with improvements to placement, copying and dense-build rendering.
 
+[Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/vandor-labs).
+The NeoForge **1.21.1** build is experimental; conversion of the remaining standalone mechanisms and Vehicle Mode is incomplete.
+
+- **Slide a gate:** build [Segmented Doors](https://github.com/rheide/vandorlabs/blob/master/docs/segmented-doors.md) with Picket, Industrial or Lattice models. Choose upward, downward or sideways travel, straight or bending motion, and a separate finish for each section. The Copifier shares chosen settings across a build.
+- **Park safely in Creative:** use the [Configurizer](https://github.com/rheide/vandorlabs/blob/master/docs/CONFIGURIZER.md) Safe Park action to align a captured craft and search nearby loaded flat ground before restoring its blocks.
 - **Build:** [hull panels, blocks, slabs, stairs, ramps, diagonal walls, pipes, vents, padding, glass and portholes](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/building.md). Share artwork across matching faces with Tile, Stretch or aspect-preserving Fit layouts.
 - **Furnish:** [configurable storage](https://github.com/rheide/vandorlabs/blob/master/docs/programmable-storage.md), plus [chairs and connected seating](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/chairs.md).
 - **Display:** [planet and ship viewscreens, animated bridge/engineering panels, consoles and interactive inputs](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/programmable.md). Choose Classic, Cool or Gold artwork in Full and Half layouts, with company control panels and larger designs for wide installations. Configure [frame finishes and split displays](https://github.com/rheide/vandorlabs/blob/master/docs/frames-and-displays.md) separately from the artwork.
@@ -28,7 +31,7 @@ and gives transmitting blocks adjustable range and local redstone output.
 - **Control:** [buttons, switches, levers, sliders, aircraft throttles, screen controls and triggers](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/controls.md), linked by redstone channels carrying levels 0-15. Transmitting blocks have a built-in [range slider and independent local redstone setting](https://github.com/rheide/vandorlabs/blob/master/docs/redstone-transmitters.md); no inserted transmitter item is needed. Screen and cockpit controls share their host range while keeping separate channel targets.
 - **Customise:** edit settings with the [Configurizer](https://github.com/rheide/vandorlabs/blob/master/docs/CONFIGURIZER.md), copy them with the [Duplifier](https://github.com/rheide/vandorlabs/blob/master/docs/DUPLIFIER.md), and choose [materials or custom artwork](https://github.com/rheide/vandorlabs/blob/master/docs/unified-materials.md). Company logos, murals and backgrounds have their own Corp category.
 
-See [what's new in 2.7](https://github.com/rheide/vandorlabs/blob/master/docs/versions/version-2.7.md)
+See [what's new in 2.9](https://github.com/rheide/vandorlabs/blob/master/docs/versions/version-2.9.md)
 and the [full changelog](https://github.com/rheide/vandorlabs/blob/master/CHANGELOG.md).
 
 Browse the [illustrated block guide](https://github.com/rheide/vandorlabs/blob/master/docs/gallery/README.md)

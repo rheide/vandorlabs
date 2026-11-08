@@ -8,7 +8,7 @@ Segmented Door sections form a sliding door with configurable travel. The defaul
 
    ![Level sill before placing the door](images/segmented-legacy-build-1-foundation.png)
 
-2. Face the opening and place the first column from bottom to top. A section placed against a section above or below inherits its facing. The top section supplies its own narrow header.
+2. Face the opening and place the first column from bottom to top. A section placed against a section above or below inherits its facing and plane. A fresh section chooses Middle/Near/Far from the clicked face, like a Programmable Wall. The top section supplies its own narrow header.
 
    ![First five-section column](images/segmented-legacy-build-2-column.png)
 
@@ -20,7 +20,7 @@ Segmented Door sections form a sliding door with configurable travel. The defaul
 
    ![Door raised overhead](images/segmented-legacy-open.png)
 
-5. Use the Configurizer, or sneak-right-click, to open the dedicated configuration dialog. **Door** selects **Slide: Up / Down / Left / Right**, **Angle: Perpendicular / Straight**, **Speed: Slow / Medium / Fast**, and **Pos: Middle / Near / Far**, to the right of the artwork picker. Perpendicular turns the panels behind the opening; Straight keeps them in the door plane and leaves a one-pixel edge exposed when open. Travel, position, texture layout and activation settings apply to the linked door. Artwork has separate **This segment / All segments** scope. Right-click an option to cycle backwards.
+5. Use the Configurizer, or sneak-right-click, to open the dedicated configuration dialog. **Door** selects **Slide: Up / Down / Left / Right**, **Angle: Perpendicular / Straight**, **Speed: Slow / Medium / Fast**, and **Pos: Middle / Near / Far**, to the right of the artwork picker. Perpendicular turns the panels behind the opening; Straight keeps them in the door plane and leaves a one-pixel edge exposed when open. **Tread Px** uses the Ramp Controller's numeric field and minus/plus controls to choose 1, 2, 4, 8 or 16 pixels per bending strip. It is disabled for Straight travel. Existing doors default to 16. Travel, position, tread size, texture layout and activation settings apply to the linked door. Artwork changes the selected section; use the Copifier to share settings. Right-click an option to cycle backwards.
 
    ![Segmented Door mechanism settings](images/segmented-mechanism-settings.png)
 
@@ -40,24 +40,40 @@ The server owns collision and the saved motion timeline. Sections remain native 
 
 ## Panel artwork
 
-Open **Door** to select general materials, Frame, Trapdoors, Doors or Large Doors artwork. Use **Custom...** to sample a block from your inventory without consuming it. Custom artwork is not reflected across neighbouring segments. **Texture: Tile / Stretch / Fit (aspect)** uses the same layout choices as Programmable Door. **Artwork: This segment** changes only the block whose dialog you opened. Select **All segments** to replace artwork across the linked door and clear individual overrides. **Use shared artwork** resets the selected block to the shared choice. Old doors without overrides keep their original artwork. The original dark slatted panel remains the default; **Doors → Segmented → Dark Segmented Panel / Light Segmented Panel** exposes its two finishes. Their saved choices and general-material availability remain unchanged. The original artwork is the standalone `segmented/segmented_panel.png` texture. Changing artwork preserves the door’s channels, motion and saved section ownership.
+Open **Door** to select general materials, Frame, Trapdoors, Doors or Large Doors artwork. Use **Custom...** to sample a block from your inventory without consuming it. Custom artwork is not reflected across neighbouring segments. **Texture: Tile / Stretch / Fit (aspect)** uses the same layout choices as Programmable Door. Artwork selection changes the block whose dialog you opened. Use the Copifier to share its selected settings with other sections. Old doors without overrides keep their original artwork. The original dark slatted panel remains the default; **Doors → Segmented → Dark Segmented Panel / Light Segmented Panel** exposes its two finishes. Their saved choices and general-material availability remain unchanged. The original artwork is the standalone `segmented/segmented_panel.png` texture. Changing artwork preserves the door’s channels, motion and saved section ownership.
 
 ![Segmented Door artwork and window controls](images/segmented-door-window-settings.png)
 
-**Doors → Segmented** also contains **Raised Black Panels**, **Ribbed Blue Steel**, **Spiral Aluminum Glazing**, and the **Picket**, **Industrial** and **Lattice** gate models. These choices work with both artwork scopes and retain their choice through configured picking and copied settings. Spiral Aluminum Glazing blends its authored translucent panes while keeping the section edges opaque.
+**Doors → Segmented** also contains **Raised Black Panels**, **Ribbed Blue Steel**, **Spiral Aluminum Glazing**, and the **Picket**, **Industrial** and **Lattice** gate models. These choices retain their identities through configured picking and copied settings. Spiral Aluminum Glazing has four real openings with solid metal borders and inner reveals. Open **Glass** to select its pane material and tint.
 
 ![Three supplied gate styles and Spiral Aluminum Glazing on existing sections](images/segmented-supplied-artwork.png)
 
-Gate models replace the panel/window faces with their authored bars. Matching neighbouring models join only where their posed edges meet; different styles, mounting planes or incompatible motion stay separate. Bars keep their authored scale. The gate choice hides inapplicable window, shape and image-layout controls, while preserving those settings for a later return to panel artwork. Motion, speed, position and artwork scope remain available. Sections retain the same two-pixel collision/fluid envelope and a single selection outline; precise interaction rays pass through the authored openings.
+Gate models replace the panel/window faces with their authored bars. Matching neighbouring models join only where their posed edges meet; different styles, mounting planes or incompatible motion stay separate. Bars keep their authored scale. The gate choice hides inapplicable window, shape and image-layout controls, while preserving those settings for a later return to panel artwork. Motion, speed, position and Tread Px remain available. Sections retain the same two-pixel collision/fluid envelope and a single selection outline; precise interaction rays pass through the authored openings.
 
-![Gate artwork with the dedicated motion and scope controls](images/segmented-gate-settings.png)
+![Gate artwork with the dedicated motion and tread controls](images/segmented-gate-settings.png)
 
+
+## Sideways gate examples
+
+Choose **Slide: Left** and **Angle: Straight** for a gate that slides in its own plane. Gate tops provide a placement face across the section width, so columns can be extended from above while front rays still pass through the openings.
+
+![Picket sliding sideways](images/segmented-2.9-picket-slide.gif)
+
+![Industrial sliding sideways](images/segmented-2.9-industrial-slide.gif)
+
+![Lattice sliding sideways](images/segmented-2.9-lattice-slide.gif)
+
+Choose **Angle: Perpendicular** and reduce **Tread Px** for finer bending behind the opening.
+
+![Industrial gate bending with four-pixel treads](images/segmented-2.9-industrial-bend.gif)
+
+Additional bending examples: [Picket](images/segmented-2.9-picket-bend.gif) and [Lattice](images/segmented-2.9-lattice-bend.gif).
 
 ## Window segments
 
-1. Configure the specific block you want to change. Opening shape, Window Tile/Fit and glass settings belong to that block; artwork follows the **This segment / All segments** selector, while Texture Tile/Stretch/Fit still applies across the linked door. To make a window row, configure each block in that row. On **Door**, change **Segment: Solid** to **Window**. Choose **Hexagon**, **Octagon**, **Square** or **Round**, using the same outlines as Programmable Porthole.
+1. Configure the specific block you want to change. Opening shape, Window Tile/Fit and glass settings belong to that block; artwork also belongs to that block, while Texture Tile/Stretch/Fit still applies across the linked door. To make a window row, configure each block in that row. On **Door**, change **Segment: Solid** to **Window**. Choose **Hexagon**, **Octagon**, **Square** or **Round**, using the same outlines as Programmable Porthole.
 2. Choose **Window: Tile** to fit the opening to the selected section, or **Fit** to share an opening only with edge-connected Window sections of the same Shape. Solid sections, different shapes and gaps split the window group. Each panel still moves independently along the selected path.
-3. Open the **Glass** tab to choose the glass shade or replacement material and its tint. The Glass tab appears for Window segments and Frame artwork. Selecting glass for a Frame enables its square opening on the configured block. All tabs keep the same dialog dimensions.
+3. Open the **Glass** tab to choose the glass shade or replacement material and its tint. The Glass tab appears for Window segments, Frame artwork and Spiral Aluminum Glazing. Selecting glass for a Frame enables its square opening on the configured block. All tabs keep the same dialog dimensions.
 
 ![Round window fitted across linked sections](images/segmented-round-fit.png)
 
