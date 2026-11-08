@@ -19,6 +19,11 @@ public final class CouplerCurrentDataChecks {
         public void deserializeNBT(NBTTagCompound tag){}
     }
     private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Coupler typed snapshot: "+why);}
+    private static void topologyHeaders()throws Exception{
+        com.vandorlabs.coupler.BlockCoupler block=new com.vandorlabs.coupler.BlockCoupler();net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(block);java.lang.reflect.Constructor<?> factory=Class.forName("com.vandorlabs.client.NonRenderingChecks$MemoryWorld").getDeclaredConstructor(boolean.class);factory.setAccessible(true);net.minecraft.world.World parent=(net.minecraft.world.World)factory.newInstance(false);List<VehicleStructure.Cell> cells=new ArrayList<>();
+        for(int i=0;i<2;i++){BlockPos at=new BlockPos(0,0,i);NBTTagCompound tag=new NBTTagCompound();tag.setString("id","vandorlabs:square_coupler");tag.setBoolean("CouplerArticulation",true);NBTTagCompound caps=new NBTTagCompound();caps.setByteArray("OpaqueProvider",new byte[16384]);tag.setTag("ForgeCaps",caps);cells.add(new VehicleStructure.Cell(at,block.getDefaultState().withProperty(com.vandorlabs.coupler.BlockCoupler.FACING,i==0?EnumFacing.SOUTH:EnumFacing.NORTH).withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,true),tag));}
+        VehicleStructure source=VehicleStructure.display(cells);VehicleWorld view=new VehicleWorld(parent,source);java.lang.reflect.Field dispatcher=TileEntity.class.getDeclaredField("capabilities");dispatcher.setAccessible(true);for(TileEntity tile:view.tiles.values())dispatcher.set(tile,new CapabilityDispatcher(Collections.singletonMap(KEY,new Provider()),null));NBTTagCompound beforeSource=source.write();int before=serializations;VehicleCouplerTopology topology=VehicleCouplerTopology.of(source);need(topology.links.size()==1&&topology.links.get(0).articulation,"actual native pair topology keeps articulation");need(serializations==before&&source.write().equals(beforeSource),"topology header query never serializes synthetic capabilities or changes opaque source");
+    }
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileCoupler.class,new ResourceLocation("vandorlabs:square_coupler"));
         for(int bits=0;bits<128;bits++){
@@ -34,6 +39,7 @@ public final class CouplerCurrentDataChecks {
         }
         System.out.println("Arm typed current-data PASS profiles=32 actual capability divergence/unknown own envelope/current controls/cleared optional fields");
         TileCoupler tile=new TileCoupler();boolean refused=false;try{tile.currentData(new NBTTagCompound());}catch(IllegalArgumentException expected){refused=true;}need(refused,"unidentified source snapshot refuses");
+        topologyHeaders();
         System.out.println("Coupler typed current-data PASS profiles="+profiles+" checks="+checks+" actual attached Forge capability serializer divergence/opaque preservation/current flags/legacy defaults/cleared optional fields; runtime unbound");
     }
 }

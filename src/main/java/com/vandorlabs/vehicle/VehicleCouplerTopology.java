@@ -28,7 +28,7 @@ public final class VehicleCouplerTopology {
             if(!a.state.getValue(BlockCoupler.LOCKED))continue;BlockPos p=a.pos.offset(a.state.getValue(BlockCoupler.FACING));VehicleStructure.Cell b=structure.at(p);
             if(b==null||a.pos.compareTo(p)>=0||!VehicleCouplings.matching(a.state,b.state)||!b.state.getValue(BlockCoupler.LOCKED)||!structure.isActive(a.pos)||!structure.isActive(b.pos))continue;
             int first=ids.get(a.pos),second=ids.get(p);if(first==second)continue;
-            net.minecraft.nbt.NBTTagCompound at=a.tileData(),bt=b.tileData();net.minecraft.tileentity.TileEntity firstTile=view.getTileEntity(a.pos),secondTile=view.getTileEntity(p);if(firstTile instanceof com.vandorlabs.coupler.TileCoupler)at=firstTile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());if(secondTile instanceof com.vandorlabs.coupler.TileCoupler)bt=secondTile.writeToNBT(new net.minecraft.nbt.NBTTagCompound());paired.add(new Link(a.pos,p,first,second,at!=null&&at.getBoolean("CouplerArticulation")||bt!=null&&bt.getBoolean("CouplerArticulation")));
+            net.minecraft.tileentity.TileEntity firstTile=view.getTileEntity(a.pos),secondTile=view.getTileEntity(p);boolean articulatedA=firstTile instanceof com.vandorlabs.coupler.TileCoupler?((com.vandorlabs.coupler.TileCoupler)firstTile).articulation():a.tileBoolean("CouplerArticulation"),articulatedB=secondTile instanceof com.vandorlabs.coupler.TileCoupler?((com.vandorlabs.coupler.TileCoupler)secondTile).articulation():b.tileBoolean("CouplerArticulation");paired.add(new Link(a.pos,p,first,second,articulatedA||articulatedB));
         }
         links=Collections.unmodifiableList(paired);
     }
@@ -52,8 +52,9 @@ public final class VehicleCouplerTopology {
     public static VehicleCouplerTopology of(VehicleStructure structure){
         if(structure.couplerTopology!=null)return structure.couplerTopology;
         VehicleWorld view=structure.componentView();if(view==null)return null;
-        if(VehicleArmCouplers.hasPayloadHeads(view)){VehicleWorld current=view.structure==structure?view:new VehicleWorld(view.parent,structure,structure.componentScope());return structure.couplerTopology=withArmPairs(structure,current,VehicleArmCouplerPairs.discover(VehicleArmCouplers.observe(structure,current)));}
-        return structure.couplerTopology=new VehicleCouplerTopology(structure,view.structure==structure?view:new VehicleWorld(view.parent,structure,structure.componentScope()));
+        VehicleWorld current=view.structure==structure?view:new VehicleWorld(view.parent,structure,structure.componentScope());
+        if(VehicleArmCouplers.hasPayloadHeads(current))return structure.couplerTopology=withArmPairs(structure,current,VehicleArmCouplerPairs.discover(VehicleArmCouplers.observe(structure,current)));
+        return structure.couplerTopology=new VehicleCouplerTopology(structure,current);
     }
     public boolean sufficientLift(VehicleStructure structure){
         if(liftReady!=null)return liftReady;
