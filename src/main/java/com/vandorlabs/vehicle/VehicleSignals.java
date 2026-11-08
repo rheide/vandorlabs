@@ -284,7 +284,8 @@ public final class VehicleSignals {
     public static void apply(EntityGroundVehicle craft,VehicleNetwork.Packet packet){
         TileEntity tile=craft.view.getTileEntity(packet.origin);if(tile==null)return;
         try{NBTTagCompound data=net.minecraft.nbt.CompressedStreamTools.readCompressed(new ByteArrayInputStream(packet.data));
-            if(!data.getString("id").equals(tile.writeToNBT(new NBTTagCompound()).getString("id")))return;
+            VehicleStructure.Cell original=craft.structure.at(packet.origin);
+            if(original==null||!data.getString("id").equals(original.tileString("id")))return;
             if(tile instanceof TileEntityLandingGear){
                 TileEntityLandingGear gear=(TileEntityLandingGear)tile;float previous=gear.progress;tile.readFromNBT(data);float authoritative=gear.progress;gear.progress=gear.previous=previous;
                 VehicleLandingGear.correct(craft,packet.origin,authoritative);
