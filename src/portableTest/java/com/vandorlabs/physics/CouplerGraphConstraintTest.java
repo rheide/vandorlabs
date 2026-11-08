@@ -31,6 +31,7 @@ public final class CouplerGraphConstraintTest {
   CouplerGraphConstraint.Model one=(p,out)->{Arrays.fill(out,0);return true;};CouplerGraphConstraint.Result result=CouplerGraphConstraint.solve(one,s,new RigidTransform[]{RigidTransform.translation(5,6,7),RigidTransform.translation(9,8,7)},w);need(result.accepted()&&result.transform(0).x==0&&result.transform(1).x==0,"supplied translations ignored");RigidTransform copy=result.transform(1);copy.r[0]=99;need(result.transform(1).r[0]==1,"result matrix defensive");
   need(new CouplerGraphConstraint.Workspace(graph(128,0,link(0,1)),64).retainedBytes()<2000000,"workspace retained bound");
  }
+ @SuppressWarnings("deprecation") // Thread.getId retains the Java 8 contract for both JDKs.
  private static void allocation(){
   com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)java.lang.management.ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);final long id=Thread.currentThread().getId();final long[] previous={-1},bytes={0};final int[] calls={0};
   CouplerGraphConstraint.Model model=(p,out)->{long now=bean.getThreadAllocatedBytes(id);if(previous[0]>=0)bytes[0]+=now-previous[0];Arrays.fill(out,0);out[0]=p[0]*p[0]-.25;calls[0]++;previous[0]=bean.getThreadAllocatedBytes(id);return true;};
