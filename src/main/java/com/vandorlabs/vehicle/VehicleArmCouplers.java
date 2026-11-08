@@ -29,11 +29,15 @@ public final class VehicleArmCouplers {
         public final BlockPos nativeCell,legacyCell;
         public final EnumFacing legacyFacing;public final double legacyHeight,localX,localY,localZ;
         public final boolean articulated,requested,locked,released;
+        public final com.vandorlabs.coupler.CouplerAssociation association;
         public final double x,y,z,nx,ny,nz;
         private Head(Address address,BlockPos carrier,IBlockState state,boolean articulated,boolean requested,RigidTransform transform){this(address,carrier,address.cell,state,articulated,requested,transform,address.arm==null?address.cell:null,address.cell,state);}
         private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform,BlockPos nativeCell,BlockPos legacyCell,IBlockState legacyState){this(address,carrier,geometryCell,state,articulated,requested,transform,nativeCell,legacyCell,legacyState,false);}
         private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform,BlockPos nativeCell,BlockPos legacyCell,IBlockState legacyState,boolean released){
-            this.released=released;
+            this(address,carrier,geometryCell,state,articulated,requested,transform,nativeCell,legacyCell,legacyState,released,null);
+        }
+        private Head(Address address,BlockPos carrier,BlockPos geometryCell,IBlockState state,boolean articulated,boolean requested,RigidTransform transform,BlockPos nativeCell,BlockPos legacyCell,IBlockState legacyState,boolean released,com.vandorlabs.coupler.CouplerAssociation association){
+            this.association=association;this.released=released;
             this.address=address;this.carrier=carrier.toImmutable();this.nativeCell=nativeCell==null?null:nativeCell.toImmutable();this.legacyCell=legacyCell.toImmutable();this.legacyFacing=legacyState.getValue(BlockCoupler.FACING);this.legacyHeight=BlockCoupler.couplingHeight(legacyState);this.articulated=articulated;this.requested=requested;locked=state.getValue(BlockCoupler.LOCKED);EnumFacing face=state.getValue(BlockCoupler.FACING);BlockPos cell=geometryCell;
             double px=cell.getX()+.5+face.getFrontOffsetX()*.5,py=face.getAxis()==EnumFacing.Axis.Y?cell.getY()+.5+face.getFrontOffsetY()*.5:cell.getY()+BlockCoupler.couplingHeight(state),pz=cell.getZ()+.5+face.getFrontOffsetZ()*.5;
             localX=px;localY=py;localZ=pz;
@@ -43,13 +47,19 @@ public final class VehicleArmCouplers {
     }
     public static final class Snapshot {
         public final List<Head> heads;public final int capturedArms;public final long retainedBytes;
-        private Snapshot(List<Head> heads,int capturedArms){this.heads=Collections.unmodifiableList(new ArrayList<>(heads));this.capturedArms=capturedArms;retainedBytes=64L+heads.size()*320L;}
+        public final java.util.UUID vehicle,generation;
+        private Snapshot(List<Head> heads,int capturedArms){this(heads,capturedArms,null,null);}
+        private Snapshot(List<Head> heads,int capturedArms,java.util.UUID vehicle,java.util.UUID generation){this.heads=Collections.unmodifiableList(new ArrayList<>(heads));this.capturedArms=capturedArms;this.vehicle=vehicle;this.generation=generation;retainedBytes=128L+heads.size()*416L;}
+        /** Explicit frozen owner receipt, supplied outside the head proofs. Never mints or publishes. */
+        public Snapshot ownership(java.util.UUID vehicle,java.util.UUID generation){if(vehicle==null||generation==null)throw new IllegalArgumentException("External Coupler ownership receipt required");return new Snapshot(heads,capturedArms,vehicle,generation);}
+        public boolean permitsUnpaired(Head head){return head.association!=null&&head.association.permitsUnpaired(head.association.head,vehicle,generation);}
+
     }
     /** Main server thread; every observation comes from installed local views, never chunk discovery. */
     public static Snapshot observe(EntityGroundVehicle craft){
         if(craft==null||!(craft.world instanceof WorldServer)||!((WorldServer)craft.world).getMinecraftServer().isCallingFromMinecraftThread())throw new IllegalStateException("Arm Coupler observations require the server thread");
         if(craft.isDead||craft.structure==null||craft.view==null||craft.view.craft!=craft||craft.view.structure!=craft.structure)throw new IllegalArgumentException("Vehicle attachment owner is unavailable");
-        return observe(craft.structure,craft.view);
+        Snapshot observed=observe(craft.structure,craft.view);java.util.UUID generation=craft.couplerAssociationGeneration();return generation==null?observed:observed.ownership(craft.getUniqueID(),generation);
     }
     private static final class MaterializedHead {
         final Address address;final BlockPos carrier;
@@ -83,11 +93,12 @@ public final class VehicleArmCouplers {
             // Nested moving mechanisms need an explicit frame hierarchy; do not quietly fold them rigid.
             for(VehicleStructure.Cell nested:payload.blocks.cells)if(nested.state.getBlock() instanceof GearBlock)throw new IllegalArgumentException("Nested arm Coupler frames are not supported yet");
             if(payload.blocks.couplers.isEmpty())continue;arms++;RigidTransform frame=payloadFrame(payload,gear,gear.progress());
-            for(int cellIndex=0;cellIndex<payload.blocks.cells.size();cellIndex++){VehicleStructure.Cell nested=payload.blocks.cells.get(cellIndex);if(!(nested.state.getBlock() instanceof BlockCoupler))continue;net.minecraft.util.ResourceLocation expected=TileEntity.getKey(TileCoupler.class);if(expected==null||!nested.hasTileKey("id",8)||!expected.toString().equals(nested.tileString("id")))throw new IllegalArgumentException("Captured Coupler data is unavailable at "+nested.pos);boolean requested=nested.hasTileKey("CouplerRequested",1)?nested.tileBoolean("CouplerRequested"):nested.tileBoolean("CouplerReceived")!=nested.tileBoolean("CouplerInverted");validate(nested.state);add(heads,addresses,new Head(Address.payloadCell(gear.getPos(),nested.pos),gear.getPos(),nested.pos,nested.state,nested.tileBoolean("CouplerArticulation"),requested,frame,null,payload.placedCellPosition(gear,cellIndex),payload.placedCellState(cellIndex),nested.tileBoolean("VehicleArmCouplerReleased")));}
+            for(int cellIndex=0;cellIndex<payload.blocks.cells.size();cellIndex++){VehicleStructure.Cell nested=payload.blocks.cells.get(cellIndex);if(!(nested.state.getBlock() instanceof BlockCoupler))continue;net.minecraft.util.ResourceLocation expected=TileEntity.getKey(TileCoupler.class);if(expected==null||!nested.hasTileKey("id",8)||!expected.toString().equals(nested.tileString("id")))throw new IllegalArgumentException("Captured Coupler data is unavailable at "+nested.pos);boolean requested=nested.hasTileKey("CouplerRequested",1)?nested.tileBoolean("CouplerRequested"):nested.tileBoolean("CouplerReceived")!=nested.tileBoolean("CouplerInverted");validate(nested.state);add(heads,addresses,new Head(Address.payloadCell(gear.getPos(),nested.pos),gear.getPos(),nested.pos,nested.state,nested.tileBoolean("CouplerArticulation"),requested,frame,null,payload.placedCellPosition(gear,cellIndex),payload.placedCellState(cellIndex),nested.tileBoolean("VehicleArmCouplerReleased"),association(nested)));}
         }
         return new Snapshot(heads,arms);
     }
-    private static Head head(Address address,BlockPos carrier,IBlockState state,TileCoupler tile,RigidTransform frame){validate(state);return new Head(address,carrier,address.cell,state,tile.articulation(),tile.requested(),frame,address.arm==null?address.cell:null,address.cell,state,tile.releasedArmHead());}
+    private static Head head(Address address,BlockPos carrier,IBlockState state,TileCoupler tile,RigidTransform frame){validate(state);return new Head(address,carrier,address.cell,state,tile.articulation(),tile.requested(),frame,address.arm==null?address.cell:null,address.cell,state,tile.releasedArmHead(),tile.association());}
+    private static com.vandorlabs.coupler.CouplerAssociation association(VehicleStructure.Cell cell){net.minecraft.nbt.NBTTagCompound data=cell.tileFields(new String[]{com.vandorlabs.coupler.CouplerAssociationData.KEY,"CouplerControlIdentityMost","CouplerControlIdentityLeast"});com.vandorlabs.coupler.CouplerAssociation proof=com.vandorlabs.coupler.CouplerAssociationData.read(data);if(proof!=null&&(!data.hasKey("CouplerControlIdentityMost",4)||!data.hasKey("CouplerControlIdentityLeast",4)||!proof.head.equals(data.getUniqueId("CouplerControlIdentity"))))throw new IllegalArgumentException("Captured Coupler association identity changed");return proof;}
     private static void validate(IBlockState state){if(!(state.getBlock() instanceof BlockCoupler)||state.getBlock().getStateFromMeta(state.getBlock().getMetaFromState(state))!=state)throw new IllegalArgumentException("Coupler orientation cannot be saved exactly");}
     private static void add(List<Head> heads,Set<Address> addresses,Head head){if(heads.size()>=MAX_HEADS||!addresses.add(head.address))throw new IllegalArgumentException("Arm Coupler head budget or duplicate address");heads.add(head);}
     static RigidTransform payloadFrame(ArmPayload payload,GearTileEntity arm,double progress){
