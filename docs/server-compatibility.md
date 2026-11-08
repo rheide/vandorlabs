@@ -176,3 +176,7 @@ parallel full-gallery runner must isolate each worker's world, preserve stateful
 scene groups, merge manifests without missing or duplicate scenes, verify the same
 artifact hash in every worker, and run all relevant image analyzers on the merged
 output. Sharding alone is not evidence of equivalent coverage or a measured speedup.
+
+### Current 2.9 default-path replay
+
+The focused physical-server VehicleWorld check passes on Forge 14.23.5.2864 with Thaumic Augmentation 2.1.7, Thaumcraft 6.1.BETA26, Baubles 1.5.2, NuclearCraft 2.19 and RedstoneFlux 2.1.0.6 installed. It covers explicit read-only chunks with physical-parent capability attachment, twelve previous-release controller/seat/finish/sign cells with eleven opaque envelopes, four rotations and 59 upgrade cases. The standard 2.9 JAR SHA-256 is `c2f21ba2b816a73c632a36b7666cc259f1badbf429755dcba361a6bfe547a38a`; the private arm runtime is disabled. The server binds loopback on an ephemeral port, stops normally and its entire disposable world/toolchain is reclaimed through the shared artifact lease. This focused check does not establish whole-vehicle transfer-journal or cold Safe Park recovery acceptance.
