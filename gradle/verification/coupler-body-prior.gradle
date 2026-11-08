@@ -1,0 +1,13 @@
+// World-free rotation prior; runtime terrain and ownership remain external.
+task testCouplerBodyPrior(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath=files(compilePortableTests.destinationDir)
+ main='com.vandorlabs.physics.CouplerBodyPriorTest'
+ maxHeapSize='512m'
+}
+task testVehicleCouplerBodyPrior(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.vehicle.VehicleCouplerBodyPriorChecks'
+ maxHeapSize='512m'
+}
