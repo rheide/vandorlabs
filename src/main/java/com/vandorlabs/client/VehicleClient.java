@@ -121,7 +121,7 @@ public final class VehicleClient {
             incoming.values().removeIf(i->System.currentTimeMillis()-i.created>10000);
             if(p.offset==0) {if(incoming.size()>=4)return;if(p.type==VehicleNetwork.PREVIEW)latestPreview=p.token;incoming.put(p.token,new Incoming(p));}
             Incoming i=incoming.get(p.token);
-            if(i==null || i.next!=p.offset || i.bytes.length!=p.total || i.header.type!=p.type || i.header.entity!=p.entity){incoming.remove(p.token);return;}
+            if(i==null || i.next!=p.offset || i.bytes.length!=p.total || i.header.type!=p.type || i.header.entity!=p.entity || !java.util.Objects.equals(i.header.associationOwner,p.associationOwner) || !java.util.Objects.equals(i.header.associationGeneration,p.associationGeneration) || i.header.associationGeneration!=null&&i.header.serverTick!=p.serverTick){incoming.remove(p.token);return;}
             System.arraycopy(p.data,0,i.bytes,p.offset,p.data.length);i.next+=p.data.length;
             if(i.next==i.bytes.length) {
                 incoming.remove(p.token);
@@ -141,7 +141,7 @@ public final class VehicleClient {
             if(i.header.type==VehicleNetwork.PREVIEW){preview=new Preview(i);mc.displayGuiScreen(preview);iterator.remove();continue;}
             Entity e=mc.world.getEntityByID(i.header.entity);
             if(e instanceof EntityGroundVehicle && e.getUniqueID().equals(i.header.token)){
-                ((EntityGroundVehicle)e).install(i.structure);iterator.remove();
+                if(!((EntityGroundVehicle)e).installScopedSnapshot(i.structure,i.header.associationOwner,i.header.associationGeneration,i.header.serverTick)){iterator.remove();VehicleNetwork.request((EntityGroundVehicle)e);continue;}iterator.remove();
                 ArrayDeque<VehicleNetwork.Packet> queued=deferred.remove(i.header.token);if(queued!=null)for(VehicleNetwork.Packet packet:queued)receive(packet);
                 GearMotionClient.installed((EntityGroundVehicle)e);
             }

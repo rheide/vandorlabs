@@ -14,6 +14,8 @@ import java.util.UUID;
 public final class VehicleNetwork {
     public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17, SAFE_PARK=18;
     public static final int FRAGMENT=28000;
+    static final int COUPLER_SCOPE_MAGIC=0x43415331,COUPLER_SCOPE_VERSION=1,COUPLER_SCOPE_BYTES=21;
+    static final int SNAPSHOT_SCOPE_MAGIC=0x43535331,SNAPSHOT_SCOPE_BYTES=45;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
         public UUID token=new UUID(0,0);
@@ -27,27 +29,30 @@ public final class VehicleNetwork {
         public short[] jointAngles=new short[0];
         public VehicleArmMotionFrame armMotion=VehicleArmMotionFrame.NONE;
         public VehicleBodyPoseFrame bodyPose=VehicleBodyPoseFrame.NONE;
+        public UUID associationGeneration,associationOwner;
         public double x,y,z,dy,speed;public float yaw,steering;
         public Packet(){}
         public Packet(int type){this.type=type;}
+        private static boolean zero(UUID value){return value.getMostSignificantBits()==0&&value.getLeastSignificantBits()==0;}
         public void toBytes(ByteBuf b){
             b.writeByte(type);b.writeInt(entity);b.writeLong(token.getMostSignificantBits());b.writeLong(token.getLeastSignificantBits());b.writeInt(sequence);
             if(type==STATE){b.writeBoolean(flag);writeState(b);return;}
-            b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);
+            b.writeInt(total);b.writeInt(offset);b.writeByte(forward);b.writeByte(strafe);b.writeBoolean(flag);b.writeLong(origin.toLong());b.writeInt(data.length);b.writeBytes(data);ByteBufUtils.writeUTF8String(b,text);if((type==SNAPSHOT||type==PREVIEW)&&associationGeneration!=null){if(associationOwner==null||zero(associationOwner)||zero(associationGeneration)||type==SNAPSHOT&&!associationOwner.equals(token))throw new IllegalArgumentException("Invalid snapshot ownership scope");b.writeInt(SNAPSHOT_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(serverTick);b.writeLong(associationOwner.getMostSignificantBits());b.writeLong(associationOwner.getLeastSignificantBits());b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}
         }
-        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);}
+        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);if(associationGeneration!=null){if(associationGeneration.getMostSignificantBits()==0&&associationGeneration.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}}
         public void fromBytes(ByteBuf b){
-            valid=false;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;
+            valid=false;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;
             try{
                 type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();
                 if(type==STATE){
                     flag=b.readBoolean();serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();
-                    boolean joints=false,arms=false,bodies=false;
+                    boolean joints=false,arms=false,bodies=false,scope=false;
                     while(b.isReadable()){
                         if(b.readableBytes()<4)return;int marker=b.readInt();
-                        if(marker==0x4A4F494E&&!joints&&!arms&&!bodies){if(b.readableBytes()<10)return;joints=true;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()<count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}}
-                        else if(marker==VehicleArmMotionFrame.MAGIC&&!arms&&!bodies){arms=true;armMotion=VehicleArmMotionFrame.read(b);}
-                        else if(marker==VehicleBodyPoseFrame.MAGIC&&!bodies){bodies=true;bodyPose=VehicleBodyPoseFrame.read(b);}
+                        if(marker==0x4A4F494E&&!joints&&!arms&&!bodies&&!scope){if(b.readableBytes()<10)return;joints=true;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()<count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}}
+                        else if(marker==VehicleArmMotionFrame.MAGIC&&!arms&&!bodies&&!scope){arms=true;armMotion=VehicleArmMotionFrame.read(b);}
+                        else if(marker==VehicleBodyPoseFrame.MAGIC&&!bodies&&!scope){bodies=true;bodyPose=VehicleBodyPoseFrame.read(b);}
+                        else if(marker==COUPLER_SCOPE_MAGIC&&!scope){if(b.readableBytes()!=17||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;scope=true;long most=b.readLong(),least=b.readLong();if(most==0&&least==0)return;associationGeneration=new UUID(most,least);}
                         else return;
                     }
                     valid=!b.isReadable()&&Double.isFinite(x)&&Double.isFinite(y)&&Double.isFinite(z)&&Double.isFinite(dy)&&Double.isFinite(speed)&&Float.isFinite(yaw)&&Float.isFinite(steering);return;
@@ -55,6 +60,11 @@ public final class VehicleNetwork {
                 total=b.readInt();offset=b.readInt();forward=b.readByte();strafe=b.readByte();flag=b.readBoolean();origin=BlockPos.fromLong(b.readLong());
                 int n=b.readInt();if(n<0||n>FRAGMENT||n>b.readableBytes())return;
                 data=new byte[n];b.readBytes(data);text=ByteBufUtils.readUTF8String(b);
+                if(b.isReadable()){
+                    if((type!=SNAPSHOT&&type!=PREVIEW)||b.readableBytes()!=SNAPSHOT_SCOPE_BYTES||b.readInt()!=SNAPSHOT_SCOPE_MAGIC||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;
+                    serverTick=b.readLong();associationOwner=new UUID(b.readLong(),b.readLong());associationGeneration=new UUID(b.readLong(),b.readLong());
+                    if(zero(associationOwner)||zero(associationGeneration)||type==SNAPSHOT&&!associationOwner.equals(token))return;
+                }
                 valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=SAFE_PARK;
             }catch(Exception malformed){valid=false;}
         }
@@ -89,7 +99,7 @@ public final class VehicleNetwork {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
         p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
-        p.bodyPose=e.currentGeneralPose();
+        p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();
         if(VehicleNetworkLab.state(p,e))return;
         PacketHandler.INSTANCE.sendToAllTracking(p,e);
         if(e.getControllingPassenger() instanceof EntityPlayerMP)PacketHandler.INSTANCE.sendTo(p,(EntityPlayerMP)e.getControllingPassenger());
@@ -109,7 +119,9 @@ public final class VehicleNetwork {
             for(int offset=0;offset<bytes.length;offset+=FRAGMENT) {
                 Packet p=new Packet(preview?PREVIEW:SNAPSHOT);p.entity=entity;p.token=token;p.origin=origin;p.flag=parking;p.total=bytes.length;p.offset=offset;
                 p.text=status; p.sequence=status.isEmpty()?0:-1;p.forward=(byte)(controller?1:0);p.strafe=(byte)(raw instanceof EntityGroundVehicle?(((EntityGroundVehicle)raw).hover?2:1):0);
-                p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));PacketHandler.INSTANCE.sendTo(p,player);
+                p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));
+                if(raw instanceof EntityGroundVehicle){p.associationGeneration=((EntityGroundVehicle)raw).couplerAssociationGeneration();if(p.associationGeneration!=null){p.associationOwner=raw.getUniqueID();p.serverTick=raw.world.getTotalWorldTime();}}
+                PacketHandler.INSTANCE.sendTo(p,player);
             }
         }catch(Exception e){error(player,"Cannot send craft: "+e.getMessage());}
     }

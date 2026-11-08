@@ -154,3 +154,10 @@ task testVehicleGeneralPoseLayout(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.VehicleGeneralPoseLayoutChecks'
  maxHeapSize = '1g'
 }
+
+task testVehicleCouplerScopeCodec(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.VehicleCouplerScopeCodecChecks'
+ maxHeapSize = '512m'
+}
