@@ -191,6 +191,45 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte[] encoded;
     private VehicleStructure rotationSource,rotatedSnapshot;private int rotationTurns;
     VehicleArmParkingCurrent armParkingPreview;
+    static final String COUPLER_GENERATION="CouplerAssociationGeneration";
+    private java.util.UUID couplerAssociationGeneration;
+    private NBTTagCompound retainedCouplerAssociation;
+    java.util.UUID couplerAssociationGeneration(){return couplerAssociationGeneration;}
+    /** The authenticated ownership publisher supplies the detached prospective generation. */
+    void commitCouplerAssociationGeneration(java.util.UUID expected,java.util.UUID next){
+        if(world==null||world.isRemote||world.getMinecraftServer()==null||!world.getMinecraftServer().isCallingFromMinecraftThread()||structure==null||ownershipBlocked||!java.util.Objects.equals(expected,couplerAssociationGeneration)||next==null||next.getMostSignificantBits()==0&&next.getLeastSignificantBits()==0)throw new IllegalStateException("Accepted Coupler ownership generation required");
+        couplerAssociationGeneration=next;retainedCouplerAssociation=null;
+    }
+    private static NBTTagCompound retainedCouplerScope(NBTTagCompound tag){
+        if(!tag.hasKey(COUPLER_GENERATION+"Most")&&!tag.hasKey(COUPLER_GENERATION+"Least"))return null;
+        NBTTagCompound raw=new NBTTagCompound();for(String suffix:new String[]{"Most","Least"}){String key=COUPLER_GENERATION+suffix;if(tag.hasKey(key))raw.setTag(key,tag.getTag(key).copy());}return raw;
+    }
+    private static java.util.UUID readCouplerGeneration(NBTTagCompound tag){
+        if(!tag.hasKey(COUPLER_GENERATION+"Most")&&!tag.hasKey(COUPLER_GENERATION+"Least"))return null;
+        if(!tag.hasKey(COUPLER_GENERATION+"Most",4)||!tag.hasKey(COUPLER_GENERATION+"Least",4))throw new IllegalArgumentException("Malformed Coupler ownership generation");
+        java.util.UUID result=tag.getUniqueId(COUPLER_GENERATION);if(result.getMostSignificantBits()==0&&result.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler ownership generation");return result;
+    }
+    void writeCouplerOwnershipMetadata(NBTTagCompound tag){
+        writeGeneralPose(tag);tag.removeTag(COUPLER_GENERATION+"Most");tag.removeTag(COUPLER_GENERATION+"Least");
+        if(retainedCouplerAssociation!=null)for(String key:retainedCouplerAssociation.getKeySet())tag.setTag(key,retainedCouplerAssociation.getTag(key).copy());
+        else if(couplerAssociationGeneration!=null)tag.setUniqueId(COUPLER_GENERATION,couplerAssociationGeneration);
+    }
+    /** Retain before decoding, so even malformed metadata survives a refused recovery. */
+    void retainCouplerOwnershipMetadata(NBTTagCompound tag){
+        generalBodyPose=VehicleBodyPoseState.retain(tag.getTag(VehicleBodyPoseFrame.NBT_KEY));retainedCouplerAssociation=retainedCouplerScope(tag);couplerAssociationGeneration=readCouplerGeneration(tag);
+    }
+    void restoreCouplerOwnershipMetadata(NBTTagCompound tag){
+        retainCouplerOwnershipMetadata(tag);
+        if(generalBodyPose!=null){generalBodyPose.readRetained();if(generalBodyPose.usesGeneral()&&!applyPendingGeneralPose()&&!world.isRemote){if(structure!=null)retainUnavailableSnapshot(structure);if(tag.hasKey("Craft",10))unavailable=tag.getCompoundTag("Craft").copy();throw new IllegalArgumentException("Saved general body pose has no matching runtime layout");}}
+        retainedCouplerAssociation=null;
+    }
+    static void validateCouplerOwnershipMetadata(NBTTagCompound tag){
+        readCouplerGeneration(tag);
+        if(tag.hasKey(VehicleBodyPoseFrame.NBT_KEY)){
+            if(!tag.hasKey(VehicleBodyPoseFrame.NBT_KEY,10))throw new IllegalArgumentException("Invalid general body envelope type");
+            VehicleBodyPoseFrame.readNBT(tag.getCompoundTag(VehicleBodyPoseFrame.NBT_KEY));
+        }
+    }
     private VehicleBodyPoseState generalBodyPose;
     private VehicleBodyPoseState.Receiver generalBodyPoseReceiver;
     VehicleBodyPoseFrame currentGeneralPose(){return generalBodyPose==null?VehicleBodyPoseFrame.NONE:generalBodyPose.current();}
@@ -273,8 +312,22 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
-    @Override protected void writeEntityToNBT(NBTTagCompound tag){tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);writeGeneralPose(tag);if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());}
-    @Override protected void readEntityFromNBT(NBTTagCompound tag){generalBodyPose=VehicleBodyPoseState.retain(tag.getTag(VehicleBodyPoseFrame.NBT_KEY));articulation.retain(tag);dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;try{structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);if(generalBodyPose!=null)generalBodyPose.readRetained();autopilot.read(tag.getCompoundTag("AutopilotNavigation"));if(generalBodyPose!=null&&generalBodyPose.usesGeneral()&&!applyPendingGeneralPose()&&!world.isRemote)throw new IllegalArgumentException("Saved general body pose has no matching runtime layout");for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}}catch(Exception | LinkageError e){articulation.retain(tag);signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),e);}motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;}
+    @Override protected void writeEntityToNBT(NBTTagCompound tag){
+        tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);writeCouplerOwnershipMetadata(tag);
+        if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);
+        if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());
+    }
+    @Override protected void readEntityFromNBT(NBTTagCompound tag){
+        generalBodyPose=VehicleBodyPoseState.retain(tag.getTag(VehicleBodyPoseFrame.NBT_KEY));retainedCouplerAssociation=retainedCouplerScope(tag);articulation.retain(tag);
+        dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;
+        try{
+            couplerAssociationGeneration=readCouplerGeneration(tag);structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);autopilot.read(tag.getCompoundTag("AutopilotNavigation"));restoreCouplerOwnershipMetadata(tag);
+            for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}
+        }catch(Exception|LinkageError failure){
+            articulation.retain(tag);signals.close();structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=tag.getCompoundTag("Craft").copy();com.vandorlabs.VandorLabs.logger.error("Vehicle data retained but unavailable: "+getUniqueID(),failure);
+        }
+        motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;
+    }
     @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(articulation!=null&&articulation.active()?articulation.worldBounds(x,y,z,rotationYaw):collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     private boolean couplingInputSeen,couplingInputBrake;private byte couplingInputForward,couplingInputStrafe;
     private void couplingInput(byte f,byte s,boolean b){if(!couplingInputSeen){couplingInputSeen=true;couplingInputForward=forward;couplingInputStrafe=strafe;couplingInputBrake=brake;}if(couplingInputForward!=f||couplingInputStrafe!=s||couplingInputBrake!=b){couplingInputForward=f;couplingInputStrafe=s;couplingInputBrake=b;VehicleCouplings.releaseControlsChanged(this);}}
