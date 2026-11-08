@@ -540,7 +540,9 @@ PYIMAGE
         exit 0
     fi
     if [ "$TARGET" = coupler-articulation ]; then
-        if [ "${VANDOR_LABS_COUPLER_ARM_RELEASE_ONLY:-0}" = 1 ]; then
+        if [ "${VANDOR_LABS_COUPLER_PEERS_ONLY:-0}" = 1 ]; then
+            grep -q "coupler-peers-live PASS" "$RUN_OUT/client.log"
+        elif [ "${VANDOR_LABS_COUPLER_ARM_RELEASE_ONLY:-0}" = 1 ]; then
             grep -q "carried-arm-coupler-release-live PASS" "$RUN_OUT/client.log"
         elif [ "${VANDOR_LABS_COUPLER_ARM_MULTI_ONLY:-0}" = 1 ]; then
             grep -q "carried-arm-coupler-multi-live PASS" "$RUN_OUT/client.log"

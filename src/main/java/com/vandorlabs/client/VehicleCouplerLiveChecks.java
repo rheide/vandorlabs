@@ -4,6 +4,7 @@ import java.io.File;
 final class VehicleCouplerLiveChecks {
     private static int ticks;
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if("1".equals(System.getenv("VANDOR_LABS_COUPLER_PEERS_ONLY")))return VehicleArmCouplerPeersLiveChecks.tick(mc,output);
         if("1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_RELEASE_ONLY")))return VehicleArmCouplerReleaseLiveChecks.tick(mc,output);
         if("1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_MULTI_ONLY")))return VehicleArmCouplerOwnershipConsumerChecks.tick(mc,output);
         if("1".equals(System.getenv("VANDOR_LABS_COUPLER_ARM_ONLY")))return VehicleArmCouplerLiveChecks.tick(mc,output);
