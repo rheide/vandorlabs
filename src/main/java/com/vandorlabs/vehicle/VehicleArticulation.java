@@ -122,6 +122,7 @@ public final class VehicleArticulation {
         long key=1469598103934665603L;key=mix(key,structure.seat.toLong());key=mix(key,structure.facing.getIndex());
         if(!structure.couplers.isEmpty())for(VehicleStructure.Cell cell:structure.cells){key=mix(key,cell.pos.toLong());key=mix(key,Block.getStateId(cell.state));if(cell.state.getBlock() instanceof BlockCoupler){TileEntity raw=craft.view.getTileEntity(cell.pos);key=mix(key,raw instanceof TileCoupler&&((TileCoupler)raw).articulation()?1:0);}}
         if(armHeads)key=mix(key,VehicleArmCouplers.signature(craft.view));
+        VehicleWorld.CouplerScope scope=craft.view.couplerScope();if(scope!=null){key=mix(key,scope.owner.getMostSignificantBits());key=mix(key,scope.owner.getLeastSignificantBits());key=mix(key,scope.generation.getMostSignificantBits());key=mix(key,scope.generation.getLeastSignificantBits());}
         if(key==signature){structure.couplerTopology=topology;return;}
         signature=key;structure.componentView(craft.view);structure.couplerTopology=null;
         Map<String,double[]> old=new HashMap<>();for(int i=0;i<joints.size();i++)old.put(id(joints.get(i)),new double[]{yaw[i],pitch[i]});

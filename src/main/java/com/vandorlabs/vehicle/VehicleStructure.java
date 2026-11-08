@@ -87,6 +87,8 @@ public final class VehicleStructure {
     public final boolean hasThruster,hasNonWheeledGear,hasSkisOnly;
     public final boolean displayOnly;
     private VehicleWorld componentView;
+    private VehicleWorld.CouplerScope componentScope;
+    VehicleWorld.CouplerScope componentScope(){return componentScope;}
     VehicleCouplerTopology couplerTopology;
     VehicleWorld componentView(){return componentView;}
     private Set<BlockPos> activeCells;
@@ -118,10 +120,17 @@ public final class VehicleStructure {
         for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state)return;if(cell!=old&&cell.gearConfigurationIdentity!=null&&cell.gearConfigurationIdentity==old.gearConfigurationIdentity)return;/* Pose revisions leave exact encoding on demand; never recount opaque payload bytes here. */if(!cell.sameTileData(old))changed.put(cell.pos,cell.tile);}
         try{encodedLength=before.lengthWithTiles(changed);}catch(IOException invalid){encodedLength=-1;}
     }
-    void componentView(VehicleWorld view){if(componentView==null){componentView=view;activeFootKinds=-1;activePropulsion=-1;}}
+    void componentView(VehicleWorld view){componentView(view,true);}
+    void componentView(VehicleWorld view,boolean explicit){
+        if(view==null||view.structure!=this)throw new IllegalArgumentException("Current component view required");
+        VehicleWorld.CouplerScope next=view.couplerScope();
+        if(!explicit&&componentScope!=null&&next==null)return;
+        boolean changed=!VehicleWorld.CouplerScope.same(componentScope,next);
+        if(componentView!=view||changed){componentView=view;componentScope=next;activeFootKinds=-1;activePropulsion=-1;if(changed){activeCells=null;couplerTopology=null;}}
+    }
     void inheritComponents(VehicleStructure before){
-        if(before.activeCells==null||before.cells.size()!=cells.size())return;
-        for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state||cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!old.sameGearConfiguration(cell))return;}
+        if(before.activeCells==null||before.cells.size()!=cells.size()||!VehicleWorld.CouplerScope.same(componentScope,before.componentScope))return;
+        for(Cell cell:cells){Cell old=before.at(cell.pos);if(old==null||old.state!=cell.state||cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock&&!old.sameGearConfiguration(cell)||cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&!old.sameTileData(cell))return;}
         activeCells=before.activeCells;activeFootKinds=before.activeFootKinds;activePropulsion=before.activePropulsion;
     }
     public boolean isActive(BlockPos pos){
@@ -129,7 +138,7 @@ public final class VehicleStructure {
         if(activeCells==null){
             if(!splitComponents)return byPosition.containsKey(pos);
             if(componentView==null)return false;
-            derivingComponents=true;try{activeCells=VehicleScan.activeCells(componentView.structure==this?componentView:new VehicleWorld(componentView.parent,this));}finally{derivingComponents=false;}
+            derivingComponents=true;try{activeCells=VehicleScan.activeCells(componentView.structure==this?componentView:new VehicleWorld(componentView.parent,this,componentScope));}finally{derivingComponents=false;}
         }
         return activeCells.contains(pos);
     }
