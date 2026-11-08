@@ -23,7 +23,10 @@ public final class VehicleArmCouplerPairs {
     public static Snapshot discover(VehicleArmCouplers.Snapshot observations){return discover(observations,VehicleArmCouplers.runtime());}
     /** Read-only saved-address constraints for a proposed parking layout, independent of live activation. */
     public static Snapshot discoverForParking(VehicleArmCouplers.Snapshot observations){return discover(observations,true);}
-    private static Snapshot discover(VehicleArmCouplers.Snapshot observations,boolean savedAliases){
+    /** Physical receipt geometry only; the caller separately validates every prior ownership claim. */
+    static Snapshot discoverForNativeReceipt(VehicleArmCouplers.Snapshot geometry){return discover(geometry,false,true);}
+    private static Snapshot discover(VehicleArmCouplers.Snapshot observations,boolean savedAliases){return discover(observations,savedAliases,false);}
+    private static Snapshot discover(VehicleArmCouplers.Snapshot observations,boolean savedAliases,boolean allowUnmatchedCaptured){
         if(observations==null||observations.heads.size()>VehicleArmCouplers.MAX_HEADS)throw new IllegalArgumentException("Invalid Coupler observations");
         for(VehicleArmCouplers.Head head:observations.heads)if(head.association!=null&&!head.association.scope(head.association.head,observations.vehicle,observations.generation))throw new IllegalArgumentException("Coupler pair admission requires matching external ownership scope");
         for(VehicleArmCouplers.Head head:observations.heads)if(head.association!=null&&head.association.state==com.vandorlabs.coupler.CouplerAssociation.EXPECTED_PAIR&&!head.locked&&!head.released)throw new IllegalArgumentException("Paired Coupler latch changed without release receipt");
@@ -37,7 +40,7 @@ public final class VehicleArmCouplerPairs {
                 for(VehicleArmCouplers.Head other:candidates){if(head==other||!matching(head,other))continue;if(partner!=null&&partner!=other)throw new IllegalArgumentException("Several Coupler heads occupy the same pair");partner=other;}
             }
             if(partner==null&&savedAliases){List<VehicleArmCouplers.Head> candidates=aliases.get(head.legacyCell.offset(head.legacyFacing));if(candidates!=null)for(VehicleArmCouplers.Head other:candidates){if(other==head||head.address.arm==null&&other.address.arm==null)continue;if(other.legacyFacing==head.legacyFacing.getOpposite()&&Math.abs(head.legacyHeight-other.legacyHeight)<EPS){if(partner!=null&&partner!=other)throw new IllegalArgumentException("Ambiguous saved arm Coupler pair");partner=other;}}}
-            if(partner==null){if(head.address.arm!=null||head.association!=null&&head.association.state==com.vandorlabs.coupler.CouplerAssociation.EXPECTED_PAIR)throw new IllegalArgumentException("Captured locked Coupler has no matching head: "+head.address);continue;}partners.put(head.address,partner);
+            if(partner==null){if(!allowUnmatchedCaptured&&(head.address.arm!=null||head.association!=null&&head.association.state==com.vandorlabs.coupler.CouplerAssociation.EXPECTED_PAIR))throw new IllegalArgumentException("Captured locked Coupler has no matching head: "+head.address);continue;}partners.put(head.address,partner);
         }
         List<Pair> pairs=new ArrayList<>();Set<VehicleArmCouplers.Address> used=new HashSet<>();
         for(VehicleArmCouplers.Head head:observations.heads){VehicleArmCouplers.Head partner=partners.get(head.address);if(partner==null||used.contains(head.address))continue;if(partners.get(partner.address)!=head)throw new IllegalArgumentException("Nonreciprocal Coupler pair");used.add(head.address);used.add(partner.address);pairs.add(new Pair(head,partner));}
