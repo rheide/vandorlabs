@@ -127,6 +127,8 @@ task testGearCollisionDescription(type: JavaExec) {
  maxHeapSize = '1g'
 }
 
+check.dependsOn testGearCollisionDescription
+
 task testArmParkingCurrent(type: JavaExec) {
  dependsOn compileNonRenderingChecks
  classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
