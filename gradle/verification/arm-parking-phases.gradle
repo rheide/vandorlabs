@@ -82,3 +82,9 @@ task testGearMotionSourceFloor(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.GearMotionSourceFloorChecks'
  maxHeapSize = '1g'
 }
+task testArmCouplerClaimEntities(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.ArmCouplerClaimEntityChecks'
+ maxHeapSize = '1g'
+}
