@@ -93,6 +93,9 @@ if os.environ.get('VANDOR_LABS_KEEP_TEST_INSTALLS') != '1':
             path = game / name
             if path.is_dir() and not path.is_symlink():
                 shutil.rmtree(path)
-    shutil.rmtree(fixture / 'mods')
+    # The shared retention helper may already have pruned this installation.
+    mods = fixture / 'mods'
+    if mods.is_dir() and not mods.is_symlink():
+        shutil.rmtree(mods)
 PY
 printf 'Release checks PASS. Logs, captures and hashes: %s\n' "$output"
