@@ -84,20 +84,37 @@ public final class ArmPayload {
     /** Typed captured Coupler edit; untouched cells, opaque data and endpoint correspondence remain retained. */
     public ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data){return withCouplerData(originalCell,data,false);}
     /** Chosen authenticated ownership receipt only; UI edits cannot change this envelope. */
-    public ArmPayload withCouplerAssociation(BlockPos originalCell,NBTTagCompound data){
-        com.vandorlabs.coupler.CouplerAssociation proof=data==null?null:com.vandorlabs.coupler.CouplerAssociationData.read(data);if(proof==null||!data.hasUniqueId("CouplerControlIdentity")||!proof.head.equals(data.getUniqueId("CouplerControlIdentity")))throw new IllegalArgumentException("Chosen Coupler association proof required");
-        return withCouplerData(originalCell,data,true);
+    public ArmPayload withCouplerAssociation(BlockPos originalCell,NBTTagCompound data){return withCouplerAssociations(Collections.singletonMap(originalCell,data));}
+    /** Atomic proof-only chosen recipe; materialized ownership and endpoint correspondence do not change. */
+    public ArmPayload withCouplerAssociations(Map<BlockPos,NBTTagCompound> patches){
+        if(hasOwnershipJournal()||patches==null||patches.size()>MAX_BLOCKS||patches.size()>blocks.cells.size())throw new IllegalArgumentException("Coupler association ownership is unavailable");
+        if(patches.isEmpty())return this;
+        Map<BlockPos,NBTTagCompound> chosen=new HashMap<>();
+        for(Map.Entry<BlockPos,NBTTagCompound> patch:patches.entrySet()){
+            if(patch.getKey()==null||patch.getValue()==null)throw new IllegalArgumentException("Missing Coupler association patch");BlockPos at=patch.getKey().toImmutable();VehicleStructure.Cell before=blocks.at(at);
+            if(before==null||!(before.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)||chosen.containsKey(at))throw new IllegalArgumentException("Coupler association head changed");
+            validateCouplerData(before,patch.getValue(),true);chosen.put(at,patch.getValue());
+        }
+        List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
+        for(int i=0;i<next.size();i++){
+            VehicleStructure.Cell before=next.get(i);NBTTagCompound data=chosen.get(before.pos);if(data==null)continue;next.set(i,new VehicleStructure.Cell(before.pos,before.state,data));
+            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
+        }
+        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,materialized,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
+    }
+    private static void validateCouplerData(VehicleStructure.Cell before,NBTTagCompound data,boolean association){
+        NBTTagCompound old=before.tileData();if(data==null||old==null||!old.getString("id").equals(data.getString("id")))throw new IllegalArgumentException("Captured Coupler tile identity changed");
+        String identity="CouplerControlIdentity";if((data.hasKey(identity+"Most")||data.hasKey(identity+"Least"))&&!data.hasUniqueId(identity))throw new IllegalArgumentException("Malformed captured Coupler identity");
+        if((old.hasKey(identity+"Most")||old.hasKey(identity+"Least"))&&(!old.hasUniqueId(identity)||!data.hasUniqueId(identity)||!old.getUniqueId(identity).equals(data.getUniqueId(identity))))throw new IllegalArgumentException("Captured Coupler lifetime changed");
+        if(association){com.vandorlabs.coupler.CouplerAssociation proof=com.vandorlabs.coupler.CouplerAssociationData.read(data);if(proof==null||!data.hasKey(identity+"Most",4)||!data.hasKey(identity+"Least",4)||!proof.head.equals(data.getUniqueId(identity)))throw new IllegalArgumentException("Chosen Coupler association proof required");}
+        NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:association?new String[]{com.vandorlabs.coupler.CouplerAssociationData.KEY,identity+"Most",identity+"Least"}:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
     }
     private ArmPayload withCouplerData(BlockPos originalCell,NBTTagCompound data,boolean association){
         if(materialized||hasOwnershipJournal())throw new IllegalArgumentException("Captured Coupler ownership is unavailable");
         List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);int found=-1;
         for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){found=i;break;}
         if(found<0||!(next.get(found).state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Captured Coupler changed");
-        VehicleStructure.Cell before=next.get(found);NBTTagCompound old=before.tileData();
-        if(data==null||!old.getString("id").equals(data.getString("id")))throw new IllegalArgumentException("Captured Coupler tile identity changed");
-        String identity="CouplerControlIdentity";if((data.hasKey(identity+"Most")||data.hasKey(identity+"Least"))&&!data.hasUniqueId(identity))throw new IllegalArgumentException("Malformed captured Coupler identity");
-        if((old.hasKey(identity+"Most")||old.hasKey(identity+"Least"))&&(!old.hasUniqueId(identity)||!data.hasUniqueId(identity)||!old.getUniqueId(identity).equals(data.getUniqueId(identity))))throw new IllegalArgumentException("Captured Coupler lifetime changed");
-        NBTTagCompound oldOpaque=old.copy(),nextOpaque=data.copy();for(String key:association?new String[]{com.vandorlabs.coupler.CouplerAssociationData.KEY,identity+"Most",identity+"Least"}:new String[]{"RedstoneChannels","CouplerArticulation","CouplerInverted","CouplerReceived","CouplerRequested","CouplerManualOverride","CouplerManualRequested","CouplerActorMost","CouplerActorLeast","CouplerStatus",identity+"Most",identity+"Least"}){oldOpaque.removeTag(key);nextOpaque.removeTag(key);}if(!oldOpaque.equals(nextOpaque))throw new IllegalArgumentException("Captured Coupler opaque data changed");
+        VehicleStructure.Cell before=next.get(found);validateCouplerData(before,data,association);
         next.set(found,new VehicleStructure.Cell(before.pos,before.state,data));
         if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;result.localCollision=localCollision;result.collisionCellEnds=collisionCellEnds;return result;
