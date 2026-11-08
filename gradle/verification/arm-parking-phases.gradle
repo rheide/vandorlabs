@@ -88,3 +88,15 @@ task testArmCouplerClaimEntities(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.ArmCouplerClaimEntityChecks'
  maxHeapSize = '1g'
 }
+task testGearMotionScopePacket(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.network.GearMotionScopePacketChecks'
+ maxHeapSize = '1g'
+}
+task testGearMotionRetention(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.client.GearMotionRetentionChecks'
+ maxHeapSize = '1g'
+}
