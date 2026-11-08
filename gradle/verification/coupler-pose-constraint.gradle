@@ -1,0 +1,13 @@
+// Detached continuous pose kernel only; no runtime or ownership binding.
+task testCouplerPoseConstraint(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath=files(compilePortableTests.destinationDir)
+ main='com.vandorlabs.physics.CouplerPoseConstraintTest'
+ maxHeapSize='512m'
+}
+task testVehicleCouplerPoseConstraint(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.vehicle.VehicleCouplerPoseConstraintChecks'
+ maxHeapSize='1g'
+}
