@@ -22,7 +22,7 @@ public final class VehicleWorld extends World {
     private CouplerScope couplerScope;
     private boolean couplerScopeExplicit;
     public CouplerScope couplerScope(){return couplerScope;}
-    public void requireCouplerScope(){structure.requireCouplerScope(couplerScope);}
+    public void requireCouplerScope(){structure.requireCouplerScope(couplerScope);for(VehicleStructure.Cell cell:structure.cells){TileEntity tile=tiles.get(cell.pos);requireSupportedTile(tile);if(!cell.hasCouplerClaims())continue;if(cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler){if(!(tile instanceof com.vandorlabs.coupler.TileCoupler))throw new IllegalArgumentException("Claimed Coupler owner tile is unavailable");}else if(cell.state.getBlock() instanceof com.vandorlabs.gear.GearBlock){if(!(tile instanceof com.vandorlabs.gear.GearTileEntity)||((com.vandorlabs.gear.GearTileEntity)tile).payload()==null||((com.vandorlabs.gear.GearTileEntity)tile).hasFailedArmSnapshot())throw new IllegalArgumentException("Claimed arm payload owner is unavailable");}}}
     private static final class RetainedCoupler extends IllegalArgumentException {RetainedCoupler(){super("Coupler snapshot retained; unsupported association");}}
     private static void requireSupportedTile(TileEntity tile){if(tile instanceof com.vandorlabs.coupler.TileCoupler&&((com.vandorlabs.coupler.TileCoupler)tile).quarantined())throw new RetainedCoupler();}
     public VehicleStructure structure;
@@ -82,7 +82,7 @@ public final class VehicleWorld extends World {
                 VehicleCompatibility.warn(cell.state.getBlock(),"local tile",error);
             }
         }
-        prepareForeignVisuals();
+        if(couplerScopeExplicit)requireCouplerScope();prepareForeignVisuals();
     }
     private float distanceYaw=Float.NaN;
     private double distanceCos,distanceSin;
@@ -146,7 +146,7 @@ public final class VehicleWorld extends World {
                 if(tile!=null){tile.setWorld(this);tiles.put(cell.pos,tile);}
             }catch(RuntimeException | LinkageError error){if(error instanceof RetainedCoupler)throw (RetainedCoupler)error;VehicleCompatibility.warn(cell.state.getBlock(),"local tile update",error);}
         }
-        prepareForeignVisuals();
+        if(couplerScopeExplicit)requireCouplerScope();prepareForeignVisuals();
     }
     @Override protected IChunkProvider createChunkProvider() {
         return new IChunkProvider() {

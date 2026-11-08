@@ -120,11 +120,16 @@ public final class ArmPayload {
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;result.localCollision=localCollision;result.collisionCellEnds=collisionCellEnds;return result;
     }
     /** Detached release preparation only: preserve the requested/input fields while changing this head's latch. */
-    public ArmPayload releaseCoupler(BlockPos originalCell,boolean locked,NBTTagCompound knownFields){
+    public ArmPayload releaseCoupler(BlockPos originalCell,boolean locked,NBTTagCompound knownFields){return couplerLatch(originalCell,locked,knownFields,true);}
+    /** A scoped unpaired control changes its own latch without fabricating release evidence. */
+    public ArmPayload withUnpairedCouplerLatch(BlockPos originalCell,boolean locked,NBTTagCompound knownFields){
+        com.vandorlabs.coupler.CouplerAssociation proof=com.vandorlabs.coupler.CouplerAssociationData.read(knownFields);if(proof==null||proof.state!=com.vandorlabs.coupler.CouplerAssociation.UNPAIRED)throw new IllegalArgumentException("Unpaired association required");return couplerLatch(originalCell,locked,knownFields,false);
+    }
+    private ArmPayload couplerLatch(BlockPos originalCell,boolean locked,NBTTagCompound knownFields,boolean released){
         ArmPayload edited=withCouplerData(originalCell,knownFields);
         List<VehicleStructure.Cell> next=new ArrayList<>(edited.blocks.cells),placedNext=edited.placedBlocks==null?null:new ArrayList<>(edited.placedBlocks.cells);
         for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){
-            VehicleStructure.Cell cell=next.get(i);NBTTagCompound retained=cell.tileData();retained.setBoolean("VehicleArmCouplerReleased",true);
+            VehicleStructure.Cell cell=next.get(i);NBTTagCompound retained=cell.tileData();if(released)retained.setBoolean("VehicleArmCouplerReleased",true);
             next.set(i,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),retained));
             if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=retained.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),mapped));}
         }
