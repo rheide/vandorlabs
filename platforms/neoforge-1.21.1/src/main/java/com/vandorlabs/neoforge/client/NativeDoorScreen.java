@@ -74,7 +74,7 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
         send();rebuild(false);
     }
     public void choose(int choice){
-        if(page==4){int shade=PortholeDialog.choiceShade(choice);glass=new NativeDoorGlass(choice==-1?DoorGlassData.ORIGINAL:shade>=0?-1:choice,shade>=0?shade:glass.shade,glass.tint,glass.layout);faceTexture=-1;send();sendGlass();}
+        if(page==4){int shade=PortholeDialog.choiceShade(choice);glass=new NativeDoorGlass(choice==-1?DoorGlassData.ORIGINAL:shade>=0?-1:choice,shade>=0?shade:glass.shade,glass.tint,glass.layout);if(faceTexture<0||!ModernFinishCatalog.option(faceTexture).id().equals("utility_door_reactor"))faceTexture=-1;send();sendGlass();}
         else if(page==1){frameDraft=new FrameSettings(frameFace==0?choice:frameDraft.front,frameFace==1?choice:frameDraft.interior,frameDraft.exterior,frameDraft.artworkVersion,frameDraft.splitTop,frameDraft.splitBottom,frameDraft.tile,frameDraft.displayFit,frameDraft.split,frameDraft.bare);sendFrame();}
         else{var artwork=ModernFinishCatalog.option(choice).door();if(artwork!=null){design=artwork.design();detail=artwork.detail();faceTexture=-1;}else faceTexture=choice;send();}rebuild(false);
     }

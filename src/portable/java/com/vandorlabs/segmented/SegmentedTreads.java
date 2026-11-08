@@ -25,7 +25,7 @@ public final class SegmentedTreads {
   int direction=(int)descriptor[11],pixels=(int)descriptor[12],count=16/pixels;double size=pixels/16D;boolean vertical=direction<2;int row=(int)descriptor[6],column=(int)descriptor[8],span=(int)(vertical?descriptor[7]:descriptor[9]);
   int cell=direction==0?row:direction==1?(int)descriptor[7]-1-row:direction==2?column:(int)descriptor[9]-1-column;
   int leading=direction==0?count-1-strip:direction==1?strip:direction==2?strip:count-1-strip;double sign=direction==1||direction==2?-1:1;
-  double start=1-size/2,travel=Math.max(0,Math.min(1,descriptor[10]))*(span+SegmentedDoorGeometry.ARC-size/2),t=start-(cell*count+leading)*size+travel,along,depth,sin,cos;
+  double start=1-size/2,travel=Math.max(0,Math.min(1,descriptor[10]))*(span+SegmentedDoorGeometry.ARC-size),t=start-(cell*count+leading)*size+travel,along,depth,sin,cos;
   if(t<=start){along=t;depth=.5;sin=0;cos=1;}else if(t<start+SegmentedDoorGeometry.ARC){double angle=(t-start)/SegmentedDoorGeometry.TURN;sin=Math.sin(angle);cos=Math.cos(angle);along=start+SegmentedDoorGeometry.TURN*sin;depth=.5+SegmentedDoorGeometry.TURN*(1-cos);}else{along=start+SegmentedDoorGeometry.TURN;depth=1+t-start-SegmentedDoorGeometry.ARC;sin=1;cos=0;}
   double delta=along-(start-(cell*count+leading)*size),center=(strip+.5)*size,offset=center-.5;
   out[0]=vertical?.5:center+sign*delta;out[1]=vertical?.5-row+offset+sign*delta:.5-row;out[2]=depth+descriptor[13];out[3]=sin*sign;out[4]=cos;out[5]=vertical?1:0;

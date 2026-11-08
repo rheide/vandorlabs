@@ -96,3 +96,5 @@ The block, item and tile now use `vandorlabs:segmented_door`. Old door identifie
 Middle-click and the Duplifier copy the complete segment configuration, including window shape, Fit/Tile, glass, artwork, motion and channel choices. They do not copy assembly identity or an active motion.
 
 Individual artwork is included in configured picking and copied settings. Tile uses the door’s existing column/row phase even when adjacent cells select different artwork; Window groups do not rescale the panel image. Segment bodies remain two pixels thick and the top border four pixels.
+
+Spiral Aluminum Glazing keeps its original full artwork over the slit geometry in Tile, Stretch and Fit layouts; the pane material remains separately selectable. Perpendicular motion stops when the final tread finishes the bend. Smaller treads can vary the bend height, but do not add travel after bend completion.

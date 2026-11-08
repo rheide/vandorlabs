@@ -12,13 +12,13 @@ Build **Picket**, **Industrial** and **Lattice** gates from ordinary Segmented D
 
 ![Lattice gate sliding sideways](../images/segmented-2.9-lattice-slide.gif)
 
-**Tread Px** uses the Ramp Controller's numeric field and minus/plus controls, with **1, 2, 4, 8 or 16 pixels** per bending strip. Smaller values produce finer articulation; existing saves default to the original sixteen-pixel motion. Straight travel retains its existing behavior.
+**Tread Px** uses the Ramp Controller's numeric field and minus/plus controls, with **1, 2, 4, 8 or 16 pixels** per bending strip. Smaller values produce finer articulation; existing saves default to sixteen-pixel treads. Straight travel retains its existing behavior. Perpendicular travel stops as the final tread completes its bend, without the extra run along the open track; bend height can vary with tread size.
 
 ![Industrial gate bending sideways with four-pixel treads](../images/segmented-2.9-industrial-bend.gif)
 
 Additional bending examples: [Picket](../images/segmented-2.9-picket-bend.gif) and [Lattice](../images/segmented-2.9-lattice-bend.gif).
 
-The **Doors → Segmented** group includes **Raised Black Panels**, **Ribbed Blue Steel**, **Spiral Aluminum Glazing**, **Dark Segmented Panel** and **Light Segmented Panel**. Spiral Aluminum Glazing has four real window openings with solid metal frames, inner reveals and a selectable glass material. Its metal no longer shares the transparent image pass.
+The **Doors → Segmented** group includes **Raised Black Panels**, **Ribbed Blue Steel**, **Spiral Aluminum Glazing**, **Dark Segmented Panel** and **Light Segmented Panel**. Spiral Aluminum Glazing has four real window openings with solid metal frames, inner reveals and a selectable glass material. Its metal no longer shares the transparent image pass. The original full texture remains mapped across the slit geometry, honoring Tile, Stretch and Fit.
 
 ![Supplied gate and panel designs](../images/segmented-supplied-artwork.png)
 
@@ -28,7 +28,7 @@ Follow the [Segmented Door construction and configuration guide](../segmented-do
 
 ## New ordinary and Large Door artwork
 
-The **Doors → Utility** group adds twelve 128×256 artwork choices: Blue, Green and Warm Utility with matching Modern variants; Factory; Industrial and Industrial Modern; Reactor; Warehouse and Warehouse Modern. Dark, Slim and White Glass designs are grouped under **Doors → Glass**. Renamed entries keep their saved texture identities.
+The **Doors → Utility** group adds twelve 128×256 artwork choices: Blue, Green and Warm Utility with matching Modern variants; Factory; Industrial and Industrial Modern; Reactor; Warehouse and Warehouse Modern. Dark, Slim and White Glass designs are grouped under **Doors → Glass**. Renamed entries keep their saved texture identities. Selecting a Reactor pane from the Glass tab retains the Reactor artwork.
 
 **Reactor** has a transparent octagonal window, selectable glass and an inner border. The same artwork and glazing work on ordinary and Large Doors, including paired leaves and their configured items. See the [Door guide](../space-doors.md) and [texture browser](../texture-browser/).
 

@@ -26,17 +26,30 @@ public final class SegmentedPanelMesh {
   if((components&2)!=0&&window&&(pass==1&&!opaqueGlass||pass==0&&opaqueGlass))for(double[] q:slice.glassQuads)front(out,q,0,1,glassLayout,wc,wh-1-wr,ww,wh,pane);
  }
 
- /** Authored four-window aluminum frame; image alpha never writes the metal's depth. */
- public static void spiral(int pass,int components,int glassLayout,boolean opaqueGlass,Surface body,Surface pane,Texture edge,Sink out){
-  double left=5D/8,right=122D/8;double[][] openings={{left,.5,right,19D/8},{left,35D/8,right,51D/8},{left,67D/8,right,82D/8},{left,98D/8,right,113D/8}};
+ /** Authored full-sheet artwork and apertures use the same Tile/Stretch/Fit projection. */
+ public static void spiral(int pass,int components,int glassLayout,boolean opaqueGlass,Surface body,Surface pane,Texture edge,Sink out){spiral(0,0,0,1,1,pass,components,glassLayout,opaqueGlass,body,pane,edge,out);}
+ public static void spiral(int layout,int column,int row,int width,int height,int pass,int components,int glassLayout,boolean opaqueGlass,Surface body,Surface pane,Texture edge,Sink out){
+  List<double[]> openings=spiralOpenings(layout,column,row,width,height,body.aspect);
   if(pass==0&&(components&1)!=0){
-   double y=0;for(double[] box:openings){rectangle(out,0,y,16,box[1],body);rectangle(out,0,box[1],left,box[3],body);rectangle(out,right,box[1],16,box[3],body);y=box[3];
-    edge(out,box[0],box[1],box[2],box[1],edge);edge(out,box[2],box[1],box[2],box[3],edge);edge(out,box[2],box[3],box[0],box[3],edge);edge(out,box[0],box[3],box[0],box[1],edge);
-   }rectangle(out,0,y,16,16,body);edges(out,null,edge);
+   SortedSet<Double> bands=new TreeSet<>();bands.add(0D);bands.add(16D);for(double[] box:openings){bands.add(box[1]);bands.add(box[3]);}
+   double bottom=0;for(double top:bands){if(top<=bottom)continue;double middle=(bottom+top)/2,x=0;List<double[]> cut=new ArrayList<>();for(double[] box:openings)if(middle>box[1]&&middle<box[3])cut.add(box);cut.sort(Comparator.comparingDouble(box->box[0]));for(double[] box:cut){spiralRectangle(out,x,bottom,box[0],top,layout,column,row,width,height,body);x=box[2];}spiralRectangle(out,x,bottom,16,top,layout,column,row,width,height,body);bottom=top;}
+   for(double[] box:openings){
+    if(box[4]>=0)edge(out,box[0],box[1],box[2],box[1],edge);
+    if(box[5]<=16)edge(out,box[2],box[1],box[2],box[3],edge);
+    if(box[6]<=16)edge(out,box[2],box[3],box[0],box[3],edge);
+    if(box[7]>=0)edge(out,box[0],box[3],box[0],box[1],edge);
+   }
+   for(int side=0;side<4;side++){List<double[]> gaps=new ArrayList<>();for(double[] box:openings){boolean crossed=side==0?box[7]<=0:side==1?box[5]>=16:side==2?box[4]<=0:box[6]>=16;if(crossed)gaps.add(side<2?new double[]{box[1],box[3]}:new double[]{box[0],box[2]});}gaps.sort(Comparator.comparingDouble(gap->gap[0]));double start=0;for(double[] gap:gaps){outer(out,side,start,gap[0],edge);start=Math.max(start,gap[1]);}outer(out,side,start,16,edge);}
   }
-  if((components&2)!=0&&pass==(opaqueGlass?0:1))for(double[] box:openings)front(out,new double[]{box[0],box[1],box[2],box[1],box[2],box[3],box[0],box[3]},0,1,glassLayout,0,0,1,1,pane);
+  if((components&2)!=0&&pass==(opaqueGlass?0:1))for(double[] box:openings)front(out,new double[]{box[0],box[1],box[2],box[1],box[2],box[3],box[0],box[3]},0,1,glassLayout,column,row,width,height,pane);
  }
- private static void rectangle(Sink out,double x0,double y0,double x1,double y1,Surface body){if(x1<=x0||y1<=y0)return;double[] q={x0,y0,x1,y0,x1,y1,x0,y1};for(int side:new int[]{-1,1})front(out,q,side*SegmentedDoorGeometry.HALF_THICKNESS*16,side,0,0,0,1,1,body);}
+ private static List<double[]> spiralOpenings(int mode,int column,int row,int width,int height,double aspect){
+  double[][] authored={{5D/8,.5,122D/8,19D/8},{5D/8,35D/8,122D/8,51D/8},{5D/8,67D/8,122D/8,82D/8},{5D/8,98D/8,122D/8,113D/8}};
+  boolean fit=TextureLayoutMode.fit(mode,width,height,aspect);long phase=tilePhase(column,row,aspect);double u0=fit?(double)column/width:Float.intBitsToFloat((int)(phase>>>32)),v0=fit?(double)row/height:Float.intBitsToFloat((int)phase),du=fit?1D/width:TextureLayoutMode.tileU(1,aspect),dv=fit?1D/height:TextureLayoutMode.tileV(1,aspect);List<double[]> result=new ArrayList<>();
+  for(int u=(int)Math.floor(u0);u<Math.ceil(u0+du-1e-8);u++)for(int v=(int)Math.floor(v0);v<Math.ceil(v0+dv-1e-8);v++)for(double[] a:authored){double left=(u+a[0]/16-u0)/du*16,right=(u+a[2]/16-u0)/du*16,bottom=16-(v+1-a[1]/16-v0)/dv*16,top=16-(v+1-a[3]/16-v0)/dv*16;double x0=Math.max(0,left),y0=Math.max(0,bottom),x1=Math.min(16,right),y1=Math.min(16,top);if(x1>x0&&y1>y0)result.add(new double[]{x0,y0,x1,y1,bottom,right,top,left});}
+  return result;
+ }
+ private static void spiralRectangle(Sink out,double x0,double y0,double x1,double y1,int mode,int column,int row,int width,int height,Surface body){if(x1<=x0||y1<=y0)return;double[] q={x0,y0,x1,y0,x1,y1,x0,y1};for(int side:new int[]{-1,1})front(out,q,side*SegmentedDoorGeometry.HALF_THICKNESS*16,side,mode,column,row,width,height,body,true);}
  /** Fast rectangular sections share the exact Tile transform and clipping used by window frames. */
  public static void nativeBody(int row,int height,int column,boolean endpoint,Surface body,Texture edge,Sink out){
   nativeCell(!endpoint||row==0,!endpoint||row==height-1,column,row,body,edge,out);

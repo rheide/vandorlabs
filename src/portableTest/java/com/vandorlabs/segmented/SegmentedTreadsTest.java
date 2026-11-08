@@ -22,8 +22,25 @@ public final class SegmentedTreadsTest {
     }
    }
   }
-  apertureAreas();
+  openStop();spiralMapping();apertureAreas();
   System.out.println("Segmented treads PASS checks="+checks+" fiveSizes/fourDirections/fourFacings/closedAlignment/UVArea/movedRays");
+ }
+ private static void openStop(){
+  for(int pixels:new int[]{1,2,4,8,16})for(int direction=0;direction<4;direction++)for(int span:new int[]{1,3,9}){
+   int row=direction==0?span-1:0,column=direction==2?span-1:0,count=16/pixels,strip=direction==0||direction==3?0:count-1;double[] descriptor=new double[14],pose=new double[6];SegmentedTreads.describe(descriptor,row,span,column,span,1,direction,pixels,0);SegmentedTreads.pose(descriptor,strip,pose);double offset=(strip+.5)*pixels/16D-.5;near(pose[2]+pose[3]*offset,1,"open stop ends at the last tread's bend exit without extra straight travel");near(Math.abs(pose[3]),1,"last tread completes its bend");near(pose[4],0,"last tread is flat at open stop");
+   if(pixels==16){SegmentedDoorGeometry.panel(row,span,column,span,1,direction,false,pose);near(pose[2],1,"full-block tread stops at the same bend exit");}
+  }
+ }
+ private static void spiralMapping(){
+  SegmentedPanelMesh.Texture uv=new SegmentedPanelMesh.Texture(){public float u(double p){return(float)p;}public float v(double p){return(float)p;}};SegmentedPanelMesh.Surface material=new SegmentedPanelMesh.Surface(uv,uv,1,false);
+  for(int width:new int[]{1,2,3})for(int height:new int[]{1,2,5})for(int layout=0;layout<3;layout++){
+   final int w=width,h=height,mode=layout;double[] faceArea={0},paneArea={0};
+   for(int row=0;row<height;row++)for(int col=0;col<width;col++){final int r=row,c=col;for(int pass=0;pass<2;pass++){final int layer=pass;double[][] points=new double[4][2];int[] count={0};SegmentedPanelMesh.spiral(layout,col,row,width,height,pass,3,0,false,material,material,uv,(x,y,z,u,v,nx,ny,nz)->{
+    if(nz<.5)return;if(layer==0){boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(mode,w,h,1);near(u,fit?(c*16+x)/w:x,"Spiral preserves full authored U across clipped slits");near(v,fit?(r*16+16-y)/h:16-y,"Spiral preserves full authored V across clipped slits");}
+    points[count[0]][0]=x;points[count[0]][1]=y;if(++count[0]==4){double sum=0;for(int a=0;a<4;a++)sum+=points[a][0]*points[(a+1)%4][1]-points[(a+1)%4][0]*points[a][1];if(layer==0)faceArea[0]+=Math.abs(sum)/2;else paneArea[0]+=Math.abs(sum)/2;count[0]=0;}
+   });}}
+   near(faceArea[0]+paneArea[0],width*height*256,"full texture and slit layer cover each panel exactly once");near(paneArea[0],width*height*7137D/64,"slits follow the full artwork in every layout");
+  }
  }
  private static void apertureAreas(){
   SegmentedPanelMesh.Texture uv=new SegmentedPanelMesh.Texture(){public float u(double p){return(float)p;}public float v(double p){return(float)p;}};

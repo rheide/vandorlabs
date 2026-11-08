@@ -27,7 +27,8 @@ public final class SegmentedGeometryLegacyChecks {
                 record.add("rays",rays);out.println(gson.toJson(record));cases++;
             }
         }
-        SegmentedReferenceGolden.check(file,"6ead83660b533edeca426e9768a64cfa82c1e5260814b8dd2f671bd7d0c8b771");
+        // 2.9 open stop ends at bend completion; closed and Straight records remain unchanged.
+        SegmentedReferenceGolden.check(file,"e5e8f3b5eb75cb74f51fd9e5cc8ecd04215eb7b2ab475596a7061d0d9f1054bc");
         System.out.println("Actual Segmented geometry PASS profiles="+cases+" rays="+(cases*9)+" complete transforms bounds header ordering and far-world arithmetic");
     }
     private static JsonArray vector(double... values){JsonArray result=new JsonArray();for(double v:values)result.add(v);return result;}

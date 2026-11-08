@@ -14,6 +14,10 @@
 
 ### Fixes and usability
 
+- Keep Reactor artwork selected when choosing glazing in its Glass tab, for ordinary and Large Doors in both targets.
+- Preserve the full Spiral Aluminum Glazing artwork and Tile/Stretch/Fit mapping across its slit geometry, inner borders and independently selected glass.
+- Stop perpendicular Segmented Doors when the final tread completes the bend, removing extra open-track travel while retaining tread-dependent bend height.
+
 - Preserve track-specific tile data when preparing carried vehicle collision snapshots.
 
 - Avoid an old Java 8u51 C2 compiler failure in the ramp face renderer while preserving its vertex output.

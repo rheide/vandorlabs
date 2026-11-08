@@ -35,7 +35,7 @@ public final class NativeSegmentedGateRenderChecks {
         runtime=new com.vandorlabs.neoforge.segmented.NativeSegmentedVisual[4][3];contexts=new com.vandorlabs.segmented.SegmentedGateContext[4][3];
         for(int style=0;style<4;style++){
             String id=style<3?com.vandorlabs.segmented.SegmentedArtworkPolicy.gateId(style):com.vandorlabs.segmented.SegmentedArtworkPolicy.tileId(2);int selected=-1;for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++)if(id.equals(ModernFinishCatalog.ENTRIES.get(i).id()))selected=i;need(selected>=0,"runtime supplied choice "+id);
-            var cfg=new com.vandorlabs.neoforge.segmented.NativeSegmentedDoorSettings(0,false,1,0,style<3,2,true,style<3?com.vandorlabs.neoforge.segmented.NativeSegmentedDoorSettings.DEFAULT.glass:new com.vandorlabs.neoforge.door.NativeDoorGlass(-1,1,1,1),0);
+            var cfg=new com.vandorlabs.neoforge.segmented.NativeSegmentedDoorSettings(0,false,style<3?1:0,0,style<3,2,true,style<3?com.vandorlabs.neoforge.segmented.NativeSegmentedDoorSettings.DEFAULT.glass:new com.vandorlabs.neoforge.door.NativeDoorGlass(-1,1,1,1),0);
             int[] kinds={style<3?style:-1,style<3?style:-1,style<3?style:-1};
             for(int column=0;column<3;column++){
                 runtime[style][column]=new com.vandorlabs.neoforge.segmented.NativeSegmentedVisual(3,3,column,net.minecraft.core.Direction.NORTH,selected,cfg,java.util.Collections.nCopies(3,cfg),java.util.Collections.nCopies(3,com.vandorlabs.persistence.SegmentedWindowLayout.SINGLE),true,false,false,false);

@@ -87,7 +87,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     }
 
     private boolean glassDesign(){return ScreenHousingTextures.reactorArtwork(faceTexture)||SpaceDoorDialog.glassPage(design);}
-    void chooseGlass(int choice){int shade=glassAppearance.shade,material=choice;if(choice>=HousingTextureList.CANOPY_GLASS_BASE&&choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(material,shade,glassAppearance.tint,glassAppearance.layout);faceTexture=-1;sendUpdate();sendGlass();initGui();}
+    void chooseGlass(int choice){int shade=glassAppearance.shade,material=choice;if(choice>=HousingTextureList.CANOPY_GLASS_BASE&&choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(material,shade,glassAppearance.tint,glassAppearance.layout);if(!ScreenHousingTextures.reactorArtwork(faceTexture))faceTexture=-1;sendUpdate();sendGlass();initGui();}
     private void sendGlass(){tile.setGlassAppearance(glassAppearance);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDoorGlass(tile.getPos(),glassAppearance));}
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}
     private String depthLabel() {
