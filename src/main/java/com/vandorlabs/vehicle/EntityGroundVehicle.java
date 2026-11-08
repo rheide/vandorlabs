@@ -336,7 +336,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     /** Preserve live canopy interpolation while publishing an immutable save/parking snapshot. */
     public void updateCanopies(VehicleStructure snapshot,boolean moved){
-        snapshot.inheritComponents(structure);snapshot.componentView(view);structure=snapshot;view.structure=snapshot;encoded=null;
+        if(!couplerScopeReady())throw new IllegalStateException("Full vehicle installation required when ownership scope changes");
+        snapshot.requireCouplerScope(view.couplerScope());
+        VehicleStructure before=structure;structure=snapshot;view.structure=snapshot;
+        snapshot.componentView(view);snapshot.inheritComponents(before);encoded=null;
         if(moved){
             long sampled=VehicleAnimationDiagnostics.start(this);
             collision=collisionCache.collision(view);
