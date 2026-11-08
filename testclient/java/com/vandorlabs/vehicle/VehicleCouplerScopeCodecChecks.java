@@ -1,0 +1,27 @@
+package com.vandorlabs.vehicle;
+
+import io.netty.buffer.*;
+import java.lang.reflect.*;
+import java.util.*;
+import net.minecraft.util.math.BlockPos;
+
+/** Real optional STATE/source headers and client time admission; no ownership receipt minting. */
+public final class VehicleCouplerScopeCodecChecks {
+ private static int checks;private static final UUID OWNER=new UUID(1,2),A=new UUID(3,4),B=new UUID(5,6);
+ private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Coupler scope codec: "+why);}
+ private static byte[] wire(VehicleNetwork.Packet p){ByteBuf b=Unpooled.buffer();try{p.toBytes(b);byte[] out=new byte[b.readableBytes()];b.readBytes(out);return out;}finally{b.release();}}
+ private static VehicleNetwork.Packet decode(byte[] bytes){ByteBuf b=Unpooled.wrappedBuffer(bytes);try{VehicleNetwork.Packet p=new VehicleNetwork.Packet();p.fromBytes(b);return p;}finally{b.release();}}
+ private static byte[] changed(byte[] bytes,int at,long value,int count){byte[] out=bytes.clone();ByteBuf b=Unpooled.wrappedBuffer(out);try{if(count==1)b.setByte(at,(int)value);else b.setLong(at,value);return out;}finally{b.release();}}
+ private static VehicleNetwork.Packet state(UUID generation,long tick){VehicleNetwork.Packet p=new VehicleNetwork.Packet(VehicleNetwork.STATE);p.token=OWNER;p.serverTick=tick;p.associationGeneration=generation;return p;}
+ public static void main(String[] args)throws Exception{
+  net.minecraft.init.Bootstrap.register();byte[] legacy=wire(state(null,1));need(legacy.length==82,"legacy STATE82 unchanged");VehicleNetwork.Packet p=state(A,10);byte[] scoped=wire(p);need(scoped.length==103&&A.equals(decode(scoped).associationGeneration),"one scope adds21B exactroundtrip");for(int n=83;n<scoped.length;n++)need(!decode(Arrays.copyOf(scoped,n)).valid,"partial STATE scope refuses");need(!decode(changed(scoped,86,2,1)).valid,"unknown scope version refuses");byte[] zero=changed(changed(scoped,87,0,8),95,0,8);need(!decode(zero).valid,"zero scope refuses");need(!decode(Arrays.copyOf(scoped,scoped.length+1)).valid,"trailing STATE scope byte refuses");
+  p.armMotion=new VehicleArmMotionFrame(19,Collections.singletonList(new VehicleArmMotionFrame.Arm(new BlockPos(1,2,3),1,.5,true)));p.bodyPose=new VehicleBodyPoseFrame(1,29,Collections.singletonList(new VehicleBodyPoseFrame.Body(new BlockPos(4,5,6),com.vandorlabs.physics.RigidTransform.rotation(0,0,1,37))));p.jointTopology=17;p.jointAngles=new short[]{10,20};VehicleNetwork.Packet decoded=decode(wire(p));need(decoded.valid&&decoded.armMotion.arms.size()==1&&decoded.bodyPose.bodies.size()==1&&A.equals(decoded.associationGeneration),"joint+arm+general+scope ordered tails");
+  for(int type:new int[]{VehicleNetwork.SNAPSHOT,VehicleNetwork.PREVIEW}){
+   VehicleNetwork.Packet source=new VehicleNetwork.Packet(type);source.token=type==VehicleNetwork.SNAPSHOT?OWNER:new UUID(7,8);source.entity=3;source.total=1;source.data=new byte[]{5};byte[] old=wire(source);source.associationOwner=OWNER;source.associationGeneration=A;source.serverTick=20;byte[] bytes=wire(source);decoded=decode(bytes);need(bytes.length==old.length+45&&decoded.valid&&OWNER.equals(decoded.associationOwner)&&A.equals(decoded.associationGeneration)&&decoded.serverTick==20,"source scope adds45B with explicit owner and clock");for(int n=old.length+1;n<bytes.length;n++)need(!decode(Arrays.copyOf(bytes,n)).valid,"partial source scope refuses");need(!decode(Arrays.copyOf(bytes,bytes.length+1)).valid,"trailing source scope refuses");if(type==VehicleNetwork.SNAPSHOT)need(!decode(changed(bytes,old.length+13,99,8)).valid,"snapshot owner must match original token");
+  }
+  EntityGroundVehicle entity=new EntityGroundVehicle(null);entity.setUniqueId(OWNER);entity.authoritative(state(A,10));need(A.equals(entity.couplerAssociationGeneration()),"admitted STATE establishes external scope");entity.authoritative(state(B,9));need(A.equals(entity.couplerAssociationGeneration()),"old STATE cannot mutate scope");entity.authoritative(state(null,11));need(A.equals(entity.couplerAssociationGeneration()),"absent legacy cannot clear known scope");
+  Method admit=EntityGroundVehicle.class.getDeclaredMethod("admitCouplerScope",UUID.class,long.class);admit.setAccessible(true);need((Boolean)admit.invoke(entity,B,20),"new scoped snapshot may precede STATE");need(!(Boolean)admit.invoke(entity,A,19)&&B.equals(entity.couplerAssociationGeneration()),"old different scope snapshot/state refuses");need((Boolean)admit.invoke(entity,B,15),"same scoped source may finish decoding after later STATE without starvation");entity.authoritative(state(A,19));need(B.equals(entity.couplerAssociationGeneration()),"snapshot scope clock guards later-delivered old STATE before root pose");entity.authoritative(state(B,21));need(B.equals(entity.couplerAssociationGeneration()),"matching next STATE remains admitted");
+  ByteBuf b=Unpooled.wrappedBuffer(legacy);try{decoded.fromBytes(b);need(decoded.valid&&decoded.associationGeneration==null&&decoded.associationOwner==null,"reused packet cannot retain old scope");}finally{b.release();}
+  System.out.println("Coupler scope codec PASS checks="+checks+" legacySTATE82B unchanged scope21B/source45B explicitowner exact lengths/stale ordering/reversed admission; actual source install separate");
+ }
+}

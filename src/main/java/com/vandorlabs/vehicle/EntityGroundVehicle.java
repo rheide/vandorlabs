@@ -150,6 +150,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public void authoritative(VehicleNetwork.Packet p) {
         if(p.serverTick<=lastServerTick)return;
+        if(!admitCouplerScope(p.associationGeneration,p.serverTick))return;
         receiveGeneralPose(p.bodyPose);
         if(p.jointAngles.length>0&&(generalBodyPose==null||!generalBodyPose.usesGeneral()))articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
@@ -193,8 +194,40 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     VehicleArmParkingCurrent armParkingPreview;
     static final String COUPLER_GENERATION="CouplerAssociationGeneration";
     private java.util.UUID couplerAssociationGeneration;
+    private long associationScopeTick=Long.MIN_VALUE;
     private NBTTagCompound retainedCouplerAssociation;
     java.util.UUID couplerAssociationGeneration(){return couplerAssociationGeneration;}
+    private boolean admitCouplerScope(java.util.UUID generation,long tick){
+        if(generation==null)return couplerAssociationGeneration==null;
+        if(generation.getMostSignificantBits()==0&&generation.getLeastSignificantBits()==0)return false;
+        if(tick<associationScopeTick&&!generation.equals(couplerAssociationGeneration))return false;
+        if(tick>=associationScopeTick){couplerAssociationGeneration=generation;associationScopeTick=tick;retainedCouplerAssociation=null;}
+        return generation.equals(couplerAssociationGeneration);
+    }
+    /** Scope arrives with the source, before any component/role admission; old different scopes cannot replace it. */
+    public boolean installScopedSnapshot(VehicleStructure next,java.util.UUID owner,java.util.UUID generation,long tick){
+        if(world==null||!world.isRemote||generation!=null&&!getUniqueID().equals(owner))return false;
+        java.util.UUID previous=couplerAssociationGeneration;long previousTick=associationScopeTick;NBTTagCompound previousRetained=retainedCouplerAssociation;VehicleStructure before=structure;
+        if(!admitCouplerScope(generation,tick))return false;
+        try{install(next);return true;}catch(RuntimeException|LinkageError failure){
+            couplerAssociationGeneration=previous;associationScopeTick=previousTick;retainedCouplerAssociation=previousRetained;
+            try{if(before!=null)install(before);else{signals.close();structure=null;view=null;collision=null;encoded=null;collisionCache.clear();VehicleLookup.remove(this);}}
+            catch(RuntimeException|LinkageError rollback){failure.addSuppressed(rollback);if(before!=null)retainUnavailableSnapshot(before);}
+            com.vandorlabs.VandorLabs.logger.warn("Rejected vehicle snapshot; prior client source retained",failure);return false;
+        }
+    }
+
+    static final class CouplerScopeSnapshot {
+        private final EntityGroundVehicle owner;private final java.util.UUID generation;private final NBTTagCompound retained;
+        private CouplerScopeSnapshot(EntityGroundVehicle owner){this.owner=owner;generation=owner.couplerAssociationGeneration;retained=owner.retainedCouplerAssociation==null?null:owner.retainedCouplerAssociation.copy();}
+    }
+    CouplerScopeSnapshot captureCouplerAssociationScope(){return new CouplerScopeSnapshot(this);}
+    /** Restore only the scope, including after a failed source installation has become inert. */
+    void restoreCouplerAssociationScope(java.util.UUID expected,CouplerScopeSnapshot original){
+        if(original==null||original.owner!=this||world==null||world.isRemote||world.getMinecraftServer()==null||!world.getMinecraftServer().isCallingFromMinecraftThread()||!java.util.Objects.equals(expected,couplerAssociationGeneration))throw new IllegalStateException("Coupler scope rollback owner changed");
+        couplerAssociationGeneration=original.generation;retainedCouplerAssociation=original.retained==null?null:original.retained.copy();
+    }
+
     /** The authenticated ownership publisher supplies the detached prospective generation. */
     void commitCouplerAssociationGeneration(java.util.UUID expected,java.util.UUID next){
         if(world==null||world.isRemote||world.getMinecraftServer()==null||!world.getMinecraftServer().isCallingFromMinecraftThread()||structure==null||ownershipBlocked||!java.util.Objects.equals(expected,couplerAssociationGeneration)||next==null||next.getMostSignificantBits()==0&&next.getLeastSignificantBits()==0)throw new IllegalStateException("Accepted Coupler ownership generation required");

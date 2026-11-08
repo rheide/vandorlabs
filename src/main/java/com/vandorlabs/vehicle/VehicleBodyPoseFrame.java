@@ -42,11 +42,11 @@ public final class VehicleBodyPoseFrame {
         if(!present())return;out.writeInt(MAGIC);out.writeByte(VERSION);out.writeLong(epoch);out.writeLong(layout);out.writeShort(bodies.size());
         for(Body body:bodies){out.writeLong(body.carrier.toLong());for(double value:body.values)out.writeDouble(value);}
     }
-    /** Magic was consumed. The final tail must have exactly the advertised bounded length. */
+    /** Magic was consumed. The enclosing packet validates any following known ownership-scope tail. */
     static VehicleBodyPoseFrame read(ByteBuf in){
         if(in.readableBytes()<HEADER_BYTES-4||in.readUnsignedByte()!=VERSION)throw new IllegalArgumentException("Unsupported general body tail");
         long epoch=in.readLong(),layout=in.readLong();int count=in.readUnsignedShort();header(epoch,layout,count);
-        if(in.readableBytes()!=count*ENTRY_BYTES)throw new IllegalArgumentException("Invalid general body tail length");
+        if(in.readableBytes()<count*ENTRY_BYTES)throw new IllegalArgumentException("Invalid general body tail length");
         int start=in.readerIndex();
         for(int i=0;i<count;i++){
             int at=start+i*ENTRY_BYTES;long key=in.getLong(at);if(!carrier(key))throw new IllegalArgumentException("Invalid general body carrier");
