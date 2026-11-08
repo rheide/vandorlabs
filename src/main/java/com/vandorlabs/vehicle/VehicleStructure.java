@@ -79,6 +79,15 @@ public final class VehicleStructure {
 
         public boolean hasTileData(){return tile!=null;}
         public boolean sameTileData(Cell other){return Objects.equals(tile,other.tile);}
+        /** Compare private immutable data without exporting or decoding opaque provider envelopes. */
+        public boolean sameTileData(NBTTagCompound incoming){return Objects.equals(tile,incoming);}
+        /** A root-only control delta cannot transfer native/captured arm ownership. */
+        public boolean sameArmOwnership(NBTTagCompound incoming){
+            if(tile==null||incoming==null)return tile==incoming;
+            return Objects.equals(tile.getTag("ArmPayload"),incoming.getTag("ArmPayload"))
+                    &&Objects.equals(tile.getTag("ArmStoredSections"),incoming.getTag("ArmStoredSections"))
+                    &&sameGearField(com.vandorlabs.gear.GearTaxiState.KEY,tile.getTag(com.vandorlabs.gear.GearTaxiState.KEY),incoming.getTag(com.vandorlabs.gear.GearTaxiState.KEY));
+        }
         /** Pose and input edges do not change the assembled gear's baked block model. */
         public boolean sameGearConfiguration(Cell other){
             if(gearConfigurationIdentity!=null&&gearConfigurationIdentity==other.gearConfigurationIdentity)return true;
