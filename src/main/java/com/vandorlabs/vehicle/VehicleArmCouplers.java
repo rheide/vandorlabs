@@ -55,6 +55,17 @@ public final class VehicleArmCouplers {
         public boolean permitsUnpaired(Head head){return head.association!=null&&head.association.permitsUnpaired(head.association.head,vehicle,generation);}
 
     }
+    /** Scalar observations at an authenticated physical ownership boundary; no vehicle scope is inferred. */
+    static Snapshot nativeReceiptSnapshot(List<Head> heads,int arms){if(heads.size()>MAX_HEADS)throw new IllegalArgumentException("Native Coupler receipt exceeds head budget");return new Snapshot(heads,arms);}
+    static Head nativeReceiptHead(Address address,BlockPos carrier,BlockPos localCell,IBlockState state,TileCoupler tile){
+        if(tile.quarantined())throw new IllegalArgumentException("Native Coupler association is retained but unavailable");validate(state);
+        return new Head(address,carrier,localCell,state,tile.articulation(),tile.requested(),RigidTransform.IDENTITY,localCell,localCell,state,tile.releasedArmHead(),tile.association());
+    }
+    static Head capturedReceiptHead(Address address,BlockPos carrier,VehicleStructure.Cell cell,RigidTransform frame,BlockPos legacyCell,IBlockState legacyState){
+        net.minecraft.util.ResourceLocation id=TileEntity.getKey(TileCoupler.class);if(id==null||!cell.hasTileKey("id",8)||!id.toString().equals(cell.tileString("id")))throw new IllegalArgumentException("Captured Coupler own data is unavailable");validate(cell.state);
+        boolean requested=cell.hasTileKey("CouplerRequested",1)?cell.tileBoolean("CouplerRequested"):cell.tileBoolean("CouplerReceived")!=cell.tileBoolean("CouplerInverted");
+        return new Head(address,carrier,cell.pos,cell.state,cell.tileBoolean("CouplerArticulation"),requested,frame,null,legacyCell,legacyState,cell.tileBoolean("VehicleArmCouplerReleased"),association(cell));
+    }
     /** Main server thread; every observation comes from installed local views, never chunk discovery. */
     public static Snapshot observe(EntityGroundVehicle craft){
         if(craft==null||!(craft.world instanceof WorldServer)||!((WorldServer)craft.world).getMinecraftServer().isCallingFromMinecraftThread())throw new IllegalStateException("Arm Coupler observations require the server thread");

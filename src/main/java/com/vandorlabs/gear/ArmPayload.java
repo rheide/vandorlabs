@@ -86,14 +86,27 @@ public final class ArmPayload {
     /** Chosen authenticated ownership receipt only; UI edits cannot change this envelope. */
     public ArmPayload withCouplerAssociation(BlockPos originalCell,NBTTagCompound data){return withCouplerAssociations(Collections.singletonMap(originalCell,data));}
     /** Atomic proof-only chosen recipe; materialized ownership and endpoint correspondence do not change. */
-    public ArmPayload withCouplerAssociations(Map<BlockPos,NBTTagCompound> patches){
+    public ArmPayload withCouplerAssociations(Map<BlockPos,NBTTagCompound> patches){return withCouplerAssociations(patches,false);}
+    /** Chosen native assembly/attach receipt only. A proven new pair may clear its old release marker. */
+    public ArmPayload withRejoinedCouplerAssociations(Map<BlockPos,NBTTagCompound> patches){return withCouplerAssociations(patches,true);}
+    private ArmPayload withCouplerAssociations(Map<BlockPos,NBTTagCompound> patches,boolean rejoined){
         if(hasOwnershipJournal()||patches==null||patches.size()>MAX_BLOCKS||patches.size()>blocks.cells.size())throw new IllegalArgumentException("Coupler association ownership is unavailable");
         if(patches.isEmpty())return this;
         Map<BlockPos,NBTTagCompound> chosen=new HashMap<>();
         for(Map.Entry<BlockPos,NBTTagCompound> patch:patches.entrySet()){
             if(patch.getKey()==null||patch.getValue()==null)throw new IllegalArgumentException("Missing Coupler association patch");BlockPos at=patch.getKey().toImmutable();VehicleStructure.Cell before=blocks.at(at);
             if(before==null||!(before.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)||chosen.containsKey(at))throw new IllegalArgumentException("Coupler association head changed");
-            validateCouplerData(before,patch.getValue(),true);chosen.put(at,patch.getValue());
+            NBTTagCompound checked=patch.getValue();
+            if(rejoined){
+                NBTTagCompound old=before.tileData();
+                if(old.getBoolean("VehicleArmCouplerReleased")&&!checked.hasKey("VehicleArmCouplerReleased")){
+                    com.vandorlabs.coupler.CouplerAssociation proof=com.vandorlabs.coupler.CouplerAssociationData.read(checked);
+                    if(proof==null||proof.state!=com.vandorlabs.coupler.CouplerAssociation.EXPECTED_PAIR)throw new IllegalArgumentException("A complete new pair is required to clear release state");
+                    checked=checked.copy();checked.setTag("VehicleArmCouplerReleased",old.getTag("VehicleArmCouplerReleased").copy());
+                    if("Released".equals(old.getString("CouplerStatus"))&&"Ready".equals(checked.getString("CouplerStatus")))checked.setTag("CouplerStatus",old.getTag("CouplerStatus").copy());
+                }
+            }
+            validateCouplerData(before,checked,true);chosen.put(at,patch.getValue());
         }
         List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
         for(int i=0;i<next.size();i++){
@@ -180,7 +193,9 @@ public final class ArmPayload {
         return new ArmGridPlacement(mapped,detached.write());
     }
     /** Ordered saved endpoint correspondence; read-only even while its native cells are captured. */
-    public BlockPos placedCellPosition(GearTileEntity arm,int originalIndex){return arm.getPos().add(placedOffset).add(placed().cells.get(originalIndex).pos);}
+    public BlockPos placedCellPosition(GearTileEntity arm,int originalIndex){return placedCellPosition(arm.getPos(),originalIndex);}
+    /** Source-local detached mapping; no synthetic gear or world is needed. */
+    public BlockPos placedCellPosition(BlockPos root,int originalIndex){return root.add(placedOffset).add(placed().cells.get(originalIndex).pos);}
     public IBlockState placedCellState(int originalIndex){return placed().cells.get(originalIndex).state;}
     public boolean materialized(){return materialized;}
     public boolean isSurfaceLayer(){for(VehicleStructure.Cell cell:blocks.cells)if(!(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface))return false;return !blocks.cells.isEmpty();}
@@ -414,11 +429,13 @@ public final class ArmPayload {
     private static void failure(String stage,BlockPos at){if(failureInjector!=null&&System.getProperty("vandorlabs.reprolab")!=null)failureInjector.check(stage,at);}
     /** Adopt edits to the already materialized cells without expanding their authorized footprint. */
     /** Chosen-only refresh from the authoritative detached snapshot; never serializes a live tile. */
-    public ArmPayload snapshotPlaced(GearTileEntity arm,VehicleStructure source){
+    public ArmPayload snapshotPlaced(GearTileEntity arm,VehicleStructure source){return snapshotPlaced(arm.getPos(),source);}
+    /** The same authoritative refresh for a detached source-local controller position. */
+    public ArmPayload snapshotPlaced(BlockPos root,VehicleStructure source){
         if(!materialized)return this;if(hasOwnershipJournal())throw new IllegalArgumentException("Attachment recovery pending");
         // No owner data exists to refresh when every immutable tile-free row is unchanged.
         // One mutable lookup key avoids rebuilding a second Cell/index tree for ordinary cargo.
-        BlockPos origin=arm.getPos().add(placedOffset);BlockPos.MutableBlockPos probe=new BlockPos.MutableBlockPos();boolean unchanged=true;
+        BlockPos origin=root.add(placedOffset);BlockPos.MutableBlockPos probe=new BlockPos.MutableBlockPos();boolean unchanged=true;
         for(int i=0;i<blocks.cells.size();i++){
             VehicleStructure.Cell before=placed().cells.get(i);probe.setPos(origin.getX()+before.pos.getX(),origin.getY()+before.pos.getY(),origin.getZ()+before.pos.getZ());VehicleStructure.Cell current=source.at(probe);
             if(current==null||current.state.getMaterial().isLiquid()||current.state.getMaterial()==net.minecraft.block.material.Material.AIR)throw new IllegalArgumentException("Native attachment snapshot unavailable");
@@ -427,7 +444,7 @@ public final class ArmPayload {
         if(unchanged)return this;
         List<VehicleStructure.Cell> original=new ArrayList<>(),nativeRows=new ArrayList<>();
         for(int i=0;i<blocks.cells.size();i++){
-            VehicleStructure.Cell old=blocks.cells.get(i),placed=placed().cells.get(i);BlockPos at=placedCellPosition(arm,i);VehicleStructure.Cell current=source.at(at);IBlockState expected=placed.state;
+            VehicleStructure.Cell old=blocks.cells.get(i),placed=placed().cells.get(i);BlockPos at=placedCellPosition(root,i);VehicleStructure.Cell current=source.at(at);IBlockState expected=placed.state;
             if(current!=null&&expected.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&current.state.getBlock()==expected.getBlock())expected=expected.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,current.state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
             if(current==null||placedBlocks!=null&&(current.state!=expected||current.hasTileData()!=old.hasTileData())||current.state.getMaterial().isLiquid()||current.state.getMaterial()==net.minecraft.block.material.Material.AIR)throw new IllegalArgumentException("Native attachment snapshot changed orientation or ownership");
             IBlockState originalState=placedBlocks==null?current.state:old.state;if(originalState.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)originalState=originalState.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,current.state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
