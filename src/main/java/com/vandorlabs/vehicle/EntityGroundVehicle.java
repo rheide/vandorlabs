@@ -196,6 +196,21 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     static final String COUPLER_GENERATION="CouplerAssociationGeneration";
     private java.util.UUID couplerAssociationGeneration;
     private long associationScopeTick=Long.MIN_VALUE,installedCouplerSourceTick=Long.MIN_VALUE;
+    private boolean ownershipSourcePending;
+    private long ownershipSourceRetryAt;
+    /** Keep this dirty until a complete source succeeds; an early request may hit server rate limiting. */
+    public void requestOwnershipSource(){
+        if(world==null||!world.isRemote||world instanceof VehicleWorld||isDead)return;
+        if(!ownershipSourcePending){ownershipSourcePending=true;ownershipSourceRetryAt=System.nanoTime();}
+        retryOwnershipSource();
+    }
+    private void retryOwnershipSource(){
+        if(!ownershipSourcePending||world==null||!world.isRemote||world instanceof VehicleWorld||isDead)return;
+        long now=System.nanoTime();boolean decoder=com.vandorlabs.VandorLabs.proxy!=null&&com.vandorlabs.VandorLabs.proxy.vehicleSnapshotPending(getUniqueID());
+        if(com.vandorlabs.vehicle.core.OwnershipSourceRetry.due(true,ownershipSourceRetryAt,now,decoder)){
+            ownershipSourceRetryAt=com.vandorlabs.vehicle.core.OwnershipSourceRetry.after(now);VehicleNetwork.request(this);
+        }
+    }
     private NBTTagCompound retainedCouplerAssociation;
     public java.util.UUID couplerAssociationGeneration(){return couplerAssociationGeneration;}
     /** Last admitted external scope/source clock; observation only, never scope renewal. */
@@ -216,7 +231,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(generation!=null&&installed!=null&&generation.equals(installed.generation)&&getUniqueID().equals(installed.owner)&&tick<installedCouplerSourceTick)return false;
         java.util.UUID previous=couplerAssociationGeneration;long previousTick=associationScopeTick,previousSourceTick=installedCouplerSourceTick;NBTTagCompound previousRetained=retainedCouplerAssociation;VehicleStructure before=structure;
         if(!admitCouplerScope(generation,tick))return false;
-        try{install(next);installedCouplerSourceTick=tick;return true;}catch(RuntimeException|LinkageError failure){
+        try{install(next);installedCouplerSourceTick=tick;ownershipSourcePending=false;return true;}catch(RuntimeException|LinkageError failure){
             couplerAssociationGeneration=previous;associationScopeTick=previousTick;installedCouplerSourceTick=previousSourceTick;retainedCouplerAssociation=previousRetained;
             try{if(before!=null)install(before);else{signals.close();structure=null;view=null;collision=null;encoded=null;collisionCache.clear();VehicleLookup.remove(this);}}
             catch(RuntimeException|LinkageError rollback){failure.addSuppressed(rollback);if(before!=null)retainUnavailableSnapshot(before);}
@@ -464,6 +479,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         try{updateAnimatedVehicle();}finally{VehicleAnimationDiagnostics.elapsed(this,"entity-full-tick",sampled);}
     }
     private void updateAnimatedVehicle() {
+        retryOwnershipSource();
         if(world.isRemote&&view!=null&&!couplerScopeReady()){
             super.onUpdate();motionX=motionY=motionZ=0;
             if(ticksExisted%40==1&&(com.vandorlabs.VandorLabs.proxy==null||!com.vandorlabs.VandorLabs.proxy.vehicleSnapshotPending(getUniqueID())))VehicleNetwork.request(this);
