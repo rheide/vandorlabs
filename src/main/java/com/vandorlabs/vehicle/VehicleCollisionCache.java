@@ -24,6 +24,7 @@ public final class VehicleCollisionCache {
     private NBTTagCompound configuration;
     private final VehicleGearConfigurationCache gearConfigurations=new VehicleGearConfigurationCache();
     private net.minecraft.world.World parent;
+    private VehicleWorld.CouplerScope ownershipScope;
     private VehicleStructure warmSnapshot;
     private BlockPos warmOwner;
     private VehicleWorld warmView;
@@ -63,7 +64,7 @@ public final class VehicleCollisionCache {
     public long misses(){return misses;}
     public long generation(){return generation;}
     public boolean warming(){return pending!=null||warmSnapshot!=null&&nextPose<=16;}
-    public void clear(){gearConfigurations.clear();generation++;modularHull=null;modularHullPose=null;modularOversize=false;asyncUnavailable=false;waitingSince=0;failure="";entries.clear();weight=0;configuration=null;parent=null;warmSnapshot=null;warmOwner=null;warmView=null;nextPose=17;if(pending!=null)pending.cancel(false);pending=null;pendingPose=null;}
+    public void clear(){gearConfigurations.clear();generation++;modularHull=null;modularHullPose=null;modularOversize=false;asyncUnavailable=false;waitingSince=0;failure="";entries.clear();weight=0;configuration=null;parent=null;ownershipScope=null;warmSnapshot=null;warmOwner=null;warmView=null;nextPose=17;if(pending!=null)pending.cancel(false);pending=null;pendingPose=null;}
     private static boolean knownSource(Block source){String name=source.getClass().getName();return name.startsWith("net.minecraft.block.")||name.startsWith("com.vandorlabs.blocks.")&&SAFE_OWN.contains(source.getClass().getSimpleName());}
     private static boolean supported(VehicleWorld view,VehicleStructure.Cell cell,TileEntity tile){
         Block block=cell.state.getBlock();if(block.getRegistryName()==null)return false;
@@ -113,8 +114,8 @@ public final class VehicleCollisionCache {
         return new Description(signature,new VehicleStructure(cells,view.structure.seat,view.structure.facing,view.structure.gearCount),new Pose(poses),movingOwners==1?owner:null);
     }
     private void accept(Description description,VehicleWorld view){
-        if(parent==view.parent&&configuration!=null&&configuration.equals(description.configuration))return;
-        clear();parent=view.parent;configuration=description.configuration;
+        if(parent==view.parent&&VehicleWorld.CouplerScope.same(ownershipScope,view.couplerScope())&&configuration!=null&&configuration.equals(description.configuration))return;
+        clear();parent=view.parent;ownershipScope=view.couplerScope();configuration=description.configuration;
         if(!uncached&&description.owner!=null){warmSnapshot=description.snapshot;warmOwner=description.owner;nextPose=0;}
     }
     private void put(Pose pose,VehicleCollision.Geometry geometry){
@@ -125,7 +126,7 @@ public final class VehicleCollisionCache {
     public void reset(VehicleWorld view,VehicleCollision baseline){clear();Description description=describe(view);if(description!=null){accept(description,view);put(description.pose,baseline.geometry());}}
     public void restart(VehicleWorld view){clear();Description description=describe(view);if(description!=null)accept(description,view);}
     public VehicleCollision collision(VehicleWorld view){
-        long signatureStart=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);if(signatureStart!=0)sample(view,"cache-signature",System.nanoTime()-signatureStart);if(description==null){if(uncached){Description current=describe(view,false);poll();VehicleCollision.Geometry prepared=current==null?null:entries.remove(current.pose);if(prepared!=null&&configuration.equals(current.configuration)){weight-=prepared.boxes.size();hits++;return new VehicleCollision(prepared);}}clear();misses++;return new VehicleCollision(view);}
+        long signatureStart=VehicleAnimationDiagnostics.start(view.craft);Description description=describe(view);if(signatureStart!=0)sample(view,"cache-signature",System.nanoTime()-signatureStart);if(description==null){if(uncached){Description current=describe(view,false);poll();VehicleCollision.Geometry prepared=current==null?null:entries.remove(current.pose);if(prepared!=null&&parent==view.parent&&VehicleWorld.CouplerScope.same(ownershipScope,view.couplerScope())&&configuration.equals(current.configuration)){weight-=prepared.boxes.size();hits++;return new VehicleCollision(prepared);}}clear();misses++;return new VehicleCollision(view);}
         accept(description,view);poll();
         VehicleCollision modular=modularCollision(view,null);if(modular!=null){hits++;return modular;}
         VehicleCollision.Geometry found=entries.get(description.pose);
@@ -195,7 +196,7 @@ public final class VehicleCollisionCache {
     }
     private void queue(VehicleWorld view,Description description,Pose pose){
         if(pending!=null||WORKER.getQueue().remainingCapacity()==0)return;
-        if(warmView==null){long cloned=VehicleAnimationDiagnostics.start(view.craft);warmView=new VehicleWorld(view.parent,description.snapshot);warmView.hover=view.hover;VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-view-create",cloned);}
+        if(warmView==null){long cloned=VehicleAnimationDiagnostics.start(view.craft);warmView=new VehicleWorld(view.parent,description.snapshot,view.couplerScope());warmView.hover=view.hover;VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-view-create",cloned);}
         long configured=VehicleAnimationDiagnostics.start(view.craft);List<TileEntity> owners=animatedOwners(warmView);if(owners.size()!=pose.values.length){fail("canopy owner count changed");return;}
         for(int i=0;i<owners.size();i++){TileEntity tile=owners.get(i);double value=Double.longBitsToDouble(pose.values[i]);if(tile instanceof TileEntityCanopy)((TileEntityCanopy)tile).progress=(float)value;else if(tile instanceof com.vandorlabs.gear.GearTileEntity)((com.vandorlabs.gear.GearTileEntity)tile).captureProgress(value);else ((TileEntityLandingGear)tile).progress=(float)value;}
         VehicleAnimationDiagnostics.elapsed(view.craft,"cache-isolated-owner-configure",configured);

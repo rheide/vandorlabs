@@ -66,7 +66,7 @@ final class TaxiModularGear {
     }
     private static Plan normalized(EntityGroundVehicle craft,List<VehicleStructure.Cell> cells){int minY=0;for(VehicleStructure.Cell cell:cells)minY=Math.min(minY,cell.pos.getY());int shift=-minY;List<VehicleStructure.Cell> normalized=new ArrayList<>();BlockPos delta=new BlockPos(0,shift,0);for(VehicleStructure.Cell cell:cells)normalized.add(new VehicleStructure.Cell(cell.pos.add(delta),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),delta):null));return new Plan(new VehicleStructure(normalized,craft.structure.seat.add(delta),craft.structure.facing,craft.structure.gearCount),shift);}
     private static VehicleCollision validate(EntityGroundVehicle craft,Plan plan,double y){
-        VehicleWorld view=new VehicleWorld(craft.world,plan.structure);for(VehicleStructure.Cell cell:plan.structure.cells)if(cell.hasTileData()&&!view.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Landing gear block data cannot be installed");
+        VehicleWorld view=new VehicleWorld(craft.world,plan.structure,craft.currentCouplerScope());for(VehicleStructure.Cell cell:plan.structure.cells)if(cell.hasTileData()&&!view.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Landing gear block data cannot be installed");
         VehicleRotation.validate(plan.structure,view);try{plan.structure.encode();}catch(java.io.IOException failure){throw new IllegalArgumentException("Adjusted craft cannot be saved",failure);}
         VehicleCollision geometry=new VehicleCollision(view);if(!geometry.loaded(craft.world,craft.posX,y,craft.posZ,0,0,0,craft.rotationYaw))throw new IllegalArgumentException("Landing adjustment reaches unloaded terrain");
         VehiclePose pose=new VehiclePose(craft.posX,y,craft.posZ,craft.rotationYaw);
@@ -131,7 +131,7 @@ final class TaxiModularGear {
             if(first.getInteger("Phase")==1){
                 if(!expand)return false;
                 Plan full=endpoint(craft,roots,true,amount);validate(craft,full,craft.posY+amount-full.shift);
-                VehicleWorld preview=new VehicleWorld(craft.world,full.structure);List<VehicleStructure.Cell> cells=new ArrayList<>();
+                VehicleWorld preview=new VehicleWorld(craft.world,full.structure,craft.currentCouplerScope());List<VehicleStructure.Cell> cells=new ArrayList<>();
                 for(VehicleStructure.Cell cell:full.structure.cells){TileEntity raw=preview.getTileEntity(cell.pos);if(raw instanceof GearTileEntity&&((GearTileEntity)raw).isController()&&((GearTileEntity)raw).isLandingAssembly()){
                     GearTileEntity projected=(GearTileEntity)raw;NBTTagCompound data=cell.tileData(),motion=state(projected,amount);motion.setInteger("Phase",2);motion.setDouble("Level",amount);motion.setBoolean("Expand",true);data.setTag(GearTaxiState.KEY,motion);data.setDouble("GearProgress",progress(projected,amount));cells.add(new VehicleStructure.Cell(cell.pos,cell.state,data));
                 }else cells.add(cell);}

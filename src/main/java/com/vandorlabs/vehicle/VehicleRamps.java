@@ -35,7 +35,7 @@ public final class VehicleRamps {
         try{
             // The clone can discover an unexpanded platform and assemble new cells,
             // while the authoritative world and live control subscriptions remain untouched.
-            VehicleWorld staging=new VehicleWorld(craft.world,craft.structure);
+            VehicleWorld staging=new VehicleWorld(craft.world,craft.structure,craft.currentCouplerScope());
             TileEntityRampController ramp=(TileEntityRampController)staging.getTileEntity(at);
             List<VehicleStructure.Cell> parts=ramp.vehicleEndpoint(deployment);
             Set<BlockPos> removed=new HashSet<>(ramp.vehicleSources());
@@ -65,7 +65,7 @@ public final class VehicleRamps {
             BlockPos shift=new BlockPos(-minX,-minY,-minZ);List<VehicleStructure.Cell> rebased=new ArrayList<>();
             for(VehicleStructure.Cell cell:cells.values())rebased.add(new VehicleStructure.Cell(cell.pos.add(shift),cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),shift):null));
             VehicleStructure next=new VehicleStructure(rebased,craft.structure.seat.add(shift),craft.structure.facing,craft.structure.gearCount);
-            VehicleWorld nextView=new VehicleWorld(craft.world,next);VehicleRotation.validate(next,nextView);next.encode();
+            VehicleWorld nextView=new VehicleWorld(craft.world,next,craft.currentCouplerScope());VehicleRotation.validate(next,nextView);next.encode();
             VehicleCollision collision=new VehicleCollision(nextView);
             double oldX=craft.structure.bounds.maxX/2,oldZ=craft.structure.bounds.maxZ/2,newX=next.bounds.maxX/2,newZ=next.bounds.maxZ/2;
             double radians=Math.toRadians(craft.rotationYaw),c=Math.cos(radians),s=Math.sin(radians),dx=newX-oldX-shift.getX(),dz=newZ-oldZ-shift.getZ();
