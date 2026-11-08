@@ -537,6 +537,7 @@ public class ReproLab {
                 @Override public void mouseXYChange(){deltaX=deltaY=0;}
             };
             if(System.getProperty("vandorlabs.armRecoveryPhase","").contains("safe-park-arm-"))net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new com.vandorlabs.vehicle.VehicleSafeParkArmRecoveryChecks());
+            if(com.vandorlabs.vehicle.VehicleScopedSplitColdChecks.active())com.vandorlabs.vehicle.VehicleScopedSplitColdChecks.register();
             if(Boolean.getBoolean("vandorlabs.traceChunkTiles"))net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new ChunkTileTrace());
             //noinspection ResultOfMethodCallIgnored
             outDir.mkdirs();
