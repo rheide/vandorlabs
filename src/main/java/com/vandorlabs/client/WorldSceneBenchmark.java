@@ -14,10 +14,15 @@ import java.util.*;
 public final class WorldSceneBenchmark {
     private static final boolean ENABLED=Boolean.getBoolean("vandorlabs.worldBenchmark");
     private static final boolean CHECK_RELOAD=Boolean.getBoolean("vandorlabs.worldBenchmarkReload");
+    private static final boolean OMIT_GLAZING=ENABLED&&Boolean.getBoolean("vandorlabs.worldBenchmarkOmitGlazing");
     private static boolean reloaded;
-    private static final int SAMPLES=240;
+    private static final int SAMPLES=Integer.getInteger("vandorlabs.worldBenchmarkSamples",240);
+    private static final String CUSTOM=System.getProperty("vandorlabs.worldBenchmarkCamera","");
+    private static double[][] cameras(){if(CUSTOM.isEmpty())return new double[][]{{36,77,100,90,8},{-8,77,100,270,8},{45,94,142,143.57,18}};String[] parts=CUSTOM.split(",");if(parts.length!=5)throw new IllegalArgumentException("Camera requires x,y,z,yaw,pitch");double[] c=new double[5];for(int i=0;i<5;i++)c[i]=Double.parseDouble(parts[i]);return new double[][]{c};}
+    private static BlockPos low(){return CUSTOM.isEmpty()?new BlockPos(-16,60,48):new BlockPos(CAMERAS[camera][0]-80,0,CAMERAS[camera][2]-80);}
+    private static BlockPos high(){return CUSTOM.isEmpty()?new BlockPos(64,104,160):new BlockPos(CAMERAS[camera][0]+80,255,CAMERAS[camera][2]+80);}
     // Camera feet coordinates, yaw, pitch; all look toward the supplied structure.
-    private static final double[][] CAMERAS={{36,77,100,90,8},{-8,77,100,270,8},{45,94,142,143.57,18}};
+    private static final double[][] CAMERAS=cameras();
     private static final String[] NAMES={"east_wall","west_wall","overview"};
     private static int ticks,camera=-1,stage,frames;
     private static long startWall,startCpu,startBytes,settleStart;
@@ -26,6 +31,7 @@ public final class WorldSceneBenchmark {
     private static PrintWriter results;
     private static final com.sun.management.ThreadMXBean BEAN=(com.sun.management.ThreadMXBean)ManagementFactory.getThreadMXBean();
     public static boolean enabled(){return ENABLED;}
+    static boolean omitGlazing(){return OMIT_GLAZING;}
     public static void tick(Minecraft mc,File directory) {
         if(!ENABLED)return;
         try {
@@ -89,7 +95,7 @@ public final class WorldSceneBenchmark {
         long submitted=System.nanoTime(),cpu=BEAN.getCurrentThreadCpuTime()-startCpu,allocated=bytes()-startBytes;
         GL11.glFinish();long completed=System.nanoTime();
         if(stage==2) {
-            if(++frames>=90 && completed-settleStart>15_000_000_000L && mc.world.isAreaLoaded(new BlockPos(-16,60,48),new BlockPos(64,104,160),false)) {
+            if(++frames>=90 && completed-settleStart>15_000_000_000L && mc.world.isAreaLoaded(low(),high(),false)) {
                 inventory(mc);stage=3;System.out.println("[vandorlabs] world-benchmark measuring "+cameraName());
             }
             if(completed-settleStart>180_000_000_000L)throw new IllegalStateException("Benchmark chunks did not settle");
@@ -102,13 +108,14 @@ public final class WorldSceneBenchmark {
         results.printf(Locale.ROOT,"%s,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.0f,%.6f%n",cameraName(),samples.size(),
                 percentile(0,.5),percentile(0,.95),percentile(1,.5),percentile(1,.95),percentile(2,.5),percentile(3,.5),server);
         results.flush();
+        System.out.println("[vandorlabs] world-benchmark glazing "+GlazingRenderOrder.diagnostics+" sort-us="+GlazingRenderOrder.sortNanos/1000+" batch-panes="+GlassPaneBatch.panes+" batch-draws="+GlassPaneBatch.draws);
         net.minecraft.util.ScreenShotHelper.saveScreenshot(output,"world-"+cameraName()+".png",mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
         stage=4;
     }
     private static void inventory(Minecraft mc) {
         if(camera!=0)return;
         Map<String,Integer> counts=new TreeMap<>();
-        for(BlockPos p:BlockPos.getAllInBox(new BlockPos(-16,60,48),new BlockPos(64,104,160))) {
+        for(BlockPos p:BlockPos.getAllInBox(low(),high())) {
             net.minecraft.block.Block block=mc.world.getBlockState(p).getBlock();
             String id=String.valueOf(block.getRegistryName());
             if(id.startsWith("vandorlabs:"))counts.put(id,counts.getOrDefault(id,0)+1);
@@ -122,6 +129,6 @@ public final class WorldSceneBenchmark {
         Arrays.sort(sorted);return sorted[(int)Math.floor((sorted.length-1)*p)];
     }
     private static long bytes(){return BEAN.isThreadAllocatedMemorySupported()?BEAN.getThreadAllocatedBytes(Thread.currentThread().getId()):0;}
-    private static String cameraName(){return NAMES[camera]+(reloaded?"_reloaded":"");}
+    private static String cameraName(){return (CUSTOM.isEmpty()?NAMES[camera]:"custom")+(reloaded?"_reloaded":"");}
     private WorldSceneBenchmark(){}
 }

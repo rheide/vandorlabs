@@ -4,13 +4,36 @@ import java.util.*;
 
 /** Preserve every acyclic occlusion constraint, even when other surfaces form cycles. */
 public final class OcclusionOrder {
+    private static final boolean LEGACY_BENCHMARK=Boolean.getBoolean("vandorlabs.benchmarkLegacyGlazing");
     public static final class Result {
         public final int[] order,component;
         public final int cyclicComponents;
         private Result(int[] order,int[] component,int cycles){this.order=order;this.component=component;cyclicComponents=cycles;}
     }
     public static Result sort(BitSet[] edges){
-        int n=edges.length;boolean[] seen=new boolean[n];int[] finish=new int[n],stack=new int[n],cursor=new int[n];int finished=0;
+        int n=edges.length;
+        // Most visible glazing graphs are acyclic. Resolve those directly without
+        // allocating a reverse graph, SCC member lists or a condensed graph.
+        if(!LEGACY_BENCHMARK){
+        int[] incomingFast=new int[n],orderFast=new int[n];
+        for(BitSet edge:edges)for(int j=edge.nextSetBit(0);j>=0;j=edge.nextSetBit(j+1)){
+            if(j>=n)throw new IllegalArgumentException("Occlusion edge outside scene");
+            incomingFast[j]++;
+        }
+        PriorityQueue<Integer> readyFast=new PriorityQueue<>();
+        for(int i=0;i<n;i++)if(incomingFast[i]==0)readyFast.add(i);
+        int usedFast=0;
+        while(!readyFast.isEmpty()){
+            int at=readyFast.remove();orderFast[usedFast++]=at;
+            for(int j=edges[at].nextSetBit(0);j>=0;j=edges[at].nextSetBit(j+1))if(--incomingFast[j]==0)readyFast.add(j);
+        }
+        if(usedFast==n){
+            // Singleton component IDs need only preserve component equivalence.
+            for(int i=0;i<n;i++)incomingFast[i]=i;
+            return new Result(orderFast,incomingFast,0);
+        }
+        }
+        boolean[] seen=new boolean[n];int[] finish=new int[n],stack=new int[n],cursor=new int[n];int finished=0;
         // Iterative DFS keeps large scenes independent of the JVM call-stack size.
         for(int root=0;root<n;root++)if(!seen[root]){
             int size=1;stack[0]=root;seen[root]=true;

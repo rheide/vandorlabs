@@ -103,6 +103,14 @@ task testGlazingOrder(type: JavaExec) {
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.render.OcclusionOrderChecks'
 }
+task testGlazingSweep(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare adaptive glazing sweep costs with all-pairs overlap counts'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlazingSweepChecks'
+}
+check.dependsOn testGlazingSweep
 check.dependsOn testGlazingOrder
 
 task testDedicatedServerLinkage(type: JavaExec) {

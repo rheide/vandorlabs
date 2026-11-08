@@ -63,6 +63,7 @@ final class FixedCanopyModel implements IBakedModel {
     FixedCanopyModel(IBakedModel delegate){this.delegate=delegate;}
     @Override public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long random){
         if(side!=null||!(state instanceof IExtendedBlockState))return Collections.emptyList();
+        if(WorldSceneBenchmark.omitGlazing()&&net.minecraftforge.client.MinecraftForgeClient.getRenderLayer()==BlockRenderLayer.TRANSLUCENT)return Collections.emptyList();
         Object value=((IExtendedBlockState)state).getValue(BlockFixedCanopyGlass.MESH);
         if(!(value instanceof Mesh))return Collections.emptyList();Mesh mesh=(Mesh)value;
         return net.minecraftforge.client.MinecraftForgeClient.getRenderLayer()==BlockRenderLayer.TRANSLUCENT?mesh.glass:mesh.solid;

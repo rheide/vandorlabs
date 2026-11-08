@@ -10,6 +10,7 @@ import org.lwjgl.opengl.GL11;
 
 /** Separate authored front border; alpha leaves the underlying display untouched. */
 final class FrameSurfaceRenderer {
+    private static final boolean LEGACY_BENCHMARK=Boolean.getBoolean("vandorlabs.benchmarkLegacyGlazing");
     private FrameSurfaceRenderer(){}
     static boolean suppressBorders;
     private static final java.util.Map<com.vandorlabs.tiles.TileEntityAnimatedScreenSelector,java.util.Map<ScreenSurface.Quad,Content>> CONTENT=new java.util.WeakHashMap<>();
@@ -35,6 +36,13 @@ final class FrameSurfaceRenderer {
     static void screen(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,boolean ceiling){
         FrameAppearance frame=tile.frameAppearance;
         if(!frame.hasFront()||suppressBorders||!applies(tile,quad))return;
+        GlassSurfaceGroups.Layout layout=frame.tile?new GlassSurfaceGroups.Layout(0,0,1,1):ScreenSurfaceGroups.frameLayout(tile);
+        boolean input=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableInput||tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole;
+        double[] border=ScreenFrameBorders.get(frame.front);
+        double l=layout.column==0?border[0]:0,r=layout.column==layout.columns-1?border[1]:0;
+        double t=layout.row==layout.rows-1?border[2]:0,d=layout.row==0?border[3]:0;
+        // Joined interior cells emit no border vertices.
+        if(l==0&&r==0&&t==0&&d==0&&!LEGACY_BENCHMARK)return;
         float oldBlock=OpenGlHelper.lastBrightnessX,oldSky=OpenGlHelper.lastBrightnessY;
         if(frame.light()>0)OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,oldSky);
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -42,11 +50,6 @@ final class FrameSurfaceRenderer {
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.alphaFunc(GL11.GL_GREATER,.01F);GL11.glEnable(GL11.GL_POLYGON_OFFSET_FILL);GL11.glPolygonOffset(-6,-6);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        GlassSurfaceGroups.Layout layout=frame.tile?new GlassSurfaceGroups.Layout(0,0,1,1):ScreenSurfaceGroups.frameLayout(tile);
-        boolean input=tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableInput||tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableHalfConsole;
-        double[] border=ScreenFrameBorders.get(frame.front);
-        double l=layout.column==0?border[0]:0,r=layout.column==layout.columns-1?border[1]:0;
-        double t=layout.row==layout.rows-1?border[2]:0,d=layout.row==0?border[3]:0;
         GlStateManager.disableCull();
         for(int row=0;row<3;row++)for(int col=0;col<3;col++)if(row!=1||col!=1){
             double x0=ScreenFrameBorders.cut(col,l,r),x1=ScreenFrameBorders.cut(col+1,l,r),y0=ScreenFrameBorders.cut(row,t,d),y1=ScreenFrameBorders.cut(row+1,t,d);

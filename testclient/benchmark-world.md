@@ -73,3 +73,20 @@ metrics; rendering time alone can miss that feedback. Retain the artifact hash,
 matching pack/settings and screenshots. Run benchmarks sequentially without
 concurrent builds. Mesa timings establish comparisons in this test environment;
 they do not establish hardware FPS or owner acceptance of a shader pack.
+
+## Custom camera and glazing controls
+
+`-Dvandorlabs.worldBenchmarkCamera=x,y,z,yaw,pitch` replaces the default camera
+sequence with one stationary view. The custom inventory and loaded-area checks
+cover the full build height and an 80-block radius in X/Z.
+`-Dvandorlabs.worldBenchmarkSamples=120` overrides the default 240 samples.
+The JVM properties can be supplied through `JAVA_TOOL_OPTIONS` to the isolated
+launcher. Keep the same copied region data, mods, settings and camera across runs.
+
+`-Dvandorlabs.benchmarkLegacyGlazing=true` restores the previous overlap-sorting
+and empty-frame submission behavior for a diagnostic baseline. It defaults off.
+`-Dvandorlabs.worldBenchmarkOmitGlazing=true` omits Programmable Glass tile
+rendering and fixed-canopy translucent chunk geometry **only while the world
+benchmark is enabled**. This changes the image and is a diagnostic cost bound,
+not an optimization or a valid visual-parity comparison. Glazing graph diagnostics
+are printed alongside the completed camera measurements.

@@ -10,6 +10,7 @@ import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
 import org.lwjgl.opengl.GL11;
 
 public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityProgrammableGlass> {
+    private static final boolean LEGACY_BENCHMARK=Boolean.getBoolean("vandorlabs.benchmarkLegacyGlazing");
     private static final java.util.Map<CornerKey,CornerMeshes> CORNERS=new java.util.LinkedHashMap<CornerKey,CornerMeshes>(128,.75F,true) {
         @Override protected boolean removeEldestEntry(java.util.Map.Entry<CornerKey,CornerMeshes> entry){return size()>128;}
     };
@@ -46,7 +47,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
-        if (tile.getWorld() == null) return;
+        if (tile.getWorld() == null || WorldSceneBenchmark.omitGlazing()) return;
         if(GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
         if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
@@ -104,6 +105,9 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
 
     private void renderSelectedFrame(TileEntityProgrammableGlass tile,net.minecraft.block.state.IBlockState state,double x,double y,double z){
+        StaticSurfaceMesh frame=GlassFrameMesh.get(tile);
+        // Joined interior cells have no frame geometry; avoid all GL and light work.
+        if(frame.vertexCount()==0&&!LEGACY_BENCHMARK)return;
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
         if(state.getValue(BlockGlassWall.ROTATED)){GlStateManager.translate(.5,0,.5);GlStateManager.rotate(-90,0,1,0);GlStateManager.translate(-.5,0,-.5);}
@@ -113,7 +117,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         GlStateManager.scale(1D/16,1D/16,1D/16);
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        GlassFrameMesh.get(tile).draw(b,light/65536,light%65536);Tessellator.getInstance().draw();
+        frame.draw(b,light/65536,light%65536);Tessellator.getInstance().draw();
         GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,savedBlockLight,savedSkyLight);
     }
 

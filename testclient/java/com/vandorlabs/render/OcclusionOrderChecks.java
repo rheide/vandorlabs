@@ -6,6 +6,14 @@ public final class OcclusionOrderChecks {
  public static void main(String[] args){
   BitSet[] g=graph(4);g[1].set(2);g[2].set(1);g[2].set(3);g[3].set(0);verify(g,true);
   Random r=new Random(27090);
+  // Acyclic fast path must retain the prior smallest-ready-index tie break.
+  for(int n=0;n<128;n++){
+   g=graph(n);for(int i=0;i<n;i++)for(int j=i+1;j<n;j++)if(r.nextInt(8)==0)g[i].set(j);
+   OcclusionOrder.Result result=OcclusionOrder.sort(g);
+   require(result.cyclicComponents==0);
+   for(int i=0;i<n;i++)require(result.order[i]==i);
+   verify(g,false);
+  }
   for(int n=0;n<=48;n++)for(int sample=0;sample<24;sample++){g=graph(n);for(int i=0;i<n;i++)for(int j=0;j<n;j++)if(r.nextInt(20)==0)g[i].set(j);verify(g,true);}
   for(int n:new int[]{128,129,16384}){g=graph(n);for(int i=1;i<n;i++)g[i].set(i-1);verify(g,false);g[0].set(n-1);verify(g,false);}
   System.out.println("occlusion-order PASS: "+checks+" graph invariants, cyclic constraints and large iterative traversal");

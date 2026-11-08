@@ -8,6 +8,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
 
 /** Collect visible glazing in pass zero; draw its translucent parts back-to-front in pass one. */
 final class GlazingRenderOrder {
+    private static final boolean LEGACY_BENCHMARK=Boolean.getBoolean("vandorlabs.benchmarkLegacyGlazing");
     private static final int LIMIT=16384;
     static String diagnostics="";static int lateDraws;static long sortNanos;
     static boolean batchPanes=true;
@@ -129,11 +130,17 @@ final class GlazingRenderOrder {
         diagnostics="draws="+ordered.size()+" planes="+planes.size();
         int n=planes.size();BitSet[] edge=new BitSet[n];for(int i=0;i<n;i++)edge[i]=new BitSet();
         Integer[] sweep=new Integer[n];for(int i=0;i<n;i++)sweep[i]=i;
-        Arrays.sort(sweep,(a,b)->Double.compare(planes.get(a).left,planes.get(b).left));
+        // Tall joined walls overlap heavily along X; choose the sweep that visits
+        // fewer interval pairs. This changes only broad-phase work, never edges.
+        boolean vertical=!LEGACY_BENCHMARK
+                && projectedPairs(planes,true)<projectedPairs(planes,false);
+        Arrays.sort(sweep,(a,b)->Double.compare(vertical?planes.get(a).bottom:planes.get(a).left,vertical?planes.get(b).bottom:planes.get(b).left));
+        long tested=0;
         for(int left=0;left<n;left++)for(int right=left+1;right<n;right++){
             int i=sweep[left],j=sweep[right];Plane one=planes.get(i),two=planes.get(j);
-            if(two.left>=one.right)break;
-            if(one.top<=two.bottom||two.top<=one.bottom)continue;
+            if(vertical?two.bottom>=one.top:two.left>=one.right)break;
+            tested++;
+            if(one.right<=two.left||two.right<=one.left||one.top<=two.bottom||two.top<=one.bottom)continue;
             int a=relation(one,two,cx,cz),b=-relation(two,one,cx,cz);
             if(a!=0&&b!=0&&a!=b)continue;int direction=a!=0?a:b;if(direction==0)continue;
             int from=direction<0?i:j,to=direction<0?j:i;edge[from].set(to);
@@ -141,8 +148,16 @@ final class GlazingRenderOrder {
         com.vandorlabs.render.OcclusionOrder.Result result=com.vandorlabs.render.OcclusionOrder.sort(edge);
         ordered.clear();for(int selected:result.order)ordered.add(planes.get(selected).draw);
         int largest=0;int[] sizes=new int[n];for(int c:result.component)largest=Math.max(largest,++sizes[c]);
-        diagnostics+=" cyclic-components="+result.cyclicComponents+" largest="+largest;
+        diagnostics+=" sweep="+(vertical?"Y":"X")+" pairs="+tested+" cyclic-components="+result.cyclicComponents+" largest="+largest;
 
+    }
+    private static long projectedPairs(List<Plane> planes,boolean vertical){
+        int n=planes.size(),used=0;double[] starts=new double[n],ends=new double[n];
+        for(Plane p:planes){double lo=vertical?p.bottom:p.left,hi=vertical?p.top:p.right;if(lo<hi){starts[used]=lo;ends[used++]=hi;}}
+        Arrays.sort(starts,0,used);Arrays.sort(ends,0,used);
+        long pairs=0;int ended=0;
+        for(int i=0;i<used;i++){while(ended<used&&ends[ended]<=starts[i])ended++;pairs+=i-ended;}
+        return pairs;
     }
     /** A behind B's plane sorts first; only wholly separated finite bounds establish an edge. */
     private static int relation(Plane a,Plane b,double cx,double cz){

@@ -14,6 +14,8 @@
 
 ### Fixes and usability
 
+- Reduce Forge 1.12.2 glazing-order allocations for acyclic scenes and choose the lower-cost overlap sweep for tall or wide walls while preserving cyclic overlap ordering. Skip empty joined glass frames and screen borders before lighting and graphics-state setup, including shader shadow passes.
+
 - Fix an OptiFine shader crash when a solid Segmented Door has no translucent geometry to submit, including the shadow pass.
 - Keep Segmented Door panels solid while moving and fully open, including beyond their original cells. Follow the selected bending treads, reuse bounded collision snapshots and remove them when the owner unloads or is removed.
 
