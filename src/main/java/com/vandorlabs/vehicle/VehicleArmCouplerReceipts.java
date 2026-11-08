@@ -34,10 +34,12 @@ public final class VehicleArmCouplerReceipts {
         Map<BlockPos,ArmPayload> payloads=new LinkedHashMap<>();
         Map<BlockPos,VehicleArmCouplers.Address> nativeAddresses=new HashMap<>();
         Map<BlockPos,ArmPayload> originalPayloads=new HashMap<>();
+        long metadataRows=candidate.cells.size();
         for(VehicleStructure.Cell cell:candidate.cells){
             if(cell.state.getBlock() instanceof BlockCoupler){VehicleArmCouplers.Head head=nativeHeads.get(cell.pos.add(origin));if(head==null)throw new IllegalArgumentException("Chosen native Coupler has no prior ownership address");validatePreimage(original.at(head.nativeCell),cell,released.contains(head.address));add(occurrences,head,cell.tileData());nativeAddresses.put(cell.pos,head.address);}
             if(!(cell.state.getBlock() instanceof GearBlock)||!cell.hasTileKey("ArmPayload",10))continue;
             ArmPayload payload=ArmPayload.readForCouplerReceipt(cell.tileData().getCompoundTag("ArmPayload"));
+            metadataRows+=payload.blocks.cells.size();if(metadataRows>2L*VehicleStructure.MAX_BLOCKS)throw new IllegalArgumentException("Chosen arm receipt metadata exceeds bounded ownership");
             if(payload.hasOwnershipJournal())throw new IllegalArgumentException("Recover arm ownership before partitioning");
             for(VehicleStructure.Cell nested:payload.blocks.cells){
                 if(nested.state.getBlock() instanceof GearBlock)throw new IllegalArgumentException("Nested arm frames require their own partition receipt");
