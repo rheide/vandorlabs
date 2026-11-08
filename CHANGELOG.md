@@ -14,6 +14,8 @@
 
 ### Fixes and usability
 
+- Keep Segmented Door panels solid while moving and fully open, including beyond their original cells. Follow the selected bending treads, reuse bounded collision snapshots and remove them when the owner unloads or is removed.
+
 - Keep Reactor artwork selected when choosing glazing in its Glass tab, for ordinary and Large Doors in both targets.
 - Preserve the full Spiral Aluminum Glazing artwork and Tile/Stretch/Fit mapping across its slit geometry, inner borders and independently selected glass.
 - Stop perpendicular Segmented Doors when the final tread completes the bend, removing extra open-track travel while retaining tread-dependent bend height.

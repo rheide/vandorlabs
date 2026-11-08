@@ -7,10 +7,11 @@ from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--supplied',action='store_true');options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--supplied',action='store_true');parser.add_argument('--collisions-only',action='store_true');options=parser.parse_args()
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)));
  if options.supplied:env['VANDOR_SEGMENTED_SUPPLIED_WORLD']='true'
+ if options.collisions_only:env['VANDOR_SEGMENTED_COLLISION_ONLY']='true'
  base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='segmented-world-client-',dir=base))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
  saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=segmented-world-client'),server_log,env)
@@ -32,12 +33,14 @@ def main():
   while '[vandorlabs][segmented-world-client] logout PASS' not in server_log.read_text(errors='replace'):
    if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Canonical Segmented authoritative logout missing: '+str(server_log))
    time.sleep(.1)
-  markers=['placement','supplied-0','supplied-1','supplied-2','supplied-motion','supplied-complete','logout'] if options.supplied else ['placement','frame-subgroup','configuration','eight-mechanisms','survival-sneak','stale-identity','nearer-refusal','lag-empty','stale-sequence','moved-bucket','closed-after-bucket','configured-pick','harvest','logout']
+  markers=['collision-matrix','collision-complete','logout'] if options.collisions_only else ['placement','supplied-0','supplied-1','supplied-2','supplied-motion','supplied-complete','logout'] if options.supplied else ['placement','frame-subgroup','configuration','eight-mechanisms','survival-sneak','stale-identity','nearer-refusal','lag-empty','stale-sequence','moved-bucket','closed-after-bucket','configured-pick','harvest','logout']
   for marker in markers:check_log(server_log,'[vandorlabs][segmented-world-client] '+marker+' PASS')
  finally:stop(server)
  deadline=time.monotonic()+30
  while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
  check_log(saved/'logs/latest.log','All dimensions are saved')
+ if options.collisions_only:
+  print('Public canonical Segmented collision acceptance PASS (dedicated/client World queries and entity movement): '+str(out),flush=True);return
  if options.supplied:
   from PIL import Image,ImageChops
   reports=[]

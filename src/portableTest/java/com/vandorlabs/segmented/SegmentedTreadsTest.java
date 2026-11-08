@@ -22,8 +22,16 @@ public final class SegmentedTreadsTest {
     }
    }
   }
-  openStop();spiralMapping();apertureAreas();
+  collisions();openStop();spiralMapping();apertureAreas();
   System.out.println("Segmented treads PASS checks="+checks+" fiveSizes/fourDirections/fourFacings/closedAlignment/UVArea/movedRays");
+ }
+ private static void collisions(){
+  for(int pixels:new int[]{1,2,4,8,16})for(int direction=0;direction<4;direction++)for(boolean straight:new boolean[]{false,true})for(int rotation=0;rotation<4;rotation++)for(double progress:new double[]{0,.25,.5,1}){
+   SegmentedPanelCollision.Builder builder=new SegmentedPanelCollision.Builder();SegmentedPanelCollision.append(builder,3,80,-4,rotation,1,4,1,4,progress,direction,straight,pixels,.1);java.util.List<double[]> boxes=builder.boxes();need(!boxes.isEmpty()&&boxes.size()<=16,"bounded solid collision slices");int count=pixels<16&&!straight&&progress>0?16/pixels:1;
+   for(int strip=0;strip<count;strip++){RigidTransform t=count==1?SegmentedHitGeometry.transform(3,80,-4,rotation,1,4,1,4,progress,direction,straight,.1):SegmentedHitGeometry.treadTransform(3,80,-4,rotation,1,4,1,4,progress,direction,pixels,.1,strip);double low=(double)strip/count,high=(strip+1D)/count;
+    for(int corner=0;corner<8;corner++){double x=direction<2?((corner&1)==0?0:1):((corner&1)==0?low:high),y=direction<2?((corner&2)==0?low-.5:high-.5):((corner&2)==0?-.5:.5),z=(corner&4)==0?-SegmentedDoorGeometry.HALF_THICKNESS:SegmentedDoorGeometry.HALF_THICKNESS;double[] point=t.point(x,y,z);boolean contained=false;for(double[] box:boxes)if(point[0]>=box[0]-1e-7&&point[1]>=box[1]-1e-7&&point[2]>=box[2]-1e-7&&point[0]<=box[3]+1e-7&&point[1]<=box[4]+1e-7&&point[2]<=box[5]+1e-7)contained=true;need(contained,"collision retains rendered panel/tread corners");}
+   }
+  }
  }
  private static void openStop(){
   for(int pixels:new int[]{1,2,4,8,16})for(int direction=0;direction<4;direction++)for(int span:new int[]{1,3,9}){

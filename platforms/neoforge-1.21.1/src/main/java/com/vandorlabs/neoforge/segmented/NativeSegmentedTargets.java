@@ -20,8 +20,10 @@ public final class NativeSegmentedTargets {
     /** Installed only by the physical client; authoritative server worlds always use their own timeline. */
     public static void clientPose(ToDoubleFunction<NativeSegmentedDoorEntity> provider){clientPose=java.util.Objects.requireNonNull(provider);}
     public static double pose(NativeSegmentedDoorEntity root){return root.getLevel()!=null&&root.getLevel().isClientSide?clientPose.applyAsDouble(root):root.pose(0);}
+    public static boolean hasCollisionRoots(Level level,AABB query){return NativeFluidWorld.open(level)&&INDEX.hasNearbyBuckets(level,query,66);}
+    public static void collisionRoots(Level level,AABB query,Consumer<NativeSegmentedDoorEntity> visitor){INDEX.visit(level,query.inflate(34).expandTowards(0,32,0),root->root.topOffset()==0&&root.formed()&&!root.inert()&&(root.targetOpen()||root.pose(0)>0),visitor);}
     public static void add(NativeSegmentedDoorEntity tile){INDEX.add(tile);}
-    public static void remove(NativeSegmentedDoorEntity tile){INDEX.remove(tile);COLUMNS.invalidate(tile);}
+    public static void remove(NativeSegmentedDoorEntity tile){INDEX.remove(tile);COLUMNS.invalidate(tile);NativeSegmentedCollisions.remove(tile);}
     public record Target(BlockPos root,BlockHitResult hit){}
     private static final class Column {
         final BlockPos root;final Direction facing;final int position,height,column,width,direction,tread;
@@ -83,6 +85,6 @@ public final class NativeSegmentedTargets {
     }
     @net.neoforged.fml.common.EventBusSubscriber(modid="vandorlabs")
     public static final class Lifecycle {
-        @net.neoforged.bus.api.SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){COLUMNS.invalidateAll();}
+        @net.neoforged.bus.api.SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){COLUMNS.invalidateAll();if(event.getLevel() instanceof Level level)NativeSegmentedCollisions.unload(level);}
     }
 }

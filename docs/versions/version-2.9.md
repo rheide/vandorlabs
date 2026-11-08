@@ -12,7 +12,7 @@ Build **Picket**, **Industrial** and **Lattice** gates from ordinary Segmented D
 
 ![Lattice gate sliding sideways](../images/segmented-2.9-lattice-slide.gif)
 
-**Tread Px** uses the Ramp Controller's numeric field and minus/plus controls, with **1, 2, 4, 8 or 16 pixels** per bending strip. Smaller values produce finer articulation; existing saves default to sixteen-pixel treads. Straight travel retains its existing behavior. Perpendicular travel stops as the final tread completes its bend, without the extra run along the open track; bend height can vary with tread size.
+**Tread Px** uses the Ramp Controller's numeric field and minus/plus controls, with **1, 2, 4, 8 or 16 pixels** per bending strip. Smaller values produce finer articulation; existing saves default to sixteen-pixel treads. Straight travel retains its existing behavior. Perpendicular travel stops as the final tread completes its bend, without the extra run along the open track; bend height can vary with tread size. Panels remain solid while moving and open, including outside their original block cells.
 
 ![Industrial gate bending sideways with four-pixel treads](../images/segmented-2.9-industrial-bend.gif)
 
