@@ -20,3 +20,5 @@ Safety checks run without Minecraft:
 python3 tools/test_test_artifacts.py
 bash -n testclient/test_viewscreen.sh
 ```
+
+The physical server startup runner accepts `--run-root` for its fresh generated server directory. An outer suite can place that directory and a reconstructed cached Forge toolchain beneath one registered disposable `game` path, then finalize the lease only after server shutdown and diagnostic extraction. The default startup location remains unchanged.

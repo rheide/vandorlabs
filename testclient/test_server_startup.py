@@ -15,6 +15,7 @@ def main():
     parser.add_argument('--forge', required=True, type=Path, help='Forge server JAR with its installed libraries')
     parser.add_argument('--jar', required=True, type=Path, help='Built standard Vandor Labs JAR')
     parser.add_argument('--java', default='java', help='Java 8 executable')
+    parser.add_argument('--run-root', type=Path, help='Parent for a fresh disposable server directory')
     parser.add_argument('--mod', action='append', default=[], type=Path, help='Additional compatibility mod JAR (repeatable)')
     parser.add_argument('--vehicle-world-checks', action='store_true', help='Run carried-tile chunk isolation checks on the physical server')
     parser.add_argument('--machine-frames', action='store_true', help='Run the complete Core-frame matrix with client classes absent')
@@ -29,7 +30,9 @@ def main():
     if args.vehicle_world_only:
         args.vehicle_world_checks = True
     root = Path(__file__).resolve().parents[1]
-    output = Path(tempfile.mkdtemp(prefix='server-startup-', dir=root / 'build'))
+    run_root = (args.run_root if args.run_root is not None else root / 'build').resolve()
+    run_root.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix='server-startup-', dir=run_root))
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
