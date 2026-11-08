@@ -55,17 +55,34 @@ public final class VehicleCouplingPlan {
         }
         public BlockPos worldCell(VehicleStructure source,BlockPos local){return origin.add(VehicleRotation.cell(local,(int)source.bounds.maxX,(int)source.bounds.maxZ,turns));}
     }
-    public static VehicleCouplingPlan attach(EntityGroundVehicle craft,EntityPlayerMP actor,BlockPos primary,VehicleScan scan)throws Exception{
+    public static VehicleCouplingPlan attach(EntityGroundVehicle craft,EntityPlayerMP actor,BlockPos primary,VehicleScan scan)throws Exception{return attach(craft,actor,primary,scan,null);}
+    /** Prospective generation comes from an authenticated chosen ownership publication, never a head tag. */
+    public static VehicleCouplingPlan attach(EntityGroundVehicle craft,EntityPlayerMP actor,BlockPos primary,VehicleScan scan,java.util.UUID prospectiveGeneration)throws Exception{
         craft.signals.persist();VehicleStructure before=craft.structure;Alignment alignment=new Alignment(craft,before);require(scan.result!=null&&scan.result.displayOnly,"The complete world section has not been scanned");
         VehicleStructure rotated=VehicleRotation.rotate(scan.result,new VehicleWorld(craft.world,scan.result),-alignment.turns);
         double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx;for(int n=0;n<8;n++){Vec3d corner=new Vec3d(scan.origin.getX()+((n&1)==0?0:scan.result.bounds.maxX),scan.origin.getY()+((n&2)==0?0:scan.result.bounds.maxY),scan.origin.getZ()+((n&4)==0?0:scan.result.bounds.maxZ));Vec3d local=craft.toLocal(corner);lx=Math.min(lx,local.x);ly=Math.min(ly,local.y);lz=Math.min(lz,local.z);}
         BlockPos localOrigin=new BlockPos(Math.round(lx),Math.round(ly),Math.round(lz));List<VehicleStructure.Cell> cells=new ArrayList<>(before.cells);Set<BlockPos> positions=new HashSet<>(),newlyOwned=new HashSet<>();for(VehicleStructure.Cell cell:before.cells)positions.add(cell.pos);
         for(VehicleStructure.Cell cell:rotated.cells){BlockPos at=localOrigin.add(cell.pos);require(positions.add(at),"The world section overlaps the existing vehicle");newlyOwned.add(at);cells.add(new VehicleStructure.Cell(at,cell.state,cell.hasTileData()?VehicleTileData.translated(cell.tileData(),localOrigin):null));}
-        clearRejoinedProof(cells,before,primary,newlyOwned);
+        if(prospectiveGeneration==null)clearRejoinedProof(cells,before,primary,newlyOwned);else clearRejoinedProof(cells,before,primary,newlyOwned,craft.getUniqueID(),prospectiveGeneration);
         return new VehicleCouplingPlan(craft,actor,before,cells,before.gearCount+scan.supportCount(),true,scan.result,scan.origin,true,primary,scan.airBoundary);
     }
     /** Clear only the real newly owned native pair. Unrelated released heads keep their proof. */
-    static void clearRejoinedProof(List<VehicleStructure.Cell> cells,VehicleStructure before,BlockPos primary,Set<BlockPos> newlyOwned){VehicleStructure.Cell a=before.at(primary);if(a==null||!(a.state.getBlock() instanceof BlockCoupler))return;BlockPos other=primary.offset(a.state.getValue(BlockCoupler.FACING));VehicleStructure.Cell b=null;for(VehicleStructure.Cell cell:cells)if(cell.pos.equals(other)){b=cell;break;}if(b==null)return;NBTTagCompound ad=a.tileData(),bd=b.tileData();boolean marked=ad!=null&&ad.hasKey("VehicleArmCouplerReleased")||bd!=null&&bd.hasKey("VehicleArmCouplerReleased");if(!marked)return;require(newlyOwned.contains(other)&&before.at(other)==null&&VehicleCouplings.matching(a.state,b.state)&&a.state.getValue(BlockCoupler.LOCKED)&&b.state.getValue(BlockCoupler.LOCKED),"Released heads need an actual newly owned opposing pair before rejoining");for(int i=0;i<cells.size();i++){VehicleStructure.Cell cell=cells.get(i);if(!cell.pos.equals(primary)&&!cell.pos.equals(other))continue;NBTTagCompound data=cell.tileData();if(data!=null&&data.hasKey("VehicleArmCouplerReleased")){data.removeTag("VehicleArmCouplerReleased");if("Released".equals(data.getString("CouplerStatus")))data.setString("CouplerStatus","Ready");cells.set(i,new VehicleStructure.Cell(cell.pos,cell.state,data));}}}
+    static void clearRejoinedProof(List<VehicleStructure.Cell> cells,VehicleStructure before,BlockPos primary,Set<BlockPos> newlyOwned){clearRejoinedProof(cells,before,primary,newlyOwned,null,null);}
+    static void clearRejoinedProof(List<VehicleStructure.Cell> cells,VehicleStructure before,BlockPos primary,Set<BlockPos> newlyOwned,java.util.UUID vehicle,java.util.UUID generation){
+        require((vehicle==null)==(generation==null),"Complete authenticated Coupler association scope required");
+        VehicleStructure.Cell a=before.at(primary);if(a==null||!(a.state.getBlock() instanceof BlockCoupler))return;
+        BlockPos other=primary.offset(a.state.getValue(BlockCoupler.FACING));VehicleStructure.Cell b=null;for(VehicleStructure.Cell cell:cells)if(cell.pos.equals(other)){b=cell;break;}if(b==null)return;
+        NBTTagCompound ad=a.tileData(),bd=b.tileData();boolean marked=ad!=null&&ad.hasKey("VehicleArmCouplerReleased")||bd!=null&&bd.hasKey("VehicleArmCouplerReleased");if(vehicle==null&&(ad!=null&&ad.hasKey(com.vandorlabs.coupler.CouplerAssociationData.KEY)||bd!=null&&bd.hasKey(com.vandorlabs.coupler.CouplerAssociationData.KEY)))throw new IllegalArgumentException("Scoped Coupler attach requires an authenticated ownership receipt");if(!marked&&vehicle==null)return;
+        require(newlyOwned.contains(other)&&before.at(other)==null&&VehicleCouplings.matching(a.state,b.state)&&a.state.getValue(BlockCoupler.LOCKED)&&b.state.getValue(BlockCoupler.LOCKED),"Released heads need an actual newly owned opposing pair before rejoining");
+        java.util.Map<Integer,VehicleStructure.Cell> patches=new java.util.LinkedHashMap<>();
+        for(int i=0;i<cells.size();i++){
+            VehicleStructure.Cell cell=cells.get(i);if(!cell.pos.equals(primary)&&!cell.pos.equals(other))continue;NBTTagCompound data=cell.tileData();
+            if(vehicle!=null)data=com.vandorlabs.coupler.CouplerAssociationData.chosenPatch(data,vehicle,generation,com.vandorlabs.coupler.CouplerAssociation.Boundary.GENUINE_ATTACH,true,true);
+            if(data!=null&&data.hasKey("VehicleArmCouplerReleased")){data.removeTag("VehicleArmCouplerReleased");if("Released".equals(data.getString("CouplerStatus")))data.setString("CouplerStatus","Ready");}
+            if(data!=null)patches.put(i,new VehicleStructure.Cell(cell.pos,cell.state,data));
+        }
+        for(java.util.Map.Entry<Integer,VehicleStructure.Cell> patch:patches.entrySet())cells.set(patch.getKey(),patch.getValue());
+    }
     /** A scan of the controller component on a temporary view with the proposed coupling cuts. */
     public static VehicleCouplingPlan detach(EntityGroundVehicle craft,EntityPlayerMP actor,BlockPos primary,VehicleStructure proposed,VehicleScan retained)throws Exception{
         craft.signals.persist();VehicleStructure before=craft.structure;Alignment alignment=new Alignment(craft,before,false);require(retained.result!=null,"The retained vehicle component has not been scanned");Set<BlockPos> keep=new HashSet<>();for(VehicleStructure.Cell cell:retained.result.cells)keep.add(retained.origin.add(cell.pos));require(keep.contains(before.seat),"Keep the main Pilot Seat with its Vehicle Controller");
