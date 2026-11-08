@@ -18,6 +18,8 @@ Build **Picket**, **Industrial** and **Lattice** gates from ordinary Segmented D
 
 Additional bending examples: [Picket](../images/segmented-2.9-picket-bend.gif) and [Lattice](../images/segmented-2.9-lattice-bend.gif).
 
+Solid Segmented Doors also skip empty translucent batches, preventing an OptiFine shader crash during shadow rendering.
+
 The **Doors → Segmented** group includes **Raised Black Panels**, **Ribbed Blue Steel**, **Spiral Aluminum Glazing**, **Dark Segmented Panel** and **Light Segmented Panel**. Spiral Aluminum Glazing has four real window openings with solid metal frames, inner reveals and a selectable glass material. Its metal no longer shares the transparent image pass. The original full texture remains mapped across the slit geometry, honoring Tile, Stretch and Fit.
 
 ![Supplied gate and panel designs](../images/segmented-supplied-artwork.png)
