@@ -2,6 +2,8 @@
 """Place canopy/fluid fixtures, tick a physical Forge server, save, and reopen its isolated world."""
 import argparse
 import hashlib
+import os
+import sys
 from pathlib import Path
 import shutil
 import socket
@@ -30,9 +32,32 @@ def main():
     if args.vehicle_world_only:
         args.vehicle_world_checks = True
     root = Path(__file__).resolve().parents[1]
-    run_root = (args.run_root if args.run_root is not None else root / 'build').resolve()
-    run_root.mkdir(parents=True, exist_ok=True)
-    output = Path(tempfile.mkdtemp(prefix='server-startup-', dir=run_root))
+    owner = None
+    if args.run_root is None:
+        sys.path.insert(0, str(root / 'tools'))
+        from test_artifacts import ArtifactRun
+        parent = root / 'build' / 'test-artifacts'
+        parent.mkdir(parents=True, exist_ok=True)
+        run_dir = Path(tempfile.mkdtemp(prefix='server-startup-', dir=parent))
+        owner = ArtifactRun(run_dir, disposable_paths=['game'])
+        output = run_dir / 'game'
+        output.mkdir()
+    else:
+        # An outer suite owns this parent and finalizes after its entire sequence.
+        run_root = args.run_root.resolve()
+        run_root.mkdir(parents=True, exist_ok=True)
+        output = Path(tempfile.mkdtemp(prefix='server-startup-', dir=run_root))
+    success = False
+    try:
+        run_server(args, root, output, owner)
+        success = True
+    finally:
+        if owner is not None:
+            result = owner.finish(success)
+            print(f'Physical-server retention: {result}; evidence: {owner.run_dir}', flush=True)
+
+
+def run_server(args, root, output, owner=None):
     with socket.socket() as sock:
         sock.bind(('127.0.0.1', 0))
         port = sock.getsockname()[1]
@@ -41,7 +66,10 @@ def main():
     shutil.copyfile(artifact, output / 'mods' / artifact.name)
     for mod in args.mod:
         shutil.copyfile(mod, output / 'mods' / mod.name)
-    (output / 'artifact.sha256').write_text(hashlib.sha256(artifact.read_bytes()).hexdigest() + '\n')
+    digest = hashlib.sha256(artifact.read_bytes()).hexdigest() + '\n'
+    (output / 'artifact.sha256').write_text(digest)
+    if owner is not None:
+        (owner.run_dir / 'artifact.sha256').write_text(digest)
     (output / 'eula.txt').write_text('eula=true\n')
     (output / 'server.properties').write_text(
         f'online-mode=false\nserver-ip=127.0.0.1\nserver-port={port}\nlevel-type=FLAT\n'
@@ -65,8 +93,13 @@ def main():
                 checks.append('-Dvandorlabs.foreignBuildingChecks=true')
             if args.machine_frames:
                 checks.append('-Dvandorlabs.machineFrameChecks=true')
+            options = {}
+            if owner is not None:
+                options = ({'creationflags': subprocess.CREATE_NEW_PROCESS_GROUP} if os.name == 'nt'
+                           else {'start_new_session': True})
             proc = subprocess.Popen([args.java, '-Xmx2G', *checks, '-jar', str(args.forge.resolve()), 'nogui'],
-                                    cwd=output, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT, text=True)
+                                    cwd=output, stdin=subprocess.PIPE, stdout=log, stderr=subprocess.STDOUT,
+                                    text=True, **options)
             def wait_for(marker, timeout=150):
                 deadline = time.monotonic() + timeout
                 while time.monotonic() < deadline:
@@ -83,6 +116,8 @@ def main():
                 proc.stdin.write(text + '\n')
                 proc.stdin.flush()
             try:
+                if owner is not None:
+                    owner.track_process(proc)
                 wait_for('Done (')
                 if args.vehicle_world_checks:
                     wait_for('vehicle-world-compatibility PASS')

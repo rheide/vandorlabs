@@ -18,7 +18,8 @@ Safety checks run without Minecraft:
 
 ```sh
 python3 tools/test_test_artifacts.py
+python3 tools/test_server_startup_retention.py
 bash -n testclient/test_viewscreen.sh
 ```
 
-The physical server startup runner accepts `--run-root` for its fresh generated server directory. An outer suite can place that directory and a reconstructed cached Forge toolchain beneath one registered disposable `game` path, then finalize the lease only after server shutdown and diagnostic extraction. The default startup location remains unchanged.
+The physical server startup runner accepts `--run-root` for its fresh generated server directory. An outer suite can place that directory and a reconstructed cached Forge toolchain beneath one registered disposable `game` path, then finalize the lease only after server shutdown and diagnostic extraction. Direct startup runs now create their own retained suite under `build/test-artifacts/`. All server phases share one disposable `game` directory, and the lease finalizes after their server processes exit. Successful runs remove generated worlds, mods and libraries while retaining bounded logs and the exact artifact hash; failed payloads use the shared retention limits. An explicit `--run-root` leaves finalization with the outer suite.
