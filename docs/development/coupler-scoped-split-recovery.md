@@ -56,30 +56,36 @@ generations, and must leave the interrupted detached UUID unusable. Across all
 usable scene owners, 48 physical cells, two chests with 18 diamonds and one
 captured arm remain exact once. Both outputs retain their released-head proofs.
 
-Two immutable Stable snapshots were recorded after 50 unchanged world ticks.
-The accepted recovery scene retained phase 0.375 with target false and the
-ordinary blocked flag set; the proposed next phase was 1/3, with articulation
-and cache readiness both true. Target completion and the precise obstruction
-are not established by that flag alone. The recovery and ownership comparisons
-remain valid independently of that motion diagnostic. A stricter test-only
-prepass now uses the actual Module geometry/sweep/foreign/world callbacks and
-records up to eight rejecting boxes. Its live rerun remains pending; cache
-preparation or a stale blocked flag cannot satisfy that stricter boundary. Read-only cached articulation evidence contains the original joint
+Two immutable Stable snapshots are recorded after 50 unchanged world ticks.
+The initial legacy-null run checked recovery independently of a blocked motion
+flag. The stronger known-before run additionally replayed the actual Module
+geometry, swept bounds, foreign-block, loaded-area and world-collision callbacks
+at the proposed next step. It retained operational, non-held phase 1/3 with
+target false; the proposed next phase was 7/24. Articulation and cache readiness
+were true, but the actual world collision query returned one rejecting box.
+The exact swept bounds and rejecting box are retained in bounded evidence.
+A stale blocked flag or pending cache cannot satisfy that stricter check.
+No target completion through the obstruction is claimed or forced. Read-only cached articulation evidence contains the original joint
 and two body matrices, then zero joints and one body matrix per independent
 output. It never invokes the live entity serializer to collect evidence.
 
 The second cold restart compares both final world-owned instances against those
 Stable snapshots, including Source, scope, pose, phase and target; it reloads the
 old interrupted chunks and again checks all usable owners and cargo. Accepted
-validation: 814 first-cold and 39 second-cold assertions, real SIGKILL and partial
-chunk save, identical standard JAR in all three processes, plus Java 8
-linkage/assemble. Separate direct-committed-before-kill and rollback-partial
-fault routes are implemented but remain unvalidated. A genuine non-null BEFORE
-scope also remains pending actual assembly/attach receipt coverage.
+validation: legacy-null 814 first-cold and 39 second-cold assertions; genuine
+native-assembly known-before 828 first-cold and 39 second-cold assertions. Both
+used real SIGKILL and partial chunk saves, with an identical standard JAR within
+each three-process suite, plus Java 8 linkage/assemble. The known-before suite
+used SHA-256 `9aa062a86a9ad13e707f15e76871ae26f65cf3633e44861dd8ef408a2a0f7e0a`.
+Separate direct-committed-before-kill, rollback-partial and attach-origin
+recovery routes remain unvalidated.
 
 All three boundary helpers now compare the actual immutable `Before` generation
 with the installed owner, preserving either legacy null or a genuine known
 scope. `-Dvandorlabs.scopedSplitKnownBefore=true` additionally refuses a null
 original, so a future receipt-binding run cannot accidentally pass through the
 legacy path. This flag asserts an existing scope; it never creates one.
-Known-before live coverage remains pending that real binding.
+The known-before partial-save suite now passes through that genuine native
+assembly binding. Known-before variants of the earlier pre-journal filesystem
+refusal and caught second-output cancellation checks remain unvalidated; their
+accepted live coverage is the original legacy-null case.
