@@ -151,6 +151,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public void authoritative(VehicleNetwork.Packet p) {
         if(p.serverTick<=lastServerTick)return;
         if(!admitCouplerScope(p.associationGeneration,p.serverTick))return;
+        if(view!=null&&!couplerScopeReady())return;
         receiveGeneralPose(p.bodyPose);
         if(p.jointAngles.length>0&&(generalBodyPose==null||!generalBodyPose.usesGeneral()))articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
@@ -217,6 +218,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
     }
 
+    VehicleWorld.CouplerScope currentCouplerScope(){return couplerAssociationGeneration==null?null:VehicleWorld.CouplerScope.external(getUniqueID(),couplerAssociationGeneration);}
+    /** A newer scope may precede its source on the client; freeze old-source consumers meanwhile. */
+    public boolean couplerScopeReady(){return view!=null&&VehicleWorld.CouplerScope.same(currentCouplerScope(),view.couplerScope());}
+
     static final class CouplerScopeSnapshot {
         private final EntityGroundVehicle owner;private final java.util.UUID generation;private final NBTTagCompound retained;
         private CouplerScopeSnapshot(EntityGroundVehicle owner){this.owner=owner;generation=owner.couplerAssociationGeneration;retained=owner.retainedCouplerAssociation==null?null:owner.retainedCouplerAssociation.copy();}
@@ -237,7 +242,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!tag.hasKey(COUPLER_GENERATION+"Most")&&!tag.hasKey(COUPLER_GENERATION+"Least"))return null;
         NBTTagCompound raw=new NBTTagCompound();for(String suffix:new String[]{"Most","Least"}){String key=COUPLER_GENERATION+suffix;if(tag.hasKey(key))raw.setTag(key,tag.getTag(key).copy());}return raw;
     }
-    private static java.util.UUID readCouplerGeneration(NBTTagCompound tag){
+    static java.util.UUID readCouplerGeneration(NBTTagCompound tag){
         if(!tag.hasKey(COUPLER_GENERATION+"Most")&&!tag.hasKey(COUPLER_GENERATION+"Least"))return null;
         if(!tag.hasKey(COUPLER_GENERATION+"Most",4)||!tag.hasKey(COUPLER_GENERATION+"Least",4))throw new IllegalArgumentException("Malformed Coupler ownership generation");
         java.util.UUID result=tag.getUniqueId(COUPLER_GENERATION);if(result.getMostSignificantBits()==0&&result.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler ownership generation");return result;
@@ -312,7 +317,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             for(String key:assignments.getKeySet())if(assignments.hasKey(key,4))assignments.setLong(key,BlockPos.fromLong(assignments.getLong(key)).add(shift).toLong());
             dataManager.set(PILOT_SEATS,assignments);
         }
-        structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot);else view.update(snapshot);collision=prepared==null?new VehicleCollision(view):new VehicleCollision(prepared.geometry());encoded=null;
+        structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot,currentCouplerScope());else view.update(snapshot,currentCouplerScope());collision=prepared==null?new VehicleCollision(view):new VehicleCollision(prepared.geometry());encoded=null;
         view.craft=this;view.hover=hover;if(!world.isRemote)view.controlUpdates=signals::changed;
         collisionCache.reset(view,collision);
         rampGeometryUpgradePending=!world.isRemote&&VehicleRamps.needsGeometryUpgrade(this);
@@ -337,7 +342,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             NBTTagCompound before=structure.at(seat).tileData(),after=snapshot.at(seat)==null?null:snapshot.at(seat).tileData();
             if((before==null?0:before.getInteger("PilotHeight"))!=(after==null?0:after.getInteger("PilotHeight")))heightChanged=true;
         }
-        structure=snapshot;view.update(snapshot);encoded=null;
+        structure=snapshot;view.update(snapshot,currentCouplerScope());encoded=null;
         if(heightChanged){collision=new VehicleCollision(view);setPosition(posX,posY,posZ);for(Entity passenger:getPassengers())updatePassenger(passenger);}
         collisionCache.restart(view);
     }
@@ -446,6 +451,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         try{updateAnimatedVehicle();}finally{VehicleAnimationDiagnostics.elapsed(this,"entity-full-tick",sampled);}
     }
     private void updateAnimatedVehicle() {
+        if(world.isRemote&&view!=null&&!couplerScopeReady()){super.onUpdate();motionX=motionY=motionZ=0;return;}
         if(!world.isRemote&&VehicleCouplings.preparingArmRelease(this)){super.onUpdate();VehicleCouplings.pollArmReleaseInputs(this);return;}
         if(transferInProgress){motionX=motionY=motionZ=0;return;}
         super.onUpdate();rotationPitch=prevRotationPitch=0;

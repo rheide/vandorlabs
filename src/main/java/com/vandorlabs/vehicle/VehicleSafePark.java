@@ -35,7 +35,7 @@ final class VehicleSafePark {
                     arms.requireStable();plan=VehicleRotation.safePlan(craft,turns,composition.result(),composition.seatMap());
                 }
                 if(arms!=null)arms.requireStable();
-                if(validation==null){placedView=new VehicleWorld(world,plan.structure);validation=new VehicleRotation.Validation(plan.structure,placedView);}
+                if(validation==null){placedView=new VehicleWorld(world,plan.structure,craft.currentCouplerScope());validation=new VehicleRotation.Validation(plan.structure,placedView);}
                 if(!validated){validated=validation.step(256,System.nanoTime()+2_000_000L);if(!validated){VehicleTransfer.deferPreflight();return;}}
                 VehicleCollision geometry=VehicleTransfer.geometry(world,plan.structure);
                 if(search==null)search=new VehicleSafeParkSearch(VehicleService.parkingTargets(placedView),geometry.boxes,plan.origin,16,world.getHeight(),VehicleSafeParkSearch.access(world,craft,player));

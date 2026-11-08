@@ -9,7 +9,7 @@ import net.minecraft.util.math.BlockPos;
 /** Read-only planning under the existing vehicle-transfer hold. Each cold preparation stage
  * yields separately; only finite-domain trials are resumable within their supplied deadline. */
 final class VehicleArmParkingSearch {
-    private final EntityGroundVehicle craft;private final VehicleStructure source;private final VehicleWorld view;
+    private final EntityGroundVehicle craft;private final VehicleStructure source;private final VehicleWorld view;private final UUID generation;
     private final List<GearTileEntity> roots=new ArrayList<>();private final List<ArmPayload> payloads=new ArrayList<>();private final int[] revisions;
     private final Map<BlockPos,ArmParkingCandidates.Result> domains=new LinkedHashMap<>();private final VehicleArmParkingCells.Displacement displacement;
     private final Map<BlockPos,ArmParkingSource> prepared=new LinkedHashMap<>();private final boolean currentOnly,requireHold;
@@ -24,7 +24,7 @@ final class VehicleArmParkingSearch {
     VehicleArmParkingSearch(EntityGroundVehicle craft,VehicleArmParkingCells.Displacement displacement,boolean currentOnly,boolean requireHold){
         if(!requireHold&&!currentOnly)throw new IllegalArgumentException("Curve search requires a vehicle transfer hold");
         if(craft==null||requireHold&&!craft.transferInProgress||craft.structure==null||craft.view==null||craft.view.structure!=craft.structure||craft.view.craft!=craft||craft.view.parent!=craft.world)throw new IllegalArgumentException("Arm parking search requires a stable vehicle source");
-        this.craft=craft;source=craft.structure;view=craft.view;this.displacement=Objects.requireNonNull(displacement);this.currentOnly=currentOnly;this.requireHold=requireHold;
+        this.craft=craft;generation=craft.couplerAssociationGeneration();source=craft.structure;view=craft.view;this.displacement=Objects.requireNonNull(displacement);this.currentOnly=currentOnly;this.requireHold=requireHold;
         for(TileEntity tile:view.tiles.values())if(tile instanceof GearTileEntity){GearTileEntity arm=(GearTileEntity)tile;if(arm.hasFailedArmSnapshot()||arm.hasTaxiData()&&!arm.isOperational()||arm.hasStoredSections()&&arm.payload()==null)throw new IllegalArgumentException("An arm payload needs recovery before parking");if(arm.payload()!=null)roots.add(arm);}
         roots.sort(Comparator.comparing(GearTileEntity::getPos));if(roots.size()>VehicleArmParkingGeometry.MAX_ARMS)throw new IllegalArgumentException("Too many arms for a bounded parking search");
         long payloadCells=0,ownedCells=source.cells.size();
@@ -58,7 +58,7 @@ final class VehicleArmParkingSearch {
     VehicleArmParkingGeometry geometry(){if(!done)throw new IllegalStateException("Arm parking search is pending");requireStable();return geometry;}
     GridCouplerParking.Result result(){if(!done)throw new IllegalStateException("Arm parking search is pending");requireStable();return search.result();}
     void requireStable(){
-        if(craft.isDead||craft.ownershipBlocked||requireHold&&!craft.transferInProgress||craft.structure!=source||craft.view!=view||view.structure!=source||view.craft!=craft||view.parent!=craft.world)throw new IllegalArgumentException("Vehicle changed during arm parking preparation");
+        if(!Objects.equals(generation,craft.couplerAssociationGeneration())||!craft.couplerScopeReady()||craft.isDead||craft.ownershipBlocked||requireHold&&!craft.transferInProgress||craft.structure!=source||craft.view!=view||view.structure!=source||view.craft!=craft||view.parent!=craft.world)throw new IllegalArgumentException("Vehicle changed during arm parking preparation");
         for(int i=0;i<roots.size();i++){
             GearTileEntity arm=roots.get(i);if(view.tiles.get(arm.getPos())!=arm||arm.payload()!=payloads.get(i)||arm.motionRevision()!=revisions[i])throw new IllegalArgumentException("Arm changed during parking preparation");
             ArmParkingSource token=prepared.get(arm.getPos());if(token!=null&&!token.stillOwned())throw new IllegalArgumentException("Prepared arm source changed during parking preparation");

@@ -67,7 +67,7 @@ public final class VehicleRotation {
     static Plan safePlan(EntityGroundVehicle craft,int turns,VehicleStructure aligned,Map<BlockPos,BlockPos> seats){
         TaxiModularGear.requireParkable(craft);
         if(aligned==null||turns<0||turns>3||!Double.isFinite(craft.posX)||!Double.isFinite(craft.posY)||!Double.isFinite(craft.posZ))throw new IllegalArgumentException("Invalid prepared arm parking pose");
-        VehicleStructure rotated=rotate(aligned,new VehicleWorld(craft.world,aligned),turns);
+        VehicleStructure rotated=rotate(aligned,new VehicleWorld(craft.world,aligned,craft.currentCouplerScope()),turns);
         double centerX=craft.posX+craft.structure.bounds.maxX/2,centerZ=craft.posZ+craft.structure.bounds.maxZ/2;
         Plan parking=VehicleLandingGear.parking(rotated,new BlockPos(Math.round(centerX-rotated.bounds.maxX/2),Math.round(craft.posY),Math.round(centerZ-rotated.bounds.maxZ/2)));
         BlockPos rebase=parking.structure.seat.subtract(rotated.seat);Map<BlockPos,BlockPos> mapped=new LinkedHashMap<>();

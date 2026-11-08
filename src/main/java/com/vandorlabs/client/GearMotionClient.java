@@ -19,7 +19,7 @@ public final class GearMotionClient {
             if(mc.world==null||mc.world.provider.getDimension()!=packet.dimension)return;
             EntityGroundVehicle craft=null;World view=mc.world;
             if(packet.entity>=0){net.minecraft.entity.Entity raw=mc.world.getEntityByID(packet.entity);if(!(raw instanceof EntityGroundVehicle)||!raw.getUniqueID().equals(packet.craft))return;
-                craft=(EntityGroundVehicle)raw;if(craft.view==null||VehicleClient.snapshotPending(packet.craft)){if(deferred.size()<16||deferred.containsKey(packet.craft)){ArrayDeque<MessageGearMotion> queue=deferred.computeIfAbsent(packet.craft,k->new ArrayDeque<>());if(queue.size()==32)queue.removeFirst();queue.addLast(packet);}return;}if(craft.transferInProgress)return;view=craft.view;}
+                craft=(EntityGroundVehicle)raw;if(craft.view==null||!craft.couplerScopeReady()||VehicleClient.snapshotPending(packet.craft)){if(deferred.size()<16||deferred.containsKey(packet.craft)){ArrayDeque<MessageGearMotion> queue=deferred.computeIfAbsent(packet.craft,k->new ArrayDeque<>());if(queue.size()==32)queue.removeFirst();queue.addLast(packet);}return;}if(craft.transferInProgress)return;view=craft.view;}
             Map<net.minecraft.util.math.BlockPos,Double> desired=new LinkedHashMap<>();
             for(MessageGearMotion.Pose pose:packet.poses){if(!view.isBlockLoaded(pose.pos))continue;TileEntity raw=view.getTileEntity(pose.pos);
                 if(raw instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)raw;
