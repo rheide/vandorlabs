@@ -22,6 +22,9 @@ public final class VehicleWorld extends World {
     private CouplerScope couplerScope;
     private boolean couplerScopeExplicit;
     public CouplerScope couplerScope(){return couplerScope;}
+    public void requireCouplerScope(){structure.requireCouplerScope(couplerScope);}
+    private static final class RetainedCoupler extends IllegalArgumentException {RetainedCoupler(){super("Coupler snapshot retained; unsupported association");}}
+    private static void requireSupportedTile(TileEntity tile){if(tile instanceof com.vandorlabs.coupler.TileCoupler&&((com.vandorlabs.coupler.TileCoupler)tile).quarantined())throw new RetainedCoupler();}
     public VehicleStructure structure;
     public EntityGroundVehicle craft;
     public final World parent;
@@ -68,12 +71,13 @@ public final class VehicleWorld extends World {
     public VehicleWorld(World parent,VehicleStructure structure,CouplerScope scope) {this(parent,structure,scope,true);}
     private VehicleWorld(World parent,VehicleStructure structure,CouplerScope scope,boolean explicit) {
         super(parent.getSaveHandler(),new WorldInfo(parent.getWorldInfo()),parent.provider,new net.minecraft.profiler.Profiler(),true);
-        this.parent=parent;this.couplerScope=scope;this.couplerScopeExplicit=explicit; this.structure=structure; structure.componentView(this,explicit); this.chunkProvider=createChunkProvider();
+        this.parent=parent;this.couplerScope=scope;this.couplerScopeExplicit=explicit; this.structure=structure;if(explicit)structure.requireCouplerScope(scope); structure.componentView(this,explicit); this.chunkProvider=createChunkProvider();
         for(VehicleStructure.Cell cell:structure.cells) if(cell.hasTileData()) {
             try {
-                TileEntity tile=localTile(cell);
+                TileEntity tile=localTile(cell);requireSupportedTile(tile);
                 if(tile!=null){tile.setWorld(this); tiles.put(cell.pos,tile);}
             }catch(RuntimeException | LinkageError error) {
+                if(error instanceof RetainedCoupler)throw (RetainedCoupler)error;
                 // The immutable snapshot remains authoritative even if a mod cannot run in this view.
                 VehicleCompatibility.warn(cell.state.getBlock(),"local tile",error);
             }
@@ -127,7 +131,7 @@ public final class VehicleWorld extends World {
     public void update(VehicleStructure next) {update(next,couplerScope,couplerScopeExplicit);}
     public void update(VehicleStructure next,CouplerScope scope) {update(next,scope,true);}
     private void update(VehicleStructure next,CouplerScope scope,boolean explicit) {
-        couplerScope=scope;couplerScopeExplicit=explicit;localLight.invalidate();
+        if(explicit)next.requireCouplerScope(scope);couplerScope=scope;couplerScopeExplicit=explicit;localLight.invalidate();
         VehicleStructure before=structure;structure=next;next.componentView(this,explicit);next.inheritComponents(before);
         if(tiles.keySet().stream().anyMatch(pos->next.at(pos)==null || !next.at(pos).hasTileData()))tileRevision++;
         tiles.keySet().removeIf(pos->next.at(pos)==null || !next.at(pos).hasTileData());
@@ -138,9 +142,9 @@ public final class VehicleWorld extends World {
             tiles.remove(cell.pos);
             tileRevision++;
             try {
-                TileEntity tile=localTile(cell);
+                TileEntity tile=localTile(cell);requireSupportedTile(tile);
                 if(tile!=null){tile.setWorld(this);tiles.put(cell.pos,tile);}
-            }catch(RuntimeException | LinkageError error){VehicleCompatibility.warn(cell.state.getBlock(),"local tile update",error);}
+            }catch(RuntimeException | LinkageError error){if(error instanceof RetainedCoupler)throw (RetainedCoupler)error;VehicleCompatibility.warn(cell.state.getBlock(),"local tile update",error);}
         }
         prepareForeignVisuals();
     }
