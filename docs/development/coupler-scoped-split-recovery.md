@@ -24,3 +24,11 @@ exception result does not establish abrupt termination or partial-save recovery.
 Those phases remain separate acceptance work. A known non-null original scope
 requires an actual accepted assembly or attach receipt, rather than fixture
 scope injection. General-active split remains intentionally unsupported.
+
+A separate pre-journal case (`VANDOR_LABS_COUPLER_SCOPED_SPLIT_PREJOURNAL=1`)
+blocks the existing shared disk worker, waits for the actual prepared record,
+and makes its destination parent a file in the disposable world. Releasing the
+worker produces a genuine filesystem exception before journal publication. The
+accepted live check made 21 assertions: pending I/O remains pending gameplay,
+the prepared original Source and null scope remain exact at the failure
+callback, and no second usable owner or live recovery record is created.
