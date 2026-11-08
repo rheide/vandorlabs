@@ -7,7 +7,7 @@ import java.util.function.IntPredicate;
 /** Released operation indices and bounded wire fields, separate from installed-menu authorization. */
 public record NativeSegmentedEdit(int window, int operation, int ticks, boolean local, boolean opens,
                                   ChannelList channels, int texture, NativeSegmentedDoorSettings settings) {
-    public static final int MAX_BYTES=27+4*ChannelList.MAX_CHANNELS;
+    public static final int MAX_BYTES=28+4*ChannelList.MAX_CHANNELS;
     public NativeSegmentedEdit {
         if(window<0 || operation<0 || operation>7 || ticks<5 || ticks>30 || channels==null
                 || (operation==4||operation==5) && settings==null)
@@ -23,7 +23,7 @@ public record NativeSegmentedEdit(int window, int operation, int ticks, boolean 
             throw new IllegalArgumentException("Invalid Segmented Door header");
         int remaining=buffer.readableBytes()-count*4;
         if(operation<3||operation==7 ? remaining!=0 : operation==3||operation==6 ? remaining!=4
-                : operation==5 ? remaining!=19 : remaining!=18 && remaining!=19)
+                : operation==5 ? remaining!=19 && remaining!=20 : remaining!=18 && remaining!=19 && remaining!=20)
             throw new IllegalArgumentException("Invalid Segmented Door extension length");
         // Check the entire list before allocating it. No world access occurs during decode.
         for(int i=0;i<count;i++)if(buffer.getInt(buffer.readerIndex()+i*4)<0)

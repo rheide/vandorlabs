@@ -10,7 +10,7 @@ public final class SegmentedSettingsChecks {
   for(int d=0;d<4;d++)for(int s=0;s<2;s++)for(int l=0;l<3;l++)for(int a=-1;a<3;a++)for(int w=0;w<2;w++)for(int sh=0;sh<4;sh++)for(int j=0;j<2;j++)for(int p=0;p<3;p++){
    NativeSegmentedDoorSettings value=new NativeSegmentedDoorSettings(d,s!=0,l,a,w!=0,sh,j!=0,new NativeDoorGlass(-1,sh,1,l),p);
    CompoundTag tag=new CompoundTag();tag.putString("Foreign","retained");value.write(tag);if(!NativeSegmentedDoorSettings.read(tag).equals(value)||!tag.getString("Foreign").equals("retained"))throw new AssertionError("save roundtrip");
-   ByteBuf b=Unpooled.buffer();try{value.encode(b);if(b.readableBytes()!=15||!NativeSegmentedDoorSettings.decode(b.duplicate()).equals(value))throw new AssertionError("wire15");hash.update(ByteBufUtil.getBytes(b));if(p==0&&!NativeSegmentedDoorSettings.decode(b.slice(0,14)).equals(value))throw new AssertionError("wire14");}finally{b.release();}
+   ByteBuf b=Unpooled.buffer();try{value.encode(b);if(b.readableBytes()!=16||!NativeSegmentedDoorSettings.decode(b.duplicate()).equals(value))throw new AssertionError("wire16");if(!NativeSegmentedDoorSettings.decode(b.slice(0,15)).equals(value))throw new AssertionError("wire15 legacy");hash.update(ByteBufUtil.getBytes(b.slice(0,15)));if(p==0&&!NativeSegmentedDoorSettings.decode(b.slice(0,14)).equals(value))throw new AssertionError("wire14");}finally{b.release();}
    hash.update(canonical(tag).getBytes("UTF-8"));hash.update((value.depthOffset()+":"+value.nativePanel()+":"+value.hashCode()).getBytes("UTF-8"));cases++;
   }
   String[] fields={"Direction","Straight","Layout","Activation","Window","Shape","Join","Position"};

@@ -24,16 +24,16 @@ public final class NativeSegmentedTargets {
     public static void remove(NativeSegmentedDoorEntity tile){INDEX.remove(tile);COLUMNS.invalidate(tile);}
     public record Target(BlockPos root,BlockHitResult hit){}
     private static final class Column {
-        final BlockPos root;final Direction facing;final int position,height,column,width,direction;
+        final BlockPos root;final Direction facing;final int position,height,column,width,direction,tread;
         final boolean straight;final double progress;
         final BlockPos[] positions;final NativeSegmentedGeometry.Snapshot[] rows;
         Column(NativeSegmentedDoorEntity owner,double progress){
-            root=owner.getBlockPos().immutable();facing=owner.facing();var settings=owner.settings();position=settings.position;
+            root=owner.getBlockPos().immutable();facing=owner.facing();var settings=owner.settings();position=settings.position;tread=settings.treadPixels;
             height=owner.height();column=owner.column();width=owner.columnsCount();direction=settings.direction;straight=settings.straight;this.progress=progress;
             positions=new BlockPos[height];rows=new NativeSegmentedGeometry.Snapshot[height];for(int row=0;row<height;row++)positions[row]=root.below(row);
         }
-        boolean matches(NativeSegmentedDoorEntity owner,double value){var settings=owner.settings();return root.equals(owner.getBlockPos())&&facing==owner.facing()&&height==owner.height()&&column==owner.column()&&width==owner.columnsCount()&&position==settings.position&&direction==settings.direction&&straight==settings.straight&&progress==value;}
-        NativeSegmentedGeometry.Snapshot row(int index){var snapshot=rows[index];if(snapshot==null)rows[index]=snapshot=NativeSegmentedGeometry.snapshot(root,facing,position,index,height,column,width,progress,direction,straight);return snapshot;}
+        boolean matches(NativeSegmentedDoorEntity owner,double value){var settings=owner.settings();return root.equals(owner.getBlockPos())&&facing==owner.facing()&&height==owner.height()&&column==owner.column()&&width==owner.columnsCount()&&position==settings.position&&tread==settings.treadPixels&&direction==settings.direction&&straight==settings.straight&&progress==value;}
+        NativeSegmentedGeometry.Snapshot row(int index){var snapshot=rows[index];if(snapshot==null)rows[index]=snapshot=NativeSegmentedGeometry.snapshot(root,facing,position,index,height,column,width,progress,direction,straight,tread);return snapshot;}
     }
     private static Column column(NativeSegmentedDoorEntity root,double progress){
         var found=COLUMNS.getIfPresent(root);if(found==null||!found.matches(root,progress)){found=new Column(root,progress);COLUMNS.put(root,found);}return found;
@@ -45,9 +45,16 @@ public final class NativeSegmentedTargets {
     private static final ThreadLocal<com.vandorlabs.segmented.SegmentedGateShape.Hit> GATE_HIT=ThreadLocal.withInitial(com.vandorlabs.segmented.SegmentedGateShape.Hit::new);
     public static com.vandorlabs.render.LegacyBoxTrace.Hit hit(NativeSegmentedDoorEntity tile,double progress,Vec3 start,Vec3 end){
         var snapshot=geometry(tile,progress);if(snapshot==null)return null;var root=tile.root();int row=tile.topOffset();int kind=NativeSegmentedArtwork.gate(root.publication().visual().texture(row));
+        var cfg=root.settings();if(cfg.treadPixels<16&&!cfg.straight){com.vandorlabs.render.LegacyBoxTrace.Hit nearest=null;int[] masks=GATE_MASKS.get();if(kind>=0)NativeSegmentedGateRays.masks(root,progress,masks);var at=root.getBlockPos();int rotation=switch(root.facing()){case NORTH->0;case WEST->1;case SOUTH->2;case EAST->3;default->0;};
+            for(int strip=0;strip<16/cfg.treadPixels;strip++){var transform=com.vandorlabs.segmented.SegmentedHitGeometry.treadTransform(at.getX(),at.getY(),at.getZ(),rotation,row,root.height(),root.column(),root.columnsCount(),progress,cfg.direction,cfg.treadPixels,cfg.depthOffset(),strip);var found=com.vandorlabs.segmented.SegmentedHitGeometry.traceStrip(transform,cfg.direction,cfg.treadPixels,strip,kind<0?null:NativeSegmentedGateModels.model(kind,masks[row]),kind<0?null:NativeSegmentedGateModels.connectors(kind,masks[row],row+1<root.height()?masks[row+1]:0,false),kind<0?null:NativeSegmentedGateModels.connectors(kind,masks[row],row>0?masks[row-1]:0,true),GATE_HIT.get(),start.x,start.y,start.z,end.x,end.y,end.z);if(found!=null&&(nearest==null||found.distance(start.x,start.y,start.z)<nearest.distance(start.x,start.y,start.z)))nearest=found;}
+            var cap=progress<=0?snapshot.trace(start.x,start.y,start.z,end.x,end.y,end.z):null;if(cap!=null&&(cap.face==0||cap.face==1)&&(nearest==null||cap.distance(start.x,start.y,start.z)<nearest.distance(start.x,start.y,start.z)))nearest=cap;var header=snapshot.header();var fixed=header==null?null:com.vandorlabs.render.LegacyBoxTrace.clip(header.minX,header.minY,header.minZ,header.maxX,header.maxY,header.maxZ,start.x,start.y,start.z,end.x,end.y,end.z);if(fixed!=null&&(nearest==null||fixed.distance(start.x,start.y,start.z)<nearest.distance(start.x,start.y,start.z)))nearest=fixed;return nearest;
+        }
         if(kind<0)return snapshot.trace(start.x,start.y,start.z,end.x,end.y,end.z);
         int[] masks=GATE_MASKS.get();NativeSegmentedGateRays.masks(root,progress,masks);
-        return snapshot.traceGate(kind,masks[row],row+1<root.height()?masks[row+1]:0,row>0?masks[row-1]:0,GATE_HIT.get(),start.x,start.y,start.z,end.x,end.y,end.z);
+        var exact=snapshot.traceGate(kind,masks[row],row+1<root.height()?masks[row+1]:0,row>0?masks[row-1]:0,GATE_HIT.get(),start.x,start.y,start.z,end.x,end.y,end.z);
+        var cap=progress<=0?snapshot.trace(start.x,start.y,start.z,end.x,end.y,end.z):null;
+        if(cap!=null&&(cap.face==0||cap.face==1)&&(exact==null||start.distanceToSqr(cap.x,cap.y,cap.z)<start.distanceToSqr(exact.x,exact.y,exact.z)))return cap;
+        return exact;
     }
     public static NativeSegmentedDoorEntity loaded(Level level,BlockPos pos){
         if(!NativeFluidWorld.open(level))return null;var chunk=level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);if(chunk==null)return null;

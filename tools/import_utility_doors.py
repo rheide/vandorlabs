@@ -4,7 +4,7 @@ import argparse,hashlib,json,shutil
 from pathlib import Path
 from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
-KINDS=(('blue','blue_utility_door','Blue Utility'),('blue_modern','blue_utility_door_modern','Modern Blue Utility'),('green','green_utility_door','Green Utility'),('green_modern','green_utility_door_modern','Modern Green Utility'),('warm','warm_utility_door','Warm Utility'),('warm_modern','warm_utility_door_modern','Modern Warm Utility'),('factory','factory_door','Factory'),('industrial','industrial_door','Industrial'),('industrial_modern','industrial_door_modern','Modern Industrial'),('reactor','reactor_door','Reactor'),('warehouse_detailed','warehouse_door_detailed','Warehouse'),('warehouse_futuristic','warehouse_door_futuristic','Futuristic Warehouse'))
+KINDS=(('blue','blue_utility_door','Blue Utility'),('blue_modern','blue_utility_door_modern','Blue Utility Modern'),('green','green_utility_door','Green Utility'),('green_modern','green_utility_door_modern','Green Utility Modern'),('warm','warm_utility_door','Warm Utility'),('warm_modern','warm_utility_door_modern','Warm Utility Modern'),('factory','factory_door','Factory'),('industrial','industrial_door','Industrial'),('industrial_modern','industrial_door_modern','Industrial Modern'),('reactor','reactor_door','Reactor'),('warehouse_detailed','warehouse_door_detailed','Warehouse'),('warehouse_futuristic','warehouse_door_futuristic','Warehouse Modern'))
 PREFIX=815
 PREFIX_SHA='f11a19e1105e5518ed0c7dae4aeb866684120387b56e0a3085e28cee050f58e3'
 def entry(kind,name,label):return dict(id='utility_door_'+kind,label=label,category='Doors/Utility',source='utility_doors/'+name,rectangular=True,doorArtwork=True)

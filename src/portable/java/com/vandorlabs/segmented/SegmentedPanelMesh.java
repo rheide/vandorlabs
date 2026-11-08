@@ -25,6 +25,18 @@ public final class SegmentedPanelMesh {
   if((components&1)!=0){if(pass==(translucentBody?1:0)){List<double[]> panels=window?slice.frameQuads:Collections.singletonList(new double[]{0,0,16,0,16,16,0,16});for(double[] q:panels){front(out,q,SegmentedDoorGeometry.HALF_THICKNESS*16,1,layout,column,row,width,height,body);front(out,q,-SegmentedDoorGeometry.HALF_THICKNESS*16,-1,layout,column,row,width,height,body);}}if(pass==0)edges(out,slice,edge);}
   if((components&2)!=0&&window&&(pass==1&&!opaqueGlass||pass==0&&opaqueGlass))for(double[] q:slice.glassQuads)front(out,q,0,1,glassLayout,wc,wh-1-wr,ww,wh,pane);
  }
+
+ /** Authored four-window aluminum frame; image alpha never writes the metal's depth. */
+ public static void spiral(int pass,int components,int glassLayout,boolean opaqueGlass,Surface body,Surface pane,Texture edge,Sink out){
+  double left=5D/8,right=122D/8;double[][] openings={{left,.5,right,19D/8},{left,35D/8,right,51D/8},{left,67D/8,right,82D/8},{left,98D/8,right,113D/8}};
+  if(pass==0&&(components&1)!=0){
+   double y=0;for(double[] box:openings){rectangle(out,0,y,16,box[1],body);rectangle(out,0,box[1],left,box[3],body);rectangle(out,right,box[1],16,box[3],body);y=box[3];
+    edge(out,box[0],box[1],box[2],box[1],edge);edge(out,box[2],box[1],box[2],box[3],edge);edge(out,box[2],box[3],box[0],box[3],edge);edge(out,box[0],box[3],box[0],box[1],edge);
+   }rectangle(out,0,y,16,16,body);edges(out,null,edge);
+  }
+  if((components&2)!=0&&pass==(opaqueGlass?0:1))for(double[] box:openings)front(out,new double[]{box[0],box[1],box[2],box[1],box[2],box[3],box[0],box[3]},0,1,glassLayout,0,0,1,1,pane);
+ }
+ private static void rectangle(Sink out,double x0,double y0,double x1,double y1,Surface body){if(x1<=x0||y1<=y0)return;double[] q={x0,y0,x1,y0,x1,y1,x0,y1};for(int side:new int[]{-1,1})front(out,q,side*SegmentedDoorGeometry.HALF_THICKNESS*16,side,0,0,0,1,1,body);}
  /** Fast rectangular sections share the exact Tile transform and clipping used by window frames. */
  public static void nativeBody(int row,int height,int column,boolean endpoint,Surface body,Texture edge,Sink out){
   nativeCell(!endpoint||row==0,!endpoint||row==height-1,column,row,body,edge,out);

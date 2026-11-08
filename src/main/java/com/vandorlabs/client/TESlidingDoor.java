@@ -250,6 +250,15 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 GlStateManager.translate(.5,.5,.5);DoorItemRenderer.baked(renderer,selected,selected.selected());
                 GlStateManager.enableLighting();GlStateManager.popMatrix();continue;
             }
+            if(part==2&&com.vandorlabs.tiles.ScreenHousingTextures.reactorArtwork(tile.getFaceTexture())){
+                SelectedDoorGeometry geometry=DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1)).selected();
+                Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                GlStateManager.disableCull();GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);GlStateManager.depthMask(!glass);
+                BufferBuilder paneBuffer=Tessellator.getInstance().getBuffer();paneBuffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+                com.vandorlabs.tiles.DoorGlassAppearance appearance=tile.glassAppearance();
+                ReactorDoorGlazing.get(geometry,appearance,true,com.vandorlabs.tiles.ScreenHousingTextures.doorArtworkMirror(tile.getFaceTexture(),right&&(paired||size>1)),size).drawColored(paneBuffer,light>>>16,light&65535,1,1,1,com.vandorlabs.tiles.GlassMaterials.opacity(appearance.material==com.vandorlabs.tiles.DoorGlassAppearance.ORIGINAL?-1:appearance.material,appearance.tint));
+                Tessellator.getInstance().draw();GlStateManager.depthMask(true);GlStateManager.disableBlend();GlStateManager.popMatrix();continue;
+            }
             GlStateManager.translate(.5,.5,.5);
             GlStateManager.disableLighting();
             DoorRenderModels.Entry item=DoorRenderModels.get(state.getBlock(),

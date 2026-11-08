@@ -53,10 +53,10 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
         int listLeft=layout.listX,listTop=guiTop+54;
         if(settingsPage==4&&!glassDesign())settingsPage=0;
-        int[] pages=SpaceDoorDialog.pages(design);
+        int[] pages=glassDesign()?new int[]{0,1,4,3,2}:new int[]{0,1,3,2};
         for(int at=0;at<pages.length;at++)buttonList.add(layout.fullTab(190+pages[at],at,pages.length,SpaceDoorDialog.pageLabel(pages[at])));
         textureList=HousingTextureList.forDoors(detail,listLeft,listTop,layout.listWidth,faceTexture<0?ScreenHousingTextures.doorIndex(design,detail):faceTexture,tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
-                .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();});
+                .visibleRows(Math.max(2,(ySize-64)/HousingTextureList.ROW_HEIGHT)).custom(value->{faceTexture=value;tile.setFaceTexture(value);sendUpdate();initGui();});
         motionButton=layout.control(10,54,motion.label);buttonList.add(motionButton);
         buttonList.add(layout.choice(12,0,2,52,framed?"Frame: Framed":"Frame: Bare"));
         buttonList.add(new RedstoneActivationButton(16,guiLeft+12,guiTop+96,xSize-24,trigger));buttonList.add(layout.control(13,102,depthLabel()));
@@ -86,7 +86,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         hingeButton.displayString=SpaceDoorDialog.hingesLabel(motion,hinges);
     }
 
-    private boolean glassDesign(){return SpaceDoorDialog.glassPage(design);}
+    private boolean glassDesign(){return ScreenHousingTextures.reactorArtwork(faceTexture)||SpaceDoorDialog.glassPage(design);}
     void chooseGlass(int choice){int shade=glassAppearance.shade,material=choice;if(choice>=HousingTextureList.CANOPY_GLASS_BASE&&choice<HousingTextureList.CANOPY_GLASS_BASE+com.vandorlabs.tiles.GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;material=-1;}glassAppearance=new com.vandorlabs.tiles.DoorGlassAppearance(material,shade,glassAppearance.tint,glassAppearance.layout);faceTexture=-1;sendUpdate();sendGlass();initGui();}
     private void sendGlass(){tile.setGlassAppearance(glassAppearance);PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageDoorGlass(tile.getPos(),glassAppearance));}
     private String layoutLabel(){return "Texture: "+com.vandorlabs.render.TextureLayoutMode.label(textureLayout);}

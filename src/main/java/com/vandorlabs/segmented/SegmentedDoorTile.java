@@ -77,7 +77,7 @@ public final class SegmentedDoorTile extends TileEntity implements net.minecraft
     private boolean uniformArtwork=true;
     /** Sampled by canBake's existing bounded row pass, avoiding a second warm lookup pass. */
     public boolean uniformArtwork(){return uniformArtwork;}
-    public boolean canBake(){if(settings.position!=0||settings.direction!=0||settings.straight)return false;uniformArtwork=true;int first=effectiveTexture();for(int row=0;row<height;row++){SegmentedDoorTile member=panel(row);if(SegmentedArtwork.complex(member.effectiveTexture())||!member.settings.nativePanel()||member.effectiveTexture()>=com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT||member.frameTexture())return false;if(member.effectiveTexture()!=first)uniformArtwork=false;}return true;}
+    public boolean canBake(){if(settings.treadPixels!=16||settings.position!=0||settings.direction!=0||settings.straight)return false;uniformArtwork=true;int first=effectiveTexture();for(int row=0;row<height;row++){SegmentedDoorTile member=panel(row);if(SegmentedArtwork.complex(member.effectiveTexture())||!member.settings.nativePanel()||member.effectiveTexture()>=com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT||member.frameTexture())return false;if(member.effectiveTexture()!=first)uniformArtwork=false;}return true;}
     public List<SegmentedDoorTile> columns(){
         SegmentedDoorTile root=root();if(!root.formed)throw new IllegalArgumentException("Complete the segmented column (maximum 32 sections)");LinkedHashSet<SegmentedDoorTile> result=new LinkedHashSet<>();ArrayDeque<SegmentedDoorTile> queue=new ArrayDeque<>();result.add(root);queue.add(root);
         while(!queue.isEmpty()){

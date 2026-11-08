@@ -31,6 +31,10 @@ public final class NativeSegmentedGeometry {
         var header=header(facing,direction,position,height,row,column,width);
         return new Snapshot(t,new AABB(b[0],b[1],b[2],b[3],b[4],b[5]),header==null?null:header.move(root.getX(),root.getY()-row,root.getZ()));
     }
+    public static Snapshot snapshot(net.minecraft.core.BlockPos root,Direction facing,int position,int row,int height,int column,int width,double progress,int direction,boolean straight,int pixels){
+        Snapshot original=snapshot(root,facing,position,row,height,column,width,progress,direction,straight);if(pixels==16||straight)return original;AABB bounds=null;int rotation=switch(facing){case NORTH->0;case WEST->1;case SOUTH->2;case EAST->3;default->0;};
+        for(int strip=0;strip<16/pixels;strip++){var transform=com.vandorlabs.segmented.SegmentedHitGeometry.treadTransform(root.getX(),root.getY(),root.getZ(),rotation,row,height,column,width,progress,direction,pixels,depth(position),strip);double[] b=new double[6];com.vandorlabs.segmented.SegmentedHitGeometry.bounds(transform,b);AABB next=new AABB(b[0],b[1],b[2],b[3],b[4],b[5]);bounds=bounds==null?next:bounds.minmax(next);}return new Snapshot(original.transform,bounds,original.header);
+    }
     private static double depth(int position){return position==1?-13D/32:position==2?13D/32:0;}
     public static AABB closedPanel(Direction facing,int position){
         return rotated(new AABB(0,0,.5-SegmentedDoorGeometry.HALF_THICKNESS,1,1,

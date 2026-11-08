@@ -44,3 +44,8 @@ task testSegmentedGateMeshes(type: JavaExec) {
  main = 'com.vandorlabs.client.SegmentedGateMeshLegacyChecks'
  maxHeapSize = '1g'
 }
+
+task testSegmentedTreads(type: Exec) {
+    commandLine System.getProperty('os.name').toLowerCase().contains('win') ? 'python' : 'python3', 'tools/test_segmented_treads.py'
+}
+check.dependsOn testSegmentedTreads

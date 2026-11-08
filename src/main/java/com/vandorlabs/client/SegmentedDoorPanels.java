@@ -31,8 +31,8 @@ public final class SegmentedDoorPanels {
         public void emit(int pass,BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light){if(pass==0)mesh(solid).drawSection(buffer,x,y,z,pose,rotation,light,255);else{if(body!=null)mesh(body).drawSection(buffer,x,y,z,pose,rotation,light,255);mesh(pane).drawSection(buffer,x,y,z,pose,rotation,light,alpha);}}
     }
     public static Prepared prepare(SegmentedDoorSettings settings,int texture,int column,int row,int width,int height,SegmentedDoorWindows.Layout window){return new Prepared(settings,texture,column,row,width,height,window);}
-    public static void clear(){CACHE.clear();Arrays.fill(MATERIALS,null);retained=0;materialBytes=MATERIAL_BASE;}
-    public static int retainedBytes(){return retained+materialBytes;}
+    public static void clear(){StaticSurfaceMesh.clearTreads();CACHE.clear();Arrays.fill(MATERIALS,null);retained=0;materialBytes=MATERIAL_BASE;}
+    public static int retainedBytes(){return retained+materialBytes+StaticSurfaceMesh.treadBytes();}
     public static void emit(SegmentedDoorTile tile,int row,int pass,BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light){
         Key key=new Key(tile,row,pass);StaticSurfaceMesh mesh=mesh(key);
         int alpha=pass==1?Math.round(255*GlassMaterials.opacity(key.settings.glass.material,key.settings.glass.tint)):255;mesh.drawSection(buffer,x,y,z,pose,rotation,light,alpha);
@@ -48,6 +48,10 @@ public final class SegmentedDoorPanels {
     private static StaticSurfaceMesh build(Key k){
         final StaticSurfaceMesh.Capture out=StaticSurfaceMesh.capture();SegmentedDoorSettings s=k.settings;boolean opaque=GlassMaterials.opaque(s.glass.material,s.glass.tint),glass=s.window&&(k.pass==1&&!opaque||k.pass==0&&opaque);
         if(k.nativeKind!=0){SegmentedNativePanelMesh.build(k.row,k.height,k.column,k.nativeKind==2,surface(k.texture,null),texture(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side")),(x,y,z,u,v,nx,ny,nz)->out.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex());return out.finish();}
+        if(SegmentedArtwork.translucent(k.texture)){
+            TextureAtlasSprite paneSprite=s.glass.material<0?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(-1,s.glass.shade,1,s.glass.tint)):null;
+            SegmentedPanelMesh.spiral(k.pass,k.components,s.glass.layout,opaque,surface(k.texture,null),surface(s.glass.material,paneSprite),texture(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side")),(x,y,z,u,v,nx,ny,nz)->out.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex());return out.finish();
+        }
         PortholeHex.Slice slice=null;if(s.window){PortholeHex outline=PortholeGeometryCache.outline(k.ww,k.wh,s.shape,0);slice=PortholeGeometryCache.slice(k.ww,k.wh,s.shape,0,k.wc,k.wr,outline);}
         TextureAtlasSprite nativeSprite=glass&&s.glass.material<0?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(-1,s.glass.shade,1,s.glass.tint)):null;
         com.vandorlabs.segmented.SegmentedPanelMesh.buildLayered(s.window,s.shape,s.layout,k.column,k.row,k.width,k.height,k.wc,k.wr,k.ww,k.wh,s.glass.layout,opaque,k.pass,k.pass==0||SegmentedArtwork.translucent(k.texture)?surface(k.texture,null):null,glass?surface(s.glass.material,nativeSprite):null,k.pass==0?texture(Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side")):null,(x,y,z,u,v,nx,ny,nz)->out.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex(),slice,SegmentedArtwork.translucent(k.texture),k.components);

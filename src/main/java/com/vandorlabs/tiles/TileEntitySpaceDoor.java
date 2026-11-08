@@ -15,7 +15,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public final FrameAppearance frameAppearance=new FrameAppearance();
     private DoorGlassAppearance glassAppearance=DoorGlassAppearance.DEFAULT;
     public DoorGlassAppearance glassAppearance(){return glassAppearance;}
-    public boolean supportsGlassAppearance(){return design==15||design==16||design==29;}
+    public boolean supportsGlassAppearance(){return ScreenHousingTextures.reactorArtwork(faceTexture)||design==15||design==16||design==29;}
     public boolean hasGlassOverride(){return supportsGlassAppearance()&&glassAppearance.material!=DoorGlassAppearance.ORIGINAL;}
     public boolean opaqueGlass(){return hasGlassOverride()&&GlassMaterials.opaque(glassAppearance.material,glassAppearance.tint);}
     public void setGlassAppearance(DoorGlassAppearance appearance){if(appearance==null||glassAppearance.equals(appearance))return;glassAppearance=appearance;markDirty();if(world!=null)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
@@ -271,7 +271,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override public void onLoad() { super.onLoad(); MovedDoorInteractions.INDEX.add(this); if(world!=null&&world.isRemote)migrateLegacyMotion();else DeferredTileLoad.schedule(this,()->{com.vandorlabs.blocks.DoorWaterGush.schedule(world,pos);migrateLegacyMotion();if(isLowerDoor()&&securityMode>0)tickReaders();}); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16 || design==29; }
     public boolean hasCompanyGlass(){return ScreenHousingTextures.companyLight(faceTexture);}
-    public boolean hasGlass() { return faceTexture<0 && hasGlassDesign(design); }
+    public boolean hasGlass() { return ScreenHousingTextures.reactorArtwork(faceTexture)||faceTexture<0 && hasGlassDesign(design); }
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public boolean hasFastRenderer() {

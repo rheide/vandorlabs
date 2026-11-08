@@ -7131,7 +7131,7 @@
   },
   {
     "id": "utility_door_blue_modern",
-    "label": "Modern Blue Utility",
+    "label": "Blue Utility Modern",
     "category": "Doors/Utility",
     "source": "utility_doors/blue_utility_door_modern",
     "rectangular": true,
@@ -7147,7 +7147,7 @@
   },
   {
     "id": "utility_door_green_modern",
-    "label": "Modern Green Utility",
+    "label": "Green Utility Modern",
     "category": "Doors/Utility",
     "source": "utility_doors/green_utility_door_modern",
     "rectangular": true,
@@ -7163,7 +7163,7 @@
   },
   {
     "id": "utility_door_warm_modern",
-    "label": "Modern Warm Utility",
+    "label": "Warm Utility Modern",
     "category": "Doors/Utility",
     "source": "utility_doors/warm_utility_door_modern",
     "rectangular": true,
@@ -7187,7 +7187,7 @@
   },
   {
     "id": "utility_door_industrial_modern",
-    "label": "Modern Industrial",
+    "label": "Industrial Modern",
     "category": "Doors/Utility",
     "source": "utility_doors/industrial_door_modern",
     "rectangular": true,
@@ -7211,7 +7211,7 @@
   },
   {
     "id": "utility_door_warehouse_futuristic",
-    "label": "Futuristic Warehouse",
+    "label": "Warehouse Modern",
     "category": "Doors/Utility",
     "source": "utility_doors/warehouse_door_futuristic",
     "rectangular": true,

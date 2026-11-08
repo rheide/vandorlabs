@@ -3,6 +3,7 @@ package com.vandorlabs.segmented;
 /** Released section transform over immutable pixel-space position/UV/normal records. */
 public final class SegmentedPanelTransform {
  private SegmentedPanelTransform(){}
+ public static void treadPose(float[] vertices,int quad,double[] descriptor,double[] out){int axis=descriptor[11]<2?1:0;double midpoint=0;for(int v=0;v<4;v++)midpoint+=vertices[quad+v*8+axis]/4D;int pixels=(int)descriptor[12],strip=Math.max(0,Math.min(16/pixels-1,(int)Math.floor(midpoint/pixels)));SegmentedTreads.pose(descriptor,strip,out);}
  /** Writes world position and unit normal to the caller-owned six-scalar scratch. */
  public static void vertex(float[] vertices,int at,double[] pose,int rotation,double x,double y,double z,double[] out){
   boolean vertical=pose[5]!=0;double sin=pose[3],cos=pose[4],px=vertices[at]/16D,py=vertices[at+1]/16D-.5,pz=vertices[at+2]/16D,nx=vertices[at+5],ny=vertices[at+6],nz=vertices[at+7],rx,ry,rz,rnx,rny,rnz;

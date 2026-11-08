@@ -130,11 +130,19 @@ final class StaticSurfaceMesh {
     }
     /** Rigid Segmented Door panel transform; cached atlas vertices stay unchanged. */
     private static final ThreadLocal<double[]> SECTION_VERTEX=ThreadLocal.withInitial(()->new double[6]);
+    private static final com.google.common.cache.Cache<TreadKey,float[]> TREADS=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(4*1024*1024).weigher((TreadKey k,float[] v)->128+v.length*4+k.source.length*4).build();
+    private static final class TreadKey {float[] source;int axis,pixels;TreadKey(float[] s,int a,int p){source=s;axis=a;pixels=p;}public int hashCode(){return System.identityHashCode(source)*31+axis*17+pixels;}public boolean equals(Object o){if(!(o instanceof TreadKey))return false;TreadKey k=(TreadKey)o;return source==k.source&&axis==k.axis&&pixels==k.pixels;}}
+    private static final ThreadLocal<TreadKey> TREAD_PROBE=ThreadLocal.withInitial(()->new TreadKey(null,0,0));
+    static void clearTreads(){TREADS.invalidateAll();TREAD_PROBE.remove();}
+    static int treadBytes(){int bytes=0;for(java.util.Map.Entry<TreadKey,float[]> e:TREADS.asMap().entrySet())bytes+=128+e.getValue().length*4+e.getKey().source.length*4;return bytes;}
+    private static final ThreadLocal<double[]> TREAD_POSE=ThreadLocal.withInitial(()->new double[6]);
     void drawSection(BufferBuilder buffer,double x,double y,double z,double[] pose,int rotation,int light,int alpha){
-        boolean normals=buffer.getVertexFormat().hasNormal();double[] out=SECTION_VERTEX.get();
-        for(int i=0;i<vertices.length;i+=8){
-            com.vandorlabs.segmented.SegmentedPanelTransform.vertex(vertices,i,pose,rotation,x,y,z,out);
-            buffer.pos(out[0],out[1],out[2]).color(255,255,255,alpha).tex(vertices[i+3],vertices[i+4]).lightmap(light>>>16,light&65535);
+        boolean normals=buffer.getVertexFormat().hasNormal(),tread=pose.length>=14&&pose[12]<16;double[] out=SECTION_VERTEX.get(),stripPose=tread?TREAD_POSE.get():null;float[] source=vertices;
+        if(tread){TreadKey key=TREAD_PROBE.get();key.source=vertices;key.axis=pose[11]<2?1:0;key.pixels=(int)pose[12];source=TREADS.getIfPresent(key);if(source==null){source=com.vandorlabs.segmented.SegmentedTreads.split(vertices,key.axis,key.pixels);TREADS.put(new TreadKey(vertices,key.axis,key.pixels),source);}}
+        for(int i=0;i<source.length;i+=8){
+            if(tread&&i%32==0)com.vandorlabs.segmented.SegmentedPanelTransform.treadPose(source,i,pose,stripPose);
+            com.vandorlabs.segmented.SegmentedPanelTransform.vertex(source,i,tread?stripPose:pose,rotation,x,y,z,out);
+            buffer.pos(out[0],out[1],out[2]).color(255,255,255,alpha).tex(source[i+3],source[i+4]).lightmap(light>>>16,light&65535);
             if(normals)buffer.normal((float)out[3],(float)out[4],(float)out[5]);buffer.endVertex();
         }
     }

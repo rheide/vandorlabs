@@ -6,6 +6,7 @@ public final class ScreenHousingTextures {
     /** Base artwork orientation is independent of the right leaf of a paired door. */
     public static boolean reversedDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);if(e==null||!e.has("source"))return false;String source=e.get("source").getAsString();return source.startsWith("company_doors/pinnacle/")||source.startsWith("company_doors/ashiro_mai/")||source.startsWith("company_doors/paladyne/")||source.startsWith("company_doors/vektor/");}
     public static boolean doorArtworkMirror(int choice,boolean rightLeaf){return reversedDoorArtwork(choice)^(rightLeaf&&mirroredDoorArtwork(choice));}
+    public static boolean reactorArtwork(int choice){return choice>=0&&choice<IDS.length&&"utility_door_reactor".equals(IDS[choice]);}
     public static boolean companyLight(int choice){com.google.gson.JsonObject entry=entry(choice);if(entry==null||!entry.has("source"))return false;String source=entry.get("source").getAsString();return source.startsWith("company_doors/")&&source.endsWith("/light");}
     public static final String[] IDS;
     private static final String[] TEXTURES;

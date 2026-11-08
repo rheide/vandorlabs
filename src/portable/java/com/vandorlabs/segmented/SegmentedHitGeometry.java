@@ -9,12 +9,30 @@ public final class SegmentedHitGeometry {
     public static RigidTransform transform(int x,int y,int z,int rotation,int row,int height,int column,int width,
                                            double progress,int direction,boolean straight,double depth){
         double[] pose=new double[6];SegmentedDoorGeometry.panel(row,height,column,width,progress,direction,straight,pose);
-        pose[2]+=depth;double angle=(Math.atan2(pose[3],pose[4])*180D/Math.PI);
+        pose[2]+=depth;return poseTransform(x,y,z,rotation,pose);
+    }
+    public static RigidTransform treadTransform(int x,int y,int z,int rotation,int row,int height,int column,int width,double progress,int direction,int pixels,double depth,int strip){
+        double[] descriptor=new double[14],pose=new double[6];SegmentedTreads.describe(descriptor,row,height,column,width,progress,direction,pixels,depth);SegmentedTreads.pose(descriptor,strip,pose);return poseTransform(x,y,z,rotation,pose);
+    }
+    private static RigidTransform poseTransform(int x,int y,int z,int rotation,double[] pose){double angle=(Math.atan2(pose[3],pose[4])*180D/Math.PI);
         RigidTransform panel=pose[5]!=0
                 ?RigidTransform.translation(0,pose[1],pose[2]).then(rotation(1,0,0,angle))
                 :RigidTransform.translation(pose[0],pose[1],pose[2]).then(rotation(0,1,0,-angle)).then(RigidTransform.translation(-.5,0,0));
         return RigidTransform.translation(x+.5,y,z+.5).then(rotation(0,1,0,rotation*90))
                 .then(RigidTransform.translation(-.5,0,-.5)).then(panel);
+    }
+    /** Restrict a ray to one articulated strip before querying its authored bars. */
+    public static LegacyBoxTrace.Hit traceStrip(RigidTransform t,int direction,int pixels,int strip,SegmentedGateShape.Model model,java.util.List<SegmentedGateShape.Connector> below,java.util.List<SegmentedGateShape.Connector> above,SegmentedGateShape.Hit scratch,double sx,double sy,double sz,double ex,double ey,double ez){
+        double[] a=t.inverse(sx,sy,sz),b=t.inverse(ex,ey,ez);double lo=strip*pixels/16D,hi=(strip+1)*pixels/16D;
+        double[] low={direction<2?0:lo,direction<2?lo-.5:-.5,-SegmentedDoorGeometry.HALF_THICKNESS},high={direction<2?1:hi,direction<2?hi-.5:.5,SegmentedDoorGeometry.HALF_THICKNESS};
+        if(model==null){LegacyBoxTrace.Hit local=LegacyBoxTrace.clip(low[0],low[1],low[2],high[0],high[1],high[2],a[0],a[1],a[2],b[0],b[1],b[2]);return local==null?null:world(t,local);}
+        double enter=0,exit=1;for(int axis=0;axis<3;axis++){double delta=b[axis]-a[axis];if(Math.abs(delta)<1e-12){if(a[axis]<low[axis]||a[axis]>high[axis])return null;}else{double first=(low[axis]-a[axis])/delta,last=(high[axis]-a[axis])/delta;enter=Math.max(enter,Math.min(first,last));exit=Math.min(exit,Math.max(first,last));}}if(enter>exit)return null;
+        enter=Math.max(0,enter-1e-7);exit=Math.min(1,exit+1e-7);
+        return traceGate(t,model,below,above,scratch,sx+(ex-sx)*enter,sy+(ey-sy)*enter,sz+(ez-sz)*enter,sx+(ex-sx)*exit,sy+(ey-sy)*exit,sz+(ez-sz)*exit);
+    }
+    private static LegacyBoxTrace.Hit world(RigidTransform t,LegacyBoxTrace.Hit local){
+        int dx=local.face==4?-1:local.face==5?1:0,dy=local.face==0?-1:local.face==1?1:0,dz=local.face==2?-1:local.face==3?1:0;
+        return new LegacyBoxTrace.Hit(t.x+t.r[0]*local.x+t.r[1]*local.y+t.r[2]*local.z,t.y+t.r[3]*local.x+t.r[4]*local.y+t.r[5]*local.z,t.z+t.r[6]*local.x+t.r[7]*local.y+t.r[8]*local.z,face((float)(t.r[0]*dx+t.r[1]*dy+t.r[2]*dz),(float)(t.r[3]*dx+t.r[4]*dy+t.r[5]*dz),(float)(t.r[6]*dx+t.r[7]*dy+t.r[8]*dz)));
     }
     /** Java 8 degree conversion order is part of the released ray arithmetic. */
     private static RigidTransform rotation(double ax,double ay,double az,double degrees){

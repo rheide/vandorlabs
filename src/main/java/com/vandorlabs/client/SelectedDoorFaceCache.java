@@ -11,7 +11,7 @@ final class SelectedDoorFaceCache {
     private static final int LIMIT=256;
     private static final Map<Key,StaticSurfaceMesh> MESHES=new LinkedHashMap<>(64,.75F,true);
     private SelectedDoorFaceCache() { }
-    static void clear() { MESHES.clear();CompanyDoorGlazing.clear(); }
+    static void clear() { MESHES.clear();CompanyDoorGlazing.clear();ReactorDoorGlazing.clear(); }
     static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,boolean tiled) {
         return get(geometry,choice,tiled?1:0);
     }
@@ -20,6 +20,7 @@ final class SelectedDoorFaceCache {
         return get(geometry,choice,layout,scale,false);
     }
     static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,int layout,double scale,boolean mirror) {
+        if(ScreenHousingTextures.reactorArtwork(choice))return ReactorDoorGlazing.get(geometry,com.vandorlabs.tiles.DoorGlassAppearance.DEFAULT,false,mirror);
         Key key=new Key(geometry,choice,layout,scale,mirror);StaticSurfaceMesh cached=MESHES.get(key);
         if(cached!=null)return cached;
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice));

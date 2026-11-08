@@ -16,7 +16,7 @@ public record NativeSegmentedTerrainSnapshot(Direction facing,int texture,boolea
     public static boolean eligible(NativeSegmentedVisual visual){
         if(visual.settings().direction!=0||visual.settings().position!=0||visual.settings().straight)return false;
         for(int row=0;row<visual.height();row++){
-            int choice=visual.texture(row);if(choice>=ModernFinishCatalog.ENTRIES.size()||NativeSegmentedArtwork.complex(choice)||!visual.rows().get(row).nativePanel())return false;
+            if(visual.settings().treadPixels!=16)return false;int choice=visual.texture(row);if(choice>=ModernFinishCatalog.ENTRIES.size()||NativeSegmentedArtwork.complex(choice)||!visual.rows().get(row).nativePanel())return false;
             if(choice>=0){String category=ModernFinishCatalog.option(choice).category();int slash=category.indexOf('/');if(slash>=0)category=category.substring(0,slash);if(category.equals("Frame")||category.equals("Frames"))return false;}
         }
         return true;
