@@ -464,7 +464,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         try{updateAnimatedVehicle();}finally{VehicleAnimationDiagnostics.elapsed(this,"entity-full-tick",sampled);}
     }
     private void updateAnimatedVehicle() {
-        if(world.isRemote&&view!=null&&!couplerScopeReady()){super.onUpdate();motionX=motionY=motionZ=0;return;}
+        if(world.isRemote&&view!=null&&!couplerScopeReady()){
+            super.onUpdate();motionX=motionY=motionZ=0;
+            if(ticksExisted%40==1&&(com.vandorlabs.VandorLabs.proxy==null||!com.vandorlabs.VandorLabs.proxy.vehicleSnapshotPending(getUniqueID())))VehicleNetwork.request(this);
+            return;
+        }
         if(!world.isRemote&&VehicleCouplings.preparingArmRelease(this)){super.onUpdate();VehicleCouplings.pollArmReleaseInputs(this);return;}
         if(transferInProgress){motionX=motionY=motionZ=0;return;}
         super.onUpdate();rotationPitch=prevRotationPitch=0;

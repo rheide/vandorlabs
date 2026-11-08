@@ -39,6 +39,7 @@ public class CommonProxy {
     public void gearMotion(com.vandorlabs.network.MessageGearMotion packet) { }
     public void turntablePacket(com.vandorlabs.network.MessageTurntableSnapshot packet) { }
     public double materialAspect(int choice){return 1;}
+    public boolean vehicleSnapshotPending(java.util.UUID id){return false;}
     public void vehiclePacket(com.vandorlabs.vehicle.VehicleNetwork.Packet packet) { }
     public String customTexture(int choice){return "vandorlabs:blocks/dark_wall_panel";}
     public boolean customDoor(int choice){return false;}
