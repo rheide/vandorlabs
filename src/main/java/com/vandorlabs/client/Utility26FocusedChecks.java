@@ -14,6 +14,7 @@ final class Utility26FocusedChecks {
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if("true".equals(System.getenv("VANDOR_ARM_UNPAIRED_COUPLER_ONLY")))return VehicleArmCouplerUnpairedLiveChecks.tick(mc,output);
+        if("true".equals(System.getenv("VANDOR_GEAR_MOTION_SCOPE_ONLY")))return GearMotionScopeLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_ARM_ENDPOINT_COUPLER_ONLY")))return com.vandorlabs.gear.ArmEndpointCouplerLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_ARM_PARKING_HOLD_ONLY")))return ArmParkingHoldLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_WALL_PLACEMENT_ONLY")))return WallAgainstPlacementChecks.tick(mc);

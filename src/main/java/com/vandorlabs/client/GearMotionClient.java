@@ -85,6 +85,6 @@ public final class GearMotionClient {
                     }
                 }
             }
-            if(craft!=null&&!desired.isEmpty())ModularGearVehicles.correct(craft,desired);
+            if(craft!=null&&!desired.isEmpty())ModularGearVehicles.correct(craft,desired,packet.associationGeneration,packet.tick);
     }
 }
