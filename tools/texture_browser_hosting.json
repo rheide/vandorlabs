@@ -3,5 +3,6 @@
   "repository": "rheide/vandorlabs",
   "branch": "master",
   "directory": "/docs",
-  "url": "https://rheide.github.io/vandorlabs/texture-browser/"
+  "url": "https://rheide.github.io/vandorlabs/texture-browser/",
+  "documentation_url": "https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html"
 }

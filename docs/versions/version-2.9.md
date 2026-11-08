@@ -30,7 +30,7 @@ Follow the [Segmented Door construction and configuration guide](../segmented-do
 
 The **Doors → Utility** group adds twelve 128×256 artwork choices: Blue, Green and Warm Utility with matching Modern variants; Factory; Industrial and Industrial Modern; Reactor; Warehouse and Warehouse Modern. Dark, Slim and White Glass designs are grouped under **Doors → Glass**. Renamed entries keep their saved texture identities. Selecting a Reactor pane from the Glass tab retains the Reactor artwork.
 
-**Reactor** has a transparent octagonal window, selectable glass and an inner border. The same artwork and glazing work on ordinary and Large Doors, including paired leaves and their configured items. See the [Door guide](../space-doors.md) and [texture browser](../texture-browser/).
+**Reactor** has a transparent octagonal window, selectable glass and an inner border. The same artwork and glazing work on ordinary and Large Doors, including paired leaves and their configured items. See the [Door guide](../space-doors.md) and [texture browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html).
 
 ## Creative Safe Park
 

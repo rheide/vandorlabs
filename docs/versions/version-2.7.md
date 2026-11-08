@@ -2,7 +2,7 @@
 
 Version 2.7 expands programmable displays, separates artwork from physical frame finishes, and adds more control over redstone, glass and moving mechanisms. Classic, Cool and Gold display libraries now cover matching Full and Half designs, with higher-resolution choices for larger installations.
 
-Browse the [complete texture catalog](../texture-browser/index.html), compare the [display styles](../display-matrix.html) and [control panels](../control-matrix.html), or read the [complete changelog](../../CHANGELOG.md).
+Browse the [complete texture catalog](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html), compare the [display styles](../display-matrix.html) and [control panels](../control-matrix.html), or read the [complete changelog](../../CHANGELOG.md).
 
 Animated displays reuse uploaded frame strips. Unrelated distant block updates preserve cached display layouts, and unavailable animation resources fall back to static artwork until resource reload.
 
@@ -116,7 +116,7 @@ Vehicle discovery respects water, Surface boundaries and ramps owned by another 
 
 ## Materials, shaders and rendering costs
 
-Materials adds **Satin Silver**, **Cool Steel** and **Pale Titanium** at native 128px resolution. Corporate armor artwork is refreshed, and Surface artwork includes the additional helipads. The [texture browser](../texture-browser/index.html) shows the current selectable catalog.
+Materials adds **Satin Silver**, **Cool Steel** and **Pale Titanium** at native 128px resolution. Corporate armor artwork is refreshed, and Surface artwork includes the additional helipads. The [texture browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html) shows the current selectable catalog.
 
 Every runtime texture has a LabPBR specular companion, with shared maps for equivalent finishes. Bare metal, painted machinery, glass, fabric and composite surfaces receive distinct material properties without altering diffuse artwork or adding emission. In Complementary Unbound, select **RP Support: labPBR** and enable specular maps. Atlas companions follow the diffuse sprite's crop and dimensions, including Half displays, avoiding OptiFine startup/reload crashes. See [shader material maps](../shader-materials.md).
 

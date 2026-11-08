@@ -1,6 +1,6 @@
 # Display texture matrix
 
-[Open the visual comparison page](display-matrix.html) · [Texture browser](texture-browser/index.html)
+[Open the visual comparison page](display-matrix.html) · [Texture browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html)
 
 First frames of Classic, Cool and Gold displays, with Full and Half layouts on separate rows. A dash means that style has no matching design.
 

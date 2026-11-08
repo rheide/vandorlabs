@@ -15,7 +15,7 @@ def generate_display_matrix(entries):
         if any(v==variant for v,e in cell):raise ValueError('Duplicate display variant: '+str(key))
         cell.append((variant,entry));subjects.add(subject);counts[style]+=1
     headings=['Display / height']+[style+' ('+str(counts[style])+')' for style in STYLES]
-    md=['# Display texture matrix','', '[Open the visual comparison page](display-matrix.html) · [Texture browser](texture-browser/index.html)','',
+    md=['# Display texture matrix','', '[Open the visual comparison page](display-matrix.html) · [Texture browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html)','',
         'First frames of Classic, Cool and Gold displays, with Full and Half layouts on separate rows. A dash means that style has no matching design.','',
         '| '+' | '.join(headings)+' |','|'+'|'.join('---' for h in headings)+'|']
     rendered=[]

@@ -251,4 +251,4 @@ Programmable Doors and Large Programmable Doors follow the same loaded-chunk and
 
 Open the Door texture picker and expand **Doors**, then the company folder. **Pinnacle**, **Ashiro-Mai**, **Paladyne**, **Vektor**, **Seyr** and **Vandor** each offer **Standard**, **Security** and **Light**. These are artwork choices; selecting Security artwork does not enable card security. Light designs retain transparent window openings. The complete 1:2 artwork fits a normal leaf and also works on Large Programmable Doors.
 
-See the [texture browser](texture-browser/) for all eighteen designs.
+See the [texture browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html) for all eighteen designs.

@@ -1,8 +1,8 @@
 # Texture browser
 
-[Open the GitHub Pages texture browser](https://rheide.github.io/vandorlabs/texture-browser/) once Pages is enabled for this repository. Its HTML, thumbnails and collages are served directly from the committed `docs/` files.
+[Open the texture browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html). This opens the committed browser through HTML Preview. Its HTML, thumbnails and collages come from the committed `docs/` files.
 
-The [interactive browser](texture-browser/index.html) contains the built-in texture catalog, including native glass finishes. Categories and labels come from the same catalogs as the in-game picker. Search by name, ID or category; expand nested categories; click a texture for a larger preview. Each category links to a downloadable collage. The [texture overview](texture-overview.md) embeds the top-level collages directly in the repository's documentation.
+The [interactive browser](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html) contains the built-in texture catalog, including native glass finishes. Categories and labels come from the same catalogs as the in-game picker. Search by name, ID or category; expand nested categories; click a texture for a larger preview. Each category links to a downloadable collage. The [texture overview](texture-overview.md) embeds the top-level collages directly in the repository's documentation.
 
 The browser works by opening `docs/texture-browser/index.html` locally. It does not require a server or external scripts. To publish it through GitHub Pages, select **Settings → Pages → Deploy from a branch → master → /docs**. The site root opens the browser. Repository Pages configuration is separate from committing the static files.
 

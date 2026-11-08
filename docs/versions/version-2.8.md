@@ -121,7 +121,7 @@ The new Segmented Door uses `vandorlabs:segmented_door`. Its Door tab includes g
 
 ## Company doors
 
-The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings with faint native glass shimmer, and work on normal and Large Programmable Doors. All company artworks mirror across paired leaves in Fit, Tile and Auto layouts. Vektor, Pinnacle, Paladyne and Ashiro-Mai reverse their base artwork so the handle matches Seyr/Vandor on a single leaf. Browse the [texture catalog](../texture-browser/) for previews.
+The Doors texture category now includes six company folders: Pinnacle, Ashiro-Mai, Paladyne, Vektor, Seyr and Vandor. Each contains Standard, Security and Light artwork. The 128×256 textures retain their authored alpha, including the Light designs’ window openings with faint native glass shimmer, and work on normal and Large Programmable Doors. All company artworks mirror across paired leaves in Fit, Tile and Auto layouts. Vektor, Pinnacle, Paladyne and Ashiro-Mai reverse their base artwork so the handle matches Seyr/Vandor on a single leaf. Browse the [texture catalog](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html) for previews.
 
 ## Chair angle and single-Track steering
 

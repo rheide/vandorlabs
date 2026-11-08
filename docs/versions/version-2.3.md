@@ -120,7 +120,7 @@ A half-width, full-height diagonal glass wall can hold water on one side while l
 
 The material catalog adds four Security Glass designs, three Ancient Relief textures under Tech, and ceiling-tile finishes with plain and speaker panels plus paired light artwork. Directional lights place their illuminated face away from the supporting face, including floor and ceiling placements.
 
-Browse the whole catalog through the [interactive texture browser and category collages](../texture-browser.md). It uses the same categories and selectable artwork as the mod.
+Browse the whole catalog through the [interactive texture browser and category collages](https://htmlpreview.github.io/?https://github.com/rheide/vandorlabs/blob/master/docs/texture-browser/index.html). It uses the same categories and selectable artwork as the mod.
 
 The Advanced Pilot Chair armrest sliders remain independently selectable at every height and detent. Hold a regular or Long Canopy and use it on a Cockpit to share the raised upper part, preserving cockpit collision and controls; removing the canopy preserves the cockpit. Placement against the rear cockpit face aligns the canopy’s rear edge and extends forward, without needing an extra clear block behind it.
 
