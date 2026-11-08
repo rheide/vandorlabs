@@ -71,3 +71,14 @@ task testArmCouplerAssociationBatch(type: JavaExec) {
  main = 'com.vandorlabs.gear.ArmCouplerAssociationBatchChecks'
  maxHeapSize = '1g'
 }
+task testGearMotionScopePolicy(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath = files(compilePortableTests.destinationDir)
+ main = 'com.vandorlabs.gear.core.GearMotionScopeTest'
+}
+task testGearMotionSourceFloor(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.vehicle.GearMotionSourceFloorChecks'
+ maxHeapSize = '1g'
+}
