@@ -17,7 +17,7 @@
 - Remove the duplicate Dark Segmented Panel picker row and redundant artwork scope/reset buttons; preserve saved IDs and use the Copifier for sharing.
 - Add Ramp-style Tread Px controls for 1/2/4/8/16-pixel Segmented Door bending strips, retaining sixteen-pixel motion for older saves.
 - Give custom gates usable top placement faces and select Segmented Door depth from the clicked support or neighbouring door plane.
-- Render Spiral Aluminum Glazing with opaque metal, inner reveals and selectable glass; give Reactor Door artwork a real octagonal pane and inner border.
+- Render Spiral Aluminum Glazing with opaque metal, inner reveals and selectable glass; give Reactor Door artwork a real octagonal pane and inner border, including sealed Large Door X-split cuts.
 - Rename Utility Modern variants consistently, including Warehouse Modern, without changing saved choices.
 
 - Keep centered vertical articulated couplers facing consistently while the parent turns in Forge 1.12.2. Preserve existing saved joint poses and packet fields.

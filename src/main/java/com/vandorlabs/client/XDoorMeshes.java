@@ -13,7 +13,7 @@ final class XDoorMeshes {
     private static final com.google.common.cache.Cache<Key,StaticSurfaceMesh[]> CACHE=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(4*1024*1024).weigher((Key k,StaticSurfaceMesh[] v)->1024+Arrays.stream(v).mapToInt(m->m.vertexCount()*32).sum()+(k.model instanceof DoorGlassModel?((DoorGlassModel)k.model).memoryBytes():0)).build();
     static void clear(){CACHE.invalidateAll();}
     static StaticSurfaceMesh[] get(TileEntitySpaceDoor tile,IBlockState state,boolean right,int part) {
-        if((part==1||part==2)&&com.vandorlabs.tiles.ScreenHousingTextures.reactorArtwork(tile.getFaceTexture()))return ReactorDoorGlazing.get(DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,1)).selected(),tile.glassAppearance(),part==2,com.vandorlabs.tiles.ScreenHousingTextures.doorArtworkMirror(tile.getFaceTexture(),right),tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?1.5:1).xPanels(right?1:0,false);
+        if((part==1||part==2)&&com.vandorlabs.tiles.ScreenHousingTextures.reactorArtwork(tile.getFaceTexture()))return ReactorDoorGlazing.get(DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,1)).selected(),tile.glassAppearance(),part==2,com.vandorlabs.tiles.ScreenHousingTextures.doorArtworkMirror(tile.getFaceTexture(),right),tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor?1.5:1).xPanels(right?1:0,part==1);
         if(part==2&&tile.hasCompanyGlass())return CompanyDoorGlazing.panels(DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,1)).selected(),right);
         DoorRenderModels.Entry entry=DoorRenderModels.get(state.getBlock(),tile.metadata(true,right,part));
         int choice=part==1?tile.getFaceTexture():-1;
