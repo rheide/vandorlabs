@@ -119,3 +119,8 @@ task testGearTileOwnership(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.GearTileOwnershipChecks'
  maxHeapSize = '1g'
 }
+task testOwnershipSourceRetry(type: JavaExec) {
+ dependsOn compilePortableTests
+ classpath = files(compilePortableTests.destinationDir)
+ main = 'com.vandorlabs.vehicle.core.OwnershipSourceRetryTest'
+}

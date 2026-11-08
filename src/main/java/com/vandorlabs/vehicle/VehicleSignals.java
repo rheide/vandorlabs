@@ -293,7 +293,7 @@ public final class VehicleSignals {
                 // Native cells and retained payload/sections must change as one source.
                 // This also covers nested Coupler edits: request the current complete recipe
                 // rather than dropping the edit or installing a partial root over old cells.
-                if(!original.sameArmOwnership(data)){VehicleNetwork.request(craft);return;}
+                if(!original.sameArmOwnership(data)){craft.requestOwnershipSource();return;}
             }
             if(tile instanceof TileEntityLandingGear){
                 TileEntityLandingGear gear=(TileEntityLandingGear)tile;float previous=gear.progress;tile.readFromNBT(data);float authoritative=gear.progress;gear.progress=gear.previous=previous;
