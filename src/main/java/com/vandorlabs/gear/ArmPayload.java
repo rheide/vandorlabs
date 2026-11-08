@@ -267,7 +267,7 @@ public final class ArmPayload {
         return discover(arm,actor,BlockPos.ORIGIN);
     }
     static ArmPayload discover(GearTileEntity arm,EntityPlayerMP actor,BlockPos shift){
-        World world=arm.getWorld();BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0).add(shift);
+        World world=arm.getWorld();VehicleWorld sourceView=world instanceof VehicleWorld?(VehicleWorld)world:null;VehicleStructure source=sourceView==null?null:sourceView.structure;if(sourceView!=null&&(!ArmParkingSource.serverThread(world)||sourceView.tiles.get(arm.getPos())!=arm))throw new IllegalArgumentException("Prepared server attachment source required");BlockPos start=arm.localCell(0,-arm.assembly().columnHeight(),0).add(shift);
         Set<BlockPos> platform=arm.joinEnabled()&&arm.columns().size()>1?JoinedArms.platform(arm,shift):null;
         if(platform!=null)platform=expandSurfaceLayers(arm,platform);
         if(platform==null&&world.getBlockState(start).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)
@@ -279,7 +279,7 @@ public final class ArmPayload {
         // floor does not opt the surrounding structure into the moving payload.
         boolean tipOnly=platform==null&&!arm.isLandingAssembly()&&!arm.isExtendedTrackStroke()
                 &&arm.getBlockType() instanceof GearBlock&&GearAssembly.isExtender(world.getBlockState(arm.getPos()));
-        if(platform!=null){for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
+        if(platform!=null){if(sourceView==null)for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
         if(world.isAirBlock(start))return null;
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Set<BlockPos> visited=new LinkedHashSet<>();pending.add(start);
         int minX=start.getX(),minY=start.getY(),minZ=start.getZ(),maxX=minX,maxY=minY,maxZ=minZ;
@@ -296,13 +296,15 @@ public final class ArmPayload {
                 VehicleService.permission(actor,at);
                 if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,state,actor)))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
             }
-            TileEntity tile=world.getTileEntity(at);
+            TileEntity tile=sourceView==null?world.getTileEntity(at):sourceView.tiles.get(at);
+            if(tile!=null&&(tile.isInvalid()||tile.getWorld()!=world||!tile.getPos().equals(at)))throw new IllegalArgumentException("Attachment tile identity changed");
             if(tile instanceof net.minecraft.tileentity.TileEntityPiston)throw new IllegalArgumentException("Wait for the piston to stop before moving it");
             if(state.getBlock().hasTileEntity(state)&&tile==null)throw new IllegalArgumentException("Attachment block data is still loading");
             minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());maxX=Math.max(maxX,at.getX());maxY=Math.max(maxY,at.getY());maxZ=Math.max(maxZ,at.getZ());
             int limit=platform==null?64:MAX_BLOCKS,span=platform==null?16:MAX_SPAN;
             if(captured.size()>=limit||maxX-minX>=span||maxY-minY>=span||maxZ-minZ>=span)throw new IllegalArgumentException("Arm attachment exceeds "+limit+" blocks or a "+span+"-block span");
-            captured.add(new VehicleStructure.Cell(at,state,tile==null?null:tile.writeToNBT(new NBTTagCompound())));
+            if(sourceView!=null){VehicleStructure.Cell current=source.at(at);if(sourceView.structure!=source||current==null||current.state!=state||current.hasTileData()!=(tile!=null))throw new IllegalArgumentException("Attachment source changed");captured.add(new VehicleStructure.Cell(at,state,current.tileData()));}
+            else captured.add(new VehicleStructure.Cell(at,state,tile==null?null:tile.writeToNBT(new NBTTagCompound())));
             if(tipOnly)continue;
             // A landing foot terminates its own outward branch, allowing nested gear above it.
             boolean foot=GearAssembly.isFoot(state);
