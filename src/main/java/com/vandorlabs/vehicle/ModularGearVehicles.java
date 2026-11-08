@@ -10,9 +10,11 @@ import java.util.*;
 /** Captured gear uses the same local pose and source membership as stationary assemblies. */
 public final class ModularGearVehicles {
     private ModularGearVehicles(){}
-    private static final class Correction {final double progress;final int revision;Correction(double p,int r){progress=p;revision=r;}}
+    private static final class Correction {final double progress;final int revision;final UUID generation;final long tick;final Object configuration;Correction(double p,int r,UUID generation,long tick,Object configuration){progress=p;revision=r;this.generation=generation;this.tick=tick;this.configuration=configuration;}boolean current(EntityGroundVehicle craft,BlockPos root){VehicleStructure.Cell cell=craft.structure==null?null:craft.structure.at(root);return cell!=null&&cell.gearConfigurationIdentity()==configuration&&craft.acceptsCouplerMotion(generation,tick);}}
     private static final Map<EntityGroundVehicle,Map<BlockPos,Correction>> corrections=new WeakHashMap<>();
-    public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired){Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){TileEntity raw=craft.view.getTileEntity(entry.getKey());if(raw instanceof GearTileEntity)pending.put(entry.getKey(),new Correction(entry.getValue(),((GearTileEntity)raw).motionRevision()));}}
+    public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired){correct(craft,desired,null,Long.MIN_VALUE);}
+    public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired,UUID generation,long serverTick){if(craft==null||craft.view==null||craft.structure==null||!craft.acceptsCouplerMotion(generation,serverTick))return;Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){VehicleStructure.Cell cell=craft.structure.at(entry.getKey());TileEntity raw=craft.view.tiles.get(entry.getKey());Double phase=entry.getValue();if(cell!=null&&cell.gearConfigurationIdentity()!=null&&raw instanceof GearTileEntity&&phase!=null&&Double.isFinite(phase)&&phase>=0&&phase<=1)pending.put(entry.getKey().toImmutable(),new Correction(phase,((GearTileEntity)raw).motionRevision(),generation,serverTick,cell.gearConfigurationIdentity()));}}
+
     public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).landingDeployed())return false;return true;}
     /** Move ordinary craft cells into the arm's retained snapshot once, before its first animated step. */
     private static boolean captureAttachment(EntityGroundVehicle craft){
@@ -44,14 +46,14 @@ public final class ModularGearVehicles {
         return false;
     }
     public static void tick(EntityGroundVehicle craft){
-        if(craft.view==null||craft.transferInProgress||craft.ownershipBlocked||VehicleCouplings.preparingArmRelease(craft))return;
+        if(craft.view==null||craft.transferInProgress||craft.ownershipBlocked||!craft.couplerScopeReady()||VehicleCouplings.preparingArmRelease(craft))return;
         if(!craft.world.isRemote&&TaxiModularGear.tick(craft))return;
         if(!craft.world.isRemote&&captureAttachment(craft))return;
         Map<BlockPos,Double> desired=new LinkedHashMap<>();Set<BlockPos> notify=new LinkedHashSet<>();VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
         Map<BlockPos,Correction> corrected=craft.world.isRemote?corrections.get(craft):null;
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational()||gear.taxiPhase()==1)continue;double before=gear.progress();
             if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
-            if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision())next=correction.progress;else if(gear.motionBlocked())next=before;}
+            if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision()&&correction.current(craft,gear.getPos()))next=correction.progress;else if(gear.motionBlocked())next=before;}
             if(gear.isLandingAssembly()&&!craft.hover&&next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
             if(craft.world.isRemote&&gear.taxiPhase()>=0&&!gear.target()){double maximum=gear.pose(0).footOffsetY(),rise=gear.taxiAmount();if(maximum>0){double smooth=Math.max(0,Math.min(1,1-rise/maximum));double endpoint=.5-Math.sin(Math.asin(1-2*smooth)/3);next=Math.max(endpoint,next);}}
             if(next==before){gear.captureProgress(before);continue;}
