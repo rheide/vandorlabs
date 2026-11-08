@@ -23,3 +23,5 @@ A read-only join observer installed before world launch records immutable struct
 Run only this focused case with `VANDOR_LABS_ARM_RECOVERY_CASES=safe-park-arm-partial bash testclient/test_arm_recovery.sh`, supplying the usual optional-mod compatibility directory. The ordinary Safe Park recovery case and its two-process path remain unchanged. Client task polling and flight synchronization are confined to the new test case; gameplay authorization, transfer scheduling, journaling and recovery are unchanged.
 
 Fixture metadata uses file fsync, atomic replacement and `JournalFiles` directory sync, preserving the Windows directory-channel distinction without suppressing Linux I/O errors.
+
+The current cold evidence establishes original pre-motion state and single ownership across two restarts. Continued motion to the retained endpoint with a durably saved external channel baseline, followed by exact stable-state replay, remains a separate pending acceptance check.
