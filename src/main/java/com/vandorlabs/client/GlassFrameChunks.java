@@ -29,7 +29,7 @@ public final class GlassFrameChunks {
     private static final Map<BlockPos,Section> PENDING=new LinkedHashMap<>();
     private static final com.google.common.cache.Cache<Key,GlassFrameModel.Mesh> MESHES=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(8*1024*1024)
             .weigher((Key key,GlassFrameModel.Mesh mesh)->(int)Math.min(Integer.MAX_VALUE,Math.max(1,mesh.bytes()+128L+key.source.cacheRetainedBytes()))).build();
-    private static final Field FRUSTUM=ReflectionHelper.findField(RenderGlobal.class,"viewFrustum","field_175008_n"),DISPATCHER=ReflectionHelper.findField(RenderGlobal.class,"renderDispatcher","field_174995_M"),TASK=ReflectionHelper.findField(RenderChunk.class,"compileTask","field_178599_i");
+    private static final Field FRUSTUM=ReflectionHelper.findField(RenderGlobal.class,"viewFrustum","field_175008_n"),TASK=ReflectionHelper.findField(RenderChunk.class,"compileTask","field_178599_i");
     private static final Method LOOKUP=lookup();
     private static World world;
     private static WorldRenderListener listener;
@@ -56,14 +56,25 @@ public final class GlassFrameChunks {
     private static final class Section {
         final BlockPos pos;RenderChunk chunk;CompiledChunk before;
         Section(BlockPos pos){this.pos=pos;}
-        boolean uploaded(ViewFrustum view,Set<RenderChunk> rebuild)throws ReflectiveOperationException{
+        boolean uploaded(ViewFrustum view,RenderGlobal renderer)throws ReflectiveOperationException{
             if(view==null)return false;RenderChunk current=(RenderChunk)LOOKUP.invoke(view,pos);
             if(current==null||!current.getPosition().equals(pos))return false;
-            if(chunk!=current){chunk=current;before=current.getCompiledChunk();current.setNeedsUpdate(false);}
-            if(current.needsUpdate()){rebuild.add(current);return false;}
-            current.getLockCompileTask().lock();try{
+            if(chunk!=current){
+                chunk=current;before=current.getCompiledChunk();
+                // One mark per pending section, after every changed mesh has been published.
+                // An interior point marks this section without touching adjacent sections.
+                int x=pos.getX()+8,y=pos.getY()+8,z=pos.getZ()+8;
+                renderer.markBlockRangeForRenderUpdate(x,y,z,x,y,z);
+                return false;
+            }
+            // Vanilla schedules visible sections; polling must not stall the client thread.
+            if(current.needsUpdate()||!current.getLockCompileTask().tryLock())return false;
+            try{
                 ChunkCompileTaskGenerator task=(ChunkCompileTaskGenerator)TASK.get(current);
-                return !current.needsUpdate()&&task!=null&&task.getStatus()==ChunkCompileTaskGenerator.Status.DONE&&current.getCompiledChunk()!=before&&task.getCompiledChunk()==current.getCompiledChunk();
+                if(task==null||!task.getLock().tryLock())return false;
+                try{
+                    return !current.needsUpdate()&&task.getStatus()==ChunkCompileTaskGenerator.Status.DONE&&current.getCompiledChunk()!=before&&task.getCompiledChunk()==current.getCompiledChunk();
+                }finally{task.getLock().unlock();}
             }finally{current.getLockCompileTask().unlock();}
         }
     }
@@ -117,6 +128,9 @@ public final class GlassFrameChunks {
         if(format==null||!format.equals(DefaultVertexFormats.BLOCK)){format=new VertexFormat(DefaultVertexFormats.BLOCK);reload();}
         Set<TileEntityProgrammableGlass> queued=Collections.newSetFromMap(new IdentityHashMap<>());
         synchronized(QUEUED){queued.addAll(QUEUED);QUEUED.clear();}
+        // Tile loads and packets may arrive without a neighbour block-state notification.
+        // Invalidate once for the batch, before reading any frame contours.
+        if(!queued.isEmpty())GlassSurfaceGroups.invalidate(world);
         for(TileEntityProgrammableGlass tile:queued)if(tile.getWorld()==world){
             BlockPos pos=tile.getPos().toImmutable();DIRTY.add(pos);
             if(valid(tile)){
@@ -140,18 +154,15 @@ public final class GlassFrameChunks {
             if(entry.mesh==mesh&&tile.frameChunkLight==light&&(entry.ready||PENDING.containsKey(entry.section)))continue;
             if(entry.mesh==mesh&&mesh==null)continue;
             entry.mesh=mesh;entry.ready=false;tile.frameChunkLight=light;tile.frameChunkMesh=mesh;
-            PENDING.put(entry.section,new Section(entry.section));world.markBlockRangeForRenderUpdate(tile.getPos(),tile.getPos());
+            PENDING.put(entry.section,new Section(entry.section));
         }
         try{
             viewChanged(mc);
-            Set<RenderChunk> rebuild=new LinkedHashSet<>();
             Iterator<Section> pending=PENDING.values().iterator();while(pending.hasNext()){
-                Section section=pending.next();if(!section.uploaded(frustum,rebuild))continue;
+                Section section=pending.next();if(!section.uploaded(frustum,mc.renderGlobal))continue;
                 Set<Entry> members=MEMBERS.get(section.pos);if(members!=null)for(Entry entry:members){entry.chunk=section.chunk;entry.ready=entry.mesh!=null;}
                 pending.remove();
             }
-            ChunkRenderDispatcher dispatcher=(ChunkRenderDispatcher)DISPATCHER.get(mc.renderGlobal);int submitted=0;
-            if(dispatcher!=null)for(RenderChunk chunk:rebuild){if(submitted++>=8||!dispatcher.updateChunkLater(chunk))break;chunk.clearNeedsUpdate();}
         }catch(ReflectiveOperationException failure){throw new IllegalStateException("Glass frame terrain publication failed",failure);}
     }
     private static boolean valid(TileEntityProgrammableGlass tile){return !tile.isInvalid()&&world.isBlockLoaded(tile.getPos())&&world.getTileEntity(tile.getPos())==tile&&world.getBlockState(tile.getPos()).getBlock() instanceof BlockProgrammableGlass;}

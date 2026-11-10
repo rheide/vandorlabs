@@ -56,7 +56,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
         if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1 && !GlassFrameChunks.rendered(tile))renderSelectedFrame(tile,state,x,y,z);
-        if(FlatPanelBarRenderer.render(tile,state,x,y,z))return;
+        if(corner!=null&&FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
         int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();

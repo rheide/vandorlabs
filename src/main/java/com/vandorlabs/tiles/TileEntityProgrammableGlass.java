@@ -142,8 +142,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return oldState.getBlock() != newState.getBlock();
     }
     @Override public boolean shouldRenderInPass(int pass) {
-        if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
-        if(pass==1&&fluids.any())return true;
-        boolean opaque=GlassMaterials.opaque(material,tint);
-        return pass==0||pass==1&&!opaque; }
+        if(pass==0)return true;
+        if(pass!=1)return false;
+        if(fluids.any()||!GlassMaterials.opaque(material,tint))return true;
+        return world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null;
+    }
 }

@@ -32,7 +32,8 @@ final class GlassSurfaceMapping {
             Entry found=CACHE.get(LOOKUP);if(found!=null)return found.mesh;
             StaticSurfaceMesh result=mode==0?mesh.glassTexture(sprite,layout,raw,borderX,borderY):mesh.textureLayout(sprite,layout,raw,borderX,borderY,mode);
             Entry next=new Entry(mesh,result);
-            if(next.bytes<=BUDGET){CACHE.put(new Key(LOOKUP),next);retained+=next.bytes;while(retained>BUDGET||CACHE.size()>1024){Iterator<Entry> oldest=CACHE.values().iterator();retained-=oldest.next().bytes;oldest.remove();}}
+            // Bound retained geometry by bytes; a fixed entry limit thrashes dense sets of small panes.
+            if(next.bytes<=BUDGET){CACHE.put(new Key(LOOKUP),next);retained+=next.bytes;while(retained>BUDGET){Iterator<Entry> oldest=CACHE.values().iterator();retained-=oldest.next().bytes;oldest.remove();}}
             return result;
         } finally {LOOKUP.release();}
     }

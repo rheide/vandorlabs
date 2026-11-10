@@ -29,7 +29,7 @@ final class GlassPaneBatch implements AutoCloseable {
         TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;
         if(!GlazingDisplay.atlasStatic(tile)||GlassMaterials.opaque(tile.getMaterial(),tile.getTint())||tile.fluids.any())return false;
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
-        if(!(state.getBlock() instanceof BlockProgrammableGlass)||PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())!=null||PanelJoins.flatBar(state,tile.getWorld(),tile.getPos())!=null)return false;
+        if(!(state.getBlock() instanceof BlockProgrammableGlass)||PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())!=null)return false;
         // OptiFine block aliases can depend on metadata. Keep the correct entity
         // payload for each state even when adjacent sorted panes use one atlas.
         if(drawing&&shaderFormat&&batchState!=state)flush();
