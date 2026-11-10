@@ -21,12 +21,13 @@ final class ShaderStartupChecks {
         if(!shaders.getField("configSpecularMap").getBoolean(null))throw new IllegalStateException("Specular maps disabled: regression would be hidden");
         if(stage==0){
             SegmentedShaderBatchChecks.run(mc);
+            HousingShaderLightingChecks.run(mc);
             int count=rectangles(mc);System.out.println("[vandorlabs][reprolab] shader-startup initial-atlas PASS pack="+name+" rectangular-OptiFine-uploads="+count);
             mc.gameSettings.pauseOnLostFocus=false;mc.player.closeScreen();
             mc.getIntegratedServer().addScheduledTask(()->{net.minecraft.entity.player.EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());player.setGameType(net.minecraft.world.GameType.CREATIVE);player.capabilities.isFlying=true;player.sendPlayerAbilities();player.connection.setPlayerLocation(POS.getX()+.5,POS.getY()+2,POS.getZ()-4,0,38);net.minecraft.block.Block glass=net.minecraft.block.Block.getBlockFromName("vandorlabs:regular_canopy_glass");player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new net.minecraft.item.ItemStack(glass,8));for(int x=0;x<2;x++)for(int z=0;z<2;z++){net.minecraft.util.math.BlockPos support=POS.add(x,-1,z);player.world.setBlockState(support,net.minecraft.init.Blocks.STONE.getDefaultState(),3);if(player.getHeldItemMainhand().onItemUse(player,player.world,support,net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.util.EnumFacing.UP,.5F,1,.5F)!=net.minecraft.util.EnumActionResult.SUCCESS)throw new IllegalStateException("Native shader canopy placement failed");}player.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);}).get();
             mc.refreshResources();stage=1;ticks=0;return false;
         }
-        if(!segmentedReloadChecked){SegmentedShaderBatchChecks.run(mc);segmentedReloadChecked=true;}
+        if(!segmentedReloadChecked){SegmentedShaderBatchChecks.run(mc);HousingShaderLightingChecks.run(mc);segmentedReloadChecked=true;}
         if(ticks>300)throw new IllegalStateException("Shader native-canopy mesh was not published; block="+mc.world.getBlockState(POS)+" tile="+mc.world.getTileEntity(POS)+" player="+mc.player.getPosition());
         com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(mc.world,POS);if(tile==null||!(tile.chunkMesh instanceof FixedCanopyModel.Mesh))return false;
         FixedCanopyModel.Mesh mesh=(FixedCanopyModel.Mesh)tile.chunkMesh;

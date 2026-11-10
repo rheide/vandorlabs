@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 final class GlassVisualChecks {
     private static int ticks;
     static boolean tick(Minecraft mc,File output) throws Exception {
+        if(Boolean.getBoolean("vandorlabs.glassFrameChunkChecksOnly"))return ProgrammableGlassFrameChunkChecks.tick(mc,output);
         ticks++;mc.gameSettings.pauseOnLostFocus=false;
         if(ticks==1){mc.displayGuiScreen(null);mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);mc.gameSettings.renderDistanceChunks=4;}
         if(ticks==80) {

@@ -736,6 +736,7 @@ public class ModBlocks {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void onModelBake(ModelBakeEvent event) {
+        com.vandorlabs.client.GlassFrameChunks.reload();
         com.vandorlabs.client.DoorRenderModels.clear();
         com.vandorlabs.client.DiagonalWallMeshCache.clear();
         String[] shapes={"programmable_storage","programmable_block","programmable_trapdoor","programmable_diagonal_trapdoor",
@@ -786,6 +787,10 @@ public class ModBlocks {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())
                     || "inventory".equals(location.getVariant())) continue;
             String path = location.getResourcePath();
+            if ("programmable_glass".equals(path)) {
+                event.getModelRegistry().putObject(location,new com.vandorlabs.client.GlassFrameModel(event.getModelRegistry().getObject(location)));
+                continue;
+            }
             if ("programmable_diagonal_wall".equals(path) || "programmable_diagonal_glass".equals(path)) {
                 event.getModelRegistry().putObject(location,new com.vandorlabs.client.DiagonalWallModel(
                         event.getModelRegistry().getObject(location)));

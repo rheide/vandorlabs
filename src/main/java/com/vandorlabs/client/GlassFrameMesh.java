@@ -4,6 +4,7 @@ import com.vandorlabs.tiles.TileEntityProgrammableGlass;
 import com.vandorlabs.tiles.FrameAppearance;
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.BufferBuilder;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import java.util.*;
 
@@ -27,11 +28,31 @@ final class GlassFrameMesh {
     private static final GlassSurfaceGroups.Layout UNIT=new GlassSurfaceGroups.Layout(0,0,1,1);
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile){return get(tile,UNIT);}
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
-        net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
-        int mask=GlassSurfaceGroups.frameMask(tile);
-        Key key=PROBE.set(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),mask,tile.frameAppearance.front,layout.columns,layout.rows);
+        Key key=key(tile,layout);
         try {
         StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;key=new Key(key);StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
+        emit(b,key);
+        mesh=b.finish();long cost=128+mesh.cacheRetainedBytes();
+        if(cost<=MAX_BYTES){CACHE.put(key,mesh);retainedBytes+=cost;
+            while(CACHE.size()>256||retainedBytes>MAX_BYTES){Key oldest=CACHE.keySet().iterator().next();retainedBytes-=128+CACHE.remove(oldest).cacheRetainedBytes();}}
+        return mesh;
+        }finally{PROBE.set(null,null,null,0,0,0,0);}
+    }
+    private static Key key(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
+        net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
+        return PROBE.set(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),GlassSurfaceGroups.frameMask(tile),tile.frameAppearance.front,layout.columns,layout.rows);
+    }
+    /** The chunk capture uses this same emitter and keeps each authored atlas sprite. */
+    static void emit(TileEntityProgrammableGlass tile,BufferBuilder buffer){
+        try{emit(buffer,key(tile,UNIT));}finally{PROBE.set(null,null,null,0,0,0,0);}
+    }
+    interface Sprites { void texture(TextureAtlasSprite sprite); }
+    private static void texture(BufferBuilder buffer,TextureAtlasSprite sprite){if(buffer instanceof Sprites)((Sprites)buffer).texture(sprite);}
+    private static void quad(BufferBuilder buffer,TextureAtlasSprite sprite,boolean reverse,double[]... points){
+        texture(buffer,FrameEdgeTextures.edge(sprite,points));WorldSurface.quad(buffer,sprite,reverse,points);
+    }
+    private static void emit(BufferBuilder b,Key key){
+        int mask=key.mask;
         double[] widths=ScreenFrameBorders.get(key.choice);
         double left=(mask&1)!=0?(key.choice<0?1:widths[0]*16):0;
         double right=(mask&2)!=0?(key.choice<0?1:widths[1]*16):0;
@@ -43,14 +64,10 @@ final class GlassFrameMesh {
             boolean rightCorner=(corner&1)!=0,topCorner=(corner&2)!=0;double w=key.choice<0?1:widths[rightCorner?1:0]*16,h=key.choice<0?1:widths[topCorner?2:3]*16;
             box(b,key,rightCorner?16-w:0,topCorner?16-h:0,rightCorner?16:w,topCorner?16:h);
         }
-        if(key.choice>=0&&FrameAppearance.border(key.choice))front(b,key,atlas.getAtlasSprite(ScreenHousingTextures.texture(key.choice)),widths);
-        mesh=b.finish();long cost=128+mesh.cacheRetainedBytes();
-        if(cost<=MAX_BYTES){CACHE.put(key,mesh);retainedBytes+=cost;
-            while(CACHE.size()>256||retainedBytes>MAX_BYTES){Key oldest=CACHE.keySet().iterator().next();retainedBytes-=128+CACHE.remove(oldest).cacheRetainedBytes();}}
-        return mesh;
-        }finally{PROBE.set(null,null,null,0,0,0,0);}
+        if(key.choice>=0&&FrameAppearance.border(key.choice))front(b,key,Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(key.choice)),widths);
     }
-    private static void front(StaticSurfaceMesh.Capture b,Key key,TextureAtlasSprite sprite,double[] border){
+    private static void front(BufferBuilder b,Key key,TextureAtlasSprite sprite,double[] border){
+        texture(b,sprite);
         double l=(key.mask&1)!=0?border[0]:0,r=(key.mask&2)!=0?border[1]:0;
         double t=(key.mask&8)!=0?border[2]:0,d=(key.mask&4)!=0?border[3]:0;
         // Same nine-slice geometry/source cuts as programmable screen frames.
@@ -66,7 +83,8 @@ final class GlassFrameMesh {
         }
         concave(b,key,sprite,border);
     }
-    private static void concave(StaticSurfaceMesh.Capture b,Key key,TextureAtlasSprite sprite,double[] border){
+    private static void concave(BufferBuilder b,Key key,TextureAtlasSprite sprite,double[] border){
+        texture(b,sprite);
         for(int corner=0;corner<4;corner++)if((key.mask&(16<<corner))!=0){
             boolean right=(corner&1)!=0,top=(corner&2)!=0;double l=border[right?1:0],h=border[top?2:3];
             double x0=right?16-l*16:0,x1=right?16:l*16,y0=top?16-h*16:0,y1=top?16:h*16;
@@ -75,15 +93,15 @@ final class GlassFrameMesh {
             WorldSurface.rawQuad(b,true,x0,y0,10,u0,v1,x0,y1,10,u0,v0,x1,y1,10,u1,v0,x1,y0,10,u1,v1);
         }
     }
-    private static void box(StaticSurfaceMesh.Capture b,Key k,double x,double y,double r,double t){
+    private static void box(BufferBuilder b,Key k,double x,double y,double r,double t){
         double u0=x,u1=r,v0=16-t,v1=16-y;
         // Opaque backing remains behind authored alpha, including canvas padding.
         double inset=k.choice>=0&&FrameAppearance.border(k.choice)?.016:0;
-        if(k.front!=null)WorldSurface.quad(b,k.front,false,new double[]{x,y,6+inset,u0,v1},new double[]{x,t,6+inset,u0,v0},new double[]{r,t,6+inset,u1,v0},new double[]{r,y,6+inset,u1,v1});
-        if(k.front!=null)WorldSurface.quad(b,k.front,true,new double[]{x,y,10-inset,u0,v1},new double[]{x,t,10-inset,u0,v0},new double[]{r,t,10-inset,u1,v0},new double[]{r,y,10-inset,u1,v1});
-        WorldSurface.quad(b,y==0?k.outer:k.inner,false,new double[]{x,y,6,x,0},new double[]{r,y,6,r,0},new double[]{r,y,10,r,4},new double[]{x,y,10,x,4});
-        WorldSurface.quad(b,t==16?k.outer:k.inner,true,new double[]{x,t,6,x,0},new double[]{r,t,6,r,0},new double[]{r,t,10,r,4},new double[]{x,t,10,x,4});
-        WorldSurface.quad(b,x==0?k.outer:k.inner,true,new double[]{x,y,6,0,16-y},new double[]{x,t,6,0,16-t},new double[]{x,t,10,4,16-t},new double[]{x,y,10,4,16-y});
-        WorldSurface.quad(b,r==16?k.outer:k.inner,false,new double[]{r,y,6,0,16-y},new double[]{r,t,6,0,16-t},new double[]{r,t,10,4,16-t},new double[]{r,y,10,4,16-y});
+        if(k.front!=null)quad(b,k.front,false,new double[]{x,y,6+inset,u0,v1},new double[]{x,t,6+inset,u0,v0},new double[]{r,t,6+inset,u1,v0},new double[]{r,y,6+inset,u1,v1});
+        if(k.front!=null)quad(b,k.front,true,new double[]{x,y,10-inset,u0,v1},new double[]{x,t,10-inset,u0,v0},new double[]{r,t,10-inset,u1,v0},new double[]{r,y,10-inset,u1,v1});
+        quad(b,y==0?k.outer:k.inner,false,new double[]{x,y,6,x,0},new double[]{r,y,6,r,0},new double[]{r,y,10,r,4},new double[]{x,y,10,x,4});
+        quad(b,t==16?k.outer:k.inner,true,new double[]{x,t,6,x,0},new double[]{r,t,6,r,0},new double[]{r,t,10,r,4},new double[]{x,t,10,x,4});
+        quad(b,x==0?k.outer:k.inner,true,new double[]{x,y,6,0,16-y},new double[]{x,t,6,0,16-t},new double[]{x,t,10,4,16-t},new double[]{x,y,10,4,16-y});
+        quad(b,r==16?k.outer:k.inner,false,new double[]{r,y,6,0,16-y},new double[]{r,t,6,0,16-t},new double[]{r,t,10,4,16-t},new double[]{r,y,10,4,16-y});
     }
 }

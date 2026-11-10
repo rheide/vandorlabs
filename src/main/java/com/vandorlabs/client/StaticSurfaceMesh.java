@@ -105,6 +105,17 @@ final class StaticSurfaceMesh {
     StaticSurfaceMesh outlineFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,net.minecraft.client.renderer.texture.TextureAtlasSprite exterior,
             boolean hideLeft,boolean hideRight,boolean hideFront,boolean hideBack,boolean hideLower,boolean hideUpper,int rowAxis){return outlineFrame(sprite,hideLeft,hideRight,hideFront,hideBack,hideLower,hideUpper,rowAxis,false,pane,interior,exterior);}
     StaticSurfaceMesh outlineFlatFrame(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,net.minecraft.client.renderer.texture.TextureAtlasSprite exterior){return outlineFrame(sprite,false,false,false,false,false,false,1,true,pane,interior,exterior);}
+    private static final com.vandorlabs.render.PanelTextureMesh.Sink<BufferBuilder,net.minecraft.client.renderer.texture.TextureAtlasSprite> FRAME_VERTEX=new com.vandorlabs.render.PanelTextureMesh.Sink<BufferBuilder,net.minecraft.client.renderer.texture.TextureAtlasSprite>(){
+        public void atlas(BufferBuilder buffer,net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,double x,double y,double z,double u,double v,float nx,float ny,float nz){
+            if(buffer instanceof GlassFrameMesh.Sprites)((GlassFrameMesh.Sprites)buffer).texture(sprite);
+            buffer.pos(x,y,z).tex(u,v).normal(nx,ny,nz).endVertex();
+        }
+        public void pixel(BufferBuilder buffer,net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,double x,double y,double z,double u,double v,float nx,float ny,float nz){atlas(buffer,sprite,x,y,z,sprite.getInterpolatedU(u),sprite.getInterpolatedV(v),nx,ny,nz);}
+    };
+    /** Retain the authored sprite on each corner/junction face while reusing the exact outline emitter. */
+    void emitFlatFrame(BufferBuilder buffer,net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,net.minecraft.client.renderer.texture.TextureAtlasSprite pane,net.minecraft.client.renderer.texture.TextureAtlasSprite interior,net.minecraft.client.renderer.texture.TextureAtlasSprite exterior){
+        com.vandorlabs.render.PanelOutlineFrame.emit(FRAME_VERTEX,buffer,FRAME_TEXTURES,vertices,sprite,pane,interior,exterior,false,false,false,false,false,false,1,true);
+    }
     private static final com.vandorlabs.render.PanelOutlineFrame.Textures<net.minecraft.client.renderer.texture.TextureAtlasSprite> FRAME_TEXTURES=new com.vandorlabs.render.PanelOutlineFrame.Textures<net.minecraft.client.renderer.texture.TextureAtlasSprite>(){
         public net.minecraft.client.renderer.texture.TextureAtlasSprite edge(net.minecraft.client.renderer.texture.TextureAtlasSprite sprite,double[] a,double[] b){return FrameEdgeTextures.edge(sprite,a,b);}
         public boolean authored(net.minecraft.client.renderer.texture.TextureAtlasSprite original,net.minecraft.client.renderer.texture.TextureAtlasSprite edge){return edge!=original||original.getIconName().contains("/frames/");}
@@ -119,12 +130,16 @@ final class StaticSurfaceMesh {
 
     /** Apply the standard horizontal housing transform while appending to Forge's shared buffer. */
     void drawPlaced(BufferBuilder buffer,double x,double y,double z,int rotation,int light){
+        drawPlacedColored(buffer,x,y,z,rotation,light,1F);
+    }
+    /** Static glazing shares the placement path while retaining per-pane opacity. */
+    void drawPlacedColored(BufferBuilder buffer,double x,double y,double z,int rotation,int light,float opacity){
         boolean normals=buffer.getVertexFormat().hasNormal();
         for(int i=0;i<vertices.length;i+=8){
             double a=vertices[i]/16D,b=vertices[i+1]/16D,c=vertices[i+2]/16D,rx=a,rz=c;
             float nx=vertices[i+5],ny=vertices[i+6],nz=vertices[i+7],fx=nx,fz=nz;
             switch(rotation){case 1:rx=c;rz=1-a;fx=nz;fz=-nx;break;case 2:rx=1-a;rz=1-c;fx=-nx;fz=-nz;break;case 3:rx=1-c;rz=a;fx=-nz;fz=nx;break;default:break;}
-            buffer.pos(x+rx,y+b,z+rz).color(255,255,255,255).tex(vertices[i+3],vertices[i+4]).lightmap(light>>>16,light&65535);
+            buffer.pos(x+rx,y+b,z+rz).color(1F,1F,1F,opacity).tex(vertices[i+3],vertices[i+4]).lightmap(light>>>16,light&65535);
             if(normals)buffer.normal(fx,ny,fz);buffer.endVertex();
         }
     }

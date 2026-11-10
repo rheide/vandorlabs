@@ -65,11 +65,20 @@ final class DenseRenderChecks {
         GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState saved=new TurntableRenderState()){
             mc.entityRenderer.disableLightmap();GlStateManager.disableFog();GlStateManager.enableTexture2D();GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.disableLighting();
-            for(boolean rotated:new boolean[]{false,true})for(int depth=0;depth<=2;depth++){
+            int screen=-1;for(int i=0;i<ScreenHousingTextures.BUILTIN_COUNT;i++)if(ScreenHousingTextures.visible(i)&&"Screens".equals(ScreenHousingTextures.category(i))){screen=i;break;}
+            require(screen>=0,"missing static screen fixture");
+            int copied=CustomBlockMaterials.identifier(net.minecraft.init.Blocks.IRON_BLOCK,0);
+            for(String profile:new String[]{"stock","material","screen","mixed"})for(boolean rotated:new boolean[]{false,true})for(int depth=0;depth<=2;depth++){
+                String scene=profile+"-"+rotated+"-"+depth;
                 IBlockState state=Block.getBlockFromName("vandorlabs:programmable_glass").getDefaultState().withProperty(com.vandorlabs.blocks.BlockGlassWall.ROTATED,rotated).withProperty(com.vandorlabs.blocks.BlockGlassWall.DEPTH,depth);
                 List<VehicleStructure.Cell> cells=new ArrayList<>();
                 for(int layer=0;layer<3;layer++)for(int x=0;x<6;x++)for(int y=0;y<12;y++){
-                    BlockPos p=rotated?new BlockPos(layer*2,y,x):new BlockPos(x,y,layer*2);TileEntityProgrammableGlass t=new TileEntityProgrammableGlass();t.setPos(p);t.setAppearance(layer%3,false);t.setShade(layer==0?0:layer==1?12:14);cells.add(new VehicleStructure.Cell(p,state,t.writeToNBT(new NBTTagCompound())));
+                    BlockPos p=rotated?new BlockPos(layer*2,y,x):new BlockPos(x,y,layer*2);TileEntityProgrammableGlass t=new TileEntityProgrammableGlass();t.setPos(p);t.setAppearance(layer%3,false);
+                    t.setShade((x+6*y+7*layer)%GlassTextures.IDS.length);t.setTextureLayout(depth);
+                    int kind=profile.equals("mixed")?layer:profile.equals("material")?1:profile.equals("screen")?2:0;
+                    if(kind!=0)t.setMaterial(kind==1?copied:screen);
+                    t.glassPlayback.set(1,1);t.setPanelFacing(rotated?(layer%2==0?EnumFacing.WEST:EnumFacing.EAST):(layer%2==0?EnumFacing.NORTH:EnumFacing.SOUTH));
+                    cells.add(new VehicleStructure.Cell(p,state,t.writeToNBT(new NBTTagCompound())));
                 }
                 VehicleWorld world=new VehicleWorld(mc.world,VehicleStructure.display(cells));world.origin=new BlockPos(0,80,0);dispatcher.world=world;dispatcher.entityX=rotated?-6:3;dispatcher.entityY=6;dispatcher.entityZ=rotated?3:-6;
                 GlStateManager.loadIdentity();GlStateManager.rotate(8,1,0,0);if(rotated)GlStateManager.rotate(90,0,1,0);GlStateManager.translate(-3,-6,-3);
@@ -80,11 +89,11 @@ final class DenseRenderChecks {
                     GlazingRenderOrder.end();
                 };
                 GlazingRenderOrder.batchPanes=false;BufferedImage before=image(mc,f,draw);long[] baseline=sample(draw);
-                GlazingRenderOrder.batchPanes=true;BufferedImage after=image(mc,f,draw);int difference=significantDifference(before,after);require(difference==0,"glass batching changed pixels rotated="+rotated+" depth="+depth+" difference="+difference);
-                require(GlassPaneBatch.panes==216&&GlassPaneBatch.draws==1,"glass did not batch actual ordered dispatcher panes="+GlassPaneBatch.panes+" draws="+GlassPaneBatch.draws);
-                long[] batched=sample(draw);csv.println("glass-"+rotated+"-"+depth+",216,216,1,"+baseline[0]+","+batched[0]+","+baseline[1]+","+batched[1]+","+difference);csv.flush();
-                javax.imageio.ImageIO.write(before,"png",new File(out,"density-glass-"+rotated+"-"+depth+"-before.png"));javax.imageio.ImageIO.write(after,"png",new File(out,"density-glass-"+rotated+"-"+depth+"-after.png"));
-                System.out.println("[vandorlabs][reprolab] dense-glass PASS rotated="+rotated+" depth="+depth+" calls=216->1 pixel-difference="+difference+" before-ns="+baseline[0]+" after-ns="+batched[0]);
+                GlazingRenderOrder.batchPanes=true;BufferedImage after=image(mc,f,draw);int difference=significantDifference(before,after);require(difference==0,"glass batching changed pixels scene="+scene+" difference="+difference);
+                require(GlassPaneBatch.panes==216&&GlassPaneBatch.draws==1,"glass did not batch actual ordered dispatcher scene="+scene+" panes="+GlassPaneBatch.panes+" draws="+GlassPaneBatch.draws);
+                long[] batched=sample(draw);csv.println("glass-"+scene+",216,216,1,"+baseline[0]+","+batched[0]+","+baseline[1]+","+batched[1]+","+difference);csv.flush();
+                javax.imageio.ImageIO.write(before,"png",new File(out,"density-glass-"+scene+"-before.png"));javax.imageio.ImageIO.write(after,"png",new File(out,"density-glass-"+scene+"-after.png"));
+                System.out.println("[vandorlabs][reprolab] dense-glass PASS scene="+scene+" calls=216->1 pixel-difference="+difference+" before-ns="+baseline[0]+" after-ns="+batched[0]);
                 TEAnimatedScreenSelector.unloadGroups(world);GlassSurfaceGroups.unload(world);
             }
         }finally{GlazingRenderOrder.batchPanes=oldBatch;GlazingRenderOrder.end();net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);dispatcher.world=old;dispatcher.entityX=oldX;dispatcher.entityY=oldY;dispatcher.entityZ=oldZ;GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);f.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}

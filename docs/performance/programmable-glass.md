@@ -2,11 +2,32 @@
 
 ## Current rendering paths
 
-Ordinary stock-glass panes already share a sorted draw batch. Selected custom
-frames use cached CPU meshes but still submit separate tile-renderer draws.
+Ordinary transparent stock-glass colours share a sorted draw batch. Static
+selected materials and Screens in static playback mode also enter that batch,
+using the existing mapped pane geometry and per-pane opacity. Stretch, Tile and
+Fit artwork retain their joined layouts, inset and depth transforms. Shader
+batches split at block-state changes to preserve metadata-dependent aliases.
+Animated or off Screens, opaque panes, fluids and junction panes retain their
+existing renderer and sorted placement.
+
+Stationary custom flat frames and regular Programmable Glass L, T and cross
+junction frames are published as immutable chunk meshes. The client prepares
+geometry and owner lighting; chunk workers consume snapshots from unlisted
+extended state. Tile frame drawing remains active until the replacement section
+has actually uploaded. Edits, joins, lighting changes, resource/format reloads and
+world/frustum changes invalidate publication. Queued rebuild work and retained
+mesh bytes are bounded. Moving VehicleWorld frames retain their tile renderer;
+the separate Programmable Diagonal Glass renderer is unchanged.
+
+Each frame quad retains its actual atlas sprite. Flat frame artwork with partial
+alpha stays in the translucent terrain layer; opaque or binary-alpha artwork
+uses the cutout layer. Junction frames preserve their previous cutout behavior.
+Two-sided geometry and the previous owner/emissive light values are retained.
+Stock flat frames continue to use their original baked model.
+
 Joined interior cells can have no frame vertices. Screens also omit borders
-inside joined surfaces. Both empty cases now return before lighting, texture
-binding and graphics-state changes.
+inside joined surfaces. Both empty cases return before lighting, texture binding
+and graphics-state changes.
 
 Mixed-orientation glazing builds a finite projected-overlap graph each frame.
 The renderer now chooses the horizontal or vertical sweep with fewer interval
@@ -20,7 +41,11 @@ its entire mesh on each rendered frame. The shared `programmable_viewscreen`
 tile ID also belongs to Programmable Blocks and other housings: tile-ID counts
 must not be interpreted as actual screen counts.
 
-## Measured scope
+## Release 2.9 measurements before this patch
+
+The measurements below describe the released 2.9 artifact, before the static
+material batching, chunk-frame publication and housing lighting changes above.
+They do not measure the speedup from this patch.
 
 An isolated copied scene was measured at camera feet `(1228,102,-12146)`, yaw
 `-146`, pitch `7`, using OptiFine G5, six-chunk render distance, 70-degree FOV,
@@ -73,24 +98,15 @@ bottleneck on a hardware GPU.
 
 ## Larger optimizations to investigate
 
-1. Publish static custom glass frames into chunk geometry, following the existing
-   fixed-canopy publication pattern. This removes per-tile submission and state
-   changes, including shader passes. Preserve authored alpha-cutout borders,
-   emissive lighting, front/interior/exterior materials, depth offsets, rotations,
-   joined corners and the carried-world fallback. Do not suppress the tile path
-   before valid replacement geometry can be rendered. Preserve each quad's
-   atlas sprite identity for shader/material handling; packed UV coordinates alone
-   are insufficient. Compare chunk lighting against the current tile-light path
-   in bright, dark and emissive fixtures.
-2. Cache packed pane batches or immutable GPU meshes for static arrangements.
+1. Cache packed pane batches or immutable GPU meshes for static arrangements.
    Cache geometry independently of transparency ordering. Camera motion can change
    ordering without changing geometry. Keep shadow and main-view state separate;
    preserve shader block/entity payloads, and invalidate on format/resource reload.
-3. Measure retained geometry and graph reuse before adding a persistent scene
+2. Measure retained geometry and graph reuse before adding a persistent scene
    cache. Invalidation must cover neighbor edits, artwork/tint/frame changes,
    chunk load/unload, world replacement, lighting, carried tile replacement and
    camera projection changes. Bound caches by bytes, not just entry count.
-4. Use a glazing-omission diagnostic to bound potential savings before undertaking
+3. Use a glazing-omission diagnostic to bound potential savings before undertaking
    a large rewrite. If terrain, shader composites or other mods dominate, glass
    caching alone cannot restore the reported frame rate. Omission changes the
    image and must never be presented as a production optimization.
@@ -105,7 +121,7 @@ It removes geometry and changes its occlusion/shading effects, so it is not a
 prediction of what caching alone can recover and does not preserve the image.
 There remains a large non-glazing frame cost in this software-rendered scene.
 
-## Validation
+## Release 2.9 baseline validation
 
 The Java 8 candidate passes `testGlazingOrder` (1,139,886 graph assertions),
 `testGlazingSweep` (258 projected-interval cases, including touching, empty and
@@ -119,3 +135,22 @@ Validated Forge 1.12.2 artifact SHA-256:
 `5b692f889b7622c433e23310f3915f7db00faab59eecfd4b3332af331f485ea6`.
 Benchmarks ran on isolated copies. Deployment, when authorized, uses the exact
 validated artifact after graceful shutdown and a verified offline backup.
+
+## Focused checks for the rendering changes
+
+The housing lighting checks compare physical face corners and complete vertex
+records against vanilla FaceBakery, including rotated top/bottom faces, slabs,
+storage and expanded shader formats. Deliberately displaced floor corners form
+a negative control. The shader startup fixture also checks vertex lighting
+through the installed terrain renderer before and after a resource reload.
+
+The dense-render fixture compares legacy and batched pane pixels in 24 scenes:
+stock colours, selected static materials, static Screens and mixed panes, both
+orientations and all depth/texture-layout modes. Its draw-count and CPU samples
+are diagnostics, not hardware FPS claims.
+
+The opt-in glass-frame fixture checks native upload publication, edits, joins,
+resource reload, stock fallback and captured frame geometry. Plain Forge also
+compares legacy and chunk-model frame pixels in bright/dark and emissive scenes.
+The native-only variant keeps publication and geometry checks under an active
+shader pack, where a manual fixed-function framebuffer comparison is unsuitable.

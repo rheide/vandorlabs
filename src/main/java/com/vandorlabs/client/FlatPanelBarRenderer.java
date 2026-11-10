@@ -116,6 +116,8 @@ final class FlatPanelBarRenderer {
     static boolean render(TileEntity root,IBlockState state,double x,double y,double z) {
         BlockProgrammableWall.FlatCorner bar=PanelJoins.flatBar(state,root.getWorld(),root.getPos());
         if(bar==null)return false;
+        boolean frameBaked=root instanceof TileEntityProgrammableGlass&&GlassFrameChunks.rendered((TileEntityProgrammableGlass)root);
+        if(frameBaked&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==0){TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)root;if(!GlassMaterials.opaque(glass.getMaterial(),glass.getTint()))return true;}
         EnumFacing facing=PanelJoins.flatFacing(state,root.getWorld(),root.getPos());
         Material[] materials={material(root,state),barMaterial(root,state,bar.frontArm)};
         int[] turns={0,3};
@@ -131,7 +133,7 @@ final class FlatPanelBarRenderer {
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
         } else {GlStateManager.disableBlend();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);}
         for(int i=0;i<2;i++) {
-            Material m=materials[i];StaticSurfaceMesh mesh=part(transparent?m.transparent:m.opaque,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width,!transparent && m.cap==null?.02:0);
+            Material m=materials[i];StaticSurfaceMesh mesh=part(transparent?m.transparent:frameBaked?null:m.opaque,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width,!transparent && m.cap==null?.02:0);
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             if(transparent){
                 if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0){GlStateManager.depthMask(false);drawPane(mesh,root,sky,GlassInsertLighting.block(root,block),m.opacity);}

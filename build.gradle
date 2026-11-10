@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '2.9'
+version = '2.9.1'
 // Forge reads @Mod.version independently of the expanded mcmod.info metadata.
 def declaredModVersion = file('src/main/java/com/vandorlabs/VandorLabs.java').getText('UTF-8') =~ /public static final String VERSION = "([^"]+)";/
 if (!declaredModVersion.find() || declaredModVersion.group(1) != version.toString()) {

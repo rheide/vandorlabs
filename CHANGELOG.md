@@ -1,5 +1,11 @@
 # Changelog
 
+## 2.9.1
+
+- Enable smooth lighting for programmable housing models and restore vanilla face-corner ordering after rotation, including floor and ceiling faces, while preserving texture coordinates and extended shader vertex data.
+- Batch static selected glass materials and static screen artwork with ordinary transparent panes, retaining per-pane tint, depth and joined Stretch/Tile/Fit mapping. Preserve shader material boundaries and the animated-display fallback.
+- Publish stationary custom Programmable Glass frames and regular glass junction frames into chunk geometry. Preserve each face's sprite, alpha and lighting, and retain tile rendering until replacement chunk geometry is uploaded and for moving vehicle worlds.
+
 ## 2.9
 
 ### New features and artwork

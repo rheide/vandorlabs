@@ -76,8 +76,21 @@ final class HousingModelChecks {
             BakedQuad a=expected.get(i),b=actual.get(i);
             require(a.getSprite()==b.getSprite() && a.getFace()==b.getFace() && a.getTintIndex()==b.getTintIndex()
                     && a.shouldApplyDiffuseLighting()==b.shouldApplyDiffuseLighting() && a.getFormat().equals(b.getFormat())
-                    && Arrays.equals(a.getVertexData(),b.getVertexData()),"housing quad data or texture changed");
+                    && sameCyclicRecords(a.getVertexData(),b.getVertexData()),"housing quad data or texture changed");
         }
+    }
+    /** AO requires a canonical first corner. A cyclic change must keep the
+     * complete vertex records and winding, including each UV-to-position pair. */
+    private static boolean sameCyclicRecords(int[] a,int[] b) {
+        if(a.length!=b.length)return false;
+        int stride=a.length/4;
+        for(int first=0;first<4;first++) {
+            boolean equal=true;
+            for(int vertex=0;vertex<4&&equal;vertex++)for(int word=0;word<stride;word++)
+                if(a[((vertex+first)&3)*stride+word]!=b[vertex*stride+word]){equal=false;break;}
+            if(equal)return true;
+        }
+        return false;
     }
     private static void require(boolean value,String message){if(!value)throw new AssertionError(message);}
 }

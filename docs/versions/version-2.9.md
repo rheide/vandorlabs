@@ -2,6 +2,10 @@
 
 Version 2.9 expands Segmented Doors with authored gates, panel finishes and finer bending motion, adds new ordinary and Large Door artwork, and improves placement, copying and vehicle parking. Forge **1.12.2** remains the main release target. The **NeoForge 1.21.1** build is experimental and does not yet provide complete feature parity.
 
+## 2.9.1 rendering update
+
+Programmable Block, Slab and Storage use smooth ambient lighting with corrected face corners after rotation. Static selected glass materials and static Screen artwork share transparent-pane batches, and stationary custom Programmable Glass frames use chunk geometry. Moving vehicle frames retain tile rendering. See the [glass rendering notes](../performance/programmable-glass.md) for scope and baseline measurements.
+
 ## Sliding gates and Segmented Doors
 
 Build **Picket**, **Industrial** and **Lattice** gates from ordinary Segmented Door blocks. Matching models join horizontally and vertically while retaining their bars and openings. Choose **Slide: Up / Down / Left / Right** and **Angle: Straight / Perpendicular**. Straight gates retract along their plane; Perpendicular gates turn behind the opening.

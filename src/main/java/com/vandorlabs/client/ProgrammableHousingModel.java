@@ -8,6 +8,7 @@ import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.block.BlockSlab;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.EnumFaceDirection;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.block.model.IBakedModel;
 import net.minecraft.client.renderer.block.model.ItemCameraTransforms;
@@ -179,10 +180,46 @@ public final class ProgrammableHousingModel implements IBakedModel {
                 data[offset + uv + 1] = Float.floatToRawIntBits(sprite.getInterpolatedV(v.v));
                 if(format.hasNormal())data[offset+format.getNormalOffset()/4]=packedNormal;
             }
+            canonicalizeCorners(data, normal, stride);
             // Keep the geometric face: vanilla and OptiFine use it to choose
             // the visible surface's light sample, independently of its neighbours.
             return retainedQuad(data, -1, normal,
                     sprite, false, format);
+    }
+
+    /** Vanilla's AO arrays address FaceBakery corners, not an arbitrary cyclic
+     * ordering. Rotating the housing changes the first UP/DOWN corner even
+     * though its normal stays vertical. Move complete records so artwork,
+     * normals and shader attributes remain attached to their physical corners. */
+    private static void canonicalizeCorners(int[] data, EnumFacing face, int stride) {
+        float[] bounds = new float[6];
+        bounds[EnumFacing.WEST.getIndex()] = bounds[EnumFacing.DOWN.getIndex()]
+                = bounds[EnumFacing.NORTH.getIndex()] = Float.POSITIVE_INFINITY;
+        bounds[EnumFacing.EAST.getIndex()] = bounds[EnumFacing.UP.getIndex()]
+                = bounds[EnumFacing.SOUTH.getIndex()] = Float.NEGATIVE_INFINITY;
+        for (int vertex = 0; vertex < 4; vertex++) {
+            int at = vertex * stride;
+            float x = Float.intBitsToFloat(data[at]);
+            float y = Float.intBitsToFloat(data[at + 1]);
+            float z = Float.intBitsToFloat(data[at + 2]);
+            bounds[EnumFacing.WEST.getIndex()] = Math.min(bounds[EnumFacing.WEST.getIndex()], x);
+            bounds[EnumFacing.EAST.getIndex()] = Math.max(bounds[EnumFacing.EAST.getIndex()], x);
+            bounds[EnumFacing.DOWN.getIndex()] = Math.min(bounds[EnumFacing.DOWN.getIndex()], y);
+            bounds[EnumFacing.UP.getIndex()] = Math.max(bounds[EnumFacing.UP.getIndex()], y);
+            bounds[EnumFacing.NORTH.getIndex()] = Math.min(bounds[EnumFacing.NORTH.getIndex()], z);
+            bounds[EnumFacing.SOUTH.getIndex()] = Math.max(bounds[EnumFacing.SOUTH.getIndex()], z);
+        }
+        int[] original = data.clone();
+        EnumFaceDirection corners = EnumFaceDirection.getFacing(face);
+        for (int vertex = 0; vertex < 4; vertex++) {
+            EnumFaceDirection.VertexInformation corner = corners.getVertexInformation(vertex);
+            int source = 0;
+            while (source < 4 && (Float.intBitsToFloat(original[source * stride]) != bounds[corner.xIndex]
+                    || Float.intBitsToFloat(original[source * stride + 1]) != bounds[corner.yIndex]
+                    || Float.intBitsToFloat(original[source * stride + 2]) != bounds[corner.zIndex])) source++;
+            if (source == 4) throw new IllegalStateException("Housing face is not an axis-aligned rectangle");
+            System.arraycopy(original, source * stride, data, vertex * stride, stride);
+        }
     }
 
     /** OptiFine may normalize BakedQuad's internal array from a global shader flag. */
@@ -195,7 +232,7 @@ public final class ProgrammableHousingModel implements IBakedModel {
         return EnumFacing.getFront(com.vandorlabs.render.HousingTexturePolicy.housingWorldFace(face.getIndex(),facing.getIndex()));
     }
 
-    @Override public boolean isAmbientOcclusion() { return false; }
+    @Override public boolean isAmbientOcclusion() { return true; }
     @Override public boolean isGui3d() { return delegate.isGui3d(); }
     @Override public boolean isBuiltInRenderer() { return false; }
     @Override public TextureAtlasSprite getParticleTexture() { return delegate.getParticleTexture(); }

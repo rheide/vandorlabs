@@ -22,14 +22,27 @@ import net.minecraft.world.IBlockAccess;
 /** One connected wall block with two detail sizes, legacy metadata support and a configurable metal frame. */
 public final class BlockProgrammableGlass extends BlockGlassWall {
     public static final PropertyInteger SIZE = PropertyInteger.create("size", 0, 2);
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Object> FRAME_MESH=new net.minecraftforge.common.property.IUnlistedProperty<Object>(){
+        public String getName(){return "glass_frame_mesh";}
+        public boolean isValid(Object value){return value!=null;}
+        public Class<Object> getType(){return Object.class;}
+        public String valueToString(Object value){return value.toString();}
+    };
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> FRAME_LIGHT=new net.minecraftforge.common.property.IUnlistedProperty<Integer>(){
+        public String getName(){return "glass_frame_light";}
+        public boolean isValid(Integer value){return value!=null;}
+        public Class<Integer> getType(){return Integer.class;}
+        public String valueToString(Integer value){return value.toString();}
+    };
 
     public BlockProgrammableGlass(String name) {
         super(name);
         setDefaultState(getDefaultState().withProperty(SIZE, 1));
     }
     @Override protected BlockStateContainer createBlockState() {
-        return new BlockStateContainer(this, ROTATED, DEPTH, TOP, BOTTOM, LEFT, RIGHT,
-                INNER_TL, INNER_TR, INNER_BL, INNER_BR, SIZE);
+        return new net.minecraftforge.common.property.ExtendedBlockState(this,
+                new net.minecraft.block.properties.IProperty[]{ROTATED, DEPTH, TOP, BOTTOM, LEFT, RIGHT, INNER_TL, INNER_TR, INNER_BL, INNER_BR, SIZE},
+                new net.minecraftforge.common.property.IUnlistedProperty[]{FRAME_MESH,FRAME_LIGHT});
     }
     @Override public int getMetaFromState(IBlockState state) {
         int rotated = state.getValue(ROTATED) ? 1 : 0;
@@ -67,6 +80,21 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         return new TileEntityProgrammableGlass();
     }
     @Override public BlockRenderLayer getBlockLayer() { return BlockRenderLayer.SOLID; }
+    @Override public boolean canRenderInLayer(IBlockState state,BlockRenderLayer layer){return layer==BlockRenderLayer.SOLID||layer==BlockRenderLayer.CUTOUT_MIPPED||layer==BlockRenderLayer.TRANSLUCENT;}
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
+        TileEntity raw=world.getTileEntity(pos);
+        if(!(raw instanceof TileEntityProgrammableGlass)||world instanceof com.vandorlabs.vehicle.VehicleWorld)return state;
+        TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;Object mesh=tile.frameChunkMesh;
+        if(mesh==null){if(tile.frameChunkPublication==null&&VandorLabs.proxy!=null)VandorLabs.proxy.glassFrameAppearanceChanged(tile);return state;}
+        int light=world.getCombinedLight(pos,tile.frameChunkLight);if(tile.frameChunkLight>0)light=(light&0xffff0000)|240;
+        return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(FRAME_MESH,mesh).withProperty(FRAME_LIGHT,light);
+    }
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @Override public int getPackedLightmapCoords(IBlockState state,IBlockAccess world,BlockPos pos){
+        if(state instanceof net.minecraftforge.common.property.IExtendedBlockState){Integer light=((net.minecraftforge.common.property.IExtendedBlockState)state).getValue(FRAME_LIGHT);if(light!=null)return light;}
+        return super.getPackedLightmapCoords(state,world,pos);
+    }
     @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,
             World world, BlockPos pos, EntityPlayer player) {
         ItemStack stack = new ItemStack(this);

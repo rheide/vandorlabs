@@ -16,6 +16,7 @@ public class CommonProxy {
     public boolean canSampleDisplayPower(){return true;}
     public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}
+    public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
     /** Physical server and integrated-server light reads use only shared APIs. */
     public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return sharedVehicleCombinedLight(world,pos,minimum);}
     public static int sharedVehicleCombinedLight(World world,BlockPos pos,int minimum){

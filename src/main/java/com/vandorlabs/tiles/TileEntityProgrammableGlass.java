@@ -12,6 +12,9 @@ import net.minecraft.world.World;
 public final class TileEntityProgrammableGlass extends TileEntity {
     public final FrameAppearance frameAppearance=new FrameAppearance();
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
+    /** Client publication only; never serialized into block, item or vehicle data. */
+    public volatile Object frameChunkMesh,frameChunkPublication;
+    public volatile int frameChunkLight;
 
     /** World geometry follows loaded chunks and the view frustum, like Programmable Walls. */
     @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
@@ -19,7 +22,10 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
         return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
     }
-    @Override public void markDirty(){super.markDirty();GlassMaterials.changed();}
+    private void frameChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.glassFrameAppearanceChanged(this);}
+    @Override public void markDirty(){super.markDirty();GlassMaterials.changed();frameChanged();}
+    @Override public void invalidate(){super.invalidate();frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
+    @Override public void onChunkUnload(){super.onChunkUnload();frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
     public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
     private int shade;
     private int material=-1;
@@ -111,6 +117,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     }
     @Override public void onLoad() {
         super.onLoad();
+        frameChanged();
         if ((!restored || legacySize) && world != null) {
             size = Math.min(1,world.getBlockState(pos).getValue(
                     com.vandorlabs.blocks.BlockProgrammableGlass.SIZE));
@@ -126,6 +133,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     }
     @Override public void handleUpdateTag(NBTTagCompound tag) {
         readFromNBT(tag);
+        frameChanged();
         if (world != null) world.markBlockRangeForRenderUpdate(
                 pos.add(-1, -1, -1), pos.add(1, 1, 1));
     }
