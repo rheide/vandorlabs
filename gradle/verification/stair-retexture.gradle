@@ -1,0 +1,17 @@
+task testStairRetexturing(type: JavaExec) {
+    group = 'verification'
+    description = 'Check bounded stair material caches against the frozen renderer, formats, items, concurrent workers and preparation costs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StairRetextureChecks'
+}
+check.dependsOn testStairRetexturing
+
+task testStairForgeRetexturing(type: JavaExec) {
+    group = 'verification'
+    description = 'Check actual Forge JSON stair bake eligibility, animation/seed fallbacks and paired preparation costs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StairRetextureChecks'
+    args 'forge-only'
+}

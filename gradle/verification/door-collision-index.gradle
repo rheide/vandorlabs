@@ -1,0 +1,8 @@
+task testDoorCollisionIndex(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare ordered door collision/ray results and broad-phase costs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorCollisionIndexChecks'
+}
+check.dependsOn testDoorCollisionIndex

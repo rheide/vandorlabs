@@ -32,6 +32,18 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     TileEntityTokenSlot forDoor(TileEntitySpaceDoor owner,int side){door=owner;visualSlot=side+1;return this;}
     public int visualSlot(){return visualSlot;}
     protected boolean installed(){return world!=null&&world.getTileEntity(pos)==(screen!=null?screen:door==null?this:door);}
+    private net.minecraft.world.World authorityWorld(){return world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;}
+    /** A carried view stays remote even on the server; only its live owner may change inventory. */
+    boolean authoritative(){
+        net.minecraft.world.World physical=authorityWorld();
+        if(physical==null||physical.isRemote)return false;
+        if(door!=null&&(door.isInvalid()||!installed()))return false;
+        if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))return true;
+        com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)world;
+        com.vandorlabs.vehicle.EntityGroundVehicle craft=view.craft;
+        return craft!=null&&craft.view==view&&craft.world==physical&&!craft.isDead
+                &&!craft.ownershipBlocked&&!craft.transferInProgress&&installed();
+    }
     protected int returnPulseTicks(){return door==null?20:100;}
     public int logoDesign(){if((effectiveAllowed()&1)!=0)return 0;if((effectiveAllowed()&(1<<logoDesign))!=0)return logoDesign;for(int i=0;i<7;i++)if((effectiveAllowed()&(1<<i))!=0)return i;return 0;}
     public static int singleCompany(int mask){return com.vandorlabs.credentials.CredentialCatalog.singleCompany(mask);}
@@ -47,7 +59,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     public boolean indicatorOn(){return getOutputLevel()>0;}
     public boolean matches(){return authorized(token);}
     public boolean rejected(){return world!=null&&world.getTotalWorldTime()<rejectedUntil;}
-    public void reject(){if(world!=null&&!world.isRemote){rejectedUntil=world.getTotalWorldTime()+12;changed(false);}}
+    public void reject(){if(authoritative()){rejectedUntil=world.getTotalWorldTime()+12;changed(false);}}
     public boolean returning(){return returnTo!=null&&!token.isEmpty();}
     private long insertionSequence;
     public long insertionStarted(){return insertStarted;}
@@ -55,8 +67,8 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     public float animationAge(float partial){return !token.isEmpty()&&world!=null?(float)Math.max(0,Math.min(20,world.getTotalWorldTime()-insertStarted+partial)):20;}
     /** Borrows exactly one real item, including in Creative, until the animation finishes. */
     public boolean insertToggle(EntityPlayer player,ItemStack stack){
-        if(world==null||world.isRemote||(behavior!=2&&behavior!=3)||!isEmpty()||!isUsableByPlayer(player)||!authorized(stack))return false;
-        token=stack.copy();token.setCount(1);stack.shrink(1);returnTo=player.getUniqueID();insertStarted=world.getTotalWorldTime();insertionSequence++;toggleApplied=false;changed(false);sound(net.minecraft.init.SoundEvents.BLOCK_IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
+        if(!authoritative()||(behavior!=2&&behavior!=3)||!isEmpty()||!isUsableByPlayer(player)||!authorized(stack))return false;
+        token=stack.copy();token.setCount(1);stack.shrink(1);returnTo=player.getUniqueID();insertStarted=world.getTotalWorldTime();insertionSequence++;toggleApplied=false;nextReturnAttempt=0;changed(false);sound(net.minecraft.init.SoundEvents.BLOCK_IRON_TRAPDOOR_OPEN,1.4F);schedule(8);return true;
     }
     private void sound(net.minecraft.util.SoundEvent sound,float pitch){if(world!=null&&!world.isRemote&&installed()&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.playSound(null,pos,sound,net.minecraft.util.SoundCategory.BLOCKS,.25F,pitch);}
     @Override public boolean isChannelLatch(){return false;}
@@ -78,13 +90,16 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
         publishedLevel=getOutputLevel();
     }
     public boolean expire(long now){
+        // Standalone save-data copies can advance their local timeline. They cannot
+        // return inventory without an installed world owner; live clients never advance it.
+        if(!authoritative()&&!(world==null&&door==null&&screen==null))return false;
         boolean dirty=false;
         if((behavior==1||behavior==3)&&pulseUntil>0&&now>=pulseUntil){pulseUntil=0;dirty=true;}
         if(returning()){
             if(!toggleApplied&&now>=insertStarted+8){toggleApplied=true;if((behavior==2||behavior==3)&&matches()){if(behavior==2){if(door==null)toggled=!toggled;else door.toggleCredential();}else pulseUntil=now+returnPulseTicks();sound(net.minecraft.init.SoundEvents.UI_BUTTON_CLICK,toggled?1.4F:.8F);}dirty=true;}
-            if(world!=null&&!world.isRemote&&installed()&&now>=insertStarted+20&&now>=nextReturnAttempt){
+            if(installed()&&now>=insertStarted+20&&now>=nextReturnAttempt){
                 nextReturnAttempt=now+20;
-                net.minecraft.server.MinecraftServer server=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance();
+                net.minecraft.server.MinecraftServer server=authorityWorld().getMinecraftServer();
                 EntityPlayer player=server==null?null:server.getPlayerList().getPlayerByUUID(returnTo);
                 if(player!=null&&!player.isDead&&hasRoom(player,token)){
                     ItemStack returned=token.copy();
@@ -103,18 +118,19 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     }
     private void schedule(int ticks){if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),door==null?ticks:1);}
     public void scheduledTick(){
-        if(world==null||world.isRemote)return;long now=world.getTotalWorldTime();expire(now);refresh();
+        if(!authoritative())return;long now=world.getTotalWorldTime();expire(now);refresh();
         // Minecraft coalesces scheduled updates at a position. An earlier pulse
         // may fire before a replacement token's deadline, so rearm the remainder.
         if(returning())schedule(now>=insertStarted+20?20:(int)Math.max(1,(toggleApplied?insertStarted+20:insertStarted+8)-now));
         else if((behavior==1||behavior==3)&&pulseUntil>now)schedule((int)Math.min(20,pulseUntil-now));
     }
     private void changed(boolean inserted){
-        if(world!=null&&(!world.isRemote||screen!=null&&world instanceof com.vandorlabs.vehicle.VehicleWorld&&!((com.vandorlabs.vehicle.VehicleWorld)world).parent.isRemote)){
+        if(authoritative()){
             if(inserted){insertStarted=world.getTotalWorldTime();insertionSequence++;}
             if(inserted&&matches()&&behavior==1){pulseUntil=world.getTotalWorldTime()+returnPulseTicks();schedule(returnPulseTicks());}
             if(token.isEmpty()&&behavior==1)pulseUntil=0;
-            refresh();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);
+            refresh();
+            if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);
         }
         markDirty();if(screen!=null)screen.chipChanged();
     }
@@ -128,7 +144,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);return writeReaderData(tag);}
     private NBTTagCompound writeReaderData(NBTTagCompound tag){tag.setInteger("TokenLogo",logoDesign);tag.setLong("TokenRejectedUntil",rejectedUntil);tag.setBoolean("ChipSlot",chip());tag.setBoolean("AnyToken",any);tag.setInteger("AllowedTokens",allowed);tag.setInteger("TokenBehavior",behavior);tag.setLong("TokenPulseUntil",pulseUntil);tag.setBoolean("TokenToggled",toggled);tag.setBoolean("TokenToggleApplied",toggleApplied);tag.setLong("TokenInsertStarted",insertStarted);tag.setLong("TokenInsertionSequence",insertionSequence);if(returnTo!=null)tag.setUniqueId("TokenReturnTo",returnTo);else{tag.removeTag("TokenReturnToMost");tag.removeTag("TokenReturnToLeast");}if(!token.isEmpty())tag.setTag("InsertedToken",token.writeToNBT(new NBTTagCompound()));else tag.removeTag("InsertedToken");return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);readReaderData(tag);}
-    private void readReaderData(NBTTagCompound tag){logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");insertionSequence=tag.getLong("TokenInsertionSequence");returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
+    private void readReaderData(NBTTagCompound tag){logoDesign=Math.max(0,Math.min(6,tag.getInteger("TokenLogo")));rejectedUntil=tag.getLong("TokenRejectedUntil");chip=tag.getBoolean("ChipSlot");any=!tag.hasKey("AnyToken")||tag.getBoolean("AnyToken");allowed=singleCompany(any?127:tag.hasKey("AllowedTokens")?tag.getInteger("AllowedTokens"):127);any=allowed==127;behavior=tag.getInteger("TokenBehavior");if(behavior<0||behavior>3)behavior=0;pulseUntil=tag.getLong("TokenPulseUntil");toggled=tag.getBoolean("TokenToggled");toggleApplied=tag.getBoolean("TokenToggleApplied");insertStarted=tag.getLong("TokenInsertStarted");insertionSequence=tag.getLong("TokenInsertionSequence");nextReturnAttempt=0;returnTo=tag.hasUniqueId("TokenReturnTo")?tag.getUniqueId("TokenReturnTo"):null;token=tag.hasKey("InsertedToken",10)?new ItemStack(tag.getCompoundTag("InsertedToken")):ItemStack.EMPTY;if(!token.isEmpty())token.setCount(1);else returnTo=null;}
     /** Move one physical mount when a joined assembly chooses a new owning module. */
     public boolean moveReaderTo(TileEntityTokenSlot target){
         if(target==this)return true;
@@ -141,7 +157,7 @@ public class TileEntityTokenSlot extends TileEntityRedstoneChannel implements II
     @Override public int getSizeInventory(){return 1;}
     @Override public boolean isEmpty(){return token.isEmpty();}
     @Override public ItemStack getStackInSlot(int slot){return slot==0?token:ItemStack.EMPTY;}
-    public ItemStack takeForDrop(){ItemStack result=token;token=ItemStack.EMPTY;returnTo=null;changed(false);return result;}
+    public ItemStack takeForDrop(){if((door!=null&&world!=null||world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!authoritative())return ItemStack.EMPTY;ItemStack result=token;token=ItemStack.EMPTY;returnTo=null;changed(false);return result;}
     @Override public ItemStack decrStackSize(int slot,int count){if(slot!=0||count<=0||returning())return ItemStack.EMPTY;return takeForDrop();}
     @Override public ItemStack removeStackFromSlot(int slot){return decrStackSize(slot,1);}
     @Override public void setInventorySlotContents(int slot,ItemStack stack){if(slot!=0||returning()||!stack.isEmpty()&&(!authorized(stack)||behavior>=2))return;boolean inserted=!stack.isEmpty()&&(token.isEmpty()||!ItemStack.areItemStacksEqual(token,stack));token=stack.copy();if(!token.isEmpty())token.setCount(1);changed(inserted);}

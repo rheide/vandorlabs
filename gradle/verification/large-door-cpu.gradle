@@ -1,0 +1,18 @@
+task testLargeDoorCollisionCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare Large Door collision partitions, cache invalidation and CPU costs with the released algorithm'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LargeDoorCollisionCpuChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+task testDoorXBatchTravel(type: JavaExec) {
+    group = 'verification'
+    description = 'Check fast Large Door X-panel travel against the ordinary renderer at intermediate and endpoint poses'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.DoorXBatchTravelChecks'
+}
+check.dependsOn testLargeDoorCollisionCpu, testDoorXBatchTravel

@@ -1,0 +1,17 @@
+task testGlassConfiguration(type: JavaExec) {
+    group = 'verification'
+    description = 'Check real frame-light propagation and batched settings notification/wire parity'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassConfigurationChecks'
+}
+
+task testPortholeLocality(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify complete porthole dependencies and edit-heavy component reuse'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PortholeLocalityChecks'
+}
+
+check.dependsOn testGlassConfiguration, testPortholeLocality

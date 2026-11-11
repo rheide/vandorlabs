@@ -51,6 +51,18 @@ final class HousingStateChecks {
         System.out.println("PASS: "+cases+" housing snapshots match Forge direct/map reads, transitions, clean states, external properties and concurrent publication");
     }
     private static void direct(IExtendedBlockState expected,IExtendedBlockState actual) {
+        // Probe every known absent property before the lazy Forge map is requested.
+        // In particular, slab/stair snapshots must reject JOINED rather than silently
+        // returning the cube default. Match the real container's exception and text.
+        net.minecraftforge.common.property.IUnlistedProperty<?>[] known={
+            ProgrammableHousingState.FINISH,ProgrammableHousingState.SIDE_FINISH,
+            ProgrammableHousingState.FACES,ProgrammableHousingState.TILE_SIDES,
+            ProgrammableHousingState.VISIBLE,ProgrammableHousingState.LIGHT,
+            ProgrammableHousingState.STAIR_GEOMETRY,ProgrammableHousingState.JOINED};
+        for(net.minecraftforge.common.property.IUnlistedProperty<?> property:known)if(!expected.getUnlistedNames().contains(property)){
+            sameFailure(()->expected.getValue(property),()->actual.getValue(property));
+            sameFailure(()->expected.withProperty(property,null),()->actual.withProperty(property,null));
+        }
         // These reads happen before asking for the complete unlisted map.
         for(net.minecraftforge.common.property.IUnlistedProperty<?> property:expected.getUnlistedNames()) {
             require(Objects.equals(expected.getValue(property),actual.getValue(property)),"direct unlisted read differs: "+actual.getBlock()+"/"+property.getName()+" expected="+expected.getValue(property)+" actual="+actual.getValue(property));

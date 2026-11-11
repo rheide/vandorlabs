@@ -27,7 +27,9 @@ public class ClientProxy extends CommonProxy {
     @Override public boolean canSampleDisplayPower(){return net.minecraft.client.Minecraft.getMinecraft().isCallingFromMinecraftThread();}
     @Override public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){com.vandorlabs.client.SurfaceArmClients.changed(tile);}
     @Override public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){com.vandorlabs.client.FixedCanopyChunks.changed(tile);}
-    @Override public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.client.GlassFrameChunks.changed(tile);}
+    @Override public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.client.GlassFrameChunks.changed(tile);com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);}
+    @Override public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){if(tile.getWorld()!=null&&tile.getWorld().isRemote)com.vandorlabs.client.GlassLightUpdates.schedule(tile);else super.glassLightRefreshNeeded(tile);}
+    @Override public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);}
     @Override public boolean glassCollectionOnly(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){return com.vandorlabs.client.ProgrammableGlassPasses.collectionOnly(tile);}
     @Override public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return world.isRemote?world.getCombinedLight(pos,minimum):super.vehicleCombinedLight(world,pos,minimum);}
     @Override public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){com.vandorlabs.client.ForeignBuildingVisuals.prepare(world);}
@@ -40,6 +42,7 @@ public class ClientProxy extends CommonProxy {
     @Override public double materialAspect(int choice){return com.vandorlabs.client.UnifiedTextureSprites.aspect(net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(choice)));}
     @Override public boolean customDoor(int choice){return com.vandorlabs.client.CustomBlockTextures.isDoor(choice);}
     @Override public void preInit(FMLPreInitializationEvent event) {
+        com.vandorlabs.client.GlassLightUpdates.install();
         com.vandorlabs.client.SharedTextureResources.install();
         com.vandorlabs.client.cockpits.CockpitModels.install();
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.CockpitItemModels());

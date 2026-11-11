@@ -167,7 +167,7 @@ public final class HousingBlockState extends ExtendedBlockState {
             if(property==ProgrammableHousingState.TILE_SIDES)return property.getType().cast(tileSides);
             if(lighting && property==ProgrammableHousingState.VISIBLE)return property.getType().cast(visible);
             if(lighting && property==ProgrammableHousingState.LIGHT)return property.getType().cast(light);
-            if(property==ProgrammableHousingState.JOINED)return property.getType().cast(com.vandorlabs.blocks.HousingFaceLayouts.NONE);
+            if(property==ProgrammableHousingState.JOINED && schema.containsKey(property))return property.getType().cast(com.vandorlabs.blocks.HousingFaceLayouts.NONE);
             return full().getValue(property);
         }
         @Override public ImmutableMap<IUnlistedProperty<?>,Optional<?>> getUnlistedProperties() {

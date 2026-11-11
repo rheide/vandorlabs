@@ -180,10 +180,16 @@ public final class VehicleSignals {
             cockpit.updatePower();if(cockpit.expire(craft.world.getTotalWorldTime()))for(TileEntityCockpit.Control control:cockpit.controls){Link link=links.get(control);if(link!=null)RedstoneChannels.inputChanged(link);}
         }
         if(cockpitGeometry)VehicleCockpits.refreshGeometry(craft);
-        for(TileEntitySpaceDoor door:new ArrayList<>(securityDoors))if(door.securityMode()>0){
+        for(TileEntitySpaceDoor previous:new ArrayList<>(securityDoors)){
+            if(previous.securityMode()==0&&!previous.hasReturningCredential())continue;
+            // Publishing another leaf's OPEN state may have replaced this tile.
+            TileEntity current=craft.view.getTileEntity(previous.getPos());
+            if(!(current instanceof TileEntitySpaceDoor)||!((TileEntitySpaceDoor)current).isSecurityRoot())continue;
+            TileEntitySpaceDoor door=(TileEntitySpaceDoor)current;
+            // Disabling security must not strand a card that is still returning.
             for(int side=0;side<2;side++)if(door.keyReader(side).expire(craft.world.getTotalWorldTime()))dirty.add(door.getPos());
-            boolean open=door.securityOpen();
-            if(craft.view.getBlockState(door.getPos()).getValue(net.minecraft.block.BlockDoor.OPEN)!=open)VehicleDoors.securitySet(craft,door.getPos(),open);
+            if(door.securityMode()>0){boolean open=door.securityOpen();
+                if(craft.view.getBlockState(door.getPos()).getValue(net.minecraft.block.BlockDoor.OPEN)!=open)VehicleDoors.securitySet(craft,door.getPos(),open);}
         }
         for(TileEntityTokenSlot slot:tokenSlots)if(slot.expire(craft.world.getTotalWorldTime())){Link link=links.get(slot);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(slot.getPos());}
         if(!screenPulses.isEmpty())for(RedstoneScreenContents.Row row:new ArrayList<>(screenPulses))if(row.expirePulse(craft.world.getTotalWorldTime())){Link link=links.get(row);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(row.channelTile().getPos());screenPulses.remove(row);}

@@ -17,6 +17,13 @@ import java.util.*;
 public final class MovedDoorInteractions {
     public static final com.vandorlabs.world.LoadedTileIndex<TileEntitySpaceDoor> INDEX=new com.vandorlabs.world.LoadedTileIndex<>(TileEntitySpaceDoor.class);
     public static final MovedDoorInteractions INSTANCE=new MovedDoorInteractions();
+    // Native Large Door roles are local fields. Reject follower tiles before
+    // the index performs loaded-chunk and tile-identity reads. Evaluate on each
+    // query so assign()/NBT changes need no index re-registration. Extensions
+    // retain their original loaded-world validation before calling isAnchor().
+    private static final java.util.function.Predicate<TileEntitySpaceDoor> ROOT_CANDIDATE=
+            door->door.getClass()!=TileEntityLargeProgrammableDoor.class
+                    ||((TileEntityLargeProgrammableDoor)door).isAnchor();
     private MovedDoorInteractions() { }
 
     public static boolean isMoved(World world,BlockPos pos) {
@@ -41,9 +48,14 @@ public final class MovedDoorInteractions {
         List<TileEntitySpaceDoor> result=new ArrayList<>();
         // Leaves extend at most three blocks vertically or sideways from the assembly.
         AxisAlignedBB owners=query.grow(5);
-        for(TileEntitySpaceDoor door:INDEX.query(world,owners))if(isMoved(world,door.getPos())
+        for(TileEntitySpaceDoor door:INDEX.query(world,owners,ROOT_CANDIDATE))if(isMoved(world,door.getPos())
                 &&(door instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)door).isAnchor():world.getBlockState(door.getPos()).getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.LOWER))result.add(door);
         return result;
+    }
+    private static net.minecraft.block.state.IBlockState nativeLargeState(World world,TileEntitySpaceDoor door){
+        if(door.getClass()!=TileEntityLargeProgrammableDoor.class||!world.isBlockLoaded(door.getPos()))return null;
+        net.minecraft.block.state.IBlockState state=world.getBlockState(door.getPos());
+        return state.getBlock().getClass()==BlockLargeProgrammableDoor.class?state:null;
     }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
@@ -56,24 +68,43 @@ public final class MovedDoorInteractions {
                 }
                 continue;
             }
+            net.minecraft.block.state.IBlockState nativeState=nativeLargeState(world,door);
+            if(nativeState!=null){
+                RayTraceResult hit=((TileEntityLargeProgrammableDoor)door).collisionIndex(
+                        nativeState.getValue(BlockVandorDoor.FACING),nativeState.getValue(BlockVandorDoor.OPEN)).trace(start,end);
+                if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){
+                    distance=start.squareDistanceTo(hit.hitVec);
+                    nearest=movedHit(door,nativeState.getValue(BlockVandorDoor.FACING).rotateYCCW(),hit);
+                }
+                continue;
+            }
             for(AxisAlignedBB box:bounds(world,door.getPos())) {
                 RayTraceResult hit=box.calculateIntercept(start,end);
                 if(hit==null || start.squareDistanceTo(hit.hitVec)>=distance)continue;
                 distance=start.squareDistanceTo(hit.hitVec);
                 EnumFacing width=world.getBlockState(door.getPos()).getValue(BlockVandorDoor.FACING).rotateYCCW();
-                double column=(hit.hitVec.x-door.getPos().getX())*width.getFrontOffsetX()
-                        +(hit.hitVec.z-door.getPos().getZ())*width.getFrontOffsetZ();
-                if(width.getFrontOffsetX()<0 || width.getFrontOffsetZ()<0)column+=1;
-                BlockPos owner=door.getPos().offset(width,MathHelper.clamp(MathHelper.floor(column),0,2))
-                        .up(MathHelper.clamp(MathHelper.floor(hit.hitVec.y-door.getPos().getY()),0,2));
-                nearest=new RayTraceResult(hit.hitVec,hit.sideHit,owner);
+                nearest=movedHit(door,width,hit);
             }
         }
         return nearest;
     }
+    private static RayTraceResult movedHit(TileEntitySpaceDoor door,EnumFacing width,RayTraceResult hit){
+        double column=(hit.hitVec.x-door.getPos().getX())*width.getFrontOffsetX()
+                +(hit.hitVec.z-door.getPos().getZ())*width.getFrontOffsetZ();
+        if(width.getFrontOffsetX()<0 || width.getFrontOffsetZ()<0)column+=1;
+        BlockPos owner=door.getPos().offset(width,MathHelper.clamp(MathHelper.floor(column),0,2))
+                .up(MathHelper.clamp(MathHelper.floor(hit.hitVec.y-door.getPos().getY()),0,2));
+        return new RayTraceResult(hit.hitVec,hit.sideHit,owner);
+    }
     @SubscribeEvent public void collisions(GetCollisionBoxesEvent event) {
         World world=event.getWorld();AxisAlignedBB query=event.getAabb();
         for(TileEntitySpaceDoor door:doors(world,query)) {
+            net.minecraft.block.state.IBlockState nativeState=nativeLargeState(world,door);
+            if(nativeState!=null){
+                ((TileEntityLargeProgrammableDoor)door).collisionIndex(nativeState.getValue(BlockVandorDoor.FACING),
+                        nativeState.getValue(BlockVandorDoor.OPEN)).addIntersecting(query,event.getCollisionBoxesList());
+                continue;
+            }
             for(int half=0;half<(door instanceof TileEntityLargeProgrammableDoor?1:2);half++)
                 for(AxisAlignedBB box:bounds(world,door.getPos().up(half)))
                     if(box.intersects(query) && !event.getCollisionBoxesList().contains(box))event.getCollisionBoxesList().add(box);

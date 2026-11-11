@@ -84,10 +84,6 @@ public class TEAnimatedScreenSelector
 
     private static final Map<String, AnimData> ANIM_CACHE = new HashMap<>();
     private static final Map<String, AnimData> INPUT_ANIM_CACHE = new HashMap<>();
-    private static final Map<BlockPos, PortholeGroup> PORTHOLE_GROUPS = new HashMap<>();
-    private static World portholeCacheWorld;
-    private static long portholeCacheTick = Long.MIN_VALUE;
-    private static long portholeCacheRevision = Long.MIN_VALUE;
     private static final Map<BlockPos, LightGroup> LIGHT_GROUPS = new HashMap<>();
     private static World lightCacheWorld;
     private static long lightCacheTick = Long.MIN_VALUE;
@@ -104,10 +100,7 @@ public class TEAnimatedScreenSelector
             LIGHT_GROUPS.clear();lightCacheWorld=null;
             lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
         }
-        if(portholeCacheWorld==world) {
-            PORTHOLE_GROUPS.clear();portholeCacheWorld=null;
-            portholeCacheTick=Long.MIN_VALUE;portholeCacheRevision=Long.MIN_VALUE;
-        }
+        PortholeGroupCache.unload(world);
     }
 
     static final class LightGroup {
@@ -183,7 +176,7 @@ public class TEAnimatedScreenSelector
     static final class PortholeGroup {
         final int minAxis, minY, columns, rows;
         final EnumFacing right, up;
-        private PortholeHex hex;
+        private java.lang.ref.WeakReference<PortholeHex> hex;
         final int shape, extraBorder;
 
         PortholeGroup(int minAxis, int minY, int columns, int rows,
@@ -199,8 +192,11 @@ public class TEAnimatedScreenSelector
         }
 
         PortholeHex outline() {
-            if(hex==null)hex=PortholeGeometryCache.outline(columns,rows,shape,extraBorder);
-            return hex;
+            // Long-lived topology descriptors must not pin geometry evicted from
+            // the separately bounded shape cache.
+            PortholeHex found=hex==null?null:hex.get();
+            if(found==null){found=PortholeGeometryCache.outline(columns,rows,shape,extraBorder);hex=new java.lang.ref.WeakReference<>(found);}
+            return found;
         }
 
         PortholeHex.Slice slice(BlockPos pos) { return slice(pos,right,up); }
@@ -222,18 +218,32 @@ public class TEAnimatedScreenSelector
 
     static PortholeGroup portholeGroup(TileEntityAnimatedScreenSelector tile,
             IBlockState state) {
-        World world = tile.getWorld();
-        long tick = world.getTotalWorldTime();
-        long revision = TileEntityAnimatedScreenSelector.getPortholeRevision();
-        if (world != portholeCacheWorld || tick != portholeCacheTick
-                || revision != portholeCacheRevision) {
-            PORTHOLE_GROUPS.clear();
-            portholeCacheWorld = world;
-            portholeCacheTick = tick;
-            portholeCacheRevision = revision;
+        synchronized(PortholeGroupCache.class) {
+            if(tile.getClass()!=TileEntityAnimatedScreenSelector.class
+                    ||state.getBlock().getClass()!=BlockProgrammableWall.class&&state.getBlock().getClass()!=BlockProgrammablePortholeBlock.class)
+                return discoverPortholes(tile,state,new PortholeGroupCache.Dependencies()).get(tile.getPos());
+            PortholeGroupCache.Cache cache=PortholeGroupCache.cache(tile.getWorld());
+            PortholeGroup found=cache.get(tile.getPos());
+            if(found!=null)return found;
+            PortholeGroupCache.Dependencies dependencies=new PortholeGroupCache.Dependencies();
+            Map<BlockPos,PortholeGroup> groups=discoverPortholes(tile,state,dependencies);
+            if(dependencies.cacheable)cache.install(groups,dependencies);
+            return groups.get(tile.getPos());
         }
-        PortholeGroup cached = PORTHOLE_GROUPS.get(tile.getPos());
-        if (cached != null) return cached;
+    }
+
+    /** Client proxy hook: no world reads, registration or retained tile reference. */
+    public static void portholeChanged(net.minecraft.tileentity.TileEntity tile){
+        World world=tile.getWorld();if(world==null||!world.isRemote)return;
+        BlockPos pos=tile.getPos();PortholeGroupCache.invalidate(world,pos.getX(),pos.getY(),pos.getZ(),pos.getX(),pos.getY(),pos.getZ());
+    }
+
+    /** Original bounded discovery and rectangle partitioning, performed only on a miss. */
+    private static Map<BlockPos,PortholeGroup> discoverPortholes(TileEntityAnimatedScreenSelector tile,
+            IBlockState state,PortholeGroupCache.Dependencies dependencies) {
+        World world=tile.getWorld();
+        dependencies.include(tile.getPos());
+        Map<BlockPos,PortholeGroup> groups=new HashMap<>();
         EnumFacing facing = state.getValue(BlockProgrammableWall.FACING);
         EnumFacing right = facing.rotateY();
         boolean shallow = ((BlockProgrammableWall) state.getBlock()).isDiagonalShape()
@@ -242,9 +252,9 @@ public class TEAnimatedScreenSelector
         int extraBorder = state.getBlock() instanceof BlockProgrammablePortholeBlock ? 1 : 0;
         Set<BlockPos> members = tile.isJoinPortholes()
                 ? (((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
-                        ? collectDiagonalPortholes(world,tile.getPos())
+                        ? collectDiagonalPortholes(world,tile.getPos(),dependencies)
                         : LoadedPlaneConnections.collect(tile.getPos(),PanelPlane.of(facing),
-                                world::isBlockLoaded,next -> compatiblePorthole(world,tile.getPos(),next)))
+                                next -> {dependencies.include(next);return world.isBlockLoaded(next);},next -> compatiblePorthole(world,tile.getPos(),next,dependencies)))
                 : java.util.Collections.singleton(tile.getPos());
         // Every member must select the same basis, including opposite-facing shallow rows.
         BlockPos first=java.util.Collections.min(members);
@@ -258,10 +268,10 @@ public class TEAnimatedScreenSelector
         }
         boolean capped = members.size() >= LoadedPlaneConnections.LIMIT;
         if (capped) {
-            for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos,
+            for (BlockPos pos : members) groups.put(pos.toImmutable(),
                     new PortholeGroup(axis(pos, right), axis(pos, up), 1, 1, right, up,
                             tile.getPortholeShape(), extraBorder));
-            return PORTHOLE_GROUPS.get(tile.getPos());
+            return groups;
         }
         if ((long) (maximum - minimum + 1) * (maxY - minY + 1) != members.size()) {
             Map<Long, BlockPos> positions = new HashMap<>();
@@ -273,15 +283,15 @@ public class TEAnimatedScreenSelector
                         extraBorder);
                 for (int row = rect.y; row < rect.y + rect.height; row++)
                     for (int column = rect.x; column < rect.x + rect.width; column++)
-                        PORTHOLE_GROUPS.put(positions.get(PortholeRectangles.cell(column, row)), part);
+                        groups.put(positions.get(PortholeRectangles.cell(column, row)).toImmutable(), part);
             }
-            return PORTHOLE_GROUPS.get(tile.getPos());
+            return groups;
         }
         PortholeGroup group = new PortholeGroup(minimum, minY,
                 maximum - minimum + 1, maxY - minY + 1, right, up,
                 tile.getPortholeShape(), extraBorder);
-        for (BlockPos pos : members) PORTHOLE_GROUPS.put(pos, group);
-        return group;
+        for (BlockPos pos : members) groups.put(pos.toImmutable(), group);
+        return groups;
     }
 
     private static boolean eligiblePorthole(World world, BlockPos pos,
@@ -1205,11 +1215,15 @@ public class TEAnimatedScreenSelector
 
     /** Compare actual planes, including reversed upper half-width pieces. */
     private static boolean compatiblePorthole(World world,BlockPos root,BlockPos next) {
+        return compatiblePorthole(world,root,next,null);
+    }
+    private static boolean compatiblePorthole(World world,BlockPos root,BlockPos next,PortholeGroupCache.Dependencies dependencies) {
         if(!world.isBlockLoaded(next))return false;
         IBlockState a=world.getBlockState(root),b=world.getBlockState(next);
         if(a.getBlock()!=b.getBlock() || !(a.getBlock() instanceof BlockProgrammableWall))return false;
         net.minecraft.tileentity.TileEntity ar=world.getTileEntity(root),br=world.getTileEntity(next);
         if(!(ar instanceof TileEntityAnimatedScreenSelector)||!(br instanceof TileEntityAnimatedScreenSelector))return false;
+        if(dependencies!=null&&(ar.getClass()!=TileEntityAnimatedScreenSelector.class||br.getClass()!=TileEntityAnimatedScreenSelector.class))dependencies.cacheable=false;
         TileEntityAnimatedScreenSelector at=(TileEntityAnimatedScreenSelector)ar,bt=(TileEntityAnimatedScreenSelector)br;
         if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
         if(solidDiagonalPortholeJunction(at,a) || solidDiagonalPortholeJunction(bt,b))return false;
@@ -1221,7 +1235,7 @@ public class TEAnimatedScreenSelector
                 || com.vandorlabs.blocks.DiagonalPanelGeometry.rowsMeet(root,a,next,b,mode);
     }
 
-    private static Set<BlockPos> collectDiagonalPortholes(World world,BlockPos root) {
+    private static Set<BlockPos> collectDiagonalPortholes(World world,BlockPos root,PortholeGroupCache.Dependencies dependencies) {
         Set<BlockPos> members=new java.util.LinkedHashSet<>();
         java.util.ArrayDeque<BlockPos> queue=new java.util.ArrayDeque<>();
         members.add(root);queue.add(root);
@@ -1234,7 +1248,8 @@ public class TEAnimatedScreenSelector
             for(boolean positive:new boolean[]{false,true})candidates.addAll(
                     com.vandorlabs.blocks.DiagonalPanelGeometry.rowCandidates(pos,state,mode,positive));
             for(BlockPos next:candidates) {
-                if(members.contains(next)||!compatiblePorthole(world,pos,next))continue;
+                dependencies.include(next);
+                if(members.contains(next)||!compatiblePorthole(world,pos,next,dependencies))continue;
                 members.add(next);queue.add(next);
                 if(members.size()>=LoadedPlaneConnections.LIMIT)break;
             }
@@ -1464,6 +1479,7 @@ public class TEAnimatedScreenSelector
 
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
     public static synchronized void clearCache() {
+        PortholeGroupCache.clear();
         VehicleShapeRenderer.clear();
         LightHousingMeshes.clear();
         SelectorHousingMeshes.clear();

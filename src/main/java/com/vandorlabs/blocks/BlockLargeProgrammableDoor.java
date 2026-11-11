@@ -111,6 +111,17 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){List<AxisAlignedBB> boxes=geometry(world,pos);AxisAlignedBB cell=new AxisAlignedBB(pos),union=null;for(AxisAlignedBB box:boxes){if(!box.intersects(cell))continue;AxisAlignedBB clipped=box.intersect(cell);union=union==null?clipped:union.union(clipped);}return union==null?FULL_BLOCK_AABB:union.offset(-pos.getX(),-pos.getY(),-pos.getZ());}
     @Override public AxisAlignedBB getCollisionBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return NULL_AABB;}
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB entityBox,List<AxisAlignedBB> boxes,Entity entity,boolean actual){TileEntityLargeProgrammableDoor root=root(world,pos);if(root==null)return;
+        // geometry is a public extension point. An unknown block subclass may
+        // supply different or mutable shapes, so retain its original dispatch.
+        if(getClass()!=BlockLargeProgrammableDoor.class){addUncachedCollisionBoxes(world,pos,root,entityBox,boxes);return;}
+        IBlockState rootState=world.getBlockState(root.getPos());
+        EnumFacing facing=rootState.getValue(FACING),width=facing.rotateYCCW();
+        int column=(pos.getX()-root.getPos().getX())*width.getFrontOffsetX()+(pos.getZ()-root.getPos().getZ())*width.getFrontOffsetZ();
+        int row=pos.getY()-root.getPos().getY();
+        for(AxisAlignedBB box:root.collisionCellGeometry(facing,rootState.getValue(OPEN),column,row))
+            if(box.intersects(entityBox))boxes.add(box);}
+    private void addUncachedCollisionBoxes(World world,BlockPos pos,TileEntityLargeProgrammableDoor root,
+            AxisAlignedBB entityBox,List<AxisAlignedBB> boxes){
         EnumFacing width=world.getBlockState(root.getPos()).getValue(FACING).rotateYCCW();
         int column=(pos.getX()-root.getPos().getX())*width.getFrontOffsetX()+(pos.getZ()-root.getPos().getZ())*width.getFrontOffsetZ();
         int row=pos.getY()-root.getPos().getY();
@@ -119,8 +130,25 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         if(width.getAxis()==EnumFacing.Axis.X){minX=pos.getX()+(width.getFrontOffsetX()>0?lo:1-hi);maxX=pos.getX()+(width.getFrontOffsetX()>0?hi:1-lo);}
         else{minZ=pos.getZ()+(width.getFrontOffsetZ()>0?lo:1-hi);maxZ=pos.getZ()+(width.getFrontOffsetZ()>0?hi:1-lo);}
         AxisAlignedBB cell=new AxisAlignedBB(minX,row==0?Double.NEGATIVE_INFINITY:pos.getY(),minZ,maxX,row==2?Double.POSITIVE_INFINITY:pos.getY()+1,maxZ);
-        // AxisAlignedBB normalizes reversed endpoints. Intersecting disjoint boxes
-        // therefore creates a phantom solid instead of an empty intersection.
-        for(AxisAlignedBB b:geometry(world,pos)){if(!b.intersects(cell))continue;AxisAlignedBB clipped=b.intersect(cell);if(clipped.intersects(entityBox))boxes.add(clipped);}}
-    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){RayTraceResult nearest=null;double distance=Double.MAX_VALUE;for(AxisAlignedBB box:geometry(world,pos)){RayTraceResult hit=box.calculateIntercept(start,end);if(hit!=null && start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);nearest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}}return nearest;}
+        for(AxisAlignedBB box:geometry(world,pos)){
+            if(!box.intersects(cell))continue;
+            AxisAlignedBB clipped=box.intersect(cell);if(clipped.intersects(entityBox))boxes.add(clipped);
+        }
+    }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
+        if(getClass()==BlockLargeProgrammableDoor.class){
+            TileEntityLargeProgrammableDoor root=root(world,pos);
+            if(root!=null&&root.getClass()==TileEntityLargeProgrammableDoor.class){
+                IBlockState actual=world.getBlockState(root.getPos());
+                RayTraceResult hit=root.collisionIndex(actual.getValue(FACING),actual.getValue(OPEN)).trace(start,end);
+                return hit==null?null:new RayTraceResult(hit.hitVec,hit.sideHit,pos);
+            }
+        }
+        RayTraceResult nearest=null;double distance=Double.MAX_VALUE;
+        for(AxisAlignedBB box:geometry(world,pos)){
+            RayTraceResult hit=box.calculateIntercept(start,end);
+            if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);nearest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}
+        }
+        return nearest;
+    }
 }

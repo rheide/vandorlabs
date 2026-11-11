@@ -32,7 +32,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     }
     private void addControl(GlassDialog.Control control){GuiButton button=control.tab?new DialogTabButton(control.id,control.x,control.y,control.width,control.height,control.label):new GuiButton(control.id,control.x,control.y,control.width,control.height,control.label);button.enabled=control.enabled;button.visible=control.visible;buttonList.add(button);}
     void choose(int choice){if(textures!=null&&textures.selected()!=choice)textures.setSelected(choice);state=state.choose(choice,HousingTextureList.CANOPY_GLASS_BASE);send();initGui();}
-    private void send(){tile.setSize(state.size);tile.setShade(state.shade);tile.setMaterial(state.material);tile.setTextureLayout(state.layout);tile.setJoin(state.join);tile.setAppearance(state.tint,state.framed);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),state.size,state.shade,state.join).withAppearance(state.tint,state.framed).withMaterial(state.material).withTextureLayout(state.layout).withPlayback(tile.glassPlayback.mode(),tile.glassPlayback.speed()));}
+    private void send(){tile.configure(state.size,state.shade,state.material,state.layout,state.join,state.tint,state.framed,-1,1);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),state.size,state.shade,state.join).withAppearance(state.tint,state.framed).withMaterial(state.material).withTextureLayout(state.layout).withPlayback(tile.glassPlayback.mode(),tile.glassPlayback.speed()));}
     @Override protected void actionPerformed(GuiButton button) {
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){send();initGui();return;}
         if(state.framePage()&&framePane.action(button))return;

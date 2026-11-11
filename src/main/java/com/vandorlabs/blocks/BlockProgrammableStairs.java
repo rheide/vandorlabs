@@ -118,7 +118,15 @@ public final class BlockProgrammableStairs extends BlockStairs {
     @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> out,net.minecraft.entity.Entity entity,boolean actual){
         int settings=ProgrammableStairGeometry.settings(world,pos);
         if(settings==8){super.addCollisionBoxToList(state,world,pos,query,out,entity,actual);return;}
-        for(AxisAlignedBB box:ProgrammableStairGeometry.boxes(getActualState(state,world,pos),settings))if(box.offset(pos).intersects(query))out.add(box.offset(pos));
+        int x=pos.getX(),y=pos.getY(),z=pos.getZ();
+        for(AxisAlignedBB box:ProgrammableStairGeometry.boxes(getActualState(state,world,pos),settings)){
+            // Match AxisAlignedBB.intersects exactly, but only allocate translated
+            // boxes that enter the caller's list. Do not dispatch to query.intersects:
+            // the query can be a subclass with different intersection behavior.
+            if(box.minX+x<query.maxX&&box.maxX+x>query.minX
+                    &&box.minY+y<query.maxY&&box.maxY+y>query.minY
+                    &&box.minZ+z<query.maxZ&&box.maxZ+z>query.minZ)out.add(box.offset(x,y,z));
+        }
     }
     @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
         int settings=ProgrammableStairGeometry.settings(world,pos);if(settings==8)return super.collisionRayTrace(state,world,pos,start,end);

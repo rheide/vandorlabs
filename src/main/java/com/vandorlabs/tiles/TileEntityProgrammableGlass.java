@@ -23,23 +23,69 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
     }
     private void frameChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.glassFrameAppearanceChanged(this);}
+    private int configurationDepth;
+    private boolean configurationChanged,configurationRange,configurationLight;
+    private boolean pendingLight,lightQueued;
+    private int frameLight(){return framed?frameAppearance.light():0;}
+    private void loadedLightChanged(){
+        pendingLight=true;
+        queuePendingLight();
+    }
+    private void queuePendingLight(){
+        if(world==null)return;
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld){refreshPendingLight();return;}
+        if(lightQueued)return;
+        lightQueued=true;
+        if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.glassLightRefreshNeeded(this);
+        else DeferredTileLoad.schedule(this,this::refreshPendingLight);
+    }
+    /** Called after an installed packet, or by an identity-checked load callback. */
+    public void refreshPendingLight(){lightQueued=false;if(pendingLight&&world!=null){pendingLight=false;world.checkLight(pos);}}
+    @Override public void setWorld(World world){if(this.world!=world)lightQueued=false;super.setWorld(world);}
+    @Override public void setPos(BlockPos pos){if(!this.pos.equals(pos))lightQueued=false;super.setPos(pos);}
+    private void changed(boolean range,boolean light){
+        if(configurationDepth>0){configurationChanged=true;configurationRange|=range;configurationLight|=light;return;}
+        markDirty();
+        if(world!=null){
+            IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);
+            if(range)world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
+            if(light){pendingLight=lightQueued=false;world.checkLight(pos);}
+        }
+    }
+    void playbackChanged(){changed(false,false);}
+    /** One authorized settings transaction; individual setters retain their public behavior. */
+    public void configure(int size,int shade,int material,int layout,boolean join,int tint,boolean framed,int playbackMode,int playbackSpeed){
+        if(size<0||size>2||!GlassTextures.valid(shade)||!GlassMaterials.valid(material)
+                ||!com.vandorlabs.render.TextureLayoutMode.valid(layout)||!GlassTextures.validTint(tint)
+                ||playbackMode>=0&&(!GlassPlayback.valid(playbackMode)||!GlassPlayback.valid(playbackSpeed)))
+            throw new IllegalArgumentException("Invalid glass configuration");
+        configurationDepth++;
+        try{
+            setSize(size);if(playbackMode>=0)glassPlayback.set(playbackMode,playbackSpeed);
+            setShade(shade);setMaterial(material);setTextureLayout(layout);setJoin(join);setAppearance(tint,framed);
+        }finally{
+            if(--configurationDepth==0&&configurationChanged){
+                boolean range=configurationRange,light=configurationLight;
+                configurationChanged=configurationRange=configurationLight=false;changed(range,light);
+            }
+        }
+    }
     @Override public void markDirty(){super.markDirty();GlassMaterials.changed();frameChanged();}
-    @Override public void invalidate(){super.invalidate();frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
-    @Override public void onChunkUnload(){super.onChunkUnload();frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
+    @Override public void invalidate(){super.invalidate();lightQueued=false;frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
+    @Override public void onChunkUnload(){super.onChunkUnload();lightQueued=false;frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
     public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
     private int shade;
     private int material=-1;
     private boolean stretch;
     private int textureLayout=-1;
     public int getTextureLayout(){return textureLayout<0?(stretch?0:1):textureLayout;}
-    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");if(getTextureLayout()==mode)return;stretch=mode!=1;textureLayout=mode;markDirty();if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");if(getTextureLayout()==mode)return;stretch=mode!=1;textureLayout=mode;changed(true,false);}
     public boolean isStretch(){return stretch;}
-    public void setStretch(boolean value){if(stretch==value)return;textureLayout=-1;stretch=value;markDirty();if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}}
+    public void setStretch(boolean value){if(stretch==value)return;textureLayout=-1;stretch=value;changed(true,false);}
     public int getMaterial(){return material;}
     public void setMaterial(int value){
         if(!GlassMaterials.valid(value) || material==value)return;
-        material=value;markDirty();
-        if(world!=null){IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
+        material=value;changed(true,false);
     }
     private int tint = 1;
     private boolean framed = true;
@@ -52,11 +98,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     }
     public void setPanelFacing(net.minecraft.util.EnumFacing facing) {
         if(!facing.getAxis().isHorizontal() || panelFacing==facing.getHorizontalIndex())return;
-        panelFacing=facing.getHorizontalIndex();markDirty();
-        if(world!=null) {
-            world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);
-            world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
-        }
+        panelFacing=facing.getHorizontalIndex();changed(true,false);
     }
     private boolean legacySize;
     private boolean restored;
@@ -64,11 +106,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     public boolean isFramed() { return framed; }
     public void setAppearance(int tint, boolean framed) {
         if (!GlassTextures.validTint(tint) || this.tint==tint && this.framed==framed) return;
-        this.tint=tint; this.framed=framed; markDirty();
-        if(world!=null) {
-            IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);
-            world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
-        }
+        int previousLight=frameLight();this.tint=tint;this.framed=framed;
+        changed(true,previousLight!=frameLight());
     }
     public int getShade() { return shade; }
     public int getSize() { return size; }
@@ -76,29 +115,19 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     public void setJoin(boolean join) {
         if (this.join == join) return;
         this.join = join;
-        markDirty();
-        if (world != null) {
-            IBlockState state = world.getBlockState(pos);
-            world.notifyBlockUpdate(pos, state, state, 3);
-            world.markBlockRangeForRenderUpdate(pos.add(-1, -1, -1),
-                    pos.add(1, 1, 1));
-        }
+        changed(true,false);
     }
     public void setSize(int size) {
         if (size < 0 || size > 2) return;
         size=Math.min(size,1);
         if(size==this.size)return;
         this.size = size;
-        markDirty();
-        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
-                world.getBlockState(pos), 3);
+        changed(false,false);
     }
     public void setShade(int shade) {
         if (!GlassTextures.valid(shade) || shade == this.shade) return;
         this.shade = shade;
-        markDirty();
-        if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
-                world.getBlockState(pos), 3);
+        changed(false,false);
     }
     public com.vandorlabs.persistence.ProgrammableGlassSettings settings(){
         return new com.vandorlabs.persistence.ProgrammableGlassSettings(shade,material,textureLayout,stretch,tint,framed,size,join,panelFacing,legacySize);
@@ -108,7 +137,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         settings().write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         return tag;
     }
-    @Override public void readFromNBT(NBTTagCompound tag) {
+    @Override public void readFromNBT(NBTTagCompound tag) {readSettings(tag,true);}
+    private void readSettings(NBTTagCompound tag,boolean deferLight) {
+        int previousLight=frameLight();
         super.readFromNBT(tag);frameAppearance.read(tag);glassPlayback.read(tag);fluids.read(tag);
         restored = true;
         com.vandorlabs.persistence.ProgrammableGlassSettings saved=com.vandorlabs.persistence.ProgrammableGlassSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag),GlassMaterials::clamp);
@@ -117,10 +148,14 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         // Packet, copy and carried-tile replacements all invalidate local client
         // topology; a global material revision is not a topology dependency.
         if(world!=null)frameChanged();
+        if(previousLight!=frameLight()){if(deferLight)loadedLightChanged();else pendingLight=true;}
     }
     @Override public void onLoad() {
         super.onLoad();
         frameChanged();
+        // A prior settlement may have skipped this object before installation.
+        // Re-arm on load without reading a world or a neighbouring tile.
+        if(pendingLight){lightQueued=false;queuePendingLight();}
         if ((!restored || legacySize) && world != null) {
             size = Math.min(1,world.getBlockState(pos).getValue(
                     com.vandorlabs.blocks.BlockProgrammableGlass.SIZE));
@@ -132,7 +167,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return new SPacketUpdateTileEntity(pos, 0, getUpdateTag());
     }
     @Override public void onDataPacket(NetworkManager net, SPacketUpdateTileEntity packet) {
-        handleUpdateTag(packet.getNbtCompound());
+        readSettings(packet.getNbtCompound(),false);
+        if(world!=null)world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));
+        refreshPendingLight();
     }
     @Override public void handleUpdateTag(NBTTagCompound tag) {
         readFromNBT(tag);

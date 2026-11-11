@@ -111,12 +111,19 @@ public final class OpaqueDoorBatch {
         mesh(tile,state,paired,right,0).draw(buffer,facing,x,y,z,tile.positionOffset(),light,0,0,0,0,0,size,leafOffset);
         if(tile.isXSplit()) {
             StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,1);
-            for(int panel=0;panel<4;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,tile.positionOffset(),light,
-                    size*com.vandorlabs.render.XDoorPanel.shiftX(panel,progress),size*com.vandorlabs.render.XDoorPanel.shiftY(panel,progress),0,0,0,size,leafOffset);
+            drawXPanels(panels,tile.isFramed(),facing,progress,x,y,z,tile.positionOffset(),light,size,leafOffset,buffer);
         } else mesh(tile,state,paired,right,1).draw(buffer,facing,x,y,z,tile.positionOffset(),light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
         SpaceDoorControlPanel.Side side=BlockConfigurableSpaceDoor.panelSide(tile.getWorld(),tile.getPos(),state);
         if(side!=SpaceDoorControlPanel.Side.NONE)
             panel(tile,side).draw(buffer,facing,x,y,z,tile.positionOffset(),light,0,0,0,0,0,size,leafOffset);
+    }
+    /** Keep the fast batch's endpoint identical to the ordinary TESR and collision geometry. */
+    static void drawXPanels(StaticSurfaceMesh[] panels,boolean framed,EnumFacing facing,float progress,
+            double x,double y,double z,double depth,int light,double size,double leafOffset,BufferBuilder buffer) {
+        double travel=com.vandorlabs.render.XDoorPanel.travel(progress,framed,size);
+        for(int panel=0;panel<4;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,depth,light,
+                size*com.vandorlabs.render.XDoorPanel.shiftX(panel,travel),
+                size*com.vandorlabs.render.XDoorPanel.shiftY(panel,travel),0,0,0,size,leafOffset);
     }
     static final class Mesh {
         private final int[] source;

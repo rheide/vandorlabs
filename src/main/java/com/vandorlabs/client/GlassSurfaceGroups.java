@@ -48,10 +48,11 @@ final class GlassSurfaceGroups {
         final Map<BlockPos,Layout> layouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
         final Map<BlockPos,Layout> mainLayouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
         final Map<BlockPos,Corner> corners=new HashMap<>();
+        final Dependencies layoutDependencies=new Dependencies();
         final BlockPos.MutableBlockPos lookup=new BlockPos.MutableBlockPos();
         int minX=Integer.MAX_VALUE,minY=Integer.MAX_VALUE,minZ=Integer.MAX_VALUE;
         int maxX=Integer.MIN_VALUE,maxY=Integer.MIN_VALUE,maxZ=Integer.MIN_VALUE;
-        void clearLayouts(){layouts.clear();mainLayouts.clear();frames.clear();frameMasks.clear();}
+        void clearLayouts(){layouts.clear();mainLayouts.clear();frames.clear();frameMasks.clear();layoutDependencies.clear();}
         void clear(){clearLayouts();corners.clear();minX=minY=minZ=Integer.MAX_VALUE;maxX=maxY=maxZ=Integer.MIN_VALUE;mutation++;}
         void admit(BlockPos pos,Corner corner){
             corners.put(pos.toImmutable(),corner);
@@ -59,10 +60,14 @@ final class GlassSurfaceGroups {
             maxX=Math.max(maxX,pos.getX());maxY=Math.max(maxY,pos.getY());maxZ=Math.max(maxZ,pos.getZ());
         }
         /** Flat corners read only the owner and its four same-height neighbours.
-         * Connected artwork has wider dependencies and keeps its old invalidation.
+         * Connected artwork tracks its wider discovery dependencies separately.
          * Bounds may be conservative after removal; they never omit an entry. */
         void changed(int x0,int y0,int z0,int x1,int y1,int z1){
-            mutation++;clearLayouts();
+            mutation++;
+            // Include rejected and unloaded candidate cells as well as members:
+            // placing a bridge there can change an entire artwork rectangle.
+            // A distant edit cannot affect any of those previously read cells.
+            if(layoutDependencies.intersects(x0,y0,z0,x1,y1,z1))clearLayouts();
             long loX=(long)Math.min(x0,x1)-1,hiX=(long)Math.max(x0,x1)+1;
             long loZ=(long)Math.min(z0,z1)-1,hiZ=(long)Math.max(z0,z1)+1;
             int loY=Math.min(y0,y1),hiY=Math.max(y0,y1);
@@ -108,6 +113,22 @@ final class GlassSurfaceGroups {
         }
         @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2){
             synchronized(GlassSurfaceGroups.class){changed(x1,y1,z1,x2,y2,z2);}
+        }
+    }
+    /** Conservative union of every cell consulted by the retained layouts and
+     * frame masks. Eviction may leave extra bounds; it can never omit a dependency. */
+    private static final class Dependencies {
+        int minX=Integer.MAX_VALUE,minY=Integer.MAX_VALUE,minZ=Integer.MAX_VALUE;
+        int maxX=Integer.MIN_VALUE,maxY=Integer.MIN_VALUE,maxZ=Integer.MIN_VALUE;
+        void clear(){minX=minY=minZ=Integer.MAX_VALUE;maxX=maxY=maxZ=Integer.MIN_VALUE;}
+        void include(BlockPos pos){
+            minX=Math.min(minX,pos.getX());minY=Math.min(minY,pos.getY());minZ=Math.min(minZ,pos.getZ());
+            maxX=Math.max(maxX,pos.getX());maxY=Math.max(maxY,pos.getY());maxZ=Math.max(maxZ,pos.getZ());
+        }
+        boolean intersects(int x0,int y0,int z0,int x1,int y1,int z1){
+            return minX<=maxX && Math.min(x0,x1)<=maxX && Math.max(x0,x1)>=minX
+                    && Math.min(y0,y1)<=maxY && Math.max(y0,y1)>=minY
+                    && Math.min(z0,z1)<=maxZ && Math.max(z0,z1)>=minZ;
         }
     }
     private static final Map<World,Cache> CACHES=new WeakHashMap<>();
@@ -169,9 +190,11 @@ final class GlassSurfaceGroups {
         Integer old=cache.frameMasks.get(tile.getPos());if(old!=null)return old;
         EnumFacing right=PanelJoins.facing(world.getBlockState(tile.getPos())).rotateY();
         BlockPos p=tile.getPos();BlockPos[] next={p.offset(right.getOpposite()),p.offset(right),p.down(),p.up()};boolean[] joined=new boolean[4];int mask=0;
-        for(int i=0;i<4;i++){joined[i]=world.isBlockLoaded(next[i])&&compatible(tile,next[i],false,true);if(!joined[i])mask|=1<<i;}
+        cache.layoutDependencies.include(p);
+        for(int i=0;i<4;i++){cache.layoutDependencies.include(next[i]);joined[i]=world.isBlockLoaded(next[i])&&compatible(tile,next[i],false,true);if(!joined[i])mask|=1<<i;}
         for(int side=0;side<2;side++)for(int vertical=0;vertical<2;vertical++)if(joined[side]&&joined[2+vertical]){
             BlockPos diagonal=next[side].add(0,vertical==0?-1:1,0);
+            cache.layoutDependencies.include(diagonal);
             if(!world.isBlockLoaded(diagonal)||!compatible(tile,diagonal,false,true))mask|=1<<(4+side+vertical*2);
         }
         if(cache.frameMasks.size()>=MAX_LAYOUTS)cache.frameMasks.clear();cache.frameMasks.put(p.toImmutable(),mask);return mask;
@@ -183,6 +206,7 @@ final class GlassSurfaceGroups {
         Map<BlockPos,Layout> layouts=frame?cache.frames:main?cache.mainLayouts:cache.layouts;
         if(layouts.size()>MAX_LAYOUTS)layouts.clear();
         Layout found=layouts.get(tile.getPos());if(found!=null)return found;
+        cache.layoutDependencies.include(tile.getPos());
         IBlockState state=world.getBlockState(tile.getPos());boolean diagonal=state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape();
         EnumFacing facing=PanelJoins.facing(state),right=facing.rotateY(),up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?facing.getOpposite():EnumFacing.UP;
         Set<BlockPos> members=new LinkedHashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();members.add(tile.getPos());queue.add(tile.getPos());
@@ -190,7 +214,7 @@ final class GlassSurfaceGroups {
             BlockPos current=queue.removeFirst();List<BlockPos> candidates=new ArrayList<>();candidates.add(current.offset(right));candidates.add(current.offset(right.getOpposite()));
             if(diagonal)for(boolean positive:new boolean[]{false,true})candidates.addAll(DiagonalPanelGeometry.rowCandidates(current,world.getBlockState(current),BlockProgrammableWall.geometry(world,current),positive));
             else {candidates.add(current.up());candidates.add(current.down());}
-            for(BlockPos next:candidates){if(members.contains(next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main,frame))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
+            for(BlockPos next:candidates){cache.layoutDependencies.include(next);if(members.contains(next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main,frame))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
         }
         BlockPos first=Collections.min(members);EnumFacing basis=PanelJoins.facing(world.getBlockState(first));right=basis.rotateY();up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?basis.getOpposite():EnumFacing.UP;
         Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos p:members)cells.put(PortholeRectangles.cell(PanelPlane.axis(p,right),PanelPlane.axis(p,up)),p);

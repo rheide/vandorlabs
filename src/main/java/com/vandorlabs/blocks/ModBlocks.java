@@ -782,6 +782,7 @@ public class ModBlocks {
             if(binary instanceof BlockIndustrialLever || binary instanceof BlockMountedSwitch)event.getModelRegistry().putObject(location,new com.vandorlabs.client.MountedBinaryControlModel(event.getModelRegistry().getObject(location),binary));
         }
         com.vandorlabs.client.ProgrammableHousingModel cube = null, slab = null;
+        com.vandorlabs.client.ProgrammableStairsModel.Bake stairBake = new com.vandorlabs.client.ProgrammableStairsModel.Bake();
         for (ModelResourceLocation location : new java.util.ArrayList<>(
                 event.getModelRegistry().getKeys())) {
             if (!VandorLabs.MODID.equals(location.getResourceDomain())
@@ -797,7 +798,7 @@ public class ModBlocks {
                 continue;
             }
             if ("programmable_stairs".equals(path)) {
-                event.getModelRegistry().putObject(location,new com.vandorlabs.client.ProgrammableStairsModel(
+                event.getModelRegistry().putObject(location,stairBake.wrap(
                         event.getModelRegistry().getObject(location)));
                 continue;
             }
@@ -844,7 +845,7 @@ public class ModBlocks {
             event.getModelRegistry().putObject(diagonalScreenItem,new com.vandorlabs.client.DiagonalScreenItemModel(event.getModelRegistry().getObject(diagonalScreenItem)));
         ModelResourceLocation stairItem=new ModelResourceLocation("vandorlabs:programmable_stairs","inventory");
         if (event.getModelRegistry().getObject(stairItem)!=null)
-            event.getModelRegistry().putObject(stairItem,new com.vandorlabs.client.ProgrammableStairsModel(event.getModelRegistry().getObject(stairItem)));
+            event.getModelRegistry().putObject(stairItem,stairBake.wrap(event.getModelRegistry().getObject(stairItem)));
         for (int design = 0; design < com.vandorlabs.tiles.TileEntitySpaceDoor.DESIGNS.length;
                 design++) for (String detail : com.vandorlabs.tiles.TileEntitySpaceDoor.DETAILS)
             for (boolean framed : new boolean[]{false, true})

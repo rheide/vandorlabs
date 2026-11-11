@@ -17,6 +17,8 @@ public class CommonProxy {
     public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}
     public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
+    public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.tiles.DeferredTileLoad.schedule(tile,tile::refreshPendingLight);}
+    public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}
     public boolean glassCollectionOnly(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){return false;}
     /** Physical server and integrated-server light reads use only shared APIs. */
     public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return sharedVehicleCombinedLight(world,pos,minimum);}

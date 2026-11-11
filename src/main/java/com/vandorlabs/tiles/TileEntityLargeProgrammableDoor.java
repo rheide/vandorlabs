@@ -12,7 +12,7 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
     private boolean assigned;
     public void assign(BlockPos anchor){column=Math.abs(pos.getX()-anchor.getX())+Math.abs(pos.getZ()-anchor.getZ());row=pos.getY()-anchor.getY();assigned=true;markDirty();}
     public boolean isAnchor(){return assigned && column==0 && row==0;}
-    public BlockPos anchorPos(){if(world==null)return pos;
+    public BlockPos anchorPos(){if(world==null||column==0&&row==0)return pos;
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
         if(!(state.getBlock() instanceof BlockLargeProgrammableDoor))return pos;
         return pos.offset(state.getValue(com.vandorlabs.blocks.BlockVandorDoor.FACING).rotateYCCW(),-column).down(row);}
@@ -44,6 +44,8 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
     private int collisionKey=-1;
     private BlockPos collisionPos;
     private java.util.List<AxisAlignedBB> collisionBoxes;
+    private java.util.List<java.util.List<AxisAlignedBB>> collisionCells;
+    private com.vandorlabs.blocks.DoorCollisionIndex collisionIndex;
     /** Reuse immutable transformed boxes across the assembly's nine cell queries. */
     public java.util.List<AxisAlignedBB> collisionGeometry(net.minecraft.util.EnumFacing face,boolean open) {
         boolean sliding=isSliding();
@@ -58,9 +60,68 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
             if(securityMode()>0){pad=pad.grow(0,1.05/16,0);pad=face.getAxis()==net.minecraft.util.EnumFacing.Axis.X?pad.grow(.75/16,0,0):pad.grow(0,0,.75/16);}
             boxes.add(pad.offset(pos));if(panelMode()==2)boxes.add(com.vandorlabs.blocks.BlockConfigurableSpaceDoor.mirrorPanel(pad,face).offset(pos));
         }
-        collisionKey=key;collisionPos=pos.toImmutable();collisionBoxes=java.util.Collections.unmodifiableList(boxes);return collisionBoxes;
+        collisionKey=key;collisionPos=pos.toImmutable();collisionBoxes=java.util.Collections.unmodifiableList(boxes);
+        collisionCells=null;
+        collisionIndex=null;
+        return collisionBoxes;
     }
-    @Override public AxisAlignedBB getRenderBoundingBox(){return new AxisAlignedBB(pos.add(-4,-3,-4),pos.add(5,7,5));}
+    /** Geometry and its broad phase have exactly the same key and lifetime. */
+    public com.vandorlabs.blocks.DoorCollisionIndex collisionIndex(net.minecraft.util.EnumFacing face,boolean open){
+        java.util.List<AxisAlignedBB> geometry=collisionGeometry(face,open);
+        if(getClass()!=TileEntityLargeProgrammableDoor.class)return new com.vandorlabs.blocks.DoorCollisionIndex(geometry);
+        if(collisionIndex==null)collisionIndex=new com.vandorlabs.blocks.DoorCollisionIndex(geometry);
+        return collisionIndex;
+    }
+    /**
+     * Each of the nine block cells owns a slice of the same assembly. Cache that
+     * partition along with its geometry, rather than clipping every box again
+     * for every entity collision query. Edge cells retain the overhanging leaf.
+     */
+    public java.util.List<AxisAlignedBB> collisionCellGeometry(net.minecraft.util.EnumFacing face,
+            boolean open,int column,int row) {
+        java.util.List<AxisAlignedBB> all=collisionGeometry(face,open);
+        // Extensions may supply mutable/dynamic collisionGeometry overrides.
+        boolean cacheable=getClass()==TileEntityLargeProgrammableDoor.class
+                &&column>=0&&column<3&&row>=0&&row<3;
+        int index=row*3+column;
+        if(cacheable){
+            if(collisionCells==null)collisionCells=new java.util.ArrayList<>(
+                    java.util.Collections.<java.util.List<AxisAlignedBB>>nCopies(9,null));
+            java.util.List<AxisAlignedBB> cached=collisionCells.get(index);
+            if(cached!=null)return cached;
+        }
+        net.minecraft.util.EnumFacing width=face.rotateYCCW();
+        BlockPos cellPos=pos.offset(width,column).up(row);
+        double lo=column==0?Double.NEGATIVE_INFINITY:0,hi=column==2?Double.POSITIVE_INFINITY:1;
+        double minX=Double.NEGATIVE_INFINITY,maxX=Double.POSITIVE_INFINITY;
+        double minZ=Double.NEGATIVE_INFINITY,maxZ=Double.POSITIVE_INFINITY;
+        if(width.getAxis()==net.minecraft.util.EnumFacing.Axis.X){
+            minX=cellPos.getX()+(width.getFrontOffsetX()>0?lo:1-hi);
+            maxX=cellPos.getX()+(width.getFrontOffsetX()>0?hi:1-lo);
+        }else{
+            minZ=cellPos.getZ()+(width.getFrontOffsetZ()>0?lo:1-hi);
+            maxZ=cellPos.getZ()+(width.getFrontOffsetZ()>0?hi:1-lo);
+        }
+        AxisAlignedBB cell=new AxisAlignedBB(minX,row==0?Double.NEGATIVE_INFINITY:cellPos.getY(),minZ,
+                maxX,row==2?Double.POSITIVE_INFINITY:cellPos.getY()+1,maxZ);
+        java.util.List<AxisAlignedBB> clipped=new java.util.ArrayList<>();
+        // Intersect only overlapping boxes: AxisAlignedBB normalizes reversed
+        // endpoints, so clipping disjoint boxes would create phantom solids.
+        for(AxisAlignedBB box:all)if(box.intersects(cell))clipped.add(box.intersect(cell));
+        java.util.List<AxisAlignedBB> result=java.util.Collections.unmodifiableList(clipped);
+        if(cacheable)collisionCells.set(index,result);
+        return result;
+    }
+    private BlockPos renderBoundsPos;
+    private AxisAlignedBB renderBounds;
+    @Override public AxisAlignedBB getRenderBoundingBox(){
+        if(renderBounds==null||!pos.equals(renderBoundsPos)){
+            renderBoundsPos=pos.toImmutable();
+            renderBounds=new AxisAlignedBB(pos.getX()-4,pos.getY()-3,pos.getZ()-4,
+                    pos.getX()+5,pos.getY()+7,pos.getZ()+5);
+        }
+        return renderBounds;
+    }
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("LargeDoorAssigned",assigned);tag.setInteger("LargeDoorColumn",column);tag.setInteger("LargeDoorRow",row);return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){
         // Assign role before the base class schedules redstone registration.

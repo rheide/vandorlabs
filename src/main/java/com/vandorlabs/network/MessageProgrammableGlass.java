@@ -52,6 +52,10 @@ public final class MessageProgrammableGlass implements IMessage {
             writePlayback(b);
     }
 
+    private void apply(TileEntityProgrammableGlass tile){
+        tile.configure(size,shade,material,layout,join,tint,framed,playbackMode,playbackSpeed);
+    }
+
     public static final class Handler implements IMessageHandler<MessageProgrammableGlass, IMessage> {
         @Override public IMessage onMessage(MessageProgrammableGlass msg, MessageContext context) {
             EntityPlayerMP player = context.getServerHandler().player;
@@ -73,13 +77,7 @@ public final class MessageProgrammableGlass implements IMessage {
                 }
                 TileEntity updated = player.world.getTileEntity(msg.pos);
                 if (updated instanceof TileEntityProgrammableGlass) {
-                    ((TileEntityProgrammableGlass) updated).setSize(msg.size);
-                if(msg.playbackMode>=0)((TileEntityProgrammableGlass) updated).glassPlayback.set(msg.playbackMode,msg.playbackSpeed);
-                    ((TileEntityProgrammableGlass) updated).setShade(msg.shade);
-                    ((TileEntityProgrammableGlass) updated).setMaterial(msg.material);
-                    ((TileEntityProgrammableGlass) updated).setTextureLayout(msg.layout);
-                    ((TileEntityProgrammableGlass) updated).setJoin(msg.join);
-                    ((TileEntityProgrammableGlass) updated).setAppearance(msg.tint,msg.framed);
+                    msg.apply((TileEntityProgrammableGlass)updated);
                 }
             });
             return null;

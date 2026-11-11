@@ -60,8 +60,16 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     void toggleCredential(){securityToggled=!securityToggled;BlockPos other=mate();net.minecraft.tileentity.TileEntity raw=other==null?null:world.getTileEntity(other);if(raw instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)raw).securityMode()==4){TileEntitySpaceDoor paired=(TileEntitySpaceDoor)raw;paired.securityToggled=securityToggled;paired.securityChanged();}securityChanged();}
     private final TileEntityTokenSlot keyReader=new TileEntityTokenSlot(false).forDoor(this,0),rearKeyReader=new TileEntityTokenSlot(false).forDoor(this,1);
     boolean usableReader(net.minecraft.entity.player.EntityPlayer player){
-        if(world instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.EntityGroundVehicle craft=((com.vandorlabs.vehicle.VehicleWorld)world).craft;return craft!=null&&!craft.isDead&&!craft.ownershipBlocked&&!craft.transferInProgress&&player.world==craft.world&&player.getDistanceSqToCenter(new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(pos).addVector(.5,.5,.5))))<=64;}
-        return usable(player);
+        if(player==null||player.isDead||player.isSpectator())return false;
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld){
+            com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)world;
+            com.vandorlabs.vehicle.EntityGroundVehicle craft=view.craft;
+            if(craft==null||craft.view!=view||craft.world!=view.parent||craft.isDead||craft.ownershipBlocked
+                    ||craft.transferInProgress||player.world!=craft.world||view.getTileEntity(pos)!=this||!isSecurityRoot())return false;
+            net.minecraft.util.math.Vec3d center=craft.toWorld(new net.minecraft.util.math.Vec3d(pos).addVector(.5,.5,.5),pos);
+            return player.getDistanceSq(center.x,center.y,center.z)<=64;
+        }
+        return player.world==world&&usable(player);
     }
     public int panelMode(){return panel?panelMode==2&&getPlacementDepth()==0?2:1:0;}
     public void setPanelMode(int value){panelMode=Math.max(0,Math.min(getPlacementDepth()==0?2:1,value));panel=panelMode>0;markDirty();}
@@ -69,6 +77,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public boolean isSecurityRoot(){return isLowerDoor();}
     public TileEntityTokenSlot keyReader(){return keyReader(0);}
     public TileEntityTokenSlot keyReader(int side){TileEntityTokenSlot reader=side==1?rearKeyReader:keyReader;if(world!=null){reader.setWorld(world);reader.setPos(pos);}return reader;}
+    public boolean hasReturningCredential(){return keyReader.returning()||rearKeyReader.returning();}
     public void tickReaders(){keyReader(0).scheduledTick();keyReader(1).scheduledTick();}
     private boolean readerOpen(){return panelMode()>0&&keyReader(0).getOutputLevel()>0||panelMode()==2&&keyReader(1).getOutputLevel()>0;}
     public int readerIndex(net.minecraft.util.math.Vec3d hit){
@@ -92,7 +101,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         return tile instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)tile).securityMode()>0&&((TileEntitySpaceDoor)tile).readerOpen();
     }
     void securityChanged(){
-        markDirty();if(world==null||world.isRemote||world.getTileEntity(pos)!=this)return;
+        markDirty();if(world==null||!keyReader().authoritative()||world.getTileEntity(pos)!=this)return;
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
         if(world instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)world;if(view.craft!=null)view.craft.signals.changed(pos);return;}
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor){((com.vandorlabs.blocks.BlockConfigurableSpaceDoor)state.getBlock()).updateRedstoneState(world,pos,state);BlockPos other=mate();if(other!=null){net.minecraft.block.state.IBlockState paired=world.getBlockState(other);if(paired.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)((com.vandorlabs.blocks.BlockConfigurableSpaceDoor)paired.getBlock()).updateRedstoneState(world,other,paired);}}
@@ -105,7 +114,8 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     public boolean useSecurity(net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand){return useSecurity(player,hand,0);}
     public boolean useSecurity(net.minecraft.entity.player.EntityPlayer player,net.minecraft.util.EnumHand hand,int side){
-        if(world.isRemote)return true;TileEntityTokenSlot reader=keyReader(side);if(!reader.isUsableByPlayer(player))return true;net.minecraft.item.ItemStack held=player.getHeldItem(hand);
+        if(securityMode==0||side<0||side>1||side==1&&panelMode()!=2)return true;
+        TileEntityTokenSlot reader=keyReader(side);if(!reader.authoritative()||!reader.isUsableByPlayer(player))return true;net.minecraft.item.ItemStack held=player.getHeldItem(hand);
         if(reader.isEmpty()&&!reader.authorized(held)){net.minecraft.item.ItemStack found=inventoryCredential(player,reader);if(found!=null)held=found;}
         if(held.isEmpty()){if(reader.isEmpty())reader.cycleLogo();else{net.minecraft.item.ItemStack item=reader.removeStackFromSlot(0);if(!player.inventory.addItemStackToInventory(item)&&!item.isEmpty())player.dropItem(item,false);}player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();return true;}
         if(!reader.accepts(held))return true;if(!reader.authorized(held)){reader.reject();return true;}if(!reader.isEmpty())return true;
@@ -268,7 +278,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     }
     @Override public void invalidate(){MovedDoorInteractions.INDEX.remove(this);super.invalidate();}
     @Override public void onChunkUnload(){MovedDoorInteractions.INDEX.remove(this);super.onChunkUnload();}
-    @Override public void onLoad() { super.onLoad(); MovedDoorInteractions.INDEX.add(this); if(world!=null&&world.isRemote)migrateLegacyMotion();else DeferredTileLoad.schedule(this,()->{com.vandorlabs.blocks.DoorWaterGush.schedule(world,pos);migrateLegacyMotion();if(isLowerDoor()&&securityMode>0)tickReaders();}); }
+    @Override public void onLoad() { super.onLoad(); MovedDoorInteractions.INDEX.add(this); if(world!=null&&world.isRemote)migrateLegacyMotion();else DeferredTileLoad.schedule(this,()->{com.vandorlabs.blocks.DoorWaterGush.schedule(world,pos);migrateLegacyMotion();if(isLowerDoor()&&(securityMode>0||hasReturningCredential()))tickReaders();}); }
     public static boolean hasGlassDesign(int design) { return design==0 || design==5 || design==6 || design==11 || design==15 || design==16 || design==29; }
     public boolean hasCompanyGlass(){return ScreenHousingTextures.companyLight(faceTexture);}
     public boolean hasGlass() { return ScreenHousingTextures.reactorArtwork(faceTexture)||faceTexture<0 && hasGlassDesign(design); }

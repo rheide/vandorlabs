@@ -207,8 +207,9 @@ public final class VehicleWorld extends World {
     private void controlChanged(BlockPos p){if(controlUpdates!=null)controlUpdates.accept(p.toImmutable());}
     @Override public void notifyBlockUpdate(BlockPos p,IBlockState before,IBlockState after,int flags){controlChanged(p);}
     @Override public void markBlockRangeForRenderUpdate(BlockPos a,BlockPos b){}
-    @Override public boolean checkLight(BlockPos p){return false;}
-    @Override public boolean checkLightFor(EnumSkyBlock type,BlockPos p){return false;}
+    // Recompute only the carried light field. The view never mutates parent chunks.
+    @Override public boolean checkLight(BlockPos p){localLight.invalidate();return false;}
+    @Override public boolean checkLightFor(EnumSkyBlock type,BlockPos p){if(type==EnumSkyBlock.BLOCK)localLight.invalidate();return false;}
     @Override public void setLightFor(EnumSkyBlock type,BlockPos p,int value){}
     /** Light readers used by foreign block models must not fall back to local chunks. */
     @Override public int getLight(BlockPos p){return loadedParent(p,0,parent::getLight);}

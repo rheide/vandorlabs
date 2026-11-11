@@ -19,7 +19,9 @@ public final class GlassPlayback {
     public void set(int mode,int speed){
         if(!valid(mode)||!valid(speed))throw new IllegalArgumentException("Invalid glass playback");
         if(this.mode==mode&&this.speed==speed)return;
-        this.mode=mode;this.speed=speed;owner.markDirty();GlassMaterials.changed();
+        this.mode=mode;this.speed=speed;
+        if(owner instanceof TileEntityProgrammableGlass){((TileEntityProgrammableGlass)owner).playbackChanged();return;}
+        owner.markDirty();GlassMaterials.changed();
         if(owner.getWorld()!=null){net.minecraft.block.state.IBlockState state=owner.getWorld().getBlockState(owner.getPos());owner.getWorld().notifyBlockUpdate(owner.getPos(),state,state,3);}
     }
     public void write(NBTTagCompound tag){

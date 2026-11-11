@@ -297,16 +297,21 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private boolean glassFramed=true;
     private boolean joinPortholes;
     private int portholeShape;
-    private static long portholeRevision;
+    private static final java.util.concurrent.atomic.AtomicLong portholeRevision = new java.util.concurrent.atomic.AtomicLong();
 
-    public static long getPortholeRevision() { return portholeRevision; }
+    public static long getPortholeRevision() { return portholeRevision.get(); }
+    /** Local-only notification also covers packet and same-state tile replacements. */
+    private void portholeChanged(){
+        portholeRevision.incrementAndGet();
+        if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.portholeGeometryChanged(this);
+    }
 
     public boolean isJoinPortholes() { return joinPortholes; }
     public int getPortholeShape() { return portholeShape; }
     public void setPortholeShape(int shape) {
         if (shape < 0 || shape > 3 || shape == portholeShape) return;
         portholeShape = shape;
-        portholeRevision++;
+        portholeChanged();
         settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
@@ -314,7 +319,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void setJoinPortholes(boolean join) {
         if (join == joinPortholes) return;
         joinPortholes = join;
-        portholeRevision++;
+        portholeChanged();
         settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
@@ -380,7 +385,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int getDiagonalJoin(){return diagonalJoin;}
     public void setDiagonalJoin(int choice){
         if(choice<0 || choice>11 || choice==diagonalJoin)return;
-        diagonalJoin=choice;settingsChanged();portholeRevision++;
+        diagonalJoin=choice;settingsChanged();portholeChanged();
         if(world!=null){world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1),pos.add(1,1,1));}
     }
     public int getDiagonalFill() { return diagonalFill; }
@@ -391,7 +396,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         diagonalHalfHeight=halfHeight;
         diagonalFullWidth=fullWidth;
         diagonalFill=nextFill;
-        settingsChanged(); portholeRevision++;
+        settingsChanged(); portholeChanged();
         if (world != null) {
             world.notifyBlockUpdate(pos, world.getBlockState(pos), world.getBlockState(pos), 3);
             world.markBlockRangeForRenderUpdate(pos.add(-1,-1,-1), pos.add(1,1,1));
@@ -402,7 +407,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (diagonalFullWidth == fullWidth && !diagonalHalfHeight) return;
         diagonalHalfHeight = false;
         diagonalFullWidth = fullWidth;
-        portholeRevision++;
+        portholeChanged();
         settingsChanged();
         if (world != null) world.notifyBlockUpdate(pos, world.getBlockState(pos),
                 world.getBlockState(pos), 3);
@@ -451,6 +456,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void localInputChanged() {if(joinedDisplayPower!=null)joinedDisplayPower.powerChanged();RedstoneChannels.inputChanged(this); }
     @Override public void onLoad() {
         super.onLoad();
+        portholeChanged();
         DeferredTileLoad.schedule(this, this::finishLoading);
     }
 
@@ -461,8 +467,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         return true;
     }
     protected void finishLoading() {com.vandorlabs.redstone.JoinedDisplayPower.changed(this);if(world!=null&&initializeDisplayArtwork(world.getBlockState(pos).getBlock())){markDirty();net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);} RedstoneChannels.register(this);for(RedstoneScreenContents c:controls)if(c!=null)c.finishLoading(); }
-    @Override public void invalidate() {com.vandorlabs.redstone.JoinedDisplayPower.changed(this);RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.invalidate(); super.invalidate(); }
-    @Override public void onChunkUnload() {com.vandorlabs.redstone.JoinedDisplayPower.changed(this);RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.onChunkUnload(); super.onChunkUnload(); }
+    @Override public void invalidate() {portholeChanged();com.vandorlabs.redstone.JoinedDisplayPower.changed(this);RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.invalidate(); super.invalidate(); }
+    @Override public void onChunkUnload() {portholeChanged();com.vandorlabs.redstone.JoinedDisplayPower.changed(this);RedstoneChannels.unregister(this);for(RedstoneScreenContents c:controls)if(c!=null)c.onChunkUnload(); super.onChunkUnload(); }
 
     public static boolean isValidInputPanel(String id) {
         if (id != null) {
@@ -718,7 +724,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         // Tile packets arrive after the unchanged-state block notification. A
         // layout rebuilt between those events must see the newly loaded artwork.
         com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();
-        portholeRevision++;
+        portholeChanged();
         if (world != null && !world.isRemote && !previousChannels.equals(channels))
             DeferredTileLoad.schedule(this, () -> RedstoneChannels.channelChanged(this, oldChannel));
     }

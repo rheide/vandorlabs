@@ -1,0 +1,25 @@
+task testGlassActualState(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare complete glass model states and verify custom-frame neighbour reads are skipped'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassActualStateChecks'
+}
+
+task testGlassLayoutLocality(type: JavaExec) {
+    group = 'verification'
+    description = 'Check artwork-layout boundary invalidation and distant-update read costs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassLayoutLocalityChecks'
+}
+
+task testPortholeGroupCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare aperture geometry and idle topology costs with the per-tick porthole cache'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.PortholeGroupCacheChecks'
+}
+
+check.dependsOn testGlassActualState, testGlassLayoutLocality, testPortholeGroupCache
