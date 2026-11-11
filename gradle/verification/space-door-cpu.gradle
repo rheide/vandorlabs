@@ -1,0 +1,11 @@
+task testSpaceDoorCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare regular door eligibility, pairing, pad geometry, invalidation and CPU preparation against master'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SpaceDoorCpuChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testSpaceDoorCpu

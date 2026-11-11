@@ -1,0 +1,23 @@
+task testSelectorCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare selector render eligibility, housing preparation and hidden-animation routing without GL'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SelectorCpuChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testSelectorCpu
+
+task testSelectorTextureRouting(type: JavaExec) {
+    group = 'verification'
+    description = 'Execute the compiled primary-artwork branch with recording texture and light sinks'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SelectorCpuChecks'
+    args 'routing'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}

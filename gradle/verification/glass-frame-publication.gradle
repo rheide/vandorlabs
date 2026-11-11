@@ -1,0 +1,8 @@
+task testGlassFramePublication(type: JavaExec) {
+    group = 'verification'
+    description = 'Check frame upload generations, coalesced section marks and nonblocking acknowledgement without OpenGL'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassFramePublicationChecks'
+    maxHeapSize = '512m'
+}

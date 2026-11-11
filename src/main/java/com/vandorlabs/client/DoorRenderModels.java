@@ -33,7 +33,7 @@ public final class DoorRenderModels {
         return entry;
     }
 
-    public static void clear() { FrameDoorModel.clear();DoorGlassModel.clear();MODELS.clear(); BY_BLOCK.clear(); SelectedDoorFaceCache.clear(); XDoorMeshes.clear(); OpaqueDoorBatch.clear(); }
+    public static void clear() { FrameDoorModel.clear();DoorGlassModel.clear();MODELS.clear(); BY_BLOCK.clear(); SelectedDoorFaceCache.clear(); XDoorMeshes.clear(); OpaqueDoorBatch.clear(); DoorControlPanelMeshes.clear(); }
     static void checkPreparedDrawStates(){DoorDrawRuntimeChecks.run(new java.util.ArrayList<>(MODELS.values()));}
 
     static final class Entry {

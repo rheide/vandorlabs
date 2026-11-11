@@ -7,6 +7,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import java.lang.ref.WeakReference;
 import java.util.*;
 
 /** Loaded, coplanar material groups. Holes partition into complete rectangles. */
@@ -22,29 +23,149 @@ final class GlassSurfaceGroups {
         String key(){return column+":"+row+":"+columns+":"+rows+":"+flipU+":"+flipV;}
     }
     static final int MAX_LAYOUTS=8192;
+    // A cheap same-flush guard for captured state/topology. All writes already
+    // hold this class's cache lock; readers need no world lookup or allocation.
+    private static volatile long mutation;
+    static long mutation(){return mutation;}
+    private static final class Corner {
+        final WeakReference<TileEntityProgrammableGlass> owner;
+        final IBlockState state;
+        final int metadata;
+        final boolean joined;
+        final EnumFacing facing;
+        final BlockProgrammableWall.FlatCorner value;
+        Corner(TileEntityProgrammableGlass tile,IBlockState state,EnumFacing facing){
+            owner=new WeakReference<>(tile);this.state=state;metadata=state.getBlock().getMetaFromState(state);joined=tile.isJoin();this.facing=facing;
+            value=PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
+        }
+    }
     private static final class Cache extends WorldRenderListener {
         long revision;
         final Map<BlockPos,Layout> frames=new HashMap<>();
         final Map<BlockPos,Integer> frameMasks=new HashMap<>();
         int tileRevision=-1;
+        WeakReference<Object> structure;
         final Map<BlockPos,Layout> layouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
         final Map<BlockPos,Layout> mainLayouts=new LinkedHashMap<BlockPos,Layout>(128,.75F,true){protected boolean removeEldestEntry(Map.Entry<BlockPos,Layout> entry){return size()>MAX_LAYOUTS;}};
-        void clear(){synchronized(GlassSurfaceGroups.class){layouts.clear();mainLayouts.clear();frames.clear();frameMasks.clear();}}
-        @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags){clear();}
-        @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2){clear();}
+        final Map<BlockPos,Corner> corners=new HashMap<>();
+        final BlockPos.MutableBlockPos lookup=new BlockPos.MutableBlockPos();
+        int minX=Integer.MAX_VALUE,minY=Integer.MAX_VALUE,minZ=Integer.MAX_VALUE;
+        int maxX=Integer.MIN_VALUE,maxY=Integer.MIN_VALUE,maxZ=Integer.MIN_VALUE;
+        void clearLayouts(){layouts.clear();mainLayouts.clear();frames.clear();frameMasks.clear();}
+        void clear(){clearLayouts();corners.clear();minX=minY=minZ=Integer.MAX_VALUE;maxX=maxY=maxZ=Integer.MIN_VALUE;mutation++;}
+        void admit(BlockPos pos,Corner corner){
+            corners.put(pos.toImmutable(),corner);
+            minX=Math.min(minX,pos.getX());minY=Math.min(minY,pos.getY());minZ=Math.min(minZ,pos.getZ());
+            maxX=Math.max(maxX,pos.getX());maxY=Math.max(maxY,pos.getY());maxZ=Math.max(maxZ,pos.getZ());
+        }
+        /** Flat corners read only the owner and its four same-height neighbours.
+         * Connected artwork has wider dependencies and keeps its old invalidation.
+         * Bounds may be conservative after removal; they never omit an entry. */
+        void changed(int x0,int y0,int z0,int x1,int y1,int z1){
+            mutation++;clearLayouts();
+            long loX=(long)Math.min(x0,x1)-1,hiX=(long)Math.max(x0,x1)+1;
+            long loZ=(long)Math.min(z0,z1)-1,hiZ=(long)Math.max(z0,z1)+1;
+            int loY=Math.min(y0,y1),hiY=Math.max(y0,y1);
+            if(corners.isEmpty()||hiX<minX||loX>maxX||hiY<minY||loY>maxY||hiZ<minZ||loZ>maxZ)return;
+            if(x0==x1&&y0==y1&&z0==z1){
+                corners.remove(lookup.setPos(x0,y0,z0));
+                if(x0>Integer.MIN_VALUE)corners.remove(lookup.setPos(x0-1,y0,z0));
+                if(x0<Integer.MAX_VALUE)corners.remove(lookup.setPos(x0+1,y0,z0));
+                if(z0>Integer.MIN_VALUE)corners.remove(lookup.setPos(x0,y0,z0-1));
+                if(z0<Integer.MAX_VALUE)corners.remove(lookup.setPos(x0,y0,z0+1));
+                return;
+            }
+            int left=(int)Math.max(loX,minX),right=(int)Math.min(hiX,maxX);
+            int bottom=Math.max(loY,minY),top=Math.min(hiY,maxY);
+            int near=(int)Math.max(loZ,minZ),far=(int)Math.min(hiZ,maxZ);
+            long width=(long)right-left+1,height=(long)top-bottom+1,depth=(long)far-near+1;
+            // Small edits need no iterator. Large ranges scan at most the fixed
+            // cache budget, never every coordinate of a chunk/world-sized range.
+            if(width<=256&&height<=256&&depth<=256&&width*height*depth<=256){
+                for(long y=bottom;y<=top;y++)for(long z=near;z<=far;z++)for(long x=left;x<=right;x++)
+                    corners.remove(lookup.setPos((int)x,(int)y,(int)z));
+            }else for(Iterator<BlockPos> it=corners.keySet().iterator();it.hasNext();){
+                BlockPos pos=it.next();
+                if(pos.getX()>=left&&pos.getX()<=right&&pos.getY()>=bottom&&pos.getY()<=top&&pos.getZ()>=near&&pos.getZ()<=far)it.remove();
+            }
+        }
+        void topology(World world){
+            int next=-1;Object snapshot=null;
+            if(world instanceof com.vandorlabs.vehicle.VehicleWorld){
+                com.vandorlabs.vehicle.VehicleWorld vehicle=(com.vandorlabs.vehicle.VehicleWorld)world;
+                next=vehicle.tileRevision;snapshot=vehicle.structure;
+            }
+            if(tileRevision!=next||(structure==null?null:structure.get())!=snapshot){
+                tileRevision=next;structure=snapshot==null?null:new WeakReference<>(snapshot);clear();
+            }
+        }
+        void materials(World world){
+            topology(world);long next=GlassMaterials.revision();
+            if(revision!=next){revision=next;clearLayouts();}
+        }
+        @Override public void notifyBlockUpdate(World world,BlockPos pos,IBlockState before,IBlockState after,int flags){
+            synchronized(GlassSurfaceGroups.class){changed(pos.getX(),pos.getY(),pos.getZ(),pos.getX(),pos.getY(),pos.getZ());}
+        }
+        @Override public void markBlockRangeForRenderUpdate(int x1,int y1,int z1,int x2,int y2,int z2){
+            synchronized(GlassSurfaceGroups.class){changed(x1,y1,z1,x2,y2,z2);}
+        }
     }
     private static final Map<World,Cache> CACHES=new WeakHashMap<>();
-    static synchronized void invalidate(World world){Cache cache=CACHES.get(world);if(cache!=null)cache.clear();}
-    static synchronized void unload(World world){Cache cache=CACHES.remove(world);if(cache!=null)world.removeEventListener(cache);}
+    private static Cache cache(World world){
+        Cache cache=CACHES.get(world);
+        if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);mutation++;}
+        return cache;
+    }
+    static synchronized void invalidate(World world){Cache cache=CACHES.get(world);if(cache!=null)cache.clear();else mutation++;}
+    static synchronized void invalidate(World world,int x0,int y0,int z0,int x1,int y1,int z1){
+        Cache cache=CACHES.get(world);if(cache!=null)cache.changed(x0,y0,z0,x1,y1,z1);else mutation++;
+    }
+    /** Local-only tile lifecycle/settings notification, also used by captured worlds. */
+    static void changed(TileEntityProgrammableGlass tile){
+        World world=tile.getWorld();if(world==null)return;BlockPos pos=tile.getPos();
+        invalidate(world,pos.getX(),pos.getY(),pos.getZ(),pos.getX(),pos.getY(),pos.getZ());
+    }
+    static synchronized void unload(World world){Cache cache=CACHES.remove(world);mutation++;if(cache!=null)world.removeEventListener(cache);}
     static Layout layout(TileEntity tile){return layout(tile,false,false);}
     static Layout frameLayout(TileEntity tile){return layout(tile,false,true);}
+    /** Fast-render eligibility must not perform discovery: Forge asks twice per
+     * dispatch, including panes outside the admission budget. A missed proof
+     * keeps the ordinary renderer, which discovers the corner only once. */
+    static synchronized boolean flatCached(TileEntityProgrammableGlass tile,IBlockState state){
+        World world=tile.getWorld();if(world==null)return false;Cache cache=CACHES.get(world);if(cache==null)return false;
+        cache.topology(world);Corner corner=cache.corners.get(tile.getPos());
+        return corner!=null&&corner.value==null&&corner.owner.get()==tile&&corner.state==state
+                &&corner.joined==tile.isJoin()&&corner.facing==tile.getPanelFacing(PanelJoins.facing(state));
+    }
+    /** Native metadata preserves the corner's ROTATED/DEPTH inputs; size and
+     * calculated connection properties do not participate. Precompute the saved
+     * value on admission instead of rebuilding an IBlockState twice per dispatch. */
+    static synchronized boolean flatCached(TileEntityProgrammableGlass tile,net.minecraft.block.Block block,int metadata){
+        World world=tile.getWorld();if(world==null)return false;Cache cache=CACHES.get(world);if(cache==null)return false;
+        cache.topology(world);Corner corner=cache.corners.get(tile.getPos());
+        return corner!=null&&corner.value==null&&corner.owner.get()==tile&&corner.state.getBlock()==block&&corner.metadata==metadata
+                &&corner.joined==tile.isJoin()&&corner.facing==tile.getPanelFacing((metadata&1)==0?EnumFacing.NORTH:EnumFacing.EAST);
+    }
+    /** Reuse regular-panel topology across collection, sorting and pane submission.
+     * Null corners are cached too; geometry contains no atlas or vertex-format data. */
+    static synchronized BlockProgrammableWall.FlatCorner flatCorner(TileEntityProgrammableGlass tile,IBlockState state){
+        World world=tile.getWorld();Cache cache=cache(world);cache.topology(world);
+        EnumFacing facing=tile.getPanelFacing(PanelJoins.facing(state));
+        Corner old=cache.corners.get(tile.getPos());
+        if(old!=null&&old.owner.get()==tile&&old.state==state&&old.joined==tile.isJoin()&&old.facing==facing)return old.value;
+        // A view can contain more panes than the cache budget. Cycling through
+        // those panes must not evict every useful entry and allocate a new weak
+        // owner/map node on every pass. Keep the admitted working set and run
+        // excess positions uncached until ordinary invalidation reopens space.
+        // An admitted position can still replace a stale owner/state in place.
+        if(old==null&&cache.corners.size()>=MAX_LAYOUTS)
+            return PanelJoins.flatCorner(state,world,tile.getPos());
+        Corner next=new Corner(tile,state,facing);cache.admit(tile.getPos(),next);return next.value;
+    }
     /** Local contour edges are independent of rectangular artwork partitions. */
     static synchronized int frameMask(TileEntityProgrammableGlass tile){
         if(tile.frameAppearance.tile||!tile.isJoin())return 15;
-        World world=tile.getWorld();Cache cache=CACHES.get(world);
-        if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
-        int revision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
-        if(cache.tileRevision!=revision||cache.revision!=GlassMaterials.revision()){cache.tileRevision=revision;cache.revision=GlassMaterials.revision();cache.clear();}
+        World world=tile.getWorld();Cache cache=cache(world);cache.materials(world);
         Integer old=cache.frameMasks.get(tile.getPos());if(old!=null)return old;
         EnumFacing right=PanelJoins.facing(world.getBlockState(tile.getPos())).rotateY();
         BlockPos p=tile.getPos();BlockPos[] next={p.offset(right.getOpposite()),p.offset(right),p.down(),p.up()};boolean[] joined=new boolean[4];int mask=0;
@@ -58,11 +179,7 @@ final class GlassSurfaceGroups {
 
     static Layout mainLayout(TileEntity tile){return layout(tile,true,false);}
     private static synchronized Layout layout(TileEntity tile,boolean main,boolean frame){
-        World world=tile.getWorld();Cache cache=CACHES.get(world);
-        if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}
-        // Captured vehicle worlds can replace their local structure without ordinary block events.
-        int tileRevision=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).tileRevision:-1;
-        if(cache.tileRevision!=tileRevision || cache.revision!=GlassMaterials.revision()){cache.tileRevision=tileRevision;cache.revision=GlassMaterials.revision();cache.clear();}
+        World world=tile.getWorld();Cache cache=cache(world);cache.materials(world);
         Map<BlockPos,Layout> layouts=frame?cache.frames:main?cache.mainLayouts:cache.layouts;
         if(layouts.size()>MAX_LAYOUTS)layouts.clear();
         Layout found=layouts.get(tile.getPos());if(found!=null)return found;

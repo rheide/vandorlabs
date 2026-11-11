@@ -1,0 +1,16 @@
+task testGlassTopologyCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Check cached glass topology against neighbour discovery and measure warm world reads'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassTopologyCacheChecks'
+}
+
+task testGlassShaderMaterial(type: JavaExec) {
+    group = 'verification'
+    description = 'Check optional G5 material-key dispatch, alias boundaries and allocation'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassShaderMaterialChecks'
+    if (project.hasProperty('glassOptifineJar')) args file(project.property('glassOptifineJar')).absolutePath
+}

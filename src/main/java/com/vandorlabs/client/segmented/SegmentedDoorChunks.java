@@ -16,7 +16,7 @@ import java.util.*;
 public final class SegmentedDoorChunks {
     private static final Set<SegmentedDoorTile> QUEUED=Collections.newSetFromMap(new IdentityHashMap<SegmentedDoorTile,Boolean>());
     private static final Map<SegmentedDoorTile,Pending> ACTIVE=new IdentityHashMap<>();
-    private static final Field FRUSTUM=ReflectionHelper.findField(RenderGlobal.class,"viewFrustum","field_175008_n"),DISPATCHER=ReflectionHelper.findField(RenderGlobal.class,"renderDispatcher","field_174995_M"),TASK=ReflectionHelper.findField(RenderChunk.class,"compileTask","field_178599_i");
+    private static final Field FRUSTUM=ReflectionHelper.findField(RenderGlobal.class,"viewFrustum","field_175008_n"),TASK=ReflectionHelper.findField(RenderChunk.class,"compileTask","field_178599_i");
     private static final Method LOOKUP=lookup();
     private static Method lookup(){for(Method m:ViewFrustum.class.getDeclaredMethods())if(m.getReturnType()==RenderChunk.class&&Arrays.equals(m.getParameterTypes(),new Class[]{BlockPos.class})){m.setAccessible(true);return m;}throw new IllegalStateException("Missing render chunk lookup");}
     private static final class Section {
@@ -25,11 +25,15 @@ public final class SegmentedDoorChunks {
         boolean uploaded(Minecraft mc,Set<RenderChunk> rebuild)throws ReflectiveOperationException{
             ViewFrustum view=(ViewFrustum)FRUSTUM.get(mc.renderGlobal);if(view==null)return false;RenderChunk current=(RenderChunk)LOOKUP.invoke(view,pos);
             if(current==null||!current.getPosition().equals(pos))return false;
-            if(chunk!=current){chunk=current;before=current.getCompiledChunk();current.setNeedsUpdate(false);}
-            if(current.needsUpdate()){rebuild.add(current);return false;}
-            current.getLockCompileTask().lock();try{
+            if(chunk!=current){chunk=current;before=current.getCompiledChunk();rebuild.add(current);return false;}
+            // The render dispatcher owns rebuild scheduling. Never wait behind a
+            // worker or replace its in-flight task from the client tick.
+            if(current.needsUpdate()||!current.getLockCompileTask().tryLock())return false;
+            try{
                 ChunkCompileTaskGenerator task=(ChunkCompileTaskGenerator)TASK.get(current);
-                return !current.needsUpdate()&&task!=null&&task.getStatus()==ChunkCompileTaskGenerator.Status.DONE&&current.getCompiledChunk()!=before&&task.getCompiledChunk()==current.getCompiledChunk();
+                if(task==null||!task.getLock().tryLock())return false;
+                try{return !current.needsUpdate()&&task.getStatus()==ChunkCompileTaskGenerator.Status.DONE&&current.getCompiledChunk()!=before&&task.getCompiledChunk()==current.getCompiledChunk();}
+                finally{task.getLock().unlock();}
             }finally{current.getLockCompileTask().unlock();}
         }
     }
@@ -38,7 +42,6 @@ public final class SegmentedDoorChunks {
         Pending(SegmentedDoorTile root,boolean baked,List<SegmentedDoorTile> members){
             this.baked=baked;this.members=members;Set<BlockPos> positions=new LinkedHashSet<>();for(SegmentedDoorTile tile:members){tile.clientBaked=baked;positions.add(new BlockPos(tile.getPos().getX()&~15,tile.getPos().getY()&~15,tile.getPos().getZ()&~15));}
             for(BlockPos pos:positions)sections.add(new Section(pos));root.clientAwaitingChunk=true;root.clientSuppressed=false;
-            root.getWorld().markBlockRangeForRenderUpdate(root.getPos().down(root.height-1),root.getPos());
         }
         boolean uploaded(Minecraft mc,Set<RenderChunk> rebuild)throws ReflectiveOperationException{boolean done=true;for(Section section:sections)done&=section.uploaded(mc,rebuild);return done;}
     }
@@ -47,22 +50,28 @@ public final class SegmentedDoorChunks {
     @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote){synchronized(QUEUED){QUEUED.removeIf(t->t.getWorld()==event.getWorld());}ACTIVE.keySet().removeIf(t->t.getWorld()==event.getWorld());}}
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event){
         if(event.phase!=TickEvent.Phase.END)return;Minecraft mc=Minecraft.getMinecraft();if(mc.world==null)return;
-        synchronized(QUEUED){for(SegmentedDoorTile tile:QUEUED)if(tile.getWorld()==mc.world&&!tile.isInvalid()){SegmentedDoorTile root=tile.root();if(root.ready()&&root.isRoot())ACTIVE.putIfAbsent(root,null);}QUEUED.clear();}
+        synchronized(QUEUED){if(!QUEUED.isEmpty()){for(SegmentedDoorTile tile:QUEUED)if(tile.getWorld()==mc.world&&!tile.isInvalid()){SegmentedDoorTile root=tile.root();if(root.ready()&&root.isRoot())ACTIVE.putIfAbsent(root,null);}QUEUED.clear();}}
+        if(ACTIVE.isEmpty())return;
         Set<RenderChunk> rebuild=new LinkedHashSet<>();
         try{Iterator<Map.Entry<SegmentedDoorTile,Pending>> it=ACTIVE.entrySet().iterator();while(it.hasNext()){
             Map.Entry<SegmentedDoorTile,Pending> entry=it.next();SegmentedDoorTile root=entry.getKey();if(root.getWorld()!=mc.world||root.isInvalid()||SegmentedDoorTile.at(mc.world,root.getPos())!=root||!root.isRoot()){it.remove();continue;}
-            List<SegmentedDoorTile> members=new ArrayList<>();boolean complete=true;for(int row=0;row<root.height;row++){SegmentedDoorTile member=SegmentedDoorTile.at(mc.world,root.getPos().down(row));if(member==null||!member.ready()||member.topOffset!=row||member.height!=root.height){complete=false;break;}members.add(member);}if(!complete)continue;
-            Pending pending=entry.getValue();boolean wantsBaked=root.canBake()&&!root.targetOpen&&(root.clientAwaitingChunk||SegmentedDoorVisuals.pose(root,0)==0);
+            List<SegmentedDoorTile> members=new ArrayList<>();boolean complete=true;for(int row=0;row<root.height;row++){SegmentedDoorTile member=SegmentedDoorTile.at(mc.world,root.getPos().down(row));if(member==null||!member.ready()||member.topOffset!=row||member.height!=root.height){complete=false;break;}members.add(member);}if(!complete){
+                // A later member load/packet queues the owner again. Retain an
+                // outstanding upload handoff, whose fallback must remain live.
+                if(entry.getValue()==null)it.remove();continue;
+            }
+            Pending pending=entry.getValue();boolean eligible=root.canBake(),wantsBaked=eligible&&!root.targetOpen&&(root.clientAwaitingChunk||SegmentedDoorVisuals.pose(root,0)==0);
             boolean changed=false;for(SegmentedDoorTile member:members)changed|=member.clientBaked!=wantsBaked;
             if(changed||pending!=null&&(pending.baked!=wantsBaked||!pending.members.equals(members))){pending=new Pending(root,wantsBaked,members);entry.setValue(pending);}
             if(pending!=null){if(!pending.uploaded(mc,rebuild))continue;root.clientAwaitingChunk=false;root.clientSuppressed=pending.baked;if(!pending.baked)SegmentedDoorVisuals.resume(root);entry.setValue(null);}
-            if(root.clientSuppressed||root.targetOpen){it.remove();}
+            // A closed custom/windowed column cannot enter terrain geometry.
+            // Appearance/topology packets queue it again if eligibility changes.
+            if(root.clientSuppressed||root.targetOpen||!eligible){it.remove();}
         }
-        // Publish every column flag first. Queue each dirty section once, including
-        // sections outside the current frustum. Native workers/upload queues retain
-        // normal scheduling; cap submissions so a bank of doors cannot spike a tick.
-        ChunkRenderDispatcher dispatcher=(ChunkRenderDispatcher)DISPATCHER.get(mc.renderGlobal);int submitted=0;
-        if(dispatcher!=null)for(RenderChunk chunk:rebuild){if(submitted++>=8||!dispatcher.updateChunkLater(chunk))break;chunk.clearNeedsUpdate();}
+        // Publish every column flag first, then mark each affected section once.
+        // An interior point avoids invalidating neighbouring sections or unrelated
+        // world listeners; ordinary rendering schedules the pending chunk work.
+        for(RenderChunk chunk:rebuild){BlockPos pos=chunk.getPosition();int x=pos.getX()+8,y=pos.getY()+8,z=pos.getZ()+8;mc.renderGlobal.markBlockRangeForRenderUpdate(x,y,z,x,y,z);}
         }catch(ReflectiveOperationException failure){throw new IllegalStateException("Segmented terrain publication failed",failure);}
     }
     private SegmentedDoorChunks(){}

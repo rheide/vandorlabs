@@ -1,0 +1,11 @@
+task testHousingPrepared(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare prepared housing families and shared snapshots against the delivered performance patch'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.HousingPreparedChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testHousingPrepared

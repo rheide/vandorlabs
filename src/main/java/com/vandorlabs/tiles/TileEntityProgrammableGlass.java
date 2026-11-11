@@ -114,6 +114,9 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         com.vandorlabs.persistence.ProgrammableGlassSettings saved=com.vandorlabs.persistence.ProgrammableGlassSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag),GlassMaterials::clamp);
         material=saved.material;stretch=saved.stretch;textureLayout=saved.layout;tint=saved.tint;framed=saved.framed;
         shade=saved.shade;legacySize=saved.legacySize;size=saved.size;join=saved.join;panelFacing=saved.panelFacing;
+        // Packet, copy and carried-tile replacements all invalidate local client
+        // topology; a global material revision is not a topology dependency.
+        if(world!=null)frameChanged();
     }
     @Override public void onLoad() {
         super.onLoad();
@@ -133,7 +136,6 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     }
     @Override public void handleUpdateTag(NBTTagCompound tag) {
         readFromNBT(tag);
-        frameChanged();
         if (world != null) world.markBlockRangeForRenderUpdate(
                 pos.add(-1, -1, -1), pos.add(1, 1, 1));
     }
@@ -146,5 +148,10 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         if(pass!=1)return false;
         if(fluids.any()||!GlassMaterials.opaque(material,tint))return true;
         return world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null;
+    }
+    /** An empty opaque pass still collects this pane for sorted translucent drawing. */
+    @Override public boolean hasFastRenderer(){
+        return com.vandorlabs.VandorLabs.proxy!=null
+                &&com.vandorlabs.VandorLabs.proxy.glassCollectionOnly(this);
     }
 }

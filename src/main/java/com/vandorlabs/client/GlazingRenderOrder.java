@@ -17,6 +17,7 @@ final class GlazingRenderOrder {
     private static final Map<TileEntity,Draw> visible=new IdentityHashMap<>();
     private static final class Draw {
         TileEntity tile;double x,y,z;float partial,alpha;int stage,axis;double depth,plane;
+        final GlassPanePreparation glass=new GlassPanePreparation();
         void set(TileEntity tile,double x,double y,double z,float partial,int stage,float alpha){this.tile=tile;this.x=x;this.y=y;this.z=z;this.partial=partial;this.stage=stage;this.alpha=alpha;}
     }
     private static final List<Draw> pool=new ArrayList<>(),ordered=new ArrayList<>();
@@ -24,7 +25,7 @@ final class GlazingRenderOrder {
     private static final java.nio.FloatBuffer projection=org.lwjgl.BufferUtils.createFloatBuffer(16);
     private static final java.nio.IntBuffer viewport=org.lwjgl.BufferUtils.createIntBuffer(16);
     private static final java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);
-    private static void clear(){for(Draw draw:ordered)draw.tile=null;ordered.clear();visible.clear();}
+    private static void clear(){for(Draw draw:ordered){draw.tile=null;draw.glass.clear();}ordered.clear();visible.clear();}
     static void begin(World view){end();world=view;lateDraws=0;GlassPaneBatch.panes=GlassPaneBatch.draws=0;}
     static void end(){clear();world=null;flushing=false;flushed=false;}
     static boolean handle(TileEntity tile,double x,double y,double z,float partial,int stage,float alpha){
@@ -64,7 +65,7 @@ final class GlazingRenderOrder {
         flushing=true;
         try(TurntableRenderState saved=new TurntableRenderState();GlassPaneBatch batch=new GlassPaneBatch()){
             for(Draw draw:ordered)if(world.getTileEntity(draw.tile.getPos())==draw.tile&&draw.tile.shouldRenderInPass(1)){
-                if(batchPanes&&batch.append(draw.tile,draw.x,draw.y,draw.z))continue;
+                if(batchPanes&&batch.append(draw.tile,draw.x,draw.y,draw.z,draw.glass))continue;
                 batch.flush();
                 dispatcher.render(draw.tile,draw.x,draw.y,draw.z,draw.partial,draw.stage,draw.alpha);
             }
@@ -73,9 +74,11 @@ final class GlazingRenderOrder {
     }
     private static double depth(Draw draw,double cx,double cy,double cz,java.nio.FloatBuffer matrix){
         TileEntity tile=draw.tile;
+        draw.glass.clear();long mutation=GlassSurfaceGroups.mutation();
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         int axis=-1;double plane=0,offset=0;
-        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableGlass&&com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())==null){
+        if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableGlass&&tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass&&GlassSurfaceGroups.flatCorner((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile,state)==null){
+            draw.glass.capture((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile,state,mutation);
             boolean rotated=state.getValue(com.vandorlabs.blocks.BlockGlassWall.ROTATED);axis=rotated?0:2;offset=com.vandorlabs.blocks.PanelDepth.offset(state.getValue(com.vandorlabs.blocks.BlockGlassWall.DEPTH))/16D;
             plane=rotated?tile.getPos().getX()+.5-offset:tile.getPos().getZ()+.5+offset;
         }else if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall){

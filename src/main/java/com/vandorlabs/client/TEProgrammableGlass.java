@@ -36,6 +36,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
     private static final double PANE_NEAR = 7D / 16D;
     private static final double PANE_FAR = 9D / 16D;
+    private static final GlassSurfaceGroups.Layout UNIT_LAYOUT=new GlassSurfaceGroups.Layout(0,0,1,1);
     private static StaticSurfaceMesh materialPlane;
     static StaticSurfaceMesh materialPlane(){
         if(materialPlane==null){StaticSurfaceMesh.Capture buffer=StaticSurfaceMesh.capture();
@@ -45,23 +46,33 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
             }materialPlane=buffer.finish();
         }return materialPlane;
     }
+    @Override public void renderTileEntityFast(TileEntityProgrammableGlass tile,double x,double y,
+            double z,float partial,int stage,float alpha,BufferBuilder buffer){
+        if(tile.getWorld()==null || WorldSceneBenchmark.omitGlazing())return;
+        // hasFastRenderer admits only an empty opaque pass. Keep its visibility
+        // record, but leave the shared Forge buffer and its vertex format alone.
+        // Translucent panes still go through the ordered shader-aware renderer.
+        GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha);
+    }
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null || WorldSceneBenchmark.omitGlazing()) return;
         if(GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
-        if (!(tile.getWorld().getBlockState(tile.getPos()).getBlock()
+        net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
+        if (!(state.getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
         if(tile.fluids.any()&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(tile,x,y,z);
         int size = tile.getSize();
-        net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
-        com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
+        com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=GlassSurfaceGroups.flatCorner(tile,state);
+        if(net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==0
+                &&ProgrammableGlassPasses.emptyOpaquePass(tile,corner))return;
         if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1 && !GlassFrameChunks.rendered(tile))renderSelectedFrame(tile,state,x,y,z);
         if(corner!=null&&FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
         int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
         if(pass>=0&&pass!=(opaque?0:1))return;
-        net.minecraft.client.renderer.texture.TextureAtlasSprite material=net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
+        net.minecraft.client.renderer.texture.TextureAtlasSprite material=tile.getMaterial()<0?null:net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                 com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),size,tile.getTint()));
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         float savedPaneBlock=OpenGlHelper.lastBrightnessX,savedPaneSky=OpenGlHelper.lastBrightnessY;
@@ -70,12 +81,12 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         GlStateManager.pushMatrix();
         GlStateManager.translate(x,y,z);
-        if (tile.getWorld().getBlockState(tile.getPos()).getValue(BlockGlassWall.ROTATED)) {
+        if (state.getValue(BlockGlassWall.ROTATED)) {
             GlStateManager.translate(.5,0,.5);
             GlStateManager.rotate(-90,0,1,0);
             GlStateManager.translate(-.5,0,-.5);
         }
-        int depth = tile.getWorld().getBlockState(tile.getPos()).getValue(BlockGlassWall.DEPTH);
+        int depth = state.getValue(BlockGlassWall.DEPTH);
         GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(depth) / 16D);
         GlStateManager.disableLighting();
         if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();
@@ -89,8 +100,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         GlStateManager.color(1F, 1F, 1F, 1F);
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-        double inset=tile.getMaterial()<0?0:.0001;
-        if(tile.getMaterial()<0){pane(b,PANE_NEAR+inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));pane(b,PANE_FAR-inset,1,1,1,opacity,material,new GlassSurfaceGroups.Layout(0,0,1,1));}
+        if(tile.getMaterial()<0)GlassNativePanes.get(tile.getShade(),size,tile.getTint(),false,0).draw(b,0,0,0,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
         else{GlStateManager.scale(1F/16,1F/16,1F/16);GlazingDisplay.draw(GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()),tile,b,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,opacity);}
         Tessellator.getInstance().draw();
         GlStateManager.enableCull();
@@ -174,7 +184,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
 
     static void pane(BufferBuilder buffer,double depth,float r,float g,float b,float a) {
-        pane(buffer,depth,r,g,b,a,null,new GlassSurfaceGroups.Layout(0,0,1,1));
+        pane(buffer,depth,r,g,b,a,null,UNIT_LAYOUT);
     }
     private static void pane(BufferBuilder buffer,double depth,float r,float g,float b,float a,net.minecraft.client.renderer.texture.TextureAtlasSprite material,GlassSurfaceGroups.Layout layout) {
         boolean near=depth<.5;

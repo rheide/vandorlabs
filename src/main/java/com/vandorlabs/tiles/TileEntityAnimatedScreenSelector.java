@@ -66,24 +66,31 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
 
     @Override public boolean shouldRenderInPass(int pass) {
+        if(pass!=0 && pass!=1)return false;
         if(fluids.any() && pass==1)return true;
-        if(world!=null && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return pass==0 || pass==1;
         net.minecraft.block.Block block = getBlockType();
-        if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)return pass==0||pass==1;
-        if(world!=null && getMainTextureLayout()==0 && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableSlab)) return false;
-        if (block instanceof com.vandorlabs.blocks.BlockProgrammableWall
-                && ((com.vandorlabs.blocks.BlockProgrammableWall) block).isPortholeShape())
-            return pass == 0 || pass == 1;
+        if(block instanceof com.vandorlabs.blocks.BlockProgrammableWall){
+            com.vandorlabs.blocks.BlockProgrammableWall wall=(com.vandorlabs.blocks.BlockProgrammableWall)block;
+            if(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass || wall.isPortholeShape())return true;
+            if(world!=null){
+                if(wall.isDiagonalShape()){
+                    if(getMainTextureLayout()==0 && com.vandorlabs.blocks.DiagonalWallState.baked(block,pos,
+                            getBlockMetadata(),diagonalHalfHeight,diagonalFullWidth))return false;
+                }else if(pass==1 && com.vandorlabs.blocks.PanelJoins.flatBar(world.getBlockState(pos),world,pos)!=null)return true;
+            }
+        }
+        // Ordinary screens/inputs cannot form a flat wall T bar. Pass zero also
+        // needs no topology query: both the bar and the ordinary panel draw then.
         return super.shouldRenderInPass(pass);
     }
 
     /** Only atlas-backed opaque solids can join Forge's shared tile vertex buffer. */
     @Override public boolean hasFastRenderer() {
         if (world == null) return false;
-        net.minecraft.block.Block block = world.getBlockState(pos).getBlock();
+        net.minecraft.block.Block block = getBlockType();
         if(block instanceof com.vandorlabs.blocks.BlockProgrammableWall){
             com.vandorlabs.blocks.BlockProgrammableWall wall=(com.vandorlabs.blocks.BlockProgrammableWall)block;
             return wall.isDiagonalShape()&&!wall.isPortholeShape()&&!(block instanceof com.vandorlabs.blocks.BlockProgrammableDiagonalGlass)&&!fluids.any();
@@ -175,8 +182,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null&&!DisplayJoinGeometry.installed(this))return new net.minecraft.util.math.AxisAlignedBB(pos);
         if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&hasChipSurface(0)){com.vandorlabs.blocks.ScreenChipGroups.Group group=com.vandorlabs.blocks.ScreenChipGroups.group(this);if(group!=null)return group.bounds;}
 
-        if (world != null && world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall
-                && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).isDiagonalShape())
+        if (world != null && getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableWall
+                && ((com.vandorlabs.blocks.BlockProgrammableWall)getBlockType()).isDiagonalShape())
             return new net.minecraft.util.math.AxisAlignedBB(pos).grow(.125);
         if (ceilingMounted) return new net.minecraft.util.math.AxisAlignedBB(
                 pos.add(-1,0,-1),pos.add(2,1,2));

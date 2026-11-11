@@ -40,6 +40,9 @@ public final class OpaqueDoorBatch {
                 || tile.getFaceTexture()>=0 || net.minecraftforge.fml.client.FMLClientHandler.instance().hasOptifine()
                 || !compatible(Minecraft.getMinecraft().getRenderItem())
                 || !ForgeModContainer.allowEmissiveItems || DefaultVertexFormats.BLOCK.getNextOffset()!=28) return false;
+        // Shaders and unsupported item renderers cannot use this batch, so
+        // reject them before asking the world about aperture water adjacency.
+        if(com.vandorlabs.blocks.RenderFluidPresence.wet(tile))return false;
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock() instanceof BlockConfigurableSpaceDoor)
                 || tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor && !((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).isAnchor()) return false;

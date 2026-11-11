@@ -1,0 +1,10 @@
+task testGlassFrameDirtyRegions(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare frame invalidation coverage, owner probes and allocation with the original neighbour scan'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassFrameDirtyRegionChecks'
+    maxHeapSize = '512m'
+}
+
+check.dependsOn testGlassFrameDirtyRegions

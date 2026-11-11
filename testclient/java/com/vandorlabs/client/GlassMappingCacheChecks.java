@@ -10,6 +10,32 @@ public final class GlassMappingCacheChecks {
     private static void need(boolean yes,String why){if(!yes)throw new AssertionError(why);}
     private static TextureAtlasSprite sprite(int offset){TextureAtlasSprite sprite=new TextureAtlasSprite("mapping-check/"+offset){};sprite.setIconWidth(16);sprite.setIconHeight(32);sprite.initSprite(256,256,offset,64,false);return sprite;}
     private static StaticSurfaceMesh mesh(int quads){StaticSurfaceMesh.Capture out=StaticSurfaceMesh.independentCapture();for(int q=0;q<quads;q++)for(int v=0;v<4;v++)out.pos(v==1||v==2?16:0,v>=2?16:0,q/16D).tex(v==1||v==2?1:0,v>=2?0:1).normal(0,0,-1).endVertex();return out.finish();}
+    private static void denseWorkingSets(Field vertices,TextureAtlasSprite sprite)throws Exception {
+        StaticSurfaceMesh source=mesh(2);
+        com.sun.management.ThreadMXBean meter=(com.sun.management.ThreadMXBean)ManagementFactory.getThreadMXBean();
+        long thread=Thread.currentThread().getId();
+        for(int count:new int[]{1025,1536,3072}){
+            GlassSurfaceMapping.clear();
+            GlassSurfaceGroups.Layout[] layouts=new GlassSurfaceGroups.Layout[count];
+            StaticSurfaceMesh[] expected=new StaticSurfaceMesh[count];
+            for(int i=0;i<count;i++){
+                layouts[i]=new GlassSurfaceGroups.Layout(i%64,i/64,64,(count+63)/64,(i&1)!=0,(i&2)!=0);
+                expected[i]=GlassSurfaceMapping.map(source,sprite,layouts[i],true,0,0,0);
+                StaticSurfaceMesh direct=source.glassTexture(sprite,layouts[i],true,0,0);
+                need(Arrays.equals((float[])vertices.get(direct),(float[])vertices.get(expected[i])),"dense mapping output "+i);
+            }
+            for(int pass=0;pass<8;pass++)for(int i=0;i<count;i++)
+                if(GlassSurfaceMapping.map(source,sprite,layouts[i],true,0,0,0)!=expected[i])throw new AssertionError("dense working set evicted below byte budget");
+            long before=meter.getThreadAllocatedBytes(thread),start=System.nanoTime();
+            for(int pass=0;pass<8;pass++)for(int i=0;i<count;i++)
+                if(GlassSurfaceMapping.map(source,sprite,layouts[i],true,0,0,0)!=expected[i])throw new AssertionError("dense warm cache miss");
+            long nanos=System.nanoTime()-start,allocated=meter.getThreadAllocatedBytes(thread)-before;
+            need(GlassSurfaceMapping.entries()==count&&GlassSurfaceMapping.retainedBytes()<=8L*1024*1024,"dense byte-bound retention");
+            need(allocated==0,"dense warmed mapping allocation="+allocated);
+            System.out.println("Glass UV cache mappings="+count+" hits="+(8*count)+" allocated="+allocated+" nanos="+nanos+" retained="+GlassSurfaceMapping.retainedBytes());
+        }
+        GlassSurfaceMapping.clear();
+    }
     public static void main(String[] args)throws Exception {
         net.minecraft.init.Bootstrap.register();Field vertices=StaticSurfaceMesh.class.getDeclaredField("vertices");vertices.setAccessible(true);
         StaticSurfaceMesh source=mesh(4);TextureAtlasSprite sprite=sprite(32);
@@ -28,6 +54,7 @@ public final class GlassMappingCacheChecks {
         System.out.println("Glass UV cache calls4096 layouts16 allocated="+allocated+" exactProfiles=96");
         if(args.length==0||!args[0].equals("baseline"))need(allocated==0,"warmed UV-cache allocation="+allocated);
         if(args.length>0&&args[0].equals("baseline"))return;
+        denseWorkingSets(vertices,sprite);
         GlassSurfaceMapping.clear();need(GlassSurfaceMapping.entries()==0&&GlassSurfaceMapping.retainedBytes()==0,"explicit retirement");
         StaticSurfaceMesh large=mesh(1000),first=null;
         for(int i=0;i<64;i++){

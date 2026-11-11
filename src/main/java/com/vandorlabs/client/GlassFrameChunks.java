@@ -80,7 +80,13 @@ public final class GlassFrameChunks {
     }
     /** Safe from onLoad and chunk workers: geometry and neighbour reads happen in flush only. */
     public static void changed(TileEntityProgrammableGlass tile){
-        if(tile.getWorld()==null||!tile.getWorld().isRemote||tile.getWorld() instanceof VehicleWorld)return;
+        World view=tile.getWorld(),physical=view;
+        // Captured views are remote even on the integrated server. Follow only
+        // parent references before touching any client cache or publication queue.
+        while(physical instanceof VehicleWorld)physical=((VehicleWorld)physical).parent;
+        if(physical==null||!physical.isRemote)return;
+        GlassSurfaceGroups.changed(tile);
+        if(view instanceof VehicleWorld)return;
         synchronized(QUEUED){QUEUED.add(tile);}
     }
     static boolean selected(TileEntityProgrammableGlass tile){return tile.isFramed()&&(tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile);}
@@ -105,7 +111,10 @@ public final class GlassFrameChunks {
         if(world!=null&&listener!=null)world.removeEventListener(listener);
         for(Entry entry:ENTRIES.values()){entry.tile.frameChunkMesh=null;entry.tile.frameChunkPublication=null;}
         ENTRIES.clear();MEMBERS.clear();DIRTY.clear();PENDING.clear();MESHES.invalidateAll();world=next;frustum=null;
-        if(next!=null){listener=new WorldRenderListener(){@Override public void notifyBlockUpdate(World w,BlockPos pos,IBlockState old,IBlockState state,int flags){DIRTY.add(pos.toImmutable());}};next.addEventListener(listener);}
+        if(next!=null){listener=new WorldRenderListener(){@Override public void notifyBlockUpdate(World w,BlockPos pos,IBlockState old,IBlockState state,int flags){
+            // Newly loaded owners enter through QUEUED; unrelated worlds need no frame work.
+            if(!MEMBERS.isEmpty())DIRTY.add(pos.toImmutable());
+        }};next.addEventListener(listener);}
     }
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event){if(event.phase==TickEvent.Phase.END)flush();}
     @SubscribeEvent public static void renderTick(TickEvent.RenderTickEvent event){
@@ -126,12 +135,12 @@ public final class GlassFrameChunks {
         Minecraft mc=Minecraft.getMinecraft();if(mc.world!=world)reset(mc.world);
         if(world==null){synchronized(QUEUED){QUEUED.clear();}return;}
         if(format==null||!format.equals(DefaultVertexFormats.BLOCK)){format=new VertexFormat(DefaultVertexFormats.BLOCK);reload();}
-        Set<TileEntityProgrammableGlass> queued=Collections.newSetFromMap(new IdentityHashMap<>());
-        synchronized(QUEUED){queued.addAll(QUEUED);QUEUED.clear();}
-        // Tile loads and packets may arrive without a neighbour block-state notification.
-        // Invalidate once for the batch, before reading any frame contours.
-        if(!queued.isEmpty())GlassSurfaceGroups.invalidate(world);
+        Set<TileEntityProgrammableGlass> queued=Collections.emptySet();
+        synchronized(QUEUED){if(!QUEUED.isEmpty()){queued=Collections.newSetFromMap(new IdentityHashMap<>());queued.addAll(QUEUED);QUEUED.clear();}}
         for(TileEntityProgrammableGlass tile:queued)if(tile.getWorld()==world){
+            // Recheck after queued loads have settled, before building contours.
+            // Only this owner and adjacent corner dependencies need to expire.
+            GlassSurfaceGroups.changed(tile);
             BlockPos pos=tile.getPos().toImmutable();DIRTY.add(pos);
             if(valid(tile)){
                 Entry entry=ENTRIES.get(pos);if(entry==null||entry.tile!=tile){
@@ -140,8 +149,8 @@ public final class GlassFrameChunks {
                 }
             }else{Entry entry=ENTRIES.get(pos);if(entry!=null&&entry.tile==tile)remove(entry);}
         }
-        Set<Entry> dirty=Collections.newSetFromMap(new IdentityHashMap<>());
-        for(BlockPos pos:DIRTY)for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++)for(int z=-1;z<=1;z++){Entry entry=ENTRIES.get(pos.add(x,y,z));if(entry!=null)dirty.add(entry);}
+        Set<Entry> dirty=DIRTY.isEmpty()?Collections.emptySet():Collections.newSetFromMap(new IdentityHashMap<>());
+        if(!DIRTY.isEmpty())GlassFrameDirtyRegions.collect(ENTRIES,MEMBERS,DIRTY,dirty);
         DIRTY.clear();
         for(Entry entry:dirty){
             TileEntityProgrammableGlass tile=entry.tile;

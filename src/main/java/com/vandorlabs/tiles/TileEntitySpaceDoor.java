@@ -275,15 +275,42 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     @Override
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public boolean hasFastRenderer() {
-        return !(world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this))&&com.vandorlabs.client.OpaqueDoorBatch.available(this);
+        return com.vandorlabs.client.OpaqueDoorBatch.available(this);
     }
     @Override public boolean shouldRenderInPass(int pass) {
-        return pass==1&&world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this)||isLowerDoor() && (pass == 0 || pass == 1 && (hasCompanyGlass()||hasGlass() && !opaqueGlass()));
+        if(pass!=0&&pass!=1)return false;
+        if(pass==1){
+            if(world!=null&&com.vandorlabs.blocks.RenderFluidPresence.wet(this))return true;
+            if(!hasCompanyGlass()&&(!hasGlass()||opaqueGlass()))return false;
+        }
+        if(world==null||pos==null)return false;
+        // Native chunks invalidate TileEntity's cached block and metadata
+        // when a block changes. Synthetic vehicle views retain tiles across
+        // snapshot edits, so keep their live-state path, as well as overrides
+        // supplied by subclasses with different root/metadata conventions.
+        if(world.isRemote&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){
+            Block block=getBlockType();
+            if(getClass()==TileEntitySpaceDoor.class
+                    &&block.getClass()==com.vandorlabs.blocks.BlockConfigurableSpaceDoor.class)
+                return (getBlockMetadata()&8)==0;
+            if(getClass()==TileEntityLargeProgrammableDoor.class
+                    &&block.getClass()==com.vandorlabs.blocks.BlockLargeProgrammableDoor.class)
+                return ((TileEntityLargeProgrammableDoor)this).isAnchor();
+        }
+        return isLowerDoor();
     }
     /** Keep frames and moving leaves visible throughout the loaded chunk render distance. */
     @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
+    private BlockPos renderBoundsPos;
+    private boolean renderBoundsVertical;
+    private net.minecraft.util.math.AxisAlignedBB renderBounds;
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
-        return slideDirection==0?super.getRenderBoundingBox():
-                new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,-2,-1),pos.add(2,4,2));
+        boolean vertical=slideDirection!=0;
+        if(renderBounds==null||vertical!=renderBoundsVertical||!pos.equals(renderBoundsPos)){
+            renderBoundsPos=pos.toImmutable();renderBoundsVertical=vertical;
+            renderBounds=new net.minecraft.util.math.AxisAlignedBB(pos.getX()-1,pos.getY()+(vertical?-2:0),pos.getZ()-1,
+                    pos.getX()+2,pos.getY()+(vertical?4:2),pos.getZ()+2);
+        }
+        return renderBounds;
     }
 }

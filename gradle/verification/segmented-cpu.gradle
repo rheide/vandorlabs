@@ -1,0 +1,17 @@
+task testSegmentedColumnCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare actual segmented templates and prepared-column world reads, allocation and invalidation'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedColumnCpuChecks'
+    maxHeapSize = '1g'
+}
+
+task testSegmentedPublicationCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify segmented terrain publication avoids blocked locks, task replacement and idle rescans'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.SegmentedPublicationCpuChecks'
+    maxHeapSize = '512m'
+}

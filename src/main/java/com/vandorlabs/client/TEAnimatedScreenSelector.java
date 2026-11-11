@@ -83,6 +83,7 @@ public class TEAnimatedScreenSelector
     }
 
     private static final Map<String, AnimData> ANIM_CACHE = new HashMap<>();
+    private static final Map<String, AnimData> INPUT_ANIM_CACHE = new HashMap<>();
     private static final Map<BlockPos, PortholeGroup> PORTHOLE_GROUPS = new HashMap<>();
     private static World portholeCacheWorld;
     private static long portholeCacheTick = Long.MIN_VALUE;
@@ -97,6 +98,7 @@ public class TEAnimatedScreenSelector
         ScreenSurfaceGroups.unload(world);
         VehicleShapeRenderer.clear();
         LightHousingMeshes.clear();
+        SelectorHousingMeshes.clear();
         GlassSurfaceMapping.clear();
         if(lightCacheWorld==world) {
             LIGHT_GROUPS.clear();lightCacheWorld=null;
@@ -327,7 +329,8 @@ public class TEAnimatedScreenSelector
 
     private static synchronized AnimData animData(String screenId) {
         screenId=ScreenHousingTextures.canonicalScreen(screenId);
-        return animation(screenId,TEX_ROOT+screenId);
+        AnimData cached=ANIM_CACHE.get(screenId);
+        return cached!=null?cached:animation(screenId,TEX_ROOT+screenId);
     }
 
     private static synchronized AnimData animation(String key,String pathRoot){
@@ -341,7 +344,9 @@ public class TEAnimatedScreenSelector
 
     private static synchronized AnimData inputAnimData(String id) {
         id=ScreenHousingTextures.canonicalInput(id);
-        return animation("input_"+id,TEX_ROOT+"console_inputs/"+id);
+        AnimData cached=INPUT_ANIM_CACHE.get(id);
+        if(cached==null){cached=animation("input_"+id,TEX_ROOT+"console_inputs/"+id);INPUT_ANIM_CACHE.put(id,cached);}
+        return cached;
     }
 
     private static AnimData loadCompactAnimation(String cacheName, String pathRoot) {
@@ -472,9 +477,9 @@ public class TEAnimatedScreenSelector
                 int front=1<<EnumFacing.NORTH.getIndex();
                 if(trigger.isFrontOnly()){
                     TextureAtlasSprite sides=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(trigger.getSidesTexture()));
-                    drawWallMesh(sides,ScreenHousingMesh.cube().boxFaces(63&~front).textureLayout(te.getMainTextureLayout(),UnifiedTextureSprites.aspect(sides)));
+                    drawWallMesh(sides,SelectorHousingMeshes.cubeFaces(63&~front,te.getMainTextureLayout(),UnifiedTextureSprites.aspect(sides)));
                 }
-                {TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));drawWallMesh(sprite,ScreenHousingMesh.cube().boxFaces(trigger.isFrontOnly()?front:63).textureLayout(te.getMainTextureLayout(),UnifiedTextureSprites.aspect(sprite)));}
+                {TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));drawWallMesh(sprite,SelectorHousingMeshes.cubeFaces(trigger.isFrontOnly()?front:63,te.getMainTextureLayout(),UnifiedTextureSprites.aspect(sprite)));}
             }else renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getMainTextureLayout());
             GlStateManager.enableLighting();
             endLocalTransform();
@@ -508,7 +513,7 @@ public class TEAnimatedScreenSelector
             boolean ceiling=state.getValue(com.vandorlabs.blocks.BlockDiagonalHalfConsole.UPPER);
             if(com.vandorlabs.blocks.ScreenChipSupport.selected(te)){bindAtlas();setWorldLight(te);renderHousingBox(wallSprite(te),0,ceiling?15:0,0,16,ceiling?16:1,8,te.getSurfaceTextureLayout());}
             GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
-            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),ScreenHousingMesh.diagonal(false).textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wallSprite(te))),ceiling);
+            bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),SelectorHousingMeshes.layout(ScreenHousingMesh.diagonal(false),te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wallSprite(te))),ceiling);
             if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)||te.hasChipSurface(0)){
                 FrameSurfaceRenderer.screen(te,ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false),ceiling);
                 GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
@@ -578,38 +583,31 @@ public class TEAnimatedScreenSelector
         int mode = te.getEffectiveMode();
         boolean off = mode == TileEntityAnimatedScreenSelector.MODE_OFF;
 
-        String screenId = te.getSelectedScreen();
-        if (!ModBlocks.DISPLAY_SCREEN_IDS.contains(screenId)) {
-            screenId = ScreenHousingTextures.canonicalScreen("engineering_screen");
-        }
-
-        ResourceLocation texture;
-        float vTop;
-        float vBottom;
-        if (off) {
-            // Off-texture follows the ACTIVE variant id, so it stays correct
-            // even if the tile's framed flag ever skews from its screen id.
-            boolean framed = ModBlocks.DISPLAY_FRAMED_IDS.contains(screenId);
-            texture = ScreenTextureLocations.off(false);
-            vTop = 0.0F;
-            vBottom = 1.0F;
-        } else if (mode == TileEntityAnimatedScreenSelector.MODE_ANIMATED) {
-            AnimData data = animData(screenId);
-            texture = data.texture;
-            int ticks = te.getAnimationSpeedTicks();
-            long tick = te.getWorld().getTotalWorldTime();
-            // Global phase is intentional: adjacent L/R halves of a 2x1
-            // display must always select the same authored animation frame.
-            int frame = AnimationFrames.frame(tick,ticks,data.frameCount);
-            // TextureUtil uploads the PNG's first scanline at V=0. The strip
-            // stores frame zero at the top, so frame UVs advance downward.
-            // The old 1-frame/n calculation sampled the reserved black tail.
-            vTop = (float)AnimationFrames.top(frame,data.frameCount);
-            vBottom = (float)AnimationFrames.bottom(frame,data.frameCount);
-        } else {
-            texture = ScreenTextureLocations.stationary(screenId);
-            vTop = 0.0F;
-            vBottom = 1.0F;
+        int surfaceChoice=te.getSurfaceTexture(0);
+        float vTop=0,vBottom=1,uMin=0,uMax=1;
+        if(surfaceChoice>=0){
+            // A configured surface replaces the legacy artwork. Loading/binding
+            // that hidden animation first can stall both main and shadow passes.
+            double[] uv=bindSurface(te,0,surfaceChoice);
+            vTop=(float)uv[0];vBottom=(float)uv[1];uMin=(float)uv[2];uMax=(float)uv[3];
+        }else{
+            String screenId=te.getSelectedScreen();
+            if(!ModBlocks.DISPLAY_SCREEN_IDS.contains(screenId))screenId=ScreenHousingTextures.canonicalScreen("engineering_screen");
+            ResourceLocation texture;
+            if(off){
+                texture=ScreenTextureLocations.off(false);
+            }else if(mode==TileEntityAnimatedScreenSelector.MODE_ANIMATED){
+                AnimData data=animData(screenId);
+                texture=data.texture;
+                int frame=AnimationFrames.frame(te.getWorld().getTotalWorldTime(),te.getAnimationSpeedTicks(),data.frameCount);
+                // Global phase keeps adjoining L/R artwork synchronized.
+                vTop=(float)AnimationFrames.top(frame,data.frameCount);
+                vBottom=(float)AnimationFrames.bottom(frame,data.frameCount);
+            }else texture=ScreenTextureLocations.stationary(screenId);
+            if("engineering_screen".equals(screenId)){
+                float span=vBottom-vTop;vTop+=span/16;vBottom-=span/16;uMin=1F/16;uMax=15F/16;
+            }
+            bindTexture(texture);
         }
 
         float lightU;
@@ -624,10 +622,6 @@ public class TEAnimatedScreenSelector
             lightV = 240.0F;
         }
 
-        float uMin=0,uMax=1;
-        if("engineering_screen".equals(screenId)&&te.getSurfaceTexture(0)<0){float span=vBottom-vTop;vTop+=span/16;vBottom-=span/16;uMin=1F/16;uMax=15F/16;}
-        bindTexture(texture);
-        if(te.getSurfaceTexture(0)>=0){double[] uv=bindSurface(te,0);vTop=(float)uv[0];vBottom=(float)uv[1];uMin=(float)uv[2];uMax=(float)uv[3];}
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit, lightU, lightV);
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder buf = tess.getBuffer();
@@ -759,7 +753,7 @@ public class TEAnimatedScreenSelector
         setWorldLight(te);
         TextureAtlasSprite wall = wallSprite(te);
         renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
-        drawWallMesh(wall,ScreenHousingMesh.halfConsole().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
+        drawWallMesh(wall,SelectorHousingMeshes.layout(ScreenHousingMesh.halfConsole(),te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
         if(com.vandorlabs.blocks.ScreenChipSupport.selected(te)){
             ScreenSurface.Quad deck=com.vandorlabs.blocks.ScreenChipSupport.deck();if(!redstoneFace(te,0)){double[] uv=bindInput(te,te.getInputPanel());double right=uv.length>2?uv[3]:1,left=uv.length>2?uv[2]:0;
@@ -824,11 +818,13 @@ public class TEAnimatedScreenSelector
     private static boolean engineeringChoice(int choice){com.google.gson.JsonObject entry=ScreenHousingTextures.entry(ScreenHousingTextures.canonicalChoice(choice));return entry!=null&&"engineering_screen_static".equals(entry.get("source").getAsString());}
     private static void engineeringBody(double[] uv){insetBody(uv,1D/16);}
     private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot) {
-        int choice=te.getSurfaceTexture(slot);
+        return bindSurface(te,slot,te.getSurfaceTexture(slot));
+    }
+    private static double[] bindSurface(TileEntityAnimatedScreenSelector te,int slot,int choice) {
         if("Screens".equals(ScreenHousingTextures.category(choice)))return bindDisplay(te,choice,te.effectiveMode(slot)!=TileEntityAnimatedScreenSelector.MODE_OFF,te.effectiveMode(slot)==TileEntityAnimatedScreenSelector.MODE_ANIMATED,te.effectiveSpeed(slot));
         if(slot==te.activationSurfaceSlot()&&te.activation.mode>0&&te.effectiveMode(slot)==TileEntityAnimatedScreenSelector.MODE_OFF)return bindDisplay(te,choice,false,false,1);
         bindAtlas();TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.texture(choice));
-        setWorldLight(te);double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(te.getSurfaceTexture(slot)))engineeringBody(uv);else if(unpairedInputChoice(te.getSurfaceTexture(slot)))insetBody(uv,1D/32);return uv;
+        setWorldLight(te);double[] uv={sprite.getMinV(),sprite.getMaxV(),sprite.getMinU(),sprite.getMaxU()};if(engineeringChoice(choice))engineeringBody(uv);else if(unpairedInputChoice(choice))insetBody(uv,1D/32);return uv;
     }
     static double[] bindCockpit(com.vandorlabs.tiles.TileEntityCockpit tile,com.vandorlabs.tiles.TileEntityCockpit.Display screen){
         return bindDisplay(tile,screen.texture,screen.active,screen.animated,screen.speed);
@@ -900,11 +896,11 @@ public class TEAnimatedScreenSelector
 
     private static void renderSlab(TextureAtlasSprite sprite, boolean upper,
             int layout) {
-        drawWallMesh(sprite, ScreenHousingMesh.slab(upper, true).textureLayout(layout,UnifiedTextureSprites.aspect(sprite)));
+        drawWallMesh(sprite, SelectorHousingMeshes.layout(ScreenHousingMesh.slab(upper, true),layout,UnifiedTextureSprites.aspect(sprite)));
     }
 
     private static void renderHousingBox(TextureAtlasSprite sprite,double x0,double y0,double z0,double x1,double y1,double z1,int layout){
-        drawWallMesh(sprite,ScreenHousingMesh.box(x0,y0,z0,x1,y1,z1).textureLayout(layout,UnifiedTextureSprites.aspect(sprite)));
+        drawWallMesh(sprite,SelectorHousingMeshes.box(x0,y0,z0,x1,y1,z1,layout,UnifiedTextureSprites.aspect(sprite)));
     }
 
     private static final com.vandorlabs.render.PanelBoxEmitter.Sink<BufferBuilder,TextureAtlasSprite> BOX_MESH=(buffer,sprite,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3)->spriteQuad(buffer,sprite,x0,y0,z0,x1,y1,z1,x2,y2,z2,x3,y3,z3,0,0,16,16);
@@ -936,7 +932,7 @@ public class TEAnimatedScreenSelector
 
         TextureAtlasSprite wall = wallSprite(te);
         renderHousingBox(wall,0,0,0,16,1,16,te.getSurfaceTextureLayout());
-        drawWallMesh(wall,ScreenHousingMesh.console().textureLayout(te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
+        drawWallMesh(wall,SelectorHousingMeshes.layout(ScreenHousingMesh.console(),te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wall)));
 
         // The supplied half-height controls are native 2:1 textures rather
         // than square atlas tiles. Bind them directly so the complete artwork
@@ -1415,17 +1411,30 @@ public class TEAnimatedScreenSelector
         drawWallMesh(sprite,mesh,false);
     }
 
+    private static void drawWallMesh(TextureAtlasSprite sprite,SelectorHousingMeshes.Mesh mesh) {
+        drawWallMesh(sprite,mesh,false);
+    }
+
+    private static void drawWallMesh(TextureAtlasSprite sprite,SelectorHousingMeshes.Mesh mesh,boolean ceiling) {
+        drawWallFaces(sprite,mesh.quads,mesh.triangles,ceiling);
+    }
+
     private static void drawWallMesh(TextureAtlasSprite sprite,ScreenHousingMesh mesh,boolean ceiling) {
+        drawWallFaces(sprite,mesh.quads,mesh.triangles,ceiling);
+    }
+
+    private static void drawWallFaces(TextureAtlasSprite sprite,ScreenHousingMesh.Face[] quads,
+            ScreenHousingMesh.Face[] triangles,boolean ceiling) {
         Tessellator tess=Tessellator.getInstance();
         BufferBuilder buf=tess.getBuffer();
-        if (mesh.quads.length>0) {
+        if (quads.length>0) {
             buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
-            drawWallFaces(buf,sprite,mesh.quads,ceiling);
+            drawWallFaces(buf,sprite,quads,ceiling);
             tess.draw();
         }
-        if (mesh.triangles.length>0) {
+        if (triangles.length>0) {
             buf.begin(GL11.GL_TRIANGLES,BlockSurfaceFormat.get());
-            drawWallFaces(buf,sprite,mesh.triangles,ceiling);
+            drawWallFaces(buf,sprite,triangles,ceiling);
             tess.draw();
         }
     }
@@ -1457,8 +1466,10 @@ public class TEAnimatedScreenSelector
     public static synchronized void clearCache() {
         VehicleShapeRenderer.clear();
         LightHousingMeshes.clear();
+        SelectorHousingMeshes.clear();
         GlassSurfaceMapping.clear();
         for(AnimData data:ANIM_CACHE.values())Minecraft.getMinecraft().getTextureManager().deleteTexture(data.texture);
         ANIM_CACHE.clear();
+        INPUT_ANIM_CACHE.clear();
     }
 }

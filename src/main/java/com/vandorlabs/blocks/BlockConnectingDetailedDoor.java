@@ -72,13 +72,16 @@ public class BlockConnectingDetailedDoor extends BlockDetailedDoor {
                 ? pos : pos.down();
         IBlockState lower = world.getBlockState(lowerPos);
         if (lower.getBlock() != this
-                || lower.getValue(HALF) != BlockDoor.EnumDoorHalf.LOWER
-                || world.getBlockState(lowerPos.up()).getBlock() != this) {
+                || lower.getValue(HALF) != BlockDoor.EnumDoorHalf.LOWER) {
             return false;
         }
-        IBlockState lowerActual = super.getActualState(lower, world, lowerPos);
-        EnumFacing facing = lowerActual.getValue(FACING);
-        BlockDoor.EnumHingePosition hinge = lowerActual.getValue(HINGE);
+        IBlockState upper = world.getBlockState(lowerPos.up());
+        if (upper.getBlock() != this) return false;
+        // These are the same fields getActualState would merge from these
+        // two halves. Reuse the states just validated instead of reading
+        // each upper half again in every main and shader-shadow draw.
+        EnumFacing facing = lower.getValue(FACING);
+        BlockDoor.EnumHingePosition hinge = upper.getValue(HINGE);
 
         // Vanilla's hinge labels are mirrored from the visual hand. A LEFT
         // hinge rests on the visual right jamb and therefore needs its mate
@@ -96,10 +99,8 @@ public class BlockConnectingDetailedDoor extends BlockDetailedDoor {
                 || neighborUpper.getValue(HALF) != BlockDoor.EnumDoorHalf.UPPER) {
             return false;
         }
-        IBlockState neighborActual = super.getActualState(
-                neighbor, world, neighborPos);
-        return neighborActual.getValue(FACING) == facing
-                && neighborActual.getValue(HINGE) != hinge;
+        return neighbor.getValue(FACING) == facing
+                && neighborUpper.getValue(HINGE) != hinge;
     }
 
     private void refreshPairArea(World world, BlockPos pos) {

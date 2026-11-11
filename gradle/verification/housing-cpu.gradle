@@ -1,0 +1,23 @@
+task testHousingCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare housing geometry, format generations, cache allocation and baked-tile reads against master'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.HousingCpuChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testHousingCpu
+
+task measureHousingUniformCpu(type: JavaExec) {
+    group = 'verification'
+    description = 'Measure the warmed uniform housing fast path in longer alternating CPU/allocation batches'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.HousingCpuChecks'
+    args 'uniform-cost'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}

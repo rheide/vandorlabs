@@ -1,0 +1,15 @@
+task testGlassNativePanes(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare finite native-glass plans with delivered pane vertices and CPU/atlas/allocation costs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassNativePanesChecks'
+}
+
+task testGlassPanePreparation(type: JavaExec) {
+    group = 'verification'
+    description = 'Check same-flush glass preparation, mutation/carried-world invalidation and avoided world reads'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPanePreparationChecks'
+}

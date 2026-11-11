@@ -1,0 +1,7 @@
+task testGlassCollection(type: JavaExec) {
+    group = 'verification'
+    description = 'Check empty opaque glass collection, native frame fallback and actual Forge dispatcher work'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassCollectionChecks'
+}

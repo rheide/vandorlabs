@@ -20,28 +20,188 @@ import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.property.IExtendedBlockState;
 
 import javax.annotation.Nullable;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.RandomAccess;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /** Reuses material/facing quads from a chunk mesh until a model reload. */
 public final class ProgrammableHousingModel implements IBakedModel {
     private static final EnumFacing[] FACE = {EnumFacing.UP, EnumFacing.DOWN,
             EnumFacing.WEST, EnumFacing.EAST, EnumFacing.NORTH, EnumFacing.SOUTH};
+    private static final byte[][] MASK_FACES=maskFaces();
+    private static final byte[][] LOCAL_MASKS=localMasks();
     private final IBakedModel delegate;
     private final boolean slab;
     private final boolean storage;
     private final java.util.function.Function<String,TextureAtlasSprite> sprites;
     private final java.util.function.Supplier<net.minecraft.client.renderer.vertex.VertexFormat> formats;
-    private volatile net.minecraft.client.renderer.vertex.VertexFormat buildFormat;
-    private final Map<Long, BakedQuad> variants = new ConcurrentHashMap<>();
-    private final com.google.common.cache.Cache<String,List<BakedQuad>> joinedFaces=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
     static final int MAX_FACE_LISTS=1024;
-    private final com.google.common.cache.Cache<Long,List<BakedQuad>> faceLists=
-            com.google.common.cache.CacheBuilder.newBuilder().maximumSize(MAX_FACE_LISTS).build();
-    long cachedFaceLists(){faceLists.cleanUp();return faceLists.size();}
+    static final long MAX_PROFILE_BYTES=8L*1024*1024;
+    static final long MAX_UNIFORM_BYTES=2L*1024*1024;
+    private static final int UNIFORM_SLOTS=1024;
+    /** A format change publishes a new generation; in-flight chunk workers retain theirs. */
+    private static final class Geometry {
+        final VertexFormat format;
+        final Map<Long,BakedQuad> variants=new ConcurrentHashMap<>();
+        final com.google.common.cache.Cache<String,List<BakedQuad>> joinedFaces=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
+        final com.google.common.cache.Cache<Long,List<BakedQuad>> faceLists=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(MAX_FACE_LISTS).build();
+        final AtomicReferenceArray<UniformEntry> uniformFamilies=new AtomicReferenceArray<>(UNIFORM_SLOTS);
+        volatile long uniformBytes=64L+8L*UNIFORM_SLOTS;
+        volatile int uniformCount;
+        final com.google.common.cache.Cache<ProfileKey,List<BakedQuad>> profiles=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(MAX_PROFILE_BYTES)
+                .weigher((ProfileKey key,List<BakedQuad> quads)->profileBytes(key,quads)).build();
+        Geometry(VertexFormat live){format=new VertexFormat(live);}
+    }
+    private volatile Geometry geometry;
+    private static final ThreadLocal<ProfileLookup> PROFILE_LOOKUP=ThreadLocal.withInitial(ProfileLookup::new);
+    long cachedFaceLists(){Geometry current=geometry;if(current==null)return 0;current.faceLists.cleanUp();return current.faceLists.size();}
+    long cachedUniformBytes(){Geometry current=geometry;return current==null?0:current.uniformBytes;}
+    int cachedUniformFamilies(){Geometry current=geometry;return current==null?0:current.uniformCount;}
+
+    /** Write-once quad slots; each immutable view is published only after its slots exist.
+     * The common single-mask family needs neither 63 unused views nor an index array. */
+    private static final class UniformFamily {
+        final BakedQuad[] quads;
+        final int firstMask;
+        final List<BakedQuad> first;
+        volatile AtomicReferenceArray<List<BakedQuad>> visible;
+        UniformFamily(BakedQuad[] quads,int mask){
+            this.quads=quads;firstMask=mask;first=Collections.unmodifiableList(new FaceView(quads,MASK_FACES[mask]));
+        }
+        List<BakedQuad> get(int mask){
+            if(mask==firstMask)return first;
+            AtomicReferenceArray<List<BakedQuad>> views=visible;return views==null?null:views.get(mask);
+        }
+        // Called under this family's lock, after filling only previously empty slots.
+        void publish(int mask,List<BakedQuad> view){
+            AtomicReferenceArray<List<BakedQuad>> views=visible;
+            if(views==null){views=new AtomicReferenceArray<>(64);views.set(mask,view);visible=views;}
+            else views.set(mask,view);
+        }
+    }
+    private static final class FaceView extends AbstractList<BakedQuad> implements RandomAccess {
+        final BakedQuad[] quads;final byte[] indices;
+        FaceView(BakedQuad[] quads,byte[] indices){this.quads=quads;this.indices=indices;}
+        @Override public BakedQuad get(int index){return quads[indices[index]];}
+        @Override public int size(){return indices.length;}
+    }
+    private static final class UniformEntry {
+        final long key;final UniformFamily family;
+        UniformEntry(long key,UniformFamily family){this.key=key;this.family=family;}
+    }
+    /** Fixed primitive probe table: no key boxing, LRU bookkeeping, or per-worker lookup object. */
+    private static int uniformSlot(Geometry current,long key){
+        int hash=Long.hashCode(key);hash^=hash>>>16;int slot=hash&(UNIFORM_SLOTS-1);
+        // The byte budget admits fewer families than half of this table's slots.
+        for(;;){UniformEntry entry=current.uniformFamilies.get(slot);if(entry==null||entry.key==key)return slot;slot=(slot+1)&(UNIFORM_SLOTS-1);}
+    }
+    private static byte[][] maskFaces(){
+        byte[][] result=new byte[64][];
+        for(int mask=0;mask<64;mask++){
+            byte[] indices=new byte[Integer.bitCount(mask)];int count=0;
+            for(byte face=0;face<6;face++)if((mask&(1<<face))!=0)indices[count++]=face;
+            result[mask]=indices;
+        }
+        return result;
+    }
+    private static byte[][] localMasks(){
+        byte[][] result=new byte[6][64];
+        for(EnumFacing facing:EnumFacing.values())for(int visible=0;visible<64;visible++){
+            int mask=0;for(int local=0;local<6;local++)if((visible&(1<<worldFace(FACE[local],facing).getIndex()))!=0)mask|=1<<local;
+            result[facing.getIndex()][visible]=(byte)mask;
+        }
+        return result;
+    }
+    private UniformFamily uniformFamily(Geometry current,long key,int mask,int finish,EnumFacing facing,boolean upper,int layout){
+        int slot=uniformSlot(current,key);UniformEntry cached=current.uniformFamilies.get(slot);if(cached!=null&&cached.key==key)return cached.family;
+        // Reserve the whole family's eventual 64 views before admitting it. Lazy mask
+        // publication therefore cannot exceed the byte budget later. New materials use
+        // the previous bounded list cache at saturation, without rebuilding hot families.
+        long bytes=4096L+6*(96L+16L*current.format.getIntegerSize());
+        if(current.uniformBytes+bytes>MAX_UNIFORM_BYTES)return null;
+        BakedQuad[] quads=new BakedQuad[6];
+        for(byte local:MASK_FACES[mask])quads[local]=face(current,finish,facing,upper,layout,local,storage);
+        UniformFamily built=new UniformFamily(quads,mask);
+        synchronized(current.uniformFamilies){
+            slot=uniformSlot(current,key);cached=current.uniformFamilies.get(slot);if(cached!=null)return cached.family;
+            if(current.uniformBytes+bytes<=MAX_UNIFORM_BYTES){current.uniformFamilies.set(slot,new UniformEntry(key,built));current.uniformBytes+=bytes;current.uniformCount++;}
+        }
+        return built;
+    }
+    private List<BakedQuad> uniformQuads(Geometry current,UniformFamily family,int mask,int finish,EnumFacing facing,boolean upper,int layout){
+        List<BakedQuad> cached=family.get(mask);if(cached!=null)return cached;
+        byte[] indices=MASK_FACES[mask];BakedQuad[] built=new BakedQuad[indices.length];
+        // Sprite/geometry preparation stays outside the short publication lock. A
+        // chunk worker asking for an already published mask never waits for this work.
+        for(int i=0;i<indices.length;i++)built[i]=face(current,finish,facing,upper,layout,indices[i],storage);
+        synchronized(family){
+            cached=family.get(mask);if(cached!=null)return cached;
+            for(int i=0;i<indices.length;i++)if(family.quads[indices[i]]==null)family.quads[indices[i]]=built[i];
+            cached=Collections.unmodifiableList(new FaceView(family.quads,indices));family.publish(mask,cached);
+        }
+        return cached;
+    }
+
+    /** Both settings types defensively copy their arrays and expose only immutable values. */
+    private static final class ProfileKey {
+        final int finish,side,layout,visible,facing,hash;
+        final boolean upper;
+        final com.vandorlabs.tiles.FaceTextures faces;
+        final com.vandorlabs.blocks.HousingFaceLayouts joined;
+        ProfileKey(ProfileLookup lookup){finish=lookup.finish;side=lookup.side;layout=lookup.layout;visible=lookup.visible;facing=lookup.facing;upper=lookup.upper;faces=lookup.faces;joined=lookup.joined;hash=lookup.hash;}
+        @Override public int hashCode(){return hash;}
+        @Override public boolean equals(Object value){
+            if(value instanceof ProfileLookup)return value.equals(this);
+            if(!(value instanceof ProfileKey))return false;ProfileKey other=(ProfileKey)value;
+            return finish==other.finish&&side==other.side&&layout==other.layout&&visible==other.visible&&facing==other.facing&&upper==other.upper
+                    &&faces.equals(other.faces)&&samePlanes(joined,other.joined,visible);
+        }
+    }
+    /** A thread-local probe is never published to a cache or retained after a lookup. */
+    private static final class ProfileLookup {
+        int finish,side,layout,visible,facing,hash;boolean upper;
+        com.vandorlabs.tiles.FaceTextures faces;
+        com.vandorlabs.blocks.HousingFaceLayouts joined;
+        void set(int finish,int side,int layout,int visible,EnumFacing facing,boolean upper,com.vandorlabs.tiles.FaceTextures faces,com.vandorlabs.blocks.HousingFaceLayouts joined){
+            this.finish=finish;this.side=side;this.layout=layout;this.visible=visible&63;this.facing=facing.getIndex();this.upper=upper;this.faces=faces;this.joined=joined;
+            int h=31*(31*(31*(31*finish+side)+layout)+this.visible)+this.facing;h=31*h+(upper?1:0);h=31*h+faces.hashCode();
+            for(EnumFacing face:FACE)if((this.visible&(1<<face.getIndex()))!=0){
+                com.vandorlabs.blocks.HousingFaceLayouts.Plane plane=joined.face(face);h=31*h+(plane==null?0:1);
+                if(plane!=null)for(int axis=0;axis<3;axis++){h=31*h+plane.min(axis);h=31*h+plane.size(axis);}
+            }
+            hash=h;
+        }
+        void clear(){faces=null;joined=null;}
+        @Override public int hashCode(){return hash;}
+        @Override public boolean equals(Object value){
+            if(!(value instanceof ProfileKey))return false;ProfileKey key=(ProfileKey)value;
+            return finish==key.finish&&side==key.side&&layout==key.layout&&visible==key.visible&&facing==key.facing&&upper==key.upper
+                    &&faces.equals(key.faces)&&samePlanes(joined,key.joined,visible);
+        }
+    }
+    private static boolean samePlanes(com.vandorlabs.blocks.HousingFaceLayouts a,com.vandorlabs.blocks.HousingFaceLayouts b,int visible){
+        if(a==b)return true;
+        for(EnumFacing face:FACE)if((visible&(1<<face.getIndex()))!=0){
+            com.vandorlabs.blocks.HousingFaceLayouts.Plane x=a.face(face),y=b.face(face);if(x==y)continue;
+            if(x==null||y==null)return false;
+            for(int axis=0;axis<3;axis++)if(x.min(axis)!=y.min(axis)||x.size(axis)!=y.size(axis))return false;
+        }
+        return true;
+    }
+    private static int profileBytes(ProfileKey key,List<BakedQuad> quads){
+        // Conservatively count shared snapshots/quads again for every retained list.
+        long bytes=512+64;
+        if(key.joined!=com.vandorlabs.blocks.HousingFaceLayouts.NONE){bytes+=64;for(EnumFacing face:FACE)if(key.joined.face(face)!=null)bytes+=96;}
+        for(BakedQuad quad:quads)bytes+=96L+4L*quad.getVertexData().length;
+        return (int)Math.min(Integer.MAX_VALUE,bytes);
+    }
+    long cachedProfileBytes(){Geometry current=geometry;if(current==null)return 0;current.profiles.cleanUp();long bytes=0;for(Map.Entry<ProfileKey,List<BakedQuad>> entry:current.profiles.asMap().entrySet())bytes+=profileBytes(entry.getKey(),entry.getValue());return bytes;}
+    long cachedProfiles(){Geometry current=geometry;if(current==null)return 0;current.profiles.cleanUp();return current.profiles.size();}
 
     public ProgrammableHousingModel(IBakedModel delegate, boolean slab) {
         this(delegate, slab, false);
@@ -65,14 +225,14 @@ public final class ProgrammableHousingModel implements IBakedModel {
             @Nullable EnumFacing side, long rand) {
         if (state == null) return delegate.getQuads(null, side, rand);
         if (side != null) return Collections.emptyList();
-        ensureFormat();
+        Geometry current=ensureFormat();
         int finish = 0, sideFinish=-1, visible = 63, tileSides = 0;
         com.vandorlabs.tiles.FaceTextures faces = com.vandorlabs.tiles.FaceTextures.DEFAULT;
         com.vandorlabs.blocks.HousingFaceLayouts joined=com.vandorlabs.blocks.HousingFaceLayouts.NONE;
         if (state instanceof IExtendedBlockState) {
             IExtendedBlockState extended = (IExtendedBlockState)state;
-            if (extended.getValue(ProgrammableHousingState.FACES) != null)
-                faces = extended.getValue(ProgrammableHousingState.FACES);
+            com.vandorlabs.tiles.FaceTextures selectedFaces=extended.getValue(ProgrammableHousingState.FACES);
+            if(selectedFaces!=null)faces=selectedFaces;
             Integer sf=extended.getValue(ProgrammableHousingState.SIDE_FINISH);
             if(sf!=null)sideFinish=sf;
             Integer f = extended.getValue(ProgrammableHousingState.FINISH);
@@ -90,10 +250,26 @@ public final class ProgrammableHousingModel implements IBakedModel {
                 == BlockSlab.EnumBlockHalf.TOP;
         if((visible&63)==0)return Collections.emptyList();
         boolean uniform=joined==com.vandorlabs.blocks.HousingFaceLayouts.NONE&&!faces.enabled && (!slab || sideFinish<0 || sideFinish==finish);
-        long listKey=(((((long)finish*6+facing.getIndex())*2+(upper?1:0))*3+tileSides)*64)+(visible&63);
+        long familyKey=((((long)finish*6+facing.getIndex())*2+(upper?1:0))*3+tileSides);
+        long listKey=familyKey*64+(visible&63);
         if(uniform) {
-            List<BakedQuad> cached=faceLists.getIfPresent(listKey);
+            int mask=LOCAL_MASKS[facing.getIndex()][visible&63];
+            UniformFamily family=tileSides>=0&&tileSides<=2?uniformFamily(current,familyKey,mask,finish,facing,upper,tileSides):null;
+            if(family!=null){
+                List<BakedQuad> cached=family.get(mask);if(cached!=null)return cached;
+                return uniformQuads(current,family,mask,finish,facing,upper,tileSides);
+            }
+            List<BakedQuad> cached=current.faceLists.getIfPresent(listKey);
             if(cached!=null)return cached;
+        }
+        ProfileKey profile=null;
+        if(!uniform){
+            ProfileLookup lookup=PROFILE_LOOKUP.get();
+            try{
+                lookup.set(finish,sideFinish,tileSides,visible,facing,upper,faces,joined);
+                List<BakedQuad> cached=current.profiles.getIfPresent(lookup);if(cached!=null)return cached;
+                profile=new ProfileKey(lookup);
+            }finally{lookup.clear();}
         }
         List<BakedQuad> result = new ArrayList<>(6);
         for (int local = 0; local < 6; local++) {
@@ -102,24 +278,26 @@ public final class ProgrammableHousingModel implements IBakedModel {
             int texture = faces.texture(FACE[local].getIndex(), com.vandorlabs.render.HousingTexturePolicy.baseChoice(FACE[local].getIndex(),finish,sideFinish,slab));
             final boolean storageSet = storage && !(faces.enabled && faces.choice(FACE[local].getIndex()) >= 0);
             com.vandorlabs.blocks.HousingFaceLayouts.Plane plane=joined.face(worldFace);
-            BakedQuad quad=face(texture,facing,upper,plane==null?tileSides:0,local,storageSet);
-            if(plane!=null){String key=texture+":"+facing+":"+local+":"+tileSides+":"+plane;List<BakedQuad> mapped=joinedFaces.getIfPresent(key);if(mapped==null){mapped=mapJoined(quad,plane,tileSides,sprites.apply("minecraft:blocks/concrete_black"));joinedFaces.put(key,mapped);}result.addAll(mapped);}
+            BakedQuad quad=face(current,texture,facing,upper,plane==null?tileSides:0,local,storageSet);
+            if(plane!=null){String key=texture+":"+facing+":"+local+":"+tileSides+":"+plane;List<BakedQuad> mapped=current.joinedFaces.getIfPresent(key);if(mapped==null){mapped=mapJoined(quad,plane,tileSides,sprites.apply("minecraft:blocks/concrete_black"));current.joinedFaces.put(key,mapped);}result.addAll(mapped);}
             else result.add(quad);
         }
         if(uniform) {
             result=Collections.unmodifiableList(result);
-            faceLists.put(listKey,result);
+            current.faceLists.put(listKey,result);
+        }else{
+            result=Collections.unmodifiableList(result);
+            current.profiles.put(profile,result);
         }
         return result;
     }
 
     /** OptiFine mutates the global format when shaders change, including without a resource reload. */
-    private void ensureFormat(){
-        net.minecraft.client.renderer.vertex.VertexFormat live=formats.get();
-        if(live.equals(buildFormat))return;
-        synchronized(this){if(live.equals(buildFormat))return;
-            buildFormat=new net.minecraft.client.renderer.vertex.VertexFormat(live);
-            variants.clear();joinedFaces.invalidateAll();faceLists.invalidateAll();
+    private Geometry ensureFormat(){
+        VertexFormat live=formats.get();Geometry current=geometry;
+        if(current!=null&&live.equals(current.format))return current;
+        synchronized(this){current=geometry;if(current!=null&&live.equals(current.format))return current;
+            geometry=current=new Geometry(live);return current;
         }
     }
     /** Fit preserves the released centered crop and covers the entire joined face. */
@@ -140,22 +318,21 @@ public final class ProgrammableHousingModel implements IBakedModel {
         return Collections.singletonList(retainedQuad(data,quad.getTintIndex(),quad.getFace(),sprite,quad.shouldApplyDiffuseLighting(),quad.getFormat()));
     }
 
-    private BakedQuad face(int texture,EnumFacing facing,boolean upper,int layout,int local,boolean storageSet) {
+    private BakedQuad face(Geometry current,int texture,EnumFacing facing,boolean upper,int layout,int local,boolean storageSet) {
         long key=(((((long)texture*6+facing.getIndex())*2+(upper?1:0))*3+layout)*6+local)*2+(storageSet?1:0);
-        BakedQuad cached=variants.get(key);
+        BakedQuad cached=current.variants.get(key);
         if(cached!=null)return cached;
-        BakedQuad built=build(texture,facing,upper,layout,local,storageSet);
-        BakedQuad raced=variants.putIfAbsent(key,built);
+        BakedQuad built=build(current.format,texture,facing,upper,layout,local,storageSet);
+        BakedQuad raced=current.variants.putIfAbsent(key,built);
         return raced==null?built:raced;
     }
 
-    private BakedQuad build(int finish, EnumFacing facing, boolean upper, int layout, int i, boolean storageSet) {
+    private BakedQuad build(VertexFormat format,int finish, EnumFacing facing, boolean upper, int layout, int i, boolean storageSet) {
         TextureAtlasSprite sprite = sprites.apply(storageSet ? ScreenHousingTextures.storageTexture(finish, FACE[i]) : ScreenHousingTextures.texture(finish));
         ScreenHousingMesh mesh = (slab ? ScreenHousingMesh.slab(upper, true)
                 : ScreenHousingMesh.cube()).textureLayout(layout,UnifiedTextureSprites.aspect(sprite));
         int rotation = ((int)(180 - facing.getHorizontalAngle()) / 90) & 3;
 
-            net.minecraft.client.renderer.vertex.VertexFormat format=buildFormat;
             int stride=format.getIntegerSize(),color=format.getColorOffset()/4,uv=format.getUvOffsetById(0)/4;
             int[] data = new int[4*stride];
             EnumFacing normal=worldFace(FACE[i],facing);

@@ -108,9 +108,15 @@ public class BlockConfigurableSpaceDoor extends BlockSpaceDoor {
                     ((TileEntitySpaceDoor)raw).isSliding(),true,false,false);
         EnumFacing front=actual.getValue(FACING);
         boolean sliding=raw instanceof TileEntitySpaceDoor && ((TileEntitySpaceDoor)raw).isSliding();
-        return SpaceDoorControlPanel.side(actual.getValue(HINGE)==BlockDoor.EnumHingePosition.RIGHT,
-                sliding,actual.getValue(PAIRED),hasDoorBeside(world,lower,front.rotateY(),front),
-                hasDoorBeside(world,lower,front.rotateYCCW(),front));
+        SpaceDoorControlPanel.Side side=SpaceDoorControlPanel.side(
+                actual.getValue(HINGE)==BlockDoor.EnumHingePosition.RIGHT,
+                sliding,actual.getValue(PAIRED),false,false);
+        // Neighbours only suppress an otherwise visible pad when BOTH are
+        // complete doors. An absent pad, or one free side, needs no more reads.
+        if(side==SpaceDoorControlPanel.Side.NONE)return side;
+        return hasDoorBeside(world,lower,front.rotateY(),front)
+                && hasDoorBeside(world,lower,front.rotateYCCW(),front)
+                ?SpaceDoorControlPanel.Side.NONE:side;
     }
     private static boolean hasDoorBeside(World world,BlockPos lower,EnumFacing side,EnumFacing front) {
         BlockPos neighbor=lower.offset(side);

@@ -12,12 +12,69 @@ import net.minecraftforge.common.property.IUnlistedProperty;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.IdentityHashMap;
+import java.util.Set;
+import java.util.Collections;
+import java.util.concurrent.ConcurrentHashMap;
 
 /** Compact mesh snapshots, materializing Forge property maps only when requested. */
 public final class HousingBlockState extends ExtendedBlockState {
+    // A snapshot may later materialize its complete Forge map. Charge for that
+    // larger representation up front; admission is bounded even after such reads.
+    static final int MAX_COMMON_SNAPSHOTS=2048;
+    static final long COMMON_SNAPSHOT_BYTES=1024;
+    private final Set<IBlockState> commonSources;
+    private final Map<SampleKey,DirectSnapshot> commonSnapshots=new ConcurrentHashMap<>();
+    private volatile int commonCount;
+    private static final ThreadLocal<SampleLookup> SAMPLE_LOOKUP=ThreadLocal.withInitial(SampleLookup::new);
+
     public HousingBlockState(Block block,IProperty<?>[] listed,IUnlistedProperty<?>[] unlisted) {
         super(block,listed,unlisted);
+        Set<IBlockState> sources=Collections.newSetFromMap(new IdentityHashMap<IBlockState,Boolean>());
+        if(block.getClass()==BlockProgrammableBlock.class||block.getClass()==BlockProgrammableSlab.class)sources.addAll(getValidStates());
+        commonSources=Collections.unmodifiableSet(sources);
     }
+
+    private static final class SampleKey {
+        final IExtendedBlockState source;final int finish,side,layout,visible,hash;
+        SampleKey(SampleLookup lookup){source=lookup.source;finish=lookup.finish;side=lookup.side;layout=lookup.layout;visible=lookup.visible;hash=lookup.hash;}
+        @Override public int hashCode(){return hash;}
+        @Override public boolean equals(Object other){
+            if(other instanceof SampleLookup)return other.equals(this);
+            if(!(other instanceof SampleKey))return false;SampleKey key=(SampleKey)other;
+            return source==key.source&&finish==key.finish&&side==key.side&&layout==key.layout&&visible==key.visible;
+        }
+    }
+    /** Never published; release the source after probing so a worker retains no block container. */
+    private static final class SampleLookup {
+        IExtendedBlockState source;int finish,side,layout,visible,hash;
+        void set(IExtendedBlockState source,int finish,int side,int layout,int visible){
+            this.source=source;this.finish=finish;this.side=side;this.layout=layout;this.visible=visible;
+            hash=31*(31*(31*(31*System.identityHashCode(source)+finish)+side)+layout)+visible;
+        }
+        @Override public int hashCode(){return hash;}
+        @Override public boolean equals(Object other){
+            if(!(other instanceof SampleKey))return false;SampleKey key=(SampleKey)other;
+            return source==key.source&&finish==key.finish&&side==key.side&&layout==key.layout&&visible==key.visible;
+        }
+    }
+    private IExtendedBlockState commonSnapshot(IExtendedBlockState source,int finish,int side,int layout,int visible){
+        if(!commonSources.contains(source))return null;
+        SampleLookup lookup=SAMPLE_LOOKUP.get();
+        try{
+            lookup.set(source,finish,side,layout,visible);
+            DirectSnapshot cached=commonSnapshots.get(lookup);if(cached!=null)return cached;
+            if(commonCount>=MAX_COMMON_SNAPSHOTS)return null;
+            DirectSnapshot built=new DirectSnapshot(source,source.getUnlistedProperties(),finish,side,FaceTextures.DEFAULT,layout,visible,0);
+            synchronized(commonSnapshots){
+                cached=commonSnapshots.get(lookup);if(cached!=null)return cached;
+                if(commonCount<MAX_COMMON_SNAPSHOTS){commonSnapshots.put(new SampleKey(lookup),built);commonCount++;}
+            }
+            return built;
+        }finally{lookup.source=null;}
+    }
+    int cachedCommonSnapshots(){return commonCount;}
+    long cachedCommonBytes(){return commonCount*COMMON_SNAPSHOT_BYTES;}
 
     static IExtendedBlockState sample(IExtendedBlockState state,int finish,int side,FaceTextures faces,
             int tileSides,int visible,int light) {
@@ -29,6 +86,12 @@ public final class HousingBlockState extends ExtendedBlockState {
                     .withProperty(ProgrammableHousingState.TILE_SIDES,tileSides);
             return state.getUnlistedNames().contains(ProgrammableHousingState.VISIBLE)
                     ?result.withProperty(ProgrammableHousingState.VISIBLE,visible).withProperty(ProgrammableHousingState.LIGHT,light):result;
+        }
+        // Neighbours are still read afresh by extend(). Only the resulting immutable
+        // values are shared across equal native cube/slab states, never world/position data.
+        if(faces==FaceTextures.DEFAULT&&light==0&&state.getBlock().getBlockState() instanceof HousingBlockState){
+            IExtendedBlockState common=((HousingBlockState)state.getBlock().getBlockState()).commonSnapshot(state,finish,side,tileSides,visible);
+            if(common!=null)return common;
         }
         if(faces!=null) {
             if(state instanceof DirectSnapshot) {

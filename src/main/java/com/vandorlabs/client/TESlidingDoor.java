@@ -89,6 +89,12 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             return;
         }
         if(te instanceof com.vandorlabs.tiles.TileEntitySpaceDoor&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)WaterloggedRenderer.render(te,x,y,z);
+        // A wet upper half may be dispatched for its water alone. Its stored
+        // HALF is sufficient; do not resolve the entire paired assembly.
+        if(te instanceof com.vandorlabs.tiles.TileEntitySpaceDoor
+                &&!(te instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
+                &&state.getBlock().getClass()==com.vandorlabs.blocks.BlockConfigurableSpaceDoor.class
+                &&state.getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.UPPER)return;
         state = state.getBlock().getActualState(state, te.getWorld(), te.getPos());
         EnumFacing facing = state.getValue(BlockVandorDoor.FACING);
         boolean upper = state.getValue(BlockVandorDoor.HALF) == BlockDoor.EnumDoorHalf.UPPER;
@@ -349,11 +355,8 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     /** Atlas geometry only; also used by the GL-free shared opaque batch. */
     static void panelGeometry(BufferBuilder buf,boolean sliding,boolean farEdge,SpaceDoorControlPanel.Side side) {
-        TextureAtlasSprite buttons=Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/control_buttons");
-        TextureAtlasSprite wall=Minecraft.getMinecraft().getTextureMapBlocks()
-                .getAtlasSprite("vandorlabs:blocks/dark_wall_panel");
-        panelGeometry(buf,sliding,farEdge,side,buttons,wall);
+        DoorControlPanelMeshes.get(sliding,farEdge,side)
+                .draw(buf,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
     }
     static void panelGeometry(BufferBuilder buf,boolean sliding,boolean farEdge,SpaceDoorControlPanel.Side side,TextureAtlasSprite buttons,TextureAtlasSprite wall) {
         PadEmitter emitter=PAD_EMITTER.get();emitter.buffer=buf;emitter.buttons.sprite=buttons;emitter.wall.sprite=wall;
