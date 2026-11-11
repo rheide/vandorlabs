@@ -63,10 +63,18 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.DiagonalScreenSelection());
     }
 
+    private final com.vandorlabs.client.ThrusterParticleBudget thrusterParticleBudget = new com.vandorlabs.client.ThrusterParticleBudget();
+    private boolean allowThrusterParticle(net.minecraft.client.Minecraft minecraft, World world, double x, double y, double z) {
+        if (minecraft.effectRenderer == null || world == null || world != minecraft.world || minecraft.isGamePaused()) return false;
+        net.minecraft.entity.Entity camera = minecraft.getRenderViewEntity();
+        return camera != null && thrusterParticleBudget.allow(world, world.getTotalWorldTime(),
+                minecraft.gameSettings.particleSetting, camera.getDistanceSq(x, y, z));
+    }
+
     @Override public void spawnThrusterParticle(World world, BlockPos pos,
             EnumFacing facing, int color, int style, float speed) {
         net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
-        if (minecraft.effectRenderer == null) return;
+        if (!allowThrusterParticle(minecraft, world, pos.getX() + .5, pos.getY() + .5, pos.getZ() + .5)) return;
         minecraft.effectRenderer.addEffect(
                 new ParticleThrusterStream(world, pos, facing, color, style, speed));
     }
@@ -74,7 +82,7 @@ public class ClientProxy extends CommonProxy {
     @Override public void spawnThrusterParticle(World world, double x, double y, double z,
             EnumFacing facing, int color, int style, float speed, float spreadScale) {
         net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
-        if (minecraft.effectRenderer == null) return;
+        if (!allowThrusterParticle(minecraft, world, x, y, z)) return;
         minecraft.effectRenderer.addEffect(new ParticleThrusterStream(world, x, y, z,
                 facing, color, style, speed, spreadScale));
     }
@@ -82,7 +90,7 @@ public class ClientProxy extends CommonProxy {
     @Override public void spawnRotatedThrusterParticle(World world, double x, double y, double z,
             EnumFacing facing, int color, int style, float speed, float spreadScale, float yaw) {
         net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
-        if (minecraft.effectRenderer == null) return;
+        if (!allowThrusterParticle(minecraft, world, x, y, z)) return;
         ParticleThrusterStream particle = new ParticleThrusterStream(world, x, y, z,
                 facing, color, style, speed, spreadScale);
         particle.rotateAround(x, z, yaw);

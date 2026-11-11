@@ -1,0 +1,11 @@
+task testItemVariantCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Check configured item model reuse, appearance isolation, retained budgets and complete vertex records'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ItemVariantCacheChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testItemVariantCache

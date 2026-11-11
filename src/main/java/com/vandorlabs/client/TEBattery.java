@@ -10,7 +10,12 @@ import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.util.EnumFacing;
 
 /** Closed axial battery shell with live segmented charge indicators. */
+@net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs",value=net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class TEBattery extends TileEntitySpecialRenderer<TileEntityBattery> {
+    private static final BatteryGeometryCache GEOMETRY=new BatteryGeometryCache();
+    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void stitch(net.minecraftforge.client.event.TextureStitchEvent.Post event){GEOMETRY.clear();}
+    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)GEOMETRY.clear();}
+    static BatteryGeometryCache geometryCache(){return GEOMETRY;}
     private static TextureAtlasSprite sprite(String name){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/"+name);}
     private static void quad(BufferBuilder b,TextureAtlasSprite sprite,double[][] points,float[] normal,int color,EnumFacing facing){
         float shade=net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(normal[0],normal[1],normal[2]);
@@ -36,27 +41,26 @@ public final class TEBattery extends TileEntitySpecialRenderer<TileEntityBattery
         }
     }
     private static void rectangle(BufferBuilder b,TextureAtlasSprite white,double left,double right,double front,double back,double y,float[] normal,int color){quad(b,white,new double[][]{{left,y,front},{left,y,back},{right,y,back},{right,y,front}},normal,color,EnumFacing.UP);}
+    private static final class GeometrySink implements BatteryGeometryCache.Sink {
+        private final BufferBuilder buffer;
+        private final TextureAtlasSprite casing,cells,input,output;
+        private TextureAtlasSprite current;
+        private float shade,nx,ny,nz;
+        GeometrySink(BufferBuilder buffer,TextureAtlasSprite casing,TextureAtlasSprite cells,TextureAtlasSprite input,TextureAtlasSprite output){this.buffer=buffer;this.casing=casing;this.cells=cells;this.input=input;this.output=output;}
+        public void beginQuad(int material,float nx,float ny,float nz){current=material==BatteryGeometryCache.CASING?casing:material==BatteryGeometryCache.CELLS?cells:material==BatteryGeometryCache.INPUT?input:output;shade=net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(nx,ny,nz);this.nx=nx;this.ny=ny;this.nz=nz;}
+        public void vertex(double x,double y,double z,double u,double v){buffer.pos(x,y,z).tex(current.getInterpolatedU(u),current.getInterpolatedV(v)).color(shade,shade,shade,1).normal(nx,ny,nz).endVertex();}
+    }
     @Override public void render(TileEntityBattery tile,double x,double y,double z,float partial,int stage,float alpha){
         if(tile.getWorld()==null||tile.isInvalid()||!(tile.getWorld().getBlockState(tile.getPos()).getBlock() instanceof BlockBattery))return;
-        EnumFacing face=tile.inputSide();double[][] outline=tile.isBlockShape()?AxialShellGeometry.BLOCK:AxialShellGeometry.HEX;
+        EnumFacing face=tile.inputSide();
         GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){
             GlStateManager.translate(x,y,z);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>16);
             TextureAtlasSprite casing=tile.hasCustomHousingTexture()?Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(com.vandorlabs.tiles.ScreenHousingTextures.texture(tile.getHousingTexture())):sprite("matter/casing"),cells=tile.hasCustomHousingTexture()?casing:sprite("imported/power/battery_cell_bank");
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-            for(int i=0;i<outline.length;i++){
-                double[] a=outline[i],c=outline[(i+1)%outline.length];float[] normal=AxialShellGeometry.normal(outline,i,face);
-                quad(b,Math.abs(normal[1])>.99?casing:cells,new double[][]{{a[0],1,a[1]},{a[0],0,a[1]},{c[0],0,c[1]},{c[0],1,c[1]}},normal,0xffffff,face);
-            }
-            for(int end=0;end<2;end++){
-                double[] n=AxialShellGeometry.orient(new double[]{0,end==0?-1:1,0},face);float[] normal={(float)n[0],(float)n[1],(float)n[2]};
-                boolean input=face.getAxisDirection()==(end==0?EnumFacing.AxisDirection.NEGATIVE:EnumFacing.AxisDirection.POSITIVE);
-                TextureAtlasSprite port=sprite(input?"matter/energy_in":"matter/energy_out");
-                // Explicit profile UVs keep each port centered over the complete cap.
-                float shade=net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(normal[0],normal[1],normal[2]);
-                for(int i=0;i<outline.length;i++)for(double[] p:new double[][]{{.5,end,.5},{outline[i][0],end,outline[i][1]},{outline[(i+1)%outline.length][0],end,outline[(i+1)%outline.length][1]},{.5,end,.5}}){double[] q=AxialShellGeometry.orient(p,face);double[] uv=portUV(q,EnumFacing.getFacingFromVector(normal[0],normal[1],normal[2]));b.pos(q[0],q[1],q[2]).tex(port.getInterpolatedU(uv[0]),port.getInterpolatedV(uv[1])).color(shade,shade,shade,1).normal(normal[0],normal[1],normal[2]).endVertex();}
-            }
+            int axis=face.getAxis()==EnumFacing.Axis.X?BatteryGeometryCache.X:face.getAxis()==EnumFacing.Axis.Z?BatteryGeometryCache.Z:BatteryGeometryCache.Y;
+            GEOMETRY.mesh(tile.isBlockShape(),axis,face.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE).emit(new GeometrySink(b,casing,cells,sprite("matter/energy_in"),sprite("matter/energy_out")));
             t.draw();
             // Draw solid colors without introducing another atlas texture.
             GlStateManager.disableTexture2D();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);

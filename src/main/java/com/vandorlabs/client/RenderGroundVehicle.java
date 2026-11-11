@@ -25,9 +25,11 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
     private static final long[] frameSamples=VehicleDiagnostics.ENABLED?new long[256]:null,meshSamples=VehicleDiagnostics.ENABLED?new long[256]:null,uploadSamples=VehicleDiagnostics.ENABLED?new long[256]:null;
     private static int frameCount,meshCount,uploadCount;private static long lastFrame;
     private static String percentile(String label,long[] samples,int count){if(count==0)return label+"=none";long[] sorted=Arrays.copyOf(samples,Math.min(count,samples.length));Arrays.sort(sorted);return label+"-us[p50/p95/p99]="+sorted[sorted.length/2]/1000+"/"+sorted[(sorted.length-1)*95/100]/1000+"/"+sorted[(sorted.length-1)*99/100]/1000;}
-    public static String profile(){return !VehicleDiagnostics.ENABLED?"disabled":percentile("frame-interval",frameSamples,frameCount)+" "+percentile("mesh-work",meshSamples,meshCount)+" "+percentile("upload",uploadSamples,uploadCount);}
+    private static final VehicleMeshUpload.Budget uploads=new VehicleMeshUpload.Budget();
+    private static long uploadedBytes,uploadBatches,largeTranslucentUploads;
+    public static String profile(){return !VehicleDiagnostics.ENABLED?"disabled":percentile("frame-interval",frameSamples,frameCount)+" "+percentile("mesh-work",meshSamples,meshCount)+" "+percentile("upload",uploadSamples,uploadCount)+" upload-bytes="+uploadedBytes+" upload-batches="+uploadBatches+" large-translucent="+largeTranslucentUploads;}
     public static int fallbackDraws(){return fallbackDraws;}
-    public static void beginFrame(){TECanopy.cleanup();if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=tileDraws=0;buildNanos=2000000;buildCells=512;}
+    public static void beginFrame(){TECanopy.cleanup();if(VehicleDiagnostics.ENABLED){long now=System.nanoTime();if(lastFrame!=0 && !drawn.isEmpty())frameSamples[frameCount++%frameSamples.length]=now-lastFrame;lastFrame=now;}drawn.clear();fallbackDraws=tileDraws=0;buildNanos=2000000;buildCells=512;uploads.reset();}
     private static long buildNanos;private static int buildCells;
     public static void renderMissing(float partial) {
         if(VehicleRenderPass.shadow())return;
@@ -75,8 +77,12 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         final VertexFormat format=new VertexFormat(DefaultVertexFormats.BLOCK);
         final List<int[]> extendedComponents=new ArrayList<>();
         BufferBuilder builder;
-        int layer,cell;
+        BufferBuilder.State translucentState;
+        VehicleMeshUpload.Bounds scannedBounds;
+        boolean finished,ready;
+        int layer,cell,uploadOffset;
         Build(Mesh source,int light,int level){cells=source.cells;result.generation=generation;result.light=light;result.level=level;}
+        void nextLayer(){builder=null;translucentState=null;scannedBounds=null;finished=ready=false;uploadOffset=cell=0;layer++;}
     }
     public static void reload(){VehiclePaintingRenderer.clear();generation++;for(Regions regions:meshes.values())regions.delete();meshes.clear();VehicleWheelMotion.clear();TELandingGear.clearWheelModels();}
     public static void cleanup(net.minecraft.world.World world){Iterator<Map.Entry<EntityGroundVehicle,Regions>> i=meshes.entrySet().iterator();while(i.hasNext()){Map.Entry<EntityGroundVehicle,Regions> e=i.next();if(e.getKey().isDead || e.getKey().world!=world){e.getValue().delete();i.remove();}}}
@@ -168,48 +174,76 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         // old records with new pointers, even while a replacement build is pending.
         if(mesh.format!=null&&!mesh.format.equals(DefaultVertexFormats.BLOCK)||mesh.pending!=null&&!mesh.pending.format.equals(DefaultVertexFormats.BLOCK)){mesh.delete();mesh.format=null;mesh.builtCells=null;}
         if(mesh.builtCells==mesh.cells && mesh.generation==generation && mesh.light==light && (!propulsion || mesh.level==appearance))return mesh;
-        if(buildCells<=0 || buildNanos<=0)return mesh;
-        if(mesh.pending==null)mesh.pending=new Build(mesh,light,appearance);
-        Build job=mesh.pending;long start=System.nanoTime(),deadline=start+buildNanos;
-        Minecraft mc=Minecraft.getMinecraft();
-        try {
-            while(job.layer<BlockRenderLayer.values().length && buildCells>0 && System.nanoTime()<deadline) {
-                BlockRenderLayer layer=BlockRenderLayer.values()[job.layer];net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);
-                if(job.builder==null){job.builder=new BufferBuilder(65536);job.builder.begin(GL11.GL_QUADS,job.format);}
-                while(job.cell<job.cells.size() && buildCells>0 && System.nanoTime()<deadline) {
-                    VehicleStructure.Cell cell=job.cells.get(job.cell++);buildCells--;
-                    job.component.begin(GL11.GL_QUADS,job.format);
-                    try {if(cell.state.getBlock().canRenderInLayer(cell.state,layer))mc.getBlockRendererDispatcher().renderBlock(e.view.getBlockState(cell.pos),cell.pos,e.view,job.component);}
-                    catch(RuntimeException | LinkageError error) {
-                        VehicleCompatibility.warn(cell.state.getBlock(),"block model",error);job.component.finishDrawing();job.component.begin(GL11.GL_QUADS,job.format);
-                        if(layer==BlockRenderLayer.SOLID)mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModel(e.view,mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),cell.state,cell.pos,job.component,false);
-                    }
-                    job.component.finishDrawing();if(job.component.getVertexCount()>0){int[] raw=job.component.getVertexState().getRawBuffer();if(job.format.getNextOffset()>28)job.extendedComponents.add(raw);else job.builder.addVertexData(raw);}
+        if(mesh.pending==null) {
+            if(buildCells<=0 || buildNanos<=0)return mesh;
+            mesh.pending=new Build(mesh,light,appearance);
+        }
+        Build job=mesh.pending;
+        while(job.layer<BlockRenderLayer.values().length) {
+            BlockRenderLayer layer=BlockRenderLayer.values()[job.layer];
+            if(!job.ready) {
+                if(buildNanos<=0 || !job.finished && job.cell<job.cells.size() && buildCells<=0)break;
+                long start=System.nanoTime();
+                try { prepareLayer(e,job,layer,start+buildNanos); }
+                finally {
+                    net.minecraftforge.client.ForgeHooksClient.setRenderLayer(null);
+                    long elapsed=System.nanoTime()-start;buildNanos-=elapsed;
+                    if(VehicleDiagnostics.ENABLED)meshSamples[meshCount++%meshSamples.length]=elapsed;
                 }
-                if(job.cell<job.cells.size())break;
-                if(!job.extendedComponents.isEmpty()){BlockMeshVbo.merge(job.builder,job.extendedComponents,job.format);job.extendedComponents.clear();}
-                job.builder.finishDrawing();
-                if(job.builder.getVertexCount()>0) {
-                    java.nio.ByteBuffer data=job.builder.getByteBuffer();int stride=job.format.getNextOffset();
-                    double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
-                    for(int vertex=0;vertex<job.builder.getVertexCount();vertex++){int offset=vertex*stride;float vx=data.getFloat(offset),vy=data.getFloat(offset+4),vz=data.getFloat(offset+8);minX=Math.min(minX,vx);minY=Math.min(minY,vy);minZ=Math.min(minZ,vz);maxX=Math.max(maxX,vx);maxY=Math.max(maxY,vy);maxZ=Math.max(maxZ,vz);}
-                    net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(minX,minY,minZ,maxX,maxY,maxZ);
-                    job.result.bounds=job.result.bounds==null?bounds:job.result.bounds.union(bounds);
-                    long upload=VehicleDiagnostics.ENABLED?System.nanoTime():0;
-                    VertexBuffer buffer=new VertexBuffer(job.format);buffer.bufferData(job.builder.getByteBuffer());
-                    if(VehicleDiagnostics.ENABLED)uploadSamples[uploadCount++%uploadSamples.length]=System.nanoTime()-upload;
-                    if(layer==BlockRenderLayer.TRANSLUCENT)job.result.translucent.put(job.result.buffers.size(),job.builder.getVertexState());
-                    job.result.buffers.add(buffer);job.result.layers.add(layer);
-                }
-                job.builder=null;job.cell=0;job.layer++;
+                if(!job.ready)break;
             }
-        }finally{net.minecraftforge.client.ForgeHooksClient.setRenderLayer(null);long elapsed=System.nanoTime()-start;buildNanos-=elapsed;if(VehicleDiagnostics.ENABLED)meshSamples[meshCount++%meshSamples.length]=elapsed;}
+            int total=Math.multiplyExact(job.builder.getVertexCount(),job.format.getNextOffset());
+            if(total==0){job.nextLayer();continue;}
+            boolean translucent=layer==BlockRenderLayer.TRANSLUCENT;
+            int size=VehicleMeshUpload.nextBytes(total,job.uploadOffset,job.format.getNextOffset(),translucent);
+            if(!uploads.allows(size,translucent))break;
+            long start=System.nanoTime();
+            VertexBuffer buffer=new VertexBuffer(job.format);
+            try { buffer.bufferData(VehicleMeshUpload.slice(job.builder.getByteBuffer(),job.uploadOffset,size)); }
+            catch(RuntimeException|LinkageError failure){buffer.deleteGlBuffers();throw failure;}
+            finally {
+                long elapsed=System.nanoTime()-start;uploads.submitted(size,elapsed);
+                if(VehicleDiagnostics.ENABLED){uploadSamples[uploadCount++%uploadSamples.length]=elapsed;uploadedBytes+=size;uploadBatches++;if(translucent&&size>VehicleMeshUpload.BATCH_BYTES)largeTranslucentUploads++;}
+            }
+            if(translucent)job.result.translucent.put(job.result.buffers.size(),job.translucentState);
+            job.result.buffers.add(buffer);job.result.layers.add(layer);job.uploadOffset+=size;
+            if(job.uploadOffset==total)job.nextLayer();
+        }
         if(job.layer==BlockRenderLayer.values().length) {
             mesh.pending=null;mesh.delete();mesh.buffers.addAll(job.result.buffers);mesh.layers.addAll(job.result.layers);mesh.translucent.putAll(job.result.translucent);
             mesh.builtCells=mesh.cells;mesh.generation=generation;mesh.light=job.result.light;mesh.level=job.result.level;
             mesh.bounds=job.result.bounds;mesh.format=job.format;
         }
         return mesh;
+    }
+    /** CPU preparation yields independently of GPU admission; the previous mesh stays visible. */
+    private static void prepareLayer(EntityGroundVehicle e,Build job,BlockRenderLayer layer,long deadline) {
+        if(!job.finished) {
+            net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);
+            if(job.builder==null){job.builder=new BufferBuilder(65536);job.builder.begin(GL11.GL_QUADS,job.format);}
+            Minecraft mc=Minecraft.getMinecraft();
+            while(job.cell<job.cells.size() && buildCells>0 && System.nanoTime()<deadline) {
+                VehicleStructure.Cell cell=job.cells.get(job.cell++);buildCells--;
+                job.component.begin(GL11.GL_QUADS,job.format);
+                try {if(cell.state.getBlock().canRenderInLayer(cell.state,layer))mc.getBlockRendererDispatcher().renderBlock(e.view.getBlockState(cell.pos),cell.pos,e.view,job.component);}
+                catch(RuntimeException | LinkageError error) {
+                    VehicleCompatibility.warn(cell.state.getBlock(),"block model",error);job.component.finishDrawing();job.component.begin(GL11.GL_QUADS,job.format);
+                    if(layer==BlockRenderLayer.SOLID)mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModel(e.view,mc.getBlockRendererDispatcher().getBlockModelShapes().getModelManager().getMissingModel(),cell.state,cell.pos,job.component,false);
+                }
+                job.component.finishDrawing();if(job.component.getVertexCount()>0){int[] raw=job.component.getVertexState().getRawBuffer();if(job.format.getNextOffset()>28)job.extendedComponents.add(raw);else job.builder.addVertexData(raw);}
+            }
+            if(job.cell<job.cells.size() || System.nanoTime()>=deadline)return;
+            if(!job.extendedComponents.isEmpty()){BlockMeshVbo.merge(job.builder,job.extendedComponents,job.format);job.extendedComponents.clear();}
+            job.builder.finishDrawing();job.finished=true;job.scannedBounds=new VehicleMeshUpload.Bounds();
+            if(layer==BlockRenderLayer.TRANSLUCENT)job.translucentState=job.builder.getVertexState();
+        }
+        int count=job.builder.getVertexCount(),position=0;
+        for(int i=0;i<job.format.getElementCount();i++)if(job.format.getElement(i).getUsage()==VertexFormatElement.EnumUsage.POSITION){position=job.format.getOffset(i);break;}
+        while(System.nanoTime()<deadline) {
+            if(!job.scannedBounds.scan(job.builder.getByteBuffer(),count,job.format.getNextOffset(),position,1024))continue;
+            if(count>0){VehicleMeshUpload.Bounds b=job.scannedBounds;net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(b.minX,b.minY,b.minZ,b.maxX,b.maxY,b.maxZ);job.result.bounds=job.result.bounds==null?bounds:job.result.bounds.union(bounds);}
+            job.ready=true;return;
+        }
     }
     private static double posedDistance(EntityGroundVehicle e,BlockPos p,net.minecraft.util.math.Vec3d camera,float partial){
         if(!e.articulation.active())return p.distanceSq(camera.x,camera.y,camera.z);

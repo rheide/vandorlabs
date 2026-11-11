@@ -1,0 +1,10 @@
+task testMachineDisplayBatches(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare adjacent machine display batches with per-slot binding and complete emitted vertex records'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.MachineDisplayBatchChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testMachineDisplayBatches

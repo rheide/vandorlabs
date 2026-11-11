@@ -1,0 +1,9 @@
+task testThrusterParticleBudget(type: JavaExec) {
+    group = 'verification'
+    description = 'Check preallocation particle admission, settings, distance and per-tick/world budgets'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ThrusterParticleBudgetChecks'
+}
+
+check.dependsOn testThrusterParticleBudget

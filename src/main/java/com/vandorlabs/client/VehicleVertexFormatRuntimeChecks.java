@@ -28,6 +28,7 @@ final class VehicleVertexFormatRuntimeChecks {
         BlockMeshVbo.merge(batch,java.util.Arrays.asList(parts),extended);int[] merged=batch.getVertexState().getRawBuffer();require(merged.length==112,"complete extended records merged");for(int i=0;i<merged.length;i++)require(merged[i]==parts[i/56][i%56],"shader payload changed while batching");batch.finishDrawing();
         WallLightRecords light=WallLightRecords.forFormat(extended);require(light!=null,"extended lightmap format supported");int[] original=merged.clone();int[] levels={0x00310072,0x00600090};light.update(merged,new int[]{0,56,112},new int[]{0,0},levels);
         for(int i=0;i<merged.length;i++)require(merged[i]==(i%light.stride==light.word?light.packed(levels[i/56]):original[i]),"shader payload changed while relighting");
+        VehicleSplitUploadRuntimeChecks.run(mc,output,snapshot,extended);
         System.out.println("[vandorlabs][reprolab] vehicle-vertex-format-live PASS vanilla/56-byte GPU pixel parity, old-stride negative control, immutable format snapshots and preserved shader payload; shader-pack hardware acceptance separate");
     }
     private static BufferedImage capture(Minecraft mc,VertexFormat format,boolean old){

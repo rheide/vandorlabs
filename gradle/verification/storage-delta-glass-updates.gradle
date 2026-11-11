@@ -1,0 +1,25 @@
+task testWindowPropertyDeltas(type: JavaExec) {
+    group = 'verification'
+    description = 'Check exact int window-property deltas, listener snapshots and before/after message counts'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.WindowPropertyDeltaChecks'
+}
+
+task testStorageStatusDeltas(type: JavaExec) {
+    group = 'verification'
+    description = 'Check Container listener lifecycle and vanilla property-packet round trips'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.StorageStatusDeltaChecks'
+}
+
+task testGlassPacketUpdates(type: JavaExec) {
+    group = 'verification'
+    description = 'Check duplicate glass packets, changed visual dependencies and forced tile lifecycle invalidation'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPacketUpdateChecks'
+}
+
+check.dependsOn testWindowPropertyDeltas, testStorageStatusDeltas, testGlassPacketUpdates

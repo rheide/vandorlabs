@@ -1,0 +1,11 @@
+task testBatteryCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare cached battery shell/cap geometry with the pre-cache renderer, including port orientation, memory bounds and CPU/allocation cost'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.BatteryCacheChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testBatteryCache

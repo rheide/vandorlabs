@@ -1,0 +1,9 @@
+task testVehicleMeshUploads(type: JavaExec) {
+    group = 'verification'
+    description = 'Check complete vertex slices, offset-aware incremental bounds and upload admission budgets'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.VehicleMeshUploadChecks'
+}
+
+check.dependsOn testVehicleMeshUploads

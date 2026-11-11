@@ -26,20 +26,37 @@ final class HexTankClientChecks {
             javax.imageio.ImageIO.write(image,"png",new File(output,"shot_hex_tank_step_"+stage+".png"));
         }
         for(EnumFacing face:EnumFacing.values())for(int size:new int[]{2,3})render(mc,size,face,false);
-        System.out.println("[vandorlabs][reprolab] hex-tank-render PASS complete-2x2-3x3 six-axes single-root actual-shell-fluid-render tiled-fit-atlas-safe partial-construction-four-images");
+        HexTankGeometryCache cache=TEHexTank.geometryCache();int cases=0;
+        for(EnumFacing face:EnumFacing.values())for(boolean block:new boolean[]{false,true})for(int layout:new int[]{1,2}){
+            int size=block?1:3;cache.clear();BufferedImage cold=render(mc,size,face,false,block,layout,7319);
+            long outlines=cache.outlineBuilds(),templates=cache.templateBuilds();BufferedImage warm=render(mc,size,face,false,block,layout,7319);
+            same(cold,warm,"warm geometry "+face+"/"+block+"/"+layout);
+            require(cache.outlineBuilds()==outlines&&cache.templateBuilds()==templates,"warm draw rebuilt geometry");cases++;
+        }
+        for(boolean block:new boolean[]{false,true})for(int amount:new int[]{0,1,16000})render(mc,1,EnumFacing.EAST,false,block,1,amount);
+        // Empty contents keep the pixel comparison independent of animated water's frame reset.
+        BufferedImage before=render(mc,3,EnumFacing.EAST,false,false,1,0);long builds=cache.templateBuilds(),outlines=cache.outlineBuilds();
+        mc.refreshResources();require(cache.staticBytes()==0&&cache.outlineBytes()==0,"real atlas reload clears retained geometry");
+        BufferedImage after=render(mc,3,EnumFacing.EAST,false,false,1,0);same(before,after,"real resource reload");require(cache.templateBuilds()>builds,"resource reload did not rebuild geometry");
+        render(mc,3,EnumFacing.EAST,false,false,1,7319);require(cache.outlineBuilds()>outlines,"resource reload did not rebuild the fluid outline");
+        System.out.println("[vandorlabs][reprolab] hex-tank-render PASS complete-2x2-3x3 six-axes single-root actual-shell-fluid-render tiled-fit-atlas-safe partial-construction-four-images warm-pixel-parity="+cases+" both-shapes exact-fluid-amounts real-atlas-reload");
     }
+    private static void same(BufferedImage a,BufferedImage b,String label){require(a.getWidth()==b.getWidth()&&a.getHeight()==b.getHeight(),label+" image size");for(int y=0;y<a.getHeight();y++)for(int x=0;x<a.getWidth();x++)if(a.getRGB(x,y)!=b.getRGB(x,y))throw new IllegalStateException("joined tank renderer: "+label+" pixel "+x+","+y);}
     private static BufferedImage render(Minecraft mc,int size,EnumFacing face,boolean incomplete){
+        return render(mc,size,face,incomplete,false,size==3?1:2,8000);
+    }
+    private static BufferedImage render(Minecraft mc,int size,EnumFacing face,boolean incomplete,boolean blockShape,int layout,int amount){
         Block block=Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank");
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(int x=0;x<size;x++)for(int y=0;y<size;y++){
             if(incomplete&&x==size-1&&y==size-1)continue;
             BlockPos at=BlockPos.ORIGIN.offset(HexTankGroups.right(face.getAxis()),x).offset(HexTankGroups.up(face.getAxis()),y);
-            TileEntityHexTank cell=new TileEntityHexTank();cell.setPos(at);cell.setMainTextureLayout(size==3?1:2);cell.tank.setFluid(new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,8000));
+            TileEntityHexTank cell=new TileEntityHexTank();cell.setPos(at);cell.setBlockShape(blockShape);cell.setMainTextureLayout(layout);cell.tank.setFluid(amount==0?null:new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,amount));
             cells.add(new VehicleStructure.Cell(at,block.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,face),cell.writeToNBT(new NBTTagCompound())));
         }
         VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(cells));int roots=0;
-        for(VehicleStructure.Cell cell:cells){TileEntityHexTank tile=(TileEntityHexTank)view.getTileEntity(cell.pos);com.vandorlabs.render.ConnectedSquare.Part part=HexTankGroups.part(tile);require(part.size==(incomplete?1:size),"same geometry group on "+face);if(part.x==0&&part.y==0)roots++;}
-        require(roots==(incomplete?cells.size():1),"each assembly has exactly one renderer root");
+        for(VehicleStructure.Cell cell:cells){TileEntityHexTank tile=(TileEntityHexTank)view.getTileEntity(cell.pos);com.vandorlabs.render.ConnectedSquare.Part part=HexTankGroups.part(tile);require(part.size==(incomplete||blockShape?1:size),"same geometry group on "+face);if(part.x==0&&part.y==0)roots++;}
+        require(roots==(incomplete||blockShape?cells.size():1),"each assembly has exactly one renderer root");
         Framebuffer frame=new Framebuffer(384,320,true);TEHexTank renderer=new TEHexTank();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);
         GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-size,size,-size*.85,size*.85,-20,20);
         GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();

@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+- Reuse completed configured material and mounted-control item variants within entry and retained-memory limits. Preserve custom-model fallbacks, complete shader records, item padding and resource/format invalidation.
+- Apply distance, particle settings and per-tick admission limits before constructing decorative thruster particles.
+- Cache exact hex-tank fluid outlines and static tank/battery geometry while retaining current artwork, fluid appearance, lighting and fractional battery charge.
+- Send Storage Status fields only when changed after each listener's initial snapshot. Avoid repeating Programmable Glass render/topology invalidation for identical updates while preserving load, copy, fluid and light refresh boundaries.
+- Stage vehicle mesh finalization and opaque GPU uploads across frames, preserving complete quads, extended vertex attributes, translucent ordering and atomic mesh replacement.
+- Combine adjacent machine-display slots that use the same texture into one submission while preserving slot order and animation UVs.
+
 ## 2.9.1
 
 - Enable smooth lighting for programmable housing models and restore vanilla face-corner ordering after rotation, including floor and ceiling faces, while preserving texture coordinates and extended shader vertex data.

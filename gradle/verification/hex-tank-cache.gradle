@@ -1,0 +1,11 @@
+task testHexTankCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare tank outlines and static shell/window geometry with the pre-cache renderer, including byte bounds and CPU/allocation cost'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.HexTankCacheChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testHexTankCache

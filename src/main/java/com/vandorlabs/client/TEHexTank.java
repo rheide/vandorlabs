@@ -12,22 +12,25 @@ import net.minecraftforge.fluids.FluidStack;
 /** Axial hollow shell with level fluid and windows on its diagonal sides. */
 @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs",value=net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank> {
-    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void stitch(net.minecraftforge.client.event.TextureStitchEvent.Pre event){for(String name:new String[]{"port","tank_empty"})event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/matter/"+name));}
+    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void stitch(net.minecraftforge.client.event.TextureStitchEvent.Pre event){GEOMETRY.clear();for(String name:new String[]{"port","tank_empty"})event.getMap().registerSprite(new ResourceLocation("vandorlabs:blocks/matter/"+name));}
+    @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote)GEOMETRY.clear();}
     private static final double[][] OUTLINE=AxialShellGeometry.HEX;
     private static final double[][] BLOCK=AxialShellGeometry.BLOCK;
-    private static final double INNER=.90, LIQUID=.895, FLOOR=.04, CEILING=.96;
+    private static final double LIQUID=.895, FLOOR=.04, CEILING=.96;
+    private static final HexTankGeometryCache GEOMETRY=new HexTankGeometryCache(TileEntityHexTank.CAPACITY);
+    static HexTankGeometryCache geometryCache(){return GEOMETRY;}
     private static TextureAtlasSprite sprite(String name){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(name);}
     /** Horizontal hexagons retain flat top/bottom faces, like hexagonal thrusters. */
     static double[] orient(double[] p,EnumFacing f){return AxialShellGeometry.orient(p,f);}
     static double fluidLevel(int amount){return FLOOR+(CEILING-FLOOR)*Math.max(0,Math.min(1,amount/(double)TileEntityHexTank.CAPACITY));}
-    private static double[] point(double[][] outline,int edge,double u,double y,double scale){double[] a=outline[edge],c=outline[(edge+1)%outline.length];return new double[]{.5+(a[0]+(c[0]-a[0])*u-.5)*scale,y,.5+(a[1]+(c[1]-a[1])*u-.5)*scale};}
+    private static double[] point(HexTankGeometryCache.Outline outline,int edge,double u,double y,double scale){int next=(edge+1)%outline.size();return new double[]{.5+(outline.x(edge)+(outline.x(next)-outline.x(edge))*u-.5)*scale,y,.5+(outline.z(edge)+(outline.z(next)-outline.z(edge))*u-.5)*scale};}
     private static void quad(BufferBuilder b,TextureAtlasSprite s,int color,double[][] vertices,EnumFacing facing,boolean cap){
         float r=(color>>16&255)/255F,g=(color>>8&255)/255F,blue=(color&255)/255F;
         double[][] uv={{0,0},{0,16},{16,16},{16,0}};
         for(int i=0;i<4;i++){double[] p=orient(vertices[i],facing);b.pos(p[0],p[1],p[2]).tex(s.getInterpolatedU(cap?vertices[i][0]*16:uv[i][0]),s.getInterpolatedV(cap?vertices[i][2]*16:uv[i][1])).color(r,g,blue,1).normal(0,1,0).endVertex();}
     }
-    private static void side(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing){quad(b,s,color,new double[][]{point(outline,edge,left,top,scale),point(outline,edge,left,bottom,scale),point(outline,edge,right,bottom,scale),point(outline,edge,right,top,scale)},facing,false);}
-    private static void cap(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,double y,double scale,EnumFacing facing){double cx=0,cz=0;for(double[] p:outline){cx+=p[0];cz+=p[1];}cx=.5+(cx/outline.length-.5)*scale;cz=.5+(cz/outline.length-.5)*scale;for(int i=0;i<outline.length;i++)quad(b,s,color,new double[][]{{cx,y,cz},point(outline,i,0,y,scale),point(outline,i,1,y,scale),{cx,y,cz}},facing,true);}
+    private static void side(HexTankGeometryCache.Outline outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing){quad(b,s,color,new double[][]{point(outline,edge,left,top,scale),point(outline,edge,left,bottom,scale),point(outline,edge,right,bottom,scale),point(outline,edge,right,top,scale)},facing,false);}
+    private static void cap(HexTankGeometryCache.Outline outline,BufferBuilder b,TextureAtlasSprite s,int color,double y,double scale,EnumFacing facing){double cx=0,cz=0;for(int i=0;i<outline.size();i++){cx+=outline.x(i);cz+=outline.z(i);}cx=.5+(cx/outline.size()-.5)*scale;cz=.5+(cz/outline.size()-.5)*scale;for(int i=0;i<outline.size();i++)quad(b,s,color,new double[][]{{cx,y,cz},point(outline,i,0,y,scale),point(outline,i,1,y,scale),{cx,y,cz}},facing,true);}
     static double[] window(boolean block,int edge,EnumFacing facing){
         if(facing.getAxis()!=EnumFacing.Axis.Y && (block?edge==0||edge==2:edge==0||edge==3))return null;
         double[][] outline=block?BLOCK:OUTLINE;double[] a=outline[edge],b=outline[(edge+1)%outline.length];
@@ -39,31 +42,24 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
     static float[] casingNormal(double[][] outline,int edge,EnumFacing facing){
         return AxialShellGeometry.normal(outline,edge,facing);
     }
-    private static void casingSide(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing,boolean tiled,double repeat){
-        double[] a=outline[edge],c=outline[(edge+1)%outline.length];double units=Math.hypot(c[0]-a[0],c[1]-a[1])*scale*repeat;
-        double begin=left;
-        if(tiled&&units>0)for(int tile=(int)Math.floor(left*units)+1;tile<right*units;tile++){
-            double end=tile/units;casingSegment(outline,b,s,color,edge,begin,end,bottom,top,scale,facing,true,repeat);begin=end;
-        }
-        casingSegment(outline,b,s,color,edge,begin,right,bottom,top,scale,facing,tiled,repeat);
-    }
-    private static void casingSegment(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double left,double right,double bottom,double top,double scale,EnumFacing facing,boolean tiled,double repeat){
-        double[][] vertices={point(outline,edge,left,top,scale),point(outline,edge,left,bottom,scale),point(outline,edge,right,bottom,scale),point(outline,edge,right,top,scale)};
-        double[][] uv={casingUV(outline,edge,left,top,tiled,scale*repeat),casingUV(outline,edge,left,bottom,tiled,scale*repeat),casingUV(outline,edge,right,bottom,tiled,scale*repeat),casingUV(outline,edge,right,top,tiled,scale*repeat)};
-        if(tiled){double[] a=outline[edge],c=outline[(edge+1)%outline.length];double base=Math.floor((left+right)*.5*Math.hypot(c[0]-a[0],c[1]-a[1])*scale*repeat)*16;for(double[] point:uv)point[0]-=base;}
-        if(System.getProperty("vandorlabs.reprolab")!=null)for(double[] point:uv)if(point[0]<-.00001||point[0]>16.00001||point[1]<-.00001||point[1]>16.00001)throw new IllegalStateException("Tank casing crossed its atlas sprite boundary");
-        float[] normal=casingNormal(outline,edge,facing);float shade=net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(normal[0],normal[1],normal[2]);
-        float r=(color>>16&255)/255F*shade,g=(color>>8&255)/255F*shade,blue=(color&255)/255F*shade;
-        for(int i=0;i<4;i++){double[] p=orient(vertices[i],facing);b.pos(p[0],p[1],p[2]).tex(s.getInterpolatedU(uv[i][0]),s.getInterpolatedV(uv[i][1])).color(r,g,blue,1).normal(normal[0],normal[1],normal[2]).endVertex();}
-    }
-    private static void wall(double[][] outline,BufferBuilder b,TextureAtlasSprite s,int color,int edge,double scale,double low,double high,EnumFacing facing,boolean tiled,double repeat){
-        double[] w=window(outline.length==4,edge,facing);if(w==null){casingSide(outline,b,s,color,edge,0,1,low,high,scale,facing,tiled,repeat);return;}
-        casingSide(outline,b,s,color,edge,0,1,low,w[2],scale,facing,tiled,repeat);casingSide(outline,b,s,color,edge,0,1,w[3],high,scale,facing,tiled,repeat);
-        casingSide(outline,b,s,color,edge,0,w[0],w[2],w[3],scale,facing,tiled,repeat);casingSide(outline,b,s,color,edge,w[1],1,w[2],w[3],scale,facing,tiled,repeat);
-    }
     static double area(double[][] polygon){double sum=0;for(int i=0;i<polygon.length;i++){double[] a=polygon[i],b=polygon[(i+1)%polygon.length];sum+=a[0]*b[1]-b[0]*a[1];}return Math.abs(sum)*.5;}
-    private static double[][] below(double[][] polygon,double level){java.util.List<double[]> out=new java.util.ArrayList<>();for(int i=0;i<polygon.length;i++){double[] a=polygon[i],b=polygon[(i+1)%polygon.length];boolean inside=a[1]<=level,next=b[1]<=level;if(inside)out.add(a.clone());if(inside!=next){double t=(level-a[1])/(b[1]-a[1]);out.add(new double[]{a[0]+(b[0]-a[0])*t,level});}}return out.toArray(new double[0][]);}
-    static double[][] fluidOutline(boolean block,int amount){double[][] polygon=block?BLOCK:OUTLINE;double fraction=Math.max(0,Math.min(1,amount/(double)TileEntityHexTank.CAPACITY)),low=0,high=1,total=area(polygon);if(fraction==1)return polygon;for(int i=0;i<40;i++){double mid=(low+high)/2;if(area(below(polygon,mid))<total*fraction)low=mid;else high=mid;}return below(polygon,(low+high)/2);}
+    static double[][] fluidOutline(boolean block,int amount){return GEOMETRY.fluidOutline(block,amount).copy();}
+    private static int axis(EnumFacing facing){return facing.getAxis()==EnumFacing.Axis.X?HexTankGeometryCache.X:facing.getAxis()==EnumFacing.Axis.Z?HexTankGeometryCache.Z:HexTankGeometryCache.Y;}
+
+    /** Resolve artwork and diffuse shading while appending to the live, unmodified vertex format. */
+    private static final class GeometrySink implements HexTankGeometryCache.Sink {
+        private final BufferBuilder buffer;
+        private final TextureAtlasSprite casing,liner,port,glass;
+        private TextureAtlasSprite current;
+        private float r,g,b,nx,ny,nz;
+        GeometrySink(BufferBuilder buffer,TextureAtlasSprite casing,TextureAtlasSprite liner,TextureAtlasSprite port,TextureAtlasSprite glass){this.buffer=buffer;this.casing=casing;this.liner=liner;this.port=port;this.glass=glass;}
+        public void beginQuad(int material,int color,boolean diffuse,float nx,float ny,float nz){
+            current=material==HexTankGeometryCache.CASING?casing:material==HexTankGeometryCache.LINER?liner:material==HexTankGeometryCache.PORT?port:glass;
+            float shade=diffuse?net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(nx,ny,nz):1;
+            r=(color>>16&255)/255F*shade;g=(color>>8&255)/255F*shade;b=(color&255)/255F*shade;this.nx=nx;this.ny=ny;this.nz=nz;
+        }
+        public void vertex(double x,double y,double z,double u,double v){buffer.pos(x,y,z).tex(current.getInterpolatedU(u),current.getInterpolatedV(v)).color(r,g,b,1).normal(nx,ny,nz).endVertex();}
+    }
     @Override public void render(TileEntityHexTank tile,double x,double y,double z,float partial,int stage,float alpha){
         if(tile.getWorld()==null||tile.isInvalid()||!tile.getWorld().getBlockState(tile.getPos()).getProperties().containsKey(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING))return;
         com.vandorlabs.render.ConnectedSquare.Part joined=HexTankGroups.part(tile);
@@ -77,17 +73,9 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
             else if(facing.getAxis()==EnumFacing.Axis.Z)GlStateManager.scale(joined.size,joined.size,1);
             else GlStateManager.scale(joined.size,1,joined.size);
             TextureAtlasSprite casing=sprite(ScreenHousingTextures.texture(tile.getHousingTexture())),port=sprite("vandorlabs:blocks/matter/port"),liner=sprite("vandorlabs:blocks/matter/tank_empty");
-            double[][] outline=tile.isBlockShape()?BLOCK:OUTLINE;
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-            for(int i=0;i<outline.length;i++){
-                wall(outline,b,casing,0xffffff,i,1,0,1,facing,tile.getMainTextureLayout()==1,joined.size);wall(outline,b,liner,0xffffff,i,INNER,FLOOR,CEILING,facing,false,1);
-                double[] w=window(tile.isBlockShape(),i,facing);if(w==null)continue;
-                // Thickness around the four edges of every window opening.
-                for(double u:new double[]{w[0],w[1]})quad(b,casing,0xb5c2cc,new double[][]{point(outline,i,u,w[2],1),point(outline,i,u,w[3],1),point(outline,i,u,w[3],INNER),point(outline,i,u,w[2],INNER)},facing,false);
-                for(double h:new double[]{w[2],w[3]})quad(b,casing,0xb5c2cc,new double[][]{point(outline,i,w[0],h,1),point(outline,i,w[1],h,1),point(outline,i,w[1],h,INNER),point(outline,i,w[0],h,INNER)},facing,false);
-            }
-            cap(outline,b,port,0xffffff,0,1,facing);cap(outline,b,port,0xffffff,1,1,facing);
-            cap(outline,b,liner,0xffffff,FLOOR,INNER,facing);cap(outline,b,liner,0xffffff,CEILING,INNER,facing);t.draw();
+            HexTankGeometryCache.Template geometry=GEOMETRY.template(tile.isBlockShape(),axis(facing),tile.getMainTextureLayout()==1,joined.size);
+            GeometrySink sink=new GeometrySink(b,casing,liner,port,sprite("minecraft:blocks/glass"));geometry.shell.emit(sink);t.draw();
             FluidStack fluid=null;int total=0;
             for(int a=0;a<joined.size;a++)for(int c=0;c<joined.size;c++){
                 net.minecraft.tileentity.TileEntity raw=tile.getWorld().getTileEntity(tile.getPos().offset(HexTankGroups.right(facing.getAxis()),a).offset(HexTankGroups.up(facing.getAxis()),c));
@@ -98,13 +86,12 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
             if(fluid!=null&&fluid.amount>0){
                 TextureAtlasSprite contents=sprite(fluid.getFluid().getStill(fluid).toString());double top=fluidLevel(fluid.amount);int color=fluid.getFluid().getColor(fluid);
                 b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-                double[][] liquid=facing.getAxis()==EnumFacing.Axis.Y?outline:fluidOutline(tile.isBlockShape(),fluid.amount);double high=facing.getAxis()==EnumFacing.Axis.Y?top:CEILING;
-                for(int i=0;i<liquid.length;i++)side(liquid,b,contents,color,i,0,1,FLOOR+.0005,high,LIQUID,facing);
+                HexTankGeometryCache.Outline liquid=facing.getAxis()==EnumFacing.Axis.Y?HexTankGeometryCache.fullOutline(tile.isBlockShape()):GEOMETRY.fluidOutline(tile.isBlockShape(),fluid.amount);double high=facing.getAxis()==EnumFacing.Axis.Y?top:CEILING;
+                for(int i=0;i<liquid.size();i++)side(liquid,b,contents,color,i,0,1,FLOOR+.0005,high,LIQUID,facing);
                 cap(liquid,b,contents,color,high,LIQUID,facing);cap(liquid,b,contents,color,FLOOR+.0005,LIQUID,facing);t.draw();
             }
             // Actual glass panes, with transparent centers rather than a painted level image.
-            b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);TextureAtlasSprite glass=sprite("minecraft:blocks/glass");
-            for(int i=0;i<outline.length;i++){double[] w=window(tile.isBlockShape(),i,facing);if(w!=null)side(outline,b,glass,0xffffff,i,w[0],w[1],w[2],w[3],1.0005,facing);}t.draw();
+            b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);geometry.windows.emit(sink);t.draw();
         }finally{GlStateManager.popMatrix();GlStateManager.resetColor();GlStateManager.color(1,1,1,1);}
     }
 }

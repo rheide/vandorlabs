@@ -27,6 +27,8 @@ final class Utility26FocusedChecks {
         if("true".equals(System.getenv("VANDOR_SEGMENTED_DENSITY_ONLY")))return SegmentedDoorDensityChecks.run(mc,output);
         if("true".equals(System.getenv("VANDOR_SEGMENTED_GATES_ONLY")))return SegmentedGateLiveChecks.tick(mc,output);
         if(ticks!=80)return false;
+        if("true".equals(System.getenv("VANDOR_HEX_TANK_CACHE_ONLY"))){HexTankClientChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS hex-tank-cache-only");return true;}
+        if("true".equals(System.getenv("VANDOR_BATTERY_CACHE_ONLY"))){BatteryCacheClientChecks.run(mc);System.out.println("[vandorlabs][reprolab] utility26-focused PASS battery-cache-only");return true;}
         if("true".equals(System.getenv("VANDOR_UTILITY_DOORS_ONLY"))){UtilityDoorArtworkChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS utility-doors-only");return true;}
         if("true".equals(System.getenv("VANDOR_SEGMENTED_TILE_ONLY"))){SegmentedTileModeChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS segmented-tile-only");return true;}
         if("true".equals(System.getenv("VANDOR_CHANNEL_INPUT_ONLY"))){
@@ -94,6 +96,7 @@ final class Utility26FocusedChecks {
         check(failures,"Track tread animation",()->com.vandorlabs.gear.client.TrackTreadChecks.run(mc,output));
         check(failures,"thruster joined hex rendering",()->ThrusterJoinClientChecks.run(mc,output));
         check(failures,"joined tank rendering",()->HexTankClientChecks.run(mc,output));
+        check(failures,"battery static shell cache",()->BatteryCacheClientChecks.run(mc));
         check(failures,"coupler models",()->Utility26RuntimeChecks.models(mc));
         check(failures,"arm and track rendering",()->com.vandorlabs.gear.client.Gear26ClientChecks.run(mc,output));
         if(!failures.isEmpty()){IllegalStateException failure=new IllegalStateException("Utility 2.6 failed fixtures="+failures.size());for(Throwable problem:failures)failure.addSuppressed(problem);throw failure;}
