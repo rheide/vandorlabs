@@ -1,19 +1,39 @@
 # Changelog
 
-## Unreleased
-
-- Reuse completed configured material and mounted-control item variants within entry and retained-memory limits. Preserve custom-model fallbacks, complete shader records, item padding and resource/format invalidation.
-- Apply distance, particle settings and per-tick admission limits before constructing decorative thruster particles.
-- Cache exact hex-tank fluid outlines and static tank/battery geometry while retaining current artwork, fluid appearance, lighting and fractional battery charge.
-- Send Storage Status fields only when changed after each listener's initial snapshot. Avoid repeating Programmable Glass render/topology invalidation for identical updates while preserving load, copy, fluid and light refresh boundaries.
-- Stage vehicle mesh finalization and opaque GPU uploads across frames, preserving complete quads, extended vertex attributes, translucent ordering and atomic mesh replacement.
-- Combine adjacent machine-display slots that use the same texture into one submission while preserving slot order and animation UVs.
-
 ## 2.9.1
 
-- Enable smooth lighting for programmable housing models and restore vanilla face-corner ordering after rotation, including floor and ceiling faces, while preserving texture coordinates and extended shader vertex data.
-- Batch static selected glass materials and static screen artwork with ordinary transparent panes, retaining per-pane tint, depth and joined Stretch/Tile/Fit mapping. Preserve shader material boundaries and the animated-display fallback.
-- Publish stationary custom Programmable Glass frames and regular glass junction frames into chunk geometry. Preserve each face's sprite, alpha and lighting, and retain tile rendering until replacement chunk geometry is uploaded and for moving vehicle worlds.
+### Lighting and prepared models
+
+- Enable ambient occlusion for Programmable Block, Slab and Storage. Restore vanilla face-corner ordering after rotation, including floor and ceiling faces, while preserving texture coordinates and complete extended shader vertex records.
+- Reuse prepared housing geometry, common immutable block-state snapshots and selector housing meshes instead of rebuilding equivalent faces and property maps. Preserve individual materials, joined layouts, visibility and live lighting.
+- Cache Programmable Stair retexturing and collision geometry, reducing repeated face preparation and collision-query allocation while preserving facing, half, shape and selected artwork.
+- Reuse completed configured-material, texture-layout and mounted-control item variants within entry and retained-memory limits. Preserve custom-model fallbacks, full shader records, item padding and resource/format invalidation.
+
+### Glass and Portholes
+
+- Batch static selected glass materials and static Screen artwork with ordinary transparent panes, retaining per-pane tint, opacity, depth and joined Stretch/Tile/Fit mapping. Preserve shader material boundaries, transparent ordering and animated-display fallbacks.
+- Publish stationary custom Programmable Glass frames and regular junction frames into chunk geometry. Retain each face's sprite, alpha and lighting; keep tile rendering until replacement geometry is uploaded and for moving vehicle worlds.
+- Let vanilla schedule pending frame-section rebuilds and poll upload completion without blocking the client thread. Coalesce dirty regions and avoid repeated frame publication and unnecessary neighboring-section rebuilds.
+- Reuse prepared pane geometry, shader material data and render-pass decisions. Bound mapped-pane geometry by retained bytes so dense sets of small panes do not thrash a fixed entry limit.
+- Cache glass topology, joined artwork layouts and Porthole groups with dependency-aware invalidation. Nearby edits, bridge placements, chunk changes and appearance updates refresh affected groups; unrelated distant edits retain reusable data.
+- Refresh glass configuration, actual state, fluid rendering and emitted light through consistent update paths. Avoid repeated render/topology invalidation for identical packets while preserving first-load, copy, world/position, carried-fluid and pending-light refreshes.
+- Skip empty joined frames and screen borders before lighting and graphics-state setup. Reduce glazing-sort allocation and choose the lower-cost overlap sweep while retaining cyclic overlap ordering.
+
+### Doors and carried controls
+
+- Reuse ordinary Door control-panel meshes, render bounds and pass decisions. Cache Segmented Door appearance contexts and chunk publications instead of repeating preparation for unchanged columns and render passes.
+- Cache Large Door collision partitions and spatial indexes for collision and moved-leaf ray queries. Reject follower tiles before expensive root lookups, retain overhanging leaves, and avoid phantom collision boxes from disjoint clipping.
+- Correct X-split Door batch travel while preserving leaf placement and animation.
+- Use the physical parent world's authority for carried Door credential slots and signal updates. Validate the live installed owner before inventory changes so remote VehicleWorld views retain server-authoritative access and credential handling.
+
+### Machines, particles and vehicle uploads
+
+- Cache exact Hex Tank fluid outlines and static tank/Battery geometry while retaining current artwork, fluid color, lighting and fractional Battery charge.
+- Combine adjacent machine-display slots using the same texture into one submission, retaining slot order, animated UVs and live appearance.
+- Apply camera distance, particle settings and per-tick admission limits before constructing decorative thruster particles. Clear admission state across world/tick changes and preserve authoritative thruster behavior.
+- Send Storage Status fields only when changed after each listener's initial snapshot. Preserve the existing split-integer protocol, signed-half reconstruction and independent listener lifecycle.
+- Spread vehicle mesh finalization and opaque GPU uploads across frames using bounded batches. Preserve complete quads, extended vertex attributes and translucent ordering; keep the previous mesh visible until its replacement is ready and discard unfinished uploads on invalidation.
+- Bound prepared caches by entries or retained memory as appropriate, and retire stale geometry on resource reload, format changes and world unload. Add focused regression fixtures for the changed rendering, collision, security, cache, packet and upload paths.
 
 ## 2.9
 
