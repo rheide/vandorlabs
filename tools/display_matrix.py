@@ -6,7 +6,7 @@ STYLES=('Classic','Cool','Gold')
 def generate_display_matrix(entries):
     cells={};counts={style:0 for style in STYLES};subjects=set()
     for entry in entries:
-        if entry['category'] not in {'Displays/'+style for style in STYLES}:continue
+        if entry['category'] not in {size+'/'+style for size in ('Displays','Half Displays') for style in STYLES}:continue
         style=entry['category'].split('/')[1];match=re.fullmatch(r'(.+) \('+style+r'/(Full|Half)\)( Large)?',entry['label'])
         if not match:raise ValueError('Display label missing style/height: '+entry['label'])
         subject,height,large=match.groups();variant='Large ('+str(entry['pixelWidth'])+'px)' if large else 'Original'

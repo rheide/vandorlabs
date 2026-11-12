@@ -23,12 +23,19 @@ final class FrameFramebufferChecks {
     private static final int SIZE=256,BACKGROUND=0x203040;
     private static final class Fixture {
         final VehicleWorld world;final int columns,rows;
+        final EnumFacing facing,right,up;
         final List<TileEntityAnimatedScreenSelector> tiles=new ArrayList<>();
         Fixture(Minecraft mc,int columns,int rows,int material){
-            this.columns=columns;this.rows=rows;List<VehicleStructure.Cell> cells=new ArrayList<>();
+            this(mc,columns,rows,material,EnumFacing.SOUTH);
+        }
+        Fixture(Minecraft mc,int columns,int rows,int material,EnumFacing facing){
+            this.columns=columns;this.rows=rows;this.facing=facing;
+            right=facing==EnumFacing.UP?EnumFacing.EAST:facing==EnumFacing.DOWN?EnumFacing.WEST:facing.rotateYCCW();
+            up=facing.getAxis().isHorizontal()?EnumFacing.UP:EnumFacing.NORTH;
+            List<VehicleStructure.Cell> cells=new ArrayList<>();
             for(int y=0;y<rows;y++)for(int x=0;x<columns;x++){
-                TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(new BlockPos(x,y,0));tile.setSurfaceTexture(0,material);tile.setDisplayMode(TileEntityAnimatedScreenSelector.MODE_STATIC);tile.setRedstoneEnabled(false);
-                cells.add(new VehicleStructure.Cell(tile.getPos(),ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.SOUTH),tile.writeToNBT(new NBTTagCompound())));
+                TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(BlockPos.ORIGIN.offset(right,x).offset(up,y));tile.setSurfaceTexture(0,material);tile.setDisplayMode(TileEntityAnimatedScreenSelector.MODE_STATIC);tile.setRedstoneEnabled(false);
+                cells.add(new VehicleStructure.Cell(tile.getPos(),ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,facing),tile.writeToNBT(new NBTTagCompound())));
             }
             world=new VehicleWorld(mc.world,VehicleStructure.display(cells));
             for(net.minecraft.tileentity.TileEntity tile:world.tiles.values())tiles.add((TileEntityAnimatedScreenSelector)tile);
@@ -71,10 +78,49 @@ final class FrameFramebufferChecks {
             try{BufferedImage darkImage=capture(mc,darkReference);require(distance(splitImage.getRGB(128,64),single.getRGB(128,128))<30,"split upper display differs from selected artwork");require(distance(splitImage.getRGB(128,192),darkImage.getRGB(128,128))<30,"split lower display differs from selected artwork");require(distance(splitImage.getRGB(128,64),splitImage.getRGB(128,192))>30,"independent split artwork is indistinguishable");}finally{darkReference.close();}
             ImageIO.write(fit,"png",new File(output,"shot_frames_display_fit_2x2.png"));ImageIO.write(perimeter,"png",new File(output,"shot_frames_border_fit_2x2.png"));ImageIO.write(repeated,"png",new File(output,"shot_frames_border_tile_2x2.png"));ImageIO.write(splitImage,"png",new File(output,"shot_frames_split_display.png"));
             coupledLayouts(mc,output,pattern,dark,bolted,splitImage);
+            orientedLayouts(mc,dark,bolted);
             reportedBorders(mc,output,pattern);framePersistence(mc);companyDisplays(mc,output);opaqueInterior(mc,output);joinedGlassFrames(mc,output);frameDialog(mc,output,one.tiles.get(0));screenRedstoneDialog(mc,output,one.tiles.get(0));pickerDialogs(mc,output);TextureSearchRuntimeChecks.run(mc,output);
             System.out.println("[vandorlabs][reprolab] frame-framebuffer PASS square-and-rectangular-display-fit independent-frame-fit mixed-artwork-and-frame-negative-controls split-fit-2x2-and-3x3 opaque-interior");
         }finally{one.close();square.close();rectangle.close();row.close();}
     }
+    /** Independent viewing axes expose swapped whole-cell slices and inward-facing rails. */
+    private static void orientedLayouts(Minecraft mc,int dark,int border)throws Exception{
+        int artwork=ScreenHousingTextures.screenIndex("company_vektor_full_communications_static");
+        require(artwork>0,"asymmetric joined artwork fixture");int cases=0;
+        for(EnumFacing facing:EnumFacing.values()){
+            Fixture reference=new Fixture(mc,1,1,artwork,facing);
+            try{
+                BufferedImage whole=capture(mc,reference);
+                reference.tiles.get(0).frameAppearance.split=true;
+                reference.tiles.get(0).frameAppearance.splitTop=artwork;
+                reference.tiles.get(0).frameAppearance.splitBottom=dark;
+                GlassMaterials.changed();BufferedImage split=capture(mc,reference);
+                for(int[] size:new int[][]{{2,2},{4,2},{4,3}}){
+                    Fixture group=new Fixture(mc,size[0],size[1],artwork,facing);
+                    try{
+                        group.appearance(-1,false,true);
+                        for(TileEntityAnimatedScreenSelector tile:group.tiles){
+                            BlockPos p=tile.getPos();int column=group.columns-1-dot(p,group.right),row=dot(p,group.up);
+                            for(GlassSurfaceGroups.Layout layout:new GlassSurfaceGroups.Layout[]{ScreenSurfaceGroups.layout(tile),ScreenSurfaceGroups.frameLayout(tile)})
+                                require(layout.column==column&&layout.row==row&&layout.columns==group.columns&&layout.rows==group.rows,"rendered cell orientation "+facing+" "+group.columns+"x"+group.rows+" at="+p+" got="+layout.key());
+                        }
+                        require(difference(whole,capture(mc,group),5,5,251,251)<180,"fitted artwork swapped cells on "+facing+" "+group.columns+"x"+group.rows);
+                        for(TileEntityAnimatedScreenSelector tile:group.tiles){tile.frameAppearance.split=true;tile.frameAppearance.splitTop=artwork;tile.frameAppearance.splitBottom=dark;}
+                        GlassMaterials.changed();require(difference(split,capture(mc,group),8,8,248,248)<400,"rectangular split Fit repeated or swapped artwork on "+facing+" "+group.columns+"x"+group.rows);
+                        group.appearance(border,false,true);BufferedImage framed,bare;
+                        TEAnimatedScreenSelector.suppressDisplayContent=true;
+                        try{framed=capture(mc,group);FrameSurfaceRenderer.suppressBorders=true;try{bare=capture(mc,group);}finally{FrameSurfaceRenderer.suppressBorders=false;}}
+                        finally{TEAnimatedScreenSelector.suppressDisplayContent=false;}
+                        require(difference(bare,framed,32,32,224,224)==0,"fitted frame retained interior rails on "+facing+" "+group.columns+"x"+group.rows);
+                        require(difference(bare,framed,0,0,SIZE,SIZE)>200,"fitted frame lost its perimeter on "+facing+" "+group.columns+"x"+group.rows);
+                        cases++;
+                    }finally{group.close();}
+                }
+            }finally{reference.close();}
+        }
+        System.out.println("[vandorlabs][reprolab] screen-join-orientation PASS cases="+cases+" all-six-faces 2x2/4x2/4x3 actual-TESR asymmetric-artwork rectangular-split independent-outer-frame");
+    }
+    private static int dot(BlockPos p,EnumFacing direction){return p.getX()*direction.getFrontOffsetX()+p.getY()*direction.getFrontOffsetY()+p.getZ()*direction.getFrontOffsetZ();}
     private static void reportedBorders(Minecraft mc,File output,int material)throws Exception{
         Fixture fixture=new Fixture(mc,1,1,material);
         try{
@@ -249,8 +295,14 @@ final class FrameFramebufferChecks {
         Framebuffer frame=new Framebuffer(SIZE,SIZE,true);int pass=MinecraftForgeClient.getRenderPass();projection(0,fixture.columns,0,fixture.rows);
         try(TurntableRenderState saved=new TurntableRenderState()){
             prepare(mc,frame);ForgeHooksClient.setRenderPass(0);
+            java.nio.FloatBuffer camera=org.lwjgl.BufferUtils.createFloatBuffer(16);
+            EnumFacing right=fixture.right,up=fixture.up,normal=fixture.facing;
+            camera.put(new float[]{right.getFrontOffsetX(),up.getFrontOffsetX(),normal.getFrontOffsetX(),0,
+                    right.getFrontOffsetY(),up.getFrontOffsetY(),normal.getFrontOffsetY(),0,
+                    right.getFrontOffsetZ(),up.getFrontOffsetZ(),normal.getFrontOffsetZ(),0,
+                    right.getAxisDirection()==EnumFacing.AxisDirection.NEGATIVE?1:0,up.getAxisDirection()==EnumFacing.AxisDirection.NEGATIVE?1:0,0,1});camera.flip();GlStateManager.multMatrix(camera);
             TEAnimatedScreenSelector renderer=new TEAnimatedScreenSelector();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);
-            for(TileEntityAnimatedScreenSelector tile:fixture.tiles)renderer.render(tile,tile.getPos().getX(),tile.getPos().getY(),0,0,-1,1);
+            for(TileEntityAnimatedScreenSelector tile:fixture.tiles)renderer.render(tile,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ(),0,-1,1);
             GL11.glFinish();return net.minecraft.util.ScreenShotHelper.createScreenshot(SIZE,SIZE,frame);
         }finally{ForgeHooksClient.setRenderPass(pass);restore(mc,frame);}
     }

@@ -68,7 +68,8 @@ final class HousingTextureList {
         return ScreenHousingTextures.generalTexture(choice);
     }
     static boolean displayTexture(int choice){
-        return ScreenHousingTextures.menuCategory(choice).startsWith("Displays")
+        String category=ScreenHousingTextures.menuCategory(choice);
+        return (category.startsWith("Displays") || category.startsWith("Half Displays"))
                 && com.vandorlabs.tiles.FrameAppearance.bareChoice(choice)==choice;
     }
     /** Native armor artwork is added locally, leaving every block/screen picker unchanged. */

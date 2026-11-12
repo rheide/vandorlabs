@@ -780,7 +780,6 @@ public class TEAnimatedScreenSelector
     }
     private static void drawSplitScreen(TileEntityAnimatedScreenSelector tile,ScreenSurface.Quad quad,BufferBuilder buffer){
         Tessellator.getInstance().draw();GlassSurfaceGroups.Layout layout=tile.frameAppearance.displayFit?ScreenSurfaceGroups.layout(tile):new GlassSurfaceGroups.Layout(0,0,1,1);
-        if(layout.columns!=layout.rows)layout=new GlassSurfaceGroups.Layout(0,0,1,1);
         int n=layout.rows;boolean middle=(n&1)!=0&&layout.row==n/2,input=tile.getBlockType() instanceof BlockProgrammableInput;
         for(int half=0;half<2;half++){
             boolean upper=layout.row>=n/2;if(!middle&&((half==0)!=upper))continue;
@@ -790,7 +789,7 @@ public class TEAnimatedScreenSelector
             if(choice<0)choice=tile.getSurfaceTexture(0)>=0?tile.getSurfaceTexture(0):ScreenHousingTextures.screenIndex(tile.getSelectedScreen()+"_static");
             double[] uv=bindDisplay(tile,choice,tile.getEffectiveMode()!=TileEntityAnimatedScreenSelector.MODE_OFF,tile.getEffectiveMode()==TileEntityAnimatedScreenSelector.MODE_ANIMATED,tile.getAnimationSpeedIndex());
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());if(engineeringChoice(choice))engineeringBody(uv);else if(unpairedInputChoice(choice))insetBody(uv,1D/32);
-            double du=uv[3]-uv[2],dv=uv[1]-uv[0],left=input?(double)layout.column/n:(double)(n-layout.column)/n,right=input?(double)(layout.column+1)/n:(double)(n-layout.column-1)/n;
+            double du=uv[3]-uv[2],dv=uv[1]-uv[0],left=input?(double)layout.column/layout.columns:(double)(layout.columns-layout.column)/layout.columns,right=input?(double)(layout.column+1)/layout.columns:(double)(layout.columns-layout.column-1)/layout.columns;
             double top=(layout.rows-layout.row-1+localTop)*2/n-half,bottom=(layout.rows-layout.row-1+localBottom)*2/n-half;
             drawScreenQuad(buffer,part,uv[2]+right*du,uv[2]+left*du,uv[0]+top*dv,uv[0]+bottom*dv,false);
             Tessellator.getInstance().draw();

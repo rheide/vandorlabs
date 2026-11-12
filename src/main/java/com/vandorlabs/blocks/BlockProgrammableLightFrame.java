@@ -1,6 +1,9 @@
 package com.vandorlabs.blocks;
 
+import com.vandorlabs.tiles.TileEntityProgrammableLight;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
@@ -15,4 +18,15 @@ public final class BlockProgrammableLightFrame extends BlockProgrammableLight {
     }
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}
+
+    @Override public BlockFaceShape getBlockFaceShape(IBlockAccess world,
+            IBlockState state, BlockPos pos, EnumFacing side) {
+        // Only the backing face fills a cell boundary. The front is recessed,
+        // and the narrow edges must not draw connecting wall/fence arms.
+        if (side != state.getValue(FACING).getOpposite()) return BlockFaceShape.UNDEFINED;
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof TileEntityProgrammableLight
+                && ((TileEntityProgrammableLight) tile).isSmallInput()
+                ? BlockFaceShape.UNDEFINED : BlockFaceShape.SOLID;
+    }
 }

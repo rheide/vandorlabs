@@ -28,7 +28,7 @@ dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
 }
 
-version = '2.9.1'
+version = '2.10.0'
 // Forge reads @Mod.version independently of the expanded mcmod.info metadata.
 def declaredModVersion = file('src/main/java/com/vandorlabs/VandorLabs.java').getText('UTF-8') =~ /public static final String VERSION = "([^"]+)";/
 if (!declaredModVersion.find() || declaredModVersion.group(1) != version.toString()) {
@@ -122,6 +122,15 @@ task testDedicatedServerLinkage(type: JavaExec) {
     args file("$buildDir/classes/java/main").absolutePath
 }
 check.dependsOn testDedicatedServerLinkage
+
+task testLightFrameAttachments(type: JavaExec) {
+    group = 'verification'
+    description = 'Check directional Light Frame backing faces and vanilla wall connections'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightFrameAttachmentChecks'
+}
+check.dependsOn testLightFrameAttachments
 
 task testVehicleWorldCompatibility(type: JavaExec) {
     group = 'verification'

@@ -7,23 +7,20 @@ import net.minecraft.client.gui.FontRenderer;
 /** Shared materials plus Screens; authored artwork retains its animation identity. */
 final class ScreenTextureList {
     private final String[] ids;
-    private final boolean input,includeHalf;
+    private final boolean input;
     private final HousingTextureList list;
     private boolean framed;
     ScreenTextureList(int x,int y,int width,int rows,String selected,String[] ids,String[] labels,boolean input) {
-        this(x,y,width,rows,selected,ids,labels,input,false);
-    }
-    ScreenTextureList(int x,int y,int width,int rows,String selected,String[] ids,String[] labels,boolean input,boolean includeHalf){
-        this.ids=ids;this.input=input;this.includeHalf=includeHalf;
+        this.ids=ids;this.input=input;
         int choice=ScreenHousingTextures.screenIndex((input?"console_inputs/":"")+selected+"_static");
         framed=false;
         list=new HousingTextureList(x,y,width,canonical(choice),rows,null,
                 value->HousingTextureList.generalTexture(value) || selectableArtwork(value) && canonical(value)==value,
-                value->{com.google.gson.JsonObject entry=ScreenHousingTextures.entry(value);return entry!=null&&entry.has("menuGroup")?ScreenHousingTextures.menuCategory(value):"Screens".equals(ScreenHousingTextures.category(value))?(input?"Controls":"Displays"):ScreenHousingTextures.menuCategory(value);},
+                ScreenHousingTextures::menuCategory,
                 value->selectableArtwork(value)?HousingTextureList.name(value).replaceAll("\\b(Bare|Framed)\\s+",""):HousingTextureList.name(value));
         setFramed(framed);
     }
-    private boolean selectableArtwork(int choice){return artwork(choice,input)||includeHalf&&!input&&HousingTextureList.displayTexture(choice);}
+    private boolean selectableArtwork(int choice){return artwork(choice,input)||!input&&HousingTextureList.displayTexture(choice);}
     static boolean artwork(int choice,boolean input) {
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);
         return entry!=null && (("Screens".equals(ScreenHousingTextures.category(choice))

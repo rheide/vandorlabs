@@ -29,7 +29,7 @@ final class StyleScreenRuntimeChecks {
                 JsonObject entry=ScreenHousingTextures.entry(choice);if(entry==null||!entry.get("id").getAsString().startsWith("screen_"+prefix))continue;
                 String source=entry.get("source").getAsString();if(source.startsWith("console_inputs/")!=half)continue;
                 String root=source.replaceFirst("_static$",""),id=root.replaceFirst("^console_inputs/","");
-                require(ScreenHousingTextures.visible(choice)&&ScreenHousingTextures.menuCategory(choice).equals("Displays/"+style),"visible "+style+" folder "+id);
+                require(ScreenHousingTextures.visible(choice)&&ScreenHousingTextures.menuCategory(choice).equals((half?"Half Displays/":"Displays/")+style),"visible "+style+" folder "+id);
                 if(half)require(Arrays.asList(TileEntityAnimatedScreenSelector.INPUT_PANELS).contains(id)&&TileEntityAnimatedScreenSelector.getInputFrameCount(id)==6,"native half sequence "+id);
                 else require(ModBlocks.DISPLAY_SCREEN_IDS.contains(id),"native full sequence "+id);
                 Object decoded=decode.invoke(null,mc.getResourceManager(),"textures/blocks/"+root);Field image=decoded.getClass().getDeclaredField("image"),count=decoded.getClass().getDeclaredField("frameCount");image.setAccessible(true);count.setAccessible(true);

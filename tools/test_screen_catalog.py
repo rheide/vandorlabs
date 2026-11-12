@@ -10,6 +10,18 @@ assert hashlib.sha256('\n'.join(e['id'] for e in catalog[:589]).encode()).hexdig
 inputs=[e for e in catalog if e['source'].startswith(tuple('console_inputs/'+p for p in CONTROL_PREFIXES))]
 assert len(inputs)==18 and hashlib.sha256(json.dumps([{k:v for k,v in e.items() if k not in {'label','category','menuGroup','hidden','alias','retireAnimation'}} for e in inputs],sort_keys=True).encode()).hexdigest()=='a4a027ab9cf2419c6641b9ecb619e0ba7e20af5a7735ffca89b22a8682501d3b'
 assert restructure(catalog,blocks,lang)==(catalog,blocks,lang),'regeneration is not idempotent'
+# Menu-only recategorization must keep every authored half display in its own
+# top-level category, without moving persisted catalog choices or losing art.
+from generate_texture_browser import catalog as browser_catalog
+browser=browser_catalog()
+half_displays=[e for e in browser if e['category'].startswith('Half Displays/')]
+assert len(half_displays)==123
+assert all(e['source'].startswith('console_inputs/') and e['label'].removesuffix(' Large').endswith('/Half)') for e in half_displays)
+assert all(not e['source'].startswith('console_inputs/') for e in browser if e['category'].startswith('Displays/'))
+assert {e['menuGroup'] for e in half_displays}=={'Classic','Cool','Gold'}
+from prune_unlisted_screen_artwork import inventory
+_,allowed=inventory()
+assert all('textures/blocks/'+e['source']+'.png' in allowed for e in half_displays),'half display artwork was pruned after recategorization'
 byid={e['id']:e for e in catalog};assert byid['screen_engineering_screen_static']['hidden'] and byid['screen_engineering_screen_static']['alias']=='screen_bridge_bare_engineering_static';byblock={e['id']:e for e in blocks};groups=collections.defaultdict(list)
 for e in catalog:
     if e.get('category','').startswith('Controls/') and not e.get('hidden'):

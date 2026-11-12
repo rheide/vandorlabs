@@ -25,10 +25,10 @@ def catalog():
         if entry.get('hidden') or entry.get('alias') or entry.get('detail',0)>0: continue
         if entry.get('category')=='Screens' and bare_source(entry['source'])!=entry['source'] and bare_source(entry['source']) in sources: continue
         entry = dict(entry)
-        if entry.get('category')=='Screens' and not entry.get('menuGroup') and entry['source'].startswith('console_inputs/'): entry['category']='Controls'
+        if entry.get('category')=='Screens' and entry['source'].startswith('console_inputs/'): entry['category']='Half Displays' if entry.get('menuGroup') else 'Controls'
         elif entry.get('category')=='Screens': entry['category']='Displays'
         entry['label'] = entry.get('label', names.get('tile.vandorlabs.'+entry['id']+'.name', entry['id'].replace('_',' ').title()))
-        if entry.get('category') in ('Displays','Controls'): entry['label']=re.sub(r'\b(Bare|Framed)\s+','',entry['label'])
+        if entry.get('category') in ('Displays','Half Displays','Controls'): entry['label']=re.sub(r'\b(Bare|Framed)\s+','',entry['label'])
         if entry.get('design') is not None or entry.get('detail') is not None:entry['label']=re.sub(r' (Small|Medium|Large)$','',entry['label'])
         entry.setdefault('category','Materials')
         if entry.get('menuGroup'):entry['category']+='/'+entry['menuGroup']

@@ -13,7 +13,7 @@ def inventory():
     unified={'unified/'+e['id'] for e in entries if e.get('category')=='Screens' or e.get('category','').startswith('Controls')}
     allowed=set()
     for e in catalog():
-        if not e['category'].startswith(('Displays','Controls')):continue
+        if not e['category'].startswith(('Displays','Half Displays','Controls')):continue
         source=e['source'];allowed.add(source+'.png')
         if e.get('rectangular'):allowed.add('unified/'+e['id']+'.png')
         if source.endswith('_static'):

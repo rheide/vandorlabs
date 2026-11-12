@@ -221,6 +221,17 @@ limits and the selected state.
 
 ## Building
 
+To apply a patch and build only the standard JAR without tests, run:
+
+```bash
+./apply-patch-build.sh ~/LLMShareDrive/example.patch
+```
+
+The script checks the patch before applying it and requires a Java 8 JDK
+(`JAVA_HOME` can override the default). Build logs are saved in
+`build/patch-builds/`, and the JAR is written to `build/libs/`. If the build fails,
+the patch remains applied for inspection. It does not commit or push changes.
+
 Aster, Rivet Dynamics, Vektor, Kestrel and Hadron machinery and their unused runtime code have been removed. Canopies and the other programmable block families remain available.
 
 Requirements: a Java 8 JDK, Python 3 with Pillow, and the included Gradle wrapper (Gradle 4.9 +

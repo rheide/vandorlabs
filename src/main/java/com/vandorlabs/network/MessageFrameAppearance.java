@@ -34,6 +34,7 @@ public final class MessageFrameAppearance implements IMessage {
                     FrameAppearance appearance=FrameAppearance.of(target);
                     if(com.vandorlabs.blocks.BlockAnimatedScreenSelector.usesDeviceHousing(target.getBlockType()))appearance.artworkVersion=1;
                     appearance.bare=msg.bare;appearance.front=FrameAppearance.usesMainFront(target.getBlockType())?-1:msg.front;appearance.interior=msg.interior;appearance.exterior=msg.exterior;appearance.tile=msg.tile;appearance.displayFit=msg.displayFit;appearance.split=msg.split;appearance.splitTop=msg.top;appearance.splitBottom=msg.bottom;target.markDirty();
+                    if(target instanceof TileEntityAnimatedScreenSelector)com.vandorlabs.redstone.JoinedDisplayPower.changed((TileEntityAnimatedScreenSelector)target);
                     net.minecraft.block.state.IBlockState state=player.world.getBlockState(target.getPos());player.world.notifyBlockUpdate(target.getPos(),state,state,3);player.world.checkLight(target.getPos());
                 }
                 com.vandorlabs.tiles.GlassMaterials.changed();

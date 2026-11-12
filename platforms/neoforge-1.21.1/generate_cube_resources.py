@@ -69,12 +69,12 @@ def main():
         if 'detail' in original:label=re.sub(r' (Small|Medium|Large)$','',label)
         general=original.get('generalMaterial',False) or not original.get('lightOnly',False) and original.get('detail',0)==0 and original.get('category') not in ['Frame','Screens','Lights','Doors','Double Doors'] and not original.get('category','').startswith(('Doors/','Double Doors/'))
         category=original.get('category','Materials')
-        if category=='Screens':category='Controls' if 'menuGroup' not in original and original.get('source','').startswith('console_inputs/') else 'Displays'
+        if category=='Screens':category=('Half Displays' if 'menuGroup' in original else 'Controls') if original.get('source','').startswith('console_inputs/') else 'Displays'
         if 'menuGroup' in original:category+='/'+original['menuGroup']
         source=original['source'];bare=source.replace('_framed_','_bare_').replace('/framed_','/bare_')
         if bare.startswith('framed_'):bare='bare_'+bare[7:]
         bare_index=next((i for i,item in enumerate(entries) if item['source']==bare),0)
-        display_selectable=category.startswith('Displays') and (bare==source or bare_index==0 or bare_index==index)
+        display_selectable=category.startswith(('Displays','Half Displays')) and (bare==source or bare_index==0 or bare_index==index)
         catalog.append(dict(id=original['id'],label=label,category=category,visible=not original.get('hidden',False),general=general,displaySelectable=display_selectable,canonical=canonical,texture='vandorlabs:'+texture,u=u,v=v))
         if 'design' in original:
             catalog[-1]['door']=dict(design=original['design'],detail=original.get('detail',0))

@@ -88,7 +88,7 @@ public final class ScreenHousingTextures {
     }
     public static String menuCategory(int choice){
         com.google.gson.JsonObject e=menu(choice);String category=category(choice);
-        if("Screens".equals(category))category=e!=null&&!e.has("menuGroup")&&e.has("source")&&e.get("source").getAsString().startsWith("console_inputs/")?"Controls":"Displays";
+        if("Screens".equals(category))category=e!=null&&e.has("source")&&e.get("source").getAsString().startsWith("console_inputs/")?(e.has("menuGroup")?"Half Displays":"Controls"):"Displays";
         return category+(e!=null&&e.has("menuGroup")?"/"+e.get("menuGroup").getAsString():"");
     }
     public static String category(int choice){com.google.gson.JsonObject e=menu(choice);return e!=null && e.has("category")?e.get("category").getAsString():"Materials";}

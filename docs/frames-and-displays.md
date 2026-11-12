@@ -20,14 +20,18 @@ level-three block light when used on glass, walls or doors.
 The screen, Flatscreen and diagonal screen **Display** page provides
 **Texture: Tile / Fit**. Fit spreads one display over a complete matching rectangle,
 including 2×2, 3×3, 2×3 and 3×1 arrangements. Tile repeats the artwork
-on individual displays. Wide Screens and Flatscreens offer Half designs when
-the joined shape suits them, including 4×2 groups. The frame's Fit layout is independent and
+on individual displays. Screens, Flatscreens, consoles and their variants always
+offer half-height artwork in the top-level **Half Displays** category, with
+**Classic**, **Cool** and **Gold** subcategories, regardless of the joined shape.
+The frame's Fit layout is independent and
 can surround a rectangular group, including neighboring displays with different artwork or playback settings. Display Fit can join matching displays with different frame finishes. Diagonal display artwork reaches both side
 edges, allowing adjacent displays to meet without a housing-colored stripe.
 
 On **Display**, enable **Split display** to show two half-height images on a full-height
 screen or Flatscreen. Select them independently using **Top** and **Bottom**.
-With Display Fit enabled on a square group, Top spans the upper half of the whole group and Bottom spans the lower half. Different split selections form separate display groups.
+With Display Fit enabled on a complete matching rectangle, including 2×2 and
+4×2 groups, Top spans the upper half of the whole group and Bottom spans the
+lower half. Different split selections form separate display groups.
 The outer frame continues to surround the complete display. Turning splitting
 off retains the selections for later reuse.
 

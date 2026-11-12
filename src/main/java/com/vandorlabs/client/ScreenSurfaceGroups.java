@@ -45,8 +45,20 @@ final class ScreenSurfaceGroups {
         if(block!=ModBlocks.ANIMATED_SCREEN_SELECTOR&&block!=ModBlocks.PROGRAMMABLE_FULL_INPUT)return false;
         return DisplayEditGroups.wide(tile);
     }
-    static synchronized GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile){return layout(tile,false);}
-    static synchronized GlassSurfaceGroups.Layout frameLayout(TileEntityAnimatedScreenSelector tile){GlassSurfaceGroups.Layout layout=layout(tile,true);if(tile.getBlockType().getClass()==BlockAnimatedScreenSelector.class&&tile.hasChipSurface(0)){EnumFacing facing=tile.getWorld().getBlockState(tile.getPos()).getValue(BlockAnimatedScreenSelector.FACING);if(facing==EnumFacing.UP)return layout.mirrorU();if(facing==EnumFacing.DOWN)return layout.mirrorV();}return layout;}
+    static synchronized GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile){return renderedLayout(tile,layout(tile,false));}
+    static synchronized GlassSurfaceGroups.Layout frameLayout(TileEntityAnimatedScreenSelector tile){return renderedLayout(tile,layout(tile,true));}
+    private static GlassSurfaceGroups.Layout renderedLayout(TileEntityAnimatedScreenSelector tile,GlassSurfaceGroups.Layout layout){
+        if(layout.columns==1&&layout.rows==1)return layout;
+        IBlockState state=tile.getWorld().getBlockState(tile.getPos());
+        com.vandorlabs.screen.ScreenFamily family=state.getBlock() instanceof BlockProgrammableInput?com.vandorlabs.screen.ScreenFamily.INPUT
+                :state.getBlock() instanceof BlockProgrammableConsole?com.vandorlabs.screen.ScreenFamily.CONSOLE
+                :state.getBlock() instanceof BlockProgrammableDiagonalScreen?com.vandorlabs.screen.ScreenFamily.DIAGONAL:com.vandorlabs.screen.ScreenFamily.SCREEN;
+        int facing=(state.getBlock() instanceof BlockProgrammableInput?state.getValue(BlockProgrammableInput.FACING)
+                :state.getBlock() instanceof BlockProgrammableDiagonalScreen?state.getValue(BlockProgrammableDiagonalScreen.FACING):state.getValue(BlockAnimatedScreenSelector.FACING)).getIndex();
+        if(com.vandorlabs.screen.ScreenRenderLayout.mirrorColumns(family,facing))layout=layout.mirrorU();
+        if(com.vandorlabs.screen.ScreenRenderLayout.mirrorRows(family,facing,tile.isCeilingMounted()))layout=layout.mirrorV();
+        return layout;
+    }
     private static GlassSurfaceGroups.Layout layout(TileEntityAnimatedScreenSelector tile,boolean frame){
         if(tile.isSmallInput()&&tile.getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableFullInput)return new GlassSurfaceGroups.Layout(0,0,1,1);
         World world=tile.getWorld();Cache cache=CACHES.get(world);if(cache==null){cache=new Cache();CACHES.put(world,cache);world.addEventListener(cache);}

@@ -9,9 +9,9 @@ import java.util.*;
 
 /** Same flat state tabs, picker and playback widgets in every programmable display dialog. */
 final class DisplayActivationPane {
-    private final GuiContainer host;private final TileEntityAnimatedScreenSelector tile;private final boolean input,includeHalfDisplays;
+    private final GuiContainer host;private final TileEntityAnimatedScreenSelector tile;private final boolean input;
     private HousingTextureList picker;private ProgrammableDialogLayout layout;private int selected=-1;private boolean active;private int pickerState=-1,pickerMode=-1;
-    DisplayActivationPane(GuiContainer host,TileEntityAnimatedScreenSelector tile,boolean input){this.host=host;this.tile=tile;this.input=input;this.includeHalfDisplays=ScreenSurfaceGroups.wideDisplay(tile);}
+    DisplayActivationPane(GuiContainer host,TileEntityAnimatedScreenSelector tile,boolean input){this.host=host;this.tile=tile;this.input=input;}
     boolean active(){return active;}
     void init(ProgrammableDialogLayout layout,List<GuiButton> buttons,int page,int redstonePage){
         this.layout=layout;int mode=tile.activationMode();
@@ -32,7 +32,7 @@ final class DisplayActivationPane {
         if(!active)return;
         for(GuiButton b:buttons)if(!(b.id>=90&&b.id<=93||b.id==197||b.id>=650&&b.id<=653||b.id==20||b.id==30||b.id==3004))b.visible=false;
         picker=new HousingTextureList(layout.listX,layout.top+54,layout.listWidth,tile.activationTexture(selected),8,null,
-            value->HousingTextureList.generalTexture(value)||(input?ScreenTextureList.artwork(value,true):HousingTextureList.displayTexture(value)&&(!com.vandorlabs.tiles.ScreenHousingTextures.entry(value).get("source").getAsString().startsWith("console_inputs/")||includeHalfDisplays)))
+            value->HousingTextureList.generalTexture(value)||(input?ScreenTextureList.artwork(value,true):HousingTextureList.displayTexture(value)))
             .visibleRows(layout.rows(true)).keepView(picker).custom(value->save(value,tile.activationPlayback(selected),tile.activationSpeed(selected)));
         if(pickerState!=selected||pickerMode!=mode)picker.revealSelected();
         pickerState=selected;pickerMode=mode;

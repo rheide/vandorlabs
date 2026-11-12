@@ -32,6 +32,10 @@ These collages cover the built-in texture picker, including both light states an
 
 ![Glass textures](texture-browser/collages/glass.png)
 
+## Half Displays
+
+![Half Displays textures](texture-browser/collages/half-displays.png)
+
 ## Hull
 
 ![Hull textures](texture-browser/collages/hull.png)

@@ -1,5 +1,21 @@
 package com.vandorlabs.neoforge.screen;
-/** Actual constructor memberships for all Source built-in choices and authored wide/input roles. */
+
+/** Actual constructor memberships and half-display categories across both screen picker roles. */
 public final class ScreenPickerPolicyChecks {
- public static void main(String[] args)throws Exception{var root=com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of(System.getProperty("screenPickerReference")))).getAsJsonObject();int checks=0,accepted=0;for(var element:root.getAsJsonArray("profiles")){var profile=element.getAsJsonObject();var expected=new java.util.HashSet<Integer>();for(var id:profile.getAsJsonArray("choices"))expected.add(id.getAsInt());boolean input=profile.get("input").getAsBoolean(),wide=profile.get("wide").getAsBoolean();for(int id=0;id<root.get("materials").getAsInt();id++){boolean actual=NativeScreenPickerPolicy.selectable(id,input,wide);if(actual!=expected.contains(id))throw new AssertionError("Source picker differs input="+input+" wide="+wide+" choice="+id+" expected="+expected.contains(id)+" actual="+actual+" entry="+com.vandorlabs.neoforge.ModernFinishCatalog.option(id));checks++;if(actual)accepted++;}}var split=new java.util.HashSet<Integer>();for(var id:root.getAsJsonArray("split"))split.add(id.getAsInt());for(int id=0;id<root.get("materials").getAsInt();id++)if(NativeScreenPickerPolicy.split(id)!=split.contains(id))throw new AssertionError("Source split picker differs "+id);if(split.size()!=512||!root.get("splitSha256").getAsString().equals("dfe288eaa2396e7a60be3030151e570e969a00fa5dab0ed43bfe4e669e790667"))throw new AssertionError("Split picker coverage");if(checks!=3572||accepted!=1623||!root.get("sha256").getAsString().equals("bda7c0ebdf819bb2084f1c585b0d5140b0f8cdbfc4946ba347ee1fedad644824"))throw new AssertionError("Picker coverage");System.out.println("Native Screen picker policy PASS actual Source choices="+checks+" accepted="+accepted+" splitChoices="+split.size());}
+    public static void main(String[] args)throws Exception{
+        var root=com.google.gson.JsonParser.parseString(java.nio.file.Files.readString(java.nio.file.Path.of(System.getProperty("screenPickerReference")))).getAsJsonObject();int checks=0,accepted=0;
+        if(root.getAsJsonArray("profiles").size()!=2||root.get("materials").getAsInt()!=com.vandorlabs.neoforge.ModernFinishCatalog.ENTRIES.size())throw new AssertionError("Current source picker coverage");
+        for(var element:root.getAsJsonArray("profiles")){
+            var profile=element.getAsJsonObject();var expected=new java.util.HashSet<Integer>();for(var id:profile.getAsJsonArray("choices"))expected.add(id.getAsInt());boolean input=profile.get("input").getAsBoolean();int half=0;
+            for(int id=0;id<root.get("materials").getAsInt();id++){
+                boolean actual=NativeScreenPickerPolicy.selectable(id,input);var entry=com.vandorlabs.neoforge.ModernFinishCatalog.option(id);
+                if(actual!=expected.contains(id))throw new AssertionError("Source picker differs input="+input+" choice="+id+" expected="+expected.contains(id)+" actual="+actual+" entry="+entry);
+                checks++;if(actual){accepted++;if(entry.category().startsWith("Half Displays/"))half++;}
+            }
+            if(half!=123)throw new AssertionError("Every half display must be available for input="+input+", got "+half);
+        }
+        var split=new java.util.HashSet<Integer>();for(var id:root.getAsJsonArray("split"))split.add(id.getAsInt());
+        for(int id=0;id<root.get("materials").getAsInt();id++)if(NativeScreenPickerPolicy.split(id)!=split.contains(id))throw new AssertionError("Source split picker differs "+id);
+        System.out.println("Native Screen picker policy PASS actual Source choices="+checks+" accepted="+accepted+" halfDisplays=123 splitChoices="+split.size());
+    }
 }

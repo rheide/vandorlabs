@@ -58,7 +58,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
     private final boolean console;
     private final boolean diagonalScreen;
     private final boolean fullInput;
-    private final boolean includeHalfDisplays;
 
     private ModBlocks.ScreenOption selectedOption;
     private boolean framed;
@@ -107,7 +106,6 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
                 .getBlock() instanceof BlockProgrammableDiagonalScreen;
         this.fullInput = te.getWorld() != null && te.getWorld().getBlockState(pos)
                 .getBlock() instanceof BlockProgrammableFullInput;
-        this.includeHalfDisplays=ScreenSurfaceGroups.wideDisplay(te);
         this.xSize = 420;
         this.ySize = 240;
         this.redstoneEnabled = te.isRedstoneEnabled();
@@ -198,7 +196,7 @@ public class GuiAnimatedScreenSelector extends GuiContainer {
         listLeft=layout.listX;listTop=guiTop+54;listRight=listLeft+layout.listWidth;listBottom=listTop+rows*HousingTextureList.ROW_HEIGHT;
         String[] ids=new String[entries.size()],labels=new String[entries.size()];
         for(int i=0;i<ids.length;i++){ids[i]=entries.get(i).option.bareId;labels[i]=entries.get(i).name;}
-        screenList=new ScreenTextureList(listLeft,listTop,layout.listWidth,8,activeId(),ids,labels,false,includeHalfDisplays).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList,0)).redstone(pos,0,()->openRows(0)).chip(te,0);
+        screenList=new ScreenTextureList(listLeft,listTop,layout.listWidth,8,activeId(),ids,labels,false).visibleRows(rows).restore(te.getSurfaceTexture(0)).custom(value->chooseArtwork(screenList,0)).redstone(pos,0,()->openRows(0)).chip(te,0);
         if(console)inputList=new ScreenTextureList(listLeft,listTop,layout.listWidth,8,inputPanel,TileEntityAnimatedScreenSelector.INPUT_PANELS,null,true).visibleRows(rows).restore(te.getSurfaceTexture(1)).custom(value->chooseArtwork(inputList,1)).redstone(pos,1,()->openRows(1));
         housingList=new HousingTextureList(listLeft,listTop,layout.listWidth,housingTexture)
                 .visibleRows(rows).custom(value->{housingTexture=value;te.setHousingTexture(value);sendUpdate();});
