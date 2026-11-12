@@ -45,7 +45,7 @@ final class ChannelSourceIndexRuntimeChecks {
             require((origin.getX()>>4)!=(edge.getX()>>4),"range edge crosses chunk boundary");
             require(inside.getSignalLevel()==8&&inside.getVisibleSlot()==2&&beyond.getSignalLevel()==0,"placed Trigger receives exact analog edge, outside stays off");
             long[] before=RedstoneChannels.diagnostics(world);RedstoneChannels.inputChanged(source);long[] after=RedstoneChannels.diagnostics(world);
-            require(after[4]==before[4],"identical source update sends no duplicate recipient delivery");
+            for(int counter=0;counter<before.length;counter++)require(after[counter]==before[counter],"identical source update skips index/recipient work counter="+counter);
             source.level=15;RedstoneChannels.inputChanged(source);require(inside.getSignalLevel()==15&&inside.getVisibleSlot()==3,"placed Trigger full signal");
             source.level=0;RedstoneChannels.inputChanged(source);require(inside.getSignalLevel()==0&&inside.getVisibleSlot()==0,"placed Trigger source withdrawal");
             source.level=8;RedstoneChannels.inputChanged(source);

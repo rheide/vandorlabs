@@ -54,9 +54,7 @@ public final class VehicleCanopies {
         packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.associationGeneration=craft.couplerAssociationGeneration();
         packet.data=ByteBuffer.allocate(13).putLong(tile.getPos().toLong())
                 .put((byte)(tile.targetOpen?1:0)).putFloat(tile.progress).array();
-        com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(packet,craft);
-        if(craft.getControllingPassenger() instanceof net.minecraft.entity.player.EntityPlayerMP)
-            com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)craft.getControllingPassenger());
+        com.vandorlabs.network.TrackingPackets.send(packet,craft);
     }
     public static boolean apply(EntityGroundVehicle craft,byte[] bytes){
         if(bytes.length!=13)return false;

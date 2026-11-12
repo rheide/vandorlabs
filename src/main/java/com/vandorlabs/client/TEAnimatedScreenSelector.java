@@ -84,10 +84,6 @@ public class TEAnimatedScreenSelector
 
     private static final Map<String, AnimData> ANIM_CACHE = new HashMap<>();
     private static final Map<String, AnimData> INPUT_ANIM_CACHE = new HashMap<>();
-    private static final Map<BlockPos, LightGroup> LIGHT_GROUPS = new HashMap<>();
-    private static World lightCacheWorld;
-    private static long lightCacheTick = Long.MIN_VALUE;
-    private static long lightCacheRevision = Long.MIN_VALUE;
 
     /** Release the last rendered world even if no later light or porthole is drawn. */
     static void unloadGroups(World world) {
@@ -96,10 +92,7 @@ public class TEAnimatedScreenSelector
         LightHousingMeshes.clear();
         SelectorHousingMeshes.clear();
         GlassSurfaceMapping.clear();
-        if(lightCacheWorld==world) {
-            LIGHT_GROUPS.clear();lightCacheWorld=null;
-            lightCacheTick=Long.MIN_VALUE;lightCacheRevision=Long.MIN_VALUE;
-        }
+        LightGroupCache.unload(world);
         PortholeGroupCache.unload(world);
     }
 
@@ -125,18 +118,13 @@ public class TEAnimatedScreenSelector
 
     static LightGroup lightGroup(com.vandorlabs.tiles.TileEntityProgrammableLight tile,
             IBlockState state) {
-        World world = tile.getWorld();
-        long tick = world.getTotalWorldTime();
-        long revision = com.vandorlabs.tiles.TileEntityProgrammableLight.getJoinRevision();
-        if (world != lightCacheWorld || tick != lightCacheTick
-                || revision != lightCacheRevision) {
-            LIGHT_GROUPS.clear();
-            lightCacheWorld = world;
-            lightCacheTick = tick;
-            lightCacheRevision = revision;
-        }
-        LightGroup cached = LIGHT_GROUPS.get(tile.getPos());
-        if (cached != null) return cached;
+        return LightGroupCache.get(tile,state);
+    }
+
+    static Map<BlockPos,LightGroup> discoverLightGroups(TileEntityProgrammableLight tile,
+            IBlockState state,java.util.function.Consumer<BlockPos> inspected) {
+        Map<BlockPos,LightGroup> groups=new HashMap<>();
+        inspected.accept(tile.getPos());
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
         PanelPlane plane = PanelPlane.of(facing);
         EnumFacing right = plane.right;
@@ -144,11 +132,11 @@ public class TEAnimatedScreenSelector
         if (!tile.isJoin()) {
             LightGroup group = new LightGroup(axis(tile.getPos(), right), axis(tile.getPos(), up),
                     1, 1, right, up);
-            LIGHT_GROUPS.put(tile.getPos(), group);
-            return group;
+            groups.put(tile.getPos(), group);
+            return groups;
         }
         Set<BlockPos> members = com.vandorlabs.blocks.ProgrammableLightConnections
-                .members(tile, state);
+                .members(tile, state, inspected);
         int minX = Integer.MAX_VALUE, minY = Integer.MAX_VALUE;
         int maxX = Integer.MIN_VALUE, maxY = Integer.MIN_VALUE;
         for (BlockPos pos : members) {
@@ -157,8 +145,8 @@ public class TEAnimatedScreenSelector
         }
         if ((long)(maxX-minX+1)*(maxY-minY+1) == members.size()) {
             LightGroup group = new LightGroup(minX, minY, maxX-minX+1, maxY-minY+1, right, up);
-            for (BlockPos pos : members) LIGHT_GROUPS.put(pos, group);
-            return group;
+            for (BlockPos pos : members) groups.put(pos, group);
+            return groups;
         }
         Map<Long, BlockPos> positions = new HashMap<>();
         for (BlockPos pos : members)
@@ -168,9 +156,9 @@ public class TEAnimatedScreenSelector
                     right, up);
             for (int row = rect.y; row < rect.y + rect.height; row++)
                 for (int col = rect.x; col < rect.x + rect.width; col++)
-                    LIGHT_GROUPS.put(positions.get(PortholeRectangles.cell(col, row)), group);
+                    groups.put(positions.get(PortholeRectangles.cell(col, row)), group);
         }
-        return LIGHT_GROUPS.get(tile.getPos());
+        return groups;
     }
 
     static final class PortholeGroup {
@@ -1370,6 +1358,10 @@ public class TEAnimatedScreenSelector
 
     /** Adjacent light cubes fully cover these surfaces, regardless of Join. */
     static int lightVisibleFaces(TileEntityAnimatedScreenSelector tile,EnumFacing facing) {
+        return LightGroupCache.visibleFaces(tile,facing);
+    }
+
+    static int discoverLightVisibleFaces(TileEntityAnimatedScreenSelector tile,EnumFacing facing) {
         if(tile.isSmallInput())return 63;
         int visible=0;
         for(EnumFacing local:EnumFacing.values()) {
@@ -1491,6 +1483,7 @@ public class TEAnimatedScreenSelector
     /** TextureManager caches per ResourceLocation; drop entries on pack reload. */
     public static synchronized void clearCache() {
         PortholeGroupCache.clear();
+        LightGroupCache.clear();
         VehicleShapeRenderer.clear();
         LightHousingMeshes.clear();
         SelectorHousingMeshes.clear();

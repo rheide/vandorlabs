@@ -31,20 +31,36 @@ public final class ProgrammableLightConnections {
 
     public static Set<BlockPos> members(TileEntityProgrammableLight first,
             IBlockState state) {
-        return members(first, state, true);
+        return members(first, state, true, null);
+    }
+
+    /** Report every consulted boundary cell, including rejected and unloaded cells. */
+    public static Set<BlockPos> members(TileEntityProgrammableLight first,
+            IBlockState state, java.util.function.Consumer<BlockPos> inspected) {
+        return members(first, state, true, inspected);
     }
 
     private static Set<BlockPos> members(TileEntityProgrammableLight first,
             IBlockState state, boolean matchOn) {
+        return members(first, state, matchOn, null);
+    }
+
+    private static Set<BlockPos> members(TileEntityProgrammableLight first,
+            IBlockState state, boolean matchOn, java.util.function.Consumer<BlockPos> inspected) {
         World world = first.getWorld();
+        if (inspected != null) inspected.accept(first.getPos());
         if (!first.isJoin() || first.isSmallInput()) {
             Set<BlockPos> single = new LinkedHashSet<>();
             single.add(first.getPos());
             return single;
         }
         EnumFacing facing = state.getValue(BlockAnimatedScreenSelector.FACING);
+        java.util.function.Predicate<BlockPos> loaded = inspected == null ? world::isBlockLoaded : next -> {
+            inspected.accept(next);
+            return world.isBlockLoaded(next);
+        };
         Set<BlockPos> members = LoadedPlaneConnections.collect(first.getPos(), PanelPlane.of(facing),
-                world::isBlockLoaded, next -> eligible(world, next, facing, first, matchOn));
+                loaded, next -> eligible(world, next, facing, first, matchOn));
         if (members.size() >= LoadedPlaneConnections.LIMIT) {
             members.clear();
             members.add(first.getPos());

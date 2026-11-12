@@ -161,13 +161,35 @@ public final class RedstoneChannels {
             refresh(member);settle(changed);
         }
         void unregister(RedstoneChannelMember member){pendingClears.remove(member);ChannelList previous=subscriptions.remove(member);ChannelList old=outputs.remove(member);if(old!=null)for(int c:channels(old)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}delivered.remove(member);if(previous==null)return;for(int c:channels(previous)){Set<RedstoneChannelMember> set=members.get(c);if(set!=null)set.remove(member);Recipients grid=recipients.get(c);if(grid!=null){grid.remove(member);if(grid.isEmpty())recipients.remove(c);}}settle(channels(previous));}
-        private void refresh(RedstoneChannelMember member){
-            ChannelList previous=outputs.remove(member);if(previous!=null)for(int c:channels(previous)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}
-            ChannelList list=member.transmittedChannels();if(member.transmissionRange()<0||!member.isChannelMemberActive())return;
+        private boolean refresh(RedstoneChannelMember member){
+            ChannelList previous=outputs.get(member),list=member.transmittedChannels();
+            int range=member.transmissionRange();
+            boolean active=range>=0&&member.isChannelMemberActive();
+            // Neighbor notifications often leave the published source unchanged.
+            // Retain its spatial/strength entries instead of removing and adding
+            // them, visiting every receiver in range, and recomputing their banks.
+            // Liveness and physical position still participate in this decision.
+            if(active&&previous!=null&&previous.equals(list)&&unchanged(member,list,range))return false;
+            if(!active&&previous==null)return false;
+            outputs.remove(member);if(previous!=null)for(int c:channels(previous)){Index index=indexes.get(c);if(index!=null){affect(c,index.source(member));index.remove(member);}}
+            if(!active)return true;
             outputs.put(member,list);for(int c:channels(list)){int value=Math.max(0,Math.min(15,member.localSignalLevel(c)));if(value>0){Source source=new Source(member.channelPosition(),member.transmissionRange(),value);indexes.computeIfAbsent(c,k->new Index(stats)).put(member,source);affect(c,source);}}
+            return true;
+        }
+        private boolean unchanged(RedstoneChannelMember member,ChannelList list,int range){
+            net.minecraft.util.math.BlockPos position=null;
+            for(int i=0;i<list.size();i++){
+                int channel=list.get(i),value=Math.max(0,Math.min(15,member.localSignalLevel(channel)));
+                Index index=indexes.get(channel);Source source=index==null?null:index.source(member);
+                if(value==0){if(source!=null)return false;continue;}
+                if(source==null||source.level!=value||source.range!=range)return false;
+                if(position==null)position=member.channelPosition();
+                if(!source.pos.equals(position))return false;
+            }
+            return true;
         }
         void positionChanged(RedstoneChannelMember member){ChannelList list=subscriptions.get(member);if(list!=null){for(int c:channels(list))recipients.computeIfAbsent(c,k->new Recipients(stats)).put(member,member.channelPosition());affected.add(member);}refresh(member);if(list!=null)settle(channels(list));}
-        void inputChanged(RedstoneChannelMember member){ChannelList previous=outputs.get(member);refresh(member);settle(channels(union(previous==null?ChannelList.EMPTY:previous,member.transmittedChannels())));}
+        void inputChanged(RedstoneChannelMember member){ChannelList previous=outputs.get(member);if(refresh(member))settle(channels(union(previous==null?ChannelList.EMPTY:previous,member.transmittedChannels())));}
         void latchChanged(RedstoneChannelLatch source,int level){
             ChannelList selected=source.transmittedChannels();if(source.transmissionRange()<0||selected.isEmpty())return;
             SignalUpdateBatch.apply(()->{applyLatch(source.channelPosition(),selected,source.transmissionRange(),level);ManualRedstoneData data=ManualRedstoneData.get(world);int count=data.entries.size();data.apply(source.channelPosition(),selected,source.transmissionRange(),false);if(data.entries.size()!=count)syncManual();refresh(source);settle(channels(selected));});

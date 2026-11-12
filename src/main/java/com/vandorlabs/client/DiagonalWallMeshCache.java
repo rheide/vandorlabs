@@ -206,6 +206,7 @@ public final class DiagonalWallMeshCache {
             if(!event.getWorld().isRemote)return;
             int x=event.getChunk().x*16,z=event.getChunk().z*16;
             PortholeGroupCache.invalidate(event.getWorld(),x,0,z,x+15,255,z+15);
+            LightGroupCache.invalidate(event.getWorld(),x,0,z,x+15,255,z+15);
             GlassSurfaceGroups.invalidate(event.getWorld(),x,0,z,x+15,255,z+15);
             invalidate(event.getWorld(),x,0,z,x+15,255,z+15);
         }

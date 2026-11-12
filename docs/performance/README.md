@@ -1,5 +1,8 @@
 # Programmable block performance review
 
+For the latest incremental Forge light-rendering, channel-publication and
+vehicle-packet changes, see [light and channel cache costs](light-and-channel-caches.md).
+
 For the current development findings and remaining priorities, see the [2.8 performance summary](2.8-summary.md). The measurements and priority list below describe the original review.
 
 2026-09-26. Original production code: `a3962677`. Tests and the first measurement

@@ -37,8 +37,7 @@ public final class MessageGearMotion implements IMessage {
     }
     private static void publish(EntityGroundVehicle craft,MessageGearMotion packet){
         packet.associationGeneration=craft.couplerAssociationGeneration();
-        PacketHandler.INSTANCE.sendToAllTracking(packet,craft);
-        if(craft.getControllingPassenger() instanceof net.minecraft.entity.player.EntityPlayerMP)PacketHandler.INSTANCE.sendTo(packet,(net.minecraft.entity.player.EntityPlayerMP)craft.getControllingPassenger());
+        TrackingPackets.send(packet,craft);
     }
     private static final int TAXI=0x54415849,SCOPE=0x474d5343;
     private static final int SCOPE_BYTES=21;

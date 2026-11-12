@@ -1,7 +1,6 @@
 package com.vandorlabs.vehicle;
 
 import com.vandorlabs.blocks.*;
-import com.vandorlabs.network.PacketHandler;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.EnumFacing;
@@ -37,8 +36,7 @@ public final class VehicleNetworkLab {
         if(!ENABLED)return false;
         packet.total=phase();packet.offset=elapsed();
         if(++states%17!=0)delay(()->{
-            PacketHandler.INSTANCE.sendToAllTracking(packet,vehicle);
-            if(vehicle.getControllingPassenger() instanceof EntityPlayerMP)PacketHandler.INSTANCE.sendTo(packet,(EntityPlayerMP)vehicle.getControllingPassenger());
+            com.vandorlabs.network.TrackingPackets.send(packet,vehicle);
         });
         return true;
     }

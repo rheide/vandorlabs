@@ -30,6 +30,7 @@ public class ClientProxy extends CommonProxy {
     @Override public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.client.GlassFrameChunks.changed(tile);com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);}
     @Override public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){if(tile.getWorld()!=null&&tile.getWorld().isRemote)com.vandorlabs.client.GlassLightUpdates.schedule(tile);else super.glassLightRefreshNeeded(tile);}
     @Override public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){com.vandorlabs.client.TEAnimatedScreenSelector.portholeChanged(tile);}
+    @Override public void lightAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableLight tile){com.vandorlabs.client.LightGroupCache.changed(tile);}
     @Override public boolean glassCollectionOnly(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){return com.vandorlabs.client.ProgrammableGlassPasses.collectionOnly(tile);}
     @Override public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return world.isRemote?world.getCombinedLight(pos,minimum):super.vehicleCombinedLight(world,pos,minimum);}
     @Override public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){com.vandorlabs.client.ForeignBuildingVisuals.prepare(world);}

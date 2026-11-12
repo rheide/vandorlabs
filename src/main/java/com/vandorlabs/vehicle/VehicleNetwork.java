@@ -108,8 +108,7 @@ public final class VehicleNetwork {
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
         p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();
         if(VehicleNetworkLab.state(p,e))return;
-        PacketHandler.INSTANCE.sendToAllTracking(p,e);
-        if(e.getControllingPassenger() instanceof EntityPlayerMP)PacketHandler.INSTANCE.sendTo(p,(EntityPlayerMP)e.getControllingPassenger());
+        com.vandorlabs.network.TrackingPackets.send(p,e);
     }
     public static void request(EntityGroundVehicle entity){Packet p=new Packet(REQUEST);p.entity=entity.getEntityId();p.token=entity.getUniqueID();PacketHandler.INSTANCE.sendToServer(p);}
     public static void send(EntityPlayerMP player,VehicleStructure snapshot,int entity,UUID token,BlockPos origin,boolean preview,boolean parking) {

@@ -7,6 +7,7 @@ import io.netty.buffer.*;
 public final class NetworkBoundaryChecks {
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("network boundary: "+text);}
     public static void main(String[] args){
+        com.vandorlabs.network.TrackingPacketChecks.run();
         VehicleNetwork.Packet sent=new VehicleNetwork.Packet(VehicleNetwork.STATE);
         sent.entity=73;sent.token=new java.util.UUID(123,456);sent.sequence=Integer.MAX_VALUE;
         sent.flag=true;sent.serverTick=987654321;sent.x=-12345.25;sent.y=120.75;sent.z=30985.5;

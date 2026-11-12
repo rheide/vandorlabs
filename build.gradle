@@ -1219,6 +1219,29 @@ task testChannelSourceIndexAdapters(type: JavaExec) {
 }
 check.dependsOn testChannelSourceIndexAdapters
 
+task testChannelSourceRefresh(type: JavaExec) {
+    group = 'verification'
+    description = 'Check stable source costs, analog transitions and channel publication lifetime'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ChannelSourceRefreshChecks'
+    if (project.hasProperty('channelRefreshMeasure')) args '--measure'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testChannelSourceRefresh
+
+task testLightGroupCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Check joined-light topology reuse, exact UV layouts and local invalidation'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LightGroupCacheChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testLightGroupCache
+
 task testInventorySampleGrid(type: JavaExec) {
     group = 'verification'
     dependsOn compileNonRenderingChecks

@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Rendering and client-server performance (Forge 1.12.2)
+
+- Retain joined Programmable Light layouts across ticks and world switches, and cache their hidden-face masks. Invalidate affected layouts on nearby edits, settings, chunk changes and carried-world replacement; preserve exact artwork coordinates, face visibility and live lighting within bounded cache storage.
+- Keep unchanged virtual-redstone source publications in their existing spatial and strength indexes. Repeated neighbor notifications no longer rescan receivers, while analog changes, movement, channel edits, source lifetime and transfer settlement retain their existing behavior.
+- Deliver vehicle motion, carried Door/Canopy/gear and control updates once to each tracked rider. Retain the fallback for passengers whose tracking has not started, with unchanged packet formats and update frequency.
+- Add focused layout, visibility, cache-lifetime, source-publication and packet-delivery regressions with before/after work and payload measurements; see the [performance notes](docs/performance/light-and-channel-caches.md).
+
 ### Appearance and mod compatibility (Forge 1.12.2)
 
 - Show the selected primary texture in Waila/Hwyla (including Wawla setups), with Rotating or Sliding movement for Doors and Trapdoors. Resolve upper halves and Large Door parts to their settings owner. The HUD remains optional.

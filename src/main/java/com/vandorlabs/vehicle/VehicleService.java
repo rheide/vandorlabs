@@ -377,7 +377,7 @@ public final class VehicleService {
         if(previous.entity!=null){EntityGroundVehicle craft=previous.entity;craft.updateSettings(changed);
             try{java.io.ByteArrayOutputStream bytes=new java.io.ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(seat.writeToNBT(new net.minecraft.nbt.NBTTagCompound()),bytes);
                 VehicleNetwork.Packet update=new VehicleNetwork.Packet(VehicleNetwork.TILE);update.entity=craft.getEntityId();update.token=craft.getUniqueID();update.origin=previous.selected;update.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(previous.selected));update.data=bytes.toByteArray();
-                com.vandorlabs.network.PacketHandler.INSTANCE.sendToAllTracking(update,craft);for(Entity rider:craft.getPassengers())if(rider instanceof EntityPlayerMP)com.vandorlabs.network.PacketHandler.INSTANCE.sendTo(update,(EntityPlayerMP)rider);
+                com.vandorlabs.network.TrackingPackets.send(update,craft);
             }catch(java.io.IOException failure){throw new IllegalStateException("Cannot synchronize Pilot Seat",failure);}
             craft.signals.persist();changed=craft.structure;for(Entity passenger:craft.getPassengers())craft.updatePassenger(passenger);
         }

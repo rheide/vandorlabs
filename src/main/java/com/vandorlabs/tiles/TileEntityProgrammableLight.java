@@ -132,7 +132,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     @Override public void setChannelSignal(boolean powered) {
         boolean wasOn = isOn();
         super.setChannelSignal(powered);
-        if (wasOn != isOn()) joinRevision++;
+        if (wasOn != isOn()) { joinRevision++; appearanceChanged(); }
         ProgrammableLightConnections.refreshAround(world, pos);
     }
 
@@ -149,6 +149,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
     @Override public void onLoad() {
         unloading = false;
         super.onLoad();
+        appearanceChanged();
     }
 
     @Override protected void finishLoading() {
@@ -158,23 +159,32 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
 
     @Override public void onChunkUnload() {
         unloading = true;
+        appearanceChanged();
         super.onChunkUnload();
         ProgrammableLightConnections.refreshAround(world, pos);
     }
 
     @Override public void invalidate() {
+        appearanceChanged();
         super.invalidate();
         ProgrammableLightConnections.refreshAround(world, pos);
     }
 
     private void notifyChanged() {
         joinRevision++;
+        appearanceChanged();
         markDirty();
         if (world != null && pos != null) {
             IBlockState state = world.getBlockState(pos);
             world.notifyBlockUpdate(pos, state, state, 3);
             world.checkLightFor(EnumSkyBlock.BLOCK, pos);
         }
+    }
+
+    /** No world reads: safe during chunk loading and through the sided proxy. */
+    private void appearanceChanged() {
+        if (world != null && world.isRemote && com.vandorlabs.VandorLabs.proxy != null)
+            com.vandorlabs.VandorLabs.proxy.lightAppearanceChanged(this);
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
@@ -192,6 +202,7 @@ public class TileEntityProgrammableLight extends TileEntityAnimatedScreenSelecto
         lightLevel=data.configuredLevel;on=data.manualOn;join=data.join;
         joinedTriggerPower=data.joinedPower;trigger=data.trigger;
         joinRevision++;
+        appearanceChanged();
         if (world != null && pos != null) {
             if (world.isRemote) world.checkLightFor(EnumSkyBlock.BLOCK, pos);
             else DeferredTileLoad.schedule(this, () -> {
