@@ -1,5 +1,14 @@
 # Changelog
 
+## Unreleased
+
+### Appearance and mod compatibility (Forge 1.12.2)
+
+- Show the selected primary texture in Waila/Hwyla (including Wawla setups), with Rotating or Sliding movement for Doors and Trapdoors. Resolve upper halves and Large Door parts to their settings owner. The HUD remains optional.
+- Display copied Door face artwork and glazing, Trapdoor surfaces, and Porthole materials correctly in configured inventory items. Preserve the existing middle-click settings and use bounded caches invalidated on resource reload.
+- Let Industrial Renewal catwalks recognize ordinary and Large Programmable Doors through Minecraft's native Door type, preserving Vandor placement, motion, security, metadata and multiblock ownership. Segmented Doors remain a separate mechanism.
+- Add amber-gold Gold glass to the shared glass palette, its four tint levels, configured items, and Dynmap. Append the new shade without changing existing saved glass IDs.
+
 ## 2.9.1
 
 ### Lighting and prepared models

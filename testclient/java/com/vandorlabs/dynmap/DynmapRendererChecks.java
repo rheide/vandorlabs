@@ -88,6 +88,13 @@ public final class DynmapRendererChecks {
         int variants=0;for(int direction=0;direction<4;direction++)for(boolean straight:new boolean[]{false,true})for(int shape=-1;shape<4;shape++)for(boolean open:new boolean[]{false,true})for(String facing:new String[]{"north","east","south","west"}){
             Context context=new Context("vandorlabs:segmented_door","facing="+facing);context.data.put("SegmentedTopOffset",1);context.data.put("SegmentedHeight",3);context.data.put("SegmentedColumn",1);context.data.put("SegmentedColumns",3);context.data.put("SegmentedOpen",(byte)(open?1:0));context.data.put("SegmentedSlide",direction);context.data.put("SegmentedStraight",(byte)(straight?1:0));context.data.put("SegmentedWindow",(byte)(shape>=0?1:0));context.data.put("SegmentedShape",Math.max(0,shape));context.data.put("SegmentedJoin",(byte)1);context.data.put("SegmentedGlassShade",7);context.data.put("SegmentedGlassTint",2);RenderPatch[] mesh=valid(renderer,context);require(mesh.length>0,"Directional/window Segmented Door map geometry");if(shape>=0){boolean glass=false;for(RenderPatch p:mesh)glass|=p.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT*2+21+7*4+2;require(glass,"Native window shade/tint map material");}variants++;
         }
+        for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<GlassTextures.TINT_COUNT;tint++)for(int tread:new int[]{8,16}){
+            Context context=new Context("vandorlabs:segmented_door","facing=north");
+            context.data.put("SegmentedSlide",0);context.data.put("SegmentedWindow",(byte)1);context.data.put("SegmentedTread",tread);
+            context.data.put("SegmentedGlassShade",shade);context.data.put("SegmentedGlassTint",tint);
+            boolean glass=false;for(RenderPatch patch:valid(renderer,context))glass|=patch.getTextureIndex()==ScreenHousingTextures.BUILTIN_COUNT*2+21+shade*GlassTextures.TINT_COUNT+tint;
+            require(glass,"Every native glass finish survives direct and prepared Segmented map meshes");
+        }
         for(int rotation=0;rotation<4;rotation++){
             final int rot=rotation,rx=rotation==0?1:rotation==2?-1:0,rz=rotation==1?-1:rotation==3?1:0;
             Context grouped=new Context("vandorlabs:segmented_door","facing="+new String[]{"north","west","south","east"}[rotation]){
@@ -155,12 +162,12 @@ public final class DynmapRendererChecks {
         }
         Context canopy=new Context("vandorlabs:regular_canopy_glass","facing=north");canopy.data.put("CanopyShade",18);canopy.data.put("CanopyTint",2);
         valid(new CanopyRenderer(),canopy);
-        for(String facing:new String[]{"north","east","south","west"})for(int mount=0;mount<4;mount++){
-            Context mounted=new Context("vandorlabs:regular_canopy_glass","facing="+facing);mounted.data.put("CanopyMount",mount);mounted.data.put("CanopyShade",18);mounted.data.put("CanopyTint",2);
-            boolean glazing=false;for(RenderPatch patch:valid(new CanopyRenderer(),mounted))glazing|=patch.getTextureIndex()==78;
+        for(String facing:new String[]{"north","east","south","west"})for(int mount=0;mount<4;mount++)for(int shade=0;shade<GlassTextures.IDS.length;shade++)for(int tint=0;tint<GlassTextures.TINT_COUNT;tint++){
+            Context mounted=new Context("vandorlabs:regular_canopy_glass","facing="+facing);mounted.data.put("CanopyMount",mount);mounted.data.put("CanopyShade",shade);mounted.data.put("CanopyTint",tint);
+            boolean glazing=false;for(RenderPatch patch:valid(new CanopyRenderer(),mounted))glazing|=patch.getTextureIndex()==4+shade*GlassTextures.TINT_COUNT+tint;
             require(glazing,"Mounted canopy retains its glazing artwork");
         }
-        require(new CanopyRenderer().getMaximumTextureCount(FACTORY)==80,"All canopy materials declared");
+        require(new CanopyRenderer().getMaximumTextureCount(FACTORY)==4+GlassTextures.IDS.length*GlassTextures.TINT_COUNT,"All canopy materials declared");
         for(int design=0;design<30;design++)for(String facing:new String[]{"north","east","south","west"})for(boolean open:new boolean[]{false,true}){
             Context door=new Context("vandorlabs:programmable_door","facing="+facing+",half=lower,hinge=left,open="+open);door.data.put("SpaceDesign",design);
             RenderPatch[] mesh=valid(new ProgrammableDoorRenderer(),door);

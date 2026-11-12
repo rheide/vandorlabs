@@ -29,7 +29,7 @@ public final class DoorGlassDataTest {
             Node root=new Node(),child=new Node();child.values.put("Unknown","opaque");int choice=code;
             for(String key:keys){Object v=values[choice&7];choice>>>=3;if(v!=null)child.values.put(key,v);}root.values.put("DoorGlass",child);root.values.put("Foreign","keep");Map<String,Object> original=new HashMap<String,Object>(child.values);
             int material=TAG.integer(child,"Material")?TAG.getInt(child,"Material"):-2,shade=TAG.getInt(child,"Shade"),tint=TAG.integer(child,"Tint")?TAG.getInt(child,"Tint"):1,layout=TAG.integer(child,"Layout")?TAG.getInt(child,"Layout"):1;
-            boolean valid=material>=-2&&material<=2&&shade>=0&&shade<19&&tint>=0&&tint<4&&layout>=0&&layout<3;
+            boolean valid=material>=-2&&material<=2&&shade>=0&&shade<com.vandorlabs.tiles.GlassTextures.IDS.length&&tint>=0&&tint<4&&layout>=0&&layout<3;
             settings=creates=0;DoorGlassData data=DoorGlassData.read(TAG,root,MATERIAL,FACTORY);
             require(child.values.equals(original)&&root.values.get("DoorGlass")==child&&creates==0,"read is source preserving and does not allocate compounds");
             require(settings==(valid?1:0),"only one factory snapshot for a valid child, none for fallback");

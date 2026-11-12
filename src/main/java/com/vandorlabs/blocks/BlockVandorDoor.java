@@ -4,8 +4,13 @@ import com.vandorlabs.GuiHandler;
 import com.vandorlabs.VandorLabs;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockDoor;
+import net.minecraft.block.SoundType;
+import net.minecraft.block.material.EnumPushReaction;
+import net.minecraft.block.material.Material;
 import net.minecraft.block.properties.PropertyBool;
+import net.minecraft.block.properties.PropertyDirection;
 import net.minecraft.block.properties.PropertyEnum;
+import net.minecraft.block.state.BlockFaceShape;
 import net.minecraft.block.state.BlockStateContainer;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.EntityLivingBase;
@@ -32,8 +37,13 @@ import com.vandorlabs.tiles.TileEntitySlidingDoor;
 
 import java.util.Random;
 
-public class BlockVandorDoor extends BlockVandorDirectional {
+/** Native door identity lets other mods (including Industrial Renewal catwalks)
+ * recognize a doorway without changing their blocks or saved connection settings. */
+public class BlockVandorDoor extends BlockDoor {
 
+    // Keep the existing cached properties and saved metadata layout. Vanilla's
+    // equivalent properties compare equal, including during its constructor.
+    public static final PropertyDirection FACING = BlockVandorDirectional.FACING;
     public static final PropertyEnum<BlockDoor.EnumDoorHalf> HALF = CachedProperties.enumeration("half", BlockDoor.EnumDoorHalf.class);
     public static final PropertyBool OPEN = PropertyBool.create("open");
     public static final PropertyEnum<BlockDoor.EnumHingePosition> HINGE = CachedProperties.enumeration("hinge", BlockDoor.EnumHingePosition.class);
@@ -94,7 +104,14 @@ public class BlockVandorDoor extends BlockVandorDirectional {
     private static final AxisAlignedBB LEAF_S_AABB = new AxisAlignedBB(0.0D, 0.0D, 0.875D, 1.0D, 1.0D, 1.0D);
 
     public BlockVandorDoor(String name, DoorMotion motion, boolean cutout) {
-        super(name);
+        super(Material.IRON);
+        setRegistryName(name);
+        setUnlocalizedName(VandorLabs.MODID + "." + name);
+        setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+        setHardness(5.0F);
+        setResistance(10.0F);
+        setSoundType(SoundType.METAL);
+        setHarvestLevel("pickaxe", 1);
         this.motion = motion;
         this.cutout = cutout;
         setDefaultState(this.blockState.getBaseState().withProperty(FACING, EnumFacing.NORTH).withProperty(HALF, BlockDoor.EnumDoorHalf.LOWER).withProperty(OPEN, false).withProperty(HINGE, BlockDoor.EnumHingePosition.LEFT).withProperty(POWERED, false));
@@ -129,7 +146,7 @@ public class BlockVandorDoor extends BlockVandorDirectional {
     @Override
     @SideOnly(Side.CLIENT)
     public BlockRenderLayer getBlockLayer() {
-        return cutout ? BlockRenderLayer.CUTOUT : super.getBlockLayer();
+        return cutout ? BlockRenderLayer.CUTOUT : BlockRenderLayer.SOLID;
     }
 
     @Override
@@ -195,7 +212,9 @@ public class BlockVandorDoor extends BlockVandorDirectional {
 
     @Override
     public boolean canPlaceBlockAt(World world, BlockPos pos) {
-        return super.canPlaceBlockAt(world, pos)
+        // Do not inherit vanilla's full support requirement: Vandor also
+        // permits its programmable slabs and filled diagonal wall supports.
+        return world.getBlockState(pos).getBlock().isReplaceable(world, pos)
                 && world.getBlockState(pos.up()).getBlock().isReplaceable(world, pos.up())
                 && hasDoorSupport(world, pos.down());
     }
@@ -358,6 +377,49 @@ public class BlockVandorDoor extends BlockVandorDirectional {
     }
 
     protected boolean canToggleByHand(World world,BlockPos lowerPos) { return true; }
+
+    /** Native callers must use our two-half update and honor manual/security mode. */
+    @Override
+    public void toggleDoor(World world, BlockPos pos, boolean open) {
+        if (world.isRemote || !world.isBlockLoaded(pos)) return;
+        IBlockState state = world.getBlockState(pos);
+        if (state.getBlock() != this || !canToggleByHand(world, lowerPos(state, pos))) return;
+        setPowered(world, pos, state, getActualState(state, world, pos).getValue(POWERED), open);
+    }
+
+    @Override
+    public boolean isPassable(IBlockAccess world, BlockPos pos) {
+        IBlockState state = world.getBlockState(pos);
+        return state.getBlock() == this && getActualState(state, world, pos).getValue(OPEN);
+    }
+
+    // BlockDoor assumes vanilla item IDs and removes a partner during harvest.
+    // Preserve our item identity and let our own breakBlock handle every size.
+    @Override
+    public ItemStack getItem(World world, BlockPos pos, IBlockState state) {
+        return new ItemStack(this);
+    }
+
+    @Override
+    public String getLocalizedName() {
+        return net.minecraft.util.text.translation.I18n.translateToLocal(getUnlocalizedName() + ".name");
+    }
+
+    @Override
+    public void onBlockHarvested(World world, BlockPos pos, IBlockState state, EntityPlayer player) { }
+
+    @Override
+    public EnumPushReaction getMobilityFlag(IBlockState state) {
+        return EnumPushReaction.NORMAL;
+    }
+
+    @Override
+    public BlockFaceShape getBlockFaceShape(IBlockAccess world, IBlockState state,
+            BlockPos pos, EnumFacing face) {
+        // Retain existing attachment behavior; native identity is sufficient
+        // for catwalks and does not require changing other neighboring blocks.
+        return BlockFaceShape.SOLID;
+    }
 
     @Override
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand, EnumFacing facing, float hitX, float hitY, float hitZ) {

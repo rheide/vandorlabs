@@ -646,6 +646,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY"))){try{if(AppearanceCompatibilityLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Appearance compatibility focus",failure);}return;}
         if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_CANOPY_ITEM_SAFETY_CHECKS_ONLY"))){try{CanopyItemSafetyClientChecks.tick(mc);}catch(Exception failure){failure.printStackTrace();mc.shutdown();}return;}
         if(Boolean.getBoolean("vandorlabs.shapeDialogChecksOnly")){try{if(ShapeDialogChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Shape dialog focus",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.glassDialogChecksOnly")){try{if(GlassDialogChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Glass dialog focus",failure);}return;}

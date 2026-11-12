@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Register tile-aware closed canopy overview models and their four materials."""
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -17,9 +18,8 @@ files = {'metal': 'canopy_canopy_steel', 'glass': 'canopy_canopy_glass',
          'amber': 'canopy_canopy_amber', 'cyan': 'canopy_canopy_light'}
 textures = [f'texture:id=canopy_{m},filename=assets/vandorlabs/textures/blocks/canopy/{files[m]}.png,xcount=1,ycount=1'
             for m in materials]
-glass_ids = ['clear', 'soft_cyan', 'soft_dark_grey', 'white', 'orange', 'magenta',
-             'light_blue', 'yellow', 'lime', 'pink', 'grey', 'light_grey', 'cyan',
-             'purple', 'blue', 'brown', 'green', 'red', 'black']
+glass_ids = re.findall(r'"([^"]+)"', re.search(r'IDS=\{([^}]+)',
+    (ROOT / 'src/portable/java/com/vandorlabs/tiles/GlassTextures.java').read_text())[1])
 finishes = [(shade, tint, name + suffix) for shade, name in enumerate(glass_ids)
             for tint, suffix in enumerate(('_mild', '', '_strong', '_opaque'))]
 textures += [f'texture:id=canopy_glass_{shade}_{tint},filename=assets/vandorlabs/textures/blocks/programmable_glass/medium/{name}.png,xcount=1,ycount=1'

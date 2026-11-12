@@ -67,6 +67,11 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         boolean open=tile.securityMode()>0?tile.securityOpen():tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED?actual.getValue(OPEN):SpaceDoorData.openForSignal(tile.getTrigger(),powered);
         setPowered(world,tile.getPos(),actual,powered,open);
     }
+    @Override public void toggleDoor(World world,BlockPos pos,boolean open){
+        if(world.isRemote)return;
+        TileEntityLargeProgrammableDoor tile=root(world,pos);
+        if(tile!=null)super.toggleDoor(world,tile.getPos(),open);
+    }
     @Override protected void setPowered(World world,BlockPos pos,IBlockState state,boolean powered,boolean open){
         TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null || !complete(world,tile))return;
         BlockPos anchor=tile.getPos();IBlockState old=world.getBlockState(anchor);EnumFacing width=old.getValue(FACING).rotateYCCW();

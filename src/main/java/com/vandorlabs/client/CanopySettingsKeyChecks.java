@@ -13,7 +13,7 @@ final class CanopySettingsKeyChecks {
     static void run(){
         try{
             int cases=0;
-            for(int shade=0;shade<19;shade++)for(int tint=0;tint<4;tint++)for(int material:new int[]{-1,0}){
+            for(int shade=0;shade<com.vandorlabs.tiles.GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++)for(int material:new int[]{-1,0}){
                 LargeCanopySettings s=new LargeCanopySettings();s.shade=shade;s.tint=tint;s.material=material;check(s);
                 NBTTagCompound first=new NBTTagCompound();s.write(first);s.key();NBTTagCompound second=new NBTTagCompound();s.write(second);
                 if(!first.equals(second))throw new IllegalStateException("Canopy cache changed saved settings");cases++;

@@ -22,10 +22,13 @@ def pythonExecutable = project.findProperty('pythonExecutable') ?: (
 
 repositories {
     maven { url = 'https://repo.mikeprimm.com/' }
+    maven { url = 'https://www.cursemaven.com/' }
 }
 
 dependencies {
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
+    // Hwyla's published 1.12.2 API only; the HUD remains an optional runtime mod.
+    compileOnly 'curse.maven:hwyla-253449:2568753'
 }
 
 version = '2.10.0'
@@ -131,6 +134,24 @@ task testLightFrameAttachments(type: JavaExec) {
     main = 'com.vandorlabs.client.LightFrameAttachmentChecks'
 }
 check.dependsOn testLightFrameAttachments
+
+task testNativeDoorCompatibility(type: JavaExec) {
+    group = 'verification'
+    description = 'Check native Door interoperability without changing saved door states or ownership'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NativeDoorCompatibilityChecks'
+}
+check.dependsOn testNativeDoorCompatibility
+
+task testWailaTooltips(type: JavaExec) {
+    group = 'verification'
+    description = 'Check optional Waila registration, primary artwork names and multiblock door lookup'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + configurations.compileOnly + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.WailaTooltipChecks'
+}
+check.dependsOn testWailaTooltips
 
 task testVehicleWorldCompatibility(type: JavaExec) {
     group = 'verification'

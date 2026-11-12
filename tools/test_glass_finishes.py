@@ -2,11 +2,20 @@
 """Check glass finish opacity/color and projected padding for every inventory variant."""
 import json
 import math
+import re
 from pathlib import Path
 from PIL import Image, ImageStat
 
 ROOT = Path(__file__).resolve().parents[1]
 TEXTURES = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/programmable_glass'
+catalog = (ROOT / 'src/portable/java/com/vandorlabs/tiles/GlassTextures.java').read_text()
+ids, labels = [re.findall(r'"([^"]+)"', re.search(r'String\[\] '+name+r'=\{([^}]+)', catalog)[1])
+               for name in ('IDS', 'LABELS')]
+legacy = ['clear','soft_cyan','soft_dark_grey','white','orange','magenta','light_blue',
+          'yellow','lime','pink','grey','light_grey','cyan','purple','blue','brown','green','red','black']
+assert ids[:len(legacy)] == legacy, 'Existing saved shade IDs changed'
+assert len(ids) == len(set(ids)) == len(labels) and ids[19] == 'gold' and labels[19] == 'Gold'
+suffixes = ('_mild','','_strong','_opaque')
 for detail in ('low', 'medium'):
     clear = Image.open(TEXTURES / detail / 'clear.png').convert('RGBA')
     for file in (TEXTURES / detail).glob('*.png'):
@@ -15,8 +24,8 @@ for detail in ('low', 'medium'):
         if not file.stem.startswith(('clear', 'soft_cyan', 'soft_dark_grey')) and not file.stem.endswith(('_mild','_strong','_opaque')):
             assert data.getchannel('A').getextrema()[0] >= 76, file.name
             assert ImageStat.Stat(data.getchannel('A')).mean[0] > ImageStat.Stat(clear.getchannel('A')).mean[0] + 40, file.name
-    assert len(list((TEXTURES / detail).glob('*.png'))) == 76
-    for name in ('soft_cyan','soft_dark_grey') + tuple(n for n in ('white','orange','magenta','light_blue','yellow','lime','pink','grey','light_grey','cyan','purple','blue','brown','green','red','black')):
+    assert {file.stem for file in (TEXTURES / detail).glob('*.png')} == {name+suffix for name in ids for suffix in suffixes}
+    for name in ids[1:]:
         means = [ImageStat.Stat(Image.open(TEXTURES / detail / (name + suffix + '.png')).getchannel('A')).mean[0]
                  for suffix in ('_mild','','_strong','_opaque')]
         assert means[0] < means[1] < means[2] < means[3], (name, means)
@@ -25,6 +34,14 @@ for detail in ('low', 'medium'):
 
     for file in (TEXTURES / detail).glob('*_opaque.png'):
         assert Image.open(file).getchannel('A').getextrema()==(255,255), file
+
+    # Gold is a distinct amber finish with the same seamless alpha/shimmer policy as dye glass.
+    gold = Image.open(TEXTURES / detail / 'gold.png').convert('RGBA')
+    r, g, b, _ = ImageStat.Stat(gold).mean
+    assert r > g > b and 145 < g < 165 and b < 60, 'Gold must remain amber-gold'
+    for name in ('yellow', 'orange'):
+        other = Image.open(TEXTURES / detail / (name+'.png')).convert('RGBA')
+        assert gold.tobytes() != other.tobytes() and gold.getchannel('A').tobytes() == other.getchannel('A').tobytes()
 
 # Thickness caps sample the same fully opaque metal patch as regular glass.
 metal = Image.open(ROOT / 'texture-packs/space-doors/medium/double_frame_metal.png').convert('RGBA')
@@ -88,5 +105,5 @@ for file in (ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured
                         point = rotate(point, axis, angle)
                     assert abs(point[0]) <= 7.5 and abs(point[1]) <= 7.5, (file.name, point)
     count += 1
-assert count == 513, count
-print('PASS: 152 glass textures, four tint levels, and projected slot padding for all 513 item models')
+assert count == len(ids) * 27, count
+print(f'PASS: {len(ids) * 8} glass textures, stable saved IDs, amber-gold, four tint levels, and projected slot padding for all {count} item models')

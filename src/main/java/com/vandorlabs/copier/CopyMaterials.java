@@ -92,7 +92,8 @@ public final class CopyMaterials {
         if(block instanceof BlockConstructorPart)return cell.tileData()!=null&&cell.tileData().getBoolean("ConstructorMatter")?new ItemStack(Block.getBlockFromName("vandorlabs:programmable_matter_block")):ItemStack.EMPTY;
         if(block instanceof BlockControlledRamp||block instanceof BlockPistonExtension||tile instanceof TileEntityCockpitPart)return ItemStack.EMPTY;
         if(block instanceof BlockLargeProgrammableDoor){TileEntityLargeProgrammableDoor root=((BlockLargeProgrammableDoor)block).root(view,cell.pos);if(root==null)throw new IllegalArgumentException("Complete the large door before copying it");if(!root.getPos().equals(cell.pos))return ItemStack.EMPTY;}
-        else if(block instanceof BlockDoor&&cell.state.getValue(BlockDoor.HALF)==BlockDoor.EnumDoorHalf.UPPER)return ItemStack.EMPTY;
+        // Native door identity is for interoperability; keep existing Vandor copy costs.
+        else if(block instanceof BlockDoor&&!(block instanceof BlockVandorDoor)&&cell.state.getValue(BlockDoor.HALF)==BlockDoor.EnumDoorHalf.UPPER)return ItemStack.EMPTY;
         if(block instanceof BlockBed&&cell.state.getValue(BlockBed.PART)==BlockBed.EnumPartType.HEAD)return ItemStack.EMPTY;
         if(block instanceof BlockDoublePlant&&cell.state.getValue(BlockDoublePlant.HALF)==BlockDoublePlant.EnumBlockHalf.UPPER)return ItemStack.EMPTY;
         if((block instanceof BlockBridgeChair||block instanceof BlockConnectedSeat||block instanceof BlockPilotSeat&&!(block instanceof BlockCockpit))&&cell.state.getValue(BlockBridgeChair.UPPER))return ItemStack.EMPTY;

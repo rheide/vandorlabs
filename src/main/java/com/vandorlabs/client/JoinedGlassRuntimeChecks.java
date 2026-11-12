@@ -53,10 +53,13 @@ final class JoinedGlassRuntimeChecks {
                 }
                 TileEntity root=world.getTileEntity(BASE);GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(root);require(layout.columns==2 && layout.rows==rows,"joined rectangle "+facing+":"+mode+":"+inverted+" actual="+layout.key());
                 long tick=world.getTotalWorldTime();try{world.setTotalWorldTime(tick+1);require(GlassSurfaceGroups.layout(root)==layout,"unchanged joined layout was rebuilt on the next tick");}finally{world.setTotalWorldTime(tick);}
-                world.setBlockState(BASE.up(4),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                // The rejected cell just beyond the two-column group is a
+                // discovery dependency; changing it must invalidate the layout.
+                BlockPos boundary=BASE.offset(facing.rotateY(),2);
+                world.setBlockState(boundary,net.minecraft.init.Blocks.STONE.getDefaultState(),3);
                 // Fresh server fixture chunks suppress ordinary notifications until populated.
-                world.notifyBlockUpdate(BASE.up(4),net.minecraft.init.Blocks.AIR.getDefaultState(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
-                require(GlassSurfaceGroups.layout(root)!=layout,"block event did not invalidate layout");world.setBlockToAir(BASE.up(4));
+                world.notifyBlockUpdate(boundary,net.minecraft.init.Blocks.AIR.getDefaultState(),net.minecraft.init.Blocks.STONE.getDefaultState(),3);
+                require(GlassSurfaceGroups.layout(root)!=layout,"boundary block event did not invalidate layout");world.setBlockToAir(boundary);
                 if(root instanceof TileEntityProgrammableGlass)((TileEntityProgrammableGlass)root).setJoin(false);else ((TileEntityAnimatedScreenSelector)root).setGlassLayout(true,false);
                 layout=GlassSurfaceGroups.layout(root);require(layout.columns==1 && layout.rows==1,"Join Off has local artwork");
             }

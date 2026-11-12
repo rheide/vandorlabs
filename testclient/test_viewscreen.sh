@@ -23,12 +23,16 @@ unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONL
 unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
+unset VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY
 case "${1:-}" in
     --full) MODE=full; PREFIX= ;;
     --focus)
         MODE=focus
         TARGET=${2:?Usage: test_viewscreen.sh --focus door-selection/trapdoors/dialogs/storage/scene-prefix}
-        if [ "$TARGET" = shape-dialog ]; then
+        if [ "$TARGET" = appearance-compat ]; then
+            PREFIX=appearance_compat_
+            export VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY=true
+        elif [ "$TARGET" = shape-dialog ]; then
             PREFIX=shape_dialog_
             export VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY=true
         elif [ "$TARGET" = glass-dialog ]; then
@@ -368,6 +372,9 @@ cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
 # Exact optional reference renderers for the segmented comparison, isolated from production.
 if [ -n "${VANDOR_LABS_TEST_MALISIS_CORE:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_CORE" "$TEST_RUNTIME_GAME/mods/"; fi
 if [ -n "${VANDOR_LABS_TEST_MALISIS_DOORS:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_DOORS" "$TEST_RUNTIME_GAME/mods/"; fi
+# Exact optional HUD/building integrations used by --focus appearance-compat.
+if [ -n "${VANDOR_LABS_TEST_HWYLA:-}" ]; then cp "$VANDOR_LABS_TEST_HWYLA" "$TEST_RUNTIME_GAME/mods/"; fi
+if [ -n "${VANDOR_LABS_TEST_INDUSTRIAL_RENEWAL:-}" ]; then cp "$VANDOR_LABS_TEST_INDUSTRIAL_RENEWAL" "$TEST_RUNTIME_GAME/mods/"; fi
 # Optional Mekanism fixtures for supported block rotation, enabled explicitly.
 if [ -n "${VANDOR_LABS_TEST_MEKANISM:-}" ]; then
     cp "$VANDOR_LABS_TEST_MEKANISM" "$TEST_RUNTIME_GAME/mods/"
@@ -393,6 +400,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = appearance-compat ]; then
+        for marker in appearance-compat picked-item-models waila-appearance industrial-renewal-catwalk industrial-renewal-catwalk-client; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
+        echo "Appearance compatibility passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = shape-dialog ]; then
         grep -q "shape-dialog legacy PASS" "$RUN_OUT/client.log"
         grep -q "stair-dialog-live PASS" "$RUN_OUT/client.log"

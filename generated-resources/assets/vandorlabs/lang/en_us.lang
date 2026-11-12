@@ -902,3 +902,15 @@ tile.vandorlabs.door27_cool_full_controller.name=Door Controller (Cool/Full)
 tile.vandorlabs.door27_gold_full_controller.name=Door Controller (Gold/Full)
 
 tile.vandorlabs.segmented_door.name=Segmented Door
+
+# Optional Waila/Hwyla appearance details
+option.vandorlabs.appearance=Texture and door movement
+option.vandorlabs.appearance.desc=Show the selected primary texture and door movement in the looking-at tooltip.
+tooltip.vandorlabs.texture=Texture: %s
+tooltip.vandorlabs.movement=Movement: %s
+tooltip.vandorlabs.sliding=Sliding
+tooltip.vandorlabs.rotating=Rotating
+tooltip.vandorlabs.segmented_original=Original segmented panels
+tooltip.vandorlabs.redstone_display=Redstone controls
+tooltip.vandorlabs.chip_display=Data Chip display
+tooltip.vandorlabs.vehicle_display=Vehicle Status

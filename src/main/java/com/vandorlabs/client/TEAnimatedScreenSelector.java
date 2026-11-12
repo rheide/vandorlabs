@@ -1107,11 +1107,15 @@ public class TEAnimatedScreenSelector
         drawFlatBar(buf,wall,metal,metal,opening);
     }
     static void drawFlatBar(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,TextureAtlasSprite outer,PortholeHex.Slice opening) {
+        drawPortholeBar(buf,wall,metal,outer,opening,4,null);
+    }
+    /** Standalone inventory previews use the same outline, rim UVs and diagonal projection. */
+    static void drawPortholeBar(BufferBuilder buf,TextureAtlasSprite wall,TextureAtlasSprite metal,TextureAtlasSprite outer,PortholeHex.Slice opening,double depthUv,DiagonalPortholeMesh mesh) {
         if(opening==null) {renderFlatWall(buf,wall,outer,6,null);return;}
-        for(double[] q:opening.frameQuads)panelQuad(buf,wall,null,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
-        for(double[] edge:opening.hexEdges)rimSegment(buf,metal,null,edge[0],edge[1],edge[2],edge[3],4);
-        for(int y:new int[]{0,16})topRim(buf,outer,null,y,0,16,4);
-        for(int x:new int[]{0,16})sideRim(buf,outer,null,x,0,16,4);
+        for(double[] q:opening.frameQuads)panelQuad(buf,wall,mesh,q[0],q[1],q[2],q[3],q[4],q[5],q[6],q[7]);
+        for(double[] edge:opening.hexEdges)rimSegment(buf,metal,mesh,edge[0],edge[1],edge[2],edge[3],depthUv);
+        for(int y:new int[]{0,16})topRim(buf,outer,mesh,y,0,16,depthUv);
+        for(int x:new int[]{0,16})sideRim(buf,outer,mesh,x,0,16,depthUv);
     }
 
     /** Build only when this wall or its immediate neighbors change. */

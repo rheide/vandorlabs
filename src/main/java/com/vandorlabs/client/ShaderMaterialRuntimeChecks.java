@@ -58,7 +58,7 @@ final class ShaderMaterialRuntimeChecks {
             }
             sprites++;
         }
-        require(sprites==19,"all nineteen native Opaque shades verified");
+        require(sprites==GlassTextures.IDS.length,"all native Opaque shades verified");
         System.out.println("[vandorlabs][reprolab] opaque-glass-atlas PASS post-reload native-sprites="+sprites+" alpha255-pixels="+pixels+" explicit missing-sprite rejection; actual background FBO checks follow");
     }
     private static BufferedImage capture(Minecraft mc,TileEntity tile,boolean red){

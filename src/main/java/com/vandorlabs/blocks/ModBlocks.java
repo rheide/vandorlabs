@@ -863,6 +863,7 @@ public class ModBlocks {
                         if (baked != null) event.getModelRegistry().putObject(location,
                                 new com.vandorlabs.client.ScaledDoorItemModel(baked,design==29));
                     }
+        com.vandorlabs.client.ConfiguredPickItemModels.install(event);
     }
 
     @SideOnly(Side.CLIENT)
