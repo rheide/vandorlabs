@@ -2,6 +2,13 @@
 
 ## Unreleased
 
+### Stationary joined glass performance (Forge 1.12.2)
+
+- Retain flat tinted Programmable Glass in bounded section/plane meshes, including the complete supported OptiFine shader records. Publish one render owner per compatible group and remove other pane-only tiles from uploaded section render lists, preserving frame fallbacks and restoring ownership on edits, lighting changes and reloads.
+- Merge joined interiors into actual rectangles with exact holes, material and lighting boundaries. Smooth stock glass and one compensated surface are the default performance policy; repeated shimmer and stock-glass animation are intentionally removed. Authored textures and two surfaces remain explicit options.
+- Keep opaque frame shadows while omitting translucent pane shadows by default. The optional full-shadow mode uses the retained pane geometry; opaque inserts and required frame/fluid rendering remain intact.
+- Add main/shadow draw and upload diagnostics, optional asynchronous GPU timings, and focused geometry, shader-record, admission and framebuffer checks. See [stationary glass rendering](docs/stationary-glass-rendering.md) for options, patch replacement and validation.
+
 ### Rendering and client-server performance (Forge 1.12.2)
 
 - Retain joined Programmable Light layouts across ticks and world switches, and cache their hidden-face masks. Invalidate affected layouts on nearby edits, settings, chunk changes and carried-world replacement; preserve exact artwork coordinates, face visibility and live lighting within bounded cache storage.

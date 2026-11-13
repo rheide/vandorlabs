@@ -124,6 +124,10 @@ final class FlatPanelBarRenderer {
         if(materials[0]==null || materials[1]==null)return false;
         int light=root.getWorld().getCombinedLight(root.getPos(),0),sky=light/65536,block=light%65536;
         boolean transparent=net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1;
+        // Keep opaque T-junction frame/cap work in pass zero. This policy only
+        // applies to Programmable Glass interiors, not other wall families.
+        if(transparent&&root instanceof TileEntityProgrammableGlass
+                &&GlassPanePolicy.omitPane(false,VehicleRenderPass.shadow()))return true;
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
         GlStateManager.translate(.5,0,.5);GlStateManager.rotate(180-facing.getHorizontalAngle(),0,1,0);GlStateManager.translate(-.5,0,-.5);
         GlStateManager.scale(1D/16,1D/16,1D/16);GlStateManager.disableLighting();GlStateManager.disableCull();

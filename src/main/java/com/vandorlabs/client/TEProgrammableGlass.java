@@ -70,8 +70,15 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if(corner!=null&&FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
+        // Frames have already rendered (or are owned by chunk geometry). Only
+        // the translucent interior is omitted by the fast shadow policy.
+        if(GlassPanePolicy.omitPane(opaque,VehicleRenderPass.shadow()))return;
         int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
         if(pass>=0&&pass!=(opaque?0:1))return;
+        GlassPaneChunks.Plan stationary=stage<0?GlassPaneChunks.plan(tile):null;
+        if(stationary!=null){
+            if(stationary.anchor!=tile||GlassPaneBuffers.draw(stationary,x,y,z))return;
+        }
         net.minecraft.client.renderer.texture.TextureAtlasSprite material=tile.getMaterial()<0?null:net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
                 com.vandorlabs.tiles.GlassMaterials.texture(tile.getMaterial(),tile.getShade(),size,tile.getTint()));
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -162,7 +169,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(opaque);
-        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,tile,buffer,sky,GlassInsertLighting.block(tile,block),opacity);Tessellator.getInstance().draw();}
+        if((pass<0||pass==(opaque?0:1))&&!GlassPanePolicy.omitPane(opaque,VehicleRenderPass.shadow())){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,tile,buffer,sky,GlassInsertLighting.block(tile,block),opacity);Tessellator.getInstance().draw();}
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
     }

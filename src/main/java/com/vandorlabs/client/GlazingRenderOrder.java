@@ -28,6 +28,8 @@ final class GlazingRenderOrder {
     private static void clear(){for(Draw draw:ordered){draw.tile=null;draw.glass.clear();}ordered.clear();visible.clear();}
     static void begin(World view){end();world=view;lateDraws=0;GlassPaneBatch.panes=GlassPaneBatch.draws=0;}
     static void end(){clear();world=null;flushing=false;flushed=false;}
+    /** A flush already owns one complete graphics-state snapshot. */
+    static boolean ownsState(){return flushing;}
     static boolean handle(TileEntity tile,double x,double y,double z,float partial,int stage,float alpha){
         if(flushing||world==null||tile.getWorld()!=world||stage>=0||VehicleRenderPass.shadow())return false;
         int pass=MinecraftForgeClient.getRenderPass();
@@ -75,6 +77,16 @@ final class GlazingRenderOrder {
     private static double depth(Draw draw,double cx,double cy,double cz,java.nio.FloatBuffer matrix){
         TileEntity tile=draw.tile;
         draw.glass.clear();long mutation=GlassSurfaceGroups.mutation();
+        GlassPaneChunks.Plan group=tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass
+                ?GlassPaneChunks.plan((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile):null;
+        if(group!=null){
+            draw.axis=group.rotated?0:2;
+            double offset=com.vandorlabs.blocks.PanelDepth.offset(group.depth)/16D;
+            draw.plane=(group.rotated?group.origin.getX():group.origin.getZ())+group.plane+.5+(group.rotated?-offset:offset);
+            // Ordering and coverage must see the complete published group.
+            // Do not capture an ordinary one-block preparation for its anchor.
+            return -Math.abs(draw.plane-(draw.axis==0?cx:cz));
+        }
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         int axis=-1;double plane=0,offset=0;
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableGlass&&tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass&&GlassSurfaceGroups.flatCorner((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile,state)==null){
@@ -102,6 +114,10 @@ final class GlazingRenderOrder {
         Plane(Draw d){draw=d;axis=d.axis;coordinate=d.plane;}
         void add(Draw d,double cx,double cy,double cz){
             net.minecraft.util.math.AxisAlignedBB b=new net.minecraft.util.math.AxisAlignedBB(d.tile.getPos());
+            if(d.tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass){
+                GlassPaneChunks.Plan group=GlassPaneChunks.plan((com.vandorlabs.tiles.TileEntityProgrammableGlass)d.tile);
+                if(group!=null)b=group.bounds;
+            }
             if(d.tile instanceof com.vandorlabs.tiles.TileEntityCanopy){java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes=((com.vandorlabs.tiles.TileEntityCanopy)d.tile).boxes();if(!boxes.isEmpty()){b=boxes.get(0);for(int i=1;i<boxes.size();i++)b=b.union(boxes.get(i));}}
             if(axis==0)b=new net.minecraft.util.math.AxisAlignedBB(coordinate-.0625,b.minY,b.minZ,coordinate+.0625,b.maxY,b.maxZ);
             if(axis==2)b=new net.minecraft.util.math.AxisAlignedBB(b.minX,b.minY,coordinate-.0625,b.maxX,b.maxY,coordinate+.0625);

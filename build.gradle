@@ -116,6 +116,43 @@ task testGlazingSweep(type: JavaExec) {
 check.dependsOn testGlazingSweep
 check.dependsOn testGlazingOrder
 
+task testStaticGlassPolicy(type: JavaExec) {
+    group = 'verification'
+    description = 'Check stationary pane alpha compensation and explicit shadow/texture policies'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPanePolicyChecks'
+}
+task testStaticGlassAdmissions(type: JavaExec) {
+    group = 'verification'
+    description = 'Check uploaded section tile admission, invalidation and owner replacement'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneAdmissionChecks'
+}
+task testGlassPaneBuffers(type: JavaExec) {
+    group = 'verification'
+    description = 'Check stationary pane positions, normals, UVs and complete extended vertex records'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneBufferChecks'
+}
+task testJoinedPaneMesher(type: JavaExec) {
+    group = 'verification'
+    description = 'Exhaustively preserve holes, joins and authored texture cells during real pane meshing'
+    dependsOn 'compilePortableTests'
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.JoinedPaneMesherTest'
+}
+task testStaticGlassOrdering(type: JavaExec) {
+    group = 'verification'
+    description = 'Keep intersecting perpendicular glass at its original ordering granularity'
+    dependsOn 'compilePortableTests'
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.GlassPaneOrderingTest'
+}
+check.dependsOn testStaticGlassPolicy, testStaticGlassAdmissions, testGlassPaneBuffers, testJoinedPaneMesher, testStaticGlassOrdering
+
 task testDedicatedServerLinkage(type: JavaExec) {
     group = 'verification'
     description = 'Reject shared-code references to client-only Minecraft and Forge APIs'

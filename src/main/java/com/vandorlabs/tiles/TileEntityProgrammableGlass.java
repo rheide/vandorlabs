@@ -14,11 +14,15 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
     /** Client publication only; never serialized into block, item or vehicle data. */
     public volatile Object frameChunkMesh,frameChunkPublication;
+    /** Unsaved client renderer ownership; never part of captured vehicle or item data. */
+    public volatile Object paneChunkPublication;
     public volatile int frameChunkLight;
 
     /** World geometry follows loaded chunks and the view frustum, like Programmable Walls. */
     @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){
+        net.minecraft.util.math.AxisAlignedBB panes=com.vandorlabs.VandorLabs.proxy==null?null:com.vandorlabs.VandorLabs.proxy.glassPaneBounds(this);
+        if(panes!=null)return panes;
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
         return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
     }
@@ -43,8 +47,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     }
     /** Called after an installed packet, or by an identity-checked load callback. */
     public void refreshPendingLight(){lightQueued=false;if(pendingLight&&world!=null){pendingLight=false;world.checkLight(pos);}}
-    @Override public void setWorld(World world){if(this.world!=world){lightQueued=false;receivedSettings=false;}super.setWorld(world);}
-    @Override public void setPos(BlockPos pos){if(!this.pos.equals(pos)){lightQueued=false;receivedSettings=false;}super.setPos(pos);}
+    @Override public void setWorld(World world){if(this.world!=world){lightQueued=false;receivedSettings=false;if(paneChunkPublication!=null)frameChanged();}super.setWorld(world);}
+    @Override public void setPos(BlockPos pos){if(!this.pos.equals(pos)){lightQueued=false;receivedSettings=false;if(paneChunkPublication!=null)frameChanged();}super.setPos(pos);}
     private void changed(boolean range,boolean light){
         if(configurationDepth>0){configurationChanged=true;configurationRange|=range;configurationLight|=light;return;}
         markDirty();
@@ -216,6 +220,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return oldState.getBlock() != newState.getBlock();
     }
     @Override public boolean shouldRenderInPass(int pass) {
+        int panes=com.vandorlabs.VandorLabs.proxy==null?-1:com.vandorlabs.VandorLabs.proxy.glassPanePass(this,pass);
+        if(panes>=0)return panes!=0;
         if(pass==0)return true;
         if(pass!=1)return false;
         if(fluids.any()||!GlassMaterials.opaque(material,tint))return true;
