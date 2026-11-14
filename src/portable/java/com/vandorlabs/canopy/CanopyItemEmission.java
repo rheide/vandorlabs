@@ -7,6 +7,18 @@ public final class CanopyItemEmission {
         void vertex(float x,float y,float z,float u,float v,int color);
     }
     private CanopyItemEmission(){}
+    public static void emitPreview(CanopyFace face,float opacity,CanopyEmission.Sprite sprite,Sink sink){
+        if(face.points()==4){
+            CanopyPoint normal=face.vertex(1).subtract(face.vertex(0)).crossProduct(face.vertex(2).subtract(face.vertex(0)));
+            CanopyPoint tail=face.vertex(3).subtract(face.vertex(0));
+            if(Math.abs(normal.x*tail.x+normal.y*tail.y+normal.z*tail.z)<1E-10){
+                quad(face,opacity,sprite,sink,0,1,2,3);
+                if(face.doubleSided)quad(face,opacity,sprite,sink,3,2,1,0);
+                return;
+            }
+        }
+        emit(face,opacity,sprite,sink);
+    }
     public static void emit(CanopyFace face,float opacity,CanopyEmission.Sprite sprite,Sink sink){
         for(int triangle=1;triangle<face.points()-1;triangle++){
             quad(face,opacity,sprite,sink,0,triangle,triangle+1,triangle+1);

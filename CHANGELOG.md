@@ -1,6 +1,11 @@
 # Changelog
 
-## Unreleased
+## Unreleased — 2.10.0
+
+### Item presentation
+
+- Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.
+
 
 ### Native stationary glass rendering (Forge 1.12.2)
 

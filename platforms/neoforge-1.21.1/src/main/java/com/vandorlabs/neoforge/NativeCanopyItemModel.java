@@ -78,18 +78,23 @@ public final class NativeCanopyItemModel extends BakedModelWrapper<BakedModel> {
         Selected(Key key){super(NativeCanopyItemModel.this.originalModel);
             var fresh=CanopySettingsData.fresh();var s=new CanopySettingsData(key.depth,key.scale,key.shade,key.tint,fresh.mount,fresh.motion,fresh.hinge,key.angle,key.material,false,false,false,key.layout==1,true,key.layout,fresh.channels);
             double aspect=s.material<0?1:panel(s.material).usedU()/panel(s.material).usedV();
-            var faces=CanopyItemGeometry.faces(NativeCanopyModels.builtin()::model,kind,s,aspect,choice->"vandorlabs:blocks/"+ModernFinishCatalog.option(choice).id());
+            var faces=CanopyItemGeometry.preview(NativeCanopyModels.builtin()::model,kind,s,aspect,choice->"vandorlabs:blocks/"+ModernFinishCatalog.option(choice).id());
             particle=surface(faces.getFirst(),s.material).sprite();var result=new ArrayList<BakedQuad>();var bounds=new ItemIconBounds(25,225,0,1,1,1,0);
             for(var face:faces){var material=surface(face,s.material);var sprite=material.sprite();
-                CanopyItemEmission.emit(face,CanopyEmission.opacity(face,s.material,s.tint),new CanopyEmission.Sprite(sprite.getU0(),sprite.getU0()+(sprite.getU1()-sprite.getU0())*material.usedU(),sprite.getV0(),sprite.getV0()+(sprite.getV1()-sprite.getV0())*material.usedV()),new CanopyItemEmission.Sink(){
+                CanopyItemEmission.emitPreview(face,CanopyEmission.opacity(face,s.material,s.tint),new CanopyEmission.Sprite(sprite.getU0(),sprite.getU0()+(sprite.getU1()-sprite.getU0())*material.usedU(),sprite.getV0(),sprite.getV0()+(sprite.getV1()-sprite.getV0())*material.usedV()),new CanopyItemEmission.Sink(){
                     int[] words;int direction,normal,count;
                     public void quad(int direction,int normal){this.direction=direction;this.normal=normal;words=new int[32];count=0;}
                     public void vertex(float x,float y,float z,float u,float v,int color){int at=count++*8;words[at]=Float.floatToRawIntBits(x);words[at+1]=Float.floatToRawIntBits(y);words[at+2]=Float.floatToRawIntBits(z);words[at+3]=color;words[at+4]=Float.floatToRawIntBits(u);words[at+5]=Float.floatToRawIntBits(v);words[at+7]=normal;bounds.include(x,y,z);if(count==4)result.add(new BakedQuad(words,-1,Direction.from3DDataValue(direction),sprite,true,false));}
                 });
             }
-            quads=List.copyOf(result);bytes=512+quads.size()*(96+32*4);var gui=transform(bounds.fit());var third=ItemTransform.NO_TRANSFORM;var right=third;var left=third;
-            if(kind.equals("regular_canopy_glass")){third=transform(new float[]{75,45,0,0,2.5F/16,0,.375F,.375F,.375F});right=transform(new float[]{0,45,0,0,0,0,.4F,.4F,.4F});left=transform(new float[]{0,225,0,0,0,0,.4F,.4F,.4F});}
-            transforms=new ItemTransforms(third,third,left,right,ItemTransform.NO_TRANSFORM,gui,ItemTransform.NO_TRANSFORM,ItemTransform.NO_TRANSFORM);
+            quads=List.copyOf(result);bytes=512+quads.size()*(96+32*4);var gui=transform(bounds.fit());
+            var third=transform(new float[]{75,45,0,0,2.5F/16,0,.375F,.375F,.375F});
+            var right=transform(new float[]{0,45,0,0,0,0,.4F,.4F,.4F});
+            var left=transform(new float[]{0,225,0,0,0,0,.4F,.4F,.4F});
+            if(!kind.equals("regular_canopy_glass")){third=transform(new float[]{25,225,0,0,2.5F/16,0,.375F,.375F,.375F});right=transform(new float[]{25,225,0,0,0,0,.4F,.4F,.4F});left=right;}
+            var ground=transform(new float[]{25,225,0,0,3F/16,0,.25F,.25F,.25F});
+            var fixed=transform(new float[]{25,225,0,0,0,0,.5F,.5F,.5F});
+            transforms=new ItemTransforms(third,third,left,right,ItemTransform.NO_TRANSFORM,gui,ground,fixed);
         }
         @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return side==null?quads:List.of();}
         @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){return side==null?quads:List.of();}

@@ -2,6 +2,7 @@
 
 Release highlights, feature explanations and illustrated examples, newest first. For detailed changes, see the [changelog](../../CHANGELOG.md). Older guides describe their release; use the current feature documentation for present-day behavior.
 
+- [Vandor Labs 2.10.0 development: materials, joining and item presentation](version-2.10.md)
 - [Vandor Labs 2.9: gates, Door artwork, Safe Park and rendering improvements](version-2.9.md)
 - [Vandor Labs 2.8: dense builds and segmented doors](version-2.8.md)
 - [Vandor Labs 2.7: artwork, configuration and mechanisms](version-2.7.md)
