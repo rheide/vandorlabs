@@ -7362,5 +7362,11 @@
     "source": "utility_doors/windowed_white",
     "rectangular": true,
     "doorArtwork": true
+  },
+  {
+    "id": "port_hull",
+    "label": "Port Hull",
+    "category": "Hull",
+    "source": "resource_ports/port_hull"
   }
 ]

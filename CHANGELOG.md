@@ -12,6 +12,7 @@
 
 ### Materials and connected artwork
 
+- Add Port Hull to the generic Hull texture category, retaining all earlier saved texture choices.
 - Add thirteen Floor finishes and four Utility Door designs, resized to the existing material and Door artwork resolutions. Preserve prior texture indices and regenerate the browser, category collages and Dynmap data.
 - Mirror filesystem Door artwork on paired leaves, matching selected vanilla-block materials in Forge 1.12.2 and NeoForge 1.21.1.
 - Standardize image layout captions as Texture: Tile / Fit (Aspect) / Stretch. Keep Join for connectivity and Junction for diagonal junction shape.

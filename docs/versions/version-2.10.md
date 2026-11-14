@@ -11,6 +11,7 @@ The new **Floor** category contains thirteen finishes, including coloured tiles,
 staggered tiles, limestone and terrazzo designs. **Doors / Utility** gains
 Bathroom White, Modern Oak Windowed, Windowed Utility and Windowed White.
 Existing saved texture choices keep their identities.
+The **Hull** category also includes the supplied **Port Hull** face.
 
 Filesystem Door artwork now mirrors correctly across double-door leaves,
 matching the behavior of selected vanilla-block textures.
