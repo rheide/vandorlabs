@@ -72,6 +72,10 @@ for the supported paths and diagnostic command.
 
 ## Coupler ownership recovery
 
+On Forge 1.12.2, Couplers can travel on moving Arm payloads. Linked Arms preserve every head contact while passive peers retain their own control settings. Rigid connections retain the full head orientation; articulated connections permit their configured motion. Arm, payload and vehicle animation share one coherent frame during lag, reversal and reload.
+
+Release preserves both sections and cargo. Return general body poses and connected Arms to their assembly reference before separation when requested, open the other head independently if needed, and drive the sections apart. Nearby Arms use actual vehicle surfaces for pushes instead of the empty space inside an enclosing hull. See the [Coupler guide](../couplers.md).
+
 Native arm-endpoint attachment and release retain their original physical before
 images while renewing the receiving vehicle association. Interrupted transfers
 recover through their durable journals, including copied capability data.

@@ -24,6 +24,17 @@ pairs. Taxi keeps its existing support requirements and does not require lift
 blocks in every section. An ordinary block bridge makes the adjoining sections
 one rigid body.
 
+## Couplers on moving arms
+
+1. Build and configure the Arm with its mounting block and supports in place, following the [arm construction guide](modular-landing-gear.md) or [joined platform guide](joined-arm-platforms.md). Choose its payload mode and extension before making the connection.
+2. Place a Coupler on the Arm's native payload, then place an opposing head on the other section. Assemble or attach the sections through their Vehicle Controllers as described above. Each independently released section still needs its own controller, seat and required supports.
+3. Use **Articulation: No** for a rigid connection that retains the complete head orientation. Select **Yes** on either half to permit articulation. Multiple arm connections must be physically compatible; an overconstrained motion refuses safely rather than opening a gap between the heads.
+4. Activate an Arm through its usual channel or control. Linked passive Arms follow only as needed to preserve the connections; their own channels and requested targets remain unchanged. Keep the mounting blocks in place and leave clearance for the complete moving payload.
+
+The arm, attached payload and connected sections animate together, including during reversals and saved fractional motion. Actual collision checks can stop a stroke; remove the obstruction and retry the ordinary control. A stopped stroke retains its attachment and controls.
+
+Before releasing a connection with a general body pose, align the sections and return connected Arms to their original assembly reference pose. The dialog reports this requirement when needed. A supported single articulated hitch can retain its existing bounded fractional release. Release preserves each output's cargo and association; open the other head independently if necessary, then drive the sections apart. Carried Arm payloads remain captured vehicle contents at their endpoints; standalone native Arms retain their normal world-block handoff.
+
 ## Articulated trailers
 
 1. Build each section separately. Put one pair of opposing, enabled coupling heads between the sections; leave room around the hitch for the sections to turn.

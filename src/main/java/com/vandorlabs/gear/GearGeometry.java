@@ -177,13 +177,27 @@ public final class GearGeometry {
     private static MovePlan plan(World world,List<AxisAlignedBB> before,List<AxisAlignedBB> after,Entity vehicle){
         MovePlan result=new MovePlan();if(world.isRemote||after.isEmpty())return result;
         AxisAlignedBB area=before.get(0).union(after.get(0));for(int i=1;i<after.size();i++)area=area.union(before.get(i)).union(after.get(i));
-        List<Entity> candidates=world.getEntitiesWithinAABBExcludingEntity(vehicle,area.grow(.001,.5,.001));
+        AxisAlignedBB candidateArea=area.grow(.001,.5,.001);
+        List<Entity> candidates=world.getEntitiesWithinAABBExcludingEntity(vehicle,candidateArea);
+        Map<Entity,List<AxisAlignedBB>> vehicleSurfaces=new IdentityHashMap<>();
+        if(vehicle!=null)for(Entity entity:candidates)if(entity instanceof com.vandorlabs.vehicle.EntityGroundVehicle&&entity!=vehicle){
+            com.vandorlabs.vehicle.EntityGroundVehicle other=(com.vandorlabs.vehicle.EntityGroundVehicle)entity;
+            List<AxisAlignedBB> surfaces=new ArrayList<>();
+            if(other.collision!=null&&other.structure!=null){
+                if(other.articulation.active()){for(AxisAlignedBB box:other.articulation.collisionBoxes())if(box.intersects(candidateArea))surfaces.add(box);}
+                else {AxisAlignedBB query=candidateArea.offset(-other.posX,-other.posY,-other.posZ);for(com.vandorlabs.vehicle.VehicleCollision.OrientedBox box:other.collision.pose(other.rotationYaw))if(box.broad.intersects(query))surfaces.add(box.broad.offset(other.posX,other.posY,other.posZ));}
+            }
+            vehicleSurfaces.put(entity,surfaces);
+        }
         Map<Entity,Double> highest=new IdentityHashMap<>();
         for(int i=0;i<after.size();i++){
             AxisAlignedBB old=before.get(i),next=after.get(i);if(old.equals(next)||next.getAverageEdgeLength()==0)continue;
             for(Entity entity:candidates){
                 if(entity.isDead||entity.noClip||vehicle!=null&&entity.getLowestRidingEntity()==vehicle)continue;
-                AxisAlignedBB body=entity.getEntityBoundingBox();boolean standing=Math.abs(body.minY-old.maxY)<(entity instanceof net.minecraft.entity.player.EntityPlayer?.5:.15)&&body.maxX>old.minX&&body.minX<old.maxX&&body.maxZ>old.minZ&&body.minZ<old.maxZ;
+                // A sparse craft's overall bounds contain empty space. Only physical
+                // surfaces can ride or be pushed by a carried arm.
+                List<AxisAlignedBB> surfaces=vehicleSurfaces.get(entity);
+                for(AxisAlignedBB body:surfaces==null?Collections.singletonList(entity.getEntityBoundingBox()):surfaces){boolean standing=Math.abs(body.minY-old.maxY)<(entity instanceof net.minecraft.entity.player.EntityPlayer?.5:.15)&&body.maxX>old.minX&&body.minX<old.maxX&&body.maxZ>old.minZ&&body.minZ<old.maxZ;
                 double dx=(next.minX+next.maxX-old.minX-old.maxX)/2,dz=(next.minZ+next.maxZ-old.minZ-old.maxZ)/2;
                 if(standing){if(!com.vandorlabs.motion.PlatformRiders.eligible(entity))continue;Double prior=highest.get(entity);if(prior!=null&&prior>=old.maxY)continue;highest.put(entity,old.maxY);result.riders.add(entity);result.supportSteps.put(entity,next.maxY-old.maxY);result.supportSurfaces.put(entity,i);result.moves.put(entity,new Vec3d(dx,next.maxY-body.minY,dz));continue;}
                 if(result.riders.contains(entity)||!body.intersects(old.union(next)))continue;
@@ -194,6 +208,7 @@ public final class GearGeometry {
                     else dz+=dz>=0?next.maxZ-shifted.minZ+.001:next.minZ-shifted.maxZ-.001;
                 }
                 Vec3d move=new Vec3d(dx,dy,dz),previous=result.moves.get(entity);if(previous==null||move.lengthSquared()>previous.lengthSquared())result.moves.put(entity,move);
+                }
             }
         }
         return result;

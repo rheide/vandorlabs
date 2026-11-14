@@ -21,6 +21,8 @@
 
 ### Coupler ownership recovery (Forge 1.12.2)
 
+- Support Couplers on moving Arm payloads, including linked active/passive Arms, rigid head orientation and articulated connections. Keep arm phases and payload/body rendering coherent during lag, reversal and reload. Preserve authenticated post-release travel and prevent empty space inside a detached vehicle’s bounds from causing a large arm push. See the [Coupler guide](docs/couplers.md).
+
 - Preserve source-scoped Coupler receipts when attaching, detaching or splitting native arm endpoints. Validate the exact physical preimage independently of refreshed association headers, retain opaque capability data, and recover interrupted transfers through the durable journal.
 
 - Restore the original source, cargo, occupied seats, root position and ownership metadata if a same-vehicle structural publication fails. A failed rollback leaves an inert vehicle retaining its complete original snapshot.

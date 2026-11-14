@@ -1,6 +1,6 @@
 # Forge multi-pair arm player focus
 
-The private `VANDOR_LABS_COUPLER_ARM_MULTI_ONLY=1` case runs through the existing `coupler-articulation` focus with `vandorlabs.armCouplerRuntime=true`. It adds no public activation or admission exception.
+The `VANDOR_LABS_COUPLER_ARM_MULTI_ONLY=1` case runs through the existing `coupler-articulation` focus. Source arm Couplers are enabled by default; the fixture adds no admission exception.
 
 The physical scene has two independent regular EAST-mounted Extenders at local `(3,1,1)` and `(3,1,5)`. Their EAST-facing heads at X=4 meet WEST-facing child heads at X=5, backed by the child pad at X=6. The two contact points share X/Y and differ by four blocks in Z. The child centre lies to the positive X side of that line. Both pads retain three wheeled supports, three lift blocks, a dedicated controller, seat and thruster; the ground remains in place. Ordinary item callbacks place the arms, heads and named cargo chests.
 
