@@ -33,6 +33,8 @@ tick. The limit applies to all Output faces together, including pipes that extra
 from those faces. Accepting outputs share the available throughput; rotating
 remainders keep small limits useful across multiple outputs.
 
+On NeoForge, Mekanism 10.7 uses whole Joules. At its default 2.5 J/FE conversion, 2 FE converts exactly to 5 J; an offer of 1 FE cannot make an exact round trip. Very small shared limits can stall or leave budget unused; a shared limit of 4 permits 2 FE on each of two outputs. Leaving the field blank permits larger offers. Unaccepted energy remains in the port.
+
 Incoming resources wait in a bounded buffer. Power Ports hold 1,000,000 RF, Fluid
 Ports hold 64,000 mB of one fluid and Matter Ports hold nine item stacks. Full
 buffers refuse additional input. Unaccepted output remains in the port.

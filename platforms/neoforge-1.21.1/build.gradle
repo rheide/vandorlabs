@@ -430,3 +430,14 @@ tasks.register('testNativeJoinDependencies', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.shape.NativeJoinDependencyChecks'
 }
+
+// Own Battery and Hex Tank are the resource-port storage prerequisites.
+sourceSets.main.resources.srcDir('build/generated/reservoir-resources')
+tasks.register('generateReservoirResources', Exec) {
+    commandLine pythonExecutable, 'generate_reservoir_resources.py'
+    inputs.file('generate_reservoir_resources.py')
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/matter'), fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/imported/power'))
+    inputs.files('../../src/main/resources/assets/vandorlabs/recipes/battery_block.json', '../../src/main/resources/assets/vandorlabs/recipes/hexagonal_fuel_tank.json')
+    outputs.dir('build/generated/reservoir-resources')
+}
+tasks.named('processResources') { dependsOn 'generateReservoirResources' }

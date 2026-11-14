@@ -46,6 +46,11 @@
 - Preserve payload ownership through asynchronous native publication, active-foot adoption and captured-block mining; checkpoint terrain and dropped-item records before releasing ownership. Carry native players and restore a clear last-valid endpoint when a stroke is blocked.
 - Keep Tracks, horizontal Push blocks and Vehicle Mode unavailable. Unsupported vanilla endpoint orientations remain captured and selectable. See the [native arm construction guide](docs/native-joined-arm-platforms.md).
 
+### Battery and Hexagonal Fuel Tank (NeoForge 1.21.1)
+
+- Add the canonical Battery Block and Hexagonal Fuel Tank with Source capacities, six-face placement, dedicated casing/shape/status dialogs and resource-preserving configured items. Keep tank fluid owned by each cell through joining, splitting, mining and reload.
+- Connect native Power and Fluid Ports to these storage blocks, including optional input pulling. Reuse bounded tank membership and coalesce resource-only visual updates.
+
 ### Resource transfer ports (Forge 1.12.2)
 
 - Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge Energy; Matter accepts ordinary items.

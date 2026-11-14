@@ -1,0 +1,12 @@
+package com.vandorlabs.neoforge.reservoir;
+import com.vandorlabs.neoforge.NativeConfigurationAccess;import net.minecraft.core.BlockPos;import net.minecraft.server.level.ServerPlayer;import net.minecraft.world.entity.player.*;import net.minecraft.world.inventory.*;import net.minecraft.world.item.ItemStack;
+/** Dedicated status/configuration session, bound to the exact installed owner. */
+public final class NativeBufferMenu extends AbstractContainerMenu {
+ public final NativeBufferEntity tile;private final ContainerData data;private long statusTick=Long.MIN_VALUE;private int statusAmount,statusCapacity;
+ public NativeBufferMenu(int window,Inventory inventory,BlockPos pos){this(window,require(inventory.player,pos));}
+ public NativeBufferMenu(int window,NativeBufferEntity tile){super(NativeBufferBindings.MENU,window);this.tile=tile;data=new ContainerData(){public int get(int n){if(tile.getLevel()!=null&&statusTick!=tile.getLevel().getGameTime()){statusTick=tile.getLevel().getGameTime();if(tile instanceof NativeHexTankEntity tank){var members=tank.members();statusAmount=members.stream().mapToInt(NativeHexTankEntity::amount).sum();statusCapacity=members.size()*NativeHexTankEntity.CAPACITY;}else{statusAmount=tile.amount();statusCapacity=tile.capacity();}}int value=statusAmount,capacity=statusCapacity;return switch(n){case 0->value&65535;case 1->value>>>16;case 2->capacity&65535;case 3->capacity>>>16;default->0;};}public void set(int n,int value){values[n]=value&65535;}public int getCount(){return 4;}};addDataSlots(data);}
+ private final int[] values=new int[4];public int amount(){return values[0]|values[1]<<16;}public int capacity(){return values[2]|values[3]<<16;}
+ private static NativeBufferEntity require(Player p,BlockPos pos){if(!p.level().hasChunkAt(pos)||!(p.level().getBlockEntity(pos) instanceof NativeBufferEntity owner))throw new IllegalArgumentException("Missing storage owner");return owner;}
+ @Override public boolean stillValid(Player p){return !tile.isRemoved()&&!tile.inert()&&NativeConfigurationAccess.canEditDialog(p,tile);}@Override public ItemStack quickMoveStack(Player p,int index){return ItemStack.EMPTY;}
+ public boolean apply(ServerPlayer p,int window,BlockPos pos,int casing,int layout,boolean block){return p.getServer().isSameThread()&&p.containerMenu==this&&containerId==window&&tile.getBlockPos().equals(pos)&&stillValid(p)&&tile.configure(p,casing,layout,block);}
+}

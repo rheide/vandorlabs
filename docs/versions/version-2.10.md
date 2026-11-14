@@ -75,6 +75,8 @@ pulling and Redstone conditions in their dedicated dialog. Stored resources rema
 in one configured item when mined; Duplifier copying transfers settings only.
 See [Resource Ports](../resource-ports.md) for recipes, connections and buffer limits.
 
+NeoForge 1.21.1 includes the Battery Block and Hexagonal Fuel Tank with the same capacities, shapes and complete joined sections. Their dedicated dialogs show live contents and reuse the casing picker. Mining and placement retain each cell's stored resources, including when a tank section is split. See [matter and storage](../matter-and-storage.md) and the [joined tank construction guide](../multiblocks/hexagonal-tank/README.md).
+
 ## Stationary Glass and Portholes
 
 On Forge 1.12.2, eligible stationary Glass panes use ordinary translucent chunk

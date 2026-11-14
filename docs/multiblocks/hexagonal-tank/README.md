@@ -1,6 +1,6 @@
 # Joined Hexagonal Tanks
 
-Hexagonal Fuel Tanks join complete **2 × 2** and **3 × 3** squares across their cross section. Every placed block retains its own 16,000 mB storage. A one-block-deep 2 × 2 tank holds 64,000 mB; a 3 × 3 tank holds 144,000 mB. Axial stacks connect these sections into a longer tank.
+On Forge 1.12.2 and NeoForge 1.21.1, Hexagonal Fuel Tanks join complete **2 × 2** and **3 × 3** squares across their cross section. Every placed block retains its own 16,000 mB storage. A one-block-deep 2 × 2 tank holds 64,000 mB; a 3 × 3 tank holds 144,000 mB. Axial stacks connect these sections into a longer tank.
 
 ## 1. Place the first tank
 

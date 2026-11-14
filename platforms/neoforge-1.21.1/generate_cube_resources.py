@@ -125,6 +125,8 @@ def main():
     atlas.extend(generate_ports(ROOT,OUT))
     # Source-sized Screen item artwork is supplied by generateScreenItemResources.
     atlas.append(dict(type='minecraft:single',resource='vandorlabs:housing/native_screen_door_side'))
+    # Own-storage sprites are generated separately; the shared atlas owns their registration.
+    atlas.extend(dict(type='minecraft:single',resource='vandorlabs:blocks/'+name) for name in ('matter/casing','matter/energy_in','matter/energy_out','matter/port','matter/tank_empty','imported/power/battery_cell_bank','reservoir/white'))
     write(ASSETS/'data/housing_finishes.json',catalog)
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())+[dict(type='vandorlabs:frame_edges'),dict(type='vandorlabs:door_sprites'),dict(type='vandorlabs:reader_sprites'),dict(type='vandorlabs:segmented_sprites'),dict(type='vandorlabs:propulsion_sprites'),dict(type='vandorlabs:programmer_sprites'),dict(type='vandorlabs:storage_sprites'),dict(type='vandorlabs:canopy_sprites'),dict(type='vandorlabs:gear_sprites')]))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}

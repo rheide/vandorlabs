@@ -1,0 +1,9 @@
+package com.vandorlabs.neoforge.reservoir;
+import net.minecraft.core.BlockPos;import net.minecraft.network.RegistryFriendlyByteBuf;import net.minecraft.network.codec.StreamCodec;import net.minecraft.network.protocol.common.custom.CustomPacketPayload;import net.minecraft.resources.ResourceLocation;import net.minecraft.server.level.ServerPlayer;import net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent;
+/** Bounded choices only; the status editor cannot supply energy, fluid or platform components. */
+public record NativeBufferSettingsPayload(int window,BlockPos pos,int casing,int layout,boolean block) implements CustomPacketPayload {
+ public static final Type<NativeBufferSettingsPayload> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:buffer_settings"));
+ public static final StreamCodec<RegistryFriendlyByteBuf,NativeBufferSettingsPayload> CODEC=new StreamCodec<>(){public NativeBufferSettingsPayload decode(RegistryFriendlyByteBuf b){return new NativeBufferSettingsPayload(b.readVarInt(),b.readBlockPos(),b.readInt(),b.readUnsignedByte(),b.readBoolean());}public void encode(RegistryFriendlyByteBuf b,NativeBufferSettingsPayload p){b.writeVarInt(p.window);b.writeBlockPos(p.pos);b.writeInt(p.casing);b.writeByte(p.layout);b.writeBoolean(p.block);}};
+ public Type<? extends CustomPacketPayload> type(){return TYPE;}
+ public static void register(RegisterPayloadHandlersEvent e){e.registrar("1").playToServer(TYPE,CODEC,(packet,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer p&&p.containerMenu instanceof NativeBufferMenu menu)menu.apply(p,packet.window,packet.pos,packet.casing,packet.layout,packet.block);}));}
+}
