@@ -10,13 +10,14 @@ import net.minecraft.util.math.BlockPos;
 final class VehicleArmCouplerNativeRelease {
  final VehicleArmCouplers.Snapshot prior;
  final Set<VehicleArmCouplers.Address> released;
- final VehicleStructure source;
+ final VehicleStructure source,preimage;
  static VehicleWorld.CouplerScope scope(EntityGroundVehicle craft){UUID generation=craft.couplerAssociationGeneration();return generation==null?null:VehicleWorld.CouplerScope.external(craft.getUniqueID(),generation);}
  static boolean required(EntityGroundVehicle craft){return VehicleArmCouplers.runtime()||craft.couplerAssociationGeneration()!=null;}
  VehicleArmCouplerNativeRelease(EntityGroundVehicle craft,VehicleStructure proposed,BlockPos primary){
   VehicleCouplingPlan.require(craft.couplerScopeReady()&&craft.generalPoseReady()&&craft.currentGeneralPose().bodies.isEmpty(),"Align the sections and return connected arms to their assembly reference pose before releasing this connection");prior=VehicleArmCouplers.observe(craft);VehicleArmCouplerPairs.Pair selected=null;
   for(VehicleArmCouplerPairs.Pair pair:VehicleArmCouplerPairs.discoverForParking(prior).pairs)if(primary.equals(pair.first.nativeCell)||primary.equals(pair.second.nativeCell)){VehicleCouplingPlan.require(selected==null,"Ambiguous native release pair");selected=pair;}
   VehicleCouplingPlan.require(selected!=null&&selected.first.nativeCell!=null&&selected.second.nativeCell!=null&&(!selected.first.requested||!selected.second.requested),"Native release requires the actual requested complete pair");
+  preimage=VehicleCouplings.nativeReleasePreimage(craft,primary);
   released=Collections.unmodifiableSet(new HashSet<>(Arrays.asList(selected.first.address,selected.second.address)));Map<BlockPos,VehicleStructure.Cell> patches=new HashMap<>();Map<BlockPos,ArmPayload> payloads=new HashMap<>();
   for(VehicleArmCouplers.Head head:new VehicleArmCouplers.Head[]{selected.first,selected.second}){
    VehicleStructure.Cell cell=proposed.at(head.nativeCell);VehicleCouplingPlan.require(cell!=null&&cell.state.getBlock() instanceof BlockCoupler&&cell.hasTileData(),"Native release head changed");NBTTagCompound data=cell.tileData();data.setBoolean("VehicleArmCouplerReleased",true);data.setString("CouplerStatus","Released");patches.put(cell.pos,new VehicleStructure.Cell(cell.pos,cell.state,data));

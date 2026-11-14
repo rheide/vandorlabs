@@ -55,7 +55,7 @@ public final class VehicleCouplings {
         BlockPos selected=RELEASE.get(craft);if(selected!=null){if(hasPair(craft,selected)){TileCoupler a=tile(craft,selected),b=tile(craft,selected.offset(craft.structure.at(selected).state.getValue(BlockCoupler.FACING)));if(a!=null&&b!=null&&(!a.requested()||!b.requested()))release=selected;else RELEASE.remove(craft);}else RELEASE.remove(craft);}
         if(release!=null){try{
             TileCoupler source=tile(craft,release);EntityPlayerMP actor=actor(craft,source);VehicleCouplingPlan.require(craft.stopped(),"Stop the vehicle before detaching; section remains attached");status(craft,release,"Checking separated vehicle validity; section remains attached");craft.signals.persist();
-            boolean manual=release.equals(RELEASE.get(craft));List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){IBlockState state=cell.state;net.minecraft.nbt.NBTTagCompound data=cell.tileData();if(state.getBlock() instanceof BlockCoupler&&hasPair(craft,cell.pos)){TileCoupler coupler=tile(craft,cell.pos);VehicleStructure.Cell chosen=craft.structure.at(release);BlockPos other=release.offset(chosen.state.getValue(BlockCoupler.FACING));if(cell.pos.equals(release)||cell.pos.equals(other))state=state.withProperty(BlockCoupler.LOCKED,coupler!=null&&coupler.requested());else if(manual&&coupler!=null&&coupler.manualReleaseRequested()&&state.getValue(BlockCoupler.LOCKED)&&craft.structure.at(cell.pos.offset(state.getValue(BlockCoupler.FACING))).state.getValue(BlockCoupler.LOCKED)){data.setBoolean("CouplerManualRequested",true);data.setBoolean("CouplerRequested",true);data.setString("CouplerStatus","Ready");}}cells.add(new VehicleStructure.Cell(cell.pos,state,data));}
+            List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells){IBlockState state=cell.state;net.minecraft.nbt.NBTTagCompound data=retainedReleaseInput(craft,release,cell);if(state.getBlock() instanceof BlockCoupler&&hasPair(craft,cell.pos)){TileCoupler coupler=tile(craft,cell.pos);VehicleStructure.Cell chosen=craft.structure.at(release);BlockPos other=release.offset(chosen.state.getValue(BlockCoupler.FACING));if(cell.pos.equals(release)||cell.pos.equals(other))state=state.withProperty(BlockCoupler.LOCKED,coupler!=null&&coupler.requested());}cells.add(new VehicleStructure.Cell(cell.pos,state,data));}
             VehicleStructure proposed=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);VehicleWorld view=new VehicleWorld(craft.world,proposed,VehicleArmCouplerNativeRelease.scope(craft));view.hover=craft.hover;BlockPos controller=craft.structure.controller()==null?craft.structure.seat:craft.structure.controller().pos;
             JOBS.put(craft,new Job(craft,actor,release,proposed,VehicleScan.attachment(view,controller,Collections.emptySet()),false));
         }catch(Exception failure){status(craft,release,failure.getMessage());}return;}
@@ -83,6 +83,23 @@ public final class VehicleCouplings {
             status(craft,at,"Scanning the opposing world section");craft.signals.persist();Set<BlockPos> excluded=new HashSet<>();for(VehicleStructure.Cell cell:craft.structure.cells)excluded.add(alignment.worldCell(craft.structure,cell.pos));
             JOBS.put(craft,new Job(craft,actor,at,null,VehicleScan.attachment(world,neighbor,excluded),true));return;
         }catch(Exception failure){status(craft,at,failure.getMessage());}
+    }
+    /** Replay only the existing authorized cleanup; never use arbitrary proposed fields as a preimage. */
+    static VehicleStructure nativeReleasePreimage(EntityGroundVehicle craft,BlockPos release){
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(new VehicleStructure.Cell(cell.pos,cell.state,retainedReleaseInput(craft,release,cell)));
+        return new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
+    }
+    static net.minecraft.nbt.NBTTagCompound retainedReleaseInput(EntityGroundVehicle craft,BlockPos release,VehicleStructure.Cell cell){
+        net.minecraft.nbt.NBTTagCompound data=cell.tileData();
+        if(!release.equals(RELEASE.get(craft))||!(cell.state.getBlock() instanceof BlockCoupler)||!hasPair(craft,cell.pos))return data;
+        VehicleStructure.Cell chosen=craft.structure.at(release);if(chosen==null||!(chosen.state.getBlock() instanceof BlockCoupler))throw new IllegalArgumentException("Selected release preimage unavailable");
+        BlockPos mate=release.offset(chosen.state.getValue(BlockCoupler.FACING));if(cell.pos.equals(release)||cell.pos.equals(mate))return data;
+        TileCoupler coupler=tile(craft,cell.pos);VehicleStructure.Cell partner=craft.structure.at(cell.pos.offset(cell.state.getValue(BlockCoupler.FACING)));
+        if(coupler!=null&&coupler.manualReleaseRequested()&&cell.state.getValue(BlockCoupler.LOCKED)&&partner!=null&&partner.state.getValue(BlockCoupler.LOCKED)){
+            if(data==null)throw new IllegalArgumentException("Kept Coupler input preimage unavailable");
+            data.setBoolean("CouplerManualRequested",true);data.setBoolean("CouplerRequested",true);data.setString("CouplerStatus","Ready");
+        }
+        return data;
     }
     private static void physical(EntityGroundVehicle craft,VehicleStructure proposed){for(VehicleStructure.Cell cell:proposed.cells)if(cell.state.getBlock() instanceof BlockCoupler){TileCoupler coupler=tile(craft,cell.pos);if(coupler!=null)craft.signals.couplerState(coupler,cell.state.getValue(BlockCoupler.LOCKED));}}
     public static void tick(WorldServer world){
