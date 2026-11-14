@@ -23,3 +23,33 @@ task testGearFootProjection(type: JavaExec) {
  main='com.vandorlabs.physics.GearFootProjectionTest'
  maxHeapSize='512m'
 }
+
+task testVehicleArmCouplerRuntime(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.vehicle.VehicleArmCouplerRuntimeChecks'
+ maxHeapSize='1g'
+}
+
+
+task testVehicleArmVisualMotion(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.client.VehicleArmVisualMotionChecks'
+ maxHeapSize='512m'
+}
+
+// Full authored rigid head frames, with actual Source descriptors.
+task testVehicleArmRigidCouplers(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.vehicle.VehicleArmRigidCouplerChecks'
+ maxHeapSize='1g'
+}
+
+task testVehicleArmOrphanCapture(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath=sourceSets.main.runtimeClasspath+files(compileNonRenderingChecks.destinationDir)
+ main='com.vandorlabs.vehicle.VehicleArmOrphanCaptureChecks'
+ maxHeapSize='512m'
+}

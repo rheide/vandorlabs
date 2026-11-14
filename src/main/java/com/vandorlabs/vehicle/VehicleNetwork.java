@@ -106,7 +106,7 @@ public final class VehicleNetwork {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
         p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
-        p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();
+        p.armMotion=e.articulation.armMotion();p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();
         if(VehicleNetworkLab.state(p,e))return;
         com.vandorlabs.network.TrackingPackets.send(p,e);
     }

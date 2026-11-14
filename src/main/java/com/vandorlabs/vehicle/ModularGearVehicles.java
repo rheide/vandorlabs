@@ -13,7 +13,7 @@ public final class ModularGearVehicles {
     private static final class Correction {final double progress;final int revision;final UUID generation;final long tick;final Object configuration;Correction(double p,int r,UUID generation,long tick,Object configuration){progress=p;revision=r;this.generation=generation;this.tick=tick;this.configuration=configuration;}boolean current(EntityGroundVehicle craft,BlockPos root){VehicleStructure.Cell cell=craft.structure==null?null:craft.structure.at(root);return cell!=null&&cell.gearConfigurationIdentity()==configuration&&craft.acceptsCouplerMotion(generation,tick);}}
     private static final Map<EntityGroundVehicle,Map<BlockPos,Correction>> corrections=new WeakHashMap<>();
     public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired){correct(craft,desired,null,Long.MIN_VALUE);}
-    public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired,UUID generation,long serverTick){if(craft==null||craft.view==null||craft.structure==null||!craft.acceptsCouplerMotion(generation,serverTick))return;Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){VehicleStructure.Cell cell=craft.structure.at(entry.getKey());TileEntity raw=craft.view.tiles.get(entry.getKey());Double phase=entry.getValue();if(cell!=null&&cell.gearConfigurationIdentity()!=null&&raw instanceof GearTileEntity&&phase!=null&&Double.isFinite(phase)&&phase>=0&&phase<=1)pending.put(entry.getKey().toImmutable(),new Correction(phase,((GearTileEntity)raw).motionRevision(),generation,serverTick,cell.gearConfigurationIdentity()));}}
+    public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired,UUID generation,long serverTick){if(craft==null||craft.view==null||craft.structure==null||!craft.acceptsCouplerMotion(generation,serverTick)||craft.world.isRemote&&craft.articulation.coupledStateFrames())return;Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){VehicleStructure.Cell cell=craft.structure.at(entry.getKey());TileEntity raw=craft.view.tiles.get(entry.getKey());Double phase=entry.getValue();if(cell!=null&&cell.gearConfigurationIdentity()!=null&&raw instanceof GearTileEntity&&phase!=null&&Double.isFinite(phase)&&phase>=0&&phase<=1)pending.put(entry.getKey().toImmutable(),new Correction(phase,((GearTileEntity)raw).motionRevision(),generation,serverTick,cell.gearConfigurationIdentity()));}}
 
     public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).landingDeployed())return false;return true;}
     /** Move ordinary craft cells into the arm's retained snapshot once, before its first animated step. */
@@ -22,6 +22,7 @@ public final class ModularGearVehicles {
             GearTileEntity arm=(GearTileEntity)raw;if(!arm.isOperational()||arm.isLandingAssembly()||arm.isFixedMount())continue;
             if(!arm.validateParkingHoldInstalled())continue;arm.input();if(arm.parkingHeld())continue;if(arm.latchRetractionStroke())craft.signals.persist();if(GearMotion.advance(arm.progress(),arm.target(),1,GearTileEntity.ANIMATION_TICKS)==arm.progress())continue;
             com.vandorlabs.gear.ArmPayload payload=arm.payload();
+            if(payload!=null&&!payload.materialized())continue;
             try{
                 craft.signals.persist();VehicleStructure source=craft.structure;
                 if(payload==null)payload=com.vandorlabs.gear.ArmPayload.discover(arm,null);
@@ -33,14 +34,16 @@ public final class ModularGearVehicles {
                     VehicleStructureEdits.install(craft,next,"Arm sections");return true;
                 }
                 if(payload==null||!payload.materialized())continue;
+                if(VehicleArmCouplers.runtime()&&!payload.blocks.couplers.isEmpty()&&capturePeers(craft,arm.getPos()))return true;
                 ArmPayload captured=payload.capturedCopy();UUID firstScope=null;
                 if(VehicleArmCouplers.runtime()&&!payload.blocks.couplers.isEmpty()){
                     VehicleArmCouplers.Snapshot observed=VehicleArmCouplers.observe(craft);VehicleArmCouplerPairs.Snapshot pairs=VehicleArmCouplerPairs.discoverForParking(observed);
                     if(pairs.pairs.isEmpty()){
-                        if(craft.couplerAssociationGeneration()!=null)throw new IllegalArgumentException("Scoped recapture requires a complete ownership publication receipt");
-                        craft.structure.requireCouplerScope(null);firstScope=UUID.randomUUID();Map<BlockPos,NBTTagCompound> proofs=new LinkedHashMap<>();
-                        for(VehicleStructure.Cell head:captured.blocks.couplers)proofs.put(head.pos,com.vandorlabs.coupler.CouplerAssociationData.chosenPatch(head.tileData(),craft.getUniqueID(),firstScope,com.vandorlabs.coupler.CouplerAssociation.Boundary.NEW_HEAD_INSTALLATION,true,false));
-                        captured=captured.withCouplerAssociations(proofs);
+                        if(craft.couplerAssociationGeneration()!=null)VehicleArmOrphanCapture.require(craft,arm,captured,observed);
+                        else {craft.structure.requireCouplerScope(null);firstScope=UUID.randomUUID();Map<BlockPos,NBTTagCompound> proofs=new LinkedHashMap<>();
+                            for(VehicleStructure.Cell head:captured.blocks.couplers)proofs.put(head.pos,com.vandorlabs.coupler.CouplerAssociationData.chosenPatch(head.tileData(),craft.getUniqueID(),firstScope,com.vandorlabs.coupler.CouplerAssociation.Boundary.NEW_HEAD_INSTALLATION,true,false));
+                            captured=captured.withCouplerAssociations(proofs);
+                        }
                     }
                 }
                 Set<BlockPos> removed=payload.placedCells(arm);List<VehicleStructure.Cell> next=new ArrayList<>();
@@ -55,6 +58,27 @@ public final class ModularGearVehicles {
         }
         return false;
     }
+    /** Native peers leave Source together; a restart still owns the complete prior or complete captured snapshot. */
+    private static boolean capturePeers(EntityGroundVehicle craft,BlockPos selected){
+        VehicleArmCouplerPairs.Snapshot pairs=VehicleArmCouplerPairs.discoverForParking(VehicleArmCouplers.observe(craft));
+        if(pairs.pairs.isEmpty())return false;
+        VehicleArmCouplerPeers.Prepared prepared=VehicleArmCouplerPeers.prepare(craft,pairs);
+        if(prepared.peers().isEmpty()||prepared.peers().size()==1&&!VehicleArmCouplers.hasPayloadHeads(craft.view))return false;
+        boolean selectedPeer=false;for(VehicleArmCouplerPeers.Peer peer:prepared.peers())selectedPeer|=peer.root().equals(selected);if(!selectedPeer)return false;
+        Map<BlockPos,ArmPayload> captures=new LinkedHashMap<>();Set<BlockPos> removed=new HashSet<>();
+        for(VehicleArmCouplerPeers.Peer peer:prepared.peers()){
+            GearTileEntity owner=(GearTileEntity)craft.view.tiles.get(peer.root());ArmPayload payload=peer.payload();
+            for(BlockPos cell:payload.placedCells(owner))if(!removed.add(cell))throw new IllegalArgumentException("Peer capture ownership overlaps");
+            captures.put(peer.root(),payload.capturedCopy());
+        }
+        List<VehicleStructure.Cell> cells=new ArrayList<>();
+        for(VehicleStructure.Cell cell:craft.structure.cells){
+            if(removed.contains(cell.pos))continue;ArmPayload payload=captures.get(cell.pos);
+            if(payload==null)cells.add(cell);else {GearTileEntity owner=(GearTileEntity)craft.view.tiles.get(cell.pos);NBTTagCompound data=owner.currentData(cell.tileData());data.setTag("ArmPayload",payload.write());if(owner.progress()==1&&owner.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.NONE)data.setBoolean("ArmRetractingStroke",true);data.removeTag("ArmStoredSections");cells.add(new VehicleStructure.Cell(cell.pos,cell.state,data));}
+        }
+        if(!prepared.recheck())throw new IllegalArgumentException("Peer capture Source changed before batch publication");
+        VehicleStructureEdits.install(craft,cells,"Coupled arm attachments");return true;
+    }
     public static void tick(EntityGroundVehicle craft){
         if(craft.view==null||craft.transferInProgress||craft.ownershipBlocked||!craft.couplerScopeReady()||VehicleCouplings.preparingArmRelease(craft))return;
         if(!craft.world.isRemote&&TaxiModularGear.tick(craft))return;
@@ -62,7 +86,8 @@ public final class ModularGearVehicles {
         Map<BlockPos,Double> desired=new LinkedHashMap<>();Set<BlockPos> notify=new LinkedHashSet<>();VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
         Map<BlockPos,Correction> corrected=craft.world.isRemote?corrections.get(craft):null;
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational()||gear.taxiPhase()==1)continue;double before=gear.progress();
-            if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
+            if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=gear.couplerPassive()?before:GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
+            if(craft.world.isRemote&&craft.articulation.constrainsArm(gear.getPos()))next=before;
             if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision()&&correction.current(craft,gear.getPos()))next=correction.progress;else if(gear.motionBlocked())next=before;}
             if(gear.isLandingAssembly()&&!craft.hover&&next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
             if(craft.world.isRemote&&gear.taxiPhase()>=0&&!gear.target()){double maximum=gear.pose(0).footOffsetY(),rise=gear.taxiAmount();if(maximum>0){double smooth=Math.max(0,Math.min(1,1-rise/maximum));double endpoint=.5-Math.sin(Math.asin(1-2*smooth)/3);next=Math.max(endpoint,next);}}
@@ -78,7 +103,7 @@ public final class ModularGearVehicles {
             desired.put(gear.getPos(),next);
         }
         if(!notify.isEmpty())com.vandorlabs.network.MessageGearMotion.send(craft,notify);
-        if(desired.isEmpty())return;Map<BlockPos,Double> geometry=new LinkedHashMap<>(desired);
+        if(desired.isEmpty())return;if(!craft.articulation.fitArmPoses(desired))return;Map<BlockPos,Double> geometry=new LinkedHashMap<>(desired);
         if(!craft.collisionCache.readyForCanopyPose(craft.view,geometry))return;
         if(!craft.world.isRemote)for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){GearTileEntity gear=(GearTileEntity)craft.view.getTileEntity(entry.getKey());List<AxisAlignedBB> before=new ArrayList<>(),after=new ArrayList<>();for(AxisAlignedBB box:GearGeometry.boxes(gear,gear.progress()))before.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));for(AxisAlignedBB box:GearGeometry.boxes(gear,entry.getValue()))after.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));GearGeometry.pushEntities(craft.world,before,after,craft);}
         for(Map.Entry<BlockPos,Double> entry:desired.entrySet())((GearTileEntity)craft.view.getTileEntity(entry.getKey())).captureProgress(entry.getValue());

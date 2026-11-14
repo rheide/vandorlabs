@@ -1,5 +1,7 @@
 package com.vandorlabs.vehicle;
 
+import java.util.Map;
+import com.vandorlabs.physics.RigidTransform;
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.coupler.*;
 import com.vandorlabs.gear.*;
@@ -36,6 +38,20 @@ public final class VehicleArmCouplerFixture {
         for(BlockPos local:new BlockPos[]{FIRST,SECOND}){TileCoupler head=(TileCoupler)world.getTileEntity(BASE.add(local));need(head!=null,"placed head tile");head.configure(ChannelList.EMPTY,true,true);need(world.getBlockState(BASE.add(local)).getValue(BlockCoupler.LOCKED),"real inverted input closes each independent head");}
         ItemStack transmitter=new ItemStack(ModItems.REDSTONE_TRANSMITTER,1,3);ItemRedstoneTransmitter.configure(transmitter,ChannelList.of(CHANNEL));held(actor,transmitter);need(tile.target()&&tile.progress()==1,"unpowered arm starts at construction endpoint");
     }
+    /** Actual calibrated head frames through the same body/render phase path as payload artwork. */
+    public static double rigidOrientationError(EntityGroundVehicle craft,java.util.Map<BlockPos,Double> phases,float partial){
+        VehicleCouplerTopology topology=VehicleCouplerTopology.forParking(craft.structure,craft.view,VehicleArmCouplerPairs.discoverForParking(VehicleArmCouplers.observe(craft.structure,craft.view)));double error=0;
+        for(VehicleCouplerTopology.Link link:topology.links)if(!link.articulation){double[][] frames=new double[2][];VehicleArmCouplers.Head[] heads={link.headA,link.headB};for(int side=0;side<2;side++){VehicleArmCouplers.Head head=heads[side];double[] local=RigidTransform.IDENTITY.r;if(head.address.arm!=null){GearTileEntity arm=(GearTileEntity)craft.view.tiles.get(head.address.arm);double phase=phases==null?arm.progress():phases.get(head.address.arm);double[] raw=VehicleArmCouplers.payloadFrame(arm.payload(),arm,phase).r;int[] nativeBasis=arm.payload().placedTileBasis();local=new double[9];for(int row=0;row<3;row++)for(int col=0;col<3;col++)for(int k=0;k<3;k++)local[row*3+col]+=raw[row*3+k]*nativeBasis[col*3+k];}double[] body=craft.articulation.renderBody(craft.articulation.bodyAt(head.carrier),partial).r;frames[side]=new double[9];for(int row=0;row<3;row++)for(int col=0;col<3;col++)for(int k=0;k<3;k++)frames[side][row*3+col]+=body[row*3+k]*local[k*3+col];}for(int component=0;component<9;component++)error=Math.max(error,Math.abs(frames[0][component]-frames[1][component]));}return error;
+    }
     public static String status(EntityGroundVehicle craft,BlockPos arm){if(craft==null||craft.structure==null)return "no craft";net.minecraft.tileentity.TileEntity raw=craft.view.getTileEntity(arm);if(!(raw instanceof GearTileEntity))return "no arm at "+arm;GearTileEntity tile=(GearTileEntity)raw;return "target="+tile.target()+" progress="+tile.progress()+" blocked="+tile.motionBlocked()+" payload="+(tile.payload()==null?"none":tile.payload().materialized()?"native":"captured")+" joints="+craft.articulation.jointCount()+" error="+tile.error()+" cacheWaits="+craft.collisionCache.waits()+" entries="+craft.collisionCache.entries()+" generation="+craft.collisionCache.generation()+" bypass="+craft.collisionCache.bypass()+" failure="+craft.collisionCache.failure()+" obstruction="+craft.articulation.lastObstruction+" budgetStops="+craft.articulation.budgetStops;}
+    public static boolean neutralEnvelope(EntityGroundVehicle craft){
+        if(System.getProperty("vandorlabs.reprolab")==null||!(craft.world instanceof WorldServer)||!((WorldServer)craft.world).getMinecraftServer().isCallingFromMinecraftThread())throw new IllegalStateException("Disposable owning-thread fixture only");return craft.generalPoseReady()&&craft.currentGeneralPose().bodies.isEmpty();
+    }
+    /** Disposable client renderer probe; this is not a gameplay observation or motion admission API. */
+    public static double[] renderedContactDistances(EntityGroundVehicle craft,Map<BlockPos,Double> phases,float partial){
+        if(!craft.world.isRemote||System.getProperty("vandorlabs.reprolab")==null)throw new IllegalStateException("Disposable rendered fixture only");
+        VehicleArmCouplerPairs.Snapshot pairs=VehicleArmCouplerPairs.discoverForParking(VehicleArmCouplers.observe(craft.structure,craft.view));double[] distances=new double[pairs.pairs.size()];int index=0;
+        for(VehicleArmCouplerPairs.Pair pair:pairs.pairs){double[] a=new double[3],b=new double[3];VehicleArmCouplers.point(pair.first,craft.view,phases,a);VehicleArmCouplers.point(pair.second,craft.view,phases,b);double[] first=craft.articulation.renderBody(craft.articulation.bodyAt(pair.first.carrier),partial).point(a[0],a[1],a[2]),second=craft.articulation.renderBody(craft.articulation.bodyAt(pair.second.carrier),partial).point(b[0],b[1],b[2]);for(int axis=0;axis<3;axis++)distances[index]+=(first[axis]-second[axis])*(first[axis]-second[axis]);index++;}return distances;
+    }
     private VehicleArmCouplerFixture(){}
 }

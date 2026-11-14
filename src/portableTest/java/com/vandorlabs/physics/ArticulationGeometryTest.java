@@ -14,6 +14,7 @@ public final class ArticulationGeometryTest {
     public static void main(String[] args){parity();
         HingeGraph train=new HingeGraph(4,0,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true),new HingeGraph.Edge(2,3,true)));require(train.bodies==4&&train.joints.size()==3,"three independent trailer joints");
         HingeGraph parallel=new HingeGraph(3,0,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true)));require(parallel.bodies==2&&parallel.joints.size()==1&&parallel.body[0]==parallel.body[1],"parallel pairs lock only their own connection");
+        HingeGraph closed=new HingeGraph(3,1,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true)),true);require(closed.bodies==3&&closed.joints.size()==2&&closed.body[1]==0,"explicit closed solver retains parallel bodies with root zero");
         HingeGraph cycle=new HingeGraph(4,0,Arrays.asList(new HingeGraph.Edge(0,1,true),new HingeGraph.Edge(1,2,true),new HingeGraph.Edge(2,0,true),new HingeGraph.Edge(2,3,true)));require(cycle.bodies==2&&cycle.joints.size()==1,"closed loop rigid, free tail still articulated");
         List<HingeGraph.Edge> longTrain=new ArrayList<>();for(int i=1;i<16000;i++)longTrain.add(new HingeGraph.Edge(i-1,i,true));HingeGraph bounded=new HingeGraph(16000,15999,longTrain);require(bounded.joints.size()==15999,"long train has no recursive stack limit");
         Random random=new Random(2864);

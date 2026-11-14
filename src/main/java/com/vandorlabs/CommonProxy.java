@@ -47,6 +47,9 @@ public class CommonProxy {
         }
         return (sky<<20)|(Math.max(block,minimum)<<4);
     }
+    public void vehicleArmVisualSupport(com.vandorlabs.vehicle.EntityGroundVehicle craft,java.util.List<BlockPos> roots){}
+    public double vehicleBodyVisualClock(){return 0;}
+    public com.vandorlabs.physics.RigidTransform[] vehicleBodyVisuals(com.vandorlabs.vehicle.EntityGroundVehicle craft,long layout,java.util.List<BlockPos> roots,java.util.List<BlockPos> carriers,com.vandorlabs.physics.RigidTransform[] bodies,float partial){return null;}
     public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){}
     public double cockpitMotion(com.vandorlabs.tiles.TileEntityCockpit tile,boolean screens,float partial){return (screens?tile.screenLift:tile.seatSlide).sample(tile.getWorld().getTotalWorldTime()+partial);}
     public void gearMotion(com.vandorlabs.network.MessageGearMotion packet) { }

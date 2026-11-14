@@ -26,4 +26,13 @@ public final class RigidTransform {
         double lo=0,hi=1;for(int i=0;i<24;i++){double mid=(lo+hi)/2;if(combinedAngle(yaw*mid,pitch*mid)<=maximum)lo=mid;else hi=mid;}
         return new double[]{yaw*lo,pitch*lo};
     }
+
+    /** Shortest proper rotation interpolation, with independent translation. */
+    public static RigidTransform interpolate(RigidTransform a,RigidTransform b,double t){
+        if(t<=0)return new RigidTransform(a.r,a.x,a.y,a.z);if(t>=1)return new RigidTransform(b.r,b.x,b.y,b.z);
+        double[] relative=new double[9];for(int row=0;row<3;row++)for(int col=0;col<3;col++)for(int k=0;k<3;k++)relative[row*3+col]+=a.r[k*3+row]*b.r[k*3+col];double cosine=Math.max(-1,Math.min(1,(relative[0]+relative[4]+relative[8]-1)/2)),angle=Math.acos(cosine);RigidTransform rotation;
+        if(angle<1e-10)rotation=new RigidTransform(a.r,0,0,0);
+        else {double x=relative[7]-relative[5],y=relative[2]-relative[6],z=relative[3]-relative[1],length=Math.sqrt(x*x+y*y+z*z);if(length<1e-10){if(relative[0]>=relative[4]&&relative[0]>=relative[8]){x=Math.sqrt(Math.max(0,(relative[0]+1)/2));y=(relative[1]+relative[3])/(4*x);z=(relative[2]+relative[6])/(4*x);}else if(relative[4]>=relative[8]){y=Math.sqrt(Math.max(0,(relative[4]+1)/2));x=(relative[1]+relative[3])/(4*y);z=(relative[5]+relative[7])/(4*y);}else{z=Math.sqrt(Math.max(0,(relative[8]+1)/2));x=(relative[2]+relative[6])/(4*z);y=(relative[5]+relative[7])/(4*z);}}rotation=new RigidTransform(a.r,0,0,0).then(RigidTransform.rotation(x,y,z,Math.toDegrees(angle)*t));}
+        return new RigidTransform(rotation.r,a.x+(b.x-a.x)*t,a.y+(b.y-a.y)*t,a.z+(b.z-a.z)*t);
+    }
 }

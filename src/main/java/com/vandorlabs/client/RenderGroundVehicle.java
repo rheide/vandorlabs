@@ -250,7 +250,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         return camera.squareDistanceTo(e.articulation.point(new net.minecraft.util.math.Vec3d(p).addVector(.5,.5,.5),p,partial));
     }
     private static void tileCamera(EntityGroundVehicle e,int body,float partial,net.minecraft.util.math.Vec3d camera,Map<Integer,net.minecraft.util.math.Vec3d> cache,TileEntityRendererDispatcher dispatcher){
-        net.minecraft.util.math.Vec3d local=body==0?camera:cache.get(body);if(local==null){double[] p=e.articulation.body(body,partial).inverse(camera.x,camera.y,camera.z);local=new net.minecraft.util.math.Vec3d(p[0],p[1],p[2]);cache.put(body,local);}
+        net.minecraft.util.math.Vec3d local=body==0?camera:cache.get(body);if(local==null){double[] p=e.articulation.renderBody(body,partial).inverse(camera.x,camera.y,camera.z);local=new net.minecraft.util.math.Vec3d(p[0],p[1],p[2]);cache.put(body,local);}
         dispatcher.entityX=TileEntityRendererDispatcher.staticPlayerX=local.x;dispatcher.entityY=TileEntityRendererDispatcher.staticPlayerY=local.y;dispatcher.entityZ=TileEntityRendererDispatcher.staticPlayerZ=local.z;
     }
     private void sortTranslucent(Mesh mesh,double x,double y,double z) {
@@ -281,7 +281,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         x=pose.x-cameraXWorld;y=pose.y-cameraYWorld;z=pose.z-cameraZWorld;
         float angle=pose.yaw;
         net.minecraft.util.math.Vec3d localCamera=pose.local(new net.minecraft.util.math.Vec3d(cameraXWorld,cameraYWorld,cameraZWorld),e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2);
-        for(Mesh mesh:pair){if(mesh.body==0)sortTranslucent(mesh,localCamera.x,localCamera.y,localCamera.z);else{double[] camera=e.articulation.body(mesh.body,partial).inverse(localCamera.x,localCamera.y,localCamera.z);sortTranslucent(mesh,camera[0],camera[1],camera[2]);}}
+        for(Mesh mesh:pair){if(mesh.body==0)sortTranslucent(mesh,localCamera.x,localCamera.y,localCamera.z);else{double[] camera=e.articulation.renderBody(mesh.body,partial).inverse(localCamera.x,localCamera.y,localCamera.z);sortTranslucent(mesh,camera[0],camera[1],camera[2]);}}
         // Capture the camera planes before applying the craft's model transform.
         net.minecraft.client.renderer.culling.Frustum tileFrustum=new net.minecraft.client.renderer.culling.Frustum();
         tileFrustum.setPosition(cameraXWorld,cameraYWorld,cameraZWorld);

@@ -44,7 +44,7 @@ public final class VehicleSteering {
             Block block=cell.state.getBlock();BlockPos at=cell.pos;IBlockState state=cell.state;double factor=0,x=at.getX()+.5,z=at.getZ()+.5,bottom;
             if(block instanceof GearBlock){
                 GearBlock gear=(GearBlock)block;
-                if(!gear.componentRoot(at,state).equals(at))continue;
+                if(!gear.componentRoot(world,at,state).equals(at))continue;
                 TileEntity raw=world.getTileEntity(at);GearTileEntity controller=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
                 if(controller!=null&&(!controller.isLandingAssembly()||controller.mountDirection()!=EnumFacing.DOWN||!controller.landingDeployed()))continue;
                 if(controller==null&&!(block instanceof TrackBlock))continue;

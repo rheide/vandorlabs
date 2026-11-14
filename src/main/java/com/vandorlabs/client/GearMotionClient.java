@@ -73,6 +73,8 @@ public final class GearMotionClient {
         });
     }
     private static void applyPacket(MessageGearMotion packet,EntityGroundVehicle craft,World view){
+            // Proper coupled bodies arrive with ALL scalar phases in one admitted STATE envelope.
+            if(craft!=null&&craft.articulation.coupledStateFrames())return;
             Map<net.minecraft.util.math.BlockPos,Double> desired=new LinkedHashMap<>();
             for(MessageGearMotion.Pose pose:packet.poses){if(!view.isBlockLoaded(pose.pos))continue;TileEntity raw=view.getTileEntity(pose.pos);
                 if(raw instanceof GearTileEntity){GearTileEntity gear=(GearTileEntity)raw;

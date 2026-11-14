@@ -6,7 +6,21 @@ The physical scene has two independent regular EAST-mounted Extenders at local `
 
 Only the first arm receives a real handheld transmitter command. Its peer keeps a separate untouched channel and target intent. Preserving both rigid child contact points requires the peer's X stroke to follow, independently of the free rotation around the Z contact line. Later stages use ordinary seated SPACE/flight packets to lift the root, observe the resulting child world basis, and reverse the real arm command only while that basis is changing. The fixture never assigns a phase, rotation matrix, payload or transfer state.
 
-## Current measured boundary
+## Accepted articulated player path
+
+The two-pair scene passes the complete real placement and input sequence. Active and passive native heads are captured together; the peer follows only as needed and retains its original target/channel intent. A real stone obstruction holds both native endpoints on server and client. Removing it permits retry. Root lift creates the free Z-line rotation, and a second real transmitter command reverses the arm while that orientation is changing.
+
+The fixture checks every observed server contact and the actual interpolated client contacts, reloads the complete fractional rotated entity snapshot, and verifies eleven diamonds and seven emeralds with exactly one world owner. Both arms finish at their exact endpoint. Only a fully proved neutral body/arm pose retires the optional proper-body envelope. Peer metadata preparation occurs once at capture.
+
+A separate actual render regression queries the same body 1,024 times across main and shadow framebuffers. Identical clock/partial requests reuse the same immutable result and perform zero extra graph fits; a changed partial permits one new fit. Typed STATE scalar/body installation and delayed, repeated, out-of-order and paused visual-clock checks accompany this live path. Software framebuffer timing is not hardware FPS or shader-pack acceptance.
+
+`VANDOR_LABS_COUPLER_ARM_JOIN_MODE=rigid` selects two default rigid pairs; `mixed` selects one rigid and one articulated pair. These variants compare complete calibrated head frames and require the rigid Extender platform to retain its orientation under root lift. The rigid Extender variant passes the complete actual-player path with zero platform roll, 58 strict rendered contacts, fractional saved reload, obstruction retry and exact cargo. Mixed and rotating combinations retain separate validation boundaries. Rotating payloads require full authored head orientation, and an overconstrained pair must refuse safely.
+
+The rigid variant originally exposed different independent cosmetic histories for the active and passive arms. The visual cache now solves the passive scalar within supported bounds and returns it together with the body transforms. Gear and attachment renderers consume that exact cached scalar. A regression deliberately gives the two raw visual histories incompatible phases and requires the corrected scalar/body pair to close the actual head callbacks without changing authority. Repeated main/shadow body queries still reuse the prepared frame.
+
+## Historical failing boundaries
+
+The following records explain the previous ownership and topology failures. They are retained as regression context and do not describe the current accepted articulated result.
 
 The first actual baseline passed native placement, read-only scanning and durable assembly, including retirement of the original world cargo cells. Server observations contained four heads in two distinct coincident EAST/WEST pairs. The real first-arm command then advanced it to phase 0.75 with a captured payload; the untouched arm remained at phase one without a payload.
 

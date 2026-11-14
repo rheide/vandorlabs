@@ -13,6 +13,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 /** Detached passive capture recipes. This helper never installs a payload or grants publication authority. */
 public final class VehicleArmCouplerPeers {
+    public static long preparations;
     public static final int MAX_ROOTS=64,MAX_ROWS=2*VehicleStructure.MAX_BLOCKS;
     public static final long MAX_RETAINED_BYTES=64L*1024*1024;
     public static final class Peer {
@@ -210,11 +211,11 @@ public final class VehicleArmCouplerPeers {
         thread(craft);
         Objects.requireNonNull(supplied);
         if(!installed(craft))throw new IllegalArgumentException("Installed ready peer owner required");
+        preparations++;
         if(supplied.pairs.size()>VehicleArmCouplers.MAX_HEADS/2)throw new IllegalArgumentException("Peer pair budget");
         Map<VehicleArmCouplers.Address,VehicleArmCouplers.Head> heads=index(VehicleArmCouplers.observe(craft));
         Map<BlockPos,VehicleArmCouplers.Head> wanted=new HashMap<>();
         Set<VehicleArmCouplers.Address> used=new HashSet<>();
-        Set<BlockPos> rigid=new HashSet<>();
         for(VehicleArmCouplerPairs.Pair p:supplied.pairs){
             VehicleArmCouplers.Head a=heads.get(p.first.address),b=heads.get(p.second.address);
             if(!same(p.first,a,false)||!same(p.second,b,false)||!used.add(a.address)||!used.add(b.address)||!a.locked||!b.locked||a.released||b.released||!a.requested||!b.requested)throw new IllegalArgumentException("Closed peer pair changed or release is pending");
@@ -222,7 +223,6 @@ public final class VehicleArmCouplerPeers {
                 if(craft.couplerAssociationGeneration()!=null&&(h.association==null||h.association.state!=CouplerAssociation.EXPECTED_PAIR||!h.association.scope(h.association.head,craft.getUniqueID(),craft.couplerAssociationGeneration())))throw new IllegalArgumentException("Peer pair lacks actual owner scope");
                 if(h.nativeCell!=null){
                     if(wanted.put(h.nativeCell,h)!=null)throw new IllegalArgumentException("Ambiguous native peer head");
-                    if(!a.articulated&&!b.articulated)rigid.add(h.nativeCell);
                 }
             }
         }
@@ -266,7 +266,7 @@ public final class VehicleArmCouplerPeers {
             for(BlockPos at:positions)if(wanted.containsKey(at)){
                 VehicleArmCouplers.Head head=wanted.get(at);
                 if(head.address.arm!=null&&!head.address.arm.equals(g.getPos()))throw new IllegalArgumentException("Peer head already belongs to another arm");
-                if(rigid.contains(at))throw new IllegalArgumentException("Captured nonarticulated peer unsupported");
+
                 matching.add(at);
             }
             if(matching.isEmpty())continue;

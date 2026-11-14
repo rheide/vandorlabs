@@ -49,6 +49,9 @@ public class ClientProxy extends CommonProxy {
     @Override public int portholeRenderPass(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,int pass){return com.vandorlabs.client.PortholeRetained.renderPass(tile,pass);}
     @Override public net.minecraft.util.math.AxisAlignedBB portholeRenderBounds(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,net.minecraft.util.math.AxisAlignedBB bounds){net.minecraft.util.math.AxisAlignedBB group=com.vandorlabs.client.PortholeRetained.bounds(tile);return group==null?bounds:bounds.union(group);}
     @Override public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return world.isRemote?world.getCombinedLight(pos,minimum):super.vehicleCombinedLight(world,pos,minimum);}
+    @Override public void vehicleArmVisualSupport(com.vandorlabs.vehicle.EntityGroundVehicle craft,java.util.List<net.minecraft.util.math.BlockPos> roots){com.vandorlabs.gear.client.GearRenderer.prepareVisualSupport(craft,roots);}
+    @Override public double vehicleBodyVisualClock(){return com.vandorlabs.client.VehicleArmVisualMotion.time();}
+    @Override public com.vandorlabs.physics.RigidTransform[] vehicleBodyVisuals(com.vandorlabs.vehicle.EntityGroundVehicle craft,long layout,java.util.List<BlockPos> roots,java.util.List<BlockPos> carriers,com.vandorlabs.physics.RigidTransform[] bodies,float partial){return com.vandorlabs.client.VehicleArmVisualMotion.sample(craft,layout,roots,carriers,bodies,partial);}
     @Override public void vehicleBuildingVisuals(com.vandorlabs.vehicle.VehicleWorld world){com.vandorlabs.client.ForeignBuildingVisuals.prepare(world);}
     @Override public double cockpitMotion(com.vandorlabs.tiles.TileEntityCockpit tile,boolean screens,float partial){return com.vandorlabs.client.CockpitVisualMotion.sample(tile,screens,partial);}
     @Override public void gearMotion(com.vandorlabs.network.MessageGearMotion packet){com.vandorlabs.client.GearMotionClient.receive(packet);}

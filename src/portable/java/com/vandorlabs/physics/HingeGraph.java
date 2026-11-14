@@ -12,7 +12,9 @@ public final class HingeGraph {
         Joint(int edge,int parent,int child){this.edge=edge;this.parent=parent;this.child=child;}
     }
     public final int[] body;public final int bodies;public final List<Joint> joints;
-    public HingeGraph(int nodes,int root,List<Edge> edges){
+    public HingeGraph(int nodes,int root,List<Edge> edges){this(nodes,root,edges,false);}
+    /** Explicit closed constraints keep articulated bodies distinct; their solver must admit every edge. */
+    public HingeGraph(int nodes,int root,List<Edge> edges,boolean closedConstraints){
         if(nodes<1||root<0||root>=nodes)throw new IllegalArgumentException("Invalid hinge graph");
         List<List<Integer>> adjacent=new ArrayList<>();for(int i=0;i<nodes;i++)adjacent.add(new ArrayList<>());
         for(int i=0;i<edges.size();i++){Edge e=edges.get(i);if(e.a<0||e.b<0||e.a>=nodes||e.b>=nodes)throw new IllegalArgumentException("Invalid hinge endpoint");adjacent.get(e.a).add(i);adjacent.get(e.b).add(i);}
@@ -28,7 +30,7 @@ public final class HingeGraph {
             }
         }
         int[] union=new int[nodes];for(int i=0;i<nodes;i++)union[i]=i;
-        for(int i=0;i<edges.size();i++)if(!bridge[i]||!edges.get(i).articulated)join(union,edges.get(i).a,edges.get(i).b);
+        for(int i=0;i<edges.size();i++)if((!closedConstraints&&!bridge[i])||!edges.get(i).articulated)join(union,edges.get(i).a,edges.get(i).b);
         // Disconnected decorative/owned cargo has no independently movable hitch.
         boolean[] reachable=new boolean[nodes];stack.push(root);reachable[root]=true;while(!stack.isEmpty()){int v=stack.pop();for(int ei:adjacent.get(v)){int w=edges.get(ei).other(v);if(!reachable[w]){reachable[w]=true;stack.push(w);}}}
         for(int i=0;i<nodes;i++)if(!reachable[i])join(union,root,i);

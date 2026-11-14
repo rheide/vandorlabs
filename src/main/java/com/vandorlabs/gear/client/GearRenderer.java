@@ -17,8 +17,11 @@ import net.minecraftforge.fml.relauncher.SideOnly;
  */
 @SideOnly(Side.CLIENT)
 public final class GearRenderer extends net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer<GearTileEntity> {
-    public static double renderedProgress(GearTileEntity tile,float partial){return GearVisualMotion.sample(tile,partial);}
+    public static double rawRenderedProgress(GearTileEntity tile,float partial){return GearVisualMotion.sample(tile,partial);}
+    public static double renderedProgress(GearTileEntity tile,float partial){if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld){com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)tile.getWorld();if(view.craft!=null&&view.parent.isRemote){double phase=com.vandorlabs.client.VehicleArmVisualMotion.armPhase(view.craft,tile.getPos(),partial);if(Double.isFinite(phase))return phase;}}return rawRenderedProgress(tile,partial);}
 
+    public static void prepareVisualSupport(com.vandorlabs.vehicle.EntityGroundVehicle craft,java.util.List<net.minecraft.util.math.BlockPos> roots){GearVisualMotion.support(craft,roots);}
+    public static String visualSupportDiagnostic(com.vandorlabs.vehicle.EntityGroundVehicle craft,java.util.Collection<net.minecraft.util.math.BlockPos> roots){return GearVisualMotion.diagnostic(craft,roots);}
     private boolean cachePose;
     private Affine mounting=Affine.identity();
     public static long cachedVertexBytes(){return GearModels.cachedVertexBytes();}

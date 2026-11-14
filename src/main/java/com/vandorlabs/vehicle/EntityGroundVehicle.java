@@ -152,7 +152,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(p.serverTick<=lastServerTick)return;
         if(!admitCouplerScope(p.associationGeneration,p.serverTick))return;
         if(view!=null&&!couplerScopeReady())return;
-        receiveGeneralPose(p.bodyPose);
+        if(p.armMotion.arms.isEmpty()||articulation.receiveArmMotion(p.armMotion,p.bodyPose,p.serverTick))receiveGeneralPose(p.bodyPose);
         if(p.jointAngles.length>0&&(generalBodyPose==null||!generalBodyPose.usesGeneral()))articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
         lastServerTick=p.serverTick;
@@ -342,8 +342,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             for(String key:assignments.getKeySet())if(assignments.hasKey(key,4))assignments.setLong(key,BlockPos.fromLong(assignments.getLong(key)).add(shift).toLong());
             dataManager.set(PILOT_SEATS,assignments);
         }
+        if(world.isRemote)com.vandorlabs.VandorLabs.proxy.vehicleArmVisualSupport(this,null);
         structure=snapshot;if(view==null)view=new VehicleWorld(world,snapshot,currentCouplerScope());else view.update(snapshot,currentCouplerScope());collision=prepared==null?new VehicleCollision(view):new VehicleCollision(prepared.geometry());encoded=null;
         view.craft=this;view.hover=hover;if(!world.isRemote)view.controlUpdates=signals::changed;
+        if(world.isRemote)com.vandorlabs.VandorLabs.proxy.vehicleArmVisualSupport(this,null);
         collisionCache.reset(view,collision);
         rampGeometryUpgradePending=!world.isRemote&&VehicleRamps.needsGeometryUpgrade(this);
         setPosition(posX,posY,posZ);

@@ -179,6 +179,8 @@ public final class ArmPayload {
         Endpoint endpoint=endpoint(arm,progress);Set<BlockPos> result=new HashSet<>();if(endpoint==null)return result;
         for(VehicleStructure.Cell cell:blocks.cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(endpoint.placed(arm.getPos().add(offset).add(cell.pos)));return result;
     }
+    /** Last authenticated native tile orientation, relative to the immutable original payload. */
+    public int[] placedTileBasis(){if(placedBlocks!=null&&gridTileBasis==null)throw new IllegalArgumentException("Saved native tile orientation is unavailable");return gridTileBasis==null?new int[]{1,0,0,0,1,0,0,0,1}:gridTileBasis.clone();}
     /** Geometry only: intermediate grid alignment does not bypass ownership/state validation. */
     public ArmGridMapping gridMapping(GearTileEntity arm,double progress){return ArmGridMapping.resolve(this,arm,progress);}
     /** Detached representable grid publication candidate; never restores or retires world cells. */

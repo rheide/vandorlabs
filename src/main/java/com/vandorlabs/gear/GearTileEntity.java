@@ -283,6 +283,16 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(revision!=motionRevision||tick<=lastMotionTick||!isOperational())return false;
         lastMotionTick=tick;deployedTarget=isFixedMount()||target;motionBlocked=blocked;return true;
     }
+    /** Scalar STATE correction after matching layout/scope admission; this never changes payload ownership. */
+    public boolean canAcceptCouplerFrame(long revision,long tick,double phase){
+        if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))return false;
+        com.vandorlabs.vehicle.VehicleWorld view=(com.vandorlabs.vehicle.VehicleWorld)world;com.vandorlabs.vehicle.EntityGroundVehicle craft=view.craft;
+        return view.parent.isRemote&&craft!=null&&craft.view==view&&craft.structure==view.structure&&view.tiles.get(pos)==this&&craft.couplerScopeReady()&&isOperational()&&revision>=motionRevision&&revision<=Integer.MAX_VALUE&&tick>=lastMotionTick&&Double.isFinite(phase)&&phase>=0&&phase<=1;
+    }
+    public boolean acceptCouplerFrame(long revision,long tick,boolean target,boolean passive,double phase){
+        if(!canAcceptCouplerFrame(revision,tick,phase))return false;
+        motionRevision=(int)revision;lastMotionTick=tick;deployedTarget=isFixedMount()||target;couplerPassive=passive;correctProgress(phase);return true;
+    }
     public void correctProgress(double value){rememberSurfaceEndpoint();if(value!=progress)surfaceDepartureSaved=true;previousProgress=progress;progress=isFixedMount()?1:Math.max(0,Math.min(1,value));boxesAt=Double.NaN;}
     // A cached group may be temporarily suspended while required chunks are
     // absent. Its saved membership, target and exact progress are preserved.
