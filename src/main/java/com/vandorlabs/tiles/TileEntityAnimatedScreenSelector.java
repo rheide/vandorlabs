@@ -68,6 +68,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     @Override public boolean shouldRenderInPass(int pass) {
         if(pass!=0 && pass!=1)return false;
         if(fluids.any() && pass==1)return true;
+        int retained=com.vandorlabs.VandorLabs.proxy==null?-1:com.vandorlabs.VandorLabs.proxy.portholeRenderPass(this,pass);
+        if(retained>=0)return retained!=0;
         net.minecraft.block.Block block = getBlockType();
         if (block != null && (block.getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || block instanceof com.vandorlabs.blocks.BlockProgrammableStairs
@@ -142,7 +144,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     private long settingsRevision;
     public long getSettingsRevision() { return settingsRevision; }
-    private void settingsChanged() { com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();markDirty(); }
+    private void settingsChanged() { com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();markDirty();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.portholeAppearanceChanged(this); }
 
     private String selectedScreen = "engineering_screen";
     private boolean redstoneEnabled = false;
@@ -183,12 +185,17 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&hasChipSurface(0)){com.vandorlabs.blocks.ScreenChipGroups.Group group=com.vandorlabs.blocks.ScreenChipGroups.group(this);if(group!=null)return group.bounds;}
 
         if (world != null && getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableWall
-                && ((com.vandorlabs.blocks.BlockProgrammableWall)getBlockType()).isDiagonalShape())
-            return new net.minecraft.util.math.AxisAlignedBB(pos).grow(.125);
-        if (ceilingMounted) return new net.minecraft.util.math.AxisAlignedBB(
-                pos.add(-1,0,-1),pos.add(2,1,2));
+                && ((com.vandorlabs.blocks.BlockProgrammableWall)getBlockType()).isDiagonalShape()){
+            net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(pos).grow(.125);
+            return com.vandorlabs.VandorLabs.proxy==null?bounds:com.vandorlabs.VandorLabs.proxy.portholeRenderBounds(this,bounds);
+        }
+        if (ceilingMounted){
+            net.minecraft.util.math.AxisAlignedBB bounds=new net.minecraft.util.math.AxisAlignedBB(pos.add(-1,0,-1),pos.add(2,1,2));
+            return com.vandorlabs.VandorLabs.proxy==null?bounds:com.vandorlabs.VandorLabs.proxy.portholeRenderBounds(this,bounds);
+        }
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
-        return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
+        if(fluids.any())bounds=bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos));
+        return com.vandorlabs.VandorLabs.proxy==null?bounds:com.vandorlabs.VandorLabs.proxy.portholeRenderBounds(this,bounds);
     }
     public void setCeilingMounted(boolean value) {
         if(ceilingMounted==value)return;

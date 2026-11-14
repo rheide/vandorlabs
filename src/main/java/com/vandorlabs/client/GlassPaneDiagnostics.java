@@ -14,6 +14,6 @@ public final class GlassPaneDiagnostics {
         if(!ENABLED||event.phase!=TickEvent.Phase.END||++ticks%200!=1)return;
         System.out.println("[vandorlabs] native-glass "+report());
     }
-    public static String report(){return GlassPanePolicy.diagnostics()+" "+GlassPaneTerrain.diagnostics()+" "+GlassPaneRetained.diagnostics();}
+    public static String report(){return GlassPanePolicy.diagnostics()+" "+GlassPaneTerrain.diagnostics()+" "+GlassPaneRetained.diagnostics()+" "+GlassFrameRetained.diagnostics()+" "+PortholeRetained.diagnostics();}
     private GlassPaneDiagnostics(){}
 }

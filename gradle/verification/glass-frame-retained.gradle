@@ -1,0 +1,9 @@
+task testGlassFrameRetained(type: JavaExec) {
+    group = 'verification'
+    description = 'Check retained emissive frame records, actual partial-alpha artwork, independent panes and sparse joined placement'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassFrameRetainedChecks'
+    maxHeapSize = '512m'
+}
+check.dependsOn testGlassFrameRetained

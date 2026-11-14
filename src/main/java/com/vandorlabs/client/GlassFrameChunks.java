@@ -49,22 +49,34 @@ public final class GlassFrameChunks {
         @Override public boolean equals(Object other){if(!(other instanceof Key))return false;Key key=(Key)other;return key.source==source&&key.depth==depth&&key.facing==facing&&key.kind==kind;}
     }
     private static final class Entry {
-        final TileEntityProgrammableGlass tile;final BlockPos section;
-        GlassFrameModel.Mesh mesh;RenderChunk chunk;boolean ready;
-        Entry(TileEntityProgrammableGlass tile){this.tile=tile;section=section(tile.getPos());}
+        final TileEntityProgrammableGlass tile;final BlockPos pos,section;
+        GlassFrameModel.Mesh mesh;RenderChunk chunk;boolean ready,retiring,retained,wasNative,withdrawn=true;
+        Entry(TileEntityProgrammableGlass tile){this.tile=tile;pos=tile.getPos().toImmutable();section=section(pos);}
     }
     private static final class Section {
-        final BlockPos pos;RenderChunk chunk;CompiledChunk before;
+        final BlockPos pos;RenderChunk chunk;CompiledChunk before,beforeTaskResult;
+        ChunkCompileTaskGenerator beforeTask;boolean marked;
         Section(BlockPos pos){this.pos=pos;}
+        Section(BlockPos pos,RenderChunk chunk,ChunkCompileTaskGenerator task){
+            this.pos=pos;this.chunk=chunk;before=chunk.getCompiledChunk();beforeTask=task;beforeTaskResult=task==null?null:task.getCompiledChunk();
+        }
         boolean uploaded(ViewFrustum view,RenderGlobal renderer)throws ReflectiveOperationException{
             if(view==null)return false;RenderChunk current=(RenderChunk)LOOKUP.invoke(view,pos);
             if(current==null||!current.getPosition().equals(pos))return false;
             if(chunk!=current){
-                chunk=current;before=current.getCompiledChunk();
+                if(!current.getLockCompileTask().tryLock())return false;
+                try{
+                    ChunkCompileTaskGenerator old=(ChunkCompileTaskGenerator)TASK.get(current);
+                    if(old!=null&&!old.getLock().tryLock())return false;
+                    try{chunk=current;before=current.getCompiledChunk();beforeTask=old;beforeTaskResult=old==null?null:old.getCompiledChunk();marked=false;}
+                    finally{if(old!=null)old.getLock().unlock();}
+                }finally{current.getLockCompileTask().unlock();}
+            }
+            if(!marked){
                 // One mark per pending section, after every changed mesh has been published.
                 // An interior point marks this section without touching adjacent sections.
                 int x=pos.getX()+8,y=pos.getY()+8,z=pos.getZ()+8;
-                renderer.markBlockRangeForRenderUpdate(x,y,z,x,y,z);
+                renderer.markBlockRangeForRenderUpdate(x,y,z,x,y,z);marked=true;
                 return false;
             }
             // Vanilla schedules visible sections; polling must not stall the client thread.
@@ -73,7 +85,13 @@ public final class GlassFrameChunks {
                 ChunkCompileTaskGenerator task=(ChunkCompileTaskGenerator)TASK.get(current);
                 if(task==null||!task.getLock().tryLock())return false;
                 try{
-                    return !current.needsUpdate()&&task.getStatus()==ChunkCompileTaskGenerator.Status.DONE&&current.getCompiledChunk()!=before&&task.getCompiledChunk()==current.getCompiledChunk();
+                    CompiledChunk installed=current.getCompiledChunk();
+                    // A pre-publication DONE task can install after its lock is
+                    // released. Exclude that result as well as the old installed
+                    // chunk; a later resort may acknowledge the distinct rebuild.
+                    return !current.needsUpdate()&&!task.isFinished()&&task!=beforeTask&&installed!=CompiledChunk.DUMMY
+                            &&installed!=before&&installed!=beforeTaskResult&&task.getCompiledChunk()==installed
+                            &&(task.getType()==ChunkCompileTaskGenerator.Type.RESORT_TRANSPARENCY||task.getStatus()==ChunkCompileTaskGenerator.Status.DONE);
                 }finally{task.getLock().unlock();}
             }finally{current.getLockCompileTask().unlock();}
         }
@@ -88,14 +106,15 @@ public final class GlassFrameChunks {
         GlassSurfaceGroups.changed(tile);
         if(view instanceof VehicleWorld)return;
         synchronized(QUEUED){QUEUED.add(tile);}
+        GlassFrameRetained.changed(tile);
     }
     static boolean selected(TileEntityProgrammableGlass tile){return tile.isFramed()&&(tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile);}
     static boolean supported(TileEntityProgrammableGlass tile,IBlockState state){
         return !LEGACY_BENCHMARK&&!(tile.getWorld() instanceof VehicleWorld)&&state.getBlock() instanceof BlockProgrammableGlass&&tile.isFramed()
                 &&(selected(tile)||PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())!=null);
     }
-    /** A block layer has one lightmap input. Keep blended emissive frames separate
-     * from ordinarily lit panes sharing TRANSLUCENT; cutout frames stay native. */
+    /** Mixed-light translucent frames use a retained frame group, independently
+     * of the pane, instead of restoring an individual frame renderer. */
     static boolean nativeLighting(GlassFrameModel.Mesh mesh,int light){
         return mesh!=null&&(light==0||mesh.translucent.isEmpty());
     }
@@ -103,17 +122,25 @@ public final class GlassFrameChunks {
         Object value=tile.frameChunkPublication;
         return value instanceof Entry&&((Entry)value).mesh!=null&&!((Entry)value).ready;
     }
+    /** Never let a retained group overlap a previously published native frame. */
+    static boolean retainedSafe(TileEntityProgrammableGlass tile){
+        Object value=tile.frameChunkPublication;if(!(value instanceof Entry))return false;Entry entry=(Entry)value;
+        return entry.tile==tile&&entry.pos.equals(tile.getPos())&&entry.retained&&entry.mesh==null
+                &&tile.frameChunkMesh==null&&(!entry.wasNative||entry.withdrawn);
+    }
     /** A ready mesh stays valid across ordinary relighting and transparent resort tasks. */
     static boolean rendered(TileEntityProgrammableGlass tile){
         Object value=tile.frameChunkPublication;if(!(value instanceof Entry))return false;Entry entry=(Entry)value;
-        if(!entry.ready||entry.mesh==null||tile.frameChunkMesh!=entry.mesh)return false;
+        if(entry.tile!=tile||!entry.pos.equals(tile.getPos()))return false;
+        if(!entry.retiring&&(!entry.ready||entry.mesh==null||tile.frameChunkMesh!=entry.mesh))return false;
         if(entry.chunk!=null&&entry.chunk.getPosition().equals(entry.section))return true;
-        entry.ready=false;changed(tile);GlassPaneTerrain.refreshAdmissions(tile.getPos());return false;
+        entry.ready=entry.retiring=false;changed(tile);GlassPaneTerrain.refreshAdmissions(tile.getPos());return false;
     }
     public static void reload(){
         MESHES.invalidateAll();GlassFrameMesh.clear();GlassFrameModel.clear();
-        for(Entry entry:ENTRIES.values()){entry.ready=false;entry.mesh=null;entry.tile.frameChunkMesh=null;changed(entry.tile);GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
-        PENDING.clear();frustum=null;
+        for(Entry entry:ENTRIES.values()){changed(entry.tile);GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
+        GlassFrameRetained.reload();
+        PENDING.clear();
     }
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld()==world)reset(null);}
     private static void reset(World next){
@@ -134,17 +161,18 @@ public final class GlassFrameChunks {
     private static void viewChanged(Minecraft mc)throws ReflectiveOperationException{
         ViewFrustum next=(ViewFrustum)FRUSTUM.get(mc.renderGlobal);
         if(next==frustum)return;frustum=next;
-        for(Entry entry:ENTRIES.values())if(entry.mesh!=null){entry.ready=false;PENDING.put(entry.section,new Section(entry.section));GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
+        for(Entry entry:ENTRIES.values())if(entry.mesh!=null||!entry.withdrawn){entry.ready=entry.retiring=false;PENDING.put(entry.section,new Section(entry.section));GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());GlassFrameRetained.invalidateSection(entry.pos);}
     }
     private static void remove(Entry entry){
-        ENTRIES.remove(entry.tile.getPos(),entry);entry.tile.frameChunkMesh=null;entry.tile.frameChunkPublication=null;
-        GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());
+        ENTRIES.remove(entry.pos,entry);if(entry.tile.frameChunkPublication==entry){entry.tile.frameChunkMesh=null;entry.tile.frameChunkPublication=null;}
+        GlassPaneTerrain.refreshAdmissions(entry.pos);GlassFrameRetained.invalidateSection(entry.pos);
         Set<Entry> members=MEMBERS.get(entry.section);if(members!=null){members.remove(entry);if(members.isEmpty()){MEMBERS.remove(entry.section);PENDING.remove(entry.section);}}
     }
     static void flush(){
         Minecraft mc=Minecraft.getMinecraft();if(mc.world!=world)reset(mc.world);
         if(world==null){synchronized(QUEUED){QUEUED.clear();}return;}
         if(format==null||!format.equals(DefaultVertexFormats.BLOCK)){format=new VertexFormat(DefaultVertexFormats.BLOCK);reload();}
+        try{viewChanged(mc);}catch(ReflectiveOperationException failure){throw new IllegalStateException("Glass frame view publication failed",failure);}
         Set<TileEntityProgrammableGlass> queued=Collections.emptySet();
         synchronized(QUEUED){if(!QUEUED.isEmpty()){queued=Collections.newSetFromMap(new IdentityHashMap<>());queued.addAll(QUEUED);QUEUED.clear();}}
         for(TileEntityProgrammableGlass tile:queued)if(tile.getWorld()==world){
@@ -153,6 +181,7 @@ public final class GlassFrameChunks {
             GlassSurfaceGroups.changed(tile);
             BlockPos pos=tile.getPos().toImmutable();DIRTY.add(pos);
             if(valid(tile)){
+                Object previous=tile.frameChunkPublication;if(previous instanceof Entry&&((Entry)previous).tile==tile&&!((Entry)previous).pos.equals(pos))remove((Entry)previous);
                 Entry entry=ENTRIES.get(pos);if(entry==null||entry.tile!=tile){
                     if(entry!=null)remove(entry);
                     entry=new Entry(tile);ENTRIES.put(pos,entry);MEMBERS.computeIfAbsent(entry.section,p->Collections.newSetFromMap(new IdentityHashMap<>())).add(entry);tile.frameChunkPublication=entry;
@@ -164,27 +193,71 @@ public final class GlassFrameChunks {
         DIRTY.clear();
         for(Entry entry:dirty){
             TileEntityProgrammableGlass tile=entry.tile;
-            if(!valid(tile)){remove(entry);continue;}
-            IBlockState state=world.getBlockState(tile.getPos());GlassFrameModel.Mesh mesh=null;int light=0;
+            if(!valid(tile)||!entry.pos.equals(tile.getPos())){remove(entry);continue;}
+            IBlockState state=world.getBlockState(tile.getPos());GlassFrameModel.Mesh mesh=null;int light=0;boolean retained=false;
             if(supported(tile,state)){
                 Key key=new Key(tile,state);mesh=MESHES.getIfPresent(key);light=key.kind==0?tile.frameAppearance.light():0;
                 if(mesh==null){mesh=GlassFrameModel.build(tile,state);MESHES.put(key,mesh);}
-                if(!nativeLighting(mesh,light))mesh=null;
+                if(!nativeLighting(mesh,light)){retained=true;mesh=null;}
             }
-            if(entry.mesh==mesh&&tile.frameChunkLight==light&&(entry.ready||PENDING.containsKey(entry.section)))continue;
-            if(entry.mesh==mesh&&mesh==null)continue;
-            entry.mesh=mesh;entry.ready=false;tile.frameChunkLight=light;tile.frameChunkMesh=mesh;
-            GlassPaneTerrain.refreshAdmissions(tile.getPos());
-            PENDING.put(entry.section,new Section(entry.section));
+            if(entry.mesh==mesh&&tile.frameChunkLight==light&&entry.retained==retained
+                    &&(entry.ready||PENDING.containsKey(entry.section)||mesh==null&&(!entry.wasNative||entry.withdrawn)))continue;
+            try{if(!publish(entry,mesh,light,retained,mc))DIRTY.add(entry.pos);}
+            catch(ReflectiveOperationException failure){throw new IllegalStateException("Glass frame publication fence failed",failure);}
         }
+        // Retire old groups before any replacement native build can be queued.
+        // Cold non-native frames may already establish their retained anchors.
+        GlassFrameRetained.flush();
+        settleUploads();
+    }
+    /** Observe receipts before retained groups and admission lists are updated.
+     * This is cheap at frame start: no owner scan or new mesh publication. */
+    static void settleUploads(){
+        Minecraft mc=Minecraft.getMinecraft();if(mc==null||world==null||mc.world!=world)return;
         try{
             viewChanged(mc);
             Iterator<Section> pending=PENDING.values().iterator();while(pending.hasNext()){
                 Section section=pending.next();if(!section.uploaded(frustum,mc.renderGlobal))continue;
-                Set<Entry> members=MEMBERS.get(section.pos);if(members!=null)for(Entry entry:members){entry.chunk=section.chunk;entry.ready=entry.mesh!=null;GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
+                Set<Entry> members=MEMBERS.get(section.pos);if(members!=null)for(Entry entry:members){entry.chunk=section.chunk;entry.ready=entry.mesh!=null;entry.retiring=false;entry.withdrawn=entry.mesh==null;GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());GlassFrameRetained.invalidateSection(entry.pos);}
                 pending.remove();
             }
         }catch(ReflectiveOperationException failure){throw new IllegalStateException("Glass frame terrain publication failed",failure);}
+    }
+    /** Snapshot changes and withdrawal receipts share the real compile-task fence. */
+    private static boolean publish(Entry entry,GlassFrameModel.Mesh mesh,int light,boolean retained,Minecraft mc)throws ReflectiveOperationException{
+        ViewFrustum view=(ViewFrustum)FRUSTUM.get(mc.renderGlobal);
+        RenderChunk chunk=view==null?null:(RenderChunk)LOOKUP.invoke(view,entry.section);
+        if(chunk!=null&&!chunk.getPosition().equals(entry.section))chunk=null;
+        if(chunk==null){publish(entry,mesh,light,retained);if(mesh!=null||entry.wasNative)PENDING.put(entry.section,new Section(entry.section));return true;}
+        if(!chunk.getLockCompileTask().tryLock())return false;
+        try{
+            ChunkCompileTaskGenerator task=(ChunkCompileTaskGenerator)TASK.get(chunk);
+            if(task!=null&&!task.getLock().tryLock())return false;
+            try{
+                if(!GlassPaneTerrain.finishBeforePublish(task))return false;
+                publish(entry,mesh,light,retained);
+                if(mesh!=null||entry.wasNative)PENDING.put(entry.section,new Section(entry.section,chunk,task));
+                return true;
+            }finally{if(task!=null)task.getLock().unlock();}
+        }finally{chunk.getLockCompileTask().unlock();}
+    }
+    private static void publish(Entry entry,GlassFrameModel.Mesh mesh,int light,boolean retained){
+        entry.retiring|=entry.ready;entry.ready=false;entry.retained=retained;
+        entry.mesh=mesh;entry.tile.frameChunkLight=light;entry.tile.frameChunkMesh=mesh;
+        if(mesh!=null){entry.wasNative=true;entry.withdrawn=false;}
+        GlassPaneTerrain.refreshAdmissions(entry.pos);GlassFrameRetained.changed(entry.tile);
+    }
+    static String diagnostics(){
+        Map<String,Integer> reasons=new TreeMap<>();int nativeOwners=0;
+        for(Entry entry:ENTRIES.values()){
+            String reason;
+            if(entry.retained)reason=retainedSafe(entry.tile)?GlassFrameRetained.handles(entry.tile)?"retained":"retained-pending":"native-withdrawal";
+            else if(entry.ready||entry.retiring){reason="native";nativeOwners++;}
+            else if(entry.mesh!=null)reason="native-pending";
+            else reason=entry.tile.isFramed()?"stock-or-unsupported":"unframed";
+            reasons.put(reason,reasons.getOrDefault(reason,0)+1);
+        }
+        return "native-frame-owners="+nativeOwners+" native-frame-pending-sections="+PENDING.size()+" frame-owner-reasons="+reasons;
     }
     private static boolean valid(TileEntityProgrammableGlass tile){return !tile.isInvalid()&&world.isBlockLoaded(tile.getPos())&&world.getTileEntity(tile.getPos())==tile&&world.getBlockState(tile.getPos()).getBlock() instanceof BlockProgrammableGlass;}
     private GlassFrameChunks(){}

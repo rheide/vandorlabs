@@ -166,6 +166,7 @@ public final class PortholeLocalityChecks {
         }finally{PortholeGroupCache.unload(view);close(parent);}
     }
     public static void main(String[] args)throws Exception{
+        java.lang.reflect.Field environment=net.minecraftforge.fml.relauncher.CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");environment.setAccessible(true);environment.setBoolean(null,true);
         net.minecraft.init.Bootstrap.register();com.vandorlabs.VandorLabs.proxy=new com.vandorlabs.CommonProxy(){@Override public void portholeGeometryChanged(TileEntityAnimatedScreenSelector tile){TEAnimatedScreenSelector.portholeChanged(tile);}@Override public void glassFrameAppearanceChanged(TileEntityProgrammableGlass tile){TEAnimatedScreenSelector.portholeChanged(tile);}};
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new net.minecraft.util.ResourceLocation("minecraft","porthole_locality_checks"));
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("minecraft","porthole_locality_glass_checks"));

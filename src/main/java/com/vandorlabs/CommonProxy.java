@@ -19,10 +19,13 @@ public class CommonProxy {
     public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
     public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.tiles.DeferredTileLoad.schedule(tile,tile::refreshPendingLight);}
     public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}
+    public void portholeAppearanceChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}
     public void lightAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableLight tile){}
     public boolean glassCollectionOnly(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){return false;}
     public int glassPanePass(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,int pass){return -1;}
     public net.minecraft.util.math.AxisAlignedBB glassPaneBounds(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,net.minecraft.util.math.AxisAlignedBB bounds){return bounds;}
+    public int portholeRenderPass(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,int pass){return -1;}
+    public net.minecraft.util.math.AxisAlignedBB portholeRenderBounds(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,net.minecraft.util.math.AxisAlignedBB bounds){return bounds;}
     /** Physical server and integrated-server light reads use only shared APIs. */
     public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return sharedVehicleCombinedLight(world,pos,minimum);}
     public static int sharedVehicleCombinedLight(World world,BlockPos pos,int minimum){

@@ -31,6 +31,9 @@ final class FlatPanelBarRenderer {
         }
     }
     static Material material(TileEntity tile,IBlockState state) {
+        return material(tile,state,false);
+    }
+    static Material material(TileEntity tile,IBlockState state,boolean retained) {
         if(tile instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)tile;
             TEProgrammableGlass.CornerMeshes m=TEProgrammableGlass.meshes(glass,state,PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos()));
@@ -47,7 +50,7 @@ final class FlatPanelBarRenderer {
         StaticSurfaceMesh pane=slice==null?null:DiagonalWallMeshCache.glass(wall,state,face,rim,slice);
         BlockProgrammableWall.FlatCorner corner=PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos());
         double depth=block.isPortholeShape() || corner==null?PanelDepth.offset(state.getValue(BlockProgrammableWall.DEPTH)):0;
-        if(pane!=null)pane=PortholePane.mesh(wall,state,pane);
+        if(pane!=null)pane=retained?PortholePane.retained(wall,state,pane):PortholePane.mesh(wall,state,pane);
         Material result=new Material(opaque,pane,depth,block.isPortholeShape() && corner!=null?corner.left():0,block.isPortholeShape() && corner!=null?(corner.right()-corner.left())/16:1,rim);
         result.opacity=GlassMaterials.opacity(wall.getGlassMaterial(),wall.getGlassTint());result.solidPane=GlassMaterials.opaque(wall.getGlassMaterial(),wall.getGlassTint());return result;
     }
@@ -68,6 +71,9 @@ final class FlatPanelBarRenderer {
         @Override protected boolean removeEldestEntry(Map.Entry<BarKey,StaticSurfaceMesh[]> e){return size()>128;}
     };
     static Material barMaterial(TileEntity root,IBlockState state,double near) {
+        return barMaterial(root,state,near,false);
+    }
+    static Material barMaterial(TileEntity root,IBlockState state,double near,boolean retained) {
         if(root instanceof TileEntityProgrammableGlass) {
             TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)root;
             TEProgrammableGlass.CornerMeshes m=TEProgrammableGlass.meshes(glass,state,null);
@@ -88,7 +94,7 @@ final class FlatPanelBarRenderer {
             if(slice!=null){capture=StaticSurfaceMesh.capture();TEAnimatedScreenSelector.drawPortholeGlassGeometry(capture,slice,null);pane=capture.finish();}
             meshes=new StaticSurfaceMesh[]{opaque,pane};BARS.put(key,meshes);
         }
-        StaticSurfaceMesh pane=meshes[1]==null?null:PortholePane.mesh(tile,state,meshes[1]);
+        StaticSurfaceMesh pane=meshes[1]==null?null:retained?PortholePane.retained(tile,state,meshes[1]):PortholePane.mesh(tile,state,meshes[1]);
         Material result=new Material(meshes[0],pane,near-6,0,1,metal);result.opacity=GlassMaterials.opacity(tile.getGlassMaterial(),tile.getGlassTint());result.solidPane=GlassMaterials.opaque(tile.getGlassMaterial(),tile.getGlassTint());return result;
     }
     static StaticSurfaceMesh part(StaticSurfaceMesh source,int turns,int half,double near,double depth,double left,double width) {
@@ -118,6 +124,8 @@ final class FlatPanelBarRenderer {
         if(bar==null)return false;
         boolean frameBaked=root instanceof TileEntityProgrammableGlass&&GlassFrameChunks.rendered((TileEntityProgrammableGlass)root);
         if(frameBaked&&net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==0){TileEntityProgrammableGlass glass=(TileEntityProgrammableGlass)root;if(!GlassMaterials.opaque(glass.getMaterial(),glass.getTint()))return true;}
+        boolean porthole=root instanceof TileEntityAnimatedScreenSelector&&((BlockProgrammableWall)state.getBlock()).isPortholeShape();
+        frameBaked|=porthole&&PortholeRetained.handlesHousing((TileEntityAnimatedScreenSelector)root);
         EnumFacing facing=PanelJoins.flatFacing(state,root.getWorld(),root.getPos());
         Material[] materials={material(root,state),barMaterial(root,state,bar.frontArm)};
         int[] turns={0,3};
@@ -139,12 +147,12 @@ final class FlatPanelBarRenderer {
                 if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0
                         &&!(root instanceof TileEntityProgrammableGlass&&GlassPanePolicy.omitPane(false,VehicleRenderPass.shadow()))){GlStateManager.depthMask(false);drawPane(mesh,root,sky,GlassInsertLighting.block(root,block),m.opacity);}
             }else{
-                if(mesh!=null&&mesh.vertexCount()>0)draw(mesh,sky,block);
+                if(mesh!=null&&mesh.vertexCount()>0){draw(mesh,sky,block);if(porthole)PortholeRetained.legacyHousing();}
                 if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,root,sky,GlassInsertLighting.block(root,block),m.opacity);}
             }
-            if(!transparent && i==0 && m.opaque!=null) {
+            if(!transparent && !frameBaked && i==0 && m.opaque!=null) {
                 StaticSurfaceMesh cap=stemCap(m,bar.straightLeft?bar.frontArm:bar.frontArm+4,PanelJoins.flatNear(state,root.getWorld(),root.getPos()),bar.straightLeft);
-                if(cap!=null)draw(cap,sky,block);
+                if(cap!=null){draw(cap,sky,block);if(porthole)PortholeRetained.legacyHousing();}
             }
 
         }
@@ -154,6 +162,7 @@ final class FlatPanelBarRenderer {
     }
     private static void drawPane(StaticSurfaceMesh mesh,TileEntity root,int sky,int block,float opacity){
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,root,b,sky,block,opacity);Tessellator.getInstance().draw();
+        if(root instanceof TileEntityAnimatedScreenSelector&&root.getBlockType() instanceof BlockProgrammableWall&&((BlockProgrammableWall)root.getBlockType()).isPortholeShape())PortholeRetained.legacyPane();
     }
     private static void draw(StaticSurfaceMesh mesh,int sky,int block) {
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.draw(b,sky,block);Tessellator.getInstance().draw();

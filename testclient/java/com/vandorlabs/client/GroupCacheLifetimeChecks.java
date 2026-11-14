@@ -5,7 +5,6 @@ import com.vandorlabs.tiles.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.math.BlockPos;
 import net.minecraftforge.event.world.WorldEvent;
-import java.util.Map;
 
 /** Unloading the client world must release group cache owners and their geometry. */
 final class GroupCacheLifetimeChecks {
@@ -21,22 +20,20 @@ final class GroupCacheLifetimeChecks {
         wall.setJoinPortholes(false);
         Object lightGroup=TEAnimatedScreenSelector.lightGroup(light,lightState);
         Object portholeGroup=TEAnimatedScreenSelector.portholeGroup(wall,wallState);
-        require(field("lightCacheWorld")==world && PortholeGroupCache.contains(world),"group caches were not primed");
+        LightGroupCache.visibleFaces(light,net.minecraft.util.EnumFacing.NORTH);
+        require(LightGroupCache.contains(world) && PortholeGroupCache.contains(world),"group caches were not primed");
+        require(LightGroupCache.entries(world)>0 && LightGroupCache.faceEntries(world)>0,"light topology/visibility caches were not primed");
         DiagonalWallMeshCache.Events events=new DiagonalWallMeshCache.Events();
         events.worldUnloaded(new WorldEvent.Unload(other));
         require(TEAnimatedScreenSelector.lightGroup(light,lightState)==lightGroup
                 && TEAnimatedScreenSelector.portholeGroup(wall,wallState)==portholeGroup,"unrelated unload discarded active groups");
         events.worldUnloaded(new WorldEvent.Unload(world));
-        require(field("lightCacheWorld")==null && !PortholeGroupCache.contains(world),"unloaded world retained by group renderer");
-        require(((Map<?,?>)field("LIGHT_GROUPS")).isEmpty() && PortholeGroupCache.entries(world)==0,"unloaded group geometry retained");
+        require(!LightGroupCache.contains(world) && !PortholeGroupCache.contains(world),"unloaded world retained by group renderer");
+        require(LightGroupCache.entries(world)==0 && LightGroupCache.faceEntries(world)==0 && PortholeGroupCache.entries(world)==0,"unloaded group geometry retained");
         require(TEAnimatedScreenSelector.lightGroup(light,lightState)!=lightGroup
                 && TEAnimatedScreenSelector.portholeGroup(wall,wallState)!=portholeGroup,"next world render reused unloaded groups");
         events.worldUnloaded(new WorldEvent.Unload(world));
         System.out.println("PASS: world unload releases light/porthole owners and groups, preserves unrelated worlds and rebuilds on next draw");
-    }
-    private static Object field(String name) {
-        try{java.lang.reflect.Field field=TEAnimatedScreenSelector.class.getDeclaredField(name);field.setAccessible(true);return field.get(null);}
-        catch(ReflectiveOperationException error){throw new AssertionError(error);}
     }
     private static void require(boolean value,String message){if(!value)throw new AssertionError(message);}
 }

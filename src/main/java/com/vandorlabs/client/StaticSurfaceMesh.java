@@ -65,6 +65,57 @@ final class StaticSurfaceMesh {
     StaticSurfaceMesh panelTransform(int turns,double depth,double left,double width) {
         return new StaticSurfaceMesh(com.vandorlabs.render.PanelMeshTransform.transform(vertices,turns,depth,left,width));
     }
+    /** Bake the existing positive-scale porthole model transform before VBO upload. */
+    StaticSurfaceMesh portholeTransform(double left,double width,double depth,double zScale) {
+        if(width<=0||zScale<=0)throw new IllegalArgumentException("Invalid porthole scale");
+        if(left==0&&width==1&&depth==0&&zScale==1)return this;
+        float[] data=vertices.clone();
+        for(int i=0;i<data.length;i+=8){
+            data[i]=(float)(left+data[i]*width);data[i+2]=(float)(depth+data[i+2]*zScale);
+            double nx=data[i+5]/width,ny=data[i+6],nz=data[i+7]/zScale,length=Math.sqrt(nx*nx+ny*ny+nz*nz);
+            if(length>0){data[i+5]=(float)(nx/length);data[i+6]=(float)(ny/length);data[i+7]=(float)(nz/length);}
+        }
+        return new StaticSurfaceMesh(data);
+    }
+    /** Exact flat aperture polygons, centered and duplicated only for back-face culling. */
+    StaticSurfaceMesh centeredPorthole() {
+        float[] data=new float[vertices.length];int used=0;
+        for(int q=0;q<vertices.length;q+=32){
+            float plane=vertices[q+2];
+            for(int v=0;v<4;v++)if(vertices[q+v*8+2]!=plane||(plane!=7&&plane!=9))
+                throw new IllegalArgumentException("Only unprojected porthole panes may be centered");
+            if(plane!=7)continue;
+            for(int face=0;face<2;face++)for(int v=0;v<4;v++){
+                int from=q+(face==0?v:3-v)*8;System.arraycopy(vertices,from,data,used,8);data[used+2]=8;
+                if(face!=0){data[used+5]=-data[used+5];data[used+6]=-data[used+6];data[used+7]=-data[used+7];}used+=8;
+            }
+        }
+        if(used!=data.length)throw new IllegalArgumentException("Unpaired porthole aperture sheets");
+        return new StaticSurfaceMesh(data);
+    }
+    /** A complete pane may share a sort item only when all its polygons are parallel. */
+    long[] portholePlanes(int rotation,net.minecraft.util.math.BlockPos origin){
+        double nx=0,ny=0,nz=0,near=Double.NaN,far=Double.NaN;
+        for(int i=0;i<vertices.length;i+=8){
+            double x=vertices[i]/16D,y=vertices[i+1]/16D,z=vertices[i+2]/16D;
+            double ax=vertices[i+5],ay=vertices[i+6],az=vertices[i+7],rx=x,rz=z,anx=ax,anz=az;
+            switch(rotation){case 1:rx=z;rz=1-x;anx=az;anz=-ax;break;case 2:rx=1-x;rz=1-z;anx=-ax;anz=-az;break;case 3:rx=1-z;rz=x;anx=-az;anz=ax;break;default:break;}
+            double length=Math.sqrt(anx*anx+ay*ay+anz*anz);if(length<1E-9)continue;
+            anx/=length;ay/=length;anz/=length;
+            if(nx==0&&ny==0&&nz==0){
+                double dominant=Math.abs(anx)>Math.abs(ay)?(Math.abs(anx)>Math.abs(anz)?anx:anz):(Math.abs(ay)>Math.abs(anz)?ay:anz);
+                double sign=dominant<0?-1:1;nx=anx*sign;ny=ay*sign;nz=anz*sign;
+            }
+            if(Math.abs(anx*nx+ay*ny+anz*nz)<1-1E-7)return null;
+            double plane=(origin.getX()+rx)*nx+(origin.getY()+y)*ny+(origin.getZ()+rz)*nz;
+            if(Double.isNaN(near))near=plane;
+            else if(Math.abs(plane-near)>1E-5){
+                if(Double.isNaN(far))far=plane;else if(Math.abs(plane-far)>1E-5)return null;
+            }
+        }
+        if(Double.isNaN(near))return null;if(Double.isNaN(far))far=near;
+        return new long[]{Math.round(nx*1E6),Math.round(ny*1E6),Math.round(nz*1E6),Math.round(Math.min(near,far)*1E5),Math.round(Math.max(near,far)*1E5)};
+    }
     /** Close the opaque stem at a material boundary, retaining porthole openings in its section. */
     StaticSurfaceMesh panelEnd(double cut,double near,net.minecraft.client.renderer.texture.TextureAtlasSprite metal,boolean right) {
         Capture result=capture();com.vandorlabs.render.PanelMeshTransform.end(TEXTURE_VERTEX,result,metal,vertices,cut,near,right);return result.finish();

@@ -67,7 +67,9 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=GlassSurfaceGroups.flatCorner(tile,state);
         if(net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==0
                 &&ProgrammableGlassPasses.emptyOpaquePass(tile,corner))return;
-        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1 && !GlassFrameChunks.rendered(tile))renderSelectedFrame(tile,state,x,y,z);
+        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1 && !GlassFrameChunks.rendered(tile)){
+            if(!GlassFrameRetained.draw(tile,x,y,z))renderSelectedFrame(tile,state,x,y,z);
+        }
         if(terrain)return;
         if(GlassPaneRetained.draw(tile,x,y,z))return;
         if(corner!=null&&FlatPanelBarRenderer.render(tile,state,x,y,z))return;
@@ -122,6 +124,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         StaticSurfaceMesh frame=GlassFrameMesh.get(tile);
         // Joined interior cells have no frame geometry; avoid all GL and light work.
         if(frame.vertexCount()==0&&!LEGACY_BENCHMARK)return;
+        GlassFrameRetained.legacyDraw();
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
         if(state.getValue(BlockGlassWall.ROTATED)){GlStateManager.translate(.5,0,.5);GlStateManager.rotate(-90,0,1,0);GlStateManager.translate(-.5,0,-.5);}

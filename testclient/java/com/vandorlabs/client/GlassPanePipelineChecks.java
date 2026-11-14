@@ -91,13 +91,16 @@ public final class GlassPanePipelineChecks {
         }
     }
     static final class SceneWorld extends WorldClient {
-        Map<BlockPos,IBlockState> states;Map<BlockPos,TileEntity> tiles;
+        Map<BlockPos,IBlockState> states;Map<BlockPos,TileEntity> tiles;int light;
         SceneWorld(){super(null,null,0,net.minecraft.world.EnumDifficulty.NORMAL,null);}
         @Override public IBlockState getBlockState(BlockPos pos){return states.getOrDefault(pos,Blocks.AIR.getDefaultState());}
         @Override public TileEntity getTileEntity(BlockPos pos){return tiles.get(pos);}
         @Override public boolean isBlockLoaded(BlockPos pos){return true;}
         @Override public boolean isBlockLoaded(BlockPos pos,boolean empty){return true;}
-        @Override public int getCombinedLight(BlockPos pos,int minimum){return (LIGHT&0xffff0000)|Math.max(LIGHT&65535,minimum*16);}
+        @Override public int getCombinedLight(BlockPos pos,int minimum){return (light&0xffff0000)|Math.max(light&65535,minimum*16);}
+        @Override public void markChunkDirty(BlockPos pos,TileEntity tile){}
+        @Override public boolean checkLight(BlockPos pos){return true;}
+        @Override public void updateComparatorOutputLevel(BlockPos pos,net.minecraft.block.Block block){}
         @Override public long getTotalWorldTime(){return 1000;}
         @Override public Biome getBiome(BlockPos pos){return Biomes.PLAINS;}
         @Override public WorldType getWorldType(){return WorldType.DEFAULT;}
@@ -138,7 +141,7 @@ public final class GlassPanePipelineChecks {
         final List<TileEntityProgrammableGlass> cells=new ArrayList<>();
         final ExecutorService worker=Executors.newSingleThreadExecutor();
         Fixture()throws Exception{
-            world=(SceneWorld)unsafe.allocateInstance(SceneWorld.class);world.states=new HashMap<>();world.tiles=new HashMap<>();
+            world=(SceneWorld)unsafe.allocateInstance(SceneWorld.class);world.states=new HashMap<>();world.tiles=new HashMap<>();world.light=LIGHT;
             set(world,net.minecraft.world.World.class,"isRemote",true);
             set(world,net.minecraft.world.World.class,"eventListeners",new ArrayList<net.minecraft.world.IWorldEventListener>());
             set(world,net.minecraft.world.World.class,"loadedTileEntityList",new ArrayList<TileEntity>());
@@ -167,22 +170,26 @@ public final class GlassPanePipelineChecks {
         void queue(){for(TileEntityProgrammableGlass tile:cells){GlassFrameChunks.changed(tile);GlassPaneTerrain.changed(tile);}}
         void flush(){GlassFrameChunks.flush();GlassPaneTerrain.flush();}
         CompiledChunk compileAndUpload()throws Exception{
-            ChunkCompileTaskGenerator task=chunk.makeCompileTaskChunk();task.setRegionRenderCacheBuilder(new RegionRenderCacheBuilder());
+            return compileAndUpload(chunk);
+        }
+        CompiledChunk compileAndUpload(SceneChunk target)throws Exception{
+            ChunkCompileTaskGenerator task=target.makeCompileTaskChunk();task.setRegionRenderCacheBuilder(new RegionRenderCacheBuilder());
             task.setStatus(ChunkCompileTaskGenerator.Status.COMPILING);
-            worker.submit(()->chunk.rebuildChunk(8,8,20,task)).get(30,TimeUnit.SECONDS);
+            worker.submit(()->target.rebuildChunk(8,8,20,task)).get(30,TimeUnit.SECONDS);
             CompiledChunk compiled=task.getCompiledChunk();need(compiled!=null,"RenderChunk did not produce a compiled result");
             task.setStatus(ChunkCompileTaskGenerator.Status.UPLOADING);
             for(BlockRenderLayer layer:BlockRenderLayer.values())if(compiled.isLayerStarted(layer)){
                 BufferBuilder buffer=task.getRegionRenderCacheBuilder().getWorldRendererByLayer(layer);
                 if(layer==BlockRenderLayer.TRANSLUCENT&&!compiled.isLayerEmpty(layer))need(buffer.getVertexCount()>0,"native translucent build empty");
-                if(layer==BlockRenderLayer.CUTOUT_MIPPED&&!compiled.isLayerEmpty(layer)){
+                if(layer==BlockRenderLayer.CUTOUT_MIPPED&&!compiled.isLayerEmpty(layer)&&!cells.isEmpty()
+                        &&cells.stream().allMatch(tile->tile.frameAppearance.light()>0)){
                     BufferBuilder.State state=buffer.getVertexState();int[] data=state.getRawBuffer();int stride=state.getVertexFormat().getIntegerSize(),light=state.getVertexFormat().getUvOffsetById(1)/4;
                     for(int at=light;at<data.length;at+=stride)need((data[at]&65535)==240,"emissive native frame lost full block light");
                 }
-                VertexBufferUploader uploader=new VertexBufferUploader();uploader.setVertexBuffer(chunk.getVertexBufferByLayer(layer.ordinal()));uploader.draw(buffer);
+                VertexBufferUploader uploader=new VertexBufferUploader();uploader.setVertexBuffer(target.getVertexBufferByLayer(layer.ordinal()));uploader.draw(buffer);
             }
             // Publication comes only after the real layer uploads above.
-            chunk.setCompiledChunk(compiled);task.setStatus(ChunkCompileTaskGenerator.Status.DONE);chunk.clearNeedsUpdate();return compiled;
+            target.setCompiledChunk(compiled);task.setStatus(ChunkCompileTaskGenerator.Status.DONE);target.clearNeedsUpdate();return compiled;
         }
         public void close()throws Exception{
             mc.world=null;GlassFrameChunks.flush();GlassPaneTerrain.flush();
@@ -219,7 +226,9 @@ public final class GlassPanePipelineChecks {
         for(int y=0;y<size;y++)for(int x=0;x<size;x++){atlas.setRGB(x,y,gold.getRGB(x,y));atlas.setRGB(x+size,y,single.getRGB(x,y));atlas.setRGB(x+size*2,y,0xffffffff);}
         atlasTexture=texture(atlas);sourceSprite=new Sprite("vandorlabs:checks/source",size,0,true);nativeSprite=new Sprite("vandorlabs:checks/single",size,size,true);frameSprite=new Sprite("vandorlabs:checks/frame",size,size*2,false);
         TextureMap map=new TextureMap(""){@Override public TextureAtlasSprite getAtlasSprite(String name){return name.contains("native_glass")?nativeSprite:name.contains("programmable_glass")&&!name.contains("metal")?sourceSprite:frameSprite;}};
-        TextureManager textures=new TextureManager(null){@Override public void bindTexture(ResourceLocation location){GlStateManager.bindTexture(atlasTexture);}};
+        TextureManager textures=new TextureManager(null){@Override public void bindTexture(ResourceLocation location){
+            if(TextureMap.LOCATION_BLOCKS_TEXTURE.equals(location))GlStateManager.bindTexture(atlasTexture);else super.bindTexture(location);
+        }};
         for(Field value:Minecraft.class.getDeclaredFields())if(!Modifier.isStatic(value.getModifiers())){
             value.setAccessible(true);if(value.getType()==TextureMap.class)value.set(mc,map);if(value.getType()==TextureManager.class)value.set(mc,textures);
         }
@@ -235,6 +244,7 @@ public final class GlassPanePipelineChecks {
             return null;
         });
         for(Field value:Minecraft.class.getDeclaredFields())if(!Modifier.isStatic(value.getModifiers())&&net.minecraft.client.resources.IResourceManager.class.isAssignableFrom(value.getType())){value.setAccessible(true);value.set(mc,resources);}
+        for(Field value:TextureManager.class.getDeclaredFields())if(!Modifier.isStatic(value.getModifiers())&&net.minecraft.client.resources.IResourceManager.class.isAssignableFrom(value.getType())){value.setAccessible(true);value.set(textures,resources);}
         Class<?> variant=Class.forName("com.vandorlabs.client.GlassPaneTextures$Variant");Constructor<?> ctor=variant.getDeclaredConstructor(int.class,int.class,BufferedImage.class);ctor.setAccessible(true);
         Constructor<GlassPaneTextures.Selection> selection=GlassPaneTextures.Selection.class.getDeclaredConstructor(TextureAtlasSprite.class,variant);selection.setAccessible(true);
         GlassPaneTextures.Selection[] choices=new GlassPaneTextures.Selection[GlassTextures.IDS.length*GlassTextures.TINT_COUNT];
@@ -301,12 +311,11 @@ public final class GlassPanePipelineChecks {
             need(paneOnly.getTileEntities().contains(border),"pending frame upload lost its fallback admission");
 
             CompiledChunk framed=current.compileAndUpload();GlassPaneTerrain.flush();
-            need(!dirty.getBoolean(section)&&framed.getTileEntities().contains(border),"unacknowledged frame was prematurely pruned");
-            GlassFrameChunks.flush();
-            need(GlassFrameChunks.rendered(border)&&dirty.getBoolean(section),"completed frame upload did not invalidate settled pane admissions");
-            GlassPaneTerrain.flush();
+            need(GlassFrameChunks.rendered(border)&&!dirty.getBoolean(section),"frame-start phase did not settle uploaded frame before pane admissions");
             need(framed.getTileEntities().isEmpty(),"cold registered frames left settled pane owners in the TESR list");
-            System.out.println("GlassPaneColdFrames PASS real cold registration, upload, readiness notifications and final all-owner admission");
+            GlassFrameChunks.flush();GlassPaneTerrain.flush();
+            need(!dirty.getBoolean(section)&&framed.getTileEntities().isEmpty(),"repeated settled-frame sweep churned pane admission");
+            System.out.println("GlassPaneColdFrames PASS real cold registration, upload, same-phase readiness settlement and final all-owner admission");
         }
     }
     static void blendedEmissiveFrames()throws Exception{
@@ -322,7 +331,7 @@ public final class GlassPanePipelineChecks {
             for(TileEntityProgrammableGlass tile:current.cells)need(GlassPaneTerrain.rendered(tile),"blended emissive frame rejected its native pane");
             int[] records=compiled.getState().getRawBuffer();int stride=compiled.getState().getVertexFormat().getIntegerSize(),light=compiled.getState().getVertexFormat().getUvOffsetById(1)/4;
             for(int at=light;at<records.length;at+=stride)need((records[at]&65535)==(LIGHT&65535),"blended emissive frame made its native pane fullbright");
-            need(compiled.getTileEntities().size()==8&&compiled.getTileEntities().contains(border)&&!compiled.getTileEntities().contains(interior),"only blended border frames should retain TESR admission");
+            need(compiled.getTileEntities().size()==1&&compiled.getTileEntities().contains(border)&&!compiled.getTileEntities().contains(interior),"only the retained blended-frame anchor should retain TESR admission");
             final class Capture extends net.minecraft.client.renderer.Tessellator {
                 int draws,vertices;Capture(){super(4096);}
                 @Override public void draw(){
@@ -334,15 +343,15 @@ public final class GlassPanePipelineChecks {
             }
             Field singleton=null;for(Field candidate:net.minecraft.client.renderer.Tessellator.class.getDeclaredFields())if(Modifier.isStatic(candidate.getModifiers())&&candidate.getType()==net.minecraft.client.renderer.Tessellator.class)singleton=candidate;
             need(singleton!=null,"Tessellator singleton unavailable");singleton.setAccessible(true);Object old=singleton.get(null),base=unsafe.staticFieldBase(singleton);long offset=unsafe.staticFieldOffset(singleton);Capture capture=new Capture();
-            unsafe.putObject(base,offset,capture);
+            unsafe.putObject(base,offset,capture);long retainedDraws=GlassFrameRetained.mainDraws;
             try{
                 TEProgrammableGlass renderer=new TEProgrammableGlass();renderer.setRendererDispatcher(TileEntityRendererDispatcher.instance);
                 net.minecraftforge.client.ForgeHooksClient.setRenderPass(0);renderer.render(border,0,0,0,0,-1,1);
-                need(capture.draws==1&&capture.vertices==GlassFrameMesh.get(border).vertexCount(),"native-owned pane leaked into the emissive frame fallback");
+                need(capture.draws==0&&GlassFrameRetained.mainDraws==retainedDraws+1,"retained blended frame escaped to legacy drawing or native-owned pane repeated");
                 net.minecraftforge.client.ForgeHooksClient.setRenderPass(1);renderer.render(border,0,0,0,0,-1,1);
-                need(capture.draws==1,"native-owned pane or emissive frame repeated in translucent TESR pass");
+                need(capture.draws==0&&GlassFrameRetained.mainDraws==retainedDraws+1,"native-owned pane or emissive frame repeated in translucent TESR pass");
             }finally{unsafe.putObject(base,offset,old);net.minecraftforge.client.ForgeHooksClient.setRenderPass(-1);}
-            System.out.println("GlassPaneBlendedFrames PASS native ordinarily lit panes, border-only TESR admissions, actual fullbright frame-only fallback and no translucent redraw");
+            System.out.println("GlassPaneBlendedFrames PASS native ordinarily lit panes, one retained frame anchor, actual fullbright frame VBO and no translucent redraw");
         }finally{frameSprite=opaque;GlassFrameChunks.reload();}
     }
     public static void main(String[] args)throws Exception{

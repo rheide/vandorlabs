@@ -476,7 +476,7 @@ public final class GlassPaneTerrain {
 
     static void flush(){
         Minecraft mc=Minecraft.getMinecraft();if(mc.world!=world)reset(mc.world);
-        if(world==null){synchronized(QUEUED){QUEUED.clear();}GlassPaneRetained.flush();return;}
+        if(world==null){synchronized(QUEUED){QUEUED.clear();}GlassFrameRetained.flush();GlassPaneRetained.flush();PortholeRetained.flush();return;}
         boolean active=GlassPanePolicy.terrainEnabled()&&!WorldSceneBenchmark.omitGlazing();
         if(active!=terrainActive){terrainActive=active;DIRTY.addAll(ENTRIES.values());}
         // Even explicit retained-group mode needs ownership/admission tracking.
@@ -530,7 +530,10 @@ public final class GlassPaneTerrain {
         }
         // Retire incompatible groups before publishing native snapshots, and
         // establish replacement anchors before the compiled lists are pruned.
+        GlassFrameChunks.settleUploads();
+        GlassFrameRetained.flush();
         GlassPaneRetained.flush();
+        PortholeRetained.flush();
         try{updateView(mc);}catch(ReflectiveOperationException failure){throw new IllegalStateException("Native glass pane publication failed",failure);}
     }
 

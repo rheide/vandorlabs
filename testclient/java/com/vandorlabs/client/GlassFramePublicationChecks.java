@@ -62,12 +62,16 @@ public final class GlassFramePublicationChecks {
             set(renderer,RenderGlobal.class,"viewFrustum",view);
         }
         void complete(CompiledChunk compiled)throws Exception{
-            ChunkCompileTaskGenerator task=new ChunkCompileTaskGenerator(chunk,ChunkCompileTaskGenerator.Type.REBUILD_CHUNK,0);
+            task(ChunkCompileTaskGenerator.Type.REBUILD_CHUNK,compiled,ChunkCompileTaskGenerator.Status.DONE,true);
+        }
+        ChunkCompileTaskGenerator task(ChunkCompileTaskGenerator.Type type,CompiledChunk compiled,ChunkCompileTaskGenerator.Status status,boolean install)throws Exception{
+            ChunkCompileTaskGenerator task=new ChunkCompileTaskGenerator(chunk,type,0);
             task.setCompiledChunk(compiled);
-            task.setStatus(ChunkCompileTaskGenerator.Status.DONE);
+            task.setStatus(status);
             set(chunk,RenderChunk.class,"compileTask",task);
-            chunk.compiledChunk=compiled;
+            if(install)chunk.compiledChunk=compiled;
             chunk.clearNeedsUpdate();
+            return task;
         }
         ChunkCompileTaskGenerator task()throws Exception{return (ChunkCompileTaskGenerator)get(chunk,RenderChunk.class,"compileTask");}
     }
@@ -147,7 +151,30 @@ public final class GlassFramePublicationChecks {
         position.setPos(POS.add(48,0,0));
         require(!poll(edited,replacement),"recycled chunk at another position was accepted");
         require(replacement.renderer.count==1,"out-of-position chunk was marked");
-        System.out.println("glass-frame-publication PASS initial/edit/new-frustum generations, matching completed upload, interior-only coalesced marks, recycled position and nonblocking compile/task locks");
+        latePublication();
+        System.out.println("glass-frame-publication PASS initial/edit/new-frustum generations, late DONE installation and old resort rejection, successor resort acknowledgement, canceled task rejection, interior-only coalesced marks, recycled position and nonblocking compile/task locks");
+    }
+
+    /** A DONE rebuild can still install its result after its publication lock is released. */
+    private static void latePublication()throws Exception{
+        Fixture fixture=new Fixture();CompiledChunk oldResult=new CompiledChunk();
+        ChunkCompileTaskGenerator before=fixture.task(ChunkCompileTaskGenerator.Type.REBUILD_CHUNK,oldResult,ChunkCompileTaskGenerator.Status.DONE,false);
+        Object pending=section();require(!poll(pending,fixture),"withdrawal fence did not mark its section");
+        fixture.chunk.compiledChunk=oldResult;fixture.chunk.clearNeedsUpdate();
+        require(!poll(pending,fixture),"pre-publication DONE task installed after the fence and falsely withdrew native frame");
+        require(fixture.task()==before,"receipt probe replaced the in-flight task");
+        fixture.task(ChunkCompileTaskGenerator.Type.RESORT_TRANSPARENCY,oldResult,ChunkCompileTaskGenerator.Status.DONE,true);
+        require(!poll(pending,fixture),"resort of a pre-publication task result falsely withdrew native frame");
+
+        CompiledChunk replacement=new CompiledChunk();fixture.complete(replacement);
+        fixture.task(ChunkCompileTaskGenerator.Type.RESORT_TRANSPARENCY,replacement,ChunkCompileTaskGenerator.Status.PENDING,true);
+        require(poll(pending,fixture),"successor resort lost acknowledgement of the already installed replacement rebuild");
+        require(fixture.renderer.count==1,"resorting repeatedly scheduled the same native-frame withdrawal");
+
+        ChunkCompileTaskGenerator canceled=fixture.task(ChunkCompileTaskGenerator.Type.REBUILD_CHUNK,new CompiledChunk(),ChunkCompileTaskGenerator.Status.COMPILING,true);
+        canceled.finish();fixture.chunk.clearNeedsUpdate();
+        require(!poll(pending,fixture),"canceled task was mistaken for a completed frame replacement");
+        fixture.complete(new CompiledChunk());require(poll(pending,fixture),"valid replacement could not recover from a canceled task");
     }
 
     public static void main(String[] args)throws Exception{

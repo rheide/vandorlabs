@@ -138,8 +138,9 @@ public final class GlassPaneGpuTimers {
         context.addProperty("block_vertex_stride",DefaultVertexFormats.BLOCK.getNextOffset());
         context.addProperty("native_policy",GlassPanePolicy.diagnostics());
         context.addProperty("native_coverage",GlassPaneTerrain.diagnostics());
-        try{context.addProperty("retained_coverage",String.valueOf(Class.forName("com.vandorlabs.client.GlassPaneRetained").getMethod("diagnostics").invoke(null)));}
-        catch(ReflectiveOperationException|LinkageError absent){context.addProperty("retained_coverage","unavailable in this build");}
+        coverage(context,"retained_coverage","GlassPaneRetained");
+        coverage(context,"frame_coverage","GlassFrameRetained");
+        coverage(context,"porthole_coverage","PortholeRetained");
         if(mc!=null){
             context.addProperty("width",mc.displayWidth);context.addProperty("height",mc.displayHeight);
             if(mc.gameSettings!=null){context.addProperty("render_distance",mc.gameSettings.renderDistanceChunks);context.addProperty("fps_limit",mc.gameSettings.limitFramerate);context.addProperty("vsync",mc.gameSettings.enableVsync);}
@@ -155,6 +156,10 @@ public final class GlassPaneGpuTimers {
         catch(ReflectiveOperationException|LinkageError unavailable){context.addProperty("shader_pack","unavailable through this OptiFine version");}
         return context;
     }
+    private static void coverage(JsonObject context,String key,String renderer){
+        try{context.addProperty(key,String.valueOf(Class.forName("com.vandorlabs.client."+renderer).getMethod("diagnostics").invoke(null)));}
+        catch(ReflectiveOperationException|LinkageError absent){context.addProperty(key,"unavailable in this build");}
+    }
     private static JsonObject stats(long[] input,int size){
         long[] sorted=Arrays.copyOf(input,size);Arrays.sort(sorted);double total=0;for(long value:sorted)total+=value;
         JsonObject stats=new JsonObject();stats.addProperty("count",size);
@@ -164,7 +169,7 @@ public final class GlassPaneGpuTimers {
     public static JsonObject report(){
         JsonObject report=new JsonObject();report.addProperty("schema",1);report.addProperty("active",capturing);report.addProperty("frames",frames);report.addProperty("requested_frames",frameLimit);report.addProperty("gpu_timestamps",gpu);
         report.addProperty("pending_queries",pending);report.addProperty("ring_dropped_intervals",dropped);report.addProperty("sample_limit_per_label",SAMPLE_LIMIT);
-        report.addProperty("scope","frame-interval is render-start to render-start; render-event covers Forge RenderTick START to END; retained scopes cover glass draws only, not the complete shader shadow pass. Nested scopes overlap and must not be summed.");
+        report.addProperty("scope","frame-interval is render-start to render-start; render-event covers Forge RenderTick START to END; retained/porthole scopes cover the named pane, frame or housing submissions only, not the complete shader shadow pass. Native panes share terrain draws. Nested scopes overlap and must not be summed.");
         report.add("start",startContext);report.add("end",endContext);
         if(startContext!=null&&endContext!=null&&startContext.has("camera_x")&&endContext.has("camera_x")){
             boolean moved=false;for(String key:new String[]{"camera_x","camera_y","camera_z","yaw","pitch"})if(Math.abs(startContext.get(key).getAsDouble()-endContext.get(key).getAsDouble())>0.0001)moved=true;

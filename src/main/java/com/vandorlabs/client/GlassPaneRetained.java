@@ -67,17 +67,20 @@ public final class GlassPaneRetained {
         final TextureAtlasSprite sprite;
         final int shader,opacity,axis;
         final long plane;
-        final boolean single,palette;
+        final boolean single,palette,opaque;
         Key(IBlockState state,TextureAtlasSprite sprite,int shader,float opacity,boolean single,boolean palette,BlockPos pos){
-            this.state=state;this.sprite=sprite;this.shader=shader;this.opacity=Float.floatToRawIntBits(opacity);this.single=single;this.palette=palette;
+            this(state,sprite,shader,opacity,single,palette,false,pos);
+        }
+        Key(IBlockState state,TextureAtlasSprite sprite,int shader,float opacity,boolean single,boolean palette,boolean opaque,BlockPos pos){
+            this.state=state;this.sprite=sprite;this.shader=shader;this.opacity=Float.floatToRawIntBits(opacity);this.single=single;this.palette=palette;this.opaque=opaque;
             boolean rotated=state.getValue(BlockGlassWall.ROTATED);axis=rotated?0:2;
             double offset=PanelDepth.offset(state.getValue(BlockGlassWall.DEPTH))/16D;
             plane=Double.doubleToLongBits((rotated?pos.getX():pos.getZ())+.5+(rotated?-offset:offset));
         }
-        public int hashCode(){return Objects.hash(System.identityHashCode(state),System.identityHashCode(sprite),shader,opacity,axis,plane,single,palette);}
+        public int hashCode(){return Objects.hash(System.identityHashCode(state),System.identityHashCode(sprite),shader,opacity,axis,plane,single,palette,opaque);}
         public boolean equals(Object other){
             if(!(other instanceof Key))return false;Key k=(Key)other;
-            return state==k.state&&sprite==k.sprite&&shader==k.shader&&opacity==k.opacity&&axis==k.axis&&plane==k.plane&&single==k.single&&palette==k.palette;
+            return state==k.state&&sprite==k.sprite&&shader==k.shader&&opacity==k.opacity&&axis==k.axis&&plane==k.plane&&single==k.single&&palette==k.palette&&opaque==k.opaque;
         }
     }
 
@@ -111,17 +114,19 @@ public final class GlassPaneRetained {
         void delete(){if(buffer!=null){buffer.deleteGlBuffers();buffer=null;}if(accounted){retainedBytes-=bytes;accounted=false;}}
         void draw(double x,double y,double z){
             boolean shadow=VehicleRenderPass.shadow();
-            if(shadow&&GlassPanePolicy.framesOnlyShadows())return;
+            if(GlassPanePolicy.omitPane(key.opaque,shadow))return;
             if(format.getNextOffset()>32)try{SHADER_TILE.invoke(null,anchor);}catch(ReflectiveOperationException failure){throw new IllegalStateException("Cannot select retained glass shader material",failure);}
             GlassPaneGpuTimers.Token timing=GlassPaneGpuTimers.begin(shadow?"retained-shadow":"retained-main");
             GlStateManager.pushMatrix();
             try{
                 GlStateManager.translate(x,y,z);
                 Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-                GlStateManager.disableLighting();if(key.palette)GlStateManager.enableCull();else GlStateManager.disableCull();
-                GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);
-                GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);GlStateManager.color(1,1,1,1);
-                BlockMeshVbo.draw(buffer,format,BlockRenderLayer.TRANSLUCENT,key.palette);
+                boolean cull=key.palette&&!key.opaque;
+                GlStateManager.disableLighting();if(cull)GlStateManager.enableCull();else GlStateManager.disableCull();
+                if(key.opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+                GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(key.opaque);GlStateManager.color(1,1,1,1);
+                BlockMeshVbo.draw(buffer,format,key.opaque?BlockRenderLayer.CUTOUT:BlockRenderLayer.TRANSLUCENT,cull);
                 if(shadow)shadowDraws++;else mainDraws++;
             }finally{
                 GlStateManager.enableCull();GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
@@ -193,16 +198,21 @@ public final class GlassPaneRetained {
 
     private static Key selection(TileEntityProgrammableGlass tile){
         if(!installed(tile)||tile.getWorld() instanceof VehicleWorld||tile.fluids.any()
-                ||GlassMaterials.opaque(tile.getMaterial(),tile.getTint())||!GlazingDisplay.atlasStatic(tile)||!GlassPaneTerrain.fallbackSafe(tile))return null;
+                ||!GlazingDisplay.atlasStatic(tile)||!GlassPaneTerrain.fallbackSafe(tile))return null;
         IBlockState state=world.getBlockState(tile.getPos());
         if(!(state.getBlock() instanceof BlockProgrammableGlass)||GlassSurfaceGroups.flatCorner(tile,state)!=null)return null;
         int shader=format.getNextOffset()>32?SHADER_MATERIAL.key(tile):GlassShaderMaterial.UNAVAILABLE;
+        boolean opaque=GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
         if(tile.getMaterial()<0){
+            if(opaque){
+                TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(-1,tile.getShade(),tile.getSize(),tile.getTint()));
+                return new Key(state,sprite,shader,1,false,true,true,tile.getPos());
+            }
             GlassPaneTextures.Selection material=GlassPaneTextures.select(tile.getShade(),tile.getTint());
             return material==null?null:new Key(state,material.sprite,shader,1,material.singleSurface,true,tile.getPos());
         }
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
-        return new Key(state,sprite,shader,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()),false,false,tile.getPos());
+        return new Key(state,sprite,shader,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()),false,false,opaque,tile.getPos());
     }
 
     /** Real ordinary vertex writers generate per-component optional shader data once. */
@@ -213,8 +223,10 @@ public final class GlassPaneRetained {
             try{
                 context=VehicleShaderContext.push(tile,COMPONENT);
                 int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
+                light=(light&0xffff0000)|GlassInsertLighting.block(tile,light&65535);
                 double x=tile.getPos().getX()-origin.getX(),y=tile.getPos().getY()-origin.getY(),z=tile.getPos().getZ()-origin.getZ();
-                if(key.palette)emitPalette(COMPONENT,key,x,y,z,light);
+                if(key.palette&&key.opaque)GlassNativePanes.get(tile.getShade(),tile.getSize(),tile.getTint(),key.state.getValue(BlockGlassWall.ROTATED),key.state.getValue(BlockGlassWall.DEPTH)).draw(COMPONENT,x,y,z,light>>>16,light&65535);
+                else if(key.palette)emitPalette(COMPONENT,key,x,y,z,light);
                 else{
                     boolean rotated=key.state.getValue(BlockGlassWall.ROTATED);double offset=PanelDepth.offset(key.state.getValue(BlockGlassWall.DEPTH))/16D;
                     StaticSurfaceMesh mesh=GlassSurfaceMapping.map(TEProgrammableGlass.materialPlane(),key.sprite,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout());
@@ -269,13 +281,13 @@ public final class GlassPaneRetained {
         VertexFormat current=BlockSurfaceFormat.get();
         if(format==null||!format.equals(current)){reload();format=new VertexFormat(current);}
         if(drawFailed||!BlockMeshVbo.supportsRetained(current)||(current.getNextOffset()>32&&(SHADER_TILE==null||!VehicleShaderContext.available()))){
-            for(Section section:SECTIONS.values())if(!section.groups.isEmpty())section.retire();
+            for(Section section:SECTIONS.values()){if(!section.groups.isEmpty())section.retire();DIRTY.add(section.key);}
             unavailable=drawFailed?"retained-draw-failed":"unsupported-shader-hooks";return;
         }
         Set<TileEntityProgrammableGlass> queued=Collections.newSetFromMap(new IdentityHashMap<>());
         synchronized(QUEUED){
             queued.addAll(QUEUED);QUEUED.clear();DIRTY.addAll(INVALIDATED);INVALIDATED.clear();
-            if(rescan){for(TileEntity tile:world.loadedTileEntityList)if(tile instanceof TileEntityProgrammableGlass)queued.add((TileEntityProgrammableGlass)tile);rescan=false;}
+            if(rescan){for(Section section:SECTIONS.values())DIRTY.add(section.key);for(TileEntity tile:world.loadedTileEntityList)if(tile instanceof TileEntityProgrammableGlass)queued.add((TileEntityProgrammableGlass)tile);rescan=false;}
         }
         for(TileEntityProgrammableGlass tile:queued)if(installed(tile)){
             long key=sectionKey(tile.getPos());Section section=SECTIONS.computeIfAbsent(key,Section::new);section.tiles.add(tile);DIRTY.add(key);section.current=false;
@@ -300,17 +312,17 @@ public final class GlassPaneRetained {
     public static AxisAlignedBB bounds(TileEntityProgrammableGlass tile){Group group=current(tile);return group!=null&&group.anchor==tile?group.bounds:null;}
     static double plane(TileEntityProgrammableGlass tile){Group group=current(tile);return group==null?Double.NaN:Double.longBitsToDouble(group.key.plane);}
     /** Never remove an anchor or an owner whose exceptional frame still needs a TESR. */
-    public static boolean suppress(TileEntityProgrammableGlass tile){Group group=current(tile);return group!=null&&group.anchor!=tile&&ProgrammableGlassPasses.emptyOpaquePass(tile,null);}
+    public static boolean suppress(TileEntityProgrammableGlass tile){Group group=current(tile);return group!=null&&group.anchor!=tile&&!tile.fluids.any()&&!ProgrammableGlassPasses.frameFallbackInPass(tile,0);}
     public static int renderPass(TileEntityProgrammableGlass tile,int pass){
         Group group=current(tile);if(group==null)return -1;
-        if(pass==0)return group.anchor==tile?1:ProgrammableGlassPasses.emptyOpaquePass(tile,null)?0:-1;
-        if(pass==1)return group.anchor==tile&&!(GlassPanePolicy.framesOnlyShadows()&&VehicleRenderPass.shadow())?1:0;
+        if(pass==0)return group.anchor==tile?1:ProgrammableGlassPasses.frameFallbackInPass(tile,0)?-1:0;
+        if(pass==1)return group.anchor==tile&&!group.key.opaque&&!GlassPanePolicy.omitPane(false,VehicleRenderPass.shadow())?1:0;
         return 0;
     }
     public static boolean draw(TileEntityProgrammableGlass tile,double x,double y,double z){
         Group group=current(tile);if(group==null)return false;
         int pass=MinecraftForgeClient.getRenderPass();
-        if(group.anchor==tile&&(pass<0||pass==1)){
+        if(group.anchor==tile&&(pass<0||pass==(group.key.opaque?0:1))){
             try{group.draw(x,y,z);}catch(RuntimeException|LinkageError failure){
                 // Do not mutate RenderGlobal's active tile iterator here. Retire
                 // and restore every member at the next safe flush boundary.

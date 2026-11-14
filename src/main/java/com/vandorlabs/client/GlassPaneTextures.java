@@ -70,7 +70,7 @@ public final class GlassPaneTextures {
 
     @SubscribeEvent(priority=EventPriority.HIGH) public static void before(TextureStitchEvent.Pre event){
         if(event.getMap()!=Minecraft.getMinecraft().getTextureMapBlocks())return;
-        GlassPaneTerrain.reload();GlassPaneRetained.reload();close();selections=new Selection[0];prepared=Collections.emptyList();
+        GlassPaneTerrain.reload();GlassPaneRetained.reload();GlassFrameRetained.reload();PortholeRetained.reload();close();selections=new Selection[0];prepared=Collections.emptyList();
         if(!GlassPanePolicy.staticEnabled())return;
         List<IResourcePack> active=ShaderAtlasResources.packs();
         Scope scope=new Scope(active);List<Variant> next=new ArrayList<>();
@@ -94,7 +94,7 @@ public final class GlassPaneTextures {
             TextureAtlasSprite sprite=event.getMap().getAtlasSprite(variant.sprite.toString());
             if(sprite!=event.getMap().getMissingSprite())next[variant.index]=new Selection(sprite,variant);
         }
-        selections=next;prepared=Collections.emptyList();close();GlassPaneTerrain.reload();GlassPaneRetained.reload();
+        selections=next;prepared=Collections.emptyList();close();GlassPaneTerrain.reload();GlassPaneRetained.reload();GlassFrameRetained.reload();PortholeRetained.reload();
     }
     @SubscribeEvent public static void cleanup(TickEvent.ClientTickEvent event){
         if(loading!=null&&event.phase==TickEvent.Phase.END){close();prepared=Collections.emptyList();}
