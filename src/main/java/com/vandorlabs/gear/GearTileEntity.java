@@ -36,6 +36,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private final List<BlockPos> columns = new ArrayList<BlockPos>();
     private final Set<BlockPos> members = new HashSet<BlockPos>();
     private EnumFacing footFacing = EnumFacing.NORTH,sourceFootFacing=EnumFacing.NORTH;
+    private boolean sourceFootFacingExplicit;
     private EnumFacing configuredFootFacing;
     private boolean middleHinge;
     public boolean middleHinge(){return middleHinge;}
@@ -833,7 +834,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             tag.setInteger("GearHeight", assembly.columnHeight());
             tag.setString("GearKind", assembly.kind().name());
             tag.setInteger("GearFootFacing", footFacing.getHorizontalIndex());
-            if(assembly.kind()!=GearTopology.FootKind.NONE)tag.setInteger("GearSourceFootFacing",sourceFootFacing.getHorizontalIndex());else tag.removeTag("GearSourceFootFacing");
+            if(assembly.kind()!=GearTopology.FootKind.NONE&&(sourceFootFacingExplicit||sourceFootFacing!=footFacing))tag.setInteger("GearSourceFootFacing",sourceFootFacing.getHorizontalIndex());else tag.removeTag("GearSourceFootFacing");
             NBTTagList feet = new NBTTagList();
             for (GearTopology.Cell foot : assembly.feet()) {
                 feet.appendTag(new NBTTagIntArray(new int[] { foot.x, foot.y, foot.z }));
@@ -903,7 +904,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         progress = previousProgress = Double.isFinite(savedProgress) ? Math.max(0, Math.min(1, savedProgress)) : 1.0;
         surfaceDepartureTarget=deployedTarget;surfaceDepartureSaved=tag.hasKey("SurfaceDepartureActive",1);surfaceDepartureActive=surfaceDepartureSaved?tag.getBoolean("SurfaceDepartureActive"):progress>=1||progress>0&&!deployedTarget;rememberSurfaceEndpoint();
         operational = !tag.hasKey("GearOperational") || tag.getBoolean("GearOperational");
-        assembly = null;sourceFootFacing=EnumFacing.NORTH;
+        assembly = null;sourceFootFacing=EnumFacing.NORTH;sourceFootFacingExplicit=tag.hasKey("GearSourceFootFacing",3);
         if (tag.getBoolean("GearController")) {
             NBTTagList rawFeet = tag.getTagList("GearFeet", 11);
             if (rawFeet.tagCount() <= GearTopology.MAX_FEET) {

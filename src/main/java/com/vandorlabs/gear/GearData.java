@@ -46,7 +46,7 @@ public final class GearData {
         BlockPos north=ArmOrientation.inverse(nextMount,vector(ArmOrientation.vector(mount,new BlockPos(0,0,-1)),turns));int localTurns=north.getX()==1?1:north.getZ()==1?2:north.getX()==-1?3:0;
         if(tag.hasKey("ArmMountDirection",8))tag.setString("ArmMountDirection",nextMount.name());
         try{EnumFacing facing=EnumFacing.valueOf(tag.getString("GearDirection"));for(int i=0;i<localTurns;i++)facing=facing.rotateY();tag.setString("GearDirection",facing.name());}catch(IllegalArgumentException ignored){}
-        if(!tag.hasKey("GearSourceFootFacing")&&tag.getBoolean("GearController")&&!"NONE".equals(tag.getString("GearKind"))&&tag.hasKey("GearFootFacing",3))tag.setInteger("GearSourceFootFacing",tag.getInteger("GearFootFacing"));
+        if(sourceTurns!=localTurns&&!tag.hasKey("GearSourceFootFacing")&&tag.getBoolean("GearController")&&!"NONE".equals(tag.getString("GearKind"))&&tag.hasKey("GearFootFacing",3))tag.setInteger("GearSourceFootFacing",tag.getInteger("GearFootFacing"));
         if(tag.hasKey("GearSourceFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("GearSourceFootFacing"));for(int i=0;i<sourceTurns;i++)foot=foot.rotateY();tag.setInteger("GearSourceFootFacing",foot.getHorizontalIndex());}
         if(tag.hasKey("ArmFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("ArmFootFacing"));for(int i=0;i<localTurns;i++)foot=foot.rotateY();tag.setInteger("ArmFootFacing",foot.getHorizontalIndex());}
         if(tag.hasKey("GearFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("GearFootFacing"));for(int i=0;i<localTurns;i++)foot=foot.rotateY();tag.setInteger("GearFootFacing",foot.getHorizontalIndex());}

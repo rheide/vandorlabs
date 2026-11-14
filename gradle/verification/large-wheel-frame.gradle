@@ -13,3 +13,11 @@ task testRegularFootComponentFrame(type: JavaExec) {
     maxHeapSize = '512m'
 }
 check.dependsOn testRegularFootComponentFrame
+
+task testLegacyArmFootDefaults(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.gear.LegacyArmFootDefaultsChecks'
+    maxHeapSize = '512m'
+}
+check.dependsOn testLegacyArmFootDefaults
