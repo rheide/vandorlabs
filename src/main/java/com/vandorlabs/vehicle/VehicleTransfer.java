@@ -263,7 +263,7 @@ public final class VehicleTransfer {
         if(structure.gearCount<3){
             VehicleScan supports=VehicleScan.attachment(view,structure.seat,Collections.emptySet());
             while(!supports.step(256)){}
-            if(supports.error!=null||supports.trackSupportCount()<2)throw new IllegalArgumentException("A craft needs at least three landing gear or wheel supports, or two track blocks.");
+            if(supports.error!=null||!supports.hasRequiredSupports())throw new IllegalArgumentException("A craft needs three landing gear or wheel supports, two skis, or two track blocks.");
         }
         if(work!=null&&REUSE_ASSEMBLY_PREFLIGHT)work.validationComplete=true;
         fault("assembly-validation-built");

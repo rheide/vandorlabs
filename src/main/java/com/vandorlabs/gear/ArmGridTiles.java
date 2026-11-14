@@ -23,6 +23,7 @@ final class ArmGridTiles {
     static IBlockState state(VehicleStructure.Cell cell,IBlockState state,int[] basis){
         if(state.getBlock()!=cell.state.getBlock())return null;
         Vec3d[] axes=axes(basis);
+        if(ArmLooseGearData.foot(state))return state==cell.state?ArmLooseGearData.state(cell,basis):null;
         if(!(state.getBlock() instanceof BlockCoupler))return cell.hasTileData()||!state.isFullCube()?null:ArmPayload.rotateState(state,axes);
         if(state.getPropertyKeys().size()!=(state.getBlock() instanceof BlockCouplerSlab?3:2))return null;
         ResourceLocation id=TileEntity.getKey(TileCoupler.class);
@@ -36,6 +37,7 @@ final class ArmGridTiles {
         state=state.withProperty(BlockCoupler.FACING,mapped);
         return state.getBlock().getStateFromMeta(state.getBlock().getMetaFromState(state))==state?state:null;
     }
+    static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis){return ArmLooseGearData.foot(cell.state)?ArmLooseGearData.data(cell,basis):cell.tileData();}
     static void validate(VehicleStructure source,VehicleStructure placed,int[] basis){
         axes(basis);if(source.cells.isEmpty()||source.cells.size()!=placed.cells.size())throw new IllegalArgumentException("Invalid typed attachment size");
         BlockPos first=source.cells.get(0).pos,target=placed.cells.get(0).pos;
@@ -44,7 +46,7 @@ final class ArmGridTiles {
             BlockPos expected=target.add(basis[0]*d.getX()+basis[1]*d.getY()+basis[2]*d.getZ(),basis[3]*d.getX()+basis[4]*d.getY()+basis[5]*d.getZ(),basis[6]*d.getX()+basis[7]*d.getY()+basis[8]*d.getZ());
             if(!expected.equals(b.pos)||state(a,basis)!=b.state||a.hasTileData()!=b.hasTileData())throw new IllegalArgumentException("Invalid ordered attachment state mapping");
             if(a.hasTileData()){
-                NBTTagCompound data=a.tileData();BlockPos shift=b.pos.subtract(a.pos);data.setInteger("x",data.getInteger("x")+shift.getX());data.setInteger("y",data.getInteger("y")+shift.getY());data.setInteger("z",data.getInteger("z")+shift.getZ());
+                NBTTagCompound data=ArmLooseGearData.foot(a.state)?ArmLooseGearData.data(a,basis):a.tileData();BlockPos shift=b.pos.subtract(a.pos);data.setInteger("x",data.getInteger("x")+shift.getX());data.setInteger("y",data.getInteger("y")+shift.getY());data.setInteger("z",data.getInteger("z")+shift.getZ());
                 if(!data.equals(b.tileData()))throw new IllegalArgumentException("Typed attachment altered original Coupler data");
             }
         }

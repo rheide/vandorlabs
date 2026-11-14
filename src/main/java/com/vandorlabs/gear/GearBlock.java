@@ -53,6 +53,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     public int width(){return 1;}
     public int sizeClass(){return width();}
     public BlockPos componentRoot(BlockPos pos,IBlockState state){return pos;}
+    public BlockPos componentRoot(IBlockAccess world,BlockPos pos,IBlockState state){return componentRoot(pos,state);}
     public java.util.List<BlockPos> componentCells(World world,BlockPos pos){return java.util.Collections.singletonList(pos);}
     public boolean componentIntact(World world,BlockPos pos){return true;}
     public String wheelModel(){return width()==2?"wheel_large":"wheel";}
@@ -82,10 +83,15 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     }
 
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){
+        if(this instanceof LargeGearBlock&&kind==Kind.WHEEL&&ArmFootComponentFrame.posedPlacement()&&ArmFootComponentFrame.placementFacing()!=null)return getDefaultState().withProperty(FACING,ArmFootComponentFrame.placementFacing());
         IBlockState clicked=world.getBlockState(pos.offset(side.getOpposite()));
         EnumFacing facing=((kind==Kind.SKI||kind==Kind.WHEEL)&&clicked.getBlock()==this || sizeClass()==2 && clicked.getBlock() instanceof GearBlock && ((GearBlock)clicked.getBlock()).sizeClass()==2)?clicked.getValue(FACING):placer.getHorizontalFacing().getOpposite();
         return getDefaultState().withProperty(FACING,facing);
     }
+
+    private static EnumFacing looseMount(IBlockAccess world,BlockPos pos){if(world==null)return EnumFacing.DOWN;TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof GearTileEntity))return EnumFacing.DOWN;GearTileEntity tile=(GearTileEntity)raw;return tile.hasLoadedController()?EnumFacing.DOWN:tile.mountDirection();}
+    private AxisAlignedBB footBounds(IBlockAccess world,BlockPos pos,AxisAlignedBB box){return sizeClass()==1&&kind!=Kind.EXTENDER&&kind!=Kind.SWING_ARM&&kind!=Kind.MOUNT?ArmOrientation.box(looseMount(world,pos),box):box;}
+    @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return ArmLooseGearData.foot(state)&&looseMount(world,pos)!=EnumFacing.DOWN?state.withProperty(ASSEMBLED,true):state;}
 
     @Override
     public int damageDropped(IBlockState state) { return 0; }
@@ -169,9 +175,9 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
 
     @Override
     public AxisAlignedBB getBoundingBox(IBlockState state, IBlockAccess world, BlockPos pos) {
-        if(kind==Kind.WHEEL)return new AxisAlignedBB(.15,0,.15,.85,.75,.85);
-        if (kind == Kind.PLATE) return new AxisAlignedBB(0, 0, 0, 1, 3.0 / 16, 1);
-        if (kind == Kind.SKI) return new AxisAlignedBB(0, 0, 0, 1, 5.0 / 16, 1);
+        if(kind==Kind.WHEEL)return footBounds(world,pos,new AxisAlignedBB(.15,0,.15,.85,.75,.85));
+        if (kind == Kind.PLATE) return footBounds(world,pos,new AxisAlignedBB(0, 0, 0, 1, 3.0 / 16, 1));
+        if (kind == Kind.SKI) return footBounds(world,pos,new AxisAlignedBB(0, 0, 0, 1, 5.0 / 16, 1));
         return FULL_BLOCK_AABB;
     }
 
@@ -233,15 +239,15 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         }
         if(kind==Kind.WHEEL){addCollisionBoxToList(pos,entityBox,boxes,getBoundingBox(state,world,pos));
         } else if (kind == Kind.PLATE) {
-            addCollisionBoxToList(pos, entityBox, boxes, new AxisAlignedBB(0, 0, 0, 1, 3.0 / 16, 1));
+            addCollisionBoxToList(pos, entityBox, boxes, footBounds(world,pos,new AxisAlignedBB(0, 0, 0, 1, 3.0 / 16, 1)));
         } else if (kind == Kind.SKI) {
             boolean alongZ = state.getValue(FACING).getAxis() == EnumFacing.Axis.Z;
-            addCollisionBoxToList(pos, entityBox, boxes, alongZ
+            addCollisionBoxToList(pos, entityBox, boxes, footBounds(world,pos,alongZ
                     ? new AxisAlignedBB(4.0 / 16, 0, 0, 12.0 / 16, 5.0 / 16, 1)
-                    : new AxisAlignedBB(0, 0, 4.0 / 16, 1, 5.0 / 16, 12.0 / 16));
-            addCollisionBoxToList(pos, entityBox, boxes, alongZ
+                    : new AxisAlignedBB(0, 0, 4.0 / 16, 1, 5.0 / 16, 12.0 / 16)));
+            addCollisionBoxToList(pos, entityBox, boxes, footBounds(world,pos,alongZ
                     ? new AxisAlignedBB(0, 3.0 / 16, 6.0 / 16, 1, 5.0 / 16, 10.0 / 16)
-                    : new AxisAlignedBB(6.0 / 16, 3.0 / 16, 0, 10.0 / 16, 5.0 / 16, 1));
+                    : new AxisAlignedBB(6.0 / 16, 3.0 / 16, 0, 10.0 / 16, 5.0 / 16, 1)));
         } else {
             TileEntity raw = world.getTileEntity(pos);
             GearTileEntity tile = raw instanceof GearTileEntity ? (GearTileEntity) raw : null;
@@ -289,7 +295,8 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
                     new AxisAlignedBB(5.0 / 16, 5.0 / 16, 5.0 / 16, 11.0 / 16, 1, 11.0 / 16));
         }
     }
-    public static java.util.List<AxisAlignedBB> movingArmParts(){return loadParts("block/gear/swing_linkage",8);}
+    public static java.util.List<AxisAlignedBB> movingArmParts(){return movingArmParts("swing_linkage");}
+    public static java.util.List<AxisAlignedBB> movingArmParts(String name){return loadParts("block/gear/"+name,8);}
     public static java.util.List<AxisAlignedBB> nativeModelParts(String path){return loadParts(path);}
     public static java.util.List<AxisAlignedBB> modelParts(String name){return loadParts("block/gear/"+name);}
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){

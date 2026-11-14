@@ -29,7 +29,7 @@ final class GearModels {
         MESHES.clear();ArmPayloadRenderer.clear();TrackTreadMotion.clear();
         List<String> names = new ArrayList<String>();
         for (String name : new String[] { "mount", "fixed_mount","fixed_mount_compact", "sleeve", "rod", "socket", "extender",
-                "swing_linkage", "swivel", "swing_arm", "wheel", "wheel_large", "wheel_bracket", "wheel_tyre", "wheel_large_bracket", "wheel_large_tyre", "wheel_connector", "wheel_large_connector" }) names.add(name);
+                "swing_linkage", "swing_linkage_upper", "swing_linkage_lower", "swivel", "swing_arm", "wheel", "wheel_large", "wheel_bracket", "wheel_tyre", "wheel_large_bracket", "wheel_large_tyre", "wheel_connector", "wheel_large_connector" }) names.add(name);
         for (int mask = 0; mask < 16; mask++) {
             names.add("plate_" + mask);
             names.add("ski_" + mask);

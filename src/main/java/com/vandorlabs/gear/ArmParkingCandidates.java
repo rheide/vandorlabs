@@ -112,7 +112,7 @@ public final class ArmParkingCandidates {
                 if(mode==GearMotion.Mode.ROTATE)phases=ArmParkingPhases.rotating(a,b);
                 else{
                     Vec3d[] samples=new Vec3d[3];int i=0;
-                    for(double angle:new double[]{0,90,180}){GearMotion.Pose pose=GearMotion.pose(mode,arm.direction(),arm.assembly().columnHeight(),1,0,0,arm.footMountOffset(),angle,angle);samples[i++]=payload.rawTransform(arm,pose,0,0,0);transforms++;}
+                    for(double angle:new double[]{0,90,180}){GearMotion.Pose pose=arm.poseAtAngle(angle);samples[i++]=payload.rawTransform(arm,pose,0,0,0);transforms++;}
                     double[] center=new double[3],cosine=new double[3],sine=new double[3];double[] zero=vector(samples[0]),quarter=vector(samples[1]),half=vector(samples[2]);
                     for(i=0;i<3;i++){center[i]=(zero[i]+half[i])*.5;cosine[i]=(zero[i]-half[i])*.5;sine[i]=quarter[i]-center[i];}
                     phases=ArmParkingPhases.leveling(center,cosine,sine,a,b);

@@ -30,6 +30,13 @@
 - Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.
 
 
+### Arms and landing gear (Forge 1.12.2)
+
+- Add a separate Foot direction setting to formed Ski and Wheel assemblies, including sideways mounts and Large Wheels. Preserve the physical source footprint separately from the chosen visual orientation, configured items and copied settings.
+- Attach native Plates, Skis and matching Wheels at grid-aligned activated Rotating Arm sockets, including complete Large Wheels and connected joined landing groups. Journal every ownership handoff, preserve opaque capability data and retain items when a fractional endpoint refuses placement.
+- Add Base / Middle hinge selection to Rotating Arms. The middle option turns the lower linkage at the authored elbow, with matching payload motion, collision, saved settings and client rendering; existing saves retain the base hinge.
+- Allow Taxi mode with two independent complete Ski supports. Preserve single-Ski refusal, lowest-support selection and the existing rules for other landing supports.
+
 ### Native stationary glass rendering (Forge 1.12.2)
 
 - Render eligible stationary Programmable Glass in native translucent chunk buffers, with authored glimmer enabled by default and existing joined frame borders preserved.

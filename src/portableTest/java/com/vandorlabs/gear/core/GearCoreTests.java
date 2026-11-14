@@ -37,6 +37,7 @@ public final class GearCoreTests {
         extensionEndpointsAndAttachments();
         cardinalRotationAndRigidity();
         configuredEndpoints();
+        middleHinge();
         levelFootRotationAndLowerHinge();
         boundsContainTransformedGeometry();
         progressAndReversal();
@@ -50,6 +51,15 @@ public final class GearCoreTests {
         numericSafety();
         System.out.println("PASS: " + checks + " core assertions; topology, masks, limits, "
                 + "attachments, four fold directions, level-foot swivel, bounds, reversal, and numeric safety.");
+    }
+
+    private static void middleHinge(){
+        for(Direction direction:Direction.values())for(int height:new int[]{1,2,8})for(double socket:new double[]{0,9/16D,13/16D})for(int tick=0;tick<=24;tick++){
+            double p=tick/24D,px=.5+direction.axisZ()*GearMotion.MIDDLE_HINGE_OFFSET,py=GearMotion.middlePivotY(height,socket),pz=.5-direction.axisX()*GearMotion.MIDDLE_HINGE_OFFSET;
+            Pose elbow=GearMotion.pose(Mode.ROTATE,direction,height,p,0,0,socket,90,0,true);Vec fixed=elbow.transformRigidVertex(px,py,pz);check(Math.abs(fixed.x-px)+Math.abs(fixed.y-py)+Math.abs(fixed.z-pz)<1e-10,"Authored elbow is stationary in every fold");
+            Vec foot=elbow.transformFootVertex(.5,-height+socket,.5);double radius=Math.sqrt((.5-px)*(.5-px)+(-height+socket-py)*(-height+socket-py)+(.5-pz)*(.5-pz));check(Math.abs(Math.sqrt((foot.x-px)*(foot.x-px)+(foot.y-py)*(foot.y-py)+(foot.z-pz)*(foot.z-pz))-radius)<1e-9,"Lower linkage preserves elbow radius");
+            Pose level=GearMotion.pose(Mode.ROTATE_LEVEL,direction,height,p,0,0,socket,90,0,true);Vec a=level.transformFootVertex(0,-height,0),b=level.transformFootVertex(1,-height,1);check(Math.abs(a.y-b.y)<1e-10&&Math.abs((b.x-a.x)-1)<1e-10&&Math.abs((b.z-a.z)-1)<1e-10,"Middle hinge counter-rotates level payloads");
+        }
     }
 
     private static void configuredEndpoints(){

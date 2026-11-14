@@ -35,7 +35,12 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Nullable private GearTopology.Assembly assembly;
     private final List<BlockPos> columns = new ArrayList<BlockPos>();
     private final Set<BlockPos> members = new HashSet<BlockPos>();
-    private EnumFacing footFacing = EnumFacing.NORTH;
+    private EnumFacing footFacing = EnumFacing.NORTH,sourceFootFacing=EnumFacing.NORTH;
+    private EnumFacing configuredFootFacing;
+    private boolean middleHinge;
+    public boolean middleHinge(){return middleHinge;}
+    /** Orientation within the arm mounting plane, independent of the folding direction. */
+    public boolean canConfigureFootFacing(){return assembly!=null&&(assembly.kind()==GearTopology.FootKind.SKI||assembly.kind()==GearTopology.FootKind.WHEEL);}
     private ArmPayload payload;
     private boolean payloadPreparationPending,clientGeometryPending;
     GearGeometry.MovePlan riderPlan;
@@ -78,6 +83,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(payload!=null&&payload.hasOwnershipJournal()){lastError="Original attachment cells need recovery before this snapshot can move";return false;}
         if(failedPayload!=null){lastError="Attachment snapshot could not be loaded; original data retained";return false;}
         try{
+            if(!ArmActiveLanding.prepare(this))return false;
             refreshMaterializedPayload();
             if(failedStoredSections!=null)throw new IllegalArgumentException("Stored arm sections are unavailable; recovery retained");
             // The original attachment stays owned by this arm in push mode.
@@ -129,6 +135,8 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     }
     private void restorePayloadEndpoint(){if(progress!=(deployedTarget?1:0))return;try{if(payload!=null&&(progress==0||progress==1)&&!payload.materialized()&&payload.restore(this,progress))sync();}catch(RuntimeException | LinkageError failure){motionBlocked=true;lastError="Attachment snapshot retained: "+failure.getMessage();if(payload!=null&&payload.hasOwnershipJournal()){operational=false;sync();}else markDirty();}}
     private EnumFacing mountDirection=EnumFacing.DOWN;
+    private EnumFacing componentFrame=EnumFacing.DOWN,sourceFootComponentFrame=EnumFacing.DOWN;
+    private boolean componentFrameExplicit;
     private NBTTagCompound taxiState;
     private boolean taxiClearPending;
     private void validateTaxiState(NBTTagCompound state){GearTaxiState.validate(state);int expected=state.getInteger("Height")-(state.getInteger("Phase")==1?state.getInteger("Amount"):0);if(assembly==null||assembly.columnHeight()!=expected||!GearTaxiState.supportsFoot(assembly.kind())||mode!=GearMotion.Mode.EXTEND||mountDirection!=EnumFacing.DOWN||columns.size()!=1)throw new IllegalArgumentException("Taxi arm topology does not match its retained sections");}
@@ -146,17 +154,21 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private boolean pushBlocks;
     public boolean pushBlocks(){return pushBlocks;}
     public boolean canPushBlocks(){return mountDirection.getAxis().isHorizontal()&&mode==GearMotion.Mode.EXTEND&&!isLandingAssembly();}
-    private boolean rotatePayload,trackExtensionStroke,trackRetractingStroke,armRetractingStroke,formingActiveTrack;
+    private boolean rotatePayload,trackExtensionStroke,trackRetractingStroke,armRetractingStroke,formingActiveTrack,formingActiveFoot;
     public boolean isExtendedTrackStroke(){return trackExtensionStroke&&assembly!=null&&assembly.kind()==GearTopology.FootKind.TRACK;}
     public boolean landingDeployed(){if(taxiState!=null)return taxiState.getInteger("Phase")==1&&progress==1&&validTaxiState();return fullyDeployed()||isExtendedTrackStroke()&&!deployedTarget&&progress==0;}
     public void showError(String message){lastError=message==null?"Arm operation unavailable":message;sync();}
     public boolean formTrackAtActivePose(){if(assembly==null||assembly.kind()!=GearTopology.FootKind.NONE&&!isExtendedTrackStroke()||payload!=null||failedPayload!=null)return false;formingActiveTrack=true;boolean previousStroke=trackExtensionStroke,previousRetracting=trackRetractingStroke;trackRetractingStroke=activeExtension()<0;trackExtensionStroke=true;try{boolean formed=rebuild();if(!formed){trackExtensionStroke=previousStroke;trackRetractingStroke=previousRetracting;}return formed;}finally{formingActiveTrack=false;}}
+    boolean formLandingAtActivePose(){formingActiveFoot=true;try{return rebuild();}finally{formingActiveFoot=false;}}
+    java.util.List<AxisAlignedBB> landingBoxes(GearTopology.FootKind kind,EnumFacing facing,java.util.List<GearTopology.Cell> feet,java.util.Map<BlockPos,IBlockState> states){GearTopology.Assembly previous=assembly;EnumFacing old=footFacing;try{assembly=GearTopology.validate(previous.columnHeight(),kind,feet).assembly();footFacing=configuredFootFacing==null?facing:configuredFootFacing;return GearGeometry.landingBoxes(this,states);}finally{assembly=previous;footFacing=old;}}
     private double activeAngle=90,activeExtension=1,startAngle,savedEndAngle;
     private boolean adjustingStart;
     public double startAngle(){return adjustingStart?activeAngle:startAngle;}
     public double configuredEndAngle(){return adjustingStart?savedEndAngle:activeAngle;}
     public double physicalStartAngle(){return startAngle;}
     public EnumFacing mountDirection(){return mountDirection;}
+    public EnumFacing componentFrame(){return componentFrame;}
+    void componentFrame(EnumFacing frame){java.util.Objects.requireNonNull(frame);boolean explicit=frame!=EnumFacing.DOWN||!(getBlockType() instanceof LargeGearBlock);if(componentFrame!=frame||componentFrameExplicit!=explicit){componentFrame=frame;componentFrameExplicit=explicit;clearPoses();GearGeometry.register(this);sync();}}
     public void setMountDirection(EnumFacing face){if(mountDirection!=face){mountDirection=face;scheduleRebuild();sync();}}
     public BlockPos localCell(int x,int y,int z){return pos.add(ArmOrientation.vector(mountDirection,new BlockPos(x,y,z)));}
     public BlockPos localCell(GearTopology.Cell cell){return localCell(cell.x,cell.y,cell.z);}
@@ -168,7 +180,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public boolean armRetractionStroke(){return armRetractingStroke;}
     public boolean trackRetractionStroke(){return trackRetractingStroke;}
     boolean sameJoinConfiguration(GearTileEntity other){return triggerMode==other.triggerMode&&direction==other.direction
-            &&pushBlocks==other.pushBlocks&&rotatePayload==other.rotatePayload&&activeAngle==other.activeAngle&&startAngle==other.startAngle&&activeExtension==other.activeExtension
+            &&middleHinge==other.middleHinge&&pushBlocks==other.pushBlocks&&rotatePayload==other.rotatePayload&&activeAngle==other.activeAngle&&startAngle==other.startAngle&&activeExtension==other.activeExtension
             &&joinEnabled==other.joinEnabled&&joinRange==other.joinRange&&carryLoad==other.carryLoad&&loadHeight==other.loadHeight
             &&legacyAnyChannels==other.legacyAnyChannels&&channels.equals(other.channels);}
     public double minimumExtension(){return assembly==null||assembly.columnHeight()==1?-.5:1-assembly.columnHeight();}
@@ -204,9 +216,12 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(assembly.kind()==GearTopology.FootKind.NONE||isExtendedTrackStroke())stowed=-assembly.columnHeight()-activeExtension();
         else if(mode==GearMotion.Mode.EXTEND)stowed=footMountOffset()>0?6/16D-1/64D-(3/16D+footMountOffset()):stowed-1/64D;
         // Clear the fork bridge as well as the tyre beneath the mounting cap.
-        double hingeDrop=mode==GearMotion.Mode.ROTATE_LEVEL && armSize()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?17/128D:0;
-        return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop,footMountOffset(),assembly.kind()==GearTopology.FootKind.NONE?activeAngle:90,assembly.kind()==GearTopology.FootKind.NONE?startAngle:0);
+        double hingeDrop=!middleHinge&&mode==GearMotion.Mode.ROTATE_LEVEL && armSize()==2 && assembly.kind()==GearTopology.FootKind.WHEEL?17/128D:0;
+        return GearMotion.pose(mode,direction,assembly.columnHeight(),progress,stowed,hingeDrop,footMountOffset(),assembly.kind()==GearTopology.FootKind.NONE?activeAngle:90,assembly.kind()==GearTopology.FootKind.NONE?startAngle:0,middleHinge);
     }
+
+    /** Same authored hinge used by sweep extrema and parking candidate harmonics. */
+    public GearMotion.Pose poseAtAngle(double angle){return GearMotion.pose(mode,direction,assembly.columnHeight(),1,0,0,footMountOffset(),angle,angle,middleHinge);}
 
     private double progress = 1.0;
     private boolean surfaceDepartureActive=true,surfaceDepartureSaved=true,surfaceDepartureTarget=true;
@@ -370,6 +385,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         return root == null || !root.operational || root.fullyDeployed();
     }
 
+    // TileEntity.create calls this before capability deserialization; vanilla's
+    // default hook is empty, even when the caller supplies a physical world.
+    @Override protected void setWorldCreate(World world){setWorld(world);}
     @Override public void setWorld(World world){super.setWorld(world);rebuildMemberCache();clearPoses();}
 
     @Override
@@ -504,12 +522,12 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             IBlockState state = world.getBlockState(member);
             if(GearAssembly.isExtender(state)){
                 if(state.getBlock()!=rootState.getBlock())return false;
-                GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(member,state)))return false;
+                GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(world,member,state)))return false;
             }else{
                 if(!GearAssembly.isFoot(state)||!((GearBlock)state.getBlock()).kind().name().equals(assembly.kind().name()))return false;
-                if(assembly.kind()!=GearTopology.FootKind.PLATE&&state.getValue(GearBlock.FACING)!=footFacing)return false;
+                if(assembly.kind()!=GearTopology.FootKind.PLATE&&state.getValue(GearBlock.FACING)!=sourceFootFacing)return false;
                 if(assembly.kind()==GearTopology.FootKind.WHEEL && ((GearBlock)state.getBlock()).sizeClass()!=armSize())return false;
-                GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(member,state)))return false;
+                GearBlock block=(GearBlock)state.getBlock();if(!block.componentIntact(world,block.componentRoot(world,member,state)))return false;
             }
             TileEntity tile = world.getTileEntity(member);
             if (!(tile instanceof GearTileEntity) || !pos.equals(((GearTileEntity) tile).owner)) return false;
@@ -531,6 +549,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             return operational;
         }
         if (!GearAssembly.loaded(world, pos) || !GearAssembly.isExtender(world.getBlockState(pos))) return false;
+        if(assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE&&payload!=null&&payload.materialized()&&progress==1&&payload.singleLandingMount()!=null&&payload.singleLandingMount()!=mountDirection&&cachedMembersIntact()){lastError="";return true;}
         GearAssembly.Scan scan = GearAssembly.scan(world, pos);
         if (!scan.valid()) {
             lastError = scan.error;
@@ -568,8 +587,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             mode = rotatePayload?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;
         }
         else mode = world.getBlockState(pos).getBlock() instanceof GearBlock && ((GearBlock)world.getBlockState(pos).getBlock()).kind()==GearBlock.Kind.MOUNT?GearMotion.Mode.STATIC:GearMotion.Mode.EXTEND;
+        EnumFacing scannedFoot=configuredFootFacing==null?scan.footFacing:configuredFootFacing;
         boolean unchanged = assembly != null && assembly.columnHeight() == scan.assembly.columnHeight()
-                && assembly.kind() == scan.assembly.kind() && footFacing == scan.footFacing
+                && assembly.kind() == scan.assembly.kind() && footFacing == scannedFoot
                 && assembly.feet().equals(scan.assembly.feet()) && columns.equals(relativeColumns(scan.columns));
         if (unchanged && cachedMembersIntact()) {
             lastError = "";
@@ -585,7 +605,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             boolean sameColumns=assembly!=null&&assembly.columnHeight()==scan.assembly.columnHeight()&&columns.equals(relativeColumns(scan.columns));
             boolean footRemesh=sameColumns&&stationary&&payload==null&&failedPayload==null&&assembly.kind()==GearTopology.FootKind.TRACK
                     &&(scan.assembly.kind()==GearTopology.FootKind.TRACK||trackExtensionStroke&&scan.assembly.kind()==GearTopology.FootKind.NONE);
-            if(footRemesh||formingActiveTrack&&(genericBefore||isExtendedTrackStroke())&&scan.assembly.kind()==GearTopology.FootKind.TRACK&&scan.columns.size()==1&&scan.columns.get(0).equals(pos)){
+            if(footRemesh||formingActiveFoot&&genericBefore&&sameColumns&&scan.assembly.kind()!=GearTopology.FootKind.NONE||formingActiveTrack&&(genericBefore||isExtendedTrackStroke())&&scan.assembly.kind()==GearTopology.FootKind.TRACK&&scan.columns.size()==1&&scan.columns.get(0).equals(pos)){
                 // Track editing changes the foot mesh, not the stationary column's pose.
                 // Release departed helpers before rebinding the surviving component.
                 for(BlockPos member:new ArrayList<>(members))if(!prospective.contains(member)&&GearAssembly.loaded(world,member)){
@@ -605,7 +625,8 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(genericBefore!=(assembly.kind()==GearTopology.FootKind.NONE))signalKnown=false;
         columns.clear();columns.addAll(relativeColumns(scan.columns));
         operational = true;
-        footFacing = scan.footFacing;
+        footFacing = scannedFoot;sourceFootFacing=scan.footFacing;
+        sourceFootComponentFrame=scan.assembly.kind()!=GearTopology.FootKind.NONE&&!scan.assembly.feet().isEmpty()?ArmFootComponentFrame.frame(world,localCell(scan.assembly.feet().get(0))):EnumFacing.DOWN;
         owner = pos.toImmutable();
         rebuildMemberCache();
         lastError = "";
@@ -613,7 +634,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             GearTileEntity tile = (GearTileEntity) world.getTileEntity(member);
             tile.owner = pos.toImmutable();
             if (tile != this) {
-                tile.direction=direction;tile.pushBlocks=pushBlocks;tile.rotatePayload=rotatePayload;tile.activeAngle=activeAngle;tile.startAngle=startAngle;tile.assembly = null;GearGeometry.remove(tile);
+                tile.direction=direction;tile.middleHinge=middleHinge;tile.pushBlocks=pushBlocks;tile.rotatePayload=rotatePayload;tile.activeAngle=activeAngle;tile.startAngle=startAngle;tile.assembly = null;GearGeometry.remove(tile);
                 tile.members.clear();
                 tile.rebuildDelay = -1;
                 tile.retryUnavailable = false;
@@ -705,7 +726,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         }
     }
 
-    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",triggerMode);tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);tag.setBoolean("PushBlocks",pushBlocks);tag.setBoolean("RotatePayload",rotatePayload);tag.setBoolean("JoinArms",joinEnabled);tag.setInteger("JoinRange",joinRange);tag.setBoolean("CarryLoad",carryLoad);tag.setInteger("LoadHeight",loadHeight);tag.setDouble("ActiveAngle",configuredEndAngle());tag.setDouble("StartAngle",startAngle());tag.setDouble("ActiveExtension",activeExtension);int trackStyle=com.vandorlabs.gear.track.TrackStyles.style(this);if(trackStyle>=0)tag.setInteger("TrackStyle",trackStyle);return tag;}
+    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Trigger",triggerMode);tag.setInteger("FootFacing",footFacing.getHorizontalIndex());tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);tag.setBoolean("PushBlocks",pushBlocks);tag.setBoolean("RotatePayload",rotatePayload);tag.setBoolean("MiddleHinge",middleHinge);tag.setBoolean("JoinArms",joinEnabled);tag.setInteger("JoinRange",joinRange);tag.setBoolean("CarryLoad",carryLoad);tag.setInteger("LoadHeight",loadHeight);tag.setDouble("ActiveAngle",configuredEndAngle());tag.setDouble("StartAngle",startAngle());tag.setDouble("ActiveExtension",activeExtension);int trackStyle=com.vandorlabs.gear.track.TrackStyles.style(this);if(trackStyle>=0)tag.setInteger("TrackStyle",trackStyle);return tag;}
     public void configure(NBTTagCompound tag){configure(tag,true);}
     private void configure(NBTTagCompound tag,boolean command){
         if(parkingQuarantine!=null||parkingHoldNeedsGeometry&&!validateParkingHoldInstalled())return;
@@ -724,24 +745,36 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         double extension=tag.hasKey("ActiveExtension",6)?tag.getDouble("ActiveExtension"):activeExtension;
         boolean rotate=tag.hasKey("RotatePayload",1)?tag.getBoolean("RotatePayload"):rotatePayload;
         boolean push=tag.hasKey("PushBlocks",1)?tag.getBoolean("PushBlocks"):pushBlocks;
+        boolean middle=tag.hasKey("MiddleHinge",1)?tag.getBoolean("MiddleHinge"):middleHinge;
+        if(middle!=middleHinge&&assembly!=null&&(!isSwingArmController()||!fullyDeployed()||physicalStartAngle()!=0||adjustingStart))throw new IllegalArgumentException("Return the Rotating Arm to a zero-degree Start before changing its hinge");
         boolean pushChanged=push!=pushBlocks;
         if(push!=pushBlocks&&(progress!=0&&progress!=1||payload!=null&&!payload.materialized()))throw new IllegalArgumentException("Return to rest before changing pushing");
         boolean join=tag.hasKey("JoinArms",1)?tag.getBoolean("JoinArms"):joinEnabled,load=tag.hasKey("CarryLoad",1)?tag.getBoolean("CarryLoad"):carryLoad;
         int range=tag.hasKey("JoinRange",3)?tag.getInteger("JoinRange"):joinRange,height=tag.hasKey("LoadHeight",3)?tag.getInteger("LoadHeight"):loadHeight;
         if(range<1||range>32||height<1||height>32)throw new IllegalArgumentException("Platform ranges must be from 1 to 32 blocks");
         if(load&&!canCarryLoad())throw new IllegalArgumentException("Carry load requires a vertically moving Extender Arm");
-        boolean groupChanged=join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight||angle!=activeAngle||rotate!=rotatePayload||dir!=direction.ordinal();
+        EnumFacing requestedFoot=tag.hasKey("FootFacing",3)?EnumFacing.getHorizontal(tag.getInteger("FootFacing")):footFacing;
+        if(tag.hasKey("FootFacing",3)&&(tag.getInteger("FootFacing")<0||tag.getInteger("FootFacing")>3))throw new IllegalArgumentException("Invalid landing foot direction");
+        boolean changeFoot=requestedFoot!=footFacing;
+        if(changeFoot&&assembly!=null&&(!canConfigureFootFacing()||!fullyDeployed()))throw new IllegalArgumentException("Deploy a Ski or Wheel assembly before changing its direction");
+        if(changeFoot&&assembly!=null&&world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){
+            EnumFacing previousFoot=footFacing;footFacing=requestedFoot;
+            try{for(AxisAlignedBB box:GearGeometry.computeBoxes(this,progress))if(!GearGeometry.foreign(world,this,box.shrink(.0001)).isEmpty())throw new IllegalArgumentException("The selected landing foot direction is obstructed");}
+            finally{footFacing=previousFoot;}
+        }
+        boolean groupChanged=middle!=middleHinge||join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight||angle!=activeAngle||rotate!=rotatePayload||dir!=direction.ordinal();
         if(groupChanged&&!fullyDeployed())throw new IllegalArgumentException("Extend fully before changing joined platform settings");
         if(!Double.isFinite(angle)||angle < -180||angle > 180||!Double.isFinite(extension)||extension < -8||extension > 8)throw new IllegalArgumentException("Arm stroke is out of range");
         if((dir!=direction.ordinal()||angle!=activeAngle||rotate!=rotatePayload)&&!fullyDeployed())throw new IllegalArgumentException("Deploy fully before changing the fold direction");
         if(tag.hasKey("TrackStyle",3)){if(assembly!=null&&!fullyDeployed()&&com.vandorlabs.gear.track.TrackStyles.style(this)!=tag.getInteger("TrackStyle"))throw new IllegalArgumentException("Deploy fully before changing track style");com.vandorlabs.gear.track.TrackStyles.apply(this,tag.getInteger("TrackStyle"));}
         // An unformed/releasing arm accepts its starting angle directly, but a
         // later validation failure must still leave every setting unchanged.
-        boolean commandChanged=triggerMode!=trigger||!channels.equals(values)||dir!=direction.ordinal()||push!=pushBlocks||join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight||rotate!=rotatePayload||angle!=activeAngle||extension!=activeExtension||requestedStart!=startAngle()||tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")||trigger==0&&deployedTarget!=(isFixedMount()||tag.getBoolean("Deployed"));
+        boolean commandChanged=middle!=middleHinge||changeFoot||triggerMode!=trigger||!channels.equals(values)||dir!=direction.ordinal()||push!=pushBlocks||join!=joinEnabled||range!=joinRange||load!=carryLoad||height!=loadHeight||rotate!=rotatePayload||angle!=activeAngle||extension!=activeExtension||requestedStart!=startAngle()||tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")||trigger==0&&deployedTarget!=(isFixedMount()||tag.getBoolean("Deployed"));
         if(command&&commandChanged)clearCouplerPassive();
         if(installStart)startAngle=requestedStart;
-        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}releaseParkingHold();configured=true;pushBlocks=push;joinEnabled=join;joinRange=range;carryLoad=load;loadHeight=height;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(changeStart){savedEndAngle=angle;activeAngle=requestedStart;adjustingStart=true;}if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");if(changeStart)deployedTarget=false;if(command)input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
-        if((groupChanged||pushChanged)&&world!=null&&!world.isRemote){for(BlockPos column:new ArrayList<>(columns)){TileEntity raw=world.getTileEntity(pos.add(column));if(raw instanceof GearTileEntity&&raw!=this){GearTileEntity member=(GearTileEntity)raw;member.joinEnabled=join;member.joinRange=range;member.carryLoad=load;member.loadHeight=height;member.direction=direction;member.pushBlocks=pushBlocks;member.rotatePayload=rotatePayload;member.activeAngle=activeAngle;member.startAngle=startAngle;member.activeExtension=activeExtension;member.mode=mode;member.sync();}}if(groupChanged)scheduleRebuild();}
+        if(changeFoot){configuredFootFacing=requestedFoot;footFacing=requestedFoot;}
+        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}releaseParkingHold();configured=true;middleHinge=middle;pushBlocks=push;joinEnabled=join;joinRange=range;carryLoad=load;loadHeight=height;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(changeStart){savedEndAngle=angle;activeAngle=requestedStart;adjustingStart=true;}if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");if(changeStart)deployedTarget=false;if(command)input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
+        if((groupChanged||pushChanged)&&world!=null&&!world.isRemote){for(BlockPos column:new ArrayList<>(columns)){TileEntity raw=world.getTileEntity(pos.add(column));if(raw instanceof GearTileEntity&&raw!=this){GearTileEntity member=(GearTileEntity)raw;member.joinEnabled=join;member.joinRange=range;member.carryLoad=load;member.loadHeight=height;member.direction=direction;member.middleHinge=middleHinge;member.pushBlocks=pushBlocks;member.rotatePayload=rotatePayload;member.activeAngle=activeAngle;member.startAngle=startAngle;member.activeExtension=activeExtension;member.mode=mode;member.sync();}}if(groupChanged)scheduleRebuild();}
     }
 
     public void sync() {
@@ -761,7 +794,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public NBTTagCompound currentData(NBTTagCompound original){
         if(parkingQuarantine!=null)return parkingQuarantine.copy();
         net.minecraft.util.ResourceLocation expected=TileEntity.getKey(GearTileEntity.class);if(original==null||expected==null||!expected.toString().equals(original.getString("id")))throw new IllegalArgumentException("Original arm identity unavailable");
-        NBTTagCompound result=original.copy();for(String key:new String[]{"GearParkingHold","GearCouplerPassive","ArmOperatorMost","ArmOperatorLeast","ArmStoredSections","ArmPayload",GearTaxiState.KEY,"ArmJoinEnabled","ArmJoinRange","ArmCarryLoad","ArmLoadHeight","TrackRetractingStroke","ArmRetractingStroke","GearOwnerOffset","GearHeight","GearKind","GearFootFacing","GearFeet","GearTrackContact"})result.removeTag(key);
+        NBTTagCompound result=original.copy();for(String key:new String[]{"GearParkingHold","GearCouplerPassive","ArmOperatorMost","ArmOperatorLeast","ArmStoredSections","ArmPayload",GearTaxiState.KEY,"ArmJoinEnabled","ArmJoinRange","ArmCarryLoad","ArmLoadHeight","TrackRetractingStroke","ArmRetractingStroke","GearOwnerOffset","GearHeight","GearKind","GearFootFacing","GearSourceFootFacing","GearFeet","GearTrackContact"})result.removeTag(key);
         result.setInteger("x",pos.getX());result.setInteger("y",pos.getY());result.setInteger("z",pos.getZ());return writeOwnData(result);
     }
     /** Small current pose projection; retained payloads and capability trees are deliberately absent. */
@@ -770,6 +803,8 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         rememberSurfaceEndpoint();if(surfaceDepartureSaved&&progress>0&&progress<1)tag.setBoolean("SurfaceDepartureActive",surfaceDepartureActive);return tag;
     }
     private NBTTagCompound writeOwnData(NBTTagCompound tag){
+        if(componentFrameExplicit)tag.setString(ArmFootComponentFrame.KEY,componentFrame.name());else ArmFootComponentFrame.write(tag,componentFrame);
+        if(assembly!=null&&assembly.kind()!=GearTopology.FootKind.NONE&&sourceFootComponentFrame!=EnumFacing.DOWN)tag.setString(ArmFootComponentFrame.SOURCE_KEY,sourceFootComponentFrame.name());else tag.removeTag(ArmFootComponentFrame.SOURCE_KEY);
         if(couplerPassive)tag.setBoolean("GearCouplerPassive",true);else tag.removeTag("GearCouplerPassive");
         if(parkingHold)tag.setBoolean("GearParkingHold",true);else tag.removeTag("GearParkingHold");
         if(operator!=null)tag.setUniqueId("ArmOperator",operator);
@@ -777,8 +812,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(failedPayload!=null)tag.setTag("ArmPayload",failedPayload.copy());else if(payload!=null)tag.setTag("ArmPayload",payload.write());
         if(taxiState!=null)tag.setTag(GearTaxiState.KEY,taxiState.copy());
         tag.setInteger("GearRevision",motionRevision);
+        if(configuredFootFacing!=null)tag.setInteger("ArmFootFacing",configuredFootFacing.getHorizontalIndex());else tag.removeTag("ArmFootFacing");
         if(joinedSettingsPresent||joinEnabled||carryLoad||joinRange!=32||loadHeight!=1){tag.setBoolean("ArmJoinEnabled",joinEnabled);tag.setInteger("ArmJoinRange",joinRange);tag.setBoolean("ArmCarryLoad",carryLoad);tag.setInteger("ArmLoadHeight",loadHeight);}
-        tag.setBoolean("TrackExtensionStroke",trackExtensionStroke);if(trackRetractingStroke)tag.setBoolean("TrackRetractingStroke",true);if(armRetractingStroke)tag.setBoolean("ArmRetractingStroke",true);tag.setString("ArmMountDirection",mountDirection.name());if(pushBlocks)tag.setBoolean("ArmPushBlocks",true);else tag.removeTag("ArmPushBlocks");tag.setBoolean("ArmRotatePayload",rotatePayload);tag.setDouble("ArmActiveAngle",activeAngle);if(startAngle!=0)tag.setDouble("ArmStartAngle",startAngle);else tag.removeTag("ArmStartAngle");if(adjustingStart){tag.setBoolean("ArmAdjustingStart",true);tag.setDouble("ArmSavedEndAngle",savedEndAngle);}else{tag.removeTag("ArmAdjustingStart");tag.removeTag("ArmSavedEndAngle");}tag.setDouble("ArmActiveExtension",activeExtension);
+        tag.setBoolean("TrackExtensionStroke",trackExtensionStroke);if(trackRetractingStroke)tag.setBoolean("TrackRetractingStroke",true);if(armRetractingStroke)tag.setBoolean("ArmRetractingStroke",true);tag.setString("ArmMountDirection",mountDirection.name());if(pushBlocks)tag.setBoolean("ArmPushBlocks",true);else tag.removeTag("ArmPushBlocks");tag.setBoolean("ArmRotatePayload",rotatePayload);if(middleHinge)tag.setBoolean("ArmMiddleHinge",true);else tag.removeTag("ArmMiddleHinge");tag.setDouble("ArmActiveAngle",activeAngle);if(startAngle!=0)tag.setDouble("ArmStartAngle",startAngle);else tag.removeTag("ArmStartAngle");if(adjustingStart){tag.setBoolean("ArmAdjustingStart",true);tag.setDouble("ArmSavedEndAngle",savedEndAngle);}else{tag.removeTag("ArmAdjustingStart");tag.removeTag("ArmSavedEndAngle");}tag.setDouble("ArmActiveExtension",activeExtension);
         if (owner != null) tag.setLong("GearOwnerOffset", owner.subtract(pos).toLong());
         tag.setInteger("GearTrigger",triggerMode);tag.setString("GearChannels",channels.toString());
         NBTTagList columnList=new NBTTagList();
@@ -797,6 +833,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             tag.setInteger("GearHeight", assembly.columnHeight());
             tag.setString("GearKind", assembly.kind().name());
             tag.setInteger("GearFootFacing", footFacing.getHorizontalIndex());
+            if(assembly.kind()!=GearTopology.FootKind.NONE)tag.setInteger("GearSourceFootFacing",sourceFootFacing.getHorizontalIndex());else tag.removeTag("GearSourceFootFacing");
             NBTTagList feet = new NBTTagList();
             for (GearTopology.Cell foot : assembly.feet()) {
                 feet.appendTag(new NBTTagIntArray(new int[] { foot.x, foot.y, foot.z }));
@@ -810,6 +847,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public void readFromNBT(NBTTagCompound tag) {
         if(parkingQuarantine!=null){lastError="Incoming arm snapshot refused; retained parking recovery requires replacement";return;}
+        if(!ArmFootComponentFrame.valid(tag)){if(payload!=null||storedSections!=null||taxiState!=null){lastError="Incoming component frame refused; prior ownership retained";return;}quarantineParking(tag);return;}
         if(tag.hasKey("GearCouplerPassive")&&(!tag.hasKey("GearCouplerPassive",1)||tag.getByte("GearCouplerPassive")<0||tag.getByte("GearCouplerPassive")>1)){
             if(payload!=null||storedSections!=null||taxiState!=null){lastError="Incoming passive arm state refused; prior ownership retained";return;}
             quarantineParking(tag);return;
@@ -840,9 +878,13 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(tag.hasKey("ArmPayload",10))try{payload=ArmPayload.read(tag.getCompoundTag("ArmPayload"));}catch(RuntimeException | LinkageError failure){failedPayload=tag.getCompoundTag("ArmPayload").copy();}
         motionRevision=tag.getInteger("GearRevision");lastMotionTick=Long.MIN_VALUE;
         mountDirection=parseEnum(EnumFacing.class,tag.getString("ArmMountDirection"),EnumFacing.DOWN);
+        componentFrame=tag.hasKey(ArmFootComponentFrame.KEY,8)?EnumFacing.valueOf(tag.getString(ArmFootComponentFrame.KEY)):EnumFacing.DOWN;
+        componentFrameExplicit=tag.hasKey(ArmFootComponentFrame.KEY,8);
+        sourceFootComponentFrame=tag.hasKey(ArmFootComponentFrame.SOURCE_KEY,8)?EnumFacing.valueOf(tag.getString(ArmFootComponentFrame.SOURCE_KEY)):EnumFacing.DOWN;
+        configuredFootFacing=tag.hasKey("ArmFootFacing",3)?EnumFacing.getHorizontal(tag.getInteger("ArmFootFacing")):null;
         joinedSettingsPresent=tag.hasKey("ArmJoinEnabled")||tag.hasKey("ArmJoinRange")||tag.hasKey("ArmCarryLoad")||tag.hasKey("ArmLoadHeight");
         joinEnabled=tag.getBoolean("ArmJoinEnabled");joinRange=tag.hasKey("ArmJoinRange",3)?Math.max(1,Math.min(32,tag.getInteger("ArmJoinRange"))):32;carryLoad=tag.getBoolean("ArmCarryLoad");loadHeight=tag.hasKey("ArmLoadHeight",3)?Math.max(1,Math.min(32,tag.getInteger("ArmLoadHeight"))):1;
-        pushBlocks=tag.getBoolean("ArmPushBlocks");rotatePayload=tag.getBoolean("ArmRotatePayload");trackExtensionStroke=tag.getBoolean("TrackExtensionStroke");trackRetractingStroke=tag.getBoolean("TrackRetractingStroke");armRetractingStroke=tag.getBoolean("ArmRetractingStroke");
+        middleHinge=tag.getBoolean("ArmMiddleHinge");pushBlocks=tag.getBoolean("ArmPushBlocks");rotatePayload=tag.getBoolean("ArmRotatePayload");trackExtensionStroke=tag.getBoolean("TrackExtensionStroke");trackRetractingStroke=tag.getBoolean("TrackRetractingStroke");armRetractingStroke=tag.getBoolean("ArmRetractingStroke");
         startAngle=tag.hasKey("ArmStartAngle",6)?tag.getDouble("ArmStartAngle"):0;
         adjustingStart=tag.getBoolean("ArmAdjustingStart");savedEndAngle=tag.getDouble("ArmSavedEndAngle");
         if(!Double.isFinite(startAngle)||Math.abs(startAngle)>180||adjustingStart&&(!Double.isFinite(savedEndAngle)||Math.abs(savedEndAngle)>180))throw new IllegalArgumentException("Invalid saved rotating-arm endpoints");
@@ -861,7 +903,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         progress = previousProgress = Double.isFinite(savedProgress) ? Math.max(0, Math.min(1, savedProgress)) : 1.0;
         surfaceDepartureTarget=deployedTarget;surfaceDepartureSaved=tag.hasKey("SurfaceDepartureActive",1);surfaceDepartureActive=surfaceDepartureSaved?tag.getBoolean("SurfaceDepartureActive"):progress>=1||progress>0&&!deployedTarget;rememberSurfaceEndpoint();
         operational = !tag.hasKey("GearOperational") || tag.getBoolean("GearOperational");
-        assembly = null;
+        assembly = null;sourceFootFacing=EnumFacing.NORTH;
         if (tag.getBoolean("GearController")) {
             NBTTagList rawFeet = tag.getTagList("GearFeet", 11);
             if (rawFeet.tagCount() <= GearTopology.MAX_FEET) {
@@ -877,6 +919,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                     assembly = result.assembly();
                     owner = pos.toImmutable();
                     footFacing = EnumFacing.getHorizontal(tag.getInteger("GearFootFacing") & 3);
+                    sourceFootFacing=tag.hasKey("GearSourceFootFacing",3)?EnumFacing.getHorizontal(tag.getInteger("GearSourceFootFacing")):footFacing;
                 }
             }
         }
@@ -925,6 +968,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public AxisAlignedBB getRenderBoundingBox() {
         if (assembly == null) {
+            if(armSize()==2&&world!=null&&componentFrame!=EnumFacing.DOWN){java.util.List<AxisAlignedBB> loose=GearGeometry.looseWheelBoxes(this);if(!loose.isEmpty()){AxisAlignedBB extent=new AxisAlignedBB(pos);for(AxisAlignedBB box:loose)extent=extent.union(box);return extent;}}
             if(armSize()==2&&world!=null){AxisAlignedBB extent=new AxisAlignedBB(pos);GearBlock block=(GearBlock)world.getBlockState(pos).getBlock();for(BlockPos cell:block.componentCells(world,pos))extent=extent.union(new AxisAlignedBB(cell));extent=extent.grow(block.kind()==GearBlock.Kind.WHEEL?.5:.125,0,block.kind()==GearBlock.Kind.WHEEL?.5:.125);return isSwingArmController()||block.kind()==GearBlock.Kind.WHEEL?extent.union(extent.offset(0,-1,0)):extent;}
             // The unformed swing arm already reaches into the foot cell.
             return isSwingArmController()

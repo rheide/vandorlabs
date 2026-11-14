@@ -30,7 +30,17 @@ Right click a strut or its visible landing foot with an empty hand to deploy or 
 on an arm to open its motion dialog. Tracks open their own appearance dialog with either right click or the Configurizer. Select Manual, ON deploys or OFF deploys,
 and enter channels as comma-separated positive numbers. Zero uses local redstone;
 configured lists require all channels to be powered. Fold direction can be
-changed while fully deployed. Manual mode exposes a deployed/stowed target.
+changed while fully deployed. **Foot** changes the Ski or Wheel's
+orientation independently of **Fold**. Its label describes the direction in the
+world, including a sideways-mounted arm. Return to the fully deployed position
+before changing it; an obstructed direction is refused. The source blocks keep their original placement footprint.
+Manual mode exposes a deployed/stowed target.
+
+Rotating Arms offer **Hinge: Base / Middle**. Base swings the complete linkage from
+the mounting housing. Middle keeps the upper link fixed and bends the lower link
+at the visible elbow. The landing foot or payload follows the selected hinge;
+**Payload: stays level** still counter-rotates its lower swivel. Choose the hinge
+while fully deployed with the starting angle at zero. Existing arms use Base.
 
 Landing-foot source blocks remain at their construction positions during animation.
 General Extenders save displaced arm sections separately when an aligned retracted
@@ -91,7 +101,7 @@ Craft a Wheel from three Programmable Matter Ingots, one Slimeball and one Iron
 Ingot. Four Wheels craft one Large Wheel. These recipes are shapeless.
 
 
-Ski-only vehicles can use Taxi mode on ice, packed ice and frosted ice. Every runner must remain above ice; mixed plate/wheel/ski supports do not qualify for this exception. Taxi movement stops before a runner leaves the ice. Lift blocks are not required for ski Taxi mode; Hover still needs its usual lift and thruster hardware.
+Two Ski supports are sufficient to assemble a vehicle, including saved legacy Ski gear. A single Ski remains insufficient; ordinary wheel and landing-pad craft still require three supports. Ski-only vehicles can use Taxi mode on ice, packed ice and frosted ice. Every runner must remain above ice; mixed plate/wheel/ski supports do not qualify for this exception. Taxi movement stops before a runner leaves the ice. Lift blocks are not required for ski Taxi mode; Hover still needs its usual lift and thruster hardware.
 
 The modular wheels roll with actual Taxi travel, reverse their roll when backing up and steer with the vehicle controls. Hover pauses wheel roll and steering.
 
@@ -120,7 +130,10 @@ landing foot points it toward that foot. Existing saved arms continue to point d
 
 Use the Configurizer for the arm dialog. Input, channels, fold direction and
 payload orientation use the same single-page dialog as joining and load settings.
-The dialog has no Angle or Active Reach editors.
+Rotating Arms expose **Start** and **End** angles in 15-degree steps. Return a
+bare arm to its starting position before changing Start; use a zero-degree Start
+before switching between Base and Middle hinges. Extenders retain their fixed
+construction length.
 For standalone regular and Large Extender Arms, Off is the fully extended construction
 pose. On retracts a single section by half a block, leaving clearance for its base.
 Two sections retract by one block; longer stacks retract by one fewer block than
@@ -135,6 +148,25 @@ against it. This works on floors, ceilings and walls, including stacked regular
 or large arms. The attachment starts in the adjacent block cell; it does not need
 to be placed inside the arm. Matching arm sections placed at that tip lengthen
 the same mechanism before attaching the payload.
+
+To attach landing gear to an already activated Rotating Arm:
+
+1. Use one bare column with **Start: 0°**, **End: 90°**, **Hinge: Base** and
+   **Payload: rotates**.
+2. Activate it and wait for its end socket to stop on the block grid.
+3. Hold a Plate, Ski or matching Wheel and click the outward face of that socket.
+4. Return the arm to its construction pose. The foot becomes part of its landing
+   assembly and remains an ordinary editable native block at that endpoint.
+
+The regular Wheel needs a regular arm; the Large Wheel needs a Large arm and
+four clear cells in the socket's plane. A Large arm also accepts a regular Plate
+or Ski. Connected native foot groups at an aligned endpoint attach together;
+join the matching arm columns before activation and give every column a foot in
+the same connected group.
+
+A fractional endpoint, including the usual **Payload: stays level** 90-degree
+endpoint, refuses native foot placement without consuming the item. Return the
+arm to its construction pose to attach the foot, then operate it normally.
 
 **Payload: stays level** keeps the attachment's original orientation as a Rotating
 Arm swings. **Payload: rotates with arm** makes the attachment turn with its linkage;

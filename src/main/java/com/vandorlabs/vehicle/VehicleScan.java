@@ -21,7 +21,7 @@ public final class VehicleScan {
     private final int maxBlocks=com.vandorlabs.config.BlockAvailability.vehicleMaxBlocks();
     private final BlockPos start;
     private final ArrayDeque<BlockPos> queue = new ArrayDeque<>();
-    private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>(), trackSupports=new HashSet<>();
+    private final Set<BlockPos> scheduled = new HashSet<>(), visited = new HashSet<>(), gears = new HashSet<>(), trackSupports=new HashSet<>(),skiSupports=new HashSet<>();
     private final Map<BlockPos, VehicleStructure.Cell> cells = new LinkedHashMap<>();
     private final Set<BlockPos> rampSections=new HashSet<>(),overhangContacts=new HashSet<>(),gearAssemblies=new HashSet<>();
     private final Map<BlockPos,Double> supportBottoms=new HashMap<>(),trackBottoms=new HashMap<>();
@@ -73,12 +73,13 @@ public final class VehicleScan {
     public BlockPos startPosition(){return start;}
     public int supportCount(){return Math.max(gears.size(),trackSupports.size());}
     public int trackSupportCount(){return trackSupports.size();}
-    public boolean hasRequiredSupports(){return gears.size()>=3||trackSupports.size()>=2;}
+    public boolean hasRequiredSupports(){return gears.size()>=3||trackSupports.size()>=2||skiSupports.size()>=2;}
     private void require(boolean test, String reason) { if(!test) throw new IllegalArgumentException(reason); }
     private void support(BlockLandingGear block,BlockPos root) {
         double bottom=block.vehicleBottomY(world,root);
         require(Double.isFinite(bottom),"Cannot determine landing gear bottom.");
         supportBottoms.put(root,bottom);
+        if(block instanceof BlockNonWheeledLandingGear&&((BlockNonWheeledLandingGear)block).ski)skiSupports.add(root);
         gearBottomY=gearBottomY==null?bottom:Math.min(gearBottomY,bottom);
     }
     private void supportCells(Collection<BlockPos> members,BlockPos owner){for(BlockPos at:members){supportCells.add(at);supportOwners.put(at,owner);}}
@@ -103,7 +104,7 @@ public final class VehicleScan {
         final Set<BlockPos> positions=new HashSet<>();
         final List<VehicleStructure.Cell> cells=new ArrayList<>();
         BlockPos pilot,controller;int controllers,autopilots,pilots;
-        int feet,tracks;double bottom=Double.POSITIVE_INFINITY;
+        int feet,tracks,skis;double bottom=Double.POSITIVE_INFINITY;
     }
     /** Landing contacts separate child controls from the requested hull, without changing saved tile data. */
     private List<VehicleStructure.Cell> roles(){
@@ -119,7 +120,7 @@ public final class VehicleScan {
                 for(BlockPos other:next)if(cells.containsKey(other)&&!owners.containsKey(other)){owners.put(other,group);pending.add(other);}
             }
         }
-        for(Map.Entry<BlockPos,Double> support:supportBottoms.entrySet()){RoleGroup group=owners.get(support.getKey());if(group!=null){group.feet++;group.bottom=Math.min(group.bottom,support.getValue());}}
+        for(Map.Entry<BlockPos,Double> support:supportBottoms.entrySet()){RoleGroup group=owners.get(support.getKey());if(group!=null){group.feet++;if(skiSupports.contains(support.getKey()))group.skis++;group.bottom=Math.min(group.bottom,support.getValue());}}
         for(Map.Entry<BlockPos,Double> support:trackBottoms.entrySet()){RoleGroup group=owners.get(support.getKey());if(group!=null){group.tracks++;group.bottom=Math.min(group.bottom,support.getValue());}}
         RoleGroup primary=owners.get(start);require(primary!=null,"The selected vehicle component is unavailable.");
         primaryPositions=Collections.unmodifiableSet(new HashSet<>(primary.positions));
@@ -134,11 +135,11 @@ public final class VehicleScan {
         for(RoleGroup group:groups)if(group!=primary&&(group.controllers>0||group.pilots>0||group.autopilots>0)){
             require(primary.controller!=null,"The lower vehicle needs its own Vehicle Controller before carrying another complete vehicle.");
             require(group.controllers==1&&group.pilots>=1&&group.autopilots<=1,"Only a complete parked child vehicle may carry additional Pilot Seats or controllers.");
-            require((group.feet>=3||group.tracks>=2)&&gearBottomY!=null&&group.bottom>gearBottomY+.001,"A parked child vehicle needs its own higher landing supports.");
+            require((group.feet>=3||group.tracks>=2||group.skis>=2)&&gearBottomY!=null&&group.bottom>gearBottomY+.001,"A parked child vehicle needs its own higher landing supports.");
         }
         }
         if(primary.pilot!=null)pilot=primary.pilot;
-        if(gearBottomY!=null){final double lowest=gearBottomY;gears.removeIf(at->supportBottoms.containsKey(at)&&Math.abs(supportBottoms.get(at)-lowest)>.001);trackSupports.removeIf(at->trackBottoms.containsKey(at)&&Math.abs(trackBottoms.get(at)-lowest)>.001);}
+        if(gearBottomY!=null){final double lowest=gearBottomY;gears.removeIf(at->supportBottoms.containsKey(at)&&Math.abs(supportBottoms.get(at)-lowest)>.001);trackSupports.removeIf(at->trackBottoms.containsKey(at)&&Math.abs(trackBottoms.get(at)-lowest)>.001);skiSupports.removeIf(at->supportBottoms.containsKey(at)&&Math.abs(supportBottoms.get(at)-lowest)>.001);}
         // Each component starts with its controller. The primary component comes
         // first, retaining canonical control selection through the existing codec.
         List<VehicleStructure.Cell> ordered=new ArrayList<>();List<RoleGroup> orderedGroups=new ArrayList<>();orderedGroups.add(primary);for(RoleGroup group:groups)if(group!=primary)orderedGroups.add(group);
@@ -464,6 +465,7 @@ public final class VehicleScan {
                         BlockPos at=gear.getPos().add(column),foot=at.down(gear.assembly().columnHeight());
                         List<BlockPos> lower=nestedLandingPath(gear,foot);
                         if(gears.add(at))support((BlockLandingGear)world.getBlockState(at).getBlock(),at);
+                        if(gear.assembly().kind()==com.vandorlabs.gear.core.GearTopology.FootKind.SKI)skiSupports.add(at);
                         for(BlockPos next:lower)enqueue(next);
                     }
                     if(landing)for(BlockPos member:gear.members())if(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){trackSupports.add(member);trackBottoms.put(member,((BlockLandingGear)world.getBlockState(member).getBlock()).vehicleBottomY(world,member));}
@@ -536,7 +538,7 @@ public final class VehicleScan {
                 require(!cells.isEmpty(),"The opposing coupler section contains no blocks.");
                 List<VehicleStructure.Cell> ordered=roles();
                 if(!attachment){require(seats>=1, "A craft must contain at least one Pilot Seat.");
-                    require(hasRequiredSupports(), "A craft needs at least three landing gear or wheel supports, or two track blocks.");}
+                    require(hasRequiredSupports(), "A craft needs three landing gear or wheel supports, two skis, or two track blocks.");}
                 origin=new BlockPos(minX,minY,minZ);
                 List<VehicleStructure.Cell> local=new ArrayList<>();
                 for(VehicleStructure.Cell cell:ordered)local.add(new VehicleStructure.Cell(cell.pos.subtract(origin),cell.state,

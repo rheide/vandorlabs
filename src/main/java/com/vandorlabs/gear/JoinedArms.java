@@ -22,7 +22,7 @@ final class JoinedArms {
                     BlockPos at=current.add(step.getX()*distance,step.getY()*distance,step.getZ()*distance);
                     if(!GearAssembly.loaded(world,at))break; // A boundary never loads chunks just to look for a partner.
                     IBlockState state=world.getBlockState(at);if(state.getBlock()!=world.getBlockState(root).getBlock())continue;
-                    GearBlock block=(GearBlock)state.getBlock();if(!block.componentRoot(at,state).equals(at))continue;
+                    GearBlock block=(GearBlock)state.getBlock();if(!block.componentRoot(world,at,state).equals(at))continue;
                     if(!(world.getTileEntity(at) instanceof GearTileEntity))continue;GearTileEntity partner=(GearTileEntity)world.getTileEntity(at);
                     GearTileEntity control=partner.loadedController();if(control==null)control=partner;
                     if(!partner.joinEnabled()||distance>partner.joinRange()||partner.mountDirection()!=first.mountDirection()||!at.equals(GearAssembly.topOfColumn(world,at)))continue;

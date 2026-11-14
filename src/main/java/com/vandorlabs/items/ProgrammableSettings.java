@@ -29,7 +29,7 @@ import net.minecraft.world.World;
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
     public static final String MODULAR_ARM_SETTINGS="modular_arm_settings";
-    private static final String[] ARM_KEYS={"Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
+    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";

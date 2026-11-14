@@ -58,18 +58,19 @@ final class ModularGearFollowupRuntimeChecks {
         }}finally{clear(world,at);}
         System.out.println("[vandorlabs][reprolab] modular-gear-covers PASS both sizes arms and rotating/sliding covers stay open until stowed");
     }
-    private static void skis(WorldServer world,EntityPlayerMP player)throws Exception{
+    static void skis(WorldServer world,EntityPlayerMP player)throws Exception{
         BlockPos at=new BlockPos(540,150,240);EntityGroundVehicle craft=null;Vec3d old=player.getPositionVector();
         java.lang.reflect.Method advance=EntityGroundVehicle.class.getDeclaredMethod("advance",boolean.class);advance.setAccessible(true);
-        try{for(boolean large:new boolean[]{false,true})for(boolean swing:new boolean[]{false,true}){
+        try{for(int supports:new int[]{1,2,3})for(boolean large:new boolean[]{false,true})for(boolean swing:new boolean[]{false,true}){
             clear(world,at);ground(world,at,Blocks.ICE);
             for(int x=0;x<8;x++)for(int z=0;z<8;z++)world.setBlockState(at.add(x,1,z),Blocks.IRON_BLOCK.getDefaultState());
-            for(BlockPos root:new BlockPos[]{at,at.east(4),at.south(4)})build(world,player,root,large,swing,true);
+            for(BlockPos root:supports==1?new BlockPos[]{at}:supports==2?new BlockPos[]{at,at.east(4)}:new BlockPos[]{at,at.east(4),at.south(4)})build(world,player,root,large,swing,true);
             BlockPos seat=at.add(2,2,2);world.setBlockState(seat,ModBlocks.PILOT_SEAT.getDefaultState());ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,seat,world.getBlockState(seat),player,new ItemStack(ModBlocks.PILOT_SEAT));
             world.setBlockState(at.add(3,2,2),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());
             world.setBlockState(at.add(4,2,2),Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState());
             VehicleScan scan=new VehicleScan(world,seat);for(int tick=0;tick<200&&!scan.step(128);tick++);
-            require(scan.result!=null&&scan.error==null,"ski vehicle scan "+scan.error);require(scan.result.hasSkisOnly&&scan.result.gearCount==3,"all supports identified as skis");
+            if(supports==1){require(scan.result==null&&scan.error!=null&&scan.error.contains("two skis"),"one Ski is refused "+scan.error);continue;}
+            require(scan.result!=null&&scan.error==null,"ski vehicle scan "+scan.error);require(scan.result.hasSkisOnly&&scan.result.gearCount==supports,"all supports identified as skis");
             for(Block ice:new Block[]{Blocks.ICE,Blocks.PACKED_ICE,Blocks.FROSTED_ICE}){ground(world,at,ice);require(VehicleSkiTraction.canStart(world,scan.result,scan.origin),"ski Taxi on "+ice.getRegistryName());}
             world.setBlockState(at.down(2),Blocks.STONE.getDefaultState());require(!VehicleSkiTraction.canStart(world,scan.result,scan.origin),"one runner on ordinary ground rejects Taxi");ground(world,at,Blocks.ICE);
             require(!VehicleFlight.canHover(scan.result),"fixture has no lift blocks");player.setPositionAndUpdate(at.getX()-3,at.getY()+3,at.getZ()-3);
@@ -78,7 +79,7 @@ final class ModularGearFollowupRuntimeChecks {
             ground(world,at,Blocks.STONE);double stoppedX=craft.posX,stoppedZ=craft.posZ;advance.invoke(craft,true);require(craft.posX==stoppedX&&craft.posZ==stoppedZ&&craft.driveSpeed==0,"ski Taxi stops before leaving ice");
             VehicleTransfer.park(world,craft,new BlockPos(craft.posX,craft.posY,craft.posZ),player);craft=null;
         }}finally{if(craft!=null&&!craft.isDead)craft.setDead();clear(world,at);for(BlockPos p:BlockPos.getAllInBox(at.add(-12,-2,-12),at.add(18,-2,18)))world.setBlockToAir(p);player.setPositionAndUpdate(old.x,old.y,old.z);}
-        System.out.println("[vandorlabs][reprolab] ski-taxi PASS both arm types/sizes three ice types no lift requirement ordinary-ground rejection and real drive stop");
+        System.out.println("[vandorlabs][reprolab] ski-taxi PASS two/three supports both arm types/sizes three ice types no lift requirement ordinary-ground rejection and real drive stop");
     }
     private static void ground(WorldServer world,BlockPos at,Block block){for(BlockPos p:BlockPos.getAllInBox(at.add(-12,-2,-12),at.add(18,-2,18)))world.setBlockState(p,block.getDefaultState(),2);}
 }

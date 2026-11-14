@@ -35,12 +35,14 @@ final class NonWheeledGearRuntimeChecks {
         }
         System.out.println("[vandorlabs][reprolab] non-wheeled-gear PASS three families both sizes four facings persistence scan hover-only block-round-trip");
     }
-    private static void roundTrip(WorldServer world,EntityPlayerMP player,BlockNonWheeledLandingGear gear)throws Exception{
+    static void twoSkis(WorldServer world,EntityPlayerMP player)throws Exception{roundTrip(world,player,(BlockNonWheeledLandingGear)Block.getBlockFromName("vandorlabs:ski_landing_gear"),2);System.out.println("[vandorlabs][reprolab] legacy-two-skis PASS actual saved-family scan assemble park exact extension");}
+    private static void roundTrip(WorldServer world,EntityPlayerMP player,BlockNonWheeledLandingGear gear)throws Exception{roundTrip(world,player,gear,3);}
+    private static void roundTrip(WorldServer world,EntityPlayerMP player,BlockNonWheeledLandingGear gear,int supports)throws Exception{
         BlockPos base=new BlockPos(300,101,120),seat=base.add(1,2,1);EntityGroundVehicle craft=null;Vec3d before=player.getPositionVector();
         try{
             for(int x=-2;x<=5;x++)for(int z=-2;z<=5;z++)world.setBlockState(base.add(x,-2,z),Blocks.STONE.getDefaultState());
             for(int x=0;x<3;x++)for(int z=0;z<3;z++)world.setBlockState(base.add(x,1,z),Blocks.STONE.getDefaultState());
-            for(BlockPos p:new BlockPos[]{base,base.east(2),base.south(2)}){
+            for(BlockPos p:supports==2?new BlockPos[]{base,base.south(2)}:new BlockPos[]{base,base.east(2),base.south(2)}){
                 world.setBlockState(p,gear.getDefaultState());TileEntityLandingGear tile=(TileEntityLandingGear)world.getTileEntity(p);tile.configure(0,0,16,0);require(gear.setExtended(world,p,true),"fixture extended gear");tile.progress=tile.previous=1;
             }
             if(gear.ski){world.setBlockState(base.up(),gear.getDefaultState());require(gear.connectedRoot(world,base.up()).equals(base),"vertical ski root");require(!((TileEntityLandingGear)world.getTileEntity(base.up())).isRoot(),"vertical ski extension shared");}
@@ -49,7 +51,7 @@ final class NonWheeledGearRuntimeChecks {
             world.setBlockState(seat.east(),Block.getBlockFromName("vandorlabs:impulse_engine").getDefaultState());world.setBlockState(seat.west(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState());
             for(int x=0;x<3;x++)world.setBlockState(base.add(x,2,0),Block.getBlockFromName("vandorlabs:antigravity_plate").getDefaultState());
             VehicleScan scan=new VehicleScan(world,seat);for(int i=0;i<200 && !scan.step(128);i++);
-            require(scan.error==null && scan.result!=null,"vehicle discovery "+scan.error);require(scan.result.gearCount==3 && scan.result.hasNonWheeledGear,"support detection");require(!VehicleSkiTraction.canStart(world,scan.result,scan.origin),"non-wheeled Taxi rejected on ordinary ground");
+            require(scan.error==null && scan.result!=null,"vehicle discovery "+scan.error);require(scan.result.gearCount==supports && scan.result.hasNonWheeledGear,"support detection");require(!VehicleSkiTraction.canStart(world,scan.result,scan.origin),"non-wheeled Taxi rejected on ordinary ground");
             player.setPositionAndUpdate(seat.getX()+.5,seat.getY()+1,seat.getZ()+.5);
             craft=VehicleTransfer.assemble(world,scan.result,scan.origin,player);require(craft.hover && !craft.setHover(false),"direct Hover assembly and Taxi rejection");
             VehicleTransfer.park(world,craft,scan.origin,player);craft=null;

@@ -5,12 +5,13 @@ import net.minecraft.util.math.BlockPos;
 
 /** Independent focused fixtures report all failures before ending the disposable client. */
 final class Utility26FocusedChecks {
-    private static int ticks;private static boolean splitLive;
+    private static int ticks;private static boolean splitLive,arms210;
     private interface Check{void run()throws Exception;}
     private static void check(java.util.List<Throwable> failures,String name,Check action){
         try{action.run();}catch(Exception|LinkageError failure){System.err.println("[vandorlabs][reprolab] utility26 fixture FAILED "+name);failure.printStackTrace();failures.add(failure);}
     }
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
+        if(arms210){if(!com.vandorlabs.gear.ArmMiddleLiveChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] utility26-focused PASS arms-210-only");return true;}
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
         if("true".equals(System.getenv("VANDOR_SEGMENTED_COLLISIONS_ONLY")))return SegmentedCollisionLiveChecks.tick(mc,output);
@@ -19,6 +20,10 @@ final class Utility26FocusedChecks {
         if("true".equals(System.getenv("VANDOR_NATIVE_RECEIPT_ONLY")))return NativeCouplerReceiptClientChecks.tick(mc);
         if("true".equals(System.getenv("VANDOR_GEAR_MOTION_SCOPE_ONLY")))return GearMotionScopeLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_ARM_UNPAIRED_COUPLER_ONLY")))return VehicleArmCouplerUnpairedLiveChecks.tick(mc,output);
+        if("true".equals(System.getenv("VANDOR_ARMS_210_FRAME_ONLY"))){if(ticks<80)return false;com.vandorlabs.gear.client.ArmMiddleRenderChecks.runFootFrames(mc);System.out.println("[vandorlabs][reprolab] utility26-focused PASS arms-210-foot-frame");return true;}
+        if("true".equals(System.getenv("VANDOR_ARMS_210_JOINED_LANDING_ONLY"))||"true".equals(System.getenv("VANDOR_ARMS_210_JOINED_WHEELS_ONLY")))return com.vandorlabs.gear.ArmJoinedLandingLiveChecks.tick(mc);
+        if("true".equals(System.getenv("VANDOR_ARMS_210_SOCKET_ONLY"))||"true".equals(System.getenv("VANDOR_ARMS_210_LARGE_ONLY")))return com.vandorlabs.gear.ArmSocketLandingLiveChecks.tick(mc);
+        if("true".equals(System.getenv("VANDOR_ARMS_210_ENDPOINT_ONLY")))return com.vandorlabs.gear.ArmEndpointLandingLiveChecks.tick(mc);
         if("true".equals(System.getenv("VANDOR_ARM_ENDPOINT_COUPLER_ONLY")))return com.vandorlabs.gear.ArmEndpointCouplerLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_ARM_PARKING_HOLD_ONLY")))return ArmParkingHoldLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_WALL_PLACEMENT_ONLY")))return WallAgainstPlacementChecks.tick(mc);
@@ -29,6 +34,11 @@ final class Utility26FocusedChecks {
         if(ticks!=80)return false;
         if("true".equals(System.getenv("VANDOR_PORT_HULL_ONLY"))){PortHullPickerChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS port-hull-only");return true;}
         if("true".equals(System.getenv("VANDOR_STRUCTURE_EDIT_ROLLBACK_ONLY"))){mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.vehicle.VehicleStructureEditChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));return null;}).get();System.out.println("[vandorlabs][reprolab] utility26-focused PASS structure-publication-rollback");return true;}
+        if("true".equals(System.getenv("VANDOR_ARMS_210_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{Arm210Checks.server(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));NonWheeledGearRuntimeChecks.twoSkis(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));ModularGearFollowupRuntimeChecks.skis(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));return null;}).get();
+            GearDialogChecks.run(mc,output);GearDialogChecks.landingDirections(mc,output);com.vandorlabs.gear.client.ArmMiddleRenderChecks.run(mc,output);
+            arms210=true;return false;
+        }
         if("true".equals(System.getenv("VANDOR_HEX_TANK_CACHE_ONLY"))){HexTankClientChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS hex-tank-cache-only");return true;}
         if("true".equals(System.getenv("VANDOR_BATTERY_CACHE_ONLY"))){BatteryCacheClientChecks.run(mc);System.out.println("[vandorlabs][reprolab] utility26-focused PASS battery-cache-only");return true;}
         if("true".equals(System.getenv("VANDOR_UTILITY_DOORS_ONLY"))){UtilityDoorArtworkChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS utility-doors-only");return true;}

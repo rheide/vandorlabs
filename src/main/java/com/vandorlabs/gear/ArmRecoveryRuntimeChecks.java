@@ -20,7 +20,7 @@ public final class ArmRecoveryRuntimeChecks {
     private static final BlockPos ROOT=new BlockPos(15,100,0),PAYLOAD=ROOT.east(2);
     private static int stage,ticks;private static TransferCheckpoint checkpoint;
     private static java.util.concurrent.Future<Boolean> armSafeParkTask;
-    public static boolean paused(GearTileEntity arm){return System.getProperty("vandorlabs.reprolab")!=null&&!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty()&&arm.getPos().equals(ROOT);}
+    public static boolean paused(GearTileEntity arm){return System.getProperty("vandorlabs.reprolab")!=null&&!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty()&&arm.getPos().equals(ROOT)&&(!ArmLandingRecoveryChecks.active()||ArmLandingRecoveryChecks.paused());}
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Arm recovery: "+why);}
     @SideOnly(Side.CLIENT) public static boolean tick(Minecraft mc)throws Exception{
         mc.gameSettings.pauseOnLostFocus=false;mc.displayGuiScreen(null);
@@ -30,6 +30,7 @@ public final class ArmRecoveryRuntimeChecks {
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase)).get();
     }
     private static boolean run(WorldServer world,EntityPlayerMP actor,String phase)throws Exception{
+        if(ArmLandingRecoveryChecks.active())return ArmLandingRecoveryChecks.run(world,actor,phase);
         if(phase.contains("safe-park-"))return com.vandorlabs.vehicle.VehicleSafeParkRecoveryChecks.run(world,actor,phase);
         if(phase.contains("coupling-"))return com.vandorlabs.vehicle.VehicleCouplingRecoveryChecks.run(world,actor,phase);
         if(phase.contains("painting-")){if(phase.startsWith("verify-"))return com.vandorlabs.vehicle.VehiclePaintingRecoveryChecks.verify(world,phase);com.vandorlabs.vehicle.TaxiModularRuntimeChecks.run(world,actor);throw new IllegalStateException("Painting crash barrier was not reached");}

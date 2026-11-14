@@ -1,6 +1,7 @@
 package com.vandorlabs.gear.client;
 
 import com.vandorlabs.gear.GearBlock;
+import com.vandorlabs.gear.GearAssembly;
 import com.vandorlabs.gear.GearTileEntity;
 import com.vandorlabs.gear.core.GearMotion;
 import com.vandorlabs.gear.core.GearTopology;
@@ -27,7 +28,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
             net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableCull();
             BufferBuilder buffer=net.minecraft.client.renderer.Tessellator.getInstance().getBuffer();buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
-            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();try{ArmPayloadRenderer.render(tile,GearVisualMotion.sample(tile,partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
+            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();try{ArmPayloadRenderer.render(tile,renderedProgress(tile,partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
         }
     }
     /** Bound members are drawn by their operational controller, including compact parts. */
@@ -36,7 +37,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         GearTileEntity controller=tile.loadedController();
         if(controller!=null&&controller.isOperational()&&controller!=tile)return false;
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
-        return state.getBlock() instanceof GearBlock&&((GearBlock)state.getBlock()).componentRoot(tile.getPos(),state).equals(tile.getPos());
+        return state.getBlock() instanceof GearBlock&&((GearBlock)state.getBlock()).componentRoot(tile.getWorld(),tile.getPos(),state).equals(tile.getPos());
     }
     @Override public void renderTileEntityFast(GearTileEntity tile, double x, double y, double z, float partialTicks,
                                      int destroyStage, float partial, BufferBuilder buffer) {
@@ -49,8 +50,10 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     }
     private void emit(GearTileEntity tile,double x,double y,double z,float partialTicks,int destroyStage,float partial,BufferBuilder buffer,boolean cache){
         if (tile.getWorld() == null) return;
-        mounting=Affine.mount(tile.mountDirection());
-        double progress=GearVisualMotion.sample(tile,partialTicks);
+        IBlockState physicalState=tile.getWorld().getBlockState(tile.getPos());
+        boolean looseLargeWheel=physicalState.getBlock() instanceof com.vandorlabs.gear.LargeGearBlock&&((GearBlock)physicalState.getBlock()).kind()==GearBlock.Kind.WHEEL&&!tile.hasLoadedController();
+        mounting=Affine.mount(looseLargeWheel&&tile.componentFrame()!=EnumFacing.DOWN?tile.componentFrame():tile.mountDirection());
+        double progress=renderedProgress(tile,partialTicks);
         cachePose=cache&&(tile.isFixedMount()||progress==0||progress==1)&&(!(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft==null);
 
         IBlockState state = tile.getWorld().getBlockState(tile.getPos());
@@ -68,8 +71,8 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             }
             return;
         }
-        if(!state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).sizeClass()==1)return;
-        GearBlock part=(GearBlock)state.getBlock();if(!part.componentRoot(tile.getPos(),state).equals(tile.getPos()))return;
+        if(!state.getValue(GearBlock.ASSEMBLED)&&((GearBlock)state.getBlock()).sizeClass()==1&&!((((GearBlock)state.getBlock()).kind()==GearBlock.Kind.PLATE||((GearBlock)state.getBlock()).kind()==GearBlock.Kind.SKI||((GearBlock)state.getBlock()).kind()==GearBlock.Kind.WHEEL)&&tile.mountDirection()!=EnumFacing.DOWN&&!tile.hasLoadedController()))return;
+        GearBlock part=(GearBlock)state.getBlock();if(!part.componentRoot(tile.getWorld(),tile.getPos(),state).equals(tile.getPos()))return;
         // Another mod's FastTESR can leave a buffer translation behind.
         // Coordinates below already include the camera-relative tile offset.
         buffer.setTranslation(0, 0, 0);
@@ -116,7 +119,11 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(size)),x,y,z,light,buffer);
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());
-                draw("swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
+                if(tile.middleHinge()){
+                    Affine upper=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(barSize);
+                    GearModels.draw("swing_linkage_upper",mounting.compose(offset.compose(upper.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw)))),x,y,z,light,buffer,true);
+                }
+                draw(tile.middleHinge()?"swing_linkage_lower":"swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
                 draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset()-(assembly.kind()==GearTopology.FootKind.TRACK?1/64D:0),0).compose(hingeYaw))),x,y,z,light,buffer);
             }else{
                 // The Large fixed wheel socket starts exactly at the solid body's
@@ -146,7 +153,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 }continue;
             }
             if(assembly.kind()==GearTopology.FootKind.WHEEL){
-                net.minecraft.util.math.BlockPos source=tile.localCell(foot);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(source,ws).equals(source))continue;
+                net.minecraft.util.math.BlockPos source=tile.localCell(foot);IBlockState ws=tile.getWorld().getBlockState(source);if(!(ws.getBlock() instanceof GearBlock)||((GearBlock)ws.getBlock()).kind()!=GearBlock.Kind.WHEEL)continue;GearBlock wheel=(GearBlock)ws.getBlock();if(!wheel.componentRoot(tile.getWorld(),source,ws).equals(source))continue;
                 Affine transform=orientation;com.vandorlabs.vehicle.EntityGroundVehicle craft=tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).craft:null;
                 Affine at=feet.compose(Affine.translation(foot.x,foot.y,foot.z));
                 if(craft!=null)transform=transform.compose(Affine.yaw(.5,com.vandorlabs.client.VehicleWheelMotion.steer(craft,source)));

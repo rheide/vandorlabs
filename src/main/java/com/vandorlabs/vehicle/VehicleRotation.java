@@ -156,13 +156,13 @@ public final class VehicleRotation {
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(VehicleStructure.Cell before:source.cells) {
             if(!MovingBlockSupport.supported(before,view.getTileEntity(before.pos)))throw new IllegalArgumentException("Rotation is not supported for "+before.state.getBlock().getRegistryName()+". Rotate the craft back to its original heading before exiting Taxi Mode.");
-            BlockPos pos=cell(before.pos,width,depth,turns);NBTTagCompound data=before.tileData();
+            BlockPos pos=cell(before.pos,width,depth,turns);VehicleStructure.Cell looseFoot=com.vandorlabs.gear.GearData.rotateLooseFoot(before,turns);NBTTagCompound data=looseFoot==null?before.tileData():looseFoot.tileData();
             if(data!=null) {
                 data.setInteger("x",pos.getX());data.setInteger("y",pos.getY());data.setInteger("z",pos.getZ());
                 BuildingBlockCompat.rotateTile(before.state,data,rotation);VehiclePaintings.rotate(data,width,depth,turns);
                 String domain=before.state.getBlock().getRegistryName().getResourceDomain();
                 if(domain.equals("vandorlabs")) {
-                    if(data.getString("id").equals("vandorlabs:modular_gear")||data.getString("id").equals("vandorlabs:track"))com.vandorlabs.gear.GearData.rotate(data,turns,view.parent);
+                    if(looseFoot==null&&(data.getString("id").equals("vandorlabs:modular_gear")||data.getString("id").equals("vandorlabs:track")))com.vandorlabs.gear.GearData.rotate(data,turns,view.parent);
                     for(String key:new String[]{"Anchor","Pair","TrapdoorPartner","TrapdoorSquare","RampJournalOrigin"})if(data.hasKey(key,4)) {
                         BlockPos link=BlockPos.fromLong(data.getLong(key));
                         if(key.equals("TrapdoorSquare") && !(view.getTileEntity(before.pos) instanceof TileEntityProgrammableDiagonalTrapdoor)) {
@@ -212,7 +212,8 @@ public final class VehicleRotation {
                     if(view.getTileEntity(before.pos)!=null&&view.getTileEntity(before.pos).getClass().getName().equals("mekanism.common.tile.TileEntityGlowPanel"))facing(data,"side",rotation,false);
                 }
             }
-            try{cells.add(new VehicleStructure.Cell(pos,state(before.state,rotation),data));}
+            net.minecraft.block.state.IBlockState component=com.vandorlabs.gear.GearData.rotateComponentState(before,turns);
+            try{cells.add(new VehicleStructure.Cell(pos,looseFoot!=null?looseFoot.state:component!=null?component:state(before.state,rotation),data));}
             catch(RuntimeException | LinkageError failure){throw new IllegalArgumentException("Cannot rotate "+before.state.getBlock().getRegistryName()+" safely. Rotate back to the original heading before parking.",failure);}
         }
         return source.displayOnly?VehicleStructure.display(cells):new VehicleStructure(cells,cell(source.seat,width,depth,turns),rotation.rotate(source.facing),source.gearCount);

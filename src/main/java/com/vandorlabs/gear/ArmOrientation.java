@@ -27,6 +27,7 @@ public final class ArmOrientation {
         switch(face){case EAST:return vector(EnumFacing.WEST,p);case WEST:return vector(EnumFacing.EAST,p);case NORTH:return vector(EnumFacing.SOUTH,p);case SOUTH:return vector(EnumFacing.NORTH,p);default:return vector(face,p);}
     }
     public static AxisAlignedBB box(EnumFacing face,AxisAlignedBB b){
+        if(face==EnumFacing.DOWN)return b;
         double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;
         for(int n=0;n<8;n++){Vec3d v=point(face,(n&1)==0?b.minX:b.maxX,(n&2)==0?b.minY:b.maxY,(n&4)==0?b.minZ:b.maxZ);lx=Math.min(lx,v.x);ly=Math.min(ly,v.y);lz=Math.min(lz,v.z);hx=Math.max(hx,v.x);hy=Math.max(hy,v.y);hz=Math.max(hz,v.z);}
         return new AxisAlignedBB(lx,ly,lz,hx,hy,hz);

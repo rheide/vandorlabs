@@ -163,3 +163,10 @@ task testVehicleCouplerScopeCodec(type: JavaExec) {
  main = 'com.vandorlabs.vehicle.VehicleCouplerScopeCodecChecks'
  maxHeapSize = '512m'
 }
+
+task testArmLandingEndpointData(type: JavaExec) {
+ dependsOn compileNonRenderingChecks
+ classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+ main = 'com.vandorlabs.gear.ArmLandingEndpointDataChecks'
+ maxHeapSize = '512m'
+}

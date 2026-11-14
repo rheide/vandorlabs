@@ -32,6 +32,14 @@ public final class GearGeometry {
     }
     private static final Map<String,List<AxisAlignedBB>> MODELS=new java.util.concurrent.ConcurrentHashMap<>();
     private static final ThreadLocal<GearTileEntity> EXCLUDED=new ThreadLocal<>();
+    private static final ThreadLocal<Map<BlockPos,net.minecraft.block.state.IBlockState>> LANDING_PREVIEW=new ThreadLocal<>();
+    static List<AxisAlignedBB> landingBoxes(GearTileEntity root,Map<BlockPos,net.minecraft.block.state.IBlockState> states){LANDING_PREVIEW.set(states);try{return computeBoxes(root,root.progress());}finally{LANDING_PREVIEW.remove();}}
+    private static net.minecraft.block.state.IBlockState footState(GearTileEntity root,BlockPos at){Map<BlockPos,net.minecraft.block.state.IBlockState> preview=LANDING_PREVIEW.get();return preview!=null&&preview.containsKey(at)?preview.get(at):root.getWorld().getBlockState(at);}
+    static boolean landingClear(GearTileEntity root,List<AxisAlignedBB> future,Collection<com.vandorlabs.vehicle.VehicleStructure.Cell> originals){
+        List<AxisAlignedBB> own=new ArrayList<>();for(com.vandorlabs.vehicle.VehicleStructure.Cell source:originals){source.state.addCollisionBoxToList(root.getWorld(),source.pos,new AxisAlignedBB(source.pos).grow(2),own,null,false);if(ArmLooseGearData.largeWheel(source.state)&&source.state.getValue(LargeGearBlock.PART)==0)for(AxisAlignedBB box:MODELS.computeIfAbsent("wheel_large",GearBlock::modelParts))own.add(ArmOrientation.box(ArmFootComponentFrame.frame(source),yaw(box,GearCollision.quarterTurns(source.state.getValue(GearBlock.FACING)))).offset(source.pos));}PreflightSources prior=PREFLIGHT_SOURCES.get();PREFLIGHT_SOURCES.set(new PreflightSources(root.getWorld(),new HashSet<>(own)));List<AxisAlignedBB> previous=computeBoxes(root,root.progress());
+        try{for(int i=0;i<future.size();i++){AxisAlignedBB box=future.get(i);if(i<previous.size())box=box.union(previous.get(i));box=box.shrink(.0001);if(!root.getWorld().isAreaLoaded(new BlockPos(box.minX,box.minY,box.minZ),new BlockPos(box.maxX,box.maxY,box.maxZ),false)||!foreign(root.getWorld(),root,box).isEmpty())return false;}return true;}finally{if(prior==null)PREFLIGHT_SOURCES.remove();else PREFLIGHT_SOURCES.set(prior);}
+    }
+
     private static final class PreflightSources {
         final World world;final Set<AxisAlignedBB> boxes;
         PreflightSources(World world,Set<AxisAlignedBB> boxes){this.world=world;this.boxes=boxes;}
@@ -53,7 +61,7 @@ public final class GearGeometry {
     }
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
-    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false))return;ArmSurfaceActivity.refresh(tile);Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
+    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false)||world.getTileEntity(tile.getPos())!=tile)return;ArmSurfaceActivity.refresh(tile);Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
     public static void remove(GearTileEntity tile){ArmSurfaceActivity.remove(tile);Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null)roots.remove(tile);SpatialIndex index=INDICES.get(tile.getWorld());if(index!=null)index.remove(tile);}
     @SubscribeEvent public static void unload(WorldEvent.Unload event){ArmSurfaceActivity.unload(event.getWorld());ROOTS.remove(event.getWorld());INDICES.remove(event.getWorld());}
     public static java.util.List<GearTileEntity> roots(World world){Set<GearTileEntity> found=ROOTS.get(world);return found==null?Collections.emptyList():new ArrayList<>(found);}
@@ -63,15 +71,15 @@ public final class GearGeometry {
         if(world==null||tile.isInvalid()||!world.isBlockLoaded(pos))return Collections.emptyList();
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
         if(!(state.getBlock() instanceof LargeGearBlock)||((GearBlock)state.getBlock()).kind()!=GearBlock.Kind.WHEEL
-            ||!((GearBlock)state.getBlock()).componentRoot(pos,state).equals(pos))return Collections.emptyList();
+            ||!((GearBlock)state.getBlock()).componentRoot(world,pos,state).equals(pos))return Collections.emptyList();
         GearTileEntity owner=tile.loadedController();if(owner!=null && owner.isOperational())return Collections.emptyList();
         int turns=GearCollision.quarterTurns(state.getValue(GearBlock.FACING));List<AxisAlignedBB> result=new ArrayList<>();
-        for(AxisAlignedBB box:MODELS.computeIfAbsent("wheel_large",GearBlock::modelParts))result.add(yaw(box,turns).offset(pos));
+        for(AxisAlignedBB box:MODELS.computeIfAbsent("wheel_large",GearBlock::modelParts))result.add(ArmOrientation.box(tile.componentFrame(),yaw(box,turns)).offset(pos));
         return result;
     }
     @SubscribeEvent public static void collisions(GetCollisionBoxesEvent event){PreflightSources sources=PREFLIGHT_SOURCES.get();if(sources!=null&&sources.world==event.getWorld())event.getCollisionBoxesList().removeIf(sources.boxes::contains);if(event.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;SpatialIndex index=INDICES.get(event.getWorld());if(index==null)return;Set<GearTileEntity> roots=index.near(event.getAabb());
         for(GearTileEntity root:roots)if(!root.isInvalid()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root)
-            for(AxisAlignedBB box:looseWheelBoxes(root))if(box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);
+            for(AxisAlignedBB box:looseWheelBoxes(root))if(box.intersects(event.getAabb())&&(sources==null||sources.world!=event.getWorld()||!sources.boxes.contains(box)))event.getCollisionBoxesList().add(box);
         for(GearTileEntity root:roots)if(root!=EXCLUDED.get()&&!root.isInvalid()&&root.isOperational()&&root.getWorld().isBlockLoaded(root.getPos())&&root.getWorld().getTileEntity(root.getPos())==root&&root.getRenderBoundingBox().intersects(event.getAabb()))for(AxisAlignedBB original:root.collisionBoxes()){AxisAlignedBB box=com.vandorlabs.motion.PlatformRiders.supportCollision(original,event.getEntity(),root.progress()>0&&root.progress()<1);if(box!=null&&box.getAverageEdgeLength()>0&&box.intersects(event.getAabb()))event.getCollisionBoxesList().add(box);}
     }
     private static GearMotion.Bounds bounds(AxisAlignedBB box){return new GearMotion.Bounds(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ);}
@@ -87,15 +95,18 @@ public final class GearGeometry {
         for(BlockPos column:tile.columns()){
             BlockPos sourceColumn=root.add(column);if(!(tile.getWorld().getBlockState(sourceColumn).getBlock() instanceof GearBlock))continue;BlockPos at=root.add(ArmOrientation.inverse(tile.mountDirection(),column));int width=tile.armSize();double shift=(width-1)*.5;
             out.add(new AxisAlignedBB(0,14/16D,0,1,1,1).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));out.add(new AxisAlignedBB(.5-5/16D*width,tile.isFixedMount()?0:6/16D,.5-5/16D*width,.5+5/16D*width,14/16D,.5+5/16D*width).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));
-            if(tile.isSwingArmController())for(AxisAlignedBB arm:armParts())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+            if(tile.isSwingArmController()){
+                for(AxisAlignedBB arm:tile.middleHinge()?armParts("swing_linkage_upper"):Collections.<AxisAlignedBB>emptyList())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),tile.poseAtAngle(0),false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+                for(AxisAlignedBB arm:armParts(tile.middleHinge()?"swing_linkage_lower":"swing_linkage"))addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+            }
             else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY()+tile.footMountOffset(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
             AxisAlignedBB socket=group.kind()==GearTopology.FootKind.NONE&&!tile.isSwingArmController()?new AxisAlignedBB(4.25/16D,3/16D,4.25/16D,11.75/16D,5/16D,11.75/16D):new AxisAlignedBB(.25,3/16D,.3125,.75,7/16D,.6875);
             if(group.kind()!=GearTopology.FootKind.NONE||!tile.isFixedMount())addArm(out,socket.offset(0,-group.columnHeight()+tile.footMountOffset()-(group.kind()==GearTopology.FootKind.TRACK&&tile.isSwingArmController()?1/64D:0),0),pose,true,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
         }
         int turns=tile.footFacing()==EnumFacing.EAST?1:tile.footFacing()==EnumFacing.SOUTH?2:tile.footFacing()==EnumFacing.WEST?3:0;
         if(group.kind()!=GearTopology.FootKind.NONE)for(GearTopology.Cell foot:group.feet()){
-            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=tile.localCell(foot);net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);AxisAlignedBB posed=box(pose.transformFootBounds(bounds(wheel.offset(foot.x,foot.y,foot.z))));
-                if(block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(source,state).equals(source)){AxisAlignedBB connector=yaw(MODELS.computeIfAbsent(block.wheelModel()+"_connector",GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns).offset(foot.x,foot.y,foot.z);posed=posed.union(box(pose.transformConnectorBounds(bounds(connector),(connector.minX+connector.maxX)/2,(connector.minY+connector.maxY)/2,(connector.minZ+connector.maxZ)/2)));}
+            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=tile.localCell(foot);net.minecraft.block.state.IBlockState state=footState(tile,source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(tile.getWorld(),source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);AxisAlignedBB posed=box(pose.transformFootBounds(bounds(wheel.offset(foot.x,foot.y,foot.z))));
+                if(block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(tile.getWorld(),source,state).equals(source)){AxisAlignedBB connector=yaw(MODELS.computeIfAbsent(block.wheelModel()+"_connector",GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns).offset(foot.x,foot.y,foot.z);posed=posed.union(box(pose.transformConnectorBounds(bounds(connector),(connector.minX+connector.maxX)/2,(connector.minY+connector.maxY)/2,(connector.minZ+connector.maxZ)/2)));}
                 out.add(posed.offset(root));}
             else if(group.kind()==GearTopology.FootKind.TRACK){BlockPos source=tile.localCell(foot);com.vandorlabs.gear.track.TrackAppearance appearance=com.vandorlabs.gear.track.TrackGeometry.onArm(com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),source));AxisAlignedBB nativeTrack=com.vandorlabs.gear.track.TrackGeometry.bounds(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),source),tile.footFacing(),appearance);add(out,nativeTrack.offset(foot.x,foot.y,foot.z),pose,true,root);}
             else if(group.kind()==GearTopology.FootKind.PLATE)add(out,new AxisAlignedBB(0,0,0,1,3/16D,1).offset(foot.x,foot.y,foot.z),pose,true,root);
@@ -107,7 +118,7 @@ public final class GearGeometry {
         if(payload&&tile.payload()!=null)try{out.addAll(tile.payload().boxes(tile,progress));}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();return Collections.emptyList();}
         return Collections.unmodifiableList(out);
     }
-    private static List<AxisAlignedBB> armParts(){return MODELS.computeIfAbsent("swing_linkage_sliced",name->GearBlock.movingArmParts());}
+    private static List<AxisAlignedBB> armParts(String model){return MODELS.computeIfAbsent(model+"_sliced",name->GearBlock.movingArmParts(model));}
     private static AxisAlignedBB stretch(AxisAlignedBB b,double height){double factor=(height+.25)/1.25;return new AxisAlignedBB(b.minX,GearMotion.PIVOT_Y+(b.minY-GearMotion.PIVOT_Y)*factor,b.minZ,b.maxX,GearMotion.PIVOT_Y+(b.maxY-GearMotion.PIVOT_Y)*factor,b.maxZ);}
     private static void addArm(List<AxisAlignedBB> out,AxisAlignedBB local,GearMotion.Pose pose,boolean foot,BlockPos at,int scaleX,int scaleZ,double shiftX,double shiftZ){AxisAlignedBB scaled=new AxisAlignedBB(.5+(local.minX-.5)*scaleX,local.minY,.5+(local.minZ-.5)*scaleZ,.5+(local.maxX-.5)*scaleX,local.maxY,.5+(local.maxZ-.5)*scaleZ);List<AxisAlignedBB> one=new ArrayList<>();add(one,scaled,pose,foot,at);out.add(one.get(0).offset(shiftX,0,shiftZ));}
     public static boolean canMove(GearTileEntity root,double before,double next){
@@ -195,7 +206,7 @@ public final class GearGeometry {
             if(index>=start)return root.payload().sweptBox(root,index-start,before,after);
         }
         if(!root.isLandingAssembly()){double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());return rotationEnvelope(root,old.union(next),(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
-        int pieces=root.isSwingArmController()?armParts().size()+3:4,feetStart=root.columns().size()*pieces;
+        int pieces=root.isSwingArmController()?(root.middleHinge()?armParts("swing_linkage_upper").size()+armParts("swing_linkage_lower").size():armParts("swing_linkage").size())+3:4,feetStart=root.columns().size()*pieces;
         boolean translated=root.mode()==GearMotion.Mode.EXTEND||root.mode()==GearMotion.Mode.ROTATE_LEVEL&&(index>=feetStart||index%pieces==pieces-1);
         double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());
         double padding=translated?0:(root.assembly().columnHeight()+2)*(1-Math.cos(Math.toRadians(angle/2)));
@@ -203,13 +214,17 @@ public final class GearGeometry {
         if(root.mode()==GearMotion.Mode.ROTATE_LEVEL&&root.assembly().kind()==GearTopology.FootKind.WHEEL&&index>=feetStart){
             GearTopology.Cell foot=root.assembly().feet().get(index-feetStart);BlockPos source=root.localCell(foot);
             net.minecraft.block.state.IBlockState state=root.getWorld().getBlockState(source);
-            if(state.getBlock() instanceof GearBlock&&((GearBlock)state.getBlock()).componentRoot(source,state).equals(source)){
+            if(state.getBlock() instanceof GearBlock&&((GearBlock)state.getBlock()).componentRoot(root.getWorld(),source,state).equals(source)){
                 GearBlock wheel=(GearBlock)state.getBlock();int turns=GearCollision.quarterTurns(root.footFacing());
                 AxisAlignedBB connector=yaw(MODELS.computeIfAbsent(wheel.wheelModel()+"_connector",GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns).offset(foot.x,foot.y,foot.z);
                 double cx=(connector.minX+connector.maxX)/2,cy=(connector.minY+connector.maxY)/2,cz=(connector.minZ+connector.maxZ)/2;
                 AxisAlignedBB first=box(root.pose(before).transformConnectorBounds(bounds(connector),cx,cy,cz)),last=box(root.pose(after).transformConnectorBounds(bounds(connector),cx,cy,cz));
                 double curve=(root.assembly().columnHeight()+2)*(1-Math.cos(Math.toRadians(angle/2)));
-                envelope=envelope.union(first.union(last).grow(curve).offset(root.getPos()));
+                // Connector samples are still in the authored DOWN frame;
+                // the body envelope above is already in the mounting frame.
+                // Mixing them invents a second connector beneath an UP mount.
+                AxisAlignedBB connectorSweep=ArmOrientation.box(root.mountDirection(),first.union(last)).offset(root.getPos());
+                envelope=envelope.union(rotationEnvelope(root,connectorSweep,curve));
             }
         }
         // Level feet only translate monotonically along this quarter arc. Their

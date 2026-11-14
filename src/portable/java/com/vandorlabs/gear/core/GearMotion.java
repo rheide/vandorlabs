@@ -12,6 +12,9 @@ public final class GearMotion {
     public static final double RETRACTED_FOOT_Y = 3.0 / 16.0;
     public static final double FOOT_SOCKET_Y = 5.0 / 16.0;
     public static final double ROD_TOP_Y = 9.0 / 16.0;
+    /** Authored elbow centre; the lower link turns while the upper link remains mounted. */
+    public static final double MIDDLE_HINGE_OFFSET = 10*Math.tan(Math.PI/8)/16;
+    public static double middlePivotY(int height,double socketOffset){return PIVOT_Y+(-1/16D-PIVOT_Y)*(height-socketOffset+.25)/1.25;}
 
     public enum Mode {
         STATIC,
@@ -109,13 +112,14 @@ public final class GearMotion {
         private final double levelOffsetY;
         private final double levelOffsetZ;
 
-        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle) {
+        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle,boolean middleHinge) {
             // A diagonal hinge offset lowers the folded foot by twice the drop
             // while preserving its final horizontal reach and deployed pose.
             this.hingeDrop=hingeDrop;
-            this.pivotX=PIVOT_X+direction.axisZ()*hingeDrop;
-            this.pivotY=PIVOT_Y-hingeDrop;
-            this.pivotZ=PIVOT_Z-direction.axisX()*hingeDrop;
+            double lateral=middleHinge?MIDDLE_HINGE_OFFSET:hingeDrop;
+            this.pivotX=PIVOT_X+direction.axisZ()*lateral;
+            this.pivotY=middleHinge?middlePivotY(height,socketOffset):PIVOT_Y-hingeDrop;
+            this.pivotZ=PIVOT_Z-direction.axisX()*lateral;
             this.mode = mode;
             this.direction = direction;
             this.columnHeight = height;
@@ -295,11 +299,14 @@ public final class GearMotion {
     }
 
     public static Pose pose(Mode mode,Direction direction,int height,double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle){
+        return pose(mode,direction,height,progress,stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle,false);
+    }
+    public static Pose pose(Mode mode,Direction direction,int height,double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle,boolean middleHinge){
         requireFinite(startAngle,"startAngle");requireFinite(activeAngle,"activeAngle");
         if(startAngle < -180||startAngle > 180||activeAngle < -180||activeAngle > 180)throw new IllegalArgumentException("Arm endpoints must be within -180 to 180 degrees");
         if(height < 1||height > GearTopology.MAX_COLUMN_HEIGHT||mode==null||direction==null)throw new IllegalArgumentException("Invalid arm pose");
         requireFinite(stowedFootY,"stowedFootY");requireFinite(hingeDrop,"hingeDrop");requireFinite(socketOffset,"socketOffset");
-        return new Pose(mode,direction,height,clampUnit(progress),stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle);
+        return new Pose(mode,direction,height,clampUnit(progress),stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle,middleHinge);
     }
 
     /** Ease a raw position; finite overshoot is clamped to the end states. */

@@ -68,7 +68,7 @@ public final class GearAssembly {
     @Nullable
     public static BlockPos topOfColumn(World world, BlockPos start) {
         if (!loaded(world, start) || !isExtender(world.getBlockState(start))) return null;
-        BlockPos top = ((GearBlock)world.getBlockState(start).getBlock()).componentRoot(start,world.getBlockState(start));
+        BlockPos top = ((GearBlock)world.getBlockState(start).getBlock()).componentRoot(world,start,world.getBlockState(start));
         int count = 1;
         while (true) {
             BlockPos above = top.offset(mountDirection(world,top).getOpposite());
@@ -123,7 +123,7 @@ public final class GearAssembly {
         Set<BlockPos> feet=new HashSet<>(),columns=new HashSet<>();columns.add(top);ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(first);feet.add(first);
         while(!queue.isEmpty()){
             BlockPos foot=queue.removeFirst();
-            if(!((GearBlock)footState.getBlock()).componentIntact(world,((GearBlock)footState.getBlock()).componentRoot(foot,world.getBlockState(foot))))return fail("Incomplete wheel footprint.");
+            if(!((GearBlock)footState.getBlock()).componentIntact(world,((GearBlock)footState.getBlock()).componentRoot(world,foot,world.getBlockState(foot))))return fail("Incomplete wheel footprint.");
             if(!(world.getTileEntity(foot) instanceof GearTileEntity))return unavailable("A foot tile is still loading.");
             BlockPos above=foot.offset(mount.getOpposite());if(!loaded(world,above))return unavailable("Load every mounting column.");
             if(isExtender(world.getBlockState(above))){
@@ -137,7 +137,7 @@ public final class GearAssembly {
                 }
                 if(footBlock.kind()==GearBlock.Kind.WHEEL && footBlock.width()==2){
                     BlockPos anchor=column.offset(mount,height);IBlockState wheel=world.getBlockState(anchor);
-                    if(wheel.getBlock()!=footBlock || !footBlock.componentRoot(anchor,wheel).equals(anchor) || wheel.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))
+                    if(wheel.getBlock()!=footBlock || !footBlock.componentRoot(world,anchor,wheel).equals(anchor) || wheel.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))
                         return fail("Align the complete Large Wheel footprint beneath its Large arm.");
                 }
                 columns.add(column);

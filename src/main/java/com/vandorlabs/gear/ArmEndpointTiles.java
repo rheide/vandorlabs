@@ -16,8 +16,10 @@ final class ArmEndpointTiles {
         forward=mapping.basis();inverse=new int[9];for(int row=0;row<3;row++)for(int col=0;col<3;col++)inverse[row*3+col]=forward[col*3+row];turns=mapping.rotates();
     }
     int[] basis(){return forward.clone();}
+    net.minecraft.nbt.NBTTagCompound constructionData(VehicleStructure.Cell nativeCell){return turns?ArmGridTiles.data(nativeCell,inverse):nativeCell.tileData();}
     IBlockState constructionState(VehicleStructure.Cell nativeCell){
         if(!turns)return nativeCell.state;
+        if(ArmLooseGearData.foot(nativeCell.state)){IBlockState rest=ArmGridTiles.state(nativeCell,inverse);if(rest==null)return null;VehicleStructure.Cell mapped=new VehicleStructure.Cell(nativeCell.pos,rest,ArmGridTiles.data(nativeCell,inverse));return ArmGridTiles.state(mapped,forward)==nativeCell.state&&nativeCell.sameTileData(ArmGridTiles.data(mapped,forward))?rest:null;}
         if(!nativeCell.hasTileData()&&tileFree.containsKey(nativeCell.state))return tileFree.get(nativeCell.state);
         IBlockState rest=ArmGridTiles.state(nativeCell,inverse);
         if(rest!=null&&ArmGridTiles.state(nativeCell,rest,forward)!=nativeCell.state)rest=null;

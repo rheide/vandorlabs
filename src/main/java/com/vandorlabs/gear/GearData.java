@@ -9,8 +9,30 @@ import net.minecraft.world.World;
 public final class GearData {
     private GearData(){}
     private static BlockPos vector(BlockPos p,int turns){switch(Math.floorMod(turns,4)){case 1:return new BlockPos(-p.getZ(),p.getY(),p.getX());case 2:return new BlockPos(-p.getX(),p.getY(),-p.getZ());case 3:return new BlockPos(p.getZ(),p.getY(),-p.getX());default:return p;}}
+    /** Unowned oriented endpoint feet use their own six-face frame rather than world-horizontal metadata. */
+    public static com.vandorlabs.vehicle.VehicleStructure.Cell rotateLooseFoot(com.vandorlabs.vehicle.VehicleStructure.Cell cell,int turns){
+        if(!ArmLooseGearData.admitted(cell))return null;int[] basis;switch(Math.floorMod(turns,4)){case 1:basis=new int[]{0,0,-1,0,1,0,1,0,0};break;case 2:basis=new int[]{-1,0,0,0,1,0,0,0,-1};break;case 3:basis=new int[]{0,0,1,0,1,0,-1,0,0};break;default:basis=new int[]{1,0,0,0,1,0,0,0,1};}
+        return new com.vandorlabs.vehicle.VehicleStructure.Cell(cell.pos,ArmGridTiles.state(cell,basis),ArmGridTiles.data(cell,basis));
+    }
+    /** Bound Large Wheel parts rotate their footprint metadata in its saved plane. */
+    public static net.minecraft.block.state.IBlockState rotateComponentState(com.vandorlabs.vehicle.VehicleStructure.Cell cell,int turns){
+        if(!ArmLooseGearData.foot(cell.state)||!cell.hasTileKey(ArmFootComponentFrame.KEY))return null;
+        if(!ArmFootComponentFrame.valid(cell.tileData()))throw new IllegalArgumentException("Unknown landing component frame");
+        if(!ArmLooseGearData.largeWheel(cell.state)&&!cell.tileString(ArmFootComponentFrame.KEY).equals(cell.tileString("ArmMountDirection")))throw new IllegalArgumentException("Landing foot metadata frame differs from its mounting frame");
+        EnumFacing frame=ArmFootComponentFrame.frame(cell),next=frame;for(int i=0;i<Math.floorMod(turns,4);i++)if(next.getAxis().isHorizontal())next=next.rotateY();
+        BlockPos x=vector(new BlockPos(1,0,0),turns),y=vector(new BlockPos(0,1,0),turns),z=vector(new BlockPos(0,0,1),turns);int[] basis={x.getX(),y.getX(),z.getX(),x.getY(),y.getY(),z.getY(),x.getZ(),y.getZ(),z.getZ()};
+        return cell.state.withProperty(GearBlock.FACING,ArmLooseGearData.localFacing(frame,next,cell.state.getValue(GearBlock.FACING),basis));
+    }
     public static void rotate(NBTTagCompound tag,int turns){rotate(tag,turns,null);}
     public static void rotate(NBTTagCompound tag,int turns,World parent){
+        EnumFacing sourceFrame=tag.hasKey(ArmFootComponentFrame.SOURCE_KEY,8)?EnumFacing.valueOf(tag.getString(ArmFootComponentFrame.SOURCE_KEY)):EnumFacing.DOWN;
+        EnumFacing nextSourceFrame=sourceFrame;for(int i=0;i<Math.floorMod(turns,4);i++)if(nextSourceFrame.getAxis().isHorizontal())nextSourceFrame=nextSourceFrame.rotateY();
+        BlockPos sourceNorth=ArmOrientation.inverse(nextSourceFrame,vector(ArmOrientation.vector(sourceFrame,new BlockPos(0,0,-1)),turns));int sourceTurns=sourceNorth.getX()==1?1:sourceNorth.getZ()==1?2:sourceNorth.getX()==-1?3:0;
+        if(tag.hasKey(ArmFootComponentFrame.SOURCE_KEY)){if(!ArmFootComponentFrame.valid(tag))throw new IllegalArgumentException("Unknown source footprint frame");if(nextSourceFrame==EnumFacing.DOWN)tag.removeTag(ArmFootComponentFrame.SOURCE_KEY);else tag.setString(ArmFootComponentFrame.SOURCE_KEY,nextSourceFrame.name());}
+        if(tag.hasKey(ArmFootComponentFrame.KEY)){
+            if(!ArmFootComponentFrame.valid(tag))throw new IllegalArgumentException("Unknown landing component frame");
+            EnumFacing frame=EnumFacing.valueOf(tag.getString(ArmFootComponentFrame.KEY));for(int i=0;i<Math.floorMod(turns,4);i++)if(frame.getAxis().isHorizontal())frame=frame.rotateY();tag.setString(ArmFootComponentFrame.KEY,frame.name());
+        }
         EnumFacing mount=EnumFacing.DOWN;try{mount=EnumFacing.valueOf(tag.getString("ArmMountDirection"));}catch(IllegalArgumentException ignored){}
         EnumFacing nextMount=mount;if(mount.getAxis().isHorizontal())for(int i=0;i<Math.floorMod(turns,4);i++)nextMount=nextMount.rotateY();
         for(String key:new String[]{"GearOwnerOffset","TrackLeaderOffset"})if(tag.hasKey(key,4))tag.setLong(key,vector(BlockPos.fromLong(tag.getLong(key)),turns).toLong());
@@ -24,6 +46,9 @@ public final class GearData {
         BlockPos north=ArmOrientation.inverse(nextMount,vector(ArmOrientation.vector(mount,new BlockPos(0,0,-1)),turns));int localTurns=north.getX()==1?1:north.getZ()==1?2:north.getX()==-1?3:0;
         if(tag.hasKey("ArmMountDirection",8))tag.setString("ArmMountDirection",nextMount.name());
         try{EnumFacing facing=EnumFacing.valueOf(tag.getString("GearDirection"));for(int i=0;i<localTurns;i++)facing=facing.rotateY();tag.setString("GearDirection",facing.name());}catch(IllegalArgumentException ignored){}
+        if(!tag.hasKey("GearSourceFootFacing")&&tag.getBoolean("GearController")&&!"NONE".equals(tag.getString("GearKind"))&&tag.hasKey("GearFootFacing",3))tag.setInteger("GearSourceFootFacing",tag.getInteger("GearFootFacing"));
+        if(tag.hasKey("GearSourceFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("GearSourceFootFacing"));for(int i=0;i<sourceTurns;i++)foot=foot.rotateY();tag.setInteger("GearSourceFootFacing",foot.getHorizontalIndex());}
+        if(tag.hasKey("ArmFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("ArmFootFacing"));for(int i=0;i<localTurns;i++)foot=foot.rotateY();tag.setInteger("ArmFootFacing",foot.getHorizontalIndex());}
         if(tag.hasKey("GearFootFacing",3)){EnumFacing foot=EnumFacing.getHorizontal(tag.getInteger("GearFootFacing"));for(int i=0;i<localTurns;i++)foot=foot.rotateY();tag.setInteger("GearFootFacing",foot.getHorizontalIndex());}
         if(tag.hasKey(GearTaxiState.KEY,10))tag.setTag(GearTaxiState.KEY,GearTaxiState.rotate(tag.getCompoundTag(GearTaxiState.KEY),turns,parent));
         if(tag.hasKey("ArmStoredSections",10))tag.setTag("ArmStoredSections",ArmStoredSections.rotate(tag.getCompoundTag("ArmStoredSections"),turns,parent));

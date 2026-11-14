@@ -33,6 +33,25 @@ and smaller display transforms. World Canopy geometry remains detailed. Item
 meshes retain the authored materials and visible shell outline while avoiding
 the cost and oversized appearance of drawing a complete multiblock in hand.
 
+## Arms and landing gear
+
+Forge assemblies have a separate **Foot** direction option for Skis and Wheels,
+including sideways mounts and Large Wheels. It changes the foot's facing without
+changing the supporting blocks' ownership footprint.
+
+Grid-aligned activated Rotating Arm sockets accept Plates, Skis and matching
+Wheels, including complete Large Wheels. Connected native feet can join an
+existing joined arm group. Ownership changes use the durable recovery journal;
+fractional endpoints refuse placement without consuming the held item.
+
+Rotating Arms offer **Hinge: Base / Middle**. Middle rotates the lower linkage at
+the visible elbow; Base retains the existing motion. Saved assemblies default to
+Base. Payload motion and collision follow the selected hinge.
+
+Vehicles using two independent complete Ski supports can enter Taxi mode. A
+single Ski remains insufficient, and other support families keep their existing
+admission rules. See the [modular landing gear guide](../modular-landing-gear.md).
+
 ## Stationary Glass and Portholes
 
 On Forge 1.12.2, eligible stationary Glass panes use ordinary translucent chunk

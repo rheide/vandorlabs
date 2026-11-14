@@ -1,6 +1,7 @@
 package com.vandorlabs.gear;
 
 import com.vandorlabs.gear.core.GearTopology;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.*;
@@ -63,12 +64,29 @@ public final class GearInteractions {
             }
         }catch(RuntimeException failure){root.showError(failure.getMessage());throw failure instanceof IllegalArgumentException?(IllegalArgumentException)failure:new IllegalArgumentException("Track attachment failed: "+failure.getClass().getSimpleName(),failure);}
     }
+    /** Ordinary native item placement at a stopped posed tip. Motion subsequently uses the existing arm journal. */
+    public static boolean attachLandingFoot(EntityPlayerMP player,GearTileEntity root,RayTraceResult hit){
+        World world=root.getWorld();net.minecraft.item.ItemStack held=player.getHeldItemMainhand();
+        if(world==null||world.isRemote||player.world!=world||player.isDead||player.isSpectator()||root.isInvalid()||world.getTileEntity(root.getPos())!=root)throw new IllegalArgumentException("The arm is no longer available");
+        if(root.assembly()==null||root.assembly().kind()!=GearTopology.FootKind.NONE||!root.isSwingArmController()||root.columns().size()!=1||root.payload()!=null||root.hasRetainedPayload()||root.hasFailedArmSnapshot())throw new IllegalArgumentException("Attach landing gear to one clear Rotating Arm tip");
+        if(root.progress()!=0||root.target()||ArmTransactions.locked(world,root.getPos()))throw new IllegalArgumentException("Stop the Rotating Arm at its active endpoint before attaching landing gear");
+        if(!(held.getItem() instanceof net.minecraft.item.ItemBlock))throw new IllegalArgumentException("Hold a landing foot item");net.minecraft.block.Block block=((net.minecraft.item.ItemBlock)held.getItem()).getBlock();if(!ArmLooseGearData.foot(block.getDefaultState())||held.hasTagCompound()&&(held.getTagCompound().hasKey("ArmRecovery",10)||held.getTagCompound().hasKey("BlockEntityTag",10)))throw new IllegalArgumentException("Use an ordinary Plate, Ski or matching Wheel item");if(((GearBlock)block).kind()==GearBlock.Kind.WHEEL&&((GearBlock)block).sizeClass()!=root.armSize())throw new IllegalArgumentException("Wheel and mounting arm sizes must match");
+        ArmPayload.Endpoint endpoint=ArmPayload.endpoint(root,0);if(endpoint==null)throw new IllegalArgumentException("Align the arm to a whole-block endpoint before attaching landing gear");
+        java.util.List<AxisAlignedBB> boxes=root.collisionBoxes();AxisAlignedBB socket=boxes.get(boxes.size()-1);if(!socket.grow(.025).contains(hit.hitVec))throw new IllegalArgumentException("Click the visible end socket to attach landing gear");
+        com.vandorlabs.gear.core.GearMotion.Pose pose=root.pose(0);com.vandorlabs.gear.core.GearMotion.Vec a=pose.transformFootVertex(0,0,0),b=pose.transformFootVertex(0,1,0);Vec3d normal=ArmOrientation.vector(root.mountDirection(),a.x-b.x,a.y-b.y,a.z-b.z);net.minecraft.util.EnumFacing mount=net.minecraft.util.EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z);if(hit.sideHit!=mount)throw new IllegalArgumentException("Click the outward face of the end socket");
+        BlockPos target=endpoint.placed(root.localCell(0,-root.assembly().columnHeight(),0));if(!GearAssembly.loaded(world,target)||!world.getWorldBorder().contains(target)||!world.isAirBlock(target))throw new IllegalArgumentException("Clear the active landing gear cell first");for(BlockPos member:root.members())com.vandorlabs.vehicle.VehicleService.permission(player,member);com.vandorlabs.vehicle.VehicleService.permission(player,target);
+        net.minecraft.util.EnumFacing facing=net.minecraft.util.EnumFacing.NORTH;
+        if(block instanceof LargeGearBlock){net.minecraft.nbt.NBTTagCompound template=new net.minecraft.nbt.NBTTagCompound();template.setString("id",TileEntity.getKey(GearTileEntity.class).toString());template.setString("ArmMountDirection",root.mountDirection().name());ArmFootComponentFrame.write(template,root.mountDirection());IBlockState canonical=block.getDefaultState().withProperty(GearBlock.FACING,world.getBlockState(root.getPos()).getValue(GearBlock.FACING));IBlockState projected=endpoint.placedState(new com.vandorlabs.vehicle.VehicleStructure.Cell(root.localCell(0,-root.assembly().columnHeight(),0),canonical,template));if(projected==null)throw new IllegalArgumentException("The Large Wheel cannot retain its complete socket frame");facing=projected.getValue(GearBlock.FACING);}
+        net.minecraft.util.EnumActionResult result;try(ArmFootComponentFrame.Placement placement=ArmFootComponentFrame.placing(mount,facing)){result=held.onItemUse(player,world,target,net.minecraft.util.EnumHand.MAIN_HAND,mount,.5F,.5F,.5F);}if(result!=net.minecraft.util.EnumActionResult.SUCCESS||world.getBlockState(target).getBlock()!=block)return false;
+        TileEntity placed=world.getTileEntity(target);if(!(placed instanceof GearTileEntity))throw new IllegalArgumentException("Landing foot data is still loading");((GearTileEntity)placed).setMountDirection(mount);root.operator(player);player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();return true;
+    }
     public static void use(EntityPlayerMP player,BlockPos source){
         if(player.isSpectator()||player.isDead)return;Vec3d start=player.getPositionEyes(1),end=start.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue()+.5));
         RayTraceResult hit=trace(player.world,start,end);if(hit==null||!hit.getBlockPos().equals(source))return;
         TileEntity raw=player.world.getTileEntity(source);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root==null)return;
         for(BlockPos member:root.members())com.vandorlabs.vehicle.VehicleService.permission(player,member);
         if(player.getHeldItemMainhand().getItem() instanceof net.minecraft.item.ItemBlock&&((net.minecraft.item.ItemBlock)player.getHeldItemMainhand().getItem()).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){attachTrack(player,root,hit);return;}
+        if(player.getHeldItemMainhand().getItem() instanceof net.minecraft.item.ItemBlock&&ArmLooseGearData.foot(((net.minecraft.item.ItemBlock)player.getHeldItemMainhand().getItem()).getBlock().getDefaultState())){try{attachLandingFoot(player,root,hit);}catch(IllegalArgumentException denied){root.showError(denied.getMessage());throw denied;}return;}
         if(player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_MODULAR_GEAR,player.world,root.getPos().getX(),root.getPos().getY(),root.getPos().getZ());
         else if(player.getHeldItemMainhand().isEmpty()){root.operator(player);root.target(!root.target());}
     }
