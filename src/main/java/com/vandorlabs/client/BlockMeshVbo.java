@@ -11,17 +11,37 @@ import java.lang.reflect.Method;
 public final class BlockMeshVbo {
     private static final ShaderHooks SHADERS=ShaderHooks.find();
     private static boolean warned;
-    private static void unavailable(Throwable error){if(!warned){warned=true;com.vandorlabs.VandorLabs.logger.warn("Optional shader VBO integration unavailable; using standard vertex attributes",error);}}
+    private static void unavailable(Throwable error){if(!warned){warned=true;if(com.vandorlabs.VandorLabs.logger!=null)com.vandorlabs.VandorLabs.logger.warn("Optional shader VBO integration unavailable; using standard vertex attributes",error);}}
     public static void draw(VertexBuffer buffer,VertexFormat format,BlockRenderLayer layer){
+        draw(buffer,format,layer,0);
+    }
+    /** Retained two-sided sheets need their culling choice after shader setup. */
+    public static void draw(VertexBuffer buffer,VertexFormat format,BlockRenderLayer layer,boolean cullFaces){
+        draw(buffer,format,layer,cullFaces?1:-1);
+    }
+    /** Group owners may leave TESR lists only when every retained attribute is drawable. */
+    public static boolean supportsRetained(VertexFormat format){
+        if(!GlassPaneTerrainMesh.supports(format)||format.getColorOffset()!=12||format.getUvOffsetById(0)!=16||format.getUvOffsetById(1)!=24)return false;
+        int stride=format.getNextOffset();
+        if(stride==28)return !format.hasNormal();
+        if(!format.hasNormal()||format.getNormalOffset()!=28)return false;
+        if(stride==32)return true;
+        for(int i=0;i<format.getElementCount();i++)if(format.getOffset(i)>=32
+                &&format.getElement(i).getUsage()!=VertexFormatElement.EnumUsage.PADDING)return false;
+        return stride==56&&format.equals(DefaultVertexFormats.BLOCK)&&SHADERS!=null&&SHADERS.active();
+    }
+    private static void draw(VertexBuffer buffer,VertexFormat format,BlockRenderLayer layer,int forcedCull){
+        if(forcedCull!=0&&!supportsRetained(format))throw new IllegalStateException("Retained glass vertex layout or shader hooks are unavailable");
         boolean shaders=SHADERS!=null&&format.getNextOffset()==56&&SHADERS.active();
         boolean cull=GL11.glIsEnabled(GL11.GL_CULL_FACE);
         buffer.bindBuffer();
         try{
             pointers(format,true);
-            if(shaders)SHADERS.begin(layer);
+            if(shaders)SHADERS.begin(layer,forcedCull!=0);
+            if(forcedCull>0)GlStateManager.enableCull();else if(forcedCull<0)GlStateManager.disableCull();
             buffer.drawArrays(GL11.GL_QUADS);
         }finally{
-            try{if(shaders)SHADERS.end(layer);}finally{pointers(format,false);buffer.unbindBuffer();
+            try{if(shaders)SHADERS.end(layer,forcedCull!=0);}finally{pointers(format,false);buffer.unbindBuffer();
             OpenGlHelper.setClientActiveTexture(OpenGlHelper.defaultTexUnit);
             if(cull)GlStateManager.enableCull();else GlStateManager.disableCull();
             GlStateManager.resetColor();GlStateManager.color(1,1,1,1);}
@@ -54,8 +74,8 @@ public final class BlockMeshVbo {
         }
         static ShaderHooks find(){try{return new ShaderHooks();}catch(ClassNotFoundException absent){return null;}catch(ReflectiveOperationException|LinkageError incompatible){unavailable(incompatible);return null;}}
         boolean active(){try{return (Boolean)active.invoke(null);}catch(ReflectiveOperationException|LinkageError error){unavailable(error);return false;}}
-        void begin(BlockRenderLayer layer){try{begin.invoke(null,layer);pointers.invoke(null);GL20.glEnableVertexAttribArray(mid);GL20.glEnableVertexAttribArray(tangent);GL20.glEnableVertexAttribArray(entity);}catch(ReflectiveOperationException|LinkageError error){unavailable(error);}}
-        void end(BlockRenderLayer layer){try{end.invoke(null,layer);}catch(ReflectiveOperationException|LinkageError error){unavailable(error);}finally{GL20.glDisableVertexAttribArray(mid);GL20.glDisableVertexAttribArray(tangent);GL20.glDisableVertexAttribArray(entity);}}
+        void begin(BlockRenderLayer layer,boolean strict){try{begin.invoke(null,layer);pointers.invoke(null);GL20.glEnableVertexAttribArray(mid);GL20.glEnableVertexAttribArray(tangent);GL20.glEnableVertexAttribArray(entity);}catch(ReflectiveOperationException|LinkageError error){unavailable(error);if(strict)throw new IllegalStateException("Retained shader attributes unavailable",error);}}
+        void end(BlockRenderLayer layer,boolean strict){try{end.invoke(null,layer);}catch(ReflectiveOperationException|LinkageError error){unavailable(error);if(strict)throw new IllegalStateException("Cannot restore retained shader attributes",error);}finally{GL20.glDisableVertexAttribArray(mid);GL20.glDisableVertexAttribArray(tangent);GL20.glDisableVertexAttribArray(entity);}}
     }
     /** Avoid OptiFine addVertexData rewriting each component's block/entity shader IDs. */
     public static void merge(BufferBuilder builder,java.util.List<int[]> components,VertexFormat format){mergeRetained(builder,components,format);}

@@ -1,0 +1,8 @@
+task testStaticGlassTextures(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve authored native glass pixels, animation and shader-resource priority'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneTextureChecks'
+}
+check.dependsOn testStaticGlassTextures

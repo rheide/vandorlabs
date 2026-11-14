@@ -1,0 +1,11 @@
+// Optional Linux/EGL checks consume exactly the mapped runtime used by this build.
+task exportGlassCheckClasspath {
+    group = 'verification'
+    description = 'Export the deobfuscated classpath for isolated glass EGL checks'
+    dependsOn classes
+    doLast {
+        def destination = file("$buildDir/glass-egl/runtime-classpath.txt")
+        destination.parentFile.mkdirs()
+        destination.text = sourceSets.main.runtimeClasspath.asPath
+    }
+}

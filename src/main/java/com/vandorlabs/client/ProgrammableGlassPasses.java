@@ -16,13 +16,16 @@ public final class ProgrammableGlassPasses {
     private ProgrammableGlassPasses(){}
 
     public static boolean collectionOnly(TileEntityProgrammableGlass tile){
+        if(GlassPaneTerrain.rendered(tile))return false;
         if(MinecraftForgeClient.getRenderPass()!=0 || tile.getWorld()==null
                 || !tile.getWorld().isRemote || tile.getWorld() instanceof VehicleWorld
                 || GlassMaterials.opaque(tile.getMaterial(),tile.getTint()))return false;
         Block block=tile.getBlockType();
         if(!(block instanceof BlockProgrammableGlass))return false;
         if(!tile.isFramed())return true;
-        if(GlassFrameChunks.selected(tile))return GlassFrameChunks.rendered(tile);
+        if(GlassFrameRetained.handles(tile))return !GlassFrameRetained.anchor(tile);
+        if(GlassFrameChunks.selected(tile))return GlassFrameChunks.rendered(tile)
+                ||GlassSurfaceGroups.flatCached(tile,block,tile.getBlockMetadata())&&GlassFrameMesh.get(tile).vertexCount()==0;
         if(!tile.isJoin()||GlassFrameChunks.rendered(tile))return true;
         // Native TileEntity metadata is invalidated by updateContainingBlockInfo.
         // VehicleWorld replacement uses different lifetime rules and stays on the
@@ -35,11 +38,26 @@ public final class ProgrammableGlassPasses {
 
     static boolean emptyOpaquePass(TileEntityProgrammableGlass tile,BlockProgrammableWall.FlatCorner corner){
         if(GlassMaterials.opaque(tile.getMaterial(),tile.getTint()))return false;
-        if(!tile.isFramed())return true;
+        return !frameNeeded(tile,corner);
+    }
+
+    /** Frame work is independent of pane opacity, custom artwork and playback. */
+    static boolean frameNeeded(TileEntityProgrammableGlass tile,BlockProgrammableWall.FlatCorner corner){
+        if(!tile.isFramed())return false;
+        if(GlassFrameRetained.handles(tile))return GlassFrameRetained.anchor(tile);
         // A selected frame remains a TESR fallback until its exact native chunk
         // upload is acknowledged. Recycled RenderChunks cannot suppress it.
-        if(GlassFrameChunks.selected(tile))return GlassFrameChunks.rendered(tile);
-        if(!tile.isJoin())return true;
-        return corner==null || GlassFrameChunks.rendered(tile);
+        if(GlassFrameChunks.selected(tile))return !GlassFrameChunks.rendered(tile)
+                &&!(corner==null&&GlassFrameMesh.get(tile).vertexCount()==0);
+        if(!tile.isJoin())return false;
+        return corner!=null&&!GlassFrameChunks.rendered(tile);
+    }
+
+    /** Pane ownership never suppresses a frame that still needs its own lighting/material pass. */
+    static boolean frameFallbackInPass(TileEntityProgrammableGlass tile,int pass){
+        if(pass!=0||!tile.isFramed()||tile.getWorld()==null)return false;
+        net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
+        if(!(state.getBlock() instanceof BlockProgrammableGlass))return false;
+        return frameNeeded(tile,GlassSurfaceGroups.flatCorner(tile,state));
     }
 }

@@ -16,7 +16,7 @@ import net.minecraftforge.client.MinecraftForgeClient;
 import net.minecraftforge.common.property.IExtendedBlockState;
 import java.util.*;
 
-/** Immutable frame records are built on the client thread and consumed by chunk workers. */
+/** Immutable frame and pane records are consumed by Minecraft's ordinary chunk builder. */
 public final class GlassFrameModel implements IBakedModel {
     private static final Map<TextureAtlasSprite,Boolean> BLENDED=new IdentityHashMap<>();
     static void clear(){BLENDED.clear();}
@@ -118,21 +118,53 @@ public final class GlassFrameModel implements IBakedModel {
     }
     private final IBakedModel delegate;
     public GlassFrameModel(IBakedModel delegate){this.delegate=delegate;}
+    private static Mesh currentFrame(Object value){
+        if(!(value instanceof Mesh))return null;
+        Mesh mesh=(Mesh)value;
+        // The raw native writer cannot consume a stale vertex stride. The
+        // frame manager refreshes snapshots on the client thread after reload.
+        return mesh.format.equals(DefaultVertexFormats.BLOCK)?mesh:null;
+    }
     @Override public List<BakedQuad> getQuads(IBlockState state,EnumFacing side,long random){
         if(state==null)return delegate.getQuads(null,side,random);
         BlockRenderLayer layer=MinecraftForgeClient.getRenderLayer();
-        if(layer==null||layer==BlockRenderLayer.SOLID)return delegate.getQuads(state,side,random);
+        if(layer==null){
+            List<BakedQuad> stock=delegate.getQuads(state,side,random);
+            if(side!=null||!(state instanceof IExtendedBlockState)||WorldSceneBenchmark.omitGlazing())return stock;
+            IExtendedBlockState extended=(IExtendedBlockState)state;
+            // The unlayered block-damage model needs the pane too. This read
+            // does not acknowledge a native chunk build or change ownership.
+            GlassPaneTerrainMesh pane=GlassPaneTerrain.peekMesh(extended.getValue(BlockProgrammableGlass.PANE_MESH));
+            if(pane==null)return stock;
+            Mesh mesh=currentFrame(extended.getValue(BlockProgrammableGlass.FRAME_MESH));
+            List<BakedQuad> frame=mesh==null?Collections.emptyList():mesh.quads;
+            List<BakedQuad> damaged=new ArrayList<>(stock.size()+frame.size()+pane.quads.size());
+            damaged.addAll(stock);damaged.addAll(frame);damaged.addAll(pane.quads);return damaged;
+        }
+        if(layer==BlockRenderLayer.SOLID)return delegate.getQuads(state,side,random);
         // OptiFine remaps CUTOUT_MIPPED to CUTOUT when mipmaps are disabled.
         if(layer!=BlockRenderLayer.CUTOUT_MIPPED&&layer!=BlockRenderLayer.CUTOUT&&layer!=BlockRenderLayer.TRANSLUCENT)return Collections.emptyList();
         if(side!=null||!(state instanceof IExtendedBlockState)||WorldSceneBenchmark.omitGlazing())return Collections.emptyList();
-        Object value=((IExtendedBlockState)state).getValue(BlockProgrammableGlass.FRAME_MESH);
-        if(!(value instanceof Mesh))return Collections.emptyList();Mesh mesh=(Mesh)value;
+        IExtendedBlockState extended=(IExtendedBlockState)state;
+        Mesh mesh=currentFrame(extended.getValue(BlockProgrammableGlass.FRAME_MESH));
         // Authored antialiasing and partially transparent rail finishes retain blending.
-        return layer==BlockRenderLayer.TRANSLUCENT?mesh.translucent:mesh.cutout;
+        if(layer!=BlockRenderLayer.TRANSLUCENT)return mesh==null?Collections.emptyList():mesh.cutout;
+        GlassPaneTerrainMesh pane=GlassPaneTerrain.mesh(extended.getValue(BlockProgrammableGlass.PANE_MESH));
+        List<BakedQuad> frame=mesh==null?Collections.emptyList():mesh.translucent;
+        if(pane==null)return frame;
+        if(frame.isEmpty())return pane.quads;
+        List<BakedQuad> joined=new ArrayList<>(frame.size()+pane.quads.size());
+        joined.addAll(frame);joined.addAll(pane.quads);return joined;
     }
     public boolean isAmbientOcclusion(){return delegate.isAmbientOcclusion();}
     @Override public boolean isAmbientOcclusion(IBlockState state){
-        if(state instanceof IExtendedBlockState&&((IExtendedBlockState)state).getValue(BlockProgrammableGlass.FRAME_MESH) instanceof Mesh)return false;
+        if(state instanceof IExtendedBlockState){
+            IExtendedBlockState extended=(IExtendedBlockState)state;
+            BlockRenderLayer layer=MinecraftForgeClient.getRenderLayer();
+            if(currentFrame(extended.getValue(BlockProgrammableGlass.FRAME_MESH))!=null
+                    ||(layer==null||layer==BlockRenderLayer.TRANSLUCENT)
+                    &&GlassPaneTerrain.hasMesh(extended.getValue(BlockProgrammableGlass.PANE_MESH)))return false;
+        }
         return delegate.isAmbientOcclusion(state);
     }
     public boolean isGui3d(){return delegate.isGui3d();}

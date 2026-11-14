@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Native stationary glass rendering (Forge 1.12.2)
+
+- Render eligible stationary Programmable Glass in native translucent chunk buffers, with authored glimmer enabled by default and existing joined frame borders preserved.
+- Use one compensated physical sheet with opposite windings for native backface culling. Keep authored RGB, animation metadata, resource-pack priority and normal/specular companions.
+- Confirm actual installed pane records before retiring fallback drawing, and remove every settled pane-only tile from special-renderer admission. Handle partial/stale rebuilds, edits, resource reloads and vertex-format changes without steady-state owner scans.
+- Use native terrain sorting, lighting and shader inputs. Stationary panes remain eligible with emissive frames; native cutout frames retain fullbright lighting, blended emissive frames keep a separate frame draw, and empty joined interiors leave tile rendering.
+- Retain grouped fallback VBOs for stationary flat panes, including faint palette artwork and static custom atlas inserts. Share each coplanar section/material group across main and shadow passes, preserve holes and per-cell light/UV data, and remove nonanchor pane-only tiles from renderer admission.
+- Withdraw native pane snapshots through a completed replacement-build fence when an extension cannot expose installed vertex records, then hand ownership to retained groups. Keep explicit frame-only shadows on an optimized retained main-view path.
+- Add actual chunk-builder/publication, emissive-frame, retained-buffer and framebuffer regressions. `/vandorglassprofile` records frame intervals, optional asynchronous GPU timings and ownership/rejection counters without changing the camera or graphics settings. See [stationary glass rendering](docs/stationary-glass-rendering.md) for behavior, settings and validation limits.
+
 ### Rendering and client-server performance (Forge 1.12.2)
 
 - Retain joined Programmable Light layouts across ticks and world switches, and cache their hidden-face masks. Invalidate affected layouts on nearby edits, settings, chunk changes and carried-world replacement; preserve exact artwork coordinates, face visibility and live lighting within bounded cache storage.

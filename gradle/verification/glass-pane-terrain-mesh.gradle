@@ -1,0 +1,8 @@
+task testGlassPaneTerrainMesh(type: JavaExec) {
+    group = 'verification'
+    description = 'Check authored native panes, real block-writer consumption, culling and frame/layer separation'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneTerrainMeshChecks'
+}
+check.dependsOn testGlassPaneTerrainMesh

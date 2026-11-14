@@ -923,8 +923,13 @@ public class TEAnimatedScreenSelector
         Tessellator tess = Tessellator.getInstance();
         BufferBuilder b = tess.getBuffer();
         b.begin(GL11.GL_QUADS, BlockSurfaceFormat.get());
-        com.vandorlabs.render.PanelBoxEmitter.box(BOX_MESH,b,face,side,faceAlongZ,x0,y0,z0,x1,y1,z1,front);
+        drawWallBox(b,face,side,faceAlongZ,x0,y0,z0,x1,y1,z1,front);
         tess.draw();
+    }
+
+    static void drawWallBox(BufferBuilder buffer,TextureAtlasSprite face,TextureAtlasSprite side,
+            boolean faceAlongZ,double x0,double y0,double z0,double x1,double y1,double z1,boolean front){
+        com.vandorlabs.render.PanelBoxEmitter.box(BOX_MESH,buffer,face,side,faceAlongZ,x0,y0,z0,x1,y1,z1,front);
     }
 
     /** Draw the console's non-cuboid wall wedge and selectable input deck. */
@@ -949,6 +954,7 @@ public class TEAnimatedScreenSelector
 
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
             IBlockState state, double x, double y, double z) {
+        if(((BlockProgrammableWall)state.getBlock()).isPortholeShape()&&PortholeRetained.draw(te,x,y,z))return;
         if(FlatPanelBarRenderer.render(te,state,x,y,z))return;
         BlockProgrammableWall wallBlock = (BlockProgrammableWall) state.getBlock();
         BlockProgrammableWall.FlatCorner flat = wallBlock.flatCorner(state, te.getWorld(), te.getPos());
@@ -1010,7 +1016,7 @@ public class TEAnimatedScreenSelector
                 renderPortholeGlass(te,state,DiagonalWallMeshCache.glass(te,state,wall,metal,porthole));
                 GlStateManager.popMatrix();
         }
-        if(panePass==1){
+        if(panePass==1||wallBlock.isPortholeShape()&&PortholeRetained.handlesHousing(te)){
             GlStateManager.enableLighting();endLocalTransform();return;
         }
         BufferBuilder buf = Tessellator.getInstance().getBuffer();
@@ -1026,11 +1032,12 @@ public class TEAnimatedScreenSelector
         wallMesh.draw(buf,
                 (int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
         Tessellator.getInstance().draw();
+        if(wallBlock.isPortholeShape())PortholeRetained.legacyHousing();
         if(bentPorthole) {
             GlStateManager.popMatrix();
             double near=com.vandorlabs.blocks.PanelDepth.start(state.getValue(BlockProgrammableWall.DEPTH));
-            if(flat.frontArm!=null)renderWallBox(wall,metal,false,flat.frontArm,0,0,flat.frontArm+4,16,near,false);
-            if(flat.backArm!=null)renderWallBox(wall,metal,false,flat.backArm,0,near+4,flat.backArm+4,16,16,false);
+            if(flat.frontArm!=null){renderWallBox(wall,metal,false,flat.frontArm,0,0,flat.frontArm+4,16,near,false);PortholeRetained.legacyHousing();}
+            if(flat.backArm!=null){renderWallBox(wall,metal,false,flat.backArm,0,near+4,flat.backArm+4,16,16,false);PortholeRetained.legacyHousing();}
         }
         GlStateManager.enableLighting();
         endLocalTransform();
@@ -1338,6 +1345,7 @@ public class TEAnimatedScreenSelector
         int sky=(int)OpenGlHelper.lastBrightnessY,block=(int)OpenGlHelper.lastBrightnessX;
         buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(glass,tile,buf,sky,block,opacity);
         Tessellator.getInstance().draw();
+        PortholeRetained.legacyPane();
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
         GlStateManager.disableBlend();bindAtlas();
     }

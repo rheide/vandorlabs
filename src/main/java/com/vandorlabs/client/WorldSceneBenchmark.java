@@ -108,7 +108,7 @@ public final class WorldSceneBenchmark {
         results.printf(Locale.ROOT,"%s,%d,%.6f,%.6f,%.6f,%.6f,%.6f,%.0f,%.6f%n",cameraName(),samples.size(),
                 percentile(0,.5),percentile(0,.95),percentile(1,.5),percentile(1,.95),percentile(2,.5),percentile(3,.5),server);
         results.flush();
-        System.out.println("[vandorlabs] world-benchmark glazing "+GlazingRenderOrder.diagnostics+" sort-us="+GlazingRenderOrder.sortNanos/1000+" batch-panes="+GlassPaneBatch.panes+" batch-draws="+GlassPaneBatch.draws);
+        System.out.println("[vandorlabs] world-benchmark glazing "+GlazingRenderOrder.diagnostics+" sort-us="+GlazingRenderOrder.sortNanos/1000+" batch-panes="+GlassPaneBatch.panes+" batch-draws="+GlassPaneBatch.draws+" "+GlassPaneTerrain.diagnostics());
         net.minecraft.util.ScreenShotHelper.saveScreenshot(output,"world-"+cameraName()+".png",mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
         stage=4;
     }

@@ -51,8 +51,16 @@ final class PortholeGroupCache {
         long origin;
         int tileRevision=Integer.MIN_VALUE;
         WeakReference<Object> structure;
+        WeakReference<World> ownerWorld;
 
-        void clear(){admitted.clear();components.clear();overflow=Collections.emptyMap();overflowComponent=null;bounds=new Dependencies();}
+        void invalidateRetained(Component component){
+            World owner=ownerWorld==null?null:ownerWorld.get();
+            if(owner!=null&&component!=null)PortholeRetained.invalidatePositions(owner,component.positions);
+        }
+        void clear(){
+            for(Component component:components)invalidateRetained(component);invalidateRetained(overflowComponent);
+            admitted.clear();components.clear();overflow=Collections.emptyMap();overflowComponent=null;bounds=new Dependencies();
+        }
 
         void prepare(World world){
             int nextTileRevision=-1;Object snapshot=null;long nextOrigin=0;
@@ -98,9 +106,9 @@ final class PortholeGroupCache {
             Iterator<Component> iterator=components.iterator();
             while(iterator.hasNext()){
                 Component component=iterator.next();
-                if(component.dependencies.intersects(x0,y0,z0,x1,y1,z1)){remove(component);iterator.remove();}
+                if(component.dependencies.intersects(x0,y0,z0,x1,y1,z1)){invalidateRetained(component);remove(component);iterator.remove();}
             }
-            if(overflowComponent!=null&&overflowComponent.dependencies.intersects(x0,y0,z0,x1,y1,z1)){overflow=Collections.emptyMap();overflowComponent=null;}
+            if(overflowComponent!=null&&overflowComponent.dependencies.intersects(x0,y0,z0,x1,y1,z1)){invalidateRetained(overflowComponent);overflow=Collections.emptyMap();overflowComponent=null;}
             // Eviction may leave a wider union. It costs a conservative scan,
             // never an omitted dependency; empty caches can start afresh.
             if(admitted.isEmpty()&&overflow.isEmpty())bounds=new Dependencies();
@@ -113,14 +121,20 @@ final class PortholeGroupCache {
 
     static synchronized Cache cache(World world){
         Cache cache=WORLDS.get(world);
-        if(cache==null){cache=new Cache();WORLDS.put(world,cache);world.addEventListener(cache);}
+        if(cache==null){cache=new Cache();cache.ownerWorld=new WeakReference<>(world);WORLDS.put(world,cache);world.addEventListener(cache);}
         cache.prepare(world);return cache;
     }
     static synchronized void invalidate(World world){Cache cache=WORLDS.get(world);if(cache!=null)cache.clear();}
     static synchronized void invalidate(World world,int x0,int y0,int z0,int x1,int y1,int z1){Cache cache=WORLDS.get(world);if(cache!=null)cache.changed(x0,y0,z0,x1,y1,z1);}
-    static synchronized void unload(World world){Cache cache=WORLDS.remove(world);if(cache!=null)world.removeEventListener(cache);}
-    static synchronized void clear(){for(Map.Entry<World,Cache> entry:WORLDS.entrySet())entry.getKey().removeEventListener(entry.getValue());WORLDS.clear();}
+    static synchronized void unload(World world){Cache cache=WORLDS.remove(world);if(cache!=null){cache.clear();world.removeEventListener(cache);}}
+    static synchronized void clear(){for(Map.Entry<World,Cache> entry:WORLDS.entrySet()){entry.getValue().clear();entry.getKey().removeEventListener(entry.getValue());}WORLDS.clear();}
     static synchronized int entries(World world){Cache cache=WORLDS.get(world);return cache==null?0:cache.admitted.size()+cache.overflow.size();}
     static synchronized boolean contains(World world){return WORLDS.containsKey(world);}
+    /** Retained VBOs keep their dependency region even after this CPU cache evicts it. */
+    static synchronized Dependencies dependencies(World world,BlockPos pos){
+        Cache cache=WORLDS.get(world);if(cache==null)return null;Member member=cache.admitted.get(pos);
+        if(member!=null)return member.component.dependencies;
+        return cache.overflowComponent!=null&&cache.overflow.containsKey(pos)?cache.overflowComponent.dependencies:null;
+    }
     private PortholeGroupCache(){}
 }

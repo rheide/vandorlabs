@@ -154,6 +154,7 @@ public final class PortholeGroupCacheChecks {
         } finally { close(limit); }
     }
     public static void main(String[] args) throws Exception {
+        java.lang.reflect.Field environment=net.minecraftforge.fml.relauncher.CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");environment.setAccessible(true);environment.setBoolean(null,true);
         net.minecraft.init.Bootstrap.register(); com.vandorlabs.VandorLabs.proxy = new com.vandorlabs.CommonProxy(){@Override public void portholeGeometryChanged(TileEntityAnimatedScreenSelector tile){TEAnimatedScreenSelector.portholeChanged(tile);}};
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class, new net.minecraft.util.ResourceLocation("vandorlabs", "porthole_group_cache_checks"));
         flat = new BlockProgrammableWall("porthole_cache_flat", BlockProgrammableWall.Shape.PORTHOLE);

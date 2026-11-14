@@ -1,0 +1,17 @@
+task testStaticGlassTerrainPublication(type: JavaExec) {
+    group = 'verification'
+    description = 'Check native pane upload lifetime and complete tile-render admission handoff'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneTerrainPublicationChecks'
+}
+check.dependsOn testStaticGlassTerrainPublication
+
+task testStaticGlassTerrainCoverage(type: JavaExec) {
+    group = 'verification'
+    description = 'Check native pane eligibility with real emissive frames and joined empty interiors'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneTerrainCoverageChecks'
+}
+check.dependsOn testStaticGlassTerrainCoverage

@@ -65,6 +65,13 @@ final class GlazingRenderOrder {
         flushing=true;
         try(TurntableRenderState saved=new TurntableRenderState();GlassPaneBatch batch=new GlassPaneBatch()){
             for(Draw draw:ordered)if(world.getTileEntity(draw.tile.getPos())==draw.tile&&draw.tile.shouldRenderInPass(1)){
+                if(draw.tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass
+                        &&GlassPaneRetained.handles((com.vandorlabs.tiles.TileEntityProgrammableGlass)draw.tile)){
+                    batch.flush();
+                    if(!GlassPaneRetained.draw((com.vandorlabs.tiles.TileEntityProgrammableGlass)draw.tile,draw.x,draw.y,draw.z))
+                        dispatcher.render(draw.tile,draw.x,draw.y,draw.z,draw.partial,draw.stage,draw.alpha);
+                    continue;
+                }
                 if(batchPanes&&batch.append(draw.tile,draw.x,draw.y,draw.z,draw.glass))continue;
                 batch.flush();
                 dispatcher.render(draw.tile,draw.x,draw.y,draw.z,draw.partial,draw.stage,draw.alpha);
@@ -85,9 +92,15 @@ final class GlazingRenderOrder {
             com.vandorlabs.blocks.BlockProgrammableWall wall=(com.vandorlabs.blocks.BlockProgrammableWall)state.getBlock();
             if(wall.isPortholeShape()&&!wall.isDiagonalShape()&&com.vandorlabs.blocks.PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())==null){
                 net.minecraft.util.EnumFacing facing=state.getValue(com.vandorlabs.blocks.BlockProgrammableWall.FACING);axis=facing.getAxis()==net.minecraft.util.EnumFacing.Axis.X?0:2;
-                offset=com.vandorlabs.blocks.PanelDepth.offset(state.getValue(com.vandorlabs.blocks.BlockProgrammableWall.DEPTH))/16D;
+                offset=wall instanceof com.vandorlabs.blocks.BlockProgrammablePortholeBlock?0:
+                        com.vandorlabs.blocks.PanelDepth.offset(state.getValue(com.vandorlabs.blocks.BlockProgrammableWall.DEPTH))/16D;
                 plane=(axis==0?tile.getPos().getX():tile.getPos().getZ())+.5-(axis==0?facing.getFrontOffsetX():facing.getFrontOffsetZ())*offset;
             }
+        }
+        if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+            com.vandorlabs.tiles.TileEntityAnimatedScreenSelector porthole=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
+            int retainedAxis=PortholeRetained.paneAxis(porthole);
+            if(retainedAxis>=0){axis=retainedAxis;plane=PortholeRetained.paneCoordinate(porthole);}
         }
         draw.axis=axis;draw.plane=plane;
         // Parallel planes have a camera-side order even when the centre viewing ray
@@ -102,9 +115,18 @@ final class GlazingRenderOrder {
         Plane(Draw d){draw=d;axis=d.axis;coordinate=d.plane;}
         void add(Draw d,double cx,double cy,double cz){
             net.minecraft.util.math.AxisAlignedBB b=new net.minecraft.util.math.AxisAlignedBB(d.tile.getPos());
+            boolean apertureBounds=false;
+            if(d.tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass){
+                net.minecraft.util.math.AxisAlignedBB retained=GlassPaneRetained.bounds((com.vandorlabs.tiles.TileEntityProgrammableGlass)d.tile);
+                if(retained!=null)b=retained;
+            }
+            if(d.tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+                net.minecraft.util.math.AxisAlignedBB retained=PortholeRetained.paneBounds((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)d.tile);
+                if(retained!=null){b=retained;apertureBounds=true;}
+            }
             if(d.tile instanceof com.vandorlabs.tiles.TileEntityCanopy){java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes=((com.vandorlabs.tiles.TileEntityCanopy)d.tile).boxes();if(!boxes.isEmpty()){b=boxes.get(0);for(int i=1;i<boxes.size();i++)b=b.union(boxes.get(i));}}
-            if(axis==0)b=new net.minecraft.util.math.AxisAlignedBB(coordinate-.0625,b.minY,b.minZ,coordinate+.0625,b.maxY,b.maxZ);
-            if(axis==2)b=new net.minecraft.util.math.AxisAlignedBB(b.minX,b.minY,coordinate-.0625,b.maxX,b.maxY,coordinate+.0625);
+            if(!apertureBounds&&axis==0)b=new net.minecraft.util.math.AxisAlignedBB(coordinate-.0625,b.minY,b.minZ,coordinate+.0625,b.maxY,b.maxZ);
+            if(!apertureBounds&&axis==2)b=new net.minecraft.util.math.AxisAlignedBB(b.minX,b.minY,coordinate-.0625,b.maxX,b.maxY,coordinate+.0625);
             minX=b.minX;minZ=b.minZ;maxX=b.maxX;maxZ=b.maxZ;
             left=bottom=Double.POSITIVE_INFINITY;right=top=Double.NEGATIVE_INFINITY;
             int inFront=0;

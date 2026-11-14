@@ -10,6 +10,17 @@ import net.minecraft.util.EnumFacing;
 /** The independently configured window surface follows the existing porthole outline. */
 final class PortholePane {
     static TextureAtlasSprite sprite(TileEntityAnimatedScreenSelector tile){return Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getGlassMaterial(),tile.getGlassShade(),1,tile.getGlassTint()));}
+    static GlassPaneTextures.Selection retainedPalette(TileEntityAnimatedScreenSelector tile,IBlockState state){
+        if(tile.getGlassMaterial()>=0||GlassMaterials.opaque(tile.getGlassMaterial(),tile.getGlassTint())
+                ||((BlockProgrammableWall)state.getBlock()).isDiagonalShape())return null;
+        GlassPaneTextures.Selection selected=GlassPaneTextures.select(tile.getGlassShade(),tile.getGlassTint());
+        return selected!=null&&selected.singleSurface?selected:null;
+    }
+    static StaticSurfaceMesh retained(TileEntityAnimatedScreenSelector tile,IBlockState state,StaticSurfaceMesh raw){
+        GlassPaneTextures.Selection selected=retainedPalette(tile,state);
+        return selected==null?mesh(tile,state,raw):GlassSurfaceMapping.map(raw.centeredPorthole(),selected.sprite,
+                new GlassSurfaceGroups.Layout(0,0,1,1),true,0,0,0);
+    }
     static StaticSurfaceMesh mesh(TileEntityAnimatedScreenSelector tile,IBlockState state,StaticSurfaceMesh raw){
         GlassSurfaceGroups.Layout layout=new GlassSurfaceGroups.Layout(0,0,1,1);double bx=0,by=0;
         if(tile.getGlassMaterial()>=0){

@@ -48,7 +48,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     }
     @Override public void renderTileEntityFast(TileEntityProgrammableGlass tile,double x,double y,
             double z,float partial,int stage,float alpha,BufferBuilder buffer){
-        if(tile.getWorld()==null || WorldSceneBenchmark.omitGlazing())return;
+        if(tile.getWorld()==null || WorldSceneBenchmark.omitGlazing()||GlassPaneTerrain.rendered(tile))return;
         // hasFastRenderer admits only an empty opaque pass. Keep its visibility
         // record, but leave the shared Forge buffer and its vertex format alone.
         // Translucent panes still go through the ordered shader-aware renderer.
@@ -57,7 +57,8 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null || WorldSceneBenchmark.omitGlazing()) return;
-        if(GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
+        boolean terrain=GlassPaneTerrain.rendered(tile);
+        if(!terrain&&GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock()
                 instanceof com.vandorlabs.blocks.BlockProgrammableGlass)) return;
@@ -66,10 +67,15 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         com.vandorlabs.blocks.BlockProgrammableWall.FlatCorner corner=GlassSurfaceGroups.flatCorner(tile,state);
         if(net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==0
                 &&ProgrammableGlassPasses.emptyOpaquePass(tile,corner))return;
-        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1 && !GlassFrameChunks.rendered(tile))renderSelectedFrame(tile,state,x,y,z);
+        if(tile.isFramed() && (tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile) && corner==null && net.minecraftforge.client.MinecraftForgeClient.getRenderPass()!=1 && !GlassFrameChunks.rendered(tile)){
+            if(!GlassFrameRetained.draw(tile,x,y,z))renderSelectedFrame(tile,state,x,y,z);
+        }
+        if(terrain)return;
+        if(GlassPaneRetained.draw(tile,x,y,z))return;
         if(corner!=null&&FlatPanelBarRenderer.render(tile,state,x,y,z))return;
         if(corner!=null) { renderCorner(tile,state,corner,x,y,z);return; }
         boolean opaque=com.vandorlabs.tiles.GlassMaterials.opaque(tile.getMaterial(),tile.getTint());
+        if(GlassPanePolicy.omitPane(opaque,VehicleRenderPass.shadow()))return;
         int pass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();
         if(pass>=0&&pass!=(opaque?0:1))return;
         net.minecraft.client.renderer.texture.TextureAtlasSprite material=tile.getMaterial()<0?null:net.minecraft.client.Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
@@ -118,6 +124,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         StaticSurfaceMesh frame=GlassFrameMesh.get(tile);
         // Joined interior cells have no frame geometry; avoid all GL and light work.
         if(frame.vertexCount()==0&&!LEGACY_BENCHMARK)return;
+        GlassFrameRetained.legacyDraw();
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);
         if(state.getValue(BlockGlassWall.ROTATED)){GlStateManager.translate(.5,0,.5);GlStateManager.rotate(-90,0,1,0);GlStateManager.translate(-.5,0,-.5);}
@@ -162,7 +169,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
         float opacity=com.vandorlabs.tiles.GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
         GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(opaque);
-        if(pass<0||pass==(opaque?0:1)){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,tile,buffer,sky,GlassInsertLighting.block(tile,block),opacity);Tessellator.getInstance().draw();}
+        if((pass<0||pass==(opaque?0:1))&&!GlassPanePolicy.omitPane(opaque,VehicleRenderPass.shadow())){buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());GlazingDisplay.draw(mesh,tile,buffer,sky,GlassInsertLighting.block(tile,block),opacity);Tessellator.getInstance().draw();}
         GlStateManager.depthMask(true);GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);GlStateManager.disableBlend();GlStateManager.enableCull();GlStateManager.enableLighting();GlStateManager.popMatrix();
         bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
     }
