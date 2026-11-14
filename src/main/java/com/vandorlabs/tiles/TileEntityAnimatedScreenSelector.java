@@ -666,6 +666,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         fluids.read(compound);
         boolean previousSlabSides = slabTileSides;
         int oldMainLayout=getMainTextureLayout(),oldSurfaceLayout=getSurfaceTextureLayout(),oldGlassLayout=getGlassTextureLayout();
+        com.vandorlabs.surface.TextureJoinSettings previousTextureJoin=textureJoin;
         textureJoinPresent=compound.hasKey(com.vandorlabs.surface.TextureJoinSettings.DIRECTION_TAG)||compound.hasKey(com.vandorlabs.surface.TextureJoinSettings.PARITY_TAG);
         textureJoin=com.vandorlabs.surface.TextureJoinSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(compound));
         surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=com.vandorlabs.persistence.PanelGlassSettings.rawLayout(compound.hasKey("GlassTextureLayout",3),compound.getInteger("GlassTextureLayout"));
@@ -730,7 +731,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if (world != null && world.isRemote
                 && (previousStair!=stairGeometry() || oldMainLayout!=getMainTextureLayout() || oldSurfaceLayout!=getSurfaceTextureLayout() || oldGlassLayout!=getGlassTextureLayout() || !previousFaces.equals(faceTextures) || previousSide!=sideTexture || previousHousing != housingTexture || previousSlabSides != slabTileSides || previousSurfaceSides!=surfaceTileSides
                 || previousDiagonalWidth != diagonalFullWidth || previousHalfHeight != diagonalHalfHeight
-                || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade || previousPortholeJoin!=joinPortholes))
+                || previousFill != diagonalFill || previousJoin!=diagonalJoin || previousGlassShade!=glassShade || previousPortholeJoin!=joinPortholes || !previousTextureJoin.equals(textureJoin)))
         {
             if(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableWall
                     && ((com.vandorlabs.blocks.BlockProgrammableWall)world.getBlockState(pos).getBlock()).isDiagonalShape())
