@@ -1,0 +1,40 @@
+package com.vandorlabs.neoforge.ports;
+
+import net.minecraft.core.*;
+import net.minecraft.nbt.*;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.items.*;
+
+public final class NativeMatterPortEntity extends NativeResourcePortEntity {
+    public static final int SLOTS=9;
+    private final NonNullList<ItemStack> items=NonNullList.withSize(SLOTS,ItemStack.EMPTY);
+    private final IItemHandler[] faces=new IItemHandler[6];
+    private final int[] pullCursors=new int[6];
+    public NativeMatterPortEntity(BlockPos pos,BlockState state){super(pos,state,NativePortKind.MATTER);for(int i=0;i<6;i++)faces[i]=new Face(i);}
+    public ItemStack stored(int slot){check(slot);return items.get(slot).copy();}public IItemHandler items(Direction side){return side!=null&&settings().face(side.get3DDataValue())!=com.vandorlabs.ports.ResourcePortSettings.Face.DISABLED?faces[side.get3DDataValue()]:null;}
+    private static void check(int slot){if(slot<0||slot>=SLOTS)throw new IllegalArgumentException("Invalid matter port slot");}
+    @Override protected int storedUnits(){int count=0;for(var stack:items)count+=stack.getCount();return count;}
+    @Override protected Object resolve(BlockPos pos,Direction face){return level.getCapability(Capabilities.ItemHandler.BLOCK,pos,face);}
+    @Override protected boolean compatible(Object raw,boolean receiving){return raw instanceof IItemHandler handler&&handler.getSlots()>0;}
+    @Override protected int simulateCapacity(int side,int max){var raw=neighbor(side);if(!(raw instanceof IItemHandler handler))return 0;int total=0;for(var stack:items)if(!stack.isEmpty()&&total<max){int count=Math.min(stack.getCount(),max-total);var remainder=ItemHandlerHelper.insertItem(handler,stack.copyWithCount(count),true);total+=count-Math.min(count,remainder.getCount());}return total;}
+    private int room(int slot,ItemStack stack){var current=items.get(slot);return current.isEmpty()?Math.min(64,stack.getMaxStackSize()):ItemStack.isSameItemSameComponents(current,stack)?Math.max(0,Math.min(64,current.getMaxStackSize())-current.getCount()):0;}
+    private int room(ItemStack stack){int count=0;for(int i=0;i<SLOTS;i++)count+=room(i,stack);return count;}
+    private int insert(int slot,ItemStack stack,int max,boolean commit){int count=Math.min(Math.min(stack.getCount(),Math.max(0,max)),room(slot,stack));if(commit&&count>0){var current=items.get(slot);if(current.isEmpty())items.set(slot,stack.copyWithCount(count));else current.grow(count);}return count;}
+    private int insert(ItemStack stack){int left=stack.getCount();for(int i=0;i<SLOTS&&left>0;i++)left-=insert(i,stack,left,true);return stack.getCount()-left;}
+    @Override protected void transferTick(){
+        if(settings().pullInputs)for(int side=0;side<6;side++)if(input(side)){var raw=neighbor(side);if(!(raw instanceof IItemHandler source))continue;int slots=Math.max(0,source.getSlots());if(slots==0)continue;int cursor=pullCursors[side]%slots;for(int n=0;n<Math.min(32,slots);n++){int slot=cursor;cursor=cursor+1==slots?0:cursor+1;var offer=source.extractItem(slot,64,true);if(offer.isEmpty())continue;int count=Math.min(offer.getCount(),room(offer));if(count<=0)continue;var received=source.extractItem(slot,count,false);if(received.isEmpty())continue;int accepted=insert(received);if(accepted<received.getCount())ItemHandlerHelper.insertItem(source,received.copyWithCount(received.getCount()-accepted),false);if(accepted>0)transferred(side,accepted,false);}pullCursors[side]=cursor;}
+        for(int slot=0;slot<SLOTS&&availableOutput()>0;slot++){var stack=items.get(slot);if(stack.isEmpty())continue;int offer=boundedOutput(stack.getCount());for(int side=0;side<6;side++){capacities[side]=0;if(output(side)){var raw=neighbor(side);if(raw instanceof IItemHandler handler){var remainder=ItemHandlerHelper.insertItem(handler,stack.copyWithCount(offer),true);capacities[side]=offer-Math.min(offer,remainder.getCount());}}}allocate(stack.getCount());for(int side=0;side<6;side++)if(grants[side]>0&&!stack.isEmpty()){var raw=neighbor(side);if(!(raw instanceof IItemHandler handler))continue;int count=(int)Math.min(grants[side],boundedOutput(stack.getCount()));if(count<=0)continue;var remainder=ItemHandlerHelper.insertItem(handler,stack.copyWithCount(count),false);int accepted=count-Math.min(count,remainder.getCount());if(accepted>0){stack.shrink(accepted);transferred(side,accepted,true);}}if(stack.isEmpty())items.set(slot,ItemStack.EMPTY);}
+    }
+    @Override protected void writeContents(CompoundTag tag,HolderLookup.Provider registries){var list=new ListTag();for(int i=0;i<SLOTS;i++)if(!items.get(i).isEmpty()){var entry=new CompoundTag();entry.putInt("Slot",i);entry.put("Item",items.get(i).save(registries));list.add(entry);}tag.put("PortItems",list);}
+    @Override protected void readContents(CompoundTag tag,HolderLookup.Provider registries){items.clear();if(tag.contains("Items")){
+        if(tag.contains("NativePortSchema")||tag.contains("PortItems")||!(tag.get("Items") instanceof ListTag legacy)||legacy.size()>SLOTS||!legacy.isEmpty()&&legacy.getElementType()!=Tag.TAG_COMPOUND)throw new IllegalArgumentException("Conflicting legacy matter port ownership");
+        boolean[] used=new boolean[SLOTS];var budget=new com.vandorlabs.neoforge.inventory.NativeInventoryItems.Budget();for(var raw:legacy){var entry=(CompoundTag)raw;if(!entry.contains("Slot",Tag.TAG_BYTE))throw new IllegalArgumentException("Invalid legacy matter slot");int slot=entry.getByte("Slot")&255;check(slot);if(used[slot])throw new IllegalArgumentException("Duplicate legacy matter slot");used[slot]=true;var stack=com.vandorlabs.neoforge.inventory.NativeInventoryItems.legacy(entry,registries,budget);if(stack.getCount()>Math.min(64,stack.getMaxStackSize()))throw new IllegalArgumentException("Oversized legacy matter stack");items.set(slot,stack);}return;
+    }if(!tag.contains("PortItems"))return;if(!(tag.get("PortItems") instanceof ListTag list)||list.size()>SLOTS||!list.isEmpty()&&list.getElementType()!=Tag.TAG_COMPOUND)throw new IllegalArgumentException("Invalid matter port inventory");boolean[] seen=new boolean[SLOTS];for(var raw:list){var entry=(CompoundTag)raw;if(!entry.getAllKeys().equals(java.util.Set.of("Slot","Item"))||!entry.contains("Slot",Tag.TAG_INT)||!entry.contains("Item",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Invalid matter port inventory row");int slot=entry.getInt("Slot");check(slot);if(seen[slot])throw new IllegalArgumentException("Duplicate matter port slot");seen[slot]=true;var stack=ItemStack.parse(registries,entry.getCompound("Item")).orElseThrow(()->new IllegalArgumentException("Unknown matter port item"));if(stack.isEmpty()||stack.getCount()>Math.min(64,stack.getMaxStackSize()))throw new IllegalArgumentException("Invalid matter port stack");items.set(slot,stack);}}
+    private final class Face implements IItemHandler {
+        final int side;Face(int side){this.side=side;}public int getSlots(){return SLOTS;}public ItemStack getStackInSlot(int slot){return stored(slot);}public int getSlotLimit(int slot){check(slot);return 64;}public boolean isItemValid(int slot,ItemStack stack){check(slot);return input(side)&&room(slot,stack)>0;}
+        public ItemStack insertItem(int slot,ItemStack stack,boolean simulate){check(slot);if(stack.isEmpty()||!input(side)||!transferAllowed())return stack;int count=insert(slot,stack,stack.getCount(),!simulate);if(!simulate&&count>0)transferred(side,count,false);return stack.copyWithCount(stack.getCount()-count);}
+        public ItemStack extractItem(int slot,int max,boolean simulate){check(slot);if(max<=0||!output(side)||!transferAllowed())return ItemStack.EMPTY;var stack=items.get(slot);if(stack.isEmpty())return ItemStack.EMPTY;int count=Math.min(stack.getCount(),boundedOutput(side,max));var result=stack.copyWithCount(count);if(!simulate&&count>0){stack.shrink(count);if(stack.isEmpty())items.set(slot,ItemStack.EMPTY);transferred(side,count,true);}return result;}
+    }
+}

@@ -71,6 +71,9 @@ tasks.register('generateCubeResources', Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'generate_cube_resources.py'
     inputs.file('generate_cube_resources.py')
+    inputs.file('generate_port_resources.py')
+    inputs.files('../../src/main/resources/assets/vandorlabs/recipes/power_port.json', '../../src/main/resources/assets/vandorlabs/recipes/fluid_port.json', '../../src/main/resources/assets/vandorlabs/recipes/matter_port.json')
+    inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/blocks/resource_ports')
     inputs.file('material_playback_resources.py')
     inputs.file('glass_palette_resources.py')
     inputs.file('../../texture-packs/default/assets/vandorlabs/textures/blocks/space_doors/medium/double_frame_metal.png')

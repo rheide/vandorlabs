@@ -1,0 +1,34 @@
+package com.vandorlabs.neoforge.ports;
+
+import com.vandorlabs.ports.ResourcePortSettings;
+import com.vandorlabs.redstone.ChannelList;
+import java.util.*;
+import net.minecraft.core.*;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.material.Fluids;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+
+/** Focused transfer integration: the real tick engine, sparse output fairness and private buffers. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class NativePortRuntimeChecks {
+    private static final List<NativeResourcePortEntity[]> groups=new ArrayList<>();private static int tick,checks,start;
+    private static boolean enabled(){return Boolean.getBoolean("vandorlabs.portRuntimeChecks");}
+    private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError("Port tick="+tick+": "+message);}
+    private static ResourcePortSettings settings(boolean source){var faces=new ResourcePortSettings.Face[6];Arrays.fill(faces,source?ResourcePortSettings.Face.DISABLED:ResourcePortSettings.Face.INPUT);if(source){faces[Direction.WEST.get3DDataValue()]=ResourcePortSettings.Face.INPUT;faces[0]=faces[1]=ResourcePortSettings.Face.OUTPUT;}return new ResourcePortSettings(faces,source?1:0,false,ResourcePortSettings.OnTexture.TRANSFERRING);}
+    @SubscribeEvent public static void started(ServerStartedEvent event){if(!enabled())return;try{var level=event.getServer().overworld();legacy(level);for(var kind:NativePortKind.values()){var pos=new BlockPos(18000+kind.ordinal()*8,120,18000);level.setChunkForced(pos.getX()>>4,pos.getZ()>>4,true);level.getChunkAt(pos);var owners=new NativeResourcePortEntity[3];for(int n=0;n<3;n++){var at=n==0?pos:pos.relative(n==1?Direction.DOWN:Direction.UP);level.setBlock(at,NativePortBindings.BLOCKS.get(kind).defaultBlockState(),3);owners[n]=(NativeResourcePortEntity)level.getBlockEntity(at);}groups.add(owners);}}catch(Throwable failure){fail(event.getServer(),failure);}}
+    private static void legacy(ServerLevel level){for(var kind:NativePortKind.values()){
+        var state=NativePortBindings.BLOCKS.get(kind).defaultBlockState();var owner=(NativeResourcePortEntity)((NativePortBlock)state.getBlock()).newBlockEntity(BlockPos.ZERO,state);var tag=new net.minecraft.nbt.CompoundTag();NativePortData.write(tag,new NativePortData.Configuration(settings(true),0,ChannelList.EMPTY));tag.putString("id","vandorlabs:"+kind.id);tag.putString("OpaquePortField","retained");
+        switch(kind){case POWER->tag.putInt("PortEnergy",37);case FLUID->{var water=new net.minecraft.nbt.CompoundTag();water.putString("FluidName","water");water.putInt("Amount",37);tag.put("PortFluid",water);}case MATTER->{var entry=new net.minecraft.nbt.CompoundTag();entry.putByte("Slot",(byte)0);entry.putString("id","minecraft:diamond");entry.putByte("Count",(byte)37);entry.putShort("Damage",(short)0);var list=new net.minecraft.nbt.ListTag();list.add(entry);tag.put("Items",list);}}
+        var before=tag.copy();owner.loadWithComponents(tag,level.registryAccess());need(!owner.inert()&&stored(owner)==37,"Source buffer migration "+kind);need(before.equals(tag),"Source buffer preimage untouched "+kind);var saved=owner.saveWithoutMetadata(level.registryAccess());need(saved.getString("OpaquePortField").equals("retained")&&!saved.contains("Items"),"canonical buffer with opaque fields "+kind);need(net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(owner.getType()).toString().equals("vandorlabs:"+kind.id),"canonical shared block entity ID "+kind);var again=(NativeResourcePortEntity)((NativePortBlock)state.getBlock()).newBlockEntity(BlockPos.ZERO,state);again.loadWithComponents(saved,level.registryAccess());need(!again.inert()&&stored(again)==37,"canonical migrated buffer reload "+kind);
+    }}
+    @SubscribeEvent public static void tick(ServerTickEvent.Post event){if(!enabled()||groups.isEmpty())return;try{++tick;if(tick>100)throw new AssertionError("Port chunks did not begin ticking");if(start==0&&groups.stream().allMatch(owners->Arrays.stream(owners).allMatch(owner->owner.serverTicks>=2))){start=tick;for(var owners:groups){for(int i=0;i<3;i++)need(owners[i].configure(new NativePortData.Configuration(settings(i==0),0,ChannelList.EMPTY)),"installed configuration");var source=owners[0];if(source instanceof NativePowerPortEntity power)need(power.energy(Direction.WEST).receiveEnergy(37,false)==37,"power input");if(source instanceof NativeFluidPortEntity fluid)need(fluid.fluid(Direction.WEST).fill(new FluidStack(Fluids.WATER,37),FluidAction.EXECUTE)==37,"fluid input");if(source instanceof NativeMatterPortEntity matter)need(matter.items(Direction.WEST).insertItem(0,new ItemStack(Items.DIAMOND,37),false).isEmpty(),"matter input");}return;}if(start>0&&tick==start+10){for(var owners:groups){need(stored(owners[0])==27,"global one-per-tick budget "+owners[0].kind+" "+stored(owners[0]));need(stored(owners[1])==5&&stored(owners[2])==5,"sparse DOWN/UP output balance "+owners[0].kind+" "+stored(owners[1])+"/"+stored(owners[2]));var tag=owners[0].getUpdateTag(event.getServer().registryAccess());need(!tag.contains("PortEnergy")&&!tag.contains("PortFluid")&&!tag.contains("PortItems"),"no resource state in update packet");var saved=owners[0].saveWithoutMetadata(event.getServer().registryAccess());var restored=(NativeResourcePortEntity)((NativePortBlock)owners[0].getBlockState().getBlock()).newBlockEntity(owners[0].getBlockPos(),owners[0].getBlockState());restored.loadWithComponents(saved,event.getServer().registryAccess());need(!restored.inert()&&stored(restored)==27&&restored.configuration().equals(owners[0].configuration()),"saved buffer/config round trip");}System.out.println("[vandorlabs][port-runtime] PASS checks="+checks+" power/fluid/matter sparseBalance globalBudget privatePackets savedBuffers");groups.clear();event.getServer().halt(false);}}catch(Throwable failure){fail(event.getServer(),failure);}}
+    private static int stored(NativeResourcePortEntity owner){if(owner instanceof NativePowerPortEntity power)return power.stored();if(owner instanceof NativeFluidPortEntity fluid)return fluid.stored().getAmount();int total=0;var matter=(NativeMatterPortEntity)owner;for(int i=0;i<9;i++)total+=matter.stored(i).getCount();return total;}
+    private static void fail(net.minecraft.server.MinecraftServer server,Throwable failure){failure.printStackTrace();System.out.println("[vandorlabs][port-runtime] FAIL "+failure);groups.clear();server.halt(false);}
+    private NativePortRuntimeChecks(){}
+}
