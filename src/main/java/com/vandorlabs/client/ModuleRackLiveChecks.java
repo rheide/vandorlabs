@@ -38,6 +38,8 @@ final class ModuleRackLiveChecks {
     private static final EnumFacing[] FACES = {EnumFacing.SOUTH, EnumFacing.NORTH,
             EnumFacing.EAST, EnumFacing.WEST, EnumFacing.UP, EnumFacing.DOWN};
     private static int direction, slot, stage, wait;
+    private static int placementStage, placementWait;
+    private static final BlockPos PLACE = AT.add(-6, 0, 0);
     private static long idleDraws, insertionDraws, capturedDraws;
     private static long stressSequence;
     private static boolean stressed;
@@ -61,6 +63,7 @@ final class ModuleRackLiveChecks {
     private static void next(int value) { stage = value; wait = 0; }
 
     static boolean tick(Minecraft mc, File directory) throws Exception {
+        if (placementStage < 3) return placement(mc);
         if (direction >= FACES.length) return true;
         output = directory;
         if (++wait > 1000) throw new IllegalStateException("Module Rack timeout face="
@@ -249,6 +252,55 @@ final class ModuleRackLiveChecks {
             capture(mc, movingFrames++ == 0 ? "insert_start" : "insert_moving");
             capturedDraws = ModuleRackAnimation.drawCount();
         } catch (Exception failure) { throw new IllegalStateException("Rack insertion capture", failure); }
+    }
+
+    /** The reported floor-click regression uses the real Survival placement packet and a shallow view. */
+    private static boolean placement(Minecraft mc) throws Exception {
+        if (++placementWait > 160) throw new IllegalStateException("Rack placement timeout stage=" + placementStage
+                + " mode=" + mc.playerController.getCurrentGameType() + " slot=" + mc.player.inventory.currentItem
+                + " held=" + mc.player.getHeldItemMainhand() + " pos=" + mc.player.getPositionVector());
+        if (placementStage == 0) {
+            mc.player.closeScreen(); mc.playerController.setGameType(GameType.SURVIVAL);
+            mc.player.inventory.currentItem = 0;
+            mc.getConnection().sendPacket(new CPacketHeldItemChange(0));
+            server(mc, () -> {
+                EntityPlayerMP p = player(mc); WorldServer world = p.getServerWorld();
+                for (BlockPos at : BlockPos.getAllInBox(PLACE.add(-1, -1, -1), PLACE.add(1, 2, 4)))
+                    world.setBlockState(at, at.getY() == PLACE.getY() - 1 ? Blocks.STONE.getDefaultState() : Blocks.AIR.getDefaultState(), 3);
+                p.interactionManager.setGameType(GameType.SURVIVAL); p.inventory.clear(); p.inventory.currentItem = 0;
+                p.setHeldItem(EnumHand.MAIN_HAND, new ItemStack(Block.getBlockFromName("vandorlabs:module_rack")));
+                p.setHeldItem(EnumHand.OFF_HAND, ItemStack.EMPTY);
+                p.connection.setPlayerLocation(PLACE.getX() + .5, PLACE.getY(), PLACE.getZ() + 3.5, 180, 10);
+                p.inventoryContainer.detectAndSendChanges();
+            });
+            placementStage = 1; placementWait = 0; return false;
+        }
+        if (placementStage == 1) {
+            if (mc.playerController.getCurrentGameType() != GameType.SURVIVAL || mc.player.inventory.currentItem != 0
+                    || mc.player.getHeldItemMainhand().getItem() != net.minecraft.item.Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:module_rack"))
+                    || mc.player.getPositionVector().squareDistanceTo(PLACE.getX() + .5, PLACE.getY(), PLACE.getZ() + 3.5) > .02
+                    || Math.abs(mc.player.rotationPitch - 10) > .1 || Math.abs(Math.abs(mc.player.rotationYaw) - 180) > .1) return false;
+            require(mc.playerController.processRightClickBlock(mc.player, mc.world, PLACE.down(), EnumFacing.UP,
+                    new Vec3d(PLACE.getX() + .5, PLACE.getY(), PLACE.getZ() + .5), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS,
+                    "real shallow floor placement packet refused");
+            placementStage = 2; placementWait = 0; return false;
+        }
+        if (!(mc.world.getBlockState(PLACE).getBlock() instanceof BlockModuleRack) || !mc.player.getHeldItemMainhand().isEmpty()) return false;
+        require(mc.world.getBlockState(PLACE).getValue(BlockModuleRack.FACING) == EnumFacing.SOUTH,
+                "floor click must face the shallow-view player, rather than point upward");
+        server(mc, () -> {
+            EntityPlayerMP p = player(mc);
+            require(p.interactionManager.getGameType() == GameType.SURVIVAL && p.getHeldItemMainhand().isEmpty()
+                    && p.world.getBlockState(PLACE).getValue(BlockModuleRack.FACING) == EnumFacing.SOUTH,
+                    "server Survival item consumption and player-facing floor placement");
+        });
+        placementStage = 3; placementWait = 0;
+        System.out.println("[vandorlabs][reprolab] module-rack placement PASS real Survival shallow-floor player-facing consumption");
+        if (Boolean.getBoolean("vandorlabs.moduleRackPlacementOnly")) {
+            direction = FACES.length;
+            System.out.println("[vandorlabs][reprolab] module-rack PASS targeted placement"); return true;
+        }
+        return false;
     }
 
     private static void click(Minecraft mc, EnumFacing facing, int slot, boolean button) {
