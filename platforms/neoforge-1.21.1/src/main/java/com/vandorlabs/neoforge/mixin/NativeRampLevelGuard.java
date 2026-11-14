@@ -11,7 +11,7 @@ import org.spongepowered.asm.mixin.injection.callback.CallbackInfoReturnable;
 @Mixin(Level.class)
 public abstract class NativeRampLevelGuard {
  @Inject(method="setBlock(Lnet/minecraft/core/BlockPos;Lnet/minecraft/world/level/block/state/BlockState;II)Z",at=@At("HEAD"),cancellable=true)
- private void vandorlabs$rampSet(BlockPos pos,BlockState state,int flags,int recursion,CallbackInfoReturnable<Boolean> result){if(NativeRampHeldOwners.blocked((Level)(Object)this,pos))result.setReturnValue(false);}
+ private void vandorlabs$rampSet(BlockPos pos,BlockState state,int flags,int recursion,CallbackInfoReturnable<Boolean> result){if(NativeRampHeldOwners.blocked((Level)(Object)this,pos)||com.vandorlabs.neoforge.gear.NativeGearHolds.replacementBlocked((Level)(Object)this,pos,state))result.setReturnValue(false);}
  @Inject(method="destroyBlock",at=@At("HEAD"),cancellable=true)
- private void vandorlabs$rampDestroy(BlockPos pos,boolean drop,Entity actor,int recursion,CallbackInfoReturnable<Boolean> result){if(NativeRampHeldOwners.blocked((Level)(Object)this,pos))result.setReturnValue(false);}
+ private void vandorlabs$rampDestroy(BlockPos pos,boolean drop,Entity actor,int recursion,CallbackInfoReturnable<Boolean> result){if(NativeRampHeldOwners.blocked((Level)(Object)this,pos)||com.vandorlabs.neoforge.gear.NativeGearHolds.retainedOwner((Level)(Object)this,pos))result.setReturnValue(false);}
 }

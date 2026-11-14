@@ -1,0 +1,43 @@
+package com.vandorlabs.neoforge.gear;
+
+import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import io.netty.buffer.Unpooled;
+import net.minecraft.core.*;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.network.protocol.game.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.*;
+import net.minecraft.world.item.*;
+import net.minecraft.world.level.*;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.ChestBlockEntity;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.entity.player.PlayerEvent;
+
+/** Actual player and journal preparation; only the settled render capture pauses server block ticking. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class NativeGearPayloadClientFixture {
+    public static final BlockPos ROOT=new BlockPos(0,99,0),SUPPORT=ROOT.above(),SOURCE=ROOT.below(2),ACK=ROOT.east(3);
+    private static java.util.UUID actorId;private static int stage,checks;private static boolean held;
+    private static long fullBytes,motionBytes,baselineTotal,actualTotal;private static int fullMessages,motionMessages;
+    public static boolean enabled(){return Boolean.getBoolean("vandorlabs.gearPayloadClientCheck");}
+    private static void need(boolean ok,String why){checks++;if(!ok)throw new AssertionError("Native gear payload actual server stage="+stage+": "+why);}
+    public record Mode(int operation) implements CustomPacketPayload {public static final Type<Mode> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:gear_payload_client_fixture"));public Type<? extends CustomPacketPayload> type(){return TYPE;}}
+    @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD) public static final class Packets {@SubscribeEvent public static void register(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(enabled())event.registrar("1").playToServer(Mode.TYPE,new StreamCodec<RegistryFriendlyByteBuf,Mode>(){public Mode decode(RegistryFriendlyByteBuf b){if(b.readableBytes()!=1)throw new IllegalArgumentException();return new Mode(b.readUnsignedByte());}public void encode(RegistryFriendlyByteBuf b,Mode p){b.writeByte(p.operation);}},(p,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer actor)apply(actor,p.operation);}));}}
+    private static void held(ServerPlayer actor,ItemStack stack){actor.getInventory().selected=0;actor.setItemInHand(InteractionHand.MAIN_HAND,stack);actor.setItemInHand(InteractionHand.OFF_HAND,ItemStack.EMPTY);actor.connection.send(new ClientboundSetCarriedItemPacket(0));actor.connection.send(new ClientboundContainerSetSlotPacket(-2,0,0,stack.copy()));actor.inventoryMenu.broadcastChanges();}
+    @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event){if(!enabled()||!(event.getEntity() instanceof ServerPlayer actor))return;actorId=actor.getUUID();NativeGearEntity.packetProbe=(tile,packet)->{if(tile.getBlockPos().equals(ROOT)){actualTotal+=bytes(packet,actor);baselineTotal+=bytes(ClientboundBlockEntityDataPacket.create(tile),actor);if(packet.getTag().getBoolean("NativeGearMotionOnly"))motionMessages++;else fullMessages++;}};var world=actor.serverLevel();for(int x=-4;x<=8;x++)for(int z=-4;z<=4;z++){world.setBlock(new BlockPos(x,95,z),Blocks.STONE.defaultBlockState(),3);for(int y=96;y<=103;y++)world.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);}world.setBlock(SUPPORT,Blocks.STONE.defaultBlockState(),3);actor.setGameMode(GameType.SURVIVAL);actor.getInventory().clearContent();held(actor,new ItemStack(NativeGearBindings.ITEMS.get(NativeGearDefinition.EXTENDER.id),2));actor.connection.teleport(.5,96,-3,0,0);System.out.println("[vandorlabs][gear-payload-client] setup PASS actualSurvival/heldSlot/physicalSupport");}
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(!enabled()||stage!=1||held)return;var level=event.getServer().overworld();var root=NativeGearFormation.at(level,ROOT);if(root!=null&&root.payload()!=null&&!root.payload().materialized()&&!NativeGearJournal.busy(root)&&root.progress()<.8&&root.progress()>.5){need(level.getBlockState(SOURCE).isAir(),"durable capture removed native chest");need(root.payload().cells().get(0).tile().toString().contains("diamond"),"private chest inventory retained");event.getServer().tickRateManager().setFrozen(true);held=true;level.setBlock(ACK.above(),Blocks.STONE.defaultBlockState(),3);System.out.println("[vandorlabs][gear-payload-client] capture PASS phase="+root.progress());}}
+    private static int bytes(ClientboundBlockEntityDataPacket packet,ServerPlayer actor){var buffer=new RegistryFriendlyByteBuf(Unpooled.buffer(),actor.registryAccess());try{ClientboundBlockEntityDataPacket.STREAM_CODEC.encode(buffer,packet);return buffer.readableBytes();}finally{buffer.release();}}
+    private static void apply(ServerPlayer actor,int operation){need(actor.getUUID().equals(actorId)&&operation==stage,"actor/order");var root=NativeGearFormation.at(actor.level(),ROOT);need(root!=null&&root.controller()&&!root.inert(),"healthy exact controller");switch(operation){
+        case 0->{need(actor.getMainHandItem().isEmpty()&&root.assembly().columnHeight()==2&&root.mount()==Direction.DOWN,"real two placements consume two");actor.serverLevel().setBlock(SOURCE,Blocks.CHEST.defaultBlockState(),3);var chest=(ChestBlockEntity)actor.level().getBlockEntity(SOURCE);chest.setItem(0,new ItemStack(Items.DIAMOND,7));chest.setChanged();held(actor,new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));System.out.println("[vandorlabs][gear-payload-client] placement PASS");}
+        case 1->{need(held&&root.payloadView()!=null,"captured appearance published before render pause");var full=ClientboundBlockEntityDataPacket.create(root);var motion=root.getUpdatePacket();need(!full.getTag().toString().contains("diamond")&&!full.getTag().contains("NativeGearPayload"),"actual network omits private inventory");fullBytes=bytes(full,actor);motionBytes=bytes(motion,actor);need(motion.getTag().getBoolean("NativeGearMotionOnly"),"warmed motion packet reuses immutable header");System.out.println("[vandorlabs][gear-payload-client] wire full="+fullBytes+" motion="+motionBytes+" beforeStroke="+(24*fullBytes)+" afterStroke="+(fullBytes+23*motionBytes));actor.getServer().tickRateManager().setFrozen(false);held=false;held(actor,ItemStack.EMPTY);}
+        case 2->{need(root.progress()==0&&root.payload()!=null&&root.payload().materialized()&&root.payloadView()==null&&root.hasStoredSections(),"native endpoint clear and displaced strut separate");need(actor.level().getBlockEntity(ROOT.below()) instanceof ChestBlockEntity chest&&chest.getItem(0).getCount()==7,"exact native chest inventory");System.out.println("[vandorlabs][gear-payload-client] endpoint PASS");}
+        case 3->{need(root.progress()==1&&root.payload()!=null&&root.payload().materialized()&&root.payloadView()==null&&!root.hasStoredSections(),"returned native payload and restored strut");need(actor.level().getBlockEntity(SOURCE) instanceof ChestBlockEntity chest&&chest.getItem(0).getCount()==7,"one native seven-diamond owner");var child=NativeGearFormation.at(actor.level(),ROOT.below());need(child!=null&&child.mount()==Direction.DOWN&&ROOT.equals(child.owner()),"restored client-data owner metadata");need(actualTotal<baselineTotal&&motionMessages>20,"actual outgoing motion volume reduced");System.out.println("[vandorlabs][gear-payload-client] wire actualBaseline="+baselineTotal+" optimized="+actualTotal+" fullMessages="+fullMessages+" motionMessages="+motionMessages);System.out.println("[vandorlabs][gear-payload-client] return PASS");}
+        case 4->{need(!root.blocked(),"completed unblocked journey");System.out.println("[vandorlabs][gear-payload-client] completed PASS checks="+checks);}
+        default->throw new IllegalArgumentException("Gear payload fixture operation");}actor.serverLevel().setBlock(ACK.east(operation),Blocks.STONE.defaultBlockState(),3);stage++;}
+    @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event){if(enabled()&&event.getEntity().getUUID().equals(actorId)){need(stage==5,"complete interaction journey");NativeGearEntity.packetProbe=null;event.getEntity().getServer().tickRateManager().setFrozen(false);System.out.println("[vandorlabs][gear-payload-client] logout PASS");}}
+}

@@ -1,0 +1,33 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    {
+      "item": "minecraft:slime_ball"
+    },
+    {
+      "item": "minecraft:iron_ingot"
+    }
+  ],
+  "result": {
+    "id": "vandorlabs:landing_wheel"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:landing_wheel"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  ]
+}

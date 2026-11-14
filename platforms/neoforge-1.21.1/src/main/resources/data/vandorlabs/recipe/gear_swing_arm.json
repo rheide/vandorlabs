@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MM ",
+    " RM",
+    " M "
+  ],
+  "key": {
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "count": 1,
+    "id": "vandorlabs:gear_swing_arm"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  ]
+}

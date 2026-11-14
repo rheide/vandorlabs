@@ -52,6 +52,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('access_card_slot','data_chip_slot')]
     wanted += ['tile.vandorlabs.programmable_glass.name','tile.vandorlabs.programmable_storage.name','tile.vandorlabs.data_chip_programmer.name']
     wanted += ['item.vandorlabs.duplifier.name']
+    wanted += ['tile.vandorlabs.' + name + '.name' for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')]
     wanted += ['tile.vandorlabs.programmable_ramp.name', 'tile.vandorlabs.programmable_ramp_slab.name']
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         key, separator, value = line.partition('=')

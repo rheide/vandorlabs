@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "item": "vandorlabs:gear_mount"
+    }
+  ],
+  "result": {
+    "id": "vandorlabs:large_gear_mount"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:large_gear_mount"
+    }
+  ]
+}

@@ -1,0 +1,26 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "M  ",
+    "MMM"
+  ],
+  "key": {
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  },
+  "result": {
+    "count": 2,
+    "id": "vandorlabs:landing_ski"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:landing_ski"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  ]
+}

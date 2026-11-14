@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:gear_extender"
+    },
+    {
+      "item": "vandorlabs:gear_extender"
+    },
+    {
+      "item": "vandorlabs:gear_extender"
+    },
+    {
+      "item": "vandorlabs:gear_extender"
+    }
+  ],
+  "result": {
+    "id": "vandorlabs:large_gear_extender"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:gear_extender"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:large_gear_extender"
+    }
+  ]
+}

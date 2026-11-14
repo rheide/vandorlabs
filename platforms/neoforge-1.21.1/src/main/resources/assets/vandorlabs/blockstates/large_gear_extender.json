@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "": {
+      "model": "vandorlabs:block/gear/empty"
+    }
+  }
+}

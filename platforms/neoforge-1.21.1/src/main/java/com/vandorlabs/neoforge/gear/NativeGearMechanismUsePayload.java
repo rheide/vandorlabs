@@ -1,0 +1,19 @@
+package com.vandorlabs.neoforge.gear;
+
+import java.util.UUID;
+import net.minecraft.core.BlockPos;
+import net.minecraft.network.RegistryFriendlyByteBuf;
+import net.minecraft.network.codec.StreamCodec;
+import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ClipContext;
+
+/** Root identity and operation only. Server recomputes current eye ray, loaded visibility and permissions. */
+public record NativeGearMechanismUsePayload(BlockPos root,UUID identity,int operation) implements CustomPacketPayload {
+    public static final Type<NativeGearMechanismUsePayload> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:gear_mechanism_use"));
+    public static final StreamCodec<RegistryFriendlyByteBuf,NativeGearMechanismUsePayload> CODEC=new StreamCodec<>(){public NativeGearMechanismUsePayload decode(RegistryFriendlyByteBuf b){if(b.readableBytes()!=25)throw new IllegalArgumentException("Arm interaction length");var root=b.readBlockPos();var id=b.readUUID();int operation=b.readUnsignedByte();if(operation>2)throw new IllegalArgumentException("Arm interaction operation");return new NativeGearMechanismUsePayload(root,id,operation);}public void encode(RegistryFriendlyByteBuf b,NativeGearMechanismUsePayload packet){b.writeBlockPos(packet.root);b.writeUUID(packet.identity);b.writeByte(packet.operation);}};
+    @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
+    public static boolean apply(ServerPlayer actor,NativeGearMechanismUsePayload packet){if(!actor.getServer().isSameThread())return false;var world=actor.serverLevel();double reach=actor.blockInteractionRange();if(!Double.isFinite(reach)||reach<=0||reach>64)return false;var start=actor.getEyePosition();var end=start.add(actor.getViewVector(1).scale(reach));if(!NativeGearAccess.rayLoaded(world,start,end))return false;var requested=NativeGearFormation.at(world,packet.root);if(requested==null||!requested.identity().equals(packet.identity))return false;var hit=NativeGearMechanismTrace.nearest(world,start,end,NativeGearEntity::progress);var recent=NativeGearMechanismTrace.recent(requested,start,end);if(recent!=null&&(hit==null||recent.distanceSq()<hit.distanceSq()))hit=recent;if(hit==null||hit.owner()!=requested||!NativeGearAccess.menu(actor,requested))return false;var ordinary=NativeGearPayloadTrace.nearest(world,start,end,NativeGearEntity::progress);if(ordinary!=null&&ordinary.distanceSquared()<=hit.distanceSq()+1e-8)return false;var vanilla=world.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));if(vanilla.getType()!=net.minecraft.world.phys.HitResult.Type.MISS&&start.distanceToSqr(vanilla.getLocation())+1e-8<hit.distanceSq()){var member=NativeGearFormation.at(world,vanilla.getBlockPos());if(member==null||member.controllerEntity()!=requested)return false;}var cell=BlockPos.containing(hit.worldPoint());if(!NativeGearFormation.loaded(world,cell)||!world.mayInteract(actor,cell)||!actor.mayUseItemAt(hit.owner().getBlockPos(),hit.worldFace(),actor.getMainHandItem()))return false;if(packet.operation==2)return NativeGearItem.placeFoot(actor,requested,hit.worldPoint());if(packet.operation==1)return actor.getMainHandItem().is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get())&&NativeGearBindings.openRoot(actor,hit.owner());if(!actor.getMainHandItem().isEmpty())return false;hit.owner().authorize(actor);return hit.owner().command(!hit.owner().target());}
+    static void register(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(NativeGearBindings.enabled())event.registrar("1").playToServer(TYPE,CODEC,(packet,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer actor)apply(actor,packet);}));}
+}

@@ -17,6 +17,15 @@ public final class NativeCopifierHousingWorld {
         default CompoundTag configuration(boolean ignore){var result=capture();if(ignore)com.vandorlabs.items.CopiedDirectionality.strip(result::remove);return result;}
         boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor);
     }
+    private record Gear(com.vandorlabs.neoforge.gear.NativeGearEntity tile) implements Target {
+        public CompoundTag capture(){return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.capture(tile.settings());}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            final com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.Plan plan;
+            try{plan=com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.prepare(tile.settings(),values);}catch(IllegalArgumentException malformed){return false;}
+            if(!plan.applicable()||!com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.available(tile,actor))return false;
+            NativeCopifierUndo.before(actor,level,pos);return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.apply(tile,actor,plan);
+        }
+    }
     private record Canopy(com.vandorlabs.neoforge.canopy.NativeCanopyEntity tile) implements Target {
         public CompoundTag capture(){return NativeCopifierCanopyEdit.capture(tile.kind(),tile.settings());}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -128,6 +137,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.gear.NativeGearEntity gear){var root=gear.controllerEntity();return root!=null&&!root.inert()?new Gear(root):null;}
         if(tile instanceof com.vandorlabs.neoforge.canopy.NativeCanopyEntity canopy){var owner=com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.owner(canopy);return owner.available()&&com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.installed(owner)&&owner.publication().draws()?new Canopy(owner):null;}
         if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)return !screen.inert()&&screen.isChannelMemberActive()?new Screen(screen):null;
         if(tile instanceof com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity trapdoor)return trapdoor.copiedAvailable()?new Trapdoor(trapdoor):null;

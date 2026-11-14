@@ -1,0 +1,45 @@
+package com.vandorlabs.neoforge.gear;
+
+import com.vandorlabs.gear.core.*;
+import java.util.*;
+import java.util.function.Function;
+import net.minecraft.core.*;
+import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
+
+/** Loaded-only compatible columns and supported platform cells. No terrain search escapes the selected volume. */
+public final class NativeGearJoined {
+    private static final Direction[] SIDES={Direction.NORTH,Direction.SOUTH,Direction.EAST,Direction.WEST};
+    private static boolean matching(NativeGearSettings a,NativeGearSettings b){return a.trigger()==b.trigger()&&a.direction()==b.direction()&&a.middleHinge()==b.middleHinge()&&a.pushBlocks()==b.pushBlocks()&&a.rotatePayload()==b.rotatePayload()&&a.activeAngle()==b.activeAngle()&&a.startAngle()==b.startAngle()&&a.activeExtension()==b.activeExtension()&&a.join()==b.join()&&a.joinRange()==b.joinRange()&&a.carryLoad()==b.carryLoad()&&a.loadHeight()==b.loadHeight()&&a.legacyAnyChannels()==b.legacyAnyChannels()&&a.channels().equals(b.channels());}
+    static List<BlockPos> columns(NativeGearEntity first,int height){
+        var root=first.getBlockPos();var world=first.getLevel();if(!first.settings().join())return List.of(root);
+        var existing=first.controllerEntity();if(existing!=null&&existing.columns().size()>1)for(var member:existing.members())if(!NativeGearFormation.loaded(world,member))throw new IllegalArgumentException("Load every joined arm before rebuilding");
+        var seen=new LinkedHashSet<BlockPos>();var pending=new ArrayDeque<BlockPos>();seen.add(root);pending.add(root);
+        while(!pending.isEmpty()){
+            var current=pending.removeFirst();var source=NativeGearFormation.at(world,current);if(source==null)throw new IllegalArgumentException("Joined arm data is still loading");
+            for(var local:SIDES){if(first.definition().kind==NativeGearDefinition.Kind.ROTATING&&(local.getAxis()==Direction.Axis.X?GearMotion.Direction.values()[first.settings().direction()].axisX()==0:GearMotion.Direction.values()[first.settings().direction()].axisZ()==0))continue;var step=NativeGearOrientation.vector(first.mount(),local.getStepX(),0,local.getStepZ());
+                for(int distance=1;distance<=source.settings().joinRange();distance++){
+                    var at=current.offset((int)step.x*distance,(int)step.y*distance,(int)step.z*distance);if(!NativeGearFormation.loaded(world,at))break;var partner=NativeGearFormation.at(world,at);if(partner==null||partner.definition()!=first.definition()||partner.mount()!=first.mount()||!partner.settings().join()||distance>partner.settings().joinRange())continue;var control=partner.controllerEntity();if(control==null)control=partner;var firstControl=first.controllerEntity();if(firstControl==null)firstControl=first;if(!matching(firstControl.settings(),control.settings()))continue;
+                    var above=NativeGearFormation.at(world,at.relative(first.mount().getOpposite()));if(above!=null&&above.definition().arm()&&above.mount()==first.mount())continue;boolean valid=true;for(int n=0;n<height;n++){var part=NativeGearFormation.at(world,at.relative(first.mount(),n));if(part==null||part.definition()!=first.definition()||part.mount()!=first.mount()){valid=false;break;}}if(!valid)continue;var tip=at.relative(first.mount(),height);if(!NativeGearFormation.loaded(world,tip))continue;var foot=NativeGearFormation.at(world,tip);if(foot!=null&&(foot.definition().foot()||foot.definition().arm()&&foot.mount()==first.mount()))continue;
+                    if(seen.add(at)){if(seen.size()>64)throw new IllegalArgumentException("Join at most 64 arms");pending.addLast(at);}break;
+                }
+            }
+        }
+        var ordered=seen.stream().sorted().toList();int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;for(var at:ordered){var local=NativeGearOrientation.inverse(first.mount(),at.subtract(root));minX=Math.min(minX,local.getX());minZ=Math.min(minZ,local.getZ());maxX=Math.max(maxX,local.getX());maxZ=Math.max(maxZ,local.getZ());}if((long)maxX-minX>JoinedPlatform.MAX_SPAN||(long)maxZ-minZ>JoinedPlatform.MAX_SPAN)throw new IllegalArgumentException("A joined platform may span at most 64 blocks per axis");return ordered;
+    }
+    public static Set<BlockPos> platform(NativeGearEntity owner){return platform(owner,Function.identity());}
+    /** mapPosition maps canonical construction cells to the current exact native endpoint. */
+    public static Set<BlockPos> platform(NativeGearEntity owner,Function<BlockPos,BlockPos> mapPosition){
+        if(owner.columns().size()<2)throw new IllegalArgumentException("Enable compatible neighbouring arms first");var supports=new ArrayList<JoinedPlatform.Cell>();int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;for(var column:owner.columns()){var local=NativeGearOrientation.inverse(owner.mount(),column);supports.add(new JoinedPlatform.Cell(local.getX(),local.getZ()));minX=Math.min(minX,local.getX());minZ=Math.min(minZ,local.getZ());maxX=Math.max(maxX,local.getX());maxZ=Math.max(maxZ,local.getZ());}
+        var occupied=new LinkedHashSet<JoinedPlatform.Cell>();int y=-owner.assembly().columnHeight();for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){var construction=owner.getBlockPos().offset(NativeGearOrientation.vector(owner.mount(),new BlockPos(x,y,z)));var at=Objects.requireNonNull(mapPosition.apply(construction));if(!NativeGearFormation.loaded(owner.getLevel(),at))throw new IllegalArgumentException("Load the entire joined platform");if(!owner.getLevel().getBlockState(at).isAir()&&(!owner.members().contains(at)||owner.sections()!=null&&owner.sections().at(at)!=null))occupied.add(new JoinedPlatform.Cell(x,z));}
+        if(occupied.isEmpty())return Set.of();var result=new ArrayList<BlockPos>();for(var cell:JoinedPlatform.connected(supports,occupied))result.add(mapPosition.apply(owner.getBlockPos().offset(NativeGearOrientation.vector(owner.mount(),new BlockPos(cell.u,y,cell.v)))));Collections.sort(result);return Collections.unmodifiableSet(new LinkedHashSet<>(result));
+    }
+    public static boolean canCarry(NativeGearEntity owner){return owner.definition().kind==NativeGearDefinition.Kind.EXTENDER&&owner.mount().getAxis()==Direction.Axis.Y;}
+    /** Face contacts outside a platform's own layer never pull neighbouring walls or ground into the move. */
+    public static Set<BlockPos> selected(NativeGearEntity owner,Function<BlockPos,BlockPos> mapPosition){
+        var platform=platform(owner,mapPosition);if(platform.isEmpty()||!owner.settings().carryLoad())return platform;if(!canCarry(owner))throw new IllegalArgumentException("Carry load requires vertical movement");int floor=platform.iterator().next().getY(),minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;for(var at:platform){if(at.getY()!=floor)throw new IllegalArgumentException("The carried platform must be horizontal");minX=Math.min(minX,at.getX());minZ=Math.min(minZ,at.getZ());maxX=Math.max(maxX,at.getX());maxZ=Math.max(maxZ,at.getZ());}var result=new LinkedHashSet<BlockPos>(platform);var pending=new ArrayDeque<BlockPos>(platform);while(!pending.isEmpty()){var at=pending.removeFirst();for(var side:Direction.values()){var next=at.relative(side);if(owner.members().contains(next)&&(owner.sections()==null||owner.sections().at(next)==null))continue;boolean inside=platform.contains(next)||next.getY()>floor&&(long)next.getY()<=floor+owner.settings().loadHeight()&&next.getX()>=minX&&next.getX()<=maxX&&next.getZ()>=minZ&&next.getZ()<=maxZ;if(!NativeGearFormation.loaded(owner.getLevel(),next))throw new IllegalArgumentException("Load the complete carried volume and its boundary");if(owner.getLevel().getBlockState(next).isAir()||!touches(owner.getLevel(),at,next,side))continue;if(!inside){if(!platform.contains(at))throw new IllegalArgumentException("Load extends beyond the selected platform or height");continue;}if(result.add(next)){if(result.size()>8192)throw new IllegalArgumentException("Arm attachment exceeds 8192 blocks");pending.addLast(next);}}}return Collections.unmodifiableSet(result);
+    }
+    private static List<AABB> contactBoxes(Level world,BlockPos at){var state=world.getBlockState(at);var collision=state.getCollisionShape(world,at);return collision.isEmpty()&&state.getBlock() instanceof net.minecraft.world.level.block.SignBlock?state.getShape(world,at).toAabbs():collision.toAabbs();}
+    private static boolean touches(Level world,BlockPos at,BlockPos next,Direction face){var a=contactBoxes(world,at);var b=contactBoxes(world,next);for(var left:a)for(var right:b){var moved=right.move(face.getStepX(),face.getStepY(),face.getStepZ());double x=Math.min(left.maxX,moved.maxX)-Math.max(left.minX,moved.minX),y=Math.min(left.maxY,moved.maxY)-Math.max(left.minY,moved.minY),z=Math.min(left.maxZ,moved.maxZ)-Math.max(left.minZ,moved.minZ);if(face.getAxis()==Direction.Axis.X?x>=-1e-7&&y>1e-7&&z>1e-7:face.getAxis()==Direction.Axis.Y?y>=-1e-7&&x>1e-7&&z>1e-7:z>=-1e-7&&x>1e-7&&y>1e-7)return true;}return false;}
+    private NativeGearJoined(){}
+}

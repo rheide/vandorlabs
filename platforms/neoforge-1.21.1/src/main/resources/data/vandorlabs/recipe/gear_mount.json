@@ -1,0 +1,29 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    " M ",
+    "MIM",
+    " M "
+  ],
+  "key": {
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "I": {
+      "item": "minecraft:iron_ingot"
+    }
+  },
+  "result": {
+    "id": "vandorlabs:gear_mount"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:gear_mount"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:programmable_matter_ingot"
+    }
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "item": "vandorlabs:gear_swing_arm"
+    }
+  ],
+  "result": {
+    "id": "vandorlabs:large_gear_swing_arm"
+  },
+  "neoforge:conditions": [
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:gear_swing_arm"
+    },
+    {
+      "type": "neoforge:item_exists",
+      "item": "vandorlabs:large_gear_swing_arm"
+    }
+  ]
+}

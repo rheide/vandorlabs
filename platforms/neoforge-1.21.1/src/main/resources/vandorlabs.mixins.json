@@ -22,7 +22,11 @@
     "NativeRampEntityStorageAccess",
     "NativeRampHopperGuard",
     "NativeRampInventoryGuard",
-    "NativeRampLevelGuard"
+    "NativeRampLevelGuard",
+    "NativeGearTickGuard",
+    "NativeGearEntityManagerAccess",
+    "NativeGearEntityStoreCapture",
+    "NativeGearHopperItemGuard"
   ],
   "injectors": {
     "defaultRequire": 1
@@ -36,6 +40,8 @@
     "SegmentedLevelRendererAccessor",
     "SegmentedViewAreaInvoker",
     "SegmentedRenderSectionMixin",
-    "SegmentedRebuildTaskMixin"
+    "SegmentedRebuildTaskMixin",
+    "NativeGearPickMixin",
+    "NativeGearAttackMixin"
   ]
 }
