@@ -162,6 +162,7 @@ public final class VehicleRotation {
                 BuildingBlockCompat.rotateTile(before.state,data,rotation);VehiclePaintings.rotate(data,width,depth,turns);
                 String domain=before.state.getBlock().getRegistryName().getResourceDomain();
                 if(domain.equals("vandorlabs")) {
+                    if(before.state.getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock)com.vandorlabs.ports.ResourcePortData.rotate(data,rotation);
                     if(looseFoot==null&&(data.getString("id").equals("vandorlabs:modular_gear")||data.getString("id").equals("vandorlabs:track")))com.vandorlabs.gear.GearData.rotate(data,turns,view.parent);
                     for(String key:new String[]{"Anchor","Pair","TrapdoorPartner","TrapdoorSquare","RampJournalOrigin"})if(data.hasKey(key,4)) {
                         BlockPos link=BlockPos.fromLong(data.getLong(key));

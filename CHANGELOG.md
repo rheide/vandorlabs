@@ -37,6 +37,11 @@
 - Add Base / Middle hinge selection to Rotating Arms. The middle option turns the lower linkage at the authored elbow, with matching payload motion, collision, saved settings and client rendering; existing saves retain the base hinge.
 - Allow Taxi mode with two independent complete Ski supports. Preserve single-Ski refusal, lowest-support selection and the existing rules for other landing supports.
 
+### Resource transfer ports (Forge 1.12.2)
+
+- Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge Energy; Matter accepts ordinary items.
+- Add dedicated General/Redstone configuration, per-face activity artwork and settings-only Duplifier copying. Mining retains resources in one configured block item.
+
 ### Native stationary glass rendering (Forge 1.12.2)
 
 - Render eligible stationary Programmable Glass in native translucent chunk buffers, with authored glimmer enabled by default and existing joined frame borders preserved.

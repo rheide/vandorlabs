@@ -52,6 +52,14 @@ Vehicles using two independent complete Ski supports can enter Taxi mode. A
 single Ski remains insufficient, and other support families keep their existing
 admission rules. See the [modular landing gear guide](../modular-landing-gear.md).
 
+## Resource Ports
+
+Forge adds **Power Port**, **Fluid Port** and **Matter Port** for transferring RF,
+fluids and items. Configure all six faces, an optional shared output limit, input
+pulling and Redstone conditions in their dedicated dialog. Stored resources remain
+in one configured item when mined; Duplifier copying transfers settings only.
+See [Resource Ports](../resource-ports.md) for recipes, connections and buffer limits.
+
 ## Stationary Glass and Portholes
 
 On Forge 1.12.2, eligible stationary Glass panes use ordinary translucent chunk

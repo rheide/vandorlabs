@@ -16,6 +16,7 @@ public final class MovingBlockSupport {
     public static boolean supported(VehicleStructure.Cell cell,TileEntity tile) {
         if(tile instanceof com.vandorlabs.coupler.TileCoupler&&((com.vandorlabs.coupler.TileCoupler)tile).quarantined())return false;
         if(cell.tileData()!=null && tile==null)return false;
+        if(cell.state.getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock){com.vandorlabs.ports.ResourcePortBlock.Kind kind=((com.vandorlabs.ports.ResourcePortBlock)cell.state.getBlock()).kind;return kind==com.vandorlabs.ports.ResourcePortBlock.Kind.POWER?tile instanceof com.vandorlabs.ports.PowerPortTile:kind==com.vandorlabs.ports.ResourcePortBlock.Kind.FLUID?tile instanceof com.vandorlabs.ports.FluidPortTile:tile instanceof com.vandorlabs.ports.MatterPortTile;}
         String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
         if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))return false; // RF/fluid/network adapters are deliberately deferred.
         if(MekanismTankCompat.reactorGlass(tile))return MekanismTankCompat.standaloneReactorGlass(tile);

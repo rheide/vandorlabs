@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "vandorlabs:power_port"
+    },
+    "facing=up": {
+      "model": "vandorlabs:power_port"
+    },
+    "facing=north": {
+      "model": "vandorlabs:power_port"
+    },
+    "facing=south": {
+      "model": "vandorlabs:power_port"
+    },
+    "facing=west": {
+      "model": "vandorlabs:power_port"
+    },
+    "facing=east": {
+      "model": "vandorlabs:power_port"
+    }
+  }
+}

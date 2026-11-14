@@ -1,0 +1,22 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "vandorlabs:matter_port"
+    },
+    "facing=up": {
+      "model": "vandorlabs:matter_port"
+    },
+    "facing=north": {
+      "model": "vandorlabs:matter_port"
+    },
+    "facing=south": {
+      "model": "vandorlabs:matter_port"
+    },
+    "facing=west": {
+      "model": "vandorlabs:matter_port"
+    },
+    "facing=east": {
+      "model": "vandorlabs:matter_port"
+    }
+  }
+}

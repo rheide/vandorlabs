@@ -11,6 +11,8 @@ final class Utility26FocusedChecks {
         try{action.run();}catch(Exception|LinkageError failure){System.err.println("[vandorlabs][reprolab] utility26 fixture FAILED "+name);failure.printStackTrace();failures.add(failure);}
     }
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
+        if("true".equals(System.getenv("VANDOR_RESOURCE_PORT_MODS_ONLY")))return ResourcePortModLiveChecks.tick(mc,output);
+        if("true".equals(System.getenv("VANDOR_RESOURCE_PORTS_ONLY")))return ResourcePortLiveChecks.tick(mc,output);
         if(arms210){if(!com.vandorlabs.gear.ArmMiddleLiveChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] utility26-focused PASS arms-210-only");return true;}
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}

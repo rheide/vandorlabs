@@ -230,6 +230,7 @@ public class ModBlocks {
         add(new BlockTokenSlot("access_card_slot",false));
         add(new BlockTokenSlot("data_chip_slot",true));
         add(new BlockModuleRack());
+        for(com.vandorlabs.ports.ResourcePortBlock port:com.vandorlabs.ports.ResourcePorts.BLOCKS)add(port);
         VEHICLE_CONTROLLER = add(new BlockVehicleController());
         for(String id:com.vandorlabs.cockpit.CockpitData.IDS)if(id.equals("yoke_screen"))add(new BlockCockpitPeripheral(id));else add(new BlockCockpit(id));
         addNoItem(new BlockCockpitPart());

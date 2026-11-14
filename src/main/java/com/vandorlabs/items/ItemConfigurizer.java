@@ -115,6 +115,7 @@ public final class ItemConfigurizer extends Item {
         if(state.getBlock() instanceof com.vandorlabs.programmer.ProgrammerBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);state.getBlock().onBlockActivated(world,pos,state,event.getEntityPlayer(),EnumHand.MAIN_HAND,event.getFace(),.5F,.5F,.5F);return;}
         if(state.getBlock() instanceof com.vandorlabs.segmented.SegmentedDoorBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);com.vandorlabs.segmented.SegmentedDoorBlock.configure(event.getEntityPlayer(),world,pos);return;}
         TileEntity tile = world.getTileEntity(pos);
+        if(tile instanceof com.vandorlabs.ports.ResourcePortTile){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);com.vandorlabs.ports.ResourcePorts.open(event.getEntityPlayer(),world,pos);return;}
         int gui;
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){pos=((com.vandorlabs.blocks.BlockNonWheeledLandingGear)state.getBlock()).connectedRoot(world,pos);tile=world.getTileEntity(pos);}
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && ((com.vandorlabs.tiles.TileEntityCanopy)tile).owner().configurable()){tile=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();pos=tile.getPos();gui=GuiHandler.GUI_LARGE_CANOPY;}

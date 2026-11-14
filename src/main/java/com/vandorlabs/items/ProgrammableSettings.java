@@ -29,6 +29,7 @@ import net.minecraft.world.World;
 /** Semantic setting names shared by the duplifier's capture and apply paths. */
 public final class ProgrammableSettings {
     public static final String MODULAR_ARM_SETTINGS="modular_arm_settings";
+    public static final String RESOURCE_PORT_SETTINGS="resource_port_settings";
     private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
@@ -159,6 +160,7 @@ public final class ProgrammableSettings {
         TileEntity tile = world.getTileEntity(pos);
         Block block = world.getBlockState(pos).getBlock();
         if (tile == null) return null;
+        if(tile instanceof com.vandorlabs.ports.ResourcePortTile){NBTTagCompound ports=new NBTTagCompound();ports.setTag(RESOURCE_PORT_SETTINGS,((com.vandorlabs.ports.ResourcePortTile)tile).configuration());return ports;}
         NBTTagCompound out = new NBTTagCompound();
         if(tile instanceof RedstoneChannelMember&&com.vandorlabs.redstone.TransmitterSlots.supported((RedstoneChannelMember)tile)){
             RedstoneChannelMember member=(RedstoneChannelMember)tile;NBTTagCompound transmission=new NBTTagCompound();
@@ -417,6 +419,7 @@ public final class ProgrammableSettings {
             EntityPlayer player, TileEntity tile, Block block) {
         if (tile == null || values == null || values.hasNoTags()) return false;
         if(!CopiedSettingsValidation.valid(values,COPY_TAGS))return false;
+        if(tile instanceof com.vandorlabs.ports.ResourcePortTile){if(!values.hasKey(RESOURCE_PORT_SETTINGS,10))return false;try{((com.vandorlabs.ports.ResourcePortTile)tile).configure(values.getCompoundTag(RESOURCE_PORT_SETTINGS));return true;}catch(IllegalArgumentException invalid){return false;}}
         NBTTagCompound transmission=values.getCompoundTag("Transmission");
         ChannelList transmissionChannels=values.hasKey("Transmission",10)?ChannelList.of(transmission.getIntArray("Channels")):null;
         boolean applicable = false;

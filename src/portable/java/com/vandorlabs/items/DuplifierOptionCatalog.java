@@ -82,7 +82,8 @@ public final class DuplifierOptionCatalog {
         new Option("modular_arm_settings","Arm / Track Settings",2),
         new Option("chair_angle","Chair Angle",2),
         new Option("ramp_vertical_layout","Vertical Ramp Layout",4),
-        new Option("segmented_door","Segmented Door Settings",3)
+        new Option("segmented_door","Segmented Door Settings",3),
+        new Option("resource_port_settings","Resource Port Settings",0)
     };
     public static String[] pages(){return PAGES.clone();}
     public static Option[] options(){return OPTIONS.clone();}

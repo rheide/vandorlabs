@@ -31,6 +31,7 @@ public final class CopyMaterials {
         if(supplied.isEmpty()||need.item.getItem()!=supplied.getItem()||need.item.getMetadata()!=supplied.getMetadata())return false;
         if(!supplied.areCapsCompatible(need.item))return false;
         if(!supplied.hasTagCompound())return true;
+        if(supplied.getItem() instanceof ItemBlock&&((ItemBlock)supplied.getItem()).getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock&&com.vandorlabs.ports.ResourcePortData.hasResources(supplied.getSubCompound("BlockEntityTag")))return false;
         // Empty configured building blocks remain valid base materials. Never consume a filled carrier as an empty block.
         String domain=supplied.getItem().getRegistryName().getResourceDomain();return (domain.equals("vandorlabs")||domain.equals("minecraft"))&&!retained(supplied.getTagCompound(),0);
     }
@@ -47,7 +48,7 @@ public final class CopyMaterials {
         if(depth>=8)throw new IllegalArgumentException("Captured material nesting exceeds eight structures");
         for(VehicleStructure.Cell cell:snapshot.cells){if(cell.tileData()!=null&&cell.tileData().hasKey("LootTable",8)&&!cell.tileData().getString("LootTable").isEmpty())throw new IllegalArgumentException("Open loot containers before Survival copying them");TileEntity tile=view.getTileEntity(cell.pos);if(VehicleForeignCompat.toolbox(tile)){ItemStack carrier=VehicleForeignCompat.toolboxMaterial(tile,cell.state);add(needs,carrier,1);continue;}ItemStack base=base(cell,view);boolean carrier=false;
             if(storedResources(tile,cell.tileData())){
-                if(!base.isEmpty()&&(tile instanceof TileEntityBattery||tile instanceof TileEntityHexTank)){ItemStack pick=cell.state.getBlock().getPickBlock(cell.state,null,view,cell.pos,null);NBTTagCompound source=cell.tileData(),data=pick.getSubCompound("BlockEntityTag");if(data==null||!resourceData(source,data))throw new IllegalArgumentException("Stored resources have no lossless material item: "+cell.state.getBlock().getLocalizedName());base=pick;carrier=true;}
+                if(!base.isEmpty()&&(tile instanceof TileEntityBattery||tile instanceof TileEntityHexTank||tile instanceof com.vandorlabs.ports.ResourcePortTile)){NBTTagCompound source=cell.tileData();ItemStack pick;if(tile instanceof com.vandorlabs.ports.ResourcePortTile){pick=new ItemStack(cell.state.getBlock());NBTTagCompound raw=source.copy();for(String key:new String[]{"id","x","y","z"})raw.removeTag(key);pick.setTagInfo("BlockEntityTag",raw);}else pick=cell.state.getBlock().getPickBlock(cell.state,null,view,cell.pos,null);NBTTagCompound data=pick.getSubCompound("BlockEntityTag");if(data==null||!resourceData(source,data))throw new IllegalArgumentException("Stored resources have no lossless material item: "+cell.state.getBlock().getLocalizedName());base=pick;carrier=true;}
                 else throw new IllegalArgumentException("Empty stored energy, fluids or fuel before Survival copying "+cell.state.getBlock().getLocalizedName());
             }
             add(needs,base,base.isEmpty()?0:base.getCount(),carrier);
@@ -60,9 +61,10 @@ public final class CopyMaterials {
             if(tile instanceof TileEntityRampController)ramp(snapshot,view,cell,needs,depth);
         }
     }
-    private static boolean resourceData(NBTTagCompound source,NBTTagCompound item){for(String key:new String[]{"Energy","Tank","ContainedFluids"})if(source.hasKey(key)&&!Objects.equals(source.getTag(key),item.getTag(key)))return false;return true;}
+    private static boolean resourceData(NBTTagCompound source,NBTTagCompound item){for(String key:new String[]{"Energy","Tank","ContainedFluids","PortEnergy","PortFluid","Items"})if(source.hasKey(key)&&!Objects.equals(source.getTag(key),item.getTag(key)))return false;return true;}
     private static boolean storedResources(TileEntity tile,NBTTagCompound tag){
         if(tile==null||tag==null)return false;
+        if(tile instanceof com.vandorlabs.ports.ResourcePortTile&&com.vandorlabs.ports.ResourcePortData.hasResources(tag))return true;
         com.vandorlabs.blocks.ContainedFluids contained=WaterloggedParts.data(tile);if(contained!=null&&contained.any())return true;
         if(tile instanceof net.minecraft.tileentity.TileEntityFurnace&&tag.getShort("BurnTime")>0)return true;
         for(EnumFacing side:new EnumFacing[]{null,EnumFacing.DOWN,EnumFacing.UP,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.WEST,EnumFacing.EAST}){
@@ -103,7 +105,7 @@ public final class CopyMaterials {
         if(tile instanceof TileEntityCanopy&&((TileEntityCanopy)tile).anchor!=null&&!((TileEntityCanopy)tile).anchor.equals(cell.pos))return ItemStack.EMPTY;
         if(tile instanceof TileEntityLandingGear&&((TileEntityLandingGear)tile).owner()!=null)return ItemStack.EMPTY;
         if(block instanceof BlockWheel&&!((BlockWheel)block).root(cell.pos,cell.state).equals(cell.pos))return ItemStack.EMPTY;
-        if(block instanceof com.vandorlabs.gear.LargeGearBlock&&!((com.vandorlabs.gear.LargeGearBlock)block).componentRoot(cell.pos,cell.state).equals(cell.pos))return ItemStack.EMPTY;
+        if(block instanceof com.vandorlabs.gear.LargeGearBlock&&!((com.vandorlabs.gear.LargeGearBlock)block).componentRoot(view,cell.pos,cell.state).equals(cell.pos))return ItemStack.EMPTY;
         ItemStack result=block.getItem(view,cell.pos,cell.state);if(result.isEmpty())throw new IllegalArgumentException("No obtainable material item for "+block.getLocalizedName());result=result.copy();int count=result.getCount();if(block instanceof BlockSlab&&((BlockSlab)block).isDouble())count=2;if(block instanceof BlockSnow)count=cell.state.getValue(BlockSnow.LAYERS);if(count<1||count>64)throw new IllegalArgumentException("Block material quantity is not recoverable exactly");result.setCount(count);result.setTagCompound(null);return result;
     }
     private static BlockPos position(NBTTagCompound tag){return tag.hasKey("X",99)?new BlockPos(tag.getInteger("X"),tag.getInteger("Y"),tag.getInteger("Z")):BlockPos.fromLong(tag.getLong("Pos"));}
