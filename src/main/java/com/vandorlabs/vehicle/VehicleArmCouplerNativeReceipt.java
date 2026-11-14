@@ -43,7 +43,7 @@ public final class VehicleArmCouplerNativeReceipt {
     private static boolean zero(UUID value){return value.getMostSignificantBits()==0&&value.getLeastSignificantBits()==0;}
     private static UUID identity(NBTTagCompound data){boolean any=data.hasKey(ID+"Most")||data.hasKey(ID+"Least");if(!any)return null;if(!data.hasKey(ID+"Most",4)||!data.hasKey(ID+"Least",4))throw new IllegalArgumentException("Malformed native head identity");UUID result=data.getUniqueId(ID);if(zero(result))throw new IllegalArgumentException("Zero native head identity");return result;}
     private static boolean sameProof(CouplerAssociation a,CouplerAssociation b){return a==null?b==null:b!=null&&a.state==b.state&&a.head.equals(b.head)&&a.vehicle.equals(b.vehicle)&&a.generation.equals(b.generation);}
-    private static void header(VehicleStructure.Cell template,VehicleStructure.Cell nativeCell){
+    static void header(VehicleStructure.Cell template,VehicleStructure.Cell nativeCell){
         NBTTagCompound a=template.tileData(),b=nativeCell.tileData();net.minecraft.util.ResourceLocation expected=TileEntity.getKey(TileCoupler.class);if(a==null||b==null||expected==null||!expected.toString().equals(a.getString("id"))||!expected.toString().equals(b.getString("id"))||a.getBoolean("VehicleArmCouplerReleased")!=b.getBoolean("VehicleArmCouplerReleased")||!Objects.equals(identity(a),identity(b))||!sameProof(CouplerAssociationData.read(a),CouplerAssociationData.read(b)))throw new IllegalArgumentException("Materialized native/template head ownership differs");
     }
     private static NBTTagCompound patch(NBTTagCompound data,UUID identity,UUID owner,UUID generation,boolean paired){

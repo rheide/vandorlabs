@@ -10,6 +10,10 @@
 - Add Vertical, Horizontal, North/South and East/West texture joining to supported connected building surfaces. Add an All/Even/Odd neighbour-coordinate filter, retaining the owner's decision when neighbours use different filters and preserving previous saved defaults. See the [texture joining guide](docs/texture-joining.md).
 - Add Respect block joins to connected Duplifier selection. Retain the original matching-region behavior when disabled, and preserve saved option indices and existing message sizes.
 
+### Coupler ownership recovery (Forge 1.12.2)
+
+- Preserve source-scoped Coupler receipts when attaching, detaching or splitting native arm endpoints. Validate the exact physical preimage independently of refreshed association headers, retain opaque capability data, and recover interrupted transfers through the durable journal.
+
 ### Item presentation
 
 - Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.

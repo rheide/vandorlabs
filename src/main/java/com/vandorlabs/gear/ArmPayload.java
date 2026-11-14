@@ -132,6 +132,17 @@ public final class ArmPayload {
         if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;result.localCollision=localCollision;result.collisionCellEnds=collisionCellEnds;return result;
     }
+    /** Authenticated native release stages its materialized header and native occurrence together. */
+    public ArmPayload releaseMaterializedCoupler(BlockPos originalCell,boolean locked,NBTTagCompound knownFields){
+        if(!materialized||hasOwnershipJournal())throw new IllegalArgumentException("Materialized Coupler ownership is unavailable");
+        VehicleStructure.Cell prior=blocks.at(originalCell);if(prior==null||!(prior.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Materialized release head changed");validateCouplerData(prior,knownFields,false);
+        List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
+        for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){
+            VehicleStructure.Cell cell=next.get(i);NBTTagCompound data=knownFields.copy();data.setBoolean("VehicleArmCouplerReleased",true);data.setString("CouplerStatus","Released");next.set(i,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),data));
+            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound nativeData=data.copy();nativeData.setInteger("x",placed.pos.getX());nativeData.setInteger("y",placed.pos.getY());nativeData.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),nativeData));}
+        }
+        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,true,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
+    }
     /** Detached release preparation only: preserve the requested/input fields while changing this head's latch. */
     public ArmPayload releaseCoupler(BlockPos originalCell,boolean locked,NBTTagCompound knownFields){return couplerLatch(originalCell,locked,knownFields,true);}
     /** A scoped unpaired control changes its own latch without fabricating release evidence. */

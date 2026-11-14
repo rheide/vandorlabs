@@ -41,3 +41,9 @@ frames and panes. Joined holes remain holes, and each surface retains its
 artwork, lighting and opacity. Moving, animated and fluid cases retain their
 appropriate fallbacks. See [stationary Glass and Porthole rendering](../stationary-glass-rendering.md)
 for the supported paths and diagnostic command.
+
+## Coupler ownership recovery
+
+Native arm-endpoint attachment and release retain their original physical before
+images while renewing the receiving vehicle association. Interrupted transfers
+recover through their durable journals, including copied capability data.
