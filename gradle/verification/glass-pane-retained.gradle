@@ -1,0 +1,8 @@
+task testGlassPaneRetained(type: JavaExec) {
+    group = 'verification'
+    description = 'Check retained joined pane coverage, real writer records, lights and material boundaries'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.GlassPaneRetainedChecks'
+}
+check.dependsOn testGlassPaneRetained

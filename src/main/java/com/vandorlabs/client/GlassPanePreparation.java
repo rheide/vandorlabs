@@ -41,6 +41,7 @@ final class GlassPanePreparation {
         return state;
     }
     static IBlockState flatState(TileEntityProgrammableGlass tile,GlassPanePreparation prepared) {
+        if(GlassPaneTerrain.rendered(tile))return null;
         IBlockState state=prepared==null?null:prepared.current(tile);
         if(state!=null)return state;
         state=tile.getWorld().getBlockState(tile.getPos());

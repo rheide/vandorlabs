@@ -11,9 +11,12 @@ import java.lang.management.ManagementFactory;
 import java.lang.reflect.*;
 import java.util.*;
 import net.minecraft.block.state.IBlockState;
+import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.chunk.RenderChunk;
 import net.minecraft.client.renderer.tileentity.TileEntitySpecialRenderer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -85,14 +88,28 @@ public final class GlassCollectionChecks {
     }
 
     private static void publication()throws Exception{
+        Unsafe unsafe=(Unsafe)field(Unsafe.class,"theUnsafe").get(null);
+        Field singleton=null;Object previousClient=null;Minecraft client=(Minecraft)unsafe.allocateInstance(Minecraft.class);
+        TextureAtlasSprite sprite=new TextureAtlasSprite("vandorlabs:checks/collection-frame"){};
+        sprite.setIconWidth(16);sprite.setIconHeight(16);sprite.initSprite(256,256,32,32,false);
+        int[] pixels=new int[256];Arrays.fill(pixels,0xffffffff);
+        List<int[][]> frames=new ArrayList<>();frames.add(new int[][]{pixels});sprite.setFramesTextureData(frames);
+        TextureMap atlas=new TextureMap(""){@Override public TextureAtlasSprite getAtlasSprite(String name){return sprite;}};
+        for(Field value:Minecraft.class.getDeclaredFields()){
+            value.setAccessible(true);
+            if(Modifier.isStatic(value.getModifiers())&&value.getType()==Minecraft.class){singleton=value;previousClient=value.get(null);value.set(null,client);}
+            else if(!Modifier.isStatic(value.getModifiers())&&value.getType()==TextureMap.class)value.set(client,atlas);
+        }
+        need(singleton!=null,"Minecraft singleton fixture missing");
         World world=new World();TileEntityProgrammableGlass tile=put(world,POS,EnumFacing.NORTH,0,1,true,0);tile.frameAppearance.front=0;
         Class<?> entryClass=Class.forName("com.vandorlabs.client.GlassFrameChunks$Entry");Constructor<?> constructor=entryClass.getDeclaredConstructor(TileEntityProgrammableGlass.class);constructor.setAccessible(true);
         Object entry=constructor.newInstance(tile);tile.frameChunkPublication=entry;
         GlassFrameModel.Mesh mesh=new GlassFrameModel.Mesh(Collections.emptyList(),DefaultVertexFormats.BLOCK,false);tile.frameChunkMesh=mesh;field(entryClass,"mesh").set(entry,mesh);
-        Unsafe unsafe=(Unsafe)field(Unsafe.class,"theUnsafe").get(null);RenderChunk chunk=(RenderChunk)unsafe.allocateInstance(RenderChunk.class);
+        RenderChunk chunk=(RenderChunk)unsafe.allocateInstance(RenderChunk.class);
         BlockPos.MutableBlockPos section=new BlockPos.MutableBlockPos(0,80,0);field(RenderChunk.class,"position").set(chunk,section);field(entryClass,"chunk").set(entry,chunk);
         ForgeHooksClient.setRenderPass(0);
         try{
+            need(GlassFrameMesh.get(tile).vertexCount()>0,"selected-frame fixture has no fallback geometry");
             need(!tile.hasFastRenderer(),"unacknowledged selected frame lost fallback");
             field(entryClass,"ready").setBoolean(entry,true);need(tile.hasFastRenderer(),"acknowledged frame retained empty TESR work");
             tile.frameChunkMesh=new Object();need(!tile.hasFastRenderer(),"wrong mesh generation suppressed fallback");tile.frameChunkMesh=mesh;
@@ -100,7 +117,7 @@ public final class GlassCollectionChecks {
             section.setPos(0,80,0);need(!tile.hasFastRenderer(),"recycled chunk accepted without a new acknowledgement");
             field(entryClass,"ready").setBoolean(entry,true);need(tile.hasFastRenderer(),"new exact upload not accepted");
             tile.invalidate();need(!ProgrammableGlassPasses.emptyOpaquePass(tile,null),"invalidated publication survived");
-        }finally{GlassSurfaceGroups.unload(world);ForgeHooksClient.setRenderPass(-1);}
+        }finally{GlassSurfaceGroups.unload(world);GlassFrameMesh.clear();ForgeHooksClient.setRenderPass(-1);singleton.set(null,previousClient);}
         System.out.println("glass-collection publication PASS pending, exact upload, mismatched mesh, recycled chunk and invalidation");
     }
 

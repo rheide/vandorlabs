@@ -14,13 +14,16 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
     /** Client publication only; never serialized into block, item or vehicle data. */
     public volatile Object frameChunkMesh,frameChunkPublication;
+    /** Unsaved client snapshots; Object types keep shared tiles free of client linkage. */
+    public volatile Object paneTerrainMesh,paneTerrainPublication;
     public volatile int frameChunkLight;
 
     /** World geometry follows loaded chunks and the view frustum, like Programmable Walls. */
     @Override public double getMaxRenderDistanceSquared(){return Double.MAX_VALUE;}
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox(){
         net.minecraft.util.math.AxisAlignedBB bounds=super.getRenderBoundingBox();
-        return fluids.any()?bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos)):bounds;
+        if(fluids.any())bounds=bounds.union(new net.minecraft.util.math.AxisAlignedBB(pos));
+        return com.vandorlabs.VandorLabs.proxy==null?bounds:com.vandorlabs.VandorLabs.proxy.glassPaneBounds(this,bounds);
     }
     private void frameChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.glassFrameAppearanceChanged(this);}
     private int configurationDepth;
@@ -43,8 +46,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     }
     /** Called after an installed packet, or by an identity-checked load callback. */
     public void refreshPendingLight(){lightQueued=false;if(pendingLight&&world!=null){pendingLight=false;world.checkLight(pos);}}
-    @Override public void setWorld(World world){if(this.world!=world){lightQueued=false;receivedSettings=false;}super.setWorld(world);}
-    @Override public void setPos(BlockPos pos){if(!this.pos.equals(pos)){lightQueued=false;receivedSettings=false;}super.setPos(pos);}
+    @Override public void setWorld(World world){if(this.world!=world){lightQueued=false;receivedSettings=false;if(paneTerrainPublication!=null)frameChanged();paneTerrainMesh=null;}super.setWorld(world);}
+    @Override public void setPos(BlockPos pos){if(!this.pos.equals(pos)){lightQueued=false;receivedSettings=false;if(paneTerrainPublication!=null)frameChanged();paneTerrainMesh=null;}super.setPos(pos);}
     private void changed(boolean range,boolean light){
         if(configurationDepth>0){configurationChanged=true;configurationRange|=range;configurationLight|=light;return;}
         markDirty();
@@ -73,8 +76,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         }
     }
     @Override public void markDirty(){super.markDirty();GlassMaterials.changed();frameChanged();}
-    @Override public void invalidate(){super.invalidate();lightQueued=false;receivedSettings=false;frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
-    @Override public void onChunkUnload(){super.onChunkUnload();lightQueued=false;receivedSettings=false;frameChunkMesh=null;frameChunkPublication=null;frameChanged();}
+    @Override public void invalidate(){super.invalidate();lightQueued=false;receivedSettings=false;frameChunkMesh=null;frameChunkPublication=null;paneTerrainMesh=null;frameChanged();}
+    @Override public void onChunkUnload(){super.onChunkUnload();lightQueued=false;receivedSettings=false;frameChunkMesh=null;frameChunkPublication=null;paneTerrainMesh=null;frameChanged();}
     public final com.vandorlabs.blocks.ContainedFluids fluids=new com.vandorlabs.blocks.ContainedFluids(this);
     private int shade;
     private int material=-1;
@@ -216,6 +219,8 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         return oldState.getBlock() != newState.getBlock();
     }
     @Override public boolean shouldRenderInPass(int pass) {
+        int nativePass=com.vandorlabs.VandorLabs.proxy==null?-1:com.vandorlabs.VandorLabs.proxy.glassPanePass(this,pass);
+        if(nativePass>=0)return nativePass!=0;
         if(pass==0)return true;
         if(pass!=1)return false;
         if(fluids.any()||!GlassMaterials.opaque(material,tint))return true;

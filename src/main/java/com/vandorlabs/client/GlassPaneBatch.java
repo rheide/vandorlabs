@@ -32,6 +32,7 @@ final class GlassPaneBatch implements AutoCloseable {
         boolean shaderFormat=net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK.getNextOffset()>32;
         if(shaderFormat&&SHADER_TILE==null)return false;
         TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;
+        if(GlassPaneRetained.handles(tile))return false;
         if(!GlazingDisplay.atlasStatic(tile)||GlassMaterials.opaque(tile.getMaterial(),tile.getTint())||tile.fluids.any())return false;
         IBlockState state=GlassPanePreparation.flatState(tile,prepared);
         if(state==null)return false;

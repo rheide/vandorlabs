@@ -21,6 +21,8 @@ public class CommonProxy {
     public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}
     public void lightAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableLight tile){}
     public boolean glassCollectionOnly(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){return false;}
+    public int glassPanePass(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,int pass){return -1;}
+    public net.minecraft.util.math.AxisAlignedBB glassPaneBounds(com.vandorlabs.tiles.TileEntityProgrammableGlass tile,net.minecraft.util.math.AxisAlignedBB bounds){return bounds;}
     /** Physical server and integrated-server light reads use only shared APIs. */
     public int vehicleCombinedLight(World world,BlockPos pos,int minimum){return sharedVehicleCombinedLight(world,pos,minimum);}
     public static int sharedVehicleCombinedLight(World world,BlockPos pos,int minimum){

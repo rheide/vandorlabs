@@ -132,9 +132,13 @@ public final class GlassPanePreparationChecks {
         }finally{for(GlassPanePreparation plan:plans)if(plan!=null)plan.clear();GlassSurfaceGroups.unload(world);}
     }
     public static void main(String[] args)throws Exception{
-        PropulsionPlacementLegacyOracle.initialize();for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockProgrammableGlass)glass=(BlockProgrammableGlass)block;need(glass!=null,"glass block");
-        net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("vandorlabs","programmable_glass"));
-        changes();carried();actualSorter();cost(256,false);cost(GlassSurfaceGroups.MAX_LAYOUTS*2,false);cost(4096,true);
-        System.out.println("Glass pane preparation PASS real sorter depth/clear, block/range/local/global/unload edits, owner replacement/move/settings, carried revision/structure/origin and dense/edit-heavy work");
+        Field environment=net.minecraftforge.fml.relauncher.CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");environment.setAccessible(true);
+        boolean previous=environment.getBoolean(null);environment.setBoolean(null,true);
+        try{
+            PropulsionPlacementLegacyOracle.initialize();for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockProgrammableGlass)glass=(BlockProgrammableGlass)block;need(glass!=null,"glass block");
+            net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("vandorlabs","programmable_glass"));
+            changes();carried();actualSorter();cost(256,false);cost(GlassSurfaceGroups.MAX_LAYOUTS*2,false);cost(4096,true);
+            System.out.println("Glass pane preparation PASS real sorter depth/clear, block/range/local/global/unload edits, owner replacement/move/settings, carried revision/structure/origin and dense/edit-heavy work");
+        }finally{environment.setBoolean(null,previous);}
     }
 }

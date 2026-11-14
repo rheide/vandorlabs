@@ -34,6 +34,12 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
         public Class<Integer> getType(){return Integer.class;}
         public String valueToString(Integer value){return value.toString();}
     };
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Object> PANE_MESH=new net.minecraftforge.common.property.IUnlistedProperty<Object>(){
+        public String getName(){return "glass_pane_mesh";}
+        public boolean isValid(Object value){return value!=null;}
+        public Class<Object> getType(){return Object.class;}
+        public String valueToString(Object value){return value.toString();}
+    };
 
     public BlockProgrammableGlass(String name) {
         super(name);
@@ -42,7 +48,7 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
     @Override protected BlockStateContainer createBlockState() {
         return new net.minecraftforge.common.property.ExtendedBlockState(this,
                 new net.minecraft.block.properties.IProperty[]{ROTATED, DEPTH, TOP, BOTTOM, LEFT, RIGHT, INNER_TL, INNER_TR, INNER_BL, INNER_BR, SIZE},
-                new net.minecraftforge.common.property.IUnlistedProperty[]{FRAME_MESH,FRAME_LIGHT});
+                new net.minecraftforge.common.property.IUnlistedProperty[]{FRAME_MESH,FRAME_LIGHT,PANE_MESH});
     }
     @Override public int getMetaFromState(IBlockState state) {
         int rotated = state.getValue(ROTATED) ? 1 : 0;
@@ -94,14 +100,32 @@ public final class BlockProgrammableGlass extends BlockGlassWall {
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntity raw=world.getTileEntity(pos);
         if(!(raw instanceof TileEntityProgrammableGlass)||world instanceof com.vandorlabs.vehicle.VehicleWorld)return state;
-        TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;Object mesh=tile.frameChunkMesh;
-        if(mesh==null){if(tile.frameChunkPublication==null&&VandorLabs.proxy!=null)VandorLabs.proxy.glassFrameAppearanceChanged(tile);return state;}
-        int light=world.getCombinedLight(pos,tile.frameChunkLight);if(tile.frameChunkLight>0)light=(light&0xffff0000)|240;
-        return ((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(FRAME_MESH,mesh).withProperty(FRAME_LIGHT,light);
+        TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;
+        // Both snapshots are immutable client publications. A frameless pane
+        // still contributes terrain geometry when no frame snapshot is present.
+        Object frame=tile.frameChunkMesh,pane=tile.paneTerrainMesh;
+        net.minecraftforge.common.property.IExtendedBlockState extended=(net.minecraftforge.common.property.IExtendedBlockState)state;
+        if(frame==null){
+            if(tile.frameChunkPublication==null&&VandorLabs.proxy!=null)VandorLabs.proxy.glassFrameAppearanceChanged(tile);
+        }else{
+            int light=world.getCombinedLight(pos,tile.frameChunkLight);if(tile.frameChunkLight>0)light=(light&0xffff0000)|240;
+            extended=extended.withProperty(FRAME_MESH,frame).withProperty(FRAME_LIGHT,light);
+        }
+        if(pane!=null)extended=extended.withProperty(PANE_MESH,pane);
+        return extended;
     }
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     @Override public int getPackedLightmapCoords(IBlockState state,IBlockAccess world,BlockPos pos){
-        if(state instanceof net.minecraftforge.common.property.IExtendedBlockState){Integer light=((net.minecraftforge.common.property.IExtendedBlockState)state).getValue(FRAME_LIGHT);if(light!=null)return light;}
+        if(state instanceof net.minecraftforge.common.property.IExtendedBlockState){
+            net.minecraftforge.common.property.IExtendedBlockState extended=(net.minecraftforge.common.property.IExtendedBlockState)state;
+            // A pane uses live cell lighting, never a selected frame's forced
+            // fullbright material. Blended emissive frames have a separate
+            // frame-only draw; opaque emissive frames retain their native layer.
+            if(com.vandorlabs.client.GlassPaneTerrain.hasMesh(extended.getValue(PANE_MESH))
+                    &&net.minecraftforge.client.MinecraftForgeClient.getRenderLayer()==BlockRenderLayer.TRANSLUCENT)
+                return world.getCombinedLight(pos,0);
+            Integer light=extended.getValue(FRAME_LIGHT);if(light!=null)return light;
+        }
         return super.getPackedLightmapCoords(state,world,pos);
     }
     @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult target,

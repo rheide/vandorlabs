@@ -94,16 +94,25 @@ public final class GlassFrameChunks {
         return !LEGACY_BENCHMARK&&!(tile.getWorld() instanceof VehicleWorld)&&state.getBlock() instanceof BlockProgrammableGlass&&tile.isFramed()
                 &&(selected(tile)||PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())!=null);
     }
+    /** A block layer has one lightmap input. Keep blended emissive frames separate
+     * from ordinarily lit panes sharing TRANSLUCENT; cutout frames stay native. */
+    static boolean nativeLighting(GlassFrameModel.Mesh mesh,int light){
+        return mesh!=null&&(light==0||mesh.translucent.isEmpty());
+    }
+    static boolean awaiting(TileEntityProgrammableGlass tile){
+        Object value=tile.frameChunkPublication;
+        return value instanceof Entry&&((Entry)value).mesh!=null&&!((Entry)value).ready;
+    }
     /** A ready mesh stays valid across ordinary relighting and transparent resort tasks. */
     static boolean rendered(TileEntityProgrammableGlass tile){
         Object value=tile.frameChunkPublication;if(!(value instanceof Entry))return false;Entry entry=(Entry)value;
         if(!entry.ready||entry.mesh==null||tile.frameChunkMesh!=entry.mesh)return false;
         if(entry.chunk!=null&&entry.chunk.getPosition().equals(entry.section))return true;
-        entry.ready=false;changed(tile);return false;
+        entry.ready=false;changed(tile);GlassPaneTerrain.refreshAdmissions(tile.getPos());return false;
     }
     public static void reload(){
         MESHES.invalidateAll();GlassFrameMesh.clear();GlassFrameModel.clear();
-        for(Entry entry:ENTRIES.values()){entry.ready=false;entry.mesh=null;entry.tile.frameChunkMesh=null;changed(entry.tile);}
+        for(Entry entry:ENTRIES.values()){entry.ready=false;entry.mesh=null;entry.tile.frameChunkMesh=null;changed(entry.tile);GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
         PENDING.clear();frustum=null;
     }
     @SubscribeEvent public static void unloaded(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld()==world)reset(null);}
@@ -125,10 +134,11 @@ public final class GlassFrameChunks {
     private static void viewChanged(Minecraft mc)throws ReflectiveOperationException{
         ViewFrustum next=(ViewFrustum)FRUSTUM.get(mc.renderGlobal);
         if(next==frustum)return;frustum=next;
-        for(Entry entry:ENTRIES.values())if(entry.mesh!=null){entry.ready=false;PENDING.put(entry.section,new Section(entry.section));}
+        for(Entry entry:ENTRIES.values())if(entry.mesh!=null){entry.ready=false;PENDING.put(entry.section,new Section(entry.section));GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
     }
     private static void remove(Entry entry){
         ENTRIES.remove(entry.tile.getPos(),entry);entry.tile.frameChunkMesh=null;entry.tile.frameChunkPublication=null;
+        GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());
         Set<Entry> members=MEMBERS.get(entry.section);if(members!=null){members.remove(entry);if(members.isEmpty()){MEMBERS.remove(entry.section);PENDING.remove(entry.section);}}
     }
     static void flush(){
@@ -159,17 +169,19 @@ public final class GlassFrameChunks {
             if(supported(tile,state)){
                 Key key=new Key(tile,state);mesh=MESHES.getIfPresent(key);light=key.kind==0?tile.frameAppearance.light():0;
                 if(mesh==null){mesh=GlassFrameModel.build(tile,state);MESHES.put(key,mesh);}
+                if(!nativeLighting(mesh,light))mesh=null;
             }
             if(entry.mesh==mesh&&tile.frameChunkLight==light&&(entry.ready||PENDING.containsKey(entry.section)))continue;
             if(entry.mesh==mesh&&mesh==null)continue;
             entry.mesh=mesh;entry.ready=false;tile.frameChunkLight=light;tile.frameChunkMesh=mesh;
+            GlassPaneTerrain.refreshAdmissions(tile.getPos());
             PENDING.put(entry.section,new Section(entry.section));
         }
         try{
             viewChanged(mc);
             Iterator<Section> pending=PENDING.values().iterator();while(pending.hasNext()){
                 Section section=pending.next();if(!section.uploaded(frustum,mc.renderGlobal))continue;
-                Set<Entry> members=MEMBERS.get(section.pos);if(members!=null)for(Entry entry:members){entry.chunk=section.chunk;entry.ready=entry.mesh!=null;}
+                Set<Entry> members=MEMBERS.get(section.pos);if(members!=null)for(Entry entry:members){entry.chunk=section.chunk;entry.ready=entry.mesh!=null;GlassPaneTerrain.refreshAdmissions(entry.tile.getPos());}
                 pending.remove();
             }
         }catch(ReflectiveOperationException failure){throw new IllegalStateException("Glass frame terrain publication failed",failure);}

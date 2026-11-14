@@ -136,7 +136,8 @@ final class FlatPanelBarRenderer {
             Material m=materials[i];StaticSurfaceMesh mesh=part(transparent?m.transparent:frameBaked?null:m.opaque,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width,!transparent && m.cap==null?.02:0);
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             if(transparent){
-                if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0){GlStateManager.depthMask(false);drawPane(mesh,root,sky,GlassInsertLighting.block(root,block),m.opacity);}
+                if(!m.solidPane&&mesh!=null&&mesh.vertexCount()>0
+                        &&!(root instanceof TileEntityProgrammableGlass&&GlassPanePolicy.omitPane(false,VehicleRenderPass.shadow()))){GlStateManager.depthMask(false);drawPane(mesh,root,sky,GlassInsertLighting.block(root,block),m.opacity);}
             }else{
                 if(mesh!=null&&mesh.vertexCount()>0)draw(mesh,sky,block);
                 if(m.solidPane){StaticSurfaceMesh pane=part(m.transparent,turns[i],i==0?0:5,bar.frontArm,m.depth,m.left,m.width);if(pane!=null&&pane.vertexCount()>0)drawPane(pane,root,sky,GlassInsertLighting.block(root,block),m.opacity);}

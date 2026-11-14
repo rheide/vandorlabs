@@ -65,6 +65,13 @@ final class GlazingRenderOrder {
         flushing=true;
         try(TurntableRenderState saved=new TurntableRenderState();GlassPaneBatch batch=new GlassPaneBatch()){
             for(Draw draw:ordered)if(world.getTileEntity(draw.tile.getPos())==draw.tile&&draw.tile.shouldRenderInPass(1)){
+                if(draw.tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass
+                        &&GlassPaneRetained.handles((com.vandorlabs.tiles.TileEntityProgrammableGlass)draw.tile)){
+                    batch.flush();
+                    if(!GlassPaneRetained.draw((com.vandorlabs.tiles.TileEntityProgrammableGlass)draw.tile,draw.x,draw.y,draw.z))
+                        dispatcher.render(draw.tile,draw.x,draw.y,draw.z,draw.partial,draw.stage,draw.alpha);
+                    continue;
+                }
                 if(batchPanes&&batch.append(draw.tile,draw.x,draw.y,draw.z,draw.glass))continue;
                 batch.flush();
                 dispatcher.render(draw.tile,draw.x,draw.y,draw.z,draw.partial,draw.stage,draw.alpha);
@@ -102,6 +109,10 @@ final class GlazingRenderOrder {
         Plane(Draw d){draw=d;axis=d.axis;coordinate=d.plane;}
         void add(Draw d,double cx,double cy,double cz){
             net.minecraft.util.math.AxisAlignedBB b=new net.minecraft.util.math.AxisAlignedBB(d.tile.getPos());
+            if(d.tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass){
+                net.minecraft.util.math.AxisAlignedBB retained=GlassPaneRetained.bounds((com.vandorlabs.tiles.TileEntityProgrammableGlass)d.tile);
+                if(retained!=null)b=retained;
+            }
             if(d.tile instanceof com.vandorlabs.tiles.TileEntityCanopy){java.util.List<net.minecraft.util.math.AxisAlignedBB> boxes=((com.vandorlabs.tiles.TileEntityCanopy)d.tile).boxes();if(!boxes.isEmpty()){b=boxes.get(0);for(int i=1;i<boxes.size();i++)b=b.union(boxes.get(i));}}
             if(axis==0)b=new net.minecraft.util.math.AxisAlignedBB(coordinate-.0625,b.minY,b.minZ,coordinate+.0625,b.maxY,b.maxZ);
             if(axis==2)b=new net.minecraft.util.math.AxisAlignedBB(b.minX,b.minY,coordinate-.0625,b.maxX,b.maxY,coordinate+.0625);
