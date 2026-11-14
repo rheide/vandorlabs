@@ -59,3 +59,7 @@ Its darker graphite housing follows the compact equipment design: a one-pixel ri
 Seated modules and the rack share Minecraft's ordinary chunk mesh. Only active insertions need a temporary renderer; idle racks have neither ticking tiles nor permanent tile-entity rendering.
 
 See [Module Rack usage and crafting](../module-rack.md).
+
+Failed structural updates restore the original cargo, seats and vehicle position.
+If the original source cannot be reinstalled, the vehicle remains inert and keeps
+that complete snapshot for recovery.

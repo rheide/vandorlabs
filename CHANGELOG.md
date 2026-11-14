@@ -22,6 +22,8 @@
 
 - Preserve source-scoped Coupler receipts when attaching, detaching or splitting native arm endpoints. Validate the exact physical preimage independently of refreshed association headers, retain opaque capability data, and recover interrupted transfers through the durable journal.
 
+- Restore the original source, cargo, occupied seats, root position and ownership metadata if a same-vehicle structural publication fails. A failed rollback leaves an inert vehicle retaining its complete original snapshot.
+
 ### Item presentation
 
 - Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.

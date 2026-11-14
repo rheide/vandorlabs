@@ -324,8 +324,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public EntityGroundVehicle(World world){super(world);setSize(1,1);isImmuneToFire=true;preventEntitySpawning=true;}
     /** Preserve the last complete owner if both a replacement and its rollback fail. */
     public void retainUnavailableSnapshot(VehicleStructure original){
-        NBTTagCompound retained=original.write().copy();signals.close();structure=null;view=null;collision=null;encoded=null;
-        rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);unavailable=retained;motionX=motionY=motionZ=0;
+        NBTTagCompound retained=original.write().copy();unavailable=retained;motionX=motionY=motionZ=0;
+        try{signals.close();}finally{structure=null;view=null;collision=null;encoded=null;rampGeometryUpgradePending=false;collisionCache.clear();VehicleLookup.remove(this);}
     }
     public void install(VehicleStructure snapshot) {
         install(snapshot,null);
