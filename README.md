@@ -221,6 +221,9 @@ limits and the selected state.
 
 ## Building
 
+Run `./build.sh` to build the standard JAR with Java 8 and no tests.
+The output is saved in `build/libs/`; set `JAVA_HOME` to override the default JDK.
+
 To apply a patch and build only the standard JAR without tests, run:
 
 ```bash
