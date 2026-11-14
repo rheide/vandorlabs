@@ -737,7 +737,7 @@
       "id": "landing_gear_wheels",
       "label": "Modular landing gear and wheels",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "angled_landing_strut",
         "gear_extender",
@@ -758,15 +758,30 @@
         "wheel_small"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native parts and collision/placement",
-        "shared gear policy and carried animation",
-        "all item models with padding",
-        "live parity"
+        "Vehicle-specific landing effects and support admission remain deferred",
+        "Legacy nonmodular decorative landing-gear families remain unconverted",
+        "Tracks and horizontal terrain pushing are unavailable"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "standalone_first_vehicle_integration_deferred"
+      "integration_scope": "standalone_first_vehicle_integration_deferred",
+      "modern_registered_block_ids": [
+        "gear_extender",
+        "gear_swing_arm",
+        "large_gear_extender",
+        "large_gear_swing_arm",
+        "gear_mount",
+        "large_gear_mount",
+        "landing_plate",
+        "landing_ski",
+        "landing_wheel",
+        "large_landing_wheel"
+      ],
+      "implemented": [
+        "Public regular/Large mounts, connected Plates/Skis and regular/four-cell Large Wheels with six-face formation and configured items",
+        "Separate Foot direction and Middle hinge settings, active grid-socket foot adoption and settings-only copying",
+        "Native construction guide, authored bounded meshes, padded items and focused placement/restart/player/render acceptance"
+      ]
     },
     {
       "id": "turntables",
@@ -973,7 +988,7 @@
       "id": "moving_arms",
       "label": "Standalone Extenders and rotating arms",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "historical_neoforge_1_21_1": "unimplemented",
       "legacy_block_ids": [
         "gear_extender",
@@ -984,8 +999,23 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Joined/independent arms, six mounts, native endpoints, payload mining, client ownership and partial-save recovery",
-        "Native adapter integration and focused runtime/render acceptance"
+        "Horizontal terrain pushing (Push blocks) is unavailable",
+        "Vehicle Mode and carried vehicle/Coupler integration remain deferred"
+      ],
+      "modern_registered_block_ids": [
+        "gear_extender",
+        "gear_swing_arm",
+        "large_gear_extender",
+        "large_gear_swing_arm"
+      ],
+      "implemented": [
+        "Public regular/Large standalone arms on six mounting faces, independent and joined platforms, dedicated configuration and settings-only Duplifier/Undo",
+        "Native materialized endpoints, selectable captured payload mining, pause-aware rendering and native rider transport",
+        "Asynchronous capture/publication/adoption/harvest journals with terrain and native actor durability, failed-NBT retention and abrupt-restart recovery"
+      ],
+      "limits": [
+        "Tracks are a separate unimplemented native family",
+        "Unrepresentable vanilla endpoint orientations remain captured and mineable until a representable endpoint"
       ]
     },
     {

@@ -40,6 +40,12 @@
 - Add Base / Middle hinge selection to Rotating Arms. The middle option turns the lower linkage at the authored elbow, with matching payload motion, collision, saved settings and client rendering; existing saves retain the base hinge.
 - Allow Taxi mode with two independent complete Ski supports. Preserve single-Ski refusal, lowest-support selection and the existing rules for other landing supports.
 
+### Standalone arms (NeoForge 1.21.1)
+
+- Enable regular and Large Extenders, Rotating Arms, mounts, Plates, Skis and Wheels with six-face placement, joined platforms, Foot direction, Middle hinge and dedicated settings. Add all ten items to creative/search and support settings-only Duplifier copying and Undo.
+- Preserve payload ownership through asynchronous native publication, active-foot adoption and captured-block mining; checkpoint terrain and dropped-item records before releasing ownership. Carry native players and restore a clear last-valid endpoint when a stroke is blocked.
+- Keep Tracks, horizontal Push blocks and Vehicle Mode unavailable. Unsupported vanilla endpoint orientations remain captured and selectable. See the [native arm construction guide](docs/native-joined-arm-platforms.md).
+
 ### Resource transfer ports (Forge 1.12.2)
 
 - Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge Energy; Matter accepts ordinary items.

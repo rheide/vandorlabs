@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Private native joined-arm construction, menu settings and session rebinding."""
+"""Public native joined-arm construction, menu settings and session rebinding."""
 import argparse,os,socket,time,hashlib
 from pathlib import Path
 from test_cube import ROOT,command,launch,stop,check_log,jdk_home
@@ -9,7 +9,7 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 def main():
  parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');options=parser.parse_args()
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
- env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.gearRuntime=true -Dvandorlabs.gearMenuClientCheck=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='gear-menu-client-',dir=base))
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.gearMenuClientCheck=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='gear-menu-client-',dir=base))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
  extra=[];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=gear-menu-client',*extra),server_log,env)
  try:

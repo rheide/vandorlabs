@@ -30,7 +30,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
 | Cockpits and peripherals | pending | unimplemented | standalone first; carried integration deferred |
-| Modular landing gear and wheels | pending | unimplemented | standalone first; vehicle effects deferred |
+| Modular landing gear and wheels | partial (ten modular arm/mount/foot items enabled) | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | pending | unimplemented | non-vehicle first |
 | Industrial table | pending | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
@@ -39,12 +39,12 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Compatibility integrations | pending | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
 | Copy Controllers and shared surfaces | pending | unimplemented | non-vehicle first |
-| Standalone Extenders and rotating arms | pending | unimplemented | non-vehicle first |
+| Standalone Extenders and rotating arms | partial (regular/Large joined and independent arms enabled) | unimplemented | non-vehicle first |
 | Track assemblies | pending | unimplemented | non-vehicle first |
 
 Historical partial work includes programmable cubes, slabs/stairs, flat walls/portholes, screens, mounted controls, wireless endpoints, Industrial Tables and filesystem materials. The JSON retains their branch-specific descriptions and remaining gaps under explicitly historical fields. Registration, compilation and shared fixtures alone do not establish parity.
 
-Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. These require native implementations and acceptance against current Forge behavior. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
+Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. Segmented Doors and the supported standalone arm family now have native adapters and focused acceptance; native Copy Controllers, turntables and tracks remain pending. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
 
 Every integrated family requires shared policy, native persistence and permissions, bounded server-authoritative round trips, subsequent-process reload, and inspected client geometry/dialog/animation output. Ownership transfers additionally require durable recovery and abrupt-restart/partial-save checks. Use focused Forge regressions as changes land; preserve the final exact-artifact release gate. Dual-JDK contracts and modern startup checks remain distinct from runtime and visual acceptance. Compatibility integrations need native equivalents or an explicit unsupported status.
 
@@ -102,3 +102,5 @@ Standalone Card and Data Chip readers now register their original IDs and shared
 
 
 Ordinary programmable Glass is now enabled with its canonical block/item/entity/menu identities, Source recipe, two-sided contained fluids, dedicated four-tab editor and source-matched chunk/pane/item rendering. Canonical focused checks cover 193 write/13 restart assertions, 52 real editor checks, actual L/T picks and filled-diagonal contacts, independent terrain/pane render negatives, all 304 padded item variants, tiny resource-pack overrides and reload/unload retirement. The standalone Canopy family is separately enabled; Vehicle/carried integration and broader native release acceptance remain deferred.
+
+Native standalone arms now provide regular and Large Extenders, Rotating Arms and mounts with Plates, Skis and Wheels, six mounting faces, joined platforms, dedicated settings, configured items and Duplifier Undo. Focused player and restart checks cover native/captured ownership, active-foot adoption, captured mining, native riders and safe obstruction return. See the [native construction guide](../native-joined-arm-platforms.md). Tracks, horizontal terrain pushing and Vehicle Mode remain unavailable; unsupported vanilla endpoint orientations stay captured and selectable. This does not establish complete non-Vehicle conversion or a release gate.

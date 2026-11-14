@@ -1,6 +1,6 @@
 # Joined arm platforms in Minecraft 1.21.1
 
-This guide describes the native NeoForge arm implementation. It is currently available in development builds with the arm runtime enabled. Regular and Large Extenders and Rotating Arms use the same construction rules. Keep one arm type, size, mounting face and section count within each group. Tracks and **Push blocks** are unavailable in this implementation.
+This guide describes the native NeoForge arm implementation. Regular and Large arms, mounts, Plates, Skis and Wheels are available in the Vandor Labs creative tab and vanilla item search. Regular and Large Extenders and Rotating Arms use the same construction rules. Keep one arm type, size, mounting face and section count within each group. Tracks, **Push blocks** and Vehicle Mode are unavailable on this target.
 
 ## Build a supported platform
 
@@ -34,4 +34,6 @@ A formed Ski or Wheel assembly also exposes a separate **Foot** direction. This 
 
 Use the **Redstone** tab to select Manual, Powered or Unpowered activation and its receive channels. Right-click an option to choose its previous value; left-click chooses the next. Sliders and channels are acknowledged by the server. Unsupported changes while moving retain the previous configuration.
 
-At a grid-aligned materialized endpoint, edit the native platform blocks in place. The next move captures the connected platform as it exists then. Removing the entire platform allows the empty arms to return. Keep every corner connected when removing individual blocks. A captured fractional endpoint can be mined through the visible mechanism, but is not an ordinary world-block platform.
+At a grid-aligned materialized endpoint, edit the native platform blocks in place. The next move captures the connected platform as it exists then. Removing the entire platform allows the empty arms to return. Keep every corner connected when removing individual blocks. Mine the visible captured blocks at a fractional endpoint. They are not ordinary world blocks until materialized.
+
+Some vanilla block states cannot represent a quarter-turn orientation. Those attachments remain captured and selectable until a representable endpoint is reached; mine the visible captured block if it must be removed there. Native inventory interaction is available when the payload has materialized as world blocks.

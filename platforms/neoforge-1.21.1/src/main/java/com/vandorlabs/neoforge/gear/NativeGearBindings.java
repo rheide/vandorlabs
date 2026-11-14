@@ -18,14 +18,14 @@ import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
-/** Private runtime bindings. Canonical public registration stays disabled until player/restart acceptance. */
+/** Canonical standalone arm bindings. An explicit false switch supports baseline fixtures. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
 public final class NativeGearBindings {
     public static final Map<String,NativeGearBlock> BLOCKS=new LinkedHashMap<>();
     public static final Map<String,NativeGearItem> ITEMS=new LinkedHashMap<>();
     public static BlockEntityType<NativeGearEntity> ENTITY;
     public static MenuType<NativeGearMenu> MENU;
-    private static final boolean ENABLED=Boolean.getBoolean("vandorlabs.gearRuntime");
+    private static final boolean ENABLED=Boolean.parseBoolean(System.getProperty("vandorlabs.gearRuntime","true"));
     public static boolean enabled(){return ENABLED;}
     private static ResourceLocation id(String path){return ResourceLocation.fromNamespaceAndPath("vandorlabs",path);}
     @SubscribeEvent public static void register(RegisterEvent event){if(!enabled())return;

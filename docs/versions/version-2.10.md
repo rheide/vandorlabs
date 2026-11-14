@@ -2,7 +2,8 @@
 
 This development version adds material choices, directional texture joins and
 smaller Canopy item models. Forge 1.12.2 remains the reference target; NeoForge
-1.21.1 supports these changes through its existing converted building families.
+1.21.1 supports these changes through its converted building families and now
+includes the supported standalone arm family.
 User testing and final release validation remain pending.
 
 ## Materials and joined artwork
@@ -51,6 +52,20 @@ Base. Payload motion and collision follow the selected hinge.
 Vehicles using two independent complete Ski supports can enter Taxi mode. A
 single Ski remains insufficient, and other support families keep their existing
 admission rules. See the [modular landing gear guide](../modular-landing-gear.md).
+
+### Native Minecraft 1.21.1 arms
+
+NeoForge now includes regular and Large Extenders, Rotating Arms, mounts, Plates,
+Skis and Wheels as ten ordinary creative/search items. Six-face placement, joined
+platforms, Foot direction, Middle hinge and the dedicated Configurizer dialog use
+the Source construction rules. Duplifier copying and Undo transfer settings only.
+Native/captured payload handoffs, active-foot attachment and captured-block mining
+use durable recovery, and platforms carry native players through motion.
+
+Tracks, horizontal **Push blocks** and Vehicle Mode remain unavailable on this
+target. Unsupported vanilla endpoint orientations stay captured and selectable
+until they reach a representable endpoint. See the
+[native arm construction guide](../native-joined-arm-platforms.md).
 
 ## Resource Ports
 
