@@ -61,6 +61,7 @@ final class ModuleRackLiveChecks {
     private static void next(int value) { stage = value; wait = 0; }
 
     static boolean tick(Minecraft mc, File directory) throws Exception {
+        if (direction >= FACES.length) return true;
         output = directory;
         if (++wait > 1000) throw new IllegalStateException("Module Rack timeout face="
                 + FACES[direction] + " slot=" + slot + " stage=" + stage
