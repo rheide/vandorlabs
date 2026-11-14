@@ -308,6 +308,19 @@ public final class GlassTopologyInvalidationChecks {
         long start=meter.getThreadAllocatedBytes(thread),value=0;for(int i=0;i<65536;i++)value^=GlassSurfaceGroups.mutation();long allocated=meter.getThreadAllocatedBytes(thread)-start;
         need(allocated==0,"same-flush mutation token allocated "+allocated);sink=value;
     }
+    private static void removedOwnerFrameMask(){
+        World world=new World();BlockPos p=new BlockPos(32,80,32);
+        TileEntityProgrammableGlass removed=put(world,p,EnumFacing.NORTH);removed.frameAppearance.tile=false;
+        world.states.remove(p);world.tiles.remove(p);
+        // Render-tick publication can still hold this owner until its queued removal is drained.
+        need(GlassSurfaceGroups.frameMask(removed)==15,"removed AIR owner has no join contour");
+        world.states.put(p,Blocks.STONE.getDefaultState());world.tiles.put(p,removed);
+        need(GlassSurfaceGroups.frameMask(removed)==15,"replacement non-panel cannot supply panel facing");
+        world.states.put(p,state(EnumFacing.NORTH));TileEntityProgrammableGlass replacement=put(world,p,EnumFacing.NORTH);
+        need(GlassSurfaceGroups.frameMask(removed)==15,"replaced owner is not admitted into contour cache");
+        need(GlassSurfaceGroups.frameMask(replacement)==15,"current replacement owner retains a valid contour");
+        removed.setWorld(null);need(GlassSurfaceGroups.frameMask(removed)==15,"detached render owner is harmless");
+    }
     public static void main(String[] args)throws Exception{
         Field environment=net.minecraftforge.fml.relauncher.CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");environment.setAccessible(true);
         boolean previous=environment.getBoolean(null);
@@ -321,7 +334,7 @@ public final class GlassTopologyInvalidationChecks {
             PropulsionPlacementLegacyOracle.initialize();for(net.minecraft.block.Block block:ModBlocks.BLOCKS)if(block instanceof BlockProgrammableGlass)glass=(BlockProgrammableGlass)block;need(glass!=null,"glass block");
             net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityProgrammableGlass.class,new net.minecraft.util.ResourceLocation("vandorlabs","programmable_glass"));
             net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class,new net.minecraft.util.ResourceLocation("vandorlabs","animated_screen_selector"));
-            localDependencies();materialsAndLayouts();cacheOnly();metadataProofs();lifecycle();authoritativeCopies();chunksAndCarried();updateStorms();
+            removedOwnerFrameMask();localDependencies();materialsAndLayouts();cacheOnly();metadataProofs();lifecycle();authoritativeCopies();chunksAndCarried();updateStorms();
             System.out.println("Glass topology invalidation PASS delivered-baseline storms; local block/range/chunk dependencies; materials/layout separation; native/carried NBT and snapshot lifecycle; unload and allocation");
         }finally{environment.setBoolean(null,previous);}
     }

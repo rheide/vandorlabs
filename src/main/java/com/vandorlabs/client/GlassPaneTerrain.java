@@ -460,7 +460,9 @@ public final class GlassPaneTerrain {
                 section.admissions.prune(current,GlassPaneTerrain::suppress,GlassPaneTerrain::installed);
                 section.admitted=current;section.admissionsDirty=false;admissionSweeps++;
                 section.frameWaiting.clear();
-                for(Entry entry:section.entries)if((section.publication.visible(entry.pos)||GlassPaneRetained.handles(entry.tile))
+                for(Entry entry:section.entries)if(installed(entry.tile)&&entry.pos.equals(entry.tile.getPos())
+                        &&world.getBlockState(entry.pos).getBlock() instanceof BlockProgrammableGlass
+                        &&(section.publication.visible(entry.pos)||GlassPaneRetained.handles(entry.tile))
                         &&!entry.tile.fluids.any()&&GlassFrameChunks.awaiting(entry.tile)
                         &&!ProgrammableGlassPasses.emptyOpaquePass(entry.tile,null))section.frameWaiting.add(entry.tile);
             }

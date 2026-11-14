@@ -186,9 +186,15 @@ final class GlassSurfaceGroups {
     /** Local contour edges are independent of rectangular artwork partitions. */
     static synchronized int frameMask(TileEntityProgrammableGlass tile){
         if(tile.frameAppearance.tile||!tile.isJoin())return 15;
-        World world=tile.getWorld();Cache cache=cache(world);cache.materials(world);
+        World world=tile.getWorld();if(world==null||tile.isInvalid())return 15;
+        Cache cache=cache(world);cache.materials(world);
         Integer old=cache.frameMasks.get(tile.getPos());if(old!=null)return old;
-        EnumFacing right=PanelJoins.facing(world.getBlockState(tile.getPos())).rotateY();
+        // Publication callbacks can outlive the native tile while its removal is queued.
+        // Refuse that owner without caching a contour for a replacement at the same position.
+        if(!world.isBlockLoaded(tile.getPos())||world.getTileEntity(tile.getPos())!=tile)return 15;
+        IBlockState state=world.getBlockState(tile.getPos());
+        if(!(state.getBlock() instanceof BlockProgrammableGlass)&&!(state.getBlock() instanceof BlockProgrammableWall))return 15;
+        EnumFacing right=PanelJoins.facing(state).rotateY();
         BlockPos p=tile.getPos();BlockPos[] next={p.offset(right.getOpposite()),p.offset(right),p.down(),p.up()};boolean[] joined=new boolean[4];int mask=0;
         cache.layoutDependencies.include(p);
         for(int i=0;i<4;i++){cache.layoutDependencies.include(next[i]);joined[i]=com.vandorlabs.blocks.TextureJoins.allows(tile,p,next[i])&&world.isBlockLoaded(next[i])&&compatible(tile,next[i],false,true);if(!joined[i])mask|=1<<i;}

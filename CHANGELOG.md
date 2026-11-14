@@ -61,6 +61,8 @@
 
 ### Stationary glass terrain and retained rendering (Forge 1.12.2)
 
+- Ignore removed or replaced Glass owners during delayed frame publication, preventing the client crash that tried to read panel facing from Air. Keep warmed contour cache reads allocation-free.
+
 - Render eligible stationary Programmable Glass in native translucent chunk buffers, with authored glimmer enabled by default and existing joined frame borders preserved.
 - Use one compensated physical sheet with opposite windings for native backface culling. Keep authored RGB, animation metadata, resource-pack priority and normal/specular companions.
 - Confirm actual installed pane records before retiring fallback drawing, and remove every settled pane-only tile from special-renderer admission. Handle partial/stale rebuilds, edits, resource reloads and vertex-format changes without steady-state owner scans.
