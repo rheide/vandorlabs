@@ -58,6 +58,8 @@ The [diagonal join design](docs/DIAGONAL_JOINS.md) explains the current stepped 
 
 ## What's in the mod
 
+- Module Rack (Forge 1.12.2): four individually selectable slots for animated Blank Modules, vertical end handles, and a recessed panel with per-slot populated indicators. See the [Module Rack guide](docs/module-rack.md).
+
 - **Structure**: programmable hull, padding, pipe, and vent finishes, wall
   panels, ribs, and cockpit glass. Shift-right-click a Programmable Diagonal
   Wall in creative mode to choose half/full width, half height, slope direction, and inside/outside fill. Programmable Stairs support the same optional face overrides as Block and Slab, a 1/2/4/8px step-size slider, and dialog-controlled Normal / Sideways orientation. Placement follows vanilla stairs; sideways mounts rotate their textures; matching slabs combine into a full block. Diagonal Portholes support joined openings in both tall and shallow arrangements.

@@ -592,6 +592,9 @@ tile.vandorlabs.large_gear_mount.name=Large Fixed Arm
 
 tile.vandorlabs.access_card_slot.name=Access Card Mount
 tile.vandorlabs.data_chip_slot.name=Data Chip Mount
+tile.vandorlabs.module_rack.name=Module Rack
+item.vandorlabs.blank_module.name=Blank Module
+message.vandorlabs.module_rack.inventory_full=Make room in your inventory to remove this module.
 
 tile.vandorlabs.redstone_transmitter_block.name=Redstone Transmitter Block
 tile.vandorlabs.redstone_receiver_block.name=Redstone Receiver Block

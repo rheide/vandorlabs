@@ -20,6 +20,13 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void moduleRackUpdated(com.vandorlabs.tiles.TileEntityModuleRack tile,
+            int previousMask, long[] previousSequences, boolean initial) {
+        com.vandorlabs.client.ModuleRackAnimation.updated(tile, previousMask, previousSequences, initial);
+    }
+    @Override public void moduleRackRemoved(com.vandorlabs.tiles.TileEntityModuleRack tile) {
+        com.vandorlabs.client.ModuleRackAnimation.removed(tile);
+    }
     @Override public double segmentedSelectionPose(com.vandorlabs.segmented.SegmentedDoorTile tile){net.minecraft.world.World physical=tile.getWorld();while(physical instanceof com.vandorlabs.vehicle.VehicleWorld)physical=((com.vandorlabs.vehicle.VehicleWorld)physical).parent;return physical.isRemote?com.vandorlabs.client.segmented.SegmentedDoorVisuals.pose(tile,1):super.segmentedSelectionPose(tile);}
     @Override public void segmentedAppearanceChanged(com.vandorlabs.segmented.SegmentedDoorTile tile){com.vandorlabs.client.SegmentedGateContexts.changed(tile);com.vandorlabs.client.segmented.SegmentedDoorChunks.changed(tile);}
     @Override public void segmentedGateMasks(com.vandorlabs.segmented.SegmentedDoorTile root,double pose,int[] out){if(!root.getWorld().isRemote){super.segmentedGateMasks(root,pose,out);return;}com.vandorlabs.client.SegmentedGateContexts.Prepared prepared=com.vandorlabs.client.SegmentedGateContexts.prepare(root);java.util.Arrays.fill(out,0);if(prepared!=null&&prepared.context!=null)com.vandorlabs.segmented.SegmentedDoorGateRays.masks(prepared.context,pose,prepared.leftPose(net.minecraft.client.Minecraft.getMinecraft().getRenderPartialTicks()),prepared.rightPose(net.minecraft.client.Minecraft.getMinecraft().getRenderPartialTicks()),prepared.rotation,out);}
@@ -115,6 +122,7 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void init(FMLInitializationEvent event) {
         super.init(event);
+        com.vandorlabs.client.ModuleRackAnimation.registerRenderer();
         net.minecraftforge.client.ClientCommandHandler.instance.registerCommand(new com.vandorlabs.client.CommandGlassProfile());
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ConnectedFluidRenderer.Installer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCockpit.class,new com.vandorlabs.client.TECockpit());

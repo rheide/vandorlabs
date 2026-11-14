@@ -2,6 +2,14 @@
 
 ## Unreleased — 2.10.0
 
+### Module Rack (Forge 1.12.2)
+
+- Add a four-slot Module Rack and three-dimensional Blank Module item. The darker compact housing has a one-pixel rim, a three-pixel right panel recessed by one pixel, and separate cyan/amber populated indicators for each bay.
+- Insert a module by clicking its intended slot or aligned button, with an eased slide into the rack. Empty-hand interaction retrieves that slot's item; saved contents retain their data and drop when the rack breaks.
+- Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Slot selection, indicators and insertion travel rotate together.
+- Render settled racks and modules in shared opaque chunk meshes. Use temporary client animation only during insertion, without ticking idle tiles or submitting a permanent tile renderer.
+- Include crafting recipes, model assets and focused geometry, inventory, animation and rendering checks. See the [Module Rack guide](docs/module-rack.md).
+
 ### Materials and connected artwork
 
 - Add thirteen Floor finishes and four Utility Door designs, resized to the existing material and Door artwork resolutions. Preserve prior texture indices and regenerate the browser, category collages and Dynmap data.

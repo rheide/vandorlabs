@@ -21498,6 +21498,14 @@ block:id=%survey_dish_core,state=*,patch0=0:frame_machine_0,patch1=0:frame_machi
 block:id=%constructor_part,state=*,patch0=0:frame_machine_0,patch1=0:frame_machine_1,patch2=0:frame_machine_2,patch3=0:frame_machine_3,patch4=0:frame_machine_4,patch5=0:frame_machine_5,patch6=0:frame_machine_6,patch7=0:frame_machine_7,patch8=0:frame_machine_8,patch9=0:frame_machine_9,patch10=0:frame_machine_10,patch11=0:frame_machine_11,patch12=0:frame_machine_12,patch13=0:frame_machine_13,patch14=0:frame_machine_14,patch15=0:frame_machine_15,patch16=0:frame_machine_16,patch17=0:frame_machine_17,patch18=0:frame_machine_18,patch19=0:frame_machine_19,patch20=0:frame_machine_20,patch21=0:frame_machine_21,patch22=0:frame_machine_22,patch23=0:frame_machine_23,patch24=0:frame_machine_24,patch25=0:frame_machine_25,patch26=0:frame_machine_26,patch27=0:frame_machine_27,patch28=0:frame_machine_28,patch29=0:frame_machine_29,patch30=0:frame_machine_30,patch31=0:frame_machine_31,patch32=0:frame_machine_32,patch33=0:frame_machine_33,patch34=0:frame_machine_34,patch35=0:frame_machine_35,patch36=0:frame_machine_36,patch37=0:frame_machine_37,transparency=TRANSPARENT
 # End Core machine maps
 
+# Module Rack: native model palette
+texture:id=module_rack_housing,filename=assets/vandorlabs/textures/blocks/module_rack/housing.png,xcount=1,ycount=1
+texture:id=module_rack_module,filename=assets/vandorlabs/textures/blocks/module_rack/module.png,xcount=1,ycount=1
+texture:id=module_rack_trim,filename=assets/vandorlabs/textures/blocks/module_rack/trim.png,xcount=1,ycount=1
+texture:id=module_rack_dark,filename=assets/vandorlabs/textures/blocks/module_rack/dark.png,xcount=1,ycount=1
+texture:id=module_rack_indicators,filename=assets/vandorlabs/textures/blocks/module_rack/indicators.png,xcount=1,ycount=1
+texture:id=module_rack_contacts,filename=assets/vandorlabs/textures/blocks/module_rack/contacts.png,xcount=1,ycount=1
+block:id=%module_rack,state=*,patch0=0:module_rack_housing,patch1=0:module_rack_module,patch2=0:module_rack_trim,patch3=0:module_rack_dark,patch4=0:module_rack_indicators,patch5=0:module_rack_contacts,transparency=SEMITRANSPARENT
 
 # Generated tile-aware material palette
 texture:id=housing_0,filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png,xcount=1,ycount=1

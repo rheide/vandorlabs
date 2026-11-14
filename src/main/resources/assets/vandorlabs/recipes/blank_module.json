@@ -1,0 +1,10 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": ["III", "GRG"],
+  "key": {
+    "I": {"item": "minecraft:iron_ingot"},
+    "G": {"item": "minecraft:gold_nugget"},
+    "R": {"item": "minecraft:redstone"}
+  },
+  "result": {"item": "vandorlabs:blank_module"}
+}

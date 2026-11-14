@@ -1,0 +1,84 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "housing": "vandorlabs:blocks/module_rack/housing",
+    "module": "vandorlabs:blocks/module_rack/module",
+    "trim": "vandorlabs:blocks/module_rack/trim",
+    "dark": "vandorlabs:blocks/module_rack/dark",
+    "indicators": "vandorlabs:blocks/module_rack/indicators",
+    "contacts": "vandorlabs:blocks/module_rack/contacts",
+    "particle": "vandorlabs:blocks/module_rack/housing"
+  },
+  "elements": [
+    {
+      "name": "slot_3_indicator_off",
+      "from": [
+        13.5,
+        2.125,
+        15.125
+      ],
+      "to": [
+        15.5,
+        3.375,
+        15.25
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "up": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "north": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "west": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "east": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        }
+      }
+    }
+  ]
+}

@@ -12,7 +12,7 @@ unset VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY VANDOR_LABS_DENSE_RENDER_CHECK
 unset VANDOR_LABS_VEHICLE_SAFE_PARK_CHECKS_ONLY VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY VANDOR_LABS_ARTWORK27_CHECKS_ONLY
 unset VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY VANDOR_LABS_UTILITY26_CHECKS_ONLY VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY
 
-unset VANDOR_LABS_CANOPY_ITEM_SAFETY_CHECKS_ONLY VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
+unset VANDOR_LABS_CANOPY_ITEMS_ONLY VANDOR_LABS_CANOPY_ITEM_SAFETY_CHECKS_ONLY VANDOR_LABS_CANOPY_CHECKS_ONLY VANDOR_LABS_ARMOR_DUPLIFIER_ONLY VANDOR_LABS_ARMOR_TOOLS_ONLY VANDOR_LABS_ARMOR_CHECKS_ONLY VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY VANDOR_LABS_CONTROL_ICONS_ONLY VANDOR_LABS_REDSTONE_SCREEN_CHECKS_ONLY VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY VANDOR_LABS_REDSTONE_SCREEN_FOCUSED VANDOR_LABS_REPRO_SHOT_PREFIX VANDOR_LABS_TRAPDOOR_CHECKS_ONLY VANDOR_LABS_STORAGE_CHECKS_ONLY VANDOR_LABS_DIALOG_CHECKS_ONLY
 
 unset VANDOR_LABS_CHANNEL_SOURCE_INDEX_CHECKS_ONLY VANDOR_LABS_MATERIAL_SPRITE_CHECKS_ONLY VANDOR_LABS_FILESYSTEM_DISCOVERY_CHECKS_ONLY VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY VANDOR_LABS_TRIGGER_STATE_CHECKS_ONLY
 
@@ -21,6 +21,7 @@ unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
 unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
 
 unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY
+unset VANDOR_LABS_MODULE_RACK_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 unset VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY
@@ -104,6 +105,9 @@ case "${1:-}" in
         elif [ "$TARGET" = screen-chips ]; then
             PREFIX=screen_chip_
             export VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY=true
+        elif [ "$TARGET" = module-rack ]; then
+            PREFIX=module_rack_
+            export VANDOR_LABS_MODULE_RACK_CHECKS_ONLY=true
         elif [ "$TARGET" = vehicle-design ]; then
             PREFIX=vehicle_design_
             export VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY=true
@@ -257,6 +261,9 @@ case "${1:-}" in
         elif [ "$TARGET" = pilot-seat ]; then
             PREFIX=pilot_seat_
             export VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopy-items ]; then
+            PREFIX=canopy_
+            export VANDOR_LABS_CANOPY_CHECKS_ONLY=true VANDOR_LABS_CANOPY_ITEMS_ONLY=true
         elif [ "$TARGET" = canopy-item-placement ]; then
             PREFIX=canopy_item_
             export VANDOR_LABS_CANOPY_CHECKS_ONLY=true VANDOR_LABS_CANOPY_ITEM_SAFETY_CHECKS_ONLY=true
@@ -351,7 +358,7 @@ fi
 TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$RUN_OUT/game"}
 export VANDOR_LABS_TEST_GAME_DIR="$TEST_RUNTIME_GAME"
 mkdir -p "$TEST_RUNTIME_GAME/mods"
-if [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ] || [ "${VANDOR_LABS_SHAPE_TEXTURE_CHECKS:-false}" = true ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
+if [ "${TARGET:-}" = door-appearance ] || [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ] || [ "${VANDOR_LABS_SHAPE_TEXTURE_CHECKS:-false}" = true ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
 rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar
@@ -586,6 +593,11 @@ PYIMAGE
     if [ "$TARGET" = screen-chips ]; then
         grep -q "screen-chips PASS" "$RUN_OUT/client.log"
         echo "Screen chip live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = module-rack ]; then
+        grep -q "module-rack PASS" "$RUN_OUT/client.log"
+        echo "Module Rack live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = vehicle-design ]; then
@@ -906,6 +918,11 @@ PYIMAGE
         grep -q 'large-canopy-live PASS' "$RUN_OUT/client.log"
         grep -q 'canopy-opacity-render PASS' "$RUN_OUT/client.log"
         echo "Live large canopy and material opacity checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = canopy-items ]; then
+        grep -q 'canopy-item-presentation PASS' "$RUN_OUT/client.log"
+        echo "Canopy item presentation checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = canopy-item-placement ]; then

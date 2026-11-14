@@ -9,6 +9,9 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    public void moduleRackUpdated(com.vandorlabs.tiles.TileEntityModuleRack tile,
+            int previousMask, long[] previousSequences, boolean initial) { }
+    public void moduleRackRemoved(com.vandorlabs.tiles.TileEntityModuleRack tile) { }
     public double segmentedSelectionPose(com.vandorlabs.segmented.SegmentedDoorTile tile){return tile.pose(0);}
     public void segmentedAppearanceChanged(com.vandorlabs.segmented.SegmentedDoorTile tile){}
     public void segmentedGateMasks(com.vandorlabs.segmented.SegmentedDoorTile root,double pose,int[] out){com.vandorlabs.segmented.SegmentedDoorGateRays.masks(root,pose,out);}

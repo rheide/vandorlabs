@@ -1,0 +1,442 @@
+{
+  "ambientocclusion": false,
+  "textures": {
+    "housing": "vandorlabs:blocks/module_rack/housing",
+    "module": "vandorlabs:blocks/module_rack/module",
+    "trim": "vandorlabs:blocks/module_rack/trim",
+    "dark": "vandorlabs:blocks/module_rack/dark",
+    "indicators": "vandorlabs:blocks/module_rack/indicators",
+    "contacts": "vandorlabs:blocks/module_rack/contacts",
+    "particle": "vandorlabs:blocks/module_rack/housing"
+  },
+  "elements": [
+    {
+      "name": "seated_slot_seal",
+      "from": [
+        1,
+        4.75,
+        15
+      ],
+      "to": [
+        13,
+        7.75,
+        15
+      ],
+      "shade": true,
+      "faces": {
+        "south": {
+          "texture": "#dark"
+        }
+      }
+    },
+    {
+      "name": "cassette_body",
+      "from": [
+        1.25,
+        4.75,
+        15
+      ],
+      "to": [
+        12.75,
+        7.75,
+        15.25
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "south": {
+          "texture": "#module",
+          "uv": [
+            0,
+            13,
+            11.5,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            16,
+            2
+          ]
+        }
+      }
+    },
+    {
+      "name": "vertical_handle",
+      "from": [
+        1.5,
+        5.125,
+        15.75
+      ],
+      "to": [
+        2.0,
+        7.375,
+        16
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "handle_standoff",
+      "from": [
+        1.5,
+        5.125,
+        15.25
+      ],
+      "to": [
+        2.0,
+        5.5,
+        15.75
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "handle_standoff",
+      "from": [
+        1.5,
+        7.0,
+        15.25
+      ],
+      "to": [
+        2.0,
+        7.375,
+        15.75
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "vertical_handle",
+      "from": [
+        12,
+        5.125,
+        15.75
+      ],
+      "to": [
+        12.5,
+        7.375,
+        16
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            4,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "handle_standoff",
+      "from": [
+        12,
+        5.125,
+        15.25
+      ],
+      "to": [
+        12.5,
+        5.5,
+        15.75
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "handle_standoff",
+      "from": [
+        12,
+        7.0,
+        15.25
+      ],
+      "to": [
+        12.5,
+        7.375,
+        15.75
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "up": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "west": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        },
+        "east": {
+          "texture": "#trim",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        }
+      }
+    }
+  ]
+}

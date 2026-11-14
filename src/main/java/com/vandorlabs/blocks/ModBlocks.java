@@ -229,6 +229,7 @@ public class ModBlocks {
         add(new BlockWirelessRedstone(true));add(new BlockWirelessRedstone(false));
         add(new BlockTokenSlot("access_card_slot",false));
         add(new BlockTokenSlot("data_chip_slot",true));
+        add(new BlockModuleRack());
         VEHICLE_CONTROLLER = add(new BlockVehicleController());
         for(String id:com.vandorlabs.cockpit.CockpitData.IDS)if(id.equals("yoke_screen"))add(new BlockCockpitPeripheral(id));else add(new BlockCockpit(id));
         addNoItem(new BlockCockpitPart());

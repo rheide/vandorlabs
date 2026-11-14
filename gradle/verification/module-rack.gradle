@@ -1,0 +1,43 @@
+task testModuleRack(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify targeted rack interactions, item ownership, save/load, compact visual packets and idle costs'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ModuleRackChecks'
+    workingDir = file("$buildDir/module-rack-checks")
+    doFirst { workingDir.mkdirs() }
+}
+
+task testModuleRackGeometry(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify all rack facings, bay and button boundaries without game classes'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.rack.ModuleRackGeometryTest'
+}
+
+task testModuleRackAssets(type: Exec) {
+    group = 'verification'
+    description = 'Verify generated rack assets and authored fit constraints'
+    commandLine project.findProperty('pythonExecutable') ?: (
+            System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3'),
+            'tools/test_module_rack.py'
+}
+
+task testModuleRackMotion(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify insertion motion endpoints, ordering and duplicate/load event suppression'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.rack.ModuleRackMotionTest'
+}
+
+task testModuleRackDynmap(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify cached rack map geometry for every mounting face and occupied-slot mask'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + configurations.compileOnly + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.dynmap.ModuleRackMapChecks'
+}
+
+check.dependsOn testModuleRack, testModuleRackGeometry, testModuleRackMotion, testModuleRackAssets, testModuleRackDynmap

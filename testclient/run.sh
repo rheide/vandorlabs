@@ -50,6 +50,7 @@ CAPTURE_JVM+=("-Dvandorlabs.rampAxisChecksOnly=${VANDOR_LABS_RAMP_AXIS_CHECKS_ON
 CAPTURE_JVM+=("-Dvandorlabs.rftoolsBuilderChecksOnly=${VANDOR_LABS_RFTOOLS_BUILDER_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.furnitureChecksOnly=${VANDOR_LABS_FURNITURE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.screenChipChecksOnly=${VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.moduleRackChecksOnly=${VANDOR_LABS_MODULE_RACK_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleSafeParkChecksOnly=${VANDOR_LABS_VEHICLE_SAFE_PARK_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleDesignChecksOnly=${VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleRenderCostChecksOnly=${VANDOR_LABS_VEHICLE_RENDER_COST_CHECKS_ONLY:-false}")
@@ -115,6 +116,7 @@ exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render
   -Dvandorlabs.hoverFixture="${VANDOR_LABS_HOVER_FIXTURE:-}" \
   -Dvandorlabs.creativeCatalogChecksOnly="${VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY:-false}" \
   -Dvandorlabs.canopyChecksOnly="${VANDOR_LABS_CANOPY_CHECKS_ONLY:-false}" \
+  -Dvandorlabs.canopyItemsOnly="${VANDOR_LABS_CANOPY_ITEMS_ONLY:-false}" \
   -Dvandorlabs.largeCanopyChecksOnly="${VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY:-false}" \
   -Dvandorlabs.canopyGlassOrderChecksOnly="${VANDOR_LABS_CANOPY_GLASS_ORDER_CHECKS_ONLY:-false}" \
   -Dvandorlabs.canopyGlassCostChecksOnly="${VANDOR_LABS_CANOPY_GLASS_COST_CHECKS_ONLY:-false}" \

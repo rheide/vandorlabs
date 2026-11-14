@@ -47,3 +47,15 @@ for the supported paths and diagnostic command.
 Native arm-endpoint attachment and release retain their original physical before
 images while renewing the receiving vehicle association. Interrupted transfers
 recover through their durable journals, including copied capability data.
+
+## Module Rack
+
+The new **Module Rack** has four horizontal slots for **Blank Modules**. Click a specific slot to insert a module with a sliding animation, or use an empty hand to retrieve it. The matching row of cyan/amber buttons lights when occupied.
+
+Racks mount on all six faces, including floors and ceilings. Their controls and insertion direction rotate with the front.
+
+Its darker graphite housing follows the compact equipment design: a one-pixel rim, three-pixel right panel recessed by one pixel, and paired vertical module handles. The right panel contains slot controls without an Access Card or Chip Mount.
+
+Seated modules and the rack share Minecraft's ordinary chunk mesh. Only active insertions need a temporary renderer; idle racks have neither ticking tiles nor permanent tile-entity rendering.
+
+See [Module Rack usage and crafting](../module-rack.md).

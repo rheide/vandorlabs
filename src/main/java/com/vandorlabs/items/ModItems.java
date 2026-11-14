@@ -17,6 +17,10 @@ public final class ModItems {
     public static final Item REDSTONE_TRANSMITTER = new ItemRedstoneTransmitter();
     public static final Item ACCESS_CARD = new ItemDesignToken("access_card");
     public static final Item DATA_CHIP = new ItemDesignToken("data_chip");
+    public static final Item BLANK_MODULE = new Item()
+            .setRegistryName(VandorLabs.MODID, "blank_module")
+            .setUnlocalizedName("vandorlabs.blank_module")
+            .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
     public static final Item PROGRAMMABLE_MATTER_INGOT = new Item()
             .setRegistryName(VandorLabs.MODID, "programmable_matter_ingot")
             .setUnlocalizedName("vandorlabs.programmable_matter_ingot")
@@ -41,6 +45,7 @@ public final class ModItems {
         event.getRegistry().register(REDSTONE_TRANSMITTER);
         event.getRegistry().register(ACCESS_CARD);
         event.getRegistry().register(DATA_CHIP);
+        event.getRegistry().register(BLANK_MODULE);
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
         event.getRegistry().register(INFUSER_CORE);
@@ -56,6 +61,8 @@ public final class ModItems {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void registerModels(ModelRegistryEvent event) {
+        ModelLoader.setCustomModelResourceLocation(BLANK_MODULE, 0,
+                new ModelResourceLocation(BLANK_MODULE.getRegistryName(), "inventory"));
         for(int i=0;i<4;i++)ModelLoader.setCustomModelResourceLocation(REDSTONE_TRANSMITTER,i,new ModelResourceLocation(new ResourceLocation(VandorLabs.MODID,"redstone_transmitter_"+ItemRedstoneTransmitter.VARIANTS[i]),"inventory"));
         for(Item token:new Item[]{ACCESS_CARD,DATA_CHIP})for(int i=0;i<ItemDesignToken.DESIGNS.length;i++)
             ModelLoader.setCustomModelResourceLocation(token,i,new ModelResourceLocation(

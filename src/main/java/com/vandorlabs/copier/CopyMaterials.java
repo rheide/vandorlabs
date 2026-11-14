@@ -77,6 +77,9 @@ public final class CopyMaterials {
     }
     private static void inventory(TileEntity tile,List<Need> needs){
         if(tile==null)return;
+        // Module racks deliberately expose no hopper inventory. Their physical
+        // modules still have to be paid for, including each exact item's NBT.
+        if(tile instanceof TileEntityModuleRack){for(int slot=0;slot<com.vandorlabs.rack.ModuleRackGeometry.SLOTS;slot++){ItemStack item=((TileEntityModuleRack)tile).getStackInSlot(slot);add(needs,item,item.getCount());}return;}
         if(tile.getClass().getName().equals("mekanism.common.tile.TileEntityBin"))try{long count=((Number)tile.getClass().getMethod("getItemCount").invoke(tile)).longValue();if(count<0)throw new IllegalArgumentException("Invalid stored bin count");ItemStack type=(ItemStack)tile.getClass().getField("itemType").get(tile);if(count>0&&type.isEmpty())throw new IllegalArgumentException("Stored bin items cannot be identified");add(needs,type,count);return;}catch(ReflectiveOperationException unsupported){throw new IllegalArgumentException("Cannot account for the bin inventory exactly");}
         List<ItemStack> foreign=VehicleForeignCompat.inventory(tile);if(foreign!=null){for(ItemStack item:foreign)add(needs,item,item.getCount());return;}
         if(tile instanceof IInventory){IInventory inventory=(IInventory)tile;int slots=inventory.getSizeInventory();if(slots<0||slots>8192)throw new IllegalArgumentException("Inventory slot count exceeds the copy limit");for(int slot=0;slot<slots;slot++){ItemStack item=inventory.getStackInSlot(slot);add(needs,item,item.getCount());}}

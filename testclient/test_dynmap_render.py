@@ -24,7 +24,7 @@ def validate_render(output):
     labels=json.loads((output/'fixtures.json').read_text())
     validate_fixture_matrix(labels)
     text=(output/'render.log').read_text(errors='replace')
-    if text.count('Block placed')<len(labels)+4:raise AssertionError('Incomplete block fixture')
+    if text.count('Block placed')<len(labels)+(0 if all(v['block']=='module_rack' for v in labels) else 4):raise AssertionError('Incomplete block fixture')
     files=[p for p in (output/'dynmap/web/tiles/world').rglob('*.png') if 'fixture' in str(p)]
     if not files:raise AssertionError('Dynmap produced no fixture PNG tiles')
     richest=0
@@ -59,7 +59,7 @@ def place_utility_doors(command,labels,jar):
         entries=json.loads(archive.read('assets/vandorlabs/data/unified_textures.json'))
         legacy=len(json.loads(archive.read('assets/vandorlabs/data/dynmap_material_aspects.json')))-len(entries)
     utilities=[(legacy+i,e) for i,e in enumerate(entries) if e['id'].startswith('utility_door_')]
-    assert len(utilities)==12,'Incomplete Utility Door map corpus'
+    assert len(utilities)==16,'Incomplete Utility Door map corpus'
     for i,(choice,entry) in enumerate(utilities):
         x,y,z=30+3*i,12,-8
         command(f'setblock {x} {y} {z} vandorlabs:programmable_door facing=south,half=lower,hinge=left,open=false replace {{SpaceDesign:2,SpaceFramed:1b,DoorFaceTexture:{choice}}}')
@@ -194,9 +194,24 @@ def place_segmented_supplied(command, labels, jar):
                 labels.append(dict(x=x,y=y,z=z,block='segmented_door',facing='north',opened=False,row=row,supplied=name,choice=selected))
 
 
+def place_module_racks(command, labels):
+    """All native facing/mask combinations from saved module item ownership."""
+    for row, facing in enumerate(('north', 'east', 'south', 'west', 'up', 'down')):
+        for mask in range(16):
+            x, y, z = -8 + 3 * mask, 12, 4 + 3 * row
+            items = ','.join('{Slot:%db,id:"vandorlabs:blank_module",Count:1b,tag:{RackMapSlot:%d}}' % (slot, slot)
+                             for slot in range(4) if mask & (1 << slot))
+            command(f'setblock {x} {y} {z} vandorlabs:module_rack facing={facing} replace {{Items:[{items}]}}')
+            labels.append(dict(x=x, y=y, z=z, block='module_rack', facing=facing, mask=mask))
+
+
 def validate_fixture_matrix(labels):
     """Fail before launching a map if any authored group or drive state is absent."""
     from collections import Counter
+    if labels and all(label['block'] == 'module_rack' for label in labels):
+        assert {(v['facing'], v['mask']) for v in labels} == {(f, m) for f in ('north','east','south','west','up','down') for m in range(16)}, 'Module Rack facing/mask coverage missing'
+        assert len(labels) == 96 and len({(v['x'],v['y'],v['z']) for v in labels}) == 96, 'Overlapping rack fixtures'
+        return
     families=('rocket_thruster','ion_drive','plasma_vent','impulse_engine')
     groups=Counter((label['block'],label.get('facing'),label.get('joined_size'))
                    for label in labels if label.get('joined'))
@@ -223,6 +238,7 @@ def main():
     parser.add_argument('--dynmap',required=True,type=Path)
     parser.add_argument('--jar',required=True,type=Path)
     parser.add_argument('--java',default='java')
+    parser.add_argument('--focus',choices=('module-rack',),help='Only the selected changed block family')
     parser.add_argument('--mod',action='append',default=[],type=Path,help='Additional installed compatibility JARs')
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
@@ -278,27 +294,30 @@ def run_fixture(args,root,output,artifact):
                 else:
                     command('fill -34 11 -2 64 11 64 minecraft:stone')
                     labels=[]
-                    for i,facing in enumerate(('north','east','south','west')):
-                        x=i*5
-                        for z,block,properties,tag in (
-                            (0,'programmable_slab','half=bottom', '{housingTexture:1}'),
-                            (3,'programmable_stairs','half=bottom,shape=straight','{housingTexture:17,HousingTextureVersion:1,StairTread:4}'),
-                            (6,'programmable_diagonal_wall','inverted=false,depth=0','{housingTexture:1,DiagonalFullWidth:1b,DiagonalFill:3}'),
-                            (9,'programmable_wall','inverted=false,depth=0','{housingTexture:3}'),
-                            (12,'programmable_door','half=lower,open=false','{SpaceDesign:2,SpaceFramed:1b}'),
-                            (16,'regular_canopy_glass','', '{CanopyShade:1,CanopyTint:1}'),
-                            (20,'programmable_slab','half=top','{housingTexture:84,HousingTextureVersion:1}'),
-                            (23,'programmable_diagonal_wall','inverted=true,depth=0','{housingTexture:1,DiagonalHalfHeight:1b,DiagonalFill:3}')):
-                            state='facing='+facing+(','+properties if properties else '')
-                            command(f'setblock {x} 12 {z} vandorlabs:{block} {state} replace {tag}')
-                            if block=='programmable_door':command(f'setblock {x} 13 {z} vandorlabs:{block} half=upper,hinge=left')
-                            labels.append({'x':x,'y':12,'z':z,'block':block,'facing':facing})
-                    place_utility_models(command,labels)
-                    place_frame_machines(command,labels,root)
-                    place_material_finishes(command,labels,args.jar)
-                    place_utility_doors(command,labels,args.jar)
-                    place_segmented_doors(command,labels)
-                    place_segmented_supplied(command,labels,args.jar)
+                    if args.focus == 'module-rack':
+                        place_module_racks(command, labels)
+                    else:
+                        for i,facing in enumerate(('north','east','south','west')):
+                            x=i*5
+                            for z,block,properties,tag in (
+                                (0,'programmable_slab','half=bottom', '{housingTexture:1}'),
+                                (3,'programmable_stairs','half=bottom,shape=straight','{housingTexture:17,HousingTextureVersion:1,StairTread:4}'),
+                                (6,'programmable_diagonal_wall','inverted=false,depth=0','{housingTexture:1,DiagonalFullWidth:1b,DiagonalFill:3}'),
+                                (9,'programmable_wall','inverted=false,depth=0','{housingTexture:3}'),
+                                (12,'programmable_door','half=lower,open=false','{SpaceDesign:2,SpaceFramed:1b}'),
+                                (16,'regular_canopy_glass','', '{CanopyShade:1,CanopyTint:1}'),
+                                (20,'programmable_slab','half=top','{housingTexture:84,HousingTextureVersion:1}'),
+                                (23,'programmable_diagonal_wall','inverted=true,depth=0','{housingTexture:1,DiagonalHalfHeight:1b,DiagonalFill:3}')):
+                                state='facing='+facing+(','+properties if properties else '')
+                                command(f'setblock {x} 12 {z} vandorlabs:{block} {state} replace {tag}')
+                                if block=='programmable_door':command(f'setblock {x} 13 {z} vandorlabs:{block} half=upper,hinge=left')
+                                labels.append({'x':x,'y':12,'z':z,'block':block,'facing':facing})
+                        place_utility_models(command,labels)
+                        place_frame_machines(command,labels,root)
+                        place_material_finishes(command,labels,args.jar)
+                        place_utility_doors(command,labels,args.jar)
+                        place_segmented_doors(command,labels)
+                        place_segmented_supplied(command,labels,args.jar)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')
                     content=logpath.read_text(errors='replace')

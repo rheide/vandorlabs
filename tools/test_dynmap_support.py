@@ -53,7 +53,8 @@ def main():
             ("programmable_diagonal_trapdoor", "ProgrammableDiagonalTrapdoorRenderer"),
             ("programmable_door", "ProgrammableDoorRenderer"),
             ("large_programmable_door", "LargeProgrammableDoorRenderer"),
-            ("controlled_ramp", "ControlledRampRenderer")):
+            ("controlled_ramp", "ControlledRampRenderer"),
+            ("module_rack", "ModuleRackRenderer")):
         if (name, "*") not in custom or not re.search(
                 r"^customblock:id=%%%s,state=\*,class=com\.vandorlabs\.dynmap\.%s$" %
                 (name, renderer), model_path.read_text(), re.MULTILINE):
@@ -67,7 +68,7 @@ def main():
         "programmable_block", "programmable_light", "programmable_trigger_block",
         "programmable_slab", "programmable_wall", "programmable_porthole_wall",
         "programmable_porthole_block", "programmable_diagonal_wall",
-        "programmable_stairs", "controlled_ramp",
+        "programmable_stairs", "controlled_ramp", "module_rack",
     )
     for name in dynamic:
         variants = json.loads((ASSETS / "blockstates" / (name + ".json")).read_text())["variants"]
@@ -127,7 +128,7 @@ def main():
         "programmable_console", "programmable_diagonal_screen",
         "programmable_half_input", "programmable_half_console",
         "programmable_input", "programmable_ramp", "industrial_table",
-        "compact_track", "armoured_track", "bogie_track",
+        "compact_track", "armoured_track", "bogie_track", "module_rack",
     })
     expected.update(spec['block'] for spec in json.loads((ASSETS/'data/frame_machines.json').read_text()))
     expected.add('constructor_part')

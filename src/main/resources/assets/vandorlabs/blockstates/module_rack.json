@@ -1,0 +1,34 @@
+{
+  "variants": {
+    "facing=south": {
+      "model": "vandorlabs:module_rack/shell",
+      "x": 0,
+      "y": 0
+    },
+    "facing=west": {
+      "model": "vandorlabs:module_rack/shell",
+      "x": 0,
+      "y": 90
+    },
+    "facing=north": {
+      "model": "vandorlabs:module_rack/shell",
+      "x": 0,
+      "y": 180
+    },
+    "facing=east": {
+      "model": "vandorlabs:module_rack/shell",
+      "x": 0,
+      "y": 270
+    },
+    "facing=up": {
+      "model": "vandorlabs:module_rack/shell",
+      "x": 90,
+      "y": 0
+    },
+    "facing=down": {
+      "model": "vandorlabs:module_rack/shell",
+      "x": 270,
+      "y": 0
+    }
+  }
+}

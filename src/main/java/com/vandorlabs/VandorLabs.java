@@ -24,7 +24,7 @@ public class VandorLabs {
     public static final String NAME = "Vandor Labs";
     public static final String VERSION = "2.10.0";
     /** Bump on every test build so logs identify the exact binary. */
-    public static final String BUILD_ID = "t251";
+    public static final String BUILD_ID = "t253-module-rack";
 
     @Mod.Instance(MODID)
     public static VandorLabs instance;
@@ -48,6 +48,7 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableSurface.class,"vandorlabs:turntable_surface");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWirelessRedstone.class,"vandorlabs:wireless_redstone");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTokenSlot.class,"vandorlabs:token_slot");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityModuleRack.class,"vandorlabs:module_rack");
         GameRegistry.registerTileEntity(com.vandorlabs.programmer.ProgrammerTile.class,"vandorlabs:data_chip_programmer");
         GameRegistry.registerTileEntity(com.vandorlabs.plate.PlateTile.class,"vandorlabs:programmable_pressure_plate");
         GameRegistry.registerTileEntity(com.vandorlabs.coupler.TileCoupler.class,new net.minecraft.util.ResourceLocation(MODID,"square_coupler"));

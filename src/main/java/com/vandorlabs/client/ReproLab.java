@@ -585,6 +585,7 @@ public class ReproLab {
         if(LargeVehicleBenchmark.enabled()){LargeVehicleBenchmark.render(event);return;}
         if(WorldSceneBenchmark.enabled()){WorldSceneBenchmark.render(event);return;}
         if(event.phase==TickEvent.Phase.END && enabled)renderedFrames++;
+        if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.moduleRackChecksOnly"))ModuleRackLiveChecks.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.taxiVisibilityChecksOnly"))try{TaxiVisibilityClientChecks.captureFrame(Minecraft.getMinecraft());}catch(Exception failure){throw new IllegalStateException("Taxi natural main-frame capture",failure);}
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.joinedArmDocs"))JoinedArmDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.machineBuildDocsOnly"))FrameMachineDocumentation.render(Minecraft.getMinecraft());
@@ -646,6 +647,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.moduleRackChecksOnly")){try{if(ModuleRackLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Module Rack live checks",failure);}return;}
         if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY"))){try{if(AppearanceCompatibilityLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Appearance compatibility focus",failure);}return;}
         if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_CANOPY_ITEM_SAFETY_CHECKS_ONLY"))){try{CanopyItemSafetyClientChecks.tick(mc);}catch(Exception failure){failure.printStackTrace();mc.shutdown();}return;}
         if(Boolean.getBoolean("vandorlabs.shapeDialogChecksOnly")){try{if(ShapeDialogChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Shape dialog focus",failure);}return;}
