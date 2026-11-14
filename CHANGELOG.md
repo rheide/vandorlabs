@@ -31,7 +31,6 @@
 
 - Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.
 
-
 ### Arms and landing gear (Forge 1.12.2)
 
 - Add a separate Foot direction setting to formed Ski and Wheel assemblies, including sideways mounts and Large Wheels. Preserve the physical source footprint separately from the chosen visual orientation, configured items and copied settings.
@@ -44,14 +43,15 @@
 - Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge Energy; Matter accepts ordinary items.
 - Add dedicated General/Redstone configuration, per-face activity artwork and settings-only Duplifier copying. Mining retains resources in one configured block item.
 
-### Native stationary glass rendering (Forge 1.12.2)
+### Stationary glass terrain and retained rendering (Forge 1.12.2)
 
 - Render eligible stationary Programmable Glass in native translucent chunk buffers, with authored glimmer enabled by default and existing joined frame borders preserved.
 - Use one compensated physical sheet with opposite windings for native backface culling. Keep authored RGB, animation metadata, resource-pack priority and normal/specular companions.
 - Confirm actual installed pane records before retiring fallback drawing, and remove every settled pane-only tile from special-renderer admission. Handle partial/stale rebuilds, edits, resource reloads and vertex-format changes without steady-state owner scans.
-- Use native terrain sorting, lighting and shader inputs. Stationary panes remain eligible with emissive frames; native cutout frames retain fullbright lighting, blended emissive frames keep a separate frame draw, and empty joined interiors leave tile rendering.
+- Use native terrain sorting, lighting and shader inputs. Stationary panes remain eligible with emissive frames; native cutout frames retain fullbright lighting, partially transparent emissive frames use independent retained groups, and empty joined interiors leave tile rendering.
 - Retain grouped fallback VBOs for stationary flat panes, including faint palette artwork and static custom atlas inserts. Share each coplanar section/material group across main and shadow passes, preserve holes and per-cell light/UV data, and remove nonanchor pane-only tiles from renderer admission.
 - Withdraw native pane snapshots through a completed replacement-build fence when an extension cannot expose installed vertex records, then hand ownership to retained groups. Keep explicit frame-only shadows on an optimized retained main-view path.
+- Retain stationary Porthole housing and pane geometry in independent groups, covering flat, full-depth, diagonal, bent and T-bar apertures. Preserve authored material, opacity, glimmer, per-owner light and moving/fluid/animated fallbacks; retire buffers when their owner, format, resources or world changes.
 - Add actual chunk-builder/publication, emissive-frame, retained-buffer and framebuffer regressions. `/vandorglassprofile` records frame intervals, optional asynchronous GPU timings and ownership/rejection counters without changing the camera or graphics settings. See [stationary glass rendering](docs/stationary-glass-rendering.md) for behavior, settings and validation limits.
 
 ### Rendering and client-server performance (Forge 1.12.2)
