@@ -59,9 +59,9 @@ def main():
         for x, y in [(image.width-1, 0), (0, image.height-1), (image.width-1, image.height-1)]:
             if image.getpixel((x, y)) != content.getpixel((min(x, content.width-1), min(y, content.height-1))):
                 raise AssertionError('Door square padding must extend edge texels ' + entry['id'])
-    if models != 1924 or len(data['textures']) != 80 or set(reference) != {item['original'] for item in data['textures'] if not item['original'].startswith('vandorlabs:blocks/utility_doors/')}:
+    if models != 1924 or len(data['textures']) != 84 or set(reference) != {item['original'] for item in data['textures'] if not item['original'].startswith('vandorlabs:blocks/utility_doors/')}:
         raise AssertionError('Incomplete current authored door resource inventory')
-    print('Authored door resource projection PASS models=' + str(models) + ' sprites=80 original68 frozen Forge +12 exact supplied RGBA, exact inherited geometry/materials and padded content ratios; runtime baking separate')
+    print('Authored door resource projection PASS models=' + str(models) + ' sprites=84 original68 frozen Forge +16 exact supplied RGBA, exact inherited geometry/materials and padded content ratios; runtime baking separate')
 
 
 if __name__ == '__main__':

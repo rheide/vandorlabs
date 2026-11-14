@@ -8,6 +8,7 @@ public final class DuplifierApplyOptions {
     public static final String TAG = "DuplifierApplyMask";
     private static final String COUNT_TAG = "DuplifierApplyOptionCount";
     public static final String CONNECTED_TAG = "DuplifierConnected";
+    public static final String RESPECT_JOINS_TAG = "DuplifierRespectJoins";
     public static final String IGNORE_DIRECTION_TAG = "DuplifierIgnoreDirectionality";
     public static final String[] PAGES = DuplifierOptionCatalog.pages();
 
@@ -46,6 +47,9 @@ public final class DuplifierApplyOptions {
     public static void setConnected(ItemStack tool, boolean connected) {
         tool.setTagInfo(CONNECTED_TAG, new net.minecraft.nbt.NBTTagByte((byte)(connected ? 1 : 0)));
     }
+
+    public static boolean respectJoins(ItemStack tool){NBTTagCompound root=tool.getTagCompound();return root!=null&&root.getBoolean(RESPECT_JOINS_TAG);}
+    public static void setRespectJoins(ItemStack tool,boolean respect){tool.setTagInfo(RESPECT_JOINS_TAG,new net.minecraft.nbt.NBTTagByte((byte)(respect?1:0)));}
 
     public static boolean ignoreDirectionality(ItemStack tool) {
         NBTTagCompound root=tool.getTagCompound();

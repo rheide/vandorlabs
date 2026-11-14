@@ -20,7 +20,7 @@ public final class DiagonalGlassDialog {
   for(int i=0;i<3;i++)rows.add(plain.get(i));int x=p.controlsX,y=p.top+126,w=ProgrammableDialogLayout.CONTROLS_WIDTH;
   rows.add(new DialogControl(109,x,y,w/2-1,20,"Inside: "+((geometry.walls.fill&1)!=0?"On":"Off"),false,true));rows.add(new DialogControl(110,x+w/2+1,y,w/2-1,20,"Outside: "+((geometry.walls.fill&2)!=0?"On":"Off"),false,true));y+=24;
   rows.add(new DialogControl(113,x,y,w/2-1,20,GlassTextures.tintLabel(glass.tint),false,true));rows.add(new DialogControl(114,x+w/2+1,y,w/2-1,20,glass.framed?"Framed":"Bare",false,true));y+=24;
-  if(glass.material>=0){rows.add(new DialogControl(115,x,y,w/2-1,20,glass.textureLayout()==2?"Fit":glass.textureLayout()==1?"Tile":"Stretch",false,true));rows.add(new DialogControl(116,x+w/2+1,y,w/2-1,20,"Join: "+(glass.textureJoin?"On":"Off"),false,true));}
+  if(glass.material>=0){rows.add(new DialogControl(115,x,y,w/2-1,20,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(glass.textureLayout()),false,true));rows.add(new DialogControl(116,x+w/2+1,y,w/2-1,20,"Join: "+(glass.textureJoin?"On":"Off"),false,true));}
   return Collections.unmodifiableList(rows);
  }
  public static PanelGlassSettings action(PanelGlassSettings state,int id,int direction){

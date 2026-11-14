@@ -28,6 +28,8 @@ public final class NativePortholePane {
     private boolean glassPage(int id){return id==(diagonalGlass?DiagonalGlassDialog.GLASS:PortholeDialog.GLASS);}
     private boolean page(int id){return diagonalGlass?DiagonalGlassDialog.page(id):PortholeDialog.page(id);}
     public int page(){return page;}
+    public boolean textureJoinPage(){return !framePage(page); }
+    public void textureJoinChanged(com.vandorlabs.surface.TextureJoinSettings next){walls=new WallSettings(walls.fullWidth,walls.halfHeight,walls.fill,walls.join,next.direction!=0,walls.portholeShape);glass=new PanelGlassSettings(glass.shade,glass.material,glass.layout,glass.stretch,glass.tint,glass.framed,next.direction!=0); }
     public int selectedTexture(){return glassPage(page)?glass.material<0?PortholeDialog.shadeChoice(glass.shade):glass.material:page==DiagonalGlassDialog.FRONT?draft.front:page==PortholeDialog.INTERIOR?draft.interior:page==PortholeDialog.EXTERIOR?draft.exterior:base.housing().mainTexture;}
     public NativeMaterialPicker picker(){
         return pickers.computeIfAbsent(page,id->{

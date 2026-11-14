@@ -25,7 +25,7 @@ import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
-public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember {
+public class TileEntityAnimatedScreenSelector extends TileEntity implements RedstoneChannelMember, com.vandorlabs.surface.TextureJoinOwner {
     public final FrameAppearance frameAppearance=new FrameAppearance();
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
 
@@ -144,6 +144,12 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     private long settingsRevision;
     public long getSettingsRevision() { return settingsRevision; }
+    private boolean textureJoinPresent;
+    private volatile com.vandorlabs.surface.TextureJoinSettings textureJoin=com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
+    @Override public com.vandorlabs.surface.TextureJoinSettings textureJoin(){return world!=null&&getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableWall&&((com.vandorlabs.blocks.BlockProgrammableWall)getBlockType()).isPortholeShape()&&!joinPortholes?textureJoin.disabled():textureJoin;}
+    @Override public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){
+        if(next.equals(textureJoin)&&joinPortholes==(next.direction!=0)&&glassTextureJoin==(next.direction!=0))return;textureJoin=next;joinPortholes=next.direction!=0;glassTextureJoin=next.direction!=0;layoutChanged();portholeChanged();
+    }
     private void settingsChanged() { com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();markDirty();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.portholeAppearanceChanged(this); }
 
     private String selectedScreen = "engineering_screen";
@@ -638,6 +644,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         com.vandorlabs.persistence.HousingSettings.write(primitiveData,housingTexture,sideTexture,mainTextureLayout,
                 slabTileSides,faceTextures.enabled,faceTextures.choices());
         fluids.write(compound);
+        textureJoin.write(new com.vandorlabs.persistence.NbtPrimitiveData(compound),textureJoinPresent);
         compound.setInteger("SurfaceTextureLayout",getSurfaceTextureLayout());
         compound.setBoolean("SurfaceTileSides",surfaceTileSides);
         com.vandorlabs.persistence.WallSettings.write(primitiveData,diagonalFullWidth,diagonalHalfHeight,
@@ -659,6 +666,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         fluids.read(compound);
         boolean previousSlabSides = slabTileSides;
         int oldMainLayout=getMainTextureLayout(),oldSurfaceLayout=getSurfaceTextureLayout(),oldGlassLayout=getGlassTextureLayout();
+        textureJoinPresent=compound.hasKey(com.vandorlabs.surface.TextureJoinSettings.DIRECTION_TAG)||compound.hasKey(com.vandorlabs.surface.TextureJoinSettings.PARITY_TAG);
+        textureJoin=com.vandorlabs.surface.TextureJoinSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(compound));
         surfaceTextureLayout=layoutValue(compound,"SurfaceTextureLayout");glassTextureLayout=com.vandorlabs.persistence.PanelGlassSettings.rawLayout(compound.hasKey("GlassTextureLayout",3),compound.getInteger("GlassTextureLayout"));
         boolean previousSurfaceSides=surfaceTileSides;
         surfaceTileSides=!compound.hasKey("SurfaceTileSides",1)||compound.getBoolean("SurfaceTileSides");

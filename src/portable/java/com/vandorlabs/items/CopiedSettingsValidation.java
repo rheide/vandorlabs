@@ -20,6 +20,12 @@ public final class CopiedSettingsValidation {
     private static final String[] PLAYBACK={GlassPlaybackData.MODE,GlassPlaybackData.SPEED};
     public static <T> boolean valid(T values,Access<T> tags){
         if(values==null)return false;
+        if(tags.contains(values,"texture_join_policy")){
+            if(!tags.type(values,"texture_join_policy",10))return false;
+            T policy=tags.compound(values,"texture_join_policy");
+            if(!tags.type(policy,"Direction",3)||!tags.type(policy,"Parity",3)
+                    ||!com.vandorlabs.surface.TextureJoinSettings.valid(tags.integer(policy,"Direction"),tags.integer(policy,"Parity")))return false;
+        }
         for(String key:LAYOUTS)if(tags.type(values,key,3)&&!TextureLayoutMode.valid(tags.integer(values,key)))return false;
         if(tags.type(values,"glass_layout",10)){
             T glass=tags.compound(values,"glass_layout");

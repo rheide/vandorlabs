@@ -215,7 +215,7 @@ public class TEAnimatedScreenSelector
             if(found!=null)return found;
             PortholeGroupCache.Dependencies dependencies=new PortholeGroupCache.Dependencies();
             Map<BlockPos,PortholeGroup> groups=discoverPortholes(tile,state,dependencies);
-            if(dependencies.cacheable)cache.install(groups,dependencies);
+            if(dependencies.cacheable)cache.install(dependencies.ownerSpecific?java.util.Collections.singletonMap(tile.getPos().toImmutable(),groups.get(tile.getPos())):groups,dependencies);
             return groups.get(tile.getPos());
         }
     }
@@ -230,7 +230,7 @@ public class TEAnimatedScreenSelector
     private static Map<BlockPos,PortholeGroup> discoverPortholes(TileEntityAnimatedScreenSelector tile,
             IBlockState state,PortholeGroupCache.Dependencies dependencies) {
         World world=tile.getWorld();
-        dependencies.include(tile.getPos());
+        dependencies.include(tile.getPos());dependencies.ownerSpecific=!com.vandorlabs.blocks.TextureJoins.defaultPolicy(tile);
         Map<BlockPos,PortholeGroup> groups=new HashMap<>();
         EnumFacing facing = state.getValue(BlockProgrammableWall.FACING);
         EnumFacing right = facing.rotateY();
@@ -242,7 +242,7 @@ public class TEAnimatedScreenSelector
                 ? (((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
                         ? collectDiagonalPortholes(world,tile.getPos(),dependencies)
                         : LoadedPlaneConnections.collect(tile.getPos(),PanelPlane.of(facing),
-                                next -> {dependencies.include(next);return world.isBlockLoaded(next);},next -> compatiblePorthole(world,tile.getPos(),next,dependencies)))
+                                next -> {dependencies.include(next);return world.isBlockLoaded(next);},next -> compatiblePorthole(world,tile.getPos(),next,dependencies),(from,to)->com.vandorlabs.blocks.TextureJoins.allows(tile,from,to)))
                 : java.util.Collections.singleton(tile.getPos());
         // Every member must select the same basis, including opposite-facing shallow rows.
         BlockPos first=java.util.Collections.min(members);
@@ -1231,6 +1231,7 @@ public class TEAnimatedScreenSelector
         if(!(ar instanceof TileEntityAnimatedScreenSelector)||!(br instanceof TileEntityAnimatedScreenSelector))return false;
         if(dependencies!=null&&(ar.getClass()!=TileEntityAnimatedScreenSelector.class||br.getClass()!=TileEntityAnimatedScreenSelector.class))dependencies.cacheable=false;
         TileEntityAnimatedScreenSelector at=(TileEntityAnimatedScreenSelector)ar,bt=(TileEntityAnimatedScreenSelector)br;
+        if(dependencies!=null&&(!com.vandorlabs.blocks.TextureJoins.defaultPolicy(at)||!com.vandorlabs.blocks.TextureJoins.defaultPolicy(bt)))dependencies.ownerSpecific=true;
         if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
         if(solidDiagonalPortholeJunction(at,a) || solidDiagonalPortholeJunction(bt,b))return false;
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
@@ -1255,7 +1256,7 @@ public class TEAnimatedScreenSelector
                     com.vandorlabs.blocks.DiagonalPanelGeometry.rowCandidates(pos,state,mode,positive));
             for(BlockPos next:candidates) {
                 dependencies.include(next);
-                if(members.contains(next)||!compatiblePorthole(world,pos,next,dependencies))continue;
+                if(members.contains(next)||!com.vandorlabs.blocks.TextureJoins.allows(world.getTileEntity(root),pos,next)||!compatiblePorthole(world,pos,next,dependencies))continue;
                 members.add(next);queue.add(next);
                 if(members.size()>=LoadedPlaneConnections.LIMIT)break;
             }

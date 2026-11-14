@@ -2,6 +2,14 @@
 
 ## Unreleased — 2.10.0
 
+### Materials and connected artwork
+
+- Add thirteen Floor finishes and four Utility Door designs, resized to the existing material and Door artwork resolutions. Preserve prior texture indices and regenerate the browser, category collages and Dynmap data.
+- Mirror filesystem Door artwork on paired leaves, matching selected vanilla-block materials in Forge 1.12.2 and NeoForge 1.21.1.
+- Standardize image layout captions as Texture: Tile / Fit (Aspect) / Stretch. Keep Join for connectivity and Junction for diagonal junction shape.
+- Add Vertical, Horizontal, North/South and East/West texture joining to supported connected building surfaces. Add an All/Even/Odd neighbour-coordinate filter, retaining the owner's decision when neighbours use different filters and preserving previous saved defaults. See the [texture joining guide](docs/texture-joining.md).
+- Add Respect block joins to connected Duplifier selection. Retain the original matching-region behavior when disabled, and preserve saved option indices and existing message sizes.
+
 ### Item presentation
 
 - Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.

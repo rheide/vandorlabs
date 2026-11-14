@@ -9,7 +9,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 /** Glass tint is synchronized independently of the baked frame geometry. */
-public final class TileEntityProgrammableGlass extends TileEntity {
+public final class TileEntityProgrammableGlass extends TileEntity implements com.vandorlabs.surface.TextureJoinOwner {
     public final FrameAppearance frameAppearance=new FrameAppearance();
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
     /** Client publication only; never serialized into block, item or vehicle data. */
@@ -95,6 +95,10 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     private int tint = 1;
     private boolean framed = true;
     private int size = 1;
+    private boolean textureJoinPresent;
+    private volatile com.vandorlabs.surface.TextureJoinSettings textureJoin=com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
+    @Override public com.vandorlabs.surface.TextureJoinSettings textureJoin(){return join?textureJoin:textureJoin.disabled();}
+    @Override public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){if(next.equals(textureJoin()))return;textureJoin=next;join=next.direction!=0;changed(true,false);}
     private boolean join = true;
     private int panelFacing = -1;
     public net.minecraft.util.EnumFacing getPanelFacing(net.minecraft.util.EnumFacing fallback) {
@@ -140,6 +144,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
         super.writeToNBT(tag);frameAppearance.write(tag);glassPlayback.write(tag);fluids.write(tag);
         settings().write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
+        textureJoin.write(new com.vandorlabs.persistence.NbtPrimitiveData(tag),textureJoinPresent);
         return tag;
     }
     /** Conservative visual dependencies, compared exactly rather than by a hash.
@@ -148,7 +153,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
      */
     private int[] renderSettings() {
         return new int[]{shade,material,getTextureLayout(),stretch?1:0,tint,framed?1:0,
-                size,join?1:0,panelFacing,legacySize?1:0,
+                size,join?1:0,textureJoin.direction,textureJoin.parity,panelFacing,legacySize?1:0,
                 frameAppearance.front,frameAppearance.interior,frameAppearance.exterior,
                 frameAppearance.artworkVersion,frameAppearance.tile?1:0,frameAppearance.displayFit?1:0,
                 frameAppearance.split?1:0,frameAppearance.bare?1:0,frameAppearance.splitTop,frameAppearance.splitBottom,
@@ -167,7 +172,7 @@ public final class TileEntityProgrammableGlass extends TileEntity {
         NBTTagCompound previousFluids=force?null:fluidSettings();
         BlockPos previousPos=pos;
         int previousLight=frameLight();
-        super.readFromNBT(tag);frameAppearance.read(tag);glassPlayback.read(tag);fluids.read(tag);
+        super.readFromNBT(tag);textureJoinPresent=tag.hasKey(com.vandorlabs.surface.TextureJoinSettings.DIRECTION_TAG)||tag.hasKey(com.vandorlabs.surface.TextureJoinSettings.PARITY_TAG);textureJoin=com.vandorlabs.surface.TextureJoinSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag));frameAppearance.read(tag);glassPlayback.read(tag);fluids.read(tag);
         restored = true;
         com.vandorlabs.persistence.ProgrammableGlassSettings saved=com.vandorlabs.persistence.ProgrammableGlassSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag),GlassMaterials::clamp);
         material=saved.material;stretch=saved.stretch;textureLayout=saved.layout;tint=saved.tint;framed=saved.framed;

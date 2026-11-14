@@ -24,26 +24,27 @@ final class DuplifierMaskRuntimeChecks {
         encoded=Unpooled.buffer();try{encoded.writeLong(0).writeBoolean(false);MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);require(packetValid(packet) && packetWords(packet)[0]==0 && DuplifierApplyOptions.enabled(packetWords(packet),64),"legacy9-byte packet retains old choices and defaults new option on");}finally{encoded.release();}
         encoded=Unpooled.buffer();try{encoded.writeLong(0).writeBoolean(false).writeByte(2).writeLong(Long.MIN_VALUE);MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);require(!packetValid(packet),"unknown high bits rejected");}finally{encoded.release();}
         encoded=Unpooled.buffer();try{encoded.writeLong(0).writeBoolean(false).writeByte(255);MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);require(!packetValid(packet),"oversized packet count rejected");}finally{encoded.release();}
-        for(boolean ignore:new boolean[]{false,true}){
+        for(boolean ignore:new boolean[]{false,true})for(boolean respect:new boolean[]{false,true}){
             encoded=Unpooled.buffer();try{
-                new MessageDuplifierOptions(words,true,ignore).toBytes(encoded);
+                new MessageDuplifierOptions(words,true,ignore,respect).toBytes(encoded);
                 int bytes=encoded.readableBytes();byte[] original=new byte[bytes];encoded.getBytes(encoded.readerIndex(),original);
                 MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);
-                require(packetValid(packet)&&packetIgnore(packet)==ignore&&Arrays.equals(words,packetWords(packet)),"direction flag round trip");
+                require(packetValid(packet)&&packetIgnore(packet)==ignore&&packetRespect(packet)==respect&&Arrays.equals(words,packetWords(packet)),"direction flag round trip");
                 ByteBuf replay=Unpooled.buffer();try{packet.toBytes(replay);byte[] actual=new byte[replay.readableBytes()];replay.readBytes(actual);require(Arrays.equals(actual,original),"direction packet re-encode");}finally{replay.release();}
-                require(bytes==11+(words.length-1)*8,"direction packet grows by exactly one byte");
+                require(bytes==11+(words.length-1)*8,"respect flag reuses existing option byte");
             }finally{encoded.release();}
         }
         encoded=Unpooled.buffer();try{encoded.writeLong(0).writeBoolean(true).writeByte(2).writeLong(1);MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);require(packetValid(packet)&&!packetIgnore(packet),"previous multiword packet defaults direction off");}finally{encoded.release();}
-        for(int[] tail:new int[][]{{2},{1,0},{1,1}}){
+        for(int[] tail:new int[][]{{4},{1,0},{1,1}}){
             encoded=Unpooled.buffer();try{encoded.writeLong(0).writeBoolean(false).writeByte(2).writeLong(1);for(int value:tail)encoded.writeByte(value);MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);require(!packetValid(packet),"unknown direction flag/trailing bytes rejected");}finally{encoded.release();}
         }
         encoded=Unpooled.buffer();try{MessageDuplifierOptions.undo().toBytes(encoded);require(encoded.readableBytes()==10,"undo wire unchanged");MessageDuplifierOptions packet=new MessageDuplifierOptions();packet.fromBytes(encoded);require(packetValid(packet),"undo decode");}finally{encoded.release();}
-        System.out.println("[vandorlabs][reprolab] duplifier-direction-packet PASS legacy9/multiword direction round-trip malformed tails option packet18->19bytes undo10bytes unchanged");
+        System.out.println("[vandorlabs][reprolab] duplifier-direction-packet PASS legacy9/multiword direction round-trip malformed tails respect-joins round-trip option19bytes unchanged undo10bytes unchanged");
         System.out.println("[vandorlabs][reprolab] duplifier-scalable-mask PASS legacy-indices61-63 bit64-independent item-save packet-roundtrip legacy-packet malformed-bounds");
     }
     private static boolean packetValid(MessageDuplifierOptions packet){return net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(MessageDuplifierOptions.class,packet,"valid");}
     private static long[] packetWords(MessageDuplifierOptions packet){return net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(MessageDuplifierOptions.class,packet,"mask");}
+    private static boolean packetRespect(MessageDuplifierOptions packet){return net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(MessageDuplifierOptions.class,packet,"respectJoins");}
     private static boolean packetIgnore(MessageDuplifierOptions packet){return net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(MessageDuplifierOptions.class,packet,"ignoreDirectionality");}
     private DuplifierMaskRuntimeChecks(){}
 }

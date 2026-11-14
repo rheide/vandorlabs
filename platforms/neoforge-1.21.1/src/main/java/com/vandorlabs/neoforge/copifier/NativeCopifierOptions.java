@@ -8,7 +8,7 @@ import net.minecraft.nbt.Tag;
 /** Inactive native item-data adapter; the Copifier item, menu and gameplay route remain separate. */
 public final class NativeCopifierOptions {
     public static final String MASK="DuplifierApplyMask",WORDS=MASK+"Words",COUNT="DuplifierApplyOptionCount";
-    public static final String CONNECTED="DuplifierConnected",IGNORE_DIRECTION="DuplifierIgnoreDirectionality";
+    public static final String CONNECTED="DuplifierConnected",IGNORE_DIRECTION="DuplifierIgnoreDirectionality",RESPECT_JOINS="DuplifierRespectJoins";
     private static final DuplifierOptionMask POLICY=new DuplifierOptionMask(DuplifierOptionCatalog.size());
     public static long[] maskWords(CompoundTag root){
         if(root==null)return POLICY.legacyWords(POLICY.lowMask());
@@ -22,6 +22,8 @@ public final class NativeCopifierOptions {
     }
     public static CompoundTag withMask(CompoundTag original,long low){long[] words=maskWords(original);words[0]=low&POLICY.lowMask();return withMask(original,words);}
     public static boolean connected(CompoundTag root){return root!=null&&root.getBoolean(CONNECTED);}
+    public static boolean respectJoins(CompoundTag root){return root!=null&&root.getBoolean(RESPECT_JOINS);}
+    public static CompoundTag withRespectJoins(CompoundTag original,boolean value){CompoundTag root=copy(original);root.putBoolean(RESPECT_JOINS,value);return root;}
     public static boolean ignoreDirectionality(CompoundTag root){return root!=null&&root.getBoolean(IGNORE_DIRECTION);}
     public static CompoundTag withConnected(CompoundTag original,boolean value){CompoundTag root=copy(original);root.putBoolean(CONNECTED,value);return root;}
     public static CompoundTag withIgnoreDirectionality(CompoundTag original,boolean value){CompoundTag root=copy(original);root.putBoolean(IGNORE_DIRECTION,value);return root;}

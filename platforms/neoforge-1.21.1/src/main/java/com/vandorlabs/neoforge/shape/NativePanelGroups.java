@@ -24,6 +24,9 @@ final class NativePanelGroups {
 
     static <T> Capture<T> capture(BlockPos origin, Direction right, T root,
                                   Function<BlockPos,T> compatible) {
+        return capture(origin,right,root,compatible,(a,b)->true);
+    }
+    static <T> Capture<T> capture(BlockPos origin,Direction right,T root,Function<BlockPos,T> compatible,java.util.function.BiPredicate<BlockPos,BlockPos> edge){
         Map<BlockPos,T> members = new LinkedHashMap<>();
         ArrayDeque<BlockPos> queue = new ArrayDeque<>();
         members.put(origin, root);
@@ -33,7 +36,7 @@ final class NativePanelGroups {
             BlockPos pos = queue.remove();
             for (Direction direction : steps) {
                 BlockPos next = pos.relative(direction);
-                if (members.containsKey(next)) continue;
+                if (members.containsKey(next)||!edge.test(pos,next)) continue;
                 T other = compatible.apply(next);
                 if (other == null) continue;
                 members.put(next, other);

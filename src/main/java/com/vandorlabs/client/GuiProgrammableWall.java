@@ -172,7 +172,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             if(diagonalGlass){GuiButton frameToggle=new GuiButton(114,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,tile.isGlassFramed()?"Framed":"Bare");frameToggle.visible=false;buttonList.add(frameToggle);}
             y+=24;
             if(tile.getGlassMaterial()>=0){
-                buttonList.add(new GuiButton(115,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Texture: ")+(tile.getGlassTextureLayout()==2?(diagonalGlass?"Fit":"Fit (aspect)"):tile.getGlassTextureLayout()==1?"Tile":"Stretch")));
+                buttonList.add(new GuiButton(115,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Texture: ")+com.vandorlabs.render.TextureLayoutMode.label(tile.getGlassTextureLayout())));
                 if(diagonalGlass)buttonList.add(new GuiButton(116,controlsX+controlsWidth/2+1,y,controlsWidth/2-1,20,"Join: "+(tile.isGlassTextureJoin()?"On":"Off")));y+=24;
             }
         }
@@ -187,6 +187,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             buttonList.add(new GuiButton(c.id,c.x,c.y,c.width,c.height,c.label));
         }
         buttonList.add(new GuiButton(100,controlsX,guiTop+ySize-26,controlsWidth,20,I18n.format("gui.done")));
+        if(!slab&&tile.getBlockType()!=com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_STORAGE)TextureJoinPane.install(buttonList,tile,controlsX,guiTop+54,controlsWidth,guiTop+ySize-26);
 
         java.util.SortedSet<Integer> positions=new java.util.TreeSet<>();for(GuiButton button:buttonList)if(!(button instanceof DialogTabButton)&&button.id!=100&&button.visible)positions.add(button.y);
         if(!positions.isEmpty()&&positions.last()+20>guiTop+ySize-30){int first=positions.first(),step=Math.min(24,(guiTop+ySize-30-first)/positions.size());java.util.List<Integer> ordered=new java.util.ArrayList<>(positions);for(GuiButton button:buttonList)if(!(button instanceof DialogTabButton)&&button.id!=100&&button.visible){button.y=first+ordered.indexOf(button.y)*step;button.height=Math.min(20,step-2);}}
@@ -204,6 +205,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
             GuiButton button=c.tab?new DialogTabButton(c.id,c.x,c.y,c.width,c.height,c.label):new GuiButton(c.id,c.x,c.y,c.width,c.height,c.label);
             button.enabled=c.enabled;buttonList.add(button);
         }
+        TextureJoinPane.install(buttonList,tile,layout.controlsX,layout.top+54,154,layout.doneY);
         listX=layout.listX;listY=com.vandorlabs.ui.ProgrammableBlockDialog.listY(layout,state);rows=com.vandorlabs.ui.ProgrammableBlockDialog.listRows(layout,state);
         textureList=new HousingTextureList(listX,listY,layout.listWidth,selected).visibleRows(rows).custom(this::choose);
     }
@@ -286,7 +288,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116,131))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116,131,240,241))return;
         if(framePage){if(framePane.click(mouseX,mouseY,button))return;super.mouseClicked(mouseX,mouseY,button);return;}if(redstonePage){super.mouseClicked(mouseX,mouseY,button);return;}
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
@@ -294,6 +296,7 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
     }
 
     @Override protected void actionPerformed(GuiButton button) {
+        if(TextureJoinPane.action(button,tile)){join=tile.isJoinPortholes();initGui();return;}
         if(cubeDialog()&&cubeAction(button))return;
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){sendPortholeSettings();initGui();return;}
         if(framePage&&framePane!=null&&framePane.action(button))return;if(button.id==213){framePage=false;redstonePage=false;faceTarget=-3;selected=selectedTexture();textureList=null;initGui();return;}if(button.id>=210&&button.id<=212){if(porthole&&button.id==210)return;frameFace=button.id-210;redstonePage=false;framePage=true;initGui();return;}if(button.id==195||button.id==196||button.id==197){if(porthole&&button.id==195){faceTarget=-1;selected=selectedTexture();textureList=null;}redstonePage=button.id==196;framePage=button.id==197;initGui();return;}if(button.id==198){return;}

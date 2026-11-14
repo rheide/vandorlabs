@@ -2,7 +2,7 @@ package com.vandorlabs.tiles;
 
 /** Shared menu choices and atlas names for programmable housing surfaces. */
 public final class ScreenHousingTextures {
-    public static boolean mirroredDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);return CustomBlockMaterials.isCustom(choice)||e!=null&&e.has("source")&&(e.get("source").getAsString().startsWith("company_doors/")||e.has("doorArtwork")&&e.get("doorArtwork").getAsBoolean());}
+    public static boolean mirroredDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);return CustomBlockMaterials.isCustom(choice)||e!=null&&e.has("file")||e!=null&&e.has("source")&&(e.get("source").getAsString().startsWith("company_doors/")||e.has("doorArtwork")&&e.get("doorArtwork").getAsBoolean());}
     /** Base artwork orientation is independent of the right leaf of a paired door. */
     public static boolean reversedDoorArtwork(int choice){com.google.gson.JsonObject e=entry(choice);if(e==null||!e.has("source"))return false;String source=e.get("source").getAsString();return source.startsWith("company_doors/pinnacle/")||source.startsWith("company_doors/ashiro_mai/")||source.startsWith("company_doors/paladyne/")||source.startsWith("company_doors/vektor/");}
     public static boolean doorArtworkMirror(int choice,boolean rightLeaf){return reversedDoorArtwork(choice)^(rightLeaf&&mirroredDoorArtwork(choice));}

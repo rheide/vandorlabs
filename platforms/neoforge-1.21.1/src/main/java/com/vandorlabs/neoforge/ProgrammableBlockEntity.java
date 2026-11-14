@@ -11,13 +11,16 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.ModelData;
 import net.neoforged.neoforge.client.model.data.ModelProperty;
 
-public class ProgrammableBlockEntity extends BlockEntity {
+public class ProgrammableBlockEntity extends BlockEntity implements com.vandorlabs.surface.TextureJoinOwner {
     public static final ModelProperty<ProgrammableBlockDialog.State> SETTINGS=new ModelProperty<>();
     public static final ModelProperty<JoinedCubeFaces> JOINED=new ModelProperty<>();
     private volatile JoinedCubeFaces joinedFaces=JoinedCubeFaces.NONE;
     private volatile ProgrammableBlockDialog.State settings=defaults();
     private int sideTexture=-1,rawLayout=1;
     private boolean tileSides=true;
+    private com.vandorlabs.surface.TextureJoinSettings textureJoin=com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
+    public com.vandorlabs.surface.TextureJoinSettings textureJoin(){return textureJoin;}
+    public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){if(textureJoin().equals(next))return;textureJoin=java.util.Objects.requireNonNull(next);if(this instanceof com.vandorlabs.neoforge.shape.NativeWallEntity wall){com.vandorlabs.neoforge.shape.NativeWallLayouts.invalidate(wall);com.vandorlabs.neoforge.fluid.NativeFluidWorld.queue(wall);}refresh();}
     private CompoundTag retainedSettings=new CompoundTag();
     public ProgrammableBlockEntity(BlockPos pos,BlockState state){this(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,defaults());}
     protected ProgrammableBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type,BlockPos pos,BlockState state,ProgrammableBlockDialog.State initial){
@@ -54,7 +57,7 @@ public class ProgrammableBlockEntity extends BlockEntity {
     protected final CompoundTag copiedHousingFields(){
         var fields=new CompoundTag();HousingSettings.write(new ModernHousingTags(fields),settings.mainTexture,sideTexture,rawLayout,tileSides,settings.facesEnabled,settings.faces());
         var housing=HousingSettings.read(new ModernHousingTags(fields),settings.mainTexture,tileSides,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);
-        return NativeCopiedHousingMetadata.snapshot(housing,retainedSettings);
+        var snapshot=NativeCopiedHousingMetadata.snapshot(housing,retainedSettings);textureJoin().write(new ModernHousingTags(snapshot));return snapshot;
     }
     /** Validate and install dormant metadata locally, allowing a family to publish one coherent projection. */
     protected final boolean installCopiedMetadata(com.vandorlabs.persistence.FrameSettings frames,com.vandorlabs.redstone.ChannelList channels,int range,boolean local,com.vandorlabs.redstone.ChannelList transmitted){
@@ -71,6 +74,7 @@ public class ProgrammableBlockEntity extends BlockEntity {
         retainedSettings=tag.copy();for(String key:java.util.List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retainedSettings.remove(key);
         HousingSettings saved=HousingSettings.read(new ModernHousingTags(tag),settings.mainTexture,tileSides,
             ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);
+        textureJoin=com.vandorlabs.surface.TextureJoinSettings.read(new ModernHousingTags(tag));
         rawLayout=saved.rawLayout;tileSides=saved.tileSides;sideTexture=saved.sideTexture;
         settings=new ProgrammableBlockDialog.State(saved.mainTexture,saved.layout(),saved.facesEnabled,saved.faces(),-1);
         joinedFaces=JoinedCubeFaces.NONE;housingLoaded();requestModelDataUpdate();
@@ -79,7 +83,7 @@ public class ProgrammableBlockEntity extends BlockEntity {
     /** Called after local housing installation and before model/update notification. */
     protected void housingLoaded(){ }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        super.saveAdditional(tag,registries);tag.merge(retainedSettings);
+        super.saveAdditional(tag,registries);tag.merge(retainedSettings);textureJoin.write(new ModernHousingTags(tag));
         HousingSettings.write(new ModernHousingTags(tag),settings.mainTexture,sideTexture,rawLayout,tileSides,settings.facesEnabled,settings.faces());
     }
     @Override protected void collectImplicitComponents(net.minecraft.core.component.DataComponentMap.Builder components){

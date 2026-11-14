@@ -1,0 +1,8 @@
+task testTextureJoinSettings(type: JavaExec) {
+    group = 'verification'
+    description = 'Check directional texture joins and owner-directed Even/Odd neighbour coordinates'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.surface.TextureJoinSettingsTest'
+}
+check.dependsOn testTextureJoinSettings

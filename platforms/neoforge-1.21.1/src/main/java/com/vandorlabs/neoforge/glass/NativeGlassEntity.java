@@ -11,11 +11,14 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.neoforged.neoforge.client.model.data.*;
 
 /** Ordinary glass authority; installed-thread preparation publishes world-free worker/render data. */
-public final class NativeGlassEntity extends BlockEntity implements ContainedFluidHost {
+public final class NativeGlassEntity extends BlockEntity implements ContainedFluidHost,com.vandorlabs.surface.TextureJoinOwner {
  public static final String RECOVERY="GlassRecoverySnapshot",PLACEMENT_RECOVERY="GlassPlacementRecovery";
  public record Publication(NativeGlassSettings settings,NativeGlassGeometry.Snapshot geometry,NativeFlatGlassVisual visual){}
  public static final ModelProperty<Publication> GLASS=new ModelProperty<>();
  private NativeGlassSettings settings;
+ private com.vandorlabs.surface.TextureJoinSettings textureJoin=com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
+ public com.vandorlabs.surface.TextureJoinSettings textureJoin(){return settings!=null&&!settings.glass().join?textureJoin.disabled():textureJoin;}
+ public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){if(textureJoin().equals(next))return;textureJoin=java.util.Objects.requireNonNull(next);var g=settings.glass();settings=new NativeGlassSettings(new com.vandorlabs.persistence.ProgrammableGlassSettings(g.shade,g.material,g.layout,g.stretch,g.tint,g.framed,g.size,next.direction!=0,g.panelFacing,g.legacySize),settings.frames(),settings.playback());NativeGlassService.invalidate(this);setChanged();NativeFluidWorld.queue(this);if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2); }
  private CompoundTag retained=new CompoundTag();
  private NativeFluidSlots fluids=new NativeFluidSlots();
  private volatile Publication publication;
@@ -40,7 +43,7 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
   forcedRemoval=net.minecraft.world.item.ItemStack.EMPTY;var original=tag.copy();try{
    NativePlatformComponents.requireSupported(original,registries);fluidsSupported(original);
    if(tag.contains("NeoForgeData")&&!tag.contains("NeoForgeData",Tag.TAG_COMPOUND)||tag.contains(RECOVERY)||tag.contains(PLACEMENT_RECOVERY)||tag.contains("NativeGlassSchema")&&(!tag.contains("NativeGlassSchema",Tag.TAG_INT)||tag.getInt("NativeGlassSchema")!=1))throw new IllegalArgumentException("Retained glass owner");
-   var next=NativeGlassSettings.read(tag);try(var platform=NativePlatformComponents.guardLoad(this)){super.loadAdditional(tag.copy(),registries);platform.requireSuccessful();}
+   textureJoin=com.vandorlabs.surface.TextureJoinSettings.read(new com.vandorlabs.neoforge.ModernHousingTags(tag));var next=NativeGlassSettings.read(tag);if(!tag.contains(com.vandorlabs.surface.TextureJoinSettings.DIRECTION_TAG)&&!next.glass().join)textureJoin=new com.vandorlabs.surface.TextureJoinSettings(0,0);try(var platform=NativePlatformComponents.guardLoad(this)){super.loadAdditional(tag.copy(),registries);platform.requireSuccessful();}
    fluids.read(tag,registries);retained=tag.copy();NativePlatformComponents.forgetLoadedFields(retained);
    if(!settings.same(next))NativeGlassService.invalidate(this);settings=settings.same(next)?settings:next;inert=level!=null&&level.isClientSide&&tag.getBoolean("NativeGlassInert");
   }catch(RuntimeException failure){NativeGlassService.invalidate(this);retained=original;settings=NativeGlassSettings.read(new CompoundTag()).resolveLegacySize(getBlockState().getValue(NativeGlassBlock.SIZE));fluids=new NativeFluidSlots();fluidRender=NativeFluidRenderSnapshot.EMPTY;inert=true;}
@@ -49,7 +52,7 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
  }
 
  private void writeFluids(CompoundTag tag){var extra=retained.getCompound(NativeFluidSlots.KEY).copy();extra.remove("Side0");extra.remove("Side1");fluids.write(tag);extra.merge(tag.getCompound(NativeFluidSlots.KEY));tag.put(NativeFluidSlots.KEY,extra);}
- @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);settings.write(tag);writeFluids(tag);tag.putInt("NativeGlassSchema",1);}
+ @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);settings.write(tag);textureJoin.write(new com.vandorlabs.neoforge.ModernHousingTags(tag));writeFluids(tag);tag.putInt("NativeGlassSchema",1);}
  static final class Prepared {final BlockState state;final CompoundTag snapshot;Prepared(BlockState state,CompoundTag snapshot){this.state=state;this.snapshot=snapshot.copy();}}
  static Prepared prepareItem(NativeGlassBlock block,BlockPos pos,BlockState state,CompoundTag generic,CompoundTag outer,int facing,HolderLookup.Provider registries){
   if(outer!=null&&(outer.contains(RECOVERY)||outer.contains(PLACEMENT_RECOVERY)))throw new IllegalArgumentException("Retained glass item owner");var candidate=new NativeGlassEntity(block.entityType(),pos,state);var merged=candidate.saveWithoutMetadata(registries);if(generic!=null)merged.merge(generic.copy());candidate.loadWithComponents(merged,registries);if(candidate.inert)throw new IllegalArgumentException("Unsupported glass item owner");var result=NativeGlassPlacementPolicy.place(candidate.settings,outer,state.getValue(NativeGlassBlock.SIZE),state.getValue(NativeGlassBlock.DEPTH),facing);BlockState target=state.setValue(NativeGlassBlock.SIZE,result.stateSize());candidate.settings=result.settings();candidate.setBlockState(target);candidate.publishLocal(NativeGlassService.straight(candidate),true);return new Prepared(target,candidate.saveWithoutMetadata(registries));
@@ -61,7 +64,7 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
  /** Placement samples the two separating sides; storage availability is independent of visible gap volume. */
  public void capturePlacementFluids(BlockState previous){if(!available()||!NativeFluidWorld.installed(this))return;refreshFluidGeometry();var fallback=NativeFluidWorld.fromState(previous.getFluidState());net.neoforged.neoforge.fluids.FluidStack[] boundary={net.neoforged.neoforge.fluids.FluidStack.EMPTY,net.neoforged.neoforge.fluids.FluidStack.EMPTY};for(Direction direction:fluidPlacementFaces()){BlockPos next=worldPosition.relative(direction);if(!NativeFluidWorld.loaded(level,next))continue;var fluid=NativeFluidWorld.fromState(level.getFluidState(next));if(fluid.isEmpty()||NativeFluidWorld.gaseous(fluid))continue;int side=containedFluidSide(.5+direction.getStepX()*.51,.5+direction.getStepY()*.51,.5+direction.getStepZ()*.51);boundary[side]=fluid;}boolean sides=!boundary[0].isEmpty()||!boundary[1].isEmpty();for(int side=0;side<2;side++){var fluid=sides?boundary[side]:fallback;if(!fluid.isEmpty()&&!NativeFluidWorld.gaseous(fluid)&&!fluids.occupied(side))fluids.set(side,fluid,level.registryAccess());}}
  @Override public boolean acceptsPlacementFluid(int side){return side==0||side==1;}
- @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();settings.write(tag);fluids.write(tag);tag.putBoolean("NativeGlassInert",inert);tag.putInt("NativeGlassSchema",1);return tag;}
+ @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=new CompoundTag();settings.write(tag);textureJoin.write(new com.vandorlabs.neoforge.ModernHousingTags(tag));fluids.write(tag);tag.putBoolean("NativeGlassInert",inert);tag.putInt("NativeGlassSchema",1);return tag;}
  @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
  @Override public ModelData getModelData(){return modelData;}
  public CompoundTag recoverySnapshot(){return retained.copy();}

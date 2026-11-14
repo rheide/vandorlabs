@@ -59,9 +59,13 @@ def main():
             padded = Image.new('RGBA', (size, size))
             padded.paste(image, (0, 0))
             if width < size:
-                padded.paste(image.crop((width - 1, 0, width, height)).resize((size - width, height), Image.Resampling.NEAREST), (width, 0))
+                edge = image.crop((width - 1, 0, width, height))
+                for x in range(width, size):
+                    padded.paste(edge, (x, 0))
             if height < size:
-                padded.paste(padded.crop((0, height - 1, size, height)).resize((size, size - height), Image.Resampling.NEAREST), (0, height))
+                edge = padded.crop((0, height - 1, size, height))
+                for y in range(height, size):
+                    padded.paste(edge, (0, y))
             destination = ASSETS / 'textures' / (target + '.png')
             destination.parent.mkdir(parents=True, exist_ok=True)
             padded.save(destination, optimize=True)

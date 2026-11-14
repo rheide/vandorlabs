@@ -30,7 +30,7 @@ public final class NativeCopifierHousingCapture {
         if(!migration.installable())throw new IllegalArgumentException("Unsupported installed transmission ownership");
         var tag=migration.install();var access=new ModernHousingTags(tag);
         var housing=HousingSettings.read(access,0,family.faces,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice);
-        var out=new CompoundTag();out.putInt("wall_texture",housing.mainTexture);
+        var out=new CompoundTag();var policy=com.vandorlabs.surface.TextureJoinSettings.read(access);if(family.pane&&!family.glass&&!WallSettings.read(access).joinPortholes)policy=new com.vandorlabs.surface.TextureJoinSettings(0,policy.parity);var policyTag=new CompoundTag();policyTag.putInt("Direction",policy.direction);policyTag.putInt("Parity",policy.parity);out.put("texture_join_policy",policyTag);out.putInt("wall_texture",housing.mainTexture);
         if(family.side)out.putInt("side_texture",housing.sideTexture);
         out.putBoolean("slab_tile_sides",housing.tileSides);out.putInt("texture_layout",housing.layout());
         if(family.faces){var faces=new CompoundTag();faces.putBoolean("enabled",housing.facesEnabled);if(housing.facesEnabled)faces.putIntArray("choices",housing.faces());out.put("face_textures",faces);}

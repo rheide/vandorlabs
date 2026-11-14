@@ -5,7 +5,7 @@ import java.util.*;
 /** Current four-tab glass policy; hidden compatibility controls and panes are intentionally distinct. */
 public final class GlassDialogTest {
     private static void require(boolean value,String detail){if(!value)throw new AssertionError(detail);}
-    public static void main(String[] ignored){int cases=0;String[] pages={"Glass","Front","Interior","Exterior"},tints={"Mild","Normal","Strong","Opaque"},layouts={"Stretch","Tile","Fit (aspect)"};int base=0x10000000;
+    public static void main(String[] ignored){int cases=0;String[] pages={"Glass","Front","Interior","Exterior"},tints={"Mild","Normal","Strong","Opaque"},layouts={"Stretch","Tile","Fit (Aspect)"};int base=0x10000000;
         for(int width:new int[]{320,854,1280})for(int height:new int[]{240,720})for(int tint=0;tint<4;tint++)for(int layout=0;layout<3;layout++)for(boolean join:new boolean[]{false,true})for(boolean framed:new boolean[]{false,true})for(int material:new int[]{-1,0,91}){
             ProgrammableDialogLayout panel=new ProgrammableDialogLayout(width,height);GlassDialog.State initial=new GlassDialog.State(7,tint,material,layout,join,framed,false);
             require(initial.size==0,"current UI always writes zero size");

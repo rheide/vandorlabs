@@ -64,19 +64,26 @@ public final class DuplifierConnectedApply {
         if (!editable(world, origin, player, face, tool)) return 0;
         IBlockState originalState = world.getBlockState(origin);
         boolean ignoreDirectionality=DuplifierApplyOptions.ignoreDirectionality(tool);
+        final boolean respectJoins=DuplifierApplyOptions.respectJoins(tool);
+        net.minecraft.tileentity.TileEntity joinOwner=world.getTileEntity(origin);
+        final com.vandorlabs.surface.TextureJoinSettings joinPolicy=joinOwner instanceof com.vandorlabs.surface.TextureJoinOwner?((com.vandorlabs.surface.TextureJoinOwner)joinOwner).textureJoin():com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
         NBTTagCompound originalSettings = configuration(world, origin,ignoreDirectionality);
+        if(respectJoins&&originalSettings!=null)originalSettings.removeTag("texture_join_policy");
         if (originalSettings == null) return 0;
         ConnectedCopySelection.Result<BlockPos> selected=ConnectedCopySelection.discover(
                 clicked.toImmutable(),origin.toImmutable(),new ConnectedCopySelection.Access<BlockPos>() {
             public BlockPos matchingOwner(BlockPos cell) {
                 if(!editable(world,cell,player,face,tool))return null;
                 BlockPos root=ProgrammableTarget.settingsPos(world,cell);
+                if(!editable(world,root,player,face,tool))return null;
+                NBTTagCompound candidate=configuration(world,root,ignoreDirectionality);if(respectJoins&&candidate!=null)candidate.removeTag("texture_join_policy");
                 return editable(world,root,player,face,tool)
                         && matchingState(originalState,world.getBlockState(root),ignoreDirectionality)
-                        && originalSettings.equals(configuration(world,root,ignoreDirectionality))
+                        && originalSettings.equals(candidate)
                         ?root.toImmutable():null;
             }
             public BlockPos offset(BlockPos cell,int x,int y,int z){return cell.add(x,y,z);}
+            public boolean connects(BlockPos from,BlockPos next){return !respectJoins||world.isBlockLoaded(next)&&(ProgrammableTarget.settingsPos(world,from).equals(ProgrammableTarget.settingsPos(world,next))||com.vandorlabs.blocks.TextureJoins.joined(world,from,next,joinPolicy));}
         });
         if(selected.exceeded)return -1;
         // A selected section can update its linked peers. Snapshot the whole

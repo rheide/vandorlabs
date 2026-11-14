@@ -18,6 +18,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeCubeScreen extends AbstractContainerScreen<ProgrammableMenu> {
     private ProgrammableBlockDialog.State state;
+    private com.vandorlabs.surface.TextureJoinSettings textureJoin;
     private ProgrammableDialogLayout panel;
     private List<? extends DialogControl> controls=List.of();
     private SlabStairDialog.State shapeState;
@@ -34,7 +35,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     public NativeMaterialPicker activePicker(){return picker;}
     @SubscribeEvent public static void register(RegisterMenuScreensEvent event){event.register(VandorLabsBootstrap.PROGRAMMABLE_MENU.get(),NativeCubeScreen::new);}
     public NativeCubeScreen(ProgrammableMenu menu,net.minecraft.world.entity.player.Inventory inventory,Component title){
-        super(menu,inventory,menu.tile instanceof com.vandorlabs.neoforge.shape.ProgrammableShapeEntity?title:Component.literal("Programmable Block"));state=menu.tile.settings();
+        super(menu,inventory,menu.tile instanceof com.vandorlabs.neoforge.shape.ProgrammableShapeEntity?title:Component.literal("Programmable Block"));state=menu.tile.settings();textureJoin=menu.tile.textureJoin();
         stair=menu.tile.getBlockState().getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs;
         if(menu.tile instanceof com.vandorlabs.neoforge.shape.ProgrammableShapeEntity tile&&(stair||tile.getBlockState().getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableSlab)){var appearance=tile.appearance();shapeState=new SlabStairDialog.State(state,appearance.sideTexture(),appearance.stairs().tread,appearance.stairs().roll);}
         if(menu.tile instanceof com.vandorlabs.neoforge.shape.NativeWallEntity wall){if(wall.isPorthole()||wall.isGlass())porthole=new NativePortholePane(menu,()->rebuild(false));else wallState=com.vandorlabs.neoforge.shape.NativeWallDialog.editor(wall.wallAppearance());}
@@ -54,6 +55,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     private void rebuild(boolean center){
         if(porthole!=null)picker=porthole.picker();else if(wallState!=null&&wallState.exterior){if(exteriorPicker==null)exteriorPicker=new NativeMaterialPicker(selectedTexture(),com.vandorlabs.neoforge.shape.NativeWallDialog::surfaceOption,this::choose).originalArtwork("vandorlabs:frame-default/metal_side");picker=exteriorPicker;}else picker=mainPicker;
         clearWidgets();controls=porthole!=null?porthole.controls(panel):diagonal!=null?DiagonalWallDialog.controls(panel,diagonal,Component.translatable("gui.done").getString()):wallState!=null?PlainWallDialog.controls(panel,wallState,Component.translatable("gui.done").getString()):shapeState==null?ProgrammableBlockDialog.controls(panel,state,Component.translatable("gui.done").getString()):SlabStairDialog.controls(panel,shapeState,stair,Component.translatable("gui.done").getString());
+        if(shapeState==null&&(wallState==null||!wallState.exterior)&&(porthole==null||porthole.textureJoinPage()))controls=NativeTextureJoinControls.add(controls,textureJoin,panel);
         for(var control:controls){
             if(control.tab)continue;
             if(shapeState!=null&&control.id==SlabStairDialog.TREAD){treadSlider=new NativeIntegerSlider(control.x,control.y,control.width,control.height,0,3,SlabStairDialog.treadIndex(shapeState.tread),value->Component.literal(SlabStairDialog.treadLabel(shapeState.tread)),value->{shapeState=shapeState.chooseTread(value);state=shapeState.housing;send();treadSlider.setMessage(Component.literal(SlabStairDialog.treadLabel(shapeState.tread)));});addRenderableWidget(treadSlider);continue;}
@@ -67,7 +69,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
         else PacketDistributor.sendToServer(new com.vandorlabs.neoforge.shape.ShapeAppearancePayload(menu.tile.getBlockPos(),menu.containerId,new com.vandorlabs.neoforge.shape.ProgrammableShapeEntity.Appearance(state,shapeState.sideTexture,new com.vandorlabs.persistence.StairState(shapeState.tread,shapeState.roll))));
     }
     public void action(int id,int direction){
-        picker.closeInventory();if(id==ProgrammableBlockDialog.DONE){onClose();return;}
+        picker.closeInventory();if(id==240||id==241){textureJoin=id==240?textureJoin.cycleDirection(direction):textureJoin.cycleParity(direction);if(porthole!=null)porthole.textureJoinChanged(textureJoin);PacketDistributor.sendToServer(new TextureJoinPayload(menu.tile.getBlockPos(),menu.containerId,textureJoin.direction,textureJoin.parity));rebuild(false);return;}if(id==ProgrammableBlockDialog.DONE){onClose();return;}
         if(porthole!=null){porthole.action(id,direction);return;}
         if(diagonal!=null){diagonal=diagonal.action(id,direction);wallState=diagonal.wall;state=wallState.base.housing;if(DiagonalWallDialog.geometryOperation(id)){var walls=wallState.walls;PacketDistributor.sendToServer(new com.vandorlabs.neoforge.shape.DiagonalGeometryPayload(menu.tile.getBlockPos(),menu.containerId,walls.halfHeight?2:walls.fullWidth?1:0,walls.fill,walls.join,net.minecraft.core.Direction.from3DDataValue(diagonal.facing),diagonal.inverted));}else if(id==ProgrammableBlockDialog.TEXTURE_LAYOUT)send();rebuild(true);return;}
         if(wallState!=null){wallState=wallState.action(id,direction);state=wallState.base.housing;}else if(shapeState==null)state=state.action(id,direction);else{shapeState=shapeState.action(id,direction);state=shapeState.housing;}
@@ -75,7 +77,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     }
     public void choose(int choice){if(porthole!=null){porthole.choose(choice);return;}if(diagonal!=null){diagonal=diagonal.choose(choice);wallState=diagonal.wall;state=wallState.base.housing;send();rebuild(false);return;}if(wallState!=null){wallState=wallState.choose(choice);state=wallState.base.housing;}else if(shapeState==null)state=state.choose(choice);else{shapeState=shapeState.choose(choice);state=shapeState.housing;}send();rebuild(false);}
     @Override public boolean mouseClicked(double x,double y,int button){
-        if(button==0||button==1)for(var control:controls)if(control.enabled&&(button==0||porthole!=null&&porthole.reverseOption(control.id)||diagonal!=null&&DiagonalWallDialog.geometryOperation(control.id)||control.id==ProgrammableBlockDialog.FACE_OVERRIDES||control.id==ProgrammableBlockDialog.TEXTURE_LAYOUT||shapeState!=null&&control.id==SlabStairDialog.ORIENTATION)&&x>=control.x&&x<control.x+control.width&&y>=control.y&&y<control.y+control.height){if(shapeState!=null&&control.id==SlabStairDialog.TREAD)return button==0&&super.mouseClicked(x,y,button);action(control.id,button==1?-1:1);return true;}
+        if(button==0||button==1)for(var control:controls)if(control.enabled&&(button==0||control.id==240||control.id==241||porthole!=null&&porthole.reverseOption(control.id)||diagonal!=null&&DiagonalWallDialog.geometryOperation(control.id)||control.id==ProgrammableBlockDialog.FACE_OVERRIDES||control.id==ProgrammableBlockDialog.TEXTURE_LAYOUT||shapeState!=null&&control.id==SlabStairDialog.ORIENTATION)&&x>=control.x&&x<control.x+control.width&&y>=control.y&&y<control.y+control.height){if(shapeState!=null&&control.id==SlabStairDialog.TREAD)return button==0&&super.mouseClicked(x,y,button);action(control.id,button==1?-1:1);return true;}
         return picker.click(x,y,button)||super.mouseClicked(x,y,button);
     }
     @Override public boolean keyPressed(int key,int scan,int modifiers){return picker.keyPressed(key,scan,modifiers)||super.keyPressed(key,scan,modifiers);}

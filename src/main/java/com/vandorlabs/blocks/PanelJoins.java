@@ -81,7 +81,7 @@ public final class PanelJoins {
     /** Match a flat panel's edge to an aligned flat face or a diagonal endpoint. */
     public static boolean connectsFlat(IBlockAccess world,BlockPos flatPos,IBlockState flatState,BlockPos next){
         if(world instanceof net.minecraft.world.World && (!((net.minecraft.world.World)world).isBlockLoaded(flatPos) || !((net.minecraft.world.World)world).isBlockLoaded(next)))return false;
-        if(!enabled(world,flatPos) || !enabled(world,next))return false;
+        if(!enabled(world,flatPos) || !enabled(world,next) || !TextureJoins.allows(world.getTileEntity(flatPos),flatPos,next))return false;
         IBlockState other=world.getBlockState(next);
         EnumFacing facing=facing(flatState);
         if(flat(other)){

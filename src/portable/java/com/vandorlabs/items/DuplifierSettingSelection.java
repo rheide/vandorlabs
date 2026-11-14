@@ -20,7 +20,7 @@ public final class DuplifierSettingSelection {
         {"primary_texture","primary_kind"}
     };
     public static void prune(long[] mask,Predicate<String> contains,Consumer<String> remove){
-        for(int i=0;i<OPTIONS.length;i++)if(!MASK.enabled(mask,i))remove.accept(OPTIONS[i].key);
+        for(int i=0;i<OPTIONS.length;i++)if(!MASK.enabled(mask,i)){remove.accept(OPTIONS[i].key);if("join".equals(OPTIONS[i].key))remove.accept("texture_join_policy");}
         for(String[] group:DEPENDENCIES)if(!contains.test(group[0]))for(int i=1;i<group.length;i++)remove.accept(group[i]);
     }
     private DuplifierSettingSelection(){}

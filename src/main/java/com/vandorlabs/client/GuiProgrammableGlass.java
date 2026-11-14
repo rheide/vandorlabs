@@ -29,11 +29,13 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
             if(GlassPlaybackPane.available(state.material))GlassPlaybackPane.init(layout,tile.glassPlayback,buttonList,130);
         }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{state=state.withFramed(!tile.isFramed());send();},()->tile.isFramed());framePane.initGlassFace(state.page-1,54,buttonList);}
         addControl(GlassDialog.done(shared,"Done"));
+        if(!state.framePage())TextureJoinPane.install(buttonList,tile,shared.controlsX,shared.top+54,154,shared.doneY);
     }
     private void addControl(GlassDialog.Control control){GuiButton button=control.tab?new DialogTabButton(control.id,control.x,control.y,control.width,control.height,control.label):new GuiButton(control.id,control.x,control.y,control.width,control.height,control.label);button.enabled=control.enabled;button.visible=control.visible;buttonList.add(button);}
     void choose(int choice){if(textures!=null&&textures.selected()!=choice)textures.setSelected(choice);state=state.choose(choice,HousingTextureList.CANOPY_GLASS_BASE);send();initGui();}
     private void send(){tile.configure(state.size,state.shade,state.material,state.layout,state.join,state.tint,state.framed,-1,1);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),state.size,state.shade,state.join).withAppearance(state.tint,state.framed).withMaterial(state.material).withTextureLayout(state.layout).withPlayback(tile.glassPlayback.mode(),tile.glassPlayback.speed()));}
     @Override protected void actionPerformed(GuiButton button) {
+        if(TextureJoinPane.action(button,tile)){state=new GlassDialog.State(tile.getShade(),tile.getTint(),tile.getMaterial(),tile.getTextureLayout(),tile.isJoin(),tile.isFramed(),tile.isStretch());initGui();return;}
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){send();initGui();return;}
         if(state.framePage()&&framePane.action(button))return;
         if(GlassDialog.isPage(button.id)){state=state.action(button.id,GuiOptionCycle.direction());initGui();return;}
@@ -44,7 +46,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
         if(state.framePage()){if(!framePane.click(x,y,button))super.mouseClicked(x,y,button);return;}
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,GlassDialog.rightClickIds()))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,new int[]{0,3,4,5,6,240,241}))return;
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}
         super.mouseClicked(x,y,button);
     }

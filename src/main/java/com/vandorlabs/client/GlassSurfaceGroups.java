@@ -191,7 +191,7 @@ final class GlassSurfaceGroups {
         EnumFacing right=PanelJoins.facing(world.getBlockState(tile.getPos())).rotateY();
         BlockPos p=tile.getPos();BlockPos[] next={p.offset(right.getOpposite()),p.offset(right),p.down(),p.up()};boolean[] joined=new boolean[4];int mask=0;
         cache.layoutDependencies.include(p);
-        for(int i=0;i<4;i++){cache.layoutDependencies.include(next[i]);joined[i]=world.isBlockLoaded(next[i])&&compatible(tile,next[i],false,true);if(!joined[i])mask|=1<<i;}
+        for(int i=0;i<4;i++){cache.layoutDependencies.include(next[i]);joined[i]=com.vandorlabs.blocks.TextureJoins.allows(tile,p,next[i])&&world.isBlockLoaded(next[i])&&compatible(tile,next[i],false,true);if(!joined[i])mask|=1<<i;}
         for(int side=0;side<2;side++)for(int vertical=0;vertical<2;vertical++)if(joined[side]&&joined[2+vertical]){
             BlockPos diagonal=next[side].add(0,vertical==0?-1:1,0);
             cache.layoutDependencies.include(diagonal);
@@ -214,14 +214,14 @@ final class GlassSurfaceGroups {
             BlockPos current=queue.removeFirst();List<BlockPos> candidates=new ArrayList<>();candidates.add(current.offset(right));candidates.add(current.offset(right.getOpposite()));
             if(diagonal)for(boolean positive:new boolean[]{false,true})candidates.addAll(DiagonalPanelGeometry.rowCandidates(current,world.getBlockState(current),BlockProgrammableWall.geometry(world,current),positive));
             else {candidates.add(current.up());candidates.add(current.down());}
-            for(BlockPos next:candidates){cache.layoutDependencies.include(next);if(members.contains(next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main,frame))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
+            for(BlockPos next:candidates){cache.layoutDependencies.include(next);if(members.contains(next) || !com.vandorlabs.blocks.TextureJoins.allows(tile,current,next) || !world.isBlockLoaded(next) || !compatible(world.getTileEntity(current),next,main,frame))continue;members.add(next);queue.add(next);if(members.size()>=LoadedPlaneConnections.LIMIT)break;}
         }
         BlockPos first=Collections.min(members);EnumFacing basis=PanelJoins.facing(world.getBlockState(first));right=basis.rotateY();up=diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight()?basis.getOpposite():EnumFacing.UP;
         Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos p:members)cells.put(PortholeRectangles.cell(PanelPlane.axis(p,right),PanelPlane.axis(p,up)),p);
-        if(members.size()>=LoadedPlaneConnections.LIMIT){for(BlockPos p:members)layouts.put(p,new Layout(0,0,1,1));}
+        if(members.size()>=LoadedPlaneConnections.LIMIT){for(BlockPos p:members)if(p.equals(tile.getPos())||com.vandorlabs.blocks.TextureJoins.defaultPolicy(tile)&&com.vandorlabs.blocks.TextureJoins.defaultPolicy(world.getTileEntity(p)))layouts.put(p,new Layout(0,0,1,1));}
         else for(PortholeRectangles.Rect rect:PortholeRectangles.partition(cells.keySet()))for(int y=0;y<rect.height;y++)for(int x=0;x<rect.width;x++){
             BlockPos p=cells.get(PortholeRectangles.cell(rect.x+x,rect.y+y));EnumFacing local=PanelJoins.facing(world.getBlockState(p));
-            layouts.put(p,new Layout(x,y,rect.width,rect.height,local.rotateY()!=right,diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight() && local.getOpposite()!=up));
+            if(p.equals(tile.getPos())||com.vandorlabs.blocks.TextureJoins.defaultPolicy(tile)&&com.vandorlabs.blocks.TextureJoins.defaultPolicy(world.getTileEntity(p)))layouts.put(p,new Layout(x,y,rect.width,rect.height,local.rotateY()!=right,diagonal && ((TileEntityAnimatedScreenSelector)tile).isDiagonalHalfHeight() && local.getOpposite()!=up));
         }
         return layouts.get(tile.getPos());
     }

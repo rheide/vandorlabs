@@ -13,8 +13,9 @@ import net.minecraft.world.item.component.CustomData;
 public final class NativeCopifierMenu extends NativeHeldToolMenu {
     private static final DuplifierOptionMask MASK=new DuplifierOptionMask(DuplifierOptionCatalog.size());
     public NativeCopifierMenu(MenuType<NativeCopifierMenu> type,int id,Inventory inventory){super(type,id,inventory,InteractionHand.MAIN_HAND,stack->!stack.isEmpty()&&stack.getItem() instanceof NativeCopifierItem);}
-    public boolean configure(ServerPlayer player,long[] words,boolean connected,boolean ignore){
+    public boolean configure(ServerPlayer player,long[] words,boolean connected,boolean ignore){return configure(player,words,connected,ignore,false);}
+    public boolean configure(ServerPlayer player,long[] words,boolean connected,boolean ignore,boolean respect){
         if(!player.getServer().isSameThread()||player.containerMenu!=this||!stillValid(player)||!MASK.valid(words))return false;
-        var root=heldStack().getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();root=NativeCopifierOptions.withMask(root,words);root=NativeCopifierOptions.withConnected(root,connected);root=NativeCopifierOptions.withIgnoreDirectionality(root,ignore);heldStack().set(DataComponents.CUSTOM_DATA,CustomData.of(root));synchronizeTool(player);return true;
+        var root=heldStack().getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();root=NativeCopifierOptions.withMask(root,words);root=NativeCopifierOptions.withConnected(root,connected);root=NativeCopifierOptions.withIgnoreDirectionality(root,ignore);root=NativeCopifierOptions.withRespectJoins(root,respect);heldStack().set(DataComponents.CUSTOM_DATA,CustomData.of(root));synchronizeTool(player);return true;
     }
 }

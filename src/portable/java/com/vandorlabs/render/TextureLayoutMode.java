@@ -4,7 +4,7 @@ package com.vandorlabs.render;
 public final class TextureLayoutMode {
     public static final int STRETCH=0,TILE=1,FIT=2;
     public static boolean valid(int mode){return mode>=STRETCH && mode<=FIT;}
-    public static String label(int mode){return mode==TILE?"Tile":mode==FIT?"Fit (aspect)":"Stretch";}
+    public static String label(int mode){return mode==TILE?"Tile":mode==FIT?"Fit (Aspect)":"Stretch";}
     public static int next(int mode){return (mode+1)%3;}
     public static boolean fit(int mode,double width,double height,double imageAspect){
         if(mode==STRETCH)return true;

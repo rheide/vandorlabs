@@ -32,9 +32,9 @@ final class DuplifierDirectionLiveChecks {
             mc.playerController.processRightClick(mc.player,mc.world,EnumHand.MAIN_HAND);phase++;return false;}
         require(mc.currentScreen instanceof GuiDuplifier,"dialog did not open phase="+phase);
         GuiDuplifier gui=(GuiDuplifier)mc.currentScreen;
-        if(phase==2){require(!DuplifierApplyOptions.ignoreDirectionality(mc.player.getHeldItemMainhand()),"new tool defaults");click(gui,98,0);click(gui,96,0);}
+        if(phase==2){require(!DuplifierApplyOptions.ignoreDirectionality(mc.player.getHeldItemMainhand()),"new tool defaults");click(gui,98,0);click(gui,95,1);click(gui,96,0);}
         if(phase==3){check(mc,true);DuplifierRuntimeChecks.checkDialog(gui);for(int page=0;page<DuplifierApplyOptions.PAGES.length;page++){
-            gui.actionPerformed(button(gui,page));GuiButton left=button(gui,98),right=button(gui,96);
+            gui.actionPerformed(button(gui,page));GuiButton left=button(gui,98),right=button(gui,95);
             require(left.y==right.y&&right.x>=left.x+left.width+8&&left.width==right.width,"top toggles are not spaced columns");
             require(mc.fontRenderer.getStringWidth(left.displayString)<=left.width-12&&mc.fontRenderer.getStringWidth(right.displayString)<=right.width-12,"top toggle text clipped");
             snapshot(mc,gui,output,"duplifier-direction-page-"+page);
@@ -42,8 +42,24 @@ final class DuplifierDirectionLiveChecks {
         if(phase==4){check(mc,true);click(gui,96,1);}
         if(phase==5){check(mc,false);mc.player.closeScreen();mc.playerController.processRightClick(mc.player,mc.world,EnumHand.MAIN_HAND);}
         if(phase==6){require(button(gui,96).displayString.endsWith("Off"),"reopened direction option lost state");snapshot(mc,gui,output,"duplifier-direction-off");click(gui,96,1);}
-        if(phase==7){check(mc,true);mc.player.closeScreen();server(mc,()->{DuplifierRuntimeChecks.run(player(mc));worldChecks(player(mc));segmentedUndo(player(mc));crafting(player(mc));});DuplifierMaskRuntimeChecks.run();System.out.println("[vandorlabs][reprolab] duplifier-direction-live PASS real item opening held/container packets toggle persistence reverse clicks five rendered pages cube/slab/stairs strict/ignored mounting data undo adjacent connected regressions");return true;}
+        if(phase==7){check(mc,true);mc.player.closeScreen();server(mc,()->{DuplifierRuntimeChecks.run(player(mc));worldChecks(player(mc));respectJoins(player(mc));segmentedUndo(player(mc));crafting(player(mc));});DuplifierMaskRuntimeChecks.run();System.out.println("[vandorlabs][reprolab] duplifier-direction-live PASS real item opening held/container packets toggle persistence reverse clicks five rendered pages cube/slab/stairs strict/ignored mounting data undo adjacent connected regressions");return true;}
         phase++;return false;
+    }
+    private static void respectJoins(EntityPlayerMP player){
+        World world=player.world;BlockPos root=new BlockPos(256,100,256);BlockPos[] cells={root,root.east(),root.east(2),root.south(),root.west(),root.east().south()};
+        try{
+            for(BlockPos pos:cells){world.setBlockState(pos,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).setMainTextureLayout(0);}
+            ((TileEntityAnimatedScreenSelector)world.getTileEntity(root)).setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(com.vandorlabs.surface.TextureJoinSettings.EAST_WEST,com.vandorlabs.surface.TextureJoinSettings.ODD));
+            ((TileEntityAnimatedScreenSelector)world.getTileEntity(root.west())).setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(0,0));
+            ItemStack tool=new ItemStack(ModItems.DUPLIFIER);NBTTagCompound source=ProgrammableSettings.capture(world,root);long[] mask=DuplifierApplyOptions.maskWords(tool);require(DuplifierApplyOptions.selected(source,mask).hasKey("texture_join_policy",10),"cube copy retains default/enabled join policy without legacy boolean");for(int i=0;i<DuplifierApplyOptions.OPTIONS.length;i++)if(DuplifierApplyOptions.OPTIONS[i].key.equals(ProgrammableSettings.JOIN))mask[i/64]&=~(1L<<(i%64));require(!DuplifierApplyOptions.selected(source,mask).hasKey("texture_join_policy"),"disabled Join omits policy");
+            NBTTagCompound copied=new NBTTagCompound();copied.setInteger(ProgrammableSettings.WALL_TEXTURE,14);tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,copied);DuplifierApplyOptions.setConnected(tool,true);DuplifierApplyOptions.setRespectJoins(tool,true);
+            require(DuplifierConnectedApply.apply(world,root,tool,player,EnumFacing.UP)==2,"respect joins copies only clicked directional group including different neighbour policy");
+            for(BlockPos pos:cells)require(((TileEntityAnimatedScreenSelector)world.getTileEntity(pos)).getHousingTexture()==(pos.equals(root)||pos.equals(root.east())?14:0),"separate same-texture group untouched "+pos);
+            ItemStack saved=new ItemStack(tool.writeToNBT(new NBTTagCompound()).copy());require(DuplifierApplyOptions.respectJoins(saved),"respect joins survives save");ItemDuplifier.clearCopyState(saved);require(DuplifierApplyOptions.respectJoins(saved),"clear copy retains respect flag");require(ItemDuplifier.hasCopy(tool),"saved-item clear does not alias original tool");
+            for(BlockPos pos:cells){world.setBlockToAir(pos);world.setBlockState(pos,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(pos);tile.setHousingTexture(0);tile.setMainTextureLayout(0);tile.setTextureJoin(com.vandorlabs.surface.TextureJoinSettings.DEFAULT);}
+            DuplifierApplyOptions.setRespectJoins(tool,false);int legacy=DuplifierConnectedApply.apply(world,root,tool,player,EnumFacing.UP);require(legacy==cells.length,"disabled option retains legacy corner and edge region count="+legacy);
+            System.out.println("[vandorlabs][reprolab] duplifier-respect-joins PASS directional-group=2 legacy-region=6 owner-parity/different-neighbour-policy/explicit-off/saved-clear");
+        }finally{for(BlockPos pos:cells)world.setBlockToAir(pos);}
     }
     private static void crafting(EntityPlayerMP player){
         player.inventory.clear();player.inventory.setItemStack(ItemStack.EMPTY);
@@ -103,7 +119,7 @@ final class DuplifierDirectionLiveChecks {
         }finally{for(int x=0;x<2;x++)for(int row=0;row<2;row++)world.setBlockToAir(base.east(x).down(row));}
     }
     private static void check(Minecraft mc,boolean ignore)throws Exception{server(mc,()->{
-        ItemStack tool=player(mc).getHeldItemMainhand();require(DuplifierApplyOptions.connected(tool)&&DuplifierApplyOptions.ignoreDirectionality(tool)==ignore,"server flag round trip");
+        ItemStack tool=player(mc).getHeldItemMainhand();require(DuplifierApplyOptions.connected(tool)&&DuplifierApplyOptions.respectJoins(tool)&&DuplifierApplyOptions.ignoreDirectionality(tool)==ignore,"server flag round trip");
         ItemStack saved=new ItemStack(tool.writeToNBT(new NBTTagCompound()));require(DuplifierApplyOptions.ignoreDirectionality(saved)==ignore,"saved flag");
     });}
     @SuppressWarnings("unchecked") private static GuiButton button(GuiDuplifier gui,int id){List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");return buttons.stream().filter(b->b.id==id).findFirst().get();}

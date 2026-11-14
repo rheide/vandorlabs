@@ -50,6 +50,7 @@ public final class FilesystemTextureChecks {
                     && ScreenHousingTextures.visible(FilesystemTextures.identifier("Example/owner_panel.png")),"populated Example category hidden");
             TextureNameChecks.run();
             int blue=FilesystemTextures.identifier("Bridge/blue.png"),red=FilesystemTextures.identifier("Engineering/Panels/red.png");
+            require(ScreenHousingTextures.doorArtworkMirror(blue,true)&&!ScreenHousingTextures.doorArtworkMirror(blue,false),"filesystem paired right leaf mirrors authored artwork");
             require(blue!=red && ScreenHousingTextures.validChoice(blue),"stable identifiers");
             require("Bridge".equals(ScreenHousingTextures.category(blue)),"category");
             require("Engineering/Panels".equals(ScreenHousingTextures.category(red)),"nested category");

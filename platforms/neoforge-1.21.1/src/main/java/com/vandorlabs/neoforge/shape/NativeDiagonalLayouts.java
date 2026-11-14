@@ -21,6 +21,7 @@ final class NativeDiagonalLayouts {
         boolean solid(BlockPos pos,M member);
         default com.vandorlabs.persistence.PanelGlassSettings glass(M member){return com.vandorlabs.persistence.PanelGlassSettings.fresh();}
         default PanelPlayback playback(M member){return PanelPlayback.DEFAULT;}
+        default com.vandorlabs.surface.TextureJoinSettings textureJoin(M member){return com.vandorlabs.surface.TextureJoinSettings.DEFAULT;}
     }
     private record LevelAccess(Level level) implements Access<NativeWallEntity> {
         public boolean loaded(BlockPos pos){return NativeFluidWorld.loaded(level,pos);}
@@ -30,6 +31,7 @@ final class NativeDiagonalLayouts {
         public com.vandorlabs.persistence.WallSettings settings(NativeWallEntity host){return host.wallSettings();}
         public int mainTexture(NativeWallEntity host){return host.settings().mainTexture;}
         public int textureLayout(NativeWallEntity host){return host.settings().layout;}
+        public com.vandorlabs.surface.TextureJoinSettings textureJoin(NativeWallEntity host){return host.textureJoin();}
         public com.vandorlabs.persistence.PanelGlassSettings glass(NativeWallEntity host){return host.panelGlassSettings();}
         public PanelPlayback playback(NativeWallEntity host){return host.panelPlayback();}
         public boolean solid(BlockPos pos,NativeWallEntity host){return NativeDiagonalWallTopology.solid(level,pos,host.getBlockState());}
@@ -37,6 +39,7 @@ final class NativeDiagonalLayouts {
     record Capture<M>(Map<BlockPos,M> members,Map<Long,NativePanelLayout> layouts,boolean capped) {}
     private static <M> int mode(Access<M> access,M member){var settings=access.settings(member);return com.vandorlabs.persistence.WallSettings.geometry(settings.halfHeight,settings.fullWidth);}
 
+    static boolean joined(NativeWallEntity root,BlockPos next){return compatible(new LevelAccess(root.getLevel()),root.getBlockPos(),root,next,NativePanelGroups.Mode.MATERIAL)!=null;}
     static NativePanelLayout layout(NativeWallEntity root){return query(root,NativePanelGroups.Mode.MATERIAL);}
     private static NativeWallLayouts.Group group(NativeWallEntity host,NativePanelGroups.Mode mode){return switch(mode){case MATERIAL->host.textureGroup;case APERTURE->host.apertureGroup;case GLASS->host.glassGroup;};}
     private static void group(NativeWallEntity host,NativePanelGroups.Mode mode,NativeWallLayouts.Group group){switch(mode){case MATERIAL->host.textureGroup=group;case APERTURE->host.apertureGroup=group;case GLASS->host.glassGroup=group;}}
@@ -59,30 +62,34 @@ final class NativeDiagonalLayouts {
         var old=group(root,queryMode);
         if(old!=null&&old.valid&&!membershipValid(root,old))old.valid=false;
         if(old!=null&&!old.valid&&!old.queued){old.queued=true;for(long packed:old.layouts.keySet()){BlockPos pos=BlockPos.of(packed);if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity member)NativeFluidWorld.queue(member);}}
-        if(switch(queryMode){case MATERIAL->root.settings().layout==0;case GLASS->root.panelGlassSettings().material<0||!root.panelGlassSettings().textureJoin;case APERTURE->!root.wallSettings().joinPortholes||new LevelAccess(level).solid(root.getBlockPos(),root);}){group(root,queryMode,null);return NativePanelLayout.UNIT;}
+        if(switch(queryMode){case MATERIAL->root.settings().layout==0||root.textureJoin().direction==0;case GLASS->root.panelGlassSettings().material<0||!root.panelGlassSettings().textureJoin;case APERTURE->!root.wallSettings().joinPortholes||new LevelAccess(level).solid(root.getBlockPos(),root);}){group(root,queryMode,null);return NativePanelLayout.UNIT;}
         if(old!=null&&old.valid)return old.layouts.getOrDefault(root.getBlockPos().asLong(),NativePanelLayout.UNIT);
-        var captured=capture(new LevelAccess(level),root.getBlockPos(),root,queryMode);
+        var dependencies=new com.vandorlabs.neoforge.NativeJoinDependencies.Bounds();var captured=capture(new LevelAccess(level),root.getBlockPos(),root,queryMode,dependencies);
         Map<BlockPos,NativeWallEntity> members=captured.members();Map<Long,NativePanelLayout> layouts=captured.layouts();
-        var group=new NativeWallLayouts.Group(queryMode,layouts,captured.capped());
+        var group=new NativeWallLayouts.Group(queryMode,layouts,captured.capped());boolean shared=com.vandorlabs.neoforge.NativeTextureJoins.shareable(root,members.values());boolean admitted=com.vandorlabs.neoforge.NativeJoinDependencies.observe(shared?members.values():java.util.List.of(root),queryMode.ordinal(),dependencies,group);if(!admitted){group(root,queryMode,group);return NativePanelLayout.UNIT;}
         for(var entry:members.entrySet()){
-            NativeWallEntity member=entry.getValue();var previous=group(member,queryMode);
+            NativeWallEntity member=entry.getValue();if(!shared&&member!=root)continue;var previous=group(member,queryMode);
             if(previous!=null&&previous!=group){previous.valid=false;for(long packed:previous.layouts.keySet()){BlockPos pos=BlockPos.of(packed);if(!members.containsKey(pos)&&NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeWallEntity excluded)NativeFluidWorld.queue(excluded);}}
-            group(member,queryMode,group);if(member!=root)NativeFluidWorld.queue(member);
+            group(member,queryMode,group);if(member!=root&&group.valid)NativeFluidWorld.queue(member);
         }
         return layouts.getOrDefault(root.getBlockPos().asLong(),NativePanelLayout.UNIT);
     }
     private static boolean membershipValid(NativeWallEntity root,NativeWallLayouts.Group group){
         var access=new LevelAccess(root.getLevel());
-        for(BlockPos next:candidates(access,root.getBlockPos(),root)){boolean contains=group.layouts.containsKey(next.asLong()),matches=compatible(access,root.getBlockPos(),root,next,group.mode)!=null;if(contains&&!matches||!contains&&matches&&!group.capped)return false;}return true;
+        for(BlockPos next:candidates(access,root.getBlockPos(),root)){boolean contains=group.layouts.containsKey(next.asLong()),matches=compatible(access,root.getBlockPos(),root,next,group.mode)!=null&&com.vandorlabs.neoforge.NativeTextureJoins.edge(root,root.getBlockPos(),next);if(contains&&!matches||!contains&&matches&&!group.capped)return false;}return true;
     }
     static <M> Capture<M> capture(Access<M> access,BlockPos origin,M root){return capture(access,origin,root,NativePanelGroups.Mode.MATERIAL);}
     static <M> Capture<M> capture(Access<M> access,BlockPos origin,M root,NativePanelGroups.Mode queryMode){
-        if(!access.loaded(origin))throw new IllegalArgumentException("Loaded diagonal artwork root required");
+        return capture(access,origin,root,queryMode,null);
+    }
+    static <M> Capture<M> capture(Access<M> access,BlockPos origin,M root,NativePanelGroups.Mode queryMode,com.vandorlabs.neoforge.NativeJoinDependencies.Bounds dependencies){
+        if(dependencies!=null)dependencies.include(origin);if(!access.loaded(origin))throw new IllegalArgumentException("Loaded diagonal artwork root required");
         Map<BlockPos,M> members=new LinkedHashMap<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();members.put(origin,root);queue.add(origin);
         while(groupingEnabled(access,origin,root,queryMode)&&!queue.isEmpty()&&members.size()<NativePanelGroups.LIMIT){
             BlockPos current=queue.removeFirst();M member=members.get(current);
             for(BlockPos next:candidates(access,current,member)){
-                if(members.containsKey(next))continue;M other=compatible(access,current,member,next,queryMode);if(other==null)continue;members.put(next,other);queue.add(next);if(members.size()>=NativePanelGroups.LIMIT)break;
+                if(dependencies!=null)dependencies.include(next);
+                if(members.containsKey(next)||!access.textureJoin(root).connects(current.getX(),current.getY(),current.getZ(),next.getX(),next.getY(),next.getZ()))continue;M other=compatible(access,current,member,next,queryMode);if(other==null)continue;members.put(next,other);queue.add(next);if(members.size()>=NativePanelGroups.LIMIT)break;
             }
         }
         BlockPos first=Collections.min(members.keySet());Direction basis=access.localState(members.get(first)).getValue(NativePanelBlock.FACING),right=basis.getClockWise();boolean half=mode(access,root)==2;Direction up=half?basis.getOpposite():Direction.UP;
@@ -94,7 +101,7 @@ final class NativeDiagonalLayouts {
         return new Capture<>(Collections.unmodifiableMap(members),layouts,capped);
     }
     private static <M> boolean groupingEnabled(Access<M> access,BlockPos origin,M root,NativePanelGroups.Mode mode){
-        return switch(mode){case MATERIAL->true;case GLASS->access.glass(root).textureJoin;case APERTURE->access.settings(root).joinPortholes&&!access.solid(origin,root);};
+        return switch(mode){case MATERIAL->access.textureJoin(root).direction!=0;case GLASS->access.textureJoin(root).direction!=0&&access.glass(root).textureJoin;case APERTURE->access.settings(root).joinPortholes&&!access.solid(origin,root);};
     }
     private static <M> List<BlockPos> candidates(Access<M> access,BlockPos pos,M host){
         Direction facing=access.localState(host).getValue(NativePanelBlock.FACING),right=facing.getClockWise();int mode=mode(access,host);
@@ -103,7 +110,7 @@ final class NativeDiagonalLayouts {
     }
     private static <M> M compatible(Access<M> access,BlockPos rootPos,M root,BlockPos next,NativePanelGroups.Mode queryMode){
         if(!access.loaded(next))return null;BlockState a=access.localState(root),b=access.state(next);
-        if(a.getBlock()!=b.getBlock())return null;M other=access.member(next);if(other==null)return null;
+        if(a.getBlock()!=b.getBlock())return null;M other=access.member(next);if(other==null||access.textureJoin(other).direction==0)return null;
         if(queryMode==NativePanelGroups.Mode.MATERIAL){if(access.mainTexture(root)!=access.mainTexture(other)||access.textureLayout(root)!=access.textureLayout(other)||access.settings(root).fill!=access.settings(other).fill)return null;}
         else if(queryMode==NativePanelGroups.Mode.GLASS){
             var ar=access.glass(root);var br=access.glass(other);

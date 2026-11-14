@@ -55,13 +55,13 @@ public final class GuiDuplifier extends GuiContainer {
     }
 
     private String directionLabel(){return "Ignore directionality: "+(DuplifierApplyOptions.ignoreDirectionality(tool())?"On":"Off");}
-    private void sendOptions(){PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(DuplifierApplyOptions.maskWords(tool()),DuplifierApplyOptions.connected(tool()),DuplifierApplyOptions.ignoreDirectionality(tool())));}
+    private void sendOptions(){PacketHandler.INSTANCE.sendToServer(new MessageDuplifierOptions(DuplifierApplyOptions.maskWords(tool()),DuplifierApplyOptions.connected(tool()),DuplifierApplyOptions.ignoreDirectionality(tool()),DuplifierApplyOptions.respectJoins(tool())));}
 
     private void showPage() {
         buttonList.clear();
         for(CopifierDialog.Control control:CopifierDialog.controls(guiLeft,guiTop,page,
                 DuplifierApplyOptions.maskWords(tool()),DuplifierApplyOptions.connected(tool()),
-                DuplifierApplyOptions.ignoreDirectionality(tool()),"Done")) {
+                DuplifierApplyOptions.ignoreDirectionality(tool()),DuplifierApplyOptions.respectJoins(tool()),"Done")) {
             GuiButton button=control.tab?new DialogTabButton(control.id,control.x,control.y,
                     control.width,control.height,control.label):new GuiButton(control.id,control.x,
                     control.y,control.width,control.height,control.label);
@@ -73,13 +73,15 @@ public final class GuiDuplifier extends GuiContainer {
         if(button.id==97){PacketHandler.INSTANCE.sendToServer(MessageDuplifierOptions.undo());
         } else if (button.id == 99) {
             mc.player.closeScreen();
+        } else if(button.id==CopifierDialog.RESPECT_JOINS){
+            DuplifierApplyOptions.setRespectJoins(tool(),!DuplifierApplyOptions.respectJoins(tool()));sendOptions();showPage();
         } else if (button.id == 96) {
             DuplifierApplyOptions.setIgnoreDirectionality(tool(),!DuplifierApplyOptions.ignoreDirectionality(tool()));
             sendOptions();button.displayString=directionLabel();
         } else if (button.id == 98) {
             DuplifierApplyOptions.setConnected(tool(), !DuplifierApplyOptions.connected(tool()));
             sendOptions();
-            button.displayString = connectedLabel();
+            showPage();
         } else if (button.id >= 0 && button.id < DuplifierApplyOptions.PAGES.length) {
             page = button.id;
             showPage();
@@ -101,10 +103,10 @@ public final class GuiDuplifier extends GuiContainer {
                 guiTop + 7, 0xFFFFFFFF);
         DialogHeader.logo(guiLeft,guiTop,xSize);
         fontRenderer.drawString("Choose which copied properties to apply", guiLeft + 14,
-                guiTop + 70, 0xFFB8C7D2);
+                guiTop + 92, 0xFFB8C7D2);
     }
     @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,java.util.stream.IntStream.concat(java.util.stream.IntStream.of(96,98),
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,java.util.stream.IntStream.concat(java.util.stream.IntStream.of(95,96,98),
                 java.util.stream.IntStream.range(OPTION_START,OPTION_START+DuplifierApplyOptions.OPTIONS.length)).toArray()))return;
         super.mouseClicked(x,y,button);
     }

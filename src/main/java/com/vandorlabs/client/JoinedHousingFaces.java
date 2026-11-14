@@ -58,12 +58,12 @@ public final class JoinedHousingFaces {
         Set<BlockPos> members=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(root.getPos());
         while(!queue.isEmpty()&&members.size()<=LIMIT){BlockPos at=queue.removeFirst();
             if(members.contains(at)||!matches(world,root,at,face))continue;
-            members.add(at);for(EnumFacing step:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})queue.add(at.offset(step));
+            members.add(at);for(EnumFacing step:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})if(TextureJoins.allows(root,at,at.offset(step)))queue.add(at.offset(step));
         }
         if(members.size()>LIMIT){for(BlockPos at:members)cache.planes.computeIfAbsent(at,k->new HousingFaceLayouts.Plane[6])[face.getIndex()]=new HousingFaceLayouts.Plane(new int[3],new int[]{1,1,1});return;}
         Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos at:members)cells.put(PortholeRectangles.cell(axis(at,u),axis(at,v)),at);
         for(PortholeRectangles.Rect rect:PortholeRectangles.partition(cells.keySet()))for(int y=0;y<rect.height;y++)for(int x=0;x<rect.width;x++){
-            BlockPos at=cells.get(PortholeRectangles.cell(rect.x+x,rect.y+y));int col=x%16,row=y%16;int[] min={-u.getFrontOffsetX()*col-v.getFrontOffsetX()*row,-u.getFrontOffsetY()*col-v.getFrontOffsetY()*row,-u.getFrontOffsetZ()*col-v.getFrontOffsetZ()*row};
+            BlockPos at=cells.get(PortholeRectangles.cell(rect.x+x,rect.y+y));if(!at.equals(root.getPos())&&(!TextureJoins.defaultPolicy(root)||!TextureJoins.defaultPolicy(world.getTileEntity(at))))continue;int col=x%16,row=y%16;int[] min={-u.getFrontOffsetX()*col-v.getFrontOffsetX()*row,-u.getFrontOffsetY()*col-v.getFrontOffsetY()*row,-u.getFrontOffsetZ()*col-v.getFrontOffsetZ()*row};
             int[] size={1,1,1};size[u.getAxis().ordinal()]=Math.min(16,rect.width-x/16*16);size[v.getAxis().ordinal()]=Math.min(16,rect.height-y/16*16);
             HousingFaceLayouts.Plane[] maps=cache.planes.computeIfAbsent(at,k->new HousingFaceLayouts.Plane[6]);maps[face.getIndex()]=new HousingFaceLayouts.Plane(min,size);
         }

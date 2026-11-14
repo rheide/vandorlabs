@@ -415,3 +415,15 @@ tasks.register('testNativeDiagonalGlassMeshes', JavaExec) {
 }
 
 fileTree('gradle/verification').matching { include '*.gradle' }.files.sort().each { apply from: it }
+
+tasks.register('testNativeTextureJoins', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.NativeTextureJoinChecks'
+}
+
+tasks.register('testNativeJoinDependencies', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.shape.NativeJoinDependencyChecks'
+}

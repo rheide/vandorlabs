@@ -11,7 +11,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.MessageContext;
 
 public final class MessageDuplifierOptions implements IMessage {
     private long[] mask;private boolean valid;
-    private boolean connected,ignoreDirectionality,undo;
+    private boolean connected,ignoreDirectionality,respectJoins,undo;
     public static MessageDuplifierOptions undo(){MessageDuplifierOptions message=new MessageDuplifierOptions();message.undo=true;message.valid=true;return message;}
 
     public MessageDuplifierOptions() { }
@@ -19,10 +19,11 @@ public final class MessageDuplifierOptions implements IMessage {
         this(DuplifierApplyOptions.legacyWords(mask),connected);
     }
     public MessageDuplifierOptions(long[] mask,boolean connected){this(mask,connected,false);}
-    public MessageDuplifierOptions(long[] mask,boolean connected,boolean ignoreDirectionality){this.mask=mask.clone();this.connected=connected;this.ignoreDirectionality=ignoreDirectionality;this.valid=DuplifierApplyOptions.valid(mask);}
+    public MessageDuplifierOptions(long[] mask,boolean connected,boolean ignoreDirectionality){this(mask,connected,ignoreDirectionality,false);}
+    public MessageDuplifierOptions(long[] mask,boolean connected,boolean ignoreDirectionality,boolean respectJoins){this.respectJoins=respectJoins;this.mask=mask.clone();this.connected=connected;this.ignoreDirectionality=ignoreDirectionality;this.valid=DuplifierApplyOptions.valid(mask);}
 
     @Override public void fromBytes(ByteBuf buf) {
-        valid=false;undo=false;ignoreDirectionality=false;mask=null;
+        valid=false;undo=false;ignoreDirectionality=false;respectJoins=false;mask=null;
         try{
             long low=buf.readLong();connected=buf.readBoolean();
             if(!buf.isReadable())mask=DuplifierApplyOptions.legacyWords(low);
@@ -34,12 +35,12 @@ public final class MessageDuplifierOptions implements IMessage {
                 if(buf.readableBytes()!=bytes && buf.readableBytes()!=bytes+1)return;
                 mask=new long[count];mask[0]=low;
                 for(int i=1;i<count;i++)mask[i]=buf.readLong();
-                if(buf.isReadable()){int flag=buf.readUnsignedByte();if(flag>1)return;ignoreDirectionality=flag==1;}
+                if(buf.isReadable()){int flag=buf.readUnsignedByte();if(flag>3)return;ignoreDirectionality=(flag&1)!=0;respectJoins=(flag&2)!=0;}
             }
             valid=DuplifierApplyOptions.valid(mask);
         }catch(Exception malformed){valid=false;}
     }
-    @Override public void toBytes(ByteBuf buf) {if(undo){buf.writeLong(0);buf.writeBoolean(false);buf.writeByte(0);return;}buf.writeLong(mask[0]);buf.writeBoolean(connected);buf.writeByte(mask.length);for(int i=1;i<mask.length;i++)buf.writeLong(mask[i]);buf.writeBoolean(ignoreDirectionality);}
+    @Override public void toBytes(ByteBuf buf) {if(undo){buf.writeLong(0);buf.writeBoolean(false);buf.writeByte(0);return;}buf.writeLong(mask[0]);buf.writeBoolean(connected);buf.writeByte(mask.length);for(int i=1;i<mask.length;i++)buf.writeLong(mask[i]);buf.writeByte((ignoreDirectionality?1:0)|(respectJoins?2:0));}
 
     public static final class Handler implements IMessageHandler<MessageDuplifierOptions, IMessage> {
         @Override public IMessage onMessage(MessageDuplifierOptions message, MessageContext context) {
@@ -53,6 +54,7 @@ public final class MessageDuplifierOptions implements IMessage {
                 DuplifierApplyOptions.setMask(tool, message.mask);
                 DuplifierApplyOptions.setConnected(tool, message.connected);
                 DuplifierApplyOptions.setIgnoreDirectionality(tool,message.ignoreDirectionality);
+                DuplifierApplyOptions.setRespectJoins(tool,message.respectJoins);
                 player.inventory.markDirty();
             });
             return null;

@@ -34,7 +34,7 @@ public final class FrameAppearancePane {
                 :HousingTextureList.forCategory("Screens",left+12,body,listWidth,page==2?appearance.splitTop:appearance.splitBottom,8))
                 .visibleRows(Math.max(2,(height-contentTop-(anyControls?34:56))/HousingTextureList.ROW_HEIGHT)).keepView(textures);
         int controlY=body;
-        if(tiledFrame){buttons.add(new GuiButton(3003,controls,controlY,154,20,"Texture: "+(appearance.tile?"Tile":"Fit")));controlY+=24;}
+        if(tiledFrame){buttons.add(new GuiButton(3003,controls,controlY,154,20,"Texture: "+(appearance.tile?"Tile":"Fit (Aspect)")));controlY+=24;}
 
         if(bare)buttons.add(new GuiButton(3008,controls,controlY,154,20,(display()?appearance.hasFront():framed.getAsBoolean())?"Framed":"Bare"));
 
@@ -45,7 +45,7 @@ public final class FrameAppearancePane {
         displayPage=true;buttons=hostButtons;contentTop=54;if(page<2)page=2;
         buttons.removeIf(b->b.id>=3000&&b.id<=3008);
         int left=host.getGuiLeft(),top=host.getGuiTop(),controls=left+host.getXSize()-166;
-        buttons.add(new GuiButton(3004,controls,top+124,154,20,"Texture: "+(appearance.displayFit?"Fit":"Tile")));
+        buttons.add(new GuiButton(3004,controls,top+124,154,20,"Texture: "+(appearance.displayFit?"Fit (Aspect)":"Tile")));
         buttons.add(new GuiButton(3007,controls,top+148,154,20,"Split display: "+(appearance.split?"On":"Off")));
         textures=null;
         if(appearance.split){

@@ -24,6 +24,10 @@ These collages cover the built-in texture picker, including both light states an
 
 ![Double Doors textures](texture-browser/collages/double-doors.png)
 
+## Floor
+
+![Floor textures](texture-browser/collages/floor.png)
+
 ## Frame
 
 ![Frame textures](texture-browser/collages/frame.png)

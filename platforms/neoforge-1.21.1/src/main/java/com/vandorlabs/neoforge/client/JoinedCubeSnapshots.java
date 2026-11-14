@@ -21,7 +21,7 @@ public final class JoinedCubeSnapshots {
     private static ClientLevel lastWorld;
     private static volatile long generation;
     private static volatile boolean active;
-    private record Signature(int main,int layout,boolean enabled,int f0,int f1,int f2,int f3,int f4,int f5,Direction facing){}
+    private record Signature(int main,int layout,com.vandorlabs.surface.TextureJoinSettings join,boolean enabled,int f0,int f1,int f2,int f3,int f4,int f5,Direction facing){}
     private static final Map<ProgrammableBlockEntity,Signature> SEEN=new WeakHashMap<>();
     private static long scans,publications,requests,samples,invalidations;
     public record Stats(long requests,long samples,long scans,long publications,long invalidations,int queued){}
@@ -53,18 +53,18 @@ public final class JoinedCubeSnapshots {
     }
     private static boolean matches(ClientLevel world,ProgrammableBlockEntity root,BlockPos pos,Direction face){
         if(!world.hasChunkAt(pos)||!world.getBlockState(pos).is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get())||!exposed(world,pos,face))return false;
-        return world.getBlockEntity(pos) instanceof ProgrammableBlockEntity tile&&tile.getBlockState().getValue(ProgrammableBlock.FACING)==root.getBlockState().getValue(ProgrammableBlock.FACING)
+        return world.getBlockEntity(pos) instanceof ProgrammableBlockEntity tile&&tile.textureJoin().direction!=0&&tile.getBlockState().getValue(ProgrammableBlock.FACING)==root.getBlockState().getValue(ProgrammableBlock.FACING)
             &&tile.settings().layout==root.settings().layout&&material(tile,face)==material(root,face);
     }
     public static void sample(ClientLevel world,BlockPos pos){
         if(!Minecraft.getInstance().isSameThread())throw new IllegalStateException("Joined world sampling outside client thread");
         if(!world.hasChunkAt(pos)||!world.getBlockState(pos).is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get())||!(world.getBlockEntity(pos) instanceof ProgrammableBlockEntity root))return;
-        samples++;var state=root.settings();Signature signature=new Signature(state.mainTexture,state.layout,state.facesEnabled,state.face(0),state.face(1),state.face(2),state.face(3),state.face(4),state.face(5),root.getBlockState().getValue(ProgrammableBlock.FACING));
+        samples++;var state=root.settings();Signature signature=new Signature(state.mainTexture,state.layout,root.textureJoin(),state.facesEnabled,state.face(0),state.face(1),state.face(2),state.face(3),state.face(4),state.face(5),root.getBlockState().getValue(ProgrammableBlock.FACING));
         Signature previous=SEEN.put(root,signature);
         if(previous!=null&&!previous.equals(signature)){invalidations++;Minecraft.getInstance().levelRenderer.setBlocksDirty(pos.getX()-16,pos.getY()-16,pos.getZ()-16,pos.getX()+16,pos.getY()+16,pos.getZ()+16);}
         Map<BlockPos,HousingFacePlane[]> next=new HashMap<>();next.put(pos,new HousingFacePlane[6]);
-        if(state.layout!=1)for(Direction face:Direction.values())if(exposed(world,pos,face))discover(world,root,face,next);
-        for(var entry:next.entrySet())if(world.hasChunkAt(entry.getKey())&&world.getBlockEntity(entry.getKey()) instanceof ProgrammableBlockEntity tile){
+        if(state.layout!=1&&root.textureJoin().direction!=0)for(Direction face:Direction.values())if(exposed(world,pos,face))discover(world,root,face,next);
+        for(var entry:next.entrySet())if(entry.getKey().equals(pos)&&world.hasChunkAt(entry.getKey())&&world.getBlockEntity(entry.getKey()) instanceof ProgrammableBlockEntity tile){
             HousingFacePlane[] planes=entry.getValue();boolean joined=false;
             for(var plane:planes)if(plane!=null&&plane.size(0)*plane.size(1)*plane.size(2)>1)joined=true;
             if(joined)for(Direction face:Direction.values())if(planes[face.get3DDataValue()]==null&&exposed(world,entry.getKey(),face))planes[face.get3DDataValue()]=UNIT;
@@ -75,7 +75,7 @@ public final class JoinedCubeSnapshots {
         scans++;Direction u=face.getAxis()==Direction.Axis.X?Direction.SOUTH:Direction.EAST,v=face.getAxis()==Direction.Axis.Y?Direction.SOUTH:Direction.UP;
         Set<BlockPos> members=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(root.getBlockPos());
         while(!queue.isEmpty()&&members.size()<=256){BlockPos at=queue.removeFirst();if(members.contains(at)||!matches(world,root,at,face))continue;
-            members.add(at);queue.add(at.relative(u));queue.add(at.relative(u.getOpposite()));queue.add(at.relative(v));queue.add(at.relative(v.getOpposite()));}
+            members.add(at);for(Direction step:new Direction[]{u,u.getOpposite(),v,v.getOpposite()}){BlockPos candidate=at.relative(step);if(NativeTextureJoins.edge(root,at,candidate))queue.add(candidate);}}
         if(members.size()>256){for(BlockPos at:members)planes(world,at,next)[face.get3DDataValue()]=UNIT;return;}
         Map<Long,BlockPos> cells=new HashMap<>();for(BlockPos at:members)cells.put(JoinedRectangles.cell(axis(at,u),axis(at,v)),at);
         for(var rectangle:JoinedRectangles.partition(cells.keySet()))for(int y=0;y<rectangle.height;y++)for(int x=0;x<rectangle.width;x++){

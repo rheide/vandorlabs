@@ -113,13 +113,15 @@ public final class NativeCopifierHousingWorld {
     }
     private record Glass(com.vandorlabs.neoforge.glass.NativeGlassEntity tile) implements Target {
         private com.vandorlabs.neoforge.glass.NativeGlassSettings current(){return tile.settings().resolveLegacySize(tile.getBlockState().getValue(com.vandorlabs.neoforge.glass.NativeGlassBlock.SIZE));}
-        public CompoundTag capture(){return NativeCopifierGlassEdit.capture(current());}
+        public CompoundTag capture(){var out=NativeCopifierGlassEdit.capture(current());var policy=new CompoundTag();policy.putInt("Direction",tile.textureJoin().direction);policy.putInt("Parity",tile.textureJoin().parity);out.put("texture_join_policy",policy);return out;}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
             final NativeCopifierGlassEdit.Plan plan;var before=current();try{plan=NativeCopifierGlassEdit.prepare(before,values);}catch(IllegalArgumentException malformed){return false;}
-            if(!plan.applicable()||!com.vandorlabs.neoforge.glass.NativeGlassService.valid(plan.settings()))return false;
-            if(before.same(plan.settings()))return true;
+            if((!plan.applicable()&&!values.contains("texture_join_policy",net.minecraft.nbt.Tag.TAG_COMPOUND))||!com.vandorlabs.neoforge.glass.NativeGlassService.valid(plan.settings()))return false;
+            var policy=values.contains("texture_join_policy",net.minecraft.nbt.Tag.TAG_COMPOUND)?values.getCompound("texture_join_policy"):null;
+            if(before.same(plan.settings())&&policy==null)return true;
             NativeCopifierUndo.before(actor,level,pos);
-            return tile.configure(plan.settings(),tile.getBlockState().getValue(com.vandorlabs.neoforge.glass.NativeGlassBlock.SIZE));
+            if(!tile.configure(plan.settings(),tile.getBlockState().getValue(com.vandorlabs.neoforge.glass.NativeGlassBlock.SIZE)))return false;
+            if(policy!=null)tile.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(policy.getInt("Direction"),policy.getInt("Parity")));return true;
         }
     }
     static Target installed(ServerLevel level,BlockPos pos){
@@ -173,6 +175,7 @@ public final class NativeCopifierHousingWorld {
             if((wall.isPorthole()||wall.isGlass())&&!wall.configurePanelGlass(plan.glass(),plan.playback(),plan.walls().joinPortholes,plan.walls().portholeShape))throw new IllegalStateException("Validated copied panel refused");
         }else if(tile instanceof com.vandorlabs.neoforge.shape.ProgrammableShapeEntity shape){if(!shape.applyShape(plan.appearance()))return false;}
         else tile.apply(plan.appearance().housing());
+        if(values.contains("texture_join_policy",net.minecraft.nbt.Tag.TAG_COMPOUND))tile.setTextureJoin(com.vandorlabs.surface.TextureJoinSettings.read(new com.vandorlabs.neoforge.ModernHousingTags(plan.fields())));
         if(!tile.configureCopiedMetadata(plan.frames(),plan.channels(),plan.transmissionRange(),plan.localRedstone(),plan.transmittedChannels()))throw new IllegalStateException("Validated copied metadata refused");
         level.sendBlockUpdated(pos,tile.getBlockState(),tile.getBlockState(),2);return true;
     }

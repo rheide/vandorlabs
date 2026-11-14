@@ -36,7 +36,7 @@ public class NativeCopifierItem extends Item implements NativeOwnsBlockInteracti
         var selected=NativeCopifierOptions.selected(NativeCopifierClipboard.settings(root),NativeCopifierOptions.maskWords(root));
         NativeCopifierUndo.begin(player,level);
         try{boolean applied=NativeCopifierOptions.connected(root)
-            ?NativeCopifierHousingConnected.apply(level,pos,player,context.getClickedFace(),selected,NativeCopifierOptions.ignoreDirectionality(root))>0
+            ?NativeCopifierHousingConnected.apply(level,pos,player,context.getClickedFace(),selected,NativeCopifierOptions.ignoreDirectionality(root),NativeCopifierOptions.respectJoins(root))>0
             :NativeCopifierHousingWorld.applySingle(level,pos,player,context.getClickedFace(),selected);
         return applied?InteractionResult.CONSUME:InteractionResult.FAIL;
         }finally{NativeCopifierUndo.finish(player);}

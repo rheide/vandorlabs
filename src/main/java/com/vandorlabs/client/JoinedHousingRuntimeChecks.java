@@ -15,6 +15,7 @@ import java.util.*;
 final class JoinedHousingRuntimeChecks {
     static void run(Minecraft mc){
         try{JoinedFitAppearanceChecks.run(mc);}catch(Exception failure){throw new IllegalStateException("Joined Fit vanilla appearance",failure);}
+        directional(mc);
         int count=0;BlockPos base=new BlockPos(15,10,15);
         int texture=ScreenHousingTextures.screenIndex("corp/ashiro_logo");
         require(texture>0,"company logo fixture");
@@ -65,6 +66,27 @@ final class JoinedHousingRuntimeChecks {
             count++;
         }
         System.out.println("[vandorlabs][reprolab] joined-block-textures PASS "+count+" real-model cases, six faces four facings, chunk borders, continuous UVs, Fit aspect and material splits");
+    }
+    private static void directional(Minecraft mc){
+        List<VehicleStructure.Cell> cells=new ArrayList<>();
+        IBlockState state=ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState();
+        for(int x=0;x<=8;x++){
+            BlockPos pos=new BlockPos(x,30,20);TileEntityAnimatedScreenSelector tile=new TileEntityAnimatedScreenSelector();tile.setPos(pos);tile.setMainTextureLayout(0);
+            tile.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(x==3||x==2?5:1,x==3||x==2?1:0));
+            cells.add(new VehicleStructure.Cell(pos,state,tile.writeToNBT(new NBTTagCompound())));
+        }
+        VehicleWorld world=new VehicleWorld(mc.world,VehicleStructure.display(cells));
+        // Prime the unrestricted owner's cache first; directed neighbors must not inherit it.
+        JoinedHousingFaces.sample((TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(0,30,20)),63);
+        for(int x:new int[]{3,2,3,2}){
+            TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(x,30,20));
+            HousingFaceLayouts.Plane plane=JoinedHousingFaces.sample(tile,63).face(EnumFacing.UP);int width=plane==null?1:plane.size(0);
+            require(width==(x==3?3:1),"owner-directed Even coordinate filter and cache isolation owner="+x+" width="+width);
+        }
+        TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(3,30,20));
+        NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(saved);
+        require(loaded.textureJoin().direction==5&&loaded.textureJoin().parity==1,"direction/parity saved round trip");
+        System.out.println("[vandorlabs][reprolab] directional-joins PASS owner3-Even neighbors2/4 owner2-Even singleton mixed-neighbor filters cache-isolation persistence");
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("joined block textures: "+message);}
 }

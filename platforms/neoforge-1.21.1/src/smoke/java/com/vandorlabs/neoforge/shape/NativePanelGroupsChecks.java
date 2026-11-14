@@ -8,6 +8,11 @@ import net.minecraft.core.Direction;
 public final class NativePanelGroupsChecks {
     private static void require(boolean ok, String why) { if (!ok) throw new AssertionError(why); }
     public static void main(String[] args) {
+        var root=new BlockPos(3,80,0);var even=new com.vandorlabs.surface.TextureJoinSettings(com.vandorlabs.surface.TextureJoinSettings.EAST_WEST,com.vandorlabs.surface.TextureJoinSettings.EVEN);
+        var directed=NativePanelGroups.capture(root,Direction.EAST,"same",p->p.getY()==80&&p.getZ()==0&&p.getX()>=0&&p.getX()<=6?"same":null,(a,b)->even.connects(a.getX(),a.getY(),a.getZ(),b.getX(),b.getY(),b.getZ()));
+        require(directed.members().keySet().equals(Set.of(root,new BlockPos(2,80,0),new BlockPos(4,80,0))),"owner3 Even accepts candidate2/4 without candidate parity veto");
+        require(directed.layouts().get(root.asLong()).columns()==3,"directed owner retains its three-cell texture span");
+
         for (int a : new int[]{0, 7, 13}) for (int b : new int[]{0, 7, 13})
             for (int la = 0; la < 3; la++) for (int lb = 0; lb < 3; lb++) {
                 require(NativePanelGroups.Mode.APERTURE.sameSettings(a, la, true, 3,

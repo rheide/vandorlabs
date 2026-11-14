@@ -337,6 +337,11 @@ public final class ProgrammableSettings {
             out.setInteger(RAMP_TRAVEL, ramp.travelAxis);
             out.setBoolean(RAMP_MATCH_TEXTURES, ramp.matchTextures);
         }
+        if(tile instanceof com.vandorlabs.surface.TextureJoinOwner){
+            com.vandorlabs.surface.TextureJoinSettings policy=((com.vandorlabs.surface.TextureJoinOwner)tile).textureJoin();
+            NBTTagCompound joinPolicy=new NBTTagCompound();joinPolicy.setInteger("Direction",policy.direction);joinPolicy.setInteger("Parity",policy.parity);
+            out.setTag("texture_join_policy",joinPolicy);
+        }
         return out.hasNoTags() ? null : out;
     }
 
@@ -355,6 +360,7 @@ public final class ProgrammableSettings {
             ((TileEntitySpaceDoor)tile).applyItemSettings(input.getSubCompound("SpaceDoorSettings"));
         if (tile instanceof TileEntityProgrammableGlass && input.getSubCompound("ProgrammableGlassSettings") != null) {
             NBTTagCompound glass = input.getSubCompound("ProgrammableGlassSettings");
+            if(glass.hasKey(com.vandorlabs.surface.TextureJoinSettings.DIRECTION_TAG,3))((TileEntityProgrammableGlass)tile).setTextureJoin(com.vandorlabs.surface.TextureJoinSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(glass)));
             ((TileEntityProgrammableGlass)tile).frameAppearance.read(glass);
             ((TileEntityProgrammableGlass)tile).setSize(glass.getInteger("Size"));
             ((TileEntityProgrammableGlass)tile).setShade(glass.getInteger("Shade"));
@@ -384,7 +390,7 @@ public final class ProgrammableSettings {
             settings.setInteger("Size", glass.getSize());settings.setInteger("Shade",glass.getShade());settings.setBoolean("Join",glass.isJoin());settings.setInteger("Tint",glass.getTint());settings.setBoolean("Framed",glass.isFramed());
             settings.setInteger("Material",glass.getMaterial());
             settings.setBoolean("Stretch",glass.isStretch());settings.setInteger("LayoutMode",glass.getTextureLayout());
-            glass.frameAppearance.write(settings);glass.glassPlayback.writeSettings(settings);
+            glass.textureJoin().write(new com.vandorlabs.persistence.NbtPrimitiveData(settings));glass.frameAppearance.write(settings);glass.glassPlayback.writeSettings(settings);
             output.setTagInfo("ProgrammableGlassSettings",settings);
         }
         if (tile instanceof TileEntityRampController) output.setTagInfo("CopiedRampSettings", values.copy());
@@ -414,6 +420,10 @@ public final class ProgrammableSettings {
         NBTTagCompound transmission=values.getCompoundTag("Transmission");
         ChannelList transmissionChannels=values.hasKey("Transmission",10)?ChannelList.of(transmission.getIntArray("Channels")):null;
         boolean applicable = false;
+        if(tile instanceof com.vandorlabs.surface.TextureJoinOwner&&values.hasKey("texture_join_policy",10)){
+            NBTTagCompound policy=values.getCompoundTag("texture_join_policy");
+            ((com.vandorlabs.surface.TextureJoinOwner)tile).setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(policy.getInteger("Direction"),policy.getInteger("Parity")));applicable=true;
+        }
         if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile && values.hasKey(SEGMENTED_DOOR,10)){
             com.vandorlabs.segmented.SegmentedDoorTile door=(com.vandorlabs.segmented.SegmentedDoorTile)tile,selected=new com.vandorlabs.segmented.SegmentedDoorTile();selected.applyItemConfiguration(values.getCompoundTag(SEGMENTED_DOOR),channels(values,door));
             if(world==null)door.applyItemConfiguration(selected.configuration(),selected.getRedstoneChannels());

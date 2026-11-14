@@ -7252,5 +7252,115 @@
     "label": "Lattice Gate",
     "category": "Doors/Segmented",
     "source": "segmented_gates/previews/lattice"
+  },
+  {
+    "id": "floor_floor_tile_blue",
+    "label": "Floor Tile Blue",
+    "category": "Floor",
+    "source": "floor/floor_tile_blue"
+  },
+  {
+    "id": "floor_floor_tile_charcoal",
+    "label": "Floor Tile Charcoal",
+    "category": "Floor",
+    "source": "floor/floor_tile_charcoal"
+  },
+  {
+    "id": "floor_floor_tile_green",
+    "label": "Floor Tile Green",
+    "category": "Floor",
+    "source": "floor/floor_tile_green"
+  },
+  {
+    "id": "floor_floor_tile_warm",
+    "label": "Floor Tile Warm",
+    "category": "Floor",
+    "source": "floor/floor_tile_warm"
+  },
+  {
+    "id": "floor_floor_tile_white",
+    "label": "Floor Tile White",
+    "category": "Floor",
+    "source": "floor/floor_tile_white"
+  },
+  {
+    "id": "floor_limestone_tile",
+    "label": "Limestone Tile",
+    "category": "Floor",
+    "source": "floor/limestone_tile"
+  },
+  {
+    "id": "floor_staggered_tiles_blue",
+    "label": "Staggered Tiles Blue",
+    "category": "Floor",
+    "source": "floor/staggered_tiles_blue"
+  },
+  {
+    "id": "floor_staggered_tiles_green",
+    "label": "Staggered Tiles Green",
+    "category": "Floor",
+    "source": "floor/staggered_tiles_green"
+  },
+  {
+    "id": "floor_staggered_tiles_grey",
+    "label": "Staggered Tiles Grey",
+    "category": "Floor",
+    "source": "floor/staggered_tiles_grey"
+  },
+  {
+    "id": "floor_staggered_tiles_red",
+    "label": "Staggered Tiles Red",
+    "category": "Floor",
+    "source": "floor/staggered_tiles_red"
+  },
+  {
+    "id": "floor_staggered_tiles_warm",
+    "label": "Staggered Tiles Warm",
+    "category": "Floor",
+    "source": "floor/staggered_tiles_warm"
+  },
+  {
+    "id": "floor_terrazo",
+    "label": "Terrazo",
+    "category": "Floor",
+    "source": "floor/terrazo"
+  },
+  {
+    "id": "floor_terrazo_tile",
+    "label": "Terrazo Tile",
+    "category": "Floor",
+    "source": "floor/terrazo_tile"
+  },
+  {
+    "id": "utility_door_bathroom_white",
+    "label": "Bathroom White",
+    "category": "Doors/Utility",
+    "source": "utility_doors/bathroom_white",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_modern_oak_windowed",
+    "label": "Modern Oak Windowed",
+    "category": "Doors/Utility",
+    "source": "utility_doors/modern_oak_windowed",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_windowed_utility",
+    "label": "Windowed Utility",
+    "category": "Doors/Utility",
+    "source": "utility_doors/windowed_utility",
+    "rectangular": true,
+    "doorArtwork": true
+  },
+  {
+    "id": "utility_door_windowed_white",
+    "label": "Windowed White",
+    "category": "Doors/Utility",
+    "source": "utility_doors/windowed_white",
+    "rectangular": true,
+    "doorArtwork": true
   }
 ]

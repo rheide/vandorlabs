@@ -37,6 +37,7 @@ final class DoorAppearanceRuntimeChecks {
  static void run(Minecraft mc,File output)throws Exception{
   benchmarkCaches(output);
   customMirror(mc,output);
+  filesystemMirror(mc,output);
   CompanyDoorChecks.run(mc,output);
   worldGeometryDistance(mc);
   int bg=ScreenHousingTextures.screenIndex("frames/frames-door-window/vandor_bg"),inside=ScreenHousingTextures.screenIndex("materials/cool_steel"),cases=0;
@@ -95,6 +96,17 @@ final class DoorAppearanceRuntimeChecks {
    }finally{f.close();}
   }
   System.out.println("[vandorlabs][reprolab] door-custom-mirror PASS cases="+count+" normal/large both-hands Fit/Tile/Auto asymmetric-block/vanilla-door split-sprites cached-geometry");
+ }
+ private static void filesystemMirror(Minecraft mc,File output)throws Exception{
+  int choice=FilesystemTextures.identifier("Reference/portrait.png"),cases=0;require(ScreenHousingTextures.localIndex(choice)>0,"filesystem portrait discovered before atlas loading");
+  for(boolean large:new boolean[]{false,true})for(int layout=0;layout<3;layout++){
+   Fixture f=new Fixture(mc,large,2,!large);try{
+    f.tile.setFaceTexture(choice);f.tile.setTextureLayout(layout);require(ScreenHousingTextures.doorArtworkMirror(choice,true)&&!ScreenHousingTextures.doorArtworkMirror(choice,false),"filesystem leaf mirror policy");
+    BufferedImage image=capture(mc,f,false,0,false);ImageIO.write(image,"png",new File(output,"door-filesystem-mirrored-"+(large?"large":"paired")+"-"+layout+".png"));
+    int different=0,total=0;for(int y=40;y<344;y++)for(int x=40;x<174;x++){int a=image.getRGB(x,y),b=image.getRGB(image.getWidth()-1-x,y);int delta=Math.abs((a>>16&255)-(b>>16&255))+Math.abs((a>>8&255)-(b>>8&255))+Math.abs((a&255)-(b&255));if(delta>30)different++;total++;}require(different<total/15,"actual paired/large filesystem door pixels must mirror around centre: "+different+"/"+total);cases++;
+   }finally{f.close();}
+  }
+  System.out.println("[vandorlabs][reprolab] door-filesystem-mirror PASS cases="+cases+" paired/Large Fit/Tile/Stretch real config PNG atlas rendered centre symmetry");
  }
  private static volatile Object benchmarkSink;
  private static void benchmarkCaches(File output)throws Exception{

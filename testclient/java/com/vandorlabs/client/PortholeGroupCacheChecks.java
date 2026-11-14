@@ -43,6 +43,17 @@ public final class PortholeGroupCacheChecks {
         arrays(a.polygon, b.polygon); arrays(a.frameQuads, b.frameQuads); arrays(a.hexEdges, b.hexEdges); arrays(a.glassQuads, b.glassQuads);
     }
     private static void close(World world) { PortholeGroupCache.unload(world); ReferencePortholeGroups.clear(); }
+    private static void directionalDependencies(){
+        World world=new World();IBlockState state=flat.getDefaultState();List<TileEntityAnimatedScreenSelector> line=new ArrayList<>();
+        try{
+            for(int x=0;x<48;x++)line.add(put(world,new BlockPos(x,80,8),state,0,0));
+            TileEntityAnimatedScreenSelector owner=line.get(0),vertical=line.get(24),ordinary=line.get(1);owner.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(5,0));vertical.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(2,0));
+            TEAnimatedScreenSelector.PortholeGroup wide=group(owner,state);need(wide.columns==48,"directional owner spans three real sections");need(group(vertical,state).columns==1,"wide owner never installs its group into vertical neighbor");need(group(ordinary,state).columns==48,"ordinary owner still spans matching custom neighbors");need(group(vertical,state).columns==1&&group(owner,state)==wide,"ordinary discovery cannot replace per-owner custom groups");
+            world.resetReads();need(group(owner,state)==wide&&group(vertical,state).columns==1,"directed groups retain stable owner descriptors");need(world.stateReads==0&&world.tileReads==0,"custom policies do not cause quiet per-frame rescans");
+            TileEntityAnimatedScreenSelector far=line.get(47);far.setJoinPortholes(false);world.notifyBlockUpdate(far.getPos(),state,state,3);TEAnimatedScreenSelector.PortholeGroup rebuilt=group(owner,state);need(rebuilt!=wide&&rebuilt.columns==47,"far third-section peer mutation invalidates complete owner dependencies");need(group(vertical,state).columns==1,"far invalidation retains independent vertical policy");
+            System.out.println("porthole-group-cache directed dependencies PASS threeSections/farPeerMutation/perOwnerIsolation/zeroIdleReads");
+        }finally{close(world);}
+    }
     private static void geometry() {
         BlockProgrammableWall[] blocks = {flat, new BlockProgrammablePortholeBlock(), new BlockProgrammableWall("porthole_cache_diagonal", BlockProgrammableWall.Shape.DIAGONAL_PORTHOLE)};
         int cases = 0;
@@ -158,7 +169,7 @@ public final class PortholeGroupCacheChecks {
         net.minecraft.init.Bootstrap.register(); com.vandorlabs.VandorLabs.proxy = new com.vandorlabs.CommonProxy(){@Override public void portholeGeometryChanged(TileEntityAnimatedScreenSelector tile){TEAnimatedScreenSelector.portholeChanged(tile);}};
         net.minecraftforge.fml.common.registry.GameRegistry.registerTileEntity(TileEntityAnimatedScreenSelector.class, new net.minecraft.util.ResourceLocation("vandorlabs", "porthole_group_cache_checks"));
         flat = new BlockProgrammableWall("porthole_cache_flat", BlockProgrammableWall.Shape.PORTHOLE);
-        geometry(); idle(); lifecycle(); carried(); capacity();
+        geometry(); directionalDependencies(); idle(); lifecycle(); carried(); capacity();
         System.out.println("porthole-group-cache PASS geometry/idle/multiworld/block+range/lifecycle+NBT/settings/chunks/carried/resource-reset/world-unload/8192+overflow/scan-limit");
     }
     private PortholeGroupCacheChecks() { }

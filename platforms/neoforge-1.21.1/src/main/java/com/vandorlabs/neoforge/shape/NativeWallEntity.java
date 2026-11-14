@@ -80,6 +80,11 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     @Override protected void appearancePublished(){publishWallAppearance();}
     public static boolean validFrame(int choice){if(choice==-1)return true;if(!ModernFinishCatalog.validChoice(choice))return false;String category=ModernFinishCatalog.option(choice).category();return category.equals("Frame")||category.startsWith("Frame/");}
     public static boolean validSurface(int choice){return validFrame(choice)||ModernFinishCatalog.validChoice(choice)&&ModernFinishCatalog.option(choice).general();}
+    @Override public com.vandorlabs.surface.TextureJoinSettings textureJoin(){var saved=super.textureJoin();return walls!=null&&isPorthole()&&!walls.joinPortholes?saved.disabled():saved;}
+    @Override public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){
+        if(textureJoin().equals(next))return;
+        super.setTextureJoin(next);var g=panelGlassSettings();if(isGlass()||isPorthole())configurePanelGlass(new PanelGlassSettings(g.shade,g.material,g.layout,g.stretch,g.tint,g.framed,next.direction!=0),panelPlayback(),next.direction!=0,wallSettings().portholeShape);
+    }
     public static boolean valid(WallSettings value){return value!=null&&value.fill>=0&&value.fill<=3&&value.join>=0&&value.join<=11&&value.portholeShape>=0&&value.portholeShape<=3;}
     public static boolean valid(FrameSettings value){return value!=null&&validFrame(value.front)&&validSurface(value.interior)&&(value.exterior==-2||validSurface(value.exterior))&&(value.artworkVersion==0||value.artworkVersion==1)&&(value.splitTop==-1||ModernFinishCatalog.validChoice(value.splitTop))&&(value.splitBottom==-1||ModernFinishCatalog.validChoice(value.splitBottom));}
     private static boolean same(WallSettings a,WallSettings b){return a.fullWidth==b.fullWidth&&a.halfHeight==b.halfHeight&&a.fill==b.fill&&a.join==b.join&&a.joinPortholes==b.joinPortholes&&a.portholeShape==b.portholeShape;}

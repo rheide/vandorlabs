@@ -31,6 +31,7 @@ final class MaterialFinishRuntimeChecks {
             mc.player.closeScreen();mc.playerController.setGameType(GameType.CREATIVE);if(FILESYSTEM_ONLY)mc.player.inventory.currentItem=0;
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityPlayerMP player=player(mc);player.interactionManager.setGameType(GameType.CREATIVE);
+                if(!FILESYSTEM_ONLY)TextureJoinItemRuntimeChecks.run(player,POS.add(5,10,0));
                 player.inventory.currentItem=0;player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.CONFIGURIZER));
                 player.capabilities.isFlying=true;player.sendPlayerAbilities();
                 player.world.setBlockState(POS,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
