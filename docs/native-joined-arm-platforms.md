@@ -1,6 +1,6 @@
 # Joined arm platforms in Minecraft 1.21.1
 
-This guide describes the native NeoForge arm implementation. Regular and Large arms, mounts, Plates, Skis and Wheels are available in the Vandor Labs creative tab and vanilla item search. Regular and Large Extenders and Rotating Arms use the same construction rules. Keep one arm type, size, mounting face and section count within each group. Tracks, **Push blocks** and Vehicle Mode are unavailable on this target.
+This guide describes the native NeoForge arm implementation. Regular and Large arms, mounts, Plates, Skis and Wheels are available in the Vandor Labs creative tab and vanilla item search. Regular and Large Extenders and Rotating Arms use the same construction rules. Keep one arm type, size, mounting face and section count within each group. Tracks and Vehicle Mode are unavailable on this target.
 
 ## Build a supported platform
 
@@ -32,8 +32,17 @@ A formed Ski or Wheel assembly also exposes a separate **Foot** direction. This 
 
 ## Controls and editing
 
-Use the **Redstone** tab to select Manual, Powered or Unpowered activation and its receive channels. Right-click an option to choose its previous value; left-click chooses the next. Sliders and channels are acknowledged by the server. Unsupported changes while moving retain the previous configuration.
+Use the **Redstone** tab to select Manual, Powered or Unpowered activation and its receive channels. Right-click an option to choose its previous value; left-click chooses the next. Sliders and channels are acknowledged by the server. The dialog stays open during motion and enables endpoint controls when the mechanism settles. Unsupported changes while moving retain the previous configuration.
 
 At a grid-aligned materialized endpoint, edit the native platform blocks in place. The next move captures the connected platform as it exists then. Removing the entire platform allows the empty arms to return. Keep every corner connected when removing individual blocks. Mine the visible captured blocks at a fractional endpoint. They are not ordinary world blocks until materialized.
 
 Some vanilla block states cannot represent a quarter-turn orientation. Those attachments remain captured and selectable until a representable endpoint is reached; mine the visible captured block if it must be removed there. Native inventory interaction is available when the payload has materialized as world blocks.
+
+## Push blocks with a horizontal Extender
+
+1. Build a regular or Large Extender against a wall, with a connected solid platform at its tip. Joined line and rectangular platforms use the same rules above. A single Extender carries its tip block; use joined arms for a wider platform. Keep the mounting blocks in place.
+2. Retract the platform to its native block endpoint. Open its arm dialog and enable **Push blocks**. This option is available only for horizontal Extenders without landing feet.
+3. Activate the outward stroke. The platform moves at most twelve ordinary solid blocks out of its path. Blocks beyond an air gap begin moving only when the mechanism reaches them. Tile entities, fluids, immovable blocks and protected locations refuse the stroke. The entire outward contact path is checked before the platform is detached.
+4. Retract again to return the original platform. Pushed terrain stays where it was left; it does not become part of the platform.
+
+Change **Push blocks** only at a materialized endpoint while the arm is idle. Other geometry choices still require the rest endpoint. Disk preparation pauses the stroke until its recovery record is durable. After an interrupted push, recovery retains the original platform and one owner for each terrain block; clear any reported obstruction before retrying.

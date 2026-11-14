@@ -17,10 +17,11 @@ public final class NativeGearMenu extends AbstractContainerMenu {
     private static NativeGearEntity require(Player player,BlockPos pos){var member=NativeGearFormation.at(player.level(),pos);if(member==null||member.controllerEntity()==null)throw new IllegalArgumentException("Missing arm member");return member;}
     public BlockPos selectedPosition(){return selected;}
     public java.util.UUID selectedIdentity(){return identity;}
-    public boolean resolve(Player player){var member=NativeGearFormation.at(player.level(),selected);if(member==null||!identity.equals(member.identity())||member.inert()||!player.level().mayInteract(player,selected)||!player.mayUseItemAt(selected,net.minecraft.core.Direction.UP,player.getMainHandItem()))return false;var root=member.controllerEntity();if(root==null||!NativeGearAccess.menu(player,root))return false;tile=root;return true;}
+    public boolean resolve(Player player){return resolve(player,false);}
+    private boolean resolve(Player player,boolean keepSession){var member=NativeGearFormation.at(player.level(),selected);if(member==null||!identity.equals(member.identity())||member.inert()||!player.level().mayInteract(player,selected)||!player.mayUseItemAt(selected,net.minecraft.core.Direction.UP,player.getMainHandItem()))return false;var root=member.controllerEntity();if(root==null||!(keepSession?NativeGearAccess.session(player,root):NativeGearAccess.menu(player,root)))return false;tile=root;return true;}
     /** A result may precede the chunk update; keep the pending reply until its exact root arrives. */
     public boolean rebind(Player player,BlockPos controller,java.util.UUID controllerIdentity){var root=NativeGearFormation.at(player.level(),controller);if(root==null||!root.identity().equals(controllerIdentity)||!root.controller())return false;var member=NativeGearFormation.at(player.level(),selected);if(member==null||!identity.equals(member.identity())||member.controllerEntity()!=root)return false;tile=root;return true;}
-    @Override public boolean stillValid(Player player){return resolve(player);}
+    @Override public boolean stillValid(Player player){return resolve(player,true);}
     @Override public ItemStack quickMoveStack(Player player,int index){return ItemStack.EMPTY;}
     public boolean apply(ServerPlayer actor,int window,BlockPos pos,NativeGearSettings settings,boolean target){if(!actor.getServer().isSameThread()||actor.containerMenu!=this||containerId!=window||!selected.equals(pos)||!NativeConfigurationAccess.canConfigure(actor)||!resolve(actor))return false;tile.authorize(actor);return tile.configure(settings,target);}
 }

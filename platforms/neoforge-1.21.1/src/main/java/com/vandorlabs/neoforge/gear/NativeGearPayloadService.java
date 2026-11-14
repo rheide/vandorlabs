@@ -18,8 +18,8 @@ final class NativeGearPayloadService {
         BlockPos source=tip(owner);if(source==null)return true;if(!NativeGearFormation.loaded(level,source)){owner.journalWaiting("Load the complete attachment first");return false;}var state=level.getBlockState(source);
         var selected=owner.columns().size()>1?NativeGearJoined.selected(owner,cell->nativeCell(owner,cell)):state.isAir()||ownSection(owner,level,source)?Set.<BlockPos>of():Set.of(source);
         if(selected.isEmpty()){if(owner.sections()!=null)return restoreEmpty(owner,level);if(payload!=null)owner.journalPayload(null);owner.journalWaiting("");return true;}
-        return capture(owner,level,selected);
-        }catch(RuntimeException failure){owner.journalFailure(Objects.toString(failure.getMessage(),"Attachment preparation failed"));return false;}}
+        NativeGearPushing.preflight(owner);return capture(owner,level,selected);
+        }catch(RuntimeException failure){var reason=Objects.toString(failure.getMessage(),"Attachment preparation failed");if(owner.canPushBlocks()&&owner.settings().pushBlocks())owner.pushFailure(reason);else owner.journalFailure(reason);return false;}}
     private static BlockPos nativeCell(NativeGearEntity owner,BlockPos construction){
         var local=NativeGearOrientation.inverse(owner.mount(),construction.subtract(owner.getBlockPos()));var point=NativeGearPayload.frame(owner,owner.progress()).point(local.getX()+.5,local.getY()+.5,local.getZ()+.5);double x=point.x-.5,y=point.y-.5,z=point.z-.5;
         if(Math.abs(x-Math.rint(x))+Math.abs(y-Math.rint(y))+Math.abs(z-Math.rint(z))>1e-8)throw new IllegalArgumentException("Joined attachment endpoint is not on the native grid");return owner.getBlockPos().offset((int)Math.rint(x),(int)Math.rint(y),(int)Math.rint(z));

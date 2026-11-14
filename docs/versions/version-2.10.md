@@ -62,8 +62,9 @@ the Forge 1.12.2 construction rules. Duplifier copying and Undo transfer setting
 Native/captured payload handoffs, active-foot attachment and captured-block mining
 use durable recovery, and platforms carry native players through motion.
 
-Tracks, horizontal **Push blocks** and Vehicle Mode remain unavailable on this
-target. Unsupported vanilla endpoint orientations stay captured and selectable
+Horizontal Extenders also support **Push blocks** for ordinary solid terrain,
+including joined platforms. Pushed terrain stays in place when the original
+platform retracts. Tracks and Vehicle Mode remain unavailable on this target. Unsupported vanilla endpoint orientations stay captured and selectable
 until they reach a representable endpoint. See the
 [native arm construction guide](../native-joined-arm-platforms.md).
 

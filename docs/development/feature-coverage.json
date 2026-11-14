@@ -787,7 +787,7 @@
       "remaining": [
         "Vehicle-specific landing effects and support admission remain deferred",
         "Legacy nonmodular decorative landing-gear families remain unconverted",
-        "Tracks and horizontal terrain pushing are unavailable"
+        "Tracks remain unavailable"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
@@ -1026,7 +1026,7 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Horizontal terrain pushing (Push blocks) is unavailable",
+        "User testing and release acceptance for horizontal terrain pushing remain pending",
         "Vehicle Mode and carried vehicle/Coupler integration remain deferred"
       ],
       "modern_registered_block_ids": [
