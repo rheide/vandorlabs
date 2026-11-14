@@ -58,7 +58,7 @@ admission rules. See the [modular landing gear guide](../modular-landing-gear.md
 NeoForge now includes regular and Large Extenders, Rotating Arms, mounts, Plates,
 Skis and Wheels as ten ordinary creative/search items. Six-face placement, joined
 platforms, Foot direction, Middle hinge and the dedicated Configurizer dialog use
-the Source construction rules. Duplifier copying and Undo transfer settings only.
+the Forge 1.12.2 construction rules. Duplifier copying and Undo transfer settings only.
 Native/captured payload handoffs, active-foot attachment and captured-block mining
 use durable recovery, and platforms carry native players through motion.
 
@@ -69,7 +69,7 @@ until they reach a representable endpoint. See the
 
 ## Resource Ports
 
-Forge adds **Power Port**, **Fluid Port** and **Matter Port** for transferring RF,
+Forge 1.12.2 and NeoForge 1.21.1 add **Power Port**, **Fluid Port** and **Matter Port** for transferring RF,
 fluids and items. Configure all six faces, an optional shared output limit, input
 pulling and Redstone conditions in their dedicated dialog. Stored resources remain
 in one configured item when mined; Duplifier copying transfers settings only.

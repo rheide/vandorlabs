@@ -11,8 +11,10 @@ def main():
  if not 0<=options.start<options.end<=4:parser.error('Require 0 <= start < end <= 4')
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.resourcePorts=true -Dvandorlabs.portModClientCheck=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='port-mod-client-',dir=base))
+ with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
+ saved=out/'server';fixture_world(saved,port)
  metadata=json.loads((ROOT/'build/port-research/native-interop-downloads.json').read_text())
- mods=out/'optional-mods';mods.mkdir();records=[]
+ mods=saved/'optional-mods';mods.mkdir();records=[]
  required={'Mekanism-1.21.1-10.7.19.85.jar':'mekanism','rftoolspower-1.21-7.0.6.jar':'rftoolspower','mcjtylib-1.21-9.0.22.jar':'mcjtylib','rftoolsbase-1.21-6.0.11.jar':'rftoolsbase'}
  folders={'vandorlabs':os.pathsep.join(str((ROOT/'platforms/neoforge-1.21.1/build'/part).resolve()) for part in ['classes/java/main','resources/main','classes/java/smoke','resources/smoke'])}
  for item in metadata:
@@ -24,8 +26,7 @@ def main():
  properties=out/'dev-mod-folders.properties';properties.write_text(''.join(key+'='+value.replace('\\','\\\\')+'\n' for key,value in folders.items()))
  (out/'optional-mods.sha256').write_text('\n'.join(records)+'\n')
  env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.portModStart='+str(options.start)+' -Dvandorlabs.portModEnd='+str(options.end)+' -Xmx8G -Dfml.modFoldersFile="'+str(properties.resolve())+'"'
- with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
- extra=[];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=port-client',*extra),server_log,env)
+ extra=[];server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=port-client',*extra),server_log,env)
  try:
   deadline=time.monotonic()+180
   while 'Done (' not in server_log.read_text(errors='replace'):
@@ -36,7 +37,12 @@ def main():
   if options.xvfb:args=['xvfb-run','-a','-s','-screen 0 1280x720x24']+args;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
   process=launch(args,out/'client.log',env)
   try:
-   code=process.wait(timeout=420)
+   deadline=time.monotonic()+420
+   while process.poll() is None:
+    if '[vandorlabs][port-mod-client] FAIL' in server_log.read_text(errors='replace') or server.poll() is not None:raise RuntimeError('Optional server fixture failed: '+str(server_log))
+    if time.monotonic()>deadline:raise TimeoutError('Optional native client timeout: '+str(out/'client.log'))
+    time.sleep(.25)
+   code=process.returncode
    if code:raise RuntimeError('Native port client exit '+str(code)+': '+str(out/'client.log'))
    check_log(out/'client.log','[vandorlabs][port-mod-client] client PASS')
   finally:stop(process)

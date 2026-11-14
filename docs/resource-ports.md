@@ -2,7 +2,9 @@
 
 **Power Port**, **Fluid Port** and **Matter Port** transfer resources between
 compatible storage and pipes. They do not generate resources. Matter Ports accept
-ordinary items as well as Programmable Matter.
+ordinary items as well as Programmable Matter. All three ports are available on
+Forge 1.12.2 and NeoForge 1.21.1, using the target platform’s standard capabilities
+without mandatory dependencies on pipe mods.
 
 Each face can be **Disabled**, **Input** or **Output**. A newly placed port has an
 Input facing the player and an Output on the opposite face. This also works when

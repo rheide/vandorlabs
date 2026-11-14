@@ -51,10 +51,11 @@
 - Add the canonical Battery Block and Hexagonal Fuel Tank with Source capacities, six-face placement, dedicated casing/shape/status dialogs and resource-preserving configured items. Keep tank fluid owned by each cell through joining, splitting, mining and reload.
 - Connect native Power and Fluid Ports to these storage blocks, including optional input pulling. Reuse bounded tank membership and coalesce resource-only visual updates.
 
-### Resource transfer ports (Forge 1.12.2)
+### Resource transfer ports (Forge 1.12.2 and NeoForge 1.21.1)
 
-- Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge Energy; Matter accepts ordinary items.
-- Add dedicated General/Redstone configuration, per-face activity artwork and settings-only Duplifier copying. Mining retains resources in one configured block item.
+- Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge/NeoForge Energy; Matter accepts ordinary items.
+- Add dedicated General/Redstone configuration, per-face activity artwork and settings-only Duplifier copying and Undo. Mining retains resources in one configured block item.
+- Use standard capabilities without mandatory mod dependencies. Native player checks cover Mekanism energy, fluid and item networks, RFTools Powercells, and the native Battery and Tank.
 
 ### Stationary glass terrain and retained rendering (Forge 1.12.2)
 

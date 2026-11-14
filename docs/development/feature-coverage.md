@@ -25,7 +25,8 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | pending | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (Battery and Hexagonal Fuel Tank enabled; other machines pending) | unimplemented | non-vehicle first |
+| Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation tables | pending | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |

@@ -616,7 +616,7 @@
       "id": "machines",
       "label": "Constructors, matter infuser, battery and tank",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "assembly_press_core",
         "battery_block",
@@ -632,11 +632,38 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
+        "Integrate the remaining constructor, infuser, drive and navigation-core machine adapters; Battery and Hexagonal Fuel Tank are enabled",
         "native multiblock assembly/inventory/fluid adapters",
         "transaction and container semantics",
         "all frame models and surface input",
         "live parity"
+      ],
+      "historical_neoforge_1_21_1": "unimplemented",
+      "historical_modern_registered_block_ids": [],
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Battery Block and Hexagonal Fuel Tank with canonical IDs, six-face placement, resource-preserving configured items and dedicated casing/shape/status dialogs",
+        "Native Power and Fluid Port integration, complete axial tank groups, per-cell resource ownership, reload and bounded membership caching"
+      ]
+    },
+    {
+      "id": "resource_ports",
+      "label": "Power, Fluid and Matter Ports",
+      "forge_1_12_2": "reference",
+      "neoforge_1_21_1": "partial",
+      "legacy_block_ids": [
+        "power_port",
+        "fluid_port",
+        "matter_port"
+      ],
+      "implemented": [
+        "Six configurable faces, optional pulling, shared fair throughput, bounded persistent buffers and Redstone activation",
+        "Dedicated dialogs, per-face activity artwork, resource-bearing configured items and settings-only Duplifier copying and Undo",
+        "Focused actual Mekanism energy/fluid/item and RFTools Powercell networks, plus native Battery and Tank integration"
+      ],
+      "remaining": [
+        "User testing and deferred release acceptance",
+        "Other optional pipe-mod versions require their own installed-mod checks"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
