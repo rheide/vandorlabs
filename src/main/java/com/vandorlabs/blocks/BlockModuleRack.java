@@ -55,7 +55,7 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override public IBlockState getStateForPlacement(World world, BlockPos pos, EnumFacing face,
             float x, float y, float z, int meta, EntityLivingBase placer) {
-        return getDefaultState().withProperty(FACING, face);
+        return getDefaultState().withProperty(FACING, DirectionalPlacement.towardView(placer));
     }
     @Override public IBlockState withRotation(IBlockState state, Rotation rotation) {
         return state.withProperty(FACING, rotation.rotate(state.getValue(FACING)));

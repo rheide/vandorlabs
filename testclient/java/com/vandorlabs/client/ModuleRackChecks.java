@@ -80,6 +80,7 @@ public final class ModuleRackChecks {
         CommonProxy before = VandorLabs.proxy;
         try {
             VandorLabs.proxy = null;
+            placement(block);
             persistence();
             interactions(block);
             dropOwnership(block);
@@ -93,6 +94,20 @@ public final class ModuleRackChecks {
         System.out.println("Module Rack PASS cases=" + cases
                 + " 16 occupancy states, six-face slot/button callbacks, full item NBT, exact ownership,"
                 + " compact appearance packets, duplicate/stale update suppression, no idle tile ticks/TESR");
+    }
+
+    private static void placement(BlockModuleRack block) {
+        NonRenderingChecks.MemoryWorld world = new NonRenderingChecks.MemoryWorld(false);
+        Player player = new Player(world);
+        player.rotationYaw = 0;
+        for (float pitch : new float[] {-80, -10, 0, 10, 80}) {
+            player.rotationPitch = pitch;
+            EnumFacing expected = pitch > 45 ? EnumFacing.UP : pitch < -45 ? EnumFacing.DOWN : EnumFacing.NORTH;
+            for (EnumFacing clicked : EnumFacing.values())
+                require(block.getStateForPlacement(world, AT, clicked, .5F, .5F, .5F, 0, player)
+                        .getValue(BlockModuleRack.FACING) == expected,
+                        "rack uses Programmable Light player-view placement: pitch=" + pitch + " clicked=" + clicked);
+        }
     }
 
     private static ItemStack module(int count, int id) {
@@ -199,8 +214,10 @@ public final class ModuleRackChecks {
             NonRenderingChecks.MemoryWorld world = new NonRenderingChecks.MemoryWorld(false);
             TileEntityModuleRack rack = install(world, block, facing);
             Player player = new Player(world);
+            player.rotationPitch = facing == EnumFacing.UP ? 80 : facing == EnumFacing.DOWN ? -80 : 0;
+            player.rotationYaw = facing == EnumFacing.NORTH ? 0 : facing == EnumFacing.SOUTH ? 180 : facing == EnumFacing.WEST ? 270 : 90;
             IBlockState placed = block.getStateForPlacement(world, AT, facing, .5F, .5F, .5F, 0, player);
-            require(placed.getValue(BlockModuleRack.FACING) == facing, "placement must use clicked face " + facing);
+            require(placed.getValue(BlockModuleRack.FACING) == facing, "placement uses player view " + facing);
             require(block.getStateFromMeta(block.getMetaFromState(placed)).equals(placed), "face metadata round trip " + facing);
             player.setHeldItem(EnumHand.MAIN_HAND, module(2, slot));
             float[] hit = hit(facing, slot, false);
