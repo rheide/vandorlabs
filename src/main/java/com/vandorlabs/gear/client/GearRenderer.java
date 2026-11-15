@@ -27,11 +27,11 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     public static long cachedVertexBytes(){return GearModels.cachedVertexBytes();}
     @Override public void render(GearTileEntity tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!visible(tile))return;
+        GearRenderAdmission.drawn(tile);
         try(com.vandorlabs.client.TurntableRenderState state=new com.vandorlabs.client.TurntableRenderState()){
             bindTexture(net.minecraft.client.renderer.texture.TextureMap.LOCATION_BLOCKS_TEXTURE);
             net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableCull();
-            BufferBuilder buffer=net.minecraft.client.renderer.Tessellator.getInstance().getBuffer();buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
-            renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();try{ArmPayloadRenderer.render(tile,renderedProgress(tile,partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
+            if(!GearRenderAdmission.mechanismDrawn(tile)){BufferBuilder buffer=net.minecraft.client.renderer.Tessellator.getInstance().getBuffer();buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);net.minecraft.client.renderer.Tessellator.getInstance().draw();}try{if(GearRenderAdmission.payloadAllowed(tile))ArmPayloadRenderer.render(tile,renderedProgress(tile,partial),x,y,z,partial);}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();com.vandorlabs.VandorLabs.logger.warn("Arm attachment rendering unavailable; snapshot retained",failure);}
         }
     }
     /** Bound members are drawn by their operational controller, including compact parts. */
@@ -45,6 +45,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
     @Override public void renderTileEntityFast(GearTileEntity tile, double x, double y, double z, float partialTicks,
                                      int destroyStage, float partial, BufferBuilder buffer) {
         if(!visible(tile))return;
+        GearRenderAdmission.mechanism(tile);
         emit(tile,x,y,z,partialTicks,destroyStage,partial,buffer,true);
     }
     /** Uncached vertex path retained for native equivalence/performance checks. */

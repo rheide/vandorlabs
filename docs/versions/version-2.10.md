@@ -14,6 +14,10 @@ arms capture and restore them. Dish scanning continues through native endpoints
 and reversal without restarting; a replacement at the old position animates
 independently.
 
+Captured Forge arm attachments remain visible when their mounting columns are
+outside the camera's rendered terrain sections, including close views of a
+rotated Core machine.
+
 ## Module Rack and Autopilot
 
 Module Racks are available on Forge 1.12.2 and NeoForge 1.21.1. Autopilot fits

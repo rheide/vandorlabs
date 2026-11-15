@@ -15,6 +15,7 @@ import java.util.*;
 public final class GearGeometry {
     private static final Map<World,Set<GearTileEntity>> ROOTS=Collections.synchronizedMap(new WeakHashMap<>());
     private static final Map<World,SpatialIndex> INDICES=Collections.synchronizedMap(new WeakHashMap<>());
+    private static final Map<World,GearTileEntity[]> RENDER_ROOTS=Collections.synchronizedMap(new WeakHashMap<>());
     private static final class SpatialIndex {
         final Map<Long,Set<GearTileEntity>> chunks=new HashMap<>();
         final Map<GearTileEntity,Set<Long>> membership=new IdentityHashMap<>();
@@ -61,10 +62,14 @@ public final class GearGeometry {
     }
     public static boolean excluded(GearTileEntity root){return EXCLUDED.get()==root;}
     public static List<AxisAlignedBB> foreign(World world,GearTileEntity root,AxisAlignedBB box){EXCLUDED.set(root);try{return world.getCollisionBoxes(null,box);}finally{EXCLUDED.remove();}}
-    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false)||world.getTileEntity(tile.getPos())!=tile)return;ArmSurfaceActivity.refresh(tile);Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){roots.add(tile);index.put(tile);}else{roots.remove(tile);index.remove(tile);}}
-    public static void remove(GearTileEntity tile){ArmSurfaceActivity.remove(tile);Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null)roots.remove(tile);SpatialIndex index=INDICES.get(tile.getWorld());if(index!=null)index.remove(tile);}
-    @SubscribeEvent public static void unload(WorldEvent.Unload event){ArmSurfaceActivity.unload(event.getWorld());ROOTS.remove(event.getWorld());INDICES.remove(event.getWorld());}
+    public static void register(GearTileEntity tile){World world=tile.getWorld();if(world==null||world instanceof com.vandorlabs.vehicle.VehicleWorld||!world.isBlockLoaded(tile.getPos(),false)||world.getTileEntity(tile.getPos())!=tile)return;ArmSurfaceActivity.refresh(tile);Set<GearTileEntity> roots=ROOTS.computeIfAbsent(world,k->Collections.newSetFromMap(new IdentityHashMap<>()));SpatialIndex index=INDICES.computeIfAbsent(world,k->new SpatialIndex());if(tile.isController()||!looseWheelBoxes(tile).isEmpty()){if(roots.add(tile))RENDER_ROOTS.remove(world);index.put(tile);}else{if(roots.remove(tile))RENDER_ROOTS.remove(world);index.remove(tile);}}
+    public static void remove(GearTileEntity tile){ArmSurfaceActivity.remove(tile);Set<GearTileEntity> roots=ROOTS.get(tile.getWorld());if(roots!=null&&roots.remove(tile))RENDER_ROOTS.remove(tile.getWorld());SpatialIndex index=INDICES.get(tile.getWorld());if(index!=null)index.remove(tile);}
+    @SubscribeEvent public static void unload(WorldEvent.Unload event){ArmSurfaceActivity.unload(event.getWorld());ROOTS.remove(event.getWorld());INDICES.remove(event.getWorld());RENDER_ROOTS.remove(event.getWorld());}
     public static java.util.List<GearTileEntity> roots(World world){Set<GearTileEntity> found=ROOTS.get(world);return found==null?Collections.emptyList():new ArrayList<>(found);}
+    /** Loaded-root visitation without scanning tiles or allocating a per-frame copy. */
+    public static void visitRoots(World world,java.util.function.Consumer<GearTileEntity> visitor){Set<GearTileEntity> found=ROOTS.get(world);if(found==null)return;GearTileEntity[] snapshot=RENDER_ROOTS.get(world);if(snapshot==null){snapshot=found.toArray(new GearTileEntity[found.size()]);RENDER_ROOTS.put(world,snapshot);}for(GearTileEntity root:snapshot)visitor.accept(root);}
+    /** Authored mechanism only; never constructs a payload view or reads its inventories. */
+    public static AxisAlignedBB mechanismBounds(GearTileEntity root,double progress){AxisAlignedBB result=null;for(AxisAlignedBB box:computeBoxes(root,progress,false))result=result==null?box:result.union(box);return result;}
     /** A full-size loose wheel reaches below its four reserved source cells. */
     public static List<AxisAlignedBB> looseWheelBoxes(GearTileEntity tile){
         World world=tile.getWorld();BlockPos pos=tile.getPos();

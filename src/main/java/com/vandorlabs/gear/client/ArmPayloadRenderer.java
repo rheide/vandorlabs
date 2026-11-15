@@ -22,6 +22,7 @@ final class ArmPayloadRenderer {
         final ArmPayload payload;final VertexFormat format=new VertexFormat(DefaultVertexFormats.BLOCK);
         final Map<BlockRenderLayer,VertexBuffer> buffers=new EnumMap<>(BlockRenderLayer.class);
         BufferBuilder.State translucent;Vec3d sorted,sortedTiles;long bytes;boolean cached;
+        AxisAlignedBB localBounds,worldBounds,mechanismBounds;double boundsPhase=Double.NaN;int boundsRevision;
         final java.nio.FloatBuffer matrix=org.lwjgl.BufferUtils.createFloatBuffer(16);
         final List<TileEntity> tiles=new ArrayList<>();
         Mesh(ArmPayload payload){this.payload=payload;}
@@ -36,6 +37,7 @@ final class ArmPayloadRenderer {
         if(mesh!=null)return mesh;
         if(CACHE.size()>=128){Map.Entry<GearTileEntity,Mesh> oldest=CACHE.entrySet().iterator().next();remove(oldest.getValue());CACHE.remove(oldest.getKey());}
         mesh=new Mesh(payload);VehicleWorld view=payload.view(arm);mesh.tiles.addAll(view.tiles.values());
+        for(TileEntity tile:mesh.tiles){AxisAlignedBB bounds=tile.getRenderBoundingBox();if(finite(bounds))mesh.localBounds=mesh.localBounds==null?bounds:mesh.localBounds.union(bounds);}
         if(arm.getWorld()==Minecraft.getMinecraft().world)com.vandorlabs.client.constructors.CoreArmVisualIdentity.bind(arm,payload,view);
         try{for(BlockRenderLayer layer:BlockRenderLayer.values()){
             net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);
@@ -46,11 +48,17 @@ final class ArmPayloadRenderer {
                 if(component.getVertexCount()>0)components.add(component.getVertexState().getRawBuffer());
             }
             BlockMeshVbo.merge(joined,components,mesh.format);joined.finishDrawing();
-            if(joined.getVertexCount()>0){mesh.bytes+=joined.getByteBuffer().remaining();if(layer==BlockRenderLayer.TRANSLUCENT){mesh.translucent=joined.getVertexState();mesh.bytes+=mesh.translucent.getRawBuffer().length*4L;}VertexBuffer buffer=new VertexBuffer(mesh.format);buffer.bufferData(joined.getByteBuffer());mesh.buffers.put(layer,buffer);}
+            if(joined.getVertexCount()>0){java.nio.ByteBuffer data=joined.getByteBuffer();int offset=0;for(int i=0;i<mesh.format.getElementCount();i++)if(mesh.format.getElement(i).getUsage()==VertexFormatElement.EnumUsage.POSITION){offset=mesh.format.getOffset(i);break;}double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;for(int v=0;v<joined.getVertexCount();v++){int at=v*mesh.format.getNextOffset()+offset;double px=data.getFloat(at),py=data.getFloat(at+4),pz=data.getFloat(at+8);lx=Math.min(lx,px);ly=Math.min(ly,py);lz=Math.min(lz,pz);hx=Math.max(hx,px);hy=Math.max(hy,py);hz=Math.max(hz,pz);}AxisAlignedBB bounds=new AxisAlignedBB(lx,ly,lz,hx,hy,hz);if(finite(bounds))mesh.localBounds=mesh.localBounds==null?bounds:mesh.localBounds.union(bounds);mesh.bytes+=data.remaining();if(layer==BlockRenderLayer.TRANSLUCENT){mesh.translucent=joined.getVertexState();mesh.bytes+=mesh.translucent.getRawBuffer().length*4L;}VertexBuffer buffer=new VertexBuffer(mesh.format);buffer.bufferData(joined.getByteBuffer());mesh.buffers.put(layer,buffer);}
         }}catch(RuntimeException | LinkageError failure){mesh.delete();throw failure;}finally{net.minecraftforge.client.ForgeHooksClient.setRenderLayer(null);}
         while(!CACHE.isEmpty()&&cachedBytes+mesh.bytes>MAX_BYTES){Map.Entry<GearTileEntity,Mesh> first=CACHE.entrySet().iterator().next();remove(first.getValue());CACHE.remove(first.getKey());}
         if(mesh.bytes<=MAX_BYTES){mesh.cached=true;cachedBytes+=mesh.bytes;CACHE.put(arm,mesh);}return mesh;
     }
+    private static boolean finite(AxisAlignedBB b){return b!=null&&Double.isFinite(b.minX)&&Double.isFinite(b.minY)&&Double.isFinite(b.minZ)&&Double.isFinite(b.maxX)&&Double.isFinite(b.maxY)&&Double.isFinite(b.maxZ)&&b.maxX-b.minX<1000000&&b.maxY-b.minY<1000000&&b.maxZ-b.minZ<1000000;}
+    /** Cached actual emitted/model bounds; an absent mesh keeps the existing conservative first draw. */
+    static AxisAlignedBB bounds(GearTileEntity arm,double progress,boolean mechanism){Mesh mesh=CACHE.get(arm);if(mesh==null||mesh.payload!=arm.payload()||mesh.localBounds==null)return arm.getRenderBoundingBox();if(mesh.boundsPhase!=progress||mesh.boundsRevision!=arm.motionRevision()){
+        AxisAlignedBB b=mesh.localBounds;Vec3d zero=mesh.payload.transform(arm,progress,0,0,0),origin=zero.add(new Vec3d(arm.getPos())),a=mesh.payload.transform(arm,progress,1,0,0).subtract(zero),c=mesh.payload.transform(arm,progress,0,1,0).subtract(zero),d=mesh.payload.transform(arm,progress,0,0,1).subtract(zero);
+        mesh.worldBounds=new AxisAlignedBB(origin.x+Math.min(a.x*b.minX,a.x*b.maxX)+Math.min(c.x*b.minY,c.x*b.maxY)+Math.min(d.x*b.minZ,d.x*b.maxZ),origin.y+Math.min(a.y*b.minX,a.y*b.maxX)+Math.min(c.y*b.minY,c.y*b.maxY)+Math.min(d.y*b.minZ,d.y*b.maxZ),origin.z+Math.min(a.z*b.minX,a.z*b.maxX)+Math.min(c.z*b.minY,c.z*b.maxY)+Math.min(d.z*b.minZ,d.z*b.maxZ),origin.x+Math.max(a.x*b.minX,a.x*b.maxX)+Math.max(c.x*b.minY,c.x*b.maxY)+Math.max(d.x*b.minZ,d.x*b.maxZ),origin.y+Math.max(a.y*b.minX,a.y*b.maxX)+Math.max(c.y*b.minY,c.y*b.maxY)+Math.max(d.y*b.minZ,d.y*b.maxZ),origin.z+Math.max(a.z*b.minX,a.z*b.maxX)+Math.max(c.z*b.minY,c.z*b.maxY)+Math.max(d.z*b.minZ,d.z*b.maxZ));mesh.mechanismBounds=GearGeometry.mechanismBounds(arm,progress);mesh.boundsPhase=progress;mesh.boundsRevision=arm.motionRevision();
+        }return mechanism?mesh.mechanismBounds:mesh.worldBounds;}
     static void verifyNativeRecords(GearTileEntity arm){
         Mesh mesh=mesh(arm);try{if(mesh.format==DefaultVertexFormats.BLOCK)throw new IllegalStateException("Payload VBO format is mutable global state");
         if(!mesh.buffers.containsKey(BlockRenderLayer.SOLID)||!mesh.buffers.containsKey(BlockRenderLayer.TRANSLUCENT))throw new IllegalStateException("Payload render layers were flattened");

@@ -22,6 +22,8 @@ The original Constructor frames have no authored display surfaces or chip reader
 
 On Forge 1.12.2, the shared Core animation clock follows a machine while an arm carries it and restores it as native blocks. Dish scanning and the other animated Core mechanisms retain their cosmetic phase through these handoffs and reversals. A new machine placed at the vacated source has an independent clock. Animation remains client-side; saved ownership and collision do not depend on its phase.
 
+Captured machines also remain visible when viewed close up from a side, including when their supporting arm columns are behind the camera. Visibility follows the posed model bounds rather than the terrain section containing the arm's mounting block.
+
 ## Activation
 
 Machines consume physical redstone or configured Vandor Labs input channels. Apply physical power to any reserved cell or the Core. `0` means disconnected from channels. No Core or reserved cell emits physical or channel power, including with a chip inserted.
