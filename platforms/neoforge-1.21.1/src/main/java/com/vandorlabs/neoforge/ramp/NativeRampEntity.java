@@ -12,8 +12,13 @@ import net.minecraft.world.level.block.state.BlockState;
 public class NativeRampEntity extends BlockEntity implements NativeChannelMember {
  public record Visual(NativeRampSettings settings,boolean slab,boolean inert,int receivedPower,int physicalPower){}
  private final boolean slab;private CompoundTag retained=new CompoundTag();private NativeRampSettings settings=NativeRampSettings.defaults();private boolean inert;private int received,physical;private volatile Visual visual;private NativeRampReservations.View reservationView;
+ private NativeRampController controller;
  public NativeRampEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean slab){super(type,pos,state);this.slab=slab;retained.putString("Status","Retracted");retained.putInt("Duration",60);retained.putInt("Length",1);retained.putInt("Facing",2);publish();}
  public final NativeRampSettings settings(){return settings;}public final Visual visual(){return visual;}public final boolean inert(){return inert;}public final boolean slab(){return slab;}
+ /** Old private fixtures keep their settings-only hosts; canonical bindings supply the part factory. */
+ public final NativeRampController controller(){if(controller==null&&getBlockState().getBlock() instanceof NativeRampBlock block&&block.runtimeParts()!=null)controller=new NativeRampController(this,block.runtimeParts());return controller;}
+ final void commitRuntimeChoices(NativeRampSettings next){if(!authority())throw new IllegalStateException("Ramp settings require loaded server authority");settings=java.util.Objects.requireNonNull(next);reservationView=null;publish();setChanged();NativeRedstoneChannels.channelsChanged(this);runtimeChanged(true);}
+ final void runtimeChanged(boolean notify){if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp runtime publication authority");setChanged();NativeRampBlock.updateModelState(this,controller!=null&&controller.attached());if(notify)server.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),net.minecraft.world.level.block.Block.UPDATE_CLIENTS);}
  public static final String PLACEMENT_RECOVERY="NativeRampPlacementRecovery",ITEM_RECOVERY="RampRecoverySnapshot";
  private net.minecraft.world.item.ItemStack recoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;
  final void prepareRecoveryDrop(net.minecraft.world.item.ItemStack stack){if(!(level instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp recovery drop authority");recoveryDrop=stack.copy();}
@@ -45,9 +50,9 @@ public class NativeRampEntity extends BlockEntity implements NativeChannelMember
  @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:settings.channels();}
  @Override public boolean isChannelMemberActive(){return !inert&&NativeChannelMember.super.isChannelMemberActive();}
  public final void queueInputRefresh(){if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);}
- @Override public void beforeChannelRegistration(){if(!authority())return;NativeRampAuthorization.resumed(this);NativeRampBlock.updateModelState(this,false);int next=NativeLoadedRedstonePower.level(level,worldPosition);if(next!=physical){physical=next;publish();setChanged();}}
+ @Override public void beforeChannelRegistration(){if(!authority())return;NativeRampAuthorization.resumed(this);int next=NativeLoadedRedstonePower.level(level,worldPosition);if(next!=physical){physical=next;publish();setChanged();}var runtime=controller();if(runtime!=null)runtime.resumed();else NativeRampBlock.updateModelState(this,false);}
  @Override public int localSignalLevel(int channel){return authority()?NativeLoadedRedstonePower.level(level,worldPosition):0;}
- @Override public void setChannelLevel(int value){if(!authority())return;value=Math.max(0,Math.min(15,value));if(value==received)return;received=value;publish();setChanged();}
+ @Override public void setChannelLevel(int value){if(!authority())return;value=Math.max(0,Math.min(15,value));if(value==received)return;received=value;publish();setChanged();var runtime=controller();if(runtime!=null)runtime.inputChanged();}
  @Override public void onLoad(){super.onLoad();NativeRampReservations.add(this);if(level instanceof ServerLevel&&!inert)NativeRedstoneChannels.queueRegistration(this);}
  @Override public void setRemoved(){NativeRampAuthorization.removed(this);NativeRampReservations.remove(this);if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);super.setRemoved();}
  @Override public void onChunkUnloaded(){NativeRampAuthorization.unloaded(this);NativeRampReservations.remove(this);if(level instanceof ServerLevel)NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}

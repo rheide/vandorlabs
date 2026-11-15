@@ -1,0 +1,38 @@
+package com.vandorlabs.neoforge.ramp;
+
+import java.nio.file.*;
+import java.util.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.*;
+import net.minecraft.world.phys.*;
+
+/** Typed player repair and actual atomic file compare; connected movement is a separate live proof. */
+public final class NativeRampPlayerRecordChecks {
+ private static int checks;
+ private static final UUID ID=new UUID(4,1203);private static final String DIM="minecraft:overworld";
+ private static final NativeRampActorIntent.Participant ACTOR=new NativeRampActorIntent.Participant(ID,"minecraft:player",new Vec3(100.5,100,100.5),new Vec3(100.5,99,100.5),new AABB(100.2,100,100.2,100.8,101.8,100.8),Vec3.ZERO,0,true,false,false,false);
+ private static void need(boolean yes,String message){checks++;if(!yes)throw new AssertionError(message);}
+ private static ListTag vector(Vec3 value){var result=new ListTag();result.add(DoubleTag.valueOf(value.x));result.add(DoubleTag.valueOf(value.y));result.add(DoubleTag.valueOf(value.z));return result;}
+ private static CompoundTag row(Vec3 position){var row=new CompoundTag();row.putUUID("UUID",ID);row.putString("Dimension",DIM);row.putInt("playerGameType",0);var abilities=new CompoundTag();abilities.putBoolean("flying",false);row.put("abilities",abilities);row.put("Pos",vector(position));row.put("Motion",vector(Vec3.ZERO));row.putFloat("FallDistance",0);row.putBoolean("OnGround",true);var caps=new CompoundTag();caps.putByteArray("UnknownModule",new byte[]{7,3,-1,5});row.put("ForgeCaps",caps);var items=new ListTag();var item=new CompoundTag();item.putString("id","minecraft:diamond");item.putInt("count",37);items.add(item);row.put("Inventory",items);row.putString("OpaqueFutureField","preserve exactly");return row;}
+ private static NativeRampPlayerRecord.State classify(CompoundTag row){return NativeRampPlayerRecord.classify(Optional.of(row),Optional.empty(),ACTOR,DIM).state();}
+ public static void main(String[] args)throws Exception {
+  var before=row(ACTOR.from());var after=row(ACTOR.to());
+  need(classify(before)==NativeRampPlayerRecord.State.ORIGINAL,"original role");need(classify(after)==NativeRampPlayerRecord.State.TRANSFERRED,"transferred role");
+  var returned=NativeRampPlayerRecord.returned(after,Optional.empty(),ACTOR,DIM);need(returned.equals(before),"only physical position changes, all opaque/resource data exact");need(!after.equals(returned),"caller input is immutable");
+  var a=after.copy();var b=returned.copy();a.remove("Pos");b.remove("Pos");need(a.equals(b),"all unrelated NBT byte fields survive");
+  var old=row(new Vec3(90,100,90));need(NativeRampPlayerRecord.classify(Optional.of(old),Optional.of(old.copy()),ACTOR,DIM).state()==NativeRampPlayerRecord.State.UNCHANGED,"exact earlier file is not rewritten");
+  for(int variant=0;variant<16;variant++){var broken=after.copy();switch(variant){case 0->broken.putUUID("UUID",new UUID(9,9));case 1->broken.putString("Dimension","minecraft:the_nether");case 2->broken.putInt("playerGameType",3);case 3->broken.getCompound("abilities").putBoolean("flying",true);case 4->broken.put("RootVehicle",new CompoundTag());case 5->broken.putInt("SleepingX",0);case 6->broken.put("Motion",vector(new Vec3(1,0,0)));case 7->broken.put("Pos",vector(new Vec3(100.5,98,100.5)));case 8->broken.putFloat("FallDistance",1);case 9->broken.putByte("OnGround",(byte)2);case 10->broken.putDouble("FallDistance",0);case 11->broken.put("Pos",new ListTag());case 12->broken.put("Pos",vector(new Vec3(Double.NaN,99,100.5)));case 13->broken.putString("attributes","unknown shape");case 14->broken.remove("abilities");default->broken.remove("UUID");}need(classify(broken)==NativeRampPlayerRecord.State.REFUSED,"changed physical role refuses "+variant);}
+  var changedOld=old.copy();changedOld.putInt("UnknownChanged",1);need(NativeRampPlayerRecord.classify(Optional.of(changedOld),Optional.of(old),ACTOR,DIM).state()==NativeRampPlayerRecord.State.REFUSED,"earlier unrelated position needs exact file preimage");
+  need(NativeRampPlayerRecord.classify(Optional.empty(),Optional.empty(),ACTOR,DIM).state()==NativeRampPlayerRecord.State.UNCHANGED,"missing earlier player file remains missing");need(NativeRampPlayerRecord.classify(Optional.empty(),Optional.of(before),ACTOR,DIM).state()==NativeRampPlayerRecord.State.REFUSED,"disappeared player file refuses");
+  var dir=Files.createTempDirectory("ramp-player-record-");try{
+   var file=dir.resolve(ID+".dat");NbtIo.writeCompressed(after,file);NativeRampPlayerStorage.replace(dir,ID,Optional.of(after.copy()),returned);need(NativeRampPlayerStorage.read(dir,ID).orElseThrow().equals(before),"real atomic repair exact round trip");
+   boolean stale=false;try{NativeRampPlayerStorage.replace(dir,ID,Optional.of(after),after);}catch(java.io.IOException expected){stale=true;}need(stale&&NativeRampPlayerStorage.read(dir,ID).orElseThrow().equals(before),"stale compare cannot overwrite file");
+   var intent=new NativeRampActorIntent(new UUID(8,9),DIM,new BlockPos(100,100,100),List.of(ACTOR));NbtIo.writeCompressed(after,file);NativeRampPhysicalPlayerCheckpoint.force(dir,intent);need(NativeRampPlayerStorage.read(dir,ID).orElseThrow().equals(after),"physical checkpoint forces current vanilla file without changing opaque/resources");NbtIo.writeCompressed(before,file);boolean physicalRefused=false;try{NativeRampPhysicalPlayerCheckpoint.force(dir,intent);}catch(java.io.IOException expected){physicalRefused=true;}need(physicalRefused&&NativeRampPlayerStorage.read(dir,ID).orElseThrow().equals(before),"physical checkpoint rejects uncommitted endpoint without rewriting it");
+   var captured=NativeRampPlayerReceipts.capture(dir,intent);var record=new CompoundTag();record.put(NativeRampPlayerReceipts.KEY,captured);need(NativeRampPlayerReceipts.read(record,intent).get(ID).orElseThrow().equals(before),"bounded private receipt round trip");
+   var bad=record.copy();bad.getList(NativeRampPlayerReceipts.KEY,Tag.TAG_COMPOUND).getCompound(0).putString("Future","unknown");boolean refused=false;try{NativeRampPlayerReceipts.read(bad,intent);}catch(IllegalArgumentException expected){refused=true;}need(refused,"unknown receipt fields refuse");
+  }finally{try(var files=Files.list(dir)){for(var file:files.toList())Files.delete(file);}Files.delete(dir);}
+  var recipe=new CompoundTag();recipe.putInt("Second",2);recipe.putInt("First",1);var reordered=new CompoundTag();reordered.putInt("First",1);reordered.putInt("Second",2);var hash=NativeRampActiveState.recipe(recipe);need(Arrays.equals(hash,NativeRampActiveState.recipe(reordered)),"recipe identity has stable field ordering");var timeline=new com.vandorlabs.ramp.RampLifecycle.Timeline(3,10,12,.2,1,.4,60,true);var state=new NativeRampActiveState(new UUID(8,9),hash,7,timeline,List.of(new BlockPos(100,100,100)),false,NativeRampPartData.Belt.NONE);var encoded=state.write();need(NativeRampActiveState.read(encoded,new BlockPos(100,100,100)).write().equals(encoded),"typed ACTIVE projection round trip");for(int variant=0;variant<5;variant++){var invalid=encoded.copy();switch(variant){case 0->invalid.putString("Future","unknown");case 1->invalid.putInt("Revision",7);case 2->invalid.putByteArray("Recipe",new byte[31]);case 3->invalid.getCompound("Timeline").putInt("Moving",1);default->invalid.put("Cells",new ListTag());}boolean refused=false;try{NativeRampActiveState.read(invalid,new BlockPos(100,100,100));}catch(IllegalArgumentException expected){refused=true;}need(refused,"unknown/malformed ACTIVE projection refuses "+variant);}
+  System.out.println("[vandorlabs][ramp-player-record] PASS checks="+checks);
+ }
+ private NativeRampPlayerRecordChecks(){}
+}

@@ -12,8 +12,10 @@ import net.minecraft.world.level.block.state.properties.*;
 public class NativeRampBlock extends BaseEntityBlock {
  public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING,ACTIVE_FACE=DirectionProperty.create("active_face");
  public static final BooleanProperty ACTIVE=BooleanProperty.create("active");public static final IntegerProperty MODE=IntegerProperty.create("mode",0,6);
- private final Supplier<? extends BlockEntityType<?>> entities;
- public NativeRampBlock(Properties properties,Supplier<? extends BlockEntityType<?>> entities){super(properties);this.entities=java.util.Objects.requireNonNull(entities);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ACTIVE_FACE,Direction.NORTH).setValue(ACTIVE,false).setValue(MODE,0));}
+ private final Supplier<? extends BlockEntityType<?>> entities;private final Supplier<BlockState> parts;
+ public NativeRampBlock(Properties properties,Supplier<? extends BlockEntityType<?>> entities){this(properties,entities,null);}
+ public NativeRampBlock(Properties properties,Supplier<? extends BlockEntityType<?>> entities,Supplier<BlockState> parts){super(properties);this.entities=java.util.Objects.requireNonNull(entities);this.parts=parts;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH).setValue(ACTIVE_FACE,Direction.NORTH).setValue(ACTIVE,false).setValue(MODE,0));}
+ final Supplier<BlockState> runtimeParts(){return parts;}
  @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
  @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,ACTIVE_FACE,ACTIVE,MODE);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return entities.get().create(pos,state);}
@@ -23,6 +25,8 @@ public class NativeRampBlock extends BaseEntityBlock {
  public int legacyMeta(BlockState state){var scan=scanFacing(state);return (scan.getAxis().isVertical()?8|(scan==Direction.DOWN?1:0):scan.get2DDataValue())|(state.getValue(ACTIVE)?4:0);}
  @Override public BlockState getStateForPlacement(BlockPlaceContext context){var facing=context.getHorizontalDirection();var player=context.getPlayer();var scan=player!=null&&player.getXRot()>45?Direction.DOWN:player!=null&&player.getXRot()< -45?Direction.UP:facing;return defaultBlockState().setValue(FACING,facing).setValue(ACTIVE_FACE,scan);}
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
+ @Override protected void tick(BlockState state,ServerLevel world,BlockPos pos,net.minecraft.util.RandomSource random){if(world.getBlockEntity(pos) instanceof NativeRampEntity owner){var runtime=owner.controller();if(runtime!=null)runtime.scheduledTick();}}
+ @Override protected void neighborChanged(BlockState state,net.minecraft.world.level.Level world,BlockPos pos,Block block,BlockPos from,boolean moving){if(!world.isClientSide&&world.getBlockEntity(pos) instanceof NativeRampEntity owner)owner.queueInputRefresh();}
  @Override public net.minecraft.world.item.ItemStack getCloneItemStack(BlockState state,net.minecraft.world.phys.HitResult hit,net.minecraft.world.level.LevelReader world,BlockPos pos,net.minecraft.world.entity.player.Player player){return NativeRampItem.pick(asItem(),world.getBlockEntity(pos) instanceof NativeRampEntity owner?owner:null);}
  @Override protected java.util.List<net.minecraft.world.item.ItemStack> getDrops(BlockState state,net.minecraft.world.level.storage.loot.LootParams.Builder context){var raw=context.getOptionalParameter(net.minecraft.world.level.storage.loot.parameters.LootContextParams.BLOCK_ENTITY);return java.util.List.of(raw instanceof NativeRampEntity owner&&owner.inert()?NativeRampItem.pick(asItem(),owner):new net.minecraft.world.item.ItemStack(asItem()));}
  @Override public BlockState playerWillDestroy(net.minecraft.world.level.Level world,BlockPos pos,BlockState state,net.minecraft.world.entity.player.Player player){if(!world.isClientSide&&world.getBlockEntity(pos) instanceof NativeRampEntity owner)owner.prepareRecoveryDrop(owner.inert()&&(player.isCreative()||!state.canHarvestBlock(world,pos,player))?NativeRampItem.pick(asItem(),owner):net.minecraft.world.item.ItemStack.EMPTY);return super.playerWillDestroy(world,pos,state,player);}

@@ -1,0 +1,6 @@
+tasks.register('testRampPlayerRecords', JavaExec) {
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.ramp.NativeRampPlayerRecordChecks'
+    maxHeapSize = '512m'
+}

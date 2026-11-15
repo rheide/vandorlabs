@@ -13,6 +13,7 @@ public class NativeRampSlabBlock extends NativeRampBlock {
  public static final EnumProperty<Half> HALF=BlockStateProperties.HALF;
  private static final VoxelShape BOTTOM=Block.box(0,0,0,16,8,16),TOP=Block.box(0,8,0,16,16,16);
  public NativeRampSlabBlock(Properties properties,Supplier<? extends BlockEntityType<?>> entities){super(properties,entities);registerDefaultState(defaultBlockState().setValue(HALF,Half.BOTTOM));}
+ public NativeRampSlabBlock(Properties properties,Supplier<? extends BlockEntityType<?>> entities,Supplier<BlockState> parts){super(properties,entities,parts);registerDefaultState(defaultBlockState().setValue(HALF,Half.BOTTOM));}
  @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){super.createBlockStateDefinition(builder);builder.add(HALF);}
  @Override public BlockState legacyState(int meta){int face=meta&7;var scan=face<6?Direction.from3DDataValue(face):Direction.NORTH;return defaultBlockState().setValue(ACTIVE_FACE,scan).setValue(FACING,scan.getAxis().isVertical()?Direction.NORTH:scan).setValue(HALF,(meta&8)!=0?Half.TOP:Half.BOTTOM);}
  @Override public int legacyMeta(BlockState state){return scanFacing(state).get3DDataValue()|(state.getValue(HALF)==Half.TOP?8:0);}
