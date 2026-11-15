@@ -1,0 +1,10 @@
+task testResourcePortSavedData(type: JavaExec) {
+    group = 'verification'
+    description = 'Retain undecodable port resources exactly and inert, including missing providers and invalid inventory rows'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ResourcePortSavedDataChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testResourcePortSavedData

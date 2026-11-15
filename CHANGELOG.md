@@ -4,6 +4,7 @@
 
 ### Module Rack (Forge 1.12.2 and NeoForge 1.21.1)
 
+- Preserve undecodable Forge Rack module inventories as inert recovery items instead of dropping invalid rows or truncating stack counts; retain opaque module and housing data.
 - Add a four-slot Module Rack and three-dimensional Blank Module item. The darker compact housing has a one-pixel rim, a full-depth right wall around a recessed inner panel, and two tiny status squares per bay: lower amber when empty and upper cyan when occupied.
 - Insert a module by clicking its intended slot or aligned button, with an eased slide into the rack. Empty-hand interaction retrieves that slot's item; saved contents retain their data and drop when the rack breaks.
 - Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Reuse the Light and Port viewing-angle placement rule. Slot selection, indicators and module travel rotate together.
@@ -102,6 +103,8 @@
 - Connect native Power and Fluid Ports to these storage blocks, including optional input pulling. Reuse bounded tank membership and coalesce resource-only visual updates.
 
 ### Resource transfer ports (Forge 1.12.2 and NeoForge 1.21.1)
+
+- Retain unavailable or malformed saved port resources in their original inert owner instead of loading an empty buffer. Reject mixed resource owners and duplicate inventory slots.
 
 - Fix recursive chunk loading when reading older Forge Battery data. Resolve physical facing after chunk loading while preserving stored energy, capability data and the original face-policy format.
 

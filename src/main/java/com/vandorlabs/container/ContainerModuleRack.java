@@ -9,7 +9,7 @@ public final class ContainerModuleRack extends ContainerRedstoneChannel {
     public final TileEntityModuleRack tile;
     public ContainerModuleRack(TileEntityModuleRack tile) { super(tile.output); this.tile = tile; }
     @Override public boolean canInteractWith(EntityPlayer player) {
-        return !tile.isInvalid() && tile.getWorld() != null && tile.getWorld().isBlockLoaded(tile.getPos()) && tile.getWorld().getTileEntity(tile.getPos()) == tile
+        return !tile.inert() && !tile.isInvalid() && tile.getWorld() != null && tile.getWorld().isBlockLoaded(tile.getPos()) && tile.getWorld().getTileEntity(tile.getPos()) == tile
                 && ConfigurationAccess.canKeepDialogOpen(player, tile.getWorld(), tile.getPos());
     }
 }

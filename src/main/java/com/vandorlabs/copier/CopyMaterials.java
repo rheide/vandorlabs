@@ -64,6 +64,8 @@ public final class CopyMaterials {
     private static boolean resourceData(NBTTagCompound source,NBTTagCompound item){for(String key:new String[]{"Energy","Tank","ContainedFluids","PortEnergy","PortFluid","Items"})if(source.hasKey(key)&&!Objects.equals(source.getTag(key),item.getTag(key)))return false;return true;}
     private static boolean storedResources(TileEntity tile,NBTTagCompound tag){
         if(tile==null||tag==null)return false;
+        if(tile instanceof TileEntityModuleRack&&((TileEntityModuleRack)tile).inert())return true;
+        if(tile instanceof com.vandorlabs.ports.ResourcePortTile&&((com.vandorlabs.ports.ResourcePortTile)tile).inert())return true;
         // Inert Batteries retain their original charge but deliberately expose no energy capability.
         if(tile instanceof TileEntityBattery&&tag.hasKey("Energy",99)&&tag.getDouble("Energy")>0)return true;
         if(tile instanceof com.vandorlabs.ports.ResourcePortTile&&com.vandorlabs.ports.ResourcePortData.hasResources(tag))return true;

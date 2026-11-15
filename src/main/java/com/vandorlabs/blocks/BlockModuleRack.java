@@ -112,6 +112,7 @@ public final class BlockModuleRack extends BlockVandor {
         TileEntity raw = world.getTileEntity(pos);
         if (!(raw instanceof TileEntityModuleRack)) return false;
         TileEntityModuleRack rack = (TileEntityModuleRack)raw;
+        if (rack.inert()) return false;
         ItemStack held = player.getHeldItem(hand);
         if (hand == EnumHand.MAIN_HAND && (held.getItem() == com.vandorlabs.items.ModItems.CONFIGURIZER || held.isEmpty() && slot < 0))
             return openConfiguration(world, pos, player);
@@ -133,7 +134,8 @@ public final class BlockModuleRack extends BlockVandor {
     }
 
     public static boolean openConfiguration(World world, BlockPos pos, EntityPlayer player) {
-        if (!ConfigurationAccess.canEditDialog(player, world, pos) || !(world.getTileEntity(pos) instanceof TileEntityModuleRack)) return false;
+        if (!ConfigurationAccess.canEditDialog(player, world, pos) || !(world.getTileEntity(pos) instanceof TileEntityModuleRack)
+                || ((TileEntityModuleRack)world.getTileEntity(pos)).inert()) return false;
         if (!world.isRemote) {
             com.vandorlabs.tiles.WorldActionAuthorization.authorize(world.getTileEntity(pos),player);
             player.openGui(com.vandorlabs.VandorLabs.instance, com.vandorlabs.GuiHandler.GUI_MODULE_RACK,world, pos.getX(), pos.getY(), pos.getZ());
@@ -185,8 +187,27 @@ public final class BlockModuleRack extends BlockVandor {
                 && stack.getCount() < Math.min(stack.getMaxStackSize(), inventoryLimit);
     }
 
+    private ItemStack shell(TileEntity raw) {
+        ItemStack stack=new ItemStack(this);
+        if(raw instanceof TileEntityModuleRack&&((TileEntityModuleRack)raw).inert()){
+            net.minecraft.nbt.NBTTagCompound saved=raw.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+            for(String key:new String[]{"id","x","y","z"})saved.removeTag(key);
+            stack.setTagInfo("BlockEntityTag",saved);
+        }
+        return stack;
+    }
     @Override public ItemStack getPickBlock(IBlockState state, RayTraceResult hit, World world,
-            BlockPos pos, EntityPlayer player) { return new ItemStack(this); }
+            BlockPos pos, EntityPlayer player) { return shell(world.getTileEntity(pos)); }
+    @Override public void getDrops(net.minecraft.util.NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){
+        TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityModuleRack&&((TileEntityModuleRack)raw).inert())drops.add(shell(raw));else super.getDrops(drops,world,pos,state,fortune);
+    }
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest){
+        if(!world.isRemote&&!willHarvest){TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityModuleRack&&((TileEntityModuleRack)raw).inert())spawnAsEntity(world,pos,shell(raw));}
+        return super.removedByPlayer(state,world,pos,player,willHarvest);
+    }
+    @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity raw,ItemStack tool){
+        if(raw instanceof TileEntityModuleRack&&((TileEntityModuleRack)raw).inert())spawnAsEntity(world,pos,shell(raw));else super.harvestBlock(world,player,pos,state,raw,tool);
+    }
 
     @Override public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity raw = world.getTileEntity(pos);

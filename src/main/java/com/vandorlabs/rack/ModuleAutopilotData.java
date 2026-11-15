@@ -19,7 +19,11 @@ public final class ModuleAutopilotData {
         data.setTag(AutopilotModuleSettings.KEY,state.copy()); module.setTagCompound(data);
     }
     public static AutopilotModuleSettings settings(ItemStack module) {
+        if(module.hasTagCompound()&&module.getTagCompound().hasKey(AutopilotModuleSettings.KEY)
+                &&!module.getTagCompound().hasKey(AutopilotModuleSettings.KEY,10))throw new IllegalArgumentException("Invalid module navigation data");
         NBTTagCompound data=state(module);
+        for(String key:new String[]{"AutopilotTrigger","RouteMarkerMeta"})if(data.hasKey(key)&&!data.hasKey(key,3))throw new IllegalArgumentException("Invalid module setting type");
+        if(data.hasKey("RedstoneChannels")&&!data.hasKey("RedstoneChannels",11)||data.hasKey("RouteMarker")&&!data.hasKey("RouteMarker",8))throw new IllegalArgumentException("Invalid module setting type");
         return new AutopilotModuleSettings(ChannelData.read(data,0),data.hasKey("AutopilotTrigger")?data.getInteger("AutopilotTrigger"):1,
                 data.hasKey("RouteMarker")?data.getString("RouteMarker"):"minecraft:concrete",data.getInteger("RouteMarkerMeta"));
     }

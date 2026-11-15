@@ -32,7 +32,6 @@ public final class LegacyAutopilotMigration {
         return new LegacyAutopilotData(opaqueOwn(original),new NBTTagCompound()).preserve(result);
     }
     public static LegacyAutopilotData preservation(NBTTagCompound saved,NBTTagCompound nativeAtRead) {
-        if(!saved.hasKey(BACKUP,10))return null;
         return new LegacyAutopilotData(opaqueOwn(saved),nativeAtRead);
     }
     private static NBTTagCompound opaqueOwn(NBTTagCompound saved) {

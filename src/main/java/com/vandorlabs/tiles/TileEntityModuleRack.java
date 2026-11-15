@@ -35,6 +35,8 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     private int primary = -1;
     private int moduleKinds, previousModuleKinds;
     private boolean loadingModules;
+    private NBTTagCompound failedLoad;
+    public boolean inert() { return failedLoad != null; }
     private com.vandorlabs.rack.LegacyAutopilotData legacyBlockData;
     private NBTTagCompound legacyOriginal;
     private final ModuleReceiver[] receivers = { new ModuleReceiver(0), new ModuleReceiver(1), new ModuleReceiver(2), new ModuleReceiver(3) };
@@ -76,8 +78,8 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
      * read-only views cannot acquire or release physical inventory through this API.
      */
     private boolean canMutate() {
-        return world == null || !(world instanceof VehicleWorld) && !world.isRemote
-                && !isInvalid() && world.isBlockLoaded(pos) && world.getTileEntity(pos) == this;
+        return !inert() && (world == null || !(world instanceof VehicleWorld) && !world.isRemote
+                && !isInvalid() && world.isBlockLoaded(pos) && world.getTileEntity(pos) == this);
     }
 
     public boolean insertModule(int slot, ItemStack held, boolean creative) {
@@ -117,6 +119,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
      */
     public NonNullList<ItemStack> drainModules() {
         NonNullList<ItemStack> result = NonNullList.create();
+        if (inert()) return result;
         if (world != null && (world.isRemote || world instanceof VehicleWorld || isInvalid()
                 || !world.isBlockLoaded(pos) || world.getTileEntity(pos) != this)) return result;
         suspendReceivers();
@@ -138,7 +141,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     private static long next(long value) { return value == Long.MAX_VALUE ? 1 : value + 1; }
 
     @Override public void changed() {
-        if (loadingModules) return;
+        if (loadingModules || inert()) return;
         saveNavigation();
         revision = next(revision);
         renderMask = occupiedMask;
@@ -162,6 +165,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
+        if (inert()) { tag.merge(failedLoad.copy()); return tag; }
         saveNavigation();
         writeTileIdentity(tag);
         NBTTagList items = new NBTTagList();
@@ -180,23 +184,39 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
+        NBTTagCompound original = tag.copy();
+        failedLoad = original;
+        try {
+        if (tag.hasKey("RackHousing") && (!tag.hasKey("RackHousing",3) || tag.getInteger("RackHousing") < -1
+                || tag.getInteger("RackHousing") >= 0 && !ScreenHousingTextures.validChoice(tag.getInteger("RackHousing"))))
+            throw new IllegalArgumentException("Invalid saved Rack housing");
+        if (tag.hasKey("RackEmit") && (!tag.hasKey("RackEmit",1) || tag.getByte("RackEmit") < 0 || tag.getByte("RackEmit") > 1))
+            throw new IllegalArgumentException("Invalid saved Rack output");
+        for (String key : new String[]{"Revision","Insert0","Insert1","Insert2","Insert3"})
+            if (tag.hasKey(key) && (!tag.hasKey(key,4) || tag.getLong(key)<0)) throw new IllegalArgumentException("Invalid saved Rack sequence");
+        if (tag.hasKey("Items") && (!tag.hasKey("Items",9)
+                || ((NBTTagList)tag.getTag("Items")).tagCount()>4
+                || ((NBTTagList)tag.getTag("Items")).tagCount()>0 && ((NBTTagList)tag.getTag("Items")).getTagType()!=10))
+            throw new IllegalArgumentException("Invalid saved Rack inventory");
+        ItemStack[] staged = {ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY};
+        NBTTagList items = tag.getTagList("Items",10);
+        for (int index=0;index<items.tagCount();index++) {
+            NBTTagCompound row=items.getCompoundTagAt(index);
+            if (!row.hasKey("Slot",1)) throw new IllegalArgumentException("Invalid saved Rack slot");
+            int slot=row.getByte("Slot")&255;
+            if (!ModuleRackGeometry.validSlot(slot) || !staged[slot].isEmpty()) throw new IllegalArgumentException("Duplicate or invalid saved Rack slot");
+            ItemStack stack=new ItemStack(row);NBTTagCompound raw=row.copy();raw.removeTag("Slot");
+            if (!accepts(stack) || stack.getCount()!=1 || !stack.writeToNBT(new NBTTagCompound()).equals(raw))
+                throw new IllegalArgumentException("Unknown saved Rack module owner");
+            if (stack.getItem()==ModItems.AUTOPILOT_MODULE) com.vandorlabs.rack.ModuleAutopilotData.settings(stack);
+            staged[slot]=stack;
+        }
         super.readFromNBT(tag);
         housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
         emitRedstone = tag.getBoolean("RackEmit");
         output.loaded(tag);
-        for (int slot = 0; slot < modules.length; slot++) modules[slot] = ItemStack.EMPTY;
-        NBTTagList items = tag.getTagList("Items", 10);
         int occupied = 0;
-        for (int index = 0; index < items.tagCount(); index++) {
-            NBTTagCompound item = items.getCompoundTagAt(index);
-            int slot = item.getByte("Slot") & 255;
-            if (!ModuleRackGeometry.validSlot(slot) || !modules[slot].isEmpty()) continue;
-            ItemStack stack = new ItemStack(item);
-            if (!accepts(stack)) continue;
-            stack.setCount(1);
-            modules[slot] = stack;
-            occupied |= 1 << slot;
-        }
+        for (int slot=0;slot<4;slot++) { modules[slot]=staged[slot];if(!staged[slot].isEmpty())occupied|=1<<slot; }
         occupiedMask = renderMask = occupied;
         loadNavigation();
         revision = Math.max(0, tag.getLong("Revision"));
@@ -204,6 +224,12 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
             insertionSequences[slot] = Math.max(0, tag.getLong("Insert" + slot));
         legacyOriginal=tag.hasKey(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP,10)?tag.getCompoundTag(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP).copy():null;
         legacyBlockData=com.vandorlabs.rack.LegacyAutopilotMigration.preservation(tag,writeTileIdentity(new NBTTagCompound()));
+        failedLoad=null;
+        } catch (RuntimeException failure) {
+            failedLoad=original;java.util.Arrays.fill(modules,ItemStack.EMPTY);
+            occupiedMask=renderMask=moduleKinds=previousModuleKinds=0;primary=-1;
+            loadingModules=true;try{readAutopilotData(new NBTTagCompound());}finally{loadingModules=false;}
+        }
     }
 
     private NBTTagCompound writeVisualData(NBTTagCompound tag) {
@@ -216,6 +242,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
 
     private NBTTagCompound writeSyncData(NBTTagCompound tag) {
         writeVisualData(tag);
+        tag.setBoolean("RackInert",inert());
         if (housingTexture >= 0) tag.setInteger("RackHousing", housingTexture);
         if (emitRedstone) tag.setBoolean("RackEmit", true);
         NBTTagCompound transmission = output.publicSettings();
@@ -275,6 +302,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
             renderMask = 0;
         }
         occupiedMask = mask;
+        failedLoad = tag.getBoolean("RackInert") ? new NBTTagCompound() : null;
         previousModuleKinds = moduleKinds;
         moduleKinds = tag.hasKey("ModuleKinds",3) ? tag.getInteger("ModuleKinds") & 255 : com.vandorlabs.rack.ModuleRackPolicy.blankKinds(mask);
         for (int slot = 0; slot < modules.length; slot++) {
@@ -303,7 +331,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
 
     @Override public void onLoad() {
         super.onLoad();
-        if (!(world instanceof VehicleWorld)) DeferredTileLoad.schedule(this, () -> { com.vandorlabs.redstone.RedstoneChannels.register(output); resumeReceivers(); output.publish(); });
+        if (!(world instanceof VehicleWorld)) DeferredTileLoad.schedule(this, () -> { if(!inert()){com.vandorlabs.redstone.RedstoneChannels.register(output); resumeReceivers(); output.publish();} });
     }
 
     @Override public void invalidate() {
@@ -364,7 +392,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
             readAutopilotData(primary<0?new NBTTagCompound():com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary]));
         } finally { loadingModules=false; }
     }
-    private boolean physicalChannels() { return world!=null && !world.isRemote && !(world instanceof VehicleWorld) && !isInvalid() && world.isBlockLoaded(pos) && world.getTileEntity(pos)==this; }
+    private boolean physicalChannels() { return !inert() && world!=null && !world.isRemote && !(world instanceof VehicleWorld) && !isInvalid() && world.isBlockLoaded(pos) && world.getTileEntity(pos)==this; }
     private void suspendReceivers() {
         if(world==null||world.isRemote||world instanceof VehicleWorld)return;
         com.vandorlabs.redstone.RedstoneChannels.unregister(this);
@@ -403,4 +431,6 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     }
 
     @Override public boolean shouldRenderInPass(int pass) { return false; }
+    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability,net.minecraft.util.EnumFacing side){return !inert()&&super.hasCapability(capability,side);}
+    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability,net.minecraft.util.EnumFacing side){return inert()?null:super.getCapability(capability,side);}
 }

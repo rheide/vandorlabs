@@ -38,7 +38,7 @@ public class PowerPortTile extends ResourcePortTile {
         }
     }
     @Override protected void writeContents(NBTTagCompound tag){tag.setInteger("PortEnergy",energy);}
-    @Override protected void readContents(NBTTagCompound tag){if(tag.hasKey("PortEnergy")&&(!tag.hasKey("PortEnergy",3)||tag.getInteger("PortEnergy")<0||tag.getInteger("PortEnergy")>capacity))throw new IllegalArgumentException("Invalid saved power port charge");energy=tag.getInteger("PortEnergy");}
+    @Override protected void readContents(NBTTagCompound tag){if(tag.hasKey("PortFluid")||tag.hasKey("Items"))throw new IllegalArgumentException("Mixed power port resource owners");if(tag.hasKey("PortEnergy")&&(!tag.hasKey("PortEnergy",3)||tag.getInteger("PortEnergy")<0||tag.getInteger("PortEnergy")>capacity))throw new IllegalArgumentException("Invalid saved power port charge");energy=tag.getInteger("PortEnergy");}
     @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityEnergy.ENERGY?!inert()&&side!=null&&settings().face(side.getIndex())!=ResourcePortSettings.Face.DISABLED:super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityEnergy.ENERGY)return hasCapability(cap,side)?CapabilityEnergy.ENERGY.cast(faces[side.getIndex()]):null;return super.getCapability(cap,side);}
     private final class Face implements IEnergyStorage {

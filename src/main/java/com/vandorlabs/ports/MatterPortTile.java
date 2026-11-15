@@ -52,7 +52,21 @@ public final class MatterPortTile extends ResourcePortTile {
         }
     }
     @Override protected void writeContents(NBTTagCompound tag){ItemStackHelper.saveAllItems(tag,items);}
-    @Override protected void readContents(NBTTagCompound tag){items.clear();ItemStackHelper.loadAllItems(tag,items);for(ItemStack stack:items)if(!stack.isEmpty()&&(stack.getCount()<1||stack.getCount()>Math.min(64,stack.getMaxStackSize())))throw new IllegalArgumentException("Invalid saved matter port stack");}
+    @Override protected void readContents(NBTTagCompound tag){
+        if(tag.hasKey("PortEnergy")||tag.hasKey("PortFluid"))throw new IllegalArgumentException("Mixed matter port resource owners");
+        items.clear();if(!tag.hasKey("Items"))return;
+        if(!tag.hasKey("Items",9))throw new IllegalArgumentException("Invalid saved matter port inventory");
+        net.minecraft.nbt.NBTTagList rows=(net.minecraft.nbt.NBTTagList)tag.getTag("Items");
+        if(rows.tagCount()>SLOTS||rows.tagCount()>0&&rows.getTagType()!=10)throw new IllegalArgumentException("Invalid saved matter port inventory");
+        boolean[] seen=new boolean[SLOTS];
+        for(int index=0;index<rows.tagCount();index++){
+            NBTTagCompound row=rows.getCompoundTagAt(index);if(!row.hasKey("Slot",1))throw new IllegalArgumentException("Invalid saved matter port slot");int slot=row.getByte("Slot")&255;checkSlot(slot);
+            if(seen[slot])throw new IllegalArgumentException("Duplicate saved matter port slot");seen[slot]=true;
+            ItemStack stack=new ItemStack(row);NBTTagCompound raw=row.copy();raw.removeTag("Slot");
+            if(stack.isEmpty()||stack.getCount()>Math.min(64,stack.getMaxStackSize())||!stack.writeToNBT(new NBTTagCompound()).equals(raw))throw new IllegalArgumentException("Unknown saved matter port stack");
+            items.set(slot,stack);
+        }
+    }
     @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY?!inert()&&side!=null&&settings().face(side.getIndex())!=ResourcePortSettings.Face.DISABLED:super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)return hasCapability(cap,side)?CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(faces[side.getIndex()]):null;return super.getCapability(cap,side);}
     private final class Face implements IItemHandler {

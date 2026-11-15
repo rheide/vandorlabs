@@ -1,0 +1,10 @@
+task testModuleRackSavedData(type: JavaExec) {
+    group = 'verification'
+    description = 'Retain invalid Rack module ownership exactly with one inert recovery carrier'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ModuleRackSavedDataChecks'
+    workingDir = file("$buildDir/module-rack-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testModuleRackSavedData
