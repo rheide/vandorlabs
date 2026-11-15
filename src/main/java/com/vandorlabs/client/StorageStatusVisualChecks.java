@@ -10,6 +10,7 @@ import java.io.File;
 final class StorageStatusVisualChecks {
     static void run(Minecraft mc,File output)throws Exception{
         GuiScreen old=mc.currentScreen;
+        int[][] sizes={{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}};
         try{for(int index=0;index<2;index++){
             TileEntity tile=mc.world.getTileEntity(new BlockPos(index==0?144:146,21,120));if(tile==null)throw new IllegalStateException("Storage status fixture missing");
             ContainerStorageStatus data=new ContainerStorageStatus(tile);if(data.values[0]<=0||data.values[0]>=data.values[1])throw new IllegalStateException("Storage meter needs partial contents");
@@ -18,7 +19,7 @@ final class StorageStatusVisualChecks {
                 for(int id:new int[]{com.vandorlabs.GuiHandler.GUI_STORAGE_STATUS,com.vandorlabs.GuiHandler.GUI_RESOURCE_PORT})if(!(routes.getClientGuiElement(id,mc.player,mc.world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ()) instanceof GuiResourcePort))throw new IllegalStateException("Battery entry points must open the shared Port settings dialog");
             }
             if(index==1){com.vandorlabs.GuiHandler routes=new com.vandorlabs.GuiHandler();for(int id:new int[]{com.vandorlabs.GuiHandler.GUI_STORAGE_STATUS,com.vandorlabs.GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR})if(!(routes.getClientGuiElement(id,mc.player,mc.world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ()) instanceof GuiStorageStatus))throw new IllegalStateException("Tank entry points must open the same settings dialog");}
-            for(int[] size:new int[][]{{320,240},{460,340},{new ScaledResolution(mc).getScaledWidth(),new ScaledResolution(mc).getScaledHeight()}}){
+            for(int[] size:sizes){
                 net.minecraft.client.gui.inventory.GuiContainer gui;
                 if(index==0){
                     com.vandorlabs.ports.ResourcePortContainer ports=new com.vandorlabs.ports.ResourcePortContainer((com.vandorlabs.tiles.TileEntityBattery)tile);ports.batteryValues[0]=data.values[0];
@@ -29,7 +30,13 @@ final class StorageStatusVisualChecks {
                     if(!battery.controlsFit()||net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiResourcePort.class,battery,"textures")==null)throw new IllegalStateException("Battery Housing picker/control bounds");
                     if(battery.controls().stream().noneMatch(button->button.id==40&&button.displayString.startsWith("Shape: ")))throw new IllegalStateException("Battery Housing shape control missing");
                 }else{gui=new GuiStorageStatus(data);mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);GuiOptionCycleRuntimeChecks.check(mc);}
-                mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();gui.drawScreen(-1,-1,0);
+                mc.getFramebuffer().bindFramebuffer(true);net.minecraft.client.renderer.GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();
+                // The fixture forces logical resolutions; project those coordinates instead of
+                // the current GUI scale (Battery may temporarily change that scale to fit).
+                net.minecraft.client.renderer.GlStateManager.matrixMode(5889);net.minecraft.client.renderer.GlStateManager.loadIdentity();
+                net.minecraft.client.renderer.GlStateManager.ortho(0,gui.width,gui.height,0,1000,3000);
+                net.minecraft.client.renderer.GlStateManager.matrixMode(5888);net.minecraft.client.renderer.GlStateManager.loadIdentity();net.minecraft.client.renderer.GlStateManager.translate(0,0,-2000);
+                gui.drawScreen(-1,-1,0);
                 int dialogWidth=(Integer)net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.inventory.GuiContainer.class,gui,"xSize","field_146999_f");
                 int dialogHeight=(Integer)net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.inventory.GuiContainer.class,gui,"ySize","field_147000_g");
                 if(index==1&&(dialogWidth>354||dialogHeight>238))throw new IllegalStateException("Tank dialog is not compact");
@@ -40,9 +47,15 @@ final class StorageStatusVisualChecks {
                 for(Object raw:buttons){GuiButton b=(GuiButton)raw;shape|=b.id==1&&b.displayString.startsWith("Shape: ");}
                 if(index==1&&!shape)throw new IllegalStateException("Storage shape control missing");
                 if(index==1&&!layout)throw new IllegalStateException("Tank Tile/Fit control missing");
-                javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(output,"shot_storage_meter_"+index+"_"+size[0]+".png"));
+                java.awt.image.BufferedImage capture=net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());int glyphPixels=0;
+                for(int y=0;y<capture.getHeight();y++)for(int x=0;x<capture.getWidth();x++){int pixel=capture.getRGB(x,y),r=pixel>>16&255,g=pixel>>8&255,b=pixel&255;if(Math.min(r,Math.min(g,b))>170&&Math.max(r,Math.max(g,b))-Math.min(r,Math.min(g,b))<25)glyphPixels++;}
+                javax.imageio.ImageIO.write(capture,"png",new File(output,"shot_storage_meter_"+index+"_"+size[0]+".png"));
+                if(glyphPixels<100)throw new IllegalStateException("Storage capture has no visible dialog text: "+index+" "+size[0]+"x"+size[1]+" pixels="+glyphPixels);
+                System.out.println("[vandorlabs][reprolab] storage-meter-capture PASS kind="+index+" requested="+size[0]+"x"+size[1]+" logical="+gui.width+"x"+gui.height+" glyph-pixels="+glyphPixels);
+                mc.displayGuiScreen(null); // Restore a temporary Battery GUI scale before the next case.
+                mc.entityRenderer.setupOverlayRendering();
             }
-        }}finally{mc.displayGuiScreen(old);}
+        }}finally{mc.displayGuiScreen(old);mc.entityRenderer.setupOverlayRendering();}
         for(String texture:new String[]{"port","tank_empty"})if(mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/matter/"+texture)==mc.getTextureMapBlocks().getMissingSprite())throw new IllegalStateException("Missing tank sprite "+texture);
         for(boolean block:new boolean[]{false,true})for(int amount:new int[]{1,4000,8000,12000,16000}){
             double area=TEHexTank.area(TEHexTank.fluidOutline(block,amount)),full=TEHexTank.area(TEHexTank.fluidOutline(block,16000));if(Math.abs(area/full-amount/16000D)>1e-8)throw new IllegalStateException("Horizontal tank fill volume must match stored amount");
