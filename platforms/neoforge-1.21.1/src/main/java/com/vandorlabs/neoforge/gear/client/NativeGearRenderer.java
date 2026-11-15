@@ -20,7 +20,20 @@ public final class NativeGearRenderer implements BlockEntityRenderer<NativeGearE
         var pose=tile.pose(phase);var moving=NativeGearAffine.fromPose(pose,false);var feet=NativeGearAffine.fromPose(pose,true);boolean swing=definition.kind==NativeGearDefinition.Kind.ROTATING,mount=definition.kind==NativeGearDefinition.Kind.MOUNT;int width=definition.size;double shift=(width-1)*.5;
         for(BlockPos column:tile.columns()){var canonical=NativeGearOrientation.inverse(tile.mount(),column);var offset=NativeGearAffine.translation(canonical.getX(),canonical.getY(),canonical.getZ());var columnTile=NativeGearFormation.at(tile.getLevel(),tile.getBlockPos().offset(column));var columnFixed=columnTile==null?fixed:NativeGearAffine.quarterTurn(turns(columnTile.getBlockState().getValue(NativeGearBlock.FACING)));var size=NativeGearAffine.translation(-shift,0,-shift).compose(NativeGearAffine.scaleXZ(width));var bar=NativeGearAffine.scaleXZ(swing?(pose.direction().axisX()!=0?width:1):width,swing?(pose.direction().axisZ()!=0?width:1):width);bar=NativeGearAffine.translation(.5,0,.5).compose(bar.compose(NativeGearAffine.translation(-.5,0,-.5)));var arm=moving.compose(bar);var foot=feet.compose(size);
             draw.part(mount?(width==2?"fixed_mount_compact":"fixed_mount"):"mount",offset.compose(columnFixed),true);if(!mount)draw.part("sleeve",offset.compose(columnFixed.compose(size)),true);
-            if(swing){var yaw=NativeGearAffine.quarterTurn(tile.settings().direction());var stretch=NativeGearAffine.stretchArm(assembly.columnHeight()-tile.socketOffset()).compose(yaw);if(tile.settings().middleHinge())draw.part("swing_linkage_upper",offset.compose(bar.compose(stretch)),true);draw.part(tile.settings().middleHinge()?"swing_linkage_lower":"swing_linkage",offset.compose(arm.compose(stretch)),cache);draw.part("swivel",offset.compose(foot.compose(NativeGearAffine.translation(0,-assembly.columnHeight()+tile.socketOffset(),0).compose(yaw))),cache);}
+            if(swing){var yaw=NativeGearAffine.quarterTurn(tile.settings().direction());var stretch=NativeGearAffine.stretchArm(assembly.columnHeight()-tile.socketOffset());
+                if(tile.settings().hingeMode()==ArmHinge.Mode.DOUBLE||tile.settings().kinkDirection()!=tile.settings().direction()){
+                    var kinkYaw=NativeGearAffine.quarterTurn(tile.settings().kinkDirection());var upper=NativeGearAffine.fromUpperPose(pose);
+                    draw.part("swing_linkage_upper_body",offset.compose(upper.compose(bar.compose(stretch.compose(kinkYaw)))),cache);
+                    var fold=GearMotion.Direction.values()[tile.settings().direction()];var kink=GearMotion.Direction.values()[tile.settings().kinkDirection()];
+                    var elbow=upper.compose(NativeGearAffine.translation(ArmHinge.kinkOffsetX(fold,kink,width),0,ArmHinge.kinkOffsetZ(fold,kink,width)).compose(bar.compose(stretch.compose(yaw))));
+                    draw.part("swing_linkage_elbow",offset.compose(elbow),cache);
+                    draw.part("swing_linkage_lower",offset.compose(arm.compose(stretch.compose(kinkYaw))),cache);
+                }else{
+                    if(tile.settings().middleHinge())draw.part("swing_linkage_upper",offset.compose(bar.compose(stretch.compose(yaw))),true);
+                    draw.part(tile.settings().middleHinge()?"swing_linkage_lower":"swing_linkage",offset.compose(arm.compose(stretch.compose(yaw))),cache);
+                }
+                draw.part("swivel",offset.compose(foot.compose(NativeGearAffine.translation(0,-assembly.columnHeight()+tile.socketOffset(),0).compose(yaw))),cache);
+            }
             else {if(!mount||pose.rodBottomY()+tile.socketOffset()<-.0001)draw.part("rod",offset.compose(arm.compose(NativeGearAffine.scaleY(pose.rodTopY()-pose.rodBottomY()-tile.socketOffset(),pose.rodBottomY()+tile.socketOffset()))),cache);if(assembly.kind()!=GearTopology.FootKind.NONE||!mount)draw.part("socket",offset.compose(foot.compose(NativeGearAffine.translation(0,-assembly.columnHeight()+tile.socketOffset(),0).compose(assembly.kind()!=GearTopology.FootKind.NONE?NativeGearAffine.scaleY(1.25,-1/16D):NativeGearAffine.identity()))),cache);}
         }
         int turns=assembly.kind()==GearTopology.FootKind.PLATE?0:Math.floorMod(tile.settings().footFacing()+2,4);var orientation=NativeGearAffine.quarterTurn(turns);

@@ -18,6 +18,8 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /** One actual four-section horizontal Push menu journey, without replaying the geometry matrix. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativeGearPushClientChecks {
+    private static final boolean DOUBLE_UI=Boolean.getBoolean("vandorlabs.gearDoubleUi");
+    private static int hingeStep,kinkBefore;
     private static int stage,ticks,checks,lastStage=-1,stageStarted;private static boolean movingDisabled,shot;
     private static void need(boolean ok,String why){checks++;if(!ok)throw new AssertionError("Native Push UI client stage="+stage+" tick="+ticks+": "+why);}
     private static boolean marker(Minecraft mc,int op){return mc.level.getBlockState(NativeGearPushClientFixture.ACK.above(op)).is(Blocks.GOLD_BLOCK);}
@@ -51,7 +53,15 @@ public final class NativeGearPushClientChecks {
             case 17->{if(!marker(mc,4)||!ready(mc,NativeGearPushClientFixture.VERTICAL))return;use(mc,NativeGearPushClientFixture.VERTICAL,Direction.NORTH);stage=18;}
             case 18->{if(gui==null)return;need(gui.getMenu().tile.getBlockPos().equals(NativeGearPushClientFixture.VERTICAL)&&gui.button(14)==null,"vertical Push control hidden");mode(5);stage=19;}
             case 19->{if(!marker(mc,5)||!ready(mc,NativeGearPushClientFixture.ROTATING))return;use(mc,NativeGearPushClientFixture.ROTATING,Direction.NORTH);stage=20;}
-            case 20->{if(gui==null)return;need(gui.getMenu().tile.getBlockPos().equals(NativeGearPushClientFixture.ROTATING)&&gui.button(14)==null,"rotating Push control hidden");mode(6);stage=21;}
+            case 20->{if(gui==null)return;need(gui.getMenu().tile.getBlockPos().equals(NativeGearPushClientFixture.ROTATING)&&gui.button(14)==null,"rotating Push control hidden");
+                if(DOUBLE_UI){
+                    if(hingeStep==0){need(gui.button(18)!=null&&gui.button(19)!=null,"rotating native Hinge/Kink controls");click(gui,18,0);hingeStep=1;return;}
+                    if(gui.waitingForReply())return;need(gui.error().isEmpty(),"authoritative Hinge/Kink reply "+gui.error());var selected=gui.getMenu().tile;
+                    if(selected.settings().hingeMode()!=com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE)return;need(gui.editingSettings().hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE,"actual Double2 C2S/S2C");
+                    if(hingeStep==1){kinkBefore=selected.settings().kinkDirection();click(gui,19,1);need(gui.editingSettings().kinkDirection()==Math.floorMod(kinkBefore-1,4),"right click selects previous Kink");hingeStep=2;return;}
+                    if(hingeStep==2){if(selected.settings().kinkDirection()!=Math.floorMod(kinkBefore-1,4))return;need(gui.editingSettings().kinkDirection()==Math.floorMod(kinkBefore-1,4),"previous Kink acknowledged on actual client owner");click(gui,19,0);hingeStep=3;return;}
+                    if(selected.settings().kinkDirection()!=kinkBefore)return;need(gui.editingSettings().kinkDirection()==kinkBefore,"left Kink restores exact original direction");System.out.println("[vandorlabs][gear-push-ui] double-kink PASS actualDouble2/C2S/S2C/rightPrevious/leftRestore");
+                }mode(6);stage=21;}
             case 21->{if(!marker(mc,6)||!ready(mc,NativeGearPushClientFixture.FEET))return;use(mc,NativeGearPushClientFixture.FEET,Direction.NORTH);stage=22;}
             case 22->{if(gui==null)return;need(gui.getMenu().tile.getBlockPos().equals(NativeGearPushClientFixture.FEET)&&gui.button(14)==null,"horizontal landing feet Push control hidden");mode(7);stage=23;}
             case 23->{if(!marker(mc,7))return;mc.level.disconnect();mc.disconnect();stage=30;}

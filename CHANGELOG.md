@@ -2,14 +2,15 @@
 
 ## Unreleased — 2.10.0
 
-### Module Rack (Forge 1.12.2)
+### Module Rack (Forge 1.12.2 and NeoForge 1.21.1)
 
 - Add a four-slot Module Rack and three-dimensional Blank Module item. The darker compact housing has a one-pixel rim, a full-depth right wall around a recessed inner panel, and two tiny status squares per bay: lower amber when empty and upper cyan when occupied.
 - Insert a module by clicking its intended slot or aligned button, with an eased slide into the rack. Empty-hand interaction retrieves that slot's item; saved contents retain their data and drop when the rack breaks.
 - Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Reuse the Light and Port viewing-angle placement rule. Slot selection, indicators and module travel rotate together.
 - Render settled racks and modules in shared opaque chunk meshes. Use pause-aware temporary client animation during insertion and extraction, including rapid reversals, without ticking idle tiles or submitting a permanent tile renderer.
-- Install Autopilot as a NAV module, with per-bay route, activation and receiving controls. Existing Autopilot blocks migrate after chunk loading while preserving navigation, authorization, capability data and their original backup. Older carried snapshots retain their saved representation until returned to the world.
+- Install Autopilot as a NAV module, with per-bay route, activation and receiving controls. On Forge 1.12.2, existing Autopilot blocks migrate after chunk loading while preserving navigation, authorization, capability data and their original backup. Older carried snapshots retain their saved representation until returned to the world.
 - Configure housing and proportional Redstone output through the standard tabs; the four occupied bays produce levels 4, 8, 11 and 15.
+- Native Racks retain modules exactly once through captured mining and interrupted cross-chunk transfers. Insertion and extraction use bounded, isolated rendering buffers and release their terrain observers when settled. Native Vehicle navigation remains unavailable.
 - Include crafting recipes, model assets and focused geometry, inventory, animation and rendering checks. See the [Module Rack guide](docs/module-rack.md).
 
 ### Materials and connected artwork
@@ -42,7 +43,7 @@
 - Extend existing stopped, stowed Plate, Ski and regular Wheel assemblies by sneak-clicking their visible sides with a matching item. Preserve the stopped pose, mounting frame and one-item placement through rebuilding.
 - Add a separate Foot direction setting to formed Ski and Wheel assemblies, including sideways mounts and Large Wheels. Preserve the physical source footprint separately from the chosen visual orientation, configured items and copied settings.
 - Attach native Plates, Skis and matching Wheels at grid-aligned activated Rotating Arm sockets, including complete Large Wheels and connected joined landing groups. Journal every ownership handoff, preserve opaque capability data and retain items when a fractional endpoint refuses placement.
-- Use Single / Double hinge selection on Rotating Arms. Double shares the selected angle between the base and elbow. Set Kink independently of Fold; retain matching foot/payload motion, collision, configured items and copied settings. Older active middle-only strokes keep their saved motion until native zero-degree rest.
+- Use Single / Double hinge selection on Rotating Arms in both Forge 1.12.2 and NeoForge 1.21.1. Double shares the selected angle between the base and elbow. Set Kink independently of Fold; retain matching foot/payload motion, collision, configured items and copied settings. Older active middle-only strokes keep their saved motion until native zero-degree rest.
 - Reuse bounded shared arm poses and allocation-free constraint projections to reduce repeated kinematic preparation.
 - Allow Taxi mode with two independent complete Ski supports. Preserve single-Ski refusal, lowest-support selection and the existing rules for other landing supports.
 

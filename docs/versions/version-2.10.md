@@ -6,13 +6,16 @@ smaller Canopy item models. Forge 1.12.2 remains the reference target; NeoForge
 includes the supported standalone arm family.
 User testing and final release validation remain pending.
 
-## Module Rack and Autopilot (Forge 1.12.2)
+## Module Rack and Autopilot
 
-Autopilot now fits inside Module Racks as an identifiable NAV module, with
-per-bay route, activation and receiving controls. Existing Autopilot computers
+Module Racks are available on Forge 1.12.2 and NeoForge 1.21.1. Autopilot fits
+inside them as an identifiable NAV module, with
+per-bay route, activation and receiving controls. On Forge 1.12.2, existing Autopilot computers
 migrate after chunk loading while preserving navigation, authorization and saved
 data. Rack placement, extraction animation, housing and proportional Redstone
-controls follow the standard dialogs. See the [Module Rack guide](../module-rack.md).
+controls follow the standard dialogs. Native captured Racks retain every module
+through mining and abrupt recovery; Vehicle navigation remains Forge-only.
+See the [Module Rack guide](../module-rack.md).
 
 ## Materials and joined artwork
 
@@ -74,7 +77,8 @@ admission rules. See the [modular landing gear guide](../modular-landing-gear.md
 
 NeoForge now includes regular and Large Extenders, Rotating Arms, mounts, Plates,
 Skis and Wheels as ten ordinary creative/search items. Six-face placement, joined
-platforms, Foot direction, Middle hinge and the dedicated Configurizer dialog use
+platforms, Foot direction, Single / Double hinges, independent Kink and the dedicated
+Configurizer dialog use
 the Forge 1.12.2 construction rules. Duplifier copying and Undo transfer settings only.
 Native/captured payload handoffs, active-foot attachment and captured-block mining
 use durable recovery, and platforms carry native players through motion.

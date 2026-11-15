@@ -447,6 +447,12 @@ tasks.register('generateReservoirResources', Exec) {
 }
 tasks.named('processResources') { dependsOn 'generateReservoirResources' }
 
+tasks.register('testNativeGearDoubleSettings', JavaExec) {
+    dependsOn 'compileJava', 'compileSmokeJava'
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.gear.NativeGearDoubleSettingsChecks'
+}
+
 tasks.register('testRackTerrainUploads', JavaExec) {
     dependsOn 'compileJava', 'compileSmokeJava'
     classpath = sourceSets.smoke.runtimeClasspath

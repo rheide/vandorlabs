@@ -42,6 +42,10 @@ public final class NativeGearAffine {
                     0.5 - cosine * 0.5 + sine * 0.5, 0, 0.5 - sine * 0.5 - cosine * 0.5);
         }
 
+        static NativeGearAffine fromUpperPose(GearMotion.Pose pose){
+            var o=pose.transformUpperLinkVertex(0,0,0);var x=pose.transformUpperLinkVertex(1,0,0);var y=pose.transformUpperLinkVertex(0,1,0);var z=pose.transformUpperLinkVertex(0,0,1);
+            return new NativeGearAffine(x.x-o.x,y.x-o.x,z.x-o.x,x.y-o.y,y.y-o.y,z.y-o.y,x.z-o.z,y.z-o.z,z.z-o.z,o.x,o.y,o.z);
+        }
         static NativeGearAffine fromPose(GearMotion.Pose pose, boolean feet) {
             GearMotion.Vec origin = transform(pose, feet, 0, 0, 0);
             GearMotion.Vec vx = transform(pose, feet, 1, 0, 0);
