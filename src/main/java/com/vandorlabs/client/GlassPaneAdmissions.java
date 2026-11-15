@@ -16,12 +16,14 @@ final class GlassPaneAdmissions {
     void prune(CompiledChunk current,Predicate<TileEntity> suppress,Predicate<TileEntity> installed){
         if(chunk!=current){restore(installed);chunk=current;}
         if(current==null||current==CompiledChunk.DUMMY)return;
+        Set<TileEntity> present=null;
         Iterator<TileEntity> prior=removed.iterator();
         while(prior.hasNext()){
             TileEntity tile=prior.next();
             if(!installed.test(tile)){prior.remove();continue;}
             if(!suppress.test(tile)){
-                if(!current.getTileEntities().contains(tile))current.getTileEntities().add(tile);
+                if(present==null){present=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());present.addAll(current.getTileEntities());}
+                if(present.add(tile))current.getTileEntities().add(tile);
                 prior.remove();
             }
         }
@@ -33,8 +35,11 @@ final class GlassPaneAdmissions {
     }
 
     void restore(Predicate<TileEntity> installed){
-        if(chunk!=null&&chunk!=CompiledChunk.DUMMY)for(TileEntity tile:removed)
-            if(installed.test(tile)&&!chunk.getTileEntities().contains(tile))chunk.getTileEntities().add(tile);
+        if(chunk!=null&&chunk!=CompiledChunk.DUMMY&&!removed.isEmpty()){
+            Set<TileEntity> present=Collections.newSetFromMap(new IdentityHashMap<TileEntity,Boolean>());
+            present.addAll(chunk.getTileEntities());
+            for(TileEntity tile:removed)if(installed.test(tile)&&present.add(tile))chunk.getTileEntities().add(tile);
+        }
         removed.clear();chunk=null;
     }
     int removedCount(){return removed.size();}

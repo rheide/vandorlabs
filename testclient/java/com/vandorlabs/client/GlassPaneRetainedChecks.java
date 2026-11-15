@@ -94,10 +94,26 @@ public final class GlassPaneRetainedChecks {
         need(GlassPaneRetained.sectionKey(new BlockPos(-1,64,-1))==new BlockPos(-16,64,-16).toLong(),"negative section boundary rounded toward zero");
         need(GlassPaneRetained.sectionKey(origin)!=GlassPaneRetained.sectionKey(origin.east(16)),"groups crossed render-section boundary");
     }
+    private static final class CountedTile extends net.minecraft.tileentity.TileEntity {
+        static long comparisons;
+        @Override public boolean equals(Object other){comparisons++;return this==other;}
+        @Override public int hashCode(){return System.identityHashCode(this);}
+    }
+    private static void admissions(){
+        final int count=4096;net.minecraft.client.renderer.chunk.CompiledChunk chunk=new net.minecraft.client.renderer.chunk.CompiledChunk();
+        java.util.List<CountedTile> owners=new java.util.ArrayList<>();for(int i=0;i<count;i++){CountedTile tile=new CountedTile();owners.add(tile);chunk.getTileEntities().add(tile);}
+        GlassPaneAdmissions admissions=new GlassPaneAdmissions();admissions.prune(chunk,tile->true,tile->true);need(chunk.getTileEntities().isEmpty(),"all real section admissions pruned");
+        CountedTile.comparisons=0;admissions.restore(tile->true);long comparisons=CountedTile.comparisons;System.out.println("GlassPaneAdmissions restore owners="+count+" equalityComparisons="+comparisons);
+        need(chunk.getTileEntities().size()==count,"restoration lost an installed owner");need(comparisons<=count*2L,"dense admission restoration must be linear, comparisons="+comparisons);
+        admissions.prune(chunk,tile->true,tile->true);CountedTile.comparisons=0;admissions.prune(chunk,tile->false,tile->true);comparisons=CountedTile.comparisons;System.out.println("GlassPaneAdmissions incremental owners="+count+" equalityComparisons="+comparisons);need(comparisons<=count*2L&&chunk.getTileEntities().size()==count,"incremental admission restoration must be linear and exact");
+        admissions.prune(chunk,tile->true,tile->true);CountedTile already=owners.get(0),removed=owners.get(1);chunk.getTileEntities().add(already);admissions.restore(tile->tile!=removed);
+        java.util.Set<net.minecraft.tileentity.TileEntity> exact=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<net.minecraft.tileentity.TileEntity,Boolean>());exact.addAll(chunk.getTileEntities());need(exact.size()==count-1&&chunk.getTileEntities().size()==exact.size()&&!exact.contains(removed),"restoration must keep exact installed owners once and omit removed tile");
+        admissions.restore(tile->true);need(chunk.getTileEntities().size()==count-1,"retired admissions restored twice");
+    }
     public static void main(String[] args)throws Exception{
         Field environment=CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");environment.setAccessible(true);environment.setBoolean(null,true);
         Bootstrap.register();com.vandorlabs.VandorLabs.proxy=new com.vandorlabs.CommonProxy();
-        BlockProgrammableGlass block=new BlockProgrammableGlass("retained_glass_checks");boundaries(block);
+        BlockProgrammableGlass block=new BlockProgrammableGlass("retained_glass_checks");boundaries(block);admissions();
         for(boolean rotated:new boolean[]{false,true})for(int depth=0;depth<3;depth++)for(boolean single:new boolean[]{false,true}){
             coverage(block,normals(),rotated,depth,single);coverage(block,extended(),rotated,depth,single);
         }
