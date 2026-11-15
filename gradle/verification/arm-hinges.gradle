@@ -1,0 +1,15 @@
+task testArmHinge(type: JavaExec) {
+    group = 'verification'
+    description = 'Check shared Double hinge frames, legacy poses, rigid feet and swept bounds'
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.gear.core.ArmHingeTest'
+}
+task testArmHingeAllocation(type: JavaExec) {
+    group = 'verification'
+    description = 'Measure caller-owned legacy and Double hinge projection allocation'
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.gear.core.ArmHingeAllocationTest'
+}
+check.dependsOn testArmHinge, testArmHingeAllocation

@@ -111,11 +111,16 @@ public final class GearMotion {
         private final double levelOffsetX;
         private final double levelOffsetY;
         private final double levelOffsetZ;
+        private final ArmHinge.Mode hingeMode;
+        private final double[] splitHinge;
 
         private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle,boolean middleHinge) {
+            this(mode,direction,height,progress,stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle,middleHinge,middleHinge?ArmHinge.Mode.LEGACY_CENTER:ArmHinge.Mode.SINGLE,direction,1);
+        }
+        private Pose(Mode mode, Direction direction, int height, double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle,boolean middleHinge,ArmHinge.Mode hingeMode,Direction kink,int width) {
             // A diagonal hinge offset lowers the folded foot by twice the drop
             // while preserving its final horizontal reach and deployed pose.
-            this.hingeDrop=hingeDrop;
+            this.hingeDrop=hingeDrop;this.hingeMode=hingeMode;
             double lateral=middleHinge?MIDDLE_HINGE_OFFSET:hingeDrop;
             this.pivotX=PIVOT_X+direction.axisZ()*lateral;
             this.pivotY=middleHinge?middlePivotY(height,socketOffset):PIVOT_Y-hingeDrop;
@@ -130,8 +135,9 @@ public final class GearMotion {
             this.angleDegrees = mode == Mode.ROTATE || mode == Mode.ROTATE_LEVEL ? startAngle+(activeAngle-startAngle)*stowed : 0.0;
             // Exact endpoints avoid tiny residual sideways translations in
             // fully deployed/stowed states and make joined faces coincide.
-            this.sine = angleDegrees == 90.0 ? 1.0 : Math.sin(Math.toRadians(angleDegrees));
-            this.cosine = angleDegrees == 90.0 ? 0.0 : Math.cos(Math.toRadians(angleDegrees));
+            this.splitHinge=hingeMode==ArmHinge.Mode.DOUBLE?new double[13]:null;
+            if(splitHinge!=null){ArmHinge.prepareDouble(direction,kink,height,socketOffset,width,angleDegrees,splitHinge);this.sine=splitHinge[11];this.cosine=splitHinge[12];}
+            else{this.sine = angleDegrees == 90.0 ? 1.0 : Math.sin(Math.toRadians(angleDegrees));this.cosine = angleDegrees == 90.0 ? 0.0 : Math.cos(Math.toRadians(angleDegrees));}
             if (mode == Mode.ROTATE_LEVEL) {
                 double deployedAnkleY = -height + FOOT_SOCKET_Y + socketOffset;
                 Vec swungAnkle = rotate(PIVOT_X, deployedAnkleY, PIVOT_Z);
@@ -145,6 +151,22 @@ public final class GearMotion {
             }
         }
 
+        public ArmHinge.Mode hingeMode(){return hingeMode;}
+        /** The upper linkage follows the base half-angle only in Double mode. */
+        public Vec transformUpperLinkVertex(double x,double y,double z){
+            if(splitHinge!=null){double s=splitHinge[6],c=splitHinge[7],dot=direction.axisX()*x+direction.axisZ()*z,d=1-c;
+                return new Vec(x*c-direction.axisZ()*y*s+direction.axisX()*dot*d+splitHinge[3],y*c+(direction.axisZ()*x-direction.axisX()*z)*s+splitHinge[4],z*c+direction.axisX()*y*s+direction.axisZ()*dot*d+splitHinge[5]);}
+            return hingeMode==ArmHinge.Mode.LEGACY_CENTER?new Vec(x,y,z):rotate(x,y,z);
+        }
+        /** Second-derivative bound for a foot point, with respect to the full arm angle in radians. */
+        public double footCurvatureBound(double x,double y,double z,double socketOffset){
+            requireFinite(x,"x");requireFinite(y,"y");requireFinite(z,"z");requireFinite(socketOffset,"socketOffset");
+            if(mode!=Mode.ROTATE&&mode!=Mode.ROTATE_LEVEL)return 0;
+            if(mode==Mode.ROTATE_LEVEL){x=PIVOT_X;y=-columnHeight+FOOT_SOCKET_Y+socketOffset;z=PIVOT_Z;}
+            if(splitHinge!=null)return ArmHinge.curvatureBound(direction,splitHinge,x,y,z);
+            double radius=direction.axisX()!=0?Math.hypot(y-pivotY,z-pivotZ):Math.hypot(x-pivotX,y-pivotY);
+            return radius+2*Math.abs(hingeDrop);
+        }
         public Mode mode() { return mode; }
         public Direction direction() { return direction; }
         public int columnHeight() { return columnHeight; }
@@ -244,6 +266,8 @@ public final class GearMotion {
         }
 
         private Vec rotate(double x, double y, double z) {
+            if(splitHinge!=null){double dot=direction.axisX()*x+direction.axisZ()*z,d=1-cosine;
+                return new Vec(x*cosine-direction.axisZ()*y*sine+direction.axisX()*dot*d+splitHinge[0],y*cosine+(direction.axisZ()*x-direction.axisX()*z)*sine+splitHinge[1],z*cosine+direction.axisX()*y*sine+direction.axisZ()*dot*d+splitHinge[2]);}
             requireFinite(x, "x");
             requireFinite(y, "y");
             requireFinite(z, "z");
@@ -307,6 +331,15 @@ public final class GearMotion {
         if(height < 1||height > GearTopology.MAX_COLUMN_HEIGHT||mode==null||direction==null)throw new IllegalArgumentException("Invalid arm pose");
         requireFinite(stowedFootY,"stowedFootY");requireFinite(hingeDrop,"hingeDrop");requireFinite(socketOffset,"socketOffset");
         return new Pose(mode,direction,height,clampUnit(progress),stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle,middleHinge);
+    }
+
+    /** New controls use typed hinge modes; the boolean overload retains old center-only snapshot semantics. */
+    public static Pose pose(Mode mode,Direction direction,int height,double progress,double stowedFootY,double hingeDrop,double socketOffset,double activeAngle,double startAngle,ArmHinge.Mode hinge,Direction kink,int width){
+        requireFinite(startAngle,"startAngle");requireFinite(activeAngle,"activeAngle");
+        if(startAngle < -180||startAngle > 180||activeAngle < -180||activeAngle > 180)throw new IllegalArgumentException("Arm endpoints must be within -180 to 180 degrees");
+        if(height < 1||height > GearTopology.MAX_COLUMN_HEIGHT||mode==null||direction==null||hinge==null||kink==null||width<1||width>2)throw new IllegalArgumentException("Invalid arm pose");
+        requireFinite(stowedFootY,"stowedFootY");requireFinite(hingeDrop,"hingeDrop");requireFinite(socketOffset,"socketOffset");
+        return new Pose(mode,direction,height,clampUnit(progress),stowedFootY,hingeDrop,socketOffset,activeAngle,startAngle,hinge==ArmHinge.Mode.LEGACY_CENTER,hinge,kink,width);
     }
 
     /** Ease a raw position; finite overshoot is clamped to the end states. */
