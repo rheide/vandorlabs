@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Validate fresh captures and the runtime contracts relevant to a focused run."""
 import sys
+import re
 from pathlib import Path
 from PIL import Image
 from export_gallery import SHOTS
@@ -9,6 +10,11 @@ source, prefix, target = Path(sys.argv[1]), sys.argv[2], sys.argv[3]
 selected = [name for name in SHOTS if name.startswith(prefix)]
 if target == 'utility22_card_mounts':
     selected=['utility22_card_mounts']
+if target == 'utility22_blocks':
+    selected=['utility22_blocks', 'utility22_blocks_tanks',
+              'utility22_blocks_tanks_block', 'utility22_blocks_tanks_hexagon',
+              'utility22_blocks_tank_quarter', 'utility22_blocks_tank_half',
+              'utility22_blocks_tank_full']
 if target == 'gallery_distant_geometry':
     selected=['gallery_distant_geometry']
 if target == 'dialogs':
@@ -46,6 +52,22 @@ if target == 'utility22_card_mounts':
                    'fluid-render-bounds PASS cases=132 cameraViews=10', 'fluid-lightmap PASS cases=256', 'fluid-waterline PASS', 'fluid-pool PASS', 'fluid-boundary-matrix PASS',
                    'submerged-contact-views PASS', 'cockpit-runtime PASS', 'token-mount-dialog PASS'):
         require(marker)
+storage_captures = {}
+if target == 'utility22_blocks':
+    for marker in ('utility-storage PASS new-unlimited legacy-1000 six-player-view placements deferred-facing',
+                   'storage-meters PASS partial RF in Battery Housing and pooled fluid',
+                   'diagonal-trapdoor-hotbar-runtime PASS', 'storage-hotbar-runtime PASS'):
+        require(marker)
+    rows = re.findall(r'storage-meter-capture PASS kind=([01]) requested=(\d+)x(\d+) logical=\d+x\d+ glyph-pixels=(\d+)', log)
+    assert len(rows) == 6, 'Expected six fresh storage dialog captures'
+    for kind in ('0', '1'):
+        widths = [int(width) for entry, width, height, pixels in rows if entry == kind]
+        assert len(widths) == 3 and len(set(widths)) == 3 and {320, 460}.issubset(widths), 'Storage resolutions missing for ' + kind
+    for kind, width, height, pixels in rows:
+        name = 'storage_meter_' + kind + '_' + width
+        assert int(pixels) >= 100, 'Empty storage dialog capture: ' + name
+        storage_captures[name] = int(pixels)
+        selected.append(name)
 if target == 'door-selection': require('moved-door-selection PASS large=40 regular=24 xTips=16')
 if target == 'control-icons' or target == 'gallery_close_control_': require('twin-power-lever-models PASS poses=32')
 if target == 'control-icons':
@@ -67,7 +89,11 @@ for name in selected:
     with Image.open(image) as png:
         assert png.size == (1280, 720), 'Unexpected screenshot dimensions: ' + name
         png.verify()
-    if target not in ('signals','redstone-dialogs','control-icons'): require('wrote shot_' + name + '.png')
+    if name in storage_captures:
+        with Image.open(image) as png:
+            pixels = sum(min(r,g,b)>170 and max(r,g,b)-min(r,g,b)<25 for r,g,b in png.convert('RGB').getdata())
+        assert pixels >= 100 and pixels == storage_captures[name], 'Storage dialog text missing or differs from capture marker: ' + name
+    elif target not in ('signals','redstone-dialogs','control-icons'): require('wrote shot_' + name + '.png')
     if name.startswith('gallery_trapdoor_followup_'):
         require('trapdoor-material-runtime PASS ' + name[len('gallery_trapdoor_followup_'):])
     if name.startswith('gallery_trapdoor_patch_'):

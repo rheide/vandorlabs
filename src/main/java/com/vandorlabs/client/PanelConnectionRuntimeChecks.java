@@ -95,6 +95,19 @@ final class PanelConnectionRuntimeChecks {
                         com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
             net.minecraft.client.renderer.BufferBuilder dense = renderedBuffer(world,pos);
             require(dense.getVertexCount()==8,"dense cube should render only exposed top and bottom");
+            net.minecraft.client.Minecraft mc=net.minecraft.client.Minecraft.getMinecraft();
+            java.nio.ByteBuffer witness=dense.getByteBuffer();int witnessStride=dense.getVertexFormat().getNextOffset(),witnessLight=dense.getVertexFormat().getUvOffsetById(1);
+            for(int vertex=0;vertex<dense.getVertexCount();vertex++){
+                EnumFacing face=witness.getFloat(vertex*witnessStride+4)<.5F?EnumFacing.DOWN:EnumFacing.UP;int expected=world.getCombinedLight(pos.offset(face),0);
+                System.out.println("[vandorlabs][reprolab] dense-housing-light vertex="+vertex+" face="+face+" ao-setting="+mc.gameSettings.ambientOcclusion+" block="+(witness.getShort(vertex*witnessStride+witnessLight)&65535)+" sky="+(witness.getShort(vertex*witnessStride+witnessLight+2)&65535)+" face-block="+(expected&65535)+" face-sky="+(expected>>>16));
+            }
+            net.minecraft.client.renderer.BufferBuilder smooth=renderedLighting(world,pos,true,false),reference=renderedLighting(world,pos,true,true);
+            require(smooth.getVertexCount()==8&&reference.getVertexCount()==8,"AO dense cube face culling changed");
+            require(java.util.Arrays.deepEquals(physicalLighting(smooth),physicalLighting(reference)),"dense cube AO differs from actual FaceBakery reference");
+            // A direct face sample is the flat-light contract. AO intentionally
+            // blends adjacent sky/block samples at each physical corner.
+            dense=renderedLighting(world,pos,false,false);
+            require(dense.getVertexCount()==8,"flat dense cube face culling changed");
             java.nio.ByteBuffer data=dense.getByteBuffer();
             int stride=dense.getVertexFormat().getNextOffset(),lightOffset=dense.getVertexFormat().getUvOffsetById(1);
             for (int vertex=0;vertex<dense.getVertexCount();vertex++) {
@@ -109,6 +122,33 @@ final class PanelConnectionRuntimeChecks {
             for (int x=-1;x<=1;x++) for (int z=-1;z<=1;z++)
                 world.setBlockToAir(pos.add(x,0,z));
         }
+    }
+
+    private static net.minecraft.client.renderer.BufferBuilder renderedLighting(net.minecraft.world.World world,BlockPos pos,boolean smooth,boolean reference){
+        net.minecraft.client.renderer.BlockRendererDispatcher dispatcher=net.minecraft.client.Minecraft.getMinecraft().getBlockRendererDispatcher();
+        net.minecraft.block.state.IBlockState listed=world.getBlockState(pos).getActualState(world,pos),state=listed.getBlock().getExtendedState(listed,world,pos);
+        net.minecraft.client.renderer.block.model.IBakedModel model=dispatcher.getModelForState(listed);
+        require(model.isAmbientOcclusion(),"registered housing must retain AO");
+        if(reference){
+            final net.minecraft.client.renderer.block.model.IBakedModel source=model;final java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> faces=new java.util.ArrayList<>();
+            for(EnumFacing side:new EnumFacing[]{null,EnumFacing.UP,EnumFacing.DOWN,EnumFacing.NORTH,EnumFacing.SOUTH,EnumFacing.EAST,EnumFacing.WEST})for(net.minecraft.client.renderer.block.model.BakedQuad quad:source.getQuads(state,side,0))faces.add(HousingShaderLightingChecks.reference(quad));
+            model=new net.minecraft.client.renderer.block.model.IBakedModel(){
+                public java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> getQuads(net.minecraft.block.state.IBlockState s,EnumFacing side,long seed){return side==null?faces:java.util.Collections.emptyList();}
+                public boolean isAmbientOcclusion(){return true;}public boolean isGui3d(){return source.isGui3d();}public boolean isBuiltInRenderer(){return false;}
+                public net.minecraft.client.renderer.texture.TextureAtlasSprite getParticleTexture(){return source.getParticleTexture();}
+                public net.minecraft.client.renderer.block.model.ItemCameraTransforms getItemCameraTransforms(){return source.getItemCameraTransforms();}
+                public net.minecraft.client.renderer.block.model.ItemOverrideList getOverrides(){return net.minecraft.client.renderer.block.model.ItemOverrideList.NONE;}
+            };
+        }
+        net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(4096);buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);buffer.setTranslation(-pos.getX(),-pos.getY(),-pos.getZ());
+        net.minecraft.util.BlockRenderLayer old=net.minecraftforge.client.MinecraftForgeClient.getRenderLayer();net.minecraftforge.client.ForgeHooksClient.setRenderLayer(net.minecraft.util.BlockRenderLayer.SOLID);
+        try{if(smooth)dispatcher.getBlockModelRenderer().renderModelSmooth(world,model,state,pos,buffer,true,0);else dispatcher.getBlockModelRenderer().renderModelFlat(world,model,state,pos,buffer,true,0);}finally{net.minecraftforge.client.ForgeHooksClient.setRenderLayer(old);}
+        buffer.finishDrawing();return buffer;
+    }
+    private static int[][] physicalLighting(net.minecraft.client.renderer.BufferBuilder buffer){
+        net.minecraft.client.renderer.vertex.VertexFormat format=buffer.getVertexFormat();int stride=format.getIntegerSize(),color=format.getColorOffset()/4,light=format.getUvOffsetById(1)/4;int[] raw=buffer.getVertexState().getRawBuffer();int[][] rows=new int[buffer.getVertexCount()][5];
+        for(int i=0;i<rows.length;i++){int at=i*stride;rows[i]=new int[]{raw[at],raw[at+1],raw[at+2],raw[at+color],raw[at+light]};}
+        java.util.Arrays.sort(rows,(a,b)->{for(int axis=0;axis<3;axis++){int order=Float.compare(Float.intBitsToFloat(a[axis]),Float.intBitsToFloat(b[axis]));if(order!=0)return order;}return 0;});return rows;
     }
 
     private static int renderedVertices(net.minecraft.world.World world, BlockPos pos) {

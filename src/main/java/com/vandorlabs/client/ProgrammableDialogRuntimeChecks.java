@@ -52,9 +52,16 @@ final class ProgrammableDialogRuntimeChecks {
                         boolean controls=input.getBoolean(value);int artwork=0;
                         for(Object option:((java.util.Map<?,?>)options.get(picker)).values()) {
                             HousingTextureList.Option item=(HousingTextureList.Option)option;
-                            if("Screens".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(item.choice))) {
-                                require(ScreenTextureList.artwork(item.choice,controls),"wrong height of screen artwork");
-                                require(item.category.equals(controls?"Controls":"Screens"),"wrong screen category");artwork++;
+                            String category=com.vandorlabs.tiles.ScreenHousingTextures.category(item.choice);
+                            if("Screens".equals(category)) {
+                                com.google.gson.JsonObject entry=com.vandorlabs.tiles.ScreenHousingTextures.entry(item.choice);
+                                boolean half=entry.get("source").getAsString().startsWith("console_inputs/"),grouped=entry.has("menuGroup");
+                                require(ScreenTextureList.artwork(item.choice,controls)||!controls&&half&&grouped,"wrong height of screen artwork");
+                                String root=half?(grouped?"Half Displays":"Controls"):"Displays";
+                                String expected=root+(grouped?"/"+entry.get("menuGroup").getAsString():"");
+                                require(item.category.equals(expected),"wrong screen category: "+item.category+" expected "+expected);artwork++;
+                            }else if(category.startsWith("Controls/")){
+                                require(item.category.equals(category),"wrong authored control category");
                             }
                         }
                         require(artwork>0,"missing screen artwork category");

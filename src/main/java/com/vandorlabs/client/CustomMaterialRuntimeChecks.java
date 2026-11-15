@@ -97,8 +97,9 @@ final class CustomMaterialRuntimeChecks {
         try {
             java.lang.reflect.Field options=HousingTextureList.class.getDeclaredField("options"),count=HousingTextureList.class.getDeclaredField("count");
             options.setAccessible(true);count.setAccessible(true);
-            int expected=new ProgrammableDialogLayout(gui.width,gui.height).rows(true);
-            require(expected>=7,"light dialog has too few texture rows");
+            int allocated=new ProgrammableDialogLayout(gui.width,gui.height).rows(true);
+            require(allocated>=7,"light dialog has too few texture rows");
+            int expected=Math.max(1,allocated-1);
             for(String name:new String[]{"faceList","housingList"}) {
                 java.lang.reflect.Field field=GuiProgrammableLight.class.getDeclaredField(name);field.setAccessible(true);
                 HousingTextureList list=(HousingTextureList)field.get(gui);
@@ -113,7 +114,7 @@ final class CustomMaterialRuntimeChecks {
                 require(entries.containsKey(64) && entries.containsKey(amber),"hex light choices missing");
                 for(String artwork:new String[]{"bussard_classic","bussard_modern","deflector_amber","deflector_blue","nacelle_a","nacelle_d","nacelle_defiant","nacelle_intrepid"})
                     require(entries.containsKey(ScreenHousingTextures.screenIndex("lights/"+artwork+"_on")),"new light missing from picker: "+artwork);
-                require(on==6 && off==23,"light picker paired artwork coverage");
+                require(on==6 && off==26,"light picker paired artwork coverage");
                 for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.lightOnly(i))require(entries.containsKey(i)!=ScreenHousingTextures.isLightOff(i),"Corp light ON picker filter");
             }
             java.lang.reflect.Field offTab=GuiProgrammableLight.class.getDeclaredField("editingOff");offTab.setAccessible(true);offTab.setBoolean(gui,true);gui.initGui();
@@ -191,14 +192,23 @@ final class CustomMaterialRuntimeChecks {
         java.util.Map<String,Integer> counts=new java.util.HashMap<>();
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)if(ScreenHousingTextures.visible(choice))
             counts.merge(ScreenHousingTextures.category(choice),1,Integer::sum);
-        require(counts.get("Hull")==21 && counts.get("Panels")==19 && counts.get("Industrial")==14 && counts.get("Tech")==25 && counts.get("Doors/Segmented")==8,"approved Hull/Panels/Industrial/Tech and Segmented category counts: "+counts);
+        int portHull=ScreenHousingTextures.screenIndex("resource_ports/port_hull");
+        require(portHull==ScreenHousingTextures.LEGACY_COUNT+850&&"port_hull".equals(ScreenHousingTextures.IDS[portHull])&&ScreenHousingTextures.visible(portHull)&&"Hull".equals(ScreenHousingTextures.category(portHull)),"Port Hull retains its appended choice and visible Hull category");
+        require(mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(portHull))!=mc.getTextureMapBlocks().getMissingSprite(),"Port Hull artwork stitched");
+        String[] retiredPorts={"dual","round"};
+        for(int i=0;i<retiredPorts.length;i++){
+            String id="imported_fuel_fuel_port_"+retiredPorts[i];int choice=ScreenHousingTextures.screenIndex("imported/fuel/fuel_port_"+retiredPorts[i]);
+            require(choice==ScreenHousingTextures.LEGACY_COUNT+187+i&&id.equals(ScreenHousingTextures.IDS[choice])&&!ScreenHousingTextures.visible(choice),"retired Fuel Port choice identity/visibility: "+id);
+            require(ScreenHousingTextures.texture(choice).equals(fallback)&&ScreenHousingTextures.fullTexture(choice).equals(fallback),"retired Fuel Port uses retained fallback: "+id);
+        }
+        require(counts.get("Hull")==22 && counts.get("Panels")==19 && counts.get("Industrial")==14 && counts.get("Tech")==23 && counts.get("Doors/Segmented")==8,"approved Hull/Panels/Industrial/Tech and Segmented category counts: "+counts);
         HousingTextureList moved=new HousingTextureList(0,0,180,32);
         require(moved.selected()==32 && "Heavy Bulkhead 1".equals(HousingTextureList.name(32)) && "Industrial".equals(ScreenHousingTextures.category(32)),"moved saved choice changed identity");
         try {
             java.lang.reflect.Field expanded=HousingTextureList.class.getDeclaredField("expanded");expanded.setAccessible(true);
             require(((java.util.Set<?>)expanded.get(moved)).contains("Industrial"),"moved material did not expand its new category");
         }catch(ReflectiveOperationException e){throw new RuntimeException(e);}
-        System.out.println("[vandorlabs][reprolab] industrial-category-runtime PASS Hull=21 Panels=19 Industrial=16 Tech=25; saved material opens new category");
+        System.out.println("[vandorlabs][reprolab] industrial-category-runtime PASS Hull=22 Panels=19 Industrial=14 Tech=23; Port Hull retained, Fuel Port Dual/Round hidden, saved material opens new category");
         int amber=ScreenHousingTextures.screenIndex("lights/amber_hex_on");
         for(String finish:new String[]{"pale_grey","industrial_grey","dark_cyan_metallic"})for(String variant:new String[]{"plain","speaker","light_on","light_off"}){
             String id="ceiling/"+finish+"/"+variant;int choice=ScreenHousingTextures.screenIndex(id);require(choice>=ScreenHousingTextures.LEGACY_COUNT,"retained ceiling choice "+id);

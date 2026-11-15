@@ -15,6 +15,8 @@ import net.minecraft.world.World;
 final class OffsetTrapdoorRuntimeChecks {
     private final BlockPos pos;
     private int scenario,stage,wait;
+    private int hotbarWait;
+    private volatile net.minecraft.item.ItemStack[] sentHotbar;
     OffsetTrapdoorRuntimeChecks(BlockPos pos){this.pos=pos.up(4);}
     boolean tick(Minecraft mc) {
         if(wait>0){wait--;return false;}
@@ -113,13 +115,25 @@ final class OffsetTrapdoorRuntimeChecks {
                     owner.inventory.setInventorySlotContents(slot,stack);
                 }
                 owner.inventoryContainer.detectAndSendChanges();
+                net.minecraft.item.ItemStack[] sent=new net.minecraft.item.ItemStack[3];for(int i=0;i<3;i++)sent[i]=owner.inventory.getStackInSlot(i+1).copy();sentHotbar=sent;
             });
             stage=7;wait=20;return false;
         }
         if(stage==7) {
+            net.minecraft.item.ItemStack[] sent=sentHotbar;boolean ready=sent!=null;
+            for(int slot=1;slot<=3&&ready;slot++)ready=net.minecraft.item.ItemStack.areItemStacksEqual(mc.player.inventory.getStackInSlot(slot),sent[slot-1]);
+            if(!ready){if(++hotbarWait>100)throw new IllegalStateException("diagonal trapdoor hotbar synchronization client="+mc.player.inventory.mainInventory.subList(1,4)+" server="+java.util.Arrays.toString(sent));wait=1;return false;}
             for(int slot=1;slot<=3;slot++) {
                 net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(mc.player.inventory.getStackInSlot(slot),mc.world,mc.player);
-                if(Math.abs(model.getItemCameraTransforms().gui.scale.x-.65F)>.00001 || Math.abs(model.getItemCameraTransforms().gui.scale.y-.65F)>.00001)throw new IllegalStateException("diagonal trapdoor hotbar model scale lost in configured/custom override");
+                net.minecraft.client.renderer.block.model.ItemTransformVec3f gui=model.getItemCameraTransforms().gui;
+                if(slot==1&&(Math.abs(gui.scale.x-.65F)>.00001||Math.abs(gui.scale.y-.65F)>.00001))throw new IllegalStateException("raw diagonal trapdoor hotbar scale changed");
+                if(Math.abs(gui.rotation.x-30)>.00001||Math.abs(gui.rotation.y-225)>.00001||Math.abs(gui.rotation.z)>.00001)throw new IllegalStateException("diagonal trapdoor hotbar authored orientation changed");
+                javax.vecmath.Matrix4f transform=net.minecraftforge.common.model.TRSRTransformation.from(gui).getMatrix();int vertices=0;
+                for(net.minecraft.client.renderer.block.model.BakedQuad quad:ItemAppearanceMesh.all(model)){int[] data=quad.getVertexData();int stride=data.length/4;for(int vertex=0;vertex<4;vertex++){
+                    javax.vecmath.Vector4f point=new javax.vecmath.Vector4f(Float.intBitsToFloat(data[vertex*stride])-.5F,Float.intBitsToFloat(data[vertex*stride+1])-.5F,Float.intBitsToFloat(data[vertex*stride+2])-.5F,1);transform.transform(point);double x=point.x+.5,y=point.y+.5,pad=slot==1?0:.035;
+                    if(!(x>pad&&x<1-pad&&y>pad&&y<1-pad))throw new IllegalStateException("diagonal trapdoor hotbar projected padding slot="+slot+" model="+model.getClass().getSimpleName()+" point="+x+","+y);vertices++;
+                }}
+                if(vertices==0)throw new IllegalStateException("empty diagonal trapdoor hotbar model slot="+slot);
             }
             mc.gameSettings.hideGUI=false;stage=8;wait=3;return false;
         }
