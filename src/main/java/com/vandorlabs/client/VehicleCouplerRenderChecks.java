@@ -15,8 +15,13 @@ final class VehicleCouplerRenderChecks {
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-17,17,-11,11,-100,100);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try(TurntableRenderState state=new TurntableRenderState()){
             BufferedImage straight=draw(mc,renderer,craft,frame);
+            int trailer=craft.articulation.bodyAt(new net.minecraft.util.math.BlockPos(1,0,6));
+            com.vandorlabs.physics.RigidTransform previous=craft.articulation.renderBody(trailer,1);
             NBTTagCompound saved=new NBTTagCompound();craft.writeToNBT(saved);NBTTagCompound pose=new NBTTagCompound();pose.setInteger("Version",1);net.minecraft.nbt.NBTTagList joints=new net.minecraft.nbt.NBTTagList();
             for(int i=0;i<3;i++){NBTTagCompound j=new NBTTagCompound();j.setLong("A",new net.minecraft.util.math.BlockPos(1,0,i*6+4).toLong());j.setLong("B",new net.minecraft.util.math.BlockPos(1,0,i*6+5).toLong());j.setDouble("Yaw",i==0?-30:12);j.setDouble("Pitch",i==1?8:0);joints.appendTag(j);}pose.setTag("Joints",joints);saved.setTag("CouplerJointPose",pose);craft.articulation.read(saved);
+            com.vandorlabs.physics.RigidTransform loaded=craft.articulation.body(trailer,1),rendered=craft.articulation.renderBody(trailer,1);
+            boolean changed=false;for(int i=0;i<9;i++){changed|=Math.abs(previous.r[i]-loaded.r[i])>1e-8;if(Math.abs(rendered.r[i]-loaded.r[i])>1e-8)throw new IllegalStateException("loaded joint pose retained a warmed render matrix");}
+            if(!changed||Math.abs(rendered.x-loaded.x)>1e-8||Math.abs(rendered.y-loaded.y)>1e-8||Math.abs(rendered.z-loaded.z)>1e-8)throw new IllegalStateException("loaded joint pose must replace the complete warmed render transform");
             net.minecraft.util.math.AxisAlignedBB visibleBounds=craft.getRenderBoundingBox();for(com.vandorlabs.vehicle.VehicleStructure.Cell c:craft.structure.cells)for(int n=0;n<8;n++){net.minecraft.util.math.Vec3d point=craft.toWorld(new net.minecraft.util.math.Vec3d(c.pos).addVector((n&1)==0?0:1,(n&2)==0?0:1,(n&4)==0?0:1),c.pos);if(!visibleBounds.contains(point))throw new IllegalStateException("articulated render reach lost a trailer cell");}
             BufferedImage bent=draw(mc,renderer,craft,frame);int visible=0,different=0;for(int y=0;y<320;y++)for(int x=0;x<512;x++){if((bent.getRGB(x,y)&0xffffff)!=0x203040)visible++;if(straight.getRGB(x,y)!=bent.getRGB(x,y))different++;}
             if(visible<500||different<500)throw new IllegalStateException("articulated rendered hull missing or unchanged visible="+visible+" different="+different);

@@ -89,14 +89,44 @@ final class DenseRenderChecks {
                     GlazingRenderOrder.end();
                 };
                 GlazingRenderOrder.batchPanes=false;BufferedImage before=image(mc,f,draw);long[] baseline=sample(draw);
-                GlazingRenderOrder.batchPanes=true;BufferedImage after=image(mc,f,draw);int difference=significantDifference(before,after);require(difference==0,"glass batching changed pixels scene="+scene+" difference="+difference);
+                GlazingRenderOrder.batchPanes=true;BufferedImage after=image(mc,f,draw);int difference=significantDifference(before,after);
+                // Preserve the failing comparison before its assertion, including the actual
+                // mapped mesh and packed batch records rather than just a pixel count.
+                javax.imageio.ImageIO.write(before,"png",new File(out,"density-glass-"+scene+"-before.png"));
+                javax.imageio.ImageIO.write(after,"png",new File(out,"density-glass-"+scene+"-after.png"));
+                if(difference!=0)glassDifference(out,scene,before,after,tiles);
+                require(difference==0,"glass batching changed pixels scene="+scene+" difference="+difference);
                 require(GlassPaneBatch.panes==216&&GlassPaneBatch.draws==1,"glass did not batch actual ordered dispatcher scene="+scene+" panes="+GlassPaneBatch.panes+" draws="+GlassPaneBatch.draws);
                 long[] batched=sample(draw);csv.println("glass-"+scene+",216,216,1,"+baseline[0]+","+batched[0]+","+baseline[1]+","+batched[1]+","+difference);csv.flush();
-                javax.imageio.ImageIO.write(before,"png",new File(out,"density-glass-"+scene+"-before.png"));javax.imageio.ImageIO.write(after,"png",new File(out,"density-glass-"+scene+"-after.png"));
                 System.out.println("[vandorlabs][reprolab] dense-glass PASS scene="+scene+" calls=216->1 pixel-difference="+difference+" before-ns="+baseline[0]+" after-ns="+batched[0]);
                 TEAnimatedScreenSelector.unloadGroups(world);GlassSurfaceGroups.unload(world);
             }
         }finally{GlazingRenderOrder.batchPanes=oldBatch;GlazingRenderOrder.end();net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);dispatcher.world=old;dispatcher.entityX=oldX;dispatcher.entityY=oldY;dispatcher.entityZ=oldZ;GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);f.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
+    }
+    private static void glassDifference(File out,String scene,BufferedImage before,BufferedImage after,List<net.minecraft.tileentity.TileEntity> tiles)throws Exception{
+        BufferedImage diff=new BufferedImage(before.getWidth(),before.getHeight(),BufferedImage.TYPE_INT_RGB);int maximum=0;
+        for(int y=0;y<diff.getHeight();y++)for(int x=0;x<diff.getWidth();x++){
+            int a=before.getRGB(x,y),b=after.getRGB(x,y),r=Math.abs((a>>16&255)-(b>>16&255)),g=Math.abs((a>>8&255)-(b>>8&255)),v=Math.abs((a&255)-(b&255));maximum=Math.max(maximum,Math.max(r,Math.max(g,v)));diff.setRGB(x,y,(r<<16)|(g<<8)|v);
+        }
+        javax.imageio.ImageIO.write(diff,"png",new File(out,"density-glass-"+scene+"-diff.png"));
+        try(PrintWriter csv=new PrintWriter(new File(out,"density-glass-"+scene+"-vertices.csv"))){
+            csv.println("tile,material,playback,sprite,layout,mesh_hash,vertex,local_x,local_y,local_z,reference_x,reference_y,reference_z,batch_x,batch_y,batch_z,u,v");int rows=0;double maximumPositionError=0;
+            for(net.minecraft.tileentity.TileEntity raw:tiles){
+                TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;if(tile.getMaterial()<0)continue;
+                net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
+                GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(tile);StaticSurfaceMesh mesh=GlassSurfaceMapping.map(TEProgrammableGlass.materialPlane(),sprite,layout,true,0,0,tile.getTextureLayout());
+                BufferBuilder local=new BufferBuilder(256),batch=new BufferBuilder(256);local.begin(GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);batch.begin(GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
+                mesh.drawColored(local,0,0,1,1,1,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()));
+                boolean rotated=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockGlassWall.ROTATED);double offset=com.vandorlabs.blocks.PanelDepth.offset(tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockGlassWall.DEPTH))/16D;
+                mesh.drawPlacedColored(batch,tile.getPos().getX()-(rotated?offset:0),tile.getPos().getY(),tile.getPos().getZ()+(rotated?0:offset),rotated?3:0,0,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()));local.finishDrawing();batch.finishDrawing();
+                int stride=local.getVertexFormat().getNextOffset(),uv=local.getVertexFormat().getUvOffsetById(0);
+                for(int n=0;n<local.getVertexCount();n++){
+                    int p=n*stride;double x=local.getByteBuffer().getFloat(p),y=local.getByteBuffer().getFloat(p+4),z=local.getByteBuffer().getFloat(p+8),rx=tile.getPos().getX()+(rotated?1-z/16-offset:x/16),ry=tile.getPos().getY()+y/16,rz=tile.getPos().getZ()+(rotated?x/16:z/16+offset),bx=batch.getByteBuffer().getFloat(p),by=batch.getByteBuffer().getFloat(p+4),bz=batch.getByteBuffer().getFloat(p+8);maximumPositionError=Math.max(maximumPositionError,Math.max(Math.abs(rx-bx),Math.max(Math.abs(ry-by),Math.abs(rz-bz))));
+                    if(rows++<4096)csv.println(tile.getPos().toLong()+","+tile.getMaterial()+","+tile.glassPlayback.mode()+","+sprite.getIconName()+","+layout.key()+","+mesh.geometryHash()+","+n+","+x+","+y+","+z+","+rx+","+ry+","+rz+","+bx+","+by+","+bz+","+local.getByteBuffer().getFloat(p+uv)+","+local.getByteBuffer().getFloat(p+uv+4));
+                }
+            }
+            System.out.println("[vandorlabs][reprolab] dense-glass diagnostic scene="+scene+" max-channel-delta="+maximum+" mapped-vertices="+rows+" max-packed-position-error="+maximumPositionError);
+        }
     }
     private static void panelsAndRamps(Minecraft mc,File out,PrintWriter csv)throws Exception{
         NBTTagCompound saved;try(InputStream in=DenseRenderChecks.class.getResourceAsStream("/assets/vandorlabs/fixtures/dense-panels-ramps-2.7.nbt")){saved=net.minecraft.nbt.CompressedStreamTools.readCompressed(in);}
