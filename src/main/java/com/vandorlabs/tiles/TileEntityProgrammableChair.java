@@ -15,28 +15,28 @@ public class TileEntityProgrammableChair extends TileEntity {
     private int height = 1;
     private int angle;
     public int getAngle(){return angle;}
-    public int angleDegrees(){return angle*45;}
-    public void setAngle(int value){int next=Math.max(0,Math.min(7,value));if(next!=angle){angle=next;notifyChairChanged();}}
+    public int angleDegrees(){return com.vandorlabs.persistence.SeatPose.angleDegrees(angle);}
+    public void setAngle(int value){int next=com.vandorlabs.persistence.ChairSettings.angle(value);if(next!=angle){angle=next;notifyChairChanged();}}
 
     public int getStyle() { return style; }
     public int getHeight() { return height; }
-    public int getHeightOffsetPixels() { return (height - 1) * 2; }
+    public int getHeightOffsetPixels() { return com.vandorlabs.persistence.ChairSettings.heightOffsetPixels(height,false); }
 
     public void setHeight(int value) {
-        int next = Math.max(0, Math.min(2, value));
+        int next = com.vandorlabs.persistence.ChairSettings.height(true,value);
         if (height == next) return;
         height = next;
         notifyChairChanged();
     }
 
     public void setStyle(int value) {
-        int next = Math.max(0, Math.min(4, value));
+        int next = com.vandorlabs.persistence.ChairSettings.style(value);
         if (style == next) return;
         style = next;
         notifyChairChanged();
     }
 
-    protected double seatHeight() { return BlockBridgeChair.Style.byIndex(style).seatY + getHeightOffsetPixels()/16D; }
+    protected double seatHeight() { return com.vandorlabs.persistence.ChairSettings.cushion(style,height); }
 
     protected void notifyChairChanged() {
         markDirty();
@@ -64,10 +64,9 @@ public class TileEntityProgrammableChair extends TileEntity {
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
-        angle=Math.max(0,Math.min(7,tag.getInteger("ChairAngle")));
-        style = Math.max(0, Math.min(4, tag.getInteger("ChairStyle")));
-        height = tag.hasKey("ChairHeight", 3)
-                ? Math.max(0, Math.min(2, tag.getInteger("ChairHeight"))) : 1;
+        angle=com.vandorlabs.persistence.ChairSettings.angle(tag.getInteger("ChairAngle"));
+        style = com.vandorlabs.persistence.ChairSettings.style(tag.getInteger("ChairStyle"));
+        height = com.vandorlabs.persistence.ChairSettings.height(tag.hasKey("ChairHeight",3),tag.getInteger("ChairHeight"));
     }
 
     @Override public NBTTagCompound getUpdateTag() {

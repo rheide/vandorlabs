@@ -1,0 +1,5 @@
+task testChairSettings(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.persistence.ChairSettingsTest'
+}

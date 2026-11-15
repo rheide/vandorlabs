@@ -28,7 +28,7 @@ public final class BlockConnectedSeat extends BlockVandorDirectional {
     public static int offset(IBlockAccess world,BlockPos pos) {
         com.vandorlabs.tiles.TileEntityConnectedSeat tile=settings(world,pos);return tile==null?1:tile.getHeightOffsetPixels();
     }
-    public double seatHeight(IBlockAccess world,BlockPos pos){return (height==1.5?9:8)/16D+offset(world,pos)/16D;}
+    public double seatHeight(IBlockAccess world,BlockPos pos){com.vandorlabs.tiles.TileEntityConnectedSeat tile=settings(world,pos);return com.vandorlabs.persistence.ChairSettings.connectedCushion(height==1.5,tile==null?1:tile.getHeight());}
     @Override public boolean hasTileEntity(IBlockState state){return !state.getValue(BlockBridgeChair.UPPER);}
     @Override public net.minecraft.tileentity.TileEntity createTileEntity(World world,IBlockState state){return new com.vandorlabs.tiles.TileEntityConnectedSeat();}
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
@@ -51,22 +51,22 @@ public final class BlockConnectedSeat extends BlockVandorDirectional {
     public int getMetaFromState(IBlockState state) {
         return state.getValue(FACING).getHorizontalIndex() | (state.getValue(BlockBridgeChair.UPPER) ? 4 : 0);
     }
-    private boolean joins(IBlockAccess world, BlockPos pos, IBlockState state) {
+    private boolean joins(IBlockAccess world, BlockPos pos, IBlockState state, int ownHeight) {
         if (world instanceof World && !((World)world).isBlockLoaded(pos)) return false;
         IBlockState other = world.getBlockState(pos);
         if(other.getBlock()!=this || other.getValue(BlockBridgeChair.UPPER)||other.getValue(FACING)!=state.getValue(FACING))return false;
         com.vandorlabs.tiles.TileEntityConnectedSeat tile=settings(world,pos);
-        return tile==null||tile.isJoin();
+        return com.vandorlabs.persistence.ChairSettings.connects(true,true,true,true,ownHeight,tile==null?1:tile.getHeightOffsetPixels(),tile==null||tile.isJoin());
     }
     public IBlockState getActualState(IBlockState state, IBlockAccess world, BlockPos pos) {
         if (state.getValue(BlockBridgeChair.UPPER)) return state;
         com.vandorlabs.tiles.TileEntityConnectedSeat tile=settings(world,pos);
         if(tile!=null&&!tile.isJoin())return state.withProperty(PART,Part.SINGLE);
         EnumFacing right = state.getValue(FACING).rotateY();
-        boolean leftJoin = joins(world, pos.offset(right.getOpposite()), state) && offset(world,pos)==offset(world,pos.offset(right.getOpposite()));
-        boolean rightJoin = joins(world, pos.offset(right), state) && offset(world,pos)==offset(world,pos.offset(right));
-        return state.withProperty(PART, leftJoin ? rightJoin ? Part.MIDDLE : Part.RIGHT
-                : rightJoin ? Part.LEFT : Part.SINGLE);
+        int height=tile==null?1:tile.getHeightOffsetPixels();
+        boolean leftJoin = joins(world, pos.offset(right.getOpposite()), state,height);
+        boolean rightJoin = joins(world, pos.offset(right), state,height);
+        return state.withProperty(PART,Part.values()[com.vandorlabs.persistence.ChairSettings.part(true,leftJoin,rightJoin)]);
     }
     public boolean canPlaceBlockAt(World world, BlockPos pos) {
         return super.canPlaceBlockAt(world, pos) && pos.getY() < world.getHeight() - 1
