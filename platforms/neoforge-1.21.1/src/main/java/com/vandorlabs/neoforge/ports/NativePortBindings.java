@@ -29,7 +29,7 @@ public final class NativePortBindings {
     private static ResourceLocation id(String value){return ResourceLocation.fromNamespaceAndPath("vandorlabs",value);}
     @SubscribeEvent public static void register(RegisterEvent event){if(!enabled())return;
         event.register(Registries.BLOCK,helper->{for(var kind:NativePortKind.values()){var block=new NativePortBlock(kind,BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).requiresCorrectToolForDrops().sound(SoundType.METAL));BLOCKS.put(kind,block);helper.register(id(kind.id),block);}});
-        event.register(Registries.ITEM,helper->{for(var kind:NativePortKind.values())helper.register(id(kind.id),new BlockItem(BLOCKS.get(kind),new Item.Properties().stacksTo(1)));});
+        event.register(Registries.ITEM,helper->{for(var kind:NativePortKind.values())helper.register(id(kind.id),new NativePortItem(BLOCKS.get(kind),new Item.Properties().stacksTo(1)));});
         event.register(Registries.BLOCK_ENTITY_TYPE,helper->{for(var kind:NativePortKind.values()){var type=BlockEntityType.Builder.<NativeResourcePortEntity>of((pos,state)->((NativePortBlock)state.getBlock()).newBlockEntity(pos,state) instanceof NativeResourcePortEntity owner?owner:null,BLOCKS.get(kind)).build(null);ENTITIES.put(kind,type);helper.register(id(kind.id),type);}});
         event.register(Registries.MENU,helper->{MENU=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,buffer)->new NativePortMenu(MENU,window,inventory,buffer.readBlockPos()));helper.register(id("resource_port"),MENU);});
     }

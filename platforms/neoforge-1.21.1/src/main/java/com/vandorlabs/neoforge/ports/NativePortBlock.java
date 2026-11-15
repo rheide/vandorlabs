@@ -35,6 +35,8 @@ public final class NativePortBlock extends BaseEntityBlock {
     private ItemStack pick(BlockEntity tile){var stack=new ItemStack(asItem());if(tile instanceof NativeResourcePortEntity owner){var tag=owner.saveWithId(owner.getLevel().registryAccess());stack.set(DataComponents.BLOCK_ENTITY_DATA,CustomData.of(tag));}return stack;}
     @Override public ItemStack getCloneItemStack(BlockState state,HitResult hit,LevelReader level,BlockPos pos,Player player){return pick(level.getBlockEntity(pos));}
     @Override protected List<ItemStack> getDrops(BlockState state,LootParams.Builder context){return List.of(pick(context.getOptionalParameter(LootContextParams.BLOCK_ENTITY)));}
+    @Override public BlockState playerWillDestroy(Level level,BlockPos pos,BlockState state,Player player){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeResourcePortEntity owner)owner.forceRecovery(owner.inert()&&(player.isCreative()||!state.canHarvestBlock(level,pos,player)));return super.playerWillDestroy(level,pos,state,player);}
+    @Override protected void onRemove(BlockState state,Level level,BlockPos pos,BlockState next,boolean moving){if(!state.is(next.getBlock())&&!level.isClientSide&&!com.vandorlabs.neoforge.placement.NativeStationaryPlacement.mutating(level,pos)&&level.getBlockEntity(pos) instanceof NativeResourcePortEntity owner&&owner.inert()&&owner.takeRecovery())Block.popResource(level,pos,pick(owner));super.onRemove(state,level,pos,next,moving);}
     @Override protected BlockState rotate(BlockState state,Rotation rotation){return state.setValue(FACING,rotation.rotate(state.getValue(FACING)));}
     @Override protected BlockState mirror(BlockState state,Mirror mirror){return rotate(state,mirror.getRotation(state.getValue(FACING)));}
 }

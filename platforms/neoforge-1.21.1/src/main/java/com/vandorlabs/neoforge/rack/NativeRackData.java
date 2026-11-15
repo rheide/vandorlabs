@@ -77,6 +77,7 @@ public final class NativeRackData {
     public static ItemStack readItem(CompoundTag original,HolderLookup.Provider registries){
         var raw=original.copy();raw.remove("Slot");ItemStack result;
         if(raw.contains("Count")){
+            if(raw.contains("ForgeCaps")&&(!raw.contains("ForgeCaps",Tag.TAG_COMPOUND)||!raw.getCompound("ForgeCaps").isEmpty()))throw new IllegalArgumentException("Unsupported Source module capabilities");
             // Like the credential adapter, retain the complete old stack in the one physical item.
             String id=raw.getString("id");if(ModuleRackPolicy.kind(id)==0||raw.getByte("Count")!=1||raw.getShort("Damage")!=0)throw new IllegalArgumentException("Unsupported Source Rack item");
             var key=ResourceLocation.tryParse(id);if(key==null||!BuiltInRegistries.ITEM.containsKey(key))throw new IllegalArgumentException("Missing Rack module");

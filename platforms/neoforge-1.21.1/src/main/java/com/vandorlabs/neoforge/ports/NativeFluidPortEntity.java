@@ -12,7 +12,7 @@ public final class NativeFluidPortEntity extends NativeResourcePortEntity {
     private FluidStack fluid=FluidStack.EMPTY;
     private final IFluidHandler[] faces=new IFluidHandler[6];
     public NativeFluidPortEntity(BlockPos pos,BlockState state){super(pos,state,NativePortKind.FLUID);for(int i=0;i<6;i++)faces[i]=new Face(i);}
-    public FluidStack stored(){return fluid.copy();}public IFluidHandler fluid(Direction side){return side!=null&&settings().face(side.get3DDataValue())!=com.vandorlabs.ports.ResourcePortSettings.Face.DISABLED?faces[side.get3DDataValue()]:null;}
+    public FluidStack stored(){return fluid.copy();}public IFluidHandler fluid(Direction side){return !inert()&&side!=null&&settings().face(side.get3DDataValue())!=com.vandorlabs.ports.ResourcePortSettings.Face.DISABLED?faces[side.get3DDataValue()]:null;}
     @Override protected int storedUnits(){return fluid.getAmount();}
     private boolean accepts(FluidStack stack){return !stack.isEmpty()&&(fluid.isEmpty()||FluidStack.isSameFluidSameComponents(fluid,stack));}
     private void add(FluidStack stack,int amount){if(fluid.isEmpty())fluid=stack.copyWithAmount(amount);else fluid.grow(amount);}
@@ -31,7 +31,7 @@ public final class NativeFluidPortEntity extends NativeResourcePortEntity {
         for(String key:old.getAllKeys())if(!java.util.Set.of("FluidName","Amount","Tag").contains(key))throw new IllegalArgumentException("Unknown legacy fluid fields");
         if(old.contains("Tag")&&(!(old.get("Tag") instanceof CompoundTag extra)||!extra.isEmpty()))throw new IllegalArgumentException("Unsupported legacy fluid metadata");
         var id=net.minecraft.resources.ResourceLocation.tryParse(old.getString("FluidName"));if(id==null||!net.minecraft.core.registries.BuiltInRegistries.FLUID.containsKey(id))throw new IllegalArgumentException("Unknown legacy fluid identity");var type=net.minecraft.core.registries.BuiltInRegistries.FLUID.get(id);if(type==net.minecraft.world.level.material.Fluids.EMPTY)throw new IllegalArgumentException("Empty legacy fluid identity");fluid=new FluidStack(type,old.getInt("Amount"));
-    }else fluid=tag.contains("PortFluid")?FluidStack.parse(registries,tag.get("PortFluid")).orElseThrow(()->new IllegalArgumentException("Unknown fluid port contents")):FluidStack.EMPTY;if(fluid.getAmount()>CAPACITY)throw new IllegalArgumentException("Oversized fluid port contents");}
+    }else fluid=tag.contains("PortFluid")?FluidStack.parse(registries,tag.get("PortFluid")).orElseThrow(()->new IllegalArgumentException("Unknown fluid port contents")):FluidStack.EMPTY;if(fluid.getAmount()>CAPACITY)throw new IllegalArgumentException("Oversized fluid port contents");if(tag.contains("PortFluid")&&!(tag.get("PortFluid") instanceof CompoundTag old&&old.contains("FluidName"))&&(fluid.isEmpty()||!fluid.save(registries).equals(tag.get("PortFluid"))))throw new IllegalArgumentException("Unknown fluid port fields");}
     private final class Face implements IFluidHandler {
         final int side;Face(int side){this.side=side;}
         public int getTanks(){return 1;}public FluidStack getFluidInTank(int tank){check(tank);return stored();}public int getTankCapacity(int tank){check(tank);return CAPACITY;}public boolean isFluidValid(int tank,FluidStack stack){check(tank);return input(side)&&accepts(stack);}

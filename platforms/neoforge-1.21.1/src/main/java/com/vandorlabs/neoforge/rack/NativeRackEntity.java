@@ -125,6 +125,7 @@ public final class NativeRackEntity extends BlockEntity {
         if(level!=null&&level.isClientSide&&tag.getBoolean("RackPublic")){readVisual(tag,true);return;}
         CompoundTag original=tag.copy();try{
             NativePlatformComponents.requireSupported(original,registries);
+            if(tag.contains("ForgeCaps")&&(!tag.contains("ForgeCaps",Tag.TAG_COMPOUND)||!tag.getCompound("ForgeCaps").isEmpty()))throw new IllegalArgumentException("Unsupported legacy Rack capabilities");
             if(tag.contains("NativeRackSchema")&&(!tag.contains("NativeRackSchema",Tag.TAG_INT)||tag.getInt("NativeRackSchema")!=1))throw new IllegalArgumentException("Future Rack schema");
             if(tag.contains("RackHousing")&&!tag.contains("RackHousing",Tag.TAG_INT)||tag.contains("RackEmit")&&(!tag.contains("RackEmit",Tag.TAG_BYTE)||tag.getByte("RackEmit")<0||tag.getByte("RackEmit")>1))throw new IllegalArgumentException("Rack settings types");
             for(String key:List.of("Revision","Insert0","Insert1","Insert2","Insert3"))if(tag.contains(key)&&(!tag.contains(key,Tag.TAG_LONG)||tag.getLong(key)<0))throw new IllegalArgumentException("Rack sequence type");
