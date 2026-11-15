@@ -34,9 +34,17 @@ public final class VehicleTransfer {
     /** A preflight pass yields before any mutation. The commit pass revalidates live state. */
     private static final class Deferred extends RuntimeException {private Deferred(){super(null,null,false,false);}}
     private static final Deferred DEFERRED=new Deferred();
+    /** Inspection and receipt-bound installation have distinct immutable inputs. */
+    private static final class GeometryWork {
+        final VehicleStructure source;final VehicleWorld.CouplerScope scope;final VehiclePreparation preparation;
+        VehicleCollision geometry;
+        GeometryWork(World world,VehicleStructure source,VehicleWorld.CouplerScope scope,boolean explicit){this.source=source;this.scope=scope;preparation=new VehiclePreparation(explicit?new VehicleWorld(world,source,scope):new VehicleWorld(world,source));}
+        boolean poll()throws Exception{if(geometry==null)geometry=preparation.poll();return geometry!=null;}
+        void cancel(){preparation.cancel();}
+    }
     private static final class Work {
         final WorldServer world;final Action action;final java.util.function.Consumer<Exception> failed;
-        VehicleStructure geometrySource,validationSource;VehiclePreparation preparation;VehicleCollision geometry;
+        VehicleStructure validationSource;GeometryWork inspectionGeometry,assemblyGeometry;
         VehicleWorld validationView;boolean validationComplete;int validationBuilds,validationReuses;
         EntityGroundVehicle assembled,held;
         UUID assemblyOwner;VehicleArmCouplerNativeReceipt.Prepared assemblyReceipt;
@@ -96,11 +104,11 @@ public final class VehicleTransfer {
     private static VehicleCollision geometry(World world,VehicleStructure structure,VehicleWorld.CouplerScope scope){return geometry(world,structure,scope,true);}
     private static VehicleCollision geometry(World world,VehicleStructure structure,VehicleWorld.CouplerScope scope,boolean explicit){
         Work work=ACTIVE.get();if(work==null)return new VehicleCollision(explicit?new VehicleWorld(world,structure,scope):new VehicleWorld(world,structure));
-        if(work.geometrySource==null){work.geometrySource=structure;work.preparation=new VehiclePreparation(explicit?new VehicleWorld(world,structure,scope):new VehicleWorld(world,structure));}
-        else if(!work.geometrySource.sameSnapshot(structure))throw new IllegalArgumentException("Craft changed while preparing geometry; inspect it again.");
-        if(work.geometry==null)try{work.geometry=work.preparation.poll();}catch(Exception failure){throw new IllegalStateException("Vehicle geometry preparation failed.",failure);}
-        if(work.geometry==null)throw DEFERRED;
-        return work.geometry;
+        GeometryWork prepared=explicit?work.assemblyGeometry:work.inspectionGeometry;
+        if(prepared==null){prepared=new GeometryWork(world,structure,scope,explicit);if(explicit)work.assemblyGeometry=prepared;else work.inspectionGeometry=prepared;}
+        else if(!prepared.source.sameSnapshot(structure)||!VehicleWorld.CouplerScope.same(prepared.scope,scope))throw new IllegalArgumentException("Craft changed while preparing geometry; inspect it again.");
+        try{if(!prepared.poll())throw DEFERRED;}catch(Deferred pending){throw pending;}catch(Exception failure){throw new IllegalStateException("Vehicle geometry preparation failed.",failure);}
+        return prepared.geometry;
     }
     static Long preparedOwnership(WorldServer world,UUID id,boolean active)throws IOException{
         Work work=ACTIVE.get();if(work==null)return null;
@@ -116,7 +124,7 @@ public final class VehicleTransfer {
         TransferCoordinator.release(work.world,work);
         if(VehicleDiagnostics.ENABLED&&work.validationBuilds>0)System.out.println("[vandorlabs] vehicle-preflight views="+work.validationBuilds+" reused="+work.validationReuses+" cached="+REUSE_ASSEMBLY_PREFLIGHT);
         if(work.indicator!=null)work.indicator.setConverting(false);
-        if(work.checkpoint!=null)work.checkpoint.close();if(work.held!=null)work.held.setTransferInProgress(false);if(work.preparation!=null)work.preparation.cancel();
+        if(work.checkpoint!=null)work.checkpoint.close();if(work.held!=null)work.held.setTransferInProgress(false);if(work.inspectionGeometry!=null)work.inspectionGeometry.cancel();if(work.assemblyGeometry!=null)work.assemblyGeometry.cancel();
         for(TileEntity tile:work.pausedTiles){int remaining=PAUSED_TILES.getOrDefault(tile,1)-1;
             if(remaining>0){PAUSED_TILES.put(tile,remaining);continue;}PAUSED_TILES.remove(tile);
             if(!tile.isInvalid()&&work.world.isBlockLoaded(tile.getPos())&&work.world.getTileEntity(tile.getPos())==tile&&!work.world.tickableTileEntities.contains(tile))work.world.tickableTileEntities.add(tile);
@@ -128,7 +136,8 @@ public final class VehicleTransfer {
         ArrayDeque<Work> queue=WORK.get(world);if(queue==null||queue.isEmpty())return;Work work=queue.peek();
         if(!TransferCoordinator.acquire(world,work))return;
         try{
-            if(work.preparation!=null&&work.geometry==null){work.geometry=work.preparation.poll();if(work.geometry==null)return;}
+            if(work.inspectionGeometry!=null&&!work.inspectionGeometry.poll())return;
+            if(work.assemblyGeometry!=null&&!work.assemblyGeometry.poll())return;
             if(work.io!=null){if(!work.io.isDone())return;work.io.get();work.io=null;if(work.retiring||work.aborting){release(work);queue.remove();return;}work.journalReady=true;}
             if(work.aborting){try{work.io=IO.submit(()->{work.ownership.restore();deleteJournal(work.journal);return null;});}catch(RejectedExecutionException busy){}return;}
             if(work.committed){

@@ -13,6 +13,10 @@
 - Native Racks retain modules exactly once through captured mining and interrupted cross-chunk transfers. Insertion and extraction use bounded, isolated rendering buffers and release their terrain observers when settled. Native Vehicle navigation remains unavailable.
 - Include crafting recipes, model assets and focused geometry, inventory, animation and rendering checks. See the [Module Rack guide](docs/module-rack.md).
 
+### Forge vehicle fixes
+
+- Keep inspection geometry separate from Coupler ownership-prepared geometry. Valid native Couplers no longer trigger a changed-craft refusal during Taxi assembly. Both stages retain exact snapshot and ownership checks; edits during preparation still refuse safely.
+
 ### Materials and connected artwork
 
 - Add Port Hull to the generic Hull texture category, retaining all earlier saved texture choices.

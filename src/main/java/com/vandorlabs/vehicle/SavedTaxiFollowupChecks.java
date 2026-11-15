@@ -17,6 +17,28 @@ import net.minecraft.world.WorldServer;
 /** Compact, unchanged native block/NBT excerpts from the reported saved layouts. */
 public final class SavedTaxiFollowupChecks {
     private SavedTaxiFollowupChecks(){}
+    /** Opt-in check against an unchanged disposable copy of the reported world. */
+    public static void currentGeometry(WorldServer world,EntityPlayerMP actor)throws Exception{
+        BlockPos controller=new BlockPos(-114,84,184);
+        for(int x=-9;x<=-6;x++)for(int z=9;z<=13;z++)world.getChunkFromChunkCoords(x,z);
+        actor.setGameType(net.minecraft.world.GameType.CREATIVE);
+        require(world.getTileEntity(controller) instanceof com.vandorlabs.tiles.TileEntityVehicleController,"reported saved controller exists");
+        System.out.println("[vandorlabs][saved-taxi-geometry] begin controller="+controller+" seat="+world.getBlockState(controller.west()).getBlock().getRegistryName());
+        EntityGroundVehicle craft=assemble(world,actor,controller);
+        require(craft!=null&&craft.structure.hasDedicatedController(),"reported craft assembled through inspected Taxi path");
+        int cells=craft.structure.cells.size();
+        park(world,actor,craft);require(craft.isDead,"reported craft parks as native blocks");
+        craft=assemble(world,actor,controller);require(craft.structure.cells.size()==cells,"reported craft recaptures complete material");
+        park(world,actor,craft);require(craft.isDead,"recaptured craft parks without duplicate ownership");
+        com.vandorlabs.tiles.TileEntityVehicleController nativeController=(com.vandorlabs.tiles.TileEntityVehicleController)world.getTileEntity(controller);
+        String name=nativeController.vehicleName;
+        assemble(world,actor,controller,()->nativeController.vehicleName="Edited during preparation");
+        require("Edited during preparation".equals(nativeController.vehicleName),"refusal preserves the actual controller edit");
+        nativeController.vehicleName=name;
+        craft=assemble(world,actor,controller);require(craft.structure.cells.size()==cells,"unchanged retry after refusal keeps complete material");park(world,actor,craft);
+        System.out.println("[vandorlabs][saved-taxi-geometry] PASS cells="+cells+" actualSavedWorld/queuedInspection/asyncGeometry/Taxi/park/recapture/editedSourceRefused/retry");
+    }
+
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Saved Taxi followup: "+why);}
     private static NBTTagCompound load(WorldServer world,String name)throws Exception{
         return loadResource(world,"followups3-"+name);

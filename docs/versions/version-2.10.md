@@ -79,6 +79,8 @@ stay with the complete machine. Configure or dismantle it at a supported native
 endpoint; unsupported tilts stay captured. See the
 [Core construction guide](../universal-constructors.md).
 
+Taxi conversion keeps its inspected geometry separate from the geometry prepared with new Coupler ownership data. Valid Couplers can assemble, park and recapture; actual source edits during preparation still refuse without removing the craft.
+
 Vehicles using two independent complete Ski supports can enter Taxi mode. A
 single Ski remains insufficient, and other support families keep their existing
 admission rules. See the [modular landing gear guide](../modular-landing-gear.md).
