@@ -131,12 +131,34 @@ floor mounts point up, and wall mounts point outward. Additional matching arm
 sections inherit the existing column's mounting axis. Placing an arm against a
 landing foot points it toward that foot. Existing saved arms continue to point down.
 
-Use the Configurizer for the arm dialog. Input, channels, fold direction and
-payload orientation use the same single-page dialog as joining and load settings.
-Rotating Arms expose **Start** and **End** angles in 15-degree steps. Return a
-bare arm to its starting position before changing Start; use a zero-degree Start
-before switching between Single and Double hinges. Extenders retain their fixed
-construction length.
+Use the Configurizer for the arm dialog. On Forge 1.12.2, **Mechanism** groups
+the target, Fold/Payload, Hinge/Kink and Start/End controls. **Join range**, beside
+**Join arms**, limits the search for matching columns; it does not change stroke
+length. **Redstone** contains activation and receive channels.
+
+Rotating Arms expose **Start** and **End** in 15-degree steps with or without
+landing feet. Return the arm to Start before editing its endpoints. Editing Start
+uses the normal collision-checked adjustment stroke. Use a zero-degree Start
+before changing Hinge or Kink. Extenders retain their placed construction length.
+
+With landing feet attached, at least one endpoint must place the complete foot
+layout on the native block grid with a supported orientation. This includes the
+payload mode, hinge, kink and socket offsets; a multiple of 90 degrees alone is
+insufficient. Configuration does not require terrain under the feet. Taxi still
+requires downward-mounted upright supports and ground contact, and uses a valid
+endpoint even when only End is suitable. Sideways and upward mounts do not become
+Taxi supports.
+
+Older landing assemblies retain their physical 0°/90° stroke, including saves
+with ignored generic angle values. Changing channels or Join range preserves
+that behavior. A new angle edit explicitly enables the displayed settings. A new
+clipboard captures an older landing assembly's physical 0°/90° angles rather than
+its ignored remnants; an older clipboard does not enable those remnants.
+
+![Landing feet retain the standard Start and End angle controls](images/modular-gear/landing-angle-dialog.png)
+
+The example shows an older landing assembly's effective angles before its first
+explicit angle edit.
 For standalone regular and Large Extender Arms, Off is the fully extended construction
 pose. On retracts a single section by half a block, leaving clearance for its base.
 Two sections retract by one block; longer stacks retract by one fewer block than

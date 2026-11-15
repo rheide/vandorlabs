@@ -89,6 +89,32 @@ public final class GearGeometry {
     public static List<AxisAlignedBB> boxes(GearTileEntity tile,double progress){
         return tile.boxesAt(progress);
     }
+    /** One actual authored foot contact. A zero-height reserved Large part never becomes a support. */
+    public static final class LandingContact {
+        public final double x,y,z;private LandingContact(double x,double y,double z){this.x=x;this.y=y;this.z=z;}
+    }
+    public static LandingContact landingContact(GearTileEntity tile,BlockPos source){
+        if(tile.assembly()==null||tile.assembly().kind()==GearTopology.FootKind.NONE)return null;
+        GearTopology.Cell selected=null;for(GearTopology.Cell foot:tile.assembly().feet())if(tile.localCell(foot).equals(source)){selected=foot;break;}
+        List<AxisAlignedBB> boxes=new ArrayList<>();appendFeet(tile,tile.pose(tile.progress()),selected==null?tile.assembly().feet():java.util.Collections.singletonList(selected),boxes);
+        double lowest=Double.POSITIVE_INFINITY,lx=Double.POSITIVE_INFINITY,lz=lx,hx=Double.NEGATIVE_INFINITY,hz=hx;
+        for(AxisAlignedBB local:boxes){AxisAlignedBB box=tile.mountDirection()==EnumFacing.DOWN?local:ArmOrientation.box(tile.mountDirection(),local.offset(-tile.getPos().getX(),-tile.getPos().getY(),-tile.getPos().getZ())).offset(tile.getPos());if(box.maxX<=box.minX||box.maxY<=box.minY||box.maxZ<=box.minZ)continue;
+            if(box.minY<lowest-1e-8){lowest=box.minY;lx=box.minX;lz=box.minZ;hx=box.maxX;hz=box.maxZ;}else if(Math.abs(box.minY-lowest)<=1e-8){lx=Math.min(lx,box.minX);lz=Math.min(lz,box.minZ);hx=Math.max(hx,box.maxX);hz=Math.max(hz,box.maxZ);}
+        }
+        return Double.isFinite(lowest)?new LandingContact((lx+hx)/2,lowest,(lz+hz)/2):null;
+    }
+    private static void appendFeet(GearTileEntity tile,GearMotion.Pose pose,java.util.Collection<GearTopology.Cell> feet,List<AxisAlignedBB> out){
+        GearTopology.Assembly group=tile.assembly();BlockPos root=tile.getPos();
+        int turns=tile.footFacing()==EnumFacing.EAST?1:tile.footFacing()==EnumFacing.SOUTH?2:tile.footFacing()==EnumFacing.WEST?3:0;
+        if(group.kind()!=GearTopology.FootKind.NONE)for(GearTopology.Cell foot:feet){
+            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=tile.localCell(foot);net.minecraft.block.state.IBlockState state=footState(tile,source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(tile.getWorld(),source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);AxisAlignedBB posed=box(pose.transformFootBounds(bounds(wheel.offset(foot.x,foot.y,foot.z))));
+                if(block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(tile.getWorld(),source,state).equals(source)){AxisAlignedBB connector=yaw(MODELS.computeIfAbsent(block.wheelModel()+"_connector",GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns).offset(foot.x,foot.y,foot.z);posed=posed.union(box(pose.transformConnectorBounds(bounds(connector),(connector.minX+connector.maxX)/2,(connector.minY+connector.maxY)/2,(connector.minZ+connector.maxZ)/2)));}
+                out.add(posed.offset(root));}
+            else if(group.kind()==GearTopology.FootKind.TRACK){BlockPos source=tile.localCell(foot);com.vandorlabs.gear.track.TrackAppearance appearance=com.vandorlabs.gear.track.TrackGeometry.onArm(com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),source));AxisAlignedBB nativeTrack=com.vandorlabs.gear.track.TrackGeometry.bounds(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),source),tile.footFacing(),appearance);add(out,nativeTrack.offset(foot.x,foot.y,foot.z),pose,true,root);}
+            else if(group.kind()==GearTopology.FootKind.PLATE)add(out,new AxisAlignedBB(0,0,0,1,3/16D,1).offset(foot.x,foot.y,foot.z),pose,true,root);
+            else{add(out,yaw(new AxisAlignedBB(.25,0,0,.75,5/16D,1),turns).offset(foot.x,foot.y,foot.z),pose,true,root);add(out,yaw(new AxisAlignedBB(0,3/16D,.375,1,5/16D,.625),turns).offset(foot.x,foot.y,foot.z),pose,true,root);}
+        }
+    }
     static List<AxisAlignedBB> computeBoxes(GearTileEntity tile,double progress){return computeBoxes(tile,progress,true);}
     private static List<AxisAlignedBB> computeBoxes(GearTileEntity tile,double progress,boolean payload){
         if(tile.assembly()==null)return Collections.emptyList();GearTopology.Assembly group=tile.assembly();GearMotion.Pose pose=tile.pose(progress);List<AxisAlignedBB> out=new ArrayList<>();BlockPos root=tile.getPos();
@@ -112,15 +138,7 @@ public final class GearGeometry {
             AxisAlignedBB socket=group.kind()==GearTopology.FootKind.NONE&&!tile.isSwingArmController()?new AxisAlignedBB(4.25/16D,3/16D,4.25/16D,11.75/16D,5/16D,11.75/16D):new AxisAlignedBB(.25,3/16D,.3125,.75,7/16D,.6875);
             if(group.kind()!=GearTopology.FootKind.NONE||!tile.isFixedMount())addArm(out,socket.offset(0,-group.columnHeight()+tile.footMountOffset()-(group.kind()==GearTopology.FootKind.TRACK&&tile.isSwingArmController()?1/64D:0),0),pose,true,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
         }
-        int turns=tile.footFacing()==EnumFacing.EAST?1:tile.footFacing()==EnumFacing.SOUTH?2:tile.footFacing()==EnumFacing.WEST?3:0;
-        if(group.kind()!=GearTopology.FootKind.NONE)for(GearTopology.Cell foot:group.feet()){
-            if(group.kind()==GearTopology.FootKind.WHEEL){BlockPos source=tile.localCell(foot);net.minecraft.block.state.IBlockState state=footState(tile,source);GearBlock block=state.getBlock() instanceof GearBlock?(GearBlock)state.getBlock():null;AxisAlignedBB wheel=block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(tile.getWorld(),source,state).equals(source)?yaw(MODELS.computeIfAbsent(block.wheelModel(),GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns):new AxisAlignedBB(0,0,0,0,0,0);AxisAlignedBB posed=box(pose.transformFootBounds(bounds(wheel.offset(foot.x,foot.y,foot.z))));
-                if(block!=null&&block.kind()==GearBlock.Kind.WHEEL&&block.componentRoot(tile.getWorld(),source,state).equals(source)){AxisAlignedBB connector=yaw(MODELS.computeIfAbsent(block.wheelModel()+"_connector",GearBlock::modelParts).stream().reduce(AxisAlignedBB::union).get(),turns).offset(foot.x,foot.y,foot.z);posed=posed.union(box(pose.transformConnectorBounds(bounds(connector),(connector.minX+connector.maxX)/2,(connector.minY+connector.maxY)/2,(connector.minZ+connector.maxZ)/2)));}
-                out.add(posed.offset(root));}
-            else if(group.kind()==GearTopology.FootKind.TRACK){BlockPos source=tile.localCell(foot);com.vandorlabs.gear.track.TrackAppearance appearance=com.vandorlabs.gear.track.TrackGeometry.onArm(com.vandorlabs.gear.track.TrackBlock.appearance(tile.getWorld(),source));AxisAlignedBB nativeTrack=com.vandorlabs.gear.track.TrackGeometry.bounds(com.vandorlabs.gear.track.TrackBlock.style(tile.getWorld(),source),tile.footFacing(),appearance);add(out,nativeTrack.offset(foot.x,foot.y,foot.z),pose,true,root);}
-            else if(group.kind()==GearTopology.FootKind.PLATE)add(out,new AxisAlignedBB(0,0,0,1,3/16D,1).offset(foot.x,foot.y,foot.z),pose,true,root);
-            else{add(out,yaw(new AxisAlignedBB(.25,0,0,.75,5/16D,1),turns).offset(foot.x,foot.y,foot.z),pose,true,root);add(out,yaw(new AxisAlignedBB(0,3/16D,.375,1,5/16D,.625),turns).offset(foot.x,foot.y,foot.z),pose,true,root);}
-        }
+        appendFeet(tile,pose,group.feet(),out);
         if(tile.mountDirection()!=EnumFacing.DOWN){
             List<AxisAlignedBB> oriented=new ArrayList<>();for(AxisAlignedBB b:out)oriented.add(ArmOrientation.box(tile.mountDirection(),b.offset(-root.getX(),-root.getY(),-root.getZ())).offset(root));out=oriented;
         }

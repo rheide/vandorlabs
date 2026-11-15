@@ -1,0 +1,24 @@
+task testArmLandingAngles(type: JavaExec) {
+    group = 'verification'
+    description = 'Check legacy landing-angle geometry, endpoint admission and shared dialog controls'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.gear.core.ArmAnglePolicyChecks'
+    maxHeapSize = '256m'
+}
+task testArmAngleAdjustment(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare shared Start adjustment with the retained Source stroke and rollback'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.gear.core.ArmAngleAdjustmentChecks'
+    maxHeapSize = '256m'
+}
+task testGearMountFrame(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare shared six-face basis with Source/native transforms and endpoint grids'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.gear.core.GearMountFrameChecks'
+    maxHeapSize = '256m'
+}

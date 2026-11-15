@@ -51,7 +51,7 @@ public final class VehicleSteering {
                 if(gear.kind()==GearBlock.Kind.WHEEL){factor=gear.sizeClass()==2?LARGE:SMALL;if(gear.width()==2){BlockPos offset=LargeGearBlock.offset(state.getValue(GearBlock.FACING),1,1);x+=offset.getX()*.5;z+=offset.getZ()*.5;}}
                 else if(gear.kind()==GearBlock.Kind.TRACK)factor=TRACK;
                 else if(controller==null||!at.equals(controller.getPos()))continue;
-                bottom=gear.vehicleBottomY(world,at);
+                if(controller!=null&&controller.isSwingArmController()&&controller.landingAnglesVersion()==1){com.vandorlabs.gear.GearGeometry.LandingContact contact=com.vandorlabs.gear.GearGeometry.landingContact(controller,at);if(contact==null)continue;x=contact.x;z=contact.z;bottom=contact.y;}else bottom=gear.vehicleBottomY(world,at);
             }else if(block instanceof BlockWheel){
                 BlockWheel wheel=(BlockWheel)block;if(state.getValue(BlockWheel.PART)!=0)continue;factor=wheel.wheelSize()==2?LARGE:wheel.wheelSize()==1?MEDIUM:SMALL;
                 if(wheel.wheelSize()==2){EnumFacing along=state.getValue(BlockWheel.FACING).rotateY();x+=along.getFrontOffsetX()*.5;z+=along.getFrontOffsetZ()*.5;}bottom=wheel.vehicleBottomY(world,at);

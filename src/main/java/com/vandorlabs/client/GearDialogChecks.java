@@ -27,14 +27,15 @@ public final class GearDialogChecks {
             GearTileEntity tile=fixture(mc,block);boolean track=tile instanceof com.vandorlabs.gear.track.TrackTile;net.minecraft.client.gui.inventory.GuiContainer gui=track?new GuiTrack(new ContainerModularGear(tile)):new RecordingGearGui(new ContainerModularGear(tile));gui.inventorySlots.windowId=-94;mc.displayGuiScreen(gui);gui.setWorldAndResolution(mc,size[0],size[1]);
             List<GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");List<Rectangle> occupied=new ArrayList<>();boolean rotation=false,done=false;
             for(GuiButton button:buttons){require(button.id!=6&&button.id!=8&&!button.displayString.equals("Back"),"no page-navigation controls");if(!button.visible)continue;require(mc.fontRenderer.getStringWidth(button.displayString)<=button.width-4,"button text fits "+button.displayString);add(occupied,new Rectangle(button.x,button.y,button.width,button.height),size);if(button.id==7)rotation=true;if(button.id==4)done="Done".equals(button.displayString);}
-            require(done&&(track?!rotation:rotation),"separate Track appearance and arm motion controls");if(track){require(buttons.size()==2,"Track shows only style and Done");require(((com.vandorlabs.gear.track.TrackTile)tile).error().isEmpty(),"standalone mounted Track has no generic arm assembly error");}else for(Field field:fields){GuiTextField text=(GuiTextField)field.get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);}
+            require(done&&(rotation==(!track&&tile.isSwingArmController())),"separate Track appearance and arm motion controls");if(track){require(buttons.size()==2,"Track shows only style and Done");require(((com.vandorlabs.gear.track.TrackTile)tile).error().isEmpty(),"standalone mounted Track has no generic arm assembly error");}else for(Field field:fields){GuiTextField text=(GuiTextField)field.get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);}
             if(!track){
                 GuiModularGear armGui=(GuiModularGear)gui;
-                require(gui.getYSize()==244,"Mechanism includes the relative Kink row");
-                for(int id:new int[]{1,2,7}){GuiButton row=buttons.stream().filter(b->b.id==id).findFirst().get();require(row.y-gui.getGuiTop()==56+26*(id==1?0:id==2?1:2),"Mechanism rows fill the space immediately below tabs");}
+                require(gui.getYSize()==Math.min(244,size[1]-12),"shared mechanism panel fits compact viewport");
+                GuiButton target=buttons.stream().filter(b->b.id==2).findFirst().get();require(target.visible&&target.x==gui.getGuiLeft()+12&&target.width==gui.getXSize()-24,"target is the first full-width mechanism row");
+                if(tile.isSwingArmController()){GuiButton fold=buttons.stream().filter(b->b.id==1).findFirst().get(),payload=buttons.stream().filter(b->b.id==7).findFirst().get();require(fold.visible&&payload.visible&&fold.y==payload.y&&fold.y>target.y,"Fold and Payload share their own row below target");}
                 GuiButton join=buttons.stream().filter(b->b.id==9).findFirst().get(),load=buttons.stream().filter(b->b.id==11).findFirst().get();
-                require(join.visible&&(load.visible!=tile.isSwingArmController())&&!((GuiTextField)fields[0].get(gui)).getVisible(),"mechanism page separates receiver channels from arm geometry");
-                if(join.enabled){
+                require(join.visible==(!tile.isLandingAssembly()&&!tile.isFixedMount())&&load.visible==tile.canCarryLoad()&&!((GuiTextField)fields[0].get(gui)).getVisible(),"mechanism page separates receiver channels from arm geometry");
+                if(join.visible&&join.enabled){
                     armGui.mouseClicked(join.x+5,join.y+5,0);require(join.displayString.endsWith("On"),"left click enables joining");
                     armGui.mouseClicked(join.x+5,join.y+5,1);require(join.displayString.endsWith("Off"),"right click disables joining");
                     armGui.mouseClicked(join.x+5,join.y+5,0);

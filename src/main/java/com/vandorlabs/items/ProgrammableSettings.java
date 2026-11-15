@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 public final class ProgrammableSettings {
     public static final String MODULAR_ARM_SETTINGS="modular_arm_settings";
     public static final String RESOURCE_PORT_SETTINGS="resource_port_settings";
-    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","HingeMode","KinkDirection","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
+    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","HingeMode","KinkDirection","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","LandingAnglesVersion","ActiveExtension","TrackStyle"};
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
@@ -177,7 +177,7 @@ public final class ProgrammableSettings {
         }
         if(tile instanceof com.vandorlabs.segmented.SegmentedDoorTile){out.setTag(SEGMENTED_DOOR,((com.vandorlabs.segmented.SegmentedDoorTile)tile).configuration());}
         else if(tile instanceof com.vandorlabs.gear.GearTileEntity){
-            NBTTagCompound settings=((com.vandorlabs.gear.GearTileEntity)tile).settings(),copied=new NBTTagCompound();
+            NBTTagCompound settings=((com.vandorlabs.gear.GearTileEntity)tile).copiedSettings(),copied=new NBTTagCompound();
             for(String key:ARM_KEYS)if(settings.hasKey(key))copied.setTag(key,settings.getTag(key).copy());
             copied.setBoolean("LegacyAnyChannels",settings.getBoolean("LegacyAnyChannels"));out.setTag(MODULAR_ARM_SETTINGS,copied);out.setInteger(TRIGGER,settings.getInteger("Trigger"));
         }else if (tile instanceof com.vandorlabs.tiles.TileEntityCanopy) {
@@ -439,6 +439,7 @@ public final class ProgrammableSettings {
             if(values.hasKey(MODULAR_ARM_SETTINGS,10)||values.hasKey(TRIGGER)||values.hasKey(CHANNEL)){
                 NBTTagCompound settings=arm.settings(),copied=values.getCompoundTag(MODULAR_ARM_SETTINGS);
                 for(String key:ARM_KEYS)if(copied.hasKey(key))settings.setTag(key,copied.getTag(key).copy());
+                if((copied.hasKey("StartAngle")||copied.hasKey("ActiveAngle"))&&!copied.hasKey("LandingAnglesVersion"))settings.removeTag("LandingAnglesVersion");
                 if(copied.hasKey("MiddleHinge",1)&&!copied.hasKey("HingeMode"))settings.removeTag("HingeMode");
                 if(copied.hasKey("Direction",3)&&!copied.hasKey("KinkDirection"))settings.setInteger("KinkDirection",copied.getInteger("Direction"));
                 if(values.hasKey(TRIGGER,3))settings.setInteger("Trigger",values.getInteger(TRIGGER));

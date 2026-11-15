@@ -86,10 +86,14 @@ public final class ModularGearVehicles {
         Map<BlockPos,Double> desired=new LinkedHashMap<>();Set<BlockPos> notify=new LinkedHashSet<>();VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
         Map<BlockPos,Correction> corrected=craft.world.isRemote?corrections.get(craft):null;
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational()||gear.taxiPhase()==1)continue;double before=gear.progress();
-            if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=gear.couplerPassive()?before:GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
+            if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;
+            if(!craft.world.isRemote&&!craft.hover&&gear.isLandingAssembly()&&gear.isSwingArmController()&&gear.landingAnglesVersion()==1){int safe=gear.taxiSafeTarget();if(safe>=0&&gear.target()!=(safe==1)){gear.target(safe==1);notify.add(gear.getPos());}}if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=gear.couplerPassive()?before:GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
             if(craft.world.isRemote&&craft.articulation.constrainsArm(gear.getPos()))next=before;
             if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision()&&correction.current(craft,gear.getPos()))next=correction.progress;else if(gear.motionBlocked())next=before;}
-            if(gear.isLandingAssembly()&&!craft.hover&&next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
+            if(gear.isLandingAssembly()&&!craft.hover){
+                if(gear.isSwingArmController()&&gear.landingAnglesVersion()==1){if(!gear.landingEndpoints().uprightAt(gear.target()?1:0))next=before;}
+                else if(next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
+            }
             if(craft.world.isRemote&&gear.taxiPhase()>=0&&!gear.target()){double maximum=gear.pose(0).footOffsetY(),rise=gear.taxiAmount();if(maximum>0){double smooth=Math.max(0,Math.min(1,1-rise/maximum));double endpoint=.5-Math.sin(Math.asin(1-2*smooth)/3);next=Math.max(endpoint,next);}}
             if(next==before){gear.captureProgress(before);continue;}
             if(!craft.world.isRemote){List<AxisAlignedBB> old=GearGeometry.boxes(gear,before),after=GearGeometry.boxes(gear,next);boolean blocked=false,constrained=craft.articulation.constrainsArm(gear.getPos());
@@ -107,9 +111,10 @@ public final class ModularGearVehicles {
         if(!craft.collisionCache.readyForCanopyPose(craft.view,geometry))return;
         if(!craft.world.isRemote)for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){GearTileEntity gear=(GearTileEntity)craft.view.getTileEntity(entry.getKey());List<AxisAlignedBB> before=new ArrayList<>(),after=new ArrayList<>();for(AxisAlignedBB box:GearGeometry.boxes(gear,gear.progress()))before.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));for(AxisAlignedBB box:GearGeometry.boxes(gear,entry.getValue()))after.add(pose.world(box,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2));GearGeometry.pushEntities(craft.world,before,after,craft);}
         for(Map.Entry<BlockPos,Double> entry:desired.entrySet())((GearTileEntity)craft.view.getTileEntity(entry.getKey())).captureProgress(entry.getValue());
+        Set<BlockPos> reconfigured=Collections.emptySet();for(BlockPos at:desired.keySet()){GearTileEntity gear=(GearTileEntity)craft.view.getTileEntity(at);if(gear.finishCapturedAngleAdjustment()){if(reconfigured.isEmpty())reconfigured=new HashSet<>();reconfigured.add(at);reconfigured.addAll(gear.members());}}
         craft.articulation.armPosesCommitted();
         if(craft.world.isRemote)corrections.remove(craft);
-        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?cell.withGearPose((GearTileEntity)craft.view.getTileEntity(cell.pos)):cell);
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(reconfigured.contains(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,((GearTileEntity)craft.view.getTileEntity(cell.pos)).currentData(cell.tileData())):desired.containsKey(cell.pos)?cell.withGearPose((GearTileEntity)craft.view.getTileEntity(cell.pos)):cell);
         craft.updateCanopies(new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount),true);
         if(!craft.world.isRemote)com.vandorlabs.network.MessageGearMotion.send(craft,desired.keySet());
     }

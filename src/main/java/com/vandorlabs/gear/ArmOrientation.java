@@ -13,15 +13,9 @@ public final class ArmOrientation {
         return new BlockPos(v.x,v.y,v.z);
     }
     public static Vec3d vector(EnumFacing face,double x,double y,double z){
-        switch(face){
-            case UP:return new Vec3d(x,-y,-z);
-            case EAST:return new Vec3d(-y,x,z);
-            case WEST:return new Vec3d(y,-x,z);
-            case NORTH:return new Vec3d(x,-z,y);
-            case SOUTH:return new Vec3d(x,z,-y);
-            default:return new Vec3d(x,y,z);
-        }
+        return new Vec3d(com.vandorlabs.gear.core.GearMountFrame.x(face.ordinal(),x,y,z),com.vandorlabs.gear.core.GearMountFrame.y(face.ordinal(),x,y,z),com.vandorlabs.gear.core.GearMountFrame.z(face.ordinal(),x,y,z));
     }
+
     public static Vec3d point(EnumFacing face,double x,double y,double z){return vector(face,x-.5,y-.5,z-.5).addVector(.5,.5,.5);}
     public static BlockPos inverse(EnumFacing face,BlockPos p){
         switch(face){case EAST:return vector(EnumFacing.WEST,p);case WEST:return vector(EnumFacing.EAST,p);case NORTH:return vector(EnumFacing.SOUTH,p);case SOUTH:return vector(EnumFacing.NORTH,p);default:return vector(face,p);}

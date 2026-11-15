@@ -698,6 +698,15 @@ PYIMAGE
     fi
     if [ "$TARGET" = arm-live ]; then
         grep -q "arm-live PASS" "$RUN_OUT/client.log"
+        if [ "${VANDOR_LABS_ARM_LANDING_ANGLES_ONLY:-false}" = true ]; then
+            if [ "${VANDOR_LABS_LANDING_ANGLE_TAXI_ONLY:-false}" = true ]; then
+                grep -q "arm-live PASS landing-angles-taxi" "$RUN_OUT/client.log"
+            else
+                grep -q "arm-live PASS landing-angles checks=" "$RUN_OUT/client.log"
+            fi
+            echo "Landing angle player checks passed: $RUN_OUT"
+            exit 0
+        fi
         if [ "${VANDOR_LABS_ARM_CORE_ONLY:-false}" = true ]; then
             grep -q "arm-live PASS arm-core" "$RUN_OUT/client.log"
             for core_profile in 0 1 2; do grep -q "arm-core case PASS profile=$core_profile " "$RUN_OUT/client.log"; done
