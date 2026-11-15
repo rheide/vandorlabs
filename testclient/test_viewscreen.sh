@@ -372,7 +372,7 @@ fi
 TEST_RUNTIME_GAME=${VANDOR_LABS_TEST_GAME_DIR:-"$RUN_OUT/game"}
 export VANDOR_LABS_TEST_GAME_DIR="$TEST_RUNTIME_GAME"
 mkdir -p "$TEST_RUNTIME_GAME/mods"
-if [ "${TARGET:-}" = door-appearance ] || [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ] || [ "${VANDOR_LABS_SHAPE_TEXTURE_CHECKS:-false}" = true ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
+if [ "${TARGET:-}" = door-appearance ] || [ "${TARGET:-}" = glass-appearance ] || [ "${TARGET:-}" = cube-reference ] || [ "${TARGET:-}" = filesystem-discovery ] || [ "${VANDOR_LABS_SHAPE_TEXTURE_CHECKS:-false}" = true ]; then python3 testclient/prepare_cube_reference.py "$TEST_RUNTIME_GAME"; fi
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 TEST_JAR=${VANDOR_LABS_TEST_JAR:-build/libs/vandorlabs-$VERSION.jar}
 rm -f "$TEST_RUNTIME_GAME"/mods/vandorlabs-*.jar

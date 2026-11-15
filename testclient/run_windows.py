@@ -92,7 +92,7 @@ def main():
     game = output/'game'
     natives = output/'natives'
     game.mkdir(parents=True)
-    if args.focus in ('cube-reference','filesystem-discovery'):
+    if args.focus in ('glass-appearance','cube-reference','filesystem-discovery'):
         from prepare_cube_reference import prepare
         prepare(game)
     if args.focus == 'connection-acceptance':
