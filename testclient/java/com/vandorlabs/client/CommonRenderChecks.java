@@ -215,6 +215,12 @@ final class CommonRenderChecks {
             require(ProgrammableSettings.apply(world,p,copy) && tile.getHousingTexture()==2 && tile.getSettingsRevision()>revision
                     && world.updates>0 && world.dirty>0,"changed finish not persisted or synchronized");
         }
+        for(IBlockState state:new IBlockState[]{ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),ModBlocks.PROGRAMMABLE_DIAGONAL_WALL.getDefaultState(),ModBlocks.PROGRAMMABLE_PORTHOLE_BLOCK.getDefaultState(),ModBlocks.PROGRAMMABLE_DIAGONAL_GLASS.getDefaultState()}){
+            put(world,p,state);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(p);
+            NBTTagCompound original=tile.writeToNBT(new NBTTagCompound());long revision=tile.getSettingsRevision();world.updates=world.dirty=world.renderUpdates=world.lightChecks=0;
+            tile.setTextureJoin(tile.textureJoin());
+            require(revision==tile.getSettingsRevision()&&world.updates==0&&world.dirty==0&&world.renderUpdates==0&&world.lightChecks==0&&original.equals(tile.writeToNBT(new NBTTagCompound())),"effective join no-op changed legacy aliases or appearance: "+state);
+        }
         System.out.println("No-op configuration PASS cases=6 updates=0 dirty=0 revisions=0 rebuilds=0 light-checks=0; raw saved texture aliases retained");
     }
     private static void distance() {

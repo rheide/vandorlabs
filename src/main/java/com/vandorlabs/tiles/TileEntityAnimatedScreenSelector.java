@@ -148,7 +148,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     private volatile com.vandorlabs.surface.TextureJoinSettings textureJoin=com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
     @Override public com.vandorlabs.surface.TextureJoinSettings textureJoin(){return world!=null&&getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableWall&&((com.vandorlabs.blocks.BlockProgrammableWall)getBlockType()).isPortholeShape()&&!joinPortholes?textureJoin.disabled():textureJoin;}
     @Override public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){
-        if(next.equals(textureJoin)&&joinPortholes==(next.direction!=0)&&glassTextureJoin==(next.direction!=0))return;textureJoin=next;joinPortholes=next.direction!=0;glassTextureJoin=next.direction!=0;layoutChanged();portholeChanged();
+        if(next.equals(textureJoin()))return;textureJoin=next;joinPortholes=next.direction!=0;glassTextureJoin=next.direction!=0;layoutChanged();portholeChanged();
     }
     private void settingsChanged() { com.vandorlabs.redstone.JoinedDisplayPower.changed(this);settingsRevision++;GlassMaterials.changed();markDirty();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.portholeAppearanceChanged(this); }
 
