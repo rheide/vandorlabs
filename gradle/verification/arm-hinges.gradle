@@ -13,3 +13,11 @@ task testArmHingeAllocation(type: JavaExec) {
     main = 'com.vandorlabs.gear.core.ArmHingeAllocationTest'
 }
 check.dependsOn testArmHinge, testArmHingeAllocation
+task testArmPoseCache(type: JavaExec) {
+    group = 'verification'
+    description = 'Check bounded kinematic pose reuse and isolation across caller threads'
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.gear.core.GearPoseCacheTest'
+}
+check.dependsOn testArmPoseCache
