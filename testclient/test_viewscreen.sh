@@ -163,6 +163,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-mining ]; then
             PREFIX=arm_mining_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_MINING_ONLY=true
+        elif [ "$TARGET" = arm-core-use ]; then
+            PREFIX=arm_core_use_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_CORE_ONLY=true VANDOR_LABS_ARM_CORE_USE_ONLY=true
         elif [ "$TARGET" = arm-live ]; then
             PREFIX=arm_live_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true
@@ -694,6 +697,11 @@ PYIMAGE
     if [ "$TARGET" = arm-mining ]; then
         grep -q "arm-payload-mining PASS" "$RUN_OUT/client.log"
         echo "Arm payload mining passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-core-use ]; then
+        grep -q "arm-live PASS carried-core-use checks=" "$RUN_OUT/client.log"
+        echo "Carried Core player operations passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-live ]; then

@@ -101,8 +101,11 @@ either its Core or a reserved part. Chips, settings and original capability data
 stay with the complete machine. Joined Rotating Arms include the whole validated
 Core footprint from their contact layer. Set the same Join, range, fold, payload
 mode, hinge and kink on every supporting column; independent neighbouring arms
-remain real obstacles. Configure or dismantle it at a supported native
-endpoint; unsupported tilts stay captured. See the
+remain real obstacles. At a fractional captured pose, body clicks cycle the
+machine’s activity and the Configurizer opens its existing settings dialog
+without moving the arm. Settings remain with the machine through saving and
+native restoration. Chip insertion/removal and dismantling require a supported
+native endpoint; unsupported tilts stay captured. See the
 [Core construction guide](../universal-constructors.md).
 
 Taxi conversion keeps its inspected geometry separate from the geometry prepared with new Coupler ownership data. Valid Couplers can assemble, park and recapture; actual source edits during preparation still refuse without removing the craft.

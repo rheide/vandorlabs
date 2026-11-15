@@ -85,6 +85,12 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld)||((com.vandorlabs.vehicle.VehicleWorld)world).parent.isRemote||world.getTileEntity(pos)!=this||payload!=expected||next==null||next.materialized())throw new IllegalArgumentException("Captured arm owner changed");payload=next;
     }
 
+    /** Configuration-only publication: the installed physical root retains sole attachment ownership. */
+    void installCoreSettings(ArmPayload expected,ArmPayload next){
+        if(world==null||world.isRemote||!(world instanceof net.minecraft.world.WorldServer)||!world.getMinecraftServer().isCallingFromMinecraftThread()||world.getTileEntity(pos)!=this||!isOperational()||payload!=expected||expected==null||expected.materialized()||expected.hasOwnershipJournal()||ArmTransactions.locked(world,pos)||next==null||next.materialized())throw new IllegalArgumentException("Carried machine ownership changed");
+        payload=next;sync();
+    }
+
     void removePayloadCell(BlockPos cell){if(payload==null||payload.materialized())throw new IllegalArgumentException("Payload is no longer captured");payload=payload.without(cell);sync();GearGeometry.register(this);}
     public void operator(net.minecraft.entity.player.EntityPlayer player){if(player!=null){operator=player.getUniqueID();com.vandorlabs.tiles.WorldActionAuthorization.authorize(this,player);markDirty();}}
     public boolean preparePayloadMotion(){

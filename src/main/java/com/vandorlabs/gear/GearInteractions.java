@@ -130,6 +130,7 @@ public final class GearInteractions {
         RayTraceResult hit=trace(player.world,start,end);if(hit==null||!hit.getBlockPos().equals(source))return;
         TileEntity raw=player.world.getTileEntity(source);GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;if(root==null)return;
         for(BlockPos member:root.members())com.vandorlabs.vehicle.VehicleService.permission(player,member);
+        if(ArmCoreUse.use(player,root,hit))return;
         if(player.getHeldItemMainhand().getItem() instanceof net.minecraft.item.ItemBlock&&((net.minecraft.item.ItemBlock)player.getHeldItemMainhand().getItem()).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){attachTrack(player,root,hit);return;}
         if(player.getHeldItemMainhand().getItem() instanceof net.minecraft.item.ItemBlock&&ArmLooseGearData.foot(((net.minecraft.item.ItemBlock)player.getHeldItemMainhand().getItem()).getBlock().getDefaultState())){try{attachLandingFoot(player,root,hit);}catch(IllegalArgumentException denied){root.showError(denied.getMessage());throw denied;}return;}
         if(player.getHeldItemMainhand().getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_MODULAR_GEAR,player.world,root.getPos().getX(),root.getPos().getY(),root.getPos().getZ());

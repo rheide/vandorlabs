@@ -39,6 +39,12 @@ Oculus shutters use a one-second stroke with continuous reversals. Dish models s
 
 These settings control appearances; they do not add propulsion, dimension travel, crafting or navigation calculations.
 
+## Core controls on arms (Forge 1.12.2)
+
+When a machine stays captured at a fractional arm pose, ordinary body clicks cycle its existing activity. The Configurizer opens its normal machine settings dialog through either the Core or a reserved part. Both actions leave the supporting arm’s target unchanged. Display, activation and channel edits remain on the arm-owned machine snapshot, including through saving and restoration to native blocks.
+
+Chip insertion/removal and dismantling require a native block pose. Captured chip clicks consume the interaction without transferring an item or moving the arm.
+
 ## Native chip mount
 
 Models with an authored holder always show it. It uses the standalone Data Chip Mount's native frame, size, insertion animation and physical item retention. Right-click with any Data Chip to insert one item; empty-hand right-click removes it. The chip stays inserted until removed, accepts every company, and does not control the machine's activity.

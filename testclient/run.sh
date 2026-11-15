@@ -79,6 +79,7 @@ CAPTURE_JVM+=("-Dvandorlabs.armEndpointOnly=${VANDOR_LABS_ARM_ENDPOINT_ONLY:-fal
 CAPTURE_JVM+=("-Dvandorlabs.armJoinedOnly=${VANDOR_LABS_ARM_JOINED_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armMiningOnly=${VANDOR_LABS_ARM_MINING_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armCoreOnly=${VANDOR_LABS_ARM_CORE_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.armCoreUseOnly=${VANDOR_LABS_ARM_CORE_USE_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.signChecksOnly=${VANDOR_LABS_SIGN_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armStartOnly=${VANDOR_LABS_ARM_START_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armPushOnly=${VANDOR_LABS_ARM_PUSH_ONLY:-false}")

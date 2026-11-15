@@ -72,7 +72,7 @@
 
 - Move a complete formed Core construction by touching its Core or any reserved part with an Extender or Rotating Arm. Preserve every reservation, chip, setting and opaque capability field through native endpoints, reversal and durable recovery.
 - Include the complete validated Core footprint when joined Rotating Arms contact it. Match Join, range, fold, payload mode, hinge and kink across the columns; an independent neighbouring arm can still obstruct the machine.
-- Keep unsupported tilted poses captured. Refuse captured dismantling or partial mining; ordinary native configuration and dismantling remain available at supported endpoints. See the [Core construction guide](docs/universal-constructors.md).
+- Keep unsupported tilted poses captured. Ordinary body clicks cycle a captured machine’s activity, and the Configurizer opens its existing settings dialog without toggling the supporting arm. Preserve settings and per-channel data through saving and native restoration. Chip insertion/removal, dismantling and partial mining require a supported native pose. See the [Core construction guide](docs/universal-constructors.md).
 
 ### Landing foot controls (Forge 1.12.2 and NeoForge 1.21.1)
 

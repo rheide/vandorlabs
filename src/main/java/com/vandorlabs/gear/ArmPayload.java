@@ -78,6 +78,16 @@ public final class ArmPayload {
 
     private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
     ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
+    /** Only machine controls may change; inventory, opaque capabilities and all other cells remain exact. */
+    ArmPayload withCoreData(BlockPos owner,NBTTagCompound data,boolean activityOnly){
+        if(materialized||hasOwnershipJournal())throw new IllegalArgumentException("Carried machine is unavailable");ArmCorePayload.validate(blocks);VehicleStructure.Cell original=blocks.at(owner);
+        if(original==null||!(original.state.getBlock() instanceof com.vandorlabs.blocks.BlockConstructorCore)||!original.state.getValue(com.vandorlabs.blocks.BlockConstructorCore.FORMED))throw new IllegalArgumentException("Carried machine owner changed");
+        NBTTagCompound check=data.copy(),before=original.tileData();String[] fields=activityOnly?new String[]{"MachineActivity"}:ArmCoreUse.CONFIG;
+        for(String field:fields){if(before.hasKey(field))check.setTag(field,before.getTag(field).copy());else check.removeTag(field);}if(!check.equals(before))throw new IllegalArgumentException("Machine edit changed immutable attachment data");
+        if(activityOnly&&(!data.hasKey("MachineActivity",3)||data.getInteger("MachineActivity")<0||data.getInteger("MachineActivity")>2))throw new IllegalArgumentException("Invalid machine activity");
+        List<VehicleStructure.Cell> cells=new ArrayList<>(blocks.cells),placed=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);for(int i=0;i<cells.size();i++)if(cells.get(i)==original){cells.set(i,new VehicleStructure.Cell(owner,original.state,data));if(placed!=null){VehicleStructure.Cell old=placed.get(i);NBTTagCompound mapped=old.tileData();for(String field:fields)if(data.hasKey(field))mapped.setTag(field,data.getTag(field).copy());else mapped.removeTag(field);placed.set(i,new VehicleStructure.Cell(old.pos,old.state,mapped));}break;}
+        ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(cells),offset,false,placedOffset));if(placed!=null)result.placedBlocks=VehicleStructure.display(placed);result.localCollision=localCollision;result.collisionCellEnds=collisionCellEnds;result.couplerPower=couplerPower;return result;
+    }
     /** Read-only known-producer sampling, without constructing a nested tile/capability view. */
     public Boolean snapshotCouplerPower(GearTileEntity arm,BlockPos originalCell){
         VehicleStructure.Cell selected=blocks.at(originalCell);if(materialized||selected==null||!(selected.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Captured Coupler source unavailable");
