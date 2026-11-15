@@ -4,14 +4,13 @@ Forge 1.12.2 remains the default development target on `master`, at mod version 
 
 ## Current conversion boundary
 
-Complete the current 2.10 follow-ups before continuing native conversion.
-The next conversion scope is Ramp Controllers; chairs and seats;
+The current native completion scope comprises Ramp Controllers; chairs and seats;
 Turntables, Copy Controllers and Surface blocks; Tracks and remaining landing
-gear; and the Industrial Table and remaining control variants. Extract reusable
-behavior into the portable Java 8 code while retaining platform-specific
-lifecycle and rendering adapters. Stop after these families. Native Vehicle
-Mode and other unlisted families remain outside this increment. Release gates
-remain deferred until user testing.
+gear; and the Industrial Table and remaining control variants. Shared portable
+Java 8 policies provide the common behavior, with platform lifecycle and rendering
+adapters. Native Vehicle Mode and other unlisted families remain deferred.
+Release gates remain pending user testing. The 2.10 follow-ups now include public
+native Module Racks and shared Single / Double arm hinges with independent Kink.
 
 ## Integrated scope
 
@@ -554,7 +553,7 @@ The final accepted Source candidate passes the standard Java 8 build (113 tasks)
 
 The NeoForge 1.21.1 arm editor exposes Join arms, Range, Carry load and Height in the existing Mechanism/Redstone layout, alongside fold, payload, hinge and angle controls. Foot direction appears for formed Skis and Wheels. The Configurizer uses the same dedicated configuration route as mechanism targeting; empty-hand use remains a manual toggle. Horizontal bare Extenders also expose Push blocks at materialized endpoints.
 
-Editor sessions retain the originally selected member position and UUID while resolving its current controller. Joining can select another primary without closing the window. Choice replies identify the exact resolved controller, and stale windows or replaced members cannot configure a new installation. The [native construction guide](../native-joined-arm-platforms.md) documents supported columns and platforms with native construction-stage images. The ten supported modular arm, mount and foot items are enabled in ordinary native registration and creative/search. Native placement and moving restart checks cover regular and Large arms on six mounting faces, connected feet and joined platforms. Typed asynchronous journals protect payload capture, native publication, active landing-foot adoption and captured-block harvest. Harvest drops remain frozen until both terrain and native entity records are durable; abrupt recovery restores one owner before gameplay. Moving platforms transport existing native players, while a newly obstructed stroke restores the last valid native endpoint when its return path is clear. Duplifier projections copy arm and redstone choices without physical ownership, and use the existing settings-only Undo path. Horizontal Extender contact pushing uses typed asynchronous journals and retains pushed terrain independently of the original platform. Tracks and Vehicle Mode remain unsupported.
+Editor sessions retain the originally selected member position and UUID while resolving its current controller. Joining can select another primary without closing the window. Choice replies identify the exact resolved controller, and stale windows or replaced members cannot configure a new installation. The [native construction guide](../native-joined-arm-platforms.md) documents supported columns and platforms with native construction-stage images. The ten supported modular arm, mount and foot items are enabled in ordinary native registration and creative/search. Native placement and moving restart checks cover regular and Large arms on six mounting faces, connected feet and joined platforms. Typed asynchronous journals protect payload capture, native publication, active landing-foot adoption and captured-block harvest. Harvest drops remain frozen until both terrain and native entity records are durable; abrupt recovery restores one owner before gameplay. Moving platforms transport existing native players, while a newly obstructed stroke restores the last valid native endpoint when its return path is clear. Duplifier projections copy arm and redstone choices without physical ownership, and use the existing settings-only Undo path. Horizontal Extender contact pushing uses typed asynchronous journals and retains pushed terrain independently of the original platform. Tracks now use shared topology, mounting, appearance and mesh policies, with public style selection and native arm formation. Small/Medium/Large stationary side wheels are also public. Legacy integrated telescoping families and Vehicle Mode remain unsupported.
 
 ## Native resource ports and storage
 

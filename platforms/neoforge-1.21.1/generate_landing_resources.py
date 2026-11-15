@@ -19,7 +19,12 @@ def generate(root,out):
         write(f'assets/vandorlabs/blockstates/{name}.json',states)
         item=remap(json.loads((source/f'models/item/{name}.json').read_text()))
         write(f'assets/vandorlabs/models/item/{name}.json',item)
-        recipe=json.loads((source/f'recipes/{name}.json').read_text());recipe['result']['id']=recipe['result'].pop('item');recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:'+name}]
+        recipe=json.loads((source/f'recipes/{name}.json').read_text());
+        for ingredient in recipe.get('key',{}).values():
+            if ingredient.get('item')=='minecraft:wool' and ingredient.get('data')==15:
+                ingredient['item']='minecraft:black_wool';ingredient.pop('data')
+            elif 'data' in ingredient:raise ValueError('Unsupported side-wheel ingredient metadata')
+        recipe['result']['id']=recipe['result'].pop('item');recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:'+name}]
         write(f'data/vandorlabs/recipe/{name}.json',recipe)
         write(f'data/vandorlabs/loot_table/blocks/{name}.json',{'type':'minecraft:block','neoforge:conditions':[{'type':'neoforge:item_exists','item':'vandorlabs:'+name}],'pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     return []

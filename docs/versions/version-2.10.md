@@ -95,7 +95,7 @@ use durable recovery, and platforms carry native players through motion.
 
 Horizontal Extenders also support **Push blocks** for ordinary solid terrain,
 including joined platforms. Pushed terrain stays in place when the original
-platform retracts. Tracks and Vehicle Mode remain unavailable on this target. Unsupported vanilla endpoint orientations stay captured and selectable
+platform retracts. Tracks now join regular and Large arm groups with Compact, Armoured and Bogie styles. Small, Medium and Large stationary side wheels mount on supported slab sides; see [native Tracks and side wheels](../native-tracks-and-wheels.md). Vehicle Mode remains unavailable on this target. Unsupported vanilla endpoint orientations stay captured and selectable
 until they reach a representable endpoint. See the
 [native arm construction guide](../native-joined-arm-platforms.md).
 

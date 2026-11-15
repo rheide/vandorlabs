@@ -799,8 +799,7 @@
       ],
       "remaining": [
         "Vehicle-specific landing effects and support admission remain deferred",
-        "Legacy nonmodular decorative landing-gear families remain unconverted",
-        "Tracks remain unavailable"
+        "Legacy nonmodular decorative landing-gear families remain unconverted"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
@@ -815,12 +814,21 @@
         "landing_plate",
         "landing_ski",
         "landing_wheel",
-        "large_landing_wheel"
+        "large_landing_wheel",
+        "compact_track",
+        "armoured_track",
+        "bogie_track",
+        "wheel_small",
+        "wheel_medium",
+        "wheel_large"
       ],
       "implemented": [
         "Public regular/Large mounts, connected Plates/Skis and regular/four-cell Large Wheels with six-face formation and configured items",
         "Separate Foot direction and Middle hinge settings, active grid-socket foot adoption and settings-only copying",
-        "Native construction guide, authored bounded meshes, padded items and focused placement/restart/player/render acceptance"
+        "Native construction guide, authored bounded meshes, padded items and focused placement/restart/player/render acceptance",
+        "Public canonical Track with Compact/Armoured/Bogie styles, hidden legacy aliases, six-face regular/Large arm formation and shared authored mesh/topology policies.",
+        "Public Small/Medium/Large stationary side wheels with shared footprint metadata, authored models, slab mounting and one-owner mining.",
+        "Focused native 108-profile Track mounting/size/motion matrix, actual Survival configuration/copy/Undo/stroke/mining, public catalog and 144 emitted appearance profiles pass. Exact collision caches avoid repeated shape optimization during lighting."
       ]
     },
     {
@@ -1077,7 +1085,7 @@
       "id": "tracks",
       "label": "Track assemblies",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "historical_neoforge_1_21_1": "unimplemented",
       "legacy_block_ids": [
         "compact_track",
@@ -1087,8 +1095,17 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Native parts, topology, authored models and item padding; vehicle propulsion integration deferred",
-        "Native adapter integration and focused runtime/render acceptance"
+        "Vehicle propulsion, Taxi belt animation and vehicle-specific support admission remain deferred."
+      ],
+      "modern_registered_block_ids": [
+        "compact_track",
+        "armoured_track",
+        "bogie_track"
+      ],
+      "implemented": [
+        "Canonical Compact/Armoured/Bogie style selection, hidden compatibility IDs, bounded shared topology/mounting and authored mesh policies.",
+        "Regular/Large six-face native arm groups, typed settings copying/Undo, configured items and native mining repairs.",
+        "Focused 108-profile installed motion matrix, ordinary Survival player path, public catalog, authored emitted geometry and native construction images."
       ]
     }
   ],

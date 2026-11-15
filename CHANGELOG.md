@@ -36,6 +36,9 @@
 
 ### Native furniture, controls and surfaces (NeoForge 1.21.1)
 
+- Add the canonical Track with Compact, Armoured and Bogie styles, regular/Large six-face arm formation, bounded shared geometry and settings-only Duplifier copying/Undo. Retain hidden historical Track IDs. Add Small, Medium and Large stationary slab-side wheels with native footprint ownership and one configured drop. See [Native Tracks and side wheels](docs/native-tracks-and-wheels.md).
+- Cache exact arm collision shapes and answer lighting opacity without rebuilding geometry. Keep moving pose changes and world unload invalidation bounded.
+
 - Add stationary Programmable Chairs, Luxury Seats, Military Seats and Pilot Seats with shared authored settings, connected benches, native sitting/dismounting, configured two-cell item ownership and dedicated previous-value dialogs. Preserve saved Pilot data while keeping Vehicle/Taxi behavior and moving-seat capture unavailable. See [Native seating](docs/native-seating.md).
 
 - Add the canonical Industrial Table with authored connected end struts, ordinary and inverted placement, tabletop support, padded items and native saved block states. Share exact collision geometry with Forge 1.12.2 without adding a table entity or ticker.

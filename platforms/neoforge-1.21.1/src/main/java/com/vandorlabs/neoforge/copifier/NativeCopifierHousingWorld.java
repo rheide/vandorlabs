@@ -33,6 +33,15 @@ public final class NativeCopifierHousingWorld {
             if(!plan.applicable())return false;NativeCopifierUndo.before(actor,level,pos);return NativeCopifierFurnitureEdit.apply(tile,plan);
         }
     }
+    private record Track(com.vandorlabs.neoforge.gear.NativeGearEntity tile) implements Target {
+        public CompoundTag capture(){return com.vandorlabs.neoforge.gear.track.NativeTrackCopiedSettings.capture(tile);}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            final com.vandorlabs.neoforge.gear.track.NativeTrackCopiedSettings.Plan plan;
+            try{plan=com.vandorlabs.neoforge.gear.track.NativeTrackCopiedSettings.prepare(tile,values);}catch(IllegalArgumentException malformed){return false;}
+            if(!plan.applicable()||!com.vandorlabs.neoforge.gear.track.NativeTrackCopiedSettings.available(tile,actor))return false;
+            NativeCopifierUndo.before(actor,level,pos);return com.vandorlabs.neoforge.gear.track.NativeTrackCopiedSettings.apply(tile,actor,plan);
+        }
+    }
     private record Gear(com.vandorlabs.neoforge.gear.NativeGearEntity tile) implements Target {
         public CompoundTag capture(){return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.capture(tile.settings());}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -165,7 +174,7 @@ public final class NativeCopifierHousingWorld {
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
         if(tile instanceof com.vandorlabs.neoforge.seating.NativeChairEntity chair){var owner=com.vandorlabs.neoforge.seating.NativeSeatBlock.owner(level,pos);return owner==null?null:new Seat(owner);}
         if(tile instanceof com.vandorlabs.neoforge.plate.NativePlateEntity plate)return plate.isChannelMemberActive()?new Plate(plate):null;
-        if(tile instanceof com.vandorlabs.neoforge.gear.NativeGearEntity gear){var root=gear.controllerEntity();return root!=null&&!root.inert()?new Gear(root):null;}
+        if(tile instanceof com.vandorlabs.neoforge.gear.NativeGearEntity gear){var root=gear.controllerEntity();if(gear instanceof com.vandorlabs.neoforge.gear.track.NativeTrackEntity&&root==null)return gear.visual().owner()==null&&!gear.inert()?new Track(gear):null;return root!=null&&!root.inert()?(root.trackDescriptor()!=null?new Track(root):new Gear(root)):null;}
         if(tile instanceof com.vandorlabs.neoforge.ports.NativePortOwner port)return !port.inert()?new Port(port):null;
         if(tile instanceof com.vandorlabs.neoforge.canopy.NativeCanopyEntity canopy){var owner=com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.owner(canopy);return owner.available()&&com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.installed(owner)&&owner.publication().draws()?new Canopy(owner):null;}
         if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)return !screen.inert()&&screen.isChannelMemberActive()?new Screen(screen):null;
