@@ -34,8 +34,20 @@ public final class NativeEntityCheckpoint {
     public boolean loaded(){
         thread();boolean ready=true;var manager=manager();var access=(NativeGearEntityManagerAccess)(Object)manager;var states=((NativeRampEntityManagerAccess)(Object)manager).vandorlabs$rampActorLoads();
         for(var chunk:chunks)if(!manager.areEntitiesLoaded(chunk.toLong())){ready=false;Object state=states.get(chunk.toLong());if(state instanceof Enum<?> value&&value.name().equals("FRESH"))access.vandorlabs$gearLoad(chunk.toLong());}
-        // Startup recovery has no world ticks to drain the native asynchronous inbox.
-        if(!ready&&level.getServer().getTickCount()==0)access.vandorlabs$gearInbox();return ready;
+        // Startup recovery has no server ticks to execute EntityStorage's queued deserializer.
+        // Pump at most one item from that private native mailbox, then its completion inbox.
+        // Calling mailbox.run() would reschedule and potentially drain recursively on this thread.
+        // Other dispatchers already progress independently; never race their mailbox consumer.
+        if(!ready&&level.getServer().getTickCount()==0){
+            var storage=((NativeRampEntityManagerAccess)(Object)manager).vandorlabs$rampActorStorage();
+            if(storage instanceof EntityStorage){
+                var mailbox=((NativeRampEntityStorageAccess)(Object)storage).vandorlabs$entityDeserializerQueue();
+                var deserializer=(NativeEntityDeserializerAccess)(Object)mailbox;
+                if(deserializer.vandorlabs$entityDispatcher()==level.getServer())deserializer.vandorlabs$pollEntityDeserializer();
+            }
+            access.vandorlabs$gearInbox();
+        }
+        return ready;
     }
     /** Loaded actor sections also contain actors not yet admitted to the visible-world lookup. */
     public Entity actor(UUID identity){

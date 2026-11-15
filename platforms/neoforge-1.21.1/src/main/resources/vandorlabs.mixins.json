@@ -25,6 +25,7 @@
     "NativeRampEntityLevelAccess",
     "NativeRampEntityManagerAccess",
     "NativeRampEntityStorageAccess",
+    "NativeEntityDeserializerAccess",
     "NativeRampHopperGuard",
     "NativeRampInventoryGuard",
     "NativeRampLevelGuard",

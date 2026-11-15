@@ -6,5 +6,6 @@ import org.spongepowered.asm.mixin.gen.Accessor;
 @Mixin(EntityStorage.class)
 public interface NativeRampEntityStorageAccess {
  @Accessor("simpleRegionStorage") SimpleRegionStorage vandorlabs$rampActorRegions();
+ @Accessor("entityDeserializerQueue") net.minecraft.util.thread.ProcessorMailbox<Runnable> vandorlabs$entityDeserializerQueue();
  @Accessor("emptyChunks") LongSet vandorlabs$rampActorEmptyChunks();
 }
