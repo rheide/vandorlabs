@@ -85,15 +85,21 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         int light = tile.getWorld().getCombinedLight(tile.getPos(), 0);
         light=(light&0xffff0000)|GlassInsertLighting.block(tile,light&65535);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
+        // Static atlas panes use the same world-space placement as the ordered
+        // batch, avoiding different rounding at high-contrast artwork edges.
+        boolean placed=material!=null&&GlazingDisplay.atlasStatic(tile);
+        boolean rotated=state.getValue(BlockGlassWall.ROTATED);
+        int depth=state.getValue(BlockGlassWall.DEPTH);
         GlStateManager.pushMatrix();
-        GlStateManager.translate(x,y,z);
-        if (state.getValue(BlockGlassWall.ROTATED)) {
-            GlStateManager.translate(.5,0,.5);
-            GlStateManager.rotate(-90,0,1,0);
-            GlStateManager.translate(-.5,0,-.5);
+        if(!placed){
+            GlStateManager.translate(x,y,z);
+            if (rotated) {
+                GlStateManager.translate(.5,0,.5);
+                GlStateManager.rotate(-90,0,1,0);
+                GlStateManager.translate(-.5,0,-.5);
+            }
+            GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(depth) / 16D);
         }
-        int depth = state.getValue(BlockGlassWall.DEPTH);
-        GlStateManager.translate(0, 0, com.vandorlabs.blocks.PanelDepth.offset(depth) / 16D);
         GlStateManager.disableLighting();
         if(opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,
@@ -107,6 +113,7 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
         BufferBuilder b=Tessellator.getInstance().getBuffer();
         b.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
         if(tile.getMaterial()<0)GlassNativePanes.get(tile.getShade(),size,tile.getTint(),false,0).draw(b,0,0,0,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+        else if(placed){double offset=com.vandorlabs.blocks.PanelDepth.offset(depth)/16D;GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()).drawPlacedColored(b,x-(rotated?offset:0),y,z+(rotated?0:offset),rotated?3:0,light,opacity);}
         else{GlStateManager.scale(1F/16,1F/16,1F/16);GlazingDisplay.draw(GlassSurfaceMapping.map(materialPlane(),material,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout()),tile,b,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX,opacity);}
         Tessellator.getInstance().draw();
         GlStateManager.enableCull();

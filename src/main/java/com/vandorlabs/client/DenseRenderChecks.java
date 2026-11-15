@@ -83,6 +83,7 @@ final class DenseRenderChecks {
                 VehicleWorld world=new VehicleWorld(mc.world,VehicleStructure.display(cells));world.origin=new BlockPos(0,80,0);dispatcher.world=world;dispatcher.entityX=rotated?-6:3;dispatcher.entityY=6;dispatcher.entityZ=rotated?3:-6;
                 GlStateManager.loadIdentity();GlStateManager.rotate(8,1,0,0);if(rotated)GlStateManager.rotate(90,0,1,0);GlStateManager.translate(-3,-6,-3);
                 List<net.minecraft.tileentity.TileEntity> tiles=new ArrayList<>(world.tiles.values());
+                glassPlacement(scene,tiles);
                 Runnable draw=()->{
                     GlazingRenderOrder.begin(world);
                     for(int rp=0;rp<2;rp++){net.minecraftforge.client.ForgeHooksClient.setRenderPass(rp);for(net.minecraft.tileentity.TileEntity tile:tiles)if(tile.shouldRenderInPass(rp))dispatcher.render(tile,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ(),1,-1,1);}
@@ -103,6 +104,28 @@ final class DenseRenderChecks {
             }
         }finally{GlazingRenderOrder.batchPanes=oldBatch;GlazingRenderOrder.end();net.minecraftforge.client.ForgeHooksClient.setRenderPass(pass);dispatcher.world=old;dispatcher.entityX=oldX;dispatcher.entityY=oldY;dispatcher.entityZ=oldZ;GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);f.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
     }
+    /** Independent authored local-pixel transform, separate from the batch emitter. */
+    private static void glassPlacement(String scene,List<net.minecraft.tileentity.TileEntity> tiles){
+        BufferBuilder local=new BufferBuilder(4096),placed=new BufferBuilder(4096);int checked=0;double maximum=0;
+        for(net.minecraft.tileentity.TileEntity raw:tiles){
+            TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;if(tile.getMaterial()<0)continue;
+            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
+            StaticSurfaceMesh mesh=GlassSurfaceMapping.map(TEProgrammableGlass.materialPlane(),sprite,GlassSurfaceGroups.layout(tile),true,0,0,tile.getTextureLayout());
+            IBlockState state=tile.getWorld().getBlockState(tile.getPos());boolean rotated=state.getValue(com.vandorlabs.blocks.BlockGlassWall.ROTATED);double offset=com.vandorlabs.blocks.PanelDepth.offset(state.getValue(com.vandorlabs.blocks.BlockGlassWall.DEPTH))/16D;
+            int light=tile.getWorld().getCombinedLight(tile.getPos(),0);light=(light&0xffff0000)|GlassInsertLighting.block(tile,light&65535);float opacity=GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
+            local.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());placed.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());mesh.drawColored(local,light>>>16,light&65535,1,1,1,opacity);mesh.drawPlacedColored(placed,tile.getPos().getX()-(rotated?offset:0),tile.getPos().getY(),tile.getPos().getZ()+(rotated?0:offset),rotated?3:0,light,opacity);local.finishDrawing();placed.finishDrawing();
+            require(local.getVertexCount()==placed.getVertexCount(),"placement vertex count scene="+scene);int stride=local.getVertexFormat().getNextOffset(),color=local.getVertexFormat().getColorOffset(),uv=local.getVertexFormat().getUvOffsetById(0),lightmap=local.getVertexFormat().getUvOffsetById(1),normal=local.getVertexFormat().getNormalOffset();
+            for(int n=0;n<local.getVertexCount();n++){
+                int p=n*stride;double x=local.getByteBuffer().getFloat(p)/16D,y=local.getByteBuffer().getFloat(p+4)/16D,z=local.getByteBuffer().getFloat(p+8)/16D;
+                double[] expected={tile.getPos().getX()+(rotated?1-z-offset:x),tile.getPos().getY()+y,tile.getPos().getZ()+(rotated?x:z+offset)};
+                for(int axis=0;axis<3;axis++){double error=Math.abs(expected[axis]-placed.getByteBuffer().getFloat(p+axis*4));maximum=Math.max(maximum,error);require(error<1e-6,"authored placement scene="+scene+" tile="+tile.getPos()+" vertex="+n+" axis="+axis+" error="+error);}
+                for(int field:new int[]{color,uv,uv+4,lightmap})require(local.getByteBuffer().getInt(p+field)==placed.getByteBuffer().getInt(p+field),"placement color/UV/light scene="+scene+" field="+field);
+                int nx=local.getByteBuffer().get(p+normal),ny=local.getByteBuffer().get(p+normal+1),nz=local.getByteBuffer().get(p+normal+2);
+                require(placed.getByteBuffer().get(p+normal)==(rotated?-nz:nx)&&placed.getByteBuffer().get(p+normal+1)==ny&&placed.getByteBuffer().get(p+normal+2)==(rotated?nx:nz),"placement authored normal scene="+scene);checked++;
+            }
+        }
+        System.out.println("[vandorlabs][reprolab] dense-glass placement PASS scene="+scene+" vertices="+checked+" max-position-error="+maximum+" exact-UV-color-light authored-normals");
+    }
     private static void glassDifference(File out,String scene,BufferedImage before,BufferedImage after,List<net.minecraft.tileentity.TileEntity> tiles)throws Exception{
         BufferedImage diff=new BufferedImage(before.getWidth(),before.getHeight(),BufferedImage.TYPE_INT_RGB);int maximum=0;
         for(int y=0;y<diff.getHeight();y++)for(int x=0;x<diff.getWidth();x++){
@@ -115,7 +138,7 @@ final class DenseRenderChecks {
                 TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)raw;if(tile.getMaterial()<0)continue;
                 net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
                 GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(tile);StaticSurfaceMesh mesh=GlassSurfaceMapping.map(TEProgrammableGlass.materialPlane(),sprite,layout,true,0,0,tile.getTextureLayout());
-                BufferBuilder local=new BufferBuilder(256),batch=new BufferBuilder(256);local.begin(GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);batch.begin(GL11.GL_QUADS,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);
+                BufferBuilder local=new BufferBuilder(256),batch=new BufferBuilder(256);local.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());batch.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
                 mesh.drawColored(local,0,0,1,1,1,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()));
                 boolean rotated=tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockGlassWall.ROTATED);double offset=com.vandorlabs.blocks.PanelDepth.offset(tile.getWorld().getBlockState(tile.getPos()).getValue(com.vandorlabs.blocks.BlockGlassWall.DEPTH))/16D;
                 mesh.drawPlacedColored(batch,tile.getPos().getX()-(rotated?offset:0),tile.getPos().getY(),tile.getPos().getZ()+(rotated?0:offset),rotated?3:0,0,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()));local.finishDrawing();batch.finishDrawing();
