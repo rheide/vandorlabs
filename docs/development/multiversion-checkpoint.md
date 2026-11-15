@@ -9,7 +9,9 @@ Turntables, Copy Controllers and Surface blocks; Tracks and remaining landing
 gear; the Industrial Table and remaining control variants; and the Core family. Shared portable
 Java 8 policies provide the common behavior, with platform lifecycle and rendering
 adapters. Native Vehicle Mode and other unlisted families remain deferred.
-Release gates remain pending user testing. The 2.10 follow-ups now include public
+The Forge 2.10.0 release review is complete, using the full frozen baseline
+inventory and relevant repair reruns; see the [validation boundaries](../release-compatibility-2.10.md#validation-boundaries).
+The separate native checks do not establish full conversion parity. The 2.10 follow-ups include public
 native Module Racks and shared Single / Double arm hinges with Inward / Outward
 Kink relative to Fold. Forge Battery chunk loading now defers facing reads until
 loading settles, avoiding recursive capability initialization in existing pipe networks.

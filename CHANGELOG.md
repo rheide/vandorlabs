@@ -1,6 +1,18 @@
 # Changelog
 
-## Unreleased — 2.10.0
+## 2.10.0
+
+### Release review and recovery
+
+- Keep native Arm and Ramp inventories frozen during publication callbacks. Restrict internal block writes to one exact cell at a time so retained inventory wrappers cannot duplicate captured contents.
+- Verify actual native entity write completion and expected owner records before completing recovery checkpoints. Refuse unsupported Ramp actors before capture, and retain malformed Arm drop escrow inertly instead of throwing during world load.
+- Remove quadratic retained-Glass restoration and native join-cache accounting. Preserve cache budgets, lifecycle invalidation and quiet-frame reuse.
+- Reapplying an identical effective join policy preserves dormant settings without dirtying or rebuilding ordinary blocks.
+- Restore the original Arm payload coordinate mapping after a failed placement is completely rolled back; retain the destination mapping when unfinished cleanup still needs journal recovery.
+- Invalidate cached vehicle joint render transforms when loading a replacement pose.
+- Finish tall Segmented Door terrain handoffs when lower sections are outside the camera view, using bounded asynchronous upload scheduling.
+- Use consistent vertex placement for individual and batched static material Glass panes, avoiding artwork-edge rounding differences while preserving their normals, lighting and UVs.
+- See the [saved-data and performance review](docs/release-compatibility-2.10.md) for findings, validation boundaries and compatibility details.
 
 ### Module Rack (Forge 1.12.2 and NeoForge 1.21.1)
 

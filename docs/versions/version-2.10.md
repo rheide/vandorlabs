@@ -5,9 +5,10 @@ into a compact rack, and move power, fluids and items through configurable ports
 Vandor Labs 2.10 also expands directional artwork joining and brings more
 building, furniture and mechanism families to Minecraft 1.21.1.
 
-**Development preview:** user testing is underway; final release validation is
-pending. Forge 1.12.2 remains the main target. NeoForge 1.21.1 is experimental,
-and its converted standalone features do not include Vehicle Mode.
+Forge 1.12.2 is the release target. The [compatibility and performance
+review](../release-compatibility-2.10.md) records the release checks and their
+limits. NeoForge 1.21.1 remains experimental, and its converted standalone
+features do not include Vehicle Mode.
 
 On Forge 1.12.2, animated Core machines keep their client animation phase while
 arms capture and restore them. Dish scanning continues through native endpoints
@@ -196,6 +197,6 @@ Older Battery saves load without recursively reading their own chunk; stored
 energy and side configuration are retained. Taxi assembly accepts unchanged
 Coupler-equipped craft while still refusing actual edits during preparation.
 
-For detailed changes, read the [2.10 changelog](../../CHANGELOG.md#unreleased--2100).
+For detailed changes, read the [2.10 changelog](../../CHANGELOG.md#2100).
 Use the [1.21.1 coverage inventory](../development/feature-coverage.md) for the
 current conversion boundaries.
