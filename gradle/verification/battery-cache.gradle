@@ -9,3 +9,14 @@ task testBatteryCache(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 check.dependsOn testBatteryCache
+
+task testBatteryColdRead(type: JavaExec) {
+    group = 'verification'
+    description = 'Reject world reads during old/new Battery NBT decode and bind legacy facing after chunk load'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.BatteryColdReadChecks'
+    workingDir = file("$buildDir/non-rendering-checks")
+    maxHeapSize = '1g'
+    doFirst { workingDir.mkdirs() }
+}

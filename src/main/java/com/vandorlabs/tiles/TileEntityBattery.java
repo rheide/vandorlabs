@@ -14,6 +14,8 @@ public final class TileEntityBattery extends PowerPortTile {
     private boolean blockShape=true,energyDirty,legacyMissingPolicy;
     private int legacyRate,legacyFace=-1,legacyHousing=-1;
     private ResourcePortSettings legacySettings;
+    private EnumFacing loadedInputSide=EnumFacing.NORTH;
+    private boolean facingQueued;
     public TileEntityBattery(){super(CAPACITY);}
     public boolean hasCustomHousingTexture(){return settings().housingChoice>=0;}
     public int getHousingTexture(){return Math.max(0,settings().housingChoice);}
@@ -21,7 +23,27 @@ public final class TileEntityBattery extends PowerPortTile {
     public boolean isBlockShape(){return blockShape;}
     public float chargeFraction(){return energy/(float)CAPACITY;}
     public void setBlockShape(boolean block){if(inert())return;if(blockShape!=block){blockShape=block;markDirty();sync();}}
-    public EnumFacing inputSide(){return world==null||!(world.getBlockState(pos).getBlock() instanceof BlockBattery)?EnumFacing.NORTH:world.getBlockState(pos).getValue(BlockBattery.FACING);}
+    public EnumFacing inputSide(){
+        // Read-only carried/client views have no server load callback. This is never called by NBT decoding.
+        if(world!=null&&world.isRemote){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);return state.getBlock() instanceof BlockBattery?state.getValue(BlockBattery.FACING):EnumFacing.NORTH;}
+        return loadedInputSide;
+    }
+    private void deferFacing(){
+        if(facingQueued||world==null||world.isRemote)return;
+        facingQueued=true;
+        DeferredTileLoad.schedulePriority(this,()->{
+            facingQueued=false;
+            net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
+            if(!(state.getBlock() instanceof BlockBattery))return;
+            EnumFacing next=state.getValue(BlockBattery.FACING);boolean changed=next!=loadedInputSide;
+            loadedInputSide=next;legacySettings=null;legacyFace=-1;
+            if(changed&&legacyMissingPolicy){invalidateNeighbors();sync();world.notifyNeighborsOfStateChange(pos,state.getBlock(),false);}
+        });
+    }
+    @Override public void onLoad(){super.onLoad();facingQueued=false;deferFacing();}
+    @Override public void updateContainingBlockInfo(){super.updateContainingBlockInfo();deferFacing();}
+    @Override public void invalidate(){facingQueued=false;super.invalidate();}
+    @Override public void onChunkUnload(){facingQueued=false;super.onChunkUnload();}
     @Override public ResourcePortSettings settings(){
         if(!legacyMissingPolicy)return super.settings();
         int face=inputSide().getIndex();if(legacySettings==null||legacyFace!=face){legacyFace=face;legacySettings=legacyPolicy(face,legacyHousing);}return legacySettings;
@@ -35,13 +57,16 @@ public final class TileEntityBattery extends PowerPortTile {
         legacyMissingPolicy=false;legacySettings=null;
     }
     @Override protected NBTTagCompound normalizedReadData(NBTTagCompound original){
-        legacyMissingPolicy=!original.hasKey(ResourcePortData.FACES);legacySettings=null;legacyFace=-1;
+        legacyMissingPolicy=!original.hasKey(ResourcePortData.FACES);legacySettings=null;legacyFace=-1;loadedInputSide=EnumFacing.NORTH;deferFacing();
         if(!legacyMissingPolicy)return original;
         // Never reinterpret a partially written new policy as an old battery.
         for(String key:new String[]{ResourcePortData.RATE,ResourcePortData.PULL,ResourcePortData.ART,ResourcePortData.MODE,ResourcePortData.HOUSING})if(original.hasKey(key))throw new IllegalArgumentException("Incomplete saved Battery face policy");
         legacyHousing=original.hasKey("HousingTexture")?original.getInteger("HousingTexture"):-1;
         if(original.hasKey("HousingTexture")&&(!original.hasKey("HousingTexture",3)||legacyHousing<0||!ScreenHousingTextures.validChoice(legacyHousing)))throw new IllegalArgumentException("Invalid saved Battery housing");
-        NBTTagCompound normalized=original.copy();ResourcePortData.write(normalized,legacyPolicy(inputSide().getIndex(),legacyHousing),0,ChannelList.EMPTY);return normalized;
+        // Chunk NBT is decoded before its tile map is installed. Looking up even our own state
+        // here can recursively load this chunk (and poison LaunchWrapper's class failure cache).
+        // Preserve the old raw policy omission; bind the physical facing after chunk loading.
+        NBTTagCompound normalized=original.copy();ResourcePortData.write(normalized,legacyPolicy(EnumFacing.NORTH.getIndex(),legacyHousing),0,ChannelList.EMPTY);return normalized;
     }
     @Override protected void readContents(NBTTagCompound tag){
         if(tag.hasKey("PortEnergy")||tag.hasKey("PortFluid")||tag.hasKey("Items"))throw new IllegalArgumentException("Mixed Battery resource owners");
