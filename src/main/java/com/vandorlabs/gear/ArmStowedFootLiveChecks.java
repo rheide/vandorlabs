@@ -15,6 +15,7 @@ import net.minecraft.world.*;
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class ArmStowedFootLiveChecks {
     private static final BlockPos ROOT=new BlockPos(1280,155,120);
+    private static final boolean CAMERA_ONLY=Boolean.getBoolean("vandorlabs.stowedFootCameraOnly");
     private static final int START=Integer.parseInt(System.getenv().getOrDefault("VANDOR_STOWED_FOOT_START","0")),END=Integer.parseInt(System.getenv().getOrDefault("VANDOR_STOWED_FOOT_END","48"));
     private static int fixture=START,stage,ticks,started;private static Vec3d position,sourceAim;private static boolean sent,aimed;private static float expectedYaw,expectedPitch;private static EnumFacing clickedFace;private static BlockPos source,extra,standingSupport;
     private static EnumFacing mount(){return EnumFacing.values()[fixture%6];}
@@ -32,7 +33,7 @@ public final class ArmStowedFootLiveChecks {
         return renderers==1;
     }
     public static boolean tick(Minecraft mc)throws Exception{
-        if(fixture==END){KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(),false);System.out.println("[vandorlabs][reprolab] utility26-focused PASS stowed-ski cases="+(END-START)+" sixMounts/regularLarge/joinedIndependent/bothPayloadModes/SurvivalSneaking/bothPacketRoutes/clientOneOwner/reversal/reload/mining");return true;}
+        if(fixture==END){KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(),false);System.out.println("[vandorlabs][reprolab] utility26-focused PASS stowed-ski cases="+(END-START)+(CAMERA_ONLY?" camera-setup-only standing+crouched/exactSourceFace/fullStrokeFloorClear":" sixMounts/regularLarge/joinedIndependent/bothPayloadModes/SurvivalSneaking/bothPacketRoutes/clientOneOwner/reversal/reload/mining"));return true;}
         ticks++;mc.displayGuiScreen(null);
         if(stage!=2)KeyBinding.setKeyBindState(mc.gameSettings.keyBindSneak.getKeyCode(),false);
         if(stage==2){
@@ -78,20 +79,24 @@ public final class ArmStowedFootLiveChecks {
                 com.vandorlabs.gear.core.GearMotion.Pose pose=root.pose(0);com.vandorlabs.gear.core.GearMotion.Vec a=pose.transformFootVertex(0,0,0),b=pose.transformFootVertex(localStep.getX(),0,localStep.getZ());Vec3d normal=ArmOrientation.vector(mount(),b.x-a.x,b.y-a.y,b.z-a.z);clickedFace=EnumFacing.getFacingFromVector((float)normal.x,(float)normal.y,(float)normal.z);
                 int index=-1;for(int i=0;i<root.assembly().feet().size();i++)if(root.localCell(root.assembly().feet().get(i)).equals(source))index=i;need(index>=0,"selected source is an actual foot");java.util.List<AxisAlignedBB> boxes=root.collisionBoxes();AxisAlignedBB foot=boxes.get(boxes.size()-count()*2+index*2);
                 Vec3d aim=new Vec3d(clickedFace==EnumFacing.EAST?foot.maxX:clickedFace==EnumFacing.WEST?foot.minX:(foot.minX+foot.maxX)/2,clickedFace==EnumFacing.UP?foot.maxY:clickedFace==EnumFacing.DOWN?foot.minY:(foot.minY+foot.maxY)/2,clickedFace==EnumFacing.SOUTH?foot.maxZ:clickedFace==EnumFacing.NORTH?foot.minZ:(foot.minZ+foot.maxZ)/2);
+                boolean wasSneaking=actor.isSneaking();actor.setSneaking(false);double standingEyeHeight=actor.getEyeHeight();actor.setSneaking(true);double cameraEyeHeight=actor.getEyeHeight();actor.setSneaking(wasSneaking);
                 java.util.List<AxisAlignedBB> appendStroke=expandedStroke(root,extra);boolean found=false;int occupied=0,occluded=0,missed=0,stroke=0;
                 for(Vec3d tangent:new Vec3d[]{Vec3d.ZERO,new Vec3d(1.5,0,0),new Vec3d(-1.5,0,0),new Vec3d(0,0,1.5),new Vec3d(0,0,-1.5),new Vec3d(3,0,0),new Vec3d(-3,0,0),new Vec3d(0,0,3),new Vec3d(0,0,-3)}){
                     if(Math.abs(tangent.dotProduct(normal))>1e-6)continue;
-                    Vec3d eye=aim.add(normal.scale(3)).add(tangent);BlockPos support=new BlockPos(eye.x,eye.y-actor.getEyeHeight()-.01,eye.z);
+                    Vec3d eye=aim.add(normal.scale(3)).add(tangent);BlockPos support=new BlockPos(eye.x,eye.y-cameraEyeHeight-.01,eye.z);
                     if(!world.isAirBlock(support)||root.members().contains(support)){occupied++;continue;}
-                    eye=new Vec3d(eye.x,support.getY()+1D+actor.getEyeHeight(),eye.z);
+                    eye=new Vec3d(eye.x,support.getY()+1D+cameraEyeHeight,eye.z);
                     if(new AxisAlignedBB(support).grow(.001).calculateIntercept(eye,aim)!=null){occluded++;continue;}
                     Vec3d d=aim.subtract(eye);RayTraceResult hit=GearInteractions.trace(world,eye,eye.add(d.normalize().scale(4.5)));
                     if(hit==null||!hit.getBlockPos().equals(source)||hit.sideHit!=clickedFace){missed++;continue;}
+                    Vec3d standingEye=eye.addVector(0,standingEyeHeight-cameraEyeHeight,0),standingRay=aim.subtract(standingEye);RayTraceResult standingHit=GearInteractions.trace(world,standingEye,standingEye.add(standingRay.normalize().scale(4.5)));
+                    if(standingHit==null||!standingHit.getBlockPos().equals(source)||standingHit.sideHit!=clickedFace){missed++;continue;}
                     boolean clear=true;for(AxisAlignedBB box:appendStroke)if(box.intersects(new AxisAlignedBB(support).shrink(.0001)))clear=false;if(!clear){stroke++;continue;}
                     sourceAim=hit.hitVec;standingSupport=support;world.setBlockState(support,Blocks.STONE.getDefaultState(),2);position=new Vec3d(eye.x,support.getY()+1D,eye.z);float yaw=(float)Math.toDegrees(Math.atan2(-d.x,d.z)),pitch=(float)-Math.toDegrees(Math.atan2(d.y,Math.sqrt(d.x*d.x+d.z*d.z)));
                     actor.setGameType(GameType.SURVIVAL);actor.capabilities.isFlying=false;actor.sendPlayerAbilities();actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(GearRegistry.LANDING_SKI,2));actor.inventoryContainer.detectAndSendChanges();actor.connection.setPlayerLocation(position.x,position.y,position.z,yaw,pitch);found=true;break;
                 }
                 need(found,"visible posed Ski face and non-occluding standing support source="+source+" face="+clickedFace+" bounds="+foot+" candidateRejected occupied="+occupied+" floorRay="+occluded+" posedRay="+missed+" fullStroke="+stroke);
+                if(CAMERA_ONLY){System.out.println("[vandorlabs][reprolab] stowed-ski camera PASS fixture="+fixture+" support="+standingSupport+" source="+source+" face="+clickedFace);fixture++;stage=0;started=ticks;return false;}
                 stage=2;started=ticks;return false;
             }
             if(stage==2){if(!sent||ticks-started<20)return false;boolean appended=world.getBlockState(extra).getBlock()==GearRegistry.LANDING_SKI&&root.assembly().feet().size()==count()+1&&world.getTileEntity(extra) instanceof GearTileEntity&&((GearTileEntity)world.getTileEntity(extra)).loadedController()==root;if(!appended)need(false,"extra Ski belongs to stowed owner, held="+actor.getHeldItemMainhand()+" error="+root.error()+appendStatus(root,actor));need(root.progress()==0&&!root.target()&&actor.getHeldItemMainhand().getCount()==1,"placement preserves pose and consumes one");root.sync();stage=3;started=ticks;return false;}
