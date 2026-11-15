@@ -12,9 +12,12 @@ import net.minecraft.world.*;
 public class BlockCoupler extends BlockVandor {
     public static final PropertyDirection FACING=PropertyDirection.create("facing");
     public static final PropertyBool LOCKED=PropertyBool.create("locked");
+    public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> FRAME_UP=new net.minecraftforge.common.property.IUnlistedProperty<Integer>(){
+        public String getName(){return "coupler_frame_up";}public boolean isValid(Integer value){return value!=null&&value>=0&&value<6;}public Class<Integer> getType(){return Integer.class;}public String valueToString(Integer value){return String.valueOf(value);}
+    };
     public BlockCoupler(){this("square_coupler");}
     protected BlockCoupler(String id){super(id);setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH).withProperty(LOCKED,false));}
-    @Override protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING,LOCKED);}
+    @Override protected BlockStateContainer createBlockState(){return new net.minecraftforge.common.property.ExtendedBlockState(this,new IProperty[]{FACING,LOCKED},new net.minecraftforge.common.property.IUnlistedProperty[]{FRAME_UP});}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,EnumFacing.getFront(meta&7)).withProperty(LOCKED,(meta&8)!=0);}
     @Override public int getMetaFromState(IBlockState state){return state.getValue(FACING).getIndex()|(state.getValue(LOCKED)?8:0);}
     @Override public IBlockState withRotation(IBlockState state,Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}
@@ -26,12 +29,23 @@ public class BlockCoupler extends BlockVandor {
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing side){return BlockFaceShape.UNDEFINED;}
-    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return CouplerShape.getBounds(state.getValue(FACING),state.getValue(LOCKED));}
-    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> out,net.minecraft.entity.Entity entity,boolean actual){for(AxisAlignedBB box:collisionBoxes(state))addCollisionBoxToList(pos,query,out,box);}
+    @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos){return bounds(state,frameUp(state,world,pos));}
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> out,net.minecraft.entity.Entity entity,boolean actual){for(AxisAlignedBB box:collisionBoxes(state,frameUp(state,world,pos)))addCollisionBoxToList(pos,query,out,box);}
     /** Pure emitted component boxes for retained captured geometry; never reads a tile or world. */
     public void appendCollisionBoxes(IBlockState state,BlockPos pos,java.util.List<AxisAlignedBB> out){for(AxisAlignedBB box:collisionBoxes(state))out.add(box.offset(pos));}
-    protected AxisAlignedBB[] collisionBoxes(IBlockState state){return CouplerShape.getBoxes(state.getValue(FACING),state.getValue(LOCKED));}
-    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){RayTraceResult closest=null;double distance=Double.POSITIVE_INFINITY;for(AxisAlignedBB box:collisionBoxes(state)){RayTraceResult hit=box.offset(pos).calculateIntercept(start,end);if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);closest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}}return closest;}
+    public void appendCollisionBoxes(IBlockState state,BlockPos pos,net.minecraft.nbt.NBTTagCompound data,java.util.List<AxisAlignedBB> out){for(AxisAlignedBB box:collisionBoxes(state,CouplerFrameData.up(state,data)))out.add(box.offset(pos));}
+    protected AxisAlignedBB[] collisionBoxes(IBlockState state){return collisionBoxes(state,CouplerShape.defaultUp(state.getValue(FACING)));}
+    protected AxisAlignedBB[] collisionBoxes(IBlockState state,EnumFacing up){return CouplerShape.getBoxes(state.getValue(FACING),up,state.getValue(LOCKED));}
+    protected AxisAlignedBB bounds(IBlockState state,EnumFacing up){return CouplerShape.getBounds(state.getValue(FACING),up,state.getValue(LOCKED));}
+    protected EnumFacing frameUp(IBlockState state,IBlockAccess world,BlockPos pos){
+        net.minecraft.tileentity.TileEntity raw=world==null?null:world.getTileEntity(pos);if(raw instanceof TileCoupler)try{return ((TileCoupler)raw).frameUp(state);}catch(IllegalArgumentException malformed){/* An invalid frame remains visibly inert until deferred validation retains its original data. */}
+        return CouplerShape.defaultUp(state.getValue(FACING));
+    }
+    @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
+        if(!(state instanceof net.minecraftforge.common.property.IExtendedBlockState))return state;EnumFacing up=frameUp(state,world,pos);
+        return up==CouplerShape.defaultUp(state.getValue(FACING))?state:((net.minecraftforge.common.property.IExtendedBlockState)state).withProperty(FRAME_UP,up.getIndex());
+    }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){RayTraceResult closest=null;double distance=Double.POSITIVE_INFINITY;for(AxisAlignedBB box:collisionBoxes(state,frameUp(state,world,pos))){RayTraceResult hit=box.offset(pos).calculateIntercept(start,end);if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);closest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}}return closest;}
     public static double couplingHeight(IBlockState state){return state.getBlock() instanceof BlockCouplerSlab?(state.getValue(BlockCouplerSlab.HALF)==BlockSlab.EnumBlockHalf.TOP?.75:.25):.5;}
     @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);if(tile instanceof TileCoupler)((TileCoupler)tile).sample();}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,net.minecraft.entity.player.EntityPlayer actor,EnumHand hand,EnumFacing side,float x,float y,float z){

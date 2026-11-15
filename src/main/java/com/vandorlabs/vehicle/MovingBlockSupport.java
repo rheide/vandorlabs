@@ -14,7 +14,7 @@ public final class MovingBlockSupport {
     private MovingBlockSupport(){}
     public static void validate(VehicleStructure source,VehicleWorld view){if(view.structure!=source)throw new IllegalArgumentException("Matching moving source view required");view.requireCouplerScope();VehicleRotation.validate(source,view);}
     public static boolean supported(VehicleStructure.Cell cell,TileEntity tile) {
-        if(tile instanceof com.vandorlabs.coupler.TileCoupler&&((com.vandorlabs.coupler.TileCoupler)tile).quarantined())return false;
+        if(tile instanceof com.vandorlabs.coupler.TileCoupler&&(((com.vandorlabs.coupler.TileCoupler)tile).quarantined()||!((com.vandorlabs.coupler.TileCoupler)tile).acceptFrame(cell.state)))return false;
         if(cell.tileData()!=null && tile==null)return false;
         if(cell.state.getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock){com.vandorlabs.ports.ResourcePortBlock.Kind kind=((com.vandorlabs.ports.ResourcePortBlock)cell.state.getBlock()).kind;return kind==com.vandorlabs.ports.ResourcePortBlock.Kind.POWER?tile instanceof com.vandorlabs.ports.PowerPortTile:kind==com.vandorlabs.ports.ResourcePortBlock.Kind.FLUID?tile instanceof com.vandorlabs.ports.FluidPortTile:tile instanceof com.vandorlabs.ports.MatterPortTile;}
         String domain=cell.state.getBlock().getRegistryName().getResourceDomain();

@@ -19,7 +19,7 @@ final class ArmEndpointTiles {
     net.minecraft.nbt.NBTTagCompound constructionData(VehicleStructure.Cell nativeCell){return turns?ArmGridTiles.data(nativeCell,inverse):nativeCell.tileData();}
     IBlockState constructionState(VehicleStructure.Cell nativeCell){
         if(!turns)return nativeCell.state;
-        if(ArmLooseGearData.foot(nativeCell.state)){IBlockState rest=ArmGridTiles.state(nativeCell,inverse);if(rest==null)return null;VehicleStructure.Cell mapped=new VehicleStructure.Cell(nativeCell.pos,rest,ArmGridTiles.data(nativeCell,inverse));return ArmGridTiles.state(mapped,forward)==nativeCell.state&&nativeCell.sameTileData(ArmGridTiles.data(mapped,forward))?rest:null;}
+        if(ArmLooseGearData.foot(nativeCell.state)||nativeCell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler){IBlockState rest=ArmGridTiles.state(nativeCell,inverse);if(rest==null)return null;VehicleStructure.Cell mapped=new VehicleStructure.Cell(nativeCell.pos,rest,ArmGridTiles.data(nativeCell,inverse));return ArmGridTiles.state(mapped,forward)==nativeCell.state&&nativeCell.sameTileData(ArmGridTiles.data(mapped,forward))?rest:null;}
         if(!nativeCell.hasTileData()&&tileFree.containsKey(nativeCell.state))return tileFree.get(nativeCell.state);
         IBlockState rest=ArmGridTiles.state(nativeCell,inverse);
         if(rest!=null&&ArmGridTiles.state(nativeCell,rest,forward)!=nativeCell.state)rest=null;

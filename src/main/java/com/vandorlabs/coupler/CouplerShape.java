@@ -17,45 +17,37 @@ public final class CouplerShape {
         {12.0, 5.0, 5.0, 13.0, 11.0, 7.0, 1.0}, // head_right_cheek
         {8.25, 5.25, 1.25, 11.75, 10.75, 7.0, 1.0}, // mating_tongue
     };
-    private static final AxisAlignedBB[][][] CACHE = new AxisAlignedBB[6][2][];
+    private static final AxisAlignedBB[][][][] CACHE = new AxisAlignedBB[6][6][2][];
+    private static final AxisAlignedBB[][][] BOUNDS = new AxisAlignedBB[6][6][2];
     static {
-        for (EnumFacing facing : EnumFacing.VALUES) {
-            for (int state = 0; state < 2; ++state) {
-                AxisAlignedBB[] result = new AxisAlignedBB[BOXES.length];
-                for (int i = 0; i < BOXES.length; ++i) {
-                    double[] b = BOXES[i];
-                    double dz = state * b[6] * -4.0;
-                    double[] a = orient(b[0]/16.0, b[1]/16.0, (b[2]+dz)/16.0, facing);
-                    double[] c = orient(b[3]/16.0, b[4]/16.0, (b[5]+dz)/16.0, facing);
-                    result[i] = new AxisAlignedBB(Math.min(a[0],c[0]),Math.min(a[1],c[1]),Math.min(a[2],c[2]),
-                                                 Math.max(a[0],c[0]),Math.max(a[1],c[1]),Math.max(a[2],c[2]));
+        for(EnumFacing facing:EnumFacing.VALUES)for(EnumFacing up:EnumFacing.VALUES){
+            if(facing.getAxis()==up.getAxis())continue;
+            for(int state=0;state<2;state++){
+                AxisAlignedBB[] boxes=new AxisAlignedBB[BOXES.length];AxisAlignedBB bounds=null;
+                for(int i=0;i<BOXES.length;i++){
+                    double[] b=BOXES[i];double dz=state*b[6]*-4;
+                    double[] a=orient(b[0]/16,b[1]/16,(b[2]+dz)/16,facing,up),c=orient(b[3]/16,b[4]/16,(b[5]+dz)/16,facing,up);
+                    AxisAlignedBB box=new AxisAlignedBB(Math.min(a[0],c[0]),Math.min(a[1],c[1]),Math.min(a[2],c[2]),Math.max(a[0],c[0]),Math.max(a[1],c[1]),Math.max(a[2],c[2]));
+                    boxes[i]=box;bounds=bounds==null?box:bounds.union(box);
                 }
-                CACHE[facing.getIndex()][state] = result;
+                CACHE[facing.getIndex()][up.getIndex()][state]=boxes;BOUNDS[facing.getIndex()][up.getIndex()][state]=bounds;
             }
         }
     }
+    public static EnumFacing defaultUp(EnumFacing facing){return EnumFacing.getFront(com.vandorlabs.geometry.CardinalFrame.defaultUp(facing.getIndex()));}
     /** Read-only shared array; callers must not replace entries. */
-    public static AxisAlignedBB[] getBoxes(EnumFacing facing, boolean locked) {
-        return CACHE[facing.getIndex()][locked ? 1 : 0];
+    public static AxisAlignedBB[] getBoxes(EnumFacing facing,boolean locked){return getBoxes(facing,defaultUp(facing),locked);}
+    public static AxisAlignedBB[] getBoxes(EnumFacing facing,EnumFacing up,boolean locked){
+        com.vandorlabs.geometry.CardinalFrame.of(facing.getIndex(),up.getIndex());return CACHE[facing.getIndex()][up.getIndex()][locked?1:0];
     }
-    public static AxisAlignedBB getBounds(EnumFacing facing, boolean locked) {
-        AxisAlignedBB[] boxes = getBoxes(facing,locked);
-        AxisAlignedBB result=boxes[0];
-        for (int i=1;i<boxes.length;++i) result=result.union(boxes[i]);
-        return result;
+    public static AxisAlignedBB getBounds(EnumFacing facing,boolean locked){return getBounds(facing,defaultUp(facing),locked);}
+    public static AxisAlignedBB getBounds(EnumFacing facing,EnumFacing up,boolean locked){
+        com.vandorlabs.geometry.CardinalFrame.of(facing.getIndex(),up.getIndex());return BOUNDS[facing.getIndex()][up.getIndex()][locked?1:0];
     }
-    /** Centered Ry(-jsonY)*Rx(-jsonX); canonical front is north (-Z). */
-    public static double[] orient(double x,double y,double z,EnumFacing facing) {
-        x-=0.5; y-=0.5; z-=0.5;
-        double a=x,b=y,c=z;
-        switch(facing) {
-            case SOUTH: a=-x; c=-z; break;
-            case EAST: a=-z; c=x; break;
-            case WEST: a=z; c=-x; break;
-            case DOWN: b=z; c=-y; break;
-            case UP: a=-x; b=-z; c=-y; break;
-            case NORTH: default: break;
-        }
-        return new double[]{a+0.5,b+0.5,c+0.5};
+    /** Canonical north/up frame, rotated about the block center without changing texture coordinates. */
+    public static double[] orient(double x,double y,double z,EnumFacing facing){return orient(x,y,z,facing,defaultUp(facing));}
+    public static double[] orient(double x,double y,double z,EnumFacing facing,EnumFacing up){
+        com.vandorlabs.geometry.CardinalFrame frame=com.vandorlabs.geometry.CardinalFrame.of(facing.getIndex(),up.getIndex());x-=.5;y-=.5;z-=.5;
+        return new double[]{frame.transform(0,x,y,z)+.5,frame.transform(1,x,y,z)+.5,frame.transform(2,x,y,z)+.5};
     }
 }

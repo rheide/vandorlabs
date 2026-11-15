@@ -11,6 +11,16 @@ import net.minecraft.util.math.BlockPos;
 public final class TileCoupler extends TileEntity implements RedstoneChannelMember,CouplerControl {
     private ChannelList channels=ChannelList.EMPTY;
     private CouplerAssociation association;
+    private Integer frameUp;
+    private NBTTagCompound frameOriginal;
+    public EnumFacing frameUp(net.minecraft.block.state.IBlockState state){return CouplerFrameData.up(state,frameUp);}
+    /** Called only after the local listed block state is available; never reads neighbours. */
+    public boolean acceptFrame(net.minecraft.block.state.IBlockState state){
+        if(quarantined())return false;
+        try{frameUp(state);frameOriginal=null;return true;}catch(IllegalArgumentException malformed){
+            NBTTagCompound original=frameOriginal==null?writeToNBT(new NBTTagCompound()):frameOriginal;associationQuarantine=original;frameOriginal=null;associationError="Coupler frame unavailable; original data retained";couplingStatus=associationError;return false;
+        }
+    }
     private NBTTagCompound associationQuarantine;
     private boolean clientAssociationQuarantine,ownDataLoaded;
     private String associationError="";
@@ -58,10 +68,10 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
         boolean carried=world instanceof com.vandorlabs.vehicle.VehicleWorld;
         net.minecraft.world.World parent=carried?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;
         if(parent==null||parent.isRemote||world.getTileEntity(pos)!=this)return;
+        net.minecraft.block.state.IBlockState state=world.getBlockState(pos);if(!(state.getBlock() instanceof BlockCoupler)||!acceptFrame(state))return;
         ownDataLoaded=true;boolean powered=received;
         for(EnumFacing side:EnumFacing.values()){BlockPos p=pos.offset(side);if(world.isBlockLoaded(p))powered|=world.getRedstonePower(p,side)>0;}
         boolean desired=input.sample(powered,inverted);
-        net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
         boolean changed=requested!=desired;requested=desired;
         if(changed&&carried)com.vandorlabs.vehicle.VehicleCouplings.wake(((com.vandorlabs.vehicle.VehicleWorld)world).craft);
         if(carried&&com.vandorlabs.vehicle.VehicleCouplings.hasPair(((com.vandorlabs.vehicle.VehicleWorld)world).craft,pos)){
@@ -78,11 +88,11 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
         else if(changed)sync();
     }
     private void sync(){if(quarantined())return;markDirty();if(world!=null&&(!world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld))world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
-    @Override public void onLoad(){super.onLoad();if(quarantined())return;ownDataLoaded=true;DeferredTileLoad.schedule(this,()->{if(quarantined())return;if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))RedstoneChannels.register(this);sample();});}
+    @Override public void onLoad(){super.onLoad();if(quarantined())return;ownDataLoaded=true;DeferredTileLoad.schedule(this,()->{if(quarantined()||!acceptFrame(world.getBlockState(pos)))return;if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))RedstoneChannels.register(this);sample();});}
     @Override public void invalidate(){if(!quarantined())RedstoneChannels.unregister(this);super.invalidate();}
     @Override public void onChunkUnload(){if(!quarantined())RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override public boolean shouldRefresh(net.minecraft.world.World w,BlockPos p,net.minecraft.block.state.IBlockState old,net.minecraft.block.state.IBlockState next){return old.getBlock()!=next.getBlock();}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(associationQuarantine!=null)return copyExact(associationQuarantine,tag);if(clientAssociationQuarantine)return copyExact(quarantineShell(),tag);super.writeToNBT(tag);return writeOwnData(tag);}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(associationQuarantine!=null)return copyExact(associationQuarantine,tag);if(clientAssociationQuarantine)return copyExact(quarantineShell(),tag);super.writeToNBT(tag);if(frameUp==null)tag.removeTag(CouplerFrameData.KEY);else tag.setInteger(CouplerFrameData.KEY,frameUp);return writeOwnData(tag);}
     private NBTTagCompound writeOwnData(NBTTagCompound tag){CouplerAssociationData.write(tag,association);if(releasedArmHead)tag.setBoolean("VehicleArmCouplerReleased",true);else tag.removeTag("VehicleArmCouplerReleased");if(controlIdentity!=null)tag.setUniqueId("CouplerControlIdentity",controlIdentity);if(articulation)tag.setBoolean("CouplerArticulation",true);else tag.removeTag("CouplerArticulation");ChannelData.write(tag,channels);tag.setBoolean("CouplerInverted",inverted);tag.setBoolean("CouplerReceived",received);tag.setBoolean("CouplerRequested",requested);if(input.overridden()){tag.setBoolean("CouplerManualOverride",true);tag.setBoolean("CouplerManualRequested",input.manualRequested());}if(operator!=null)tag.setUniqueId("CouplerActor",operator);tag.setString("CouplerStatus",couplingStatus);return tag;}
     /** Typed carried-control merge, without serializing physical capabilities or discarding future own fields. */
     public NBTTagCompound currentData(NBTTagCompound original){
@@ -98,14 +108,14 @@ public final class TileCoupler extends TileEntity implements RedstoneChannelMemb
     @Override public void readFromNBT(NBTTagCompound tag){
         if(quarantined())return;
         if(world!=null&&world.isRemote&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&tag.getBoolean("CouplerAssociationQuarantined")){clientAssociationQuarantine=true;associationError="Coupler association unavailable; original data retained";couplingStatus=associationError;return;}
-        CouplerAssociation preparedAssociation;
-        try{preparedAssociation=CouplerAssociationData.read(tag);if(preparedAssociation!=null&&(!tag.hasKey("CouplerControlIdentityMost",4)||!tag.hasKey("CouplerControlIdentityLeast",4)||!preparedAssociation.head.equals(tag.getUniqueId("CouplerControlIdentity"))))throw new IllegalArgumentException("Coupler association head identity changed");}
+        CouplerAssociation preparedAssociation;Integer preparedFrame;
+        try{preparedFrame=CouplerFrameData.read(tag);preparedAssociation=CouplerAssociationData.read(tag);if(preparedAssociation!=null&&(!tag.hasKey("CouplerControlIdentityMost",4)||!tag.hasKey("CouplerControlIdentityLeast",4)||!preparedAssociation.head.equals(tag.getUniqueId("CouplerControlIdentity"))))throw new IllegalArgumentException("Coupler association head identity changed");}
         catch(IllegalArgumentException unsupported){associationError="Coupler association unavailable; original data retained";if(ownDataLoaded)return;associationQuarantine=tag.copy();setPos(new BlockPos(tag.getInteger("x"),tag.getInteger("y"),tag.getInteger("z")));couplingStatus=associationError;return;}
         // Preserve the previous malformed control-identity contract when no new proof is present.
         if((tag.hasKey("CouplerControlIdentityMost")||tag.hasKey("CouplerControlIdentityLeast"))&&!tag.hasUniqueId("CouplerControlIdentity"))throw new IllegalArgumentException("Malformed captured Coupler identity");
-        association=preparedAssociation;releasedArmHead=tag.getBoolean("VehicleArmCouplerReleased");controlIdentity=tag.hasUniqueId("CouplerControlIdentity")?tag.getUniqueId("CouplerControlIdentity"):null;super.readFromNBT(tag);articulation=tag.getBoolean("CouplerArticulation");channels=ChannelData.read(tag,0);inverted=tag.getBoolean("CouplerInverted");received=tag.getBoolean("CouplerReceived");requested=tag.hasKey("CouplerRequested",1)?tag.getBoolean("CouplerRequested"):received!=inverted;input.read(tag.getBoolean("CouplerManualOverride"),tag.getBoolean("CouplerManualRequested"));operator=tag.hasUniqueId("CouplerActor")?tag.getUniqueId("CouplerActor"):null;couplingStatus=tag.hasKey("CouplerStatus",8)?tag.getString("CouplerStatus"):"Ready";ownDataLoaded=true;associationError="";
+        frameUp=preparedFrame;frameOriginal=tag.hasKey(CouplerFrameData.KEY)?tag.copy():null;association=preparedAssociation;releasedArmHead=tag.getBoolean("VehicleArmCouplerReleased");controlIdentity=tag.hasUniqueId("CouplerControlIdentity")?tag.getUniqueId("CouplerControlIdentity"):null;super.readFromNBT(tag);articulation=tag.getBoolean("CouplerArticulation");channels=ChannelData.read(tag,0);inverted=tag.getBoolean("CouplerInverted");received=tag.getBoolean("CouplerReceived");requested=tag.hasKey("CouplerRequested",1)?tag.getBoolean("CouplerRequested"):received!=inverted;input.read(tag.getBoolean("CouplerManualOverride"),tag.getBoolean("CouplerManualRequested"));operator=tag.hasUniqueId("CouplerActor")?tag.getUniqueId("CouplerActor"):null;couplingStatus=tag.hasKey("CouplerStatus",8)?tag.getString("CouplerStatus"):"Ready";ownDataLoaded=true;associationError="";
     }
     @Override public NBTTagCompound getUpdateTag(){return quarantined()?quarantineShell():writeToNBT(new NBTTagCompound());}
     @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}
-    @Override public void onDataPacket(net.minecraft.network.NetworkManager manager,net.minecraft.network.play.server.SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());world.markBlockRangeForRenderUpdate(pos,pos);}
+    @Override public void onDataPacket(net.minecraft.network.NetworkManager manager,net.minecraft.network.play.server.SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());if(world.getBlockState(pos).getBlock() instanceof BlockCoupler)acceptFrame(world.getBlockState(pos));world.markBlockRangeForRenderUpdate(pos,pos);}
 }

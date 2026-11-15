@@ -28,6 +28,7 @@ final class ArmGridTiles {
         if(state.getPropertyKeys().size()!=(state.getBlock() instanceof BlockCouplerSlab?3:2))return null;
         ResourceLocation id=TileEntity.getKey(TileCoupler.class);
         if(!cell.hasTileData()||id==null||!id.toString().equals(cell.tileString("id")))return null;
+        try{CouplerFrameData.up(cell);}catch(IllegalArgumentException malformed){return null;}
         EnumFacing face=state.getValue(BlockCoupler.FACING);Vec3d out=axes[face.getAxis()==EnumFacing.Axis.X?0:face.getAxis()==EnumFacing.Axis.Y?1:2].scale(face.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:-1);
         EnumFacing mapped=EnumFacing.getFacingFromVector((float)out.x,(float)out.y,(float)out.z);
         if(state.getBlock() instanceof BlockCouplerSlab){
@@ -37,16 +38,26 @@ final class ArmGridTiles {
         state=state.withProperty(BlockCoupler.FACING,mapped);
         return state.getBlock().getStateFromMeta(state.getBlock().getMetaFromState(state))==state?state:null;
     }
-    static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis){return ArmLooseGearData.foot(cell.state)?ArmLooseGearData.data(cell,basis):cell.tileData();}
-    static void validate(VehicleStructure source,VehicleStructure placed,int[] basis){
+    static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis){return data(cell,basis,true);}
+    private static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis,boolean framed){
+        if(ArmLooseGearData.foot(cell.state))return ArmLooseGearData.data(cell,basis);
+        if(cell.state.getBlock() instanceof BlockCoupler){
+            if(!framed){if(cell.hasTileKey(CouplerFrameData.KEY))throw new IllegalArgumentException("Coupler frame requires versioned mapping");return cell.tileData();}
+            return CouplerFrameData.mapped(cell.state,cell.tileData(),basis);
+        }
+        return cell.tileData();
+    }
+    static void validate(VehicleStructure source,VehicleStructure placed,int[] basis){validate(source,placed,basis,true);}
+    static void validate(VehicleStructure source,VehicleStructure placed,int[] basis,boolean framed){
         axes(basis);if(source.cells.isEmpty()||source.cells.size()!=placed.cells.size())throw new IllegalArgumentException("Invalid typed attachment size");
         BlockPos first=source.cells.get(0).pos,target=placed.cells.get(0).pos;
         for(int i=0;i<source.cells.size();i++){
             VehicleStructure.Cell a=source.cells.get(i),b=placed.cells.get(i);BlockPos d=a.pos.subtract(first);
             BlockPos expected=target.add(basis[0]*d.getX()+basis[1]*d.getY()+basis[2]*d.getZ(),basis[3]*d.getX()+basis[4]*d.getY()+basis[5]*d.getZ(),basis[6]*d.getX()+basis[7]*d.getY()+basis[8]*d.getZ());
             if(!expected.equals(b.pos)||state(a,basis)!=b.state||a.hasTileData()!=b.hasTileData())throw new IllegalArgumentException("Invalid ordered attachment state mapping");
+            if(!framed&&b.state.getBlock() instanceof BlockCoupler&&b.hasTileKey(CouplerFrameData.KEY))throw new IllegalArgumentException("Coupler frame requires versioned mapping");
             if(a.hasTileData()){
-                NBTTagCompound data=ArmLooseGearData.foot(a.state)?ArmLooseGearData.data(a,basis):a.tileData();BlockPos shift=b.pos.subtract(a.pos);data.setInteger("x",data.getInteger("x")+shift.getX());data.setInteger("y",data.getInteger("y")+shift.getY());data.setInteger("z",data.getInteger("z")+shift.getZ());
+                NBTTagCompound data=data(a,basis,framed);BlockPos shift=b.pos.subtract(a.pos);data.setInteger("x",data.getInteger("x")+shift.getX());data.setInteger("y",data.getInteger("y")+shift.getY());data.setInteger("z",data.getInteger("z")+shift.getZ());
                 if(!data.equals(b.tileData()))throw new IllegalArgumentException("Typed attachment altered original Coupler data");
             }
         }

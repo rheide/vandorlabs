@@ -42,6 +42,7 @@ public final class ArmPayload {
     private BlockPos placedOffset;
     private VehicleStructure placedBlocks;
     private int[] gridTileBasis;
+    private boolean couplerFrames=true;
     private VehicleStructure placed(){return placedBlocks==null?blocks:placedBlocks;}
     // Absolute cells that may still hold copied contents after a failed rollback.
     // These links deliberately do not translate with a dropped recovery item.
@@ -112,7 +113,7 @@ public final class ArmPayload {
         List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
         for(int i=0;i<next.size();i++){
             VehicleStructure.Cell before=next.get(i);NBTTagCompound data=chosen.get(before.pos);if(data==null)continue;next.set(i,new VehicleStructure.Cell(before.pos,before.state,data));
-            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
+            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=data.copy();com.vandorlabs.coupler.CouplerFrameData.retain(placed.tileData(),mapped);mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
         }
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,materialized,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
     }
@@ -130,7 +131,7 @@ public final class ArmPayload {
         if(found<0||!(next.get(found).state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))throw new IllegalArgumentException("Captured Coupler changed");
         VehicleStructure.Cell before=next.get(found);validateCouplerData(before,data,association);
         next.set(found,new VehicleStructure.Cell(before.pos,before.state,data));
-        if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
+        if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(found);NBTTagCompound mapped=data.copy();com.vandorlabs.coupler.CouplerFrameData.retain(placed.tileData(),mapped);mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(found,new VehicleStructure.Cell(placed.pos,placed.state,mapped));}
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,false,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;result.localCollision=localCollision;result.collisionCellEnds=collisionCellEnds;return result;
     }
     /** Authenticated native release stages its materialized header and native occurrence together. */
@@ -140,7 +141,7 @@ public final class ArmPayload {
         List<VehicleStructure.Cell> next=new ArrayList<>(blocks.cells),placedNext=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
         for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){
             VehicleStructure.Cell cell=next.get(i);NBTTagCompound data=knownFields.copy();data.setBoolean("VehicleArmCouplerReleased",true);data.setString("CouplerStatus","Released");next.set(i,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),data));
-            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound nativeData=data.copy();nativeData.setInteger("x",placed.pos.getX());nativeData.setInteger("y",placed.pos.getY());nativeData.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),nativeData));}
+            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound nativeData=data.copy();com.vandorlabs.coupler.CouplerFrameData.retain(placed.tileData(),nativeData);nativeData.setInteger("x",placed.pos.getX());nativeData.setInteger("y",placed.pos.getY());nativeData.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),nativeData));}
         }
         ArmPayload result=preserveAlignment(new ArmPayload(VehicleStructure.display(next),offset,true,placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);result.couplerPower=couplerPower;return result;
     }
@@ -156,15 +157,15 @@ public final class ArmPayload {
         for(int i=0;i<next.size();i++)if(next.get(i).pos.equals(originalCell)){
             VehicleStructure.Cell cell=next.get(i);NBTTagCompound retained=cell.tileData();if(released)retained.setBoolean("VehicleArmCouplerReleased",true);
             next.set(i,new VehicleStructure.Cell(cell.pos,cell.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),retained));
-            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=retained.copy();mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),mapped));}
+            if(placedNext!=null){VehicleStructure.Cell placed=placedNext.get(i);NBTTagCompound mapped=retained.copy();com.vandorlabs.coupler.CouplerFrameData.retain(placed.tileData(),mapped);mapped.setInteger("x",placed.pos.getX());mapped.setInteger("y",placed.pos.getY());mapped.setInteger("z",placed.pos.getZ());placedNext.set(i,new VehicleStructure.Cell(placed.pos,placed.state.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,locked),mapped));}
         }
         ArmPayload result=edited.preserveAlignment(new ArmPayload(VehicleStructure.display(next),edited.offset,false,edited.placedOffset));if(placedNext!=null)result.placedBlocks=VehicleStructure.display(placedNext);
         if(edited.localCollision!=null&&edited.collisionCellEnds!=null){
             int index=0;while(index<next.size()&&!next.get(index).pos.equals(originalCell))index++;int begin=index==0?0:edited.collisionCellEnds[index-1],end=edited.collisionCellEnds[index];VehicleStructure.Cell changed=next.get(index);
-            List<AxisAlignedBB> boxes=new ArrayList<>(edited.localCollision.subList(0,begin));((com.vandorlabs.coupler.BlockCoupler)changed.state.getBlock()).appendCollisionBoxes(changed.state,changed.pos,boxes);int delta=boxes.size()-end;boxes.addAll(edited.localCollision.subList(end,edited.localCollision.size()));result.localCollision=Collections.unmodifiableList(boxes);result.collisionCellEnds=edited.collisionCellEnds.clone();for(int i=index;i<result.collisionCellEnds.length;i++)result.collisionCellEnds[i]+=delta;
+            List<AxisAlignedBB> boxes=new ArrayList<>(edited.localCollision.subList(0,begin));((com.vandorlabs.coupler.BlockCoupler)changed.state.getBlock()).appendCollisionBoxes(changed.state,changed.pos,changed.tileData(),boxes);int delta=boxes.size()-end;boxes.addAll(edited.localCollision.subList(end,edited.localCollision.size()));result.localCollision=Collections.unmodifiableList(boxes);result.collisionCellEnds=edited.collisionCellEnds.clone();for(int i=index;i<result.collisionCellEnds.length;i++)result.collisionCellEnds[i]+=delta;
         }return result;
     }
-    private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();return next;}
+    private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();next.couplerFrames=couplerFrames;return next;}
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;}return view;}
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
     Set<BlockPos> placedSurfaceCells(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();BlockPos origin=materializedOrigin(arm);for(VehicleStructure.Cell cell:placed().cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(origin.add(cell.pos));return result;}
@@ -468,7 +469,7 @@ public final class ArmPayload {
             if(current!=null&&expected.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler&&current.state.getBlock()==expected.getBlock())expected=expected.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,current.state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
             if(current==null||placedBlocks!=null&&(current.state!=expected||current.hasTileData()!=old.hasTileData())||current.state.getMaterial().isLiquid()||current.state.getMaterial()==net.minecraft.block.material.Material.AIR)throw new IllegalArgumentException("Native attachment snapshot changed orientation or ownership");
             IBlockState originalState=placedBlocks==null?current.state:old.state;if(originalState.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)originalState=originalState.withProperty(com.vandorlabs.coupler.BlockCoupler.LOCKED,current.state.getValue(com.vandorlabs.coupler.BlockCoupler.LOCKED));
-            NBTTagCompound data=current.tileData(),restored=gridTileBasis!=null&&ArmLooseGearData.foot(current.state)?ArmGridTiles.data(current,ArmLooseGearData.inverse(gridTileBasis)):data;original.add(new VehicleStructure.Cell(old.pos,originalState,restored==null?null:VehicleTileData.translated(restored,old.pos.subtract(at))));
+            NBTTagCompound data=current.tileData(),restored=gridTileBasis!=null&&(ArmLooseGearData.foot(current.state)||couplerFrames&&current.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler)?ArmGridTiles.data(current,ArmLooseGearData.inverse(gridTileBasis)):data;original.add(new VehicleStructure.Cell(old.pos,originalState,restored==null?null:VehicleTileData.translated(restored,old.pos.subtract(at))));
             if(placedBlocks!=null)nativeRows.add(new VehicleStructure.Cell(placed.pos,current.state,data==null?null:VehicleTileData.translated(data,placed.pos.subtract(at))));
         }
         ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(original),offset,true,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(nativeRows);return next;
@@ -570,7 +571,7 @@ public final class ArmPayload {
         for(VehicleStructure.Cell cell:destination.cells)VehicleService.permission(authorizer,origin.add(cell.pos));
         Map<VehicleStructure.Cell,TileEntity> prepared=prepareTiles(world,origin,destination);
         MovingBlockSupport.validate(blocks,view(arm));java.util.List<BlockPos> targets=new java.util.ArrayList<>();for(VehicleStructure.Cell cell:destination.cells)targets.add(origin.add(cell.pos));if(!ArmTransactions.ready(arm,"restore",targets))return false;
-        placedBlocks=destination==blocks?null:destination;gridTileBasis=placementBasis;
+        placedBlocks=destination==blocks?null:destination;gridTileBasis=placementBasis;couplerFrames=true;
         arm.storedSections=stored;
         List<VehicleStructure.Cell> installed=new ArrayList<>();
         try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
@@ -667,12 +668,30 @@ public final class ArmPayload {
         return new AxisAlignedBB(min[0],min[1],min[2],max[0],max[1],max[2]).offset(arm.getPos()).shrink(.0001);
     }
     private static BlockPos yaw(BlockPos p,int turns){switch(Math.floorMod(turns,4)){case 1:return new BlockPos(-p.getZ(),p.getY(),p.getX());case 2:return new BlockPos(-p.getX(),p.getY(),-p.getZ());case 3:return new BlockPos(p.getZ(),p.getY(),-p.getX());default:return p;}}
-    public static NBTTagCompound rotate(NBTTagCompound tag,int turns,World parent){
-        ArmPayload before=read(tag);if(before.hasOwnershipJournal())throw new IllegalArgumentException("Reconcile attachment ownership before rotating the craft");VehicleStructure after=VehicleRotation.rotate(before.blocks,new VehicleWorld(parent,before.blocks),turns);
-        BlockPos zero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.blocks.bounds.maxX,(int)before.blocks.bounds.maxZ,turns);
-        ArmPayload result=before.preserveAlignment(new ArmPayload(after,yaw(before.offset,turns).subtract(zero),before.materialized,yaw(before.placedOffset,turns).subtract(zero)));if(before.placedBlocks!=null){BlockPos placedZero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.placedBlocks.bounds.maxX,(int)before.placedBlocks.bounds.maxZ,turns);result.placedBlocks=VehicleRotation.rotate(before.placedBlocks,new VehicleWorld(parent,before.placedBlocks),turns);result.placedOffset=yaw(before.placedOffset,turns).subtract(placedZero);}if(before.gridTileBasis!=null){result.gridTileBasis=ArmGridTiles.yawBasis(before.gridTileBasis,turns);ArmGridTiles.validate(result.blocks,result.placedBlocks,result.gridTileBasis);}return result.write();
+    /** Copies only the newly typed frame from the authoritative occurrence during an actual yaw handoff. */
+    private static VehicleStructure framedGeometry(VehicleStructure target,VehicleStructure source,int[] basis){
+        List<VehicleStructure.Cell> cells=new ArrayList<>(target.cells);
+        for(int i=0;i<cells.size();i++){
+            VehicleStructure.Cell cell=cells.get(i),from=source.cells.get(i);if(!(cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler))continue;
+            NBTTagCompound data=cell.tileData(),mapped=com.vandorlabs.coupler.CouplerFrameData.mapped(from.state,from.tileData(),basis);com.vandorlabs.coupler.CouplerFrameData.retain(mapped,data);cells.set(i,new VehicleStructure.Cell(cell.pos,cell.state,data));
+        }
+        return VehicleStructure.display(cells);
     }
-    public NBTTagCompound write(){NBTTagCompound tag=retainedHeader==null?new NBTTagCompound():retainedHeader.copy();tag.setTag("Blocks",blocks.write());tag.setLong("Offset",offset.toLong());tag.setLong("PlacedOffset",placedOffset.toLong());tag.setBoolean("Materialized",materialized);if(gridAligned)tag.setBoolean("GridAligned",true);if(placedBlocks!=null)tag.setTag("PlacedBlocks",placedBlocks.write());if(gridTileBasis!=null){tag.setInteger("GridTileMapping",1);tag.setIntArray("GridTileBasis",gridTileBasis.clone());}
+    public static NBTTagCompound rotate(NBTTagCompound tag,int turns,World parent){
+        ArmPayload before=read(tag);if(before.hasOwnershipJournal())throw new IllegalArgumentException("Reconcile attachment ownership before rotating the craft");
+        VehicleStructure after=VehicleRotation.rotate(before.blocks,new VehicleWorld(parent,before.blocks),turns);
+        BlockPos zero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.blocks.bounds.maxX,(int)before.blocks.bounds.maxZ,turns),placedZero=before.placedOffset;
+        VehicleStructure nativeAfter=null;int[] basis=before.gridTileBasis==null?null:ArmGridTiles.yawBasis(before.gridTileBasis,turns);boolean framed=before.couplerFrames;
+        if(before.placedBlocks!=null){placedZero=VehicleRotation.cell(BlockPos.ORIGIN,(int)before.placedBlocks.bounds.maxX,(int)before.placedBlocks.bounds.maxZ,turns);nativeAfter=VehicleRotation.rotate(before.placedBlocks,new VehicleWorld(parent,before.placedBlocks),turns);}
+        if(!framed){for(VehicleStructure.Cell cell:after.cells)if(cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler){
+            if(basis!=null){if(before.materialized)after=framedGeometry(after,nativeAfter,ArmLooseGearData.inverse(basis));else nativeAfter=framedGeometry(nativeAfter,after,basis);}
+            framed=true;break;
+        }}
+        ArmPayload result=before.preserveAlignment(new ArmPayload(after,yaw(before.offset,turns).subtract(zero),before.materialized,yaw(before.placedOffset,turns).subtract(zero)));result.couplerFrames=framed;
+        if(nativeAfter!=null){result.placedBlocks=nativeAfter;result.placedOffset=yaw(before.placedOffset,turns).subtract(placedZero);}
+        if(basis!=null){result.gridTileBasis=basis;ArmGridTiles.validate(result.blocks,result.placedBlocks,basis,framed);}return result.write();
+    }
+    public NBTTagCompound write(){NBTTagCompound tag=retainedHeader==null?new NBTTagCompound():retainedHeader.copy();tag.setTag("Blocks",blocks.write());tag.setLong("Offset",offset.toLong());tag.setLong("PlacedOffset",placedOffset.toLong());tag.setBoolean("Materialized",materialized);if(couplerFrames)tag.setInteger("CouplerFrameMapping",1);else tag.removeTag("CouplerFrameMapping");if(gridAligned)tag.setBoolean("GridAligned",true);if(placedBlocks!=null)tag.setTag("PlacedBlocks",placedBlocks.write());if(gridTileBasis!=null){tag.setInteger("GridTileMapping",1);tag.setIntArray("GridTileBasis",gridTileBasis.clone());}
         if(hasOwnershipJournal()){tag.setInteger("OwnershipDimension",journalDimension);net.minecraft.nbt.NBTTagList list=new net.minecraft.nbt.NBTTagList();for(Map.Entry<Integer,BlockPos> entry:ownershipJournal.entrySet()){NBTTagCompound cell=new NBTTagCompound();cell.setInteger("Cell",entry.getKey());cell.setLong("Pos",entry.getValue().toLong());list.appendTag(cell);}tag.setTag("OwnershipJournal",list);}
         return tag;}
     public static ArmPayload read(NBTTagCompound tag){
@@ -690,20 +709,24 @@ public final class ArmPayload {
     }
     private static void headerType(NBTTagCompound tag,String key,int type){if(tag.hasKey(key)&&!tag.hasKey(key,type))throw new IllegalArgumentException("Invalid attachment header type: "+key);}
     private static ArmPayload readBounded(NBTTagCompound tag,boolean validateTiles){
+        headerType(tag,"CouplerFrameMapping",3);if(tag.hasKey("CouplerFrameMapping")&&tag.getInteger("CouplerFrameMapping")!=1)throw new IllegalArgumentException("Unsupported Coupler frame mapping");
         headerType(tag,"Materialized",1);headerType(tag,"GridAligned",1);headerType(tag,"Offset",4);headerType(tag,"PlacedOffset",4);headerType(tag,"PlacedBlocks",10);headerType(tag,"OwnershipDimension",3);headerType(tag,"OwnershipJournal",9);
         if(tag.hasKey("OwnershipJournal",9)){net.minecraft.nbt.NBTTagList entries=(net.minecraft.nbt.NBTTagList)tag.getTag("OwnershipJournal");if(entries.tagCount()>0&&entries.getTagType()!=10)throw new IllegalArgumentException("Invalid attachment journal entry type");}
         VehicleStructure structure=VehicleStructure.readDisplay(tag.getCompoundTag("Blocks"));if(structure.cells.isEmpty()||structure.cells.size()>MAX_BLOCKS)throw new IllegalArgumentException("Oversized arm payload");
         if(validateTiles)for(VehicleStructure.Cell cell:structure.cells)if(cell.hasTileData()&&TileEntity.create(null,cell.tileData())==null)throw new IllegalArgumentException("Attachment tile cannot be loaded; original snapshot retained");
         BlockPos offset=BlockPos.fromLong(tag.getLong("Offset")),placed=BlockPos.fromLong(tag.getLong("PlacedOffset"));
         for(BlockPos p:new BlockPos[]{offset,placed})if(Math.abs((long)p.getX())>80||Math.abs((long)p.getY())>80||Math.abs((long)p.getZ())>80)throw new IllegalArgumentException("Arm payload is too far from its controller");
-        ArmPayload payload=new ArmPayload(structure,offset,tag.getBoolean("Materialized"),placed);
+        ArmPayload payload=new ArmPayload(structure,offset,tag.getBoolean("Materialized"),placed);payload.couplerFrames=tag.hasKey("CouplerFrameMapping");
         net.minecraft.nbt.NBTTagList journal=tag.getTagList("OwnershipJournal",10);if(journal.tagCount()>structure.cells.size())throw new IllegalArgumentException("Invalid attachment ownership journal");
         payload.journalDimension=tag.getInteger("OwnershipDimension");
         for(int i=0;i<journal.tagCount();i++){NBTTagCompound entry=journal.getCompoundTagAt(i);for(String key:entry.getKeySet())if(!key.equals("Cell")&&!key.equals("Pos"))throw new IllegalArgumentException("Unknown attachment ownership entry field");if(!entry.hasKey("Cell",3))throw new IllegalArgumentException("Invalid attachment ownership index");int cell=entry.getInteger("Cell");if(cell<0||cell>=structure.cells.size()||!entry.hasKey("Pos",4)||payload.ownershipJournal.put(cell,BlockPos.fromLong(entry.getLong("Pos")))!=null)throw new IllegalArgumentException("Invalid attachment ownership entry");}
         if(tag.hasKey("PlacedBlocks",10)){payload.placedBlocks=VehicleStructure.readDisplay(tag.getCompoundTag("PlacedBlocks"));if(payload.placedBlocks.cells.size()!=structure.cells.size())throw new IllegalArgumentException("Invalid rotated attachment mapping");if(!tag.hasKey("GridTileMapping"))for(VehicleStructure.Cell cell:payload.placedBlocks.cells)if(cell.hasTileData())throw new IllegalArgumentException("Unsupported rotated attachment tile");}
         if(tag.hasKey("GridTileMapping")||tag.hasKey("GridTileBasis")){
             if(!tag.hasKey("GridTileMapping",3)||tag.getInteger("GridTileMapping")!=1||!tag.hasKey("GridTileBasis",11)||payload.placedBlocks==null)throw new IllegalArgumentException("Invalid typed attachment mapping");
-            payload.gridTileBasis=tag.getIntArray("GridTileBasis").clone();ArmGridTiles.validate(structure,payload.placedBlocks,payload.gridTileBasis);
+            payload.gridTileBasis=tag.getIntArray("GridTileBasis").clone();ArmGridTiles.validate(structure,payload.placedBlocks,payload.gridTileBasis,payload.couplerFrames);
+        }
+        for(VehicleStructure typed:payload.placedBlocks==null?new VehicleStructure[]{structure}:new VehicleStructure[]{structure,payload.placedBlocks})for(VehicleStructure.Cell cell:typed.cells)if(cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler){
+            if(!payload.couplerFrames&&cell.hasTileKey(com.vandorlabs.coupler.CouplerFrameData.KEY))throw new IllegalArgumentException("Coupler frame requires versioned mapping");com.vandorlabs.coupler.CouplerFrameData.up(cell);
         }
         payload.gridAligned=tag.getBoolean("GridAligned");
         if(payload.hasOwnershipJournal())payload.materialized=false;
@@ -715,7 +738,7 @@ public final class ArmPayload {
         return payload;
     }
     private static boolean knownHeader(String key){switch(key){
-        case "Blocks":case "Offset":case "PlacedOffset":case "Materialized":case "GridAligned":case "PlacedBlocks":case "GridTileMapping":case "GridTileBasis":case "OwnershipDimension":case "OwnershipJournal":return true;
+        case "Blocks":case "Offset":case "PlacedOffset":case "Materialized":case "GridAligned":case "PlacedBlocks":case "GridTileMapping":case "GridTileBasis":case "CouplerFrameMapping":case "OwnershipDimension":case "OwnershipJournal":return true;
         default:return false;
     }}
 }
