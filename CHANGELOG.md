@@ -23,6 +23,8 @@
 
 ### Coupler ownership recovery (Forge 1.12.2)
 
+- Retain the Amber and Cyan Coupler face artwork through Arm rotation and native endpoint handoffs. Track full rigid orientation while preserving registry metadata and old saved payload mappings. Slab Couplers keep their horizontal housing; unsupported tilted endpoints stay captured.
+
 - Preserve release behavior for older saved coupled vehicles, including clearing authorized stale manual requests on the connections they keep.
 
 - Support Couplers on moving Arm payloads, including linked active/passive Arms, rigid head orientation and articulated connections. Keep arm phases and payload/body rendering coherent during lag, reversal and reload. Preserve authenticated post-release travel and prevent empty space inside a detached vehicle’s bounds from causing a large arm push. See the [Coupler guide](docs/couplers.md).

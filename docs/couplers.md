@@ -68,3 +68,12 @@ Hover sections follow vertical movement with a short delay and settle horizontal
 Separation writes and syncs an ownership journal before changing either entity. Both outputs remain inert until their affected chunks have been checkpointed. Interrupted work recovers the original vehicle or the committed pair without duplicating blocks or inventories. World-block release retains its exact-destination checks and durable recovery.
 
 The startup setting `vehicles.maxArticulationPoints` in `config/vandorlabs-blocks.cfg` limits independent hinge points in new assemblies and attachments. Its default of `7` permits eight independently articulated segments; `0` permits rigid assemblies only. The accepted range is 0–16384, with the existing block, axis, data, collision and per-step work limits still applying. Restart Minecraft or the server after editing it. Parallel pairs, rigid links and bridged sections do not add independent segments. Lowering the limit does not prevent longer saved vehicles from loading, being recovered or parking. Four- and eight-segment driving regressions cover acceleration from a slight initial bend, terrain collision and saved poses.
+
+### Arm face orientation
+
+Coupler face artwork rotates with the complete Arm payload frame. The Amber and
+Cyan sides remain attached to the same authored faces when a full Coupler moves
+between horizontal and vertical orientations, including native endpoint handoffs.
+Slab Couplers retain a horizontal half-height housing. A pose that cannot represent
+that housing as native blocks stays captured and selectable until the Arm returns
+to a supported pose. Older saved Arm payload mappings remain readable.
