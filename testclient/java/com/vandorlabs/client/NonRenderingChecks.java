@@ -19,6 +19,8 @@ import java.util.*;
 /** Real block/tile and buffer code, with an in-memory world and no GL context. */
 public final class NonRenderingChecks {
     public static void main(String[] args) {
+        // This runner loads MCP-named development classes without Forge's launcher.
+        try{java.lang.reflect.Field environment=net.minecraftforge.fml.relauncher.CoreModManager.class.getDeclaredField("deobfuscatedEnvironment");environment.setAccessible(true);environment.setBoolean(null,true);}catch(ReflectiveOperationException failure){throw new AssertionError("Development fixture namespace initialization",failure);}
         com.vandorlabs.render.ConnectedSquareChecks.run();
         net.minecraft.init.Bootstrap.register();
         BlockAvailabilityChecks.run();
