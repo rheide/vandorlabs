@@ -31,6 +31,14 @@ public final class NativeRampController {
     public Phase phase(){return phase;}
     public boolean attached(){return operation!=null;}
     public double committedPose(){return timeline.observed;}
+    public double committedBeltDistance(){return frame==null?0:frame.belt().observed();}
+    NativeRampRuntime runtimeSnapshot(){
+        if(!(owner.getLevel() instanceof ServerLevel)||operation==null||frame==null)return owner.loadedRuntime();if(!NativeRampJournal.startupActiveReceipt(operation)||phase==Phase.RESTORING)return null;
+        var state=new NativeRampActiveState(operation.id(),NativeRampJournal.recipeIdentity(operation),frame.revision(),timeline,frame.cells(),phase==Phase.RETURNING,frame.belt());return new NativeRampRuntime(owner.ownerIdentity(),net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(owner.getType()),owner.getBlockState(),state,queuedChoices,requested,lastSignalTarget,signalKnown,phase==Phase.HELD,error,text);
+    }
+    void adopt(NativeRampJournal.Operation operation,NativeRampRuntime saved,NativeRampFramePublisher.Frame installedFrame){
+        var world=level();if(!NativeRampRecoveryAdmission.active(world)||!installed(world)||this.operation!=null||!saved.frame.operation.equals(operation.id()))throw new IllegalStateException("Ramp controller adoption authority changed");this.operation=operation;frame=installedFrame;var old=saved.frame.timeline;timeline=new RampLifecycle.Timeline(Math.addExact(old.sequence,1),world.getGameTime(),world.getGameTime(),old.observed,old.target,old.observed,old.duration,old.moving&&old.observed!=old.target);revision=installedFrame.revision();queuedChoices=saved.queued;requested=saved.requested;lastSignalTarget=saved.signal;signalKnown=saved.signalKnown;phase=saved.frame.returning?Phase.RETURNING:Phase.ACTIVE;text=saved.status;error=saved.error;waitingCanopy=false;stopPending=false;resumed=true;owner.adoptedRuntime();
+    }
     public NativeRampMenu.Status status(){return new NativeRampMenu.Status(text,error,phase==Phase.PREPARING||phase==Phase.PUBLISHING||phase==Phase.RESTORING||waitingCanopy||stopPending,timeline.moving,revision);}
     private ServerLevel level(){if(!(owner.getLevel() instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp controller requires server thread");return server;}
     private boolean installed(ServerLevel level){var p=owner.getBlockPos();var chunk=level.getChunkSource().getChunkNow(p.getX()>>4,p.getZ()>>4);return !owner.inert()&&!owner.isRemoved()&&chunk!=null&&chunk.getBlockEntities().get(p)==owner;}

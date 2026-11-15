@@ -18,8 +18,8 @@ public final class NativeRampCopiedItem {
         var component=input.get(DataComponents.BLOCK_ENTITY_DATA);
         try {
             // Recipe conversion reads the existing tag directly; placement later merges its result.
-            if(component!=null)draft.loadWithComponents(component.copyTag(),registries);
-            else if(root.contains("BlockEntityTag")){if(!root.contains("BlockEntityTag",Tag.TAG_COMPOUND))return ItemStack.EMPTY;draft.loadWithComponents(root.getCompound("BlockEntityTag").copy(),registries);}
+            if(component!=null){if(NativeRampRuntime.itemAuthority(component.copyTag()))return ItemStack.EMPTY;draft.loadWithComponents(component.copyTag(),registries);}
+            else if(root.contains("BlockEntityTag")){if(!root.contains("BlockEntityTag",Tag.TAG_COMPOUND))return ItemStack.EMPTY;if(NativeRampRuntime.itemAuthority(root.getCompound("BlockEntityTag")))return ItemStack.EMPTY;draft.loadWithComponents(root.getCompound("BlockEntityTag").copy(),registries);}
             if(draft.inert())return ItemStack.EMPTY;
             var plan=NativeRampConfiguration.copied(draft.settings(),state.getValue(NativeRampBlock.FACING).get3DDataValue(),NativeRampBlock.scanFacing(state).get3DDataValue(),values,false,false,false,false);
             var fields=draft.saveWithoutMetadata(registries);plan.result().writeChoices(fields);for(String key:new String[]{"id","x","y","z"})fields.remove(key);

@@ -52,7 +52,7 @@ final class NativeRampColdActorRecovery implements AutoCloseable {
   if(phase==4){
    if(!originalSpaceProven){proveOriginalSpace();originalSpaceProven=true;}
    if(!players.isEmpty()){if(playerRepair==null)playerRepair=NativeRampPlayerStorage.repair(level.getServer().getWorldPath(LevelResource.PLAYER_DATA_DIR),intent,players);if(!playerRepair.isDone())return NativeRampJournal.Status.PENDING;playerRepair.join();proveOriginalSpace();}
-   NativeRampJournal.startupActorsReturned(level,operation,intent);phase=5;
+   if(level.getBlockEntity(operation.root()) instanceof NativeRampEntity owner&&!owner.inert())NativeRampAuthorization.recovered(owner,NativeRampJournal.permissionIdentity(operation));NativeRampJournal.startupActorsReturned(level,operation,intent);phase=5;
   }
   if(phase==5){var result=NativeRampJournal.recover(level,operation);if(result==NativeRampJournal.Status.REFUSED)throw new IllegalStateException("Actor source restore retained: "+operation.error());if(result!=NativeRampJournal.Status.DONE)return NativeRampJournal.Status.PENDING;NativeRampJournal.startupActorRecoveryComplete(level);phase=6;}
   return NativeRampJournal.Status.READY;

@@ -25,7 +25,7 @@ final class NativeRampActorCheckpoint {
    if(chunks.size()>64||players.size()>NativeRampPlayerReceipts.MAX_PLAYERS)throw new IllegalStateException("Ramp actor checkpoint budget");
    var manager=(NativeRampEntityManagerAccess)(Object)((NativeRampEntityLevelAccess)(Object)level).vandorlabs$rampActorManager();
    for(var chunk:chunks)if(!manager.vandorlabs$rampStoreChunk(chunk.toLong(),entity->{}))return NativeRampJournal.Status.PENDING;
-   for(var player:players)((NativeRampPlayerSaveAccess)(Object)level.getServer().getPlayerList()).vandorlabs$rampSaveParticipant(player);
+   for(var player:players){NativeRampSupportStamps.requireInitial(player,NativeRampJournal.supportedInitialOperation(level,operation));((NativeRampPlayerSaveAccess)(Object)level.getServer().getPlayerList()).vandorlabs$rampSaveParticipant(player);}
    var storage=(NativeRampEntityStorageAccess)(Object)manager.vandorlabs$rampActorStorage();entitySync=storage.vandorlabs$rampActorRegions().synchronize(true);
    saved=true;
   }

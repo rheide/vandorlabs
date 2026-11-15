@@ -36,8 +36,8 @@ public final class RampControllerPlayerChecks {
   var hit=mc.level.clip(new ClipContext(eye,target,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,mc.player));String diagnostic=" target="+pos+" point="+target+" eye="+eye+" player="+mc.player.position()+" yaw="+mc.player.getYRot()+" pitch="+mc.player.getXRot()+" reach="+eye.distanceTo(target)+" hitType="+hit.getType()+" hitBlock="+hit.getBlockPos()+" face="+hit.getDirection()+" point="+hit.getLocation()+" state="+mc.level.getBlockState(hit.getBlockPos());if(mc.level.getBlockEntity(hit.getBlockPos()) instanceof NativeRampPartEntity part&&part.publication()!=null)diagnostic+=" rampBoxes="+part.publication().worldBoxes().stream().limit(4).toList();need(hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(pos),"ordinary ray reaches"+diagnostic);System.out.println("[vandorlabs][ramp-controller-player] normal click"+diagnostic);
   mc.gameMode.useItemOn(mc.player,InteractionHand.MAIN_HAND,hit);
  }
- private static void open(Minecraft mc){click(mc,RampControllerPlayerFixture.ROOT,Vec3.atLowerCornerOf(RampControllerPlayerFixture.ROOT).add(.5,.75,.001));}
- private static void lever(Minecraft mc){
+ static void open(Minecraft mc){click(mc,RampControllerPlayerFixture.ROOT,Vec3.atLowerCornerOf(RampControllerPlayerFixture.ROOT).add(.5,.75,.001));}
+ static void lever(Minecraft mc){
   var pos=RampControllerPlayerFixture.LEVER;var eye=mc.player.getEyePosition();var boxes=mc.level.getBlockState(pos).getShape(mc.level,pos).toAabbs();need(boxes.size()<=8,"bounded vanilla lever outline");Vec3 selected=null;double distance=Double.POSITIVE_INFINITY;
   for(var box:boxes)for(double x:new double[]{.25,.5,.75})for(double z:new double[]{.25,.5,.75}){
    var point=new Vec3(pos.getX()+box.minX+(box.maxX-box.minX)*x,pos.getY()+box.maxY-1e-4,pos.getZ()+box.minZ+(box.maxZ-box.minZ)*z);
@@ -46,7 +46,7 @@ public final class RampControllerPlayerChecks {
   }
   need(selected!=null,"an actual visible lever surface is reachable eye="+eye+" player="+mc.player.position()+" outline="+boxes);click(mc,pos,selected);
  }
- private static boolean stoppedSupport(Minecraft mc){
+ static boolean stoppedSupport(Minecraft mc){
   var body=mc.player.getBoundingBox();double nearest=Double.POSITIVE_INFINITY;net.minecraft.world.phys.AABB witness=null;long revision=-1;int parts=0;
   for(var pos:BlockPos.betweenClosed(new BlockPos(-1,98,-2),new BlockPos(1,100,-1))){
    if(!(mc.level.getBlockEntity(pos) instanceof NativeRampPartEntity part)||!part.ownershipKnown())continue;
@@ -59,11 +59,12 @@ public final class RampControllerPlayerChecks {
   need(Math.abs(body.minY-(100.5-2D/3D))<1e-6,"client/server endpoint support height "+body+" witness="+witness);
   System.out.println("[vandorlabs][ramp-controller-player] stopped endpoint client PASS pose=0 revision="+revision+" parts="+parts+" player="+mc.player.position()+" body="+body+" witness="+witness);return true;
  }
- private static void offset(NativeRampScreen screen,int desired){var slider=screen.startSlider();double fraction=(desired+32)/64D,x=slider.getX()+4+fraction*(slider.getWidth()-8);screen.mouseClicked(x,slider.getY()+slider.getHeight()/2D,0);screen.mouseReleased(x,slider.getY()+slider.getHeight()/2D,0);need(screen.editingDraft().settings().startHalf()==desired,"actual slider chose "+desired);}
+ static void offset(NativeRampScreen screen,int desired){var slider=screen.startSlider();double fraction=(desired+32)/64D,x=slider.getX()+4+fraction*(slider.getWidth()-8);screen.mouseClicked(x,slider.getY()+slider.getHeight()/2D,0);screen.mouseReleased(x,slider.getY()+slider.getHeight()/2D,0);need(screen.editingDraft().settings().startHalf()==desired,"actual slider chose "+desired);}
  @SubscribeEvent public static void tick(ClientTickEvent.Post event){
   if(!RampControllerPlayerFixture.enabled())return;if(com.vandorlabs.neoforge.ramp.NativeRampBindings.enabled()){RampControllerPlayerFixture.canonical();com.vandorlabs.neoforge.ramp.NativeRampBindings.bindMotion(RampControllerPlayerFixture::receive);}var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
-  if(stage>=18)return;
+  if(NativeRampColdPlayerFixture.read()){NativeRampColdPlayerChecks.tick(mc);return;}if(stage>=18)return;
   if(stage==17){if(mc.level==null){System.out.println("[vandorlabs][ramp-controller-player] client PASS checks="+checks+" corrections="+corrections);mc.stop();stage=18;}return;}
+  if(NativeRampColdPlayerFixture.write()&&mc.screen instanceof net.minecraft.client.gui.screens.DisconnectedScreen){System.out.println("[vandorlabs][ramp-player-cold] intentional write disconnect");stage=18;mc.stop();return;}
   need(!(mc.screen instanceof net.minecraft.client.gui.screens.DisconnectedScreen),"unexpected disconnect");
   if(mc.level==null||mc.player==null||mc.gameMode==null)return;need(++ticks<2400,"timeout ack="+ack(mc)+" position="+mc.player.position()+" mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" screen="+mc.screen+" endpoint="+endpointDiagnostic);
   switch(stage){
@@ -78,7 +79,7 @@ public final class RampControllerPlayerChecks {
    case 8->{stop(mc);if(ack(mc)!=4)return;walkFrom=mc.player.getX();walk=0;stage=9;}
    case 9->{walkRight(mc);if(ack(mc)<5||mc.player.getX()<1.35)return;stop(mc);wait=0;stage=10;}
    case 10->{stop(mc);if(++wait<12)return;lever(mc);stage=11;}
-   case 11->{if(ack(mc)!=6)return;lever(mc);stage=12;}
+   case 11->{if(NativeRampColdPlayerFixture.write())return;if(ack(mc)!=6)return;lever(mc);stage=12;}
    case 12->{if(ack(mc)!=7)return;wait=0;stage=13;}
    case 13->{stop(mc);if(++wait<12||!stoppedSupport(mc))return;open(mc);stage=14;}
    case 14->{if(!(mc.screen instanceof NativeRampScreen screen))return;offset(screen,0);stage=15;}

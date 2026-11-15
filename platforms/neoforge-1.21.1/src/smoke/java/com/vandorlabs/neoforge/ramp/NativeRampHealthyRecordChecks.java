@@ -1,0 +1,17 @@
+package com.vandorlabs.neoforge.ramp;
+import java.util.*;
+import net.minecraft.core.BlockPos;
+import net.minecraft.nbt.*;
+import net.minecraft.world.phys.*;
+/** Bounded malformed support/raw-chunk negatives; actual adoption uses the connected cold path. */
+final class NativeRampHealthyRecordChecks {
+ private static int checks;private static void need(boolean yes,String message){checks++;if(!yes)throw new AssertionError(message);}
+ static int run(){
+  var pos=new Vec3(.5,100.5,-1.5);var stamp=new NativeRampSupportStamp(new UUID(1,2),"minecraft:player","minecraft:overworld",new UUID(3,4),new UUID(5,6),new BlockPos(0,100,0),new byte[32],7,.3,0,pos,new AABB(.2,100.5,-1.8,.8,102.3,-1.2));var encoded=stamp.write();need(NativeRampSupportStamp.read(encoded).write().equals(encoded),"support stamp strict round trip");
+  for(int variant=0;variant<8;variant++){var bad=encoded.copy();switch(variant){case 0->bad.putString("Future","unknown");case 1->bad.putInt("Revision",7);case 2->bad.putByteArray("Recipe",new byte[31]);case 3->bad.putDouble("Pose",Double.NaN);case 4->bad.putDouble("Distance",Double.POSITIVE_INFINITY);case 5->bad.putString("Type","unknown unnamespaced type");case 6->{var body=bad.getList("Body",Tag.TAG_DOUBLE);body.set(3,DoubleTag.valueOf(-1));}default->bad.putIntArray("Root",new int[]{0,100});}boolean refused=false;try{NativeRampSupportStamp.read(bad);}catch(IllegalArgumentException expected){refused=true;}need(refused,"malformed support refuses "+variant);}
+  var chunk=new CompoundTag();chunk.putInt("xPos",0);chunk.putInt("zPos",-1);var sections=new ListTag();var section=new CompoundTag();section.putByte("Y",(byte)6);var states=new CompoundTag();var palette=new ListTag();var state=new CompoundTag();state.putString("Name","vandorlabs:programmable_ramp");palette.add(state);states.put("palette",palette);section.put("block_states",states);sections.add(section);chunk.put("sections",sections);var tiles=new ListTag();var tile=new CompoundTag();tile.putInt("x",0);tile.putInt("y",100);tile.putInt("z",-1);tile.putString("id","vandorlabs:programmable_ramp");tiles.add(tile);chunk.put("block_entities",tiles);var root=new BlockPos(0,100,-1);var raw=NativeRampSavedRoot.read(chunk,root);need(raw.state().equals(state)&&raw.tile().equals(tile),"bounded raw root lookup exact selected state/tile");raw.tile().putString("Changed","copy");need(!NativeRampSavedRoot.read(chunk,root).tile().contains("Changed"),"raw lookup owns immutable detached copies");
+  for(int variant=0;variant<4;variant++){var bad=chunk.copy();switch(variant){case 0->bad.putInt("xPos",1);case 1->bad.getList("sections",Tag.TAG_COMPOUND).add(section.copy());case 2->bad.getList("block_entities",Tag.TAG_COMPOUND).add(tile.copy());default->{var selected=bad.getList("sections",Tag.TAG_COMPOUND).getCompound(0).getCompound("block_states");selected.getList("palette",Tag.TAG_COMPOUND).add(state.copy());selected.putLongArray("data",new long[1]);}}boolean refused=false;try{NativeRampSavedRoot.read(bad,root);}catch(IllegalArgumentException expected){refused=true;}need(refused,"ambiguous or malformed raw root refuses "+variant);}
+  var item=new CompoundTag();need(!NativeRampRuntime.itemAuthority(item),"old empty configuration has no operation authority");item.putUUID(NativeRampRuntime.OWNER,new UUID(1,2));need(NativeRampRuntime.itemAuthority(item),"location owner cannot become configured item authority");return checks;
+ }
+ private NativeRampHealthyRecordChecks(){}
+}

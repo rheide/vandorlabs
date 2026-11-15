@@ -38,6 +38,7 @@ public class NativeRampItem extends BlockItem {
         for(String key:new String[]{RECOVERY,NativeRampEntity.PLACEMENT_RECOVERY})if(root.contains(key))throw new IllegalArgumentException("Ramp recovery item");
         for(String key:new String[]{CONFIGURATION,COPIED,"BlockEntityTag"})if(root.contains(key)&&!root.contains(key,Tag.TAG_COMPOUND))throw new IllegalArgumentException("Malformed Ramp item "+key);
         var raw=stack.get(DataComponents.BLOCK_ENTITY_DATA);var input=raw!=null?raw.copyTag():root.getCompound("BlockEntityTag").copy();
+        if(NativeRampRuntime.itemAuthority(input))throw new IllegalArgumentException("Ramp item contains physical operation authority");
         for(String key:new String[]{"id","x","y","z"})input.remove(key);
         var draft=block.entityType().create(pos,state);if(!(draft instanceof NativeRampEntity owner))throw new IllegalArgumentException("Ramp item factory");
         // Vanilla placement merges generic item data onto the fresh tile before loading it.
