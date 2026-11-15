@@ -39,8 +39,8 @@ Manual mode exposes a deployed/stowed target.
 Rotating Arms offer **Hinge: Single / Double**. Single swings the complete linkage
 from its mounting housing. Double turns both the base and the visible elbow,
 splitting the selected angle equally between them. The foot or payload keeps the
-same total rotation. **Kink** changes the linkage's bend direction independently
-of **Fold**. **Payload: stays level** still counter-rotates the lower swivel.
+same total rotation. **Kink: Inward / Outward** chooses the bend relative to **Fold**. Changing Fold
+keeps that relationship. Older perpendicular saved choices retain their pose and show **Legacy** until Kink is changed. **Payload: stays level** still counter-rotates the lower swivel.
 Choose the hinge and kink while fully deployed with the starting angle at zero.
 Older saved middle-only strokes retain their original motion until they return
 to the native zero-degree rest pose, where they adopt Double.

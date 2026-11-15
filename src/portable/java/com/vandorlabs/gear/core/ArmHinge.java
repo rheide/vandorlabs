@@ -13,6 +13,13 @@ public final class ArmHinge {
     /** Move the elbow cover while keeping its axle aligned with the fold axis. */
     public static double kinkOffsetX(GearMotion.Direction fold,GearMotion.Direction kink,int width){return (kink.axisZ()-fold.axisZ())*GearMotion.MIDDLE_HINGE_OFFSET*(fold.axisX()!=0?width:1);}
     public static double kinkOffsetZ(GearMotion.Direction fold,GearMotion.Direction kink,int width){return (fold.axisX()-kink.axisX())*GearMotion.MIDDLE_HINGE_OFFSET*(fold.axisZ()!=0?width:1);}
+    /** UI relationship in the mounting plane; -1 retains a previously saved perpendicular choice. */
+    public static int kinkRelationship(int fold,int kink){if(fold<0||fold>3||kink<0||kink>3)throw new IllegalArgumentException("Kink direction bounds");int relative=Math.floorMod(kink-fold,4);return relative==0?0:relative==2?1:-1;}
+    public static int relativeKink(int fold,boolean outward){if(fold<0||fold>3)throw new IllegalArgumentException("Fold direction bounds");return (fold+(outward?2:0))&3;}
+    /** Changing Fold preserves the chosen relationship, including an untouched old perpendicular pose. */
+    public static int reorientKink(int oldFold,int kink,int newFold){kinkRelationship(oldFold,kink);if(newFold<0||newFold>3)throw new IllegalArgumentException("Fold direction bounds");return Math.floorMod(newFold+kink-oldFold,4);}
+    public static int cycleRelativeKink(int fold,int kink,int step){if(step!=1&&step!=-1)throw new IllegalArgumentException("Kink option step");int relationship=kinkRelationship(fold,kink);return relativeKink(fold,relationship<0?step<0:Math.floorMod(relationship+step,2)==1);}
+    public static String kinkLabel(int fold,int kink){int relationship=kinkRelationship(fold,kink);return relationship<0?"Legacy":relationship==0?"Inward":"Outward";}
     private static double sine(double degrees){if(degrees==0||Math.abs(degrees)==180)return 0;if(degrees==90)return 1;if(degrees==-90)return -1;return Math.sin(Math.toRadians(degrees));}
     private static double cosine(double degrees){if(degrees==0)return 1;if(Math.abs(degrees)==180)return -1;if(Math.abs(degrees)==90)return 0;return Math.cos(Math.toRadians(degrees));}
     /** Caller-owned scratch: lower translation, upper translation/sine/cosine, authored elbow. */

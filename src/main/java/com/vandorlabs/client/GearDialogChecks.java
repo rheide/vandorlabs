@@ -30,7 +30,7 @@ public final class GearDialogChecks {
             require(done&&(track?!rotation:rotation),"separate Track appearance and arm motion controls");if(track){require(buttons.size()==2,"Track shows only style and Done");require(((com.vandorlabs.gear.track.TrackTile)tile).error().isEmpty(),"standalone mounted Track has no generic arm assembly error");}else for(Field field:fields){GuiTextField text=(GuiTextField)field.get(gui);if(text.getVisible())add(occupied,new Rectangle(text.x,text.y,text.width,text.height),size);}
             if(!track){
                 GuiModularGear armGui=(GuiModularGear)gui;
-                require(gui.getYSize()==244,"Mechanism includes the independent Kink row");
+                require(gui.getYSize()==244,"Mechanism includes the relative Kink row");
                 for(int id:new int[]{1,2,7}){GuiButton row=buttons.stream().filter(b->b.id==id).findFirst().get();require(row.y-gui.getGuiTop()==56+26*(id==1?0:id==2?1:2),"Mechanism rows fill the space immediately below tabs");}
                 GuiButton join=buttons.stream().filter(b->b.id==9).findFirst().get(),load=buttons.stream().filter(b->b.id==11).findFirst().get();
                 require(join.visible&&(load.visible!=tile.isSwingArmController())&&!((GuiTextField)fields[0].get(gui)).getVisible(),"mechanism page separates receiver channels from arm geometry");
@@ -41,6 +41,7 @@ public final class GearDialogChecks {
                     sliderEndpoints(mc,armGui,buttons,10);
                     if(load.enabled){armGui.mouseClicked(load.x+5,load.y+5,1);require(load.displayString.endsWith("On"),"right click enables load");sliderEndpoints(mc,armGui,buttons,12);}
                 }
+                if(tile.isSwingArmController())relativeKink((RecordingGearGui)armGui,buttons);
                 GuiButton angle=buttons.stream().filter(b->b.id==13).findFirst().get();
                 GuiButton start=buttons.stream().filter(b->b.id==16).findFirst().get();
                 if(angle.visible&&angle.enabled){
@@ -92,6 +93,23 @@ public final class GearDialogChecks {
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}cases++;
         }}finally{mc.displayGuiScreen(previous);mc.player.openContainer=container;}
         System.out.println("[vandorlabs][reprolab] arms-210 landing-dialog PASS cases="+cases+" Tracks/Skis/Wheels/Plates six mounts three resolutions reverse/forward Foot independent of Fold rendered glyphs nonoverlap");
+    }
+    private static void relativeKink(RecordingGearGui gui,List<GuiButton> buttons)throws Exception{
+        GuiButton kink=buttons.stream().filter(b->b.id==19).findFirst().get(),fold=buttons.stream().filter(b->b.id==1).findFirst().get();
+        require(kink.enabled&&fold.enabled,"resting rotating arm exposes relative Kink and Fold");
+        int count=gui.sent.size();
+        gui.mouseClicked(kink.x+5,kink.y+5,0);
+        NBTTagCompound outward=gui.sent.get(count);
+        require(kink.displayString.equals("Kink: Outward")&&Math.floorMod(outward.getInteger("KinkDirection")-outward.getInteger("Direction"),4)==2,"left click selects Outward relative to Fold");
+        gui.mouseClicked(fold.x+5,fold.y+5,0);
+        NBTTagCompound rotated=gui.sent.get(count+1);
+        require(Math.floorMod(rotated.getInteger("Direction")-outward.getInteger("Direction"),4)==1&&Math.floorMod(rotated.getInteger("KinkDirection")-rotated.getInteger("Direction"),4)==2,"changing Fold preserves Outward");
+        gui.mouseClicked(fold.x+5,fold.y+5,1);
+        NBTTagCompound restored=gui.sent.get(count+2);
+        require(restored.getInteger("Direction")==outward.getInteger("Direction")&&restored.getInteger("KinkDirection")==outward.getInteger("KinkDirection"),"previous Fold restores both directions");
+        gui.mouseClicked(kink.x+5,kink.y+5,1);
+        NBTTagCompound inward=gui.sent.get(count+3);
+        require(kink.displayString.equals("Kink: Inward")&&inward.getInteger("KinkDirection")==inward.getInteger("Direction"),"right click restores Inward");
     }
     private static final class RecordingGearGui extends GuiModularGear {
         final List<NBTTagCompound> sent=new ArrayList<>();

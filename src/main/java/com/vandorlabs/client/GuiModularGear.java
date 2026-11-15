@@ -56,8 +56,7 @@ public class GuiModularGear extends GuiContainer {
         button(17).displayString="Foot: "+net.minecraft.util.EnumFacing.getFacingFromVector(footVector.getX(),footVector.getY(),footVector.getZ()).getName();
         button(18).visible=page==0&&tile.isSwingArmController();button(18).enabled=rest&&tile.physicalStartAngle()==0;button(18).displayString="Hinge: "+(middle?"Double":"Single");
         button(19).visible=page==0&&tile.isSwingArmController();button(19).enabled=rest&&tile.physicalStartAngle()==0;
-        net.minecraft.util.math.BlockPos kinkVector=com.vandorlabs.gear.ArmOrientation.vector(tile.mountDirection(),new net.minecraft.util.math.BlockPos(net.minecraft.util.EnumFacing.valueOf(new String[]{"NORTH","EAST","SOUTH","WEST"}[kink]).getDirectionVec()));
-        button(19).displayString="Kink: "+net.minecraft.util.EnumFacing.getFacingFromVector(kinkVector.getX(),kinkVector.getY(),kinkVector.getZ()).getName();
+        button(19).displayString="Kink: "+com.vandorlabs.gear.core.ArmHinge.kinkLabel(direction,kink);
         button(11).visible=page==0&&!tile.isSwingArmController();
         button(11).displayString="Carry load: "+(load?"On":"Off");button(11).enabled=rest&&join&&tile.canCarryLoad();loadSlider.enabled=rest;
         ((RedstoneActivationButton)button(0)).setMode(trigger);
@@ -88,7 +87,7 @@ public class GuiModularGear extends GuiContainer {
     @Override protected void actionPerformed(GuiButton b){
         if(b.id>=20){page=b.id-20;labels();return;}
         if(b.id==4){mc.player.closeScreen();return;}
-        if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1){kinkExplicit=true;direction=GuiOptionCycle.next(direction,4);}else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else if(b.id==9){join=!join;if(!join)load=false;}else if(b.id==11)load=!load;else if(b.id==14)push=!push;else if(b.id==18){middle=!middle;hinge=middle?com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE:com.vandorlabs.gear.core.ArmHinge.Mode.SINGLE;}else if(b.id==19){kink=GuiOptionCycle.next(kink,4);kinkExplicit=true;}else if(b.id==17)footFacing=GuiOptionCycle.next(footFacing,4);else return;
+        if(b.id==0)trigger=GuiOptionCycle.next(trigger,3);else if(b.id==1){int next=GuiOptionCycle.next(direction,4);kink=com.vandorlabs.gear.core.ArmHinge.reorientKink(direction,kink,next);kinkExplicit=true;direction=next;}else if(b.id==2)deployed=!deployed;else if(b.id==7)rotate=!rotate;else if(b.id==9){join=!join;if(!join)load=false;}else if(b.id==11)load=!load;else if(b.id==14)push=!push;else if(b.id==18){middle=!middle;hinge=middle?com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE:com.vandorlabs.gear.core.ArmHinge.Mode.SINGLE;}else if(b.id==19){kink=com.vandorlabs.gear.core.ArmHinge.cycleRelativeKink(direction,kink,GuiOptionCycle.direction());kinkExplicit=true;}else if(b.id==17)footFacing=GuiOptionCycle.next(footFacing,4);else return;
         submit();labels();
     }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff19232c);}
@@ -103,7 +102,7 @@ public class GuiModularGear extends GuiContainer {
         java.util.List<String> lines=fontRenderer.listFormattedStringToWidth(status,xSize-24);for(int i=0;i<Math.min(2,lines.size());i++)fontRenderer.drawString(lines.get(i),12,ySize-20+i*9,failure.isEmpty()?0xcdd7e4:0xff8888);
     }
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();super.drawScreen(x,y,partial);net.minecraft.client.renderer.GlStateManager.disableLighting();net.minecraft.client.renderer.GlStateManager.disableDepth();channels.drawTextBox();renderHoveredToolTip(x,y);}
-    @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11,14,17,18))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
+    @Override protected void mouseClicked(int x,int y,int b)throws IOException{if(GuiOptionCycle.rightClick(mc,buttonList,x,y,b,this::actionPerformed,0,1,2,7,9,11,14,17,18,19))return;super.mouseClicked(x,y,b);channels.mouseClicked(x,y,b);}
     @Override protected void keyTyped(char c,int key)throws IOException{if(channels.textboxKeyTyped(c,key))submit();else super.keyTyped(c,key);}
     @Override public void updateScreen(){super.updateScreen();GearTileEntity current=((ContainerModularGear)inventorySlots).currentTile();if(current!=null)tile=current;reconcileAngles();channels.updateCursorCounter();labels();}
     @Override public void onGuiClosed(){super.onGuiClosed();org.lwjgl.input.Keyboard.enableRepeatEvents(false);}

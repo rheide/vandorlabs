@@ -69,7 +69,7 @@ fractional endpoints refuse placement without consuming the held item.
 
 Rotating Arms offer **Hinge: Single / Double**. Double shares the angle between
 the base and elbow while preserving the total foot or payload rotation. **Kink**
-controls the bend direction independently of **Fold**. Older saved middle-only
+chooses **Inward / Outward** relative to **Fold**, keeping that relationship when Fold changes. Older saved middle-only
 strokes finish with their original motion before adopting Double at native
 zero-degree rest. Payload motion and collision use the same shared geometry.
 
@@ -87,7 +87,7 @@ admission rules. See the [modular landing gear guide](../modular-landing-gear.md
 
 NeoForge now includes regular and Large Extenders, Rotating Arms, mounts, Plates,
 Skis and Wheels as ten ordinary creative/search items. Six-face placement, joined
-platforms, Foot direction, Single / Double hinges, independent Kink and the dedicated
+platforms, Foot direction, Single / Double hinges, relative Inward / Outward Kink and the dedicated
 Configurizer dialog use
 the Forge 1.12.2 construction rules. Duplifier copying and Undo transfer settings only.
 Native/captured payload handoffs, active-foot attachment and captured-block mining

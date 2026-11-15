@@ -4,7 +4,13 @@ public final class ArmHingeTest {
  private static void close(double a,double b){checks++;if(Math.abs(a-b)>1e-9)throw new AssertionError(a+" != "+b);}
  private static void refused(Runnable action){checks++;try{action.run();throw new AssertionError("Invalid hinge input accepted");}catch(IllegalArgumentException expected){}}
  private static void equal(GearMotion.Vec a,GearMotion.Vec b){close(a.x,b.x);close(a.y,b.y);close(a.z,b.z);}
- public static void main(String[] args){GearFootProjection scratch=new GearFootProjection();double[] projected=new double[3];
+ private static void relativeChoices(){for(int fold=0;fold<4;fold++)for(int kink=0;kink<4;kink++){
+  int relation=ArmHinge.kinkRelationship(fold,kink);close(relation,kink==fold?0:kink==((fold+2)&3)?1:-1);
+  for(int next=0;next<4;next++)close(Math.floorMod(ArmHinge.reorientKink(fold,kink,next)-next,4),Math.floorMod(kink-fold,4));
+  for(int step:new int[]{-1,1}){int selected=ArmHinge.cycleRelativeKink(fold,kink,step);if(ArmHinge.kinkRelationship(fold,selected)<0)throw new AssertionError("Perpendicular choice exposed");checks++;if(relation>=0)close(ArmHinge.cycleRelativeKink(fold,selected,-step),kink);}
+  for(int state=0;state<2;state++){int selected=ArmHinge.relativeKink(fold,state==1);close(ArmHinge.kinkRelationship(fold,selected),state);if(!ArmHinge.kinkLabel(fold,selected).equals(state==0?"Inward":"Outward"))throw new AssertionError("Relative label");checks++;}
+ }}
+ public static void main(String[] args){relativeChoices();GearFootProjection scratch=new GearFootProjection();double[] projected=new double[3];
   for(GearMotion.Direction fold:GearMotion.Direction.values())for(GearMotion.Direction kink:GearMotion.Direction.values())for(int height=1;height<=8;height++)for(int width=1;width<=2;width++)for(double socket:new double[]{0,13/16D,11/16D})for(int angle=-180;angle<=180;angle+=15){
    ReferenceHinge.Pose pose=ReferenceHinge.pose(ArmHinge.Mode.DOUBLE,fold,kink,height,socket,width,angle);
    equal(pose.upper.point(pose.elbow.x,pose.elbow.y,pose.elbow.z),pose.lower.point(pose.elbow.x,pose.elbow.y,pose.elbow.z));
