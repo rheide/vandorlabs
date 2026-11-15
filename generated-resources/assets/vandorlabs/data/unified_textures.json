@@ -1733,13 +1733,15 @@
     "id": "imported_fuel_fuel_port_dual",
     "label": "Fuel Port Dual",
     "category": "Tech",
-    "source": "imported/fuel/fuel_port_dual"
+    "source": "imported/fuel/fuel_port_dual",
+    "hidden": true
   },
   {
     "id": "imported_fuel_fuel_port_round",
     "label": "Fuel Port Round",
     "category": "Tech",
-    "source": "imported/fuel/fuel_port_round"
+    "source": "imported/fuel/fuel_port_round",
+    "hidden": true
   },
   {
     "id": "imported_hull_dark_r1_c2",

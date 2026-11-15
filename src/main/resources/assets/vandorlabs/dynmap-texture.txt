@@ -21774,8 +21774,8 @@ texture:id=housing_261,filename=assets/vandorlabs/textures/blocks/logo_off.png,x
 texture:id=housing_262,filename=assets/vandorlabs/textures/blocks/imported/computing/server_compute_rack.png,xcount=1,ycount=1
 texture:id=housing_263,filename=assets/vandorlabs/textures/blocks/imported/computing/server_data_storage.png,xcount=1,ycount=1
 texture:id=housing_264,filename=assets/vandorlabs/textures/blocks/imported/computing/server_network_core.png,xcount=1,ycount=1
-texture:id=housing_265,filename=assets/vandorlabs/textures/blocks/imported/fuel/fuel_port_dual.png,xcount=1,ycount=1
-texture:id=housing_266,filename=assets/vandorlabs/textures/blocks/imported/fuel/fuel_port_round.png,xcount=1,ycount=1
+texture:id=housing_265,filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png,xcount=1,ycount=1
+texture:id=housing_266,filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png,xcount=1,ycount=1
 texture:id=housing_267,filename=assets/vandorlabs/textures/blocks/imported/hull/dark_r1_c2.png,xcount=1,ycount=1
 texture:id=housing_268,filename=assets/vandorlabs/textures/blocks/imported/hull/dark_r1_c3.png,xcount=1,ycount=1
 texture:id=housing_269,filename=assets/vandorlabs/textures/blocks/imported/hull/dark_r1_c6.png,xcount=1,ycount=1
@@ -22705,8 +22705,8 @@ texture:id=housing_1192,filename=assets/vandorlabs/textures/blocks/logo_off.png,
 texture:id=housing_1193,filename=assets/vandorlabs/textures/blocks/imported/computing/server_compute_rack.png,xcount=1,ycount=1
 texture:id=housing_1194,filename=assets/vandorlabs/textures/blocks/imported/computing/server_data_storage.png,xcount=1,ycount=1
 texture:id=housing_1195,filename=assets/vandorlabs/textures/blocks/imported/computing/server_network_core.png,xcount=1,ycount=1
-texture:id=housing_1196,filename=assets/vandorlabs/textures/blocks/imported/fuel/fuel_port_dual.png,xcount=1,ycount=1
-texture:id=housing_1197,filename=assets/vandorlabs/textures/blocks/imported/fuel/fuel_port_round.png,xcount=1,ycount=1
+texture:id=housing_1196,filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png,xcount=1,ycount=1
+texture:id=housing_1197,filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png,xcount=1,ycount=1
 texture:id=housing_1198,filename=assets/vandorlabs/textures/blocks/imported/hull/dark_r1_c2.png,xcount=1,ycount=1
 texture:id=housing_1199,filename=assets/vandorlabs/textures/blocks/imported/hull/dark_r1_c3.png,xcount=1,ycount=1
 texture:id=housing_1200,filename=assets/vandorlabs/textures/blocks/imported/hull/dark_r1_c6.png,xcount=1,ycount=1

@@ -20,10 +20,12 @@
 ### Materials and connected artwork
 
 - Add Port Hull to the generic Hull texture category, retaining all earlier saved texture choices.
+- Remove Fuel Port Dual and Fuel Port Round from the picker and bundled artwork. Retain their saved choice numbers with the standard compatibility fallback; update the texture browser and Dynmap palette.
 - Add thirteen Tiles finishes and six Utility Door designs, including Bathroom and Stall, resized to the existing material and Door artwork resolutions. Preserve prior texture indices and regenerate the browser, category collages and Dynmap data.
 - Mirror filesystem Door artwork on paired leaves, matching selected vanilla-block materials in Forge 1.12.2 and NeoForge 1.21.1.
 - Standardize image layout captions as Texture: Tile / Fit (Aspect) / Stretch. Keep Join for connectivity and Junction for diagonal junction shape.
 - Add Vertical, Horizontal, North/South and East/West texture joining to supported connected building surfaces. Remove the Even/Odd coordinate filter; older saved choices behave as All. Invalidate warmed joins after Copifier batch changes while preserving original saved snapshots and opaque capability data. See the [texture joining guide](docs/texture-joining.md).
+- Require both Glass and Porthole neighbours to allow the shared join axis. Duplifier changes rebuild the original group’s frames and aperture rims, including splitting Horizontal groups into individual North/South blocks.
 - Add Respect block joins to connected Duplifier selection. Explain Connected Matching Blocks, Respect block joins and Ignore directionality with hover tooltips. Retain the original matching-region behavior when disabled, and preserve saved option indices and existing message sizes.
 
 ### Coupler ownership recovery (Forge 1.12.2)

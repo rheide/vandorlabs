@@ -24,13 +24,13 @@ staggered tiles, limestone and terrazzo designs. **Doors / Utility** gains
 Bathroom White, Modern Oak Windowed, Windowed Utility, Windowed White, Bathroom
 and Stall.
 Existing saved texture choices keep their identities.
-The **Hull** category also includes the supplied **Port Hull** face.
+The **Hull** category also includes the supplied **Port Hull** face. Fuel Port Dual and Fuel Port Round have been removed from the picker and artwork; their old saved slots use the standard fallback.
 
 Filesystem Door artwork now mirrors correctly across double-door leaves,
 matching the behavior of selected vanilla-block textures.
 
 Material dialogs consistently call image mapping **Texture: Tile / Fit (Aspect)
-/ Stretch**. Connected surfaces offer Vertical, Horizontal, North/South and East/West joining.
+/ Stretch**. Connected surfaces offer Vertical, Horizontal, North/South and East/West joining. Both neighbours must allow the shared axis: Vertical can join Vertical or On above and below, but cannot join a Horizontal-only neighbour.
 Older saved Even/Odd choices now behave as All. Copifier batch changes refresh
 previously joined surfaces immediately. See [texture layout and joining](../texture-joining.md)
 for examples, axis meanings and supported families.
