@@ -44,11 +44,24 @@ public final class BatteryPortRuntimeChecks {
                 NBTTagCompound bad=snapshot.copy();if(corruption==0)bad.setInteger("Energy",100001);else if(corruption==1)bad.setIntArray(ResourcePortData.FACES,new int[]{1,2});else bad.setInteger("PortEnergy",1);
                 TileEntityBattery failed=new TileEntityBattery();failed.readFromNBT(bad);need(failed.inert()&&failed.getCapability(CapabilityEnergy.ENERGY,null)==null&&failed.getRedstoneChannels().isEmpty(),"malformed owner inert, no capability/output");need(failed.writeToNBT(new NBTTagCompound()).equals(bad),"malformed original snapshot retained exactly");
             }
+            inertCopy(world);
             actor.setGameType(net.minecraft.world.GameType.SURVIVAL);actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(Items.IRON_PICKAXE));need(actor.interactionManager.tryHarvestBlock(at)&&world.isAirBlock(at),"actual Battery harvest");
             java.util.List<net.minecraft.entity.item.EntityItem> drops=world.getEntitiesWithinAABB(net.minecraft.entity.item.EntityItem.class,new net.minecraft.util.math.AxisAlignedBB(at).grow(2));ItemStack carrier=ItemStack.EMPTY;int owners=0;for(net.minecraft.entity.item.EntityItem item:drops)if(!item.isDead&&item.getItem().getItem()==net.minecraft.item.Item.getItemFromBlock(block)){owners+=item.getItem().getCount();carrier=item.getItem().copy();item.setDead();}need(owners==1&&carrier.getSubCompound("BlockEntityTag").getInteger("Energy")==99993,"one configured Battery resource item");
             world.setBlockToAir(at);world.setBlockState(at.down(),net.minecraft.init.Blocks.STONE.getDefaultState(),2);actor.setHeldItem(EnumHand.MAIN_HAND,carrier);actor.setPosition(at.getX()+.5,at.getY(),at.getZ()-3);need(carrier.getItem().onItemUse(actor,world,at.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS&&actor.getHeldItemMainhand().isEmpty(),"actual Battery carrier placement consumes once");TileEntityBattery placed=(TileEntityBattery)world.getTileEntity(at);need(placed.stored()==99993&&placed.configuration().equals(tile.configuration()),"placement retains resources and configured six-face policy");
             System.out.println("[vandorlabs][reprolab] battery-port-runtime PASS checks="+checks+" old-six-facing1000/100k/new-unlimited/opaque-capabilities/inert-original/shared-budget/mine-placement");
         }finally{world.removeTileEntity(at);world.setBlockToAir(at);world.setBlockToAir(at.down());}
+    }
+    public static void inertCopy(WorldServer world){
+        BlockBattery block=(BlockBattery)Block.getBlockFromName("vandorlabs:battery_block");
+        NBTTagCompound inertData=new NBTTagCompound();ResourcePortData.write(inertData,ResourcePortSettings.placed(EnumFacing.UP.getIndex()),0,ChannelList.EMPTY);inertData.setString("id","vandorlabs:battery");inertData.setInteger("Energy",99993);inertData.setBoolean("BlockShape",true);inertData.setIntArray(ResourcePortData.FACES,new int[]{1,2});
+        com.vandorlabs.vehicle.VehicleStructure held=com.vandorlabs.vehicle.VehicleStructure.display(java.util.Collections.singletonList(new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,block.getDefaultState(),inertData)));
+        com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(world,held);
+        need(view.getTileEntity(BlockPos.ORIGIN) instanceof TileEntityBattery&&((TileEntityBattery)view.getTileEntity(BlockPos.ORIGIN)).inert(),"unreadable saved policy retains inert Battery in copy view");
+        java.util.List<com.vandorlabs.copier.CopyMaterials.Need> materials=com.vandorlabs.copier.CopyMaterials.forSnapshot(held,view,false);
+        need(materials.size()==1&&materials.get(0).exact&&materials.get(0).count==1,"inert positive charge requires one exact resource carrier");
+        need(!com.vandorlabs.copier.CopyMaterials.satisfies(materials.get(0),new ItemStack(block))&&com.vandorlabs.copier.CopyMaterials.satisfies(materials.get(0),materials.get(0).item.copy()),"empty block cannot pay for retained inert charge");
+        need(materials.get(0).item.getSubCompound("BlockEntityTag").getInteger("Energy")==99993,"exact inert carrier retains the original charge");
+        System.out.println("[vandorlabs][reprolab] battery-inert-copy PASS positive-original-energy exact-carrier bare-material-refusal");
     }
     private BatteryPortRuntimeChecks(){}
 }

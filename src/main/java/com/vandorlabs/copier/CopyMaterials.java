@@ -64,6 +64,8 @@ public final class CopyMaterials {
     private static boolean resourceData(NBTTagCompound source,NBTTagCompound item){for(String key:new String[]{"Energy","Tank","ContainedFluids","PortEnergy","PortFluid","Items"})if(source.hasKey(key)&&!Objects.equals(source.getTag(key),item.getTag(key)))return false;return true;}
     private static boolean storedResources(TileEntity tile,NBTTagCompound tag){
         if(tile==null||tag==null)return false;
+        // Inert Batteries retain their original charge but deliberately expose no energy capability.
+        if(tile instanceof TileEntityBattery&&tag.hasKey("Energy",99)&&tag.getDouble("Energy")>0)return true;
         if(tile instanceof com.vandorlabs.ports.ResourcePortTile&&com.vandorlabs.ports.ResourcePortData.hasResources(tag))return true;
         com.vandorlabs.blocks.ContainedFluids contained=WaterloggedParts.data(tile);if(contained!=null&&contained.any())return true;
         if(tile instanceof net.minecraft.tileentity.TileEntityFurnace&&tag.getShort("BurnTime")>0)return true;

@@ -16,6 +16,7 @@ public final class ResourcePortOwnershipChecks {
     private static void need(boolean value,String why){checks++;if(!value)throw new IllegalStateException("Resource port ownership: "+why);}
     private static VehicleStructure snapshot(ResourcePortBlock block,NBTTagCompound raw){return VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(BlockPos.ORIGIN,block.getDefaultState(),raw)));}
     public static void run(WorldServer world){
+        BatteryPortRuntimeChecks.inertCopy(world);
         BlockPos at=new BlockPos(958,110,32);world.getChunkFromBlockCoords(at);
         try{for(ResourcePortBlock block:ResourcePorts.BLOCKS){
             ResourcePortTile tile=ResourcePortRuntimeChecks.put(world,at,block);ResourcePortRuntimeChecks.fill(tile,37);ResourcePortSettings.Face[] disabled=new ResourcePortSettings.Face[6];Arrays.fill(disabled,ResourcePortSettings.Face.DISABLED);tile.configure(new ResourcePortSettings(disabled,7,true,ResourcePortSettings.OnTexture.CONNECTED),2,ChannelList.of(64123));
