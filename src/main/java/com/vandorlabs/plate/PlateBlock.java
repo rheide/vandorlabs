@@ -28,8 +28,8 @@ public final class PlateBlock extends BlockBasePressurePlate {
     @Override public int getMetaFromState(IBlockState state){return state.getValue(POWER);}
     private static int sensitivity(World world,BlockPos pos){TileEntity tile=world.getTileEntity(pos);return tile instanceof PlateTile?((PlateTile)tile).sensitivity():0;}
     @Override protected int computeRedstoneStrength(World world,BlockPos pos){int kind=sensitivity(world,pos);return PlateTile.measure(kind,kind==0?world.getEntitiesWithinAABBExcludingEntity(null,PRESSURE_AABB.offset(pos)):world.getEntitiesWithinAABB(Entity.class,PRESSURE_AABB.offset(pos)));}
-    public int releaseTicks(World world,BlockPos pos){return sensitivity(world,pos)==0?20:10;}
-    @Override public int tickRate(World world){Integer sensitivity=SENSING.get();return sensitivity==null||sensitivity==0?20:10;}
+    public int releaseTicks(World world,BlockPos pos){return com.vandorlabs.persistence.PressurePlateSettings.releaseTicks(sensitivity(world,pos));}
+    @Override public int tickRate(World world){Integer sensitivity=SENSING.get();return com.vandorlabs.persistence.PressurePlateSettings.releaseTicks(sensitivity==null?0:sensitivity);}
     public void resample(World world,BlockPos pos){IBlockState state=world.getBlockState(pos);if(state.getBlock()==this)updateState(world,pos,state,state.getValue(POWER));}
     @Override protected void updateState(World world,BlockPos pos,IBlockState state,int previous){
         Integer before=SENSING.get();SENSING.set(sensitivity(world,pos));try{super.updateState(world,pos,state,previous);}finally{if(before==null)SENSING.remove();else SENSING.set(before);}

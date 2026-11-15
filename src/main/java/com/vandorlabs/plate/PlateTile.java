@@ -15,12 +15,12 @@ public final class PlateTile extends TileEntityRedstoneChannel {
     public static String sensitivityName(int value){return new String[]{"Wood","Gold","Iron"}[Math.max(0,Math.min(2,value))];}
     /** Native weighted plates count entities, not item stack sizes, and ignore the wooden trigger-exempt flag. */
     public static int measure(int sensitivity,java.util.Collection<? extends net.minecraft.entity.Entity> entities){
-        if(sensitivity==0){for(net.minecraft.entity.Entity entity:entities)if(!entity.doesEntityNotTriggerPressurePlate())return 15;return 0;}
-        int maximum=sensitivity==1?15:150,count=Math.min(entities.size(),maximum);return count==0?0:net.minecraft.util.math.MathHelper.ceil(((float)count/(float)maximum)*15F);
+        if(sensitivity==0){for(net.minecraft.entity.Entity entity:entities)if(!entity.doesEntityNotTriggerPressurePlate())return com.vandorlabs.persistence.PressurePlateSettings.measure(sensitivity,entities.size(),true);return 0;}
+        return com.vandorlabs.persistence.PressurePlateSettings.measure(sensitivity,entities.size(),false);
     }
     public int physicalPower(){return world!=null&&world.getBlockState(pos).getBlock() instanceof PlateBlock?world.getBlockState(pos).getValue(PlateBlock.POWER):0;}
     public boolean pressed(){return physicalPower()>0;}
-    public int outputFor(int power){return mode==1?power:mode==2&&power==0?15:0;}
+    public int outputFor(int power){return com.vandorlabs.persistence.PressurePlateSettings.output(mode,power);}
     @Override public boolean isChannelLatch(){return false;}
     @Override public int getOutputLevel(){return output;}
     @Override public int localSignalLevel(int channel){return output;}
@@ -33,7 +33,7 @@ public final class PlateTile extends TileEntityRedstoneChannel {
     public boolean carriedSampleDue(long tick){return physicalPower()==0||tick>=nextCarriedSample;}
     public int carriedMeasurement(int measured,long tick){
         int current=physicalPower();if(current>0&&tick<nextCarriedSample)return current;
-        if(measured>0)nextCarriedSample=tick+(sensitivity==0?20:10);else nextCarriedSample=Long.MIN_VALUE;
+        if(measured>0)nextCarriedSample=tick+com.vandorlabs.persistence.PressurePlateSettings.releaseTicks(sensitivity);else nextCarriedSample=Long.MIN_VALUE;
         return measured;
     }
     public void configure(int texture,int mode,ChannelList channels){configure(texture,mode,sensitivity,channels);}
@@ -45,5 +45,5 @@ public final class PlateTile extends TileEntityRedstoneChannel {
     }
     @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{sample();if(pressed())world.scheduleUpdate(pos,world.getBlockState(pos).getBlock(),((PlateBlock)world.getBlockState(pos).getBlock()).releaseTicks(world,pos));});}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("PlateTexture",texture);tag.setInteger("PlateMode",mode);tag.setInteger("PlateSensitivity",sensitivity);tag.setInteger("PlateOutput",output);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);texture=tag.hasKey("PlateTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("PlateTexture")):ScreenHousingTextures.screenIndex("door_inner");mode=tag.hasKey("PlateMode",3)?Math.max(0,Math.min(2,tag.getInteger("PlateMode"))):1;sensitivity=Math.max(0,Math.min(2,tag.getInteger("PlateSensitivity")));output=tag.hasKey("PlateOutput",3)?Math.max(0,Math.min(15,tag.getInteger("PlateOutput"))):isLocalOn()?15:0;}
+    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);texture=tag.hasKey("PlateTexture",3)?ScreenHousingTextures.clamp(tag.getInteger("PlateTexture")):ScreenHousingTextures.screenIndex("door_inner");mode=com.vandorlabs.persistence.PressurePlateSettings.savedMode(tag.hasKey("PlateMode",3),tag.getInteger("PlateMode"));sensitivity=com.vandorlabs.persistence.PressurePlateSettings.savedSensitivity(tag.getInteger("PlateSensitivity"));output=tag.hasKey("PlateOutput",3)?Math.max(0,Math.min(15,tag.getInteger("PlateOutput"))):isLocalOn()?15:0;}
 }
