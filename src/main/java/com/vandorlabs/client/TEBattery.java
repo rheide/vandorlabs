@@ -49,7 +49,7 @@ public final class TEBattery extends TileEntitySpecialRenderer<TileEntityBattery
             int axis=face.getAxis()==EnumFacing.Axis.X?BatteryGeometryCache.X:face.getAxis()==EnumFacing.Axis.Z?BatteryGeometryCache.Z:BatteryGeometryCache.Y;
             BatteryGeometryCache.Mesh mesh=GEOMETRY.mesh(tile.isBlockShape(),axis,face.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE);
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);mesh.emit(new GeometrySink(b,tile,casing,portSprites));t.draw();
-            GlStateManager.disableTexture2D();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);mesh.emit(new Indicators(b,tile));t.draw();GlStateManager.enableTexture2D();
+            GlStateManager.disableTexture2D();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);mesh.emit(new Indicators(b,tile));if(b.getVertexCount()>0)t.draw();else{b.finishDrawing();b.reset();}GlStateManager.enableTexture2D();
         }finally{GlStateManager.popMatrix();GlStateManager.resetColor();GlStateManager.color(1,1,1,1);}
     }
 }

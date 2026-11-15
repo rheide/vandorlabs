@@ -15,6 +15,9 @@ import net.minecraft.util.NonNullList;
 public final class StorageStatusDeltaChecks {
     private static final class Listener implements IContainerListener {
         final ContainerStorageStatus client = new ContainerStorageStatus(new TileEntity() { });
+        private final java.util.function.BiConsumer<Integer,Integer> receive;
+        Listener(){receive=client::updateProgressBar;}
+        Listener(java.util.function.BiConsumer<Integer,Integer> receive){this.receive=receive;}
         int messages, bytes;
         @Override public void sendAllContents(Container container, NonNullList<ItemStack> items) { }
         @Override public void sendSlotContents(Container container, int slot, ItemStack stack) { }
@@ -26,7 +29,7 @@ public final class StorageStatusDeltaChecks {
                 bytes += wire.readableBytes();
                 SPacketWindowProperty decoded = new SPacketWindowProperty();
                 decoded.readPacketData(wire);
-                client.updateProgressBar(decoded.getProperty(), decoded.getValue());
+                receive.accept(decoded.getProperty(), decoded.getValue());
                 messages++;
             } catch (IOException failure) { throw new AssertionError(failure); }
             finally { wire.release(); }
@@ -64,8 +67,31 @@ public final class StorageStatusDeltaChecks {
         System.arraycopy(expected, 0, server.values, 0, expected.length);
         first.reset(); late.reset(); server.detectAndSendChanges();
         need(first.messages == 4 && Arrays.equals(first.client.values, expected), "full-width signed capacity/color round trip");
+        batteryMeter();
         System.out.println("storage-status-delta PASS: actual Container initial/late/removal lifecycle and vanilla packet bytes; "
                 + "1000 idle samples before=6000 messages after=0; one changed field before=6 after=2 messages per listener");
+    }
+    @SuppressWarnings("unchecked")
+    private static void batteryMeter(){
+        // Standalone Bootstrap does not run Forge capability injection. Use the real registered capability.
+        try{if(net.minecraftforge.energy.CapabilityEnergy.ENERGY==null){
+            java.lang.reflect.Field field=net.minecraftforge.common.capabilities.CapabilityManager.class.getDeclaredField("providers");field.setAccessible(true);
+            java.util.Map<?,?> providers=(java.util.Map<?,?>)field.get(net.minecraftforge.common.capabilities.CapabilityManager.INSTANCE);String key=net.minecraftforge.energy.IEnergyStorage.class.getName().intern();
+            if(!providers.containsKey(key))net.minecraftforge.energy.CapabilityEnergy.register();
+            net.minecraftforge.energy.CapabilityEnergy.ENERGY=(net.minecraftforge.common.capabilities.Capability<net.minecraftforge.energy.IEnergyStorage>)providers.get(key);
+        }}catch(ReflectiveOperationException failure){throw new AssertionError(failure);}
+        need(net.minecraftforge.energy.CapabilityEnergy.ENERGY!=null,"actual Forge energy capability initialized");
+        com.vandorlabs.tiles.TileEntityBattery battery=new com.vandorlabs.tiles.TileEntityBattery();
+        net.minecraft.nbt.NBTTagCompound saved=new net.minecraft.nbt.NBTTagCompound();saved.setInteger("Energy",99993);battery.readFromNBT(saved);
+        ContainerStorageStatus previous=new ContainerStorageStatus(battery);
+        com.vandorlabs.ports.ResourcePortContainer server=new com.vandorlabs.ports.ResourcePortContainer(battery),client=new com.vandorlabs.ports.ResourcePortContainer(battery);
+        Listener before=new Listener(),after=new Listener(client::updateProgressBar);previous.addListener(before);server.addListener(after);
+        need(before.messages==6&&before.bytes==30&&after.messages==2&&after.bytes==10&&client.batteryValues[0]==99993,"Battery exact initial packet counts and full-width charge roundtrip");
+        before.reset();after.reset();for(int n=0;n<1000;n++){previous.detectAndSendChanges();server.detectAndSendChanges();}
+        need(before.messages==0&&after.messages==0,"Battery idle meter sends no packets");
+        saved.setInteger("Energy",65536);battery.readFromNBT(saved);server.detectAndSendChanges();
+        need(after.messages==2&&after.bytes==10&&client.batteryValues[0]==65536,"Battery charge carry survives signed-short wire halves");
+        System.out.println("battery-meter-packets PASS initial before6/30bytes after2/10bytes idle1000=0 changed2/10bytes roundtrip99993/65536");
     }
     private StorageStatusDeltaChecks() { }
 }

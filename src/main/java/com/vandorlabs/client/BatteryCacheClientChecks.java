@@ -26,16 +26,19 @@ final class BatteryCacheClientChecks {
             cache.clear();BufferedImage cold=render(mc,block,facing,custom,45321);long builds=cache.builds();BufferedImage warm=render(mc,block,facing,custom,45321);
             need(difference(cold,warm)==0,"warm pixel parity "+block+"/"+facing+"/"+custom);need(cache.builds()==builds,"warm shell rebuilt");cases++;
         }
+        for(boolean block:new boolean[]{false,true}){BufferedImage first=render(mc,block,EnumFacing.UP,false,45321,true),second=render(mc,block,EnumFacing.UP,false,45321,true);need(difference(first,second)==0,"all-enabled faces safely finish an empty indicator batch");}
         cache.clear();BufferedImage low=render(mc,true,EnumFacing.UP,false,41000);long builds=cache.builds();BufferedImage high=render(mc,true,EnumFacing.UP,false,49000);
         need(difference(low,high)>0,"fractional charge within one segment did not change the actual indicator");need(cache.builds()==builds,"charge changes invalidated static shell geometry");
         BufferedImage empty=render(mc,true,EnumFacing.UP,false,0),full=render(mc,true,EnumFacing.UP,false,TileEntityBattery.CAPACITY);need(difference(empty,full)>0,"empty/full indicator transition");
         BufferedImage before=render(mc,false,EnumFacing.WEST,true,45321);builds=cache.builds();mc.refreshResources();need(cache.retainedBytes()==0,"real atlas reload retained static shell");
         BufferedImage after=render(mc,false,EnumFacing.WEST,true,45321);need(difference(before,after)==0,"resource reload changed battery appearance");need(cache.builds()>builds,"resource reload did not rebuild shell");
-        System.out.println("[vandorlabs][reprolab] battery-cache-render PASS warm-pixel-parity="+cases+" both-shapes six-input-directions default/custom-materials fractional-charge-within-segment empty-full real-atlas-reload");
+        System.out.println("[vandorlabs][reprolab] battery-cache-render PASS warm-pixel-parity="+cases+" both-shapes six-input-directions default/custom-materials all-enabled-empty-indicator-batch fractional-charge-within-segment empty-full real-atlas-reload");
     }
     private static int difference(BufferedImage a,BufferedImage b){need(a.getWidth()==b.getWidth()&&a.getHeight()==b.getHeight(),"image dimensions");int changed=0;for(int y=0;y<a.getHeight();y++)for(int x=0;x<a.getWidth();x++)if(a.getRGB(x,y)!=b.getRGB(x,y))changed++;return changed;}
-    private static BufferedImage render(Minecraft mc,boolean blockShape,EnumFacing facing,boolean custom,int energy){
+    private static BufferedImage render(Minecraft mc,boolean blockShape,EnumFacing facing,boolean custom,int energy){return render(mc,blockShape,facing,custom,energy,false);}
+    private static BufferedImage render(Minecraft mc,boolean blockShape,EnumFacing facing,boolean custom,int energy,boolean allPorts){
         Block block=Block.getBlockFromName("vandorlabs:battery_block");TileEntityBattery source=new TileEntityBattery();source.setPos(BlockPos.ORIGIN);source.place(facing);source.setBlockShape(blockShape);if(custom)source.setHousingTexture(ScreenHousingTextures.DEFAULT_STORAGE);
+        if(allPorts){com.vandorlabs.ports.ResourcePortSettings policy=source.settings();for(int side=0;side<6;side++)policy=policy.withFace(side,com.vandorlabs.ports.ResourcePortSettings.Face.INPUT);source.configure(policy,0,com.vandorlabs.redstone.ChannelList.EMPTY);}
         NBTTagCompound data=source.writeToNBT(new NBTTagCompound());data.setInteger("Energy",energy);
         VehicleStructure.Cell cell=new VehicleStructure.Cell(BlockPos.ORIGIN,block.getDefaultState().withProperty(BlockBattery.FACING,facing),data);
         VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(cell)));TileEntityBattery tile=(TileEntityBattery)view.getTileEntity(BlockPos.ORIGIN);
