@@ -51,7 +51,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('landing_gear','ski_landing_gear','landing_strut','angled_landing_strut')]
     wanted += ['tile.vandorlabs.programmable_chair.name','tile.vandorlabs.luxury_seat.name','tile.vandorlabs.military_seat.name','tile.vandorlabs.pilot_seat.name']
     wanted += ['tile.vandorlabs.wheel_small.name','tile.vandorlabs.wheel_medium.name','tile.vandorlabs.wheel_large.name','tile.vandorlabs.compact_track.name','tile.vandorlabs.armoured_track.name','tile.vandorlabs.bogie_track.name']
-    wanted += ['tile.vandorlabs.turntable_surface.name']
+    wanted += ['tile.vandorlabs.turntable_surface.name','tile.vandorlabs.turntable_controller.name','tile.vandorlabs.copy_controller.name']
     wanted += ['tile.vandorlabs.industrial_table.name','tile.vandorlabs.programmable_pressure_plate.name']
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('rocket_thruster', 'ion_drive', 'plasma_vent', 'impulse_engine', 'antigravity_plate', 'repulsor_array', 'vertical_hover_thruster')]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('access_card_slot','data_chip_slot')]
@@ -79,7 +79,7 @@ def main():
     propulsion = [family + suffix for family in ('rocket_thruster', 'ion_drive', 'plasma_vent', 'impulse_engine') for suffix in ('', '_hexagonal', '_wedge', '_wedge_bottom_right', '_wedge_top_right', '_wedge_top_left')] + ['antigravity_plate', 'repulsor_array', 'vertical_hover_thruster']
     for tag in ['mineable/pickaxe', 'needs_stone_tool']:
         optional_trapdoors = [{'id': 'vandorlabs:' + name, 'required': False} for name in ('programmable_trapdoor', 'programmable_diagonal_trapdoor')] if tag == 'mineable/pickaxe' else []
-        optional_trapdoors += [{'id':'vandorlabs:turntable_surface','required':False}]
+        optional_trapdoors += [{'id':'vandorlabs:'+name,'required':False} for name in ('turntable_surface','turntable_controller','copy_controller')]
         optional_trapdoors += [{'id':'vandorlabs:industrial_table','required':False}]
         optional_trapdoors += [{'id': 'vandorlabs:' + name, 'required': False} for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')] if tag == 'mineable/pickaxe' else []
         optional_trapdoors += [{'id':'vandorlabs:module_rack','required':False}]

@@ -27,3 +27,7 @@ testclient/door-animation.*/
 
 # Local Forge installation helper.
 /copy-latest.sh
+
+# Local javac diagnostics and retained rack-upgrade runtimes.
+/javac.*.args
+/testclient/rack-upgrade.*/
