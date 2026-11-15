@@ -1,0 +1,86 @@
+{
+  "credit": "MCTrek landing gear \u2014 native cuboid source",
+  "ambientocclusion": false,
+  "textures": {
+    "particle": "vandorlabs:blocks/gear/steel",
+    "steel": "vandorlabs:blocks/gear/steel",
+    "steel_top": "vandorlabs:blocks/gear/steel_top",
+    "housing": "vandorlabs:blocks/gear/housing",
+    "piston": "vandorlabs:blocks/gear/piston",
+    "sole": "vandorlabs:blocks/gear/sole",
+    "indicator": "vandorlabs:blocks/gear/indicator"
+  },
+  "elements": [
+    {
+      "name": "elbow_cover",
+      "from": [
+        5,
+        -2.5,
+        2.357864376269049
+      ],
+      "to": [
+        11,
+        0.5,
+        5.357864376269049
+      ],
+      "faces": {
+        "up": {
+          "uv": [
+            0,
+            0,
+            6,
+            3.0
+          ],
+          "texture": "#housing",
+          "rotation": 180
+        },
+        "down": {
+          "uv": [
+            0,
+            0,
+            6,
+            3.0
+          ],
+          "texture": "#housing",
+          "rotation": 180
+        },
+        "south": {
+          "uv": [
+            0,
+            0,
+            6,
+            3.0
+          ],
+          "texture": "#housing"
+        },
+        "north": {
+          "uv": [
+            0,
+            0,
+            6,
+            3.0
+          ],
+          "texture": "#housing"
+        },
+        "east": {
+          "uv": [
+            0,
+            0,
+            3.0,
+            3.0
+          ],
+          "texture": "#housing"
+        },
+        "west": {
+          "uv": [
+            0,
+            0,
+            3.0,
+            3.0
+          ],
+          "texture": "#housing"
+        }
+      }
+    }
+  ]
+}

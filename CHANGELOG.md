@@ -42,8 +42,14 @@
 - Extend existing stopped, stowed Plate, Ski and regular Wheel assemblies by sneak-clicking their visible sides with a matching item. Preserve the stopped pose, mounting frame and one-item placement through rebuilding.
 - Add a separate Foot direction setting to formed Ski and Wheel assemblies, including sideways mounts and Large Wheels. Preserve the physical source footprint separately from the chosen visual orientation, configured items and copied settings.
 - Attach native Plates, Skis and matching Wheels at grid-aligned activated Rotating Arm sockets, including complete Large Wheels and connected joined landing groups. Journal every ownership handoff, preserve opaque capability data and retain items when a fractional endpoint refuses placement.
-- Add Base / Middle hinge selection to Rotating Arms. The middle option turns the lower linkage at the authored elbow, with matching payload motion, collision, saved settings and client rendering; existing saves retain the base hinge.
+- Use Single / Double hinge selection on Rotating Arms. Double shares the selected angle between the base and elbow. Set Kink independently of Fold; retain matching foot/payload motion, collision, configured items and copied settings. Older active middle-only strokes keep their saved motion until native zero-degree rest.
+- Reuse bounded shared arm poses and allocation-free constraint projections to reduce repeated kinematic preparation.
 - Allow Taxi mode with two independent complete Ski supports. Preserve single-Ski refusal, lowest-support selection and the existing rules for other landing supports.
+
+### Core constructions on arms (Forge 1.12.2)
+
+- Move a complete formed Core construction by touching its Core or any reserved part with an Extender or Rotating Arm. Preserve every reservation, chip, setting and opaque capability field through native endpoints, reversal and durable recovery.
+- Keep unsupported tilted poses captured. Refuse captured dismantling or partial mining; ordinary native configuration and dismantling remain available at supported endpoints. See the [Core construction guide](docs/universal-constructors.md).
 
 ### Landing foot controls (Forge 1.12.2 and NeoForge 1.21.1)
 

@@ -105,6 +105,8 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
         Affine fixed = Affine.quarterTurn(quarterTurns(state.getValue(GearBlock.FACING)));
         Affine moving = Affine.fromPose(pose, false);
         Affine feet = Affine.fromPose(pose, true);
+        boolean splitParts=tile.hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE||tile.kinkDirection()!=tile.direction();
+        Affine upperMoving=splitParts?(tile.hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE?Affine.fromUpperPose(pose):tile.middleHinge()?Affine.identity():moving):null;
 
         for(net.minecraft.util.math.BlockPos column:tile.columns()){
             int width=tile.armSize();double shift=(width-1)*.5;
@@ -122,11 +124,22 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(size)),x,y,z,light,buffer);
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());
-                if(tile.middleHinge()){
-                    Affine upper=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(barSize);
-                    GearModels.draw("swing_linkage_upper",mounting.compose(offset.compose(upper.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw)))),x,y,z,light,buffer,true);
+                if(splitParts){
+                    Affine kinkYaw=Affine.quarterTurn(tile.kinkDirection().ordinal());
+                    Affine upper=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(upperMoving.compose(barSize));
+                    Affine stretch=Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset());
+                    draw("swing_linkage_upper_body",offset.compose(upper.compose(stretch.compose(kinkYaw))),x,y,z,light,buffer);
+                    double dx=com.vandorlabs.gear.core.ArmHinge.kinkOffsetX(tile.direction(),tile.kinkDirection(),width),dz=com.vandorlabs.gear.core.ArmHinge.kinkOffsetZ(tile.direction(),tile.kinkDirection(),width);
+                    Affine elbow=upperMoving.compose(Affine.translation(dx,0,dz).compose(barSize.compose(stretch.compose(hingeYaw))));
+                    draw("swing_linkage_elbow",offset.compose(Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(elbow)),x,y,z,light,buffer);
+                    draw("swing_linkage_lower",offset.compose(armPose.compose(stretch.compose(kinkYaw))),x,y,z,light,buffer);
+                }else{
+                    if(tile.middleHinge()){
+                        Affine upper=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(barSize);
+                        GearModels.draw("swing_linkage_upper",mounting.compose(offset.compose(upper.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw)))),x,y,z,light,buffer,true);
+                    }
+                    draw(tile.middleHinge()?"swing_linkage_lower":"swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
                 }
-                draw(tile.middleHinge()?"swing_linkage_lower":"swing_linkage",offset.compose(armPose.compose(Affine.stretchArm(assembly.columnHeight()-tile.footMountOffset()).compose(hingeYaw))),x,y,z,light,buffer);
                 draw("swivel",offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset()-(assembly.kind()==GearTopology.FootKind.TRACK?1/64D:0),0).compose(hingeYaw))),x,y,z,light,buffer);
             }else{
                 // The Large fixed wheel socket starts exactly at the solid body's
@@ -246,6 +259,10 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                     0.5 - cosine * 0.5 + sine * 0.5, 0, 0.5 - sine * 0.5 - cosine * 0.5);
         }
 
+        static Affine fromUpperPose(GearMotion.Pose pose){
+            GearMotion.Vec o=pose.transformUpperLinkVertex(0,0,0),x=pose.transformUpperLinkVertex(1,0,0),y=pose.transformUpperLinkVertex(0,1,0),z=pose.transformUpperLinkVertex(0,0,1);
+            return new Affine(x.x-o.x,y.x-o.x,z.x-o.x,x.y-o.y,y.y-o.y,z.y-o.y,x.z-o.z,y.z-o.z,z.z-o.z,o.x,o.y,o.z);
+        }
         static Affine fromPose(GearMotion.Pose pose, boolean feet) {
             GearMotion.Vec origin = transform(pose, feet, 0, 0, 0);
             GearMotion.Vec vx = transform(pose, feet, 1, 0, 0);

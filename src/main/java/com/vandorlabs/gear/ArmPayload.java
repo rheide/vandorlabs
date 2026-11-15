@@ -671,6 +671,7 @@ public final class ArmPayload {
     }
     /** Exact coordinate extrema of each rotating corner, including the grid-alignment translation. */
     public AxisAlignedBB sweptBox(GearTileEntity arm,int index,double before,double after){
+        if(arm.hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE)return doubleHingeSweep(arm,index,before,after);
         AxisAlignedBB box=localCollision(arm).get(index);double lo=Math.toRadians(Math.min(arm.pose(before).angleDegrees(),arm.pose(after).angleDegrees())),hi=Math.toRadians(Math.max(arm.pose(before).angleDegrees(),arm.pose(after).angleDegrees()));
         Vec3d rawStart=rawTransform(arm,1,0,0,0),start=transform(arm,1,0,0,0),rawEnd=rawTransform(arm,0,0,0,0),end=transform(arm,0,0,0,0);
         double base=Math.toRadians(arm.physicalStartAngle()),span=Math.toRadians(arm.activeAngle()-arm.physicalStartAngle());
@@ -687,6 +688,21 @@ public final class ArmPayload {
             }
         }
         return new AxisAlignedBB(min[0],min[1],min[2],max[0],max[1],max[2]).offset(arm.getPos()).shrink(.0001);
+    }
+    /** Bound each corner chord by the shared full-angle curvature; grid correction is linear in angle. */
+    private AxisAlignedBB doubleHingeSweep(GearTileEntity arm,int index,double before,double after){
+        AxisAlignedBB b=localCollision(arm).get(index);com.vandorlabs.gear.core.GearMotion.Pose first=arm.pose(before),last=arm.pose(after);
+        double radians=Math.toRadians(Math.abs(first.angleDegrees()-last.angleDegrees())),curvature=0;
+        double lx=Double.POSITIVE_INFINITY,ly=lx,lz=lx,hx=Double.NEGATIVE_INFINITY,hy=hx,hz=hx;
+        for(int n=0;n<8;n++){
+            double x=(n&1)==0?b.minX:b.maxX,y=(n&2)==0?b.minY:b.maxY,z=(n&4)==0?b.minZ:b.maxZ;
+            Vec3d local=ArmOrientation.vector(inverseFace(arm.mountDirection()),x+offset.getX()-.5,y+offset.getY()-.5,z+offset.getZ()-.5).addVector(.5,.5,.5);
+            curvature=Math.max(curvature,first.footCurvatureBound(local.x,local.y,local.z,arm.footMountOffset()));
+            Vec3d a=transform(arm,before,x,y,z),c=transform(arm,after,x,y,z);
+            lx=Math.min(lx,Math.min(a.x,c.x));ly=Math.min(ly,Math.min(a.y,c.y));lz=Math.min(lz,Math.min(a.z,c.z));hx=Math.max(hx,Math.max(a.x,c.x));hy=Math.max(hy,Math.max(a.y,c.y));hz=Math.max(hz,Math.max(a.z,c.z));
+        }
+        double pad=curvature*radians*radians/8;Vec3d axis=ArmOrientation.vector(arm.mountDirection(),first.direction().axisX(),0,first.direction().axisZ());
+        return new AxisAlignedBB(lx-(axis.x==0?pad:0),ly-(axis.y==0?pad:0),lz-(axis.z==0?pad:0),hx+(axis.x==0?pad:0),hy+(axis.y==0?pad:0),hz+(axis.z==0?pad:0)).offset(arm.getPos()).shrink(.0001);
     }
     private static BlockPos yaw(BlockPos p,int turns){switch(Math.floorMod(turns,4)){case 1:return new BlockPos(-p.getZ(),p.getY(),p.getX());case 2:return new BlockPos(-p.getX(),p.getY(),-p.getZ());case 3:return new BlockPos(p.getZ(),p.getY(),-p.getX());default:return p;}}
     /** Copies only the newly typed frame from the authoritative occurrence during an actual yaw handoff. */

@@ -96,8 +96,17 @@ public final class GearGeometry {
             BlockPos sourceColumn=root.add(column);if(!(tile.getWorld().getBlockState(sourceColumn).getBlock() instanceof GearBlock))continue;BlockPos at=root.add(ArmOrientation.inverse(tile.mountDirection(),column));int width=tile.armSize();double shift=(width-1)*.5;
             out.add(new AxisAlignedBB(0,14/16D,0,1,1,1).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));out.add(new AxisAlignedBB(.5-5/16D*width,tile.isFixedMount()?0:6/16D,.5-5/16D*width,.5+5/16D*width,14/16D,.5+5/16D*width).offset(tile.armShiftX(column),0,tile.armShiftZ(column)).offset(at));
             if(tile.isSwingArmController()){
-                for(AxisAlignedBB arm:tile.middleHinge()?armParts("swing_linkage_upper"):Collections.<AxisAlignedBB>emptyList())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),tile.poseAtAngle(0),false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
-                for(AxisAlignedBB arm:armParts(tile.middleHinge()?"swing_linkage_lower":"swing_linkage"))addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+                if(tile.hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE||tile.kinkDirection()!=tile.direction()){
+                    int sx=tile.direction().axisX()!=0?width:1,sz=tile.direction().axisZ()!=0?width:1;
+                    double height=group.columnHeight()-tile.footMountOffset();
+                    for(AxisAlignedBB arm:armParts("swing_linkage_upper_body"))addUpperArm(out,stretch(yaw(arm,tile.kinkDirection().ordinal()),height),pose,at,sx,sz,0,0,tile.armShiftX(column),tile.armShiftZ(column));
+                    double dx=com.vandorlabs.gear.core.ArmHinge.kinkOffsetX(tile.direction(),tile.kinkDirection(),width),dz=com.vandorlabs.gear.core.ArmHinge.kinkOffsetZ(tile.direction(),tile.kinkDirection(),width);
+                    for(AxisAlignedBB arm:armParts("swing_linkage_elbow"))addUpperArm(out,stretch(yaw(arm,tile.direction().ordinal()),height),pose,at,sx,sz,dx,dz,tile.armShiftX(column),tile.armShiftZ(column));
+                    for(AxisAlignedBB arm:armParts("swing_linkage_lower"))addArm(out,stretch(yaw(arm,tile.kinkDirection().ordinal()),height),pose,false,at,sx,sz,tile.armShiftX(column),tile.armShiftZ(column));
+                }else{
+                    for(AxisAlignedBB arm:tile.middleHinge()?armParts("swing_linkage_upper"):Collections.<AxisAlignedBB>emptyList())addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),tile.poseAtAngle(0),false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+                    for(AxisAlignedBB arm:armParts(tile.middleHinge()?"swing_linkage_lower":"swing_linkage"))addArm(out,stretch(yaw(arm,tile.direction().ordinal()),group.columnHeight()-tile.footMountOffset()),pose,false,at,tile.direction().axisX()!=0?width:1,tile.direction().axisZ()!=0?width:1,tile.armShiftX(column),tile.armShiftZ(column));
+                }
             }
             else addArm(out,new AxisAlignedBB(5/16D,pose.rodBottomY()+tile.footMountOffset(),5/16D,11/16D,pose.rodTopY(),11/16D),pose,false,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
             AxisAlignedBB socket=group.kind()==GearTopology.FootKind.NONE&&!tile.isSwingArmController()?new AxisAlignedBB(4.25/16D,3/16D,4.25/16D,11.75/16D,5/16D,11.75/16D):new AxisAlignedBB(.25,3/16D,.3125,.75,7/16D,.6875);
@@ -121,6 +130,10 @@ public final class GearGeometry {
     private static List<AxisAlignedBB> armParts(String model){return MODELS.computeIfAbsent(model+"_sliced",name->GearBlock.movingArmParts(model));}
     private static AxisAlignedBB stretch(AxisAlignedBB b,double height){double factor=(height+.25)/1.25;return new AxisAlignedBB(b.minX,GearMotion.PIVOT_Y+(b.minY-GearMotion.PIVOT_Y)*factor,b.minZ,b.maxX,GearMotion.PIVOT_Y+(b.maxY-GearMotion.PIVOT_Y)*factor,b.maxZ);}
     private static void addArm(List<AxisAlignedBB> out,AxisAlignedBB local,GearMotion.Pose pose,boolean foot,BlockPos at,int scaleX,int scaleZ,double shiftX,double shiftZ){AxisAlignedBB scaled=new AxisAlignedBB(.5+(local.minX-.5)*scaleX,local.minY,.5+(local.minZ-.5)*scaleZ,.5+(local.maxX-.5)*scaleX,local.maxY,.5+(local.maxZ-.5)*scaleZ);List<AxisAlignedBB> one=new ArrayList<>();add(one,scaled,pose,foot,at);out.add(one.get(0).offset(shiftX,0,shiftZ));}
+    private static void addUpperArm(List<AxisAlignedBB> out,AxisAlignedBB local,GearMotion.Pose pose,BlockPos at,int sx,int sz,double dx,double dz,double shiftX,double shiftZ){
+        AxisAlignedBB scaled=new AxisAlignedBB(.5+(local.minX-.5)*sx+dx,local.minY,.5+(local.minZ-.5)*sz+dz,.5+(local.maxX-.5)*sx+dx,local.maxY,.5+(local.maxZ-.5)*sz+dz);
+        out.add(box(pose.transformUpperLinkBounds(bounds(scaled))).offset(at).offset(shiftX,0,shiftZ));
+    }
     public static boolean canMove(GearTileEntity root,double before,double next){
         World world=root.getWorld();List<AxisAlignedBB> old=boxes(root,before),after=boxes(root,next);if(old.size()!=after.size())return false;
         MovePlan riders=plan(world,old,after,null);riders.root=root.getPos();riders.progress=next;
@@ -154,7 +167,7 @@ public final class GearGeometry {
         for(int step=0;step<GearTileEntity.ANIMATION_TICKS;step++){
             double a=start+(end-start)*step/GearTileEntity.ANIMATION_TICKS,b=start+(end-start)*(step+1)/GearTileEntity.ANIMATION_TICKS;AxisAlignedBB sweep;
             if(index>=payloadStart)sweep=root.payload().sweptBox(root,index-payloadStart,a,b);
-            else {AxisAlignedBB first=computeBoxes(root,a,false).get(index),last=computeBoxes(root,b,false).get(index);double angle=Math.abs(root.pose(b).angleDegrees()-root.pose(a).angleDegrees());sweep=rotationEnvelope(root,first.union(last),(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
+            else {AxisAlignedBB first=computeBoxes(root,a,false).get(index),last=computeBoxes(root,b,false).get(index);double angle=Math.abs(root.pose(b).angleDegrees()-root.pose(a).angleDegrees());sweep=rotationEnvelope(root,first.union(last),root.hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE?doublePadding(root,first.union(last),a,b):(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
             if(sweep.intersects(obstacle)&&penetration(sweep,obstacle)>tolerance)return false;
         }
         return true;
@@ -220,6 +233,7 @@ public final class GearGeometry {
             int start=boxes(root,before).size()-root.payload().collisionBoxCount(root);
             if(index>=start)return root.payload().sweptBox(root,index-start,before,after);
         }
+        if(root.isSwingArmController()&&root.hingeMode()==com.vandorlabs.gear.core.ArmHinge.Mode.DOUBLE)return rotationEnvelope(root,old.union(next),doublePadding(root,old.union(next),before,after)).shrink(.0001);
         if(!root.isLandingAssembly()){double angle=Math.abs(root.pose(after).angleDegrees()-root.pose(before).angleDegrees());return rotationEnvelope(root,old.union(next),(root.assembly().columnHeight()+18)*(1-Math.cos(Math.toRadians(angle/2)))).shrink(.0001);}
         int pieces=root.isSwingArmController()?(root.middleHinge()?armParts("swing_linkage_upper").size()+armParts("swing_linkage_lower").size():armParts("swing_linkage").size())+3:4,feetStart=root.columns().size()*pieces;
         boolean translated=root.mode()==GearMotion.Mode.EXTEND||root.mode()==GearMotion.Mode.ROTATE_LEVEL&&(index>=feetStart||index%pieces==pieces-1);
@@ -245,6 +259,14 @@ public final class GearGeometry {
         // Level feet only translate monotonically along this quarter arc. Their
         // endpoint union is exact; rigid bars need curvature only in their plane.
         return rotationEnvelope(root,envelope,padding).shrink(.0001);
+    }
+    private static double doublePadding(GearTileEntity root,AxisAlignedBB box,double a,double b){
+        Vec3d pivot=ArmOrientation.point(root.mountDirection(),GearMotion.PIVOT_X,GearMotion.PIVOT_Y,GearMotion.PIVOT_Z).add(new Vec3d(root.getPos()));
+        Vec3d axis=ArmOrientation.vector(root.mountDirection(),root.direction().axisX(),0,root.direction().axisZ());
+        double x=Math.max(Math.abs(box.minX-pivot.x),Math.abs(box.maxX-pivot.x)),y=Math.max(Math.abs(box.minY-pivot.y),Math.abs(box.maxY-pivot.y)),z=Math.max(Math.abs(box.minZ-pivot.z),Math.abs(box.maxZ-pivot.z));
+        double radius=axis.x!=0?Math.hypot(y,z):axis.y!=0?Math.hypot(x,z):Math.hypot(x,y);
+        double radians=Math.toRadians(Math.abs(root.pose(b).angleDegrees()-root.pose(a).angleDegrees()));
+        return (radius+1.25*(root.assembly().columnHeight()+2))*radians*radians/8;
     }
     private static AxisAlignedBB rotationEnvelope(GearTileEntity root,AxisAlignedBB envelope,double padding){
         // Rotation never changes coordinates along the hinge axis. Inflating

@@ -54,9 +54,17 @@ Wheels, including complete Large Wheels. Connected native feet can join an
 existing joined arm group. Ownership changes use the durable recovery journal;
 fractional endpoints refuse placement without consuming the held item.
 
-Rotating Arms offer **Hinge: Base / Middle**. Middle rotates the lower linkage at
-the visible elbow; Base retains the existing motion. Saved assemblies default to
-Base. Payload motion and collision follow the selected hinge.
+Rotating Arms offer **Hinge: Single / Double**. Double shares the angle between
+the base and elbow while preserving the total foot or payload rotation. **Kink**
+controls the bend direction independently of **Fold**. Older saved middle-only
+strokes finish with their original motion before adopting Double at native
+zero-degree rest. Payload motion and collision use the same shared geometry.
+
+Forge arms can also carry a complete formed Core construction, selected through
+either its Core or a reserved part. Chips, settings and original capability data
+stay with the complete machine. Configure or dismantle it at a supported native
+endpoint; unsupported tilts stay captured. See the
+[Core construction guide](../universal-constructors.md).
 
 Vehicles using two independent complete Ski supports can enter Taxi mode. A
 single Ski remains insufficient, and other support families keep their existing

@@ -34,6 +34,7 @@ final class ArmLooseGearData {
         if(!admitted(cell))throw new IllegalArgumentException("Only an unowned supported landing foot can rotate at an arm endpoint");
         EnumFacing mount=EnumFacing.valueOf(cell.tileString("ArmMountDirection")),next=mapFacing(mount,basis);NBTTagCompound data=cell.tileData();data.setString("ArmMountDirection",next.name());
         if(data.hasKey("GearDirection",8))data.setString("GearDirection",localFacing(mount,next,EnumFacing.valueOf(data.getString("GearDirection")),basis).name());
+        if(data.hasKey("ArmKinkDirection")){if(!data.hasKey("ArmKinkDirection",8))throw new IllegalArgumentException("Invalid kink direction");data.setString("ArmKinkDirection",localFacing(mount,next,EnumFacing.valueOf(data.getString("ArmKinkDirection")),basis).name());}
         for(String key:LOCAL_FACINGS)if(data.hasKey(key,3))data.setInteger(key,localFacing(mount,next,EnumFacing.getHorizontal(data.getInteger(key)),basis).getHorizontalIndex());
         if(largeWheel(cell.state))ArmFootComponentFrame.write(data,mapFacing(ArmFootComponentFrame.frame(cell),basis));
         else if(cell.hasTileKey(ArmFootComponentFrame.KEY,8))data.setString(ArmFootComponentFrame.KEY,mapFacing(ArmFootComponentFrame.frame(cell),basis).name());

@@ -10,6 +10,9 @@ public final class ArmHinge {
     /** Old copied/UI choices select the corrected Double option when newly applied. */
     public static Mode readChoice(boolean middle,Integer value){return value==null?(middle?Mode.DOUBLE:Mode.SINGLE):explicit(middle,value);}
     public static Mode atRest(Mode value,boolean zeroRest,boolean ownershipPending){if(value==null)throw new IllegalArgumentException("Missing arm hinge mode");return value==Mode.LEGACY_CENTER&&zeroRest&&!ownershipPending?Mode.DOUBLE:value;}
+    /** Move the elbow cover while keeping its axle aligned with the fold axis. */
+    public static double kinkOffsetX(GearMotion.Direction fold,GearMotion.Direction kink,int width){return (kink.axisZ()-fold.axisZ())*GearMotion.MIDDLE_HINGE_OFFSET*(fold.axisX()!=0?width:1);}
+    public static double kinkOffsetZ(GearMotion.Direction fold,GearMotion.Direction kink,int width){return (fold.axisX()-kink.axisX())*GearMotion.MIDDLE_HINGE_OFFSET*(fold.axisZ()!=0?width:1);}
     private static double sine(double degrees){if(degrees==0||Math.abs(degrees)==180)return 0;if(degrees==90)return 1;if(degrees==-90)return -1;return Math.sin(Math.toRadians(degrees));}
     private static double cosine(double degrees){if(degrees==0)return 1;if(Math.abs(degrees)==180)return -1;if(Math.abs(degrees)==90)return 0;return Math.cos(Math.toRadians(degrees));}
     /** Caller-owned scratch: lower translation, upper translation/sine/cosine, authored elbow. */

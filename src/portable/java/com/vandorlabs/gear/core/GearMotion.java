@@ -239,10 +239,12 @@ public final class GearMotion {
             return new Vec(x, currentY, z);
         }
 
-        public Bounds transformFootBounds(Bounds bounds) { return transformBounds(bounds, true); }
-        public Bounds transformRigidBounds(Bounds bounds) { return transformBounds(bounds, false); }
+        public Bounds transformFootBounds(Bounds bounds) { return transformBounds(bounds, 1); }
+        public Bounds transformRigidBounds(Bounds bounds) { return transformBounds(bounds, 0); }
 
-        private Bounds transformBounds(Bounds bounds, boolean foot) {
+        public Bounds transformUpperLinkBounds(Bounds bounds) { return transformBounds(bounds, 2); }
+
+        private Bounds transformBounds(Bounds bounds, int kind) {
             if (bounds == null) throw new IllegalArgumentException("Bounds are missing.");
             double minX = Double.POSITIVE_INFINITY;
             double minY = Double.POSITIVE_INFINITY;
@@ -254,7 +256,7 @@ public final class GearMotion {
                 double x = (corner & 1) == 0 ? bounds.minX : bounds.maxX;
                 double y = (corner & 2) == 0 ? bounds.minY : bounds.maxY;
                 double z = (corner & 4) == 0 ? bounds.minZ : bounds.maxZ;
-                Vec transformed = foot ? transformFootVertex(x, y, z) : transformRigidVertex(x, y, z);
+                Vec transformed = kind==2?transformUpperLinkVertex(x,y,z):kind==1?transformFootVertex(x,y,z):transformRigidVertex(x,y,z);
                 minX = Math.min(minX, transformed.x);
                 minY = Math.min(minY, transformed.y);
                 minZ = Math.min(minZ, transformed.z);

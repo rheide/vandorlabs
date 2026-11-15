@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 public final class ProgrammableSettings {
     public static final String MODULAR_ARM_SETTINGS="modular_arm_settings";
     public static final String RESOURCE_PORT_SETTINGS="resource_port_settings";
-    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
+    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","HingeMode","KinkDirection","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","ActiveExtension","TrackStyle"};
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";
@@ -439,6 +439,8 @@ public final class ProgrammableSettings {
             if(values.hasKey(MODULAR_ARM_SETTINGS,10)||values.hasKey(TRIGGER)||values.hasKey(CHANNEL)){
                 NBTTagCompound settings=arm.settings(),copied=values.getCompoundTag(MODULAR_ARM_SETTINGS);
                 for(String key:ARM_KEYS)if(copied.hasKey(key))settings.setTag(key,copied.getTag(key).copy());
+                if(copied.hasKey("MiddleHinge",1)&&!copied.hasKey("HingeMode"))settings.removeTag("HingeMode");
+                if(copied.hasKey("Direction",3)&&!copied.hasKey("KinkDirection"))settings.setInteger("KinkDirection",copied.getInteger("Direction"));
                 if(values.hasKey(TRIGGER,3))settings.setInteger("Trigger",values.getInteger(TRIGGER));
                 if(values.hasKey(CHANNEL)){settings.setString("Channels",channels(values,arm).toString());if(copied.hasKey("LegacyAnyChannels",1))settings.setBoolean("LegacyAnyChannels",copied.getBoolean("LegacyAnyChannels"));}
                 try{if(!settings.equals(arm.settings()))arm.configure(settings);}catch(IllegalArgumentException refused){return false;}if(player instanceof net.minecraft.entity.player.EntityPlayerMP)arm.operator((net.minecraft.entity.player.EntityPlayerMP)player);applicable=true;

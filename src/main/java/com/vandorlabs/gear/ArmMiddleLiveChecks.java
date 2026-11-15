@@ -14,16 +14,19 @@ import net.minecraft.world.*;
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class ArmMiddleLiveChecks {
     private static final BlockPos ROOT=new BlockPos(1180,150,40);
-    private static int fixture,stage,ticks,started;
+    private static final int FIRST=Integer.getInteger("vandorlabs.armDoubleStart",0);
+    private static int fixture=FIRST,stage,ticks,started;
     private static boolean clicked,copifier;
-    private static boolean joined(){return fixture/8==1;}
-    private static boolean rotates(){return fixture/4%2==1;}
-    private static EnumFacing mount(){return fixture%2==0?EnumFacing.DOWN:EnumFacing.EAST;}
-    private static GearBlock block(){return fixture/2%2==0?GearRegistry.GEAR_SWING_ARM:GearRegistry.LARGE_GEAR_SWING_ARM;}
-    private static BlockPos at(int x,int y,int z){return ROOT.add(ArmOrientation.vector(mount(),new BlockPos(x,y,z)));}
+    private static final boolean DOUBLE_ONLY=Boolean.getBoolean("vandorlabs.armDoubleOnly");
+    private static int variants(){return fixture/(DOUBLE_ONLY?6:2);}
+    private static boolean joined(){return variants()/4==1;}
+    private static boolean rotates(){return variants()/2%2==1;}
+    private static EnumFacing mount(){return DOUBLE_ONLY?EnumFacing.values()[fixture%6]:fixture%2==0?EnumFacing.DOWN:EnumFacing.EAST;}
+    private static GearBlock block(){return variants()%2==0?GearRegistry.GEAR_SWING_ARM:GearRegistry.LARGE_GEAR_SWING_ARM;}
+    private static BlockPos at(int x,int y,int z){return ROOT.add(ArmOrientation.vector(mount(),new BlockPos(mount()==EnumFacing.WEST?-x:x,y,z)));}
     private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("arm-middle fixture="+fixture+" stage="+stage+" tick="+ticks+": "+detail);}
     public static boolean tick(Minecraft mc)throws Exception{
-        if(fixture>=16){System.out.println("[vandorlabs][reprolab] arm-middle PASS cases=16 supported ordinary placement actual-click real-async-journals regular/Large independent/joined upright/sideways rotate/level reload reverse native mining");return true;}
+        if(fixture>=(DOUBLE_ONLY?48:16)){System.out.println("[vandorlabs][reprolab] arm-middle PASS cases="+((DOUBLE_ONLY?48:16)-FIRST)+" start="+FIRST+" supported ordinary placement actual-click real-async-journals regular/Large independent/joined upright/sideways rotate/level reload reverse native mining");return true;}
         ticks++;mc.displayGuiScreen(null);
         if(stage==1||stage==3){
             require(ticks-started<300,"client synchronization mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" server="+ArmInteractionSync.status());
@@ -40,7 +43,7 @@ public final class ArmMiddleLiveChecks {
                 for(int x:new int[]{0,2}){
                     if(x==2&&!joined())continue;world.setBlockState(at(x,1,0),Blocks.STONE.getDefaultState(),2);actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block(),2));
                     for(int y=1;y>=0;y--)require(actor.getHeldItemMainhand().onItemUse(actor,world,at(x,y,0),EnumHand.MAIN_HAND,mount(),.5F,.5F,.5F)==EnumActionResult.SUCCESS,"ordinary supported column placement");
-                    GearTileEntity arm=(GearTileEntity)world.getTileEntity(at(x,0,0));arm.operator(actor);require(arm.rebuild(),"column forms "+arm.error());NBTTagCompound settings=arm.settings();settings.setBoolean("MiddleHinge",true);settings.setInteger("Direction",0);settings.setBoolean("RotatePayload",rotates());settings.setBoolean("JoinArms",joined());settings.setInteger("JoinRange",3);arm.configure(settings);
+                    GearTileEntity arm=(GearTileEntity)world.getTileEntity(at(x,0,0));arm.operator(actor);require(arm.rebuild(),"column forms "+arm.error());NBTTagCompound settings=arm.settings();settings.setBoolean("MiddleHinge",true);settings.setInteger("HingeMode",2);settings.setInteger("KinkDirection",DOUBLE_ONLY?variants()%4:0);settings.setInteger("Direction",0);settings.setBoolean("RotatePayload",rotates());settings.setBoolean("JoinArms",joined());settings.setInteger("JoinRange",3);arm.configure(settings);
                 }
                 for(int x=0;x<=(joined()?2:0);x++)world.setBlockState(at(x,-2,0),Blocks.HAY_BLOCK.getDefaultState(),2);
                 GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);require(arm.rebuild(),"joined topology forms "+arm.error());require(arm.columns().size()==(joined()?2:1),"expected support count");

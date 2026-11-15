@@ -20,12 +20,14 @@ final class ArmCopifierChecks {
             for(BlockPos p:BlockPos.getAllInBox(origin.add(-3,-2,-3),origin.add(14,4,4))){world.removeTileEntity(p);world.setBlockToAir(p);}
             player.setGameType(GameType.CREATIVE);
             GearTileEntity source=place(world,player,origin,block,0),target=place(world,player,origin.east(10),block,90);
-            NBTTagCompound settings=source.settings();settings.setBoolean("JoinArms",true);settings.setInteger("JoinRange",5);settings.setInteger("LoadHeight",7);settings.setBoolean("RotatePayload",true);settings.setBoolean("MiddleHinge",source.isSwingArmController());settings.setDouble("ActiveExtension",2);source.configure(settings);
+            NBTTagCompound settings=source.settings();settings.setBoolean("JoinArms",true);settings.setInteger("JoinRange",5);settings.setInteger("LoadHeight",7);settings.setBoolean("RotatePayload",true);settings.setBoolean("MiddleHinge",source.isSwingArmController());settings.setInteger("HingeMode",source.isSwingArmController()?2:0);settings.setInteger("KinkDirection",source.isSwingArmController()?1:source.direction().ordinal());settings.setDouble("ActiveExtension",2);source.configure(settings);
             net.minecraft.block.state.IBlockState placed=world.getBlockState(target.getPos());source.target(false);double progress=target.progress();
             ItemStack tool=new ItemStack(ModItems.DUPLIFIER);player.setHeldItem(EnumHand.MAIN_HAND,tool);
             require(ItemDuplifier.copyFrom(world,origin.up(),tool)!=null,"capture through the non-controller section");
             require(ItemDuplifier.applyTo(world,origin.east(10).up(),tool,player),"paste through the non-controller section");
             require(target.middleHinge()==source.isSwingArmController()&&target.joinEnabled()&&target.joinRange()==5&&target.settings().getInteger("LoadHeight")==7&&target.settings().getBoolean("RotatePayload")&&target.settings().getDouble("ActiveExtension")==2,"authored platform and movement settings copied "+block);
+            require(target.hingeMode()==source.hingeMode()&&target.kinkDirection()==source.kinkDirection(),"copied typed hinge and independent kink");
+            NBTTagCompound savedChoices=source.writeToNBT(new NBTTagCompound());GearTileEntity reloaded=(GearTileEntity)net.minecraft.tileentity.TileEntity.create(world,savedChoices);require(reloaded.hingeMode()==source.hingeMode()&&reloaded.kinkDirection()==source.kinkDirection(),"typed hinge and kink survive saved data");
             require(target.target()&&target.progress()==progress&&world.getBlockState(target.getPos())==placed,"paste preserves current target, progress and placement orientation");
             NBTTagCompound disabled=target.settings();disabled.setBoolean("JoinArms",false);target.configure(disabled);
             NBTTagCompound subset=tool.getSubCompound(ItemDuplifier.SETTINGS_TAG).copy();subset.removeTag(ProgrammableSettings.MODULAR_ARM_SETTINGS);require(ProgrammableSettings.apply(world,target.getPos(),subset,player)&&!target.joinEnabled(),"omitting Arm settings preserves target joining");

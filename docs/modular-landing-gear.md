@@ -36,11 +36,14 @@ world, including a sideways-mounted arm. Return to the fully deployed position
 before changing it; an obstructed direction is refused. The source blocks keep their original placement footprint.
 Manual mode exposes a deployed/stowed target.
 
-Rotating Arms offer **Hinge: Base / Middle**. Base swings the complete linkage from
-the mounting housing. Middle keeps the upper link fixed and bends the lower link
-at the visible elbow. The landing foot or payload follows the selected hinge;
-**Payload: stays level** still counter-rotates its lower swivel. Choose the hinge
-while fully deployed with the starting angle at zero. Existing arms use Base.
+Rotating Arms offer **Hinge: Single / Double**. Single swings the complete linkage
+from its mounting housing. Double turns both the base and the visible elbow,
+splitting the selected angle equally between them. The foot or payload keeps the
+same total rotation. **Kink** changes the linkage's bend direction independently
+of **Fold**. **Payload: stays level** still counter-rotates the lower swivel.
+Choose the hinge and kink while fully deployed with the starting angle at zero.
+Older saved middle-only strokes retain their original motion until they return
+to the native zero-degree rest pose, where they adopt Double.
 
 Landing-foot source blocks remain at their construction positions during animation.
 General Extenders save displaced arm sections separately when an aligned retracted
@@ -132,7 +135,7 @@ Use the Configurizer for the arm dialog. Input, channels, fold direction and
 payload orientation use the same single-page dialog as joining and load settings.
 Rotating Arms expose **Start** and **End** angles in 15-degree steps. Return a
 bare arm to its starting position before changing Start; use a zero-degree Start
-before switching between Base and Middle hinges. Extenders retain their fixed
+before switching between Single and Double hinges. Extenders retain their fixed
 construction length.
 For standalone regular and Large Extender Arms, Off is the fully extended construction
 pose. On retracts a single section by half a block, leaving clearance for its base.
@@ -151,7 +154,7 @@ the same mechanism before attaching the payload.
 
 To attach landing gear to an already activated Rotating Arm:
 
-1. Use one bare column with **Start: 0°**, **End: 90°**, **Hinge: Base** and
+1. Use one bare column with **Start: 0°**, **End: 90°**, **Hinge: Single** and
    **Payload: rotates**.
 2. Activate it and wait for its end socket to stop on the block grid.
 3. Hold a Plate, Ski or matching Wheel and click the outward face of that socket.
