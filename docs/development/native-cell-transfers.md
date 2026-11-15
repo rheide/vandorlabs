@@ -1,0 +1,21 @@
+# Native cell transfer foundation
+
+`NativeCellTransactions` supplies private durable publication for typed family adapters. It does not enable Copy Controllers, Turntable Controllers or Vehicle Mode by itself. Existing arm and Ramp journals retain their own protocols and authority.
+
+A family registers an identifier, snapshot limits and an immutable recipe decoder. It owns actor and controller authorization, supported tile types, known field migrations, opaque-data comparison and its exact publication rules. Requests contain ordered before/after snapshots with identical cell coverage and an explicit held footprint. A request cannot publish outside that footprint. Recipes never come directly from a client snapshot packet.
+
+Preparation writes copied records on the bounded `JournalWorker`. While those bytes are pending, the request remains queued and does not reserve the source. After durable preparation, the server revalidates its sources and acquires an exact reservation. That reservation protects blocks and physical inventories while the ARMED record is written, but it cannot authorize a write. Source removal, withdrawal and publication begin only after ARMED completes.
+
+`NativeTransferHolds` admits one explicit position write at a time. A callback cannot reuse a consumed admission. Inventory automation remains blocked during internal block writes; physical material slots use a separate receipt that checks the exact container identity, slot and before/after stack. Families must explicitly validate any permitted partial slot state during recovery. Equal block types alone do not establish ownership.
+
+`NativeTransferCheckpoint` takes at most one chunk snapshot per poll and waits for the actual region write futures and flush. It compares ownership before and after durability rather than repeatedly serializing every tile while disk work is pending. Families with actor or entity ownership must provide their own additional receipt, comparison and durable checkpoint. Only then can APPLIED or ROLLED_BACK be published and the journal durably retired. Reservations remain held through completion and cancellation.
+
+Snapshots, records, recipes, positions, operation counts and retained memory are bounded. World access remains on the server thread. Unloaded chunks and disabled saving suspend progress. Unknown factories, changed owners and I/O failures retain the recovery record; no blind refund is performed. Startup recovery resolves recognized records before gameplay and preserves unavailable records on failure.
+
+The shared Java 8 `JournalPublication` helper syncs file bytes, verifies the written bytes, atomically publishes and routes directory sync through `JournalFiles`. Windows avoids unsupported directory channels; genuine Linux I/O failures remain visible. Disk jobs contain immutable records and paths, never a world or live inventory.
+
+`NativeRawCell` stages unpublished tiles against their physical level and position before guarded deserialization. The factory identity, supported type and caller-owned field comparison are checked before publication. Public moving-block appearance is separately allowlisted by `NativeSnapshotAppearance`; inventories, claims and capability envelopes are excluded. The palette helper retains the five-argument model-data path, while caching, transforms, shading and gameplay authority remain with each renderer.
+
+The focused core checks compare appearance against an independent accepted projection implementation and cover old Surface coordinate packing. The cell-journal focus exercises real pending disk work, reservation, disabled saving, reentrant write rejection, caught partial installation, exact rollback and retry. Abrupt termination with a partial cross-chunk save requires its separate cold-recovery proof before a production family uses the ownership path.
+
+Construction-chip decoding remains separate from Vehicle Mode. A Source Vehicle Chip can contain unavailable native blocks such as `vehicle_controller`; those designs must be retained and refused without consuming materials or altering the chip. The transfer foundation does not authorize replacement blocks, driving controls or a new construction-authoring mechanism.

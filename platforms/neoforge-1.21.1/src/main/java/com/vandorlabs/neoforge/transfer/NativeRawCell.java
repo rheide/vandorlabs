@@ -26,6 +26,7 @@ public final class NativeRawCell {
     }
     public CompoundTag tile(){return raw==null?null:raw.copy();}
     public boolean hasTile(){return raw!=null;}
+    public boolean identical(NativeRawCell other){return other!=null&&pos.equals(other.pos)&&state==other.state&&Objects.equals(raw,other.raw);}
     /** Callers select missing legacy properties explicitly for a recognized block; supplied values are never changed. */
     public static BlockState decodePalette(HolderLookup.Provider registries,CompoundTag input,Map<String,String> missingProperties){
         if(!input.contains("Name",Tag.TAG_STRING))throw new IllegalArgumentException("Missing palette block identity");

@@ -1,0 +1,55 @@
+package com.vandorlabs.neoforge.copier;
+
+import com.vandorlabs.copier.core.*;
+import com.vandorlabs.neoforge.transfer.NativeSnapshotAppearance;
+import com.vandorlabs.turntable.TurntableGeometry;
+import com.vandorlabs.redstone.ChannelList;
+import java.io.*;
+import java.util.*;
+import java.util.zip.GZIPOutputStream;
+import net.minecraft.core.*;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.nbt.*;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+
+/** New shared mechanics against the still-independent accepted arm projection; no journal or world ownership mutation. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class NativeCopyCoreChecks {
+    private static int checks;
+    private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Copy shared core: "+why);}
+    private static void refused(Runnable operation,String why){boolean refusal=false;try{operation.run();}catch(IllegalArgumentException expected){refusal=true;}need(refusal,why);}
+    @SubscribeEvent public static void started(ServerStartedEvent event){if(!Boolean.getBoolean("vandorlabs.copyCoreChecks"))return;try{
+        policy();projection(event.getServer().overworld());legacySurface(event.getServer().overworld());System.out.println("[vandorlabs][copy-core] PASS checks="+checks+" codec/volume/material-order/settings/acceptedProjectionParity/privacy");
+    }catch(Throwable failure){failure.printStackTrace();System.out.println("[vandorlabs][copy-core] FAIL "+failure);}finally{event.getServer().halt(false);}}
+    private static void policy()throws Exception {
+        byte[] bytes=new byte[1024];new Random(71).nextBytes(bytes);var compressed=new ByteArrayOutputStream();try(var gzip=new GZIPOutputStream(compressed)){gzip.write(bytes);}need(Arrays.equals(bytes,BlueprintCompression.decode(1,compressed.toByteArray())),"existing compressed chip payload");var copy=BlueprintCompression.decode(0,bytes);copy[0]^=1;need(copy[0]!=bytes[0],"raw chip data copied");refused(()->{try{BlueprintCompression.decode(2,new byte[0]);}catch(IOException failure){throw new UncheckedIOException(failure);}},"unknown chip codec refused");
+        for(var face:TurntableGeometry.Face.values())for(int width=1;width<=4;width++)for(int height=1;height<=3;height++)for(int depth:new int[]{1,4,16}){
+            int u=-7,v=3,plane=31;int[] actual=CopyGeometry.volume(face,u,v,plane,width,height,depth);int[] low={Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE},high={Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE};
+            for(int du:new int[]{0,width-1})for(int dv:new int[]{0,height-1})for(int d:new int[]{1,depth}){int[] point={face.ux*(u+du)+face.vx*(v+dv)+face.x*(plane+d),face.uy*(u+du)+face.vy*(v+dv)+face.y*(plane+d),face.uz*(u+du)+face.vz*(v+dv)+face.z*(plane+d)};for(int axis=0;axis<3;axis++){low[axis]=Math.min(low[axis],point[axis]);high[axis]=Math.max(high[axis],point[axis]);}}
+            for(int axis=0;axis<3;axis++)need(actual[axis]==low[axis]&&actual[axis+3]==high[axis],"Source two-corner prism matches all eight corners");
+        }
+        need(Arrays.equals(CopyGeometry.center(new int[]{2,0,4,4,2,5},new int[]{10,20,30,16,23,37},1),new int[]{0,0,-1}),"Source blueprint plane centering retains depth origin");
+        int[] source={4,7,3};int[] result=MaterialWithdrawal.remaining(new long[]{5,4},source,(need,slot)->need==0?slot<2:slot>0);need(Arrays.equals(source,new int[]{4,7,3})&&Arrays.equals(result,new int[]{0,2,3}),"deterministic Source greedy allocation and untouched originals");refused(()->MaterialWithdrawal.remaining(new long[]{15},source,(n,s)->true),"missing materials refuse before mutation");
+        for(int activation=0;activation<3;activation++){var settings=new CopySettings(4,12,activation,ChannelList.of(3,5),false);need(settings.active(true)==(activation==1)&&settings.active(false)==(activation==2),"Source activation rules");need(!settings.changesEdgeBank(new CopySettings(8,-2,activation,ChannelList.of(5,3),true)),"shape changes preserve edge bank");need(settings.changesEdgeBank(new CopySettings(4,12,activation,ChannelList.of(3),false)),"channel edits rearm edge bank");}
+        refused(()->new CopySettings(17,0,0,ChannelList.EMPTY,false),"height bound");refused(()->new CopySettings(4,Integer.MIN_VALUE,0,ChannelList.EMPTY,false),"channel increment bound");
+    }
+    private static void projection(ServerLevel world)throws Exception {
+        var states=new ArrayList<BlockState>();for(String id:List.of("programmable_block","programmable_slab","programmable_stairs","programmable_storage","module_rack")){var name=ResourceLocation.fromNamespaceAndPath("vandorlabs",id);need(BuiltInRegistries.BLOCK.containsKey(name),"accepted projection registered "+id);states.add(BuiltInRegistries.BLOCK.get(name).defaultBlockState());}states.add(Blocks.OAK_SIGN.defaultBlockState());states.add(Blocks.CHEST.defaultBlockState());
+        for(var state:states){var raw=new CompoundTag();if(state.getBlock() instanceof EntityBlock factory){var tile=factory.newBlockEntity(new BlockPos(0,120,0),state);tile.setLevel(world);raw=tile.saveWithFullMetadata(world.registryAccess());}
+            if(state.getBlock() instanceof SignBlock){var face=raw.getCompound("front_text");var text=new ListTag();for(int i=0;i<4;i++)text.add(StringTag.valueOf("{\"text\":\"visible\",\"clickEvent\":{\"action\":\"run_command\",\"value\":\"/private\"},\"insertion\":\"secret\"}"));face.put("messages",text);face.put("filtered_messages",text.copy());raw.put("front_text",face);}
+            raw.putString("PrivateActor","never-public");var caps=new CompoundTag();caps.putString("secret","opaque");raw.put("ForgeCaps",caps);var before=raw.copy();var old=AcceptedSnapshotAppearanceOracle.project(state,raw,world.registryAccess());var next=NativeSnapshotAppearance.project(state,raw,world.registryAccess());need(old.equals(next),"accepted independent arm projection byte-for-byte parity "+state);need(raw.equals(before),"projection retains original opaque snapshot");need(!next.contains("Items")&&!next.contains("ForgeCaps")&&!next.contains("PrivateActor")&&!next.toString().contains("run_command")&&!next.toString().contains("secret"),"public fields and sign events sanitized");need(NativeSnapshotAppearance.canonical(state,next,world.registryAccess()),"public projection idempotent");
+        }
+        var surface=com.vandorlabs.neoforge.surface.NativeSurfaceBindings.BLOCK.defaultBlockState();var raw=new CompoundTag();raw.putString("SurfaceOn","landing");raw.putString("SurfaceOff","landing-grey");raw.putLong("Owner",99);raw.putUUID("OwnerKey",UUID.randomUUID());raw.putInt("SurfaceGroupSize",3);raw.putInt("SurfaceGroupHeight",2);raw.putInt("SurfaceLayout",1);raw.putString("PrivateActor","hidden");var clean=NativeSnapshotAppearance.project(surface,raw,world.registryAccess());need(clean.getInt("SurfaceGroupSize")==3&&clean.getInt("SurfaceGroupHeight")==2&&!clean.contains("Owner")&&!clean.contains("OwnerKey")&&!clean.contains("PrivateActor"),"new Surface projection has drawing appearance without authority");need(NativeSnapshotAppearance.canonical(surface,clean,world.registryAccess()),"Surface public projection idempotent");raw.putBoolean("NativeSurfaceInert",true);refused(()->NativeSnapshotAppearance.project(surface,raw,world.registryAccess()),"inert Surface never made usable by projection");raw.remove("NativeSurfaceInert");raw.putInt("SurfaceGroupSize",33);refused(()->NativeSnapshotAppearance.project(surface,raw,world.registryAccess()),"Surface public bounds");
+    }
+    private static void legacySurface(ServerLevel world){
+        var offset=new BlockPos(-2,0,1);var owner=new BlockPos(-41,121,53);var raw=new CompoundTag();raw.putString("SurfaceOn","landing");raw.putString("SurfaceOff","landing-grey");raw.putInt("SurfaceLayout",1);raw.putInt("SurfaceGroupSize",3);raw.putInt("SurfaceGroupHeight",2);raw.putInt("SurfaceGroupNormal",1);raw.putLong("SurfaceGroupOffset",com.vandorlabs.persistence.LegacyBlockPosition.pack(offset.getX(),offset.getY(),offset.getZ()));raw.putLong("Owner",com.vandorlabs.persistence.LegacyBlockPosition.pack(owner.getX(),owner.getY(),owner.getZ()));UUID key=UUID.randomUUID();raw.putLong("OwnerKeyMost",key.getMostSignificantBits());raw.putLong("OwnerKeyLeast",key.getLeastSignificantBits());raw.putString("UnknownSourceField","retained");var caps=new CompoundTag();caps.putString("old:external","opaque");raw.put("ForgeCaps",caps);var before=raw.copy();
+        var pos=new BlockPos(-39,121,52);var tile=new com.vandorlabs.neoforge.surface.NativeSurfaceEntity(com.vandorlabs.neoforge.surface.NativeSurfaceBindings.ENTITY,pos,com.vandorlabs.neoforge.surface.NativeSurfaceBindings.BLOCK.defaultBlockState());tile.setLevel(world);tile.loadWithComponents(raw,world.registryAccess());need(!tile.inert(),"previous Source Surface nonzero offsets load");var saved=tile.saveWithFullMetadata(world.registryAccess());need(saved.getInt("NativeSurfaceSchema")==1&&BlockPos.of(saved.getLong("SurfaceGroupOffset")).equals(offset)&&BlockPos.of(saved.getLong("Owner")).equals(owner),"Source X26/Y12/Z26 positions migrate to explicitly native schema");need(saved.getCompound("ForgeCaps").equals(caps)&&saved.getString("UnknownSourceField").equals("retained")&&raw.equals(before),"old Surface capabilities/unknown own fields/input remain exact");var projected=NativeSnapshotAppearance.project(tile.getBlockState(),raw,world.registryAccess());need(BlockPos.of(projected.getLong("SurfaceGroupOffset")).equals(offset),"Source snapshot public projection uses the same migrated drawing offset");var nativeTile=new com.vandorlabs.neoforge.surface.NativeSurfaceEntity(com.vandorlabs.neoforge.surface.NativeSurfaceBindings.ENTITY,pos,tile.getBlockState());nativeTile.setLevel(world);nativeTile.loadWithComponents(saved,world.registryAccess());need(!nativeTile.inert()&&nativeTile.saveWithFullMetadata(world.registryAccess()).equals(saved),"native schema positions do not migrate twice");var future=saved.copy();future.putInt("NativeSurfaceSchema",2);var bad=new com.vandorlabs.neoforge.surface.NativeSurfaceEntity(com.vandorlabs.neoforge.surface.NativeSurfaceBindings.ENTITY,pos,tile.getBlockState());bad.setLevel(world);bad.loadWithComponents(future,world.registryAccess());need(bad.inert(),"unknown Surface schema remains inert");var inert=bad.saveWithFullMetadata(world.registryAccess());for(String field:future.getAllKeys())need(Objects.equals(future.get(field),inert.get(field)),"unknown Surface original field retained "+field);refused(()->NativeSnapshotAppearance.project(tile.getBlockState(),future,world.registryAccess()),"unknown Surface schema has no public live projection");
+    }
+    private NativeCopyCoreChecks(){}
+}

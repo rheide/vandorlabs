@@ -26,7 +26,7 @@ public final class NativeRampHeldOwners {
  static boolean held(NativeRampJournal.Operation operation){for(var hold:holds)if(hold.world.get()!=null&&hold.operation==operation)return true;return false;}
  static void release(NativeRampJournal.Operation operation){holds=holds.stream().filter(hold->hold.world.get()!=null&&hold.operation!=operation).toList();}
  static void unload(ServerLevel world){holds=holds.stream().filter(hold->hold.world.get()!=null&&hold.world.get()!=world).toList();}
- public static boolean active(Level world){if(com.vandorlabs.neoforge.gear.NativeGearHolds.active(world))return true;if(!(world instanceof ServerLevel)||holds.isEmpty())return false;for(var hold:holds)if(hold.world.get()==world)return true;return false;}
+ public static boolean active(Level world){if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.active(world))return true;if(com.vandorlabs.neoforge.gear.NativeGearHolds.active(world))return true;if(!(world instanceof ServerLevel)||holds.isEmpty())return false;for(var hold:holds)if(hold.world.get()==world)return true;return false;}
  /** Candidate cells are not reserved: only this operation's installed/pending markers are held.
   * A durable motion header and reconciliation must precede callers enabling this scope. */
  static void movingCandidates(ServerLevel world,NativeRampJournal.Operation operation,Collection<BlockPos> positions,net.minecraft.world.level.block.Block partBlock){
@@ -35,8 +35,9 @@ public final class NativeRampHeldOwners {
   var next=new ArrayList<Hold>();boolean found=false;for(var hold:holds){if(hold.world.get()==null)continue;if(hold.world.get()==world&&hold.operation==operation){next.add(new Hold(hold.world,operation,hold.positions,hold.containers,Set.copyOf(candidates),partBlock));found=true;}else next.add(hold);}if(!found)throw new IllegalStateException("Ramp operation not held");holds=List.copyOf(next);
  }
  public static boolean blocked(Level world,BlockPos pos){return blockedForBreak(world,pos,null);}
- public static boolean blockedForBreak(Level world,BlockPos pos,UUID admittedGear){if(com.vandorlabs.neoforge.gear.NativeGearHolds.blockedForBreak(world,pos,admittedGear))return true;if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();var current=holds;for(int i=0;i<current.size();i++){var hold=current.get(i);if(hold.world.get()==world&&hold.operation!=bypass){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)){var state=NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root());if(state!=NativeRampPartOwnership.State.OTHER)return true;}}}return false;}
+ public static boolean blockedForBreak(Level world,BlockPos pos,UUID admittedGear){if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.blocked(world,pos))return true;if(com.vandorlabs.neoforge.gear.NativeGearHolds.blockedForBreak(world,pos,admittedGear))return true;if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();var current=holds;for(int i=0;i<current.size();i++){var hold=current.get(i);if(hold.world.get()==world&&hold.operation!=bypass){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)){var state=NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root());if(state!=NativeRampPartOwnership.State.OTHER)return true;}}}return false;}
  public static boolean blocked(Container container){
+  if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.blocked(container))return true;
   if(com.vandorlabs.neoforge.gear.NativeGearHolds.blocked(container))return true;
   if(holds.isEmpty())return false;
   if(container instanceof BlockEntity tile&&tile.getLevel() instanceof ServerLevel world&&blocked(world,tile.getBlockPos()))return true;
