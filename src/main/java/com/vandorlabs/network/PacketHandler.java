@@ -71,5 +71,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageSegmentedDoorUse.Handler.class,MessageSegmentedDoorUse.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageTextureJoin.Handler.class,MessageTextureJoin.class,id++,Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.ports.ResourcePortMessage.Handler.class,com.vandorlabs.ports.ResourcePortMessage.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageModuleRack.Handler.class,MessageModuleRack.class,id++,Side.SERVER);
     }
 }

@@ -50,10 +50,10 @@ final class ModuleRackLiveChecks {
 
     private ModuleRackLiveChecks() { }
 
-    private static EntityPlayerMP player(Minecraft mc) {
+    static EntityPlayerMP player(Minecraft mc) {
         return mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
     }
-    private static void server(Minecraft mc, Runnable action) throws Exception {
+    static void server(Minecraft mc, Runnable action) throws Exception {
         mc.getIntegratedServer().addScheduledTask(action).get();
     }
     private static TileEntityModuleRack tile(World world) {
@@ -64,6 +64,7 @@ final class ModuleRackLiveChecks {
 
     static boolean tick(Minecraft mc, File directory) throws Exception {
         if (placementStage < 3) return placement(mc);
+        if (Boolean.getBoolean("vandorlabs.moduleRackSettingsOnly")) return ModuleRackSettingsLiveChecks.tick(mc, directory);
         if (direction >= FACES.length) return true;
         output = directory;
         if (++wait > 1000) throw new IllegalStateException("Module Rack timeout face="
@@ -321,6 +322,8 @@ final class ModuleRackLiveChecks {
         }
         return false;
     }
+
+    static BlockPos placedRackPosition() { return PLACE; }
 
     private static void click(Minecraft mc, EnumFacing facing, int slot, boolean button) {
         insertionDraws = ModuleRackAnimation.drawCount();

@@ -81,6 +81,7 @@ public final class ModuleRackChecks {
         try {
             VandorLabs.proxy = null;
             placement(block);
+            configuration();
             persistence();
             interactions(block);
             dropOwnership(block);
@@ -108,6 +109,58 @@ public final class ModuleRackChecks {
                         .getValue(BlockModuleRack.FACING) == expected,
                         "rack uses Programmable Light player-view placement: pitch=" + pitch + " clicked=" + clicked);
         }
+    }
+
+    private static void configuration() {
+        TileEntityModuleRack rack = new TileEntityModuleRack(); rack.setPos(AT);
+        NBTTagCompound original = rack.writeToNBT(new NBTTagCompound());
+        require(!original.hasKey("RackHousing") && !original.hasKey("RackEmit"), "new defaults preserve old Rack field absence");
+        rack.setEmitsRedstone(true);
+        int[] levels = {0, 4, 8, 11, 15};
+        require(rack.output.level() == levels[0], "empty enabled output");
+        for (int slot = 0; slot < 4; slot++) {
+            require(rack.insertModule(slot, module(1, slot), false), "configured Rack insertion");
+            require(rack.output.level() == levels[slot + 1], "proportional Rack level " + (slot + 1));
+        }
+        rack.setEmitsRedstone(false); require(rack.output.level() == 0, "emission switch gates every occupied slot");
+        rack.setEmitsRedstone(true); rack.setHousingTexture(0);
+        com.vandorlabs.redstone.TransmitterSlots.configure(rack.output, com.vandorlabs.redstone.ChannelList.of(42,43), 32, false);
+        rack.getTileData().setString("PrivateTestData", "saved only");
+        NBTTagCompound saved = rack.writeToNBT(new NBTTagCompound());
+        TileEntityModuleRack restored = new TileEntityModuleRack(); restored.readFromNBT(saved);
+        require(restored.getHousingTexture() == 0 && restored.emitsRedstone() && restored.output.level() == 15,
+                "housing and output survive save/load");
+        require(restored.output.transmissionRange() == 32 && restored.output.getRedstoneChannels().equals(com.vandorlabs.redstone.ChannelList.of(42,43))
+                && !com.vandorlabs.redstone.TransmitterSlots.localRedstone(restored), "standard channel/range/local settings survive");
+        NBTTagCompound appearance = restored.getUpdateTag();
+        require(!appearance.hasKey("Items") && !appearance.hasKey("ForgeCaps") && !appearance.hasKey("ForgeData")
+                && !appearance.toString().contains("PrivateTestData"), "appearance excludes inventories, caps and private saved fields");
+        TileEntityModuleRack client = new TileEntityModuleRack(); client.handleUpdateTag(appearance);
+        require(client.getHousingTexture() == 0 && client.emitsRedstone()
+                && client.output.getRedstoneChannels().equals(restored.output.getRedstoneChannels()), "public configuration round trip");
+        com.vandorlabs.network.MessageModuleRack message = new com.vandorlabs.network.MessageModuleRack(9, AT, 0, true);
+        io.netty.buffer.ByteBuf encoded = io.netty.buffer.Unpooled.buffer();
+        try {
+            message.toBytes(encoded); require(encoded.readableBytes() == 17, "configuration request is fixed seventeen bytes");
+            com.vandorlabs.network.MessageModuleRack decoded = new com.vandorlabs.network.MessageModuleRack();
+            io.netty.buffer.ByteBuf copy = encoded.copy();
+            try { decoded.fromBytes(copy); } finally { copy.release(); }
+            for (int length : new int[] {0, 16, 18}) {
+                io.netty.buffer.ByteBuf malformed = io.netty.buffer.Unpooled.buffer().writeZero(length);
+                try { boolean rejected = false; try { decoded.fromBytes(malformed); } catch (IllegalArgumentException expected) { rejected = true; }
+                    require(rejected, "malformed configuration length refused before reading fields");
+                } finally { malformed.release(); }
+            }
+        } finally { encoded.release(); }
+        NonRenderingChecks.MemoryWorld world = new NonRenderingChecks.MemoryWorld(false);
+        BlockModuleRack block = (BlockModuleRack)net.minecraft.block.Block.getBlockFromName("vandorlabs:module_rack");
+        TileEntityModuleRack previous = install(world, block, EnumFacing.SOUTH);
+        previous.insertModule(0, module(1, 8), false);
+        TileEntityModuleRack replacement = new TileEntityModuleRack(); replacement.setPos(AT);
+        replacement.readFromNBT(previous.writeToNBT(new NBTTagCompound())); world.setTileEntity(AT, replacement);
+        require(previous.removeModule(0).isEmpty() && previous.drainModules().isEmpty()
+                && replacement.getOccupiedMask() == 1, "replaced physical tile cannot release another owner's modules");
+        cases++;
     }
 
     private static ItemStack module(int count, int id) {

@@ -32,6 +32,21 @@ public final class TileEntityModuleRack extends TileEntity {
     private volatile int occupiedMask;
     private volatile int renderMask;
     private long revision;
+    private int housingTexture = -1;
+    private boolean emitRedstone;
+    public final com.vandorlabs.rack.ModuleRackOutput output = new com.vandorlabs.rack.ModuleRackOutput(this);
+    public int getHousingTexture() { return housingTexture; }
+    public boolean emitsRedstone() { return emitRedstone; }
+    public void setHousingTexture(int choice) {
+        if (choice < -1 || choice >= 0 && !ScreenHousingTextures.validChoice(choice))
+            throw new IllegalArgumentException("Invalid rack housing");
+        if (housingTexture != choice) { housingTexture = choice; configurationChanged(); }
+    }
+    public void setEmitsRedstone(boolean value) {
+        if (emitRedstone != value) { emitRedstone = value; configurationChanged(); }
+    }
+    public void configurationChanged() { changed(); }
+
 
     public int getOccupiedMask() { return occupiedMask; }
     public int getRenderMask() { return renderMask; }
@@ -87,7 +102,8 @@ public final class TileEntityModuleRack extends TileEntity {
      */
     public NonNullList<ItemStack> drainModules() {
         NonNullList<ItemStack> result = NonNullList.create();
-        if (world != null && (world.isRemote || world instanceof VehicleWorld)) return result;
+        if (world != null && (world.isRemote || world instanceof VehicleWorld || isInvalid()
+                || !world.isBlockLoaded(pos) || world.getTileEntity(pos) != this)) return result;
         for (int slot = 0; slot < modules.length; slot++) {
             if (!modules[slot].isEmpty()) result.add(modules[slot]);
             modules[slot] = ItemStack.EMPTY;
@@ -95,6 +111,7 @@ public final class TileEntityModuleRack extends TileEntity {
         if (occupiedMask != 0) {
             occupiedMask = renderMask = 0;
             revision = next(revision);
+            output.publish();
             markDirty();
         }
         return result;
@@ -105,6 +122,7 @@ public final class TileEntityModuleRack extends TileEntity {
     private void changed() {
         revision = next(revision);
         renderMask = occupiedMask;
+        output.publish();
         markDirty();
         if (world != null) {
             IBlockState state = world.getBlockState(pos);
@@ -133,11 +151,16 @@ public final class TileEntityModuleRack extends TileEntity {
             items.appendTag(item);
         }
         tag.setTag("Items", items);
+        if (housingTexture >= 0) tag.setInteger("RackHousing", housingTexture);
+        if (emitRedstone) tag.setBoolean("RackEmit", true);
         return writeVisualData(tag);
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
         super.readFromNBT(tag);
+        housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
+        emitRedstone = tag.getBoolean("RackEmit");
+        output.loaded(tag);
         for (int slot = 0; slot < modules.length; slot++) modules[slot] = ItemStack.EMPTY;
         NBTTagList items = tag.getTagList("Items", 10);
         int occupied = 0;
@@ -166,13 +189,21 @@ public final class TileEntityModuleRack extends TileEntity {
 
     private NBTTagCompound writeSyncData(NBTTagCompound tag) {
         writeVisualData(tag);
+        if (housingTexture >= 0) tag.setInteger("RackHousing", housingTexture);
+        if (emitRedstone) tag.setBoolean("RackEmit", true);
+        NBTTagCompound transmission = output.publicSettings();
+        if (transmission != null) tag.setTag("RackTransmission", transmission);
         tag.setLong("RackEpoch", localEpoch);
         return tag;
     }
 
     /** Chunk-load tags contain placement identity but never actual items or arbitrary item NBT. */
     @Override public NBTTagCompound getUpdateTag() {
-        return writeSyncData(super.writeToNBT(new NBTTagCompound()));
+        NBTTagCompound tag = new NBTTagCompound();
+        net.minecraft.util.ResourceLocation id = TileEntity.getKey(getClass());
+        if (id != null) tag.setString("id", id.toString());
+        tag.setInteger("x", pos.getX()); tag.setInteger("y", pos.getY()); tag.setInteger("z", pos.getZ());
+        return writeSyncData(tag);
     }
 
     @Override public SPacketUpdateTileEntity getUpdatePacket() {
@@ -211,6 +242,9 @@ public final class TileEntityModuleRack extends TileEntity {
             renderMask = 0;
         }
         occupiedMask = mask;
+        housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
+        emitRedstone = tag.getBoolean("RackEmit");
+        output.readPublic(tag, replacement || initial);
         revision = incoming;
         for (int slot = 0; slot < modules.length; slot++)
             insertionSequences[slot] = Math.max(0, tag.getLong("Insert" + slot));
@@ -226,13 +260,20 @@ public final class TileEntityModuleRack extends TileEntity {
         return oldState.getBlock() != newState.getBlock();
     }
 
+    @Override public void onLoad() {
+        super.onLoad();
+        if (!(world instanceof VehicleWorld)) DeferredTileLoad.schedule(this, () -> { com.vandorlabs.redstone.RedstoneChannels.register(output); output.publish(); });
+    }
+
     @Override public void invalidate() {
+        com.vandorlabs.redstone.RedstoneChannels.unregister(output);
         if (world != null && world.isRemote && !(world instanceof VehicleWorld) && VandorLabs.proxy != null)
             VandorLabs.proxy.moduleRackRemoved(this);
         super.invalidate();
     }
 
     @Override public void onChunkUnload() {
+        com.vandorlabs.redstone.RedstoneChannels.unregister(output);
         if (world != null && world.isRemote && !(world instanceof VehicleWorld) && VandorLabs.proxy != null)
             VandorLabs.proxy.moduleRackRemoved(this);
         super.onChunkUnload();

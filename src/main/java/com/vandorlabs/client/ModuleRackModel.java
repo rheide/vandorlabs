@@ -40,6 +40,9 @@ public final class ModuleRackModel implements IBakedModel {
     private static final String[] TEXTURES = { "housing", "module", "trim", "dark", "indicators", "contacts" };
     private static final ModuleRackModel[] MODELS = new ModuleRackModel[6];
     private final IBakedModel shell;
+    private int housingChoice = -1;
+    private final java.util.LinkedHashMap<Integer, ModuleRackModel> housingModels = new java.util.LinkedHashMap<>(16, .75F, true);
+
     private final IBakedModel[] modules;
     private final MovingMesh[] moving;
     private final List<BakedQuad>[] seated, empty;
@@ -55,6 +58,42 @@ public final class ModuleRackModel implements IBakedModel {
         this.seated = seated;
         this.empty = empty;
         this.indicators = indicators;
+    }
+
+    private ModuleRackModel(ModuleRackModel source, int housingChoice, TextureAtlasSprite sprite) {
+        this.housingChoice = housingChoice; shell = new HousingShell(source.shell, sprite);
+        modules = source.modules; moving = source.moving; seated = source.seated; empty = source.empty; indicators = source.indicators;
+    }
+    private synchronized ModuleRackModel housing(int choice) {
+        ModuleRackModel found = housingModels.get(choice);
+        if (found != null) return found;
+        TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
+                com.vandorlabs.tiles.ScreenHousingTextures.texture(choice));
+        found = new ModuleRackModel(this, choice, sprite); housingModels.put(choice, found);
+        // Every entry shares the same fixed geometry and module meshes. Retain at most sixteen shell finishes per facing.
+        if (housingModels.size() > 16) housingModels.remove(housingModels.keySet().iterator().next());
+        return found;
+    }
+    private static final class HousingShell implements IBakedModel {
+        private final IBakedModel source; private final TextureAtlasSprite sprite;
+        private final List<BakedQuad>[] quads;
+        @SuppressWarnings("unchecked") HousingShell(IBakedModel source, TextureAtlasSprite sprite) {
+            this.source = source; this.sprite = sprite; quads = (List<BakedQuad>[])new List<?>[7];
+            for (int face = 0; face < 7; face++) {
+                List<BakedQuad> built = new ArrayList<>();
+                for (BakedQuad quad : source.getQuads(null, face == 6 ? null : EnumFacing.getFront(face), 0))
+                    built.add(quad.getSprite().getIconName().equals("vandorlabs:blocks/module_rack/housing")
+                            ? RetexturedItemModel.retextureQuad(quad, sprite) : quad);
+                quads[face] = Collections.unmodifiableList(built);
+            }
+        }
+        public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long seed) { return quads[side == null ? 6 : side.getIndex()]; }
+        public boolean isAmbientOcclusion() { return source.isAmbientOcclusion(); }
+        public boolean isGui3d() { return source.isGui3d(); }
+        public boolean isBuiltInRenderer() { return source.isBuiltInRenderer(); }
+        public TextureAtlasSprite getParticleTexture() { return sprite; }
+        public ItemCameraTransforms getItemCameraTransforms() { return source.getItemCameraTransforms(); }
+        public ItemOverrideList getOverrides() { return source.getOverrides(); }
     }
 
     @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event) {
@@ -190,10 +229,15 @@ public final class ModuleRackModel implements IBakedModel {
     }
 
     @Override public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long seed) {
+        if (state instanceof IExtendedBlockState && state.getBlock() instanceof BlockModuleRack) {
+            Integer choice = ((IExtendedBlockState)state).getValue(BlockModuleRack.HOUSING);
+            if (choice != null && choice >= 0 && choice != housingChoice
+                    && com.vandorlabs.tiles.ScreenHousingTextures.validChoice(choice)) return housing(choice).getQuads(state, side, seed);
+        }
         // Only the housing reaches block boundaries. Leave its cull faces intact.
         if (side != null) return shell.getQuads(null, side, 0);
         int occupied = 0, visible = 0;
-        if (state instanceof IExtendedBlockState) {
+        if (state instanceof IExtendedBlockState && state.getBlock() instanceof BlockModuleRack) {
             IExtendedBlockState extended = (IExtendedBlockState)state;
             Integer occupiedValue = extended.getValue(BlockModuleRack.OCCUPIED_MASK);
             Integer visibleValue = extended.getValue(BlockModuleRack.MODULE_MASK);

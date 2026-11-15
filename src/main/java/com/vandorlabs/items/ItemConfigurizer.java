@@ -132,6 +132,7 @@ public final class ItemConfigurizer extends Item {
         else if (tile instanceof com.vandorlabs.tiles.TileEntityLandingGear) gui = GuiHandler.GUI_LANDING_GEAR;
         else if (tile instanceof TileEntityProgrammableChair) gui = GuiHandler.GUI_PROGRAMMABLE_CHAIR;
         else if (state.getBlock() instanceof BlockRampController) gui = GuiHandler.GUI_RAMP_CONTROLLER;
+        else if (tile instanceof com.vandorlabs.tiles.TileEntityModuleRack) gui = GuiHandler.GUI_MODULE_RACK;
         else if (tile instanceof com.vandorlabs.tiles.TileEntityAutopilot) gui = GuiHandler.GUI_AUTOPILOT;
         else if (tile instanceof com.vandorlabs.tiles.TileEntityHexTank) gui=GuiHandler.GUI_STORAGE_STATUS;
         else if (tile instanceof TileEntityAnimatedScreenSelector)

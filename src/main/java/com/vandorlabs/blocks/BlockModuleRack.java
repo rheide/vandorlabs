@@ -36,6 +36,7 @@ public final class BlockModuleRack extends BlockVandor {
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
     public static final IUnlistedProperty<Integer> OCCUPIED_MASK = ProgrammableHousingState.integer("rack_occupied");
     public static final IUnlistedProperty<Integer> MODULE_MASK = ProgrammableHousingState.integer("rack_modules");
+    public static final IUnlistedProperty<Integer> HOUSING = ProgrammableHousingState.integer("rack_housing");
 
     public BlockModuleRack() {
         super("module_rack");
@@ -44,7 +45,7 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this, new IProperty<?>[] { FACING },
-                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK });
+                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, HOUSING });
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -82,23 +83,26 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
         TileEntity raw = world.getTileEntity(pos);
-        int occupied = 0, modules = 0;
+        int occupied = 0, modules = 0, housing = -1;
         if (raw instanceof TileEntityModuleRack) {
             TileEntityModuleRack rack = (TileEntityModuleRack)raw;
-            occupied = rack.getOccupiedMask();
+            occupied = rack.getOccupiedMask(); housing = rack.getHousingTexture();
             modules = world instanceof VehicleWorld ? occupied : rack.getRenderMask();
         }
-        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules);
+        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(HOUSING, housing);
     }
 
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
             EntityPlayer player, EnumHand hand, EnumFacing face, float x, float y, float z) {
+        if (world instanceof VehicleWorld || !ConfigurationAccess.canEditDialog(player, world, pos)) return false;
         int slot = ModuleRackGeometry.hitSlot(state.getValue(FACING).getIndex(), face.getIndex(), x, y, z);
-        if (slot < 0 || world instanceof VehicleWorld || !ConfigurationAccess.canEditDialog(player, world, pos)) return false;
         TileEntity raw = world.getTileEntity(pos);
         if (!(raw instanceof TileEntityModuleRack)) return false;
         TileEntityModuleRack rack = (TileEntityModuleRack)raw;
         ItemStack held = player.getHeldItem(hand);
+        if (hand == EnumHand.MAIN_HAND && (held.getItem() == com.vandorlabs.items.ModItems.CONFIGURIZER || held.isEmpty() && slot < 0))
+            return openConfiguration(world, pos, player);
+        if (slot < 0) return false;
         boolean occupied = (rack.getOccupiedMask() & (1 << slot)) != 0;
         if (held.isEmpty()) {
             // An empty main hand must not swallow an off-hand insertion.
@@ -113,6 +117,22 @@ public final class BlockModuleRack extends BlockVandor {
             world.playSound(null, pos, SoundEvents.BLOCK_IRON_TRAPDOOR_CLOSE, SoundCategory.BLOCKS, .25F, 1.3F);
         }
         return true;
+    }
+
+    public static boolean openConfiguration(World world, BlockPos pos, EntityPlayer player) {
+        if (!ConfigurationAccess.canEditDialog(player, world, pos) || !(world.getTileEntity(pos) instanceof TileEntityModuleRack)) return false;
+        if (!world.isRemote) player.openGui(com.vandorlabs.VandorLabs.instance, com.vandorlabs.GuiHandler.GUI_MODULE_RACK,
+                world, pos.getX(), pos.getY(), pos.getZ());
+        return true;
+    }
+    @Override public boolean canProvidePower(IBlockState state) { return true; }
+    @Override public int getWeakPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        TileEntity tile = world.getTileEntity(pos);
+        return tile instanceof TileEntityModuleRack && com.vandorlabs.redstone.TransmitterSlots.localRedstone(tile)
+                ? ((TileEntityModuleRack)tile).output.level() : 0;
+    }
+    @Override public int getStrongPower(IBlockState state, IBlockAccess world, BlockPos pos, EnumFacing side) {
+        return getWeakPower(state, world, pos, side);
     }
 
     private static void remove(World world, BlockPos pos, TileEntityModuleRack rack, int slot, EntityPlayer player) {

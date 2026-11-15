@@ -12,11 +12,35 @@ The Module Rack holds four **Blank Modules** in independently selectable horizon
 - Use an empty hand on an occupied bay or its buttons to retrieve its module. If the inventory cannot accept it, the module remains in the rack.
 - Breaking the rack releases its contained modules. Middle-clicking the rack picks the empty block, without duplicating the contents.
 
-Insertion consumes one module in Survival. Creative insertion follows ordinary creative placement and leaves the held stack unchanged. Stored modules retain their item data, including custom names. Blank Modules are decorative inserts; this initial item does not provide a machine function or redstone output.
+Insertion consumes one module in Survival. Creative insertion follows ordinary creative placement and leaves the held stack unchanged. Stored modules retain their item data, including custom names. Blank Modules are decorative inserts. Every occupied bay contributes to the rack's optional proportional Redstone output.
 
 ![A Blank Module sliding into the top bay, with the other three bays empty](images/module-rack/inserting.png)
 
 ![An extracted module sliding outward while the remaining bays stay populated](images/module-rack/extracting.png)
+
+## Housing and Redstone
+
+Click the casing with an empty hand, or use the Configurizer, to open the same dedicated dialog. Empty-hand clicks on occupied bays still retrieve their modules.
+
+The **Housing** tab selects the casing's wall texture. **Original artwork** restores the graphite casing. The picker supports search, mouse-wheel scrolling and dragging its scrollbar. Changing the finish preserves all inserted modules.
+
+![The Rack's standard Housing picker](images/module-rack/housing.png)
+
+In **Redstone**, turn **Emit Redstone** on to publish the occupied-bay count as a proportional level. Emission starts off. All inserted modules count:
+
+| Occupied bays | Level |
+| --- | --- |
+| 0 | 0 |
+| 1 | 4 |
+| 2 | 8 |
+| 3 | 11 |
+| 4 | 15 |
+
+Use the standard transmit-channel list, range slider and **Local Redstone** switch to choose where this level is available. Local output drives all six sides. Turning emission off clears both local and transmitted output. Right-clicking a toggle selects its previous value.
+
+![The Rack's emission and standard transmission controls](images/module-rack/redstone.png)
+
+Housing and transmission settings survive saving and reloading. Dialog packets contain public settings, never the stored module items or their private item data.
 
 ## Shape and artwork
 
