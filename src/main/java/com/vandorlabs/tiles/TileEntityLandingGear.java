@@ -50,8 +50,7 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
         return nextChannel>=0 && configure(nextMode,ChannelList.of(nextChannel),pixels,nextSize);
     }
     public boolean configure(int nextMode,ChannelList nextChannel,int pixels,int nextSize){
-        if(getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear && nextSize!=0 && nextSize!=4)return false;
-        if(nextSize<0||nextSize>=BlockTelescopicLandingGear.SIZES.length||!isRoot()||nextMode<0||nextMode>2||nextChannel==null||pixels<0||pixels>64||pixels%8!=0)return false;
+        if(!isRoot()||nextChannel==null||!com.vandorlabs.gear.core.LegacyLandingSettings.valid(nextMode,pixels,nextSize,getBlockType() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear))return false;
         BlockTelescopicLandingGear block=(BlockTelescopicLandingGear)getBlockType();
         boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
         if((extended||nextSize>=3) && !block.reserve(world,pos,
@@ -66,9 +65,9 @@ public class TileEntityLandingGear extends TileEntity implements ITickable, Reds
     public void update(){
         if(!isRoot())return;
         boolean extended=world.getBlockState(pos).getValue(BlockTelescopicLandingGear.EXTENDED);
-        float target=extended?extensionPixels/16F:0;
+        float target=com.vandorlabs.gear.core.LegacyLandingSettings.target(extended,extensionPixels);
         previous=progress;
-        progress=progress<target?Math.min(target,progress+.05F):Math.max(target,progress-.05F);
+        progress=com.vandorlabs.gear.core.LegacyLandingSettings.advance(progress,target);
         if(!world.isRemote){
             if(progress!=previous){markDirty();
                 ((BlockTelescopicLandingGear)getBlockType()).releaseBelow(world,pos,(int)Math.ceil(Math.max(progress,target)));

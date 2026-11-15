@@ -18,8 +18,8 @@ public class BlockTelescopicLandingGear extends BlockLandingGear {
     public static final PropertyBool LOWER=PropertyBool.create("lower"),EXTENDED=PropertyBool.create("extended");
     public static final String[] SIZES={"small","medium","large","extra_large","extra_large_2x2"};
     private final List<List<List<AxisAlignedBB>>> geometry=new ArrayList<>();
-    public static float pistonAnchor(int size){return (size==0?12:size==1?14:size==2?15:14)/16F;}
-    public static float pistonLength(int size){return (size==0?2:size==1?1:size==2?.5F:1)/16F;}
+    public static float pistonAnchor(int size){return com.vandorlabs.gear.core.LegacyLandingSettings.pistonAnchor(size);}
+    public static float pistonLength(int size){return com.vandorlabs.gear.core.LegacyLandingSettings.pistonLength(size);}
     public BlockTelescopicLandingGear(String name){
         super(name);
         for(String size:SIZES){
@@ -77,11 +77,10 @@ public class BlockTelescopicLandingGear extends BlockLandingGear {
     }
     public void releaseBelow(World world,BlockPos root,int keep){
         TileEntityLandingGear tile=root(world,root);
-        int radius=tile!=null&&tile.getSize()>=3?1:0;
-        if(radius==1)keep++;
+        int size=tile==null?0:tile.getSize();
         for(int i=0;i<=5;i++)for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++){
             if(i==0&&x==0&&z==0)continue;
-            if(i<=keep && Math.abs(x)<=radius && Math.abs(z)<=radius && (tile==null||tile.getSize()!=4||x>=0&&z>=0) && (i>0||radius==1))continue;
+            if(com.vandorlabs.gear.core.LegacyLandingLayout.kept(i,x,z,keep,size))continue;
             BlockPos p=root.add(x,-i,z);if(owned(world,p,root)){
                 // Removing ownership first distinguishes internal cleanup from mining a wheel.
                 world.removeTileEntity(p);world.setBlockState(p,net.minecraft.init.Blocks.AIR.getDefaultState(),2);

@@ -47,7 +47,7 @@ public final class BlockNonWheeledLandingGear extends BlockTelescopicLandingGear
         net.minecraft.util.math.BlockPos next=pos.offset(front?facing:facing.getOpposite(),step);
         if(world instanceof net.minecraft.world.World && !((net.minecraft.world.World)world).isBlockLoaded(next) || world.getBlockState(next).getBlock()!=this)return false;
         com.vandorlabs.tiles.TileEntityLandingGear other=super.root(world,next);
-        return other!=null && other.getSize()==tile.getSize() && world.getBlockState(next).getValue(FACING).getAxis()==facing.getAxis() && Math.abs(other.progress-tile.progress)<.001;
+        return other!=null && com.vandorlabs.gear.core.LegacyLandingLayout.connectedEnd(true,true,tile.getSize(),other.getSize(),facing.getHorizontalIndex(),world.getBlockState(next).getValue(FACING).getHorizontalIndex(),tile.progress,other.progress);
     }
     public static boolean forbidsTaxi(net.minecraft.block.Block block){return block instanceof BlockNonWheeledLandingGear||block instanceof com.vandorlabs.gear.GearBlock && (((com.vandorlabs.gear.GearBlock)block).kind()==com.vandorlabs.gear.GearBlock.Kind.PLATE || ((com.vandorlabs.gear.GearBlock)block).kind()==com.vandorlabs.gear.GearBlock.Kind.SKI);}
 }
