@@ -12,4 +12,7 @@ public interface NativeSurfaceController {
     boolean surfaceLocked();
     void surfaceChanged();
     default boolean joinsArtwork(){return true;}
+    default boolean joinsArtwork(BlockPos first,BlockPos next){return true;}
+    default boolean surfaceSeed(BlockPos cell){return false;}
+    default boolean acceptsExtension(BlockPos existing,BlockPos added){return true;}
 }

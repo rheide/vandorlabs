@@ -1,0 +1,51 @@
+package com.vandorlabs.neoforge.copier;
+
+import com.vandorlabs.neoforge.transfer.*;
+
+import com.vandorlabs.copier.core.CopySettings;
+import com.vandorlabs.neoforge.copier.*;
+import com.vandorlabs.neoforge.surface.*;
+import com.vandorlabs.redstone.ChannelList;
+import java.util.*;
+import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.*;
+import net.minecraft.server.level.*;
+import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.*;
+import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.phys.AABB;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.server.*;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+
+/** One paired-pad economy with actual asynchronous withdrawal, caught rollback and exact retry. */
+@EventBusSubscriber(modid="vandorlabs")
+public final class NativeCopyRuntimeChecks {
+    private static final BlockPos ROOT=new BlockPos(14,120,8),INPUT=ROOT.east(),OUTPUT=ROOT.west(),SOURCE=INPUT.above(),TARGET=OUTPUT.above(),SUPPLY=ROOT.south();
+    private static final UUID ACTOR=new UUID(0,0x436f7079);
+    private static ServerLevel world;private static NativeCopyControllerEntity root;private static Actor actor;private static CompoundTag source,beforeSupply;
+    private static int ticks,checks,stage,stageTick,armed,caught;private static long idleScans,idlePackets;
+    private static final class Actor extends net.neoforged.neoforge.common.util.FakePlayer {Actor(ServerLevel world){super(world,new com.mojang.authlib.GameProfile(ACTOR,"CopyRuntimeFixture"));}}
+    private static boolean enabled(){return Boolean.getBoolean("vandorlabs.copyRuntimeChecks");}
+    private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError("Copy stage="+stage+" tick="+ticks+" busy="+(root!=null&&root.busy())+" status="+(root==null?"absent":root.status())+" error="+(root==null?"absent":root.error())+": "+message);}
+    private static ChestBlockEntity chest(BlockPos pos){return (ChestBlockEntity)world.getBlockEntity(pos);}
+    private static ItemStack gold(int count){var stack=new ItemStack(Items.GOLD_INGOT,count);stack.set(DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Copy receipt gold"));var tag=new CompoundTag();tag.putString("Receipt","copy-exact-components");stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));return stack;}
+    @SubscribeEvent public static void started(ServerStartedEvent event){if(!enabled())return;try{world=event.getServer().overworld();for(int x=ROOT.getX()-4;x<=ROOT.getX()+4;x++)for(int z=ROOT.getZ()-2;z<=ROOT.getZ()+3;z++){world.setChunkForced(x>>4,z>>4,true);world.getChunkAt(new BlockPos(x,120,z));}world.setBlock(ROOT,NativeCopyBindings.BLOCK.defaultBlockState(),3);world.setBlock(INPUT,NativeSurfaceBindings.BLOCK.defaultBlockState(),3);world.setBlock(OUTPUT,NativeSurfaceBindings.BLOCK.defaultBlockState(),3);world.setBlock(SOURCE,Blocks.CHEST.defaultBlockState(),3);world.setBlock(SUPPLY,Blocks.CHEST.defaultBlockState(),3);chest(SOURCE).setItem(0,gold(7));chest(SOURCE).setChanged();chest(SUPPLY).setItem(0,new ItemStack(Items.CHEST));chest(SUPPLY).setItem(1,gold(20));chest(SUPPLY).setChanged();source=chest(SOURCE).saveWithFullMetadata(world.registryAccess());beforeSupply=chest(SUPPLY).saveWithFullMetadata(world.registryAccess());root=(NativeCopyControllerEntity)world.getBlockEntity(ROOT);actor=new Actor(world);actor.setGameMode(GameType.SURVIVAL);actor.setPos(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()-2);need(root.configure(actor,new CopySettings(1,0,0,ChannelList.EMPTY,false)),"Source-style settings admission");
+        NativeCopyService.fault=(header,target)->{armed++;need(NativeCellTransactions.reservedBy(world,header,SOURCE),"exact callback Header may observe its own live reservation");var copiedHeader=new NativeCellTransactions.Header(header.operation(),header.family(),header.root(),header.owner(),header.actor(),header.creative());need(!NativeCellTransactions.reservedBy(world,copiedHeader,SOURCE)&&!NativeCellTransactions.reservedBy(world,header,ROOT.above(8)),"copied Headers and positions outside the receipt have no own reservation exemption");need(!world.setBlock(SOURCE,Blocks.EMERALD_BLOCK.defaultBlockState(),3),"read-only reservation observation never admits a source write");need(NativeTransferHolds.blocked(world,SUPPLY)&&NativeTransferHolds.blocked(world,SOURCE)&&NativeTransferHolds.blocked(world,TARGET),"all source, output and material cells held during armed material publication");need(chest(SUPPLY).getItem(0).isEmpty()&&ItemStack.matches(chest(SUPPLY).getItem(1),gold(13))&&world.getBlockState(TARGET).isAir(),"exact materials withdrawn before output publication");if(caught++==0)throw new IllegalStateException("Expected Copy withdrawal fault");};
+    }catch(Throwable failure){fail(failure);}}
+    @SubscribeEvent public static void tick(ServerTickEvent.Post event){if(!enabled()||world==null)return;try{ticks++;need(ticks-stageTick<250,"bounded asynchronous phase");
+        if(stage==0&&ticks>=3){root.request(actor);need(root.busy(),"accepted copy remains queued while disk preparation is pending");stage=1;stageTick=ticks;return;}
+        if(stage==1&&!root.busy()){need(armed==1&&caught>=1,"caught failure followed real durable ARMED callback");need(world.getBlockState(TARGET).isAir()&&chest(SUPPLY).saveWithFullMetadata(world.registryAccess()).equals(beforeSupply),"rollback restores the exact backing chest and leaves output absent");need(chest(SOURCE).saveWithFullMetadata(world.registryAccess()).equals(source),"copy input remains its original private owner");root.request(actor);stage=2;stageTick=ticks;return;}
+        if(stage==2&&!root.busy()){need(armed==2,"retry traverses a new durable journal");need(world.getBlockState(TARGET).is(Blocks.CHEST),"one physical copied chest published");var expected=source.copy();expected.putInt("x",TARGET.getX());expected.putInt("y",TARGET.getY());expected.putInt("z",TARGET.getZ());need(chest(TARGET).saveWithFullMetadata(world.registryAccess()).equals(expected),"copied chest keeps exact name, count and custom item components");need(chest(SUPPLY).getItem(0).isEmpty()&&ItemStack.matches(chest(SUPPLY).getItem(1),gold(13)),"successful retry pays one block item and seven exact component-bearing items once");need(chest(SOURCE).saveWithFullMetadata(world.registryAccess()).equals(source),"source private data unchanged after successful copy");need(!NativeTransferHolds.active(world)&&!NativeCellTransactions.busy(world,ROOT,root.key()),"authority retired only after physical checkpoint");need(world.getEntitiesOfClass(ItemEntity.class,new AABB(ROOT).inflate(8)).isEmpty(),"no loose material duplicates");world.setBlock(INPUT,Blocks.AIR.defaultBlockState(),3);stage=3;stageTick=ticks;return;}
+        if(stage==3&&ticks-stageTick>=3){need(root.input()==null&&root.output()==null,"a hole releases both saved Copy areas instead of leaving stale claims");world.setBlock(INPUT,NativeSurfaceBindings.BLOCK.defaultBlockState(),3);root.checkAreas(actor);need(root.input()!=null&&root.output()!=null,"repair permits an explicit paired-pad check");idleScans=root.topologyScans;idlePackets=root.packets;stage=4;stageTick=ticks;return;}
+        if(stage==4&&ticks-stageTick>=25){need(root.topologyScans==idleScans,"settling cosmetic activity cannot trigger topology scans before="+idleScans+" after="+root.topologyScans);System.out.println("[vandorlabs][copy-runtime] settled counters scans="+root.topologyScans+" packetsBefore="+idlePackets+" packetsAfter="+root.packets);idleScans=root.topologyScans;idlePackets=root.packets;stage=5;stageTick=ticks;return;}
+        if(stage==5&&ticks-stageTick>=20){need(root.topologyScans==idleScans&&root.packets==idlePackets,"settled Copy Controller idle scans="+idleScans+"->"+root.topologyScans+" packets="+idlePackets+"->"+root.packets);System.out.println("[vandorlabs][copy-runtime] PASS checks="+checks+" pairedPads/exactChestMaterials/realAsyncWithdrawal/caughtRollback/retry/privateComponents/holeRepair/idle");NativeCopyService.fault=null;world=null;event.getServer().halt(false);}
+    }catch(Throwable failure){fail(failure);}}
+    private static void fail(Throwable failure){failure.printStackTrace();System.out.println("[vandorlabs][copy-runtime] FAIL "+failure);NativeCopyService.fault=null;var server=world==null?net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer():world.getServer();world=null;if(server!=null)server.halt(false);}
+    private NativeCopyRuntimeChecks(){}
+}

@@ -34,6 +34,7 @@ public final class NativeSurfaceEntity extends BlockEntity {
     public Direction normal(){return getBlockState().getValue(NativeSurfaceBlock.FACING);}
     public boolean sameArtwork(NativeSurfaceEntity other){return other!=null&&on.equals(other.on)&&off.equals(other.off);}
     public NativeSurfaceController claimedOwner(){if(level==null||owner==null||ownerKey==null||!level.hasChunkAt(owner))return null;return level.getBlockEntity(owner) instanceof NativeSurfaceController controller&&ownerKey.equals(controller.surfaceKey())&&controller.ownsSurface(worldPosition)?controller:null;}
+    public boolean claimedBy(BlockPos controller,UUID identity){return Objects.equals(owner,controller)&&Objects.equals(ownerKey,identity);}
     public boolean canClaim(BlockPos controller,UUID key){return owner==null||owner.equals(controller)&&Objects.equals(ownerKey,key)||level!=null&&level.hasChunkAt(owner)&&claimedOwner()==null;}
     public boolean locked(){if(inert||owner!=null&&level!=null&&!level.hasChunkAt(owner))return true;var controller=claimedOwner();return controller!=null&&controller.surfaceLocked();}
     public void bind(BlockPos controller,UUID key){if(!canClaim(controller,key))throw new IllegalArgumentException("Programmable Surface is claimed by another controller");owner=controller.immutable();ownerKey=key;changed();schedule();}
@@ -50,11 +51,13 @@ public final class NativeSurfaceEntity extends BlockEntity {
     public void setGroup(NativeSurfaceLayout layout){var offset=layout.cell(0,0,0).subtract(worldPosition);boolean different=!offset.equals(groupOffset)||groupWidth!=layout.geometry.width||groupHeight!=layout.geometry.height||groupNormal!=layout.normal.get3DDataValue();groupOffset=offset;groupWidth=layout.geometry.width;groupHeight=layout.geometry.height;groupNormal=layout.normal.get3DDataValue();cached=layout;if(different)changed();}
     public void schedule(){NativeSurfaceUpdates.queue(this);}
     public void refreshGroup(){
-        if(!(level instanceof ServerLevel)||inert||isRemoved())return;discoveryScans++;var controller=claimedOwner();
+        if(!(level instanceof ServerLevel)||inert||isRemoved()||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,worldPosition))return;discoveryScans++;var controller=claimedOwner();
+        if(controller==null&&owner==null){for(Direction side:Direction.values()){var at=worldPosition.relative(side);if(!level.hasChunkAt(at)||!(level.getBlockEntity(at) instanceof NativeSurfaceEntity neighbor))continue;var adjacent=neighbor.claimedOwner();if(adjacent!=null&&neighbor.normal()==normal()&&adjacent.acceptsExtension(at,worldPosition)){adjacent.surfaceChanged();break;}}}
         if(owner!=null&&controller==null){if(!level.hasChunkAt(owner))return;owner=null;ownerKey=null;changed();}
         if(controller!=null&&controller.joinsArtwork()){var layout=controller.surfaceLayout(worldPosition);if(layout!=null){setGroup(layout);activityChanged();return;}}
         Set<BlockPos> members;
-        try{members=NativeSurfaceLayout.connected(level,worldPosition,p->{if(!level.hasChunkAt(p))return true;if(!(level.getBlockEntity(p) instanceof NativeSurfaceEntity tile))return true;return controller==null?tile.claimedOwner()==null:controller.ownsSurface(p)&&tile.mode==mode;},true);}catch(IllegalArgumentException unavailable){return;}
+        try{members=NativeSurfaceLayout.connected(level,worldPosition,p->{if(!level.hasChunkAt(p))return true;if(!(level.getBlockEntity(p) instanceof NativeSurfaceEntity tile))return true;return controller==null?tile.claimedOwner()==null:controller.ownsSurface(p)&&controller.joinsArtwork(worldPosition,p)&&tile.mode==mode;},true);}catch(IllegalArgumentException unavailable){return;}
+        for(var pos:members)if(com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,pos))return;
         NativeSurfaceLayout group=null;try{group=new NativeSurfaceLayout(members,normal(),true);}catch(IllegalArgumentException irregular){}
         for(var pos:members)if(level.getBlockEntity(pos) instanceof NativeSurfaceEntity tile){NativeSurfaceUpdates.settled(tile);tile.setGroup(group==null?NativeSurfaceLayout.single(pos,tile.normal()):group);tile.activityChanged();}
     }

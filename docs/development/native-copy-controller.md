@@ -1,0 +1,15 @@
+# Native Copy Controller transfer adapter
+
+The native Copy Controller is an inactive conversion checkpoint. Its canonical identifier is `copy_controller`, enabled only by the `vandorlabs.copyControllers` development property. The public Surface block remains independent. This checkpoint provides paired-pad discovery, typed configuration and a material transaction; it does not enable Vehicle Mode or construction authoring.
+
+The controller discovers matching filled rectangles on its left and right and uses the physical vanilla chest behind its authored front. The saved layout uses the released Source position packing. Pad ownership is identity checked, holes release both saved areas, and settled controllers do not repeatedly discover their pads. Changes within a dirty component coalesce through deferred identity-checked updates.
+
+A copy recipe derives output cells from an immutable input snapshot, or from a bounded construction-chip design. Channel increments affect documented setting fields after material costs have been calculated. Private inventories contribute exact item and component costs. Resource-bearing block carriers require their complete configured item. Unknown physical ownership is refused rather than priced as an empty block.
+
+Single and double supply chests are represented by their physical halves. The receipt preserves all non-inventory metadata and records each slot's exact before and after stack. It recomputes the released greedy withdrawal policy when decoding. Publication withdraws those slots before installing output blocks. Recovery accepts only the receipt's exact slot values and never overwrites an unrelated change with a guessed refund.
+
+The cell journal's two disk boundaries revalidate the installed controller, actor, settings, pad claims, input contents and material cost. Read-only reservation checks recognize only the exact callback Header object and its live durable reservation. Raw foreign Ramp and arm reservations remain refused, independently of internal write scopes. This observation grants no write admission; block and slot publication still require the armed exact lease.
+
+The focused server path exercises real asynchronous preparation, exact component-bearing inventory costs, a caught failure immediately after material withdrawal, rollback, retry and physical output installation. The input inventory remains unchanged, the supply pays once, and no loose resource copies appear. It also checks hole repair and zero discovery/packet deltas after the finite twenty-tick activity indication has settled. This is separate from the common engine's abrupt cross-chunk recovery proof; family-specific cold recovery and the actual player dialog path remain required before public activation.
+
+Construction-chip decoding is read-only. It does not consume or rewrite the chip. Designs containing unavailable native blocks, including an unconverted Vehicle Controller, are retained and refused. This adapter does not add replacement controllers or a native Vehicle Chip authoring route.
