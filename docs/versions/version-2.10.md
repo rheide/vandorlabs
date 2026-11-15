@@ -9,12 +9,13 @@ User testing and final release validation remain pending.
 ## Module Rack and Autopilot
 
 Module Racks are available on Forge 1.12.2 and NeoForge 1.21.1. Autopilot fits
-inside them as an identifiable NAV module, with
+inside them with an abstract cyan/amber route indicator and
 per-bay route, activation and receiving controls. On Forge 1.12.2, existing Autopilot computers
 migrate after chunk loading while preserving navigation, authorization and saved
 data. Rack placement, extraction animation, housing and proportional Redstone
 controls follow the standard dialogs. Native captured Racks retain every module
 through mining and abrupt recovery; Vehicle navigation remains Forge-only.
+Custom housing affects only the five exterior faces, leaving the front and bay interiors unchanged. Mounted module edits belong to the physical module immediately and survive extraction, relocation and reload independently of the rack housing/output settings.
 See the [Module Rack guide](../module-rack.md).
 
 ## Materials and joined artwork

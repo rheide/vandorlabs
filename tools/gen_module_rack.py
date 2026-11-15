@@ -214,6 +214,27 @@ def indicator(slot, on):
     return model(parts)
 
 
+def autopilot_model(elements, bottom):
+    # The archived front strip contains lettering. Never sample it: the front keeps the
+    # plain module artwork, with a small authored route icon built from uniform swatches.
+    for part in elements:
+        if part["name"] == "cassette_body":
+            part["faces"]["south"]["texture"] = "#module_front"
+    for name, low, high, uv in (
+            ("route_start", [4.75, bottom+.75], [5.5, bottom+1.5], [0,0,8,8]),
+            ("route_horizontal", [5.5, bottom+1], [7.75, bottom+1.25], [8,0,16,8]),
+            ("route_vertical", [7.5, bottom+1], [7.75, bottom+2.25], [8,0,16,8]),
+            ("route_arrow", [7.25, bottom+2], [8, bottom+2.25], [8,0,16,8]),
+            ("route_tip", [7.5, bottom+2.25], [7.75, bottom+2.5], [8,0,16,8])):
+        part=box(name,[low[0],low[1],15.25],[high[0],high[1],15.275],"indicators",uv,shade=False)
+        part["faces"]={"south":part["faces"]["south"]}
+        elements.append(part)
+    result=model(elements)
+    result["textures"]["module"]="vandorlabs:blocks/module_rack/autopilot_module"
+    result["textures"]["module_front"]="vandorlabs:blocks/module_rack/module"
+    return result
+
+
 def item_display(module=False):
     scale = .66 if module else .56
     return {"gui": {"rotation": [25, -35, 0], "translation": [0, 0, 0], "scale": [scale] * 3},
@@ -237,9 +258,9 @@ def generate():
             save_json(MODELS / ("indicator_%d_%s.json" % (slot, "on" if on else "off")), indicator(slot, on))
         for name, elements in (("slot_autopilot_%d" % slot,cassette(11.75-slot*3.5)),
                                ("slot_seated_autopilot_%d" % slot,seated_cassette(slot))):
-            variant=model(elements); variant["textures"]["module"]="vandorlabs:blocks/module_rack/autopilot_module"
+            variant=autopilot_model(elements,11.75-slot*3.5)
             save_json(MODELS / (name+".json"),variant)
-    autopilot=model(cassette(6.5));autopilot["textures"]["module"]="vandorlabs:blocks/module_rack/autopilot_module"
+    autopilot=autopilot_model(cassette(6.5),6.5)
     autopilot["display"]=item_display(True)
     save_json(MODELS / "autopilot_module.json",autopilot)
     save_json(ASSETS / "models/item/autopilot_module.json",{"parent":"vandorlabs:block/module_rack/autopilot_module"})

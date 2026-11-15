@@ -110,10 +110,21 @@ def main():
         with Image.open(path) as image:
             require(image.width == image.height and image.width <= 64, 'oversized/non-square texture ' + name)
             require(image.width & (image.width - 1) == 0, 'non-power-of-two atlas')
-    with Image.open(TEXTURES / 'autopilot_module.png') as image, Image.open(TEXTURES / 'module.png') as blank:
-        require(image.crop((8,53,38,63)).tobytes()!=blank.crop((8,53,38,63)).tobytes(), 'NAV front artwork must differ from blank module')
-        for x,y in ((19,55),(25,56),(31,55)):
-            require(image.getpixel((x,y))[1]>180,'NAV pixel landmark remains cyan and readable')
+    for path in list(MODELS.glob('*autopilot_*.json')) + [MODELS / 'autopilot_module.json']:
+        typed = read(path)
+        require(len([part for part in typed['elements'] if part['name'].startswith('route_')]) == 5,
+                'every seated/moving/item Autopilot has the abstract route indicator: ' + path.name)
+        for part in typed['elements']:
+            for face in part['faces'].values():
+                texture = typed['textures'][face['texture'][1:]]
+                if texture.endswith('/autopilot_module'):
+                    u0,v0,u1,v1 = face['uv']
+                    require(not (min(u0,u1) < 35/4 and max(u0,u1) > 19/4
+                                 and min(v0,v1) < 60/4 and max(v0,v1) > 55/4),
+                            'Autopilot must never sample archived NAV lettering: ' + path.name)
+        front = named(typed, 'cassette_body')[0]['faces']['south']
+        require(typed['textures'][front['texture'][1:]].endswith('/module'),
+                'letter-free original front artwork in every variant')
     map_models = (ASSETS / 'dynmap-models.txt').read_text().splitlines()
     map_textures = (ASSETS / 'dynmap-texture.txt').read_text().splitlines()
     require(map_models.count('customblock:id=%module_rack,state=*,'

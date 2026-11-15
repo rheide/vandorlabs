@@ -7,7 +7,8 @@
     "dark": "vandorlabs:blocks/module_rack/dark",
     "indicators": "vandorlabs:blocks/module_rack/indicators",
     "contacts": "vandorlabs:blocks/module_rack/contacts",
-    "particle": "vandorlabs:blocks/module_rack/housing"
+    "particle": "vandorlabs:blocks/module_rack/housing",
+    "module_front": "vandorlabs:blocks/module_rack/module"
   },
   "elements": [
     {
@@ -62,7 +63,7 @@
           ]
         },
         "south": {
-          "texture": "#module",
+          "texture": "#module_front",
           "uv": [
             0,
             13,
@@ -433,6 +434,131 @@
             0,
             0,
             8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "route_start",
+      "from": [
+        4.75,
+        9.0,
+        15.25
+      ],
+      "to": [
+        5.5,
+        9.75,
+        15.275
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            0,
+            0,
+            8,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "route_horizontal",
+      "from": [
+        5.5,
+        9.25,
+        15.25
+      ],
+      "to": [
+        7.75,
+        9.5,
+        15.275
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            0,
+            16,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "route_vertical",
+      "from": [
+        7.5,
+        9.25,
+        15.25
+      ],
+      "to": [
+        7.75,
+        10.5,
+        15.275
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            0,
+            16,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "route_arrow",
+      "from": [
+        7.25,
+        10.25,
+        15.25
+      ],
+      "to": [
+        8,
+        10.5,
+        15.275
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            0,
+            16,
+            8
+          ]
+        }
+      }
+    },
+    {
+      "name": "route_tip",
+      "from": [
+        7.5,
+        10.5,
+        15.25
+      ],
+      "to": [
+        7.75,
+        10.75,
+        15.275
+      ],
+      "shade": false,
+      "faces": {
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            0,
+            16,
             8
           ]
         }

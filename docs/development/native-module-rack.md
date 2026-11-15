@@ -1,12 +1,14 @@
 # Native Module Rack adapter
 
-The NeoForge adapter reuses the Forge Rack's authored shell, Blank and NAV cassette artwork, six-face hit layout, proportional output policy, compact tab widths, module configuration and pause-aware motion envelope. Its native placement delegates to the same view-facing adapter used by Programmable Light and the resource ports.
+The NeoForge adapter reuses the Forge Rack's authored shell, Blank and Autopilot cassette artwork, six-face hit layout, proportional output policy, compact tab widths, module configuration and pause-aware motion envelope. Its native placement delegates to the same view-facing adapter used by Programmable Light and the resource ports.
+
+The five exterior bounding faces accept the configured housing material; the front and recessed interiors retain authored artwork. Classification uses facing and vertex planes, so atlas aliases cannot recolor the panel. Autopilot fronts use a small geometric cyan/amber route indicator and never sample the archived lettering strip.
 
 Four internal bays each own one item. They are not an automation inventory or an item capability. Ordinary insertion consumes one held module; extraction first checks inventory room. Mining separates the empty shell from its modules. The Configurizer and empty-hand rim interaction open the same configuration-only menu. Module replacement sequences, the exact installed tile, loaded chunks, actor permissions, range and window identity guard settings changes. Packets carry bounded choices rather than inventories or arbitrary NBT.
 
 ## Channels and navigation
 
-The Rack's output and its four module receivers use the existing native channel bank. Registration is deferred after chunk loading, and removal unregisters the old identity. Local output and wireless transmission share the proportional levels 0, 4, 8, 11 and 15. Each NAV module retains its own receiving channels, activation mode and route marker.
+The Rack's output and its four module receivers use the existing native channel bank. Registration is deferred after chunk loading, and removal unregisters the old identity. Local output and wireless transmission share the proportional levels 0, 4, 8, 11 and 15. Each Autopilot Module retains its own receiving channels, activation mode and route marker. Mounted edits update the actual module stack before extraction; slot replacement, relocation and reload preserve the module choices and opaque item fields independently from the rack housing/output configuration.
 
 Vehicle navigation is implemented on Forge 1.12.2. Native modules retain their navigation data and receiving state, but do not create, convert or drive native vehicles. Their General tab states this limitation. The physical old-Autopilot migration belongs to the Forge adapter; a native Rack's legacy item decoder does not imply general cross-version world conversion.
 

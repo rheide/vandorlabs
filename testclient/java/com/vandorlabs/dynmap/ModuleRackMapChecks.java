@@ -96,13 +96,11 @@ public final class ModuleRackMapChecks {
             Context nav=new Context(facing,1,2);
             RenderPatch[] mesh=renderer.getRenderPatchList(nav);
             if(mesh!=renderer.getRenderPatchList(nav))throw new AssertionError("Typed NAV map cache missed");
-            int navFaces=0;for(RenderPatch raw:mesh)if(raw.getTextureIndex()==6){
-                navFaces++;Patch patch=(Patch)raw;
-                if(Math.abs(patch.limits[0])>1e-8||Math.abs(patch.limits[1]-11.5/16)>1e-8)
-                    throw new AssertionError("NAV front UV landmark");
-            }
-            if(navFaces!=1)throw new AssertionError("One seated NAV front per module: "+facing);
-            if(mesh==renderer.getRenderPatchList(new Context(facing,1)))throw new AssertionError("NAV front aliases blank map mesh");
+            int routeFaces=0,blankRouteFaces=0;
+            for(RenderPatch raw:mesh){if(raw.getTextureIndex()==6)throw new AssertionError("Seated module must not sample archived lettering");if(raw.getTextureIndex()==4)routeFaces++;}
+            for(RenderPatch raw:renderer.getRenderPatchList(new Context(facing,1)))if(raw.getTextureIndex()==4)blankRouteFaces++;
+            if(routeFaces!=blankRouteFaces+5)throw new AssertionError("Five abstract route-indicator faces per Autopilot: "+facing);
+            if(mesh==renderer.getRenderPatchList(new Context(facing,1)))throw new AssertionError("Route indicator aliases blank map mesh");
             states++;
 
         }

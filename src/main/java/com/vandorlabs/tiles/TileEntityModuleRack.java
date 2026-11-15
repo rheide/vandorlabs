@@ -344,8 +344,14 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         loadNavigation(); resumeReceivers(); changed(); return true;
     }
     private void saveNavigation() {
-        if(primary>=0 && !loadingModules && (world==null || !world.isRemote || world instanceof VehicleWorld))
-            com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary],writeAutopilotData(new NBTTagCompound()));
+        if(primary>=0 && !loadingModules && (world==null || !world.isRemote || world instanceof VehicleWorld)) {
+            // The physical item owns navigation state, including unknown extension fields.
+            // Clear optional live references before overlaying known state so relocation cannot
+            // resurrect an old departure authorization from the preserved module data.
+            NBTTagCompound saved=com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary]);
+            for(String key:new String[]{"AutopilotDepartureSeat","AutopilotDepartureOwnerMost","AutopilotDepartureOwnerLeast","AutopilotDepartureWaypoint"})saved.removeTag(key);
+            com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary],writeAutopilotData(saved));
+        }
     }
     private void loadNavigation() {
         loadingModules=true;

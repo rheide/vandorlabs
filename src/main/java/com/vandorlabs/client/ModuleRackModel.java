@@ -40,6 +40,7 @@ public final class ModuleRackModel implements IBakedModel {
     private static final String[] TEXTURES = { "housing", "module", "autopilot_module", "trim", "dark", "indicators", "contacts" };
     private static final ModuleRackModel[] MODELS = new ModuleRackModel[6];
     private final IBakedModel shell;
+    private final int facing;
     private int housingChoice = -1;
     private final java.util.LinkedHashMap<Integer, ModuleRackModel> housingModels = new java.util.LinkedHashMap<>(16, .75F, true);
 
@@ -55,9 +56,9 @@ public final class ModuleRackModel implements IBakedModel {
     private int cacheRead, cacheWrite, cacheEntries, cacheBytes;
     private static final int COMBINATION_BYTES = 65536;
 
-    private ModuleRackModel(IBakedModel shell, IBakedModel[] modules, List<BakedQuad>[] seated,
+    private ModuleRackModel(int facing, IBakedModel shell, IBakedModel[] modules, List<BakedQuad>[] seated,
                             List<BakedQuad>[] empty, List<BakedQuad>[][] indicators, IBakedModel[] autopilotModules, List<BakedQuad>[] autopilotSeated) {
-        this.shell = shell;
+        this.facing = facing; this.shell = shell;
         this.autopilotModules = autopilotModules; this.autopilotSeated = autopilotSeated;
         this.autopilotMoving = new MovingMesh[4];
         for(int slot=0;slot<4;slot++)autopilotMoving[slot]=new MovingMesh(autopilotModules[slot]);
@@ -70,7 +71,7 @@ public final class ModuleRackModel implements IBakedModel {
     }
 
     private ModuleRackModel(ModuleRackModel source, int housingChoice, TextureAtlasSprite sprite) {
-        this.housingChoice = housingChoice; shell = new HousingShell(source.shell, sprite);
+        this.facing = source.facing; this.housingChoice = housingChoice; shell = new HousingShell(source.shell, sprite, facing);
         modules = source.modules; moving = source.moving; autopilotModules=source.autopilotModules; autopilotMoving=source.autopilotMoving; autopilotSeated=source.autopilotSeated; seated = source.seated; empty = source.empty; indicators = source.indicators;
     }
     private synchronized ModuleRackModel housing(int choice) {
@@ -86,12 +87,12 @@ public final class ModuleRackModel implements IBakedModel {
     private static final class HousingShell implements IBakedModel {
         private final IBakedModel source; private final TextureAtlasSprite sprite;
         private final List<BakedQuad>[] quads;
-        @SuppressWarnings("unchecked") HousingShell(IBakedModel source, TextureAtlasSprite sprite) {
+        @SuppressWarnings("unchecked") HousingShell(IBakedModel source, TextureAtlasSprite sprite, int facing) {
             this.source = source; this.sprite = sprite; quads = (List<BakedQuad>[])new List<?>[7];
             for (int face = 0; face < 7; face++) {
                 List<BakedQuad> built = new ArrayList<>();
                 for (BakedQuad quad : source.getQuads(null, face == 6 ? null : EnumFacing.getFront(face), 0))
-                    built.add(quad.getSprite().getIconName().equals("vandorlabs:blocks/module_rack/housing")
+                    built.add(housingFace(quad, facing)
                             ? RetexturedItemModel.retextureQuad(quad, sprite) : quad);
                 quads[face] = Collections.unmodifiableList(built);
             }
@@ -103,6 +104,17 @@ public final class ModuleRackModel implements IBakedModel {
         public TextureAtlasSprite getParticleTexture() { return sprite; }
         public ItemCameraTransforms getItemCameraTransforms() { return source.getItemCameraTransforms(); }
         public ItemOverrideList getOverrides() { return source.getOverrides(); }
+    }
+
+    private static boolean housingFace(BakedQuad quad, int facing) {
+        int[] data = quad.getVertexData(); int stride = data.length / 4;
+        if (stride < 3 || data.length % 4 != 0) return false;
+        double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
+        for(int vertex=0;vertex<4;vertex++) {
+            int offset=vertex*stride; double x=Float.intBitsToFloat(data[offset]),y=Float.intBitsToFloat(data[offset+1]),z=Float.intBitsToFloat(data[offset+2]);
+            minX=Math.min(minX,x);minY=Math.min(minY,y);minZ=Math.min(minZ,z);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);maxZ=Math.max(maxZ,z);
+        }
+        return com.vandorlabs.rack.ModuleRackGeometry.housingFace(facing,quad.getFace().getIndex(),minX,minY,minZ,maxX,maxY,maxZ);
     }
 
     @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event) {
@@ -129,7 +141,7 @@ public final class ModuleRackModel implements IBakedModel {
                 buttons[slot][0] = all(part("indicator_" + slot + "_off", pitch, turns), true);
                 buttons[slot][1] = all(part("indicator_" + slot + "_on", pitch, turns), true);
             }
-            ModuleRackModel model = new ModuleRackModel(shell, modules, seated, empty, buttons, autopilotModules, autopilotSeated);
+            ModuleRackModel model = new ModuleRackModel(facing.getIndex(), shell, modules, seated, empty, buttons, autopilotModules, autopilotSeated);
             MODELS[facing.getIndex()] = model;
             event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:module_rack", "facing=" + facing.getName()), model);
         }

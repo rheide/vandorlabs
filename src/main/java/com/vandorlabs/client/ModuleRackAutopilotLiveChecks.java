@@ -60,7 +60,7 @@ final class ModuleRackAutopilotLiveChecks {
             if(current==null||current.moduleKind(0)!=2||mc.player.getHeldItemMainhand().getCount()!=1||ModuleRackAnimation.activeCount()!=0)return false;
             net.minecraft.block.state.IBlockState state=mc.world.getBlockState(at());net.minecraft.client.renderer.block.model.IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);
             java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(state.getBlock().getExtendedState(state,mc.world,at()),null,0);
-            need(quads.stream().filter(q->q.getSprite().getIconName().equals("vandorlabs:blocks/module_rack/autopilot_module")).count()==1,"one actual seated NAV front, distinct from blank cassette");
+            need(quads.stream().filter(q->q.getSprite().getIconName().equals("vandorlabs:blocks/module_rack/indicators")).count()>=53,"actual seated abstract route indicator, distinct from blank cassette");
             held(mc,ItemStack.EMPTY);next(3);
         }else if(stage==3){if(!mc.player.getHeldItemMainhand().isEmpty())return false;use(mc,-1);next(4);
         }else if(stage==4){if(gui==null)return false;click(gui,102,0);click(gui,201,0);click(gui,2,1);next(5);
@@ -115,7 +115,7 @@ final class ModuleRackAutopilotLiveChecks {
             });
             if("write".equals(System.getProperty("vandorlabs.moduleRackMigrationPhase","")))ModuleRackMigrationLiveChecks.write(mc,directory);
             done=true;
-            System.out.println("[vandorlabs][reprolab] module-rack PASS autopilot checks="+checks+" SurvivalInsert/NAVFront/perModuleTabs/receiverForwarding/previous/C2S/stale/permissions/extract/oldPhysicalMigration/oldSnapshot/reload");return true;
+            System.out.println("[vandorlabs][reprolab] module-rack PASS autopilot checks="+checks+" SurvivalInsert/routeIcon/perModuleTabs/receiverForwarding/previous/C2S/stale/permissions/extract/oldPhysicalMigration/oldSnapshot/reload");return true;
         }
         return false;
     }

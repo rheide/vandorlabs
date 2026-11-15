@@ -22,7 +22,7 @@ Insertion consumes one module in Survival. Creative insertion follows ordinary c
 
 Click the casing with an empty hand, or use the Configurizer, to open the same dedicated dialog. Empty-hand clicks on occupied bays still retrieve their modules.
 
-The **Housing** tab selects the casing's wall texture. **Original artwork** restores the graphite casing. The picker supports search, mouse-wheel scrolling and dragging its scrollbar. Changing the finish preserves all inserted modules.
+The **Housing** tab selects the casing's five outside faces. The front panel, recessed bay interiors and module artwork retain their original materials. **Original artwork** restores the graphite casing. The picker supports search, mouse-wheel scrolling and dragging its scrollbar. Changing the finish preserves all inserted modules.
 
 ![The Rack's standard Housing picker](images/module-rack/housing.png)
 
@@ -44,7 +44,7 @@ Housing and transmission settings survive saving and reloading. Dialog packets c
 
 ## Autopilot Module
 
-The Autopilot Module has a cyan **NAV** label and route arrow on its front. To add navigation to a Forge 1.12.2 craft:
+The Autopilot Module has a small cyan route indicator with an amber starting point on its front. To add navigation to a Forge 1.12.2 craft:
 
 1. Place a rack at the craft's route-sensor position, normally on its underside. Its facing controls access to the bays; the Pilot Seat determines driving direction.
 2. Insert one Autopilot Module into any free bay. A craft can have at most one Autopilot Module across its racks. Multiple modules keep their items and settings, but prevent ambiguous vehicle conversion. Blank Modules do not count as navigation controllers.
@@ -56,7 +56,7 @@ The Autopilot Module has a cyan **NAV** label and route arrow on its front. To a
 
 ![The module's independent receiving channels and activation mode](images/module-rack/autopilot-redstone.png)
 
-Removing and reinserting a module preserves its configuration and private item data. Manual insertion at a new location clears an old departure location and running journey; it does not transfer automation authority from another craft.
+Edits in a mounted module's tabs are stored immediately on that physical module, including its route marker, activation mode and receiving channels. Extracting it immediately, moving it to another slot or rack, and saving/reloading preserves those choices and private item data. Other Autopilot Modules keep their own settings. Housing and proportional output settings belong to the rack. Removing and reinserting a module preserves its configuration and private item data. Manual insertion at a new location clears an old departure location and running journey; it does not transfer automation authority from another craft.
 
 On Forge 1.12.2, existing Autopilot blocks convert to a rack containing one Autopilot Module when their physical chunk finishes loading. The conversion preserves facing, receiving settings, navigation/departure state, existing automation authorization and opaque saved data. It waits for an existing world transfer to finish. Waypoint blocks keep their behavior. Older saved vehicles and pending recovery snapshots retain their original IDs and remain readable; conversion applies when the legacy block is physically installed. The old block/item registry IDs remain available for compatibility, while creative/search/browser lists show the module.
 
@@ -90,14 +90,14 @@ Dynmap uses the same native model parts and displays the rack's saved slot occup
 
 The native Rack uses the same placement, four bays, cassette artwork and Housing/Redstone controls. Its module tabs use the same route-marker sampling and independent receiving settings. Both the Configurizer and the empty-hand rim interaction open this dedicated dialog.
 
-Insertion and retrieval both slide the cassette through the open front. These native captures show a Blank Module partway through each movement; the row indicator follows the authoritative occupied state.
+Insertion and retrieval both slide the cassette through the open front. These native captures show an Autopilot Module partway through each movement with a custom outer housing and the original front panel; the row indicator follows the authoritative occupied state.
 
-![A Blank Module midway through native insertion](images/module-rack/native-inserting.png)
+![An Autopilot Module midway through native insertion](images/module-rack/native-inserting.png)
 
 ![The same module midway through native retrieval](images/module-rack/native-extracting.png)
 
-Vehicle navigation remains a Forge 1.12.2 feature. Native NAV modules preserve their choices and receiving state, but do not convert or drive native vehicles; the module dialog states this limit. The old-computer migration described above applies to Forge worlds.
+Vehicle navigation remains a Forge 1.12.2 feature. Native Autopilot Modules preserve their choices and receiving state, but do not convert or drive native vehicles; the module dialog states this limit. The old-computer migration described above applies to Forge worlds.
 
-![The native NAV module dialog with a non-consuming route-marker sample](images/module-rack/native-autopilot-general.png)
+![The native Autopilot Module dialog with a non-consuming route-marker sample](images/module-rack/native-autopilot-general.png)
 
 See the [native adapter notes](development/native-module-rack.md) for its terrain publication and saved-ownership boundaries.

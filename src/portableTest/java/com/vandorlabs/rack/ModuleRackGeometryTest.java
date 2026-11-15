@@ -33,6 +33,12 @@ public final class ModuleRackGeometryTest {
                 require(com.vandorlabs.placement.PlayerViewFacing.towardView(pitches[index], facing) == expected[index],
                         "shared player-view policy keeps shallow placements horizontal and steep views vertical");
         }
+        for(int front=0;front<6;front++)for(int side=0;side<6;side++) {
+            int axis=side<2?1:side<4?2:0;double[] low={.2,.2,.2},high={.8,.8,.8};low[axis]=high[axis]=(side&1)==0?0:1;
+            require(ModuleRackGeometry.housingFace(front,side,low[0],low[1],low[2],high[0],high[1],high[2])==(front!=side),"five outer planes only, front always authored");
+            low[axis]=high[axis]=(side&1)==0?.0625:.9375;
+            require(!ModuleRackGeometry.housingFace(front,side,low[0],low[1],low[2],high[0],high[1],high[2]),"recessed and interior planes never take housing");
+        }
         double[] centers = {13.25, 9.75, 6.25, 2.75};
         double[] min = {11.75, 8.25, 4.75, 1.25};
         double[] max = {14.75, 11.25, 7.75, 4.25};

@@ -83,7 +83,7 @@ final class ModuleRackSettingsLiveChecks {
         GuiModuleRack gui=mc.currentScreen instanceof GuiModuleRack?(GuiModuleRack)mc.currentScreen:null;
         if(stage==0){
             if(current==null||!mc.player.getHeldItemMainhand().isEmpty()||mc.playerController.getCurrentGameType()!=GameType.SURVIVAL)return false;
-            use(mc,.5,.98);next(1);
+            ModuleRackAppearanceChecks.verify(mc);shot(mc,directory,"original_housing");use(mc,.5,.98);next(1);
         }else if(stage==1){
             if(gui==null)return false;
             need(current.getHousingTexture()==-1&&!current.emitsRedstone(),"old Rack defaults remain original artwork/output off");
@@ -102,7 +102,9 @@ final class ModuleRackSettingsLiveChecks {
             net.minecraft.block.state.IBlockState extended=state.getBlock().getExtendedState(state,mc.world,at());
             net.minecraft.client.renderer.block.model.IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);
             List<net.minecraft.client.renderer.block.model.BakedQuad> quads=model.getQuads(extended,null,0);
-            need(quads.stream().anyMatch(q->q.getSprite().getIconName().equals(ScreenHousingTextures.texture(0))),"actual emitted shell uses selected atlas material");
+            java.util.ArrayList<net.minecraft.client.renderer.block.model.BakedQuad> all=new java.util.ArrayList<>(quads);
+            for(EnumFacing side:EnumFacing.values())all.addAll(model.getQuads(extended,side,0));
+            need(all.stream().anyMatch(q->q.getSprite().getIconName().equals(ScreenHousingTextures.texture(0))),"actual exterior emitted shell uses selected atlas material");
             need(model.getQuads(extended,null,0)==quads,"steady Housing reuses its prepared quads");
             shot(mc,directory,"housing");click(gui,101,0);next(3);
         }else if(stage==3){click(gui,0,0);next(4);

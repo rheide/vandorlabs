@@ -20,16 +20,28 @@ import net.neoforged.neoforge.client.model.data.ModelData;
 /** Atlas-generation immutable parts plus bounded terrain combination references. */
 public final class NativeRackModel extends BakedModelWrapper<BakedModel> {
     private final List<BakedQuad> shell;
+    private final int facing;
     private final List<BakedQuad>[][] modules,seated,indicators;
     private final List<BakedQuad>[] empty;
     private final LinkedHashMap<Integer,List<BakedQuad>> combinations=new LinkedHashMap<>();
     private final LinkedHashMap<Integer,NativeRackModel> finishes=new LinkedHashMap<>(16,.75F,true);
     private int combinationBytes;
     @SuppressWarnings("unchecked") public NativeRackModel(BakedModel source,Direction facing,Map<ModelResourceLocation,BakedModel> models){
-        super(source);shell=part("shell",facing,models,false);modules=(List<BakedQuad>[][])new List<?>[4][2];seated=(List<BakedQuad>[][])new List<?>[4][2];indicators=(List<BakedQuad>[][])new List<?>[4][2];empty=(List<BakedQuad>[])new List<?>[4];
+        super(source);this.facing=facing.get3DDataValue();shell=part("shell",facing,models,false);modules=(List<BakedQuad>[][])new List<?>[4][2];seated=(List<BakedQuad>[][])new List<?>[4][2];indicators=(List<BakedQuad>[][])new List<?>[4][2];empty=(List<BakedQuad>[])new List<?>[4];
         for(int slot=0;slot<4;slot++){modules[slot][0]=part("slot_"+slot,facing,models,false);modules[slot][1]=part("slot_autopilot_"+slot,facing,models,false);seated[slot][0]=part("slot_seated_"+slot,facing,models,false);seated[slot][1]=part("slot_seated_autopilot_"+slot,facing,models,false);empty[slot]=part("slot_empty_"+slot,facing,models,false);for(int state=0;state<2;state++)indicators[slot][state]=part("indicator_"+slot+(state==0?"_off":"_on"),facing,models,true);}
     }
-    private NativeRackModel(NativeRackModel original,TextureAtlasSprite sprite){super(original.originalModel);var quads=new ArrayList<BakedQuad>();for(var quad:original.shell)quads.add(quad.getSprite().contents().name().equals(ResourceLocation.parse("vandorlabs:blocks/module_rack/housing"))?NativePortClient.retextureQuad(quad,sprite):quad);shell=List.copyOf(quads);modules=original.modules;seated=original.seated;empty=original.empty;indicators=original.indicators;}
+    private NativeRackModel(NativeRackModel original,TextureAtlasSprite sprite){super(original.originalModel);facing=original.facing;var quads=new ArrayList<BakedQuad>();for(var quad:original.shell)quads.add(housingFace(quad,facing)?NativePortClient.retextureQuad(quad,sprite):quad);shell=List.copyOf(quads);modules=original.modules;seated=original.seated;empty=original.empty;indicators=original.indicators;}
+    private static boolean housingFace(BakedQuad quad, int facing) {
+        int[] data = quad.getVertices(); int stride = data.length / 4;
+        if (stride < 3 || data.length % 4 != 0) return false;
+        double minX=Double.POSITIVE_INFINITY,minY=minX,minZ=minX,maxX=Double.NEGATIVE_INFINITY,maxY=maxX,maxZ=maxX;
+        for(int vertex=0;vertex<4;vertex++) {
+            int offset=vertex*stride; double x=Float.intBitsToFloat(data[offset]),y=Float.intBitsToFloat(data[offset+1]),z=Float.intBitsToFloat(data[offset+2]);
+            minX=Math.min(minX,x);minY=Math.min(minY,y);minZ=Math.min(minZ,z);maxX=Math.max(maxX,x);maxY=Math.max(maxY,y);maxZ=Math.max(maxZ,z);
+        }
+        return com.vandorlabs.rack.ModuleRackGeometry.housingFace(facing,quad.getDirection().get3DDataValue(),minX,minY,minZ,maxX,maxY,maxZ);
+    }
+
     public List<BakedQuad> moving(int slot,int kind){return modules[slot][kind==2?1:0];}
     private synchronized NativeRackModel housing(int choice){var found=finishes.get(choice);if(found!=null)return found;var sprite=Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ResourceLocation.parse(com.vandorlabs.neoforge.ModernFinishCatalog.option(choice).texture()));found=new NativeRackModel(this,sprite);if(finishes.size()>=16)finishes.remove(finishes.keySet().iterator().next());finishes.put(choice,found);return found;}
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){if(side!=null)return List.of();var visual=data.get(NativeRackEntity.VISUAL);if(visual==null)return combined(0,0,0);if(visual.housing()>=0)return housing(visual.housing()).combined(visual.occupied(),visual.kinds(),visual.visible());return combined(visual.occupied(),visual.kinds(),visual.visible());}

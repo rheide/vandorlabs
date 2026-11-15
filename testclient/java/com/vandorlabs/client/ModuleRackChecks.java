@@ -86,6 +86,7 @@ public final class ModuleRackChecks {
             configuration(block);
             autopilotData();
             autopilotHost();
+            mountedModulePersistence();
             autopilotCodec();
             autopilotMigrationData();
             persistence();
@@ -230,6 +231,32 @@ public final class ModuleRackChecks {
         require(client.moduleKind(2)==2&&client.moduleSettings(2).equals(configured),"client module tabs receive public settings without owned items");
         require(new com.vandorlabs.tiles.TileEntityWaypoint().getClass().getSuperclass()==com.vandorlabs.tiles.TileEntityAutopilot.class,"Waypoint retains existing superclass behavior");
         cases++;
+    }
+
+    private static void mountedModulePersistence() {
+        TileEntityModuleRack rack=new TileEntityModuleRack();rack.setPos(AT);rack.setHousingTexture(0);rack.setEmitsRedstone(true);
+        ItemStack input=new ItemStack(ModItems.AUTOPILOT_MODULE);
+        NBTTagCompound state=com.vandorlabs.rack.ModuleAutopilotData.state(input);state.setInteger("AutopilotDepartureHeight",37);state.setInteger("AutopilotDepartureMode",2);state.setBoolean("AutopilotDepartureDirect",false);
+        NBTTagCompound opaque=new NBTTagCompound();opaque.setString("LimitPolicy","retained");state.setTag("ForeignNavigationLimits",opaque);com.vandorlabs.rack.ModuleAutopilotData.state(input,state);
+        NBTTagCompound privateItem=new NBTTagCompound();privateItem.setString("Credential","first-module-only");input.getTagCompound().setTag("OpaqueItem",privateItem);
+        require(rack.insertModule(1,input,false),"insert module carrying limits/runtime/opaque state");
+        ItemStack other=new ItemStack(ModItems.AUTOPILOT_MODULE);com.vandorlabs.rack.AutopilotModuleSettings independent=new com.vandorlabs.rack.AutopilotModuleSettings(com.vandorlabs.redstone.ChannelList.of(19),1,"minecraft:concrete",3);com.vandorlabs.rack.ModuleAutopilotData.configure(other,independent);
+        require(rack.insertModule(0,other,false),"second distinct Autopilot module installed");
+        com.vandorlabs.rack.AutopilotModuleSettings edited=new com.vandorlabs.rack.AutopilotModuleSettings(com.vandorlabs.redstone.ChannelList.of(9,73),2,"minecraft:wool",14);
+        require(rack.configureModule(1,rack.getInsertionSequence(1),edited),"mounted editor commits directly to physical module");
+        ItemStack extracted=rack.removeModule(1); // No tick or Rack serialization between edit and extraction.
+        NBTTagCompound owned=com.vandorlabs.rack.ModuleAutopilotData.state(extracted);
+        require(com.vandorlabs.rack.ModuleAutopilotData.settings(extracted).equals(edited),"immediate extraction retains route/activation/channels");
+        require(owned.getInteger("AutopilotDepartureHeight")==37&&owned.getInteger("AutopilotDepartureMode")==2&&!owned.getBoolean("AutopilotDepartureDirect")&&owned.getCompoundTag("ForeignNavigationLimits").equals(opaque),"module limits and unknown state stay with item");
+        require(rack.getHousingTexture()==0&&rack.emitsRedstone(),"rack housing/output independent of module extraction");
+        require(rack.moduleSettings(0).equals(independent),"editing/extracting second slot never overwrites other Autopilot settings");
+        require(extracted.getTagCompound().getCompoundTag("OpaqueItem").equals(privateItem),"opaque item data stays with edited module");
+        TileEntityModuleRack target=new TileEntityModuleRack();target.setPos(AT.up());require(target.insertModule(3,extracted,false),"edited module reinserts into another Rack and slot");
+        TileEntityModuleRack restored=new TileEntityModuleRack();restored.readFromNBT(target.writeToNBT(new NBTTagCompound()));
+        ItemStack after=restored.removeModule(3);require(com.vandorlabs.rack.ModuleAutopilotData.settings(after).equals(edited),"reinsert/reload/extract preserves edited module choices");
+        require(com.vandorlabs.rack.ModuleAutopilotData.state(after).getCompoundTag("ForeignNavigationLimits").equals(opaque),"reinsert/reload preserves module-only opaque limits");
+        require(after.getTagCompound().getCompoundTag("OpaqueItem").equals(privateItem),"opaque item data survives module relocation/reload");
+        require(restored.getHousingTexture()==-1&&!restored.emitsRedstone(),"module never imports previous Rack housing/output");cases++;
     }
 
     private static void autopilotCodec() {

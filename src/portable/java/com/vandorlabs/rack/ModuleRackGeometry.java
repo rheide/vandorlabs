@@ -28,6 +28,19 @@ public final class ModuleRackGeometry {
         return facing >= 0 && facing <= 5 && side >= 0 && side <= 5 && side != facing;
     }
 
+    /** Semantic casing admission, independent of atlas sprite aliases. Coordinates are block-local.
+     * Only outward faces on the five exterior bounding planes receive a custom housing material.
+     * Recessed panels, bay interiors and every front-facing record retain their authored artwork.
+     */
+    public static boolean housingFace(int front, int side, double minX, double minY, double minZ,
+                                      double maxX, double maxY, double maxZ) {
+        if (!hasClosedBoundary(front, side)) return false;
+        double low = side < 2 ? minY : side < 4 ? minZ : minX;
+        double high = side < 2 ? maxY : side < 4 ? maxZ : maxX;
+        double plane = (side & 1) == 0 ? 0.0 : 1.0;
+        return Math.abs(low - plane) <= 0.000001 && Math.abs(high - plane) <= 0.000001;
+    }
+
     /** Minecraft EnumFacing indexes: DOWN=0, UP=1, NORTH=2, SOUTH=3, WEST=4, EAST=5. */
     public static double frontX(int facing, double x, double z) {
         switch (facing) {
