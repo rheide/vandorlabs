@@ -47,12 +47,12 @@ final class SegmentedDoorRenderChecks {
         int choice=-1;for(int i=0;i<ScreenHousingTextures.IDS.length;i++){int value=ScreenHousingTextures.choiceAt(i);if(SegmentedDoorTile.validTexture(value)){choice=value;break;}}require(choice>=0,"actual alternate cell material");int profiles=0;
         for(EnumFacing facing:EnumFacing.HORIZONTALS)for(boolean window:new boolean[]{false,true})for(int direction=0;direction<4;direction++){
             SegmentedDoorTile root=tile(mc,facing);root.texture=-1;root.settings=new SegmentedDoorSettings(direction,false,1,0,window,2,false,SegmentedDoorSettings.DEFAULT.glass);
-            VehicleWorld view=(VehicleWorld)root.getWorld();net.minecraft.block.state.IBlockState state=view.getBlockState(root.getPos());BlockPos physicalAnchor=view.origin.add(root.getPos());
+            VehicleWorld view=(VehicleWorld)root.getWorld();net.minecraft.block.state.IBlockState rootState=view.getBlockState(root.getPos());BlockPos physicalAnchor=view.origin.add(root.getPos());
             // Display snapshots use normalized, nonnegative local cells. Translate the
             // local root and inverse-translate the view origin, keeping its physical anchor.
             view.tiles.remove(root.getPos());root.setPos(root.getPos().up(root.height-1));view.origin=view.origin.down(root.height-1);view.tiles.put(root.getPos(),root);
             require(view.origin.add(root.getPos()).equals(physicalAnchor),"normalized per-cell physical anchor");
-            java.util.List<VehicleStructure.Cell> states=new java.util.ArrayList<>();for(int row=0;row<root.height;row++)states.add(new VehicleStructure.Cell(root.getPos().down(row),state,null));view.structure=VehicleStructure.display(states);view.tileRevision++;
+            java.util.List<VehicleStructure.Cell> states=new java.util.ArrayList<>();for(int row=0;row<root.height;row++)states.add(new VehicleStructure.Cell(root.getPos().down(row),rootState,null));view.structure=VehicleStructure.display(states);view.tileRevision++;
             // Real client cells acquire topology and readiness together through their packet.
             // Hand-setting topology on an unready tile makes the prepared cache reject a cell
             // that the uncached geometry oracle still sees, an impossible installed client pose.
