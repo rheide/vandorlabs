@@ -13,6 +13,23 @@ import org.lwjgl.opengl.GL11;
 /** Exercise moving baked parts independently of the stationary enclosure. */
 public final class MachineMotionChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Machine motion: "+why);}
+    /** Small policy proof used by the actual Dish endpoint focus, without another scene matrix. */
+    public static void handoff(Minecraft mc){
+        TileEntityConstructor source=new TileEntityConstructor();source.setWorld(mc.world);source.setPos(new BlockPos(988,90,988));
+        MachineVisualMotion.Pose original=MachineVisualMotion.sampleAt(source,true,10,100);
+        TileEntityConstructor unrelated=new TileEntityConstructor();unrelated.setWorld(mc.world);unrelated.setPos(source.getPos().east());
+        MachineVisualMotion.Pose independent=MachineVisualMotion.sampleAt(unrelated,true,10,119);
+        BlockPos target=source.getPos().up();MachineVisualMotion.Pose owned=MachineVisualMotion.takeObserved(mc.world,source.getPos());require(owned==original,"source pose becomes owned by the carried machine");MachineVisualMotion.installObserved(mc.world,target,owned);
+        TileEntityConstructor replacement=new TileEntityConstructor();replacement.setWorld(mc.world);replacement.setPos(target);
+        require(MachineVisualMotion.sampleAt(replacement,true,10,125)==original&&original.phase==100,"endpoint replacement retains exact phase object");
+        require(MachineVisualMotion.sampleAt(replacement,true,10,125).now==125,"repeated/paused samples do not advance");
+        require(MachineVisualMotion.sampleAt(replacement,false,10,130).progress==.5,"activity reversal remains continuous after handoff");
+        require(MachineVisualMotion.sampleAt(unrelated,true,10,130)==independent&&independent!=original&&independent.phase==119,"unrelated machine retains its independent phase");
+        MachineVisualMotion.Pose reused=MachineVisualMotion.sampleAt(source,true,10,150);require(reused!=original&&reused.phase==150&&original.phase==100,"reusing the vacated original position cannot mutate carried phase");
+        MachineVisualMotion.releaseObserved(mc.world,source.getPos(),original);require(MachineVisualMotion.sampleAt(source,true,10,155)==reused,"repeated carried headers cannot detach the unrelated replacement pose");
+        require(MachineVisualMotion.takeObserved(mc.world,target.up(10))==null,"unobserved cells never prewarm a pose");
+        System.out.println("[vandorlabs] machine-handoff-policy PASS exact pose/phase replacement repeated pause reversal unrelated isolation no prewarm");
+    }
     public static void run(Minecraft mc){
         TileEntityConstructor tile=new TileEntityConstructor();tile.setWorld(mc.world);tile.setPos(new BlockPos(987,90,987));
         require(MachineVisualMotion.sampleAt(tile,false,20,0).progress==0,"closed initialization");

@@ -932,6 +932,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         }
     }
     private void readGearData(NBTTagCompound tag) {
+        ArmPayload previousVisualPayload=payload;
         com.vandorlabs.tiles.WorldActionAuthorization.reading(this);super.readFromNBT(tag);
         storedSections=null;failedStoredSections=null;if(tag.hasKey("ArmStoredSections",10))try{storedSections=ArmStoredSections.read(tag.getCompoundTag("ArmStoredSections"));}catch(RuntimeException|LinkageError invalid){failedStoredSections=tag.getCompoundTag("ArmStoredSections").copy();}
         clearPoses();
@@ -990,6 +991,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(taxiState!=null)try{validateTaxiState(taxiState);}catch(RuntimeException invalid){operational=false;lastError="Taxi arm recovery data retained: "+invalid.getMessage();}
         if(failedStoredSections!=null||failedPayload!=null||payload!=null&&payload.hasOwnershipJournal())operational=false;
         rebuildMemberCache();GearGeometry.register(this);if(world!=null&&world.isRemote)clientGeometryPending=true;
+        if(world!=null&&world.isRemote&&com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.armPayloadAppearanceChanged(this,previousVisualPayload);
     }
 
     private static <T extends Enum<T>> T parseEnum(Class<T> type, String value, T fallback) {

@@ -36,6 +36,7 @@ final class ArmPayloadRenderer {
         if(mesh!=null)return mesh;
         if(CACHE.size()>=128){Map.Entry<GearTileEntity,Mesh> oldest=CACHE.entrySet().iterator().next();remove(oldest.getValue());CACHE.remove(oldest.getKey());}
         mesh=new Mesh(payload);VehicleWorld view=payload.view(arm);mesh.tiles.addAll(view.tiles.values());
+        if(arm.getWorld()==Minecraft.getMinecraft().world)com.vandorlabs.client.constructors.CoreArmVisualIdentity.bind(arm,payload,view);
         try{for(BlockRenderLayer layer:BlockRenderLayer.values()){
             net.minecraftforge.client.ForgeHooksClient.setRenderLayer(layer);
             BufferBuilder joined=new BufferBuilder(65536);joined.begin(GL11.GL_QUADS,mesh.format);List<int[]> components=new ArrayList<>();

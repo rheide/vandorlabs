@@ -163,6 +163,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-mining ]; then
             PREFIX=arm_mining_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_MINING_ONLY=true
+        elif [ "$TARGET" = arm-dish-continuity ]; then
+            PREFIX=arm_dish_continuity_
+            export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true VANDOR_LABS_DISH_CONTINUITY_ONLY=true
         elif [ "$TARGET" = arm-core-use ]; then
             PREFIX=arm_core_use_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_CORE_ONLY=true VANDOR_LABS_ARM_CORE_USE_ONLY=true
@@ -697,6 +700,11 @@ PYIMAGE
     if [ "$TARGET" = arm-mining ]; then
         grep -q "arm-payload-mining PASS" "$RUN_OUT/client.log"
         echo "Arm payload mining passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-dish-continuity ]; then
+        grep -q '\[vandorlabs\]\[dish-continuity\] PASS checks=' "$RUN_OUT/client.log"
+        echo "Carried Dish animation continuity passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-core-use ]; then

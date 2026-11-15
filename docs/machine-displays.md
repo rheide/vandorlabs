@@ -20,6 +20,8 @@ Each surface keeps its own artwork selection. **Model artwork** preserves the su
 
 The original Constructor frames have no authored display surfaces or chip reader. Standalone radar models provide redstone activation and their always-visible chip holder without display surfaces.
 
+On Forge 1.12.2, the shared Core animation clock follows a machine while an arm carries it and restores it as native blocks. Dish scanning and the other animated Core mechanisms retain their cosmetic phase through these handoffs and reversals. A new machine placed at the vacated source has an independent clock. Animation remains client-side; saved ownership and collision do not depend on its phase.
+
 ## Activation
 
 Machines consume physical redstone or configured Vandor Labs input channels. Apply physical power to any reserved cell or the Core. `0` means disconnected from channels. No Core or reserved cell emits physical or channel power, including with a chip inserted.

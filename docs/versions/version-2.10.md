@@ -9,6 +9,11 @@ building, furniture and mechanism families to Minecraft 1.21.1.
 pending. Forge 1.12.2 remains the main target. NeoForge 1.21.1 is experimental,
 and its converted standalone features do not include Vehicle Mode.
 
+On Forge 1.12.2, animated Core machines keep their client animation phase while
+arms capture and restore them. Dish scanning continues through native endpoints
+and reversal without restarting; a replacement at the old position animates
+independently.
+
 ## Module Rack and Autopilot
 
 Module Racks are available on Forge 1.12.2 and NeoForge 1.21.1. Autopilot fits
