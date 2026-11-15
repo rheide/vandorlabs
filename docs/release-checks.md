@@ -1,16 +1,34 @@
 # Running release checks
 
-On Linux, run the standard release checks from the repository:
+Start release review by **collecting failures, not by fixing the first failure**:
 
 ```sh
-./tools/verify_release.sh
+./build.sh
+./tools/verify_release.sh --jar build/libs/vandorlabs-2.10.0.jar --jobs 2
 ```
 
-Use `./tools/verify_release.sh --check` to check dependencies without building or starting Minecraft. The script requires a Java 8 JDK, Python 3 with Pillow, and Xvfb. The existing client harness prepares its Forge runtime as needed.
+`--jar` freezes an existing standard artifact and never rebuilds it. Without that option, the helper assembles once before starting validation. It records the SHA-256, source-check logs, per-focus logs and a merged `report.json` under `build/release-checks/`.
 
-Allow roughly an hour for the standard gate on a prepared runtime; downloads, graphics and hardware can change that duration. The console and retained log show each completed focus.
+The first pass runs the full CPU/non-rendering/diagonal/shader checks with Gradle `--continue`, then runs all required live focuses even if independent CPU checks failed. Live save/recovery, arms and vehicle checks are prioritized. Two isolated game/world/output lanes run functional checks concurrently; timing benchmarks have exclusive access. A multi-phase restart/recovery test remains one sequential group. The artifact must stay unchanged throughout.
 
-The script checks the texture browser, builds the standard JAR and runs `verifyRelease`: portable and non-rendering matrices, dedicated-server linkage, shader startup/reload, rendered regressions and the live gameplay/recovery fixtures. It then runs the isolated exact-JAR Dynmap test with WorldEdit and compares artifact hashes. Mekanism is required by this wrapper so its cold-restart fixture is included. It does not update the production server.
+**Do not edit packaged code or rebuild after each failure during this pass.** Finish the inventory, then batch coherent fixes: data loss/duplication/crashes, gameplay, rendering/performance, then stale fixtures. Fix a broken launcher or mixed artifact hashes before continuing, because that invalidates results. Merely failing a gameplay assertion does not prevent independent checks from running.
+
+After a batch, build the new candidate once and rerun the reported failed checks:
+
+```sh
+# Use the actual task names listed in report.json.
+JAVA_HOME=/usr/lib/jvm/java-8-openjdk-amd64 ./gradlew testNonRendering --continue --no-daemon
+python3 tools/release_live_checks.py --jar build/libs/vandorlabs-2.10.0.jar \
+    --focus arm-wall --focus vehicle-taxi --jobs 2 --report build/focused-release.json
+```
+
+Focused reports are explicitly marked targeted and cannot pass as full release coverage. Once the failed checks pass, run one complete gate on the final frozen candidate. **If the first complete inventory was already clean, it is the final gate; do not run it twice.** Never tag or publish on partial coverage.
+
+Use `--check` to validate dependencies without building or starting Minecraft. `--skip-dynmap` records an explicit omission of the separate Dynmap smoke test; otherwise that test includes WorldEdit and runs after the live lanes finish. Mekanism is required so the cold-restart group is included. The helper never deploys to a server.
+
+A prepared full suite has historically taken roughly an hour serially. Two live lanes reduce independent runtime work; fixture failures, downloads, world setup and exclusive benchmarks can still dominate. The console reports completed focuses and the logs retain exact commands and hashes. Do not promise a completion time based only on the approximately 30-second compile/package step.
+
+The Linux wrapper requires a Java 8 JDK, Python 3 with Pillow and Xvfb. The cross-platform live helper uses the configured Windows launcher on Windows. The existing `gradlew verifyRelease` task remains the Gradle all-green/publishing path and uses the same complete live coverage; prefer the shell helper for review because it also collects live results after CPU failures.
 
 The default dependency location is a sibling `MC-Forge12-2` installation. Override these environment variables for another installation:
 
@@ -29,7 +47,7 @@ The default dependency location is a sibling `MC-Forge12-2` installation. Overri
 
 The default shader ZIP belongs in the ignored runtime dependency cache at `testclient/runtime/shaderpacks/ComplementaryUnbound_r5.6.1.zip`; shader packs and third-party JARs are not distributed by this repository. `--help` lists the overrides.
 
-Each invocation writes a separate directory under `build/release-checks/`, including the release log, Dynmap log and artifact hash. Captures and generated worlds remain available. Successful runs discard their copied mod installations and regenerable caches; set `VANDOR_LABS_KEEP_TEST_INSTALLS=1` to retain those too. Failed runs keep the full installation for debugging. Review or remove completed evidence directories periodically: screenshots and worlds can still accumulate.
+Each invocation writes a separate directory under `build/release-checks/`, including the release log, Dynmap log and artifact hash. Captures and generated worlds remain available. Successful runs discard their copied mod installations and regenerable caches; set `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` only when full runtimes must be retained. Failed runs keep the full installation for debugging. Review or remove completed evidence directories periodically: screenshots and worlds can still accumulate.
 
 This is the standard release gate, not every diagnostic or benchmark in the repository. Specialized previous-release native-world upgrades, abrupt-process-termination matrices and hardware shader/FPS acceptance remain additional checks selected for the changes being released. Windows uses `gradlew.bat verifyRelease` and the Windows client harness; this Bash wrapper is for Linux.
 

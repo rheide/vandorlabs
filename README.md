@@ -275,13 +275,17 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-2.9.jar`.
+`build/libs/vandorlabs-2.10.0.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
-For the standard Linux release gate plus exact-JAR Dynmap checks, run
-`./tools/verify_release.sh`. Use `--check` to validate dependencies first.
-See [running release checks](docs/release-checks.md) for setup, scope and logs.
+For release review, **collect the complete failure inventory before fixing individual failures**. Build once, then freeze that JAR:
+
+```sh
+./tools/verify_release.sh --jar build/libs/vandorlabs-2.10.0.jar --jobs 2
+```
+
+This continues independent checks after failures, uses two isolated live-test lanes, and keeps performance benchmarks exclusive. It records one merged report and fails unless the entire required set passes. Use `--check` for dependencies and `--skip-dynmap` only when that exclusion is intended. See [running release checks](docs/release-checks.md) for the inventory, batch-fix and focused-rerun workflow.
 
 To check placement settings, diagonal lighting data, render-distance policy,
 and connected Duplifier selection without opening a renderer, run
@@ -370,7 +374,7 @@ Taxi Mode is enabled by default: sit down to assemble the connected craft, then 
 
 The build checks shared bytecode for client-only API references with `testDedicatedServerLinkage`. See [dedicated-server API compatibility](docs/server-compatibility.md) for coverage, saved-canopy recovery and its runtime limits.
 
-For the automated live client suite, set `VANDOR_LABS_COMPAT_MODS` to a folder containing the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. It defaults to the standard `.minecraft/mods` folder. Run `bash testclient/test_viewscreen.sh --full` for complete coverage.
+For automated live checks, set `VANDOR_LABS_COMPAT_MODS` to the test versions of WorldEdit, Better Builder's Wands and Immersive Engineering. **Use the collect-first release helper above for release reviews.** `bash testclient/test_viewscreen.sh --full` is the separate legacy gallery/development suite; do not substitute repeated gallery runs for a frozen release inventory.
 
 Use `--focus bridge-machines` for the Core-frame matrix, integrated chip readers,
 navigation joining, display inputs and retained data holders, authorized dialog round trips,
@@ -520,4 +524,11 @@ The hidden fixed-design Space Door blocks and the old rotating/sliding aliases a
 
 ### Release verification
 
-Run `gradlew verifyRelease` with Java 8 before distributing or tagging a release. This builds the standard JAR and runs the non-rendering and diagonal geometry suites, live glass/frame contact checks, live stair/trapdoor dialog checks, live gameplay/fluid regressions, and the bridge-machine/navigation display suite against that artifact. The glass checks include dry and waterlogged half-width diagonal panels beside solid blocks and a floor. Publishing tasks depend on this gate; a failed or missing live check blocks publication. The Windows live-client launcher requires the local Minecraft/Forge test runtime described above.
+Use the Java 8 [collect-first release helper](docs/release-checks.md) before distributing or tagging:
+
+1. Freeze one standard JAR and run the full inventory; keep checking after an individual failure.
+2. Triage the complete report and batch fixes, prioritizing world/data safety and gameplay.
+3. Rebuild once per batch, then rerun failed focuses against that candidate.
+4. Run the complete gate on the final candidate. A clean first inventory already satisfies this step.
+
+Do not rebuild the JAR between focuses or repeat passing broad suites while still fixing code. The helper covers the CPU, shader and live `verifyRelease` suites; each restart group stays together and all artifact hashes must agree. `gradlew verifyRelease` remains the all-green Gradle/publishing entry point. A failed or missing required check blocks release; targeted reruns alone do not establish full coverage. Windows needs its configured Minecraft/Forge runtime.

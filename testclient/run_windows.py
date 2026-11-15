@@ -88,10 +88,12 @@ def main():
     jar = (args.jar or root/'build/libs'/('vandorlabs-'+version+'.jar')).resolve()
     if not jar.is_file():
         parser.error('Build the standard mod JAR first: '+str(jar))
-    output = root/'testclient'/('render-run.'+time.strftime('%Y%m%d-%H%M%S')+'-'+str(os.getpid())+('-'+args.role if args.role else ''))
-    game = output/'game'
+    output = Path(os.environ.get('VANDOR_LABS_TEST_RUN_ROOT', str(root/'testclient'))).resolve()/('render-run.'+time.strftime('%Y%m%d-%H%M%S')+'-'+str(os.getpid())+('-'+args.role if args.role else ''))
+    game = Path(os.environ.get('VANDOR_LABS_TEST_GAME_DIR', str(output/'game'))).resolve()
     natives = output/'natives'
+    output.mkdir(parents=True)
     game.mkdir(parents=True)
+    (output/'artifact.sha256').write_text(hashlib.sha256(jar.read_bytes()).hexdigest()+'  '+str(jar)+'\n')
     if args.focus in ('glass-appearance','cube-reference','filesystem-discovery'):
         from prepare_cube_reference import prepare
         prepare(game)

@@ -40,6 +40,9 @@ if (!declaredModVersion.find() || declaredModVersion.group(1) != version.toStrin
 group = 'com.vandorlabs' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'vandorlabs'
 
+// Explicit candidates are read by every packaged-asset check without rebuilding.
+def validationJar = { file(System.getenv('VANDOR_LABS_TEST_JAR') ?: jar.archivePath.absolutePath) }
+
 task compileKitSpriteChecks(type: JavaCompile) {
     dependsOn compileJava
     source = files('testclient/java/com/vandorlabs/client/KitSpriteFormatChecks.java')
@@ -55,7 +58,7 @@ task testKitSpriteFormats(type: JavaExec) {
     dependsOn compileKitSpriteChecks, jar
     classpath = sourceSets.main.runtimeClasspath + files(compileKitSpriteChecks.destinationDir)
     main = 'com.vandorlabs.client.KitSpriteFormatChecks'
-    doFirst { args jar.archivePath.absolutePath }
+    doFirst { args validationJar().absolutePath }
 }
 
 assemble.dependsOn testKitSpriteFormats
@@ -536,7 +539,7 @@ check.dependsOn testUnifiedItemLookup
 task testUnusedRuntimeAssets(type: Exec) {
     dependsOn jar
     workingDir projectDir
-    commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--check-jar', jar.archivePath
+    commandLine pythonExecutable, 'tools/prune_unused_runtime_assets.py', '--check-jar', validationJar()
 }
 check.dependsOn testUnusedRuntimeAssets
 
@@ -697,38 +700,38 @@ jar.includeEmptyDirs = false
 task testPackagedTexturePruning(type: Exec) {
     dependsOn jar
     workingDir projectDir
-    commandLine pythonExecutable, 'tools/prune_retired_textures.py', '--check-jar', jar.archivePath
+    commandLine pythonExecutable, 'tools/prune_retired_textures.py', '--check-jar', validationJar()
 }
 check.dependsOn testPackagedTexturePruning
 
 task testPackagedAssetCompaction(type: Exec) {
     dependsOn jar
     workingDir projectDir
-    commandLine pythonExecutable, 'tools/test_compact_assets.py', jar.archivePath
+    commandLine pythonExecutable, 'tools/test_compact_assets.py', validationJar()
 }
 check.dependsOn testPackagedAssetCompaction
 
 task testSharedRuntimeTextures(type: Exec) {
     dependsOn jar
     workingDir projectDir
-    commandLine pythonExecutable, 'tools/deduplicate_runtime_textures.py', '--check-jar', jar.archivePath
+    commandLine pythonExecutable, 'tools/deduplicate_runtime_textures.py', '--check-jar', validationJar()
 }
 check.dependsOn testSharedRuntimeTextures
 
 task testScreenCatalog(type: Exec) {
     group = 'verification'
     dependsOn jar
-    doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' }; exec { commandLine pythonExecutable, 'tools/prune_unlisted_screen_artwork.py', '--check-jar', jar.archivePath } }
-    doFirst { exec { commandLine pythonExecutable, 'tools/test_display_expansion.py', '--jar', jar.archivePath } }
-    doFirst { for (style in ['Cool', 'Gold']) { exec { commandLine pythonExecutable, 'tools/test_cool_screens.py', '--style', style, '--jar', jar.archivePath } } }
-    commandLine pythonExecutable, 'tools/test_screen_catalog.py', '--jar', jar.archivePath
+    doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' }; exec { commandLine pythonExecutable, 'tools/prune_unlisted_screen_artwork.py', '--check-jar', validationJar() } }
+    doFirst { exec { commandLine pythonExecutable, 'tools/test_display_expansion.py', '--jar', validationJar() } }
+    doFirst { for (style in ['Cool', 'Gold']) { exec { commandLine pythonExecutable, 'tools/test_cool_screens.py', '--style', style, '--jar', validationJar() } } }
+    commandLine pythonExecutable, 'tools/test_screen_catalog.py', '--jar', validationJar()
 }
 check.dependsOn testScreenCatalog
 
 task testPbrMaterials(type: Exec) {
     dependsOn jar
     workingDir projectDir
-    commandLine pythonExecutable, 'tools/generate_pbr_materials.py', '--check-jar', jar.archivePath
+    commandLine pythonExecutable, 'tools/generate_pbr_materials.py', '--check-jar', validationJar()
 }
 check.dependsOn testPbrMaterials
 
@@ -986,7 +989,7 @@ check.dependsOn testNavigationBoundaries
 
 task testBridgeModelAssets(type: Exec) {
     dependsOn jar
-    doFirst { commandLine pythonExecutable, 'tools/test_bridge_models.py', jar.archivePath.absolutePath }
+    doFirst { commandLine pythonExecutable, 'tools/test_bridge_models.py', validationJar().absolutePath }
 }
 check.dependsOn testBridgeModelAssets
 
@@ -997,7 +1000,7 @@ check.dependsOn testOculusRadarAssets
 
 task testUtility26Assets(type: Exec) {
     dependsOn jar
-    doFirst { commandLine pythonExecutable, 'tools/test_utility26_assets.py', jar.archivePath.absolutePath }
+    doFirst { commandLine pythonExecutable, 'tools/test_utility26_assets.py', validationJar().absolutePath }
 }
 check.dependsOn testUtility26Assets
 
@@ -1007,7 +1010,7 @@ task testShaderStartup(type: Exec) {
     group = 'verification'
     description = 'Start the exact JAR with required OptiFine and shaderpack, then reload the atlas'
     dependsOn jar
-    doFirst { environment 'VANDOR_LABS_TEST_JAR', jar.archivePath.absolutePath }
+    doFirst { environment 'VANDOR_LABS_TEST_JAR', validationJar().absolutePath }
     commandLine pythonExecutable, 'testclient/test_shader_startup.py'
 }
 
@@ -1016,36 +1019,35 @@ task verifyRelease {
     description = 'Validate a standard release JAR with geometry and live rendering/gameplay regressions'
     dependsOn build, testDiagonalJoins, testNonRendering, testShaderStartup, 'testRampJit'
     doLast {
-        def releaseJar = file("$buildDir/libs/vandorlabs-${version}.jar")
+        def releaseJar = validationJar()
         def digest = { java.security.MessageDigest.getInstance('SHA-256').digest(releaseJar.bytes).encodeHex().toString() }
         def expectedDigest = digest()
-        // Shader startup above owns OptiFine/pack inputs; the following pixel oracles use vanilla rendering.
-        if (System.getProperty('os.name').toLowerCase().contains('windows')) {
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'render-regressions', '--timeout', '900' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'glass-appearance', '--timeout', '900' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--shot-prefix', 'utility22_card_mounts', '--timeout', '900' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'fluids', '--timeout', '900' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'bridge-machines', '--timeout', '900' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'utility26', '--timeout', '900' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'arm-live', '--timeout', '900' }
-            for (focus in ['segmented-door','coupler-articulation','ramp-axis','screen-chips','glass-migration','vehicle-render-cost','render-density','segmented-door-legacy','segmented-door-tall','furniture','vehicle-design','arm-endpoints','arm-joined','arm-riders','arm-placement','arm-wall','copy-surfaces','vehicle-ramps','vehicle-taxi']) exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', focus, '--timeout', '900' }
-            if (System.getenv('VANDOR_LABS_TEST_MEKANISM')) exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  commandLine 'python', 'testclient/run_windows.py', '--focus', 'mekanism-tanks', '--timeout', '900' }
-        } else {
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'render-regressions' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'glass-appearance' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility22_card_mounts' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'fluids' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'bridge-machines' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'utility26' }
-            exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', 'arm-live' }
-            for (focus in ['segmented-door','coupler-articulation','ramp-axis','screen-chips','glass-migration','vehicle-render-cost','render-density','segmented-door-legacy','segmented-door-tall','furniture','vehicle-design','arm-endpoints','arm-joined','arm-riders','arm-placement','arm-wall','copy-surfaces','vehicle-ramps','vehicle-taxi']) exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; environment 'VANDOR_LABS_TEST_SKIP_BUILD', 'true'; commandLine 'bash', 'testclient/test_viewscreen.sh', '--focus', focus }
-            if (System.getenv('VANDOR_LABS_TEST_MEKANISM')) exec { environment 'VANDOR_LABS_TEST_OPTIFINE', ''; environment 'VANDOR_LABS_TEST_SHADERPACK', '';  environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'; commandLine 'bash', 'testclient/test_mekanism_tank.sh' }
+        // Each live focus owns an isolated world. Benchmarks retain exclusive access.
+        exec {
+            environment 'VANDOR_LABS_TEST_HEAP', System.getenv('VANDOR_LABS_TEST_HEAP') ?: '8G'
+            commandLine pythonExecutable, 'tools/release_live_checks.py', '--jar', releaseJar.absolutePath,
+                    '--jobs', System.getenv('VANDOR_LABS_RELEASE_CLIENT_JOBS') ?: '2'
         }
         if (digest() != expectedDigest) throw new GradleException('Release JAR changed during live validation')
         logger.lifecycle('Release JAR verified SHA-256: ' + expectedDigest)
     }
 }
 tasks.matching { it.name == 'publish' || it.name == 'publishToMavenLocal' || it.name.startsWith('publishMaven') }.all { dependsOn verifyRelease }
+
+
+task testReleaseLiveScheduler(type: Exec) {
+    group = 'verification'
+    description = 'Check isolated live-test concurrency, exclusive benchmarks and failure reporting'
+    commandLine pythonExecutable, 'tools/test_release_live_checks.py'
+}
+check.dependsOn testReleaseLiveScheduler
+
+task testReleaseInventory(type: Exec) {
+    group = 'verification'
+    description = 'Keep collecting live results after CPU failures without rebuilding a frozen candidate'
+    commandLine pythonExecutable, 'tools/test_verify_release.py'
+}
+check.dependsOn testReleaseInventory
 
 task testJournalFiles(type: JavaExec) {
     group = 'verification'
