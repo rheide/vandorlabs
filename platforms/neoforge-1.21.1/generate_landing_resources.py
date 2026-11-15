@@ -21,5 +21,5 @@ def generate(root,out):
         write(f'assets/vandorlabs/models/item/{name}.json',item)
         recipe=json.loads((source/f'recipes/{name}.json').read_text());recipe['result']['id']=recipe['result'].pop('item');recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:'+name}]
         write(f'data/vandorlabs/recipe/{name}.json',recipe)
-        write(f'data/vandorlabs/loot_table/blocks/{name}.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
+        write(f'data/vandorlabs/loot_table/blocks/{name}.json',{'type':'minecraft:block','neoforge:conditions':[{'type':'neoforge:item_exists','item':'vandorlabs:'+name}],'pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
     return []

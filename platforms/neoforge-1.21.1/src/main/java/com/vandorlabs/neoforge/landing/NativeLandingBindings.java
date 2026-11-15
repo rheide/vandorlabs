@@ -19,7 +19,7 @@ public final class NativeLandingBindings {
     public static boolean enabled(){return Boolean.getBoolean("vandorlabs.legacyLanding");}
     private static ResourceLocation id(String name){return ResourceLocation.fromNamespaceAndPath("vandorlabs",name);}
     @SubscribeEvent public static void register(RegisterEvent event){if(!enabled())return;
-        event.register(Registries.BLOCK,helper->{String[] names={"wheel_small","wheel_medium","wheel_large"};for(int n=0;n<names.length;n++){var block=new NativeSideWheel(n,BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(2.5F,8).sound(SoundType.METAL).noOcclusion().dynamicShape());WHEELS.put(names[n],block);helper.register(id(names[n]),block);}});
+        event.register(Registries.BLOCK,helper->{String[] names={"wheel_small","wheel_medium","wheel_large"};for(int n=0;n<names.length;n++){var block=new NativeSideWheel(n,BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,10).sound(SoundType.METAL).requiresCorrectToolForDrops().noOcclusion().dynamicShape());WHEELS.put(names[n],block);helper.register(id(names[n]),block);}});
         event.register(Registries.ITEM,helper->{WHEELS.forEach((name,block)->{var item=new BlockItem(block,new Item.Properties());ITEMS.put(name,item);helper.register(id(name),item);});});
     }
     @SubscribeEvent public static void creative(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event){if(enabled()&&event.getTabKey().location().equals(id("vandorlabs")))ITEMS.values().forEach(event::accept);}
