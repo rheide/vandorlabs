@@ -814,17 +814,15 @@
       "id": "turntables",
       "label": "Turntables",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "turntable_controller",
         "turntable_surface"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native controller/surface/entity",
-        "transactional assembly/snapshot recovery",
-        "geometry/channel behavior",
-        "live parity"
+        "Native Turntable Controller and moving display entity.",
+        "Transactional assembly, snapshot recovery, controller geometry and channels, and focused live parity.",
+        "Native Surface moving-snapshot appearance integration."
       ],
       "legacy_entity_ids": [
         "turntable_display"
@@ -832,7 +830,14 @@
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "historical_modern_registered_entity_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_block_ids": [
+        "turntable_surface"
+      ],
+      "implemented": [
+        "Programmable Surfaces share Java 8 layout discovery, artwork and UV policy with Forge. Native six-face cells use cached terrain artwork with opaque backing and bounded, coalesced topology updates.",
+        "Focused installed-world and real Survival configuration, mining, material selection and repair checks pass. Uploaded terrain pixels verify settings-only mesh invalidation; actual emitted cropped and non-square artwork retains catalog UV bounds."
+      ]
     },
     {
       "id": "furniture",
@@ -1014,8 +1019,11 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Shared surface topology, drawing-root removal, rebuilding/expansion, copy ownership and recovery",
-        "Native adapter integration and focused runtime/render acceptance"
+        "Native Copy Controller adapter, copy ownership and restart recovery.",
+        "Focused copy-controller runtime and rendering acceptance."
+      ],
+      "implemented": [
+        "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair."
       ]
     },
     {
