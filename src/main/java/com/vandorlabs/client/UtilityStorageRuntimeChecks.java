@@ -15,22 +15,45 @@ final class UtilityStorageRuntimeChecks {
     static void run(World world){
         BlockPos pos=new BlockPos(145,230,145);
         Block battery=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:battery_block")),tank=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:hexagonal_fuel_tank"));
+        net.minecraft.entity.player.EntityPlayer actor=world.playerEntities.stream().filter(player->player instanceof net.minecraft.entity.player.EntityPlayerMP).findFirst().orElseThrow(()->new IllegalStateException("Storage fixture requires its connected player"));
+        float yaw=actor.rotationYaw,pitch=actor.rotationPitch;
         try{
             world.setBlockState(pos,battery.getDefaultState());world.setBlockState(pos.south(),battery.getDefaultState());
             TileEntityBattery first=(TileEntityBattery)world.getTileEntity(pos),second=(TileEntityBattery)world.getTileEntity(pos.south());
+            DeferredTileLoad.flushInstalled(world,java.util.Arrays.asList(pos,pos.south()));
+            require(first.settings().throughput==0&&second.settings().throughput==0,"new Battery shared limit is unlimited");
             IEnergyStorage in=first.getCapability(CapabilityEnergy.ENERGY,EnumFacing.NORTH),out=first.getCapability(CapabilityEnergy.ENERGY,EnumFacing.SOUTH);
-            require(in.receiveEnergy(2000,true)==1000 && in.getEnergyStored()==0,"simulated energy receive");
-            require(in.receiveEnergy(2000,false)==1000 && in.extractEnergy(1000,false)==0 && out.receiveEnergy(1000,false)==0,"directional ports");
+            require(in.receiveEnergy(2000,true)==2000 && in.getEnergyStored()==0,"simulated energy receive");
+            require(in.receiveEnergy(2000,false)==2000 && in.extractEnergy(1000,false)==0 && out.receiveEnergy(1000,false)==0,"directional ports");
             require(!first.hasCapability(CapabilityEnergy.ENERGY,EnumFacing.UP),"side insulation");first.update();
-            require(in.getEnergyStored()==0 && second.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1000,"neighbor energy transfer conserves charge");
-            TileEntityBattery restored=new TileEntityBattery();restored.readFromNBT(second.writeToNBT(new NBTTagCompound()));require(restored.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1000,"energy persists");
+            require(in.getEnergyStored()==0 && second.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==2000,"neighbor energy transfer conserves charge");
+            TileEntityBattery restored=new TileEntityBattery();restored.readFromNBT(second.writeToNBT(new NBTTagCompound()));require(restored.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==2000,"energy persists");
             world.setBlockToAir(pos);world.setBlockToAir(pos.south());
             for(int meta=0;meta<4;meta++)require(battery.getStateFromMeta(meta).getValue(com.vandorlabs.blocks.BlockBattery.FACING)==EnumFacing.getHorizontal(meta),"old battery orientation metadata");
             for(EnumFacing face:EnumFacing.values()){
-                net.minecraft.block.state.IBlockState placed=battery.getStateForPlacement(world,pos,face,.5F,.5F,.5F,0,null);
-                require(placed.getValue(com.vandorlabs.blocks.BlockBattery.FACING)==face&&battery.getStateFromMeta(battery.getMetaFromState(placed))==placed,"battery clicked-face/meta "+face);
-                world.setBlockState(pos,placed);TileEntityBattery cell=(TileEntityBattery)world.getTileEntity(pos);
-                require(cell.isBlockShape()&&!cell.hasCustomHousingTexture(),"old/default battery stays block shaped with legacy casing");
+                // Old NBT has no port policy: its physical face is bound only after installation.
+                world.setBlockState(pos,battery.getDefaultState().withProperty(com.vandorlabs.blocks.BlockBattery.FACING,face));
+                TileEntityBattery legacy=(TileEntityBattery)world.getTileEntity(pos);
+                NBTTagCompound old=legacy.writeToNBT(new NBTTagCompound());
+                for(String key:new String[]{com.vandorlabs.ports.ResourcePortData.FACES,com.vandorlabs.ports.ResourcePortData.RATE,com.vandorlabs.ports.ResourcePortData.PULL,com.vandorlabs.ports.ResourcePortData.ART,com.vandorlabs.ports.ResourcePortData.MODE,com.vandorlabs.ports.ResourcePortData.HOUSING,"RedstoneChannels","BatteryLegacyRate"})old.removeTag(key);
+                old.setInteger("Energy",37);old.setBoolean("BlockShape",true);
+                legacy.readFromNBT(old);legacy.onLoad();DeferredTileLoad.flushInstalled(world,java.util.Collections.singleton(pos));
+                IEnergyStorage oldInput=legacy.getCapability(CapabilityEnergy.ENERGY,face);
+                require(!legacy.inert()&&legacy.inputSide()==face&&legacy.settings().throughput==1000,"old Battery deferred facing and 1000 RF/t policy "+face);
+                require(oldInput!=null&&oldInput.receiveEnergy(2000,true)==1000&&oldInput.getEnergyStored()==37,"old Battery simulation keeps 1000 RF/t "+face);
+                require(oldInput.receiveEnergy(2000,false)==1000&&oldInput.getEnergyStored()==1037,"old Battery input retains legacy rate "+face);
+                NBTTagCompound legacySaved=legacy.writeToNBT(new NBTTagCompound());TileEntityBattery legacyCopy=new TileEntityBattery();legacyCopy.readFromNBT(legacySaved);
+                require(!legacySaved.hasKey(com.vandorlabs.ports.ResourcePortData.FACES)&&legacyCopy.getCapability(CapabilityEnergy.ENERGY,null).getEnergyStored()==1037&&legacyCopy.settings().throughput==1000,"old Battery save preserves policy omission and charge "+face);
+                world.setBlockToAir(pos);
+                actor.rotationPitch=face==EnumFacing.UP?90:face==EnumFacing.DOWN?-90:0;
+                if(face.getAxis()!=EnumFacing.Axis.Y)actor.rotationYaw=face.getOpposite().getHorizontalIndex()*90;
+                net.minecraft.block.state.IBlockState placed=battery.getStateForPlacement(world,pos,EnumFacing.UP,.5F,.5F,.5F,0,actor);
+                require(placed.getValue(com.vandorlabs.blocks.BlockBattery.FACING)==face&&battery.getStateFromMeta(battery.getMetaFromState(placed))==placed,"battery player-view/meta "+face);
+                net.minecraft.item.ItemStack item=new net.minecraft.item.ItemStack(battery);
+                require(((net.minecraft.item.ItemBlock)item.getItem()).placeBlockAt(item,actor,world,pos,EnumFacing.UP,.5F,.5F,.5F,placed),"Battery ItemBlock placement "+face);
+                TileEntityBattery cell=(TileEntityBattery)world.getTileEntity(pos);DeferredTileLoad.flushInstalled(world,java.util.Collections.singleton(pos));
+                require(cell.inputSide()==face&&cell.settings().throughput==0&&cell.settings().face(face.getIndex())==com.vandorlabs.ports.ResourcePortSettings.Face.INPUT,"new Battery placement policy settles on "+face);
+                require(cell.isBlockShape()&&!cell.hasCustomHousingTexture(),"new Battery stays block shaped with original casing");
                 cell.setHousingTexture(ScreenHousingTextures.DEFAULT_TRAPDOOR);
                 TileEntityBattery savedCasing=new TileEntityBattery();savedCasing.readFromNBT(cell.writeToNBT(new NBTTagCompound()));
                 require(savedCasing.hasCustomHousingTexture()&&savedCasing.getHousingTexture()==cell.getHousingTexture(),"battery casing persists on "+face);
@@ -99,8 +122,8 @@ final class UtilityStorageRuntimeChecks {
                     require(retained+removedFluid==capacity-123&&HexTankGroups.part(root).size==1,"mining splits incomplete section without duplicating fluid");
                 }finally{for(BlockPos at:cells)world.setBlockToAir(at);}
             }
-            System.out.println("[vandorlabs][reprolab] utility-storage PASS sided energy simulation transfer persistence pooled-fluid split no-mixing");
-        }finally{world.setBlockToAir(pos);world.setBlockToAir(pos.up());world.setBlockToAir(pos.south());}
+            System.out.println("[vandorlabs][reprolab] utility-storage PASS new-unlimited legacy-1000 six-player-view placements deferred-facing sided energy simulation transfer persistence pooled-fluid split no-mixing");
+        }finally{actor.rotationYaw=yaw;actor.rotationPitch=pitch;world.setBlockToAir(pos);world.setBlockToAir(pos.up());world.setBlockToAir(pos.south());}
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException(message);}
 }

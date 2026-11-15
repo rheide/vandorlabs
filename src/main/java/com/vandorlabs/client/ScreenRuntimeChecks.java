@@ -824,14 +824,14 @@ final class ScreenRuntimeChecks {
                 PortholeHex.ROUND}) {
             tile.setPortholeShape(shape);
             TEAnimatedScreenSelector.PortholeGroup group =
-                    TEAnimatedScreenSelector.portholeGroup(tile, state);
+                    serverPortholeGeometry(tile, state);
             for (double[] vertex : group.outline().vertices)
                 require(vertex[0] >= 3 && vertex[0] <= group.columns * 16 - 3
                                 && vertex[1] >= 5 && vertex[1] <= group.rows * 16 - 5,
                         "porthole block opening extends into its border");
         }
         tile.setPortholeShape(PortholeHex.HEXAGON);
-        require(TEAnimatedScreenSelector.portholeGroup(tile, state).columns == 2,
+        require(serverPortholeGeometry(tile, state).columns == 2,
                 "adjacent porthole blocks did not join");
         player.world.setBlockState(pos.east(),
                 ModBlocks.PROGRAMMABLE_PORTHOLE_WALL.getDefaultState(), 2);
@@ -839,6 +839,18 @@ final class ScreenRuntimeChecks {
                 "porthole block joined a thin wall");
         player.world.setBlockToAir(pos);
         player.world.setBlockToAir(pos.east());
+    }
+
+    /** These are fresh geometry assertions in a physical server world, not client cache tests.
+     * Unpopulated server chunks may omit render notifications, and tile render hooks deliberately
+     * act only on remote worlds. Client cache/dependency reuse has its own focused regressions. */
+    private static TEAnimatedScreenSelector.PortholeGroup serverPortholeGeometry(
+            TileEntityAnimatedScreenSelector tile,IBlockState state){
+        require(tile.getWorld() instanceof net.minecraft.world.WorldServer&&!tile.getWorld().isRemote
+                        &&tile.getWorld().getTileEntity(tile.getPos())==tile,
+                "physical server porthole geometry fixture owner");
+        PortholeGroupCache.invalidate(tile.getWorld());
+        return TEAnimatedScreenSelector.portholeGroup(tile,state);
     }
 
     private static void checkProgrammableWalls(EntityPlayer player) {
@@ -922,7 +934,7 @@ final class ScreenRuntimeChecks {
         above.setJoinPortholes(true);
         aboveRight.setJoinPortholes(true);
         TEAnimatedScreenSelector.PortholeGroup group =
-                TEAnimatedScreenSelector.portholeGroup(first, north);
+                serverPortholeGeometry(first, north);
         require(group.columns == 2 && group.rows == 2
                         && group.slice(pos).edgeOpening(0, 16) != null
                         && group.slice(pos).edgeOpening(1, 16) != null,
@@ -933,16 +945,26 @@ final class ScreenRuntimeChecks {
         for (TileEntityAnimatedScreenSelector member : new TileEntityAnimatedScreenSelector[] {
                 first, second, above}) {
             TEAnimatedScreenSelector.PortholeGroup incomplete =
-                    TEAnimatedScreenSelector.portholeGroup(member, north);
+                    serverPortholeGeometry(member, north);
             require(incomplete.columns == (member == above ? 1 : 2) && incomplete.rows == 1,
                     "L-shaped portholes must partition into a pair and a single");
         }
         player.world.setBlockState(pos.east().up(), north, 2);
         ((TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos.east().up()))
                 .setJoinPortholes(true);
-        group = TEAnimatedScreenSelector.portholeGroup(first, north);
+        TEAnimatedScreenSelector.PortholeGroup cachedServerGroup=TEAnimatedScreenSelector.portholeGroup(first,north);
+        StringBuilder flags=new StringBuilder();
+        for(BlockPos member:new BlockPos[]{pos,pos.east(),pos.up(),pos.east().up()}){
+            net.minecraft.tileentity.TileEntity raw=player.world.getTileEntity(member);
+            require(raw instanceof TileEntityAnimatedScreenSelector&&!raw.isInvalid()&&raw.getWorld()==player.world&&raw.getPos().equals(member),"current server porthole owner "+member);
+            TileEntityAnimatedScreenSelector current=(TileEntityAnimatedScreenSelector)raw;
+            require(current.isJoinPortholes(),"reinserted rectangle member joins "+member);
+            flags.append(member).append("=true;");
+        }
+        group = serverPortholeGeometry(first, north);
         require(group.columns == 2 && group.rows == 2,
                 "completing the rectangle must restore its joined hexagon");
+        System.out.println("[vandorlabs][reprolab] porthole-server-geometry remote="+player.world.isRemote+" cached="+cachedServerGroup.columns+"x"+cachedServerGroup.rows+" fresh="+group.columns+"x"+group.rows+" current-owners=4 flags="+flags);
         require(TEAnimatedScreenSelector.joinsPorthole(first, north, true)
                         && TEAnimatedScreenSelector.joinsPorthole(second, north, false),
                 "north-facing portholes do not join at their shared edge");
@@ -952,7 +974,7 @@ final class ScreenRuntimeChecks {
             above.setPortholeShape(shape);
             ((TileEntityAnimatedScreenSelector) player.world.getTileEntity(pos.east().up()))
                     .setPortholeShape(shape);
-            group = TEAnimatedScreenSelector.portholeGroup(first, north);
+            group = serverPortholeGeometry(first, north);
             require(group.columns == 2 && group.rows == 2
                             && (shape == PortholeHex.ROUND
                             || group.outline().vertices.length == new int[] {6, 8, 4}[shape])
@@ -960,12 +982,13 @@ final class ScreenRuntimeChecks {
                             && group.slice(pos).edgeOpening(1, 16) != null,
                     "joined porthole shape is incomplete: " + shape);
             second.setPortholeShape((shape + 1) % 4);
-            require(!TEAnimatedScreenSelector.joinsPorthole(first, north, true)
-                            && TEAnimatedScreenSelector.portholeGroup(first, north).columns == 1,
+            require(serverPortholeGeometry(first, north).columns == 1
+                            && !TEAnimatedScreenSelector.joinsPorthole(first, north, true),
                     "portholes joined across different shapes: " + shape);
             second.setPortholeShape(shape);
         }
         second.setJoinPortholes(false);
+        serverPortholeGeometry(first,north);
         require(!TEAnimatedScreenSelector.joinsPorthole(first, north, true),
                 "porthole joins a neighbor with its toggle off");
         player.world.setBlockToAir(pos);
