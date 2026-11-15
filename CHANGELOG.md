@@ -8,6 +8,8 @@
 - Insert a module by clicking its intended slot or aligned button, with an eased slide into the rack. Empty-hand interaction retrieves that slot's item; saved contents retain their data and drop when the rack breaks.
 - Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Reuse the Light and Port viewing-angle placement rule. Slot selection, indicators and module travel rotate together.
 - Render settled racks and modules in shared opaque chunk meshes. Use pause-aware temporary client animation during insertion and extraction, including rapid reversals, without ticking idle tiles or submitting a permanent tile renderer.
+- Install Autopilot as a NAV module, with per-bay route, activation and receiving controls. Existing Autopilot blocks migrate after chunk loading while preserving navigation, authorization, capability data and their original backup. Older carried snapshots retain their saved representation until returned to the world.
+- Configure housing and proportional Redstone output through the standard tabs; the four occupied bays produce levels 4, 8, 11 and 15.
 - Include crafting recipes, model assets and focused geometry, inventory, animation and rendering checks. See the [Module Rack guide](docs/module-rack.md).
 
 ### Materials and connected artwork

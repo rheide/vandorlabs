@@ -6,6 +6,14 @@ smaller Canopy item models. Forge 1.12.2 remains the reference target; NeoForge
 includes the supported standalone arm family.
 User testing and final release validation remain pending.
 
+## Module Rack and Autopilot (Forge 1.12.2)
+
+Autopilot now fits inside Module Racks as an identifiable NAV module, with
+per-bay route, activation and receiving controls. Existing Autopilot computers
+migrate after chunk loading while preserving navigation, authorization and saved
+data. Rack placement, extraction animation, housing and proportional Redstone
+controls follow the standard dialogs. See the [Module Rack guide](../module-rack.md).
+
 ## Materials and joined artwork
 
 The new **Tiles** category contains thirteen finishes, including coloured tiles,

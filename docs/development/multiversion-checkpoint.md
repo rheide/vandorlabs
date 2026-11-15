@@ -2,6 +2,17 @@
 
 Forge 1.12.2 remains the default development target on `master`, at mod version 2.10.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
 
+## Current conversion boundary
+
+Complete the current 2.10 follow-ups before continuing native conversion.
+The next conversion scope is Ramp Controllers; chairs and seats;
+Turntables, Copy Controllers and Surface blocks; Tracks and remaining landing
+gear; and the Industrial Table and remaining control variants. Extract reusable
+behavior into the portable Java 8 code while retaining platform-specific
+lifecycle and rendering adapters. Stop after these families. Native Vehicle
+Mode and other unlisted families remain outside this increment. Release gates
+remain deferred until user testing.
+
 ## Integrated scope
 
 - Independent Java 8/Gradle 4.9 and Java 21/modern Gradle builds, portable dependency checks and dual-JDK contracts.
