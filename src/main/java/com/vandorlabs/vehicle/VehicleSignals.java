@@ -61,8 +61,8 @@ public final class VehicleSignals {
         public int getRedstoneChannel(){return source.getRedstoneChannel();}
         public ChannelList getRedstoneChannels(){return source.getRedstoneChannels();}
         public void setRedstoneChannel(int ignored){throw new UnsupportedOperationException();}
-        public boolean hasLocalRedstoneSignal(){return (source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control) && source.hasLocalRedstoneSignal();}
-        public int localSignalLevel(int channel){return source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control?source.localSignalLevel(channel):0;}
+        public boolean hasLocalRedstoneSignal(){return (source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control || source instanceof com.vandorlabs.rack.ModuleRackOutput) && source.hasLocalRedstoneSignal();}
+        public int localSignalLevel(int channel){return source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control || source instanceof com.vandorlabs.rack.ModuleRackOutput?source.localSignalLevel(channel):0;}
         public void setChannelSignal(boolean on){setChannelLevel(on?15:0);}
         public void setChannelLevel(int level){
             if(detached || craft.isDead || craft.ownershipBlocked||!vehicleAdapterActive(source.channelTile()))return;
@@ -156,10 +156,11 @@ public final class VehicleSignals {
             if(tile instanceof TileEntityTokenSlot)tokenSlots.add((TileEntityTokenSlot)tile);
             if(tile instanceof TileEntityCockpit){TileEntityCockpit cockpit=(TileEntityCockpit)tile;cockpits.add(cockpit);for(TileEntityCockpit.Control control:cockpit.controls)add(wanted,control);}
             if(tile instanceof TileEntityRedstoneChannel && tile.getBlockType() instanceof BlockVandorSwitch && ((BlockVandorSwitch)tile.getBlockType()).isMomentary() && ((TileEntityRedstoneChannel)tile).isLocalOn() && !releases.containsKey(tile.getPos()))releases.put(tile.getPos(),craft.world.getTotalWorldTime()+20);
-            if(tile instanceof TileEntityRampController || tile instanceof TileEntityAutopilot || tile instanceof TileEntityRedstoneChannel || tile instanceof TileEntityCanopy || tile instanceof TileEntitySlidingDoor || tile instanceof TileEntityProgrammableTrapdoor
+            if(tile instanceof TileEntityModuleRack){TileEntityModuleRack rack=(TileEntityModuleRack)tile;add(wanted,rack.output);for(RedstoneChannelMember receiver:rack.moduleReceivers())add(wanted,receiver);}
+            if(!(tile instanceof TileEntityModuleRack) && (tile instanceof TileEntityRampController || tile instanceof TileEntityAutopilot || tile instanceof TileEntityRedstoneChannel || tile instanceof TileEntityCanopy || tile instanceof TileEntitySlidingDoor || tile instanceof TileEntityProgrammableTrapdoor
                     || tile instanceof TileEntityLandingGear && ((TileEntityLandingGear)tile).isRoot()
                     || tile instanceof TileEntityRedstoneLight || tile instanceof com.vandorlabs.coupler.TileCoupler
-                    || tile instanceof TileEntityAnimatedScreenSelector && tile.getBlockType() instanceof BlockProgrammableLight)
+                    || tile instanceof TileEntityAnimatedScreenSelector && tile.getBlockType() instanceof BlockProgrammableLight))
                 add(wanted,(RedstoneChannelMember)tile);
             if(tile instanceof TileEntityAnimatedScreenSelector && RedstoneScreenInteractions.supports(tile.getBlockType())){
                 TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;

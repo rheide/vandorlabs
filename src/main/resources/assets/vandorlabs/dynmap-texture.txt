@@ -21505,7 +21505,8 @@ texture:id=module_rack_trim,filename=assets/vandorlabs/textures/blocks/module_ra
 texture:id=module_rack_dark,filename=assets/vandorlabs/textures/blocks/module_rack/dark.png,xcount=1,ycount=1
 texture:id=module_rack_indicators,filename=assets/vandorlabs/textures/blocks/module_rack/indicators.png,xcount=1,ycount=1
 texture:id=module_rack_contacts,filename=assets/vandorlabs/textures/blocks/module_rack/contacts.png,xcount=1,ycount=1
-block:id=%module_rack,state=*,patch0=0:module_rack_housing,patch1=0:module_rack_module,patch2=0:module_rack_trim,patch3=0:module_rack_dark,patch4=0:module_rack_indicators,patch5=0:module_rack_contacts,transparency=SEMITRANSPARENT
+texture:id=module_rack_autopilot_module,filename=assets/vandorlabs/textures/blocks/module_rack/autopilot_module.png,xcount=1,ycount=1
+block:id=%module_rack,state=*,patch0=0:module_rack_housing,patch1=0:module_rack_module,patch2=0:module_rack_trim,patch3=0:module_rack_dark,patch4=0:module_rack_indicators,patch5=0:module_rack_contacts,patch6=0:module_rack_autopilot_module,transparency=SEMITRANSPARENT
 
 # Generated tile-aware material palette
 texture:id=housing_0,filename=assets/vandorlabs/textures/blocks/dark_wall_panel.png,xcount=1,ycount=1

@@ -17,6 +17,9 @@ public final class ModuleRackPolicy {
         for (int slot = 0; slot < ModuleRackGeometry.SLOTS; slot++) if (slotKind(packed, slot) == 3) return false;
         return true;
     }
+    public static int blankKinds(int occupiedMask) {
+        int result=0; for(int slot=0;slot<ModuleRackGeometry.SLOTS;slot++) if((occupiedMask & (1<<slot))!=0) result |= BLANK << (slot*2); return result;
+    }
     public static int occupied(int packed) {
         int result = 0;
         for (int slot = 0; slot < ModuleRackGeometry.SLOTS; slot++) if (slotKind(packed, slot) != EMPTY) result |= 1 << slot;

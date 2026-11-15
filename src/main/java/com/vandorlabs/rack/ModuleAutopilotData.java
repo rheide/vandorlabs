@@ -29,6 +29,13 @@ public final class ModuleAutopilotData {
         data.setInteger("RouteMarkerMeta",settings.markerMetadata);data.setBoolean("AutopilotEnabled",false);
         data.setString("AutopilotStatus","Off");state(module,data);
     }
+    /** Manual relocation keeps choices and opaque item data; old departure coordinates cannot authorize a new location. */
+    public static void placed(ItemStack module) {
+        NBTTagCompound data=state(module);data.setBoolean("AutopilotEnabled",false);data.setBoolean("AutopilotHigh",false);
+        data.setString("AutopilotStatus","Off");data.setLong("AutopilotDepartureAt",0);
+        for(String key:new String[]{"AutopilotDepartureSeat","AutopilotDepartureOwnerMost","AutopilotDepartureOwnerLeast","AutopilotDepartureWaypoint"})data.removeTag(key);
+        state(module,data);
+    }
     /** A migration backup is opaque recovery data, never an installed second capability provider. */
     public static void legacy(ItemStack module,NBTTagCompound original) {
         NBTTagCompound data=module.hasTagCompound()?module.getTagCompound().copy():new NBTTagCompound();
@@ -38,7 +45,7 @@ public final class ModuleAutopilotData {
     }
     public static boolean powered(NBTTagCompound data,boolean high) {
         int trigger=data.hasKey("AutopilotTrigger")?data.getInteger("AutopilotTrigger"):1;
-        return trigger==2?!high:trigger==1&&high;
+        return AutopilotModuleSettings.powered(trigger,high);
     }
     /** Secondary modules keep their receiving state even while multiple navigation controllers prevent assembly. */
     public static boolean signal(ItemStack module,boolean high) {

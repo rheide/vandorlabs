@@ -20,11 +20,11 @@ import org.dynmap.renderer.MapDataContext;
 import org.dynmap.renderer.RenderPatch;
 import org.dynmap.renderer.RenderPatchFactory;
 
-/** Read the actual rack models once; share all 96 settled facing/occupancy meshes. */
+/** Read the actual rack models once; share bounded settled facing/module meshes. */
 public final class ModuleRackRenderer extends CustomRenderer {
-    private static final String[] FIELDS = {"ModuleMask"};
+    private static final String[] FIELDS = {"ModuleMask","ModuleKinds"};
     private static final List<String> TEXTURES = Collections.unmodifiableList(Arrays.asList(
-            "housing", "module", "trim", "dark", "indicators", "contacts"));
+            "housing", "module", "trim", "dark", "indicators", "contacts", "autopilot_module"));
     private static final class Face {
         final int texture;
         final List<MapSurface.Vertex> vertices;
@@ -35,9 +35,10 @@ public final class ModuleRackRenderer extends CustomRenderer {
     }
     private static final List<Face> SHELL = read("shell");
     private static final List<List<Face>> SLOTS = slots("slot_seated_");
+    private static final List<List<Face>> AUTOPILOT_SLOTS = slots("slot_seated_autopilot_");
     private static final List<List<Face>> EMPTY_SLOTS = slots("slot_empty_");
     private static final List<List<Face>> INDICATORS = indicators();
-    private final RenderPatch[][][] cache = new RenderPatch[6][16][];
+    private final RenderPatch[][][] cache = new RenderPatch[6][81][];
     private RenderPatchFactory factory;
 
     @Override public String[] getTileEntityFieldsNeeded() { return FIELDS; }
@@ -55,17 +56,21 @@ public final class ModuleRackRenderer extends CustomRenderer {
                 : context.getBlockType().isStateMatch("facing", "east") ? 3 : 0;
         Object value = context.getBlockTileEntityField("ModuleMask");
         int mask = value instanceof Number ? ((Number) value).intValue() & 15 : 0;
-        RenderPatch[] prepared = cache[orientation][mask];
+        Object typed=context.getBlockTileEntityField("ModuleKinds");
+        int kinds=typed instanceof Number?((Number)typed).intValue():0;
+        int key=0,place=1;
+        for(int slot=0;slot<4;slot++,place*=3)if((mask&(1<<slot))!=0)key+=(((kinds>>>(slot*2))&3)==2?2:1)*place;
+        RenderPatch[] prepared = cache[orientation][key];
         if (prepared != null) return prepared;
         List<RenderPatch> patches = new ArrayList<>();
         emit(context, patches, SHELL, orientation);
         for (int slot = 0; slot < 4; slot++) {
             boolean occupied = (mask & (1 << slot)) != 0;
             emit(context, patches, INDICATORS.get(slot * 2 + (occupied ? 1 : 0)), orientation);
-            emit(context, patches, (occupied ? SLOTS : EMPTY_SLOTS).get(slot), orientation);
+            emit(context, patches, (occupied ? ((kinds>>>(slot*2)&3)==2?AUTOPILOT_SLOTS:SLOTS) : EMPTY_SLOTS).get(slot), orientation);
         }
         prepared = patches.toArray(new RenderPatch[0]);
-        cache[orientation][mask] = prepared;
+        cache[orientation][key] = prepared;
         return prepared;
     }
 

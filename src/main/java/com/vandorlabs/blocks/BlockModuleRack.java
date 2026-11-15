@@ -36,6 +36,7 @@ public final class BlockModuleRack extends BlockVandor {
     public static final PropertyDirection FACING = PropertyDirection.create("facing");
     public static final IUnlistedProperty<Integer> OCCUPIED_MASK = ProgrammableHousingState.integer("rack_occupied");
     public static final IUnlistedProperty<Integer> MODULE_MASK = ProgrammableHousingState.integer("rack_modules");
+    public static final IUnlistedProperty<Integer> MODULE_KINDS = ProgrammableHousingState.integer("rack_module_kinds");
     public static final IUnlistedProperty<Integer> HOUSING = ProgrammableHousingState.integer("rack_housing");
 
     public BlockModuleRack() {
@@ -45,7 +46,7 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this, new IProperty<?>[] { FACING },
-                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, HOUSING });
+                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, MODULE_KINDS, HOUSING });
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -63,6 +64,18 @@ public final class BlockModuleRack extends BlockVandor {
     }
     @Override public IBlockState withMirror(IBlockState state, Mirror mirror) {
         return state.withProperty(FACING, mirror.mirror(state.getValue(FACING)));
+    }
+
+    @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,EntityLivingBase placer,ItemStack stack) {
+        super.onBlockPlacedBy(world,pos,state,placer,stack);
+        if(placer instanceof EntityPlayer)com.vandorlabs.tiles.WorldActionAuthorization.authorize(world.getTileEntity(pos),(EntityPlayer)placer);
+    }
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from) {
+        TileEntity raw=world.getTileEntity(pos); if(raw instanceof TileEntityModuleRack)((TileEntityModuleRack)raw).refreshPower();
+    }
+    @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random) {
+        TileEntity raw=world.getTileEntity(pos); if(raw instanceof TileEntityModuleRack && ((TileEntityModuleRack)raw).autopilotCount()==1)
+            com.vandorlabs.vehicle.VehicleAutopilot.depart((TileEntityModuleRack)raw);
     }
 
     @Override public boolean hasTileEntity(IBlockState state) { return true; }
@@ -83,13 +96,13 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
         TileEntity raw = world.getTileEntity(pos);
-        int occupied = 0, modules = 0, housing = -1;
+        int occupied = 0, modules = 0, housing = -1, kinds = 0;
         if (raw instanceof TileEntityModuleRack) {
             TileEntityModuleRack rack = (TileEntityModuleRack)raw;
-            occupied = rack.getOccupiedMask(); housing = rack.getHousingTexture();
+            occupied = rack.getOccupiedMask(); kinds = rack.getModuleKinds(); housing = rack.getHousingTexture();
             modules = world instanceof VehicleWorld ? occupied : rack.getRenderMask();
         }
-        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(HOUSING, housing);
+        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(MODULE_KINDS, kinds).withProperty(HOUSING, housing);
     }
 
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,
@@ -121,8 +134,10 @@ public final class BlockModuleRack extends BlockVandor {
 
     public static boolean openConfiguration(World world, BlockPos pos, EntityPlayer player) {
         if (!ConfigurationAccess.canEditDialog(player, world, pos) || !(world.getTileEntity(pos) instanceof TileEntityModuleRack)) return false;
-        if (!world.isRemote) player.openGui(com.vandorlabs.VandorLabs.instance, com.vandorlabs.GuiHandler.GUI_MODULE_RACK,
-                world, pos.getX(), pos.getY(), pos.getZ());
+        if (!world.isRemote) {
+            com.vandorlabs.tiles.WorldActionAuthorization.authorize(world.getTileEntity(pos),player);
+            player.openGui(com.vandorlabs.VandorLabs.instance, com.vandorlabs.GuiHandler.GUI_MODULE_RACK,world, pos.getX(), pos.getY(), pos.getZ());
+        }
         return true;
     }
     @Override public boolean canProvidePower(IBlockState state) { return true; }

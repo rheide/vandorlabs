@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / 'src/main/resources/assets/vandorlabs'
 MODELS = ASSETS / 'models/block/module_rack'
 TEXTURES = ROOT / 'texture-packs/additional/assets/vandorlabs/textures/blocks/module_rack'
-TEXTURE_NAMES = ('housing', 'module', 'trim', 'dark', 'indicators', 'contacts')
+TEXTURE_NAMES = ('housing', 'module', 'trim', 'dark', 'indicators', 'contacts', 'autopilot_module')
 
 
 def require(value, reason):
@@ -110,6 +110,10 @@ def main():
         with Image.open(path) as image:
             require(image.width == image.height and image.width <= 64, 'oversized/non-square texture ' + name)
             require(image.width & (image.width - 1) == 0, 'non-power-of-two atlas')
+    with Image.open(TEXTURES / 'autopilot_module.png') as image, Image.open(TEXTURES / 'module.png') as blank:
+        require(image.crop((8,53,38,63)).tobytes()!=blank.crop((8,53,38,63)).tobytes(), 'NAV front artwork must differ from blank module')
+        for x,y in ((19,55),(25,56),(31,55)):
+            require(image.getpixel((x,y))[1]>180,'NAV pixel landmark remains cyan and readable')
     map_models = (ASSETS / 'dynmap-models.txt').read_text().splitlines()
     map_textures = (ASSETS / 'dynmap-texture.txt').read_text().splitlines()
     require(map_models.count('customblock:id=%module_rack,state=*,'
@@ -123,7 +127,7 @@ def main():
         'patch%d=0:module_rack_%s' % (index, name) for index, name in enumerate(TEXTURE_NAMES))
     require(map_textures.count(mapping + ',transparency=SEMITRANSPARENT') == 1,
             'rack Dynmap patch texture order must match its six native material indices')
-    for path in (ASSETS / 'models/item/module_rack.json', MODELS / 'blank_module.json'):
+    for path in (ASSETS / 'models/item/module_rack.json', MODELS / 'blank_module.json', MODELS / 'autopilot_module.json'):
         bounds = gui_bounds(read(path))
         require(all(-7.5 < bound < 7.5 for bound in bounds), 'inventory icon lacks visible padding: ' + str(bounds))
         print(path.name + ' projected GUI bounds=' + repr(tuple(round(x, 3) for x in bounds)))

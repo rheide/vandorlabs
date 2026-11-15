@@ -84,6 +84,16 @@ public final class ModuleRackGeometryTest {
         require(!ModuleRackGeometry.hasClosedBoundary(-1, 0) && !ModuleRackGeometry.hasClosedBoundary(6, 0)
                 && !ModuleRackGeometry.hasClosedBoundary(3, -1) && !ModuleRackGeometry.hasClosedBoundary(3, 6),
                 "unknown boundary faces cannot occlude neighbours");
+        for(int available:new int[]{284,324})for(int modules=0;modules<=4;modules++) {
+            int end=0;
+            for(int index=0;index<modules+2;index++) {
+                int width=ModuleRackTabs.width(available,modules,index),offset=ModuleRackTabs.offset(available,modules,index);
+                require(width>0&&offset==end,"compact tab gap/offset "+available+"/"+modules+"/"+index);
+                require(width>=(index==0?42:index==1?48:30),"standard captions and numbered modules fit at320px "+modules+"/"+index);
+                end+=width+(index==modules+1?0:ModuleRackTabs.GAP);
+            }
+            require(end==available,"all tabs retain exact panel bounds");
+        }
         System.out.println("ModuleRackGeometry PASS assertions=" + assertions
                 + " six facings, slot/button mapping, rims, separators, partial clearances, closed faces and invalid hits");
     }

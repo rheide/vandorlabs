@@ -45,12 +45,13 @@ public final class VehicleAutopilot {
     public TileEntityAutopilot controller(){
         if(craft.view==null)return null;
         if(revision!=craft.view.tileRevision||controlStructure!=craft.structure){
-            revision=craft.view.tileRevision;controlStructure=craft.structure;controller=null;boolean primaryController=false;
+            revision=craft.view.tileRevision;controlStructure=craft.structure;controller=null;boolean primaryController=false;int navigationCount=0;
             for(VehicleStructure.Cell cell:craft.structure.cells){
                 if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController){if(primaryController)break;primaryController=true;}
                 TileEntity tile=craft.view.getTileEntity(cell.pos);
-                if(tile instanceof TileEntityAutopilot&&!(tile instanceof TileEntityWaypoint)){controller=(TileEntityAutopilot)tile;break;}
+                int count=com.vandorlabs.rack.ModuleAutopilots.count(tile);navigationCount+=count;if(count==1)controller=(TileEntityAutopilot)tile;
             }
+            if(navigationCount!=1)controller=null;
         }
         return controller;
     }

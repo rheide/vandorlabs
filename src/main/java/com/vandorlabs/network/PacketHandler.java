@@ -72,5 +72,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageTextureJoin.Handler.class,MessageTextureJoin.class,id++,Side.SERVER);
         INSTANCE.registerMessage(com.vandorlabs.ports.ResourcePortMessage.Handler.class,com.vandorlabs.ports.ResourcePortMessage.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageModuleRack.Handler.class,MessageModuleRack.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageModuleAutopilot.Handler.class,MessageModuleAutopilot.class,id++,Side.SERVER);
     }
 }

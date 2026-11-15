@@ -32,12 +32,12 @@ import java.util.List;
 import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /** Settled racks are ordinary opaque terrain. All racks share finite immutable
- * component geometry, with at most 81 valid occupancy/visible combinations per
+ * component geometry, with at most 625 typed occupancy/visible combinations per
  * facing. getQuads never reads a world, item inventory, animation clock or NBT.
  */
 @Mod.EventBusSubscriber(modid = "vandorlabs", value = Side.CLIENT)
 public final class ModuleRackModel implements IBakedModel {
-    private static final String[] TEXTURES = { "housing", "module", "trim", "dark", "indicators", "contacts" };
+    private static final String[] TEXTURES = { "housing", "module", "autopilot_module", "trim", "dark", "indicators", "contacts" };
     private static final ModuleRackModel[] MODELS = new ModuleRackModel[6];
     private final IBakedModel shell;
     private int housingChoice = -1;
@@ -45,13 +45,22 @@ public final class ModuleRackModel implements IBakedModel {
 
     private final IBakedModel[] modules;
     private final MovingMesh[] moving;
+    private final IBakedModel[] autopilotModules;
+    private final MovingMesh[] autopilotMoving;
+    private final List<BakedQuad>[] autopilotSeated;
     private final List<BakedQuad>[] seated, empty;
     private final List<BakedQuad>[][] indicators;
-    private final AtomicReferenceArray<List<BakedQuad>> combinations = new AtomicReferenceArray<>(256);
+    private final AtomicReferenceArray<List<BakedQuad>> combinations = new AtomicReferenceArray<>(625);
+    private final int[] cacheOrder = new int[625];
+    private int cacheRead, cacheWrite, cacheEntries, cacheBytes;
+    private static final int COMBINATION_BYTES = 65536;
 
     private ModuleRackModel(IBakedModel shell, IBakedModel[] modules, List<BakedQuad>[] seated,
-                            List<BakedQuad>[] empty, List<BakedQuad>[][] indicators) {
+                            List<BakedQuad>[] empty, List<BakedQuad>[][] indicators, IBakedModel[] autopilotModules, List<BakedQuad>[] autopilotSeated) {
         this.shell = shell;
+        this.autopilotModules = autopilotModules; this.autopilotSeated = autopilotSeated;
+        this.autopilotMoving = new MovingMesh[4];
+        for(int slot=0;slot<4;slot++)autopilotMoving[slot]=new MovingMesh(autopilotModules[slot]);
         this.modules = modules;
         this.moving = new MovingMesh[4];
         for (int slot = 0; slot < 4; slot++) moving[slot] = new MovingMesh(modules[slot]);
@@ -62,7 +71,7 @@ public final class ModuleRackModel implements IBakedModel {
 
     private ModuleRackModel(ModuleRackModel source, int housingChoice, TextureAtlasSprite sprite) {
         this.housingChoice = housingChoice; shell = new HousingShell(source.shell, sprite);
-        modules = source.modules; moving = source.moving; seated = source.seated; empty = source.empty; indicators = source.indicators;
+        modules = source.modules; moving = source.moving; autopilotModules=source.autopilotModules; autopilotMoving=source.autopilotMoving; autopilotSeated=source.autopilotSeated; seated = source.seated; empty = source.empty; indicators = source.indicators;
     }
     private synchronized ModuleRackModel housing(int choice) {
         ModuleRackModel found = housingModels.get(choice);
@@ -106,18 +115,21 @@ public final class ModuleRackModel implements IBakedModel {
             int turns = facing == EnumFacing.WEST ? 1 : facing == EnumFacing.NORTH ? 2 : facing == EnumFacing.EAST ? 3 : 0;
             int pitch = facing == EnumFacing.UP ? 90 : facing == EnumFacing.DOWN ? 270 : 0;
             IBakedModel shell = part("shell", pitch, turns);
-            IBakedModel[] modules = new IBakedModel[4];
+            IBakedModel[] modules = new IBakedModel[4], autopilotModules = new IBakedModel[4];
             @SuppressWarnings("unchecked") List<BakedQuad>[][] buttons = (List<BakedQuad>[][])new List<?>[4][2];
             @SuppressWarnings("unchecked") List<BakedQuad>[] seated = (List<BakedQuad>[])new List<?>[4];
             @SuppressWarnings("unchecked") List<BakedQuad>[] empty = (List<BakedQuad>[])new List<?>[4];
+            @SuppressWarnings("unchecked") List<BakedQuad>[] autopilotSeated = (List<BakedQuad>[])new List<?>[4];
             for (int slot = 0; slot < 4; slot++) {
+                autopilotModules[slot] = part("slot_autopilot_"+slot,pitch,turns);
+                autopilotSeated[slot] = all(part("slot_seated_autopilot_"+slot,pitch,turns),false);
                 modules[slot] = part("slot_" + slot, pitch, turns);
                 seated[slot] = all(part("slot_seated_" + slot, pitch, turns), false);
                 empty[slot] = all(part("slot_empty_" + slot, pitch, turns), false);
                 buttons[slot][0] = all(part("indicator_" + slot + "_off", pitch, turns), true);
                 buttons[slot][1] = all(part("indicator_" + slot + "_on", pitch, turns), true);
             }
-            ModuleRackModel model = new ModuleRackModel(shell, modules, seated, empty, buttons);
+            ModuleRackModel model = new ModuleRackModel(shell, modules, seated, empty, buttons, autopilotModules, autopilotSeated);
             MODELS[facing.getIndex()] = model;
             event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:module_rack", "facing=" + facing.getName()), model);
         }
@@ -181,9 +193,10 @@ public final class ModuleRackModel implements IBakedModel {
         return model == null ? null : model.modules[slot];
     }
 
-    static MovingMesh movingMesh(EnumFacing facing, int slot) {
+    static MovingMesh movingMesh(EnumFacing facing, int slot) { return movingMesh(facing,slot,1); }
+    static MovingMesh movingMesh(EnumFacing facing, int slot, int kind) {
         ModuleRackModel model = MODELS[facing.getIndex()];
-        return model == null ? null : model.moving[slot];
+        return model == null ? null : kind==2?model.autopilotMoving[slot]:model.moving[slot];
     }
 
     /** Decode once into format-independent attributes. Animation submits these
@@ -236,15 +249,22 @@ public final class ModuleRackModel implements IBakedModel {
         }
         // Only the housing reaches block boundaries. Leave its cull faces intact.
         if (side != null) return shell.getQuads(null, side, 0);
-        int occupied = 0, visible = 0;
+        int occupied = 0, visible = 0, kinds = 0;
         if (state instanceof IExtendedBlockState && state.getBlock() instanceof BlockModuleRack) {
             IExtendedBlockState extended = (IExtendedBlockState)state;
             Integer occupiedValue = extended.getValue(BlockModuleRack.OCCUPIED_MASK);
             Integer visibleValue = extended.getValue(BlockModuleRack.MODULE_MASK);
+            Integer typed = extended.getValue(BlockModuleRack.MODULE_KINDS);
+            kinds = typed == null ? 0 : typed;
             occupied = occupiedValue == null ? 0 : occupiedValue & 15;
             visible = visibleValue == null ? occupied : visibleValue & occupied;
         }
-        int key = occupied | (visible << 4);
+        int key=0, place=1;
+        for(int slot=0;slot<4;slot++,place*=5) {
+            int bit=1<<slot; boolean autopilot=((kinds >>> (slot*2))&3)==2;
+            int digit=(occupied&bit)==0?0:((visible&bit)==0?1:2)+(autopilot?2:0);
+            key+=digit*place;
+        }
         List<BakedQuad> found = combinations.get(key);
         if (found != null) return found;
         synchronized (combinations) {
@@ -253,10 +273,15 @@ public final class ModuleRackModel implements IBakedModel {
             List<BakedQuad> result = new ArrayList<>(shell.getQuads(null, null, 0));
             for (int slot = 0; slot < 4; slot++) {
                 result.addAll(indicators[slot][(occupied >>> slot) & 1]);
-                result.addAll((visible & (1 << slot)) != 0 ? seated[slot] : empty[slot]);
+                result.addAll((visible & (1 << slot)) != 0 ? (((kinds >>> (slot*2))&3)==2?autopilotSeated[slot]:seated[slot]) : empty[slot]);
             }
             found = Collections.unmodifiableList(result);
-            combinations.set(key, found);
+            int bytes=32+result.size()*8;
+            while(cacheEntries>0 && cacheBytes+bytes>COMBINATION_BYTES) {
+                int evicted=cacheOrder[cacheRead++]; if(cacheRead==cacheOrder.length)cacheRead=0;
+                List<BakedQuad> old=combinations.getAndSet(evicted,null); if(old!=null)cacheBytes-=32+old.size()*8;cacheEntries--;
+            }
+            combinations.set(key, found); cacheOrder[cacheWrite++]=key;if(cacheWrite==cacheOrder.length)cacheWrite=0;cacheEntries++;cacheBytes+=bytes;
             return found;
         }
     }

@@ -47,14 +47,15 @@ public final class ModuleRackMapChecks {
 
     private static final class Context implements MapDataContext {
         final DynmapBlockState state;
-        final int mask;
-        Context(String facing, int mask) {
+        final int mask,kinds;
+        Context(String facing, int mask) {this(facing,mask,0);}
+        Context(String facing,int mask,int kinds) {
             state = new DynmapBlockState(null, 0, "vandorlabs:module_rack", "facing="+facing, "IRON");
-            this.mask = mask;
+            this.mask = mask;this.kinds=kinds;
         }
         public RenderPatchFactory getPatchFactory() { return FACTORY; }
         public DynmapBlockState getBlockType() { return state; }
-        public Object getBlockTileEntityField(String name) { return "ModuleMask".equals(name) ? mask : null; }
+        public Object getBlockTileEntityField(String name) { return "ModuleMask".equals(name) ? mask : "ModuleKinds".equals(name)?kinds:null; }
         public DynmapBlockState getBlockTypeAt(int x, int y, int z) { return state; }
         public Object getBlockTileEntityFieldAt(String name, int x, int y, int z) { return null; }
         public int getX() { return 0; }
@@ -76,7 +77,7 @@ public final class ModuleRackMapChecks {
                 long signature = 1;
                 for (RenderPatch raw : mesh) {
                     Patch patch = (Patch)raw;
-                    if (patch.texture < 0 || patch.texture >= 6) throw new AssertionError("Missing native texture");
+                    if (patch.texture < 0 || patch.texture >= 7) throw new AssertionError("Missing native texture");
                     signature = 31 * signature + patch.texture;
                     for (double uv : patch.limits) {
                         if (!Double.isFinite(uv) || uv < -1e-8 || uv > 1+1e-8)
@@ -92,6 +93,18 @@ public final class ModuleRackMapChecks {
                 if (!layouts.add(signature)) throw new AssertionError("Distinct occupied slots share a map layout");
                 states++;
             }
+            Context nav=new Context(facing,1,2);
+            RenderPatch[] mesh=renderer.getRenderPatchList(nav);
+            if(mesh!=renderer.getRenderPatchList(nav))throw new AssertionError("Typed NAV map cache missed");
+            int navFaces=0;for(RenderPatch raw:mesh)if(raw.getTextureIndex()==6){
+                navFaces++;Patch patch=(Patch)raw;
+                if(Math.abs(patch.limits[0])>1e-8||Math.abs(patch.limits[1]-11.5/16)>1e-8)
+                    throw new AssertionError("NAV front UV landmark");
+            }
+            if(navFaces!=1)throw new AssertionError("One seated NAV front per module: "+facing);
+            if(mesh==renderer.getRenderPatchList(new Context(facing,1)))throw new AssertionError("NAV front aliases blank map mesh");
+            states++;
+
         }
         System.out.println("Module Rack Dynmap PASS states=" + states
                 + " all six facings, all occupancy masks, native UV bounds, shared settled meshes, asymmetric top-slot landmarks");

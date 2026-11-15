@@ -72,6 +72,7 @@ public final class ModuleRackChecks {
     public static void main(String[] args) throws Exception {
         Bootstrap.register();
         ForgeRegistries.ITEMS.register(ModItems.BLANK_MODULE);
+        ForgeRegistries.ITEMS.register(ModItems.AUTOPILOT_MODULE);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityAutopilot.class, new ResourceLocation("vandorlabs:autopilot"));
         GameRegistry.registerTileEntity(TileEntityModuleRack.class,
                 new ResourceLocation("vandorlabs:module_rack_checks"));
@@ -84,6 +85,9 @@ public final class ModuleRackChecks {
             placement(block);
             configuration(block);
             autopilotData();
+            autopilotHost();
+            autopilotCodec();
+            autopilotMigrationData();
             persistence();
             interactions(block);
             dropOwnership(block);
@@ -190,6 +194,92 @@ public final class ModuleRackChecks {
         com.vandorlabs.rack.LegacyAutopilotData preservation = new com.vandorlabs.rack.LegacyAutopilotData(original,new NBTTagCompound());
         NBTTagCompound current = new NBTTagCompound(), liveCaps = new NBTTagCompound(); liveCaps.setInteger("ActualLiveState", 9); current.setTag("ForgeCaps",liveCaps);
         require(preservation.preserve(current).getCompoundTag("ForgeCaps").equals(liveCaps), "legitimate physical capability changes remain authoritative");
+        cases++;
+    }
+
+    private static void autopilotHost() {
+        TileEntityModuleRack rack=new TileEntityModuleRack();rack.setPos(AT);
+        require(com.vandorlabs.rack.ModuleAutopilots.count(rack)==0,"empty Rack is not a navigation controller");
+        ItemStack input=new ItemStack(ModItems.AUTOPILOT_MODULE,2);
+        com.vandorlabs.rack.AutopilotModuleSettings configured=new com.vandorlabs.rack.AutopilotModuleSettings(
+                com.vandorlabs.redstone.ChannelList.of(73,74),1,"minecraft:concrete",5);
+        com.vandorlabs.rack.ModuleAutopilotData.configure(input,configured);
+        require(rack.insertModule(2,input,false)&&input.getCount()==1,"Autopilot insertion consumes one physical module");
+        require(rack.primaryModuleSlot()==2&&rack.moduleKind(2)==2&&rack.autopilotCount()==1
+                &&rack.getRedstoneChannels().equals(configured.channels)&&rack.trigger==1&&rack.markerMeta==5,"physical Rack hosts existing navigation receiver fields");
+        rack.setChannelSignal(true);require(rack.enabled(),"module receiving edge latches existing navigation journey");
+        NBTTagCompound saved=rack.writeToNBT(new NBTTagCompound());
+        require(!saved.hasKey("AutopilotEnabled")&&!saved.hasKey("RedstoneChannels"),"module navigation fields stay with the item, not blank Rack top-level legacy fields");
+        TileEntityModuleRack restored=new TileEntityModuleRack();restored.readFromNBT(saved);
+        require(restored.enabled()&&restored.moduleSettings(2).equals(configured),"module runtime/configuration survive physical host reload");
+        long sequence=restored.getInsertionSequence(2);
+        require(!restored.configureModule(2,sequence+1,configured),"stale module incarnation refuses configuration");
+        require(restored.insertModule(0,new ItemStack(ModItems.AUTOPILOT_MODULE),false),"second physical navigation module retained");
+        require(com.vandorlabs.rack.ModuleAutopilots.count(restored)==2&&!restored.enabled(),"multiple modules are counted and cannot silently select a navigation controller");
+        require(restored.moduleReceivers().size()==2,"every installed Autopilot has a receiving adapter");
+        ItemStack removed=restored.removeModule(2);
+        require(com.vandorlabs.rack.ModuleAutopilotData.state(removed).getBoolean("AutopilotEnabled"),"extraction preserves that module's latched runtime");
+        ItemStack relocated=removed.copy();com.vandorlabs.rack.ModuleAutopilotData.placed(relocated);
+        require(!com.vandorlabs.rack.ModuleAutopilotData.state(relocated).getBoolean("AutopilotEnabled")
+                &&com.vandorlabs.rack.ModuleAutopilotData.settings(relocated).equals(configured),"manual relocation preserves choices without starting an old-location journey");
+        require(restored.autopilotCount()==1&&restored.primaryModuleSlot()==0,"removal rebinds installed navigation owner");
+        NBTTagCompound appearance=rack.getUpdateTag();
+        require(appearance.getInteger("ModuleKinds")==2<<(2*2)&&!appearance.hasKey("Items")&&!appearance.hasKey("ForgeCaps")
+                &&!appearance.toString().contains("AutopilotEnabled"),"appearance carries only typed module kind and public configuration");
+        TileEntityModuleRack client=new TileEntityModuleRack();client.handleUpdateTag(appearance);
+        require(client.moduleKind(2)==2&&client.moduleSettings(2).equals(configured),"client module tabs receive public settings without owned items");
+        require(new com.vandorlabs.tiles.TileEntityWaypoint().getClass().getSuperclass()==com.vandorlabs.tiles.TileEntityAutopilot.class,"Waypoint retains existing superclass behavior");
+        cases++;
+    }
+
+    private static void autopilotCodec() {
+        com.vandorlabs.rack.AutopilotModuleSettings config=new com.vandorlabs.rack.AutopilotModuleSettings(
+                com.vandorlabs.redstone.ChannelList.of(7,73),2,"minecraft:concrete",4);
+        io.netty.buffer.ByteBuf encoded=io.netty.buffer.Unpooled.buffer(),round=io.netty.buffer.Unpooled.buffer();
+        try {
+            new com.vandorlabs.network.MessageModuleAutopilot(9,AT,2,4,config).toBytes(encoded);
+            int bytes=encoded.readableBytes();require(bytes==25+8+"minecraft:concrete".length(),"typed module packet has bounded exact size without item data");
+            com.vandorlabs.network.MessageModuleAutopilot decoded=new com.vandorlabs.network.MessageModuleAutopilot();
+            io.netty.buffer.ByteBuf input=encoded.copy();try{decoded.fromBytes(input);}finally{input.release();}decoded.toBytes(round);require(encoded.equals(round),"typed module settings round trip byte exactly");
+            for(int mutation=0;mutation<5;mutation++) {
+                io.netty.buffer.ByteBuf bad=encoded.copy();
+                try {
+                    if(mutation==0)bad.setByte(12,4);
+                    else if(mutation==1)bad.setByte(21,65);
+                    else if(mutation==2)bad.setByte(30,3);
+                    else if(mutation==3)bad.setByte(31,129);
+                    else bad.writeByte(0);
+                    boolean refused=false;try{new com.vandorlabs.network.MessageModuleAutopilot().fromBytes(bad);}catch(IllegalArgumentException expected){refused=true;}
+                    require(refused,"malformed module slot/channel/activation/marker/trailing data refused before apply "+mutation);
+                }finally{bad.release();}
+            }
+        }finally{encoded.release();round.release();}
+        cases++;
+    }
+
+    private static void autopilotMigrationData() {
+        com.vandorlabs.tiles.TileEntityAutopilot old=new com.vandorlabs.tiles.TileEntityAutopilot();old.setPos(AT);
+        old.setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(73));old.setChannelSignal(true);
+        old.departureAt=19;old.departureSeat=AT.west();old.departureOwner=new UUID(11,37);old.markerMeta=6;
+        NBTTagCompound raw=old.writeToNBT(new NBTTagCompound());
+        NBTTagCompound caps=new NBTTagCompound();caps.setString("Opaque","minecraft:air old palette remains opaque");raw.setTag("ForgeCaps",caps);
+        raw.setInteger("FutureSetting",37);raw.setBoolean("RackEmit",true);
+        NBTTagCompound original=raw.copy(),converted=com.vandorlabs.rack.LegacyAutopilotMigration.migrated(raw);
+        require(raw.equals(original),"migration never mutates old saved/journal preimage");
+        require(converted.getString("id").equals("vandorlabs:module_rack")&&!converted.hasKey("RackEmit"),"old/new field collision is archived instead of becoming Rack configuration");
+        TileEntityModuleRack host=new TileEntityModuleRack();host.readFromNBT(converted);
+        NBTTagCompound saved=host.writeToNBT(new NBTTagCompound());
+        require(host.autopilotCount()==1&&host.enabled()&&host.departureAt==19&&host.departureSeat.equals(AT.west())
+                &&host.departureOwner.equals(old.departureOwner)&&host.markerMeta==6,"same-position module preserves receiving and departure/navigation state");
+        require(saved.getCompoundTag("ForgeCaps").equals(caps)&&saved.getInteger("FutureSetting")==37
+                &&saved.getCompoundTag(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP).equals(original),"new tile identity preserves original opaque capabilities and complete legacy backup");
+        host.setEmitsRedstone(true);NBTTagCompound lit=host.writeToNBT(new NBTTagCompound());TileEntityModuleRack reloaded=new TileEntityModuleRack();reloaded.readFromNBT(lit);reloaded.setEmitsRedstone(false);
+        require(!reloaded.writeToNBT(new NBTTagCompound()).hasKey("RackEmit"),"legacy preservation never restores removed new host settings");
+        require(!host.getUpdateTag().hasKey(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP)&&!host.getUpdateTag().hasKey("FutureSetting")
+                &&!host.getUpdateTag().hasKey("ForgeCaps"),"migration backup remains private on public client appearance");
+        NBTTagCompound canonical=saved.copy();canonical.setString("id","vandorlabs:module_rack");
+        require(com.vandorlabs.rack.ModuleAutopilots.count(canonical)==1,"saved vehicle role discovery counts inserted module");
+        require(com.vandorlabs.rack.ModuleAutopilots.count(original)==1,"previous saved vehicle retains compatible legacy role");
         cases++;
     }
 

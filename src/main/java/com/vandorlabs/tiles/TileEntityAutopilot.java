@@ -23,12 +23,14 @@ public class TileEntityAutopilot extends TileEntity implements RedstoneChannelMe
     public net.minecraft.util.math.BlockPos departureWaypoint;
     public boolean enabled(){return enabled;}
     public void pulseDeparture(){setEnabled(true);scheduleStart();}
+    protected boolean hasNavigationReceiver(){return true;}
+    protected boolean canDepart(){return true;}
     private void scheduleStart(){
-        if(world==null||world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld||this instanceof TileEntityWaypoint)return;
+        if(!canDepart()||world==null||world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld||this instanceof TileEntityWaypoint)return;
         if(departureSeat!=null)departureDirect=true;
         departureAt=world.getTotalWorldTime()+1;world.scheduleUpdate(pos,getBlockType(),1);changed();
     }
-    public boolean powered(){return trigger==2?!high:trigger==1&&high;}
+    public boolean powered(){return com.vandorlabs.rack.AutopilotModuleSettings.powered(trigger,high);}
     public void setEnabled(boolean value){if(enabled==value)return;enabled=value;status=value?"Following route":"Off";if(value)scheduleStart();changed();}
     public void setStatus(String value){if(!status.equals(value)){status=value;changed();}}
     public TileEntity channelTile(){return this;}
@@ -40,7 +42,18 @@ public class TileEntityAutopilot extends TileEntity implements RedstoneChannelMe
     public void setChannelSignal(boolean value){boolean before=powered();if(high!=value){high=value;changed();}if(!before&&powered())pulseDeparture();}
     public void refreshPower(){if(world!=null&&!world.isRemote){RedstoneChannels.inputChanged(this);boolean power=hasLocalRedstoneSignal();for(int i=0;i<channels.size();i++)power|=RedstoneChannels.level(world,pos,channels.get(i))>0;setChannelSignal(power);}}
     public void changed(){markDirty();if(world!=null&&(!world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld))world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
-    @Override public void onLoad(){com.vandorlabs.tiles.WorldActionAuthorization.resumed(this);super.onLoad();if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))DeferredTileLoad.schedule(this,()->{RedstoneChannels.register(this);if(enabled){if(departureAt<=0)departureAt=world.getTotalWorldTime()+1;world.scheduleUpdate(pos,getBlockType(),1);}});}
+    /** Vanilla's default factory does not bind World before decoding external capabilities. */
+    @Override protected void setWorldCreate(net.minecraft.world.World value){setWorld(value);}
+    @Override public void onLoad(){WorldActionAuthorization.resumed(this);super.onLoad();if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld))DeferredTileLoad.schedule(this,this::loadedAfterWorld);}
+    private void loadedAfterWorld(){
+        if(getClass()==TileEntityAutopilot.class){
+            // A parked legacy snapshot must finish its existing publication before compatibility conversion.
+            if(com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){DeferredTileLoad.schedule(this,this::loadedAfterWorld);return;}
+            if(com.vandorlabs.rack.LegacyAutopilotMigration.convert(this)!=null)return;
+        }
+        if(hasNavigationReceiver())RedstoneChannels.register(this);
+        if(enabled&&canDepart()){if(departureAt<=0)departureAt=world.getTotalWorldTime()+1;world.scheduleUpdate(pos,getBlockType(),1);}
+    }
     @Override public void invalidate(){WorldActionAuthorization.revoke(this);RedstoneChannels.unregister(this);super.invalidate();}
     @Override public void onChunkUnload(){WorldActionAuthorization.unloaded(this);RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound n){n=writeAutopilotData(writeTileIdentity(n));return legacyData==null?n:legacyData.preserve(n);}

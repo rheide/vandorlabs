@@ -115,7 +115,7 @@ public final class VehicleScan {
                 BlockPos at=pending.removeFirst();group.positions.add(at);VehicleStructure.Cell cell=cells.get(at);group.cells.add(cell);Block block=cell.state.getBlock();
                 if(block instanceof BlockVehicleController){group.controllers++;group.controller=at;}
                 if(block instanceof BlockPilotSeat&&!cell.state.getValue(BlockPilotSeat.UPPER)){group.pilots++;if(group.pilot==null||at.equals(start))group.pilot=at;}
-                TileEntity tile=world.getTileEntity(at);if(tile instanceof TileEntityAutopilot&&!(tile instanceof TileEntityWaypoint))group.autopilots++;
+                TileEntity tile=world.getTileEntity(at);group.autopilots+=com.vandorlabs.rack.ModuleAutopilots.count(tile);
                 Set<BlockPos> next=new LinkedHashSet<>();for(EnumFacing side:EnumFacing.values()){BlockPos other=at.offset(side);if(cells.containsKey(other)&&!supportCut(at,other)&&(touches(world,at,cell.state,side)||membershipOnly&&ownedCoupler(cell.state,cells.get(other).state,side)))next.add(other);}next.addAll(contactLinks.getOrDefault(at,Collections.emptySet()));next.addAll(roleLinks.getOrDefault(at,Collections.emptySet()));
                 for(BlockPos other:next)if(cells.containsKey(other)&&!owners.containsKey(other)){owners.put(other,group);pending.add(other);}
             }

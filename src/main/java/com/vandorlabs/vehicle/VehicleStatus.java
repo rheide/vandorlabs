@@ -45,15 +45,15 @@ public final class VehicleStatus {
         Map<BlockPos,Entry> entries=cache.computeIfAbsent(world,w->new HashMap<>());Entry old=entries.get(screen);
         if(old!=null&&world.getTotalWorldTime()-old.at>=0&&world.getTotalWorldTime()-old.at<100)return old;
         ArrayDeque<BlockPos> queue=new ArrayDeque<>();Set<BlockPos> seen=new HashSet<>();queue.add(screen);seen.add(screen);
-        BlockPos autopilot=null,controller=null;int budget=4096;
+        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096;
         while(!queue.isEmpty()&&budget-->0){BlockPos p=queue.removeFirst();if(!world.isBlockLoaded(p)||world.isAirBlock(p))continue;TileEntity tile=world.getTileEntity(p);
-            if(tile instanceof TileEntityAutopilot&&!(tile instanceof TileEntityWaypoint))autopilot=p;
+            int navigation=com.vandorlabs.rack.ModuleAutopilots.count(tile);if(navigation>0){autopilots+=navigation;autopilot=p;}
             net.minecraft.block.state.IBlockState state=world.getBlockState(p);if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)controller=p;
-            if(autopilot!=null&&controller!=null)break;
+
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockLandingGear)continue;
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight&&state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING)==net.minecraft.util.EnumFacing.DOWN)continue;
             try{for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values())if(VehicleScan.touches(world,p,state,face)){BlockPos next=p.offset(face);if(world.isBlockLoaded(next)&&!VehicleScan.ownedCoupler(state,world.getBlockState(next),face)&&seen.add(next))queue.add(next);}}catch(RuntimeException|LinkageError unavailable){VehicleCompatibility.warn(state.getBlock(),"status connectivity",unavailable);}
         }
-        if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilot,controller);entries.put(screen.toImmutable(),result);return result;
+        if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilots==1?autopilot:null,controller);entries.put(screen.toImmutable(),result);return result;
     }
 }

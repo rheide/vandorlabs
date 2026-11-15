@@ -12,7 +12,7 @@ import net.minecraft.world.World;
 /** Distinct navigation computer and route-marker housings. */
 public final class BlockAutopilot extends BlockVandorDirectional {
     private final boolean waypoint;
-    public BlockAutopilot(boolean waypoint){super(waypoint?"waypoint":"autopilot");this.waypoint=waypoint;}
+    public BlockAutopilot(boolean waypoint){super(waypoint?"waypoint":"autopilot");this.waypoint=waypoint;if(!waypoint)setCreativeTab(null);}
     public boolean hasTileEntity(IBlockState state){return true;}
     public TileEntity createTileEntity(World world,IBlockState state){return waypoint?new TileEntityWaypoint():new TileEntityAutopilot();}
     @Override public void onBlockPlacedBy(World world,BlockPos pos,IBlockState state,net.minecraft.entity.EntityLivingBase placer,net.minecraft.item.ItemStack stack){super.onBlockPlacedBy(world,pos,state,placer,stack);if(placer instanceof EntityPlayer)WorldActionAuthorization.authorize(world.getTileEntity(pos),(EntityPlayer)placer);}

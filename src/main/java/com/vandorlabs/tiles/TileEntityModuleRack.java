@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Saved item payloads never enter appearance packets. Cosmetic motion is owned
  * by the client active-animation collection, not by a per-rack renderer.
  */
-public final class TileEntityModuleRack extends TileEntity {
+public final class TileEntityModuleRack extends TileEntityAutopilot {
     private static final AtomicLong NEXT_EPOCH = new AtomicLong();
     // A new physical server tile owns a new appearance epoch, even when its
     // saved revision comes from an older copied/restored snapshot. Keep this
@@ -32,6 +32,12 @@ public final class TileEntityModuleRack extends TileEntity {
     private volatile int occupiedMask;
     private volatile int renderMask;
     private long revision;
+    private int primary = -1;
+    private int moduleKinds, previousModuleKinds;
+    private boolean loadingModules;
+    private com.vandorlabs.rack.LegacyAutopilotData legacyBlockData;
+    private NBTTagCompound legacyOriginal;
+    private final ModuleReceiver[] receivers = { new ModuleReceiver(0), new ModuleReceiver(1), new ModuleReceiver(2), new ModuleReceiver(3) };
     private int housingTexture = -1;
     private boolean emitRedstone;
     public final com.vandorlabs.rack.ModuleRackOutput output = new com.vandorlabs.rack.ModuleRackOutput(this);
@@ -63,7 +69,7 @@ public final class TileEntityModuleRack extends TileEntity {
     }
 
     public static boolean accepts(ItemStack stack) {
-        return !stack.isEmpty() && stack.getItem() == ModItems.BLANK_MODULE;
+        return !stack.isEmpty() && (stack.getItem() == ModItems.BLANK_MODULE || stack.getItem() == ModItems.AUTOPILOT_MODULE);
     }
 
     /** Offline copies may be edited by validation/import code; live clients and carried
@@ -71,18 +77,23 @@ public final class TileEntityModuleRack extends TileEntity {
      */
     private boolean canMutate() {
         return world == null || !(world instanceof VehicleWorld) && !world.isRemote
-                && !isInvalid() && world.getTileEntity(pos) == this;
+                && !isInvalid() && world.isBlockLoaded(pos) && world.getTileEntity(pos) == this;
     }
 
     public boolean insertModule(int slot, ItemStack held, boolean creative) {
         if (!canMutate() || !ModuleRackGeometry.validSlot(slot)
                 || !modules[slot].isEmpty() || !accepts(held)) return false;
+        suspendReceivers();
+        saveNavigation();
         ItemStack inserted = held.copy();
         inserted.setCount(1);
+        if(world!=null && inserted.getItem()==ModItems.AUTOPILOT_MODULE)com.vandorlabs.rack.ModuleAutopilotData.placed(inserted);
         modules[slot] = inserted;
         if (!creative) held.shrink(1);
         occupiedMask |= 1 << slot;
         insertionSequences[slot] = next(insertionSequences[slot]);
+        loadNavigation();
+        resumeReceivers();
         changed();
         return true;
     }
@@ -91,8 +102,12 @@ public final class TileEntityModuleRack extends TileEntity {
         if (!canMutate() || !ModuleRackGeometry.validSlot(slot)) return ItemStack.EMPTY;
         ItemStack removed = modules[slot];
         if (removed.isEmpty()) return ItemStack.EMPTY;
+        suspendReceivers();
+        saveNavigation();
         modules[slot] = ItemStack.EMPTY;
         occupiedMask &= ~(1 << slot);
+        loadNavigation();
+        resumeReceivers();
         changed();
         return removed;
     }
@@ -104,10 +119,13 @@ public final class TileEntityModuleRack extends TileEntity {
         NonNullList<ItemStack> result = NonNullList.create();
         if (world != null && (world.isRemote || world instanceof VehicleWorld || isInvalid()
                 || !world.isBlockLoaded(pos) || world.getTileEntity(pos) != this)) return result;
+        suspendReceivers();
+        saveNavigation();
         for (int slot = 0; slot < modules.length; slot++) {
             if (!modules[slot].isEmpty()) result.add(modules[slot]);
             modules[slot] = ItemStack.EMPTY;
         }
+        loadNavigation();
         if (occupiedMask != 0) {
             occupiedMask = renderMask = 0;
             revision = next(revision);
@@ -119,7 +137,9 @@ public final class TileEntityModuleRack extends TileEntity {
 
     private static long next(long value) { return value == Long.MAX_VALUE ? 1 : value + 1; }
 
-    private void changed() {
+    @Override public void changed() {
+        if (loadingModules) return;
+        saveNavigation();
         revision = next(revision);
         renderMask = occupiedMask;
         output.publish();
@@ -142,7 +162,8 @@ public final class TileEntityModuleRack extends TileEntity {
     }
 
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag) {
-        super.writeToNBT(tag);
+        saveNavigation();
+        writeTileIdentity(tag);
         NBTTagList items = new NBTTagList();
         for (int slot = 0; slot < modules.length; slot++) {
             if (modules[slot].isEmpty()) continue;
@@ -153,7 +174,9 @@ public final class TileEntityModuleRack extends TileEntity {
         tag.setTag("Items", items);
         if (housingTexture >= 0) tag.setInteger("RackHousing", housingTexture);
         if (emitRedstone) tag.setBoolean("RackEmit", true);
-        return writeVisualData(tag);
+        if(legacyOriginal!=null)tag.setTag(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP,legacyOriginal.copy());
+        writeVisualData(tag);
+        return legacyBlockData==null?tag:legacyBlockData.preserve(tag);
     }
 
     @Override public void readFromNBT(NBTTagCompound tag) {
@@ -175,13 +198,17 @@ public final class TileEntityModuleRack extends TileEntity {
             occupied |= 1 << slot;
         }
         occupiedMask = renderMask = occupied;
+        loadNavigation();
         revision = Math.max(0, tag.getLong("Revision"));
         for (int slot = 0; slot < modules.length; slot++)
             insertionSequences[slot] = Math.max(0, tag.getLong("Insert" + slot));
+        legacyOriginal=tag.hasKey(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP,10)?tag.getCompoundTag(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP).copy():null;
+        legacyBlockData=com.vandorlabs.rack.LegacyAutopilotMigration.preservation(tag,writeTileIdentity(new NBTTagCompound()));
     }
 
     private NBTTagCompound writeVisualData(NBTTagCompound tag) {
         tag.setInteger("ModuleMask", occupiedMask);
+        if (autopilotCount() > 0) tag.setInteger("ModuleKinds", moduleKinds);
         tag.setLong("Revision", revision);
         for (int slot = 0; slot < modules.length; slot++) tag.setLong("Insert" + slot, insertionSequences[slot]);
         return tag;
@@ -193,6 +220,12 @@ public final class TileEntityModuleRack extends TileEntity {
         if (emitRedstone) tag.setBoolean("RackEmit", true);
         NBTTagCompound transmission = output.publicSettings();
         if (transmission != null) tag.setTag("RackTransmission", transmission);
+        for (int slot = 0; slot < modules.length; slot++) if (moduleKind(slot) == com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) {
+            com.vandorlabs.rack.AutopilotModuleSettings config = moduleSettings(slot);
+            NBTTagCompound data = new NBTTagCompound(); com.vandorlabs.redstone.ChannelData.write(data, config.channels);
+            data.setInteger("AutopilotTrigger", config.activation); data.setString("RouteMarker", config.marker); data.setInteger("RouteMarkerMeta", config.markerMetadata);
+            tag.setTag("ModuleConfig" + slot, data);
+        }
         tag.setLong("RackEpoch", localEpoch);
         return tag;
     }
@@ -242,6 +275,14 @@ public final class TileEntityModuleRack extends TileEntity {
             renderMask = 0;
         }
         occupiedMask = mask;
+        previousModuleKinds = moduleKinds;
+        moduleKinds = tag.hasKey("ModuleKinds",3) ? tag.getInteger("ModuleKinds") & 255 : com.vandorlabs.rack.ModuleRackPolicy.blankKinds(mask);
+        for (int slot = 0; slot < modules.length; slot++) {
+            if (moduleKind(slot) == com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) {
+                modules[slot] = new ItemStack(ModItems.AUTOPILOT_MODULE);
+                com.vandorlabs.rack.ModuleAutopilotData.state(modules[slot],tag.getCompoundTag("ModuleConfig" + slot));
+            } else modules[slot] = ItemStack.EMPTY;
+        }
         housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
         emitRedstone = tag.getBoolean("RackEmit");
         output.readPublic(tag, replacement || initial);
@@ -262,10 +303,11 @@ public final class TileEntityModuleRack extends TileEntity {
 
     @Override public void onLoad() {
         super.onLoad();
-        if (!(world instanceof VehicleWorld)) DeferredTileLoad.schedule(this, () -> { com.vandorlabs.redstone.RedstoneChannels.register(output); output.publish(); });
+        if (!(world instanceof VehicleWorld)) DeferredTileLoad.schedule(this, () -> { com.vandorlabs.redstone.RedstoneChannels.register(output); resumeReceivers(); output.publish(); });
     }
 
     @Override public void invalidate() {
+        suspendReceivers();
         com.vandorlabs.redstone.RedstoneChannels.unregister(output);
         if (world != null && world.isRemote && !(world instanceof VehicleWorld) && VandorLabs.proxy != null)
             VandorLabs.proxy.moduleRackRemoved(this);
@@ -273,10 +315,85 @@ public final class TileEntityModuleRack extends TileEntity {
     }
 
     @Override public void onChunkUnload() {
+        suspendReceivers();
         com.vandorlabs.redstone.RedstoneChannels.unregister(output);
         if (world != null && world.isRemote && !(world instanceof VehicleWorld) && VandorLabs.proxy != null)
             VandorLabs.proxy.moduleRackRemoved(this);
         super.onChunkUnload();
+    }
+
+
+    public int moduleKind(int slot) { return ModuleRackGeometry.validSlot(slot) ? (moduleKinds >>> (slot * 2)) & 3 : 0; }
+    public int previousModuleKind(int slot) { return (previousModuleKinds >>> (slot*2)) & 3; }
+    public int getModuleKinds() { return moduleKinds; }
+    public int autopilotCount() { int count=0; for(int slot=0;slot<4;slot++) if(moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) count++; return count; }
+    public int primaryModuleSlot() { return primary; }
+    @Override protected boolean hasNavigationReceiver() { return primary >= 0; }
+    @Override protected boolean canDepart() { return autopilotCount() == 1; }
+    @Override public boolean enabled() { return canDepart() && super.enabled(); }
+    @Override public String transmitterSlot() { return "module_" + primary; }
+    @Override public com.vandorlabs.redstone.ChannelList transmittedChannels() { return com.vandorlabs.redstone.ChannelList.EMPTY; }
+    @Override public int transmissionRange() { return -1; }
+    public com.vandorlabs.rack.AutopilotModuleSettings moduleSettings(int slot) {
+        if(moduleKind(slot)!=com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) throw new IllegalArgumentException("No Autopilot module in slot");
+        return com.vandorlabs.rack.ModuleAutopilotData.settings(modules[slot]);
+    }
+    public boolean configureModule(int slot,long sequence,com.vandorlabs.rack.AutopilotModuleSettings value) {
+        if(!canMutate() || moduleKind(slot)!=com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT || getInsertionSequence(slot)!=sequence) return false;
+        suspendReceivers(); saveNavigation(); com.vandorlabs.rack.ModuleAutopilotData.configure(modules[slot],value);
+        loadNavigation(); resumeReceivers(); changed(); return true;
+    }
+    private void saveNavigation() {
+        if(primary>=0 && !loadingModules && (world==null || !world.isRemote || world instanceof VehicleWorld))
+            com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary],writeAutopilotData(new NBTTagCompound()));
+    }
+    private void loadNavigation() {
+        loadingModules=true;
+        try {
+            moduleKinds=0; primary=-1;
+            for(int slot=0;slot<4;slot++) if(!modules[slot].isEmpty()) {
+                int kind=modules[slot].getItem()==ModItems.AUTOPILOT_MODULE?com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT:com.vandorlabs.rack.ModuleRackPolicy.BLANK;
+                moduleKinds |= kind << (slot*2); if(kind==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT && primary<0) primary=slot;
+            }
+            readAutopilotData(primary<0?new NBTTagCompound():com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary]));
+        } finally { loadingModules=false; }
+    }
+    private boolean physicalChannels() { return world!=null && !world.isRemote && !(world instanceof VehicleWorld) && !isInvalid() && world.isBlockLoaded(pos) && world.getTileEntity(pos)==this; }
+    private void suspendReceivers() {
+        if(world==null||world.isRemote||world instanceof VehicleWorld)return;
+        com.vandorlabs.redstone.RedstoneChannels.unregister(this);
+        for(ModuleReceiver receiver:receivers) com.vandorlabs.redstone.RedstoneChannels.unregister(receiver);
+    }
+    private void resumeReceivers() {
+        if(!physicalChannels())return;
+        if(primary>=0)com.vandorlabs.redstone.RedstoneChannels.register(this);
+        for(int slot=0;slot<4;slot++) if(slot!=primary && moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT)
+            com.vandorlabs.redstone.RedstoneChannels.register(receivers[slot]);
+        if(canDepart()&&super.enabled()&&departureAt>0)world.scheduleUpdate(pos,getBlockType(),1);
+    }
+    public java.util.List<com.vandorlabs.redstone.RedstoneChannelMember> moduleReceivers() {
+        java.util.List<com.vandorlabs.redstone.RedstoneChannelMember> result=new java.util.ArrayList<>();
+        if(primary>=0)result.add(this);
+        for(int slot=0;slot<4;slot++)if(slot!=primary && moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT)result.add(receivers[slot]);
+        return result;
+    }
+    @Override public void refreshPower() {
+        if(!physicalChannels())return;
+        super.refreshPower();
+        for(int slot=0;slot<4;slot++)if(slot!=primary && moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT)
+            com.vandorlabs.redstone.RedstoneChannels.inputChanged(receivers[slot]);
+    }
+    private final class ModuleReceiver implements com.vandorlabs.redstone.RedstoneChannelMember {
+        private final int slot; ModuleReceiver(int slot){this.slot=slot;}
+        public TileEntity channelTile(){return TileEntityModuleRack.this;}
+        public String transmitterSlot(){return "module_"+slot;}
+        public com.vandorlabs.redstone.ChannelList transmittedChannels(){return com.vandorlabs.redstone.ChannelList.EMPTY;}
+        public int transmissionRange(){return -1;}
+        public int getRedstoneChannel(){return getRedstoneChannels().first();}
+        public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return moduleKind(slot)==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT?moduleSettings(slot).channels:com.vandorlabs.redstone.ChannelList.EMPTY;}
+        public void setRedstoneChannel(int channel){throw new UnsupportedOperationException();}
+        public boolean hasLocalRedstoneSignal(){return TileEntityModuleRack.this.hasLocalRedstoneSignal();}
+        public void setChannelSignal(boolean powered){if(com.vandorlabs.rack.ModuleAutopilotData.signal(modules[slot],powered))changed();}
     }
 
     @Override public boolean shouldRenderInPass(int pass) { return false; }

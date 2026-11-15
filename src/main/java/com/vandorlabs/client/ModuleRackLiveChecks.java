@@ -39,6 +39,8 @@ final class ModuleRackLiveChecks {
             EnumFacing.EAST, EnumFacing.WEST, EnumFacing.UP, EnumFacing.DOWN};
     private static int direction, slot, stage, wait;
     private static int placementStage, placementWait;
+    private static volatile String placementStatus="setup";
+    private static final java.lang.reflect.Field PLACEMENT_TELEPORT=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(net.minecraft.network.NetHandlerPlayServer.class,"targetPos","field_184362_y");
     private static final BlockPos PLACE = AT.add(-6, 0, 0);
     private static long idleDraws, insertionDraws, capturedDraws;
     private static long stressSequence;
@@ -63,7 +65,9 @@ final class ModuleRackLiveChecks {
     private static void next(int value) { stage = value; wait = 0; }
 
     static boolean tick(Minecraft mc, File directory) throws Exception {
+        if("read".equals(System.getProperty("vandorlabs.moduleRackMigrationPhase","")))return ModuleRackMigrationLiveChecks.read(mc,directory);
         if (placementStage < 3) return placement(mc);
+        if (Boolean.getBoolean("vandorlabs.moduleRackAutopilotOnly")) return ModuleRackAutopilotLiveChecks.tick(mc, directory);
         if (Boolean.getBoolean("vandorlabs.moduleRackSettingsOnly")) return ModuleRackSettingsLiveChecks.tick(mc, directory);
         if (direction >= FACES.length) return true;
         output = directory;
@@ -274,11 +278,25 @@ final class ModuleRackLiveChecks {
         } catch (Exception failure) { throw new IllegalStateException("Rack insertion capture", failure); }
     }
 
+    private static boolean placementPacketReady(Minecraft mc)throws Exception {
+        final double x=mc.player.posX,y=mc.player.posY,z=mc.player.posZ;
+        final int slot=mc.player.inventory.currentItem,count=mc.player.getHeldItemMainhand().getCount();
+        final net.minecraft.item.Item item=mc.player.getHeldItemMainhand().getItem();
+        return mc.getIntegratedServer().callFromMainThread(()->{
+            EntityPlayerMP actor=player(mc);boolean pending=PLACEMENT_TELEPORT.get(actor.connection)!=null;
+            placementStatus="teleportPending="+pending+" serverMode="+actor.interactionManager.getGameType()+" serverSlot="+actor.inventory.currentItem
+                    +" serverHeld="+actor.getHeldItemMainhand()+" serverPosition="+actor.getPositionVector()+" serverTarget="+actor.world.getBlockState(PLACE)+" tile="+actor.world.getTileEntity(PLACE);
+            return !pending&&actor.interactionManager.getGameType()==GameType.SURVIVAL&&actor.inventory.currentItem==slot
+                    &&actor.getHeldItemMainhand().getItem()==item&&actor.getHeldItemMainhand().getCount()==count&&actor.getDistanceSq(x,y,z)<.0001;
+        }).get();
+    }
+
     /** The reported floor-click regression uses the real Survival placement packet and a shallow view. */
     private static boolean placement(Minecraft mc) throws Exception {
-        if (++placementWait > 160) throw new IllegalStateException("Rack placement timeout stage=" + placementStage
+        if (++placementWait%40==0){placementPacketReady(mc);System.out.println("[vandorlabs][reprolab] Rack placement waiting stage="+placementStage+" age="+placementWait+" clientHeld="+mc.player.getHeldItemMainhand()+" clientTarget="+mc.world.getBlockState(PLACE)+" "+placementStatus);}
+        if (placementWait > 160) throw new IllegalStateException("Rack placement timeout stage=" + placementStage
                 + " mode=" + mc.playerController.getCurrentGameType() + " slot=" + mc.player.inventory.currentItem
-                + " held=" + mc.player.getHeldItemMainhand() + " pos=" + mc.player.getPositionVector());
+                + " held=" + mc.player.getHeldItemMainhand() + " pos=" + mc.player.getPositionVector()+" "+placementStatus);
         if (placementStage == 0) {
             mc.player.closeScreen(); mc.playerController.setGameType(GameType.SURVIVAL);
             mc.player.inventory.currentItem = 0;
@@ -300,6 +318,7 @@ final class ModuleRackLiveChecks {
                     || mc.player.getHeldItemMainhand().getItem() != net.minecraft.item.Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:module_rack"))
                     || mc.player.getPositionVector().squareDistanceTo(PLACE.getX() + .5, PLACE.getY(), PLACE.getZ() + 3.5) > .02
                     || Math.abs(mc.player.rotationPitch - 10) > .1 || Math.abs(Math.abs(mc.player.rotationYaw) - 180) > .1) return false;
+            if(!placementPacketReady(mc))return false;
             require(mc.playerController.processRightClickBlock(mc.player, mc.world, PLACE.down(), EnumFacing.UP,
                     new Vec3d(PLACE.getX() + .5, PLACE.getY(), PLACE.getZ() + .5), EnumHand.MAIN_HAND) == EnumActionResult.SUCCESS,
                     "real shallow floor placement packet refused");

@@ -69,6 +69,23 @@ def textures():
     draw.line((50, 1, 50, 48), fill=(47, 54, 61))
     draw.line((57, 1, 57, 48), fill=(16, 20, 24))
     save_png("module", image)
+    autopilot = image.copy()
+    nav = ImageDraw.Draw(autopilot)
+    nav.rectangle((7, 4, 38, 45), fill=(14, 30, 37), outline=(53, 112, 123), width=2)
+    nav.line((13, 37, 13, 25, 31, 25, 31, 12), fill=PALETTE["cyan"], width=3)
+    nav.polygon(((26, 15), (31, 8), (36, 15)), fill=PALETTE["cyan"])
+    nav.rectangle((10, 35, 16, 40), fill=PALETTE["amber"])
+    nav.rectangle((8, 53, 37, 62), fill=(12, 29, 36))
+    # A compact navigation arrow and pixel NAV label remain readable on the seated front.
+    nav.line((10, 59, 10, 56, 14, 56), fill=PALETTE["cyan"], width=2)
+    nav.polygon(((13, 54), (16, 56), (13, 58)), fill=PALETTE["cyan"])
+    glyphs={"N":("1001","1101","1011","1001","1001"), "A":("0110","1001","1111","1001","1001"), "V":("1001","1001","1001","1001","0110")}
+    for letter, x in zip("NAV", (19, 25, 31)):
+        for y, row in enumerate(glyphs[letter]):
+            for dx, pixel in enumerate(row):
+                if pixel=="1":nav.point((x+dx,55+y),fill=PALETTE["cyan"])
+    nav.rectangle((19,61,34,62),fill=PALETTE["amber"])
+    save_png("autopilot_module", autopilot)
 
     image = Image.new("RGB", (16, 16), PALETTE["trim"])
     draw = ImageDraw.Draw(image)
@@ -218,6 +235,14 @@ def generate():
         save_json(MODELS / ("slot_empty_%d.json" % slot), model(empty_bay(slot)))
         for on in (False, True):
             save_json(MODELS / ("indicator_%d_%s.json" % (slot, "on" if on else "off")), indicator(slot, on))
+        for name, elements in (("slot_autopilot_%d" % slot,cassette(11.75-slot*3.5)),
+                               ("slot_seated_autopilot_%d" % slot,seated_cassette(slot))):
+            variant=model(elements); variant["textures"]["module"]="vandorlabs:blocks/module_rack/autopilot_module"
+            save_json(MODELS / (name+".json"),variant)
+    autopilot=model(cassette(6.5));autopilot["textures"]["module"]="vandorlabs:blocks/module_rack/autopilot_module"
+    autopilot["display"]=item_display(True)
+    save_json(MODELS / "autopilot_module.json",autopilot)
+    save_json(ASSETS / "models/item/autopilot_module.json",{"parent":"vandorlabs:block/module_rack/autopilot_module"})
     blank = model(cassette(6.5))
     blank["display"] = item_display(True)
     save_json(MODELS / "blank_module.json", blank)

@@ -115,7 +115,7 @@ public final class ModuleRackAnimation {
             double from = previous == null ? extracting ? 0 : ModuleRackMotion.TRAVEL_BLOCKS : previous.offset(frameTime);
             if (entry == null) { entry = new Entry(tile); ACTIVE.put(tile.getPos().toImmutable(), entry); }
             // Wait for the terrain to remove its seated copy before either direction starts.
-            entry.poses[slot] = new Pose(sequence, frameTime, true, extracting, from);
+            entry.poses[slot] = new Pose(sequence, frameTime, true, extracting, from, extracting ? previous==null?tile.previousModuleKind(slot):previous.kind : tile.moduleKind(slot));
         }
         if (entry == null) { tile.setRenderMask(occupied); return; }
         if (!entry.hasPoses()) { detach(mc, entry); ACTIVE.remove(tile.getPos()); tile.setRenderMask(occupied); return; }
@@ -229,10 +229,10 @@ public final class ModuleRackAnimation {
         final long sequence;
         double started;
         boolean waiting, seated;
-        final boolean extracting; final double from;
-        Pose(long sequence, double started, boolean waiting, boolean extracting, double from) {
+        final boolean extracting; final double from; final int kind;
+        Pose(long sequence, double started, boolean waiting, boolean extracting, double from, int kind) {
             this.sequence = sequence; this.started = started; this.waiting = waiting;
-            this.extracting = extracting; this.from = from;
+            this.extracting = extracting; this.from = from; this.kind=kind;
         }
         double offset(double time) {
             if (waiting) return from;
@@ -461,7 +461,7 @@ public final class ModuleRackAnimation {
                     for (int slot = 0; slot < 4; slot++) {
                         Pose pose = entry.poses[slot];
                         if (pose == null || pose.waiting) continue;
-                        ModuleRackModel.MovingMesh mesh = ModuleRackModel.movingMesh(entry.facing, slot);
+                        ModuleRackModel.MovingMesh mesh = ModuleRackModel.movingMesh(entry.facing, slot, pose.kind);
                         if (mesh == null) continue;
                         double offset = pose.seated ? 0 : pose.offset(frameTime);
                         mesh.draw(buffer, entry.facing.getFrontOffsetX() * offset, entry.facing.getFrontOffsetY() * offset,

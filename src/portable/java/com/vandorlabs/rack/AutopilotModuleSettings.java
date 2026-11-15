@@ -15,6 +15,7 @@ public final class AutopilotModuleSettings {
             throw new IllegalArgumentException("Invalid Autopilot module settings");
         this.channels = channels; this.activation = activation; this.marker = marker; this.markerMetadata = markerMetadata;
     }
+    public static boolean powered(int activation,boolean high) { return activation==2?!high:activation==1&&high; }
     public static AutopilotModuleSettings defaults() {
         return new AutopilotModuleSettings(ChannelList.EMPTY, 1, "minecraft:concrete", 0);
     }
