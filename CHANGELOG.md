@@ -34,6 +34,12 @@
 
 - Restore the original source, cargo, occupied seats, root position and ownership metadata if a same-vehicle structural publication fails. A failed rollback leaves an inert vehicle retaining its complete original snapshot.
 
+### Native furniture and Pressure Plate (NeoForge 1.21.1)
+
+- Add the canonical Industrial Table with authored connected end struts, ordinary and inverted placement, tabletop support, padded items and native saved block states. Share exact collision geometry with Forge 1.12.2 without adding a table entity or ticker.
+- Add the Programmable Pressure Plate with shared Wood/Gold/Iron sensing, analogue physical power and independent Pressed/Released/Disabled channel output. Reuse the standard artwork picker and inline transmission editor through the Configurizer and ordinary sneak-right-click.
+- Preserve native plate choices, settings-only transmission copying/Undo and inert unsupported saved data. Native Vehicle Mode and vehicle-carried plate sensing remain outside this standalone conversion. See [Industrial Tables](docs/industrial-tables.md) and [Pressure Plates](docs/programmable-pressure-plate.md).
+
 ### Item presentation
 
 - Use smaller prepared Canopy item meshes in inventory, both hands, item frames and dropped items on both versions. Preserve authored materials and recognizable silhouettes while bounding item geometry and retiring cached variants on reload.

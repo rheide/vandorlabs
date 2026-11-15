@@ -39,6 +39,12 @@ The Duplifier's **Respect block joins** option restricts Connected Matching
 Blocks to the clicked joined artwork. Leave it off to retain the existing
 matching-region behavior. Hover tooltips explain all three connected selection options.
 
+## Native tables and Pressure Plates
+
+NeoForge 1.21.1 now includes the existing **Industrial Table** and **Programmable Pressure Plate**. Table modules connect only to matching neighbors and support ordinary or inverted placement; their authored end struts refresh after placement and mining without table entities or tickers.
+
+Pressure Plates share Forge's Wood, Gold and Iron entity-count sensing and release cadence. Their dedicated General/Redstone dialog uses the normal material picker, reverse-value clicks and inline transmission controls. Physical analogue power stays independent of copied channel settings. Native Vehicle Mode and vehicle-carried sensing remain excluded. See [Industrial Tables](../industrial-tables.md) and [Pressure Plates](../programmable-pressure-plate.md).
+
 ## Canopy items
 
 Canopy inventory, held, displayed and dropped items use prepared item geometry

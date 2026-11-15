@@ -444,9 +444,7 @@
         "programmable_pressure_plate"
       ],
       "remaining": [
-        "Integrate pressure plates, power levers, throttles and wall sliders against current Forge behavior.",
-        "Copy-tool workflows and other inline-source consumers remain pending.",
-        "Carried-assembly integration and hardware shader render acceptance."
+        "Carried-assembly integration and hardware shader render acceptance remain separate from standalone native controls."
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -488,7 +486,8 @@
         "thruster_lever",
         "airliner_throttle",
         "fighter_throttle",
-        "wall_slider"
+        "wall_slider",
+        "programmable_pressure_plate"
       ],
       "implemented": [
         "Native Trigger uses shared saved state and dialog policy, with loaded local analog power and positional channel delivery.",
@@ -498,7 +497,8 @@
         "Actual Forge bank inputs, subsequent-process persistence, physical neighbor consistency, configured drops, tool requirements and dynamic mounted collision pass focused checks.",
         "Authored geometry and padded items match actual Forge output before and after reload; exact packaged-JAR GUI and installed-world interaction pass through ModDev, including GUI scales 2 and 3.",
         "Native power lever families reuse the mounted host, actions, dialog and renderer, preserving hidden variants, size defaults, canonical configured items and partial banks. Focused persistence, actual Forge emitted geometry and exact-JAR UI/world checks pass; binary UI also passes on that frozen JAR.",
-        "Native four-step throttles and Wall Sliders reuse the mounted host, dialog and renderer. Shared scalar persistence and limit/type rows retain four detents, partial banks, canonical configured items and hidden throttle variants; focused persistence and actual emitted model/reload comparisons pass."
+        "Native four-step throttles and Wall Sliders reuse the mounted host, dialog and renderer. Shared scalar persistence and limit/type rows retain four detents, partial banks, canonical configured items and hidden throttle variants; focused persistence and actual emitted model/reload comparisons pass.",
+        "Native Programmable Pressure Plate shares entity-count sensing, independent analogue channel output, release cadence and saved defaults. Dedicated write/read and actual Survival/dialog/picker/previous-value/transmission/copier Undo checks pass; all sixteen power states emit the authored thin main/trapdoor geometry with padded items."
       ],
       "acceptance_limits": [
         "Trigger uses development-classpath validation; mounted control families additionally have exact packaged-JAR GUI/world validation through ModDev. Standalone installer and hardware shader acceptance remain separate.",
@@ -838,13 +838,12 @@
       "id": "furniture",
       "label": "Industrial table",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "industrial_table"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native carried-assembly integration when moving assemblies are introduced"
+        "Native moving-assembly-specific and hardware shader acceptance remain separate from the standalone table."
       ],
       "historical_neoforge_1_21_1": "partial",
       "historical_modern_registered_block_ids": [
@@ -861,7 +860,15 @@
       "historical_parity_notes": [
         "Canonical hanging end models reflect the horizontal strut placement; legacy collision reflects only vertical coordinates. Both existing contracts are retained and compared separately."
       ],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_block_ids": [
+        "industrial_table"
+      ],
+      "implemented": [
+        "Shared authored collision geometry and all32 native facing/inversion/connection states retain their existing visual/collision strut distinction.",
+        "Native saved-state write/read, real Survival ordinary/inverted placement and mining, one-item drops, actual client end-strut refresh, all32 emitted models and padded item checks pass.",
+        "Connections derive from loaded render snapshots and bounded palette-filtered chunk events; no table entity or ticker is installed."
+      ]
     },
     {
       "id": "tools_materials",

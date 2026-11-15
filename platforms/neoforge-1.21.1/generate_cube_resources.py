@@ -125,6 +125,10 @@ def main():
     atlas.extend(generate_ports(ROOT,OUT))
     from generate_rack_resources import generate as generate_rack
     atlas.extend(generate_rack(ROOT,OUT))
+    from generate_table_resources import generate as generate_table
+    atlas.extend(generate_table(ROOT,OUT))
+    from generate_plate_resources import generate as generate_plate
+    atlas.extend(generate_plate(ROOT,OUT))
     # Source-sized Screen item artwork is supplied by generateScreenItemResources.
     atlas.append(dict(type='minecraft:single',resource='vandorlabs:housing/native_screen_door_side'))
     # Own-storage sprites are generated separately; the shared atlas owns their registration.

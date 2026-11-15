@@ -1,5 +1,7 @@
 # Programmable Pressure Plate
 
+Available on Forge 1.12.2 and NeoForge 1.21.1.
+
 Craft one plate from two Programmable Blocks arranged side by side.
 
 Place the plate on a supporting block as with a wooden Minecraft pressure plate. Players, other living entities and dropped items press it. The plate has the vanilla inset outline and thin raised/recessed positions. **Sensitivity: Wood** supplies level 15 whenever an eligible entity presses it, with the normal 20-tick release check. **Gold** counts up to 15 entities; **Iron** counts up to 150. Weighted output uses vanilla rounding from 1 to 15 and checks every 10 ticks. An item stack counts as one entity, regardless of its item count. Wooden sensitivity respects the entity trigger-exempt flag; weighted sensitivity counts those entities as the native weighted plates do. Click sounds match the selected behavior.
@@ -8,4 +10,13 @@ Use the Configurizer or sneak-right-click to open its dialog. The shared materia
 
 Configure output channels and choose **Pressed**, **Released**, or **Disabled**. These choices control the channel output. Pressed mirrors the physical analog level; Released supplies level 15 only while the plate is empty; Disabled supplies zero. Ordinary physical redstone always follows the selected sensitivity. Right-click the option to cycle backwards. A plate remains an independent source, so releasing another linked toggle does not turn off a physically pressed plate.
 
-Settings survive saving and loading. An already pressed plate resumes its normal release check after loading. Carried plates use the vehicle's actual world pose to detect entities, preserve the selected 20/10-tick release polling, and publish channel changes through the vehicle's shared signal bridge.
+Settings survive saving and loading. An already pressed plate resumes its normal release check after loading. On Forge 1.12.2, carried plates use the vehicle's actual world pose to detect entities, preserve the selected 20/10-tick release polling, and publish channel changes through the vehicle's shared signal bridge.
+
+
+## Native configuration
+
+The Configurizer and ordinary sneak-right-click open the same dedicated dialog on NeoForge. **General** contains the categorized artwork picker, output mode and sensitivity. **Redstone** uses the shared inline channel, range and Local Redstone controls. Mouse-wheel scrolling, scrollbar dragging and right-click previous-value selection follow the other native dialogs.
+
+![Native plate Redstone controls](images/native-furniture/pressure-plate-redstone.png)
+
+Native Duplifier copying and Undo preserve channel transmission and the dormant rotation setting. The physical press and derived analogue output remain local. Native Vehicle Mode and carried-plate vehicle sensing are outside this standalone conversion.

@@ -17,6 +17,14 @@ public final class NativeCopifierHousingWorld {
         default CompoundTag configuration(boolean ignore){var result=capture();if(ignore)com.vandorlabs.items.CopiedDirectionality.strip(result::remove);return result;}
         boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor);
     }
+    private record Plate(com.vandorlabs.neoforge.plate.NativePlateEntity tile) implements Target {
+        public CompoundTag capture(){return NativeCopifierFurnitureEdit.capture(tile);}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            final NativeCopifierFurnitureEdit.PlatePlan plan;
+            try{plan=NativeCopifierFurnitureEdit.prepare(tile,values);}catch(IllegalArgumentException malformed){return false;}
+            if(!plan.applicable())return false;NativeCopifierUndo.before(actor,level,pos);return NativeCopifierFurnitureEdit.apply(tile,plan);
+        }
+    }
     private record Gear(com.vandorlabs.neoforge.gear.NativeGearEntity tile) implements Target {
         public CompoundTag capture(){return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.capture(tile.settings());}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -147,6 +155,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.plate.NativePlateEntity plate)return plate.isChannelMemberActive()?new Plate(plate):null;
         if(tile instanceof com.vandorlabs.neoforge.gear.NativeGearEntity gear){var root=gear.controllerEntity();return root!=null&&!root.inert()?new Gear(root):null;}
         if(tile instanceof com.vandorlabs.neoforge.ports.NativePortOwner port)return !port.inert()?new Port(port):null;
         if(tile instanceof com.vandorlabs.neoforge.canopy.NativeCanopyEntity canopy){var owner=com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.owner(canopy);return owner.available()&&com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.installed(owner)&&owner.publication().draws()?new Canopy(owner):null;}

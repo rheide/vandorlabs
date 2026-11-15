@@ -14,6 +14,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class CubeConfiguration {
     public static boolean open(Player player,Level level,BlockPos pos){
+        if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.plate.NativePlateEntity)return com.vandorlabs.neoforge.plate.NativePlateBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.reservoir.NativeBufferEntity)return com.vandorlabs.neoforge.reservoir.NativeBufferBindings.open(player,level,pos);
         if(!NativeConfigurationAccess.canEdit(player,level,pos)||!(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity))return false;
         if(level.getBlockEntity(pos) instanceof NativeTriggerBlockEntity){
