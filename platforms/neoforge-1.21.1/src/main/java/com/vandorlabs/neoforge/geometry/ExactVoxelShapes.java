@@ -15,7 +15,7 @@ import net.minecraft.world.phys.shapes.VoxelShape;
 
 /** Exact cached AABB unions without Shapes.or's coordinate-epsilon merging. */
 public final class ExactVoxelShapes {
-    private static final long MAX_CELLS=1_048_576;
+    private static final long MAX_CELLS=8_388_608;
     private ExactVoxelShapes(){}
     /** For bounded authored geometry, constructed once and reused by the block. */
     public record Built(VoxelShape shape,int retainedBytes){}

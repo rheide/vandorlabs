@@ -9,7 +9,7 @@ import net.minecraft.world.phys.shapes.*;
 /** Exact unions per immutable pose, with weak owners and bounded retained voxel storage. */
 @net.neoforged.fml.common.EventBusSubscriber(modid="vandorlabs")
 public final class NativeGearShapeCache {
-    private static final int MAX_BYTES=16*1024*1024,MAX_ENTRY=1024*1024,MAX_OWNERS=1024;
+    private static final int MAX_BYTES=16*1024*1024,MAX_ENTRY=2*1024*1024,MAX_OWNERS=1024;
     private static long builds;
     public static synchronized long buildCount(){return builds;}
     private static final WeakHashMap<NativeGearEntity,Entry> CACHE=new WeakHashMap<>();

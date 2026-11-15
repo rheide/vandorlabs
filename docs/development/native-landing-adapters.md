@@ -10,4 +10,6 @@ Standalone side wheels share the released metadata and two-by-two footprint poli
 
 Focused server checks cover ordinary Survival wheel placement, all horizontal facings, per-cell mining and cold saved palettes. The Track matrix covers 108 mounting/size/style/motion profiles with complete strokes, reversal, saved descriptors and mining repairs. The real client path covers joined placement, previous-value style selection, settings copying/Undo, manual motion and mining. Emitted geometry covers 144 authored profiles and all three side-wheel inventory bounds. Public catalog checks run without enabling private feature flags.
 
+The exact grid admits up to eight million cells (one MiB of occupied-cell bits), with a two-MiB per-owner cache budget inside the shared sixteen-MiB ceiling. A reproduced 64-Track fractional rotation exceeded the old one-million-cell limit; the same eight-by-eight saved geometry now passes six poses for each style and arm size.
+
 Exact arm shapes use a weighted weak-owner cache, invalidated by immutable posed-box identity; lighting uses the Source zero-opacity policy without rebuilding selection geometry. The former repeated shape optimizer stalled the server thread during chunk lighting; the focused matrix now completes without that path. These checks do not establish hardware shader-pack or vehicle acceptance.
