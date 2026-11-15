@@ -11,8 +11,9 @@ Without --jar, assemble once before testing; --jar reuses an existing candidate.
 CPU checks continue after failures. Independent live checks use two isolated
 lanes by default; timing benchmarks run exclusively. Logs and a merged report
 are retained under build/release-checks/. The command fails if any required
-phase fails. Fix in batches after this pass; use focused reruns before gating
-one final candidate. A clean first complete pass needs no redundant second pass.
+phase fails. Fix in batches after this pass, then rerun only failed and affected
+checks. Keep baseline and repaired-candidate hashes; do not repeat passing suites.
+A clean first complete pass needs no redundant second pass.
 --check validates dependencies without building or starting a test.
 --skip-dynmap records the omitted optional smoke test explicitly.
 
@@ -151,6 +152,6 @@ report={'schema':1,'workflow':'collect-first','status':'passed' if passed else '
 print('Release inventory '+('PASS' if passed else 'FAIL')+': '+str(out/'report.json'))
 if failed_tasks:print('CPU failed tasks: '+', '.join(failed_tasks))
 if live.get('failures'):print('Live failed focuses: '+', '.join(live['failures']))
-print('Batch fixes after the inventory; rerun failed checks, then gate the final candidate.')
+print('Batch fixes after the inventory; rerun only failed and affected checks. Retain baseline and repaired-candidate hashes.')
 sys.exit(0 if passed else 1)
 PYREPORT

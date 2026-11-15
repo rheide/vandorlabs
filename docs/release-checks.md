@@ -22,7 +22,9 @@ python3 tools/release_live_checks.py --jar build/libs/vandorlabs-2.10.0.jar \
     --focus arm-wall --focus vehicle-taxi --jobs 2 --report build/focused-release.json
 ```
 
-Focused reports are explicitly marked targeted and cannot pass as full release coverage. Once the failed checks pass, run one complete gate on the final frozen candidate. **If the first complete inventory was already clean, it is the final gate; do not run it twice.** Never tag or publish on partial coverage.
+Focused reports are explicitly marked targeted. **After fixes, rerun only failed and affected checks**, including applicable historical regressions; do not restart the whole suite. Reuse the baseline's passing checks only where code and relevant inputs remain unchanged. Record the old/new candidate hashes, the changed behavior and why each retest was selected. If shared infrastructure invalidates the original inventory, explain that before broadening the rerun. A clean initial inventory needs no rerun.
+
+Release acceptance combines the complete baseline inventory with the justified repair results and requires no unresolved mandatory failures. Describe this evidence accurately; targeted reruns are not a fresh full-suite pass on the new JAR. Every individual run still uses one frozen artifact.
 
 Use `--check` to validate dependencies without building or starting Minecraft. `--skip-dynmap` records an explicit omission of the separate Dynmap smoke test; otherwise that test includes WorldEdit and runs after the live lanes finish. Mekanism is required so the cold-restart group is included. The helper never deploys to a server.
 

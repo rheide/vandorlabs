@@ -528,7 +528,7 @@ Use the Java 8 [collect-first release helper](docs/release-checks.md) before dis
 
 1. Freeze one standard JAR and run the full inventory; keep checking after an individual failure.
 2. Triage the complete report and batch fixes, prioritizing world/data safety and gameplay.
-3. Rebuild once per batch, then rerun failed focuses against that candidate.
-4. Run the complete gate on the final candidate. A clean first inventory already satisfies this step.
+3. Rebuild once per batch, then rerun failed and affected focuses against that candidate.
+4. Reuse passing baseline results for unchanged code. Rerun only failed/affected checks, including relevant historical regressions; do not restart the full suite after fixes.
 
-Do not rebuild the JAR between focuses or repeat passing broad suites while still fixing code. The helper covers the CPU, shader and live `verifyRelease` suites; each restart group stays together and all artifact hashes must agree. `gradlew verifyRelease` remains the all-green Gradle/publishing entry point. A failed or missing required check blocks release; targeted reruns alone do not establish full coverage. Windows needs its configured Minecraft/Forge runtime.
+Do not rebuild the JAR between focuses or repeat passing broad suites while still fixing code. The helper covers the CPU, shader and live `verifyRelease` suites; each restart group stays together and all artifact hashes must agree. `gradlew verifyRelease` remains the all-green Gradle/publishing entry point. Unresolved required failures block release. Record the complete baseline inventory and the repaired-candidate hashes, selected reruns and results. A targeted rerun is not a fresh full-suite pass. Windows needs its configured Minecraft/Forge runtime.
