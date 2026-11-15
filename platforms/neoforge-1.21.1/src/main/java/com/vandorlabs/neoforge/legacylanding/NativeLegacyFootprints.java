@@ -12,6 +12,7 @@ import net.minecraft.world.level.block.state.BlockState;
 final class NativeLegacyFootprints {
  private record Scope(Level level,BlockPos root){}
  private static final ThreadLocal<Scope> ACTIVE=new ThreadLocal<>();
+ static void withoutCleanup(Level world,BlockPos root,Runnable action){var prior=ACTIVE.get();ACTIVE.set(new Scope(world,root));try{action.run();}finally{if(prior==null)ACTIVE.remove();else ACTIVE.set(prior);}}
  static boolean mutating(Level level,BlockPos pos){if(com.vandorlabs.neoforge.placement.NativeStationaryPlacement.mutating(level,pos))return true;var scope=ACTIVE.get();return scope!=null&&scope.level==level&&Math.abs((long)pos.getX()-scope.root.getX())<=1&&Math.abs((long)pos.getZ()-scope.root.getZ())<=1&&pos.getY()<=scope.root.getY()&&scope.root.getY()-pos.getY()<=5;}
  static boolean declared(NativeLegacyLandingEntity root,BlockPos pos){var delta=pos.subtract(root.getBlockPos());int size=root.settings().size(),depth=LegacyLandingLayout.depth(Math.max(root.progress(),root.targetDistance()),size),radius=size>=3?1:0,min=size==4?0:-radius;return delta.getY()<=0&&delta.getY()>=-depth&&delta.getX()>=min&&delta.getX()<=radius&&delta.getZ()>=min&&delta.getZ()<=radius;}
  static boolean loaded(NativeLegacyLandingEntity root){var world=root.getLevel();for(var offset:LegacyLandingLayout.reserved(Math.max(root.progress(),root.targetDistance()),root.settings().size()))if(!NativeLegacyLandingBlock.loaded(world,root.getBlockPos().offset(offset.x,offset.y,offset.z)))return false;return true;}
