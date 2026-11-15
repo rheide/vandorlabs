@@ -27,6 +27,7 @@
 - Standardize image layout captions as Texture: Tile / Fit (Aspect) / Stretch. Keep Join for connectivity and Junction for diagonal junction shape.
 - Add Vertical, Horizontal, North/South and East/West texture joining to supported connected building surfaces. Remove the Even/Odd coordinate filter; older saved choices behave as All. Invalidate warmed joins after Copifier batch changes while preserving original saved snapshots and opaque capability data. See the [texture joining guide](docs/texture-joining.md).
 - Require both Glass and Porthole neighbours to allow the shared join axis. Duplifier changes rebuild the original group’s frames and aperture rims, including splitting Horizontal groups into individual North/South blocks.
+- Ignore obsolete thin-wall depth metadata when joining full-depth Porthole Blocks. Existing stacked blocks with matching visible settings now join without replacement; thin walls still require matching planes.
 - Add Respect block joins to connected Duplifier selection. Explain Connected Matching Blocks, Respect block joins and Ignore directionality with hover tooltips. Retain the original matching-region behavior when disabled, and preserve saved option indices and existing message sizes.
 
 ### Coupler ownership recovery (Forge 1.12.2)

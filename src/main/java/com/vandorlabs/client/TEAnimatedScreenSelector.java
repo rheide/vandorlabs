@@ -1235,7 +1235,7 @@ public class TEAnimatedScreenSelector
         if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
         if(solidDiagonalPortholeJunction(at,a) || solidDiagonalPortholeJunction(bt,b))return false;
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
-        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH));
+        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && (a.getBlock() instanceof BlockProgrammablePortholeBlock || a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH)));
         if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
         int mode=at.isDiagonalHalfHeight()?2:at.isDiagonalFullWidth()?1:0;
         return com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(root,a,next,b,mode)

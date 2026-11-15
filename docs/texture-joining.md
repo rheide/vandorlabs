@@ -59,3 +59,5 @@ does not change which saved properties are enabled for copying.
 **Ignore directionality** allows connected matching across different placement
 facings, axes, rotations, hinges and halves. Other matching settings and edit
 permissions still apply. Hover over the three selection options for help.
+
+Full-depth Porthole Blocks ignore the unused thin-wall depth bits retained in older saved states. Blocks with matching facing, shape and permitted join axis can join even when those obsolete bits differ. Thin Porthole Walls still require the same depth plane.

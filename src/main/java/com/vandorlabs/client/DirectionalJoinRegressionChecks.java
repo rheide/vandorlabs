@@ -34,6 +34,7 @@ final class DirectionalJoinRegressionChecks {
                 }
         }
         eligibility(mc);
+        legacyDepthPairs(mc);
         System.out.println("[vandorlabs][reprolab] directional-join-regression checks="+checks+" failures="+FAILURES.size());
         for(int i=0;i<Math.min(16,FAILURES.size());i++)System.out.println("[vandorlabs][reprolab] join-failure "+FAILURES.get(i));
         if(!FAILURES.isEmpty())throw new IllegalStateException("Directional joins: "+FAILURES.size()+" failures; first="+FAILURES.get(0));
@@ -116,6 +117,27 @@ final class DirectionalJoinRegressionChecks {
                 need(TEAnimatedScreenSelector.portholeGroup(root,state).columns==1,id+" different aperture shape splits warm topology");
             }finally{PortholeGroupCache.unload(world);GlassSurfaceGroups.unload(world);}
         }
+    }
+    /** Full-depth legacy metadata retains unused depth bits; thin walls still occupy different planes. */
+    private static void legacyDepthPairs(Minecraft mc) {
+        for(String id:new String[]{"programmable_porthole_wall","programmable_porthole_block"})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int lower=0;lower<3;lower++)for(int upper=0;upper<3;upper++){
+            Block block=Block.getBlockFromName("vandorlabs:"+id);boolean full=block instanceof BlockProgrammablePortholeBlock;
+            IBlockState a=block.getDefaultState().withProperty(BlockProgrammableWall.FACING,facing).withProperty(BlockProgrammableWall.DEPTH,lower),b=a.withProperty(BlockProgrammableWall.DEPTH,upper);
+            boolean joined=full||lower==upper;VehicleWorld actual=depthPair(mc,block,a,b,2),reference=depthPair(mc,block,full?a.withProperty(BlockProgrammableWall.DEPTH,0):a,full?b.withProperty(BlockProgrammableWall.DEPTH,0):b,joined?1:0);
+            try{for(int endpoint=0;endpoint<2;endpoint++){
+                BlockPos at=BASE.up(endpoint);TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)actual.getTileEntity(at),oracle=(TileEntityAnimatedScreenSelector)reference.getTileEntity(at);IBlockState state=actual.getBlockState(at),expected=reference.getBlockState(at);
+                String label=id+" legacy depth="+lower+"/"+upper+" facing="+facing+" endpoint="+endpoint;
+                need(TEAnimatedScreenSelector.portholeGroup(tile,state).rows==(joined?2:1),label+" actual aperture span");
+                PortholeRetainedGeometry.Surfaces mesh=PortholeRetainedGeometry.capture(tile,state),match=PortholeRetainedGeometry.capture(oracle,expected);
+                need(mesh.housing.sameGeometry(match.housing)&&mesh.pane.sameGeometry(match.pane),label+" exact emitted housing/pane");
+            }}finally{PortholeGroupCache.unload(actual);PortholeGroupCache.unload(reference);GlassSurfaceGroups.unload(actual);GlassSurfaceGroups.unload(reference);}
+        }
+    }
+    private static VehicleWorld depthPair(Minecraft mc,Block block,IBlockState lower,IBlockState upper,int policy){
+        List<VehicleStructure.Cell> cells=new ArrayList<>();for(int endpoint=0;endpoint<2;endpoint++){
+            BlockPos at=BASE.up(endpoint);IBlockState state=endpoint==0?lower:upper;TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)block.createTileEntity(mc.world,state);tile.setPos(at);tile.setTextureJoin(new TextureJoinSettings(policy,0));tile.setGlassShade(2);tile.setGlassAppearance(1,true);
+            cells.add(new VehicleStructure.Cell(at,state,tile.writeToNBT(new NBTTagCompound())));
+        }return new VehicleWorld(mc.world,VehicleStructure.display(cells));
     }
     private DirectionalJoinRegressionChecks() { }
 }
