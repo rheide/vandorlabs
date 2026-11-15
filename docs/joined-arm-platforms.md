@@ -40,7 +40,7 @@ payload moves with the swivelling tips throughout the fold and return.
 
 3. With the arms fully extended, open each arm's dialog using the Configurizer.
    Enable **Join arms** in the same dialog and set
-   **Range** from 1 to 32 blocks. Range is the distance to a neighbouring arm,
+   **Join range** from 1 to 32 blocks. Range is the distance to a neighbouring arm,
    so intermediate arms can connect a longer platform. Every participating arm
    must opt in and use identical configuration and section counts. Differently
    configured or shorter/longer neighbouring arms are ignored. Both neighbours
@@ -114,6 +114,37 @@ A formed Core touching a joined rotating platform moves with its complete reserv
 
 ![A level payload attached to its rotating arm](images/joined-arms/level-contact.png)
 
+
+## Double-hinge examples
+
+Set **Hinge: Double** in the **Mechanism** tab to split the rotation between the
+base and elbow. **Kink: Inward / Outward** chooses the bend relative to **Fold**.
+The same setting works on regular and Large arms, including joined rows.
+
+| Kink Inward | Kink Outward |
+| --- | --- |
+| ![Three joined Large arms folding inward with two moving hinges](images/joined-arms/double-hinge-inward.gif) | ![Three joined Large arms folding outward with two moving hinges](images/joined-arms/double-hinge-outward.gif) |
+
+Both examples show three supported Large Rotating Arm columns, two sections per
+column, joined beneath a seven-block platform. **Payload: stays level** keeps the
+platform horizontal while both hinges move. Each animation includes folding,
+a pause at the folded endpoint, and the return stroke.
+
+To build the example:
+
+1. Place three matching two-section Large Rotating Arm columns in a straight row,
+   three blocks apart along their hinge axis. Keep their mounting blocks in place.
+2. Connect their tips with a continuous seven-block row of ordinary blocks.
+3. At the starting position with **Start: 0°**, configure every column with
+   **Join arms: On**, **Join range: 3**, matching **Fold**, **Hinge: Double**,
+   matching **Kink**, **End: 90°** and **Payload: stays level**.
+4. Close the dialog and activate an arm. Leave clearance for the entire platform
+   and both moving linkage sections. Return to the starting position before
+   changing Hinge or Kink.
+
+**Payload: rotates** uses the same two hinges but turns the attachment through
+the selected total angle. **Start** and **End** also appear when landing feet are
+attached; see [landing angles and endpoint rules](modular-landing-gear.md).
 
 ## Surface layers on a single arm
 

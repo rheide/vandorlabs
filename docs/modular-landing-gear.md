@@ -42,6 +42,7 @@ splitting the selected angle equally between them. The foot or payload keeps the
 same total rotation. **Kink: Inward / Outward** chooses the bend relative to **Fold**. Changing Fold
 keeps that relationship. Older perpendicular saved choices retain their pose and show **Legacy** until Kink is changed. **Payload: stays level** still counter-rotates the lower swivel.
 Choose the hinge and kink while fully deployed with the starting angle at zero.
+See the [animated Inward and Outward double-hinge examples](joined-arm-platforms.md#double-hinge-examples) for matching joined-arm settings.
 Older saved middle-only strokes retain their original motion until they return
 to the native zero-degree rest pose, where they adopt Double.
 

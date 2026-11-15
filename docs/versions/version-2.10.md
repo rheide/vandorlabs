@@ -1,22 +1,31 @@
 # Vandor Labs 2.10.0
 
-This development version adds material choices, directional texture joins and
-smaller Canopy item models. Forge 1.12.2 remains the reference target; NeoForge
-1.21.1 supports these changes through its converted building families and now
-includes the supported standalone arm family.
-User testing and final release validation remain pending.
+Build folding platforms with double-hinge Rotating Arms, fit an Autopilot Module
+into a compact rack, and move power, fluids and items through configurable ports.
+Vandor Labs 2.10 also expands directional artwork joining and brings more
+building, furniture and mechanism families to Minecraft 1.21.1.
+
+**Development preview:** user testing is underway; final release validation is
+pending. Forge 1.12.2 remains the main target. NeoForge 1.21.1 is experimental,
+and its converted standalone features do not include Vehicle Mode.
 
 ## Module Rack and Autopilot
 
 Module Racks are available on Forge 1.12.2 and NeoForge 1.21.1. Autopilot fits
 inside them with an abstract cyan/amber route indicator and
-per-bay route, activation and receiving controls. On Forge 1.12.2, existing Autopilot computers
+four animated bays, with per-module route, activation and receiving controls. On Forge 1.12.2, existing Autopilot computers
 migrate after chunk loading while preserving navigation, authorization and saved
 data. Rack placement, extraction animation, housing and proportional Redstone
 controls follow the standard dialogs. Native captured Racks retain every module
 through mining and abrupt recovery; Vehicle navigation remains Forge-only.
 Custom housing affects only the five exterior faces, leaving the front and bay interiors unchanged. Mounted module edits belong to the physical module immediately and survive extraction, relocation and reload independently of the rack housing/output settings.
-See the [Module Rack guide](../module-rack.md).
+Insert a Blank Module by clicking its bay; retrieve it with an empty hand.
+Racks mount on walls, floors and ceilings, and their module animations follow
+the mounting direction.
+
+![A populated four-bay Module Rack](../images/module-rack/populated.png)
+
+See the [Module Rack guide](../module-rack.md) for placement, crafting and module controls.
 
 ## Materials and joined artwork
 
@@ -74,6 +83,19 @@ chooses **Inward / Outward** relative to **Fold**, keeping that relationship whe
 strokes finish with their original motion before adopting Double at native
 zero-degree rest. Payload motion and collision use the same shared geometry.
 
+| Double hinge, Kink Inward | Double hinge, Kink Outward |
+| --- | --- |
+| ![Three joined Large Rotating Arms folding inward at both hinges](../images/joined-arms/double-hinge-inward.gif) | ![Three joined Large Rotating Arms folding outward at both hinges](../images/joined-arms/double-hinge-outward.gif) |
+
+These joined arms carry a level platform through a complete fold and return.
+See the [rotating-arm construction and animated examples](../joined-arm-platforms.md#double-hinge-examples).
+
+The **Mechanism** tab exposes **Start** and **End** angle sliders for attached
+Plates, Skis, Wheels and Tracks as well as bare arms. Change angles in 15-degree
+steps. Landing gear requires at least one endpoint that can return to ordinary
+world blocks; unsupported endpoints remain captured. **Join range** stays beside
+**Join arms**, while activation and channels use the standard **Redstone** tab.
+
 Forge arms can also carry a complete formed Core construction, selected through
 either its Core or a reserved part. Chips, settings and original capability data
 stay with the complete machine. Joined Rotating Arms include the whole validated
@@ -120,6 +142,9 @@ NeoForge 1.21.1 includes the Battery Block and Hexagonal Fuel Tank with the same
 
 ## Stationary Glass and Portholes
 
+Existing full-depth Porthole Blocks join even when old saves contain different
+unused wall-depth values. Thin Porthole Walls still need matching planes.
+
 On Forge 1.12.2, eligible stationary Glass panes use ordinary translucent chunk
 geometry. Other stationary panes, partially transparent emissive frames and
 Porthole geometry reuse retained render groups, with separate ownership for
@@ -147,14 +172,12 @@ Failed structural updates restore the original cargo, seats and vehicle position
 If the original source cannot be reinstalled, the vehicle remains inert and keeps
 that complete snapshot for recovery.
 
-## Module Rack
+## Existing-world fixes
 
-The new **Module Rack** has four horizontal slots for **Blank Modules**. Click a specific slot to insert a module with a sliding animation, or use an empty hand to retrieve it with an outward slide. Each bay has a lower amber square when empty and an upper cyan square when occupied.
+Older Battery saves load without recursively reading their own chunk; stored
+energy and side configuration are retained. Taxi assembly accepts unchanged
+Coupler-equipped craft while still refusing actual edits during preparation.
 
-Racks mount on all six faces, including floors and ceilings. They reuse the Light and Port placement rule, including shallow floor placement facing the player. Their controls and module travel rotate with the front.
-
-Its darker graphite housing follows the compact equipment design: a one-pixel rim, full-depth right wall around a recessed inner panel, and paired vertical module handles. The right panel contains slot controls without an Access Card or Chip Mount.
-
-Seated modules and the rack share Minecraft's ordinary chunk mesh. Only active insertion and extraction animations need a temporary renderer; idle racks have neither ticking tiles nor permanent tile-entity rendering.
-
-See [Module Rack usage and crafting](../module-rack.md).
+For detailed changes, read the [2.10 changelog](../../CHANGELOG.md#unreleased--2100).
+Use the [1.21.1 coverage inventory](../development/feature-coverage.md) for the
+current conversion boundaries.

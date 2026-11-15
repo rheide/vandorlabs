@@ -5,12 +5,14 @@ import csv
 from pathlib import Path
 from PIL import Image, ImageChops
 
-NAMES = ('extender-platform', 'sideways-extender-platform', 'rotating-platform')
+NAMES = ('extender-platform', 'sideways-extender-platform', 'rotating-platform', 'double-hinge-inward', 'double-hinge-outward')
 # Fixed framing throughout each cycle keeps the complete mechanism in view.
 CROPS = {
     'extender-platform': (128, 112, 640, 400),
     'sideways-extender-platform': (208, 72, 720, 360),
     'rotating-platform': (192, 112, 704, 400),
+    'double-hinge-inward': (288, 152, 608, 332),
+    'double-hinge-outward': (288, 152, 608, 332),
 }
 
 
@@ -69,7 +71,8 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('capture', type=Path)
     parser.add_argument('--destination', type=Path, default=Path('docs/images/joined-arms'))
+    parser.add_argument('--only', nargs='+', choices=NAMES, help='Encode selected completed scenes only')
     args = parser.parse_args()
     args.destination.mkdir(parents=True, exist_ok=True)
-    for name in NAMES:
+    for name in args.only or NAMES:
         encode(args.capture / name, args.destination)

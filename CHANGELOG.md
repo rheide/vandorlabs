@@ -76,16 +76,20 @@
 
 ### Landing foot controls (Forge 1.12.2 and NeoForge 1.21.1)
 
+- Share the arm dialog layout between versions. Show Start and End angle sliders for attached Plates, Skis, Wheels and Tracks; group Join range with Join arms and keep activation/channels in the standard Redstone tab.
+- Preserve legacy physical 0°/90° landing strokes until an angle is explicitly edited. Validate the complete foot geometry and require at least one endpoint that can return to world blocks. Start changes move through the checked adjustment path, with copied settings and reload retaining the same angle policy.
+- Add animated Inward and Outward Double-hinge examples to the [joined-arm construction guide](docs/joined-arm-platforms.md#double-hinge-examples).
+
 - Use one shared availability rule for Foot orientation across landing families. Forge Tracks now expose the control alongside Skis, Wheels and Plates; native supported feet use the same rule. Keep direction changes restricted to the deployed endpoint.
 
 ### Standalone arms (NeoForge 1.21.1)
 
 - Extend existing stowed Skis, Plates and regular Wheels by clicking their visible side with a matching item. Preserve the stopped pose and native owner, consume one item, and keep blocked placements unchanged. Use current posed faces for stopped foot attachment and dynamic collision shapes for mounted arms.
-- Enable regular and Large Extenders, Rotating Arms, mounts, Plates, Skis and Wheels with six-face placement, joined platforms, Foot direction, Middle hinge and dedicated settings. Add all ten items to creative/search and support settings-only Duplifier copying and Undo.
+- Enable regular and Large Extenders, Rotating Arms, mounts, Plates, Skis and Wheels with six-face placement, joined platforms, Foot direction, Single / Double hinges, relative Kink and dedicated settings. Add all ten items to creative/search and support settings-only Duplifier copying and Undo.
 - Preserve payload ownership through asynchronous native publication, active-foot adoption and captured-block mining; checkpoint terrain and dropped-item records before releasing ownership. Carry native players and restore a clear last-valid endpoint when a stroke is blocked.
 - Add horizontal Extender **Push blocks** for independent and joined regular/Large platforms. Check the complete outward path before detachment, move contacted ordinary terrain through the native recovery journal, and leave pushed blocks in place on reversal.
 - Keep the arm settings dialog open during motion and refresh endpoint controls without discarding edits.
-- Keep Tracks and Vehicle Mode unavailable. Unsupported vanilla endpoint orientations remain captured and selectable. See the [native arm construction guide](docs/native-joined-arm-platforms.md).
+- Keep Vehicle Mode unavailable. Tracks are available through the native Track family. Unsupported vanilla endpoint orientations remain captured and selectable. See the [native arm construction guide](docs/native-joined-arm-platforms.md).
 
 ### Battery and Hexagonal Fuel Tank (NeoForge 1.21.1)
 

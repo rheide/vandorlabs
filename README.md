@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-**Vandor Labs 2.9** — [new gates, Door artwork, Safe Park and release highlights](docs/versions/version-2.9.md).
+**Vandor Labs 2.10 preview** — [double-hinge arms, Module Racks, Resource Ports and new 1.21.1 families](docs/versions/version-2.10.md). User testing is underway. See also the [2.9 highlights](docs/versions/version-2.9.md).
 
 [Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/vandor-labs) · [Changelog](CHANGELOG.md) · [Player introduction](intro.md)
 
