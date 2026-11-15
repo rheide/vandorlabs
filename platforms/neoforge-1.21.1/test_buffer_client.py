@@ -22,7 +22,12 @@ def main():
   if options.xvfb:args=['xvfb-run','-a','-s','-screen 0 1280x720x24']+args;env=dict(env,LIBGL_ALWAYS_SOFTWARE='1')
   process=launch(args,out/'client.log',env)
   try:
-   code=process.wait(timeout=240)
+   deadline=time.monotonic()+240
+   while process.poll() is None:
+    if server.poll() is not None:raise RuntimeError('Native storage server exited during player proof: '+str(server_log))
+    if time.monotonic()>deadline:raise RuntimeError('Native storage client timeout: '+str(out/'client.log'))
+    time.sleep(.25)
+   code=process.returncode
    if code:raise RuntimeError('Native storage client exit '+str(code)+': '+str(out/'client.log'))
    check_log(out/'client.log','[vandorlabs][buffer-client] client PASS')
   finally:stop(process)

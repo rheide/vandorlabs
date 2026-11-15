@@ -25,7 +25,7 @@ public final class NativePortBlock extends BaseEntityBlock {
     public NativePortBlock(NativePortKind kind,Properties properties){super(properties);this.kind=kind;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH));}
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING);}
-    @Override public BlockState getStateForPlacement(BlockPlaceContext context){return defaultBlockState().setValue(FACING,context.getNearestLookingDirection().getOpposite());}
+    @Override public BlockState getStateForPlacement(BlockPlaceContext context){return defaultBlockState().setValue(FACING,com.vandorlabs.neoforge.NativeDirectionalPlacement.towardView(context));}
     @Override public RenderShape getRenderShape(BlockState state){return RenderShape.MODEL;}
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return switch(kind){case POWER->new NativePowerPortEntity(pos,state);case FLUID->new NativeFluidPortEntity(pos,state);case MATTER->new NativeMatterPortEntity(pos,state);};}
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){return level.isClientSide?null:createTickerHelper(type,NativePortBindings.ENTITIES.get(kind),NativeResourcePortEntity::tick);}

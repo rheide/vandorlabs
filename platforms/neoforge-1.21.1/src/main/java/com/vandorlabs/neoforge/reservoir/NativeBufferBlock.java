@@ -4,9 +4,10 @@ public final class NativeBufferBlock extends BaseEntityBlock {
  public static final DirectionProperty FACING=BlockStateProperties.FACING;public final boolean battery;
  public NativeBufferBlock(boolean battery,Properties p){super(p);this.battery=battery;registerDefaultState(stateDefinition.any().setValue(FACING,Direction.NORTH));}
  @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}@Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(FACING);}
- @Override public BlockState getStateForPlacement(BlockPlaceContext c){return defaultBlockState().setValue(FACING,c.getClickedFace());}
+ @Override public BlockState getStateForPlacement(BlockPlaceContext c){return defaultBlockState().setValue(FACING,battery?com.vandorlabs.neoforge.NativeDirectionalPlacement.towardView(c):c.getClickedFace());}
  public BlockState legacyState(int meta){Direction face=battery?(meta==4?Direction.UP:meta==5?Direction.DOWN:Direction.from2DDataValue(meta)):Direction.from3DDataValue(meta&7);return defaultBlockState().setValue(FACING,face);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return battery?new NativeBatteryEntity(pos,state):new NativeHexTankEntity(pos,state);}
+ @Override protected void neighborChanged(BlockState state,Level level,BlockPos pos,Block block,BlockPos from,boolean moving){if(!level.isClientSide&&level.getBlockEntity(pos) instanceof NativeBatteryEntity owner)owner.neighborChanged();}
  @Override protected RenderShape getRenderShape(BlockState state){return RenderShape.ENTITYBLOCK_ANIMATED;}
  @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level level,BlockState state,BlockEntityType<T> type){if(level.isClientSide)return null;return battery?createTickerHelper(type,NativeBufferBindings.BATTERY_ENTITY,NativeBatteryEntity::tick):createTickerHelper(type,NativeBufferBindings.TANK_ENTITY,(world,pos,s,tile)->tile.serverTick());}
  @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return NativeBufferBindings.open(player,level,pos)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.FAIL;}

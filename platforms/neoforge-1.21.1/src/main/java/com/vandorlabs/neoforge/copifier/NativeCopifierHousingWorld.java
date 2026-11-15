@@ -26,13 +26,14 @@ public final class NativeCopifierHousingWorld {
             NativeCopifierUndo.before(actor,level,pos);return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.apply(tile,actor,plan);
         }
     }
-    private record Port(com.vandorlabs.neoforge.ports.NativeResourcePortEntity tile) implements Target {
-        public CompoundTag capture(){var result=new CompoundTag();var config=new CompoundTag();com.vandorlabs.neoforge.ports.NativePortData.write(config,tile.configuration());result.put("resource_port_settings",config);return result;}
+    private record Port(com.vandorlabs.neoforge.ports.NativePortOwner owner) implements Target {
+        public net.minecraft.world.level.block.entity.BlockEntity tile(){return owner.portBlockEntity();}
+        public CompoundTag capture(){var result=new CompoundTag();var config=new CompoundTag();com.vandorlabs.neoforge.ports.NativePortData.write(config,owner.configuration());result.put("resource_port_settings",config);return result;}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
             if(!values.contains("resource_port_settings",net.minecraft.nbt.Tag.TAG_COMPOUND))return false;
             final com.vandorlabs.neoforge.ports.NativePortData.Configuration next;
             try{next=com.vandorlabs.neoforge.ports.NativePortData.read(values.getCompound("resource_port_settings"));}catch(IllegalArgumentException invalid){return false;}
-            NativeCopifierUndo.before(actor,level,pos);return tile.configure(next);
+            NativeCopifierUndo.before(actor,level,pos);return owner.configure(next);
         }
     }
     private record Canopy(com.vandorlabs.neoforge.canopy.NativeCanopyEntity tile) implements Target {
@@ -147,7 +148,7 @@ public final class NativeCopifierHousingWorld {
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
         if(tile instanceof com.vandorlabs.neoforge.gear.NativeGearEntity gear){var root=gear.controllerEntity();return root!=null&&!root.inert()?new Gear(root):null;}
-        if(tile instanceof com.vandorlabs.neoforge.ports.NativeResourcePortEntity port)return !port.inert()?new Port(port):null;
+        if(tile instanceof com.vandorlabs.neoforge.ports.NativePortOwner port)return !port.inert()?new Port(port):null;
         if(tile instanceof com.vandorlabs.neoforge.canopy.NativeCanopyEntity canopy){var owner=com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.owner(canopy);return owner.available()&&com.vandorlabs.neoforge.canopy.NativeCanopyLifecycle.installed(owner)&&owner.publication().draws()?new Canopy(owner):null;}
         if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)return !screen.inert()&&screen.isChannelMemberActive()?new Screen(screen):null;
         if(tile instanceof com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity trapdoor)return trapdoor.copiedAvailable()?new Trapdoor(trapdoor):null;
