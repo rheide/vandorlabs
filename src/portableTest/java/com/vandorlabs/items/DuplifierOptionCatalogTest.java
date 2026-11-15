@@ -21,8 +21,8 @@ public final class DuplifierOptionCatalogTest {
         check(source.equals(json.toString()),"actual Source catalog changed");
         pages[0]="mutated";options[0]=null;
         check(DuplifierOptionCatalog.pages()[0].equals("Common")&&DuplifierOptionCatalog.options()[0]!=null,"catalog arrays isolated");
-        check(DuplifierOptionCatalog.size()==74,"stable Source option count");
-        System.out.println("Copifier catalog PASS actual Source pages=5 choices=74 labels/order/keys and array isolation");
+        check(DuplifierOptionCatalog.size()==75,"stable Source option count");
+        System.out.println("Copifier catalog PASS actual Source pages=5 choices=75 labels/order/keys and array isolation");
     }
     private static void quote(StringBuilder out,String value){out.append('"').append(value.replace("\\","\\\\").replace("\"","\\\"")).append('"');}
     private static void check(boolean value,String message){if(!value)throw new AssertionError(message);}

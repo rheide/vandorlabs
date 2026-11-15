@@ -34,7 +34,7 @@ final class DuplifierSelectionChecks {
         }
         require(DuplifierApplyOptions.selected(null,new long[0])==null,"null capture");
         StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format(Locale.ROOT,"%02x",b&255));
-        require(hash.toString().equals("04aef1d90eec9cf0a9589ec47c44e34738dfbac478833d9c90541a25e4125949"),"Source selection changed: "+hash);
+        require(hash.toString().equals("5175f319713ba8f6a55978767b3801a25cb2f772bf5ee4afc089032ee3868d3f"),"Source selection changed: "+hash);
         System.out.println("Copifier selection Source PASS cases="+cases+" sha256="+hash);
     }catch(java.security.NoSuchAlgorithmException e){throw new AssertionError(e);}}
     private static void require(boolean value,String message){if(!value)throw new AssertionError(message);}

@@ -64,11 +64,15 @@ def generate(check=False):
  patches=''.join(f',patch{i}=0:frame_machine_{i}' for i in range(len(textures)))
  texture_lines += [f'block:id=%{name},state=*'+patches+',transparency=TRANSPARENT' for name in [*designs,'constructor_part']]
  for filename,lines in [('dynmap-models.txt',model_lines),('dynmap-texture.txt',texture_lines)]:
-  path=ASSETS/filename;s=path.read_text();s=re.sub(re.escape(MARKER)+'.*?'+re.escape(END),'',s,flags=re.S)
+  path=ASSETS/filename;s=path.read_text()
   records=MARKER+'\n'.join(lines)+'\n'+END
-  assert PALETTE in s
-  before,after=s.split(PALETTE,1)
-  s=before.rstrip()+'\n\n'+records+'\n'+PALETTE+after
+  if MARKER in s:
+   before,section=s.split(MARKER,1);_,after=section.split(END,1)
+   s=before+records+after
+  else:
+   assert PALETTE in s
+   before,after=s.split(PALETTE,1)
+   s=before.rstrip()+'\n\n'+records+'\n'+PALETTE+after
   if check:assert path.read_text()==s,'Stale Core map definitions '+filename
   else:path.write_text(s)
  print(f'Core machine Dynmap PASS {len(designs)} designs {len(textures)} native atlases/seed textures; complete authored meshes clipped into reservations')

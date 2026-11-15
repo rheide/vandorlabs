@@ -16,7 +16,7 @@ final class DuplifierMaskChecks {
             String reference=System.getProperty("vandorlabs.optionCatalogReference");
             if(reference!=null)try{java.nio.file.Files.write(java.nio.file.Paths.get(reference),catalog.getBytes(StandardCharsets.UTF_8));}catch(java.io.IOException e){throw new AssertionError(e);}
             MessageDigest catalogDigest=MessageDigest.getInstance("SHA-256");StringBuilder catalogHash=new StringBuilder();for(byte b:catalogDigest.digest(catalog.getBytes(StandardCharsets.UTF_8)))catalogHash.append(String.format(java.util.Locale.ROOT,"%02x",b&255));
-            require(catalogHash.toString().equals("4cdbe5b5de9eaabeeefdb18d190074935fbe888bd83764455d2b3f057ae007da"),"Source option catalog changed: "+catalogHash);
+            require(catalogHash.toString().equals("89b6fe8d00f0e25d0931a435b22ea33babedaf9561e509e55a9aa1b68979e62b"),"Source option catalog changed: "+catalogHash);
             System.out.println("Duplifier catalog Source sha256="+catalogHash);
             MessageDigest digest=MessageDigest.getInstance("SHA-256");int cases=0;
             long[] lows={0,-1,Long.MIN_VALUE,Long.MAX_VALUE,0x123456789abcdef0L};
@@ -36,7 +36,7 @@ final class DuplifierMaskChecks {
                 digest.update(line.toString().getBytes(StandardCharsets.UTF_8));cases++;
             }
             StringBuilder hash=new StringBuilder();for(byte b:digest.digest())hash.append(String.format(java.util.Locale.ROOT,"%02x",b&255));
-            require(hash.toString().equals("fa562397c27a9532dfc0eb43d7936b26e20719cc407623e93de0a2eb66d845c8"),"original Source mask digest changed: "+hash);
+            require(hash.toString().equals("1854962126d2eb73e56bf921c659f8e60df7198a7bdc37a0365f2f4636bdaef6"),"75-option Source mask digest changed: "+hash);
             System.out.println("Duplifier mask Source PASS cases="+cases+" options="+DuplifierApplyOptions.OPTIONS.length+" sha256="+hash);
         }catch(java.security.NoSuchAlgorithmException e){throw new AssertionError(e);}
     }
