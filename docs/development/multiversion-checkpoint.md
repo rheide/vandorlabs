@@ -6,11 +6,13 @@ Forge 1.12.2 remains the default development target on `master`, at mod version 
 
 The current native completion scope comprises Ramp Controllers; chairs and seats;
 Turntables, Copy Controllers and Surface blocks; Tracks and remaining landing
-gear; and the Industrial Table and remaining control variants. Shared portable
+gear; the Industrial Table and remaining control variants; and the Core family. Shared portable
 Java 8 policies provide the common behavior, with platform lifecycle and rendering
 adapters. Native Vehicle Mode and other unlisted families remain deferred.
 Release gates remain pending user testing. The 2.10 follow-ups now include public
-native Module Racks and shared Single / Double arm hinges with independent Kink.
+native Module Racks and shared Single / Double arm hinges with Inward / Outward
+Kink relative to Fold. Forge Battery chunk loading now defers facing reads until
+loading settles, avoiding recursive capability initialization in existing pipe networks.
 
 ## Integrated scope
 
