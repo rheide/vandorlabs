@@ -1,0 +1,13 @@
+def constructionSchemaOutput = project.hasProperty('constructionSchemaOutput') ? file(project.property('constructionSchemaOutput')) : file('build/legacy-construction-states.json')
+task exportLegacyConstructionStateSchema(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LegacyConstructionStateSchemaChecks'
+    args constructionSchemaOutput.absolutePath, '--write'
+}
+task testLegacyConstructionStateSchema(type: JavaExec) {
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.LegacyConstructionStateSchemaChecks'
+    args constructionSchemaOutput.absolutePath
+}
