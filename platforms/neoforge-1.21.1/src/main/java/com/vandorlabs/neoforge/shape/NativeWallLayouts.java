@@ -54,7 +54,7 @@ public final class NativeWallLayouts {
         var state=level.getBlockState(pos);var base=root.getBlockState();
         if(!(base.getBlock() instanceof NativeFlatWallBlock)||state.getBlock()!=base.getBlock()||!(level.getBlockEntity(pos) instanceof NativeWallEntity other)||other.isRemoved())return null;
         if(other.textureJoin().direction==0)return null;
-        if(state.getValue(NativeFlatWallBlock.FACING)!=base.getValue(NativeFlatWallBlock.FACING)||!state.getValue(NativeFlatWallBlock.DEPTH).equals(base.getValue(NativeFlatWallBlock.DEPTH)))return null;
+        if(state.getValue(NativeFlatWallBlock.FACING)!=base.getValue(NativeFlatWallBlock.FACING)||!((NativeFlatWallBlock)base.getBlock()).isFullDepth()&&!state.getValue(NativeFlatWallBlock.DEPTH).equals(base.getValue(NativeFlatWallBlock.DEPTH)))return null;
         return mode.sameSettings(root.settings().mainTexture,root.settings().layout,root.wallSettings().joinPortholes,root.wallSettings().portholeShape,other.settings().mainTexture,other.settings().layout,other.wallSettings().joinPortholes,other.wallSettings().portholeShape)?other:null;
     }
     private static NativePanelLayout capture(NativeWallEntity root,NativePanelGroups.Mode mode){

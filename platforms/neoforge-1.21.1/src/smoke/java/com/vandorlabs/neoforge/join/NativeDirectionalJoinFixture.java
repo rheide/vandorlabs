@@ -30,6 +30,7 @@ public final class NativeDirectionalJoinFixture {
     public static boolean enabled(){return "directional-joins".equals(System.getProperty("vandorlabs.transmitterPhase"));}
     static BlockPos source(int family){return new BlockPos(family*8,96,0);}
     static BlockPos target(int family){return source(family).east(2);}
+    static BlockPos depthPair(int kind){return new BlockPos(-6+2*(kind%2),96,kind<2?0:2);}
     private static void need(boolean yes,String why){checks++;if(!yes)throw new IllegalStateException("Directional join server op="+operation+": "+why);}
     @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
     public static final class Registration {
@@ -45,6 +46,14 @@ public final class NativeDirectionalJoinFixture {
         for(int family=0;family<IDS.length;family++) {
             var block=BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",IDS[family]));need(block!=Blocks.AIR,"canonical family "+IDS[family]);
             for(int i=-1;i<3;i++) {BlockPos pos=i<0?source(family):target(family).east(i);level.setBlock(pos,block.defaultBlockState(),3);var tile=level.getBlockEntity(pos);need(tile instanceof TextureJoinOwner,"typed join owner");if(family==3){var tag=tile.saveWithoutMetadata(level.registryAccess());tag.putInt("FrameFront",selected);tile.loadWithComponents(tag,level.registryAccess());}((TextureJoinOwner)tile).setTextureJoin(new TextureJoinSettings(i<0?4:3,0));tile.setChanged();level.sendBlockUpdated(pos,tile.getBlockState(),tile.getBlockState(),3);}
+        }
+        for(int kind=0;kind<4;kind++){
+            var block=(com.vandorlabs.neoforge.shape.NativeFlatWallBlock)BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",kind<2?"programmable_porthole_block":"programmable_porthole_wall"));
+            for(int endpoint=0;endpoint<2;endpoint++){
+                var pos=depthPair(kind).above(endpoint);int depth=kind==1?0:endpoint==0?1:0;
+                level.setBlock(pos,block.defaultBlockState().setValue(com.vandorlabs.neoforge.shape.NativeFlatWallBlock.FACING,Direction.EAST).setValue(com.vandorlabs.neoforge.shape.NativeFlatWallBlock.DEPTH,depth),3);
+                var tile=level.getBlockEntity(pos);((TextureJoinOwner)tile).setTextureJoin(new TextureJoinSettings(kind==3?0:2,0));tile.setChanged();level.sendBlockUpdated(pos,tile.getBlockState(),tile.getBlockState(),3);
+            }
         }
         player.setGameMode(GameType.SURVIVAL);equip(player,0);System.out.println("[vandorlabs][directional-joins] setup PASS canonicalHosts/Survival/sourceNorthSouth/targetsHorizontal/selectedFrame");
     }

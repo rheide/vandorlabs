@@ -22,7 +22,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /** Actual host publications, production quad emitters and normal shifted/nonshifted use packets. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class NativeDirectionalJoinChecks {
-    private static int stage,age,family,checks;private static List<List<String>> before;
+    private static int stage,age,family,checks;private static boolean depthsChecked;private static List<List<String>> before;
     private static void need(boolean yes,String text){checks++;if(!yes)throw new IllegalStateException("Native directional joins family="+family+" stage="+stage+" age="+age+": "+text);}
     private static void next(int value){stage=value;age=0;}
     private static void mode(int offset){PacketDistributor.sendToServer(new NativeDirectionalJoinFixture.Mode(family*3+offset));}
@@ -37,6 +37,14 @@ public final class NativeDirectionalJoinChecks {
         if(tile instanceof NativeGlassEntity glass){var bake=NativeFlatGlassRenderer.currentBake();need(bake!=null,"current production Glass bake");var draw=bake.getClass().getDeclaredMethod("draw",NativeFlatGlassVisual.class);draw.setAccessible(true);var result=draw.invoke(bake,glass.visual());var accessor=result.getClass().getDeclaredMethod("frame");accessor.setAccessible(true);quads.addAll((List<BakedQuad>)accessor.invoke(result));}
         List<String> out=new ArrayList<>();for(var quad:quads)out.add(quad.getSprite().contents().name()+":"+quad.getDirection()+":"+Arrays.toString(quad.getVertices()));Collections.sort(out);need(!out.isEmpty(),"nonempty actual production frame/aperture records");return out;
     }
+    private static boolean depthPairsReady(Minecraft mc){for(int kind=0;kind<4;kind++)for(int endpoint=0;endpoint<2;endpoint++)if(!policy(mc,NativeDirectionalJoinFixture.depthPair(kind).above(endpoint),kind==3?0:2))return false;return true;}
+    private static void checkDepthPairs(Minecraft mc)throws Exception{
+        for(int kind=0;kind<4;kind++)for(int endpoint=0;endpoint<2;endpoint++){
+            BlockPos pos=NativeDirectionalJoinFixture.depthPair(kind).above(endpoint);var tile=(NativeWallEntity)mc.level.getBlockEntity(pos);int expected=kind<2?2:1;
+            need(tile.apertureLayout().pane().rows()==expected,"legacy depth pair kind="+kind+" endpoint="+endpoint+" actual="+tile.apertureLayout());
+            if(kind==0||kind==2)need(records(mc,pos).equals(records(mc,NativeDirectionalJoinFixture.depthPair(kind+1).above(endpoint))),"full ignores unused depth / thin keeps distinct planes kind="+kind+" endpoint="+endpoint);
+        }System.out.println("[vandorlabs][directional-joins] legacy-depth PASS full1/0-vs0/0/thin1/0-unjoined/emittedRecords");
+    }
     @SubscribeEvent public static void tick(ClientTickEvent.Post event)throws Exception {
         if(!NativeDirectionalJoinFixture.enabled()||stage==99)return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen intro){intro.onClose();return;}
         if(stage==90&&mc.level==null){System.out.println("[vandorlabs][directional-joins] client PASS checks="+checks+" actualSurvivalCapture/connectedApply/threeOriginalMembers/mutualPublications/defaultSelectedFrames/flatFullApertures/warmCacheEmittedRecords");stage=99;mc.stop();return;}
@@ -44,7 +52,7 @@ public final class NativeDirectionalJoinChecks {
         need(++age<300,"bounded mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" pos="+mc.player.position()+" shift="+mc.player.isShiftKeyDown());
         if(age%80==0)System.out.println("[vandorlabs][directional-joins] progress family="+family+" stage="+stage+" age="+age+" pos="+mc.player.position());
         switch(stage) {
-            case 0->{if(mc.screen!=null||mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().is(NativeCopifierRegistrations.ITEM.get())||mc.player.position().distanceToSqr(NativeDirectionalJoinFixture.source(family).getX()+.5,96,3)>.04||!policy(mc,NativeDirectionalJoinFixture.source(family),4)||!ready(mc,true))return;before=new ArrayList<>();for(int i=0;i<3;i++)before.add(records(mc,NativeDirectionalJoinFixture.target(family).east(i)));mc.options.keyShift.setDown(true);next(1);}
+            case 0->{if(mc.screen!=null||mc.gameMode.getPlayerMode()!=GameType.SURVIVAL||mc.player.getInventory().selected!=0||!mc.player.getMainHandItem().is(NativeCopifierRegistrations.ITEM.get())||mc.player.position().distanceToSqr(NativeDirectionalJoinFixture.source(family).getX()+.5,96,3)>.04||!policy(mc,NativeDirectionalJoinFixture.source(family),4)||!ready(mc,true))return;if(!depthsChecked){if(!depthPairsReady(mc)||age<25)return;checkDepthPairs(mc);depthsChecked=true;}before=new ArrayList<>();for(int i=0;i<3;i++)before.add(records(mc,NativeDirectionalJoinFixture.target(family).east(i)));mc.options.keyShift.setDown(true);next(1);}
             case 1->{if(!mc.player.isShiftKeyDown()||age<6)return;use(mc,NativeDirectionalJoinFixture.source(family));next(2);}
             case 2->{var copied=NativeCopifierClipboard.settings(NativeCopifierItem.data(mc.player.getMainHandItem()));if(copied.getCompound("texture_join_policy").getInt("Direction")!=4)return;mode(0);mc.options.keyShift.setDown(false);next(3);}
             case 3->{if(!ack(mc,0)||mc.player.isShiftKeyDown()||age<8||mc.player.position().distanceToSqr(NativeDirectionalJoinFixture.target(family).getX()+1.5,96,3)>.04)return;use(mc,NativeDirectionalJoinFixture.target(family));next(4);}
