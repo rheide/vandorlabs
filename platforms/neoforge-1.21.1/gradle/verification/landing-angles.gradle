@@ -1,0 +1,7 @@
+tasks.register('testNativeLandingAngleCodec', JavaExec) {
+    group = 'verification'
+    description = 'Check legacy/configured landing-angle settings, bounded packet flags and clipboard compatibility'
+    dependsOn 'compileJava', 'compileSmokeJava'
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.gear.NativeLandingAngleCodecChecks'
+}

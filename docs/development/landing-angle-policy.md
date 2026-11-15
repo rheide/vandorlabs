@@ -26,7 +26,12 @@ behavior. `GearDialog` defines logical controls and layout for platform widgets.
 collision refusal/reversal and saved in-flight fields. Completing a carried
 adjustment uses the physical parent's authority, updates every same-owner
 member, and persists its new configuration without replacing opaque capability
-preimages. Client cosmetic clocks do not publish those authoritative changes.
+preimages. Client cosmetic clocks do not publish those authoritative changes. The Native
+adapter uses the same adjustment policy. At completion it clears only the old
+scalar-phase smoothing correction: the equivalent physical endpoint has changed
+from phase 0 to phase 1, so smoothing that scalar change would animate a second
+stroke. Ordinary interpolation, repeated updates, pause timing and reversals
+retain their existing paths.
 
 Source Taxi support uses the actual authored foot contact boxes, including their
 posed bottom and horizontal contact location. Only downward mounts can provide
@@ -58,3 +63,30 @@ The accepted Source carried candidate SHA-256 is
 `ffb1f699f28bff1c32424e554dd07c19d455f381715e28090a63bf74652a3912`.
 A fixture-only terminal guard was added afterward to suppress repeated completion
 callbacks during shutdown. This is focused validation, not a release gate.
+
+
+## Native adapter and focused player proof
+
+The Native settings packet stores schema presence and opt-in in two previously
+unused flag bits. Absent, explicit legacy and configured settings each round-trip
+in the existing 49-byte default packet; unknown or incomplete flags and excessive
+lengths are rejected. Saved raw fields and unknown data remain outside settings
+normalization. A legacy clipboard cannot inherit its target's opt-in accidentally.
+
+`testNativeLandingAngleCodec` passes 40 compatibility and packet checks. The
+existing Double Hinge settings check also passes 120 cases and 614 checks.
+`test_landing_angles.py --xvfb` exercises one actual Survival scene with two
+Rotating Arm sections and a Plate. It covers ordinary placement, the Configurizer
+and real sliders, a channel-only edit of old raw 45°/135° fields, physical and
+rendered Start adjustment, every member's settings, a phase-0-only native
+endpoint, invalid-angle refusal, Duplifier capture, ordinary reversal and installed
+NBT reload. The accepted run passes 174 server checks and 232 client checks,
+including a 21-check negative/positive visual-clock oracle. Its mount and floor
+remain in place; movement uses the normal collision and rider paths.
+
+The dialog explains invalid endpoint geometry using the same proposed-layout
+policy as admission. It does not wait for a later chunk error update or require
+terrain to exist when choosing angles. Completion refreshes the dialog's target
+from the physical tile after the adjustment ends.
+
+![Native landing-angle controls after a completed Start adjustment](../images/modular-gear/native-landing-angle-dialog.png)

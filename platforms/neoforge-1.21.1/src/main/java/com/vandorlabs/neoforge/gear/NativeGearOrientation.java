@@ -7,9 +7,7 @@ import net.minecraft.world.phys.Vec3;
 
 /** Exact Source ArmOrientation basis. Local -Y always runs away from the mounting surface. */
 public final class NativeGearOrientation {
-    public static Vec3 vector(Direction face,double x,double y,double z){return switch(face){
-        case UP->new Vec3(x,-y,-z);case EAST->new Vec3(-y,x,z);case WEST->new Vec3(y,-x,z);
-        case NORTH->new Vec3(x,-z,y);case SOUTH->new Vec3(x,z,-y);default->new Vec3(x,y,z);};}
+    public static Vec3 vector(Direction face,double x,double y,double z){return new Vec3(com.vandorlabs.gear.core.GearMountFrame.x(face.ordinal(),x,y,z),com.vandorlabs.gear.core.GearMountFrame.y(face.ordinal(),x,y,z),com.vandorlabs.gear.core.GearMountFrame.z(face.ordinal(),x,y,z));}
     public static BlockPos vector(Direction face,BlockPos point){var v=vector(face,point.getX(),point.getY(),point.getZ());return new BlockPos((int)v.x,(int)v.y,(int)v.z);}
     public static BlockPos inverse(Direction face,BlockPos point){return vector(switch(face){case EAST->Direction.WEST;case WEST->Direction.EAST;case NORTH->Direction.SOUTH;case SOUTH->Direction.NORTH;default->face;},point);}
     public static Vec3 point(Direction face,double x,double y,double z){return vector(face,x-.5,y-.5,z-.5).add(.5,.5,.5);}

@@ -17,10 +17,12 @@ public final class NativeGearVisualClock {
     private static final Map<Object,LinkedHashMap<Key,Sample>> WORLDS=new WeakHashMap<>();
     private static double time;
     private record Key(BlockPos pos,java.util.UUID identity){}
-    static final class Sample {double authority;boolean initialized;final PlatformMotionSmoothing smoothing=new PlatformMotionSmoothing(12);}
+    static final class Sample {double authority;boolean initialized,adjusting;final PlatformMotionSmoothing smoothing=new PlatformMotionSmoothing(12);}
     static double advance(Sample sample,double authoritative,double now){if(!sample.initialized){sample.authority=authoritative;sample.initialized=true;}if(authoritative!=sample.authority){sample.smoothing.accept(authoritative-sample.authority,0,0,now);sample.authority=authoritative;}return Math.max(0,Math.min(1,authoritative+sample.smoothing.x(now)));}
+    /** Completion changes the scalar parameterization while retaining the same physical pose. */
+    static double advance(Sample sample,double authoritative,double now,boolean adjusting){if(sample.adjusting&&!adjusting){sample.smoothing.clear();sample.authority=authoritative;sample.initialized=true;}sample.adjusting=adjusting;return advance(sample,authoritative,now);}
     @SubscribeEvent public static void frame(RenderFrameEvent.Pre event){time=CLOCK.sample(System.nanoTime(),Minecraft.getInstance().isPaused());}
-    public static double pose(NativeGearEntity tile){var map=WORLDS.computeIfAbsent(tile.getLevel(),ignored->new LinkedHashMap<>(32,.75F,true));var key=new Key(tile.getBlockPos(),tile.identity());var sample=map.get(key);if(sample==null){sample=new Sample();map.put(key,sample);if(map.size()>2048)map.remove(map.keySet().iterator().next());}return advance(sample,tile.visual().progress(),time);}
+    public static double pose(NativeGearEntity tile){var map=WORLDS.computeIfAbsent(tile.getLevel(),ignored->new LinkedHashMap<>(32,.75F,true));var key=new Key(tile.getBlockPos(),tile.identity());var sample=map.get(key);if(sample==null){sample=new Sample();map.put(key,sample);if(map.size()>2048)map.remove(map.keySet().iterator().next());}return advance(sample,tile.visual().progress(),time,tile.adjustingStart());}
     public static void clear(){WORLDS.clear();}
     @SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){WORLDS.remove(event.getLevel());}
 }

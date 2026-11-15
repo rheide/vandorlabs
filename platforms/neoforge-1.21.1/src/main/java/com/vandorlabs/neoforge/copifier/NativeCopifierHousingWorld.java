@@ -60,7 +60,7 @@ public final class NativeCopifierHousingWorld {
         }
     }
     private record Gear(com.vandorlabs.neoforge.gear.NativeGearEntity tile) implements Target {
-        public CompoundTag capture(){return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.capture(tile.settings());}
+        public CompoundTag capture(){return com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.capture(tile);}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
             final com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.Plan plan;
             try{plan=com.vandorlabs.neoforge.gear.NativeGearCopiedSettings.prepare(tile.settings(),values);}catch(IllegalArgumentException malformed){return false;}
