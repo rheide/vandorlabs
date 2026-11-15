@@ -19,7 +19,7 @@ import net.minecraft.world.phys.*;
 import net.minecraft.world.phys.shapes.*;
 
 /** Source component cells remain native; the controller supplies animated render, ray and collision geometry. */
-public final class NativeGearBlock extends BaseEntityBlock {
+public class NativeGearBlock extends BaseEntityBlock {
     public static final DirectionProperty FACING=BlockStateProperties.HORIZONTAL_FACING;
     public static final BooleanProperty ASSEMBLED=BooleanProperty.create("assembled");
     public static final IntegerProperty PART=IntegerProperty.create("part",0,3);
