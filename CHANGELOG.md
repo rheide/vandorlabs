@@ -35,6 +35,7 @@
 
 ### Arms and landing gear (Forge 1.12.2)
 
+- Extend existing stopped, stowed Plate, Ski and regular Wheel assemblies by sneak-clicking their visible sides with a matching item. Preserve the stopped pose, mounting frame and one-item placement through rebuilding.
 - Add a separate Foot direction setting to formed Ski and Wheel assemblies, including sideways mounts and Large Wheels. Preserve the physical source footprint separately from the chosen visual orientation, configured items and copied settings.
 - Attach native Plates, Skis and matching Wheels at grid-aligned activated Rotating Arm sockets, including complete Large Wheels and connected joined landing groups. Journal every ownership handoff, preserve opaque capability data and retain items when a fractional endpoint refuses placement.
 - Add Base / Middle hinge selection to Rotating Arms. The middle option turns the lower linkage at the authored elbow, with matching payload motion, collision, saved settings and client rendering; existing saves retain the base hinge.

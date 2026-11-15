@@ -614,8 +614,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(!unchanged){
             boolean stationary=progress==0||progress==1;
             boolean sameColumns=assembly!=null&&assembly.columnHeight()==scan.assembly.columnHeight()&&columns.equals(relativeColumns(scan.columns));
-            boolean footRemesh=sameColumns&&stationary&&payload==null&&failedPayload==null&&assembly.kind()==GearTopology.FootKind.TRACK
-                    &&(scan.assembly.kind()==GearTopology.FootKind.TRACK||trackExtensionStroke&&scan.assembly.kind()==GearTopology.FootKind.NONE);
+            boolean footRemesh=sameColumns&&stationary&&payload==null&&failedPayload==null
+                    &&(assembly.kind()==GearTopology.FootKind.TRACK&&(scan.assembly.kind()==GearTopology.FootKind.TRACK||trackExtensionStroke&&scan.assembly.kind()==GearTopology.FootKind.NONE)
+                    ||formingActiveFoot&&assembly.kind()!=GearTopology.FootKind.NONE&&assembly.kind()==scan.assembly.kind());
             if(footRemesh||formingActiveFoot&&genericBefore&&sameColumns&&scan.assembly.kind()!=GearTopology.FootKind.NONE||formingActiveTrack&&(genericBefore||isExtendedTrackStroke())&&scan.assembly.kind()==GearTopology.FootKind.TRACK&&scan.columns.size()==1&&scan.columns.get(0).equals(pos)){
                 // Track editing changes the foot mesh, not the stationary column's pose.
                 // Release departed helpers before rebinding the surviving component.

@@ -89,7 +89,7 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
         return getDefaultState().withProperty(FACING,facing);
     }
 
-    private static EnumFacing looseMount(IBlockAccess world,BlockPos pos){if(world==null)return EnumFacing.DOWN;TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof GearTileEntity))return EnumFacing.DOWN;GearTileEntity tile=(GearTileEntity)raw;return tile.hasLoadedController()?EnumFacing.DOWN:tile.mountDirection();}
+    private static EnumFacing looseMount(IBlockAccess world,BlockPos pos){if(world==null)return EnumFacing.DOWN;TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof GearTileEntity))return ArmFootComponentFrame.posedPlacement()?ArmFootComponentFrame.placement():EnumFacing.DOWN;GearTileEntity tile=(GearTileEntity)raw;return tile.hasLoadedController()?EnumFacing.DOWN:tile.mountDirection();}
     private AxisAlignedBB footBounds(IBlockAccess world,BlockPos pos,AxisAlignedBB box){return sizeClass()==1&&kind!=Kind.EXTENDER&&kind!=Kind.SWING_ARM&&kind!=Kind.MOUNT?ArmOrientation.box(looseMount(world,pos),box):box;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return ArmLooseGearData.foot(state)&&looseMount(world,pos)!=EnumFacing.DOWN?state.withProperty(ASSEMBLED,true):state;}
 

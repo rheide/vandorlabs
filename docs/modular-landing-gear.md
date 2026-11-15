@@ -164,6 +164,12 @@ or Ski. Connected native foot groups at an aligned endpoint attach together;
 join the matching arm columns before activation and give every column a foot in
 the same connected group.
 
+To extend an existing stopped, stowed Plate, Ski or regular Wheel assembly,
+sneak-click its visible side with the same ordinary foot item. The new foot
+joins at the clicked pose and keeps that pose through rebuilding. Its logical
+rest cell and visible position must both be clear. This does not add a second
+Large Wheel or a Track component.
+
 A fractional endpoint, including the usual **Payload: stays level** 90-degree
 endpoint, refuses native foot placement without consuming the item. Return the
 arm to its construction pose to attach the foot, then operate it normally.

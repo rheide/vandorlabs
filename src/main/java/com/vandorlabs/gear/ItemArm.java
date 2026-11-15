@@ -12,6 +12,17 @@ import net.minecraft.world.World;
 public class ItemArm extends net.minecraft.item.ItemBlock {
     public ItemArm(Block block){super(block);}
     @Override public net.minecraft.creativetab.CreativeTabs[] getCreativeTabs(){return getCreativeTab()==null?new net.minecraft.creativetab.CreativeTabs[0]:super.getCreativeTabs();}
+    @Override public net.minecraft.util.EnumActionResult onItemUse(EntityPlayer player,World world,BlockPos pos,net.minecraft.util.EnumHand hand,EnumFacing side,float x,float y,float z){
+        // Modded player controllers can send the ordinary placement packet for a posed selection.
+        // Use the same server-recomputed interaction as our controller rather than its rest-cell face.
+        net.minecraft.tileentity.TileEntity raw=world.isBlockLoaded(pos)?world.getTileEntity(pos):null;
+        GearTileEntity root=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
+        if(hand==net.minecraft.util.EnumHand.MAIN_HAND&&root!=null&&root.isLandingAssembly()&&root.isSwingArmController()&&!root.fullyDeployed()&&ArmLooseGearData.foot(getBlock().getDefaultState())&&((GearBlock)getBlock()).kind()!=GearBlock.Kind.TRACK){
+            if(!world.isRemote&&player instanceof net.minecraft.entity.player.EntityPlayerMP){try{GearInteractions.use((net.minecraft.entity.player.EntityPlayerMP)player,pos);}catch(IllegalArgumentException refused){root.showError(refused.getMessage());return net.minecraft.util.EnumActionResult.FAIL;}}
+            return net.minecraft.util.EnumActionResult.SUCCESS;
+        }
+        return super.onItemUse(player,world,pos,hand,side,x,y,z);
+    }
     @Override public boolean placeBlockAt(ItemStack stack,EntityPlayer player,World world,BlockPos pos,EnumFacing side,float x,float y,float z,IBlockState state){
         if(!super.placeBlockAt(stack,player,world,pos,side,x,y,z,state))return false;
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);

@@ -68,6 +68,7 @@ public final class GearInteractions {
     public static boolean attachLandingFoot(EntityPlayerMP player,GearTileEntity root,RayTraceResult hit){
         World world=root.getWorld();net.minecraft.item.ItemStack held=player.getHeldItemMainhand();
         if(world==null||world.isRemote||player.world!=world||player.isDead||player.isSpectator()||root.isInvalid()||world.getTileEntity(root.getPos())!=root)throw new IllegalArgumentException("The arm is no longer available");
+        if(root.isLandingAssembly())return appendLandingFoot(player,root,hit);
         if(root.assembly()==null||root.assembly().kind()!=GearTopology.FootKind.NONE||!root.isSwingArmController()||root.columns().size()!=1||root.payload()!=null||root.hasRetainedPayload()||root.hasFailedArmSnapshot())throw new IllegalArgumentException("Attach landing gear to one clear Rotating Arm tip");
         if(root.progress()!=0||root.target()||ArmTransactions.locked(world,root.getPos()))throw new IllegalArgumentException("Stop the Rotating Arm at its active endpoint before attaching landing gear");
         if(!(held.getItem() instanceof net.minecraft.item.ItemBlock))throw new IllegalArgumentException("Hold a landing foot item");net.minecraft.block.Block block=((net.minecraft.item.ItemBlock)held.getItem()).getBlock();if(!ArmLooseGearData.foot(block.getDefaultState())||held.hasTagCompound()&&(held.getTagCompound().hasKey("ArmRecovery",10)||held.getTagCompound().hasKey("BlockEntityTag",10)))throw new IllegalArgumentException("Use an ordinary Plate, Ski or matching Wheel item");if(((GearBlock)block).kind()==GearBlock.Kind.WHEEL&&((GearBlock)block).sizeClass()!=root.armSize())throw new IllegalArgumentException("Wheel and mounting arm sizes must match");
@@ -79,6 +80,50 @@ public final class GearInteractions {
         if(block instanceof LargeGearBlock){net.minecraft.nbt.NBTTagCompound template=new net.minecraft.nbt.NBTTagCompound();template.setString("id",TileEntity.getKey(GearTileEntity.class).toString());template.setString("ArmMountDirection",root.mountDirection().name());ArmFootComponentFrame.write(template,root.mountDirection());IBlockState canonical=block.getDefaultState().withProperty(GearBlock.FACING,world.getBlockState(root.getPos()).getValue(GearBlock.FACING));IBlockState projected=endpoint.placedState(new com.vandorlabs.vehicle.VehicleStructure.Cell(root.localCell(0,-root.assembly().columnHeight(),0),canonical,template));if(projected==null)throw new IllegalArgumentException("The Large Wheel cannot retain its complete socket frame");facing=projected.getValue(GearBlock.FACING);}
         net.minecraft.util.EnumActionResult result;try(ArmFootComponentFrame.Placement placement=ArmFootComponentFrame.placing(mount,facing)){result=held.onItemUse(player,world,target,net.minecraft.util.EnumHand.MAIN_HAND,mount,.5F,.5F,.5F);}if(result!=net.minecraft.util.EnumActionResult.SUCCESS||world.getBlockState(target).getBlock()!=block)return false;
         TileEntity placed=world.getTileEntity(target);if(!(placed instanceof GearTileEntity))throw new IllegalArgumentException("Landing foot data is still loading");((GearTileEntity)placed).setMountDirection(mount);root.operator(player);player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();return true;
+    }
+    /** Add an ordinary item to the existing logical mesh; its renderer retains the stopped pose. */
+    private static boolean appendLandingFoot(EntityPlayerMP player,GearTileEntity root,RayTraceResult hit){
+        World world=root.getWorld();net.minecraft.item.ItemStack held=player.getHeldItemMainhand();
+        if(!root.isSwingArmController()||root.progress()!=0||root.target()||root.payload()!=null||root.hasRetainedPayload()||root.hasFailedArmSnapshot()||ArmTransactions.locked(world,root.getPos()))throw new IllegalArgumentException("Stop the Rotating Arm before extending its landing gear");
+        if(!root.members().contains(hit.getBlockPos())||!GearAssembly.isFoot(world.getBlockState(hit.getBlockPos())))throw new IllegalArgumentException("Click the side of the existing landing gear");
+        if(!(held.getItem() instanceof net.minecraft.item.ItemBlock))throw new IllegalArgumentException("Hold a matching landing foot item");
+        GearBlock block=world.getBlockState(hit.getBlockPos()).getBlock() instanceof GearBlock?(GearBlock)world.getBlockState(hit.getBlockPos()).getBlock():null;
+        if(block==null||((net.minecraft.item.ItemBlock)held.getItem()).getBlock()!=block||block.kind()==GearBlock.Kind.TRACK||block.sizeClass()==2&&block.kind()==GearBlock.Kind.WHEEL||held.hasTagCompound()&&(held.getTagCompound().hasKey("ArmRecovery",10)||held.getTagCompound().hasKey("BlockEntityTag",10)))throw new IllegalArgumentException("Use a matching ordinary Plate, Ski or regular Wheel item");
+        BlockPos normal=ArmOrientation.inverse(root.mountDirection(),new BlockPos(hit.sideHit.getDirectionVec()));
+        GearTopology.Cell step=com.vandorlabs.gear.core.GearFootPlacement.neighbor(root.pose(0),normal.getX(),normal.getY(),normal.getZ());
+        BlockPos offset=ArmOrientation.vector(root.mountDirection(),new BlockPos(step.x,0,step.z)),target=hit.getBlockPos().add(offset);
+        net.minecraft.util.EnumFacing side=net.minecraft.util.EnumFacing.getFacingFromVector(offset.getX(),offset.getY(),offset.getZ());
+        if(!GearAssembly.loaded(world,target)||!world.getWorldBorder().contains(target)||!world.isAirBlock(target))throw new IllegalArgumentException("Clear the landing gear's rest cell before extending it");
+        for(BlockPos member:root.members())com.vandorlabs.vehicle.VehicleService.permission(player,member);
+        com.vandorlabs.vehicle.VehicleService.permission(player,target);
+        BlockPos local=ArmOrientation.inverse(root.mountDirection(),target.subtract(root.getPos()));
+        java.util.List<GearTopology.Cell> feet=new java.util.ArrayList<>(root.assembly().feet());feet.add(new GearTopology.Cell(local.getX(),local.getY(),local.getZ()));
+        GearTopology.Result topology=GearTopology.validate(root.assembly().columnHeight(),root.assembly().kind(),feet);
+        if(!topology.isValid())throw new IllegalArgumentException(topology.error());
+        IBlockState state=world.getBlockState(hit.getBlockPos()).withProperty(GearBlock.ASSEMBLED,false);
+        java.util.Map<BlockPos,IBlockState> preview=java.util.Collections.singletonMap(target,state);
+        for(AxisAlignedBB bounds:root.landingBoxes(root.assembly().kind(),root.footFacing(),feet,preview)){
+            AxisAlignedBB inside=bounds.shrink(.0001);if(inside.getAverageEdgeLength()<=0)continue;
+            for(BlockPos cell:BlockPos.getAllInBox(new BlockPos(inside.minX,inside.minY,inside.minZ),new BlockPos(inside.maxX,inside.maxY,inside.maxZ))){if(!GearAssembly.loaded(world,cell))throw new IllegalArgumentException("Load the visible landing gear area first");com.vandorlabs.vehicle.VehicleService.permission(player,cell);}
+            if(!GearGeometry.foreign(world,root,inside).isEmpty()||!world.checkNoEntityCollision(inside,player))throw new IllegalArgumentException("Clear the visible landing gear position first");
+        }
+        net.minecraftforge.common.util.BlockSnapshot before=net.minecraftforge.common.util.BlockSnapshot.getBlockSnapshot(world,target);
+        net.minecraft.nbt.NBTTagCompound saved=root.writeToNBT(new net.minecraft.nbt.NBTTagCompound());int count=held.getCount();boolean placed=false;
+        try{
+            net.minecraft.util.EnumActionResult result;
+            try(ArmFootComponentFrame.Placement placement=ArmFootComponentFrame.placing(root.mountDirection())){result=held.onItemUse(player,world,target,net.minecraft.util.EnumHand.MAIN_HAND,side,.5F,.5F,.5F);}
+            placed=world.getBlockState(target).getBlock()==block;
+            if(result!=net.minecraft.util.EnumActionResult.SUCCESS||!placed)return false;
+            TileEntity tile=world.getTileEntity(target);if(!(tile instanceof GearTileEntity))throw new IllegalArgumentException("Landing gear data is still loading");
+            ((GearTileEntity)tile).setMountDirection(root.mountDirection());root.operator(player);
+            if(!root.formLandingAtActivePose())throw new IllegalArgumentException(root.error().isEmpty()?"The landing gear could not join":root.error());
+            player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();return true;
+        }catch(RuntimeException failure){
+            if(placed&&world.getBlockState(target).getBlock()==block&&before.restore(true,false)){
+                root.readFromNBT(saved);root.operator(player);root.sync();if(!player.capabilities.isCreativeMode&&held.getCount()==count-1)held.grow(1);
+            }
+            player.inventory.markDirty();player.inventoryContainer.detectAndSendChanges();throw failure;
+        }
     }
     public static void use(EntityPlayerMP player,BlockPos source){
         if(player.isSpectator()||player.isDead)return;Vec3d start=player.getPositionEyes(1),end=start.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue()+.5));
