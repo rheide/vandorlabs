@@ -17,7 +17,7 @@ DOORS = ('Bathroom White', 'Modern Oak Windowed', 'Windowed Utility', 'Windowed 
 
 
 def descriptors():
-    for category, names in [('Floor', FLOORS), ('Doors/Utility', DOORS)]:
+    for category, names in [('Tiles', FLOORS), ('Doors/Utility', DOORS)]:
         door = category.startswith('Doors/')
         for label in names:
             name = re.sub(r'[^a-z0-9]+', '_', label.lower()).strip('_')
@@ -49,7 +49,7 @@ def main():
             expected[index] = entry
         target = TARGET / (entry['source'] + '.png')
         if args.source:
-            source = args.source / entry['category'] / (entry['label'] + '.png')
+            source = args.source / ('Floor' if entry['category'] == 'Tiles' else entry['category']) / (entry['label'] + '.png')
             with Image.open(source) as art:
                 # Keep the authored alpha; LANCZOS integrates enlarged source pixels
                 # into the established catalog sizes. Native pixel sheets stay exact.
@@ -68,7 +68,7 @@ def main():
         assert entries == expected, 'Imported catalog differs from append-only artwork definitions'
     else:
         CATALOG.write_text(json.dumps(expected, indent=2) + '\n')
-    print('Floor/Utility artwork PASS: 13 floors (eight64x64, five32x32), four128x256 leaves; original833 saved IDs/order retained')
+    print('Tiles/Utility artwork PASS: 13 floors (eight64x64, five32x32), four128x256 leaves; original833 saved IDs/order retained')
 
 
 if __name__ == '__main__':
