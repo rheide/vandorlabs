@@ -53,6 +53,10 @@ for examples, axis meanings and supported families.
 The Duplifier's **Respect block joins** option restricts Connected Matching
 Blocks to the clicked joined artwork. Leave it off to retain the existing
 matching-region behavior. Hover tooltips explain all three connected selection options.
+Full-depth Porthole Blocks match by their actual plane, so unused depth flags do
+not split a connected selection. Editing a neighbour also refreshes the original
+joined group, including unchanged members and cached frames; thin Porthole Walls
+still require matching depths on both versions.
 
 ## Native tables, controls and surfaces
 

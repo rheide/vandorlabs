@@ -12,6 +12,7 @@ public final class NativeCopifierHousingConnected {
  private static boolean matchingState(BlockState original,BlockState candidate,boolean ignore){
   if(original.getBlock()!=candidate.getBlock())return false;
   for(var property:original.getProperties()){
+   if(property==com.vandorlabs.neoforge.shape.NativeFlatWallBlock.DEPTH&&com.vandorlabs.surface.TextureJoinSettings.samePanelDepth(original.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeFlatWallBlock wall&&wall.isFullDepth(),original.getValue(com.vandorlabs.neoforge.shape.NativeFlatWallBlock.DEPTH),candidate.getValue(com.vandorlabs.neoforge.shape.NativeFlatWallBlock.DEPTH)))continue;
    if(ignore&&CopiedDirectionality.ignoreProperty(property.getName(),property.getValueClass()==Direction.class,property.getValueClass()==Direction.Axis.class))continue;
    if(!original.getValue(property).equals(candidate.getValue(property)))return false;
   }

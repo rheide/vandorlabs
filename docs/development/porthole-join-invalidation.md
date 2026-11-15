@@ -44,3 +44,16 @@ lighting keys.
 The existing directional focus also passes 2,600 emitted checks and 173 actual
 Duplifier checks on the same JAR, retaining thin-depth negatives and all direction
 combinations. These are focused regressions, not a release gate.
+
+On NeoForge, `python3 test_porthole_originals.py --xvfb` from the platform
+directory exercises the same two failure mechanisms through a connected Survival
+player. The negative run retains a warmed four-member original after editing its
+previously rejected fifth neighbour. The corrected run refreshes all five
+published layouts and emitted frame, rim and pane records, including the former
+terminal rim. A subsequent real connected Duplifier copy selects all six
+full-depth originals despite their different unused depth flags; every emitted
+record matches a separately initialized reference. The focused pair passes 159
+client checks and 15 server checks. The shared native directional codec/contour
+checks also pass (216 contours and 18 NBT checks). This checks native published
+model data and emitted records; the GPU-buffer readback belongs to the Forge
+scene above.

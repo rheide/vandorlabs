@@ -54,13 +54,13 @@ public final class NativeWallLayouts {
         var state=level.getBlockState(pos);var base=root.getBlockState();
         if(!(base.getBlock() instanceof NativeFlatWallBlock)||state.getBlock()!=base.getBlock()||!(level.getBlockEntity(pos) instanceof NativeWallEntity other)||other.isRemoved())return null;
         if(other.textureJoin().direction==0)return null;
-        if(state.getValue(NativeFlatWallBlock.FACING)!=base.getValue(NativeFlatWallBlock.FACING)||!((NativeFlatWallBlock)base.getBlock()).isFullDepth()&&!state.getValue(NativeFlatWallBlock.DEPTH).equals(base.getValue(NativeFlatWallBlock.DEPTH)))return null;
+        if(state.getValue(NativeFlatWallBlock.FACING)!=base.getValue(NativeFlatWallBlock.FACING)||!com.vandorlabs.surface.TextureJoinSettings.samePanelDepth(((NativeFlatWallBlock)base.getBlock()).isFullDepth(),state.getValue(NativeFlatWallBlock.DEPTH),base.getValue(NativeFlatWallBlock.DEPTH)))return null;
         return mode.sameSettings(root.settings().mainTexture,root.settings().layout,root.wallSettings().joinPortholes,root.wallSettings().portholeShape,other.settings().mainTexture,other.settings().layout,other.wallSettings().joinPortholes,other.wallSettings().portholeShape)?other:null;
     }
     private static NativePanelLayout capture(NativeWallEntity root,NativePanelGroups.Mode mode){
         Direction right=root.getBlockState().getValue(NativeFlatWallBlock.FACING).getClockWise();
         var dependencies=new com.vandorlabs.neoforge.NativeJoinDependencies.Bounds();dependencies.include(root.getBlockPos());
-        var captured=NativePanelGroups.capture(root.getBlockPos(),right,root,pos->{dependencies.include(pos);return compatible(root,pos,mode);},(from,next)->com.vandorlabs.neoforge.NativeTextureJoins.edge(root,from,next));
+        var captured=NativePanelGroups.capture(root.getBlockPos(),right,root,pos->{dependencies.include(pos);return compatible(root,pos,mode);},(from,next)->{dependencies.include(next);return com.vandorlabs.neoforge.NativeTextureJoins.edge(root,from,next);});
         Group group=new Group(mode,captured.layouts(),captured.capped());boolean shared=com.vandorlabs.neoforge.NativeTextureJoins.shareable(root,captured.members().values());boolean admitted=com.vandorlabs.neoforge.NativeJoinDependencies.observe(shared?captured.members().values():java.util.List.of(root),mode.ordinal(),dependencies,group);if(!admitted){group(root,mode,group);return NativePanelLayout.UNIT;}
         for(var entry:captured.members().entrySet()){
             NativeWallEntity member=entry.getValue();if(shared||member==root){group(member,mode,group);if(member!=root&&group.valid)NativeFluidWorld.queue(member);}
