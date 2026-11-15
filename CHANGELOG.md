@@ -5,6 +5,7 @@
 ### Module Rack (Forge 1.12.2 and NeoForge 1.21.1)
 
 - Preserve undecodable Forge Rack module inventories as inert recovery items instead of dropping invalid rows or truncating stack counts; retain opaque module and housing data.
+- Keep the exact original Autopilot controller inert and recoverable if migration and rollback both fail to install. Preserve its canonical save and one configured recovery item for a later retry.
 - Add a four-slot Module Rack and three-dimensional Blank Module item. The darker compact housing has a one-pixel rim, a full-depth right wall around a recessed inner panel, and two tiny status squares per bay: lower amber when empty and upper cyan when occupied.
 - Insert a module by clicking its intended slot or aligned button, with an eased slide into the rack. Empty-hand interaction retrieves that slot's item; saved contents retain their data and drop when the rack breaks.
 - Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Reuse the Light and Port viewing-angle placement rule. Slot selection, indicators and module travel rotate together.

@@ -8,3 +8,14 @@ task testModuleRackSavedData(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 check.dependsOn testModuleRackSavedData
+
+task testAutopilotMigrationFailure(type: JavaExec) {
+    group = 'verification'
+    description = 'Keep the exact old controller after both migration and rollback publication fail'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.AutopilotMigrationFailureChecks'
+    workingDir = file("$buildDir/module-rack-checks")
+    doFirst { workingDir.mkdirs() }
+}
+check.dependsOn testAutopilotMigrationFailure

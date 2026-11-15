@@ -46,9 +46,9 @@ public final class LegacyAutopilotMigration {
         if(!world.isCallingFromMinecraftThread()||!world.isBlockLoaded(pos,false)||world.getTileEntity(pos)!=old)return null;
         IBlockState before=world.getBlockState(pos);
         if(before.getBlock()!=ModBlocks.AUTOPILOT)return null;
-        VehicleStructure source,target;Map<BlockPos,TileEntity> prepared,rollbackPrepared;
+        VehicleStructure source,target;Map<BlockPos,TileEntity> prepared,rollbackPrepared;NBTTagCompound original;
         try {
-            NBTTagCompound original=old.writeToNBT(new NBTTagCompound());
+            original=old.writeToNBT(new NBTTagCompound());
             net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:module_rack");
             if(!(block instanceof BlockModuleRack))return null;
             IBlockState after=block.getDefaultState().withProperty(BlockModuleRack.FACING,before.getValue(BlockVandorDirectional.FACING));
@@ -69,9 +69,12 @@ public final class LegacyAutopilotMigration {
             CopyWorld.notify(world,target,pos);
             return installed;
         }catch(Exception failure){
-            try {CopyWorld.install(world,source,pos,rollbackPrepared);WorldActionAuthorization.grant(world.getTileEntity(pos),actor);CopyWorld.notify(world,source,pos);}
-            catch(RuntimeException rollback){failure.addSuppressed(rollback);}
+            rollbackAfterFailure(world,pos,before,original,()->{CopyWorld.install(world,source,pos,rollbackPrepared);WorldActionAuthorization.grant(world.getTileEntity(pos),actor);CopyWorld.notify(world,source,pos);},failure);
             com.vandorlabs.VandorLabs.logger.warn("Autopilot conversion deferred at "+pos,failure);return null;
         }
+    }
+    /** Recovery boundary shared by the real conversion and its injected publication-failure regression. */
+    public static void rollbackAfterFailure(net.minecraft.world.World world,BlockPos pos,IBlockState before,NBTTagCompound original,Runnable rollback,Exception failure){
+        try{rollback.run();}catch(RuntimeException rollbackFailure){failure.addSuppressed(rollbackFailure);try{LegacyAutopilotRecovery.install(world,pos,before,original);}catch(RuntimeException retained){failure.addSuppressed(retained);}}
     }
 }
