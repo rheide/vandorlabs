@@ -3,6 +3,13 @@ package com.vandorlabs.gear.core;
 /** Shared Double hinge translation and sweep bounds, with caller-owned projection scratch. */
 public final class ArmHinge {
     public enum Mode { SINGLE, LEGACY_CENTER, DOUBLE }
+    private static Mode mode(int value){switch(value){case 0:return Mode.SINGLE;case 1:return Mode.LEGACY_CENTER;case 2:return Mode.DOUBLE;default:throw new IllegalArgumentException("Unknown arm hinge mode");}}
+    private static Mode explicit(boolean middle,Integer value){Mode result=mode(value.intValue());if(middle!=(result!=Mode.SINGLE))throw new IllegalArgumentException("Inconsistent arm hinge fields");return result;}
+    /** Missing new fields must retain a previous center-only saved stroke exactly. */
+    public static Mode readSaved(boolean middle,Integer value){return value==null?(middle?Mode.LEGACY_CENTER:Mode.SINGLE):explicit(middle,value);}
+    /** Old copied/UI choices select the corrected Double option when newly applied. */
+    public static Mode readChoice(boolean middle,Integer value){return value==null?(middle?Mode.DOUBLE:Mode.SINGLE):explicit(middle,value);}
+    public static Mode atRest(Mode value,boolean zeroRest,boolean ownershipPending){if(value==null)throw new IllegalArgumentException("Missing arm hinge mode");return value==Mode.LEGACY_CENTER&&zeroRest&&!ownershipPending?Mode.DOUBLE:value;}
     private static double sine(double degrees){if(degrees==0||Math.abs(degrees)==180)return 0;if(degrees==90)return 1;if(degrees==-90)return -1;return Math.sin(Math.toRadians(degrees));}
     private static double cosine(double degrees){if(degrees==0)return 1;if(Math.abs(degrees)==180)return -1;if(Math.abs(degrees)==90)return 0;return Math.cos(Math.toRadians(degrees));}
     /** Caller-owned scratch: lower translation, upper translation/sine/cosine, authored elbow. */

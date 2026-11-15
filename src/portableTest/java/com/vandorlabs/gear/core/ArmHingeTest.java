@@ -62,6 +62,14 @@ public final class ArmHingeTest {
     equal(legacy.lower.point(.23,-height+.11,.76),old.transformFootVertex(.23,-height+.11,.76));
    }
   }
+  if(ArmHinge.readSaved(true,null)!=ArmHinge.Mode.LEGACY_CENTER||ArmHinge.readSaved(false,null)!=ArmHinge.Mode.SINGLE||ArmHinge.readChoice(true,null)!=ArmHinge.Mode.DOUBLE)throw new AssertionError("Legacy saved motion and new choices differ deliberately");checks+=3;
+  for(ArmHinge.Mode mode:ArmHinge.Mode.values()){
+   boolean middle=mode!=ArmHinge.Mode.SINGLE;
+   if(ArmHinge.readSaved(middle,mode.ordinal())!=mode||ArmHinge.readChoice(middle,mode.ordinal())!=mode)throw new AssertionError("Explicit hinge mode round trip");checks+=2;
+   refused(()->ArmHinge.readSaved(!middle,mode.ordinal()));
+  }
+  refused(()->ArmHinge.readSaved(true,3));refused(()->ArmHinge.readChoice(false,-1));
+  if(ArmHinge.atRest(ArmHinge.Mode.LEGACY_CENTER,true,false)!=ArmHinge.Mode.DOUBLE||ArmHinge.atRest(ArmHinge.Mode.LEGACY_CENTER,false,false)!=ArmHinge.Mode.LEGACY_CENTER||ArmHinge.atRest(ArmHinge.Mode.LEGACY_CENTER,true,true)!=ArmHinge.Mode.LEGACY_CENTER)throw new AssertionError("Only unowned zero rest adopts Double");checks+=3;
   double[] frame=new double[13];
   refused(()->ArmHinge.prepareDouble(null,GearMotion.Direction.NORTH,1,0,1,90,frame));
   refused(()->ArmHinge.prepareDouble(GearMotion.Direction.NORTH,null,1,0,1,90,frame));
