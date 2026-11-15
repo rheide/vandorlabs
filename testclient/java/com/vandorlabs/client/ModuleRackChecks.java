@@ -72,6 +72,7 @@ public final class ModuleRackChecks {
     public static void main(String[] args) throws Exception {
         Bootstrap.register();
         ForgeRegistries.ITEMS.register(ModItems.BLANK_MODULE);
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityAutopilot.class, new ResourceLocation("vandorlabs:autopilot"));
         GameRegistry.registerTileEntity(TileEntityModuleRack.class,
                 new ResourceLocation("vandorlabs:module_rack_checks"));
         BlockModuleRack block = new BlockModuleRack();
@@ -81,7 +82,8 @@ public final class ModuleRackChecks {
         try {
             VandorLabs.proxy = null;
             placement(block);
-            configuration();
+            configuration(block);
+            autopilotData();
             persistence();
             interactions(block);
             dropOwnership(block);
@@ -111,7 +113,7 @@ public final class ModuleRackChecks {
         }
     }
 
-    private static void configuration() {
+    private static void configuration(BlockModuleRack block) {
         TileEntityModuleRack rack = new TileEntityModuleRack(); rack.setPos(AT);
         NBTTagCompound original = rack.writeToNBT(new NBTTagCompound());
         require(!original.hasKey("RackHousing") && !original.hasKey("RackEmit"), "new defaults preserve old Rack field absence");
@@ -153,13 +155,41 @@ public final class ModuleRackChecks {
             }
         } finally { encoded.release(); }
         NonRenderingChecks.MemoryWorld world = new NonRenderingChecks.MemoryWorld(false);
-        BlockModuleRack block = (BlockModuleRack)net.minecraft.block.Block.getBlockFromName("vandorlabs:module_rack");
         TileEntityModuleRack previous = install(world, block, EnumFacing.SOUTH);
         previous.insertModule(0, module(1, 8), false);
         TileEntityModuleRack replacement = new TileEntityModuleRack(); replacement.setPos(AT);
-        replacement.readFromNBT(previous.writeToNBT(new NBTTagCompound())); world.setTileEntity(AT, replacement);
+        replacement.readFromNBT(previous.writeToNBT(new NBTTagCompound())); replacement.setWorld(world); world.tiles.put(AT, replacement);
         require(previous.removeModule(0).isEmpty() && previous.drainModules().isEmpty()
                 && replacement.getOccupiedMask() == 1, "replaced physical tile cannot release another owner's modules");
+        cases++;
+    }
+
+    private static void autopilotData() {
+        com.vandorlabs.tiles.TileEntityAutopilot controller = new com.vandorlabs.tiles.TileEntityAutopilot();
+        controller.setPos(AT); controller.setRedstoneChannels(com.vandorlabs.redstone.ChannelList.of(73,74));
+        controller.trigger = 2; controller.markerMeta = 5;
+        NBTTagCompound original = controller.writeToNBT(new NBTTagCompound());
+        NBTTagCompound caps = new NBTTagCompound(); caps.setString("BlockState", "opaque minecraft:air; do not migrate");
+        original.setTag("ForgeCaps", caps.copy());
+        NBTTagCompound extra = new NBTTagCompound(); extra.setInteger("FutureSetting", 37); original.setTag("ForeignAutopilotData", extra);
+        controller.readFromNBT(original); controller.setStatus("Changed after load");
+        NBTTagCompound saved = controller.writeToNBT(new NBTTagCompound());
+        require(saved.getCompoundTag("ForgeCaps").equals(caps) && saved.getCompoundTag("ForeignAutopilotData").equals(extra),
+                "old Autopilot opaque capabilities and unknown own fields round trip without reinterpretation");
+        require(saved.getString("AutopilotStatus").equals("Changed after load"), "legacy preservation does not freeze navigation state");
+        NBTTagCompound appearance = controller.getUpdateTag();
+        require(!appearance.hasKey("ForgeCaps") && !appearance.hasKey("ForeignAutopilotData") && !appearance.hasKey("ForgeData"),
+                "legacy private data stays out of appearance packets");
+        ItemStack module = module(1, 17); com.vandorlabs.rack.ModuleAutopilotData.legacy(module, saved);
+        com.vandorlabs.rack.AutopilotModuleSettings settings = com.vandorlabs.rack.ModuleAutopilotData.settings(module);
+        require(settings.channels.equals(com.vandorlabs.redstone.ChannelList.of(73,74)) && settings.activation == 2 && settings.markerMetadata == 5,
+                "module receives the established Autopilot configuration");
+        require(!module.getTagCompound().getCompoundTag(com.vandorlabs.rack.ModuleAutopilotData.LEGACY).hasKey("ForgeCaps")
+                && module.getTagCompound().getCompoundTag(com.vandorlabs.rack.ModuleAutopilotData.LEGACY).getCompoundTag("ForeignAutopilotData").equals(extra),
+                "module backup preserves unknown own data without installing another capability owner");
+        com.vandorlabs.rack.LegacyAutopilotData preservation = new com.vandorlabs.rack.LegacyAutopilotData(original,new NBTTagCompound());
+        NBTTagCompound current = new NBTTagCompound(), liveCaps = new NBTTagCompound(); liveCaps.setInteger("ActualLiveState", 9); current.setTag("ForgeCaps",liveCaps);
+        require(preservation.preserve(current).getCompoundTag("ForgeCaps").equals(liveCaps), "legitimate physical capability changes remain authoritative");
         cases++;
     }
 
