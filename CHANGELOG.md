@@ -4,20 +4,20 @@
 
 ### Module Rack (Forge 1.12.2)
 
-- Add a four-slot Module Rack and three-dimensional Blank Module item. The darker compact housing has a one-pixel rim, a three-pixel right panel recessed by one pixel, and separate cyan/amber populated indicators for each bay.
+- Add a four-slot Module Rack and three-dimensional Blank Module item. The darker compact housing has a one-pixel rim, a full-depth right wall around a recessed inner panel, and two tiny status squares per bay: lower amber when empty and upper cyan when occupied.
 - Insert a module by clicking its intended slot or aligned button, with an eased slide into the rack. Empty-hand interaction retrieves that slot's item; saved contents retain their data and drop when the rack breaks.
-- Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Slot selection, indicators and insertion travel rotate together.
-- Render settled racks and modules in shared opaque chunk meshes. Use temporary client animation only during insertion, without ticking idle tiles or submitting a permanent tile renderer.
+- Mount racks against any of the six faces, including upward-facing floor racks and downward-facing ceiling racks. Reuse the Light and Port viewing-angle placement rule. Slot selection, indicators and module travel rotate together.
+- Render settled racks and modules in shared opaque chunk meshes. Use pause-aware temporary client animation during insertion and extraction, including rapid reversals, without ticking idle tiles or submitting a permanent tile renderer.
 - Include crafting recipes, model assets and focused geometry, inventory, animation and rendering checks. See the [Module Rack guide](docs/module-rack.md).
 
 ### Materials and connected artwork
 
 - Add Port Hull to the generic Hull texture category, retaining all earlier saved texture choices.
-- Add thirteen Floor finishes and four Utility Door designs, resized to the existing material and Door artwork resolutions. Preserve prior texture indices and regenerate the browser, category collages and Dynmap data.
+- Add thirteen Tiles finishes and six Utility Door designs, including Bathroom and Stall, resized to the existing material and Door artwork resolutions. Preserve prior texture indices and regenerate the browser, category collages and Dynmap data.
 - Mirror filesystem Door artwork on paired leaves, matching selected vanilla-block materials in Forge 1.12.2 and NeoForge 1.21.1.
 - Standardize image layout captions as Texture: Tile / Fit (Aspect) / Stretch. Keep Join for connectivity and Junction for diagonal junction shape.
-- Add Vertical, Horizontal, North/South and East/West texture joining to supported connected building surfaces. Add an All/Even/Odd neighbour-coordinate filter, retaining the owner's decision when neighbours use different filters and preserving previous saved defaults. See the [texture joining guide](docs/texture-joining.md).
-- Add Respect block joins to connected Duplifier selection. Retain the original matching-region behavior when disabled, and preserve saved option indices and existing message sizes.
+- Add Vertical, Horizontal, North/South and East/West texture joining to supported connected building surfaces. Remove the Even/Odd coordinate filter; older saved choices behave as All. Invalidate warmed joins after Copifier batch changes while preserving original saved snapshots and opaque capability data. See the [texture joining guide](docs/texture-joining.md).
+- Add Respect block joins to connected Duplifier selection. Explain Connected Matching Blocks, Respect block joins and Ignore directionality with hover tooltips. Retain the original matching-region behavior when disabled, and preserve saved option indices and existing message sizes.
 
 ### Coupler ownership recovery (Forge 1.12.2)
 
@@ -60,7 +60,7 @@
 ### Resource transfer ports (Forge 1.12.2 and NeoForge 1.21.1)
 
 - Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge/NeoForge Energy; Matter accepts ordinary items.
-- Add dedicated General/Redstone configuration, per-face activity artwork and settings-only Duplifier copying and Undo. Mining retains resources in one configured block item.
+- Add dedicated General/Housing/Redstone configuration, selectable disabled-face materials, clear red/yellow/blue inventory icons and consistently sharpened artwork. Label shared output limits as blank for unlimited. Support per-face activity artwork and settings-only Duplifier copying and Undo. Mining retains resources in one configured block item.
 - Use standard capabilities without mandatory mod dependencies. Native player checks cover Mekanism energy, fluid and item networks, RFTools Powercells, and the native Battery and Tank.
 
 ### Stationary glass terrain and retained rendering (Forge 1.12.2)

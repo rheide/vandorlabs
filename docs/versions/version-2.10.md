@@ -8,9 +8,10 @@ User testing and final release validation remain pending.
 
 ## Materials and joined artwork
 
-The new **Floor** category contains thirteen finishes, including coloured tiles,
+The new **Tiles** category contains thirteen finishes, including coloured tiles,
 staggered tiles, limestone and terrazzo designs. **Doors / Utility** gains
-Bathroom White, Modern Oak Windowed, Windowed Utility and Windowed White.
+Bathroom White, Modern Oak Windowed, Windowed Utility, Windowed White, Bathroom
+and Stall.
 Existing saved texture choices keep their identities.
 The **Hull** category also includes the supplied **Port Hull** face.
 
@@ -18,14 +19,14 @@ Filesystem Door artwork now mirrors correctly across double-door leaves,
 matching the behavior of selected vanilla-block textures.
 
 Material dialogs consistently call image mapping **Texture: Tile / Fit (Aspect)
-/ Stretch**. Connected surfaces offer directional joining and an All/Even/Odd
-filter for the neighbouring coordinate. The neighbour's own filter does not
-override that choice. See [texture layout and joining](../texture-joining.md)
+/ Stretch**. Connected surfaces offer Vertical, Horizontal, North/South and East/West joining.
+Older saved Even/Odd choices now behave as All. Copifier batch changes refresh
+previously joined surfaces immediately. See [texture layout and joining](../texture-joining.md)
 for examples, axis meanings and supported families.
 
 The Duplifier's **Respect block joins** option restricts Connected Matching
 Blocks to the clicked joined artwork. Leave it off to retain the existing
-matching-region behavior.
+matching-region behavior. Hover tooltips explain all three connected selection options.
 
 ## Canopy items
 
@@ -72,7 +73,10 @@ until they reach a representable endpoint. See the
 
 Forge 1.12.2 and NeoForge 1.21.1 add **Power Port**, **Fluid Port** and **Matter Port** for transferring RF,
 fluids and items. Configure all six faces, an optional shared output limit, input
-pulling and Redstone conditions in their dedicated dialog. Stored resources remain
+pulling and Redstone conditions in their dedicated dialog. The **Housing** tab
+selects artwork for disabled faces; port faces retain their resource artwork.
+The output-limit label identifies a blank field as unlimited. Sharpened artwork
+and red/yellow/blue inventory accents distinguish the three resource types. Stored resources remain
 in one configured item when mined; Duplifier copying transfers settings only.
 See [Resource Ports](../resource-ports.md) for recipes, connections and buffer limits.
 
@@ -104,12 +108,12 @@ that complete snapshot for recovery.
 
 ## Module Rack
 
-The new **Module Rack** has four horizontal slots for **Blank Modules**. Click a specific slot to insert a module with a sliding animation, or use an empty hand to retrieve it. The matching row of cyan/amber buttons lights when occupied.
+The new **Module Rack** has four horizontal slots for **Blank Modules**. Click a specific slot to insert a module with a sliding animation, or use an empty hand to retrieve it with an outward slide. Each bay has a lower amber square when empty and an upper cyan square when occupied.
 
-Racks mount on all six faces, including floors and ceilings. Their controls and insertion direction rotate with the front.
+Racks mount on all six faces, including floors and ceilings. They reuse the Light and Port placement rule, including shallow floor placement facing the player. Their controls and module travel rotate with the front.
 
-Its darker graphite housing follows the compact equipment design: a one-pixel rim, three-pixel right panel recessed by one pixel, and paired vertical module handles. The right panel contains slot controls without an Access Card or Chip Mount.
+Its darker graphite housing follows the compact equipment design: a one-pixel rim, full-depth right wall around a recessed inner panel, and paired vertical module handles. The right panel contains slot controls without an Access Card or Chip Mount.
 
-Seated modules and the rack share Minecraft's ordinary chunk mesh. Only active insertions need a temporary renderer; idle racks have neither ticking tiles nor permanent tile-entity rendering.
+Seated modules and the rack share Minecraft's ordinary chunk mesh. Only active insertion and extraction animations need a temporary renderer; idle racks have neither ticking tiles nor permanent tile-entity rendering.
 
 See [Module Rack usage and crafting](../module-rack.md).
