@@ -60,6 +60,10 @@ case "${1:-}" in
         elif [ "$TARGET" = cube-reference ]; then
             PREFIX=cube_reference_
             export VANDOR_LABS_CUBE_REFERENCE_EXPORT_ONLY=true
+        elif [ "$TARGET" = directional-joins ]; then
+            PREFIX=directional_join_
+            export VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY=true
+            export VANDOR_LABS_DIRECTIONAL_JOIN_CHECKS_ONLY=true
         elif [ "$TARGET" = cube-joining ]; then
             PREFIX=joined_cube_
             export VANDOR_LABS_CUBE_JOINING_CHECKS_ONLY=true
@@ -467,6 +471,12 @@ if [ "$MODE" = focus ]; then
         grep -q "cube-reference-export PASS world=432" "$RUN_OUT/client.log"
         test -s "$RUN_OUT/legacy-cube-reference.json"
         echo "Cube reference exported: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = directional-joins ]; then
+        grep -q "directional-join-regression PASS" "$RUN_OUT/client.log"
+        grep -q "directional-join-player PASS" "$RUN_OUT/client.log"
+        echo "Directional joining checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = cube-joining ]; then

@@ -132,6 +132,7 @@ public class BlockGlassWall extends Block {
         }
         IBlockState other = world.getBlockState(pos);
         return canConnectTo(other.getBlock())
+                && (!(this instanceof BlockProgrammableGlass) || TextureJoins.allows(world.getTileEntity(owner),owner,pos))
                 && joinsAt(world, pos)
                 && other.getValue(ROTATED).equals(state.getValue(ROTATED))
                 && other.getValue(DEPTH).equals(state.getValue(DEPTH));

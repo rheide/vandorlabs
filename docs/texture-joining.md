@@ -21,7 +21,13 @@ other existing family rules still apply.
 | North/South | Consider neighbours along the Z axis. |
 | East/West | Consider neighbours along the X axis. |
 
-Every compatible neighbour in the selected direction participates. A sloping
+Joining requires agreement at both ends of each shared edge. For example,
+Vertical joins a Vertical or On neighbour above or below it, but does not join
+a Horizontal or Off neighbour there. North/South and East/West do not join
+each other. The same rule applies when inspecting either block, including
+Glass frames and the side rims of both Porthole shapes.
+
+Every compatible neighbour in the mutually selected direction participates. A sloping
 surface may also step in depth; its existing geometry rules determine whether
 the surfaces meet. Older Even/Odd selections now behave as All while retaining
 the saved join direction.
@@ -40,6 +46,11 @@ join direction guides discovery; existing matching and edit
 permissions still apply. Matching textures on another unjoined surface do not
 receive the copied settings. Unsupported joining families remain a single
 logical target with this option enabled.
+
+The original matching group is selected before its settings change. Applying
+North/South to an existing horizontal row therefore updates every selected
+member, then rebuilds their individual frames and apertures when the row runs
+east/west. Changing a join option does not require replacing the blocks.
 
 Leave Respect block joins off to retain the original matching-region selection,
 including supported edge and corner contacts. Changing this selection option

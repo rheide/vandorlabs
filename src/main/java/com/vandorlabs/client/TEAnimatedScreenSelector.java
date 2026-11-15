@@ -1280,12 +1280,12 @@ public class TEAnimatedScreenSelector
             if(side==row || side==row.getOpposite()) {
                 for(BlockPos next:com.vandorlabs.blocks.DiagonalPanelGeometry.rowCandidates(
                         tile.getPos(),state,mode,side==row))
-                    if(compatiblePorthole(tile.getWorld(),tile.getPos(),next))return true;
+                    if(com.vandorlabs.blocks.TextureJoins.allows(tile,tile.getPos(),next)&&compatiblePorthole(tile.getWorld(),tile.getPos(),next))return true;
                 return false;
             }
         }
         BlockPos next = tile.getPos().offset(side);
-        return compatiblePorthole(tile.getWorld(),tile.getPos(),next);
+        return com.vandorlabs.blocks.TextureJoins.allows(tile,tile.getPos(),next)&&compatiblePorthole(tile.getWorld(),tile.getPos(),next);
     }
 
     private static void topRim(BufferBuilder buf, TextureAtlasSprite metal, DiagonalPortholeMesh mesh,

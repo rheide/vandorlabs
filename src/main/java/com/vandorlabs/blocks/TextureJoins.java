@@ -4,11 +4,17 @@ import com.vandorlabs.surface.TextureJoinOwner;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 
-/** Read-only owner-directed texture edge admission; callers retain material/loaded checks. */
+/** Read-only root and mutual endpoint admission; callers retain material/geometry checks. */
 public final class TextureJoins {
     public static boolean allows(TileEntity owner,BlockPos from,BlockPos next){
-        return !(owner instanceof TextureJoinOwner)||((TextureJoinOwner)owner).textureJoin()
-                .connects(from.getX(),from.getY(),from.getZ(),next.getX(),next.getY(),next.getZ());
+        if(!(owner instanceof TextureJoinOwner))return true;
+        if(!((TextureJoinOwner)owner).textureJoin().connects(from.getX(),from.getY(),from.getZ(),next.getX(),next.getY(),next.getZ()))return false;
+        net.minecraft.world.World world=owner.getWorld();
+        if(world==null||!world.isBlockLoaded(from)||!world.isBlockLoaded(next))return false;
+        TileEntity a=world.getTileEntity(from),b=world.getTileEntity(next);
+        com.vandorlabs.surface.TextureJoinSettings first=a instanceof TextureJoinOwner?((TextureJoinOwner)a).textureJoin():com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
+        com.vandorlabs.surface.TextureJoinSettings second=b instanceof TextureJoinOwner?((TextureJoinOwner)b).textureJoin():com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
+        return first.connectsWith(second,from.getX(),from.getY(),from.getZ(),next.getX(),next.getY(),next.getZ());
     }
     public static boolean defaultPolicy(TileEntity owner){return !(owner instanceof TextureJoinOwner)
             ||((TextureJoinOwner)owner).textureJoin().equals(com.vandorlabs.surface.TextureJoinSettings.DEFAULT);}
@@ -20,7 +26,7 @@ public final class TextureJoins {
     public static boolean joined(net.minecraft.world.World world,BlockPos from,BlockPos next,com.vandorlabs.surface.TextureJoinSettings policy){
         if(!world.isBlockLoaded(from)||!world.isBlockLoaded(next)||!policy.connects(from.getX(),from.getY(),from.getZ(),next.getX(),next.getY(),next.getZ()))return false;
         TileEntity a=world.getTileEntity(from),b=world.getTileEntity(next);
-        if(!(a instanceof TextureJoinOwner)||!(b instanceof TextureJoinOwner)||((TextureJoinOwner)a).textureJoin().direction==0||((TextureJoinOwner)b).textureJoin().direction==0)return false;
+        if(!(a instanceof TextureJoinOwner)||!(b instanceof TextureJoinOwner)||!((TextureJoinOwner)a).textureJoin().connectsWith(((TextureJoinOwner)b).textureJoin(),from.getX(),from.getY(),from.getZ(),next.getX(),next.getY(),next.getZ()))return false;
         net.minecraft.block.state.IBlockState as=world.getBlockState(from),bs=world.getBlockState(next);if(as.getBlock()!=bs.getBlock())return false;
         BlockPos delta=next.subtract(from);int distance=Math.abs(delta.getX())+Math.abs(delta.getY())+Math.abs(delta.getZ());
         if(a instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass){

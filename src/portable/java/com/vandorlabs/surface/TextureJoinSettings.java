@@ -55,6 +55,10 @@ public final class TextureJoinSettings {
                 ||direction==NORTH_SOUTH&&(dz==0||dx!=0)||direction==EAST_WEST&&(dx==0||dz!=0))return false;
         return true;
     }
+    /** A seam belongs to both panels; neither endpoint may opt the other into joining. */
+    public boolean connectsWith(TextureJoinSettings other,int ax,int ay,int az,int bx,int by,int bz){
+        return other!=null&&connects(ax,ay,az,bx,by,bz)&&other.connects(bx,by,bz,ax,ay,az);
+    }
     @Override public boolean equals(Object other){return other instanceof TextureJoinSettings&&((TextureJoinSettings)other).direction==direction&&((TextureJoinSettings)other).parity==parity;}
     @Override public int hashCode(){return direction*3+parity;}
 }

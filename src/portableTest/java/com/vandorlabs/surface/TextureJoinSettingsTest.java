@@ -22,6 +22,14 @@ public final class TextureJoinSettingsTest {
         need(even.cycleDirection(-1).direction==TextureJoinSettings.NORTH_SOUTH,"reverse direction cycling");
         need(even.disabled()==new TextureJoinSettings(2,1).disabled(),"inactive host lookups reuse immutable parity profiles");
         need(new TextureJoinSettings(2,0).cycleParity(-1).parity==0,"retired coordinate cycling stays All");
+        for(int first=0;first<6;first++)for(int second=0;second<6;second++)for(int axis=0;axis<3;axis++)for(int step:new int[]{-1,1}){
+            int[] from={-17,-3,-19},to=from.clone();to[axis]+=step;
+            TextureJoinSettings a=new TextureJoinSettings(first,0),b=new TextureJoinSettings(second,0);
+            boolean expected=axis(first,axis)&&axis(second,axis);
+            need(a.connectsWith(b,from[0],from[1],from[2],to[0],to[1],to[2])==expected,"mutual axis first="+first+" second="+second+" axis="+axis);
+            need(b.connectsWith(a,to[0],to[1],to[2],from[0],from[1],from[2])==expected,"reverse endpoint order");checks+=2;
+        }
         System.out.println("Texture join settings PASS "+checks+" axis/negative-coordinate cases and legacy parity normalization");
     }
+    private static boolean axis(int policy,int axis){return policy==1||policy==2&&axis==1||policy==3&&axis!=1||policy==4&&axis==2||policy==5&&axis==0;}
 }
