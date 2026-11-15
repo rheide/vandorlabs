@@ -47,11 +47,16 @@ public final class PortholeGroupCacheChecks {
         World world=new World();IBlockState state=flat.getDefaultState();List<TileEntityAnimatedScreenSelector> line=new ArrayList<>();
         try{
             for(int x=0;x<48;x++)line.add(put(world,new BlockPos(x,80,8),state,0,0));
-            TileEntityAnimatedScreenSelector owner=line.get(0),vertical=line.get(24),ordinary=line.get(1);owner.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(5,0));vertical.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(2,0));
-            TEAnimatedScreenSelector.PortholeGroup wide=group(owner,state);need(wide.columns==48,"directional owner spans three real sections");need(group(vertical,state).columns==1,"wide owner never installs its group into vertical neighbor");need(group(ordinary,state).columns==48,"ordinary owner still spans matching custom neighbors");need(group(vertical,state).columns==1&&group(owner,state)==wide,"ordinary discovery cannot replace per-owner custom groups");
-            world.resetReads();need(group(owner,state)==wide&&group(vertical,state).columns==1,"directed groups retain stable owner descriptors");need(world.stateReads==0&&world.tileReads==0,"custom policies do not cause quiet per-frame rescans");
-            TileEntityAnimatedScreenSelector far=line.get(47);far.setJoinPortholes(false);world.notifyBlockUpdate(far.getPos(),state,state,3);TEAnimatedScreenSelector.PortholeGroup rebuilt=group(owner,state);need(rebuilt!=wide&&rebuilt.columns==47,"far third-section peer mutation invalidates complete owner dependencies");need(group(vertical,state).columns==1,"far invalidation retains independent vertical policy");
-            System.out.println("porthole-group-cache directed dependencies PASS threeSections/farPeerMutation/perOwnerIsolation/zeroIdleReads");
+            TileEntityAnimatedScreenSelector owner=line.get(0),vertical=line.get(24),ordinary=line.get(1);owner.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(5,0));
+            TEAnimatedScreenSelector.PortholeGroup original=group(owner,state);need(original.columns==48,"compatible directional owner spans three real sections");
+            vertical.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(2,0));
+            TEAnimatedScreenSelector.PortholeGroup split=group(owner,state);need(split!=original&&split.columns==24,"vertical neighbor splits horizontal owner at mutual axis boundary");need(group(vertical,state).columns==1,"vertical-only neighbor remains independent");need(group(ordinary,state).columns==24,"ordinary owner respects the same mutual boundary");need(group(line.get(25),state).columns==23,"far half remains a separate joined group");
+            world.resetReads();need(group(owner,state)==split&&group(vertical,state).columns==1,"mutual groups retain stable owner descriptors");need(world.stateReads==0&&world.tileReads==0,"custom policies do not cause quiet per-frame rescans");
+            vertical.setTextureJoin(com.vandorlabs.surface.TextureJoinSettings.DEFAULT);
+            TEAnimatedScreenSelector.PortholeGroup wide=group(owner,state);need(wide.columns==48,"restored compatible join reconnects all three sections");
+            TileEntityAnimatedScreenSelector far=line.get(47);far.setJoinPortholes(false);world.notifyBlockUpdate(far.getPos(),state,state,3);TEAnimatedScreenSelector.PortholeGroup rebuilt=group(owner,state);need(rebuilt!=wide&&rebuilt.columns==47,"far third-section peer mutation invalidates complete owner dependencies");
+            vertical.setTextureJoin(new com.vandorlabs.surface.TextureJoinSettings(2,0));need(group(vertical,state).columns==1&&group(owner,state).columns==24,"second policy edit reinstates mutual split after far invalidation");
+            System.out.println("porthole-group-cache mutual dependencies PASS threeSections/axisBarrier/reconnect/farPeerMutation/zeroIdleReads");
         }finally{close(world);}
     }
     private static void geometry() {

@@ -1,6 +1,8 @@
 package com.vandorlabs.gear.core;
 
 /** Small caller-owned kinematic cache. Other threads evaluate directly and never share mutable slots. */
+// Java 8 has no Thread.threadId(); retain its allocation-free thread identity API.
+@SuppressWarnings("deprecation")
 public final class GearPoseCache {
     private static final int LIMIT=8;
     private final long ownerThread=Thread.currentThread().getId();
