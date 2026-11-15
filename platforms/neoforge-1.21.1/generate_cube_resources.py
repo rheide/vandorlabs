@@ -139,6 +139,8 @@ def main():
     atlas.extend(generate_seats(ROOT,OUT))
     from generate_legacy_landing_resources import generate as generate_legacy_landing
     atlas.extend(generate_legacy_landing(ROOT,OUT))
+    from generate_copy_resources import generate as generate_copy
+    atlas.extend(generate_copy(ROOT,OUT))
     # Source-sized Screen item artwork is supplied by generateScreenItemResources.
     atlas.append(dict(type='minecraft:single',resource='vandorlabs:housing/native_screen_door_side'))
     # Own-storage sprites are generated separately; the shared atlas owns their registration.
