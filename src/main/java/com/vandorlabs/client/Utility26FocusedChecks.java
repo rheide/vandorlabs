@@ -70,6 +70,24 @@ final class Utility26FocusedChecks {
             }).get();
             splitLive=true;return false;
         }
+        if("true".equals(System.getenv("VANDOR_TRACK_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{
+                net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
+                net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                com.vandorlabs.gear.track.TrackRuntimeChecks.run(world,actor);return null;
+            }).get();
+            TrackClientChecks.run(mc,output);
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS track-only");return true;
+        }
+        if("true".equals(System.getenv("VANDOR_PLATE_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{
+                net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
+                net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                com.vandorlabs.plate.PlateRuntimeChecks.run(world,actor,new BlockPos(560,104,170));return null;
+            }).get();
+            PressurePlateClientChecks.run(mc,output);
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS pressure-plate-only");return true;
+        }
         if("true".equals(System.getenv("VANDOR_PROGRAMMER_ONLY"))){
             mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.programmer.ProgrammerRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),new BlockPos(500,104,120));com.vandorlabs.programmer.ProgrammerMiningSourceChecks.run(mc.getIntegratedServer().getWorld(0),new BlockPos(800,110,120),output);return null;}).get();
             com.vandorlabs.programmer.client.ProgrammerClientChecks.run(mc,output);

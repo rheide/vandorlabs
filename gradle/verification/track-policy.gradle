@@ -1,0 +1,5 @@
+task testTrackMeshPolicy(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.gear.track.core.TrackMeshPolicyTest'
+}

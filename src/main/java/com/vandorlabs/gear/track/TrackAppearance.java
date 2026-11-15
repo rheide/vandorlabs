@@ -27,16 +27,11 @@ public final class TrackAppearance {
 
     public TrackAppearance(int beltMask, Mount mount, int sideMask, int bridgeMask) {this(beltMask,mount,sideMask,bridgeMask,0);}
     public TrackAppearance(int beltMask, Mount mount, int sideMask, int bridgeMask,int lowerSideMask) {
-        if ((beltMask & ~15) != 0 || mount == null || (sideMask & ~15) != 0 || (bridgeMask & ~10) != 0) {
-            throw new IllegalArgumentException("Invalid track render state");
-        }
-        this.beltMask = beltMask;
-        this.mount = mount;
-        this.sideMask = sideMask;this.lowerSideMask=lowerSideMask&sideMask&15;
-        this.bridgeMask = bridgeMask;
+        int key=com.vandorlabs.gear.track.core.TrackVisualState.validatedKey(beltMask,mount==null?-1:mount.ordinal(),sideMask,bridgeMask,lowerSideMask);
+        this.beltMask=key&15;this.mount=mount;this.sideMask=key>>6&15;this.bridgeMask=key>>10&10;this.lowerSideMask=key>>14&15;
     }
 
-    public int key() { return beltMask | mount.ordinal() << 4 | sideMask << 6 | bridgeMask << 10 | lowerSideMask << 14; }
+    public int key() { return com.vandorlabs.gear.track.core.TrackVisualState.key(beltMask,mount.ordinal(),sideMask,bridgeMask,lowerSideMask); }
 
     public NBTTagCompound write() {
         NBTTagCompound tag = new NBTTagCompound();

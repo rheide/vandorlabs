@@ -27,6 +27,9 @@ public final class TrackParts {
         }
     }
 
+    private static final Part[] TEMPLATES=new Part[com.vandorlabs.gear.track.core.TrackMeshPolicy.templateCount()];
+    static{for(int i=0;i<TEMPLATES.length;i++){com.vandorlabs.gear.track.core.TrackMeshPolicy.Part p=com.vandorlabs.gear.track.core.TrackMeshPolicy.template(i);TEMPLATES[i]=new Part(p.name,p.quarterTurns);}}
+    private static final class Parts extends ArrayList<Part> implements com.vandorlabs.gear.track.core.TrackMeshPolicy.Sink {private static final long serialVersionUID=1L;public void part(com.vandorlabs.gear.track.core.TrackMeshPolicy.Part p){add(TEMPLATES[p.template]);}}
     private TrackParts() { }
 
     public static String styleName(TrackTopology.Style style) { return style.name().toLowerCase(Locale.ROOT); }
@@ -42,20 +45,6 @@ public final class TrackParts {
 
     /** Model parts only. It neither moves world cells nor claims an arm/controller. */
     public static List<Part> forCell(TrackTopology.Style style, EnumFacing facing, TrackAppearance appearance) {
-        List<Part> parts = new ArrayList<Part>();
-        int turns = quarterTurns(facing);
-        parts.add(new Part(styleName(style) + "_" + appearance.beltMask, turns));
-        switch (appearance.mount) {
-            case SOCKET: parts.add(new Part("socket", turns)); break;
-            case TOP: parts.add(new Part("top_mount", turns)); break;
-            case TOP_HIGH: parts.add(new Part("top_mount_high", turns)); break;
-            default: break;
-        }
-        for (int side = 0; side < 4; side++) {
-            if ((appearance.sideMask & 1 << side) != 0) parts.add(new Part((appearance.lowerSideMask&1<<side)!=0?"side_mount_low":"side_mount", side));
-        }
-        if ((appearance.bridgeMask & TrackTopology.LEFT) != 0) parts.add(new Part("bridge_left", turns));
-        if ((appearance.bridgeMask & TrackTopology.RIGHT) != 0) parts.add(new Part("bridge_right", turns));
-        return Collections.unmodifiableList(parts);
+        Parts parts=new Parts();com.vandorlabs.gear.track.core.TrackMeshPolicy.emit(style,quarterTurns(facing),appearance.key(),parts);return Collections.unmodifiableList(parts);
     }
 }
