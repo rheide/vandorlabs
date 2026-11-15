@@ -24,25 +24,12 @@ public class SquareLayout {
     public final Vec3d pivot;
     protected SquareLayout(Collection<BlockPos> members,EnumFacing normal){this(members,normal,false);}
     private SquareLayout(Collection<BlockPos> members,EnumFacing normal,boolean rectangle){
-        if(members.isEmpty())throw new IllegalArgumentException("Surface area is empty");
         this.normal=normal;basis=TurntableGeometry.Face.valueOf(normal.name());
-        List<BlockPos> ordered=new ArrayList<>(members);Collections.sort(ordered);cells=Collections.unmodifiableList(ordered);root=ordered.get(0);
-        int lowU=Integer.MAX_VALUE,lowV=lowU,highU=Integer.MIN_VALUE,highV=highU;
-        int minX=Integer.MAX_VALUE,minY=minX,minZ=minX,maxX=Integer.MIN_VALUE,maxY=maxX,maxZ=maxX;
-        plane=basis.plane(root.getX(),root.getY(),root.getZ());
-        for(BlockPos p:ordered){
-            int u=basis.u(p.getX(),p.getY(),p.getZ()),v=basis.v(p.getX(),p.getY(),p.getZ());
-            if(basis.plane(p.getX(),p.getY(),p.getZ())!=plane)throw new IllegalArgumentException("Programmable Surfaces must lie in one plane");
-            lowU=Math.min(lowU,u);highU=Math.max(highU,u);lowV=Math.min(lowV,v);highV=Math.max(highV,v);
-            minX=Math.min(minX,p.getX());minY=Math.min(minY,p.getY());minZ=Math.min(minZ,p.getZ());
-            maxX=Math.max(maxX,p.getX());maxY=Math.max(maxY,p.getY());maxZ=Math.max(maxZ,p.getZ());
-        }
-        width=highU-lowU+1;height=highV-lowV+1;
-        if(width<1||height<1||width>MAX_SIZE||height>MAX_SIZE||(long)width*height!=ordered.size()||new java.util.HashSet<>(ordered).size()!=ordered.size()||!rectangle&&width!=height)throw new IllegalArgumentException(
-                "Surface must be a filled "+(rectangle?"rectangle":"square")+" (found "+width+" x "+height+", "+ordered.size()+" cells; maximum 32 x 32)");
-        size=width;minU=lowU;minV=lowV;
-        pivot=new Vec3d((minX+maxX+1D)/2+normal.getFrontOffsetX()*.5,
-                (minY+maxY+1D)/2+normal.getFrontOffsetY()*.5,(minZ+maxZ+1D)/2+normal.getFrontOffsetZ()*.5);
+        List<BlockPos> ordered=new ArrayList<>(members);Collections.sort(ordered);cells=Collections.unmodifiableList(ordered);root=ordered.isEmpty()?BlockPos.ORIGIN:ordered.get(0);
+        List<com.vandorlabs.surface.core.SurfaceLayout.Cell> points=new ArrayList<>();for(BlockPos pos:ordered)points.add(new com.vandorlabs.surface.core.SurfaceLayout.Cell(pos.getX(),pos.getY(),pos.getZ()));
+        com.vandorlabs.surface.core.SurfaceLayout geometry=new com.vandorlabs.surface.core.SurfaceLayout(points,basis,rectangle);
+        width=geometry.width;height=geometry.height;size=width;minU=geometry.minU;minV=geometry.minV;plane=geometry.plane;
+        pivot=new Vec3d(geometry.pivotX,geometry.pivotY,geometry.pivotZ);
     }
     public SquareLayout reversed(){return new SquareLayout(cells,normal.getOpposite(),width!=height);}
     public BlockPos cell(int u,int v,int depth){
@@ -70,29 +57,21 @@ public class SquareLayout {
     public static java.util.Set<BlockPos> connected(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed){return connected(world,seed,allowed,true);}
     private static java.util.Set<BlockPos> connected(World world,BlockPos seed,java.util.function.Predicate<BlockPos> allowed,boolean matchingArtwork){
         if(TRACK_DISCOVERY)discoveryScans++;
-        if(!allowed.test(seed))throw new IllegalArgumentException("Surface is outside the selected pad");
-        if(!readLoaded(world,seed) || !(readState(world,seed).getBlock() instanceof BlockTurntableSurface))
-            throw new IllegalArgumentException("Place Programmable Surface blocks in front of the controller");
-        net.minecraft.tileentity.TileEntity seedTile=readTile(world,seed);
-        if(!(seedTile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface))throw new IllegalArgumentException("Surface tile is unavailable");
-        com.vandorlabs.tiles.TileEntityTurntableSurface appearance=(com.vandorlabs.tiles.TileEntityTurntableSurface)seedTile;
-        EnumFacing normal=readState(world,seed).getValue(BlockTurntableSurface.FACING);
-        TurntableGeometry.Face basis=TurntableGeometry.Face.valueOf(normal.name());
-        EnumFacing u=EnumFacing.getFacingFromVector(basis.ux,basis.uy,basis.uz),v=EnumFacing.getFacingFromVector(basis.vx,basis.vy,basis.vz);
-        Set<BlockPos> visited=new HashSet<>(),members=new HashSet<>();ArrayDeque<BlockPos> queue=new ArrayDeque<>();queue.add(seed.toImmutable());
-        while(!queue.isEmpty()){
-            BlockPos pos=queue.removeFirst();if(!allowed.test(pos)||!visited.add(pos))continue;
-            if(!readLoaded(world,pos))throw new IllegalArgumentException("Load every surface and its boundary before scanning");
-            IBlockState state=readState(world,pos);if(!(state.getBlock() instanceof BlockTurntableSurface))continue;
-            net.minecraft.tileentity.TileEntity tile=readTile(world,pos);
-            if(!(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)){if(matchingArtwork)continue;throw new IllegalArgumentException("Surface tile is unavailable");}
-            if(matchingArtwork&&!appearance.sameArtwork(tile))continue;
-            if(state.getValue(BlockTurntableSurface.FACING)!=normal)throw new IllegalArgumentException("Connected surfaces must face the same direction");
-            members.add(pos);if(members.size()>MAX_CELLS)throw new IllegalArgumentException("Programmable Surfaces are limited to 32 x 32 blocks");
-            for(EnumFacing side:new EnumFacing[]{u,u.getOpposite(),v,v.getOpposite()})queue.add(pos.offset(side));
-        }
-        return Collections.unmodifiableSet(members);
+        final com.vandorlabs.surface.core.SurfaceDiscovery.Access<BlockPos> access=new com.vandorlabs.surface.core.SurfaceDiscovery.Access<BlockPos>(){
+            private com.vandorlabs.tiles.TileEntityTurntableSurface seedAppearance;
+            private BlockPos current;private IBlockState state;private net.minecraft.tileentity.TileEntity tile;private boolean tileRead;
+            private IBlockState state(BlockPos cell){if(!cell.equals(current)){current=cell;state=readState(world,cell);tile=null;tileRead=false;}return state;}
+            private net.minecraft.tileentity.TileEntity tile(BlockPos cell){state(cell);if(!tileRead){tile=readTile(world,cell);tileRead=true;}return tile;}
+            public boolean loaded(BlockPos cell){return readLoaded(world,cell);}
+            public boolean surface(BlockPos cell){return state(cell).getBlock() instanceof BlockTurntableSurface;}
+            public boolean hasTile(BlockPos cell){return tile(cell) instanceof com.vandorlabs.tiles.TileEntityTurntableSurface;}
+            public TurntableGeometry.Face face(BlockPos cell){return TurntableGeometry.Face.valueOf(state(cell).getValue(BlockTurntableSurface.FACING).name());}
+            public boolean sameArtwork(BlockPos seedCell,BlockPos cell){if(seedAppearance==null)seedAppearance=(com.vandorlabs.tiles.TileEntityTurntableSurface)tile(seedCell);return seedAppearance.sameArtwork(tile(cell));}
+            public BlockPos offset(BlockPos cell,int x,int y,int z){return cell.add(x,y,z);}
+        };
+        return com.vandorlabs.surface.core.SurfaceDiscovery.connected(access,seed.toImmutable(),allowed,matchingArtwork);
     }
+
     public static final double DISC_RADIUS=.43;
     public boolean onDisc(double x,double y,double z){double dx=x-pivot.x,dy=y-pivot.y,dz=z-pivot.z,u=dx*basis.ux+dy*basis.uy+dz*basis.uz,v=dx*basis.vx+dy*basis.vy+dz*basis.vz,r=size*DISC_RADIUS;return u*u+v*v<=r*r+1e-8;}
     public boolean loaded(World world){for(BlockPos cell:cells)if(!world.isBlockLoaded(cell))return false;return true;}

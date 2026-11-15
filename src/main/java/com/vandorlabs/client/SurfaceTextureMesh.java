@@ -7,40 +7,21 @@ import com.vandorlabs.turntable.TurntableGeometry;
 
 /** Cached UV-clipped pad faces never repeat outside a sprite's atlas rectangle. */
 final class SurfaceTextureMesh {
-    private static final class V {
-        final double x,y,u,v;
-        V(double x,double y,double u,double v){this.x=x;this.y=y;this.u=u;this.v=v;}
-        double at(int axis){return axis==0?u:v;}
-        V between(V other,double t){return new V(x+(other.x-x)*t,y+(other.y-y)*t,u+(other.u-u)*t,v+(other.v-v)*t);}
-    }
     private static final int[] ORDER={0,2,1,1};
-    private final List<V[]> triangles;
+    private final List<com.vandorlabs.surface.core.SurfaceUvMesh.Vertex[]> triangles;
     private static int retained;
     private static final Map<String,SurfaceTextureMesh> CACHE=new LinkedHashMap<>(64,.75f,true);
-    private SurfaceTextureMesh(List<V[]> triangles){this.triangles=triangles;}
+    private SurfaceTextureMesh(List<com.vandorlabs.surface.core.SurfaceUvMesh.Vertex[]> triangles){this.triangles=triangles;}
     static void clear(){CACHE.clear();retained=0;}
     static SurfaceTextureMesh get(TextureAtlasSprite sprite,int size,int mode,boolean disc){return get(sprite,size,size,mode,disc);}
     static SurfaceTextureMesh get(TextureAtlasSprite sprite,int width,int height,int mode,boolean disc){
         String key=System.identityHashCode(sprite)+":"+width+":"+height+":"+mode+":"+disc;SurfaceTextureMesh found=CACHE.get(key);if(found!=null)return found;
-        double rx=width/2D,ry=height/2D,aspect=UnifiedTextureSprites.aspect(sprite);List<double[][]> polygons=new ArrayList<>();
-        if(disc)for(int i=0;i<128;i++){double a=i*Math.PI/64,b=(i+1)*Math.PI/64,rad=width*com.vandorlabs.surface.SquareLayout.DISC_RADIUS;polygons.add(new double[][]{{0,0},{Math.cos(a)*rad,Math.sin(a)*rad},{Math.cos(b)*rad,Math.sin(b)*rad}});}
-        else polygons.add(new double[][]{{-rx,-ry},{rx,-ry},{rx,ry},{-rx,ry}});
-        List<V[]> triangles=new ArrayList<>();
-        for(double[][] polygon:polygons){List<V> source=new ArrayList<>();
-            for(double[] p:polygon){double u,v;if(mode==1){u=(p[0]+rx)/Math.max(1,aspect);v=(p[1]+ry)*Math.min(1,aspect);}else if(mode==2){u=.5+p[0]/(width*Math.min(1,aspect*height/width));v=.5+p[1]/(height*Math.min(1,width/(aspect*height)));}else{u=(p[0]+rx)/width;v=(p[1]+ry)/height;}source.add(new V(p[0],p[1],u,v));}
-            double lowU=Double.POSITIVE_INFINITY,lowV=lowU,highU=Double.NEGATIVE_INFINITY,highV=highU;for(V p:source){lowU=Math.min(lowU,p.u);highU=Math.max(highU,p.u);lowV=Math.min(lowV,p.v);highV=Math.max(highV,p.v);}
-            for(int u=mode==1?(int)Math.floor(lowU+1e-9):0;u<(mode==1?Math.ceil(highU-1e-9):1);u++)for(int v=mode==1?(int)Math.floor(lowV+1e-9):0;v<(mode==1?Math.ceil(highV-1e-9):1);v++){
-                List<V> clipped=clip(clip(clip(clip(source,0,u,true),0,u+1,false),1,v,true),1,v+1,false);if(clipped.size()<3)continue;
-                List<V> normalized=new ArrayList<>();for(V p:clipped)normalized.add(new V(p.x,p.y,p.u-u,p.v-v));
-                for(int i=1;i+1<normalized.size();i++){V a=normalized.get(0),b=normalized.get(i),c=normalized.get(i+1);if(Math.abs((b.x-a.x)*(c.y-a.y)-(b.y-a.y)*(c.x-a.x))>1e-12)triangles.add(new V[]{a,b,c});}
-            }
-        }
+        List<com.vandorlabs.surface.core.SurfaceUvMesh.Vertex[]> triangles=com.vandorlabs.surface.core.SurfaceUvMesh.build(width,height,mode,UnifiedTextureSprites.aspect(sprite),disc);
         found=new SurfaceTextureMesh(Collections.unmodifiableList(triangles));int bytes=128+triangles.size()*184;while(!CACHE.isEmpty()&&(CACHE.size()>=256||retained+bytes>8*1024*1024)){Iterator<SurfaceTextureMesh> it=CACHE.values().iterator();SurfaceTextureMesh old=it.next();it.remove();retained-=128+old.triangles.size()*184;}if(bytes<=8*1024*1024){CACHE.put(key,found);retained+=bytes;}return found;
     }
-    private static List<V> clip(List<V> source,int axis,double plane,boolean lower){List<V> result=new ArrayList<>();if(source.isEmpty())return result;V last=source.get(source.size()-1);boolean before=lower?last.at(axis)>=plane:last.at(axis)<=plane;for(V next:source){boolean after=lower?next.at(axis)>=plane:next.at(axis)<=plane;if(before!=after)result.add(last.between(next,(plane-last.at(axis))/(next.at(axis)-last.at(axis))));if(after)result.add(next);last=next;before=after;}return result;}
     void draw(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double depth,int light){draw(buffer,face,sprite,depth,light,0,0,0);}
-    void draw(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double depth,int light,double x,double y,double z){for(V[] triangle:triangles)for(int index:ORDER){
-        V v=triangle[index];buffer.pos(x+face.ux*v.x+face.vx*v.y+face.x*depth,y+face.uy*v.x+face.vy*v.y+face.y*depth,z+face.uz*v.x+face.vz*v.y+face.z*depth).color(1F,1F,1F,1F).tex(sprite.getInterpolatedU(v.u*16),sprite.getInterpolatedV(v.v*16)).lightmap(light&65535,light>>>16);
+    void draw(BufferBuilder buffer,TurntableGeometry.Face face,TextureAtlasSprite sprite,double depth,int light,double x,double y,double z){for(com.vandorlabs.surface.core.SurfaceUvMesh.Vertex[] triangle:triangles)for(int index:ORDER){
+        com.vandorlabs.surface.core.SurfaceUvMesh.Vertex v=triangle[index];buffer.pos(x+face.ux*v.x+face.vx*v.y+face.x*depth,y+face.uy*v.x+face.vy*v.y+face.y*depth,z+face.uz*v.x+face.vz*v.y+face.z*depth).color(1F,1F,1F,1F).tex(sprite.getInterpolatedU(v.u*16),sprite.getInterpolatedV(v.v*16)).lightmap(light&65535,light>>>16);
         if(buffer.getVertexFormat().hasNormal())buffer.normal(face.x,face.y,face.z);buffer.endVertex();
     }}
 }

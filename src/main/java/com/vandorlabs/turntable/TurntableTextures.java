@@ -2,9 +2,9 @@ package com.vandorlabs.turntable;
 
 /** Stable surface settings, independent of the shared material catalog's numeric choices. */
 public final class TurntableTextures {
-    public static final String[] IDS={"original_off","original_on","stone_iron","rotary_deck","basalt","graphite_ivory","landing","landing-grey","maintenance","maintenance-grey","docking","docking-grey","copier-input","copier-output"};
-    public static final String[] LABELS={"Dormant","Active","Iron","Rotary","Basalt","Ivory","Landing","Landing Grey","Maintenance","Maintenance Grey","Docking","Docking Grey","Copier Input","Copier Output"};
-    private static final String[] FILES={"turntable/turntable_block_top","turntable/turntable_block_top_on","turntable/turntable_block_top_stone_iron","turntable/turntable_block_top_rotary_deck","turntable/turntable_block_top_basalt","turntable/turntable_block_top_graphite_ivory","surface/landing","surface/landing-grey","surface/maintenance","surface/maintenance-grey","surface/docking","surface/docking-grey","surface/copier-input","surface/copier-output"};
+    public static final String[] IDS=com.vandorlabs.surface.core.SurfaceArtwork.IDS;
+    public static final String[] LABELS=com.vandorlabs.surface.core.SurfaceArtwork.LABELS;
+    private static final String[] FILES=com.vandorlabs.surface.core.SurfaceArtwork.FILES;
     private TurntableTextures(){}
     public static int material(String id){if(id!=null&&id.startsWith("choice:"))try{int value=Integer.parseInt(id.substring(7));return value>=com.vandorlabs.tiles.CustomBlockMaterials.ID_BASE&&com.vandorlabs.tiles.ScreenHousingTextures.validChoice(value)?value:-1;}catch(NumberFormatException invalid){return -1;}if(id!=null&&id.startsWith("material:")){String key=id.substring(9);String[] ids=com.vandorlabs.tiles.ScreenHousingTextures.IDS;for(int i=0;i<ids.length;i++)if(ids[i].equals(key))return i;}return -1;}
     public static int choice(String id){int i=index(id);return i>=0?i:IDS.length+material(id);}
