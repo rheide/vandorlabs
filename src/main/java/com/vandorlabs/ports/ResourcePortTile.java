@@ -14,6 +14,9 @@ import net.minecraft.world.WorldServer;
 
 /** Physical transfer owner. Carried simulation tiles can expose appearance but cannot transfer. */
 public abstract class ResourcePortTile extends TileEntity implements ITickable,RedstoneChannelMember {
+    private boolean inert;
+    private NBTTagCompound retained=new NBTTagCompound(),failed;
+    public final boolean inert(){return inert;}
     private ResourcePortSettings settings=ResourcePortSettings.placed(EnumFacing.NORTH.getIndex());
     private ChannelList channels=ChannelList.EMPTY;
     /** 0 = always active; 1 = ON activates; 2 = OFF activates. */
@@ -32,31 +35,31 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
     private int visualCooldown;
     public long neighborLookups,capabilityRefreshes,visualPackets,serializationCalls;
     protected ResourcePortTile(){for(int i=0;i<6;i++)neighbors[i]=new Neighbor();}
-    public final ResourcePortSettings settings(){return settings;}
+    public ResourcePortSettings settings(){return settings;}
     public final int redstoneMode(){return redstoneMode;}
     public final int appearanceMask(){return appearanceMask;}
     public final int connectedMask(){return connectedMask;}
     public final void place(EnumFacing towardPlayer){configure(ResourcePortSettings.placed(towardPlayer.getIndex()),0,ChannelList.EMPTY);}
     public final void configure(ResourcePortSettings next,int mode,ChannelList nextChannels){
-        if(next==null||mode<0||mode>2||nextChannels==null||next.housingChoice!= -1&&!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(next.housingChoice))throw new IllegalArgumentException("Invalid port settings");
+        if(inert||next==null||mode<0||mode>2||nextChannels==null||next.housingChoice!= -1&&!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(next.housingChoice))throw new IllegalArgumentException("Invalid port settings");
         if(world!=null&&!physical())throw new IllegalArgumentException("Configure the installed physical port on the server");
-        if(next.equals(settings)&&mode==redstoneMode&&channels.equals(nextChannels))return;
-        ChannelList old=channels;settings=next;redstoneMode=mode;channels=nextChannels;signalTick=Long.MIN_VALUE;invalidateNeighbors();fairPrepared=false;
+        if(next.equals(settings())&&mode==redstoneMode&&channels.equals(nextChannels))return;
+        ChannelList old=channels;ResourcePortSettings previous=settings();int previousMode=redstoneMode;ChannelList previousChannels=channels;settings=next;configurationChanged(previous,next,previousMode!=mode||!previousChannels.equals(nextChannels));redstoneMode=mode;channels=nextChannels;signalTick=Long.MIN_VALUE;invalidateNeighbors();fairPrepared=false;
         if(world!=null){RedstoneChannels.channelChanged(this,old);markDirty();sync();world.notifyNeighborsOfStateChange(pos,getBlockType(),false);}
     }
-    public final NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();ResourcePortData.write(tag,settings,redstoneMode,channels);return tag;}
+    public final NBTTagCompound configuration(){NBTTagCompound tag=new NBTTagCompound();ResourcePortData.write(tag,settings(),redstoneMode,channels);return tag;}
     public final void configure(NBTTagCompound tag){ResourcePortSettings next=ResourcePortData.read(tag);int mode=ResourcePortData.mode(tag);ChannelList nextChannels=ResourcePortData.channels(tag);configure(next,mode,nextChannels);}
-    protected final boolean physical(){return world instanceof WorldServer&&!world.isRemote&&!isInvalid()&&world.getMinecraftServer()!=null&&world.getMinecraftServer().isCallingFromMinecraftThread()&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this;}
+    protected final boolean physical(){return !inert&&world instanceof WorldServer&&!world.isRemote&&!isInvalid()&&world.getMinecraftServer()!=null&&world.getMinecraftServer().isCallingFromMinecraftThread()&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this;}
     protected final boolean transferAllowed(){
         if(!loaded||!physical())return false;if(redstoneMode==0)return true;long tick=world.getTotalWorldTime();
         if(signalTick!=tick){signalTick=tick;boolean signal=channels.isEmpty()?LoadedRedstonePower.isPowered(world,pos):channelPowered;active=redstoneMode==0||(redstoneMode==1)==signal;}
         return active;
     }
-    protected final boolean input(int side){return settings.face(side)==ResourcePortSettings.Face.INPUT;}
-    protected final boolean output(int side){return settings.face(side)==ResourcePortSettings.Face.OUTPUT;}
+    protected final boolean input(int side){return !inert&&settings().face(side)==ResourcePortSettings.Face.INPUT;}
+    protected final boolean output(int side){return !inert&&settings().face(side)==ResourcePortSettings.Face.OUTPUT;}
     protected final long availableOutput(){
         long tick=world.getTotalWorldTime();if(tick!=budgetTick){budgetTick=tick;spent=0;fairPrepared=false;java.util.Arrays.fill(faceSpent,0);}
-        return settings.throughput==0?Long.MAX_VALUE:Math.max(0,settings.throughput-spent);
+        return settings().throughput==0?Long.MAX_VALUE:Math.max(0,settings().throughput-spent);
     }
     protected final void transferred(int side,long amount,boolean outgoing){
         if(amount<=0)return;if(outgoing){availableOutput();spent=spent>Long.MAX_VALUE-amount?Long.MAX_VALUE:spent+amount;faceSpent[side]+=amount;}
@@ -93,6 +96,14 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
         }
         return cached.handler;
     }
+    protected void configurationChanged(ResourcePortSettings previous,ResourcePortSettings next,boolean signalChanged){}
+    /** Return a comparison/read copy only; failure recovery always retains the original tag. */
+    protected NBTTagCompound normalizedReadData(NBTTagCompound original){return original;}
+    protected boolean storedAppearanceTick(){return false;}
+    protected void writePublicContents(NBTTagCompound tag){}
+    protected void writeConfiguration(NBTTagCompound tag){ResourcePortData.write(tag,settings(),redstoneMode,channels);}
+    protected void readPublicContents(NBTTagCompound tag){}
+    protected final void installReadSettings(ResourcePortSettings next){settings=next;signalTick=budgetTick=Long.MIN_VALUE;spent=0;fairPrepared=false;invalidateNeighbors();}
     protected abstract Object findHandler(TileEntity tile,EnumFacing side);
     protected abstract boolean compatible(Object handler,boolean receiving);
     protected abstract int storedUnits();
@@ -104,37 +115,47 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
         if(!loaded||!physical())return;
         if(transferAllowed())transferTick();
         if(visualCooldown>0){visualCooldown--;return;}visualCooldown=4;
-        int connected=0,on=0;long tick=world.getTotalWorldTime();
-        for(int i=0;i<6;i++)if(settings.face(i)!=ResourcePortSettings.Face.DISABLED){neighbor(i);if(neighbors[i].connected)connected|=1<<i;
-            boolean lit=settings.onTexture==ResourcePortSettings.OnTexture.REDSTONE?redstoneMode!=0&&transferAllowed():settings.onTexture==ResourcePortSettings.OnTexture.CONNECTED?(connected&(1<<i))!=0:transferTicks[i]!=Long.MIN_VALUE&&tick-transferTicks[i]<=5;
+        ResourcePortSettings visual=settings();int connected=0,on=0;long tick=world.getTotalWorldTime();
+        for(int i=0;i<6;i++)if(visual.face(i)!=ResourcePortSettings.Face.DISABLED){neighbor(i);if(neighbors[i].connected)connected|=1<<i;
+            boolean lit=visual.onTexture==ResourcePortSettings.OnTexture.REDSTONE?redstoneMode!=0&&transferAllowed():visual.onTexture==ResourcePortSettings.OnTexture.CONNECTED?(connected&(1<<i))!=0:transferTicks[i]!=Long.MIN_VALUE&&tick-transferTicks[i]<=5;
             if(lit)on|=1<<i;
         }
-        connectedMask=connected;if(on!=appearanceMask){appearanceMask=on;sync();}
+        connectedMask=connected;boolean storedChanged=storedAppearanceTick();if(on!=appearanceMask||storedChanged){appearanceMask=on;sync();}
     }
-    @Override public void onLoad(){super.onLoad();loaded=false;DeferredTileLoad.schedule(this,()->{loaded=true;invalidateNeighbors();RedstoneChannels.register(this);});}
+    @Override public void onLoad(){super.onLoad();loaded=false;DeferredTileLoad.schedule(this,()->{if(!inert){loaded=true;invalidateNeighbors();RedstoneChannels.register(this);}});}
     @Override public void invalidate(){loaded=false;invalidateNeighbors();RedstoneChannels.unregister(this);super.invalidate();}
     @Override public void onChunkUnload(){loaded=false;invalidateNeighbors();RedstoneChannels.unregister(this);super.onChunkUnload();}
     @Override protected void setWorldCreate(net.minecraft.world.World world){setWorld(world);}
     @Override public TileEntity channelTile(){return this;}
-    @Override public int getRedstoneChannel(){return channels.first();}
-    @Override public ChannelList getRedstoneChannels(){return channels;}
+    @Override public int getRedstoneChannel(){return getRedstoneChannels().first();}
+    @Override public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:channels;}
     @Override public void setRedstoneChannel(int value){setRedstoneChannels(ChannelList.of(value));}
-    @Override public void setRedstoneChannels(ChannelList value){configure(settings,redstoneMode,value);}
+    @Override public void setRedstoneChannels(ChannelList value){configure(settings(),redstoneMode,value);}
     @Override public boolean hasLocalRedstoneSignal(){return LoadedRedstonePower.isPowered(world,pos);}
     @Override public void setChannelSignal(boolean powered){channelPowered=powered;signalTick=Long.MIN_VALUE;}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){serializationCalls++;super.writeToNBT(tag);ResourcePortData.write(tag,settings,redstoneMode,channels);writeContents(tag);return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){
-        super.readFromNBT(tag);try{settings=ResourcePortData.read(tag);redstoneMode=ResourcePortData.mode(tag);}catch(IllegalArgumentException malformed){settings=ResourcePortSettings.placed(EnumFacing.NORTH.getIndex());redstoneMode=0;}
-        channels=ChannelData.read(tag,0);signalTick=budgetTick=Long.MIN_VALUE;spent=0;invalidateNeighbors();readContents(tag);
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){
+        serializationCalls++;
+        if(inert&&failed!=null){net.minecraft.util.ResourceLocation id=TileEntity.getKey(getClass());if(id!=null)tag.setString("id",id.toString());tag.setInteger("x",pos.getX());tag.setInteger("y",pos.getY());tag.setInteger("z",pos.getZ());tag.merge(failed.copy());return tag;}
+        tag.merge(retained.copy());super.writeToNBT(tag);
+        // Retain unavailable foreign providers as opaque compounds; live providers remain authoritative.
+        if(retained.hasKey("ForgeCaps",10)){NBTTagCompound saved=retained.getCompoundTag("ForgeCaps"),current=tag.getCompoundTag("ForgeCaps");for(String key:saved.getKeySet())if(!current.hasKey(key))current.setTag(key,saved.getTag(key).copy());if(!current.hasNoTags())tag.setTag("ForgeCaps",current);}
+        for(String key:new String[]{"PortEnergy","PortFluid","Items"})tag.removeTag(key);writeConfiguration(tag);writeContents(tag);return tag;
     }
-    @Override public final NBTTagCompound getUpdateTag(){NBTTagCompound tag=new NBTTagCompound();net.minecraft.util.ResourceLocation id=TileEntity.getKey(getClass());if(id!=null)tag.setString("id",id.toString());tag.setInteger("x",pos.getX());tag.setInteger("y",pos.getY());tag.setInteger("z",pos.getZ());ResourcePortData.write(tag,settings,redstoneMode,channels);tag.setInteger("PortLitFaces",appearanceMask);return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){
+        NBTTagCompound original=tag.copy();inert=true;failed=original;
+        try{super.readFromNBT(tag);NBTTagCompound normalized=normalizedReadData(tag);settings=ResourcePortData.read(normalized);redstoneMode=ResourcePortData.mode(normalized);channels=ResourcePortData.channels(normalized);readContents(tag);retained=original.copy();for(String key:new String[]{"id","x","y","z"})retained.removeTag(key);inert=false;failed=null;}catch(RuntimeException malformed){inert=true;}
+        signalTick=budgetTick=Long.MIN_VALUE;spent=0;fairPrepared=false;invalidateNeighbors();
+    }
+    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability,EnumFacing side){return !inert&&super.hasCapability(capability,side);}
+    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability,EnumFacing side){return inert?null:super.getCapability(capability,side);}
+    @Override public final NBTTagCompound getUpdateTag(){NBTTagCompound tag=new NBTTagCompound();net.minecraft.util.ResourceLocation id=TileEntity.getKey(getClass());if(id!=null)tag.setString("id",id.toString());tag.setInteger("x",pos.getX());tag.setInteger("y",pos.getY());tag.setInteger("z",pos.getZ());ResourcePortData.write(tag,settings(),redstoneMode,channels);tag.setInteger("PortLitFaces",appearanceMask);tag.setBoolean("PortInert",inert);if(!inert)writePublicContents(tag);return tag;}
     @Override public final SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public final void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){handleUpdateTag(packet.getNbtCompound());}
     @Override public final void handleUpdateTag(NBTTagCompound tag){
         // Client packets deliberately exclude inventories, fluid and stored power.
-        try{settings=ResourcePortData.read(tag);redstoneMode=ResourcePortData.mode(tag);channels=ChannelData.read(tag,0);appearanceMask=tag.getInteger("PortLitFaces")&63;}catch(IllegalArgumentException ignored){}
+        try{settings=ResourcePortData.read(tag);redstoneMode=ResourcePortData.mode(tag);channels=ChannelData.read(tag,0);appearanceMask=tag.getInteger("PortLitFaces")&63;inert=tag.getBoolean("PortInert");if(!inert)readPublicContents(tag);}catch(IllegalArgumentException ignored){}
         if(world!=null)world.markBlockRangeForRenderUpdate(pos,pos);
     }
-    private void sync(){if(physical()){IBlockState state=world.getBlockState(pos);visualPackets++;world.notifyBlockUpdate(pos,state,state,2);}}
+    protected final void sync(){if(physical()){IBlockState state=world.getBlockState(pos);visualPackets++;world.notifyBlockUpdate(pos,state,state,2);}}
     private static final class Neighbor{BlockPos origin,position;TileEntity tile;IBlockState state;Object handler;boolean connected;long refreshAt;void clear(){tile=null;state=null;handler=null;connected=false;refreshAt=Long.MIN_VALUE;}}
 }

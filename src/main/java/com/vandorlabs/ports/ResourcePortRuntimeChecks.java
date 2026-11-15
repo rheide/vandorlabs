@@ -32,7 +32,7 @@ public final class ResourcePortRuntimeChecks {
     private static TileEntity receiver(WorldServer world,BlockPos at,ResourcePortBlock.Kind kind,EnumFacing towardPort){
         Block block=kind==ResourcePortBlock.Kind.POWER?Block.getBlockFromName("vandorlabs:battery_block"):kind==ResourcePortBlock.Kind.FLUID?Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank"):Blocks.CHEST;
         IBlockState state=block.getDefaultState();if(kind==ResourcePortBlock.Kind.POWER)state=state.withProperty(BlockBattery.FACING,towardPort);if(kind==ResourcePortBlock.Kind.FLUID)state=state.withProperty(BlockAnimatedScreenSelector.FACING,towardPort);
-        world.removeTileEntity(at);world.setBlockState(at,state,2);return world.getTileEntity(at);
+        world.removeTileEntity(at);world.setBlockState(at,state,2);TileEntity tile=world.getTileEntity(at);if(tile instanceof ResourcePortTile){((ResourcePortTile)tile).place(towardPort);tile.onLoad();DeferredTileLoad.flush(world);}return tile;
     }
     private static int stored(ResourcePortTile tile){return tile instanceof PowerPortTile?((PowerPortTile)tile).stored():tile instanceof FluidPortTile?((FluidPortTile)tile).stored()==null?0:((FluidPortTile)tile).stored().amount:count((MatterPortTile)tile);}
     private static int count(MatterPortTile tile){int count=0;for(int i=0;i<MatterPortTile.SLOTS;i++)count+=tile.stored(i).getCount();return count;}
@@ -83,7 +83,7 @@ public final class ResourcePortRuntimeChecks {
         try{ResourcePortSettings settings=policy(7).withHousing(1);new ResourcePortMessage(41,settings,2,ChannelList.of(1,2)).toBytes(buffer);need(buffer.readableBytes()==30,"bounded settings body30bytes (previous26)");ResourcePortMessage decoded=new ResourcePortMessage();io.netty.buffer.ByteBuf encoded=buffer.copy();try{decoded.fromBytes(encoded);}finally{encoded.release();}decoded.toBytes(again);need(io.netty.buffer.ByteBufUtil.equals(buffer,again),"housing/controls exact wire roundtrip");again.clear();decoded=new ResourcePortMessage();io.netty.buffer.ByteBuf legacy=buffer.copy(0,buffer.writerIndex()-4);try{decoded.fromBytes(legacy);decoded.toBytes(again);need(again.getInt(again.writerIndex()-4)== -1,"legacy message implies original housing");}finally{legacy.release();}buffer.setByte(17,ChannelList.MAX_CHANNELS+1);decoded=new ResourcePortMessage();decoded.fromBytes(buffer);try{java.lang.reflect.Field accepted=ResourcePortMessage.class.getDeclaredField("valid");accepted.setAccessible(true);need(!accepted.getBoolean(decoded),"oversized channel count rejected before allocation");}catch(ReflectiveOperationException error){throw new IllegalStateException(error);}System.out.println("[vandorlabs][reprolab] resource-port-codec PASS body30(previous26) roundtrip legacy boundedChannels");}finally{buffer.release();again.release();}
     }
     public static void run(WorldServer world,EntityPlayerMP actor){
-        codec();
+        codec();BatteryPortRuntimeChecks.run(world,actor);
         BlockPos base=new BlockPos(880,110,32);for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(40,2,3))){world.getChunkFromBlockCoords(p);world.removeTileEntity(p);world.setBlockToAir(p);}
         try{
             int family=0;for(ResourcePortBlock block:ResourcePorts.BLOCKS){

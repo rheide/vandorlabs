@@ -25,6 +25,14 @@ public final class ModuleRackGeometryTest {
     }
 
     public static void main(String[] ignored) {
+        int[] opposite = {3, 2, 5, 4};
+        float[] pitches = {-90, -46, -45, 0, 45, 46, 90};
+        for (int facing = 2; facing <= 5; facing++) {
+            int[] expected = {0, 0, opposite[facing - 2], opposite[facing - 2], opposite[facing - 2], 1, 1};
+            for (int index = 0; index < pitches.length; index++)
+                require(com.vandorlabs.placement.PlayerViewFacing.towardView(pitches[index], facing) == expected[index],
+                        "shared player-view policy keeps shallow placements horizontal and steep views vertical");
+        }
         double[] centers = {13.25, 9.75, 6.25, 2.75};
         double[] min = {11.75, 8.25, 4.75, 1.25};
         double[] max = {14.75, 11.25, 7.75, 4.25};

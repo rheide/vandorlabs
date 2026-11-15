@@ -26,7 +26,7 @@ public final class ResourcePortBlock extends BlockVandor {
     @Override protected BlockStateContainer createBlockState(){return new ExtendedBlockState(this,new IProperty[]{FACING},new IUnlistedProperty[]{PORT_FACES,LIT,HOUSING});}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,meta>=0&&meta<6?EnumFacing.getFront(meta):EnumFacing.NORTH);}
     @Override public int getMetaFromState(IBlockState state){return state.getValue(FACING).getIndex();}
-    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing clicked,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,EnumFacing.getDirectionFromEntityLiving(pos,placer));}
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing clicked,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,com.vandorlabs.blocks.DirectionalPlacement.towardView(placer));}
     @Override public IBlockState withRotation(IBlockState state,Rotation rotation){return state.withProperty(FACING,rotation.rotate(state.getValue(FACING)));}
     @Override public IBlockState withMirror(IBlockState state,Mirror mirror){return state.withProperty(FACING,mirror.mirror(state.getValue(FACING)));}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
@@ -43,6 +43,7 @@ public final class ResourcePortBlock extends BlockVandor {
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){if(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;return ResourcePorts.open(player,world,pos);}
     private ItemStack drop(TileEntity tile){ItemStack result=new ItemStack(this);if(tile instanceof ResourcePortTile){NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());for(String key:new String[]{"id","x","y","z"})data.removeTag(key);result.setTagInfo("BlockEntityTag",data);}return result;}
     @Override public void getDrops(NonNullList<ItemStack> drops,IBlockAccess world,BlockPos pos,IBlockState state,int fortune){drops.add(drop(world.getTileEntity(pos)));}
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,EntityPlayer player,boolean willHarvest){if(!world.isRemote&&!willHarvest){TileEntity tile=world.getTileEntity(pos);if(tile instanceof ResourcePortTile&&((ResourcePortTile)tile).inert())spawnAsEntity(world,pos,drop(tile));}return super.removedByPlayer(state,world,pos,player,willHarvest);}
     @Override public void harvestBlock(World world,EntityPlayer player,BlockPos pos,IBlockState state,TileEntity tile,ItemStack tool){spawnAsEntity(world,pos,drop(tile));}
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult hit,World world,BlockPos pos,EntityPlayer player){return drop(world.getTileEntity(pos));}
     @Override @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)

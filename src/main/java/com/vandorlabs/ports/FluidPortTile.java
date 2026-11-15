@@ -43,7 +43,7 @@ public final class FluidPortTile extends ResourcePortTile {
     }
     @Override protected void writeContents(NBTTagCompound tag){if(fluid!=null)tag.setTag("PortFluid",fluid.writeToNBT(new NBTTagCompound()));}
     @Override protected void readContents(NBTTagCompound tag){fluid=tag.hasKey("PortFluid",10)?FluidStack.loadFluidStackFromNBT(tag.getCompoundTag("PortFluid")):null;if(fluid!=null&&(fluid.amount<=0||fluid.amount>CAPACITY))throw new IllegalArgumentException("Invalid saved fluid port volume");}
-    @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY?side!=null&&settings().face(side.getIndex())!=ResourcePortSettings.Face.DISABLED:super.hasCapability(cap,side);}
+    @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY?!inert()&&side!=null&&settings().face(side.getIndex())!=ResourcePortSettings.Face.DISABLED:super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)return hasCapability(cap,side)?CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(faces[side.getIndex()]):null;return super.getCapability(cap,side);}
     private final class Face implements IFluidHandler {
         final int side;private final IFluidTankProperties[] properties;

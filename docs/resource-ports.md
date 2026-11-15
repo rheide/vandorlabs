@@ -41,6 +41,8 @@ Incoming resources wait in a bounded buffer. Power Ports hold 1,000,000 RF, Flui
 Ports hold 64,000 mB of one fluid and Matter Ports hold nine item stacks. Full
 buffers refuse additional input. Unaccepted output remains in the port.
 
+The **Battery Block** uses the same controls with a 100,000 RF store. Its Housing tab also shows the live charge and Block/Hexagon shape. See the [storage guide](matter-and-storage.md) for existing-battery compatibility.
+
 ## Housing
 
 The **Housing** tab selects a material for Disabled faces using the standard texture picker. Choose **Original artwork** to restore the authored port hull. Input and Output faces keep their port artwork. The hotbar icons use red accents for Power, blue for Fluid and yellow for Matter.

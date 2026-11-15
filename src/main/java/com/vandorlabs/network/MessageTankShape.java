@@ -20,7 +20,13 @@ public final class MessageTankShape implements IMessage {
         @Override public IMessage onMessage(MessageTankShape message,MessageContext context){
             net.minecraft.entity.player.EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(!(player.openContainer instanceof ContainerStorageStatus)||player.openContainer.windowId!=message.window)return;
+                if(player.openContainer.windowId!=message.window)return;
+                if(player.openContainer instanceof com.vandorlabs.ports.ResourcePortContainer){
+                    com.vandorlabs.ports.ResourcePortContainer port=(com.vandorlabs.ports.ResourcePortContainer)player.openContainer;
+                    if(!(port.tile instanceof com.vandorlabs.tiles.TileEntityBattery)||!port.canInteractWith(player)||message.layout!=-1||message.casing!=-1&&!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(message.casing)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,player.world,port.tile.getPos()))return;
+                    com.vandorlabs.vehicle.VehicleService.permission(player,port.tile.getPos());com.vandorlabs.tiles.TileEntityBattery battery=(com.vandorlabs.tiles.TileEntityBattery)port.tile;battery.setBlockShape(message.block);if(message.casing!=-1)battery.setHousingTexture(message.casing);return;
+                }
+                if(!(player.openContainer instanceof ContainerStorageStatus))return;
                 ContainerStorageStatus container=(ContainerStorageStatus)player.openContainer;
                 if(container.canInteractWith(player)&&container.tile instanceof com.vandorlabs.tiles.TileEntityBattery
                         &&message.layout==-1

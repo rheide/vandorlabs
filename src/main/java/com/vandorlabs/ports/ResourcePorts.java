@@ -15,7 +15,7 @@ public final class ResourcePorts {
     public static void registerTiles(){GameRegistry.registerTileEntity(PowerPortTile.class,"vandorlabs:power_port");GameRegistry.registerTileEntity(FluidPortTile.class,"vandorlabs:fluid_port");GameRegistry.registerTileEntity(MatterPortTile.class,"vandorlabs:matter_port");}
     /** Ordinary interaction and Configurizer use this same checked dedicated dialog. */
     public static boolean open(EntityPlayer player,World world,BlockPos pos){
-        if(!world.isBlockLoaded(pos)||!(world.getTileEntity(pos) instanceof ResourcePortTile)||!ConfigurationAccess.canEditDialog(player,world,pos))return false;
+        if(!world.isBlockLoaded(pos)||!(world.getTileEntity(pos) instanceof ResourcePortTile)||((ResourcePortTile)world.getTileEntity(pos)).inert()||!ConfigurationAccess.canEditDialog(player,world,pos))return false;
         if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_RESOURCE_PORT,world,pos.getX(),pos.getY(),pos.getZ());return true;
     }
 }

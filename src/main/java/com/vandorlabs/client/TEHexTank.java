@@ -49,16 +49,16 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
     /** Resolve artwork and diffuse shading while appending to the live, unmodified vertex format. */
     private static final class GeometrySink implements HexTankGeometryCache.Sink {
         private final BufferBuilder buffer;
-        private final TextureAtlasSprite casing,liner,port,glass;
+        private final TextureAtlasSprite casing,liner,input,output,glass;private final EnumFacing facing;private boolean port;
         private TextureAtlasSprite current;
         private float r,g,b,nx,ny,nz;
-        GeometrySink(BufferBuilder buffer,TextureAtlasSprite casing,TextureAtlasSprite liner,TextureAtlasSprite port,TextureAtlasSprite glass){this.buffer=buffer;this.casing=casing;this.liner=liner;this.port=port;this.glass=glass;}
+        GeometrySink(BufferBuilder buffer,TextureAtlasSprite casing,TextureAtlasSprite liner,TextureAtlasSprite input,TextureAtlasSprite output,TextureAtlasSprite glass,EnumFacing facing){this.buffer=buffer;this.casing=casing;this.liner=liner;this.input=input;this.output=output;this.glass=glass;this.facing=facing;}
         public void beginQuad(int material,int color,boolean diffuse,float nx,float ny,float nz){
-            current=material==HexTankGeometryCache.CASING?casing:material==HexTankGeometryCache.LINER?liner:material==HexTankGeometryCache.PORT?port:glass;
+            port=material==HexTankGeometryCache.PORT;current=material==HexTankGeometryCache.CASING?casing:material==HexTankGeometryCache.LINER?liner:port?input:glass;
             float shade=diffuse?net.minecraftforge.client.model.pipeline.LightUtil.diffuseLight(nx,ny,nz):1;
             r=(color>>16&255)/255F*shade;g=(color>>8&255)/255F*shade;b=(color&255)/255F*shade;this.nx=nx;this.ny=ny;this.nz=nz;
         }
-        public void vertex(double x,double y,double z,double u,double v){buffer.pos(x,y,z).tex(current.getInterpolatedU(u),current.getInterpolatedV(v)).color(r,g,b,1).normal(nx,ny,nz).endVertex();}
+        public void vertex(double x,double y,double z,double u,double v){if(port){double coordinate=facing.getAxis()==EnumFacing.Axis.X?x:facing.getAxis()==EnumFacing.Axis.Y?y:z;boolean positive=facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE;current=(coordinate>.5)==positive?input:output;}buffer.pos(x,y,z).tex(current.getInterpolatedU(u),current.getInterpolatedV(v)).color(r,g,b,1).normal(nx,ny,nz).endVertex();}
     }
     @Override public void render(TileEntityHexTank tile,double x,double y,double z,float partial,int stage,float alpha){
         if(tile.getWorld()==null||tile.isInvalid()||!tile.getWorld().getBlockState(tile.getPos()).getProperties().containsKey(com.vandorlabs.blocks.BlockAnimatedScreenSelector.FACING))return;
@@ -72,10 +72,10 @@ public final class TEHexTank extends TileEntitySpecialRenderer<TileEntityHexTank
             if(facing.getAxis()==EnumFacing.Axis.X)GlStateManager.scale(1,joined.size,joined.size);
             else if(facing.getAxis()==EnumFacing.Axis.Z)GlStateManager.scale(joined.size,joined.size,1);
             else GlStateManager.scale(joined.size,1,joined.size);
-            TextureAtlasSprite casing=sprite(ScreenHousingTextures.texture(tile.getHousingTexture())),port=sprite("vandorlabs:blocks/matter/port"),liner=sprite("vandorlabs:blocks/matter/tank_empty");
+            TextureAtlasSprite casing=sprite(ScreenHousingTextures.texture(tile.getHousingTexture())),input=sprite("vandorlabs:blocks/resource_ports/fluid_in_off"),output=sprite("vandorlabs:blocks/resource_ports/fluid_out_off"),liner=sprite("vandorlabs:blocks/matter/tank_empty");
             Tessellator t=Tessellator.getInstance();BufferBuilder b=t.getBuffer();b.begin(7,DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
             HexTankGeometryCache.Template geometry=GEOMETRY.template(tile.isBlockShape(),axis(facing),tile.getMainTextureLayout()==1,joined.size);
-            GeometrySink sink=new GeometrySink(b,casing,liner,port,sprite("minecraft:blocks/glass"));geometry.shell.emit(sink);t.draw();
+            GeometrySink sink=new GeometrySink(b,casing,liner,input,output,sprite("minecraft:blocks/glass"),facing);geometry.shell.emit(sink);t.draw();
             FluidStack fluid=null;int total=0;
             for(int a=0;a<joined.size;a++)for(int c=0;c<joined.size;c++){
                 net.minecraft.tileentity.TileEntity raw=tile.getWorld().getTileEntity(tile.getPos().offset(HexTankGroups.right(facing.getAxis()),a).offset(HexTankGroups.up(facing.getAxis()),c));

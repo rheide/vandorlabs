@@ -35,7 +35,7 @@ final class BatteryCacheClientChecks {
     }
     private static int difference(BufferedImage a,BufferedImage b){need(a.getWidth()==b.getWidth()&&a.getHeight()==b.getHeight(),"image dimensions");int changed=0;for(int y=0;y<a.getHeight();y++)for(int x=0;x<a.getWidth();x++)if(a.getRGB(x,y)!=b.getRGB(x,y))changed++;return changed;}
     private static BufferedImage render(Minecraft mc,boolean blockShape,EnumFacing facing,boolean custom,int energy){
-        Block block=Block.getBlockFromName("vandorlabs:battery_block");TileEntityBattery source=new TileEntityBattery();source.setPos(BlockPos.ORIGIN);source.setBlockShape(blockShape);if(custom)source.setHousingTexture(ScreenHousingTextures.DEFAULT_STORAGE);
+        Block block=Block.getBlockFromName("vandorlabs:battery_block");TileEntityBattery source=new TileEntityBattery();source.setPos(BlockPos.ORIGIN);source.place(facing);source.setBlockShape(blockShape);if(custom)source.setHousingTexture(ScreenHousingTextures.DEFAULT_STORAGE);
         NBTTagCompound data=source.writeToNBT(new NBTTagCompound());data.setInteger("Energy",energy);
         VehicleStructure.Cell cell=new VehicleStructure.Cell(BlockPos.ORIGIN,block.getDefaultState().withProperty(BlockBattery.FACING,facing),data);
         VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(Collections.singletonList(cell)));TileEntityBattery tile=(TileEntityBattery)view.getTileEntity(BlockPos.ORIGIN);

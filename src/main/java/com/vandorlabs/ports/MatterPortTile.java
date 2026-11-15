@@ -53,7 +53,7 @@ public final class MatterPortTile extends ResourcePortTile {
     }
     @Override protected void writeContents(NBTTagCompound tag){ItemStackHelper.saveAllItems(tag,items);}
     @Override protected void readContents(NBTTagCompound tag){items.clear();ItemStackHelper.loadAllItems(tag,items);for(ItemStack stack:items)if(!stack.isEmpty()&&(stack.getCount()<1||stack.getCount()>Math.min(64,stack.getMaxStackSize())))throw new IllegalArgumentException("Invalid saved matter port stack");}
-    @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY?side!=null&&settings().face(side.getIndex())!=ResourcePortSettings.Face.DISABLED:super.hasCapability(cap,side);}
+    @Override public boolean hasCapability(Capability<?> cap,EnumFacing side){return cap==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY?!inert()&&side!=null&&settings().face(side.getIndex())!=ResourcePortSettings.Face.DISABLED:super.hasCapability(cap,side);}
     @Override public <T>T getCapability(Capability<T> cap,EnumFacing side){if(cap==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)return hasCapability(cap,side)?CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(faces[side.getIndex()]):null;return super.getCapability(cap,side);}
     private final class Face implements IItemHandler {
         final int side;Face(int side){this.side=side;}
