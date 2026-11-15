@@ -1,0 +1,5 @@
+task testLandingWheelLayout(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.gear.core.LandingWheelLayoutTest'
+}

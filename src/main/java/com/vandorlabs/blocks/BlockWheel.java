@@ -22,10 +22,10 @@ public final class BlockWheel extends BlockLandingGear {
     @Override protected BlockStateContainer createBlockState(){return new BlockStateContainer(this,FACING,PART);}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,EnumFacing.getHorizontal(meta&3)).withProperty(PART,(meta>>2)&3);}
     @Override public int getMetaFromState(IBlockState state){return state.getValue(FACING).getHorizontalIndex()|(state.getValue(PART)<<2);}
-    public BlockPos root(BlockPos at,IBlockState state){int part=state.getValue(PART);return at.offset(state.getValue(FACING).rotateY(),-(part&1)).down(part>>1);}
+    public BlockPos root(BlockPos at,IBlockState state){int part=state.getValue(PART);int facing=state.getValue(FACING).getHorizontalIndex();return at.add(-com.vandorlabs.gear.core.LandingWheelLayout.x(facing,part),-com.vandorlabs.gear.core.LandingWheelLayout.y(part),-com.vandorlabs.gear.core.LandingWheelLayout.z(facing,part));}
     public java.util.List<BlockPos> members(BlockPos root,IBlockState state){
         java.util.List<BlockPos> result=new java.util.ArrayList<>();
-        for(int n=0;n<(size==2?4:1);n++)result.add(root.offset(state.getValue(FACING).rotateY(),n&1).up(n>>1));
+        for(int n=0;n<(size==2?4:1);n++)result.add(root.add(com.vandorlabs.gear.core.LandingWheelLayout.x(state.getValue(FACING).getHorizontalIndex(),n),com.vandorlabs.gear.core.LandingWheelLayout.y(n),com.vandorlabs.gear.core.LandingWheelLayout.z(state.getValue(FACING).getHorizontalIndex(),n)));
         return result;
     }
     private boolean slab(IBlockState state){return state.getBlock() instanceof net.minecraft.block.BlockSlab||state.getBlock() instanceof BlockProgrammableSlab||state.getBlock() instanceof BlockProgrammableLightSlab;}
