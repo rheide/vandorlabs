@@ -612,16 +612,17 @@ public final class ArmPayload {
         for(VehicleStructure.Cell cell:destination.cells)VehicleService.permission(authorizer,origin.add(cell.pos));
         Map<VehicleStructure.Cell,TileEntity> prepared=prepareTiles(world,origin,destination);
         MovingBlockSupport.validate(blocks,view(arm));java.util.List<BlockPos> targets=new java.util.ArrayList<>();for(VehicleStructure.Cell cell:destination.cells)targets.add(origin.add(cell.pos));if(!ArmTransactions.ready(arm,"restore",targets))return false;
+        VehicleStructure previousPlaced=placedBlocks;int[] previousBasis=gridTileBasis;boolean previousFrames=couplerFrames;
         placedBlocks=destination==blocks?null:destination;gridTileBasis=placementBasis;couplerFrames=true;
         arm.storedSections=stored;
-        ArmCoreRenderTransfer.publishing(arm,this,origin,destination,prepared);
         List<VehicleStructure.Cell> installed=new ArrayList<>();
-        try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
+        try{ArmCoreRenderTransfer.publishing(arm,this,origin,destination,prepared);for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
         catch(RuntimeException | LinkageError failure){
             ArmTransactions.failed(arm);
             for(VehicleStructure.Cell cell:installed)try{BlockPos at=origin.add(cell.pos);failure("restore-cleanup",at);retireTile(world,at);if(!world.setBlockState(at,Blocks.AIR.getDefaultState(),2)&&!world.isAirBlock(at))failure.addSuppressed(new IllegalStateException("Attachment rollback blocked"));}catch(RuntimeException | LinkageError rollbackFailure){failure.addSuppressed(rollbackFailure);}
             try{ArmStoredSections.install(arm,stored,originalSections);arm.storedSections=null;}catch(RuntimeException|LinkageError rollbackFailure){failure.addSuppressed(rollbackFailure);}
             journal(world,origin,installed);
+            if(!hasOwnershipJournal()){placedBlocks=previousPlaced;gridTileBasis=previousBasis;couplerFrames=previousFrames;}
             throw failure;
         }
         ArmCoreRenderTransfer.published(arm);

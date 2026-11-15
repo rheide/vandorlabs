@@ -133,7 +133,7 @@ public final class GearDialogChecks {
         require(gui.sent.get(count).getDouble(slider.id==16?"StartAngle":"ActiveAngle")==preview,"released packet contains final snapped angle");
         NBTTagCompound unchanged=tile.settings();packetAck(tile,authority);gui.updateScreen();
         require(tile.motionRevision()==revision&&tile.settings().equals(unchanged),"same-revision refusal acknowledgment preserves gameplay revision and endpoint fields");
-        require(slider.getValue()==old&&slider.displayString.equals(slider.dispString+(int)Math.round(old)+slider.suffix),"refused angle acknowledgment restores authoritative thumb and label");
+        require(slider.getValue()==old&&slider.displayString.equals(com.vandorlabs.ui.GearDialog.sliderLabel(slider.id,old)),"refused angle acknowledgment restores authoritative thumb and shared label");
         authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",preview);authority.setInteger("GearRevision",++revision);packetAck(tile,authority);gui.updateScreen();
         require(slider.getValue()==preview,"accepted angle acknowledgment updates displayed endpoint");
         authority.setDouble(slider.id==16?"ArmStartAngle":"ArmActiveAngle",old);authority.setInteger("GearRevision",++revision);packetAck(tile,authority);gui.updateScreen();
