@@ -1,0 +1,13 @@
+# Native legacy telescopic landing gear
+
+The private 1.21.1 compatibility adapter retains `landing_gear`, `ski_landing_gear`, `landing_strut` and `angled_landing_strut`. These retired IDs have no creative entries or new recipes. The adapter is disabled by default while wheeled-to-modular migration and its player path are completed. It does not add Vehicle Mode or Taxi behavior.
+
+The permanent physical mount owns its configured item and UUID. Reserved cells carry only that owner's identity and bounded relative offset. A helper cannot become a second usable drop, and mining requires a loaded, validated owner. Size and target changes preflight the complete loaded footprint before changing helpers. A refused publication restores exact previous cells; a failed rollback retains the original snapshot in an inert recovery envelope. Reload preserves that envelope rather than resuming a partially repaired mechanism.
+
+Missing AIR helpers and matching stray helpers are reconciled through deferred, identity-checked updates. Foreign blocks and opaque helper data are never overwritten. Chunk watchers use weak references, fixed limits and unload cleanup; neither onLoad nor collision access forces neighboring chunks. Ski columns cache their lowest loaded controller and publish a position/UUID hint for the matching client dialog.
+
+Java 8 shared policies preserve the released settings defaults, float motion step, reservation ordering, cleanup predicate, piston dimensions and Ski end-connection rule. Native collision uses the authored cuboids and cached exact per-cell unions. Rendering reuses the supplied model bodies and canonical sprites; piston UVs repeat with length, and cosmetic interpolation uses a pause-aware client clock. The stationary fallback remains distinct from modular arm ownership.
+
+Focused dedicated-server checks cover actual Survival placement, retained supports, all six selected small/large family layouts, motion, reversal, foreign-block refusal and retry, configured helper mining, opaque data and cold recovery. The independent policy check compares against the released loops. These checks do not establish the pending player/render path or durable wheeled conversion.
+
+Wheeled conversion uses a separate typed maintenance transaction and pure modular after-image preparation. It must preserve exact source snapshots and compatible neighbor envelopes through asynchronous preparation, publication and recovery. Until that path and inventory/entity receipts are accepted, legacy inventory and dropped stacks remain intact.

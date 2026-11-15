@@ -1,0 +1,12 @@
+package com.vandorlabs.neoforge.legacylanding;
+import com.vandorlabs.redstone.ChannelList;
+import net.minecraft.nbt.*;
+import net.minecraft.server.level.ServerPlayer;
+/** Source's legacy settings keys, with no progress, identity, helper or resource transfer. */
+public final class NativeLegacyCopiedSettings {
+ public record Plan(NativeLegacyLandingData.Configuration before,NativeLegacyLandingData.Configuration after,boolean applicable){}
+ public static CompoundTag capture(NativeLegacyLandingEntity root){var out=new CompoundTag();var c=root.settings();out.putInt("gear_size",c.size());out.putInt("gear_length",c.pixels());out.putInt("gear_mode",c.mode());if(c.channels().size()<=1)out.putInt("redstone_channel",c.channels().first());else out.putIntArray("redstone_channel",c.channels().toArray());return out;}
+ public static Plan prepare(NativeLegacyLandingEntity root,CompoundTag values){var old=root.settings();int size=old.size(),pixels=old.pixels(),mode=old.mode();boolean applicable=false;var channels=old.channels();for(String key:java.util.List.of("gear_size","gear_length","gear_mode"))if(values.contains(key)&&!values.contains(key,Tag.TAG_INT))throw new IllegalArgumentException("Malformed telescopic copied choice");if(values.contains("gear_size")){size=values.getInt("gear_size");applicable=true;}if(values.contains("gear_length")){pixels=values.getInt("gear_length");applicable=true;}if(values.contains("gear_mode")){mode=values.getInt("gear_mode");applicable=true;}if(values.contains("redstone_channel")){if(values.contains("redstone_channel",Tag.TAG_INT))channels=ChannelList.of(values.getInt("redstone_channel"));else if(values.contains("redstone_channel",Tag.TAG_INT_ARRAY)){var raw=values.getIntArray("redstone_channel");if(raw.length>ChannelList.MAX_CHANNELS)throw new IllegalArgumentException("Copied channel bound");channels=ChannelList.of(raw);}else throw new IllegalArgumentException("Malformed copied channels");applicable=true;}var next=new NativeLegacyLandingData.Configuration(mode,channels,pixels,size);if(!NativeLegacyLandingData.configurable(root.kind(),next))throw new IllegalArgumentException("Unsupported copied telescopic size");return new Plan(old,next,applicable);}
+ public static boolean apply(NativeLegacyLandingEntity root,ServerPlayer actor,Plan plan){return plan.applicable&&plan.before.equals(root.settings())&&root.configure(actor,plan.after);}
+ private NativeLegacyCopiedSettings(){}
+}

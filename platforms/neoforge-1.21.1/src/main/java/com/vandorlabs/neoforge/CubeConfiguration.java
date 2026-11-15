@@ -17,6 +17,7 @@ public final class CubeConfiguration {
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.ramp.NativeRampEntity)return com.vandorlabs.neoforge.ramp.NativeRampBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.gear.NativeGearEntity)return com.vandorlabs.neoforge.gear.NativeGearBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.surface.NativeSurfaceEntity)return com.vandorlabs.neoforge.surface.NativeSurfaceBindings.open(player,level,pos);
+        if(level.hasChunkAt(pos)&&level.getBlockState(pos).getBlock() instanceof com.vandorlabs.neoforge.legacylanding.NativeLegacyLandingBlock)return com.vandorlabs.neoforge.legacylanding.NativeLegacyLandingBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.seating.NativeChairEntity)return com.vandorlabs.neoforge.seating.NativeSeatBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.plate.NativePlateEntity)return com.vandorlabs.neoforge.plate.NativePlateBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.reservoir.NativeBufferEntity)return com.vandorlabs.neoforge.reservoir.NativeBufferBindings.open(player,level,pos);
