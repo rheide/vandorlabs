@@ -85,6 +85,8 @@
 
 ### Resource transfer ports (Forge 1.12.2 and NeoForge 1.21.1)
 
+- Fix recursive chunk loading when reading older Forge Battery data. Resolve physical facing after chunk loading while preserving stored energy, capability data and the original face-policy format.
+
 - Add Power, Fluid and Matter Ports with six configurable Input/Output/Disabled faces, optional input pulling, shared output limits, bounded persistent buffers and balanced outputs. Power uses RF-compatible Forge/NeoForge Energy; Matter accepts ordinary items.
 - Add dedicated General/Housing/Redstone configuration, selectable disabled-face materials, clear red/yellow/blue inventory icons and consistently sharpened artwork. Label shared output limits as blank for unlimited. Support per-face activity artwork and settings-only Duplifier copying and Undo. Mining retains resources in one configured block item.
 - Use standard capabilities without mandatory mod dependencies. Native player checks cover Mekanism energy, fluid and item networks, RFTools Powercells, and the native Battery and Tank.
