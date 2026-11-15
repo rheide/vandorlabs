@@ -22,9 +22,9 @@ final class NativeGearHarvestReceipt {
     final int cell;
     final boolean creative;
     private final ItemStack tool;
-    private final List<Drop> drops;
+    private final List<Drop> drops;private final Map<UUID,Drop> dropsById;
     private NativeGearHarvestReceipt(UUID operation,UUID actor,UUID payload,byte[] cellDigest,int cell,boolean creative,ItemStack tool,List<Drop> drops){
-        this.operation=Objects.requireNonNull(operation);this.actor=Objects.requireNonNull(actor);this.payload=Objects.requireNonNull(payload);if(cellDigest==null||cellDigest.length!=32)throw new IllegalArgumentException("Arm harvest cell fingerprint");this.cellDigest=cellDigest.clone();if(cell<0||cell>=8192||drops.size()>MAX_DROPS)throw new IllegalArgumentException("Arm harvest receipt bound");this.cell=cell;this.creative=creative;this.tool=tool.copy();this.drops=List.copyOf(drops);var seen=new HashSet<UUID>();for(var drop:drops)if(!seen.add(drop.identity))throw new IllegalArgumentException("Duplicate arm harvest drop");
+        this.operation=Objects.requireNonNull(operation);this.actor=Objects.requireNonNull(actor);this.payload=Objects.requireNonNull(payload);if(cellDigest==null||cellDigest.length!=32)throw new IllegalArgumentException("Arm harvest cell fingerprint");this.cellDigest=cellDigest.clone();if(cell<0||cell>=8192||drops.size()>MAX_DROPS)throw new IllegalArgumentException("Arm harvest receipt bound");this.cell=cell;this.creative=creative;this.tool=tool.copy();this.drops=List.copyOf(drops);var byId=new HashMap<UUID,Drop>();for(var drop:drops)if(byId.put(drop.identity,drop)!=null)throw new IllegalArgumentException("Duplicate arm harvest drop");dropsById=Map.copyOf(byId);
     }
     static NativeGearHarvestReceipt prepare(NativeGearEntity owner,ServerPlayer actor,int cell){
         if(!(owner.getLevel() instanceof ServerLevel level)||!level.getServer().isSameThread()||actor.level()!=level||owner.payload()==null||owner.payload().materialized()||cell<0||cell>=owner.payload().size())throw new IllegalArgumentException("Invalid captured block harvest");
@@ -47,6 +47,15 @@ final class NativeGearHarvestReceipt {
     List<net.minecraft.world.level.ChunkPos> chunks(BlockPos root){var chunks=new LinkedHashSet<net.minecraft.world.level.ChunkPos>();chunks.add(new net.minecraft.world.level.ChunkPos(root));for(var drop:drops)chunks.add(new net.minecraft.world.level.ChunkPos(BlockPos.containing(drop.point)));return List.copyOf(chunks);}
     ItemEntity spawn(ServerLevel level,BlockPos root,Drop drop){var item=new ItemEntity(level,drop.point.x,drop.point.y,drop.point.z,drop.stack.copy());item.setUUID(drop.identity);NativeGearDropEscrow.prepare(item,operation,root);return item;}
     boolean matches(ItemEntity item,BlockPos root,Drop drop){return item!=null&&!item.isRemoved()&&item.getUUID().equals(drop.identity)&&ItemStack.matches(item.getItem(),drop.stack)&&item.position().distanceToSqr(drop.point)<1e-12&&operation.equals(NativeGearDropEscrow.operation(item))&&item.getPersistentData().getCompound(NativeGearDropEscrow.KEY).getLong("Root")==root.asLong();}
+    /** Vanilla may omit an actor whose save callback throws. Never commit an incomplete drop record. */
+    void requireRecord(HolderLookup.Provider registries,BlockPos root,net.minecraft.world.level.ChunkPos chunk,CompoundTag record,boolean present){
+        var rows=record==null?new ListTag():record.getList("Entities",Tag.TAG_COMPOUND);var found=new HashMap<UUID,CompoundTag>();
+        for(var raw:rows){var row=(CompoundTag)raw;if(row.hasUUID("UUID")){var id=row.getUUID("UUID");if(dropsById.containsKey(id)&&found.put(id,row)!=null)throw new IllegalStateException("Native harvest actor record is duplicated");}}
+        for(var drop:drops){var row=found.get(drop.identity);boolean expected=present&&chunk.equals(new net.minecraft.world.level.ChunkPos(BlockPos.containing(drop.point)));if((row!=null)!=expected)throw new IllegalStateException("Native harvest actor record is missing or unexpectedly present");if(row==null)continue;
+            var pos=row.getList("Pos",Tag.TAG_DOUBLE);var escrow=row.getCompound("NeoForgeData").getCompound(NativeGearDropEscrow.KEY);
+            if(!row.getString("id").equals("minecraft:item")||pos.size()!=3||pos.getDouble(0)!=drop.point.x||pos.getDouble(1)!=drop.point.y||pos.getDouble(2)!=drop.point.z||!row.getCompound("Item").equals(drop.stack.save(registries))||!escrow.getAllKeys().equals(Set.of("Operation","Root"))||!escrow.hasUUID("Operation")||!operation.equals(escrow.getUUID("Operation"))||!escrow.contains("Root",Tag.TAG_LONG)||escrow.getLong("Root")!=root.asLong())throw new IllegalStateException("Native harvest actor record changed");
+        }
+    }
     CompoundTag write(HolderLookup.Provider registries){
         var tag=new CompoundTag();tag.putInt("Schema",1);tag.putUUID("Operation",operation);tag.putUUID("Actor",actor);tag.putUUID("Payload",payload);tag.putByteArray("CellDigest",cellDigest);tag.putInt("Cell",cell);tag.putBoolean("Creative",creative);tag.put("Tool",tool.saveOptional(registries));var list=new ListTag();
         for(var drop:drops){var item=new CompoundTag();item.putUUID("Identity",drop.identity);item.put("Item",drop.stack.save(registries));var pos=new ListTag();pos.add(DoubleTag.valueOf(drop.point.x));pos.add(DoubleTag.valueOf(drop.point.y));pos.add(DoubleTag.valueOf(drop.point.z));item.put("Position",pos);list.add(item);}tag.put("Drops",list);if(tag.sizeInBytes()>MAX_BYTES)throw new IllegalArgumentException("Arm harvest receipt byte bound");return tag;

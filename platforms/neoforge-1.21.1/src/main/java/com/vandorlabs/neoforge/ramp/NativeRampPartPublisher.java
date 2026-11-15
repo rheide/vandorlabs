@@ -35,7 +35,7 @@ public final class NativeRampPartPublisher {
                 }
                 for(var entry:entries){var pos=entry.position;
                     if(entry.retained){entry.entity.replacePublication(operation,root,entry.publication);world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4).setUnsaved(true);continue;}
-                    if(world.getBlockState(pos)!=proxy&&!world.setBlock(pos,proxy,Block.UPDATE_KNOWN_SHAPE))throw new IllegalStateException("Ramp part block publication refused");
+                    if(world.getBlockState(pos)!=proxy&&!NativeRampHeldOwners.setBlock(world,pos,proxy,Block.UPDATE_KNOWN_SHAPE))throw new IllegalStateException("Ramp part block publication refused");
                     // Replace the temporary/default tile (or an earlier same-operation body) without exposing it.
                     world.removeBlockEntity(pos);world.setBlockEntity(entry.entity);
                     var chunk=world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);

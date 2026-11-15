@@ -65,6 +65,8 @@ public final class NativeTransferHolds {
         var lease=new Lease(level,authority,Set.copyOf(cells),List.copyOf(containers));next.add(lease);held=List.copyOf(next);for(var actor:level.players())for(var slot:actor.containerMenu.slots)if(blocked(slot.container)){actor.closeContainer();break;}return lease;
     }
     public static boolean active(Level level){if(!(level instanceof ServerLevel)||held.isEmpty())return false;for(var lease:held)if(!lease.closed&&lease.world.get()==level)return true;return false;}
+    /** Read-only reservation observation: never consumes an internal mutation admission. */
+    public static boolean reserved(Level level,BlockPos pos){if(!(level instanceof ServerLevel)||held.isEmpty())return false;for(var lease:held)if(!lease.closed&&lease.world.get()==level&&lease.cells.contains(pos))return true;return false;}
     public static boolean blocked(Level level,BlockPos pos){
         if(!(level instanceof ServerLevel)||held.isEmpty())return false;var admission=MUTATION.get();for(var lease:held)if(!lease.closed&&lease.world.get()==level&&lease.cells.contains(pos)){
             if(admission!=null&&!admission.consumed&&admission.lease==lease&&admission.pos.equals(pos)&&lease.authority.mutationArmed()){admission.consumed=true;continue;}return true;

@@ -24,11 +24,11 @@ public final class NativeGearDropEscrow {
     static UUID operation(ItemEntity item){var tag=item.getPersistentData().getCompound(KEY);if(!tag.getAllKeys().equals(Set.of("Operation","Root"))||!tag.hasUUID("Operation")||!tag.contains("Root",Tag.TAG_LONG))throw new IllegalArgumentException("Malformed arm drop escrow");return tag.getUUID("Operation");}
     public static boolean held(ItemEntity item){
         if(!(item.level() instanceof ServerLevel level)||!MARKED.contains(item))return false;
-        UUID operation=operation(item);if(NativeGearJournal.escrowAdmission(level)!=NativeGearJournal.Status.READY||NativeGearJournal.escrowOperation(level,operation)){freeze(item);return true;}
+        final UUID operation;try{operation=operation(item);}catch(IllegalArgumentException unsupported){freeze(item);return true;}if(NativeGearJournal.escrowAdmission(level)!=NativeGearJournal.Status.READY||NativeGearJournal.escrowOperation(level,operation)){freeze(item);return true;}
         // The saved marker makes this release idempotent after a crash immediately following journal deletion.
         item.getPersistentData().remove(KEY);MARKED.remove(item);item.setPickUpDelay(10);item.setNoGravity(false);item.setInvulnerable(false);return false;
     }
-    @SubscribeEvent public static void joined(EntityJoinLevelEvent event){if(!NativeGearBindings.enabled()||!(event.getLevel() instanceof ServerLevel)||!(event.getEntity() instanceof ItemEntity item)||!item.getPersistentData().contains(KEY,Tag.TAG_COMPOUND))return;operation(item);MARKED.add(item);freeze(item);}
+    @SubscribeEvent public static void joined(EntityJoinLevelEvent event){if(!NativeGearBindings.enabled()||!(event.getLevel() instanceof ServerLevel)||!(event.getEntity() instanceof ItemEntity item)||!item.getPersistentData().contains(KEY))return;MARKED.add(item);freeze(item);}
     @SubscribeEvent public static void tick(EntityTickEvent.Pre event){if(event.getEntity() instanceof ItemEntity item&&held(item))event.setCanceled(true);}
     @SubscribeEvent public static void pickup(ItemEntityPickupEvent.Pre event){if(held(event.getItemEntity()))event.setCanPickup(TriState.FALSE);}
     private NativeGearDropEscrow(){}

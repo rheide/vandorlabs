@@ -2,7 +2,7 @@
 
 Ramp journal preparation does not freeze source gameplay. Arming establishes a hold while its durable ownership record is being written. A block-write refusal alone is insufficient during that hold: vanilla piston movement can publish its destination even when the source replacement is denied.
 
-The piston pre-event now refuses the complete move if its base, head, resolved pushed source, pushed destination or destroyed cell belongs to a held Ramp operation. Worlds without active holds return before resolving a piston structure. Discovery uses vanilla's bounded piston resolver, rather than scanning loaded blocks. The operation's existing scoped mutation bypass remains authoritative.
+The piston pre-event now refuses the complete move if its base, head, resolved pushed source, pushed destination or destroyed cell belongs to a held Ramp operation. Worlds without active holds return before resolving a piston structure. Discovery uses vanilla's bounded piston resolver, rather than scanning loaded blocks. An operation scope identifies its owner but does not bypass holds. Each internal block replacement consumes one exact position admission; inventory automation stays frozen throughout callbacks.
 
 The dedicated regression prepares a real journal, waits for preparation, arms it and holds the asynchronous ARM write pending. The actual vanilla piston block-event path must leave both a pushed Stone source and a separately held empty-extension piston base untouched, with no moving destination or head. An unheld powered piston must still publish its moving block. Before this guard, the held Stone case fails because the destination is published despite the source-write refusal.
 

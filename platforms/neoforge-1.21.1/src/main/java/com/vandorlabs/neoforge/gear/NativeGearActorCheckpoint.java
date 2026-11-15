@@ -14,6 +14,7 @@ import net.minecraft.world.level.chunk.storage.SimpleRegionStorage;
 public final class NativeGearActorCheckpoint {
     private final NativeEntityCheckpoint checkpoint;
     NativeGearActorCheckpoint(ServerLevel level,Collection<ChunkPos> chunks,Runnable requireAuthority){checkpoint=new NativeEntityCheckpoint(level,chunks,requireAuthority);}
+    NativeGearActorCheckpoint(ServerLevel level,Collection<ChunkPos> chunks,Runnable requireAuthority,java.util.function.BiConsumer<ChunkPos,CompoundTag> validator){checkpoint=new NativeEntityCheckpoint(level,chunks,requireAuthority,16,validator);}
     public static CompletableFuture<Void> write(SimpleRegionStorage storage,ChunkPos chunk,CompoundTag tag){return NativeEntityCheckpoint.write(storage,chunk,tag);}
     boolean loaded(){return checkpoint.loaded();}
     Entity actor(UUID identity){return checkpoint.actor(identity);}

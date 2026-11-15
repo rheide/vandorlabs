@@ -14,6 +14,18 @@ public final class NativeRampHeldOwners {
  private record Hold(WeakReference<ServerLevel> world,NativeRampJournal.Operation operation,Set<BlockPos> positions,List<WeakReference<Container>> containers,Set<BlockPos> candidates,net.minecraft.world.level.block.Block partBlock){}
  private static volatile List<Hold> holds=List.of();
  private static final ThreadLocal<NativeRampJournal.Operation> MUTATION=new ThreadLocal<>();
+ private static final ThreadLocal<WriteAdmission> WRITE=new ThreadLocal<>();
+ private static final class WriteAdmission {final ServerLevel world;final NativeRampJournal.Operation operation;final BlockPos pos;boolean consumed;WriteAdmission(ServerLevel world,NativeRampJournal.Operation operation,BlockPos pos){this.world=world;this.operation=operation;this.pos=pos.immutable();}}
+ /** The identity scope alone grants no world mutation. Admit exactly the immediate native setBlock call. */
+ static boolean setBlock(ServerLevel world,BlockPos pos,net.minecraft.world.level.block.state.BlockState state,int flags){
+  var operation=MUTATION.get();if(operation==null||!mutationAllows(world,operation.id(),operation.root(),pos)||WRITE.get()!=null)throw new IllegalStateException("Ramp write outside exact durable operation");
+  WRITE.set(new WriteAdmission(world,operation,pos));try{return world.setBlock(pos,state,flags);}finally{WRITE.remove();}
+ }
+ /** Own-operation exclusion for read-only restoration preflight, independent of every mutation token. */
+ static boolean foreignHold(Level world,BlockPos pos,NativeRampJournal.Operation own){
+  if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.reserved(world,pos)||com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(world,pos))return true;
+  if(!(world instanceof ServerLevel server))return false;for(var hold:holds)if(hold.world.get()==world&&hold.operation!=own){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)&&NativeRampPartOwnership.read(server,pos,hold.partBlock,hold.operation.id(),hold.operation.root())!=NativeRampPartOwnership.State.OTHER)return true;}return false;
+ }
  static void freeze(ServerLevel world,NativeRampJournal.Operation operation,Collection<BlockPos> positions){
   if(!world.getServer().isSameThread())throw new IllegalStateException("Ramp freeze requires server thread");
   var next=new ArrayList<Hold>();var containers=new ArrayList<WeakReference<Container>>();Set<BlockPos> candidates=Set.of();net.minecraft.world.level.block.Block partBlock=null;
@@ -39,13 +51,19 @@ public final class NativeRampHeldOwners {
   if(com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(world,pos))return true;if(!(world instanceof ServerLevel server))return false;for(var hold:holds)if(hold.world.get()==world){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)&&NativeRampPartOwnership.read(server,pos,hold.partBlock,hold.operation.id(),hold.operation.root())!=NativeRampPartOwnership.State.OTHER)return true;}return false;
  }
  public static boolean blocked(Level world,BlockPos pos){return blockedForBreak(world,pos,null);}
- public static boolean blockedForBreak(Level world,BlockPos pos,UUID admittedGear){if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.blocked(world,pos))return true;if(com.vandorlabs.neoforge.gear.NativeGearHolds.blockedForBreak(world,pos,admittedGear))return true;if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var bypass=MUTATION.get();var current=holds;for(int i=0;i<current.size();i++){var hold=current.get(i);if(hold.world.get()==world&&hold.operation!=bypass){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)){var state=NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root());if(state!=NativeRampPartOwnership.State.OTHER)return true;}}}return false;}
+ public static boolean blockedForBreak(Level world,BlockPos pos,UUID admittedGear){
+  if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.blocked(world,pos))return true;if(com.vandorlabs.neoforge.gear.NativeGearHolds.blockedForBreak(world,pos,admittedGear))return true;
+  if(!(world instanceof ServerLevel)||holds.isEmpty())return false;var write=WRITE.get();boolean admitted=write!=null&&!write.consumed&&write.world==world&&write.pos.equals(pos)&&write.operation==MUTATION.get();
+  // Consume even when the intended candidate is still air. A callback sees the new marker, not another grant.
+  if(admitted)write.consumed=true;
+  for(var hold:holds)if(hold.world.get()==world&&!(admitted&&hold.operation==write.operation)){if(hold.positions.contains(pos))return true;if(hold.candidates.contains(pos)&&NativeRampPartOwnership.read((ServerLevel)world,pos,hold.partBlock,hold.operation.id(),hold.operation.root())!=NativeRampPartOwnership.State.OTHER)return true;}return false;
+ }
  public static boolean blocked(Container container){
   if(com.vandorlabs.neoforge.transfer.NativeTransferHolds.blocked(container))return true;
   if(com.vandorlabs.neoforge.gear.NativeGearHolds.blocked(container))return true;
   if(holds.isEmpty())return false;
-  if(container instanceof BlockEntity tile&&tile.getLevel() instanceof ServerLevel world&&blocked(world,tile.getBlockPos()))return true;
-  var bypass=MUTATION.get();for(var hold:holds)if(hold.world.get()!=null&&hold.operation!=bypass)for(var ref:hold.containers){var owner=ref.get();if(owner!=null&&(owner==container||container instanceof CompoundContainer compound&&compound.contains(owner)))return true;}return false;
+  if(container instanceof BlockEntity tile&&tile.getLevel() instanceof ServerLevel world&&foreignHold(world,tile.getBlockPos(),null))return true;
+  for(var hold:holds)if(hold.world.get()!=null)for(var ref:hold.containers){var owner=ref.get();if(owner!=null&&(owner==container||container instanceof CompoundContainer compound&&compound.contains(owner)))return true;}return false;
  }
  /** Exact live transaction and frozen coordinate, without block/tile reads. */
  static boolean mutationAllows(ServerLevel world,UUID operation,BlockPos root,BlockPos pos){
