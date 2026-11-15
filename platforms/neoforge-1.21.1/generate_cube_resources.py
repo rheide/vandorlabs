@@ -135,6 +135,8 @@ def main():
     atlas.extend(generate_landing(ROOT,OUT))
     from generate_track_resources import generate as generate_tracks
     atlas.extend(generate_tracks(ROOT,OUT))
+    from generate_seat_resources import generate as generate_seats
+    atlas.extend(generate_seats(ROOT,OUT))
     # Source-sized Screen item artwork is supplied by generateScreenItemResources.
     atlas.append(dict(type='minecraft:single',resource='vandorlabs:housing/native_screen_door_side'))
     # Own-storage sprites are generated separately; the shared atlas owns their registration.

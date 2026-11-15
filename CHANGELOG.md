@@ -36,6 +36,8 @@
 
 ### Native furniture, controls and surfaces (NeoForge 1.21.1)
 
+- Add stationary Programmable Chairs, Luxury Seats, Military Seats and Pilot Seats with shared authored settings, connected benches, native sitting/dismounting, configured two-cell item ownership and dedicated previous-value dialogs. Preserve saved Pilot data while keeping Vehicle/Taxi behavior and moving-seat capture unavailable. See [Native seating](docs/native-seating.md).
+
 - Add the canonical Industrial Table with authored connected end struts, ordinary and inverted placement, tabletop support, padded items and native saved block states. Share exact collision geometry with Forge 1.12.2 without adding a table entity or ticker.
 - Add the Programmable Pressure Plate with shared Wood/Gold/Iron sensing, analogue physical power and independent Pressed/Released/Disabled channel output. Reuse the standard artwork picker and inline transmission editor through the Configurizer and ordinary sneak-right-click.
 - Preserve native plate choices, settings-only transmission copying/Undo and inert unsupported saved data. Native Vehicle Mode and vehicle-carried plate sensing remain outside this standalone conversion. See [Industrial Tables](docs/industrial-tables.md) and [Pressure Plates](docs/programmable-pressure-plate.md).

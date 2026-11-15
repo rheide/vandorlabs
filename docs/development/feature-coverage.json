@@ -402,7 +402,7 @@
       "id": "seating",
       "label": "Chairs and seats",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "luxury_seat",
         "military_seat",
@@ -410,11 +410,8 @@
         "programmable_chair"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native shape/entity mounting",
-        "configured artwork",
-        "safe dismount and carried seats",
-        "live parity"
+        "Vehicle assembly, Taxi, driving, preview controls and carried two-cell seat ownership are deferred.",
+        "Exact packaged-JAR and hardware shader acceptance remain separate from focused development-runtime checks."
       ],
       "legacy_entity_ids": [
         "chair_seat"
@@ -422,7 +419,23 @@
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "historical_modern_registered_entity_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_block_ids": [
+        "luxury_seat",
+        "military_seat",
+        "pilot_seat",
+        "programmable_chair"
+      ],
+      "modern_registered_entity_ids": [
+        "chair_seat"
+      ],
+      "implemented": [
+        "Shared authored chair settings, cushion/yaw markers and loaded connected-row policy preserve the current Forge behavior.",
+        "Four native two-cell seat families retain one lower owner, configured pick/drop/replacement, inert unsupported data and dormant Pilot fields; moving-seat capture is refused before mutation.",
+        "Native vanilla mounting/dismount, ordinary and Configurizer dedicated dialogs, previous values, Source settings-only copying and Undo pass actual-player checks; dedicated write/read covers saved ownership and literal 1.12 position migration.",
+        "Authored cardinal emitted geometry, materials and every configured item variant retain padded presentation. Immutable geometry uses a bounded bake cache and small weak selection descriptors, with repeated visible icon pages reusing meshes.",
+        "Pilot Seat shares compatible pristine Canopy backrest reservations and repairs its own AIR upper proxy through deferred loaded-identity work after Canopy removal."
+      ]
     },
     {
       "id": "controls",

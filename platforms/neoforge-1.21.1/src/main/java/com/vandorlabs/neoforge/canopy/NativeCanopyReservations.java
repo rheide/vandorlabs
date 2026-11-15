@@ -19,7 +19,7 @@ public final class NativeCanopyReservations {
         /** Physical seat/cockpit adapters may retain their own cell; this never means replaceable material. */
         default boolean shared(NativeCanopyEntity owner,BlockPos pos){return false;}
     }
-    public static final Access WORLD=new Access(){};
+    public static final Access WORLD=new Access(){@Override public boolean shared(NativeCanopyEntity owner,BlockPos pos){return com.vandorlabs.neoforge.seating.NativeSeatBackrests.shared(owner,pos);}};
     private static List<BlockPos> cells(NativeCanopyEntity member){return NativeCanopyFootprint.cells(member.kind(),member.getBlockPos(),member.facing(),member.settings(),member.links());}
     private static boolean released(NativeCanopyEntity member,List<BlockPos> cells,BlockPos pos){return member.links().released().contains(cells.indexOf(pos));}
     private static void release(NativeCanopyEntity member,List<BlockPos> cells,BlockPos pos,boolean value){var indices=new HashSet<>(member.links().released());int index=cells.indexOf(pos);if(value)indices.add(index);else indices.remove(index);member.stageLinks(member.links().withReleased(indices));}
