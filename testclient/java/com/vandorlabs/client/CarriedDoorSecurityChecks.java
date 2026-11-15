@@ -31,11 +31,46 @@ public final class CarriedDoorSecurityChecks {
     private static int assertions,scenarios,packetCount,packetBytes;
     private static void need(boolean value,String reason){assertions++;if(!value)throw new AssertionError(reason);}
 
-    private static final class World extends NonRenderingChecks.MemoryWorld {
-        final Map<BlockPos,Long> scheduled=new HashMap<>();
-        World(boolean remote){super(remote);time=100;}
+    /** Real server-world identity exercises TrackingPackets; only terrain and remote transport are substituted. */
+    private static final class World extends net.minecraft.world.WorldServer {
+        Map<BlockPos,IBlockState> states;
+        Map<BlockPos,TileEntity> tiles;
+        Map<BlockPos,Long> scheduled;
+        long time;
+        net.minecraft.entity.EntityTracker tracker;
+        private World(){super(null,null,null,0,null);}
+        static World create(boolean remote)throws Exception{
+            NonRenderingChecks.MemoryWorld template=new NonRenderingChecks.MemoryWorld(remote);
+            World world=(World)unsafe.allocateInstance(World.class);
+            for(java.lang.reflect.Field field:net.minecraft.world.World.class.getDeclaredFields())
+                if(!java.lang.reflect.Modifier.isStatic(field.getModifiers())){field.setAccessible(true);field.set(world,field.get(template));}
+            world.states=new HashMap<>();world.tiles=new HashMap<>();world.scheduled=new HashMap<>();world.time=100;
+            world.tracker=new net.minecraft.entity.EntityTracker(world){
+                @Override public Set<? extends EntityPlayer> getTrackingPlayers(net.minecraft.entity.Entity entity){return Collections.emptySet();}
+            };
+            return world;
+        }
+        @Override public net.minecraft.entity.EntityTracker getEntityTracker(){return tracker;}
         @Override public net.minecraft.server.MinecraftServer getMinecraftServer(){return server;}
+        @Override public long getTotalWorldTime(){return time;}
+        @Override protected boolean isChunkLoaded(int x,int z,boolean empty){return true;}
+        @Override public net.minecraft.world.chunk.Chunk getChunkFromChunkCoords(int x,int z){return new net.minecraft.world.chunk.Chunk(this,x,z){@Override public Map<BlockPos,TileEntity> getTileEntityMap(){return tiles;}};}
+        @Override public IBlockState getBlockState(BlockPos pos){return states.getOrDefault(pos,net.minecraft.init.Blocks.AIR.getDefaultState());}
+        @Override public TileEntity getTileEntity(BlockPos pos){return tiles.get(pos);}
+        @Override public void removeTileEntity(BlockPos pos){TileEntity tile=tiles.remove(pos);if(tile!=null)tile.invalidate();}
+        @Override public boolean setBlockState(BlockPos pos,IBlockState state,int flags){IBlockState old=states.put(pos.toImmutable(),state);TileEntity previous=tiles.get(pos);if(old!=null&&previous!=null&&!previous.shouldRefresh(this,pos,old,state))return true;removeTileEntity(pos);TileEntity tile=state.getBlock().createTileEntity(this,state);if(tile!=null){tile.setWorld(this);tile.setPos(pos);tiles.put(pos.toImmutable(),tile);}return true;}
         @Override public void scheduleUpdate(BlockPos pos,Block block,int ticks){scheduled.merge(pos.toImmutable(),time+ticks,Math::min);}
+        @Override public void notifyNeighborsOfStateChange(BlockPos pos,Block block,boolean observers){}
+        @Override public void notifyBlockUpdate(BlockPos pos,IBlockState before,IBlockState after,int flags){}
+        @Override public void markBlockRangeForRenderUpdate(BlockPos from,BlockPos to){}
+        @Override public void markChunkDirty(BlockPos pos,TileEntity tile){}
+        @Override public void updateComparatorOutputLevel(BlockPos pos,Block block){}
+        @Override public void playEvent(EntityPlayer player,int event,BlockPos pos,int data){}
+        @Override public boolean isBlockModifiable(EntityPlayer player,BlockPos pos){return true;}
+        @Override public BlockPos getSpawnPoint(){return new BlockPos(0,64,0);}
+        @Override public <T extends net.minecraft.entity.Entity> List<T> getEntitiesWithinAABB(Class<? extends T> type,net.minecraft.util.math.AxisAlignedBB box){return Collections.emptyList();}
+        @Override public List<net.minecraft.entity.Entity> getEntitiesWithinAABBExcludingEntity(net.minecraft.entity.Entity entity,net.minecraft.util.math.AxisAlignedBB box){return Collections.emptyList();}
+        @Override public boolean spawnEntity(net.minecraft.entity.Entity entity){loadedEntityList.add(entity);return true;}
     }
     private static final class Player extends EntityPlayer {
         boolean spectator;
@@ -85,7 +120,7 @@ public final class CarriedDoorSecurityChecks {
         final BlockPos offset;
         EntityGroundVehicle craft,mirror;
         Fixture(boolean carried,boolean large,boolean paired,int mode,boolean remote,boolean creative)throws Exception{
-            ONLINE.clear();PACKETS.clear();this.carried=carried;this.large=large;this.paired=paired;world=new World(remote);
+            ONLINE.clear();PACKETS.clear();this.carried=carried;this.large=large;this.paired=paired;world=World.create(remote);
             List<VehicleStructure.Cell> source=cells(large,paired,mode);offset=carried?BlockPos.ORIGIN:new BlockPos(100,80,100);
             if(carried){craft=new EntityGroundVehicle(world);craft.install(new VehicleStructure(source,SEAT,EnumFacing.SOUTH,1));craft.setPosition(100,80,100);}
             else for(VehicleStructure.Cell cell:source)if(cell.hasTileData()){
@@ -100,7 +135,7 @@ public final class CarriedDoorSecurityChecks {
         TileEntitySpaceDoor door(){return door(root());}
         TileEntitySpaceDoor door(BlockPos at){return (TileEntitySpaceDoor)view().getTileEntity(at);}
         void use(int side){door().useSecurity(player,EnumHand.MAIN_HAND,side);}
-        void mirror(){World remote=new World(true);remote.time=world.time;mirror=new EntityGroundVehicle(remote);mirror.install(VehicleStructure.read(craft.structure.write()));mirror.setPosition(craft.posX,craft.posY,craft.posZ);}
+        void mirror()throws Exception{World remote=World.create(true);remote.time=world.time;mirror=new EntityGroundVehicle(remote);mirror.install(VehicleStructure.read(craft.structure.write()));mirror.setPosition(craft.posX,craft.posY,craft.posZ);}
         void wire(){
             if(mirror==null){PACKETS.clear();return;}
             ((World)mirror.world).time=world.time;
@@ -221,7 +256,7 @@ public final class CarriedDoorSecurityChecks {
             f.reload();connect(f.player);for(int i=0;i<f.player.inventory.mainInventory.size();i++)f.player.inventory.mainInventory.set(i,new ItemStack(net.minecraft.init.Items.STICK,64));f.player.setHeldItem(EnumHand.OFF_HAND,new ItemStack(net.minecraft.init.Items.STICK,64));
             f.player.capabilities.isCreativeMode=true;f.step(140);need(f.door().keyReader().returning()&&f.player.cards()==0,"full Creative inventory cannot delete a returned credential");
             f.player.inventory.mainInventory.set(5,ItemStack.EMPTY);f.step(159);need(f.player.cards()==0,"full-inventory retry respects its twenty-tick deadline");
-            ONLINE.get(f.player.getUniqueID()).world=new World(false);f.step(160);need(f.player.cards()==1&&f.door().keyReader().isEmpty(),"online owner receives one card after changing dimension");f.step(180);need(f.player.cards()==1,"repeated tick cannot return twice");
+            ONLINE.get(f.player.getUniqueID()).world=World.create(false);f.step(160);need(f.player.cards()==1&&f.door().keyReader().isEmpty(),"online owner receives one card after changing dimension");f.step(180);need(f.player.cards()==1,"repeated tick cannot return twice");
         }finally{f.close();}
         for(boolean carried:new boolean[]{false,true}){
             Fixture drop=new Fixture(carried,false,false,2,false,false);
