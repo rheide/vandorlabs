@@ -121,7 +121,7 @@ native restoration. Chip insertion/removal and dismantling require a supported
 native endpoint; unsupported tilts stay captured and remain aligned with the arm
 socket. Allow clearance below the whole folded machine: ground contact safely
 refuses movement while retaining the selectable payload. See the
-[Core construction guide](../universal-constructors.md).
+[Core construction guide](../universal-constructors.md). Native endpoint rendering waits for the complete machine layout and settled arm pose, preserving one visible body through separately delivered block, tile and arm updates. The current native machine then owns its displayed activity and settings.
 
 Taxi conversion keeps its inspected geometry separate from the geometry prepared with new Coupler ownership data. Valid Couplers can assemble, park and recapture; actual source edits during preparation still refuse without removing the craft.
 

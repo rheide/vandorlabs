@@ -21,6 +21,7 @@ unset VANDOR_LABS_CONTROL_LATCH_LEVELS_CHECKS_ONLY
 unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONLY VANDOR_LABS_MOUNTED_CONTROL_DIALOG_CHECKS_ONLY VANDOR_LABS_GLASS_DIALOG_CHECKS_ONLY
 
 unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY
+unset VANDOR_LABS_CORE_HANDOFF_ONLY
 unset VANDOR_LABS_MODULE_RACK_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
@@ -166,6 +167,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-dish-continuity ]; then
             PREFIX=arm_dish_continuity_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true VANDOR_LABS_DISH_CONTINUITY_ONLY=true
+        elif [ "$TARGET" = arm-core-handoff ]; then
+            PREFIX=arm_core_handoff_
+            export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true VANDOR_LABS_CORE_HANDOFF_ONLY=true
         elif [ "$TARGET" = arm-core-use ]; then
             PREFIX=arm_core_use_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_CORE_ONLY=true VANDOR_LABS_ARM_CORE_USE_ONLY=true
@@ -705,6 +709,11 @@ PYIMAGE
     if [ "$TARGET" = arm-dish-continuity ]; then
         grep -q '\[vandorlabs\]\[dish-continuity\] PASS checks=' "$RUN_OUT/client.log"
         echo "Carried Dish animation continuity passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-core-handoff ]; then
+        grep -q '\[vandorlabs\]\[core-handoff\] PASS checks=' "$RUN_OUT/client.log"
+        echo "Core native/captured render handoff passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-core-use ]; then

@@ -931,6 +931,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             else quarantineParking(original);
         }
     }
+    public ArmCoreRenderTransfer coreRenderTransfer;public Object coreVisualHandoff;
     private void readGearData(NBTTagCompound tag) {
         ArmPayload previousVisualPayload=payload;
         com.vandorlabs.tiles.WorldActionAuthorization.reading(this);super.readFromNBT(tag);
@@ -1001,12 +1002,14 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
 
     @Override
     public NBTTagCompound getUpdateTag() {
-        if(parkingQuarantine==null)return writeToNBT(new NBTTagCompound());
+        if(parkingQuarantine==null){NBTTagCompound tag=writeToNBT(new NBTTagCompound());if(coreRenderTransfer!=null)tag.setTag(ArmCoreRenderTransfer.KEY,coreRenderTransfer.write());return tag;}
         NBTTagCompound shell=new NBTTagCompound();net.minecraft.util.ResourceLocation id=TileEntity.getKey(GearTileEntity.class);if(id!=null)shell.setString("id",id.toString());shell.setInteger("x",pos.getX());shell.setInteger("y",pos.getY());shell.setInteger("z",pos.getZ());shell.setBoolean("GearOperational",false);shell.setBoolean("GearController",false);shell.setString("GearError","Arm parking snapshot retained for recovery");return shell;
     }
 
     @Override
-    public void handleUpdateTag(NBTTagCompound tag) { readFromNBT(tag);clientUpdates++; }
+    public void handleUpdateTag(NBTTagCompound tag) { readFromNBT(tag);readCoreRenderTransfer(tag);clientUpdates++; }
+
+    private void readCoreRenderTransfer(NBTTagCompound tag){coreRenderTransfer=tag.hasKey(ArmCoreRenderTransfer.KEY,10)?ArmCoreRenderTransfer.read(tag.getCompoundTag(ArmCoreRenderTransfer.KEY),payload,pos):null;if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreRenderTransferChanged(this);}
 
     @Override
     public SPacketUpdateTileEntity getUpdatePacket() { return new SPacketUpdateTileEntity(pos, 0, getUpdateTag()); }
@@ -1014,7 +1017,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     @Override
     public void onDataPacket(NetworkManager manager, SPacketUpdateTileEntity packet) {
         double previous=progress;
-        readFromNBT(packet.getNbtCompound());clientUpdates++;
+        readFromNBT(packet.getNbtCompound());readCoreRenderTransfer(packet.getNbtCompound());clientUpdates++;
         previousProgress=previous;
         if (world != null) world.markBlockRangeForRenderUpdate(pos, pos);
     }

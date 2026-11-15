@@ -614,6 +614,7 @@ public final class ArmPayload {
         MovingBlockSupport.validate(blocks,view(arm));java.util.List<BlockPos> targets=new java.util.ArrayList<>();for(VehicleStructure.Cell cell:destination.cells)targets.add(origin.add(cell.pos));if(!ArmTransactions.ready(arm,"restore",targets))return false;
         placedBlocks=destination==blocks?null:destination;gridTileBasis=placementBasis;couplerFrames=true;
         arm.storedSections=stored;
+        ArmCoreRenderTransfer.publishing(arm,this,origin,destination,prepared);
         List<VehicleStructure.Cell> installed=new ArrayList<>();
         try{for(VehicleStructure.Cell cell:destination.cells){installed.add(cell);BlockPos at=origin.add(cell.pos);if(originalSections.containsKey(at))retireTile(world,at);install(world,origin,cell,prepared.get(cell));}}
         catch(RuntimeException | LinkageError failure){
@@ -623,6 +624,7 @@ public final class ArmPayload {
             journal(world,origin,installed);
             throw failure;
         }
+        ArmCoreRenderTransfer.published(arm);
         if(world instanceof net.minecraft.world.WorldServer)com.vandorlabs.tiles.WorldActionAuthorization.installed((net.minecraft.world.WorldServer)world,destination,origin,authorizer.getUniqueID());
         placedOffset=target;materialized=true;ArmTransactions.applied(arm);return true;
     }

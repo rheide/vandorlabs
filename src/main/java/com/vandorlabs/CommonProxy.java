@@ -9,6 +9,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class CommonProxy {
+    public void coreAppearanceChanged(com.vandorlabs.tiles.TileEntityConstructor tile){}
+    public void coreRenderTransferChanged(com.vandorlabs.gear.GearTileEntity tile){}
     public void armPayloadAppearanceChanged(com.vandorlabs.gear.GearTileEntity tile,com.vandorlabs.gear.ArmPayload previous){}
     public void moduleRackUpdated(com.vandorlabs.tiles.TileEntityModuleRack tile,
             int previousMask, long[] previousSequences, boolean initial) { }

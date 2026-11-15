@@ -35,7 +35,7 @@ final class GearRenderAdmission {
     private static boolean visible(AxisAlignedBB b,GearTileEntity tile){return b!=null&&distanceSquared(b,x,y,z)<=tile.getMaxRenderDistanceSquared()&&frustum.isBoundingBoxInFrustum(b);}
     private static void missing(GearTileEntity root){
         if(DRAWN.contains(root)||root.isInvalid()||root.getWorld()!=client.world||!client.world.isBlockLoaded(root.getPos(),false)||client.world.getTileEntity(root.getPos())!=root||!root.isOperational())return;
-        ArmPayload payload=root.payload();if(payload==null||payload.materialized()||payload.hasOwnershipJournal())return;
+        ArmPayload payload=root.payload();if(payload==null||(payload.materialized()||payload.hasOwnershipJournal())&&!CoreArmHandoff.fallback(root))return;
         if(frustum==null){frustum=new Frustum();frustum.setPosition(x,y,z);}
         double progress=GearRenderer.renderedProgress(root,partial);boolean body=visible(ArmPayloadRenderer.bounds(root,progress,false),root),mechanism=visible(ArmPayloadRenderer.bounds(root,progress,true),root);if(!body&&!mechanism)return;
         if(renderState==null){client.entityRenderer.enableLightmap();renderState=new com.vandorlabs.client.TurntableRenderState();}

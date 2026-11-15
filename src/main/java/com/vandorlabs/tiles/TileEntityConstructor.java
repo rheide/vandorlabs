@@ -41,11 +41,22 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public void update(){if(world!=null&&world.isRemote&&isDrive()&&renderReady()&&screenOn()&&drive.plume(true,driveLevel))com.vandorlabs.drives.DriveParticles.emit(this);}
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
+    private java.util.UUID renderIdentity;
+    public java.util.UUID renderEpoch;public BlockPos renderOwner;public int renderCell=-1;private boolean renderAppearance;
+    public java.util.UUID renderIdentity(){if(renderIdentity==null)renderIdentity=java.util.UUID.randomUUID();return renderIdentity;}
+    public void renderIdentity(java.util.UUID identity){renderIdentity=identity;}
+    public boolean renderAppearanceReady(){return renderAppearance;}
+    private void renderPacket(NBTTagCompound tag){
+        renderAppearance=tag.hasKey("CoreRenderReady",1)&&tag.getBoolean("CoreRenderReady");
+        if(tag.hasUniqueId("CoreRenderIdentity"))renderIdentity=tag.getUniqueId("CoreRenderIdentity");renderEpoch=null;renderOwner=null;renderCell=-1;
+        if(tag.hasUniqueId("CoreRenderEpoch")&&tag.hasKey("CoreRenderOwner",4)&&tag.hasKey("CoreRenderCell",3)){int cell=tag.getInteger("CoreRenderCell");if(cell>=0&&cell<com.vandorlabs.gear.ArmPayload.MAX_BLOCKS){renderEpoch=tag.getUniqueId("CoreRenderEpoch");renderOwner=BlockPos.fromLong(tag.getLong("CoreRenderOwner"));if(Math.abs((long)renderOwner.getX()-pos.getX())>128||Math.abs((long)renderOwner.getY()-pos.getY())>128||Math.abs((long)renderOwner.getZ()-pos.getZ())>128){renderOwner=null;renderEpoch=null;}else renderCell=cell;}}
+        if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);
+    }
     private com.vandorlabs.machines.CoreLayout cachedLayout;private BlockConstructorCore cachedLayoutCore;
     private int activity=-1;
     private String assemblyProblem="";
     /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
-    @Override public boolean shouldRefresh(net.minecraft.world.World world,BlockPos pos,IBlockState before,IBlockState after){return before.getBlock()!=after.getBlock();}
+    @Override public boolean shouldRefresh(net.minecraft.world.World world,BlockPos pos,IBlockState before,IBlockState after){if(before!=after)renderAppearance=false;return before.getBlock()!=after.getBlock();}
     /** Render lists and shadow passes may retain this tile after its block disappears. */
     private IBlockState coreState(){
         if(removedState!=null)return removedState.getBlock() instanceof BlockConstructorCore?removedState:null;
@@ -97,7 +108,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
                 BlockPos p=cell(x,y,z);if(p.equals(pos))continue;
                 world.setBlockState(p,part.getDefaultState(),2);((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frame(x,y,z));
             }
-            world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,true),3);markDirty();
+            world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,true),3);renderAppearance=true;markDirty();
             world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);refreshInputs();return true;
         }finally{changing=false;}
     }
@@ -136,7 +147,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(isDrive()){if(level>0)drivePhysicalInputs.put(at.toImmutable(),level);else drivePhysicalInputs.remove(at);drivePhysicalLevel=0;for(int input:drivePhysicalInputs.values())drivePhysicalLevel=Math.max(drivePhysicalLevel,input);}
         physicalInput(!poweredInputs.isEmpty());if(isDrive())refresh();
     }
-    @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,this::refreshInputs);}
+    @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{refreshInputs();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);});}
     public com.vandorlabs.blocks.MachineMountSurface mount(){
         if(!renderReady()||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
         Vec3d local=new Vec3d(spec.chip_anchor[0],spec.chip_anchor[1],spec.chip_anchor[2]);
@@ -148,8 +159,9 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){super.readFromNBT(tag);driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;}
-    @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
+    @Override public void readFromNBT(NBTTagCompound tag){renderAppearance=false;super.readFromNBT(tag);driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;}
+    @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
+    @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);renderPacket(tag);}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
-    @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());}
+    @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());renderPacket(packet.getNbtCompound());}
 }

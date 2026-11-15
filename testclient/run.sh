@@ -70,6 +70,9 @@ CAPTURE_JVM+=("-Dvandorlabs.utility26ChecksOnly=${VANDOR_LABS_UTILITY26_CHECKS_O
 if [ "${VANDOR_LABS_DISH_CONTINUITY_ONLY:-false}" = true ]; then
     CAPTURE_JVM+=("-Dvandorlabs.savedOculusChecks=true" "-Dvandorlabs.dishContinuity=true" "-XX:CompileCommand=exclude,net/minecraft/client/renderer/Tessellator.getInstance" "-XX:CompileCommand=exclude,net/minecraft/client/renderer/Tessellator.func_178181_a")
 fi
+if [ "${VANDOR_LABS_CORE_HANDOFF_ONLY:-false}" = true ]; then
+    CAPTURE_JVM+=("-Dvandorlabs.savedOculusChecks=true" "-Dvandorlabs.coreHandoff=true" "-XX:CompileCommand=exclude,net/minecraft/client/renderer/Tessellator.getInstance" "-XX:CompileCommand=exclude,net/minecraft/client/renderer/Tessellator.func_178181_a")
+fi
 CAPTURE_JVM+=("-Dvandorlabs.vehicleTaxiChecksOnly=${VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleRampChecksOnly=${VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY:-false}" "-Dvandorlabs.vehicleRampFixture=$PWD/../fixtures/vehicle-ramps-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.copySurfaceChecksOnly=${VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY:-false}" "-Dvandorlabs.copySurfaceFixture=$PWD/../fixtures/copy-surfaces-2.6.nbt")

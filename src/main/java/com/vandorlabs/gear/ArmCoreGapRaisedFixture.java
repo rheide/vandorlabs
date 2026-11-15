@@ -36,6 +36,6 @@ final class ArmCoreGapRaisedFixture {
         actor.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);TileEntityConstructor machine=(TileEntityConstructor)world.getTileEntity(owner);need(core.onBlockActivated(world,owner,wanted,actor,EnumHand.MAIN_HAND,EnumFacing.NORTH,.5F,.5F,.5F)&&machine.formed(),"ordinary frame activation");need(machine.layout().cornerX==0&&machine.layout().cornerZ==2,"same saved Core corner and facing");
         GearTileEntity root=(GearTileEntity)world.getTileEntity(ROOT);need(root.rebuild()&&root.columns().size()==2&&root.assembly().columnHeight()==5,"two matching joined real columns");need(root.mode()==GearMotion.Mode.ROTATE&&root.hingeMode()==ArmHinge.Mode.DOUBLE&&root.direction()==GearMotion.Direction.SOUTH&&root.kinkDirection()==GearMotion.Direction.SOUTH,"same ROTATE/Double/South mechanism");ArmCoreFixture.emptyHands(actor,GameType.SURVIVAL);return root;
     }
-    static void intact(WorldServer world){for(Map.Entry<BlockPos,IBlockState> entry:SUPPORTS.entrySet())need(world.getBlockState(entry.getKey())==entry.getValue(),"clearance floor and actual mounting pillars retained");}
+    static void intact(WorldServer world){for(Map.Entry<BlockPos,IBlockState> entry:SUPPORTS.entrySet())need(world.getBlockState(entry.getKey())==entry.getValue(),"clearance floor and actual mounting pillars retained at="+entry.getKey()+" expected="+entry.getValue()+" actual="+world.getBlockState(entry.getKey()));}
     private ArmCoreGapRaisedFixture(){}
 }

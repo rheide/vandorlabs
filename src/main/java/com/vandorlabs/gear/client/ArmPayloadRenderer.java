@@ -73,7 +73,7 @@ final class ArmPayloadRenderer {
     }
     private static Vec3d inverse(Vec3d point,Vec3d origin,Vec3d a,Vec3d b,Vec3d c){Vec3d p=point.subtract(origin);return new Vec3d(p.dotProduct(a),p.dotProduct(b),p.dotProduct(c));}
     static void render(GearTileEntity arm,double progress,double x,double y,double z,float partial){
-        ArmPayload payload=arm.payload();if(payload==null)return;boolean surfaceHandoff=payload.materialized()&&com.vandorlabs.client.SurfaceArmHandoff.fallback(arm);if(payload.materialized()&&!surfaceHandoff||!surfaceHandoff&&payload.hasOwnershipJournal())return;if(surfaceHandoff)progress=arm.progress();
+        ArmPayload payload=arm.payload();if(payload==null)return;boolean coreHandoff=CoreArmHandoff.fallback(arm),surfaceHandoff=payload.materialized()&&com.vandorlabs.client.SurfaceArmHandoff.fallback(arm);if(payload.materialized()&&!surfaceHandoff&&!coreHandoff||!surfaceHandoff&&!coreHandoff&&payload.hasOwnershipJournal())return;if(surfaceHandoff)progress=arm.progress();
         Vec3d origin=payload.transform(arm,progress,0,0,0),a=payload.transform(arm,progress,1,0,0).subtract(origin),b=payload.transform(arm,progress,0,1,0).subtract(origin),c=payload.transform(arm,progress,0,0,1).subtract(origin);
         TileEntityRendererDispatcher dispatcher=TileEntityRendererDispatcher.instance;
         double oldX=dispatcher.entityX,oldY=dispatcher.entityY,oldZ=dispatcher.entityZ;net.minecraft.world.World old=dispatcher.world;int oldPass=net.minecraftforge.client.MinecraftForgeClient.getRenderPass();

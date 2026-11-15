@@ -20,6 +20,8 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void coreAppearanceChanged(com.vandorlabs.tiles.TileEntityConstructor tile){com.vandorlabs.gear.client.CoreArmHandoff.register(tile);}
+    @Override public void coreRenderTransferChanged(com.vandorlabs.gear.GearTileEntity tile){com.vandorlabs.gear.client.CoreArmHandoff.changed(tile);}
     @Override public void armPayloadAppearanceChanged(com.vandorlabs.gear.GearTileEntity tile,com.vandorlabs.gear.ArmPayload previous){
         net.minecraft.client.Minecraft client=net.minecraft.client.Minecraft.getMinecraft();
         if(!client.isCallingFromMinecraftThread()||tile.getWorld()!=client.world||client.world==null||client.world.getTileEntity(tile.getPos())!=tile)return;

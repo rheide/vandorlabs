@@ -71,6 +71,7 @@ public final class SavedOculusArmChecks {
     private static String clientSync="pending";
     private static boolean ready(Minecraft mc)throws Exception{boolean ack=ArmInteractionSync.acknowledged(mc);clientSync="clientMode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" pos="+mc.player.getPositionVector()+" wanted="+camera+" nativeVertices="+(nativeVertices==null?0:nativeVertices.size())+" server="+ArmInteractionSync.status();return camera!=null&&mc.playerController.getCurrentGameType()==GameType.CREATIVE&&mc.player.inventory.currentItem==0&&mc.player.getDistanceSq(camera.x,camera.y,camera.z)<.0001&&ack;}
     public static boolean tick(Minecraft mc,File output)throws Exception{
+        if(Boolean.getBoolean("vandorlabs.coreHandoff"))return ArmCoreHandoffChecks.tick(mc,output);
         if(Boolean.getBoolean("vandorlabs.savedCoreVisual4"))return SavedCoreVisualChecks.tick(mc,output);
         if(Boolean.getBoolean("vandorlabs.dishContinuity"))return ArmDishContinuityChecks.tick(mc,output);
         if(Boolean.getBoolean("vandorlabs.savedOculusTransition"))return SavedOculusTransitionChecks.tick(mc,output);

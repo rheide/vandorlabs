@@ -92,7 +92,7 @@ public final class ArmTransactions {
         for(BlockPos pos:positions){if(!world.isBlockLoaded(pos,false)||locked(world,pos))throw new IllegalArgumentException("Arm transfer cells are unavailable");NBTTagCompound cell=new NBTTagCompound();cell.setLong("Pos",pos.toLong());cell.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),world.getBlockState(pos)));TileEntity tile=world.getTileEntity(pos);if(tile!=null)cell.setTag("Tile",tile.writeToNBT(new NBTTagCompound()));before.appendTag(cell);}
         NBTTagCompound record=new NBTTagCompound();record.setInteger("Schema",1);record.setLong("Root",arm.getPos().toLong());record.setString("Operation",operation);java.util.UUID authorized=com.vandorlabs.tiles.WorldActionAuthorization.actorId(arm);if(authorized!=null)record.setUniqueId("AuthorizationActor",authorized);record.setTag("Before",before);if(extra!=null)record.merge(extra);
         Hold created=new Hold(world,directory(world).resolve(UUID.randomUUID()+".nbt"),record,false);
-        try{created.io=IO.submit(()->{write(created.file,record);return null;});holds.put(created.root,created);for(BlockPos pos:created.cells)if(!pos.equals(created.root))freeze(created,pos);}catch(RejectedExecutionException busy){return false;}return false;
+        try{created.io=IO.submit(()->{write(created.file,record);return null;});holds.put(created.root,created);if("detach".equals(operation)&&arm.payload()!=null)ArmCoreRenderTransfer.capturing(arm,arm.payload());for(BlockPos pos:created.cells)if(!pos.equals(created.root))freeze(created,pos);}catch(RejectedExecutionException busy){return false;}return false;
     }
     private static void freeze(Hold hold,BlockPos pos){
         // Preparing native endpoint publication must not replace the arm's own
@@ -120,6 +120,7 @@ public final class ArmTransactions {
     private static void publish(Hold hold,BlockPos pos){
         if(CopyWorld.frozen(hold.world,pos)){
         CopyWorld.publish(hold.world,pos);
+        ArmCoreRenderTransfer.nativePublished(hold.world,hold.root,pos);
         // The earlier block update can be sent while a frozen journal proxy
         // owns this cell. It has no tile update packet, so the client may have
         // only a default arm tile (no owner, DOWN mount). Publish the restored

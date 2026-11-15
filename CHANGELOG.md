@@ -73,6 +73,7 @@
 
 - Keep captured arm attachments visible when their mounting columns fall outside the camera's rendered terrain sections. Cull against cached posed model bounds, and avoid duplicate main-view draws or shader-shadow admission.
 - Keep tilted captured Core machinery aligned with its arm socket. Apply endpoint grid rounding only when that Core orientation can become native blocks; retain normal collision checks and the original native-rest pose. Allow clearance below the whole folded machine: ground contact safely refuses movement while retaining the selectable payload.
+- Keep one correctly placed Core renderer while native endpoint block, tile and arm updates arrive separately. Wait for complete native layout data and the settled visual pose; hand rendering to the current native machine without a blank frame or temporary factory corner.
 - Preserve the shared client animation phase when Core machines move from native blocks to an arm attachment and back. Dish scanning no longer restarts at native endpoints; another machine placed at the vacated source keeps its own animation.
 - Move a complete formed Core construction by touching its Core or any reserved part with an Extender or Rotating Arm. Preserve every reservation, chip, setting and opaque capability field through native endpoints, reversal and durable recovery.
 - Include the complete validated Core footprint when joined Rotating Arms contact it. Match Join, range, fold, payload mode, hinge and kink across the columns; an independent neighbouring arm can still obstruct the machine.

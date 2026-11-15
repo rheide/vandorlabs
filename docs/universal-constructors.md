@@ -34,3 +34,5 @@ Activate the arm normally. The Core, its relative part links, settings and inser
 Allow space for the complete machine throughout the swing, including below the folded body. Tilted captured machinery follows the arm socket without being shifted onto a block grid. Ground and nearby blocks can prevent a stroke; the machine remains retained and selectable. Raise the construction or clear its swept area before expecting the full motion.
 
 At a supported native endpoint, ordinary Core configuration and chip changes are retained by the next stroke. Native part mining and sneak-right-click dismantling keep their usual behavior. Mining a captured Core or part is refused with an instruction to return it to native blocks, so it cannot leave an incomplete moving machine.
+
+Core machinery stays visible while an arm returns it to native blocks, including when the client receives the block, machine data and arm update at different times. Its detected corner and current settings appear together; the native machine takes over once that data and the arm’s visual pose are ready.
