@@ -1,0 +1,6 @@
+// Focused Java 8 shared geometry task; run with testDedicatedServerLinkage in the coalesced candidate.
+task testIndustrialTableGeometry(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.IndustrialTableGeometryTest'
+}
