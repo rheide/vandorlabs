@@ -25,7 +25,7 @@ public final class NativePlateEntity extends BlockEntity implements NativeChanne
     private int texture=DEFAULT_TEXTURE,mode=1,sensitivity,output,range=16,mountRotation;
     private boolean local=true,inert;
     private ChannelList channels=ChannelList.EMPTY;
-    private CompoundTag retained=new CompoundTag();
+    private CompoundTag retained=new CompoundTag();private boolean retainedItem;
     private static int defaultTexture(){for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++)if(ModernFinishCatalog.ENTRIES.get(i).id().equals("door_inner"))return i;return 0;}
     public NativePlateEntity(BlockPos pos,BlockState state){super(NativePlateBindings.ENTITY,pos,state);}
     public int mountRotation(){return mountRotation;}public int texture(){return texture;}public int mode(){return mode;}public int sensitivity(){return sensitivity;}public int output(){return output;}public boolean localRedstone(){return local;}public boolean inert(){return inert;}
@@ -56,7 +56,7 @@ public final class NativePlateEntity extends BlockEntity implements NativeChanne
     @Override public void onChunkUnloaded(){NativeRedstoneChannels.unregister(this);super.onChunkUnloaded();}
     public CompoundTag configuration(){var tag=new CompoundTag();tag.putInt(PressurePlateSettings.TEXTURE,texture);tag.putInt(PressurePlateSettings.MODE,mode);tag.putInt(PressurePlateSettings.SENSITIVITY,sensitivity);tag.putIntArray("RedstoneChannels",channels.toArray());return tag;}
     private CompoundTag itemData(){var root=new CompoundTag();if(inert)root.put("NativePlateRetained",retained.copy());else root.put(ITEM_SETTINGS,configuration());return root;}
-    public void writeItem(ItemStack stack){var root=itemData();stack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));}
+    public void writeItem(ItemStack stack){stack.applyComponents(collectComponents());}
     private boolean readConfiguration(CompoundTag tag,boolean saved){
         for(String key:List.of(PressurePlateSettings.TEXTURE,PressurePlateSettings.MODE,PressurePlateSettings.SENSITIVITY))if(tag.contains(key)&&!tag.contains(key,Tag.TAG_INT))return false;
         int nextTexture=tag.contains(PressurePlateSettings.TEXTURE,Tag.TAG_INT)?tag.getInt(PressurePlateSettings.TEXTURE):DEFAULT_TEXTURE;
@@ -66,11 +66,11 @@ public final class NativePlateEntity extends BlockEntity implements NativeChanne
         ChannelList next;try{next=tag.contains("RedstoneChannels",Tag.TAG_INT_ARRAY)?ChannelList.of(tag.getIntArray("RedstoneChannels")):ChannelList.of(Math.max(0,tag.getInt("Channel")));}catch(IllegalArgumentException bad){return false;}
         texture=ModernFinishCatalog.storedChoice(nextTexture);mode=nextMode;sensitivity=nextSensitivity;channels=next;return true;
     }
-    @Override protected void applyImplicitComponents(DataComponentInput input){super.applyImplicitComponents(input);var data=input.get(DataComponents.CUSTOM_DATA);if(data==null)return;var tag=data.copyTag();if(tag.contains("NativePlateRetained",Tag.TAG_COMPOUND)){retained=tag.getCompound("NativePlateRetained").copy();inert=true;return;}if(tag.contains(ITEM_SETTINGS,Tag.TAG_COMPOUND)&&!readConfiguration(tag.getCompound(ITEM_SETTINGS),false))inert=true;}
+    @Override protected void applyImplicitComponents(DataComponentInput input){super.applyImplicitComponents(input);var data=input.get(DataComponents.CUSTOM_DATA);if(data==null)return;var tag=data.copyTag();if(tag.contains("NativePlateRetained")){retained=tag.contains("NativePlateRetained",Tag.TAG_COMPOUND)?tag.getCompound("NativePlateRetained").copy():tag.copy();retainedItem=true;inert=true;return;}if(tag.contains(ITEM_SETTINGS)&&(!tag.contains(ITEM_SETTINGS,Tag.TAG_COMPOUND)||!readConfiguration(tag.getCompound(ITEM_SETTINGS),false))){retained=tag.copy();retainedItem=true;inert=true;}}
     @Override protected void collectImplicitComponents(net.minecraft.core.component.DataComponentMap.Builder data){super.collectImplicitComponents(data);data.set(DataComponents.CUSTOM_DATA,CustomData.of(itemData()));}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        super.loadAdditional(tag,registries);retained=tag.copy();for(String key:List.of("id","x","y","z"))retained.remove(key);
-        try{NativePlatformComponents.requireSupported(tag,registries);}catch(IllegalArgumentException unsupported){inert=true;return;}
+        super.loadAdditional(tag,registries);retainedItem=false;retained=tag.copy();for(String key:List.of("id","x","y","z"))retained.remove(key);
+        try{NativePlatformComponents.requireSupported(tag,registries);}catch(IllegalArgumentException unsupported){inert=true;return;}if(tag.contains("NativePlateRetained")){inert=true;if(tag.contains("NativePlateRetained",Tag.TAG_COMPOUND)){retained=tag.getCompound("NativePlateRetained").copy();retainedItem=true;}return;}
         inert=tag.contains("NativePlateSchema")&&(!tag.contains("NativePlateSchema",Tag.TAG_INT)||tag.getInt("NativePlateSchema")!=1)||!readConfiguration(tag,true);
         mountRotation=Math.floorMod(tag.getInt(com.vandorlabs.persistence.SaveSchema.Redstone.MOUNT_ROTATION),4);
         output=PressurePlateSettings.level(tag.getInt(PressurePlateSettings.OUTPUT));
@@ -80,7 +80,7 @@ public final class NativePlateEntity extends BlockEntity implements NativeChanne
         requestModelDataUpdate();if(level!=null&&!level.isClientSide)NativeRedstoneChannels.queueRegistration(this);
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
-        if(inert){NativePlatformComponents.clearForInertSave(this);tag.merge(retained);return;}super.saveAdditional(tag,registries);tag.merge(retained);
+        if(inert){if(retainedItem){super.saveAdditional(tag,registries);tag.put("NativePlateRetained",retained.copy());}else{NativePlatformComponents.clearForInertSave(this);tag.merge(retained);}return;}super.saveAdditional(tag,registries);tag.merge(retained);
         tag.putInt("NativePlateSchema",1);tag.putInt(com.vandorlabs.persistence.SaveSchema.Redstone.MOUNT_ROTATION,mountRotation);tag.merge(configuration());tag.putInt(PressurePlateSettings.OUTPUT,output);
         var forge=tag.getCompound("ForgeData");var all=forge.getCompound(TransmissionSettings.SETTINGS);var main=all.getCompound("main");main.putIntArray("Channels",channels.toArray());main.putInt("Range",range);main.putBoolean("Local",local);all.put("main",main);forge.put(TransmissionSettings.SETTINGS,all);tag.put("ForgeData",forge);
     }

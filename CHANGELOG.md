@@ -47,6 +47,7 @@
 
 ### Native furniture, controls and surfaces (NeoForge 1.21.1)
 
+- Preserve inherited item components, including named container contents, when picking or dropping Seats, Pressure Plates and Surfaces. Keep malformed Chair and Plate item settings inert and exact through saving, reloading and recovery items.
 - Add the canonical Track with Compact, Armoured and Bogie styles, regular/Large six-face arm formation, bounded shared geometry and settings-only Duplifier copying/Undo. Retain hidden historical Track IDs. Add Small, Medium and Large stationary slab-side wheels with native footprint ownership and one configured drop. See [Native Tracks and side wheels](docs/native-tracks-and-wheels.md).
 - Cache exact arm collision shapes and answer lighting opacity without rebuilding geometry. Keep moving pose changes and world unload invalidation bounded.
 
