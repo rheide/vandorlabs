@@ -1,5 +1,31 @@
 # Vandor Labs 2.10.0
 
+## Developer Notes
+
+New weekend, new version! Slop agent has been hard at work at improving Programmable Glass performance and updating the codebase to work with Minecraft 1.21.1. We're a long ways off from feature parity, but if you don't mind a jar that's twice the size of the 1.12.2 version, you can now find an alpha version of 1.21.1 on CurseForge. Vehicle Mode is the most notable missing part, and it might be a while until that lands for 1.21.1.
+
+A lot of performance and shader fixes for 1.12.2 this time: Programmable Light and Programmable Glass's performance was abysmal with shader packs. Lights should be ok now, glass could still be better, but it should be a lot better than it was before.
+
+Fun new things in this release:
+
+- Toilet doors. Because why not. Also a couple of other doors, and some tile textures.
+- Three new transfer port blocks: Power Port, Fluid Port, and Item Port. These are compatible with RFTools/Mekanism/Industrial Renewal/Immersive Engineering and are configurable with the Configurizer. Also updated the Battery and Tank blocks to have consistent input/output port textures. 
+- New Rack Module block. Accepts up to four Modules, which will be used in vehicles and multiblock structures. The Autopilot block will be replaced by a Rack + Autopilot module when you update your world.
+- Rotating Arm fun! You now have an option to double-hinge it so the middle part of the arm becomes a hinge as well. Angles are customizable for the whole arm and split between the enabled hinges. You can also change the position of the middle hinge as well as change the direction of the attached landing gear block through the dialog, so e.g. Landing Gear Skis actually align properly for sideways mounted Rotating Arms.
+- You can place Multiblock structures on arms, and they'll rotate/extend correctly. Always wanted an extendable radar dish? Here you go!
+- New Gold color for glass.
+- Coupler blocks now have less bugs and can be placed on Arm blocks so they can be extended.
+- Better mod compat for WAWLA, and Industrial Renewal catwalks recognize Programmable Doors.
+
+What's next:
+
+- A proper tech tree and working constructor multiblocks.
+- A working navigation table, navigation computer and satellite dish/antennae.
+- Working engine multiblocks.
+- SPACE.
+
+## New Features
+
 Build folding platforms with double-hinge Rotating Arms, fit an Autopilot Module
 into a compact rack, and move power, fluids and items through configurable ports.
 Vandor Labs 2.10 also expands directional artwork joining and brings more
