@@ -24,6 +24,7 @@ public final class ArmPayload {
     /** Owned immutable opaque header fields; shared only between detached payload revisions. */
     private NBTTagCompound retainedHeader;
     private VehicleWorld view;
+    private final com.vandorlabs.gear.core.CoreNativeOrientation.Cache coreEndpointAlignment;
     private com.vandorlabs.vehicle.VehicleArmCouplerPower couplerPower;
     private List<AxisAlignedBB> localCollision;
     private int[] collisionCellEnds;
@@ -76,7 +77,7 @@ public final class ArmPayload {
         materialized=false;return true;
     }
 
-    private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;}
+    private ArmPayload(VehicleStructure blocks,BlockPos offset,boolean materialized,BlockPos placed){this.blocks=blocks;this.offset=offset;this.materialized=materialized;this.placedOffset=placed;coreEndpointAlignment=ArmCorePayload.contains(blocks)?new com.vandorlabs.gear.core.CoreNativeOrientation.Cache():null;}
     ArmPayload without(BlockPos removed){List<VehicleStructure.Cell> remaining=new ArrayList<>(),placedRemaining=new ArrayList<>();for(int i=0;i<blocks.cells.size();i++)if(!blocks.cells.get(i).pos.equals(removed)){remaining.add(blocks.cells.get(i));if(placedBlocks!=null)placedRemaining.add(placedBlocks.cells.get(i));}if(remaining.isEmpty())return null;ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(remaining),offset,false,placedOffset));if(placedBlocks!=null)next.placedBlocks=VehicleStructure.display(placedRemaining);return next;}
     /** Only machine controls may change; inventory, opaque capabilities and all other cells remain exact. */
     ArmPayload withCoreData(BlockPos owner,NBTTagCompound data,boolean activityOnly){
@@ -653,13 +654,15 @@ public final class ArmPayload {
         if(state.getBlock().getStateFromMeta(state.getBlock().getMetaFromState(state))!=state)return null;
         return state;
     }
+    /** A tilted Core has no native endpoint: preserve its raw contact instead of rounding it off the socket. */
+    private boolean coreCanSnap(GearTileEntity arm,boolean active){return coreEndpointAlignment==null||coreEndpointAlignment.allows(arm.mode(),arm.mountDirection().ordinal(),arm.direction(),arm.physicalStartAngle(),arm.activeAngle(),active);}
     public Vec3d transform(GearTileEntity arm,double progress,double x,double y,double z){
         Vec3d result=rawTransform(arm,progress,x,y,z);
-        if(gridAligned&&arm.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL&&arm.isSwingArmController()&&Math.abs(arm.activeAngle()/90-Math.rint(arm.activeAngle()/90))<1e-8){
+        if(gridAligned&&arm.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL&&arm.isSwingArmController()&&coreCanSnap(arm,true)&&Math.abs(arm.activeAngle()/90-Math.rint(arm.activeAngle()/90))<1e-8){
             Vec3d endpoint=rawTransform(arm,0,0,0,0);double blend=1-progress;blend=blend*blend*(3-2*blend);
             result=result.addVector((Math.rint(endpoint.x)-endpoint.x)*blend,(Math.rint(endpoint.y)-endpoint.y)*blend,(Math.rint(endpoint.z)-endpoint.z)*blend);
         }
-        if(gridAligned&&arm.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL&&arm.isSwingArmController()&&Math.abs(arm.physicalStartAngle()/90-Math.rint(arm.physicalStartAngle()/90))<1e-8){
+        if(gridAligned&&arm.mode()!=com.vandorlabs.gear.core.GearMotion.Mode.ROTATE_LEVEL&&arm.isSwingArmController()&&coreCanSnap(arm,false)&&Math.abs(arm.physicalStartAngle()/90-Math.rint(arm.physicalStartAngle()/90))<1e-8){
             Vec3d endpoint=rawTransform(arm,1,0,0,0);double blend=progress*progress*(3-2*progress);
             result=result.addVector((Math.rint(endpoint.x)-endpoint.x)*blend,(Math.rint(endpoint.y)-endpoint.y)*blend,(Math.rint(endpoint.z)-endpoint.z)*blend);
         }

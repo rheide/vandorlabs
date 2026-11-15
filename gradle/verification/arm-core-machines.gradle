@@ -14,3 +14,12 @@ task testArmCorePayload(type: JavaExec) {
     main = 'com.vandorlabs.gear.ArmCorePayloadChecks'
     maxHeapSize = '512m'
 }
+
+// The Core codec and endpoint alignment use the same engine-neutral orientation rule.
+task testCoreNativeOrientation(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify Core native endpoint orientation and cache inputs across every arm mount and hinge'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.gear.core.CoreNativeOrientationTest'
+}

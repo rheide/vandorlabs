@@ -114,7 +114,9 @@ remain real obstacles. At a fractional captured pose, body clicks cycle the
 machine’s activity and the Configurizer opens its existing settings dialog
 without moving the arm. Settings remain with the machine through saving and
 native restoration. Chip insertion/removal and dismantling require a supported
-native endpoint; unsupported tilts stay captured. See the
+native endpoint; unsupported tilts stay captured and remain aligned with the arm
+socket. Allow clearance below the whole folded machine: ground contact safely
+refuses movement while retaining the selectable payload. See the
 [Core construction guide](../universal-constructors.md).
 
 Taxi conversion keeps its inspected geometry separate from the geometry prepared with new Coupler ownership data. Valid Couplers can assemble, park and recapture; actual source edits during preparation still refuse without removing the craft.

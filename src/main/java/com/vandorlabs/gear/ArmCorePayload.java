@@ -80,7 +80,7 @@ final class ArmCorePayload {
         VehicleStructure result=VehicleStructure.display(restored);validate(result);validate(current);ArmGridTiles.validate(result,current,basis);return new VehicleStructure[]{result,current};
     }
     private static boolean known(VehicleStructure.Cell cell){return cell.hasTileData()&&cell.tileString("id").equals(cell.state.getBlock() instanceof BlockConstructorCore?"vandorlabs:constructor":"vandorlabs:constructor_part");}
-    static boolean yaw(int[] m){return m!=null&&m.length==9&&m[1]==0&&m[3]==0&&m[4]==1&&m[5]==0&&m[7]==0&&m[0]==m[8]&&m[2]==-m[6]&&(Math.abs(m[0])==1&&m[2]==0||m[0]==0&&Math.abs(m[2])==1);}
+    static boolean yaw(int[] m){return com.vandorlabs.gear.core.CoreNativeOrientation.yaw(m);}
     static IBlockState state(VehicleStructure.Cell cell,IBlockState state,int[] basis){
         if(!typed(cell)||!known(cell)||state.getBlock()!=cell.state.getBlock()||!yaw(basis))return null;
         if(state.getBlock() instanceof BlockConstructorCore){if(state.getPropertyKeys().size()!=2)return null;EnumFacing face=state.getValue(BlockVandorDirectional.FACING);EnumFacing next=EnumFacing.getFacingFromVector(basis[0]*face.getFrontOffsetX()+basis[2]*face.getFrontOffsetZ(),0,basis[6]*face.getFrontOffsetX()+basis[8]*face.getFrontOffsetZ());state=state.withProperty(BlockVandorDirectional.FACING,next);}

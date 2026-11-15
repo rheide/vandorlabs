@@ -23,6 +23,10 @@ public final class ArmCoreFixture {
     private static void need(boolean ok,String why){if(!ok)throw new IllegalStateException("Core arm setup: "+why);}
     @SubscribeEvent public static void attach(AttachCapabilitiesEvent<TileEntity> event){if(event.getObject() instanceof TileEntityConstructor||event.getObject() instanceof TileEntityConstructorPart)event.addCapability(CAPS,new Probe(event.getObject()));}
     private static final class Probe implements ICapabilitySerializable<NBTTagCompound>{final TileEntity tile;Probe(TileEntity tile){this.tile=tile;}public boolean hasCapability(Capability<?> cap,EnumFacing side){return false;}public <T>T getCapability(Capability<T> cap,EnumFacing side){return null;}public NBTTagCompound serializeNBT(){NBTTagCompound n=new NBTTagCompound();n.setInteger("Representation",tile.getWorld() instanceof VehicleWorld?47:22);n.setByteArray("OpaqueInsertedToken",new byte[]{4,-3,17});return n;}public void deserializeNBT(NBTTagCompound n){}}
+    /** Real saved-world clients need both the authoritative inventory and selected-slot packet. */
+    static void emptyHands(net.minecraft.entity.player.EntityPlayerMP actor,GameType mode){
+        actor.setGameType(mode);actor.capabilities.allowFlying=true;actor.capabilities.isFlying=true;actor.sendPlayerAbilities();actor.inventory.currentItem=0;actor.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);actor.setHeldItem(EnumHand.OFF_HAND,ItemStack.EMPTY);actor.inventoryContainer.detectAndSendChanges();actor.connection.sendPacket(new net.minecraft.network.play.server.SPacketHeldItemChange(0));actor.connection.sendPacket(new net.minecraft.network.play.server.SPacketSetSlot(-2,0,ItemStack.EMPTY));
+    }
     static BlockPos setup(WorldServer w,net.minecraft.entity.player.EntityPlayerMP player,int profile){
         return setup(w,player,profile,"meridian_drive_core");
     }

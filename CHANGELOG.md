@@ -71,6 +71,7 @@
 
 ### Core constructions on arms (Forge 1.12.2)
 
+- Keep tilted captured Core machinery aligned with its arm socket. Apply endpoint grid rounding only when that Core orientation can become native blocks; retain normal collision checks and the original native-rest pose. Allow clearance below the whole folded machine: ground contact safely refuses movement while retaining the selectable payload.
 - Preserve the shared client animation phase when Core machines move from native blocks to an arm attachment and back. Dish scanning no longer restarts at native endpoints; another machine placed at the vacated source keeps its own animation.
 - Move a complete formed Core construction by touching its Core or any reserved part with an Extender or Rotating Arm. Preserve every reservation, chip, setting and opaque capability field through native endpoints, reversal and durable recovery.
 - Include the complete validated Core footprint when joined Rotating Arms contact it. Match Join, range, fold, payload mode, hinge and kink across the columns; an independent neighbouring arm can still obstruct the machine.
