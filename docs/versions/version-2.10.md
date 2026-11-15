@@ -75,7 +75,10 @@ zero-degree rest. Payload motion and collision use the same shared geometry.
 
 Forge arms can also carry a complete formed Core construction, selected through
 either its Core or a reserved part. Chips, settings and original capability data
-stay with the complete machine. Configure or dismantle it at a supported native
+stay with the complete machine. Joined Rotating Arms include the whole validated
+Core footprint from their contact layer. Set the same Join, range, fold, payload
+mode, hinge and kink on every supporting column; independent neighbouring arms
+remain real obstacles. Configure or dismantle it at a supported native
 endpoint; unsupported tilts stay captured. See the
 [Core construction guide](../universal-constructors.md).
 

@@ -271,7 +271,16 @@ public final class ArmPayload {
                 ArmCorePayload.Group core=world.isAirBlock(tip)?null:cores.at(tip);positions=core!=null?core.cells:world.isAirBlock(tip)?Collections.emptySet():surfaceLayer(arm,tip);
             }
             if(positions.isEmpty())return null;
-            if(joined)for(BlockPos at:positions){ArmCorePayload.Group core=cores.at(at);if(core!=null&&!positions.containsAll(core.cells))throw new IllegalArgumentException("Select the complete Core footprint and height before moving it");}
+            if(joined){
+                // A contacted Core owns its complete, validated reservation just as it
+                // does on one Rotating Arm. A rotating platform has no vertical load
+                // selector; retaining only its contact row would split that owner.
+                Set<BlockPos> expandedCoreOwners=new HashSet<>();
+                for(BlockPos at:new ArrayList<>(positions)){
+                    ArmCorePayload.Group core=cores.at(at);if(core==null||!expandedCoreOwners.add(core.owner))continue;
+                    for(BlockPos member:core.cells){if(physicalMember(arm,member))throw new IllegalArgumentException("Core footprint overlaps the arm");positions.add(member);if(positions.size()>MAX_BLOCKS)throw new IllegalArgumentException("Connected Core footprint exceeds the arm attachment limit");}
+                }
+            }
             requireJoinedSurfaceSupports(arm,positions);
             Set<BlockPos> connected=new HashSet<>();ArrayDeque<BlockPos> pending=new ArrayDeque<>();pending.add(positions.iterator().next());
             while(!pending.isEmpty()){

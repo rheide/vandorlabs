@@ -110,6 +110,8 @@ blocks stay removed, and the remaining platform must still connect every support
 Removing the whole platform leaves empty arms that keep their original length.
 Blocks outside that platform remain in place and can still obstruct the stroke.
 
+A formed Core touching a joined rotating platform moves with its complete reserved footprint. Every Core cell must be loaded and intact; the arm checks the whole machine before taking ownership. A neighbouring independent arm can obstruct that machine. For a shared Core, enable **Join Arms** on both columns and match their range, fold direction, payload mode, hinge and kink. Keep the mounting supports in place.
+
 ![A level payload attached to its rotating arm](images/joined-arms/level-contact.png)
 
 

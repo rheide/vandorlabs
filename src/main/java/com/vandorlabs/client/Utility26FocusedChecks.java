@@ -11,6 +11,7 @@ final class Utility26FocusedChecks {
         try{action.run();}catch(Exception|LinkageError failure){System.err.println("[vandorlabs][reprolab] utility26 fixture FAILED "+name);failure.printStackTrace();failures.add(failure);}
     }
     static boolean tick(Minecraft mc,java.io.File output)throws Exception{
+        if(Boolean.getBoolean("vandorlabs.savedOculusChecks"))return com.vandorlabs.gear.SavedOculusArmChecks.tick(mc,output);
         if(Boolean.getBoolean("vandorlabs.stowedFootOnly"))return com.vandorlabs.gear.ArmStowedFootLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.glassStaleOwnerOnly"))return GlassStaleOwnerLiveChecks.tick(mc);
         if("true".equals(System.getenv("VANDOR_RESOURCE_PORT_MODS_ONLY")))return ResourcePortModLiveChecks.tick(mc,output);
