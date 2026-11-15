@@ -17,9 +17,8 @@ public abstract class SegmentedRebuildTaskMixin implements NativeSegmentedSectio
  public void vandorlabs$terrainUploaded(Object compiled){vandorlabs$uploaded=compiled;}
  @Inject(method="doTask",at=@At("RETURN"))
  private void vandorlabs$completion(SectionBufferBuilderPack buffers,CallbackInfoReturnable<CompletableFuture<?>> callback){
-  if(vandorlabs$publication==null)return;
   var section=(NativeSegmentedSectionUploads.Section)this$1;
-  if(!NativeSegmentedSectionUploads.current(section,vandorlabs$publication))return;
+  if(!NativeSegmentedSectionUploads.current(section,vandorlabs$publication)&&!NativeSegmentedSectionUploads.observed(section))return;
   callback.getReturnValue().whenComplete((result,failure)->NativeSegmentedSectionUploads.completed(section,this,result,failure));
  }
 }

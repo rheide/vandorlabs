@@ -1,6 +1,6 @@
 # Module Rack
 
-The Module Rack holds four **Blank Modules** or **Autopilot Modules** in independently selectable horizontal bays. It is available in the Vandor Labs creative tab on Forge 1.12.2.
+The Module Rack holds four **Blank Modules** or **Autopilot Modules** in independently selectable horizontal bays. It is available in the Vandor Labs creative tab on Forge 1.12.2 and NeoForge 1.21.1.
 
 ![A Module Rack with all four bays populated in Minecraft](images/module-rack/populated.png)
 
@@ -58,7 +58,7 @@ The Autopilot Module has a cyan **NAV** label and route arrow on its front. To a
 
 Removing and reinserting a module preserves its configuration and private item data. Manual insertion at a new location clears an old departure location and running journey; it does not transfer automation authority from another craft.
 
-Existing Autopilot blocks convert to a rack containing one Autopilot Module when their physical chunk finishes loading. The conversion preserves facing, receiving settings, navigation/departure state, existing automation authorization and opaque saved data. It waits for an existing world transfer to finish. Waypoint blocks keep their behavior. Older saved vehicles and pending recovery snapshots retain their original IDs and remain readable; conversion applies when the legacy block is physically installed. The old block/item registry IDs remain available for compatibility, while creative/search/browser lists show the module.
+On Forge 1.12.2, existing Autopilot blocks convert to a rack containing one Autopilot Module when their physical chunk finishes loading. The conversion preserves facing, receiving settings, navigation/departure state, existing automation authorization and opaque saved data. It waits for an existing world transfer to finish. Waypoint blocks keep their behavior. Older saved vehicles and pending recovery snapshots retain their original IDs and remain readable; conversion applies when the legacy block is physically installed. The old block/item registry IDs remain available for compatibility, while creative/search/browser lists show the module.
 
 ## Shape and artwork
 
@@ -86,4 +86,18 @@ The indicators do not emit world light. Their visual brightness changes with occ
 
 Dynmap uses the same native model parts and displays the rack's saved slot occupancy and each module's front artwork on all six mounting faces.
 
-The implementation targets Forge 1.12.2. The experimental NeoForge adapter is not included in this feature.
+## NeoForge 1.21.1
+
+The native Rack uses the same placement, four bays, cassette artwork and Housing/Redstone controls. Its module tabs use the same route-marker sampling and independent receiving settings. Both the Configurizer and the empty-hand rim interaction open this dedicated dialog.
+
+Insertion and retrieval both slide the cassette through the open front. These native captures show a Blank Module partway through each movement; the row indicator follows the authoritative occupied state.
+
+![A Blank Module midway through native insertion](images/module-rack/native-inserting.png)
+
+![The same module midway through native retrieval](images/module-rack/native-extracting.png)
+
+Vehicle navigation remains a Forge 1.12.2 feature. Native NAV modules preserve their choices and receiving state, but do not convert or drive native vehicles; the module dialog states this limit. The old-computer migration described above applies to Forge worlds.
+
+![The native NAV module dialog with a non-consuming route-marker sample](images/module-rack/native-autopilot-general.png)
+
+See the [native adapter notes](development/native-module-rack.md) for its terrain publication and saved-ownership boundaries.

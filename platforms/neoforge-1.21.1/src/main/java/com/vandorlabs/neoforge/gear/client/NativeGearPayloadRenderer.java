@@ -38,7 +38,7 @@ public final class NativeGearPayloadRenderer {
             var key=new Key(cell.state(),cell.projection());var palette=palettes.get(key);
             if(palette==null){
                 BlockEntity tile=cell.state().getBlock() instanceof EntityBlock factory?factory.newBlockEntity(root.getBlockPos(),cell.state()):null;
-                if(tile!=null){tile.loadWithComponents(key.projection,root.getLevel().registryAccess());tile.setLevel(root.getLevel());}
+                if(tile!=null){tile.setLevel(root.getLevel());tile.loadWithComponents(key.projection,root.getLevel().registryAccess());}
                 ModelData data=tile==null?ModelData.EMPTY:tile.getModelData();var layers=new ArrayList<Layer>();boolean fallback=false;
                 if(cell.state().getRenderShape()==RenderShape.MODEL){var model=mc.getBlockRenderer().getBlockModel(cell.state());var random=RandomSource.create(42);for(var layer:model.getRenderTypes(cell.state(),random,data)){
                     var quads=new ArrayList<BakedQuad>();for(int side=-1;side<6;side++){random.setSeed(42);quads.addAll(model.getQuads(cell.state(),side<0?null:Direction.values()[side],random,data,layer));}

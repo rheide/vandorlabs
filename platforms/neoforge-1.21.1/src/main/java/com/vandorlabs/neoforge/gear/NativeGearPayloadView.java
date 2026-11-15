@@ -71,6 +71,8 @@ public final class NativeGearPayloadView {
             if(housing){HousingSettings.read(tags,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).write(new ModernHousingTags(result));TextureJoinSettings.read(tags).write(new ModernHousingTags(result));}
             else NativeStorageSettings.read(selected).write(result);
             if(name.equals("vandorlabs:programmable_stairs"))StairState.read(tags).write(new ModernHousingTags(result));
+        }else if(name.equals("vandorlabs:module_rack")){
+            return com.vandorlabs.neoforge.rack.NativeRackData.appearance(raw);
         }else if(state.getBlock() instanceof SignBlock){
             for(String side:List.of("front_text","back_text")){
                 CompoundTag face=raw.contains(side,Tag.TAG_COMPOUND)?raw.getCompound(side):new CompoundTag();
