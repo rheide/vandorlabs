@@ -239,6 +239,7 @@ def main():
         properties.append('-Dvandorlabs.armJoinedOnly=true')
     if args.focus == 'arm-joined':
         properties.append('-Dvandorlabs.armJoinedOnly=true')
+    properties.append('-Dvandorlabs.armCoreOnly='+os.environ.get('VANDOR_LABS_ARM_CORE_ONLY','false'))
     if args.focus == 'arm-mining':
         properties.append('-Dvandorlabs.armMiningOnly=true')
     if args.focus == 'arm-live':

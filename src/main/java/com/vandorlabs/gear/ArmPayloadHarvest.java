@@ -35,6 +35,7 @@ public final class ArmPayloadHarvest {
         Vec3d eyes=player.getPositionEyes(1),end=eyes.add(player.getLook(1).scale(player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue()));RayTraceResult hit=GearInteractions.trace(world,eyes,end);
         if(hit==null||!(hit.hitInfo instanceof Target)||!root.equals(((Target)hit.hitInfo).root)||!cell.equals(((Target)hit.hitInfo).cell)||arm.progress()!=0&&arm.progress()!=1)return;
         VehicleStructure.Cell selected=null;for(VehicleStructure.Cell candidate:arm.payload().blocks.cells)if(candidate.pos.equals(cell)){selected=candidate;break;}if(selected==null)return;
+        if(ArmCorePayload.machine(selected.state)){DIGS.remove(player.getUniqueID());player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Return the arm to a native block pose before dismantling this multiblock."),true);return;}
         BlockPos logical=root.add(arm.payload().offset).add(cell);for(BlockPos at:new BlockPos[]{root,logical,new BlockPos(hit.hitVec)})com.vandorlabs.vehicle.VehicleService.permission(player,at);
         if(selected.state.getBlockHardness(arm.payload().view(arm),cell)<0)return;
         if(!player.capabilities.isCreativeMode){

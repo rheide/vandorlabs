@@ -1,0 +1,16 @@
+task testCoreLayout(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify legacy Core frame geometry and bounded ownership dimensions'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.machines.CoreLayoutTest'
+}
+
+task testArmCorePayload(type: JavaExec) {
+    group = 'verification'
+    description = 'Verify complete Core ownership and typed native yaw edits without world mutation'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.gear.ArmCorePayloadChecks'
+    maxHeapSize = '512m'
+}

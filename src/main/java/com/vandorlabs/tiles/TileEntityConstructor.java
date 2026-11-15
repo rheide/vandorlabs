@@ -41,6 +41,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public void update(){if(world!=null&&world.isRemote&&isDrive()&&renderReady()&&screenOn()&&drive.plume(true,driveLevel))com.vandorlabs.drives.DriveParticles.emit(this);}
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ;
+    private com.vandorlabs.machines.CoreLayout cachedLayout;private BlockConstructorCore cachedLayoutCore;
     private int activity=-1;
     private String assemblyProblem="";
     /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
@@ -54,14 +55,16 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public BlockConstructorCore core(){IBlockState state=coreState();return state==null?null:(BlockConstructorCore)state.getBlock();}
     public EnumFacing facing(){IBlockState state=coreState();return state==null?EnumFacing.NORTH:state.getValue(BlockVandorDirectional.FACING);}
     public boolean formed(){IBlockState state=coreState();return state!=null&&state.getValue(BlockConstructorCore.FORMED);}
-    private BlockPos rotated(int x,int y,int z,EnumFacing direction){BlockConstructorCore core=core();return core==null?BlockPos.ORIGIN:com.vandorlabs.vehicle.VehicleRotation.cell(new BlockPos(x,y,z),core.width,core.depth,(direction.getHorizontalIndex()+2)&3);}
+    public com.vandorlabs.machines.CoreLayout layout(){
+        BlockConstructorCore core=core();if(core==null)return null;int face=facing().getIndex();
+        if(cachedLayout==null||cachedLayoutCore!=core||cachedLayout.facing!=face||cachedLayout.cornerX!=coreX||cachedLayout.cornerZ!=coreZ){cachedLayout=new com.vandorlabs.machines.CoreLayout(core.width,core.height,core.depth,face,coreX,coreZ);cachedLayoutCore=core;}return cachedLayout;
+    }
     public int activity(){BlockConstructorCore core=core();return activity>=0?activity:core!=null&&core.specification().state_labels!=null?2:1;}
     public void cycleActivity(){activity=(activity()+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
-    public BlockPos pivot(){return rotated(coreX,0,coreZ,facing());}
-    public BlockPos cell(int x,int y,int z){return pos.add(rotated(x,y,z,facing()).subtract(pivot()));}
-    private BlockPos candidateCell(int x,int y,int z,EnumFacing direction,int cornerX,int cornerZ){return pos.add(rotated(x,y,z,direction).subtract(rotated(cornerX,0,cornerZ,direction)));}
+    public BlockPos pivot(){com.vandorlabs.machines.CoreLayout shape=layout();return shape==null?BlockPos.ORIGIN:new BlockPos(shape.pivotX(),0,shape.pivotZ());}
+    public BlockPos cell(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape==null?pos:pos.add(shape.x(x,z),y,shape.z(x,z));}
     public String assemblyProblem(){return assemblyProblem;}
-    public boolean frame(int x,int y,int z){if(core()==null)return false;return y==0 || (x==0 || x==core().width-1) && (z==0 || z==core().depth-1) || y==core().height-1 && (x==0 || x==core().width-1 || z==0 || z==core().depth-1);}
+    public boolean frame(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape!=null&&shape.frame(x,y,z);}
     public boolean assemble(){
         if(world==null || world.isRemote || changing || coreState()==null || formed())return false;
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
@@ -71,9 +74,10 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         for(int turn=0;turn<4 && selected==null;turn++){
             EnumFacing direction=EnumFacing.getHorizontal((preferred.getHorizontalIndex()+turn)%4);
             for(int cornerX:new int[]{0,core().width-1})for(int cornerZ:new int[]{0,core().depth-1}){
+                com.vandorlabs.machines.CoreLayout candidate=new com.vandorlabs.machines.CoreLayout(core().width,core().height,core().depth,direction.getIndex(),cornerX,cornerZ);
                 int errors=0;String first="";
                 for(int y=0;y<core().height;y++)for(int x=0;x<core().width;x++)for(int z=0;z<core().depth;z++){
-                    BlockPos p=candidateCell(x,y,z,direction,cornerX,cornerZ);if(p.equals(pos))continue;
+                    BlockPos p=pos.add(candidate.x(x,z),y,candidate.z(x,z));if(p.equals(pos))continue;
                     boolean loaded=world.isBlockLoaded(p);
                     if(!loaded || (frame(x,y,z)?world.getBlockState(p).getBlock()!=matter:!world.isAirBlock(p))){
                         if(errors++==0)first=(loaded?(frame(x,y,z)?world.getBlockState(p).getBlock() instanceof BlockConstructorCore?"Use a Matter Block, not another Core":"Matter Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();

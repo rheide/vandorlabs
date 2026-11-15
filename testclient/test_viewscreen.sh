@@ -688,6 +688,12 @@ PYIMAGE
     fi
     if [ "$TARGET" = arm-live ]; then
         grep -q "arm-live PASS" "$RUN_OUT/client.log"
+        if [ "${VANDOR_LABS_ARM_CORE_ONLY:-false}" = true ]; then
+            grep -q "arm-live PASS arm-core" "$RUN_OUT/client.log"
+            for core_profile in 0 1 2; do grep -q "arm-core case PASS profile=$core_profile " "$RUN_OUT/client.log"; done
+            echo "Core arm live checks passed: $RUN_OUT"
+            exit 0
+        fi
         grep -q "arm-saved PASS" "$RUN_OUT/client.log"
         grep -q "arm-replacement PASS" "$RUN_OUT/client.log"
         grep -q "arm-payload-mining PASS" "$RUN_OUT/client.log"

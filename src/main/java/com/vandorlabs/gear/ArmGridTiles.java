@@ -23,6 +23,7 @@ final class ArmGridTiles {
     static IBlockState state(VehicleStructure.Cell cell,IBlockState state,int[] basis){
         if(state.getBlock()!=cell.state.getBlock())return null;
         Vec3d[] axes=axes(basis);
+        if(ArmCorePayload.typed(cell))return ArmCorePayload.state(cell,state,basis);
         if(ArmLooseGearData.foot(state))return state==cell.state?ArmLooseGearData.state(cell,basis):null;
         if(!(state.getBlock() instanceof BlockCoupler))return cell.hasTileData()||!state.isFullCube()?null:ArmPayload.rotateState(state,axes);
         if(state.getPropertyKeys().size()!=(state.getBlock() instanceof BlockCouplerSlab?3:2))return null;
@@ -40,6 +41,7 @@ final class ArmGridTiles {
     }
     static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis){return data(cell,basis,true);}
     private static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis,boolean framed){
+        if(ArmCorePayload.typed(cell))return ArmCorePayload.data(cell,basis);
         if(ArmLooseGearData.foot(cell.state))return ArmLooseGearData.data(cell,basis);
         if(cell.state.getBlock() instanceof BlockCoupler){
             if(!framed){if(cell.hasTileKey(CouplerFrameData.KEY))throw new IllegalArgumentException("Coupler frame requires versioned mapping");return cell.tileData();}

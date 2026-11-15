@@ -30,6 +30,7 @@ public final class ArmRecoveryRuntimeChecks {
         return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0),phase)).get();
     }
     private static boolean run(WorldServer world,EntityPlayerMP actor,String phase)throws Exception{
+        if(ArmCoreRecoveryChecks.active(phase))return ArmCoreRecoveryChecks.run(world,actor,phase);
         if(ArmLandingRecoveryChecks.active())return ArmLandingRecoveryChecks.run(world,actor,phase);
         if(phase.contains("safe-park-"))return com.vandorlabs.vehicle.VehicleSafeParkRecoveryChecks.run(world,actor,phase);
         if(phase.contains("coupling-"))return com.vandorlabs.vehicle.VehicleCouplingRecoveryChecks.run(world,actor,phase);

@@ -10,11 +10,13 @@ public final class TileEntityConstructorPart extends TileEntity implements net.m
     public void owner(BlockPos root,boolean matter){offset=root.subtract(pos);this.matter=matter;markDirty();if(world!=null&&!world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     @Override public void update(){
         if(world==null || world.isRemote || ++ticks%20!=0 || !world.isBlockLoaded(owner()))return;
+        if(com.vandorlabs.gear.ArmTransactions.locked(world,pos))return;
         TileEntity root=world.getTileEntity(owner());
         if(root instanceof TileEntityConstructor && ((TileEntityConstructor)root).formed())return;
         world.setBlockState(pos,matter?net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:programmable_matter_block")).getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),3);
     }
     public BlockPos owner(){return pos.add(offset);}
+    public boolean frameMatter(){return matter;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setLong("ConstructorOwner",offset.toLong());tag.setBoolean("ConstructorMatter",matter);return tag;}
     @Override public NBTTagCompound getUpdateTag(){return writeToNBT(new NBTTagCompound());}
     @Override public net.minecraft.network.play.server.SPacketUpdateTileEntity getUpdatePacket(){return new net.minecraft.network.play.server.SPacketUpdateTileEntity(pos,0,getUpdateTag());}
