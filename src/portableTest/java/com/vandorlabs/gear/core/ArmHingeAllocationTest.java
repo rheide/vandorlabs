@@ -15,9 +15,11 @@ public final class ArmHingeAllocationTest {
   else PROJECTION.prepare(GearMotion.Mode.ROTATE_LEVEL,GearMotion.Direction.NORTH,3,phase,.1875,0,.6875,150,-30,true);
   PROJECTION.write(.23,-3.11,.76,POINT,0);total+=POINT[0]+POINT[1]+POINT[2];
  }sink=total;}
+ @SuppressWarnings("deprecation") // getId remains the Java 8 thread-allocation API.
  public static void main(String[] args){com.sun.management.ThreadMXBean bean=(com.sun.management.ThreadMXBean)ManagementFactory.getThreadMXBean();bean.setThreadAllocatedMemoryEnabled(true);long id=Thread.currentThread().getId();loop(false,100000);loop(true,100000);
   for(int variant=0;variant<3;variant++)poseLoop(variant,100000);
-  for(int variant=0;variant<3;variant++){long before=bean.getThreadAllocatedBytes(id),start=System.nanoTime();poseLoop(variant,200000);long ns=System.nanoTime()-start,bytes=bean.getThreadAllocatedBytes(id)-before;System.out.println(new String[]{"Legacy uncached","Double uncached","Double cached"}[variant]+" pose bytes="+bytes+" ns/lookup="+(ns/200000D));if(variant==2&&bytes>1024)throw new AssertionError("cached pose lookup allocates");}
-  for(boolean split:new boolean[]{false,true}){long before=bean.getThreadAllocatedBytes(id),start=System.nanoTime();loop(split,200000);long ns=System.nanoTime()-start,bytes=bean.getThreadAllocatedBytes(id)-before;System.out.println((split?"Double":"Legacy center")+" projection bytes="+bytes+" ns/prepare="+(ns/200000D));if(bytes>1024)throw new AssertionError("per-prepare allocations");}
+  for(int variant=0;variant<3;variant++){long before=bean.getThreadAllocatedBytes(id),start=System.nanoTime();poseLoop(variant,200000);long ns=System.nanoTime()-start,bytes=bean.getThreadAllocatedBytes(id)-before;if(Boolean.getBoolean("vandorlabs.performanceDiagnostics"))System.out.println(new String[]{"Legacy uncached","Double uncached","Double cached"}[variant]+" pose bytes="+bytes+" ns/lookup="+(ns/200000D));if(variant==2&&bytes>1024)throw new AssertionError("cached pose lookup allocates");}
+  for(boolean split:new boolean[]{false,true}){long before=bean.getThreadAllocatedBytes(id),start=System.nanoTime();loop(split,200000);long ns=System.nanoTime()-start,bytes=bean.getThreadAllocatedBytes(id)-before;if(Boolean.getBoolean("vandorlabs.performanceDiagnostics"))System.out.println((split?"Double":"Legacy center")+" projection bytes="+bytes+" ns/prepare="+(ns/200000D));if(bytes>1024)throw new AssertionError("per-prepare allocations");}
+  System.out.println("Arm hinge allocation PASS cached pose/projection bounded allocation");
  }
 }
