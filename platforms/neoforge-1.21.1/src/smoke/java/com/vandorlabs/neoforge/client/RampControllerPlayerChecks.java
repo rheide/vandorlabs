@@ -61,7 +61,7 @@ public final class RampControllerPlayerChecks {
  }
  private static void offset(NativeRampScreen screen,int desired){var slider=screen.startSlider();double fraction=(desired+32)/64D,x=slider.getX()+4+fraction*(slider.getWidth()-8);screen.mouseClicked(x,slider.getY()+slider.getHeight()/2D,0);screen.mouseReleased(x,slider.getY()+slider.getHeight()/2D,0);need(screen.editingDraft().settings().startHalf()==desired,"actual slider chose "+desired);}
  @SubscribeEvent public static void tick(ClientTickEvent.Post event){
-  if(!RampControllerPlayerFixture.enabled())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
+  if(!RampControllerPlayerFixture.enabled())return;if(com.vandorlabs.neoforge.ramp.NativeRampBindings.enabled()){RampControllerPlayerFixture.canonical();com.vandorlabs.neoforge.ramp.NativeRampBindings.bindMotion(RampControllerPlayerFixture::receive);}var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}
   if(stage>=18)return;
   if(stage==17){if(mc.level==null){System.out.println("[vandorlabs][ramp-controller-player] client PASS checks="+checks+" corrections="+corrections);mc.stop();stage=18;}return;}
   need(!(mc.screen instanceof net.minecraft.client.gui.screens.DisconnectedScreen),"unexpected disconnect");
