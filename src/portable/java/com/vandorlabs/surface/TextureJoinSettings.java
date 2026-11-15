@@ -45,6 +45,8 @@ public final class TextureJoinSettings {
                 &&tag.containsInt(PARITY_TAG)&&(tag.getInt(PARITY_TAG)==EVEN||tag.getInt(PARITY_TAG)==ODD)
                 &&(!tag.contains(DIRECTION_TAG)||tag.containsInt(DIRECTION_TAG)&&tag.getInt(DIRECTION_TAG)>=OFF&&tag.getInt(DIRECTION_TAG)<COUNT);
     }
+    /** Full-depth Portholes retain panel-depth metadata that does not move their physical plane. */
+    public static boolean samePanelDepth(boolean fullDepth,int first,int second){return fullDepth||first==second;}
     /** Directional edges still require actual geometry admission in platform adapters. */
     public boolean connects(int ax,int ay,int az,int bx,int by,int bz){
         long dx=(long)bx-ax,dy=(long)by-ay,dz=(long)bz-az;

@@ -242,7 +242,7 @@ public class TEAnimatedScreenSelector
                 ? (((BlockProgrammableWall)state.getBlock()).isDiagonalShape()
                         ? collectDiagonalPortholes(world,tile.getPos(),dependencies)
                         : LoadedPlaneConnections.collect(tile.getPos(),PanelPlane.of(facing),
-                                next -> {dependencies.include(next);return world.isBlockLoaded(next);},next -> compatiblePorthole(world,tile.getPos(),next,dependencies),(from,to)->com.vandorlabs.blocks.TextureJoins.allows(tile,from,to)))
+                                next -> {dependencies.include(next);return world.isBlockLoaded(next);},next -> compatiblePorthole(world,tile.getPos(),next,dependencies),(from,to)->{dependencies.include(to);return com.vandorlabs.blocks.TextureJoins.allows(tile,from,to);}))
                 : java.util.Collections.singleton(tile.getPos());
         // Every member must select the same basis, including opposite-facing shallow rows.
         BlockPos first=java.util.Collections.min(members);
@@ -1235,7 +1235,7 @@ public class TEAnimatedScreenSelector
         if(!at.isJoinPortholes()||!bt.isJoinPortholes()||at.getPortholeShape()!=bt.getPortholeShape())return false;
         if(solidDiagonalPortholeJunction(at,a) || solidDiagonalPortholeJunction(bt,b))return false;
         EnumFacing af=a.getValue(BlockProgrammableWall.FACING),bf=b.getValue(BlockProgrammableWall.FACING);
-        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && (a.getBlock() instanceof BlockProgrammablePortholeBlock || a.getValue(BlockProgrammableWall.DEPTH).equals(b.getValue(BlockProgrammableWall.DEPTH)));
+        if(!((BlockProgrammableWall)a.getBlock()).isDiagonalShape())return af==bf && com.vandorlabs.surface.TextureJoinSettings.samePanelDepth(a.getBlock() instanceof BlockProgrammablePortholeBlock,a.getValue(BlockProgrammableWall.DEPTH),b.getValue(BlockProgrammableWall.DEPTH));
         if(at.isDiagonalHalfHeight()!=bt.isDiagonalHalfHeight()||at.isDiagonalFullWidth()!=bt.isDiagonalFullWidth())return false;
         int mode=at.isDiagonalHalfHeight()?2:at.isDiagonalFullWidth()?1:0;
         return com.vandorlabs.blocks.DiagonalPanelGeometry.samePlane(root,a,next,b,mode)

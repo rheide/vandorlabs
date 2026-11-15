@@ -41,7 +41,7 @@ public final class TextureJoins {
         if(!(as.getBlock() instanceof BlockProgrammableWall))return false;
         BlockProgrammableWall wall=(BlockProgrammableWall)as.getBlock();
         if(wall.isPortholeShape()&&(!tile.isJoinPortholes()||!other.isJoinPortholes()))return false;
-        if(!wall.isDiagonalShape())return distance==1&&PanelPlane.axis(delta,as.getValue(BlockProgrammableWall.FACING))==0&&as.getValue(BlockProgrammableWall.FACING)==bs.getValue(BlockProgrammableWall.FACING)&&as.getValue(BlockProgrammableWall.DEPTH).equals(bs.getValue(BlockProgrammableWall.DEPTH));
+        if(!wall.isDiagonalShape())return distance==1&&PanelPlane.axis(delta,as.getValue(BlockProgrammableWall.FACING))==0&&as.getValue(BlockProgrammableWall.FACING)==bs.getValue(BlockProgrammableWall.FACING)&&com.vandorlabs.surface.TextureJoinSettings.samePanelDepth(wall instanceof BlockProgrammablePortholeBlock,as.getValue(BlockProgrammableWall.DEPTH),bs.getValue(BlockProgrammableWall.DEPTH));
         int mode=BlockProgrammableWall.geometry(world,from);if(mode!=BlockProgrammableWall.geometry(world,next)||tile.getDiagonalJoin()==1||other.getDiagonalJoin()==1)return false;
         net.minecraft.util.EnumFacing across=as.getValue(BlockProgrammableWall.FACING).rotateY();
         boolean sideways=next.equals(from.offset(across))||next.equals(from.offset(across.getOpposite()));

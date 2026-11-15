@@ -61,6 +61,7 @@ final class DirectionalJoinPlayerChecks {
         if(listener==null){listener=new WorldRenderListener(){@Override public void markBlockRangeForRenderUpdate(int x0,int y0,int z0,int x1,int y1,int z1){if(stage!=5)return;for(int i=0;i<3;i++){BlockPos pos=at(i);if(pos.getX()>=Math.min(x0,x1)&&pos.getX()<=Math.max(x0,x1)&&pos.getY()>=Math.min(y0,y1)&&pos.getY()<=Math.max(y0,y1)&&pos.getZ()>=Math.min(z0,z1)&&pos.getZ()<=Math.max(z0,z1)&&owner(mc,pos)!=null&&owner(mc,pos).textureJoin().direction==4)DIRTY.add(pos);}}};mc.world.addEventListener(listener);}
     }
     static boolean tick(Minecraft mc,File output)throws Exception {
+        if(Boolean.getBoolean("vandorlabs.savedPortholeJoinsOnly"))return SavedPortholeJoinPlayerChecks.tick(mc,output);
         mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=6;
         if(++age%80==0)System.out.println("[vandorlabs][reprolab] directional-duplifier waiting family="+family+" stage="+stage+" age="+age+" mode="+mc.playerController.getCurrentGameType()+" held="+mc.player.getHeldItemMainhand()+" position="+mc.player.getPositionVector()+" sneak="+mc.player.isSneaking());
         need(age<240,"bounded packet/state wait mode="+mc.playerController.getCurrentGameType()+" held="+mc.player.getHeldItemMainhand()+" position="+mc.player.getPositionVector());

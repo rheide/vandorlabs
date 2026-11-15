@@ -90,8 +90,8 @@ final class PortholeGroupCache {
                 if(member!=null){if(replaced==null)replaced=new HashSet<>();replaced.add(member.component);}
                 overlapsOverflow|=overflow.containsKey(pos);
             }
-            if(replaced!=null)for(Component component:replaced){remove(component);components.remove(component);}
-            if(overlapsOverflow){overflow=Collections.emptyMap();overflowComponent=null;}
+            if(replaced!=null)for(Component component:replaced){invalidateRetained(component);remove(component);components.remove(component);}
+            if(overlapsOverflow){invalidateRetained(overflowComponent);overflow=Collections.emptyMap();overflowComponent=null;}
             Component component=new Component(groups,dependencies);bounds.include(dependencies);
             // Keep the admitted set stable when an independent window exceeds
             // the budget; retain that entire latest component in one overflow.

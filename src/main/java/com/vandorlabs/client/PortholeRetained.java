@@ -26,7 +26,7 @@ import org.lwjgl.opengl.GL11;
 
 /** Retain the real porthole housing and aperture, independently of each other. */
 public final class PortholeRetained {
-    private static final int LIMIT=16*1024*1024,MAX_GROUP=2*1024*1024,MAX_SECTIONS_PER_FLUSH=8,MAX_QUEUED=32768;
+    private static final int LIMIT=16*1024*1024,MAX_GROUP=2*1024*1024,MAX_SECTIONS_PER_FLUSH=8,MAX_INVALIDATIONS_PER_FLUSH=256,MAX_QUEUED=32768;
     private static final Map<Long,Section> SECTIONS=new LinkedHashMap<>();
     private static final Map<TileEntityAnimatedScreenSelector,Owner> OWNERS=new IdentityHashMap<>();
     private static final Set<TileEntityAnimatedScreenSelector> QUEUED=identities();
@@ -42,6 +42,7 @@ public final class PortholeRetained {
     private static VertexFormat format;
     private static boolean rescan=true,reloadPending,warned,drawFailed;
     private static int retainedBytes,trackedTiles;
+    static long examinedInvalidations,absentInvalidations;static int lastExaminedInvalidations,lastSectionRebuilds;
     static long builds,uploads,housingDraws,paneDraws,shadowDraws,admissionSweeps,generation,legacyHousingDraws,legacyPaneDraws;
     private static String unavailable="world-unloaded";
 
@@ -347,8 +348,13 @@ public final class PortholeRetained {
         if(drawFailed||!BlockMeshVbo.supportsRetained(current)||(current.getNextOffset()>32&&(SHADER_TILE==null||!VehicleShaderContext.available()))){
             for(Section section:SECTIONS.values()){DIRTY.add(section.key);section.retire();}unavailable=drawFailed?"retained-draw-failed":"unsupported-shader-hooks";
         }else{
-            int rebuilt=0;Iterator<Long> dirty=DIRTY.iterator();
-            while(dirty.hasNext()&&rebuilt++<MAX_SECTIONS_PER_FLUSH){long key=dirty.next();dirty.remove();Section section=SECTIONS.get(key);if(section!=null)rebuild(section);}
+            lastExaminedInvalidations=lastSectionRebuilds=0;Iterator<Long> dirty=DIRTY.iterator();
+            while(dirty.hasNext()&&lastExaminedInvalidations<MAX_INVALIDATIONS_PER_FLUSH&&lastSectionRebuilds<MAX_SECTIONS_PER_FLUSH){
+                long key=dirty.next();dirty.remove();lastExaminedInvalidations++;examinedInvalidations++;
+                Section section=SECTIONS.get(key);
+                if(section==null){absentInvalidations++;continue;}
+                lastSectionRebuilds++;rebuild(section);
+            }
         }
         try{updateView(mc);}catch(ReflectiveOperationException|RuntimeException failure){
             for(Section section:SECTIONS.values()){section.admittedReady=false;section.admissions.restore(PortholeRetained::installed);}failed("admission-unavailable",failure);

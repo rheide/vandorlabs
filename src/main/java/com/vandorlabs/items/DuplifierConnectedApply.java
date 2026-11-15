@@ -48,6 +48,7 @@ public final class DuplifierConnectedApply {
         if (original.getBlock() != candidate.getBlock()) return false;
         for (net.minecraft.block.properties.IProperty<?> property : original.getPropertyKeys()) {
             String name = property.getName();
+            if(property==com.vandorlabs.blocks.BlockProgrammableWall.DEPTH&&com.vandorlabs.surface.TextureJoinSettings.samePanelDepth(original.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammablePortholeBlock,original.getValue(com.vandorlabs.blocks.BlockProgrammableWall.DEPTH),candidate.getValue(com.vandorlabs.blocks.BlockProgrammableWall.DEPTH)))continue;
             if (ignoreDirectionality && CopiedDirectionality.ignoreProperty(name,
                     property.getValueClass()==EnumFacing.class,
                     property.getValueClass()==EnumFacing.Axis.class)) continue;
