@@ -16,7 +16,12 @@ import java.util.*;
 public final class SegmentedDoorChunks {
     private static final Set<SegmentedDoorTile> QUEUED=Collections.newSetFromMap(new IdentityHashMap<SegmentedDoorTile,Boolean>());
     private static final Map<SegmentedDoorTile,Pending> ACTIVE=new IdentityHashMap<>();
-    private static final Field FRUSTUM=ReflectionHelper.findField(RenderGlobal.class,"viewFrustum","field_175008_n"),TASK=ReflectionHelper.findField(RenderChunk.class,"compileTask","field_178599_i");
+    private static final Field FRUSTUM=ReflectionHelper.findField(RenderGlobal.class,"viewFrustum","field_175008_n"),TASK=ReflectionHelper.findField(RenderChunk.class,"compileTask","field_178599_i"),DISPATCHER=ReflectionHelper.findField(RenderGlobal.class,"renderDispatcher","field_174995_M");
+    private static final int REQUESTS_PER_TICK=2;
+    private static int requestBudget,maxRequests;
+    private static long queuedRebuilds;
+    public static long queuedRebuilds(){return queuedRebuilds;}
+    public static int maxRequestsInTick(){return maxRequests;}
     private static final Method LOOKUP=lookup();
     private static Method lookup(){for(Method m:ViewFrustum.class.getDeclaredMethods())if(m.getReturnType()==RenderChunk.class&&Arrays.equals(m.getParameterTypes(),new Class[]{BlockPos.class})){m.setAccessible(true);return m;}throw new IllegalStateException("Missing render chunk lookup");}
     private static final class Section {
@@ -26,15 +31,38 @@ public final class SegmentedDoorChunks {
             ViewFrustum view=(ViewFrustum)FRUSTUM.get(mc.renderGlobal);if(view==null)return false;RenderChunk current=(RenderChunk)LOOKUP.invoke(view,pos);
             if(current==null||!current.getPosition().equals(pos))return false;
             if(chunk!=current){chunk=current;before=current.getCompiledChunk();rebuild.add(current);return false;}
-            // The render dispatcher owns rebuild scheduling. Never wait behind a
-            // worker or replace its in-flight task from the client tick.
-            if(current.needsUpdate()||!current.getLockCompileTask().tryLock())return false;
+            // Visibility-driven terrain scheduling never visits every lower section
+            // of a tall door viewed at its header. Submit only these pending owners,
+            // through the normal asynchronous dispatcher, with a shared tick budget.
+            if(current.needsUpdate()){request(mc,current);return false;}
+            if(!current.getLockCompileTask().tryLock())return false;
             try{
                 ChunkCompileTaskGenerator task=(ChunkCompileTaskGenerator)TASK.get(current);
                 if(task==null||!task.getLock().tryLock())return false;
                 try{return !current.needsUpdate()&&task.getStatus()==ChunkCompileTaskGenerator.Status.DONE&&current.getCompiledChunk()!=before&&task.getCompiledChunk()==current.getCompiledChunk();}
                 finally{task.getLock().unlock();}
             }finally{current.getLockCompileTask().unlock();}
+        }
+        private void request(Minecraft mc,RenderChunk current)throws ReflectiveOperationException{
+            if(requestBudget==0||!current.getLockCompileTask().tryLock())return;
+            try{
+                ChunkCompileTaskGenerator old=(ChunkCompileTaskGenerator)TASK.get(current);
+                if(old!=null&&!old.getLock().tryLock())return;
+                try{
+                    // Do not cancel or replace a PENDING, COMPILING or UPLOADING task.
+                    if(!current.needsUpdate()||old!=null&&old.getStatus()!=ChunkCompileTaskGenerator.Status.DONE)return;
+                    requestBudget--;maxRequests=Math.max(maxRequests,REQUESTS_PER_TICK-requestBudget);
+                    if(((ChunkRenderDispatcher)DISPATCHER.get(mc.renderGlobal)).updateChunkLater(current)){
+                        current.clearNeedsUpdate();queuedRebuilds++;
+                    }
+                }finally{if(old!=null)old.getLock().unlock();}
+            }finally{current.getLockCompileTask().unlock();}
+        }
+        String diagnostic(){
+            if(chunk==null)return pos+":unresolved";
+            String state="busy";
+            if(chunk.getLockCompileTask().tryLock())try{ChunkCompileTaskGenerator task=(ChunkCompileTaskGenerator)TASK.get(chunk);if(task==null)state="none";else if(task.getLock().tryLock())try{state=task.getStatus().name();}finally{task.getLock().unlock();}}catch(IllegalAccessException failure){state="inaccessible";}finally{chunk.getLockCompileTask().unlock();}
+            return pos+":installed="+chunk.getPosition()+",dirty="+chunk.needsUpdate()+",task="+state+",fresh="+(chunk.getCompiledChunk()!=before);
         }
     }
     private static final class Pending {
@@ -47,11 +75,13 @@ public final class SegmentedDoorChunks {
     }
     public static void changed(SegmentedDoorTile tile){if(tile.getWorld()!=null&&tile.getWorld().isRemote&&!(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld))synchronized(QUEUED){QUEUED.add(tile);}}
     public static void reload(){for(Pending pending:ACTIVE.values())if(pending!=null)for(Section section:pending.sections){section.chunk=null;section.before=null;}}
+    public static String diagnostic(SegmentedDoorTile root){Pending pending=ACTIVE.get(root);if(pending==null)return "no-pending";StringBuilder text=new StringBuilder("baked="+pending.baked);for(Section section:pending.sections)text.append(" [").append(section.diagnostic()).append(']');return text.toString();}
     @SubscribeEvent public static void unload(net.minecraftforge.event.world.WorldEvent.Unload event){if(event.getWorld().isRemote){synchronized(QUEUED){QUEUED.removeIf(t->t.getWorld()==event.getWorld());}ACTIVE.keySet().removeIf(t->t.getWorld()==event.getWorld());}}
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event){
         if(event.phase!=TickEvent.Phase.END)return;Minecraft mc=Minecraft.getMinecraft();if(mc.world==null)return;
         synchronized(QUEUED){if(!QUEUED.isEmpty()){for(SegmentedDoorTile tile:QUEUED)if(tile.getWorld()==mc.world&&!tile.isInvalid()){SegmentedDoorTile root=tile.root();if(root.ready()&&root.isRoot())ACTIVE.putIfAbsent(root,null);}QUEUED.clear();}}
         if(ACTIVE.isEmpty())return;
+        requestBudget=REQUESTS_PER_TICK;
         Set<RenderChunk> rebuild=new LinkedHashSet<>();
         try{Iterator<Map.Entry<SegmentedDoorTile,Pending>> it=ACTIVE.entrySet().iterator();while(it.hasNext()){
             Map.Entry<SegmentedDoorTile,Pending> entry=it.next();SegmentedDoorTile root=entry.getKey();if(root.getWorld()!=mc.world||root.isInvalid()||SegmentedDoorTile.at(mc.world,root.getPos())!=root||!root.isRoot()){it.remove();continue;}
