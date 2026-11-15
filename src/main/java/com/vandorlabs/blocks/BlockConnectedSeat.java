@@ -16,6 +16,7 @@ public final class BlockConnectedSeat extends BlockVandorDirectional {
         SINGLE, LEFT, MIDDLE, RIGHT;
         public String getName() { return name().toLowerCase(java.util.Locale.ROOT); }
     }
+    private static final Part[] PARTS = Part.values();
     public static final PropertyEnum<Part> PART = CachedProperties.enumeration("part", Part.class);
     public static final net.minecraftforge.common.property.IUnlistedProperty<Integer> HEIGHT=ProgrammableHousingState.integer("seat_height");
     private final double height;
@@ -66,7 +67,7 @@ public final class BlockConnectedSeat extends BlockVandorDirectional {
         int height=tile==null?1:tile.getHeightOffsetPixels();
         boolean leftJoin = joins(world, pos.offset(right.getOpposite()), state,height);
         boolean rightJoin = joins(world, pos.offset(right), state,height);
-        return state.withProperty(PART,Part.values()[com.vandorlabs.persistence.ChairSettings.part(true,leftJoin,rightJoin)]);
+        return state.withProperty(PART,PARTS[com.vandorlabs.persistence.ChairSettings.part(true,leftJoin,rightJoin)]);
     }
     public boolean canPlaceBlockAt(World world, BlockPos pos) {
         return super.canPlaceBlockAt(world, pos) && pos.getY() < world.getHeight() - 1
