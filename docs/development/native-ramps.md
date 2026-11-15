@@ -350,3 +350,14 @@ After checking the entire supported neighborhood, the policy changes only transf
 The `frame-initial-actor-abrupt-cold` focus performs a genuine initial handoff, saves only the relocated actor data with older block chunks, removes saved force tickets and halts before APPLIED. Its supported fixture explicitly settles and clears ambient generated actors before creating the witness. Fresh startup returns that actor record, restores the two exact wet sources, retires the journal and proves a clear actor join and first ordinary tick. A second restart verifies the retired, original-support state. A separate unrelated-record case requires startup refusal with identical owned journal and decompressed actor-chunk record hashes (excluding vanilla region allocation/timestamp bookkeeping). These are focused private server checks, not a public Ramp activation or a general healthy active-motion restart.
 
 Ramps remain inactive. Outstanding work includes the opposite block-new/actor-old save order, queued/loaded actor reconciliation, broader actor roles and neighborhoods, cross-entity-chunk ownership, players/login/packets, controller command/scheduler integration, later-motion recovery and migration, and moving-client collision/network cost acceptance. The current fallback does not turn those cases into successful repairs.
+
+
+## Canonical runtime adapter (private)
+
+`NativeRampBindings` binds the released full/slab controller and generated-part IDs to the existing typed runtime. It remains disabled by default until healthy cold recovery and deployed belt motion are accepted. Both controller housings use the original common tile identity; generated parts have no placeable item or creative entry.
+
+Ordinary empty-hand use and the Configurizer open the same dedicated Ramp/Redstone editor with the same loaded-owner and actor authorization. Held building items retain adjacent placement. Correction packets enter the pause-aware client rider smoother through a client-only consumer bridge. Configured placement validates choices and copied plans before granting stationary installation authority, then invokes the runtime only after successful native item publication.
+
+Duplifier projection contains choices and channels only. Its synchronous path refuses geometry edits while a captured operation is attached; a queued physical return is not reported as an applied settings edit. Channel-only copying uses the existing Source-compatible footer and preserves physical ownership.
+
+Focused canonical registration checks exercise real configured Survival item admission for six scan faces, full/slab housings and both slab halves; settings/footer round trips, recipes and a subsequent process retain canonical identities and stopped choices. This does not establish healthy active-platform restart or public activation.

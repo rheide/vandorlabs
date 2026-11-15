@@ -33,6 +33,15 @@ public final class NativeCopifierHousingWorld {
             if(!plan.applicable())return false;NativeCopifierUndo.before(actor,level,pos);return NativeCopifierFurnitureEdit.apply(tile,plan);
         }
     }
+    private record Ramp(com.vandorlabs.neoforge.ramp.NativeRampEntity tile) implements Target {
+        public CompoundTag capture(){return com.vandorlabs.neoforge.ramp.NativeRampCopiedSettings.capture(tile);}
+        public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
+            final com.vandorlabs.neoforge.ramp.NativeRampCopiedSettings.Plan plan;
+            try{plan=com.vandorlabs.neoforge.ramp.NativeRampCopiedSettings.prepare(tile,values);}catch(IllegalArgumentException malformed){return false;}
+            if(!plan.applicable()||!com.vandorlabs.neoforge.ramp.NativeRampCopiedSettings.available(tile,actor))return false;
+            NativeCopifierUndo.before(actor,level,pos);return com.vandorlabs.neoforge.ramp.NativeRampCopiedSettings.apply(tile,actor,plan);
+        }
+    }
     private record Track(com.vandorlabs.neoforge.gear.NativeGearEntity tile) implements Target {
         public CompoundTag capture(){return com.vandorlabs.neoforge.gear.track.NativeTrackCopiedSettings.capture(tile);}
         public boolean apply(ServerLevel level,BlockPos pos,CompoundTag values,ServerPlayer actor){
@@ -172,6 +181,7 @@ public final class NativeCopifierHousingWorld {
         if(!level.getServer().isSameThread()||!level.hasChunkAt(pos))return null;var tile=level.getBlockEntity(pos);
         if(tile==null||tile.isRemoved()||tile.getLevel()!=level||tile.getBlockState()!=level.getBlockState(pos))return null;
         var id=BuiltInRegistries.BLOCK.getKey(tile.getBlockState().getBlock());if(!id.getNamespace().equals("vandorlabs"))return null;
+        if(tile instanceof com.vandorlabs.neoforge.ramp.NativeRampEntity ramp)return com.vandorlabs.neoforge.ramp.NativeRampBindings.enabled()&&!ramp.inert()?new Ramp(ramp):null;
         if(tile instanceof com.vandorlabs.neoforge.seating.NativeChairEntity chair){var owner=com.vandorlabs.neoforge.seating.NativeSeatBlock.owner(level,pos);return owner==null?null:new Seat(owner);}
         if(tile instanceof com.vandorlabs.neoforge.plate.NativePlateEntity plate)return plate.isChannelMemberActive()?new Plate(plate):null;
         if(tile instanceof com.vandorlabs.neoforge.gear.NativeGearEntity gear){var root=gear.controllerEntity();if(gear instanceof com.vandorlabs.neoforge.gear.track.NativeTrackEntity&&root==null)return gear.visual().owner()==null&&!gear.inert()?new Track(gear):null;return root!=null&&!root.inert()?(root.trackDescriptor()!=null?new Track(root):new Gear(root)):null;}
