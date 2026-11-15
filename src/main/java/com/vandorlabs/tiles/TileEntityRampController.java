@@ -364,11 +364,11 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         if(analogDeployment&&escalator==0){
             int level=com.vandorlabs.redstone.LoadedRedstonePower.level(world,pos);
             for(int i=0;i<channels.size();i++){int channel=channels.get(i);if(channel>0)level=Math.max(level,RedstoneChannels.level(world,pos,channel));}
-            double desiredPose=(activateOnPower?level:15-level)/15D;
+            double desiredPose=com.vandorlabs.ramp.RampLifecycle.signalTarget(true,false,activateOnPower,level,0);
             if(!force&&signalKnown&&Math.abs(targetPose-desiredPose)<1e-8)return !error;
             signalKnown=true;latched=desiredPose>0;return requestPose(desiredPose);
         }
-        boolean desired=(hasLocalRedstoneSignal() || channelSignal)==activateOnPower;
+        boolean desired=com.vandorlabs.ramp.RampLifecycle.signalTarget(false,escalator!=0,activateOnPower,hasLocalRedstoneSignal()?15:0,channelSignal?15:0)>0;
         if (!force && signalKnown && desired==latched) return !error;
         signalKnown=true; latched=desired;
         if(escalator!=0) {
@@ -753,7 +753,7 @@ public class TileEntityRampController extends TileEntity implements RedstoneChan
         RedstoneChannels.unregister(this);com.vandorlabs.ramp.EscalatorActivity.unregister(this);super.onChunkUnload();
     }
     public void resumeAfterLoad() {
-        if (!world.isRemote && (moving || beltRunning || escalator!=0 || recoveryPending || legacy || waitingForCanopy || usesNativeMoatGeometry()&&moatGeometryRevision==1)) schedule();
+        if (!world.isRemote && com.vandorlabs.ramp.RampLifecycle.work(legacy||usesNativeMoatGeometry()&&moatGeometryRevision==1,recoveryPending,moving,beltRunning||escalator!=0,waitingForCanopy)!=0) schedule();
     }
     /** A scheduled tick is animation work or a one-shot load recovery, never idle polling. */
     public void scheduledTick() {

@@ -1,0 +1,8 @@
+task testRampLifecycle(type: JavaExec) {
+    group = 'verification'
+    description = 'Compare shared Ramp controller timing and lifecycle decisions with Source formulas'
+    dependsOn compilePortableTests
+    classpath = files(compilePortableTests.destinationDir)
+    main = 'com.vandorlabs.ramp.RampLifecycleTest'
+    maxHeapSize = '256m'
+}
