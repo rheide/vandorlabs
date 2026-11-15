@@ -26,7 +26,12 @@ public final class CopySupply {
         BlockPos min=positions.get(0);for(BlockPos p:positions)min=new BlockPos(Math.min(min.getX(),p.getX()),Math.min(min.getY(),p.getY()),Math.min(min.getZ(),p.getZ()));
         List<VehicleStructure.Cell> old=new ArrayList<>(),next=new ArrayList<>();List<Slot> slots=new ArrayList<>();Map<BlockPos,IInventory> clones=new LinkedHashMap<>();
         for(BlockPos p:positions){VehicleService.permission(actor,p);TileEntity tile=world.getTileEntity(p);NBTTagCompound tag=VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(min));old.add(new VehicleStructure.Cell(p.subtract(min),world.getBlockState(p),tag));TileEntity copy=TileEntity.create(null,tag);if(!(copy instanceof IInventory))throw new IllegalArgumentException("Material chest contents cannot be saved exactly");IInventory inventory=(IInventory)copy;clones.put(p,inventory);for(int slot=0;slot<inventory.getSizeInventory();slot++)slots.add(new Slot(inventory,slot));}
-        for(CopyMaterials.Need need:needs){long missing=need.count;for(Slot slot:slots){if(!CopyMaterials.satisfies(need,slot.stack))continue;int used=(int)Math.min(missing,slot.stack.getCount());slot.stack.shrink(used);missing-=used;if(missing==0)break;}if(missing>0)throw new IllegalArgumentException("Missing material: "+need.item.getDisplayName()+" x "+missing+(need.exact?" (matching item data)":" (empty block item)"));}
+        long[] required=new long[needs.size()];for(int i=0;i<needs.size();i++)required[i]=needs.get(i).count;
+        int[] available=new int[slots.size()];for(int i=0;i<slots.size();i++)available[i]=slots.get(i).stack.getCount();
+        final int[] remaining;
+        try{remaining=com.vandorlabs.copier.core.MaterialWithdrawal.remaining(required,available,(need,slot)->CopyMaterials.satisfies(needs.get(need),slots.get(slot).stack));}
+        catch(com.vandorlabs.copier.core.MaterialWithdrawal.Missing missing){CopyMaterials.Need need=needs.get(missing.need);throw new IllegalArgumentException("Missing material: "+need.item.getDisplayName()+" x "+missing.count+(need.exact?" (matching item data)":" (empty block item)"));}
+        for(int i=0;i<slots.size();i++)slots.get(i).stack.setCount(remaining[i]);
         for(Slot slot:slots)slot.inventory.setInventorySlotContents(slot.slot,slot.stack);
         for(Map.Entry<BlockPos,IInventory> clone:clones.entrySet()){TileEntity tile=(TileEntity)clone.getValue();next.add(new VehicleStructure.Cell(clone.getKey().subtract(min),world.getBlockState(clone.getKey()),tile.writeToNBT(new NBTTagCompound())));}
         return new CopySupply(VehicleStructure.display(old),VehicleStructure.display(next),min);

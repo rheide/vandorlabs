@@ -70,6 +70,14 @@ final class Utility26FocusedChecks {
             }).get();
             splitLive=true;return false;
         }
+        if("true".equals(System.getenv("VANDOR_COPY_POLICY_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{
+                net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
+                net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                com.vandorlabs.copier.CopyPlanRuntimeChecks.run(world,actor);CopyChannelChecks.run();return null;
+            }).get();
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS copy-policy-only");return true;
+        }
         if("true".equals(System.getenv("VANDOR_TRACK_ONLY"))){
             mc.getIntegratedServer().callFromMainThread(()->{
                 net.minecraft.world.WorldServer world=mc.getIntegratedServer().getWorld(0);
