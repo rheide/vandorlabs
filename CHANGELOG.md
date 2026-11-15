@@ -46,6 +46,7 @@
 
 ### Standalone arms (NeoForge 1.21.1)
 
+- Extend existing stowed Skis, Plates and regular Wheels by clicking their visible side with a matching item. Preserve the stopped pose and native owner, consume one item, and keep blocked placements unchanged. Use current posed faces for stopped foot attachment and dynamic collision shapes for mounted arms.
 - Enable regular and Large Extenders, Rotating Arms, mounts, Plates, Skis and Wheels with six-face placement, joined platforms, Foot direction, Middle hinge and dedicated settings. Add all ten items to creative/search and support settings-only Duplifier copying and Undo.
 - Preserve payload ownership through asynchronous native publication, active-foot adoption and captured-block mining; checkpoint terrain and dropped-item records before releasing ownership. Carry native players and restore a clear last-valid endpoint when a stroke is blocked.
 - Add horizontal Extender **Push blocks** for independent and joined regular/Large platforms. Check the complete outward path before detachment, move contacted ordinary terrain through the native recovery journal, and leave pushed blocks in place on reversal.

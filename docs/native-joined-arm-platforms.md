@@ -46,3 +46,7 @@ Some vanilla block states cannot represent a quarter-turn orientation. Those att
 4. Retract again to return the original platform. Pushed terrain stays where it was left; it does not become part of the platform.
 
 Change **Push blocks** only at a materialized endpoint while the arm is idle. Other geometry choices still require the rest endpoint. Disk preparation pauses the stroke until its recovery record is durable. After an interrupted push, recovery retains the original platform and one owner for each terrain block; clear any reported obstruction before retrying.
+
+### Extending stowed landing gear
+
+Hold a matching Ski, Plate or regular Wheel and right-click a visible side of an existing stowed foot. The new part joins that arm at its current pose; this also works while sneaking. Leave clearance around the visible attachment and its rest cell. An occupied position refuses placement without consuming the item. Keep the complete mounting support in place and clear the return stroke before deploying the expanded group. Large Wheel kits still use their complete socket-placement path.

@@ -47,10 +47,29 @@ public final class GearCoreTests {
             Pose large=GearMotion.pose(Mode.ROTATE_LEVEL,direction,1,sample/24D,GearMotion.RETRACTED_FOOT_Y,17/128D);
             Vec bottom=large.transformFootVertex(.5,-2,.5);check(bottom.y>=-2-1e-9,"Large wheel never dips into the ground during folding");
         }
+        posedFootPlacement();
         wheelConnector();
         numericSafety();
         System.out.println("PASS: " + checks + " core assertions; topology, masks, limits, "
                 + "attachments, four fold directions, level-foot swivel, bounds, reversal, and numeric safety.");
+    }
+
+    private static void posedFootPlacement(){
+        for(Mode mode:new Mode[]{Mode.ROTATE,Mode.ROTATE_LEVEL})for(Direction direction:Direction.values())for(double angle:new double[]{0,90,180,-90}){
+            Pose pose=GearMotion.pose(mode,direction,2,0,GearMotion.RETRACTED_FOOT_Y,0,0,angle,0,false);
+            Vec origin=pose.transformFootVertex(0,0,0);
+            for(int[] offset:new int[][]{{1,0},{-1,0},{0,1},{0,-1}}){
+                Vec normal=pose.transformFootVertex(offset[0],0,offset[1]);
+                Cell cell=GearFootPlacement.neighbor(pose,normal.x-origin.x,normal.y-origin.y,normal.z-origin.z);
+                check(cell.equals(new Cell(offset[0],0,offset[1])),"posed foot side returns its shared logical neighbor");
+            }
+            Vec normal=pose.transformFootVertex(0,1,0);boolean refused=false;
+            try{GearFootPlacement.neighbor(pose,normal.x-origin.x,normal.y-origin.y,normal.z-origin.z);}catch(IllegalArgumentException expected){refused=true;}
+            check(refused,"normal to the foot plane cannot append another foot row");
+        }
+        Pose diagonal=GearMotion.pose(Mode.ROTATE,Direction.NORTH,2,0,GearMotion.RETRACTED_FOOT_Y,0,0,45,0,false);boolean refused=false;
+        try{GearFootPlacement.neighbor(diagonal,0,0,1);}catch(IllegalArgumentException expected){refused=true;}
+        check(refused,"an axis-aligned selection face cannot guess a fractional neighbor");
     }
 
     private static void middleHinge(){
