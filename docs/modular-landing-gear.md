@@ -27,10 +27,10 @@ group horizontal. Straight Extenders retract the feet vertically. Fixed mounting
 caps and sleeves stay attached to the hull.
 
 Right click a strut or its visible landing foot with an empty hand to deploy or stow it. Use the Configurizer
-on an arm to open its motion dialog. Tracks open their own appearance dialog with either right click or the Configurizer. Select Manual, ON deploys or OFF deploys,
+on an arm to open its motion dialog. Standalone Tracks open their own appearance dialog with either right click or the Configurizer. Mounted Tracks expose Foot in their arm controller dialog. Select Manual, ON deploys or OFF deploys,
 and enter channels as comma-separated positive numbers. Zero uses local redstone;
 configured lists require all channels to be powered. Fold direction can be
-changed while fully deployed. **Foot** changes the Ski or Wheel's
+changed while fully deployed. **Foot** changes the landing foot's
 orientation independently of **Fold**. Its label describes the direction in the
 world, including a sideways-mounted arm. Return to the fully deployed position
 before changing it; an obstructed direction is refused. The source blocks keep their original placement footprint.

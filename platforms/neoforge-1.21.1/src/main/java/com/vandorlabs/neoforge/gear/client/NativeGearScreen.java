@@ -39,7 +39,7 @@ public final class NativeGearScreen extends AbstractContainerScreen<NativeGearMe
             if(swing&&!landing){slider(16,12,134,col,-12,12,(int)draft.startAngle()/15,"Start",rest);slider(13,right,134,col,-12,12,(int)draft.activeAngle()/15,"End",rest);}
             if(menu.tile.canPushBlocks())option(14,12,134,col,"Push blocks: "+(draft.pushBlocks()?"On":"Off"),menu.tile.progress()==0||menu.tile.progress()==1);
             if(!swing&&draft.join()&&draft.carryLoad()&&carry)slider(12,right,134,col,1,32,draft.loadHeight(),"Height",rest);
-            if(foot==com.vandorlabs.gear.core.GearTopology.FootKind.SKI||foot==com.vandorlabs.gear.core.GearTopology.FootKind.WHEEL)option(17,right,134,col,"Foot: "+worldFacing(net.minecraft.core.Direction.from2DDataValue(draft.footFacing())),rest);
+            if(menu.tile.canConfigureFootFacing())option(17,right,134,col,"Foot: "+worldFacing(net.minecraft.core.Direction.from2DDataValue(draft.footFacing())),rest);
         }else{option(0,12,60,imageWidth-24,"Activation: "+new String[]{"Manual","Powered","Unpowered"}[draft.trigger()],!fixed);channels=new EditBox(font,leftPos+12,topPos+98,imageWidth-24,18,Component.literal("Receive channels"));channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);channels.setValue(draft.channels().toString());channels.setEditable(!fixed);channels.setResponder(value->{channels.setTextColor(ChannelList.parse(value)==null?0xFF8888:0xFFFFFF);dirty=true;});addRenderableWidget(channels);}
         option(4,(imageWidth-200)/2,imageHeight-54,200,"Done",true);ready=true;
     }

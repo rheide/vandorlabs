@@ -33,7 +33,11 @@ public final class GearTopology {
     public static final int SOUTH = 4;
     public static final int WEST = 8;
 
-    public enum FootKind { PLATE, SKI, WHEEL, TRACK, NONE }
+    public enum FootKind {
+        PLATE, SKI, WHEEL, TRACK, NONE;
+        /** Every landing family has an orientation; a bare arm has no foot to configure. */
+        public boolean configurableFacing(){return this!=NONE;}
+    }
 
     private GearTopology() { }
 

@@ -28,7 +28,7 @@ Arms support the floor, ceiling and all four wall mounting faces. Place sections
 
 For a rotating platform, place matching Rotating Arm columns in a straight row along their hinge axis and connect their extended tips with one layer. Enable **Join arms** and matching **Range** on every column. Set the same world-facing **Fold** direction and payload mode throughout the row. **Payload: rotates** turns the platform with the arm; **Payload: stays level** preserves its orientation. **Start** and **End** use 15-degree steps. **Hinge: Middle** is available with a zero start angle. Return to rest before changing these choices. Non-grid endpoints keep a captured, selectable payload rather than placing fractional world blocks.
 
-A formed Ski or Wheel assembly also exposes a separate **Foot** direction. This changes the foot's facing without changing **Fold**. Landing Plates do not need that control. To construct landing feet and their Large footprints, see [Modular landing gear](modular-landing-gear.md).
+Every formed landing-foot assembly exposes a separate **Foot** direction. This changes the foot's facing without changing **Fold**. Square Plates keep the same outline when rotated. To construct landing feet and their Large footprints, see [Modular landing gear](modular-landing-gear.md).
 
 ## Controls and editing
 

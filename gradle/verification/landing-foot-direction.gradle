@@ -1,0 +1,7 @@
+task testLandingFootDirection(type: JavaExec) {
+    group = 'verification'
+    description = 'Check Foot configuration for all landing families and retain endpoint guards'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.gear.LandingFootDirectionChecks'
+}

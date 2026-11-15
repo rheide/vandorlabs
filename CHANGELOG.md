@@ -40,6 +40,10 @@
 - Add Base / Middle hinge selection to Rotating Arms. The middle option turns the lower linkage at the authored elbow, with matching payload motion, collision, saved settings and client rendering; existing saves retain the base hinge.
 - Allow Taxi mode with two independent complete Ski supports. Preserve single-Ski refusal, lowest-support selection and the existing rules for other landing supports.
 
+### Landing foot controls (Forge 1.12.2 and NeoForge 1.21.1)
+
+- Use one shared availability rule for Foot orientation across landing families. Forge Tracks now expose the control alongside Skis, Wheels and Plates; native supported feet use the same rule. Keep direction changes restricted to the deployed endpoint.
+
 ### Standalone arms (NeoForge 1.21.1)
 
 - Enable regular and Large Extenders, Rotating Arms, mounts, Plates, Skis and Wheels with six-face placement, joined platforms, Foot direction, Middle hinge and dedicated settings. Add all ten items to creative/search and support settings-only Duplifier copying and Undo.

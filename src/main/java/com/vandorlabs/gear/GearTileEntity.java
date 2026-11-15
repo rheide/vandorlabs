@@ -41,7 +41,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private boolean middleHinge;
     public boolean middleHinge(){return middleHinge;}
     /** Orientation within the arm mounting plane, independent of the folding direction. */
-    public boolean canConfigureFootFacing(){return assembly!=null&&(assembly.kind()==GearTopology.FootKind.SKI||assembly.kind()==GearTopology.FootKind.WHEEL);}
+    public boolean canConfigureFootFacing(){return assembly!=null&&assembly.kind().configurableFacing();}
     private ArmPayload payload;
     private boolean payloadPreparationPending,clientGeometryPending;
     GearGeometry.MovePlan riderPlan;
@@ -767,7 +767,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         EnumFacing requestedFoot=tag.hasKey("FootFacing",3)?EnumFacing.getHorizontal(tag.getInteger("FootFacing")):footFacing;
         if(tag.hasKey("FootFacing",3)&&(tag.getInteger("FootFacing")<0||tag.getInteger("FootFacing")>3))throw new IllegalArgumentException("Invalid landing foot direction");
         boolean changeFoot=requestedFoot!=footFacing;
-        if(changeFoot&&assembly!=null&&(!canConfigureFootFacing()||!fullyDeployed()))throw new IllegalArgumentException("Deploy a Ski or Wheel assembly before changing its direction");
+        if(changeFoot&&assembly!=null&&(!canConfigureFootFacing()||!fullyDeployed()))throw new IllegalArgumentException("Deploy the landing gear assembly before changing its direction");
         if(changeFoot&&assembly!=null&&world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)){
             EnumFacing previousFoot=footFacing;footFacing=requestedFoot;
             try{for(AxisAlignedBB box:GearGeometry.computeBoxes(this,progress))if(!GearGeometry.foreign(world,this,box.shrink(.0001)).isEmpty())throw new IllegalArgumentException("The selected landing foot direction is obstructed");}

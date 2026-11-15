@@ -17,6 +17,7 @@ final class Utility26FocusedChecks {
         if(arms210){if(!com.vandorlabs.gear.ArmMiddleLiveChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] utility26-focused PASS arms-210-only");return true;}
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}
+        if(Boolean.getBoolean("vandorlabs.landingFootDialogOnly")){if(ticks<80)return false;GearDialogChecks.landingDirections(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS landing-foot-dialog");return true;}
         if("true".equals(System.getenv("VANDOR_SEGMENTED_COLLISIONS_ONLY")))return SegmentedCollisionLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_GEAR_TILE_OWNERSHIP_ONLY")))return GearTileOwnershipLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_NATIVE_RECEIPT_ROLLBACK_ONLY")))return NativeReceiptRollbackClientChecks.tick(mc);
