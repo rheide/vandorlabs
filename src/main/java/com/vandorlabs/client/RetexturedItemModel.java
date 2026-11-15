@@ -46,20 +46,25 @@ public class RetexturedItemModel implements IBakedModel {
                     || portholeSides && quad.getSprite().getIconName().contains("programmable_glass/metal_side");
             if(edge)target=sideSprite!=null?sideSprite:portholeSides?quad.getSprite():target;
             if(target==null){result.add(quad);continue;}
-            VertexFormat format=quad.getFormat();int uv=uvOffset(format);
-            if(uv<0){result.add(quad);continue;}
-            int[] source=quad.getVertexData();int stride=source.length/4;
-            if(source.length%4!=0||uv+1>=stride){result.add(quad);continue;}
-            int[] data=source.clone();
-            for(int v=0;v<4;v++) {
-                float u=quad.getSprite().getUnInterpolatedU(Float.intBitsToFloat(data[v*stride+uv]));
-                float t=quad.getSprite().getUnInterpolatedV(Float.intBitsToFloat(data[v*stride+uv+1]));
-                data[v*stride+uv]=Float.floatToRawIntBits(target.getInterpolatedU(u));
-                data[v*stride+uv+1]=Float.floatToRawIntBits(target.getInterpolatedV(t));
-            }
-            result.add(new BakedQuad(data,quad.getTintIndex(),quad.getFace(),target,quad.shouldApplyDiffuseLighting(),format));
+            result.add(retextureQuad(quad,target));
         }
         return result;
+    }
+    /** Remap only UV0; keep the source format and every other authored/shader component intact. */
+    public static BakedQuad retextureQuad(BakedQuad quad,TextureAtlasSprite target) {
+        if(target==null)return quad;
+        VertexFormat format=quad.getFormat();int uv=uvOffset(format);
+        if(uv<0)return quad;
+        int[] source=quad.getVertexData();int stride=source.length/4;
+        if(source.length%4!=0||uv+1>=stride)return quad;
+        int[] data=source.clone();
+        for(int v=0;v<4;v++) {
+            float u=quad.getSprite().getUnInterpolatedU(Float.intBitsToFloat(data[v*stride+uv]));
+            float t=quad.getSprite().getUnInterpolatedV(Float.intBitsToFloat(data[v*stride+uv+1]));
+            data[v*stride+uv]=Float.floatToRawIntBits(target.getInterpolatedU(u));
+            data[v*stride+uv+1]=Float.floatToRawIntBits(target.getInterpolatedV(t));
+        }
+        return new BakedQuad(data,quad.getTintIndex(),quad.getFace(),target,quad.shouldApplyDiffuseLighting(),format);
     }
     private static boolean isLamp(String name){for(String id:com.vandorlabs.tiles.ProgrammableLightTextures.IDS)if(name.startsWith("vandorlabs:blocks/"+id+"_"))return true;return false;}
     @Override public boolean isAmbientOcclusion(){return base.isAmbientOcclusion();}

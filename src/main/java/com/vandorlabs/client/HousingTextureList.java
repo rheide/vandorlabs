@@ -86,6 +86,12 @@ final class HousingTextureList {
         }
         return new HousingTextureList(x,y,width,selected==-2&&nativeArtwork?MODEL_ARTWORK:selected<0?NAVIGATION_BLACK:selected,rows,entries);
     }
+    /** Original family artwork plus the ordinary general-material picker. */
+    static HousingTextureList forHousing(int x,int y,int width,int selected,int rows,String originalArtwork){
+        List<Option> entries=new ArrayList<>();entries.add(new Option(-1,"Original artwork","Housing",originalArtwork));
+        for(int i=0;i<ScreenHousingTextures.IDS.length;i++)if(ScreenHousingTextures.visible(i)&&generalTexture(i))entries.add(new Option(ScreenHousingTextures.choiceAt(i),name(i),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
+        return new HousingTextureList(x,y,width,selected,rows,entries).visibleRows(rows);
+    }
     static HousingTextureList forFrames(int x,int y,int width,int selected,int rows){return forFrames(x,y,width,selected,rows,false);}
     static HousingTextureList forFrames(int x,int y,int width,int selected,int rows,boolean display){return forFrames(x,y,width,selected,rows,display,false);}
     static HousingTextureList forFrames(int x,int y,int width,int selected,int rows,boolean display,boolean half){

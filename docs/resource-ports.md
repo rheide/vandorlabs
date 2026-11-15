@@ -29,7 +29,7 @@ source and destination faces must permit the corresponding transfer.
 
 ## Limits and balancing
 
-The blank **Shared output limit** field means unlimited throughput. Enter a
+The **Shared output limit (blank for unlimited)** field accepts a blank value for unlimited throughput. Enter a
 positive whole number to limit RF, millibuckets or items leaving the port per game
 tick. The limit applies to all Output faces together, including pipes that extract
 from those faces. Accepting outputs share the available throughput; rotating
@@ -40,6 +40,10 @@ On NeoForge, Mekanism 10.7 uses whole Joules. At its default 2.5 J/FE conversion
 Incoming resources wait in a bounded buffer. Power Ports hold 1,000,000 RF, Fluid
 Ports hold 64,000 mB of one fluid and Matter Ports hold nine item stacks. Full
 buffers refuse additional input. Unaccepted output remains in the port.
+
+## Housing
+
+The **Housing** tab selects a material for Disabled faces using the standard texture picker. Choose **Original artwork** to restore the authored port hull. Input and Output faces keep their port artwork. The hotbar icons use red accents for Power, blue for Fluid and yellow for Matter.
 
 ## Redstone and artwork
 
@@ -64,5 +68,5 @@ Place that item to restore its settings and contents. Stored items are not also
 dropped separately.
 
 The Duplifier's **Resource Port Settings** option copies all six face choices,
-throughput, pull option, artwork condition, Redstone mode and channels. It never
+throughput, pull option, Housing material, artwork condition, Redstone mode and channels. It never
 copies stored power, fluid or items; the destination keeps its own contents.

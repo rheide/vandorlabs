@@ -66,8 +66,9 @@ public final class ResourcePortRuntimeChecks {
         need(item.getItem().onItemUse(actor,world,target.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS&&actor.getHeldItemMainhand().isEmpty(),"normal ItemBlock use consumes mined resource owner once");ResourcePortTile placed=(ResourcePortTile)world.getTileEntity(target);need(placed!=null&&stored(placed)==37&&expectedConfiguration.equals(placed.configuration()),"mined item placement restores exact resources and every setting");
     }
     public static boolean idleTick(WorldServer world){
+        if(idleStart==Long.MIN_VALUE){idleStart=world.getTotalWorldTime();idleLookups=idle.neighborLookups;idleRefreshes=idle.capabilityRefreshes;idlePackets=idle.visualPackets;idleSerializations=idle.serializationCalls;return false;}
         if(world.getTotalWorldTime()-idleStart<45)return false;need(idle!=null&&!idle.isInvalid()&&world.getTileEntity(idle.getPos())==idle,"idle physical owner stays installed");
-        need(idle.visualPackets==idlePackets&&idle.serializationCalls==idleSerializations,"45 actual idle ticks send no appearance packets and serialize no private buffers");need(idle.capabilityRefreshes-idleRefreshes<=6,"idle capability refreshes stay bounded across40tick cache expiry");
+        need(idle.visualPackets==idlePackets&&idle.serializationCalls==idleSerializations,"45 actual idle ticks send no appearance packets and serialize no private buffers");need(idle.capabilityRefreshes-idleRefreshes<=6,"idle capability refreshes stay bounded across40tick cache expiry elapsed="+(world.getTotalWorldTime()-idleStart)+" refreshes="+(idle.capabilityRefreshes-idleRefreshes));
         System.out.println("[vandorlabs][reprolab] resource-ports-idle PASS worldTicks="+(world.getTotalWorldTime()-idleStart)+" neighborLookups="+(idle.neighborLookups-idleLookups)+" capabilityRefreshes="+(idle.capabilityRefreshes-idleRefreshes)+" serializationCalls="+(idle.serializationCalls-idleSerializations)+" appearancePackets="+(idle.visualPackets-idlePackets));world.removeTileEntity(idle.getPos());world.setBlockToAir(idle.getPos());idle=null;return true;
     }
     private static void redstoneArtwork(WorldServer world,ResourcePortTile tile){
@@ -77,13 +78,18 @@ public final class ResourcePortRuntimeChecks {
         tile.configure(art,1,ChannelList.EMPTY);for(int i=0;i<5;i++)tile.update();need(tile.appearanceMask()==0,"unmatched Redstone keeps artwork Off");
         tile.configure(ResourcePortSettings.placed(EnumFacing.NORTH.getIndex()),0,ChannelList.EMPTY);for(int i=0;i<5;i++)tile.update();
     }
+    private static void codec(){
+        io.netty.buffer.ByteBuf buffer=io.netty.buffer.Unpooled.buffer(),again=io.netty.buffer.Unpooled.buffer();
+        try{ResourcePortSettings settings=policy(7).withHousing(1);new ResourcePortMessage(41,settings,2,ChannelList.of(1,2)).toBytes(buffer);need(buffer.readableBytes()==30,"bounded settings body30bytes (previous26)");ResourcePortMessage decoded=new ResourcePortMessage();io.netty.buffer.ByteBuf encoded=buffer.copy();try{decoded.fromBytes(encoded);}finally{encoded.release();}decoded.toBytes(again);need(io.netty.buffer.ByteBufUtil.equals(buffer,again),"housing/controls exact wire roundtrip");again.clear();decoded=new ResourcePortMessage();io.netty.buffer.ByteBuf legacy=buffer.copy(0,buffer.writerIndex()-4);try{decoded.fromBytes(legacy);decoded.toBytes(again);need(again.getInt(again.writerIndex()-4)== -1,"legacy message implies original housing");}finally{legacy.release();}buffer.setByte(17,ChannelList.MAX_CHANNELS+1);decoded=new ResourcePortMessage();decoded.fromBytes(buffer);try{java.lang.reflect.Field accepted=ResourcePortMessage.class.getDeclaredField("valid");accepted.setAccessible(true);need(!accepted.getBoolean(decoded),"oversized channel count rejected before allocation");}catch(ReflectiveOperationException error){throw new IllegalStateException(error);}System.out.println("[vandorlabs][reprolab] resource-port-codec PASS body30(previous26) roundtrip legacy boundedChannels");}finally{buffer.release();again.release();}
+    }
     public static void run(WorldServer world,EntityPlayerMP actor){
+        codec();
         BlockPos base=new BlockPos(880,110,32);for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(40,2,3))){world.getChunkFromBlockCoords(p);world.removeTileEntity(p);world.setBlockToAir(p);}
         try{
             int family=0;for(ResourcePortBlock block:ResourcePorts.BLOCKS){
                 BlockPos at=base.east(family++*12);ItemBlock item=(ItemBlock)Item.getItemFromBlock(block);
                 for(EnumFacing face:EnumFacing.values()){
-                    world.removeTileEntity(at);world.setBlockToAir(at);actor.setPosition(at.getX()+.5+face.getFrontOffsetX()*4,at.getY()+face.getFrontOffsetY()*4,at.getZ()+.5+face.getFrontOffsetZ()*4);if(face.getAxis().isHorizontal())actor.rotationYaw=face.getOpposite().getHorizontalIndex()*90;
+                    world.removeTileEntity(at);world.setBlockToAir(at);actor.setPosition(at.getX()+.5+face.getFrontOffsetX()*4,at.getY()+face.getFrontOffsetY()*4,at.getZ()+.5+face.getFrontOffsetZ()*4);actor.rotationPitch=face==EnumFacing.UP?90:face==EnumFacing.DOWN?-90:0;if(face.getAxis().isHorizontal())actor.rotationYaw=face.getOpposite().getHorizontalIndex()*90;
                     IBlockState state=block.getStateForPlacement(world,at,EnumFacing.UP,.5F,.5F,.5F,0,actor);need(state.getValue(ResourcePortBlock.FACING)==face,"six-axis placement faces toward player "+block.kind+" "+face);
                     need(item.placeBlockAt(new ItemStack(item),actor,world,at,EnumFacing.UP,.5F,.5F,.5F,state),"actual ItemBlock placement");ResourcePortTile tile=(ResourcePortTile)world.getTileEntity(at);tile.onLoad();DeferredTileLoad.flush(world);
                     need(tile.settings().face(face.getIndex())==ResourcePortSettings.Face.INPUT&&tile.settings().face(face.getOpposite().getIndex())==ResourcePortSettings.Face.OUTPUT,"placed input and opposite output "+face);
@@ -102,7 +108,7 @@ public final class ResourcePortRuntimeChecks {
             }
             System.out.println("[vandorlabs][reprolab] resource-ports-runtime PASS checks="+checks+" six-axis actual placement/own Battery/own Hex Tank/Chest/passive extraction+push shared budget/simulation/typed save/opaque client NBT/Duplifier atomicity/Redstone");
         }finally{for(BlockPos p:BlockPos.getAllInBox(base.add(-3,-1,-3),base.add(40,2,3))){world.removeTileEntity(p);world.setBlockToAir(p);}}
-        idle=put(world,new BlockPos(946,110,32),ResourcePorts.POWER);redstoneArtwork(world,idle);idleStart=world.getTotalWorldTime();idleLookups=idle.neighborLookups;idleRefreshes=idle.capabilityRefreshes;idlePackets=idle.visualPackets;idleSerializations=idle.serializationCalls;
+        idle=put(world,new BlockPos(946,110,32),ResourcePorts.POWER);redstoneArtwork(world,idle);idleStart=Long.MIN_VALUE;
     }
     /** Only installed during one bounded server callback, then removed before any chunk save. */
     private static final class PartialReceiver extends TileEntity {

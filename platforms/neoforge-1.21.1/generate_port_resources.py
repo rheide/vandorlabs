@@ -8,7 +8,7 @@ def generate(root, out):
     source = root / 'texture-packs/additional/assets/vandorlabs/textures/blocks/resource_ports'
     target = assets / 'textures/blocks/resource_ports'
     target.mkdir(parents=True, exist_ok=True)
-    names = ['port_hull'] + [f'{kind}_{face}_{active}' for kind in ('power', 'fluid', 'matter') for face in ('in', 'out') for active in ('off', 'on')]
+    names = ['port_hull'] + [f'{kind}_{face}_{active}' for kind in ('power', 'fluid', 'matter') for face in ('in', 'out') for active in ('off', 'on')] + [f'{kind}_{face}_icon' for kind in ('power','fluid','matter') for face in ('in','out')]
     for name in names:
         shutil.copyfile(source / f'{name}.png', target / f'{name}.png')
     def write(path, value):
@@ -24,5 +24,5 @@ def generate(root, out):
         recipe['result']['id'] = recipe['result'].pop('item')
         recipe['neoforge:conditions'] = [{'type': 'neoforge:item_exists', 'item': f'vandorlabs:{kind}_port'}]
         write(out / f'data/vandorlabs/recipe/{kind}_port.json', recipe)
-        write(assets / f'models/item/{kind}_port.json', dict(parent=f'vandorlabs:block/{kind}_port', display=dict(gui=dict(rotation=[30, 225, 0], translation=[0, 0, 0], scale=[.55, .55, .55]))))
+        write(assets / f'models/item/{kind}_port.json', dict(parent=f'vandorlabs:block/{kind}_port', textures={side:f'vandorlabs:blocks/resource_ports/{kind}_{direction}_icon' for side,direction in [('north','in'),('west','out'),('south','out'),('east','in')]}, display=dict(gui=dict(rotation=[30, 225, 0], translation=[0, 0, 0], scale=[.55, .55, .55]))))
     return [dict(type='minecraft:single', resource=f'vandorlabs:blocks/resource_ports/{name}') for name in names]

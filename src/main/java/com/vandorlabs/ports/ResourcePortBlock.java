@@ -20,10 +20,10 @@ import net.minecraftforge.common.property.*;
 public final class ResourcePortBlock extends BlockVandor {
     public enum Kind{POWER("power","Power Port"),FLUID("fluid","Fluid Port"),MATTER("matter","Matter Port");public final String texture,title;Kind(String texture,String title){this.texture=texture;this.title=title;}}
     public static final PropertyDirection FACING=PropertyDirection.create("facing");
-    public static final IUnlistedProperty<Integer> PORT_FACES=ProgrammableHousingState.integer("resource_port_faces"),LIT=ProgrammableHousingState.integer("resource_port_lit");
+    public static final IUnlistedProperty<Integer> PORT_FACES=ProgrammableHousingState.integer("resource_port_faces"),LIT=ProgrammableHousingState.integer("resource_port_lit"),HOUSING=ProgrammableHousingState.integer("resource_port_housing");
     public final Kind kind;
     public ResourcePortBlock(Kind kind){super(kind.texture+"_port");this.kind=kind;setDefaultState(blockState.getBaseState().withProperty(FACING,EnumFacing.NORTH));}
-    @Override protected BlockStateContainer createBlockState(){return new ExtendedBlockState(this,new IProperty[]{FACING},new IUnlistedProperty[]{PORT_FACES,LIT});}
+    @Override protected BlockStateContainer createBlockState(){return new ExtendedBlockState(this,new IProperty[]{FACING},new IUnlistedProperty[]{PORT_FACES,LIT,HOUSING});}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,meta>=0&&meta<6?EnumFacing.getFront(meta):EnumFacing.NORTH);}
     @Override public int getMetaFromState(IBlockState state){return state.getValue(FACING).getIndex();}
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing clicked,float x,float y,float z,int meta,EntityLivingBase placer){return getDefaultState().withProperty(FACING,EnumFacing.getDirectionFromEntityLiving(pos,placer));}
@@ -37,7 +37,7 @@ public final class ResourcePortBlock extends BlockVandor {
     }
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){
         TileEntity raw=world.getTileEntity(pos);ResourcePortSettings settings=raw instanceof ResourcePortTile?((ResourcePortTile)raw).settings():ResourcePortSettings.placed(state.getValue(FACING).getIndex());int faces=0;for(int i=0;i<6;i++)faces|=settings.face(i).ordinal()<<(i*2);
-        return ((IExtendedBlockState)state).withProperty(PORT_FACES,faces).withProperty(LIT,raw instanceof ResourcePortTile?((ResourcePortTile)raw).appearanceMask():0);
+        return ((IExtendedBlockState)state).withProperty(PORT_FACES,faces).withProperty(HOUSING,settings.housingChoice).withProperty(LIT,raw instanceof ResourcePortTile?((ResourcePortTile)raw).appearanceMask():0);
     }
     @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){if(!world.isRemote&&world.isBlockLoaded(pos)){TileEntity tile=world.getTileEntity(pos);if(tile instanceof ResourcePortTile)((ResourcePortTile)tile).neighborChanged();}}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){if(player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;return ResourcePorts.open(player,world,pos);}

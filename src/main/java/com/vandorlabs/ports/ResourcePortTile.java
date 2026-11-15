@@ -38,7 +38,7 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
     public final int connectedMask(){return connectedMask;}
     public final void place(EnumFacing towardPlayer){configure(ResourcePortSettings.placed(towardPlayer.getIndex()),0,ChannelList.EMPTY);}
     public final void configure(ResourcePortSettings next,int mode,ChannelList nextChannels){
-        if(next==null||mode<0||mode>2||nextChannels==null)throw new IllegalArgumentException("Invalid port settings");
+        if(next==null||mode<0||mode>2||nextChannels==null||next.housingChoice!= -1&&!com.vandorlabs.tiles.ScreenHousingTextures.validChoice(next.housingChoice))throw new IllegalArgumentException("Invalid port settings");
         if(world!=null&&!physical())throw new IllegalArgumentException("Configure the installed physical port on the server");
         if(next.equals(settings)&&mode==redstoneMode&&channels.equals(nextChannels))return;
         ChannelList old=channels;settings=next;redstoneMode=mode;channels=nextChannels;signalTick=Long.MIN_VALUE;invalidateNeighbors();fairPrepared=false;

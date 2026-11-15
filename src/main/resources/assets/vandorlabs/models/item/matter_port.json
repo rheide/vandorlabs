@@ -18,5 +18,11 @@
         0.55
       ]
     }
+  },
+  "textures": {
+    "north": "vandorlabs:blocks/resource_ports/matter_in_icon",
+    "west": "vandorlabs:blocks/resource_ports/matter_out_icon",
+    "south": "vandorlabs:blocks/resource_ports/matter_out_icon",
+    "east": "vandorlabs:blocks/resource_ports/matter_in_icon"
   }
 }

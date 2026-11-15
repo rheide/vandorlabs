@@ -26,6 +26,11 @@ public final class CopiedSettingsValidation {
             if(!tags.type(policy,"Direction",3)||!tags.type(policy,"Parity",3)
                     ||!com.vandorlabs.surface.TextureJoinSettings.valid(tags.integer(policy,"Direction"),tags.integer(policy,"Parity")))return false;
         }
+        if(tags.contains(values,"resource_port_settings")){
+            if(!tags.type(values,"resource_port_settings",10))return false;
+            T port=tags.compound(values,"resource_port_settings");
+            if(tags.contains(port,"PortHousing")&&(!tags.type(port,"PortHousing",3)||tags.integer(port,"PortHousing")< -1))return false;
+        }
         for(String key:LAYOUTS)if(tags.type(values,key,3)&&!TextureLayoutMode.valid(tags.integer(values,key)))return false;
         if(tags.type(values,"glass_layout",10)){
             T glass=tags.compound(values,"glass_layout");
