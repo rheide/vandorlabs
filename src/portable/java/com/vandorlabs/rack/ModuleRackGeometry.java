@@ -12,9 +12,9 @@ public final class ModuleRackGeometry {
     public static final double FASCIA_DEPTH = 15.0;
     public static final double MODULE_MIN_X = 1.25;
     public static final double MODULE_MAX_X = 12.75;
-    public static final double BUTTON_MIN_X = 13.5;
-    public static final double BUTTON_MAX_X = 15.5;
-    public static final double BUTTON_HALF_HEIGHT = 0.625;
+    public static final double BUTTON_MIN_X = 13.875;
+    public static final double BUTTON_MAX_X = 14.875;
+    public static final double BUTTON_HALF_HEIGHT = 0.9375;
 
     private ModuleRackGeometry() { }
 
@@ -23,19 +23,9 @@ public final class ModuleRackGeometry {
     public static double slotMaxY(int slot) { return slotMinY(slot) + 3.0; }
     public static double slotCenterY(int slot) { return slotMinY(slot) + 1.5; }
 
-    /** The recessed fascia reaches the outer right edge, leaving its last depth
-     * pixel open. Only the other four sides can completely occlude a neighbour.
-     */
+    /** The recessed control strip sits inside a full-depth one-pixel right wall. */
     public static boolean hasClosedBoundary(int facing, int side) {
-        if (facing < 0 || facing > 5 || side < 0 || side > 5 || side == facing) return false;
-        int right;
-        switch (facing) {
-            case 2: right = 4; break;
-            case 4: right = 3; break;
-            case 5: right = 2; break;
-            default: right = 5; break;
-        }
-        return side != right;
+        return facing >= 0 && facing <= 5 && side >= 0 && side <= 5 && side != facing;
     }
 
     /** Minecraft EnumFacing indexes: DOWN=0, UP=1, NORTH=2, SOUTH=3, WEST=4, EAST=5. */

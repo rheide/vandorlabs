@@ -28,7 +28,7 @@ public final class ModuleRackGeometryTest {
         double[] centers = {13.25, 9.75, 6.25, 2.75};
         double[] min = {11.75, 8.25, 4.75, 1.25};
         double[] max = {14.75, 11.25, 7.75, 4.25};
-        int[] closedBoundaryMasks = {30, 29, 43, 23, 39, 27};
+        int[] closedBoundaryMasks = {62, 61, 59, 55, 47, 31};
         require(ModuleRackGeometry.SLOTS == 4 && ModuleRackGeometry.ALL_SLOTS == 15, "exactly four slots");
         require(ModuleRackGeometry.FASCIA_MIN_X == 13 && ModuleRackGeometry.FASCIA_DEPTH == 15,
                 "three-pixel fascia recessed one pixel");
@@ -43,20 +43,20 @@ public final class ModuleRackGeometryTest {
             for (int side = 0; side < 6; side++)
                 require(ModuleRackGeometry.hasClosedBoundary(facing, side)
                         == ((closedBoundaryMasks[facing] & (1 << side)) != 0),
-                        "only four authored full boundary faces occlude neighbours");
+                        "all five casing boundaries, including the full-depth right wall, occlude neighbours");
             for (int slot = 0; slot < 4; slot++) {
                 for (double u : new double[] {1, 1.25, 7, 12.75, 12.999})
                     require(hit(facing, facing, u, centers[slot]) == slot, "bay hit at facing " + facing + " slot " + slot);
-                for (double u : new double[] {13.5, 14.5, 15.5})
-                    for (double v : new double[] {centers[slot] - .625, centers[slot], centers[slot] + .625})
+                for (double u : new double[] {13.875, 14.5, 14.875})
+                    for (double v : new double[] {centers[slot] - .9375, centers[slot], centers[slot] + .9375})
                         require(hit(facing, facing, u, v) == slot, "button hit and inclusive button edges");
                 for (int clickedFace = 0; clickedFace < 6; clickedFace++)
                     if (clickedFace != facing) require(hit(facing, clickedFace, 7, centers[slot]) == -1,
                             "back/side/top/bottom cannot insert");
-                for (double u : new double[] {0, .5, .999, 13, 13.25, 13.499, 15.501, 16})
+                for (double u : new double[] {0, .5, .999, 13, 13.25, 13.874, 14.876, 16})
                     require(hit(facing, facing, u, centers[slot]) == -1, "rim and non-button panel reject");
-                require(hit(facing, facing, 14.5, centers[slot] - .626) == -1, "below button reject");
-                require(hit(facing, facing, 14.5, centers[slot] + .626) == -1, "above button reject");
+                require(hit(facing, facing, 14.5, centers[slot] - .938) == -1, "below button reject");
+                require(hit(facing, facing, 14.5, centers[slot] + .938) == -1, "above button reject");
             }
             for (double v : new double[] {0, .5, .999, 4.25, 4.5, 4.749, 7.75, 8, 8.249, 11.25, 11.5, 11.749, 15, 15.5, 16})
                 require(hit(facing, facing, 7, v) == -1, "one-pixel horizontal rim and half-pixel separators reject");

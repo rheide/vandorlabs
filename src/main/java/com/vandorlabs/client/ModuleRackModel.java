@@ -75,7 +75,7 @@ public final class ModuleRackModel implements IBakedModel {
                 modules[slot] = part("slot_" + slot, pitch, turns);
                 seated[slot] = all(part("slot_seated_" + slot, pitch, turns), false);
                 empty[slot] = all(part("slot_empty_" + slot, pitch, turns), false);
-                buttons[slot][0] = all(part("indicator_" + slot + "_off", pitch, turns), false);
+                buttons[slot][0] = all(part("indicator_" + slot + "_off", pitch, turns), true);
                 buttons[slot][1] = all(part("indicator_" + slot + "_on", pitch, turns), true);
             }
             ModuleRackModel model = new ModuleRackModel(shell, modules, seated, empty, buttons);

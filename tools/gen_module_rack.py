@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Author the compact rack and its padded cassette item from exact model-unit boxes.
 
-The SOUTH-facing front has a one-unit rim and a three-unit recessed control
+The SOUTH-facing front has a one-unit rim and a two-unit recessed control
 fascia. Runtime and Dynmap consume these same JSON parts; no OBJ loader or
 per-frame geometry generation is required. --check verifies reproducibility.
 """
@@ -81,13 +81,12 @@ def textures():
 
     image = Image.new("RGB", (16, 16), (19, 23, 26))
     draw = ImageDraw.Draw(image)
-    # Left eight texels: unpopulated. Right eight: populated, including paired bars.
-    for x, cyan, amber in ((0, (22, 67, 74), (73, 56, 34)),
-                           (8, (83, 247, 255), (239, 177, 74))):
-        draw.rectangle((x, 0, x + 7, 7), outline=(50, 58, 64))
-        draw.rectangle((x + 1, 1, x + 6, 2), fill=cyan)
-        draw.rectangle((x + 1, 4, x + 6, 5), fill=amber)
-        draw.line((x + 1, 7, x + 6, 7), fill=(10, 13, 16))
+    # Four square swatches: lit amber/cyan above their dim versions.
+    for low, high, color in [((0, 0), (7, 7), (255, 174, 47)),
+                             ((8, 0), (15, 7), (83, 247, 255)),
+                             ((0, 8), (7, 15), (59, 39, 16)),
+                             ((8, 8), (15, 15), (14, 47, 51))]:
+        draw.rectangle((*low, *high), fill=color)
     save_png("indicators", image)
 
     image = Image.new("RGB", (16, 16), (29, 24, 15))
@@ -124,13 +123,14 @@ def shell():
         box("top_rim_1px", [0, 15, 0], [16, 16, 16], "housing", cull=("up", "west", "east", "north")),
         box("left_rim_1px", [0, 1, 0], [1, 15, 16], "housing", cull=("west", "north")),
         box("back", [1, 1, 0], [13, 15, 1], "dark", cull=("north",)),
-        box("fascia_3px_recessed_1px", [13, 1, 0], [16, 15, 15], "housing", cull=("east", "north")),
+        box("fascia_2px_recessed_1px", [13, 1, 0], [15, 15, 15], "housing", cull=("north",)),
+        box("right_rim_1px", [15, 1, 0], [16, 15, 16], "housing", cull=("east", "north")),
     ]
     for y in (4.25, 7.75, 11.25):
         parts.append(box("separator", [1, y, 1], [13, y + .5, 16], "housing"))
     for slot in range(4):
         y = 11.75 - slot * 3.5
-        parts.append(box("button_socket_%s" % slot, [13.375, y + .75, 15], [15.625, y + 2.25, 15.125], "dark"))
+        parts.append(box("button_socket_%s" % slot, [13.75, y + .5, 15], [15, y + 2.5, 15.0625], "dark"))
     return parts
 
 
@@ -188,10 +188,12 @@ def seated_cassette(slot):
 
 
 def indicator(slot, on):
-    y = 11.75 - slot * 3.5
-    parts = [box("slot_%d_indicator_%s" % (slot, "on" if on else "off"),
-                 [13.5, y + .875, 15.125], [15.5, y + 2.125, 15.25], "indicators",
-                 [8 if on else 0, 0, 16 if on else 8, 8], shade=not on)]
+    center = 13.25 - slot * 3.5
+    parts = []
+    for name, y, uv in (("cyan_top", center + .1875, [8, 0 if on else 8, 16, 8 if on else 16]),
+                        ("amber_bottom", center - .8125, [0, 8 if on else 0, 8, 16 if on else 8])):
+        parts.append(box("slot_%d_%s" % (slot, name), [14, y, 15.0625],
+                         [14.625, y + .625, 15.1875], "indicators", uv, shade=False))
     return model(parts)
 
 

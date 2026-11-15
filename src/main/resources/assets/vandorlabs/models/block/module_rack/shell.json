@@ -158,16 +158,51 @@
       }
     },
     {
-      "name": "fascia_3px_recessed_1px",
+      "name": "fascia_2px_recessed_1px",
       "from": [
         13,
         1,
         0
       ],
       "to": [
-        16,
+        15,
         15,
         15
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#housing"
+        },
+        "up": {
+          "texture": "#housing"
+        },
+        "north": {
+          "texture": "#housing",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#housing"
+        },
+        "west": {
+          "texture": "#housing"
+        },
+        "east": {
+          "texture": "#housing"
+        }
+      }
+    },
+    {
+      "name": "right_rim_1px",
+      "from": [
+        15,
+        1,
+        0
+      ],
+      "to": [
+        16,
+        15,
+        16
       ],
       "shade": true,
       "faces": {
@@ -298,14 +333,14 @@
     {
       "name": "button_socket_0",
       "from": [
-        13.375,
-        12.5,
+        13.75,
+        12.25,
         15
       ],
       "to": [
-        15.625,
-        14.0,
-        15.125
+        15,
+        14.25,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -332,14 +367,14 @@
     {
       "name": "button_socket_1",
       "from": [
-        13.375,
-        9.0,
+        13.75,
+        8.75,
         15
       ],
       "to": [
-        15.625,
-        10.5,
-        15.125
+        15,
+        10.75,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -366,14 +401,14 @@
     {
       "name": "button_socket_2",
       "from": [
-        13.375,
-        5.5,
+        13.75,
+        5.25,
         15
       ],
       "to": [
-        15.625,
-        7.0,
-        15.125
+        15,
+        7.25,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -400,14 +435,14 @@
     {
       "name": "button_socket_3",
       "from": [
-        13.375,
-        2.0,
+        13.75,
+        1.75,
         15
       ],
       "to": [
-        15.625,
-        3.5,
-        15.125
+        15,
+        3.75,
+        15.0625
       ],
       "shade": true,
       "faces": {

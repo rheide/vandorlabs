@@ -45,7 +45,7 @@ final class ModuleRackLiveChecks {
     private static boolean stressed;
     private static boolean replacedWhileMoving;
     private static long replacedIncarnation;
-    private static int movingFrames;
+    private static int movingFrames, extractionFrames;
     private static File output;
 
     private ModuleRackLiveChecks() { }
@@ -106,7 +106,7 @@ final class ModuleRackLiveChecks {
                 camera(p, facing);
                 p.inventoryContainer.detectAndSendChanges();
             });
-            slot = 0; movingFrames = 0; stressed = false; next(1); return false;
+            slot = 0; movingFrames = 0; extractionFrames = 0; stressed = false; next(1); return false;
         }
         if (stage == 1) {
             TileEntityModuleRack rack = tile(mc.world);
@@ -211,12 +211,29 @@ final class ModuleRackLiveChecks {
                     if (item.getItem() == ModItems.BLANK_MODULE) owned += item.getCount();
                 require(owned == 5 + slot, "extraction did not return one owned module");
             });
+            require(ModuleRackAnimation.activeCount() > 0, "extraction did not start the transient renderer");
+            next(11); return false;
+        }
+        if (stage == 11) {
+            if (ModuleRackAnimation.activeCount() > 0) return false;
+            require(ModuleRackAnimation.drawCount() > insertionDraws, "extraction never drew its outward slide");
+            if (slot == 0) require(extractionFrames > 0, "no actual extraction framebuffer captured");
             if (++slot < 4) { next(6); return false; }
-            require(ModuleRackAnimation.activeCount() == 0, "empty rack retains animation proxy");
+            idleDraws = ModuleRackAnimation.drawCount(); next(12); return false;
+        }
+        if (stage == 12) {
+            if (wait < 24) return false;
+            require(ModuleRackAnimation.activeCount() == 0 && ModuleRackAnimation.drawCount() == idleDraws,
+                    "empty rack retains an animation proxy or performs idle draws");
             require(movingFrames > 0, "no moving-module framebuffer captured for " + facing);
             System.out.println("[vandorlabs][reprolab] module-rack face PASS " + facing.getName()
                     + " four Survival insert/remove packets, populated indicators, chunk handoff and idle draws");
-            if (++direction < FACES.length) { next(0); return false; }
+            if (++direction == 1 && Boolean.getBoolean("vandorlabs.moduleRackAnimationOnly")) {
+                direction = FACES.length;
+                System.out.println("[vandorlabs][reprolab] module-rack PASS targeted insertion/extraction/reversal/reload/idle");
+                return true;
+            }
+            if (direction < FACES.length) { next(0); return false; }
             System.out.println("[vandorlabs][reprolab] module-rack PASS six faces, 24 targeted Survival insert/remove pairs,"
                     + " moving-frame screenshots, active same-position replacement, rapid reinsertion, resource reload,"
                     + " seated chunk rendering and zero idle module draws");
@@ -243,13 +260,15 @@ final class ModuleRackLiveChecks {
     }
 
     static void render(Minecraft mc) {
-        if (output == null || direction >= FACES.length || slot != 0 || stage < 2 || stage > 3
+        if (output == null || direction >= FACES.length || slot != 0 || !(stage == 2 || stage == 3 || stage == 7 || stage == 11)
                 || ModuleRackAnimation.activeCount() == 0 || mc.world == null
                 || ModuleRackAnimation.drawCount() <= capturedDraws) return;
         TileEntityModuleRack rack = tile(mc.world);
         if (rack == null || (rack.getRenderMask() & 1) != 0) return;
         try {
-            capture(mc, movingFrames++ == 0 ? "insert_start" : "insert_moving");
+            if (stage == 7 || stage == 11) {
+                capture(mc, extractionFrames++ == 0 ? "extract_start" : "extract_moving");
+            } else capture(mc, movingFrames++ == 0 ? "insert_start" : "insert_moving");
             capturedDraws = ModuleRackAnimation.drawCount();
         } catch (Exception failure) { throw new IllegalStateException("Rack insertion capture", failure); }
     }

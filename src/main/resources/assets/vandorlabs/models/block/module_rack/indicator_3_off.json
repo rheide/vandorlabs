@@ -11,18 +11,88 @@
   },
   "elements": [
     {
-      "name": "slot_3_indicator_off",
+      "name": "slot_3_cyan_top",
       "from": [
-        13.5,
-        2.125,
-        15.125
+        14,
+        2.9375,
+        15.0625
       ],
       "to": [
-        15.5,
-        3.375,
-        15.25
+        14.625,
+        3.5625,
+        15.1875
       ],
-      "shade": true,
+      "shade": false,
+      "faces": {
+        "down": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "slot_3_amber_bottom",
+      "from": [
+        14,
+        1.9375,
+        15.0625
+      ],
+      "to": [
+        14.625,
+        2.5625,
+        15.1875
+      ],
+      "shade": false,
       "faces": {
         "down": {
           "texture": "#indicators",

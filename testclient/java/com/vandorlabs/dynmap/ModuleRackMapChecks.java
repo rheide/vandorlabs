@@ -102,18 +102,18 @@ public final class ModuleRackMapChecks {
         // catch mirrored/right-left errors and all facings accidentally using SOUTH.
         double[] expected;
         switch (facing) {
-            case "north": expected = new double[]{.5,12.625,.75,2.5,13.875,.875}; break;
-            case "west": expected = new double[]{.75,12.625,13.5,.875,13.875,15.5}; break;
-            case "east": expected = new double[]{15.125,12.625,.5,15.25,13.875,2.5}; break;
-            case "up": expected = new double[]{13.5,15.125,2.125,15.5,15.25,3.375}; break;
-            case "down": expected = new double[]{13.5,.75,12.625,15.5,.875,13.875}; break;
-            default: expected = new double[]{13.5,12.625,15.125,15.5,13.875,15.25};
+            case "north": expected = new double[]{1.375,13.4375,.8125,2,14.0625,.9375}; break;
+            case "west": expected = new double[]{.8125,13.4375,14,.9375,14.0625,14.625}; break;
+            case "east": expected = new double[]{15.0625,13.4375,1.375,15.1875,14.0625,2}; break;
+            case "up": expected = new double[]{14,15.0625,1.9375,14.625,15.1875,2.5625}; break;
+            case "down": expected = new double[]{14,.8125,13.4375,14.625,.9375,14.0625}; break;
+            default: expected = new double[]{14,13.4375,15.0625,14.625,14.0625,15.1875};
         }
         double[] actual = {Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,
                 Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
         for (RenderPatch raw : mesh) {
             Patch patch = (Patch)raw;
-            if (patch.texture != 4 || patch.limits[0] < .5 - 1e-8) continue;
+            if (patch.texture != 4 || patch.limits[0] < .5 - 1e-8 || patch.limits[2] > 1e-8) continue;
             for (double[] point : patch.corners()) for (int axis = 0; axis < 3; axis++) {
                 actual[axis] = Math.min(actual[axis], point[axis] * 16);
                 actual[axis+3] = Math.max(actual[axis+3], point[axis] * 16);

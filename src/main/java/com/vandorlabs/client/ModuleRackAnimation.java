@@ -103,20 +103,19 @@ public final class ModuleRackAnimation {
         for (int slot = 0; slot < 4; slot++) {
             int bit = 1 << slot;
             Pose previous = entry == null ? null : entry.poses[slot];
-            if ((occupied & bit) == 0) {
-                if (entry != null) entry.poses[slot] = null;
-                continue;
-            }
+            boolean extracting = (occupied & bit) == 0;
             long sequence = tile.getInsertionSequence(slot);
-            if (previous != null && previous.sequence == sequence) continue;
-            if (previous != null) entry.poses[slot] = null;
+            if (previous != null && previous.sequence == sequence && previous.extracting == extracting) continue;
             long oldSequence = previousSequences == null || previousSequences.length <= slot ? 0 : previousSequences[slot];
             if (!ModuleRackMotion.starts(initial, previousMask, occupied, slot, oldSequence, sequence)) continue;
+            // An insertion that never became visible does not owe a phantom extraction.
+            if (extracting && previous != null && previous.waiting && !previous.extracting) {
+                entry.poses[slot] = null; continue;
+            }
+            double from = previous == null ? extracting ? 0 : ModuleRackMotion.TRAVEL_BLOCKS : previous.offset(frameTime);
             if (entry == null) { entry = new Entry(tile); ACTIVE.put(tile.getPos().toImmutable(), entry); }
-            // Packet occupancy is not an upload acknowledgement: a rapid
-            // remove/reinsert can still have its old face in the terrain VBO.
-            // Always wait for the empty-slot publication before sliding.
-            entry.poses[slot] = new Pose(sequence, frameTime, true);
+            // Wait for the terrain to remove its seated copy before either direction starts.
+            entry.poses[slot] = new Pose(sequence, frameTime, true, extracting, from);
         }
         if (entry == null) { tile.setRenderMask(occupied); return; }
         if (!entry.hasPoses()) { detach(mc, entry); ACTIVE.remove(tile.getPos()); tile.setRenderMask(occupied); return; }
@@ -179,9 +178,12 @@ public final class ModuleRackAnimation {
             for (int slot = 0; slot < 4; slot++) {
                 Pose pose = entry.poses[slot];
                 if (pose == null) continue;
-                if ((entry.tile.getOccupiedMask() & (1 << slot)) == 0
+                if (((entry.tile.getOccupiedMask() & (1 << slot)) == 0) != pose.extracting
                         || pose.sequence != entry.tile.getInsertionSequence(slot)) { entry.poses[slot] = null; continue; }
-                if (!pose.waiting && frameTime - pose.started >= ModuleRackMotion.DURATION_TICKS) pose.seated = true;
+                if (!pose.waiting && frameTime - pose.started >= ModuleRackMotion.DURATION_TICKS) {
+                    if (pose.extracting) entry.poses[slot] = null;
+                    else pose.seated = true;
+                }
             }
             entry.publish(mc);
             entry.acknowledge(mc);
@@ -227,8 +229,14 @@ public final class ModuleRackAnimation {
         final long sequence;
         double started;
         boolean waiting, seated;
-        Pose(long sequence, double started, boolean waiting) {
+        final boolean extracting; final double from;
+        Pose(long sequence, double started, boolean waiting, boolean extracting, double from) {
             this.sequence = sequence; this.started = started; this.waiting = waiting;
+            this.extracting = extracting; this.from = from;
+        }
+        double offset(double time) {
+            if (waiting) return from;
+            return ModuleRackMotion.between(time - started, from, extracting ? ModuleRackMotion.TRAVEL_BLOCKS : 0);
         }
     }
 
@@ -455,7 +463,7 @@ public final class ModuleRackAnimation {
                         if (pose == null || pose.waiting) continue;
                         ModuleRackModel.MovingMesh mesh = ModuleRackModel.movingMesh(entry.facing, slot);
                         if (mesh == null) continue;
-                        double offset = pose.seated ? 0 : ModuleRackMotion.offset(frameTime - pose.started);
+                        double offset = pose.seated ? 0 : pose.offset(frameTime);
                         mesh.draw(buffer, entry.facing.getFrontOffsetX() * offset, entry.facing.getFrontOffsetY() * offset,
                                 entry.facing.getFrontOffsetZ() * offset, light);
                         draws++;

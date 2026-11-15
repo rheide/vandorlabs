@@ -50,15 +50,16 @@ def main():
     shell = read(MODELS / 'shell.json')
     for name, axis, low, high in [('left_rim_1px', 0, 0, 1),
                                   ('top_rim_1px', 1, 15, 16),
-                                  ('bottom_rim_1px', 1, 0, 1)]:
+                                  ('bottom_rim_1px', 1, 0, 1),
+                                  ('right_rim_1px', 0, 15, 16)]:
         elements = named(shell, name)
         require(len(elements) == 1, 'missing exact rim ' + name)
         require(elements[0]['from'][axis] == low and elements[0]['to'][axis] == high,
                 'rim must be one Minecraft model pixel ' + name)
-    fascia = named(shell, 'fascia_3px_recessed_1px')
+    fascia = named(shell, 'fascia_2px_recessed_1px')
     require(len(fascia) == 1, 'missing recessed fascia')
-    require(fascia[0]['from'][0] == 13 and fascia[0]['to'][0] == 16 and fascia[0]['to'][2] == 15,
-            'fascia must be three pixels wide and one pixel behind the casing face')
+    require(fascia[0]['from'][0] == 13 and fascia[0]['to'][0] == 15 and fascia[0]['to'][2] == 15,
+            'fascia remains recessed inside the full-depth right rim')
     require(not any('card' in element.get('name', '') or 'reader' in element.get('name', '')
                     for element in shell['elements']), 'reader remains on requested plain slot-control panel')
     variants = read(ASSETS / 'blockstates/module_rack.json')['variants']
@@ -95,11 +96,14 @@ def main():
             require(a[2] > high[2] and b[2] <= 16, 'handle needs real finger gap within casing envelope')
         off = read(MODELS / ('indicator_%d_off.json' % slot))['elements']
         on = read(MODELS / ('indicator_%d_on.json' % slot))['elements']
-        require(len(off) == len(on) == 1, 'one slot button per row and state')
-        require(off[0]['from'] == on[0]['from'] and off[0]['to'] == on[0]['to'], 'indicator state shifts geometry')
-        a, b = on[0]['from'], on[0]['to']
-        require(13 <= a[0] < b[0] <= 16 and b[2] < 16, 'button must stay on recessed panel')
-        require(abs((a[1] + b[1]) / 2 - (low[1] + high[1]) / 2) < 1e-8, 'button not aligned with its slot')
+        require(len(off) == len(on) == 2, 'two tiny vertically stacked lights per row and state')
+        for before, after in zip(off, on):
+            require(before['from'] == after['from'] and before['to'] == after['to'], 'indicator state shifts geometry')
+            a, b = after['from'], after['to']
+            require(13 <= a[0] < b[0] <= 15 and b[2] < 16, 'lights stay inside recessed control strip')
+            require(abs((b[0] - a[0]) - (b[1] - a[1])) < 1e-8 and b[0] - a[0] <= 1,
+                    'rocker-style light is a tiny square')
+        require(on[0]['from'][1] > on[1]['to'][1], 'cyan light must sit above amber with a gap')
     for name in TEXTURE_NAMES:
         path = TEXTURES / (name + '.png')
         require(path.exists(), 'texture absent from packaged texture source: ' + name)
@@ -123,7 +127,7 @@ def main():
         bounds = gui_bounds(read(path))
         require(all(-7.5 < bound < 7.5 for bound in bounds), 'inventory icon lacks visible padding: ' + str(bounds))
         print(path.name + ' projected GUI bounds=' + repr(tuple(round(x, 3) for x in bounds)))
-    print('Module Rack assets PASS: 1px rim, 3px recessed fascia, four bays/buttons, vertical handles, '
+    print('Module Rack assets PASS: four full-depth 1px rims, 2px recessed strip, paired amber/cyan squares, vertical handles, '
           'six facings, texture dimensions, Dynmap mapping, source reproducibility; component face records=' + str(quads))
 
 

@@ -158,16 +158,51 @@
       }
     },
     {
-      "name": "fascia_3px_recessed_1px",
+      "name": "fascia_2px_recessed_1px",
       "from": [
         13,
         1,
         0
       ],
       "to": [
-        16,
+        15,
         15,
         15
+      ],
+      "shade": true,
+      "faces": {
+        "down": {
+          "texture": "#housing"
+        },
+        "up": {
+          "texture": "#housing"
+        },
+        "north": {
+          "texture": "#housing",
+          "cullface": "north"
+        },
+        "south": {
+          "texture": "#housing"
+        },
+        "west": {
+          "texture": "#housing"
+        },
+        "east": {
+          "texture": "#housing"
+        }
+      }
+    },
+    {
+      "name": "right_rim_1px",
+      "from": [
+        15,
+        1,
+        0
+      ],
+      "to": [
+        16,
+        15,
+        16
       ],
       "shade": true,
       "faces": {
@@ -298,14 +333,14 @@
     {
       "name": "button_socket_0",
       "from": [
-        13.375,
-        12.5,
+        13.75,
+        12.25,
         15
       ],
       "to": [
-        15.625,
-        14.0,
-        15.125
+        15,
+        14.25,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -332,14 +367,14 @@
     {
       "name": "button_socket_1",
       "from": [
-        13.375,
-        9.0,
+        13.75,
+        8.75,
         15
       ],
       "to": [
-        15.625,
-        10.5,
-        15.125
+        15,
+        10.75,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -366,14 +401,14 @@
     {
       "name": "button_socket_2",
       "from": [
-        13.375,
-        5.5,
+        13.75,
+        5.25,
         15
       ],
       "to": [
-        15.625,
-        7.0,
-        15.125
+        15,
+        7.25,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -400,14 +435,14 @@
     {
       "name": "button_socket_3",
       "from": [
-        13.375,
-        2.0,
+        13.75,
+        1.75,
         15
       ],
       "to": [
-        15.625,
-        3.5,
-        15.125
+        15,
+        3.75,
+        15.0625
       ],
       "shade": true,
       "faces": {
@@ -984,18 +1019,88 @@
       }
     },
     {
-      "name": "slot_0_indicator_off",
+      "name": "slot_0_cyan_top",
       "from": [
-        13.5,
-        12.625,
-        15.125
+        14,
+        13.4375,
+        15.0625
       ],
       "to": [
-        15.5,
-        13.875,
-        15.25
+        14.625,
+        14.0625,
+        15.1875
       ],
-      "shade": true,
+      "shade": false,
+      "faces": {
+        "down": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "slot_0_amber_bottom",
+      "from": [
+        14,
+        12.4375,
+        15.0625
+      ],
+      "to": [
+        14.625,
+        13.0625,
+        15.1875
+      ],
+      "shade": false,
       "faces": {
         "down": {
           "texture": "#indicators",
@@ -1054,18 +1159,88 @@
       }
     },
     {
-      "name": "slot_1_indicator_off",
+      "name": "slot_1_cyan_top",
       "from": [
-        13.5,
-        9.125,
-        15.125
+        14,
+        9.9375,
+        15.0625
       ],
       "to": [
-        15.5,
-        10.375,
-        15.25
+        14.625,
+        10.5625,
+        15.1875
       ],
-      "shade": true,
+      "shade": false,
+      "faces": {
+        "down": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "slot_1_amber_bottom",
+      "from": [
+        14,
+        8.9375,
+        15.0625
+      ],
+      "to": [
+        14.625,
+        9.5625,
+        15.1875
+      ],
+      "shade": false,
       "faces": {
         "down": {
           "texture": "#indicators",
@@ -1124,18 +1299,88 @@
       }
     },
     {
-      "name": "slot_2_indicator_off",
+      "name": "slot_2_cyan_top",
       "from": [
-        13.5,
-        5.625,
-        15.125
+        14,
+        6.4375,
+        15.0625
       ],
       "to": [
-        15.5,
-        6.875,
-        15.25
+        14.625,
+        7.0625,
+        15.1875
       ],
-      "shade": true,
+      "shade": false,
+      "faces": {
+        "down": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "slot_2_amber_bottom",
+      "from": [
+        14,
+        5.4375,
+        15.0625
+      ],
+      "to": [
+        14.625,
+        6.0625,
+        15.1875
+      ],
+      "shade": false,
       "faces": {
         "down": {
           "texture": "#indicators",
@@ -1194,18 +1439,88 @@
       }
     },
     {
-      "name": "slot_3_indicator_off",
+      "name": "slot_3_cyan_top",
       "from": [
-        13.5,
-        2.125,
-        15.125
+        14,
+        2.9375,
+        15.0625
       ],
       "to": [
-        15.5,
-        3.375,
-        15.25
+        14.625,
+        3.5625,
+        15.1875
       ],
-      "shade": true,
+      "shade": false,
+      "faces": {
+        "down": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#indicators",
+          "uv": [
+            8,
+            8,
+            16,
+            16
+          ]
+        }
+      }
+    },
+    {
+      "name": "slot_3_amber_bottom",
+      "from": [
+        14,
+        1.9375,
+        15.0625
+      ],
+      "to": [
+        14.625,
+        2.5625,
+        15.1875
+      ],
+      "shade": false,
       "faces": {
         "down": {
           "texture": "#indicators",

@@ -6,9 +6,9 @@ The Module Rack holds four **Blank Modules** in independently selectable horizon
 
 ## Use
 
-- Place the rack against any block face. Its open front faces out from the clicked surface: four wall directions, upward from a floor, or downward from a ceiling.
+- Place the rack against any block face. Its open front faces toward your view, using the same placement rule as Programmable Light. A shallow floor click faces you horizontally; looking steeply down or up places an upward- or downward-facing rack.
 - Hold a Blank Module and right-click the front of the intended bay. The module slides into that bay; the other bays remain unchanged.
-- Each row has its own cyan/amber buttons in the recessed right-hand panel. Their bright state indicates that the corresponding bay is occupied. A row's buttons select the same bay as its opening.
+- Each row has two tiny vertically stacked indicators in the recessed right-hand panel: bright cyan above for an occupied bay, or amber below for an empty bay. A row's buttons select the same bay as its opening.
 - Use an empty hand on an occupied bay or its buttons to retrieve its module. If the inventory cannot accept it, the module remains in the rack.
 - Breaking the rack releases its contained modules. Middle-clicking the rack picks the empty block, without duplicating the contents.
 
@@ -16,9 +16,11 @@ Insertion consumes one module in Survival. Creative insertion follows ordinary c
 
 ![A Blank Module sliding into the top bay, with the other three bays empty](images/module-rack/inserting.png)
 
+![An extracted module sliding outward while the remaining bays stay populated](images/module-rack/extracting.png)
+
 ## Shape and artwork
 
-The front is a 16 by 16 model-pixel square. The top, bottom and left rim are one pixel thick. The right panel is three pixels wide and sits one pixel behind the front of the casing; it has no card or chip mount. Four three-pixel-high module faces are separated by half-pixel rails, with quarter-pixel clearance above and below the group.
+The front is a 16 by 16 model-pixel square. The top, bottom, left and right rims are one pixel thick and reach the front of the casing. The two-pixel control strip inside the right rim stays recessed by one pixel; it has no card or chip mount. Four three-pixel-high module faces are separated by half-pixel rails, with quarter-pixel clearance above and below the group.
 
 The rack and modules use darker graphite-grey housing, restrained amber/cyan details, and raised vertical handles at both ends of each module face. The module body has side runners and rear contacts. The inventory item is a padded three-dimensional model of the same cassette.
 
@@ -34,7 +36,7 @@ One Blank Module requires three Iron Ingots, two Gold Nuggets and one Redstone D
 
 The casing, populated indicators and seated modules are ordinary opaque chunk geometry. Prepared quads are shared across equivalent rack states. Stationary racks have no tile-entity renderer and no ticking tile entity. Inventory contents are serialized for saves and actual interactions, never by the rendering loop.
 
-Insertion uses a temporary client animation. Only racks with active insertions enter that renderer. At the end of the slide, the module transfers to the chunk mesh after the replacement section has uploaded. Repeated state packets do not replay an insertion; loading an existing populated rack displays its seated modules immediately. The visual clock pauses with the game.
+Insertion and extraction use a temporary client animation. Only racks with an active slide enter that renderer. At the end of the slide, the module transfers to the chunk mesh after the replacement section has uploaded. Removing a seated module slides it outward, and rapid reversals retain the displayed offset. Repeated state packets do not replay a slide; loading an existing populated rack displays its seated modules immediately. The visual clock pauses with the game.
 
 The indicators do not emit world light. Their visual brightness changes with occupancy, avoiding a lighting update whenever a module is inserted or removed.
 
