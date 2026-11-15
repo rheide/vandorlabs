@@ -127,6 +127,8 @@ def main():
     atlas.extend(generate_rack(ROOT,OUT))
     from generate_table_resources import generate as generate_table
     atlas.extend(generate_table(ROOT,OUT))
+    from generate_surface_resources import generate as generate_surfaces
+    atlas.extend(generate_surfaces(ROOT,OUT))
     from generate_plate_resources import generate as generate_plate
     atlas.extend(generate_plate(ROOT,OUT))
     # Source-sized Screen item artwork is supplied by generateScreenItemResources.
