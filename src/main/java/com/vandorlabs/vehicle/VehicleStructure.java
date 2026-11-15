@@ -80,9 +80,9 @@ public final class VehicleStructure {
         NBTTagCompound tileFields(String[] names){NBTTagCompound result=new NBTTagCompound();if(tile!=null)for(String name:names)if(tile.hasKey(name))result.setTag(name,tile.getTag(name).copy());return result;}
 
         public boolean hasTileData(){return tile!=null;}
-        public boolean sameTileData(Cell other){return Objects.equals(tile,other.tile);}
+        public boolean sameTileData(Cell other){return com.vandorlabs.surface.TextureJoinMigration.same(tile,other.tile);}
         /** Compare private immutable data without exporting or decoding opaque provider envelopes. */
-        public boolean sameTileData(NBTTagCompound incoming){return Objects.equals(tile,incoming);}
+        public boolean sameTileData(NBTTagCompound incoming){return com.vandorlabs.surface.TextureJoinMigration.same(tile,incoming);}
         /** A root-only control delta cannot transfer native/captured arm ownership. */
         public boolean sameArmOwnership(NBTTagCompound incoming){
             if(tile==null||incoming==null)return tile==incoming;

@@ -33,13 +33,13 @@ final class CubeDialogRuntimeChecks {
         }else if(stage==5){check(mc,pos,true,2,-1,originalLayout);click(gui,124,0);pick(gui,4);
         }else if(stage==6){check(mc,pos,true,3,4,originalLayout);click(gui,106,1);
         }else if(stage==7){check(mc,pos,false,3,4,originalLayout);require(tile.getHousingTexture()==originalMain,"face editing changed main");click(gui,240,0);
-        }else if(stage==8){joinCheck(mc,pos,2,0);click(gui,241,0);
-        }else if(stage==9){joinCheck(mc,pos,2,1);click(gui,240,1);
-        }else if(stage==10){joinCheck(mc,pos,1,1);require(!button(gui,241).enabled,"On disables candidate filter without discarding it");click(gui,240,1);
-        }else if(stage==11){joinCheck(mc,pos,0,1);click(gui,240,0);click(gui,240,0);click(gui,241,1);
-        }else if(stage==12){joinCheck(mc,pos,2,0);click(gui,240,1);
-        }else if(stage==13){joinCheck(mc,pos,1,0);com.vandorlabs.network.MessageTextureJoin malformed=new com.vandorlabs.network.MessageTextureJoin();io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();try{bytes.writeLong(pos.toLong());bytes.writeByte(255);bytes.writeByte(0);malformed.fromBytes(bytes);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(malformed);}finally{bytes.release();}
-        }else if(stage==14){joinCheck(mc,pos,1,0);layout(mc,gui,tile);TextureJoinDialogRuntimeChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] cube-dialog-live PASS current Appearance row compact320 regular layout seven face tabs real left/right option clicks wheel/drag face/inherit packets stored disabled overrides NBT reload; directional join/parity C2S/S2C reverse cycling latent filter and malformed refusal");return true;}
+        }else if(stage==8){joinCheck(mc,pos,2,0);click(gui,240,1);
+        }else if(stage==9){joinCheck(mc,pos,1,0);click(gui,240,1);
+        }else if(stage==10){joinCheck(mc,pos,0,0);click(gui,240,0);click(gui,240,0);
+        }else if(stage==11){joinCheck(mc,pos,2,0);click(gui,240,0);click(gui,240,0);
+        }else if(stage==12){joinCheck(mc,pos,4,0);click(gui,240,0);
+        }else if(stage==13){joinCheck(mc,pos,5,0);for(int n=0;n<4;n++)click(gui,240,1);com.vandorlabs.network.MessageTextureJoin malformed=new com.vandorlabs.network.MessageTextureJoin();io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer();try{bytes.writeLong(pos.toLong());bytes.writeByte(255);bytes.writeByte(0);malformed.fromBytes(bytes);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(malformed);}finally{bytes.release();}
+        }else if(stage==14){joinCheck(mc,pos,1,0);layout(mc,gui,tile);TextureJoinDialogRuntimeChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] cube-dialog-live PASS current Appearance row compact320 regular layout seven face tabs real left/right option clicks wheel/drag face/inherit packets stored disabled overrides NBT reload; directional join C2S/S2C reverse cycling and malformed refusal");return true;}
         stage++;return false;
     }
     private static void joinCheck(Minecraft mc,BlockPos pos,int direction,int parity)throws Exception{
@@ -57,10 +57,10 @@ final class CubeDialogRuntimeChecks {
             gui.setWorldAndResolution(mc,size[0],size[1]);
             ProgrammableDialogLayout p=new ProgrammableDialogLayout(size[0],size[1]);
             ProgrammableBlockDialog.State state=new ProgrammableBlockDialog.State(tile.getHousingTexture(),tile.getMainTextureLayout(),tile.getFaceTextures().enabled,tile.getFaceTextures().choices(),-1);
-            GuiButton join=button(gui,240),parity=button(gui,241),done=button(gui,100);
-            require(join.displayString.equals(tile.textureJoin().directionLabel())&&parity.displayString.equals(tile.textureJoin().parityLabel()),"join captions");
-            require(parity.y>=join.y+join.height&&parity.y+parity.height<done.y,"join group stays above Done");
-            require(parity.enabled==tile.textureJoin().directional(),"coordinate filter only active for directional joins");
+            GuiButton join=button(gui,240),done=button(gui,100);
+            require(join.displayString.equals(tile.textureJoin().directionLabel()),"join caption");
+            require(join.y+join.height<done.y,"join row stays above Done");
+            java.lang.reflect.Field allButtons=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(GuiScreen.class,"buttonList","field_146292_n");for(Object candidate:(List<?>)allButtons.get(gui))require(((GuiButton)candidate).id!=241,"retired parity control absent");
             for(ProgrammableBlockDialog.Control c:ProgrammableBlockDialog.controls(p,state,"Done")){
                 GuiButton b=button(gui,c.id);require(b.x==c.x&&b.y==c.y&&b.width==c.width&&b.height==c.height,"actual widget bounds "+c.id);
                 require(b.displayString.equals(c.label),"actual widget label "+c.id+" "+b.displayString);

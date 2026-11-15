@@ -7,7 +7,7 @@ import net.minecraft.core.BlockPos;
 public final class NativeTextureJoins {
  public static boolean edge(TextureJoinOwner owner,BlockPos from,BlockPos next){return edge(owner.textureJoin(),from,next);}
  public static boolean edge(TextureJoinSettings policy,BlockPos from,BlockPos next){return policy.connects(from.getX(),from.getY(),from.getZ(),next.getX(),next.getY(),next.getZ());}
- public static boolean shareable(TextureJoinOwner root,java.util.Collection<? extends TextureJoinOwner> members){var policy=root.textureJoin();if(policy.direction==0||policy.directional()&&policy.parity!=0)return false;for(var member:members)if(member.textureJoin().direction!=policy.direction||policy.directional()&&member.textureJoin().parity!=0)return false;return true;}
+ public static boolean shareable(TextureJoinOwner root,java.util.Collection<? extends TextureJoinOwner> members){var policy=root.textureJoin();if(policy.direction==0)return false;for(var member:members)if(member.textureJoin().direction!=policy.direction)return false;return true;}
  public static boolean ordinary(TextureJoinOwner owner){return owner.textureJoin().direction==TextureJoinSettings.ALL;}
  public static boolean joined(net.minecraft.world.level.Level level,BlockPos from,BlockPos next){return level.hasChunkAt(from)&&level.getBlockEntity(from) instanceof TextureJoinOwner owner&&joined(level,from,next,owner.textureJoin());}
  public static boolean joined(net.minecraft.world.level.Level level,BlockPos from,BlockPos next,TextureJoinSettings rootPolicy){

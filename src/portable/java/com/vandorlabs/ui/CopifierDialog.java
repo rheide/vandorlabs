@@ -28,5 +28,11 @@ public final class CopifierDialog {
   result.add(new Control(UNDO,left+14,top+height()-28,132,18,"Undo last application",true,false));result.add(new Control(DONE,left+162,top+height()-28,96,18,done,true,false));return Collections.unmodifiableList(result);
  }
  public static boolean cycles(int id){return id==CONNECTED||id==IGNORE||id==RESPECT_JOINS||id>=OPTION_START&&id<OPTION_START+OPTIONS.length;}
+ public static String tooltip(int id){
+  if(id==CONNECTED)return "Apply to a connected group with the same block type and settings as the clicked block.";
+  if(id==RESPECT_JOINS)return "With Connected Matching Blocks on, follow actual joined texture neighbours instead of every touching matching block.";
+  if(id==IGNORE)return "When matching connected blocks, ignore placement facing, axis, rotation, hinge and half. Other settings must still match.";
+  return "";
+ }
  private CopifierDialog(){}
 }

@@ -127,6 +127,6 @@ public final class MovingBlockSupport {
             return;
         }
         if(carriedCapability){before.removeTag("ForgeCaps");after.removeTag("ForgeCaps");}
-        if(!before.equals(after))throw new IllegalArgumentException("Cannot preserve all block data for "+cell.state.getBlock().getRegistryName()+"; operation cancelled before changing the structure");
+        if(!com.vandorlabs.surface.TextureJoinMigration.same(before,after))throw new IllegalArgumentException("Cannot preserve all block data for "+cell.state.getBlock().getRegistryName()+"; operation cancelled before changing the structure");
     }
 }

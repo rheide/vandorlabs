@@ -13,6 +13,7 @@ public final class VehicleTileData {
 
     public static NBTTagCompound translated(NBTTagCompound source, BlockPos offset) {
         NBTTagCompound result=com.vandorlabs.redstone.TransmitterSlots.normalize(source.copy());
+        com.vandorlabs.surface.TextureJoinMigration.normalizeOwnedCopy(result);
         result.setInteger("x",source.getInteger("x")+offset.getX());
         result.setInteger("y",source.getInteger("y")+offset.getY());
         result.setInteger("z",source.getInteger("z")+offset.getZ());

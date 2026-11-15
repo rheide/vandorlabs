@@ -14,8 +14,8 @@ import java.util.*;
 /** UV seams on real chunk-model quads for every face, facing and layout. */
 final class JoinedHousingRuntimeChecks {
     static void run(Minecraft mc){
-        try{JoinedFitAppearanceChecks.run(mc);}catch(Exception failure){throw new IllegalStateException("Joined Fit vanilla appearance",failure);}
-        directional(mc);
+        try{tilesPicker();JoinedFitAppearanceChecks.run(mc);}catch(Exception failure){throw new IllegalStateException("Joined Fit vanilla appearance",failure);}
+        legacyParity(mc);directional(mc);
         int count=0;BlockPos base=new BlockPos(15,10,15);
         int texture=ScreenHousingTextures.screenIndex("corp/ashiro_logo");
         require(texture>0,"company logo fixture");
@@ -67,6 +67,33 @@ final class JoinedHousingRuntimeChecks {
         }
         System.out.println("[vandorlabs][reprolab] joined-block-textures PASS "+count+" real-model cases, six faces four facings, chunk borders, continuous UVs, Fit aspect and material splits");
     }
+    private static void tilesPicker()throws Exception{
+        HousingTextureList picker=new HousingTextureList(20,40,220,-1,20);
+        java.lang.reflect.Field categories=HousingTextureList.class.getDeclaredField("categories");categories.setAccessible(true);
+        List<?> labels=(List<?>)categories.get(picker);require(labels.contains("Tiles")&&!labels.contains("Floor"),"real picker uses Tiles category only");
+        require(picker.searchClick(25,47,0),"Tiles search focused");for(char c:"Tiles".toCharArray())picker.searchKey(c,0);
+        java.lang.reflect.Field rows=HousingTextureList.class.getDeclaredField("rows");rows.setAccessible(true);List<?> visible=(List<?>)rows.get(picker);
+        require(visible.size()==13,"Tiles search contains all thirteen supplied textures");for(Object choice:visible)require("Tiles".equals(ScreenHousingTextures.category((Integer)choice)),"Tiles search excludes other categories");
+        require(picker.click(35,73,0)&&"Tiles".equals(ScreenHousingTextures.category(picker.selected())),"real Tiles search row selected");
+        System.out.println("[vandorlabs][reprolab] tiles-picker PASS category rename thirteen rows actual search/click stable catalog IDs");
+    }
+    private static void legacyParity(Minecraft mc){
+        for(net.minecraft.block.Block block:new net.minecraft.block.Block[]{ModBlocks.PROGRAMMABLE_BLOCK,net.minecraft.block.Block.getBlockFromName("vandorlabs:programmable_glass")})for(int old:new int[]{1,2}){
+            IBlockState state=block.getDefaultState();BlockPos pos=new BlockPos(1,30,1);net.minecraft.tileentity.TileEntity seed=block.createTileEntity(mc.world,state);seed.setPos(pos);
+            NBTTagCompound raw=seed.writeToNBT(new NBTTagCompound());raw.setInteger("TextureJoinDirection",5);raw.setInteger("TextureJoinParity",old);NBTTagCompound opaque=new NBTTagCompound();opaque.setInteger("TextureJoinParity",old);opaque.setString("owner","external");raw.setTag("ForgeCaps",opaque.copy());
+            VehicleStructure structure=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(pos,state,raw)));NBTTagCompound saved=structure.write();saved.getTagList("Blocks",10).getCompoundTagAt(0).getCompoundTag("Tile").setInteger("TextureJoinParity",old);NBTTagCompound before=saved.copy();
+            VehicleStructure loaded=VehicleStructure.readDisplay(saved);VehicleWorld view=new VehicleWorld(mc.world,loaded);MovingBlockSupport.validate(loaded,view);
+            NBTTagCompound migrated=loaded.cells.get(0).tileData();require(migrated.getInteger("TextureJoinDirection")==5&&migrated.getInteger("TextureJoinParity")==old&&((com.vandorlabs.surface.TextureJoinOwner)view.getTileEntity(pos)).textureJoin().parity==0,"old saved palette retains raw policy while staged tile normalizes All");require(opaque.equals(migrated.getCompoundTag("ForgeCaps"))&&saved.equals(before),"old saved preimage and opaque capabilities unchanged");
+            NBTTagCompound payload=new NBTTagCompound();payload.setTag("Blocks",saved.copy());payload.setLong("Offset",0);payload.setLong("PlacedOffset",0);payload.setBoolean("Materialized",false);payload.setBoolean("GridAligned",true);
+            require(com.vandorlabs.gear.ArmPayload.read(payload).write().equals(payload),"actual nested old ArmPayload round trip keeps all original bytes/fields");
+            net.minecraft.block.Block armBlock=net.minecraft.block.Block.getBlockFromName("vandorlabs:gear_extender");net.minecraft.tileentity.TileEntity arm=armBlock.createTileEntity(mc.world,armBlock.getDefaultState());arm.setPos(pos);NBTTagCompound armTag=arm.writeToNBT(new NBTTagCompound());armTag.setTag("ArmPayload",payload.copy());
+            VehicleStructure outer=VehicleStructure.display(Collections.singletonList(new VehicleStructure.Cell(pos,armBlock.getDefaultState(),armTag)));VehicleStructure outerRead=VehicleStructure.readDisplay(outer.write());require(outerRead.cells.get(0).tileData().equals(armTag),"outer VehicleCell retains nested ArmPayload and capabilities exactly");
+            NBTTagCompound changed=raw.copy();changed.setInteger("TextureJoinParity",0);changed.getCompoundTag("ForgeCaps").setInteger("TextureJoinParity",99);require(!com.vandorlabs.surface.TextureJoinMigration.same(raw,changed),"unknown capability fields remain exact");
+            changed=raw.copy();changed.setInteger("TextureJoinParity",0);changed.setInteger("UnknownOwnField",1);require(!com.vandorlabs.surface.TextureJoinMigration.same(raw,changed),"unknown own edits remain refused");
+            NBTTagCompound moved=VehicleTileData.translated(raw,new BlockPos(5,0,0));require(moved.getInteger("TextureJoinParity")==0&&opaque.equals(moved.getCompoundTag("ForgeCaps"))&&raw.getInteger("TextureJoinParity")==old,"translation canonicalizes only known own field on a copy");
+        }
+        System.out.println("[vandorlabs][reprolab] legacy-join-parity PASS four saved palettes/actual carried strict preflight/opaque capabilities/original preimages");
+    }
     private static void directional(Minecraft mc){
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         IBlockState state=ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState();
@@ -81,12 +108,12 @@ final class JoinedHousingRuntimeChecks {
         for(int x:new int[]{3,2,3,2}){
             TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(x,30,20));
             HousingFaceLayouts.Plane plane=JoinedHousingFaces.sample(tile,63).face(EnumFacing.UP);int width=plane==null?1:plane.size(0);
-            require(width==(x==3?3:1),"owner-directed Even coordinate filter and cache isolation owner="+x+" width="+width);
+            require(width==9,"retired parity keeps directional joins and cache isolation owner="+x+" width="+width);
         }
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(new BlockPos(3,30,20));
         NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityAnimatedScreenSelector loaded=new TileEntityAnimatedScreenSelector();loaded.readFromNBT(saved);
-        require(loaded.textureJoin().direction==5&&loaded.textureJoin().parity==1,"direction/parity saved round trip");
-        System.out.println("[vandorlabs][reprolab] directional-joins PASS owner3-Even neighbors2/4 owner2-Even singleton mixed-neighbor filters cache-isolation persistence");
+        require(loaded.textureJoin().direction==5&&loaded.textureJoin().parity==0,"direction/parity saved round trip");
+        System.out.println("[vandorlabs][reprolab] directional-joins PASS legacyParityAll nine-cell cardinal span cache-isolation persistence");
     }
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("joined block textures: "+message);}
 }

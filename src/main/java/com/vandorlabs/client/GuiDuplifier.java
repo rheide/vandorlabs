@@ -105,6 +105,13 @@ public final class GuiDuplifier extends GuiContainer {
         fontRenderer.drawString("Choose which copied properties to apply", guiLeft + 14,
                 guiTop + 92, 0xFFB8C7D2);
     }
+    @Override public void drawScreen(int x,int y,float partial){
+        super.drawScreen(x,y,partial);
+        for(GuiButton button:buttonList)if(button.visible&&x>=button.x&&x<button.x+button.width&&y>=button.y&&y<button.y+button.height){
+            String tooltip=CopifierDialog.tooltip(button.id);
+            if(!tooltip.isEmpty())drawHoveringText(fontRenderer.listFormattedStringToWidth(tooltip,Math.min(300,width-30)),x,y);
+        }
+    }
     @Override protected void mouseClicked(int x,int y,int button)throws java.io.IOException {
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,java.util.stream.IntStream.concat(java.util.stream.IntStream.of(95,96,98),
                 java.util.stream.IntStream.range(OPTION_START,OPTION_START+DuplifierApplyOptions.OPTIONS.length)).toArray()))return;
