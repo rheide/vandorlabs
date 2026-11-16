@@ -31,8 +31,10 @@ final class NativeRampPlayerRecord {
    return refused("Player position is outside its operation receipt");
   }catch(RuntimeException failure){return refused("Player physical record is malformed");}
  }
- static CompoundTag returned(CompoundTag row,Optional<CompoundTag> before,NativeRampActorIntent.Participant actor,String dimension){
-  if(classify(Optional.of(row),before,actor,dimension).state()!=State.TRANSFERRED)throw new IllegalArgumentException("Player has no authenticated transferred position");
+ static Result classifyReturn(Optional<CompoundTag> current,Optional<CompoundTag> before,NativeRampActorIntent.Participant actor,String dimension){var result=classify(current,before,actor,dimension);if(result.state()!=State.REFUSED)return result;var reversed=new NativeRampActorIntent.Participant(actor.id(),actor.type(),actor.to(),actor.from(),actor.body().move(actor.to().subtract(actor.from())),actor.velocity(),actor.fall(),actor.ground(),actor.noPhysics(),actor.impulse(),actor.hurtMarked());return classify(current,before,reversed,dimension).state()==State.ORIGINAL?new Result(State.TRANSFERRED,""):result;}
+ static CompoundTag returned(CompoundTag row,Optional<CompoundTag> before,NativeRampActorIntent.Participant actor,String dimension){return returned(row,before,actor,dimension,false);}
+ static CompoundTag returned(CompoundTag row,Optional<CompoundTag> before,NativeRampActorIntent.Participant actor,String dimension,boolean returning){
+  if((returning?classifyReturn(Optional.of(row),before,actor,dimension):classify(Optional.of(row),before,actor,dimension)).state()!=State.TRANSFERRED)throw new IllegalArgumentException("Player has no authenticated transferred position");
   var result=row.copy();var position=new ListTag();position.add(DoubleTag.valueOf(actor.from().x));position.add(DoubleTag.valueOf(actor.from().y));position.add(DoubleTag.valueOf(actor.from().z));result.put("Pos",position);return result;
  }
  static void identity(CompoundTag row,UUID id,String dimension){if(!row.hasUUID("UUID")||!row.getUUID("UUID").equals(id)||!row.contains("Dimension",Tag.TAG_STRING)||!row.getString("Dimension").equals(dimension))throw new IllegalArgumentException("Player UUID or dimension differs from operation");}

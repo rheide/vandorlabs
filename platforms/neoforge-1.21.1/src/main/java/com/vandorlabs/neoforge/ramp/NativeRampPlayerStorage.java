@@ -12,8 +12,9 @@ import net.minecraft.nbt.*;
 final class NativeRampPlayerStorage {
  static final int BYTES=512*1024;
  private static final ThreadPoolExecutor IO=new ThreadPoolExecutor(1,1,30,TimeUnit.SECONDS,new ArrayBlockingQueue<>(1),task->{var thread=new Thread(task,"Vandor Ramp player repair");thread.setDaemon(true);return thread;},new ThreadPoolExecutor.AbortPolicy());
- static CompletableFuture<Void> repair(Path directory,NativeRampActorIntent intent,Map<UUID,Optional<CompoundTag>> receipts){
-  var result=new CompletableFuture<Void>();try{IO.execute(()->{try{NativeRampPlayerReceipts.repair(directory,intent,receipts);result.complete(null);}catch(Throwable failure){result.completeExceptionally(failure);}});}catch(RejectedExecutionException busy){result.completeExceptionally(new IOException("Ramp player repair queue is busy",busy));}return result;
+ static CompletableFuture<Void> repair(Path directory,NativeRampActorIntent intent,Map<UUID,Optional<CompoundTag>> receipts){return repair(directory,intent,receipts,false);}
+ static CompletableFuture<Void> repair(Path directory,NativeRampActorIntent intent,Map<UUID,Optional<CompoundTag>> receipts,boolean returning){
+  var result=new CompletableFuture<Void>();try{IO.execute(()->{try{NativeRampPlayerReceipts.repair(directory,intent,receipts,returning);result.complete(null);}catch(Throwable failure){result.completeExceptionally(failure);}});}catch(RejectedExecutionException busy){result.completeExceptionally(new IOException("Ramp player repair queue is busy",busy));}return result;
  }
  /** Null is bounded executor backpressure, never a rejected ownership action. */
  static CompletableFuture<Void> forceParticipants(Path directory,NativeRampActorIntent intent){
