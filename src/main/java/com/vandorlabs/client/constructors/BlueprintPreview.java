@@ -5,8 +5,8 @@ import net.minecraft.client.renderer.*;
 public final class BlueprintPreview {
  public static void draw(String blueprint,float centerX,float centerY,float width,float height,float angle){
   GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
-   GlStateManager.translate(centerX,centerY,.5);GlStateManager.scale(1,1,.005);GlStateManager.enableDepth();GlStateManager.depthMask(true);GlStateManager.rotate(17,1,0,0);
-   double scale=Math.min(width,height)*.85/Math.max(1,BuilderRecipePreview.extent(blueprint));GlStateManager.scale(scale,-scale,scale);BuilderRecipePreview.render(blueprint,angle);
+   GlStateManager.translate(centerX,centerY,.5);GlStateManager.scale(1,1,.005);GlStateManager.enableDepth();GlStateManager.depthMask(true);
+   double scale=Math.min(width,height)*.85/Math.max(1,BuilderRecipePreview.extent(blueprint));GlStateManager.scale(scale,-scale,scale);GlStateManager.rotate(17,1,0,0);BuilderRecipePreview.render(blueprint,angle);
   }finally{GlStateManager.popMatrix();}
  }
  private BlueprintPreview(){}
