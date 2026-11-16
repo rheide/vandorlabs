@@ -62,17 +62,20 @@ def generate(id,s):
         if id=='enclosed_gantry':
             if g.startswith('head__'):
                 # Half-size unit, attached at the new upper rail, with its
-                # bottom-center laser outlet at (2.5, 3.25, 1.21875).
-                points=[(2.5+(x-2.5)*.5,3.75+(y-2.8125)*.5,1.21875+(z-1.21875)*.5) for x,y,z in points]
+                # bottom-center laser outlet at (2.5, 3.25, 1.5625).
+                points=[(2.5+(x-2.5)*.5,3.75+(y-2.8125)*.5,1.5625+(z-1.21875)*.5) for x,y,z in points]
                 g='gantry_head'
             elif g=='static__overhead_beam':
-                points=[(x,y+1,z) for x,y,z in points];g='gantry_arm'
+                points=[(x,y+1,z+.34375) for x,y,z in points];g='gantry_arm'
             elif g in ('static__left_support','static__right_support'):
                 points=[(x,y if y<=1 else 1+(y-1)*1.5,z) for x,y,z in points]
             elif g.startswith('glass__'):
                 points=[(x,y+1 if y>2 else y,z) for x,y,z in points]
         if g.startswith('glass__'):quad(g,glass,points,[v[3:] for v in face['vertices']])
         else:panel(g,interior if g in ('gantry_head','gantry_arm','static__build_bed') else casing,points)
+    if id=='enclosed_gantry':
+        for i,x in enumerate((.625,4.375)):
+            box('static__gantry_travel_rail_'+str(i),interior,x-.0625,3.75,.5,x+.0625,3.875,2.625)
     if id=='assembly_press':
         emitter=mat('press_emitter','minecraft:blocks/concrete_green')
         for i,(x,z) in enumerate(((1.125,.4375),(3.125,.4375),(1.125,2.5),(3.125,2.5))):
