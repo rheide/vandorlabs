@@ -16,7 +16,7 @@ def main():
     def write(path,value):
         path.parent.mkdir(parents=True,exist_ok=True);path.write_text(json.dumps(value,indent=2)+'\n')
     def modern(reference):
-        return {'minecraft:blocks/concrete_black':'minecraft:block/black_concrete','minecraft:blocks/concrete_white':'minecraft:block/white_concrete'}.get(reference,reference.replace('minecraft:blocks/','minecraft:block/'))
+        return {'minecraft:blocks/concrete_black':'minecraft:block/black_concrete','minecraft:blocks/concrete_white':'minecraft:block/white_concrete','minecraft:blocks/concrete_green':'minecraft:block/green_concrete'}.get(reference,reference.replace('minecraft:blocks/','minecraft:block/'))
     def texture(reference):
         reference=modern(reference)
         if not reference.startswith('vandorlabs:'):return reference

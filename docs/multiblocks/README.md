@@ -6,7 +6,7 @@ Each guide shows successive stages captured in Minecraft. All frame machines reu
 | --- | --- | --- |
 | [Assembly Press](assembly-press/README.md) | 4 × 3 × 3 | 25 + one Core |
 | [Synthesis Tower](synthesis-tower/README.md) | 3 × 3 × 5 | 28 + one Core |
-| [Enclosed Gantry](enclosed-gantry/README.md) | 5 × 3 × 3 | 30 + one Core |
+| [Enclosed Gantry](enclosed-gantry/README.md) | 5 × 3 × 4 | 34 + one Core |
 | [Maxwell Drive](longburn-drive/README.md) | 3 × 4 × 3 | 25 + one Core |
 | [Seyr Meridian Drive](meridian-core/README.md) | 3 × 3 × 3 | 20 + one Core |
 | [Paladyne Navigation Computer](paladyne-navigation-computer/README.md) | 1 × 1 × 3 | 2 + one Core |

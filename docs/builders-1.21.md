@@ -14,7 +14,7 @@ stages as the illustrated guides:
 | --- | --- | --- | --- |
 | Synthesis Tower | 3 × 3 × 5 | 28 + one matching Core | [Tower guide](multiblocks/synthesis-tower/README.md) |
 | Assembly Press | 4 × 3 × 3 | 25 + one matching Core | [Press guide](multiblocks/assembly-press/README.md) |
-| Enclosed Gantry | 5 × 3 × 3 | 30 + one matching Core | [Gantry guide](multiblocks/enclosed-gantry/README.md) |
+| Enclosed Gantry | 5 × 3 × 4 | 34 + one matching Core | [Gantry guide](multiblocks/enclosed-gantry/README.md) |
 
 Place the Core in any bottom corner, facing a horizontal direction. Fill the
 bottom layer with Matter Blocks, raise the four corner pillars, and join their

@@ -40,6 +40,13 @@ d 1
 illum 1
 map_Kd vandorlabs:blocks/universal_constructor/synthesis_keyboard
 
+newmtl press_emitter
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_green
+
 newmtl rack_housing
 Ka 1 1 1
 Kd 1 1 1

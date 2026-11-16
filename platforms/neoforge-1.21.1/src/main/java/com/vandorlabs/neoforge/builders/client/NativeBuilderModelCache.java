@@ -35,7 +35,7 @@ public final class NativeBuilderModelCache {
     public static NativeBuilderModel rack(String name){return rackMeshes.get(name);}
     public static long retainedBytes(){return generation.bytes;}
     public static int width(String id){return switch(id){case "synthesis_tower"->3;case "assembly_press"->4;case "enclosed_gantry"->5;default->throw new IllegalArgumentException(id);};}
-    public static int height(String id){return id.equals("synthesis_tower")?5:3;}
+    public static int height(String id){return id.equals("synthesis_tower")?5:id.equals("enclosed_gantry")?4:3;}
     /** Centered, complete textured multiblock. Caller owns GUI/world screen projection and rotation. */
     public static void preview(String id,PoseStack poses,MultiBufferSource buffers,int light){
         if(!ready())return;poses.pushPose();try{poses.translate(-width(id)/2D,-height(id)/2D,-1.5);mesh(id,false).emit(poses.last(),buffers.getBuffer(LAYER),light,OverlayTexture.NO_OVERLAY);}finally{poses.popPose();}

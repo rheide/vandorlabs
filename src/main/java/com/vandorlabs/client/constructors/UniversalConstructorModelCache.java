@@ -48,6 +48,7 @@ public final class UniversalConstructorModelCache {
         installed = true;
         OBJLoader.INSTANCE.addDomain(DOMAIN);
         for(com.vandorlabs.blocks.FrameMachineDesign spec:com.vandorlabs.blocks.FrameMachineDesign.all()){
+            if(spec.design.equals("enclosed_gantry"))for(String path:new String[]{"static.obj","gantry_arm.obj","gantry_head.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
             String[] paths=spec.state_models!=null?spec.state_models:spec.hasChip()?new String[]{"complete.obj","active/complete.obj"}:new String[]{"complete.obj"};
             for(String path:paths)register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
             if(spec.motion!=null)for(String state:spec.state_models){

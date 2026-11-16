@@ -47,7 +47,7 @@
     "design": "enclosed_gantry",
     "block": "enclosed_gantry_core",
     "width": 5,
-    "height": 3,
+    "height": 4,
     "depth": 3,
     "model": "universal_constructor/enclosed_gantry",
     "chip_anchor": [

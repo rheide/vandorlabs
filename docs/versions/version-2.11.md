@@ -103,3 +103,14 @@ brightness track. Infuser, Synthesis Tower, Ramp, Port and Surface now share
 portable layout definitions between both versions. Other editors reuse their
 existing shared controls and the common skin; their remaining local geometry is
 recorded in the [dialog parity inventory](../development/native-dialog-parity.md).
+
+## Fabrication refinements
+
+Forge Press and Gantry jobs now take ten seconds at 40 RF/tick, retaining
+8,000 RF total. The Press builds flat items with green corner lasers; the
+Gantry moves its smaller head and rail over a blue fan beam. Both chambers
+allow completed-item pickup. The Gantry now needs a four-high frame with
+34 Matter Blocks and one Core; the former three-high frame is not supported.
+Native includes the revised structures; its production scope remains unchanged.
+Vehicle Chip previews use adaptive sub-block detail with explicit work and
+voxel budgets rather than one fixed thumbnail resolution.

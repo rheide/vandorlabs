@@ -1,14 +1,14 @@
 # Universal Constructors
 
-See the [step-by-step multiblock guides](multiblocks/README.md) for screenshots of each construction stage, including the newer drive and navigation computer assemblies that use the same frame system.
+See the [step-by-step multiblock guides](multiblocks/README.md) for illustrated construction stages, including the newer drive and navigation computer assemblies that use the same frame system.
 
-On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards and modules, and the Enclosed Gantry builds mechanical parts. Frame sizes and construction steps are unchanged. On NeoForge 1.21.1, only the Tower has production; the Press and Gantry retain structure-only behavior.
+On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards and modules, and the Enclosed Gantry builds mechanical parts. The Tower and Press retain their frames; the Gantry now uses a four-high frame. On NeoForge 1.21.1, only the Tower has production; the Press and Gantry retain structure-only behavior.
 
 | Core | Width x depth x total height | Matter Blocks + Core |
 | --- | --- | --- |
 | Assembly Press | 4 x 3 x 3 | 25 + 1 |
 | Synthesis Tower | 3 x 3 x 5 | 28 + 1 |
-| Enclosed Gantry | 5 x 3 x 3 | 30 + 1 |
+| Enclosed Gantry | 5 x 3 x 4 | 34 + 1 |
 
 Use exactly one matching Core; every `M` below must be a Programmable Matter Block, not another Core. Place the matching Core in **any bottom corner**, facing any horizontal direction. Fill the rest of the bottom layer with Programmable Matter Blocks. Build four corner pillars to the listed total height, counting the bottom layer, and connect their tops with a rectangular rim. Leave the interior empty, including the middle of the roof. The footprint can run along either horizontal axis; the Core detects it automatically and prefers its placed facing when that facing fits.
 
@@ -102,11 +102,15 @@ Right-click or use the Configurizer on a formed member to open the same editor.
 The rear-bottom right corner accepts RF on its back and bottom; the rear-bottom
 left accepts ingredients on its back and outputs on its left and bottom.
 
-Each job consumes **one ingredient and 8,000 RF**, at **20 RF/tick for 400 ticks**.
+Each Press or Gantry job consumes **one ingredient and 8,000 RF**, at
+**40 RF/tick for 200 ticks** (ten seconds). The Tower remains at 20 RF/tick
+for 400 ticks.
 The Press takes **Programmable Matter Ingots**; the Gantry takes **Programmable
 Matter Blocks**. Their front displays show the selected output, with lower
-keyboards, fitted chip mounts and flush racks. Their chambers have no new
-fabrication animation.
+keyboards, fitted chip mounts and flush racks. The Press prints items lying flat under four green scanning lasers.
+The Gantry prints blocks beneath a moving head and rail with a blue fan-shaped
+scanning beam. Effects stop when work pauses or RF runs out. Click a finished
+item in either chamber to collect it, or use the dialog/adjacent output.
 
 | Builder | Designs available without a Catalog Chip | Master Catalog additions |
 | --- | --- | --- |

@@ -4,6 +4,11 @@
 
 ### Catalogs and Forge builder production
 
+- Double Press/Gantry build speed to 200 ticks at 40 RF/tick, retaining 8,000 RF per job; keep Tower timing unchanged. Label inputs Block/Ingot and explain the required Matter ingredient in slot tooltips.
+- Fit previews to actual transformed item geometry. Tile grey casing, remove the Press hood and add flat item fabrication with green corner beams and Matter-colored interior voxels.
+- Raise the Gantry frame to four blocks (34 Matter Blocks and one Core), halve its head and animate the head/rail over printed blocks with a blue fan beam. Allow finished chamber-item pickup. The previous three-high frame is no longer supported.
+- Adapt Vehicle Chip preview density toward eight voxels per block per axis, reducing detail to fixed voxel, surface-work and cache budgets for large models.
+
 - Increase saved Vehicle Chip preview sampling from 12³ to 15³ cells and color voxels from their represented block materials. Cache thumbnails and material colors; keep legacy occupancy-only chips readable.
 
 - Widen builder dialogs with a full-height design list, selected-design preview heading, right-column inventory, vertical module slots and a shared top row with exact combined-RF tooltips. Use the same responsive layout in both versions. Correct Catalog Chip previews to view models from above.
