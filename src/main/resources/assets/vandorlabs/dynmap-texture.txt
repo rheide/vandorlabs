@@ -21444,25 +21444,25 @@ block:id=%impulse_engine_hexagonal,state=*,patch0=0:hexnative_0,patch1=0:hexnati
 # End joined hexagonal propulsion models
 
 # Generated Core machine maps
-texture:id=frame_machine_0,filename=assets/vandorlabs/textures/blocks/universal_constructor/assembly_press.png,xcount=1,ycount=1
-texture:id=frame_machine_1,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_tower.png,xcount=1,ycount=1
-texture:id=frame_machine_2,filename=assets/vandorlabs/textures/blocks/resource_ports/port_hull.png,xcount=1,ycount=1
-texture:id=frame_machine_3,filename=assets/minecraft/textures/blocks/iron_block.png,xcount=1,ycount=1
+texture:id=frame_machine_0,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_casing.png,xcount=1,ycount=1
+texture:id=frame_machine_1,filename=assets/vandorlabs/textures/blocks/frames/frames-door-window/door_interior_dark_rail.png,xcount=1,ycount=1
+texture:id=frame_machine_2,filename=assets/vandorlabs/textures/blocks/universal_constructor/assembly_press.png,xcount=1,ycount=1
+texture:id=frame_machine_3,filename=assets/vandorlabs/textures/blocks/resource_ports/port_hull.png,xcount=1,ycount=1
 texture:id=frame_machine_4,filename=assets/minecraft/textures/blocks/concrete_black.png,xcount=1,ycount=1
-texture:id=frame_machine_5,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_casing.png,xcount=1,ycount=1
-texture:id=frame_machine_6,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_service.png,xcount=1,ycount=1
-texture:id=frame_machine_7,filename=assets/vandorlabs/textures/blocks/frames/frames-door-window/door_interior_dark_rail.png,xcount=1,ycount=1
-texture:id=frame_machine_8,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_keyboard.png,xcount=1,ycount=1
-texture:id=frame_machine_9,filename=assets/vandorlabs/textures/blocks/module_rack/housing.png,xcount=1,ycount=1
-texture:id=frame_machine_10,filename=assets/vandorlabs/textures/blocks/module_rack/module.png,xcount=1,ycount=1
-texture:id=frame_machine_11,filename=assets/vandorlabs/textures/blocks/module_rack/trim.png,xcount=1,ycount=1
-texture:id=frame_machine_12,filename=assets/vandorlabs/textures/blocks/module_rack/dark.png,xcount=1,ycount=1
-texture:id=frame_machine_13,filename=assets/vandorlabs/textures/blocks/module_rack/indicators.png,xcount=1,ycount=1
-texture:id=frame_machine_14,filename=assets/vandorlabs/textures/blocks/module_rack/contacts.png,xcount=1,ycount=1
-texture:id=frame_machine_15,filename=assets/vandorlabs/textures/blocks/programmable_glass/door_side.png,xcount=1,ycount=1
-texture:id=frame_machine_16,filename=assets/vandorlabs/textures/blocks/resource_ports/matter_in_off.png,xcount=1,ycount=1
-texture:id=frame_machine_17,filename=assets/vandorlabs/textures/blocks/resource_ports/matter_out_off.png,xcount=1,ycount=1
-texture:id=frame_machine_18,filename=assets/vandorlabs/textures/blocks/resource_ports/power_in_off.png,xcount=1,ycount=1
+texture:id=frame_machine_5,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_keyboard.png,xcount=1,ycount=1
+texture:id=frame_machine_6,filename=assets/vandorlabs/textures/blocks/module_rack/housing.png,xcount=1,ycount=1
+texture:id=frame_machine_7,filename=assets/vandorlabs/textures/blocks/module_rack/module.png,xcount=1,ycount=1
+texture:id=frame_machine_8,filename=assets/vandorlabs/textures/blocks/module_rack/trim.png,xcount=1,ycount=1
+texture:id=frame_machine_9,filename=assets/vandorlabs/textures/blocks/module_rack/dark.png,xcount=1,ycount=1
+texture:id=frame_machine_10,filename=assets/vandorlabs/textures/blocks/module_rack/indicators.png,xcount=1,ycount=1
+texture:id=frame_machine_11,filename=assets/vandorlabs/textures/blocks/module_rack/contacts.png,xcount=1,ycount=1
+texture:id=frame_machine_12,filename=assets/vandorlabs/textures/blocks/programmable_glass/door_side.png,xcount=1,ycount=1
+texture:id=frame_machine_13,filename=assets/vandorlabs/textures/blocks/resource_ports/power_in_off.png,xcount=1,ycount=1
+texture:id=frame_machine_14,filename=assets/vandorlabs/textures/blocks/resource_ports/matter_in_off.png,xcount=1,ycount=1
+texture:id=frame_machine_15,filename=assets/vandorlabs/textures/blocks/resource_ports/matter_out_off.png,xcount=1,ycount=1
+texture:id=frame_machine_16,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_tower.png,xcount=1,ycount=1
+texture:id=frame_machine_17,filename=assets/minecraft/textures/blocks/iron_block.png,xcount=1,ycount=1
+texture:id=frame_machine_18,filename=assets/vandorlabs/textures/blocks/universal_constructor/synthesis_service.png,xcount=1,ycount=1
 texture:id=frame_machine_19,filename=assets/vandorlabs/textures/blocks/universal_constructor/enclosed_gantry.png,xcount=1,ycount=1
 texture:id=frame_machine_20,filename=assets/vandorlabs/textures/blocks/longburn_drive/longburn_drive_idle.png,xcount=1,ycount=1
 texture:id=frame_machine_21,filename=assets/vandorlabs/textures/blocks/thrusters/rocket_stream.png,xcount=1,ycount=1
