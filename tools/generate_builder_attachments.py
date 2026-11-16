@@ -38,19 +38,56 @@ def generate(id,s):
         orientation=[(1 if p[u]>lo[u]+1e-8 else 0,1 if p[v]>lo[v]+1e-8 else 0) for p in points]
         for a,b in zip(us,us[1:]):
             for c,d in zip(vs,vs[1:]):
-                # Frame artwork is one native panel per block. The continuous
-                # grey interior texture repeats twice per block, never stretches
-                # over a whole wall, and never samples outside its atlas sprite.
-                tile_material=interior if material==casing and (b-a<1-1e-8 or d-c<1-1e-8) else material
-                period=.5 if tile_material==interior else 1
-                aa,cc=cuts(a,b,period),cuts(c,d,period)
-                for A,B in zip(aa,aa[1:]):
-                    for C,D in zip(cc,cc[1:]):
+                # Door-interior material caps every horizontal wall/roof edge.
+                # Vertical faces retain Tower frames down to half-block panels;
+                # smaller returns use the continuous tiled interior material.
+                framed=material==casing and axis!=1 and min(b-a,d-c)>=.5-1e-8
+                tile_material=casing if framed else interior if material==casing else material
+                def framed_slices(lo,hi):
+                    pixels=round((hi-lo)*64)
+                    if pixels>=64:return [(lo,hi,0,1)]
+                    # Same 12-texel fastener bands as Tower side panels. Remove
+                    # only center pixels, preserving the authored pixel density.
+                    return [(lo,lo+12/64,0,12/64),(lo+12/64,hi-12/64,(88-pixels)/128,(40+pixels)/128),(hi-12/64,hi,52/64,1)]
+                if framed:
+                    uu,vv=framed_slices(a,b),framed_slices(c,d)
+                else:
+                    period=.5 if tile_material==interior else 1
+                    def tiled_slices(lo,hi):
+                        edges=cuts(lo,hi,period)
+                        return [(A,B,(A-math.floor(A/period)*period)/period,(B-math.floor(A/period)*period)/period) for A,B in zip(edges,edges[1:])]
+                    uu,vv=tiled_slices(a,b),tiled_slices(c,d)
+                for A,B,U0,U1 in uu:
+                    for C,D,V0,V1 in vv:
                         pts=[];uv=[]
                         for iu,iv in orientation:
                             p=[0,0,0];p[axis]=base;p[u]=B if iu else A;p[v]=D if iv else C;pts.append(p)
-                            uv.append(((p[u]-math.floor(A/period)*period)/period,(p[v]-math.floor(C/period)*period)/period))
+                            uv.append((U1 if iu else U0,V1 if iv else V0))
                         quad(group,tile_material,pts,uv)
+    seen_glass=set()
+    def glass_panel(group,points,uv):
+        # Both renderers use two-sided geometry. Legacy shells contained two
+        # opposite-winding copies at identical positions, including roof edges.
+        identity=(group,tuple(sorted(tuple(p) for p in points)))
+        if identity in seen_glass:return
+        seen_glass.add(identity)
+        if id!='enclosed_gantry' or group not in ('glass__chamber_left_glass','glass__chamber_right_glass'):
+            quad(group,glass,points,uv);return
+        # Travel rails actually occupy these side-pane rectangles. Remove the
+        # hidden glass band rather than shifting either surface by an epsilon.
+        axis=0;u,v=2,1;base=points[0][axis]
+        lo=[min(p[a] for p in points) for a in range(3)];hi=[max(p[a] for p in points) for a in range(3)]
+        bands=[(lo[v],min(hi[v],3.75)),(max(lo[v],3.875),hi[v])]
+        orientation=[(int(p[u]>lo[u]),int(p[v]>lo[v])) for p in points]
+        corners={key:value for key,value in zip(orientation,uv)}
+        for bottom,top in bands:
+            if top<=bottom:continue
+            pts=[];tex=[]
+            for iu,iv in orientation:
+                y=top if iv else bottom;p=[0,0,0];p[axis]=base;p[u]=hi[u] if iu else lo[u];p[v]=y;pts.append(p)
+                amount=(y-lo[v])/(hi[v]-lo[v]);low=corners[(iu,0)];high=corners[(iu,1)]
+                tex.append(tuple(A+(B-A)*amount for A,B in zip(low,high)))
+            quad(group,glass,pts,tex)
     def box(group,material,x,y,z,X,Y,Z,skip=()):
         faces={'north':[(x,Y,z),(X,Y,z),(X,y,z),(x,y,z)],'south':[(X,Y,Z),(x,Y,Z),(x,y,Z),(X,y,Z)],'west':[(x,Y,Z),(x,Y,z),(x,y,z),(x,y,Z)],'east':[(X,Y,z),(X,Y,Z),(X,y,Z),(X,y,z)],'up':[(x,Y,z),(x,Y,Z),(X,Y,Z),(X,Y,z)],'down':[(x,y,Z),(x,y,z),(X,y,z),(X,y,Z)]}
         for name,pts in faces.items():
@@ -71,7 +108,7 @@ def generate(id,s):
                 points=[(x,y if y<=1 else 1+(y-1)*1.5,z) for x,y,z in points]
             elif g.startswith('glass__'):
                 points=[(x,y+1 if y>2 else y,z) for x,y,z in points]
-        if g.startswith('glass__'):quad(g,glass,points,[v[3:] for v in face['vertices']])
+        if g.startswith('glass__'):glass_panel(g,points,[v[3:] for v in face['vertices']])
         else:panel(g,interior if g in ('gantry_head','gantry_arm','static__build_bed') else casing,points)
     if id=='enclosed_gantry':
         for i,x in enumerate((.625,4.375)):
@@ -79,7 +116,7 @@ def generate(id,s):
     if id=='assembly_press':
         emitter=mat('press_emitter','minecraft:blocks/concrete_green')
         for i,(x,z) in enumerate(((1.125,.4375),(3.125,.4375),(1.125,2.5),(3.125,2.5))):
-            box('static__laser_housing_'+str(i),interior,x-.0625,2.4375,z-.0625,x+.0625,2.625,z+.0625,skip=('down',))
+            box('static__laser_housing_'+str(i),interior,x-.0625,2.4375,z-.0625,x+.0625,2.625,z+.0625,skip=('down','up'))
             quad('static__laser_aperture_'+str(i),emitter,[(x-.03125,2.4375,z+.03125),(x-.03125,2.4375,z-.03125),(x+.03125,2.4375,z-.03125),(x+.03125,2.4375,z+.03125)])
     w=int(s['width']);depth=int(s['depth'])
     # Replace the old stretched plinth. The flush rack owns its entire front,
