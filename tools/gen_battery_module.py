@@ -15,7 +15,7 @@ BASE=ROOT/'src/main/resources/assets/vandorlabs/models/block/module_rack'
 for name in ['blank_module']+['slot_'+str(i) for i in range(4)]+['slot_seated_'+str(i) for i in range(4)]:
     source=json.loads((BASE/(name+'.json')).read_text())
     for level in range(5):
-        data=json.loads(json.dumps(source));body=data['elements'][0];y=body['from'][1];z=body['to'][2]+.025
+        data=json.loads(json.dumps(source));body=next(part for part in data['elements'] if part.get('name')=='cassette_body');y=body['from'][1];z=body['to'][2]+.025
         data['textures']['power']='vandorlabs:blocks/resource_ports/power_in_icon'
         data['textures']['green']='minecraft:blocks/emerald_block'
         def rect(label,x1,y1,x2,y2,texture,uv):

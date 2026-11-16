@@ -54,6 +54,11 @@ def main():
         require(bounds[0]>-8 and bounds[1]<8 and bounds[2]>-8 and bounds[3]<8,'padded battery module item variant')
         require(len([part for part in battery['elements'] if part['name'].startswith('power_lightning_')])==4,'battery identifying lightning')
         require(sum(part['faces']['south']['texture']=='#green' for part in battery['elements'] if part['name'].startswith('charge_'))==level,'battery charge segment progression')
+    for path in MODELS.glob('*battery*_[0-4].json'):
+        battery=read(path);body=named(battery,'cassette_body')[0]
+        for part in battery['elements']:
+            if part['name'].startswith(('power_lightning_','charge_')):
+                require(part['from'][2]>body['to'][2], 'battery artwork hidden behind cassette front: '+path.name)
     shell = read(MODELS / 'shell.json')
     for name, axis, low, high in [('left_rim_1px', 0, 0, 1),
                                   ('top_rim_1px', 1, 15, 16),
