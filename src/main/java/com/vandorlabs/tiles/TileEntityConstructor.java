@@ -40,7 +40,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public boolean synthesisReady(){return synthesisInputsReady;}
     public boolean working(){return synthesisRuntime.working();}
     public boolean synthesisWorking(){return working();}
-    public void synthesisSlotChanged(int slot){if(slot>=2&&slot<6)batterySequences[slot-2]++;synthesisChanged();if(slot>=2&&slot<6)publishSynthesisVisual();}
+    public void synthesisSlotChanged(int slot){if(world!=null&&world.isRemote)return;if(readingSynthesis)return;if(slot>=2&&slot<6)batterySequences[slot-2]++;synthesisChanged();if(slot>=2&&slot<6)publishSynthesisVisual();}
     public void selectDesign(int design){if(authoritative()&&formed()&&synthesis())synthesisRuntime.select(design);}
     public void synthesisChanged(){markDirty();synthesisSync=true;}
     private int synthesisActivation;

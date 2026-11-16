@@ -16,6 +16,9 @@ for name in ['blank_module']+['slot_'+str(i) for i in range(4)]+['slot_seated_'+
     source=json.loads((BASE/(name+'.json')).read_text())
     for level in range(5):
         data=json.loads(json.dumps(source));body=next(part for part in data['elements'] if part.get('name')=='cassette_body');y=body['from'][1];z=body['to'][2]+.025
+        # Battery fronts are plain casing: do not inherit the blank cassette's cyan/amber artwork.
+        body['faces']['south']['texture']='#dark'
+        body['faces']['south']['uv']=[0,0,16,16]
         data['textures']['bar_off']='vandorlabs:blocks/resource_ports/power_in_off'
         data['textures']['bar_on']='vandorlabs:blocks/resource_ports/power_in_on'
         def rect(label,x1,y1,x2,y2,texture,uv,depth=z):

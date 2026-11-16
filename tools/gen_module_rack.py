@@ -205,13 +205,9 @@ def seated_cassette(slot):
 
 
 def indicator(slot, on):
-    center = 13.25 - slot * 3.5
-    parts = []
-    for name, y, uv in (("cyan_top", center + .1875, [8, 0 if on else 8, 16, 8 if on else 16]),
-                        ("amber_bottom", center - .8125, [0, 8 if on else 0, 8, 16 if on else 8])):
-        parts.append(box("slot_%d_%s" % (slot, name), [14, y, 15.0625],
-                         [14.625, y + .625, 15.1875], "indicators", uv, shade=False))
-    return model(parts)
+    # The rack fascia carries no decorative cyan/amber status bars.
+    # Retain the model IDs so old block/item references remain valid.
+    return model([])
 
 
 def autopilot_model(elements, bottom):

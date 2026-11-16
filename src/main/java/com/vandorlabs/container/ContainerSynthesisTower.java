@@ -15,11 +15,14 @@ public final class ContainerSynthesisTower extends Container {
             (listener,id,value)->listener.sendWindowProperty(this,id,value));
     public ContainerSynthesisTower(InventoryPlayer player,TileEntityConstructor tile){
         this.tile=tile;
-        addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),0,28,190));
-        addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),1,118,190){@Override public boolean isItemValid(ItemStack stack){return false;}});
-        addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),2,208,190));
-        addSlotToContainer(new Slot(tile,0,298,190));
-        for(int bay=1;bay<4;bay++)addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),2+bay,208+bay*18,190));
+        // Window slot packets must never mutate the world-render snapshot or its insertion sequences.
+        net.minecraftforge.items.IItemHandler slots=player.player.world.isRemote?new net.minecraftforge.items.ItemStackHandler(6):tile.synthesisInventory();
+        IInventory chip=player.player.world.isRemote?new InventoryBasic("",false,1):tile;
+        addSlotToContainer(new SlotItemHandler(slots,0,28,190));
+        addSlotToContainer(new SlotItemHandler(slots,1,118,190){@Override public boolean isItemValid(ItemStack stack){return false;}});
+        addSlotToContainer(new SlotItemHandler(slots,2,208,190));
+        addSlotToContainer(new Slot(chip,0,298,190));
+        for(int bay=1;bay<4;bay++)addSlotToContainer(new SlotItemHandler(slots,2+bay,208+bay*18,190));
         for(int row=0;row<3;row++)for(int col=0;col<9;col++)addSlotToContainer(new Slot(player,col+row*9+9,100+col*18,224+row*18));
         for(int col=0;col<9;col++)addSlotToContainer(new Slot(player,col,100+col*18,282));
         com.vandorlabs.ui.SynthesisDialog.Layout layout=new com.vandorlabs.ui.SynthesisDialog.Layout(false);for(int i=0;i<inventorySlots.size();i++){inventorySlots.get(i).xPos=layout.slotX(i);inventorySlots.get(i).yPos=layout.slotY(i);}
