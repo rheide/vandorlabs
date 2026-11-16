@@ -1,5 +1,5 @@
 """Validate imported machine mesh bounds, materials, animations and state coverage."""
-import json,math,sys,io
+import json,math,sys,io,os
 from zipfile import ZipFile
 from pathlib import Path
 from PIL import Image
@@ -7,6 +7,32 @@ from PIL import Image
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
 TEX=ROOT/'texture-packs/additional/assets/vandorlabs/textures'
+# Native attachments deliberately reuse vanilla atlas sprites. Validate those
+# against the actual 1.12.2 client resources rather than accepting a namespace.
+VANILLA_CACHE={}
+def texture_source(reference):
+    namespace,path=reference.split(':',1)
+    assert path and not path.startswith('/') and '..' not in Path(path).parts,reference
+    if namespace=='vandorlabs':
+        texture=next((base/(path+'.png') for base in (TEX,ROOT/'texture-packs/default/assets/vandorlabs/textures',ASSETS/'textures') if (base/(path+'.png')).is_file()),None)
+        assert texture,('missing Vandor material',reference)
+        metadata=texture.with_suffix('.png.mcmeta')
+        return texture.read_bytes(),metadata.read_bytes() if metadata.is_file() else None
+    assert namespace=='minecraft',('unsupported material namespace',reference)
+    if reference not in VANILLA_CACHE:
+        gradle=Path(os.environ.get('GRADLE_USER_HOME',Path.home()/'.gradle'))
+        candidates=[Path(os.environ['VANDOR_LABS_MINECRAFT_ASSET_JAR'])] if os.environ.get('VANDOR_LABS_MINECRAFT_ASSET_JAR') else [
+            gradle/'caches/forge_gradle/mcp_repo/de/oceanlabs/mcp/mcp_config/1.12.2/joined/downloadClient/client.jar',
+            gradle/'caches/minecraft/net/minecraft/minecraft_merged/1.12.2/minecraft_merged-1.12.2.jar',
+            Path.home()/'.minecraft/versions/1.12.2/1.12.2.jar']
+        source=next((candidate for candidate in candidates if candidate.is_file()),None)
+        assert source,('Minecraft 1.12.2 client asset JAR required; set VANDOR_LABS_MINECRAFT_ASSET_JAR',reference)
+        with ZipFile(source) as archive:
+            member='assets/minecraft/textures/'+path+'.png'
+            assert member in archive.namelist(),(source,member)
+            metadata=member+'.mcmeta'
+            VANILLA_CACHE[reference]=(archive.read(member),archive.read(metadata) if metadata in archive.namelist() else None)
+    return VANILLA_CACHE[reference]
 specs=json.loads((ASSETS/'data/frame_machines.json').read_text())
 models=0;animations=0
 for spec in specs:
@@ -30,12 +56,12 @@ for spec in specs:
         mtl=(obj.parent/'materials.mtl').read_text();assert 'mctrek:' not in mtl
         for line in mtl.splitlines():
             if not line.startswith('map_Kd '):continue
-            texture=TEX/(line.split('vandorlabs:',1)[1]+'.png');assert texture.is_file(),texture
-            with Image.open(texture) as image:
-                assert image.width<=256 and image.height%image.width==0,texture
-                metadata=texture.with_suffix('.png.mcmeta')
+            reference=line.split(None,1)[1].strip();pixels,metadata=texture_source(reference)
+            with Image.open(io.BytesIO(pixels)) as image:
+                assert image.width<=256 and image.height%image.width==0,reference
                 if image.height!=image.width:
-                    animation=json.loads(metadata.read_text())['animation'];assert animation['frametime']>0
+                    assert metadata,('missing animation metadata',reference)
+                    animation=json.loads(metadata)['animation'];assert animation['frametime']>0
                     assert all(0<=int(frame)<image.height//image.width for frame in animation['frames']);animations+=1
         models+=1
     core=json.loads((ASSETS/'models/item'/(spec['block']+'.json')).read_text())

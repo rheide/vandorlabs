@@ -6,3 +6,115 @@ Ks 0.0 0.0 0.0
 d 1.0
 illum 1
 map_Kd vandorlabs:blocks/universal_constructor/synthesis_tower
+
+newmtl hull
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/port_hull
+
+newmtl bezel
+Ka 1 1 1
+Kd 0.45 0.55 0.60
+d 1
+illum 1
+map_Kd minecraft:blocks/iron_block
+
+newmtl screen
+Ka 1 1 1
+Kd 0.10 0.15 0.20
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_black
+# Generated native attachments
+newmtl synth_rack_housing
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/housing
+
+newmtl synth_rack_module
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/module
+
+newmtl synth_rack_trim
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/trim
+
+newmtl synth_rack_dark
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/dark
+
+newmtl synth_rack_indicators
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/indicators
+
+newmtl synth_rack_contacts
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/contacts
+
+newmtl synth_rack_particle
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/housing
+
+newmtl synth_chip_particle
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/programmable_glass/door_side
+
+newmtl synth_chip_metal
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/programmable_glass/door_side
+
+newmtl synth_chip_dark
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_black
+
+newmtl synth_port_matter_in_off
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/matter_in_off
+
+newmtl synth_port_matter_out_off
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/matter_out_off
+
+newmtl synth_port_power_in_off
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/power_in_off

@@ -116,10 +116,12 @@ public final class ItemConfigurizer extends Item {
         if(state.getBlock() instanceof com.vandorlabs.segmented.SegmentedDoorBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);com.vandorlabs.segmented.SegmentedDoorBlock.configure(event.getEntityPlayer(),world,pos);return;}
         TileEntity tile = world.getTileEntity(pos);
         if(tile instanceof com.vandorlabs.ports.ResourcePortTile){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);com.vandorlabs.ports.ResourcePorts.open(event.getEntityPlayer(),world,pos);return;}
+        if(tile instanceof com.vandorlabs.tiles.TileEntityConstructorPart){BlockPos owner=((com.vandorlabs.tiles.TileEntityConstructorPart)tile).owner();if(world.isBlockLoaded(owner)){TileEntity root=world.getTileEntity(owner);if(root instanceof com.vandorlabs.tiles.TileEntityConstructor&&((com.vandorlabs.tiles.TileEntityConstructor)root).synthesis()){tile=root;pos=owner;}}}
         int gui;
         if(state.getBlock() instanceof com.vandorlabs.blocks.BlockNonWheeledLandingGear){pos=((com.vandorlabs.blocks.BlockNonWheeledLandingGear)state.getBlock()).connectedRoot(world,pos);tile=world.getTileEntity(pos);}
         if(tile instanceof com.vandorlabs.tiles.TileEntityCanopy && ((com.vandorlabs.tiles.TileEntityCanopy)tile).owner().configurable()){tile=((com.vandorlabs.tiles.TileEntityCanopy)tile).owner();pos=tile.getPos();gui=GuiHandler.GUI_LARGE_CANOPY;}
         else if(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone)gui=GuiHandler.GUI_WIRELESS_REDSTONE;
+        else if(tile instanceof com.vandorlabs.tiles.TileEntityConstructor&&((com.vandorlabs.tiles.TileEntityConstructor)tile).synthesis()&&((com.vandorlabs.tiles.TileEntityConstructor)tile).formed())gui=GuiHandler.GUI_SYNTHESIS_TOWER;
         else if(tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot) gui=GuiHandler.GUI_TOKEN_SLOT;
         else if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface) gui=GuiHandler.GUI_SURFACE;
         else if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableController) gui=GuiHandler.GUI_TURNTABLE;

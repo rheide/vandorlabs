@@ -46,9 +46,21 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
     @Override public void render(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!tile.renderReady()||!com.vandorlabs.gear.client.CoreArmHandoff.allowed(tile))return;
         com.vandorlabs.gear.client.CoreArmHandoff.drawn(tile);
+        if(tile.synthesis()){
+            try(com.vandorlabs.client.TurntableRenderState saved=new com.vandorlabs.client.TurntableRenderState()){
+                // The authored chamber glass is binary-alpha cutout geometry.
+                // Blending alone still writes invisible glass depth over the fabrication volume.
+                net.minecraft.client.renderer.GlStateManager.enableAlpha();
+                net.minecraft.client.renderer.GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER,.1F);
+                renderMachine(tile,x,y,z,partial,stage,alpha);
+            }
+        }else renderMachine(tile,x,y,z,partial,stage,alpha);
+    }
+    private void renderMachine(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha){
         body.setRendererDispatcher(net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance);
         body.render(tile,x,y,z,partial,stage,alpha);
         com.vandorlabs.client.MachineDisplayRenderer.render(tile,x,y,z);
-        com.vandorlabs.blocks.MachineMountSurface mount=tile.mount();if(mount!=null)com.vandorlabs.client.TETokenSlot.nativeMount(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);
+        SynthesisTowerRenderer.render(tile,x,y,z,partial);
+        com.vandorlabs.blocks.MachineMountSurface mount=tile.mount();if(mount!=null){if(tile.synthesis())com.vandorlabs.client.TETokenSlot.embedded(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);else com.vandorlabs.client.TETokenSlot.nativeMount(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);}
     }
 }

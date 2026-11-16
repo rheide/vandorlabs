@@ -2,7 +2,19 @@
 
 ## 2.11.0 (in development)
 
-- Begin development of Battery Modules and powered Synthesis Tower production.
+### Synthesis Tower
+
+- Produce Synthesis Tower, Assembly Press and Enclosed Gantry Cores from Programmable Matter and RF, with saved build progress and one owned output. Keep existing frame dimensions and materials.
+- Add an inventory dialog with full textured rotating structure previews, battery power status and a chip slot for future designs. Ordinary right-click and Configurizer open the same dialog.
+- Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior.
+- Add rear RF and item ports, a square front display, native chip/rack fittings, bottom-up Core fabrication and four scanning beams. Cull fabrication effects beyond nearby viewing range.
+
+### Battery Modules
+
+- Add single-item Battery Modules holding 10,000 RF, with a Programmable Matter Ingot, gold and redstone recipe and an item energy capability.
+- Charge modules in Forge Matter Infusers using sunlight and redstone catalyst. Keep partial charge on the physical item through charging, rack insertion, extraction and reload.
+- Show a red lightning mark and green charge segments on mounted modules, with exact RF in the item tooltip.
+
 
 ## 2.10.0
 

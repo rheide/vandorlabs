@@ -15,6 +15,9 @@ public final class TileEntityConstructorPart extends TileEntity implements net.m
         if(root instanceof TileEntityConstructor && ((TileEntityConstructor)root).formed())return;
         world.setBlockState(pos,matter?net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:programmable_matter_block")).getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),3);
     }
+    private TileEntityConstructor synthesisOwner(){if(world==null||!world.isBlockLoaded(owner()))return null;TileEntity raw=world.getTileEntity(owner());return raw instanceof TileEntityConstructor?(TileEntityConstructor)raw:null;}
+    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> cap,net.minecraft.util.EnumFacing side){TileEntityConstructor root=synthesisOwner();return root!=null&&root.synthesisCapability(cap,pos,side)!=null||super.hasCapability(cap,side);}
+    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> cap,net.minecraft.util.EnumFacing side){TileEntityConstructor root=synthesisOwner();T result=root==null?null:root.synthesisCapability(cap,pos,side);return result!=null?result:super.getCapability(cap,side);}
     public BlockPos owner(){return pos.add(offset);}
     public boolean frameMatter(){return matter;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setLong("ConstructorOwner",offset.toLong());tag.setBoolean("ConstructorMatter",matter);return tag;}

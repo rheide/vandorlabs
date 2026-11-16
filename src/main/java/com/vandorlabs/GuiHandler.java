@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 import net.minecraftforge.fml.common.network.IGuiHandler;
 
 public class GuiHandler implements IGuiHandler {
+    public static final int GUI_SYNTHESIS_TOWER=33;
     public static final int GUI_MODULE_RACK=32;
     public static final int GUI_RESOURCE_PORT=31;
     public static final int GUI_SEGMENTED_DOOR=30;
@@ -72,6 +73,7 @@ public class GuiHandler implements IGuiHandler {
     @Override
     public Object getServerGuiElement(int ID,EntityPlayer player,World world,int x,int y,int z){Object result=createServerGuiElement(ID,player,world,x,y,z);if(result instanceof net.minecraft.inventory.Container)com.vandorlabs.redstone.InlineTransmitters.attach((net.minecraft.inventory.Container)result,player);return result;}
     private Object createServerGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_SYNTHESIS_TOWER){BlockPos at=new BlockPos(x,y,z);if(!world.isBlockLoaded(at)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,at))return null;TileEntity raw=world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityConstructor&&((com.vandorlabs.tiles.TileEntityConstructor)raw).synthesis()&&((com.vandorlabs.tiles.TileEntityConstructor)raw).formed()?new com.vandorlabs.container.ContainerSynthesisTower(player.inventory,(com.vandorlabs.tiles.TileEntityConstructor)raw):null;}
         if(ID==GUI_MODULE_RACK){BlockPos at=new BlockPos(x,y,z);if(!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,at))return null;TileEntity raw=world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityModuleRack?new com.vandorlabs.container.ContainerModuleRack((com.vandorlabs.tiles.TileEntityModuleRack)raw):null;}
         if(ID==GUI_RESOURCE_PORT){BlockPos at=new BlockPos(x,y,z);if(!world.isBlockLoaded(at))return null;TileEntity raw=world.getTileEntity(at);if(!(raw instanceof com.vandorlabs.ports.ResourcePortTile))return null;com.vandorlabs.ports.ResourcePortContainer c=new com.vandorlabs.ports.ResourcePortContainer((com.vandorlabs.ports.ResourcePortTile)raw);return c.canInteractWith(player)?c:null;}
         if(ID==GUI_SEGMENTED_DOOR){TileEntity raw=world.getTileEntity(new BlockPos(x,y,z));if(!(raw instanceof com.vandorlabs.segmented.SegmentedDoorTile))return null;com.vandorlabs.segmented.SegmentedDoorContainer c=new com.vandorlabs.segmented.SegmentedDoorContainer((com.vandorlabs.segmented.SegmentedDoorTile)raw);return c.canInteractWith(player)?c:null;}
@@ -177,6 +179,7 @@ public class GuiHandler implements IGuiHandler {
     public Object getClientGuiElement(int ID,EntityPlayer player,World world,int x,int y,int z){Object result=createClientGuiElement(ID,player,world,x,y,z);if(result instanceof net.minecraft.client.gui.inventory.GuiContainer)com.vandorlabs.redstone.InlineTransmitters.attach(((net.minecraft.client.gui.inventory.GuiContainer)result).inventorySlots,player);return result;}
     @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     private Object createClientGuiElement(int ID, EntityPlayer player, World world, int x, int y, int z) {
+        if(ID==GUI_SYNTHESIS_TOWER){BlockPos at=new BlockPos(x,y,z);if(!world.isBlockLoaded(at)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,at))return null;TileEntity raw=world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityConstructor&&((com.vandorlabs.tiles.TileEntityConstructor)raw).synthesis()&&((com.vandorlabs.tiles.TileEntityConstructor)raw).formed()?new com.vandorlabs.client.GuiSynthesisTower(player.inventory,(com.vandorlabs.tiles.TileEntityConstructor)raw):null;}
         if(ID==GUI_MODULE_RACK){BlockPos at=new BlockPos(x,y,z);if(!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,at))return null;TileEntity raw=world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityModuleRack?new com.vandorlabs.client.GuiModuleRack((com.vandorlabs.tiles.TileEntityModuleRack)raw):null;}
         if(ID==GUI_RESOURCE_PORT){BlockPos at=new BlockPos(x,y,z);if(!world.isBlockLoaded(at))return null;TileEntity raw=world.getTileEntity(at);return raw instanceof com.vandorlabs.ports.ResourcePortTile?new com.vandorlabs.client.GuiResourcePort(new com.vandorlabs.ports.ResourcePortContainer((com.vandorlabs.ports.ResourcePortTile)raw)):null;}
         if(ID==GUI_SEGMENTED_DOOR){TileEntity raw=world.getTileEntity(new BlockPos(x,y,z));return raw instanceof com.vandorlabs.segmented.SegmentedDoorTile?new com.vandorlabs.client.GuiSegmentedDoor(new com.vandorlabs.segmented.SegmentedDoorContainer((com.vandorlabs.segmented.SegmentedDoorTile)raw)):null;}
