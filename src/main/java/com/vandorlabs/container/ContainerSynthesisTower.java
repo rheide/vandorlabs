@@ -19,8 +19,10 @@ public final class ContainerSynthesisTower extends Container {
         addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),1,118,190){@Override public boolean isItemValid(ItemStack stack){return false;}});
         addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),2,208,190));
         addSlotToContainer(new Slot(tile,0,298,190));
+        for(int bay=1;bay<4;bay++)addSlotToContainer(new SlotItemHandler(tile.synthesisInventory(),2+bay,208+bay*18,190));
         for(int row=0;row<3;row++)for(int col=0;col<9;col++)addSlotToContainer(new Slot(player,col+row*9+9,100+col*18,224+row*18));
         for(int col=0;col<9;col++)addSlotToContainer(new Slot(player,col,100+col*18,282));
+        com.vandorlabs.ui.SynthesisDialog.Layout layout=new com.vandorlabs.ui.SynthesisDialog.Layout(false);for(int i=0;i<inventorySlots.size();i++){inventorySlots.get(i).xPos=layout.slotX(i);inventorySlots.get(i).yPos=layout.slotY(i);}
         sample();
     }
     private void sample(){values[0]=tile.selectedDesign();values[1]=Math.round(tile.buildProgress()*200);values[2]=tile.batteryEnergy();values[3]=tile.batteryCapacity();values[4]=tile.externalPowerConnected()?1:0;values[5]=tile.buildDesign();}
@@ -32,11 +34,11 @@ public final class ContainerSynthesisTower extends Container {
         if(index<0||index>=inventorySlots.size()||!canInteractWith(player))return ItemStack.EMPTY;
         Slot slot=inventorySlots.get(index);if(!slot.getHasStack())return ItemStack.EMPTY;
         ItemStack stack=slot.getStack(),before=stack.copy();
-        if(index<4){if(!mergeItemStack(stack,4,40,true))return ItemStack.EMPTY;}
+        if(index<7){if(!mergeItemStack(stack,7,43,true))return ItemStack.EMPTY;}
         else{
             boolean moved=false;
-            for(int target:new int[]{0,2,3})if(inventorySlots.get(target).isItemValid(stack)&&mergeItemStack(stack,target,target+1,false)){moved=true;break;}
-            if(!moved){if(index<31){if(!mergeItemStack(stack,31,40,false))return ItemStack.EMPTY;}else if(!mergeItemStack(stack,4,31,false))return ItemStack.EMPTY;}
+            for(int target:new int[]{0,2,4,5,6,3})if(inventorySlots.get(target).isItemValid(stack)&&mergeItemStack(stack,target,target+1,false)){moved=true;break;}
+            if(!moved){if(index<34){if(!mergeItemStack(stack,34,43,false))return ItemStack.EMPTY;}else if(!mergeItemStack(stack,7,34,false))return ItemStack.EMPTY;}
         }
         if(stack.isEmpty())slot.putStack(ItemStack.EMPTY);else slot.onSlotChanged();
         if(stack.getCount()==before.getCount())return ItemStack.EMPTY;slot.onTake(player,stack);return before;

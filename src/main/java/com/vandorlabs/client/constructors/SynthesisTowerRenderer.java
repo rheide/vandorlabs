@@ -1,6 +1,10 @@
 package com.vandorlabs.client.constructors;
 
 import com.vandorlabs.blocks.*;
+import com.vandorlabs.machines.SynthesisPresentation;
+import com.vandorlabs.rack.EmbeddedRackMotion;
+import com.vandorlabs.rack.ModuleBatteryData;
+import java.util.*;
 import com.vandorlabs.client.TurntableRenderState;
 import com.vandorlabs.tiles.TileEntityConstructor;
 import net.minecraft.block.Block;
@@ -17,6 +21,16 @@ import org.lwjgl.opengl.GL11;
 public final class SynthesisTowerRenderer {
     private static final String[] DESIGNS={"synthesis_tower","assembly_press","enclosed_gantry"};
     private static final java.nio.DoubleBuffer CLIP=org.lwjgl.BufferUtils.createDoubleBuffer(4);
+    private static final Map<net.minecraft.world.World,LinkedHashMap<net.minecraft.util.math.BlockPos,Rack>> RACKS=new WeakHashMap<>();
+    private static final class Rack {final java.util.UUID identity;final EmbeddedRackMotion motion=new EmbeddedRackMotion();Rack(java.util.UUID identity){this.identity=identity;}}
+    public static void clear(net.minecraft.world.World world){RACKS.remove(world);}
+    public static void clear(){RACKS.clear();}
+    private static EmbeddedRackMotion rack(TileEntityConstructor tile,double now){
+        LinkedHashMap<net.minecraft.util.math.BlockPos,Rack> values=RACKS.get(tile.getWorld());if(values==null){values=new LinkedHashMap<>(16,.75F,true);RACKS.put(tile.getWorld(),values);}
+        Rack rack=values.get(tile.getPos());if(rack==null||!rack.identity.equals(tile.renderIdentity())){rack=new Rack(tile.renderIdentity());values.put(tile.getPos().toImmutable(),rack);if(values.size()>256)values.remove(values.keySet().iterator().next());}
+        int mask=0;for(int bay=0;bay<4;bay++)if(ModuleBatteryData.isBattery(tile.batteryStack(bay)))mask|=1<<bay;
+        rack.motion.observe(mask,tile.batterySequence(0),tile.batterySequence(1),tile.batterySequence(2),tile.batterySequence(3),tile.batteryEnergy(0)*4/10000,tile.batteryEnergy(1)*4/10000,tile.batteryEnergy(2)*4/10000,tile.batteryEnergy(3)*4/10000,now);return rack.motion;
+    }
     public static final double CORE_X=1,CORE_Y=2.125,CORE_Z=1.125;
     public static void render(TileEntityConstructor tile,double x,double y,double z,float partial){
         if(!tile.synthesis())return;
@@ -29,23 +43,17 @@ public final class SynthesisTowerRenderer {
             OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
             mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
             ports(tile.externalPowerConnected());
-            ItemStack battery=tile.synthesisInventory().getStackInSlot(2);
-            if(!battery.isEmpty()){
-                GlStateManager.pushMatrix();try{
-                    GlStateManager.translate(1.03,.20,0);GlStateManager.scale(-.72,.72,.72);
-                    BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(7,DefaultVertexFormats.ITEM);
-                    int level=Math.min(4,(com.vandorlabs.rack.ModuleBatteryData.energy(battery)*4+9999)/10000);
-                    for(net.minecraft.client.renderer.block.model.BakedQuad q:com.vandorlabs.client.ModuleRackModel.batteryQuads(EnumFacing.NORTH,0,level))b.addVertexData(q.getVertexData());
-                    Tessellator.getInstance().draw();
-                }finally{GlStateManager.popMatrix();}
-            }
+            double now=MachineVisualMotion.sample(tile,true,10).now;EmbeddedRackMotion motion=rack(tile,now);
+            BufferBuilder rackBuffer=Tessellator.getInstance().getBuffer();rackBuffer.setTranslation(0,0,0);rackBuffer.begin(7,DefaultVertexFormats.BLOCK);
+            for(int bay=0;bay<4;bay++)com.vandorlabs.client.ModuleRackModel.emitEmbedded(rackBuffer,EnumFacing.NORTH,bay,motion.level(bay),motion.occupied(bay),motion.visible(bay,now),motion.moving(bay,now),SynthesisPresentation.RACK_X,SynthesisPresentation.RACK_Y,SynthesisPresentation.RACK_Z,motion.offset(bay,now),15728880);
+            Tessellator.getInstance().draw();
             if(mc.getRenderViewEntity()==null||mc.getRenderViewEntity().getDistanceSq(tile.getPos())>24*24)return;
             boolean processing=tile.processing();ItemStack output=tile.synthesisInventory().getStackInSlot(1);
             if(processing||!output.isEmpty()){
                 double progress=processing?tile.buildProgress():1;
                 IBlockState state=processing?Block.getBlockFromName("vandorlabs:"+DESIGNS[tile.buildDesign()]+"_core").getDefaultState():Block.getBlockFromItem(output.getItem()).getDefaultState();
                 core(state,progress);
-                if(processing){double now=MachineVisualMotion.sample(tile,true,10).now;lasers(progress,now);screen(DESIGNS[tile.buildDesign()],now);}
+                if(processing){if(tile.working())lasers(progress,now);screen(DESIGNS[tile.buildDesign()],now);}
             }
         }finally{Tessellator.getInstance().getBuffer().setTranslation(0,0,0);GlStateManager.popMatrix();}
     }
@@ -67,8 +75,8 @@ public final class SynthesisTowerRenderer {
     }
     private static void screen(String design,double now){
         GlStateManager.pushMatrix();try{
-            GlStateManager.translate(2.01,1.00,.35);
-            FrameMachineDesign spec=FrameMachineDesign.get(design);double scale=1.48/Math.sqrt(spec.width*spec.width+spec.depth*spec.depth+spec.height*spec.height);
+            GlStateManager.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);
+            FrameMachineDesign spec=FrameMachineDesign.get(design);double scale=SynthesisPresentation.SCREEN_SIZE*1.3/Math.sqrt(spec.width*spec.width+spec.depth*spec.depth+spec.height*spec.height);
             GlStateManager.scale(scale,scale,.002);SynthesisDesignPreview.render(design,(float)(now*1.4));
         }finally{GlStateManager.popMatrix();}
     }

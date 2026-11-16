@@ -6,6 +6,14 @@ group = 'com.vandorlabs'
 version = (file('../../build.gradle').text =~ /(?m)^version\s*=\s*'([^']+)'/)[0][1]
 base { archivesName = 'vandorlabs-neoforge-1.21.1' }
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
+repositories { maven { url = uri('https://maven.blamejared.com/') } }
+dependencies {
+    compileOnly 'mezz.jei:jei-1.21.1-common-api:19.70.0.469'
+    compileOnly 'mezz.jei:jei-1.21.1-neoforge-api:19.70.0.469'
+    if (project.hasProperty('withJei')) {
+        runtimeOnly 'mezz.jei:jei-1.21.1-neoforge:19.70.0.469'
+    }
+}
 sourceSets.main.java.srcDir('../../src/portable/java')
 sourceSets.main.resources.srcDir('build/generated/matter-resources')
 sourceSets.main.resources.srcDir('build/generated/cube-resources')
@@ -485,6 +493,7 @@ tasks.register('generateBuilderResources', Exec) {
     dependsOn 'generateCubeResources'
     commandLine pythonExecutable, 'generate_builder_resources.py'
     inputs.file('generate_builder_resources.py')
+    inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/core_flat.png')
     inputs.files(fileTree('build/generated/cube-resources/assets/vandorlabs/textures/blocks/resource_ports'),
                  fileTree('build/generated/cube-resources/assets/vandorlabs/textures/blocks/module_rack'))
     for (design in ['assembly_press', 'synthesis_tower', 'enclosed_gantry']) {
@@ -520,3 +529,13 @@ tasks.register('testInfuserResources', Exec) {
     dependsOn 'generateInfuserResources'
     commandLine pythonExecutable, 'test_infuser_resources.py'
 }
+
+
+tasks.register('testNativeBuilderSnapshots', JavaExec) {
+    group = 'verification'
+    description = 'Preserve exact builder ownership snapshots while migrating absent default bay counters'
+    dependsOn tasks.named('compileSmokeJava')
+    classpath = sourceSets.smoke.runtimeClasspath
+    mainClass = 'com.vandorlabs.neoforge.builders.NativeBuilderSnapshotChecks'
+}
+tasks.named('check') { dependsOn 'testNativeBuilderSnapshots' }

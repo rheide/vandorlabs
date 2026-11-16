@@ -44,6 +44,9 @@ public final class ModuleRackModel implements IBakedModel {
     private int housingChoice = -1;
     private final java.util.LinkedHashMap<Integer, ModuleRackModel> housingModels = new java.util.LinkedHashMap<>(16, .75F, true);
 
+    private MovingMesh[][] embeddedSeated;
+    private MovingMesh[] embeddedEmpty;
+    private MovingMesh[][] embeddedIndicators;
     private final IBakedModel[] modules;
     private final MovingMesh[] moving;
     private final IBakedModel[] autopilotModules;
@@ -146,12 +149,13 @@ public final class ModuleRackModel implements IBakedModel {
                 buttons[slot][1] = all(part("indicator_" + slot + "_on", pitch, turns), true);
             }
             ModuleRackModel model = new ModuleRackModel(facing.getIndex(), shell, modules, seated, empty, buttons, autopilotModules, autopilotSeated);
-            model.batteryModules=new IBakedModel[4][5];model.batteryMoving=new MovingMesh[4][5];
+            model.batteryModules=new IBakedModel[4][5];model.batteryMoving=new MovingMesh[4][5];model.embeddedSeated=new MovingMesh[4][5];model.embeddedEmpty=new MovingMesh[4];model.embeddedIndicators=new MovingMesh[4][2];
+            for(int slot=0;slot<4;slot++){model.embeddedEmpty[slot]=new MovingMesh(empty[slot]);for(int on=0;on<2;on++)model.embeddedIndicators[slot][on]=new MovingMesh(buttons[slot][on]);}
             @SuppressWarnings("unchecked") List<BakedQuad>[][] battery=(List<BakedQuad>[][])new List<?>[4][5];model.batterySeated=battery;
             for(int slot=0;slot<4;slot++)for(int level=0;level<5;level++){
                 model.batteryModules[slot][level]=part("slot_battery_"+slot+"_"+level,pitch,turns);
                 model.batteryMoving[slot][level]=new MovingMesh(model.batteryModules[slot][level]);
-                model.batterySeated[slot][level]=all(part("slot_seated_battery_"+slot+"_"+level,pitch,turns),false);
+                model.batterySeated[slot][level]=all(part("slot_seated_battery_"+slot+"_"+level,pitch,turns),false);model.embeddedSeated[slot][level]=new MovingMesh(model.batterySeated[slot][level]);
             }
             MODELS[facing.getIndex()] = model;
             event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:module_rack", "facing=" + facing.getName()), model);
@@ -216,6 +220,14 @@ public final class ModuleRackModel implements IBakedModel {
         return model==null||slot<0||slot>=4?Collections.emptyList():model.batterySeated[slot][Math.max(0,Math.min(4,level))];
     }
 
+    /** Same cached four-bay geometry and moving cassette as the actual placed Rack. */
+    public static void emitEmbedded(BufferBuilder buffer,EnumFacing facing,int bay,int level,boolean occupied,boolean visible,boolean moving,double x,double y,double z,double offset,int light){
+        ModuleRackModel model=MODELS[facing.getIndex()];if(model==null||bay<0||bay>=4)return;
+        if(!occupied)model.embeddedEmpty[bay].draw(buffer,x,y,z,light);
+        model.embeddedIndicators[bay][occupied?1:0].draw(buffer,x,y,z,15728880);
+        if(visible)(moving?model.batteryMoving[bay][Math.max(0,Math.min(4,level))]:model.embeddedSeated[bay][Math.max(0,Math.min(4,level))]).draw(buffer,x+facing.getFrontOffsetX()*offset,y+facing.getFrontOffsetY()*offset,z+facing.getFrontOffsetZ()*offset,light);
+    }
+
     static IBakedModel movingModule(EnumFacing facing, int slot) {
         ModuleRackModel model = MODELS[facing.getIndex()];
         return model == null ? null : model.modules[slot];
@@ -233,8 +245,8 @@ public final class ModuleRackModel implements IBakedModel {
      */
     static final class MovingMesh {
         private final float[] vertices;
-        MovingMesh(IBakedModel source) {
-            List<BakedQuad> quads = all(source, false);
+        MovingMesh(IBakedModel source) {this(all(source,false));}
+        MovingMesh(List<BakedQuad> quads) {
             vertices = new float[quads.size() * 4 * 9];
             float[] value = new float[4];
             int at = 0;

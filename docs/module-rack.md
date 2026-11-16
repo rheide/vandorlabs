@@ -98,6 +98,12 @@ and a covered lens pause charging. A full module moves into the output slot
 when it is free. Partial charge survives saving and removal from the infuser.
 RF integrations can also charge the item through its energy capability.
 
+The [Synthesis Tower](universal-constructors.md#synthesis-tower-production) accepts
+four modules in its fitted rack, for 40,000 RF total. Each bay retains its own
+module and charge. Its bay buttons and inventory slots insert or retrieve the
+same physical items, with the placed rack's sliding motion. External tower RF
+can recharge the installed modules, including while production is paused.
+
 ## Rendering
 
 The casing, populated indicators and seated modules are ordinary opaque chunk geometry. Prepared quads are shared across equivalent rack states. Stationary racks have no tile-entity renderer and no ticking tile entity. Inventory contents are serialized for saves and actual interactions, never by the rendering loop.

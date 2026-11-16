@@ -31,12 +31,15 @@ recipes; a powered Synthesis Tower can subsequently produce all three designs.
 Right-click the formed tower or use the Configurizer on a reserved member to
 open the same Production dialog. Select a design from the list; its textured,
 rotating preview shows the complete multiblock. Supply one Programmable Matter
-Block in the Matter slot. One Core costs **8,000 RF**, consumed at **40 RF per
-tick**, for a minimum of ten seconds at normal server speed.
+Block in the Matter slot. One Core costs **8,000 RF**, consumed at **20 RF per
+tick**, for a minimum of twenty seconds at normal server speed.
 
-Install a charged **10,000 RF Battery Module** in the fitted rack or its dialog
-slot, or connect an external RF source. The tower has no built-in battery.
-Connected RF recharges an installed module, including while Redstone pauses the
+Install up to four **10,000 RF Battery Modules** in the flush four-bay rack or
+its four dialog slots, for **40,000 RF** total, or connect an external RF source.
+Use each bay button to insert a held module or retrieve it with an empty hand.
+The fitted rack uses the same sliding cassette motion and charge segments as a
+placed Module Rack. The tower has no built-in battery.
+Connected RF recharges the installed modules, including while Redstone pauses the
 build. Charging and work retain the same energy accounting regardless of
 whether the source or tower ticks first.
 
@@ -51,11 +54,17 @@ Right-click activation to cycle backwards. Pausing, unloading and reloading
 retain the selected job and paid work. Processing waits for deferred input
 registration after loading, so Off cannot briefly run before its inputs settle.
 
-The chamber displays a Core forming from the bottom upwards beneath four
-scanning beams. The square front display shows its rotating structure preview.
+The chamber displays the open, colored Core scaffold forming from the bottom
+upwards. Four scanning beams track its top surface while the tower spends RF;
+paused or unpowered work keeps the partial Core without beams. The smaller
+square display and projecting keyboard are on the front left; the chip mount
+and flush rack are on the right. The display shows the full rotating structure
+preview.
 These fabrication effects are drawn only within 24 blocks. Collect a finished
 Core through the output slot or by right-clicking it in the chamber. The next
-queued Matter Block waits until that output is removed.
+queued Matter Block waits until that output is removed. A chest or compatible
+item inventory immediately outside either output face receives finished Cores
+automatically. A full or unavailable destination leaves the output in the tower.
 
 Data Chips can be inserted and retrieved through their physical mount or the
 dialog. They retain their physical item ownership; additional chip designs are
@@ -66,7 +75,7 @@ reserved for a later update. All three default designs work without a chip.
 Sneak-right-click a formed member to restore its Matter frame. Mining a member
 queues durable teardown and omits the mined cell from the restored frame; a
 frame member yields one Matter Block. Mining a Core releases its owned input,
-output, battery and chip exactly once. An unfinished job returns its Matter
+output, all four batteries and chip exactly once. An unfinished job returns its Matter
 Block; spent RF is not refunded. Ordinary tool and Creative rules still apply
 to the Core block item.
 
@@ -80,3 +89,16 @@ them before bulk world editing. Malformed saved ownership remains inert with
 its original data retained. Native arm carrying and Copy Controller integration
 for these assemblies remain deferred and are refused by their existing adapter
 checks.
+
+## Cores and JEI
+
+The three Core block/item models have a colored inner cube, eight diagonal
+struts, an outer cube outline and larger corner nodes, with real empty gaps.
+The same geometry appears during fabrication and in padded inventory icons.
+This native conversion does not register the other ten Forge Core families.
+
+With JEI installed, **Matter Infuser** lists iron conversion and Battery Module
+charging; **Synthesis Tower** lists the three Core outputs and their RF/time
+requirements. Choose the design in Production before supplying Matter. JEI
+browsing does not change the selected or running tower design. Infuser recipe
+transfer fills its input and catalyst slots.

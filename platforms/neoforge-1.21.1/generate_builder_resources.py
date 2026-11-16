@@ -41,6 +41,7 @@ def main():
             target=assets/'textures'/relative;target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
             if meta.exists():shutil.copyfile(meta,target.with_suffix('.png.mcmeta'))
         textures[reference]=digest;return reference
+    texture("vandorlabs:blocks/core_flat")
     catalog=json.loads((SOURCE/'data/frame_machines.json').read_text())
     for design in IDS:
         spec=next(v for v in catalog if v['design']==design)

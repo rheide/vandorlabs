@@ -2,6 +2,7 @@ package com.vandorlabs.dynmap;
 
 import com.google.gson.*;
 import com.vandorlabs.vehicle.VehicleRotation;
+import com.vandorlabs.geometry.CoreMesh;
 import java.io.*;
 import java.lang.reflect.Proxy;
 import java.util.*;
@@ -32,9 +33,23 @@ public final class FrameMachineMapChecks {
     public static void run()throws Exception{
         JsonObject catalog;
         try(InputStream input=FrameMachineMapChecks.class.getResourceAsStream("/assets/vandorlabs/data/dynmap_frame_models.json")){catalog=new JsonParser().parse(new InputStreamReader(input,"UTF-8")).getAsJsonObject();}
-        int textureCount=catalog.getAsJsonArray("textures").size(),assemblies=0,patches=0;FrameMachineRenderer renderer=new FrameMachineRenderer();
+        int textureCount=catalog.getAsJsonArray("textures").size()+catalog.getAsJsonArray("colors").size(),assemblies=0,patches=0,cores=0;FrameMachineRenderer renderer=new FrameMachineRenderer();
         for(Map.Entry<String,JsonElement> entry:catalog.getAsJsonObject("designs").entrySet()){
             String block=entry.getKey();JsonObject design=entry.getValue().getAsJsonObject();int w=design.get("width").getAsInt(),h=design.get("height").getAsInt(),d=design.get("depth").getAsInt();JsonArray states=design.getAsJsonArray("states");
+            final DynmapBlockState seed=new DynmapBlockState(null,0,"vandorlabs:"+block,"facing=north,formed=false","IRON");
+            MapDataContext seedContext=new MapDataContext(){
+                public RenderPatchFactory getPatchFactory(){return FACTORY;}public DynmapBlockState getBlockType(){return seed;}
+                public Object getBlockTileEntityField(String key){return null;}public DynmapBlockState getBlockTypeAt(int x,int y,int z){return seed;}
+                public Object getBlockTileEntityFieldAt(String key,int x,int y,int z){return null;}public int getX(){return 0;}public int getY(){return 0;}public int getZ(){return 0;}
+            };
+            List<CoreMesh.Face> coreFaces=CoreMesh.faces(design.get("core").getAsString());RenderPatch[] corePatches=renderer.getRenderPatchList(seedContext);
+            require(corePatches.length==coreFaces.size()&&corePatches.length>6,"real scaffold instead of a solid seed cube");double coreArea=0;
+            for(int i=0;i<corePatches.length;i++){
+                Patch patch=(Patch)corePatches[i];int palette=patch.texture-catalog.getAsJsonArray("textures").size();
+                require(palette>=0&&palette<catalog.getAsJsonArray("colors").size()&&catalog.getAsJsonArray("colors").get(palette).getAsInt()==coreFaces.get(i).rgb,"shared per-face Core RGB");
+                coreArea+=area(patch.corners());for(double[] point:patch.corners())for(double value:point)require(value>.10&&value<.90,"padded open Core bounds");
+            }
+            require(coreArea>0&&coreArea<3,"sparse scaffold surface area");cores++;
             for(int mode=0;mode<states.size();mode++){
                 double expected=0;for(JsonElement raw:states.get(mode).getAsJsonArray()){
                     JsonArray vertices=raw.getAsJsonObject().getAsJsonArray("vertices");double[][] points=new double[vertices.size()][3];for(int v=0;v<points.length;v++)for(int axis=0;axis<3;axis++)points[v][axis]=vertices.get(v).getAsJsonArray().get(axis).getAsDouble();expected+=area(points);
@@ -62,7 +77,7 @@ public final class FrameMachineMapChecks {
                 }
             }
         }
-        System.out.println("Frame machine Dynmap checks PASS assemblies="+assemblies+" clipped-patches="+patches+" native UVs states all facings and Core corners full area preserved once");
+        System.out.println("Frame machine Dynmap checks PASS assemblies="+assemblies+" clipped-patches="+patches+" open-colored-cores="+cores+" native UVs states all facings and Core corners full area preserved once");
     }
     private FrameMachineMapChecks(){}
 }

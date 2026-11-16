@@ -35,8 +35,9 @@ final class SynthesisTowerLiveChecks {
                 need(tile.assemble(),"capture frame assembles through actual player layout");
                 ItemStack battery=new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE);com.vandorlabs.rack.ModuleBatteryData.receive(battery,10000,false);
                 tile.synthesisInventory().setStackInSlot(2,battery);tile.synthesisInventory().setStackInSlot(0,new ItemStack(matter));
-                for(int i=0;i<101;i++){player.world.setTotalWorldTime(player.world.getTotalWorldTime()+1);tile.update();}
-                tile.configureSynthesisRedstone(1,com.vandorlabs.redstone.ChannelList.EMPTY);
+                for(int bay=1;bay<4;bay++){ItemStack module=new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE);com.vandorlabs.rack.ModuleBatteryData.receive(module,bay*2500,false);tile.synthesisInventory().setStackInSlot(2+bay,module);}
+                for(int i=0;i<201;i++){player.world.setTotalWorldTime(player.world.getTotalWorldTime()+1);tile.update();}
+
                 need(tile.processing()&&tile.buildProgress()>.45&&tile.buildProgress()<.60,"real RF produces partial core before capture");
                 player.connection.setPlayerLocation(181.5,222,174,0,0);
                 player.world.notifyBlockUpdate(ROOT,player.world.getBlockState(ROOT),player.world.getBlockState(ROOT),3);
@@ -45,8 +46,9 @@ final class SynthesisTowerLiveChecks {
         if(++ticks>300)throw new IllegalStateException("Synthesis render capture client chunk/tile timeout stage="+stage+" pos="+mc.player.getPosition());
         if(!(mc.world.getTileEntity(ROOT) instanceof TileEntityConstructor))return false;
         TileEntityConstructor tile=(TileEntityConstructor)mc.world.getTileEntity(ROOT);
-        if(!tile.renderReady()||!tile.processing()||tile.buildProgress()<.45||ticks<25)return false;
+        if(!tile.renderReady()||!tile.processing()||!tile.working()||tile.buildProgress()<.45||ticks<25)return false;
         com.vandorlabs.client.constructors.SynthesisRenderChecks.run();
+        CoreIconRenderChecks.capture(mc,directory);
         while(GL11.glGetError()!=GL11.GL_NO_ERROR){} // Attribute errors to the capture below, not preceding world frames.
         BufferedImage legacy=tower(mc,tile,20,155,2),effects=tower(mc,tile,20,155,1);
         javax.imageio.ImageIO.write(legacy,"png",new File(directory,"synthesis-tower-alpha-negative-control.png"));
@@ -56,7 +58,9 @@ final class SynthesisTowerLiveChecks {
         javax.imageio.ImageIO.write(b,"png",new File(directory,"synthesis-tower-scanning.png"));
         javax.imageio.ImageIO.write(tower(mc,tile,20,-25),"png",new File(directory,"synthesis-tower-rear-ports.png"));
         net.minecraft.nbt.NBTTagCompound appearance=tile.getUpdateTag();
-        try{net.minecraft.nbt.NBTTagCompound idle=appearance.copy();idle.getCompoundTag("Synthesis").setBoolean("Active",false);tile.readFromNBT(idle);javax.imageio.ImageIO.write(tower(mc,tile,20,155),"png",new File(directory,"synthesis-tower-finished-front.png"));}finally{tile.readFromNBT(appearance);}
+        try{net.minecraft.nbt.NBTTagCompound paused=appearance.copy();paused.setBoolean("SynthesisWorking",false);tile.handleUpdateTag(paused);BufferedImage pausedImage=tower(mc,tile,20,155);javax.imageio.ImageIO.write(pausedImage,"png",new File(directory,"synthesis-tower-paused.png"));need(redPixels(pausedImage)==0,"paused fabrication retains partial Core but emits no scanning lasers");}finally{tile.handleUpdateTag(appearance);}
+
+        try{net.minecraft.nbt.NBTTagCompound idle=appearance.copy();idle.getCompoundTag("Synthesis").setBoolean("Active",false);tile.readFromNBT(idle);javax.imageio.ImageIO.write(tower(mc,tile,20,155),"png",new File(directory,"synthesis-tower-finished-front.png"));}finally{tile.handleUpdateTag(appearance);}
         int laserPixels=redPixels(a),isolated=redPixels(effects),negative=redPixels(legacy);
         System.out.println("[vandorlabs] synthesis-beam-pixels full="+laserPixels+" effectsOnly="+isolated+" alphaOffNegative="+negative);
         need(laserPixels>12&&isolated>12,"four scanning beams visible with and without chamber body count="+laserPixels+" isolated="+isolated);
@@ -108,7 +112,7 @@ final class SynthesisTowerLiveChecks {
             need(colors.size()>24,"textured preview produces varied nonempty pixels "+name+" colors="+colors.size());
         }
     }
-    private static int redPixels(BufferedImage image){int count=0;for(int y=60;y<240;y++)for(int x=90;x<310;x++){int c=image.getRGB(x,y),r=(c>>>16)&255,g=(c>>>8)&255,b=c&255;if(r>110&&r>g*1.5&&r>b*1.3)count++;}return count;}
+    private static int redPixels(BufferedImage image){int count=0;for(int y=60;y<210;y++)for(int x=90;x<310;x++){int c=image.getRGB(x,y),r=(c>>>16)&255,g=(c>>>8)&255,b=c&255;if(r>110&&r>g*1.5&&r>b*1.3)count++;}return count;}
     private static int different(BufferedImage a,BufferedImage b,int x0,int y0,int x1,int y1){int changed=0;for(int y=y0;y<y1;y++)for(int x=x0;x<x1;x++)if(a.getRGB(x,y)!=b.getRGB(x,y))changed++;return changed;}
     private static void need(boolean value,String message){if(!value)throw new IllegalStateException("Synthesis rendered: "+message);}
 }

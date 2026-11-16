@@ -14,7 +14,14 @@
 - Produce Synthesis Tower, Assembly Press and Enclosed Gantry Cores from Programmable Matter and RF, with saved build progress and one owned output. Keep existing frame dimensions and materials.
 - Add an inventory dialog with full textured rotating structure previews, battery power status and a chip slot for future designs. Ordinary right-click and Configurizer open the same dialog.
 - Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior. Wait for deferred inputs to settle after loading before consuming Matter or RF.
-- Add rear RF and item ports, a square front display, native chip/rack fittings, bottom-up Core fabrication and four scanning beams. Cull fabrication effects beyond nearby viewing range.
+- Fit four sliding Battery Modules in a flush rack, retaining 10,000 RF per item and displaying up to 40,000 RF in the shared Source/native dialog. Preserve each bay, charge and chip through physical insertion, extraction and reload.
+- Use 20 RF per tick for each 8,000 RF Core, taking at least twenty seconds. Export finished Cores into a chest or compatible inventory beside an item-output face; retain output when the destination cannot accept it.
+- Add rear RF/item ports, a smaller left display with a projecting keyboard, a right chip mount/rack and neutral casing panels. Show bottom-up Core fabrication with four scanning beams only while spending RF; retain the partial Core while paused. Cull fabrication effects beyond nearby viewing range.
+
+### Core models and JEI
+
+- Replace all thirteen Forge Core block/item models and the three native builder Cores with open colored tesseract scaffolds: inner cube, eight diagonal struts, outer edges and larger corner nodes. Use the same geometry for fabrication and Dynmap, with padded inventory icons.
+- Add shared Matter Infuser and Synthesis Tower JEI categories for iron conversion, Battery Module charging and the three Core outputs, including costs and processing requirements. Support Infuser input/catalyst transfer; keep tower design selection in Production.
 
 ### Native Matter Infuser
 

@@ -26,7 +26,7 @@ public final class MachineVisualMotion {
     static Pose takeObserved(World world,BlockPos at){Map<BlockPos,Pose> existing=WORLDS.get(world);return existing==null?null:existing.remove(at);}
     static void releaseObserved(World world,BlockPos at,Pose expected){Map<BlockPos,Pose> existing=WORLDS.get(world);if(existing!=null&&existing.get(at)==expected)existing.remove(at);}
     static void installObserved(World world,BlockPos at,Pose pose){if(pose!=null)retain(world,at,pose);}
-    public static void clear(World world){WORLDS.remove(world);CoreArmVisualIdentity.clear(world);}
+    public static void clear(World world){SynthesisTowerRenderer.clear(world);WORLDS.remove(world);CoreArmVisualIdentity.clear(world);}
     static Pose sample(TileEntityConstructor tile,boolean active,double duration){
         Double authored=AUTHORED.get();
         double now=authored==null?CLOCK.sample(System.nanoTime(),Minecraft.getMinecraft().isGamePaused()):authored;

@@ -28,6 +28,41 @@ d 1
 illum 1
 map_Kd minecraft:blocks/concrete_black
 # Generated native attachments
+newmtl synth_casing
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/universal_constructor/synthesis_casing
+
+newmtl synth_service
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/universal_constructor/synthesis_service
+
+newmtl synth_bezel
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/port_hull
+
+newmtl synth_screen
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_black
+
+newmtl synth_keyboard
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/universal_constructor/synthesis_keyboard
+
 newmtl synth_rack_housing
 Ka 1 1 1
 Kd 1 1 1

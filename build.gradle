@@ -21,11 +21,14 @@ def pythonExecutable = project.findProperty('pythonExecutable') ?: (
         System.getProperty('os.name').toLowerCase().contains('windows') ? 'python' : 'python3')
 
 repositories {
+    maven { url = 'https://maven.blamejared.com/' }
     maven { url = 'https://repo.mikeprimm.com/' }
     maven { url = 'https://www.cursemaven.com/' }
 }
 
 dependencies {
+    // Optional recipe-browser integration; API classes are never bundled.
+    compileOnly 'mezz.jei:jei_1.12.2:4.15.0.268:api'
     compileOnly 'us.dynmap:DynmapCoreAPI:3.7-beta-6'
     // Hwyla's published 1.12.2 API only; the HUD remains an optional runtime mod.
     compileOnly 'curse.maven:hwyla-253449:2568753'

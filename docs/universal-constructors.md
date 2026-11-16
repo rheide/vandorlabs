@@ -37,10 +37,13 @@ At a supported native endpoint, ordinary Core configuration and chip changes are
 
 Core machinery stays visible while an arm returns it to native blocks, including when the client receives the block, machine data and arm update at different times. Its detected corner and current settings appear together; the native machine takes over once that data and the arm’s visual pose are ready.
 
-## Synthesis Tower production (Forge 1.12.2)
+<a id="synthesis-tower-production-forge-1122"></a>
+
+## Synthesis Tower production
 
 Build the same 3 x 3 x 5 frame with 28 Programmable Matter Blocks and one
 Synthesis Tower Core, following the [Synthesis Tower construction guide](multiblocks/synthesis-tower/README.md).
+This production behavior is available on Forge 1.12.2 and NeoForge 1.21.1.
 Right-click the Core to form the machine. Its finished front has a square
 display on the left and a Data Chip Mount and Module Rack on the right.
 
@@ -48,20 +51,26 @@ Right-click the formed machine, or use the Configurizer, to open Production.
 Select Synthesis Tower, Assembly Press or Enclosed Gantry from the design list;
 the rotating textured preview shows the complete structure. Insert one
 Programmable Matter Block in the Matter slot. Each Core uses 8,000 RF, at
-40 RF per tick, taking at least ten seconds at normal server speed.
+20 RF per tick, taking at least twenty seconds at normal server speed.
 A running build retains its selected design if you select the next design.
 Remove the completed Core from the output slot or right-click the finished
 Core in the processing chamber. The next queued input waits for the output
 to be removed. Dismantling returns unprocessed inventory and refunds the
 Matter Block of an unfinished build; spent RF is not refunded.
 
-The tower has no internal battery. Install a charged [Battery Module](module-rack.md)
-in its battery slot, or supply RF through its Power In port. Connected power
-also recharges the installed module. The bottom rear-right block accepts RF
+The tower has no internal battery. Its flush four-bay rack accepts up to four
+charged [Battery Modules](module-rack.md), for **40,000 RF** total. Insert or
+retrieve each physical module at its bay button, or use the four Battery slots
+in Production. Modules slide into and out of the rack and retain their charge.
+Supply external RF through the Power In port; connected power also recharges
+the installed modules. The bottom rear-right block accepts RF
 on its back and bottom faces. The bottom rear-left block accepts Matter on
 its back face and exposes completed Cores on its left and bottom faces.
 The RF port lights when a compatible power source is connected, even when
-no RF is moving.
+no RF is moving. Place a chest or compatible item inventory immediately outside
+either output face to receive completed Cores automatically. If that inventory
+is full or unavailable, the Core remains in the tower until there is room or
+you collect it.
 
 The Redstone tab uses the standard activation selector and receiving-channel
 list. Manual means continuous automatic processing whenever input and RF are
@@ -69,10 +78,32 @@ available; Redstone On requires a physical signal or an active listed
 channel; Redstone Off requires both to be absent. An empty channel list uses
 physical Redstone only. Right-click the activation option to cycle backwards.
 Disabling the tower pauses its build without discarding input or progress,
-including through saving and reloading. RF can still recharge its module.
+including through saving and reloading. RF can still recharge its modules.
 
 Data Chips currently retain their ordinary inventory behavior; additional
 design data is reserved for a later update. The three default designs are
 available without a chip. The chamber shows the selected Core forming from
-the bottom upwards, with four scanning beams. Chamber effects and the front
+the bottom upwards. Four scanning beams follow its growing surface while RF
+is being spent; paused or unpowered work retains its partial Core without
+beams. The smaller square screen and its projecting keyboard sit to the left
+of the chip mount and flush rack. Chamber effects and the front
 display's rotating preview are rendered only within 24 blocks.
+
+## Core appearance and recipe browsing
+
+Unformed Core blocks and their inventory items use an open tesseract scaffold:
+a small colored inner cube connects through eight diagonal struts to an outer
+cube outline with thicker corner nodes. The gaps are actual empty model space.
+Each Core type keeps its own color, and inventory models retain padding around
+their projected edges. Fabrication reveals the same geometry from the bottom
+upwards. All thirteen existing Forge Core block types use this appearance;
+NeoForge includes only the Synthesis Tower, Assembly Press and Enclosed Gantry.
+Their frame recipes and registry identities are unchanged.
+
+With JEI installed, the **Matter Infuser** category shows iron-to-Matter
+production and Battery Module charging. The **Synthesis Tower** category shows
+one Matter Block becoming each of the three default Cores, with the 8,000 RF
+cost and twenty-second minimum. Select the matching design in Production
+before inserting Matter; recipe browsing does not change the tower's selected
+or running design. The Infuser supports ordinary recipe transfer into its
+input and catalyst slots.

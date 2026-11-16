@@ -33,7 +33,61 @@ def validate_render(output):
         with Image.open(path) as image:richest=max(richest,len(image.convert('RGB').getcolors(1000000) or []))
     if richest<300:raise AssertionError('Map contains no sufficiently detailed textured fixture tile')
     if labels and all(v["block"]=="module_rack" for v in labels):validate_battery_render(output,labels)
+    if labels and all(v.get('frame_fixture') for v in labels):validate_core_render(output,labels)
     return len(files)
+
+def validate_core_render(output,labels):
+    """Real map pixels must show colored open scaffolds, not full seed cubes."""
+    import json,math
+    from PIL import Image,ImageDraw
+    config=json.loads((output/'dynmap/web/standalone/dynmap_config.json').read_text())
+    world=next(v for v in config['worlds'] if v['name']=='world')
+    mapping=next(v for v in world['maps'] if v['name']=='core_fixture')
+    matrix=mapping['worldtomap'];prefix=mapping['prefix'];tiles={};records=[]
+    sheet=Image.new('RGB',(8*112,7*116),(20,24,32));draw=ImageDraw.Draw(sheet)
+    def project(x,y,z):return matrix[0]*x+matrix[1]*y+matrix[2]*z,matrix[3]*x+matrix[4]*y+matrix[5]*z
+    def cross(o,a,b):return (a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0])
+    def hull(points):
+        points=sorted(set(points));lower=[];upper=[]
+        for p in points:
+            while len(lower)>1 and cross(lower[-2],lower[-1],p)<=0:lower.pop()
+            lower.append(p)
+        for p in reversed(points):
+            while len(upper)>1 and cross(upper[-2],upper[-1],p)<=0:upper.pop()
+            upper.append(p)
+        return lower[:-1]+upper[:-1]
+    def pixel(u,v):
+        tx,ty=u//128,v//128;key=tx,ty
+        if key not in tiles:
+            path=output/f'dynmap/web/tiles/world/{prefix}/{tx>>5}_{ty>>5}/{tx}_{ty}.png'
+            if not path.is_file():raise AssertionError('Missing Core closeup tile '+str(path))
+            with Image.open(path) as image:tiles[key]=image.convert('RGB')
+        return tiles[key].getpixel((u%128,127-v%128))
+    for seed in (v for v in labels if v.get('core_seed')):
+        x,y,z=(seed[k] for k in ('x','y','z'))
+        polygon=hull([project(x+a,y+b,z+c) for a in (.108,.892) for b in (.108,.892) for c in (.108,.892)])
+        left,right=math.floor(min(p[0] for p in polygon)),math.ceil(max(p[0] for p in polygon))
+        bottom,top=math.floor(min(p[1] for p in polygon)),math.ceil(max(p[1] for p in polygon))
+        colored=empty=0
+        for u in range(left,right+1):
+            for v in range(bottom,top+1):
+                if not all(cross(a,b,(u+.5,v+.5))>=1 for a,b in zip(polygon,polygon[1:]+polygon[:1])):continue
+                rgb=pixel(u,v)
+                if max(rgb)>35 and max(rgb)-min(rgb)>20:colored+=1
+                else:empty+=1
+        if colored<12 or empty<.30*(colored+empty):raise AssertionError(f'Core map lacks visible colored negative space: {seed} colored={colored} background={empty}')
+        crop=Image.new('RGB',(right-left+7,top-bottom+7))
+        for px,u in enumerate(range(left-3,right+4)):
+            for py,v in enumerate(range(top+3,bottom-4,-1)):crop.putpixel((px,py),pixel(u,v))
+        index=len(records);sx,sy=(index%8)*112,(index//8)*116
+        if crop.width>108 or crop.height>100:raise AssertionError('Unexpected Core closeup projection bounds')
+        sheet.paste(crop,(sx+(112-crop.width)//2,sy))
+        draw.text((sx+2,sy+102),seed['block'].removesuffix('_core')[:15],fill=(230,230,230))
+        records.append(dict(block=seed['block'],facing=seed['facing'],colored_pixels=colored,background_pixels=empty))
+    assert len(records)==52,'All thirteen Core blocks and four facings must render'
+    (output/'core-render-analysis.json').write_text(json.dumps(records,indent=2)+'\n')
+    sheet.save(output/'core-map-contact-sheet.png')
+    print('Actual Core map pixels PASS 52 colored open scaffolds',flush=True)
 
 
 def validate_battery_render(output,labels):
@@ -197,14 +251,14 @@ def place_utility_models(command, labels):
                         labels.append({'x':x,'y':y,'z':z,'block':name,'facing':facing,'joined':True,'joined_size':size,'u':u,'v':v})
 
 
-def place_frame_machines(command, labels, root):
+def place_frame_machines(command, labels, root,all_facings=False):
     """Form native map footprints with the same relative owner/corner fields as gameplay."""
     import json
     specs=json.loads((root/'src/main/resources/assets/vandorlabs/data/frame_machines.json').read_text())
     new={'oculus_drive','survey_dish','sentinel_array','standalone_dish','standalone_antenna'}
     drives={'longburn_drive','meridian_core','oculus_drive'}
     layouts=[(spec,facing,None) for spec in specs if spec['design'] not in drives
-             for facing in (('north','east','south','west') if spec['design'] in new else ('north',))]
+             for facing in (('north','east','south','west') if all_facings or spec['design'] in new else ('north',))]
     # Drive On/Off models occupy a separate field so both saved variants remain
     # visible simultaneously. A static map uses the active model as a steady
     # approximation of the in-game cyan pulse; it has no animation clock.
@@ -218,7 +272,8 @@ def place_frame_machines(command, labels, root):
     ordinary=drive_index=0
     for spec,facing,active in layouts:
         if active is None:
-            bx=34+(ordinary%4)*8;bz=(ordinary//4)*8;ordinary+=1
+            columns=6 if all_facings else 4
+            bx=34+(ordinary%columns)*8;bz=(ordinary//columns)*8;ordinary+=1
         else:
             bx=-32+(drive_index%4)*8;bz=(drive_index//4)*8;drive_index+=1
         w,h,d=(spec[k] for k in ('width','height','depth'));cx,cz=rotate(0,0,w,d,facing)
@@ -226,7 +281,7 @@ def place_frame_machines(command, labels, root):
         powered=True if active is None else active
         drive='' if active is None else f',NavigationRedstone:{0 if active else 1}b,DriveSignalLevels:0b,DriveInverted:0b,DriveParticles:0,DriveParticleThreshold:8,DriveLevel:{15 if active else 0}'
         command(f"setblock {core[0]} 12 {core[2]} vandorlabs:{spec['block']} facing={facing},formed=true replace {{ConstructorCoreX:0,ConstructorCoreZ:0,NavigationScreenOn:{int(powered)}b,MachineActivity:2{drive}}}")
-        label={'x':core[0],'y':12,'z':core[2],'block':spec['block'],'facing':facing,'formed':True}
+        label={'x':core[0],'y':12,'z':core[2],'block':spec['block'],'facing':facing,'formed':True,'frame_fixture':True}
         if active is not None:label.update(drive_active=active,drive_level=15 if active else 0,map_animation='steady-active' if active else 'off')
         labels.append(label)
         for y in range(h):
@@ -236,7 +291,17 @@ def place_frame_machines(command, labels, root):
                     px,pz=rotate(x,z,w,d,facing);px+=bx;pz+=bz
                     offset=packed(core[0]-px,-y,core[2]-pz)
                     command(f'setblock {px} {12+y} {pz} vandorlabs:constructor_part 0 replace {{ConstructorOwner:{offset}L,ConstructorMatter:0b}}')
-                    labels.append({'x':px,'y':12+y,'z':pz,'block':'constructor_part','owner':spec['block'],'facing':facing})
+                    labels.append({'x':px,'y':12+y,'z':pz,'block':'constructor_part','owner':spec['block'],'facing':facing,'frame_fixture':True})
+
+def place_core_seeds(command,labels,root):
+    import json
+    specs=json.loads((root/'src/main/resources/assets/vandorlabs/data/frame_machines.json').read_text())
+    index=0
+    for spec in specs:
+        for facing in ('north','east','south','west'):
+            x,z=2+3*(index%8),2+3*(index//8);index+=1
+            command(f"setblock {x} 12 {z} vandorlabs:{spec['block']} facing={facing},formed=false")
+            labels.append(dict(x=x,y=12,z=z,block=spec['block'],facing=facing,core_seed=True,frame_fixture=True))
 
 
 def place_segmented_doors(command, labels):
@@ -288,6 +353,16 @@ def place_module_racks(command, labels):
 def validate_fixture_matrix(labels):
     """Fail before launching a map if any authored group or drive state is absent."""
     from collections import Counter
+    if labels and all(v.get('frame_fixture') for v in labels):
+        import json
+        specs=json.loads((Path(__file__).resolve().parents[1]/'src/main/resources/assets/vandorlabs/data/frame_machines.json').read_text())
+        expected={(v['block'],f) for v in specs for f in ('north','east','south','west')}
+        assert {(v['block'],v['facing']) for v in labels if v.get('core_seed')}==expected,'Core seed coverage'
+        assert {(v['block'],v['facing']) for v in labels if v.get('formed')}==expected,'Formed machine facing coverage'
+        positions=[(v['x'],v['y'],v['z']) for v in labels]
+        assert len(set(positions))==len(positions),'Overlapping frame/Core fixtures'
+        assert all((x-24)**2+(z-24)**2<=64**2 for x,_,z in positions),'Frame fixture outside map radius'
+        return
     if labels and all(label['block'] == 'module_rack' for label in labels):
         blanks=[v for v in labels if v.get('module')=='blank'];batteries=[v for v in labels if v.get('module')=='battery']
         assert len(blanks)==96 and {(v['facing'], v['mask']) for v in blanks} == {(f, m) for f in ('north','east','south','west','up','down') for m in range(16)}, 'Module Rack facing/mask coverage missing'
@@ -324,7 +399,7 @@ def main():
     parser.add_argument('--dynmap',required=True,type=Path)
     parser.add_argument('--jar',required=True,type=Path)
     parser.add_argument('--java',default='java')
-    parser.add_argument('--focus',choices=('module-rack',),help='Only the selected changed block family')
+    parser.add_argument('--focus',choices=('module-rack','frame-machines'),help='Only the selected changed block family')
     parser.add_argument('--mod',action='append',default=[],type=Path,help='Additional installed compatibility JARs')
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
@@ -363,6 +438,10 @@ def run_fixture(args,root,output,artifact):
         (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: rack_charge_closeup\n    azimuth: 135\n    inclination: 30\n    scale: 64\n    minimumheight: 10\n    maximumheight: 16\n')
         with (output/'dynmap/worlds.txt').open('a') as extra:
             extra.write('      - class: org.dynmap.hdmap.HDMap\n        name: battery_fixture\n        title: Battery Charge Fixture\n        prefix: battery_fixture\n        perspective: rack_charge_closeup\n        shader: stdtexture\n        lighting: default\n        image-format: png\n')
+    if args.focus=='frame-machines':
+        (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: core_closeup\n    azimuth: 135\n    inclination: 30\n    scale: 64\n    minimumheight: 10\n    maximumheight: 16\n')
+        with (output/'dynmap/worlds.txt').open('a') as extra:
+            extra.write('      - class: org.dynmap.hdmap.HDMap\n        name: core_fixture\n        title: Open Core Fixture\n        prefix: core_fixture\n        perspective: core_closeup\n        shader: stdtexture\n        lighting: default\n        image-format: png\n')
     for phase in ('prepare','render'):
         logpath=output/(phase+'.log')
         with logpath.open('w') as log:
@@ -382,10 +461,14 @@ def run_fixture(args,root,output,artifact):
                 wait('Done (');command('dynmap pause all')
                 if phase=='prepare':command('setworldspawn 8 12 8')
                 else:
-                    command('fill -34 11 -2 64 11 64 minecraft:stone')
+                    floor_max=80 if args.focus=='frame-machines' else 64
+                    command(f'fill -34 11 -2 {floor_max} 11 64 minecraft:stone')
                     labels=[]
                     if args.focus == 'module-rack':
                         place_module_racks(command, labels)
+                    elif args.focus=='frame-machines':
+                        place_frame_machines(command,labels,root,all_facings=True)
+                        place_core_seeds(command,labels,root)
                     else:
                         for i,facing in enumerate(('north','east','south','west')):
                             x=i*5
@@ -420,6 +503,9 @@ def run_fixture(args,root,output,artifact):
                     wait('completed -',timeout=240)
                     if args.focus=='module-rack':
                         start=len(logpath.read_text(errors='replace'));command('dynmap radiusrender world -2 36 16 battery_fixture')
+                        wait('completed -',timeout=240,start=start)
+                    if args.focus=='frame-machines':
+                        start=len(logpath.read_text(errors='replace'));command('dynmap radiusrender world 12 12 16 core_fixture')
                         wait('completed -',timeout=240,start=start)
                     count=validate_render(output)
                     print('Dynmap render PASS:',count,'PNG tiles;',output,flush=True)

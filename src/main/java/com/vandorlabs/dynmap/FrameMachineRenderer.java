@@ -2,6 +2,7 @@ package com.vandorlabs.dynmap;
 
 import com.google.gson.Gson;
 import com.vandorlabs.blocks.MachineMountSurface;
+import com.vandorlabs.geometry.CoreMesh;
 import com.vandorlabs.vehicle.VehicleRotation;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,8 +16,8 @@ import org.dynmap.renderer.*;
 /** Authored static machinery is clipped into its reserved cells, never submitted twice. */
 public final class FrameMachineRenderer extends CustomRenderer {
     private static final class Face {int texture;double[][] vertices;}
-    private static final class Design {int width,height,depth,seed;Face[][] states;}
-    private static final class Catalog {String[] textures;Map<String,Design> designs;}
+    private static final class Design {int width,height,depth;String core;Face[][] states;}
+    private static final class Catalog {String[] textures;int[] colors;Map<String,Design> designs;}
     private static final Catalog CATALOG=load();
     private final com.google.common.cache.Cache<String,RenderPatch[]> meshes=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
     private static Catalog load(){
@@ -25,7 +26,7 @@ public final class FrameMachineRenderer extends CustomRenderer {
             return new Gson().fromJson(new InputStreamReader(input,StandardCharsets.UTF_8),Catalog.class);
         }catch(java.io.IOException error){throw new IllegalStateException(error);}
     }
-    @Override protected int getMaximumTextureCount(){return CATALOG.textures.length;}
+    @Override protected int getMaximumTextureCount(){return CATALOG.textures.length+CATALOG.colors.length;}
     @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"ConstructorOwner","ConstructorCoreX","ConstructorCoreZ","NavigationScreenOn","MachineActivity"};}
     private static int integer(Object value,int fallback){return value instanceof Number?((Number)value).intValue():fallback;}
     private static boolean on(Object value){return Boolean.TRUE.equals(value)||value instanceof Number&&((Number)value).intValue()!=0;}
@@ -37,7 +38,15 @@ public final class FrameMachineRenderer extends CustomRenderer {
         if(state==null||state.blockName==null)return new RenderPatch[0];
         Design design=CATALOG.designs.get(state.blockName.replace("vandorlabs:",""));if(design==null)return new RenderPatch[0];
         if(!state.isStateMatch("formed","true")){
-            if(part)return new RenderPatch[0];List<RenderPatch> seed=new ArrayList<>();int t=design.seed;addBox(context.getPatchFactory(),seed,0,1,0,1,0,1,new int[]{t,t,t,t,t,t});return seed.toArray(new RenderPatch[0]);
+            if(part)return new RenderPatch[0];String key=state.blockName+":core";RenderPatch[] cached=meshes.getIfPresent(key);if(cached!=null)return cached;
+            List<RenderPatch> result=new ArrayList<>();
+            for(CoreMesh.Face face:CoreMesh.faces(design.core)){
+                int color=Arrays.binarySearch(CATALOG.colors,face.rgb);if(color<0)throw new IllegalStateException("Missing Core map color");
+                List<MapSurface.Vertex> polygon=new ArrayList<>(4);
+                for(int vertex=0;vertex<4;vertex++)polygon.add(new MapSurface.Vertex(new Vec3d(face.coordinate(vertex,0),face.coordinate(vertex,1),face.coordinate(vertex,2)),vertex==1||vertex==2?1:0,vertex>=2?1:0));
+                MapSurface.emit(context,result,polygon,CATALOG.textures.length+color);
+            }
+            RenderPatch[] built=result.toArray(new RenderPatch[0]);meshes.put(key,built);return built;
         }
         EnumFacing facing=state.isStateMatch("facing","east")?EnumFacing.EAST:state.isStateMatch("facing","south")?EnumFacing.SOUTH:state.isStateMatch("facing","west")?EnumFacing.WEST:EnumFacing.NORTH;
         int x=integer(context.getBlockTileEntityFieldAt("ConstructorCoreX",ox,oy,oz),0),z=integer(context.getBlockTileEntityFieldAt("ConstructorCoreZ",ox,oy,oz),0);

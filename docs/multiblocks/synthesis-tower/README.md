@@ -26,14 +26,24 @@ Right-click the Core. The frame becomes the complete model, and its occupied cel
 
 ![Synthesis Tower: assemble](step-4.png)
 
+The assembled view also shows four optional Battery Modules installed in the fitted rack.
+
 ## 5. Insert a Data Chip
 
 The native Data Chip Mount is always visible on this model. Right-click it with any Data Chip to insert one physical item; empty-hand right-click removes it. The chip stays inserted and does not gate activation. Redstone settings alone control optional power activation. The machine never emits a redstone signal.
 
 ![Synthesis Tower: insert a data chip](step-5.png)
 
+The operating view shows the retained chip alongside a powered Core build.
+
 ## Facing and removal
 
 The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
 
-On Forge 1.12.2, the formed Synthesis Tower produces constructor Cores from Programmable Matter and RF. Right-click it to select a design, supply a charged Battery Module or external RF, and insert Matter. Its Redstone tab controls physical and receiving-channel activation. See [production and ports](../../universal-constructors.md#synthesis-tower-production-forge-1122) for operating details.
+On Forge 1.12.2 and NeoForge 1.21.1, the formed Synthesis Tower produces constructor Cores from Programmable Matter and RF. Right-click it to select a design, supply up to four charged Battery Modules (40,000 RF total) or external RF, and insert Matter. Its Redstone tab controls physical and receiving-channel activation. See [production and ports](../../universal-constructors.md#synthesis-tower-production) for operating details.
+
+Each Core consumes one Matter Block and 8,000 RF over at least twenty seconds.
+The front left has a smaller square preview screen and projecting keyboard;
+the right has the chip mount and a flush four-bay rack. A chest beside either
+item-output face receives finished Cores automatically. The original frame
+size, twenty-eight Matter Blocks and Core placement are unchanged.

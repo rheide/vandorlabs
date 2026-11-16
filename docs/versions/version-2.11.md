@@ -20,13 +20,18 @@ production, redstone catalyst and hopper access.
 ## Powered Synthesis Tower
 
 Forge 1.12.2 and NeoForge 1.21.1 Synthesis Towers produce three constructor Cores from Programmable
-Matter and RF, supplied through a connected power port or a Battery Module.
+Matter and RF, supplied through a connected power port or up to four Battery
+Modules. The flush four-bay rack holds **40,000 RF**; each Core uses **8,000 RF**
+at **20 RF per tick**, taking at least **twenty seconds**.
 The original construction frame is unchanged. A new Production dialog shows
 rotating, textured previews of the finished structures; the Redstone tab
 controls physical and channel activation while retaining paused work.
 
-Watch each Core grow in the chamber beneath four scanning beams, then collect
-it in the world or from the output slot. See the [constructor guide](../universal-constructors.md)
+Watch each Core grow in the chamber beneath four scanning beams while RF is
+being spent. Pausing retains the partial Core and stops the beams. Collect it
+in the world, from the output slot, or automatically into a chest beside an
+item-output face. The front has a smaller square screen and projecting keyboard
+on the left, a chip mount and flush rack on the right, and neutral steel casing. See the [constructor guide](../universal-constructors.md)
 for power costs, ports and operation.
 
 ## Builders on Minecraft 1.21.1
@@ -43,3 +48,16 @@ and safe teardown. Other Core multiblocks and
 arm/copy integration for these assemblies remain deferred. The current native
 validation is focused development-runtime/software-rendering coverage, not a
 full release gate or hardware shader acceptance.
+
+## Open Core models and JEI
+
+All thirteen Forge Core block types now use colored open tesseract scaffolds,
+with a small inner cube, eight diagonal struts, outer edges and thicker corner
+nodes. The three enabled native builder Cores use the same geometry. Real gaps
+remain visible in placed blocks, fabrication, padded inventory icons and
+Dynmap; Core frame requirements and identities are preserved.
+
+With JEI installed, **Matter Infuser** shows iron conversion and Battery Module
+charging, and **Synthesis Tower** shows its three Core outputs with the energy
+and processing requirements. Infuser input/catalyst transfer is supported;
+choose tower designs in Production before supplying Matter.

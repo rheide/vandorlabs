@@ -112,6 +112,7 @@ public final class UniversalConstructorModelCache {
             next.put(entry.getKey(), Mesh.fromObj(baked));
         }
         meshes = Collections.unmodifiableMap(next);
+        SynthesisTowerRenderer.clear();
     }
 
     /**
