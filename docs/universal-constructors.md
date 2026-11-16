@@ -91,14 +91,16 @@ display's rotating preview are rendered only within 24 blocks.
 
 ## Core appearance and recipe browsing
 
-Unformed Core blocks and inventory items use a cage in each Core’s primary color on a
-**32×32 pixel grid**: detailed solid corner cubes, recessed face crosses and
-four stepped supports around a 12-pixel cube carrying the original Core artwork. The gaps are actual
-empty model space. Inventory models retain padding around their projected edges.
-Fabrication prints occupied voxels from the bottom upwards, including partial
-rows and their individual top faces. All thirteen existing Forge Core block
-types use this appearance; NeoForge includes only the Synthesis Tower, Assembly
-Press and Enclosed Gantry. Frame recipes and registry identities are unchanged.
+Eleven unformed Core block and inventory models use the supplied Voxel Machines
+cuboids and their original 64×64 material atlases. Constructor, communications,
+array and drive Cores each retain their distinct armor, cooling ribs and stepped
+braces. The two navigation Cores retain their existing cage models. Gaps in the
+imported models are real empty space, and inventory icons retain padding.
+Fabrication prints each design's occupied voxels from the bottom upwards,
+including partial rows and their individual textured top faces. Dynmap uses the
+same geometry and artwork. NeoForge includes only the Synthesis Tower, Assembly
+Press and Enclosed Gantry Core models; the other imports remain Forge-only.
+Registry identities and frame assembly requirements are unchanged.
 
 With JEI installed, the **Matter Infuser** category shows iron-to-Matter
 production and Battery Module charging. The **Synthesis Tower** category shows

@@ -42,6 +42,7 @@ def main():
             if meta.exists():shutil.copyfile(meta,target.with_suffix('.png.mcmeta'))
         textures[reference]=digest;return reference
     texture("vandorlabs:blocks/core_flat")
+    for name in ("heavy_constructor","automated_fabricator","industrial_printer"):texture("vandorlabs:blocks/voxel_cores/"+name)
     catalog=json.loads((SOURCE/'data/frame_machines.json').read_text())
     for design in IDS:
         spec=next(v for v in catalog if v['design']==design)

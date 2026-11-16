@@ -92,9 +92,10 @@ checks.
 
 ## Cores and JEI
 
-The three Core block/item models use a 32×32 pixel cage, a legacy-textured inner cube, four stepped
-supports, recessed face crosses and solid corner cubes, with real empty gaps.
-The same geometry appears during fabrication and in padded inventory icons.
+The three Core block/item models use the supplied Heavy Constructor, Automated
+Fabricator and Industrial Printer cuboids and their original 64×64 atlases.
+Their occupied geometry also drives bottom-up fabrication, including the
+textured faces of partially printed rows. Inventory icons retain visible padding.
 This native conversion does not register the other ten Forge Core families.
 
 With JEI installed, **Matter Infuser** lists iron conversion and Battery Module

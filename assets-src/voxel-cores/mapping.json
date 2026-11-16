@@ -1,0 +1,31 @@
+{
+  "heavy_constructor": [
+    "synthesis_tower"
+  ],
+  "automated_fabricator": [
+    "assembly_press"
+  ],
+  "industrial_printer": [
+    "enclosed_gantry"
+  ],
+  "comms_relay": [
+    "sentinel_array",
+    "standalone_antenna"
+  ],
+  "network_node": [
+    "survey_dish",
+    "standalone_dish"
+  ],
+  "deep_space_array": [
+    "vector_fold_array"
+  ],
+  "ion_drive": [
+    "meridian_core"
+  ],
+  "plasma_drive": [
+    "longburn_drive"
+  ],
+  "fusion_drive": [
+    "oculus_drive"
+  ]
+}

@@ -2,7 +2,7 @@ package com.vandorlabs.geometry;
 
 import java.util.*;
 
-/** Minecraft-pixel Core cage. Every solid cell and emitted edge lies on the authored 32-grid. */
+/** Shared Core meshes: supplied cuboid imports plus the two retained navigation cages. */
 public final class CoreMesh {
     public static final int GRID=32,CENTER_MIN=10,CENTER_MAX=22;
     public static final float ITEM_GUI_SCALE=.54F;
@@ -24,13 +24,15 @@ public final class CoreMesh {
         public final boolean textured;
         public final double nx,ny,nz;
         private final double[] vertices;
+        private double[] importedUV;
         private final double shade;
         private Face(int material,int axis,int sign,double[] positions){this.material=material;textured=material==LEGACY_CORE;shade=axis==1?(sign>0?1:.70):axis==0?(sign>0?.80:.86):(sign>0?.84:.94);rgb=rgb(PALETTES.get("assembly_press"));fabricationRGB=fabricationRGB(PALETTES.get("assembly_press"));vertices=positions;nx=axis==0?sign:0;ny=axis==1?sign:0;nz=axis==2?sign:0;}
+        Face(int axis,int sign,double[] positions,double[] uv){this(LEGACY_CORE,axis,sign,positions);importedUV=uv;}
         public int rgb(Palette palette){return textured?0xffffff:shade(palette.tones[material],shade);}
         public int fabricationRGB(Palette palette){return textured?shade(0xffffff,shade):rgb(palette);}
         public double coordinate(int vertex,int axis){return vertices[vertex*3+axis];}
-        public double u(int vertex){if(!textured)return .5;double x=coordinate(vertex,0)*GRID,y=coordinate(vertex,1)*GRID,z=coordinate(vertex,2)*GRID;return (nx<0?CENTER_MAX-z:nx>0?z-CENTER_MIN:nz>0?CENTER_MAX-x:x-CENTER_MIN)/(CENTER_MAX-CENTER_MIN);}
-        public double v(int vertex){if(!textured)return .5;double y=coordinate(vertex,1)*GRID,z=coordinate(vertex,2)*GRID;return (ny>0?z-CENTER_MIN:ny<0?CENTER_MAX-z:CENTER_MAX-y)/(CENTER_MAX-CENTER_MIN);}
+        public double u(int vertex){if(importedUV!=null)return importedUV[vertex*2];if(!textured)return .5;double x=coordinate(vertex,0)*GRID,y=coordinate(vertex,1)*GRID,z=coordinate(vertex,2)*GRID;return (nx<0?CENTER_MAX-z:nx>0?z-CENTER_MIN:nz>0?CENTER_MAX-x:x-CENTER_MIN)/(CENTER_MAX-CENTER_MIN);}
+        public double v(int vertex){if(importedUV!=null)return importedUV[vertex*2+1];if(!textured)return .5;double y=coordinate(vertex,1)*GRID,z=coordinate(vertex,2)*GRID;return (ny>0?z-CENTER_MIN:ny<0?CENTER_MAX-z:CENTER_MAX-y)/(CENTER_MAX-CENTER_MIN);}
     }
     private static final List<Face> FULL;
     private static final int[] RANK=new int[GRID*GRID*GRID],LAYER_COUNTS=new int[GRID+1];
@@ -74,16 +76,17 @@ public final class CoreMesh {
     private static void put(int x,int y,int z,int material){int at=index(x,y,z);if(VOXELS[at]!=CORNER)VOXELS[at]=(byte)material;}
     private static void box(int x0,int y0,int z0,int x1,int y1,int z1,int material){for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)for(int z=z0;z<z1;z++)put(x,y,z,material);}
     public static int color(String id){return palette(id).primary;}
-    public static String legacyTexture(String id){require(id);String name=id.equals("meridian_core")?"meridian_drive_core":id.equals("paladyne_navigation_computer")?"paladyne_navigation_core":id.equals("seyr_navigation_computer")?"seyr_navigation_core":id+"_core";return "vandorlabs:blocks/matter/"+name;}
+    public static String legacyTexture(String id){require(id);if(ImportedCoreMesh.has(id))return "vandorlabs:blocks/voxel_cores/"+ImportedCoreData.model(id);String name=id.equals("meridian_core")?"meridian_drive_core":id.equals("paladyne_navigation_computer")?"paladyne_navigation_core":id.equals("seyr_navigation_computer")?"seyr_navigation_core":id+"_core";return "vandorlabs:blocks/matter/"+name;}
     private static void require(String id){if(!IDS.contains(id))throw new IllegalArgumentException("Unknown Core "+id);}
-    public static List<Face> faces(String id){require(id);return FULL;}
+    public static List<Face> faces(String id){require(id);return ImportedCoreMesh.has(id)?ImportedCoreMesh.faces(id,1):FULL;}
     public static int layers(double progress){return Math.max(0,Math.min(GRID,(int)Math.floor(Math.max(0,Math.min(1,progress))*GRID)));}
     public static int voxelCount(){return ORDER.length;}
     public static int printed(double progress){return Math.max(0,Math.min(ORDER.length,(int)Math.floor(Math.max(0,Math.min(1,progress))*ORDER.length)));}
     public static double height(double progress){int count=printed(progress);return count==0?0:(ORDER[count-1]/(GRID*GRID)+1)/(double)GRID;}
-    public static List<Face> faces(String id,int layers){require(id);if(layers<0||layers>GRID)throw new IllegalArgumentException("Core voxel layers");return prefix(LAYER_COUNTS[layers]);}
+    public static List<Face> faces(String id,int layers){require(id);if(ImportedCoreMesh.has(id))return faces(id,layers/(double)GRID);if(layers<0||layers>GRID)throw new IllegalArgumentException("Core voxel layers");return prefix(LAYER_COUNTS[layers]);}
     /** A stable bottom-up voxel prefix, including partially printed rows; local tops preserve original UVs. */
-    public static List<Face> faces(String id,double progress){require(id);return prefix(printed(progress));}
+    public static List<Face> faces(String id,double progress){require(id);return ImportedCoreMesh.has(id)?ImportedCoreMesh.faces(id,progress):prefix(printed(progress));}
+    public static double height(String id,double progress){require(id);return ImportedCoreMesh.has(id)?ImportedCoreMesh.height(id,progress):height(progress);}
     private static synchronized List<Face> prefix(int count){if(count==0)return Collections.emptyList();if(count==ORDER.length)return FULL;List<Face> found=PREFIXES.get(count);if(found!=null)return found;List<Face> built=Collections.unmodifiableList(surface(count));long bytes=64L+built.size()*192L;while(prefixBytes+bytes>PREFIX_BUDGET&&!PREFIXES.isEmpty()){Iterator<Map.Entry<Integer,List<Face>>> iterator=PREFIXES.entrySet().iterator();Map.Entry<Integer,List<Face>> old=iterator.next();prefixBytes-=64L+old.getValue().size()*192L;iterator.remove();}if(bytes<=PREFIX_BUDGET){PREFIXES.put(count,built);prefixBytes+=bytes;}return built;}
     private static int printedMaterial(int x,int y,int z,int prefix){if(x<0||y<0||z<0||x>=GRID||y>=GRID||z>=GRID)return EMPTY;int at=index(x,y,z),rank=RANK[at];return rank>0&&rank<=prefix?VOXELS[at]:EMPTY;}
     private static List<Face> surface(int prefix){List<Face> result=new ArrayList<>();int[] mask=new int[GRID*GRID];

@@ -604,8 +604,8 @@ tile.vandorlabs.programmable_ramp_slab.name=Ramp Controller Slab
 tile.vandorlabs.oculus_drive_core.name=Pinnacle Oculus Drive Core
 tile.vandorlabs.survey_dish_core.name=Survey Dish Core
 tile.vandorlabs.sentinel_array_core.name=Sentinel Array Core
-tile.vandorlabs.standalone_dish_core.name=Standalone Dish Core
-tile.vandorlabs.standalone_antenna_core.name=Standalone Antenna Core
+tile.vandorlabs.standalone_dish_core.name=Survey Dish Core (Standalone)
+tile.vandorlabs.standalone_antenna_core.name=Sentinel Array Core (Standalone)
 
 tile.vandorlabs.data_chip_programmer.name=Card / Chip Programmer
 
