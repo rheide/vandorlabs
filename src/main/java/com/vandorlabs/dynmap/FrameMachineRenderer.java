@@ -40,9 +40,10 @@ public final class FrameMachineRenderer extends CustomRenderer {
         if(!state.isStateMatch("formed","true")){
             if(part)return new RenderPatch[0];String key=state.blockName+":core";RenderPatch[] cached=meshes.getIfPresent(key);if(cached!=null)return cached;
             List<RenderPatch> result=new ArrayList<>();
+            CoreMesh.Palette corePalette=CoreMesh.palette(design.core);
             for(CoreMesh.Face face:CoreMesh.faces(design.core)){
                 int texture=design.core_texture;
-                if(!face.textured){int color=Arrays.binarySearch(CATALOG.colors,face.rgb);if(color<0)throw new IllegalStateException("Missing Core map color");texture=CATALOG.textures.length+color;}
+                if(!face.textured){int color=Arrays.binarySearch(CATALOG.colors,face.rgb(corePalette));if(color<0)throw new IllegalStateException("Missing Core map color");texture=CATALOG.textures.length+color;}
                 List<MapSurface.Vertex> polygon=new ArrayList<>(4);
                 for(int vertex=0;vertex<4;vertex++)polygon.add(new MapSurface.Vertex(new Vec3d(face.coordinate(vertex,0),face.coordinate(vertex,1),face.coordinate(vertex,2)),face.u(vertex),face.v(vertex)));
                 MapSurface.emit(context,result,polygon,texture);

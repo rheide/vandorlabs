@@ -14,13 +14,13 @@
 - Produce Synthesis Tower, Assembly Press and Enclosed Gantry Cores from Programmable Matter and RF, with saved build progress and one owned output. Keep existing frame dimensions and materials.
 - Add an inventory dialog with full textured rotating structure previews, battery power status and a chip slot for future designs. Ordinary right-click and Configurizer open the same dialog.
 - Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior. Wait for deferred inputs to settle after loading before consuming Matter or RF.
-- Fit four sliding Battery Modules in a flush rack, retaining 10,000 RF per item and displaying up to 40,000 RF in the shared Source/native dialog. Preserve each bay, charge and chip through physical insertion, extraction and reload; update occupancy and charge immediately with shared rack motion.
+- Fit four sliding Battery Modules in a flush rack, retaining 10,000 RF per item and displaying up to 40,000 RF in the shared Source/native dialog. Preserve each bay, charge and chip through physical insertion, extraction and reload; keep client inventory-slot updates separate from authoritative bay snapshots so removal and charge updates retain shared rack motion.
 - Use 20 RF per tick for each 8,000 RF Core, taking at least twenty seconds. Export finished Cores into a chest or compatible inventory beside an item-output face; retain output when the destination cannot accept it.
-- Light rear RF/item ports from compatible endpoint presence, including idle or push-only connections. Add rear RF/item ports, a smaller left display with a projecting keyboard, a right chip mount/rack and neutral casing panels. Show bottom-up Core fabrication with four scanning beams only while spending RF; retain the partial Core while paused. Keep previews inside their screen, raise the fabrication tray by two Minecraft pixels, and use lighter, translucent scanning beams. Align the chip and rack to the right-hand casing blocks. Cull fabrication effects beyond nearby viewing range.
+- Light rear RF/item ports from compatible endpoint presence, including idle or push-only connections. Add rear RF/item ports, a smaller left display with a projecting keyboard, a right chip mount/rack and neutral casing panels. Show bottom-up Core fabrication with four scanning beams only while spending RF; retain the partial Core while paused. Keep previews inside their screen, raise the fabrication tray by two Minecraft pixels, and use lighter, translucent scanning beams. Align the chip and rack to the right-hand casing blocks. Remove casing faces covered by the rack and preserve authored texel density on shortened side panels and rack rims. Cull fabrication effects beyond nearby viewing range.
 
 ### Core models and JEI
 
-- Replace all thirteen Forge Core block/item models and the three native builder Cores with cyan Minecraft-pixel cages: legacy-textured inner cube, four stepped diagonal supports, recessed face crosses and solid corner cubes on a 32×32 pixel grid. Use the same geometry for fabrication and Dynmap, with padded inventory icons.
+- Replace all thirteen Forge Core block/item models and the three native builder Cores with Minecraft-pixel cages in each Core’s primary color: larger legacy-textured inner cube, four stepped diagonal supports, recessed face crosses and detailed solid corner cubes on a 32×32 pixel grid. Use the same geometry for fabrication and Dynmap, with padded inventory icons.
 - Add shared Matter Infuser and Synthesis Tower JEI categories for iron conversion, Battery Module charging and the three Core outputs, including costs and processing requirements. Support Infuser input/catalyst transfer; keep tower design selection in Production.
 
 ### Native Matter Infuser
@@ -40,7 +40,7 @@
 
 - Add single-item Battery Modules holding 10,000 RF, with a Programmable Matter Ingot, gold and redstone recipe and an item energy capability.
 - Charge modules in Forge and NeoForge Matter Infusers using sunlight and redstone catalyst. Keep partial charge on the physical item through charging, rack insertion, extraction and reload.
-- Show the original Power Port red on/off bar between the module handles, lighting one authored pixel column at a time with charge. Share the display across items, racks and towers; include an empty and a full module in Creative.
+- Show the original Power Port red on/off bar between the module handles, lighting one authored pixel column at a time with charge. Share the display across items, racks and towers; remove the former cyan/amber bars and include an empty and a full module in Creative.
 
 
 ## 2.10.0

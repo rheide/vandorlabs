@@ -54,7 +54,7 @@ full release gate or hardware shader acceptance.
 
 All thirteen Forge Core block types now use colored open tesseract scaffolds,
 on a 32×32 pixel grid, with a legacy-textured inner cube, four stepped
-diagonal supports, recessed face crosses and solid corner cubes. The three enabled native builder Cores use the same geometry. Real gaps
+diagonal supports, recessed face crosses and detailed solid corner cubes. The larger inner cube retains the original Core artwork, while each outer frame follows its Core’s primary color. The three enabled native builder Cores use the same geometry. Real gaps
 remain visible in placed blocks, fabrication, padded inventory icons and
 Dynmap; Core frame requirements and identities are preserved.
 

@@ -61,18 +61,30 @@ def main():
             service=x0==1 and .5<=y0 and y1<=1.5
             uv=uv_rect(0,1,y0-.5,y1-.5) if service else uv_rect(0,1,y0-math.floor(y0),y1-math.floor(y0))
             quad('synth_rear_'+str(count),'synth_service' if service else 'synth_casing',[(x1,y1,3),(x0,y1,3),(x0,y0,3),(x1,y0,3)],uv)
-    zs=cuts(.375,3)
+    # Side panels use a complete frame at 64 authored texels per block. Narrow
+    # returns keep both border/fastener bands and omit only plain middle pixels.
+    def side_panel(name,x,z0,z1,y0,y1,left):
+        pixels=round((z1-z0)*64)
+        strips=[(0,1,0,1)] if pixels==64 else [(0,12/64,0,12/64),(12/64,(pixels-12)/64,(88-pixels)/128,(40+pixels)/128),( (pixels-12)/64,pixels/64,52/64,1)]
+        for a,b,u0,u1 in strips:
+            A=z0+a;B=z0+b
+            points=[(x,y1,B),(x,y1,A),(x,y0,A),(x,y0,B)] if left else [(x,y1,A),(x,y1,B),(x,y0,B),(x,y0,A)]
+            uv=((u1,1),(u0,1),(u0,0),(u1,0)) if left else ((u0,1),(u1,1),(u1,0),(u0,0))
+            quad(name+'_'+str(count),'synth_casing',points,uv)
+    for y0 in (0,1):
+        # The mounted rack owns its exterior side. Never draw a coplanar casing
+        # face behind it; its rear edge is not aligned to the old integer seam.
+        left_start=rz+1 if y0==ry and rx==0 else .375
+        for z0,z1 in zip(cuts(left_start,3),cuts(left_start,3)[1:]):
+            if not(y0==0 and z0>=2):side_panel('synth_left',0,z0,z1,y0,y0+1,True)
+        for z0,z1 in zip(cuts(.375,3),cuts(.375,3)[1:]):side_panel('synth_right',3,z0,z1,y0,y0+1,False)
+    zs=cuts(.375,3,(rz+1,))
     for z0,z1 in zip(zs,zs[1:]):
-        for y0,y1 in zip(cuts(0,2),cuts(0,2)[1:]):
-            uv=uv_rect(z0-math.floor(z0),z1-math.floor(z0),y0,y1) if y0==0 else uv_rect(z0-math.floor(z0),z1-math.floor(z0),0,1)
-            # The shortened front return uses seamless interior metal, never half a framed panel.
-            side_material='synth_interior' if z0<1 else 'synth_casing'
-            if not (y0==0 and z0>=2):quad('synth_left_'+str(count),side_material,[(0,y1,z1),(0,y1,z0),(0,y0,z0),(0,y0,z1)],uv)
-            quad('synth_right_'+str(count),side_material,[(3,y1,z0),(3,y1,z1),(3,y0,z1),(3,y0,z0)],uv)
         for x0,x1 in zip(cuts(0,3),cuts(0,3)[1:]):
             uv=((0,z0-math.floor(z0)),(1,z0-math.floor(z0)),(1,z1-math.floor(z0)),(0,z1-math.floor(z0)))
             quad('synth_top_'+str(count),'synth_casing',[(x0,2,z0),(x0,2,z1),(x1,2,z1),(x1,2,z0)],uv)
-            if not (z0>=2 and x0 in (0,2)):quad('synth_bottom_'+str(count),'synth_casing',[(x0,0,z1),(x0,0,z0),(x1,0,z0),(x1,0,z1)],uv)
+            rack_bottom=rx<=x0 and x1<=rx+1 and rz<=z0 and z1<=rz+1
+            if not rack_bottom and not(z0>=2 and x0 in (0,2)):quad('synth_bottom_'+str(count),'synth_casing',[(x0,0,z1),(x0,0,z0),(x1,0,z0),(x1,0,z1)],uv)
     def front(name,mat,x0,y0,x1,y1,z):quad(name,mat,[(x0,y1,z),(x1,y1,z),(x1,y0,z),(x0,y0,z)],((0,1),(1,1),(1,0),(0,0)))
     cx,cy,cz=value('SCREEN_X'),value('SCREEN_Y'),value('SCREEN_Z');s=value('SCREEN_FRAME')/2
     front('synth_screen_bezel','synth_bezel',cx-s,cy-s,cx+s,cy+s,cz+.012)
@@ -107,7 +119,14 @@ def main():
                     px,py,pz=points[n]
                     if north:px,pz=1-px,1-pz
                     p.append((ox+px,oy+py,oz+pz))
-                a,b,c,d=face.get('uv',[0,0,16,16]);quad('synth_'+name+'_'+str(index)+'_'+side,'synth_'+name+'_'+face['texture'][1:],p,((a/16,1-b/16),(c/16,1-b/16),(c/16,1-d/16),(a/16,1-d/16)))
+                default_uv={
+                    'down':[x*16,16-Z*16,X*16,16-z*16],
+                    'up':[x*16,z*16,X*16,Z*16],
+                    'north':[16-X*16,16-Y*16,16-x*16,16-y*16],
+                    'south':[x*16,16-Y*16,X*16,16-y*16],
+                    'west':[z*16,16-Y*16,Z*16,16-y*16],
+                    'east':[16-Z*16,16-Y*16,16-z*16,16-y*16]}
+                a,b,c,d=face.get('uv',default_uv[side]);quad('synth_'+name+'_'+str(index)+'_'+side,'synth_'+name+'_'+face['texture'][1:],p,((a/16,1-b/16),(c/16,1-b/16),(c/16,1-d/16),(a/16,1-d/16)))
     ports=[('power_in_off',[(2,0,3),(3,0,3),(3,1,3),(2,1,3)]),('power_in_off',[(2,0,2),(3,0,2),(3,0,3),(2,0,3)]),('matter_in_off',[(0,0,3),(1,0,3),(1,1,3),(0,1,3)]),('matter_out_off',[(0,0,2),(1,0,2),(1,0,3),(0,0,3)]),('matter_out_off',[(0,0,2),(0,0,3),(0,1,3),(0,1,2)])]
     for texture in sorted({name for name,points in ports}):material('synth_port_'+texture,'vandorlabs:blocks/resource_ports/'+texture)
     for index,(texture,points) in enumerate(ports):quad('synth_port_'+str(index),'synth_port_'+texture,points)

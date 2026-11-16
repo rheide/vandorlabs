@@ -5,7 +5,7 @@ import java.util.TreeSet;
 public final class CorePaletteExport {
     public static void main(String[] args) {
         TreeSet<Integer> colors=new TreeSet<Integer>();
-        for(String id:CoreMesh.IDS)for(CoreMesh.Face face:CoreMesh.faces(id))if(!face.textured)colors.add(face.rgb);
+        for(String id:CoreMesh.IDS)for(CoreMesh.Face face:CoreMesh.faces(id))if(!face.textured)colors.add(face.rgb(CoreMesh.palette(id)));
         System.out.print("{\"colors\":[");boolean first=true;
         for(int color:colors){if(!first)System.out.print(",");System.out.print(color);first=false;}
         System.out.print("],\"textures\":{");first=true;

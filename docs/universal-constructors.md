@@ -91,9 +91,9 @@ display's rotating preview are rendered only within 24 blocks.
 
 ## Core appearance and recipe browsing
 
-Unformed Core blocks and inventory items use a cyan cage on a **32×32 pixel
-grid**: solid corner cubes, recessed face crosses and four stepped supports
-around a small cube carrying the original Core artwork. The gaps are actual
+Unformed Core blocks and inventory items use a cage in each Core’s primary color on a
+**32×32 pixel grid**: detailed solid corner cubes, recessed face crosses and
+four stepped supports around a 12-pixel cube carrying the original Core artwork. The gaps are actual
 empty model space. Inventory models retain padding around their projected edges.
 Fabrication prints occupied voxels from the bottom upwards, including partial
 rows and their individual top faces. All thirteen existing Forge Core block

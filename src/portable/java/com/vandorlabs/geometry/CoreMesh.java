@@ -4,19 +4,30 @@ import java.util.*;
 
 /** Minecraft-pixel Core cage. Every solid cell and emitted edge lies on the authored 32-grid. */
 public final class CoreMesh {
-    public static final int GRID=32,CENTER_MIN=12,CENTER_MAX=20;
+    public static final int GRID=32,CENTER_MIN=10,CENTER_MAX=22;
     public static final float ITEM_GUI_SCALE=.54F;
-    public static final int EMPTY=0,FRAME=1,HIGHLIGHT=2,SHADOW=3,CORNER=4,LEGACY_CORE=5;
+    public static final int EMPTY=0,FRAME=1,HIGHLIGHT=2,SHADOW=3,CORNER=4,LEGACY_CORE=5,CORNER_PANEL=6,CORNER_RIVET=7,CORNER_INSET=8;
     public static final List<String> IDS=Collections.unmodifiableList(Arrays.asList("assembly_press","synthesis_tower","enclosed_gantry","longburn_drive","meridian_core","paladyne_navigation_computer","seyr_navigation_computer","vector_fold_array","oculus_drive","sentinel_array","standalone_antenna","standalone_dish","survey_dish"));
-    // Cyan highlight matches the established GUI emblem; darker steps shade physical frame pixels.
-    private static final int[] RGB={0,0x3d8b9d,0x77e6ef,0x235160,0x78e8f1,0xffffff};
+    // Primary hues sampled from each unchanged legacy Core artwork, including its registry aliases.
+    private static final int[] PRIMARIES={0x52cfde,0xa873e4,0xe9a84a,0xe9a84a,0xdebb53,0x52cfde,0x48ace2,0xdebb53,0xdebb53,0x52cfde,0x52cfde,0x52cfde,0x52cfde};
+    public static final class Palette {
+        public final int primary;
+        private final int[] tones;
+        private Palette(int primary){this.primary=primary;tones=new int[]{0,shade(primary,.67),mix(primary,0xffffff,.30),shade(primary,.38),mix(primary,0xffffff,.28),0xffffff,shade(primary,.42),mix(primary,0xffffff,.60),shade(primary,.80)};}
+    }
+    private static final Map<String,Palette> PALETTES=palettes();
+    private static Map<String,Palette> palettes(){Map<String,Palette> values=new LinkedHashMap<>();for(int i=0;i<IDS.size();i++)values.put(IDS.get(i),new Palette(PRIMARIES[i]));return Collections.unmodifiableMap(values);}
+    public static Palette palette(String id){Palette palette=PALETTES.get(id);if(palette==null)throw new IllegalArgumentException("Unknown Core "+id);return palette;}
     private static final byte[] VOXELS=new byte[GRID*GRID*GRID];
     public static final class Face {
         public final int rgb,material,fabricationRGB;
         public final boolean textured;
         public final double nx,ny,nz;
         private final double[] vertices;
-        private Face(int material,int axis,int sign,double[] positions){this.material=material;textured=material==LEGACY_CORE;double shade=axis==1?(sign>0?1:.70):axis==0?(sign>0?.80:.86):(sign>0?.84:.94);rgb=textured?0xffffff:shade(RGB[material],shade);fabricationRGB=textured?shade(0xffffff,shade):rgb;vertices=positions;nx=axis==0?sign:0;ny=axis==1?sign:0;nz=axis==2?sign:0;}
+        private final double shade;
+        private Face(int material,int axis,int sign,double[] positions){this.material=material;textured=material==LEGACY_CORE;shade=axis==1?(sign>0?1:.70):axis==0?(sign>0?.80:.86):(sign>0?.84:.94);rgb=rgb(PALETTES.get("assembly_press"));fabricationRGB=fabricationRGB(PALETTES.get("assembly_press"));vertices=positions;nx=axis==0?sign:0;ny=axis==1?sign:0;nz=axis==2?sign:0;}
+        public int rgb(Palette palette){return textured?0xffffff:shade(palette.tones[material],shade);}
+        public int fabricationRGB(Palette palette){return textured?shade(0xffffff,shade):rgb(palette);}
         public double coordinate(int vertex,int axis){return vertices[vertex*3+axis];}
         public double u(int vertex){if(!textured)return .5;double x=coordinate(vertex,0)*GRID,y=coordinate(vertex,1)*GRID,z=coordinate(vertex,2)*GRID;return (nx<0?CENTER_MAX-z:nx>0?z-CENTER_MIN:nz>0?CENTER_MAX-x:x-CENTER_MIN)/(CENTER_MAX-CENTER_MIN);}
         public double v(int vertex){if(!textured)return .5;double y=coordinate(vertex,1)*GRID,z=coordinate(vertex,2)*GRID;return (ny>0?z-CENTER_MIN:ny<0?CENTER_MAX-z:CENTER_MAX-y)/(CENTER_MAX-CENTER_MIN);}
@@ -44,16 +55,25 @@ public final class CoreMesh {
             int x=(bits&1)==0?4+step:26-step,y=(bits&2)==0?4+step:26-step,z=(bits&4)==0?4+step:26-step;box(x,y,z,x+2,y+2,z+2,FRAME);
         }
         box(CENTER_MIN,CENTER_MIN,CENTER_MIN,CENTER_MAX,CENTER_MAX,CENTER_MAX,LEGACY_CORE);
+        // A one-pixel rim, corner rivets and a small inset on each 6³ corner panel.
+        // Only material colors change: corner occupancy and the printing order stay cubic.
+        for(int x=0;x<GRID;x++)for(int y=0;y<GRID;y++)for(int z=0;z<GRID;z++)if(material(x,y,z)==CORNER){
+            int lx=x>=26?x-26:x,ly=y>=26?y-26:y,lz=z>=26?z-26:z;
+            boolean bx=lx==0||lx==5,by=ly==0||ly==5,bz=lz==0||lz==5;
+            if((bx?1:0)+(by?1:0)+(bz?1:0)!=1)continue;int u=bx?ly:lx,v=bz?ly:lz;
+            int detail=(u==1||u==4)&&(v==1||v==4)?CORNER_RIVET:u>=2&&u<=3&&v>=2&&v<=3?CORNER_INSET:CORNER_PANEL;VOXELS[index(x,y,z)]=(byte)detail;
+        }
         int occupied=0;for(byte material:VOXELS)if(material!=EMPTY)occupied++;ORDER=new int[occupied];int printed=0;
         for(int y=0;y<GRID;y++){for(int x=0;x<GRID;x++)for(int z=0;z<GRID;z++)if(material(x,y,z)!=EMPTY){int at=index(x,y,z);ORDER[printed]=at;RANK[at]=++printed;}LAYER_COUNTS[y+1]=printed;}
         FULL=Collections.unmodifiableList(surface(ORDER.length));
     }
+    private static int mix(int a,int b,double amount){int r=(int)Math.round((a>>16&255)*(1-amount)+(b>>16&255)*amount),g=(int)Math.round((a>>8&255)*(1-amount)+(b>>8&255)*amount),blue=(int)Math.round((a&255)*(1-amount)+(b&255)*amount);return r<<16|g<<8|blue;}
     private static int shade(int rgb,double value){return (int)Math.round((rgb>>16&255)*value)<<16|(int)Math.round((rgb>>8&255)*value)<<8|(int)Math.round((rgb&255)*value);}
     private static int index(int x,int y,int z){return (y*GRID+z)*GRID+x;}
     public static int material(int x,int y,int z){return x<0||y<0||z<0||x>=GRID||y>=GRID||z>=GRID?EMPTY:VOXELS[index(x,y,z)];}
     private static void put(int x,int y,int z,int material){int at=index(x,y,z);if(VOXELS[at]!=CORNER)VOXELS[at]=(byte)material;}
     private static void box(int x0,int y0,int z0,int x1,int y1,int z1,int material){for(int x=x0;x<x1;x++)for(int y=y0;y<y1;y++)for(int z=z0;z<z1;z++)put(x,y,z,material);}
-    public static int color(String id){require(id);return RGB[FRAME];}
+    public static int color(String id){return palette(id).primary;}
     public static String legacyTexture(String id){require(id);String name=id.equals("meridian_core")?"meridian_drive_core":id.equals("paladyne_navigation_computer")?"paladyne_navigation_core":id.equals("seyr_navigation_computer")?"seyr_navigation_core":id+"_core";return "vandorlabs:blocks/matter/"+name;}
     private static void require(String id){if(!IDS.contains(id))throw new IllegalArgumentException("Unknown Core "+id);}
     public static List<Face> faces(String id){require(id);return FULL;}
