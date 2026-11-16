@@ -32,7 +32,51 @@ def validate_render(output):
         if path.name.startswith('z'):continue
         with Image.open(path) as image:richest=max(richest,len(image.convert('RGB').getcolors(1000000) or []))
     if richest<300:raise AssertionError('Map contains no sufficiently detailed textured fixture tile')
+    if labels and all(v["block"]=="module_rack" for v in labels):validate_battery_render(output,labels)
     return len(files)
+
+
+def validate_battery_render(output,labels):
+    """Project actual fixture blocks into PNGs; require red art and increasing green charge.
+
+    CPU goldens count four red faces and zero through four green faces on all six
+    orientations. This SE view tests the visible south/east/up fronts; rear-facing
+    fronts are deliberately omitted from color assertions because the shell hides them.
+    """
+    import json
+    import math
+    from PIL import Image
+    config=json.loads((output/'dynmap/web/standalone/dynmap_config.json').read_text())
+    world=next(v for v in config['worlds'] if v['name']=='world')
+    mapping=next(v for v in world['maps'] if v['name']=='battery_fixture')
+    matrix=mapping['worldtomap'];prefix=mapping['prefix'];tiles={};samples=[]
+    def pixel(u,v):
+        tx,ty=u//128,v//128;key=tx,ty
+        if key not in tiles:
+            path=output/f'dynmap/web/tiles/world/{prefix}/{tx>>5}_{ty>>5}/{tx}_{ty}.png'
+            if not path.exists():raise AssertionError('Missing battery closeup tile: '+str(path))
+            with Image.open(path) as source:tiles[key]=source.convert('RGB')
+        return tiles[key].getpixel((u%128,127-v%128))
+    for fixture in labels:
+        if fixture.get('module')!='battery' or fixture['facing'] not in ('south','east','up'):continue
+        x,y,z=(fixture[k] for k in ('x','y','z'))
+        points=[(matrix[0]*(x+a)+matrix[1]*(y+b)+matrix[2]*(z+c),matrix[3]*(x+a)+matrix[4]*(y+b)+matrix[5]*(z+c)) for a in (0,1) for b in (0,1) for c in (0,1)]
+        left,right=math.floor(min(p[0] for p in points)),math.ceil(max(p[0] for p in points))
+        bottom,top=math.floor(min(p[1] for p in points)),math.ceil(max(p[1] for p in points))
+        red=green=0
+        for u in range(left,right+1):
+            for v in range(bottom,top+1):
+                r,g,b=pixel(u,v)
+                green+=g>=45 and g>r*1.6 and g>b*1.2
+                red+=r>=45 and r>g*2 and r>b*1.6
+        samples.append(dict(label=fixture['label'],facing=fixture['facing'],energy=fixture['energy'],red_pixels=red,green_pixels=green))
+    (output/'battery-render-analysis.json').write_text(json.dumps(samples,indent=2)+'\n')
+    for facing in ('south','east','up'):
+        group=sorted((v for v in samples if v['facing']==facing),key=lambda v:v['energy'])
+        assert len(group)==5,'Missing projected battery front '+facing
+        greens=[v['green_pixels'] for v in group]
+        assert greens[0]==0 and greens[-1]>0 and all(a<=b for a,b in zip(greens,greens[1:])),f'Battery green charge progression {facing}: {greens}'
+        assert sum(v['red_pixels'] for v in group)>0,'Missing red battery lightning '+facing
 
 
 def place_material_finishes(command, labels, jar):
@@ -195,22 +239,33 @@ def place_segmented_supplied(command, labels, jar):
 
 
 def place_module_racks(command, labels):
-    """All native facing/mask combinations from saved module item ownership."""
+    """All native facing/mask combinations plus physical saved battery charge levels."""
     for row, facing in enumerate(('north', 'east', 'south', 'west', 'up', 'down')):
         for mask in range(16):
             x, y, z = -8 + 3 * mask, 12, 4 + 3 * row
             items = ','.join('{Slot:%db,id:"vandorlabs:blank_module",Count:1b,tag:{RackMapSlot:%d}}' % (slot, slot)
                              for slot in range(4) if mask & (1 << slot))
             command(f'setblock {x} {y} {z} vandorlabs:module_rack facing={facing} replace {{Items:[{items}]}}')
-            labels.append(dict(x=x, y=y, z=z, block='module_rack', facing=facing, mask=mask))
+            labels.append(dict(x=x, y=y, z=z, block='module_rack', facing=facing, mask=mask, module='blank', label=f'blank-{facing}-{mask}'))
+        for level,energy in enumerate((0,2500,5000,7500,10000)):
+            x,y,z=-8+3*level,12,28+3*row
+            item='{Slot:0b,id:"vandorlabs:battery_module",Count:1b,tag:{BatteryEnergy:%d}}'%energy
+            command(f'setblock {x} {y} {z} vandorlabs:module_rack facing={facing} replace {{Items:[{item}]}}')
+            labels.append(dict(x=x,y=y,z=z,block='module_rack',facing=facing,mask=1,module='battery',energy=energy,expected_green_segments=level,expected_red_faces=4,label=f'battery-{facing}-{energy}'))
 
 
 def validate_fixture_matrix(labels):
     """Fail before launching a map if any authored group or drive state is absent."""
     from collections import Counter
     if labels and all(label['block'] == 'module_rack' for label in labels):
-        assert {(v['facing'], v['mask']) for v in labels} == {(f, m) for f in ('north','east','south','west','up','down') for m in range(16)}, 'Module Rack facing/mask coverage missing'
-        assert len(labels) == 96 and len({(v['x'],v['y'],v['z']) for v in labels}) == 96, 'Overlapping rack fixtures'
+        blanks=[v for v in labels if v.get('module')=='blank'];batteries=[v for v in labels if v.get('module')=='battery']
+        assert len(blanks)==96 and {(v['facing'], v['mask']) for v in blanks} == {(f, m) for f in ('north','east','south','west','up','down') for m in range(16)}, 'Module Rack facing/mask coverage missing'
+        expected={(f,e) for f in ('north','east','south','west','up','down') for e in (0,2500,5000,7500,10000)}
+        assert len(batteries)==30 and {(v['facing'],v['energy']) for v in batteries}==expected,'Battery facing/charge coverage missing'
+        assert all(v['mask']==1 and v['expected_green_segments']==v['energy']//2500 and v['expected_red_faces']==4 for v in batteries),'Battery fixture differs from emitted-geometry goldens'
+        assert len(labels)==126 and len({v['label'] for v in labels})==126,'Duplicate rack coverage labels'
+        assert len({(v['x'],v['y'],v['z']) for v in labels})==126,'Overlapping rack fixtures'
+        assert all((v['x']-24)**2+(v['z']-24)**2<=64**2 for v in labels),'Rack fixture outside map radius'
         return
     families=('rocket_thruster','ion_drive','plasma_vent','impulse_engine')
     groups=Counter((label['block'],label.get('facing'),label.get('joined_size'))
@@ -273,16 +328,20 @@ def run_fixture(args,root,output,artifact):
         lighting: default
         image-format: png
 ''')
+    if args.focus=='module-rack':
+        (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: rack_charge_closeup\n    azimuth: 135\n    inclination: 30\n    scale: 64\n')
+        with (output/'dynmap/worlds.txt').open('a') as extra:
+            extra.write('      - class: org.dynmap.hdmap.HDMap\n        name: battery_fixture\n        title: Battery Charge Fixture\n        prefix: battery_fixture\n        perspective: rack_charge_closeup\n        shader: stdtexture\n        lighting: default\n        image-format: png\n')
     for phase in ('prepare','render'):
         logpath=output/(phase+'.log')
         with logpath.open('w') as log:
             process=subprocess.Popen([args.java,'-Xmx2G','-jar',str(args.forge.resolve()),'nogui'],cwd=output,stdin=subprocess.PIPE,stdout=log,stderr=subprocess.STDOUT,text=True)
             artifact.track_process(process)
             def command(line):process.stdin.write(line+'\n');process.stdin.flush()
-            def wait(marker,timeout=180):
+            def wait(marker,timeout=180,start=0):
                 deadline=time.monotonic()+timeout
                 while time.monotonic()<deadline:
-                    content=logpath.read_text(errors='replace')
+                    content=logpath.read_text(errors='replace')[start:]
                     if any(error in content for error in ('NoSuchMethodError','Exception in server tick loop','Encountered an unexpected exception','Error loading custom renderer','Cannot load native Copy Controller map geometry')):raise RuntimeError('Dynmap/server error: '+str(logpath))
                     if marker in content:return
                     if process.poll() is not None:raise RuntimeError('Server exited: '+str(logpath))
@@ -320,7 +379,7 @@ def run_fixture(args,root,output,artifact):
                         place_segmented_supplied(command,labels,args.jar)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')
-                    content=logpath.read_text(errors='replace')
+                    content=logpath.read_text(errors='replace')[start:]
                     if any(error in content for error in ('Cannot place block','Invalid block state','Invalid block property','is not a valid state','Data tag parsing failed')):raise RuntimeError('Fixture placement failed: '+str(logpath))
                     import json
                     (output/'fixtures.json').write_text(json.dumps(labels,indent=2)+'\n')
@@ -328,6 +387,9 @@ def run_fixture(args,root,output,artifact):
                     wait('render of map',timeout=240)
                     # Completion wording differs between Forge builds; require the explicit completion.
                     wait('completed -',timeout=240)
+                    if args.focus=='module-rack':
+                        start=len(logpath.read_text(errors='replace'));command('dynmap radiusrender world -2 36 16 battery_fixture')
+                        wait('completed -',timeout=240,start=start)
                     count=validate_render(output)
                     print('Dynmap render PASS:',count,'PNG tiles;',output,flush=True)
                 command('stop');process.wait(timeout=45)
