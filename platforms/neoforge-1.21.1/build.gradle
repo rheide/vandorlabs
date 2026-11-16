@@ -61,6 +61,9 @@ tasks.register('generateMatterResources', Exec) {
     workingDir projectDir
     commandLine pythonExecutable, 'generate_matter_resources.py'
     inputs.file('generate_matter_resources.py')
+    inputs.file('generate_credential_resources.py')
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/items'),
+                 fileTree('../../texture-packs/default/assets/vandorlabs/textures/items'))
     inputs.file('../../tools/compact_runtime_assets.py')
     inputs.dir('../../src/main/resources/assets/vandorlabs/models')
     inputs.dir('../../src/main/resources/assets/vandorlabs/recipes')

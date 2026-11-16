@@ -35,6 +35,22 @@ item-output face. The front has a smaller square screen and projecting keyboard
 on the left, a chip mount and flush rack on the right, and neutral steel casing. See the [constructor guide](../universal-constructors.md)
 for power costs, ports and operation.
 
+## Catalog Chips and additional Forge production
+
+The new Journal, Vehicle, Navigation and Catalog Chip artwork identifies chip
+purpose. Programming a journal or vehicle changes its chip artwork; company
+variants remain available. Navigation Chip (blank) has no assigned function.
+[Catalog Chip (Master)](../data-chips.md) stores explicit blueprint lists
+for each builder, and Forge Journal-capable displays can browse those models.
+
+On Forge 1.12.2, the Master Catalog extends the Tower with the additional Core
+models, Vehicle Controller and Ramp Controller. The Assembly Press produces
+Data Chips and Access Cards from Matter Ingots, with Battery Modules and
+Autopilot Modules supplied by the Master Catalog. The Enclosed Gantry produces
+arms, landing gear and couplers from Matter Blocks. Both reuse the Tower’s
+inventory, RF, Redstone, rack and output behavior, with updated casing and
+lower workstation mounts. Their new production is not ported to 1.21.1.
+
 ## Builders on Minecraft 1.21.1
 
 Synthesis Tower, Assembly Press and Enclosed Gantry now have native Core items

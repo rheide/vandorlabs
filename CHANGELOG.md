@@ -2,6 +2,13 @@
 
 ## 2.11.0 (in development)
 
+### Catalogs and Forge builder production
+
+- Add supplied Journal, Vehicle, Navigation and Catalog Chip artwork; retain company cards and change chip appearance when programming journals or vehicles. Navigation Chip (blank) remains unpurposed.
+- Store explicit per-machine blueprint lists on Catalog Chip (Master), including Assembly Press Battery Module and Autopilot Module designs. Browse catalog models using existing Forge journal screens and their previous/next controls.
+- Extend Forge Tower production to the supplied Core families plus Vehicle and Ramp Controllers when listed on an inserted catalog. Keep the three builder Cores available without one.
+- Give Forge Assembly Press and Enclosed Gantry the shared production inventory, Redstone controls, RF/battery handling and adjacent output. Press recipes use Matter Ingots; Gantry recipes use Matter Blocks. Refresh both casings, corner ports and lower workstations using shared mount coordinates. Native production remains Tower-only.
+
 ### Three builders on NeoForge 1.21.1
 
 - Add only Synthesis Tower, Assembly Press and Enclosed Gantry and their Core items, retaining the shared frame sizes and all horizontal facings/Core corners. Other Core multiblocks remain deferred.

@@ -20,3 +20,9 @@ All reader insertion motion uses the shared pause-aware chip animation. Console 
 Adjacent regular Screens share their attached reader in Chip mode. Selecting Chip applies it across the joined artwork rectangle; the view stretches across the complete screen. One mounted reader is sufficient for the rectangle. If several readers are attached, the first occupied reader in the shared layout supplies the view.
 
 Console and Half Console frame finishes apply only to the Displays surface. The lower Controls deck keeps its full authored area, including the cropped deck beside an integrated chip slot.
+
+## Catalog displays
+
+On Forge 1.12.2, [Catalog Chips](data-chips.md) use the same readers and
+previous/next controls as Journal Chips. Each page shows a stored blueprint
+with its rotating model preview. Native catalog browsing remains deferred.

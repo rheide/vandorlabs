@@ -41,7 +41,10 @@ def generate(id,s):
                 for iu,iv in orientation:
                     p=[0,0,0];p[axis]=base;p[u]=b if iu else a;p[v]=d if iv else c;pts.append(p)
                     uv.append((p[u]-math.floor(a),p[v]-math.floor(c)))
-                quad(group,material,pts,uv)
+                # Narrow beams and returns use continuous rail artwork rather
+                # than cropping fasteners/borders from a full framed panel.
+                tile_material=interior if material==casing and (b-a<1-1e-8 or d-c<1-1e-8) else material
+                quad(group,tile_material,pts,uv)
     def box(group,material,x,y,z,X,Y,Z,skip=()):
         faces={'north':[(x,Y,z),(X,Y,z),(X,y,z),(x,y,z)],'south':[(X,Y,Z),(x,Y,Z),(x,y,Z),(X,y,Z)],'west':[(x,Y,Z),(x,Y,z),(x,y,z),(x,y,Z)],'east':[(X,Y,z),(X,Y,Z),(X,y,Z),(X,y,z)],'up':[(x,Y,z),(x,Y,Z),(X,Y,Z),(X,Y,z)],'down':[(x,y,Z),(x,y,z),(X,y,z),(X,y,Z)]}
         for name,pts in faces.items():

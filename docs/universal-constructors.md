@@ -2,7 +2,7 @@
 
 See the [step-by-step multiblock guides](multiblocks/README.md) for screenshots of each construction stage, including the newer drive and navigation computer assemblies that use the same frame system.
 
-The Synthesis Tower produces Core blocks from Programmable Matter and RF. The Assembly Press and Enclosed Gantry remain decorative multiblock assemblies. Their frame sizes and construction steps are unchanged.
+On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards and modules, and the Enclosed Gantry builds mechanical parts. Frame sizes and construction steps are unchanged. On NeoForge 1.21.1, only the Tower has production; the Press and Gantry retain structure-only behavior.
 
 | Core | Width x depth x total height | Matter Blocks + Core |
 | --- | --- | --- |
@@ -80,14 +80,38 @@ physical Redstone only. Right-click the activation option to cycle backwards.
 Disabling the tower pauses its build without discarding input or progress,
 including through saving and reloading. RF can still recharge its modules.
 
-Data Chips currently retain their ordinary inventory behavior; additional
-design data is reserved for a later update. The three default designs are
-available without a chip. The chamber shows the selected Core forming from
+On Forge 1.12.2, a [Catalog Chip (Master)](data-chips.md) adds its explicitly
+stored Tower designs to the three default builder Cores. Each machine reads
+only its own design list; a Press or Gantry cannot produce Tower Cores.
+NeoForge 1.21.1 retains the three default Tower recipes. The chamber shows the selected Core forming from
 the bottom upwards. Four scanning beams follow its growing surface while RF
 is being spent; paused or unpowered work retains its partial Core without
 beams. The smaller square screen and its projecting keyboard sit to the left
 of the chip mount and flush rack. Chamber effects and the front
 display's rotating preview are rendered only within 24 blocks.
+
+## Assembly Press and Enclosed Gantry production (Forge 1.12.2)
+
+Both machines reuse the Tower’s Production and Redstone dialog, four-bay Battery
+Module rack, RF charging, saved job progress and adjacent-inventory output.
+Right-click or use the Configurizer on a formed member to open the same editor.
+The rear-bottom right corner accepts RF on its back and bottom; the rear-bottom
+left accepts ingredients on its back and outputs on its left and bottom.
+
+Each job consumes **one ingredient and 8,000 RF**, at **20 RF/tick for 400 ticks**.
+The Press takes **Programmable Matter Ingots**; the Gantry takes **Programmable
+Matter Blocks**. Their front displays show the selected output, with lower
+keyboards, fitted chip mounts and flush racks. Their chambers have no new
+fabrication animation.
+
+| Builder | Designs available without a Catalog Chip | Master Catalog additions |
+| --- | --- | --- |
+| Assembly Press | Data Chip, Access Card | Battery Module, Autopilot Module |
+| Enclosed Gantry | Regular and Large Extending/Rotating Arms, regular and Large Landing Wheels, Landing Ski, Landing Plate, Coupler and Coupler Slab | The same mechanical designs |
+
+Catalog permissions apply when starting a job. A started job retains its own
+blueprint if the chip or selected design changes. Dismantling returns the
+unfinished job’s original ingredient; spent RF is not refunded.
 
 ## Core appearance and recipe browsing
 
