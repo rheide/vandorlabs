@@ -5,7 +5,7 @@ import net.minecraft.util.math.BlockPos;
 
 /** Independent focused fixtures report all failures before ending the disposable client. */
 final class Utility26FocusedChecks {
-    private static int ticks;private static boolean splitLive,arms210;
+    private static int ticks;private static boolean splitLive,arms210,batteryPolicyDone;
     private interface Check{void run()throws Exception;}
     private static void check(java.util.List<Throwable> failures,String name,Check action){
         try{action.run();}catch(Exception|LinkageError failure){System.err.println("[vandorlabs][reprolab] utility26 fixture FAILED "+name);failure.printStackTrace();failures.add(failure);}
@@ -17,6 +17,11 @@ final class Utility26FocusedChecks {
         if("true".equals(System.getenv("VANDOR_RESOURCE_PORT_MODS_ONLY")))return ResourcePortModLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_RESOURCE_PORTS_ONLY")))return ResourcePortLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_MACHINE_DIALOGS_ONLY"))){if(++ticks<80)return false;MachineDialogVisualChecks.run(mc,output);SurfaceClientChecks.dialogs(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS machine-dialogs-only actualSourcePort+Surface");return true;}
+        if("true".equals(System.getenv("VANDOR_BATTERY_POLICY_ONLY"))){
+            if(batteryPolicyDone)return true;if(++ticks<80)return false;
+            mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.ports.BatteryPortRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));return null;}).get();
+            batteryPolicyDone=true;System.out.println("[vandorlabs][reprolab] utility26-focused PASS battery-policy-only");return true;
+        }
         if(arms210){if(!com.vandorlabs.gear.ArmMiddleLiveChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] utility26-focused PASS arms-210-only");return true;}
         if(splitLive){if(!VehicleSplitClientChecks.tick(mc))return false;System.out.println("[vandorlabs][reprolab] coupling-focused PASS");return true;}
         if(++ticks==1){mc.displayGuiScreen(null);mc.gameSettings.pauseOnLostFocus=false;mc.gameSettings.renderDistanceChunks=3;}

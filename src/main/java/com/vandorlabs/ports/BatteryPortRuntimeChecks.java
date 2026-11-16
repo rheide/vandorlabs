@@ -32,7 +32,15 @@ public final class BatteryPortRuntimeChecks {
                 IEnergyStorage input=tile.getCapability(CapabilityEnergy.ENERGY,face),output=tile.getCapability(CapabilityEnergy.ENERGY,face.getOpposite());
                 need(input.receiveEnergy(5000,true)==1000&&output.extractEnergy(5000,true)==1000&&tile.stored()==43210,"old adapter simulation retains1000 rate and contents");
                 NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());need(old.equals(saved),"previous-release own fields and opaque caps remain byte-equivalent before configuration");need(!saved.hasKey(ResourcePortData.FACES)&&old.getCompoundTag("ForgeCaps").equals(saved.getCompoundTag("ForgeCaps"))&&saved.getString("UnknownOwnField").equals("retained"),"opaque old capability/unknown fields preserved");
-                TileEntityBattery copy=new TileEntityBattery();copy.setWorld(world);copy.setPos(at);copy.readFromNBT(saved);need(!copy.inert()&&copy.stored()==43210&&copy.configuration().equals(tile.configuration()),"legacy persistence roundtrip without invented policy fields");
+                NBTTagCompound expectedPolicy=tile.configuration();
+                TileEntityBattery copy=new TileEntityBattery();copy.setWorld(world);copy.setPos(at);copy.readFromNBT(saved);
+                need(!copy.inert()&&copy.stored()==43210&&copy.inputSide()==EnumFacing.NORTH&&world.getTileEntity(at)==tile,"detached NBT decode retains charge without borrowing another owner's physical facing");
+                need(copy.writeToNBT(new NBTTagCompound()).equals(saved),"detached legacy snapshot retains raw omitted policy fields");
+                // Legacy input/output faces live in block metadata, not tile NBT. Bind them
+                // through the real installed owner and its deferred, identity-checked callback.
+                world.removeTileEntity(at);world.setTileEntity(at,copy);copy.onLoad();DeferredTileLoad.flush(world);
+                need(!copy.inert()&&copy.stored()==43210&&copy.configuration().equals(expectedPolicy),"installed legacy persistence roundtrip after deferred metadata binding");
+                need(copy.writeToNBT(new NBTTagCompound()).equals(saved),"installed legacy roundtrip does not invent saved policy fields");
             }
             TileEntityBattery tile=put(world,block,at,EnumFacing.UP,null);need(tile.settings().throughput==0&&!tile.settings().pullInputs,"new battery uses port defaults");
             IEnergyStorage input=tile.getCapability(CapabilityEnergy.ENERGY,EnumFacing.UP);need(input.getMaxEnergyStored()==100000&&input.receiveEnergy(100001,false)==100000&&input.receiveEnergy(1,false)==0,"one100k owner, no legacy receive cap for new battery");
