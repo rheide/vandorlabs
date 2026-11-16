@@ -24,6 +24,8 @@ public final class NativeRampController {
     private boolean signalKnown,error,waitingCanopy,resumed,stopPending;
     private String stoppedError="";
     private long revision;
+    private NativeRampBeltRiders.State beltState;
+    private boolean beltRequested,nearby,beltWaiting;
     private String text="Retracted";
     private static final NativeRampRiders.Sync SYNC=PacketDistributor::sendToPlayer;
 
@@ -37,7 +39,7 @@ public final class NativeRampController {
         var state=new NativeRampActiveState(operation.id(),NativeRampJournal.recipeIdentity(operation),frame.revision(),timeline,frame.cells(),phase==Phase.RETURNING,frame.belt());return new NativeRampRuntime(owner.ownerIdentity(),net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(owner.getType()),owner.getBlockState(),state,queuedChoices,requested,lastSignalTarget,signalKnown,phase==Phase.HELD,error,text);
     }
     void adopt(NativeRampJournal.Operation operation,NativeRampRuntime saved,NativeRampFramePublisher.Frame installedFrame){
-        var world=level();if(!NativeRampRecoveryAdmission.active(world)||!installed(world)||this.operation!=null||!saved.frame.operation.equals(operation.id()))throw new IllegalStateException("Ramp controller adoption authority changed");this.operation=operation;frame=installedFrame;var old=saved.frame.timeline;timeline=new RampLifecycle.Timeline(Math.addExact(old.sequence,1),world.getGameTime(),world.getGameTime(),old.observed,old.target,old.observed,old.duration,old.moving&&old.observed!=old.target);revision=installedFrame.revision();queuedChoices=saved.queued;requested=saved.requested;lastSignalTarget=saved.signal;signalKnown=saved.signalKnown;phase=saved.frame.returning?Phase.RETURNING:Phase.ACTIVE;text=saved.status;error=saved.error;waitingCanopy=false;stopPending=false;resumed=true;owner.adoptedRuntime();
+        var world=level();if(!NativeRampRecoveryAdmission.active(world)||!installed(world)||this.operation!=null||!saved.frame.operation.equals(operation.id()))throw new IllegalStateException("Ramp controller adoption authority changed");this.operation=operation;frame=installedFrame;beltState=new NativeRampBeltRiders.State(operation.id());NativeRampActivity.watch(this);var old=saved.frame.timeline;timeline=new RampLifecycle.Timeline(Math.addExact(old.sequence,1),world.getGameTime(),world.getGameTime(),old.observed,old.target,old.observed,old.duration,old.moving&&old.observed!=old.target);revision=installedFrame.revision();queuedChoices=saved.queued;requested=saved.requested;lastSignalTarget=saved.signal;signalKnown=saved.signalKnown;beltRequested=owner.settings().escalator()!=0&&saved.signal>0;phase=saved.frame.returning?Phase.RETURNING:Phase.ACTIVE;text=saved.status;error=saved.error;waitingCanopy=false;stopPending=false;resumed=true;owner.adoptedRuntime();
     }
     public NativeRampMenu.Status status(){return new NativeRampMenu.Status(text,error,phase==Phase.PREPARING||phase==Phase.PUBLISHING||phase==Phase.RESTORING||waitingCanopy||stopPending,timeline.moving,revision);}
     private ServerLevel level(){if(!(owner.getLevel() instanceof ServerLevel server)||!server.getServer().isSameThread())throw new IllegalStateException("Ramp controller requires server thread");return server;}
@@ -45,7 +47,7 @@ public final class NativeRampController {
     private void changed(){owner.runtimeChanged(false);}
     private void status(String next,boolean failed){String message=next==null?"Ramp operation failed":next.substring(0,Math.min(256,next.length()));boolean notify=!text.equals(message)||error!=failed;text=message;error=failed;owner.runtimeChanged(notify);}
     private void schedule(){var world=level();if(installed(world)&&work()!=0)world.scheduleTick(owner.getBlockPos(),owner.getBlockState().getBlock(),1);}
-    private int work(){return RampLifecycle.work(false,phase==Phase.PREPARING||phase==Phase.PUBLISHING||phase==Phase.RETURNING||phase==Phase.RESTORING||stopPending,timeline.moving,false,waitingCanopy);}
+    private int work(){return RampLifecycle.work(false,phase==Phase.PREPARING||phase==Phase.PUBLISHING||phase==Phase.RETURNING||phase==Phase.RESTORING||stopPending,timeline.moving,beltRunning(),waitingCanopy);}
     private NativeRampReceipt receipt(boolean admitted,boolean choices,boolean refused){return new NativeRampReceipt(admitted,choices,status().pending(),refused,status());}
 
     /** All UI/item/copy adapters use the same admitted choices and controller command path. */
@@ -65,12 +67,13 @@ public final class NativeRampController {
     }
 
     /** Called only by the loaded/deferred channel adapter, never directly from tile onLoad. */
-    void resumed(){var world=level();if(!installed(world))return;var pending=NativeRampJournal.atRoot(world,owner.getBlockPos());if(pending!=null&&pending!=operation){operation=pending;phase=Phase.RESTORING;status("Recovering original platform",false);schedule();return;}boolean initial=!resumed;resumed=true;evaluateInput(initial);schedule();}
+    void resumed(){var world=level();if(!installed(world))return;var pending=NativeRampJournal.atRoot(world,owner.getBlockPos());if(pending!=null&&pending!=operation){operation=pending;phase=Phase.RESTORING;status("Recovering original platform",false);schedule();return;}boolean initial=!resumed;resumed=true;evaluateInput(initial);refreshActivity();schedule();}
     void inputChanged(){if(installed(level()))evaluateInput(false);}
     private void evaluateInput(boolean force){
         var choices=owner.settings();double next=RampLifecycle.signalTarget(choices.analogDeployment(),choices.escalator()!=0,choices.powerOn(),owner.visual().physicalPower(),owner.visual().receivedPower());
-        if(!force&&signalKnown&&Double.compare(next,lastSignalTarget)==0)return;signalKnown=true;lastSignalTarget=next;
+        if(!force&&signalKnown&&Double.compare(next,lastSignalTarget)==0)return;signalKnown=true;lastSignalTarget=next;beltRequested=choices.escalator()!=0&&next>0;
         requestPose(choices.escalator()==0?next:1);
+        refreshActivity();
     }
     public NativeRampReceipt requestPose(double target){
         var world=level();if(!Double.isFinite(target)||target<0||target>1||!installed(world)||phase==Phase.HELD)return receipt(false,false,true);
@@ -96,7 +99,7 @@ public final class NativeRampController {
         var motion=new NativeRampPartData.Motion(0,world.getGameTime(),0,0,duration,false,0);
         var choices=owner.settings();var belt=choices.escalator()==0?NativeRampPartData.Belt.NONE:new NativeRampPartData.Belt(choices.escalator(),choices.speed(),0,world.getGameTime(),false,0);
         var started=NativeRampJournal.prepareAssembly(owner,actor,selection.plan(),state,motion,belt);
-        operation=started.operation();if(started.status()==NativeRampJournal.Status.REFUSED){status(started.error(),true);return;}
+        operation=started.operation();if(operation!=null){beltState=new NativeRampBeltRiders.State(operation.id());NativeRampActivity.watch(this);}if(started.status()==NativeRampJournal.Status.REFUSED){status(started.error(),true);return;}
         phase=Phase.PREPARING;status("Preparing platform",false);
     }
     private void startTimeline(double target){
@@ -106,7 +109,7 @@ public final class NativeRampController {
     }
     private void beginReturn(){
         if(operation==null)return;stopPending=false;phase=Phase.RETURNING;
-        var world=level();timeline=timeline.request(0,world.getGameTime(),timeline.duration);revision++;
+        var world=level();timeline=deployed()?timeline.stopped(world.getGameTime()):timeline.request(0,world.getGameTime(),timeline.duration);revision++;
         status("Returning platform",false);schedule();
     }
     public void scheduledTick(){
@@ -120,8 +123,9 @@ public final class NativeRampController {
             if(phase==Phase.ACTIVE||phase==Phase.RETURNING){
                 notices=NativeRampFrameCommand.retry(world,operation,notices,frame.cells());
                 if(stopPending){publishStopped();schedule();return;}
-                if(phase==Phase.RETURNING&&!timeline.moving&&timeline.observed==0){alignOriginal();schedule();return;}
+                if(phase==Phase.RETURNING&&!timeline.moving&&(timeline.observed==0||deployed())){alignOriginal();schedule();return;}
                 if(timeline.moving&&timeline.lastTick!=world.getGameTime())advance();
+                else if(beltRunning())advanceBelt();
             }
             schedule();
         }catch(RuntimeException failure){phase=Phase.HELD;timeline=timeline.stopped(world.getGameTime());status(failure.getMessage(),true);}
@@ -148,16 +152,16 @@ public final class NativeRampController {
         }
     }
     private static NativeRampPartData.Motion motion(RampLifecycle.Timeline value){return new NativeRampPartData.Motion(value.sequence,value.started,value.from,value.target,value.duration,value.moving,value.observed);}
-    private NativeRampFramePublisher.Frame frozen(){var m=frame.motion();double p=timeline.observed;return new NativeRampFramePublisher.Frame(frame.cells(),new NativeRampPartData.Motion(m.sequence(),m.started(),p,p,m.duration(),false,p),frame.belt(),frame.revision());}
+    private NativeRampFramePublisher.Frame frozen(){var m=frame.motion();double p=timeline.observed;return new NativeRampFramePublisher.Frame(frame.cells(),new NativeRampPartData.Motion(m.sequence(),m.started(),p,p,m.duration(),false,p),stoppedBelt(),frame.revision());}
     private void advance(){
         var world=level();var proposed=timeline.committed(world.getGameTime(),timeline.sample(world.getGameTime(),0));
         // A stopped endpoint is a new physical publication, even when its control sequence is unchanged.
         // Clients otherwise retain the first moving observation as their collision shape.
         long nextRevision=timeline.moving&&!proposed.moving?Math.addExact(revision,1):revision;
-        var candidate=new NativeRampFramePublisher.Frame(operation.assembly().cells(proposed.observed,proposed.sample(world.getGameTime()+1,0)),motion(proposed),frame.belt(),nextRevision);
+        var candidate=new NativeRampFramePublisher.Frame(operation.assembly().cells(proposed.observed,proposed.sample(world.getGameTime()+1,0)),motion(proposed),stoppedBelt(),nextRevision);
         var result=NativeRampFrameCommand.advance(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),candidate,Math.addExact(nextRevision,1),SYNC);
         notices=result.notices();
-        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){timeline=proposed;frame=result.frame();revision=frame.revision();if(!timeline.moving){status(timeline.observed>0?"Deployed":"Retracted",false);if(timeline.observed==0&&(owner.settings().startHalf()==0||queuedChoices!=null))phase=Phase.RETURNING;}}
+        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){timeline=proposed;frame=result.frame();revision=frame.revision();if(!timeline.moving){status(timeline.observed>0?"Deployed":"Retracted",false);if(timeline.observed==0&&(owner.settings().startHalf()==0||queuedChoices!=null))phase=Phase.RETURNING;else refreshActivity();}}
         else if(result.outcome()==NativeRampFrameCommand.Outcome.PENDING){timeline=timeline.request(timeline.target,world.getGameTime(),timeline.duration);status(result.error(),false);}
         else{if(result.frame()!=null){frame=result.frame();revision=frame.revision();}timeline=timeline.stopped(world.getGameTime());if(result.outcome()==NativeRampFrameCommand.Outcome.HELD_FAILURE)phase=Phase.HELD;else{stoppedError=result.error();stopPending=true;}status(result.error(),true);if(stopPending)publishStopped();}
         changed();
@@ -167,22 +171,50 @@ public final class NativeRampController {
     private void publishStopped(){
         var world=level();double pose=timeline.observed;long nextRevision=Math.addExact(Math.max(revision,frame.revision()),1);
         var stopped=new NativeRampPartData.Motion(timeline.sequence,world.getGameTime(),pose,pose,timeline.duration,false,pose);
-        var candidate=new NativeRampFramePublisher.Frame(operation.assembly().cells(pose,pose),stopped,frame.belt(),nextRevision);
+        var candidate=new NativeRampFramePublisher.Frame(operation.assembly().cells(pose,pose),stopped,stoppedBelt(),nextRevision);
         var result=NativeRampFrameCommand.advance(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),candidate,Math.addExact(nextRevision,1),SYNC);
         notices=result.notices();
-        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){frame=result.frame();revision=frame.revision();stopPending=false;status(stoppedError,true);}
+        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){frame=result.frame();revision=frame.revision();stopPending=false;status(stoppedError,error);}
         else if(result.outcome()!=NativeRampFrameCommand.Outcome.PENDING){if(result.frame()!=null){frame=result.frame();revision=frame.revision();}stopPending=false;phase=Phase.HELD;status(stoppedError+"; stopped publication: "+result.error(),true);}
     }
     private void alignOriginal(){
         var world=level();var stationary=new NativeRampPartData.Motion(timeline.sequence+1,world.getGameTime(),0,0,timeline.duration,false,0);
         var candidate=new NativeRampFramePublisher.Frame(operation.assembly().originalAlignment().cells(0,0),stationary,NativeRampPartData.Belt.NONE,++revision);
-        var result=NativeRampFrameCommand.alignOriginal(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),candidate,revision+1,SYNC);
+        var result=NativeRampFrameCommand.alignOriginal(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),candidate,revision+1,SYNC,beltState);
         if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){frame=result.frame();notices=result.notices();phase=Phase.RESTORING;status("Restoring original blocks",false);}
         else if(result.outcome()!=NativeRampFrameCommand.Outcome.PENDING){phase=Phase.HELD;status(result.error(),true);}
     }
+    private boolean deployed(){return frame!=null&&com.vandorlabs.ramp.RampBeltPolicy.deployed(frame.belt().mode(),timeline.moving,timeline.observed);}
+    private boolean beltRunning(){return phase==Phase.ACTIVE&&!error&&!beltWaiting&&beltRequested&&nearby&&deployed();}
+    private NativeRampPartData.Belt stoppedBelt(){var b=frame.belt();if(b.mode()==0)return NativeRampPartData.Belt.NONE;return new NativeRampPartData.Belt(b.mode(),b.speed(),b.observed(),level().getGameTime(),false,b.observed());}
+    /** The registry polls once per second, including sleeping belts; no idle per-tick scan. */
+    boolean belongs(net.minecraft.world.level.Level world){return owner.getLevel()==world;}
+    boolean refreshActivity(net.minecraft.server.MinecraftServer server){return owner.getLevel() instanceof ServerLevel world&&world.getServer()==server&&refreshActivity();}
+    boolean refreshActivity(){
+        if(!(owner.getLevel() instanceof ServerLevel world)||!installed(world)||operation==null||owner.settings().escalator()==0)return false;
+        boolean was=beltRunning();beltWaiting=false;double radius=was?40:32;nearby=false;
+        if(deployed()&&phase==Phase.ACTIVE){var spec=operation.assembly().footprint();for(var player:world.players()){
+            if(!player.isAlive()||player.isSpectator())continue;
+            for(var origin:spec.origins()){
+                var source=origin.position();double along=spec.verticalLayout()?source.getY()-spec.sourceY():source.getX()*spec.facing().getStepX()+source.getZ()*spec.facing().getStepZ()-spec.minimumAlong();
+                double offset=spec.end()*along/Math.max(1,spec.length()-1);
+                double x=source.getX()+.5+(spec.verticalLayout()?spec.facing().getStepX()*offset:0),y=source.getY()+(spec.verticalLayout()?.5:spec.high()+offset),z=source.getZ()+.5+(spec.verticalLayout()?spec.facing().getStepZ()*offset:0);
+                if(player.distanceToSqr(x,y,z)<=radius*radius){nearby=true;break;}
+            }if(nearby)break;
+        }}
+        if(was!=beltRunning()||deployed()&&!timeline.moving&&!error){String next=beltRunning()?"Escalator running":beltRequested?"Escalator sleeping (no nearby player)":"Escalator stopped";if(!next.equals(text))status(next,false);if(!beltRunning()&&frame.belt().running()){stoppedError=text;stopPending=true;}schedule();}
+        return true;
+    }
+    private void advanceBelt(){
+        var world=level();if(frame.belt().running()&&frame.belt().tick()==world.getGameTime())return;
+        var result=NativeRampFrameCommand.advanceBelt(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),frame.belt().running()?revision:Math.addExact(revision,1),SYNC,beltState);notices=result.notices();
+        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){frame=result.frame();revision=frame.revision();changed();}
+        else if(result.outcome()==NativeRampFrameCommand.Outcome.PENDING){beltWaiting=true;stoppedError=result.error();stopPending=true;status(stoppedError,false);publishStopped();}
+        else{if(result.frame()!=null){frame=result.frame();revision=frame.revision();}stoppedError=result.error();stopPending=true;status(stoppedError,true);publishStopped();}
+    }
     private void restore(){
         var result=NativeRampJournal.recover(level(),operation);
-        if(result==NativeRampJournal.Status.DONE){operation=null;frame=null;phase=Phase.IDLE;timeline=new RampLifecycle.Timeline(timeline.sequence,level().getGameTime(),level().getGameTime(),0,0,0,timeline.duration,false);status("Retracted",false);if(queuedChoices!=null){var next=queuedChoices;queuedChoices=null;owner.commitRuntimeChoices(next);signalKnown=false;evaluateInput(true);}}
+        if(result==NativeRampJournal.Status.DONE){operation=null;frame=null;if(beltState!=null)beltState.reset();beltState=null;NativeRampActivity.unwatch(this);phase=Phase.IDLE;timeline=new RampLifecycle.Timeline(timeline.sequence,level().getGameTime(),level().getGameTime(),0,0,0,timeline.duration,false);status("Retracted",false);if(queuedChoices!=null){var next=queuedChoices;queuedChoices=null;owner.commitRuntimeChoices(next);signalKnown=false;evaluateInput(true);}}
         else if(result==NativeRampJournal.Status.REFUSED){phase=Phase.HELD;status(operation.error(),true);}
     }
 }
