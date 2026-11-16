@@ -114,13 +114,17 @@ def stage(directory, models_staged=False):
             file.unlink();removed+=1;continue
         model=redirect(json.loads(file.read_text()),aliases)
         if model.get('elements') and 'parent' not in model and shared not in file.parents:
-            geometry={k:v for k,v in model.items() if k!='textures'}
+            # ItemOverrideList is local to the item model in 1.12.2; it does
+            # not inherit the parent's overrides with its shared geometry.
+            geometry={k:v for k,v in model.items() if k not in ('textures','overrides')}
             encoded=json.dumps(geometry,sort_keys=True,separators=(',',':'))
             name=hashlib.sha256(encoded.encode()).hexdigest()[:16]
             if name not in templates:
                 (shared/(name+'.json')).write_text(encoded+'\n');templates[name]=encoded
             elif templates[name]!=encoded:raise AssertionError('Geometry hash collision')
+            overrides=model.get('overrides')
             model=dict(parent='vandorlabs:block/runtime_shared/'+name,textures=model.get('textures',{}))
+            if overrides is not None:model['overrides']=overrides
             reused+=1
         file.write_text(json.dumps(model,separators=(',',':'))+'\n')
     for path in sorted(models.rglob('high'),reverse=True):

@@ -4,6 +4,8 @@
 
 ### Catalogs and Forge builder production
 
+- Keep item appearance overrides on concrete item models when sharing packaged geometry, so typed chip artwork and other item predicates remain selectable in Minecraft 1.12.2.
+
 - Add supplied Journal, Vehicle, Navigation and Catalog Chip artwork; retain company cards and change chip appearance when programming journals or vehicles. Navigation Chip (blank) remains unpurposed.
 - Store explicit per-machine blueprint lists on Catalog Chip (Master), including Assembly Press Battery Module and Autopilot Module designs. Browse catalog models using existing Forge journal screens and their previous/next controls.
 - Extend Forge Tower production to the supplied Core families plus Vehicle and Ramp Controllers when listed on an inserted catalog. Keep the three builder Cores available without one.
