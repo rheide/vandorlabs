@@ -29,8 +29,25 @@ The expanded builder recipes and catalog model browsing are currently for Minecr
 
 ## Vehicle previews
 
-On Forge 1.12.2, chips containing a complete vehicle design show a material-colored
-15×15×15 voxel preview, almost twice the previous 12×12×12 voxel budget. Colors
-are sampled from each represented block’s model textures and tint, with a map-color
-fallback. Old chips containing only their saved occupancy thumbnail retain that
-preview. Display changes do not rewrite the chip or its vehicle design.
+On Forge 1.12.2, chips containing a complete vehicle design use an adaptive,
+material-colored surface preview. The default density is eight voxels per
+Minecraft block on each axis. Large designs reduce that density to stay within
+131,072 voxels and 512 voxels on any axis. A further reduction limits the emitted
+mesh to 65,536 exposed voxel faces.
+
+The preview samples ordinary baked block-model surfaces, their texture UVs,
+vertex colors and block tint. This preserves sub-block shapes such as slabs and
+slopes where their models provide those surfaces. Blocks without a usable model
+fall back to their selection bounds and map color. The preview does not construct
+a vehicle world or instantiate tile entities, so tile-renderer effects and
+world-dependent connected models are not reproduced. Texture sampling uses the
+first animation frame.
+
+Building this preview costs more CPU on its first display than the old fixed
+grid: the client decodes the design and samples up to two million surface points.
+Subsequent frames reuse the sample and compiled mesh. Samples and meshes each
+have an 8 MiB cache budget; block-model sampling records have a 4 MiB budget.
+These are implementation bounds, not measured frame-rate results.
+
+Old chips containing only their saved occupancy thumbnail retain that preview.
+Display changes never rewrite the chip or its vehicle design.
