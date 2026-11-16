@@ -16,7 +16,11 @@ public final class GuiSynthesisTower extends GuiContainer {
     private static final String[] NAMES=com.vandorlabs.ui.SynthesisDialog.NAMES;
     private final ContainerSynthesisTower container;
     private final VisualClock clock=new VisualClock();
-    private int page,activation;
+    private int page,activation,recipeScroll;
+    private boolean draggingRecipes;
+    private java.util.List<String> recipes(){return container.tile.builderRecipes();}
+    private int rows(){return 3;}
+    private void clampScroll(){recipeScroll=Math.max(0,Math.min(recipeScroll,Math.max(0,recipes().size()-rows())));}
     private boolean compact;
     private com.vandorlabs.ui.SynthesisDialog.Layout layout=new com.vandorlabs.ui.SynthesisDialog.Layout(false);
     private int machineY(){return compact?136:190;}
@@ -61,19 +65,21 @@ public final class GuiSynthesisTower extends GuiContainer {
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,com.vandorlabs.ui.SynthesisDialog.STYLE.body);DialogHeader.logo(guiLeft,guiTop,xSize);
         if(page==0){
         drawRect(guiLeft+12,previewTop(),guiLeft+layout.previewLeft-10,previewBottom(),0xFF0D1118);
-        int selected=container.values[0];
-        for(int i=0;i<3;i++){
+        clampScroll();int selected=container.values[0];java.util.List<String> recipes=recipes();
+        for(int i=0;i<Math.min(rows(),recipes.size()-recipeScroll);i++){
+            String blueprint=recipes.get(recipeScroll+i);
             int y=previewTop()+(compact?0:4)+i*(compact?17:24);
-            if(i==selected)drawRect(guiLeft+14,y,guiLeft+layout.previewLeft-12,y+(compact?17:22),0xFF345166);
-            fontRenderer.drawString(NAMES[i],guiLeft+20,y+(compact?5:9),i==selected?0xFFFFFF:0xB6C2CD);
+            if(container.tile.builderRecipeIndex(blueprint)==selected)drawRect(guiLeft+14,y,guiLeft+layout.previewLeft-12,y+(compact?17:22),0xFF345166);
+            fontRenderer.drawString(fontRenderer.trimStringToWidth(com.vandorlabs.client.constructors.BuilderRecipePreview.label(blueprint),layout.previewLeft-44),guiLeft+20,y+(compact?5:9),container.tile.builderRecipeIndex(blueprint)==selected?0xFFFFFF:0xB6C2CD);
         }
         drawRect(guiLeft+layout.previewLeft,previewTop(),guiLeft+layout.previewRight,previewBottom(),0xFF0D1118);
-        int preview=Math.max(0,Math.min(2,selected));
+        if(recipes.size()>rows()){int track=previewBottom()-previewTop(),thumb=Math.max(12,track*rows()/recipes.size()),offset=(track-thumb)*recipeScroll/(recipes.size()-rows());drawRect(guiLeft+layout.previewLeft-18,previewTop(),guiLeft+layout.previewLeft-12,previewBottom(),0xFF24323E);drawRect(guiLeft+layout.previewLeft-18,previewTop()+offset,guiLeft+layout.previewLeft-12,previewTop()+offset+thumb,0xFF809AA8);}
+        String blueprint=container.tile.builderRecipe(selected);
         GlStateManager.pushMatrix();
         try{
             GlStateManager.translate(guiLeft+(layout.previewLeft+layout.previewRight)/2,guiTop+(compact?84:115),90);
-            double previewScale=compact?8:12;GlStateManager.scale(previewScale,-previewScale,previewScale);GlStateManager.rotate(17,1,0,0);
-            com.vandorlabs.client.constructors.SynthesisDesignPreview.render(IDS[preview],(float)(clock.sample(System.nanoTime(),mc.isGamePaused())*1.5));
+            double previewScale=(compact?38:66)/com.vandorlabs.client.constructors.BuilderRecipePreview.extent(blueprint);GlStateManager.scale(previewScale,-previewScale,previewScale);GlStateManager.rotate(17,1,0,0);
+            com.vandorlabs.client.constructors.BuilderRecipePreview.render(blueprint,(float)(clock.sample(System.nanoTime(),mc.isGamePaused())*1.5));
         }finally{GlStateManager.popMatrix();GlStateManager.color(1,1,1,1);RenderHelper.enableGUIStandardItemLighting();}
         }
         for(int i=0;i<7;i++)slot(layout.machineX(i),machineY());
@@ -85,11 +91,11 @@ public final class GuiSynthesisTower extends GuiContainer {
     }
     private void slot(int x,int y){drawRect(guiLeft+x-1,guiTop+y-1,guiLeft+x+17,guiTop+y+17,0xFF67727E);drawRect(guiLeft+x,guiTop+y,guiLeft+x+16,guiTop+y+16,0xFF0B1017);}
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
-        fontRenderer.drawString("Synthesis Tower",12,10,0xFFFFFF);
-        if(page==0){if(!compact){fontRenderer.drawString("Designs",12,60,0xD4DFE9);fontRenderer.drawString("Finished structure",174,60,0xD4DFE9);}
+        fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Assembly Press":container.tile.builderMachine().equals("enclosed_gantry")?"Enclosed Gantry":"Synthesis Tower",12,10,0xFFFFFF);
+        if(page==0){if(!compact){fontRenderer.drawString("Designs",12,60,0xD4DFE9);fontRenderer.drawString("Finished design",174,60,0xD4DFE9);}
         }
-        if(page==1&&!compact){fontRenderer.drawString("Physical Redstone or any receiving channel.",12,142,0xA7B3C0);fontRenderer.drawString("A disabled tower keeps its current build.",12,155,0xA7B3C0);}
-        fontRenderer.drawString("Matter",layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Core",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
+        if(page==1&&!compact){fontRenderer.drawString("Physical Redstone or any receiving channel.",12,142,0xA7B3C0);fontRenderer.drawString("A disabled machine keeps its current build.",12,155,0xA7B3C0);}
+        fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Ingots":"Matter",layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Output",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString("Chip",layout.machineX(3)-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString(Integer.toString(container.values[2]),12,compact?210:272,0xA7B3C0);
         // Inventory is offset right to leave power and production status visible.
@@ -97,10 +103,16 @@ public final class GuiSynthesisTower extends GuiContainer {
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
         if(page==1){receiver.mouseClicked(x,y,button);if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2))return;}
+        if(page==0&&button==0&&recipes().size()>rows()&&x>=guiLeft+layout.previewLeft-18&&x<guiLeft+layout.previewLeft-10&&y>=previewTop()&&y<previewBottom()){draggingRecipes=true;scrollAt(y);return;}
         if(page==0&&(button==0||button==1)&&x>=guiLeft+12&&x<guiLeft+layout.previewLeft-10&&y>=previewTop()+(compact?0:4)&&y<previewTop()+(compact?0:4)+3*(compact?17:24)){
             int choice=(y-previewTop()-(compact?0:4))/(compact?17:24);
-            PacketHandler.INSTANCE.sendToServer(new MessageSynthesisTower(inventorySlots.windowId,container.tile.getPos(),choice));return;
+            choice+=recipeScroll;if(choice<recipes().size())PacketHandler.INSTANCE.sendToServer(new MessageSynthesisTower(inventorySlots.windowId,container.tile.getPos(),container.tile.builderRecipeIndex(recipes().get(choice))));return;
         }
         super.mouseClicked(x,y,button);
     }
+    private void scrollAt(int y){int range=Math.max(0,recipes().size()-rows());int track=previewBottom()-previewTop(),thumb=Math.max(12,track*rows()/Math.max(1,recipes().size()));recipeScroll=(int)Math.round((y-previewTop()-thumb/2D)*range/Math.max(1,track-thumb));clampScroll();}
+    @Override protected void mouseClickMove(int x,int y,int button,long elapsed){if(draggingRecipes)scrollAt(y);else super.mouseClickMove(x,y,button,elapsed);}
+    @Override protected void mouseReleased(int x,int y,int button){draggingRecipes=false;super.mouseReleased(x,y,button);}
+    @Override public void handleMouseInput()throws IOException{super.handleMouseInput();int wheel=org.lwjgl.input.Mouse.getEventDWheel();if(page==0&&wheel!=0){recipeScroll+=wheel>0?-1:1;clampScroll();}}
+
 }

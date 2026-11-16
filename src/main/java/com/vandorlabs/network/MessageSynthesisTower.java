@@ -15,10 +15,10 @@ public final class MessageSynthesisTower implements IMessage {
     @Override public void toBytes(ByteBuf b){b.writeInt(window);b.writeLong(pos.toLong());b.writeByte(design);}
     @Override public void fromBytes(ByteBuf b){if(b.readableBytes()!=13)throw new IllegalArgumentException("Malformed Synthesis selection");window=b.readInt();pos=BlockPos.fromLong(b.readLong());design=b.readUnsignedByte();}
     public static boolean apply(EntityPlayerMP player,MessageSynthesisTower message){
-        if(!player.getServerWorld().isCallingFromMinecraftThread()||message.pos==null||message.design<0||message.design>2||!(player.openContainer instanceof ContainerSynthesisTower))return false;
+        if(!player.getServerWorld().isCallingFromMinecraftThread()||message.pos==null||message.design<0||message.design>127||!(player.openContainer instanceof ContainerSynthesisTower))return false;
         ContainerSynthesisTower container=(ContainerSynthesisTower)player.openContainer;
         if(container.windowId!=message.window||!container.tile.getPos().equals(message.pos)||!container.canInteractWith(player))return false;
-        container.tile.selectDesign(message.design);return true;
+        if(!container.tile.builderRecipes().contains(container.tile.builderRecipe(message.design))||message.design!=container.tile.builderRecipeIndex(container.tile.builderRecipe(message.design)))return false;container.tile.selectDesign(message.design);return true;
     }
     public static final class Handler implements IMessageHandler<MessageSynthesisTower,IMessage>{
         @Override public IMessage onMessage(MessageSynthesisTower message,MessageContext context){EntityPlayerMP player=context.getServerHandler().player;player.getServerWorld().addScheduledTask(()->apply(player,message));return null;}

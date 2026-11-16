@@ -61,6 +61,6 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
         body.render(tile,x,y,z,partial,stage,alpha);
         com.vandorlabs.client.MachineDisplayRenderer.render(tile,x,y,z);
         SynthesisTowerRenderer.render(tile,x,y,z,partial);
-        com.vandorlabs.blocks.MachineMountSurface mount=tile.mount();if(mount!=null){if(tile.synthesis())com.vandorlabs.client.TETokenSlot.embedded(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);else com.vandorlabs.client.TETokenSlot.nativeMount(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);}
+        com.vandorlabs.blocks.MachineMountSurface mount=tile.mount();if(mount!=null){if(tile.builder())com.vandorlabs.client.TETokenSlot.embedded(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);else com.vandorlabs.client.TETokenSlot.nativeMount(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);}
     }
 }

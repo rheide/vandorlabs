@@ -32,7 +32,7 @@ public final class ContainerSynthesisTower extends Container {
     @Override public void detectAndSendChanges(){super.detectAndSendChanges();sample();for(IContainerListener listener:listeners)deltas.sendChanges(listener,values);}
     @Override public void removeListener(IContainerListener listener){super.removeListener(listener);deltas.removeListener(listener);}
     @Override public void updateProgressBar(int id,int data){WindowPropertyDeltas.receive(values,id,data);}
-    @Override public boolean canInteractWith(EntityPlayer player){return tile.synthesis()&&tile.formed()&&!tile.isInvalid()&&tile.getWorld()==player.world&&player.world.isBlockLoaded(tile.getPos())&&player.world.getTileEntity(tile.getPos())==tile&&tile.isUsableByPlayer(player)&&ConfigurationAccess.canEditDialog(player,player.world,tile.getPos());}
+    @Override public boolean canInteractWith(EntityPlayer player){return tile.builder()&&tile.formed()&&!tile.isInvalid()&&tile.getWorld()==player.world&&player.world.isBlockLoaded(tile.getPos())&&player.world.getTileEntity(tile.getPos())==tile&&tile.isUsableByPlayer(player)&&ConfigurationAccess.canEditDialog(player,player.world,tile.getPos());}
     @Override public ItemStack transferStackInSlot(EntityPlayer player,int index){
         if(index<0||index>=inventorySlots.size()||!canInteractWith(player))return ItemStack.EMPTY;
         Slot slot=inventorySlots.get(index);if(!slot.getHasStack())return ItemStack.EMPTY;

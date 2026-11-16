@@ -27,7 +27,7 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public int getLightOpacity(IBlockState state){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
-            if(state.getValue(FORMED)&&tile.synthesis()&&!player.isSneaking()){
+            if(state.getValue(FORMED)&&tile.builder()&&!player.isSneaking()){
                 if(tile.synthesisModuleInteraction(player,hand))return true;
                 if(tile.mount()!=null&&tile.mount().hit(player))return TokenSlotInteractions.activate(tile,player,hand);
                 if(!tile.takeCompletedCore(player,hand))player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_SYNTHESIS_TOWER,world,pos.getX(),pos.getY(),pos.getZ());return true;
