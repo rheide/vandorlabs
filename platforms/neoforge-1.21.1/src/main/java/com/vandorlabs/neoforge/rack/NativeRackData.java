@@ -38,7 +38,7 @@ public final class NativeRackData {
         if(raw.contains("ModuleMask")&&!raw.contains("ModuleMask",Tag.TAG_INT)||raw.contains("ModuleKinds")&&!raw.contains("ModuleKinds",Tag.TAG_INT)||raw.contains("RackHousing")&&!raw.contains("RackHousing",Tag.TAG_INT))throw new IllegalArgumentException("Rack appearance field type");
         int mask=raw.getInt("ModuleMask"),kinds=raw.contains("ModuleKinds")?raw.getInt("ModuleKinds"):ModuleRackPolicy.blankKinds(mask),housing=raw.contains("RackHousing")?raw.getInt("RackHousing"):-1;
         if((mask&~15)!=0||!ModuleRackPolicy.validKinds(kinds)||ModuleRackPolicy.occupied(kinds)!=mask||housing< -1||housing>=0&&!com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(housing))throw new IllegalArgumentException("Rack appearance bounds");
-        var result=new CompoundTag();result.putBoolean("RackPublic",true);result.putInt("ModuleMask",mask);if(ModuleRackPolicy.autopilots(kinds)>0)result.putInt("ModuleKinds",kinds);result.putInt("RackHousing",housing);return result;
+        var result=new CompoundTag();result.putBoolean("RackPublic",true);result.putInt("ModuleMask",mask);if(kinds!=ModuleRackPolicy.blankKinds(mask))result.putInt("ModuleKinds",kinds);result.putInt("RackHousing",housing);for(int slot=0;slot<4;slot++)if(ModuleRackPolicy.slotKind(kinds,slot)==3){String key="BatteryCharge"+slot;if(raw.contains(key)&&(!raw.contains(key,Tag.TAG_INT)||raw.getInt(key)<0||raw.getInt(key)>NativeBatteryModule.CAPACITY))throw new IllegalArgumentException("Battery display charge");result.putInt(key,raw.getInt(key));}return result;
     }
     public static ItemStack marker(AutopilotModuleSettings settings,HolderLookup.Provider registries){
         var id=ResourceLocation.tryParse(settings.marker);if(id==null)return ItemStack.EMPTY;
@@ -85,7 +85,7 @@ public final class NativeRackData {
             var display=raw.getCompound("tag").getCompound("display");if(display.contains("Name",Tag.TAG_STRING))result.set(DataComponents.CUSTOM_NAME,Component.literal(display.getString("Name")));
         }else result=com.vandorlabs.neoforge.inventory.NativeInventoryItems.modern(raw,registries);
         if(kind(result)==0||result.getCount()!=1||com.vandorlabs.neoforge.inventory.NativeInventoryItems.containedOwnership(result))throw new IllegalArgumentException("Unsupported Rack module ownership");
-        if(kind(result)==2)settings(result);return result;
+        if(kind(result)==2)settings(result);if(kind(result)==3&&!NativeBatteryModule.valid(result))throw new IllegalArgumentException("Invalid saved Battery charge");return result;
     }
     public static CompoundTag writeItem(ItemStack stack,int slot,HolderLookup.Provider registries){var result=com.vandorlabs.neoforge.inventory.NativeInventoryItems.write(stack,registries);result.putByte("Slot",(byte)slot);return result;}
 }

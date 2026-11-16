@@ -57,7 +57,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('access_card_slot','data_chip_slot')]
     wanted += ['tile.vandorlabs.programmable_glass.name','tile.vandorlabs.programmable_storage.name','tile.vandorlabs.data_chip_programmer.name']
     wanted += ['item.vandorlabs.duplifier.name']
-    wanted += ['tile.vandorlabs.module_rack.name','item.vandorlabs.blank_module.name','item.vandorlabs.autopilot_module.name','message.vandorlabs.module_rack.inventory_full']
+    wanted += ['tile.vandorlabs.module_rack.name','item.vandorlabs.blank_module.name','item.vandorlabs.autopilot_module.name','item.vandorlabs.battery_module.name','message.vandorlabs.module_rack.inventory_full']
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('power_port', 'fluid_port', 'matter_port', 'battery_block', 'hexagonal_fuel_tank')]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')]
     wanted += ['tile.vandorlabs.programmable_ramp.name', 'tile.vandorlabs.programmable_ramp_slab.name']

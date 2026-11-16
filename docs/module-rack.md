@@ -76,6 +76,28 @@ One Blank Module requires three Iron Ingots, two Gold Nuggets and one Redstone D
 
 One Autopilot Module uses the former Autopilot recipe: Iron / Redstone / Iron, Redstone / Comparator / Redstone, then three Iron Ingots. The recipe produces the module; the rack is crafted separately.
 
+## Battery Module
+
+A Battery Module stores **10,000 RF**, one tenth of a Battery Block. It is a
+single physical item: inserting, removing or breaking its Module Rack preserves
+its current charge. Its front has a red lightning mark and four green charge
+segments. The item tooltip shows its exact stored RF.
+
+Craft one with Programmable Matter Ingots in the four corners, Gold Ingots at
+the middle of each edge, and Redstone Dust in the center:
+
+```
+Matter  Gold      Matter
+Gold    Redstone  Gold
+Matter  Gold      Matter
+```
+
+On Forge 1.12.2, put the module in a Programmable Matter Infuser's input slot
+with redstone catalyst. Sunlight supplies 50 RF per working tick; night, rain
+and a covered lens pause charging. A full module moves into the output slot
+when it is free. Partial charge survives saving and removal from the infuser.
+RF integrations can also charge the item through its energy capability.
+
 ## Rendering
 
 The casing, populated indicators and seated modules are ordinary opaque chunk geometry. Prepared quads are shared across equivalent rack states. Stationary racks have no tile-entity renderer and no ticking tile entity. Inventory contents are serialized for saves and actual interactions, never by the rendering loop.
@@ -88,7 +110,7 @@ Dynmap uses the same native model parts and displays the rack's saved slot occup
 
 ## NeoForge 1.21.1
 
-The native Rack uses the same placement, four bays, cassette artwork and Housing/Redstone controls. Its module tabs use the same route-marker sampling and independent receiving settings. Both the Configurizer and the empty-hand rim interaction open this dedicated dialog.
+The native Rack uses the same placement, four bays, cassette artwork and Housing/Redstone controls. Native Battery Modules retain the same 10,000 RF item store, recipe, charge segments and energy capability; charge them through a compatible item charger. Its module tabs use the same route-marker sampling and independent receiving settings. Both the Configurizer and the empty-hand rim interaction open this dedicated dialog.
 
 Insertion and retrieval both slide the cassette through the open front. These native captures show an Autopilot Module partway through each movement with a custom outer housing and the original front panel; the row indicator follows the authoritative occupied state.
 

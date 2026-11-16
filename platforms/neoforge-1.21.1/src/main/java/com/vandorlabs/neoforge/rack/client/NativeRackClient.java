@@ -15,7 +15,7 @@ import net.neoforged.neoforge.client.event.*;
 public final class NativeRackClient {
     private static final NativeRackModel[] MODELS=new NativeRackModel[6];
     public static ResourceLocation model(String name){return ResourceLocation.fromNamespaceAndPath("vandorlabs","block/module_rack/"+name);}
-    public static List<String> parts(){var result=new ArrayList<String>();result.add("shell");for(int slot=0;slot<4;slot++)for(String prefix:new String[]{"slot_","slot_seated_","slot_empty_","slot_autopilot_","slot_seated_autopilot_","indicator_"}){if(prefix.equals("indicator_")){result.add(prefix+slot+"_off");result.add(prefix+slot+"_on");}else result.add(prefix+slot);}return List.copyOf(result);}
+    public static List<String> parts(){var result=new ArrayList<String>();result.add("shell");for(int slot=0;slot<4;slot++)for(String prefix:new String[]{"slot_","slot_seated_","slot_empty_","slot_autopilot_","slot_seated_autopilot_","indicator_"}){if(prefix.equals("indicator_")){result.add(prefix+slot+"_off");result.add(prefix+slot+"_on");}else result.add(prefix+slot);}for(int slot=0;slot<4;slot++)for(int charge=0;charge<5;charge++){result.add("slot_battery_"+slot+"_"+charge);result.add("slot_seated_battery_"+slot+"_"+charge);}return List.copyOf(result);}
     public static NativeRackModel facing(Direction facing){return MODELS[facing.get3DDataValue()];}
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(NativeRackBindings.enabled())event.register(NativeRackBindings.MENU,NativeRackScreen::new);}
     @SubscribeEvent public static void additional(ModelEvent.RegisterAdditional event){if(NativeRackBindings.enabled())for(String name:parts())event.register(ModelResourceLocation.standalone(model(name)));}

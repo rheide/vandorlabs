@@ -47,6 +47,13 @@ def gui_bounds(model):
 
 def main():
     subprocess.run([sys.executable, str(ROOT / 'tools/gen_module_rack.py'), '--check'], check=True)
+    subprocess.run([sys.executable, str(ROOT / 'tools/gen_battery_module.py'), '--check'], check=True)
+    for level in range(5):
+        battery=read(MODELS / ('battery_module_'+str(level)+'.json'))
+        bounds=gui_bounds(battery)
+        require(bounds[0]>-8 and bounds[1]<8 and bounds[2]>-8 and bounds[3]<8,'padded battery module item variant')
+        require(len([part for part in battery['elements'] if part['name'].startswith('power_lightning_')])==4,'battery identifying lightning')
+        require(sum(part['faces']['south']['texture']=='#green' for part in battery['elements'] if part['name'].startswith('charge_'))==level,'battery charge segment progression')
     shell = read(MODELS / 'shell.json')
     for name, axis, low, high in [('left_rim_1px', 0, 0, 1),
                                   ('top_rim_1px', 1, 15, 16),
@@ -130,12 +137,14 @@ def main():
     require(map_models.count('customblock:id=%module_rack,state=*,'
                              'class=com.vandorlabs.dynmap.ModuleRackRenderer') == 1,
             'rack must use its native geometry Dynmap renderer exactly once')
-    for name in TEXTURE_NAMES:
+    map_names=TEXTURE_NAMES+('power_in_icon','emerald_block')
+    for name in map_names:
         line = ('texture:id=module_rack_' + name + ',filename=assets/vandorlabs/textures/blocks/'
-                'module_rack/' + name + '.png,xcount=1,ycount=1')
+                + ('resource_ports/' if name=='power_in_icon' else 'module_rack/') + name + '.png,xcount=1,ycount=1')
+        if name=='emerald_block':line='texture:id=module_rack_emerald_block,filename=assets/minecraft/textures/blocks/emerald_block.png,xcount=1,ycount=1'
         require(map_textures.count(line) == 1, 'rack Dynmap texture registration ' + name)
     mapping = 'block:id=%module_rack,state=*,' + ','.join(
-        'patch%d=0:module_rack_%s' % (index, name) for index, name in enumerate(TEXTURE_NAMES))
+        'patch%d=0:module_rack_%s' % (index, name) for index, name in enumerate(map_names))
     require(map_textures.count(mapping + ',transparency=SEMITRANSPARENT') == 1,
             'rack Dynmap patch texture order must match its six native material indices')
     for path in (ASSETS / 'models/item/module_rack.json', MODELS / 'blank_module.json', MODELS / 'autopilot_module.json'):

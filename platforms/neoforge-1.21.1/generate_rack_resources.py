@@ -10,11 +10,11 @@ def generate(root, out):
         path.write_text(json.dumps(value, indent=2) + '\n')
     source = root / 'src/main/resources/assets/vandorlabs'
     for path in (source / 'models/block/module_rack').glob('*.json'):
-        write(assets / 'models/block/module_rack' / path.name, json.loads(path.read_text()))
-    for name in ('module_rack', 'blank_module', 'autopilot_module'):
+        write(assets / 'models/block/module_rack' / path.name, json.loads(path.read_text().replace('minecraft:blocks/emerald_block','minecraft:block/emerald_block')))
+    for name in ('module_rack', 'blank_module', 'autopilot_module', 'battery_module'):
         write(assets / f'models/item/{name}.json', json.loads((source / f'models/item/{name}.json').read_text()))
     write(assets / 'blockstates/module_rack.json', {'variants': {f'facing={face}': {'model': 'vandorlabs:block/module_rack/shell'} for face in ('down', 'up', 'north', 'south', 'west', 'east')}})
-    for recipe_id in ('module_rack', 'blank_module', 'autopilot'):
+    for recipe_id in ('module_rack', 'blank_module', 'autopilot', 'battery_module'):
         recipe = json.loads((source / f'recipes/{recipe_id}.json').read_text())
         recipe['result']['id'] = recipe['result'].pop('item')
         recipe['neoforge:conditions'] = [{'type': 'neoforge:item_exists', 'item': recipe['result']['id']}]

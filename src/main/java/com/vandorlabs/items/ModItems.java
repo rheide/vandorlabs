@@ -17,6 +17,7 @@ public final class ModItems {
     public static final Item REDSTONE_TRANSMITTER = new ItemRedstoneTransmitter();
     public static final Item ACCESS_CARD = new ItemDesignToken("access_card");
     public static final Item DATA_CHIP = new ItemDesignToken("data_chip");
+    public static final Item BATTERY_MODULE = new ItemBatteryModule();
     public static final Item BLANK_MODULE = new Item()
             .setRegistryName(VandorLabs.MODID, "blank_module")
             .setUnlocalizedName("vandorlabs.blank_module")
@@ -50,6 +51,7 @@ public final class ModItems {
         event.getRegistry().register(ACCESS_CARD);
         event.getRegistry().register(DATA_CHIP);
         event.getRegistry().register(BLANK_MODULE);
+        event.getRegistry().register(BATTERY_MODULE);
         event.getRegistry().register(AUTOPILOT_MODULE);
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
@@ -66,6 +68,7 @@ public final class ModItems {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void registerModels(ModelRegistryEvent event) {
+        ModelLoader.setCustomModelResourceLocation(BATTERY_MODULE, 0, new ModelResourceLocation(BATTERY_MODULE.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(BLANK_MODULE, 0,
                 new ModelResourceLocation(BLANK_MODULE.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(AUTOPILOT_MODULE, 0,

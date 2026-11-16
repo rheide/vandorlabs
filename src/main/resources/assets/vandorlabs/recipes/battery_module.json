@@ -1,0 +1,22 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+    "MGM",
+    "GRG",
+    "MGM"
+  ],
+  "key": {
+    "M": {
+      "item": "vandorlabs:programmable_matter_ingot"
+    },
+    "G": {
+      "item": "minecraft:gold_ingot"
+    },
+    "R": {
+      "item": "minecraft:redstone"
+    }
+  },
+  "result": {
+    "item": "vandorlabs:battery_module"
+  }
+}

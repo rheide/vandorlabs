@@ -11,7 +11,7 @@ public final class ContainerMatterInfuser extends ContainerFurnace {
         Slot slot=inventorySlots.get(index);if(slot==null || !slot.getHasStack())return ItemStack.EMPTY;
         ItemStack stack=slot.getStack(),original=stack.copy();
         if(index<3){if(!mergeItemStack(stack,3,39,true))return ItemStack.EMPTY;}
-        else if(stack.getItem()==net.minecraft.init.Items.IRON_INGOT){if(!mergeItemStack(stack,0,1,false))return ItemStack.EMPTY;}
+        else if(TileEntityMatterInfuser.acceptsInput(stack)){if(!mergeItemStack(stack,0,1,false))return ItemStack.EMPTY;}
         else if(TileEntityMatterInfuser.fuelTicks(stack)>0){if(!mergeItemStack(stack,1,2,false))return ItemStack.EMPTY;}
         else if(index<30){if(!mergeItemStack(stack,30,39,false))return ItemStack.EMPTY;}
         else if(!mergeItemStack(stack,3,30,false))return ItemStack.EMPTY;

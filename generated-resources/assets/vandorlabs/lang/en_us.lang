@@ -921,3 +921,5 @@ tooltip.vandorlabs.vehicle_display=Vehicle Status
 tile.vandorlabs.power_port.name=Power Port
 tile.vandorlabs.fluid_port.name=Fluid Port
 tile.vandorlabs.matter_port.name=Matter Port
+
+item.vandorlabs.battery_module.name=Battery Module

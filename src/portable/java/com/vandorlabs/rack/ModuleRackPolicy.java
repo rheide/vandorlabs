@@ -2,19 +2,19 @@ package com.vandorlabs.rack;
 
 /** Four bounded physical module slots, shared by both engine adapters. */
 public final class ModuleRackPolicy {
-    public static final int EMPTY = 0, BLANK = 1, AUTOPILOT = 2;
+    public static final int EMPTY = 0, BLANK = 1, AUTOPILOT = 2, BATTERY = 3;
     public static final String BLANK_ID = "vandorlabs:blank_module";
     public static final String AUTOPILOT_ID = "vandorlabs:autopilot_module";
+    public static final String BATTERY_ID = "vandorlabs:battery_module";
     private ModuleRackPolicy() { }
     public static int kind(String itemId) {
-        return BLANK_ID.equals(itemId) ? BLANK : AUTOPILOT_ID.equals(itemId) ? AUTOPILOT : EMPTY;
+        return BLANK_ID.equals(itemId) ? BLANK : AUTOPILOT_ID.equals(itemId) ? AUTOPILOT : BATTERY_ID.equals(itemId) ? BATTERY : EMPTY;
     }
     public static int slotKind(int packed, int slot) {
         return ModuleRackGeometry.validSlot(slot) ? packed >>> (slot * 2) & 3 : EMPTY;
     }
     public static boolean validKinds(int packed) {
         if ((packed & ~255) != 0) return false;
-        for (int slot = 0; slot < ModuleRackGeometry.SLOTS; slot++) if (slotKind(packed, slot) == 3) return false;
         return true;
     }
     public static int blankKinds(int occupiedMask) {

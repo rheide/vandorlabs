@@ -37,6 +37,7 @@ public final class BlockModuleRack extends BlockVandor {
     public static final IUnlistedProperty<Integer> OCCUPIED_MASK = ProgrammableHousingState.integer("rack_occupied");
     public static final IUnlistedProperty<Integer> MODULE_MASK = ProgrammableHousingState.integer("rack_modules");
     public static final IUnlistedProperty<Integer> MODULE_KINDS = ProgrammableHousingState.integer("rack_module_kinds");
+    public static final IUnlistedProperty<Integer> BATTERY_LEVELS = ProgrammableHousingState.integer("rack_battery_levels");
     public static final IUnlistedProperty<Integer> HOUSING = ProgrammableHousingState.integer("rack_housing");
 
     public BlockModuleRack() {
@@ -46,7 +47,7 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this, new IProperty<?>[] { FACING },
-                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, MODULE_KINDS, HOUSING });
+                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, MODULE_KINDS, HOUSING, BATTERY_LEVELS });
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -96,13 +97,13 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override public IBlockState getExtendedState(IBlockState state, IBlockAccess world, BlockPos pos) {
         TileEntity raw = world.getTileEntity(pos);
-        int occupied = 0, modules = 0, housing = -1, kinds = 0;
+        int occupied = 0, modules = 0, housing = -1, kinds = 0, charge = 0;
         if (raw instanceof TileEntityModuleRack) {
             TileEntityModuleRack rack = (TileEntityModuleRack)raw;
-            occupied = rack.getOccupiedMask(); kinds = rack.getModuleKinds(); housing = rack.getHousingTexture();
+            charge = rack.batteryChargeLevels(); occupied = rack.getOccupiedMask(); kinds = rack.getModuleKinds(); housing = rack.getHousingTexture();
             modules = world instanceof VehicleWorld ? occupied : rack.getRenderMask();
         }
-        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(MODULE_KINDS, kinds).withProperty(HOUSING, housing);
+        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(MODULE_KINDS, kinds).withProperty(HOUSING, housing).withProperty(BATTERY_LEVELS, charge);
     }
 
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,

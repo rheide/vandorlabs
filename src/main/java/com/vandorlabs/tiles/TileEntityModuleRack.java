@@ -71,7 +71,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     }
 
     public static boolean accepts(ItemStack stack) {
-        return !stack.isEmpty() && (stack.getItem() == ModItems.BLANK_MODULE || stack.getItem() == ModItems.AUTOPILOT_MODULE);
+        return !stack.isEmpty() && (stack.getItem() == ModItems.BLANK_MODULE || stack.getItem() == ModItems.AUTOPILOT_MODULE || com.vandorlabs.rack.ModuleBatteryData.valid(stack));
     }
 
     /** Offline copies may be edited by validation/import code; live clients and carried
@@ -234,7 +234,8 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
 
     private NBTTagCompound writeVisualData(NBTTagCompound tag) {
         tag.setInteger("ModuleMask", occupiedMask);
-        if (autopilotCount() > 0) tag.setInteger("ModuleKinds", moduleKinds);
+        if (moduleKinds != com.vandorlabs.rack.ModuleRackPolicy.blankKinds(occupiedMask)) tag.setInteger("ModuleKinds", moduleKinds);
+        for(int slot=0;slot<4;slot++)if(moduleKind(slot)==3)tag.setInteger("BatteryCharge"+slot,com.vandorlabs.rack.ModuleBatteryData.energy(modules[slot]));
         tag.setLong("Revision", revision);
         for (int slot = 0; slot < modules.length; slot++) tag.setLong("Insert" + slot, insertionSequences[slot]);
         return tag;
@@ -309,6 +310,9 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
             if (moduleKind(slot) == com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) {
                 modules[slot] = new ItemStack(ModItems.AUTOPILOT_MODULE);
                 com.vandorlabs.rack.ModuleAutopilotData.state(modules[slot],tag.getCompoundTag("ModuleConfig" + slot));
+            } else if(moduleKind(slot)==3){
+                modules[slot]=new ItemStack(ModItems.BATTERY_MODULE);
+                com.vandorlabs.rack.ModuleBatteryData.receive(modules[slot],Math.max(0,Math.min(com.vandorlabs.rack.ModuleBatteryData.CAPACITY,tag.getInteger("BatteryCharge"+slot))),false);
             } else modules[slot] = ItemStack.EMPTY;
         }
         housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
@@ -386,7 +390,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         try {
             moduleKinds=0; primary=-1;
             for(int slot=0;slot<4;slot++) if(!modules[slot].isEmpty()) {
-                int kind=modules[slot].getItem()==ModItems.AUTOPILOT_MODULE?com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT:com.vandorlabs.rack.ModuleRackPolicy.BLANK;
+                int kind=modules[slot].getItem()==ModItems.AUTOPILOT_MODULE?com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT:modules[slot].getItem()==ModItems.BATTERY_MODULE?com.vandorlabs.rack.ModuleRackPolicy.BATTERY:com.vandorlabs.rack.ModuleRackPolicy.BLANK;
                 moduleKinds |= kind << (slot*2); if(kind==com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT && primary<0) primary=slot;
             }
             readAutopilotData(primary<0?new NBTTagCompound():com.vandorlabs.rack.ModuleAutopilotData.state(modules[primary]));
@@ -428,6 +432,17 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         public void setRedstoneChannel(int channel){throw new UnsupportedOperationException();}
         public boolean hasLocalRedstoneSignal(){return TileEntityModuleRack.this.hasLocalRedstoneSignal();}
         public void setChannelSignal(boolean powered){if(com.vandorlabs.rack.ModuleAutopilotData.signal(modules[slot],powered))changed();}
+    }
+
+    public int batteryChargeLevels(){int result=0;for(int slot=0;slot<4;slot++)result|=(com.vandorlabs.rack.ModuleBatteryData.energy(modules[slot])*4/com.vandorlabs.rack.ModuleBatteryData.CAPACITY)<<(slot*3);return result;}
+    public int batteryEnergy(){int total=0;for(ItemStack stack:modules)total+=com.vandorlabs.rack.ModuleBatteryData.energy(stack);return total;}
+    public int batteryCapacity(){int total=0;for(ItemStack stack:modules)if(com.vandorlabs.rack.ModuleBatteryData.valid(stack))total+=com.vandorlabs.rack.ModuleBatteryData.CAPACITY;return total;}
+    public int receiveBatteryEnergy(int maximum,boolean simulate){return transferBattery(maximum,simulate,true);}
+    public int extractBatteryEnergy(int maximum,boolean simulate){return transferBattery(maximum,simulate,false);}
+    private int transferBattery(int maximum,boolean simulate,boolean receive){
+        if(!canMutate())return 0;int previousLevels=batteryChargeLevels(),remaining=Math.max(0,maximum),total=0;
+        for(ItemStack stack:modules){int amount=receive?com.vandorlabs.rack.ModuleBatteryData.receive(stack,remaining,simulate):com.vandorlabs.rack.ModuleBatteryData.extract(stack,remaining,simulate);remaining-=amount;total+=amount;}
+        if(!simulate&&total>0){markDirty();if(previousLevels!=batteryChargeLevels())changed();}return total;
     }
 
     @Override public boolean shouldRenderInPass(int pass) { return false; }

@@ -47,15 +47,16 @@ public final class ModuleRackMapChecks {
 
     private static final class Context implements MapDataContext {
         final DynmapBlockState state;
-        final int mask,kinds;
+        final int mask,kinds,energy;
         Context(String facing, int mask) {this(facing,mask,0);}
-        Context(String facing,int mask,int kinds) {
+        Context(String facing,int mask,int kinds) {this(facing,mask,kinds,0);}
+        Context(String facing,int mask,int kinds,int energy) {
             state = new DynmapBlockState(null, 0, "vandorlabs:module_rack", "facing="+facing, "IRON");
-            this.mask = mask;this.kinds=kinds;
+            this.mask = mask;this.kinds=kinds;this.energy=energy;
         }
         public RenderPatchFactory getPatchFactory() { return FACTORY; }
         public DynmapBlockState getBlockType() { return state; }
-        public Object getBlockTileEntityField(String name) { return "ModuleMask".equals(name) ? mask : "ModuleKinds".equals(name)?kinds:null; }
+        public Object getBlockTileEntityField(String name) { return "ModuleMask".equals(name) ? mask : "ModuleKinds".equals(name)?kinds:name.startsWith("BatteryCharge")?energy:null; }
         public DynmapBlockState getBlockTypeAt(int x, int y, int z) { return state; }
         public Object getBlockTileEntityFieldAt(String name, int x, int y, int z) { return null; }
         public int getX() { return 0; }
@@ -102,6 +103,12 @@ public final class ModuleRackMapChecks {
             if(routeFaces!=blankRouteFaces+5)throw new AssertionError("Five abstract route-indicator faces per Autopilot: "+facing);
             if(mesh==renderer.getRenderPatchList(new Context(facing,1)))throw new AssertionError("Route indicator aliases blank map mesh");
             states++;
+            for(int level=0;level<5;level++){
+                RenderPatch[] battery=renderer.getRenderPatchList(new Context(facing,1,3,level*2500));int red=0,green=0;
+                for(RenderPatch part:battery){if(part.getTextureIndex()==7)red++;if(part.getTextureIndex()==8)green++;}
+                if(red!=4||green!=level)throw new AssertionError("Battery map lightning/charge segments "+facing+" level="+level+" red="+red+" green="+green);
+                states++;
+            }
 
         }
         System.out.println("Module Rack Dynmap PASS states=" + states

@@ -33,6 +33,11 @@ final class ModuleRackAppearanceChecks {
                     noLetters(b);
                 }
             }
+            for(int slot=0;slot<4;slot++)for(int charge=0;charge<5;charge++){
+                List<BakedQuad> battery=ModuleRackModel.batteryQuads(facing,slot,charge);int red=0,green=0;
+                for(BakedQuad quad:battery){String sprite=quad.getSprite().getIconName();need(!sprite.contains("missingno"),"battery sprite present");if(sprite.equals("vandorlabs:blocks/resource_ports/power_in_icon"))red++;if(sprite.equals("minecraft:blocks/emerald_block"))green++;}
+                need(red==4&&green==charge,"battery emitted lightning/charge geometry "+facing+"/"+slot+"/"+charge);
+            }
             need(outer>0&&front>0,"both outer and front records exercised "+facing);
             for(int slot=0;slot<4;slot++) {
                 // Source moving meshes retain decoded records; inspect the same typed baked source independently.
