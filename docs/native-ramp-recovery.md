@@ -42,7 +42,9 @@ snapshots leaves the native tile inert and retains its original NBT exactly.
 Configure or dismantle the original Source platform before moving its settings
 to a native world.
 
-Independent saves with different escalator tread phases still require a proven
-belt-phase mapping. Such phase changes remain refused during support adoption;
-ordinary Ramp pose recovery does not establish generic mob or escalator
-recovery parity.
+Independent escalator tread phases preserve the actor's saved horizontal
+position and adjust its feet to the nearest clear support surface emitted by
+the current saved belt phase. Recovery does not reconstruct elapsed conveyor
+travel or wrap an actor to the opposite landing. If no clear authored support
+exists at that position, the record remains retained. Ordinary Ramp and belt
+recovery do not admit unproven mob roles or external ownership data.
