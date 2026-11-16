@@ -56,6 +56,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
                 // The authored chamber glass is binary-alpha cutout geometry.
                 // Blending alone still writes invisible glass depth over the fabrication volume.
                 net.minecraft.client.renderer.GlStateManager.enableAlpha();
+                net.minecraft.client.renderer.GlStateManager.disableCull();
                 net.minecraft.client.renderer.GlStateManager.alphaFunc(org.lwjgl.opengl.GL11.GL_GREATER,.1F);
                 renderMachine(tile,x,y,z,partial,stage,alpha);
             }

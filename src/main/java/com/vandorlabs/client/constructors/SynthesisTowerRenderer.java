@@ -73,17 +73,17 @@ public final class SynthesisTowerRenderer {
         if(result.isEmpty())return;boolean flat="assembly_press".equals(tile.builderMachine());
         com.vandorlabs.machines.BuilderOutputBounds bounds=com.vandorlabs.machines.BuilderOutputBounds.forMachine(tile.builderMachine());
         BuilderFabricationVoxels.Model model=BuilderFabricationVoxels.get(result,flat);
-        GlStateManager.pushMatrix();try{GlStateManager.translate(bounds.minX,bounds.minY,bounds.minZ);GlStateManager.scale(bounds.maxX-bounds.minX,flat?(bounds.maxY-bounds.minY)/.125:bounds.maxY-bounds.minY,bounds.maxZ-bounds.minZ);BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);buffer.begin(7,DefaultVertexFormats.BLOCK);model.emit(buffer,progress);Tessellator.getInstance().draw();}finally{GlStateManager.popMatrix();}
-        if(tile.processing()&&tile.working())fabricationLasers(tile,flat,bounds,bounds.minY+model.height(progress)*(flat?1:bounds.maxY-bounds.minY)+.008,BuilderFabricationMotion.sample(tile));
+        GlStateManager.pushMatrix();try{GlStateManager.translate(bounds.centerX(),bounds.minY,bounds.centerZ());BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);buffer.begin(7,DefaultVertexFormats.BLOCK);model.emit(buffer,progress);Tessellator.getInstance().draw();}finally{GlStateManager.popMatrix();}
+        if(tile.processing()&&tile.working())fabricationLasers(tile,flat,bounds,model,bounds.minY+model.height(progress)+.008,BuilderFabricationMotion.sample(tile));
     }
-    private static void fabricationLasers(TileEntityConstructor tile,boolean press,com.vandorlabs.machines.BuilderOutputBounds bounds,double surface,BuilderFabricationMotion.Pose pose){
+    private static void fabricationLasers(TileEntityConstructor tile,boolean press,com.vandorlabs.machines.BuilderOutputBounds bounds,BuilderFabricationVoxels.Model model,double surface,BuilderFabricationMotion.Pose pose){
         try(TurntableRenderState saved=new TurntableRenderState()){
             GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA,GL11.GL_ONE,GL11.GL_ONE_MINUS_SRC_ALPHA);GlStateManager.depthMask(false);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableTexture2D();
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);TextureAtlasSprite white=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/core_flat");BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
-            if(press){for(int i=0;i<4;i++){double sx=i%2==0?1.125:3.125,sz=i<2?.4375:2.5,ex=2.125+.45*Math.sin(pose.work*.12+i*Math.PI/2),ez=1.5+.45*Math.sin(pose.work*.075+i*Math.PI);beam(b,white,sx,2.4375,sz,ex,surface,ez,.009,0xb04fee75);}}
-            else {double sx=2.5+pose.headX(),sy=3.25,sz=1.5625+pose.armZ(),scan=bounds.centerZ()+(bounds.maxZ-bounds.minZ)*.45*Math.sin(pose.work*.11);
-                beamVertex(b,white,sx,sy,sz,0x324baeff);beamVertex(b,white,bounds.minX,surface,scan,0x324baeff);beamVertex(b,white,bounds.maxX,surface,scan,0x324baeff);beamVertex(b,white,sx,sy,sz,0x324baeff);
-                beamVertex(b,white,bounds.minX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.maxX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.maxX,surface,scan+.009,0xc05bbcff);beamVertex(b,white,bounds.minX,surface,scan+.009,0xc05bbcff);
+            if(press){for(int i=0;i<4;i++){double sx=i%2==0?1.125:3.125,sz=i<2?.4375:2.5,ex=bounds.centerX()+(model.minX+model.maxX)/2+(model.maxX-model.minX)*.45*Math.sin(pose.work*.12+i*Math.PI/2),ez=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(pose.work*.075+i*Math.PI);beam(b,white,sx,2.4375,sz,ex,surface,ez,.009,0xb04fee75);}}
+            else {double sx=2.5+pose.headX(),sy=3.25,sz=1.5625+pose.armZ(),scan=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(pose.work*.11);
+                beamVertex(b,white,sx,sy,sz,0x324baeff);beamVertex(b,white,bounds.centerX()+model.minX,surface,scan,0x324baeff);beamVertex(b,white,bounds.centerX()+model.maxX,surface,scan,0x324baeff);beamVertex(b,white,sx,sy,sz,0x324baeff);
+                beamVertex(b,white,bounds.centerX()+model.minX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.centerX()+model.maxX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.centerX()+model.maxX,surface,scan+.009,0xc05bbcff);beamVertex(b,white,bounds.centerX()+model.minX,surface,scan+.009,0xc05bbcff);
                 beam(b,white,sx,sy+.018,sz,sx,sy-.018,sz,.018,0xd06ccaff);
             }Tessellator.getInstance().draw();
         }
