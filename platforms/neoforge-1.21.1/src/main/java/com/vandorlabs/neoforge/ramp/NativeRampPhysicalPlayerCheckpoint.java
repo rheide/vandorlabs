@@ -15,7 +15,7 @@ final class NativeRampPhysicalPlayerCheckpoint {
    if(records.size()>=NativeRampPlayerReceipts.MAX_PLAYERS)throw new IOException("Ramp participant checkpoint count");
    var current=NativeRampPlayerStorage.read(directory,actor.id());
    var classified=NativeRampPlayerRecord.classify(current,Optional.empty(),actor,intent.dimension());
-   if(classified.state()!=NativeRampPlayerRecord.State.TRANSFERRED)throw new IOException("Participant physical record does not match committed Ramp endpoint: "+classified.reason());
+   if(classified.state()!=NativeRampPlayerRecord.State.TRANSFERRED&&!(actor.from().equals(actor.to())&&classified.state()==NativeRampPlayerRecord.State.ORIGINAL))throw new IOException("Participant physical record does not match committed Ramp endpoint: "+classified.reason());
    records.put(actor.id(),current.orElseThrow());
   }
   for(var entry:records.entrySet()){
