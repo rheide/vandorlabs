@@ -192,7 +192,7 @@ public final class NativeRampController {
     boolean refreshActivity(net.minecraft.server.MinecraftServer server){return owner.getLevel() instanceof ServerLevel world&&world.getServer()==server&&refreshActivity();}
     boolean refreshActivity(){
         if(!(owner.getLevel() instanceof ServerLevel world)||!installed(world)||operation==null||owner.settings().escalator()==0)return false;
-        boolean was=beltRunning();beltWaiting=false;double radius=was?40:32;nearby=false;
+        boolean was=beltRunning(),retainExitRadius=beltWaiting&&nearby&&beltRequested&&!error;beltWaiting=false;double radius=was||retainExitRadius?40:32;nearby=false;
         if(deployed()&&phase==Phase.ACTIVE){var spec=operation.assembly().footprint();for(var player:world.players()){
             if(!player.isAlive()||player.isSpectator())continue;
             for(var origin:spec.origins()){
