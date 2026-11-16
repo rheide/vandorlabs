@@ -15,8 +15,8 @@
     "depth": 3,
     "model": "universal_constructor/synthesis_tower",
     "chip_anchor": [
-      0.8125,
-      1.65,
+      0.5,
+      1.5,
       0.35
     ],
     "chip_size": [

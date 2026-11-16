@@ -11,6 +11,8 @@ import net.minecraftforge.energy.*;
 
 public final class ItemBatteryModule extends Item {
     public ItemBatteryModule(){setRegistryName(VandorLabs.MODID,"battery_module");setUnlocalizedName("vandorlabs.battery_module");setCreativeTab(VandorLabs.VANDOR_LABS_TAB);setMaxStackSize(1);}
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @Override public void getSubItems(net.minecraft.creativetab.CreativeTabs tab,net.minecraft.util.NonNullList<ItemStack> items){if(isInCreativeTab(tab)){items.add(new ItemStack(this));ItemStack full=new ItemStack(this);ModuleBatteryData.receive(full,ModuleBatteryData.CAPACITY,false);items.add(full);}}
     @Override public ICapabilityProvider initCapabilities(final ItemStack stack,NBTTagCompound nbt){
         return new ICapabilityProvider(){
             private final IEnergyStorage energy=new IEnergyStorage(){
@@ -29,5 +31,5 @@ public final class ItemBatteryModule extends Item {
     @Override public void addInformation(ItemStack stack,net.minecraft.world.World world,java.util.List<String> lines,net.minecraft.client.util.ITooltipFlag flag){lines.add(ModuleBatteryData.energy(stack)+" / "+ModuleBatteryData.CAPACITY+" RF");}
     @Override public boolean showDurabilityBar(ItemStack stack){return true;}
     @Override public double getDurabilityForDisplay(ItemStack stack){return 1-ModuleBatteryData.energy(stack)/(double)ModuleBatteryData.CAPACITY;}
-    @Override public int getRGBDurabilityForDisplay(ItemStack stack){return 0x43cc55;}
+    @Override public int getRGBDurabilityForDisplay(ItemStack stack){return 0xff4033;}
 }

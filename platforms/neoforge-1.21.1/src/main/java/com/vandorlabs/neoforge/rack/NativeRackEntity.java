@@ -56,7 +56,10 @@ public final class NativeRackEntity extends BlockEntity {
     public AutopilotModuleSettings moduleSettings(int slot){if(kind(slot)!=2)throw new IllegalArgumentException("No Autopilot module");return level!=null&&level.isClientSide?publicModules[slot]:NativeRackData.settings(items[slot]);}
     public ItemStack module(int slot){return ModuleRackGeometry.validSlot(slot)?items[slot].copy():ItemStack.EMPTY;}
     public List<ItemStack> ownedModuleDrops(){var result=new ArrayList<ItemStack>();if(!inert)for(var stack:items)if(!stack.isEmpty())result.add(stack.copy());return List.copyOf(result);}
-    public int batteryLevels(){int result=0;for(int slot=0;slot<4;slot++)result|=(NativeBatteryModule.energy(items[slot])*4/NativeBatteryModule.CAPACITY)<<(slot*3);return result;}
+    private int previousBatteryPixels;
+    public int batteryPixels(int slot){return com.vandorlabs.rack.BatteryChargeBar.unpack(level!=null&&level.isClientSide?publicBatteryLevels:batteryLevels(),slot);}
+    public int previousBatteryPixels(int slot){return com.vandorlabs.rack.BatteryChargeBar.unpack(previousBatteryPixels,slot);}
+    public int batteryLevels(){int result=0;for(int slot=0;slot<4;slot++)result|=com.vandorlabs.rack.BatteryChargeBar.pixels(NativeBatteryModule.energy(items[slot]),NativeBatteryModule.CAPACITY)<<(slot*6);return result;}
     public int batteryEnergy(){int total=0;for(var stack:items)total+=NativeBatteryModule.energy(stack);return total;}
     public int transferBattery(int maximum,boolean simulate,boolean receive){if(!installed()||inert)return 0;int before=batteryLevels(),total=0;for(var stack:items)total+=NativeBatteryModule.transfer(stack,Math.max(0,maximum)-total,simulate,receive);if(!simulate&&total>0){setChanged();if(before!=batteryLevels())changed();}return total;}
     private boolean installed(){
@@ -155,8 +158,9 @@ public final class NativeRackEntity extends BlockEntity {
         boolean replacement=incomingEpoch>0&&incomingEpoch!=receivedEpoch;if(!replacement&&receivedEpoch>0&&incoming<revision&&!(revision==Long.MAX_VALUE&&incoming==1))return;
         if(!replacement&&receivedEpoch>0&&incoming==revision)return;
         int previous=replacement?0:occupied,previousKinds=replacement?0:kinds;long[] before=replacement?new long[4]:inserted.clone();
+        previousBatteryPixels=publicBatteryLevels;
         occupied=tag.getInt("ModuleMask")&15;kinds=tag.contains("ModuleKinds")?tag.getInt("ModuleKinds")&255:ModuleRackPolicy.blankKinds(occupied);visible=initial?occupied:visible&occupied;housing=tag.getInt("RackHousing");emit=tag.getBoolean("RackEmit");inert=tag.getBoolean("NativeRackInert");transmission=NativeRackData.transmission(tag);revision=incoming;if(incomingEpoch>0)receivedEpoch=incomingEpoch;
-        publicBatteryLevels=0;for(int slot=0;slot<4;slot++)if(kind(slot)==3)publicBatteryLevels|=Math.max(0,Math.min(4,tag.getInt("BatteryCharge"+slot)*4/NativeBatteryModule.CAPACITY))<<(slot*3);
+        publicBatteryLevels=0;for(int slot=0;slot<4;slot++)if(kind(slot)==3)publicBatteryLevels|=com.vandorlabs.rack.BatteryChargeBar.pixels(tag.getInt("BatteryCharge"+slot),NativeBatteryModule.CAPACITY)<<(slot*6);
         for(int slot=0;slot<4;slot++){inserted[slot]=Math.max(0,tag.getLong("Insert"+slot));publicModules[slot]=kind(slot)==2?NativeRackData.settings(tag.getCompound("ModuleConfig"+slot)):null;}
         publish();CLIENT_UPDATES.updated(this,previous,previousKinds,before,initial);if(level!=null&&level.isClientSide&&level.getBlockEntity(worldPosition)==this)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),Block.UPDATE_CLIENTS);
     }

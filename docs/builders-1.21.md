@@ -92,8 +92,8 @@ checks.
 
 ## Cores and JEI
 
-The three Core block/item models have a colored inner cube, eight diagonal
-struts, an outer cube outline and larger corner nodes, with real empty gaps.
+The three Core block/item models use a 32×32 pixel cage, a legacy-textured inner cube, four stepped
+supports, recessed face crosses and solid corner cubes, with real empty gaps.
 The same geometry appears during fabrication and in padded inventory icons.
 This native conversion does not register the other ten Forge Core families.
 

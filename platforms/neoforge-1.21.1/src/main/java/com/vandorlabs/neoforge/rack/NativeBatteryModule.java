@@ -26,6 +26,6 @@ public final class NativeBatteryModule extends Item {
     };}
     @Override public boolean isBarVisible(ItemStack stack){return true;}
     @Override public int getBarWidth(ItemStack stack){return Math.round(13F*energy(stack)/CAPACITY);}
-    @Override public int getBarColor(ItemStack stack){return 0x43cc55;}
+    @Override public int getBarColor(ItemStack stack){return 0xff4033;}
     @Override public void appendHoverText(ItemStack stack,TooltipContext context,List<Component> lines,TooltipFlag flag){lines.add(Component.literal(energy(stack)+" / "+CAPACITY+" RF"));}
 }

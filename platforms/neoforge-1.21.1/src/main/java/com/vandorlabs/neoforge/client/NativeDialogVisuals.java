@@ -19,7 +19,13 @@ public final class NativeDialogVisuals {
     }
     public static void logo(GuiGraphics graphics,int left,int top,int width,int headerHeight){
         int h=DialogStyle.logoHeight(headerHeight),w=DialogStyle.logoWidth(headerHeight);
-        if(h>0&&w>0)graphics.blit(LOGO,DialogStyle.logoLeft(left,width,headerHeight),DialogStyle.logoTop(top,headerHeight),0,0,w,h,w,h);
+        if(h>0&&w>0){
+            graphics.flush();
+            net.minecraft.client.Minecraft.getInstance().getTextureManager().bindForSetup(LOGO);
+            net.minecraft.client.Minecraft.getInstance().getTextureManager().getTexture(LOGO).setFilter(false,false);
+            graphics.blit(LOGO,DialogStyle.logoLeft(left,width,headerHeight),DialogStyle.logoTop(top,headerHeight),0,0,w,h,w,h);
+            graphics.flush();
+        }
     }
     public static void tab(GuiGraphics graphics,Font font,String label,int left,int top,int width,int height,boolean enabled,int mouseX,int mouseY){
         boolean hovered=mouseX>=left&&mouseY>=top&&mouseX<left+width&&mouseY<top+height;

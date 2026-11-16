@@ -17,6 +17,7 @@ public final class DialogHeader {
         try{
         GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();GlStateManager.enableAlpha();
         Minecraft.getMinecraft().getTextureManager().bindTexture(LOGO);
+        Minecraft.getMinecraft().getTextureManager().getTexture(LOGO).setBlurMipmap(false,false);
         GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();
         int h=com.vandorlabs.ui.DialogStyle.logoHeight(headerHeight),w=com.vandorlabs.ui.DialogStyle.logoWidth(headerHeight);
         Gui.drawModalRectWithCustomSizedTexture(com.vandorlabs.ui.DialogStyle.logoLeft(left,width,headerHeight),com.vandorlabs.ui.DialogStyle.logoTop(top,headerHeight),0,0,w,h,w,h);

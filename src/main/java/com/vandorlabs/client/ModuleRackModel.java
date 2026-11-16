@@ -29,10 +29,9 @@ import net.minecraftforge.fml.relauncher.Side;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReferenceArray;
 
 /** Settled racks are ordinary opaque terrain. All racks share finite immutable
- * component geometry, with at most 6561 typed occupancy/visible/charge combinations per
+ * component geometry and a bounded cache of typed occupancy/visible/charge combinations per
  * facing. getQuads never reads a world, item inventory, animation clock or NBT.
  */
 @Mod.EventBusSubscriber(modid = "vandorlabs", value = Side.CLIENT)
@@ -57,9 +56,10 @@ public final class ModuleRackModel implements IBakedModel {
     private List<BakedQuad>[][] batterySeated;
     private final List<BakedQuad>[] seated, empty;
     private final List<BakedQuad>[][] indicators;
-    private final AtomicReferenceArray<List<BakedQuad>> combinations = new AtomicReferenceArray<>(6561);
-    private final int[] cacheOrder = new int[6561];
-    private int cacheRead, cacheWrite, cacheEntries, cacheBytes;
+    private final java.util.LinkedHashMap<Integer,List<BakedQuad>> combinations=new java.util.LinkedHashMap<>(16,.75F,true);
+    private int cacheBytes;
+    private List<BakedQuad>[][] chargeQuads;
+    private MovingMesh[][] chargeMeshes;
     private static final int COMBINATION_BYTES = 65536;
 
     private ModuleRackModel(int facing, IBakedModel shell, IBakedModel[] modules, List<BakedQuad>[] seated,
@@ -78,7 +78,7 @@ public final class ModuleRackModel implements IBakedModel {
 
     private ModuleRackModel(ModuleRackModel source, int housingChoice, TextureAtlasSprite sprite) {
         this.facing = source.facing; this.housingChoice = housingChoice; shell = new HousingShell(source.shell, sprite, facing);
-        batteryModules=source.batteryModules;batteryMoving=source.batteryMoving;batterySeated=source.batterySeated;
+        batteryModules=source.batteryModules;batteryMoving=source.batteryMoving;batterySeated=source.batterySeated;chargeQuads=source.chargeQuads;chargeMeshes=source.chargeMeshes;embeddedSeated=source.embeddedSeated;embeddedEmpty=source.embeddedEmpty;embeddedIndicators=source.embeddedIndicators;
         modules = source.modules; moving = source.moving; autopilotModules=source.autopilotModules; autopilotMoving=source.autopilotMoving; autopilotSeated=source.autopilotSeated; seated = source.seated; empty = source.empty; indicators = source.indicators;
     }
     private synchronized ModuleRackModel housing(int choice) {
@@ -127,9 +127,12 @@ public final class ModuleRackModel implements IBakedModel {
     @SubscribeEvent public static void stitch(TextureStitchEvent.Pre event) {
         for (String texture : TEXTURES)
             event.getMap().registerSprite(new ResourceLocation("vandorlabs", "blocks/module_rack/" + texture));
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs","blocks/resource_ports/power_in_off"));
+        event.getMap().registerSprite(new ResourceLocation("vandorlabs","blocks/resource_ports/power_in_on"));
     }
 
     @SubscribeEvent public static void bake(ModelBakeEvent event) {
+        com.vandorlabs.items.ModItems.BATTERY_MODULE.addPropertyOverride(new ResourceLocation("vandorlabs","charge"),(stack,world,entity)->com.vandorlabs.rack.ModuleBatteryData.energy(stack)/(float)com.vandorlabs.rack.ModuleBatteryData.CAPACITY);
         for (EnumFacing facing : EnumFacing.values()) {
             int turns = facing == EnumFacing.WEST ? 1 : facing == EnumFacing.NORTH ? 2 : facing == EnumFacing.EAST ? 3 : 0;
             int pitch = facing == EnumFacing.UP ? 90 : facing == EnumFacing.DOWN ? 270 : 0;
@@ -157,6 +160,8 @@ public final class ModuleRackModel implements IBakedModel {
                 model.batteryMoving[slot][level]=new MovingMesh(model.batteryModules[slot][level]);
                 model.batterySeated[slot][level]=all(part("slot_seated_battery_"+slot+"_"+level,pitch,turns),false);model.embeddedSeated[slot][level]=new MovingMesh(model.batterySeated[slot][level]);
             }
+            @SuppressWarnings("unchecked") List<BakedQuad>[][] bars=(List<BakedQuad>[][])new List<?>[4][37];model.chargeQuads=bars;model.chargeMeshes=new MovingMesh[4][37];
+            for(int bay=0;bay<4;bay++){List<BakedQuad> full=all(part("battery_bar_"+bay,pitch,turns),false);for(int fill=0;fill<=36;fill++){List<BakedQuad> clipped=new ArrayList<>();if(fill>0)for(BakedQuad quad:full)clipped.add(luminous(new BakedQuad(com.vandorlabs.rack.BatteryChargeBar.clip(quad.getVertexData(),fill),quad.getTintIndex(),quad.getFace(),quad.getSprite(),false,quad.getFormat())));bars[bay][fill]=Collections.unmodifiableList(clipped);model.chargeMeshes[bay][fill]=new MovingMesh(bars[bay][fill]);}}
             MODELS[facing.getIndex()] = model;
             event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:module_rack", "facing=" + facing.getName()), model);
         }
@@ -225,9 +230,11 @@ public final class ModuleRackModel implements IBakedModel {
         ModuleRackModel model=MODELS[facing.getIndex()];if(model==null||bay<0||bay>=4)return;
         if(!occupied)model.embeddedEmpty[bay].draw(buffer,x,y,z,light);
         model.embeddedIndicators[bay][occupied?1:0].draw(buffer,x,y,z,15728880);
-        if(visible)(moving?model.batteryMoving[bay][Math.max(0,Math.min(4,level))]:model.embeddedSeated[bay][Math.max(0,Math.min(4,level))]).draw(buffer,x+facing.getFrontOffsetX()*offset,y+facing.getFrontOffsetY()*offset,z+facing.getFrontOffsetZ()*offset,light);
+        if(visible)(moving?model.batteryMoving[bay][0]:model.embeddedSeated[bay][0]).draw(buffer,x+facing.getFrontOffsetX()*offset,y+facing.getFrontOffsetY()*offset,z+facing.getFrontOffsetZ()*offset,light);
+        if(visible)emitBatteryBar(buffer,facing,bay,level,x+facing.getFrontOffsetX()*offset,y+facing.getFrontOffsetY()*offset,z+facing.getFrontOffsetZ()*offset,15728880);
     }
 
+    static void emitBatteryBar(BufferBuilder buffer,EnumFacing facing,int bay,int fill,double x,double y,double z,int light){ModuleRackModel model=MODELS[facing.getIndex()];if(model!=null)model.chargeMeshes[bay][Math.max(0,Math.min(36,fill))].draw(buffer,x,y,z,15728880);}
     static IBakedModel movingModule(EnumFacing facing, int slot) {
         ModuleRackModel model = MODELS[facing.getIndex()];
         return model == null ? null : model.modules[slot];
@@ -301,38 +308,17 @@ public final class ModuleRackModel implements IBakedModel {
             visible = visibleValue == null ? occupied : visibleValue & occupied;
         }
         int key=0, place=1;
-        for(int slot=0;slot<4;slot++,place*=9) {
+        for(int slot=0;slot<4;slot++,place*=41) {
             int bit=1<<slot,kind=(kinds >>> (slot*2))&3;
-            int digit=(occupied&bit)==0?0:(visible&bit)==0?1:kind==3?4+Math.min(4,(charge >>> (slot*3))&7):kind==2?3:2;
+            int digit=(occupied&bit)==0?0:(visible&bit)==0?1:kind==3?4+com.vandorlabs.rack.BatteryChargeBar.unpack(charge,slot):kind==2?3:2;
             key+=digit*place;
         }
-        List<BakedQuad> found = combinations.get(key);
-        if (found != null) return found;
-        synchronized (combinations) {
-            found = combinations.get(key);
-            if (found != null) return found;
-            List<BakedQuad> result = new ArrayList<>(shell.getQuads(null, null, 0));
-            for (int slot = 0; slot < 4; slot++) {
-                result.addAll(indicators[slot][(occupied >>> slot) & 1]);
-                result.addAll((visible & (1 << slot)) != 0 ? (((kinds >>> (slot*2))&3)==3?batterySeated[slot][Math.min(4,(charge >>> (slot*3))&7)]:((kinds >>> (slot*2))&3)==2?autopilotSeated[slot]:seated[slot]) : empty[slot]);
-            }
-            found = Collections.unmodifiableList(result);
-            int bytes=32+result.size()*8;
-            while(cacheEntries>0 && cacheBytes+bytes>COMBINATION_BYTES) {
-                int evicted=cacheOrder[cacheRead++]; if(cacheRead==cacheOrder.length)cacheRead=0;
-                List<BakedQuad> old=combinations.getAndSet(evicted,null); if(old!=null)cacheBytes-=32+old.size()*8;cacheEntries--;
-            }
-            combinations.set(key, found); cacheOrder[cacheWrite++]=key;if(cacheWrite==cacheOrder.length)cacheWrite=0;cacheEntries++;cacheBytes+=bytes;
-            return found;
-        }
+        synchronized(combinations){List<BakedQuad> found=combinations.get(key);if(found!=null)return found;
+            List<BakedQuad> result=new ArrayList<>(shell.getQuads(null,null,0));
+            for(int slot=0;slot<4;slot++){result.addAll(indicators[slot][occupied>>>slot&1]);boolean show=(visible&1<<slot)!=0;int kind=kinds>>>(slot*2)&3;result.addAll(show?(kind==3?batterySeated[slot][0]:kind==2?autopilotSeated[slot]:seated[slot]):empty[slot]);if(show&&kind==3)result.addAll(chargeQuads[slot][com.vandorlabs.rack.BatteryChargeBar.unpack(charge,slot)]);}
+            found=Collections.unmodifiableList(result);int bytes=32+found.size()*8;while(!combinations.isEmpty()&&(cacheBytes+bytes>COMBINATION_BYTES||combinations.size()>=128)){java.util.Iterator<List<BakedQuad>> values=combinations.values().iterator();List<BakedQuad> old=values.next();cacheBytes-=32+old.size()*8;values.remove();}if(bytes<=COMBINATION_BYTES){combinations.put(key,found);cacheBytes+=bytes;}return found;}
     }
-
-    /** Useful for diagnostics: cache capacity depends on appearance states, never world size. */
-    int cachedCombinations() {
-        int count = 0;
-        for (int index = 0; index < combinations.length(); index++) if (combinations.get(index) != null) count++;
-        return count;
-    }
+    int cachedCombinations(){synchronized(combinations){return combinations.size();}}
 
     @Override public boolean isAmbientOcclusion() { return false; }
     @Override public boolean isGui3d() { return true; }

@@ -304,6 +304,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         }
         occupiedMask = mask;
         failedLoad = tag.getBoolean("RackInert") ? new NBTTagCompound() : null;
+        previousBatteryPixels=batteryChargeLevels();
         previousModuleKinds = moduleKinds;
         moduleKinds = tag.hasKey("ModuleKinds",3) ? tag.getInteger("ModuleKinds") & 255 : com.vandorlabs.rack.ModuleRackPolicy.blankKinds(mask);
         for (int slot = 0; slot < modules.length; slot++) {
@@ -434,7 +435,10 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         public void setChannelSignal(boolean powered){if(com.vandorlabs.rack.ModuleAutopilotData.signal(modules[slot],powered))changed();}
     }
 
-    public int batteryChargeLevels(){int result=0;for(int slot=0;slot<4;slot++)result|=(com.vandorlabs.rack.ModuleBatteryData.energy(modules[slot])*4/com.vandorlabs.rack.ModuleBatteryData.CAPACITY)<<(slot*3);return result;}
+    private int previousBatteryPixels;
+    public int batteryPixels(int slot){return com.vandorlabs.rack.BatteryChargeBar.unpack(batteryChargeLevels(),slot);}
+    public int previousBatteryPixels(int slot){return com.vandorlabs.rack.BatteryChargeBar.unpack(previousBatteryPixels,slot);}
+    public int batteryChargeLevels(){int result=0;for(int slot=0;slot<4;slot++)result|=com.vandorlabs.rack.BatteryChargeBar.pixels(com.vandorlabs.rack.ModuleBatteryData.energy(modules[slot]),com.vandorlabs.rack.ModuleBatteryData.CAPACITY)<<(slot*6);return result;}
     public int batteryEnergy(){int total=0;for(ItemStack stack:modules)total+=com.vandorlabs.rack.ModuleBatteryData.energy(stack);return total;}
     public int batteryCapacity(){int total=0;for(ItemStack stack:modules)if(com.vandorlabs.rack.ModuleBatteryData.valid(stack))total+=com.vandorlabs.rack.ModuleBatteryData.CAPACITY;return total;}
     public int receiveBatteryEnergy(int maximum,boolean simulate){return transferBattery(maximum,simulate,true);}

@@ -14,6 +14,8 @@ public final class NativeBuilderModelCache {
     public static final RenderType LAYER=RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS);
     private record Generation(Map<String,NativeBuilderModel> meshes,long bytes){}
     private static final Map<String,NativeBuilderModel> rackMeshes=new HashMap<>();
+    private static final NativeBuilderModel[][] batteryBars=new NativeBuilderModel[4][37];
+    public static NativeBuilderModel batteryBar(int bay,int pixels){return batteryBars[bay][Math.clamp(pixels,0,36)];}
     private static volatile Generation generation=new Generation(Map.of(),0);
     public static ResourceLocation model(String design,boolean core){if(!IDS.contains(design))throw new IllegalArgumentException("Unknown builder "+design);return ResourceLocation.fromNamespaceAndPath("vandorlabs","block/builders/"+design+"/"+(core?"core":"complete"));}
     public static void bake(Map<ModelResourceLocation,BakedModel> models){
@@ -24,6 +26,7 @@ public final class NativeBuilderModelCache {
             for(String name:List.of("slot_empty_"+bay,"indicator_"+bay+"_off","indicator_"+bay+"_on")){var model=new NativeBuilderModel(Objects.requireNonNull(models.get(ModelResourceLocation.standalone(ResourceLocation.parse("vandorlabs:block/module_rack/"+name))),name));rackMeshes.put(name,model);bytes+=model.retainedBytes();}
             for(int charge=0;charge<5;charge++)for(String prefix:List.of("slot_battery_","slot_seated_battery_")){String name=prefix+bay+"_"+charge;var model=new NativeBuilderModel(Objects.requireNonNull(models.get(ModelResourceLocation.standalone(ResourceLocation.parse("vandorlabs:block/module_rack/"+name))),name));rackMeshes.put(name,model);bytes+=model.retainedBytes();}
         }
+        for(int bay=0;bay<4;bay++)for(int fill=0;fill<=36;fill++){var bar=new NativeBuilderModel(com.vandorlabs.neoforge.rack.client.NativeRackBatteryBar.quads(models,net.minecraft.core.Direction.SOUTH,bay,fill));batteryBars[bay][fill]=bar;bytes+=bar.retainedBytes();}
         if(bytes>4*1024*1024)throw new IllegalStateException("Builder mesh generation byte budget");generation=new Generation(Map.copyOf(meshes),bytes);
     }
     public static boolean ready(){return generation.meshes.size()==6;}

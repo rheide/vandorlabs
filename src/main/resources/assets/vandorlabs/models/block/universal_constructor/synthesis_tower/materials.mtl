@@ -49,6 +49,13 @@ d 1
 illum 1
 map_Kd vandorlabs:blocks/resource_ports/port_hull
 
+newmtl synth_interior
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/frames/frames-door-window/door_interior_dark_rail
+
 newmtl synth_screen
 Ka 1 1 1
 Kd 1 1 1

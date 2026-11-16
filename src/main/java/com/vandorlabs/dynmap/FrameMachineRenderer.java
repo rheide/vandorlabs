@@ -16,7 +16,7 @@ import org.dynmap.renderer.*;
 /** Authored static machinery is clipped into its reserved cells, never submitted twice. */
 public final class FrameMachineRenderer extends CustomRenderer {
     private static final class Face {int texture;double[][] vertices;}
-    private static final class Design {int width,height,depth;String core;Face[][] states;}
+    private static final class Design {int width,height,depth,core_texture;String core;Face[][] states;}
     private static final class Catalog {String[] textures;int[] colors;Map<String,Design> designs;}
     private static final Catalog CATALOG=load();
     private final com.google.common.cache.Cache<String,RenderPatch[]> meshes=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
@@ -41,10 +41,11 @@ public final class FrameMachineRenderer extends CustomRenderer {
             if(part)return new RenderPatch[0];String key=state.blockName+":core";RenderPatch[] cached=meshes.getIfPresent(key);if(cached!=null)return cached;
             List<RenderPatch> result=new ArrayList<>();
             for(CoreMesh.Face face:CoreMesh.faces(design.core)){
-                int color=Arrays.binarySearch(CATALOG.colors,face.rgb);if(color<0)throw new IllegalStateException("Missing Core map color");
+                int texture=design.core_texture;
+                if(!face.textured){int color=Arrays.binarySearch(CATALOG.colors,face.rgb);if(color<0)throw new IllegalStateException("Missing Core map color");texture=CATALOG.textures.length+color;}
                 List<MapSurface.Vertex> polygon=new ArrayList<>(4);
-                for(int vertex=0;vertex<4;vertex++)polygon.add(new MapSurface.Vertex(new Vec3d(face.coordinate(vertex,0),face.coordinate(vertex,1),face.coordinate(vertex,2)),vertex==1||vertex==2?1:0,vertex>=2?1:0));
-                MapSurface.emit(context,result,polygon,CATALOG.textures.length+color);
+                for(int vertex=0;vertex<4;vertex++)polygon.add(new MapSurface.Vertex(new Vec3d(face.coordinate(vertex,0),face.coordinate(vertex,1),face.coordinate(vertex,2)),face.u(vertex),face.v(vertex)));
+                MapSurface.emit(context,result,polygon,texture);
             }
             RenderPatch[] built=result.toArray(new RenderPatch[0]);meshes.put(key,built);return built;
         }

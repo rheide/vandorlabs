@@ -1,0 +1,1 @@
+{"ambientocclusion":false,"textures":{"bar":"vandorlabs:blocks/resource_ports/power_in_on"},"elements":[{"from":[2.5,9.25,15.278],"to":[11.5,10.25,15.279],"shade":false,"faces":{"south":{"texture":"#bar","uv":[3.5,1.75,12.5,2.75]}}}]}

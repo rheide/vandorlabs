@@ -22,6 +22,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public float buildProgress(){return synthesisRuntime.progress();}
     public boolean processing(){return synthesisRuntime.active();}
     public boolean externalPowerConnected(){return synthesisRuntime.connected;}
+    private int synthesisConnections;private boolean readingSynthesis;
+    public int synthesisConnections(){return synthesisConnections;}
     private final long[] batterySequences=new long[4];
     public long batterySequence(int bay){return bay>=0&&bay<4?batterySequences[bay]:0;}
     public net.minecraft.item.ItemStack batteryStack(int bay){return bay>=0&&bay<4?synthesisInventory().getStackInSlot(2+bay):net.minecraft.item.ItemStack.EMPTY;}
@@ -30,11 +32,15 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public int batteryCapacity(){int total=0;for(int bay=0;bay<4;bay++)if(com.vandorlabs.rack.ModuleBatteryData.valid(batteryStack(bay))&&!batteryStack(bay).isEmpty())total+=com.vandorlabs.rack.ModuleBatteryData.CAPACITY;return total;}
     public int receiveBatteryEnergy(int amount,boolean simulate){return transferBatteryEnergy(amount,simulate,true);}
     public int extractBatteryEnergy(int amount,boolean simulate){return transferBatteryEnergy(amount,simulate,false);}
-    private int transferBatteryEnergy(int amount,boolean simulate,boolean receive){int total=0;for(int bay=0;bay<4&&total<amount;bay++)total+=receive?com.vandorlabs.rack.ModuleBatteryData.receive(batteryStack(bay),amount-total,simulate):com.vandorlabs.rack.ModuleBatteryData.extract(batteryStack(bay),amount-total,simulate);if(total>0&&!simulate)synthesisChanged();return total;}
+    private int batteryPixels(){int packed=0;for(int bay=0;bay<4;bay++)packed=com.vandorlabs.rack.BatteryChargeBar.pack(packed,bay,batteryEnergy(bay),com.vandorlabs.rack.ModuleBatteryData.CAPACITY);return packed;}
+    private int transferBatteryEnergy(int amount,boolean simulate,boolean receive){int before=simulate?0:batteryPixels(),total=0;for(int bay=0;bay<4&&total<amount;bay++)total+=receive?com.vandorlabs.rack.ModuleBatteryData.receive(batteryStack(bay),amount-total,simulate):com.vandorlabs.rack.ModuleBatteryData.extract(batteryStack(bay),amount-total,simulate);if(total>0&&!simulate){synthesisChanged();if(before!=batteryPixels())publishSynthesisVisual();}return total;}
+    private void publishSynthesisVisual(){if(!readingSynthesis&&world!=null&&!world.isRemote&&world.isBlockLoaded(pos,false)&&world.getTileEntity(pos)==this){synthesisSync=false;publish();}}
+    public void refreshSynthesisConnections(){if(world==null||world.isRemote||!world.isBlockLoaded(pos,false)||world.getTileEntity(pos)!=this||!formed()||!synthesis())return;int mask=0;if(endpoint(synthesisPowerPort(),facing().getOpposite(),true))mask|=1;if(endpoint(synthesisPowerPort(),EnumFacing.DOWN,true))mask|=2;if(endpoint(cell(0,0,2),facing().getOpposite(),false))mask|=4;if(endpoint(cell(0,0,2),facing().rotateYCCW(),false))mask|=8;if(endpoint(cell(0,0,2),EnumFacing.DOWN,false))mask|=16;boolean connected=com.vandorlabs.machines.SynthesisConnections.power(mask);if(mask!=synthesisConnections||connected!=synthesisRuntime.connected){synthesisConnections=mask;synthesisRuntime.connected=connected;publishSynthesisVisual();}}
+    private boolean endpoint(BlockPos port,EnumFacing side,boolean energy){BlockPos at=port.offset(side);if(!world.isBlockLoaded(at,false))return false;TileEntity tile=world.getTileEntity(at);if(tile==null||tile.isInvalid())return false;return energy?com.vandorlabs.ports.EnergyEndpointPresence.connected(tile,side.getOpposite()):tile.getCapability(net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,side.getOpposite())!=null||tile instanceof net.minecraft.inventory.IInventory;}
     public boolean synthesisReady(){return synthesisInputsReady;}
     public boolean working(){return synthesisRuntime.working();}
     public boolean synthesisWorking(){return working();}
-    public void synthesisSlotChanged(int slot){if(slot>=2&&slot<6)batterySequences[slot-2]++;synthesisChanged();}
+    public void synthesisSlotChanged(int slot){if(slot>=2&&slot<6)batterySequences[slot-2]++;synthesisChanged();if(slot>=2&&slot<6)publishSynthesisVisual();}
     public void selectDesign(int design){if(authoritative()&&formed()&&synthesis())synthesisRuntime.select(design);}
     public void synthesisChanged(){markDirty();synthesisSync=true;}
     private int synthesisActivation;
@@ -49,15 +55,15 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         Vec3d start=player.getPositionEyes(1),delta=player.getLook(1).scale(player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());double divisor=delta.dotProduct(mount.normal);if(divisor>=-1e-8)return false;double time=mount.center.subtract(start).dotProduct(mount.normal)/divisor;if(time<0||time>1)return false;Vec3d point=start.add(delta.scale(time)).subtract(mount.center);
         int bay=com.vandorlabs.machines.SynthesisPresentation.bayAt(local.x-point.dotProduct(mount.u),local.y+point.y);if(bay<0)return false;
         int slot=2+bay;net.minecraft.item.ItemStack held=player.getHeldItem(hand),installed=synthesisInventory().getStackInSlot(slot);
-        if(installed.isEmpty()&&com.vandorlabs.rack.ModuleBatteryData.valid(held)){net.minecraft.item.ItemStack one=held.copy();one.setCount(1);synthesisInventory().setStackInSlot(slot,one);held.shrink(1);publish();return true;}
-        if(held.isEmpty()&&!installed.isEmpty()){player.setHeldItem(hand,synthesisInventory().extractItem(slot,1,false));publish();return true;}return false;
+        if(installed.isEmpty()&&com.vandorlabs.rack.ModuleBatteryData.valid(held)){net.minecraft.item.ItemStack one=held.copy();one.setCount(1);synthesisInventory().setStackInSlot(slot,one);held.shrink(1);return true;}
+        if(held.isEmpty()&&!installed.isEmpty()){player.setHeldItem(hand,synthesisInventory().extractItem(slot,1,false));return true;}return false;
     }
 
     public boolean completedCoreHit(net.minecraft.entity.player.EntityPlayer player){
         if(!synthesis()||synthesisInventory().getStackInSlot(1).isEmpty())return false;
         Vec3d origin=new Vec3d(pos.subtract(pivot()));
-        Vec3d a=MachineMountSurface.rotate(new Vec3d(1,2.125,1.125),facing(),core().width,core().depth).add(origin);
-        Vec3d b=MachineMountSurface.rotate(new Vec3d(2,3.125,2.125),facing(),core().width,core().depth).add(origin);
+        Vec3d a=MachineMountSurface.rotate(new Vec3d(1,com.vandorlabs.machines.SynthesisPresentation.CORE_Y,1.125),facing(),core().width,core().depth).add(origin);
+        Vec3d b=MachineMountSurface.rotate(new Vec3d(2,com.vandorlabs.machines.SynthesisPresentation.CORE_Y+1,2.125),facing(),core().width,core().depth).add(origin);
         AxisAlignedBB bounds=new AxisAlignedBB(Math.min(a.x,b.x),a.y,Math.min(a.z,b.z),Math.max(a.x,b.x),b.y,Math.max(a.z,b.z));
         Vec3d eye=player.getPositionEyes(1);double reach=player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue();RayTraceResult hit=bounds.calculateIntercept(eye,eye.add(player.getLook(1).scale(reach)));return hit!=null&&eye.squareDistanceTo(hit.hitVec)<=reach*reach;
     }
@@ -111,6 +117,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public void renderIdentity(java.util.UUID identity){renderIdentity=identity;}
     public boolean renderAppearanceReady(){return renderAppearance;}
     private void renderPacket(NBTTagCompound tag){
+        synthesisConnections=tag.getInteger("SynthesisConnections");
         renderAppearance=tag.hasKey("CoreRenderReady",1)&&tag.getBoolean("CoreRenderReady");
         if(tag.hasUniqueId("CoreRenderIdentity"))renderIdentity=tag.getUniqueId("CoreRenderIdentity");renderEpoch=null;renderOwner=null;renderCell=-1;
         if(tag.hasUniqueId("CoreRenderEpoch")&&tag.hasKey("CoreRenderOwner",4)&&tag.hasKey("CoreRenderCell",3)){int cell=tag.getInteger("CoreRenderCell");if(cell>=0&&cell<com.vandorlabs.gear.ArmPayload.MAX_BLOCKS){renderEpoch=tag.getUniqueId("CoreRenderEpoch");renderOwner=BlockPos.fromLong(tag.getLong("CoreRenderOwner"));if(Math.abs((long)renderOwner.getX()-pos.getX())>128||Math.abs((long)renderOwner.getY()-pos.getY())>128||Math.abs((long)renderOwner.getZ()-pos.getZ())>128){renderOwner=null;renderEpoch=null;}else renderCell=cell;}}
@@ -209,7 +216,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(!member)return;
         int level=com.vandorlabs.redstone.LoadedRedstonePower.level(world,at);if(level>0)poweredInputs.add(at.toImmutable());else poweredInputs.remove(at);
         if(isDrive()){if(level>0)drivePhysicalInputs.put(at.toImmutable(),level);else drivePhysicalInputs.remove(at);drivePhysicalLevel=0;for(int input:drivePhysicalInputs.values())drivePhysicalLevel=Math.max(drivePhysicalLevel,input);}
-        physicalInput(!poweredInputs.isEmpty());if(isDrive())refresh();
+        physicalInput(!poweredInputs.isEmpty());if(synthesis())refreshSynthesisConnections();if(isDrive())refresh();
     }
     @Override public void refreshInputs(){super.refreshInputs();if(authoritative()&&synthesis()){synthesisInputsReady=true;refresh();}}
     @Override public void onLoad(){synthesisInputsReady=false;super.onLoad();DeferredTileLoad.schedule(this,()->{refreshInputs();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);});}
@@ -224,8 +231,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);synthesisRuntime.write(tag);NBTTagCompound sequences=new NBTTagCompound();for(int bay=0;bay<4;bay++)sequences.setLong("Bay"+bay,batterySequences[bay]);tag.setTag("SynthesisBatterySequences",sequences);tag.setInteger("SynthesisActivation",synthesisActivation);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;}
-    @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setBoolean("SynthesisWorking",working());tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
+    @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setInteger("SynthesisConnections",synthesisConnections);tag.setBoolean("SynthesisWorking",working());tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
     @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);synthesisRuntime.visualWorking(tag.getBoolean("SynthesisWorking"));renderPacket(tag);}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());synthesisRuntime.visualWorking(packet.getNbtCompound().getBoolean("SynthesisWorking"));renderPacket(packet.getNbtCompound());}

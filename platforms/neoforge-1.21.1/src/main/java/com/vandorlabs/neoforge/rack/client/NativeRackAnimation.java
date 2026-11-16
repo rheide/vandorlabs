@@ -48,14 +48,16 @@ public final class NativeRackAnimation {
             double from=old==null?extracting?0:ModuleRackMotion.TRAVEL_BLOCKS:old.offset(time);
             if(entry==null){entry=new Entry(tile);ACTIVE.put(pos.immutable(),entry);}
             int kind=extracting?old==null?(previousKinds>>>(slot*2)&3):old.kind:tile.kind(slot);
-            entry.poses[slot]=new Pose(sequence,time,extracting,from,kind);starts++;
+            entry.poses[slot]=new Pose(sequence,time,extracting,from,kind);entry.poses[slot].pixels=extracting?old==null?tile.previousBatteryPixels(slot):old.pixels:tile.batteryPixels(slot);starts++;
         }
+        if(entry!=null)for(int slot=0;slot<4;slot++)if(entry.poses[slot]!=null&&!entry.poses[slot].extracting)entry.poses[slot].pixels=tile.batteryPixels(slot);
         if(entry==null){tile.renderMask(tile.occupied());return;}
         if(!entry.any()){entry.close();ACTIVE.remove(pos);tile.renderMask(tile.occupied());return;}entry.publish();
         while(ACTIVE.size()>2048){var iterator=ACTIVE.entrySet().iterator();var oldest=iterator.next().getValue();oldest.close();oldest.tile.renderMask(oldest.tile.occupied());iterator.remove();}
     }
+    private static java.util.List<net.minecraft.client.renderer.block.model.BakedQuad> animationQuads(NativeRackModel model,int slot,Pose pose,NativeRackEntity tile){if(pose.kind!=3)return model.moving(slot,pose.kind);return model.movingBattery(slot,pose.extracting?pose.pixels:tile.batteryPixels(slot));}
     private static final class Pose {
-        final long sequence;final boolean extracting;final double from;final int kind;double started;boolean waiting=true,seated;
+        final long sequence;final boolean extracting;final double from;final int kind;int pixels;double started;boolean waiting=true,seated;
         Pose(long sequence,double time,boolean extracting,double from,int kind){this.sequence=sequence;this.started=time;this.extracting=extracting;this.from=from;this.kind=kind;}
         double offset(double time){return waiting?from:ModuleRackMotion.between(time-started,from,extracting?ModuleRackMotion.TRAVEL_BLOCKS:0);}
     }
@@ -81,7 +83,7 @@ public final class NativeRackAnimation {
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){advance();}
     @SubscribeEvent public static void render(RenderLevelStageEvent event){if(event.getStage()!=RenderLevelStageEvent.Stage.AFTER_SOLID_BLOCKS||ACTIVE.isEmpty())return;advance();if(ACTIVE.isEmpty())return;var mc=Minecraft.getInstance();if(buffers==null){storage=new ByteBufferBuilder(65536);buffers=MultiBufferSource.immediate(storage);}var buffer=buffers.getBuffer(RenderType.solid());int batchVertices=0;var camera=event.getCamera().getPosition();var stack=event.getPoseStack();var modelView=RenderSystem.getModelViewStack();modelView.pushMatrix();modelView.mul(event.getModelViewMatrix());RenderSystem.applyModelViewMatrix();try{for(var entry:ACTIVE.values()){
         var pos=entry.tile.getBlockPos();if(!event.getFrustum().isVisible(entry.bounds))continue;var face=entry.tile.getBlockState().getValue(NativeRackBlock.FACING);var model=NativeRackClient.facing(face);if(model==null)continue;int light=LevelRenderer.getLightColor(world,pos);
-        for(int slot=0;slot<4;slot++){var pose=entry.poses[slot];if(pose==null||pose.waiting)continue;double offset=pose.offset(time);stack.pushPose();stack.translate(pos.getX()-camera.x+face.getStepX()*offset,pos.getY()-camera.y+face.getStepY()*offset,pos.getZ()-camera.z+face.getStepZ()*offset);for(var quad:model.moving(slot,pose.kind)){int[] raw=quad.getVertices();int stride=raw.length/4;for(int vertex=0;vertex<4;vertex++){int at=vertex*stride,normal=raw[at+7];float nx=(byte)normal/127F,ny=(byte)(normal>>>8)/127F,nz=(byte)(normal>>>16)/127F,shade=nx*nx*.6F+ny*ny*(ny>0?1:.5F)+nz*nz*.8F;buffer.addVertex(stack.last().pose(),Float.intBitsToFloat(raw[at]),Float.intBitsToFloat(raw[at+1]),Float.intBitsToFloat(raw[at+2])).setColor(shade,shade,shade,1).setUv(Float.intBitsToFloat(raw[at+4]),Float.intBitsToFloat(raw[at+5])).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(stack.last(),nx,ny,nz);}batchVertices+=4;if(batchVertices>=1024){buffers.endBatch(RenderType.solid());buffer=buffers.getBuffer(RenderType.solid());batchVertices=0;}}stack.popPose();draws++;}
+        for(int slot=0;slot<4;slot++){var pose=entry.poses[slot];if(pose==null||pose.waiting)continue;double offset=pose.offset(time);stack.pushPose();stack.translate(pos.getX()-camera.x+face.getStepX()*offset,pos.getY()-camera.y+face.getStepY()*offset,pos.getZ()-camera.z+face.getStepZ()*offset);for(var quad:animationQuads(model,slot,pose,entry.tile)){int[] raw=quad.getVertices();int stride=raw.length/4;for(int vertex=0;vertex<4;vertex++){int at=vertex*stride,normal=raw[at+7];float nx=(byte)normal/127F,ny=(byte)(normal>>>8)/127F,nz=(byte)(normal>>>16)/127F,shade=nx*nx*.6F+ny*ny*(ny>0?1:.5F)+nz*nz*.8F;buffer.addVertex(stack.last().pose(),Float.intBitsToFloat(raw[at]),Float.intBitsToFloat(raw[at+1]),Float.intBitsToFloat(raw[at+2])).setColor(shade,shade,shade,1).setUv(Float.intBitsToFloat(raw[at+4]),Float.intBitsToFloat(raw[at+5])).setOverlay(OverlayTexture.NO_OVERLAY).setLight(light).setNormal(stack.last(),nx,ny,nz);}batchVertices+=4;if(batchVertices>=1024){buffers.endBatch(RenderType.solid());buffer=buffers.getBuffer(RenderType.solid());batchVertices=0;}}stack.popPose();draws++;}
     }buffers.endBatch(RenderType.solid());}finally{modelView.popMatrix();RenderSystem.applyModelViewMatrix();}}
     private NativeRackAnimation(){}
 }

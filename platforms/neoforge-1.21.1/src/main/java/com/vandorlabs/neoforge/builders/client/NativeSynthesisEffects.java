@@ -27,34 +27,39 @@ public final class NativeSynthesisEffects {
         poses.pushPose();try{
             poses.translate(SynthesisPresentation.RACK_X+1,SynthesisPresentation.RACK_Y,SynthesisPresentation.RACK_Z+1);poses.mulPose(Axis.YP.rotationDegrees(180));
             for(int bay=0;bay<4;bay++){
-                boolean occupied=!visual.batteries().get(bay).isEmpty();int charge=NativeBatteryModule.energy(visual.batteries().get(bay))*4/NativeBatteryModule.CAPACITY;
+                boolean occupied=!visual.batteries().get(bay).isEmpty();int charge=com.vandorlabs.rack.BatteryChargeBar.pixels(NativeBatteryModule.energy(visual.batteries().get(bay)),NativeBatteryModule.CAPACITY);
                 if(motion!=null){occupied=motion.occupied(bay);charge=motion.level(bay);}
                 emitRack("indicator_"+bay+(occupied?"_on":"_off"),poses,buffers,light,overlay);
                 if(!occupied)emitRack("slot_empty_"+bay,poses,buffers,light,overlay);
-                if(motion==null?occupied:motion.visible(bay,now)){poses.pushPose();try{if(motion!=null)poses.translate(0,0,motion.offset(bay,now));emitRack((motion!=null&&motion.moving(bay,now)?"slot_battery_":"slot_seated_battery_")+bay+"_"+charge,poses,buffers,light,overlay);}finally{poses.popPose();}}
+                if(motion==null?occupied:motion.visible(bay,now)){poses.pushPose();try{if(motion!=null)poses.translate(0,0,motion.offset(bay,now));emitRack((motion!=null&&motion.moving(bay,now)?"slot_battery_":"slot_seated_battery_")+bay+"_0",poses,buffers,light,overlay);var bar=NativeBuilderModelCache.batteryBar(bay,charge);if(bar!=null)bar.emit(poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),FULLBRIGHT,overlay);}finally{poses.popPose();}}
             }
         }finally{poses.popPose();}
         if(!visual.chip().isEmpty()){
             poses.pushPose();try{poses.translate(SynthesisPresentation.CHIP_X,SynthesisPresentation.CHIP_Y,SynthesisPresentation.CHIP_Z-.07);poses.scale(.35F,.35F,.35F);poses.mulPose(Axis.YP.rotationDegrees(180));Minecraft.getInstance().getItemRenderer().renderStatic(visual.chip(),ItemDisplayContext.FIXED,light,overlay,poses,buffers,Minecraft.getInstance().level,0);}finally{poses.popPose();}
         }
-        if(visual.connected()){
-            var sprite=sprite("vandorlabs:blocks/resource_ports/power_in_on");var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);
-            point(out,poses,sprite,2,0,3.002,0,1,0xffffffff);point(out,poses,sprite,3,0,3.002,1,1,0xffffffff);point(out,poses,sprite,3,1,3.002,1,0,0xffffffff);point(out,poses,sprite,2,1,3.002,0,0,0xffffffff);
-            point(out,poses,sprite,2,-.002,2,0,0,0xffffffff);point(out,poses,sprite,3,-.002,2,1,0,0xffffffff);point(out,poses,sprite,3,-.002,3,1,1,0xffffffff);point(out,poses,sprite,2,-.002,3,0,1,0xffffffff);
-        }
+        int mask=visual.portConnections();
+        if((mask&1)!=0)rear(poses,buffers,"power_in_on",2);
+        if((mask&2)!=0)bottom(poses,buffers,"power_in_on",2);
+        if((mask&4)!=0)rear(poses,buffers,"matter_in_on",0);
+        if((mask&16)!=0)bottom(poses,buffers,"matter_out_on",0);
+        if((mask&8)!=0){var sprite=sprite("vandorlabs:blocks/resource_ports/matter_out_on");var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,-.002,0,2,0,1,-1);point(out,poses,sprite,-.002,0,3,1,1,-1);point(out,poses,sprite,-.002,1,3,1,0,-1);point(out,poses,sprite,-.002,1,2,0,0,-1);}
     }
+    private static void rear(PoseStack poses,MultiBufferSource buffers,String name,int x){var sprite=sprite("vandorlabs:blocks/resource_ports/"+name);var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,x+1,0,3.002,0,1,-1);point(out,poses,sprite,x,0,3.002,1,1,-1);point(out,poses,sprite,x,1,3.002,1,0,-1);point(out,poses,sprite,x+1,1,3.002,0,0,-1);}
+    private static void bottom(PoseStack poses,MultiBufferSource buffers,String name,int x){var sprite=sprite("vandorlabs:blocks/resource_ports/"+name);var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,x,-.002,2,0,0,-1);point(out,poses,sprite,x+1,-.002,2,1,0,-1);point(out,poses,sprite,x+1,-.002,3,1,1,-1);point(out,poses,sprite,x,-.002,3,0,1,-1);}
+
     public static void processing(NativeBuilderEntity.Visual visual,PoseStack poses,MultiBufferSource buffers,double now){
         if(!visual.processing()&&visual.progress()<=0)return;
         String id=NativeBuilderModelCache.IDS.get(Math.clamp(visual.building(),0,2));float progress=visual.processing()?visual.progress():1;
-        poses.pushPose();try{poses.translate(1,2.125,1.125);NativeBuilderModelCache.mesh(id,true).emitClipped(poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),FULLBRIGHT,OverlayTexture.NO_OVERLAY,progress);}finally{poses.popPose();}
+        poses.pushPose();try{poses.translate(1,SynthesisPresentation.CORE_Y,1.125);NativeCoreModel.emit(id,progress,poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),FULLBRIGHT,OverlayTexture.NO_OVERLAY);}finally{poses.popPose();}
         if(!visual.processing())return;
-        var white=sprite("minecraft:block/white_concrete");var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);double surface=2.125+Math.clamp(progress,.001F,1F)+.008;
+        var white=sprite("minecraft:block/white_concrete");var out=buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));double surface=SynthesisPresentation.CORE_Y+com.vandorlabs.geometry.CoreMesh.height(progress)+.008;
         if(visual.working())for(int i=0;i<4;i++){
+            int color=com.vandorlabs.machines.SynthesisLaserStyle.color(i,now);
             double ex=1.5+.46*Math.sin(now*.12+i*Math.PI/2),ez=1.625+.46*Math.sin(now*.075+i*Math.PI),sx=i%2==0?.70:2.30,sz=i<2?.95:2.30,r=.014;
-            point(out,poses,white,sx-r,4.48,sz,.5,.5,0xffff4132);point(out,poses,white,sx+r,4.48,sz,.5,.5,0xffff4132);point(out,poses,white,ex+r,surface,ez,.5,.5,0xffff4132);point(out,poses,white,ex-r,surface,ez,.5,.5,0xffff4132);
-            point(out,poses,white,sx,4.48,sz-r,.5,.5,0xffff4132);point(out,poses,white,sx,4.48,sz+r,.5,.5,0xffff4132);point(out,poses,white,ex,surface,ez+r,.5,.5,0xffff4132);point(out,poses,white,ex,surface,ez-r,.5,.5,0xffff4132);
+            point(out,poses,white,sx-r,4.48,sz,.5,.5,color);point(out,poses,white,sx+r,4.48,sz,.5,.5,color);point(out,poses,white,ex+r,surface,ez,.5,.5,color);point(out,poses,white,ex-r,surface,ez,.5,.5,color);
+            point(out,poses,white,sx,4.48,sz-r,.5,.5,color);point(out,poses,white,sx,4.48,sz+r,.5,.5,color);point(out,poses,white,ex,surface,ez+r,.5,.5,color);point(out,poses,white,ex,surface,ez-r,.5,.5,color);
         }
-        poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.SCREEN_SIZE*1.3/Math.sqrt(Math.pow(NativeBuilderModelCache.width(id),2)+Math.pow(NativeBuilderModelCache.height(id),2)+9);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));NativeBuilderModelCache.preview(id,poses,buffers,FULLBRIGHT);}finally{poses.popPose();}
+        poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.screenPreviewScale(NativeBuilderModelCache.width(id),NativeBuilderModelCache.height(id),3);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));NativeBuilderModelCache.preview(id,poses,buffers,FULLBRIGHT);}finally{poses.popPose();}
     }
     private static void emitRack(String name,PoseStack poses,MultiBufferSource buffers,int light,int overlay){var model=NativeBuilderModelCache.rack(name);if(model!=null)model.emit(poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),light,overlay);}
     private static TextureAtlasSprite sprite(String id){return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ResourceLocation.parse(id));}

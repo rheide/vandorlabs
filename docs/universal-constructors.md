@@ -91,14 +91,14 @@ display's rotating preview are rendered only within 24 blocks.
 
 ## Core appearance and recipe browsing
 
-Unformed Core blocks and their inventory items use an open tesseract scaffold:
-a small colored inner cube connects through eight diagonal struts to an outer
-cube outline with thicker corner nodes. The gaps are actual empty model space.
-Each Core type keeps its own color, and inventory models retain padding around
-their projected edges. Fabrication reveals the same geometry from the bottom
-upwards. All thirteen existing Forge Core block types use this appearance;
-NeoForge includes only the Synthesis Tower, Assembly Press and Enclosed Gantry.
-Their frame recipes and registry identities are unchanged.
+Unformed Core blocks and inventory items use a cyan cage on a **32×32 pixel
+grid**: solid corner cubes, recessed face crosses and four stepped supports
+around a small cube carrying the original Core artwork. The gaps are actual
+empty model space. Inventory models retain padding around their projected edges.
+Fabrication prints occupied voxels from the bottom upwards, including partial
+rows and their individual top faces. All thirteen existing Forge Core block
+types use this appearance; NeoForge includes only the Synthesis Tower, Assembly
+Press and Enclosed Gantry. Frame recipes and registry identities are unchanged.
 
 With JEI installed, the **Matter Infuser** category shows iron-to-Matter
 production and Battery Module charging. The **Synthesis Tower** category shows

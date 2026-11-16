@@ -60,7 +60,9 @@ def generate(check=False):
   if spec.get('motion')=='shutters':paths=paths[:-1]+['active/complete_open.obj']
   designs[spec['block']]=dict(width=spec['width'],height=spec['height'],depth=spec['depth'],core=spec['design'],
                             states=[state_obj(spec,path) for path in paths])
- colors=core_colors()
+ core=core_colors()
+ colors=core['colors']
+ for design in designs.values():design['core_texture']=texture(core['textures'][design['core']])
  side=1
  while side*side<len(colors):side*=2
  palette=Image.new('RGBA',(side,side),(0,0,0,255))
@@ -102,6 +104,6 @@ def generate(check=False):
    s=before.rstrip()+'\n\n'+records+'\n'+PALETTE+after
   if check:assert path.read_text()==s,'Stale Core map definitions '+filename
   else:path.write_text(s)
- print(f'Core machine Dynmap PASS {len(designs)} designs {len(textures)} native atlases; {len(colors)} shared flat Core colors; complete meshes clipped into reservations')
+ print(f'Core machine Dynmap {"PASS" if check else "generated"} {len(designs)} designs {len(textures)} native atlases; {len(colors)} shared flat Core colors; complete meshes clipped into reservations')
 if __name__=='__main__':
  parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--check',action='store_true');generate(parser.parse_args().check)

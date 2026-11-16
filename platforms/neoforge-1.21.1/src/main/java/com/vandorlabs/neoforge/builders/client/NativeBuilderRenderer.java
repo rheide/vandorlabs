@@ -25,7 +25,8 @@ public final class NativeBuilderRenderer implements BlockEntityRenderer<NativeBu
         int mask=0;for(int bay=0;bay<4;bay++)if(!visual.batteries().get(bay).isEmpty())mask|=1<<bay;
         rack.motion.observe(mask,visual.batterySequences().get(0),visual.batterySequences().get(1),visual.batterySequences().get(2),visual.batterySequences().get(3),level(visual,0),level(visual,1),level(visual,2),level(visual,3),now);return rack.motion;
     }
-    private static int level(NativeBuilderEntity.Visual visual,int bay){return NativeBatteryModule.energy(visual.batteries().get(bay))*4/NativeBatteryModule.CAPACITY;}
+    private static int level(NativeBuilderEntity.Visual visual,int bay){return com.vandorlabs.rack.BatteryChargeBar.pixels(NativeBatteryModule.energy(visual.batteries().get(bay)),NativeBatteryModule.CAPACITY);}
+    public static void observe(NativeBuilderEntity tile){if(tile.getLevel()!=null&&tile.design().id().equals("synthesis_tower"))motion(tile,tile.visual(),now());}
     public static double now(){return clock.sample(System.nanoTime(),Minecraft.getInstance().isPaused());}
     public static void orient(PoseStack poses,Direction facing,int width,int depth){switch(facing){case EAST-> {poses.translate(depth,0,0);poses.mulPose(Axis.YP.rotationDegrees(-90));}case SOUTH->{poses.translate(width,0,depth);poses.mulPose(Axis.YP.rotationDegrees(180));}case WEST->{poses.translate(0,0,width);poses.mulPose(Axis.YP.rotationDegrees(90));}default->{}}}
     @Override public void render(NativeBuilderEntity tile,float partial,PoseStack poses,MultiBufferSource buffers,int light,int overlay){

@@ -26,7 +26,7 @@ public final class EmbeddedRackMotion {
             if(occupied&&!visible(bay,now))current=ModuleRackMotion.TRAVEL_BLOCKS;
             from[bay]=current;to[bay]=occupied?0:ModuleRackMotion.TRAVEL_BLOCKS;starts[bay]=now;sequences[bay]=sequence;
         }
-        if(occupied)levels[bay]=Math.max(0,Math.min(4,level));return true;
+        if(occupied)levels[bay]=Math.max(0,Math.min(BatteryChargeBar.COLUMNS,level));return true;
     }
     public double offset(int bay,double now){return ModuleRackMotion.between(Math.max(0,now-starts[bay]),from[bay],to[bay]);}
     public boolean occupied(int bay){return (present&1<<bay)!=0;}

@@ -56,7 +56,7 @@ public final class GuiSynthesisTower extends GuiContainer {
     @Override protected void keyTyped(char c,int key)throws IOException{if(page==1&&receiver.keyTyped(c,key)){saveRedstone();return;}super.keyTyped(c,key);}
     @Override public void onGuiClosed(){if(page==1&&receiver!=null)saveRedstone();org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
     @Override public void updateScreen(){super.updateScreen();if(receiver!=null)receiver.field().updateCursorCounter();}
-    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);if(page==1){GlStateManager.disableLighting();GlStateManager.disableDepth();receiver.draw();GlStateManager.enableDepth();}renderHoveredToolTip(x,y);}
+    @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);if(page==1){GlStateManager.disableLighting();GlStateManager.disableDepth();receiver.draw();GlStateManager.enableDepth();}if(isPointInRegion(layout.machineX(3),machineY(),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.CATALOG_CHIP_TOOLTIP,x,y);else renderHoveredToolTip(x,y);}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY){
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,com.vandorlabs.ui.SynthesisDialog.STYLE.body);DialogHeader.logo(guiLeft,guiTop,xSize);
         if(page==0){
@@ -87,13 +87,10 @@ public final class GuiSynthesisTower extends GuiContainer {
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
         fontRenderer.drawString("Synthesis Tower",12,10,0xFFFFFF);
         if(page==0){if(!compact){fontRenderer.drawString("Designs",12,60,0xD4DFE9);fontRenderer.drawString("Finished structure",174,60,0xD4DFE9);}
-        fontRenderer.drawString(container.tile.isEmpty()?"More designs can be loaded from a chip.":"Default designs",12,compact?114:162,0x9FAEBB);}
+        }
         if(page==1&&!compact){fontRenderer.drawString("Physical Redstone or any receiving channel.",12,142,0xA7B3C0);fontRenderer.drawString("A disabled tower keeps its current build.",12,155,0xA7B3C0);}
         fontRenderer.drawString("Matter",layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Core",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
-        fontRenderer.drawString("Battery",layout.machineX(2)-14,machineY()-12,0xC3CFDB);fontRenderer.drawString("Chip",layout.machineX(3)-4,machineY()-12,0xC3CFDB);
-        fontRenderer.drawString("RF input",12,compact?162:228,0xA7B3C0);
-        fontRenderer.drawString(container.values[4]!=0?"Connected":compact?"Offline":"Disconnected",12,compact?174:240,container.values[4]!=0?0x55CBA4:0xA7B3C0);
-        fontRenderer.drawString("Battery RF",12,compact?198:260,0xA7B3C0);
+        fontRenderer.drawString("Chip",layout.machineX(3)-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString(Integer.toString(container.values[2]),12,compact?210:272,0xA7B3C0);
         // Inventory is offset right to leave power and production status visible.
         fontRenderer.drawString("Inventory",layout.inventoryX,inventoryY()-10,0xD4DFE9);

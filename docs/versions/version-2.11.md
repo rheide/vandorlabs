@@ -8,8 +8,9 @@ builder multiblocks; other Core multiblocks remain outside this update.
 
 [Battery Modules](../module-rack.md#battery-module) hold **10,000 RF**, one tenth
 of a Battery Block. Craft one from four Programmable Matter Ingots, four Gold
-Ingots and one Redstone Dust. Mounted modules show a red lightning mark and
-four green charge segments; removing a module retains its stored energy.
+Ingots and one Redstone Dust. Mounted modules reuse the Power Port red on/off bar between their handles.
+Lit pixel columns show charge; removing a module retains its stored energy.
+Creative offers both an empty and a full module.
 The item also exposes its charge to compatible RF integrations.
 
 On Forge 1.12.2 and NeoForge 1.21.1, charge a module in the Matter Infuser using sunlight and
@@ -52,8 +53,8 @@ full release gate or hardware shader acceptance.
 ## Open Core models and JEI
 
 All thirteen Forge Core block types now use colored open tesseract scaffolds,
-with a small inner cube, eight diagonal struts, outer edges and thicker corner
-nodes. The three enabled native builder Cores use the same geometry. Real gaps
+on a 32×32 pixel grid, with a legacy-textured inner cube, four stepped
+diagonal supports, recessed face crosses and solid corner cubes. The three enabled native builder Cores use the same geometry. Real gaps
 remain visible in placed blocks, fabrication, padded inventory icons and
 Dynmap; Core frame requirements and identities are preserved.
 
@@ -61,3 +62,28 @@ With JEI installed, **Matter Infuser** shows iron conversion and Battery Module
 charging, and **Synthesis Tower** shows its three Core outputs with the energy
 and processing requirements. Infuser input/catalyst transfer is supported;
 choose tower designs in Production before supplying Matter.
+
+## Native Ramp Controllers
+
+Ramp Controller and Ramp Controller Slab now provide the seven Source modes on
+Minecraft 1.21.1, including escalators, six scan faces and horizontal top/bottom
+slab housings. Ordinary right-click and Configurizer use the same dedicated
+editor, with shared half-block offsets, option order, receiving channels and
+reverse cycling.
+
+Escalators retain their tread phase when stopped and use nearby-player
+sleep/wake hysteresis. Durable preparation and return keep the original
+platform and supported actors owned through pending disk work and restarts.
+See the [Ramp guide](../landing-ramps.md) and the
+[native recovery boundaries](../native-ramp-recovery.md) for supported materials,
+actors and saved-state behavior.
+
+## Source-authoritative dialogs
+
+Forge 1.12.2 remains the appearance and interaction reference. Native editors
+reuse its family headers, logos, notebook tabs and ordinary button artwork,
+including hover colors and cropped button edges. The Light retains its authored
+brightness track. Infuser, Synthesis Tower, Ramp, Port and Surface now share
+portable layout definitions between both versions. Other editors reuse their
+existing shared controls and the common skin; their remaining local geometry is
+recorded in the [dialog parity inventory](../development/native-dialog-parity.md).

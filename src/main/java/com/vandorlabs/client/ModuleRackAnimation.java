@@ -116,7 +116,9 @@ public final class ModuleRackAnimation {
             if (entry == null) { entry = new Entry(tile); ACTIVE.put(tile.getPos().toImmutable(), entry); }
             // Wait for the terrain to remove its seated copy before either direction starts.
             entry.poses[slot] = new Pose(sequence, frameTime, true, extracting, from, extracting ? previous==null?tile.previousModuleKind(slot):previous.kind : tile.moduleKind(slot));
+            entry.poses[slot].pixels=extracting?(previous==null?tile.previousBatteryPixels(slot):previous.pixels):tile.batteryPixels(slot);
         }
+        if(entry!=null)for(int slot=0;slot<4;slot++)if(entry.poses[slot]!=null&&!entry.poses[slot].extracting)entry.poses[slot].pixels=tile.batteryPixels(slot);
         if (entry == null) { tile.setRenderMask(occupied); return; }
         if (!entry.hasPoses()) { detach(mc, entry); ACTIVE.remove(tile.getPos()); tile.setRenderMask(occupied); return; }
         entry.publish(mc);
@@ -229,7 +231,7 @@ public final class ModuleRackAnimation {
         final long sequence;
         double started;
         boolean waiting, seated;
-        final boolean extracting; final double from; final int kind;
+        final boolean extracting; final double from; final int kind; int pixels;
         Pose(long sequence, double started, boolean waiting, boolean extracting, double from, int kind) {
             this.sequence = sequence; this.started = started; this.waiting = waiting;
             this.extracting = extracting; this.from = from; this.kind=kind;
@@ -466,6 +468,7 @@ public final class ModuleRackAnimation {
                         double offset = pose.seated ? 0 : pose.offset(frameTime);
                         mesh.draw(buffer, entry.facing.getFrontOffsetX() * offset, entry.facing.getFrontOffsetY() * offset,
                                 entry.facing.getFrontOffsetZ() * offset, light);
+                        if(pose.kind==3)ModuleRackModel.emitBatteryBar(buffer,entry.facing,slot,pose.extracting?pose.pixels:entry.tile.batteryPixels(slot),entry.facing.getFrontOffsetX()*offset,entry.facing.getFrontOffsetY()*offset,entry.facing.getFrontOffsetZ()*offset,15728880);
                         draws++;
                     }
                 } finally { if (shader) VehicleShaderContext.pop(buffer); }

@@ -16,6 +16,13 @@ def main():
         if line.startswith('g '):group=line[2:]
         if group in retired and line.startswith(('g ','usemtl ','f ')):continue
         lines.append(line)
+    # Keep the complete fabrication tray two standard Minecraft pixels higher.
+    vertex=0
+    for index,line in enumerate(lines):
+        if not line.startswith('v '):continue
+        vertex+=1
+        if 57<=vertex<=64:
+            fields=line.split();fields[2]='%.8f'%(value('CORE_Y') if vertex in (57,58,61,62) else value('CORE_Y')-.125);lines[index]=' '.join(fields)
     obj='\n'.join(lines).rstrip()+'\n'+MARKER+'\n'
     mtl=(TARGET/'materials.mtl').read_text().split(MARKER)[0].rstrip()+'\n'+MARKER+'\n'
     nv=sum(l.startswith('v ') for l in obj.splitlines());nt=sum(l.startswith('vt ') for l in obj.splitlines());count=0
@@ -31,6 +38,7 @@ def main():
     material('synth_casing','vandorlabs:blocks/universal_constructor/synthesis_casing')
     material('synth_service','vandorlabs:blocks/universal_constructor/synthesis_service')
     material('synth_bezel','vandorlabs:blocks/resource_ports/port_hull')
+    material('synth_interior','vandorlabs:blocks/frames/frames-door-window/door_interior_dark_rail')
     material('synth_screen','minecraft:blocks/concrete_black')
     source=ROOT/'texture-packs/default/assets/vandorlabs/textures/blocks/console_inputs/input_surfaces_keyboard_static.png'
     with Image.open(source) as im:
@@ -57,8 +65,10 @@ def main():
     for z0,z1 in zip(zs,zs[1:]):
         for y0,y1 in zip(cuts(0,2),cuts(0,2)[1:]):
             uv=uv_rect(z0-math.floor(z0),z1-math.floor(z0),y0,y1) if y0==0 else uv_rect(z0-math.floor(z0),z1-math.floor(z0),0,1)
-            if not (y0==0 and z0>=2):quad('synth_left_'+str(count),'synth_casing',[(0,y1,z1),(0,y1,z0),(0,y0,z0),(0,y0,z1)],uv)
-            quad('synth_right_'+str(count),'synth_casing',[(3,y1,z0),(3,y1,z1),(3,y0,z1),(3,y0,z0)],uv)
+            # The shortened front return uses seamless interior metal, never half a framed panel.
+            side_material='synth_interior' if z0<1 else 'synth_casing'
+            if not (y0==0 and z0>=2):quad('synth_left_'+str(count),side_material,[(0,y1,z1),(0,y1,z0),(0,y0,z0),(0,y0,z1)],uv)
+            quad('synth_right_'+str(count),side_material,[(3,y1,z0),(3,y1,z1),(3,y0,z1),(3,y0,z0)],uv)
         for x0,x1 in zip(cuts(0,3),cuts(0,3)[1:]):
             uv=((0,z0-math.floor(z0)),(1,z0-math.floor(z0)),(1,z1-math.floor(z0)),(0,z1-math.floor(z0)))
             quad('synth_top_'+str(count),'synth_casing',[(x0,2,z0),(x0,2,z1),(x1,2,z1),(x1,2,z0)],uv)
@@ -69,9 +79,22 @@ def main():
     s=value('SCREEN_SIZE')/2;front('synth_screen_display','synth_screen',cx-s,cy-s,cx+s,cy+s,cz)
     kx,ky,kz=value('KEYBOARD_X'),value('KEYBOARD_Y'),value('KEYBOARD_Z');kw,kd=value('KEYBOARD_WIDTH'),value('KEYBOARD_DEPTH')
     quad('synth_keyboard','synth_keyboard',[(kx,ky,kz),(kx,ky,kz+kd),(kx+kw,ky,kz+kd),(kx+kw,ky,kz)],((0,.5),(0,1),(1,1),(1,.5)))
-    front('synth_keyboard_lip','synth_bezel',kx-.04,ky-.125,kx+kw+.04,ky,kz-.002)
-    quad('synth_keyboard_left','synth_bezel',[(kx-.04,ky,kz),(kx-.04,ky,kz+kd),(kx-.04,ky-.125,kz+kd),(kx-.04,ky-.125,kz)])
-    quad('synth_keyboard_right','synth_bezel',[(kx+kw+.04,ky,kz+kd),(kx+kw+.04,ky,kz),(kx+kw+.04,ky-.125,kz),(kx+kw+.04,ky-.125,kz+kd)])
+    lip=.0625
+    # Door-frame interior artwork repeats at its native block scale on every casing side.
+    for a,b in zip(cuts(0,kw+2*lip),cuts(0,kw+2*lip)[1:]):
+        u0=a-math.floor(a);u1=b-math.floor(a);x0=kx-lip+a;x1=kx-lip+b
+        quad('synth_keyboard_lip_'+str(count),'synth_interior',[(x0,ky,kz-.002),(x1,ky,kz-.002),(x1,ky-.125,kz-.002),(x0,ky-.125,kz-.002)],((u0,.125),(u1,.125),(u1,0),(u0,0)))
+        quad('synth_keyboard_bottom_'+str(count),'synth_interior',[(x0,ky-.125,kz+kd),(x0,ky-.125,kz),(x1,ky-.125,kz),(x1,ky-.125,kz+kd)],((u0,kd),(u0,0),(u1,0),(u1,kd)))
+    quad('synth_keyboard_left','synth_interior',[(kx-lip,ky,kz),(kx-lip,ky,kz+kd),(kx-lip,ky-.125,kz+kd),(kx-lip,ky-.125,kz)],((0,.125),(kd,.125),(kd,0),(0,0)))
+    quad('synth_keyboard_right','synth_interior',[(kx+kw+lip,ky,kz+kd),(kx+kw+lip,ky,kz),(kx+kw+lip,ky-.125,kz),(kx+kw+lip,ky-.125,kz+kd)],((0,.125),(kd,.125),(kd,0),(0,0)))
+    # Extend the raised tray down to the original plinth; no unsupported floating gap.
+    base=2;top=value('CORE_Y')-.125
+    for name,points in (
+        ('front',[(1,top,1.125),(2,top,1.125),(2,base,1.125),(1,base,1.125)]),
+        ('rear',[(2,top,2.125),(1,top,2.125),(1,base,2.125),(2,base,2.125)]),
+        ('left',[(1,top,2.125),(1,top,1.125),(1,base,1.125),(1,base,2.125)]),
+        ('right',[(2,top,1.125),(2,top,2.125),(2,base,2.125),(2,base,1.125)])):
+        quad('synth_tray_support_'+name,'synth_interior',points,((0,top-base),(1,top-base),(1,0),(0,0)))
     faces={'north':(3,2,1,0),'south':(6,7,4,5),'west':(7,3,0,4),'east':(2,6,5,1),'up':(7,6,2,3),'down':(0,1,5,4)}
     for name,path,ox,oy,oz,north in [('rack','module_rack/shell.json',rx,ry,rz,True),('chip','token_slots/data_chip_slot_north_0.json',value('CHIP_X')-.5,value('CHIP_Y')-.5,value('CHIP_Z')-.975,False)]:
         model=json.loads((ASSETS/'models/block'/path).read_text())

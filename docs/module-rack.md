@@ -80,8 +80,8 @@ One Autopilot Module uses the former Autopilot recipe: Iron / Redstone / Iron, R
 
 A Battery Module stores **10,000 RF**, one tenth of a Battery Block. It is a
 single physical item: inserting, removing or breaking its Module Rack preserves
-its current charge. Its front has a red lightning mark and four green charge
-segments. The item tooltip shows its exact stored RF.
+its current charge. Its front reuses the Power Port red on/off bar between
+the handles, lighting individual pixel columns with charge. The item tooltip shows its exact stored RF.
 
 Craft one with Programmable Matter Ingots in the four corners, Gold Ingots at
 the middle of each edge, and Redstone Dust in the center:
