@@ -24,7 +24,8 @@ def validate_render(output):
     labels=json.loads((output/'fixtures.json').read_text())
     validate_fixture_matrix(labels)
     text=(output/'render.log').read_text(errors='replace')
-    if text.count('Block placed')<len(labels)+(0 if all(v['block']=='module_rack' for v in labels) else 4):raise AssertionError('Incomplete block fixture')
+    extra_placements=0 if all(v['block']=='module_rack' or v.get('frame_fixture') for v in labels) else 4
+    if text.count('Block placed')<len(labels)+extra_placements:raise AssertionError('Incomplete block fixture')
     files=[p for p in (output/'dynmap/web/tiles/world').rglob('*.png') if 'fixture' in str(p)]
     if not files:raise AssertionError('Dynmap produced no fixture PNG tiles')
     richest=0
