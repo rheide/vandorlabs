@@ -141,3 +141,9 @@ cost and twenty-second minimum. Select the matching design in Production
 before inserting Matter; recipe browsing does not change the tower's selected
 or running design. The Infuser supports ordinary recipe transfer into its
 input and catalyst slots.
+
+Fabricated parts retain their authored proportions and physical size. Cards and
+chips lie flat; modules keep their native horizontal cassette shape. Gantry
+parts are reduced uniformly only if they exceed its workspace. Temporary
+interior pixels use Matter colors in the Press; Gantry cut surfaces inherit
+colors from the part’s own material.

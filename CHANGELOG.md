@@ -4,6 +4,9 @@
 
 ### Catalogs and Forge builder production
 
+- Preserve fabricated item proportions and authored world scale: keep rack modules horizontal, flatten only cards/chips and shrink only Gantry models that exceed the workspace. Keep random Matter interior colors exclusive to the Press.
+- Tile door-interior artwork on builder wall caps, preserve Tower border detail on half-panels, and remove duplicate glass faces and actual upper-rail overlaps.
+
 - Double Press/Gantry build speed to 200 ticks at 40 RF/tick, retaining 8,000 RF per job; keep Tower timing unchanged. Label inputs Block/Ingot and explain the required Matter ingredient in slot tooltips.
 - Fit previews to actual transformed item geometry. Tile grey casing, remove the Press hood and add flat item fabrication with green corner beams and Matter-colored interior voxels.
 - Raise the Gantry frame to four blocks (34 Matter Blocks and one Core), halve its head and animate the head/rail over printed blocks with a blue fan beam. Allow finished chamber-item pickup. The previous three-high frame is no longer supported.
