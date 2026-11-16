@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.11.0 (in development)
+
+- Begin development of Battery Modules and powered Synthesis Tower production.
+
 ## 2.10.0
 
 ### Release review and recovery
