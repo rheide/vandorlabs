@@ -54,7 +54,7 @@ def activity_notes(spec):
     return text
 
 def main():
-    p=argparse.ArgumentParser(description=__doc__);p.add_argument('capture',type=Path);p.add_argument('--text-only',action='store_true',help='Update guide prose without replacing existing stage images');args=p.parse_args()
+    p=argparse.ArgumentParser(description=__doc__);p.add_argument('capture',type=Path);p.add_argument('--text-only',action='store_true',help='Update guide prose without replacing existing stage images');p.add_argument('--design', choices=sorted(TITLES), help='Publish only this guide while still validating capture coverage');args=p.parse_args()
     records=json.loads((args.capture/'machine-build-steps.json').read_text())
     specs=json.loads((ROOT/'src/main/resources/assets/vandorlabs/data/frame_machines.json').read_text())
     by_design={}
@@ -73,6 +73,7 @@ def main():
     root=ROOT/'docs/multiblocks';root.mkdir(parents=True,exist_ok=True)
     rows=[]
     for spec in specs:
+        if args.design and spec['design']!=args.design:continue
         design=spec['design'];slug=design.replace('_','-');folder=root/slug;folder.mkdir(exist_ok=True)
         w,h,d=spec['width'],spec['height'],spec['depth'];matter=sum(frame(spec,x,y,z) for y in range(h) for x in range(w) for z in range(d))-1
         language=dict(line.split('=',1) for line in (ROOT/'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines() if '=' in line and not line.startswith('#'))
@@ -96,12 +97,14 @@ def main():
             text+=f'## {index}. {heading}\n\n{body}\n\n![{TITLES[design]}: {heading.lower()}]({image})\n\n'
         text+=activity_notes(spec)
         text+='## Facing and removal\n\nThe same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.\n\n'
-        if spec.get('chip_anchor'):text+='A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.\n\n'
+        if spec.get('chip_anchor') and design!='synthesis_tower':text+='A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.\n\n'
         if spec.get('surfaces') and design not in NEW_GUIDES:text+='Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional retained Data Chips.\n\n'
-        if design not in NEW_GUIDES:text+='These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.\n\n[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)\n'
+        if design=='synthesis_tower':text+='On Forge 1.12.2, the formed Synthesis Tower produces constructor Cores from Programmable Matter and RF. Right-click it to select a design, supply a charged Battery Module or external RF, and insert Matter. Its Redstone tab controls physical and receiving-channel activation. See [production and ports](../../universal-constructors.md#synthesis-tower-production-forge-1122) for operating details.\n\n'
+        elif design not in NEW_GUIDES:text+='These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.\n\n[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)\n'
         (folder/'README.md').write_text(text.rstrip()+'\n')
         rows.append(f'| [{TITLES[design]}]({slug}/README.md) | {w} × {d} × {h} | {matter} + one Core |')
     for design in ['navigation_table_flat','navigation_table_angled']:
+        if args.design and design!=args.design:continue
         flat=design.endswith('flat');folder=root/design.replace('_','-');folder.mkdir(exist_ok=True)
         descriptions=[('Place the first module','Place a navigation module facing the operating side. Its native chip holder is already visible.'),
                       ('Extend the front row','Place matching modules side by side, facing the same way. '+('Complete a three-module front row.' if flat else 'The screenshot shows two modules joined into one sloped screen.')),
@@ -114,8 +117,10 @@ def main():
         text+='## Joining and editing\n\nAll members must have the same type and height. Flat tables accept mixed facings and require a filled rectangle; holes and L shapes remain unjoined. Angled consoles require one row with a common facing. Assemblies are limited to 256 loaded modules. A group touching an unloaded boundary waits for complete discovery rather than inventing another chip owner.\n\nThere is always exactly one visible native-size Data Chip Mount on a valid assembly, just below the top of an exterior front panel. It accepts every Data Chip company and keeps the chip inserted until removed. Uniform rows choose the front-center module; even widths choose the smaller local-X cell. Mixed facings choose a deterministic exterior-facing module. If resizing moves the holder, its chip and configuration move with it. Remove chips before merging occupied tables: only one retained chip can occupy the shared holder, and extras are dropped once. Chips awaiting return keep their original return owner.\n\nChoose artwork from the Programmable Block materials and Programmable Screen designs, including static or animated playback. The default is black. These displays only consume redstone: no module emits physical or channel power. Enabling Redstone requires physical or channel power. Data Chips never gate the display, and integrated holders have no Security, company-filter or return-mode options. See [Navigation display settings](../../navigation-displays.md) for the full behavior table.\n\n[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)\n'
         (folder/'README.md').write_text(text.rstrip()+'\n')
     index='# Multiblock build guides\n\nEach guide shows successive stages captured in Minecraft. All frame machines reuse the same Core-and-Programmable-Matter assembly rules.\n\n| Assembly | Width × depth × height | Matter Blocks |\n| --- | --- | --- |\n'+'\n'.join(rows)+'\n\nNavigation displays join as ordinary placed modules:\n\n- [Flat Navigation Table](navigation-table-flat/README.md)\n- [Angled Navigation Console](navigation-table-angled/README.md)\n\n[Navigation display settings](../navigation-displays.md) · [Universal Constructor rules](../universal-constructors.md) · [Data Chip Mounts](../data-mounts.md)\n'
-    (root/'README.md').write_text(index)
-    print(f'Updated {len(expected)} guide texts; '+('existing stage images unchanged' if args.text_only else f'published {len(records)} asserted stage screenshots'))
+    if not args.design:(root/'README.md').write_text(index)
+    published=[record for record in records if not args.design or record['design']==args.design]
+    guide_count=1 if args.design else len(expected)
+    print(f'Updated {guide_count} guide texts; '+('existing stage images unchanged' if args.text_only else f'published {len(published)} asserted stage screenshots'))
 
 
 if __name__=='__main__':main()

@@ -26,10 +26,14 @@ Right-click the Core. The frame becomes the complete model, and its occupied cel
 
 ![Synthesis Tower: assemble](step-4.png)
 
+## 5. Insert a Data Chip
+
+The native Data Chip Mount is always visible on this model. Right-click it with any Data Chip to insert one physical item; empty-hand right-click removes it. The chip stays inserted and does not gate activation. Redstone settings alone control optional power activation. The machine never emits a redstone signal.
+
+![Synthesis Tower: insert a data chip](step-5.png)
+
 ## Facing and removal
 
 The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
 
-These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.
-
-[All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)
+On Forge 1.12.2, the formed Synthesis Tower produces constructor Cores from Programmable Matter and RF. Right-click it to select a design, supply a charged Battery Module or external RF, and insert Matter. Its Redstone tab controls physical and receiving-channel activation. See [production and ports](../../universal-constructors.md#synthesis-tower-production-forge-1122) for operating details.
