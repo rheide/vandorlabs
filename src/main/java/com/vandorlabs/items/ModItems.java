@@ -68,6 +68,7 @@ public final class ModItems {
     @SubscribeEvent
     @SideOnly(Side.CLIENT)
     public static void registerModels(ModelRegistryEvent event) {
+        DATA_CHIP.addPropertyOverride(new ResourceLocation(VandorLabs.MODID,"chip_type"),(stack,world,entity)->ItemDesignToken.chipAppearance(stack));
         ModelLoader.setCustomModelResourceLocation(BATTERY_MODULE, 0, new ModelResourceLocation(BATTERY_MODULE.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(BLANK_MODULE, 0,
                 new ModelResourceLocation(BLANK_MODULE.getRegistryName(), "inventory"));

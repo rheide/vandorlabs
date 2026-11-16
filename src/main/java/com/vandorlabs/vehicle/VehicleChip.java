@@ -20,7 +20,7 @@ public final class VehicleChip {
         return VehicleStructure.decode(com.vandorlabs.copier.core.BlueprintCompression.decode(tag.getInteger("VehicleDesignCodec"),bytes));
     }
     public static void write(ItemStack stack,VehicleStructure structure,String name)throws IOException{
-        if(!isVehicle(stack))throw new IllegalArgumentException("Insert a Vehicle Chip in the attached Data Chip Mount");
+        if(!ChipJournal.isChip(stack))throw new IllegalArgumentException("Insert a Data Chip in the attached Data Chip Mount");
         byte[] raw=structure.encode();ByteArrayOutputStream compressed=new ByteArrayOutputStream();try(OutputStream out=new GZIPOutputStream(compressed)){out.write(raw);}
         if(compressed.size()>MAX_STORED_BYTES)throw new IllegalArgumentException("Vehicle design exceeds the chip capacity (768 KiB compressed)");
         NBTTagCompound tag=new NBTTagCompound();tag.setString("ChipType","vehicle");tag.setString("VehicleName",ChipJournal.bounded(name,40));tag.setInteger("VehicleDesignCodec",1);tag.setByteArray("VehicleDesign",compressed.toByteArray());VehicleShape.of(structure).write(tag);stack.setTagCompound(tag);

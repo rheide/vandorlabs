@@ -17,7 +17,7 @@ public final class NativeChipJournal {
     public static boolean journal(ItemStack stack){return !stack.isEmpty()&&stack.is(NativeCredentialItems.DATA_CHIP.get())&&"journal".equals(data(stack).getString("ChipType"));}
     /** Exact current/imported type precedence; used only to refuse unavailable mutation paths. */
     public static boolean vehicle(ItemStack stack){return !stack.isEmpty()&&stack.is(NativeCredentialItems.DATA_CHIP.get())&&"vehicle".equals(data(stack).getString("ChipType"));}
-    public static boolean master(ItemStack stack){return NativeCredentialItems.accepts(stack,true)&&NativeCredentialItems.company(stack)>0&&!journal(stack)&&!"vehicle".equals(data(stack).getString("ChipType"));}
+    public static boolean master(ItemStack stack){return NativeCredentialItems.accepts(stack,true)&&NativeCredentialItems.company(stack)>0&&!journal(stack)&&!"vehicle".equals(data(stack).getString("ChipType"))&&!"navigation".equals(data(stack).getString("ChipType"))&&!"catalog".equals(data(stack).getString("ChipType"));}
     public static JournalText view(ItemStack stack){
         return viewText(textData(stack));
     }
@@ -36,7 +36,7 @@ public final class NativeChipJournal {
     /** Retain company/components and opaque import data while publishing one complete native payload. */
     public static void write(ItemStack stack,boolean journal,String title,String[] entries){
         if(stack.isEmpty()||!stack.is(NativeCredentialItems.DATA_CHIP.get()))throw new IllegalArgumentException("Journal requires a data chip");
-        var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();for(String key:new String[]{"VehicleDesign","VehicleDesignCodec","VehicleName","VehicleShape","JournalTitle","JournalPages"})tag.remove(key);
+        var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();for(String key:new String[]{"Catalog","CatalogName","VehicleDesign","VehicleDesignCodec","VehicleName","VehicleShape","JournalTitle","JournalPages"})tag.remove(key);
         tag.putString("ChipType",journal?"journal":"master");if(journal){tag.putString("JournalTitle",JournalText.bounded(title,JournalText.TITLE_LIMIT));var pages=new ListTag();for(int entry=0;entry<JournalText.MAX_ENTRIES;entry++)pages.add(StringTag.valueOf(JournalText.bounded(entry<entries.length?entries[entry]:"",JournalText.PAGE_LIMIT)));tag.put("JournalPages",pages);}
         stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
     }

@@ -47,7 +47,8 @@ public final class ProgrammerJournalRenderer {
             if(view==null&&ChipJournal.master(chip)&&companyLogo(chip,height))return;
             if(view==null){fitted(font,chip.isEmpty()?"Insert a Data Chip":ChipJournal.master(chip)?"Master Chip":"Blank Data Chip",7,8,306,0xc8eeff);if(!chip.isEmpty())fitted(font,chip.getDisplayName(),8,48,304,0xe2edf5);GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;}
             fitted(font,view.title.isEmpty()?"Untitled Journal":view.title,7,8,306,0xc8eeff);
-            java.util.List<String> lines=view.pages.get(page).lines;for(int i=0;i<lines.size();i++)fitted(font,lines.get(i),8,23+i*9,304,0xe2edf5);
+            if(!view.designs.isEmpty()){String design=view.designs.get(page);com.vandorlabs.client.constructors.BlueprintPreview.draw(design,160,(height-1)/2F,280,height-62,(float)angle);net.minecraft.item.Item item=net.minecraft.item.Item.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs",design));String label=item==null?design:new net.minecraft.item.ItemStack(item).getDisplayName();fitted(font,label,8,height-31,304,0xe2edf5);}
+            else {java.util.List<String> lines=view.pages.get(page).lines;for(int i=0;i<lines.size();i++)fitted(font,lines.get(i),8,23+i*9,304,0xe2edf5);}
             RedstoneScreenRenderer.text(font,"< Previous",12,height-16,page>0?0xc8eeff:0x697987);RedstoneScreenRenderer.text(font,"Next >",270,height-16,page+1<view.pages.size()?0xc8eeff:0x697987);
             String counter=view.source+"  "+(page+1)+" / "+view.pages.size();RedstoneScreenRenderer.text(font,counter,(320-font.getStringWidth(counter))/2,height-16,0xa6bfd0);
             GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();

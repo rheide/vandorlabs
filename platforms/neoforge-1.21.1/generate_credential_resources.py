@@ -37,7 +37,15 @@ def generate(root: Path, out: Path):
             {'predicate': {'custom_model_data': index}, 'model': 'vandorlabs:item/' + kind + '_' + company}
             for index, company in enumerate(names) if index
         ] + [{'predicate': {'custom_model_data': 7}, 'model': 'vandorlabs:item/' + kind + '_' + names[0]}]}
+        if kind == 'data_chip':
+            model['overrides'] += [{'predicate': {'vandorlabs:chip_type': index}, 'model': 'vandorlabs:item/data_chip_' + name} for index,name in enumerate(('journal','vehicle','navigation','catalog'),1)]
         (assets / 'models/item' / (kind + '.json')).write_text(json.dumps(model, separators=(',', ':')) + '\n')
+    for kind in ("journal", "vehicle", "navigation", "catalog"):
+        name="data_chip_"+kind
+        model_path=root/"src/main/resources/assets/vandorlabs/models/item"/(name+".json")
+        model=json.loads(model_path.read_text())
+        shutil.copyfile(model_path,assets/"models/item"/model_path.name)
+        sources.update(model["textures"].values())
     for texture in sorted(sources):
         relative = texture.split(':', 1)[1] + '.png'
         target = assets / 'textures' / relative

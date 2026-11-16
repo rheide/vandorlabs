@@ -23,7 +23,7 @@ public final class NativeCredentialItems {
     public static ItemStack accessCard(int company){return variant(false,company);}
     public static ItemStack dataChip(int company){return variant(true,company);}
     private static ItemStack variant(boolean chip,int company){if(!CredentialCatalog.validCompany(company))throw new IllegalArgumentException("Credential company");var result=new ItemStack(chip?DATA_CHIP.get():ACCESS_CARD.get());result.set(DataComponents.CUSTOM_MODEL_DATA,new CustomModelData(company));return result;}
-    public static List<ItemStack> creativeVariants(){var result=new ArrayList<ItemStack>(14);for(boolean chip:new boolean[]{false,true})for(int company=0;company<CredentialCatalog.COMPANY_COUNT;company++)result.add(variant(chip,company));return List.copyOf(result);}
+    public static List<ItemStack> creativeVariants(){var result=new ArrayList<ItemStack>(14);for(boolean chip:new boolean[]{false,true})for(int company=0;company<CredentialCatalog.COMPANY_COUNT;company++)result.add(variant(chip,company));for(String type:List.of("journal","vehicle","navigation","catalog"))result.add(NativeChipTypes.variant(type));return List.copyOf(result);}
     /** Visual names/models may fall back; this raw value never converts an invalid credential to company0. */
     public static int company(ItemStack stack){if(stack.isEmpty())return -1;var value=stack.get(DataComponents.CUSTOM_MODEL_DATA);return value==null?0:value.value();}
     public static boolean accepts(ItemStack stack,boolean chip){return !stack.isEmpty()&&stack.is(chip?DATA_CHIP.get():ACCESS_CARD.get())&&CredentialCatalog.validCompany(company(stack));}
