@@ -58,6 +58,7 @@ tasks.register('generateMatterResources', Exec) {
     inputs.dir('../../src/main/resources/assets/vandorlabs/recipes')
     inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/matter/matter.png')
+    inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/gui/vandor_logo.png')
     inputs.file('../../texture-packs/default/assets/vandorlabs/textures/items/programmable_matter_ingot.png')
     inputs.file('../../texture-packs/default/assets/vandorlabs/textures/items/industrial_alloy_ingot.png')
     outputs.dir('build/generated/matter-resources')
@@ -500,4 +501,22 @@ tasks.named('processResources') { dependsOn 'generateBuilderResources' }
 tasks.register('testBuilderResources', Exec) {
     dependsOn 'generateBuilderResources'
     commandLine pythonExecutable, 'test_builder_resources.py'
+}
+
+sourceSets.main.resources.srcDir('build/generated/infuser-resources')
+tasks.register('generateInfuserResources', Exec) {
+    commandLine pythonExecutable, 'generate_infuser_resources.py'
+    inputs.file('generate_infuser_resources.py')
+    inputs.files('../../src/main/resources/assets/vandorlabs/blockstates/programmable_matter_infuser.json',
+                 '../../src/main/resources/assets/vandorlabs/models/block/programmable_matter_infuser.json',
+                 '../../src/main/resources/assets/vandorlabs/models/item/programmable_matter_infuser.json',
+                 '../../src/main/resources/assets/vandorlabs/models/item/infuser_core.json',
+                 '../../src/main/resources/assets/vandorlabs/recipes/programmable_matter_infuser.json')
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures/blocks/matter'))
+    outputs.dir('build/generated/infuser-resources')
+}
+tasks.named('processResources') { dependsOn 'generateInfuserResources' }
+tasks.register('testInfuserResources', Exec) {
+    dependsOn 'generateInfuserResources'
+    commandLine pythonExecutable, 'test_infuser_resources.py'
 }
