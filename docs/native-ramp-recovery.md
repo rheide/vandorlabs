@@ -5,6 +5,13 @@ platform. Disk preparation can leave an action pending for several ticks. The
 original platform and supported actors remain owned throughout preparation,
 publication and return; a pending disk operation does not reject the action.
 
+When saving is temporarily disabled, an already durable active platform publishes
+stopped motion and tread controls on its existing parts. Its committed geometry,
+reserved cells and actor ownership stay unchanged. Paused movement keeps its
+saved destination intent, so a forced save and restart can resume from that
+committed position. A genuine obstruction remains an error until explicitly
+cleared and retried.
+
 Initial capture and return to native blocks support connected players, native
 item entities and adult, unsaddled pigs. Other actor roles must be moved off the
 platform before capture or return. The controller reports this refusal before
