@@ -25,7 +25,7 @@ public final class NativeRampController {
     private String stoppedError="";
     private long revision;
     private NativeRampBeltRiders.State beltState;
-    private boolean beltRequested,nearby,beltWaiting;
+    private boolean beltRequested,nearby,beltWaiting,controlsStoppedPublished;
     private String text="Retracted";
     private static final NativeRampRiders.Sync SYNC=PacketDistributor::sendToPlayer;
 
@@ -108,7 +108,7 @@ public final class NativeRampController {
         status(timeline.moving?(target>timeline.observed?"Deploying":"Retracting"):(target>0?"Deployed":"Retracted"),false);schedule();
     }
     private void beginReturn(){
-        if(operation==null)return;stopPending=false;phase=Phase.RETURNING;
+        if(operation==null)return;stopPending=deployed()&&frame.belt().running();phase=Phase.RETURNING;
         var world=level();timeline=deployed()?timeline.stopped(world.getGameTime()):timeline.request(0,world.getGameTime(),timeline.duration);revision++;
         status("Returning platform",false);schedule();
     }
@@ -118,10 +118,11 @@ public final class NativeRampController {
             if(waitingCanopy&&operation==null){waitingCanopy=false;prepare();}
             if(phase==Phase.PREPARING&&operation==null){prepare();schedule();return;}
             if(operation==null)return;
+            if(frame!=null&&(phase==Phase.ACTIVE||phase==Phase.RETURNING))notices=NativeRampFrameCommand.retry(world,operation,notices,frame.cells());
+            if(world.noSave&&frame!=null&&(phase==Phase.ACTIVE||phase==Phase.RETURNING)){if(!error&&timeline.moving)timeline=timeline.request(timeline.target,world.getGameTime(),timeline.duration);stoppedError=error?text:"Saving is disabled";stopPending=true;status(stoppedError,error);publishStopped();if(deployed())beltWaiting=true;schedule();return;}
             if(phase==Phase.RESTORING){restore();schedule();return;}
             if(phase==Phase.PREPARING||phase==Phase.PUBLISHING){publish();schedule();return;}
             if(phase==Phase.ACTIVE||phase==Phase.RETURNING){
-                notices=NativeRampFrameCommand.retry(world,operation,notices,frame.cells());
                 if(stopPending){publishStopped();schedule();return;}
                 if(phase==Phase.RETURNING&&!timeline.moving&&(timeline.observed==0||deployed())){alignOriginal();schedule();return;}
                 if(timeline.moving&&timeline.lastTick!=world.getGameTime())advance();
@@ -161,7 +162,7 @@ public final class NativeRampController {
         var candidate=new NativeRampFramePublisher.Frame(operation.assembly().cells(proposed.observed,proposed.sample(world.getGameTime()+1,0)),motion(proposed),stoppedBelt(),nextRevision);
         var result=NativeRampFrameCommand.advance(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),candidate,Math.addExact(nextRevision,1),SYNC);
         notices=result.notices();
-        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){timeline=proposed;frame=result.frame();revision=frame.revision();if(!timeline.moving){status(timeline.observed>0?"Deployed":"Retracted",false);if(timeline.observed==0&&(owner.settings().startHalf()==0||queuedChoices!=null))phase=Phase.RETURNING;else refreshActivity();}}
+        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){controlsStoppedPublished=false;timeline=proposed;frame=result.frame();revision=frame.revision();if(timeline.moving&&!error&&text.equals("Saving is disabled"))status(phase==Phase.RETURNING?"Returning platform":"Moving platform",false);if(!timeline.moving){status(timeline.observed>0?"Deployed":"Retracted",false);if(timeline.observed==0&&(owner.settings().startHalf()==0||queuedChoices!=null))phase=Phase.RETURNING;else refreshActivity();}}
         else if(result.outcome()==NativeRampFrameCommand.Outcome.PENDING){timeline=timeline.request(timeline.target,world.getGameTime(),timeline.duration);status(result.error(),false);}
         else{if(result.frame()!=null){frame=result.frame();revision=frame.revision();}timeline=timeline.stopped(world.getGameTime());if(result.outcome()==NativeRampFrameCommand.Outcome.HELD_FAILURE)phase=Phase.HELD;else{stoppedError=result.error();stopPending=true;}status(result.error(),true);if(stopPending)publishStopped();}
         changed();
@@ -169,12 +170,13 @@ public final class NativeRampController {
     /** Freeze client control at the last installed physical frame after a refused step.
      * This transports no actors and never substitutes a new ownership scope. */
     private void publishStopped(){
+        if(controlsStoppedPublished&&frame.motion().observed()==timeline.observed){stopPending=false;return;}
         var world=level();double pose=timeline.observed;long nextRevision=Math.addExact(Math.max(revision,frame.revision()),1);
         var stopped=new NativeRampPartData.Motion(timeline.sequence,world.getGameTime(),pose,pose,timeline.duration,false,pose);
         var candidate=new NativeRampFramePublisher.Frame(operation.assembly().cells(pose,pose),stopped,stoppedBelt(),nextRevision);
         var result=NativeRampFrameCommand.advance(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),candidate,Math.addExact(nextRevision,1),SYNC);
         notices=result.notices();
-        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){frame=result.frame();revision=frame.revision();stopPending=false;status(stoppedError,error);}
+        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){controlsStoppedPublished=true;frame=result.frame();revision=frame.revision();stopPending=false;status(stoppedError,error);}
         else if(result.outcome()!=NativeRampFrameCommand.Outcome.PENDING){if(result.frame()!=null){frame=result.frame();revision=frame.revision();}stopPending=false;phase=Phase.HELD;status(stoppedError+"; stopped publication: "+result.error(),true);}
     }
     private void alignOriginal(){
@@ -192,7 +194,7 @@ public final class NativeRampController {
     boolean refreshActivity(net.minecraft.server.MinecraftServer server){return owner.getLevel() instanceof ServerLevel world&&world.getServer()==server&&refreshActivity();}
     boolean refreshActivity(){
         if(!(owner.getLevel() instanceof ServerLevel world)||!installed(world)||operation==null||owner.settings().escalator()==0)return false;
-        boolean was=beltRunning();beltWaiting=false;double radius=was?40:32;nearby=false;
+        boolean was=beltRunning(),retainExitRadius=beltWaiting&&nearby&&beltRequested&&!error;beltWaiting=false;double radius=was||retainExitRadius?40:32;nearby=false;
         if(deployed()&&phase==Phase.ACTIVE){var spec=operation.assembly().footprint();for(var player:world.players()){
             if(!player.isAlive()||player.isSpectator())continue;
             for(var origin:spec.origins()){
@@ -208,7 +210,7 @@ public final class NativeRampController {
     private void advanceBelt(){
         var world=level();if(frame.belt().running()&&frame.belt().tick()==world.getGameTime())return;
         var result=NativeRampFrameCommand.advanceBelt(world,operation,NativeRampAuthorization.permissionActor(owner),frozen(),frame.belt().running()?revision:Math.addExact(revision,1),SYNC,beltState);notices=result.notices();
-        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){frame=result.frame();revision=frame.revision();changed();}
+        if(result.outcome()==NativeRampFrameCommand.Outcome.INSTALLED){controlsStoppedPublished=false;frame=result.frame();revision=frame.revision();if(!error&&text.equals("Saving is disabled"))status("Escalator running",false);changed();}
         else if(result.outcome()==NativeRampFrameCommand.Outcome.PENDING){beltWaiting=true;stoppedError=result.error();stopPending=true;status(stoppedError,false);publishStopped();}
         else{if(result.frame()!=null){frame=result.frame();revision=frame.revision();}stoppedError=result.error();stopPending=true;status(stoppedError,true);publishStopped();}
     }
