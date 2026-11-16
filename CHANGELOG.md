@@ -6,7 +6,7 @@
 
 - Produce Synthesis Tower, Assembly Press and Enclosed Gantry Cores from Programmable Matter and RF, with saved build progress and one owned output. Keep existing frame dimensions and materials.
 - Add an inventory dialog with full textured rotating structure previews, battery power status and a chip slot for future designs. Ordinary right-click and Configurizer open the same dialog.
-- Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior.
+- Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior. Wait for deferred inputs to settle after loading before consuming Matter or RF.
 - Add rear RF and item ports, a square front display, native chip/rack fittings, bottom-up Core fabrication and four scanning beams. Cull fabrication effects beyond nearby viewing range.
 
 ### Battery Modules

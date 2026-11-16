@@ -13,7 +13,7 @@ import net.minecraft.util.math.*;
 /** Validate first, then reserve a footprint; reconstruction restores the consumed frame. */
 public final class TileEntityConstructor extends TileEntitySecuredDisplay implements ITickable {
     private final com.vandorlabs.machines.SynthesisRuntime synthesisRuntime=new com.vandorlabs.machines.SynthesisRuntime(this);
-    private boolean synthesisSync;
+    private boolean synthesisSync,synthesisInputsReady;
     public boolean synthesis(){BlockConstructorCore core=core();return core!=null&&core.design.equals("synthesis_tower");}
     public net.minecraftforge.items.ItemStackHandler synthesisInventory(){return synthesisRuntime.inventory;}
     public BlockPos synthesisPowerPort(){return cell(2,0,2);}
@@ -29,7 +29,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     private int synthesisActivation;
     private boolean synthesisInput;
     public int synthesisActivation(){return synthesisActivation;}
-    public boolean synthesisEnabled(){return synthesisActivation==0||synthesisActivation==1&&synthesisInput||synthesisActivation==2&&!synthesisInput;}
+    public boolean synthesisEnabled(){return synthesisInputsReady&&(synthesisActivation==0||synthesisActivation==1&&synthesisInput||synthesisActivation==2&&!synthesisInput);}
     public void configureSynthesisRedstone(int mode,com.vandorlabs.redstone.ChannelList channels){if(!authoritative()||!synthesis()||mode<0||mode>2||channels==null)return;synthesisActivation=mode;setRedstoneChannels(channels);refreshInputs();publish();}
     public boolean synthesisModuleInteraction(net.minecraft.entity.player.EntityPlayer player,EnumHand hand){
         if(!synthesis()||!formed()||!authoritative()||!isUsableByPlayer(player)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos))return false;
@@ -198,7 +198,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(isDrive()){if(level>0)drivePhysicalInputs.put(at.toImmutable(),level);else drivePhysicalInputs.remove(at);drivePhysicalLevel=0;for(int input:drivePhysicalInputs.values())drivePhysicalLevel=Math.max(drivePhysicalLevel,input);}
         physicalInput(!poweredInputs.isEmpty());if(isDrive())refresh();
     }
-    @Override public void onLoad(){super.onLoad();DeferredTileLoad.schedule(this,()->{refreshInputs();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);});}
+    @Override public void refreshInputs(){super.refreshInputs();if(authoritative()&&synthesis()){synthesisInputsReady=true;refresh();}}
+    @Override public void onLoad(){synthesisInputsReady=false;super.onLoad();DeferredTileLoad.schedule(this,()->{refreshInputs();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);});}
     public com.vandorlabs.blocks.MachineMountSurface mount(){
         if(!renderReady()||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
         Vec3d local=new Vec3d(spec.chip_anchor[0],spec.chip_anchor[1],spec.chip_anchor[2]);
@@ -210,7 +211,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);synthesisRuntime.write(tag);tag.setInteger("SynthesisActivation",synthesisActivation);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){renderAppearance=false;super.readFromNBT(tag);synthesisRuntime.read(tag);synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;}
+    @Override public void readFromNBT(NBTTagCompound tag){synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisRuntime.read(tag);synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
     @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);renderPacket(tag);}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}

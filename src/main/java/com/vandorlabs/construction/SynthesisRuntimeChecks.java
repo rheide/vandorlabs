@@ -28,6 +28,7 @@ public final class SynthesisRuntimeChecks {
             tile.configureSynthesisRedstone(2,com.vandorlabs.redstone.ChannelList.EMPTY);require(!tile.synthesisEnabled(),"physical redstone disables OFF");
             world.setBlockToAir(root.west());tile.sampleInput(root);require(tile.synthesisEnabled(),"OFF enables without signal");
             tile.configureSynthesisRedstone(1,com.vandorlabs.redstone.ChannelList.of(19991));tile.setChannelSignal(true);require(tile.synthesisEnabled(),"channel aggregate enables ON");tile.setChannelSignal(false);require(!tile.synthesisEnabled(),"channel OFF pauses");tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);
+            tile=firstLoadSignals(world,tile,matter);
             double px=player.posX,py=player.posY,pz=player.posZ;net.minecraft.inventory.Container old=player.openContainer;
             player.setPosition(root.getX()+1,root.getY()+1,root.getZ()-2);
             com.vandorlabs.container.ContainerSynthesisTower container=new com.vandorlabs.container.ContainerSynthesisTower(player.inventory,tile);container.windowId=37;player.openContainer=container;
@@ -79,6 +80,19 @@ public final class SynthesisRuntimeChecks {
             }
             System.out.println("[vandorlabs][reprolab] synthesis PASS cases=3 powered production rate simulation save/reload exact input/output ownership");
         }finally{net.minecraft.tileentity.TileEntity raw=world.getTileEntity(root);if(raw instanceof TileEntityConstructor)((TileEntityConstructor)raw).dismantle();for(int x=0;x<block.width;x++)for(int y=0;y<block.height;y++)for(int z=0;z<block.depth;z++)world.setBlockToAir(root.add(x,y,z));}
+    }
+    private static TileEntityConstructor firstLoadSignals(World world,TileEntityConstructor tile,Block matter){
+        final BlockPos root=tile.getPos(),sourcePos=root.west(4);world.setBlockState(sourcePos,net.minecraft.init.Blocks.CHEST.getDefaultState());final net.minecraft.tileentity.TileEntity sourceTile=world.getTileEntity(sourcePos);final int channel=19993;
+        com.vandorlabs.redstone.RedstoneChannelMember source=new com.vandorlabs.redstone.RedstoneChannelMember(){public net.minecraft.tileentity.TileEntity channelTile(){return sourceTile;}public int getRedstoneChannel(){return 0;}public void setRedstoneChannel(int ignored){}public com.vandorlabs.redstone.ChannelList getRedstoneChannels(){return com.vandorlabs.redstone.ChannelList.EMPTY;}public com.vandorlabs.redstone.ChannelList transmittedChannels(){return com.vandorlabs.redstone.ChannelList.of(channel);}public int transmissionRange(){return 0;}public boolean hasLocalRedstoneSignal(){return true;}public void setChannelSignal(boolean ignored){}};
+        com.vandorlabs.redstone.RedstoneChannels.register(source);
+        for(boolean wireless:new boolean[]{false,true}){
+            if(!wireless)world.setBlockState(root.west(),net.minecraft.init.Blocks.REDSTONE_BLOCK.getDefaultState());
+            tile.configureSynthesisRedstone(2,wireless?com.vandorlabs.redstone.ChannelList.of(channel):com.vandorlabs.redstone.ChannelList.EMPTY);tile.synthesisInventory().setStackInSlot(0,new net.minecraft.item.ItemStack(matter));net.minecraft.item.ItemStack battery=new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE);com.vandorlabs.rack.ModuleBatteryData.receive(battery,1000,false);tile.synthesisInventory().setStackInSlot(2,battery);NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());
+            TileEntityConstructor loaded=new TileEntityConstructor();loaded.setWorld(world);loaded.setPos(root);loaded.readFromNBT(saved);world.setTileEntity(root,loaded);loaded.onLoad();loaded.update();require(loaded.synthesisInventory().getStackInSlot(0).getCount()==1&&loaded.batteryEnergy()==1000&&!loaded.processing()&&loaded.buildProgress()==0,"first tick before deferred input readiness cannot spend Matter/RF OFF-under-ON wireless="+wireless);
+            com.vandorlabs.tiles.DeferredTileLoad.flush(world);require(!loaded.synthesisEnabled(),"deferred registration settles actual ON source before enabling OFF mode wireless="+wireless);loaded.update();require(loaded.synthesisInventory().getStackInSlot(0).getCount()==1&&loaded.batteryEnergy()==1000&&!loaded.processing(),"settled disabled OFF mode remains unchanged wireless="+wireless);
+            loaded.synthesisInventory().extractItem(0,1,false);loaded.synthesisInventory().extractItem(2,1,false);if(!wireless)world.setBlockToAir(root.west());tile=loaded;
+        }
+        com.vandorlabs.redstone.RedstoneChannels.unregister(source);world.setBlockToAir(sourcePos);tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);return tile;
     }
     private static void require(boolean condition,String message){if(!condition)throw new IllegalStateException("Synthesis: "+message);}
 }
