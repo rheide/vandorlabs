@@ -16,7 +16,7 @@ import net.minecraft.world.phys.*;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 
-/** Canonical native registration and real configured-item admission, without enabling the unfinished public runtime. */
+/** Canonical native registration and real configured-item admission, using the public runtime bindings. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeRampCanonicalChecks {
     private static int ticks,checks;
@@ -25,7 +25,7 @@ public final class NativeRampCanonicalChecks {
     private static void need(boolean yes,String why){checks++;if(!yes)throw new AssertionError("Canonical Ramp: "+why);}
     @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(!phase().startsWith("ramp-canonical-")||++ticks!=20)return;try{
         var world=event.getServer().overworld();var actor=net.neoforged.neoforge.common.util.FakePlayerFactory.getMinecraft(world);actor.setGameMode(GameType.SURVIVAL);actor.getInventory().clearContent();
-        need(NativeRampBindings.enabled(),"explicit private activation");need(BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:programmable_ramp"))==NativeRampBindings.BLOCK&&BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:programmable_ramp_slab"))==NativeRampBindings.SLAB,"canonical block identities");
+        need(NativeRampBindings.enabled(),"public activation");need(BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:programmable_ramp"))==NativeRampBindings.BLOCK&&BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:programmable_ramp_slab"))==NativeRampBindings.SLAB,"canonical block identities");
         need(BuiltInRegistries.BLOCK_ENTITY_TYPE.getKey(NativeRampBindings.ENTITY).equals(ResourceLocation.parse("vandorlabs:programmable_ramp")),"released common tile identity");need(NativeRampBindings.PART.asItem()==Items.AIR,"generated parts have no placeable item");
         int index=0;for(int kind=0;kind<2;kind++)for(var scan:Direction.values())for(boolean top:new boolean[]{false,true}){
             var pos=BASE.east(index++*3);world.getChunkAt(pos);var block=kind==0?NativeRampBindings.BLOCK:NativeRampBindings.SLAB;var item=kind==0?NativeRampBindings.ITEM:NativeRampBindings.SLAB_ITEM;

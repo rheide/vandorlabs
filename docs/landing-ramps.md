@@ -77,6 +77,24 @@ Vertical player transport uses support updates. Sideways travel uses server
 position updates. Moving collision surfaces tolerate a
 small difference between player and platform update times at block boundaries.
 
+## Minecraft 1.21.1
+
+Native Ramp Controllers use the same modes, scan/travel distinction, source
+selection and editor definitions. Ordinary right-click and the Configurizer
+open the dedicated editor. The Slab keeps its horizontal half-height body when
+its active scan face points up or down.
+
+Capture and return can show a pending status while their durable ownership
+records finish. Keep the selected source and travel area loaded and clear.
+Connected players, native dropped items and adult unsaddled pigs have native
+recovery support. Move other actor roles off the platform before capture or
+return. An unsupported action leaves its original owner intact and can be
+retried after clearing the obstruction.
+
+See [native saved-state recovery](native-ramp-recovery.md) for the bounded cold
+repair protocol, independent platform/actor saves and the distinction between
+native saves and importing active Source 1.12 platforms.
+
 ## Escalators
 
 Choose **Escalator Up** or **Escalator Down** in the same controller. The platform

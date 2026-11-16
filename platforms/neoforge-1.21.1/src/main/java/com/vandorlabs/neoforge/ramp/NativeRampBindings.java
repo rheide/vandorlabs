@@ -32,7 +32,7 @@ public final class NativeRampBindings {
     public static MenuType<NativeRampMenu> MENU;
     private static java.util.function.Consumer<NativeRampMotionPayload> motion=ignored->{};
     public static void bindMotion(java.util.function.Consumer<NativeRampMotionPayload> receiver){motion=java.util.Objects.requireNonNull(receiver);}
-    public static boolean enabled(){return Boolean.parseBoolean(System.getProperty("vandorlabs.ramps","false"));}
+    public static boolean enabled(){return Boolean.parseBoolean(System.getProperty("vandorlabs.ramps","true"));}
     private static ResourceLocation id(String path){return ResourceLocation.fromNamespaceAndPath("vandorlabs",path);}
     private static BlockBehaviour.Properties properties(){return BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6).sound(SoundType.METAL).requiresCorrectToolForDrops().noOcclusion();}
     private static ItemInteractionResult itemUse(ItemStack stack,Level world,BlockPos pos,Player actor,InteractionHand hand){

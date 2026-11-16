@@ -709,18 +709,17 @@
       "id": "ramps",
       "label": "Ramp controllers and moving endpoints",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "controlled_ramp",
         "programmable_ramp",
         "programmable_ramp_slab"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native world snapshot/movement adapters",
-        "transactional recovery and data retention",
-        "all six scan faces and travel modes",
-        "dedicated and live collision parity"
+        "Broader native actor roles, passengers and external ownership adapters",
+        "Cross-entity-chunk actor handoff beyond the bounded cold recovery scope",
+        "Active Source 1.12 world import; unsupported snapshots remain inert and exact",
+        "Final packaged-artifact release gate after user testing"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],

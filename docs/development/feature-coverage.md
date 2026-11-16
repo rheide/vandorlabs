@@ -28,7 +28,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Constructors, matter infuser, battery and tank | partial (three builders, Matter Infuser, Battery and Hexagonal Fuel Tank enabled; other machines deferred) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation tables | pending | unimplemented | non-vehicle first |
-| Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
+| Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
 | Cockpits and peripherals | pending | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled) | unimplemented | standalone first; vehicle effects deferred |
