@@ -22,6 +22,8 @@ final class NativeRampActorStorage {
   if(!(manager.vandorlabs$rampActorStorage() instanceof EntityStorage storage))throw new IllegalStateException("Unknown entity storage adapter");
   var permit=new Permit(level,manager,(NativeRampEntityStorageAccess)(Object)storage);LIVE.put(level,permit);return permit;
  }
+ /** Read-only startup inspection grants no permission to replace an already queued/live native record. */
+ static CompletableFuture<Optional<CompoundTag>> inspect(ServerLevel level,ChunkPos chunk){requireStartup(level);var manager=(NativeRampEntityManagerAccess)(Object)((NativeRampEntityLevelAccess)(Object)level).vandorlabs$rampActorManager();if(!(manager.vandorlabs$rampActorStorage() instanceof EntityStorage storage))throw new IllegalStateException("Unknown entity storage adapter");var regions=((NativeRampEntityStorageAccess)(Object)storage).vandorlabs$rampActorRegions();return regions.read(chunk).thenApply(raw->raw.map(tag->copy(tag,chunk)));}
  private static void requireStartup(ServerLevel level){
   NativeRampRiders.requireThread(level);if(!NativeRampRecoveryAdmission.active(level)||level.getServer().getTickCount()!=0||!level.getServer().getPlayerList().getPlayers().isEmpty())throw new IllegalStateException("Ramp actor storage requires isolated startup admission");
  }
