@@ -8,7 +8,7 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 
 @retain_artifacts
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--case',choices=('healthy','root-ahead','actors-ahead','return-before','return-after','unsupported','legacy','legacy-unknown'),default='healthy');args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--case',choices=('healthy','root-ahead','actors-ahead','return-before','return-after','unsupported','legacy','legacy-unknown','return-intent'),default='healthy');args=parser.parse_args()
     (ROOT/'build/test-artifacts').mkdir(parents=True,exist_ok=True)
     out=Path(artifact_directory(prefix='ramp-item-cold-',dir=ROOT/'build/test-artifacts'));saved=out/'saved-world';fixture_world(saved,0)
     base=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.ramps=true -Dvandorlabs.rampSourceSnapshot='+str(ROOT/'testclient/fixtures/vehicle-ramps-2.6.nbt'))
