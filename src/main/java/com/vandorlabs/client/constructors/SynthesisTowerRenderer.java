@@ -24,7 +24,7 @@ public final class SynthesisTowerRenderer {
     private static final java.nio.DoubleBuffer CLIP=org.lwjgl.BufferUtils.createDoubleBuffer(4);
     private static final Map<net.minecraft.world.World,LinkedHashMap<net.minecraft.util.math.BlockPos,Rack>> RACKS=new WeakHashMap<>();
     private static final class Rack {final java.util.UUID identity;final EmbeddedRackMotion motion=new EmbeddedRackMotion();Rack(java.util.UUID identity){this.identity=identity;}}
-    public static void clear(net.minecraft.world.World world){RACKS.remove(world);}
+    public static void clear(net.minecraft.world.World world){RACKS.remove(world);BuilderFabricationMotion.clear(world);BuilderFabricationVoxels.clear();BuilderItemGeometry.clear();}
     public static void clear(){RACKS.clear();BuilderRecipePreview.clear();}
     public static void observe(TileEntityConstructor tile){if(tile.getWorld()!=null&&tile.builder())rack(tile,MachineVisualMotion.now());}
     private static EmbeddedRackMotion rack(TileEntityConstructor tile,double now){
@@ -60,6 +60,7 @@ public final class SynthesisTowerRenderer {
                 if(state.getBlock() instanceof BlockConstructorCore){core(state,progress);if(processing&&tile.working())lasers(((BlockConstructorCore)state.getBlock()).design,progress,now);}
                 else if(!processing){GlStateManager.pushMatrix();try{GlStateManager.translate(CORE_X+.5,CORE_Y+.5,CORE_Z+.5);BuilderRecipePreview.renderItem(result,(float)(now*1.4));}finally{GlStateManager.popMatrix();}}
             }
+            if(!tile.synthesis()&&(processing||!output.isEmpty()))fabrication(tile,processing?tile.builderResult(tile.buildDesign()):output,processing?tile.buildProgress():1);
             screen(blueprint,now,presentation);
         }finally{Tessellator.getInstance().getBuffer().setTranslation(0,0,0);GlStateManager.popMatrix();}
     }
@@ -67,6 +68,29 @@ public final class SynthesisTowerRenderer {
         if(!(state.getBlock() instanceof com.vandorlabs.blocks.BlockConstructorCore))return;
         String design=((com.vandorlabs.blocks.BlockConstructorCore)state.getBlock()).design;
         GlStateManager.pushMatrix();try{GlStateManager.translate(CORE_X,CORE_Y,CORE_Z);BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);buffer.begin(7,DefaultVertexFormats.BLOCK);CoreModels.emit(buffer,design,amount,15728880);Tessellator.getInstance().draw();}finally{GlStateManager.popMatrix();}
+    }
+    private static void fabrication(TileEntityConstructor tile,ItemStack result,double progress){
+        if(result.isEmpty())return;boolean flat="assembly_press".equals(tile.builderMachine());
+        com.vandorlabs.machines.BuilderOutputBounds bounds=com.vandorlabs.machines.BuilderOutputBounds.forMachine(tile.builderMachine());
+        BuilderFabricationVoxels.Model model=BuilderFabricationVoxels.get(result,flat);
+        GlStateManager.pushMatrix();try{GlStateManager.translate(bounds.minX,bounds.minY,bounds.minZ);GlStateManager.scale(bounds.maxX-bounds.minX,flat?(bounds.maxY-bounds.minY)/.125:bounds.maxY-bounds.minY,bounds.maxZ-bounds.minZ);BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);buffer.begin(7,DefaultVertexFormats.BLOCK);model.emit(buffer,progress);Tessellator.getInstance().draw();}finally{GlStateManager.popMatrix();}
+        if(tile.processing()&&tile.working())fabricationLasers(tile,flat,bounds,bounds.minY+model.height(progress)*(flat?1:bounds.maxY-bounds.minY)+.008,BuilderFabricationMotion.sample(tile));
+    }
+    private static void fabricationLasers(TileEntityConstructor tile,boolean press,com.vandorlabs.machines.BuilderOutputBounds bounds,double surface,BuilderFabricationMotion.Pose pose){
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA,GL11.GL_ONE,GL11.GL_ONE_MINUS_SRC_ALPHA);GlStateManager.depthMask(false);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableTexture2D();
+            Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);TextureAtlasSprite white=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/core_flat");BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
+            if(press){for(int i=0;i<4;i++){double sx=i%2==0?1.125:3.125,sz=i<2?.4375:2.5,ex=2.125+.45*Math.sin(pose.work*.12+i*Math.PI/2),ez=1.5+.45*Math.sin(pose.work*.075+i*Math.PI);beam(b,white,sx,2.4375,sz,ex,surface,ez,.009,0xb04fee75);}}
+            else {double sx=2.5+pose.headX(),sy=3.25,sz=1.5625+pose.armZ(),scan=bounds.centerZ()+(bounds.maxZ-bounds.minZ)*.45*Math.sin(pose.work*.11);
+                beamVertex(b,white,sx,sy,sz,0x324baeff);beamVertex(b,white,bounds.minX,surface,scan,0x324baeff);beamVertex(b,white,bounds.maxX,surface,scan,0x324baeff);beamVertex(b,white,sx,sy,sz,0x324baeff);
+                beamVertex(b,white,bounds.minX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.maxX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.maxX,surface,scan+.009,0xc05bbcff);beamVertex(b,white,bounds.minX,surface,scan+.009,0xc05bbcff);
+                beam(b,white,sx,sy+.018,sz,sx,sy-.018,sz,.018,0xd06ccaff);
+            }Tessellator.getInstance().draw();
+        }
+    }
+    private static void beam(BufferBuilder b,TextureAtlasSprite white,double sx,double sy,double sz,double ex,double ey,double ez,double radius,int color){
+        beamVertex(b,white,sx-radius,sy,sz,color);beamVertex(b,white,sx+radius,sy,sz,color);beamVertex(b,white,ex+radius,ey,ez,color);beamVertex(b,white,ex-radius,ey,ez,color);
+        beamVertex(b,white,sx,sy,sz-radius,color);beamVertex(b,white,sx,sy,sz+radius,color);beamVertex(b,white,ex,ey,ez+radius,color);beamVertex(b,white,ex,ey,ez-radius,color);
     }
     private static void screen(String blueprint,double now,SynthesisPresentation.Spec presentation){
         GlStateManager.pushMatrix();GL11.glPushAttrib(GL11.GL_TRANSFORM_BIT|GL11.GL_ENABLE_BIT);
@@ -93,7 +117,7 @@ public final class SynthesisTowerRenderer {
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         TextureAtlasSprite white=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("minecraft:blocks/concrete_white");
         BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
-        double surface=CORE_Y+com.vandorlabs.geometry.CoreMesh.height(progress)+.008;
+        double surface=CORE_Y+com.vandorlabs.geometry.CoreMesh.height(design,progress)+.008;
         for(int i=0;i<4;i++){
             double sweep=.5+.46*Math.sin(now*.12+i*Math.PI/2),cross=.5+.46*Math.sin(now*.075+i*Math.PI);
             double sx=i%2==0?.70:2.30,sz=i<2?.95:2.30,ex=CORE_X+sweep,ez=CORE_Z+cross,r=.014;

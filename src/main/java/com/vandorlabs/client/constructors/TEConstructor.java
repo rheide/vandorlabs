@@ -36,6 +36,11 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
                 drawPart(tile,folder+"static.obj",buffer,x,y,z,0,0,0);
                 double yaw=Math.toRadians(55)*Math.sin((pose.now-pose.phase)*Math.PI/80)*MachineVisualMotion.eased(pose.progress);
                 UniversalConstructorModelCache.get(spec.design,folder+"rotor.obj").emitTransformed(buffer,x,y,z,tile.facing(),spec.width,spec.depth,0,0,0,packedLight(tile),yaw,spec.motion_pivot[0],spec.motion_pivot[2]);
+            }else if("enclosed_gantry".equals(spec.design)){
+                BuilderFabricationMotion.Pose pose=BuilderFabricationMotion.sample(tile);
+                drawPart(tile,"static.obj",buffer,x,y,z,0,0,0);
+                drawPart(tile,"gantry_arm.obj",buffer,x,y,z,0,0,pose.armZ());
+                drawPart(tile,"gantry_head.obj",buffer,x,y,z,pose.headX(),0,pose.armZ());
             }else{
                 String path=spec.state_models!=null?spec.state_models[state]:spec.hasChip()?(tile.screenOn()?"active/static.obj":"static.obj"):"complete.obj";
                 drawPart(tile,path,buffer,x,y,z,0,0,0);
@@ -46,7 +51,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
     @Override public void render(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!tile.renderReady()||!com.vandorlabs.gear.client.CoreArmHandoff.allowed(tile))return;
         com.vandorlabs.gear.client.CoreArmHandoff.drawn(tile);
-        if(tile.synthesis()){
+        if(tile.builder()){
             try(com.vandorlabs.client.TurntableRenderState saved=new com.vandorlabs.client.TurntableRenderState()){
                 // The authored chamber glass is binary-alpha cutout geometry.
                 // Blending alone still writes invisible glass depth over the fabrication volume.
