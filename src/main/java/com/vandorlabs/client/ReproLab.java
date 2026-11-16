@@ -647,6 +647,7 @@ public class ReproLab {
         if (mc.player == null) {
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.infuserGuiChecksOnly")){try{if(InfuserGuiLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Infuser GUI live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.synthesisTowerChecksOnly")){try{if(SynthesisTowerLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Synthesis Tower live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.moduleRackChecksOnly")){try{if(ModuleRackLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Module Rack live checks",failure);}return;}
         if(Boolean.parseBoolean(System.getenv("VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY"))){try{if(AppearanceCompatibilityLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Appearance compatibility focus",failure);}return;}

@@ -18,8 +18,8 @@ public final class DialogHeader {
         GlStateManager.setActiveTexture(net.minecraft.client.renderer.OpenGlHelper.defaultTexUnit);GlStateManager.disableTexture2D();GlStateManager.enableTexture2D();GlStateManager.enableAlpha();
         Minecraft.getMinecraft().getTextureManager().bindTexture(LOGO);
         GlStateManager.color(1,1,1,1);GlStateManager.enableBlend();
-        int h=Math.min(21,headerHeight-2),w=h*12/7;
-        Gui.drawModalRectWithCustomSizedTexture(left+width-w-8,top+(headerHeight-h)/2,0,0,w,h,w,h);
+        int h=com.vandorlabs.ui.DialogStyle.logoHeight(headerHeight),w=com.vandorlabs.ui.DialogStyle.logoWidth(headerHeight);
+        Gui.drawModalRectWithCustomSizedTexture(com.vandorlabs.ui.DialogStyle.logoLeft(left,width,headerHeight),com.vandorlabs.ui.DialogStyle.logoTop(top,headerHeight),0,0,w,h,w,h);
         GlStateManager.disableBlend();
         }finally{if(lighting)GlStateManager.enableLighting();}
     }

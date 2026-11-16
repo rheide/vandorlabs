@@ -645,7 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Matter Infuser, drive, navigation and other Core multiblocks remain outside the three-builder slice",
+        "Drive, navigation and other Core multiblocks remain outside the three-builder slice",
         "Native builder arm carrying and Copy Controller adapters remain deferred",
         "Full release-gate and hardware shader acceptance remain separate from focused development checks"
       ],
@@ -658,7 +658,8 @@
         "Synthesis Tower, Assembly Press and Enclosed Gantry cores plus the hidden reserved part; shared frame dimensions and all four Core corners/facings",
         "Asynchronous durable formation, dismantling and mining with exact owned input/output/battery/chip drops and abrupt partial-save recovery",
         "Powered Synthesis production, physical RF/item ports, standard Redstone activation/channels, authenticated inventory dialog and textured rotating previews",
-        "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication"
+        "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication",
+        "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog."
       ]
     },
     {

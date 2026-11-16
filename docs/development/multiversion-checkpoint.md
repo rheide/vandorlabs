@@ -5,8 +5,8 @@ Forge 1.12.2 remains the default development target on `master`, at development 
 ## Current conversion boundary
 
 The current new multiblock scope is limited to Synthesis Tower, Assembly Press
-and Enclosed Gantry and their cores. Other Core multiblocks and the Matter Infuser
-remain deferred. Existing native families retain their previously integrated
+and Enclosed Gantry and their cores, plus the standalone Matter Infuser. Other
+Core multiblocks remain deferred. Existing native families retain their previously integrated
 scope; Native Vehicle Mode remains deferred. Shared portable Java 8 policies
 continue to provide common behavior with platform-specific lifecycle and
 rendering adapters.
@@ -580,3 +580,15 @@ complete client footprint publication. Render checks cover all three structures,
 partial Cores, scanning beams, nearby culling, resource reload and the actual
 world BER. The native checks use the development runtime and software renderer;
 they do not constitute a full release gate or hardware shader acceptance.
+
+### Matter Infuser and shared dialog presentation
+
+The standalone native Matter Infuser now uses its canonical block/entity and
+Creative Infuser Core, original crafting pattern, directional artwork and sided
+inventory. Iron production and physical Battery Module charging retain sunlight,
+catalyst and saved-work behavior. Actual source furnace NBT and typed native
+failed-load retention are covered by focused dedicated checks and cold restart.
+Both platforms use one standard Infuser layout and authored header definitions;
+real Survival and rendered checks cover inventory interactions, sunlight pauses,
+progress and the absence of combustion artwork. These focused checks do not
+establish complete native conversion or the full release gate.

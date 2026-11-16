@@ -25,7 +25,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three builders, Battery and Hexagonal Fuel Tank enabled; other machines deferred) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three builders, Matter Infuser, Battery and Hexagonal Fuel Tank enabled; other machines deferred) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation tables | pending | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
@@ -111,8 +111,7 @@ Native standalone arms now provide regular and Large Extenders, Rotating Arms an
 Synthesis Tower, Assembly Press and Enclosed Gantry now have native Core items
 and the same frame layouts as Forge. The Synthesis Tower includes RF production,
 its Battery Module and chip mounts, inventory dialog, physical item/RF ports,
-and receiving-channel activation. Other Core multiblocks and the Matter Infuser
-remain outside this slice. See the [native builder guide](../builders-1.21.md).
+and receiving-channel activation. Other Core multiblocks remain outside this slice. See the [native builder guide](../builders-1.21.md).
 
 Focused checks cover all 48 design/facing/Core-corner layouts, durable Survival
 mining, three production recipes, malformed-data retention, and abrupt formation,
@@ -121,3 +120,18 @@ all 45 tower cells, part ownership, both dialog paths, physical inventory and th
 actual world renderer. Separate software rendering covers all three full meshes,
 fabrication, nearby culling, animation and resource reload. These are development
 runtime/software checks, not a full release gate or hardware shader acceptance.
+
+## Native Matter Infuser
+
+The Matter Infuser retains the Source iron-to-Matter recipe, catalyst durations,
+solar pauses, sided automation and physical Battery Module charging. Synchronous
+loaded-column sky admission prevents first-tick work beneath a newly placed roof;
+transparent cover and rain retain the Source behavior. Typed native inventory
+and legacy furnace NBT reads preserve failed snapshots inertly.
+
+Focused dedicated checks cover processing, malformed data and a subsequent-process
+partial-charge continuation. Actual Survival client checks cover placement, both
+dialog paths, shift-clicking, mining and exact module ownership. Both targets
+render the same shared standard Infuser panel, all 39 slots, branded header,
+progress and sunlight states without furnace flames. Native acceptance remains
+ModDev/software coverage, separate from a full native release gate.

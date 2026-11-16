@@ -92,7 +92,7 @@ Gold    Redstone  Gold
 Matter  Gold      Matter
 ```
 
-On Forge 1.12.2, put the module in a Programmable Matter Infuser's input slot
+On Forge 1.12.2 and NeoForge 1.21.1, put the module in a Programmable Matter Infuser's input slot
 with redstone catalyst. Sunlight supplies 50 RF per working tick; night, rain
 and a covered lens pause charging. A full module moves into the output slot
 when it is free. Partial charge survives saving and removal from the infuser.

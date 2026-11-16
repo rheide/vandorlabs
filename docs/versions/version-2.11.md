@@ -12,9 +12,10 @@ Ingots and one Redstone Dust. Mounted modules show a red lightning mark and
 four green charge segments; removing a module retains its stored energy.
 The item also exposes its charge to compatible RF integrations.
 
-On Forge 1.12.2, charge a module in the Matter Infuser using sunlight and
+On Forge 1.12.2 and NeoForge 1.21.1, charge a module in the Matter Infuser using sunlight and
 redstone catalyst. It receives 50 RF per working tick and moves to the output
-slot when full. NeoForge currently has no Matter Infuser adapter.
+slot when full. The native Infuser also retains sunlight-driven iron-to-Matter
+production, redstone catalyst and hopper access.
 
 ## Powered Synthesis Tower
 
@@ -38,7 +39,7 @@ same RF production and Redstone controls as Forge. Assembly Press and Enclosed
 Gantry retain their current structure-only behavior.
 
 See the [native builder guide](../builders-1.21.md) for construction, operation
-and safe teardown. Other Core multiblocks, the native Matter Infuser, and
+and safe teardown. Other Core multiblocks and
 arm/copy integration for these assemblies remain deferred. The current native
 validation is focused development-runtime/software-rendering coverage, not a
 full release gate or hardware shader acceptance.

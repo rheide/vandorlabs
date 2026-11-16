@@ -22,7 +22,7 @@ unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONL
 
 unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY
 unset VANDOR_LABS_CORE_HANDOFF_ONLY
-unset VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY
+unset VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY VANDOR_LABS_INFUSER_GUI_CHECKS_ONLY
 unset VANDOR_LABS_MODULE_RACK_CHECKS_ONLY
 
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
@@ -111,6 +111,9 @@ case "${1:-}" in
         elif [ "$TARGET" = screen-chips ]; then
             PREFIX=screen_chip_
             export VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY=true
+        elif [ "$TARGET" = infuser-gui ]; then
+            PREFIX=infuser_gui_
+            export VANDOR_LABS_INFUSER_GUI_CHECKS_ONLY=true
         elif [ "$TARGET" = synthesis-tower ]; then
             PREFIX=synthesis_tower_
             export VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY=true
@@ -622,6 +625,11 @@ PYIMAGE
     if [ "$TARGET" = screen-chips ]; then
         grep -q "screen-chips PASS" "$RUN_OUT/client.log"
         echo "Screen chip live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = infuser-gui ]; then
+        grep -q "infuser-gui PASS" "$RUN_OUT/client.log"
+        echo "Matter Infuser GUI live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = synthesis-tower ]; then

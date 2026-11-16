@@ -2,11 +2,13 @@
 
 Programmable Matter Infusers turn one iron ingot into one Programmable Matter ingot in 200 working ticks. The lens needs an unobstructed view of the sun; night and rain pause processing and fuel consumption. Redstone dust supplies 33 working ticks, and a redstone block supplies 300, matching a vanilla log. A blocked output also pauses fuel use. Insert iron from above, redstone from the sides, and extract the product below with hoppers or item-handler pipes.
 
-On Forge 1.12.2, the same input slot also accepts a [Battery Module](module-rack.md#battery-module).
+On Forge 1.12.2 and NeoForge 1.21.1, the same input slot also accepts a [Battery Module](module-rack.md#battery-module).
 It stores 10,000 RF and receives 50 RF per sunny working tick while consuming
 the same redstone catalyst. A full module moves into the output slot when
 available. Partial charge remains on the item when it is removed or saved.
-The Matter Infuser currently has no NeoForge adapter.
+Right-click or use the Configurizer to open the same inventory dialog. Both
+versions use the standard Vandor header, sunlight status, catalyst slot and
+production or battery-charge progress display; solar work has no furnace flame.
 
 Craft the infuser with iron around a glass lens, an Infuser Core in the center, and redstone at the bottom. Infuser Cores are currently available in creative mode only. The former direct crafting recipe for Programmable Matter ingots is removed. Nine ingots craft one Programmable Matter Block; the block can be unpacked into nine ingots.
 

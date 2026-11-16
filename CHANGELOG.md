@@ -4,7 +4,7 @@
 
 ### Three builders on NeoForge 1.21.1
 
-- Add only Synthesis Tower, Assembly Press and Enclosed Gantry and their Core items, retaining the shared frame sizes and all horizontal facings/Core corners. Other Core multiblocks and the Matter Infuser remain deferred.
+- Add only Synthesis Tower, Assembly Press and Enclosed Gantry and their Core items, retaining the shared frame sizes and all horizontal facings/Core corners. Other Core multiblocks remain deferred.
 - Add durable asynchronous formation, dismantling and Survival mining, with escrowed inventory drops and abrupt cross-chunk restart recovery. Preserve malformed saved ownership inertly and refuse non-player removal of retained assemblies.
 - Match powered Synthesis production, physical battery/chip handling, rear-bottom RF/item ports, Production/Redstone dialogs and textured previews. Publish every reserved cell and its owner data to clients after completion.
 - Reuse fixed-size, reload-safe meshes for all three structures, bottom-up Cores, four scanning beams and nearby-only fabrication effects. Native arm/copy integration for these assemblies remains deferred.
@@ -16,10 +16,16 @@
 - Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior. Wait for deferred inputs to settle after loading before consuming Matter or RF.
 - Add rear RF and item ports, a square front display, native chip/rack fittings, bottom-up Core fabrication and four scanning beams. Cull fabrication effects beyond nearby viewing range.
 
+### Native Matter Infuser
+
+- Add the NeoForge 1.21.1 Matter Infuser, its original recipe and Creative Infuser Core, authored artwork, shared right-click/Configurizer inventory and sided item access.
+- Retain sunlight, redstone catalyst, iron-to-Matter production and 50 RF/tick Battery Module charging, with saved progress and charge ownership.
+- Give both Infusers the same shared standard dialog, branded header and solar/progress indicators instead of a vanilla furnace background and flames.
+
 ### Battery Modules
 
 - Add single-item Battery Modules holding 10,000 RF, with a Programmable Matter Ingot, gold and redstone recipe and an item energy capability.
-- Charge modules in Forge Matter Infusers using sunlight and redstone catalyst. Keep partial charge on the physical item through charging, rack insertion, extraction and reload.
+- Charge modules in Forge and NeoForge Matter Infusers using sunlight and redstone catalyst. Keep partial charge on the physical item through charging, rack insertion, extraction and reload.
 - Show a red lightning mark and green charge segments on mounted modules, with exact RF in the item tooltip.
 
 

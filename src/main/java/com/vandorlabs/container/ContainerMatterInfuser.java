@@ -6,7 +6,7 @@ import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
 
 public final class ContainerMatterInfuser extends ContainerFurnace {
-    public ContainerMatterInfuser(InventoryPlayer player,TileEntityMatterInfuser tile){super(player,tile);Slot fuel=new Slot(tile,1,56,53){@Override public boolean isItemValid(ItemStack stack){return TileEntityMatterInfuser.fuelTicks(stack)>0;}};fuel.slotNumber=1;inventorySlots.set(1,fuel);}
+    public ContainerMatterInfuser(InventoryPlayer player,TileEntityMatterInfuser tile){super(player,tile);for(int index=0;index<inventorySlots.size();index++){Slot slot=inventorySlots.get(index);slot.xPos=com.vandorlabs.ui.InfuserDialog.slotX(index);slot.yPos=com.vandorlabs.ui.InfuserDialog.slotY(index);}Slot fuel=new Slot(tile,1,com.vandorlabs.ui.InfuserDialog.slotX(1),com.vandorlabs.ui.InfuserDialog.slotY(1)){@Override public boolean isItemValid(ItemStack stack){return TileEntityMatterInfuser.fuelTicks(stack)>0;}};fuel.slotNumber=1;inventorySlots.set(1,fuel);}
     @Override public ItemStack transferStackInSlot(EntityPlayer player,int index){
         Slot slot=inventorySlots.get(index);if(slot==null || !slot.getHasStack())return ItemStack.EMPTY;
         ItemStack stack=slot.getStack(),original=stack.copy();

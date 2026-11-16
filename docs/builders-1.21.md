@@ -1,8 +1,8 @@
 # Builder machines on Minecraft 1.21.1
 
 This native slice covers the Synthesis Tower, Assembly Press and Enclosed Gantry,
-with their three Core items. Other Core multiblocks and the Matter Infuser remain
-outside this conversion. The Assembly Press and Enclosed Gantry form their
+with their three Core items. Other Core multiblocks remain outside this conversion. The native
+[Matter Infuser](matter-and-storage.md) supplies Matter Ingots and charges modules. The Assembly Press and Enclosed Gantry form their
 finished structures; Core production belongs to the Synthesis Tower.
 
 ## Build and form a machine
