@@ -73,7 +73,8 @@ def generate(id,s):
     x,y,z=s['keyboardX'],s['keyboardY'],s['keyboardZ'];kw,kd=s['keyboardWidth'],s['keyboardDepth']
     box('static__keyboard_case',interior,x,y-.125,z,x+kw,y,z+kd,skip=('up',))
     quad('static__keyboard',keys,[(x,y,z),(x,y,z+kd),(x+kw,y,z+kd),(x+kw,y,z)],((0,.5),(0,1),(1,1),(1,.5)))
-    faces={'north':(3,2,1,0),'south':(6,7,4,5),'west':(7,3,0,4),'east':(2,6,5,1),'up':(7,6,2,3),'down':(0,1,5,4)}
+    # Vanilla EnumFaceDirection vertex order; UVs below use BlockFaceUV vertex0..3.
+    faces={'north':(2,1,0,3),'south':(7,4,5,6),'west':(3,0,4,7),'east':(6,5,1,2),'up':(3,7,6,2),'down':(4,0,1,5)}
     for label,path,ox,oy,oz,north in [('rack','module_rack/shell.json',s['rackX'],s['rackY'],s['rackZ'],True),('chip','token_slots/data_chip_slot_north_0.json',s['chipX']-.5,s['chipY']-.5,s['chipZ']-.975,False)]:
         model=json.loads((MODELS/path).read_text())
         for key,texture in model['textures'].items():mat(label+'_'+key,texture)
@@ -86,7 +87,7 @@ def generate(id,s):
                     px,py,pz=p[i]
                     if north:px,pz=1-px,1-pz
                     pts.append((ox+px,oy+py,oz+pz))
-                a,b,c,d=f.get('uv',default[side]);quad('static__'+label+'_'+str(index)+'_'+side,label+'_'+f['texture'][1:],pts,((a/16,1-b/16),(c/16,1-b/16),(c/16,1-d/16),(a/16,1-d/16)))
+                a,b,c,d=f.get('uv',default[side]);quad('static__'+label+'_'+str(index)+'_'+side,label+'_'+f['texture'][1:],pts,((a/16,1-b/16),(a/16,1-d/16),(c/16,1-d/16),(c/16,1-b/16)))
     for name,pts in [('power_in_off',[(w-1,0,depth),(w,0,depth),(w,1,depth),(w-1,1,depth)]),('power_in_off',[(w-1,0,depth-1),(w,0,depth-1),(w,0,depth),(w-1,0,depth)]),('matter_in_off',[(0,0,depth),(1,0,depth),(1,1,depth),(0,1,depth)]),('matter_out_off',[(0,0,depth-1),(1,0,depth-1),(1,0,depth),(0,0,depth)]),('matter_out_off',[(0,0,depth-1),(0,0,depth),(0,1,depth),(0,1,depth-1)])]:
         material=mat('port_'+name,'vandorlabs:blocks/resource_ports/'+name);quad('static__port_'+name,material,pts)
     target=MODELS/'universal_constructor'/id

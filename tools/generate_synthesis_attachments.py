@@ -107,7 +107,8 @@ def main():
         ('left',[(1,top,2.125),(1,top,1.125),(1,base,1.125),(1,base,2.125)]),
         ('right',[(2,top,1.125),(2,top,2.125),(2,base,2.125),(2,base,1.125)])):
         quad('synth_tray_support_'+name,'synth_interior',points,((0,top-base),(1,top-base),(1,0),(0,0)))
-    faces={'north':(3,2,1,0),'south':(6,7,4,5),'west':(7,3,0,4),'east':(2,6,5,1),'up':(7,6,2,3),'down':(0,1,5,4)}
+    # Vanilla EnumFaceDirection vertex order; UVs below use BlockFaceUV vertex0..3.
+    faces={'north':(2,1,0,3),'south':(7,4,5,6),'west':(3,0,4,7),'east':(6,5,1,2),'up':(3,7,6,2),'down':(4,0,1,5)}
     for name,path,ox,oy,oz,north in [('rack','module_rack/shell.json',rx,ry,rz,True),('chip','token_slots/data_chip_slot_north_0.json',value('CHIP_X')-.5,value('CHIP_Y')-.5,value('CHIP_Z')-.975,False)]:
         model=json.loads((ASSETS/'models/block'/path).read_text())
         for key,texture in model['textures'].items():material('synth_'+name+'_'+key,texture)
@@ -126,7 +127,7 @@ def main():
                     'south':[x*16,16-Y*16,X*16,16-y*16],
                     'west':[z*16,16-Y*16,Z*16,16-y*16],
                     'east':[16-Z*16,16-Y*16,16-z*16,16-y*16]}
-                a,b,c,d=face.get('uv',default_uv[side]);quad('synth_'+name+'_'+str(index)+'_'+side,'synth_'+name+'_'+face['texture'][1:],p,((a/16,1-b/16),(c/16,1-b/16),(c/16,1-d/16),(a/16,1-d/16)))
+                a,b,c,d=face.get('uv',default_uv[side]);quad('synth_'+name+'_'+str(index)+'_'+side,'synth_'+name+'_'+face['texture'][1:],p,((a/16,1-b/16),(a/16,1-d/16),(c/16,1-d/16),(c/16,1-b/16)))
     ports=[('power_in_off',[(2,0,3),(3,0,3),(3,1,3),(2,1,3)]),('power_in_off',[(2,0,2),(3,0,2),(3,0,3),(2,0,3)]),('matter_in_off',[(0,0,3),(1,0,3),(1,1,3),(0,1,3)]),('matter_out_off',[(0,0,2),(1,0,2),(1,0,3),(0,0,3)]),('matter_out_off',[(0,0,2),(0,0,3),(0,1,3),(0,1,2)])]
     for texture in sorted({name for name,points in ports}):material('synth_port_'+texture,'vandorlabs:blocks/resource_ports/'+texture)
     for index,(texture,points) in enumerate(ports):quad('synth_port_'+str(index),'synth_port_'+texture,points)
