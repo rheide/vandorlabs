@@ -20,9 +20,11 @@ moves between native entity chunks require a separate ownership protocol and
 remain refused.
 
 Returning actors have a durable original-space intent before physical alignment.
-The journal remains until both native terrain and actor records have completed
+The current generated-side actor records are checkpointed under the same fence
+before the return intent becomes durable. The journal remains until both native
+terrain and actor records have completed
 their checkpoints. Interrupted return recovery runs before ordinary gameplay.
-The conservative cold repair admits one operation, at most 128 actors, one
+The conservative cold repair admits one operation, at most 128 actors (including at most eight players), one
 native actor chunk and empty neighbouring actor chunks. Unknown records,
 external ownership envelopes, passengers, changed dimensions and unavailable
 factories remain retained for recovery instead of being guessed or discarded.
