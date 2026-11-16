@@ -50,6 +50,25 @@ def validate_battery_render(output,labels):
     world=next(v for v in config['worlds'] if v['name']=='world')
     mapping=next(v for v in world['maps'] if v['name']=='battery_fixture')
     matrix=mapping['worldtomap'];prefix=mapping['prefix'];tiles={};samples=[]
+    jars=list((output/'mods').glob('vandorlabs-*.jar'))
+    if len(jars)!=1:raise AssertionError('Battery analysis requires exactly one candidate JAR')
+    with ZipFile(jars[0]) as archive:
+        def model(path):
+            data=json.loads(archive.read('assets/vandorlabs/models/'+path+'.json'))
+            return data if 'elements' in data else model(data['parent'].replace('vandorlabs:',''))
+        bars=[part for part in model('block/module_rack/slot_seated_battery_0_4')['elements'] if part.get('name','').startswith('charge_')]
+    if len(bars)!=4:raise AssertionError('Candidate lacks four Battery charge quads')
+    def project(point,fixture):
+        a,b,c=(v/16 for v in point)
+        if fixture['facing']=='east':a,c=c,1-a
+        elif fixture['facing']=='up':b,c=c,1-b
+        a+=fixture['x'];b+=fixture['y'];c+=fixture['z']
+        return matrix[0]*a+matrix[1]*b+matrix[2]*c,matrix[3]*a+matrix[4]*b+matrix[5]*c
+    def inside(point,polygon):
+        crosses=[(b[0]-a[0])*(point[1]-a[1])-(b[1]-a[1])*(point[0]-a[0]) for a,b in zip(polygon,polygon[1:]+polygon[:1])]
+        return all(v>=-1e-7 for v in crosses) or all(v<=1e-7 for v in crosses)
+    def green_pixel(color):
+        r,g,b=color;return g>=45 and g>r*1.6 and g>b*1.2
     def pixel(u,v):
         tx,ty=u//128,v//128;key=tx,ty
         if key not in tiles:
@@ -69,13 +88,25 @@ def validate_battery_render(output,labels):
                 r,g,b=pixel(u,v)
                 green+=g>=45 and g>r*1.6 and g>b*1.2
                 red+=r>=45 and r>g*2 and r>b*1.6
-        samples.append(dict(label=fixture['label'],facing=fixture['facing'],energy=fixture['energy'],red_pixels=red,green_pixels=green))
+        segments=[]
+        for bar in bars:
+            lo,hi=bar['from'],bar['to'];polygon=[project(point,fixture) for point in ((lo[0],hi[1],hi[2]),(lo[0],lo[1],hi[2]),(hi[0],lo[1],hi[2]),(hi[0],hi[1],hi[2]))]
+            colored=sampled=0
+            for u in range(math.floor(min(p[0] for p in polygon)),math.ceil(max(p[0] for p in polygon))+1):
+                for v in range(math.floor(min(p[1] for p in polygon)),math.ceil(max(p[1] for p in polygon))+1):
+                    if inside((u+.5,v+.5),polygon):sampled+=1;colored+=green_pixel(pixel(u,v))
+            segments.append(dict(samples=sampled,green_pixels=colored))
+        samples.append(dict(label=fixture['label'],facing=fixture['facing'],energy=fixture['energy'],red_pixels=red,green_pixels=green,segments=segments))
     (output/'battery-render-analysis.json').write_text(json.dumps(samples,indent=2)+'\n')
     for facing in ('south','east','up'):
         group=sorted((v for v in samples if v['facing']==facing),key=lambda v:v['energy'])
         assert len(group)==5,'Missing projected battery front '+facing
         greens=[v['green_pixels'] for v in group]
-        assert greens[0]==0 and greens[-1]>0 and all(a<=b for a,b in zip(greens,greens[1:])),f'Battery green charge progression {facing}: {greens}'
+        assert greens[0]==0 and greens[-1]>0,f'Battery empty/full green contrast {facing}: {greens}'
+        for fixture in group:
+            expected=fixture['energy']//2500
+            for index,segment in enumerate(fixture['segments']):
+                assert segment['samples']>0 and (segment['green_pixels']>0)==(index<expected),f'Battery projected segment {fixture["label"]}/{index}: {segment}, expected lit={index<expected}'
         assert sum(v['red_pixels'] for v in group)>0,'Missing red battery lightning '+facing
 
 
@@ -243,13 +274,13 @@ def place_module_racks(command, labels):
     for row, facing in enumerate(('north', 'east', 'south', 'west', 'up', 'down')):
         for mask in range(16):
             x, y, z = -8 + 3 * mask, 12, 4 + 3 * row
-            items = ','.join('{Slot:%db,id:"vandorlabs:blank_module",Count:1b,tag:{RackMapSlot:%d}}' % (slot, slot)
+            items = ','.join('{Slot:%db,id:"vandorlabs:blank_module",Count:1b,Damage:0s,tag:{RackMapSlot:%d}}' % (slot, slot)
                              for slot in range(4) if mask & (1 << slot))
             command(f'setblock {x} {y} {z} vandorlabs:module_rack facing={facing} replace {{Items:[{items}]}}')
             labels.append(dict(x=x, y=y, z=z, block='module_rack', facing=facing, mask=mask, module='blank', label=f'blank-{facing}-{mask}'))
         for level,energy in enumerate((0,2500,5000,7500,10000)):
             x,y,z=-8+3*level,12,28+3*row
-            item='{Slot:0b,id:"vandorlabs:battery_module",Count:1b,tag:{BatteryEnergy:%d}}'%energy
+            item='{Slot:0b,id:"vandorlabs:battery_module",Count:1b,Damage:0s,tag:{BatteryEnergy:%d}}'%energy
             command(f'setblock {x} {y} {z} vandorlabs:module_rack facing={facing} replace {{Items:[{item}]}}')
             labels.append(dict(x=x,y=y,z=z,block='module_rack',facing=facing,mask=1,module='battery',energy=energy,expected_green_segments=level,expected_red_faces=4,label=f'battery-{facing}-{energy}'))
 
@@ -329,7 +360,7 @@ def run_fixture(args,root,output,artifact):
         image-format: png
 ''')
     if args.focus=='module-rack':
-        (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: rack_charge_closeup\n    azimuth: 135\n    inclination: 30\n    scale: 64\n')
+        (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: rack_charge_closeup\n    azimuth: 135\n    inclination: 30\n    scale: 64\n    minimumheight: 10\n    maximumheight: 16\n')
         with (output/'dynmap/worlds.txt').open('a') as extra:
             extra.write('      - class: org.dynmap.hdmap.HDMap\n        name: battery_fixture\n        title: Battery Charge Fixture\n        prefix: battery_fixture\n        perspective: rack_charge_closeup\n        shader: stdtexture\n        lighting: default\n        image-format: png\n')
     for phase in ('prepare','render'):
@@ -379,7 +410,7 @@ def run_fixture(args,root,output,artifact):
                         place_segmented_supplied(command,labels,args.jar)
                     validate_fixture_matrix(labels)
                     command('save-all flush');command('say VANDOR_DYNMAP_FIXTURE_SAVED');wait('VANDOR_DYNMAP_FIXTURE_SAVED')
-                    content=logpath.read_text(errors='replace')[start:]
+                    content=logpath.read_text(errors='replace')
                     if any(error in content for error in ('Cannot place block','Invalid block state','Invalid block property','is not a valid state','Data tag parsing failed')):raise RuntimeError('Fixture placement failed: '+str(logpath))
                     import json
                     (output/'fixtures.json').write_text(json.dumps(labels,indent=2)+'\n')
