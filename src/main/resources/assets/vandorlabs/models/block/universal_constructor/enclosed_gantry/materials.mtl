@@ -1,8 +1,132 @@
-# White material modulation; transparency is binary alpha in the PNG.
+newmtl builder_casing
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/universal_constructor/synthesis_casing
+
+newmtl builder_interior
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/frames/frames-door-window/door_interior_dark_rail
+
 newmtl atlas
-Ka 1.0 1.0 1.0
-Kd 1.0 1.0 1.0
-Ks 0.0 0.0 0.0
-d 1.0
+Ka 1 1 1
+Kd 1 1 1
+d 1
 illum 1
 map_Kd vandorlabs:blocks/universal_constructor/enclosed_gantry
+
+newmtl builder_bezel
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/port_hull
+
+newmtl builder_screen
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_black
+
+newmtl builder_keys
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/universal_constructor/synthesis_keyboard
+
+newmtl rack_housing
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/housing
+
+newmtl rack_module
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/module
+
+newmtl rack_trim
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/trim
+
+newmtl rack_dark
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/dark
+
+newmtl rack_indicators
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/indicators
+
+newmtl rack_contacts
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/contacts
+
+newmtl rack_particle
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/module_rack/housing
+
+newmtl chip_particle
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/programmable_glass/door_side
+
+newmtl chip_metal
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/programmable_glass/door_side
+
+newmtl chip_dark
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd minecraft:blocks/concrete_black
+
+newmtl port_power_in_off
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/power_in_off
+
+newmtl port_matter_in_off
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/matter_in_off
+
+newmtl port_matter_out_off
+Ka 1 1 1
+Kd 1 1 1
+d 1
+illum 1
+map_Kd vandorlabs:blocks/resource_ports/matter_out_off

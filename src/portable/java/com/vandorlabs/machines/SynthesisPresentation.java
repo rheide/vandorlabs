@@ -28,5 +28,16 @@ public final class SynthesisPresentation {
     public static double rackFront(){return RACK_Z+1-ModuleRackGeometry.FASCIA_DEPTH/16;}
     /** Same four slot/button regions as a placed NORTH-facing Module Rack. */
     public static int bayAt(double x,double y){return ModuleRackGeometry.hitSlot(2,2,x-RACK_X,y-RACK_Y,0);}
+    /** Machine-local mounts share the same rack geometry and corner port convention. */
+    public static final class Spec {
+        public final int width,depth;
+        public final double rackX,rackY,rackZ,chipX,chipY,chipZ,screenX,screenY,screenZ,screenSize,screenFrame,keyboardX,keyboardY,keyboardZ,keyboardWidth,keyboardDepth;
+        private Spec(int width,boolean tower){this.width=width;depth=3;rackX=0;rackY=0;rackZ=tower?RACK_Z:0;chipX=tower?CHIP_X:.5;chipY=1.5;chipZ=tower?CHIP_Z:.35;screenX=tower?SCREEN_X:width-.375;screenY=1.5;screenZ=tower?SCREEN_Z:-.025;screenSize=tower?SCREEN_SIZE:.5;screenFrame=tower?SCREEN_FRAME:.625;keyboardWidth=tower?KEYBOARD_WIDTH:.75;keyboardDepth=tower?.5:.375;keyboardX=tower?KEYBOARD_X:width-.75;keyboardY=KEYBOARD_Y;keyboardZ=tower?KEYBOARD_Z:-.25;}
+        public int bayAt(double x,double y){return ModuleRackGeometry.hitSlot(2,2,x-rackX,y-rackY,0);}
+        public double rackFront(){return rackZ+1-ModuleRackGeometry.FASCIA_DEPTH/16;}
+        public double previewScale(double width,double height,double depth){return screenSize*.875/Math.sqrt(width*width+height*height+depth*depth);}
+    }
+    private static final Spec TOWER=new Spec(3,true),PRESS=new Spec(4,false),GANTRY=new Spec(5,false);
+    public static Spec forMachine(String machine){if("synthesis_tower".equals(machine))return TOWER;if("assembly_press".equals(machine))return PRESS;if("enclosed_gantry".equals(machine))return GANTRY;throw new IllegalArgumentException("Not a builder: "+machine);}
     private SynthesisPresentation(){}
 }

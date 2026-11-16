@@ -495,6 +495,9 @@ tasks.register('generateBuilderResources', Exec) {
     commandLine pythonExecutable, 'generate_builder_resources.py'
     inputs.file('generate_builder_resources.py')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/core_flat.png')
+    inputs.files('../../src/portable/java/com/vandorlabs/geometry/CoreMesh.java',
+                 '../../src/portable/java/com/vandorlabs/geometry/ImportedCoreMesh.java',
+                 '../../src/portable/java/com/vandorlabs/geometry/ImportedCoreData.java')
     inputs.files(fileTree('build/generated/cube-resources/assets/vandorlabs/textures/blocks/resource_ports'),
                  fileTree('build/generated/cube-resources/assets/vandorlabs/textures/blocks/module_rack'))
     for (design in ['assembly_press', 'synthesis_tower', 'enclosed_gantry']) {

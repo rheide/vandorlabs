@@ -52,7 +52,7 @@ public final class NativeSynthesisEffects {
         String id=NativeBuilderModelCache.IDS.get(Math.clamp(visual.building(),0,2));float progress=visual.processing()?visual.progress():1;
         poses.pushPose();try{poses.translate(1,SynthesisPresentation.CORE_Y,1.125);NativeCoreModel.emit(id,progress,poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),FULLBRIGHT,OverlayTexture.NO_OVERLAY);}finally{poses.popPose();}
         if(!visual.processing())return;
-        var white=sprite("minecraft:block/white_concrete");var out=buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));double surface=SynthesisPresentation.CORE_Y+com.vandorlabs.geometry.CoreMesh.height(progress)+.008;
+        var white=sprite("minecraft:block/white_concrete");var out=buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));double surface=SynthesisPresentation.CORE_Y+com.vandorlabs.geometry.CoreMesh.height(id,progress)+.008;
         if(visual.working())for(int i=0;i<4;i++){
             int color=com.vandorlabs.machines.SynthesisLaserStyle.color(i,now);
             double ex=1.5+.46*Math.sin(now*.12+i*Math.PI/2),ez=1.625+.46*Math.sin(now*.075+i*Math.PI),sx=i%2==0?.70:2.30,sz=i<2?.95:2.30,r=.014;

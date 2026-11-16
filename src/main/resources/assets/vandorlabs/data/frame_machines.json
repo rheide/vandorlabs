@@ -5,7 +5,21 @@
     "width": 4,
     "height": 3,
     "depth": 3,
-    "model": "universal_constructor/assembly_press"
+    "model": "universal_constructor/assembly_press",
+    "chip_anchor": [
+      0.5,
+      1.5,
+      0.35
+    ],
+    "chip_size": [
+      6,
+      6
+    ],
+    "state_models": [
+      "complete.obj",
+      "complete.obj",
+      "complete.obj"
+    ]
   },
   {
     "design": "synthesis_tower",
@@ -35,7 +49,21 @@
     "width": 5,
     "height": 3,
     "depth": 3,
-    "model": "universal_constructor/enclosed_gantry"
+    "model": "universal_constructor/enclosed_gantry",
+    "chip_anchor": [
+      0.5,
+      1.5,
+      0.35
+    ],
+    "chip_size": [
+      6,
+      6
+    ],
+    "state_models": [
+      "complete.obj",
+      "complete.obj",
+      "complete.obj"
+    ]
   },
   {
     "design": "longburn_drive",

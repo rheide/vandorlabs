@@ -1,0 +1,5 @@
+import com.vandorlabs.machines.SynthesisPresentation;
+/** Build-time export of the same mount coordinates used for rendering and hit detection. */
+public final class BuilderPresentationExport {
+ public static void main(String[] args){System.out.print("{");boolean first=true;for(String id:new String[]{"assembly_press","enclosed_gantry"}){if(!first)System.out.print(",");first=false;SynthesisPresentation.Spec s=SynthesisPresentation.forMachine(id);System.out.print("\""+id+"\":{");String[] keys={"width","depth","rackX","rackY","rackZ","chipX","chipY","chipZ","screenX","screenY","screenZ","screenSize","screenFrame","keyboardX","keyboardY","keyboardZ","keyboardWidth","keyboardDepth"};double[] values={s.width,s.depth,s.rackX,s.rackY,s.rackZ,s.chipX,s.chipY,s.chipZ,s.screenX,s.screenY,s.screenZ,s.screenSize,s.screenFrame,s.keyboardX,s.keyboardY,s.keyboardZ,s.keyboardWidth,s.keyboardDepth};for(int i=0;i<keys.length;i++){if(i>0)System.out.print(",");System.out.print("\""+keys[i]+"\":"+values[i]);}System.out.print("}");}System.out.print("}");}
+}
