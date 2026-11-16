@@ -33,7 +33,7 @@ public final class MachineJeiPlugin implements IModPlugin {
         ItemStack charged=new ItemStack(ModItems.BATTERY_MODULE);ModuleBatteryData.receive(charged,ModuleBatteryData.CAPACITY,false);
         registry.addRecipes(Arrays.asList(new Recipe(MachineRecipeDisplay.Kind.INFUSING,new ItemStack(Items.IRON_INGOT),new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT)),new Recipe(MachineRecipeDisplay.Kind.CHARGING,new ItemStack(ModItems.BATTERY_MODULE),charged)),MachineRecipeDisplay.INFUSER);
         for(String machine:Arrays.asList("synthesis_tower","assembly_press","enclosed_gantry")){
-            List<Recipe> recipes=new ArrayList<>();for(String blueprint:BuilderRecipeCatalog.known(machine))recipes.add(new Recipe(MachineRecipeDisplay.Kind.SYNTHESIS,item(BuilderRecipeCatalog.input(machine)),item(blueprint),!BuilderRecipeCatalog.defaults(machine).contains(blueprint)));
+            List<Recipe> recipes=new ArrayList<>();for(String blueprint:BuilderRecipeCatalog.known(machine))recipes.add(new Recipe(MachineRecipeDisplay.Kind.SYNTHESIS,item(BuilderRecipeCatalog.input(machine)),item(blueprint),!BuilderRecipeCatalog.defaults(machine).contains(blueprint),machine));
             registry.addRecipes(recipes,uid(machine));registry.addRecipeCatalyst(block(machine+"_core"),uid(machine));
         }
         registry.addRecipeCatalyst(block("programmable_matter_infuser"),MachineRecipeDisplay.INFUSER);
@@ -45,11 +45,11 @@ public final class MachineJeiPlugin implements IModPlugin {
     }
     @SideOnly(Side.CLIENT)
     public static final class Recipe implements IRecipeWrapper {
-        public final MachineRecipeDisplay.Kind kind;public final ItemStack input,output;private final boolean catalog;
-        Recipe(MachineRecipeDisplay.Kind kind,ItemStack input,ItemStack output){this(kind,input,output,false);}
-        Recipe(MachineRecipeDisplay.Kind kind,ItemStack input,ItemStack output,boolean catalog){this.kind=kind;this.input=input.copy();this.output=output.copy();this.catalog=catalog;}
+        public final MachineRecipeDisplay.Kind kind;public final ItemStack input,output;private final boolean catalog;private final String machine;
+        Recipe(MachineRecipeDisplay.Kind kind,ItemStack input,ItemStack output){this(kind,input,output,false,"synthesis_tower");}
+        Recipe(MachineRecipeDisplay.Kind kind,ItemStack input,ItemStack output,boolean catalog,String machine){this.kind=kind;this.input=input.copy();this.output=output.copy();this.catalog=catalog;this.machine=machine;}
         @Override public void getIngredients(IIngredients ingredients){List<List<ItemStack>> inputs=new ArrayList<>();inputs.add(Collections.singletonList(input.copy()));if(kind!=MachineRecipeDisplay.Kind.SYNTHESIS)inputs.add(Arrays.asList(new ItemStack(Items.REDSTONE,7),new ItemStack(Blocks.REDSTONE_BLOCK)));ingredients.setInputLists(VanillaTypes.ITEM,inputs);ingredients.setOutput(VanillaTypes.ITEM,output.copy());}
-        @Override public void drawInfo(Minecraft mc,int width,int height,int mouseX,int mouseY){String[] lines=kind==MachineRecipeDisplay.Kind.SYNTHESIS?new String[]{com.vandorlabs.machines.SynthesisRecipePolicy.REQUIRED_RF+" RF / item",(com.vandorlabs.machines.SynthesisRecipePolicy.MINIMUM_TICKS/20)+" seconds minimum",catalog?"Catalog Chip design required.":"Default machine blueprint.","Select in Production; supply RF."}:MachineRecipeDisplay.lines(kind);for(int i=0;i<lines.length;i++)mc.fontRenderer.drawString(lines[i],4,46+i*13,0x404040);}
+        @Override public void drawInfo(Minecraft mc,int width,int height,int mouseX,int mouseY){String[] lines=kind==MachineRecipeDisplay.Kind.SYNTHESIS?new String[]{com.vandorlabs.machines.SynthesisRecipePolicy.REQUIRED_RF+" RF / item",(com.vandorlabs.machines.SynthesisRecipePolicy.minimumTicks(machine)/20)+" seconds minimum",catalog?"Catalog Chip design required.":"Default machine blueprint.","Select in Production; supply RF."}:MachineRecipeDisplay.lines(kind);for(int i=0;i<lines.length;i++)mc.fontRenderer.drawString(lines[i],4,46+i*13,0x404040);}
     }
     @SideOnly(Side.CLIENT)
     private static final class Category implements IRecipeCategory<Recipe> {

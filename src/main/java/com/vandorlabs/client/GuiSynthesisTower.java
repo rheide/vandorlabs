@@ -61,7 +61,8 @@ public final class GuiSynthesisTower extends GuiContainer {
     @Override public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();super.drawScreen(x,y,partial);
         if(page==1){GlStateManager.disableLighting();GlStateManager.disableDepth();receiver.draw();GlStateManager.enableDepth();}
-        if(isPointInRegion(layout.machineX(3),layout.slotY(3),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.CATALOG_CHIP_TOOLTIP,x,y);
+        if(isPointInRegion(layout.machineX(0),layout.slotY(0),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.inputTooltip(container.tile.builderMachine()),x,y);
+        else if(isPointInRegion(layout.machineX(3),layout.slotY(3),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.CATALOG_CHIP_TOOLTIP,x,y);
         else if(isPointInRegion(layout.rfX,layout.rfY,layout.rfWidth,layout.rfHeight,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.rfTooltip(container.values[2],container.values[3]),x,y);
         else if(page==0&&isPointInRegion(layout.previewLeft,layout.previewTop-12,layout.previewRight-layout.previewLeft,10,x,y)&&fontRenderer.getStringWidth(selectedLabel())>layout.previewRight-layout.previewLeft)drawHoveringText(selectedLabel(),x,y);
         else renderHoveredToolTip(x,y);
@@ -106,7 +107,7 @@ public final class GuiSynthesisTower extends GuiContainer {
         fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Assembly Press":container.tile.builderMachine().equals("enclosed_gantry")?"Enclosed Gantry":"Synthesis Tower",12,10,0xFFFFFF);
         if(page==0){fontRenderer.drawString("Designs",layout.listLeft,layout.listHeadingY(),0xD4DFE9);fontRenderer.drawString(fontRenderer.trimStringToWidth(selectedLabel(),layout.previewRight-layout.previewLeft),layout.previewLeft,layout.previewTop-12,0xD4DFE9);}
         if(page==1&&!compact){fontRenderer.drawString("Physical Redstone or any receiving channel.",12,180,0xA7B3C0);fontRenderer.drawString("A disabled machine keeps its current build.",12,193,0xA7B3C0);}
-        fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Ingots":"Matter",layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Output",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
+        fontRenderer.drawString(com.vandorlabs.ui.SynthesisDialog.inputLabel(container.tile.builderMachine()),layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Output",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString("Chip",layout.machineX(3)-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString("RF",layout.rfX+4,layout.rfY+4,0xE4EDF4);
         fontRenderer.drawString(">",layout.progressX()+layout.progressWidth()/2-2,machineY()+4,0xD4DFE9);

@@ -2,6 +2,8 @@ package com.vandorlabs.ui;
 /** Authoritative Source layout, with a compact form for minimum GUI sizes. */
 public final class SynthesisDialog {
  public static final String CATALOG_CHIP_TOOLTIP="Insert Catalog Chip to load designs";
+ public static String inputLabel(String machine){return "assembly_press".equals(machine)?"Ingot":"Block";}
+ public static String inputTooltip(String machine){return "assembly_press".equals(machine)?"Programmable Matter Ingots":"Programmable Matter Blocks";}
  public static final String[] DESIGNS={"synthesis_tower","assembly_press","enclosed_gantry"};
  public static final String[] NAMES={"Synthesis Tower","Assembly Press","Enclosed Gantry"};
  public static final DialogStyle.Shell STYLE=DialogStyle.SYNTHESIS;

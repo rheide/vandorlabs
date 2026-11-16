@@ -69,16 +69,17 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
 
     public boolean completedCoreHit(net.minecraft.entity.player.EntityPlayer player){
-        if(!synthesis()||synthesisInventory().getStackInSlot(1).isEmpty())return false;
+        if(!builder()||synthesisInventory().getStackInSlot(1).isEmpty())return false;
+        com.vandorlabs.machines.BuilderOutputBounds box=com.vandorlabs.machines.BuilderOutputBounds.forMachine(builderMachine());
         Vec3d origin=new Vec3d(pos.subtract(pivot()));
-        Vec3d a=MachineMountSurface.rotate(new Vec3d(1,com.vandorlabs.machines.SynthesisPresentation.CORE_Y,1.125),facing(),core().width,core().depth).add(origin);
-        Vec3d b=MachineMountSurface.rotate(new Vec3d(2,com.vandorlabs.machines.SynthesisPresentation.CORE_Y+1,2.125),facing(),core().width,core().depth).add(origin);
+        Vec3d a=MachineMountSurface.rotate(new Vec3d(box.minX,box.minY,box.minZ),facing(),core().width,core().depth).add(origin);
+        Vec3d b=MachineMountSurface.rotate(new Vec3d(box.maxX,box.maxY,box.maxZ),facing(),core().width,core().depth).add(origin);
         AxisAlignedBB bounds=new AxisAlignedBB(Math.min(a.x,b.x),a.y,Math.min(a.z,b.z),Math.max(a.x,b.x),b.y,Math.max(a.z,b.z));
         Vec3d eye=player.getPositionEyes(1);double reach=player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue();RayTraceResult hit=bounds.calculateIntercept(eye,eye.add(player.getLook(1).scale(reach)));return hit!=null&&eye.squareDistanceTo(hit.hitVec)<=reach*reach;
     }
     public boolean takeCompletedCore(net.minecraft.entity.player.EntityPlayer player,EnumHand hand){
-        if(!authoritative()||!isUsableByPlayer(player)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)||!completedCoreHit(player))return false;
-        net.minecraft.item.ItemStack stack=synthesisInventory().extractItem(1,1,false);
+        if(!authoritative()||!isUsableByPlayer(player)||com.vandorlabs.gear.ArmTransactions.locked(world,pos)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)||!completedCoreHit(player))return false;
+        net.minecraft.item.ItemStack stack=synthesisInventory().extractItem(1,1,false);if(stack.isEmpty())return false;
         if(!player.inventory.addItemStackToInventory(stack))player.dropItem(stack,false);publish();return true;
     }
     public <T>T synthesisCapability(net.minecraftforge.common.capabilities.Capability<T> capability,BlockPos at,EnumFacing side){
