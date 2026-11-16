@@ -26,3 +26,11 @@ The Master Catalog contains these lists:
 The three builder Cores are available in the Synthesis Tower without a catalog. The Assembly Press always offers Data Chips and Access Cards. The Enclosed Gantry's ordinary arm and landing recipes remain available without a catalog. Extra blueprints come from the lists stored on the inserted chip.
 
 The expanded builder recipes and catalog model browsing are currently for Minecraft 1.12.2. Minecraft 1.21.1 includes the four chip appearances and creative variants, and Journal programming selects the Journal appearance; its existing native programming restrictions still apply.
+
+## Vehicle previews
+
+On Forge 1.12.2, chips containing a complete vehicle design show a material-colored
+15×15×15 voxel preview, almost twice the previous 12×12×12 voxel budget. Colors
+are sampled from each represented block’s model textures and tint, with a map-color
+fallback. Old chips containing only their saved occupancy thumbnail retain that
+preview. Display changes do not rewrite the chip or its vehicle design.
