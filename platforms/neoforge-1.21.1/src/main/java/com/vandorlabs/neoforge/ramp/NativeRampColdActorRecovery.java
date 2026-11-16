@@ -21,7 +21,7 @@ final class NativeRampColdActorRecovery implements AutoCloseable {
   this.level=level;if(operations.size()!=1)throw new IllegalStateException("Cold actor repair supports one operation at a time");operation=operations.getFirst();intent=NativeRampJournal.startupActorIntent(operation);
   if(!NativeRampJournal.knownActorRecoveryHeader(operation)||intent==null||intent.participants().size()>128)throw new IllegalStateException("Unproven actor recovery header/count retained");
   players=NativeRampJournal.startupPlayerReceipts(operation);
-  if(NativeRampJournal.startupActiveReceipt(operation))throw new IllegalStateException("Healthy ACTIVE Ramp actors need authenticated support adoption; initial intent cannot rewind them");
+  if(NativeRampJournal.startupActiveReceipt(operation)&&!NativeRampJournal.returningActors(operation))throw new IllegalStateException("Healthy ACTIVE Ramp actors need authenticated support adoption; initial intent cannot rewind them");
   if(!players.isEmpty()&&NativeRampJournal.startupPlayerNeedsAdoption(operation))throw new IllegalStateException("Healthy Ramp player ownership needs active adoption; initial intent cannot rewind it");
   var map=new HashMap<UUID,NativeRampActorIntent.Participant>();ChunkPos selected=null;long work=0;
   for(var actor:intent.participants()){

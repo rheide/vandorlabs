@@ -19,7 +19,7 @@ def await_abrupt(pid):
 
 @retain_artifacts
 def main():
-    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--xvfb',action='store_true');parser.add_argument('--case',choices=('healthy','interrupted'),default='healthy');args=parser.parse_args()
+    parser=argparse.ArgumentParser(description=__doc__);parser.add_argument('--xvfb',action='store_true');parser.add_argument('--case',choices=('healthy','healthy-mixed','interrupted'),default='healthy');args=parser.parse_args()
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     out=Path(artifact_directory(prefix='ramp-player-cold-',dir=ROOT/'build/test-artifacts'))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
