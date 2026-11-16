@@ -89,7 +89,7 @@ public final class NativeMaterialPicker {
     private int thumbHeight(){return DialogInput.thumbHeight(height(),visible(),rows.size());}
     private int thumbTop(){return DialogInput.thumbY(top(),height(),thumbHeight(),scroll,maximum());}
     private int row(int row){int id=rows.get(scroll+row);if(TextureListLayout.pinCategory(row,visible(),search.getValue().trim().isEmpty())&&option(id))return TextureListLayout.categoryRow(categories.indexOf(category(id)));return id;}
-    private void customInventory(){inventoryPicker=new NativeInventorySamplePicker(x,y,width+7,height()+22,stack->{int value=NativeBlockMaterials.sample(stack);selected=value;closeInventory();inventoryChosen.accept(value);},()->{inventoryPicker=null;search.visible=true;search.active=true;});search.visible=false;search.active=false;}
+    public void customInventory(){inventoryPicker=new NativeInventorySamplePicker(x,y,width+7,height()+22,stack->{int value=NativeBlockMaterials.sample(stack);selected=value;closeInventory();inventoryChosen.accept(value);},()->{inventoryPicker=null;search.visible=true;search.active=true;});search.visible=false;search.active=false;}
     public boolean click(double x,double y,int button){
         if(inventoryPicker!=null)return inventoryPicker.click((int)x,(int)y,button);
         if(button==0&&y>=top()&&y<top()+height()){

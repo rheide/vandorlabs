@@ -25,6 +25,10 @@ final class SurfaceClientChecks {
             require(count>40000,"actual multi-cell selected artwork visibly fills pad "+TurntableTextures.IDS[i]+" pixels="+count);signatures.add(hash);
         }
         require(signatures.size()>=12,"native selected artwork and Tile/Fit produce distinct actual frames");
+        dialogs(mc,output);
+        System.out.println("[vandorlabs][reprolab] surface-client PASS 16 actual native-artwork multi-cell Tile/Fit FBO frames compact GUI320/460 wheel/drag previous/next independent state selection");
+    }
+    static void dialogs(Minecraft mc,File output)throws Exception{
         TileEntityTurntableSurface tile=new TileEntityTurntableSurface();Field picker=GuiProgrammableSurface.class.getDeclaredField("textures"),layout=GuiProgrammableSurface.class.getDeclaredField("layout"),on=GuiProgrammableSurface.class.getDeclaredField("on"),off=GuiProgrammableSurface.class.getDeclaredField("off"),active=GuiProgrammableSurface.class.getDeclaredField("active");for(Field field:new Field[]{picker,layout,on,off,active})field.setAccessible(true);
         net.minecraft.inventory.Container previous=mc.player.openContainer;
         try{for(int[] size:new int[][]{{320,240},{460,340}}){GuiProgrammableSurface gui=new GuiProgrammableSurface(new ContainerSurface(tile));gui.inventorySlots.windowId=-91;gui.setWorldAndResolution(mc,size[0],size[1]);ProgrammableDialogLayout positions=new ProgrammableDialogLayout(size[0],size[1]);require(gui.getGuiTop()>=0&&gui.getGuiLeft()>=0&&gui.getGuiTop()+gui.getYSize()<=size[1],"dialog fits compact viewport");
@@ -33,7 +37,7 @@ final class SurfaceClientChecks {
             list.setSelected(ScreenHousingTextures.DEFAULT_TRAPDOOR);require(list.selected()==ScreenHousingTextures.DEFAULT_TRAPDOOR,"main trapdoor artwork selectable on surface");net.minecraft.client.gui.GuiButton inactive=positions.tab(91,0,2,"Inactive");gui.mouseClicked(inactive.x+3,inactive.y+3,0);require(!(Boolean)active.get(gui),"Inactive tab selects inactive artwork");String oldOn=(String)on.get(gui);gui.choose(TurntableTextures.materialChoice("landing"));require(off.get(gui).equals(TurntableTextures.fromMaterialChoice(TurntableTextures.materialChoice("landing")))&&on.get(gui).equals(oldOn),"inactive selection preserves active artwork");String oldOff=(String)off.get(gui);net.minecraft.client.gui.GuiButton activeTab=positions.tab(90,1,2,"Active");gui.mouseClicked(activeTab.x+3,activeTab.y+3,0);require((Boolean)active.get(gui),"Active artwork tab above picker selects active state");gui.choose(TurntableTextures.materialChoice("copier-output"));require(off.get(gui).equals(oldOff)&&on.get(gui).equals(TurntableTextures.fromMaterialChoice(TurntableTextures.materialChoice("copier-output"))),"active selection preserves inactive artwork");
             javax.imageio.ImageIO.write(DialogRenderCapture.image(mc,gui,size[0],size[1]),"png",new File(output,"shot_surface_dialog_"+size[0]+".png"));
         }}finally{mc.player.openContainer=previous;org.lwjgl.input.Keyboard.enableRepeatEvents(false);}
-        System.out.println("[vandorlabs][reprolab] surface-client PASS 16 actual native-artwork multi-cell Tile/Fit FBO frames compact GUI320/460 wheel/drag previous/next independent state selection");
+        System.out.println("[vandorlabs][reprolab] surface-dialog PASS actual320/460 compact/normal scroll/drag/previous/next independent Active/Inactive");
     }
     private static void heldItem(Minecraft mc,File output)throws Exception{
         net.minecraft.item.ItemStack surface=new net.minecraft.item.ItemStack(net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface")),stone=new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.STONE);net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(surface,mc.world,mc.player),reference=mc.getRenderItem().getItemModelWithOverrides(stone,mc.world,mc.player);int checked=0;

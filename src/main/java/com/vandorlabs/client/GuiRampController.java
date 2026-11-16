@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.container.ContainerRampController;
 import com.vandorlabs.ramp.ControllerPlatform;
+import com.vandorlabs.ui.RampDialog;
 import com.vandorlabs.network.MessageRampController;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.tiles.TileEntityRampController;
@@ -31,131 +32,59 @@ public class GuiRampController extends GuiContainer {
         lastUpdate=controller.clientUpdates;
         direction=controller.rampDirection();
         lastStartHalf=controller.startHalfSteps(); lastEndHalf=controller.endHalfSteps();
-        xSize=320; ySize=248;
+        xSize=RampDialog.WIDTH; ySize=RampDialog.HEIGHT;
+    }
+    RampDialog.State editingState(){return dialogState();}
+    GuiButton control(int id){for(GuiButton button:buttonList)if(button.id==id)return button;return null;}
+    GuiTextField channelEditor(){return channelField;}
+    int dialogLeft(){return guiLeft;}int dialogTop(){return guiTop;}
+    boolean controlsFit(){if(guiLeft<0||guiTop<0||guiLeft+xSize>width||guiTop+ySize>height)return false;for(GuiButton b:buttonList)if(b.visible&&(b.x<guiLeft||b.y<guiTop||b.x+b.width>guiLeft+xSize||b.y+b.height>guiTop+ySize))return false;return true;}
+    private RampDialog.State dialogState(){
+        RampDialog.State state=new RampDialog.State();state.start=startSlider==null?lastStartHalf:startSlider.getValueInt();state.end=endSlider==null?lastEndHalf:endSlider.getValueInt();
+        state.tread=treadField==null?controller.treadPixels:parseOffset(treadField);if(!ControllerPlatform.validTreadPixels(state.tread))state.tread=controller.treadPixels;
+        state.power=powerOn;state.elevator=elevator;state.extend=extendSegments;state.speed=speed;state.match=matchTextures;state.interpolation=interpolation;state.escalator=escalator;state.moat=moat;state.vertical=verticalLayout;state.travel=travelAxis;state.direction=direction.getIndex();state.analog=analogDeployment;
+        state.scanFacing=com.vandorlabs.blocks.BlockRampController.scanFacing(controller.getWorld().getBlockState(controller.getPos())).getIndex();return state;
     }
     @Override public void initGui() {
-        ySize=Math.min(248,height-8);super.initGui(); buttonList.clear(); Keyboard.enableRepeatEvents(true);
-        startSlider=new GuiSlider(20,guiLeft+14,guiTop+30,292,20,"","",
-                -ControllerPlatform.MAX_OFFSET_HALF_STEPS,ControllerPlatform.MAX_OFFSET_HALF_STEPS,
-                controller.startHalfSteps(),false,true,slider->{
-            int half=slider.getValueInt();slider.setValue(half);
-            slider.displayString=offsetLabel("Start / off",half);
-        });
-        endSlider=new GuiSlider(21,guiLeft+14,guiTop+54,292,20,"","",
-                -ControllerPlatform.MAX_OFFSET_HALF_STEPS,ControllerPlatform.MAX_OFFSET_HALF_STEPS,
-                controller.endHalfSteps(),false,true,slider->{
-            int half=slider.getValueInt();slider.setValue(half);
-            slider.displayString=offsetLabel(escalator==0?"End / on":"Ramp height",half);
-        });
-        startSlider.displayString=offsetLabel("Start / off",controller.startHalfSteps());
-        endSlider.displayString=offsetLabel("End / on",controller.endHalfSteps());
+        RampDialog.Panel panel=new RampDialog.Panel(height);ySize=panel.height;super.initGui();buttonList.clear();Keyboard.enableRepeatEvents(true);
+        RampDialog.State state=dialogState();
+        RampDialog.Control start=RampDialog.control(panel,state,0,20),end=RampDialog.control(panel,state,0,21);
+        startSlider=new GuiSlider(20,guiLeft+start.x,guiTop+start.y,start.width,start.height,"","",start.minimum,start.maximum,state.start,false,true,slider->{int half=slider.getValueInt();slider.setValue(half);slider.displayString=RampDialog.offsetLabel("Start / off",half);});
+        endSlider=new GuiSlider(21,guiLeft+end.x,guiTop+end.y,end.width,end.height,"","",end.minimum,end.maximum,state.end,false,true,slider->{int half=slider.getValueInt();slider.setValue(half);slider.displayString=RampDialog.offsetLabel(escalator==0?"End / on":"Ramp height",half);});
         buttonList.add(startSlider);buttonList.add(endSlider);
-        treadField=new GuiTextField(16,fontRenderer,guiLeft+216,guiTop+127,36,18);
-        treadField.setMaxStringLength(2);
-        treadField.setValidator(text -> text.matches("[0-9]{0,2}"));
-        treadField.setText(Integer.toString(controller.treadPixels));
-        buttonList.add(new GuiButton(14,guiLeft+260,guiTop+126,20,20,"-"));
-        buttonList.add(new GuiButton(15,guiLeft+282,guiTop+126,20,20,"+"));
-        channelField=new GuiTextField(8,fontRenderer,guiLeft+200,guiTop+208,98,18);
-        ChannelFields.configure(channelField);
-        channelField.setText(ChannelFields.text(controller.getRedstoneChannels()));
-
-        buttonList.add(new GuiButton(1,guiLeft+14,guiTop+78,142,20,""));
-        buttonList.add(new RedstoneActivationButton(3,guiLeft+14,guiTop+102,142,powerOn?1:2));
-        buttonList.add(new GuiButton(6,guiLeft+164,guiTop+78,142,20,""));
-        buttonList.add(new GuiButton(4,guiLeft+14,guiTop+126,142,20,""));
-        buttonList.add(new GuiButton(17,guiLeft+164,guiTop+102,142,20,""));
-        buttonList.add(new GuiButton(19,guiLeft+14,guiTop+151,292,20,""));
-        buttonList.add(new GuiButton(22,guiLeft+14,guiTop+176,292,20,""));
-        buttonList.add(new GuiButton(18,guiLeft+14,guiTop+207,122,20,""));
-        buttonList.add(new GuiButton(7,guiLeft+14,guiTop+232,292,20,"Done"));
-        for(GuiButton button:buttonList)button.y+=26;
-        startSlider.y=guiTop+56;endSlider.y=guiTop+80;
-        treadField.y+=26;channelField.x=guiLeft+14;channelField.y=guiTop+68;channelField.width=292;
-
-        buttonList.add(new DialogTabButton(30,guiLeft+14,guiTop+30,140,20,"Ramp"));
-        buttonList.add(new DialogTabButton(31,guiLeft+164,guiTop+30,142,20,"Redstone"));
-        buttonList.add(new GuiButton(24,guiLeft+164,guiTop+104,64,20,""));
+        RampDialog.Control tread=RampDialog.control(panel,state,0,16),channels=RampDialog.control(panel,state,1,8);
+        treadField=new GuiTextField(16,fontRenderer,guiLeft+tread.x,guiTop+tread.y,tread.width,tread.height);treadField.setMaxStringLength(2);treadField.setValidator(text->text.matches("[0-9]{0,2}"));treadField.setText(Integer.toString(controller.treadPixels));
+        channelField=new GuiTextField(8,fontRenderer,guiLeft+channels.x,guiTop+channels.y,channels.width,channels.height);ChannelFields.configure(channelField);channelField.setText(ChannelFields.text(controller.getRedstoneChannels()));
+        java.util.Set<Integer> seen=new java.util.HashSet<>();
+        for(int p=0;p<2;p++)for(RampDialog.Control control:RampDialog.controls(panel,state,p))if(control.kind==RampDialog.Kind.BUTTON&&seen.add(control.id)){
+            GuiButton button=control.tab?new DialogTabButton(control.id,guiLeft+control.x,guiTop+control.y,control.width,control.height,control.label)
+                    :control.id==3?new RedstoneActivationButton(3,guiLeft+control.x,guiTop+control.y,control.width,powerOn?1:2)
+                    :new GuiButton(control.id,guiLeft+control.x,guiTop+control.y,control.width,control.height,control.label);
+            buttonList.add(button);
+        }
         refresh();
     }
     private void refresh() {
-        treadField.setVisible(page==0);channelField.setVisible(page==1);
-        for(GuiButton button:buttonList){
-            boolean redstone=button.id==3||button.id==22||button.id==23;
-            button.visible=button.id>=30||button.id==7||((page==1)==redstone);
-            if(button.id>=30)button.enabled=button.id!=30+page;
-            if(button.id==3){button.x=guiLeft+14;button.y=guiTop+96;button.width=292;}
-            if(button.id==22)button.y=guiTop+120;
-            if(button.id==7){button.x=guiLeft+164;button.y=guiTop+(ySize<248?186:200);button.width=142;}
-            if(button.id==18){button.x=guiLeft+14;button.y=guiTop+(ySize<248?186:200);button.width=142;}
-            if(button.id==4)button.y=guiTop+128;
-            if(button.id==14||button.id==15)button.y=guiTop+152;
-            if(button.id==19)button.y=guiTop+176;
-
-        }
-        if(ySize<248){
-            startSlider.y=guiTop+54;startSlider.height=18;endSlider.y=guiTop+76;endSlider.height=18;
-            treadField.y=guiTop+142;
-            for(GuiButton button:buttonList){
-                if(button.id==1||button.id==6||button.id==24){button.y=guiTop+98;button.height=18;}
-                if(button.id==4||button.id==17){button.y=guiTop+120;button.height=18;}
-                if(button.id==14||button.id==15){button.y=guiTop+142;button.height=18;}
-                if(button.id==19){button.y=guiTop+164;button.height=18;}
-                if(button.id==7||button.id==18)button.height=18;
-            }
-        }
-        treadField.setEnabled(!elevator);
-        startSlider.enabled=escalator==0;
-        endSlider.displayString=offsetLabel(escalator==0?"End / on":"Ramp height",endSlider.getValueInt());
-        for (GuiButton b:buttonList) {
-            if(b.id==22){b.enabled=escalator==0;b.displayString="Deployment: "+(analogDeployment?"Analog (0-15)":"Digital (on/off)");}
-            if (b.id==14 || b.id==15) b.enabled=!elevator;
-            if (b.id==1) b.displayString=moat?"Mode: Moat":escalator!=0?(escalator==1?"Mode: escalator up":"Mode: escalator down"):elevator
-                    ?(extendSegments?"Mode: extend":"Mode: lift")
-                    :(extendSegments?"Mode: filled ramp":"Mode: ramp");
-            if (b.id==3) ((RedstoneActivationButton)b).setMode(powerOn?1:2);
-            if(b.id==6){b.x=guiLeft+232;b.width=74;b.enabled=!verticalLayout;b.displayString="Dir: "+direction.getName().toUpperCase(java.util.Locale.ROOT);}
-            if(b.id==24){b.displayString="Axis: "+(verticalLayout?"Y":direction.getAxis().name());}
-            if (b.id==4) b.displayString="Speed: "+(speed==0?"fast":speed==1?"medium":"slow");
-            if (b.id==18) b.displayString="Match textures: "+(matchTextures?"On":"Off");
-            if(b.id==19){b.enabled=!elevator;b.displayString="Interpolation: "+new String[]{"Linear","Curve In","Curve Out"}[interpolation];}
-            if (b.id==17) {b.enabled=escalator==0&&!moat;b.displayString="Travel: "+(travelAxis==0?(verticalLayout?"out / in":"up / down"):"left / right");}
-        }
+        RampDialog.Panel panel=new RampDialog.Panel(height);RampDialog.State state=dialogState();
+        java.util.Map<Integer,RampDialog.Control> visible=new java.util.HashMap<>();for(RampDialog.Control control:RampDialog.controls(panel,state,page))visible.put(control.id,control);
+        for(GuiButton button:buttonList){RampDialog.Control control=visible.get(button.id);button.visible=control!=null;if(control==null)continue;button.x=guiLeft+control.x;button.y=guiTop+control.y;button.width=control.width;button.height=control.height;button.enabled=control.enabled;button.displayString=control.label;}
+        RampDialog.Control tread=RampDialog.control(panel,state,0,16),channels=RampDialog.control(panel,state,1,8);
+        treadField.x=guiLeft+tread.x;treadField.y=guiTop+tread.y;treadField.width=tread.width;treadField.setVisible(page==0);treadField.setEnabled(tread.enabled);
+        channelField.x=guiLeft+channels.x;channelField.y=guiTop+channels.y;channelField.width=channels.width;channelField.setVisible(page==1);
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id>=30){page=button.id-30;refresh();return;}
         if(button.id==23){return;}
-        if (button.id==1) {
-            int mode=GuiOptionCycle.next(moat?6:escalator!=0?escalator+3:elevator?(extendSegments?3:2):(extendSegments?1:0),7);
-            moat=mode==6;escalator=mode>=4&&mode<6?mode-3:0;
-            elevator=mode==2 || mode==3;extendSegments=mode<4 && (mode&1)!=0;
-            if(escalator!=0){travelAxis=0;startSlider.setValue(0);}if(moat)travelAxis=0;
-        }
-        if(button.id==22)analogDeployment=!analogDeployment;
-        if (button.id==3) powerOn=!powerOn;
-        if (button.id==4) speed=GuiOptionCycle.next(speed,3);
-        if(button.id==6)direction=direction.getOpposite();
-        if(button.id==24){
-            net.minecraft.util.EnumFacing mount=com.vandorlabs.blocks.BlockRampController.scanFacing(controller.getWorld().getBlockState(controller.getPos()));
-            com.vandorlabs.ramp.RampAxis[] choices=com.vandorlabs.ramp.RampAxis.choices(com.vandorlabs.ramp.RampAxis.valueOf(mount.getAxis().name()));
-            com.vandorlabs.ramp.RampAxis selected=verticalLayout?com.vandorlabs.ramp.RampAxis.Y:com.vandorlabs.ramp.RampAxis.valueOf(direction.getAxis().name());
-            com.vandorlabs.ramp.RampAxis next=choices[0]==selected?choices[1]:choices[0];verticalLayout=next==com.vandorlabs.ramp.RampAxis.Y;
-            direction=verticalLayout?mount:net.minecraft.util.EnumFacing.getFacingFromAxis(direction.getAxisDirection(),net.minecraft.util.EnumFacing.Axis.valueOf(next.name()));
-        }
-        if(button.id==19) interpolation=GuiOptionCycle.next(interpolation,3);
-        if (button.id==18) matchTextures=!matchTextures;
-        if (button.id==17) travelAxis=travelAxis==0?2:0;
-        if (button.id==7) mc.player.closeScreen();
-        if (button.id==14 || button.id==15) {
-            int pixels=parseOffset(treadField);
-            if (pixels<1 || pixels>16) pixels=controller.treadPixels;
-            treadField.setText(Integer.toString(ControllerPlatform.stepTreadPixels(pixels,button.id==15)));
-        }
+        RampDialog.State state=RampDialog.action(dialogState(),button.id,GuiOptionCycle.direction());
+        powerOn=state.power;elevator=state.elevator;extendSegments=state.extend;speed=state.speed;matchTextures=state.match;interpolation=state.interpolation;escalator=state.escalator;moat=state.moat;verticalLayout=state.vertical;travelAxis=state.travel;direction=net.minecraft.util.EnumFacing.getFront(state.direction);analogDeployment=state.analog;
+        startSlider.setValue(state.start);endSlider.setValue(state.end);
+        if(button.id==14||button.id==15)treadField.setText(Integer.toString(state.tread));
+        if(button.id==7)mc.player.closeScreen();
         if (button.id!=7 && button.id!=20 && button.id!=21) submit();
         refresh();
     }
     private static String offsetLabel(String label,int half) {
-        return label+" offset: "+(half/2D)+" blocks";
+        return RampDialog.offsetLabel(label,half);
     }
     private int parseOffset(GuiTextField field) {
         try { return Integer.parseInt(field.getText()); }
@@ -198,7 +127,7 @@ public class GuiRampController extends GuiContainer {
         if (!treadBefore.equals(treadField.getText()) || !channelBefore.equals(channelField.getText())) submit();
     }
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,3,4,6,17,18,19,22,24))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,RampDialog.reverseOperations()))return;
         super.mouseClicked(x,y,button); treadField.mouseClicked(x,y,button); channelField.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int button) {
@@ -207,16 +136,16 @@ public class GuiRampController extends GuiContainer {
     }
     @Override public void onGuiClosed() { super.onGuiClosed(); Keyboard.enableRepeatEvents(false); }
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY) {
-        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xFF19232C);
-        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+28,0xFF304858);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,RampDialog.STYLE.body);
+        drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+RampDialog.STYLE.headerHeight,RampDialog.STYLE.header);
     }
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY) {
-        fontRenderer.drawString(controller.getBlockType().getLocalizedName(),14,10,0xFFFFFF);
+        fontRenderer.drawString(controller.getBlockType().getLocalizedName(),RampDialog.STYLE.titleX,RampDialog.STYLE.titleY,0xFFFFFF);
         DialogHeader.logo(0,0,xSize);
-        if(page==0)fontRenderer.drawString("Tread px",164,ySize<248?148:158,elevator?0x78848C:0xDAE8F0);
+        if(page==0)fontRenderer.drawString(RampDialog.TREAD_LABEL,164,new RampDialog.Panel(height).treadLabelY(),elevator?0x78848C:0xDAE8F0);
         fontRenderer.drawSplitString((controller.error?"Error: ":"")+controller.status,
                 14,ySize-24,292,controller.error?0xFF9988:0xE5C76B);
-        if(page==1)fontRenderer.drawString("Receive channels",14,54,0xDAE8F0);
+        if(page==1)fontRenderer.drawString(RampDialog.RECEIVE_LABEL,14,54,0xDAE8F0);
     }
     @Override public void drawScreen(int mouseX,int mouseY,float partial) {
         drawDefaultBackground();

@@ -42,7 +42,7 @@ public final class NativeTriggerScreen extends AbstractContainerScreen<TriggerMe
     private void rebuild(){
         String draft=channels==null?(menu.tile.getRedstoneChannels().isEmpty()?"":menu.tile.getRedstoneChannels().toString()):channels.getValue();
         clearWidgets();controls=TriggerDialog.controls(panel,state,Component.translatable("gui.done").getString());
-        for(var control:controls){if(control.tab)continue;Button button=Button.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();button.active=control.enabled;addRenderableWidget(button);}
+        for(var control:controls){if(control.tab)continue;Button button=com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();button.active=control.enabled;addRenderableWidget(button);}
         var box=TriggerDialog.channelBox(panel);channels=new EditBox(font,box.x,box.y,box.width,box.height,Component.literal(TriggerDialog.CHANNEL_LABEL));channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);channels.setFilter(value->value.matches("[0-9, ]*"));channels.setValue(draft);channels.visible=state.page==TriggerDialog.REDSTONE_PAGE;channels.active=channels.visible;channels.setResponder(ignored->send());addRenderableWidget(channels);
         validateChannels();NativeMaterialPicker picker=activePicker();if(picker!=null){picker.layout(panel.listX,TriggerDialog.listY(panel),panel.listWidth,TriggerDialog.listRows(panel),false);addRenderableWidget(picker.searchField());}
     }
@@ -69,8 +69,8 @@ public final class NativeTriggerScreen extends AbstractContainerScreen<TriggerMe
     @Override public boolean keyPressed(int key,int scan,int modifiers){var picker=activePicker();if(picker!=null&&picker.keyPressed(key,scan,modifiers))return true;if(key==257||key==335){if(send())onClose();return true;}return super.keyPressed(key,scan,modifiers);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int mouseX,int mouseY){
-        graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF101012);graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+24,0xFF202028);graphics.drawString(font,title,panel.left+12,panel.top+8,0xFFFFFFFF,false);
-        for(var control:controls)if(control.tab){graphics.fill(control.x,control.y,control.x+control.width,control.y+control.height,control.enabled?0xFF203540:0xFF365568);graphics.drawCenteredString(font,control.label,control.x+control.width/2,control.y+5,0xFFE0F0FF);}
+        com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(graphics,font,title,panel.left,panel.top,panel.width,panel.height,com.vandorlabs.ui.DialogStyle.DARK_TITLE_12);
+        for(var control:controls)if(control.tab){com.vandorlabs.neoforge.client.NativeDialogVisuals.tab(graphics,font,control.label,control.x,control.y,control.width,control.height,control.enabled,mouseX,mouseY);}
         var picker=activePicker();if(picker!=null)picker.render(graphics,mouseX,mouseY);else graphics.drawString(font,TriggerDialog.CHANNEL_LABEL,panel.left+12,TriggerDialog.channelLabelY(panel),0xDAE8F0,false);
     }
     @Override protected void renderLabels(GuiGraphics graphics,int x,int y){}

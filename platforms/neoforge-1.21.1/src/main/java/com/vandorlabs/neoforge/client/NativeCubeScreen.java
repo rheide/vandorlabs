@@ -59,7 +59,7 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
         for(var control:controls){
             if(control.tab)continue;
             if(shapeState!=null&&control.id==SlabStairDialog.TREAD){treadSlider=new NativeIntegerSlider(control.x,control.y,control.width,control.height,0,3,SlabStairDialog.treadIndex(shapeState.tread),value->Component.literal(SlabStairDialog.treadLabel(shapeState.tread)),value->{shapeState=shapeState.chooseTread(value);state=shapeState.housing;send();treadSlider.setMessage(Component.literal(SlabStairDialog.treadLabel(shapeState.tread)));});addRenderableWidget(treadSlider);continue;}
-            Button button=Button.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();button.active=control.enabled;addRenderableWidget(button);
+            Button button=com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(control.label),ignored->action(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();button.active=control.enabled;addRenderableWidget(button);
         }
         picker.select(selectedTexture(),false);picker.layout(panel.listX,porthole!=null?panel.top+54:wallState!=null?PlainWallDialog.listY(panel):shapeState==null?ProgrammableBlockDialog.listY(panel,state):SlabStairDialog.listY(panel),porthole!=null?porthole.listWidth(panel):wallState!=null?PlainWallDialog.listWidth(panel,wallState):panel.listWidth,porthole!=null?porthole.listRows(panel):wallState!=null?PlainWallDialog.listRows(panel,wallState):shapeState==null?ProgrammableBlockDialog.listRows(panel,state):SlabStairDialog.listRows(panel),center);addRenderableWidget(picker.searchField());
     }
@@ -86,9 +86,9 @@ public final class NativeCubeScreen extends AbstractContainerScreen<Programmable
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){return picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int mouseX,int mouseY){
-        graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF101012);graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+24,0xFF202028);graphics.drawString(font,title,panel.left+8,panel.top+8,0xFFFFFFFF,false);
+        com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(graphics,font,title,panel.left,panel.top,panel.width,panel.height,com.vandorlabs.ui.DialogStyle.DARK);
         if(selectedTexture()>=ModernFinishCatalog.ENTRIES.size()&&ModernFinishCatalog.renderChoice(selectedTexture())==0)graphics.drawString(font,"Saved artwork unavailable",panel.left+panel.width-font.width("Saved artwork unavailable")-12,panel.top+8,0xFFFFCF70,false);
-        for(var control:controls)if(control.tab){graphics.fill(control.x,control.y,control.x+control.width,control.y+control.height,control.enabled?0xFF203540:0xFF365568);graphics.drawCenteredString(font,control.label,control.x+control.width/2,control.y+5,0xFFE0F0FF);}
+        for(var control:controls)if(control.tab){com.vandorlabs.neoforge.client.NativeDialogVisuals.tab(graphics,font,control.label,control.x,control.y,control.width,control.height,control.enabled,mouseX,mouseY);}
         picker.render(graphics,mouseX,mouseY);
     }
     @Override protected void renderLabels(GuiGraphics graphics,int mouseX,int mouseY){}

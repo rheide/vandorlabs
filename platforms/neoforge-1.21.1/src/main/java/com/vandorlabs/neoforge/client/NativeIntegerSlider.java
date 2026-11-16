@@ -8,7 +8,9 @@ import net.minecraft.network.chat.Component;
 /** Integer slider shared by range and level editors, with mouse-only input and caller-owned publication. */
 public final class NativeIntegerSlider extends AbstractSliderButton {
     private final int minimum,maximum;
-    private boolean draggingValue;
+    private boolean draggingValue,sourceLight;
+    public NativeIntegerSlider sourceLight(){sourceLight=true;return this;}
+    @Override public void renderWidget(net.minecraft.client.gui.GuiGraphics graphics,int mouseX,int mouseY,float partial){if(sourceLight)NativeDialogVisuals.lightSlider(graphics,getX()+4,getY(),getWidth()-8,getIntValue()-minimum,maximum-minimum);else super.renderWidget(graphics,mouseX,mouseY,partial);}
     private final IntFunction<Component> label;
     private final IntConsumer changed;
     public NativeIntegerSlider(int x,int y,int width,int height,int minimum,int maximum,int initial,IntFunction<Component> label,IntConsumer changed){

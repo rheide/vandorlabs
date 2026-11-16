@@ -43,7 +43,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
         rebuild(true);
     }
     private void option(int id,int x,int y,int width,String label,boolean enabled){
-        var button=Button.builder(Component.literal(label),ignored->action(id,1)).bounds(x,y,width,20).build();button.active=enabled;buttons.put(id,button);addRenderableWidget(button);
+        Button button=(id==100||id==101)?new com.vandorlabs.neoforge.client.NativeDialogTabButton(x,y,width,20,Component.literal(label),ignored->action(id,1)):com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(label),ignored->action(id,1)).bounds(x,y,width,20).build();button.active=enabled;buttons.put(id,button);addRenderableWidget(button);
     }
     private void rebuild(boolean center){
         if(channels!=null)draft=channels.getValue();clearWidgets();buttons.clear();var c=settings.choices();
@@ -94,7 +94,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
     @Override public boolean mouseReleased(double x,double y,int button){picker.release();return super.mouseReleased(x,y,button);}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){return page==0&&picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}
     @Override public void renderBackground(GuiGraphics g,int x,int y,float partial){g.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(g,partial,x,y);}
-    @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){g.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xEE18212C);g.fill(panel.left,panel.top,panel.left+panel.width,panel.top+26,0xFF304858);g.drawString(font,title,panel.left+12,panel.top+10,0xFFFFFFFF,false);if(page==0)picker.render(g,x,y);else g.drawString(font,"Channels",panel.left+12,panel.top+54,0xFFCBD6E2,false);}
+    @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(g,font,title,panel.left,panel.top,panel.width,panel.height,com.vandorlabs.ui.DialogStyle.PROGRAMMABLE);if(page==0)picker.render(g,x,y);else g.drawString(font,"Channels",panel.left+12,panel.top+54,0xFFCBD6E2,false);}
     @Override protected void renderLabels(GuiGraphics g,int x,int y){}
     @Override public boolean isPauseScreen(){return false;}
 }

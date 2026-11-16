@@ -44,9 +44,9 @@ public final class NativeBinaryControlScreen extends AbstractContainerScreen<Bin
     private void rebuild(){setFocused(null);clearWidgets();mountButtons.clear();
         if(page==0){if(menu.tile.isSelectableControlType())addOption(MountedControlDialog.typeControl(leftPos,topPos,controlType));if(menu.tile.supportsPowerLeverSize())addOption(MountedControlDialog.sizeControl(leftPos,topPos,menu.tile.isTwinPowerLever(),size));for(var control:MountedControlDialog.controls(leftPos,topPos,heightValue,tilt,direction))addOption(control);}
         else {for(var control:transmission.controls())addRenderableWidget(control);if(menu.tile.supportsSignalControl())for(var control:MountedControlDialog.limitControls(leftPos,topPos,lowLimit,highLimit))addOption(control);}
-        addRenderableWidget(Button.builder(Component.translatable("gui.done"),ignored->done()).bounds(leftPos+114,topPos+206,154,20).build());
+        addRenderableWidget(com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.translatable("gui.done"),ignored->done()).bounds(leftPos+114,topPos+206,154,20).build());
     }
-    private void addOption(com.vandorlabs.ui.DialogControl control){Button button=Button.builder(Component.literal(control.label),ignored->cycle(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();mountButtons.put(control.id,button);addRenderableWidget(button);}
+    private void addOption(com.vandorlabs.ui.DialogControl control){Button button=com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(control.label),ignored->cycle(control.id,1)).bounds(control.x,control.y,control.width,control.height).build();mountButtons.put(control.id,button);addRenderableWidget(button);}
     private void cycle(int id,int step){
         if(id==MountedControlDialog.SIZE)size=DialogInput.cycle(size,2,step);
         if(id==MountedControlDialog.TYPE)controlType=DialogInput.cycle(controlType,MountedControlDialog.TYPE_COUNT,step);
@@ -68,8 +68,8 @@ public final class NativeBinaryControlScreen extends AbstractContainerScreen<Bin
     @Override public boolean keyPressed(int key,int scan,int modifiers){if(page==1&&transmission.specialKey(key))return true;if(key==257||key==335){done();return true;}return super.keyPressed(key,scan,modifiers);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
     @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){
-        graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0xFF101012);graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+24,0xFF202028);graphics.drawString(font,title,leftPos+12,topPos+8,0xFFFFFFFF,false);
-        for(int tab=0;tab<2;tab++){int left=leftPos+(tab==0?12:116);graphics.fill(left,topPos+30,left+100,topPos+50,page==tab?0xFF365568:0xFF203540);graphics.drawCenteredString(font,tab==0?"General":"Redstone",left+50,topPos+35,0xFFE0F0FF);}if(page==1){transmission.renderLabels(graphics,font);if(menu.tile.supportsSignalControl()){graphics.drawString(font,MountedControlDialog.detentLabel(lowLimit,highLimit),leftPos+14,topPos+MountedControlDialog.LIMIT_LABEL_Y,0xFFDAE8F0,false);graphics.drawString(font,MountedControlDialog.LIMIT_HINT,leftPos+14,topPos+MountedControlDialog.LIMIT_HINT_Y,0xFFDAE8F0,false);}}
+        com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(graphics,font,title,leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.DialogStyle.SIGNAL);
+        for(int tab=0;tab<2;tab++){int left=leftPos+(tab==0?12:116);NativeDialogVisuals.tab(graphics,font,tab==0?"General":"Redstone",left,topPos+30,100,20,page!=tab,x,y);}if(page==1){transmission.renderLabels(graphics,font);if(menu.tile.supportsSignalControl()){graphics.drawString(font,MountedControlDialog.detentLabel(lowLimit,highLimit),leftPos+14,topPos+MountedControlDialog.LIMIT_LABEL_Y,0xFFDAE8F0,false);graphics.drawString(font,MountedControlDialog.LIMIT_HINT,leftPos+14,topPos+MountedControlDialog.LIMIT_HINT_Y,0xFFDAE8F0,false);}}
     }
     @Override protected void renderLabels(GuiGraphics graphics,int x,int y){}
     @Override public boolean isPauseScreen(){return false;}

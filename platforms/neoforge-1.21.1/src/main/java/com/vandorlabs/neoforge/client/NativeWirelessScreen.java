@@ -39,9 +39,9 @@ public final class NativeWirelessScreen extends AbstractContainerScreen<Wireless
         if(page==0)addOption(2,66,(transmitter?"Input":"Output")+" port: "+Direction.from3DDataValue(face).getSerializedName());
         else {if(transmitter)for(var control:transmission.controls())addRenderableWidget(control);else addRenderableWidget(channels);addOption(1,transmitter?140:102,"Signal: "+(analog?"Analog":"Digital"));
             if(!transmitter){onSlider=new NativeIntegerSlider(leftPos+12,topPos+128,imageWidth-24,20,0,15,on,value->Component.literal("On level: "+value),value->{on=value;if(ready)dirty=true;});onSlider.active=!analog;addRenderableWidget(onSlider);offSlider=new NativeIntegerSlider(leftPos+12,topPos+154,imageWidth-24,20,0,15,off,value->Component.literal("Off level: "+value),value->{off=value;if(ready)dirty=true;});addRenderableWidget(offSlider);}}
-        addRenderableWidget(Button.builder(Component.translatable("gui.done"),ignored->onClose()).bounds(leftPos+12,topPos+imageHeight-30,imageWidth-24,20).build());ready=previous;
+        addRenderableWidget(com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.translatable("gui.done"),ignored->onClose()).bounds(leftPos+12,topPos+imageHeight-30,imageWidth-24,20).build());ready=previous;
     }
-    private void addOption(int id,int y,String label){Button button=Button.builder(Component.literal(label),ignored->act(id,1)).bounds(leftPos+12,topPos+y,imageWidth-24,20).build();options.put(id,button);addRenderableWidget(button);}
+    private void addOption(int id,int y,String label){Button button=com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(label),ignored->act(id,1)).bounds(leftPos+12,topPos+y,imageWidth-24,20).build();options.put(id,button);addRenderableWidget(button);}
     private void act(int id,int direction){if(id==1)analog=!analog;else if(id==2)face=DialogInput.cycle(face,6,direction);save();rebuild();}
     private boolean save(){if(!ready)return false;ChannelList receive=transmitter?ChannelList.EMPTY:ChannelList.parse(channels.getValue());if(!transmitter)channels.setTextColor(receive==null?0xFF7777:0xE0E0E0);if(receive==null)return false;PacketDistributor.sendToServer(new WirelessPayload(menu.tile.getBlockPos(),menu.containerId,receive,analog,on,off,Direction.from3DDataValue(face)));dirty=false;return true;}
     @Override protected void containerTick(){super.containerTick();if(dirty)save();}
@@ -56,8 +56,8 @@ public final class NativeWirelessScreen extends AbstractContainerScreen<Wireless
     @Override public boolean mouseReleased(double x,double y,int button){NativeIntegerSlider.releaseFocused(getFocused(),x,y,button);return super.mouseReleased(x,y,button);}
     @Override public boolean keyPressed(int key,int scan,int modifiers){if(page==1&&transmission!=null&&transmission.specialKey(key))return true;if(key==257||key==335)return true;return super.keyPressed(key,scan,modifiers);}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
-    @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0xFF101012);graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+24,0xFF202028);graphics.drawString(font,title,leftPos+12,topPos+8,0xFFFFFFFF,false);
-        for(int tab=0;tab<2;tab++){int left=leftPos+(tab==0?12:128),span=tab==0?112:140;graphics.fill(left,topPos+32,left+span,topPos+52,page==tab?0xFF365568:0xFF203540);graphics.drawCenteredString(font,tab==0?"General":"Redstone",left+span/2,topPos+37,0xFFE0F0FF);}
+    @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(graphics,font,title,leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.DialogStyle.PORT);
+        for(int tab=0;tab<2;tab++){int left=leftPos+(tab==0?12:128),span=tab==0?112:140;NativeDialogVisuals.tab(graphics,font,tab==0?"General":"Redstone",left,topPos+32,span,20,page!=tab,x,y);}
         if(page==1){if(transmission!=null)transmission.renderLabels(graphics,font);else {graphics.drawString(font,"Receive channels",leftPos+12,topPos+60,0xFFDAE8F0,false);if(analog)graphics.drawString(font,"On level follows received signal",leftPos+12,topPos+180,0xFFC9D9E2,false);}}
     }
     @Override protected void renderLabels(GuiGraphics graphics,int x,int y){}

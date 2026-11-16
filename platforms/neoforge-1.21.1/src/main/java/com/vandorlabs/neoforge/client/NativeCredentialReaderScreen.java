@@ -40,7 +40,7 @@ public final class NativeCredentialReaderScreen extends AbstractContainerScreen<
         if(transmission==null)transmission=new NativeInlineTransmissionWidget(font,leftPos+12,topPos+74,imageWidth-24,menu.tile.transmittedChannels(),menu.tile.transmissionRange(),menu.tile.localRedstone(),(channels,range,local)->sendTransmission.accept(new ReaderTransmissionPayload(menu.containerId,channels,range,local)));
         else transmission.layout(leftPos+12,topPos+74,imageWidth-24);rebuild();
     }
-    private void option(int id,int x,int y,int width,String text){var button=Button.builder(Component.literal(text),ignored->action(id,1)).bounds(x,y,width,20).build();buttons.put(id,button);addRenderableWidget(button);}
+    private void option(int id,int x,int y,int width,String text){Button button=(id==100||id==101)?new com.vandorlabs.neoforge.client.NativeDialogTabButton(x,y,width,20,Component.literal(text),ignored->action(id,1)):com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(text),ignored->action(id,1)).bounds(x,y,width,20).build();buttons.put(id,button);addRenderableWidget(button);}
     private void rebuild(){setFocused(null);clearWidgets();buttons.clear();
         option(101,leftPos+12,topPos+34,138,"Security");option(100,leftPos+154,topPos+34,Math.max(40,imageWidth-166),"Redstone");buttons.get(101).active=page!=1;buttons.get(100).active=page!=0&&page!=2;
         if(page==0){option(90,leftPos+12,topPos+74,imageWidth-24,"Redstone Transmitter...");option(1,leftPos+12,topPos+144,imageWidth-24,CredentialCatalog.behaviorName(behavior));}
@@ -69,7 +69,7 @@ public final class NativeCredentialReaderScreen extends AbstractContainerScreen<
     @Override public void onClose(){if(transmission!=null)transmission.flush();super.onClose();}
     @Override public void removed(){if(transmission!=null)transmission.flush();super.removed();}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
-    @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0xFF19232C);graphics.fill(leftPos,topPos,leftPos+imageWidth,topPos+28,0xFF304858);graphics.drawString(font,title,leftPos+12,topPos+10,0xFFFFFF,false);if(page==1){graphics.drawString(font,"Accepted credential",leftPos+12,topPos+68,0xDAE8F0,false);credentials.render(graphics,font,leftPos+12,topPos+82,allowed);}else if(page==2)transmission.renderLabels(graphics,font);}
+    @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(graphics,font,title,leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.DialogStyle.PORT);if(page==1){graphics.drawString(font,"Accepted credential",leftPos+12,topPos+68,0xDAE8F0,false);credentials.render(graphics,font,leftPos+12,topPos+82,allowed);}else if(page==2)transmission.renderLabels(graphics,font);}
     @Override protected void renderLabels(GuiGraphics graphics,int x,int y){}
     @Override public boolean isPauseScreen(){return false;}
 }

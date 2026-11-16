@@ -15,11 +15,21 @@ public final class DialogStyle {
     public static final Shell RACK=new Shell(0xee171b23,0,0,12,10,24);
     public static final Shell SYNTHESIS=new Shell(0xf0171b23,0,0,12,10,24);
     public static final Shell SURFACE=new Shell(0xff101012,0xff202028,18,8,5,18);
+    public static final Shell DARK_TITLE_12=new Shell(0xff101012,0xff202028,24,12,8,24);
+    public static final Shell SIGNAL=new Shell(0xff101012,0xff304858,24,12,8,24);
+    public static final Shell SEGMENTED=new Shell(0xee18212c,0xff304858,26,12,10,26);
+    public static final Shell CANOPY=new Shell(0xee101012,0,0,8,8,24);
+    public static final Shell GEAR=new Shell(0xff19232c,0,0,12,12,24);
+    public static final Shell LANDING=new Shell(0xee171b23,0,0,14,12,24);
+    public static final Shell CHAIR=new Shell(0xdd171b23,0,0,14,11,24);
+    public static final Shell BUFFER=new Shell(0xff18212c,0,0,16,14,24);
+    public static final Shell COPY=new Shell(0xee18212c,0,0,12,8,0);
+    public static final Shell PROGRAMMER=new Shell(0xff19232c,0xff304858,24,15,8,0);
     /** Header fill height and logo positioning height deliberately differ in several Source dialogs. */
     public static final class Shell {
         public final int body,header,headerHeight,titleX,titleY,logoHeaderHeight;
         public Shell(int body,int header,int headerHeight,int titleX,int titleY,int logoHeaderHeight){
-            if(headerHeight<0||logoHeaderHeight<2)throw new IllegalArgumentException("Dialog header geometry");
+            if(headerHeight<0||logoHeaderHeight<0||logoHeaderHeight==1)throw new IllegalArgumentException("Dialog header geometry");
             this.body=body;this.header=header;this.headerHeight=headerHeight;this.titleX=titleX;this.titleY=titleY;this.logoHeaderHeight=logoHeaderHeight;
         }
     }

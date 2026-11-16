@@ -22,6 +22,7 @@ unset VANDOR_LABS_SHAPE_DIALOG_CHECKS_ONLY VANDOR_LABS_STAIR_SETTINGS_CHECKS_ONL
 
 unset VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY
 unset VANDOR_LABS_CORE_HANDOFF_ONLY
+unset VANDOR_LABS_RAMP_DIALOG_CHECKS_ONLY
 unset VANDOR_LABS_MACHINE_JEI_CHECKS_ONLY
 unset VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY VANDOR_LABS_INFUSER_GUI_CHECKS_ONLY VANDOR_LABS_CORE_ICONS_CHECKS_ONLY
 unset VANDOR_LABS_MODULE_RACK_CHECKS_ONLY
@@ -118,6 +119,9 @@ case "${1:-}" in
         elif [ "$TARGET" = infuser-gui ]; then
             PREFIX=infuser_gui_
             export VANDOR_LABS_INFUSER_GUI_CHECKS_ONLY=true
+        elif [ "$TARGET" = ramp-dialog ]; then
+            PREFIX=ramp_dialog_
+            export VANDOR_LABS_RAMP_DIALOG_CHECKS_ONLY=true
         elif [ "$TARGET" = machine-jei ]; then
             PREFIX=machine_jei_
             export VANDOR_LABS_MACHINE_JEI_CHECKS_ONLY=true
@@ -642,6 +646,13 @@ PYIMAGE
     if [ "$TARGET" = infuser-gui ]; then
         grep -q "infuser-gui PASS" "$RUN_OUT/client.log"
         echo "Matter Infuser GUI live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = ramp-dialog ]; then
+        grep -q "ramp-dialog PASS" "$RUN_OUT/client.log"
+        test -s "$RUN_OUT/ramp-dialog-0-ramp.png"
+        test -s "$RUN_OUT/ramp-dialog-1-ramp-compact.png"
+        echo "Ramp dialog live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = machine-jei ]; then

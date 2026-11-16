@@ -53,7 +53,7 @@ public class NativeProgrammerScreen extends AbstractContainerScreen<NativeProgra
         if(!chipInput())draft=new NativeProgrammerDraft(false,false,draft.title(),draft.pages());
         cursor=draft.pages().get(page).length();if(titleField!=null)titleField.setValue(draft.title());invalidateText();
     }
-    private Button add(int id,int x,int y,int width,int height,String text,Runnable action){var button=Button.builder(Component.literal(text),ignored->action.run()).bounds(leftPos+x,topPos+y,width,height).build();buttons.put(id,button);return addRenderableWidget(button);}
+    private Button add(int id,int x,int y,int width,int height,String text,Runnable action){var button=com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(text),ignored->action.run()).bounds(leftPos+x,topPos+y,width,height).build();buttons.put(id,button);return addRenderableWidget(button);}
     @Override protected void init(){
         imageHeight=height>=264?264:228;super.init();buttons.clear();ready=false;
         titleField=new EditBox(font,leftPos+49,topPos+104,188,18,Component.literal("Journal title"));titleField.setMaxLength(40);titleField.setValue(draft.title());titleField.setResponder(value->{if(ready){draft=new NativeProgrammerDraft(false,draft.journal(),value,draft.pages());invalidateText();refresh();}});addRenderableWidget(titleField);
@@ -117,7 +117,7 @@ public class NativeProgrammerScreen extends AbstractContainerScreen<NativeProgra
     @Override public boolean isPauseScreen(){return false;}
     @Override public void renderBackground(GuiGraphics g,int x,int y,float partial){g.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(g,partial,x,y);}
     @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){
-        ensureResources();g.fill(leftPos,topPos,leftPos+imageWidth,topPos+imageHeight,0xFF19232C);g.fill(leftPos,topPos,leftPos+imageWidth,topPos+24,0xFF304858);
+        ensureResources();NativeDialogVisuals.frame(g,leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.DialogStyle.PROGRAMMER);
         g.fill(leftPos+13,topPos+99,leftPos+239,topPos+100,0xFF506878);g.fill(leftPos+13,topPos+100,leftPos+14,topPos+185+extra(),0xFF506878);g.fill(leftPos+238,topPos+100,leftPos+239,topPos+185+extra(),0xFF506878);g.fill(leftPos+13,topPos+184+extra(),leftPos+239,topPos+185+extra(),0xFF506878);
         if(journalPage){g.fill(leftPos+14,topPos+PAPER_TOP-1,leftPos+238,topPos+paperBottom()+1,editing?0xFF506070:0xFF777777);g.fill(leftPos+15,topPos+PAPER_TOP,leftPos+237,topPos+paperBottom(),selectedAll?0xFF385570:0xFF101820);g.fill(leftPos+230,topPos+PAPER_TOP,leftPos+236,topPos+paperBottom(),0xFF303840);g.fill(leftPos+230,topPos+thumbTop(),leftPos+236,topPos+thumbTop()+thumbHeight(),maxScroll()>0?0xFF8BAEC0:0xFF536674);}
         for(var slot:menu.slots)if(slot.isActive()){int sx=leftPos+slot.x,sy=topPos+slot.y;g.fill(sx-1,sy-1,sx+17,sy+17,0xFF555555);g.fill(sx,sy,sx+16,sy+16,0xFF8B8B8B);}

@@ -45,9 +45,10 @@ def main():
         output.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(ROOT / source, output)
         resized(output, 128)
-    logo = OUT / 'assets/vandorlabs/textures/gui/vandor_logo.png'
-    logo.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(ROOT / 'texture-packs/additional/assets/vandorlabs/textures/gui/vandor_logo.png', logo)
+    for gui in ('vandor_logo.png', 'source_buttons.png'):
+        target = OUT / 'assets/vandorlabs/textures/gui' / gui
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(ROOT / 'texture-packs/additional/assets/vandorlabs/textures/gui' / gui, target)
     lang = {}
     wanted = ['itemGroup.vandorlabs', 'tile.vandorlabs.programmable_matter_block.name', 'tile.vandorlabs.programmable_block.name', 'tile.vandorlabs.programmable_slab.name', 'tile.vandorlabs.programmable_stairs.name', 'tile.vandorlabs.programmable_wall.name', 'tile.vandorlabs.programmable_porthole_wall.name', 'tile.vandorlabs.programmable_porthole_block.name', 'tile.vandorlabs.programmable_diagonal_wall.name', 'tile.vandorlabs.programmable_diagonal_porthole.name', 'tile.vandorlabs.programmable_diagonal_glass.name', 'tile.vandorlabs.programmable_trigger_block.name', 'tile.vandorlabs.push_button.name', 'tile.vandorlabs.rocker_switch.name', 'tile.vandorlabs.compact_power_lever.name', 'tile.vandorlabs.industrial_power_lever.name', 'tile.vandorlabs.small_power_lever.name', 'tile.vandorlabs.large_power_lever.name', 'tile.vandorlabs.thruster_lever.name', 'tile.vandorlabs.airliner_throttle.name', 'tile.vandorlabs.fighter_throttle.name', 'tile.vandorlabs.wall_slider.name', 'tile.vandorlabs.redstone_transmitter_block.name', 'tile.vandorlabs.redstone_receiver_block.name', 'item.vandorlabs.configurizer.name'] + ['tile.vandorlabs.' + name + '.name' for name in ('programmable_door', 'space_rotating_door', 'space_sliding_door', 'large_programmable_door', 'segmented_door', 'programmable_trapdoor', 'programmable_diagonal_trapdoor', 'programmable_light', 'programmable_light_frame', 'programmable_light_slab', 'programmable_viewscreen', 'programmable_console', 'programmable_half_console', 'programmable_half_input', 'programmable_input', 'programmable_diagonal_screen', 'programmable_diagonal_half_screen')] + [
         'item.vandorlabs.' + name + '.name' for name in ids[1:]]

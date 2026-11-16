@@ -17,7 +17,7 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 public final class NativeInfuserScreen extends AbstractContainerScreen<NativeInfuserMenu>{
  public NativeInfuserScreen(NativeInfuserMenu menu,Inventory inventory,Component title){super(menu,inventory,Component.literal(InfuserDialog.TITLE));imageWidth=InfuserDialog.WIDTH;imageHeight=InfuserDialog.HEIGHT;}
  @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){event.register(NativeInfuserBindings.MENU,NativeInfuserScreen::new);}
- @Override protected void init(){super.init();addRenderableWidget(net.minecraft.client.gui.components.Button.builder(Component.literal(InfuserDialog.DONE),button->onClose()).bounds(leftPos+InfuserDialog.DONE_X,topPos+InfuserDialog.DONE_Y,InfuserDialog.DONE_WIDTH,InfuserDialog.DONE_HEIGHT).build());}
+ @Override protected void init(){super.init();addRenderableWidget(com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(InfuserDialog.DONE),button->onClose()).bounds(leftPos+InfuserDialog.DONE_X,topPos+InfuserDialog.DONE_Y,InfuserDialog.DONE_WIDTH,InfuserDialog.DONE_HEIGHT).build());}
  public int left(){return leftPos;}public int top(){return topPos;}public boolean sunlight(){return menu.value(3)>0;}
  private ItemStack battery(){var input=menu.contents().getItem(0);return NativeBatteryModule.valid(input)?input:menu.contents().getItem(2);}
  private boolean charging(){return NativeBatteryModule.valid(battery());}

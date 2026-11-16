@@ -67,6 +67,7 @@ tasks.register('generateMatterResources', Exec) {
     inputs.file('../../generated-resources/assets/vandorlabs/lang/en_us.lang')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/matter/matter.png')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/gui/vandor_logo.png')
+    inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/gui/source_buttons.png')
     inputs.file('../../texture-packs/default/assets/vandorlabs/textures/items/programmable_matter_ingot.png')
     inputs.file('../../texture-packs/default/assets/vandorlabs/textures/items/industrial_alloy_ingot.png')
     outputs.dir('build/generated/matter-resources')

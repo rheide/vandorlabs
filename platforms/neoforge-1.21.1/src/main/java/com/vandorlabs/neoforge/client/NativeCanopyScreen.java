@@ -47,7 +47,7 @@ public final class NativeCanopyScreen extends AbstractContainerScreen<NativeCano
     private boolean resizable(){return CanopySettingsData.supports(menu.tile.kind());}
     private boolean opening(){return menu.tile.kind().equals("canopy")||menu.tile.kind().equals("long_canopy");}
     @Override protected void init(){super.init();panel=new ProgrammableDialogLayout(width,height);imageWidth=panel.width;imageHeight=panel.height;leftPos=panel.left;topPos=panel.top;rebuild(true);}
-    private void option(int id,int x,int y,int w,String label,boolean enabled){var button=Button.builder(Component.literal(label),ignored->action(id,1)).bounds(x,y,w,20).build();button.active=enabled;buttons.put(id,button);addRenderableWidget(button);}
+    private void option(int id,int x,int y,int w,String label,boolean enabled){Button button=(id==90||id==91)?new com.vandorlabs.neoforge.client.NativeDialogTabButton(x,y,w,20,Component.literal(label),ignored->action(id,1)):com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(label),ignored->action(id,1)).bounds(x,y,w,20).build();button.active=enabled;buttons.put(id,button);addRenderableWidget(button);}
     private void control(int id,int y,String label){option(id,panel.controlsX,panel.top+y,154,label,true);}
     private void rebuild(boolean center){
         String text=channels==null?draft.data().channels.toString():channels.getValue();ready=false;clearWidgets();buttons.clear();
@@ -112,7 +112,7 @@ public final class NativeCanopyScreen extends AbstractContainerScreen<NativeCano
     @Override public boolean keyPressed(int key,int scan,int modifiers){return page==0&&picker.keyPressed(key,scan,modifiers)||super.keyPressed(key,scan,modifiers);}
     @Override public void onClose(){apply();super.onClose();}
     @Override public void renderBackground(GuiGraphics graphics,int x,int y,float partial){graphics.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(graphics,partial,x,y);}
-    @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){if(panel==null)return;graphics.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF101012);graphics.drawString(font,title,panel.left+8,panel.top+8,0xFFFFFF,false);if(page==0)picker.render(graphics,x,y);else graphics.drawString(font,"Receive channels",panel.left+12,panel.top+54,0xFFFFFF,false);if(!error.isEmpty()){if(panel.height<300)graphics.drawString(font,font.plainSubstrByWidth(error,panel.width-24),panel.left+12,panel.top+18,0xFFFFAA88,false);else graphics.drawWordWrap(font,Component.literal(error),panel.controlsX,panel.doneY-34,154,0xFFFFAA88);}}
+    @Override protected void renderBg(GuiGraphics graphics,float partial,int x,int y){if(panel==null)return;com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(graphics,font,title,panel.left,panel.top,panel.width,panel.height,com.vandorlabs.ui.DialogStyle.CANOPY);if(page==0)picker.render(graphics,x,y);else graphics.drawString(font,"Receive channels",panel.left+12,panel.top+54,0xFFFFFF,false);if(!error.isEmpty()){if(panel.height<300)graphics.drawString(font,font.plainSubstrByWidth(error,panel.width-24),panel.left+12,panel.top+18,0xFFFFAA88,false);else graphics.drawWordWrap(font,Component.literal(error),panel.controlsX,panel.doneY-34,154,0xFFFFAA88);}}
     @Override protected void renderLabels(GuiGraphics graphics,int x,int y){}
     @Override public boolean isPauseScreen(){return false;}
 }

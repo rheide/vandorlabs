@@ -48,7 +48,7 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
         return new NativeMaterialPicker(selected(),id->NativeDoorAssets.selectable(ModernFinishCatalog.option(id),menu.tile.large(),detail),this::choose).presentation(NativeDoorAssets::preview);
     }
     @Override protected void init(){super.init();panel=new ProgrammableDialogLayout(width,height);imageWidth=panel.width;imageHeight=panel.height;leftPos=panel.left;topPos=panel.top;rebuild(true);}
-    private void option(int id,int x,int y,int width,int height,String text,boolean active){var button=Button.builder(Component.literal(text),ignored->action(id,1)).bounds(x,y,width,height).build();button.active=active;buttons.put(id,button);addRenderableWidget(button);}
+    private void option(int id,int x,int y,int width,int height,String text,boolean active){var button=com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(text),ignored->action(id,1)).bounds(x,y,width,height).build();button.active=active;buttons.put(id,button);addRenderableWidget(button);}
     private void option(int id,int relativeY,String text,boolean active){option(id,panel.controlsX,panel.top+relativeY,154,20,text,active);}
     private static final class Tab extends DialogControl {Tab(int id,int x,int y,int width,String text,boolean enabled){super(id,x,y,width,18,text,true,enabled);}}
     private void tab(int id,int x,int y,int width,String text,boolean enabled){tabs.add(new Tab(id,x,y,width,text,enabled));}
@@ -87,7 +87,7 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
     @Override public boolean mouseReleased(double x,double y,int button){if(picker!=null)picker.release();return super.mouseReleased(x,y,button);}
     @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){return picker!=null&&picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}
     @Override public void renderBackground(GuiGraphics g,int x,int y,float partial){g.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(g,partial,x,y);}
-    @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){g.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xFF101012);g.fill(panel.left,panel.top,panel.left+panel.width,panel.top+24,0xFF202028);g.drawString(font,title,panel.left+8,panel.top+8,0xFFFFFFFF,false);for(var tab:tabs){g.fill(tab.x,tab.y,tab.x+tab.width,tab.y+tab.height,tab.enabled?0xFF203540:0xFF365568);g.drawCenteredString(font,tab.label,tab.x+tab.width/2,tab.y+5,0xFFE0F0FF);}if(picker!=null)picker.render(g,x,y);if(page==3)credentials.render(g,font,panel.controlsX,panel.top+136,allowed);}
+    @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(g,font,title,panel.left,panel.top,panel.width,panel.height,com.vandorlabs.ui.DialogStyle.PROGRAMMABLE);for(var tab:tabs){com.vandorlabs.neoforge.client.NativeDialogVisuals.tab(g,font,tab.label,tab.x,tab.y,tab.width,tab.height,tab.enabled,x,y);}if(picker!=null)picker.render(g,x,y);if(page==3)credentials.render(g,font,panel.controlsX,panel.top+136,allowed);}
     @Override protected void renderLabels(GuiGraphics g,int x,int y){}
     @Override public boolean isPauseScreen(){return false;}
 }

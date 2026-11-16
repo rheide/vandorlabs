@@ -28,7 +28,7 @@ public final class NativeGlassScreen extends AbstractContainerScreen<NativeGlass
  public ProgrammableDialogLayout panel(){return panel;}public NativeMaterialPicker activePicker(){return picker;}public GlassDialog.State state(){return state;}public FrameSettings frames(){return frames;}public PanelPlayback playback(){return playback;}public Button button(int id){return buttons.get(id);}
  @Override protected void init(){super.init();panel=new ProgrammableDialogLayout(width,height);imageWidth=panel.width;imageHeight=panel.height;leftPos=panel.left;topPos=panel.top;rebuild(true);}
  private void option(DialogControl c){option(c.id,c.x,c.y,c.width,c.height,c.label,c.enabled);}
- private void option(int id,int x,int y,int width,int height,String text,boolean enabled){var b=Button.builder(Component.literal(text),ignored->action(id,1)).bounds(x,y,width,height).build();b.active=enabled;buttons.put(id,b);addRenderableWidget(b);}
+ private void option(int id,int x,int y,int width,int height,String text,boolean enabled){Button b=(id>=GlassDialog.FIRST_PAGE&&id<GlassDialog.FIRST_PAGE+GlassDialog.PAGE_COUNT)?new com.vandorlabs.neoforge.client.NativeDialogTabButton(x,y,width,height,Component.literal(text),ignored->action(id,1)):com.vandorlabs.neoforge.client.NativeDialogButton.builder(Component.literal(text),ignored->action(id,1)).bounds(x,y,width,height).build();b.active=enabled;buttons.put(id,b);addRenderableWidget(b);}
  private int selected(){return state.page==0?state.material<0?PortholeDialog.shadeChoice(state.shade):state.material:state.page==1?draft.front:state.page==2?draft.interior:draft.exterior;}
  private NativeMaterialPicker createPicker(int page){
   if(page>0)return new NativeMaterialPicker(selected(),page==1?choice->NativeWallEntity.validFrame(choice)&&NativeWallDialog.surfaceOption(choice):NativeWallDialog::surfaceOption,this::choose).originalArtwork(page==1?"vandorlabs:frame-default/double_frame_metal":"vandorlabs:frame-default/metal_side").sampling(false);
@@ -52,6 +52,6 @@ public final class NativeGlassScreen extends AbstractContainerScreen<NativeGlass
  @Override public boolean mouseReleased(double x,double y,int button){picker.release();return super.mouseReleased(x,y,button);}
  @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){return picker.wheel(x,y,vertical)||super.mouseScrolled(x,y,horizontal,vertical);}
  @Override public void renderBackground(GuiGraphics g,int x,int y,float partial){g.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(g,partial,x,y);}
- @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){g.fill(panel.left,panel.top,panel.left+panel.width,panel.top+panel.height,0xEE18212C);g.fill(panel.left,panel.top,panel.left+panel.width,panel.top+26,0xFF304858);g.drawString(font,GlassDialog.TITLE,panel.left+12,panel.top+10,0xFFFFFFFF,false);picker.render(g,x,y);}
+ @Override protected void renderBg(GuiGraphics g,float partial,int x,int y){com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(g,font,Component.literal(GlassDialog.TITLE),panel.left,panel.top,panel.width,panel.height,com.vandorlabs.ui.DialogStyle.DARK);picker.render(g,x,y);}
  @Override protected void renderLabels(GuiGraphics g,int x,int y){}@Override public boolean isPauseScreen(){return false;}
 }

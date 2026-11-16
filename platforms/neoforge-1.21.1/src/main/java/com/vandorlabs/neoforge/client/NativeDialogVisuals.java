@@ -21,6 +21,10 @@ public final class NativeDialogVisuals {
         int h=DialogStyle.logoHeight(headerHeight),w=DialogStyle.logoWidth(headerHeight);
         if(h>0&&w>0)graphics.blit(LOGO,DialogStyle.logoLeft(left,width,headerHeight),DialogStyle.logoTop(top,headerHeight),0,0,w,h,w,h);
     }
+    public static void tab(GuiGraphics graphics,Font font,String label,int left,int top,int width,int height,boolean enabled,int mouseX,int mouseY){
+        boolean hovered=mouseX>=left&&mouseY>=top&&mouseX<left+width&&mouseY<top+height;
+        graphics.fill(left,top,left+width,top+height,DialogStyle.tabBody(enabled,hovered));graphics.fill(left,top+height-2,left+width,top+height,DialogStyle.tabLine(enabled));graphics.drawCenteredString(font,label,left+width/2,top+(height-8)/2,DialogStyle.tabText(enabled));
+    }
     /** Exact authored Light slider, distinct from the Ramp's Forge GuiSlider skin. */
     public static void lightSlider(GuiGraphics graphics,int left,int top,int width,int selected,int maximum){
         graphics.fill(left,top+4,left+width,top+10,DialogStyle.LIGHT_SLIDER_TRACK);
