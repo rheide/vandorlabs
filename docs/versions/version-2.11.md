@@ -1,8 +1,8 @@
 # Vandor Labs 2.11.0
 
 Version 2.11 is in development, adding rechargeable Battery Modules and powered
-Core production in the Synthesis Tower. Minecraft 1.21.1 builder conversion is
-also in progress; other Core multiblocks remain outside this update.
+Core production in the Synthesis Tower. Minecraft 1.21.1 now includes the three
+builder multiblocks; other Core multiblocks remain outside this update.
 
 ## Battery Modules
 
@@ -18,7 +18,7 @@ slot when full. NeoForge currently has no Matter Infuser adapter.
 
 ## Powered Synthesis Tower
 
-Forge 1.12.2 Synthesis Towers produce three constructor Cores from Programmable
+Forge 1.12.2 and NeoForge 1.21.1 Synthesis Towers produce three constructor Cores from Programmable
 Matter and RF, supplied through a connected power port or a Battery Module.
 The original construction frame is unchanged. A new Production dialog shows
 rotating, textured previews of the finished structures; the Redstone tab
@@ -27,3 +27,18 @@ controls physical and channel activation while retaining paused work.
 Watch each Core grow in the chamber beneath four scanning beams, then collect
 it in the world or from the output slot. See the [constructor guide](../universal-constructors.md)
 for power costs, ports and operation.
+
+## Builders on Minecraft 1.21.1
+
+Synthesis Tower, Assembly Press and Enclosed Gantry now have native Core items
+and their complete structures. Formation and teardown wait for durable
+ownership preparation; mining and interrupted restarts retain one owner for
+frames, inputs, outputs, batteries and chips. The Synthesis Tower includes the
+same RF production and Redstone controls as Forge. Assembly Press and Enclosed
+Gantry retain their current structure-only behavior.
+
+See the [native builder guide](../builders-1.21.md) for construction, operation
+and safe teardown. Other Core multiblocks, the native Matter Infuser, and
+arm/copy integration for these assemblies remain deferred. The current native
+validation is focused development-runtime/software-rendering coverage, not a
+full release gate or hardware shader acceptance.

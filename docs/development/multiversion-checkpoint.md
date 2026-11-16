@@ -1,14 +1,15 @@
 # Multiversion development baseline
 
-Forge 1.12.2 remains the default development target on `master`, at mod version 2.10.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
+Forge 1.12.2 remains the default development target on `master`, at development version 2.11.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
 
 ## Current conversion boundary
 
-The current native completion scope comprises Ramp Controllers; chairs and seats;
-Turntables, Copy Controllers and Surface blocks; Tracks and remaining landing
-gear; the Industrial Table and remaining control variants; and the Core family. Shared portable
-Java 8 policies provide the common behavior, with platform lifecycle and rendering
-adapters. Native Vehicle Mode and other unlisted families remain deferred.
+The current new multiblock scope is limited to Synthesis Tower, Assembly Press
+and Enclosed Gantry and their cores. Other Core multiblocks and the Matter Infuser
+remain deferred. Existing native families retain their previously integrated
+scope; Native Vehicle Mode remains deferred. Shared portable Java 8 policies
+continue to provide common behavior with platform-specific lifecycle and
+rendering adapters.
 The Forge 2.10.0 release review is complete, using the full frozen baseline
 inventory and relevant repair reruns; see the [validation boundaries](../release-compatibility-2.10.md#validation-boundaries).
 The separate native checks do not establish full conversion parity. The 2.10 follow-ups include public
@@ -562,3 +563,20 @@ Editor sessions retain the originally selected member position and UUID while re
 ## Native resource ports and storage
 
 Power, Fluid and Matter Ports, Battery Block and Hexagonal Fuel Tank are enabled by default with canonical registry IDs and creative/search entries. Ports share six-face settings, optional pulling, bounded buffers, fair throughput and settings-only Duplifier copying/Undo with Forge. Focused native player checks cover configuration, resource-bearing mining and placement, Mekanism energy/fluid/item networks and RFTools Powercells. Storage checks cover resource-preserving items, joined tank membership, reload, casing/shape dialogs and coalesced resource-only updates. These focused checks do not establish completion of other machine families or replace the deferred release gate.
+
+## Three builder machines
+
+The three builder cores and their reserved parts are enabled with shared
+CoreLayout footprints, durable asynchronous formation/dismantling, and journaled
+mining receipts. Synthesis production uses the physical Battery Module or external
+RF, with the same work cost, ports, dialog and receiving-channel activation as
+Forge. Invalid saved ownership retains its original inert data. Direct
+non-player replacement is refused until teardown; native arm/copy adapters for
+these assemblies remain deferred.
+
+Focused acceptance includes 48 placed layouts, three recipes, exact inventory
+ownership, six abrupt restart phases, connected-player dialogs/mounts and
+complete client footprint publication. Render checks cover all three structures,
+partial Cores, scanning beams, nearby culling, resource reload and the actual
+world BER. The native checks use the development runtime and software renderer;
+they do not constitute a full release gate or hardware shader acceptance.

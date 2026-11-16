@@ -25,7 +25,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (Battery and Hexagonal Fuel Tank enabled; other machines pending) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three builders, Battery and Hexagonal Fuel Tank enabled; other machines deferred) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation tables | pending | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | pending | unimplemented | non-vehicle first |
@@ -105,3 +105,19 @@ Standalone Card and Data Chip readers now register their original IDs and shared
 Ordinary programmable Glass is now enabled with its canonical block/item/entity/menu identities, Source recipe, two-sided contained fluids, dedicated four-tab editor and source-matched chunk/pane/item rendering. Canonical focused checks cover 193 write/13 restart assertions, 52 real editor checks, actual L/T picks and filled-diagonal contacts, independent terrain/pane render negatives, all 304 padded item variants, tiny resource-pack overrides and reload/unload retirement. The standalone Canopy family is separately enabled; Vehicle/carried integration and broader native release acceptance remain deferred.
 
 Native standalone arms now provide regular and Large Extenders, Rotating Arms and mounts with Plates, Skis and Wheels, six mounting faces, joined platforms, dedicated settings, configured items and Duplifier Undo. Focused player and restart checks cover native/captured ownership, active-foot adoption, captured mining, native riders and safe obstruction return. See the [native construction guide](../native-joined-arm-platforms.md). Horizontal bare Extenders support journaled contact pushing for independent and joined platforms. Tracks and stationary side wheels are public with authored geometry, settings copying/Undo and focused player/motion checks; older integrated landing gear and Vehicle Mode remain unavailable; unsupported vanilla endpoint orientations stay captured and selectable. This does not establish complete non-Vehicle conversion or a release gate.
+
+## Three native builder machines
+
+Synthesis Tower, Assembly Press and Enclosed Gantry now have native Core items
+and the same frame layouts as Forge. The Synthesis Tower includes RF production,
+its Battery Module and chip mounts, inventory dialog, physical item/RF ports,
+and receiving-channel activation. Other Core multiblocks and the Matter Infuser
+remain outside this slice. See the [native builder guide](../builders-1.21.md).
+
+Focused checks cover all 48 design/facing/Core-corner layouts, durable Survival
+mining, three production recipes, malformed-data retention, and abrupt formation,
+mining and owned unformed-Core restart recovery. Connected-client checks verify
+all 45 tower cells, part ownership, both dialog paths, physical inventory and the
+actual world renderer. Separate software rendering covers all three full meshes,
+fabrication, nearby culling, animation and resource reload. These are development
+runtime/software checks, not a full release gate or hardware shader acceptance.

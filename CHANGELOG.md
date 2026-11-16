@@ -2,6 +2,13 @@
 
 ## 2.11.0 (in development)
 
+### Three builders on NeoForge 1.21.1
+
+- Add only Synthesis Tower, Assembly Press and Enclosed Gantry and their Core items, retaining the shared frame sizes and all horizontal facings/Core corners. Other Core multiblocks and the Matter Infuser remain deferred.
+- Add durable asynchronous formation, dismantling and Survival mining, with escrowed inventory drops and abrupt cross-chunk restart recovery. Preserve malformed saved ownership inertly and refuse non-player removal of retained assemblies.
+- Match powered Synthesis production, physical battery/chip handling, rear-bottom RF/item ports, Production/Redstone dialogs and textured previews. Publish every reserved cell and its owner data to clients after completion.
+- Reuse fixed-size, reload-safe meshes for all three structures, bottom-up Cores, four scanning beams and nearby-only fabrication effects. Native arm/copy integration for these assemblies remains deferred.
+
 ### Synthesis Tower
 
 - Produce Synthesis Tower, Assembly Press and Enclosed Gantry Cores from Programmable Matter and RF, with saved build progress and one owned output. Keep existing frame dimensions and materials.

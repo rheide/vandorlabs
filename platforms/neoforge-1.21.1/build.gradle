@@ -477,3 +477,27 @@ tasks.register('testRackTerrainUploads', JavaExec) {
     classpath = sourceSets.smoke.runtimeClasspath
     mainClass = 'com.vandorlabs.neoforge.client.SegmentedSectionUploadChecks'
 }
+
+// Only the three builder machines are included in this native conversion.
+sourceSets.main.resources.srcDir('build/generated/builder-resources')
+tasks.register('generateBuilderResources', Exec) {
+    dependsOn 'generateCubeResources'
+    commandLine pythonExecutable, 'generate_builder_resources.py'
+    inputs.file('generate_builder_resources.py')
+    inputs.files(fileTree('build/generated/cube-resources/assets/vandorlabs/textures/blocks/resource_ports'),
+                 fileTree('build/generated/cube-resources/assets/vandorlabs/textures/blocks/module_rack'))
+    for (design in ['assembly_press', 'synthesis_tower', 'enclosed_gantry']) {
+        inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block/universal_constructor/' + design))
+        inputs.files('../../src/main/resources/assets/vandorlabs/models/block/' + design + '_core.json',
+                     '../../src/main/resources/assets/vandorlabs/models/item/' + design + '_core.json')
+    }
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures'),
+                 fileTree('../../texture-packs/default/assets/vandorlabs/textures'))
+    outputs.dir('build/generated/builder-resources')
+}
+tasks.named('processResources') { dependsOn 'generateBuilderResources' }
+
+tasks.register('testBuilderResources', Exec) {
+    dependsOn 'generateBuilderResources'
+    commandLine pythonExecutable, 'test_builder_resources.py'
+}

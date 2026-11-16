@@ -1,0 +1,8 @@
+package com.vandorlabs.neoforge.builders;
+import com.mojang.serialization.MapCodec;import net.minecraft.core.*;import net.minecraft.world.*;import net.minecraft.world.entity.player.Player;import net.minecraft.world.item.ItemStack;import net.minecraft.world.level.*;import net.minecraft.world.level.block.*;import net.minecraft.world.level.block.entity.*;import net.minecraft.world.level.block.state.*;import net.minecraft.world.phys.BlockHitResult;
+public final class NativeBuilderPartBlock extends BaseEntityBlock {
+ NativeBuilderPartBlock(Properties p){super(p);}@Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}@Override public BlockEntity newBlockEntity(BlockPos p,BlockState s){return new NativeBuilderPartEntity(p,s);}@Override public RenderShape getRenderShape(BlockState s){return RenderShape.INVISIBLE;}
+ @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level level,BlockPos pos,Player player,InteractionHand hand,BlockHitResult hit){return NativeBuilderBindings.interact(player,level,pos,hand)?ItemInteractionResult.SUCCESS:ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;}
+ @Override protected InteractionResult useWithoutItem(BlockState state,Level level,BlockPos pos,Player player,BlockHitResult hit){return NativeBuilderBindings.interact(player,level,pos,InteractionHand.MAIN_HAND)?InteractionResult.sidedSuccess(level.isClientSide):InteractionResult.PASS;}
+ @Override protected void neighborChanged(BlockState s,Level l,BlockPos p,Block b,BlockPos f,boolean m){var owner=NativeBuilderBindings.ownerAt(l,p);if(!l.isClientSide&&owner!=null)owner.samplePower();}
+}

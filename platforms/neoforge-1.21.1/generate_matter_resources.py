@@ -61,6 +61,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('power_port', 'fluid_port', 'matter_port', 'battery_block', 'hexagonal_fuel_tank')]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')]
     wanted += ['tile.vandorlabs.programmable_ramp.name', 'tile.vandorlabs.programmable_ramp_slab.name']
+    wanted += ['tile.vandorlabs.' + name + '_core.name' for name in ('synthesis_tower', 'assembly_press', 'enclosed_gantry')]
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         key, separator, value = line.partition('=')
         if separator and key in wanted:
@@ -83,6 +84,7 @@ def main():
         optional_trapdoors += [{'id':'vandorlabs:industrial_table','required':False}]
         optional_trapdoors += [{'id': 'vandorlabs:' + name, 'required': False} for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')] if tag == 'mineable/pickaxe' else []
         optional_trapdoors += [{'id':'vandorlabs:module_rack','required':False}]
+        optional_trapdoors += [{'id':'vandorlabs:'+name+'_core','required':False} for name in ('synthesis_tower','assembly_press','enclosed_gantry')]
         optional_trapdoors += [{'id':'vandorlabs:'+name,'required':False} for name in ('landing_gear','ski_landing_gear','landing_strut','angled_landing_strut')]
         optional_trapdoors += [{'id':'vandorlabs:'+name,'required':False} for name in ('programmable_chair','luxury_seat','military_seat','pilot_seat')]
         optional_trapdoors += [{'id':'vandorlabs:'+name,'required':False} for name in ('compact_track','armoured_track','bogie_track','wheel_small','wheel_medium','wheel_large')]

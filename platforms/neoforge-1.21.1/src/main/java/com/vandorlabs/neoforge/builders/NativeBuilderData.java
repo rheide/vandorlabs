@@ -1,0 +1,15 @@
+package com.vandorlabs.neoforge.builders;
+import net.minecraft.core.*;import net.minecraft.nbt.*;import net.minecraft.world.item.ItemStack;
+public final class NativeBuilderData {
+ public static CompoundTag save(ItemStack[] items,HolderLookup.Provider registries){var tag=new CompoundTag();var list=new ListTag();for(int slot=0;slot<items.length;slot++)if(!items[slot].isEmpty()){var entry=new CompoundTag();entry.putInt("Slot",slot);entry.put("Stack",items[slot].save(registries));list.add(entry);}tag.put("Items",list);return tag;}
+ public static ItemStack[] read(CompoundTag tag,HolderLookup.Provider registries){
+  if(!tag.getAllKeys().stream().allMatch(k->k.equals("Items")))throw new IllegalArgumentException("Builder inventory fields");var items=new ItemStack[]{ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY};if(!tag.contains("Items"))return items;
+  if(!(tag.get("Items") instanceof ListTag list)||!list.isEmpty()&&list.getElementType()!=Tag.TAG_COMPOUND||list.size()>4)throw new IllegalArgumentException("Builder inventory schema");boolean[] seen=new boolean[4];
+  for(var value:list){var entry=(CompoundTag)value;if(!entry.getAllKeys().equals(java.util.Set.of("Slot","Stack"))||!entry.contains("Slot",Tag.TAG_INT)||!entry.contains("Stack",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Builder inventory entry");int slot=entry.getInt("Slot");if(slot<0||slot>3||seen[slot])throw new IllegalArgumentException("Builder inventory slot");seen[slot]=true;var encoded=entry.getCompound("Stack");var stack=ItemStack.parse(registries,encoded).orElseThrow(()->new IllegalArgumentException("Builder inventory item"));if(stack.isEmpty()||stack.getCount()<1||stack.getCount()>stack.getMaxStackSize()||slot>=2&&stack.getCount()!=1||!encoded.equals(stack.save(registries)))throw new IllegalArgumentException("Builder inventory count/components");String id=net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();if(slot==0&&!id.equals("vandorlabs:programmable_matter_block")||slot==1&&!NativeBuilderDesigns.ALL.stream().anyMatch(d->id.equals("vandorlabs:"+d.block()))||slot==2&&!com.vandorlabs.neoforge.rack.NativeBatteryModule.valid(stack)||slot==3&&!com.vandorlabs.neoforge.credentials.NativeCredentialItems.accepts(stack,true))throw new IllegalArgumentException("Builder inventory slot item");items[slot]=stack;}
+  return items;
+ }
+ /** Vanilla loaded-chunk storage hints are not tile ownership. Every authored field stays exact. */
+ public static CompoundTag normalizedSnapshot(CompoundTag original){var tag=original.copy();if(tag.contains("keepPacked",Tag.TAG_BYTE)&&tag.getByte("keepPacked")==0)tag.remove("keepPacked");if(tag.contains("NeoForgeData",Tag.TAG_COMPOUND)&&tag.getCompound("NeoForgeData").isEmpty())tag.remove("NeoForgeData");return tag;}
+ public static boolean sameSnapshots(CompoundTag a,CompoundTag b){return java.util.Objects.equals(a,b)||a!=null&&b!=null&&normalizedSnapshot(a).equals(normalizedSnapshot(b));}
+ private NativeBuilderData(){}
+}

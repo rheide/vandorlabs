@@ -645,18 +645,20 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Integrate the remaining constructor, infuser, drive and navigation-core machine adapters; Battery and Hexagonal Fuel Tank are enabled",
-        "native multiblock assembly/inventory/fluid adapters",
-        "transaction and container semantics",
-        "all frame models and surface input",
-        "live parity"
+        "Matter Infuser, drive, navigation and other Core multiblocks remain outside the three-builder slice",
+        "Native builder arm carrying and Copy Controller adapters remain deferred",
+        "Full release-gate and hardware shader acceptance remain separate from focused development checks"
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "implemented": [
         "Battery Block and Hexagonal Fuel Tank with canonical IDs, six-face placement, resource-preserving configured items and dedicated casing/shape/status dialogs",
-        "Native Power and Fluid Port integration, complete axial tank groups, per-cell resource ownership, reload and bounded membership caching"
+        "Native Power and Fluid Port integration, complete axial tank groups, per-cell resource ownership, reload and bounded membership caching",
+        "Synthesis Tower, Assembly Press and Enclosed Gantry cores plus the hidden reserved part; shared frame dimensions and all four Core corners/facings",
+        "Asynchronous durable formation, dismantling and mining with exact owned input/output/battery/chip drops and abrupt partial-save recovery",
+        "Powered Synthesis production, physical RF/item ports, standard Redstone activation/channels, authenticated inventory dialog and textured rotating previews",
+        "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication"
       ]
     },
     {

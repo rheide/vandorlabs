@@ -32,7 +32,8 @@
     "NativeGearTickGuard",
     "NativeGearEntityManagerAccess",
     "NativeGearEntityStoreCapture",
-    "NativeGearHopperItemGuard"
+    "NativeGearHopperItemGuard",
+    "NativeBuilderLevelGuard"
   ],
   "injectors": {
     "defaultRequire": 1
