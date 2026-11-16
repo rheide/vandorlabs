@@ -22,6 +22,7 @@ public final class SynthesisDialog {
    listLeft=12;listRight=previewLeft-12;listTop=compact?92:100;listBottom=height-12;rowHeight=compact?17:24;
    rfX=narrow?110:126;rfY=machineY;rfWidth=width-42-rfX;rfHeight=16;
   }
+  public int listHeadingY(){return listTop-(compact?10:12);}
   public int visibleRows(){return Math.max(1,(listBottom-listTop)/rowHeight);}
   public int machineX(int slot){switch(slot){case 0:return 18;case 1:return 80;case 2:case 3:case 4:case 5:case 6:return width-30;default:throw new IllegalArgumentException("Slot");}}
   public int slotX(int slot){return slot<7?machineX(slot):inventoryX+(slot-7)%9*18;}

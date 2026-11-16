@@ -4,6 +4,8 @@
 
 ### Catalogs and Forge builder production
 
+- Widen builder dialogs with a full-height design list, selected-design preview heading, right-column inventory, vertical module slots and a shared top row with exact combined-RF tooltips. Use the same responsive layout in both versions. Correct Catalog Chip previews to view models from above.
+
 - Keep item appearance overrides on concrete item models when sharing packaged geometry, so typed chip artwork and other item predicates remain selectable in Minecraft 1.12.2.
 
 - Add supplied Journal, Vehicle, Navigation and Catalog Chip artwork; retain company cards and change chip appearance when programming journals or vehicles. Navigation Chip (blank) remains unpurposed.

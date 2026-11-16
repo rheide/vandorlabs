@@ -69,6 +69,7 @@ public final class GuiSynthesisTower extends GuiContainer {
     private String selectedLabel(){return com.vandorlabs.client.constructors.BuilderRecipePreview.label(container.tile.builderRecipe(container.values[0]));}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY){
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,com.vandorlabs.ui.SynthesisDialog.STYLE.body);DialogHeader.logo(guiLeft,guiTop,xSize);
+        drawRect(guiLeft+12,guiTop+52,guiLeft+xSize-12,guiTop+layout.machineY+20,0xFF17212C);
         if(page==0){
         drawRect(guiLeft+layout.listLeft,guiTop+layout.listTop,guiLeft+layout.listRight,guiTop+layout.listBottom,0xFF0D1118);
         clampScroll();int selected=container.values[0];java.util.List<String> recipes=recipes();
@@ -103,10 +104,11 @@ public final class GuiSynthesisTower extends GuiContainer {
     private void slot(int x,int y){drawRect(guiLeft+x-1,guiTop+y-1,guiLeft+x+17,guiTop+y+17,0xFF67727E);drawRect(guiLeft+x,guiTop+y,guiLeft+x+16,guiTop+y+16,0xFF0B1017);}
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
         fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Assembly Press":container.tile.builderMachine().equals("enclosed_gantry")?"Enclosed Gantry":"Synthesis Tower",12,10,0xFFFFFF);
-        if(page==0){fontRenderer.drawString("Designs",layout.listLeft,layout.listTop-12,0xD4DFE9);fontRenderer.drawString(fontRenderer.trimStringToWidth(selectedLabel(),layout.previewRight-layout.previewLeft),layout.previewLeft,layout.previewTop-12,0xD4DFE9);}
+        if(page==0){fontRenderer.drawString("Designs",layout.listLeft,layout.listHeadingY(),0xD4DFE9);fontRenderer.drawString(fontRenderer.trimStringToWidth(selectedLabel(),layout.previewRight-layout.previewLeft),layout.previewLeft,layout.previewTop-12,0xD4DFE9);}
         if(page==1&&!compact){fontRenderer.drawString("Physical Redstone or any receiving channel.",12,180,0xA7B3C0);fontRenderer.drawString("A disabled machine keeps its current build.",12,193,0xA7B3C0);}
         fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Ingots":"Matter",layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Output",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString("Chip",layout.machineX(3)-4,machineY()-12,0xC3CFDB);
+        fontRenderer.drawString("RF",layout.rfX+4,layout.rfY+4,0xE4EDF4);
         fontRenderer.drawString(">",layout.progressX()+layout.progressWidth()/2-2,machineY()+4,0xD4DFE9);
         fontRenderer.drawString("Inventory",layout.inventoryX,inventoryY()-10,0xD4DFE9);
     }

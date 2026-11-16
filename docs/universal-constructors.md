@@ -48,6 +48,10 @@ Right-click the Core to form the machine. Its finished front has a square
 display on the left and a Data Chip Mount and Module Rack on the right.
 
 Right-click the formed machine, or use the Configurizer, to open Production.
+The design list occupies the full left column. The selected design’s name
+heads its preview, with player inventory below and four vertical module slots
+beside it. The top row holds Matter, Output, the combined battery RF bar and
+the Chip slot. Hover over the RF bar for the exact stored RF and capacity.
 Select Synthesis Tower, Assembly Press or Enclosed Gantry from the design list;
 the rotating textured preview shows the complete structure. Insert one
 Programmable Matter Block in the Matter slot. Each Core uses 8,000 RF, at
