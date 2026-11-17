@@ -8,7 +8,7 @@ public final class ScreenJoinSignature {
  private boolean frame(ScreenJoinSignature other){return fit==other.fit&&split==other.split&&(!split||top==other.top&&bottom==other.bottom);}
  public boolean editMatches(ScreenJoinSignature other){return other!=null&&shape(other)&&frame(other)&&sharedArtwork==other.sharedArtwork;}
  public boolean powerMatches(ScreenJoinSignature other){return other!=null&&shape(other)&&frame(other)&&mode==other.mode&&inverted==other.inverted&&Arrays.equals(activation,other.activation);}
- public boolean editEligible(ScreenFamily family){return ScreenJoinGeometry.supports(family,small)&&(sharedArtwork>=0||sharedArtwork==-4);}
+ public boolean editEligible(ScreenFamily family){return ScreenJoinGeometry.supports(family,small)&&(sharedArtwork>=0||sharedArtwork==-4||sharedArtwork==-5);}
  public boolean powerEligible(ScreenFamily family){return mode!=0&&ScreenJoinGeometry.supports(family,small);}
  public int texture(int state){return activation[state*3];}public int playback(int state){return activation[state*3+1];}public int speed(int state){return activation[state*3+2];}
 }

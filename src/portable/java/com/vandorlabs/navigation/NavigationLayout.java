@@ -165,6 +165,7 @@ public final class NavigationLayout {
             }
         }
     }
+    public static Screen mapScreen(Kind kind,Facing facing,Cell origin,int width,int depth){return new Layout(kind,facing,width,depth,origin,origin,Collections.<Cell,Tile>emptyMap()).screen();}
     public static DisplayPatch displayPatch(Kind kind,Facing moduleFacing,Cell cell,int mask,Facing displayFacing,Cell origin,int width,int depth){
         Layout layout=new Layout(kind,displayFacing,width,depth,origin,origin,Collections.<Cell,Tile>emptyMap());
         return new DisplayPatch(layout.screen(),surface(kind,moduleFacing,cell,mask));

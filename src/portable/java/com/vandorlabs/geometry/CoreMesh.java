@@ -7,7 +7,7 @@ public final class CoreMesh {
     public static final int GRID=32,CENTER_MIN=10,CENTER_MAX=22;
     public static final float ITEM_GUI_SCALE=.54F;
     public static final int EMPTY=0,FRAME=1,HIGHLIGHT=2,SHADOW=3,CORNER=4,LEGACY_CORE=5,CORNER_PANEL=6,CORNER_RIVET=7,CORNER_INSET=8;
-    public static final List<String> IDS=Collections.unmodifiableList(Arrays.asList("assembly_press","synthesis_tower","enclosed_gantry","longburn_drive","meridian_core","paladyne_navigation_computer","seyr_navigation_computer","vector_fold_array","oculus_drive","sentinel_array","standalone_antenna","standalone_dish","survey_dish"));
+    public static final List<String> IDS=Collections.unmodifiableList(Arrays.asList("assembly_press","synthesis_tower","enclosed_gantry","longburn_drive","meridian_core","paladyne_navigation_computer","seyr_navigation_computer","vector_fold_array","oculus_drive","standalone_antenna","standalone_dish"));
     // Primary hues sampled from each unchanged legacy Core artwork, including its registry aliases.
     private static final int[] PRIMARIES={0x52cfde,0xa873e4,0xe9a84a,0xe9a84a,0xdebb53,0x52cfde,0x48ace2,0xdebb53,0xdebb53,0x52cfde,0x52cfde,0x52cfde,0x52cfde};
     public static final class Palette {
