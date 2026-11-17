@@ -40,7 +40,7 @@ public final class NativeBuilderMenuChecks{
    for(int mutation=0;mutation<4;mutation++){
     var buffer=new RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),actor.registryAccess());try{
      NativeBuilderPayload.CODEC.encode(buffer,new NativeBuilderPayload(new NativeBuilderEdit(37,tile.getBlockPos(),0,0,ChannelList.EMPTY)));
-     if(mutation==0)buffer.writeByte(0);else if(mutation==1)buffer.setByte(14,65);else if(mutation==2)buffer.setByte(12,2);else buffer.setByte(13,3);
+     if(mutation==0)buffer.writeByte(0);else if(mutation==1)buffer.setByte(14,65);else if(mutation==2)buffer.setByte(12,2);else buffer.setByte(13,6);
      boolean rejected=false;try{NativeBuilderPayload.CODEC.decode(buffer);}catch(IllegalArgumentException expected){rejected=true;}need(rejected,"bounded malformed payload "+mutation);
     }finally{buffer.release();}
    }

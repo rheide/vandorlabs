@@ -39,8 +39,9 @@ final class NativeScreenChipService {
  }
  void install(Prepared prepared){externalSource=null;externalDisplay=null;reader=prepared.reader;page=prepared.page;pendingPage=page;displayInitialized=false;displayedJournal=null;client=prepared.client;cached=null;cachedVisual=null;cachedMotion=null;cachedPage=-1;}
  void clear(){externalSource=null;externalDisplay=null;reader=null;client=null;cached=null;cachedVisual=null;cachedMotion=null;page=0;pendingPage=0;displayInitialized=false;displayedJournal=null;cachedPage=-1;}
- boolean selected(int slot){return owner.family().supportsSlot(slot)&&(slot==0?owner.screenSettings().primarySurface():owner.screenSettings().secondarySurface())==-4&&!owner.controls(slot).enabled();}
+ boolean selected(int slot){return owner.family().supportsSlot(slot)&&(slot==0?owner.screenSettings().primarySurface():owner.screenSettings().secondarySurface())<=-4&&!owner.controls(slot).enabled();}
  boolean selected(){return selected(0)||selected(1);}
+ net.minecraft.world.item.ItemStack navigationChip(){return reader==null?net.minecraft.world.item.ItemStack.EMPTY:reader.tokenCopy();}
  int page(){return page;}
  NativeScreenChipView view(){
   if(owner.inert()||!selected())return null;if(owner.getLevel()!=null&&owner.getLevel().isClientSide)return client==null?NativeScreenChipView.empty():client;

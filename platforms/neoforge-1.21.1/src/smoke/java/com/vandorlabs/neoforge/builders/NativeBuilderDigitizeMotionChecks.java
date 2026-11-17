@@ -1,0 +1,12 @@
+package com.vandorlabs.neoforge.builders;
+import com.vandorlabs.neoforge.builders.client.NativeBuilderProgressMotion;
+import net.minecraft.core.*;
+import net.minecraft.world.item.*;
+import java.util.*;
+/** Cosmetic RF progress remains separate from authoritative jobs and duplicate publications. */
+public final class NativeBuilderDigitizeMotionChecks {
+ private static NativeBuilderEntity.Visual view(boolean processing,float progress,ItemStack input){return new NativeBuilderEntity.Visual("synthesis_tower",Direction.NORTH,BlockPos.ZERO,true,processing,progress,5,5,true,ItemStack.EMPTY,ItemStack.EMPTY,List.of(ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY,ItemStack.EMPTY),List.of(0L,0L,0L,0L),processing,0,1,input,ItemStack.EMPTY);}
+ public static void run(){var state=new NativeBuilderProgressMotion.State();var key=new UUID(1,2);var input=new ItemStack(Items.STONE);state.observe(view(true,.2f,input),key,0);need(state.progress==.2f,"initial restored progress exact");var update=view(true,.4f,input);state.observe(update,key,1);need(state.progress==.2f,"new RF update starts from prior display");state.observe(update,key,3);float middle=state.progress;need(middle>.2f&&middle<.4f,"partial reverse easing");state.observe(view(true,.4f,input),key,3);need(state.progress==middle,"duplicate packet does not restart easing");state.observe(update,key,5);need(state.progress==.4f,"easing stops at authorized RF progress");state.observe(update,key,5);need(state.progress==.4f,"paused client clock holds exact pose");state.observe(view(false,0,ItemStack.EMPTY),key,6);need(state.visible&&!state.input().isEmpty(),"completion retains bounded input for cosmetic tail");state.observe(view(false,0,ItemStack.EMPTY),key,10);need(!state.visible&&state.progress==1,"completed reverse disappears at zero remaining volume");var next=new ItemStack(Items.GLASS);state.observe(view(false,0,next),key,10.5);need(state.visible&&state.input().is(Items.GLASS)&&state.progress==0,"new idle sample replaces completed cosmetic tail");state.observe(view(true,0,input),key,11);need(state.visible&&state.progress==0,"repeat same-item job resets after completion");System.out.println("[vandorlabs][builder-client] motion PASS restoredProgress/duplicatePackets/pausedClock/smoothReverse/boundedCompletionTail/repeatedJobs");}
+ private static void need(boolean value,String why){if(!value)throw new AssertionError("Builder Digitize motion: "+why);}
+ private NativeBuilderDigitizeMotionChecks(){}
+}

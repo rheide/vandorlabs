@@ -26,12 +26,12 @@ public final class NativeBuilderRenderChecks {
     }
     private static void verifyDynamicNormals(){
         need(NativeBuilderModelCache.mesh("synthesis_tower",true).vertexCount()==com.vandorlabs.geometry.CoreMesh.faces("synthesis_tower").size()*4,"shared hollow Core mesh");
-        int[] vertices={0},normals={0};boolean[] beam={false};
+        int[] vertices={0},normals={0};boolean[] beam={false};var colors=new java.util.HashSet<Integer>();for(int i=0;i<4;i++)colors.add(com.vandorlabs.machines.SynthesisLaserStyle.color(i,20));
         var target=(com.mojang.blaze3d.vertex.VertexConsumer)java.lang.reflect.Proxy.newProxyInstance(com.mojang.blaze3d.vertex.VertexConsumer.class.getClassLoader(),new Class[]{com.mojang.blaze3d.vertex.VertexConsumer.class},(proxy,method,args)->{
             if(method.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,method,args);
             if(method.getName().equals("addVertex")){vertices[0]++;beam[0]=false;}
-            if(method.getName().equals("setColor")&&args.length==1&&args[0] instanceof Integer color)beam[0]=color==0xffff4132;
-            if(method.getName().equals("setColor")&&args.length==4)beam[0]=((Number)args[0]).intValue()==255&&((Number)args[1]).intValue()==65&&((Number)args[2]).intValue()==50;
+            if(method.getName().equals("setColor")&&args.length==1&&args[0] instanceof Integer color)beam[0]=colors.contains(color);
+            if(method.getName().equals("setColor")&&args.length==4)beam[0]=colors.contains(((Number)args[3]).intValue()<<24|((Number)args[0]).intValue()<<16|((Number)args[1]).intValue()<<8|((Number)args[2]).intValue());
             if(method.getName().equals("setNormal")&&beam[0]){normals[0]++;need(Math.abs(((Number)args[0]).floatValue())<.001&&((Number)args[1]).floatValue()<-.99&&Math.abs(((Number)args[2]).floatValue())<.001,"dynamic beam normal follows GUI flipped-Y pose");}
             return method.getReturnType()==com.mojang.blaze3d.vertex.VertexConsumer.class?proxy:null;
         });

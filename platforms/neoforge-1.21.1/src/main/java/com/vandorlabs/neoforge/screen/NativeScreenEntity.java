@@ -73,7 +73,7 @@ public class NativeScreenEntity extends BlockEntity implements NativeChannelMemb
  void installSurface(NativeScreenSurfaceEdit.Result next,int slot){if(next.settings()==snapshot.settings&&controls(slot).enabled()==next.rowsEnabled())return;geometryRevision++;snapshot=new Snapshot(next.settings(),snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);publishLocal();controlService.setEnabled(slot,next.rowsEnabled());changed(false);}
  boolean applySurface(NativeScreenSurfaceEdit edit){
   serverThread();if(!activationEditAllowed()||edit==null)return false;
-  if(edit.choice()==-4&&!NativeScreenChipInteractions.available(this,edit.slot()))return false;
+  if((edit.choice()==-4||edit.choice()==-5)&&!NativeScreenChipInteractions.available(this,edit.slot()))return false;
   var next=planSurface(edit);if(next==null)return false;
   NativeScreenPowerService.queueTopology(this);editingDisplay=true;try{NativeRedstoneChannels.batch((ServerLevel)level,()->{installSurface(next,edit.slot());NativeScreenPowerService.refresh(this);});}finally{editingDisplay=false;}return true;
  }

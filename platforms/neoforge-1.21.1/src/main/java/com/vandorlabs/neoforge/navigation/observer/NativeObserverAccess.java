@@ -1,0 +1,13 @@
+package com.vandorlabs.neoforge.navigation.observer;
+import com.vandorlabs.neoforge.ramp.NativeRampHeldOwners;import com.vandorlabs.neoforge.transfer.NativeCellTransactions;import net.minecraft.core.*;import net.minecraft.server.level.ServerLevel;import net.minecraft.world.entity.player.Player;
+/** A formed machine is reached through its actual member; both root and clicked-cell permissions apply. */
+public final class NativeObserverAccess {
+ public static BlockPos nearest(Player actor,NativeObserverEntity root){if(!root.formed())return root.getBlockPos();var l=root.layout();var d=root.design();int x=root.getBlockPos().getX()-l.pivotX(),z=root.getBlockPos().getZ()-l.pivotZ(),y=root.getBlockPos().getY()-(root.inverted()?d.height()-1:0);return new BlockPos(clamp((int)Math.floor(actor.getX()),x,x+l.extentX()-1),clamp((int)Math.floor(actor.getY()),y,y+d.height()-1),clamp((int)Math.floor(actor.getZ()),z,z+l.extentZ()-1));}
+ private static int clamp(int value,int min,int max){return Math.max(min,Math.min(max,value));}
+ public static boolean member(NativeObserverEntity root,BlockPos target){var world=root.getLevel();if(!NativeObserverFormation.loaded(world,target))return false;var tile=world.getBlockEntity(target);return target.equals(root.getBlockPos())?tile==root:root.formed()&&tile instanceof NativeObserverPartEntity part&&part.root()==root;}
+ public static boolean canUse(Player actor,NativeObserverEntity root,BlockPos target){return !root.transactionBlocked()&&valid(actor,root,target,null);}
+ public static boolean journal(Player actor,NativeObserverEntity root,BlockPos target,NativeCellTransactions.Header header){return valid(actor,root,target,header);}
+ private static boolean valid(Player actor,NativeObserverEntity root,BlockPos target,NativeCellTransactions.Header header){var world=root.getLevel();return actor!=null&&!root.inert()&&actor.isAlive()&&!actor.isSpectator()&&actor.level()==world&&NativeObserverFormation.loaded(world,root.getBlockPos())&&world.getBlockEntity(root.getBlockPos())==root&&member(root,target)&&actor.distanceToSqr(target.getCenter())<=64&&unlocked(world,header,root.getBlockPos())&&unlocked(world,header,target)&&world.mayInteract(actor,root.getBlockPos())&&world.mayInteract(actor,target)&&actor.mayUseItemAt(root.getBlockPos(),Direction.UP,actor.getMainHandItem())&&actor.mayUseItemAt(target,Direction.UP,actor.getMainHandItem());}
+ public static boolean unlocked(net.minecraft.world.level.Level world,NativeCellTransactions.Header header,BlockPos pos){return !NativeRampHeldOwners.blocked(world,pos)||header!=null&&world instanceof ServerLevel server&&NativeCellTransactions.reservedBy(server,header,pos);}
+ private NativeObserverAccess(){}
+}

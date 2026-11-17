@@ -1,0 +1,8 @@
+package com.vandorlabs.neoforge.gear;
+import com.vandorlabs.neoforge.navigation.observer.*;import com.vandorlabs.redstone.ChannelList;import net.minecraft.world.level.Level;import net.minecraft.world.phys.*;
+/** Authoritative observer projection without exposing private arm ownership snapshots. */
+public final class NativeObserverPayloadSources {
+ @FunctionalInterface public interface Visitor {void accept(Vec3 position,int radius,ChannelList channels,int transmissionRange);}
+ public static void visit(Level world,AABB bounds,Visitor visitor){NativeGearTargets.visit(world,bounds,arm->{var payload=arm.payload();if(payload==null||payload.materialized())return;var transform=payload.transform(arm,arm.progress());for(var cell:payload.cells()){if(!(cell.state.getBlock() instanceof NativeObserverCoreBlock block)||!cell.state.getValue(NativeObserverCoreBlock.FORMED))continue;var raw=cell.tile();if(raw==null)continue;var d=NativeObserverDesigns.scaled(block.design.id(),raw.getInt("ObserverWidth"));var local=cell.pos.subtract(arm.getBlockPos());var p=transform.point(local.getX()+.5,local.getY(),local.getZ()+.5).add(Vec3.atLowerCornerOf(arm.getBlockPos()));int range=raw.contains("TransmissionRange")?raw.getInt("TransmissionRange"):16;try{var channels=ChannelList.of(raw.getIntArray("TransmittedChannels"));if(NativeObserverEntity.validRange(range))visitor.accept(p,com.vandorlabs.navigation.NavigationRange.radius(d.maximum(),p.y,com.vandorlabs.navigation.ObserverScale.linearScale(d.id(),d.width())),channels,range);}catch(IllegalArgumentException ignored){/* Malformed captured sources supply no observation. */}}});}
+ private NativeObserverPayloadSources(){}
+}

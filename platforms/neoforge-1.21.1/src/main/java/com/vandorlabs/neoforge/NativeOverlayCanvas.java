@@ -10,7 +10,7 @@ import org.joml.Matrix4fc;
 
 /** Shared prepared pixel canvas for standalone controls and journal displays. No worlds, hosts or item stacks. */
 final class NativeOverlayCanvas {
- interface Text {void trimmed(String value,int x,int y,int color,int width);void fitted(String value,int x,int y,int width,int color);void plain(String value,int x,int y,int color);void centered(String value,int center,int y,int color);}
+ interface Text {void trimmed(String value,int x,int y,int color,int width);void fitted(String value,int x,int y,int width,int color);void enchantingFitted(String value,int x,int y,int width,int color);void plain(String value,int x,int y,int color);void centered(String value,int center,int y,int color);}
  record Glyphs(RenderType type,int[] words){}
  record Mesh(List<Glyphs> layers,long bytes){}
  private static final class Types extends RenderType {
@@ -41,6 +41,7 @@ final class NativeOverlayCanvas {
    public void plain(String value,int x,int y,int color){font.drawInBatch(value,x,y,0xff000000|color,false,depth,target,Font.DisplayMode.NORMAL,0,0x00f000f0);}
    public void trimmed(String value,int x,int y,int color,int width){plain(width<0?value:font.plainSubstrByWidth(value,width),x,y,color);}
    public void fitted(String value,int x,int y,int width,int color){int measured=font.width(value);if(measured<=width){plain(value,x,y,color);return;}float scale=width/(float)measured;fit.translation(x,y,.04F).scale(scale,scale,1);font.drawInBatch(value,0,0,0xff000000|color,false,fit,target,Font.DisplayMode.NORMAL,0,0x00f000f0);}
+   public void enchantingFitted(String value,int x,int y,int width,int color){var component=net.minecraft.network.chat.Component.literal(value).withStyle(net.minecraft.network.chat.Style.EMPTY.withFont(net.minecraft.resources.ResourceLocation.parse("minecraft:alt")));int measured=font.width(component);float scale=measured>width?width/(float)measured:1;fit.translation(x,y,.04F).scale(scale,scale,1);font.drawInBatch(component,0,0,0xff000000|color,false,fit,target,Font.DisplayMode.NORMAL,0,0x00f000f0);}
    public void centered(String value,int center,int y,int color){plain(value,(center*2-font.width(value))/2,y,color);}
   });
   var layers=new ArrayList<Glyphs>();long retained=96;for(var layer:captured.entrySet()){int[] words=Arrays.copyOf(layer.getValue().words,layer.getValue().vertices*7);retained+=96L+words.length*4L;layers.add(new Glyphs(layer.getKey(),words));}return new Mesh(List.copyOf(layers),retained);

@@ -1,0 +1,9 @@
+package com.vandorlabs.neoforge.navigation.observer;
+import com.vandorlabs.machines.CoreLayout;import net.minecraft.core.*;import net.minecraft.core.registries.BuiltInRegistries;import net.minecraft.resources.ResourceLocation;import net.minecraft.world.level.Level;
+public final class NativeObserverFormation {
+ public record Layout(Direction facing,int x,int z,boolean inverted,int width){}
+ public static boolean loaded(Level level,BlockPos pos){return level!=null&&!level.isOutsideBuildHeight(pos)&&level.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4)!=null;}
+ public static net.minecraft.world.level.block.Block matter(){return BuiltInRegistries.BLOCK.get(ResourceLocation.parse("vandorlabs:programmable_matter_block"));}
+ public static Layout discover(NativeObserverEntity owner){String id=owner.design().id();for(int width=com.vandorlabs.navigation.ObserverScale.baseWidth(id);width<=com.vandorlabs.navigation.ObserverScale.maximumWidth(id);width++){var d=NativeObserverDesigns.scaled(id,width);for(boolean inverted:new boolean[]{false,true})for(int turn=0;turn<4;turn++){var face=Direction.from2DDataValue((owner.facing().get2DDataValue()+turn)%4);for(int x:new int[]{0,d.width()-1})for(int z:new int[]{0,d.depth()-1}){var l=new CoreLayout(d.width(),d.height(),d.depth(),face.get3DDataValue(),x,z);boolean valid=true;for(int a=0;a<d.width()&&valid;a++)for(int y=0;y<d.height()&&valid;y++)for(int b=0;b<d.depth();b++){var p=owner.getBlockPos().offset(l.x(a,b),inverted?-y:y,l.z(a,b));if(p.equals(owner.getBlockPos()))continue;if(!loaded(owner.getLevel(),p)||owner.getLevel().getBlockEntity(p)!=null||(l.frame(a,y,b)?owner.getLevel().getBlockState(p).getBlock()!=matter():!owner.getLevel().getBlockState(p).isAir())){valid=false;break;}}if(valid)return new Layout(face,x,z,inverted,width);}}}throw new IllegalArgumentException("Complete the Matter Block frame and leave its interior empty");}
+ private NativeObserverFormation(){}
+}

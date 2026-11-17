@@ -33,7 +33,8 @@
     "NativeGearEntityManagerAccess",
     "NativeGearEntityStoreCapture",
     "NativeGearHopperItemGuard",
-    "NativeBuilderLevelGuard"
+    "NativeBuilderLevelGuard",
+    "NativeObserverLevelGuard"
   ],
   "injectors": {
     "defaultRequire": 1

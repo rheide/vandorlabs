@@ -1,0 +1,25 @@
+package com.vandorlabs.neoforge.screen;
+import com.vandorlabs.navigation.NavigationCanvas;
+import com.vandorlabs.screen.*;
+import com.vandorlabs.redstone.ChannelList;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.phys.Vec3;
+/** Navigation eligibility and authoritative hit geometry for existing chip-capable Screen hosts. */
+public final class NativeScreenNavigation {
+ @FunctionalInterface public interface Actions{boolean action(Player player,NativeScreenEntity screen,int slot,int action);}
+ public static Actions SERVER=(p,t,s,a)->false,CLIENT=(p,t,s,a)->false;
+ public static boolean selected(NativeScreenEntity t,int slot){return t!=null&&!t.inert()&&t.family().supportsSlot(slot)&&!t.controls(slot).enabled()&&(slot==0?t.screenSettings().primarySurface():t.screenSettings().secondarySurface())==-5&&NativeScreenChipInteractions.available(t,slot);}
+ public static NativeScreenEntity owner(NativeScreenEntity t){if(t==null||t.family()!=ScreenFamily.SCREEN)return t;var group=NativeScreenChipGroups.group(t);if(group==null||!t.getLevel().hasChunkAt(group.owner()))return null;return t.getLevel().getBlockEntity(group.owner()) instanceof NativeScreenEntity owner?owner:null;}
+ public static ItemStack chipStack(NativeScreenEntity t){if(t==null)return ItemStack.EMPTY;if(ScreenChipMount.integrated(t.family()))return t.chips().navigationChip();if(t.family()!=ScreenFamily.SCREEN)return ItemStack.EMPTY;var group=NativeScreenChipGroups.group(t);if(group==null||group.reader()==null||!t.getLevel().hasChunkAt(group.reader()))return ItemStack.EMPTY;return t.getLevel().getBlockEntity(group.reader()) instanceof com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity reader&&!reader.inert()?reader.getItem(0):ItemStack.EMPTY;}
+ public static ChannelList channels(NativeScreenEntity t){var owner=owner(t);return owner==null?ChannelList.EMPTY:owner.getRedstoneChannels();}
+ public static boolean usable(Player p,NativeScreenEntity t){if(t==null||t.getLevel()==null||t.inert()||t.isRemoved())return false;if(com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(p,t))return true;if(t.family()==ScreenFamily.SCREEN){var group=NativeScreenChipGroups.group(t);if(group!=null)for(var member:group.members())if(com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(p,t.getLevel(),member))return true;}return false;}
+ public static ScreenControlLayout.Projection projection(NativeScreenEntity t,int slot){var settings=t.screenSettings();var s=settings.scalar();return ScreenControlLayout.of(t.family(),((NativeScreenBlock)t.getBlockState().getBlock()).screenState(t.getBlockState()),slot,s.smallInput,s.wallPosition,settings.ceilingMounted(),settings.ceilingPosition(),t.family()==ScreenFamily.HALF_CONSOLE);}
+ public static NavigationCanvas canvas(NativeScreenEntity t,int slot){var q=projection(t,slot).surface;double width=Math.abs(q.topRight.x-q.topLeft.x)/16,height=Math.hypot(q.bottomRight.y-q.topRight.y,q.bottomRight.z-q.topRight.z)/16;if(t.family()==ScreenFamily.SCREEN){var group=NativeScreenChipGroups.group(t);if(group!=null){width*=group.columns();height*=group.rows();}}return new NavigationCanvas(width,height,false);}
+ public static boolean activate(NativeScreenEntity t,Player player,net.minecraft.world.InteractionHand hand,Vec3 eye,Vec3 end){int slot=t.family()==ScreenFamily.HALF_CONSOLE?1:0;if(hand!=net.minecraft.world.InteractionHand.MAIN_HAND||!selected(t,slot)||!usable(player,t))return false;var family=t.family();var state=((NativeScreenBlock)t.getBlockState().getBlock()).screenState(t.getBlockState());var settings=t.screenSettings();
+  if(ScreenChipMount.integrated(family)){var frame=ScreenChipMount.frame(family,state.facing,family==ScreenFamily.DIAGONAL?state.inverted:state.upper,settings.ceilingMounted(),settings.ceilingPosition()<0?1:settings.ceilingPosition());if(frame.hit(eye.x,eye.y,eye.z,end.x,end.y,end.z))return t.getLevel().isClientSide||t.chips().interact((net.minecraft.server.level.ServerPlayer)player,hand);}
+  var projection=projection(t,slot);var sample=projection.sample(eye.x,eye.y,eye.z,end.x,end.y,end.z);if(sample.column<0||sample.column>128||sample.line<0||sample.line>projection.height)return false;double u=sample.column/128,v=sample.line/projection.height;if(family==ScreenFamily.SCREEN){var group=NativeScreenChipGroups.group(t);if(group!=null){var basis=ScreenJoinGeometry.basis(family,state,settings.ceilingMounted());long cell=basis.cell(t.getBlockPos().getX(),t.getBlockPos().getY(),t.getBlockPos().getZ());int col=(int)(cell>>32)-group.minColumn(),row=(int)cell-group.minRow();if(state.facing==1)col=group.columns()-1-col;if(state.facing==0)row=group.rows()-1-row;u=(group.columns()-1-col+u)/group.columns();v=(group.rows()-1-row+v)/group.rows();}}int action=canvas(t,slot).action(u,v);if(action==0)return false;return (t.getLevel().isClientSide?CLIENT:SERVER).action(player,t,slot,action);
+ }
+ private NativeScreenNavigation(){}
+}

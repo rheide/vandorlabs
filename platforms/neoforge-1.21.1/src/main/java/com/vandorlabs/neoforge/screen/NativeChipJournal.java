@@ -24,8 +24,9 @@ public final class NativeChipJournal {
     /** Only authored journal text may leave the inventory owner; arbitrary item fields are excluded. */
     public static CompoundTag textData(ItemStack stack){
         if(stack.isEmpty()||!stack.is(NativeCredentialItems.DATA_CHIP.get()))return null;var tag=data(stack);if(!"journal".equals(tag.getString("ChipType")))return null;
-        var result=new CompoundTag();result.putString("ChipType","journal");result.putString("JournalTitle",JournalText.bounded(tag.getString("JournalTitle"),JournalText.TITLE_LIMIT));var source=tag.getList("JournalPages",Tag.TAG_STRING);var pages=new ListTag();for(int entry=0;entry<JournalText.MAX_ENTRIES;entry++)pages.add(StringTag.valueOf(JournalText.bounded(entry<source.size()?source.getString(entry):"",JournalText.PAGE_LIMIT)));result.put("JournalPages",pages);return result;
+        var result=new CompoundTag();result.putString("ChipType","journal");result.putString("JournalTitle",JournalText.bounded(tag.getString("JournalTitle"),JournalText.TITLE_LIMIT));var source=tag.getList("JournalPages",Tag.TAG_STRING);var pages=new ListTag();for(int entry=0;entry<JournalText.MAX_ENTRIES;entry++)pages.add(StringTag.valueOf(JournalText.bounded(entry<source.size()?source.getString(entry):"",JournalText.PAGE_LIMIT)));result.put("JournalPages",pages);if(enchanting(tag))result.putString("JournalFont","enchanting");return result;
     }
+    public static boolean enchanting(CompoundTag tag){return tag!=null&&tag.contains("JournalFont",Tag.TAG_STRING)&&tag.getString("JournalFont").equals("enchanting");}
     public static JournalText viewText(CompoundTag tag){return viewText(tag,"Chip");}
     /** Consuming displays may supply their released Input/Output caption without changing text policy. */
     public static JournalText viewText(CompoundTag tag,String source){
@@ -36,7 +37,7 @@ public final class NativeChipJournal {
     /** Retain company/components and opaque import data while publishing one complete native payload. */
     public static void write(ItemStack stack,boolean journal,String title,String[] entries){
         if(stack.isEmpty()||!stack.is(NativeCredentialItems.DATA_CHIP.get()))throw new IllegalArgumentException("Journal requires a data chip");
-        var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();for(String key:new String[]{"Catalog","CatalogName","VehicleDesign","VehicleDesignCodec","VehicleName","VehicleShape","JournalTitle","JournalPages"})tag.remove(key);
+        var tag=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();for(String key:new String[]{"Catalog","CatalogName","VehicleDesign","VehicleDesignCodec","VehicleName","VehicleShape","JournalTitle","JournalPages","JournalFont","NavigationMapPixels","NavigationLocation"})tag.remove(key);
         tag.putString("ChipType",journal?"journal":"master");if(journal){tag.putString("JournalTitle",JournalText.bounded(title,JournalText.TITLE_LIMIT));var pages=new ListTag();for(int entry=0;entry<JournalText.MAX_ENTRIES;entry++)pages.add(StringTag.valueOf(JournalText.bounded(entry<entries.length?entries[entry]:"",JournalText.PAGE_LIMIT)));tag.put("JournalPages",pages);}
         stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
     }

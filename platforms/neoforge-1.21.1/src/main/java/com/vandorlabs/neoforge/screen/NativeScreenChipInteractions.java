@@ -24,7 +24,7 @@ public final class NativeScreenChipInteractions {
   var level=owner.getLevel();if(level==null)return false;if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Screen chip interaction requires server thread");
   if(player.level()!=level||!player.isAlive()||player.isSpectator()||player.isShiftKeyDown()||player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())||screen(level,owner.getBlockPos())!=owner)return false;
   ServerPlayer actor=player instanceof ServerPlayer server?server:null;if(!level.isClientSide&&(actor==null||!NativeConfigurationAccess.canEditDialog(actor,owner)))return false;
-  var family=owner.family();int slot=family==ScreenFamily.HALF_CONSOLE?1:0;if(!owner.chips().selected(slot))return false;
+  var family=owner.family();int slot=family==ScreenFamily.HALF_CONSOLE?1:0;if(!owner.chips().selected(slot)||(slot==0?owner.screenSettings().primarySurface():owner.screenSettings().secondarySurface())!=-4)return false;
   var block=(NativeScreenBlock)owner.getBlockState().getBlock();var state=block.screenState(owner.getBlockState());var settings=owner.screenSettings();
   if(ScreenChipMount.integrated(family)){
    var frame=ScreenChipMount.frame(family,state.facing,family==ScreenFamily.DIAGONAL?state.inverted:state.upper,settings.ceilingMounted(),settings.ceilingPosition()<0?1:settings.ceilingPosition());

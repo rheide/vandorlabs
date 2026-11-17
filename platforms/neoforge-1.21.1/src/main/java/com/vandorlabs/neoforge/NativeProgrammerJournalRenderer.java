@@ -10,7 +10,7 @@ import net.minecraft.core.Direction;
 public final class NativeProgrammerJournalRenderer {
  private final NativeScreenJournalRenderer canvas;
  public NativeProgrammerJournalRenderer(Font font,NativeFlatWallModel.Bake materials){canvas=new NativeScreenJournalRenderer(font,materials);}
- public void render(NativeProgrammerJournalView view,Direction facing,PoseStack poses,MultiBufferSource buffers){if(view!=null)canvas.render(view.overlay(),JournalOverlay.MIN_HEIGHT,NativeProgrammerJournalFrame.matrix(facing),poses,buffers,0x00F000F0);}
+ public void render(NativeProgrammerJournalView view,Direction facing,PoseStack poses,MultiBufferSource buffers){if(view!=null)canvas.render(view.overlay(),JournalOverlay.MIN_HEIGHT,NativeProgrammerJournalFrame.matrix(facing),poses,buffers,0x00F000F0,view.enchanting);}
  public long retainedBytes(){return canvas.retainedBytes();}
  public long builds(){return canvas.builds();}
  public void clear(){canvas.clear();}

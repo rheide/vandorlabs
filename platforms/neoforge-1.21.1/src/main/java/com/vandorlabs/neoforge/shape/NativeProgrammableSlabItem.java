@@ -13,6 +13,7 @@ import net.minecraft.world.phys.shapes.Shapes;
 /** Combining keeps the placed slab's complete saved settings; the incoming item's draft is ignored. */
 public final class NativeProgrammableSlabItem extends BlockItem {
     public NativeProgrammableSlabItem(NativeProgrammableSlab block,Properties properties){super(block,properties);}
+    @Override public net.minecraft.network.chat.Component getName(ItemStack stack){var name=com.vandorlabs.neoforge.appliances.NativeAirConditionerPresets.name(stack);return name==null?super.getName(stack):name;}
     @Override public InteractionResult useOn(UseOnContext context){
         var level=context.getLevel();var pos=context.getClickedPos();var state=level.getBlockState(pos);
         if(state.is(getBlock())&&SlabMergePolicy.directMerge(state.getValue(NativeProgrammableSlab.HALF)==Half.TOP,context.getClickedFace().get3DDataValue()))return combine(context,pos);

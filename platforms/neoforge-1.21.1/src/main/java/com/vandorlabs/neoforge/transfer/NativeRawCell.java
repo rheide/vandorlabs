@@ -30,6 +30,7 @@ public final class NativeRawCell {
     /** Callers select missing legacy properties explicitly for a recognized block; supplied values are never changed. */
     public static BlockState decodePalette(HolderLookup.Provider registries,CompoundTag input,Map<String,String> missingProperties){
         if(!input.contains("Name",Tag.TAG_STRING))throw new IllegalArgumentException("Missing palette block identity");
+        input=com.vandorlabs.neoforge.navigation.observer.NativeObserverAliases.palette(input);
         var id=ResourceLocation.tryParse(input.getString("Name"));if(id==null||!BuiltInRegistries.BLOCK.containsKey(id))throw new IllegalArgumentException("Unknown palette block");
         if(input.contains("Properties")&&!input.contains("Properties",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Malformed palette properties");
         var expanded=input.copy();var properties=expanded.getCompound("Properties");for(var key:properties.getAllKeys())if(!properties.contains(key,Tag.TAG_STRING))throw new IllegalArgumentException("Malformed palette property value");

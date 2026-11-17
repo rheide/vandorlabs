@@ -546,3 +546,36 @@ tasks.register('testNativeBuilderSnapshots', JavaExec) {
     mainClass = 'com.vandorlabs.neoforge.builders.NativeBuilderSnapshotChecks'
 }
 tasks.named('check') { dependsOn 'testNativeBuilderSnapshots' }
+
+sourceSets.main.resources.srcDir('build/generated/navigation-table-resources')
+sourceSets.main.resources.srcDir('build/generated/navigation-observer-resources')
+tasks.register('generateNavigationTableResources', Exec) {
+    dependsOn 'generateCubeResources'
+    commandLine pythonExecutable, 'generate_navigation_table_resources.py'
+    inputs.file('generate_navigation_table_resources.py')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/navigation_table')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/module_rack')
+    outputs.dir('build/generated/navigation-table-resources')
+}
+tasks.register('generateNavigationObserverResources', Exec) {
+    dependsOn 'generateCubeResources', 'generateBuilderResources'
+    commandLine pythonExecutable, 'generate_navigation_observer_resources.py'
+    inputs.file('generate_navigation_observer_resources.py')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/universal_constructor')
+    outputs.dir('build/generated/navigation-observer-resources')
+}
+tasks.named('processResources') { dependsOn 'generateNavigationTableResources', 'generateNavigationObserverResources' }
+
+sourceSets.main.resources.srcDir('build/generated/appliance-resources')
+tasks.register('generateApplianceResources', Exec) {
+    dependsOn 'generateCubeResources'
+    commandLine pythonExecutable, 'generate_appliance_resources.py'
+    inputs.file('generate_appliance_resources.py')
+    inputs.file('../../src/portable/java/com/vandorlabs/appliance/ApplianceCatalog.java')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/appliances')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/item/appliances')
+    inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/blocks/appliances')
+    outputs.dir('build/generated/appliance-resources')
+}
+tasks.named('processResources') { dependsOn 'generateApplianceResources' }
+tasks.named('generateMatterResources') { inputs.file('generate_appliance_resources.py'); inputs.file('../../src/portable/java/com/vandorlabs/appliance/ApplianceCatalog.java') }

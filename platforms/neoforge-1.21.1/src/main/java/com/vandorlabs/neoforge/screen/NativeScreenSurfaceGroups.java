@@ -11,8 +11,8 @@ public final class NativeScreenSurfaceGroups {
  private NativeScreenSurfaceGroups(){}
  public static boolean apply(NativeScreenEntity origin,NativeScreenSurfaceEdit edit,Predicate<NativeScreenEntity> allowed){
   if(origin==null||edit==null||allowed==null||!(origin.getLevel() instanceof ServerLevel level)||!level.getServer().isSameThread()||!NativeScreenGroups.installed(level,origin)||!origin.activationEditAllowed())return false;
-  if(edit.choice()==-4&&!NativeScreenChipInteractions.available(origin,edit.slot()))return false;
-  boolean rectangle=origin.family()==ScreenFamily.SCREEN&&(edit.choice()==-4||origin.chips().selected(edit.slot()));
+  if((edit.choice()==-4||edit.choice()==-5)&&!NativeScreenChipInteractions.available(origin,edit.slot()))return false;
+  boolean rectangle=origin.family()==ScreenFamily.SCREEN&&(edit.choice()==-4||edit.choice()==-5||origin.chips().selected(edit.slot()));
   var targets=rectangle?NativeScreenGroups.editMembers(origin):List.of(origin);
   var before=new IdentityHashMap<NativeScreenEntity,NativeScreenSettings>();var plans=new IdentityHashMap<NativeScreenEntity,NativeScreenSurfaceEdit.Result>();
   for(var tile:targets){if(!NativeScreenGroups.installed(level,tile)||!tile.activationEditAllowed()||!allowed.test(tile))return false;var plan=tile.planSurface(edit);if(plan==null)return false;before.put(tile,tile.screenSettings());plans.put(tile,plan);}

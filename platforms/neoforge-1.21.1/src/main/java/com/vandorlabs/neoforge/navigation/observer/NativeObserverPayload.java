@@ -1,0 +1,10 @@
+package com.vandorlabs.neoforge.navigation.observer;
+import com.vandorlabs.redstone.ChannelList;import net.minecraft.network.RegistryFriendlyByteBuf;import net.minecraft.network.codec.StreamCodec;import net.minecraft.network.protocol.common.custom.CustomPacketPayload;import net.minecraft.resources.ResourceLocation;import net.minecraft.server.level.ServerPlayer;
+public record NativeObserverPayload(int window,ChannelList channels,int range) implements CustomPacketPayload {
+ public NativeObserverPayload{if(channels==null||!NativeObserverEntity.validRange(range))throw new IllegalArgumentException("Invalid observer edit");}
+ public static final Type<NativeObserverPayload> TYPE=new Type<>(ResourceLocation.parse("vandorlabs:observer"));
+ public static final StreamCodec<RegistryFriendlyByteBuf,NativeObserverPayload> CODEC=new StreamCodec<>(){public NativeObserverPayload decode(RegistryFriendlyByteBuf b){if(b.readableBytes()<8)throw new IllegalArgumentException("Truncated observer edit");int w=b.readInt(),r=b.readUnsignedShort(),n=b.readUnsignedShort();if(n>ChannelList.MAX_CHANNELS||b.readableBytes()!=n*4)throw new IllegalArgumentException("Observer edit length");int[] c=new int[n];for(int i=0;i<n;i++)c[i]=b.readInt();return new NativeObserverPayload(w,ChannelList.of(c),r);}public void encode(RegistryFriendlyByteBuf b,NativeObserverPayload p){b.writeInt(p.window);b.writeShort(p.range);b.writeShort(p.channels.size());for(int c:p.channels.toArray())b.writeInt(c);}};
+ @Override public Type<? extends CustomPacketPayload> type(){return TYPE;}
+ public static boolean apply(ServerPlayer actor,NativeObserverPayload p){var menu=NativeObserverMenu.editing(actor,p.window);if(menu==null)return false;menu.tile.configure(p.channels,p.range);return true;}
+ public static void register(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent e){e.registrar("1").playToServer(TYPE,CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer actor){apply(actor,p);}}));}
+}

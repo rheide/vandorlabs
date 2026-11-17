@@ -36,6 +36,8 @@ public final class NativeGearHolds {
         WriteScope(WriteAdmission admission){this.admission=admission;}
         public void close(){if(closed)return;if(WRITE.get()!=admission)throw new IllegalStateException("Arm write scopes closed out of order");if(admission.previous==null)WRITE.remove();else WRITE.set(admission.previous);closed=true;}
     }
+    /** Exact one-use publication scope; other family guards may observe but cannot consume it. */
+    public static boolean publicationAdmitted(Level world,BlockPos pos){return exactWrite(world,pos);}
     private static boolean exactWrite(Level world,BlockPos pos){var admission=WRITE.get();return admission!=null&&admission.world==world&&admission.pos.equals(pos)&&admission.operation.equals(MUTATION.get());}
     static void freeze(ServerLevel world,UUID id,Collection<BlockPos> cells){if(!world.getServer().isSameThread()||cells.size()>8769)throw new IllegalStateException("Arm hold admission");var next=new ArrayList<Hold>();var containers=new ArrayList<WeakReference<Container>>();for(var hold:holds)if(hold.world.get()!=null){if(hold.id.equals(id)){containers.addAll(hold.containers);}else next.add(hold);}for(var pos:cells)if(NativeGearFormation.loaded(world,pos)&&world.getBlockEntity(pos) instanceof Container container){boolean seen=false;for(var ref:containers)seen|=ref.get()==container;if(!seen)containers.add(new WeakReference<>(container));}next.add(new Hold(new WeakReference<>(world),id,Set.copyOf(cells),List.copyOf(containers)));holds=List.copyOf(next);for(var actor:world.players())for(var slot:actor.containerMenu.slots)if(blocked(slot.container)){actor.closeContainer();break;}}
     static void release(UUID id){holds=holds.stream().filter(h->h.world.get()!=null&&!h.id.equals(id)).toList();}

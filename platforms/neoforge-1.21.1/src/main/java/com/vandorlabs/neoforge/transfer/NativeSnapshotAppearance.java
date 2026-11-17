@@ -28,6 +28,14 @@ public final class NativeSnapshotAppearance {
             if(housing){HousingSettings.read(tags,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).write(new ModernHousingTags(result));TextureJoinSettings.read(tags).write(new ModernHousingTags(result));}
             else NativeStorageSettings.read(selected).write(result);
             if(name.equals("vandorlabs:programmable_stairs"))StairState.read(tags).write(new ModernHousingTags(result));
+        }else if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock){
+            for(String key:List.of("ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth")){Tag value=raw.get(key);if(value!=null)result.put(key,value.copy());}
+        }else if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableBlock){
+            for(String key:List.of("NavigationOwner","NavigationOrigin","NavigationChipStorage","NavigationModuleStorage","NavigationFormed","NavigationExplicit","NavigationBay","NavigationWidth","NavigationDepth","NavigationFacing","NavigationModuleFacing","NavigationSequence","NavigationTexture","NavigationChannels")){Tag value=raw.get(key);if(value!=null)result.put(key,value.copy());}
+            result.putBoolean("NativeNavigationVisual",true);result.putLong("NativeNavigationVisualPos",raw.contains("NativeNavigationVisualPos",Tag.TAG_LONG)?raw.getLong("NativeNavigationVisualPos"):new net.minecraft.core.BlockPos(raw.getInt("x"),raw.getInt("y"),raw.getInt("z")).asLong());
+            for(String key:List.of("NavigationChip","NavigationModule"))if(raw.contains(key,Tag.TAG_COMPOUND)){var stack=net.minecraft.world.item.ItemStack.parseOptional(registries,raw.getCompound(key));if(!stack.isEmpty()){var publicStack=key.equals("NavigationModule")?com.vandorlabs.neoforge.navigation.NativeNavigationTableHooks.TABLE.moduleSummary(stack):navigationChip(stack);result.put(key,publicStack.save(registries));}}
+        }else if(state.getBlock() instanceof com.vandorlabs.neoforge.appliances.NativeApplianceBlock){
+            return com.vandorlabs.neoforge.appliances.NativeApplianceEntity.appearance(raw,registries);
         }else if(name.equals("vandorlabs:module_rack")){
             return com.vandorlabs.neoforge.rack.NativeRackData.appearance(raw);
         }else if(name.equals("vandorlabs:turntable_surface")){
@@ -43,6 +51,7 @@ public final class NativeSnapshotAppearance {
         }
         return result;
     }
+    private static net.minecraft.world.item.ItemStack navigationChip(net.minecraft.world.item.ItemStack stack){var result=new net.minecraft.world.item.ItemStack(stack.getItem(),1);String type=com.vandorlabs.neoforge.credentials.NativeChipTypes.type(stack);if(Set.of("journal","vehicle","navigation","catalog").contains(type)){var data=new CompoundTag();data.putString("ChipType",type);result.set(net.minecraft.core.component.DataComponents.CUSTOM_DATA,net.minecraft.world.item.component.CustomData.of(data));}return result;}
     private static SignText readSign(CompoundTag raw,HolderLookup.Provider registries){
         var face=new CompoundTag();for(String key:SIGN_KEYS){Tag value=raw.get(key);if(value!=null)face.put(key,value.copy());}
         for(String key:List.of("messages","filtered_messages")){

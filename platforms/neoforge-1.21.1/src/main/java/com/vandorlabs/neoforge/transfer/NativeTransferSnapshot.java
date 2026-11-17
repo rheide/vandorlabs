@@ -13,13 +13,13 @@ public final class NativeTransferSnapshot {
         public Limits {if(cells<1||cells>32768||tileBytes<1||tileBytes>8*1024*1024||bytes<1||bytes>16*1024*1024||retainedBytes<1||retainedBytes>64*1024*1024)throw new IllegalArgumentException("Transfer snapshot limits");}
     }
     private final List<NativeRawCell> cells;
-    public final int retainedBytes;
+    public final int retainedBytes,decodedBytes;
     private final Limits limits;
     public NativeTransferSnapshot(Collection<NativeRawCell> cells,Limits limits){
         this.limits=Objects.requireNonNull(limits);if(cells.isEmpty()||cells.size()>limits.cells)throw new IllegalArgumentException("Transfer snapshot cell bound");
         var seen=new HashSet<BlockPos>();var stable=new ArrayList<NativeRawCell>(cells.size());long weight=256;
         for(var cell:cells){Objects.requireNonNull(cell);if(!seen.add(cell.pos))throw new IllegalArgumentException("Duplicate transfer snapshot cell");var raw=cell.tile();if(raw!=null&&raw.sizeInBytes()>limits.tileBytes)throw new IllegalArgumentException("Transfer tile byte bound");weight=Math.addExact(weight,512L+(raw==null?0:4L*raw.sizeInBytes()));if(weight>limits.retainedBytes)throw new IllegalArgumentException("Transfer retained byte bound");stable.add(cell);}
-        this.cells=List.copyOf(stable);retainedBytes=Math.toIntExact(weight);write();
+        this.cells=List.copyOf(stable);retainedBytes=Math.toIntExact(weight);decodedBytes=write().sizeInBytes();
     }
     public List<NativeRawCell> cells(){return cells;}
     public CompoundTag write(){

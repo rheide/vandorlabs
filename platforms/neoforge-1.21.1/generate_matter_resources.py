@@ -65,7 +65,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('power_port', 'fluid_port', 'matter_port', 'battery_block', 'hexagonal_fuel_tank')]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')]
     wanted += ['tile.vandorlabs.programmable_ramp.name', 'tile.vandorlabs.programmable_ramp_slab.name']
-    wanted += ['tile.vandorlabs.' + name + '_core.name' for name in ('synthesis_tower', 'assembly_press', 'enclosed_gantry')]
+    wanted += ['tile.vandorlabs.' + name + '_core.name' for name in ('synthesis_tower', 'assembly_press', 'enclosed_gantry', 'standalone_antenna', 'standalone_dish')]
     wanted += ['tile.vandorlabs.programmable_matter_infuser.name', 'item.vandorlabs.infuser_core.name']
     for line in (ROOT / 'generated-resources/assets/vandorlabs/lang/en_us.lang').read_text().splitlines():
         key, separator, value = line.partition('=')
@@ -77,6 +77,9 @@ def main():
     lang.update(credential_translations(ROOT))
     from generate_canopy_resources import translations as canopy_translations
     lang.update(canopy_translations(ROOT))
+    lang.update({'block.vandorlabs.navigation_table_flat':'Navigation Table','block.vandorlabs.navigation_table_angled':'Angled Navigation Table','item.vandorlabs.navigation_data_module':'Navigation Data Module'})
+    from generate_appliance_resources import translations as appliance_translations
+    lang.update(appliance_translations(ROOT))
     write('assets/vandorlabs/lang/en_us.json', lang)
     for name in ['programmable_matter_block', 'programmable_matter_unpack', 'industrial_alloy_ingot']:
         value = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/recipes' / (name + '.json')).read_text())
@@ -89,6 +92,7 @@ def main():
         optional_trapdoors += [{'id':'vandorlabs:industrial_table','required':False}]
         optional_trapdoors += [{'id': 'vandorlabs:' + name, 'required': False} for name in ('gear_extender', 'gear_swing_arm', 'large_gear_extender', 'large_gear_swing_arm', 'gear_mount', 'large_gear_mount', 'landing_plate', 'landing_ski', 'landing_wheel', 'large_landing_wheel')] if tag == 'mineable/pickaxe' else []
         optional_trapdoors += [{'id':'vandorlabs:module_rack','required':False}]
+        optional_trapdoors += [{'id':'vandorlabs:'+name,'required':False} for name in ('navigation_table_flat','navigation_table_angled','standalone_dish_core','standalone_antenna_core','observer_part','printer','scanner')]
         optional_trapdoors += [{'id':'vandorlabs:programmable_matter_infuser','required':False}]
         optional_trapdoors += [{'id':'vandorlabs:'+name+'_core','required':False} for name in ('synthesis_tower','assembly_press','enclosed_gantry')]
         optional_trapdoors += [{'id':'vandorlabs:'+name,'required':False} for name in ('landing_gear','ski_landing_gear','landing_strut','angled_landing_strut')]
