@@ -49,9 +49,11 @@ display on the left and a Data Chip Mount and Module Rack on the right.
 
 Right-click the formed machine, or use the Configurizer, to open Production.
 The design list occupies the full left column. The selected design’s name
-heads its preview, with player inventory below and four vertical module slots
-beside it. The top row holds Matter, Output, the combined battery RF bar and
-the Chip slot. Hover over the RF bar for the exact stored RF and capacity.
+heads its preview, with player inventory below. The Mode button switches between
+Synthesize and Digitize. Synthesize places the Chip slot on the left, followed
+by Block → Output, a narrow RF bar and four horizontal Battery slots. These
+production controls and inventory appear only on the Production tab. Hover
+over the RF bar for the exact stored RF and capacity.
 Select Synthesis Tower, Assembly Press or Enclosed Gantry from the design list;
 the rotating textured preview shows the complete structure. Insert one
 Programmable Matter Block in the Matter slot. Each Core uses 8,000 RF, at
@@ -61,6 +63,31 @@ Remove the completed Core from the output slot or right-click the finished
 Core in the processing chamber. The next queued input waits for the output
 to be removed. Dismantling returns unprocessed inventory and refunds the
 Matter Block of an unfinished build; spent RF is not refunded.
+
+### Digitize a block
+
+Select **Digitize** on the Production tab. Its first row changes to
+**Input → Chip**, followed by the RF bar and four Battery slots. Insert a Data
+Chip and one eligible block, either into Input or by right-clicking the
+processing enclosure with the held block. The machine scans the block with
+the fabrication animation running in reverse. A completed scan consumes that
+block and 8,000 RF and replaces the chip's contents with a Catalog for that
+single block. The label names the scanned block. The inserted Catalog adds
+that block to the Synthesize design list and can also be viewed on a Screen.
+
+Single-block vanilla models include slabs, stairs, trapdoors, furnaces, glass
+and ordinary terrain. Manufactured wood is allowed; plants, crops, leaves and
+logs are excluded, as are doors, beds and entity-rendered containers. Registered Vandor
+full blocks and slabs include Cores, propulsion blocks, Ramp Controllers and
+Programmable Screen/Console variants. Forge also supports Vehicle Controllers;
+these and unregistered drive-core families remain unavailable in the native port. Separate furniture,
+levers, switches, canopies and arms cannot be scanned. Scanning preserves
+supported appearance settings, never an inventory or external capability data.
+
+The source block and chip remain physical inventory items until completion.
+Removing either cancels the current scan; dismantling returns retained items.
+Spent RF is not refunded. A written Catalog replaces the previous chip data.
+Switch modes only while the machine is idle with its processing slots empty.
 
 The tower has no internal battery. Its flush four-bay rack accepts up to four
 charged [Battery Modules](module-rack.md), for **40,000 RF** total. Insert or

@@ -1,8 +1,10 @@
 # Vandor Labs 2.11.0
 
 Version 2.11 is in development, adding rechargeable Battery Modules and powered
-Core production in the Synthesis Tower. Minecraft 1.21.1 now includes the three
-builder multiblocks; other Core multiblocks remain outside this update.
+Core production in the Synthesis Tower. NeoForge 1.21.1 includes the three
+builder multiblocks, seed navigation displays and observers, Navigation Data
+Modules, air-conditioner presets and functional Printer/Scanner blocks.
+Vehicle-carried navigation uses the Forge 1.12.2 Vehicle runtime.
 
 ## Battery Modules
 
@@ -35,11 +37,22 @@ item-output face. The front has a smaller square screen and projecting keyboard
 on the left, a chip mount and flush rack on the right, and neutral steel casing. See the [constructor guide](../universal-constructors.md)
 for power costs, ports and operation.
 
+The Tower also offers **Digitize** mode: insert one eligible block and a Data
+Chip, spend 8,000 RF, and scan the block into a one-design Catalog. The scan
+consumes the block and replaces the chip contents; its recipe can then be
+synthesized or previewed on a Screen. Production has a Mode toggle, a narrow
+RF bar and four horizontal Battery slots. See [Digitize a block](../universal-constructors.md#digitize-a-block).
+
+On Forge 1.12.2, navigation also works aboard vehicles: tables and Screens
+follow the moving craft, observers gain range with altitude, and installed
+modules save linked-source coverage along the route. Screens show a crosshair
+with an onboard observer and a haiku when the required Dish/Array is missing.
+
 ## Catalog Chips and additional Forge production
 
 The new Journal, Vehicle, Navigation and Catalog Chip artwork identifies chip
 purpose. Programming a journal or vehicle changes its chip artwork; company
-variants remain available. Navigation Chip (blank) has no assigned function.
+variants remain available. Navigation Chips store locations for the seed navigation browser.
 [Catalog Chip (Master)](../data-chips.md) stores explicit blueprint lists
 for each builder, and Forge Journal-capable displays can browse those models.
 
@@ -114,3 +127,48 @@ allow completed-item pickup. The Gantry now needs a four-high frame with
 Native includes the revised structures; its production scope remains unchanged.
 Vehicle Chip previews use adaptive sub-block detail with explicit work and
 voxel budgets rather than one fixed thumbnail resolution.
+
+## Seed navigation on Forge 1.12.2
+
+[Navigation displays](../navigation-displays.md#seed-navigation-forge-1122) now
+browse the current dimension's seed without loading terrain chunks. Link formed
+Sentinel Arrays and Survey Dishes by transmit/receive channels, combine their
+height-dependent observation radii (500/2,500 blocks at Y=64), pan and zoom, and save locations on Navigation
+Chips. Existing saved display artwork is retained. Supported programmable screens
+read saved locations using their existing chip mounts. Shared map bounds and
+layout rules are version neutral; the runtime integration currently targets
+Forge 1.12.2.
+
+The three enclosed builder multiblocks also accept wall-mounted levers and
+switches for redstone activation.
+
+Navigation tables now use extra modules to show more of the map at a constant
+scale. Their controls include crosshair recentering, a cyan player arrow and a
+smooth pan/zoom transitions with dark pulsing unloaded areas. Deep zoom resolves finer biome
+boundaries without loading chunks. Bounded geographic caches reuse sampled
+areas across tables and return visits.
+
+Survey Dishes and Sentinel Arrays now use only the standalone models, without
+chip slots; previous variants remap on loading. Build them upright or inverted
+with the Core at the top. The dialog reports their scanning radius, which grows
+with height and follows extending or rotating arm motion. The radius is 500/2,500 blocks at Y=64 and increases linearly to a capped
+1,000/5,000 at Y=128 for base-size structures. Proportional larger frames keep
+the same Y=64 radius and gain up to +100% radius at Y=128: Dish 6×6×6 reaches
+10,000 blocks; Array 4×4×8 reaches 2,000. Larger builds retain that bonus cap.
+The maximum frame is Dish 16×16×16 or Array 8×8×16.
+
+The Assembly Press now manufactures Navigation Data Modules. A joined table's
+second member provides one low cassette bay, separate from its single chip
+holder. The module records whole linked-source coverage circles and remains
+bound to its first dimension, allowing later browsing without that source.
+Shrinking the assembly so its bay disappears ejects the stored module once.
+
+## Appliances
+
+Add Indoor AC slabs and Outdoor AC cubes in Dark Cyan and Silver to the creative
+block list. These presets place the ordinary programmable block families with
+six editable face textures. Printer and Scanner have front chip mounts and buttons, standard inventory dialogs, and book/map conversion. Printing uses one ink sac and one paper; scanning retains the original document. Scanned Navigation Chips retain their full map square for offline display. Detailed Vehicle Chip material previews also appear in Vehicle Controller and Vehicle Status displays, including correctly textured vanilla chests. Navigation loading pulses start on input and cover the full display background. See the [appliance guide](../appliances.md).
+
+The formed Dish and Array now occupy more of their reserved footprint, with
+wider mounting plates and enlarged bodies. The existing construction sizes and
+saves are retained; the full Dish sweep stays inside the frame.

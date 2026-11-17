@@ -1,0 +1,13 @@
+kind,width,height,inverted,quads,median_emit_ns,p95_emit_ns,median_frame_ns,median_alloc_bytes
+standalone_dish,3,3,false,145,41878,74459,375854,1584
+standalone_dish,3,3,true,145,30538,50765,310060,1608
+standalone_dish,6,6,false,145,26480,75531,299080,1584
+standalone_dish,6,6,true,145,24706,31670,294311,1608
+standalone_dish,16,16,false,145,22472,50885,291665,1584
+standalone_dish,16,16,true,145,23504,33162,302536,1608
+standalone_antenna,2,4,false,114,20679,54703,251811,928
+standalone_antenna,2,4,true,114,21650,29595,245279,952
+standalone_antenna,4,8,false,114,15118,19086,223629,928
+standalone_antenna,4,8,true,114,16541,25428,223879,952
+standalone_antenna,8,16,false,114,14297,24666,219271,928
+standalone_antenna,8,16,true,114,18605,36008,234369,952

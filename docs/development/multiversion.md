@@ -169,3 +169,67 @@ The write path reuses the screen's primitive adapter and passes one owned face-a
 `StairGeometry` emits native points, boxes and faces through platform factories, retaining source order, cache keys and exact collision/rendered coordinates without a second portable geometry graph. `SlabMergePolicy` retains the exact midpoint placement threshold and direct-face merge rule; world authorization, collision checks, saved settings and item consumption stay in the adapter. Actual collision/emitted goldens, rendered stair checks and direct server item-use slab cases cover these delegates.
 
 Native slab/stair parity also requires arbitrary registered contained fluids in the actual empty collision volume, including bucket, sponge, light and immersion behavior. Vanilla waterlogging alone is insufficient. Current Forge fluid volumes coalesce cells into runs and defer face generation; historical native/shared fluid code predates that optimization and must not reintroduce an eager Cartesian geometry graph. World sampling and lifecycle remain platform-owned.
+
+### Seed navigation adapters
+
+Forge 1.12.2 and NeoForge 1.21.1 provide platform adapters for Navigation Tables,
+existing chip-capable Screens/Consoles, standalone Survey Dishes and Sentinel
+Arrays. Shared `NavigationLayout`, `NavigationCanvas`, `NavigationMap`,
+`NavigationMotion`, `NavigationRange`, `ObserverScale`, `NavigationCoverage` and
+`NavigationTerrainCache` define physical pixel layout, geography, interpolation,
+altitude/size scaling, exact circular coverage and bounded geographic caches.
+Biome-source access, block/entity registration, NBT/components, authorization,
+packets and native rendering remain platform adapters.
+
+The native runtime samples the generator biome source on bounded server tick
+jobs without requesting terrain chunks. It reuses geographic colors and complete
+rasters, and sends a metadata-only response for an unchanged known revision.
+The client draws the map as a texture quad, keeps the physical scale when tables
+join, and pans/scales the old geographic image while new regions pulse. Player,
+saved-point and center markers share the same viewport coordinates.
+
+Navigation Chips store a dimension and block X/Y/Z. Navigation Data Modules
+store up to 1,024 dimension-bound circles with containment deduplication; a
+bounded transient square index retains exact circle edges. Public table updates
+project only bounded module dimension/count metadata. Full saves, extraction,
+carried snapshots and captured mining receipts retain the authoritative item.
+A table group has one Chip holder and a separate low cassette bay on its second
+member; inventory stays anchored to its original physical tile through topology
+changes and ejects once when a complete layout loses the bay.
+
+Both source models support proportional complete frames, inverted placement and
+physical arm transforms. The shared size bonus remains zero at Y=64 and reaches
+its capped +100% at Y=128 for twice the base width. Native source aliases preserve
+the obsolete core IDs, with narrow alias normalization in strict snapshot
+palette readers. Native module coverage accepts the resulting 10,000-block
+maximum radius.
+
+Native Synthesis Tower production exposes its existing three builder cores and
+appends the two observer cores. Native Assembly Press production currently
+exposes only Navigation Data Module manufacture, requiring a permitting Catalog
+Chip, one Matter Ingot and 8,000 RF. Broader Press/Gantry recipes are not exposed
+as functional production. Native table crafting recipes are documented in the
+platform README.
+
+The native Tower also supports Digitize and the appended dynamic block recipe.
+It retains the physical input until completion, binds partial jobs to their
+input and chip identity, and preserves malformed saved jobs inert. The native
+recipe adapter accepts supported single-block vanilla models and registered
+programmable/core/propulsion/controller families while rejecting contents and
+ownership data. Native Vehicle Controllers and unregistered drive-core families
+remain unavailable; this conversion does not add a native Vehicle runtime.
+The Production/Redstone tabs retain their existing roles, with the mode control
+and horizontal battery bank on Production. See the platform README for exact
+input boundaries and focused runtime/client checks.
+
+The native Copy Controller's existing adapter boundary remains: observers,
+tables and owned Screen controls are refused by that copier. Native arm
+carrying has explicit observer/table adapters and ownership recovery coverage.
+
+Focused native acceptance uses `test_navigation_data.py`,
+`test_navigation_observers.py`, `test_navigation_arms.py` and
+`test_navigation_client.py --xvfb` under `platforms/neoforge-1.21.1/`. Their
+manifests verify production runtime classes/resources against the standard JAR;
+separate ModDev fixture classes supply the tests. This is focused runtime and
+render validation, separate from a full release gate, standalone installation
+and hardware shader acceptance.

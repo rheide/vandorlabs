@@ -47,3 +47,10 @@ The front left has a smaller square preview screen and projecting keyboard;
 the right has the chip mount and a flush four-bay rack. A chest beside either
 item-output face receives finished Cores automatically. The original frame
 size, twenty-eight Matter Blocks and Core placement are unchanged.
+
+Use the Production tab's **Mode** button to switch to **Digitize**. Insert a
+Data Chip and one eligible block into Input, or place the held block into the
+chamber. The reverse scan consumes the block and 8,000 RF and replaces the chip
+with a one-block Catalog. Insert that Catalog to synthesize the same design.
+See [Digitize a block](../../universal-constructors.md#digitize-a-block) for
+supported blocks, appearance retention and cancellation behavior.

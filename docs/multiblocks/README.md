@@ -13,10 +13,8 @@ Each guide shows successive stages captured in Minecraft. All frame machines reu
 | [Seyr Navigation Computer](seyr-navigation-computer/README.md) | 1 × 1 × 3 | 2 + one Core |
 | [Pinnacle Vector Fold Array](vector-fold-array/README.md) | 3 × 3 × 2 | 16 + one Core |
 | [Pinnacle Oculus Drive](oculus-drive/README.md) | 3 × 3 × 3 | 20 + one Core |
-| [Sentinel Array](sentinel-array/README.md) | 2 × 2 × 4 | 15 + one Core |
-| [Standalone Antenna](standalone-antenna/README.md) | 2 × 2 × 4 | 15 + one Core |
-| [Standalone Dish](standalone-dish/README.md) | 3 × 3 × 3 | 20 + one Core |
-| [Survey Dish](survey-dish/README.md) | 3 × 3 × 3 | 20 + one Core |
+| [Sentinel Array](standalone-antenna/README.md) | 2 × 2 × 4 | 15 + one Core |
+| [Survey Dish](standalone-dish/README.md) | 3 × 3 × 3 | 20 + one Core |
 
 Navigation displays join as ordinary placed modules:
 

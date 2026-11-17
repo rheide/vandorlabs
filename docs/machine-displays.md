@@ -10,15 +10,13 @@ Use the **Configurizer** on a formed Core-based multiblock or one of its reserve
 | Paladyne Navigation Computer | Half Screen | No |
 | Seyr Navigation Computer | Half Screen | No |
 | Pinnacle Oculus Drive | Half Screen, Keyboard | Yes |
-| Survey Dish | Half Screen, Keyboard | Yes |
-| Sentinel Array | Half Screen, Keyboard | Yes |
-| Standalone Dish / Antenna | No display | Yes |
+| Survey Dish / Sentinel Array | No display | No |
 
 ![Machine display dialog with independent screen and keyboard tabs](multiblocks/machine-display-dialog.png)
 
 Each surface keeps its own artwork selection. **Model artwork** preserves the supplied design. **Black** and the standard Programmable Block material and screen/panel catalogs are also available, including half-screen and keyboard designs. **Custom...** samples a block material. Static/Animated playback and Slow/Normal/Fast speed apply to the fitted displays.
 
-The three builder machines use dedicated Production displays and fitted chip mounts; see [builder operation](universal-constructors.md). Standalone radar models provide redstone activation and their always-visible chip holder without display surfaces.
+The three builder machines use dedicated Production displays and fitted chip mounts; see [builder operation](universal-constructors.md). Survey Dishes and Sentinel Arrays use only their standalone models, without a chip holder or display surfaces. Their Redstone dialog shows the current height-dependent scanning radius and configures the navigation link. The old console-equipped versions remap to these models.
 
 On Forge 1.12.2, the shared Core animation clock follows a machine while an arm carries it and restores it as native blocks. Dish scanning and the other animated Core mechanisms retain their cosmetic phase through these handoffs and reversals. A new machine placed at the vacated source has an independent clock. Animation remains client-side; saved ownership and collision do not depend on its phase.
 

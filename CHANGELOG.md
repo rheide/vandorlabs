@@ -2,7 +2,39 @@
 
 ## 2.11.0 (in development)
 
+### Appliances
+
+- Add dark cyan and silver Indoor AC slab and Outdoor AC cube creative presets. Place ordinary programmable slabs/blocks with six editable face textures, preserving normal placement, slab combination and configured drops.
+- Add functional Printer and Scanner blocks with front Chip Mounts, half-size buttons and standard inventory dialogs. Print Journal/Catalog books and prefilled scale-0 maps for one ink sac plus one paper; scan original maps/books without consuming them, including enchanting-font journals. Save scanned map squares and pixels on Navigation Chips for offline display. Import native 64px appliance artwork and expose its face finishes in the texture picker.
+- Reuse detailed Vehicle Chip material previews in the Vehicle Controller dialog and Vehicle Status screen, retain compact parked previews, and sample vanilla chest entity skins correctly.
+- Separate navigation messages from terrain depth, brighten the loading pulse across the entire display background, and start it immediately on local pan/zoom input.
+- Simplify observer names to Survey Dish Core and Sentinel Array Core while preserving existing registry IDs.
+
+### Seed navigation (Forge 1.12.2)
+
+- Keep removed Nav Table bounds safe during native/vehicle handoffs with OptiFine, and release parked/destroyed craft from navigation discovery.
+- Support carried Navigation Tables, Navigation Screens and formed observers in Vehicle Mode. Follow physical position and altitude, center Screens with a crosshair, record module coverage along the route and retain it through saves and parking. Show a missing-observer haiku aboard unequipped vehicles.
+
+- Enlarge the formed Survey Dish and Sentinel Array models within their existing frames. Widen their mounting plates, enlarge the Dish body and raise the Array body; retain clearance through the full Dish sweep, all facings, inversions and frame sizes. Keep existing frame sizes, range and saved layouts.
+
+- Cache observer layout, pivots and model keys to reduce settled draw allocations to 24 bytes. Keep enlarged models at the same 145 Dish / 114 Array quads and retain model resource reloads.
+- Scale Survey Dishes to N×N×N (N=3–16) and Sentinel Arrays to N×N×2N (N=2–8), including inverted construction and arm-carried ownership. Keep base scanning range at Y=64; increase the size bonus linearly through Y=128, capped at +100% radius for twice the base linear dimensions. Preserve existing base-size saves and record the enlarged coverage in Navigation Data Modules.
+
+- Manufacture Navigation Data Modules in the Assembly Press. Add one low cassette bay to joined tables, record whole source coverage in a dimension-bound item, preserve offline browsing, and eject it once if its bay disappears. Reuse native rack insertion/withdrawal motion and Navigation Chip artwork.
+- Replace the spinner with smooth geographic pan/zoom transitions and dark pulsing newly exposed areas; draw a crosshair icon for recentering. Set source radii to 500/2,500 at Y=64, rising linearly to a capped 1,000/5,000 at Y=128.
+
+- Keep map pixels and controls at a fixed physical scale as tables grow; render one cached surface per assembly. Add player/facing markers, CTR recentering, smooth loading transitions, deeper biome detail and shared bounded geographic caches.
+- Retire console-equipped Survey Dish and Sentinel Array variants with saved block/item remaps. Remove their standalone chip slots, support upside-down formation, show scanning radius in configuration, and follow physical height and position on moving arms. Preserve animation phase and independent receive/transmit settings through arm handoffs.
+- Keep fallback Core scaffolds visible in Dynmap with valid palette-face UVs and cover inverted observer clipping. Register the battery rack's native charge-bar textures so Dynmap starts with the current models.
+
+- Add a north-up, seed-generated biome map to navigation tables/consoles and existing chip-capable programmable displays, with pan/zoom controls and center coordinates. Sample generators without requesting chunks; distinguish uncovered areas from generator errors.
+- Link formed Sentinel Arrays and Survey Dishes through ranged transmit/receive channels. Combine matching sources across selected channels, with height-dependent observation radii based on 500/2,500 blocks at Y=64 and capped at 1,000/5,000 at Y=128, independent of connection distance and redstone power.
+- Write dimension/X/Y/Z locations to Navigation Chips from navigation tables/consoles. Show saved-location markers, recenter on reinsertion, and retain a 1,000-block observation radius without a source. Preserve saved display artwork and existing chip ownership.
+- Allow vanilla and Vandor wall-mounted switches/levers on enclosed builder multiblocks, and let placement clicks reach the held block item for redstone activation.
+
 ### Catalogs and Forge builder production
+
+- Add Synthesis Tower Digitize mode: reverse-scan one eligible block into a one-design Catalog Chip for 8,000 RF. Preserve supported appearance settings and physical item ownership across cancellation and saves. Reorganize Production with a Mode toggle, Chip/Input → Output arrangement, narrow RF bar and horizontal batteries; hide production inventory on the Redstone tab.
 
 - Preserve fabricated item proportions and authored world scale: keep rack modules horizontal, flatten only cards/chips and shrink only Gantry models that exceed the workspace. Keep random Matter interior colors exclusive to the Press.
 - Tile door-interior artwork on builder wall caps, preserve Tower border detail on half-panels, and remove duplicate glass faces and actual upper-rail overlaps.
@@ -18,7 +50,7 @@
 
 - Keep item appearance overrides on concrete item models when sharing packaged geometry, so typed chip artwork and other item predicates remain selectable in Minecraft 1.12.2.
 
-- Add supplied Journal, Vehicle, Navigation and Catalog Chip artwork; retain company cards and change chip appearance when programming journals or vehicles. Navigation Chip (blank) remains unpurposed.
+- Add supplied Journal, Vehicle, Navigation and Catalog Chip artwork; retain company cards and change chip appearance when programming journals or vehicles. Blank Navigation Chips can be programmed at navigation tables.
 - Store explicit per-machine blueprint lists on Catalog Chip (Master), including Assembly Press Battery Module and Autopilot Module designs. Browse catalog models using existing Forge journal screens and their previous/next controls.
 - Extend Forge Tower production to the supplied Core families plus Vehicle and Ramp Controllers when listed on an inserted catalog. Keep the three builder Cores available without one.
 - Give Forge Assembly Press and Enclosed Gantry the shared production inventory, Redstone controls, RF/battery handling and adjacent output. Press recipes use Matter Ingots; Gantry recipes use Matter Blocks. Refresh both casings, corner ports and lower workstations using shared mount coordinates. Native production remains Tower-only.
