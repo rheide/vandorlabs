@@ -103,7 +103,7 @@ final class RedstoneScreenRenderer {
         if(autopilot!=null)rect(buffer,6,top+36,48,top+46,.01,0xFF495C69);Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
         if(height>64)text(font,controller==null||controller.vehicleName.isEmpty()?"VEHICLE STATUS":font.trimStringToWidth(controller.vehicleName,112),8,8,0xE1EEFF);
-        if(controller!=null&&controller.shape!=null)VehicleShapeRenderer.draw(controller.shape,height>64?88:104,height>64?102:43,height>64?88:36,height>64?48:24);
+        if(controller!=null&&controller.shape!=null)VehicleShapeRenderer.draw(VehicleShapeRenderer.controller(controller),height>64?88:104,height>64?102:43,height>64?88:36,height>64?48:24);
         if(busy){text(font,"Converting...",8,top+1,0xE1EEFF);GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;}
         if(height<=64&&autopilot==null&&controller!=null)text(font,font.trimStringToWidth(controller.vehicleName,112),8,top+1,0xE1EEFF);
         if(autopilot!=null)text(font,height<=64&&controller!=null&&!controller.vehicleName.isEmpty()?font.trimStringToWidth(controller.vehicleName,112):on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);

@@ -272,7 +272,7 @@ public final class VehicleClient {
         private String observed,sent,error="";private int delay,page;
         Preview(Incoming data){
             this.data=data;if(!hasSettings())return;
-            net.minecraft.nbt.NBTTagCompound settings=settingsData();weightLabel=settings.hasKey("VehicleWeight",99)?com.vandorlabs.vehicle.VehicleWeight.label(settings.getDouble("VehicleWeight"))+(settings.getBoolean("VehicleWeightIncomplete")?" (partial)":""):"not scanned";previewShape=com.vandorlabs.vehicle.VehicleShape.read(settings);if(previewShape==null&&data.structure!=null)previewShape=com.vandorlabs.vehicle.VehicleShape.of(data.structure);
+            net.minecraft.nbt.NBTTagCompound settings=settingsData();weightLabel=settings.hasKey("VehicleWeight",99)?com.vandorlabs.vehicle.VehicleWeight.label(settings.getDouble("VehicleWeight"))+(settings.getBoolean("VehicleWeightIncomplete")?" (partial)":""):"not scanned";previewShape=data.structure!=null?VehicleShapeRenderer.shape(data.structure):VehicleShapeRenderer.shape(settings);
             security=settings.getBoolean("VehicleSecurity");acceptedCard=MathHelper.clamp(settings.getInteger("VehicleCard"),0,6);sentDesign=settings.getString("VehicleName")+"|"+security+"|"+acceptedCard;
             pilotHeight=settings.getInteger("PilotHeight");
             pilotMode=settings.hasKey("PilotRedstoneMode",3)?settings.getInteger("PilotRedstoneMode"):1;

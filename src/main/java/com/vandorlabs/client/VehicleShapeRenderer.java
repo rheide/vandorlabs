@@ -12,7 +12,20 @@ public final class VehicleShapeRenderer {
     // Bounded adaptive samples; no compressed payload or tile NBT is retained.
     private static final int SAMPLE_BUDGET=8*1024*1024;private static int sampleBytes;
     private static final java.util.Map<VehicleShape,VehiclePreviewSampler.Sample> DETAILS=new java.util.IdentityHashMap<>();
-    public static VehicleShape shape(net.minecraft.nbt.NBTTagCompound tag){if(tag==null)return null;int[] bits=tag.getIntArray("VehicleShape");if(bits.length!=VehicleShape.WORDS)return null;VehicleShape shape=SHAPES.get(bits);if(shape==null){if(SHAPES.size()>=128){java.util.Iterator<int[]> it=SHAPES.keySet().iterator();int[] oldest=it.next();dropShape(SHAPES.get(oldest));it.remove();}shape=VehicleShape.read(tag);VehiclePreviewSampler.Sample detailed=VehiclePreviewSampler.read(tag);if(detailed!=null){while(!SHAPES.isEmpty()&&sampleBytes+detailed.bytes()>SAMPLE_BUDGET){java.util.Iterator<int[]> it=SHAPES.keySet().iterator();int[] oldest=it.next();dropShape(SHAPES.get(oldest));it.remove();}DETAILS.put(shape,detailed);sampleBytes+=detailed.bytes();}SHAPES.put(bits,shape);}return shape;}
+    public static VehicleShape shape(net.minecraft.nbt.NBTTagCompound tag){
+        if(tag==null)return null;int[] bits=tag.getIntArray("VehicleShape");if(bits.length!=VehicleShape.WORDS)return null;
+        VehicleShape shape=SHAPES.get(bits);if(shape!=null)return shape;
+        return remember(VehicleShape.read(tag),VehiclePreviewSampler.read(tag));
+    }
+    /** Called once when a controller dialog opens, using the same sampler as a written chip. */
+    public static VehicleShape shape(com.vandorlabs.vehicle.VehicleStructure structure){return remember(VehicleShape.of(structure),VehiclePreviewSampler.sample(structure));}
+    private static VehicleShape remember(VehicleShape shape,VehiclePreviewSampler.Sample sample){
+        while(!SHAPES.isEmpty()&&(SHAPES.size()>=128||sample!=null&&sampleBytes+sample.bytes()>SAMPLE_BUDGET)){
+            java.util.Iterator<VehicleShape> it=SHAPES.values().iterator();dropShape(it.next());it.remove();
+        }
+        if(sample!=null){DETAILS.put(shape,sample);sampleBytes+=sample.bytes();}SHAPES.put(shape.bits,shape);return shape;
+    }
+    public static VehicleShape controller(com.vandorlabs.tiles.TileEntityVehicleController controller){VehicleShape shape=shape(controller.preview);return shape==null?controller.shape:shape;}
     private static void dropShape(VehicleShape shape){VehiclePreviewSampler.Sample removed=DETAILS.remove(shape);if(removed!=null)sampleBytes-=removed.bytes();Mesh[] meshes=MESHES.remove(shape);if(meshes!=null)for(Mesh mesh:meshes)if(mesh!=null){retained-=mesh.bytes;GLAllocation.deleteDisplayLists(mesh.list);}}
     private static final VisualClock CLOCK=new VisualClock();
     private static final java.util.Map<VehicleShape,Mesh[]> MESHES=new java.util.LinkedHashMap<>(32,.75F,true);

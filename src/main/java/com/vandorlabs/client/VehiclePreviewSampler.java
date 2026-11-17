@@ -26,6 +26,12 @@ final class VehiclePreviewSampler {
     private static final class Face {
         final float[] x=new float[4],y=new float[4],z=new float[4],u=new float[4],v=new float[4],red=new float[4],green=new float[4],blue=new float[4];final int[] pixels;final int width,height,tint;final double edgeU,edgeV;
         Face(BakedQuad quad,int tint){this.tint=tint;int[] raw=quad.getVertexData();int stride=raw.length/4;TextureAtlasSprite sprite=quad.getSprite();width=sprite.getIconWidth();height=sprite.getIconHeight();int[][] levels=sprite.getFrameCount()==0?null:sprite.getFrameTextureData(0);pixels=levels==null||levels.length==0?null:levels[0];float du=sprite.getMaxU()-sprite.getMinU(),dv=sprite.getMaxV()-sprite.getMinV();for(int i=0;i<4;i++){int at=i*stride;int vertex=raw[at+3];red[i]=(vertex&255)/255F;green[i]=(vertex>>>8&255)/255F;blue[i]=(vertex>>>16&255)/255F;x[i]=Float.intBitsToFloat(raw[at]);y[i]=Float.intBitsToFloat(raw[at+1]);z[i]=Float.intBitsToFloat(raw[at+2]);u[i]=(Float.intBitsToFloat(raw[at+4])-sprite.getMinU())/du;v[i]=(Float.intBitsToFloat(raw[at+5])-sprite.getMinV())/dv;}edgeU=Math.max(edge(0,1),edge(3,2));edgeV=Math.max(edge(0,3),edge(1,2));}
+        Face(int[] pixels,int width,int height,float[][] vertices,int u0,int v0,int u1,int v1,EnumFacing facing){
+            this.pixels=pixels;this.width=width;this.height=height;this.tint=0xffffff;
+            float[] us={u0,u0,u1,u1},vs={v1,v0,v0,v1};
+            for(int i=0;i<4;i++){double xx=vertices[i][0]/16D-.5,zz=vertices[i][2]/16D-.5;double rx=xx,rz=zz;switch(facing){case SOUTH:rx=-xx;rz=-zz;break;case WEST:rx=zz;rz=-xx;break;case EAST:rx=-zz;rz=xx;break;default:break;}x[i]=(float)(rx+.5);y[i]=vertices[i][1]/16F;z[i]=(float)(rz+.5);u[i]=us[i]/width;v[i]=vs[i]/height;red[i]=green[i]=blue[i]=1;}
+            edgeU=Math.max(edge(0,1),edge(3,2));edgeV=Math.max(edge(0,3),edge(1,2));
+        }
         float interpolate(float[] values,double a,double b){return (float)((values[0]*(1-a)+values[1]*a)*(1-b)+(values[3]*(1-a)+values[2]*a)*b);}
         double edge(int a,int b){return Math.sqrt(Math.pow(x[a]-x[b],2)+Math.pow(y[a]-y[b],2)+Math.pow(z[a]-z[b],2));}
         int color(double a,double b){int color=0xffaaaaaa;if(pixels!=null&&width>0&&height>0){int px=Math.max(0,Math.min(width-1,(int)(interpolate(u,a,b)*width))),py=Math.max(0,Math.min(height-1,(int)(interpolate(v,a,b)*height)));int at=py*width+px;if(at<pixels.length)color=pixels[at];}if((color>>>24)<128)return 0;return 0xff000000|((int)((color>>16&255)*(tint>>16&255)/255F*interpolate(red,a,b)))<<16|((int)((color>>8&255)*(tint>>8&255)/255F*interpolate(green,a,b)))<<8|(int)((color&255)*(tint&255)/255F*interpolate(blue,a,b));}
@@ -34,9 +40,14 @@ final class VehiclePreviewSampler {
     private static final LinkedHashMap<IBlockState,Geometry> GEOMETRY=new LinkedHashMap<>(64,.75F,true);private static int geometryBytes;
     static void clear(){GEOMETRY.clear();geometryBytes=0;}
     static Sample read(NBTTagCompound tag){
-        if(!tag.hasKey("VehicleDesign",7))return null;
+        if(!tag.hasKey("VehicleDesign",7)&&!tag.hasKey("VehiclePreview",7))return null;
         try{
-            byte[] raw=com.vandorlabs.copier.core.BlueprintCompression.decode(tag.getInteger("VehicleDesignCodec"),tag.getByteArray("VehicleDesign"));VehicleStructure structure=VehicleStructure.decode(raw);
+            VehicleStructure structure=tag.hasKey("VehiclePreview",7)?com.vandorlabs.vehicle.VehiclePreview.read(tag):VehicleStructure.decode(com.vandorlabs.copier.core.BlueprintCompression.decode(tag.getInteger("VehicleDesignCodec"),tag.getByteArray("VehicleDesign")));
+            return sample(structure);
+        }catch(java.io.IOException|RuntimeException invalid){return null;}
+    }
+    static Sample sample(VehicleStructure structure){
+        try{
             double sx=Math.max(1,structure.bounds.maxX)+2,sy=Math.max(1,structure.bounds.maxY)+2,sz=Math.max(1,structure.bounds.maxZ)+2;
             double density=Math.min(VOXELS_PER_BLOCK,Math.min(MAX_AXIS/Math.max(sx,Math.max(sy,sz)),Math.cbrt(MAX_VOXELS/(sx*sy*sz))));int w,h,d;
             do{w=Math.max(1,(int)Math.ceil(sx*density));h=Math.max(1,(int)Math.ceil(sy*density));d=Math.max(1,(int)Math.ceil(sz*density));if((long)w*h*d>MAX_VOXELS)density*=.97;else break;}while(true);
@@ -48,7 +59,7 @@ final class VehiclePreviewSampler {
                 if(!wrote)box(colors,w,h,d,cell.pos,model.bounds,density,model.fallback,false);
             }
             Sample sample=new Sample(colors,w,h,d);while(sample.excessiveFaces()&&(sample.width>1||sample.height>1||sample.depth>1))sample=sample.reduced();return sample;
-        }catch(java.io.IOException|RuntimeException invalid){return null;}
+        }catch(RuntimeException invalid){return null;}
     }
     private static double inset(double value){return value==0?1e-6:value==1?1-1e-6:value;}
     private static void put(int[] colors,int w,int h,int d,double x,double y,double z,int color){int xx=(int)Math.floor(x),yy=(int)Math.floor(y),zz=(int)Math.floor(z);if(xx>=0&&xx<w&&yy>=0&&yy<h&&zz>=0&&zz<d)colors[(yy*d+zz)*w+xx]=color;}
@@ -56,8 +67,28 @@ final class VehiclePreviewSampler {
     private static Geometry geometry(IBlockState state){Geometry cached=GEOMETRY.get(state);if(cached!=null)return cached;List<Face> faces=new ArrayList<>();AxisAlignedBB bounds=new AxisAlignedBB(0,0,0,1,1,1);int fallback=0xaaaaaa;
         try{fallback=state.getMapColor(null,BlockPos.ORIGIN).colorValue;}catch(RuntimeException ignored){}
         try{bounds=state.getBoundingBox(null,BlockPos.ORIGIN);}catch(RuntimeException ignored){}
-        try{Minecraft mc=Minecraft.getMinecraft();IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);outer:for(int side=-1;side<6;side++)for(BakedQuad quad:model.getQuads(state,side<0?null:EnumFacing.VALUES[side],0)){if(faces.size()>=64)break outer;int tint=quad.hasTintIndex()?mc.getBlockColors().colorMultiplier(state,null,null,quad.getTintIndex()):0xffffff;if(tint<0)tint=0xffffff;faces.add(new Face(quad,tint));}}catch(RuntimeException unsupported){faces.clear();}
-        cached=new Geometry(Collections.unmodifiableList(faces),bounds==null?new AxisAlignedBB(0,0,0,1,1,1):bounds,fallback,state.isFullCube());while(!GEOMETRY.isEmpty()&&(geometryBytes+cached.bytes>GEOMETRY_BUDGET||GEOMETRY.size()>=512)){Iterator<Geometry> it=GEOMETRY.values().iterator();geometryBytes-=it.next().bytes;it.remove();}GEOMETRY.put(state,cached);geometryBytes+=cached.bytes;return cached;
+        try{Minecraft mc=Minecraft.getMinecraft();if(state.getBlock() instanceof net.minecraft.block.BlockChest){chest(faces,state);cached=new Geometry(Collections.unmodifiableList(faces),new AxisAlignedBB(1/16D,0,1/16D,15/16D,14/16D,15/16D),0x987040,false);return remember(state,cached);}IBakedModel model=mc.getBlockRendererDispatcher().getModelForState(state);outer:for(int side=-1;side<6;side++)for(BakedQuad quad:model.getQuads(state,side<0?null:EnumFacing.VALUES[side],0)){if(faces.size()>=64)break outer;int tint=quad.hasTintIndex()?mc.getBlockColors().colorMultiplier(state,null,null,quad.getTintIndex()):0xffffff;if(tint<0)tint=0xffffff;faces.add(new Face(quad,tint));}}catch(RuntimeException unsupported){faces.clear();}
+        cached=new Geometry(Collections.unmodifiableList(faces),bounds==null?new AxisAlignedBB(0,0,0,1,1,1):bounds,fallback,state.isFullCube());return remember(state,cached);
+    }
+    private static Geometry remember(IBlockState state,Geometry cached){while(!GEOMETRY.isEmpty()&&(geometryBytes+cached.bytes>GEOMETRY_BUDGET||GEOMETRY.size()>=512)){Iterator<Geometry> it=GEOMETRY.values().iterator();geometryBytes-=it.next().bytes;it.remove();}GEOMETRY.put(state,cached);geometryBytes+=cached.bytes;return cached;
+    }
+    private static void chest(List<Face> faces,IBlockState state){
+        // Chests have no baked block quads: use their entity skin rather than missingno.
+        String skin=state.getBlock()==net.minecraft.init.Blocks.TRAPPED_CHEST?"trapped":"normal";
+        try(net.minecraft.client.resources.IResource resource=Minecraft.getMinecraft().getResourceManager().getResource(new net.minecraft.util.ResourceLocation("minecraft:textures/entity/chest/"+skin+".png"))){
+            java.awt.image.BufferedImage image=javax.imageio.ImageIO.read(resource.getInputStream());if(image==null)throw new java.io.IOException("Invalid chest skin");
+            int[] pixels=image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth());EnumFacing facing=state.getValue(net.minecraft.block.BlockChest.FACING);
+            chestBox(faces,pixels,image.getWidth(),image.getHeight(),facing,1,0,1,14,10,14,0,19);
+            chestBox(faces,pixels,image.getWidth(),image.getHeight(),facing,1,9,1,14,5,14,0,0);
+            chestBox(faces,pixels,image.getWidth(),image.getHeight(),facing,7,7,0,2,4,1,0,0);
+        }catch(java.io.IOException error){throw new IllegalStateException("Cannot sample chest skin",error);}
+    }
+    private static void chestBox(List<Face> out,int[] pixels,int width,int height,EnumFacing facing,float x,float y,float z,int w,int h,int d,int u,int v){
+        float X=x+w,Y=y+h,Z=z+d;
+        float[][][] quads={{{x,y,z},{x,Y,z},{X,Y,z},{X,y,z}},{{X,y,Z},{X,Y,Z},{x,Y,Z},{x,y,Z}},{{x,y,Z},{x,Y,Z},{x,Y,z},{x,y,z}},{{X,y,z},{X,Y,z},{X,Y,Z},{X,y,Z}},{{x,Y,z},{x,Y,Z},{X,Y,Z},{X,Y,z}},{{x,y,Z},{x,y,z},{X,y,z},{X,y,Z}}};
+        int[][] uv={{u+d,v+d,u+d+w,v+d+h},{u+d+w+d,v+d,u+d+w+d+w,v+d+h},{u,v+d,u+d,v+d+h},{u+d+w,v+d,u+d+w+d,v+d+h},{u+d,v,u+d+w,v+d},{u+d+w,v,u+d+w+w,v+d}};
+        // Minecraft resource packs may scale entity skins; model UVs remain based on 64px.
+        for(int i=0;i<6;i++)out.add(new Face(pixels,width,height,quads[i],uv[i][0]*width/64,uv[i][1]*height/64,uv[i][2]*width/64,uv[i][3]*height/64,facing));
     }
     private VehiclePreviewSampler(){}
 }
