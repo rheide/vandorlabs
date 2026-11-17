@@ -217,6 +217,8 @@ public class ModBlocks {
         PROGRAMMABLE_WALL = add(new BlockProgrammableWall("programmable_wall",
                 BlockProgrammableWall.Shape.PLAIN));
         PROGRAMMABLE_BLOCK = add(new BlockProgrammableBlock());
+        add(new BlockChipAppliance("printer",false));
+        add(new BlockChipAppliance("scanner",true));
         PROGRAMMABLE_STORAGE = add(new BlockProgrammableStorage());
         PROGRAMMABLE_TRAPDOOR = add(new BlockProgrammableTrapdoor());
         PROGRAMMABLE_DIAGONAL_TRAPDOOR = add(new BlockProgrammableDiagonalTrapdoor());
@@ -438,7 +440,7 @@ public class ModBlocks {
     }
 
     @SubscribeEvent
-    public static void onMissingGlassRecipes(RegistryEvent.MissingMappings<net.minecraft.item.crafting.IRecipe> event){for(RegistryEvent.MissingMappings.Mapping<net.minecraft.item.crafting.IRecipe> mapping:event.getMappings())if(com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString())>=0)mapping.ignore();else if(com.vandorlabs.persistence.RenamedBlocks.OLD.equals(mapping.key.toString())){net.minecraft.item.crafting.IRecipe recipe=net.minecraftforge.fml.common.registry.ForgeRegistries.RECIPES.getValue(new ResourceLocation(com.vandorlabs.persistence.RenamedBlocks.NEW));if(recipe!=null)mapping.remap(recipe);}}
+    public static void onMissingGlassRecipes(RegistryEvent.MissingMappings<net.minecraft.item.crafting.IRecipe> event){for(RegistryEvent.MissingMappings.Mapping<net.minecraft.item.crafting.IRecipe> mapping:event.getMappings())if(com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString())>=0)mapping.ignore();else if(!com.vandorlabs.persistence.RenamedBlocks.canonical(mapping.key.toString()).equals(mapping.key.toString())){net.minecraft.item.crafting.IRecipe recipe=net.minecraftforge.fml.common.registry.ForgeRegistries.RECIPES.getValue(new ResourceLocation(com.vandorlabs.persistence.RenamedBlocks.canonical(mapping.key.toString())));if(recipe!=null)mapping.remap(recipe);}}
 
     @SubscribeEvent
     public static void onMissingDisplayItems(RegistryEvent.MissingMappings<Item> event) {
@@ -462,6 +464,8 @@ public class ModBlocks {
     }
 
     private static String replacementBlockId(String id) {
+        if("survey_dish_core".equals(id))return "standalone_dish_core";
+        if("sentinel_array_core".equals(id))return "standalone_antenna_core";
         if("programmable_diagonal_half_console".equals(id))return "programmable_diagonal_half_screen";
         if ("wall_vent".equals(id) || "bolted_wall_plate".equals(id)
                 || "vent_grille".equals(id) || "burgundy_carpet".equals(id)
@@ -661,7 +665,9 @@ public class ModBlocks {
                     "configured/" + id + "_"
                             + com.vandorlabs.tiles.ScreenHousingTextures.IDS[i]);
         ModelLoader.registerItemVariants(item, variants);
+        if(block==PROGRAMMABLE_BLOCK)registerAppliancePresets(item,false);
         ModelLoader.setCustomMeshDefinition(item, stack -> {
+            int preset=com.vandorlabs.items.AppliancePresets.matching(stack);if(preset>=0)return new ModelResourceLocation("vandorlabs:appliances/"+com.vandorlabs.appliance.ApplianceCatalog.IDS[preset],"inventory");
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int choice = tag == null || !tag.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3)
                     ? (block instanceof BlockProgrammableStorage ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_STORAGE : block instanceof BlockProgrammableTrapdoor ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR : 0)
@@ -682,7 +688,9 @@ public class ModBlocks {
                     "configured/programmable_slab_" + id + "_tile");
         }
         ModelLoader.registerItemVariants(item, variants);
+        registerAppliancePresets(item,true);
         ModelLoader.setCustomMeshDefinition(item, stack -> {
+            int preset=com.vandorlabs.items.AppliancePresets.matching(stack);if(preset>=0)return new ModelResourceLocation("vandorlabs:appliances/"+com.vandorlabs.appliance.ApplianceCatalog.IDS[preset],"inventory");
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int choice = tag == null ? 0 : com.vandorlabs.tiles.ScreenHousingTextures.clamp(
                     tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
@@ -692,6 +700,9 @@ public class ModBlocks {
                     "inventory");
         });
     }
+
+    @SideOnly(Side.CLIENT)
+    private static void registerAppliancePresets(Item item,boolean slab){java.util.List<ResourceLocation> names=new java.util.ArrayList<>();for(int i=0;i<4;i++)if(com.vandorlabs.appliance.ApplianceCatalog.slab(i)==slab)names.add(new ResourceLocation("vandorlabs","appliances/"+com.vandorlabs.appliance.ApplianceCatalog.IDS[i]));ModelLoader.registerItemVariants(item,names.toArray(new ResourceLocation[0]));}
 
     @SideOnly(Side.CLIENT)
     private static void registerLightItemModels(Block block,Item item) {

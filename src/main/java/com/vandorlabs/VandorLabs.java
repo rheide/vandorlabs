@@ -47,6 +47,7 @@ public class VandorLabs {
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableController.class,"vandorlabs:turntable_controller");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTurntableSurface.class,"vandorlabs:turntable_surface");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityWirelessRedstone.class,"vandorlabs:wireless_redstone");
+        GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityChipAppliance.class,"vandorlabs:chip_appliance");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityTokenSlot.class,"vandorlabs:token_slot");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityModuleRack.class,"vandorlabs:module_rack");
         com.vandorlabs.ports.ResourcePorts.registerTiles();

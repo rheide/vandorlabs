@@ -20,6 +20,11 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
 public class ClientProxy extends CommonProxy {
+    @Override public void navigationChanged(net.minecraft.util.math.BlockPos pos,int action){com.vandorlabs.client.NavigationMapRenderer.changed(pos,action);}
+    @Override public void navigationChanged(net.minecraft.util.math.BlockPos pos){com.vandorlabs.client.NavigationMapRenderer.changed(pos);}
+    @Override public void vehicleNavigationImage(com.vandorlabs.network.MessageVehicleNavigationImage packet){net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(()->com.vandorlabs.client.NavigationMapRenderer.receive(packet));}
+    @Override public void navigationChanged(net.minecraft.tileentity.TileEntity tile,int action){com.vandorlabs.client.NavigationMapRenderer.changed(tile,action);}
+    @Override public void navigationImage(com.vandorlabs.network.MessageNavigationImage packet){net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(()->com.vandorlabs.client.NavigationMapRenderer.receive(packet));}
     @Override public void coreAppearanceChanged(com.vandorlabs.tiles.TileEntityConstructor tile){com.vandorlabs.gear.client.CoreArmHandoff.register(tile);com.vandorlabs.client.constructors.SynthesisTowerRenderer.observe(tile);}
     @Override public void coreRenderTransferChanged(com.vandorlabs.gear.GearTileEntity tile){com.vandorlabs.gear.client.CoreArmHandoff.changed(tile);}
     @Override public void armPayloadAppearanceChanged(com.vandorlabs.gear.GearTileEntity tile,com.vandorlabs.gear.ArmPayload previous){
@@ -137,6 +142,7 @@ public class ClientProxy extends CommonProxy {
         MinecraftForge.EVENT_BUS.register(new com.vandorlabs.client.ConnectedFluidRenderer.Installer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityCockpit.class,new com.vandorlabs.client.TECockpit());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTurntableSurface.class,new com.vandorlabs.client.TETurntableSurface());
+        ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityChipAppliance.class,new com.vandorlabs.client.TEChipAppliance());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.tiles.TileEntityTokenSlot.class,new com.vandorlabs.client.TETokenSlot());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.programmer.ProgrammerTile.class,new com.vandorlabs.programmer.client.ProgrammerRenderer());
         ClientRegistry.bindTileEntitySpecialRenderer(com.vandorlabs.gear.GearTileEntity.class,new com.vandorlabs.gear.client.GearRenderer());

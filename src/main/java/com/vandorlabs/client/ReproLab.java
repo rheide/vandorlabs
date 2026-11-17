@@ -589,6 +589,7 @@ public class ReproLab {
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.taxiVisibilityChecksOnly"))try{TaxiVisibilityClientChecks.captureFrame(Minecraft.getMinecraft());}catch(Exception failure){throw new IllegalStateException("Taxi natural main-frame capture",failure);}
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.joinedArmDocs"))JoinedArmDocumentation.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.machineBuildDocsOnly"))FrameMachineDocumentation.render(Minecraft.getMinecraft());
+        if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.navigationWorldChecksOnly")){NavigationWorldChecks.render(Minecraft.getMinecraft());NavigationFlightChecks.render(Minecraft.getMinecraft());}
         if(event.phase==TickEvent.Phase.END&&enabled&&Boolean.getBoolean("vandorlabs.bridgeMachineChecksOnly"))NavigationClientChecks.render(Minecraft.getMinecraft());
         if(event.phase==TickEvent.Phase.END && enabled && state==300 && documentationCapture!=null)
             documentationCapture.render(Minecraft.getMinecraft());
@@ -621,13 +622,14 @@ public class ReproLab {
             if (!worldSpawned && tick > 60 && mc.getIntegratedServer() == null) {
                 worldSpawned = true;
                 WorldSettings settings = new WorldSettings(12345L,
-                        GameType.CREATIVE, false, false, WorldType.FLAT);
+                        GameType.CREATIVE, false, false, Boolean.getBoolean("vandorlabs.navigationWorldChecksOnly")?WorldType.DEFAULT:WorldType.FLAT);
                 // Every run gets a fresh save. Reusing one after registry ids
                 // are added/retired lets Forge remap stale chunk data into
                 // current fixtures and made otherwise deterministic renders
                 // intermittently fail.
                 String saveName = "repro-" + outDir.getName().replaceAll(
                         "[^A-Za-z0-9._-]", "_");
+                if(Boolean.getBoolean("vandorlabs.navigationVehicleChecksOnly"))saveName="navigation-vehicle";
                 if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty())saveName="arm-recovery";
                 if(!System.getProperty("vandorlabs.mekanismTankRestart","").isEmpty())saveName="mekanism-tank-restart";
                 String suppliedWorld=System.getProperty("vandorlabs.testWorldName","");
@@ -745,6 +747,12 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.rampAxisChecksOnly")){try{if(RampAxisLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Ramp axis live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.rftoolsBuilderChecksOnly")){try{if(RFToolsBuilderLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("RFTools Builder live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.furnitureChecksOnly")){try{if(FurnitureLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Furniture live checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.navigationModuleChecksOnly")){try{if(NavigationModuleLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Navigation module checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.navigationVehicleChecksOnly")){try{if(NavigationVehicleLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle navigation checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.applianceChecksOnly")){try{if(ApplianceLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Appliance checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.observerPerformanceOnly")){try{if(ObserverPerformanceChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Observer performance checks",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.navigationPerformanceOnly")){try{if(NavigationPerformanceChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Navigation performance",failure);}return;}
+        if(Boolean.getBoolean("vandorlabs.navigationWorldChecksOnly")){try{if(NavigationWorldChecks.tick(mc,outDir)){mc.shutdown();}}catch(Exception failure){throw new IllegalStateException("Navigation world checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.screenChipChecksOnly")){try{if(ScreenChipLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Screen chip live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleDesignChecksOnly")){try{if(VehicleDesignRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Vehicle design live checks",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleSafeParkChecksOnly")){try{if("1".equals(System.getenv("VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_ONLY"))?VehicleSafeParkArmLiveChecks.tick(mc,outDir):VehicleSafeParkLiveChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Safe Park live checks",failure);}return;}

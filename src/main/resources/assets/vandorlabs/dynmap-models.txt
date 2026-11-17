@@ -21071,15 +21071,17 @@ customblock:id=%paladyne_navigation_core,state=*,class=com.vandorlabs.dynmap.Fra
 customblock:id=%seyr_navigation_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 customblock:id=%vector_fold_array_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 customblock:id=%oculus_drive_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
-customblock:id=%sentinel_array_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 customblock:id=%standalone_antenna_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 customblock:id=%standalone_dish_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
-customblock:id=%survey_dish_core,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 customblock:id=%constructor_part,state=*,class=com.vandorlabs.dynmap.FrameMachineRenderer
 # End Core machine maps
 
 # Module Rack: native models and retained slot occupancy
 customblock:id=%module_rack,state=*,class=com.vandorlabs.dynmap.ModuleRackRenderer
+
+# Appliance decorations
+customblock:id=%printer,state=*,class=com.vandorlabs.dynmap.ApplianceRenderer
+customblock:id=%scanner,state=*,class=com.vandorlabs.dynmap.ApplianceRenderer
 
 # Generated tile-aware material palette
 customblock:id=%segmented_door,state=*,class=com.vandorlabs.dynmap.SegmentedDoorMapRenderer

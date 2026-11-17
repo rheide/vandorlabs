@@ -24,7 +24,7 @@ import org.dynmap.renderer.RenderPatchFactory;
 public final class ModuleRackRenderer extends CustomRenderer {
     private static final String[] FIELDS = {"ModuleMask","ModuleKinds","BatteryCharge0","BatteryCharge1","BatteryCharge2","BatteryCharge3"};
     private static final List<String> TEXTURES = Collections.unmodifiableList(Arrays.asList(
-            "housing", "module", "trim", "dark", "indicators", "contacts", "autopilot_module", "power_in_icon", "emerald_block"));
+            "housing", "module", "trim", "dark", "indicators", "contacts", "autopilot_module", "power_in_icon", "emerald_block", "power_in_off", "power_in_on"));
     private static final class Face {
         final int texture;
         final List<MapSurface.Vertex> vertices;

@@ -23,7 +23,7 @@ final class BuilderFabricationVoxels {
         long memory(){return bytes+(vertices==null?0:vertices.length*4L);}
         Model(BuilderItemGeometry source,boolean flat){
             this.source=source;this.flat=flat;
-            boolean module=source.stack.getItem()==com.vandorlabs.items.ModItems.BATTERY_MODULE||source.stack.getItem()==com.vandorlabs.items.ModItems.BLANK_MODULE||source.stack.getItem()==com.vandorlabs.items.ModItems.AUTOPILOT_MODULE;
+            boolean module=source.stack.getItem()==com.vandorlabs.items.ModItems.NAVIGATION_DATA_MODULE||source.stack.getItem()==com.vandorlabs.items.ModItems.BATTERY_MODULE||source.stack.getItem()==com.vandorlabs.items.ModItems.BLANK_MODULE||source.stack.getItem()==com.vandorlabs.items.ModItems.AUTOPILOT_MODULE;
             boolean flatten=flat&&!module;
             List<BuilderItemGeometry.Triangle> triangles=new ArrayList<>();BuilderItemGeometry.Bounds bounds=new BuilderItemGeometry.Bounds();
             for(BuilderItemGeometry.Triangle triangle:source.triangles){double[] p=triangle.p.clone();for(int v=0;v<3;v++){double y=p[v*3+1],z=p[v*3+2];if(flatten){p[v*3+1]=-z;p[v*3+2]=y;}bounds.add(p[v*3],p[v*3+1],p[v*3+2]);}triangles.add(new BuilderItemGeometry.Triangle(p,triangle.uv,triangle.sprite,triangle.tint,triangle.surface));}

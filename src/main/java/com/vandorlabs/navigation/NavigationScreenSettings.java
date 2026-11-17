@@ -13,7 +13,7 @@ public final class NavigationScreenSettings {
         this.texture=texture;this.animated=animated;this.speed=speed;this.redstone=redstone;this.security=security;
     }
     public static boolean validTexture(int choice){
-        if(choice==-1)return true;
+        if(choice==-1||choice==NavigationMap.SURFACE)return true;
         if(!ScreenHousingTextures.validChoice(choice))return false;
         if(ScreenHousingTextures.lightOnly(choice))return false;
         com.google.gson.JsonObject entry=ScreenHousingTextures.entry(choice);

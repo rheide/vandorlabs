@@ -14,7 +14,7 @@ public final class InlineTransmitters {
     public static void attach(Container container,EntityPlayer player){
         if(BINDINGS.containsKey(container)||container instanceof ContainerTransmitterItem)return;
         TileEntity tile=com.vandorlabs.network.MessageTransmitterSlot.openedTile(container);
-        if((tile instanceof RedstoneChannelMember||container instanceof ContainerRedstoneChannel)&&!(tile instanceof com.vandorlabs.tiles.TileEntitySecuredDisplay))BINDINGS.put(container,new Binding(container));
+        if((tile instanceof RedstoneChannelMember||container instanceof ContainerRedstoneChannel)&&(!(tile instanceof com.vandorlabs.tiles.TileEntitySecuredDisplay)||tile instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)tile)>0))BINDINGS.put(container,new Binding(container));
     }
     public static final class Binding {
         private final WeakReference<Container> owner;

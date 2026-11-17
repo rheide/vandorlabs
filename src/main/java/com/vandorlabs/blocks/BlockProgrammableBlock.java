@@ -18,6 +18,9 @@ public class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
         setLightLevel(0);
     }
 
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @Override public void getSubBlocks(net.minecraft.creativetab.CreativeTabs tab,net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> items){super.getSubBlocks(tab,items);if(getClass()==BlockProgrammableBlock.class)com.vandorlabs.items.AppliancePresets.creative(this,tab,items);}
+
     @Override public net.minecraft.tileentity.TileEntity createNewTileEntity(net.minecraft.world.World world,int meta){
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
         if(getClass()==BlockProgrammableBlock.class)tile.setMainTextureLayout(1);

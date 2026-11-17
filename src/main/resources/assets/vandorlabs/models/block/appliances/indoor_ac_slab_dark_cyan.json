@@ -1,0 +1,81 @@
+{
+  "textures": {
+    "bottom": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/bottom",
+    "top": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/top",
+    "front": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/front",
+    "back": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/back",
+    "left": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/left",
+    "right": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/right",
+    "particle": "vandorlabs:blocks/appliances/indoor_ac_slab_dark_cyan/front"
+  },
+  "elements": [
+    {
+      "from": [
+        0,
+        0,
+        0
+      ],
+      "to": [
+        16,
+        8,
+        16
+      ],
+      "faces": {
+        "down": {
+          "texture": "#bottom",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "up": {
+          "texture": "#top",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "north": {
+          "texture": "#front",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "south": {
+          "texture": "#back",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "west": {
+          "texture": "#left",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        },
+        "east": {
+          "texture": "#right",
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ]
+        }
+      }
+    }
+  ]
+}

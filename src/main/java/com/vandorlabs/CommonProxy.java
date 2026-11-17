@@ -71,6 +71,11 @@ public class CommonProxy {
     public void spawnRotatedThrusterParticle(World world, double x, double y, double z,
             EnumFacing facing, int color, int style, float speed, float spreadScale, float yaw) { }
 
+    public void navigationChanged(BlockPos pos) {}
+    public void navigationChanged(BlockPos pos,int action) { navigationChanged(pos); }
+    public void navigationImage(com.vandorlabs.network.MessageNavigationImage packet) {}
+    public void vehicleNavigationImage(com.vandorlabs.network.MessageVehicleNavigationImage packet) {}
+    public void navigationChanged(net.minecraft.tileentity.TileEntity tile,int action){navigationChanged(tile.getPos(),action);}
     public void init(FMLInitializationEvent event) {
         MinecraftForge.EVENT_BUS.register(BetterBuildersWandsCompat.INSTANCE);
         MinecraftForge.EVENT_BUS.register(com.vandorlabs.tiles.OffsetTrapdoorInteractions.INSTANCE);

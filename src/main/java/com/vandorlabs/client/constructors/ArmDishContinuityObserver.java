@@ -35,7 +35,7 @@ public final class ArmDishContinuityObserver implements ArmCoreTransitionObserve
             int start=UniversalConstructorModelCache.get(spec.design,folder+"static.obj").getQuadCount()*4;
             UniversalConstructorModelCache.Mesh rotor=UniversalConstructorModelCache.get(spec.design,folder+"rotor.obj");
             int rotorCount=rotor.getQuadCount()*4;if(start+rotorCount!=count)throw new IllegalStateException("Actual Dish BODY lost static/rotor boundary");
-            BufferBuilder reference=new BufferBuilder(4096);reference.begin(7,DefaultVertexFormats.BLOCK);rotor.emitTransformed(reference,0,0,0,tile.facing(),spec.width,spec.depth,0,0,0,0,0,spec.motion_pivot[0],spec.motion_pivot[2]);reference.finishDrawing();
+            BufferBuilder reference=new BufferBuilder(4096);reference.begin(7,DefaultVertexFormats.BLOCK);if(tile.inverted())rotor.emitInverted(reference,0,0,0,tile.facing(),spec.width,spec.height,spec.depth,0,0,spec.motion_pivot[0],spec.motion_pivot[2]);else rotor.emitTransformed(reference,0,0,0,tile.facing(),spec.width,spec.depth,0,0,0,0,0,spec.motion_pivot[0],spec.motion_pivot[2]);reference.finishDrawing();
             ByteBuffer zero=reference.getByteBuffer();int offset=position(format),stride=format.getNextOffset(),rs=DefaultVertexFormats.BLOCK.getNextOffset(),ro=position(DefaultVertexFormats.BLOCK);
             int best=0;double longest=0,rx=0,rz=0;
             for(int i=1;i<rotorCount;i++){double x=zero.getFloat(i*rs+ro)-zero.getFloat(ro),z=zero.getFloat(i*rs+ro+8)-zero.getFloat(ro+8),length=x*x+z*z;if(length>longest){longest=length;best=i;rx=x;rz=z;}}

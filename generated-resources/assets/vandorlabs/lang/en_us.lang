@@ -604,8 +604,8 @@ tile.vandorlabs.programmable_ramp_slab.name=Ramp Controller Slab
 tile.vandorlabs.oculus_drive_core.name=Pinnacle Oculus Drive Core
 tile.vandorlabs.survey_dish_core.name=Survey Dish Core
 tile.vandorlabs.sentinel_array_core.name=Sentinel Array Core
-tile.vandorlabs.standalone_dish_core.name=Survey Dish Core (Standalone)
-tile.vandorlabs.standalone_antenna_core.name=Sentinel Array Core (Standalone)
+tile.vandorlabs.standalone_dish_core.name=Survey Dish Core
+tile.vandorlabs.standalone_antenna_core.name=Sentinel Array Core
 
 tile.vandorlabs.data_chip_programmer.name=Card / Chip Programmer
 
@@ -923,3 +923,12 @@ tile.vandorlabs.fluid_port.name=Fluid Port
 tile.vandorlabs.matter_port.name=Matter Port
 
 item.vandorlabs.battery_module.name=Battery Module
+
+item.vandorlabs.navigation_data_module.name=Navigation Data Module
+
+tile.vandorlabs.indoor_ac_slab_dark_cyan.name=Indoor AC (Dark Cyan)
+tile.vandorlabs.indoor_ac_slab_silver.name=Indoor AC (Silver)
+tile.vandorlabs.outdoor_ac_dark_cyan.name=Outdoor AC (Dark Cyan)
+tile.vandorlabs.outdoor_ac_silver.name=Outdoor AC (Silver)
+tile.vandorlabs.printer.name=Printer
+tile.vandorlabs.scanner.name=Scanner

@@ -50,7 +50,7 @@ public final class VehicleClient {
         if(!VehicleInteraction.supported(mc.player,target))return false;
         VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.INTERACT);
         packet.entity=target.craft.getEntityId();packet.token=target.craft.getUniqueID();packet.origin=target.hit.cell.pos;
-        PacketHandler.INSTANCE.sendToServer(packet);return true;
+        com.vandorlabs.navigation.NavigationVehicle.predict(mc.player,target.craft,target.hit.cell.pos);PacketHandler.INSTANCE.sendToServer(packet);return true;
     }
     /** Consume the physical click before vanilla can emit duplicate main/offhand use packets. */
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST)

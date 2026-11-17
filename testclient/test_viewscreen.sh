@@ -110,6 +110,24 @@ case "${1:-}" in
         elif [ "$TARGET" = furniture ]; then
             PREFIX=furniture_
             export VANDOR_LABS_FURNITURE_CHECKS_ONLY=true
+        elif [ "$TARGET" = navigation-module ]; then
+            PREFIX=navigation_module_
+            export VANDOR_LABS_NAVIGATION_MODULE_CHECKS_ONLY=true
+        elif [ "$TARGET" = navigation-vehicle ]; then
+            PREFIX=navigation_vehicle_
+            export VANDOR_LABS_NAVIGATION_VEHICLE_CHECKS_ONLY=true
+        elif [ "$TARGET" = appliances ]; then
+            PREFIX=appliances_
+            export VANDOR_LABS_APPLIANCE_CHECKS_ONLY=true
+        elif [ "$TARGET" = observer-performance ]; then
+            PREFIX=observer_performance_
+            export VANDOR_LABS_OBSERVER_PERFORMANCE_ONLY=true
+        elif [ "$TARGET" = navigation-performance ]; then
+            PREFIX=navigation_performance_
+            export VANDOR_LABS_NAVIGATION_PERFORMANCE_ONLY=true
+        elif [ "$TARGET" = navigation-world ]; then
+            PREFIX=navigation_world_
+            export VANDOR_LABS_NAVIGATION_WORLD_CHECKS_ONLY=true
         elif [ "$TARGET" = screen-chips ]; then
             PREFIX=screen_chip_
             export VANDOR_LABS_SCREEN_CHIP_CHECKS_ONLY=true
@@ -631,6 +649,36 @@ PYIMAGE
     if [ "$TARGET" = furniture ]; then
         grep -q "furniture-live PASS" "$RUN_OUT/client.log"
         echo "Furniture live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = navigation-module ]; then
+        grep -q "navigation-module PASS" "$RUN_OUT/client.log"
+        echo "Navigation module live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = navigation-vehicle ]; then
+        grep -q "navigation-vehicle-${VANDOR_LABS_NAVIGATION_VEHICLE_PHASE:-write} PASS" "$RUN_OUT/client.log"
+        echo "Vehicle navigation checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = appliances ]; then
+        grep -q "appliances PASS" "$RUN_OUT/client.log"
+        echo "Appliance checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = observer-performance ]; then
+        grep -q "observer-performance PASS" "$RUN_OUT/client.log"
+        echo "Observer performance checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = navigation-performance ]; then
+        grep -q "navigation-performance PASS" "$RUN_OUT/client.log"
+        echo "Navigation performance checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = navigation-world ]; then
+        grep -q "navigation-world PASS" "$RUN_OUT/client.log"
+        echo "Navigation world live checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = screen-chips ]; then

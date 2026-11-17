@@ -31,7 +31,7 @@ public final class VehicleSelection {
                     : VehicleSeats.supports(cell.state) ? Action.BOARD
                     : VehicleCanopies.supports(cell.state.getBlock()) ? Action.CANOPY
                     : VehicleDoors.supports(cell.state.getBlock())
-                    ? Action.DOOR : (cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVandorSwitch || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever || com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock())) ? Action.SCREEN : Action.SURFACE;
+                    ? Action.DOOR : (cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockNavigationTable || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVandorSwitch || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever || com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock())) ? Action.SCREEN : Action.SURFACE;
         }
     }
 

@@ -28,6 +28,7 @@ public final class RedstoneScreenInteractions {
         // Use those authoritative view angles for a click delivered in the same tick.
         Vec3d end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));
         if(ScreenChipSupport.activate(tile,player,hand,eye,end))return true;
+        if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,hand,eye,end))return true;
         for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot)&&supportsSlot(state.getBlock(),slot)){
             int action=statusAction(state,tile,slot,eye,end);if(action<0)continue;
             if(!world.isRemote)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,player,action);return true;

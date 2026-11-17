@@ -13,7 +13,7 @@ import net.minecraft.world.WorldServer;
 /** Native client interaction and packet round trips across the visible empty recess. */
 final class MachineMountClientChecks {
     private static final BlockPos ROOT=new BlockPos(42,80,24);
-    private static final String[] DESIGNS={"standalone_dish","meridian_core","oculus_drive","longburn_drive"};
+    private static final String[] DESIGNS={"vector_fold_array","meridian_core","oculus_drive","longburn_drive"};
     private static int fixture,point,stage,ticks;
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Machine mount client: "+why);}
     static boolean tick(Minecraft mc)throws Exception{

@@ -27,6 +27,7 @@ public final class VehicleWorld extends World {
     private static void requireSupportedTile(TileEntity tile){if(tile instanceof com.vandorlabs.coupler.TileCoupler&&((com.vandorlabs.coupler.TileCoupler)tile).quarantined())throw new RetainedCoupler();}
     public VehicleStructure structure;
     public EntityGroundVehicle craft;
+    public com.vandorlabs.gear.GearTileEntity navigationArm;
     public final World parent;
     public final Map<BlockPos,TileEntity> tiles=new LinkedHashMap<>();
     private final Map<Long,Chunk> chunks=new HashMap<>();

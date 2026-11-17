@@ -29,7 +29,7 @@ public final class ItemDesignToken extends Item {
     @Override public String getItemStackDisplayName(ItemStack stack){
         if(!kind.equals("data_chip"))return super.getItemStackDisplayName(stack);
         if(com.vandorlabs.programmer.CatalogChipData.catalog(stack))return "Catalog Chip"+(stack.getTagCompound().getString("CatalogName").isEmpty()?"":" ("+com.vandorlabs.programmer.ChipJournal.bounded(stack.getTagCompound().getString("CatalogName"),40)+")");
-        if("navigation".equals(chipType(stack)))return "Navigation Chip (blank)";
+        if("navigation".equals(chipType(stack)))return com.vandorlabs.navigation.NavigationChip.programmed(stack)?"Navigation Chip - "+com.vandorlabs.navigation.NavigationChip.value(stack,"X")+", "+com.vandorlabs.navigation.NavigationChip.value(stack,"Y")+", "+com.vandorlabs.navigation.NavigationChip.value(stack,"Z"):"Navigation Chip (blank)";
         if(com.vandorlabs.vehicle.VehicleChip.isVehicle(stack)){String name=com.vandorlabs.vehicle.VehicleChip.name(stack);return "Vehicle Data Chip"+(name.isEmpty()?" (blank)":" - "+name);}
         if(com.vandorlabs.programmer.ChipJournal.journal(stack)){
             String title=com.vandorlabs.programmer.ChipJournal.title(stack);

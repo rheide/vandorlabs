@@ -8,14 +8,29 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 
 public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityConstructor> {
+    private static final java.util.Map<FrameMachineDesign,String[][]> OBSERVER_KEYS=new java.util.IdentityHashMap<>();
+    private static String[][] observerKeys(FrameMachineDesign spec){
+        String[][] keys=OBSERVER_KEYS.get(spec);if(keys!=null)return keys;keys=new String[spec.state_models.length][2];
+        for(int state=0;state<keys.length;state++){String model=spec.state_models[state];if("dish".equals(spec.motion)){String folder=spec.design+"/"+model.substring(0,model.lastIndexOf('/')+1)+"parts/";keys[state][0]=folder+"static.obj";keys[state][1]=folder+"rotor.obj";}else keys[state][0]=spec.design+"/"+model;}
+        OBSERVER_KEYS.put(spec,keys);return keys;
+    }
     private final UniversalConstructorFastTESR<TileEntityConstructor> body=new UniversalConstructorFastTESR<TileEntityConstructor>(){
         @Override protected boolean isController(TileEntityConstructor tile){return tile.renderReady()&&com.vandorlabs.gear.client.CoreArmHandoff.allowed(tile);}
         @Override protected String machineId(TileEntityConstructor tile){return tile.core().design;}
         @Override protected EnumFacing facing(TileEntityConstructor tile){return tile.facing();}
-        @Override protected BlockPos originOffset(TileEntityConstructor tile){return BlockPos.ORIGIN.subtract(tile.pivot());}
+        @Override protected BlockPos originOffset(TileEntityConstructor tile){return tile.renderOriginOffset();}
         @Override protected void drawMachine(TileEntityConstructor tile,double x,double y,double z,float partial,BufferBuilder buffer){
             FrameMachineDesign spec=tile.core().specification();
             int state=tile.screenOn()?tile.activity():0;
+            if(com.vandorlabs.navigation.ObserverScale.observer(spec.design)){
+                String[] keys=observerKeys(spec)[state];com.vandorlabs.machines.CoreLayout shape=tile.layout();double scale=shape.width/(double)spec.width;EnumFacing facing=EnumFacing.getFront(shape.facing);boolean inverted=tile.inverted();int light=packedLight(tile);
+                if("dish".equals(spec.motion)){
+                    MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,10);double yaw=Math.toRadians(55)*Math.sin((pose.now-pose.phase)*Math.PI/80)*MachineVisualMotion.eased(pose.progress);
+                    UniversalConstructorModelCache.getByKey(keys[0]).emitObserver(buffer,x,y,z,facing,spec.width,spec.height,spec.depth,light,scale,inverted,0,0,0);
+                    UniversalConstructorModelCache.getByKey(keys[1]).emitObserver(buffer,x,y,z,facing,spec.width,spec.height,spec.depth,light,scale,inverted,yaw,spec.motion_pivot[0],spec.motion_pivot[2]);
+                }else UniversalConstructorModelCache.getByKey(keys[0]).emitObserver(buffer,x,y,z,facing,spec.width,spec.height,spec.depth,light,scale,inverted,0,0,0);
+                return;
+            }
             if(tile.isDrive()&&(spec.design.equals("longburn_drive")||tile.screenOn()&&spec.design.equals("meridian_core"))){
                 String driveFolder=tile.screenOn()?"active/":"";drawPart(tile,driveFolder+"drive_body.obj",buffer,x,y,z,0,0,0);
                 float brightness=tile.screenOn()?(tile.driveSettings().levels?tile.driveLevel()/15F:1):.35F;

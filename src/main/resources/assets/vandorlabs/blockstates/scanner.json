@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=north": {
+      "model": "vandorlabs:appliances/scanner",
+      "y": 0
+    },
+    "facing=east": {
+      "model": "vandorlabs:appliances/scanner",
+      "y": 90
+    },
+    "facing=south": {
+      "model": "vandorlabs:appliances/scanner",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "vandorlabs:appliances/scanner",
+      "y": 270
+    }
+  }
+}

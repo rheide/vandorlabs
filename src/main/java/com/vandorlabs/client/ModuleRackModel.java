@@ -43,6 +43,7 @@ public final class ModuleRackModel implements IBakedModel {
     private int housingChoice = -1;
     private final java.util.LinkedHashMap<Integer, ModuleRackModel> housingModels = new java.util.LinkedHashMap<>(16, .75F, true);
 
+    private MovingMesh navigationBayFrame,navigationBayModule;
     private MovingMesh[][] embeddedSeated;
     private MovingMesh[] embeddedEmpty;
     private MovingMesh[][] embeddedIndicators;
@@ -162,6 +163,7 @@ public final class ModuleRackModel implements IBakedModel {
             }
             @SuppressWarnings("unchecked") List<BakedQuad>[][] bars=(List<BakedQuad>[][])new List<?>[4][37];model.chargeQuads=bars;model.chargeMeshes=new MovingMesh[4][37];
             for(int bay=0;bay<4;bay++){List<BakedQuad> full=all(part("battery_bar_"+bay,pitch,turns),false);for(int fill=0;fill<=36;fill++){List<BakedQuad> clipped=new ArrayList<>();if(fill>0)for(BakedQuad quad:full)clipped.add(luminous(new BakedQuad(com.vandorlabs.rack.BatteryChargeBar.clip(quad.getVertexData(),fill),quad.getTintIndex(),quad.getFace(),quad.getSprite(),false,quad.getFormat())));bars[bay][fill]=Collections.unmodifiableList(clipped);model.chargeMeshes[bay][fill]=new MovingMesh(bars[bay][fill]);}}
+            model.navigationBayFrame=new MovingMesh(part("navigation_bay_frame",pitch,(turns+2)%4));model.navigationBayModule=new MovingMesh(part("navigation_bay_module",pitch,(turns+2)%4));
             MODELS[facing.getIndex()] = model;
             event.getModelRegistry().putObject(new ModelResourceLocation("vandorlabs:module_rack", "facing=" + facing.getName()), model);
         }
@@ -234,6 +236,7 @@ public final class ModuleRackModel implements IBakedModel {
         if(visible)emitBatteryBar(buffer,facing,bay,level,x+facing.getFrontOffsetX()*offset,y+facing.getFrontOffsetY()*offset,z+facing.getFrontOffsetZ()*offset,15728880);
     }
 
+    public static void emitNavigationBay(BufferBuilder buffer,EnumFacing facing,double x,double y,double z,boolean visible,double offset,int light){ModuleRackModel model=MODELS[facing.getIndex()];if(model==null)return;model.navigationBayFrame.draw(buffer,x,y,z,light);if(visible)model.navigationBayModule.draw(buffer,x+facing.getFrontOffsetX()*offset,y,z+facing.getFrontOffsetZ()*offset,light);}
     static void emitBatteryBar(BufferBuilder buffer,EnumFacing facing,int bay,int fill,double x,double y,double z,int light){ModuleRackModel model=MODELS[facing.getIndex()];if(model!=null)model.chargeMeshes[bay][Math.max(0,Math.min(36,fill))].draw(buffer,x,y,z,15728880);}
     static IBakedModel movingModule(EnumFacing facing, int slot) {
         ModuleRackModel model = MODELS[facing.getIndex()];

@@ -23,10 +23,14 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityConstructor();}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
+    @Override public boolean isSideSolid(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,net.minecraft.util.EnumFacing side){return !state.getValue(FORMED)||ConstructorWallSupport.solid(world,pos);}
+    @Override public net.minecraft.block.state.BlockFaceShape getBlockFaceShape(net.minecraft.world.IBlockAccess world,IBlockState state,BlockPos pos,net.minecraft.util.EnumFacing side){return !state.getValue(FORMED)||ConstructorWallSupport.solid(world,pos)?net.minecraft.block.state.BlockFaceShape.SOLID:net.minecraft.block.state.BlockFaceShape.UNDEFINED;}
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public int getLightOpacity(IBlockState state){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
+        if(state.getValue(FORMED)&&ConstructorWallSupport.solid(world,pos)&&player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
+            if(state.getValue(FORMED)&&tile.observer()&&player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.DATA_CHIP){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("This observer has no chip slot."),true);return true;}
             if(state.getValue(FORMED)&&tile.builder()&&!player.isSneaking()){
                 if(tile.synthesisModuleInteraction(player,hand))return true;
                 if(tile.mount()!=null&&tile.mount().hit(player))return TokenSlotInteractions.activate(tile,player,hand);

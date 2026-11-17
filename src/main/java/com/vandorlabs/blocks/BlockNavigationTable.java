@@ -28,13 +28,15 @@ public final class BlockNavigationTable extends BlockVandorDirectional {
         if(block instanceof BlockNavigationTable)NavigationAssemblies.around(world,pos);
         else if(world.getTileEntity(pos) instanceof TileEntityNavigationTable)((TileEntityNavigationTable)world.getTileEntity(pos)).sampleInput();
     }
-    @Override public void breakBlock(World world,BlockPos pos,IBlockState state){TokenSlotInteractions.drop(world,pos);super.breakBlock(world,pos,state);NavigationAssemblies.around(world,pos);}
+    @Override public void breakBlock(World world,BlockPos pos,IBlockState state){if(world.getTileEntity(pos) instanceof TileEntityNavigationTable)((TileEntityNavigationTable)world.getTileEntity(pos)).ejectModule();TokenSlotInteractions.drop(world,pos);super.breakBlock(world,pos,state);NavigationAssemblies.around(world,pos);}
     @Override public void updateTick(World world,BlockPos pos,IBlockState state,java.util.Random random){TokenSlotInteractions.tick(world,pos);}
     @Override public boolean canProvidePower(IBlockState state){return false;}
     @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return 0;}
     @Override public int getStrongPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         TileEntity tile=world.getTileEntity(pos);if(!(tile instanceof TileEntityNavigationTable))return false;
+        if(com.vandorlabs.navigation.NavigationModuleSlot.activate((TileEntityNavigationTable)tile,player,hand))return true;
+        if(com.vandorlabs.navigation.NavigationInteractions.table((TileEntityNavigationTable)tile,player,hand))return true;
         TileEntityNavigationTable reader=((TileEntityNavigationTable)tile).reader();
         return reader!=null&&(player.isSneaking()||player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER||reader.mount()!=null&&(reader.mount().hit(player)||reader.accepts(player.getHeldItem(hand))))&&TokenSlotInteractions.activate(reader,player,hand);
     }

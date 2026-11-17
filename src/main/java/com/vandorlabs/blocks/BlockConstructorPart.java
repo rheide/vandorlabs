@@ -22,6 +22,8 @@ public final class BlockConstructorPart extends BlockVandor {
     @Override public int getStrongPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,net.minecraft.util.EnumFacing side){return 0;}
     @Override public boolean canProvidePower(IBlockState state){return false;}
     @Override public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess access,BlockPos pos,net.minecraft.util.EnumFacing side){return 0;}
+    @Override public boolean isSideSolid(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,net.minecraft.util.EnumFacing side){return ConstructorWallSupport.solid(world,pos);}
+    @Override public net.minecraft.block.state.BlockFaceShape getBlockFaceShape(net.minecraft.world.IBlockAccess world,IBlockState state,BlockPos pos,net.minecraft.util.EnumFacing side){return ConstructorWallSupport.solid(world,pos)?net.minecraft.block.state.BlockFaceShape.SOLID:net.minecraft.block.state.BlockFaceShape.UNDEFINED;}
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityConstructorPart();}

@@ -77,6 +77,9 @@ public final class UniversalConstructorModelCache {
         return mesh;
     }
 
+    /** Precomputed keys avoid per-frame path strings; lookup still follows resource reloads. */
+    public static Mesh getByKey(String modelKey){Mesh mesh=meshes.get(modelKey);if(mesh==null)throw new IllegalStateException("Model not registered/baked: "+modelKey);return mesh;}
+
     public static boolean isReady() {
         return !meshes.isEmpty();
     }
@@ -223,6 +226,33 @@ public final class UniversalConstructorModelCache {
                                face.data[i + 5] * shade, face.data[i + 6])
                         .tex(face.data[i + 7], face.data[i + 8])
                         .lightmap(blockLight, skyLight).endVertex();
+                }
+            }
+        }
+
+        /** Uniform observer scaling keeps UVs and animation in authored model coordinates. */
+        public void emitObserver(BufferBuilder buffer,double x,double y,double z,EnumFacing facing,double width,double height,double depth,int light,double scale,boolean inverted,double yaw,double pivotX,double pivotZ){
+            if(yaw==0&&!inverted){
+                if(cachedWidth!=width||cachedDepth!=depth){java.util.Arrays.fill(oriented,null);cachedWidth=width;cachedDepth=depth;}
+                int index=facing.getHorizontalIndex();double[] data=oriented[index];if(data==null){data=prepare(facing,width,depth);oriented[index]=data;}
+                for(int i=0;i<data.length;i+=9)buffer.pos(x+data[i]*scale,y+data[i+1]*scale,z+data[i+2]*scale).color((float)data[i+3],(float)data[i+4],(float)data[i+5],(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(light&65535,light>>>16&65535).endVertex();return;
+            }
+            double cosine=Math.cos(yaw),sine=Math.sin(yaw);
+            for(Face face:faces){EnumFacing side=rotate(face.side,facing);if(inverted&&side.getAxis().isVertical())side=side.getOpposite();float shade=face.diffuse?LightUtil.diffuseLight(side):1;
+                for(int v=0;v<4;v++){int i=(inverted?3-v:v)*9;double lx=face.data[i]-pivotX,lz=face.data[i+2]-pivotZ,px=pivotX+lx*cosine+lz*sine,pz=pivotZ-lx*sine+lz*cosine,rx,rz;
+                    switch(facing){case EAST:rx=depth-pz;rz=px;break;case SOUTH:rx=width-px;rz=depth-pz;break;case WEST:rx=pz;rz=width-px;break;default:rx=px;rz=pz;}
+                    double py=inverted?height-face.data[i+1]:face.data[i+1];
+                    buffer.pos(x+rx*scale,y+py*scale,z+rz*scale).color(face.data[i+3]*shade,face.data[i+4]*shade,face.data[i+5]*shade,face.data[i+6]).tex(face.data[i+7],face.data[i+8]).lightmap(light&65535,light>>>16&65535).endVertex();
+                }
+            }
+        }
+
+        public void emitInverted(BufferBuilder buffer,double x,double y,double z,EnumFacing facing,double width,double height,double depth,int light,double yaw,double pivotX,double pivotZ){
+            double cosine=Math.cos(yaw),sine=Math.sin(yaw);
+            for(Face face:faces){EnumFacing side=rotate(face.side,facing);if(side.getAxis().isVertical())side=side.getOpposite();float shade=face.diffuse?LightUtil.diffuseLight(side):1;
+                for(int v=3;v>=0;v--){int i=v*9;double lx=face.data[i]-pivotX,lz=face.data[i+2]-pivotZ,px=pivotX+lx*cosine+lz*sine,pz=pivotZ-lx*sine+lz*cosine,rx,rz;
+                    switch(facing){case EAST:rx=depth-pz;rz=px;break;case SOUTH:rx=width-px;rz=depth-pz;break;case WEST:rx=pz;rz=width-px;break;default:rx=px;rz=pz;}
+                    buffer.pos(x+rx,y+height-face.data[i+1],z+rz).color(face.data[i+3]*shade,face.data[i+4]*shade,face.data[i+5]*shade,face.data[i+6]).tex(face.data[i+7],face.data[i+8]).lightmap(light&65535,light>>>16&65535).endVertex();
                 }
             }
         }

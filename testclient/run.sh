@@ -101,6 +101,12 @@ CAPTURE_JVM+=("-Dvandorlabs.mekanismTankOnly=${VANDOR_LABS_MEKANISM_TANK_ONLY:-f
 CAPTURE_JVM+=("-Dvandorlabs.mekanismTankRestart=${VANDOR_LABS_MEKANISM_TANK_RESTART:-}")
 CAPTURE_JVM+=("-Dvandorlabs.armLiveStart=${VANDOR_LABS_ARM_LIVE_START:-0}")
 CAPTURE_JVM+=("-Dvandorlabs.armRecoveryPhase=${VANDOR_LABS_ARM_RECOVERY_PHASE:-}")
+CAPTURE_JVM+=("-Dvandorlabs.navigationModuleChecksOnly=${VANDOR_LABS_NAVIGATION_MODULE_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.navigationVehicleChecksOnly=${VANDOR_LABS_NAVIGATION_VEHICLE_CHECKS_ONLY:-false}" "-Dvandorlabs.navigationVehiclePhase=${VANDOR_LABS_NAVIGATION_VEHICLE_PHASE:-write}")
+CAPTURE_JVM+=("-Dvandorlabs.applianceChecksOnly=${VANDOR_LABS_APPLIANCE_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.observerPerformanceOnly=${VANDOR_LABS_OBSERVER_PERFORMANCE_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.navigationPerformanceOnly=${VANDOR_LABS_NAVIGATION_PERFORMANCE_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.navigationWorldChecksOnly=${VANDOR_LABS_NAVIGATION_WORLD_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.bridgeMachineChecksOnly=${VANDOR_LABS_BRIDGE_MACHINE_CHECKS_ONLY:-false}" "-Dvandorlabs.machineBuildDocsOnly=${VANDOR_LABS_MACHINE_BUILD_DOCS_ONLY:-false}")
 if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LABS_DOCUMENTATION_DOOR_GIF:-false}" = true ]; then
   CAPTURE_JVM+=(-XX:+UseG1GC -XX:+PrintGCDetails -XX:+PrintGCTimeStamps "-Xloggc:$REPRO_OUT/gc.log")

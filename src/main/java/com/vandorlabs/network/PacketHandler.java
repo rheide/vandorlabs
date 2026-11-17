@@ -75,5 +75,9 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageModuleAutopilot.Handler.class,MessageModuleAutopilot.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageSynthesisTower.Handler.class,MessageSynthesisTower.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageSynthesisRedstone.Handler.class,MessageSynthesisRedstone.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageNavigationRequest.Handler.class,MessageNavigationRequest.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageNavigationImage.Handler.class,MessageNavigationImage.class,id++,Side.CLIENT);
+        INSTANCE.registerMessage(MessageVehicleNavigationRequest.Handler.class,MessageVehicleNavigationRequest.class,id++,Side.SERVER);
+        INSTANCE.registerMessage(MessageVehicleNavigationImage.Handler.class,MessageVehicleNavigationImage.class,id++,Side.CLIENT);
     }
 }

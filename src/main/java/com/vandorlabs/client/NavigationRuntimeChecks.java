@@ -34,7 +34,7 @@ final class NavigationRuntimeChecks {
             NavigationAssemblies.rebuild(world,base);TileEntityNavigationTable root=table(world,base).reader();require(root!=null&&root.ownsReader(),"mixed-facing rectangle forms");
             java.util.List<BlockPos> members=new java.util.ArrayList<>();for(BlockPos at:BlockPos.getAllInBox(base,base.add(1,0,1)))if(world.getTileEntity(at) instanceof TileEntityNavigationTable)members.add(at.toImmutable());
             BlockPos powered=members.get(members.size()-1);
-            require(root.screenSettings().texture==-1,"new assembly defaults black");
+            require(root.screenSettings().texture==NavigationMap.SURFACE,"new assembly defaults Navigation");
             require(root.mount()!=null,"native mount visible by default without Security");root.configureDisplay(new NavigationScreenSettings(-1,true,1,false,true),true,127,0,ChannelList.EMPTY);
             MachineMountSurface mount=root.mount();require(Math.abs(mount.width-6D/16)<1e-9&&mount.width==mount.height,"standalone mount proportions");
             double top=kind.equals("flat")?14D/16:8D/16;

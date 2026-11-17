@@ -35,7 +35,7 @@ public final class NavigationAssemblies {
     private static int readerPriority(TileEntityNavigationTable tile){
         NavigationScreenSettings settings=tile.screenSettings();
         boolean configured=settings.texture!=-1||!settings.animated||settings.speed!=1||settings.redstone||settings.security||!tile.any||tile.behavior!=0||!tile.getRedstoneChannels().isEmpty();
-        return (tile.isEmpty()?0:1000000)+tile.assemblyWidth()*tile.assemblyDepth()*1024+(tile.formed()?512:0)+(configured?256:0);
+        return (tile.isEmpty()?0:1000000)+tile.assemblyWidth()*tile.assemblyDepth()*1024+(tile.formed()?512:0)+(configured?256:0)+(tile.navigationExplicit()?768:0);
     }
     private static Set<BlockPos> rebuildComponent(World world,BlockPos pos){
         if(world.isRemote||!world.isBlockLoaded(pos))return Collections.emptySet();
@@ -64,11 +64,19 @@ public final class NavigationAssemblies {
                 NavigationLayout.Tile assignment=layout.tiles.get(new NavigationLayout.Cell(tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ()));
                 tile.layout(assignment.connections,owner,true,new BlockPos(layout.originCell.x,layout.originCell.y,layout.originCell.z),layout.width,layout.depth,EnumFacing.valueOf(layout.facing.name()));
             }
+            // Keep each physical module on its original saved tile. Only its visible bay
+            // and lookup links move, avoiding a new cross-chunk inventory handoff.
+            List<TileEntityNavigationTable> ordered=new ArrayList<>(tiles);ordered.sort(java.util.Comparator.comparingDouble((TileEntityNavigationTable t)->t.getPos().distanceSq(owner)).thenComparingLong(t->t.getPos().toLong()));
+            TileEntityNavigationTable bay=null,storage=null;if(tiles.size()>1){for(TileEntityNavigationTable t:ordered)if(t!=destination){bay=t;break;}for(TileEntityNavigationTable t:ordered)if(!t.storedModule().isEmpty()){if(storage==null)storage=t;else t.ejectModule();}if(storage==null)storage=bay;}
+            else for(TileEntityNavigationTable t:tiles)t.ejectModule();
+            EnumFacing bayFace=EnumFacing.valueOf(layout.facing.name());if(bay!=null){EnumFacing placed=world.getBlockState(bay.getPos()).getValue(BlockVandorDirectional.FACING);if(!scan.members.contains(bay.getPos().offset(placed)))bayFace=placed;else for(EnumFacing candidate:EnumFacing.HORIZONTALS)if(!scan.members.contains(bay.getPos().offset(candidate))){bayFace=candidate;break;}}
+            for(TileEntityNavigationTable t:tiles)t.moduleRole(storage==null?t.getPos():storage.getPos(),t==bay,bayFace);
             // Merging independently occupied tables preserves borrowed returns;
             // extra retained chips are released once, as when removing a mount.
             for(TileEntityNavigationTable tile:tiles)if(tile!=destination&&!tile.isEmpty()&&!tile.returning())TokenSlotInteractions.drop(world,tile.getPos());
+            if(destination.navigationExplicit())destination.navigationExplicitSelection();
             destination.configureDisplay(destination.screenSettings(),destination.any,destination.allowed,destination.behavior,destination.getRedstoneChannels());
-        }else for(TileEntityNavigationTable tile:tiles)tile.layout(0,tile.getPos(),false);
+        }else for(TileEntityNavigationTable tile:tiles){tile.layout(0,tile.getPos(),false);tile.moduleRole(tile.getPos(),false,tile.displayFacing());if(scan.complete)tile.ejectModule();}
         return scan.members;
     }
 }

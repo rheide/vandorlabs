@@ -27,7 +27,7 @@ public final class FrameMachineRenderer extends CustomRenderer {
         }catch(java.io.IOException error){throw new IllegalStateException(error);}
     }
     @Override protected int getMaximumTextureCount(){return CATALOG.textures.length+CATALOG.colors.length;}
-    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"ConstructorOwner","ConstructorCoreX","ConstructorCoreZ","NavigationScreenOn","MachineActivity"};}
+    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"ConstructorOwner","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth","NavigationScreenOn","MachineActivity"};}
     private static int integer(Object value,int fallback){return value instanceof Number?((Number)value).intValue():fallback;}
     private static boolean on(Object value){return Boolean.TRUE.equals(value)||value instanceof Number&&((Number)value).intValue()!=0;}
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context){
@@ -45,27 +45,36 @@ public final class FrameMachineRenderer extends CustomRenderer {
                 int texture=design.core_texture;
                 if(!face.textured){int color=Arrays.binarySearch(CATALOG.colors,face.rgb(corePalette));if(color<0)throw new IllegalStateException("Missing Core map color");texture=CATALOG.textures.length+color;}
                 List<MapSurface.Vertex> polygon=new ArrayList<>(4);
-                for(int vertex=0;vertex<4;vertex++)polygon.add(new MapSurface.Vertex(new Vec3d(face.coordinate(vertex,0),face.coordinate(vertex,1),face.coordinate(vertex,2)),face.u(vertex),face.v(vertex)));
+                for(int vertex=0;vertex<4;vertex++)polygon.add(new MapSurface.Vertex(new Vec3d(face.coordinate(vertex,0),face.coordinate(vertex,1),face.coordinate(vertex,2)),face.textured?face.u(vertex):(vertex==0||vertex==3?0:1),face.textured?face.v(vertex):(vertex<2?0:1)));
                 MapSurface.emit(context,result,polygon,texture);
             }
             RenderPatch[] built=result.toArray(new RenderPatch[0]);meshes.put(key,built);return built;
         }
         EnumFacing facing=state.isStateMatch("facing","east")?EnumFacing.EAST:state.isStateMatch("facing","south")?EnumFacing.SOUTH:state.isStateMatch("facing","west")?EnumFacing.WEST:EnumFacing.NORTH;
         int x=integer(context.getBlockTileEntityFieldAt("ConstructorCoreX",ox,oy,oz),0),z=integer(context.getBlockTileEntityFieldAt("ConstructorCoreZ",ox,oy,oz),0);
-        if((x!=0&&x!=design.width-1)||(z!=0&&z!=design.depth-1))return new RenderPatch[0];
-        BlockPos pivot=VehicleRotation.cell(new BlockPos(x,0,z),design.width,design.depth,(facing.getHorizontalIndex()+2)&3);
-        int dx=ox-pivot.getX(),dy=oy,dz=oz-pivot.getZ();
+        int width=design.width,height=design.height,depth=design.depth;double scale=1;
+        String observerDesign=state.blockName.replace("vandorlabs:","").replace("_core","");
+        Object rawWidth=context.getBlockTileEntityFieldAt("ObserverWidth",ox,oy,oz);
+        if(rawWidth!=null){
+            if(!(rawWidth instanceof Number)||!com.vandorlabs.navigation.ObserverScale.observer(observerDesign))return new RenderPatch[0];
+            try{width=com.vandorlabs.navigation.ObserverScale.width(observerDesign,((Number)rawWidth).intValue());height=com.vandorlabs.navigation.ObserverScale.height(observerDesign,width);depth=width;scale=com.vandorlabs.navigation.ObserverScale.linearScale(observerDesign,width);}catch(IllegalArgumentException invalid){return new RenderPatch[0];}
+        }
+        if((x!=0&&x!=width-1)||(z!=0&&z!=depth-1))return new RenderPatch[0];
+        BlockPos pivot=VehicleRotation.cell(new BlockPos(x,0,z),width,depth,(facing.getHorizontalIndex()+2)&3);
+        boolean inverted=on(context.getBlockTileEntityFieldAt("ObserverInverted",ox,oy,oz));
+        int dx=ox-pivot.getX(),dy=oy-(inverted?height-1:0),dz=oz-pivot.getZ();
         boolean active=on(context.getBlockTileEntityFieldAt("NavigationScreenOn",ox,oy,oz));
         int activity=integer(context.getBlockTileEntityFieldAt("MachineActivity",ox,oy,oz),1);
         int mode=design.states.length==1?0:design.states.length==2?(active?1:0):active?Math.max(0,Math.min(2,activity)):0;
-        String key=state.blockName+":"+facing+":"+mode+":"+dx+":"+dy+":"+dz;RenderPatch[] cached=meshes.getIfPresent(key);if(cached!=null)return cached;
+        String key=state.blockName+":"+facing+":"+mode+":"+dx+":"+dy+":"+dz+":"+inverted+":"+width;RenderPatch[] cached=meshes.getIfPresent(key);if(cached!=null)return cached;
         List<RenderPatch> result=new ArrayList<>();
         for(Face face:design.states[mode]){
             List<MapSurface.Vertex> polygon=new ArrayList<>(face.vertices.length);
-            for(double[] point:face.vertices){Vec3d p=MachineMountSurface.rotate(new Vec3d(point[0],point[1],point[2]),facing,design.width,design.depth).addVector(dx,dy,dz);polygon.add(new MapSurface.Vertex(p,point[3],point[4]));}
+            for(double[] point:face.vertices){Vec3d p=MachineMountSurface.rotate(new Vec3d(point[0],inverted?design.height-point[1]:point[1],point[2]),facing,design.width,design.depth).scale(scale).addVector(dx,dy,dz);polygon.add(new MapSurface.Vertex(p,point[3],point[4]));}
+            if(inverted)Collections.reverse(polygon);
             // A face exactly on an internal cell plane belongs to the upper cell only.
             // Keep the maximum outer envelope face in the final reserved cell.
-            boolean owned=true;double[] extent={facing.getAxis()==EnumFacing.Axis.X?design.depth:design.width,design.height,facing.getAxis()==EnumFacing.Axis.X?design.width:design.depth};int[] origin={dx,dy,dz};
+            boolean owned=true;double[] extent={facing.getAxis()==EnumFacing.Axis.X?depth:width,height,facing.getAxis()==EnumFacing.Axis.X?width:depth};int[] origin={dx,dy,dz};
             for(int axis=0;axis<3;axis++){
                 boolean upper=true;for(MapSurface.Vertex vertex:polygon)upper&=Math.abs(vertex.at(axis)-1)<1e-8;
                 if(upper&&1-origin[axis]<extent[axis]-1e-8)owned=false;

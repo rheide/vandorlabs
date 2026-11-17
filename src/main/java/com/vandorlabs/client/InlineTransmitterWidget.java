@@ -34,6 +34,7 @@ public final class InlineTransmitterWidget {
             local=new net.minecraftforge.fml.client.config.GuiButtonExt(1982,anchor.x,anchor.y+22,anchor.width,20,"");
             range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);});
             range.displayString="Range: "+observedRange+" blocks";label();
+            if(member instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)member)>0){local.enabled=false;local.displayString="Navigation link";}
         }
         boolean rangeReady(){return range!=null;}
         void label(){local.displayString="Local Redstone: "+(observedLocal?"On":"Off");}

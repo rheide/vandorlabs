@@ -32,6 +32,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public static final int REDSTONE_SURFACE=-2;
     public static final int VEHICLE_SURFACE=-3;
     public static final int CHIP_SURFACE=-4;
+    public static final int NAVIGATION_SURFACE=com.vandorlabs.navigation.NavigationMap.SURFACE;
+    public boolean hasNavigation(int slot){return getSurfaceTexture(slot)==NAVIGATION_SURFACE;}
     private TileEntityTokenSlot chipReader;
     public TileEntityTokenSlot ownedChipReader(){if(chipReader==null)chipReader=new TileEntityTokenSlot(true).forScreen(this);chipReader.setWorld(world);chipReader.setPos(pos);return chipReader;}
     public net.minecraft.item.ItemStack ownedChip(){return chipReader==null?net.minecraft.item.ItemStack.EMPTY:chipReader.getStackInSlot(0);}
@@ -178,7 +180,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
         if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,3);}
     }
     @Override public double getMaxRenderDistanceSquared() {
-        if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&hasChipSurface(0))return Double.MAX_VALUE;
+        if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&(hasChipSurface(0)||hasNavigation(0)))return Double.MAX_VALUE;
         // These walls are world geometry. Loaded chunks and the normal render
         // frustum bound their visibility, rather than the 64-block tile cutoff.
         if (world != null && getBlockType()
@@ -188,7 +190,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override public net.minecraft.util.math.AxisAlignedBB getRenderBoundingBox() {
         if(world!=null&&!DisplayJoinGeometry.installed(this))return new net.minecraft.util.math.AxisAlignedBB(pos);
-        if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&hasChipSurface(0)){com.vandorlabs.blocks.ScreenChipGroups.Group group=com.vandorlabs.blocks.ScreenChipGroups.group(this);if(group!=null)return group.bounds;}
+        if(world!=null&&getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&(hasChipSurface(0)||hasNavigation(0))){com.vandorlabs.blocks.ScreenChipGroups.Group group=com.vandorlabs.blocks.ScreenChipGroups.group(this);if(group!=null)return group.bounds;}
 
         if (world != null && getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableWall
                 && ((com.vandorlabs.blocks.BlockProgrammableWall)getBlockType()).isDiagonalShape()){
@@ -248,7 +250,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){if((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE&&!hasRedstoneScreen(slot))return CHIP_SURFACE;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&(slot==1?secondarySurface:primarySurface)!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&(slot==1?secondarySurface:primarySurface)!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
     public void setSurfaceTexture(int slot,int choice) {
         if(choice==REDSTONE_SURFACE){
             // The row control is the active surface, replacing Vehicle Status.
@@ -256,7 +258,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             redstoneScreen(slot).setEnabled(true);return;
         }
         if(controls[slot]!=null)controls[slot].setEnabled(false);
-        int next=choice==CHIP_SURFACE?CHIP_SURFACE:choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=choice==NAVIGATION_SURFACE?NAVIGATION_SURFACE:choice==CHIP_SURFACE?CHIP_SURFACE:choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
         if((slot==1?secondarySurface:primarySurface)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
         settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
@@ -685,8 +687,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             else if(controls[i]!=null)controls[i].readFromNBT(new NBTTagCompound());
         }
         if(controls!=NO_CONTROLS && world!=null && !world.isRemote)DeferredTileLoad.schedule(this,this::finishLoading);
-        primarySurface=compound.getInteger("PrimarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("PrimarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
-        secondarySurface=compound.getInteger("SecondarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("SecondarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
+        primarySurface=compound.getInteger("PrimarySurfaceTexture")==NAVIGATION_SURFACE?NAVIGATION_SURFACE:compound.getInteger("PrimarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("PrimarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
+        secondarySurface=compound.getInteger("SecondarySurfaceTexture")==NAVIGATION_SURFACE?NAVIGATION_SURFACE:compound.getInteger("SecondarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("SecondarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
         ceilingMounted=compound.getBoolean("CeilingMounted");
         ceilingPosition=compound.hasKey("CeilingPosition",3)
                 ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;
@@ -748,7 +750,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
 
     @Override
     public NBTTagCompound getUpdateTag() {
-        return writeToNBT(new NBTTagCompound());
+        NBTTagCompound tag=writeToNBT(new NBTTagCompound());if(chipReader!=null&&!chipReader.isEmpty())tag.getCompoundTag("ScreenChipReader").setTag("InsertedToken",com.vandorlabs.navigation.NavigationChip.summary(chipReader.getStackInSlot(0)).writeToNBT(new NBTTagCompound()));return tag;
     }
 
     @Override

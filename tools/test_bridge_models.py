@@ -3,6 +3,8 @@ import json,math,sys,io,os
 from zipfile import ZipFile
 from pathlib import Path
 from PIL import Image
+from bridge_model_bounds import attachment_bounds, valid_vertex
+from generate_builder_attachments import presentation
 
 ROOT=Path(__file__).resolve().parents[1]
 ASSETS=ROOT/'src/main/resources/assets/vandorlabs'
@@ -10,6 +12,7 @@ TEX=ROOT/'texture-packs/additional/assets/vandorlabs/textures'
 # Native attachments deliberately reuse vanilla atlas sprites. Validate those
 # against the actual 1.12.2 client resources rather than accepting a namespace.
 VANILLA_CACHE={}
+ATTACHMENT_BOUNDS=attachment_bounds(presentation())
 def texture_source(reference):
     namespace,path=reference.split(':',1)
     assert path and not path.startswith('/') and '..' not in Path(path).parts,reference
@@ -40,17 +43,23 @@ for spec in specs:
     topology=None
     for path in paths:
         obj=ASSETS/'models/block'/spec['model']/path
-        lines=obj.read_text().splitlines();vertices=[];faces=[]
+        lines=obj.read_text().splitlines();vertices=[];faces=[];vertex_groups={};group=""
         for line in lines:
             values=line.split()
             if not values:continue
+            if values[0]=='g':group=' '.join(values[1:])
             if values[0]=='v':vertices.append(tuple(map(float,values[1:4])))
             if values[0]=='vt':assert all(-1e-6<=float(x)<=1.000001 for x in values[1:3]),obj
-            if values[0]=='f':assert len(values)==5,obj;faces.append(line)
+            if values[0]=='f':
+                assert len(values)==5,obj;faces.append(line)
+                for index in values[1:]:
+                    number=int(index.split('/')[0]);number=number-1 if number>0 else len(vertices)+number
+                    assert 0<=number<len(vertices),(obj,'invalid vertex index',index)
+                    vertex_groups.setdefault(number,set()).add(group)
         assert vertices and faces,obj
-        for vertex in vertices:
+        for index,vertex in enumerate(vertices):
             assert all(math.isfinite(x) for x in vertex),obj
-            assert all(-1e-5<=v<=limit+1e-5 for v,limit in zip(vertex,[spec['width'],spec['height'],spec['depth']])),(obj,vertex)
+            assert valid_vertex(spec,vertex,vertex_groups.get(index,set()),ATTACHMENT_BOUNDS),(obj,vertex,sorted(vertex_groups.get(index,set())),'outside footprint or authored workstation bounds')
         if topology is None:topology=(vertices,faces)
         else:assert topology==(vertices,faces),(obj,'state geometry changed')
         mtl=(obj.parent/'materials.mtl').read_text();assert 'mctrek:' not in mtl

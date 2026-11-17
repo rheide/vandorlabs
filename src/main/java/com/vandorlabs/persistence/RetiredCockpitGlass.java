@@ -22,13 +22,18 @@ public final class RetiredCockpitGlass {
     public static int variant(String name){for(int i=0;i<IDS.length;i++)if(NAMES[i].equals(name))return i;return -1;}
     public static IBlockState state(int variant){if(variant<0||variant>2)throw new IllegalArgumentException("Invalid retired glass variant");return variant==0?Blocks.GLASS.getDefaultState():Blocks.STAINED_GLASS.getStateFromMeta(variant==1?9:7);}
     public static void install(){
-        ModFixs fixes=FMLCommonHandler.instance().getDataFixer().init("vandorlabs",2);
+        ModFixs fixes=FMLCommonHandler.instance().getDataFixer().init("vandorlabs",3);
         for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
             public int getFixVersion(){return 1;}
             public NBTTagCompound fixTagCompound(NBTTagCompound tag){if(type==FixTypes.CHUNK)migrateChunk(tag,oldIds);migrateItems(tag);return tag;}
         });
         for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
             public int getFixVersion(){return 2;}
+            public NBTTagCompound fixTagCompound(NBTTagCompound tag){RenamedBlocks.migrateItems(tag);return tag;}
+        });
+        // Worlds already saved with fix version 2 still need the retired observer item aliases.
+        for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
+            public int getFixVersion(){return 3;}
             public NBTTagCompound fixTagCompound(NBTTagCompound tag){RenamedBlocks.migrateItems(tag);return tag;}
         });
     }

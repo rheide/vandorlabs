@@ -23,7 +23,9 @@ public final class CoreArmVisualIdentity {
         for(int i=0;i<payload.blocks.cells.size();i++){
             VehicleStructure.Cell cell=payload.blocks.cells.get(i);if(!(cell.state.getBlock() instanceof BlockConstructorCore)||!(view.tiles.get(cell.pos) instanceof TileEntityConstructor))continue;
             Entry entry=state.cores.get(cell.pos);if(entry==null||entry.block!=cell.state.getBlock()){entry=new Entry(cell.state.getBlock(),MachineVisualMotion.takeObserved(arm.getWorld(),payload.placedCellPosition(arm,i)));state.cores.put(cell.pos,entry);}
-            MachineVisualMotion.releaseObserved(arm.getWorld(),payload.placedCellPosition(arm,i),entry.pose);
+            // A materialized header may still be drawn briefly during render handoff.
+            // Its native destination already owns this pose; do not detach it again.
+            if(!payload.materialized())MachineVisualMotion.releaseObserved(arm.getWorld(),payload.placedCellPosition(arm,i),entry.pose);
             MachineVisualMotion.installObserved(view,cell.pos,entry.pose);
         }bound();
     }

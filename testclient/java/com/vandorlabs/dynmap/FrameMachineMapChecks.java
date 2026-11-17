@@ -30,6 +30,12 @@ public final class FrameMachineMapChecks {
         double[] a=new double[3],b=new double[3];for(int axis=0;axis<3;axis++){a[axis]=vertices[i][axis]-vertices[0][axis];b[axis]=vertices[i+1][axis]-vertices[0][axis];}
         double x=a[1]*b[2]-a[2]*b[1],y=a[2]*b[0]-a[0]*b[2],z=a[0]*b[1]-a[1]*b[0];result+=Math.sqrt(x*x+y*y+z*z)/2;
     }return result;}
+    private static double clippedArea(double[][] input,int width,int height,int depth){
+        List<double[]> polygon=new ArrayList<>(Arrays.asList(input));double[] limits={width,height,depth};
+        for(int axis=0;axis<3;axis++)for(int side=0;side<2;side++){List<double[]> next=new ArrayList<>();if(polygon.isEmpty())return 0;double boundary=side==0?0:limits[axis];double[] previous=polygon.get(polygon.size()-1);boolean was=side==0?previous[axis]>=boundary:previous[axis]<=boundary;
+            for(double[] point:polygon){boolean inside=side==0?point[axis]>=boundary:point[axis]<=boundary;if(inside!=was){double t=(boundary-previous[axis])/(point[axis]-previous[axis]);double[] cross=new double[3];for(int k=0;k<3;k++)cross[k]=previous[k]+t*(point[k]-previous[k]);next.add(cross);}if(inside)next.add(point);previous=point;was=inside;}polygon=next;
+        }return area(polygon.toArray(new double[0][]));
+    }
     public static void run()throws Exception{
         JsonObject catalog;
         try(InputStream input=FrameMachineMapChecks.class.getResourceAsStream("/assets/vandorlabs/data/dynmap_frame_models.json")){catalog=new JsonParser().parse(new InputStreamReader(input,"UTF-8")).getAsJsonObject();}
@@ -43,21 +49,23 @@ public final class FrameMachineMapChecks {
                 public Object getBlockTileEntityFieldAt(String key,int x,int y,int z){return null;}public int getX(){return 0;}public int getY(){return 0;}public int getZ(){return 0;}
             };
             List<CoreMesh.Face> coreFaces=CoreMesh.faces(design.get("core").getAsString());RenderPatch[] corePatches=renderer.getRenderPatchList(seedContext);
-            require(corePatches.length==coreFaces.size()&&corePatches.length>6,"real scaffold instead of a solid seed cube");double coreArea=0;
+            require(corePatches.length==coreFaces.size()&&corePatches.length>6,"real scaffold instead of a solid seed cube "+block+" patches="+corePatches.length+" faces="+coreFaces.size());double coreArea=0,expectedCoreArea=0;
             for(int i=0;i<corePatches.length;i++){
                 Patch patch=(Patch)corePatches[i];int palette=patch.texture-catalog.getAsJsonArray("textures").size();
-                require(palette>=0&&palette<catalog.getAsJsonArray("colors").size()&&catalog.getAsJsonArray("colors").get(palette).getAsInt()==coreFaces.get(i).rgb,"shared per-face Core RGB");
-                coreArea+=area(patch.corners());for(double[] point:patch.corners())for(double value:point)require(value>.10&&value<.90,"padded open Core bounds");
+                if(coreFaces.get(i).textured)require(patch.texture==design.get("core_texture").getAsInt(),"legacy center atlas");else require(palette>=0&&palette<catalog.getAsJsonArray("colors").size()&&catalog.getAsJsonArray("colors").get(palette).getAsInt()==coreFaces.get(i).rgb(CoreMesh.palette(design.get("core").getAsString())),"shared per-face Core RGB");
+                double[][] authored=new double[4][3];for(int v=0;v<4;v++)for(int axis=0;axis<3;axis++)authored[v][axis]=coreFaces.get(i).coordinate(v,axis);expectedCoreArea+=area(authored);coreArea+=area(patch.corners());for(double[] point:patch.corners()){boolean match=false;for(double[] source:authored)if(Math.abs(point[0]-source[0])+Math.abs(point[1]-source[1])+Math.abs(point[2]-source[2])<1e-7)match=true;require(match,"exact authored scaffold vertex");}
             }
-            require(coreArea>0&&coreArea<3,"sparse scaffold surface area");cores++;
+            require(coreArea>0&&Math.abs(coreArea-expectedCoreArea)<1e-7,"complete authored scaffold surface area");cores++;
             for(int mode=0;mode<states.size();mode++){
                 double expected=0;for(JsonElement raw:states.get(mode).getAsJsonArray()){
-                    JsonArray vertices=raw.getAsJsonObject().getAsJsonArray("vertices");double[][] points=new double[vertices.size()][3];for(int v=0;v<points.length;v++)for(int axis=0;axis<3;axis++)points[v][axis]=vertices.get(v).getAsJsonArray().get(axis).getAsDouble();expected+=area(points);
+                    JsonArray vertices=raw.getAsJsonObject().getAsJsonArray("vertices");double[][] points=new double[vertices.size()][3];for(int v=0;v<points.length;v++)for(int axis=0;axis<3;axis++)points[v][axis]=vertices.get(v).getAsJsonArray().get(axis).getAsDouble();expected+=clippedArea(points,w,h,d);
                 }
-                for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int cornerX:new int[]{0,w-1})for(int cornerZ:new int[]{0,d-1}){
-                    int turn=(facing.getHorizontalIndex()+2)&3;BlockPos pivot=VehicleRotation.cell(new BlockPos(cornerX,0,cornerZ),w,d,turn);double actual=0;
-                    for(int x=0;x<w;x++)for(int y=0;y<h;y++)for(int z=0;z<d;z++){
-                        BlockPos cell=VehicleRotation.cell(new BlockPos(x,y,z),w,d,turn),owner=pivot.subtract(cell);boolean core=cell.equals(pivot);
+                for(int factor:block.equals("standalone_dish_core")||block.equals("standalone_antenna_core")?new int[]{1,2}:new int[]{1}){
+                final int fw=w*factor,fh=h*factor,fd=d*factor;
+                for(boolean inverted:block.equals("standalone_dish_core")||block.equals("standalone_antenna_core")?new boolean[]{false,true}:new boolean[]{false})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int cornerX:new int[]{0,fw-1})for(int cornerZ:new int[]{0,fd-1}){
+                    int turn=(facing.getHorizontalIndex()+2)&3;BlockPos pivot=VehicleRotation.cell(new BlockPos(cornerX,0,cornerZ),fw,fd,turn);double actual=0;
+                    for(int x=0;x<fw;x++)for(int y=0;y<fh;y++)for(int z=0;z<fd;z++){
+                        BlockPos cell=VehicleRotation.cell(new BlockPos(x,inverted?-y:y,z),fw,fd,turn),owner=pivot.subtract(cell);boolean core=cell.equals(pivot);
                         final DynmapBlockState coreState=new DynmapBlockState(null,0,"vandorlabs:"+block,"facing="+facing.getName()+",formed=true","IRON");
                         final DynmapBlockState local=core?coreState:new DynmapBlockState(null,0,"vandorlabs:constructor_part","normal","IRON");
                         final int cx=cornerX,cz=cornerZ,activity=mode;final boolean active=states.size()==2?mode==1:true;
@@ -65,7 +73,7 @@ public final class FrameMachineMapChecks {
                             public RenderPatchFactory getPatchFactory(){return FACTORY;}public DynmapBlockState getBlockType(){return local;}
                             public Object getBlockTileEntityField(String key){return key.equals("ConstructorOwner")?owner.toLong():getBlockTileEntityFieldAt(key,0,0,0);}
                             public DynmapBlockState getBlockTypeAt(int dx,int dy,int dz){return dx==owner.getX()&&dy==owner.getY()&&dz==owner.getZ()?coreState:local;}
-                            public Object getBlockTileEntityFieldAt(String key,int dx,int dy,int dz){switch(key){case "ConstructorCoreX":return cx;case "ConstructorCoreZ":return cz;case "NavigationScreenOn":return active;case "MachineActivity":return activity;default:return null;}}
+                            public Object getBlockTileEntityFieldAt(String key,int dx,int dy,int dz){switch(key){case "ObserverWidth":return factor==1?null:fw;case "ObserverInverted":return inverted;case "ConstructorCoreX":return cx;case "ConstructorCoreZ":return cz;case "NavigationScreenOn":return active;case "MachineActivity":return activity;default:return null;}}
                             public int getX(){return cell.getX();}public int getY(){return cell.getY();}public int getZ(){return cell.getZ();}
                         };
                         for(RenderPatch raw:renderer.getRenderPatchList(context)){
@@ -73,7 +81,8 @@ public final class FrameMachineMapChecks {
                             actual+=area(points);patches++;
                         }
                     }
-                    require(Math.abs(expected-actual)<1e-5*Math.max(1,expected),"complete per-cell surface area/no duplicates "+block+" "+facing+" "+cornerX+","+cornerZ+" state="+mode+" expected="+expected+" actual="+actual);assemblies++;
+                    require(Math.abs(expected*factor*factor-actual)<1e-5*Math.max(1,expected*factor*factor),"complete per-cell surface area/no duplicates "+block+" "+facing+" "+cornerX+","+cornerZ+" state="+mode+" expected="+expected+" actual="+actual);assemblies++;
+                }
                 }
             }
         }

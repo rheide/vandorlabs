@@ -74,7 +74,7 @@ public final class ModuleRackMapChecks {
                 RenderPatch[] mesh = renderer.getRenderPatchList(context);
                 if (mesh.length <= 6) throw new AssertionError("Rack reduced to a cube: " + facing);
                 if (mesh != renderer.getRenderPatchList(context)) throw new AssertionError("Settled map cache missed");
-                if (mask == 1) checkTopIndicator(facing, mesh);
+                if (mask == 1) checkTopCassette(facing, mesh);
                 long signature = 1;
                 for (RenderPatch raw : mesh) {
                     Patch patch = (Patch)raw;
@@ -105,33 +105,33 @@ public final class ModuleRackMapChecks {
             states++;
             for(int level=0;level<5;level++){
                 RenderPatch[] battery=renderer.getRenderPatchList(new Context(facing,1,3,level*2500));int red=0,green=0;
-                for(RenderPatch part:battery){if(part.getTextureIndex()==7)red++;if(part.getTextureIndex()==8)green++;}
-                if(red!=4||green!=level)throw new AssertionError("Battery map lightning/charge segments "+facing+" level="+level+" red="+red+" green="+green);
+                for(RenderPatch part:battery){if(part.getTextureIndex()==9)red++;if(part.getTextureIndex()==10){green++;Patch patch=(Patch)part;double[] uv=patch.limits;if(Math.abs((uv[1]-uv[0])-9/16D*level/4)>1e-8)throw new AssertionError("Battery charge artwork preserves fill width level="+level);}}
+                if(red!=1||green!=(level==0?0:1))throw new AssertionError("Battery map native red/green charge bar "+facing+" level="+level+" red="+red+" green="+green);
                 states++;
             }
 
         }
         System.out.println("Module Rack Dynmap PASS states=" + states
-                + " all six facings, all occupancy masks, native UV bounds, shared settled meshes, asymmetric top-slot landmarks");
+                + " all six facings, all occupancy masks, native UV bounds, shared settled meshes, asymmetric top-cassette landmarks");
     }
 
-    private static void checkTopIndicator(String facing, RenderPatch[] mesh) {
-        // Only row zero is lit. Independent asymmetric model-unit landmarks
+    private static void checkTopCassette(String facing, RenderPatch[] mesh) {
+        // Only row zero is occupied. Independent asymmetric model-unit landmarks
         // catch mirrored/right-left errors and all facings accidentally using SOUTH.
         double[] expected;
         switch (facing) {
-            case "north": expected = new double[]{1.375,13.4375,.8125,2,14.0625,.9375}; break;
-            case "west": expected = new double[]{.8125,13.4375,14,.9375,14.0625,14.625}; break;
-            case "east": expected = new double[]{15.0625,13.4375,1.375,15.1875,14.0625,2}; break;
-            case "up": expected = new double[]{14,15.0625,1.9375,14.625,15.1875,2.5625}; break;
-            case "down": expected = new double[]{14,.8125,13.4375,14.625,.9375,14.0625}; break;
-            default: expected = new double[]{14,13.4375,15.0625,14.625,14.0625,15.1875};
+            case "north": expected = new double[]{3.25,11.75,.75,14.75,14.75,.75}; break;
+            case "west": expected = new double[]{.75,11.75,1.25,.75,14.75,12.75}; break;
+            case "east": expected = new double[]{15.25,11.75,3.25,15.25,14.75,14.75}; break;
+            case "up": expected = new double[]{1.25,15.25,1.25,12.75,15.25,4.25}; break;
+            case "down": expected = new double[]{1.25,.75,11.75,12.75,.75,14.75}; break;
+            default: expected = new double[]{1.25,11.75,15.25,12.75,14.75,15.25};
         }
         double[] actual = {Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,
                 Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
         for (RenderPatch raw : mesh) {
             Patch patch = (Patch)raw;
-            if (patch.texture != 4 || patch.limits[0] < .5 - 1e-8 || patch.limits[2] > 1e-8) continue;
+            if (patch.texture != 1) continue;
             for (double[] point : patch.corners()) for (int axis = 0; axis < 3; axis++) {
                 actual[axis] = Math.min(actual[axis], point[axis] * 16);
                 actual[axis+3] = Math.max(actual[axis+3], point[axis] * 16);
@@ -139,7 +139,7 @@ public final class ModuleRackMapChecks {
         }
         for (int value = 0; value < 6; value++)
             if (Math.abs(actual[value] - expected[value]) > 1e-8)
-                throw new AssertionError("Top indicator orientation: " + facing + " axis=" + value
+                throw new AssertionError("Top cassette front orientation: " + facing + " axis=" + value
                         + " expected=" + expected[value] + " actual=" + actual[value]);
     }
 

@@ -125,7 +125,7 @@ public final class DynmapRendererChecks {
     public static void main(String[] args)throws Exception{
         net.minecraft.init.Bootstrap.register();
         surfaces();trapdoorFrames();segmented();segmentedGates();
-        FrameMachineMapChecks.run();
+        FrameMachineMapChecks.run();ModuleRackMapChecks.main(new String[0]);ApplianceMapChecks.run();
         UtilityMapChecks.run();SurfaceMapChecks.run();HexThrusterMapChecks.run();
         ProgrammableSlabRenderer slab=new ProgrammableSlabRenderer();
         for(int choice=0;choice<ScreenHousingTextures.BUILTIN_COUNT;choice++)for(String half:new String[]{"bottom","top"}){

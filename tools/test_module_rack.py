@@ -52,12 +52,19 @@ def main():
         battery=read(MODELS / ('battery_module_'+str(level)+'.json'))
         bounds=gui_bounds(battery)
         require(bounds[0]>-8 and bounds[1]<8 and bounds[2]>-8 and bounds[3]<8,'padded battery module item variant')
-        require(len([part for part in battery['elements'] if part['name'].startswith('power_lightning_')])==4,'battery identifying lightning')
-        require(sum(part['faces']['south']['texture']=='#green' for part in battery['elements'] if part['name'].startswith('charge_'))==level,'battery charge segment progression')
+        off = named(battery, 'power_port_bar_off')
+        on = named(battery, 'power_port_bar_on')
+        require(len(off) == 1 and off[0]['faces']['south']['texture'] == '#bar_off', 'native red power-port background')
+        require(len(on) == (1 if level else 0), 'battery charge overlay presence')
+        if on:
+            require(on[0]['faces']['south']['texture'] == '#bar_on' and abs((on[0]['to'][0] - on[0]['from'][0]) - 9 * level / 4) < 1e-8, 'battery charge bar width progression')
+            require(on[0]['from'][2] > off[0]['to'][2], 'green charge overlay stays in front of red bar')
     for path in MODELS.glob('*battery*_[0-4].json'):
+        if path.name.startswith('battery_bar_'):
+            continue  # Standalone animated artwork has no cassette housing.
         battery=read(path);body=named(battery,'cassette_body')[0]
         for part in battery['elements']:
-            if part['name'].startswith(('power_lightning_','charge_')):
+            if part.get('name', '').startswith('power_port_bar_'):
                 require(part['from'][2]>body['to'][2], 'battery artwork hidden behind cassette front: '+path.name)
     shell = read(MODELS / 'shell.json')
     for name, axis, low, high in [('left_rim_1px', 0, 0, 1),
@@ -82,7 +89,9 @@ def main():
         model = read(path)
         for element in model.get('elements', []):
             low, high = element['from'], element['to']
-            require(all(0 <= low[axis] <= high[axis] <= 16 for axis in range(3))
+            # The inventory cassette label sits just ahead of its front handles.
+            label = path.name == 'navigation_data_module.json' and element.get('name') == 'navigation_front'
+            require(all(0 <= low[axis] <= high[axis] <= (16.025 if label and axis == 2 else 16) for axis in range(3))
                     and sum(low[axis] < high[axis] for axis in range(3)) >= 2,
                     'model extends beyond owning block: ' + str(path) + ' ' + element.get('name', ''))
             for face in element.get('faces', {}).values():
@@ -108,14 +117,7 @@ def main():
             require(a[2] > high[2] and b[2] <= 16, 'handle needs real finger gap within casing envelope')
         off = read(MODELS / ('indicator_%d_off.json' % slot))['elements']
         on = read(MODELS / ('indicator_%d_on.json' % slot))['elements']
-        require(len(off) == len(on) == 2, 'two tiny vertically stacked lights per row and state')
-        for before, after in zip(off, on):
-            require(before['from'] == after['from'] and before['to'] == after['to'], 'indicator state shifts geometry')
-            a, b = after['from'], after['to']
-            require(13 <= a[0] < b[0] <= 15 and b[2] < 16, 'lights stay inside recessed control strip')
-            require(abs((b[0] - a[0]) - (b[1] - a[1])) < 1e-8 and b[0] - a[0] <= 1,
-                    'rocker-style light is a tiny square')
-        require(on[0]['from'][1] > on[1]['to'][1], 'cyan light must sit above amber with a gap')
+        require(not off and not on, 'rack uses the plain recessed control fascia without legacy indicator geometry')
     for name in TEXTURE_NAMES:
         path = TEXTURES / (name + '.png')
         require(path.exists(), 'texture absent from packaged texture source: ' + name)
@@ -142,10 +144,10 @@ def main():
     require(map_models.count('customblock:id=%module_rack,state=*,'
                              'class=com.vandorlabs.dynmap.ModuleRackRenderer') == 1,
             'rack must use its native geometry Dynmap renderer exactly once')
-    map_names=TEXTURE_NAMES+('power_in_icon','emerald_block')
+    map_names=TEXTURE_NAMES+('power_in_icon','emerald_block','power_in_off','power_in_on')
     for name in map_names:
         line = ('texture:id=module_rack_' + name + ',filename=assets/vandorlabs/textures/blocks/'
-                + ('resource_ports/' if name=='power_in_icon' else 'module_rack/') + name + '.png,xcount=1,ycount=1')
+                + ('resource_ports/' if name.startswith('power_in_') else 'module_rack/') + name + '.png,xcount=1,ycount=1')
         if name=='emerald_block':line='texture:id=module_rack_emerald_block,filename=assets/minecraft/textures/blocks/emerald_block.png,xcount=1,ycount=1'
         require(map_textures.count(line) == 1, 'rack Dynmap texture registration ' + name)
     mapping = 'block:id=%module_rack,state=*,' + ','.join(
@@ -156,7 +158,7 @@ def main():
         bounds = gui_bounds(read(path))
         require(all(-7.5 < bound < 7.5 for bound in bounds), 'inventory icon lacks visible padding: ' + str(bounds))
         print(path.name + ' projected GUI bounds=' + repr(tuple(round(x, 3) for x in bounds)))
-    print('Module Rack assets PASS: four full-depth 1px rims, 2px recessed strip, paired amber/cyan squares, vertical handles, '
+    print('Module Rack assets PASS: four full-depth 1px rims, 2px recessed strip, plain recessed fascia, native battery charge bars, vertical handles, '
           'six facings, texture dimensions, Dynmap mapping, source reproducibility; component face records=' + str(quads))
 
 

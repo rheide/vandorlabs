@@ -17,7 +17,7 @@ public final class ScreenChipSupport {
     public static ScreenSurface.Quad deck(){return DECK;}
     public static boolean integrated(Block block){return block instanceof BlockDiagonalHalfConsole||block instanceof BlockProgrammableHalfConsole||block instanceof BlockProgrammableConsole||block instanceof BlockProgrammableDiagonalScreen;}
     public static int displaySlot(Block block){return block instanceof BlockProgrammableHalfConsole?1:0;}
-    public static boolean selected(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())&&tile.baseSurfaceTexture(displaySlot(tile.getBlockType()))==TileEntityAnimatedScreenSelector.CHIP_SURFACE;}
+    public static boolean selected(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())&&(tile.baseSurfaceTexture(displaySlot(tile.getBlockType()))==TileEntityAnimatedScreenSelector.CHIP_SURFACE||tile.baseSurfaceTexture(displaySlot(tile.getBlockType()))==TileEntityAnimatedScreenSelector.NAVIGATION_SURFACE);}
     public static TileEntityTokenSlot attached(TileEntityAnimatedScreenSelector tile){
         if(tile.getWorld()==null||tile.getBlockType().getClass()!=BlockAnimatedScreenSelector.class)return null;
         for(EnumFacing face:EnumFacing.values()){
@@ -26,6 +26,7 @@ public final class ScreenChipSupport {
             if(state.getBlock() instanceof BlockTokenSlot&&((BlockTokenSlot)state.getBlock()).chip&&state.getValue(BlockVandorSwitch.FACING)==face){net.minecraft.tileentity.TileEntity raw=tile.getWorld().getTileEntity(at);if(raw instanceof TileEntityTokenSlot)return (TileEntityTokenSlot)raw;}
         }return null;
     }
+    public static boolean navigationAvailable(TileEntityAnimatedScreenSelector tile,int slot){return slot==displaySlot(tile.getBlockType())&&(integrated(tile.getBlockType())||tile.getBlockType().getClass()==BlockAnimatedScreenSelector.class);}
     public static boolean available(TileEntityAnimatedScreenSelector tile,int slot){return slot==displaySlot(tile.getBlockType())&&(integrated(tile.getBlockType())||groupReader(tile)!=null);}
     public static TileEntityTokenSlot reader(TileEntityAnimatedScreenSelector tile){return integrated(tile.getBlockType())?tile.ownedChipReader():groupReader(tile);}
     private static TileEntityTokenSlot groupReader(TileEntityAnimatedScreenSelector tile){if(tile.getBlockType().getClass()!=BlockAnimatedScreenSelector.class)return null;ScreenChipGroups.Group group=ScreenChipGroups.group(tile);return group==null?null:group.reader;}

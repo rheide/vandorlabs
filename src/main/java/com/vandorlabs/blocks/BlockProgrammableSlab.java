@@ -32,6 +32,9 @@ public final class BlockProgrammableSlab extends BlockAnimatedScreenSelector {
         useNeighborBrightness = true;
     }
 
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
+    @Override public void getSubBlocks(net.minecraft.creativetab.CreativeTabs tab,net.minecraft.util.NonNullList<net.minecraft.item.ItemStack> items){super.getSubBlocks(tab,items);com.vandorlabs.items.AppliancePresets.creative(this,tab,items);}
+
     @Override public net.minecraft.tileentity.TileEntity createNewTileEntity(World world, int meta) {
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile =
                 new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();

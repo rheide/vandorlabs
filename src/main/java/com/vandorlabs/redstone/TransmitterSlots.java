@@ -66,7 +66,7 @@ public final class TransmitterSlots {
         SavedChannels(NBTTagCompound tag){identity=tag;channels=TransmissionSettings.readChannels(tag.hasKey(TransmissionSettings.CHANNELS,11),tag.getIntArray(TransmissionSettings.CHANNELS),ChannelList.EMPTY);}
     }
     public static boolean supported(RedstoneChannelMember member){
-        return outputOnly(member)||member instanceof com.vandorlabs.tiles.TileEntityCockpit
+        return member instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)member)>0||outputOnly(member)||member instanceof com.vandorlabs.tiles.TileEntityCockpit
                 ||member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control
                 ||member instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                 ||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row;
@@ -125,7 +125,7 @@ public final class TransmitterSlots {
             }
         }
     }
-    public static boolean outputOnly(RedstoneChannelMember member){if(member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row)return false;TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
+    public static boolean outputOnly(RedstoneChannelMember member){if(member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row||member instanceof com.vandorlabs.tiles.TileEntityConstructor)return false;TileEntity tile=member.channelTile();return member instanceof RedstoneChannelLatch&&!(tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&!((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter())||tile instanceof com.vandorlabs.tiles.TileEntityTokenSlot&&!(tile instanceof com.vandorlabs.tiles.TileEntityConstructor)||tile instanceof com.vandorlabs.plate.PlateTile||tile instanceof com.vandorlabs.tiles.TileEntityWaypoint;}
     public static void settingsChanged(RedstoneChannelMember member){
         net.minecraft.world.World world=member.channelTile().getWorld();
         boolean placed=world!=null&&!world.isRemote;

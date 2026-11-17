@@ -71,7 +71,12 @@ public final class ArmCoreTransitionObserver {
         net.minecraftforge.fml.client.registry.ClientRegistry.bindTileEntitySpecialRenderer(TileEntityConstructor.class,new TileEntitySpecialRenderer<TileEntityConstructor>(){
             @Override public void render(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha){TileEntityConstructor previous=coreContext;int oldCall=coreCall;Context previousContext=gearContext;boolean interested=recording&&(gearContext!=null||nativeCells.contains(tile.getPos()));if(interested){coreContext=tile;coreCall=0;}
                 try{if(interested&&gearContext==null){NATIVE_OUTER=matrix();NATIVE_CAMERA=new double[]{tile.getPos().getX()-x,tile.getPos().getY()-y,tile.getPos().getZ()-z};}core.render(tile,x,y,z,partial,stage,alpha);}finally{coreContext=previous;coreCall=oldCall;gearContext=previousContext;}}
-            @Override public void renderTileEntityFast(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha,BufferBuilder buffer){core.renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);}
+            @Override public void renderTileEntityFast(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha,BufferBuilder buffer){
+                boolean interested=recording&&(gearContext!=null||nativeCells.contains(tile.getPos()));TileEntityConstructor previous=coreContext;int oldCall=coreCall,start=buffer.getVertexCount();
+                try{if(interested){coreContext=tile;coreCall=0;if(gearContext==null){NATIVE_OUTER=matrix();NATIVE_CAMERA=new double[]{tile.getPos().getX()-x,tile.getPos().getY()-y,tile.getPos().getZ()-z};}}core.renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);
+                    if(interested&&buffer.getVertexCount()>start){java.nio.ByteBuffer source=buffer.getByteBuffer().duplicate();int stride=buffer.getVertexFormat().getNextOffset();source.position(start*stride);source.limit(buffer.getVertexCount()*stride);observe("core-body",source.slice().order(buffer.getByteBuffer().order()),buffer.getVertexFormat(),buffer.getVertexCount()-start);if(gearContext==null)nativeDraws++;else capturedDraws++;}
+                }finally{coreContext=previous;coreCall=oldCall;}
+            }
             @Override public void setRendererDispatcher(TileEntityRendererDispatcher dispatcher){super.setRendererDispatcher(dispatcher);core.setRendererDispatcher(dispatcher);}
             @Override public boolean isGlobalRenderer(TileEntityConstructor tile){return core.isGlobalRenderer(tile);}
         });

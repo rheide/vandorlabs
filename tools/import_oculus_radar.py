@@ -21,6 +21,8 @@ def main():
     if marker not in name or name.endswith('/'):continue
     rel=name.split(marker,1)[1]
     if not rel.startswith(('models/','textures/')):continue
+    if rel.startswith(('models/block/radar/survey_dish/','models/block/radar/sentinel_array/')):continue
+    if rel.startswith(('models/block/radar/survey_dish/','models/block/radar/sentinel_array/')):continue
     if rel.startswith('models/') and not rel.endswith(('.obj','.mtl')):continue
     out=TEX/rel[9:] if rel.startswith('textures/') else ASSETS/rel
     out.parent.mkdir(parents=True,exist_ok=True);data=z.read(name)
@@ -28,14 +30,14 @@ def main():
     out.write_bytes(data)
    for name in z.namelist():
     if '/manifests/' not in name or not name.endswith('.json'):continue
-    m=json.loads(z.read(name));design=m['id'];w,h,d=map(int,m['size_blocks']);states=list(m['states'])
+    m=json.loads(z.read(name));design=m['id'];
+    if design in ('survey_dish','sentinel_array'):continue
+    w,h,d=map(int,m['size_blocks']);states=list(m['states'])
     model=m['states'][states[0]]['obj_resource'].split('block/',1)[1].rsplit('/',2)[0]
     spec=dict(design=design,block=design+'_core',width=w,height=h,depth=d,model=model,state_models=[s+'/complete.obj' for s in states],state_labels=[s.title() for s in states],surfaces=surfaces(m['interfaces']))
-    if 'chip_pad' in m['interfaces']:
+    if 'chip_pad' in m['interfaces'] and design not in ('standalone_dish','standalone_antenna'):
      # Match the native mount's 6px frame: place it just ahead of the casing.
      a=m['interfaces']['chip_pad']['render_anchor_blocks'];spec['chip_anchor']=[a[0],a[1],a[2]-.01];spec['chip_size']=[6,6]
-    if not spec.get('chip_anchor'):
-     spec['chip_anchor']=[w/2,.3125,.6775 if design=='standalone_dish' else .615];spec['chip_size']=[6,6]
     if m['animation']['kind']=='split_shutters':spec['motion']='shutters'
     elif m['animation']['kind']=='yaw_sweep':spec['motion']='dish';spec['motion_pivot']=m['animation']['pivot_blocks']
     imported.append(spec)
@@ -43,7 +45,9 @@ def main():
     write('models/block/'+block+'.json',{'parent':'block/cube_all','textures':{'all':'vandorlabs:blocks/matter/'+block}})
     write('models/item/'+block+'.json',{'parent':'vandorlabs:block/'+block,'display':{'gui':{'rotation':[30,225,0],'scale':[.5,.5,.5]}}})
     write('blockstates/'+block+'.json',{'variants':{'facing='+f+',formed='+str(formed).lower():{'model':'vandorlabs:'+('constructor_empty' if formed else block)} for f in ['north','east','south','west'] for formed in [False,True]}})
- catalog=[s for s in catalog if s['design'] not in {s['design'] for s in imported}]+imported
+ catalog=[s for s in catalog if s['design'] not in {'survey_dish','sentinel_array'}|{s['design'] for s in imported}]+imported
  write('data/frame_machines.json',catalog)
+ from fit_observer_models import fit
+ fit()
  print('Imported',len(imported),'Oculus/radar Core designs')
 if __name__=='__main__':main()

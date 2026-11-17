@@ -92,6 +92,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
     @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> cap,EnumFacing side){return synthesisCapability(cap,pos,side)!=null||super.hasCapability(cap,side);}
     @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> cap,EnumFacing side){T result=synthesisCapability(cap,pos,side);return result!=null?result:super.getCapability(cap,side);}
+    @Override public void invalidate(){com.vandorlabs.navigation.NavigationSources.remove(this);super.invalidate();}
+    @Override public void onChunkUnload(){com.vandorlabs.navigation.NavigationSources.remove(this);super.onChunkUnload();}
     public TileEntityConstructor(){super();}
     @Override public boolean chip(){return true;}
     @Override protected boolean displayBlock(Block block){return block instanceof BlockConstructorCore;}
@@ -102,7 +104,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public int surfaceCount(){BlockConstructorCore core=core();return core==null||core.specification().surfaces==null?0:core.specification().surfaces.length;}
     @Override public String surfaceLabel(int slot){return core().specification().surfaces[slot].label;}
     @Override public int surfaceChoice(int slot){return slot<surfaceTextures.length?surfaceTextures[slot]:-2;}
-    public static boolean validSurface(int choice){return choice==-2||com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice);}
+    public static boolean validSurface(int choice){return choice==-2||choice!=com.vandorlabs.navigation.NavigationMap.SURFACE&&com.vandorlabs.navigation.NavigationScreenSettings.validTexture(choice);}
     public void configureMachine(com.vandorlabs.navigation.NavigationScreenSettings config,int[] textures,boolean any,int allowed,int behavior,com.vandorlabs.redstone.ChannelList channels){
         if(!authoritative()||textures.length!=surfaceCount()||textures.length>3)return;
         for(int choice:textures)if(!validSurface(choice))return;
@@ -120,7 +122,10 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public void setChannelLevel(int level){int next=com.vandorlabs.drives.DriveSettings.clamp(level);boolean changed=driveChannelLevel!=next;driveChannelLevel=next;setChannelSignal(next>0);if(isDrive()&&changed){refresh();publish();}}
     @Override public void update(){if(world!=null&&!world.isRemote&&formed()&&builder()){if(!com.vandorlabs.gear.ArmTransactions.locked(world,pos))synthesisRuntime.tick();if(synthesisSync&&world.getTotalWorldTime()%5==0){synthesisSync=false;publish();}}if(world!=null&&world.isRemote&&isDrive()&&renderReady()&&screenOn()&&drive.plume(true,driveLevel))com.vandorlabs.drives.DriveParticles.emit(this);}
     private boolean changing;private IBlockState removedState;
-    private int coreX,coreZ;
+    private int coreX,coreZ,observerWidth;private boolean observerInverted;private NBTTagCompound observerSnapshot;
+    public com.vandorlabs.gear.GearTileEntity carriedArm;
+    public boolean observer(){BlockConstructorCore b=core();return b!=null&&(b.design.equals("standalone_dish")||b.design.equals("standalone_antenna"));}
+    public boolean inverted(){return observerInverted&&observer();}
     private java.util.UUID renderIdentity;
     public java.util.UUID renderEpoch;public BlockPos renderOwner;public int renderCell=-1;private boolean renderAppearance;
     public java.util.UUID renderIdentity(){if(renderIdentity==null)renderIdentity=java.util.UUID.randomUUID();return renderIdentity;}
@@ -133,7 +138,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(tag.hasUniqueId("CoreRenderEpoch")&&tag.hasKey("CoreRenderOwner",4)&&tag.hasKey("CoreRenderCell",3)){int cell=tag.getInteger("CoreRenderCell");if(cell>=0&&cell<com.vandorlabs.gear.ArmPayload.MAX_BLOCKS){renderEpoch=tag.getUniqueId("CoreRenderEpoch");renderOwner=BlockPos.fromLong(tag.getLong("CoreRenderOwner"));if(Math.abs((long)renderOwner.getX()-pos.getX())>128||Math.abs((long)renderOwner.getY()-pos.getY())>128||Math.abs((long)renderOwner.getZ()-pos.getZ())>128){renderOwner=null;renderEpoch=null;}else renderCell=cell;}}
         if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);
     }
-    private com.vandorlabs.machines.CoreLayout cachedLayout;private BlockConstructorCore cachedLayoutCore;
+    private com.vandorlabs.machines.CoreLayout cachedLayout,cachedPivotLayout;private BlockConstructorCore cachedLayoutCore;private BlockPos cachedPivot,cachedOriginOffset;private boolean cachedPivotInverted;
     private int activity=-1;
     private String assemblyProblem="";
     /** Facing/formed changes belong to this assembly; replacing the tile loses its detected corner. */
@@ -146,46 +151,63 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
     public BlockConstructorCore core(){IBlockState state=coreState();return state==null?null:(BlockConstructorCore)state.getBlock();}
     public EnumFacing facing(){IBlockState state=coreState();return state==null?EnumFacing.NORTH:state.getValue(BlockVandorDirectional.FACING);}
-    public boolean formed(){IBlockState state=coreState();return state!=null&&state.getValue(BlockConstructorCore.FORMED);}
+    private boolean observerDataValid(){BlockConstructorCore b=core();if(observerSnapshot==null)return true;if(!observerSnapshot.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,3)||b==null||!observer())return false;try{com.vandorlabs.navigation.ObserverScale.width(b.design,observerWidth);observerSnapshot=null;return true;}catch(IllegalArgumentException invalid){return false;}}
+    public int structureWidth(){BlockConstructorCore b=core();return com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.width(b.design,observerWidth):b.width;}
+    public int structureHeight(){BlockConstructorCore b=core();return com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.height(b.design,observerWidth):b.height;}
+    public int structureDepth(){BlockConstructorCore b=core();return com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.width(b.design,observerWidth):b.depth;}
+    public double observerScale(){BlockConstructorCore b=core();return b!=null&&com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.linearScale(b.design,observerWidth):1;}
+    public boolean formed(){IBlockState state=coreState();return state!=null&&observerDataValid()&&state.getValue(BlockConstructorCore.FORMED);}
     public com.vandorlabs.machines.CoreLayout layout(){
-        BlockConstructorCore core=core();if(core==null)return null;int face=facing().getIndex();
-        if(cachedLayout==null||cachedLayoutCore!=core||cachedLayout.facing!=face||cachedLayout.cornerX!=coreX||cachedLayout.cornerZ!=coreZ){cachedLayout=new com.vandorlabs.machines.CoreLayout(core.width,core.height,core.depth,face,coreX,coreZ);cachedLayoutCore=core;}return cachedLayout;
+        IBlockState state=coreState();if(state==null||!observerDataValid())return null;BlockConstructorCore core=(BlockConstructorCore)state.getBlock();int face=state.getValue(BlockVandorDirectional.FACING).getIndex();
+        boolean observer=com.vandorlabs.navigation.ObserverScale.observer(core.design);int width=observer?com.vandorlabs.navigation.ObserverScale.width(core.design,observerWidth):core.width;
+        if(cachedLayout==null||cachedLayoutCore!=core||cachedLayout.facing!=face||cachedLayout.cornerX!=coreX||cachedLayout.cornerZ!=coreZ||cachedLayout.width!=width){cachedLayout=new com.vandorlabs.machines.CoreLayout(width,observer?com.vandorlabs.navigation.ObserverScale.height(core.design,width):core.height,observer?width:core.depth,face,coreX,coreZ);cachedLayoutCore=core;}return cachedLayout;
     }
-    public int activity(){BlockConstructorCore core=core();return activity>=0?activity:core!=null&&core.specification().state_labels!=null?2:1;}
+    public int activity(){if(activity>=0)return activity;BlockConstructorCore core=core();return core!=null&&core.specification().state_labels!=null?2:1;}
     public void cycleActivity(){activity=(activity()+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
-    public BlockPos pivot(){com.vandorlabs.machines.CoreLayout shape=layout();return shape==null?BlockPos.ORIGIN:new BlockPos(shape.pivotX(),0,shape.pivotZ());}
-    public BlockPos cell(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape==null?pos:pos.add(shape.x(x,z),y,shape.z(x,z));}
+    public BlockPos pivot(){com.vandorlabs.machines.CoreLayout shape=layout();if(shape==null)return BlockPos.ORIGIN;boolean inverted=observerInverted&&com.vandorlabs.navigation.ObserverScale.observer(cachedLayoutCore.design);if(cachedPivotLayout!=shape||cachedPivotInverted!=inverted){cachedPivotLayout=shape;cachedPivotInverted=inverted;cachedPivot=new BlockPos(shape.pivotX(),inverted?shape.height-1:0,shape.pivotZ());cachedOriginOffset=BlockPos.ORIGIN.subtract(cachedPivot);}return cachedPivot;}
+    public BlockPos renderOriginOffset(){return pivot()==BlockPos.ORIGIN?BlockPos.ORIGIN:cachedOriginOffset;}
+    public BlockPos cell(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape==null?pos:pos.add(shape.x(x,z),inverted()?-y:y,shape.z(x,z));}
     public String assemblyProblem(){return assemblyProblem;}
     public boolean frame(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape!=null&&shape.frame(x,y,z);}
     public boolean assemble(){
-        if(world==null || world.isRemote || changing || coreState()==null || formed())return false;
+        if(world==null || world.isRemote || changing || coreState()==null || formed()||!observerDataValid())return false;
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
-        EnumFacing selected=null;int selectedX=0,selectedZ=0,best=Integer.MAX_VALUE;
+        EnumFacing selected=null;int selectedX=0,selectedZ=0,selectedWidth=core().width,best=Integer.MAX_VALUE;boolean selectedInverted=false;
         EnumFacing preferred=facing();
         // Prefer the placed facing, but infer the footprint rather than requiring a hidden corner convention.
-        for(int turn=0;turn<4 && selected==null;turn++){
+        for(int width=core().width;width<=(observer()?com.vandorlabs.navigation.ObserverScale.maximumWidth(core().design):core().width)&&selected==null;width++){
+          int height=observer()?com.vandorlabs.navigation.ObserverScale.height(core().design,width):core().height,depth=observer()?width:core().depth;
+          for(int orientation=0;orientation<(observer()?2:1)&&selected==null;orientation++)for(int turn=0;turn<4 && selected==null;turn++){
             EnumFacing direction=EnumFacing.getHorizontal((preferred.getHorizontalIndex()+turn)%4);
-            for(int cornerX:new int[]{0,core().width-1})for(int cornerZ:new int[]{0,core().depth-1}){
-                com.vandorlabs.machines.CoreLayout candidate=new com.vandorlabs.machines.CoreLayout(core().width,core().height,core().depth,direction.getIndex(),cornerX,cornerZ);
+            for(int cornerX:new int[]{0,width-1})for(int cornerZ:new int[]{0,depth-1}){
+                com.vandorlabs.machines.CoreLayout candidate=new com.vandorlabs.machines.CoreLayout(width,height,depth,direction.getIndex(),cornerX,cornerZ);
+                // Reject absent corners before examining the entire volume of each possible size.
+                boolean corners=true;if(observer())for(int cy:new int[]{0,height-1})for(int cx:new int[]{0,width-1})for(int cz:new int[]{0,depth-1}){
+                    BlockPos at=pos.add(candidate.x(cx,cz),orientation==1?-cy:cy,candidate.z(cx,cz));
+                    if(!at.equals(pos)&&(!world.isBlockLoaded(at,false)||world.getBlockState(at).getBlock()!=matter))corners=false;
+                }
+                if(!corners)continue;
                 int errors=0;String first="";
-                for(int y=0;y<core().height;y++)for(int x=0;x<core().width;x++)for(int z=0;z<core().depth;z++){
-                    BlockPos p=pos.add(candidate.x(x,z),y,candidate.z(x,z));if(p.equals(pos))continue;
-                    boolean loaded=world.isBlockLoaded(p);
-                    if(!loaded || (frame(x,y,z)?world.getBlockState(p).getBlock()!=matter:!world.isAirBlock(p))){
-                        if(errors++==0)first=(loaded?(frame(x,y,z)?world.getBlockState(p).getBlock() instanceof BlockConstructorCore?"Use a Matter Block, not another Core":"Matter Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();
+                for(int y=0;y<height;y++)for(int x=0;x<width;x++)for(int z=0;z<depth;z++){
+                    BlockPos p=pos.add(candidate.x(x,z),orientation==1?-y:y,candidate.z(x,z));if(p.equals(pos))continue;
+                    boolean loaded=world.isBlockLoaded(p,false),frame=candidate.frame(x,y,z);
+                    if(!loaded || (frame?world.getBlockState(p).getBlock()!=matter:!world.isAirBlock(p))){
+                        if(errors++==0)first=(loaded?(frame?world.getBlockState(p).getBlock() instanceof BlockConstructorCore?"Use a Matter Block, not another Core":"Matter Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();
                     }
                 }
                 if(errors<best){best=errors;assemblyProblem=first+" ("+errors+" mismatched cells in closest frame).";}
-                if(errors==0 && selected==null){selected=direction;selectedX=cornerX;selectedZ=cornerZ;}
+                if(errors==0 && selected==null){selected=direction;selectedX=cornerX;selectedZ=cornerZ;selectedInverted=orientation==1;selectedWidth=width;}
             }
+          }
         }
+        if(best==Integer.MAX_VALUE)assemblyProblem="Complete a proportional Matter frame: Survey Dish N×N×N (N=3–16), Sentinel Array N×N×2N (N=2–8).";
         if(selected==null)return false;
         changing=true;
         try{
-            coreX=selectedX;coreZ=selectedZ;
+            coreX=selectedX;coreZ=selectedZ;observerInverted=selectedInverted;observerWidth=observer()?selectedWidth:0;observerSnapshot=null;
             world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockVandorDirectional.FACING,selected),2);
             Block part=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:constructor_part"));
-            for(int y=0;y<core().height;y++)for(int x=0;x<core().width;x++)for(int z=0;z<core().depth;z++){
+            for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos))continue;
                 world.setBlockState(p,part.getDefaultState(),2);((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frame(x,y,z));
             }
@@ -200,7 +222,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         try{
             TokenSlotInteractions.drop(world,pos);if(builder())synthesisRuntime.drop();
             Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
-            for(int y=0;y<core().height;y++)for(int x=0;x<core().width;x++)for(int z=0;z<core().depth;z++){
+            for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos) || !world.isBlockLoaded(p))continue;TileEntity part=world.getTileEntity(p);
                 if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))world.setBlockState(p,frame(x,y,z)?matter.getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),2);
             }
@@ -212,7 +234,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override protected boolean physicalPower(){
         poweredInputs.clear();drivePhysicalInputs.clear();drivePhysicalLevel=0;if(!formed())return false;
         BlockConstructorCore core=core();
-        for(int y=0;y<core.height;y++)for(int x=0;x<core.width;x++)for(int z=0;z<core.depth;z++){
+        for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
             BlockPos at=cell(x,y,z);if(world.isBlockLoaded(at)){int level=com.vandorlabs.redstone.LoadedRedstonePower.level(world,at);if(level>0)poweredInputs.add(at);if(isDrive()&&level>0){drivePhysicalInputs.put(at,level);drivePhysicalLevel=Math.max(drivePhysicalLevel,level);}}
         }
         return !poweredInputs.isEmpty();
@@ -229,7 +251,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         physicalInput(!poweredInputs.isEmpty());if(builder())refreshSynthesisConnections();if(isDrive())refresh();
     }
     @Override public void refreshInputs(){super.refreshInputs();if(authoritative()&&builder()){synthesisInputsReady=true;refresh();}}
-    @Override public void onLoad(){synthesisInputsReady=false;super.onLoad();DeferredTileLoad.schedule(this,()->{refreshInputs();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);});}
+    @Override public void onLoad(){synthesisInputsReady=false;super.onLoad();DeferredTileLoad.schedule(this,()->{com.vandorlabs.navigation.NavigationSources.register(this);refreshInputs();if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.coreAppearanceChanged(this);});}
     public com.vandorlabs.blocks.MachineMountSurface mount(){
         if(!renderReady()||!core().specification().hasChip())return null;FrameMachineDesign spec=core().specification();
         Vec3d local=synthesis()?new Vec3d(com.vandorlabs.machines.SynthesisPresentation.CHIP_X,com.vandorlabs.machines.SynthesisPresentation.CHIP_Y,com.vandorlabs.machines.SynthesisPresentation.CHIP_Z):new Vec3d(spec.chip_anchor[0],spec.chip_anchor[1],spec.chip_anchor[2]);
@@ -237,12 +259,12 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         return new MachineMountSurface(center,facing(),TokenSlotGeometry.CHIP_SIZE,TokenSlotGeometry.CHIP_SIZE);
     }
     @Override public boolean isUsableByPlayer(net.minecraft.entity.player.EntityPlayer player){return formed()&&super.isUsableByPlayer(player);}
-    @Override public AxisAlignedBB getRenderBoundingBox(){if(!formed())return new AxisAlignedBB(pos);BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX()-.5,origin.getY()-.5,origin.getZ()-.5,origin.getX()+(turn?core().depth:core().width)+.5,origin.getY()+core().height+.5,origin.getZ()+(turn?core().width:core().depth)+.5);}
+    @Override public AxisAlignedBB getRenderBoundingBox(){if(!formed())return new AxisAlignedBB(pos);BlockPos origin=pos.subtract(pivot());boolean turn=facing().getAxis()==EnumFacing.Axis.X;return new AxisAlignedBB(origin.getX()-.5,origin.getY()-.5,origin.getZ()-.5,origin.getX()+(turn?structureDepth():structureWidth())+.5,origin.getY()+structureHeight()+.5,origin.getZ()+(turn?structureWidth():structureDepth())+.5);}
     @Override public double getMaxRenderDistanceSquared(){return 65536;}
     @Override public boolean hasFastRenderer(){BlockConstructorCore core=core();return core==null||!core.specification().hasChip()&&surfaceCount()==0;}
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);synthesisRuntime.write(tag);NBTTagCompound sequences=new NBTTagCompound();for(int bay=0;bay<4;bay++)sequences.setLong("Bay"+bay,batterySequences[bay]);tag.setTag("SynthesisBatterySequences",sequences);tag.setInteger("SynthesisActivation",synthesisActivation);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
-    @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.setInteger("SynthesisConnections",synthesisConnections);tag.setBoolean("SynthesisWorking",working());tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);synthesisRuntime.write(tag);NBTTagCompound sequences=new NBTTagCompound();for(int bay=0;bay<4;bay++)sequences.setLong("Bay"+bay,batterySequences[bay]);tag.setTag("SynthesisBatterySequences",sequences);tag.setInteger("SynthesisActivation",synthesisActivation);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);observerInverted=tag.getBoolean("ObserverInverted");observerWidth=tag.getInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG);observerSnapshot=tag.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG)?tag.copy():null;cachedLayout=null;coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
+    @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());if(!getStackInSlot(0).isEmpty())tag.setTag("InsertedToken",com.vandorlabs.navigation.NavigationChip.summary(getStackInSlot(0)).writeToNBT(new NBTTagCompound()));tag.setInteger("SynthesisConnections",synthesisConnections);tag.setBoolean("SynthesisWorking",working());tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
     @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);synthesisRuntime.visualWorking(tag.getBoolean("SynthesisWorking"));renderPacket(tag);}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
     @Override public void onDataPacket(NetworkManager manager,SPacketUpdateTileEntity packet){readFromNBT(packet.getNbtCompound());synthesisRuntime.visualWorking(packet.getNbtCompound().getBoolean("SynthesisWorking"));renderPacket(packet.getNbtCompound());}

@@ -10,6 +10,7 @@ import net.minecraft.util.math.BlockPos;
 
 /** Chunk-cached housing, one native reader and a continuous image across visible cells. */
 public final class TENavigationTable extends TileEntitySpecialRenderer<TileEntityNavigationTable> {
+    public static long navigationSubmissions;
     private static final java.util.Map<TileEntityNavigationTable,Surface> SURFACES=new java.util.WeakHashMap<>();
     private static final class Surface {
         final BlockPos origin;final int width,depth,mask;final EnumFacing facing,display;final NavigationLayout.DisplayPatch patch;
@@ -21,8 +22,14 @@ public final class TENavigationTable extends TileEntitySpecialRenderer<TileEntit
     }
     @Override public void render(TileEntityNavigationTable tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!tile.renderReady())return;
-        TileEntityNavigationTable root=tile;
-        if(root!=null&&root.screenOn()&&root.screenSettings().texture>=0&&tile.formed()){
+        NavigationModuleRenderer.render(tile,x,y,z);
+        if(tile.screenSettings().texture==NavigationMap.SURFACE){
+            if(!tile.ownsReader())return;
+            GlStateManager.pushMatrix();try{GlStateManager.translate(x,y,z);navigationSubmissions++;NavigationMapRenderer.table(tile);}finally{GlStateManager.popMatrix();}
+            MachineMountSurface mount=tile.mount();if(mount!=null)TETokenSlot.nativeMount(tile,mount,x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ(),partial);return;
+        }
+        TileEntityNavigationTable root=tile.reader();
+        if(root!=null&&(root.screenSettings().texture==NavigationMap.SURFACE||root.screenOn()&&root.screenSettings().texture>=0)&&tile.formed()){
             NavigationScreenSettings config=root.screenSettings();BlockNavigationTable block=(BlockNavigationTable)tile.getBlockType();
             EnumFacing facing=tile.getWorld().getBlockState(tile.getPos()).getValue(BlockVandorDirectional.FACING);
             Surface surface=SURFACES.get(tile);if(surface==null||!surface.matches(tile,facing)){surface=new Surface(tile,facing,block.kind);SURFACES.put(tile,surface);}
@@ -30,7 +37,9 @@ public final class TENavigationTable extends TileEntitySpecialRenderer<TileEntit
             GlStateManager.pushMatrix();try(TurntableRenderState saved=new TurntableRenderState()){
                 GlStateManager.translate(x-tile.getPos().getX(),y-tile.getPos().getY(),z-tile.getPos().getZ());GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.color(1,1,1,1);
                 int light=tile.getWorld().getCombinedLight(tile.getPos(),0);OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light&65535,light>>>16);
-                double[] uv=TEAnimatedScreenSelector.bindDisplay(root,config.texture,true,config.animated,config.speed);
+                double[] uv;
+                if(config.texture==NavigationMap.SURFACE){NavigationMapRenderer.bind(root,0,Math.max(.5,tile.assemblyWidth()/(double)tile.assemblyDepth()));uv=new double[]{0,1,0,1};}
+                else uv=TEAnimatedScreenSelector.bindDisplay(root,config.texture,true,config.animated,config.speed);
                 BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.setTranslation(0,0,0);buffer.begin(7,BlockSurfaceFormat.get());
                 for(int i=0;i<4;i++){NavigationLayout.Vec3 point=patch.points[i];WorldSurface.vertex(buffer,point.x,point.y,point.z,uv[2]+patch.u[i]*(uv[3]-uv[2]),uv[0]+patch.v[i]*(uv[1]-uv[0]),(float)patch.normal.x,(float)patch.normal.y,(float)patch.normal.z);}
                 Tessellator.getInstance().draw();

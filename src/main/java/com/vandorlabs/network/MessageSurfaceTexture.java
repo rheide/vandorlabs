@@ -19,16 +19,17 @@ public final class MessageSurfaceTexture implements IMessage {
         @Override public IMessage onMessage(MessageSurfaceTexture m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(m.pos==null || m.slot<0 || m.slot>1 || m.choice< TileEntityAnimatedScreenSelector.CHIP_SURFACE || (m.choice>=0 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.choice))
+                if(m.pos==null || m.slot<0 || m.slot>1 || m.choice< TileEntityAnimatedScreenSelector.NAVIGATION_SURFACE || (m.choice>=0 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.choice))
                         || !player.world.isBlockLoaded(m.pos) || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
                 TileEntity tile=player.world.getTileEntity(m.pos);
                 if(player.openContainer instanceof ContainerAnimatedScreenSelector && tile instanceof TileEntityAnimatedScreenSelector) {
                     ContainerAnimatedScreenSelector c=(ContainerAnimatedScreenSelector)player.openContainer;
                     if(c.getTileEntity()!=tile || !c.canInteractWith(player))return;
                     if(!com.vandorlabs.blocks.RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),m.slot))return;
+                    if(m.choice==TileEntityAnimatedScreenSelector.NAVIGATION_SURFACE&&!com.vandorlabs.blocks.ScreenChipSupport.navigationAvailable((TileEntityAnimatedScreenSelector)tile,m.slot))return;
                     if(m.choice==TileEntityAnimatedScreenSelector.CHIP_SURFACE&&!com.vandorlabs.blocks.ScreenChipSupport.available((TileEntityAnimatedScreenSelector)tile,m.slot))return;
                     TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;
-                    java.util.List<TileEntityAnimatedScreenSelector> targets=(tile.getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&(m.choice==TileEntityAnimatedScreenSelector.CHIP_SURFACE||screen.hasChipSurface(m.slot)))?DisplayEditGroups.members(screen):java.util.Collections.singletonList(screen);
+                    java.util.List<TileEntityAnimatedScreenSelector> targets=(tile.getBlockType().getClass()==com.vandorlabs.blocks.BlockAnimatedScreenSelector.class&&(m.choice==TileEntityAnimatedScreenSelector.NAVIGATION_SURFACE||screen.hasNavigation(m.slot)||m.choice==TileEntityAnimatedScreenSelector.CHIP_SURFACE||screen.hasChipSurface(m.slot)))?DisplayEditGroups.members(screen):java.util.Collections.singletonList(screen);
                     for(TileEntityAnimatedScreenSelector target:targets)if(!com.vandorlabs.blocks.ScreenChipGroups.canEdit(player,target))return;
                     for(TileEntityAnimatedScreenSelector target:targets)target.setSurfaceTexture(m.slot,m.choice);
 

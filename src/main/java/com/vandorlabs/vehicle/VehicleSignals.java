@@ -198,6 +198,7 @@ public final class VehicleSignals {
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
         }
         craft.articulation.tickCapturedControls();
+        com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();
     }
     public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();}
@@ -207,10 +208,11 @@ public final class VehicleSignals {
         TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel)return true;
         if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)raw;
-        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatus(slot) || tile.hasChipSurface(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
+        for(int slot=0;slot<2;slot++)if((tile.hasRedstoneScreen(slot) || tile.hasVehicleStatus(slot) || tile.hasChipSurface(slot) || tile.hasNavigation(slot)) && RedstoneScreenInteractions.supportsSlot(tile.getBlockType(),slot))return true;
         return false;
     }
     public boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
+        if(craft.view.getTileEntity(pos) instanceof TileEntityNavigationTable){TileEntityNavigationTable table=(TileEntityNavigationTable)craft.view.getTileEntity(pos);double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());Vec3d start=craft.toLocal(player.getPositionEyes(1),pos),end=craft.toLocal(player.getPositionEyes(1).add(player.getLook(1).scale(reach)),pos);if(com.vandorlabs.navigation.NavigationVehicle.tableUse(table,player,start,end)){flush();return true;}return false;}
         if(player.isSneaking() || craft.view.getTileEntity(pos) instanceof TileEntityTokenSlot)return false;
         if(craft.view.getTileEntity(pos) instanceof TileEntityRedstoneChannel)return clickControl(pos);
         if(!(craft.view.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector))return false;
@@ -218,6 +220,7 @@ public final class VehicleSignals {
         double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d eye=player.getPositionEyes(1),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));eye=craft.toLocal(eye,pos).subtract(new Vec3d(pos));end=craft.toLocal(end,pos).subtract(new Vec3d(pos));
         tick();
+        if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){flush();return true;}
         if(ScreenChipSupport.activate(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){dirty.add(pos);flush();return true;}
         for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             int action=RedstoneScreenInteractions.statusAction(state,tile,slot,eye,end);if(action<0)continue;
@@ -254,7 +257,7 @@ public final class VehicleSignals {
     }
     private void flush(){
         if(dirty.isEmpty())return;
-        Map<BlockPos,NBTTagCompound> saved=new HashMap<>();boolean fullSnapshot=false;
+        Map<BlockPos,NBTTagCompound> saved=new HashMap<>();boolean fullSnapshot=false,variableNavigation=false;
         for(BlockPos pos:new ArrayList<>(dirty)){
             TileEntity tile=craft.view.getTileEntity(pos);if(tile==null)continue;
             VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=snapshotData(tile,original==null?null:original.tileData());
@@ -262,8 +265,8 @@ public final class VehicleSignals {
             // A redundant notification must not invalidate its open preview.
             if(tile instanceof TileEntityPilotSeat && craft.structure.at(pos)!=null
                     && data.equals(craft.structure.at(pos).tileData()))continue;
-            saved.put(pos,data);
-            try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(data,bytes);
+            saved.put(pos,data);variableNavigation|=tile instanceof TileEntityNavigationTable;
+            try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(tile instanceof TileEntityTokenSlot||tile instanceof TileEntityAnimatedScreenSelector?tile.getUpdateTag():data,bytes);
                 if(bytes.size()>VehicleNetwork.FRAGMENT){fullSnapshot=true;continue;}
                 VehicleNetwork.Packet packet=new VehicleNetwork.Packet(VehicleNetwork.TILE);packet.entity=craft.getEntityId();packet.token=craft.getUniqueID();packet.associationGeneration=craft.couplerAssociationGeneration();packet.origin=pos;packet.data=bytes.toByteArray();packet.sequence=net.minecraft.block.Block.getStateId(craft.view.getBlockState(pos));
                 com.vandorlabs.network.TrackingPackets.send(packet,craft);
@@ -273,7 +276,7 @@ public final class VehicleSignals {
             List<VehicleStructure.Cell> cells=new ArrayList<>();
             for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(saved.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,saved.get(cell.pos)):cell);
             VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
-            next.inheritEncodedLength(craft.structure);
+            if(!variableNavigation)next.inheritEncodedLength(craft.structure);
             craft.updateCanopies(next,false);
         }
         if(fullSnapshot){java.util.Set<net.minecraft.entity.player.EntityPlayer> viewers=new java.util.HashSet<>(((net.minecraft.world.WorldServer)craft.world).getEntityTracker().getTrackingPlayers(craft));for(net.minecraft.entity.Entity passenger:craft.getPassengers())if(passenger instanceof net.minecraft.entity.player.EntityPlayer)viewers.add((net.minecraft.entity.player.EntityPlayer)passenger);for(net.minecraft.entity.player.EntityPlayer viewer:viewers)if(viewer instanceof net.minecraft.entity.player.EntityPlayerMP)VehicleNetwork.send((net.minecraft.entity.player.EntityPlayerMP)viewer,craft.structure,craft.getEntityId(),craft.getUniqueID(),new BlockPos(craft),false,false);}

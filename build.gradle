@@ -976,6 +976,20 @@ task testModularGear(type: JavaExec) {
 }
 check.dependsOn testModularGear
 
+task testNavigationTerrainCache(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.navigation.NavigationTerrainCacheTest'
+}
+check.dependsOn testNavigationTerrainCache
+
+task testNavigationCanvas(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.navigation.NavigationCanvasTest'
+}
+check.dependsOn testNavigationCanvas
+
 task testNavigationLayouts(type: JavaExec) {
     dependsOn compilePortableTests
     classpath = files("$buildDir/portable-tests")
@@ -990,8 +1004,14 @@ task testNavigationBoundaries(type: JavaExec) {
 }
 check.dependsOn testNavigationBoundaries
 
+task testBridgeModelBounds(type: Exec) {
+    group = 'verification'
+    description = 'Keep body footprints strict while admitting authored front workstation attachments'
+    commandLine pythonExecutable, 'tools/test_bridge_model_bounds.py'
+}
+
 task testBridgeModelAssets(type: Exec) {
-    dependsOn jar
+    dependsOn jar, testBridgeModelBounds
     doFirst { commandLine pythonExecutable, 'tools/test_bridge_models.py', validationJar().absolutePath }
 }
 check.dependsOn testBridgeModelAssets
@@ -1648,3 +1668,41 @@ task testDuplifierSelection(type: JavaExec) {
     doFirst { workingDir.mkdirs() }
 }
 check.dependsOn testDuplifierSelection
+
+task testNavigationMotion(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = "com.vandorlabs.navigation.NavigationMotionTest"
+}
+check.dependsOn testNavigationMotion
+
+task testNavigationCoverage(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = "com.vandorlabs.navigation.NavigationCoverageTest"
+}
+check.dependsOn testNavigationCoverage
+
+['ObserverScale', 'NavigationRange'].each { contract ->
+    def contractTest = tasks.create(name: "test${contract}", type: JavaExec) {
+        group = 'verification'
+        dependsOn compilePortableTests
+        classpath = files("$buildDir/portable-tests")
+        main = "com.vandorlabs.navigation.${contract}Test"
+    }
+    check.dependsOn contractTest
+}
+
+
+task testApplianceAssets(type: Exec) {
+    group = 'verification'
+    commandLine pythonExecutable, 'tools/test_appliances.py'
+}
+check.dependsOn testApplianceAssets
+
+
+task testObserverFit(type: Exec) {
+    group = 'verification'
+    commandLine pythonExecutable, 'tools/test_observer_fit.py'
+}
+check.dependsOn testObserverFit

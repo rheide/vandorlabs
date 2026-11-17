@@ -7386,5 +7386,257 @@
     "source": "utility_doors/stall",
     "rectangular": true,
     "doorArtwork": true
+  },
+  {
+    "id": "appliance_indoor_ac_slab_dark_cyan_bottom",
+    "label": "Indoor AC (Dark Cyan) Bottom",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Dark Cyan)",
+    "source": "appliances/indoor_ac_slab_dark_cyan/bottom"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_dark_cyan_top",
+    "label": "Indoor AC (Dark Cyan) Top",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Dark Cyan)",
+    "source": "appliances/indoor_ac_slab_dark_cyan/top"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_dark_cyan_front",
+    "label": "Indoor AC (Dark Cyan) Front",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Dark Cyan)",
+    "source": "appliances/indoor_ac_slab_dark_cyan/front"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_dark_cyan_back",
+    "label": "Indoor AC (Dark Cyan) Back",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Dark Cyan)",
+    "source": "appliances/indoor_ac_slab_dark_cyan/back"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_dark_cyan_left",
+    "label": "Indoor AC (Dark Cyan) Left",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Dark Cyan)",
+    "source": "appliances/indoor_ac_slab_dark_cyan/left"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_dark_cyan_right",
+    "label": "Indoor AC (Dark Cyan) Right",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Dark Cyan)",
+    "source": "appliances/indoor_ac_slab_dark_cyan/right"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_silver_bottom",
+    "label": "Indoor AC (Silver) Bottom",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Silver)",
+    "source": "appliances/indoor_ac_slab_silver/bottom"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_silver_top",
+    "label": "Indoor AC (Silver) Top",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Silver)",
+    "source": "appliances/indoor_ac_slab_silver/top"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_silver_front",
+    "label": "Indoor AC (Silver) Front",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Silver)",
+    "source": "appliances/indoor_ac_slab_silver/front"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_silver_back",
+    "label": "Indoor AC (Silver) Back",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Silver)",
+    "source": "appliances/indoor_ac_slab_silver/back"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_silver_left",
+    "label": "Indoor AC (Silver) Left",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Silver)",
+    "source": "appliances/indoor_ac_slab_silver/left"
+  },
+  {
+    "id": "appliance_indoor_ac_slab_silver_right",
+    "label": "Indoor AC (Silver) Right",
+    "category": "Appliances",
+    "menuGroup": "Indoor AC (Silver)",
+    "source": "appliances/indoor_ac_slab_silver/right"
+  },
+  {
+    "id": "appliance_outdoor_ac_dark_cyan_bottom",
+    "label": "Outdoor AC (Dark Cyan) Bottom",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Dark Cyan)",
+    "source": "appliances/outdoor_ac_dark_cyan/bottom"
+  },
+  {
+    "id": "appliance_outdoor_ac_dark_cyan_top",
+    "label": "Outdoor AC (Dark Cyan) Top",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Dark Cyan)",
+    "source": "appliances/outdoor_ac_dark_cyan/top"
+  },
+  {
+    "id": "appliance_outdoor_ac_dark_cyan_front",
+    "label": "Outdoor AC (Dark Cyan) Front",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Dark Cyan)",
+    "source": "appliances/outdoor_ac_dark_cyan/front"
+  },
+  {
+    "id": "appliance_outdoor_ac_dark_cyan_back",
+    "label": "Outdoor AC (Dark Cyan) Back",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Dark Cyan)",
+    "source": "appliances/outdoor_ac_dark_cyan/back"
+  },
+  {
+    "id": "appliance_outdoor_ac_dark_cyan_left",
+    "label": "Outdoor AC (Dark Cyan) Left",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Dark Cyan)",
+    "source": "appliances/outdoor_ac_dark_cyan/left"
+  },
+  {
+    "id": "appliance_outdoor_ac_dark_cyan_right",
+    "label": "Outdoor AC (Dark Cyan) Right",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Dark Cyan)",
+    "source": "appliances/outdoor_ac_dark_cyan/right"
+  },
+  {
+    "id": "appliance_outdoor_ac_silver_bottom",
+    "label": "Outdoor AC (Silver) Bottom",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Silver)",
+    "source": "appliances/outdoor_ac_silver/bottom"
+  },
+  {
+    "id": "appliance_outdoor_ac_silver_top",
+    "label": "Outdoor AC (Silver) Top",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Silver)",
+    "source": "appliances/outdoor_ac_silver/top"
+  },
+  {
+    "id": "appliance_outdoor_ac_silver_front",
+    "label": "Outdoor AC (Silver) Front",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Silver)",
+    "source": "appliances/outdoor_ac_silver/front"
+  },
+  {
+    "id": "appliance_outdoor_ac_silver_back",
+    "label": "Outdoor AC (Silver) Back",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Silver)",
+    "source": "appliances/outdoor_ac_silver/back"
+  },
+  {
+    "id": "appliance_outdoor_ac_silver_left",
+    "label": "Outdoor AC (Silver) Left",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Silver)",
+    "source": "appliances/outdoor_ac_silver/left"
+  },
+  {
+    "id": "appliance_outdoor_ac_silver_right",
+    "label": "Outdoor AC (Silver) Right",
+    "category": "Appliances",
+    "menuGroup": "Outdoor AC (Silver)",
+    "source": "appliances/outdoor_ac_silver/right"
+  },
+  {
+    "id": "appliance_printer_bottom",
+    "label": "Printer Bottom",
+    "category": "Appliances",
+    "menuGroup": "Printer",
+    "source": "appliances/printer/bottom"
+  },
+  {
+    "id": "appliance_printer_top",
+    "label": "Printer Top",
+    "category": "Appliances",
+    "menuGroup": "Printer",
+    "source": "appliances/printer/top"
+  },
+  {
+    "id": "appliance_printer_front",
+    "label": "Printer Front",
+    "category": "Appliances",
+    "menuGroup": "Printer",
+    "source": "appliances/printer/front"
+  },
+  {
+    "id": "appliance_printer_back",
+    "label": "Printer Back",
+    "category": "Appliances",
+    "menuGroup": "Printer",
+    "source": "appliances/printer/back"
+  },
+  {
+    "id": "appliance_printer_left",
+    "label": "Printer Left",
+    "category": "Appliances",
+    "menuGroup": "Printer",
+    "source": "appliances/printer/left"
+  },
+  {
+    "id": "appliance_printer_right",
+    "label": "Printer Right",
+    "category": "Appliances",
+    "menuGroup": "Printer",
+    "source": "appliances/printer/right"
+  },
+  {
+    "id": "appliance_scanner_bottom",
+    "label": "Scanner Bottom",
+    "category": "Appliances",
+    "menuGroup": "Scanner",
+    "source": "appliances/scanner/bottom"
+  },
+  {
+    "id": "appliance_scanner_top",
+    "label": "Scanner Top",
+    "category": "Appliances",
+    "menuGroup": "Scanner",
+    "source": "appliances/scanner/top"
+  },
+  {
+    "id": "appliance_scanner_front",
+    "label": "Scanner Front",
+    "category": "Appliances",
+    "menuGroup": "Scanner",
+    "source": "appliances/scanner/front"
+  },
+  {
+    "id": "appliance_scanner_back",
+    "label": "Scanner Back",
+    "category": "Appliances",
+    "menuGroup": "Scanner",
+    "source": "appliances/scanner/back"
+  },
+  {
+    "id": "appliance_scanner_left",
+    "label": "Scanner Left",
+    "category": "Appliances",
+    "menuGroup": "Scanner",
+    "source": "appliances/scanner/left"
+  },
+  {
+    "id": "appliance_scanner_right",
+    "label": "Scanner Right",
+    "category": "Appliances",
+    "menuGroup": "Scanner",
+    "source": "appliances/scanner/right"
   }
 ]

@@ -15,7 +15,9 @@ import java.util.*;
 final class HousingTextureList {
     static final int ROW_HEIGHT=22;
     static final int CANOPY_GLASS_BASE=0x10000000;
-    private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001,VEHICLE_ROW=-100002,CHIP_ROW=-100003;
+    private static final int CUSTOM_ROW=-100000,REDSTONE_ROW=-100001,VEHICLE_ROW=-100002,CHIP_ROW=-100003,NAVIGATION_ROW=-100004;
+    private Runnable navigationAction;
+    HousingTextureList navigation(Runnable action){navigationAction=action;setSelected(selected());return this;}
     private Runnable chipAction;
     HousingTextureList chip(Runnable action){chipAction=action;setSelected(selected());return this;}
     private Runnable vehicleAction;
@@ -207,7 +209,7 @@ final class HousingTextureList {
                 || nativeOptions && customConsumer!=null && choice>=0 && !options.containsKey(choice)
                     && com.vandorlabs.items.ItemProgrammableArmor.validTexture(choice))?choice:-1;
         missing=!nativeOptions && choice>=com.vandorlabs.tiles.FilesystemTextures.ID_BASE && ScreenHousingTextures.localIndex(choice)==0?choice:-1;
-        selected=choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE?CHIP_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE?VEHICLE_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
+        selected=choice==com.vandorlabs.navigation.NavigationMap.SURFACE?NAVIGATION_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE?CHIP_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE?VEHICLE_ROW:choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE?REDSTONE_ROW:custom>=0?CUSTOM_ROW:nativeOptions?choice:ScreenHousingTextures.localIndex(ScreenHousingTextures.clamp(choice));
         Option option=options.get(selected);if(option!=null)TextureListLayout.expandAncestors(expanded,option.category);rebuild();
         int index=rows.indexOf(selected);scroll=TextureListLayout.centeredScroll(index,count,maxScroll());
     }
@@ -227,6 +229,7 @@ final class HousingTextureList {
         if(redstoneAction!=null)rows.add(REDSTONE_ROW);
         if(vehicleAction!=null)rows.add(VEHICLE_ROW);
         if(chipAction!=null)rows.add(CHIP_ROW);
+        if(navigationAction!=null)rows.add(NAVIGATION_ROW);
         scroll=Math.min(scroll,maxScroll());
     }
     private boolean matches(Option option){return TextureListLayout.matches(query,option.label,option.category,option.texture);}
@@ -256,7 +259,7 @@ final class HousingTextureList {
         if(TextureListLayout.pinCategory(row,count,query.isEmpty())&&options.containsKey(choice))return TextureListLayout.categoryRow(categories.indexOf(options.get(choice).category));
         return choice;
     }
-    int selected(){return selected==CHIP_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE:selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
+    int selected(){return selected==NAVIGATION_ROW?com.vandorlabs.navigation.NavigationMap.SURFACE:selected==CHIP_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE:selected==VEHICLE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE:selected==REDSTONE_ROW?com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE:custom>=0?custom:missing>=0?missing:nativeOptions?selected:ScreenHousingTextures.choiceAt(selected);}
     private InventorySamplePicker inventoryPicker;
     void customInventory(){inventoryPicker=new InventorySamplePicker(x,y,width,height(),stack->com.vandorlabs.tiles.CustomBlockMaterials.choice(stack)>=0,stack->{int value=com.vandorlabs.tiles.CustomBlockMaterials.choice(stack);setSelected(value);inventoryPicker=null;customConsumer.accept(value);},()->inventoryPicker=null);}
     private int height(){return ROW_HEIGHT*count;}
@@ -273,6 +276,7 @@ final class HousingTextureList {
         if(mouseX<x || mouseX>=x+width)return false;
         int index=scroll+(mouseY-y)/ROW_HEIGHT;if(index>=rows.size())return true;
         int choice=visibleChoice((mouseY-y)/ROW_HEIGHT);
+        if(choice==NAVIGATION_ROW){selected=NAVIGATION_ROW;custom=-1;missing=-1;navigationAction.run();return true;}
         if(choice==CHIP_ROW){selected=CHIP_ROW;custom=-1;missing=-1;chipAction.run();return true;}
         if(choice==VEHICLE_ROW){selected=VEHICLE_ROW;custom=-1;missing=-1;vehicleAction.run();return true;}
         if(choice==REDSTONE_ROW){selected=REDSTONE_ROW;custom=-1;missing=-1;redstoneAction.run();return true;}
@@ -320,7 +324,8 @@ final class HousingTextureList {
             int choice=visibleChoice(row),yy=y+row*ROW_HEIGHT;
             boolean hover=mouseX>=x && mouseX<x+width && mouseY>=yy && mouseY<yy+ROW_HEIGHT;
             if(choice==selected || hover)Gui.drawRect(x,yy,x+width,yy+ROW_HEIGHT,choice==selected?0xFF2A4A6A:0xFF1A1A20);
-            if(choice==CHIP_ROW){font.drawStringWithShadow("Chip",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
+            if(choice==NAVIGATION_ROW){font.drawStringWithShadow("Navigation",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
+            else if(choice==CHIP_ROW){font.drawStringWithShadow("Chip",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==VEHICLE_ROW){font.drawStringWithShadow("Vehicle Status",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==REDSTONE_ROW){font.drawStringWithShadow("Redstone...",x+3,yy+7,choice==selected?0xFFFFE08A:0xFFABCFE8);}
             else if(choice==CUSTOM_ROW){

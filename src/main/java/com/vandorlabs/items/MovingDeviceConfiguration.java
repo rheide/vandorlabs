@@ -37,8 +37,8 @@ public final class MovingDeviceConfiguration {
         if(controller instanceof TileEntityConstructor){
             TileEntityConstructor core=(TileEntityConstructor)controller;
             if(!core.formed()||core.getWorld()!=player.world)return false;
-            com.vandorlabs.blocks.BlockConstructorCore block=core.core();
-            for(int y=0;y<block.height;y++)for(int x=0;x<block.width;x++)for(int z=0;z<block.depth;z++){
+            com.vandorlabs.machines.CoreLayout layout=core.layout();if(layout==null)return false;
+            for(int y=0;y<layout.height;y++)for(int x=0;x<layout.width;x++)for(int z=0;z<layout.depth;z++){
                 BlockPos at=core.cell(x,y,z);if(player.getDistanceSq(at)>64||!player.world.isBlockLoaded(at))continue;
                 TileEntity tile=player.world.getTileEntity(at);if(tile==core||tile instanceof TileEntityConstructorPart&&((TileEntityConstructorPart)tile).owner().equals(core.getPos()))return true;
             }

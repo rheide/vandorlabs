@@ -48,10 +48,16 @@ final class ArmCorePayload {
         Set<BlockPos> claimed=new HashSet<>();
         for(VehicleStructure.Cell root:snapshot.cells)if(root.state.getBlock() instanceof BlockConstructorCore&&root.state.getValue(BlockConstructorCore.FORMED)){
             if(!known(root))throw new IllegalArgumentException("Core block data is unavailable");BlockConstructorCore block=(BlockConstructorCore)root.state.getBlock();
+            if(root.hasTileKey("ObserverInverted")&&!root.hasTileKey("ObserverInverted",1)||root.tileBoolean("ObserverInverted")&&!block.design.equals("standalone_dish")&&!block.design.equals("standalone_antenna"))throw new IllegalArgumentException("Invalid observer orientation");
             for(String key:new String[]{"ConstructorCoreX","ConstructorCoreZ"})if(root.hasTileKey(key)&&!root.hasTileKey(key,3))throw new IllegalArgumentException("Invalid Core corner data");
-            CoreLayout layout=new CoreLayout(block.width,block.height,block.depth,root.state.getValue(BlockVandorDirectional.FACING).getIndex(),root.tileInteger("ConstructorCoreX"),root.tileInteger("ConstructorCoreZ"));if(!layout.canonicalCorner())throw new IllegalArgumentException("Invalid Core corner");
+            int width=block.width,height=block.height,depth=block.depth;
+            if(root.hasTileKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG)){
+                if(!root.hasTileKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,3)||!com.vandorlabs.navigation.ObserverScale.observer(block.design))throw new IllegalArgumentException("Invalid observer size");
+                width=com.vandorlabs.navigation.ObserverScale.width(block.design,root.tileInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG));height=com.vandorlabs.navigation.ObserverScale.height(block.design,width);depth=width;
+            }
+            CoreLayout layout=new CoreLayout(width,height,depth,root.state.getValue(BlockVandorDirectional.FACING).getIndex(),root.tileInteger("ConstructorCoreX"),root.tileInteger("ConstructorCoreZ"));if(!layout.canonicalCorner())throw new IllegalArgumentException("Invalid Core corner");
             for(int x=0;x<layout.width;x++)for(int y=0;y<layout.height;y++)for(int z=0;z<layout.depth;z++){
-                BlockPos at=root.pos.add(layout.x(x,z),y,layout.z(x,z));VehicleStructure.Cell cell=snapshot.at(at);
+                BlockPos at=root.pos.add(layout.x(x,z),root.tileBoolean("ObserverInverted")?-y:y,layout.z(x,z));VehicleStructure.Cell cell=snapshot.at(at);
                 if(cell==null||!claimed.add(at))throw new IllegalArgumentException("Incomplete or overlapping carried Core footprint");
                 if(at.equals(root.pos)){if(cell!=root)throw new IllegalArgumentException("Core identity changed");}
                 else if(!(cell.state.getBlock() instanceof BlockConstructorPart)||!known(cell)||!cell.hasTileKey("ConstructorOwner",4)||!at.add(BlockPos.fromLong(cell.tileLong("ConstructorOwner"))).equals(root.pos)||!cell.hasTileKey("ConstructorMatter",1)||cell.tileBoolean("ConstructorMatter")!=layout.frame(x,y,z))throw new IllegalArgumentException("Incomplete carried Core reservations");

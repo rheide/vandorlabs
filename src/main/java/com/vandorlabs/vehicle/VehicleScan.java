@@ -248,7 +248,7 @@ public final class VehicleScan {
         }
         if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed()){
             TileEntityConstructor root=(TileEntityConstructor)tile;BlockConstructorCore core=root.core();
-            for(int x=0;x<core.width;x++)for(int y=0;y<core.height;y++)for(int z=0;z<core.depth;z++){
+            for(int x=0;x<root.structureWidth();x++)for(int y=0;y<root.structureHeight();y++)for(int z=0;z<root.structureDepth();z++){
                 BlockPos member=root.cell(x,y,z);requiredMember(member);require(world.isBlockLoaded(member),"Core attachment touches an unloaded chunk");
                 if(!member.equals(p)){TileEntity raw=world.getTileEntity(member);require(raw instanceof TileEntityConstructorPart&&((TileEntityConstructorPart)raw).owner().equals(p),"Incomplete Core reservation in attached section");}
                 enqueueMember(member);

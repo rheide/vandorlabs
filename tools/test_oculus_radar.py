@@ -17,7 +17,8 @@ def faces(path):
 checked=0
 for spec in specs:
  if spec['design'] not in ['oculus_drive','sentinel_array','standalone_antenna','standalone_dish','survey_dish']:continue
- assert spec['chip_anchor'] and len(spec['state_models'])==3
+ assert spec.get('chip_anchor') if spec['design']=='oculus_drive' else not spec.get('chip_anchor')
+ assert len(spec['state_models'])==3
  assert spec['state_labels'][-1] in ['Active','Scanning']
  root=ASSETS/'models/block'/spec['model']
  for state in spec['state_models']:

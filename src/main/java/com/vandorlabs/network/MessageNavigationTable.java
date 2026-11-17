@@ -13,6 +13,6 @@ public final class MessageNavigationTable extends DisplaySettingsMessage {
     @Override public void fromBytes(ByteBuf b){readHeader(b,0);if(b.isReadable())throw new IllegalArgumentException("Unexpected navigation payload");}
     @Override public void toBytes(ByteBuf b){writeHeader(b);}
     public static final class Handler implements IMessageHandler<MessageNavigationTable,IMessage>{
-        @Override public IMessage onMessage(MessageNavigationTable m,MessageContext context){m.withContainer(context,c->{if(c.tile instanceof TileEntityNavigationTable)((TileEntityNavigationTable)c.tile).configureDisplay(m.settings(),false,m.mask,m.behavior,m.channels);});return null;}
+        @Override public IMessage onMessage(MessageNavigationTable m,MessageContext context){m.withContainer(context,c->{if(c.tile instanceof TileEntityNavigationTable){((TileEntityNavigationTable)c.tile).navigationExplicitSelection();((TileEntityNavigationTable)c.tile).configureDisplay(m.settings(),false,m.mask,m.behavior,m.channels);}});return null;}
     }
 }

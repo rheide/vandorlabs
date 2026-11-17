@@ -4,6 +4,10 @@
 
 These collages cover the built-in texture picker, including both light states and the native glass finishes. Hidden compatibility aliases and duplicate resolution tiers are omitted. Custom textures from local installations are not included.
 
+## Appliances
+
+![Appliances textures](texture-browser/collages/appliances.png)
+
 ## Controls
 
 ![Controls textures](texture-browser/collages/controls.png)
