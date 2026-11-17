@@ -2,6 +2,8 @@
 
 ## 2.11.0 (in development)
 
+See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in motion and a Navigation Table pan and zoom demo.
+
 ### Ramp Controllers
 
 - Restore both horizontal axis choices on side-mounted controllers and slabs, including southward ramps on west-facing controllers.
@@ -51,7 +53,7 @@
 
 - Double Press/Gantry build speed to 200 ticks at 40 RF/tick, retaining 8,000 RF per job; keep Tower timing unchanged. Label inputs Block/Ingot and explain the required Matter ingredient in slot tooltips.
 - Fit previews to actual transformed item geometry. Tile grey casing, remove the Press hood and add flat item fabrication with green corner beams and Matter-colored interior voxels.
-- Raise the Gantry frame to four blocks (34 Matter Blocks and one Core), halve its head and animate the head/rail over printed blocks with a blue fan beam. Allow finished chamber-item pickup. The previous three-high frame is no longer supported.
+- Raise the Gantry frame to four blocks (34 Matter Blocks and one Core), halve its head and animate the head/rail over printed blocks with a blue fan beam. Allow finished chamber-item pickup. Dismantle existing three-high frames to recover their materials before rebuilding.
 - Adapt Vehicle Chip preview density toward eight voxels per block per axis, reducing detail to fixed voxel, surface-work and cache budgets for large models.
 
 - Increase saved Vehicle Chip preview sampling from 12³ to 15³ cells and color voxels from their represented block materials. Cache thumbnails and material colors; keep legacy occupancy-only chips readable.
@@ -63,7 +65,7 @@
 - Add supplied Journal, Vehicle, Navigation and Catalog Chip artwork; retain company cards and change chip appearance when programming journals or vehicles. Blank Navigation Chips can be programmed at navigation tables.
 - Store explicit per-machine blueprint lists on Catalog Chip (Master), including Assembly Press Battery Module and Autopilot Module designs. Browse catalog models using existing Forge journal screens and their previous/next controls.
 - Extend Forge Tower production to the supplied Core families plus Vehicle and Ramp Controllers when listed on an inserted catalog. Keep the three builder Cores available without one.
-- Give Forge Assembly Press and Enclosed Gantry the shared production inventory, Redstone controls, RF/battery handling and adjacent output. Press recipes use Matter Ingots; Gantry recipes use Matter Blocks. Refresh both casings, corner ports and lower workstations using shared mount coordinates. Native production remains Tower-only.
+- Give Forge Assembly Press and Enclosed Gantry the shared production inventory, Redstone controls, RF/battery handling and adjacent output. Press recipes use Matter Ingots; Gantry recipes use Matter Blocks. Refresh both casings, corner ports and lower workstations using shared mount coordinates. NeoForge also supports the Navigation Data Module recipe in the Assembly Press.
 
 ### Three builders on NeoForge 1.21.1
 

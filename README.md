@@ -2,13 +2,13 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-**Vandor Labs 2.11.0** — development in progress. See the [2.11 development notes](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
+**Vandor Labs 2.11.0** — development in progress. See the [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
 
 [Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/vandor-labs) · [Changelog](CHANGELOG.md) · [Player introduction](intro.md)
 
 Forge **1.12.2** is the main release target. The **NeoForge 1.21.1** build is experimental: many building, Door, display and control families are converted, while remaining mechanisms and Vehicle Mode are still in development. See the [coverage inventory](docs/development/feature-coverage.md).
 
-**New in 2.9:** Picket, Industrial and Lattice [Segmented Door gates](docs/segmented-doors.md), new panel finishes and selectable glazing, twelve Utility Door artwork choices, support-anchored wall placement, mixed-artwork Copy Controller pads and Creative vehicle Safe Park. Rendering caches reduce repeated work in dense Glass, Light and Segmented Door builds.
+**New in 2.11:** Watch the Synthesis Tower, Assembly Press and Enclosed Gantry fabricate parts. Pan and zoom a seed map on the Navigation Table, survey the world with a Dish or Array, and store coverage in a removable module. Digitize blocks into Catalog Chips, charge Battery Modules, print and scan books and maps, and fit out your base with new AC presets. [See the 2.11 showcase](docs/versions/version-2.11.md).
 
 See [matter and storage](docs/matter-and-storage.md), [Universal Constructors](docs/universal-constructors.md), [cockpits](docs/cockpits.md), [data mounts](docs/data-mounts.md), [turntables and programmable surfaces](docs/turntables.md), [copying](docs/copy-controller.md), [pressure plates](docs/programmable-pressure-plate.md), [modular landing gear](docs/modular-landing-gear.md), and [texture layouts and artwork resolution](docs/unified-materials.md). Previous release highlights: [copying, programmable surfaces, pressure plates, programmers, arms, tracks and Core assemblies](docs/versions/version-2.6.md). See the [2.5 vehicle compatibility fix](docs/versions/version-2.5.md), [2.4 stability and network changes](docs/versions/version-2.4.md), [2.3 feature highlights and animations](docs/versions/version-2.3.md), [2.1 feature highlights](docs/versions/version-2.1.md), [2.0 feature guide](docs/versions/version-2.0.md), [all version guides](docs/versions/README.md), and [changelog](CHANGELOG.md).
 

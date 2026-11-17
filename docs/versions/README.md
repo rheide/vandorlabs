@@ -2,6 +2,7 @@
 
 Release highlights, feature explanations and illustrated examples, newest first. For detailed changes, see the [changelog](../../CHANGELOG.md). Older guides describe their release; use the current feature documentation for present-day behavior.
 
+- [Vandor Labs 2.11: powered builders, seed navigation and appliances](version-2.11.md)
 - [Vandor Labs 2.10.0: double-hinge arms, Module Racks, Resource Ports and native families](version-2.10.md)
 - [Vandor Labs 2.9: gates, Door artwork, Safe Park and rendering improvements](version-2.9.md)
 - [Vandor Labs 2.8: dense builds and segmented doors](version-2.8.md)
