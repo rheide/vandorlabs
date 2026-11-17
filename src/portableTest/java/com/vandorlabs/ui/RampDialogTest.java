@@ -6,6 +6,18 @@ public final class RampDialogTest {
  private static int checks;
  private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError(why);}
  public static void main(String[] args){
+  RampDialog.State west=new RampDialog.State();
+  west.scanFacing=4;
+  west.direction=4;
+  west=RampDialog.action(west,24,1);
+  need(!west.vertical&&west.direction==2,"west mount selects Z");
+  west=RampDialog.action(west,6,1);
+  west=RampDialog.action(west,17,1);
+  need(west.scanFacing==4&&west.direction==3&&west.travel==2,"west mount, south heading, left/right travel");
+  west=RampDialog.action(west,24,1);
+  need(west.vertical,"side mount still selects Y");
+  west=RampDialog.action(west,24,-1);
+  need(!west.vertical&&west.direction<4,"previous axis from Y is Z");
   for(int height:new int[]{240,360})for(int scan=0;scan<6;scan++)for(int direction=2;direction<6;direction++){
    RampDialog.Panel panel=new RampDialog.Panel(height);RampDialog.State state=new RampDialog.State();state.scanFacing=scan;state.direction=direction;state.start=5;state.end=-7;
    for(int mode=0;mode<7;mode++){

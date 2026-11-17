@@ -33,8 +33,7 @@ evaluates the redstone signal using the new settings:
   immediately. For example, start `2`, end `-3` travels from two blocks up to
   three blocks down. Equal endpoints are allowed. Trigger polarity still decides
   which redstone signal selects the end position.
-- **Axis:** east/west side mounts offer X or Y; north/south side mounts offer
-  Z or Y. Up/down mounts offer X or Z. X/Z use the existing horizontal platform
+- **Axis:** side mounts offer X, Y and Z. Up/down mounts offer X or Z. X/Z use the existing horizontal platform
   layout. Y selects an upright panel, with tread cuts and the ramp profile
   running from its lowest row to its highest row.
 - **Dir:** selects the heading on a horizontal axis. With Y selected, the

@@ -47,7 +47,10 @@ public final class RampDialog {
   case 1:int mode=cycle(s.mode(),7,step);s.moat=mode==6;s.escalator=mode>=4&&mode<6?mode-3:0;s.elevator=mode==2||mode==3;s.extend=mode<4&&(mode&1)!=0;if(s.escalator!=0){s.travel=0;s.start=0;}if(s.moat)s.travel=0;break;
   case 3:s.power=!s.power;break;case 4:s.speed=cycle(s.speed,3,step);break;case 6:if(!s.vertical)s.direction^=1;break;
   case 17:if(s.escalator==0&&!s.moat)s.travel=s.travel==0?2:0;break;case 18:s.match=!s.match;break;case 19:if(!s.elevator)s.interpolation=cycle(s.interpolation,3,step);break;case 22:if(s.escalator==0)s.analog=!s.analog;break;
-  case 24:RampAxis[] choices=RampAxis.choices(RampAxis.valueOf(axis(s.scanFacing)));RampAxis selected=s.vertical?RampAxis.Y:RampAxis.valueOf(axis(s.direction));RampAxis next=choices[0]==selected?choices[1]:choices[0];s.vertical=next==RampAxis.Y;s.direction=s.vertical?s.scanFacing:next==RampAxis.X?((s.direction&1)==1?5:4):((s.direction&1)==1?3:2);break;
+  case 24:RampAxis[] choices=RampAxis.choices(RampAxis.valueOf(axis(s.scanFacing)));RampAxis selected=s.vertical?RampAxis.Y:RampAxis.valueOf(axis(s.direction));
+   int current=java.util.Arrays.asList(choices).indexOf(selected);
+   RampAxis next=choices[cycle(current,choices.length,step)];
+   s.vertical=next==RampAxis.Y;s.direction=s.vertical?s.scanFacing:next==RampAxis.X?((s.direction&1)==1?5:4):((s.direction&1)==1?3:2);break;
   case 14:case 15:if(!s.elevator)s.tread=ControllerPlatform.stepTreadPixels(s.tread,id==15);break;default:break;
  }return s;}
  private RampDialog(){}

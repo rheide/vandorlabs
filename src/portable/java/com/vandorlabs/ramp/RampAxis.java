@@ -4,10 +4,10 @@ package com.vandorlabs.ramp;
 public enum RampAxis {
     X, Y, Z;
 
-    /** Side mounts offer their horizontal axis and Y; top/bottom mounts offer X/Z. */
+    /** Side mounts offer both horizontal axes and Y; top/bottom mounts offer X/Z. */
     public static RampAxis[] choices(RampAxis mountingAxis) {
-        if (mountingAxis == X) return new RampAxis[]{X, Y};
-        if (mountingAxis == Z) return new RampAxis[]{Z, Y};
+        if (mountingAxis == X) return new RampAxis[]{X, Z, Y};
+        if (mountingAxis == Z) return new RampAxis[]{Z, X, Y};
         return new RampAxis[]{X, Z};
     }
 

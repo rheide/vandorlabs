@@ -2,6 +2,10 @@
 
 ## 2.11.0 (in development)
 
+### Ramp Controllers
+
+- Restore both horizontal axis choices on side-mounted controllers and slabs, including southward ramps on west-facing controllers.
+
 ### Appliances
 
 - Add dark cyan and silver Indoor AC slab and Outdoor AC cube creative presets. Place ordinary programmable slabs/blocks with six editable face textures, preserving normal placement, slab combination and configured drops.
