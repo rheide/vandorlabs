@@ -29,7 +29,7 @@ public final class NativeSynthesisRuntime {
  public int selected(){return selected;}public int building(){return active||!owner.owned(1).isEmpty()?building:selected;}
  public float progress(){return active?work/(float)COST:!digitizing()&&!owner.owned(1).isEmpty()?1:0;}
  public boolean active(){return active;}public boolean connected(){return connected;}void connection(boolean value){connected=value;}
- private int maxDesign(){return owner.synthesis()?DYNAMIC:0;}private int rate(){return owner.synthesis()?RATE:40;}
+ private int maxDesign(){return owner.synthesis()?DYNAMIC:0;}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
 
  public ItemStack dynamicTemplate(){var chip=owner.owned(3);if(!ItemStack.matches(chip,cachedChip)){cachedChip=NativeCredentialItems.ownedCopy(chip);cachedTemplate=NativeBlockRecipeData.read(chip);}return cachedTemplate.copy();}
  public boolean dynamicAvailable(){return !dynamicTemplate().isEmpty();}

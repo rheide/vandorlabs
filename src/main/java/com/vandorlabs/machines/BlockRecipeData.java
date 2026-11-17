@@ -18,6 +18,9 @@ public final class BlockRecipeData {
     private static final Set<String> APPEARANCE=new HashSet<>(Arrays.asList("housingTexture","HousingTexture","HousingTextureVersion","SideTexture","MainTextureLayout","SlabTileSides","FaceTexturesEnabled","FaceTextures","SurfaceTextureLayout","SurfaceTileSides","SelectedScreen","PrimarySurfaceTexture","SecondarySurfaceTexture","MainTexture","TextureVersion","PropulsionShape","PropulsionSideTexture","ParticleLevel","ParticleStream","SignalBrightness","ParticleThreshold","RedstoneInverted","PropulsionJoin","RedstoneChannel","RedstoneChannels","ManualOn","id","x","y","z"));
     private BlockRecipeData(){}
     public static boolean eligible(ItemStack stack){
+        try{return eligibleState(stack);}catch(IllegalArgumentException | IndexOutOfBoundsException invalidMetadata){return false;}
+    }
+    private static boolean eligibleState(ItemStack stack){
         if(stack.isEmpty()||!(stack.getItem() instanceof ItemBlock)||stack.getMetadata()<0||stack.getMetadata()>15)return false;
         Block block=Block.getBlockFromItem(stack.getItem());if(block==Blocks.AIR||block.getRegistryName()==null)return false;
         String namespace=block.getRegistryName().getResourceDomain(),id=block.getRegistryName().getResourcePath();

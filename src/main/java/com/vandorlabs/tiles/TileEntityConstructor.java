@@ -232,7 +232,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
             Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
             for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos) || !world.isBlockLoaded(p))continue;TileEntity part=world.getTileEntity(p);
-                if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))world.setBlockState(p,frame(x,y,z)?matter.getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),2);
+                if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))world.setBlockState(p,((TileEntityConstructorPart)part).frameMatter()?matter.getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),2);
             }
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();refresh();
         }finally{changing=false;}

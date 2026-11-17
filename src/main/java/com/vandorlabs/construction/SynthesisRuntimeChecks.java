@@ -14,10 +14,29 @@ import net.minecraftforge.energy.*;
 /** Exact assembled machine exercises power admission, inventory ownership and saved work. */
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class SynthesisRuntimeChecks {
+    private static void legacyGantry(World world,BlockPos root,Block matter){
+        BlockConstructorCore core=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:enclosed_gantry_core");
+        Block part=Block.getBlockFromName("vandorlabs:constructor_part");
+        com.vandorlabs.machines.CoreLayout old=new com.vandorlabs.machines.CoreLayout(5,3,3,EnumFacing.NORTH.getIndex(),0,0);
+        world.setBlockState(root,core.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH).withProperty(BlockConstructorCore.FORMED,true),2);
+        for(BlockPos at:BlockPos.getAllInBox(root,root.add(4,2,2))){
+            if(at.equals(root))continue;
+            BlockPos local=at.subtract(root);
+            world.setBlockState(at,part.getDefaultState(),2);
+            ((TileEntityConstructorPart)world.getTileEntity(at)).owner(root,old.frame(local.getX(),local.getY(),local.getZ()));
+        }
+        ((TileEntityConstructor)world.getTileEntity(root)).dismantle();
+        for(BlockPos at:BlockPos.getAllInBox(root,root.add(4,2,2))){
+            BlockPos local=at.subtract(root);
+            if(!at.equals(root))require(world.getBlockState(at).getBlock()==(old.frame(local.getX(),local.getY(),local.getZ())?matter:net.minecraft.init.Blocks.AIR),"2.10 Gantry frame recovery at "+local);
+            world.setBlockToAir(at);
+        }
+    }
     public static void run(World world,net.minecraft.entity.player.EntityPlayerMP player){
         long time=world.getTotalWorldTime();BlockPos root=new BlockPos(180,220,180);
         BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:synthesis_tower_core"));
         Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
+        legacyGantry(world,root.east(16),matter);
         try{
             world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH));
             TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);

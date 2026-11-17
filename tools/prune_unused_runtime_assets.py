@@ -60,8 +60,11 @@ def check_jar(path):
         prefix='assets/vandorlabs/'
         files={name[len(prefix):]:jar.read(name).decode() if name.endswith(('.json','.mtl','.txt')) else '' for name in jar.namelist() if name.startswith(prefix) and not name.endswith('/')}
         assert not unused(files),'unused artwork remains in JAR'
-        constructor_models=[name for name in files if name.startswith('models/block/universal_constructor/') and name.endswith(('.obj','.mtl'))]
-        assert len(constructor_models)==6 and all(name.count('/')==4 and name.endswith(('/complete.obj','/materials.mtl')) for name in constructor_models),'unused constructor model exports remain in JAR'
+        base='models/block/universal_constructor/'
+        constructor_models={name[len(base):] for name in files if name.startswith(base) and name.endswith(('.obj','.mtl'))}
+        expected={machine+'/'+model for machine in ('synthesis_tower','assembly_press','enclosed_gantry') for model in ('complete.obj','materials.mtl')}
+        expected.update('enclosed_gantry/'+model for model in ('static.obj','gantry_arm.obj','gantry_head.obj'))
+        assert constructor_models==expected, 'constructor model mismatch: '+str(sorted(constructor_models^expected))
         import io,json
         from PIL import Image
         aliases=json.loads(files['data/texture_aliases.json'])
