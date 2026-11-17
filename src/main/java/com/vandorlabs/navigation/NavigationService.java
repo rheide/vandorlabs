@@ -149,9 +149,30 @@ public final class NavigationService {
     public static int color(World world,int x,int z){return color(world,x,z,false);}
     public static int color(World world,int x,int z,boolean detailed){return terrainWorld(world).sampleColor(x,z,detailed?1:4);}
     private static int biomeColor(World world,int qx,int qz){
-        int color;
+        try{return biomeColor(world.getBiomeProvider().getBiomes(null,qx,qz,1,1,false)[0]);}
+        catch(RuntimeException failed){return NavigationMap.ERROR;}
+    }
+    /** Sample one vanilla map footprint directly from the generator, without loading chunks. */
+    public static int[] printTerrain(World world,int minX,int minZ){
+        int width=SavedMapPixels.WIDTH;
+        int[] colors=new int[width*width];
         try{
-            Biome biome=world.getBiomeProvider().getBiomes(null,qx,qz,1,1,false)[0];
+            Biome[] biomes=world.getBiomeProvider().getBiomes(null,minX,minZ,width,width,false);
+            Map<Biome,Integer> palette=new IdentityHashMap<>();
+            for(int i=0;i<colors.length;i++){
+                Biome biome=biomes[i];
+                Integer color=palette.get(biome);
+                if(color==null){color=biomeColor(biome);palette.put(biome,color);}
+                colors[i]=color;
+            }
+        }catch(RuntimeException unsupported){
+            // Some modded providers support single samples only.
+            for(int i=0;i<colors.length;i++)colors[i]=color(world,minX+i%width,minZ+i/width,true);
+        }
+        return colors;
+    }
+    private static int biomeColor(Biome biome){
+        int color;
             String name=biome.getRegistryName()==null?"":biome.getRegistryName().getResourcePath();
             if(biome instanceof BiomeOcean||biome instanceof BiomeRiver||name.contains("ocean")||name.contains("river"))color=0xff28659b;
             else if(name.contains("beach")||name.contains("desert"))color=0xffc7b77c;
@@ -160,7 +181,6 @@ public final class NavigationService {
             else if(name.contains("hell")||name.contains("nether"))color=0xff8c4540;
             else if(name.contains("sky")||name.contains("end"))color=0xffb0aa7a;
             else {double relief=Math.max(0,Math.min(1,biome.getBaseHeight()/2));int r=(int)(66+relief*57),g=(int)(116+relief*14),b=(int)(64+relief*65);if(biome.getRainfall()>.7){r-=12;g-=14;}color=0xff000000|(r<<16)|(g<<8)|b;}
-        }catch(RuntimeException failed){return NavigationMap.ERROR;}
         return color;
     }
     @SubscribeEvent public static void tick(TickEvent.ServerTickEvent event){

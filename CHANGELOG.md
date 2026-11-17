@@ -6,9 +6,15 @@
 
 - Restore both horizontal axis choices on side-mounted controllers and slabs, including southward ramps on west-facing controllers.
 
+### Builder compatibility
+
+- Dismantling a three-block-high Enclosed Gantry from 2.10 restores the Matter stored in its original top rim.
+- A Synthesis Tower keeps the chosen block template when a production job starts, including across chip removal and world reload. Digitize checks the stored input against its admitted sample during processing.
+
 ### Appliances
 
 - Add dark cyan and silver Indoor AC slab and Outdoor AC cube creative presets. Place ordinary programmable slabs/blocks with six editable face textures, preserving normal placement, slab combination and configured drops.
+- Reuse map palette matches across pixels on both versions. The Forge Printer requests the biome grid for a map in one batch and skips that request when scanned pixels cover the entire map.
 - Add functional Printer and Scanner blocks with front Chip Mounts, half-size buttons and standard inventory dialogs. Print Journal/Catalog books and prefilled scale-0 maps for one ink sac plus one paper; scan original maps/books without consuming them, including enchanting-font journals. Save scanned map squares and pixels on Navigation Chips for offline display. Import native 64px appliance artwork and expose its face finishes in the texture picker.
 - Reuse detailed Vehicle Chip material previews in the Vehicle Controller dialog and Vehicle Status screen, retain compact parked previews, and sample vanilla chest entity skins correctly.
 - Separate navigation messages from terrain depth, brighten the loading pulse across the entire display background, and start it immediately on local pan/zoom input.

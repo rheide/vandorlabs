@@ -25,7 +25,6 @@ public final class ChipApplianceService {
     }
     private static void message(EntityPlayer actor,String text){actor.sendStatusMessage(new TextComponentString(text),true);}
     public static int[] palette(){int[] result=new int[256],shades={180,220,255,135};for(int i=0;i<256;i++){MapColor color=MapColor.COLORS[i/4];if(i<4||color==null){result[i]=NavigationMap.OUTSIDE;continue;}int c=color.colorValue,s=shades[i&3];result[i]=0xff000000|((c>>16&255)*s/255)<<16|((c>>8&255)*s/255)<<8|(c&255)*s/255;}return result;}
-    private static int nearest(int color,int[] palette){int best=4,distance=Integer.MAX_VALUE;for(int i=4;i<256;i++){if(MapColor.COLORS[i/4]==null)continue;int dr=(color>>16&255)-(palette[i]>>16&255),dg=(color>>8&255)-(palette[i]>>8&255),db=(color&255)-(palette[i]&255),d=dr*dr+dg*dg+db*db;if(d<distance){distance=d;best=i;}}return best;}
     private static void scan(TileEntityChipAppliance tile,ItemStack original){
         ItemStack input=tile.getStackInSlot(1),chip=original.copy();
         if(input.getItem()==Items.FILLED_MAP){MapData map=(MapData)tile.getWorld().loadData(MapData.class,"map_"+input.getMetadata());if(map==null)throw new IllegalArgumentException("Map data is unavailable.");NavigationChip.writeMap(chip,new SavedMapPixels(Integer.toString(map.dimension),map.xCenter,map.zCenter,map.scale,map.colors,palette()));}
@@ -44,8 +43,16 @@ public final class ChipApplianceService {
         if(ChipJournal.journal(chip)){StringBuilder text=new StringBuilder();for(int i=0;i<ChipJournal.MAX_PAGES;i++){String page=ChipJournal.page(chip,i);if(page.isEmpty())continue;if(text.length()>0)text.append('\n');text.append(page);}result=book(ChipJournal.title(chip),ApplianceBookText.pages(text.toString()),actor.getName());}
         else if(NavigationChip.programmed(chip)){
             if(!NavigationChip.inDimension(chip,world.provider.getDimension()))throw new IllegalArgumentException("Print this Navigation Chip in its saved dimension.");
-            result=ItemMap.setupNewMap(world,NavigationChip.value(chip,"X"),NavigationChip.value(chip,"Z"),(byte)0,true,false);MapData map=(MapData)world.loadData(MapData.class,"map_"+result.getMetadata());int[] palette=palette();SavedMapPixels saved=NavigationChip.savedMap(chip);
-            for(int z=0;z<128;z++)for(int x=0;x<128;x++){int wx=map.xCenter-64+x,wz=map.zCenter-64+z,color=saved!=null&&saved.contains(wx,wz)?saved.colorAt(wx,wz):NavigationService.color(world,wx,wz,true);map.colors[z*128+x]=(byte)(color==NavigationMap.OUTSIDE||color==NavigationMap.ERROR?0:nearest(color,palette));}map.markDirty();
+            result=ItemMap.setupNewMap(world,NavigationChip.value(chip,"X"),NavigationChip.value(chip,"Z"),(byte)0,true,false);MapData map=(MapData)world.loadData(MapData.class,"map_"+result.getMetadata());int[] colors=palette();for(int i=4;i<colors.length;i++)if(MapColor.COLORS[i/4]==null)colors[i]=0;PrinterPalette palette=new PrinterPalette(colors);SavedMapPixels saved=NavigationChip.savedMap(chip);
+            int minX=map.xCenter-64,minZ=map.zCenter-64;
+            boolean covered=saved!=null&&saved.contains(minX,minZ)&&saved.contains(minX+127,minZ+127);
+            int[] terrain=covered?null:NavigationService.printTerrain(world,minX,minZ);
+            for(int i=0;i<map.colors.length;i++){
+                int x=minX+(i&127),z=minZ+(i>>7);
+                int color=saved!=null&&saved.contains(x,z)?saved.colorAt(x,z):terrain[i];
+                map.colors[i]=color==NavigationMap.OUTSIDE||color==NavigationMap.ERROR?0:palette.pixel(color);
+            }
+            map.markDirty();
         }
         else if(CatalogChipData.catalog(chip)){List<String> recipes=new ArrayList<>();for(String id:CatalogChipData.designs(chip))for(FrameMachineDesign design:FrameMachineDesign.all())if(id.equals(design.design)||id.equals(design.block)||id.equals("vandorlabs:"+design.block)){int w=design.width,h=design.height,d=design.depth,frames=-1;com.vandorlabs.machines.CoreLayout layout=new com.vandorlabs.machines.CoreLayout(w,h,d,2,0,0);for(int y=0;y<h;y++)for(int x=0;x<w;x++)for(int z=0;z<d;z++)if(layout.frame(x,y,z))frames++;recipes.add(design.design.replace('_',' ')+"\n\nMaterials: "+frames+" Programmable Matter Blocks; 1 "+design.block.replace('_',' ')+".\n\n1. Build a "+w+" x "+d+" solid base.\n2. Raise four corner pillars to "+h+" blocks high.\n3. Join their tops with a Matter rim. Keep the sides, interior and roof center open.\n4. Replace one bottom corner with the core, facing outward.\n5. Right-click the core to form.");}List<String> pages=ApplianceBookText.recipes(recipes);if(pages.isEmpty())throw new IllegalArgumentException("This Catalog Chip has no printable multiblocks.");result=book("Multiblock Catalog",pages,actor.getName());}
         else throw new IllegalArgumentException("Insert a Journal, Navigation or Catalog Chip.");
