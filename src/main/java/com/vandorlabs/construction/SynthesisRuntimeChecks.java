@@ -86,6 +86,7 @@ public final class SynthesisRuntimeChecks {
                 NBTTagCompound state=detached.writeToNBT(new NBTTagCompound());state.getCompoundTag("Synthesis").setBoolean("Active",active);state.getCompoundTag("Synthesis").setInteger("Work",active?200:0);detached.readFromNBT(state);NBTTagCompound before=detached.writeToNBT(new NBTTagCompound());
                 world.setTotalWorldTime(++time);detached.update();require(before.equals(detached.writeToNBT(new NBTTagCompound())),"detached stale tile cannot consume input/battery or advance work active="+active);
             }
+            SynthesisDigitizeChecks.run(world,tile);
             System.out.println("[vandorlabs][reprolab] synthesis PASS cases=3 powered production rate simulation save/reload exact input/output ownership");
         }finally{net.minecraft.tileentity.TileEntity raw=world.getTileEntity(root);if(raw instanceof TileEntityConstructor)((TileEntityConstructor)raw).dismantle();for(int x=0;x<block.width;x++)for(int y=0;y<block.height;y++)for(int z=0;z<block.depth;z++)world.setBlockToAir(root.add(x,y,z));}
     }

@@ -10,7 +10,7 @@ import net.minecraftforge.items.SlotItemHandler;
 /** Real server-owned machine slots; output cannot accept client inventory. */
 public final class ContainerSynthesisTower extends Container {
     public final TileEntityConstructor tile;
-    public final int[] values=new int[6];
+    public final int[] values=new int[7];
     private final WindowPropertyDeltas<IContainerListener> deltas=new WindowPropertyDeltas<>(
             (listener,id,value)->listener.sendWindowProperty(this,id,value));
     public ContainerSynthesisTower(InventoryPlayer player,TileEntityConstructor tile){
@@ -28,10 +28,11 @@ public final class ContainerSynthesisTower extends Container {
         com.vandorlabs.ui.SynthesisDialog.Layout layout=new com.vandorlabs.ui.SynthesisDialog.Layout(false);for(int i=0;i<inventorySlots.size();i++){inventorySlots.get(i).xPos=layout.slotX(i);inventorySlots.get(i).yPos=layout.slotY(i);}
         sample();
     }
-    private void sample(){values[0]=tile.selectedDesign();values[1]=Math.round(tile.buildProgress()*200);values[2]=tile.batteryEnergy();values[3]=tile.batteryCapacity();values[4]=tile.externalPowerConnected()?1:0;values[5]=tile.buildDesign();}
+    private void sample(){values[0]=tile.selectedDesign();values[1]=Math.round(tile.buildProgress()*200);values[2]=tile.batteryEnergy();values[3]=tile.batteryCapacity();values[4]=tile.externalPowerConnected()?1:0;values[5]=tile.buildDesign();values[6]=tile.digitizing()?1:0;}
     @Override public void detectAndSendChanges(){super.detectAndSendChanges();sample();for(IContainerListener listener:listeners)deltas.sendChanges(listener,values);}
     @Override public void removeListener(IContainerListener listener){super.removeListener(listener);deltas.removeListener(listener);}
     @Override public void updateProgressBar(int id,int data){WindowPropertyDeltas.receive(values,id,data);}
+    @Override public boolean enchantItem(EntityPlayer player,int mode){if(mode<0||mode>1||player.openContainer!=this||!canInteractWith(player))return false;boolean changed=tile.setDigitizing(mode==1);if(!changed&&!player.world.isRemote)player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Wait for processing and remove the input/output before changing mode."),true);return changed;}
     @Override public boolean canInteractWith(EntityPlayer player){return tile.builder()&&tile.formed()&&!tile.isInvalid()&&tile.getWorld()==player.world&&player.world.isBlockLoaded(tile.getPos())&&player.world.getTileEntity(tile.getPos())==tile&&tile.isUsableByPlayer(player)&&ConfigurationAccess.canEditDialog(player,player.world,tile.getPos());}
     @Override public ItemStack transferStackInSlot(EntityPlayer player,int index){
         if(index<0||index>=inventorySlots.size()||!canInteractWith(player))return ItemStack.EMPTY;

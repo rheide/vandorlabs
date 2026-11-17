@@ -28,6 +28,7 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public int getLightOpacity(IBlockState state){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
+        TileEntity early=world.getTileEntity(pos);if(state.getValue(FORMED)&&early instanceof TileEntityConstructor&&((TileEntityConstructor)early).digitizing()&&((TileEntityConstructor)early).enclosureHit(player)&&player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock){if(!world.isRemote&&!((TileEntityConstructor)early).placeDigitizeSample(player,hand))player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Insert one supported block while the Digitizer is idle."),true);return true;}
         if(state.getValue(FORMED)&&ConstructorWallSupport.solid(world,pos)&&player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
             if(state.getValue(FORMED)&&tile.observer()&&player.getHeldItem(hand).getItem()==com.vandorlabs.items.ModItems.DATA_CHIP){player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("This observer has no chip slot."),true);return true;}

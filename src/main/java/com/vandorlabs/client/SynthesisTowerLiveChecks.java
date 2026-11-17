@@ -20,7 +20,7 @@ import org.lwjgl.opengl.GL11;
 final class SynthesisTowerLiveChecks {
     private static int stage,ticks;private static final BlockPos ROOT=new BlockPos(180,220,180);
     static boolean tick(Minecraft mc,File directory)throws Exception{
-        if(stage==2)return SynthesisInteractionLiveChecks.tick(mc);
+        if(stage==2){if(!SynthesisInteractionLiveChecks.tick(mc))return false;stage=3;}if(stage==3)return SynthesisDigitizeLiveChecks.tick(mc,directory);
         if(mc.getIntegratedServer()==null||mc.getIntegratedServer().getPlayerList().getPlayers().isEmpty())return false;
         if(stage==0){
             mc.getIntegratedServer().addScheduledTask(()->{
@@ -79,7 +79,7 @@ final class SynthesisTowerLiveChecks {
         need(GL11.glGetError()==GL11.GL_NO_ERROR,"GUI previews leave no GL error");
         stage=2;System.out.println("[vandorlabs] synthesis-tower-render PASS powered production all designs save/reload container ownership rendered partial core four moving lasers native rack/chip and three textured GUI previews Redstone page");return false;
     }
-    private static BufferedImage tower(Minecraft mc,TileEntityConstructor tile,double now,float yaw){return tower(mc,tile,now,yaw,0);}
+    static BufferedImage tower(Minecraft mc,TileEntityConstructor tile,double now,float yaw){return tower(mc,tile,now,yaw,0);}
     private static BufferedImage tower(Minecraft mc,TileEntityConstructor tile,double now,float yaw,int mode){
         Framebuffer f=new Framebuffer(400,340,true);
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(-3.7,3.7,-3.145,3.145,-20,20);
@@ -102,7 +102,7 @@ final class SynthesisTowerLiveChecks {
             });GL11.glFinish();return ScreenShotHelper.createScreenshot(400,340,f);
         }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.popMatrix();GlStateManager.matrixMode(GL11.GL_MODELVIEW);f.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
     }
-    private static void captureGui(Minecraft mc,GuiSynthesisTower gui,File directory,String name)throws Exception{
+    static void captureGui(Minecraft mc,GuiSynthesisTower gui,File directory,String name)throws Exception{
         mc.getFramebuffer().bindFramebuffer(true);mc.entityRenderer.setupOverlayRendering();mc.entityRenderer.disableLightmap();gui.drawScreen(-1,-1,0);GL11.glFinish();
         BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());javax.imageio.ImageIO.write(shot,"png",new File(directory,name));
         need(gui.controlsFit(),"actual viewport fits all GUI controls and inventory slots");

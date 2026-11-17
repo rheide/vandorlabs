@@ -19,7 +19,7 @@ public final class GuiSynthesisTower extends GuiContainer {
     private java.util.List<String> recipes(){return container.tile.builderRecipes();}
     private int rows(){return layout.visibleRows();}
     private void clampScroll(){recipeScroll=Math.max(0,Math.min(recipeScroll,Math.max(0,recipes().size()-rows())));}
-    private boolean compact;
+    private boolean compact;private int displayedMode=-1;private boolean digitize(){return container.tile.synthesis()&&container.values[6]==1;}
     private com.vandorlabs.ui.SynthesisDialog.Layout layout=new com.vandorlabs.ui.SynthesisDialog.Layout(false);
     private int machineY(){return layout.machineY;}
     private int inventoryY(){return layout.inventoryY;}
@@ -31,7 +31,7 @@ public final class GuiSynthesisTower extends GuiContainer {
     int dialogTop(){return guiTop;}
     boolean controlsFit(){
         if(guiLeft<0||guiTop<0||guiLeft+xSize>width||guiTop+ySize>height)return false;
-        for(net.minecraft.inventory.Slot slot:inventorySlots.inventorySlots)if(slot.xPos<0||slot.xPos+16>xSize||slot.yPos<0||slot.yPos+16>ySize)return false;
+        for(net.minecraft.inventory.Slot slot:inventorySlots.inventorySlots)if(slot.xPos>-1000&&(slot.xPos<0||slot.xPos+16>xSize||slot.yPos<0||slot.yPos+16>ySize))return false;
         return receiver.button().y+receiver.button().height<=guiTop+inventoryY()-10;
     }
     private ReceiverPane receiver;
@@ -39,13 +39,13 @@ public final class GuiSynthesisTower extends GuiContainer {
     public GuiSynthesisTower(InventoryPlayer inventory,TileEntityConstructor tile){super(new ContainerSynthesisTower(inventory,tile));container=(ContainerSynthesisTower)inventorySlots;xSize=420;ySize=306;activation=tile.synthesisActivation();channels=tile.getRedstoneChannels();}
     @Override public void initGui(){
         layout=com.vandorlabs.ui.SynthesisDialog.layout(width,height);compact=layout.compact;xSize=layout.width;ySize=layout.height;super.initGui();
-        for(int i=0;i<inventorySlots.inventorySlots.size();i++){net.minecraft.inventory.Slot slot=inventorySlots.inventorySlots.get(i);slot.xPos=layout.slotX(i);slot.yPos=layout.slotY(i);}
+        for(int i=0;i<inventorySlots.inventorySlots.size();i++){net.minecraft.inventory.Slot slot=inventorySlots.inventorySlots.get(i);boolean hidden=page!=0||digitize()&&i==1;slot.xPos=hidden?-10000:layout.slotX(i,digitize());slot.yPos=hidden?-10000:layout.slotY(i);}
         draggingRecipes=false;buttonList.clear();org.lwjgl.input.Keyboard.enableRepeatEvents(true);
         buttonList.add(new DialogTabButton(100,guiLeft+12,guiTop+32,layout.tabWidth(),20,"Production"));
         buttonList.add(new DialogTabButton(101,guiLeft+layout.secondTabX(),guiTop+32,layout.tabWidth(),20,"Redstone"));
         for(GuiButton b:buttonList)b.enabled=b.id!=100+page;
         receiver=new ReceiverPane(40,2,fontRenderer,guiLeft+12,guiTop+layout.receiverY(),layout.receiverWidth(),channels,activation);
-        receiver.setVisible(page==1);buttonList.add(receiver.button());
+        receiver.setVisible(page==1);buttonList.add(receiver.button());displayedMode=container.values[6];if(page==0&&container.tile.synthesis())buttonList.add(new GuiButton(102,guiLeft+120,guiTop+3,112,20,"Mode: "+(digitize()?"Digitize":"Synthesize")));
     }
     private boolean saveRedstone(){
         com.vandorlabs.redstone.ChannelList parsed=receiver.channels();if(parsed==null)return false;
@@ -53,24 +53,25 @@ public final class GuiSynthesisTower extends GuiContainer {
     }
     @Override protected void actionPerformed(GuiButton button){
         if(button.id==100||button.id==101){if(page==1&&!saveRedstone())return;page=button.id-100;initGui();}
+        else if(button.id==102){mc.playerController.sendEnchantPacket(inventorySlots.windowId,digitize()?0:1);}
         else if(button.id==2){activation=GuiOptionCycle.next(activation,3);receiver.setMode(activation);saveRedstone();}
     }
     @Override protected void keyTyped(char c,int key)throws IOException{if(page==1&&receiver.keyTyped(c,key)){saveRedstone();return;}super.keyTyped(c,key);}
     @Override public void onGuiClosed(){if(page==1&&receiver!=null)saveRedstone();org.lwjgl.input.Keyboard.enableRepeatEvents(false);super.onGuiClosed();}
-    @Override public void updateScreen(){super.updateScreen();if(receiver!=null)receiver.field().updateCursorCounter();}
+    @Override public void updateScreen(){super.updateScreen();if(displayedMode!=container.values[6])initGui();if(receiver!=null)receiver.field().updateCursorCounter();}
     @Override public void drawScreen(int x,int y,float partial){
         drawDefaultBackground();super.drawScreen(x,y,partial);
         if(page==1){GlStateManager.disableLighting();GlStateManager.disableDepth();receiver.draw();GlStateManager.enableDepth();}
-        if(isPointInRegion(layout.machineX(0),layout.slotY(0),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.inputTooltip(container.tile.builderMachine()),x,y);
-        else if(isPointInRegion(layout.machineX(3),layout.slotY(3),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.CATALOG_CHIP_TOOLTIP,x,y);
-        else if(isPointInRegion(layout.rfX,layout.rfY,layout.rfWidth,layout.rfHeight,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.rfTooltip(container.values[2],container.values[3]),x,y);
+        if(page==0&&isPointInRegion(layout.slotX(0,digitize()),layout.slotY(0),16,16,x,y))drawHoveringText(digitize()?"One supported block to digitize":com.vandorlabs.ui.SynthesisDialog.inputTooltip(container.tile.builderMachine()),x,y);
+        else if(page==0&&isPointInRegion(layout.slotX(3,digitize()),layout.slotY(3),16,16,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.CATALOG_CHIP_TOOLTIP,x,y);
+        else if(page==0&&isPointInRegion(layout.rfX,layout.rfY,layout.rfWidth,layout.rfHeight,x,y))drawHoveringText(com.vandorlabs.ui.SynthesisDialog.rfTooltip(container.values[2],container.values[3]),x,y);
         else if(page==0&&isPointInRegion(layout.previewLeft,layout.previewTop-12,layout.previewRight-layout.previewLeft,10,x,y)&&fontRenderer.getStringWidth(selectedLabel())>layout.previewRight-layout.previewLeft)drawHoveringText(selectedLabel(),x,y);
         else renderHoveredToolTip(x,y);
     }
-    private String selectedLabel(){return com.vandorlabs.client.constructors.BuilderRecipePreview.label(container.tile.builderRecipe(container.values[0]));}
+    private String selectedLabel(){return com.vandorlabs.client.constructors.BuilderRecipePreview.label(container.tile.builderRecipe(container.values[0]),container.tile.getStackInSlot(0));}
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY){
         drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,com.vandorlabs.ui.SynthesisDialog.STYLE.body);DialogHeader.logo(guiLeft,guiTop,xSize);
-        drawRect(guiLeft+12,guiTop+52,guiLeft+xSize-12,guiTop+layout.machineY+20,0xFF17212C);
+        if(page==0)drawRect(guiLeft+12,guiTop+52,guiLeft+xSize-12,guiTop+layout.machineY+20,0xFF17212C);
         if(page==0){
         drawRect(guiLeft+layout.listLeft,guiTop+layout.listTop,guiLeft+layout.listRight,guiTop+layout.listBottom,0xFF0D1118);
         clampScroll();int selected=container.values[0];java.util.List<String> recipes=recipes();
@@ -78,7 +79,7 @@ public final class GuiSynthesisTower extends GuiContainer {
             String blueprint=recipes.get(recipeScroll+i);
             int y=guiTop+layout.listTop+i*layout.rowHeight;
             if(container.tile.builderRecipeIndex(blueprint)==selected)drawRect(guiLeft+layout.listLeft+2,y,guiLeft+layout.listRight-8,y+layout.rowHeight-1,0xFF345166);
-            fontRenderer.drawString(fontRenderer.trimStringToWidth(com.vandorlabs.client.constructors.BuilderRecipePreview.label(blueprint),layout.listRight-layout.listLeft-20),guiLeft+layout.listLeft+6,y+(layout.rowHeight-8)/2,container.tile.builderRecipeIndex(blueprint)==selected?0xFFFFFF:0xB6C2CD);
+            fontRenderer.drawString(fontRenderer.trimStringToWidth(com.vandorlabs.client.constructors.BuilderRecipePreview.label(blueprint,container.tile.getStackInSlot(0)),layout.listRight-layout.listLeft-20),guiLeft+layout.listLeft+6,y+(layout.rowHeight-8)/2,container.tile.builderRecipeIndex(blueprint)==selected?0xFFFFFF:0xB6C2CD);
         }
         drawRect(guiLeft+layout.previewLeft,previewTop(),guiLeft+layout.previewRight,previewBottom(),0xFF0D1118);
         if(recipes.size()>rows()){int track=layout.listBottom-layout.listTop,thumb=Math.max(12,track*rows()/recipes.size()),offset=(track-thumb)*recipeScroll/(recipes.size()-rows());drawRect(guiLeft+layout.listRight-6,guiTop+layout.listTop,guiLeft+layout.listRight,guiTop+layout.listBottom,0xFF24323E);drawRect(guiLeft+layout.listRight-6,guiTop+layout.listTop+offset,guiLeft+layout.listRight,guiTop+layout.listTop+offset+thumb,0xFF809AA8);}
@@ -86,11 +87,11 @@ public final class GuiSynthesisTower extends GuiContainer {
         GlStateManager.pushMatrix();
         try{
             GlStateManager.translate(guiLeft+(layout.previewLeft+layout.previewRight)/2,guiTop+(layout.previewTop+layout.previewBottom)/2,90);
-            double previewScale=Math.min(layout.previewRight-layout.previewLeft,layout.previewBottom-layout.previewTop)*.8/com.vandorlabs.client.constructors.BuilderRecipePreview.extent(blueprint);GlStateManager.scale(previewScale,-previewScale,previewScale);GlStateManager.rotate(17,1,0,0);
-            com.vandorlabs.client.constructors.BuilderRecipePreview.render(blueprint,(float)(clock.sample(System.nanoTime(),mc.isGamePaused())*1.5));
+            double previewScale=Math.min(layout.previewRight-layout.previewLeft,layout.previewBottom-layout.previewTop)*.8/com.vandorlabs.client.constructors.BuilderRecipePreview.extent(blueprint,container.tile.getStackInSlot(0));GlStateManager.scale(previewScale,-previewScale,previewScale);GlStateManager.rotate(17,1,0,0);
+            com.vandorlabs.client.constructors.BuilderRecipePreview.render(blueprint,container.tile.getStackInSlot(0),(float)(clock.sample(System.nanoTime(),mc.isGamePaused())*1.5));
         }finally{GlStateManager.popMatrix();GlStateManager.color(1,1,1,1);RenderHelper.enableGUIStandardItemLighting();}
         }
-        for(int i=0;i<7;i++)slot(layout.slotX(i),layout.slotY(i));
+        if(page==0){for(int i=0;i<7;i++)if(!(digitize()&&i==1))slot(layout.slotX(i,digitize()),layout.slotY(i));
         for(int row=0;row<3;row++)for(int col=0;col<9;col++)slot(layout.inventoryX+col*18,inventoryY()+row*18);
         for(int col=0;col<9;col++)slot(layout.inventoryX+col*18,hotbarY());
         drawRect(guiLeft+layout.rfX-1,guiTop+layout.rfY-1,guiLeft+layout.rfX+layout.rfWidth+1,guiTop+layout.rfY+layout.rfHeight+1,0xFF67727E);
@@ -100,20 +101,21 @@ public final class GuiSynthesisTower extends GuiContainer {
         if(fill>0)drawRect(guiLeft+layout.rfX,guiTop+layout.rfY,guiLeft+layout.rfX+fill,guiTop+layout.rfY+layout.rfHeight,0xFF55CBA4);
         drawRect(guiLeft+layout.progressX(),guiTop+machineY()+4,guiLeft+layout.progressX()+layout.progressWidth(),guiTop+machineY()+12,0xFF303947);
         int progress=Math.max(0,Math.min(200,container.values[1]));
-        drawRect(guiLeft+layout.progressX(),guiTop+machineY()+4,guiLeft+layout.progressX()+layout.progressWidth()*progress/200,guiTop+machineY()+12,0xFF55CBA4);
+        drawRect(guiLeft+layout.progressX(),guiTop+machineY()+4,guiLeft+layout.progressX()+layout.progressWidth()*progress/200,guiTop+machineY()+12,0xFF55CBA4);}
     }
     private void slot(int x,int y){drawRect(guiLeft+x-1,guiTop+y-1,guiLeft+x+17,guiTop+y+17,0xFF67727E);drawRect(guiLeft+x,guiTop+y,guiLeft+x+16,guiTop+y+16,0xFF0B1017);}
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){
         fontRenderer.drawString(container.tile.builderMachine().equals("assembly_press")?"Assembly Press":container.tile.builderMachine().equals("enclosed_gantry")?"Enclosed Gantry":"Synthesis Tower",12,10,0xFFFFFF);
         if(page==0){fontRenderer.drawString("Designs",layout.listLeft,layout.listHeadingY(),0xD4DFE9);fontRenderer.drawString(fontRenderer.trimStringToWidth(selectedLabel(),layout.previewRight-layout.previewLeft),layout.previewLeft,layout.previewTop-12,0xD4DFE9);}
         if(page==1&&!compact){fontRenderer.drawString("Physical Redstone or any receiving channel.",12,180,0xA7B3C0);fontRenderer.drawString("A disabled machine keeps its current build.",12,193,0xA7B3C0);}
-        fontRenderer.drawString(com.vandorlabs.ui.SynthesisDialog.inputLabel(container.tile.builderMachine()),layout.machineX(0)-6,machineY()-12,0xC3CFDB);fontRenderer.drawString("Output",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
-        fontRenderer.drawString("Chip",layout.machineX(3)-4,machineY()-12,0xC3CFDB);
+        if(page==0){fontRenderer.drawString(digitize()?"Input":com.vandorlabs.ui.SynthesisDialog.inputLabel(container.tile.builderMachine()),layout.slotX(0,digitize())-6,machineY()-12,0xC3CFDB);if(!digitize())fontRenderer.drawString("Output",layout.machineX(1)-4,machineY()-12,0xC3CFDB);
+        fontRenderer.drawString("Chip",layout.slotX(3,digitize())-4,machineY()-12,0xC3CFDB);
         fontRenderer.drawString("RF",layout.rfX+4,layout.rfY+4,0xE4EDF4);
         fontRenderer.drawString(">",layout.progressX()+layout.progressWidth()/2-2,machineY()+4,0xD4DFE9);
-        fontRenderer.drawString("Inventory",layout.inventoryX,inventoryY()-10,0xD4DFE9);
+        fontRenderer.drawString("Inventory",layout.inventoryX,inventoryY()-10,0xD4DFE9);}
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{
+        if(page==0&&GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,102))return;
         if(page==1){receiver.mouseClicked(x,y,button);if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2))return;}
         if(page==0&&button==0&&recipes().size()>rows()&&x>=guiLeft+layout.listRight-6&&x<guiLeft+layout.listRight&&y>=guiTop+layout.listTop&&y<guiTop+layout.listBottom){draggingRecipes=true;scrollAt(y);return;}
         if(page==0&&(button==0||button==1)&&x>=guiLeft+layout.listLeft&&x<guiLeft+layout.listRight-6&&y>=guiTop+layout.listTop&&y<guiTop+layout.listTop+rows()*layout.rowHeight){

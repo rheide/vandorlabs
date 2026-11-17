@@ -28,6 +28,9 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public int selectedDesign(){return synthesisRuntime.selected();}
     public int buildDesign(){return synthesisRuntime.building();}
     public float buildProgress(){return synthesisRuntime.progress();}
+    public boolean digitizing(){return synthesis()&&synthesisRuntime.digitizing();}
+    public boolean setDigitizing(boolean value){return synthesisRuntime.mode(value);}
+    public net.minecraft.item.ItemStack digitizeBlock(){return synthesisRuntime.scanningBlock();}
     public boolean processing(){return synthesisRuntime.active();}
     public boolean externalPowerConnected(){return synthesisRuntime.connected;}
     private int synthesisConnections;private boolean readingSynthesis;
@@ -68,14 +71,19 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(held.isEmpty()&&!installed.isEmpty()){player.setHeldItem(hand,synthesisInventory().extractItem(slot,1,false));return true;}return false;
     }
 
-    public boolean completedCoreHit(net.minecraft.entity.player.EntityPlayer player){
-        if(!builder()||synthesisInventory().getStackInSlot(1).isEmpty())return false;
+    public boolean completedCoreHit(net.minecraft.entity.player.EntityPlayer player){return !synthesisInventory().getStackInSlot(1).isEmpty()&&enclosureHit(player);}
+    public boolean enclosureHit(net.minecraft.entity.player.EntityPlayer player){
+        if(!builder())return false;
         com.vandorlabs.machines.BuilderOutputBounds box=com.vandorlabs.machines.BuilderOutputBounds.forMachine(builderMachine());
         Vec3d origin=new Vec3d(pos.subtract(pivot()));
         Vec3d a=MachineMountSurface.rotate(new Vec3d(box.minX,box.minY,box.minZ),facing(),core().width,core().depth).add(origin);
         Vec3d b=MachineMountSurface.rotate(new Vec3d(box.maxX,box.maxY,box.maxZ),facing(),core().width,core().depth).add(origin);
         AxisAlignedBB bounds=new AxisAlignedBB(Math.min(a.x,b.x),a.y,Math.min(a.z,b.z),Math.max(a.x,b.x),b.y,Math.max(a.z,b.z));
         Vec3d eye=player.getPositionEyes(1);double reach=player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue();RayTraceResult hit=bounds.calculateIntercept(eye,eye.add(player.getLook(1).scale(reach)));return hit!=null&&eye.squareDistanceTo(hit.hitVec)<=reach*reach;
+    }
+    public boolean placeDigitizeSample(net.minecraft.entity.player.EntityPlayer player,EnumHand hand){
+        if(!digitizing()||processing()||!authoritative()||!isUsableByPlayer(player)||com.vandorlabs.gear.ArmTransactions.locked(world,pos)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)||!enclosureHit(player)||!synthesisInventory().getStackInSlot(0).isEmpty())return false;
+        net.minecraft.item.ItemStack held=player.getHeldItem(hand);if(!com.vandorlabs.machines.BlockRecipeData.eligible(held))return false;net.minecraft.item.ItemStack remainder=synthesisInventory().insertItem(0,held.copy(),false);int taken=held.getCount()-remainder.getCount();if(taken<=0)return false;if(!player.capabilities.isCreativeMode)held.shrink(taken);publish();return true;
     }
     public boolean takeCompletedCore(net.minecraft.entity.player.EntityPlayer player,EnumHand hand){
         if(!authoritative()||!isUsableByPlayer(player)||com.vandorlabs.gear.ArmTransactions.locked(world,pos)||!com.vandorlabs.items.ConfigurationAccess.canEditDialog(player,world,pos)||!completedCoreHit(player))return false;

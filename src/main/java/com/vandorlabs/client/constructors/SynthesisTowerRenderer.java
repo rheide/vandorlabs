@@ -53,15 +53,17 @@ public final class SynthesisTowerRenderer {
             if(mc.getRenderViewEntity()==null||mc.getRenderViewEntity().getDistanceSq(tile.getPos())>24*24)return;
             boolean processing=tile.processing();ItemStack output=tile.synthesisInventory().getStackInSlot(1);
             String blueprint=tile.builderRecipe(processing||!output.isEmpty()?tile.buildDesign():tile.selectedDesign());
-            if(tile.synthesis()&&(processing||!output.isEmpty())){
+            if(tile.digitizing()&&(processing||!tile.digitizeBlock().isEmpty())){ItemStack source=tile.digitizeBlock();IBlockState state=com.vandorlabs.machines.BlockRecipeData.state(source);double remaining=processing?1-tile.buildProgress():1;if(state.getBlock() instanceof BlockConstructorCore){core(state,remaining);if(processing&&tile.working())lasers(((BlockConstructorCore)state.getBlock()).design,remaining,now);}else fabrication(tile,source,remaining);}
+            else if(tile.synthesis()&&(processing||!output.isEmpty())){
                 double progress=processing?tile.buildProgress():1;
                 ItemStack result=processing?tile.builderResult(tile.buildDesign()):output;
                 IBlockState state=Block.getBlockFromItem(result.getItem()).getDefaultState();
                 if(state.getBlock() instanceof BlockConstructorCore){core(state,progress);if(processing&&tile.working())lasers(((BlockConstructorCore)state.getBlock()).design,progress,now);}
+                else if(processing){fabrication(tile,result,progress);}
                 else if(!processing){GlStateManager.pushMatrix();try{GlStateManager.translate(CORE_X+.5,CORE_Y+.5,CORE_Z+.5);BuilderRecipePreview.renderItem(result,(float)(now*1.4));}finally{GlStateManager.popMatrix();}}
             }
             if(!tile.synthesis()&&(processing||!output.isEmpty()))fabrication(tile,processing?tile.builderResult(tile.buildDesign()):output,processing?tile.buildProgress():1);
-            screen(blueprint,now,presentation);
+            screen(tile,blueprint,now,presentation);
         }finally{Tessellator.getInstance().getBuffer().setTranslation(0,0,0);GlStateManager.popMatrix();}
     }
     private static void core(IBlockState state,double amount){
@@ -80,7 +82,8 @@ public final class SynthesisTowerRenderer {
         try(TurntableRenderState saved=new TurntableRenderState()){
             GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(GL11.GL_SRC_ALPHA,GL11.GL_ONE_MINUS_SRC_ALPHA,GL11.GL_ONE,GL11.GL_ONE_MINUS_SRC_ALPHA);GlStateManager.depthMask(false);GlStateManager.disableLighting();GlStateManager.disableCull();GlStateManager.enableTexture2D();
             Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);TextureAtlasSprite white=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/core_flat");BufferBuilder b=Tessellator.getInstance().getBuffer();b.setTranslation(0,0,0);b.begin(GL11.GL_QUADS,DefaultVertexFormats.BLOCK);
-            if(press){for(int i=0;i<4;i++){double sx=i%2==0?1.125:3.125,sz=i<2?.4375:2.5,ex=bounds.centerX()+(model.minX+model.maxX)/2+(model.maxX-model.minX)*.45*Math.sin(pose.work*.12+i*Math.PI/2),ez=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(pose.work*.075+i*Math.PI);beam(b,white,sx,2.4375,sz,ex,surface,ez,.009,0xb04fee75);}}
+            if(tile.synthesis()){for(int i=0;i<4;i++){double sx=i%2==0?.70:2.30,sz=i<2?.95:2.30,ex=bounds.centerX()+.46*Math.sin(pose.work*.12+i*Math.PI/2),ez=bounds.centerZ()+.46*Math.sin(pose.work*.075+i*Math.PI);beam(b,white,sx,4.48,sz,ex,surface,ez,.014,com.vandorlabs.machines.SynthesisLaserStyle.color(i,pose.work));}}
+            else if(press){for(int i=0;i<4;i++){double sx=i%2==0?1.125:3.125,sz=i<2?.4375:2.5,ex=bounds.centerX()+(model.minX+model.maxX)/2+(model.maxX-model.minX)*.45*Math.sin(pose.work*.12+i*Math.PI/2),ez=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(pose.work*.075+i*Math.PI);beam(b,white,sx,2.4375,sz,ex,surface,ez,.009,0xb04fee75);}}
             else {double sx=2.5+pose.headX(),sy=3.25,sz=1.5625+pose.armZ(),scan=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(pose.work*.11);
                 beamVertex(b,white,sx,sy,sz,0x324baeff);beamVertex(b,white,bounds.centerX()+model.minX,surface,scan,0x324baeff);beamVertex(b,white,bounds.centerX()+model.maxX,surface,scan,0x324baeff);beamVertex(b,white,sx,sy,sz,0x324baeff);
                 beamVertex(b,white,bounds.centerX()+model.minX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.centerX()+model.maxX,surface,scan-.009,0xc05bbcff);beamVertex(b,white,bounds.centerX()+model.maxX,surface,scan+.009,0xc05bbcff);beamVertex(b,white,bounds.centerX()+model.minX,surface,scan+.009,0xc05bbcff);
@@ -92,15 +95,15 @@ public final class SynthesisTowerRenderer {
         beamVertex(b,white,sx-radius,sy,sz,color);beamVertex(b,white,sx+radius,sy,sz,color);beamVertex(b,white,ex+radius,ey,ez,color);beamVertex(b,white,ex-radius,ey,ez,color);
         beamVertex(b,white,sx,sy,sz-radius,color);beamVertex(b,white,sx,sy,sz+radius,color);beamVertex(b,white,ex,ey,ez+radius,color);beamVertex(b,white,ex,ey,ez-radius,color);
     }
-    private static void screen(String blueprint,double now,SynthesisPresentation.Spec presentation){
+    private static void screen(TileEntityConstructor tile,String blueprint,double now,SynthesisPresentation.Spec presentation){
         GlStateManager.pushMatrix();GL11.glPushAttrib(GL11.GL_TRANSFORM_BIT|GL11.GL_ENABLE_BIT);
         try{
             GlStateManager.translate(presentation.screenX,presentation.screenY,presentation.screenZ-.01);
             double half=presentation.screenSize/2-.015625;
             screenClip(GL11.GL_CLIP_PLANE0,1,0,half);screenClip(GL11.GL_CLIP_PLANE1,-1,0,half);
             screenClip(GL11.GL_CLIP_PLANE2,0,1,half);screenClip(GL11.GL_CLIP_PLANE3,0,-1,half);
-            double scale=presentation.screenSize*.875/BuilderRecipePreview.extent(blueprint);
-            GlStateManager.scale(scale,scale,.002);BuilderRecipePreview.render(blueprint,(float)(now*1.4));
+            double scale=presentation.screenSize*.875/BuilderRecipePreview.extent(blueprint,tile.getStackInSlot(0));
+            GlStateManager.scale(scale,scale,.002);BuilderRecipePreview.render(blueprint,tile.getStackInSlot(0),(float)(now*1.4));
         }finally{GL11.glPopAttrib();GlStateManager.popMatrix();}
     }
     private static void screenClip(int plane,double x,double y,double edge){SCREEN_CLIP.clear();SCREEN_CLIP.put(x).put(y).put(0).put(edge).flip();GL11.glClipPlane(plane,SCREEN_CLIP);GL11.glEnable(plane);}
