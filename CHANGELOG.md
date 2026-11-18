@@ -4,6 +4,7 @@
 
 - Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.
 - Add the remaining Assembly Press recipes to NeoForge, preserving the existing Navigation Data Module recipe and saved jobs.
+- Craft and configure programmable armor on NeoForge, with the authored role and company designs, their equipment textures, and padded inventory icons.
 
 ## 2.11.0 (in development)
 

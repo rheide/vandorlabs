@@ -35,7 +35,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Turntables | Programmable Surfaces enabled; rotation controller and moving display missing | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
-| Programmable armor | pending | unimplemented | non-vehicle first |
+| Programmable armor | four pieces, crafting, role and company picker, equipped and inventory artwork enabled; material and copying workflows pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | native JEI machine recipes and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
