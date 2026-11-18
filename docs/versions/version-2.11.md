@@ -36,6 +36,14 @@ Join table sections to see more area at the same zoom. Pan across biomes, then l
 
 Fit a Navigation Data Module to reopen recordings on another table in the same world. Overlapping scans share their stored surface pixels. Use **SET** inside a recorded sweep to copy its image to a Navigation Chip, or use the Scanner to preserve the original pixels of a vanilla map. [Explore Navigation Tables and Screens](../navigation-displays.md) · [Use the Printer and Scanner](../appliances.md)
 
+## Developer Notes
+
+So many cool things this time! This version marks the synthesis(..) of this mod's tech tree: all three multiblock builders are hooked up: the Synthesis Tower produces Core blocks and Controller blocks, the Assembly Press builds mechanical blocks and the Enclosed Gantry manufactures Data Chips, Access Cards and anything smaller and electronic. All the machines now require RF, which can be supplied through other mods, or via the Battery Module, which can be charged in the Infuser. Did I mention all the builders have lasers? Lasers! Oh, and you can reverse engineer vanilla blocks with the Digitize mode, which writes a block recipe to a Data Chip for future synthesis. Progmatter, it's just so versatile. (and probably too cheap - we'll work on balancing that better in versions to come).
+
+The other major cool thing this time is a functional Navigation Table! Build a Survey Dish or Sentinel Array, assign it a redstone channel and pair it with a Nav Table to see a map of the area around you. Short range scans will form an image of the actual world blocks and any nearby players. Long range scans use a seed browser to project a wider area. But there's more! Stick a Nav Table and Survey Dish onto your vehicle and you can go around and map the world! Insert a Navigation Data Module into your Nav Table and it will store where you've been. More to come on this later. Did I mention you can make the Survey Dish and Sentinel Array in any size you like, as long as it's a multiple of its base size? Woohoo!
+
+Next up: more mod blocks for our three builder structures, and perhaps some fun engine and autopilot improvements. And eventually... SPACE. 
+
 ## Version notes
 
 All observer ranges are horizontal radii from the Core. Higher mounting and larger frames extend terrain coverage. The live sweep radii are fixed.
