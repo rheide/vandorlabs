@@ -39,13 +39,34 @@ final class ChipApplianceLiveChecks {
         if(stage==6){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=actor(mc);TileEntityChipAppliance tile=tile(p.world);imported=tile.getStackInSlot(0).copy();SavedMapPixels map=NavigationChip.savedMap(imported);need(map!=null&&map.scale()==4,"actual button programs map snapshot");need(map.contains(map.minX(),map.minZ())&&!map.contains(map.maxXExclusive(),map.minZ()),"full scale4 square and exact boundary");need(map.colorAt(map.minX(),map.minZ())==NavigationMap.OUTSIDE,"unexplored pixel remains blank");need(tile.getStackInSlot(1).getMetadata()==mapId,"scan retains original map");TileEntityChipAppliance copy=new TileEntityChipAppliance();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));need(NavigationChip.savedMap(copy.getStackInSlot(0)).equals(map),"map snapshot survives save/reload");need(tile.getUpdateTag().getCompoundTag("InsertedToken").getCompoundTag("tag").getCompoundTag("NavigationMapPixels").getByteArray("Colors").length==0,"public update omits saved pixel payload");need(tile.writeToNBT(new NBTTagCompound()).getCompoundTag("InsertedToken").getCompoundTag("tag").getCompoundTag("NavigationMapPixels").getByteArray("Colors").length==16384,"disk retains full pixel payload");});need(tile(mc.world).mapPreview!=null,"client top frame receives original map image");MapData rendered=TEChipAppliance.mapData(tile(mc.world));need(rendered!=null,"top frame hydrates a stable vanilla map texture");Object maps=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.MapItemRenderer.class,mc.entityRenderer.getMapItemRenderer(),"loadedMaps","field_148252_c");Object instance=((Map<?,?>)maps).get(rendered.mapName);java.lang.reflect.Field tex=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(instance.getClass(),"mapTextureData","field_148241_e");tex.setAccessible(true);int colored=0;for(int pixel:(int[])tex.get(instance))if((pixel>>>24)==255)colored++;need(colored>16000,"top frame actually uploads original map pixels: "+colored);ApplianceVisualChecks.checkMountedMap(mc,output,tile(mc.world),ChipApplianceService.palette()[18]);click(mc,EnumFacing.NORTH,.5,.25,0);stage=7;ticks=0;return false;}
         if(stage==7){if(ticks<20||!(mc.currentScreen instanceof GuiChipAppliance))return false;need(mc.player.openContainer instanceof com.vandorlabs.container.ContainerChipAppliance,"standard appliance container via ordinary right-click");mc.playerController.sendEnchantPacket(mc.player.openContainer.windowId,0);
             GuiChipAppliance dialog=(GuiChipAppliance)mc.currentScreen;
-            dialog.actionPerformed(new net.minecraft.client.gui.GuiButton(2,0,0,"Redstone"));
-            dialog.actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Trigger"));
+            redstoneTabs(dialog);
             stage=8;ticks=0;return false;}
-        if(stage==8){if(ticks<20)return false;mc.player.closeScreen();server(mc,()->{need(tile(actor(mc).world).activation()==ApplianceAutomation.ON,"Redstone dialog settings reach the installed Scanner");matrix(actor(mc));automation(actor(mc).getServerWorld());offline(actor(mc));});stage=9;ticks=0;return false;}
+        if(stage==8){if(ticks<20)return false;mc.player.closeScreen();server(mc,()->{need(tile(actor(mc).world).activation()==ApplianceAutomation.ON,"Redstone dialog settings reach the installed Scanner");matrix(actor(mc));automation(actor(mc).getServerWorld());offline(actor(mc));held(actor(mc),ItemStack.EMPTY,false);});stage=81;ticks=0;return false;}
+        if(stage==81){if(ticks<20||tile(mc.world)==null||tile(mc.world).scanner())return false;click(mc,EnumFacing.NORTH,.5,.25,0);stage=82;ticks=0;return false;}
+        if(stage==82){if(ticks<10||!(mc.currentScreen instanceof GuiChipAppliance))return false;redstoneTabs((GuiChipAppliance)mc.currentScreen);mc.player.closeScreen();stage=83;ticks=0;return false;}
+        if(stage==83){if(ticks<10)return false;server(mc,()->need(tile(actor(mc).world).activation()==ApplianceAutomation.ON,"mouse-click Redstone settings reach the installed Printer"));System.out.println("[vandorlabs] appliance-tab-clicks PASS Printer and Scanner actual mouse dispatch stable controls");stage=9;ticks=0;return false;}
         if(stage==9){if(ticks<30||!(mc.world.getTileEntity(AT.east(4)) instanceof TileEntityNavigationTable)||!(mc.world.getTileEntity(AT.east(6)) instanceof TileEntityAnimatedScreenSelector))return false;NavigationMapRenderer.bind(mc.world.getTileEntity(AT.east(4)),0,1);NavigationMapRenderer.bind(mc.world.getTileEntity(AT.east(6)),0,1);stage=10;ticks=0;return false;}
         if(stage==10){if(ticks<60||!NavigationMapRenderer.ready(AT.east(4))||!NavigationMapRenderer.ready(AT.east(6)))return false;server(mc,()->verifyDelivery(actor(mc).getServerWorld()));for(BlockPos at:new BlockPos[]{AT.east(4),AT.east(6)})snapshotRaster(at);System.out.println("[vandorlabs] chip-appliances PASS checks="+checks+" Survival mount/frame/button/menu packets maps/books/SGA/catalog costs failure paths offline-square save/client summary");return true;}
         return false;
+    }
+    private static void redstoneTabs(GuiChipAppliance dialog)throws Exception{
+        List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(
+                net.minecraft.client.gui.GuiScreen.class,dialog,"buttonList","field_146292_n");
+        List<net.minecraft.client.gui.GuiButton> original=new ArrayList<>(buttons);
+        net.minecraft.client.gui.GuiButton inventory=findButton(buttons,1),redstone=findButton(buttons,2),trigger=findButton(buttons,3);
+        for(int i=0;i<3;i++){
+            CompleteRedstoneDialogAudit.clickTab(dialog,redstone);
+            need(!redstone.enabled&&inventory.enabled&&trigger.visible&&buttons.equals(original),"one click opens Redstone with the same controls");
+            CompleteRedstoneDialogAudit.clickTab(dialog,inventory);
+            need(!inventory.enabled&&redstone.enabled&&!trigger.visible&&buttons.equals(original),"one click returns to Inventory with the same controls");
+        }
+        CompleteRedstoneDialogAudit.clickTab(dialog,redstone);
+        CompleteRedstoneDialogAudit.clickTab(dialog,trigger);
+        need(trigger.displayString.equals("Trigger: "+ApplianceAutomation.label(ApplianceAutomation.ON)),
+                "trigger click cycles exactly once");
+    }
+    private static net.minecraft.client.gui.GuiButton findButton(List<net.minecraft.client.gui.GuiButton> buttons,int id){
+        return buttons.stream().filter(button->button.id==id).findFirst().orElseThrow(IllegalStateException::new);
     }
     private static void offline(EntityPlayerMP p){
         WorldServer w=p.getServerWorld();BlockPos tablePos=AT.east(4),screenPos=AT.east(6);w.setBlockState(tablePos,Block.getBlockFromName("vandorlabs:navigation_table_flat").getDefaultState(),3);NavigationAssemblies.rebuild(w,tablePos);TileEntityNavigationTable table=(TileEntityNavigationTable)w.getTileEntity(tablePos);table.setInventorySlotContents(0,imported);

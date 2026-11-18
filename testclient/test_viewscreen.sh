@@ -4,7 +4,7 @@ set -euo pipefail
 unset VANDOR_LABS_COUPLER_ARTICULATION_CHECKS_ONLY VANDOR_LABS_RAMP_AXIS_CHECKS_ONLY VANDOR_LABS_FURNITURE_CHECKS_ONLY VANDOR_LABS_RFTOOLS_BUILDER_CHECKS_ONLY VANDOR_LABS_GLASS_DISPLAY_ORDER_ONLY VANDOR_LABS_DISPLAY_EXPANSION_CHECKS_ONLY VANDOR_LABS_CLASSIC_CONTROLS_CHECKS_ONLY VANDOR_LABS_DISPLAY_MATERIAL_CHECKS_ONLY VANDOR_LABS_SCREEN_CATALOG_CHECKS_ONLY VANDOR_LABS_TRAPDOOR_FRAME_REGRESSION_ONLY VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY VANDOR_LABS_PILOT_SEAT_CHECKS_ONLY VANDOR_LABS_FLUID_CHECKS_ONLY VANDOR_LABS_COCKPIT_CHECKS_ONLY VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY
 unset VANDOR_LABS_LIGHT_CHECKS_ONLY VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
-unset VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
+unset VANDOR_LABS_REDSTONE_TAB_DISPATCH_ONLY VANDOR_LABS_HOVER_CONTROLS_CHECKS_ONLY VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
 unset VANDOR_LABS_SEGMENTED_TALL_CHECKS_ONLY VANDOR_LABS_SEGMENTED_DOOR_BENCHMARK_ONLY VANDOR_LABS_SEGMENTED_DOOR_LEGACY_CHECKS_ONLY
@@ -157,6 +157,9 @@ case "${1:-}" in
         elif [ "$TARGET" = vehicle-safe-park ]; then
             PREFIX=vehicle_safe_park_
             export VANDOR_LABS_VEHICLE_SAFE_PARK_CHECKS_ONLY=true
+        elif [ "$TARGET" = hover-controls ]; then
+            PREFIX=hover_controls_
+            export VANDOR_LABS_HOVER_CONTROLS_CHECKS_ONLY=true
         elif [ "$TARGET" = vehicle-taxi ]; then
             PREFIX=vehicle_taxi_
             export VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY=true
@@ -363,6 +366,9 @@ case "${1:-}" in
         elif [ "$TARGET" = control-icons ]; then
             PREFIX=controls_
             export VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY=true VANDOR_LABS_CONTROL_ICONS_ONLY=true
+        elif [ "$TARGET" = redstone-tab-dispatch ]; then
+            PREFIX=redstone_tab_dispatch_
+            export VANDOR_LABS_REDSTONE_TAB_DISPATCH_ONLY=true
         elif [ "$TARGET" = redstone-dialogs ]; then
             PREFIX=channels_
             export VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY=true
@@ -663,6 +669,11 @@ PYIMAGE
         echo "Vehicle navigation checks passed: $RUN_OUT"
         exit 0
     fi
+    if [ "$TARGET" = redstone-tab-dispatch ]; then
+        grep -q "redstone-tab-dispatch PASS" "$RUN_OUT/client.log"
+        echo "Redstone tab input checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = appliances ]; then
         grep -q "appliances PASS" "$RUN_OUT/client.log"
         echo "Appliance checks passed: $RUN_OUT"
@@ -731,6 +742,11 @@ PYIMAGE
     if [ "$TARGET" = vehicle-safe-park ]; then
         if [ "${VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_CURRENT:-}" = 1 ]; then grep -q "vehicle-safe-park-arm-current PASS" "$RUN_OUT/client.log"; elif [ "${VANDOR_LABS_VEHICLE_SAFE_PARK_ARM_ONLY:-}" = 1 ]; then grep -q "vehicle-safe-park-arm PASS" "$RUN_OUT/client.log"; else grep -q "vehicle-safe-park PASS" "$RUN_OUT/client.log"; fi
         echo "Safe Park live checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = hover-controls ]; then
+        grep -q "hover-client-controls PASS" "$RUN_OUT/client.log"
+        echo "Hover controls checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = vehicle-taxi ]; then

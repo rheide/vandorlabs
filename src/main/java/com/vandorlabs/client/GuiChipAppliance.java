@@ -19,6 +19,7 @@ public final class GuiChipAppliance extends GuiContainer {
     private int page,activation;
     private ChannelList channels;
     private ReceiverPane receiver;
+    private GuiButton inventoryTab,redstoneTab,runButton;
 
     public GuiChipAppliance(ContainerChipAppliance container){
         super(container);
@@ -35,25 +36,38 @@ public final class GuiChipAppliance extends GuiContainer {
     @Override public void initGui(){
         super.initGui();
         Keyboard.enableRepeatEvents(true);
+        buttonList.clear();
         int tabWidth=(xSize-30)/2;
-        buttonList.add(new DialogTabButton(1,guiLeft+12,guiTop+32,tabWidth,20,"Inventory"));
-        buttonList.add(new DialogTabButton(2,guiLeft+18+tabWidth,guiTop+32,tabWidth,20,"Redstone"));
-        buttonList.get(page).enabled=false;
+        inventoryTab=new DialogTabButton(1,guiLeft+12,guiTop+32,tabWidth,20,"Inventory");
+        redstoneTab=new DialogTabButton(2,guiLeft+18+tabWidth,guiTop+32,tabWidth,20,"Redstone");
+        runButton=new GuiButton(0,guiLeft+12,guiTop+182,72,20,container.tile.scanner()?"Scan":"Print");
+        receiver=new ReceiverPane(40,3,fontRenderer,guiLeft+12,guiTop+68,xSize-24,channels,activation);
+        updateTriggerLabel();
+        buttonList.add(inventoryTab);
+        buttonList.add(redstoneTab);
+        buttonList.add(runButton);
+        buttonList.add(receiver.button());
+        updatePage();
+    }
+
+    private void updatePage(){
+        // GuiScreen iterates the live button list throughout a click.
+        boolean inventory=page==0;
+        inventoryTab.enabled=!inventory;
+        redstoneTab.enabled=inventory;
+        runButton.visible=inventory;
+        receiver.setVisible(!inventory);
         for(int i=0;i<slotX.length;i++){
-            Slot slot=container.inventorySlots.get(i);slot.xPos=page==0?slotX[i]:-10000;slot.yPos=page==0?slotY[i]:-10000;
-        }
-        if(page==0){receiver=null;buttonList.add(new GuiButton(0,guiLeft+12,guiTop+182,72,20,container.tile.scanner()?"Scan":"Print"));}
-        else{
-            receiver=new ReceiverPane(40,3,fontRenderer,guiLeft+12,guiTop+68,xSize-24,channels,activation);
-            updateTriggerLabel();
-            buttonList.add(receiver.button());
+            Slot slot=container.inventorySlots.get(i);
+            slot.xPos=inventory?slotX[i]:-10000;
+            slot.yPos=inventory?slotY[i]:-10000;
         }
     }
 
     private void updateTriggerLabel(){receiver.button().displayString="Trigger: "+ApplianceAutomation.label(activation);}
 
     private boolean saveRedstone(){
-        if(receiver==null)return true;
+        if(page!=1||receiver==null)return true;
         ChannelList parsed=receiver.channels();
         if(parsed==null)return false;
         channels=parsed;
@@ -67,7 +81,7 @@ public final class GuiChipAppliance extends GuiContainer {
             activation=GuiOptionCycle.next(activation,3);
             updateTriggerLabel();
             saveRedstone();
-        }else if(saveRedstone()){page=button.id-1;initGui();}
+        }else if((button.id==1||button.id==2)&&saveRedstone()){page=button.id-1;updatePage();}
     }
 
     @Override protected void mouseClicked(int x,int y,int button)throws IOException{

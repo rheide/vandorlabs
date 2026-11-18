@@ -18,7 +18,77 @@ import java.util.*;
 /** Registry-complete evidence: every block gets a manifest entry, never a GUI-class sample. */
 final class CompleteRedstoneDialogAudit {
     private static List<GuiButton> buttons(GuiScreen gui){return ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");}
-    private static void action(GuiScreen gui,GuiButton button)throws Exception{ReflectionHelper.findMethod(GuiScreen.class,"actionPerformed","func_146284_a",GuiButton.class).invoke(gui,button);}
+    static void clickTab(GuiScreen gui,GuiButton button)throws Exception{
+        int x=button.x+button.width/2,y=button.y+button.height/2;
+        ClickProbe probe=new ClickProbe(gui);
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(probe);
+        try{
+            ReflectionHelper.findMethod(GuiScreen.class,"mouseClicked","func_73864_a",int.class,int.class,int.class)
+                    .invoke(gui,x,y,0);
+            ReflectionHelper.findMethod(GuiScreen.class,"mouseReleased","func_146286_b",int.class,int.class,int.class)
+                    .invoke(gui,x,y,0);
+        }finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(probe);}
+        if(probe.actions!=1)throw new IllegalStateException(gui.getClass().getSimpleName()+" dispatched "+probe.actions
+                +" button presses for one click on "+button.displayString);
+    }
+    public static final class ClickProbe {
+        private final GuiScreen gui;
+        private int actions;
+        private ClickProbe(GuiScreen gui){this.gui=gui;}
+        @net.minecraftforge.fml.common.eventhandler.SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.HIGHEST)
+        public void onPress(net.minecraftforge.client.event.GuiScreenEvent.ActionPerformedEvent.Pre event){
+            // Fail the fixture promptly even if a regression keeps appending targets.
+            if(event.getGui()==gui&&++actions>1)event.setCanceled(true);
+        }
+    }
+    static void checkTabDispatch(Minecraft mc)throws Exception{
+        BlockPos pos=new BlockPos(mc.player.posX,200,mc.player.posZ);
+        net.minecraft.block.state.IBlockState original=mc.world.getBlockState(pos);
+        TileEntity originalTile=mc.world.getTileEntity(pos);
+        GuiScreen previous=mc.currentScreen;
+        net.minecraft.inventory.Container previousContainer=mc.player.openContainer;
+        List<String> failures=new ArrayList<>();
+        int clicks=0;
+        Set<Class<?>> screens=new HashSet<>();
+        try{
+            for(Block block:Block.REGISTRY){
+                if(!"vandorlabs".equals(block.getRegistryName().getResourceDomain()))continue;
+                TileEntity seed=block.createTileEntity(mc.world,block.getDefaultState());
+                if(skip(seed,block)!=null)continue;
+                try{
+                    mc.world.setBlockState(pos,block.getDefaultState(),2);
+                    TileEntity tile=mc.world.getTileEntity(pos);
+                    if(tile instanceof com.vandorlabs.gear.GearTileEntity)
+                        tile=GearDialogChecks.fixture(mc,(com.vandorlabs.gear.GearBlock)block);
+                    GuiContainer gui=create(mc,block,tile);
+                    if(gui==null)continue;
+                    gui.inventorySlots.windowId=-97;
+                    mc.displayGuiScreen(gui);
+                    for(int[] size:new int[][]{{320,240},{460,340}}){
+                        gui.setWorldAndResolution(mc,size[0],size[1]);
+                        List<GuiButton> initial=new ArrayList<>(buttons(gui));
+                        for(GuiButton candidate:initial){
+                            if(!candidate.visible||!(candidate instanceof DialogTabButton))continue;
+                            GuiButton current=buttons(gui).stream().filter(b->b.id==candidate.id&&b.visible&&b.enabled)
+                                    .findFirst().orElse(null);
+                            if(current==null)continue;
+                            clickTab(gui,current);
+                            clicks++;
+                            screens.add(gui.getClass());
+                        }
+                    }
+                }catch(Exception failure){failures.add(block.getRegistryName()+": "+failure);}
+            }
+        }finally{
+            mc.displayGuiScreen(previous);
+            mc.player.openContainer=previousContainer;
+            mc.world.setBlockState(pos,original,2);
+            if(originalTile!=null)mc.world.setTileEntity(pos,originalTile);
+        }
+        for(String failure:failures)System.out.println("[vandorlabs] redstone-tab-dispatch ISSUE "+failure);
+        if(!failures.isEmpty()||clicks==0)throw new IllegalStateException("Tab dispatch failures="+failures.size()+" clicks="+clicks);
+        System.out.println("[vandorlabs] redstone-tab-dispatch PASS clicks="+clicks+" screenClasses="+screens.size());
+    }
     static void run(Minecraft mc,File output,BlockPos pos)throws Exception{
         net.minecraft.block.state.IBlockState previous=mc.world.getBlockState(pos);TileEntity original=mc.world.getTileEntity(pos);GuiScreen old=mc.currentScreen;net.minecraft.inventory.Container container=mc.player.openContainer;
         List<String> failures=new ArrayList<>();int registered=0,captured=0,shots=0,skipped=0;
@@ -33,7 +103,7 @@ final class CompleteRedstoneDialogAudit {
                     guiName=gui.getClass().getSimpleName();gui.inventorySlots.windowId=-97;mc.displayGuiScreen(gui);captured++;
                     for(int[] size:new int[][]{{320,240},{460,340}}){
                         gui.setWorldAndResolution(mc,size[0],size[1]);boolean redstone=false;
-                        for(GuiButton tab:new ArrayList<>(buttons(gui)))if(tab.visible&&tab.displayString.equals("Redstone")){if(tab.enabled)action(gui,tab);redstone=true;break;}
+                        for(GuiButton tab:new ArrayList<>(buttons(gui)))if(tab.visible&&tab.displayString.equals("Redstone")){if(tab.enabled)clickTab(gui,tab);redstone=true;break;}
                         if(!redstone&&!(gui instanceof GuiPilotModes||gui instanceof com.vandorlabs.copier.client.GuiCopyController||gui instanceof GuiCoupler||gui instanceof GuiRedstoneChannel))throw new IllegalStateException("Expected configurable Redstone page is absent");
                         String file="shot_redstone_all_"+id+"_"+size[0]+".png";
                         FrameFramebufferChecks.renderDialog(mc,gui,new File(output,file),-1,-1);shots++;
@@ -42,14 +112,14 @@ final class CompleteRedstoneDialogAudit {
                         if(tile instanceof TileEntityAnimatedScreenSelector)for(int slot=0;slot<2;slot++)if(RedstoneScreenInteractions.supportsSlot(block,slot)){
                             TileEntityAnimatedScreenSelector screen=(TileEntityAnimatedScreenSelector)tile;int savedSurface=screen.getSurfaceTexture(slot);screen.setSurfaceTexture(slot,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE);screen.redstoneScreen(slot).configureRows(Arrays.asList("Doors"),Arrays.asList(com.vandorlabs.redstone.ChannelList.of(65291)),screen.getHousingTexture());
                             GuiContainer sourceGui=create(mc,block,tile);sourceGui.inventorySlots.windowId=-97;mc.displayGuiScreen(sourceGui);sourceGui.setWorldAndResolution(mc,size[0],size[1]);
-                            for(GuiButton tab:new ArrayList<>(buttons(sourceGui)))if(tab.visible&&tab.displayString.equals("Redstone")){if(tab.enabled)action(sourceGui,tab);break;}
+                            for(GuiButton tab:new ArrayList<>(buttons(sourceGui)))if(tab.visible&&tab.displayString.equals("Redstone")){if(tab.enabled)clickTab(sourceGui,tab);break;}
                             String sourceFile="shot_redstone_all_"+id+"_source"+slot+"_"+size[0]+".png";FrameFramebufferChecks.renderDialog(mc,sourceGui,new File(output,sourceFile),-1,-1);shots++;String sourceReview=review(sourceGui);manifest.println(id+"\t"+tileName+"\t"+guiName+"\tcaptured\tnative surface source settings\tSource"+slot+"\t"+size[0]+"x"+size[1]+"\t"+sourceFile+"\t"+sourceReview);if(!sourceReview.equals("PASS"))failures.add(id+" source"+slot+" "+size[0]+": "+sourceReview);
-                            for(GuiButton tab:new ArrayList<>(buttons(sourceGui)))if(tab.id==90+slot){if(tab.enabled)action(sourceGui,tab);break;}
+                            for(GuiButton tab:new ArrayList<>(buttons(sourceGui)))if(tab.id==90+slot){if(tab.enabled)clickTab(sourceGui,tab);break;}
                             java.lang.reflect.Method rows=sourceGui.getClass().getDeclaredMethod("openRows",int.class);rows.setAccessible(true);rows.invoke(sourceGui,slot);java.lang.reflect.Method rowState=sourceGui.getClass().getDeclaredMethod("rowsPage");rowState.setAccessible(true);if(!Boolean.TRUE.equals(rowState.invoke(sourceGui)))throw new IllegalStateException("Native rows capture did not enter its actual surface editor");
                             String rowFile="shot_redstone_all_"+id+"_rows"+slot+"_"+size[0]+".png";FrameFramebufferChecks.renderDialog(mc,sourceGui,new File(output,rowFile),-1,-1);shots++;String rowReview=review(sourceGui);manifest.println(id+"\t"+tileName+"\t"+guiName+"\tcaptured\tnative control target editor\tRows"+slot+"\t"+size[0]+"x"+size[1]+"\t"+rowFile+"\t"+rowReview);if(!rowReview.equals("PASS"))failures.add(id+" rows"+slot+" "+size[0]+": "+rowReview);
                             screen.setSurfaceTexture(slot,savedSurface);mc.displayGuiScreen(gui);gui.initGui();
                         }
-                        if(gui instanceof GuiModularGear||gui instanceof GuiRampController){String tabName=gui instanceof GuiModularGear?"Mechanism":"Ramp",pageName=gui instanceof GuiModularGear?"Mechanism":"General";for(GuiButton tab:new ArrayList<>(buttons(gui)))if(tab.displayString.equals(tabName)){if(tab.enabled)action(gui,tab);break;}String context="shot_redstone_all_"+id+"_"+pageName.toLowerCase(java.util.Locale.ROOT)+"_"+size[0]+".png";FrameFramebufferChecks.renderDialog(mc,gui,new File(output,context),-1,-1);shots++;String contextReview=review(gui);manifest.println(id+"\t"+tileName+"\t"+guiName+"\tcaptured\tmechanism context\t"+pageName+"\t"+size[0]+"x"+size[1]+"\t"+context+"\t"+contextReview);if(!contextReview.equals("PASS"))failures.add(id+" "+pageName+" "+size[0]+": "+contextReview);}
+                        if(gui instanceof GuiModularGear||gui instanceof GuiRampController){String tabName=gui instanceof GuiModularGear?"Mechanism":"Ramp",pageName=gui instanceof GuiModularGear?"Mechanism":"General";for(GuiButton tab:new ArrayList<>(buttons(gui)))if(tab.displayString.equals(tabName)){if(tab.enabled)clickTab(gui,tab);break;}String context="shot_redstone_all_"+id+"_"+pageName.toLowerCase(java.util.Locale.ROOT)+"_"+size[0]+".png";FrameFramebufferChecks.renderDialog(mc,gui,new File(output,context),-1,-1);shots++;String contextReview=review(gui);manifest.println(id+"\t"+tileName+"\t"+guiName+"\tcaptured\tmechanism context\t"+pageName+"\t"+size[0]+"x"+size[1]+"\t"+context+"\t"+contextReview);if(!contextReview.equals("PASS"))failures.add(id+" "+pageName+" "+size[0]+": "+contextReview);}
                     }
                 }catch(Exception failure){String detail=failure.toString().replace('\t',' ').replace('\n',' ');failures.add(id+": "+detail);manifest.println(id+"\t"+tileName+"\t"+guiName+"\tFAILED\t"+detail+"\t\t\t\t");}
                 manifest.flush();
@@ -74,6 +144,7 @@ final class CompleteRedstoneDialogAudit {
         if(tile instanceof TileEntityCockpit)return new GuiCockpit(new ContainerCockpit((TileEntityCockpit)tile,null));
         if(tile instanceof TileEntityWirelessRedstone)return new GuiWirelessRedstone(new ContainerWirelessRedstone((TileEntityWirelessRedstone)tile));
         if(tile instanceof TileEntitySecuredDisplay)return new GuiNavigationTable(new ContainerTokenSlot(mc.player.inventory,(TileEntityTokenSlot)tile));
+        if(tile instanceof TileEntityChipAppliance)return new GuiChipAppliance(new ContainerChipAppliance(mc.player.inventory,(TileEntityChipAppliance)tile));
         if(tile instanceof TileEntityTokenSlot)return new GuiTokenSlot(new ContainerTokenSlot(mc.player.inventory,(TileEntityTokenSlot)tile));
         if(tile instanceof com.vandorlabs.plate.PlateTile)return new GuiPressurePlate(new com.vandorlabs.plate.PlateContainer((com.vandorlabs.plate.PlateTile)tile));
         if(tile instanceof TileEntityProgrammableTrapdoor)return new GuiProgrammableTrapdoor((TileEntityProgrammableTrapdoor)tile);
