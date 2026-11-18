@@ -99,14 +99,14 @@ public final class NavigationSurface {
             int budget=Math.min(MAX_SAMPLES_PER_TICK,limit),count=0,checked=0;
             // A stable rotation gives each observer turns under contention. Later revolutions visit different pixels.
             sweeps.keySet().toArray(pending);
-            int sources=sweeps.size(),first=(int)Math.floorMod(time,sources);
+            int sources=sweeps.size(),first=(int)Math.floorMod(time,(long)sources);
             for(int turn=0;turn<sources&&checked<budget&&System.nanoTime()<deadline;turn++){
                 Sweep source=pending[(first+turn)%sources];
                 if(!sweeps.get(source).available.getAsBoolean()){sweeps.remove(source);continue;}
                 int period=period(source.radius);
-                int[] sector=(source.radius==128?SENTINEL:SURVEY)[(int)Math.floorMod(time,period)];
+                int[] sector=(source.radius==128?SENTINEL:SURVEY)[(int)Math.floorMod(time,(long)period)];
                 int allowance=Math.max(1,budget/sources);
-                int start=(int)Math.floorMod(Math.floorDiv(time,period)*61,Math.max(1,sector.length));
+                int start=(int)Math.floorMod(Math.floorDiv(time,period)*61,Math.max(1L,sector.length));
                 for(int i=0;i<sector.length&&i<allowance&&checked<budget&&System.nanoTime()<deadline;i++){
                     int offset=sector[(start+i)%sector.length];
                     int x=(source.x&~1)+(offset>>16),z=(source.z&~1)+(short)offset;
