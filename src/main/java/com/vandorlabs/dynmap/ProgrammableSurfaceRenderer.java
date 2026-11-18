@@ -28,17 +28,18 @@ public final class ProgrammableSurfaceRenderer extends HousingRenderer {
             }
         }
         Object selected=context.getBlockTileEntityField(active?"SurfaceOn":"SurfaceOff");int material=texture(TurntableTextures.materialChoice(selected instanceof String?(String)selected:active?"original_on":"original_off"));
-        int size=Math.max(1,Math.min(32,integer(context.getBlockTileEntityField("SurfaceGroupSize"),1))),mode=integer(context.getBlockTileEntityField("SurfaceLayout"),1);
+        int size=Math.max(1,Math.min(32,integer(context.getBlockTileEntityField("SurfaceGroupSize"),1))),mode=Math.max(0,Math.min(2,integer(context.getBlockTileEntityField("SurfaceLayout"),2)));
         int height=Math.max(1,Math.min(32,integer(context.getBlockTileEntityField("SurfaceGroupHeight"),size)));Object offset=context.getBlockTileEntityField("SurfaceGroupOffset");BlockPos relative=offset instanceof Number?BlockPos.fromLong(((Number)offset).longValue()):BlockPos.ORIGIN;
         int col=-basis.u(relative.getX(),relative.getY(),relative.getZ()),row=-basis.v(relative.getX(),relative.getY(),relative.getZ());
         if(mode==2&&size!=height||col<0||col>=size||row<0||row>=height){col=0;row=0;size=height=1;}
         List<RenderPatch> out=new ArrayList<>();int[] sides=new int[6];Arrays.fill(sides,2*ScreenHousingTextures.BUILTIN_COUNT+3);int[] faceSlot={0,1,4,5,2,3};sides[faceSlot[normal.getIndex()]]=-1;addBox(context.getPatchFactory(),out,0,1,0,1,0,1,sides);
         emit(context,out,basis,0,0,1,1,0,0,1,1,.4999,2*ScreenHousingTextures.BUILTIN_COUNT+4);
-        double aspect=material<ASPECTS.length?ASPECTS[material]:1,fu=1,fv=1;if(mode==2){fu=Math.min(1,aspect*height/size);fv=Math.min(1,size/(aspect*height));}
+        double aspect=material<ASPECTS.length?ASPECTS[material]:1,fu=1,fv=1;
+        if(mode==2){fu=Math.min(1,aspect*height/size);fv=Math.min(1,size/(aspect*height));}
         double u0=mode==1?col/Math.max(1,aspect):.5+((double)col/size-.5)/fu,u1=mode==1?(col+1)/Math.max(1,aspect):.5+((double)(col+1)/size-.5)/fu;
         double v0=mode==1?row/Math.max(1,1/aspect):.5+((double)row/height-.5)/fv,v1=mode==1?(row+1)/Math.max(1,1/aspect):.5+((double)(row+1)/height-.5)/fv;
         double x0=0,x1=1,y0=0,y1=1;if(mode==2){x0=Math.max(0,-u0/(u1-u0));x1=Math.min(1,(1-u0)/(u1-u0));y0=Math.max(0,-v0/(v1-v0));y1=Math.min(1,(1-v0)/(v1-v0));}
-        if(x1>x0&&y1>y0)emit(context,out,basis,x0,y0,x1,y1,u0+x0*(u1-u0),v0+y0*(v1-v0),u0+x1*(u1-u0),v0+y1*(v1-v0),.5,ScreenHousingTextures.BUILTIN_COUNT+material);
+        if(x1>x0&&y1>y0)emit(context,out,basis,x0,y0,x1,y1,u0+x0*(u1-u0),1-(v0+y0*(v1-v0)),u0+x1*(u1-u0),1-(v0+y1*(v1-v0)),.5,ScreenHousingTextures.BUILTIN_COUNT+material);
         return out.toArray(new RenderPatch[0]);
     }
     private static void emit(MapDataContext context,List<RenderPatch> out,TurntableGeometry.Face basis,double x0,double y0,double x1,double y1,double u0,double v0,double u1,double v1,double depth,int texture){List<MapSurface.Vertex> face=new ArrayList<>();double[][] corners={{x0,y0,u0,v0},{x1,y0,u1,v0},{x1,y1,u1,v1},{x0,y1,u0,v1}};for(double[] corner:corners){double[] p=basis.point(corner[0]-.5,corner[1]-.5,depth);face.add(new MapSurface.Vertex(new Vec3d(.5+p[0],.5+p[1],.5+p[2]),corner[2],corner[3]));}MapSurface.emit(context,out,face,texture);}

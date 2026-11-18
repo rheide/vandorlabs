@@ -24,12 +24,14 @@ def validate_render(output):
     labels=json.loads((output/'fixtures.json').read_text())
     validate_fixture_matrix(labels)
     text=(output/'render.log').read_text(errors='replace')
-    extra_placements=0 if all(v['block']=='module_rack' or v.get('frame_fixture') or v.get('appliance_fixture') for v in labels) else 4
+    extra_placements=0 if all(v['block']=='module_rack' or v.get('frame_fixture') or v.get('appliance_fixture') or v.get('surface_fixture') for v in labels) else 4
     if text.count('Block placed')<len(labels)+extra_placements:raise AssertionError('Incomplete block fixture')
     files=[p for p in (output/'dynmap/web/tiles/world').rglob('*.png') if 'fixture' in str(p)]
     if not files:raise AssertionError('Dynmap produced no fixture PNG tiles')
     if labels and all(v["block"]=="module_rack" for v in labels):
         validate_battery_render(output,labels)
+    elif labels and all(v.get("surface_fixture") for v in labels):
+        validate_surface_render(output,labels)
     else:
         richest=0
         for path in files:
@@ -38,6 +40,44 @@ def validate_render(output):
         if richest<300:raise AssertionError('Map contains no sufficiently detailed textured fixture tile')
     if labels and all(v.get('frame_fixture') for v in labels):validate_core_render(output,labels)
     return len(files)
+
+def validate_surface_render(output,labels):
+    """Check the bright and dark landmarks of the asymmetric Copier Input artwork."""
+    import json
+    import math
+    from PIL import Image
+    config=json.loads((output/'dynmap/web/standalone/dynmap_config.json').read_text())
+    world=next(v for v in config['worlds'] if v['name']=='world')
+    mapping=next(v for v in world['maps'] if v['name']=='fixture')
+    matrix=mapping['worldtomap']
+    tiles={}
+    def sample(fixture,u,v):
+        x,y,z=fixture['x']+u,fixture['y']+1,fixture['z']+v
+        px=math.floor(matrix[0]*x+matrix[1]*y+matrix[2]*z)
+        py=math.floor(matrix[3]*x+matrix[4]*y+matrix[5]*z)
+        tx,ty=px//128,py//128
+        if (tx,ty) not in tiles:
+            path=output/f'dynmap/web/tiles/world/fixture/{tx>>5}_{ty>>5}/{tx}_{ty}.png'
+            with Image.open(path) as image:tiles[tx,ty]=image.convert('RGB')
+        return sum(tiles[tx,ty].getpixel((px%128,127-py%128)))
+    def similarity(a,b):
+        mean_a,mean_b=sum(a)/len(a),sum(b)/len(b)
+        da=[value-mean_a for value in a]
+        db=[value-mean_b for value in b]
+        length=math.sqrt(sum(value*value for value in da)*sum(value*value for value in db))
+        return sum(x*y for x,y in zip(da,db))/length if length else 0
+    from io import BytesIO
+    with ZipFile(next((output/'mods').glob('vandorlabs-*.jar'))) as archive:
+        source=Image.open(BytesIO(archive.read('assets/vandorlabs/textures/blocks/surface/copier-input.png'))).convert('RGB').resize((32,32))
+    interior=[(u,v) for u in range(4,28) for v in range(4,28)]
+    expected=[sum(source.getpixel((u,v))) for u,v in interior]
+    flipped=[sum(source.getpixel((u,31-v))) for u,v in interior]
+    for fixture in labels:
+        actual=[sample(fixture,(u+.5)/32,(v+.5)/32) for u,v in interior]
+        normal,reverse=similarity(expected,actual),similarity(flipped,actual)
+        assert normal>.5 and normal>reverse+.12,f'Surface artwork vertically flipped or missing: {normal:.2f}/{reverse:.2f}'
+    print('Dynmap Surface artwork orientation PASS',flush=True)
+
 
 def core_projection_reference(output, jar, java):
     """Use this candidate's pure Core geometry, independently of Dynmap patches."""
@@ -438,6 +478,9 @@ def place_module_racks(command, labels):
 def validate_fixture_matrix(labels):
     """Fail before launching a map if any authored group or drive state is absent."""
     from collections import Counter
+    if labels and all(v.get('surface_fixture') for v in labels):
+        assert len(labels)==3 and {v['layout'] for v in labels}=={0,1,2}
+        return
     if labels and all(v.get('appliance_fixture') for v in labels):
         assert len(labels)==32 and len({(v['appliance'],v['facing'],v['upper']) for v in labels})==32,'All appliance/facing/half combinations'
         return
@@ -488,7 +531,7 @@ def main():
     parser.add_argument('--dynmap',required=True,type=Path)
     parser.add_argument('--jar',required=True,type=Path)
     parser.add_argument('--java',default='java')
-    parser.add_argument('--focus',choices=('module-rack','frame-machines','appliances'),help='Only the selected changed block family')
+    parser.add_argument('--focus',choices=('module-rack','frame-machines','appliances','surfaces'),help='Only the selected changed block family')
     parser.add_argument('--mod',action='append',default=[],type=Path,help='Additional installed compatibility JARs')
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
@@ -509,7 +552,7 @@ def run_fixture(args,root,output,artifact):
     with ZipFile(args.dynmap) as archive:config=archive.read('configuration.txt').decode()
     config=config.replace('disable-webserver: false','disable-webserver: true').replace('image-format: jpg-q90','image-format: png')
     config=config.replace('org.dynmap.InternalClientUpdateComponent','org.dynmap.JsonFileClientUpdateComponent')
-    config+=f'\nparallelrendercnt: {4 if args.focus=="module-rack" else 1}\nupdate-min-tps: 0\nfullrender-min-tps: 0\n'
+    config+=f'\nparallelrendercnt: {4 if args.focus in ("module-rack","surfaces") else 1}\nupdate-min-tps: 0\nfullrender-min-tps: 0\n'
     (output/'dynmap/configuration.txt').write_text(config)
     (output/'dynmap/worlds.txt').write_text('''worlds:
   - name: world
@@ -524,6 +567,10 @@ def run_fixture(args,root,output,artifact):
         lighting: default
         image-format: png
 ''')
+    if args.focus=='surfaces':
+        (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: surface_closeup\n    azimuth: 135\n    inclination: 90\n    scale: 64\n    minimumheight: 10\n    maximumheight: 16\n')
+        worlds=output/'dynmap/worlds.txt'
+        worlds.write_text(worlds.read_text().replace('perspective: iso_SE_30_hires','perspective: surface_closeup'))
     if args.focus=='module-rack':
         (output/'dynmap/custom-perspectives.txt').write_text('perspectives:\n  - class: org.dynmap.hdmap.IsoHDPerspective\n    name: rack_charge_closeup\n    azimuth: 135\n    inclination: 30\n    scale: 64\n    minimumheight: 10\n    maximumheight: 16\n')
         with (output/'dynmap/worlds.txt').open('a') as extra:
@@ -556,6 +603,11 @@ def run_fixture(args,root,output,artifact):
                     labels=[]
                     if args.focus == 'appliances':
                         place_appliances(command,labels,root)
+                    elif args.focus == 'surfaces':
+                        for layout in range(3):
+                            x,z=9+3*layout,12
+                            command(f'setblock {x} 12 {z} vandorlabs:turntable_surface facing=up replace {{SurfaceOn:"copier-input",SurfaceOff:"copier-input",SurfaceAppearanceConfigured:1b,SurfaceLayout:{layout}}}')
+                            labels.append(dict(x=x,y=12,z=z,block='turntable_surface',surface_fixture=True,layout=layout))
                     elif args.focus == 'module-rack':
                         place_module_racks(command, labels)
                     elif args.focus=='frame-machines':
@@ -589,7 +641,7 @@ def run_fixture(args,root,output,artifact):
                     if any(error in content for error in ('Cannot place block','Invalid block state','Invalid block property','is not a valid state','Data tag parsing failed')):raise RuntimeError('Fixture placement failed: '+str(logpath))
                     import json
                     (output/'fixtures.json').write_text(json.dumps(labels,indent=2)+'\n')
-                    command('dynmap pause none');command('dynmap radiusrender world 24 24 64 fixture')
+                    command('dynmap pause none');command('dynmap radiusrender world 12 12 8 fixture' if args.focus=='surfaces' else 'dynmap radiusrender world 24 24 64 fixture')
                     wait('render of map',timeout=240)
                     # Completion wording differs between Forge builds; require the explicit completion.
                     wait('completed -',timeout=240)

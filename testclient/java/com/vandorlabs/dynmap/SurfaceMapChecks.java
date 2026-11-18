@@ -38,6 +38,14 @@ public final class SurfaceMapChecks {
         }if(!selected&&mode!=2)throw new AssertionError("Selected artwork absent");return mesh;
     }
     public static void run(){
+        for(com.vandorlabs.turntable.TurntableGeometry.Face basis:com.vandorlabs.turntable.TurntableGeometry.Face.values()){
+            String facing=basis.name().toLowerCase(java.util.Locale.ROOT);
+            RenderPatch[] mesh=check(facing,"original_off",0,2,0,0);
+            int selected=com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT+com.vandorlabs.turntable.TurntableTextures.materialChoice("original_off");
+            double[] actual=copyPoint(mesh,selected,.125,.875),expected=basis.point(-.25,-.25,.5);
+            for(int axis=0;axis<3;axis++)if(Math.abs(actual[axis]-.5-expected[axis])>1e-8)
+                throw new AssertionError("Surface image is flipped or missing its joined layout: "+facing);
+        }
         for(String facing:new String[]{"down","up","north","south","west","east"})for(int col=0;col<2;col++)for(int row=0;row<3;row++){
             Context c=new Context(facing,"original_off",2,2,col,row){@Override public Object getBlockTileEntityField(String name){return name.equals("SurfaceGroupHeight")?3:super.getBlockTileEntityField(name);}};
             RenderPatch[] mesh=new ProgrammableSurfaceRenderer().getRenderPatchList(c);int selected=com.vandorlabs.tiles.ScreenHousingTextures.BUILTIN_COUNT+com.vandorlabs.turntable.TurntableTextures.materialChoice("original_off");double area=0;
