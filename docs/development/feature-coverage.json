@@ -866,7 +866,8 @@
       ],
       "implemented": [
         "Programmable Surfaces share Java 8 layout discovery, artwork and UV policy with Forge. Native six-face cells use cached terrain artwork with opaque backing and bounded, coalesced topology updates.",
-        "Focused installed-world and real Survival configuration, mining, material selection and repair checks pass. Uploaded terrain pixels verify settings-only mesh invalidation; actual emitted cropped and non-square artwork retains catalog UV bounds."
+        "Focused installed-world and real Survival configuration, mining, material selection and repair checks pass. Uploaded terrain pixels verify settings-only mesh invalidation; actual emitted cropped and non-square artwork retains catalog UV bounds.",
+        "Native block-only capture preflight shares the Forge scan prism and the native Copy Controller loaded-world adapter. A dedicated fixture verifies all six normals, exact Sign data and unchanged source ownership."
       ]
     },
     {
