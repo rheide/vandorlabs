@@ -1,6 +1,6 @@
 # Copy Controller
 
-The Copy Controller makes a complete block copy between two Programmable Surface pads. It preserves block states, orientation, settings, saved inventories and supported links. The input remains in place. Entities are not copied.
+On Forge 1.12.2 and NeoForge 1.21.1, the Copy Controller makes a complete block copy between two Programmable Surface pads. It preserves block states, orientation, settings, saved inventories and supported links. The input remains in place. Entities are not copied.
 
 Place the controller between two pads. When placed, its front faces you: the cyan input is on your left and the amber output is on your right. Put the material chest directly behind the controller, away from you. Both pads must be complete rectangles with matching width and height, face the same direction, and belong to this controller. Pads can be up to 32 × 32 blocks. Configure their artwork and Stretch, Tile or Fit independently through the Programmable Surface dialog; claiming a pad does not change its artwork. Connected Surface blocks can use different active/inactive textures: artwork does not split Copy Controller membership. Drawing still groups only matching appearance, so each cell keeps its selected texture and layout.
 
@@ -38,7 +38,7 @@ Open unopened loot containers before copying them in Survival. Nonempty battery 
 
 The signed **Redstone Channel Increment On Copy** adjusts Vandor redstone channels in the result, including saved input/output lists, control rows and supported nested captured structures. Negative values subtract. Unlinked zero values stay unlinked. Every linked result must remain between 1 and 2,147,483,647; overflow or underflow rejects the whole operation before withdrawal. Item contents and unrelated foreign data are preserved.
 
-Copying uses the same lossless block support policy as [Vehicle Mode](vehicle-compatibility.md) and [Turntables](turntables.md). Every block is checked; there is no fidelity setting or sampling. Unsupported blocks, incomplete assemblies, unavailable tile data and tiles that cannot round-trip exactly are refused. Finish motion, parking or recovery and release other controllers' claimed assemblies before copying them. Complete input/output regions and their boundaries must be loaded and inside the world border.
+On Forge 1.12.2, copying uses the same lossless block support policy as [Vehicle Mode](vehicle-compatibility.md) and [Turntables](turntables.md). NeoForge 1.21.1 uses its [native copy adapters](development/native-copy-controller.md). Every block is checked; there is no fidelity setting or sampling. Unsupported blocks, incomplete assemblies, unavailable tile data and tiles that cannot round-trip exactly are refused. Finish motion, parking or recovery and release other controllers' claimed assemblies before copying them. Complete input/output regions and their boundaries must be loaded and inside the world border.
 
 ## Saving and recovery
 

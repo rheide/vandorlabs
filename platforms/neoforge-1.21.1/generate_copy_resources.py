@@ -1,4 +1,4 @@
-"""Canonical Copy Controller artwork and padded Source item; registration remains independently gated."""
+"""Canonical Copy Controller artwork and padded Source item."""
 import json
 import shutil
 

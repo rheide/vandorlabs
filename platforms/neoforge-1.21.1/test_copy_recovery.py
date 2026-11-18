@@ -12,7 +12,7 @@ def main():
     saved=out/'saved-world'
     fixture_world(saved,0)
     common=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
-    properties=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.copyControllers=true -Dvandorlabs.copyRuntimeChecks=true'
+    properties=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.copyRuntimeChecks=true'
     env=dict(common,JAVA_TOOL_OPTIONS=properties+' -Dvandorlabs.copyPhase=crash')
     log=out/'crash.log'
     process=launch(command('runServer','-PmodernServerRunDirectory='+str(saved)),log,env)

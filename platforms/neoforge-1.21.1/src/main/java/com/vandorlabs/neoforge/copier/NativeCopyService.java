@@ -66,7 +66,29 @@ public final class NativeCopyService {
             if(after.hasTile()){if(staged==null)throw new IllegalStateException("Prepared Copy tile missing");world.removeBlockEntity(after.pos);world.setBlockEntity(staged);staged.setChanged();}else if(world.getBlockEntity(after.pos)!=null)world.removeBlockEntity(after.pos);world.getChunkAt(after.pos).setUnsaved(true);
         }
         public void released(ServerLevel world,NativeCellTransactions.Header header,boolean rollback,String error,NativeCopyReceipt recipe){
-            var checked=VERIFIED.get(world);if(checked!=null){checked.remove(header.operation());if(checked.isEmpty())VERIFIED.remove(world);}if(world.getBlockEntity(header.root()) instanceof NativeCopyControllerEntity root&&root.key().equals(header.owner())){if(rollback){root.status("Copy rolled back");root.failure(error.isEmpty()?"Copy cancelled safely":error);root.changed();}else root.completed();NativeCopyUpdates.queue(root);}for(var pos:recipe.targetVolume.cells()){for(Direction side:Direction.values())if(world.getBlockEntity(pos.relative(side)) instanceof NativeSurfaceEntity surface)surface.schedule();if(world.getBlockEntity(pos) instanceof NativeSurfaceEntity surface)surface.schedule();}
+            var checked=VERIFIED.get(world);
+            if(checked!=null){checked.remove(header.operation());if(checked.isEmpty())VERIFIED.remove(world);}
+            if(world.getBlockEntity(header.root()) instanceof NativeCopyControllerEntity root&&root.key().equals(header.owner())){
+                if(rollback){
+                    root.status("Copy rolled back");
+                    root.failure(error.isEmpty()?"Copy cancelled safely":error);
+                    root.changed();
+                }else root.completed();
+                NativeCopyUpdates.queue(root);
+            }
+            // Publication stages cells without client updates while the journal owns them.
+            // Announce their final blocks and any tile packets after the durable lease retires.
+            for(var cell:recipe.costSource.cells()){
+                if(!world.hasChunkAt(cell.pos))continue;
+                world.invalidateCapabilities(cell.pos);
+                var state=world.getBlockState(cell.pos);
+                world.sendBlockUpdated(cell.pos,state,state,Block.UPDATE_CLIENTS);
+            }
+            for(var pos:recipe.targetVolume.cells()){
+                for(Direction side:Direction.values())
+                    if(world.getBlockEntity(pos.relative(side)) instanceof NativeSurfaceEntity surface)surface.schedule();
+                if(world.getBlockEntity(pos) instanceof NativeSurfaceEntity surface)surface.schedule();
+            }
         }
     };
     @SubscribeEvent public static void tick(LevelTickEvent.Post event){if(!(event.getLevel() instanceof ServerLevel world))return;var queued=QUEUED.get(world);if(queued==null)return;for(var pending:List.copyOf(queued.values()))try{admit(world,pending);}catch(IllegalArgumentException refusal){queued.remove(pending.owner.getBlockPos());if(pending.owner.installed()){pending.owner.failure(refusal.getMessage());pending.owner.changed();}}if(queued.isEmpty())QUEUED.remove(world);}

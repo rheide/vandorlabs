@@ -8,6 +8,6 @@ import net.neoforged.neoforge.client.event.RegisterMenuScreensEvent;
 
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD,value=Dist.CLIENT)
 public final class NativeCopyClient {
-    @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(NativeCopyBindings.enabled())event.register(NativeCopyBindings.MENU,NativeCopyScreen::new);}
+    @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){event.register(NativeCopyBindings.MENU,NativeCopyScreen::new);}
     private NativeCopyClient(){}
 }

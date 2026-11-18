@@ -20,4 +20,4 @@ Changes apply immediately to the drawing containing the selected cell. Different
 
 Removing a drawing root or opening a hole leaves surviving cells visible. Incomplete shapes fall back to independent faces. Fill the hole and give the new cell matching artwork to rebuild the shared drawing; settled pads do not continuously rescan.
 
-Forge 1.12.2 also supports [Turntable Controllers](turntables.md) and [Copy Controllers](copy-controller.md). Turntables require a filled square. Copy input and output pads require matching filled rectangles; Copy ownership can span different artwork without changing each cell's drawing settings. Surfaces claimed by an operation cannot be removed while that operation owns their contents.
+[Copy Controllers](copy-controller.md) use Programmable Surfaces on Forge 1.12.2 and NeoForge 1.21.1. Forge 1.12.2 also supports [Turntable Controllers](turntables.md). Turntables require a filled square. Copy input and output pads require matching filled rectangles; Copy ownership can span different artwork without changing each cell's drawing settings. Surfaces claimed by an operation cannot be removed while that operation owns their contents.

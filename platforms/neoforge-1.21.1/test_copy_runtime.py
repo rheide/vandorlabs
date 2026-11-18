@@ -11,7 +11,7 @@ def main():
     out=Path(artifact_directory(prefix='copy-runtime-',dir=ROOT/'build/test-artifacts'))
     world=out/'saved-world'
     fixture_world(world,0)
-    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.copyControllers=true -Dvandorlabs.copyRuntimeChecks=true')
+    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.copyRuntimeChecks=true')
     run(command('runServer','-PmodernServerRunDirectory='+str(world)),out/'server.log','[vandorlabs][copy-runtime] PASS',env)
     print('Native Copy Controller runtime PASS '+str(out),flush=True)
 if __name__=='__main__':main()
