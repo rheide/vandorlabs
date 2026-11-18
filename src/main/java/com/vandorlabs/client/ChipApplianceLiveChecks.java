@@ -36,11 +36,15 @@ final class ChipApplianceLiveChecks {
         if(stage==3){if(ticks<20||mc.player.getHeldItemMainhand().getItem()!=Items.FILLED_MAP||Math.abs(mc.player.posY-(AT.getY()+2))>.1)return false;click(mc,EnumFacing.UP,.5,1,.5);stage=4;ticks=0;return false;}
         if(stage==4){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=actor(mc);need(tile(p.world).getStackInSlot(1).getMetadata()==mapId&&tile(p.world).getStackInSlot(1).getItem()==Items.FILLED_MAP&&p.getHeldItemMainhand().isEmpty(),"top frame owns exact original map after actual packet");held(p,ItemStack.EMPTY,false);});stage=5;ticks=0;return false;}
         if(stage==5){if(ticks<20||!mc.player.getHeldItemMainhand().isEmpty()||Math.abs(mc.player.posZ-(AT.getZ()-2))>.1)return false;click(mc,EnumFacing.NORTH,.25,.75,0);stage=6;ticks=0;return false;}
-        if(stage==6){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=actor(mc);TileEntityChipAppliance tile=tile(p.world);imported=tile.getStackInSlot(0).copy();SavedMapPixels map=NavigationChip.savedMap(imported);need(map!=null&&map.scale()==4,"actual button programs map snapshot");need(map.contains(map.minX(),map.minZ())&&!map.contains(map.maxXExclusive(),map.minZ()),"full scale4 square and exact boundary");need(map.colorAt(map.minX(),map.minZ())==NavigationMap.OUTSIDE,"unexplored pixel remains blank");need(tile.getStackInSlot(1).getMetadata()==mapId,"scan retains original map");TileEntityChipAppliance copy=new TileEntityChipAppliance();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));need(NavigationChip.savedMap(copy.getStackInSlot(0)).equals(map),"map snapshot survives save/reload");need(tile.getUpdateTag().getCompoundTag("InsertedToken").getCompoundTag("tag").getCompoundTag("NavigationMapPixels").getByteArray("Colors").length==0,"public update omits saved pixel payload");need(tile.writeToNBT(new NBTTagCompound()).getCompoundTag("InsertedToken").getCompoundTag("tag").getCompoundTag("NavigationMapPixels").getByteArray("Colors").length==16384,"disk retains full pixel payload");});need(tile(mc.world).mapPreview!=null,"client top frame receives original map image");MapData rendered=TEChipAppliance.mapData(tile(mc.world));need(rendered!=null,"top frame hydrates a stable vanilla map texture");Object maps=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.MapItemRenderer.class,mc.entityRenderer.getMapItemRenderer(),"loadedMaps","field_148252_c");Object instance=((Map<?,?>)maps).get(rendered.mapName);java.lang.reflect.Field tex=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(instance.getClass(),"mapTextureData","field_148241_e");tex.setAccessible(true);int colored=0;for(int pixel:(int[])tex.get(instance))if((pixel>>>24)==255)colored++;need(colored>16000,"top frame actually uploads original map pixels: "+colored);click(mc,EnumFacing.NORTH,.5,.25,0);stage=7;ticks=0;return false;}
-        if(stage==7){if(ticks<20||!(mc.currentScreen instanceof GuiChipAppliance))return false;need(mc.player.openContainer instanceof com.vandorlabs.container.ContainerChipAppliance,"standard appliance container via ordinary right-click");mc.playerController.sendEnchantPacket(mc.player.openContainer.windowId,0);stage=8;ticks=0;return false;}
-        if(stage==8){if(ticks<20)return false;mc.player.closeScreen();server(mc,()->{matrix(actor(mc));offline(actor(mc));});stage=9;ticks=0;return false;}
+        if(stage==6){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=actor(mc);TileEntityChipAppliance tile=tile(p.world);imported=tile.getStackInSlot(0).copy();SavedMapPixels map=NavigationChip.savedMap(imported);need(map!=null&&map.scale()==4,"actual button programs map snapshot");need(map.contains(map.minX(),map.minZ())&&!map.contains(map.maxXExclusive(),map.minZ()),"full scale4 square and exact boundary");need(map.colorAt(map.minX(),map.minZ())==NavigationMap.OUTSIDE,"unexplored pixel remains blank");need(tile.getStackInSlot(1).getMetadata()==mapId,"scan retains original map");TileEntityChipAppliance copy=new TileEntityChipAppliance();copy.readFromNBT(tile.writeToNBT(new NBTTagCompound()));need(NavigationChip.savedMap(copy.getStackInSlot(0)).equals(map),"map snapshot survives save/reload");need(tile.getUpdateTag().getCompoundTag("InsertedToken").getCompoundTag("tag").getCompoundTag("NavigationMapPixels").getByteArray("Colors").length==0,"public update omits saved pixel payload");need(tile.writeToNBT(new NBTTagCompound()).getCompoundTag("InsertedToken").getCompoundTag("tag").getCompoundTag("NavigationMapPixels").getByteArray("Colors").length==16384,"disk retains full pixel payload");});need(tile(mc.world).mapPreview!=null,"client top frame receives original map image");MapData rendered=TEChipAppliance.mapData(tile(mc.world));need(rendered!=null,"top frame hydrates a stable vanilla map texture");Object maps=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.MapItemRenderer.class,mc.entityRenderer.getMapItemRenderer(),"loadedMaps","field_148252_c");Object instance=((Map<?,?>)maps).get(rendered.mapName);java.lang.reflect.Field tex=net.minecraftforge.fml.relauncher.ReflectionHelper.findField(instance.getClass(),"mapTextureData","field_148241_e");tex.setAccessible(true);int colored=0;for(int pixel:(int[])tex.get(instance))if((pixel>>>24)==255)colored++;need(colored>16000,"top frame actually uploads original map pixels: "+colored);ApplianceVisualChecks.checkMountedMap(mc,output,tile(mc.world),ChipApplianceService.palette()[18]);click(mc,EnumFacing.NORTH,.5,.25,0);stage=7;ticks=0;return false;}
+        if(stage==7){if(ticks<20||!(mc.currentScreen instanceof GuiChipAppliance))return false;need(mc.player.openContainer instanceof com.vandorlabs.container.ContainerChipAppliance,"standard appliance container via ordinary right-click");mc.playerController.sendEnchantPacket(mc.player.openContainer.windowId,0);
+            GuiChipAppliance dialog=(GuiChipAppliance)mc.currentScreen;
+            dialog.actionPerformed(new net.minecraft.client.gui.GuiButton(2,0,0,"Redstone"));
+            dialog.actionPerformed(new net.minecraft.client.gui.GuiButton(3,0,0,"Trigger"));
+            stage=8;ticks=0;return false;}
+        if(stage==8){if(ticks<20)return false;mc.player.closeScreen();server(mc,()->{need(tile(actor(mc).world).activation()==ApplianceAutomation.ON,"Redstone dialog settings reach the installed Scanner");matrix(actor(mc));automation(actor(mc).getServerWorld());offline(actor(mc));});stage=9;ticks=0;return false;}
         if(stage==9){if(ticks<30||!(mc.world.getTileEntity(AT.east(4)) instanceof TileEntityNavigationTable)||!(mc.world.getTileEntity(AT.east(6)) instanceof TileEntityAnimatedScreenSelector))return false;NavigationMapRenderer.bind(mc.world.getTileEntity(AT.east(4)),0,1);NavigationMapRenderer.bind(mc.world.getTileEntity(AT.east(6)),0,1);stage=10;ticks=0;return false;}
-        if(stage==10){if(ticks<60||!NavigationMapRenderer.ready(AT.east(4))||!NavigationMapRenderer.ready(AT.east(6)))return false;for(BlockPos at:new BlockPos[]{AT.east(4),AT.east(6)})snapshotRaster(at);System.out.println("[vandorlabs] chip-appliances PASS checks="+checks+" Survival mount/frame/button/menu packets maps/books/SGA/catalog costs failure paths offline-square save/client summary");return true;}
+        if(stage==10){if(ticks<60||!NavigationMapRenderer.ready(AT.east(4))||!NavigationMapRenderer.ready(AT.east(6)))return false;server(mc,()->verifyDelivery(actor(mc).getServerWorld()));for(BlockPos at:new BlockPos[]{AT.east(4),AT.east(6)})snapshotRaster(at);System.out.println("[vandorlabs] chip-appliances PASS checks="+checks+" Survival mount/frame/button/menu packets maps/books/SGA/catalog costs failure paths offline-square save/client summary");return true;}
         return false;
     }
     private static void offline(EntityPlayerMP p){
@@ -74,6 +78,99 @@ final class ChipApplianceLiveChecks {
         ink(printer);ItemStack vehicle=new ItemStack(ModItems.DATA_CHIP);com.vandorlabs.vehicle.VehicleChip.blank(vehicle);printer.setInventorySlotContents(0,vehicle);printer.activate(p);need(products(w).isEmpty()&&printer.getStackInSlot(1).getCount()==2&&printer.getStackInSlot(2).getCount()==2,"unsupported Vehicle does not consume inputs");printer.setInventorySlotContents(0,journal);w.setBlockState(AT.up(),Blocks.STONE.getDefaultState(),2);printer.activate(p);need(products(w).isEmpty()&&printer.getStackInSlot(1).getCount()==2,"blocked output consumes nothing");w.setBlockToAir(AT.up());
         CancelOutput cancelled=new CancelOutput();net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(cancelled);try{printer.activate(p);}finally{net.minecraftforge.common.MinecraftForge.EVENT_BUS.unregister(cancelled);}need(products(w).isEmpty()&&printer.getStackInSlot(1).getCount()==2&&printer.getStackInSlot(2).getCount()==2,"cancelled output spawn consumes nothing");
         printer.setInventorySlotContents(1,ItemStack.EMPTY);printer.activate(p);need(products(w).isEmpty()&&printer.getStackInSlot(2).getCount()==2,"missing ink consumes nothing");
+    }
+    private static final BlockPos AUTOMATED_PRINTER=AT.south(7),AUTOMATED_SCANNER=AT.south(10);
+    private static net.minecraftforge.items.IItemHandler port(net.minecraft.tileentity.TileEntity tile,EnumFacing side){
+        return tile.getCapability(net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,side);
+    }
+    private static void automation(WorldServer world){
+        Block printer=Block.getBlockFromName("vandorlabs:printer"),scanner=Block.getBlockFromName("vandorlabs:scanner");
+        for(Block block:new Block[]{printer,scanner})for(EnumFacing face:EnumFacing.HORIZONTALS){
+            BlockPos pos=block==printer?AUTOMATED_PRINTER:AUTOMATED_SCANNER;
+            world.setBlockState(pos,block.getDefaultState().withProperty(com.vandorlabs.blocks.BlockChipAppliance.FACING,face),3);
+            TileEntityChipAppliance device=(TileEntityChipAppliance)world.getTileEntity(pos);
+            EnumFacing outlet=block==printer?EnumFacing.UP:face.getOpposite();
+            need(port(device,outlet).getSlots()==1&&port(device,face)==null&&port(device,EnumFacing.DOWN)==null,"rotated output and closed front/bottom");
+            for(EnumFacing side:new EnumFacing[]{face.rotateY(),face.rotateYCCW()})
+                need(port(device,side).getSlots()==(block==printer?3:2)&&port(device,side).getSlotLimit(0)==1,"rotated inputs and one-chip mount");
+        }
+        world.setBlockState(AUTOMATED_PRINTER,printer.getDefaultState(),3);
+        world.setBlockState(AUTOMATED_SCANNER,scanner.getDefaultState(),3);
+        TileEntityChipAppliance p=(TileEntityChipAppliance)world.getTileEntity(AUTOMATED_PRINTER),s=(TileEntityChipAppliance)world.getTileEntity(AUTOMATED_SCANNER);
+        EnumFacing scanBack=world.getBlockState(AUTOMATED_SCANNER).getValue(com.vandorlabs.blocks.BlockChipAppliance.FACING).getOpposite();
+        EnumFacing printFront=world.getBlockState(AUTOMATED_PRINTER).getValue(com.vandorlabs.blocks.BlockChipAppliance.FACING);
+        BlockPos scanOutput=AUTOMATED_SCANNER.offset(scanBack),printOutput=AUTOMATED_PRINTER.up();
+        Block duct=Block.getBlockFromName("thermaldynamics:duct_32");
+        if(duct!=null){
+            EntityPlayerMP installer=net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world);
+            ItemStack ductStack=new ItemStack(duct,1,2);
+            for(BlockPos segment:new BlockPos[]{printOutput,printOutput.south()}){
+                world.setBlockState(segment,duct.getStateFromMeta(2),3);
+                duct.onBlockPlacedBy(world,segment,world.getBlockState(segment),installer,ductStack);
+            }
+            world.setBlockState(printOutput.south(2),Blocks.CHEST.getDefaultState(),3);
+            Item servo=Item.getByNameOrId("thermaldynamics:servo");
+            need(servo!=null,"Thermal itemduct fixture can obtain a servo");
+            installer.setPosition(AUTOMATED_PRINTER.getX()+.5,AUTOMATED_PRINTER.getY(),AUTOMATED_PRINTER.getZ()-2);
+            installer.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(servo,1,4));
+            need(servo.onItemUse(installer,world,AUTOMATED_PRINTER,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1F,.5F)==EnumActionResult.SUCCESS,
+                    "Thermal servo attaches to Printer outlet");
+            world.setBlockState(printOutput.east(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+        }else world.setBlockState(printOutput,Blocks.CHEST.getDefaultState(),3);
+        world.setBlockState(scanOutput,Blocks.CHEST.getDefaultState(),3);
+        net.minecraft.inventory.IInventory scanChest=(net.minecraft.inventory.IInventory)world.getTileEntity(scanOutput);
+        for(int i=0;i<scanChest.getSizeInventory();i++)scanChest.setInventorySlotContents(i,new ItemStack(Items.STICK,64));
+        DeferredTileLoad.flush(world);
+        ItemStack journal=new ItemStack(ModItems.DATA_CHIP);
+        ChipJournal.write(journal,true,"Automated",new String[]{"A printed journal"});
+        net.minecraftforge.items.IItemHandler input=port(p,printFront.rotateY());
+        need(input.insertItem(0,journal,true).isEmpty()&&p.getStackInSlot(0).isEmpty(),"simulated input preserves owner");
+        need(input.insertItem(0,journal,false).isEmpty()&&input.extractItem(0,1,false).isEmpty(),"left input accepts chip and cannot extract");
+        need(port(p,printFront.rotateYCCW()).insertItem(1,new ItemStack(Items.DYE,2,0),false).isEmpty()
+                &&input.insertItem(2,new ItemStack(Items.PAPER,2),false).isEmpty(),"both inputs accept consumables");
+        need(port(p,EnumFacing.UP).insertItem(0,journal,false)==journal,"outlet rejects inputs");
+        p.configureRedstone(ApplianceAutomation.ON,com.vandorlabs.redstone.ChannelList.EMPTY);
+        p.update();
+        world.setBlockState(AUTOMATED_PRINTER.offset(printFront),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+        p.update();
+        need(p.getStackInSlot(1).getCount()==1&&p.getStackInSlot(2).getCount()==1,"rising edge prints once with connected outlet");
+        p.update();
+        need(p.getStackInSlot(1).getCount()==1,"held signal does not print twice");
+        world.setBlockToAir(AUTOMATED_PRINTER.offset(printFront));
+        p.update();
+        need(p.getStackInSlot(1).getCount()==1,"falling edge does not run ON mode");
+
+        net.minecraftforge.items.IItemHandler scanIn=port(s,scanBack.rotateY());
+        need(scanIn.insertItem(1,new ItemStack(Items.ENCHANTED_BOOK),false).isEmpty()
+                &&scanIn.insertItem(0,new ItemStack(ModItems.DATA_CHIP),false).isEmpty(),"Scanner takes original and chip through its side");
+        s.configureRedstone(ApplianceAutomation.OFF,com.vandorlabs.redstone.ChannelList.EMPTY);
+        s.update();
+        world.setBlockState(AUTOMATED_SCANNER.up(),Blocks.REDSTONE_BLOCK.getDefaultState(),3);
+        s.update();
+        need(s.getStackInSlot(0).getItem()==ModItems.DATA_CHIP,"Scanner OFF mode ignores rising edge");
+        world.setBlockToAir(AUTOMATED_SCANNER.up());
+        s.update();
+        ItemStack pending=port(s,scanBack).extractItem(0,1,true);
+        need(ChipJournal.enchanting(pending)&&s.getStackInSlot(0).isEmpty()
+                &&s.getStackInSlot(1).getItem()==Items.ENCHANTED_BOOK,"falling edge buffers chip and retains original with full outlet");
+        TileEntityChipAppliance reloaded=new TileEntityChipAppliance();
+        reloaded.readFromNBT(s.writeToNBT(new NBTTagCompound()));
+        need(ItemStack.areItemStacksEqual(reloaded.getStackInSlot(reloaded.outputSlot()),pending)
+                &&reloaded.activation()==ApplianceAutomation.OFF&&!s.getUpdateTag().hasKey("ApplianceOutput"),"queued output and settings persist privately");
+        scanChest.setInventorySlotContents(0,ItemStack.EMPTY);
+    }
+    private static void verifyDelivery(WorldServer world){
+        BlockPos print=AUTOMATED_PRINTER.up();
+        if(!(world.getTileEntity(print) instanceof net.minecraft.inventory.IInventory))print=print.south(2);
+        net.minecraft.inventory.IInventory chest=(net.minecraft.inventory.IInventory)world.getTileEntity(print);
+        need(chest!=null&&chest.getStackInSlot(0).getItem()==Items.WRITTEN_BOOK,"connected Printer delivers exactly one written book (buffer="+((TileEntityChipAppliance)world.getTileEntity(AUTOMATED_PRINTER)).getStackInSlot(3)+")");
+        EnumFacing scanBack=world.getBlockState(AUTOMATED_SCANNER).getValue(com.vandorlabs.blocks.BlockChipAppliance.FACING).getOpposite();
+        net.minecraft.inventory.IInventory scanChest=(net.minecraft.inventory.IInventory)world.getTileEntity(AUTOMATED_SCANNER.offset(scanBack));
+        TileEntityChipAppliance scanner=(TileEntityChipAppliance)world.getTileEntity(AUTOMATED_SCANNER);
+        need(ChipJournal.enchanting(scanChest.getStackInSlot(0))&&scanner.getStackInSlot(scanner.outputSlot()).isEmpty(),"blocked Scanner retries and exports exactly one chip");
+        need(world.getEntitiesWithinAABB(EntityItem.class,new AxisAlignedBB(AUTOMATED_PRINTER).union(new AxisAlignedBB(AUTOMATED_SCANNER)).grow(2)).isEmpty(),
+                "automation does not eject into the open world");
+        System.out.println("[vandorlabs] appliance-automation PASS printer="+world.getBlockState(AUTOMATED_PRINTER.up()).getBlock().getRegistryName()+" scanner=chest");
     }
     public static final class CancelOutput {@net.minecraftforge.fml.common.eventhandler.SubscribeEvent public void spawn(net.minecraftforge.event.entity.EntityJoinWorldEvent event){if(event.getEntity() instanceof EntityItem)event.setCanceled(true);}}
 }

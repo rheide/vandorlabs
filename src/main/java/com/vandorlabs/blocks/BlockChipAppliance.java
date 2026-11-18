@@ -15,6 +15,12 @@ public final class BlockChipAppliance extends BlockVandorDirectional {
     public BlockChipAppliance(String name,boolean scanner){super(name);this.scanner=scanner;}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityChipAppliance(scanner);}
+    public boolean scanner(){return scanner;}
+    @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,net.minecraft.block.Block block,BlockPos from){
+        if(world.isRemote||!world.isBlockLoaded(pos,false))return;
+        TileEntity raw=world.getTileEntity(pos);
+        if(raw instanceof TileEntityChipAppliance)((TileEntityChipAppliance)raw).redstoneChanged();
+    }
     public static MachineMountSurface front(TileEntityChipAppliance tile,boolean button){EnumFacing facing=tile.getWorld().getBlockState(tile.getPos()).getValue(FACING);Vec3d p=MachineMountSurface.rotate(new Vec3d(button?.25:.75,.75,-.015),facing,1,1);return new MachineMountSurface(p,facing,button?.20:.375,button?.20:.375);}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer actor,EnumHand hand,EnumFacing side,float x,float y,float z){
         TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityChipAppliance))return false;TileEntityChipAppliance tile=(TileEntityChipAppliance)raw;if(!tile.isUsableByPlayer(actor))return false;

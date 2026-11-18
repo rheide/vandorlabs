@@ -17,11 +17,11 @@ import net.neoforged.fml.common.EventBusSubscriber;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeApplianceProductChecks {
  private static ServerLevel world;private static ServerPlayer actor;private static NativeApplianceEntity printer,scanner;private static int checks,ticks,stage;private static long samples;private static ItemStack originalNav;
- private static final BlockPos P=new BlockPos(96,120,96),S=P.east(3);
+ private static final BlockPos P=new BlockPos(96,120,96),S=P.east(3),AP=P.offset(7,0,5),AS=AP.east(4);
  private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Appliance products: "+why);}
  private static void chip(NativeApplianceEntity owner,ItemStack stack){need(owner.replaceChip(owner.chipStack(),stack),"replace physical chip for fixture");}
- @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent event){if(!Boolean.getBoolean("vandorlabs.applianceProductChecks"))return;try{world=event.getServer().overworld();world.setChunkForced(6,6,true);world.getChunkAt(P);actor=new net.neoforged.neoforge.common.util.FakePlayer(world,new com.mojang.authlib.GameProfile(new UUID(0,211120),"ApplianceProducts"));actor.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);actor.setPos(98,120,94);if(System.getProperty("vandorlabs.applianceProductPhase","write").equals("read")){cold(event);return;}world.setBlock(P,NativeApplianceBindings.BLOCKS.get("printer").defaultBlockState(),3);world.setBlock(S,NativeApplianceBindings.BLOCKS.get("scanner").defaultBlockState(),3);world.setBlock(P.above(),Blocks.AIR.defaultBlockState(),3);printer=(NativeApplianceEntity)world.getBlockEntity(P);scanner=(NativeApplianceEntity)world.getBlockEntity(S);NativeSavedMapChecks.run(world,actor);NativeApplianceCodecChecks.run(world,actor);stage=-1;}catch(Throwable failure){fail(failure);}}
- private static void cold(net.neoforged.neoforge.event.server.ServerStartedEvent event){printer=(NativeApplianceEntity)world.getBlockEntity(P);scanner=(NativeApplianceEntity)world.getBlockEntity(S);need(printer!=null&&scanner!=null&&!printer.inert()&&!scanner.inert(),"actual cold tiles healthy");need(printer.inkStack().getCount()==8&&printer.paperStack().getCount()==8,"cold exactremaining resources");var snapshot=NativeNavigationChip.savedMap(scanner.chipStack());need(snapshot!=null&&snapshot.scale()==4&&snapshot.colors()[0]==0&&snapshot.colors()[16383]==50,"coldfullpixelarrayretained");var original=MapItem.getSavedData(scanner.frameStack(),world);need(original!=null&&Arrays.equals(snapshot.colors(),original.colors),"coldoriginalvanillamapretained");need(world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(4)).isEmpty(),"no duplicated published output after restart");System.out.println("[vandorlabs][appliance-products] read PASS checks="+checks+" actualColdInventory/FullPixels/OriginalMap/NoDuplicates");world=null;event.getServer().halt(false);}
+ @SubscribeEvent public static void start(net.neoforged.neoforge.event.server.ServerStartedEvent event){if(!Boolean.getBoolean("vandorlabs.applianceProductChecks"))return;try{world=event.getServer().overworld();world.setChunkForced(6,6,true);world.getChunkAt(P);actor=new net.neoforged.neoforge.common.util.FakePlayer(world,new com.mojang.authlib.GameProfile(new UUID(0,211120),"ApplianceProducts"));actor.setGameMode(net.minecraft.world.level.GameType.SURVIVAL);actor.setPos(98,120,94);if(System.getProperty("vandorlabs.applianceProductPhase","write").equals("read")){cold(event);return;}world.setBlock(P,NativeApplianceBindings.BLOCKS.get("printer").defaultBlockState(),3);world.setBlock(S,NativeApplianceBindings.BLOCKS.get("scanner").defaultBlockState(),3);world.setBlock(P.above(),Blocks.AIR.defaultBlockState(),3);printer=(NativeApplianceEntity)world.getBlockEntity(P);scanner=(NativeApplianceEntity)world.getBlockEntity(S);NativeSavedMapChecks.run(world,actor);NativeApplianceCodecChecks.run(world,actor);setupAutomation();stage=-1;}catch(Throwable failure){fail(failure);}}
+ private static void cold(net.neoforged.neoforge.event.server.ServerStartedEvent event){checkColdAutomation();printer=(NativeApplianceEntity)world.getBlockEntity(P);scanner=(NativeApplianceEntity)world.getBlockEntity(S);need(printer!=null&&scanner!=null&&!printer.inert()&&!scanner.inert(),"actual cold tiles healthy");need(printer.inkStack().getCount()==8&&printer.paperStack().getCount()==8,"cold exactremaining resources");var snapshot=NativeNavigationChip.savedMap(scanner.chipStack());need(snapshot!=null&&snapshot.scale()==4&&snapshot.colors()[0]==0&&snapshot.colors()[16383]==50,"coldfullpixelarrayretained");var original=MapItem.getSavedData(scanner.frameStack(),world);need(original!=null&&Arrays.equals(snapshot.colors(),original.colors),"coldoriginalvanillamapretained");need(world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(4)).isEmpty(),"no duplicated published output after restart");System.out.println("[vandorlabs][appliance-products] read PASS checks="+checks+" actualColdInventory/FullPixels/OriginalMap/NoDuplicates");world=null;event.getServer().halt(false);}
  private static ItemStack output(){var list=world.getEntitiesOfClass(ItemEntity.class,new AABB(P.above()).inflate(.8));need(list.size()==1,"one upward vanilla product");var item=list.getFirst().getItem().copy();list.getFirst().discard();return item;}
  private static void documents(){var journal=NativeChipTypes.variant("journal");NativeChipJournal.write(journal,true,"My Journal",new String[]{"First paragraph\nSecond paragraph","A long final page "+"a".repeat(450)});chip(printer,journal);printer.setItem(1,new ItemStack(Items.INK_SAC,12));printer.setItem(2,new ItemStack(Items.PAPER,12));need(NativeApplianceProducts.activate(actor,printer),"journal print");var book=output();need(book.is(Items.WRITTEN_BOOK)&&book.get(DataComponents.WRITTEN_BOOK_CONTENT).resolved(),"resolved vanilla writtenbook");need(printer.inkStack().getCount()==11&&printer.paperStack().getCount()==11&&ItemStack.matches(printer.chipStack(),journal),"exact1ink1paper and retainedchip");
   chip(printer,NativeChipTypes.variant("vehicle"));var before=printer.saveWithFullMetadata(world.registryAccess());need(!NativeApplianceProducts.activate(actor,printer)&&before.equals(printer.saveWithFullMetadata(world.registryAccess())),"vehicle ignored without charge or mutation");
@@ -33,6 +33,68 @@ public final class NativeApplianceProductChecks {
  }
  @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(world==null||stage==0)return;try{need(++ticks<400,"bounded completion timeoutstage="+stage);if(stage<0){if(ticks<20)return;documents();stage=1;return;}if(NativeApplianceProducts.pending(printer))return;if(stage==1){var map=output();var data=MapItem.getSavedData(map,world);need(map.is(Items.FILLED_MAP)&&data!=null&&data.scale==0&&data.colors.length==16384,"vanilla128map scale0");need(printer.inkStack().getCount()==9&&printer.paperStack().getCount()==9&&ItemStack.matches(printer.chipStack(),originalNav),"async success exactcost/retain");need(NativeNavigationRuntime.terrainSamples()>samples,"seedpixels sampled");need(world.getChunkSource().getChunkNow(900000>>4,800000>>4)==null,"print neverloads farterrain");for(int at:new int[]{0,127,8192,16383}){int x=data.centerX-64+(at&127),z=data.centerZ-64+(at>>7);need(data.colors[at]==NativeApplianceDocuments.nearest(NativeNavigationRuntime.color(world,x,z,1)),"sameNav seed pixel quantized at="+at);}
    var imported=MapItem.create(world,2100000,-1900000,(byte)4,true,false);var input=MapItem.getSavedData(imported,world);Arrays.fill(input.colors,(byte)50);input.colors[0]=0;input.colors[64*128+64]=0;input.setDirty();scanner.setItem(1,imported);need(NativeApplianceProducts.activate(actor,scanner)&&ItemStack.matches(imported,scanner.frameStack()),"mapscan retains original");var snapshot=NativeNavigationChip.savedMap(scanner.chipStack());need(snapshot!=null&&snapshot.scale()==4&&snapshot.colors()[0]==0&&snapshot.colors()[16383]==50,"fulloriginal scale4blank/square preserved");var saved=scanner.saveWithFullMetadata(world.registryAccess());var restored=new NativeApplianceEntity(S,scanner.getBlockState());restored.setLevel(world);restored.loadWithComponents(saved,world.registryAccess());need(!restored.inert()&&ItemStack.matches(restored.chipStack(),scanner.chipStack())&&ItemStack.matches(restored.frameStack(),imported),"fullsavedappliance inventoryroundtrip");need(!scanner.getUpdateTag(world.registryAccess()).toString().contains("NavigationMapPixels"),"publicappliance projection hidesprivate snapshot");chip(printer,scanner.chipStack());samples=NativeNavigationRuntime.terrainSamples();need(NativeApplianceProducts.activate(actor,printer),"printimportedmap start");stage=2;
-  }else if(stage==2){var data=MapItem.getSavedData(output(),world);need(data!=null&&data.scale==0,"importedsource prints scale0");need(data.colors[0]==0&&data.colors[16383]==50,"importedblank andopaque pixels preserved onscale0crop");need(NativeNavigationRuntime.terrainSamples()==samples,"entire importedoutput square reusesoffline snapshot no seedquery");need(printer.inkStack().getCount()==8&&printer.paperStack().getCount()==8,"importedprint exactcost");System.out.println("[vandorlabs][appliance-products] write PASS checks="+checks+" Journal/Catalog/SeedMap/ImportedScale4/NoChunks/Originals/ExactCosts/Refusals/PublicPrivacy");world=null;event.getServer().halt(false);}}catch(Throwable failure){fail(failure);}}
+  }else if(stage==2){var data=MapItem.getSavedData(output(),world);need(data!=null&&data.scale==0,"importedsource prints scale0");need(data.colors[0]==0&&data.colors[16383]==50,"importedblank andopaque pixels preserved onscale0crop");need(NativeNavigationRuntime.terrainSamples()==samples,"entire importedoutput square reusesoffline snapshot no seedquery");need(printer.inkStack().getCount()==8&&printer.paperStack().getCount()==8,"importedprint exactcost");automation();System.out.println("[vandorlabs][appliance-products] write PASS checks="+checks+" Journal/Catalog/SeedMap/ImportedScale4/NoChunks/Originals/ExactCosts/Refusals/PublicPrivacy");world=null;event.getServer().halt(false);}}catch(Throwable failure){fail(failure);}}
+ private static net.neoforged.neoforge.items.IItemHandler port(BlockPos pos,Direction side){
+  return world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,pos,side);
+ }
+ private static void setupAutomation(){
+  var printBlock=NativeApplianceBindings.BLOCKS.get("printer");
+  var scanBlock=NativeApplianceBindings.BLOCKS.get("scanner");
+  for(var block:List.of(printBlock,scanBlock))for(var facing:Direction.Plane.HORIZONTAL){
+   BlockPos pos=block==printBlock?AP:AS;
+   world.setBlock(pos,block.defaultBlockState().setValue(NativeApplianceBlock.FACING,facing),3);
+   Direction outlet=block==printBlock?Direction.UP:facing.getOpposite();
+   need(port(pos,outlet).getSlots()==1&&port(pos,facing)==null&&port(pos,Direction.DOWN)==null,"rotated outlet and closed faces");
+   for(var side:List.of(facing.getClockWise(),facing.getCounterClockWise()))
+    need(port(pos,side).getSlots()==(block==printBlock?3:2)&&port(pos,side).getSlotLimit(0)==1,"rotated inlets and mount limit");
+  }
+  world.setBlock(AP,printBlock.defaultBlockState(),3);
+  world.setBlock(AS,scanBlock.defaultBlockState(),3);
+  world.setBlock(AP.above(),Blocks.CHEST.defaultBlockState(),3);
+  world.setBlock(AS.south(),Blocks.CHEST.defaultBlockState(),3);
+ }
+ private static void automation(){
+  var print=(NativeApplianceEntity)world.getBlockEntity(AP);
+  var scan=(NativeApplianceEntity)world.getBlockEntity(AS);
+  var journal=NativeChipTypes.variant("journal");
+  NativeChipJournal.write(journal,true,"Automated",new String[]{"A printed journal"});
+  var printIn=port(AP,Direction.WEST);
+  need(printIn.insertItem(0,journal,true).isEmpty()&&print.chipStack().isEmpty(),"simulated insert keeps owner");
+  need(printIn.insertItem(0,journal,false).isEmpty()&&printIn.extractItem(0,1,false).isEmpty(),"input accepts chip and cannot extract");
+  need(printIn.insertItem(1,new ItemStack(Items.INK_SAC,2),false).isEmpty()
+        &&port(AP,Direction.EAST).insertItem(2,new ItemStack(Items.PAPER,2),false).isEmpty(),"both sides accept consumables");
+  print.configureRedstone(1,com.vandorlabs.redstone.ChannelList.EMPTY);
+  print.tick();
+  world.setBlock(AP.north(),Blocks.REDSTONE_BLOCK.defaultBlockState(),3);
+  need(com.vandorlabs.neoforge.redstone.NativeLoadedRedstonePower.level(world,AP)>0,"physical redstone block powers Printer");
+  print.tick();
+  var chest=(net.minecraft.world.Container)world.getBlockEntity(AP.above());
+  need(chest.getItem(0).is(Items.WRITTEN_BOOK)&&print.inkStack().getCount()==1,"rising edge produces and exports one book, ink="+print.inkStack()+", chest="+chest.getItem(0));
+  print.tick();
+  need(chest.getItem(1).isEmpty()&&print.inkStack().getCount()==1,"held power does not repeat");
+  var scanIn=port(AS,Direction.EAST);
+  var original=new ItemStack(Items.ENCHANTED_BOOK);
+  need(scanIn.insertItem(0,NativeChipTypes.variant("journal"),false).isEmpty()&&scanIn.insertItem(1,original,false).isEmpty(),"Scanner side accepts chip and original");
+  var full=(net.minecraft.world.Container)world.getBlockEntity(AS.south());
+  for(int slot=0;slot<full.getContainerSize();slot++)full.setItem(slot,new ItemStack(Items.STICK,64));
+  scan.configureRedstone(2,com.vandorlabs.redstone.ChannelList.EMPTY);
+  scan.tick();
+  world.setBlock(AS.above(),Blocks.REDSTONE_BLOCK.defaultBlockState(),3);
+  scan.tick();
+  need(!scan.chipStack().isEmpty(),"OFF ignores rising edge");
+  world.removeBlock(AS.above(),false);
+  scan.tick();
+  var queued=port(AS,Direction.SOUTH).extractItem(0,1,true);
+  need(NativeChipJournal.textData(queued).getString("JournalFont").equals("enchanting")&&scan.chipStack().isEmpty()
+        &&ItemStack.matches(scan.frameStack(),original),"falling edge retains original and buffers exactly one chip");
+  need(!scan.getUpdateTag(world.registryAccess()).contains("ApplianceOutput"),"public projection excludes output");
+ }
+ private static void checkColdAutomation(){
+  var scan=(NativeApplianceEntity)world.getBlockEntity(AS);
+  need(scan!=null&&!scan.inert()&&scan.activation()==2,"activation survives server restart");
+  var result=port(AS,Direction.SOUTH).extractItem(0,1,false);
+  need(NativeChipJournal.textData(result).getString("JournalFont").equals("enchanting")
+        &&port(AS,Direction.SOUTH).extractItem(0,1,false).isEmpty()&&scan.frameStack().is(Items.ENCHANTED_BOOK),"queued chip survives restart with exactly one owner");
+ }
  private static void fail(Throwable failure){failure.printStackTrace();System.out.println("[vandorlabs][appliance-products] FAIL "+failure);var server=world==null?net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer():world.getServer();world=null;if(server!=null)server.halt(false);}
 }

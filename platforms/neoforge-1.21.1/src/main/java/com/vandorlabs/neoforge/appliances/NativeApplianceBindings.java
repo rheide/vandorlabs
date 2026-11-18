@@ -24,6 +24,9 @@ public final class NativeApplianceBindings {
   event.register(Registries.BLOCK_ENTITY_TYPE,h->{ENTITY=net.minecraft.world.level.block.entity.BlockEntityType.Builder.of(NativeApplianceEntity::new,BLOCKS.values().toArray(Block[]::new)).build(null);h.register(id("appliance"),ENTITY);NativeApplianceHooks.PRODUCT=NativeApplianceProducts::activate;NativeApplianceHooks.DISPLAY=NativeApplianceProducts::display;});
   event.register(Registries.MENU,h->{MENU=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,buffer)->new NativeApplianceMenu(window,inventory,buffer.readBlockPos()));h.register(id("appliance"),MENU);});
  }
+ @SubscribeEvent public static void capabilities(net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent event){
+  event.registerBlockEntity(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,ENTITY,NativeApplianceEntity::itemPort);
+ }
  @SubscribeEvent public static void creative(net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent event){if(event.getTabKey().location().equals(id("vandorlabs")))for(var block:BLOCKS.values())event.accept(block);}
  public static boolean open(net.minecraft.world.entity.player.Player player,net.minecraft.world.level.Level level,net.minecraft.core.BlockPos pos){if(MENU==null||!level.hasChunkAt(pos)||!(level.getBlockEntity(pos) instanceof NativeApplianceEntity t)||t.inert()||!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player,t))return false;if(player instanceof net.minecraft.server.level.ServerPlayer actor){if(!t.usable(actor))return false;NativeApplianceHooks.display(actor,t);actor.openMenu(new net.minecraft.world.SimpleMenuProvider((window,inventory,ignored)->new NativeApplianceMenu(window,inventory,t),t.getBlockState().getBlock().getName()),b->b.writeBlockPos(pos));}return true;}
  private NativeApplianceBindings(){}

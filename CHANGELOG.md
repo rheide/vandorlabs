@@ -10,10 +10,15 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 
 ### Builder compatibility
 
+- Protect the Master Catalog Chip from being overwritten by Digitize on both versions.
+
 - Dismantling a three-block-high Enclosed Gantry from 2.10 restores the Matter stored in its original top rim.
 - A Synthesis Tower keeps the chosen block template when a production job starts, including across chip removal and world reload. Digitize checks the stored input against its admitted sample during processing.
 
-### Appliances
+### Devices
+
+- Add redstone edge triggers and sided item automation to the Printer and Scanner. Unconnected devices keep their manual output behavior.
+- Seat the Printer and Scanner buttons flush against the front. Seat books in the Scanner’s top frame and display the original pixels on mounted maps. Rename their texture-picker category to Devices.
 
 - Add dark cyan and silver Indoor AC slab and Outdoor AC cube creative presets. Place ordinary programmable slabs/blocks with six editable face textures, preserving normal placement, slab combination and configured drops.
 - Reuse map palette matches across pixels on both versions. The Forge Printer requests the biome grid for a map in one batch and skips that request when scanned pixels cover the entire map.
@@ -51,7 +56,7 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 - Preserve fabricated item proportions and authored world scale: keep rack modules horizontal, flatten only cards/chips and shrink only Gantry models that exceed the workspace. Keep random Matter interior colors exclusive to the Press.
 - Tile door-interior artwork on builder wall caps, preserve Tower border detail on half-panels, and remove duplicate glass faces and actual upper-rail overlaps.
 
-- Double Press/Gantry build speed to 200 ticks at 40 RF/tick, retaining 8,000 RF per job; keep Tower timing unchanged. Label inputs Block/Ingot and explain the required Matter ingredient in slot tooltips.
+- Double Press/Gantry build speed to 200 ticks at 40 RF/tick, retaining 8,000 RF per job. Label inputs Block/Ingot and explain the required Matter ingredient in slot tooltips.
 - Fit previews to actual transformed item geometry. Tile grey casing, remove the Press hood and add flat item fabrication with green corner beams and Matter-colored interior voxels.
 - Raise the Gantry frame to four blocks (34 Matter Blocks and one Core), halve its head and animate the head/rail over printed blocks with a blue fan beam. Allow finished chamber-item pickup. Dismantle existing three-high frames to recover their materials before rebuilding.
 - Adapt Vehicle Chip preview density toward eight voxels per block per axis, reducing detail to fixed voxel, surface-work and cache budgets for large models.
@@ -76,11 +81,13 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 
 ### Synthesis Tower
 
+- New Core jobs use 16,000 RF over forty seconds at full power. Jobs already underway retain their original cost. Finished vanilla outputs use their stationary block models in the chamber.
+
 - Produce Synthesis Tower, Assembly Press and Enclosed Gantry Cores from Programmable Matter and RF, with saved build progress and one owned output. Keep existing frame dimensions and materials.
 - Add an inventory dialog with full textured rotating structure previews, battery power status and a chip slot for future designs. Ordinary right-click and Configurizer open the same dialog.
 - Add a standard Redstone tab with physical and receiving-channel activation, including Redstone On/Off and saved pause/resume behavior. Wait for deferred inputs to settle after loading before consuming Matter or RF.
 - Fit four sliding Battery Modules in a flush rack, retaining 10,000 RF per item and displaying up to 40,000 RF in the shared Source/native dialog. Preserve each bay, charge and chip through physical insertion, extraction and reload; keep client inventory-slot updates separate from authoritative bay snapshots so removal and charge updates retain shared rack motion.
-- Use 20 RF per tick for each 8,000 RF Core, taking at least twenty seconds. Export finished Cores into a chest or compatible inventory beside an item-output face; retain output when the destination cannot accept it.
+- Use 20 RF per tick for each 16,000 RF Core, taking at least forty seconds. Export finished Cores into a chest or compatible inventory beside an item-output face; retain output when the destination cannot accept it.
 - Light rear RF/item ports from compatible endpoint presence, including idle or push-only connections. Add rear RF/item ports, a smaller left display with a projecting keyboard, a right chip mount/rack and neutral casing panels. Show bottom-up Core fabrication with four scanning beams only while spending RF; retain the partial Core while paused. Keep previews inside their screen, raise the fabrication tray by two Minecraft pixels, and use lighter, translucent scanning beams. Align the chip and rack to the right-hand casing blocks. Remove casing faces covered by the rack and preserve authored texel density on shortened side panels and rack rims. Cull fabrication effects beyond nearby viewing range.
 
 ### Core models and JEI

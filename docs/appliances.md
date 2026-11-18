@@ -1,4 +1,4 @@
-# Appliances
+# Devices
 
 The creative block list includes four ready-to-place AC finishes:
 
@@ -18,7 +18,7 @@ appearance on the ordinary programmable item.
 
 Printer and Scanner are solid blocks with four horizontal orientations. Each has a Chip Mount at the upper-left of its front and a half-size Push Button at the upper-right. Right-click the housing, or use the Configurizer, to open the standard inventory dialog.
 
-The Printer accepts a Data Chip, ink sacs and paper. Press its front button or **Print** in the dialog. Each successful print uses one ink sac and one paper, keeps the chip, and ejects the result upward. Leave the space above clear.
+The Printer accepts a Data Chip, ink sacs and paper. Press its front button or **Print** in the dialog. Each successful print uses one ink sac and one paper, keeps the chip, and ejects the result upward when the top port is unconnected. Leave the space above clear for ejection.
 
 | Chip | Printed item |
 | --- | --- |
@@ -33,8 +33,26 @@ The Scanner has an upward-facing item frame built into its top. Place one Filled
 
 Maps program Navigation Chips with their center, dimension, scale and original 128×128 pixels. Navigation displays can show the complete saved square without a linked Survey Dish or Sentinel Array, including the corners of scale-4 maps. Original unexplored pixels remain blank. Written Books produce Journal Chips containing up to 4,096 characters of plain text; Enchanted Books produce random journal text shown in the enchanting alphabet. Scanning replaces the chip's previous document type and keeps its company design.
 
+## Redstone and item ports
+
+Open the **Redstone** tab and choose **Manual**, **Redstone On** (one action
+when power arrives), or **Redstone Off** (one action when power ends).
+The front button and inventory dialog still work in every mode. Use physical
+redstone or enter receiving channels in the tab. A steady signal runs no
+additional cycles.
+
+| Device | Inputs on both sides, viewed from the front | Output |
+| --- | --- | --- |
+| Printer | Data Chip, ink sacs, paper | Finished book or map from the top |
+| Scanner | Data Chip and an original document | Programmed Data Chip from the back |
+
+The Scanner keeps the original document in its top frame. With no connected
+output, the programmed chip stays in the front mount. A connected outlet can
+hold one finished item in the **Output** slot while the route is blocked.
+Clear the route or take the item from that slot to make room for the next job.
+
 All supplied artwork retains its native 64×64 size. The appliance face textures
-also appear in the **Appliances** category of the regular texture picker and
+also appear in the **Devices** category of the regular texture picker and
 [texture browser](texture-browser/index.html).
 
 ![Creative appliance inventory previews](appliances/items.png)

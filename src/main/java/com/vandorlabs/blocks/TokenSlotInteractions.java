@@ -17,14 +17,15 @@ public final class TokenSlotInteractions {
         if(player.isSneaking()||held.getItem()==com.vandorlabs.items.ModItems.CONFIGURIZER){
             if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_TOKEN_SLOT,world,pos.getX(),pos.getY(),pos.getZ());return true;
         }
+        boolean mountEmpty=tile.getStackInSlot(0).isEmpty();
         if(held.isEmpty()){
-            if(tile.isEmpty()&&hand==EnumHand.MAIN_HAND&&tile.accepts(player.getHeldItemOffhand()))return false;
-            if(!world.isRemote&&tile.isEmpty())tile.cycleLogo();
+            if(mountEmpty&&hand==EnumHand.MAIN_HAND&&tile.accepts(player.getHeldItemOffhand()))return false;
+            if(!world.isRemote&&mountEmpty)tile.cycleLogo();
             else if(!world.isRemote){ItemStack removed=tile.removeStackFromSlot(0);if(!player.inventory.addItemStackToInventory(removed)&&!removed.isEmpty())player.dropItem(removed,false);}return true;
         }
         if(!tile.accepts(held))return false;
         if(!tile.authorized(held)){tile.reject();return true;}
-        if(!tile.isEmpty())return true;
+        if(!mountEmpty)return true;
         if(tile.behavior>=2){if(!world.isRemote)tile.insertToggle(player,held);return true;}
         if(!world.isRemote){ItemStack inserted=held.copy();inserted.setCount(1);tile.setInventorySlotContents(0,inserted);if(!player.capabilities.isCreativeMode)held.shrink(1);}return true;
     }

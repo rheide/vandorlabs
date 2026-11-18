@@ -2,6 +2,8 @@ package com.vandorlabs.client;
 import com.vandorlabs.tiles.TileEntityChipAppliance;
 import com.vandorlabs.blocks.*;
 import net.minecraft.client.Minecraft;
+import net.minecraft.block.Block;
+import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.*;
 import net.minecraft.client.renderer.texture.TextureMap;
 import net.minecraft.client.renderer.block.model.*;
@@ -23,19 +25,56 @@ public final class TEChipAppliance extends TileEntitySpecialRenderer<TileEntityC
             GlStateManager.pushMatrix();try{
                 com.vandorlabs.blocks.MachineMountSurface button=BlockChipAppliance.front(tile,true);EnumFacing facing=tile.getWorld().getBlockState(tile.getPos()).getValue(BlockVandorDirectional.FACING);
                 GlStateManager.translate(x+button.center.x,y+button.center.y,z+button.center.z);GlStateManager.rotate(facing==EnumFacing.EAST?270:facing==EnumFacing.SOUTH?180:facing==EnumFacing.WEST?90:0,0,1,0);GlStateManager.scale(.5,.5,.5);GlStateManager.translate(-.5,-.5,-1);
-                net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:push_button");net.minecraft.block.state.IBlockState state=block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.NORTH).withProperty(BlockVandorSwitch.ON,tile.getWorld().getTotalWorldTime()<tile.pressedUntil);bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);mc.getBlockRendererDispatcher().renderBlockBrightness(state,1);
+                Block block=Block.getBlockFromName("vandorlabs:push_button");
+                IBlockState state=block.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.NORTH)
+                        .withProperty(BlockVandorSwitch.ON,tile.getWorld().getTotalWorldTime()<tile.pressedUntil);
+                BlockRendererDispatcher dispatcher=mc.getBlockRendererDispatcher();
+                bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+                dispatcher.getBlockModelRenderer().renderModelBrightnessColor(state,dispatcher.getModelForState(state),1,1,1,1);
             }finally{GlStateManager.popMatrix();}
             if(tile.scanner())frame(tile,x,y,z);
         }
     }
-    private void frame(TileEntityChipAppliance tile,double x,double y,double z){Minecraft mc=Minecraft.getMinecraft();ItemStack item=tile.getStackInSlot(1);boolean map=item.getItem()==Items.FILLED_MAP;
-        GlStateManager.pushMatrix();try{
-            GlStateManager.translate(x+.5,y+1.035,z+.5);GlStateManager.rotate(90,1,0,0);GlStateManager.scale(map?.75:1,map?.75:1,map?.75:1);GlStateManager.translate(-.5,-.5,-1);
-            IBakedModel model=mc.getRenderItem().getItemModelMesher().getModelManager().getModel(new ModelResourceLocation(new ResourceLocation("minecraft:item_frame"),map?"map":"normal"));bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(model,1,1,1,1);
-            if(!item.isEmpty()){
-                GlStateManager.translate(.5,.5,-.035);GlStateManager.rotate(180,0,1,0);
-                if(map){MapData data=mapData(tile);if(data!=null){GlStateManager.scale(1/128F,1/128F,1/128F);GlStateManager.translate(-64,-64,0);mc.entityRenderer.getMapItemRenderer().renderMap(data,false);}}
-                else{GlStateManager.scale(.65,.65,.65);RenderHelper.enableStandardItemLighting();mc.getRenderItem().renderItem(item,ItemCameraTransforms.TransformType.FIXED);RenderHelper.disableStandardItemLighting();}
+    private void frame(TileEntityChipAppliance tile,double x,double y,double z){
+        Minecraft mc=Minecraft.getMinecraft();
+        ItemStack item=tile.getStackInSlot(1);
+        boolean map=item.getItem()==Items.FILLED_MAP;
+        double frameScale=map?.75:1;
+        // The frame is baked against the back of a unit cube (local Z=1).
+        GlStateManager.pushMatrix();
+        try{
+            GlStateManager.translate(x+.5,y+1.035,z+.5);
+            GlStateManager.rotate(90,1,0,0);
+            GlStateManager.scale(frameScale,frameScale,frameScale);
+            GlStateManager.translate(-.5,-.5,-1);
+            IBakedModel model=mc.getRenderItem().getItemModelMesher().getModelManager().getModel(
+                    new ModelResourceLocation(new ResourceLocation("minecraft:item_frame"),map?"map":"normal"));
+            bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            mc.getBlockRendererDispatcher().getBlockModelRenderer().renderModelBrightnessColor(model,1,1,1,1);
+        }finally{GlStateManager.popMatrix();}
+        if(item.isEmpty())return;
+
+        GlStateManager.pushMatrix();
+        try{
+            // Vanilla's item plane is one pixel in front of the frame's backing cube.
+            GlStateManager.translate(x+.5,y+1.035+frameScale/16,z+.5);
+            GlStateManager.rotate(90,1,0,0);
+            if(map){
+                MapData data=mapData(tile);
+                if(data!=null){
+                    // Match the vanilla map-frame pose. The raster's front is local -Z.
+                    GlStateManager.rotate(180,0,0,1);
+                    GlStateManager.scale(frameScale/128,frameScale/128,frameScale/128);
+                    GlStateManager.translate(-64,-64,-1);
+                    GlStateManager.disableLighting();
+                    mc.entityRenderer.getMapItemRenderer().renderMap(data,true);
+                }
+            }else{
+                GlStateManager.rotate(180,0,1,0);
+                GlStateManager.scale(.65,.65,.65);
+                RenderHelper.enableStandardItemLighting();
+                mc.getRenderItem().renderItem(item,ItemCameraTransforms.TransformType.FIXED);
+                RenderHelper.disableStandardItemLighting();
             }
         }finally{GlStateManager.popMatrix();}
     }

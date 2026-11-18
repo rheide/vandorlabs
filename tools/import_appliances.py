@@ -19,7 +19,7 @@ def main():
     if im.size!=(64,64):raise ValueError(f'Expected native 64px face: {source}')
    target=ROOT/'texture-packs/additional/assets/vandorlabs/textures/blocks/appliances'/identifier/(face+'.png');target.parent.mkdir(parents=True,exist_ok=True);shutil.copyfile(source,target)
    tex[face]='vandorlabs:blocks/appliances/'+identifier+'/'+face
-   entry={'id':'appliance_'+identifier+'_'+face,'label':label+' '+face.title(),'category':'Appliances','menuGroup':label,'source':'appliances/'+identifier+'/'+face}
+   entry={'id':'appliance_'+identifier+'_'+face,'label':label+' '+face.title(),'category':'Devices','menuGroup':label,'source':'appliances/'+identifier+'/'+face}
    if entry['id'] in existing:existing[entry['id']].update(entry)
    else:entries.append(entry)
   tex['particle']=tex['front'];faces={direction:{'texture':'#'+face,'uv':[0,0,16,16]} for direction,face in zip(['down','up','north','south','west','east'],FACES)}

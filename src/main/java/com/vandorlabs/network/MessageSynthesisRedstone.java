@@ -1,6 +1,8 @@
 package com.vandorlabs.network;
 
 import com.vandorlabs.container.ContainerSynthesisTower;
+import com.vandorlabs.container.ContainerChipAppliance;
+import com.vandorlabs.items.ConfigurationAccess;
 import com.vandorlabs.redstone.ChannelList;
 import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -22,7 +24,14 @@ public final class MessageSynthesisRedstone implements IMessage {
         int[] values=new int[count];for(int i=0;i<count;i++)values[i]=b.readInt();channels=ChannelList.of(values);
     }
     public static boolean apply(EntityPlayerMP player,MessageSynthesisRedstone message){
-        if(!player.getServerWorld().isCallingFromMinecraftThread()||message.pos==null||message.channels==null||message.mode<0||message.mode>2||!(player.openContainer instanceof ContainerSynthesisTower))return false;
+        if(!player.getServerWorld().isCallingFromMinecraftThread()||message.pos==null||message.channels==null||message.mode<0||message.mode>2)return false;
+        if(player.openContainer instanceof ContainerChipAppliance){
+            ContainerChipAppliance container=(ContainerChipAppliance)player.openContainer;
+            if(container.windowId!=message.window||!container.tile.getPos().equals(message.pos)||!container.canInteractWith(player)
+                    ||!ConfigurationAccess.canEditDialog(player,player.world,message.pos))return false;
+            container.tile.configureRedstone(message.mode,message.channels);return true;
+        }
+        if(!(player.openContainer instanceof ContainerSynthesisTower))return false;
         ContainerSynthesisTower container=(ContainerSynthesisTower)player.openContainer;
         if(container.windowId!=message.window||!container.tile.getPos().equals(message.pos)||!container.canInteractWith(player))return false;
         container.tile.configureSynthesisRedstone(message.mode,message.channels);return true;

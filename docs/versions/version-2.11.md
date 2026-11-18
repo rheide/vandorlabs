@@ -6,7 +6,7 @@ Build a workshop that makes its own machinery, then chart the world from a Navig
 - **Explore the map from your bridge.** Glide between biomes with smooth pan and zoom, mark places on Navigation Chips, and save surveyed areas to a removable Navigation Data Module. On Forge, a ship with an observer can map terrain as it flies.
 - **Turn a block into a recipe.** Scan an eligible block in the Synthesis Tower’s Digitize mode and store its design and supported appearance settings on a Catalog Chip. Browse the new chip artwork and rotating previews, including material-coloured Vehicle Chip previews.
 - **Power your workshop.** Charge removable Battery Modules in the Matter Infuser and slide up to four into a builder. The new open-frame Core models have their own colours and detailed corners. JEI shows Infuser and Synthesis Tower recipes.
-- **Print and scan documents.** Print a book or map from a chip, or scan a written book, enchanted book or map while keeping the original. Furnish the room with dark cyan or silver Indoor AC slabs and Outdoor AC cubes.
+- **Print and scan documents.** Print a book or map from a chip, or scan a written book, enchanted book or map while keeping the original. Run either device from redstone and connect item ducts to feed supplies and collect results. Furnish the room with dark cyan or silver Indoor AC slabs and Outdoor AC cubes.
 - **Build bigger observers and more flexible ramps.** Form Survey Dishes and Sentinel Arrays upright or inverted. Larger, higher installations can see farther. Side-mounted Ramp Controllers can use either horizontal axis, and NeoForge adds the seven Ramp Controller modes and their dedicated configuration dialog. The NeoForge Infuser, Ramp and builder screens also pick up the familiar Vandor Labs controls and styling.
 
 ## Synthesis Tower
@@ -35,6 +35,6 @@ Join table sections to see more of the seed map at the same physical scale. Pan 
 
 ## Version notes
 
-The builder clips are sped up. On Forge the Tower uses 8,000 RF over twenty seconds at full power. The Press and Gantry use the same energy over ten seconds. If you have a three-high Gantry from 2.10, dismantle it to recover the original frame materials and rebuild it four blocks high.
+The builder clips are sped up. Tower Core fabrication uses 16,000 RF over forty seconds at full power. On Forge the Press and Gantry each use 8,000 RF over ten seconds. If you have a three-high Gantry from 2.10, dismantle it to recover the original frame materials and rebuild it four blocks high.
 
 NeoForge 1.21.1 includes all three builder structures, powered Synthesis and Digitize, Assembly Press production for Navigation Data Modules, the Matter Infuser, seed navigation, observers and appliances. The extended Press catalog, Gantry production and vehicle-carried navigation shown here use Forge 1.12.2. [NeoForge builder guide](../builders-1.21.md) · [Full changelog](../../CHANGELOG.md#2110-in-development)
