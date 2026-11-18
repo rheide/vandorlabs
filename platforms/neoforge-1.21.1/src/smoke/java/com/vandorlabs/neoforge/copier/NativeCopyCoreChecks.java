@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.copier;
 import com.vandorlabs.copier.core.*;
 import com.vandorlabs.neoforge.transfer.NativeSnapshotAppearance;
 import com.vandorlabs.turntable.TurntableGeometry;
+import com.vandorlabs.surface.core.SurfaceLayout;
 import com.vandorlabs.redstone.ChannelList;
 import java.io.*;
 import java.util.*;
@@ -30,7 +31,7 @@ public final class NativeCopyCoreChecks {
     private static void policy()throws Exception {
         byte[] bytes=new byte[1024];new Random(71).nextBytes(bytes);var compressed=new ByteArrayOutputStream();try(var gzip=new GZIPOutputStream(compressed)){gzip.write(bytes);}need(Arrays.equals(bytes,BlueprintCompression.decode(1,compressed.toByteArray())),"existing compressed chip payload");var copy=BlueprintCompression.decode(0,bytes);copy[0]^=1;need(copy[0]!=bytes[0],"raw chip data copied");refused(()->{try{BlueprintCompression.decode(2,new byte[0]);}catch(IOException failure){throw new UncheckedIOException(failure);}},"unknown chip codec refused");
         for(var face:TurntableGeometry.Face.values())for(int width=1;width<=4;width++)for(int height=1;height<=3;height++)for(int depth:new int[]{1,4,16}){
-            int u=-7,v=3,plane=31;int[] actual=CopyGeometry.volume(face,u,v,plane,width,height,depth);int[] low={Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE},high={Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE};
+            int u=-7,v=3,plane=31;int[] actual=SurfaceLayout.volume(face,u,v,plane,width,height,depth);int[] low={Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE},high={Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE};
             for(int du:new int[]{0,width-1})for(int dv:new int[]{0,height-1})for(int d:new int[]{1,depth}){int[] point={face.ux*(u+du)+face.vx*(v+dv)+face.x*(plane+d),face.uy*(u+du)+face.vy*(v+dv)+face.y*(plane+d),face.uz*(u+du)+face.vz*(v+dv)+face.z*(plane+d)};for(int axis=0;axis<3;axis++){low[axis]=Math.min(low[axis],point[axis]);high[axis]=Math.max(high[axis],point[axis]);}}
             for(int axis=0;axis<3;axis++)need(actual[axis]==low[axis]&&actual[axis+3]==high[axis],"Source two-corner prism matches all eight corners");
         }

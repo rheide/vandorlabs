@@ -3,6 +3,7 @@ package com.vandorlabs.copier.core;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.redstone.ChannelRange;
 import com.vandorlabs.turntable.TurntableGeometry;
+import com.vandorlabs.surface.core.SurfaceLayout;
 import java.io.*;
 import java.util.*;
 import java.util.zip.*;
@@ -19,7 +20,7 @@ public final class CopyPolicyTest {
     private static void geometry(){
         for(TurntableGeometry.Face face:TurntableGeometry.Face.values())for(int width=1;width<=32;width++)for(int height=1;height<=32;height++)for(int depth=1;depth<=16;depth++){
             int u=width%2==0?-31:47,v=height%2==0?19:-23,plane=depth%2==0?-63:70;
-            need(Arrays.equals(oldVolume(face,u,v,plane,width,height,depth),CopyGeometry.volume(face,u,v,plane,width,height,depth)),"released two-corner scan prism parity");
+            need(Arrays.equals(oldVolume(face,u,v,plane,width,height,depth),SurfaceLayout.volume(face,u,v,plane,width,height,depth)),"released two-corner scan prism parity");
         }
         for(int axis=0;axis<3;axis++)for(int width=1;width<=32;width++)for(int height=1;height<=16;height++)for(int source=1;source<=8;source++){
             int[] box={13,70,-45,13+width-1,70+height-1,-45+width-1},design={2,0,3,2+source-1,source-1,3+source-1};int[] expected=null,actual=null;boolean oldRefused=false,newRefused=false;try{expected=oldCenter(design,box,axis);}catch(IllegalArgumentException noFit){oldRefused=true;}try{actual=CopyGeometry.center(design,box,axis);}catch(IllegalArgumentException noFit){newRefused=true;}need(oldRefused==newRefused&&(oldRefused||Arrays.equals(expected,actual)),"released blueprint normal/plane centering parity");

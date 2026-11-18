@@ -4,6 +4,7 @@ import com.vandorlabs.copier.core.CopyGeometry;
 import com.vandorlabs.copier.core.CopySettings;
 import com.vandorlabs.neoforge.surface.NativeSurfaceLayout;
 import com.vandorlabs.neoforge.transfer.*;
+import com.vandorlabs.surface.core.SurfaceLayout;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.server.level.*;
@@ -31,7 +32,7 @@ final class NativeCopyPlan {
     final UUID owner,actor;final boolean creative;
     private final ItemStack chip;private final BlockPos chipMount;
     private NativeCopyPlan(NativeTransferSnapshot input,NativeTransferSnapshot before,NativeTransferSnapshot result,NativeTransferSnapshot costSource,NativeCopySupply supply,List<NativeCopyMaterials.Need> materials,Volume sourceVolume,Volume targetVolume,List<BlockPos> held,NativeCopyControllerEntity root,ServerPlayer actor,ItemStack chip,BlockPos chipMount){this.input=input;this.before=before;this.result=result;this.costSource=costSource;this.supply=supply;this.materials=List.copyOf(materials);this.sourceVolume=sourceVolume;this.targetVolume=targetVolume;this.held=List.copyOf(held);settings=root.settings();owner=root.key();this.actor=actor.getUUID();creative=actor.isCreative();this.chip=chip.copy();this.chipMount=chipMount;}
-    static Volume volume(NativeSurfaceLayout layout,int height){var g=layout.geometry;int[] b=CopyGeometry.volume(g.face,g.minU,g.minV,g.plane,g.width,g.height,height);return new Volume(new BlockPos(b[0],b[1],b[2]),new BlockPos(b[3],b[4],b[5]));}
+    static Volume volume(NativeSurfaceLayout layout,int height){var g=layout.geometry;int[] b=SurfaceLayout.volume(g.face,g.minU,g.minV,g.plane,g.width,g.height,height);return new Volume(new BlockPos(b[0],b[1],b[2]),new BlockPos(b[3],b[4],b[5]));}
     static NativeCopyPlan prepare(NativeCopyControllerEntity root,ServerPlayer actor) {
         if(!(root.getLevel() instanceof ServerLevel world)||!world.getServer().isSameThread())throw new IllegalArgumentException("Copy requires its physical server world");authorize(world,actor);var settings=root.settings();if(root.output()==null||!settings.chip&&root.input()==null)throw new IllegalArgumentException("Complete the paired rectangular pads first");
         var targetVolume=volume(root.output(),settings.height);var sourceVolume=settings.chip?null:volume(root.input(),settings.height);loaded(world,targetVolume);if(sourceVolume!=null){loaded(world,sourceVolume);if(sourceVolume.bounds().intersects(targetVolume.bounds()))throw new IllegalArgumentException("Input and output scan prisms overlap");}

@@ -38,7 +38,22 @@ public final class SurfaceLayout {
     }
     public Cell cell(int u,int v,int depth){
         int a=Math.addExact(minU,u),b=Math.addExact(minV,v),c=Math.addExact(plane,depth);
-        return new Cell(face.ux*a+face.vx*b+face.x*c,face.uy*a+face.vy*b+face.y*c,face.uz*a+face.vz*b+face.z*c);
+        return position(face,a,b,c);
+    }
+    /** Inclusive bounds of a prism extending outwards from the textured surface. */
+    public static int[] volume(TurntableGeometry.Face face,int minU,int minV,int plane,int width,int height,int depth){
+        if(width<1||width>MAX_SIZE||height<1||height>MAX_SIZE||depth<1||depth>16)
+            throw new IllegalArgumentException("Surface volume bounds");
+        int maxU=Math.addExact(minU,width-1),maxV=Math.addExact(minV,height-1);
+        Cell first=position(face,minU,minV,Math.addExact(plane,1));
+        Cell last=position(face,maxU,maxV,Math.addExact(plane,depth));
+        return new int[]{
+            Math.min(first.x,last.x),Math.min(first.y,last.y),Math.min(first.z,last.z),
+            Math.max(first.x,last.x),Math.max(first.y,last.y),Math.max(first.z,last.z)
+        };
+    }
+    private static Cell position(TurntableGeometry.Face face,int u,int v,int normal){
+        return new Cell(face.ux*u+face.vx*v+face.x*normal,face.uy*u+face.vy*v+face.y*normal,face.uz*u+face.vz*v+face.z*normal);
     }
     /** Cropped artwork is independent on unequal rectangles, preserving the Source drawing rule. */
     public boolean independentArtwork(int mode){return mode==2&&width!=height;}

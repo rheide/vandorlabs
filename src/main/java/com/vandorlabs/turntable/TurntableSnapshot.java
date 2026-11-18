@@ -1,5 +1,6 @@
 package com.vandorlabs.turntable;
 
+import com.vandorlabs.surface.core.SurfaceLayout;
 import com.vandorlabs.vehicle.*;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
@@ -33,9 +34,8 @@ public final class TurntableSnapshot {
     }
     public static TurntableSnapshot capture(WorldServer world,TurntableSurfaceLayout layout,int height,EntityPlayerMP actor)throws IOException{
         if(height<1 || height>16)throw new IllegalArgumentException("Scan height must be between 1 and 16 blocks");
-        BlockPos a=layout.cell(0,0,1),b=layout.cell(layout.size-1,layout.size-1,height);
-        BlockPos min=new BlockPos(Math.min(a.getX(),b.getX()),Math.min(a.getY(),b.getY()),Math.min(a.getZ(),b.getZ()));
-        BlockPos max=new BlockPos(Math.max(a.getX(),b.getX()),Math.max(a.getY(),b.getY()),Math.max(a.getZ(),b.getZ()));
+        int[] bounds=SurfaceLayout.volume(layout.basis,layout.minU,layout.minV,layout.plane,layout.width,layout.height,height);
+        BlockPos min=new BlockPos(bounds[0],bounds[1],bounds[2]),max=new BlockPos(bounds[3],bounds[4],bounds[5]);
         if(min.getY()<0 || max.getY()>=world.getHeight() || !world.getWorldBorder().contains(min) || !world.getWorldBorder().contains(max) || !world.isAreaLoaded(min,max,false))
             throw new IllegalArgumentException("The entire scan volume must be inside the loaded world");
         List<VehicleStructure.Cell> cells=new ArrayList<>();
