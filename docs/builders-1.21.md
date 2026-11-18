@@ -72,6 +72,18 @@ Data Chips can be inserted and retrieved through their physical mount or the
 dialog. They retain their physical item ownership; additional chip designs are
 reserved for a later update. All three default designs work without a chip.
 
+## Assembly Press operation
+
+Supply one Programmable Matter Ingot per item. The Press fabricates at
+**40 RF per tick** for **200 ticks**, using **8,000 RF** per item. Data Chips
+and Access Cards are included. Insert a Master Catalog Chip to add Battery
+Modules, Autopilot Modules and Navigation Data Modules to the recipe list.
+
+Use the Production dialog to select a recipe and collect the completed item.
+The Press uses the same four battery bays, rear power and item ports, Redstone
+activation options, and automatic output as the Tower. Paused jobs retain their
+chosen recipe and paid work, even if the Catalog Chip is removed.
+
 ## Dismantling and ownership
 
 Sneak-right-click a formed member to restore its Matter frame. Mining a member

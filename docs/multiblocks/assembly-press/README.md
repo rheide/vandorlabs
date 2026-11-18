@@ -41,4 +41,5 @@ Each item uses 8,000 RF over 200 ticks at 40 RF/tick. Cards, chips and modules
 print flat on the bed under four green corner lasers. The old central press
 hood is removed. Click a finished item on the bed to collect it.
 See [builder production](../../universal-constructors.md) for recipes, battery
-modules, catalogs and automatic output. Native production remains deferred.
+modules, catalogs and automatic output. On NeoForge 1.21.1, see
+[Assembly Press operation](../../builders-1.21.md#assembly-press-operation).

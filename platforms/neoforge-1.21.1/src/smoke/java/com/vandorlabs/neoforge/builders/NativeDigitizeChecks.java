@@ -18,7 +18,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 /** Actual async formation, completion-owned scans, cold partial work and dynamic product ownership. */
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeDigitizeChecks {
- private static final BlockPos P=new BlockPos(31,120,31);private static ServerLevel world;private static ServerPlayer actor;private static int stage,ticks,checks;private static ItemStack input,chip,catalog;private static float savedProgress;private static ItemStack oversized;private static long oversizedSerializations,oversizedTotalSerializations,validReplacementSerializations;private static int oversizedTicks;
+ private static final BlockPos P=new BlockPos(31,120,31);private static ServerLevel world;private static ServerPlayer actor;private static int stage,ticks,checks;private static ItemStack input,chip,catalog;private static float savedProgress;private static ItemStack oversized;private static long oversizedSerializations,oversizedTotalSerializations,validReplacementSerializations;private static int oversizedTicks,pressTrial,pressEnergy;
  private static NativeBuilderEntity root(){return (NativeBuilderEntity)world.getBlockEntity(P);}private static void need(boolean value,String why){checks++;if(!value)throw new AssertionError("Digitize stage="+stage+" ticks="+ticks+": "+why);}
  private static boolean read(){return System.getProperty("vandorlabs.digitizePhase","save").equals("read");}
  private static ItemStack input(){var item=new ItemStack(Items.OAK_SLAB);item.set(DataComponents.BLOCK_STATE,new BlockItemStateProperties(Map.of("type","top")));item.set(DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Calibrated top slab"));return item;}
@@ -32,8 +32,9 @@ public final class NativeDigitizeChecks {
  }
  private static void oversizedProbes(NativeBuilderEntity owner)throws Exception{for(int probe=0;probe<128;probe++){need(owner.runtime.energy.receiveEnergy(NativeSynthesisRuntime.RATE,true)==0,"simulated RF refuses oversized chip");need(owner.runtime.energy.receiveEnergy(NativeSynthesisRuntime.RATE,false)==0,"real RF matches simulated oversized refusal");}need(!owner.processing()&&owner.buildProgress()==0&&owner.batteryEnergy()==0&&ItemStack.matches(owner.getItem(0),input)&&ItemStack.matches(owner.getItem(3),oversized),"oversized admission consumes no RF/input/chip");var cache=NativeSynthesisRuntime.class.getDeclaredField("admissionChip");cache.setAccessible(true);var cached=(ItemStack)cache.get(owner.runtime);need(cached.get(DataComponents.CUSTOM_DATA)==owner.getItem(3).get(DataComponents.CUSTOM_DATA),"failed admission cache shares immutable CustomData rather than copying70KiB payload");need(NativeSynthesisRuntime.admissionSerializations-oversizedSerializations==1,"unchanged oversized chip serialization bounded across real ticks and repeated FE probes count="+(NativeSynthesisRuntime.admissionSerializations-oversizedSerializations));}
  private static void restoredIdentity(CompoundTag valid){for(int fault=0;fault<2;fault++){var tag=valid.copy();if(fault==0){var hash=tag.getCompound("Synthesis").getByteArray("DigitizeChipHash").clone();need(hash.length==32,"valid control identity length");hash[0]^=1;tag.getCompound("Synthesis").putByteArray("DigitizeChipHash",hash);}else{var entries=tag.getCompound("Inventory").getList("Items",Tag.TAG_COMPOUND);boolean replaced=false;for(Tag value:entries){var entry=(CompoundTag)value;if(entry.getInt("Slot")==0){entry.put("Stack",new ItemStack(Items.STONE).save(world.registryAccess()));replaced=true;}}need(replaced,"valid eligible input mismatch staged");}var copy=new NativeBuilderEntity(P,root().getBlockState());copy.setLevel(world);copy.loadWithComponents(tag,world.registryAccess());need(copy.inert(),"restored identity mismatch is inert fault="+fault);need(tag.equals(copy.saveWithFullMetadata(world.registryAccess())),"restored identity mismatch retains exact original job/inventory fault="+fault);}}
- @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(world==null)return;try{need(++ticks<1000,"bounded actual runtime completion");var owner=root();if(stage==5){if(!world.isEmptyBlock(P)||com.vandorlabs.neoforge.transfer.NativeTransferHolds.active(world))return;int stone=0,matter=0,chips=0,cores=0,batteries=0;for(var item:world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(8))){var stack=item.getItem();if(stack.is(Items.STONE))stone+=stack.getCount();if(stack.is(NativeBuilderFormation.matter().asItem()))matter+=stack.getCount();if(NativeCredentialItems.accepts(stack,true))chips+=stack.getCount();if(stack.is(NativeBuilderBindings.CORES.get("synthesis_tower").asItem()))cores+=stack.getCount();if(NativeBatteryModule.valid(stack))batteries+=stack.getCount();}need(stone==1&&matter==0&&chips==1&&cores==1&&batteries==4,"digitize mining originalinput+chip once/no production escrow refund");for(var drop:world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(8)))drop.discard();setupPress();return;}if(stage==8){if(!world.isEmptyBlock(P)||com.vandorlabs.neoforge.transfer.NativeTransferHolds.active(world))return;int ingots=0,matter=0,chips=0,cores=0;var ingot=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("vandorlabs:programmable_matter_ingot"));for(var item:world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(8))){var stack=item.getItem();if(stack.is(ingot))ingots+=stack.getCount();if(stack.is(NativeBuilderFormation.matter().asItem()))matter+=stack.getCount();if(NativeCredentialItems.accepts(stack,true))chips+=stack.getCount();if(stack.is(NativeBuilderBindings.CORES.get("assembly_press").asItem()))cores+=stack.getCount();}need(ingots==1&&matter==0&&chips==1&&cores==1,"activePress mining refunds exactIngot notMatterBlock");finish("read");return;}if(owner==null||!owner.available()||!owner.formed()||!owner.synthesisReady())return;
-  if(stage==6){owner.setItem(3,NativeChipTypes.variant("catalog"));owner.setItem(0,new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("vandorlabs:programmable_matter_ingot"))));for(int bay=0;bay<4;bay++)owner.setItem(NativeBuilderEntity.batterySlot(bay),new ItemStack(NativeRackBindings.BATTERY));owner.configureRedstone(0,ChannelList.EMPTY);stage=7;return;}
+ @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){if(world==null)return;try{need(++ticks<2200,"bounded actual runtime completion");var owner=root();if(stage==5){if(!world.isEmptyBlock(P)||com.vandorlabs.neoforge.transfer.NativeTransferHolds.active(world))return;int stone=0,matter=0,chips=0,cores=0,batteries=0;for(var item:world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(8))){var stack=item.getItem();if(stack.is(Items.STONE))stone+=stack.getCount();if(stack.is(NativeBuilderFormation.matter().asItem()))matter+=stack.getCount();if(NativeCredentialItems.accepts(stack,true))chips+=stack.getCount();if(stack.is(NativeBuilderBindings.CORES.get("synthesis_tower").asItem()))cores+=stack.getCount();if(NativeBatteryModule.valid(stack))batteries+=stack.getCount();}need(stone==1&&matter==0&&chips==1&&cores==1&&batteries==4,"digitize mining originalinput+chip once/no production escrow refund");for(var drop:world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(8)))drop.discard();setupPress();return;}if(stage==8){if(!world.isEmptyBlock(P)||com.vandorlabs.neoforge.transfer.NativeTransferHolds.active(world))return;int ingots=0,matter=0,chips=0,cores=0;var ingot=net.minecraft.core.registries.BuiltInRegistries.ITEM.get(net.minecraft.resources.ResourceLocation.parse("vandorlabs:programmable_matter_ingot"));for(var item:world.getEntitiesOfClass(ItemEntity.class,new AABB(P).inflate(8))){var stack=item.getItem();if(stack.is(ingot))ingots+=stack.getCount();if(stack.is(NativeBuilderFormation.matter().asItem()))matter+=stack.getCount();if(NativeCredentialItems.accepts(stack,true))chips+=stack.getCount();if(stack.is(NativeBuilderBindings.CORES.get("assembly_press").asItem()))cores+=stack.getCount();}need(ingots==1&&matter==0&&chips==1&&cores==1,"activePress mining refunds exactIngot notMatterBlock");finish("read");return;}if(owner==null||!owner.available()||!owner.formed()||!owner.synthesisReady())return;
+  if(stage==6){startPressRecipes(owner);return;}
+  if(stage==60){runPressRecipes(owner);return;}
   if(stage==7){if(!owner.processing())return;need(owner.getItem(0).isEmpty()&&owner.batteryEnergy()==0,"Press owns active ingotescrow atzeroRF");owner.configureRedstone(1,ChannelList.EMPTY);need(!actor.gameMode.destroyBlock(P)&&owner.transactionBlocked(),"actual activePress durablemining request");stage=8;return;}
   if(stage==1){NativeMachinePlacementChecks.run(world,actor,owner);malformed();need(owner.setMode(1),"mode entersDigitize with emptyinput/output");var master=NativeChipTypes.variant("catalog");
    owner.configureRedstone(0,ChannelList.EMPTY);
@@ -54,6 +55,70 @@ public final class NativeDigitizeChecks {
   if(stage==33){if(!owner.processing()||owner.buildProgress()<.1)return;var current=owner.getItem(3);current.get(DataComponents.CUSTOM_DATA).getUnsafe().putInt("DirectMutableProbe",1);owner.setChanged();var immediate=owner.saveWithoutMetadata(world.registryAccess());need(!owner.processing()&&!immediate.getCompound("Synthesis").getBoolean("Active")&&!immediate.getCompound("Synthesis").contains("DigitizeChipHash")&&owner.getItem(0).is(Items.STONE)&&owner.getItem(0).getCount()==1,"direct mutable chip plus setChanged cancels synchronously without consuming input");var restored=new NativeBuilderEntity(P,owner.getBlockState());restored.loadWithComponents(immediate,world.registryAccess());need(!restored.inert()&&!restored.processing(),"immediately saved direct-mutation cancellation reloads healthy");owner.configureRedstone(1,ChannelList.EMPTY);owner.setItem(3,chip.copy());owner.configureRedstone(0,ChannelList.EMPTY);stage=32;return;}
   if(stage==32){if(!owner.processing())return;owner.configureRedstone(1,ChannelList.EMPTY);need(!actor.gameMode.destroyBlock(P),"realSurvival activeDigitize mining defersremoval");need(owner.transactionBlocked(),"actual durable mining request queued");stage=5;}
  }catch(Throwable bad){fail(bad);}}
+ private static ItemStack pressIngot(){
+  return new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(
+          net.minecraft.resources.ResourceLocation.parse("vandorlabs:programmable_matter_ingot")));
+ }
+ private static void startPressRecipes(NativeBuilderEntity owner){
+  owner.configureRedstone(1,ChannelList.EMPTY);
+  need(owner.selectedDesign()==1&&owner.pressChoices()==6,"Press defaults to Data Chip and grants the two credential recipes without a chip");
+  owner.selectDesign(0);
+  need(owner.selectedDesign()==1,"legacy Navigation Data Module selection is rejected without the blueprint");
+  var partial=NativeChipTypes.variant("catalog");
+  var data=partial.get(DataComponents.CUSTOM_DATA).copyTag();
+  var designs=new ListTag();designs.add(StringTag.valueOf("battery_module"));
+  data.getCompound("Catalog").getCompound("Designs").put("assembly_press",designs);
+  partial.set(DataComponents.CUSTOM_DATA,CustomData.of(data));
+  owner.setItem(3,partial);
+  need(owner.pressChoices()==14,"catalog grants only the stored Press module blueprint");
+  owner.selectDesign(4);
+  need(owner.selectedDesign()==1,"catalog hardware does not unlock an absent recipe");
+  owner.setItem(3,ItemStack.EMPTY);
+  pressTrial=1;pressEnergy=0;owner.setItem(0,pressIngot());owner.configureRedstone(0,ChannelList.EMPTY);stage=60;
+ }
+ private static void runPressRecipes(NativeBuilderEntity owner){
+  if(owner.getItem(1).isEmpty()){
+   int received=owner.runtime.energy.receiveEnergy(1024,false);
+   need(received==40,"Press production limited to 40 RF per tick");
+   pressEnergy+=received;
+   if(pressEnergy==4000){
+    var saved=owner.saveWithoutMetadata(world.registryAccess());
+    var restored=new NativeBuilderEntity(P,owner.getBlockState());
+    restored.loadWithComponents(saved,world.registryAccess());
+    need(!restored.inert()&&restored.processing()&&restored.buildDesign()==pressTrial
+            &&restored.buildProgress()==.5F&&NativeBuilderData.sameSnapshots(saved,restored.saveWithoutMetadata(world.registryAccess())),
+            "Press partial job roundtrip retains product, cost and input ownership");
+    if(pressTrial==0)owner.setItem(3,ItemStack.EMPTY);
+   }
+   return;
+  }
+  var expected=NativeBuilderProducts.pressResult(pressTrial);
+  need(!expected.isEmpty()&&ItemStack.matches(owner.getItem(1),expected)&&owner.getItem(0).isEmpty()
+          &&pressEnergy==8000&&!owner.processing(),"Press exact product and full job accounting "+pressTrial);
+  var saved=owner.saveWithoutMetadata(world.registryAccess());
+  var restored=new NativeBuilderEntity(P,owner.getBlockState());
+  restored.loadWithComponents(saved,world.registryAccess());
+  need(!restored.inert()&&ItemStack.matches(restored.getItem(1),expected),"Press persisted output "+pressTrial);
+  var viewer=new NativeBuilderEntity(P,owner.getBlockState());
+  viewer.handleUpdateTag(owner.getUpdateTag(world.registryAccess()),world.registryAccess());
+  need(!viewer.inert()&&ItemStack.matches(viewer.getItem(1),expected),"Press public output "+pressTrial);
+  owner.removeItem(1,1);
+  if(pressTrial==0){
+   owner.setItem(3,NativeChipTypes.variant("catalog"));
+   owner.setItem(0,pressIngot());
+   for(int bay=0;bay<4;bay++)owner.setItem(NativeBuilderEntity.batterySlot(bay),new ItemStack(NativeRackBindings.BATTERY));
+   System.out.println("[vandorlabs][digitize] Press catalog PASS fiveProducts/8000RF/40RFPerTick/partialReload/legacyIndex0/preview");
+   stage=7;
+   return;
+  }
+  if(pressTrial==2)owner.setItem(3,NativeChipTypes.variant("catalog"));
+  pressTrial=(pressTrial+1)%NativeBuilderProducts.PRESS.size();
+  need(owner.pressChoices()==(pressTrial==2?6:31),"Press menu recipe availability tracks chip contents");
+  owner.selectDesign(pressTrial);
+  need(owner.selectedDesign()==pressTrial,"Press accepts an available recipe");
+  owner.setItem(0,pressIngot());
+  pressEnergy=0;
+ }
  private static void setupPress(){world.setBlock(P,NativeBuilderBindings.CORES.get("assembly_press").defaultBlockState(),3);var d=root().design();var layout=new com.vandorlabs.machines.CoreLayout(d.width(),d.height(),d.depth(),Direction.NORTH.get3DDataValue(),0,0);for(int x=0;x<d.width();x++)for(int y=0;y<d.height();y++)for(int z=0;z<d.depth();z++){var at=P.offset(layout.x(x,z),y,layout.z(x,z));if(!at.equals(P))world.setBlock(at,layout.frame(x,y,z)?NativeBuilderFormation.matter().defaultBlockState():Blocks.AIR.defaultBlockState(),3);}need(NativeBuilderTransactions.request(root(),actor,true),"Press adjacent actualasyncformation");stage=6;}
  private static void finish(String phase){System.out.println("[vandorlabs][digitize] "+phase+" PASS checks="+checks+" asyncFormation/CompletionInput/OriginalChip/FourBanks/8000RF/ColdWork/ExactTemplate/DynamicSnapshot/Cancel/Mining/15ByteWire");var server=world.getServer();world=null;server.halt(false);}
  private static void fail(Throwable bad){bad.printStackTrace();System.out.println("[vandorlabs][digitize] FAIL "+bad);var server=world==null?net.neoforged.neoforge.server.ServerLifecycleHooks.getCurrentServer():world.getServer();world=null;if(server!=null)server.halt(false);}

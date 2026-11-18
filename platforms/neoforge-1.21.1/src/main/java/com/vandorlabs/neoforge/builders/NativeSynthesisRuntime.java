@@ -21,7 +21,7 @@ public final class NativeSynthesisRuntime {
  private ItemStack admissionChip=ItemStack.EMPTY;private byte[] admissionHash=new byte[0];private boolean admissionAllowed,completing;
  static long admissionSerializations;
  private ItemStack cachedChip=ItemStack.EMPTY,cachedTemplate=ItemStack.EMPTY,cachedInput=ItemStack.EMPTY;private boolean inputEligible;
- NativeSynthesisRuntime(NativeBuilderEntity owner){this.owner=owner;}
+ NativeSynthesisRuntime(NativeBuilderEntity owner){this.owner=owner;if(owner.press())selected=building=1;}
  public int mode(){return mode;}public boolean digitizing(){return owner.synthesis()&&mode==1;}
  public boolean mode(int next){if(next<0||next>1||!owner.synthesis()||active||!owner.owned(0).isEmpty()||!owner.owned(1).isEmpty())return false;if(mode==next)return true;mode=next;owner.changed();return true;}
  public boolean working(){return working;}public void visualWorking(boolean value){working=value;}public boolean exporting(){return exporting;}
@@ -31,15 +31,57 @@ public final class NativeSynthesisRuntime {
  public float progress(){return active?work/(float)workCost:!digitizing()&&!owner.owned(1).isEmpty()?1:0;}
  public boolean active(){return active;}public boolean connected(){return connected;}void connection(boolean value){connected=value;}
  private int selectedCost(){return owner.synthesis()&&!digitizing()&&selected<DYNAMIC?SynthesisRecipePolicy.CORE_RF:COST;}
- private int maxDesign(){return owner.synthesis()?DYNAMIC:0;}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
+ private int maxDesign(){return owner.synthesis()?DYNAMIC:owner.press()?NativeBuilderProducts.PRESS.size()-1:0;}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
 
  public ItemStack dynamicTemplate(){var chip=owner.owned(3);if(!ItemStack.matches(chip,cachedChip)){cachedChip=NativeCredentialItems.ownedCopy(chip);cachedTemplate=NativeBlockRecipeData.read(chip);}return cachedTemplate.copy();}
  public boolean dynamicAvailable(){return !dynamicTemplate().isEmpty();}
  public ItemStack previewTemplate(){if(!owner.owned(1).isEmpty()&&building==DYNAMIC)return owner.owned(1).copyWithCount(1);if(active&&!digitizing()&&building==DYNAMIC)return productionTemplate.copy();return selected==DYNAMIC?dynamicTemplate():ItemStack.EMPTY;}
  public ItemStack previewInput(){if(!digitizing())return ItemStack.EMPTY;var item=!digitizeBlock.isEmpty()?digitizeBlock:owner.owned(0);return item.isEmpty()?ItemStack.EMPTY:item.copyWithCount(1);}
- public ItemStack product(int index){return owner.synthesis()?(index==DYNAMIC?active&&building==DYNAMIC&&!productionTemplate.isEmpty()?productionTemplate.copy():dynamicTemplate():result(index)):new ItemStack(com.vandorlabs.neoforge.navigation.NativeNavigationItems.MODULE);}
- private boolean permitted(){if(owner.synthesis()&&selected<3)return true;if(owner.synthesis()&&selected==DYNAMIC)return dynamicAvailable();var tag=com.vandorlabs.neoforge.credentials.NativeChipTypes.data(owner.owned(3));if(!tag.getString("ChipType").equals("catalog"))return false;var catalog=tag.getCompound("Catalog");if(catalog.getInt("Version")!=com.vandorlabs.credentials.CatalogChipPolicy.VERSION)return false;var ids=catalog.getCompound("Designs").getList(owner.synthesis()?"synthesis_tower":"assembly_press",Tag.TAG_STRING);for(var id:ids)if(id.getAsString().equals(owner.synthesis()?NativeBuilderProducts.IDS[selected]+"_core":"navigation_data_module"))return true;return false;}
- public void select(int index){if(index<0||index>maxDesign()||index==DYNAMIC&&!dynamicAvailable())return;selected=index;owner.changed();}
+ public ItemStack product(int index){return owner.synthesis()?(index==DYNAMIC?active&&building==DYNAMIC&&!productionTemplate.isEmpty()?productionTemplate.copy():dynamicTemplate():result(index)):NativeBuilderProducts.pressResult(index);}
+ private ItemStack catalogSource=ItemStack.EMPTY;
+ private int catalogChoices;
+ private int catalogChoices() {
+  var chip=owner.owned(3);
+  if(!com.vandorlabs.neoforge.credentials.NativeChipTypes.type(chip).equals("catalog")){
+   catalogSource=ItemStack.EMPTY;
+   catalogChoices=0;
+   return 0;
+  }
+  if(!ItemStack.matches(chip,catalogSource)){
+   catalogSource=NativeCredentialItems.ownedCopy(chip);
+   catalogChoices=0;
+   var tag=com.vandorlabs.neoforge.credentials.NativeChipTypes.data(chip);
+   var catalog=tag.getCompound("Catalog");
+   if(catalog.getInt("Version")==com.vandorlabs.credentials.CatalogChipPolicy.VERSION){
+    var ids=catalog.getCompound("Designs").getList(owner.design().id(),Tag.TAG_STRING);
+    for(var entry:ids){
+     String id=com.vandorlabs.machines.BuilderRecipeCatalog.canonical(entry.getAsString());
+     if(owner.synthesis()){
+      for(int i=3;i<DYNAMIC;i++)if(id.equals(NativeBuilderProducts.IDS[i]+"_core"))catalogChoices|=1<<i;
+     }else{
+      int index=NativeBuilderProducts.PRESS.indexOf(id);
+      if(index>=0)catalogChoices|=1<<index;
+     }
+    }
+   }
+  }
+  return catalogChoices;
+ }
+ public int pressChoices() {
+  if(!owner.press())return 0;
+  int enabled=catalogChoices();
+  for(int i=0;i<=maxDesign();i++)if(NativeBuilderProducts.pressDefault(i))enabled|=1<<i;
+  return enabled;
+ }
+ private boolean permitted(){
+  if(owner.press())return (pressChoices()&(1<<selected))!=0;
+  if(selected==DYNAMIC)return dynamicAvailable();
+  return selected<3||(catalogChoices()&(1<<selected))!=0;
+ }
+ public void select(int index){
+  if(index<0||index>maxDesign()||index==DYNAMIC&&!dynamicAvailable()||owner.press()&&(pressChoices()&(1<<index))==0)return;
+  selected=index;owner.changed();
+ }
  public static ItemStack result(int index){return NativeBuilderProducts.result(index);}
  private void budget(){long now=owner.getLevel().getGameTime();if(now!=last){last=now;received=worked=0;}}
  private boolean eligibleInput(){var current=owner.owned(0);if(!ItemStack.matches(current,cachedInput)){cachedInput=NativeCredentialItems.ownedCopy(current);inputEligible=NativeBlockRecipeData.eligible(current);}return inputEligible;}
