@@ -92,7 +92,10 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private byte vertical;
     private boolean flightSprint;
     private int exhaustCursor,liftExhaustCursor;
-    public static final double CRUISE_SPEED=.28,UNPOWERED_TAXI_SPEED=.23,HOVER_SPRINT_SPEED=.56;
+    public static final double CRUISE_SPEED=.4,UNPOWERED_TAXI_SPEED=.3;
+    public static final double HOVER_CRUISE_SPEED=.8;
+    private static final double HOVER_SPRINT_MULTIPLIER=1.25;
+    public static final double HOVER_SPRINT_SPEED=HOVER_CRUISE_SPEED*HOVER_SPRINT_MULTIPLIER;
     public void predictFlight(boolean sprint){if(!world.isRemote)return;flightSprint=sprint;verticalAt=world.getTotalWorldTime();}
     private long verticalAt=-100,clearanceAt=-100;
     private double clearance=Double.POSITIVE_INFINITY;
@@ -569,12 +572,18 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         boolean articulated=articulation.begin();
         try { advanceController(active); } finally { if(articulated)articulation.end();collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
     }
-    public double cruiseSpeed(){return !hover&&!structure.activeThruster()?UNPOWERED_TAXI_SPEED:CRUISE_SPEED;}
+    public double cruiseSpeed(){
+        if(hover)return HOVER_CRUISE_SPEED;
+        return structure.activeThruster()?CRUISE_SPEED:UNPOWERED_TAXI_SPEED;
+    }
     private void advanceController(boolean active) {
         boolean boost=hover&&structure.activeThruster()&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
         if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost);
-        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?HOVER_SPRINT_SPEED:cruiseSpeed()):0,brake||!active?.045:forward==0?.008:boost?.028:.018);
-        if(!hover)driveSpeed=MathHelper.clamp(driveSpeed,-cruiseSpeed(),cruiseSpeed());
+        double cruise=cruiseSpeed();
+        double limit=hover?HOVER_SPRINT_SPEED:cruise;
+        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?limit:cruise):0,
+                brake||!active?.045:forward==0?.008:boost?.028:.018);
+        driveSpeed=MathHelper.clamp(driveSpeed,-limit,limit);
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
         // Both modes reverse steering while travelling backwards.

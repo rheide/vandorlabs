@@ -23,7 +23,7 @@ final class UnpoweredTaxiSpeedChecks {
                 VehicleStructure source=new VehicleStructure(cells,scanned.seat,scanned.facing,scanned.gearCount);
                 EntityGroundVehicle craft=new EntityGroundVehicle(world);craft.install(VehicleStructure.read(source.write()));craft.setPosition(base.getX(),base.getY(),base.getZ());
                 try{
-                    double limit=powered?EntityGroundVehicle.CRUISE_SPEED:EntityGroundVehicle.UNPOWERED_TAXI_SPEED;require(craft.cruiseSpeed()==limit,"cruise speed after snapshot reload");require(powered||!craft.setHover(true),"unpowered craft cannot Hover");
+                    double limit=powered?.4:.3;require(craft.cruiseSpeed()==limit,"cruise speed after snapshot reload");require(powered||!craft.setHover(true),"unpowered craft cannot Hover");
                     sprint.setBoolean(craft,sprinting);inputAt.setLong(craft,world.getTotalWorldTime());craft.autopilotControls(direction,(byte)0,false);
                     for(int tick=0;tick<45;tick++){step.invoke(craft,true);require(Math.abs(craft.driveSpeed)<=limit+1e-8,"Sprint must not exceed Taxi speed cap");}
                     require(Math.abs(craft.driveSpeed-direction*limit)<1e-8,"reaches usable top speed in both directions");require(Math.hypot(craft.posX-base.getX(),craft.posZ-base.getZ())>6,"native ground movement advances");
@@ -31,7 +31,7 @@ final class UnpoweredTaxiSpeedChecks {
                 }finally{craft.signals.close();craft.setDead();VehicleLookup.remove(craft);}
             }
         }finally{for(BlockPos at:BlockPos.getAllInBox(base.add(-35,-1,-35),base.add(35,-1,35)))world.setBlockToAir(at);}
-        System.out.println("[vandorlabs][reprolab] unpowered-taxi-speed PASS cases=8 native-ground forward/reverse Sprint-on/off snapshot-reload unpowered=.23 powered=.28 no-Hover no-boost overspeed-clamp");
+        System.out.println("[vandorlabs][reprolab] unpowered-taxi-speed PASS cases=8 native-ground forward/reverse Sprint-on/off snapshot-reload unpowered=.30 powered=.40 no-Hover no-boost overspeed-clamp");
     }
     private UnpoweredTaxiSpeedChecks(){}
 }

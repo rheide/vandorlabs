@@ -52,10 +52,22 @@ final class HoverRuntimeChecks {
             require(Math.abs(craft.rotationYaw-turnYaw)>20 && Math.abs(craft.posX-turnX)<1e-8 && Math.abs(craft.posZ-turnZ)<1e-8 && Math.abs(craft.posY-altitude)<1e-8,"stationary Hover rotates without translation");
             craft.autopilotControls((byte)0,(byte)0,false);for(int i=0;i<10;i++)advance.invoke(craft,false);
             require(player.startRiding(craft),"pilot boards fixture");
-            craft.autopilotControls((byte)1,(byte)0,false);craft.flightInput(player,(byte)0,false,true);
-            for(int i=0;i<24;i++)advance.invoke(craft,true);require(Math.abs(craft.driveSpeed-EntityGroundVehicle.HOVER_SPRINT_SPEED)<1e-8,"Sprint doubles Hover cruising speed");
-            craft.flightInput(player,(byte)0,false,false);for(int i=0;i<20;i++)advance.invoke(craft,true);require(Math.abs(craft.driveSpeed-.28)<1e-8,"releasing Sprint restores normal Hover speed");
+            // Use clear air for the longer speed run, then restore the original landing fixture.
+            for(int z=-64;z<=0;z+=16)world.getChunkFromBlockCoords(BASE.add(0,0,z));
+            float priorYaw=craft.rotationYaw;
+            craft.setPosition(BASE.getX(),220,BASE.getZ());
+            craft.hoverTarget=220;craft.rotationYaw=0;
+            craft.autopilotControls((byte)1,(byte)0,false);
+            for(int i=0;i<48;i++)advance.invoke(craft,true);
+            double cruise=craft.driveSpeed;
+            require(Math.abs(cruise-.8)<1e-8,"normal Hover reaches sixteen blocks per second");
+            craft.flightInput(player,(byte)0,false,true);
+            for(int i=0;i<8;i++)advance.invoke(craft,true);
+            require(craft.driveSpeed<=1&&Math.abs(craft.driveSpeed-cruise*1.25)<1e-8,"Sprint adds twenty-five percent up to twenty blocks per second");
+            craft.flightInput(player,(byte)0,false,false);for(int i=0;i<20;i++)advance.invoke(craft,true);
+            require(Math.abs(craft.driveSpeed-cruise)<1e-8,"releasing Sprint restores normal Hover speed");
             craft.stopForParking();craft.setPosition(BASE.getX(),altitude,BASE.getZ());
+            craft.hoverTarget=altitude;craft.rotationYaw=priorYaw;
             require(craft.structure.exhaustCells.size()==2,"movement exhaust includes impulse and vertical thrusters only");
             for(VehicleStructure.Cell cell:craft.structure.exhaustCells){String name=cell.state.getBlock().getRegistryName().getResourcePath();require(!name.startsWith("antigravity_plate")&&!name.startsWith("repulsor_array"),"passive lift blocks do not emit forward-movement particles");}
             craft.flightInput(player,(byte)1,false);for(int i=0;i<10;i++)advance.invoke(craft,true);require(craft.posY>altitude+1,"vertical input ascends");
