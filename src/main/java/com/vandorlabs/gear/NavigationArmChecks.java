@@ -12,7 +12,7 @@ public final class NavigationArmChecks {
         for(TileEntityConstructor tile:arm.payload().navigationObservers(arm)){
             BlockPos local=tile.getPos();Vec3d expected=arm.payload().transform(arm,arm.progress(),local.getX()+.5,local.getY(),local.getZ()+.5).add(new Vec3d(arm.getPos()));
             if(NavigationSources.position(tile).squareDistanceTo(expected)>1e-12)throw new IllegalStateException("Observer lost moving physical position");
-            int radius=NavigationRange.radius(tile.core().design.equals("standalone_dish")?5000:1000,expected.y,tile.observerScale());
+            int radius=NavigationRange.radius(tile.core().design.equals("standalone_dish")?NavigationRange.SURVEY_BASE:NavigationRange.SENTINEL_BASE,expected.y,tile.observerScale());
             if(NavigationSources.radius(tile)!=radius)throw new IllegalStateException("Observer retained construction-height radius");
             java.util.List<NavigationSources.Area> areas=NavigationSources.matching(arm.getWorld(),new BlockPos(expected),ChannelList.of(47));
             boolean found=false;for(NavigationSources.Area area:areas)if(area.x==MathHelper.floor(expected.x)&&area.z==MathHelper.floor(expected.z)&&area.radius==radius)found=true;

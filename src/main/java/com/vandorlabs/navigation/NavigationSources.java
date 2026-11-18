@@ -14,7 +14,7 @@ public final class NavigationSources {
     private NavigationSources(){}
     public static int radius(TileEntityConstructor tile){
         if(tile.core()==null||tile.layout()==null)return 0;String id=tile.core().design;
-        int base=id.equals("standalone_antenna")?1000:id.equals("standalone_dish")?5000:0;
+        int base=id.equals("standalone_antenna")?NavigationRange.SENTINEL_BASE:id.equals("standalone_dish")?NavigationRange.SURVEY_BASE:0;
         return NavigationRange.radius(base,position(tile).y,tile.observerScale());
     }
     /** The construction coordinates of a captured machine are not its physical height. */
@@ -24,8 +24,13 @@ public final class NavigationSources {
         return arm!=null&&arm.payload()!=null&&!arm.payload().materialized()?NavigationVehicle.point(arm.getWorld(),arm.payload().transform(arm,arm.progress(),p.getX()+.5,p.getY(),p.getZ()+.5).add(new Vec3d(arm.getPos())),arm.getPos()):NavigationVehicle.point(tile.getWorld(),new Vec3d(p.getX()+.5,p.getY(),p.getZ()+.5),p);
     }
     public static final class Area {
-        public final int x,z,radius;
-        public Area(int x,int z,int radius){this.x=x;this.z=z;this.radius=radius;}
+        public final int x,z,radius,radarRadius;
+        final TileEntityConstructor stationary;
+        final boolean sentinel;
+        public Area(int x,int z,int radius){this(x,z,radius,0,null,false);}
+        Area(int x,int z,int radius,int radarRadius,TileEntityConstructor stationary,boolean sentinel){
+            this.x=x;this.z=z;this.radius=radius;this.radarRadius=radarRadius;this.stationary=stationary;this.sentinel=sentinel;
+        }
         public boolean contains(int x,int z){return NavigationMap.covers(x,z,this.x,this.z,radius);}
     }
     private static final Map<World,List<TileEntityConstructor>> INDEX=new WeakHashMap<>();
@@ -36,7 +41,7 @@ public final class NavigationSources {
         List<Area> areas=new ArrayList<>();if(channels.isEmpty())return areas;Vec3d receiver=NavigationVehicle.point(world,new Vec3d(display.getX()+.5,display.getY(),display.getZ()+.5),display);com.vandorlabs.vehicle.EntityGroundVehicle own=NavigationVehicle.craft(world);world=NavigationVehicle.physicalWorld(world);List<TileEntityConstructor> list=INDEX.get(world);
         if(list!=null)for(TileEntityConstructor tile:list){
             if(tile.isInvalid()||!world.isBlockLoaded(tile.getPos(),false)||world.getTileEntity(tile.getPos())!=tile||!tile.formed())continue;
-            append(areas,tile,receiver,channels);
+            append(areas,tile,receiver,channels,tile);
         }
         for(GearTileEntity arm:GearGeometry.roots(world)){
             if(arm.isInvalid()||!arm.isOperational()||!world.isBlockLoaded(arm.getPos(),false)||world.getTileEntity(arm.getPos())!=arm||arm.payload()==null||arm.payload().materialized()||arm.hasFailedArmSnapshot())continue;
@@ -49,9 +54,19 @@ public final class NavigationSources {
         }if(own!=null)NavigationVehicle.observers(areas,own,receiver,channels);for(com.vandorlabs.vehicle.EntityGroundVehicle craft:NavigationVehicle.vehicles(world))if(craft!=own)NavigationVehicle.observers(areas,craft,receiver,channels);return areas;
     }
     static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels){
+        append(areas,tile,display,channels,null);
+    }
+    private static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels,TileEntityConstructor stationary){
         int radius=radius(tile),range=tile.transmissionRange();Vec3d p=position(tile);
         if(radius==0||range<0||p.squareDistanceTo(display)>range*(double)range)return;
-        ChannelList source=tile.transmittedChannels();for(int c:channels.toArray())if(source.contains(c)){areas.add(new Area(net.minecraft.util.math.MathHelper.floor(p.x),net.minecraft.util.math.MathHelper.floor(p.z),radius));break;}
+        int radar=NavigationRange.radarRadius(tile.core().design);
+        boolean sentinel=radar==NavigationRange.SENTINEL_RADAR_RADIUS;
+        ChannelList source=tile.transmittedChannels();
+        for(int c:channels.toArray())if(source.contains(c)){
+            areas.add(new Area(net.minecraft.util.math.MathHelper.floor(p.x),net.minecraft.util.math.MathHelper.floor(p.z),
+                    radius,tile.screenOn()&&tile.activity()==2?radar:0,stationary,sentinel));
+            break;
+        }
     }
     public static boolean contains(List<Area> areas,int x,int z){for(Area area:areas)if(area.contains(x,z))return true;return false;}
 }

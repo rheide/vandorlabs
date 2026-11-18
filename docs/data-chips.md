@@ -4,7 +4,7 @@ Data Chips retain their company identity separately from their programmed type. 
 
 - **Journal Data Chip:** stores the title and pages written by the Chip/Card Programmer. Programming a journal changes the chip to the Journal appearance.
 - **Vehicle Data Chip:** stores a vehicle design. Writing a design from a Vehicle Controller changes the inserted Data Chip to the Vehicle appearance. The chip must remain in the controller's attached Data Chip Mount while writing.
-- **Navigation Chip:** stores a dimension and X/Y/Z location written by a [Navigation Table or Angled Navigation Console](navigation-displays.md#seed-navigation-forge-1122). Supported displays show a 1,000-block radius around its saved point without a linked observer. Creative also offers a blank chip.
+- **Navigation Chip:** stores a dimension and X/Y/Z location written by a [Navigation Table or Angled Navigation Console](navigation-displays.md#seed-navigation-forge-1122). Supported displays show a 1,000-block radius around its saved point without a linked observer. A chip programmed inside a recorded sweep also carries a snapshot of its surface pixels. Creative also offers a blank chip.
 - **Catalog Chip (Master):** contains explicit, saved blueprint lists for each builder. A builder reads its own list; the word “Master” is a label, not a permission switch.
 
 ## Browsing a catalog

@@ -17,7 +17,7 @@ public final class NavigationChip {
         if(stack.isEmpty()||stack.getItem()!=com.vandorlabs.items.ModItems.DATA_CHIP)throw new IllegalArgumentException("A data chip is required");
         int y=programmed(stack)?value(stack,"Y"):64;
         NBTTagCompound t=stack.hasTagCompound()?stack.getTagCompound().copy():new NBTTagCompound(),location=new NBTTagCompound();
-        location.setInteger("Dimension",dimension);location.setInteger("X",x);location.setInteger("Y",y);location.setInteger("Z",z);for(String key:new String[]{"JournalTitle","JournalPages","JournalFont","VehicleDesign","VehicleDesignCodec","VehicleShape","VehicleName","Catalog","CatalogName","CatalogBlock"})t.removeTag(key);t.removeTag("NavigationMapPixels");t.setString("ChipType","navigation");t.setTag("NavigationLocation",location);stack.setTagCompound(t);
+        location.setInteger("Dimension",dimension);location.setInteger("X",x);location.setInteger("Y",y);location.setInteger("Z",z);for(String key:new String[]{"JournalTitle","JournalPages","JournalFont","VehicleDesign","VehicleDesignCodec","VehicleShape","VehicleName","Catalog","CatalogName","CatalogBlock"})t.removeTag(key);t.removeTag("NavigationMapPixels");t.removeTag("NavigationSurface");t.setString("ChipType","navigation");t.setTag("NavigationLocation",location);stack.setTagCompound(t);
     }
     public static SavedMapPixels savedMap(ItemStack stack){
         if(!programmed(stack)||!stack.getTagCompound().hasKey("NavigationMapPixels",10))return null;
@@ -29,7 +29,23 @@ public final class NavigationChip {
     public static void writeMap(ItemStack stack,SavedMapPixels map){
         int dimension=Integer.parseInt(map.dimension());write(stack,dimension,map.centerX(),map.centerZ());NBTTagCompound t=new NBTTagCompound();t.setInteger("Version",1);t.setInteger("CenterX",map.centerX());t.setInteger("CenterZ",map.centerZ());t.setInteger("Scale",map.scale());t.setByteArray("Colors",map.colors());t.setIntArray("Palette",map.palette());t.setInteger("Hash",map.hash());stack.getTagCompound().setTag("NavigationMapPixels",t);
     }
+    static NavigationSurface.Snapshot surface(ItemStack stack,int dimension){
+        if(!inDimension(stack,dimension))return null;
+        NBTTagCompound tag=stack.getTagCompound().getCompoundTag("NavigationSurface");
+        if(tag.getInteger("Version")!=1||!tag.hasKey("X",3)||!tag.hasKey("Z",3)
+                ||!tag.hasKey("Radius",3)||!tag.hasKey("Colors",7))return null;
+        try{return new NavigationSurface.Snapshot(tag.getInteger("X"),tag.getInteger("Z"),
+                tag.getInteger("Radius"),tag.getByteArray("Colors"));}
+        catch(IllegalArgumentException invalid){return null;}
+    }
+    static void writeSurface(ItemStack stack,NavigationSurface.Snapshot image){
+        if(image==null)return;
+        NBTTagCompound tag=new NBTTagCompound();
+        tag.setInteger("Version",1);tag.setInteger("X",image.x);tag.setInteger("Z",image.z);
+        tag.setInteger("Radius",image.radius);tag.setByteArray("Colors",image.pixels());
+        stack.getTagCompound().setTag("NavigationSurface",tag);
+    }
     /** Public update projection only; never replace the inventory or saved stack with this copy. */
-    public static ItemStack summary(ItemStack stack){ItemStack copy=stack.copy();if(copy.hasTagCompound()&&copy.getTagCompound().hasKey("NavigationMapPixels",10)){NBTTagCompound t=copy.getTagCompound().getCompoundTag("NavigationMapPixels");t.removeTag("Colors");t.removeTag("Palette");}return copy;}
+    public static ItemStack summary(ItemStack stack){ItemStack copy=stack.copy();if(copy.hasTagCompound())copy.getTagCompound().removeTag("NavigationSurface");if(copy.hasTagCompound()&&copy.getTagCompound().hasKey("NavigationMapPixels",10)){NBTTagCompound t=copy.getTagCompound().getCompoundTag("NavigationMapPixels");t.removeTag("Colors");t.removeTag("Palette");}return copy;}
 
 }

@@ -26,7 +26,21 @@ public final class NavigationModuleData {
             if(all.size()-remove.size()>=MAX_AREAS)continue;all.removeAll(remove);all.add(area);changed=true;
         }
         if(!changed)return false;int[] circles=new int[all.size()*3];int at=0;for(NavigationSources.Area area:all){circles[at++]=area.x;circles[at++]=area.z;circles[at++]=area.radius;}
-        NBTTagCompound tag=stack.hasTagCompound()?stack.getTagCompound().copy():new NBTTagCompound(),payload=new NBTTagCompound();payload.setInteger("Version",VERSION);payload.setInteger("Dimension",dimension);payload.setIntArray("Circles",circles);tag.setTag("NavigationAreas",payload);stack.setTagCompound(tag);return true;
+        NBTTagCompound tag=stack.hasTagCompound()?stack.getTagCompound().copy():new NBTTagCompound(),payload=new NBTTagCompound();payload.setInteger("Version",VERSION);payload.setInteger("Dimension",dimension);payload.setIntArray("Circles",circles);if(data(stack).hasKey("Surface",11)&&data(stack).hasUniqueId("SurfaceAtlas")){payload.setTag("Surface",data(stack).getTag("Surface").copy());payload.setUniqueId("SurfaceAtlas",data(stack).getUniqueId("SurfaceAtlas"));}tag.setTag("NavigationAreas",payload);stack.setTagCompound(tag);return true;
     }
-    public static ItemStack summary(ItemStack stack){ItemStack copy=stack.copy();if(copy.hasTagCompound()){NBTTagCompound p=data(copy);int count=count(copy);p.removeTag("Circles");p.setInteger("AreaCount",count);}return copy;}
+    static boolean hasSurface(ItemStack stack){return data(stack).hasKey("Surface",11);}
+    static int[] surface(ItemStack stack,int dimension,NavigationSurface.Atlas atlas){
+        return bound(stack)&&dimension(stack)==dimension&&data(stack).hasUniqueId("SurfaceAtlas")
+                &&atlas.identity().equals(data(stack).getUniqueId("SurfaceAtlas"))?NavigationSurface.validAreas(data(stack).getIntArray("Surface")):new int[0];
+    }
+    static boolean recordSurface(ItemStack stack,int dimension,int[] observed,NavigationSurface.Atlas atlas){
+        if(!bound(stack)||dimension(stack)!=dimension||observed.length==0)return false;
+        NBTTagCompound saved=data(stack);
+        if(saved.hasUniqueId("SurfaceAtlas")&&!atlas.identity().equals(saved.getUniqueId("SurfaceAtlas")))return false;
+        int[] before=saved.getIntArray("Surface"),after=NavigationSurface.mergeAreas(before,observed);
+        if(before==after)return false;
+        saved.setIntArray("Surface",after);saved.setUniqueId("SurfaceAtlas",atlas.identity());
+        return true;
+    }
+    public static ItemStack summary(ItemStack stack){ItemStack copy=stack.copy();if(copy.hasTagCompound()){NBTTagCompound p=data(copy);int count=count(copy);p.removeTag("Circles");p.removeTag("Surface");p.removeTag("SurfaceAtlasMost");p.removeTag("SurfaceAtlasLeast");p.setInteger("AreaCount",count);}return copy;}
 }

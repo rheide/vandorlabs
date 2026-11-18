@@ -34,9 +34,9 @@ Transmit channels and the connection range for nearby navigation displays. The
 current **Scanning radius** appears below these controls. Scanning needs a
 formed, loaded assembly; power and the cosmetic activity state do not gate it.
 
-At Y=64, the Sentinel Array radius is 500 blocks and the Survey Dish radius is
-2,500 blocks. Range rises linearly to 1,000 / 5,000 blocks at Y=128, then stays
-capped for the base size. Minimum radii below Y=64 are 125 / 625 blocks. An arm's current physical pose determines the height and
+At Y=64, the Sentinel Array radius is 250 blocks and the Survey Dish radius is
+1,000 blocks. Range rises linearly to 500 / 2,000 blocks at Y=128, then stays
+capped for the base size. Minimum radii below Y=64 are 63 / 250 blocks. An arm's current physical pose determines the height and
 coverage center while extending, retracting or rotating.
 
 
@@ -55,13 +55,13 @@ Core, where H is its height.
 
 | Observer | Frame | Matter Blocks | Radius at Y=64 | Radius at Y=128+ |
 | --- | --- | ---: | ---: | ---: |
-| Survey Dish | 3×3×3 | 20 | 2,500 | 5,000 |
-| Survey Dish | 4×4×4 | 35 | 2,500 | 6,667 |
-| Survey Dish | 5×5×5 | 52 | 2,500 | 8,333 |
-| Survey Dish | 6×6×6 | 71 | 2,500 | 10,000 |
-| Sentinel Array | 2×2×4 | 15 | 500 | 1,000 |
-| Sentinel Array | 3×3×6 | 32 | 500 | 1,500 |
-| Sentinel Array | 4×4×8 | 51 | 500 | 2,000 |
+| Survey Dish | 3×3×3 | 20 | 1,000 | 2,000 |
+| Survey Dish | 4×4×4 | 35 | 1,000 | 2,667 |
+| Survey Dish | 5×5×5 | 52 | 1,000 | 3,333 |
+| Survey Dish | 6×6×6 | 71 | 1,000 | 4,000 |
+| Sentinel Array | 2×2×4 | 15 | 250 | 500 |
+| Sentinel Array | 3×3×6 | 32 | 250 | 750 |
+| Sentinel Array | 4×4×8 | 51 | 250 | 1,000 |
 
 The size bonus rises linearly from zero at Y=64 to its full value at Y=128.
 Twice the base linear dimensions gives +100% radius; larger frames retain that

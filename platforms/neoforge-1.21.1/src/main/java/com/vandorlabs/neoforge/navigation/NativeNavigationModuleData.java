@@ -20,7 +20,33 @@ public final class NativeNavigationModuleData {
  public static int count(ItemStack stack){var p=data(stack);if(!p.contains("Circles",11))return Math.clamp(p.getInt("AreaCount"),0,MAX_AREAS);int n=p.getIntArray("Circles").length;return n<=MAX_AREAS*3&&n%3==0?n/3:0;}
  public static List<Area> areas(ItemStack stack,Level level){if(!bound(stack)||!NativeNavigationChip.dimension(data(stack)).equals(NativeNavigationChip.dimension(level)))return List.of();int[] circles=data(stack).getIntArray("Circles");if(circles.length>MAX_AREAS*3||circles.length%3!=0)return List.of();var result=new ArrayList<Area>(circles.length/3);try{for(int i=0;i<circles.length;i+=3)result.add(new Area(circles[i],circles[i+1],circles[i+2]));}catch(IllegalArgumentException invalid){return List.of();}return List.copyOf(result);}
  private static boolean encloses(Area a,Area b){return a.radius>=b.radius&&Math.hypot((double)a.x-b.x,(double)a.z-b.z)+b.radius<=a.radius;}
- public static boolean record(ItemStack stack,Level level,List<Area> observed){if(!item(stack)||observed.isEmpty())return false;var envelope=rootView(stack);var old=data(stack);if(envelope.contains("NavigationAreas")&&!envelope.contains("NavigationAreas",10))return false;if(envelope.contains("NavigationAreas",10)&&(!old.getAllKeys().stream().allMatch(k->java.util.Set.of("Version","Dimension","DimensionKey","Circles").contains(k))||!old.contains("Version",3)||NativeNavigationChip.dimension(old).isEmpty()||old.contains("DimensionKey")&&(!old.contains("DimensionKey",8)||net.minecraft.resources.ResourceLocation.tryParse(old.getString("DimensionKey"))==null)))return false;if(rootView(stack).contains("NavigationAreas",10)&&(old.getInt("Version")!=VERSION||!old.contains("Circles",11))||bound(stack)&&!NativeNavigationChip.dimension(old).equals(NativeNavigationChip.dimension(level)))return false;var all=new ArrayList<>(areas(stack,level));if(old.getIntArray("Circles").length>0&&all.isEmpty())return false;boolean changed=false;for(var area:observed){if(all.stream().anyMatch(a->encloses(a,area)))continue;var remove=all.stream().filter(a->encloses(area,a)).toList();if(all.size()-remove.size()>=MAX_AREAS)continue;all.removeAll(remove);all.add(area);changed=true;}if(!changed)return false;var p=new CompoundTag();p.putInt("Version",VERSION);p.putString("DimensionKey",NativeNavigationChip.dimension(level));int[] circles=new int[all.size()*3];int at=0;for(var a:all){circles[at++]=a.x;circles[at++]=a.z;circles[at++]=a.radius;}p.putIntArray("Circles",circles);var tag=root(stack);tag.put("NavigationAreas",p);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));return true;}
+ public static boolean record(ItemStack stack,Level level,List<Area> observed){if(!item(stack)||observed.isEmpty())return false;var envelope=rootView(stack);var old=data(stack);if(envelope.contains("NavigationAreas")&&!envelope.contains("NavigationAreas",10))return false;if(envelope.contains("NavigationAreas",10)&&(!old.getAllKeys().stream().allMatch(k->java.util.Set.of("Version","Dimension","DimensionKey","Circles","Surface","SurfaceAtlasMost","SurfaceAtlasLeast").contains(k))||!old.contains("Version",3)||NativeNavigationChip.dimension(old).isEmpty()||old.contains("DimensionKey")&&(!old.contains("DimensionKey",8)||net.minecraft.resources.ResourceLocation.tryParse(old.getString("DimensionKey"))==null)))return false;if(rootView(stack).contains("NavigationAreas",10)&&(old.getInt("Version")!=VERSION||!old.contains("Circles",11))||bound(stack)&&!NativeNavigationChip.dimension(old).equals(NativeNavigationChip.dimension(level)))return false;var all=new ArrayList<>(areas(stack,level));if(old.getIntArray("Circles").length>0&&all.isEmpty())return false;boolean changed=false;for(var area:observed){if(all.stream().anyMatch(a->encloses(a,area)))continue;var remove=all.stream().filter(a->encloses(area,a)).toList();if(all.size()-remove.size()>=MAX_AREAS)continue;all.removeAll(remove);all.add(area);changed=true;}if(!changed)return false;var p=new CompoundTag();p.putInt("Version",VERSION);p.putString("DimensionKey",NativeNavigationChip.dimension(level));int[] circles=new int[all.size()*3];int at=0;for(var a:all){circles[at++]=a.x;circles[at++]=a.z;circles[at++]=a.radius;}p.putIntArray("Circles",circles);if(old.contains("Surface",11)&&archive(old)!=null){p.put("Surface",old.get("Surface").copy());setArchive(p,archive(old));}var tag=root(stack);tag.put("NavigationAreas",p);stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));return true;}
+ static boolean inDimension(ItemStack stack,Level level){
+  return bound(stack)&&NativeNavigationChip.dimension(data(stack)).equals(NativeNavigationChip.dimension(level));
+ }
+ private static UUID archive(CompoundTag tag){
+  return tag.contains("SurfaceAtlasMost",Tag.TAG_LONG)&&tag.contains("SurfaceAtlasLeast",Tag.TAG_LONG)
+          ?new UUID(tag.getLong("SurfaceAtlasMost"),tag.getLong("SurfaceAtlasLeast")):null;
+ }
+ private static void setArchive(CompoundTag tag,UUID id){
+  tag.putLong("SurfaceAtlasMost",id.getMostSignificantBits());tag.putLong("SurfaceAtlasLeast",id.getLeastSignificantBits());
+ }
+ static boolean hasSurface(ItemStack stack){return data(stack).contains("Surface",11);}
+ static int[] surface(ItemStack stack,Level level,NavigationSurface.Atlas atlas){
+  return inDimension(stack,level)&&atlas.identity().equals(archive(data(stack)))
+          ?NavigationSurface.validAreas(data(stack).getIntArray("Surface")):new int[0];
+ }
+ static boolean recordSurface(ItemStack stack,Level level,int[] observed,NavigationSurface.Atlas atlas){
+  if(observed.length==0||!bound(stack)||!NativeNavigationChip.dimension(data(stack)).equals(NativeNavigationChip.dimension(level)))return false;
+  var saved=data(stack);
+  if(archive(saved)!=null&&!atlas.identity().equals(archive(saved)))return false;
+  int[] before=saved.getIntArray("Surface"),after=NavigationSurface.mergeAreas(before,observed);
+  if(before==after)return false;
+  var root=root(stack);
+  root.getCompound("NavigationAreas").putIntArray("Surface",after);
+  setArchive(root.getCompound("NavigationAreas"),atlas.identity());
+  stack.set(DataComponents.CUSTOM_DATA,CustomData.of(root));return true;
+ }
  public static ItemStack summary(ItemStack stack){if(stack.isEmpty())return ItemStack.EMPTY;var copy=new ItemStack(stack.getItem(),1);var source=data(stack);String dimension=NativeNavigationChip.dimension(source);if(source.getInt("Version")==VERSION&&!dimension.isEmpty()&&dimension.length()<=128&&net.minecraft.resources.ResourceLocation.tryParse(dimension)!=null){var p=new CompoundTag();p.putInt("Version",VERSION);p.putString("DimensionKey",dimension);p.putInt("AreaCount",count(stack));var projected=new CompoundTag();projected.put("NavigationAreas",p);copy.set(DataComponents.CUSTOM_DATA,CustomData.of(projected));}return copy;}
 
  private NativeNavigationModuleData(){}

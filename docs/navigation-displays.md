@@ -35,15 +35,34 @@ Mount. Other screen families are unchanged.
    (default 16).
 3. Set the display's **Receive channels** to include one or more source channels.
 4. Use the bottom buttons to pan west/east/north/south and zoom in/out. The map
-   is north-up; X/Z coordinates above it identify the center.
+   is north-up. The header shows the zoom level and the center’s X/Z coordinates.
+   There are seven zoom levels. A 384-pixel-wide map spans 128 blocks at level 7
+   and 8,192 blocks at level 1. Joining tables widens the view at the same scale.
+   The table shows a preview first at every zoom and sharpens the map
+   once the view settles, using up to twice the resolution along each axis.
+
+Each linked observer has a terrain coverage ring centered on its Core. While
+active, it adds a lighter player-detection ring and a rotating sweep. The
+Sentinel Array uses red, detects within **128 blocks**, and sweeps every **8 seconds**.
+The Survey Dish uses cyan, detects within **256 blocks**, and sweeps every **24 seconds**.
+Pink blips mark other visible players within that radius who are above the
+dimension’s sea level and uncrouched. Crouching or dropping to sea level removes
+a blip from other players’ radar at the next update. Your own location marker
+remains visible while crouched. On Forge, use the observer’s Scanning state. On
+NeoForge, use **Radar On** in the observer dialog.
+The same sweep gradually reveals actual surface block colors and shading at
+one pixel per two blocks on each axis. It samples the sector under the sweep
+from loaded chunks only. Under load or with several observers, the scan fills
+in over several revolutions. Undiscovered terrain still uses biome colors.
+Ceiling dimensions and vehicle displays use biome mapping without live surface scanning.
 
 Sources must be formed and loaded in the same dimension. They need no power,
 redstone signal or chip. Transmission range is the three-dimensional distance
 from the source Core to the display; it controls the connection, not observation.
-At Y=64, Sentinel Arrays observe a **500-block radius** and Survey Dishes a
-**2,500-block radius**, measured horizontally from their Cores. Range rises
-linearly to **1,000 / 5,000 blocks at Y=128** for the base sizes, then stays capped. Below Y=64,
-the same linear rule applies down to minimum radii of 125 / 625 blocks. The dialog shows the
+At Y=64, Sentinel Arrays observe a **250-block radius** and Survey Dishes a
+**1,000-block radius**, measured horizontally from their Cores. Range rises
+linearly to **500 / 2,000 blocks at Y=128** for the base sizes, then stays capped. Below Y=64,
+the same linear rule applies down to minimum radii of 63 / 250 blocks. The dialog shows the
 current scanning radius. Extending and rotating arms update it from the
 observer's physical position, including during movement. All matching
 sources and selected receive channels contribute to the same coverage area.
@@ -56,15 +75,14 @@ The Array has an animated scanning texture; the Dish has a moving rotor.
 Larger proportional frames increase only the altitude bonus above Y=64. A
 Survey Dish accepts N×N×N (N=3–16); a Sentinel Array accepts N×N×2N (N=2–8).
 Doubling every base dimension reaches +100% radius at Y=128: a 6×6×6 Dish
-reaches 10,000 blocks and a 4×4×8 Array reaches 2,000. Larger frames stay capped
+reaches a 4,000-block radius (8,000 across), and a 4×4×8 Array reaches a 1,000-block radius (2,000 across). Larger frames stay capped
 there. Intermediate sizes and heights interpolate linearly; all sizes keep the
 same radius at Y=64. See the construction guides for frame stages and counts.
 
 
-The server samples the current dimension's biome generator from its seed. The
-map never requests terrain chunks, and does not show player builds, live terrain
-edits, structures or exact heights. Colors distinguish water, beaches, dry and
-cold biomes; shading gives approximate relief from biome height. Dark navy is
+Where surface pixels are unavailable, the server samples the current dimension’s
+biome generator from its seed. These colors distinguish water, beaches, dry and
+cold biomes, with shading based on approximate relief. Dark navy is
 outside coverage. Purple indicates a generator sampling error within coverage.
 **No signal** means no matching source or usable saved chip location is available.
 
@@ -82,6 +100,10 @@ reinserting it recenters the map. Tables and supported screens can read it;
 only navigation tables/consoles write locations. The chip supplies a
 **1,000-block radius** around its saved point without an array or dish. The saved
 point applies in its recorded dimension; navigation does not switch dimensions.
+If the selected point lies inside a live or recorded sweep with surface
+pixels, **SET** also copies that sweep's current image onto the chip. A Sentinel
+image carries up to 16 KiB of pixels and a Dish image up to 64 KiB. The chip can
+show this snapshot offline.
 The chip remains one physical item through saving and joined-table resizing.
 
 ### Map controls, detail and reuse
@@ -142,8 +164,12 @@ keeps recording even when nobody is looking at its display. It binds permanently
 dimension on its first recording. A bounded square-tile index accelerates coverage lookups while keeping exact
 block-coordinate circle checks along partial edges. Stored circles combine, so the table can
 browse them after the source is disconnected or the module is moved to another
-table in that dimension. Data is stored as coverage coordinates, not loaded
-chunks or copies of map images; terrain is reconstructed from the world seed.
+table in that dimension. The module stores coverage and references to the surface sweeps it observed.
+The dimension's world save keeps one shared copy of each scanned 16×16-block
+tile. Rescanning updates those same pixels, including pixels shared by overlapping
+observers and modules. The archive holds up to 16,384 tiles (1 MiB of raw pixels)
+per dimension. Once full, it refreshes recorded tiles and leaves new territory
+on the biome map.
 
 A module retains up to 1,024 circles. Contained scans are deduplicated without
 adding unobserved space. Full modules retain their existing data. Tooltips show

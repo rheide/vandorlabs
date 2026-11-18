@@ -98,14 +98,15 @@ public final class NavigationMapRenderer {
     }
     private static void apply(Entry e,MessageNavigationImage packet){
         MessageNavigationImage old=e.data;
-        if(packet.pixels!=null){if(e.texture.getTextureData().length!=packet.pixels.length){Minecraft.getMinecraft().getTextureManager().deleteTexture(e.resource);e.texture=new DynamicTexture(packet.width,packet.height);e.resource=Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("navigation_map",e.texture);}System.arraycopy(packet.pixels,0,e.texture.getTextureData(),0,packet.pixels.length);e.texture.updateDynamicTexture();mapUploads++;}
+        if(packet.pixels!=null){if(e.texture.getTextureData().length!=packet.pixels.length||old!=null&&(old.width!=packet.width||old.height!=packet.height)){Minecraft.getMinecraft().getTextureManager().deleteTexture(e.resource);e.texture=new DynamicTexture(packet.width,packet.height);e.resource=Minecraft.getMinecraft().getTextureManager().getDynamicTextureLocation("navigation_map",e.texture);}System.arraycopy(packet.pixels,0,e.texture.getTextureData(),0,packet.pixels.length);e.texture.updateDynamicTexture();mapUploads++;}
         else if(e.revision!=packet.revision){e.revision=0;e.pending=true;e.due=0;return;}else acknowledgements++;
         e.waiting=false;e.pending=false;e.interactionPending=false;e.received=Minecraft.getSystemTime();e.revision=packet.revision;e.data=packet;e.motion.snap(packet.x,packet.z,e.canvas.scale(packet.zoom));e.targetZoom=packet.zoom;
         if(old==null||old.x!=packet.x||old.z!=packet.z||old.zoom!=packet.zoom||old.hasChip!=packet.hasChip||old.noSignal!=packet.noSignal||old.write!=packet.write||old.unlinked!=packet.unlinked)updateUI(e);trim();
     }
     private static void updateUI(Entry e){
         BufferedImage image=new BufferedImage(384,128,BufferedImage.TYPE_INT_ARGB);Graphics2D g=image.createGraphics();try{
-            g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11));g.setColor(new Color(0xcce7ee));String title=e.data==null?"ACQUIRING TERRAIN":(e.data.noSignal||e.vehicleMissing)?"NO SIGNAL":"X "+e.data.x+" Z "+e.data.z+" N^";g.drawString(title,3,14);
+            g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,11));g.setColor(new Color(0xcce7ee));String title=e.data==null?"ACQUIRING TERRAIN":(e.data.noSignal||e.vehicleMissing)?"NO SIGNAL":"X "+e.data.x+" Z "+e.data.z+" N^";if(e.data!=null&&e.data.write)title=NavigationOverlay.zoomLabel(e.data.zoom)+"  "+title;
+            g.drawString(title,3,14);
             for(int i=0;i<8;i++){int x=i*24;g.setColor(new Color(0x304958));g.fillRect(x+1,25,22,22);g.setColor(i==7&&(e.data==null||!e.data.hasChip)||e.vehicleFollow&&e.tile instanceof TileEntityAnimatedScreenSelector&&i<4?new Color(0x71818a):Color.WHITE);if(i==6){g.drawOval(x+7,31,10,10);g.drawLine(x+12,28,x+12,34);g.drawLine(x+12,38,x+12,44);g.drawLine(x+4,36,x+10,36);g.drawLine(x+14,36,x+20,36);}else g.drawString(LABELS[i],x+(24-g.getFontMetrics().stringWidth(LABELS[i]))/2,40);}
             int font=Math.min(14,Math.max(10,(e.canvas.mapBottom-e.canvas.mapTop-4)/3-4));int lineHeight=font+4;String[] prompt=e.vehicleMissing?new String[]{"No scans reach this ship","Fit a Dish or Array here","Then the maps will wake"}:e.data!=null&&e.data.unlinked?new String[]{"Seek a Survey Dish","Or a Sentinel Array","Set redstone channels"}:new String[]{"NO SIGNAL"};g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,font));int available=Math.min(384,e.canvas.width-8);while(font>6){int widest=0;for(String line:prompt)widest=Math.max(widest,g.getFontMetrics().stringWidth(line));if(widest<=available)break;g.setFont(new Font(Font.MONOSPACED,Font.PLAIN,--font));}lineHeight=font+4;e.promptHeight=lineHeight*prompt.length;g.setColor(new Color(0xcce7ee));for(int i=0;i<prompt.length;i++)g.drawString(prompt[i],(384-g.getFontMetrics().stringWidth(prompt[i]))/2,64+font+i*lineHeight);
         }finally{g.dispose();}
@@ -142,6 +143,17 @@ public final class NavigationMapRenderer {
             GlStateManager.disableTexture2D();b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_COLOR);MessageNavigationImage p=e.data;
             if(p!=null&&!p.noSignal&&!e.vehicleMissing){double cx=c.width/2.0,cy=(c.mapTop+c.mapBottom)/2.0;
                 if(p.hasChip||e.vehicleFollow){rect(b,e,0,cy-.6,cx-5,cy+.6,0xe8ffffff);rect(b,e,cx+5,cy-.6,c.width,cy+.6,0xe8ffffff);rect(b,e,cx-.6,c.mapTop,cx+.6,cy-5,0xe8ffffff);rect(b,e,cx-.6,cy+5,cx+.6,c.mapBottom,0xe8ffffff);ring(b,e,cx,cy,5,0xe8ffffff);}
+                if(p.write){
+                    p.overlay.drawCircles(c,viewX,viewZ,scale,(x,y,endX,endY,color)->circleSegment(b,e,x,y,endX,endY,color));
+                    p.overlay.drawRadar(c,viewX,viewZ,scale,mc.world.getTotalWorldTime(),
+                        (x,y,endX,endY,color)->circleSegment(b,e,x,y,endX,endY,color),
+                        (x,y,endX,endY,color)->circleSegment(b,e,x,y,endX,endY,color));
+                    for(int i=0;i<p.overlay.players.length;i+=2){
+                        double px=cx+(p.overlay.players[i]-viewX)/scale,py=cy+(p.overlay.players[i+1]-viewZ)/scale;
+                        if(px>=3&&px<=c.width-3&&py>=c.mapTop+3&&py<=c.mapBottom-3)
+                            rect(b,e,px-2.5,py-2.5,px+2.5,py+2.5,0xfffcadff);
+                    }
+                }
                 if(p.marker){double x=c.width/2.0+(p.chipX-viewX)/scale,y=cy+(p.chipZ-viewZ)/scale;if(x>=5&&x<c.width-5&&y>=c.mapTop+5&&y<c.mapBottom-5)ring(b,e,x,y,5,0xffffdf46);}
                 if(mc.player!=null){double x=c.width/2.0+(mc.player.posX-viewX)/scale,y=cy+(mc.player.posZ-viewZ)/scale;double direction=Math.toRadians(mc.player.rotationYaw),dx=-Math.sin(direction),dy=Math.cos(direction);if(x<7||x>c.width-7||y<c.mapTop+7||y>c.mapBottom-7){double ax=x-c.width/2.0,ay=y-cy,len=Math.hypot(ax,ay);dx=ax/Math.max(1,len);dy=ay/Math.max(1,len);x=Math.max(7,Math.min(c.width-7,x));y=Math.max(c.mapTop+7,Math.min(c.mapBottom-7,y));}point(b,e,x+dx*7,y+dy*7,0xff5ef1ff);point(b,e,x-dx*4-dy*4,y-dy*4+dx*4,0xff5ef1ff);point(b,e,x-dx*2,y-dy*2,0xff5ef1ff);point(b,e,x-dx*4+dy*4,y-dy*4-dx*4,0xff5ef1ff);}
             }
@@ -153,6 +165,11 @@ public final class NavigationMapRenderer {
     private static void uiQuad(BufferBuilder b,Entry e,double x,double y,double X,double Y,double u,double v,double U,double V){tex(b,e,x,y,u,v,.008);tex(b,e,x,Y,u,V,.008);tex(b,e,X,Y,U,V,.008);tex(b,e,X,y,U,v,.008);}
     private static void tex(BufferBuilder b,Entry e,double x,double y,double u,double v){tex(b,e,x,y,u,v,.004);}
     private static void tex(BufferBuilder b,Entry e,double x,double y,double u,double v,double layer){b.pos(e.ox+e.ux*x+e.vx*y+e.nx*layer,e.oy+e.uy*x+e.vy*y+e.ny*layer,e.oz+e.uz*x+e.vz*y+e.nz*layer).tex(u,v).endVertex();}
+    private static void circleSegment(BufferBuilder b,Entry e,double x,double y,double endX,double endY,int color){
+        double dx=endX-x,dy=endY-y,half=.85/Math.hypot(dx,dy),nx=dy*half,ny=-dx*half;
+        point(b,e,x+nx,y+ny,color);point(b,e,x-nx,y-ny,color);
+        point(b,e,endX-nx,endY-ny,color);point(b,e,endX+nx,endY+ny,color);
+    }
     private static void point(BufferBuilder b,Entry e,double x,double y,int argb){b.pos(e.ox+e.ux*x+e.vx*y+e.nx*.0045,e.oy+e.uy*x+e.vy*y+e.ny*.0045,e.oz+e.uz*x+e.vz*y+e.nz*.0045).color(argb>>16&255,argb>>8&255,argb&255,argb>>>24).endVertex();}
     private static void rect(BufferBuilder b,Entry e,double x,double y,double X,double Y,int argb){point(b,e,x,y,argb);point(b,e,x,Y,argb);point(b,e,X,Y,argb);point(b,e,X,y,argb);}
     private static void ring(BufferBuilder b,Entry e,double x,double y,double r,int color){rect(b,e,x-r,y-r,x+r,y-r+1,color);rect(b,e,x-r,y+r-1,x+r,y+r,color);rect(b,e,x-r,y-r,x-r+1,y+r,color);rect(b,e,x+r-1,y-r,x+r,y+r,color);}

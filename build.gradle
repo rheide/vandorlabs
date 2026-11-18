@@ -1689,7 +1689,7 @@ task testNavigationCoverage(type: JavaExec) {
 }
 check.dependsOn testNavigationCoverage
 
-['ObserverScale', 'NavigationRange'].each { contract ->
+['ObserverScale', 'NavigationRange', 'NavigationSurface'].each { contract ->
     def contractTest = tasks.create(name: "test${contract}", type: JavaExec) {
         group = 'verification'
         dependsOn compilePortableTests

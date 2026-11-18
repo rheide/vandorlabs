@@ -1,5 +1,7 @@
 package com.vandorlabs.client;
 
+import net.minecraft.tileentity.TileEntity;
+
 import com.vandorlabs.navigation.*;
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.tiles.*;
@@ -24,7 +26,9 @@ final class NavigationWorldChecks {
     private static final BlockPos POS=new BlockPos(88,110,88),BUILDER=POS.east(12);
     private static final BlockPos SCREEN=POS.south(7);
     private static final String[] SCREENS={"programmable_diagonal_half_screen","programmable_diagonal_screen","programmable_half_console","programmable_console","programmable_viewscreen","programmable_viewscreen"};
-    private static boolean enhancements;
+    private static boolean enhancements,refinementSeen;
+    private static MessageNavigationImage preview;
+    private static long previewAt;
     private static boolean flightComplete;
     private static int stage,ticks,kind;private static boolean captured;private static File output;private static String shot;
     private static void require(boolean value,String why){if(!value)throw new IllegalStateException("navigation-world: "+why);}
@@ -34,6 +38,7 @@ final class NavigationWorldChecks {
     private static TileEntityConstructor build(WorldServer w,BlockPos at,String name){FrameMachineDesign spec=FrameMachineDesign.get(name);BridgeMachineChecks.frame(w,at,spec,0);BridgeMachineChecks.frame(w,at,spec,2);TileEntityConstructor tile=(TileEntityConstructor)w.getTileEntity(at);require(tile.assemble(),"assemble "+name+" "+tile.assemblyProblem());DeferredTileLoad.flush(w);return tile;}
     static boolean tick(Minecraft mc,File directory)throws Exception{
         output=directory;mc.gameSettings.pauseOnLostFocus=false;if(++ticks>1600)throw new IllegalStateException("navigation timeout stage="+stage+" kind="+kind+" gui="+(mc.currentScreen==null?"none":mc.currentScreen.getClass().getName())+" clientTile="+mc.world.getTileEntity(SCREEN)+" mode="+mc.player.isCreative()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand());
+        if(stage>0&&!refinementSeen)observeRefinement();
         if(stage==0){mc.player.closeScreen();mc.playerController.setGameType(GameType.SURVIVAL);mc.player.inventory.currentItem=0;mc.getConnection().sendPacket(new net.minecraft.network.play.client.CPacketHeldItemChange(0));server(mc,()->{
             EntityPlayerMP p=player(mc);WorldServer w=p.getServerWorld();p.interactionManager.setGameType(GameType.SURVIVAL);p.inventory.clear();p.inventory.currentItem=0;p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
             for(BlockPos at:BlockPos.getAllInBox(POS.add(-4,-1,-4),POS.add(22,7,8)))w.setBlockState(at,at.getY()==POS.getY()-1?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);
@@ -44,13 +49,14 @@ final class NavigationWorldChecks {
             TransmitterSlots.configure(dish,ChannelList.of(42),256,false);TransmitterSlots.configure(array,ChannelList.of(43),256,false);
             t.configureDisplay(new NavigationScreenSettings(NavigationMap.SURFACE,true,1,false,false),true,127,0,ChannelList.of(42,43));
             require(NavigationService.coverage(t).size()==2,"multiple channels union");require(NavigationSources.contains(NavigationService.coverage(t),dish.getPos().getX()+NavigationSources.radius(dish),dish.getPos().getZ()),"dish radius inclusive");require(!NavigationSources.contains(NavigationService.coverage(t),dish.getPos().getX()+NavigationSources.radius(dish)+1,dish.getPos().getZ()),"beyond dish radius excluded");
+            radar(p,w,t,dish,array);
             t.setRedstoneChannels(ChannelList.of(43));require(NavigationService.coverage(t).size()==1&&NavigationService.coverage(t).get(0).radius==NavigationSources.radius(array),"array radius");t.setRedstoneChannels(ChannelList.of(42,43));
             TransmitterSlots.configure(dish,ChannelList.of(42),4,false);require(NavigationService.coverage(t).size()==2,"connection radius inclusive");TransmitterSlots.configure(dish,ChannelList.of(42),256,false);
             dish.dismantle();array.dismantle();require(NavigationService.coverage(t).isEmpty(),"unformed sources disconnected");require(dish.assemble()&&array.assemble(),"source repair reconnects");
             ItemStack chip=new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,3);NavigationChip.write(chip,0,120000,-130000);t.setInventorySlotContents(0,chip);NavigationService.View view=NavigationService.view(t);require(view.x==120000&&view.z==-130000,"inserted pin recenters");require(NavigationSources.contains(NavigationService.coverage(t),121000,-130000),"saved chip radius independent of source");
             view.x+=200;ItemStack removed=t.removeStackFromSlot(0);NavigationService.view(t);t.setInventorySlotContents(0,removed);require(NavigationService.view(t).x==120000,"reinsertion recenters");
             ItemStack retained=t.getStackInSlot(0).copy();TileEntityNavigationTable saved=new TileEntityNavigationTable();saved.readFromNBT(t.writeToNBT(new NBTTagCompound()));require(ItemStack.areItemStacksEqual(retained,saved.getStackInSlot(0)),"saved coordinates and chip metadata round trip");require(NavigationChip.value(retained,"Y")==64,"unused default Y stored");
-            t.removeStackFromSlot(0);NavigationService.view(t);t.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP));view.x=POS.getX();view.z=POS.getZ();view.zoom=4;
+            t.removeStackFromSlot(0);NavigationService.view(t);t.setInventorySlotContents(0,new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP));view.x=POS.getX();view.z=POS.getZ();view.zoom=1;
             int chunks=w.getChunkProvider().getLoadedChunkCount();Set<Integer> colors=new HashSet<>();for(int x=0;x<48;x++)for(int z=0;z<48;z++)colors.add(NavigationService.color(w,100000+x*128,100000+z*128));require(colors.size()>3,"seed image contains terrain diversity");require(w.getChunkProvider().getLoadedChunkCount()==chunks,"seed requests never load chunks");
             generatorError(w);artworkPreservation(w);wire(retained);support(w,p);NavigationObserverChecks.run(w);
             TileEntityConstructor builder=build(w,BUILDER,"synthesis_tower");builder.configureSynthesisRedstone(1,ChannelList.EMPTY);require(!builder.synthesisEnabled(),"activation starts off");
@@ -65,9 +71,16 @@ final class NavigationWorldChecks {
         if(stage==4){if(ticks<20||!mc.player.getHeldItemMainhand().isEmpty())return false;TileEntityNavigationTable tile=table(mc.world);if(tile==null)return false;
             mc.playerController.processRightClickBlock(mc.player,mc.world,POS,EnumFacing.UP,new Vec3d(POS).addVector(.5,.875,.5),EnumHand.MAIN_HAND);server(mc,()->{});stage=5;ticks=0;return false;}
         if(stage==5){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=player(mc);TileEntityNavigationTable t=table(p.world);NavigationService.View v=NavigationService.view(t);require(v.x<POS.getX(),"real table button pans map");v.x=POS.getX();v.z=POS.getZ();NavigationLayout.Screen s=NavigationLayout.mapScreen(NavigationLayout.Kind.FLAT,NavigationLayout.Facing.NORTH,new NavigationLayout.Cell(POS.getX(),POS.getY(),POS.getZ()),2,2);NavigationLayout.Vec3 at=s.overlayPoint(NavigationViewport.canvas(t,0).buttonU(7),NavigationViewport.canvas(t,0).buttonV(7));Vec3d target=new Vec3d(at.x,at.y,at.z);aim(p,target.addVector(0,3,-.8),target);});stage=6;ticks=0;return false;}
-        if(stage==6){if(ticks<15)return false;mc.playerController.processRightClickBlock(mc.player,mc.world,POS,EnumFacing.UP,new Vec3d(POS).addVector(.5,.875,.5),EnumHand.MAIN_HAND);stage=7;ticks=0;return false;}
+        if(stage==6){
+            TileEntityNavigationTable tile=table(mc.world);
+            NavigationMapRenderer.bind(tile,0,1);
+            if(ticks<15||ticks%5!=0||!surfaceReady(mc))return false;
+            mc.playerController.processRightClickBlock(mc.player,mc.world,POS,EnumFacing.UP,
+                    new Vec3d(POS).addVector(.5,.875,.5),EnumHand.MAIN_HAND);
+            stage=7;ticks=0;return false;
+        }
         if(stage==7){if(ticks<30)return false;server(mc,()->{EntityPlayerMP p=player(mc);require(NavigationChip.programmed(table(p.world).getStackInSlot(0)),"real write button programs retained chip");aim(p,new Vec3d(POS).addVector(1,4,-1.5),new Vec3d(POS).addVector(1,.875,1));});mc.gameSettings.hideGUI=true;stage=8;ticks=0;return false;}
-        if(stage==8){if(ticks<180||!NavigationMapRenderer.ready(POS))return false;if(!enhancements){NavigationObserverChecks.visual(mc);NavigationEnhancementChecks.run(mc,output,table(mc.world));enhancements=true;}shot="navigation-world-table.png";captured=false;stage=9;ticks=0;return false;}
+        if(stage==8){if(ticks<180||!NavigationMapRenderer.ready(POS)||!refinementSeen)return false;if(!enhancements){server(mc,()->surface(player(mc)));NavigationObserverChecks.visual(mc);NavigationEnhancementChecks.run(mc,output,table(mc.world));enhancements=true;}shot="navigation-world-table.png";captured=false;stage=9;ticks=0;return false;}
         if(stage==9&&captured){stage=10;ticks=0;return false;}
         if(stage==10){mc.gameSettings.hideGUI=false;mc.player.closeScreen();server(mc,()->{
             EntityPlayerMP p=player(mc);WorldServer w=p.getServerWorld();for(BlockPos at:BlockPos.getAllInBox(SCREEN.add(-1,0,-1),SCREEN.add(3,2,2)))w.setBlockToAir(at);
@@ -109,6 +122,121 @@ final class NavigationWorldChecks {
     }
     private static void artworkPreservation(WorldServer world){
         BlockPos at=POS.north(4);Block block=Block.getBlockFromName("vandorlabs:navigation_table_flat");world.setBlockState(at.east(),block.getDefaultState(),2);TileEntityNavigationTable old=(TileEntityNavigationTable)world.getTileEntity(at.east());NBTTagCompound saved=old.writeToNBT(new NBTTagCompound());saved.setInteger("NavigationTexture",-1);saved.removeTag("NavigationExplicit");old.readFromNBT(saved);NavigationAssemblies.rebuild(world,at.east());world.setBlockState(at,block.getDefaultState(),2);NavigationAssemblies.rebuild(world,at);require(((TileEntityNavigationTable)world.getTileEntity(at)).reader().screenSettings().texture==-1,"joining fresh module preserves previous-release black artwork");world.setBlockToAir(at);world.setBlockToAir(at.east());
+    }
+    private static boolean surfaceReady(Minecraft mc)throws Exception{
+        return mc.getIntegratedServer().callFromMainThread(()->{
+            TileEntityNavigationTable tile=table(player(mc).world);
+            NavigationService.View view=NavigationService.view(tile);
+            java.lang.reflect.Method capture=NavigationService.class.getDeclaredMethod("captureSurface",
+                    TileEntityNavigationTable.class,int.class,int.class);
+            capture.setAccessible(true);
+            return capture.invoke(null,tile,view.x,view.z)!=null;
+        }).get();
+    }
+    private static void surface(EntityPlayerMP player){
+        WorldServer world=player.getServerWorld();
+        TileEntityNavigationTable table=table(world);
+        NavigationSurfaceData saved=(NavigationSurfaceData)world.getPerWorldStorage()
+                .getOrLoadData(NavigationSurfaceData.class,NavigationSurface.STORAGE);
+        require(saved!=null,"live table schedules scans");
+        try{
+            NavigationSurface.Atlas atlas=(NavigationSurface.Atlas)field(saved,"atlas");
+            require(atlas.tileCount()>0,"scanner records loaded columns");
+            java.lang.reflect.Method sample=NavigationSurfaceData.class.getDeclaredMethod("sample",WorldServer.class,int.class,int.class);
+            sample.setAccessible(true);
+            int chunks=world.getChunkProvider().getLoadedChunkCount();
+            BlockPos column=table.getPos().add(0,96,0);
+            net.minecraft.world.chunk.Chunk chunk=world.getChunkProvider().getLoadedChunk(column.getX()>>4,column.getZ()>>4);
+            require(chunk!=null,"fixture table column already loaded");
+            int height=chunk.getHeightValue(column.getX()&15,column.getZ()&15);
+            require(column.getY()>height,"fixture gold is above the existing surface at "+height);
+            IBlockState original=world.getBlockState(column);
+            try{
+                require(world.setBlockState(column,Blocks.GOLD_BLOCK.getDefaultState(),3),"fixture places the gold surface");
+                int color=(int)sample.invoke(saved,world,column.getX(),column.getZ());
+                require(color/4==net.minecraft.block.material.MapColor.GOLD.colorIndex,
+                        "scan uses the placed gold surface, packed="+color+" height="+chunk.getHeightValue(column.getX()&15,column.getZ()&15)
+                                +" state="+chunk.getBlockState(column));
+            }finally{world.setBlockState(column,original,3);}
+            require((int)sample.invoke(saved,world,25000000,25000000)==0&&world.getChunkProvider().getLoadedChunkCount()==chunks,
+                    "scan skips absent chunks without loading one");
+            NavigationSurfaceData restored=new NavigationSurfaceData(NavigationSurface.STORAGE);
+            restored.readFromNBT(saved.writeToNBT(new NBTTagCompound()));
+            require(((NavigationSurface.Atlas)field(restored,"atlas")).tileCount()==atlas.tileCount(),"world atlas saved-data round trip");
+            ItemStack chip=table.getStackInSlot(0);
+            require(chip.hasTagCompound()&&chip.getTagCompound().getCompoundTag("NavigationSurface").getByteArray("Colors").length>=16384,
+                    "SET writes a portable surface snapshot");
+            System.out.println("[vandorlabs] navigation-surface PASS loaded column, no chunk load, saved atlas and SET snapshot tiles="+atlas.tileCount());
+        }catch(Exception failure){throw new IllegalStateException(failure);}
+    }
+    private static void observeRefinement()throws Exception{
+        java.lang.reflect.Field images=NavigationMapRenderer.class.getDeclaredField("IMAGES");
+        images.setAccessible(true);
+        Object entry=((Map<?,?>)images.get(null)).get(POS);
+        if(entry==null)return;
+        MessageNavigationImage image=(MessageNavigationImage)field(entry,"data");
+        if(image==null||image.pixels==null||image.noSignal)return;
+        NavigationCanvas canvas=new NavigationCanvas(image.canvasWidth,image.canvasHeight,true);
+        if(image.zoom>1||!canvas.canRefine(image.zoom))return;
+        if(image.width==canvas.gridWidth(image.zoom)&&image.height==canvas.gridHeight(image.zoom)){
+            if(image!=preview){preview=image;previewAt=Minecraft.getSystemTime();}
+        }else if(preview!=null&&preview.x==image.x&&preview.z==image.z&&preview.zoom==image.zoom
+                &&preview.canvasWidth==image.canvasWidth&&preview.canvasHeight==image.canvasHeight){
+            require(image.revision>preview.revision&&image.width==canvas.gridWidth(image.zoom,true)
+                    &&image.height==canvas.gridHeight(image.zoom,true),"preview upgrades in place at twice the raster density");
+            refinementSeen=true;
+            System.out.println("[vandorlabs] navigation-refinement PASS "+preview.width+"x"+preview.height+" -> "
+                    +image.width+"x"+image.height+" zoom="+NavigationOverlay.zoomLabel(image.zoom)+" preview-to-detail-ms="+(Minecraft.getSystemTime()-previewAt));
+            preview=null;
+        }
+    }
+    private static void radar(EntityPlayerMP viewer,WorldServer world,TileEntityNavigationTable table,TileEntityConstructor dish,TileEntityConstructor array){
+        net.minecraftforge.common.util.FakePlayer target=new net.minecraftforge.common.util.FakePlayer(world,new com.mojang.authlib.GameProfile(new UUID(0,211256),"RadarContact"));
+        MessageNavigationImage image=new MessageNavigationImage(table.getPos(),0,1,dish.getPos().getX(),dish.getPos().getZ(),4,16,false,ItemStack.EMPTY,true,world.provider.getDimension(),null);
+        world.playerEntities.add(target);
+        dish.refreshInputs();
+        array.refreshInputs();
+        table.setRedstoneChannels(ChannelList.of(42));
+        try{
+            java.lang.reflect.Method snapshot=NavigationService.class.getDeclaredMethod("overlay",EntityPlayerMP.class,TileEntity.class,MessageNavigationImage.class);
+            snapshot.setAccessible(true);
+            int x=dish.getPos().getX(),z=dish.getPos().getZ(),sea=world.getSeaLevel();
+            target.setPosition(x+256,sea+1,z);
+            NavigationOverlay data=(NavigationOverlay)snapshot.invoke(null,viewer,table,image);
+            require(data.radars.length==3&&data.radars[2]==256&&data.players.length==2&&data.players[0]==x+256,"active dish detects surface contact at exact radar radius");
+            target.setPosition(x+257,sea+1,z);
+            require(((NavigationOverlay)snapshot.invoke(null,viewer,table,image)).players.length==0,"contact beyond 256 blocks excluded");
+            target.setPosition(x+1,sea,z);
+            require(((NavigationOverlay)snapshot.invoke(null,viewer,table,image)).players.length==0,"sea-level contact excluded");
+            target.setPosition(x+1,sea+1,z);
+            target.setSneaking(true);
+            require(((NavigationOverlay)snapshot.invoke(null,viewer,table,image)).players.length==0,"crouching contact excluded");
+            target.setSneaking(false);
+            dish.cycleActivity();
+            data=(NavigationOverlay)snapshot.invoke(null,viewer,table,image);
+            require(data.radars.length==0&&data.players.length==0&&data.circles.length==3,"off observer retains map coverage and clears live radar");
+            table.setRedstoneChannels(ChannelList.of(42,43));
+            x=array.getPos().getX();
+            z=array.getPos().getZ();
+            target.setPosition(x-128,sea+1,z);
+            data=(NavigationOverlay)snapshot.invoke(null,viewer,table,image);
+            require(data.circles.length==6&&data.circles[2]*data.circles[5]<0&&data.radars.length==3&&data.radars[0]==x
+                    &&data.radars[1]==z&&data.radars[2]==128,"both observers show terrain coverage, only the active array has radar");
+            require(data.players.length==2&&data.players[0]==x-128,"array detects contact at exact radar radius");
+            target.setPosition(x-129,sea+1,z);
+            require(((NavigationOverlay)snapshot.invoke(null,viewer,table,image)).players.length==0,"contact beyond 128 blocks excluded");
+            while(dish.activity()!=2)dish.cycleActivity();
+            data=(NavigationOverlay)snapshot.invoke(null,viewer,table,image);
+            require(data.circles.length==6&&data.radars.length==6
+                    &&((data.radars[2]==128&&data.radars[5]==256)||(data.radars[2]==256&&data.radars[5]==128)),
+                    "linked dish and array each show their own coverage and radar");
+        }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
+        finally{
+            while(dish.activity()!=2)dish.cycleActivity();
+            table.setRedstoneChannels(ChannelList.of(42,43));
+            world.playerEntities.remove(target);
+        }
+        System.out.println("[vandorlabs] navigation-radar PASS mixed-observers active/off 128/256-boundaries sea-level crouching snapshot");
     }
     private static void wire(ItemStack chip){
         MessageNavigationImage m=new MessageNavigationImage(POS,0,123,-20,30,4,16,false,chip,true,0,new int[NavigationMap.SIZE*NavigationMap.SIZE]);ByteBuf a=Unpooled.buffer(),b=Unpooled.buffer();try{m.toBytes(a);int size=a.readableBytes();MessageNavigationImage copy=new MessageNavigationImage();copy.fromBytes(a.copy());copy.toBytes(b);require(a.equals(b),"raster round trip");java.util.Arrays.fill(m.pixels,NavigationMap.ERROR);m.hasChip=false;m.marker=false;require(NavigationMapRenderer.image(m,"").getRGB(1,80)==NavigationMap.ERROR,"error pixels rendered");java.util.Arrays.fill(m.pixels,NavigationMap.OUTSIDE);require(NavigationMapRenderer.image(m,"").getRGB(1,80)==NavigationMap.OUTSIDE,"uncovered pixels rendered differently");require(size==MessageNavigationImage.HEADER+2+4+96*96,"bounded palette image bytes");a.writeByte(0);try{new MessageNavigationImage().fromBytes(a);throw new IllegalStateException("oversize accepted");}catch(IllegalArgumentException expected){}System.out.println("[vandorlabs] navigation-wire PASS request=18 image="+size+" bytes round-trip bounded");}finally{a.release();b.release();}
