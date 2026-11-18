@@ -4,6 +4,10 @@
 
 See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in motion and a Navigation Table pan and zoom demo.
 
+### Vehicles
+
+- Raise Hover cruise speed to 16 blocks per second. Sprint adds 25%, up to 20 blocks per second. Taxi reaches 6 blocks per second without a thruster and 8 with an active thruster.
+
 ### Ramp Controllers
 
 - Restore both horizontal axis choices on side-mounted controllers and slabs, including southward ramps on west-facing controllers.
@@ -19,6 +23,8 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 
 ### Devices
 
+- Keep the Printer and Scanner buttons stable when switching tabs, preventing a repeated click and client freeze on Forge.
+
 - Add redstone edge triggers and sided item automation to the Printer and Scanner. Unconnected devices keep their manual output behavior.
 - Seat the Printer and Scanner buttons flush against the front. Seat books in the Scanner’s top frame and display the original pixels on mounted maps. Rename their texture-picker category to Devices.
 
@@ -30,6 +36,10 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 - Simplify observer names to Survey Dish Core and Sentinel Array Core while preserving existing registry IDs.
 
 ### Seed navigation (Forge 1.12.2)
+
+- Show zoom and live observer ranges on Navigation Tables. Offer seven zoom levels from 128 to 8,192 blocks across on a single table and sharpen the preview after panning or zooming stops at every zoom level. Give each active observer its own radar sweep and show uncrouched players above sea level. The Sentinel Array sweeps a 128-block radius every eight seconds in red and the Survey Dish sweeps a 256-block radius every 24 seconds in cyan. Terrain coverage spans 63–1,000 blocks for the Array and 250–4,000 blocks for the Dish.
+- On stationary Navigation Tables, use the active radar sweep to pick up actual loaded surface colors. Deduplicate recordings in a bounded world archive shared by Navigation Data Modules, and let a Navigation Chip carry a surface snapshot.
+- Match Programmable Surface texture orientation and legacy Fit Aspect defaults in Dynmap.
 
 - Apply queued map images before evicting cached textures. Keep unavailable captured observers out of discovery while retaining their saved payloads. Skip fully indexed circles during the fallback coverage scan.
 
