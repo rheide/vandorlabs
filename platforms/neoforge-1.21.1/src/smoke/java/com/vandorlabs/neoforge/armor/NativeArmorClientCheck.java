@@ -52,6 +52,7 @@ public final class NativeArmorClientCheck {
             }
             case 2 -> {
                 if (!(game.screen instanceof NativeArmorScreen screen)
+                    || !(offhand.getItem() instanceof NativeArmorItem)
                     || NativeArmorItem.design(offhand).choice() != NativeArmorFixture.SELECTED) return;
                 var armor = (NativeArmorItem)offhand.getItem();
                 var selected = NativeArmorItem.design(offhand);
@@ -74,10 +75,11 @@ public final class NativeArmorClientCheck {
             case 4 -> {
                 if (game.screen != null || ticks < wait + 12) return;
                 game.gameMode.useItem(player, InteractionHand.OFF_HAND);
+                wait = ticks;
                 stage++;
             }
             case 5 -> {
-                if (!(player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof NativeArmorItem)) return;
+                if (ticks < wait + 12 || !(player.getItemBySlot(EquipmentSlot.HEAD).getItem() instanceof NativeArmorItem)) return;
                 require(NativeArmorItem.design(player.getItemBySlot(EquipmentSlot.HEAD)).choice() == NativeArmorFixture.SELECTED,
                     "normal right-click equips edited offhand piece");
                 System.out.println("[vandorlabs][armor] client PASS");
@@ -88,6 +90,7 @@ public final class NativeArmorClientCheck {
     }
 
     private static void shift(Minecraft game, boolean pressed) {
+        game.player.input.shiftKeyDown = pressed;
         game.player.setShiftKeyDown(pressed);
         game.player.connection.send(new ServerboundPlayerCommandPacket(game.player, pressed
             ? ServerboundPlayerCommandPacket.Action.PRESS_SHIFT_KEY : ServerboundPlayerCommandPacket.Action.RELEASE_SHIFT_KEY));
