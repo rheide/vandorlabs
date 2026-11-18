@@ -5,6 +5,7 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.*;
@@ -52,6 +53,8 @@ public final class ArmRotatingEndpointRuntimeChecks {
         }
         GearTileEntity arm=((GearTileEntity)world.getTileEntity(ROOT)).loadedController();require(arm!=null,"controller retained");
         if(stage==1&&ticks<=20)return false;
+        if(ArmTransactions.locked(world,arm.getPos()))return false;
+        advanceMotion(world,arm);
         if(ArmTransactions.locked(world,arm.getPos()))return false;
         require(arm.columns().size()==(joined()?2:1),"expected joined topology");
         require(ticks<150||arm.error().isEmpty(),"motion error: "+arm.error());
@@ -118,6 +121,18 @@ public final class ArmRotatingEndpointRuntimeChecks {
         fixture++;stage=ticks=0;clicked=false;
         if(fixture>=48)System.out.println("[vandorlabs] arm-wall PASS saved independent joined and "+(48-START)+" selected live endpoint combinations edits inventory reverse empty motion");
         return fixture>=48;
+    }
+    /** Accelerate only settled journal-free motion in the isolated 48-case matrix. */
+    private static void advanceMotion(WorldServer world,GearTileEntity arm){
+        for(int tick=0;tick<5&&arm.progress()!=(arm.target()?1:0);tick++){
+            if(ArmTransactions.locked(world,arm.getPos())||!arm.error().isEmpty())return;
+            world.setTotalWorldTime(world.getTotalWorldTime()+1);
+            // Tick all members so topology rescans see the same sequence as ordinary world ticks.
+            for(BlockPos pos:new java.util.ArrayList<>(arm.members())){
+                TileEntity member=world.getTileEntity(pos);
+                if(member instanceof GearTileEntity)((GearTileEntity)member).update();
+            }
+        }
     }
     private static void surfaceActivity(GearTileEntity arm,boolean expected){int count=0;for(net.minecraft.tileentity.TileEntity tile:arm.payload().view(arm).tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface){require(((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).active()==expected,"carried Surface artwork follows endpoint");count++;}require(count==(joined()?3:1),"all carried Surface tiles retain appearance links");}
     private ArmRotatingEndpointRuntimeChecks(){}

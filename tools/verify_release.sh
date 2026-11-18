@@ -104,7 +104,7 @@ export VANDOR_LABS_RELEASE_CLIENT_JOBS="$jobs"
 set +e
 python3 tools/generate_texture_browser.py --check 2>&1 | tee "$output/catalog.log"
 catalog_status=${PIPESTATUS[0]}
-./gradlew check testDiagonalJoins testNonRendering testShaderStartup testRampJit --continue -x jar -x reobfJar --no-daemon 2>&1 | tee "$output/cpu.log"
+./gradlew check testDiagonalJoins testNonRendering testShaderStartup testRampJit --continue -x jar -x reobfJar --no-daemon --profile 2>&1 | tee "$output/cpu.log"
 cpu_status=${PIPESTATUS[0]}
 set -e
 printf 'catalog\t%s\ncpu\t%s\n' "$catalog_status" "$cpu_status" >> "$output/phase-status.tsv"

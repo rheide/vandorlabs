@@ -99,6 +99,4 @@ if args.jar:
                     assert prefix+root+suffix not in names and root+suffix not in aliases,(e['id'],suffix)
             elif not e.get('hidden'):
                 path='textures/blocks/'+e['source']+'.png';assert prefix+aliases.get(path,path) in names,e['id']
-    from prune_unused_runtime_assets import check_jar
-    check_jar(args.jar)
 print('Display/control catalog PASS: 589 saved indices; 18 native input identities retained; Gold/Cool both heights; six original Seyr animations; separate numbered-free unique company/Classic controls; retired assets absent')

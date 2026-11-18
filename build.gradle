@@ -723,7 +723,7 @@ check.dependsOn testSharedRuntimeTextures
 
 task testScreenCatalog(type: Exec) {
     group = 'verification'
-    dependsOn jar
+    dependsOn jar, testUnusedRuntimeAssets
     doFirst { exec { commandLine pythonExecutable, 'tools/test_unused_runtime_assets.py' }; exec { commandLine pythonExecutable, 'tools/prune_unlisted_screen_artwork.py', '--check-jar', validationJar() } }
     doFirst { exec { commandLine pythonExecutable, 'tools/test_display_expansion.py', '--jar', validationJar() } }
     doFirst { for (style in ['Cool', 'Gold']) { exec { commandLine pythonExecutable, 'tools/test_cool_screens.py', '--style', style, '--jar', validationJar() } } }

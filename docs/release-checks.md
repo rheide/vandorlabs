@@ -7,7 +7,7 @@ Start release review by **collecting failures, not by fixing the first failure**
 ./tools/verify_release.sh --jar build/libs/vandorlabs-2.10.0.jar --jobs 2
 ```
 
-`--jar` freezes an existing standard artifact and never rebuilds it. Without that option, the helper assembles once before starting validation. It records the SHA-256, source-check logs, per-focus logs and a merged `report.json` under `build/release-checks/`.
+`--jar` freezes an existing standard artifact and never rebuilds it. Without that option, the helper assembles once before starting validation. It records the SHA-256, source-check logs, per-focus logs and a merged `report.json` under `build/release-checks/`. The Gradle profile linked from `cpu.log` gives individual task durations. The live report records each focus’s start and end times.
 
 The first pass runs the full CPU/non-rendering/diagonal/shader checks with Gradle `--continue`, then runs all required live focuses even if independent CPU checks failed. Live save/recovery, arms and vehicle checks are prioritized. Two isolated game/world/output lanes run functional checks concurrently; timing benchmarks have exclusive access. A multi-phase restart/recovery test remains one sequential group. The artifact must stay unchanged throughout.
 
