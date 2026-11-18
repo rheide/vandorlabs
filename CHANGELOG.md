@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.12.0 (in development)
+
+- Continue the standalone NeoForge 1.21.1 port.
+
 ## 2.11.0 (in development)
 
 See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in motion and a Navigation Table pan and zoom demo.
