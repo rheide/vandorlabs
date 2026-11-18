@@ -558,10 +558,31 @@ tasks.register('generateNavigationTableResources', Exec) {
     outputs.dir('build/generated/navigation-table-resources')
 }
 tasks.register('generateNavigationObserverResources', Exec) {
-    dependsOn 'generateCubeResources', 'generateBuilderResources'
+    // The generator checks sprite ownership across the other production resource sets.
+    dependsOn 'generateCubeResources', 'generateBuilderResources', 'generateMatterResources',
+              'generateTransmitterResources', 'generateShapeResources', 'generatePanelResources',
+              'generateReservoirResources', 'generateInfuserResources', 'generateNavigationTableResources',
+              'generateApplianceResources', 'generateCanopyResources', 'generateCopifierResources',
+              'generateDoorRuntimeResources', 'generateDoorResources', 'generateFlatGlassResources',
+              'generateLightResources', 'generateProgrammerResources', 'generatePropulsionResources',
+              'generateRampHousingResources', 'generateReaderResources', 'generateScreenCatalog',
+              'generateScreenItemResources', 'generateScreenMediaResources', 'generateSegmentedResources',
+              'generateStorageResources', 'generateTrapdoorResources'
     commandLine pythonExecutable, 'generate_navigation_observer_resources.py'
     inputs.file('generate_navigation_observer_resources.py')
-    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/universal_constructor')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/radar')
+    for (design in ['standalone_dish', 'standalone_antenna']) {
+        inputs.files('../../src/main/resources/assets/vandorlabs/models/block/' + design + '_core.json',
+                     '../../src/main/resources/assets/vandorlabs/models/item/' + design + '_core.json')
+    }
+    inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures'),
+                 fileTree('../../texture-packs/default/assets/vandorlabs/textures'),
+                 fileTree('../../src/main/resources/assets/vandorlabs/textures'),
+                 fileTree('src/main/resources/assets/vandorlabs/textures'),
+                 fileTree('build/generated') {
+                     include '*/assets/vandorlabs/textures/**'
+                     exclude 'navigation-observer-resources/**', '*-smoke-resources/**'
+                 })
     outputs.dir('build/generated/navigation-observer-resources')
 }
 tasks.named('processResources') { dependsOn 'generateNavigationTableResources', 'generateNavigationObserverResources' }

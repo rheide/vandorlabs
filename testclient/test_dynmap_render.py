@@ -28,12 +28,14 @@ def validate_render(output):
     if text.count('Block placed')<len(labels)+extra_placements:raise AssertionError('Incomplete block fixture')
     files=[p for p in (output/'dynmap/web/tiles/world').rglob('*.png') if 'fixture' in str(p)]
     if not files:raise AssertionError('Dynmap produced no fixture PNG tiles')
-    richest=0
-    for path in files:
-        if path.name.startswith('z'):continue
-        with Image.open(path) as image:richest=max(richest,len(image.convert('RGB').getcolors(1000000) or []))
-    if richest<300:raise AssertionError('Map contains no sufficiently detailed textured fixture tile')
-    if labels and all(v["block"]=="module_rack" for v in labels):validate_battery_render(output,labels)
+    if labels and all(v["block"]=="module_rack" for v in labels):
+        validate_battery_render(output,labels)
+    else:
+        richest=0
+        for path in files:
+            if path.name.startswith('z'):continue
+            with Image.open(path) as image:richest=max(richest,len(image.convert('RGB').getcolors(1000000) or []))
+        if richest<300:raise AssertionError('Map contains no sufficiently detailed textured fixture tile')
     if labels and all(v.get('frame_fixture') for v in labels):validate_core_render(output,labels)
     return len(files)
 
@@ -115,12 +117,53 @@ def validate_core_render(output,labels):
     print(f'Actual Core map pixels PASS {len(records)} colored scaffolds with exact projected hole checks',flush=True)
 
 
-def validate_battery_render(output,labels):
-    """Project actual fixture blocks into PNGs; require red art and increasing green charge.
+def battery_charge_regions(archive):
+    """Read the candidate's continuous bar and check every clipped geometry/UV level."""
+    import json
+    import math
 
-    CPU goldens count four red faces and zero through four green faces on all six
-    orientations. This SE view tests the visible south/east/up fronts; rear-facing
-    fronts are deliberately omitted from color assertions because the shell hides them.
+    def model(path, depth=0):
+        if depth >= 16:
+            raise AssertionError('Battery model parent chain is too deep')
+        data=json.loads(archive.read('assets/vandorlabs/models/'+path+'.json'))
+        return data if 'elements' in data else model(data['parent'].replace('vandorlabs:',''),depth+1)
+
+    models=[model('block/module_rack/slot_seated_battery_0_'+str(level)) for level in range(5)]
+    backgrounds=[];overlays=[]
+    for level,data in enumerate(models):
+        off=[part for part in data['elements'] if part.get('name')=='power_port_bar_off']
+        on=[part for part in data['elements'] if part.get('name')=='power_port_bar_on']
+        assert len(off)==1 and len(on)==(0 if level==0 else 1),'Battery requires one background and one nonempty fill quad'
+        backgrounds.append(off[0]);overlays.append(on[0] if on else None)
+    full=overlays[4];lo,hi=full['from'],full['to'];uv=full['faces']['south']['uv']
+    assert all(math.isfinite(v) for v in lo+hi+uv) and hi[0]>lo[0] and hi[1]>lo[1],'Invalid Battery bar bounds'
+    for level,(off,on) in enumerate(zip(backgrounds,overlays)):
+        assert off==backgrounds[0],'Battery background must not change with charge'
+        assert off['faces']['south']['texture']=='#bar_off','Battery background artwork alias'
+        if on is None:
+            continue
+        expected_to=list(hi);expected_to[0]=lo[0]+(hi[0]-lo[0])*level/4
+        expected_uv=list(uv);expected_uv[2]=uv[0]+(uv[2]-uv[0])*level/4
+        assert on['from']==lo and on['to']==expected_to,'Battery fill must clip continuously from the left'
+        assert on['faces']['south']=={'texture':'#bar_on','uv':expected_uv},'Battery fill must preserve authored UV scale'
+        assert lo[2]>off['to'][2],'Battery fill must stay ahead of its background'
+    # Sample inside each quarter, away from the shared edges where rasterization
+    # can bleed a lit pixel into the next quarter of the continuous rectangle.
+    regions=[]
+    step=(hi[0]-lo[0])/4;inset=step/4;vertical=(hi[1]-lo[1])/8
+    for quarter in range(4):
+        regions.append({'from':[lo[0]+quarter*step+inset,lo[1]+vertical,lo[2]],
+                        'to':[lo[0]+(quarter+1)*step-inset,hi[1]-vertical,hi[2]]})
+    return regions
+
+
+def validate_battery_render(output,labels):
+    """Check continuous native power-port artwork at all five fill levels.
+
+    The authored on-bar is bright red; the off-bar is dark red. These are the
+    same native textures used in game, replacing the older green segments.
+    South/east/up expose the front in this SE view. Other facings are covered
+    by the CPU geometry matrix because their fronts are occluded in this view.
     """
     import json
     import math
@@ -132,11 +175,7 @@ def validate_battery_render(output,labels):
     jars=list((output/'mods').glob('vandorlabs-*.jar'))
     if len(jars)!=1:raise AssertionError('Battery analysis requires exactly one candidate JAR')
     with ZipFile(jars[0]) as archive:
-        def model(path):
-            data=json.loads(archive.read('assets/vandorlabs/models/'+path+'.json'))
-            return data if 'elements' in data else model(data['parent'].replace('vandorlabs:',''))
-        bars=[part for part in model('block/module_rack/slot_seated_battery_0_4')['elements'] if part.get('name','').startswith('charge_')]
-    if len(bars)!=4:raise AssertionError('Candidate lacks four Battery charge quads')
+        bars=battery_charge_regions(archive)
     def project(point,fixture):
         a,b,c=(v/16 for v in point)
         if fixture['facing']=='east':a,c=c,1-a
@@ -146,8 +185,8 @@ def validate_battery_render(output,labels):
     def inside(point,polygon):
         crosses=[(b[0]-a[0])*(point[1]-a[1])-(b[1]-a[1])*(point[0]-a[0]) for a,b in zip(polygon,polygon[1:]+polygon[:1])]
         return all(v>=-1e-7 for v in crosses) or all(v<=1e-7 for v in crosses)
-    def green_pixel(color):
-        r,g,b=color;return g>=45 and g>r*1.6 and g>b*1.2
+    def lit_pixel(color):
+        r,g,b=color;return r>=70 and r>g*1.6 and r>b*1.4
     def pixel(u,v):
         tx,ty=u//128,v//128;key=tx,ty
         if key not in tiles:
@@ -161,32 +200,27 @@ def validate_battery_render(output,labels):
         points=[(matrix[0]*(x+a)+matrix[1]*(y+b)+matrix[2]*(z+c),matrix[3]*(x+a)+matrix[4]*(y+b)+matrix[5]*(z+c)) for a in (0,1) for b in (0,1) for c in (0,1)]
         left,right=math.floor(min(p[0] for p in points)),math.ceil(max(p[0] for p in points))
         bottom,top=math.floor(min(p[1] for p in points)),math.ceil(max(p[1] for p in points))
-        red=green=0
+        lit=0
         for u in range(left,right+1):
             for v in range(bottom,top+1):
-                r,g,b=pixel(u,v)
-                green+=g>=45 and g>r*1.6 and g>b*1.2
-                red+=r>=45 and r>g*2 and r>b*1.6
-        segments=[]
+                lit+=lit_pixel(pixel(u,v))
+        quarters=[]
         for bar in bars:
             lo,hi=bar['from'],bar['to'];polygon=[project(point,fixture) for point in ((lo[0],hi[1],hi[2]),(lo[0],lo[1],hi[2]),(hi[0],lo[1],hi[2]),(hi[0],hi[1],hi[2]))]
             colored=sampled=0
             for u in range(math.floor(min(p[0] for p in polygon)),math.ceil(max(p[0] for p in polygon))+1):
                 for v in range(math.floor(min(p[1] for p in polygon)),math.ceil(max(p[1] for p in polygon))+1):
-                    if inside((u+.5,v+.5),polygon):sampled+=1;colored+=green_pixel(pixel(u,v))
-            segments.append(dict(samples=sampled,green_pixels=colored))
-        samples.append(dict(label=fixture['label'],facing=fixture['facing'],energy=fixture['energy'],red_pixels=red,green_pixels=green,segments=segments))
+                    if inside((u+.5,v+.5),polygon):sampled+=1;colored+=lit_pixel(pixel(u,v))
+            quarters.append(dict(samples=sampled,lit_pixels=colored))
+        samples.append(dict(label=fixture['label'],facing=fixture['facing'],energy=fixture['energy'],lit_pixels=lit,quarters=quarters))
     (output/'battery-render-analysis.json').write_text(json.dumps(samples,indent=2)+'\n')
     for facing in ('south','east','up'):
         group=sorted((v for v in samples if v['facing']==facing),key=lambda v:v['energy'])
         assert len(group)==5,'Missing projected battery front '+facing
-        greens=[v['green_pixels'] for v in group]
-        assert greens[0]==0 and greens[-1]>0,f'Battery empty/full green contrast {facing}: {greens}'
         for fixture in group:
             expected=fixture['energy']//2500
-            for index,segment in enumerate(fixture['segments']):
-                assert segment['samples']>0 and (segment['green_pixels']>0)==(index<expected),f'Battery projected segment {fixture["label"]}/{index}: {segment}, expected lit={index<expected}'
-        assert sum(v['red_pixels'] for v in group)>0,'Missing red battery lightning '+facing
+            for index,quarter in enumerate(fixture['quarters']):
+                assert quarter['samples']>0 and (quarter['lit_pixels']>0)==(index<expected),f'Battery projected fill {fixture["label"]}/{index}: {quarter}, expected lit={index<expected}'
 
 
 def place_material_finishes(command, labels, jar):
@@ -398,7 +432,7 @@ def place_module_racks(command, labels):
             x,y,z=-8+3*level,12,28+3*row
             item='{Slot:0b,id:"vandorlabs:battery_module",Count:1b,Damage:0s,tag:{BatteryEnergy:%d}}'%energy
             command(f'setblock {x} {y} {z} vandorlabs:module_rack facing={facing} replace {{Items:[{item}]}}')
-            labels.append(dict(x=x,y=y,z=z,block='module_rack',facing=facing,mask=1,module='battery',energy=energy,expected_green_segments=level,expected_red_faces=4,label=f'battery-{facing}-{energy}'))
+            labels.append(dict(x=x,y=y,z=z,block='module_rack',facing=facing,mask=1,module='battery',energy=energy,expected_lit_quarters=level,expected_background_quads=1,label=f'battery-{facing}-{energy}'))
 
 
 def validate_fixture_matrix(labels):
@@ -423,7 +457,7 @@ def validate_fixture_matrix(labels):
         assert len(blanks)==96 and {(v['facing'], v['mask']) for v in blanks} == {(f, m) for f in ('north','east','south','west','up','down') for m in range(16)}, 'Module Rack facing/mask coverage missing'
         expected={(f,e) for f in ('north','east','south','west','up','down') for e in (0,2500,5000,7500,10000)}
         assert len(batteries)==30 and {(v['facing'],v['energy']) for v in batteries}==expected,'Battery facing/charge coverage missing'
-        assert all(v['mask']==1 and v['expected_green_segments']==v['energy']//2500 and v['expected_red_faces']==4 for v in batteries),'Battery fixture differs from emitted-geometry goldens'
+        assert all(v['mask']==1 and v['expected_lit_quarters']==v['energy']//2500 and v['expected_background_quads']==1 for v in batteries),'Battery fixture differs from emitted-geometry goldens'
         assert len(labels)==126 and len({v['label'] for v in labels})==126,'Duplicate rack coverage labels'
         assert len({(v['x'],v['y'],v['z']) for v in labels})==126,'Overlapping rack fixtures'
         assert all((v['x']-24)**2+(v['z']-24)**2<=64**2 for v in labels),'Rack fixture outside map radius'
@@ -475,7 +509,7 @@ def run_fixture(args,root,output,artifact):
     with ZipFile(args.dynmap) as archive:config=archive.read('configuration.txt').decode()
     config=config.replace('disable-webserver: false','disable-webserver: true').replace('image-format: jpg-q90','image-format: png')
     config=config.replace('org.dynmap.InternalClientUpdateComponent','org.dynmap.JsonFileClientUpdateComponent')
-    config+='\nparallelrendercnt: 1\nupdate-min-tps: 0\nfullrender-min-tps: 0\n'
+    config+=f'\nparallelrendercnt: {4 if args.focus=="module-rack" else 1}\nupdate-min-tps: 0\nfullrender-min-tps: 0\n'
     (output/'dynmap/configuration.txt').write_text(config)
     (output/'dynmap/worlds.txt').write_text('''worlds:
   - name: world

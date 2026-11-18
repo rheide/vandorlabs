@@ -10,6 +10,7 @@ import tempfile
 import threading
 import time
 import unittest
+from unittest.mock import patch
 
 import release_live_checks as live
 
@@ -21,7 +22,7 @@ def fake_child():
     artifact = Path(os.environ['VANDOR_LABS_TEST_RUN_ROOT']) / 'artifact.sha256'
     if mode != 'no-hash':
         artifact.write_text(('0' * 64 if mode == 'bad-hash' else live.sha256(os.environ['VANDOR_LABS_TEST_JAR'])) + '  fixture.jar\n')
-        if name == 'mekanism-tanks':
+        if name in ('mekanism-tanks', 'navigation-vehicle'):
             second = artifact.parent / 'verify'; second.mkdir()
             (second / 'artifact.sha256').write_text(artifact.read_text())
     row = dict(start=start, env={k: os.environ[k] for k in (
@@ -61,7 +62,8 @@ class SchedulerChecks(unittest.TestCase):
                                 stop=stop, grace=.3, report_path=self.root / 'summary.json', scope=scope)
 
     def test_two_lanes_exclusive_barriers_and_isolation(self):
-        names = ['a', 'b', 'vehicle-render-cost', 'render-density', 'c', 'd']
+        names = ['a', 'b', 'vehicle-render-cost', 'render-density',
+                 'observer-performance', 'navigation-performance', 'c', 'd']
         report = self.run_plan(names)
         self.assertEqual('passed', report['status'])
         rows = {name: json.loads((self.events / (name + '.json')).read_text()) for name in names}
@@ -73,7 +75,7 @@ class SchedulerChecks(unittest.TestCase):
         for exclusive in live.EXCLUSIVE:
             a = rows[exclusive]
             self.assertTrue(all(name == exclusive or r['end'] <= a['start'] or r['start'] >= a['end'] for name, r in rows.items()))
-        self.assertEqual(6, len({r['env']['VANDOR_LABS_TEST_GAME_DIR'] for r in rows.values()}))
+        self.assertEqual(len(names), len({r['env']['VANDOR_LABS_TEST_GAME_DIR'] for r in rows.values()}))
         for row in rows.values():
             self.assertEqual('true', row['env']['VANDOR_LABS_TEST_SKIP_BUILD'])
             self.assertEqual('', row['env']['VANDOR_LABS_TEST_OPTIFINE'])
@@ -110,21 +112,74 @@ class SchedulerChecks(unittest.TestCase):
         self.assertIn('Missing fixture JAR hashes', report['infrastructure_error'])
 
     def test_full_inventory_and_platform_commands(self):
-        self.assertEqual(set(live.LEGACY_FOCI), set(live.PRIORITY))
-        self.assertEqual(26, len(live.PRIORITY))
+        self.assertEqual(set(live.RELEASE_FOCI), set(live.PRIORITY))
+        self.assertEqual(set(live.LEGACY_FOCI) | {
+            'navigation-vehicle', 'navigation-world', 'navigation-module', 'module-rack',
+            'appliances', 'synthesis-tower', 'infuser-gui', 'ramp-dialog', 'core-icons',
+            'observer-performance', 'navigation-performance'}, set(live.PRIORITY))
         report = self.run_plan(live.PRIORITY, jobs=2, scope='full')
         self.assertEqual('passed', report['status'])
-        self.assertEqual(26 + bool(os.environ.get('VANDOR_LABS_TEST_MEKANISM')), len(report['results']))
+        self.assertEqual(len(live.RELEASE_FOCI) + sum(bool(os.environ.get(v)) for v in live.OPTIONAL_FOCI.values()), len(report['results']))
         self.assertTrue(report['full_release_coverage'])
         self.assertIn('--shot-prefix', live.command_for('utility22_card_mounts', self.jar, '8G', windows=True))
-        for name in live.LEGACY_FOCI:
+        for name in live.RELEASE_FOCI:
             command = live.command_for(name, self.jar, '8G', windows=True)
-            self.assertIn(str(self.jar), command); self.assertIn(name, command)
+            self.assertIn(str(self.jar), command)
+            self.assertIn('testclient/test_navigation_vehicle.py' if name == 'navigation-vehicle' else name, command)
             self.assertEqual('8G', command[command.index('--max-heap') + 1])
         # Preserve the original platform-specific optional coverage: Linux's wrapper
         # performs save -> fresh-JVM verify; Windows retains its existing single focus.
         self.assertEqual(['bash', 'testclient/test_mekanism_tank.sh'], live.command_for('mekanism-tanks', self.jar, '8G', windows=False))
         self.assertIn('mekanism-tanks', live.command_for('mekanism-tanks', self.jar, '8G', windows=True))
+
+    def test_jei_is_optional_and_omission_is_reported(self):
+        with patch.dict(os.environ, {'VANDOR_LABS_TEST_JEI': ''}):
+            report = self.run_plan(live.PRIORITY, scope='full')
+        self.assertNotIn('machine-jei', report['expected'])
+        self.assertIn('machine-jei', {row['focus'] for row in report['optional_skipped']})
+        with patch.dict(os.environ, {'VANDOR_LABS_TEST_JEI': str(self.jar)}):
+            report = self.run_plan(live.PRIORITY, scope='full')
+        self.assertIn('machine-jei', report['expected'])
+        self.assertNotIn('machine-jei', {row['focus'] for row in report['optional_skipped']})
+        self.assertEqual('passed', report['status'])
+
+    def test_new_windows_focus_selectors_and_dispatch_cover_release_inventory(self):
+        # Parse the actual CLI and dispatch tables without starting Windows/Java.
+        import ast
+        tree = ast.parse((live.ROOT / 'testclient/run_windows.py').read_text())
+        choices = next(ast.literal_eval(k.value) for node in ast.walk(tree)
+                       if isinstance(node, ast.Call) and node.args and
+                       isinstance(node.args[0], ast.Constant) and node.args[0].value == '--focus'
+                       for k in node.keywords if k.arg == 'choices')
+        required = set(live.RELEASE_FOCI) - {'utility22_card_mounts'} | {'machine-jei'}
+        self.assertTrue(required.issubset(choices))
+        tables = [{key.value for key in node.keys if isinstance(key, ast.Constant)}
+                  for node in ast.walk(tree) if isinstance(node, ast.Dict)]
+        self.assertGreaterEqual(sum(required.issubset(keys) for keys in tables), 2,
+                                'Windows property and completion-marker dispatch must both cover every focus')
+
+    def test_navigation_wrapper_keeps_saved_world_through_both_phases(self):
+        import importlib.util
+        spec = importlib.util.spec_from_file_location('navigation_roundtrip', live.ROOT / 'testclient/test_navigation_vehicle.py')
+        navigation = importlib.util.module_from_spec(spec); spec.loader.exec_module(navigation)
+        child = self.root / 'navigation_child.py'
+        child.write_text('''import hashlib,os
+from pathlib import Path
+game=Path(os.environ['VANDOR_LABS_TEST_GAME_DIR'])
+phase=os.environ['VANDOR_LABS_NAVIGATION_VEHICLE_PHASE']
+saved=game/'saves/navigation-vehicle/level.dat'
+if phase=='write':saved.parent.mkdir(parents=True);saved.write_bytes(b'owned navigation state')
+else:assert saved.read_bytes()==b'owned navigation state'
+output=Path(os.environ['VANDOR_LABS_TEST_RUN_ROOT'])/phase;output.mkdir(parents=True)
+(output/'artifact.sha256').write_text(hashlib.sha256(Path(os.environ['VANDOR_LABS_TEST_JAR']).read_bytes()).hexdigest()+'  candidate.jar\\n')
+''')
+        with patch.dict(os.environ, {'VANDOR_LABS_TEST_RUN_ROOT': str(self.root / 'navigation'),
+                                    'VANDOR_LABS_TEST_KEEP_ARTIFACTS': '0'}):
+            output = navigation.run_phases(self.jar, '8G', root=self.root,
+                                          launcher=[sys.executable, str(child)])
+        self.assertEqual(2, len(live.artifact_hashes(output / 'artifacts', live.sha256(self.jar))))
+        self.assertFalse((output / 'game').exists())
+        self.assertEqual('pruned', json.loads((output / 'retention.json').read_text())['status'])
 
     @unittest.skipIf(os.name == 'nt', 'Linux legacy two-phase wrapper')
     def test_mekanism_wrapper_keeps_world_until_verify_then_finalizes(self):

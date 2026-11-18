@@ -191,7 +191,8 @@ public final class ModuleRackRenderer extends CustomRenderer {
                         if (resolved == null) throw new IOException("Missing rack texture alias: " + texture);
                         texture = resolved;
                     }
-                    int index = TEXTURES.indexOf(texture.substring(texture.lastIndexOf('/') + 1));
+                    String textureName = texture.substring(texture.lastIndexOf('/') + 1);
+                    int index = TEXTURES.indexOf(textureName);
                     if (index < 0) throw new IOException("Unknown rack texture: " + texture);
                     double[][] points;
                     switch (entry.getKey()) {
@@ -216,7 +217,10 @@ public final class ModuleRackRenderer extends CustomRenderer {
                     List<MapSurface.Vertex> vertices = new ArrayList<>(4);
                     for (int i = 0; i < 4; i++) {
                         double[] p = points[i], t = corners[Math.floorMod(i + rotation, 4)];
-                        vertices.add(new MapSurface.Vertex(new Vec3d(p[0]/16, p[1]/16, p[2]/16), t[0]/16, t[1]/16));
+                        // Authored bar UVs measure from the image top. Dynmap patch V measures from the bottom.
+                        double v = t[1]/16;
+                        if ("power_in_off".equals(textureName) || "power_in_on".equals(textureName)) v = 1-v;
+                        vertices.add(new MapSurface.Vertex(new Vec3d(p[0]/16, p[1]/16, p[2]/16), t[0]/16, v));
                     }
                     result.add(new Face(index, vertices));
                 }

@@ -40,7 +40,12 @@ public final class NavigationSources {
         }
         for(GearTileEntity arm:GearGeometry.roots(world)){
             if(arm.isInvalid()||!arm.isOperational()||!world.isBlockLoaded(arm.getPos(),false)||world.getTileEntity(arm.getPos())!=arm||arm.payload()==null||arm.payload().materialized()||arm.hasFailedArmSnapshot())continue;
-            for(TileEntityConstructor tile:arm.payload().navigationObservers(arm))if(tile.formed())append(areas,tile,receiver,channels);
+            int first=areas.size();
+            try{for(TileEntityConstructor tile:arm.payload().navigationObservers(arm))if(tile.formed())append(areas,tile,receiver,channels);}
+            catch(RuntimeException|LinkageError unavailable){
+                // Match collision discovery: a failed synthetic view retains its owned payload.
+                areas.subList(first,areas.size()).clear();arm.quarantinePayload();
+            }
         }if(own!=null)NavigationVehicle.observers(areas,own,receiver,channels);for(com.vandorlabs.vehicle.EntityGroundVehicle craft:NavigationVehicle.vehicles(world))if(craft!=own)NavigationVehicle.observers(areas,craft,receiver,channels);return areas;
     }
     static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels){

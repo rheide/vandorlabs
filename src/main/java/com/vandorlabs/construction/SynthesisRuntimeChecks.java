@@ -14,6 +14,29 @@ import net.minecraftforge.energy.*;
 /** Exact assembled machine exercises power admission, inventory ownership and saved work. */
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class SynthesisRuntimeChecks {
+    private static void batteryInsertion(TileEntityConstructor tile,net.minecraft.entity.player.EntityPlayerMP player){
+        double x=player.posX,y=player.posY,z=player.posZ;
+        float yaw=player.rotationYaw,pitch=player.rotationPitch;
+        boolean creative=player.capabilities.isCreativeMode;
+        ItemStack held=player.getHeldItemMainhand().copy(),installed=tile.batteryStack(0).copy();
+        com.vandorlabs.machines.SynthesisPresentation.Spec rack=com.vandorlabs.machines.SynthesisPresentation.forMachine(tile.builderMachine());
+        net.minecraft.util.math.Vec3d target=MachineMountSurface.rotate(new net.minecraft.util.math.Vec3d(rack.rackX+.5,rack.rackY+com.vandorlabs.rack.ModuleRackGeometry.slotCenterY(0)/16,rack.rackFront()),tile.facing(),tile.core().width,tile.core().depth).add(new net.minecraft.util.math.Vec3d(tile.getPos().subtract(tile.pivot())));
+        net.minecraft.util.math.Vec3d eye=target.add(new net.minecraft.util.math.Vec3d(tile.facing().getDirectionVec()).scale(2));
+        try{
+            player.setPosition(eye.x,eye.y-player.getEyeHeight(),eye.z);
+            player.rotationYaw=tile.facing().getOpposite().getHorizontalAngle();player.rotationPitch=0;
+            for(boolean mode:new boolean[]{false,true}){
+                player.capabilities.isCreativeMode=mode;
+                tile.synthesisInventory().setStackInSlot(2,ItemStack.EMPTY);
+                player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE));
+                require(tile.synthesisModuleInteraction(player,EnumHand.MAIN_HAND)&&tile.batteryStack(0).getCount()==1,"physical battery mount accepts one item creative="+mode);
+                require(mode?player.getHeldItemMainhand().getCount()==1:player.getHeldItemMainhand().isEmpty(),"battery insertion consumes Survival inventory and preserves Creative inventory creative="+mode);
+            }
+        }finally{
+            tile.synthesisInventory().setStackInSlot(2,installed);player.setHeldItem(EnumHand.MAIN_HAND,held);
+            player.capabilities.isCreativeMode=creative;player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(x,y,z);
+        }
+    }
     private static void legacyGantry(World world,BlockPos root,Block matter){
         BlockConstructorCore core=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:enclosed_gantry_core");
         Block part=Block.getBlockFromName("vandorlabs:constructor_part");
@@ -48,6 +71,7 @@ public final class SynthesisRuntimeChecks {
             world.setBlockToAir(root.west());tile.sampleInput(root);require(tile.synthesisEnabled(),"OFF enables without signal");
             tile.configureSynthesisRedstone(1,com.vandorlabs.redstone.ChannelList.of(19991));tile.setChannelSignal(true);require(tile.synthesisEnabled(),"channel aggregate enables ON");tile.setChannelSignal(false);require(!tile.synthesisEnabled(),"channel OFF pauses");tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);
             tile=firstLoadSignals(world,tile,matter);
+            batteryInsertion(tile,player);
             double px=player.posX,py=player.posY,pz=player.posZ;net.minecraft.inventory.Container old=player.openContainer;
             player.setPosition(root.getX()+1,root.getY()+1,root.getZ()-2);
             com.vandorlabs.container.ContainerSynthesisTower container=new com.vandorlabs.container.ContainerSynthesisTower(player.inventory,tile);container.windowId=37;player.openContainer=container;

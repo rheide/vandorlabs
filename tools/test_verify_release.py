@@ -26,6 +26,12 @@ class ReleaseInventoryTests(unittest.TestCase):
                 executable = root / 'jdk/bin' / name
                 executable.write_text('#!/bin/sh\necho \'java version "1.8.0_fake"\' >&2\n')
                 executable.chmod(0o755)
+            # This is an entirely fake release gate; the real display executable
+            # must never be needed or invoked by these scheduler unit fixtures.
+            (root / 'bin').mkdir()
+            display = root / 'bin/xvfb-run'
+            display.write_text('#!/bin/sh\necho "Unexpected live display invocation" >&2\nexit 99\n')
+            display.chmod(0o755)
             mods = root / 'mods'
             mods.mkdir()
             fixture = mods / 'fixture.jar'
@@ -50,6 +56,7 @@ if os.environ['MOCK_MUTATE']=='1':Path(sys.argv[sys.argv.index('--jar')+1]).writ
 sys.exit(1 if failed else 0)
 ''')
             env = dict(os.environ, JAVA_HOME=str(root / 'jdk'),
+                       PATH=str(root / 'bin') + os.pathsep + os.environ['PATH'],
                        VANDOR_LABS_COMPAT_MODS=str(mods),
                        MOCK_CPU_FAIL=str(int(cpu_fail)), MOCK_LIVE_FAIL=str(int(live_fail)),
                        MOCK_MUTATE=str(int(mutate)))

@@ -43,6 +43,8 @@ final class NavigationEnhancementChecks {
         border(a,e,root,true);border(a,e,root,false);
         need(green>1000,"loading backdrop cannot occlude textured terrain");need(cyan>12,"cyan player marker visible");need(yellow>12,"saved pin remains distinct");need(diff>8,"map pans over pulsing unloaded space without re-uploading terrain");javax.imageio.ImageIO.write(a,"png",new File(out,"navigation-enhancements-scanning-a.png"));javax.imageio.ImageIO.write(b,"png",new File(out,"navigation-enhancements-scanning-b.png"));
         backup.restore(e,(Integer)field(e,"serial"));protocol(root.getPos());
+        NavigationQueuedCacheChecks.run(mc,root);
+        NavigationMapRenderer.bind(root,0,1);Object restored=entries.get(root.getPos());backup.restore(restored,(Integer)field(restored,"serial"));
         System.out.println("[vandorlabs] navigation-enhancements PASS CTR pin/player fixed pixel scale fine no-chunk sampling raster cache player-pixels="+cyan+" pin-pixels="+yellow+" busy-pixel-difference="+diff);
     }
     private static void border(BufferedImage image,Object entry,TileEntityNavigationTable root,boolean top)throws Exception{

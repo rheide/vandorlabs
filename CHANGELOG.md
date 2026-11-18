@@ -10,6 +10,8 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 
 ### Builder compatibility
 
+- Preserve legacy Core save data and recipe IDs during recovery, including when the Core block has yet to be restored. Bound the NeoForge builder queue by job count and snapshot size.
+
 - Protect the Master Catalog Chip from being overwritten by Digitize on both versions.
 
 - Dismantling a three-block-high Enclosed Gantry from 2.10 restores the Matter stored in its original top rim.
@@ -28,6 +30,8 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 - Simplify observer names to Survey Dish Core and Sentinel Array Core while preserving existing registry IDs.
 
 ### Seed navigation (Forge 1.12.2)
+
+- Apply queued map images before evicting cached textures. Keep unavailable captured observers out of discovery while retaining their saved payloads. Skip fully indexed circles during the fallback coverage scan.
 
 - Keep removed Nav Table bounds safe during native/vehicle handoffs with OptiFine, and release parked/destroyed craft from navigation discovery.
 - Support carried Navigation Tables, Navigation Screens and formed observers in Vehicle Mode. Follow physical position and altitude, center Screens with a crosshair, record module coverage along the route and retain it through saves and parking. Show a missing-observer haiku aboard unequipped vehicles.
@@ -118,6 +122,9 @@ See the [2.11 showcase](docs/versions/version-2.11.md) for the three builders in
 ## 2.10.0
 
 ### Release review and recovery
+
+- Require a successful Navigation Table chip transfer before taking or returning the player’s chip on NeoForge. Read chip appearance and battery charge without copying their full saved data.
+- Include the 2.11 gameplay and performance focuses in the live release inventory, keep both vehicle navigation restart phases in one fixture on Linux and Windows, and check the visible Battery Module charge bar at all five fill levels in Dynmap.
 
 - Keep native Arm and Ramp inventories frozen during publication callbacks. Restrict internal block writes to one exact cell at a time so retained inventory wrappers cannot duplicate captured contents.
 - Verify actual native entity write completion and expected owner records before completing recovery checkpoints. Refuse unsupported Ramp actors before capture, and retain malformed Arm drop escrow inertly instead of throwing during world load.

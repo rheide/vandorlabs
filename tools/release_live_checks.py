@@ -24,16 +24,26 @@ LEGACY_FOCI = (
     'segmented-door-tall', 'furniture', 'vehicle-design', 'arm-endpoints',
     'arm-joined', 'arm-riders', 'arm-placement', 'arm-wall', 'copy-surfaces',
     'vehicle-ramps', 'vehicle-taxi')
+RELEASE_FOCI = LEGACY_FOCI + (
+    'navigation-vehicle', 'navigation-world', 'navigation-module', 'module-rack',
+    'appliances', 'synthesis-tower', 'infuser-gui', 'ramp-dialog', 'core-icons',
+    'observer-performance', 'navigation-performance')
+OPTIONAL_FOCI = {'mekanism-tanks': 'VANDOR_LABS_TEST_MEKANISM',
+                 'machine-jei': 'VANDOR_LABS_TEST_JEI'}
 PRIORITY = (
     'arm-live', 'arm-endpoints', 'arm-joined', 'arm-riders', 'arm-placement',
     'arm-wall', 'copy-surfaces', 'vehicle-ramps', 'vehicle-taxi',
+    'navigation-vehicle', 'navigation-world', 'navigation-module',
     'coupler-articulation', 'ramp-axis', 'screen-chips', 'glass-migration',
     'vehicle-design', 'bridge-machines', 'utility26', 'furniture',
+    'module-rack', 'appliances', 'synthesis-tower', 'infuser-gui', 'ramp-dialog',
     'segmented-door', 'segmented-door-legacy', 'segmented-door-tall',
     'fluids', 'utility22_card_mounts', 'render-regressions', 'glass-appearance',
-    'vehicle-render-cost', 'render-density')
-EXCLUSIVE = frozenset(('vehicle-render-cost', 'render-density'))
-assert len(PRIORITY) == len(set(PRIORITY)) and set(PRIORITY) == set(LEGACY_FOCI)
+    'core-icons', 'vehicle-render-cost', 'render-density',
+    'observer-performance', 'navigation-performance')
+EXCLUSIVE = frozenset(('vehicle-render-cost', 'render-density',
+                       'observer-performance', 'navigation-performance'))
+assert len(PRIORITY) == len(set(PRIORITY)) and set(PRIORITY) == set(RELEASE_FOCI)
 
 
 def sha256(path):
@@ -46,6 +56,10 @@ def sha256(path):
 
 def command_for(focus, jar, heap, windows=None):
     windows = os.name == 'nt' if windows is None else windows
+    if focus == 'navigation-vehicle':
+        # Both platforms keep write and cold-reload phases in one owned lane.
+        return [sys.executable, 'testclient/test_navigation_vehicle.py',
+                '--jar', str(jar), '--max-heap', heap]
     if windows:
         selector = '--shot-prefix' if focus == 'utility22_card_mounts' else '--focus'
         return [sys.executable, 'testclient/run_windows.py', '--jar', str(jar),
@@ -157,8 +171,13 @@ def run_release(jar, output, jobs=2, *, names=None, builder=None, stop=None, gra
     expected = sha256(jar)
     scope = scope or ('full' if names is None else 'targeted')
     names = list(PRIORITY if names is None else names)
-    if scope == 'full' and os.environ.get('VANDOR_LABS_TEST_MEKANISM'):
-        names.insert(0, 'mekanism-tanks')
+    optional_skipped = []
+    if scope == 'full':
+        for focus, variable in OPTIONAL_FOCI.items():
+            if os.environ.get(variable):
+                names.insert(0 if focus == 'mekanism-tanks' else names.index('core-icons'), focus)
+            else:
+                optional_skipped.append({'focus': focus, 'reason': variable + ' is not configured'})
     if len(names) != len(set(names)):
         raise ValueError('Duplicate focus in release coverage')
     output.mkdir(parents=True, exist_ok=False)
@@ -168,7 +187,9 @@ def run_release(jar, output, jobs=2, *, names=None, builder=None, stop=None, gra
         raise ValueError('Invalid release heap')
     report = {'schema': 1, 'scope': scope, 'full_release_coverage': False,
               'output': str(output), 'jar': str(jar), 'sha256_start': expected, 'jobs': jobs,
-              'expected': names, 'legacy_coverage': list(LEGACY_FOCI), 'results': [],
+              'expected': names, 'legacy_coverage': list(LEGACY_FOCI),
+              'required_coverage': list(RELEASE_FOCI), 'optional_skipped': optional_skipped,
+              'results': [],
               'status': 'running', 'infrastructure_error': None}
     active, pending = {}, list(names)
 
@@ -242,7 +263,7 @@ def run_release(jar, output, jobs=2, *, names=None, builder=None, stop=None, gra
                     if sha256(jar) != expected:
                         raise ValueError('Release JAR changed during live validation')
                     row['artifact_hashes'] = artifact_hashes(Path(row['directory']) / 'artifacts', expected)
-                    required_hashes = 2 if name == 'mekanism-tanks' and os.name != 'nt' else 1
+                    required_hashes = 2 if name == 'navigation-vehicle' or (name == 'mekanism-tanks' and os.name != 'nt') else 1
                     if code == 0 and len(row['artifact_hashes']) < required_hashes:
                         raise ValueError('Missing fixture JAR hashes: ' + name + ' requires ' + str(required_hashes))
                     row['status'] = 'passed' if code == 0 and not stop.is_set() else 'failed'
@@ -282,7 +303,7 @@ def run_release(jar, output, jobs=2, *, names=None, builder=None, stop=None, gra
         report['failures'] = [r['focus'] for r in report['results'] if r['status'] != 'passed']
         complete = len(completed) == len(names) and set(completed) == set(names)
         report['complete_coverage'] = complete
-        report['full_release_coverage'] = scope == 'full' and complete
+        report['full_release_coverage'] = scope == 'full' and complete and set(RELEASE_FOCI).issubset(completed)
         report['status'] = 'passed' if complete and not report['failures'] and not report['infrastructure_error'] and report['sha256_end'] == expected else 'failed'
         publish()
     print(('Release live inventory ' if scope == 'full' else 'Targeted live checks ') + report['status'].upper() + ': ' + str(output / 'report.json'), flush=True)
@@ -294,13 +315,14 @@ def main():
     parser.add_argument('--jar', type=Path, required=True)
     parser.add_argument('--jobs', type=int, choices=(1, 2), default=2)
     parser.add_argument('--report', type=Path, help='Also atomically write the summary at this path')
-    parser.add_argument('--focus', action='append', choices=LEGACY_FOCI + ('mekanism-tanks',),
+    parser.add_argument('--focus', action='append', choices=RELEASE_FOCI + tuple(OPTIONAL_FOCI),
                         help='Targeted rerun only; never reported as the full live inventory')
     args = parser.parse_args()
     if args.focus and len(args.focus) != len(set(args.focus)):
         parser.error('Do not repeat a focus')
-    if args.focus and 'mekanism-tanks' in args.focus and not os.environ.get('VANDOR_LABS_TEST_MEKANISM'):
-        parser.error('mekanism-tanks requires VANDOR_LABS_TEST_MEKANISM')
+    for focus, variable in OPTIONAL_FOCI.items():
+        if args.focus and focus in args.focus and not os.environ.get(variable):
+            parser.error(focus + ' requires ' + variable)
     base = Path(os.environ.get('VANDOR_LABS_RELEASE_RUN_ROOT') or os.environ.get('VANDOR_LABS_TEST_RUN_ROOT') or ROOT / 'build/release-live').resolve()
     base.mkdir(parents=True, exist_ok=True)
     # run_release claims a fresh named child; never a caller's existing directory.

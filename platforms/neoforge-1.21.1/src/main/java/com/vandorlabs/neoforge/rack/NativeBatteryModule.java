@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.rack;
 
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.*;
@@ -12,8 +13,12 @@ import java.util.List;
 public final class NativeBatteryModule extends Item {
     public static final int CAPACITY=10000;
     public NativeBatteryModule(){super(new Properties().stacksTo(1));}
-    public static boolean valid(ItemStack stack){var data=NativeRackData.data(stack);return !stack.isEmpty()&&stack.getItem() instanceof NativeBatteryModule&&(!data.contains("BatteryEnergy")||data.contains("BatteryEnergy",Tag.TAG_INT)&&data.getInt("BatteryEnergy")>=0&&data.getInt("BatteryEnergy")<=CAPACITY);}
-    public static int energy(ItemStack stack){return valid(stack)?NativeRackData.data(stack).getInt("BatteryEnergy"):0;}
+    private static boolean battery(ItemStack stack){return !stack.isEmpty()&&stack.getItem() instanceof NativeBatteryModule;}
+    /** Read only: the component can be shared by copied stacks. Copy before changing charge. */
+    private static CompoundTag dataView(ItemStack stack){return stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).getUnsafe();}
+    private static boolean validEnergy(CompoundTag data){return !data.contains("BatteryEnergy")||data.contains("BatteryEnergy",Tag.TAG_INT)&&data.getInt("BatteryEnergy")>=0&&data.getInt("BatteryEnergy")<=CAPACITY;}
+    public static boolean valid(ItemStack stack){return battery(stack)&&validEnergy(dataView(stack));}
+    public static int energy(ItemStack stack){if(!battery(stack))return 0;var data=dataView(stack);return validEnergy(data)?data.getInt("BatteryEnergy"):0;}
     public static int transfer(ItemStack stack,int maximum,boolean simulate,boolean receive){
         if(!valid(stack))return 0;int before=energy(stack),amount=Math.min(Math.max(0,maximum),receive?CAPACITY-before:before);
         if(!simulate&&amount>0){var data=NativeRackData.data(stack);data.putInt("BatteryEnergy",before+(receive?amount:-amount));stack.set(DataComponents.CUSTOM_DATA,CustomData.of(data));}return amount;

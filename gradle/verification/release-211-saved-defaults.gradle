@@ -1,0 +1,29 @@
+task testRelease211SavedDefaults(type: JavaExec) {
+    group = 'verification'
+    description = 'Keep 2.10 Core and navigation-table ownership receipts exact through the 2.11 upgrade'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.Release211SavedDefaultsChecks'
+    maxHeapSize = '512m'
+}
+check.dependsOn testRelease211SavedDefaults
+
+task testNavigationDiscoverySafety(type: JavaExec) {
+    group = 'verification'
+    description = 'Keep unavailable captured tiles inert when navigation discovers native or carried observers'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.NavigationDiscoverySafetyChecks'
+    maxHeapSize = '512m'
+}
+check.dependsOn testNavigationDiscoverySafety
+
+task testConstructorRecoveryContext(type: JavaExec) {
+    group = 'verification'
+    description = 'Preserve current Core recipe IDs while recovery prepares tiles before restoring native blocks'
+    dependsOn compileNonRenderingChecks
+    classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
+    main = 'com.vandorlabs.client.ConstructorRecoveryContextChecks'
+    maxHeapSize = '512m'
+}
+check.dependsOn testConstructorRecoveryContext

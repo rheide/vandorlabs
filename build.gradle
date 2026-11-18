@@ -502,6 +502,12 @@ task testDynmapSupport(type: Exec) {
 }
 check.dependsOn testDynmapSupport
 
+task testDynmapBatteryOracle(type: Exec) {
+    group = 'verification'
+    commandLine pythonExecutable, 'tools/test_dynmap_battery_oracle.py'
+}
+check.dependsOn testDynmapBatteryOracle
+
 task testDynmapRenderers(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + configurations.compileOnly + files(compileNonRenderingChecks.destinationDir)

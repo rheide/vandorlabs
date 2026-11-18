@@ -23,6 +23,7 @@ public final class NavigationMapRenderer {
     private NavigationMapRenderer(){}
     private static final Map<com.vandorlabs.vehicle.EntityGroundVehicle,Map<BlockPos,Entry>> CARRIED_IMAGES=new LinkedHashMap<>();
     private static long nextRequest;
+    private static boolean ticking,trimPending;
     private static final Map<BlockPos,Entry> IMAGES=new LinkedHashMap<BlockPos,Entry>(32,.75f,true);
     private static final com.vandorlabs.animation.VisualClock CLOCK=new com.vandorlabs.animation.VisualClock();
     private static net.minecraft.world.World world;private static int sequence;private static double visualTicks;
@@ -39,7 +40,11 @@ public final class NavigationMapRenderer {
     }
     public static void clear(){for(Entry e:IMAGES.values())e.delete();IMAGES.clear();for(Map<BlockPos,Entry> entries:CARRIED_IMAGES.values())for(Entry e:entries.values())e.delete();CARRIED_IMAGES.clear();nextRequest=0;}
     private static void checkWorld(){if(world!=Minecraft.getMinecraft().world){clear();world=Minecraft.getMinecraft().world;}}
-    private static void trim(){int bytes=0,count=IMAGES.size();for(Entry e:IMAGES.values())bytes+=e.bytes();for(Map<BlockPos,Entry> entries:CARRIED_IMAGES.values()){count+=entries.size();for(Entry e:entries.values())bytes+=e.bytes();}java.util.List<Map<BlockPos,Entry>> groups=new ArrayList<>();groups.add(IMAGES);groups.addAll(CARRIED_IMAGES.values());for(Map<BlockPos,Entry> group:groups){Iterator<Entry> it=group.values().iterator();while((count>32||bytes>16*1024*1024)&&it.hasNext()){Entry e=it.next();bytes-=e.bytes();count--;e.delete();it.remove();}}}
+    private static void trim(){
+        // A queued raster can grow during tick traversal. Evict only after all active
+        // iterators have finished; applying it must not invalidate the tick iterator.
+        if(ticking){trimPending=true;return;}
+        int bytes=0,count=IMAGES.size();for(Entry e:IMAGES.values())bytes+=e.bytes();for(Map<BlockPos,Entry> entries:CARRIED_IMAGES.values()){count+=entries.size();for(Entry e:entries.values())bytes+=e.bytes();}java.util.List<Map<BlockPos,Entry>> groups=new ArrayList<>();groups.add(IMAGES);groups.addAll(CARRIED_IMAGES.values());for(Map<BlockPos,Entry> group:groups){Iterator<Entry> it=group.values().iterator();while((count>32||bytes>16*1024*1024)&&it.hasNext()){Entry e=it.next();bytes-=e.bytes();count--;e.delete();it.remove();}}}
     private static Map<BlockPos,Entry> images(TileEntity tile){if(!NavigationVehicle.carried(tile))return IMAGES;com.vandorlabs.vehicle.EntityGroundVehicle craft=NavigationVehicle.craft(tile.getWorld());return CARRIED_IMAGES.computeIfAbsent(craft,k->new LinkedHashMap<BlockPos,Entry>(16,.75F,true));}
     private static Entry entry(TileEntity raw,int slot){
         checkWorld();TileEntity tile=NavigationService.owner(raw);if(tile==null)tile=raw;Map<BlockPos,Entry> cache=images(tile);Entry e=cache.get(tile.getPos());
@@ -54,8 +59,11 @@ public final class NavigationMapRenderer {
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent public static void tick(net.minecraftforge.fml.common.gameevent.TickEvent.ClientTickEvent event){
         if(event.phase!=net.minecraftforge.fml.common.gameevent.TickEvent.Phase.END)return;checkWorld();Minecraft mc=Minecraft.getMinecraft();visualTicks=CLOCK.sample(System.nanoTime(),mc.isGamePaused());if(world==null||mc.player==null||mc.isGamePaused())return;long now=Minecraft.getSystemTime();
-        tick(IMAGES,now);
-        for(Iterator<Map.Entry<com.vandorlabs.vehicle.EntityGroundVehicle,Map<BlockPos,Entry>>> it=CARRIED_IMAGES.entrySet().iterator();it.hasNext();){Map.Entry<com.vandorlabs.vehicle.EntityGroundVehicle,Map<BlockPos,Entry>> group=it.next();com.vandorlabs.vehicle.EntityGroundVehicle craft=group.getKey();if(!NavigationVehicle.live(craft)||mc.world.getEntityByID(craft.getEntityId())!=craft){for(Entry e:group.getValue().values())e.delete();it.remove();continue;}tick(group.getValue(),now);}
+        ticking=true;
+        try{
+            tick(IMAGES,now);
+            for(Iterator<Map.Entry<com.vandorlabs.vehicle.EntityGroundVehicle,Map<BlockPos,Entry>>> it=CARRIED_IMAGES.entrySet().iterator();it.hasNext();){Map.Entry<com.vandorlabs.vehicle.EntityGroundVehicle,Map<BlockPos,Entry>> group=it.next();com.vandorlabs.vehicle.EntityGroundVehicle craft=group.getKey();if(!NavigationVehicle.live(craft)||mc.world.getEntityByID(craft.getEntityId())!=craft){for(Entry e:group.getValue().values())e.delete();it.remove();continue;}tick(group.getValue(),now);}
+        }finally{ticking=false;if(trimPending){trimPending=false;trim();}}
     }
     private static void tick(Map<BlockPos,Entry> images,long now){Minecraft mc=Minecraft.getMinecraft();for(Iterator<Entry> it=images.values().iterator();it.hasNext();){Entry e=it.next();boolean carried=NavigationVehicle.carried(e.tile);if(carried){TileEntity current=e.tile.getWorld().getTileEntity(e.tile.getPos());if(current!=null&&NavigationService.owner(current)==current&&current!=e.tile){e.tile=current;e.shape=null;}}
         if(e.tile.isInvalid()||NavigationService.owner(e.tile)!=e.tile){e.delete();it.remove();continue;}refresh(e);

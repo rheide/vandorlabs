@@ -18,7 +18,7 @@ def generate(out):
   source=next((base/relative for base in (ROOT/'texture-packs/additional/assets/vandorlabs',ROOT/'texture-packs/default/assets/vandorlabs',SOURCE) if (base/relative).is_file()),None)
   if source is None:raise ValueError('Missing observer artwork '+reference)
   textures[reference]=hashlib.sha256(source.read_bytes()).hexdigest()
-  owners=[p for p in OUT.parent.iterdir() if p.is_dir() and p!=OUT]+[PLATFORM/'src/main/resources']
+  owners=[p for p in OUT.parent.iterdir() if p.is_dir() and p!=OUT and not p.name.endswith('-smoke-resources')]+[PLATFORM/'src/main/resources']
   target=assets/relative
   duplicate=next((owner/'assets/vandorlabs'/relative for owner in owners if (owner/'assets/vandorlabs'/relative).is_file()),None)
   if duplicate is not None:
