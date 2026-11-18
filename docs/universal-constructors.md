@@ -2,7 +2,7 @@
 
 See the [step-by-step multiblock guides](multiblocks/README.md) for illustrated construction stages, including the newer drive and navigation computer assemblies that use the same frame system.
 
-On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards and modules, and the Enclosed Gantry builds mechanical parts. The Tower and Press retain their frames; the Gantry now uses a four-high frame. On NeoForge 1.21.1, the Tower supports Synthesis and Digitize, and the Press produces Navigation Data Modules. The Gantry can form but has no production recipes.
+On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards and modules, and the Enclosed Gantry builds mechanical parts. The Tower and Press retain their frames; the Gantry now uses a four-high frame. On NeoForge 1.21.1, the Tower supports Synthesis and Digitize, and the Press produces Data Chips, Access Cards, and Battery, Autopilot and Navigation Data Modules. The Gantry can form but has no production recipes.
 
 | Core | Width x depth x total height | Matter Blocks + Core |
 | --- | --- | --- |

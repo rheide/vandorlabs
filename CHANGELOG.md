@@ -2,7 +2,8 @@
 
 ## 1.12.0 (in development)
 
-- Continue the standalone NeoForge 1.21.1 port.
+- Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.
+- Add the remaining Assembly Press recipes to NeoForge, preserving the existing Navigation Data Module recipe and saved jobs.
 
 ## 2.11.0 (in development)
 

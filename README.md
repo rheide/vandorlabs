@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-**Vandor Labs 1.12.0** — development in progress. See the [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
+**Vandor Labs 1.12.0** — development in progress. See the [1.12 development notes](docs/versions/version-1.12.md), [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
 
 [Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/vandor-labs) · [Changelog](CHANGELOG.md) · [Player introduction](intro.md)
 

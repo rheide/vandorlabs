@@ -3,8 +3,8 @@
 This native slice covers the Synthesis Tower, Assembly Press and Enclosed Gantry,
 with their three Core items. The native
 [Matter Infuser](matter-and-storage.md) supplies Matter Ingots and charges
-modules. The Press produces Navigation Data Modules from a permitting Catalog
-Chip. The Gantry forms its finished structure. Core production and Digitize
+modules. The Press produces chips, cards and modules. The Gantry forms its
+finished structure. Core production and Digitize
 use the Synthesis Tower.
 
 ## Build and form a machine

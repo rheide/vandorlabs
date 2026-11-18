@@ -25,7 +25,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, limited Press production, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, the five Assembly Press recipes, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
@@ -39,13 +39,13 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | native JEI machine recipes and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
-| Copy Controllers and shared surfaces | public Surfaces; transactional Copy Controller is development-only | unimplemented | non-vehicle first |
+| Copy Controllers and shared surfaces | public Surfaces; public transactional Copy Controller with a bounded target list | unimplemented | non-vehicle first |
 | Standalone Extenders and rotating arms | partial (regular/Large joined and independent arms enabled) | unimplemented | non-vehicle first |
 | Track assemblies | partial (canonical Track enabled; vehicle integration deferred) | unimplemented | non-vehicle first |
 
 Historical partial work includes programmable cubes, slabs/stairs, flat walls/portholes, screens, mounted controls, wireless endpoints, Industrial Tables and filesystem materials. The JSON retains their branch-specific descriptions and remaining gaps under explicitly historical fields. Registration, compilation and shared fixtures alone do not establish parity.
 
-Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. Segmented Doors and the supported standalone arm family now have native adapters and focused acceptance; Tracks and stationary side wheels are public. The Turntable Controller is missing and the Copy Controller is opt-in. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
+Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. Segmented Doors and the supported standalone arm family now have native adapters and focused acceptance; Tracks and stationary side wheels are public. The Turntable Controller is missing and the Copy Controller is public for supported targets. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
 
 Every integrated family requires shared policy, native persistence and permissions, bounded server-authoritative round trips, subsequent-process reload, and inspected client geometry/dialog/animation output. Ownership transfers additionally require durable recovery and abrupt-restart/partial-save checks. Use focused Forge regressions as changes land; preserve the final exact-artifact release gate. Dual-JDK contracts and modern startup checks remain distinct from runtime and visual acceptance. Compatibility integrations need native equivalents or an explicit unsupported status.
 

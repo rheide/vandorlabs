@@ -645,7 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Extend the Assembly Press catalog and enable Enclosed Gantry production.",
+        "Enable Enclosed Gantry production.",
         "Convert the six remaining drive and navigation computer Cores.",
         "Add arm carrying and Copy Controller support for formed builder machines.",
         "Complete native release and shader acceptance."
@@ -661,7 +661,7 @@
         "Powered Synthesis production, physical RF/item ports, standard Redstone activation/channels, authenticated inventory dialog and textured rotating previews",
         "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication",
         "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog.",
-        "Synthesis Tower supports Digitize and the Assembly Press produces Navigation Data Modules. Printer and Scanner include redstone control and sided automation."
+        "Synthesis Tower supports Digitize; the Assembly Press produces Data Chips, Access Cards, and the Navigation Data, Battery and Autopilot Modules. Printer and Scanner include redstone control and sided automation."
       ]
     },
     {
@@ -1049,12 +1049,14 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Complete real-player dialog acceptance and enable ordinary public registration.",
-        "Expand supported targets and complete focused player and rendering acceptance."
+        "Expand supported targets, including Navigation Tables, observers, owned Screen controls and formed builders."
       ],
       "implemented": [
         "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair.",
-        "The opt-in Copy Controller has a native material transaction and focused dedicated rollback and partial-save recovery coverage."
+        "The public Copy Controller supports dedicated configuration, resource-priced Survival copying, post-commit client publication, and focused rollback and partial-save recovery."
+      ],
+      "modern_registered_block_ids": [
+        "copy_controller"
       ]
     },
     {

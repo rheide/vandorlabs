@@ -5,11 +5,9 @@ Forge 1.12.2 remains the default development target on `master`, at development 
 ## Current conversion boundary
 
 The remaining work targets non-Vehicle parity. Current NeoForge builds include
-Synthesis Tower Synthesis and Digitize, Assembly Press Navigation Data Module
-production, the Enclosed Gantry structure, the Matter Infuser, local
-navigation and observers, and Printer/Scanner automation. The remaining
-builder recipes, six Forge drive/navigation Cores, Turntable Controller,
-public Copy Controller, programmable armor, and standalone cockpit families
+Synthesis Tower Synthesis and Digitize, Assembly Press production, the Enclosed Gantry structure, the Matter Infuser, local
+navigation and observers, and Printer/Scanner automation. Gantry production, six Forge drive/navigation Cores, Turntable Controller,
+Copy Controller target coverage, programmable armor, and standalone cockpit families
 remain open alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
@@ -35,7 +33,7 @@ Start from `master`, not the old conversion branch. Use `feature/neoforge-1.21.1
 | Card Chip Programmer | Canonical public block, item, menu and rendering; focused player, mining and restart acceptance | User testing |
 | Canopies | Canonical eleven standalone components, configured placement, dedicated editor, contacts, rendering, ordered motion and loaded ownership repair | User testing; vehicle integration deferred |
 | Ramp Controllers | Public Controller/Slab items and recipes, scheduled deployment and belts, durable source and actor checkpoints | Broader actor roles and external ownership adapters, cross-entity-chunk handoffs, active Forge 1.12.2 world import |
-| Copy Controller | Development-only controller with pad binding, material withdrawal and rollback/restart checks; public Programmable Surfaces | Real player dialog, public activation and broader supported targets |
+| Copy Controller | Public controller with pad binding, material withdrawal, client publication and rollback/restart checks | Broader supported targets |
 | Duplifier | Public settings copying and Undo on converted targets, including public Canopy behavior and the Ramp settings adapter | Broader combined player acceptance |
 
 Screens, standalone propulsion and standalone credential readers are already publicly registered. Their focused acceptance is recorded below and in the family contracts. Vehicle/carried effects remain deferred.
