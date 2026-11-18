@@ -36,7 +36,7 @@ final class SynthesisTowerLiveChecks {
                 ItemStack battery=new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE);com.vandorlabs.rack.ModuleBatteryData.receive(battery,10000,false);
                 tile.synthesisInventory().setStackInSlot(2,battery);tile.synthesisInventory().setStackInSlot(0,new ItemStack(matter));
                 for(int bay=1;bay<4;bay++){ItemStack module=new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE);com.vandorlabs.rack.ModuleBatteryData.receive(module,bay*2500,false);tile.synthesisInventory().setStackInSlot(2+bay,module);}
-                for(int i=0;i<201;i++){player.world.setTotalWorldTime(player.world.getTotalWorldTime()+1);tile.update();}
+                for(int i=0;i<401;i++){player.world.setTotalWorldTime(player.world.getTotalWorldTime()+1);tile.update();}
 
                 need(tile.processing()&&tile.buildProgress()>.45&&tile.buildProgress()<.60,"real RF produces partial core before capture");
                 player.connection.setPlayerLocation(181.5,222,174,0,0);

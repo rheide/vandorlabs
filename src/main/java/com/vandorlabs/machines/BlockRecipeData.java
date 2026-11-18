@@ -47,7 +47,14 @@ public final class BlockRecipeData {
         if(!CatalogChipData.catalog(chip)||!chip.getTagCompound().hasKey("CatalogBlock",10))return ItemStack.EMPTY;NBTTagCompound data=chip.getTagCompound().getCompoundTag("CatalogBlock");if(!data.hasKey("Version",3)||data.getInteger("Version")!=VERSION||!data.hasKey("Stack",10)||!data.hasKey("State",10))return ItemStack.EMPTY;
         ItemStack stack=new ItemStack(data.getCompoundTag("Stack"));if(stack.getCount()!=1||!eligible(stack)||!NBTUtil.writeBlockState(new NBTTagCompound(),state(stack)).equals(data.getCompoundTag("State")))return ItemStack.EMPTY;return stack;
     }
+    public static boolean canDigitizeChip(ItemStack chip){
+        if(!ChipJournal.isChip(chip))return false;
+        NBTTagCompound tag=chip.getTagCompound();
+        return tag==null||!com.vandorlabs.credentials.CatalogChipPolicy.isMaster(
+                tag.getString("ChipType"),tag.getString("CatalogName"),tag.hasKey("CatalogBlock",10));
+    }
     public static void write(ItemStack chip,ItemStack input){
-        if(!ChipJournal.isChip(chip)||!eligible(input))throw new IllegalArgumentException("This block cannot be digitized");ItemStack block=input.copy();block.setCount(1);NBTTagCompound tag=new NBTTagCompound(),catalog=new NBTTagCompound(),designs=new NBTTagCompound(),payload=new NBTTagCompound();NBTTagList list=new NBTTagList();list.appendTag(new NBTTagString(ID));designs.setTag("synthesis_tower",list);catalog.setInteger("Version",1);catalog.setTag("Designs",designs);payload.setInteger("Version",VERSION);payload.setTag("Stack",block.writeToNBT(new NBTTagCompound()));payload.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),state(block)));tag.setString("ChipType","catalog");tag.setString("CatalogName",ChipJournal.bounded(block.getDisplayName(),40));tag.setTag("Catalog",catalog);tag.setTag("CatalogBlock",payload);chip.setTagCompound(tag);
+        if(!canDigitizeChip(chip))throw new IllegalArgumentException("Digitize requires a writable Data Chip. The Master Catalog is protected.");
+        if(!eligible(input))throw new IllegalArgumentException("This block cannot be digitized");ItemStack block=input.copy();block.setCount(1);NBTTagCompound tag=new NBTTagCompound(),catalog=new NBTTagCompound(),designs=new NBTTagCompound(),payload=new NBTTagCompound();NBTTagList list=new NBTTagList();list.appendTag(new NBTTagString(ID));designs.setTag("synthesis_tower",list);catalog.setInteger("Version",1);catalog.setTag("Designs",designs);payload.setInteger("Version",VERSION);payload.setTag("Stack",block.writeToNBT(new NBTTagCompound()));payload.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),state(block)));tag.setString("ChipType","catalog");tag.setString("CatalogName",ChipJournal.bounded(block.getDisplayName(),40));tag.setTag("Catalog",catalog);tag.setTag("CatalogBlock",payload);chip.setTagCompound(tag);
     }
 }

@@ -42,7 +42,7 @@ The same frame works along either horizontal axis and with the Core in any botto
 
 On Forge 1.12.2 and NeoForge 1.21.1, the formed Synthesis Tower produces constructor Cores from Programmable Matter and RF. Right-click it to select a design, supply up to four charged Battery Modules (40,000 RF total) or external RF, and insert Matter. Its Redstone tab controls physical and receiving-channel activation. See [production and ports](../../universal-constructors.md#synthesis-tower-production) for operating details.
 
-Each Core consumes one Matter Block and 8,000 RF over at least twenty seconds.
+Each Core consumes one Matter Block and 16,000 RF over at least forty seconds.
 The front left has a smaller square preview screen and projecting keyboard;
 the right has the chip mount and a flush four-bay rack. A chest beside either
 item-output face receives finished Cores automatically. The original frame

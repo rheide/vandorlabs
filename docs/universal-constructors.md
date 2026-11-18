@@ -56,8 +56,8 @@ production controls and inventory appear only on the Production tab. Hover
 over the RF bar for the exact stored RF and capacity.
 Select Synthesis Tower, Assembly Press or Enclosed Gantry from the design list;
 the rotating textured preview shows the complete structure. Insert one
-Programmable Matter Block in the Matter slot. Each Core uses 8,000 RF, at
-20 RF per tick, taking at least twenty seconds at normal server speed.
+Programmable Matter Block in the Matter slot. Each Core uses 16,000 RF, at
+20 RF per tick, taking at least forty seconds at normal server speed.
 A running build retains its selected design if you select the next design.
 Remove the completed Core from the output slot or right-click the finished
 Core in the processing chamber. The next queued input waits for the output
@@ -66,7 +66,7 @@ Matter Block of an unfinished build; spent RF is not refunded.
 
 ### Digitize a block
 
-Select **Digitize** on the Production tab. Its first row changes to
+Select **Digitize** on the Production tab and use a writable Data Chip. The Master Catalog Chip is protected. Its first row changes to
 **Input → Chip**, followed by the RF bar and four Battery slots. Insert a Data
 Chip and one eligible block, either into Input or by right-clicking the
 processing enclosure with the held block. The machine scans the block with
@@ -163,7 +163,7 @@ Registry identities and frame assembly requirements are unchanged.
 
 With JEI installed, the **Matter Infuser** category shows iron-to-Matter
 production and Battery Module charging. The **Synthesis Tower** category shows
-one Matter Block becoming each of the three default Cores, with the 8,000 RF
+one Matter Block becoming each of the three default Cores, with the 16,000 RF
 cost and twenty-second minimum. Select the matching design in Production
 before inserting Matter; recipe browsing does not change the tower's selected
 or running design. The Infuser supports ordinary recipe transfer into its

@@ -34,9 +34,31 @@ final class SynthesisDigitizeLiveChecks {
         if(stage==4){if(ticks<20||mc.player.inventory.currentItem!=0||mc.player.getHeldItemMainhand().getCount()!=2||mc.player.getPositionEyes(1).squareDistanceTo(eye)>.025)return false;BlockPos hit=new BlockPos(target);need(mc.playerController.processRightClickBlock(mc.player,mc.world,hit,EnumFacing.NORTH,target,EnumHand.MAIN_HAND)==EnumActionResult.SUCCESS,"enclosure accepts real held-block packet");stage=5;ticks=0;return false;}
         if(stage==5){if(ticks<15)return false;server(mc,()->{EntityPlayerMP p=player(mc);TileEntityConstructor t=tile(p.world);need(t.synthesisInventory().getStackInSlot(0).getItem()==net.minecraft.item.Item.getItemFromBlock(Blocks.GLASS)&&t.synthesisInventory().getStackInSlot(0).getCount()==1&&p.getHeldItemMainhand().getCount()==1,"held block transfers exactly once into enclosure");ItemStack battery=new ItemStack(ModItems.BATTERY_MODULE);ModuleBatteryData.receive(battery,10000,false);t.synthesisInventory().setStackInSlot(2,battery);t.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);});stage=6;ticks=0;return false;}
         if(stage==6){if(ticks<40||!tile(mc.world).processing())return false;TileEntityConstructor client=tile(mc.world);partial=client.getUpdateTag();renderReverse(mc,client,output);stage=7;ticks=0;return false;}
-        if(stage==7){boolean done=mc.getIntegratedServer().callFromMainThread(()->{TileEntityConstructor t=tile(player(mc).world);return !t.processing()&&t.synthesisInventory().getStackInSlot(0).isEmpty()&&!BlockRecipeData.read(t.getStackInSlot(0)).isEmpty();}).get();if(!done)return false;server(mc,()->{TileEntityConstructor t=tile(player(mc).world);need(BlockRecipeData.read(t.getStackInSlot(0)).getItem()==net.minecraft.item.Item.getItemFromBlock(Blocks.GLASS),"actual powered scan creates glass Catalog");need(t.getStackInSlot(0).getMetadata()==2&&t.batteryEnergy()==2000,"company retained and scan spends exactly 8000RF");});System.out.println("[vandorlabs] synthesis-digitize-client PASS checks="+checks+" realMode/window/tabVisibility/enclosureSurvivalTransfer reversePixels 8000RF exactCatalog");return true;}
+        if(stage==7){boolean done=mc.getIntegratedServer().callFromMainThread(()->{TileEntityConstructor t=tile(player(mc).world);return !t.processing()&&t.synthesisInventory().getStackInSlot(0).isEmpty()&&!BlockRecipeData.read(t.getStackInSlot(0)).isEmpty();}).get();if(!done)return false;server(mc,()->{TileEntityConstructor t=tile(player(mc).world);need(BlockRecipeData.read(t.getStackInSlot(0)).getItem()==net.minecraft.item.Item.getItemFromBlock(Blocks.GLASS),"actual powered scan creates glass Catalog");need(t.getStackInSlot(0).getMetadata()==2&&t.batteryEnergy()==2000,"company retained and scan spends exactly 8000RF");});renderFinishedBlock(mc,tile(mc.world),output);System.out.println("[vandorlabs] synthesis-digitize-client PASS checks="+checks+" realMode/window/tabVisibility/enclosureSurvivalTransfer reversePixels 8000RF exactCatalog");return true;}
         return false;
     }
+    private static void renderFinishedBlock(Minecraft mc,TileEntityConstructor tile,File output)throws Exception{
+        NBTTagCompound original=tile.getUpdateTag();
+        try{
+            NBTTagCompound finished=original.copy();
+            NBTTagCompound work=finished.getCompoundTag("Synthesis");
+            work.removeTag("Mode");work.removeTag("WorkCost");work.setBoolean("Active",false);work.setInteger("Work",0);
+            work.setString("BuildingRecipe",BlockRecipeData.ID);
+            tile.handleUpdateTag(finished);
+            BufferedImage empty=SynthesisTowerLiveChecks.tower(mc,tile,20,155);
+            tile.synthesisInventory().setStackInSlot(1,new ItemStack(Blocks.STONE));
+            BufferedImage first=SynthesisTowerLiveChecks.tower(mc,tile,20,155);
+            BufferedImage later=SynthesisTowerLiveChecks.tower(mc,tile,53,155);
+            int visible=0;
+            for(int y=119;y<205;y++)for(int x=173;x<232;x++){
+                need(first.getRGB(x,y)==later.getRGB(x,y),"finished block remains still across render times");
+                if(first.getRGB(x,y)!=empty.getRGB(x,y))visible++;
+            }
+            need(visible>300,"finished placed block appears in chamber: "+visible);
+            javax.imageio.ImageIO.write(first,"png",new File(output,"synthesis-finished-vanilla.png"));
+        }finally{tile.handleUpdateTag(original);}
+    }
+
     private static void renderReverse(Minecraft mc,TileEntityConstructor tile,File output)throws Exception{
         NBTTagCompound original=tile.getUpdateTag();try{NBTTagCompound early=original.copy();early.getCompoundTag("Synthesis").setInteger("Work",2000);early.setBoolean("SynthesisWorking",false);tile.handleUpdateTag(early);BufferedImage a=SynthesisTowerLiveChecks.tower(mc,tile,20,155);NBTTagCompound late=early.copy();late.getCompoundTag("Synthesis").setInteger("Work",6000);tile.handleUpdateTag(late);BufferedImage b=SynthesisTowerLiveChecks.tower(mc,tile,20,155);int changed=0;for(int y=0;y<a.getHeight();y++)for(int x=0;x<a.getWidth();x++)if(a.getRGB(x,y)!=b.getRGB(x,y))changed++;need(changed>25,"actual emitted reverse scan visibly removes material: "+changed);javax.imageio.ImageIO.write(a,"png",new File(output,"synthesis-digitize-early.png"));javax.imageio.ImageIO.write(b,"png",new File(output,"synthesis-digitize-late.png"));}finally{tile.handleUpdateTag(original);}
     }

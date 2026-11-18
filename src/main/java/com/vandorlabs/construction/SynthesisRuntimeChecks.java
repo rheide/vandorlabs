@@ -66,15 +66,23 @@ public final class SynthesisRuntimeChecks {
             TileEntityConstructor legacy=new TileEntityConstructor();NBTTagCompound previous=tile.writeToNBT(new NBTTagCompound());previous.removeTag("Synthesis");previous.removeTag("SynthesisActivation");legacy.synthesisInventory().setStackInSlot(0,new ItemStack(matter));legacy.readFromNBT(previous);require(legacy.synthesisInventory().getSlots()==6&&legacy.synthesisInventory().getStackInSlot(0).isEmpty()&&!legacy.processing()&&legacy.synthesisActivation()==0,"previous-release absent runtime clears stale inventory and defaults always");
             for(int design=0;design<3;design++){
                 tile.selectDesign(design);tile.synthesisInventory().setStackInSlot(0,new ItemStack(matter));
-                for(int tick=0;tick<400;tick++){
+                for(int tick=0;tick<com.vandorlabs.machines.SynthesisRecipePolicy.CORE_TICKS;tick++){
                     world.setTotalWorldTime(++time);
                     net.minecraft.tileentity.TileEntity port=world.getTileEntity(tile.synthesisPowerPort());
                     IEnergyStorage energy=port.getCapability(CapabilityEnergy.ENERGY,EnumFacing.SOUTH);
                     require(energy!=null,"back power port");require(!port.hasCapability(CapabilityEnergy.ENERGY,EnumFacing.NORTH),"power rejects interior face");
                     require(energy.receiveEnergy(1000,true)==20,"simulation admits bounded work");
                     require(energy.receiveEnergy(1000,false)==20,"tick rate bounded");require(energy.receiveEnergy(1000,false)==0,"repeated transfer same tick rejected");
-                    tile.update();if(tick<399)require(tile.working(),"actual powered work enables lasers");
-                    if(tick==90){float progress=tile.buildProgress();tile.configureSynthesisRedstone(1,com.vandorlabs.redstone.ChannelList.EMPTY);world.setTotalWorldTime(++time);require(energy.receiveEnergy(20,false)==0,"paused no battery has no RF sink");tile.update();require(tile.buildProgress()==progress&&!tile.working(),"paused exact progress and lasers off");NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());TileEntityConstructor reload=new TileEntityConstructor();reload.setWorld(world);reload.setPos(root);reload.readFromNBT(saved);world.setTileEntity(root,reload);tile=reload;require(tile.processing()&&tile.synthesisInventory().getStackInSlot(0).isEmpty(),"saved work retains consumed input");require(tile.synthesisActivation()==1&&!tile.synthesisEnabled()&&tile.buildProgress()==progress,"paused reload exact progress/mode");tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);}
+                    tile.update();if(tick<com.vandorlabs.machines.SynthesisRecipePolicy.CORE_TICKS-1)require(tile.working(),"actual powered work enables lasers");
+                    if(tick==90){float progress=tile.buildProgress();tile.configureSynthesisRedstone(1,com.vandorlabs.redstone.ChannelList.EMPTY);world.setTotalWorldTime(++time);require(energy.receiveEnergy(20,false)==0,"paused no battery has no RF sink");tile.update();require(tile.buildProgress()==progress&&!tile.working(),"paused exact progress and lasers off");NBTTagCompound saved=tile.writeToNBT(new NBTTagCompound());
+                        if(design==0){
+                            NBTTagCompound oldJob=saved.copy();
+                            oldJob.getCompoundTag("Synthesis").removeTag("WorkCost");
+                            TileEntityConstructor oldJobTile=new TileEntityConstructor();
+                            oldJobTile.readFromNBT(oldJob);
+                            require(oldJobTile.processing()&&oldJobTile.buildProgress()==progress*2,"pre-upgrade job retains original 8000 RF target");
+                        }
+                        TileEntityConstructor reload=new TileEntityConstructor();reload.setWorld(world);reload.setPos(root);reload.readFromNBT(saved);world.setTileEntity(root,reload);tile=reload;require(tile.processing()&&tile.synthesisInventory().getStackInSlot(0).isEmpty(),"saved work retains consumed input");require(tile.synthesisActivation()==1&&!tile.synthesisEnabled()&&tile.buildProgress()==progress,"paused reload exact progress/mode");tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);}
                 }
                 require(!tile.processing()&&ItemStack.areItemsEqual(tile.synthesisInventory().getStackInSlot(1),SynthesisRuntime.result(design)),"selected core completed");
                 require(tile.batteryEnergy()==0,"no built-in battery");tile.synthesisInventory().extractItem(1,1,false);
@@ -83,12 +91,15 @@ public final class SynthesisRuntimeChecks {
             IEnergyStorage pausedPower=world.getTileEntity(tile.synthesisPowerPort()).getCapability(CapabilityEnergy.ENERGY,EnumFacing.SOUTH);
             require(pausedPower.receiveEnergy(20,false)==20&&tile.batteryEnergy()==20,"disabled tower charges battery");
             com.vandorlabs.rack.ModuleBatteryData.receive(tile.synthesisInventory().getStackInSlot(2),9980,false);tile.selectDesign(0);tile.synthesisInventory().setStackInSlot(0,new ItemStack(matter));tile.update();require(!tile.processing(),"disabled tower preserves queued matter");tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);
-            for(int tick=0;tick<400;tick++){world.setTotalWorldTime(++time);tile.update();}
-            require(!tile.processing()&&tile.batteryEnergy()==2000&&ItemStack.areItemsEqual(tile.synthesisInventory().getStackInSlot(1),SynthesisRuntime.result(0)),"battery alone pays exact RF cost");tile.synthesisInventory().extractItem(1,1,false);tile.synthesisInventory().extractItem(2,1,false);
+            ItemStack secondBank=new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE);
+            com.vandorlabs.rack.ModuleBatteryData.receive(secondBank,10000,false);
+            tile.synthesisInventory().setStackInSlot(3,secondBank);
+            for(int tick=0;tick<com.vandorlabs.machines.SynthesisRecipePolicy.CORE_TICKS;tick++){world.setTotalWorldTime(++time);tile.update();}
+            require(!tile.processing()&&tile.batteryEnergy()==4000&&ItemStack.areItemsEqual(tile.synthesisInventory().getStackInSlot(1),SynthesisRuntime.result(0)),"two charged banks spend exactly 16000 RF");tile.synthesisInventory().extractItem(1,1,false);tile.synthesisInventory().extractItem(2,1,false);tile.synthesisInventory().extractItem(3,1,false);
             for(boolean sourceFirst:new boolean[]{false,true}){
                 tile.synthesisInventory().setStackInSlot(2,new ItemStack(com.vandorlabs.items.ModItems.BATTERY_MODULE));com.vandorlabs.rack.ModuleBatteryData.receive(tile.synthesisInventory().getStackInSlot(2),4000,false);tile.synthesisInventory().setStackInSlot(0,new ItemStack(matter));
                 IEnergyStorage input=world.getTileEntity(tile.synthesisPowerPort()).getCapability(CapabilityEnergy.ENERGY,EnumFacing.SOUTH);
-                for(int tick=0;tick<400;tick++){world.setTotalWorldTime(++time);if(sourceFirst)require(input.receiveEnergy(20,false)==20,"source-first feeds work");tile.update();if(!sourceFirst)require(input.receiveEnergy(20,false)==20,"source-after replenishes battery");if(tick<399)require(tile.processing(),"one work budget bounds duration");}
+                for(int tick=0;tick<com.vandorlabs.machines.SynthesisRecipePolicy.CORE_TICKS;tick++){world.setTotalWorldTime(++time);if(sourceFirst)require(input.receiveEnergy(20,false)==20,"source-first feeds work");tile.update();if(!sourceFirst)require(input.receiveEnergy(20,false)==20,"source-after replenishes battery");if(tick<com.vandorlabs.machines.SynthesisRecipePolicy.CORE_TICKS-1)require(tile.processing(),"one work budget bounds duration");}
                 require(!tile.processing()&&tile.batteryEnergy()==4000,"external power preserves battery balance independent of tick order "+sourceFirst);tile.synthesisInventory().extractItem(1,1,false);tile.synthesisInventory().extractItem(2,1,false);
             }
             BlockPos chestPos=tile.cell(0,0,2).offset(tile.facing().rotateYCCW());world.setBlockState(chestPos,net.minecraft.init.Blocks.CHEST.getDefaultState());

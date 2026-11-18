@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.builders;
 
 import com.mojang.serialization.Dynamic;
+import com.vandorlabs.credentials.CatalogChipPolicy;
 import com.vandorlabs.neoforge.credentials.*;
 import com.vandorlabs.neoforge.inventory.NativeInventoryItems;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
@@ -64,8 +65,15 @@ public final class NativeBlockRecipeData {
   if(!legacy&&!NbtUtils.writeBlockState(state(stack)).equals(tag.getCompound("State")))throw new IllegalArgumentException("Block recipe state mismatch");return stack.copy();
  }
  private static CompoundTag encode(ItemStack stack,HolderLookup.Provider registries){var tag=new CompoundTag();tag.putInt("Version",VERSION);tag.put("Stack",NativeInventoryItems.write(stack.copyWithCount(1),registries));tag.put("State",NbtUtils.writeBlockState(state(stack)));if(tag.sizeInBytes()>MAX_BYTES)throw new IllegalArgumentException("Block recipe too large");return tag;}
+ public static boolean canDigitizeChip(ItemStack chip){
+  if(!NativeCredentialItems.accepts(chip,true))return false;
+  var root=chip.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).getUnsafe();
+  var tag=root.contains("ChipType")?root:root.getCompound(NativeCredentialItems.LEGACY_KEY).getCompound("tag");
+  return !CatalogChipPolicy.isMaster(tag.getString("ChipType"),tag.getString("CatalogName"),tag.contains("CatalogBlock",Tag.TAG_COMPOUND));
+ }
  public static void write(ItemStack chip,ItemStack input,HolderLookup.Provider registries){
-  if(!NativeCredentialItems.accepts(chip,true)||!eligible(input))throw new IllegalArgumentException("This block cannot be digitized");var template=encode(input,registries);var root=chip.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();for(String key:List.of("JournalTitle","JournalPages","JournalFont","NavigationLocation","NavigationMapPixels","VehicleDesign","VehicleDesignCodec","VehicleShape","VehicleName","Catalog","CatalogBlock","CatalogName"))root.remove(key);
+  if(!canDigitizeChip(chip))throw new IllegalArgumentException("Digitize requires a writable Data Chip. The Master Catalog is protected.");
+  if(!eligible(input))throw new IllegalArgumentException("This block cannot be digitized");var template=encode(input,registries);var root=chip.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();for(String key:List.of("JournalTitle","JournalPages","JournalFont","NavigationLocation","NavigationMapPixels","VehicleDesign","VehicleDesignCodec","VehicleShape","VehicleName","Catalog","CatalogBlock","CatalogName"))root.remove(key);
   var catalog=new CompoundTag();catalog.putInt("Version",1);var designs=new CompoundTag();var ids=new ListTag();ids.add(StringTag.valueOf(ID));designs.put("synthesis_tower",ids);catalog.put("Designs",designs);root.putString("ChipType","catalog");String label=input.getHoverName().getString();root.putString("CatalogName",label.substring(0,Math.min(40,label.length())));root.put("Catalog",catalog);root.put("CatalogBlock",template);chip.set(DataComponents.CUSTOM_DATA,CustomData.of(root));chip.set(DataComponents.CUSTOM_NAME,Component.literal("Catalog Chip ("+root.getString("CatalogName")+")"));
  }
  private static ItemStack legacy(CompoundTag raw,CompoundTag oldState,HolderLookup.Provider registries){

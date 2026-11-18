@@ -31,8 +31,8 @@ recipes; a powered Synthesis Tower can subsequently produce all three designs.
 Right-click the formed tower or use the Configurizer on a reserved member to
 open the same Production dialog. Select a design from the list; its textured,
 rotating preview shows the complete multiblock. Supply one Programmable Matter
-Block in the Matter slot. One Core costs **8,000 RF**, consumed at **20 RF per
-tick**, for a minimum of twenty seconds at normal server speed.
+Block in the Matter slot. One Core costs **16,000 RF**, consumed at **20 RF per
+tick**, for a minimum of forty seconds at normal server speed.
 
 Install up to four **10,000 RF Battery Modules** in the flush four-bay rack or
 its four dialog slots, for **40,000 RF** total, or connect an external RF source.

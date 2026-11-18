@@ -8,6 +8,9 @@ public final class CatalogChipPolicy {
   {"synthesis_tower_core","assembly_press_core","enclosed_gantry_core","standalone_antenna_core","standalone_dish_core","vector_fold_array_core","meridian_drive_core","longburn_drive_core","oculus_drive_core","vehicle_controller","programmable_ramp"},
   {"data_chip","access_card","battery_module","autopilot_module","navigation_data_module"},
   {"gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","landing_ski","landing_plate","square_coupler","vehicle_coupler_slab"}};
+ public static boolean isMaster(String chipType,String catalogName,boolean hasDigitizedTemplate){
+  return "catalog".equals(chipType)&&"Master".equals(catalogName)&&!hasDigitizedTemplate;
+ }
  public static boolean machine(String id){for(String machine:MACHINES)if(machine.equals(id))return true;return false;}
  public static boolean valid(String id){if(id==null||id.isEmpty()||id.length()>MAX_ID)return false;for(int i=0;i<id.length();i++){char c=id.charAt(i);if(!(c>='a'&&c<='z'||c>='0'&&c<='9'||c=='_'))return false;}return true;}
  public static List<String> master(String machine){for(int i=0;i<MACHINES.length;i++)if(MACHINES[i].equals(machine))return Collections.unmodifiableList(Arrays.asList(MASTER[i].clone()));return Collections.emptyList();}

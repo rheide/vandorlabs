@@ -4,6 +4,7 @@ import com.vandorlabs.blocks.*;
 import com.vandorlabs.tiles.*;
 import com.vandorlabs.machines.*;
 import com.vandorlabs.items.*;
+import com.vandorlabs.programmer.CatalogChipData;
 import net.minecraft.block.Block;
 import net.minecraft.item.*;
 import net.minecraft.nbt.*;
@@ -24,7 +25,17 @@ public final class SynthesisDigitizeChecks {
         for(Block block:ModBlocks.BLOCKS)if(Item.getItemFromBlock(block)!=net.minecraft.init.Items.AIR&&(block instanceof BlockConstructorCore||block instanceof BlockPropulsionLight||block instanceof BlockRampController||block instanceof BlockVehicleController))need(BlockRecipeData.eligible(new ItemStack(block)),"supported machine/controller "+block);
         for(int preset=0;preset<4;preset++)need(BlockRecipeData.eligible(AppliancePresets.stack(preset)),"configured programmable AC faces "+preset);
         ItemStack inventory=new ItemStack(Blocks.FURNACE);NBTTagCompound data=new NBTTagCompound(),contents=new NBTTagCompound();contents.setTag("Items",new NBTTagList());data.setTag("BlockEntityTag",contents);inventory.setTagCompound(data);need(!BlockRecipeData.eligible(inventory),"never digitize inventories");
-        need(tile.setDigitizing(true),"idle tower enters Digitize");ItemStack sample=new ItemStack(Blocks.STONE_SLAB,1,3),chip=new ItemStack(ModItems.DATA_CHIP,1,4);tile.setInventorySlotContents(0,chip);need(tile.synthesisInventory().insertItem(0,sample,false).isEmpty(),"single physical sample input");need(!tile.setDigitizing(false),"occupied mode switch refused");
+        need(tile.setDigitizing(true),"idle tower enters Digitize");ItemStack sample=new ItemStack(Blocks.STONE_SLAB,1,3),chip=new ItemStack(ModItems.DATA_CHIP,1,4);ItemStack master=CatalogChipData.masterStack();
+        tile.setInventorySlotContents(0,master);
+        need(tile.synthesisInventory().insertItem(0,sample,false).isEmpty(),"single physical sample input");
+        IEnergyStorage probe=tile.getCapability(CapabilityEnergy.ENERGY,EnumFacing.SOUTH);
+        if(probe==null)probe=world.getTileEntity(tile.synthesisPowerPort()).getCapability(CapabilityEnergy.ENERGY,EnumFacing.SOUTH);
+        need(probe!=null&&probe.receiveEnergy(20,true)==0&&probe.receiveEnergy(20,false)==0&&!tile.processing(),"Master Catalog cannot start Digitize");
+        need(ItemStack.areItemStacksEqual(master,tile.getStackInSlot(0))&&ItemStack.areItemStacksEqual(sample,tile.synthesisInventory().getStackInSlot(0)),"Master Catalog and sample retained");
+        boolean refused=false;
+        try{BlockRecipeData.write(master,sample);}catch(IllegalArgumentException expected){refused=true;}
+        need(refused&&ItemStack.areItemStacksEqual(master,CatalogChipData.masterStack()),"direct write protects Master Catalog");
+        tile.setInventorySlotContents(0,chip);need(!tile.setDigitizing(false),"occupied mode switch refused");
         for(int i=0;i<200;i++)power(world,tile);need(tile.processing()&&tile.buildProgress()==.5F,"half scan requires half RF");need(ItemStack.areItemStacksEqual(sample,tile.synthesisInventory().getStackInSlot(0))&&tile.getStackInSlot(0).getTagCompound()==null,"input and blank chip stay physically owned until completion");
         NBTTagCompound partial=tile.writeToNBT(new NBTTagCompound());TileEntityConstructor loaded=new TileEntityConstructor();loaded.setWorld(world);loaded.setPos(tile.getPos());loaded.readFromNBT(partial);world.setTileEntity(tile.getPos(),loaded);tile=loaded;DeferredTileLoad.flush(world);tile.refreshInputs();tile.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);need(tile.digitizing()&&tile.processing()&&tile.buildProgress()==.5F,"partial scan reload resumes exact work");for(int i=0;i<200;i++)power(world,tile);
         need(!tile.processing()&&tile.synthesisInventory().getStackInSlot(0).isEmpty()&&tile.synthesisInventory().getStackInSlot(1).isEmpty(),"completion consumes exactly one sample, no block output");ItemStack catalog=tile.getStackInSlot(0).copy();need(catalog.getMetadata()==4&&ItemStack.areItemStacksEqual(sample,BlockRecipeData.read(catalog)),"chip company and exact slab variant preserved");need(tile.builderRecipes().contains(BlockRecipeData.ID),"inserted scanned block available to tower");need(com.vandorlabs.programmer.ProgrammerJournalView.from(catalog).designs.contains(BlockRecipeData.ID),"Catalog screen can resolve scanned design");

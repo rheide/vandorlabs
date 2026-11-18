@@ -60,11 +60,31 @@ public final class SynthesisTowerRenderer {
                 IBlockState state=Block.getBlockFromItem(result.getItem()).getDefaultState();
                 if(state.getBlock() instanceof BlockConstructorCore){core(state,progress);if(processing&&tile.working())lasers(((BlockConstructorCore)state.getBlock()).design,progress,now);}
                 else if(processing){fabrication(tile,result,progress);}
-                else if(!processing){GlStateManager.pushMatrix();try{GlStateManager.translate(CORE_X+.5,CORE_Y+.5,CORE_Z+.5);BuilderRecipePreview.renderItem(result,(float)(now*1.4));}finally{GlStateManager.popMatrix();}}
+                else if(!result.isEmpty()&&result.getItem() instanceof net.minecraft.item.ItemBlock){
+                    IBlockState placed=com.vandorlabs.machines.BlockRecipeData.state(result);
+                    if("minecraft".equals(placed.getBlock().getRegistryName().getResourceDomain()))finishedBlock(tile,placed);
+                    else fabrication(tile,result,1);
+                }
             }
             if(!tile.synthesis()&&(processing||!output.isEmpty()))fabrication(tile,processing?tile.builderResult(tile.buildDesign()):output,processing?tile.buildProgress():1);
             screen(tile,blueprint,now,presentation);
         }finally{Tessellator.getInstance().getBuffer().setTranslation(0,0,0);GlStateManager.popMatrix();}
+    }
+    private static void finishedBlock(TileEntityConstructor tile,IBlockState state){
+        Minecraft mc=Minecraft.getMinecraft();
+        BlockRendererDispatcher dispatcher=mc.getBlockRendererDispatcher();
+        int tint=mc.getBlockColors().colorMultiplier(state,tile.getWorld(),tile.getPos(),0);
+        GlStateManager.pushMatrix();
+        try(TurntableRenderState ignored=new TurntableRenderState()){
+            GlStateManager.translate(CORE_X,CORE_Y,CORE_Z);
+            if(state.getBlock().getBlockLayer()==net.minecraft.util.BlockRenderLayer.TRANSLUCENT){
+                GlStateManager.enableBlend();
+                GlStateManager.tryBlendFuncSeparate(770,771,1,0);
+            }
+            mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+            dispatcher.getBlockModelRenderer().renderModelBrightnessColor(state,dispatcher.getModelForState(state),1,
+                    (tint>>16&255)/255F,(tint>>8&255)/255F,(tint&255)/255F);
+        }finally{GlStateManager.popMatrix();}
     }
     private static void core(IBlockState state,double amount){
         if(!(state.getBlock() instanceof com.vandorlabs.blocks.BlockConstructorCore))return;
