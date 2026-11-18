@@ -16,7 +16,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Programmable viewscreens | partial (seven roles enabled; focused runtime checks pass) | partial | non-vehicle first |
 | Console, input and diagonal screen variants | partial (seven roles enabled; focused runtime checks pass) | partial | non-vehicle first |
 | Ordinary programmable Glass | partial (public Glass, dedicated editor and source-matched rendering enabled) | unimplemented | non-vehicle first |
-| Canopy and cockpit glass | shared settings/geometry/contact/motion | canonical standalone family | Vehicle/carried integration deferred |
+| Canopy and cockpit glass | standalone Canopies enabled | canonical standalone family | Vehicle/carried integration deferred |
 | Programmable and large doors (Segmented Doors tracked separately) | partial (ordinary and Large Doors enabled) | unimplemented | non-vehicle first |
 | Trapdoors and diagonal trapdoors | partial (both enabled) | unimplemented | non-vehicle first |
 | Programmable lights and propulsion | partial (Lights and standalone propulsion enabled) | unimplemented | non-vehicle first |
@@ -25,27 +25,27 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three builders, Matter Infuser, Battery and Hexagonal Fuel Tank enabled; other machines deferred) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, limited Press production, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
-| Navigation tables | pending | unimplemented | non-vehicle first |
+| Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
-| Cockpits and peripherals | pending | unimplemented | standalone first; carried integration deferred |
+| Cockpits and peripherals | cockpit assemblies, Advanced Pilot Chair and Yoke and Screen missing | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled) | unimplemented | standalone first; vehicle effects deferred |
-| Turntables | pending | unimplemented | non-vehicle first |
-| Industrial table | pending | partial | non-vehicle first |
+| Turntables | Programmable Surfaces enabled; rotation controller and moving display missing | unimplemented | non-vehicle first |
+| Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
 | Programmable armor | pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
-| Compatibility integrations | pending | unimplemented | non-vehicle first |
+| Compatibility integrations | native JEI machine recipes and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
-| Copy Controllers and shared surfaces | pending | unimplemented | non-vehicle first |
+| Copy Controllers and shared surfaces | public Surfaces; transactional Copy Controller is development-only | unimplemented | non-vehicle first |
 | Standalone Extenders and rotating arms | partial (regular/Large joined and independent arms enabled) | unimplemented | non-vehicle first |
 | Track assemblies | partial (canonical Track enabled; vehicle integration deferred) | unimplemented | non-vehicle first |
 
 Historical partial work includes programmable cubes, slabs/stairs, flat walls/portholes, screens, mounted controls, wireless endpoints, Industrial Tables and filesystem materials. The JSON retains their branch-specific descriptions and remaining gaps under explicitly historical fields. Registration, compilation and shared fixtures alone do not establish parity.
 
-Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. Segmented Doors and the supported standalone arm family now have native adapters and focused acceptance; native Copy Controllers, turntables and tracks remain pending. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
+Current master adds Segmented Doors, Copy Controllers, tracks and expanded standalone arm behavior beyond the historical inventory. Segmented Doors and the supported standalone arm family now have native adapters and focused acceptance; Tracks and stationary side wheels are public. The Turntable Controller is missing and the Copy Controller is opt-in. Turntables and Copy Controllers must share surface topology handling without stale drawing roots or continuous rescanning. Standalone arms require joined and independent assemblies, all mounting faces, materialized endpoint edits, client ownership, reversal and recovery coverage. Preserve current registry IDs, saved defaults and failed-load snapshots.
 
 Every integrated family requires shared policy, native persistence and permissions, bounded server-authoritative round trips, subsequent-process reload, and inspected client geometry/dialog/animation output. Ownership transfers additionally require durable recovery and abrupt-restart/partial-save checks. Use focused Forge regressions as changes land; preserve the final exact-artifact release gate. Dual-JDK contracts and modern startup checks remain distinct from runtime and visual acceptance. Compatibility integrations need native equivalents or an explicit unsupported status.
 
@@ -59,7 +59,7 @@ Native cube inventory samples now use the shared grid without consuming items. O
 
 Optional component-renderer sampling, configuration dispatch to unconverted families, carried assemblies and the full production chain remain incomplete. Reloads do not discover new files.
 
-The native Duplifier now registers its canonical tool, dedicated options menu, original shaped recipe and copied-settings recipe. Focused actual-player checks cover options transport, connected application, Undo and stale windows. Both vanilla crafting containers pass ordinary pickup and quick-move consumption with exact outputs and the complete tool remainder; loaded production-recipe replay passes all 6,076 baseline and 7,872 configured Source cases. Canopy target adapters have private placement/history checks; final public Canopy/Ramp integration remains pending. See the [crafting contract](native-copifier-crafting.md).
+The native Duplifier now registers its canonical tool, dedicated options menu, original shaped recipe and copied-settings recipe. Focused actual-player checks cover options transport, connected application, Undo and stale windows. Both vanilla crafting containers pass ordinary pickup and quick-move consumption with exact outputs and the complete tool remainder; loaded production-recipe replay passes all 6,076 baseline and 7,872 configured Source cases. Canopy player placement, shared settings and Undo have focused coverage. The native Ramp settings and crafting adapters are in place; combined player acceptance remains open. See the [crafting contract](native-copifier-crafting.md).
 
 The current control increment adds the native Trigger and four handheld transmitter tiers. Dedicated save/restart and actual chunk unload/reload fixtures cover their channel delivery and saved configuration. Subsequent increments below cover mounted controls and world endpoints; additional inline source families remain incomplete. Focused client dialog, emitted-model/reload and ordinary interaction checks also pass. These are development-classpath/software-rendered results; exact packaged-JAR and hardware shader acceptance remain separate.
 

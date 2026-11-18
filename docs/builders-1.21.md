@@ -1,9 +1,11 @@
 # Builder machines on Minecraft 1.21.1
 
 This native slice covers the Synthesis Tower, Assembly Press and Enclosed Gantry,
-with their three Core items. Other Core multiblocks remain outside this conversion. The native
-[Matter Infuser](matter-and-storage.md) supplies Matter Ingots and charges modules. The Assembly Press and Enclosed Gantry form their
-finished structures; Core production belongs to the Synthesis Tower.
+with their three Core items. The native
+[Matter Infuser](matter-and-storage.md) supplies Matter Ingots and charges
+modules. The Press produces Navigation Data Modules from a permitting Catalog
+Chip. The Gantry forms its finished structure. Core production and Digitize
+use the Synthesis Tower.
 
 ## Build and form a machine
 
@@ -96,7 +98,9 @@ The three Core block/item models use the supplied Heavy Constructor, Automated
 Fabricator and Industrial Printer cuboids and their original 64×64 atlases.
 Their occupied geometry also drives bottom-up fabrication, including the
 textured faces of partially printed rows. Inventory icons retain visible padding.
-This native conversion does not register the other ten Forge Core families.
+The [Survey Dish and Sentinel Array](navigation-displays.md) have their own
+native adapters. The six Forge drive and navigation computer Cores remain
+unavailable.
 
 With JEI installed, **Matter Infuser** lists iron conversion and Battery Module
 charging; **Synthesis Tower** lists the three Core outputs and their RF/time

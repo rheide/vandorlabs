@@ -272,9 +272,8 @@
         "space_visor_5x1_double_height"
       ],
       "remaining": [
-        "Ordinary Glass configured item/placement, dedicated editor, placed-world rendering and contained-fluid bucket acceptance before canonical activation",
-        "Standalone canopy/cockpit-glass geometry, reservations, opening behavior and native bindings",
-        "Broader copy-tool, resource-pack, shader/hardware and final native release acceptance"
+        "Broader copy-tool, resource-pack, shader/hardware and final native release acceptance.",
+        "Cockpit-specific and vehicle-carried glass integration."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
@@ -285,7 +284,8 @@
         "Registered common ray hook preserves the union outline while tracing actual component boxes: a real ServerLevel.clip union-corner negative is fixed, with 43 inside/tie/neighbor/fluid-context/worker checks.",
         "Actual Source/native fluid probes preserve Glass material solidity: 152 profiles match, and flowing host replacements fall from 144 to zero.",
         "Existing wall geometry and shared collision-cache checks remain green; 100,000 actual worker reads of prepared geometry allocate zero measured bytes. Canonical ordinary Glass is now enabled with its original block/item/entity/menu identities.",
-        "Canonical ordinary Glass recipes, Survival placement/harvest, two-sided fluids, dedicated editor, chunk/pane rendering, all 304 padded item variants and actual pick/reload/restart paths pass focused checks."
+        "Canonical ordinary Glass recipes, Survival placement/harvest, two-sided fluids, dedicated editor, chunk/pane rendering, all 304 padded item variants and actual pick/reload/restart paths pass focused checks.",
+        "Canonical standalone Canopy family is enabled with configured placement, opening, contacts and recovery."
       ],
       "acceptance_limits": [
         "Standalone canopy and cockpit glass remain pending; Vehicle integration is deferred.",
@@ -645,9 +645,10 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Drive, navigation and other Core multiblocks remain outside the three-builder slice",
-        "Native builder arm carrying and Copy Controller adapters remain deferred",
-        "Full release-gate and hardware shader acceptance remain separate from focused development checks"
+        "Extend the Assembly Press catalog and enable Enclosed Gantry production.",
+        "Convert the six remaining drive and navigation computer Cores.",
+        "Add arm carrying and Copy Controller support for formed builder machines.",
+        "Complete native release and shader acceptance."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
@@ -659,7 +660,8 @@
         "Asynchronous durable formation, dismantling and mining with exact owned input/output/battery/chip drops and abrupt partial-save recovery",
         "Powered Synthesis production, physical RF/item ports, standard Redstone activation/channels, authenticated inventory dialog and textured rotating previews",
         "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication",
-        "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog."
+        "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog.",
+        "Synthesis Tower supports Digitize and the Assembly Press produces Navigation Data Modules. Printer and Scanner include redstone control and sided automation."
       ]
     },
     {
@@ -687,23 +689,28 @@
     },
     {
       "id": "navigation",
-      "label": "Navigation tables",
+      "label": "Navigation tables and standalone observers",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "navigation_table_angled",
         "navigation_table_flat"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native table rendering and input",
-        "shared navigation/display policy",
-        "custom display sources",
-        "live parity"
+        "Broader copy and third-party integration; native Vehicle navigation remains deferred."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "modern_registered_block_ids": [
+        "navigation_table_angled",
+        "navigation_table_flat",
+        "standalone_antenna_core",
+        "standalone_dish_core"
+      ],
+      "implemented": [
+        "Standalone tables, compatible Screen and Console displays, map chips and coverage modules, inverted and arm-carried observers, and live observer sweeps."
+      ]
     },
     {
       "id": "ramps",
@@ -1034,7 +1041,7 @@
       "id": "copy_controllers",
       "label": "Copy Controllers and shared surfaces",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "historical_neoforge_1_21_1": "unimplemented",
       "legacy_block_ids": [
         "copy_controller"
@@ -1042,11 +1049,12 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Native Copy Controller adapter, copy ownership and restart recovery.",
-        "Focused copy-controller runtime and rendering acceptance."
+        "Complete real-player dialog acceptance and enable ordinary public registration.",
+        "Expand supported targets and complete focused player and rendering acceptance."
       ],
       "implemented": [
-        "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair."
+        "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair.",
+        "The opt-in Copy Controller has a native material transaction and focused dedicated rollback and partial-save recovery coverage."
       ]
     },
     {

@@ -1,21 +1,18 @@
 # Multiversion development baseline
 
-Forge 1.12.2 remains the default development target on `master`, at development version 2.11.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
+Forge 1.12.2 remains the default development target on `master`, at development version 1.12.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
 
 ## Current conversion boundary
 
-The current new multiblock scope is limited to Synthesis Tower, Assembly Press
-and Enclosed Gantry and their cores, plus the standalone Matter Infuser. Other
-Core multiblocks remain deferred. Existing native families retain their previously integrated
-scope; Native Vehicle Mode remains deferred. Shared portable Java 8 policies
-continue to provide common behavior with platform-specific lifecycle and
-rendering adapters.
-The Forge 2.10.0 release review is complete, using the full frozen baseline
-inventory and relevant repair reruns; see the [validation boundaries](../release-compatibility-2.10.md#validation-boundaries).
-The separate native checks do not establish full conversion parity. The 2.10 follow-ups include public
-native Module Racks and shared Single / Double arm hinges with Inward / Outward
-Kink relative to Fold. Forge Battery chunk loading now defers facing reads until
-loading settles, avoiding recursive capability initialization in existing pipe networks.
+The remaining work targets non-Vehicle parity. Current NeoForge builds include
+Synthesis Tower Synthesis and Digitize, Assembly Press Navigation Data Module
+production, the Enclosed Gantry structure, the Matter Infuser, local
+navigation and observers, and Printer/Scanner automation. The remaining
+builder recipes, six Forge drive/navigation Cores, Turntable Controller,
+public Copy Controller, programmable armor, and standalone cockpit families
+remain open alongside the Ramp and compatibility limits in the
+[feature inventory](feature-coverage.md). Native Vehicle Mode and
+vehicle-carried navigation remain deferred.
 
 ## Integrated scope
 
@@ -23,7 +20,7 @@ loading settles, avoiding recursive capability initialization in existing pipe n
 - Shared catalog/material identities, housing persistence, geometry policies, channel indices and latch policies.
 - Shared dialog dimensions, picker input, inventory sampling, option rows, reverse cycling and explicit immediate-versus-confirmed edit behavior.
 - Native matter/materials, programmable cubes and filesystem PNGs; Trigger and handheld transmitters; buttons, rockers, power levers, four-step throttles and Wall Sliders; directional wireless transmitter/receiver blocks.
-- Current glass persistence and dialog policy, stair persistence and exact geometry, slab placement/merge decisions, wall/porthole saved-setting policy, and scalar slab/stair artwork selection and UV policy. Native glass is pending; slabs/stairs now have registered gameplay foundations with their shared configuration and material-render adapters integrated. Broader native acceptance remains deferred.
+- Current glass persistence and dialog policy, stair persistence and exact geometry, slab placement/merge decisions, wall/porthole saved-setting policy, and scalar slab/stair artwork selection and UV policy. Ordinary and diagonal Glass, standalone Canopies, slabs and stairs have native gameplay, configuration and rendering adapters. Broader native acceptance remains deferred.
 - Ordinary and Large native Doors with shared authored rendering, dedicated editors, credential ownership, moved-leaf interactions and canonical saved-world acceptance. Segmented Doors are also enabled after canonical dedicated/restart and real-client acceptance; closed terrain-render handoff now has focused rendered acceptance. Regular and diagonal Trapdoors are enabled after canonical dedicated/restart and actual-client acceptance.
 - A generation-wide bounded native mounted-model cache, and a regression baseline for the existing compact, lazy fluid geometry.
 
@@ -33,14 +30,13 @@ The [coverage inventory](feature-coverage.md) distinguishes integrated slices fr
 
 Start from `master`, not the old conversion branch. Use `feature/neoforge-1.21.1` as a historical reference; its slabs, walls, screens and fluid code predate current Forge behavior. Additional historical references are `wip/industrial-table-port` and `wip/wall-item-goldens`. Review and adapt their behavior rather than merging them wholesale.
 
-The original native conversion stopping point covers four families below. Additional [2.9 feature follow-ups](2.9-feature-followups.md) are also in scope before the testing handoff, including Forge-only Vehicle improvements; native Vehicle Mode remains deferred. The full release gate waits until after user testing. Use applicable focused checks while adapters change. Finish the other feature follow-ups before deeper Ramp runtime work, then continue Ramp conversion. If remaining quota reaches 10%, find a stable stopping point and retain the integrated subset with unfinished work preserved remotely.
-
 | Family | Integrated state | Remaining acceptance |
 | --- | --- | --- |
-| Card Chip Programmer | Canonical public block, item, menu and rendering; construction guide; focused player, mining and restart acceptance | User testing |
-| Canopies | Canonical eleven standalone components, original recipes, configured placement, dedicated editor, contacts, terrain/BER artwork, ordered motion and loaded ownership repair; actual player and restart acceptance | User testing; Vehicle/carried integration deferred |
-| Ramp Controllers | Canonical public Controller/Slab items and recipes; shared editor; scheduled deployment and belts; durable source/actor checkpoints, healthy restart and interrupted return; focused connected-player, six-face and exact-retention checks | Broader native actor roles and external ownership adapters, cross-entity-chunk actor handoff, active Source world import and the deferred final release gate |
-| Copifier | Canonical public tool, dedicated options, connected settings and Undo across converted targets; actual copied-settings recipes, three-state artwork and public Canopy player acceptance | Final Ramp integration and combined user testing |
+| Card Chip Programmer | Canonical public block, item, menu and rendering; focused player, mining and restart acceptance | User testing |
+| Canopies | Canonical eleven standalone components, configured placement, dedicated editor, contacts, rendering, ordered motion and loaded ownership repair | User testing; vehicle integration deferred |
+| Ramp Controllers | Public Controller/Slab items and recipes, scheduled deployment and belts, durable source and actor checkpoints | Broader actor roles and external ownership adapters, cross-entity-chunk handoffs, active Forge 1.12.2 world import |
+| Copy Controller | Development-only controller with pad binding, material withdrawal and rollback/restart checks; public Programmable Surfaces | Real player dialog, public activation and broader supported targets |
+| Duplifier | Public settings copying and Undo on converted targets, including public Canopy behavior and the Ramp settings adapter | Broader combined player acceptance |
 
 Screens, standalone propulsion and standalone credential readers are already publicly registered. Their focused acceptance is recorded below and in the family contracts. Vehicle/carried effects remain deferred.
 
@@ -53,7 +49,9 @@ Building-family foundations now include stationary contained fluids and native b
 - Slab UP/DOWN facing uses the existing horizontal UV fallback; its housing stays horizontal. Reuse `ScreenHousingMesh` side crops and keep cube image-plane joining out of slab behavior.
 - Current fluid geometry coalesces runs and defers face creation. The historical eager Cartesian implementation is not a suitable replacement. The experimental `wip/fluid-run-kernel-performance` branch is deferred because its generic extraction increased warmed allocation cost; it is not accepted production code.
 
-The current priority is slabs, stairs, walls, diagonals and portholes, followed by doors, Segmented Doors and trapdoors, then lights. Other remaining families include screens, glass, storage, machines, navigation, tools, armor, compatibility adapters and standalone mechanisms. Arms, ramps, Segmented Doors, Copy Controllers and turntables remain part of non-vehicle parity, including their durable recovery requirements. Native vehicle driving, articulation and carried-specific behavior remain deferred until non-vehicle parity and its final gate are complete.
+The rest of this document preserves earlier conversion and release evidence.
+For current registration and remaining work, use the family table above and
+the [coverage inventory](feature-coverage.md).
 
 ## Validation and release boundary
 
