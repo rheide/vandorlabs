@@ -567,7 +567,7 @@ tasks.register('generateNavigationObserverResources', Exec) {
               'generateLightResources', 'generateProgrammerResources', 'generatePropulsionResources',
               'generateRampHousingResources', 'generateReaderResources', 'generateScreenCatalog',
               'generateScreenItemResources', 'generateScreenMediaResources', 'generateSegmentedResources',
-              'generateStorageResources', 'generateTrapdoorResources'
+              'generateStorageResources', 'generateTrapdoorResources', 'generateArmorResources'
     commandLine pythonExecutable, 'generate_navigation_observer_resources.py'
     inputs.file('generate_navigation_observer_resources.py')
     inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/radar')
@@ -600,3 +600,19 @@ tasks.register('generateApplianceResources', Exec) {
 }
 tasks.named('processResources') { dependsOn 'generateApplianceResources' }
 tasks.named('generateMatterResources') { inputs.file('generate_appliance_resources.py'); inputs.file('../../src/portable/java/com/vandorlabs/appliance/ApplianceCatalog.java') }
+
+sourceSets.main.resources.srcDir('build/generated/armor-resources')
+tasks.register('generateArmorResources', Exec) {
+    workingDir projectDir
+    commandLine pythonExecutable, 'generate_armor_resources.py'
+    inputs.file('generate_armor_resources.py')
+    inputs.file('../../generated-resources/assets/vandorlabs/data/armor_textures.json')
+    inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/items/armor')
+    inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/models/armor')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/item/armor')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/recipes') {
+        include 'programmable_helmet.json', 'programmable_chestplate.json', 'programmable_leggings.json', 'programmable_boots.json'
+    })
+    outputs.dir('build/generated/armor-resources')
+}
+tasks.named('processResources') { dependsOn 'generateArmorResources' }
