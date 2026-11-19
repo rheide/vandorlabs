@@ -14,6 +14,8 @@ public final class NativeDoorWaterGush {
     private NativeDoorWaterGush(){}
     public static void update(NativeProgrammableDoorEntity owner,boolean stop){
         Level level=owner.getLevel();if(level==null||level.isClientSide)return;
+        // The existing outlet bits describe horizontal neighbors of two upright cells.
+        if(owner instanceof NativeLargeDoorEntity largeOwner&&largeOwner.isHorizontal())return;
         BlockPos lower=owner.getBlockPos();var base=owner.getBlockState();
         Block block=base.getBlock();boolean large=block instanceof NativeLargeDoorBlock;
         if((!large&&!(block instanceof NativeProgrammableDoorBlock))||base.getValue(NativeProgrammableDoorBlock.HALF)!=DoubleBlockHalf.LOWER)return;

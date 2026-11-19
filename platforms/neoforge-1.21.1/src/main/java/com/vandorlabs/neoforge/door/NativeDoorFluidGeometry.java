@@ -8,10 +8,11 @@ import net.minecraft.world.phys.AABB;
 
 /** Closed separating plane plus current physical leaf cells; immutable, level-free published data. */
 public final class NativeDoorFluidGeometry {
-    public record Plane(int x,int z,double near,double far) {
-        public int side(double px,double py,double pz){return px*x+py*0D+pz*z<(near+far)/2?0:1;}
+    public record Plane(int x,int y,int z,double near,double far) {
+        public Plane(int x,int z,double near,double far){this(x,0,z,near,far);}
+        public int side(double px,double py,double pz){return px*x+py*y+pz*z<(near+far)/2?0:1;}
         private double[] cuts(int normal){List<Double> cuts=new ArrayList<>();cuts.add(.5);if(normal!=0)for(double edge:new double[]{near,far}){double cut=edge/normal;if(cut>0&&cut<1)cuts.add(cut);}return cuts.stream().mapToDouble(Double::doubleValue).toArray();}
-        public double[][] cuts(){return new double[][]{cuts(x),new double[]{.5},cuts(z)};}
+        public double[][] cuts(){return new double[][]{cuts(x),cuts(y),cuts(z)};}
     }
     public record Snapshot(Plane plane,NativeFluidVolume volume){}
     private NativeDoorFluidGeometry(){}
