@@ -26,7 +26,10 @@ final class NativeLargeDoorJoins {
     }
 
     static boolean compatible(NativeDoorSettings first,NativeDoorSettings second){
-        return eligible(first)&&eligible(second)&&first.same(second);
+        var a=first.door();
+        var b=second.door();
+        return eligible(first)&&eligible(second)&&first.panelMode()==second.panelMode()&&first.depth()==second.depth()
+                &&a.sliding==b.sliding&&a.direction==b.direction&&a.framed==b.framed&&a.trigger==b.trigger;
     }
 
     static LargeDoorJoin.Group<NativeLargeDoorEntity> group(NativeLargeDoorEntity root){
@@ -35,14 +38,20 @@ final class NativeLargeDoorJoins {
 
     private static LargeDoorJoin.Group<NativeLargeDoorEntity> group(NativeLargeDoorEntity root,boolean enabled){
         Level level=root.getLevel();
-        if(!enabled||level==null||!eligible(root.settings())||root.opaqueCredential(0)||root.opaqueCredential(1)||root.placementRecovery()||!NativeLargeDoorLifecycle.complete(level,root))
+        if(!enabled||level==null||!eligible(root.settings())||!emptyReaders(root)||root.placementRecovery()||!NativeLargeDoorLifecycle.complete(level,root))
             return LargeDoorJoin.singleton(root);
         var face=root.getBlockState().getValue(NativeLargeDoorBlock.FACING);
         return LargeDoorJoin.resolve(root,(x,y)->{
             var position=NativeLargeDoorLifecycle.cell(root.getBlockPos(),face,root.isHorizontal(),x*LargeDoorJoin.PITCH,y*LargeDoorJoin.PITCH);
             var candidate=anchor(level,position,face,root.isHorizontal());
-            return candidate!=null&&candidate.joinEnabled()&&!candidate.opaqueCredential(0)&&!candidate.opaqueCredential(1)&&compatible(root.settings(),candidate.settings())?candidate:null;
+            return candidate!=null&&candidate.joinEnabled()&&emptyReaders(candidate)&&compatible(root.settings(),candidate.settings())?candidate:null;
         });
+    }
+
+    private static boolean emptyReaders(NativeLargeDoorEntity root){
+        var projection=root.readerProjection();
+        return !root.opaqueCredential(0)&&!root.opaqueCredential(1)
+                &&!projection.front().visual().occupied()&&!projection.rear().visual().occupied();
     }
 
     static NativeLargeDoorEntity anchor(Level level,BlockPos pos,Direction face,boolean horizontal){

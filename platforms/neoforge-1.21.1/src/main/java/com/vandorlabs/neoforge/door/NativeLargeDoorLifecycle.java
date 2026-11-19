@@ -44,7 +44,7 @@ public final class NativeLargeDoorLifecycle {
         }
         return true;
     }
-    private static NativeLargeDoorEntity supportDoor(Level level,BlockPos anchor,Direction face,boolean horizontal){
+    static NativeLargeDoorEntity supportDoor(Level level,BlockPos anchor,Direction face,boolean horizontal){
         var below=cell(anchor,face,horizontal,0,-3);
         var support=NativeLargeDoorJoins.anchor(level,below,face,horizontal);
         return support!=null&&solidSupport(level,below,face,horizontal)?support:null;

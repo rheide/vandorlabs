@@ -71,12 +71,17 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
     private void send(){if(channels!=null){var parsed=ChannelList.parse(channels.getValue());if(parsed!=null)lastValidChannels=parsed;}PacketDistributor.sendToServer(new DoorSettingsPayload(menu.tile.getBlockPos(),menu.containerId,edit(),lastValidChannels));}
     private void sendFrame(){frames=frameDraft;PacketDistributor.sendToServer(new DoorFramePayload(menu.tile.getBlockPos(),menu.containerId,frames));}
     private void sendGlass(){PacketDistributor.sendToServer(new DoorGlassPayload(menu.tile.getBlockPos(),menu.containerId,glass));}
+    @Override protected void containerTick(){
+        super.containerTick();
+        if(menu.tile instanceof NativeLargeDoorEntity large&&join!=large.joinEnabled()){
+            join=large.joinEnabled();
+            rebuild(false);
+        }
+    }
     public void action(int id,int direction){
         if(picker!=null)picker.closeInventory();if(id==1){if(validChannels()){send();onClose();}return;}if(id>=190&&id<=194){page=id-190;rebuild(true);return;}if(id==3000||id==3001){frameFace=id-3000;rebuild(true);return;}
         if(id==23&&menu.tile.large()&&(join||canJoin())){
-            join=!join;
-            PacketDistributor.sendToServer(new LargeDoorJoinPayload(menu.tile.getBlockPos(),menu.containerId,join));
-            rebuild(false);
+            PacketDistributor.sendToServer(new LargeDoorJoinPayload(menu.tile.getBlockPos(),menu.containerId,!join));
             return;
         }
         switch(id){case 10->motion=SpaceDoorDialog.nextMotion(motion,menu.tile.large(),direction);case 12,3008->framed=!framed;case 13->{depth=DialogInput.cycle(depth,3,direction);panelMode=SpaceDoorDialog.panelAfterPosition(panelMode,depth);}case 15->{if(!motion.sliding)hinges=!hinges;}case 16->trigger=DialogInput.cycle(trigger,3,direction);case 17->panelMode=SpaceDoorDialog.nextPanel(panelMode,depth,direction);case 18->layout=DialogInput.cycle(layout,3,direction);case 19->securityMode=SpaceDoorDialog.nextSecurity(securityMode,direction);case 20->{glass=new NativeDoorGlass(glass.material,glass.shade,DialogInput.cycle(glass.tint,GlassTextures.TINT_COUNT,direction),glass.layout);sendGlass();rebuild(false);return;}case 21->{glass=new NativeDoorGlass(glass.material,glass.shade,glass.tint,DialogInput.cycle(glass.layout,3,direction));sendGlass();rebuild(false);return;}case 22->{glass=NativeDoorGlass.DEFAULT;sendGlass();rebuild(false);return;}default->{return;}}
