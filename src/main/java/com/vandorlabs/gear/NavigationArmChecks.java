@@ -15,8 +15,8 @@ public final class NavigationArmChecks {
             int radius=NavigationRange.radius(tile.core().design.equals("standalone_dish")?NavigationRange.SURVEY_BASE:NavigationRange.SENTINEL_BASE,expected.y,tile.observerScale());
             if(NavigationSources.radius(tile)!=radius)throw new IllegalStateException("Observer retained construction-height radius");
             java.util.List<NavigationSources.Area> areas=NavigationSources.matching(arm.getWorld(),new BlockPos(expected),ChannelList.of(47));
-            boolean found=false;for(NavigationSources.Area area:areas)if(area.x==MathHelper.floor(expected.x)&&area.z==MathHelper.floor(expected.z)&&area.radius==radius)found=true;
-            if(!found)throw new IllegalStateException("Captured observer missing from physical channel coverage phase="+arm.progress()+" height="+expected.y);
+            if(!areas.isEmpty()||!NavigationSources.noPower(arm.getWorld(),new BlockPos(expected),ChannelList.of(47)))
+                throw new IllegalStateException("Captured observer lost its unpowered link phase="+arm.progress()+" height="+expected.y);
         }
     }
     public static void snapshot(TileEntityConstructor tile){

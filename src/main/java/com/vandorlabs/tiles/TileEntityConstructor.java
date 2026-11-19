@@ -14,31 +14,35 @@ import net.minecraft.util.math.*;
 public final class TileEntityConstructor extends TileEntitySecuredDisplay implements ITickable {
     private final com.vandorlabs.navigation.ObserverPower observerPower=new com.vandorlabs.navigation.ObserverPower();
     private boolean observerPowerVisual;
-    private final net.minecraftforge.energy.IEnergyStorage observerEnergy=new net.minecraftforge.energy.IEnergyStorage(){
-        @Override public int receiveEnergy(int maximum,boolean simulate){
-            return acceptsObserverPower()?observerPower.receive(world.getTotalWorldTime(),maximum,simulate):0;
-        }
-        @Override public int extractEnergy(int maximum,boolean simulate){return 0;}
-        @Override public int getEnergyStored(){return acceptsObserverPower()?observerPower.received(world.getTotalWorldTime()):0;}
-        @Override public int getMaxEnergyStored(){return com.vandorlabs.navigation.ObserverPower.RF_PER_TICK;}
-        @Override public boolean canExtract(){return false;}
-        @Override public boolean canReceive(){return acceptsObserverPower();}
-    };
-
-    private boolean acceptsObserverPower(){
-        return world instanceof net.minecraft.world.WorldServer&&!isInvalid()&&!changing&&world.isBlockLoaded(pos,false)
-                &&((net.minecraft.world.WorldServer)world).getMinecraftServer().isCallingFromMinecraftThread()
-                &&world.getTileEntity(pos)==this&&observer()&&formed()&&!com.vandorlabs.gear.ArmTransactions.locked(world,pos);
+    private net.minecraftforge.energy.IEnergyStorage observerEnergy;
+    net.minecraftforge.energy.IEnergyStorage createObserverInput(TileEntityConstructorPart member){
+        return new net.minecraftforge.energy.IEnergyStorage(){
+            @Override public int receiveEnergy(int maximum,boolean simulate){
+                return canReceive()?observerPower.receive(world.getTotalWorldTime(),maximum,simulate):0;
+            }
+            @Override public int extractEnergy(int maximum,boolean simulate){return 0;}
+            @Override public int getEnergyStored(){return canReceive()?observerPower.received(world.getTotalWorldTime()):0;}
+            @Override public int getMaxEnergyStored(){return com.vandorlabs.navigation.ObserverPower.RF_PER_TICK;}
+            @Override public boolean canExtract(){return false;}
+            @Override public boolean canReceive(){return acceptsObserverPower(member);}
+        };
+    }
+    boolean acceptsObserverPower(TileEntityConstructorPart member){
+        if(!(world instanceof net.minecraft.world.WorldServer)||isInvalid()||changing||!world.isBlockLoaded(pos,false)
+                ||!world.getMinecraftServer().isCallingFromMinecraftThread()||world.getTileEntity(pos)!=this
+                ||!observer()||!formed()||com.vandorlabs.gear.ArmTransactions.locked(world,pos))return false;
+        BlockPos inlet=member==null?pos:member.getPos();
+        return inlet.getY()==pos.getY()-(inverted()?structureHeight()-1:0)
+                &&(member==null||member.machineOwner()==this&&!com.vandorlabs.gear.ArmTransactions.locked(world,inlet));
     }
     public boolean observerPowered(){
         if(world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
         return world!=null&&(world.isRemote?observerPowerVisual:observerPower.powered(world.getTotalWorldTime()));
     }
-    <T>T machineCapability(net.minecraftforge.common.capabilities.Capability<T> cap,BlockPos at,EnumFacing side){
-        if(cap==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&side==EnumFacing.DOWN&&acceptsObserverPower()){
-            int bottom=pos.getY()-(inverted()?structureHeight()-1:0);
-            if(at.getY()==bottom&&!com.vandorlabs.gear.ArmTransactions.locked(world,at))
-                return net.minecraftforge.energy.CapabilityEnergy.ENERGY.cast(observerEnergy);
+    private <T>T machineCapability(net.minecraftforge.common.capabilities.Capability<T> cap,BlockPos at,EnumFacing side){
+        if(cap==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&side==EnumFacing.DOWN&&acceptsObserverPower(null)){
+            if(observerEnergy==null)observerEnergy=createObserverInput(null);
+            return net.minecraftforge.energy.CapabilityEnergy.ENERGY.cast(observerEnergy);
         }
         return synthesisCapability(cap,at,side);
     }

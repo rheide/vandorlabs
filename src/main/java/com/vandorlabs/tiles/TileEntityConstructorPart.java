@@ -15,9 +15,20 @@ public final class TileEntityConstructorPart extends TileEntity implements net.m
         if(root instanceof TileEntityConstructor && ((TileEntityConstructor)root).formed())return;
         world.setBlockState(pos,matter?net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("vandorlabs:programmable_matter_block")).getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),3);
     }
-    private TileEntityConstructor machineOwner(){if(world==null||isInvalid()||!world.isBlockLoaded(owner(),false)||world.getTileEntity(pos)!=this)return null;TileEntity raw=world.getTileEntity(owner());return raw instanceof TileEntityConstructor?(TileEntityConstructor)raw:null;}
-    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> cap,net.minecraft.util.EnumFacing side){TileEntityConstructor root=machineOwner();return root!=null&&root.machineCapability(cap,pos,side)!=null||super.hasCapability(cap,side);}
-    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> cap,net.minecraft.util.EnumFacing side){TileEntityConstructor root=machineOwner();T result=root==null?null:root.machineCapability(cap,pos,side);return result!=null?result:super.getCapability(cap,side);}
+    TileEntityConstructor machineOwner(){if(world==null||isInvalid()||!world.isBlockLoaded(pos,false)||!world.isBlockLoaded(owner(),false)||world.getTileEntity(pos)!=this)return null;TileEntity raw=world.getTileEntity(owner());return raw instanceof TileEntityConstructor?(TileEntityConstructor)raw:null;}
+    private TileEntityConstructor observer;
+    private net.minecraftforge.energy.IEnergyStorage observerInput;
+    private <T>T machineCapability(net.minecraftforge.common.capabilities.Capability<T> cap,net.minecraft.util.EnumFacing side){
+        TileEntityConstructor root=machineOwner();
+        if(root==null)return null;
+        if(cap==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&side==net.minecraft.util.EnumFacing.DOWN&&root.acceptsObserverPower(this)){
+            if(root!=observer){observer=root;observerInput=root.createObserverInput(this);}
+            return net.minecraftforge.energy.CapabilityEnergy.ENERGY.cast(observerInput);
+        }
+        return root.synthesisCapability(cap,pos,side);
+    }
+    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> cap,net.minecraft.util.EnumFacing side){return machineCapability(cap,side)!=null||super.hasCapability(cap,side);}
+    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> cap,net.minecraft.util.EnumFacing side){T result=machineCapability(cap,side);return result!=null?result:super.getCapability(cap,side);}
     public BlockPos owner(){return pos.add(offset);}
     public boolean frameMatter(){return matter;}
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setLong("ConstructorOwner",offset.toLong());tag.setBoolean("ConstructorMatter",matter);return tag;}

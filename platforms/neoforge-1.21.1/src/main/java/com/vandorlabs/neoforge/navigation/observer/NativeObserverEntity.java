@@ -5,17 +5,32 @@ public final class NativeObserverEntity extends BlockEntity {
  private UUID key=UUID.randomUUID();private int cornerX,cornerZ,range=16,observerWidth;private NativeObserverDesigns.Design cachedDesign;private boolean inverted,inert,pending,radar=true;private ChannelList channels=ChannelList.EMPTY;private CompoundTag retained=new CompoundTag();
  private final com.vandorlabs.navigation.ObserverPower power=new com.vandorlabs.navigation.ObserverPower();
  private boolean visualPower;
- private final net.neoforged.neoforge.energy.IEnergyStorage input=new net.neoforged.neoforge.energy.IEnergyStorage(){
-  public int receiveEnergy(int maximum,boolean simulate){return canReceive()?power.receive(level.getGameTime(),maximum,simulate):0;}
+ private final Input input=new Input(this,null);
+ static final class Input implements net.neoforged.neoforge.energy.IEnergyStorage {
+  private final NativeObserverEntity observer;
+  private final NativeObserverPartEntity part;
+  Input(NativeObserverEntity observer,NativeObserverPartEntity part){this.observer=observer;this.part=part;}
+  public int receiveEnergy(int maximum,boolean simulate){
+   return canReceive()?observer.power.receive(observer.level.getGameTime(),maximum,simulate):0;
+  }
   public int extractEnergy(int maximum,boolean simulate){return 0;}
-  public int getEnergyStored(){return canReceive()?power.received(level.getGameTime()):0;}
+  public int getEnergyStored(){return canReceive()?observer.power.received(observer.level.getGameTime()):0;}
   public int getMaxEnergyStored(){return com.vandorlabs.navigation.ObserverPower.RF_PER_TICK;}
   public boolean canExtract(){return false;}
-  public boolean canReceive(){return formed()&&available();}
- };
- net.neoforged.neoforge.energy.IEnergyStorage powerInput(BlockPos at,Direction side){
-  int bottom=worldPosition.getY()-(inverted?design().height()-1:0);
-  return side==Direction.DOWN&&at.getY()==bottom&&input.canReceive()?input:null;
+  public boolean canReceive(){return observer.acceptsPower(part);}
+ }
+ boolean bottom(BlockPos at){
+  return at.getY()==worldPosition.getY()-(inverted?design().height()-1:0);
+ }
+ private boolean acceptsPower(NativeObserverPartEntity part){
+  if(!available()||!formed()||!bottom(part==null?worldPosition:part.getBlockPos())
+          ||com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(level,worldPosition))return false;
+  return part==null||part.root()==this
+         &&!com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(level,part.getBlockPos())
+         &&!com.vandorlabs.neoforge.transfer.NativeTransferHolds.reserved(level,part.getBlockPos());
+ }
+ net.neoforged.neoforge.energy.IEnergyStorage powerInput(Direction side){
+  return side==Direction.DOWN&&formed()&&!inert&&bottom(worldPosition)?input:null;
  }
  public boolean powered(){return level!=null&&(level.isClientSide?visualPower:power.powered(level.getGameTime()));}
  public NativeObserverEntity(BlockPos p,BlockState s){super(NativeObserverBindings.ENTITY,p,s);}

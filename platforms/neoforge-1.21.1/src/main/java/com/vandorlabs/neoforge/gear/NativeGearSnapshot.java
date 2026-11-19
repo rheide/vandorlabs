@@ -36,7 +36,7 @@ final class NativeGearSnapshot {
             var fluid=level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,pos,side);
             var energy=level.getCapability(caps,pos,side);
             var items=builder||building(tile)?level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,pos,side):null;
-            if(fluid!=null||external(energy,builder)||external(items,builder))
+            if(fluid!=null||external(energy,builder)&&!com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.nativeInlet(energy)||external(items,builder))
                 throw new IllegalArgumentException("External arm attachment network retained");
         }
     }
