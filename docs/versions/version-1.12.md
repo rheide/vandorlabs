@@ -46,6 +46,10 @@ Trapdoors** can open at the center seam or move together from one edge.
 **Segmented Doors** pasted at another location with WorldEdit animate
 independently from the original.
 
+**Programmable Corner Glass** adds a 45° bevel between two perpendicular
+Middle-position glass panels. A sloped variant is also available.
+[Corner Glass placement and recipes](../gallery/building.md#programmable-corner-glass)
+
 The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured
 Redstone channels. Adjust the height and channels through the chair dialog.

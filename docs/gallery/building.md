@@ -189,3 +189,21 @@ Diagonal placement follows the clicked edge; the dialog can reverse the slope.
 See [placement, joining and recipes](../versions/version-1.1.md#diagonal-building-blocks).
 
 Diagonal glass uses the regular glass one-pixel perimeter artwork on its sloping faces. Perpendicular joined panes suppress internal edge frames; a middle pane joining two bends ends between its connecting arms rather than protruding past the corner. Both regular diagonal walls and glass use the same corrected corner geometry.
+
+### Programmable Corner Glass
+
+Craft **Programmable Corner Glass** from one Programmable Glass block.
+Craft **Programmable Diagonal Corner Glass** from one Programmable Diagonal
+Glass block for the sloped version. Both use the Programmable Glass editor.
+
+1. Place two perpendicular straight Programmable Glass panels along adjacent
+   sides of an empty cell. Use **Middle** for both.
+2. Place the flat Corner Glass against the exposed edge of either panel.
+   Click at the middle depth. The bevel crosses the empty cell and its ends
+   meet the centerlines of the two straight panels.
+3. Enable **Join** on all three panels to hide the rails at the two contacts.
+   Click nearer to or farther from the corner to place an offset bevel.
+
+The sloped version joins other corner panes where their edges align through
+the full height of the contact. Stacked flat corner panes also share their
+horizontal frame edges.

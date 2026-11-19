@@ -2,6 +2,7 @@
 
 ## 1.12.0 (in development)
 
+- Add flat and sloped Programmable Corner Glass. The Middle flat bevel joins two perpendicular Middle glass panels.
 - Leave the rear aperture of Canopy and Long Canopy open while retaining the frame.
 - Choose a center split or a shared near or far hinge for joined Programmable Trapdoors.
 - Keep Segmented Door animations independent when WorldEdit pastes a door at another location.

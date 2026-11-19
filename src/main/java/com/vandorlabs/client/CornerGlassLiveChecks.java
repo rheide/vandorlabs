@@ -31,14 +31,24 @@ final class CornerGlassLiveChecks {
             WorldServer world=mc.getIntegratedServer().getWorld(0);
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
             verify(world,player);
-            world.setBlockState(BASE.add(3,0,3),Blocks.STONE.getDefaultState(),3);
-            player.connection.setPlayerLocation(BASE.getX()+3,BASE.getY()+1,BASE.getZ()+3,135,27);
+            for(int x=1;x<=5;x++)for(int z=1;z<=6;z++)
+                world.setBlockState(BASE.add(x,-1,z),Blocks.QUARTZ_BLOCK.getDefaultState(),3);
+            world.setWorldTime(6000);
+            player.capabilities.allowFlying=true;player.capabilities.isFlying=true;player.sendPlayerAbilities();
+            player.connection.setPlayerLocation(BASE.getX()+4.5,BASE.getY()+.3,BASE.getZ()+5.5,148,17);
         }).get();
         if(ticks<65||!mc.world.isBlockLoaded(BASE)||mc.world.getBlockState(BASE).getBlock()!=Block.getBlockFromName(FLAT)){
             require(ticks<240,"client never received both corner panes");
             return false;
         }
         require(mc.world.getBlockState(BASE.east(2)).getBlock()==Block.getBlockFromName(SLOPED),"sloped model arrived on the client");
+        mc.setRenderViewEntity(mc.player);
+        mc.gameSettings.hideGUI=true;
+        mc.gameSettings.thirdPersonView=0;
+        mc.player.rotationYaw=mc.player.prevRotationYaw=148;
+        mc.player.rotationPitch=mc.player.prevRotationPitch=17;
+        if(ticks<85)return false;
+        require(mc.player.getDistanceSq(BASE.getX()+4.5,BASE.getY()+.3,BASE.getZ()+5.5)<1,"visible fixture camera");
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",
                 new File(output,"corner-glass-middle.png"));
         System.out.println("[vandorlabs][reprolab] corner-glass PASS registers/actual placement/two straight joins/Join off/metadata/sloped profile/client");
