@@ -4,6 +4,7 @@ import argparse,os,shutil
 from pathlib import Path
 from test_transmitter import ROOT,command,run,jdk_home
 from test_sampled_materials import fixture_world
+from connected_player_fixture import run_connected_player
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
@@ -11,7 +12,14 @@ def main():
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument('--recover-world', type=Path, help='Retry cold assertions and reversal in a stopped recovery runtime')
     mode.add_argument('--automatic', action='store_true', help='Check opt-in automatic conversion across cold starts')
+    mode.add_argument('--inventory', action='store_true', help='Check automatic conversion in a connected player inventory')
+    parser.add_argument('--xvfb', action='store_true')
     args = parser.parse_args()
+    if args.inventory:
+        out = run_connected_player('legacy-wheel-inventory', args.xvfb,
+                                   ('vandorlabs.autoConvertLandingGear=true', 'vandorlabs.legacyWheelInventoryChecks=true'))
+        print('Legacy wheel inventory PASS ' + str(out), flush=True)
+        return
     out = Path(artifact_directory(prefix='legacy-migration-', dir=ROOT/'build/test-artifacts'))
     saved = out/'saved-world'
     if args.recover_world:

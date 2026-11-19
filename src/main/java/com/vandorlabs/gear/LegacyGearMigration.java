@@ -2,6 +2,7 @@ package com.vandorlabs.gear;
 
 import com.vandorlabs.VandorLabs;
 import com.vandorlabs.blocks.*;
+import com.vandorlabs.gear.core.LegacyLandingSettings;
 import com.vandorlabs.tiles.TileEntityLandingGear;
 import com.vandorlabs.vehicle.*;
 import net.minecraft.block.Block;
@@ -38,7 +39,7 @@ public final class LegacyGearMigration {
         boolean deployed=before.getValue(BlockTelescopicLandingGear.EXTENDED)&&old.getExtensionPixels()>0;
         float end=before.getValue(BlockTelescopicLandingGear.EXTENDED)?old.getExtensionPixels()/16F:0;
         if(Math.abs(old.progress-end)>.0001)return null;
-        boolean large=old.getSize()>=3;int height=Math.max(1,(old.getExtensionPixels()+15)/16);
+        boolean large=LegacyLandingSettings.usesLargeModularParts(old.getSize());int height=LegacyLandingSettings.modularExtenders(old.getExtensionPixels());
         BlockPos root=source;if(large){if(facing==EnumFacing.EAST)root=root.east();else if(facing==EnumFacing.SOUTH)root=root.east().south();else if(facing==EnumFacing.WEST)root=root.south();}
         Set<BlockPos> owned=new LinkedHashSet<>();
         for(BlockPos at:BlockPos.getAllInBox(source.add(-1,-5,-1),source.add(1,0,1))){
@@ -92,8 +93,8 @@ public final class LegacyGearMigration {
     }
     private static BlockPos minimum(Set<BlockPos> positions){int x=Integer.MAX_VALUE,y=x,z=x;for(BlockPos at:positions){x=Math.min(x,at.getX());y=Math.min(y,at.getY());z=Math.min(z,at.getZ());}return new BlockPos(x,y,z);}
     public static java.util.List<ItemStack> items(ItemStack source){
-        NBTTagCompound old=source.getSubCompound("BlockEntityTag");boolean large=old!=null&&old.getInteger("GearSize")>=3;
-        int height=old==null?1:Math.max(1,(Math.max(0,Math.min(64,old.getInteger("ExtensionPixels")))+15)/16);
+        NBTTagCompound old=source.getSubCompound("BlockEntityTag");boolean large=old!=null&&LegacyLandingSettings.usesLargeModularParts(old.getInteger("GearSize"));
+        int height=old==null?1:LegacyLandingSettings.modularExtenders(old.getInteger("ExtensionPixels"));
         int mode=old==null||!old.hasKey("RedstoneMode")?1:Math.max(0,Math.min(2,old.getInteger("RedstoneMode")));
         com.vandorlabs.redstone.ChannelList channels=old==null?com.vandorlabs.redstone.ChannelList.EMPTY:com.vandorlabs.redstone.ChannelData.read(old,old.getInteger("RedstoneChannel"));
         java.util.List<ItemStack> parts=new java.util.ArrayList<>();int arms=source.getCount()*height;

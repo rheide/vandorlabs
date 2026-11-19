@@ -8,6 +8,9 @@ public final class LegacyLandingSettings {
     public static int mode(boolean present,int value){return present?Math.max(0,Math.min(2,value)):1;}
     public static int pixels(boolean present,int value){return present?Math.round(Math.max(0,Math.min(64,value))/8F)*8:16;}
     public static int size(int value){return Math.max(0,Math.min(4,value));}
+    public static boolean usesLargeModularParts(int size) { return size >= 3; }
+    public static int modularExtenders(int pixels) { return Math.max(1, (Math.max(0, Math.min(64, pixels)) + 15) / 16); }
+
     public static float progress(float value){return Float.isFinite(value)?Math.max(0,Math.min(4,value)):0;}
     public static float target(boolean extended,int pixels){return extended?pixels/16F:0;}
     public static float advance(float progress,float target){return progress<target?Math.min(target,progress+.05F):Math.max(target,progress-.05F);}

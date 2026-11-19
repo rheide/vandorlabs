@@ -12,7 +12,7 @@ Focused dedicated-server checks cover actual Survival placement, retained suppor
 
 The explicit wheeled-conversion request uses a separate typed maintenance family and pure modular after-image preparation. Its decoder proves the complete original Legacy ownership closure, every modular destination field and the exact compatible native neighbors; no unrelated scan-volume cells become reserved. Both original and shifted mounting supports are rechecked without acquiring ownership of them. Common holds pause original Legacy and modular gameplay callbacks until durable retirement.
 
-Focused server checks exercise real pending preparation, disabled saving, a Large source shifted across a chunk boundary, complete feet, compatible native-neighbor opaque data, deployment and reversal. An abrupt halt after durable ARMED intent and saving only the source chunk is followed by original-owner recovery, exact saved fields, a new conversion and reversal. Only typed false `keepPacked` and an empty `NeoForgeData` storage envelope are ignored by metadata comparison; true/wrong-type hints and opaque capability data remain refused for pristine conversion. The operator command covers explicit world-stationary wheel conversion. Legacy inventory and dropped stacks remain intact until their separate physical inventory/entity receipts are accepted.
+Focused server checks exercise real pending preparation, disabled saving, a Large source shifted across a chunk boundary, complete feet, compatible native-neighbor opaque data, deployment and reversal. An abrupt halt after durable ARMED intent and saving only the source chunk is followed by original-owner recovery, exact saved fields, a new conversion and reversal. Only typed false `keepPacked` and an empty `NeoForgeData` storage envelope are ignored by metadata comparison; true/wrong-type hints and opaque capability data remain refused for pristine conversion. The operator command covers explicit world-stationary wheel conversion. Dropped stacks stay in their original item entity. Player inventory conversion is available through the automatic option below.
 
 The modular destination builder prepares immutable cell images without publishing them. Its world-free validator checks all horizontal facings, regular/Large widths, column heights and both endpoints, including complete feet and legacy-packed owner offsets. Compatible native neighbors retain their opaque envelopes. Unknown or forged owner fields are refused; the destination builder grants no mutation authority. Focused native checks cover 64 profiles, compatible-neighbor preservation and malformed-recipe rejection. The destination builder alone does not authorize existing-item conversion or create a player inventory receipt.
 
@@ -22,7 +22,7 @@ With the legacy compatibility adapter enabled, an in-game operator with permissi
 
 The command reports whether it queued a conversion or found one already pending. The requesting operator receives completion or rollback feedback on the same server. If saving is disabled or admission is unavailable, restore saving or correct the stated condition, then retry. The final message includes the modular root coordinates because Large wheels can move their root by one cell during conversion.
 
-The command applies to stationary wheeled blocks. The Configurizer and sneak interaction still open the original dedicated settings menu, while a normal right-click controls the compatibility mechanism. Inventory items, nearby drops and fixed or ski gear keep their existing ownership.
+The command applies to stationary wheeled blocks. The Configurizer and sneak interaction still open the original dedicated settings menu, while a normal right-click controls the compatibility mechanism. The command does not change player inventories, dropped items, fixed gear or ski gear.
 
 Run `python3 test_legacy_migration.py` for queued operator admission, non-operator and invalid-coordinate refusal, a source-only partial save followed by an abrupt halt, cold rollback and retry. Run `python3 test_legacy_migration_client.py --xvfb` for the connected Survival operator's command, obstruction and disabled-saving refusals, retry, durable feedback and updated client owner.
 
@@ -37,3 +37,12 @@ blocks and other landing gear types keep their existing behavior.
 
 Run `python3 test_legacy_migration.py --automatic` to check cold conversion,
 a saving pause and persistence in another server process.
+
+
+With automatic conversion enabled, a recognized wheeled item in a player's
+inventory becomes the matching modular extenders and wheels. The complete
+replacement must fit in that same inventory. Extenders retain the legacy
+trigger mode and channel bank. Named stacks, unrecognized item data and
+ground drops stay intact. Run `python3 test_legacy_migration.py --inventory
+--xvfb` for the connected Survival case with a full inventory followed by a
+free slot.
