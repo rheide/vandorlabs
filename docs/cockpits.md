@@ -1,5 +1,37 @@
 # Cockpits and peripheral controls
 
+## NeoForge 1.21.1
+
+### Build and use a stationary Cockpit
+
+1. Craft the Cockpit in a 3×3 crafting grid. Place three Programmable
+   Viewscreens across the top, Redstone Dust, Pilot Seat and Redstone Dust
+   in the middle, and Iron Ingot, Redstone Dust and Iron Ingot across the bottom.
+   Leave a level 2×2 space and two clear blocks of height.
+
+   ![Cleared Cockpit site and held Cockpit item](images/cockpit-neoforge/cockpit-placement-clearance.png)
+
+2. Place the Cockpit item facing the work area. The seat, console and screen
+   housings form together. If any part of the footprint is obstructed,
+   clear it and retry.
+
+   ![Assembled stationary Cockpit with clear access behind its seat](images/cockpit-neoforge/cockpit-stationary-formed.png)
+
+3. Right-click the seat from behind to sit facing the monitors. Dismount with
+   the usual Minecraft key. In Survival, mine a part with a pickaxe to recover
+   the complete Cockpit as one item.
+
+   ![Seated player above the Cockpit dashboard](images/cockpit-neoforge/cockpit-stationary-seated.png)
+
+The stationary Cockpit currently provides the seat and authored housing with
+blank monitor and touch surfaces. The **Advanced Pilot Chair** offers height
+and numeric armrest sliders. The **Yoke and Screen** can operate Redstone from
+its main display and touch panel. Open its editor with the Configurizer or
+sneak-right-click. The display supports six control rows and the touch panel
+supports three.
+
+## Forge 1.12.2
+
 Cockpit, Advanced Pilot Chair and Yoke and Screen are available in the creative menu.
 
 Cockpit combines a Pilot Seat, vehicle mode controls, independent
@@ -24,7 +56,7 @@ Touch areas default to animated keyboard artwork and use a 2:1 aspect ratio. Sel
 
 The center cockpit screen and the Yoke and Screen display default to Vehicle Status. The left and right screens default to Bridge Bare Pilot and Bridge Bare Engineering. The left keyboard uses Console Controls Navigation Controls, the right uses Console Controls Sensor Controls, and the angled center deck uses Bare Personal Terminal. Surface pickers include Redstone and Vehicle Status modes and support wheel scrolling and scrollbar dragging. Screen backs use Door Interior (Dark), horizontal casing surfaces use Glass Frame Interior, and the casing selector controls the remaining sidewalls. Casing artwork tiles at one texture square per block rather than stretching across broad faces.
 
-Each surface starts with three independent input rows. Selecting **Redstone?** opens the shared redstone screen editor for labels, channels, row order and control type. Add or remove rows up to three per surface; choose toggle, four-position slider with configurable low/high levels, or a one-second pulse. Redstone text uses the surface’s actual proportions, and visible slider segments select their matching output levels. Other artwork remains unobstructed. The output pages also expose each independent control. Operate a row directly on the model. Physical throttles cycle
+Each surface starts with three independent input rows. Selecting **Redstone?** opens the shared redstone screen editor for labels, channels, row order and control type. Add or remove rows up to six on a screen or three on a touch panel. Choose toggle, four-position slider with configurable low/high levels, or a one-second pulse. Redstone text uses the surface’s actual proportions, and visible slider segments select their matching output levels. Other artwork remains unobstructed. The output pages also expose each independent control. Operate a row directly on the model. Physical throttles cycle
 through Off, Low, Medium and High. Their pages use the Thruster Lever’s Low/High settings, with Medium rounded up from their midpoint; the four physical positions stay aligned with those levels. Their output channels can operate separately
 placed thrusters or other channel-controlled blocks. Throttles do not replace the
 craft's physical propulsion or lift requirements.

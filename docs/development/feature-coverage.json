@@ -645,7 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Add arm carrying and provide broader Copy and previous-version import for formed builders.",
+        "Extend carrying, Copy and previous-version import beyond supported complete idle structures and accepted standalone drive data.",
         "Complete native release and shader acceptance."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
@@ -663,7 +663,8 @@
         "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry.",
         "Press and Gantry use authored fabrication beds, scanner beams and connected-player pickup and battery interactions.",
         "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. Vector Fold has its authored active/idle models and boolean Redstone control. The Tower fabricates all four cores with a permitting Catalog Chip.",
-        "Paladyne and Seyr Navigation Computers form from their original Creative-only Cores and show authored Off, Idle and Computing stages."
+        "Paladyne and Seyr Navigation Computers form from their original Creative-only Cores and show authored Off, Idle and Computing stages.",
+        "Mapped standalone Forge drives and computers import known settings and one exact physical chip. Idle production frames can be carried by grid-aligned Extenders. The Tower has dedicated rollback and cold-reversal coverage."
       ]
     },
     {
@@ -778,16 +779,19 @@
       ],
       "remaining": [
         "Port the full casing and touch-panel controls for the stationary Advanced Pilot Chair.",
-        "Port the standalone cockpit assembly and Yoke and Screen. Vehicle motion and carried integration remain deferred."
+        "Port the Cockpit’s active console and throttle functions, sender modes and moving seat. Vehicle motion and carried integration remain deferred."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "standalone_first_vehicle_integration_deferred",
       "modern_registered_block_ids": [
-        "chair_siderests"
+        "chair_siderests",
+        "cockpit",
+        "yoke_screen"
       ],
       "implemented": [
-        "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, exact configured drop and both seated numeric Redstone sliders."
+        "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, exact configured drop and both seated numeric Redstone sliders.",
+        "The Cockpit forms an eight-cell stationary housing and seat. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
       ]
     },
     {
@@ -816,7 +820,7 @@
       ],
       "remaining": [
         "Vehicle-specific landing effects and support admission remain deferred",
-        "Legacy wheel inventory and ground-drop conversion and broader verification of legacy fixed and ski gear."
+        "Legacy wheel ground-drop conversion and broader verification of legacy fixed and ski gear."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],

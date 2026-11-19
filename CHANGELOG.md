@@ -4,13 +4,15 @@
 
 - Form Maxwell, Meridian, Oculus and Vector Fold structures and fabricate their Cores on NeoForge.
 - Form the standalone Paladyne and Seyr Navigation Computers with authored Off, Idle and Computing displays.
-- Copy idle, disconnected Synthesis Towers, Assembly Presses and Enclosed Gantries with empty slots at exact frame cost.
+- Copy idle, disconnected Synthesis Towers, Assembly Presses and Enclosed Gantries with empty slots at exact frame cost. Carry them on grid-aligned Extenders with block pushing off.
+- Import mapped standalone Forge drive and computer snapshots without losing physical chip data.
 - Add the native Advanced Pilot Chair with its authored footprint, adjustable height and two seated armrest sliders.
+- Form and sit in a stationary Cockpit and use the standalone Yoke and Screen’s two Redstone surfaces.
 - Copy complete stationary Navigation Table groups and Survey Dish and Sentinel Array frames at exact material cost on NeoForge.
 - Copy complete stationary regular Programmable Screen layouts without chip or media owners or configured channel controls.
 - Add an opt-in native Turntable with block capture, swept-collision rotation, Redstone and journaled quarter-turn restoration.
 - Show Forge-matched Press and Gantry fabrication, mount interactions and pickup positions on NeoForge.
-- Add opt-in stationary legacy wheel conversion on load or by operator command, and bounded cold Ramp actor recovery for adult cows.
+- Add opt-in legacy wheel conversion on world load or in a player’s inventory and stationary conversion by operator command. Add bounded cold Ramp actor recovery for adult cows.
 - Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge.
 - Preserve native floor and ceiling propulsion wedge geometry and tile data through WorldEdit quarter-turns.
 - Add catalog-gated Ramp Controller production to the native Synthesis Tower and show the four native machine categories in JEI.

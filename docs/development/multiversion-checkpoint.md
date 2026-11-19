@@ -8,9 +8,10 @@ The remaining work targets non-Vehicle parity. Current NeoForge builds include
 Synthesis Tower Synthesis and Digitize, Assembly Press and Enclosed Gantry
 production, the Matter Infuser, local navigation and observers, and
 Printer/Scanner automation, Maxwell, Meridian, Oculus and Vector Fold, and the
-Advanced Pilot Chair with both armrest sliders. Both Navigation Computers are
-now available. Broader Copy Controller targets, renderer-specific armor
-samples and standalone cockpit peripherals remain open. The opt-in Turntable Controller supports
+Advanced Pilot Chair with both armrest sliders. Both Navigation Computers,
+the stationary Cockpit and the Redstone Yoke and Screen are available.
+Broader Copy Controller targets, renderer-specific armor samples and the
+Cockpit’s remaining interactive controls are still open. The opt-in Turntable Controller supports
 Scan, rotation and Restore with Redstone. Riders and moved interactions remain
 open, alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and

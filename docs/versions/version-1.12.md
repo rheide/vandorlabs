@@ -31,7 +31,8 @@ appearance with the Duplifier. Static Light artwork is also available. [Programm
 The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured
 Redstone channels. Adjust the height and channels through the chair dialog.
-[Chair and cockpit guide](../cockpits.md)
+The **Cockpit** forms a stationary seat and console, and **Yoke and Screen**
+operates Redstone from both displays. [Chair and cockpit guide](../cockpits.md)
 
 With WorldEdit 7.3.8, turning a clipboard also rotates the corner of floor
 and ceiling propulsion wedges. JEI lists the four native machine categories
@@ -43,7 +44,8 @@ a Programmable Surface, turn them and restore them to the world from the dialog 
 Redstone inputs. Enable it
 with `-Dvandorlabs.turntableControllers=true`. [Native Turntable guide](../development/native-turntable.md)
 
-Imported stationary wheels can be converted on load with
+Imported stationary wheels and eligible wheel items in a player inventory
+can be converted with
 `-Dvandorlabs.autoConvertLandingGear=true`. [Legacy landing gear](../development/native-legacy-landing.md)
 
 See the [NeoForge coverage inventory](../development/feature-coverage.md) for
