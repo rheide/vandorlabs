@@ -26,6 +26,7 @@ import net.minecraft.world.level.block.RotatedPillarBlock;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.StairBlock;
+import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.entity.HangingSignBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -126,8 +127,7 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
                 if (tileBytes > LIMITS.bytes()) throw new IllegalArgumentException("Turntable tile data exceeds 8 MiB");
             }
             var cell = new NativeRawCell(pos, state, saved, MAX_TILE_BYTES);
-            cell.stage(world, candidate -> candidate.getClass() == SignBlockEntity.class
-                    || candidate.getClass() == HangingSignBlockEntity.class, Objects::equals);
+            cell.stage(world, NativeTurntableCapture::supportsTile, Objects::equals);
             cells.add(cell);
         }
         var snapshot = new NativeTransferSnapshot(cells, LIMITS);
@@ -179,6 +179,10 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
         }
         if (state.isAir() || state.getBlock().getClass() == net.minecraft.world.level.block.Block.class) return state;
         throw new IllegalArgumentException("No native sideways orientation for the captured block");
+    }
+
+    static boolean supportsTile(BlockEntity candidate) {
+        return candidate.getClass() == SignBlockEntity.class || candidate.getClass() == HangingSignBlockEntity.class;
     }
 
     private static void requireSupported(BlockState state) {

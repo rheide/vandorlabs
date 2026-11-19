@@ -98,6 +98,7 @@ public final class NativeTurntableCaptureChecks {
             need(intermediate.atHeading(-heading).matches(world, Objects::equals), "endpoint inverse " + heading);
         }
         System.out.println("[vandorlabs][turntable-capture] PASS checks=" + checks);
+        event.getServer().halt(false);
     }
 
     private static void need(boolean condition, String description) {

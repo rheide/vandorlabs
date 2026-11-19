@@ -207,7 +207,7 @@ public final class NativeCellTransactions {
     private static String message(Throwable failure){while((failure instanceof ExecutionException||failure instanceof CompletionException)&&failure.getCause()!=null)failure=failure.getCause();String value=failure.getMessage();if(value==null)value=failure.getClass().getSimpleName();return value.length()>512?value.substring(0,512):value;}
     interface Fault {void check(String stage,Header header,int cell);}
     static Fault fault;
-    private static void fault(String stage,Operation<?> op,int cell){if(fault!=null&&Boolean.getBoolean("vandorlabs.cellJournalChecks"))fault.check(stage,op.header,cell);}
+    private static void fault(String stage,Operation<?> op,int cell){if(fault!=null&&(Boolean.getBoolean("vandorlabs.cellJournalChecks")||Boolean.getBoolean("vandorlabs.cellJournalFaults")))fault.check(stage,op.header,cell);}
     @SubscribeEvent public static void tick(ServerTickEvent.Post event){if(FAMILIES.isEmpty())return;for(var world:event.getServer().getAllLevels()){var state=state(world);if(!state.ready||!state.error.isEmpty()||state.operations.isEmpty())continue;for(var op:List.copyOf(state.operations.values()))poll(world,state,op);}}
     @SubscribeEvent public static void startup(ServerStartingEvent event){
         var root=event.getServer().getWorldPath(LevelResource.ROOT).resolve("vandorlabs/cell-journals");
