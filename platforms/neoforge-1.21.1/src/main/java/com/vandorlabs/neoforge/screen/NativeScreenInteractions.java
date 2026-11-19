@@ -19,6 +19,7 @@ public final class NativeScreenInteractions {
         if(level instanceof ServerLevel server&&!NativeRedstoneChannels.open(server))return false;
         if(!(level.getBlockEntity(pos) instanceof NativeScreenEntity owner)||owner.inert()||owner.isRemoved()||owner.getLevel()!=level||!(owner.getBlockState().getBlock() instanceof NativeScreenBlock block)||block.family()!=owner.family())return false;
         Vec3 start=player.getEyePosition().subtract(Vec3.atLowerCornerOf(pos));double reach=Math.min(8,player.blockInteractionRange());Vec3 end=start.add(Vec3.directionFromRotation(player.getXRot(),player.getYRot()).scale(reach));
+        if(owner.yoke())return activateYoke(owner,player,start,end);
         if(NativeScreenNavigation.activate(owner,player,hand,start,end))return true;
         if(NativeScreenChipInteractions.activate(owner,player,hand,start,end))return true;
         for(int slot=0;slot<2;slot++)if(owner.family().supportsSlot(slot)){
@@ -33,5 +34,30 @@ public final class NativeScreenInteractions {
             return true;
         }
         return false;
+    }
+
+    private static boolean activateYoke(NativeScreenEntity owner,Player player,Vec3 start,Vec3 end){
+        Level level=owner.getLevel();
+        if(!player.mayUseItemAt(owner.getBlockPos(),net.minecraft.core.Direction.UP,player.getMainHandItem()))return false;
+        Vec3 offset=Vec3.atLowerCornerOf(owner.getBlockPos());
+        var worldHit=level.clip(new net.minecraft.world.level.ClipContext(start.add(offset),end.add(offset),
+            net.minecraft.world.level.ClipContext.Block.OUTLINE,net.minecraft.world.level.ClipContext.Fluid.NONE,player));
+        if(worldHit.getType()!=net.minecraft.world.phys.HitResult.Type.BLOCK||!worldHit.getBlockPos().equals(owner.getBlockPos()))
+            return false;
+        int selected=-1;
+        NativeYokeGeometry.Face.Sample closest=null;
+        for(int slot=0;slot<2;slot++){
+            var controls=owner.controls(slot);
+            if(!controls.enabled())continue;
+            var sample=NativeYokeGeometry.face(owner.getBlockState(),slot).sample(start,end,controls.rows().size());
+            if(sample!=null&&(closest==null||sample.time()<closest.time())){closest=sample;selected=slot;}
+        }
+        if(closest==null)return false;
+        if(!level.isClientSide){
+            var row=owner.controls(selected).rows().get(closest.row());
+            if(row.slider())owner.controlService().select(selected,closest.row(),closest.sliderStep());
+            else owner.controlService().toggle(selected,closest.row());
+        }
+        return true;
     }
 }

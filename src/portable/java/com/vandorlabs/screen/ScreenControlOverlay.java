@@ -32,5 +32,36 @@ public final class ScreenControlOverlay {
             if(!row.slider())sink.text(active?"ON":row.pulse()?"GO":"OFF",100,y+1,active?0x082419:0xE0E8EF,-1);
         }
     }
+    /** Cockpit faces divide their authored square-pixel height evenly among installed rows. */
+    public static void emitCockpit(Contents contents,int height,long now,Sink sink){
+        if(height<10||height>128||contents.rows().size()>6)throw new IllegalArgumentException("Cockpit control canvas");
+        List<? extends Row> rows=contents.rows();
+        sink.rectangle(0,0,128,height,0,0xFF0A141D);
+        for(int i=0;i<rows.size();i++){
+            Row row=rows.get(i);
+            int top=(i*height/rows.size()+(i+1)*height/rows.size()-10)/2;
+            boolean active=row.active(now);
+            sink.rectangle(6,top,122,top+10,.01,!row.slider()&&active?0xFF174C3B:0xFF1C2B37);
+            if(row.slider()){
+                for(int step=0;step<4;step++){
+                    int left=ScreenControlLayout.SLIDER_LEFT+15*step;
+                    sink.rectangle(left,top,left+15,top+10,.02,0xFF91B5C8);
+                    sink.rectangle(left+1,top+1,left+14,top+9,.03,row.selectedSegment()==step?0xFF38DDE4:0xFF183B46);
+                }
+            }else sink.rectangle(98,top,120,top+10,.02,active?0xFF30C58A:0xFF45576A);
+        }
+        sink.beginText();
+        if(rows.isEmpty()){
+            sink.text("No controls",8,height/2-5,0xB8C8D0,-1);
+            return;
+        }
+        for(int i=0;i<rows.size();i++){
+            Row row=rows.get(i);
+            int y=(i*height/rows.size()+(i+1)*height/rows.size()-10)/2+1;
+            boolean active=row.active(now);
+            sink.text(row.label(),8,y,active?0xDEFFF0:0xB8C8D8,row.slider()?ScreenControlLayout.SLIDER_LABEL_WIDTH:LABEL_WIDTH);
+            if(!row.slider())sink.text(active?"ON":row.pulse()?"GO":"OFF",100,y,active?0x082419:0xE0E8EF,-1);
+        }
+    }
     private ScreenControlOverlay(){}
 }

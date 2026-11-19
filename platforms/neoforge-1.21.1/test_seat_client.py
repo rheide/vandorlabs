@@ -7,10 +7,10 @@ from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--catalog-only',action='store_true');parser.add_argument('--advanced',action='store_true');options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--catalog-only',action='store_true');parser.add_argument('--advanced',action='store_true');parser.add_argument('--yoke',action='store_true');options=parser.parse_args()
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
- marker='advanced-chair' if options.advanced else 'seat-player'
- flag='advancedChairCheck' if options.advanced else 'seatClientCheck'
+ marker='yoke-screen' if options.yoke else 'advanced-chair' if options.advanced else 'seat-player'
+ flag='yokeScreenCheck' if options.yoke else 'advancedChairCheck' if options.advanced else 'seatClientCheck'
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+f' -Dvandorlabs.{flag}=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix=marker+'-',dir=base))
  with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
  env=dict(env,JAVA_TOOL_OPTIONS=env['JAVA_TOOL_OPTIONS']+(' -Dvandorlabs.seatCatalogOnly=true' if options.catalog_only else ''))

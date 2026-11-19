@@ -15,6 +15,11 @@ public final class NativeScreenRegistrations {
  public static final Map<ScreenFamily,DeferredHolder<Block,NativeScreenBlock>> BLOCKS;
  public static final Map<ScreenFamily,DeferredHolder<Item,NativeScreenItem>> ITEMS;
  public static final DeferredHolder<MenuType<?>,MenuType<NativeScreenMenu>> MENU=VandorLabsBootstrap.MENUS.register("programmable_viewscreen",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new NativeScreenMenu(NativeScreenRegistrations.MENU.get(),id,inventory,buffer.readBlockPos())));
+ public static final DeferredHolder<Block, NativeYokeScreenBlock> YOKE=VandorLabsBootstrap.BLOCKS.register("yoke_screen",
+     ()->new NativeYokeScreenBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6)
+         .sound(SoundType.METAL).requiresCorrectToolForDrops()));
+ public static final DeferredHolder<Item, NativeScreenItem> YOKE_ITEM=VandorLabsBootstrap.ITEMS.register("yoke_screen",
+     ()->new NativeScreenItem(YOKE.get(),new Item.Properties()));
  static {
   var blocks=new EnumMap<ScreenFamily,DeferredHolder<Block,NativeScreenBlock>>(ScreenFamily.class);
   var items=new EnumMap<ScreenFamily,DeferredHolder<Item,NativeScreenItem>>(ScreenFamily.class);
@@ -24,7 +29,7 @@ public final class NativeScreenRegistrations {
   }
   BLOCKS=Collections.unmodifiableMap(blocks);ITEMS=Collections.unmodifiableMap(items);
  }
- public static Block[] blocks(){return BLOCKS.values().stream().map(DeferredHolder::get).toArray(Block[]::new);}
+ public static Block[] blocks(){return java.util.stream.Stream.concat(BLOCKS.values().stream().map(DeferredHolder::get),java.util.stream.Stream.of(YOKE.get())).toArray(Block[]::new);}
  public static void register(net.neoforged.bus.api.IEventBus bus){bus.addListener(ScreenSettingsPayload::register);bus.addListener(ScreenPickPayload::register);}
  private NativeScreenRegistrations(){}
 }

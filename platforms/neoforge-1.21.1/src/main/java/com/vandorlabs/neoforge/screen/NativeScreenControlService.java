@@ -34,7 +34,7 @@ public final class NativeScreenControlService {
  private void refresh(Row row){int received=0;for(int c=0;c<row.channels.size();c++)received=Math.max(received,NativeRedstoneChannels.level(level(),owner.getBlockPos(),row.channels.get(c)));row.setChannelLevel(received);}
  boolean configure(int slot,NativeScreenRowEdit edit){return configure(slot,edit,true,false);}
  private boolean configure(int slot,NativeScreenRowEdit edit,boolean enabled,boolean copied){
-  if(editing&&!copied||!live()||edit==null||slot<0||slot>1||!copied&&!owner.family().supportsSlot(slot)||edit.rows().size()>owner.family().standaloneControlRows(slot))return false;
+  if(editing&&!copied||!live()||edit==null||slot<0||slot>1||!copied&&!owner.family().supportsSlot(slot)||edit.rows().size()>owner.rowCapacity(slot))return false;
   boolean nested=configuring;
   List<Row> oldRows=rows.get(slot),next=new ArrayList<>();
   for(int i=0;i<edit.rows().size();i++){

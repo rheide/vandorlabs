@@ -91,5 +91,34 @@ def generate(root,out):
             elif 'data' in ingredient:raise ValueError('Unsupported seating ingredient metadata')
         recipe['result']['id']=recipe['result'].pop('item');recipe['neoforge:conditions']=[{'type':'neoforge:item_exists','item':'vandorlabs:'+kind}]
         p=out/f'data/vandorlabs/recipe/{kind}.json';p.parent.mkdir(parents=True,exist_ok=True);p.write_text(json.dumps(recipe,indent=2)+'\n')
+    yoke=source/'models/block/cockpits/yoke_screen'
+    output=assets/'models/block/cockpits/yoke_screen'
+    output.mkdir(parents=True,exist_ok=True)
+    shutil.copyfile(yoke/'off.obj',output/'off.obj')
+    shutil.copyfile(yoke/'materials.mtl',output/'materials.mtl')
+    for line in (yoke/'materials.mtl').read_text().splitlines():
+        if line.startswith('map_Kd '):
+            name=line.split(None,1)[1]
+            if name!='vandorlabs:models/cockpits/blank':texture(name)
+    write('models/block/cockpits/yoke_screen.json',
+          {'loader':'neoforge:obj','model':'vandorlabs:models/block/cockpits/yoke_screen/off.obj',
+           'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
+           'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
+    write('blockstates/yoke_screen.json',{'variants':{
+        'facing='+face:{'model':'vandorlabs:block/cockpits/yoke_screen','y':angle}
+        for face,angle in (('north',0),('east',90),('south',180),('west',270))
+    }})
+    write('models/item/yoke_screen.json',{'parent':'vandorlabs:block/cockpits/yoke_screen',
+        'display':{'gui':{'rotation':[30,225,0],'scale':[.62,.62,.62]},
+                   'ground':{'translation':[0,3,0],'scale':[.3,.3,.3]},
+                   'fixed':{'scale':[.6,.6,.6]},
+                   'firstperson_righthand':{'rotation':[0,45,0],'scale':[.55,.55,.55]}}})
+    for name in ['assembly','surfaces']:
+        asset=f'cockpits/yoke_screen/{name}.json'
+        write(asset,json.loads((source/asset).read_text()))
+    recipe=json.loads((source/'recipes/yoke_screen.json').read_text())
+    recipe['result']['id']=recipe['result'].pop('item')
+    p=out/'data/vandorlabs/recipe/yoke_screen.json'
+    p.write_text(json.dumps(recipe,indent=2)+'\n')
     write('data/native_seat_models.json',{'models':names})
     return [{'type':'minecraft:single','resource':name} for name in sorted(textures)]

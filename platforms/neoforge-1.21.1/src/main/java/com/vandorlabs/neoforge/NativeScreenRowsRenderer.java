@@ -36,16 +36,41 @@ public final class NativeScreenRowsRenderer implements NativeScreenSurfaceConsum
         if(height!=64&&height!=128)throw new IllegalArgumentException("Screen row height");NativeOverlayCanvas.uiMatrix(q,128,height,target);
     }
     private TextMesh build(NativeScreenControls controls,int height,long now,Key key){
-        var mesh=canvas.build(target->ScreenControlOverlay.emit(controls,height,height==64?4:8,now,new ScreenControlOverlay.Sink(){public void rectangle(int l,int t,int r,int b,double z,int color){}public void text(String value,int x,int y,int color,int width){target.trimmed(value,x,y,color,width);}}));
+        var mesh=canvas.build(target->{
+            var sink=new ScreenControlOverlay.Sink(){
+                public void rectangle(int l,int t,int r,int b,double z,int color){}
+                public void text(String value,int x,int y,int color,int width){target.trimmed(value,x,y,color,width);}
+            };
+            if(height<0)ScreenControlOverlay.emitCockpit(controls,-height,now,sink);
+            else ScreenControlOverlay.emit(controls,height,height==64?4:8,now,sink);
+        });
         long retained=512L+key.title.length()*2L+mesh.bytes();for(var choice:key.rows)retained+=96L+choice.label.length()*2L;builds++;return new TextMesh(mesh,retained);
     }
     private TextMesh text(NativeScreenControls controls,int height,long now){
-        var selector=selector(controls);int active=0;for(int row=0;row<Math.min(controls.rows().size(),height==64?4:8);row++)if(controls.rows().get(row).active(now))active|=1<<row;Key key=selector.key(height,active);var found=text.get(key);if(found!=null)return found;found=build(controls,height,now,key);if(found.bytes<=TEXT_BUDGET){text.put(key,found);bytes+=found.bytes;while(bytes>TEXT_BUDGET){var iterator=text.values().iterator();bytes-=iterator.next().bytes;iterator.remove();}}return found;
+        var selector=selector(controls);int active=0;for(int row=0;row<Math.min(controls.rows().size(),height<0?6:height==64?4:8);row++)if(controls.rows().get(row).active(now))active|=1<<row;Key key=selector.key(height,active);var found=text.get(key);if(found!=null)return found;found=build(controls,height,now,key);if(found.bytes<=TEXT_BUDGET){text.put(key,found);bytes+=found.bytes;while(bytes>TEXT_BUDGET){var iterator=text.values().iterator();bytes-=iterator.next().bytes;iterator.remove();}}return found;
     }
     @Override public void emit(NativeScreenRenderPlan.Binding binding,NativeScreenEntity.Visual visual,ScreenFamily.State state,int slot,ScreenSurface.Quad content,Matrix4fc pixelToOwner,PoseStack ownerPoses,MultiBufferSource buffers,int packedLight,int overlay,long controlTime){
         com.mojang.blaze3d.systems.RenderSystem.assertOnRenderThread();if(binding!=NativeScreenRenderPlan.Binding.ROWS)throw new IllegalArgumentException("Standalone row consumer only");int height=visual.family().half(slot)?64:128;var controls=visual.controls().get(slot);var glyphs=text(controls,height,controlTime);uiMatrix(content,height,ui);matrix.set(ownerPoses.last().pose()).mul(pixelToOwner).mul(ui);solid=NativeOverlayCanvas.solid(buffers);try{ScreenControlOverlay.emit(controls,height,visual.family().standaloneControlRows(slot),controlTime,rectangles);}finally{solid=null;}
         NativeOverlayCanvas.draw(glyphs.mesh,matrix,buffers,packedLight);
     }
+    public void emitYoke(NativeYokeGeometry.Face face,NativeScreenControls controls,PoseStack poses,
+                         MultiBufferSource buffers,int packedLight,long controlTime){
+        var right=face.right();
+        var down=face.down();
+        var normal=face.normal();
+        var origin=face.topLeft();
+        int height=face.height();
+        ui.zero().m00((float)(right.x/128)).m01((float)(right.y/128)).m02((float)(right.z/128))
+            .m10((float)(down.x/height)).m11((float)(down.y/height)).m12((float)(down.z/height))
+            .m20((float)(normal.x/16)).m21((float)(normal.y/16)).m22((float)(normal.z/16))
+            .m30((float)origin.x).m31((float)origin.y).m32((float)origin.z).m33(1);
+        matrix.set(poses.last().pose()).mul(ui);
+        var glyphs=text(controls,-height,controlTime);
+        solid=NativeOverlayCanvas.solid(buffers);
+        try{ScreenControlOverlay.emitCockpit(controls,height,controlTime,rectangles);}finally{solid=null;}
+        NativeOverlayCanvas.draw(glyphs.mesh,matrix,buffers,packedLight);
+    }
+
     public long builds(){return builds;}public long retainedBytes(){return bytes+selectors.bytes();}
     /** A new bake/font generation owns a new consumer; explicit clears also retire peak table capacity. */
     public void clear(){selectors.clear();text=new LinkedHashMap<>(32,.75F,true);bytes=0;}
