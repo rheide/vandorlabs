@@ -1,6 +1,7 @@
 package com.vandorlabs.blocks;
 
 import com.vandorlabs.tiles.TileEntitySpaceDoor;
+import com.vandorlabs.tiles.TileEntityLargeProgrammableDoor;
 import com.vandorlabs.fluid.DoorWaterOutlets;
 import net.minecraft.block.BlockDoor;
 import net.minecraft.block.BlockLiquid;
@@ -19,6 +20,11 @@ public final class DoorWaterGush {
         IBlockState state=world.getBlockState(pos);
         if(state.getBlock() instanceof com.vandorlabs.segmented.SegmentedDoorBlock){world.scheduleUpdate(pos,state.getBlock(),1);return;}
         if(!(state.getBlock() instanceof BlockConfigurableSpaceDoor))return;
+        net.minecraft.tileentity.TileEntity large=state.getBlock() instanceof BlockLargeProgrammableDoor?world.getTileEntity(pos):null;
+        if(large instanceof TileEntityLargeProgrammableDoor&&((TileEntityLargeProgrammableDoor)large).isHorizontal()){
+            world.scheduleUpdate(pos,state.getBlock(),1);
+            return;
+        }
         BlockPos lower=state.getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.UPPER?pos.down():pos;
         if(world.isBlockLoaded(lower))world.scheduleUpdate(lower,state.getBlock(),1);
     }
@@ -42,12 +48,55 @@ public final class DoorWaterGush {
         for(EnumFacing face:EnumFacing.HORIZONTALS){int bit=1<<face.getHorizontalIndex();if((previous&bit)==0||(retained&bit)!=0)continue;BlockPos out=pos.offset(face);if(!world.isBlockLoaded(out)){retained|=bit;continue;}IBlockState state=world.getBlockState(out);if(state.getMaterial()==net.minecraft.block.material.Material.WATER&&state.getValue(BlockLiquid.LEVEL)==0){world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState().withProperty(BlockLiquid.LEVEL,1),3);world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));}}
         if(owner.waterOutlets!=retained){owner.waterOutlets=retained;owner.markDirty();}if(!stop&&(supplying||retained!=0))world.scheduleUpdate(pos,owner.getBlockType(),5);
     }
+    /** The two saved bits record only the immediately lower and upper outlets of this member. */
+    private static void horizontal(World world,TileEntityLargeProgrammableDoor owner,boolean stop){
+        BlockPos pos=owner.getPos();
+        int previous=owner.waterOutlets(),retained=0,wet=-1;
+        if(!stop&&OpeningFluids.open(world,pos)){
+            FluidStack first=owner.fluids.get(0),second=owner.fluids.get(1);
+            wet=DoorWaterOutlets.wetSide(first!=null&&first.getFluid()==FluidRegistry.WATER,
+                    second!=null&&second.getFluid()==FluidRegistry.WATER,first!=null,second!=null);
+            if(wet>=0){
+                int bit=1<<wet;
+                BlockPos out=wet==0?pos.down():pos.up();
+                if(world.isBlockLoaded(out)){
+                    IBlockState target=world.getBlockState(out);
+                    boolean water=target.getMaterial()==net.minecraft.block.material.Material.WATER;
+                    int action=DoorWaterOutlets.supply((previous&bit)!=0,true,water,water&&target.getValue(BlockLiquid.LEVEL)==0,
+                            target.getMaterial().isLiquid(),!water&&!target.getMaterial().isLiquid()&&target.getBlock().isReplaceable(world,out));
+                    if(action==DoorWaterOutlets.RETAIN||action==DoorWaterOutlets.PUBLISH)retained|=bit;
+                    if(action==DoorWaterOutlets.PUBLISH){
+                        world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState(),3);
+                        world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));
+                    }
+                }
+            }
+        }
+        for(int slot=0;slot<2;slot++){
+            int bit=1<<slot;
+            if((previous&bit)==0||(retained&bit)!=0)continue;
+            BlockPos out=slot==0?pos.down():pos.up();
+            if(!world.isBlockLoaded(out)){if(!stop)retained|=bit;continue;}
+            IBlockState state=world.getBlockState(out);
+            if(state.getMaterial()==net.minecraft.block.material.Material.WATER&&state.getValue(BlockLiquid.LEVEL)==0){
+                world.setBlockState(out,Blocks.FLOWING_WATER.getDefaultState().withProperty(BlockLiquid.LEVEL,1),3);
+                world.scheduleUpdate(out,Blocks.FLOWING_WATER,Blocks.FLOWING_WATER.tickRate(world));
+            }
+        }
+        owner.setWaterOutlets(retained);
+        if(!stop&&(wet>=0||retained!=0))world.scheduleUpdate(pos,owner.getBlockType(),5);
+    }
     private static void update(World world,BlockPos lower,boolean stop){
         if(world.isRemote||world instanceof com.vandorlabs.vehicle.VehicleWorld)return;
+        net.minecraft.tileentity.TileEntity raw=world.getTileEntity(lower);
+        if(raw instanceof TileEntityLargeProgrammableDoor&&((TileEntityLargeProgrammableDoor)raw).isHorizontal()){
+            horizontal(world,(TileEntityLargeProgrammableDoor)raw,stop);
+            return;
+        }
         IBlockState base=world.getBlockState(lower);
         if(!stop&&(!(base.getBlock() instanceof BlockConfigurableSpaceDoor)||base.getValue(BlockVandorDoor.HALF)!=BlockDoor.EnumDoorHalf.LOWER))return;
-        if(!(world.getTileEntity(lower) instanceof TileEntitySpaceDoor))return;
-        TileEntitySpaceDoor owner=(TileEntitySpaceDoor)world.getTileEntity(lower);
+        if(!(raw instanceof TileEntitySpaceDoor))return;
+        TileEntitySpaceDoor owner=(TileEntitySpaceDoor)raw;
         int previous=owner.waterOutlets(),retained=0;boolean supplying=false;
         if(!stop&&base.getValue(BlockVandorDoor.OPEN))for(int half=0;half<2;half++){
             BlockPos pos=lower.up(half);IBlockState state=world.getBlockState(pos);
