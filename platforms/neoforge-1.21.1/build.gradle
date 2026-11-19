@@ -513,8 +513,9 @@ tasks.register('generateBuilderResources', Exec) {
                      '../../src/main/resources/assets/vandorlabs/models/item/' + design + '_core.json')
     }
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block/longburn_drive/longburn_drive'),
-                 fileTree('../../src/main/resources/assets/vandorlabs/models/block/dimension_drive/meridian_core'))
-    for (core in ['longburn_drive_core', 'meridian_drive_core']) {
+                 fileTree('../../src/main/resources/assets/vandorlabs/models/block/dimension_drive/meridian_core'),
+                 fileTree('../../src/main/resources/assets/vandorlabs/models/block/oculus_drive/oculus_drive'))
+    for (core in ['longburn_drive_core', 'meridian_drive_core', 'oculus_drive_core']) {
         inputs.files('../../src/main/resources/assets/vandorlabs/models/block/' + core + '.json',
                      '../../src/main/resources/assets/vandorlabs/models/item/' + core + '.json')
     }

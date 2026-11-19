@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Project only the three released builder structures and their exact native artwork."""
+"""Project released builder and standalone drive structures with their exact native artwork."""
 import hashlib
 import json
 from pathlib import Path
@@ -11,6 +11,8 @@ IDS=('synthesis_tower','assembly_press','enclosed_gantry')
 DRIVES={
     'longburn_drive':('drive_body','drive_lights','active/drive_body','active/drive_lights'),
     'meridian_core':('static','active/drive_body','active/drive_lights'),
+    'oculus_drive':tuple(mode+'/parts/'+part for mode in ('standby','charging','active')
+                         for part in ('static','field','shutter_upper','shutter_lower')),
 }
 SOURCE=ROOT/'src/main/resources/assets/vandorlabs'
 

@@ -123,7 +123,13 @@ public final class NativeBuilderRenderChecks {
                 need(dim[1]==full[1]&&dim[1]>0&&dim[2]>0&&dim[2]<full[2],"signal scales the same active lights "+drive.id);
                 need(drive.exhaust?off[1]>0&&off[2]<full[2]:off[1]==0,"distinct authored standby lights "+drive.id);
             }
-            System.out.println("[vandorlabs][builder-render] drives PASS actualMeshes/idleActive/signalBrightness");
+            var shutters=new com.vandorlabs.drives.DriveShutterPose();
+            need(shutters.sample(false,0)==0&&shutters.sample(true,0)==0,"closed shutters initialize and target does not jump");
+            need(shutters.sample(true,10)==.5&&shutters.sample(true,10)==.5,"half travel survives pause and duplicate target");
+            need(shutters.sample(false,10)==.5&&shutters.sample(false,15)==.25&&shutters.sample(false,20)==0,
+                    "Oculus reverses from the current travel over the matching remaining distance");
+            need(com.vandorlabs.drives.DriveShutterPose.easedTravel(1)==.5125,"authored shutter travel bound");
+            System.out.println("[vandorlabs][builder-render] drives PASS actualMeshes/idleActive/signalBrightness/OculusPausedReverse");
         }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
     }
     private static long[] drawDrive(java.lang.reflect.Method method,NativeBuilderEntity tile,net.minecraft.nbt.CompoundTag publicData,

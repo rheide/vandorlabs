@@ -85,15 +85,19 @@ public final class NativeBuilderRuntimeChecks {
     setup(0,Direction.NORTH);need(NativeBuilderTransactions.request(root(),actor,true),"Tower async formation for drive core production");
     stage=202;return;
    }
-   setup(4,Direction.WEST,1);need(NativeBuilderTransactions.request(root(),actor,true),"Meridian async formation");stage=200;return;
+   setup(3+caseIndex,caseIndex==1?Direction.WEST:Direction.EAST,caseIndex==1?1:3);need(NativeBuilderTransactions.request(root(),actor,true),"next drive async formation");stage=200;return;
   }
   if(owner==null||!owner.available()||!owner.formed()||!owner.synthesisReady())return;
   checkFrame(true);
   var drive=NativeDriveDesign.SUPPORTED.get(caseIndex);
   need(owner.drive()==drive&&owner.driveLevel()==15&&!owner.production()&&owner.layout().cornerZ==desiredZ,
         "standalone drive activates after its deferred inputs and forms in selected orientation");
-  var output=NativeBuilderProducts.result(drive==NativeDriveDesign.LONGBURN?NativeBuilderProducts.LONGBURN:NativeBuilderProducts.MERIDIAN);
+  var output=NativeBuilderProducts.result(NativeBuilderProducts.LONGBURN+caseIndex);
   need(output.is(NativeBuilderBindings.CORES.get(drive.id).asItem()),"Tower uses the exact drive core item");
+  if(drive==NativeDriveDesign.OCULUS){
+   need(owner.driveActivity()==2&&owner.cycleDrive()&&owner.driveActivity()==0&&owner.cycleDrive()&&owner.driveActivity()==1,
+        "Oculus defaults Active and cycles Standby to Charging");
+  }
   var menu=new NativeDriveMenu(NativeDriveBindings.MENU,77,owner,ROOT);
   actor.containerMenu=menu;
   var config=new NativeDriveSettings(true,false,true,drive.exhaust?2:0,8,-1,-2,false,2);
@@ -135,7 +139,7 @@ public final class NativeBuilderRuntimeChecks {
   var copy=new NativeBuilderEntity(ROOT,owner.getBlockState());
   copy.loadWithComponents(saved,world.registryAccess());
   need(!copy.inert()&&copy.driveSettings().equals(inverted)&&copy.channels().equals(bank)
-       &&ItemStack.matches(owner.getItem(3),copy.getItem(3))&&NativeBuilderData.sameSnapshots(saved,copy.saveWithoutMetadata(world.registryAccess())),
+       &&copy.driveActivity()==owner.driveActivity()&&ItemStack.matches(owner.getItem(3),copy.getItem(3))&&NativeBuilderData.sameSnapshots(saved,copy.saveWithoutMetadata(world.registryAccess())),
        "exact drive settings, channels and owned chip survive reload");
   var publicCopy=new NativeBuilderEntity(ROOT,owner.getBlockState());
   publicCopy.handleUpdateTag(owner.getUpdateTag(world.registryAccess()),world.registryAccess());
@@ -182,8 +186,8 @@ public final class NativeBuilderRuntimeChecks {
   publicCopy.handleUpdateTag(owner.getUpdateTag(world.registryAccess()),world.registryAccess());
   need(!publicCopy.inert()&&ItemStack.matches(publicCopy.getItem(1),expected),"drive core public representation");
   owner.removeItem(1,1);
-  if(recipe!=NativeBuilderProducts.MERIDIAN){recipe=NativeBuilderProducts.MERIDIAN;beginDriveCore(owner);return;}
-  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridian asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
+  if(recipe<NativeBuilderProducts.MAX_TOWER_PRODUCT){recipe++;beginDriveCore(owner);return;}
+  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridianOculus asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
   var server=world.getServer();world=null;server.halt(false);
  }
  private static void beginDriveCore(NativeBuilderEntity owner){

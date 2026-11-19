@@ -47,3 +47,6 @@ Select screen and keyboard artwork independently in their surface tabs. Model ar
 The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
 
 A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.
+
+On NeoForge 1.21.1, see [Standalone drives](../../builders-1.21.md#standalone-drives)
+for the native Tower recipe and placed-machine controls.

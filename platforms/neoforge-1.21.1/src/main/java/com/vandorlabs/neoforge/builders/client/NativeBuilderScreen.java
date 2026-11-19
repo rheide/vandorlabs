@@ -2,6 +2,7 @@ package com.vandorlabs.neoforge.builders.client;
 
 import com.vandorlabs.neoforge.builders.*;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.ui.DialogInput;
 import com.vandorlabs.animation.VisualClock;
 import com.mojang.math.Axis;
 import com.mojang.blaze3d.systems.RenderSystem;
@@ -23,6 +24,16 @@ public final class NativeBuilderScreen extends AbstractContainerScreen<NativeBui
  private com.vandorlabs.ui.SynthesisDialog.Layout layout=new com.vandorlabs.ui.SynthesisDialog.Layout(true);
  private static final String[] IDS=NativeBuilderProducts.IDS,NAMES=NativeBuilderProducts.NAMES;
  private final Map<Integer,Button> buttons=new LinkedHashMap<>();private final VisualClock clock=new VisualClock();private int page,activation,displayedMode=-1,displayedChoices=-1;private EditBox channels;private String error="";
+ private int recipeScroll,recipeCount,dragOffset;
+ private boolean dragging;
+ private int maximum(){return DialogInput.maxScroll(recipeCount,layout.visibleRows());}
+ private int trackX(){return leftPos+layout.listRight-7;}
+ private int trackTop(){return topPos+layout.listTop;}
+ private int trackHeight(){return layout.listBottom-layout.listTop;}
+ private int thumbHeight(){return DialogInput.thumbHeight(trackHeight(),layout.visibleRows(),recipeCount);}
+ private int thumbTop(){return DialogInput.thumbY(trackTop(),trackHeight(),thumbHeight(),recipeScroll,maximum());}
+ private boolean insideList(double x,double y){return x>=leftPos+layout.listLeft&&x<leftPos+layout.listRight&&y>=trackTop()&&y<trackTop()+trackHeight();}
+ private void moveRecipes(int next){int bounded=Math.clamp(next,0,maximum());if(recipeScroll!=bounded){recipeScroll=bounded;rebuild();}}
  public NativeBuilderScreen(NativeBuilderMenu menu,Inventory inventory,Component title){super(menu,inventory,title);imageWidth=312;imageHeight=240;activation=menu.tile.activation();}
  @SubscribeEvent public static void screens(RegisterMenuScreensEvent e){if(NativeBuilderBindings.enabled())e.register(NativeBuilderBindings.MENU,NativeBuilderScreen::new);}
  public Button control(int id){return buttons.get(id);}public EditBox channelField(){return channels;}public int page(){return page;}public int[] previewBounds(){return new int[]{leftPos+layout.previewLeft,topPos+layout.previewTop,leftPos+layout.previewRight,topPos+layout.previewBottom};}
@@ -39,17 +50,34 @@ public final class NativeBuilderScreen extends AbstractContainerScreen<NativeBui
  private int designs(){return tower()?NativeBuilderProducts.MAX_TOWER_PRODUCT+1:NativeBuilderProducts.parts(machine()).size();}private net.minecraft.world.item.ItemStack blockPreview(){return menu.digitizing()?(menu.tile.visual().processing()?menu.tile.visual().input():menu.contents().getItem(0)):menu.tile.visual().template();}private String name(int i){return !tower()?NativeBuilderProducts.partResult(machine(),i).getHoverName().getString():i< NAMES.length?NAMES[i]:i==5?"Block → Output":NativeBuilderProducts.result(i).getHoverName().getString();}
  private String receiving(){return channels==null?menu.tile.channels().toString():channels.getValue();}
  private void rebuild(){positionSlots();displayedMode=menu.value(9);displayedChoices=menu.value(10);String draft=receiving();clearWidgets();buttons.clear();channels=null;button(100,12,32,layout.tabWidth(),"Production");button(101,layout.secondTabX(),32,layout.tabWidth(),"Redstone");buttons.get(100+page).active=false;
-  if(page==0){int row=0;for(int order=0;order<designs();order++){
-   int i=press()?(order+1)%designs():order;
-   boolean chipChoice=press()||tower();
-   if(!chipChoice||(displayedChoices&(1<<i))!=0)button(i,12,layout.listTop+row++*layout.rowHeight,layout.listRight-layout.listLeft,name(i));
-  }if(tower())button(102,120,3,112,"Mode: "+(menu.digitizing()?"Digitize":"Synthesize"));}
+  if(page==0){
+   var entries=new ArrayList<Integer>();
+   for(int order=0;order<designs();order++){
+    int index=press()?(order+1)%designs():order;
+    if(!press()&&!tower()||(displayedChoices&(1<<index))!=0)entries.add(index);
+   }
+   recipeCount=entries.size();recipeScroll=Math.clamp(recipeScroll,0,maximum());
+   int rowWidth=layout.listRight-layout.listLeft-(maximum()>0?8:0);
+   for(int row=0;row<layout.visibleRows()&&recipeScroll+row<recipeCount;row++){
+    int index=entries.get(recipeScroll+row);button(index,layout.listLeft,layout.listTop+row*layout.rowHeight,rowWidth,name(index));
+   }
+   if(tower())button(102,120,3,112,"Mode: "+(menu.digitizing()?"Digitize":"Synthesize"));
+  }
   else{button(10,layout.listLeft,layout.receiverY()+42,layout.receiverWidth(),"Activation: "+activationName());channels=new EditBox(font,leftPos+layout.listLeft,topPos+layout.receiverY()+12,layout.receiverWidth(),18,Component.literal("Receive channels (blank = local)"));channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);channels.setValue(draft);addRenderableWidget(channels);}
  }
  private String activationName(){return com.vandorlabs.ui.RedstoneActivation.label(activation); }
  private boolean sendRedstone(){if(channels==null)return true;var parsed=ChannelList.parse(channels.getValue());channels.setTextColor(parsed==null?0xff7777:0xe0e0e0);if(parsed==null){error="Invalid receiving channels";return false;}error="";PacketDistributor.sendToServer(new NativeBuilderPayload(new NativeBuilderEdit(menu.containerId,menu.tile.getBlockPos(),1,activation,parsed)));return true;}
  public void action(int id,int direction){if(id==99){onClose();return;}if(id==102){minecraft.gameMode.handleInventoryButtonClick(menu.containerId,menu.digitizing()?0:1);return;}if(id==100||id==101){if(!sendRedstone())return;page=id-100;rebuild();return;}if(id>=0&&id<designs()){PacketDistributor.sendToServer(new NativeBuilderPayload(new NativeBuilderEdit(menu.containerId,menu.tile.getBlockPos(),0,id,ChannelList.EMPTY)));return;}if(id==10){activation=Math.floorMod(activation+(direction<0?-1:1),3);sendRedstone();rebuild();}}
- @Override public boolean mouseClicked(double x,double y,int button){if(button==1&&page==0){for(int i=0;i<designs();i++)if(buttons.containsKey(i)&&buttons.get(i).isMouseOver(x,y)){action(i,1);return true;}}if(button==1&&buttons.containsKey(102)&&buttons.get(102).isMouseOver(x,y)){action(102,-1);return true;}if(button==1&&buttons.containsKey(10)&&buttons.get(10).isMouseOver(x,y)){action(10,-1);return true;}return super.mouseClicked(x,y,button);}
+ @Override public boolean mouseClicked(double x,double y,int button){if(button==0&&page==0&&maximum()>0&&insideList(x,y)&&x>=trackX()){dragOffset=y>=thumbTop()&&y<thumbTop()+thumbHeight()?(int)y-thumbTop():thumbHeight()/2;dragging=true;return mouseDragged(x,y,button,0,0);}if(button==1&&page==0){for(int i=0;i<designs();i++)if(buttons.containsKey(i)&&buttons.get(i).isMouseOver(x,y)){action(i,1);return true;}}if(button==1&&buttons.containsKey(102)&&buttons.get(102).isMouseOver(x,y)){action(102,-1);return true;}if(button==1&&buttons.containsKey(10)&&buttons.get(10).isMouseOver(x,y)){action(10,-1);return true;}return super.mouseClicked(x,y,button);}
+ @Override public boolean mouseDragged(double x,double y,int button,double dx,double dy){
+  if(dragging){moveRecipes(DialogInput.scrollForDrag((int)y,trackTop(),trackHeight(),thumbHeight(),maximum(),dragOffset));return true;}
+  return super.mouseDragged(x,y,button,dx,dy);
+ }
+ @Override public boolean mouseReleased(double x,double y,int button){dragging=false;return super.mouseReleased(x,y,button);}
+ @Override public boolean mouseScrolled(double x,double y,double horizontal,double vertical){
+  if(page==0&&maximum()>0&&vertical!=0&&insideList(x,y)){moveRecipes(DialogInput.wheel(recipeScroll,maximum(),vertical>0?1:-1));return true;}
+  return super.mouseScrolled(x,y,horizontal,vertical);
+ }
  @Override public void onClose(){if(sendRedstone())super.onClose();}
  @Override protected void renderBg(GuiGraphics g,float partial,int mouseX,int mouseY){
   com.vandorlabs.neoforge.client.NativeDialogVisuals.panel(g,font,Component.literal(tower()?"Synthesis Tower":press()?"Assembly Press":"Enclosed Gantry"),leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.SynthesisDialog.STYLE);
@@ -57,6 +85,7 @@ public final class NativeBuilderScreen extends AbstractContainerScreen<NativeBui
   if(page==0){
    int selected=Math.clamp(menu.value(0),0,designs()-1);
    g.fill(leftPos+layout.listLeft,topPos+layout.listTop,leftPos+layout.listRight,topPos+layout.listBottom,0xff0d1118);
+   if(maximum()>0){g.fill(trackX(),trackTop(),trackX()+7,trackTop()+trackHeight(),0xff263642);g.fill(trackX()+1,thumbTop(),trackX()+6,thumbTop()+thumbHeight(),0xff718fa2);}
    g.drawString(font,"Designs",leftPos+layout.listLeft,topPos+layout.listHeadingY(),0xd4dfe9,false);
    g.drawString(font,font.plainSubstrByWidth(menu.digitizing()?"Digitize "+(blockPreview().isEmpty()?"block":blockPreview().getHoverName().getString()):tower()&&selected==5&&!blockPreview().isEmpty()?blockPreview().getHoverName().getString():name(selected),layout.previewRight-layout.previewLeft),leftPos+layout.previewLeft,topPos+layout.previewTop-12,0xd4dfe9,false);
    if(menu.digitizing()||tower()&&selected==5)blockPreview(g);else if(!tower()||selected>=3)g.renderItem(!tower()?NativeBuilderProducts.partResult(machine(),selected):NativeBuilderProducts.result(selected),leftPos+(layout.previewLeft+layout.previewRight)/2-8,topPos+(layout.previewTop+layout.previewBottom)/2-8);else preview(g,IDS[selected]);

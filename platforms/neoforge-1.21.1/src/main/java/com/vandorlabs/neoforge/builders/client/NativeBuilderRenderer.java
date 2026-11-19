@@ -19,14 +19,17 @@ public final class NativeBuilderRenderer implements BlockEntityRenderer<NativeBu
     public NativeBuilderRenderer(BlockEntityRendererProvider.Context context){}
     private record Rack(java.util.UUID identity,EmbeddedRackMotion motion,com.vandorlabs.machines.BuilderFabricationPose fabrication){}
     private static final Map<net.minecraft.world.level.Level,LinkedHashMap<net.minecraft.core.BlockPos,Rack>> racks=new WeakHashMap<>();
-    public static void clear(){clock=new VisualClock();racks.clear();NativeBuilderProgressMotion.clear();NativeBuilderPartFabrication.clear();}
+    public static void clear(){clock=new VisualClock();racks.clear();NativeBuilderProgressMotion.clear();NativeBuilderPartFabrication.clear();NativeDriveRenderer.clear();}
     private static Rack motion(NativeBuilderEntity tile,NativeBuilderEntity.Visual visual,double now){
         var values=racks.computeIfAbsent(tile.getLevel(),ignored->new LinkedHashMap<>(16,.75F,true));var rack=values.get(tile.getBlockPos());if(rack==null||!rack.identity.equals(tile.key())){rack=new Rack(tile.key(),new EmbeddedRackMotion(),new com.vandorlabs.machines.BuilderFabricationPose());values.put(tile.getBlockPos().immutable(),rack);if(values.size()>256)values.remove(values.keySet().iterator().next());}
         int mask=0;for(int bay=0;bay<4;bay++)if(!visual.batteries().get(bay).isEmpty())mask|=1<<bay;
         rack.motion.observe(mask,visual.batterySequences().get(0),visual.batterySequences().get(1),visual.batterySequences().get(2),visual.batterySequences().get(3),level(visual,0),level(visual,1),level(visual,2),level(visual,3),now);rack.fabrication.observe(now,visual.working());return rack;
     }
     private static int level(NativeBuilderEntity.Visual visual,int bay){return com.vandorlabs.rack.BatteryChargeBar.pixels(NativeBatteryModule.energy(visual.batteries().get(bay)),NativeBatteryModule.CAPACITY);}
-    public static void observe(NativeBuilderEntity tile){if(tile.getLevel()!=null&&tile.production())motion(tile,tile.visual(),now());}
+    public static void observe(NativeBuilderEntity tile){if(tile.getLevel()!=null){
+        if(tile.production())motion(tile,tile.visual(),now());
+        else if(tile.drive()==com.vandorlabs.neoforge.builders.NativeDriveDesign.OCULUS)NativeDriveRenderer.observe(tile,now());
+    }}
     public static double now(){return clock.sample(System.nanoTime(),Minecraft.getInstance().isPaused());}
     public static void orient(PoseStack poses,Direction facing,int width,int depth){switch(facing){case EAST-> {poses.translate(depth,0,0);poses.mulPose(Axis.YP.rotationDegrees(-90));}case SOUTH->{poses.translate(width,0,depth);poses.mulPose(Axis.YP.rotationDegrees(180));}case WEST->{poses.translate(0,0,width);poses.mulPose(Axis.YP.rotationDegrees(90));}default->{}}}
     @Override public void render(NativeBuilderEntity tile,float partial,PoseStack poses,MultiBufferSource buffers,int light,int overlay){

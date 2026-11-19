@@ -4,6 +4,11 @@ import com.google.gson.JsonParser;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.vandorlabs.drives.DriveControlPolicy;
+import com.vandorlabs.drives.DriveShutterPose;
+import java.util.UUID;
+import java.util.WeakHashMap;
+import net.minecraft.core.BlockPos;
+import net.minecraft.world.level.Level;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.builders.NativeBuilderBindings;
 import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
@@ -35,6 +40,19 @@ final class NativeDriveRenderer {
     private static final Map<NativeDriveDesign, Artwork> ARTWORK = loadArtwork();
     private static Map<NativeDriveDesign, Map<String, NativeBuilderModel>> baked = Map.of();
     private static final Map<Integer, Material> MATERIALS = new LinkedHashMap<>(32, .75F, true);
+    private record Shutters(UUID identity, DriveShutterPose pose) {}
+    private static final Map<Level, LinkedHashMap<BlockPos, Shutters>> SHUTTERS = new WeakHashMap<>();
+    static void clear(){SHUTTERS.clear();}
+    static double observe(NativeBuilderEntity tile,double time){
+        var positions=SHUTTERS.computeIfAbsent(tile.getLevel(),unused->new LinkedHashMap<>(16,.75F,true));
+        var entry=positions.get(tile.getBlockPos());
+        if(entry==null||!entry.identity.equals(tile.key())){
+            entry=new Shutters(tile.key(),new DriveShutterPose());
+            positions.put(tile.getBlockPos().immutable(),entry);
+            if(positions.size()>256)positions.remove(positions.keySet().iterator().next());
+        }
+        return entry.pose.sample(tile.formed()&&tile.driveLevel()>0&&tile.driveActivity()==2,time);
+    }
     private static final int BRIGHT = 0xf000f0;
 
     static ResourceLocation model(NativeDriveDesign drive, String file) {
@@ -75,7 +93,23 @@ final class NativeDriveRenderer {
             poses.translate(-pivot.getX(), -pivot.getY(), -pivot.getZ());
             NativeBuilderRenderer.orient(poses, tile.facing(), drive.width, drive.depth);
             var out = buffers.getBuffer(NativeBuilderModelCache.LAYER);
-            if (drive == NativeDriveDesign.MERIDIAN && !active) {
+            if(drive==NativeDriveDesign.OCULUS){
+                int activity=active?tile.driveActivity():0;
+                double progress=observe(tile,time);
+                int appearance=progress>0&&progress<1?1:activity;
+                String folder=(appearance==0?"standby":appearance==1?"charging":"active")+"/parts/";
+                mesh.get(folder+"static").emit(poses.last(),out,light,overlay);
+                double travel=DriveShutterPose.easedTravel(progress);
+                poses.pushPose();
+                try{
+                    poses.translate(0,travel,0);
+                    mesh.get(folder+"shutter_upper").emit(poses.last(),out,light,overlay);
+                    poses.translate(0,-travel*2,0);
+                    mesh.get(folder+"shutter_lower").emit(poses.last(),out,light,overlay);
+                }finally{poses.popPose();}
+                float brightness=settings.levels()&&appearance!=0?level/15F:1;
+                mesh.get(folder+"field").emitTinted(poses.last(),out,appearance==0?light:BRIGHT,overlay,brightness);
+            } else if (drive == NativeDriveDesign.MERIDIAN && !active) {
                 mesh.get("static").emit(poses.last(), out, light, overlay);
             } else {
                 String folder = active ? "active/" : "";
@@ -90,7 +124,7 @@ final class NativeDriveRenderer {
             var chip = tile.getItem(3);
             if (!chip.isEmpty()) {
                 poses.translate(drive.chipX, drive.chipY, drive.chipZ - .07);
-                poses.scale(.5F, .625F, .5F);
+                poses.scale((float)drive.chipWidth,(float)drive.chipHeight,.5F);
                 poses.mulPose(Axis.YP.rotationDegrees(180));
                 var mc = Minecraft.getInstance();
                 mc.getItemRenderer().renderStatic(chip, ItemDisplayContext.FIXED, light, overlay, poses, buffers, mc.level, 0);
