@@ -11,12 +11,15 @@ Catalog Chip that lists the recipe to produce Battery, Autopilot, or Navigation
 Data Modules. Existing Navigation Data Module jobs keep their progress when the
 world loads. The **Synthesis Tower** can fabricate a Ramp Controller with a
 permitting Catalog Chip. The **Enclosed Gantry** makes eight mechanical blocks, including
-arm hinges, wheels and resource ports. [NeoForge builder guide](../builders-1.21.md)
+arm hinges, wheels and resource ports. Both machines render work at their
+authored beds and let you collect completed products there. [NeoForge builder guide](../builders-1.21.md)
 
 **Programmable armor** uses the original four crafting recipes. Configure a held
 piece with its role, company, or programmable material artwork in Creative, or hold a Configurizer and
 use the armor from your offhand in Survival. The same picker works on mounted
-armor and can sample configured Blocks and Doors from your inventory. [Programmable armor guide](../programmable-armor.md)
+armor and can sample configured Blocks and Doors from your inventory. Sample
+vanilla model faces or full Programmable Blocks in the world, or transfer an
+appearance with the Duplifier. [Programmable armor guide](../programmable-armor.md)
 
 With WorldEdit 7.3.8, turning a clipboard also rotates the corner of floor
 and ceiling propulsion wedges. JEI lists the four native machine categories

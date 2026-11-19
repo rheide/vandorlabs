@@ -6,8 +6,10 @@ Hold a piece, aim into the air and **shift-right-click** to open its categorized
 
 On NeoForge 1.21.1 the held and mounted pickers offer the authored role and
 company designs, general Programmable Block materials, and inventory samples.
-World-face sampling and Duplifier appearance transfer currently use Forge
-1.12.2.
+Use the same world-face gesture on vanilla baked-model blocks and full
+Programmable Blocks. The Duplifier transfers supported armor appearances
+between the offhand and mounted pieces. Renderer-specific sampling on other
+block families remains Forge-only.
 
 **Custom block texture:** choose **Custom...** in the armor texture list to open the same inventory sample dialog as Programmable Blocks. Drag a block or door item into the sample slot, or select it and click **Use texture**. The sample is not consumed. The picker remembers the custom selection when reopened, and the choice follows the armor through saving, equipping and Duplifier copying. Configured programmable block or door items resolve their stored material or design, just as in the block picker.
 

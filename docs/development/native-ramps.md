@@ -2,6 +2,15 @@
 
 The conversion keeps standalone Ramp Controllers, their Slab variant and generated controlled-ramp cells in scope. Vehicle adapters remain deferred. Existing portable `RampControllerData`, `RampCellData`, `ControllerPlatform`, `RampGeometry`, `RampAxis` and `VerticalRampGeometry` provide scalar persistence, bounded platform discovery and motion geometry. They do not replace the controller's snapshot/journal ownership protocol.
 
+## Current native support
+
+The default build registers both Ramp Controllers, generated parts, the
+dedicated editor, and the durable standalone capture and return lanes. See the
+[current recovery guide](../native-ramp-recovery.md) for actor and migration limits.
+
+The checkpoints below preserve the staged validation history. Early sections
+refer to the private adapter as it existed at that stage.
+
 ## Source settings and item baseline
 
 `exportRampSettingsSourceReference` freezes 256 actual Source observations: both controller roles, all sixteen metadata inputs, fresh factory defaults and seven saved-data profiles. Each observation calls the real tile reader/writer, `ProgrammableSettings.capture`, configured pick and block bounding box. The expanded `ramp-settings-source.jsonl.gz` is 468464 bytes, SHA-256 `4b3b9c540e4aab2ecadcb3137024bba3c424bac1ddd9a8edbb7b8f98c97412e7`. This is a fixed-clock memory-world callback fixture; it does not establish real placement, mining, generation, journal durability or player authorization. No platform or generated cell is transferred.

@@ -1,14 +1,22 @@
-# Experimental NeoForge 1.21.1 building slices
+# Experimental NeoForge 1.21.1 target
 
-This independent Java 21 target provides the plain Programmable Matter Block, Programmable Matter Ingot and Industrial Alloy Ingot, with a creative tab, native models, loot, stone-or-better pickaxe harvesting, and the canonical block packing/unpacking and alloy recipes. The matter infuser and other acquisition systems are not implemented; matter ingots currently require creative mode or commands.
+This independent Java 21 build includes the Matter Infuser, Synthesis Tower,
+Assembly Press and Enclosed Gantry, standalone navigation and appliances,
+programmable building families and controls, armor, Copy Controllers and
+standalone arm and Ramp mechanisms. Current limits and ongoing work are in
+the [feature inventory](../../docs/development/feature-coverage.md). Use a
+new NeoForge world. Whole-world 1.12.2 migration and Vehicle Mode remain
+outside this build's supported scope.
 
-The plain Programmable Block now uses the current shared saved housing and dialog contracts. Its built-in materials, six face overrides, Stretch/Tile/Fit layouts, configuration-preserving item drops/picks and bounded joined images are supported. Creative shift-click and a main-hand Configurizer open the same dedicated dialog; survival and held-item Adventure permissions are enforced by the server. Trigger and mounted controls also route the Configurizer through their dedicated dialogs.
-
-This remains a partial port, not a legacy world migration tool. Optional component-renderer sampling, copy tools, carried assemblies, other programmable families and the production chain remain deferred. Installed filesystem PNGs are supported on the native programmable cube. Saved external material IDs are retained and unavailable artwork renders with a visible fallback; the native cube also supports non-consuming inventory block samples with retained legacy vanilla aliases. Do not open existing Vandor Labs worlds with this target.
+The Programmable Block supports built-in material choices, six face
+overrides, Stretch/Tile/Fit layouts, joined images, configured item drops and
+picks, and non-consuming inventory samples. Creative shift-click and a
+main-hand Configurizer open the same dedicated dialog. Installed filesystem
+PNGs preserve stable saved IDs and use fallback artwork when unavailable.
 
 Run `python3 tools/build_all.py --target neoforge-1.21.1` from the repository root. Set `VANDOR_JAVA21_HOME` to a Java 21 JDK when automatic discovery does not find one. The orchestration script runs shared contracts on the selected target’s JDK (both JDKs when building both targets), then builds the selected target and places its standard JAR under the root `build/libs/`. Java 8 and Java 21 builds run in separate Gradle processes. The legacy root Gradle target remains independent.
 
-`./gradlew runClient` and `./gradlew runServer` in this directory are development launch tasks; neither constitutes automated live acceptance. The historical feature branch contains broader adapters that require shared source extractions absent from the current portable tree. They are not imported here. Add adapters only with focused runtime checks and explicit coverage documentation.
+`./gradlew runClient` and `./gradlew runServer` in this directory are development launch tasks; neither constitutes automated live acceptance. Use the builds on master and the focused family checks described below. The historical branch is an earlier conversion reference.
 
 
 Resources are generated from existing canonical artwork, models, recipes and translations by `generate_matter_resources.py`; generated assets remain under `build/`. Runtime artwork uses the established 128-pixel resolution, including the compact alloy ingot icon. No duplicate artwork source is maintained here.
@@ -92,9 +100,9 @@ Navigation uses the generator's biome source without requesting terrain chunks. 
 
 A Navigation Data Chip stores one dimension and exact block X/Y/Z coordinates. A scanned vanilla map additionally retains its original 128 × 128 color bytes, 256-entry ARGB palette and scale. Tables and supported Screens can display the exact saved square, including blank pixels, without an observer; ordinary point programming clears that image. Public table updates retain location/scale/hash metadata and omit the pixel and palette arrays. A Navigation Data Module records each linked source's complete circular coverage, binds to its first dimension and keeps up to 1,024 areas. Contained circles are deduplicated; a full module preserves old data. The saved item retains compact circles, while a bounded square index accelerates exact coverage lookup. Saved coverage remains usable without a linked observer. Public table updates contain a bounded dimension/count projection, while extraction, world saves and arm snapshots retain the full item.
 
-Survey Dishes and Sentinel Arrays require complete frames and can form upright or upside down. Dish frames have equal width, depth and height, with widths 3–16. Arrays have equal width/depth and double height, with widths 2–8. The core can occupy any horizontal corner of the bottom or top layer. Scanning uses physical height, including carried arm transforms. At Y=64 every size scans a radius of 2,500 blocks for a Dish or 500 for an Array. At Y=128 the base sizes reach 5,000/1,000; size adds a linear bonus capped at double that radius when the width reaches twice the base width. Larger frames retain that cap. Transmitter range controls the separate connection to nearby displays. The dialog reports the actual footprint and current scanning radius. Legacy source block/item IDs resolve to the standalone models.
+Survey Dishes and Sentinel Arrays require complete frames and can form upright or upside down. Dish frames have equal width, depth and height, with widths 3–16. Arrays have equal width/depth and double height, with widths 2–8. The core can occupy any horizontal corner of the bottom or top layer. Scanning uses physical height, including carried arm transforms. At Y=64 every size scans a radius of 1,000 blocks for a Dish or 250 for an Array. At Y=128 the base sizes reach 2,000/500; size adds a linear bonus capped at double that radius when the width reaches twice the base width. Larger frames retain that cap. Transmitter range controls the separate connection to nearby displays. The dialog reports the actual footprint and current scanning radius. Stationary tables also show live sweeps over loaded surface colours at fixed radii of 256 blocks for the Dish and 128 for the Array. Legacy source block/item IDs resolve to the standalone models.
 
-Native manufacturing currently supports the three existing builder cores plus the two observer cores in the Synthesis Tower. Observer recipes require a permitting Catalog Chip; the existing builder recipe indices remain unchanged. The Assembly Press exposes the Navigation Data Module recipe: one Programmable Matter Ingot and 8,000 RF, with a permitting Catalog Chip. Broader Press and Gantry production remains outside this adapter. Flat tables use four Matter Ingots, two Glass and one Redstone; angled tables use three Matter Ingots, two Glass and one Redstone.
+Native manufacturing currently supports the three existing builder cores plus the two observer cores in the Synthesis Tower. Observer recipes require a permitting Catalog Chip; the existing builder recipe indices remain unchanged. The Assembly Press exposes the Navigation Data Module recipe: one Programmable Matter Ingot and 8,000 RF, with a permitting Catalog Chip. See the [native builder guide](../../docs/builders-1.21.md) for the complete Press and Gantry recipe lists and the Tower Ramp Controller recipe. Flat tables use four Matter Ingots, two Glass and one Redstone; angled tables use three Matter Ingots, two Glass and one Redstone.
 
 Build instructions and construction images are shared with [Navigation displays](../../docs/navigation-displays.md), the [Survey Dish](../../docs/multiblocks/standalone-dish/README.md) and the [Sentinel Array](../../docs/multiblocks/standalone-antenna/README.md).
 

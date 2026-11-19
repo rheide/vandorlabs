@@ -13,7 +13,7 @@ committed position. A genuine obstruction remains an error until explicitly
 cleared and retried.
 
 Initial capture and return to native blocks support connected players, native
-item entities and adult, unsaddled pigs. Other actor roles must be moved off the
+item entities, adult unsaddled pigs, and unscaled adult cows. Other actor roles must be moved off the
 platform before capture or return. The controller reports this refusal before
 transferring terrain or actor ownership. Removing the unsupported actor and
 configuring the controller again retries the action.
@@ -37,7 +37,8 @@ external ownership envelopes, passengers, changed dimensions and unavailable
 factories remain retained for recovery instead of being guessed or discarded.
 Healthy support inspection is bounded to 64 chunks, 8192 native records and
 128 matching supported actors. Rewriting a queued or already live entity record
-is refused.
+is refused. The adult-cow fixture exercises the bounded cold return and a
+second restart after an abrupt actor-only save.
 
 Known older private native `ACTIVE` journals can retain an obsolete initial actor
 roster. Their typed recipe and current actor support must be proven before that

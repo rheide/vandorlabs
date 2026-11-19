@@ -2,6 +2,9 @@
 
 ## 1.12.0 (in development)
 
+- Show Forge-matched Press and Gantry fabrication, mount interactions and pickup positions on NeoForge.
+- Add a tested opt-in legacy wheel migration command and bounded cold Ramp actor recovery for adult cows.
+- Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge.
 - Preserve native floor and ceiling propulsion wedge geometry and tile data through WorldEdit quarter-turns.
 - Add catalog-gated Ramp Controller production to the native Synthesis Tower and show the four native machine categories in JEI.
 - Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.
