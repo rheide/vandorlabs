@@ -1,6 +1,12 @@
 package com.vandorlabs.neoforge.armor;
 
+import com.vandorlabs.animation.ScreenBehavior;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
+import com.vandorlabs.neoforge.screen.NativeScreenBlock;
+import com.vandorlabs.neoforge.screen.NativeScreenEntity;
+import com.vandorlabs.neoforge.screen.NativeScreenPowerViews;
+import com.vandorlabs.screen.ScreenFamily;
+import com.vandorlabs.screen.ScreenPowerQueries;
 import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
 import com.vandorlabs.neoforge.door.NativeDoorLifecycle;
 import com.vandorlabs.neoforge.door.NativeLargeDoorBlock;
@@ -159,7 +165,8 @@ public final class NativeArmorWorldSampling {
         var block = state.getBlock();
         return block instanceof NativeLightBlock || block instanceof NativeProgrammableDoorBlock
                 || block instanceof NativeLargeDoorBlock || block instanceof NativeTrapdoorBlock
-                || block instanceof NativeFlatWallBlock || block instanceof NativeDiagonalWallBlock diagonal && !diagonal.isGlass();
+                || block instanceof NativeFlatWallBlock || block instanceof NativeDiagonalWallBlock diagonal && !diagonal.isGlass()
+                || block instanceof NativeScreenBlock screen && screen.family() == ScreenFamily.SCREEN;
     }
 
     static BlockEntity sampleOwner(Level world, BlockState state, BlockPos pos) {
@@ -186,6 +193,15 @@ public final class NativeArmorWorldSampling {
             choice = trapdoor.settings().choices().texture;
         } else if (tile instanceof NativeWallEntity wall && !wall.isGlass()) {
             choice = wall.settings().mainTexture;
+        } else if (state.getBlock() instanceof NativeScreenBlock block && block.family() == ScreenFamily.SCREEN
+                && tile instanceof NativeScreenEntity screen && !screen.inert() && !screen.yoke()) {
+            if (state.getValue(NativeScreenBlock.FACING) != face) {
+                choice = screen.screenSettings().housing().mainTexture;
+            } else {
+                var appearance = NativeScreenPowerViews.prepare(screen, ScreenPowerQueries.SURFACE_0).appearance();
+                if (appearance.playback(0) != ScreenBehavior.STATIC || appearance.surface(0) < 0) return null;
+                choice = appearance.surface(0);
+            }
         } else if ((state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) || state.is(VandorLabsBootstrap.TRIGGER_BLOCK.get()))
                 && tile instanceof ProgrammableBlockEntity cube) {
             var settings = cube instanceof NativeTriggerBlockEntity trigger ? trigger.modelSettings() : cube.settings();

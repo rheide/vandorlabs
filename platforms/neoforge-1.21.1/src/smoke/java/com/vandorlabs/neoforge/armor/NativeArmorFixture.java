@@ -1,6 +1,12 @@
 package com.vandorlabs.neoforge.armor;
 
+import com.vandorlabs.animation.ScreenBehavior;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
+import com.vandorlabs.neoforge.screen.NativeScreenBlock;
+import com.vandorlabs.neoforge.screen.NativeScreenEntity;
+import com.vandorlabs.neoforge.screen.NativeScreenRegistrations;
+import com.vandorlabs.persistence.SaveSchema;
+import com.vandorlabs.screen.ScreenFamily;
 import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
 import com.vandorlabs.neoforge.door.NativeDoorLifecycle;
 import com.vandorlabs.neoforge.door.NativeLargeDoorLifecycle;
@@ -30,6 +36,7 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.ServerLevel;
@@ -63,11 +70,13 @@ public final class NativeArmorFixture {
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
     static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final BlockPos STATIC_SCREEN = new BlockPos(-2, 79, -1), GENERATED_SCREEN = new BlockPos(-2, 79, -2);
     static final BlockPos WALL = new BlockPos(1, 79, 2), DIAGONAL_WALL = new BlockPos(2, 79, 2);
     static final BlockPos LARGE_DOOR = new BlockPos(-4, 79, 2), TRAPDOOR = new BlockPos(-1, 79, -1);
     static final BlockPos WORLD_DOOR = new BlockPos(0, 79, 2), WORLD_TRIGGER = new BlockPos(0, 79, -2);
     static final BlockPos LIGHT_ON = new BlockPos(1, 79, -2), LIGHT_OFF = new BlockPos(2, 79, -2);
     static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
+    static String screenSprite() { return ModernFinishCatalog.option(16).texture(); }
     static String wallSprite(boolean diagonal) { return ModernFinishCatalog.option(diagonal ? 15 : 14).texture(); }
     static String largeDoorSprite() { return ModernFinishCatalog.option(13).texture(); }
     static String trapdoorSprite() { return ModernFinishCatalog.option(NativeTrapdoorSettings.defaultTexture()).texture(); }
@@ -122,6 +131,8 @@ public final class NativeArmorFixture {
         world.setBlockAndUpdate(DIAGONAL_WALL, VandorLabsBootstrap.PROGRAMMABLE_DIAGONAL_WALL.get().defaultBlockState());
         setWall(world, WALL, 14);
         setWall(world, DIAGONAL_WALL, 15);
+        placeScreen(world, STATIC_SCREEN, 16);
+        placeScreen(world, GENERATED_SCREEN, -2);
         world.getChunkAt(TRAPDOOR);
         world.setBlockAndUpdate(TRAPDOOR.below(), Blocks.STONE.defaultBlockState());
         world.setBlockAndUpdate(TRAPDOOR, NativeTrapdoorRegistrations.BLOCK.get().defaultBlockState());
@@ -267,6 +278,10 @@ public final class NativeArmorFixture {
             new NativeArmorWorldSampling.Result(light.id(), LIGHT_ON, Direction.SOUTH, lightSprite(true))),
             "Light changed activity while the ticket was pending");
         setLight(player.serverLevel(), LIGHT_ON, true);
+        var generated = new BlockHitResult(Vec3.atCenterOf(GENERATED_SCREEN).add(0, 0, .5),
+                Direction.SOUTH, GENERATED_SCREEN, false);
+        require(NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, generated) == null,
+                "generated Screen does not start a sprite ticket");
         require(NativeArmorItem.worldSample(stack) == null, "negative claims preserve original armor");
         player.setShiftKeyDown(false);
     }
@@ -307,6 +322,32 @@ public final class NativeArmorFixture {
         data.putInt("DoorFaceTexture", 13);
         door.loadWithComponents(data, world.registryAccess());
         door.setChanged();
+    }
+
+    private static void placeScreen(ServerLevel world, BlockPos pos, int surface) {
+        var block = NativeScreenRegistrations.BLOCKS.get(ScreenFamily.SCREEN).get();
+        world.getChunkAt(pos);
+        world.setBlockAndUpdate(pos, block.defaultBlockState().setValue(NativeScreenBlock.FACING, Direction.SOUTH));
+        var screen = (NativeScreenEntity) world.getBlockEntity(pos);
+        var data = screen.saveWithFullMetadata(world.registryAccess());
+        data.putInt(SaveSchema.Screen.DISPLAY_MODE, ScreenBehavior.STATIC);
+        data.putInt("PrimarySurfaceTexture", surface < 0 ? -1 : surface);
+        if (surface == -2) {
+            var bank = new CompoundTag();
+            bank.putBoolean("Enabled", true);
+            bank.putString("Title", "Generated control");
+            var rows = new ListTag();
+            var row = new CompoundTag();
+            row.putString("Label", "Test toggle");
+            row.putIntArray("RedstoneChannels", new int[]{59331});
+            rows.add(row);
+            bank.put("Rows", rows);
+            data.put("RedstonePrimary", bank);
+        }
+        screen.loadWithComponents(data, world.registryAccess());
+        require(!screen.inert() && screen.visual().appearance().surface(0) == surface,
+                "actual configured Screen display choice");
+        screen.setChanged();
     }
 
     private static void setWall(ServerLevel world, BlockPos pos, int material) {

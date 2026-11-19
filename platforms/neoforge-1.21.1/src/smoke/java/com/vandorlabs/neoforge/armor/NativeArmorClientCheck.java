@@ -204,6 +204,12 @@ public final class NativeArmorClientCheck {
             case 41 -> {
                 if (!NativeArmorFixture.wallSprite(true).equals(NativeArmorItem.worldSample(offhand))) return;
                 System.out.println("[vandorlabs][armor] flat and diagonal Wall body samples PASS");
+                sampleFace(game, NativeArmorFixture.STATIC_SCREEN, Direction.SOUTH);
+                stage = 42;
+            }
+            case 42 -> {
+                if (!NativeArmorFixture.screenSprite().equals(NativeArmorItem.worldSample(offhand))) return;
+                System.out.println("[vandorlabs][armor] explicit static Programmable Screen sample PASS");
                 sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
                 stage = 25;
             }
