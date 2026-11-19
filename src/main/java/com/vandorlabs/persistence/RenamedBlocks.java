@@ -21,7 +21,8 @@ public final class RenamedBlocks {
     public static String canonical(String id){return OLD_MATTER.equals(id)?PROGRAMMABLE_BLOCK:OLD.equals(id)?NEW:"vandorlabs:survey_dish_core".equals(id)?"vandorlabs:standalone_dish_core":"vandorlabs:sentinel_array_core".equals(id)?"vandorlabs:standalone_antenna_core":id;}
     public static NBTTagCompound stateTag(NBTTagCompound saved){
         if(OLD_MATTER.equals(saved.getString("Name"))){
-            if(saved.hasKey("Properties")&&(!saved.hasKey("Properties",10)||!saved.getCompoundTag("Properties").hasNoTags()))
+            if(saved.hasKey("Properties")&&(!saved.hasKey("Properties",10)||!saved.getCompoundTag("Properties").hasNoTags())
+                    ||saved.getKeySet().stream().anyMatch(key->!key.equals("Name")&&!key.equals("Properties")))
                 throw new IllegalArgumentException("Unknown retired Matter Block properties");
             return NBTUtil.writeBlockState(new NBTTagCompound(),matterState());
         }
