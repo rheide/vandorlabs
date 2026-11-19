@@ -1,13 +1,15 @@
 package com.vandorlabs.ui;
 import java.util.*;
+import com.vandorlabs.gear.core.ArmResource;
 /** One logical mechanism/redstone dialog; platform adapters supply widgets and authoritative values. */
 public final class GearDialog {
- public static final int MECHANISM=20,REDSTONE=21,CHANNELS=22;
+ public static final int MECHANISM=20,REDSTONE=21,CHANNELS=22,RESOURCE=23;
  public enum Kind {BUTTON,SLIDER,FIELD}
  /** Rebuild-local view only; no gameplay authority or world references. */
  public static final class State {
   public boolean rotating,fixed,landing,rest,atEndpoint,hingeEditable,canJoin,canCarry,canPush,canFoot;
-  public boolean join,carry,push,rotate,target,anglesConfigured;
+  public boolean join,carry,push,rotate,target,anglesConfigured,canTransferResources;
+  public ArmResource resource=ArmResource.DISABLED;
   public int trigger,joinRange,loadHeight;public double start,end;
   public String fold="North",foot="North",hinge="Single",kink="Inward",track;
  }
@@ -26,7 +28,7 @@ public final class GearDialog {
   if(page<0||page>1)throw new IllegalArgumentException("Unknown gear page");List<Control> out=new ArrayList<Control>();out.add(new Control(MECHANISM,12,28,p.columnWidth,20,"Mechanism",true,page!=0,Kind.BUTTON,0,0,0));out.add(new Control(REDSTONE,p.rightColumn,28,p.columnWidth,20,"Redstone",true,page!=1,Kind.BUTTON,0,0,0));
   if(page==1){out.add(placed(button(0,"Activation: "+RedstoneActivation.label(s.trigger),!s.fixed),12,60,p.width-24,20));out.add(new Control(CHANNELS,12,100,p.width-24,18,"Receive channels",false,!s.fixed,Kind.FIELD,0,0,0));}
   else{
-   List<Control[]> rows=new ArrayList<Control[]>();String target=s.fixed?"Always deployed":s.landing&&!s.anglesConfigured?(s.target?"Target: Deployed":"Target: Stowed"):(s.target?"Target: Start":"Target: End");rows.add(new Control[]{button(2,target,!s.fixed&&s.trigger==0)});
+   List<Control[]> rows=new ArrayList<Control[]>();String target=s.fixed?"Always deployed":s.landing&&!s.anglesConfigured?(s.target?"Target: Deployed":"Target: Stowed"):(s.target?"Target: Start":"Target: End");rows.add(s.canTransferResources?new Control[]{button(2,target,!s.fixed&&s.trigger==0),button(RESOURCE,"Transfer: "+s.resource.label(),true)}:new Control[]{button(2,target,!s.fixed&&s.trigger==0)});
    if(s.rotating){rows.add(new Control[]{button(1,"Fold: "+s.fold,s.rest&&s.target),button(7,s.rotate?"Payload: rotates":"Payload: stays level",s.rest)});rows.add(new Control[]{button(18,"Hinge: "+s.hinge,s.hingeEditable),button(19,"Kink: "+s.kink,s.hingeEditable)});rows.add(new Control[]{slider(16,"Start",-180,180,s.start,s.rest),slider(13,"End",-180,180,s.end,s.rest)});}
    else if(s.canPush||s.canCarry)rows.add(new Control[]{s.canPush?button(14,"Push blocks: "+(s.push?"On":"Off"),s.atEndpoint):null,s.canCarry?button(11,"Carry load: "+(s.carry?"On":"Off"),s.rest&&s.join):null});
    if(s.canJoin)rows.add(new Control[]{button(9,"Join arms: "+(s.join?"On":"Off"),s.rest),slider(10,"Join range",1,32,s.joinRange,s.rest&&s.join)});
