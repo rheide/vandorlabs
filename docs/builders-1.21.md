@@ -84,6 +84,17 @@ The Press uses the same four battery bays, rear power and item ports, Redstone
 activation options, and automatic output as the Tower. Paused jobs retain their
 chosen recipe and paid work, even if the Catalog Chip is removed.
 
+## Enclosed Gantry operation
+
+Choose a regular or Large Extender, Rotating Arm or Landing Wheel, or choose a
+Landing Ski or Landing Plate. These eight designs are built into the Gantry.
+Feed one Programmable Matter Block through the rear item port or Production
+dialog. Each item costs **8,000 RF**, drawn at **40 RF per tick** over
+**200 ticks**. The rear right corner accepts external power. The rear left
+corner provides the material feed and completed-item output. The Production
+and Redstone tabs offer the same inventory, battery and activation controls
+as the Press.
+
 ## Dismantling and ownership
 
 Sneak-right-click a formed member to restore its Matter frame. Mining a member

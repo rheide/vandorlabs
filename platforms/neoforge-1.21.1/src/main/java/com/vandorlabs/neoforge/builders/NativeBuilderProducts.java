@@ -12,15 +12,34 @@ public final class NativeBuilderProducts {
  // Index zero is the original native Press recipe, including in-progress saved work.
  public static final List<String> PRESS = List.of("navigation_data_module", "data_chip", "access_card",
          "battery_module", "autopilot_module");
- public static ItemStack pressResult(int index) {
-  return new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("vandorlabs", PRESS.get(index))));
+ // Keep the native packet choices append-only. The final two Forge blueprints require Vehicle Mode.
+ public static final List<String> GANTRY = List.of("gear_extender", "gear_swing_arm", "large_gear_extender",
+         "large_gear_swing_arm", "landing_wheel", "large_landing_wheel", "landing_ski", "landing_plate");
+ public static List<String> parts(String machine) {
+  return switch(machine){
+   case "assembly_press" -> PRESS;
+   case "enclosed_gantry" -> GANTRY;
+   default -> List.of();
+  };
  }
- public static boolean pressDefault(int index) {
-  return BuilderRecipeCatalog.defaults("assembly_press").contains(PRESS.get(index));
+ public static ItemStack partResult(String machine,int index) {
+  return new ItemStack(BuiltInRegistries.ITEM.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",parts(machine).get(index))));
  }
- public static boolean pressOutput(String id) {
-  return id.startsWith("vandorlabs:") && PRESS.contains(id.substring("vandorlabs:".length()));
+ public static boolean partDefault(String machine,int index) {
+  return BuilderRecipeCatalog.defaults(machine).contains(parts(machine).get(index));
  }
- public static boolean output(String id){for(String name:IDS)if(id.equals("vandorlabs:"+name+"_core"))return true;return false;}
+ public static boolean pressPartAvailable(int index) {
+  String id=PRESS.get(index);
+  return (!id.equals("battery_module")&&!id.equals("autopilot_module"))||com.vandorlabs.neoforge.rack.NativeRackBindings.enabled();
+ }
+ public static boolean output(String machine,String id) {
+  if(!id.startsWith("vandorlabs:"))return false;
+  String path=id.substring("vandorlabs:".length());
+  if(machine.equals("synthesis_tower")){
+   for(String name:IDS)if(path.equals(name+"_core"))return true;
+   return false;
+  }
+  return parts(machine).contains(path);
+ }
  private NativeBuilderProducts(){}
 }

@@ -7,7 +7,7 @@ public final class NativeBuilderRuntimeChecks {
  private static final class Actor extends net.neoforged.neoforge.common.util.FakePlayer {Actor(ServerLevel w){super(w,new com.mojang.authlib.GameProfile(new UUID(0,211004),"NativeBuilderRuntime"));}}
  private static String phase(){return System.getProperty("vandorlabs.builderRecoveryPhase","");}private static boolean enabled(){return Boolean.getBoolean("vandorlabs.builderRuntimeChecks");}private static NativeBuilderEntity root(){return (NativeBuilderEntity)world.getBlockEntity(ROOT);}private static void need(boolean b,String why){checks++;if(!b)throw new AssertionError("Builder stage="+stage+" tick="+ticks+": "+why);}
  private static java.nio.file.Path expected(){return world.getServer().getWorldPath(net.minecraft.world.level.storage.LevelResource.ROOT).resolve("builder-smoke-expected.nbt");}
- @SubscribeEvent public static void started(ServerStartedEvent e){if(!enabled())return;try{world=e.getServer().overworld();for(int x=24;x<=40;x+=8)for(int z=24;z<=40;z+=8){world.setChunkForced(x>>4,z>>4,true);world.getChunkAt(new BlockPos(x,120,z));}actor=new Actor(world);actor.setGameMode(GameType.SURVIVAL);actor.setPos(31.5,120,27.5);actor.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.DIAMOND_PICKAXE));if(phase().equals("export-read")){stage=95;return;}if(phase().startsWith("read")){recovered();return;}setup(0,Direction.NORTH);negativeData();NativeBuilderQueueChecks.run(world,actor,ROOT.offset(-4,20,-4));if(phase().equals("crash-owned")){world.setBlock(ROOT.south(),Blocks.AIR.defaultBlockState(),3);fillOwnership();saveExpected(false);armCrash();need(!actor.gameMode.destroyBlock(ROOT),"unformed owned core mining defers original removal with incomplete frame");stage=90;return;}if(phase().equals("crash-form")){fillOwnership();saveExpected(false);armCrash();need(NativeBuilderTransactions.request(root(),actor,true),"crash formation queued");stage=90;return;}if(phase().equals("crash-mine")){need(NativeBuilderTransactions.request(root(),actor,true),"mine preparation queues real formation");stage=80;return;}stage=0;}catch(Throwable bad){fail(bad);}}
+ @SubscribeEvent public static void started(ServerStartedEvent e){if(!enabled())return;try{world=e.getServer().overworld();for(int x=24;x<=40;x+=8)for(int z=24;z<=40;z+=8){world.setChunkForced(x>>4,z>>4,true);world.getChunkAt(new BlockPos(x,120,z));}actor=new Actor(world);actor.setGameMode(GameType.SURVIVAL);actor.setPos(31.5,120,27.5);actor.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(Items.DIAMOND_PICKAXE));if(phase().equals("gantry")){setup(2,Direction.EAST,3);need(NativeBuilderTransactions.request(root(),actor,true),"Gantry async formation");stage=100;return;}if(phase().equals("export-read")){stage=95;return;}if(phase().startsWith("read")){recovered();return;}setup(0,Direction.NORTH);negativeData();NativeBuilderQueueChecks.run(world,actor,ROOT.offset(-4,20,-4));if(phase().equals("crash-owned")){world.setBlock(ROOT.south(),Blocks.AIR.defaultBlockState(),3);fillOwnership();saveExpected(false);armCrash();need(!actor.gameMode.destroyBlock(ROOT),"unformed owned core mining defers original removal with incomplete frame");stage=90;return;}if(phase().equals("crash-form")){fillOwnership();saveExpected(false);armCrash();need(NativeBuilderTransactions.request(root(),actor,true),"crash formation queued");stage=90;return;}if(phase().equals("crash-mine")){need(NativeBuilderTransactions.request(root(),actor,true),"mine preparation queues real formation");stage=80;return;}stage=0;}catch(Throwable bad){fail(bad);}}
  private static void setup(int design,Direction face){setup(design,face,0);}
  private static void setup(int design,Direction face,int corner){clear();var block=NativeBuilderBindings.CORES.get(NativeBuilderDesigns.at(design).id());world.setBlock(ROOT,block.defaultBlockState().setValue(NativeBuilderCoreBlock.FACING,face),3);var owner=root();var d=owner.design();desiredX=(corner&1)==0?0:d.width()-1;desiredZ=(corner&2)==0?0:d.depth()-1;var layout=new com.vandorlabs.machines.CoreLayout(d.width(),d.height(),d.depth(),face.get3DDataValue(),desiredX,desiredZ);for(int x=0;x<d.width();x++)for(int y=0;y<d.height();y++)for(int z=0;z<d.depth();z++){var at=ROOT.offset(layout.x(x,z),y,layout.z(x,z));if(!at.equals(ROOT))world.setBlock(at,layout.frame(x,y,z)?NativeBuilderFormation.matter().defaultBlockState():Blocks.AIR.defaultBlockState(),3);}actor.setPos(ROOT.getX()+face.getStepX()*4+.5,120,ROOT.getZ()+face.getStepZ()*4+.5);}
  private static void clear(){for(var p:BlockPos.betweenClosed(ROOT.offset(-6,-1,-6),ROOT.offset(6,6,6)))if(NativeBuilderFormation.loaded(world,p))world.setBlock(p,Blocks.AIR.defaultBlockState(),3);for(var e:world.getEntitiesOfClass(ItemEntity.class,new AABB(ROOT).inflate(12)))e.discard();}
@@ -27,7 +27,7 @@ public final class NativeBuilderRuntimeChecks {
  }
  private static CompoundTag merge(CompoundTag a,CompoundTag b){a.merge(b);return a;}
  private static void checkFrame(boolean formed){var owner=root();var d=owner.design();for(int x=0;x<d.width();x++)for(int y=0;y<d.height();y++)for(int z=0;z<d.depth();z++){var at=owner.cell(x,y,z);if(at.equals(ROOT))continue;if(!formed&&phase().endsWith("owned")&&at.equals(ROOT.south())){need(world.isEmptyBlock(at),"unformed owned recovery preserves already incomplete frame");continue;}if(formed)need(world.getBlockEntity(at) instanceof NativeBuilderPartEntity p&&p.owner().equals(ROOT),"exact owned reservation "+at);else need(owner.layout().frame(x,y,z)?world.getBlockState(at).is(NativeBuilderFormation.matter()):world.isEmptyBlock(at),"restored original frame "+at);}}
- @SubscribeEvent public static void tick(ServerTickEvent.Post e){if(!enabled()||world==null)return;try{if(++ticks>6000)throw new AssertionError("Builder async timeout");var owner=world.getBlockEntity(ROOT) instanceof NativeBuilderEntity r?r:null;if(stage==95){if(owner==null||!owner.available()||!owner.synthesisReady())return;coldExport(false);return;}if(stage==70){if(!NativeSynthesisExportEdgeChecks.tick(world,actor))return;System.out.println("[vandorlabs][builder-runtime] PASS focused800ticks/16000RF/workingPause/queuedChestExport/coldReload/unloadedTarget/menu/bank checks="+checks);world=null;e.getServer().halt(false);return;}if(stage==90)return;if(stage==80){if(owner==null||!owner.available()||!owner.formed())return;fillOwnership();saveExpected(true);armCrash();need(!actor.gameMode.destroyBlock(ROOT),"real Survival core break defers vanilla removal");need(root().transactionBlocked()&&world.getBlockState(ROOT).getValue(NativeBuilderCoreBlock.FORMED),"queued break retains original source until durable");stage=90;return;}
+ @SubscribeEvent public static void tick(ServerTickEvent.Post e){if(!enabled()||world==null)return;try{if(++ticks>6000)throw new AssertionError("Builder async timeout");var owner=world.getBlockEntity(ROOT) instanceof NativeBuilderEntity r?r:null;if(stage>=100){gantry(owner);return;}if(stage==95){if(owner==null||!owner.available()||!owner.synthesisReady())return;coldExport(false);return;}if(stage==70){if(!NativeSynthesisExportEdgeChecks.tick(world,actor))return;System.out.println("[vandorlabs][builder-runtime] PASS focused800ticks/16000RF/workingPause/queuedChestExport/coldReload/unloadedTarget/menu/bank checks="+checks);world=null;e.getServer().halt(false);return;}if(stage==90)return;if(stage==80){if(owner==null||!owner.available()||!owner.formed())return;fillOwnership();saveExpected(true);armCrash();need(!actor.gameMode.destroyBlock(ROOT),"real Survival core break defers vanilla removal");need(root().transactionBlocked()&&world.getBlockState(ROOT).getValue(NativeBuilderCoreBlock.FORMED),"queued break retains original source until durable");stage=90;return;}
   if(stage==0&&Boolean.getBoolean("vandorlabs.builderProductionOnly")){need(NativeBuilderTransactions.request(root(),actor,true),"focused production async formation");stage=10;return;}
   if(stage==0){int design=caseIndex/16;Direction face=Direction.from2DDataValue((caseIndex/4)%4);setup(design,face,caseIndex%4);need(NativeBuilderTransactions.request(root(),actor,true),"actual async formation admitted");need(!root().available(),"queued preparation freezes ownership without rejecting request");if(caseIndex==0)journalNegatives(true);stage=1;return;}
   if(stage==1){if(owner==null||!owner.available()||!owner.formed())return;if(caseIndex==0)NativeBuilderQueueChecks.empty();checkFrame(true);need(owner.layout().cornerX==desiredX&&owner.layout().cornerZ==desiredZ,"auto-discovered actual placed bottom corner");var roundtrip=new NativeBuilderEntity(ROOT,owner.getBlockState());roundtrip.setLevel(world);roundtrip.loadWithComponents(owner.saveWithFullMetadata(world.registryAccess()),world.registryAccess());need(!roundtrip.inert()&&roundtrip.pivot().equals(owner.pivot())&&roundtrip.cell(0,0,0).equals(owner.cell(0,0,0)),"saved corner and emitted origin roundtrip each layout");need(NativeBuilderTransactions.request(owner,actor,false),"actual async dismantle admitted");if(caseIndex==0)journalNegatives(false);stage=2;return;}
@@ -69,6 +69,95 @@ public final class NativeBuilderRuntimeChecks {
   ((net.minecraft.world.level.storage.ServerLevelData)world.getLevelData()).setGameTime(++time);NativeBuilderEntity.tick(world,ROOT,reload.getBlockState(),reload);
   need(chest.getItem(0).getCount()==1&&chest.getItem(0).is(NativeSynthesisRuntime.result(0).getItem())&&reload.getItem(1).isEmpty()&&reload.processing()&&reload.getItem(0).getCount()==1,"reloaded output exports exactly once and queued next recipe starts");
   reload.configureRedstone(1,ChannelList.EMPTY);var clean=reload.saveWithFullMetadata(world.registryAccess());clean.getCompound("Synthesis").putBoolean("Active",false);clean.getCompound("Synthesis").putInt("Work",0);clean.getCompound("Synthesis").remove("WorkCost");reload.loadWithComponents(clean,world.registryAccess());reload.setItem(0,ItemStack.EMPTY);reload.configureRedstone(0,ChannelList.EMPTY);reload.beforeChannelRegistration();world.setBlock(at,Blocks.AIR.defaultBlockState(),3);
+ }
+ private static int gantryEnergy;
+ private static void gantry(NativeBuilderEntity owner){
+  if(stage==102){
+   if(!world.isEmptyBlock(ROOT)||NativeTransferHolds.active(world))return;
+   var matter=NativeBuilderFormation.matter().asItem();
+   var core=NativeBuilderBindings.CORES.get("enclosed_gantry").asItem();
+   var drops=world.getEntitiesOfClass(ItemEntity.class,new AABB(ROOT).inflate(8));
+   need(drops.stream().filter(drop->drop.getItem().is(matter)).mapToInt(drop->drop.getItem().getCount()).sum()==1
+         &&drops.stream().filter(drop->drop.getItem().is(core)).mapToInt(drop->drop.getItem().getCount()).sum()==1,
+         "active Gantry mining refunds its one escrowed Matter Block with its Core");
+   System.out.println("[vandorlabs][builder-runtime] PASS Gantry eightProducts/8000RF/40RFPerTick/realPorts/partialReload/asyncMining checks="+checks);
+   var server=world.getServer();world=null;server.halt(false);return;
+  }
+  if(owner==null||!owner.available()||!owner.formed()||!owner.synthesisReady())return;
+  if(stage==100){
+   checkFrame(true);
+   need(owner.gantry()&&owner.layout().cornerX==desiredX&&owner.layout().cornerZ==desiredZ,"real rotated Gantry with opposite-corner core");
+   if(!com.vandorlabs.neoforge.gear.NativeGearBindings.enabled()){
+    var power=net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK;
+    need(!owner.production()&&world.getCapability(power,owner.powerPort(),Direction.DOWN)==null,
+          "Gantry reserves its structure without exposing production while gear is disabled");
+    for(int i=0;i<5;i++)need(NativeBuilderProducts.pressPartAvailable(i)==(i<3),
+          "disabled rack hides only its two Press products: "+i);
+    System.out.println("[vandorlabs][builder-runtime] PASS disabled parts retains Gantry structure and filters Press modules");
+    var server=world.getServer();world=null;server.halt(false);return;
+   }
+   world.getServer().tickRateManager().setTickRate(100);
+   need(!owner.setMode(1),"Digitize remains Tower-only");
+   need(NativeBuilderProducts.GANTRY.equals(com.vandorlabs.machines.BuilderRecipeCatalog.known("enclosed_gantry").subList(0,8)),
+         "Gantry production matches all native non-Vehicle blueprints");
+   var edit=new NativeBuilderEdit(3,ROOT,0,7,ChannelList.EMPTY);
+   var bytes=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),world.registryAccess());
+   try{
+    NativeBuilderPayload.CODEC.encode(bytes,new NativeBuilderPayload(edit));
+    need(bytes.readableBytes()==15&&NativeBuilderPayload.CODEC.decode(bytes).edit().equals(edit),
+          "last Gantry recipe retains the 15-byte selection packet");
+   }finally{bytes.release();}
+   var overflow=net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK;
+   need(owner.powerPort().equals(owner.cell(4,0,2))&&world.getCapability(overflow,owner.powerPort(),Direction.DOWN)!=null
+         &&world.getCapability(overflow,owner.cell(2,0,2),Direction.DOWN)==null,"FE is exposed on both faces of the rear corner only");
+   beginGantry(owner);stage=101;return;
+  }
+  if(owner.getItem(1).isEmpty()){
+   var energy=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+           owner.powerPort(),owner.facing().getOpposite());
+   need(energy!=null&&energy.receiveEnergy(1024,false)==40&&energy.receiveEnergy(40,false)==0,
+         "rear corner enforces shared 40 RF per tick across repeated supply calls");
+   gantryEnergy+=40;
+   if(gantryEnergy==4000){
+    var saved=owner.saveWithoutMetadata(world.registryAccess());
+    var loaded=new NativeBuilderEntity(ROOT,owner.getBlockState());
+    loaded.loadWithComponents(saved,world.registryAccess());
+    need(!loaded.inert()&&loaded.processing()&&loaded.buildProgress()==.5F&&loaded.buildDesign()==recipe
+          &&NativeBuilderData.sameSnapshots(saved,loaded.saveWithoutMetadata(world.registryAccess())),
+          "Gantry partial job retains its recipe and paid work "+recipe);
+   }
+   return;
+  }
+  var expected=NativeBuilderProducts.partResult("enclosed_gantry",recipe);
+  need(!expected.isEmpty()&&!owner.processing()&&owner.getItem(0).isEmpty()&&gantryEnergy==8000
+        &&ItemStack.matches(owner.getItem(1),expected),"exact Gantry item after one Matter Block and 8000 RF "+recipe);
+  var loaded=new NativeBuilderEntity(ROOT,owner.getBlockState());
+  var saved=owner.saveWithoutMetadata(world.registryAccess());
+  loaded.loadWithComponents(saved,world.registryAccess());
+  need(!loaded.inert()&&ItemStack.matches(loaded.getItem(1),expected),"exact output survives reload, including recipe index 5");
+  var viewer=new NativeBuilderEntity(ROOT,owner.getBlockState());
+  viewer.handleUpdateTag(owner.getUpdateTag(world.registryAccess()),world.registryAccess());
+  need(!viewer.inert()&&ItemStack.matches(viewer.getItem(1),expected),"fixed Gantry public preview "+recipe);
+  var output=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+          owner.itemPort(),owner.facing().getCounterClockWise());
+  need(output!=null&&ItemStack.matches(output.extractItem(0,1,false),expected),"outward port returns one exact product");
+  if(++recipe<NativeBuilderProducts.GANTRY.size()){beginGantry(owner);return;}
+  recipe=0;beginGantry(owner);
+  var energy=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+          owner.powerPort(),Direction.DOWN);
+  need(energy!=null&&energy.receiveEnergy(40,false)==40&&owner.processing()&&owner.getItem(0).isEmpty(),
+        "lower feed starts the next job and takes ownership of its Matter Block");
+  need(!actor.gameMode.destroyBlock(ROOT)&&owner.transactionBlocked(),"active Gantry mining queues one durable transfer");
+  stage=102;
+ }
+ private static void beginGantry(NativeBuilderEntity owner){
+  gantryEnergy=0;
+  owner.selectDesign(recipe);
+  var input=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
+          owner.itemPort(),owner.facing().getOpposite());
+  need(owner.selectedDesign()==recipe&&owner.getItem(3).isEmpty()&&input!=null
+        &&input.insertItem(0,new ItemStack(NativeBuilderFormation.matter()),false).isEmpty(),
+        "Gantry built-in recipe accepts Matter Block from rear feed without a chip");
  }
  private static int sourceTicks;
  private static void productionTick(NativeBuilderEntity owner){

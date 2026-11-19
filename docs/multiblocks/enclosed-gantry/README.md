@@ -35,7 +35,8 @@ Blocks at 40 RF/tick for 200 ticks. The rail moves forward/backward and its
 smaller head moves left/right above a blue scanning beam while building.
 Click the completed block in the chamber to collect it. See
 [production and port details](../../universal-constructors.md). On NeoForge
-1.21.1, the taller structure is available but production remains deferred.
+1.21.1, see [Enclosed Gantry operation](../../builders-1.21.md#enclosed-gantry-operation)
+for the native arm and landing-gear recipes.
 The former three-high frame is no longer a valid Gantry recipe.
 
 [All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)
