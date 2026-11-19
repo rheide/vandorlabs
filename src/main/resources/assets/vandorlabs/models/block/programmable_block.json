@@ -1,4 +1,4 @@
 {
-  "textures": {"particle": "vandorlabs:blocks/dark_wall_panel"},
+  "textures": {"particle": "vandorlabs:blocks/matter/matter"},
   "elements": []
 }

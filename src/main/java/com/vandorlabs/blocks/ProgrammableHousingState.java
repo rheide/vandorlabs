@@ -49,7 +49,8 @@ public final class ProgrammableHousingState {
         TileEntity raw = world.getTileEntity(pos);
         TileEntityAnimatedScreenSelector tile = raw instanceof TileEntityAnimatedScreenSelector
                 ? (TileEntityAnimatedScreenSelector)raw : null;
-        int finish = tile == null ? 0 : tile.getHousingTexture();
+        int finish = tile != null ? tile.getHousingTexture()
+                : state.getBlock() == ModBlocks.PROGRAMMABLE_BLOCK ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_PROGRAMMABLE_BLOCK : 0;
         int tileSides = tile != null ? tile.getMainTextureLayout() : 0;
         int visible = 63;
         BlockSlab.EnumBlockHalf half = slab ? state.getValue(BlockProgrammableSlab.HALF) : null;

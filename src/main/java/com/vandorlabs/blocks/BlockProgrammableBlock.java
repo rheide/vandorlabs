@@ -23,7 +23,10 @@ public class BlockProgrammableBlock extends BlockAnimatedScreenSelector {
 
     @Override public net.minecraft.tileentity.TileEntity createNewTileEntity(net.minecraft.world.World world,int meta){
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=new com.vandorlabs.tiles.TileEntityAnimatedScreenSelector();
-        if(getClass()==BlockProgrammableBlock.class)tile.setMainTextureLayout(1);
+        if(getClass()==BlockProgrammableBlock.class){
+            tile.setMainTextureLayout(1);
+            tile.setHousingTexture(com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_PROGRAMMABLE_BLOCK);
+        }
         return tile;
     }
 

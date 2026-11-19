@@ -15,19 +15,20 @@ public class ProgrammableBlockEntity extends BlockEntity implements com.vandorla
     public static final ModelProperty<ProgrammableBlockDialog.State> SETTINGS=new ModelProperty<>();
     public static final ModelProperty<JoinedCubeFaces> JOINED=new ModelProperty<>();
     private volatile JoinedCubeFaces joinedFaces=JoinedCubeFaces.NONE;
-    private volatile ProgrammableBlockDialog.State settings=defaults();
+    private volatile ProgrammableBlockDialog.State settings;
     private int sideTexture=-1,rawLayout=1;
     private boolean tileSides=true;
     private com.vandorlabs.surface.TextureJoinSettings textureJoin=com.vandorlabs.surface.TextureJoinSettings.DEFAULT;
     public com.vandorlabs.surface.TextureJoinSettings textureJoin(){return textureJoin;}
     public void setTextureJoin(com.vandorlabs.surface.TextureJoinSettings next){if(textureJoin().equals(next))return;textureJoin=java.util.Objects.requireNonNull(next);if(this instanceof com.vandorlabs.neoforge.shape.NativeWallEntity wall){com.vandorlabs.neoforge.shape.NativeWallLayouts.invalidate(wall);com.vandorlabs.neoforge.fluid.NativeFluidWorld.queue(wall);}refresh();}
     private CompoundTag retainedSettings=new CompoundTag();
-    public ProgrammableBlockEntity(BlockPos pos,BlockState state){this(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,defaults());}
+    public ProgrammableBlockEntity(BlockPos pos,BlockState state){this(VandorLabsBootstrap.PROGRAMMABLE_ENTITY.get(),pos,state,cubeDefaults());}
     protected ProgrammableBlockEntity(net.minecraft.world.level.block.entity.BlockEntityType<?> type,BlockPos pos,BlockState state,ProgrammableBlockDialog.State initial){
         super(type,pos,state);settings=initial;rawLayout=initial.layout;tileSides=initial.layout==1;
     }
     protected ProgrammableBlockDialog.State modelSettings(){return settings;}
     public static ProgrammableBlockDialog.State defaults(){return new ProgrammableBlockDialog.State(0,1,false,new int[]{-1,-1,-1,-1,-1,-1},-1);}
+    public static ProgrammableBlockDialog.State cubeDefaults(){return new ProgrammableBlockDialog.State(ModernFinishCatalog.defaultProgrammableBlock(),1,false,new int[]{-1,-1,-1,-1,-1,-1},-1);}
     public ProgrammableBlockDialog.State settings(){return settings;}
     protected final int sideTexture(){return sideTexture;}
     /** Family adapters validate the selected finish before changing this shared saved field. */

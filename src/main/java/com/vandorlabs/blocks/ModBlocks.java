@@ -670,7 +670,7 @@ public class ModBlocks {
             int preset=com.vandorlabs.items.AppliancePresets.matching(stack);if(preset>=0)return new ModelResourceLocation("vandorlabs:appliances/"+com.vandorlabs.appliance.ApplianceCatalog.IDS[preset],"inventory");
             net.minecraft.nbt.NBTTagCompound tag = stack.getSubCompound("BlockEntityTag");
             int choice = tag == null || !tag.hasKey(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE,3)
-                    ? (block instanceof BlockProgrammableStorage ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_STORAGE : block instanceof BlockProgrammableTrapdoor ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR : 0)
+                    ? (block instanceof BlockProgrammableStorage ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_STORAGE : block instanceof BlockProgrammableTrapdoor ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_TRAPDOOR : block == PROGRAMMABLE_BLOCK ? com.vandorlabs.tiles.ScreenHousingTextures.DEFAULT_PROGRAMMABLE_BLOCK : 0)
                     : com.vandorlabs.tiles.ScreenHousingTextures.clamp(tag.getInteger(com.vandorlabs.persistence.SaveSchema.Screen.HOUSING_TEXTURE));
             return new ModelResourceLocation(variants[com.vandorlabs.tiles.ScreenHousingTextures.localIndex(choice)], "inventory");
         });
