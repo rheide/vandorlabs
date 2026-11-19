@@ -5,6 +5,7 @@ import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.material.Fluids;
 import net.minecraft.world.phys.*;
@@ -78,6 +79,8 @@ final class HorizontalLargeDoorPlayerFixture {
         Vec3 p=Vec3.atCenterOf(middle);
         need(!level.getBlockCollisions(null,query).iterator().hasNext()
                 &&NativeLargeDoorTargets.trace(level,p.add(0,2,0),p.add(0,-2,0))==null,"open clears frame middle for vertical motion");
+        var visible=level.clip(new ClipContext(p.add(0,2,0),p.add(0,-2,0),ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,player));
+        need(visible.getBlockPos().equals(middle.below()),"vanilla targeting through the open hatch reaches the floor");
         // Only the two independently wet members may claim their vertical source.
         var first=(NativeLargeDoorEntity)level.getBlockEntity(NativeLargeDoorLifecycle.cell(root.getBlockPos(),facing(),true,0,2));
         var second=(NativeLargeDoorEntity)level.getBlockEntity(NativeLargeDoorLifecycle.cell(root.getBlockPos(),facing(),true,2,2));

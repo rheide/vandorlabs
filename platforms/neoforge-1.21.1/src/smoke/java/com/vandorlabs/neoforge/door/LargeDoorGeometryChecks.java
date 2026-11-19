@@ -31,7 +31,7 @@ public final class LargeDoorGeometryChecks {
    var hit=NativeLargeDoorGeometry.trace(closed,center.getX()+.5,82,center.getZ()+.5,center.getX()+.5,78,center.getZ()+.5);
    need(hit!=null&&NativeLargeDoorGeometry.owner(closed,hit.x,hit.y,hit.z).equals(center),"horizontal ray resolves middle owner "+side);
    need(closed.boxes().stream().anyMatch(box->box.intersects(sweep))&&opened.boxes().stream().noneMatch(box->box.intersects(sweep)),"horizontal collision clears only when open "+side);
-   need(opened.part(1,1).pos().equals(center)&&opened.part(1,1).collisionShape().isEmpty(),"center cell has no open collision "+side);
+   need(opened.part(1,1).pos().equals(center)&&opened.part(1,1).collisionShape().isEmpty()&&opened.part(1,1).outlineShape().isEmpty(),"center cell has no open collision or phantom outline "+side);
    var plane=NativeLargeDoorFluidGeometry.build(settings,closed,1,1).plane();
    need(plane.y()==-1&&plane.side(.5,0,.5)!=plane.side(.5,1,.5),"native fluid sides follow horizontal leaf "+side);
   }
