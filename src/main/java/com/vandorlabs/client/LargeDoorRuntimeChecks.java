@@ -48,6 +48,7 @@ final class LargeDoorRuntimeChecks {
                 door.onBlockActivated(world,passage,world.getBlockState(passage),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
                 require(world.getBlockState(passage).getValue(BlockVandorDoor.OPEN),"open from a follower cell "+front);
                 require(world.getCollisionBoxes(null,sweep).isEmpty()&&MovedDoorInteractions.trace(world,above,below)==null,"open hatch clears the vertical swept column "+front);
+                verifyWater(world,door,door.root(world,passage),player,front,passage);
                 world.destroyBlock(clicked.offset(width),false);
                 require(world.getBlockState(passage).getBlock()!=door,"loss of side support removes assembly "+front);
             }
@@ -55,7 +56,25 @@ final class LargeDoorRuntimeChecks {
             player.setHeldItem(EnumHand.MAIN_HAND,previous);
             player.setSneaking(sneaking);
         }
-        System.out.println("[vandorlabs] horizontal-door PASS four side placements, saved part roles, vertical sweep and support removal");
+        System.out.println("[vandorlabs] horizontal-door PASS four side placements, saved part roles, vertical sweep, owned water sources and support removal");
+    }
+
+    private static void verifyWater(World world,BlockLargeProgrammableDoor door,TileEntityLargeProgrammableDoor root,
+            EntityPlayer player,EnumFacing front,BlockPos passage){
+        TileEntityLargeProgrammableDoor upper=(TileEntityLargeProgrammableDoor)world.getTileEntity(root.cell(root.getPos(),front,0,2));
+        TileEntityLargeProgrammableDoor lower=(TileEntityLargeProgrammableDoor)world.getTileEntity(root.cell(root.getPos(),front,2,2));
+        BlockPos outDown=upper.getPos().down(),outUp=lower.getPos().up();
+        net.minecraftforge.fluids.FluidStack water=new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,1000);
+        upper.fluids.set(0,water);lower.fluids.set(1,water);
+        DoorWaterGush.opened(world,upper.getPos());DoorWaterGush.opened(world,lower.getPos());
+        require(upper.waterOutlets()==1&&lower.waterOutlets()==2&&root.waterOutlets()==0
+                &&world.getBlockState(outDown).getValue(net.minecraft.block.BlockLiquid.LEVEL)==0
+                &&world.getBlockState(outUp).getValue(net.minecraft.block.BlockLiquid.LEVEL)==0,"each follower owns its vertical source "+front);
+        door.onBlockActivated(world,passage,world.getBlockState(passage),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        DoorWaterGush.opened(world,upper.getPos());DoorWaterGush.opened(world,lower.getPos());
+        require(upper.waterOutlets()==0&&lower.waterOutlets()==0
+                &&world.getBlockState(outDown).getValue(net.minecraft.block.BlockLiquid.LEVEL)==1
+                &&world.getBlockState(outUp).getValue(net.minecraft.block.BlockLiquid.LEVEL)==1,"closing retires both vertical sources "+front);
     }
 
     static void run(World world,EntityPlayer player){

@@ -77,6 +77,10 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         for(int x=0;x<3;x++)for(int y=0;y<3;y++){
             BlockPos cell=tile.cell(anchor,front,x,y);IBlockState before=world.getBlockState(cell);
             if(before.getValue(OPEN)!=open || before.getValue(POWERED)!=powered)world.setBlockState(cell,before.withProperty(OPEN,open).withProperty(POWERED,powered),2);
+            if(tile.isHorizontal()&&before.getValue(OPEN)!=open && world.getTileEntity(cell) instanceof TileEntityLargeProgrammableDoor){
+                TileEntityLargeProgrammableDoor part=(TileEntityLargeProgrammableDoor)world.getTileEntity(cell);
+                if(part.fluids.any()||part.waterOutlets()!=0)DoorWaterGush.schedule(world,cell);
+            }
         }
         if(old.getValue(OPEN)!=open)world.playSound(null,anchor,open?net.minecraft.init.SoundEvents.BLOCK_IRON_DOOR_OPEN:net.minecraft.init.SoundEvents.BLOCK_IRON_DOOR_CLOSE,SoundCategory.BLOCKS,1,1);
     }
@@ -94,6 +98,8 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         tile.localInputChanged();updateRedstoneState(world,tile.getPos(),state);
     }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
+        if(!world.isRemote&&world.getTileEntity(pos) instanceof TileEntityLargeProgrammableDoor
+                &&((TileEntityLargeProgrammableDoor)world.getTileEntity(pos)).isHorizontal())DoorWaterGush.stop(world,pos);
         if(!REMOVING.get()){
             TileEntityLargeProgrammableDoor reader=root(world,pos);if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&reader!=null){for(int side=0;side<2;side++){ItemStack token=reader.keyReader(side).takeForDrop();if(!token.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,token);}}
             TileEntity raw=world.getTileEntity(pos);BlockPos anchor=raw instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)raw).anchorPos():pos;
