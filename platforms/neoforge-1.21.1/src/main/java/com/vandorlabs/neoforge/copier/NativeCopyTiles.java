@@ -40,6 +40,7 @@ final class NativeCopyTiles {
     }
 
     static boolean supported(BlockEntity tile){
+        if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)return !screen.inert();
         if(tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverEntity observer)return !observer.inert();
         if(tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartEntity)return true;
         if(tile instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table)return !table.inert();
@@ -57,6 +58,7 @@ final class NativeCopyTiles {
     static BlockEntity stage(ServerLevel world,NativeRawCell cell){
         if(cell.hasTile()){var raw=cell.tile();if(raw.contains("LootTable"))throw new IllegalArgumentException("Open loot containers before copying");}
         var tile=cell.stage(world,NativeCopyTiles::supported,NativeCopyTiles::same);
+        if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)NativeCopyScreens.requireStatic(screen,cell.tile());
         if(tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartEntity part&&part.inert())
             throw new IllegalArgumentException("Observer part failed ownership staging");
         if(tile instanceof com.vandorlabs.neoforge.ProgrammableBlockEntity&&!(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity)&&!(tile instanceof com.vandorlabs.neoforge.reservoir.NativeBufferEntity)){

@@ -32,7 +32,7 @@ public final class NativeCopyRuntimeChecks {
     private static int ticks,checks,stage,stageTick,armed,caught;private static long idleScans,idlePackets;
     private static final class Actor extends net.neoforged.neoforge.common.util.FakePlayer {Actor(ServerLevel world){super(world,new com.mojang.authlib.GameProfile(ACTOR,"CopyRuntimeFixture"));}}
     private static String phase(){return System.getProperty("vandorlabs.copyPhase","");}
-    private static boolean enabled(){return Boolean.getBoolean("vandorlabs.copyRuntimeChecks") && !Boolean.getBoolean("vandorlabs.copyPairedChestCheck") && !Boolean.getBoolean("vandorlabs.copyObserversCheck");}
+    private static boolean enabled(){return Boolean.getBoolean("vandorlabs.copyRuntimeChecks") && !Boolean.getBoolean("vandorlabs.copyPairedChestCheck") && !Boolean.getBoolean("vandorlabs.copyObserversCheck") && !Boolean.getBoolean("vandorlabs.copyScreensCheck");}
     private static void need(boolean value,String message){checks++;if(!value)throw new AssertionError("Copy stage="+stage+" tick="+ticks+" busy="+(root!=null&&root.busy())+" status="+(root==null?"absent":root.status())+" error="+(root==null?"absent":root.error())+": "+message);}
     private static ChestBlockEntity chest(BlockPos pos){return (ChestBlockEntity)world.getBlockEntity(pos);}
     private static ItemStack gold(int count){var stack=new ItemStack(Items.GOLD_INGOT,count);stack.set(DataComponents.CUSTOM_NAME,net.minecraft.network.chat.Component.literal("Copy receipt gold"));var tag=new CompoundTag();tag.putString("Receipt","copy-exact-components");stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));return stack;}

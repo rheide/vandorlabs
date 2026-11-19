@@ -56,6 +56,10 @@ public final class NativeCopyService {
             NativeCopyNavigationTable.requireIsolated(world,recipe.tableInputBoundary);
             NativeCopyNavigationTable.requireIsolated(world,recipe.tableOutputBoundary);
             for(var pos:recipe.tableOutputBoundary)permission(world,header,actor,pos);
+            NativeCopyScreens.requireIsolated(world,recipe.screenInputBoundary);
+            NativeCopyScreens.requireIsolated(world,recipe.screenOutputBoundary);
+            for(var pos:recipe.screenInputBoundary)permission(world,header,actor,pos);
+            for(var pos:recipe.screenOutputBoundary)permission(world,header,actor,pos);
             recipe.targetVolume.requireLoaded(world);if(!world.getEntities(null,recipe.targetVolume.bounds()).isEmpty())throw new IllegalArgumentException("Output prism became occupied");for(var pos:recipe.targetVolume.cells())permission(world,header,actor,pos);
             if(recipe.source!=null){recipe.sourceVolume.requireLoaded(world);
                 for(var cell:recipe.source.cells())if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock)NativeCopyObservers.requireIdle(world,cell.pos);if(!recipe.source.matches(world,NativeCopyTiles::same))throw new IllegalArgumentException("Input private fields or blocks changed");for(var pos:recipe.sourceVolume.cells())permission(world,header,actor,pos);}else{var mount=NativeCopyPlan.chipMount(world,root.getBlockPos());if(mount==null||!mount.getBlockPos().equals(recipe.chipMount)||!ItemStack.matches(mount.getItem(0),recipe.chip()))throw new IllegalArgumentException("Construction chip changed");}validateEconomy(world,header,recipe);

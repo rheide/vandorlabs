@@ -49,7 +49,7 @@ public final class NativeCopyMaterials {
                 add(needs,material,1,true);continue;
             }
             if(raw!=null){for(String key:List.of("ForgeCaps","neoforge:attachments"))if(raw.contains(key)&&!(raw.get(key) instanceof CompoundTag data&&data.isEmpty()))throw new IllegalArgumentException("Unknown stored ownership needs an exact material adapter");}
-            add(needs,material,count,false);
+            add(needs,material,count,tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity);
             if(tile instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table){
                 var chip=table.storedChip();
                 add(needs,chip,chip.getCount(),true);
