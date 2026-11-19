@@ -131,6 +131,7 @@ public final class NativeBuilderRuntimeChecks {
 
   legacyFrame(owner);
   for(int unit=0;unit<LEGACY_PRODUCTION.size();unit++) productionImport(unit);
+  for(int unit=0;unit<ACTIVE_PRODUCTION.size();unit++) activeProductionImport(unit);
  }
  private record LegacyProduction(String id,int forgeSelected,int forgeBuilding,int selected,int building) {}
  private static final List<LegacyProduction> LEGACY_PRODUCTION=List.of(
@@ -212,6 +213,50 @@ public final class NativeBuilderRuntimeChecks {
   need(unformed.inert()&&unformed.saveWithoutMetadata(world.registryAccess()).equals(data),"bounded formed-only import");
   legacyFrame(owner);
  }
+ private record ForgeActive(String design,int building,int cost,int credit,boolean explicitCost,boolean refund) {}
+ private static final List<ForgeActive> ACTIVE_PRODUCTION=List.of(
+     new ForgeActive("synthesis_tower",5,16000,15987,true,false),
+     new ForgeActive("assembly_press",0,8000,7973,false,false),
+     new ForgeActive("enclosed_gantry",7,8000,125,false,true),
+     new ForgeActive("synthesis_tower",0,8000,7987,false,false));
+ private static BlockPos forgeActivePos(int unit){return ROOT.above(52+unit*10);}
+ private static void activeProductionImport(int unit){
+  var fixture=ACTIVE_PRODUCTION.get(unit);var pos=forgeActivePos(unit);
+  var state=NativeBuilderBindings.CORES.get(fixture.design).defaultBlockState()
+      .setValue(NativeBuilderCoreBlock.FACING,Direction.NORTH).setValue(NativeBuilderCoreBlock.FORMED,true);
+  world.setBlock(pos,state,3);var owner=(NativeBuilderEntity)world.getBlockEntity(pos);
+  var data=legacyWork(fixture.design,0,fixture.building);data.putInt("SynthesisActivation",1);
+  var work=data.getCompound("Synthesis");work.putBoolean("Active",true);work.putInt("Work",fixture.credit);
+  if(fixture.explicitCost)work.putInt("WorkCost",fixture.cost);
+  var matter=fixture.design.equals("assembly_press")?"programmable_matter_ingot":"programmable_matter_block";
+  legacySlot(legacyInventory(data),0,legacyItem(matter,3));
+  owner.loadWithComponents(data,world.registryAccess());
+  verifyActive(owner,fixture);
+  for(int kind=0;kind<7;kind++){
+   var bad=data.copy();var badWork=bad.getCompound("Synthesis");
+   switch(kind){
+    case 0->badWork.putInt("Work",fixture.cost);
+    case 1->badWork.putInt("WorkCost",12345);
+    case 2->badWork.putInt("Mode",1);
+    case 3->badWork.put("ProductionTemplate",legacyItem(matter,1));
+    case 4->badWork.remove("Work");
+    case 5->legacySlot(legacyInventory(bad),1,legacyItem(fixture.design.equals("assembly_press")?"data_chip":
+        fixture.design.equals("enclosed_gantry")?"landing_plate":"synthesis_tower_core",1));
+    case 6->{badWork.putInt("Building",999);badWork.remove("BuildingRecipe");}
+   }
+   var rejected=new NativeBuilderEntity(pos,state);rejected.loadWithComponents(bad,world.registryAccess());
+   need(rejected.inert()&&rejected.isEmpty()&&rejected.saveWithoutMetadata(world.registryAccess()).equals(bad),
+       "ambiguous Forge active work keeps raw snapshot "+fixture.design+" case "+kind);
+  }
+  legacyFrame(owner);
+ }
+ private static void verifyActive(NativeBuilderEntity owner,ForgeActive fixture){
+  var work=owner.saveWithoutMetadata(world.registryAccess()).getCompound("Synthesis");
+  need(!owner.inert()&&owner.formed()&&owner.processing()&&owner.activation()==1
+      &&owner.getItem(0).getCount()==3&&owner.getItem(1).isEmpty()&&owner.batteryEnergy()==0
+      &&work.getInt("Work")==fixture.credit&&work.contains("WorkCost")==fixture.explicitCost
+      &&(!fixture.explicitCost||work.getInt("WorkCost")==fixture.cost),"exact saved Forge job credit and remaining inventory "+fixture.design);
+ }
  private static void verifyProduction(NativeBuilderEntity owner,LegacyProduction expected,int unit){
   var saved=owner.saveWithoutMetadata(world.registryAccess());var work=saved.getCompound("Synthesis");
   need(!owner.inert()&&owner.formed()&&owner.design().id().equals(expected.id)
@@ -252,6 +297,7 @@ public final class NativeBuilderRuntimeChecks {
   owner.setChanged();
  }
  private static void legacyTick(NativeBuilderEntity owner){
+  if(stage>=305){legacyActiveTick();return;}
   if(stage>=303){legacyProductionTick();return;}
   if(stage==300){
    if(owner==null||!owner.available())return;
@@ -291,10 +337,7 @@ public final class NativeBuilderRuntimeChecks {
  private static List<net.minecraft.world.item.ItemStack> expectedProductionDrops;
  private static List<BlockPos> legacyMatter,legacyAir;
  private static void legacyProductionTick(){
-  if(caseIndex==LEGACY_PRODUCTION.size()){
-   System.out.println("[vandorlabs][builder-runtime] PASS legacyDriveProductionColdReload/legacyFrame/durableMine/exactChipDrop checks="+checks);
-   world.getServer().halt(false);world=null;return;
-  }
+  if(caseIndex==LEGACY_PRODUCTION.size()){stage=305;caseIndex=0;return;}
   var pos=legacyProductionPos(caseIndex);
   if(stage==303){
    if(!(world.getBlockEntity(pos) instanceof NativeBuilderEntity owner)||!owner.available())return;
@@ -326,6 +369,44 @@ public final class NativeBuilderRuntimeChecks {
   need(actual.stream().allMatch(it->expectedProductionDrops.stream().anyMatch(expected->ItemStack.isSameItemSameComponents(it,expected))),
       "no extra migrated production item");
   stage=303;caseIndex++;
+ }
+ private static void legacyActiveTick(){
+  if(caseIndex==ACTIVE_PRODUCTION.size()){
+   System.out.println("[vandorlabs][builder-runtime] PASS legacyDriveProductionColdReload/legacyFrame/durableMine/exactChipDrop/exactActiveCredit/refund checks="+checks);
+   world.getServer().halt(false);world=null;return;
+  }
+  var fixture=ACTIVE_PRODUCTION.get(caseIndex);var pos=forgeActivePos(caseIndex);
+  if(stage==306){
+   if(!world.isEmptyBlock(pos)||NativeTransferHolds.active(world))return;
+   var drops=world.getEntitiesOfClass(ItemEntity.class,new AABB(pos).inflate(7));
+   need(drops.stream().map(ItemEntity::getItem).filter(it->it.is(NativeBuilderFormation.matter().asItem()))
+       .mapToInt(ItemStack::getCount).sum()==4,"cold active break returns three queued Matter and exactly one committed Matter");
+   need(drops.stream().map(ItemEntity::getItem).filter(it->it.is(NativeBuilderBindings.CORES.get(fixture.design).asItem()))
+       .mapToInt(ItemStack::getCount).sum()==1,"cold active break returns one Core");
+   need(drops.stream().map(ItemEntity::getItem).mapToInt(ItemStack::getCount).sum()==5,"cold active refund creates no product");
+   stage=305;caseIndex++;return;
+  }
+  if(!(world.getBlockEntity(pos) instanceof NativeBuilderEntity owner)||!owner.available()||!owner.synthesisReady())return;
+  verifyActive(owner,fixture);
+  if(fixture.refund){
+   actor.setPos(pos.getX()+.5,pos.getY(),pos.getZ()-3.5);
+   need(!actor.gameMode.destroyBlock(pos)&&owner.transactionBlocked(),"cold active refund queues real Survival Core break");
+   stage=306;return;
+  }
+  var power=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
+      owner.powerPort(),owner.facing().getOpposite());
+  need(power!=null&&power.getEnergyStored()==fixture.credit&&power.getMaxEnergyStored()==fixture.cost,
+      "cold active job exposes exact prior RF and historical cost");
+  owner.configureRedstone(0,ChannelList.EMPTY);
+  int remaining=fixture.cost-fixture.credit;
+  need(power.receiveEnergy(remaining-1,false)==remaining-1&&owner.processing()&&owner.getItem(1).isEmpty(),
+      "cold active job remains uncommitted at one RF short");
+  need(power.receiveEnergy(1,false)==1&&!owner.processing()&&owner.getItem(1).getCount()==1
+      &&owner.getItem(0).getCount()==3,"exact final RF completes once without consuming another Matter");
+  var expected=caseIndex==0?NativeBuilderProducts.result(NativeBuilderProducts.VECTOR_FOLD):
+      caseIndex==1?NativeBuilderProducts.partResult(fixture.design,1):NativeBuilderProducts.result(0);
+  need(ItemStack.matches(owner.getItem(1),expected),"cold job outputs building recipe rather than current selection");
+  caseIndex++;
  }
  private static void drives(NativeBuilderEntity owner){
   if(stage>=202){driveRecipes(owner);return;}

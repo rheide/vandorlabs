@@ -157,9 +157,11 @@ This also covers formed, idle Synthesis Towers, Assembly Presses and Enclosed
 Gantries. Their Redstone activation, channels and supported recipes survive
 import. Supported production inputs, outputs, batteries and the installed Data
 Chip retain their counts and slot ownership. Batteries keep their saved charge,
-and credentials keep their original item data. A snapshot with an unfinished
-job, unsupported item data, conflicting slots or an unavailable blueprint
-remains inert with its original data intact.
+and credentials keep their original item data. An in-progress fixed recipe
+resumes from its recorded RF and committed Matter if its output slot is empty.
+Unfinished Digitize scans and dynamic recipes, unsupported saved items,
+conflicting slots and unavailable blueprints remain inert with their original
+data intact.
 
 ## Dismantling and ownership
 

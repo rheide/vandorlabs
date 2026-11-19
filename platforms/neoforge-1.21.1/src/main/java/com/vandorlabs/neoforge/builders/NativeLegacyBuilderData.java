@@ -1,6 +1,8 @@
 package com.vandorlabs.neoforge.builders;
 
 import com.vandorlabs.machines.BuilderRecipeCatalog;
+import com.vandorlabs.machines.SynthesisRecipePolicy;
+import com.vandorlabs.neoforge.gear.NativeGearBindings;
 import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
 import com.vandorlabs.neoforge.inventory.NativeInventoryItems;
 import com.vandorlabs.neoforge.rack.NativeRackData;
@@ -23,7 +25,7 @@ final class NativeLegacyBuilderData {
             "TokenToggled", "TokenToggleApplied", "TokenInsertStarted", "TokenInsertionSequence",
             "TokenReturnToMost", "TokenReturnToLeast", "SynthesisBatterySequences", "SynthesisActivation");
     private static final Set<String> WORK_FIELDS = Set.of(
-            "Inventory", "Selected", "SelectedRecipe", "Building", "BuildingRecipe", "Work", "Active", "Connected", "Mode");
+            "Inventory", "Selected", "SelectedRecipe", "Building", "BuildingRecipe", "Work", "WorkCost", "Active", "Connected", "Mode");
     private static final Set<String> BAY_FIELDS = Set.of("Bay0", "Bay1", "Bay2", "Bay3");
 
     static boolean supports(NativeBuilderDesigns.Design design) {
@@ -57,8 +59,10 @@ final class NativeLegacyBuilderData {
         LEGACY_FIELDS.forEach(canonical::remove);
         canonical.putIntArray("Channels", channels(source));
         String machine = drive == null ? design.id() : "";
-        var work = idleWork(source, machine);
+        var work = productionWork(source, machine);
         ItemStack[] items = inventory(source, machine, work.getInt("Mode"), drive == null || drive.hasChip(), registries);
+        if (work.getBoolean("Active") && !items[1].isEmpty())
+            throw new IllegalArgumentException("Active Forge builder output has a separate owner");
         canonical.put("Synthesis", work);
         canonical.put("Inventory", NativeBuilderData.save(items, registries));
         long[] sequences = new long[4];
@@ -188,18 +192,21 @@ final class NativeLegacyBuilderData {
         return bank.toArray();
     }
 
-    private static CompoundTag idleWork(CompoundTag source, String machine) {
+    private static CompoundTag productionWork(CompoundTag source, String machine) {
         var canonical = new CompoundTag();
         requireType(source, "Synthesis", Tag.TAG_COMPOUND);
         if (!source.contains("Synthesis")) return canonical;
         var work = source.getCompound("Synthesis");
-        if (!WORK_FIELDS.containsAll(work.getAllKeys()) || flag(work, "Active", false)
-                || integer(work, "Work", 0) != 0)
-            throw new IllegalArgumentException("Forge builder work owns inventory or committed matter");
+        if (!WORK_FIELDS.containsAll(work.getAllKeys()))
+            throw new IllegalArgumentException("Unsupported Forge builder work ownership");
+        boolean active = flag(work, "Active", false);
+        int credit = integer(work, "Work", 0);
         flag(work, "Connected", false); // Connection state is sampled again in the loaded world.
         int mode = integer(work, "Mode", 0);
         if (mode < 0 || mode > 1 || mode != 0 && !machine.equals("synthesis_tower"))
             throw new IllegalArgumentException("Unsupported Forge builder mode");
+        if (active && (mode != 0 || machine.isEmpty()) || !active && (credit != 0 || work.contains("WorkCost")))
+            throw new IllegalArgumentException("Unexpected Forge builder work state");
         if (!work.contains("Inventory", Tag.TAG_COMPOUND))
             throw new IllegalArgumentException("Missing Forge builder inventory");
         var inventory = work.getCompound("Inventory");
@@ -208,9 +215,35 @@ final class NativeLegacyBuilderData {
                 || !items.isEmpty() && items.getElementType() != Tag.TAG_COMPOUND)
             throw new IllegalArgumentException("Forge builder inventory schema");
         canonical.putInt("Selected", nativeRecipe(work, machine, "Selected"));
-        canonical.putInt("Building", nativeRecipe(work, machine, "Building"));
+        int building = nativeRecipe(work, machine, "Building");
+        canonical.putInt("Building", building);
+        if (active) {
+            if (!work.contains("Building", Tag.TAG_INT) || !work.contains("Work", Tag.TAG_INT))
+                throw new IllegalArgumentException("Incomplete Forge builder work ownership");
+            int currentCost = fixedWorkCost(machine, building);
+            // Forge omitted WorkCost for 8,000 RF jobs, including the older Tower Core format.
+            int savedCost = integer(work, "WorkCost", SynthesisRecipePolicy.REQUIRED_RF);
+            if (work.contains("WorkCost") && (savedCost != SynthesisRecipePolicy.CORE_RF || savedCost != currentCost)
+                    || credit < 0 || credit >= savedCost)
+                throw new IllegalArgumentException("Forge builder work credit");
+            canonical.putBoolean("Active", true);
+            canonical.putInt("Work", credit);
+            if (savedCost != SynthesisRecipePolicy.REQUIRED_RF) canonical.putInt("WorkCost", savedCost);
+        }
         if (mode != 0) canonical.putInt("Mode", mode);
         return canonical;
+    }
+
+    private static int fixedWorkCost(String machine, int building) {
+        if (machine.equals("synthesis_tower")) {
+            if (building == NativeSynthesisRuntime.DYNAMIC || building == NativeBuilderProducts.RAMP && !NativeBuilderProducts.rampAvailable())
+                throw new IllegalArgumentException("Unsupported Forge Tower output");
+            return SynthesisRecipePolicy.requiredRf(machine, NativeBuilderProducts.towerBlueprint(building));
+        }
+        if (machine.equals("assembly_press") && !NativeBuilderProducts.pressPartAvailable(building)
+                || machine.equals("enclosed_gantry") && !NativeGearBindings.enabled())
+            throw new IllegalArgumentException("Disabled Forge builder output");
+        return SynthesisRecipePolicy.REQUIRED_RF;
     }
 
     private static int nativeRecipe(CompoundTag work, String machine, String field) {
