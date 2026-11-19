@@ -4,7 +4,9 @@
 
 - Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.
 - Add the remaining Assembly Press recipes to NeoForge, preserving the existing Navigation Data Module recipe and saved jobs.
-- Craft and configure programmable armor on NeoForge, with the authored role and company designs, their equipment textures, and padded inventory icons.
+- Add NeoForge Gantry production for all eight mechanical recipes and rear corner port support for the Press and Gantry.
+- Copy complete double chests on NeoForge, keeping both material and inventory halves protected through recovery.
+- Craft and configure programmable armor on NeoForge, with the authored role and company designs, shared Programmable Block materials, and padded inventory icons.
 
 ## 2.11.0 (in development)
 

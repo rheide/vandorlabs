@@ -25,7 +25,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, the five Assembly Press recipes, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
@@ -35,7 +35,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Turntables | Programmable Surfaces enabled and read-only capture preflight tested; rotation controller and moving display missing | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
-| Programmable armor | four pieces, crafting, role and company picker, equipped and inventory artwork enabled; material and copying workflows pending | unimplemented | non-vehicle first |
+| Programmable armor | four pieces, crafting, role/company and general material picker, equipped and inventory artwork enabled; sampling, stand editing and copying pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | native JEI machine recipes and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |

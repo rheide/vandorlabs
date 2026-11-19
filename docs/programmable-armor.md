@@ -2,12 +2,11 @@
 
 Programmable Helmet, Chestplate, Leggings and Boots use vanilla diamond armor protection, toughness, durability and enchantability. Repair with diamonds, including in an anvil. They are available in the Vandor Labs creative tab. Craft each piece with Programmable Matter Ingots in the corresponding vanilla armor pattern (5, 8, 7 or 4 ingots).
 
-Hold a piece, aim into the air and **shift-right-click** to open its categorized texture dialog. Configuration is available in creative mode, or in survival by holding a Configurizer in the main hand and the armor in the off hand. Choose a role design from **Armor**, a static **On** or **Off** artwork from **Lights**, or any material in the default Programmable Block texture list on Forge, then click **Done** or press Escape. Ordinary right-click equips the armor into its matching empty slot.
+Hold a piece, aim into the air and **shift-right-click** to open its categorized texture dialog. Configuration is available in creative mode, or in survival by holding a Configurizer in the main hand and the armor in the off hand. Choose a role design from **Armor**, a static **On** or **Off** artwork from **Lights**, or any material in the default Programmable Block texture list, then click **Done** or press Escape. Ordinary right-click equips the armor into its matching empty slot.
 
 On NeoForge 1.21.1 the held picker offers the authored role and company
-designs, including Open helmets and Short Sleeves. The detailed material
-sampling, armor stand editing, and Duplifier workflows below are currently
-available on Forge 1.12.2.
+designs and the general Programmable Block materials. The sampling, armor
+stand editing, and Duplifier workflows below currently use Forge 1.12.2.
 
 **Custom block texture:** choose **Custom...** in the armor texture list to open the same inventory sample dialog as Programmable Blocks. Drag a block or door item into the sample slot, or select it and click **Use texture**. The sample is not consumed. The picker remembers the custom selection when reopened, and the choice follows the armor through saving, equipping and Duplifier copying. Configured programmable block or door items resolve their stored material or design, just as in the block picker.
 

@@ -645,8 +645,8 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Enable Enclosed Gantry production.",
-        "Convert the six remaining drive and navigation computer Cores.",
+        "Port the six remaining drive and navigation computer Cores and complete the Tower catalog.",
+        "Match the Press and Gantry fabrication visuals and expand native JEI coverage.",
         "Add arm carrying and Copy Controller support for formed builder machines.",
         "Complete native release and shader acceptance."
       ],
@@ -661,7 +661,7 @@
         "Powered Synthesis production, physical RF/item ports, standard Redstone activation/channels, authenticated inventory dialog and textured rotating previews",
         "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication",
         "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog.",
-        "Synthesis Tower supports Digitize; the Assembly Press produces Data Chips, Access Cards, and the Navigation Data, Battery and Autopilot Modules. Printer and Scanner include redstone control and sided automation."
+        "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation."
       ]
     },
     {
@@ -951,7 +951,7 @@
       "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "Generic material and sampling support, armor stand editing and Duplifier appearance transfer."
+        "Inventory/world sampling, armor stand editing, and Duplifier appearance transfer."
       ],
       "legacy_item_ids": [
         "programmable_helmet",
@@ -964,7 +964,8 @@
       "integration_scope": "non_vehicle_first",
       "implemented": [
         "The four programmable armor pieces use the original recipes, role and company choices, and configured inventory and equipped artwork.",
-        "A connected Survival player check covers real picker edits, equipment rendering and exact saved choice round trip."
+        "A connected Survival player check covers real picker edits, equipment rendering and exact saved choice round trip.",
+        "The native picker offers general Programmable Block materials, using the shared armor skin projection and original silhouette."
       ]
     },
     {
@@ -1054,7 +1055,8 @@
       ],
       "implemented": [
         "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair.",
-        "The public Copy Controller supports dedicated configuration, resource-priced Survival copying, post-commit client publication, and focused rollback and partial-save recovery."
+        "The public Copy Controller supports dedicated configuration, resource-priced Survival copying, post-commit client publication, and focused rollback and partial-save recovery.",
+        "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback."
       ],
       "modern_registered_block_ids": [
         "copy_controller"
