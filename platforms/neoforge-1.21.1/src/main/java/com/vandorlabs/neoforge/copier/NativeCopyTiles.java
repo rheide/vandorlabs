@@ -40,6 +40,8 @@ final class NativeCopyTiles {
     }
 
     static boolean supported(BlockEntity tile){
+        if(tile instanceof com.vandorlabs.neoforge.builders.NativeBuilderEntity builder)return !builder.inert();
+        if(tile instanceof com.vandorlabs.neoforge.builders.NativeBuilderPartEntity)return true;
         if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)return !screen.inert();
         if(tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverEntity observer)return !observer.inert();
         if(tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartEntity)return true;
@@ -59,6 +61,10 @@ final class NativeCopyTiles {
         if(cell.hasTile()){var raw=cell.tile();if(raw.contains("LootTable"))throw new IllegalArgumentException("Open loot containers before copying");}
         var tile=cell.stage(world,NativeCopyTiles::supported,NativeCopyTiles::same);
         if(tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)NativeCopyScreens.requireStatic(screen,cell.tile());
+        if(tile instanceof com.vandorlabs.neoforge.builders.NativeBuilderEntity builder&&(!builder.isEmpty()||builder.processing()||builder.connected()))
+            throw new IllegalArgumentException("Empty and disconnect the idle builder before copying");
+        if(tile instanceof com.vandorlabs.neoforge.builders.NativeBuilderPartEntity part&&part.inert())
+            throw new IllegalArgumentException("Builder part failed ownership staging");
         if(tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartEntity part&&part.inert())
             throw new IllegalArgumentException("Observer part failed ownership staging");
         if(tile instanceof com.vandorlabs.neoforge.ProgrammableBlockEntity&&!(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity)&&!(tile instanceof com.vandorlabs.neoforge.reservoir.NativeBufferEntity)){
@@ -67,7 +73,7 @@ final class NativeCopyTiles {
         return tile;
     }
     static NativeRawCell at(NativeRawCell source,BlockPos target,UUID copyOwner){
-        var raw=source.tile();if(raw!=null){raw.putInt("x",target.getX());raw.putInt("y",target.getY());raw.putInt("z",target.getZ());NativeCopyObservers.translateIdentity(source,target,copyOwner,raw);
+        var raw=source.tile();if(raw!=null){raw.putInt("x",target.getX());raw.putInt("y",target.getY());raw.putInt("z",target.getZ());NativeCopyObservers.translateIdentity(source,target,copyOwner,raw);NativeCopyBuilders.translateIdentity(source,target,copyOwner,raw);
             // A drawing claim is not a transferable authority over an unrelated destination controller.
             if(source.state.getBlock() instanceof com.vandorlabs.neoforge.surface.NativeSurfaceBlock){for(String field:List.of("Owner","OwnerKey","OwnerKeyMost","OwnerKeyLeast"))raw.remove(field);}
         }

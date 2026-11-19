@@ -26,12 +26,16 @@ public final class NativeCopyMaterials {
     }
     public static List<Need> prepare(ServerLevel level,List<NativeRawCell> source,List<BlockEntity> staged,boolean creative){
         if(source.size()!=staged.size()||source.size()>32768)throw new IllegalArgumentException("Construction cost cell count");
-        if(creative)return List.of();var needs=new ArrayList<Need>();var observerMatter=NativeCopyObservers.validate(source);
+        if(creative)return List.of();var needs=new ArrayList<Need>();var observerMatter=NativeCopyObservers.validate(source);var builderMatter=NativeCopyBuilders.validate(source,false);
         for(int cell=0;cell<source.size();cell++){
             var saved=source.get(cell);var state=saved.state;var tile=staged.get(cell);var raw=saved.tile();
             if(raw!=null&&raw.contains("LootTable"))throw new IllegalArgumentException("Open loot containers before Survival copying");
             if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartBlock){
                 if(observerMatter.contains(saved.pos))add(needs,new ItemStack(com.vandorlabs.neoforge.navigation.observer.NativeObserverFormation.matter()),1,false);
+                continue;
+            }
+            if(state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderPartBlock){
+                if(builderMatter.contains(saved.pos))add(needs,new ItemStack(com.vandorlabs.neoforge.builders.NativeBuilderFormation.matter()),1,false);
                 continue;
             }
             var item=state.getBlock().asItem();if(item==Items.AIR)throw new IllegalArgumentException("Block has no obtainable material item");
@@ -49,7 +53,7 @@ public final class NativeCopyMaterials {
                 add(needs,material,1,true);continue;
             }
             if(raw!=null){for(String key:List.of("ForgeCaps","neoforge:attachments"))if(raw.contains(key)&&!(raw.get(key) instanceof CompoundTag data&&data.isEmpty()))throw new IllegalArgumentException("Unknown stored ownership needs an exact material adapter");}
-            add(needs,material,count,tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity);
+            add(needs,material,count,tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity||tile instanceof com.vandorlabs.neoforge.builders.NativeBuilderEntity);
             if(tile instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table){
                 var chip=table.storedChip();
                 add(needs,chip,chip.getCount(),true);

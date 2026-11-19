@@ -44,6 +44,7 @@ final class NativeCopyReceipt {
         if(rawSource.isEmpty()||rawSource.size()!=costSource.cells().size())throw new IllegalArgumentException("Copy cost/source coverage");
         NativeCopyTiles.requireCompleteChests(rawSource);
         NativeCopyObservers.validate(rawSource);
+        NativeCopyBuilders.validate(rawSource,settings.chip);
         if(settings.chip)NativeCopyScreens.boundary(rawSource,true);
         NativeCopyNavigationTable.requireComplete(rawSource);
         NativeCopyNavigationTable.requireComplete(costSource.cells());
