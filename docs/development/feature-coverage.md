@@ -25,12 +25,12 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Maxwell, Meridian and Oculus, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Maxwell, Meridian, Oculus and Vector Fold, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
-| Cockpits and peripherals | stationary Advanced Pilot Chair available, with armrest controls, cockpit assembly and Yoke and Screen pending | unimplemented | standalone first; carried integration deferred |
+| Cockpits and peripherals | stationary Advanced Pilot Chair with seated dual armrest sliders; touch panels, cockpit assembly and Yoke and Screen pending | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled) | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | Programmable Surfaces public; opt-in block-only Scan, rendered rotation with swept collision, and quarter-turn Restore; riding and redstone pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |

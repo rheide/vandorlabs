@@ -2,8 +2,8 @@
 
 ## 1.12.0 (in development)
 
-- Form Maxwell, Meridian and Oculus drive structures and fabricate their Cores on NeoForge.
-- Add the native Advanced Pilot Chair with its authored footprint and adjustable height.
+- Form Maxwell, Meridian, Oculus and Vector Fold structures and fabricate their Cores on NeoForge.
+- Add the native Advanced Pilot Chair with its authored footprint, adjustable height and two seated armrest sliders.
 - Copy complete stationary Navigation Table groups and Survey Dish and Sentinel Array frames at exact material cost on NeoForge.
 - Add an opt-in native Turntable with block capture, swept-collision rotation and journaled quarter-turn restoration.
 - Show Forge-matched Press and Gantry fabrication, mount interactions and pickup positions on NeoForge.

@@ -645,7 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Port the Vector Fold drive and Paladyne and Seyr navigation computers, and complete the Tower catalog.",
+        "Port the Paladyne and Seyr navigation computers.",
         "Add arm carrying and Copy Controller support for formed builder machines.",
         "Complete native release and shader acceptance."
       ],
@@ -663,7 +663,7 @@
         "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation.",
         "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry.",
         "Press and Gantry use authored fabrication beds, scanner beams and connected-player pickup and battery interactions.",
-        "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. The Tower fabricates all three cores with a permitting Catalog Chip."
+        "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. Vector Fold has its authored active/idle models and boolean Redstone control. The Tower fabricates all four cores with a permitting Catalog Chip."
       ]
     },
     {

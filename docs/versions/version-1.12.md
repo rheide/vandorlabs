@@ -12,7 +12,7 @@ The **Assembly Press** makes Data Chips and Access Cards by default. Insert a
 Catalog Chip that lists the recipe to produce Battery, Autopilot, or Navigation
 Data Modules. Existing Navigation Data Module jobs keep their progress when the
 world loads. With a permitting Catalog Chip, the **Synthesis Tower** can
-fabricate a Ramp Controller and the Maxwell, Meridian and Oculus drive Cores. The **Enclosed Gantry** makes eight mechanical blocks, including
+fabricate a Ramp Controller and the Maxwell, Meridian, Oculus and Vector Fold Cores. The **Enclosed Gantry** makes eight mechanical blocks, including
 arm hinges, wheels and resource ports. Both machines render work at their
 authored beds and let you collect completed products there. [NeoForge builder guide](../builders-1.21.md)
 
@@ -24,7 +24,8 @@ vanilla model faces or full Programmable Blocks in the world, or transfer an
 appearance with the Duplifier. Static Light artwork is also available. [Programmable armor guide](../programmable-armor.md)
 
 The **Advanced Pilot Chair** is available as stationary furniture. Its
-authored side rests, saved height and forward seating work on NeoForge.
+two armrest sliders let a seated player set numeric levels on configured
+Redstone channels. Adjust the height and channels through the chair dialog.
 [Chair and cockpit guide](../cockpits.md)
 
 With WorldEdit 7.3.8, turning a clipboard also rotates the corner of floor
