@@ -3,6 +3,8 @@ package com.vandorlabs.neoforge.builders.client;
 import com.mojang.blaze3d.vertex.*;
 import com.mojang.math.Axis;
 import com.vandorlabs.machines.SynthesisPresentation;
+import com.vandorlabs.machines.BuilderFabricationPose;
+import com.vandorlabs.machines.BuilderOutputBounds;
 import com.vandorlabs.rack.EmbeddedRackMotion;
 import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
 import com.vandorlabs.neoforge.builders.NativeBuilderProducts;
@@ -27,8 +29,9 @@ public final class NativeSynthesisEffects {
         mounted(visual,poses,buffers,light,overlay,null,0);
     }
     public static void mounted(NativeBuilderEntity.Visual visual,PoseStack poses,MultiBufferSource buffers,int light,int overlay,EmbeddedRackMotion motion,double now){
+        var spec=SynthesisPresentation.forMachine(visual.design());
         poses.pushPose();try{
-            poses.translate(SynthesisPresentation.RACK_X+1,SynthesisPresentation.RACK_Y,SynthesisPresentation.RACK_Z+1);poses.mulPose(Axis.YP.rotationDegrees(180));
+            poses.translate(spec.rackX+1,spec.rackY,spec.rackZ+1);poses.mulPose(Axis.YP.rotationDegrees(180));
             for(int bay=0;bay<4;bay++){
                 boolean occupied=!visual.batteries().get(bay).isEmpty();int charge=com.vandorlabs.rack.BatteryChargeBar.pixels(NativeBatteryModule.energy(visual.batteries().get(bay)),NativeBatteryModule.CAPACITY);
                 if(motion!=null){occupied=motion.occupied(bay);charge=motion.level(bay);}
@@ -38,11 +41,11 @@ public final class NativeSynthesisEffects {
             }
         }finally{poses.popPose();}
         if(!visual.chip().isEmpty()){
-            poses.pushPose();try{poses.translate(SynthesisPresentation.CHIP_X,SynthesisPresentation.CHIP_Y,SynthesisPresentation.CHIP_Z-.07);poses.scale(.35F,.35F,.35F);poses.mulPose(Axis.YP.rotationDegrees(180));Minecraft.getInstance().getItemRenderer().renderStatic(visual.chip(),ItemDisplayContext.FIXED,light,overlay,poses,buffers,Minecraft.getInstance().level,0);}finally{poses.popPose();}
+            poses.pushPose();try{poses.translate(spec.chipX,spec.chipY,spec.chipZ-.07);poses.scale(.35F,.35F,.35F);poses.mulPose(Axis.YP.rotationDegrees(180));Minecraft.getInstance().getItemRenderer().renderStatic(visual.chip(),ItemDisplayContext.FIXED,light,overlay,poses,buffers,Minecraft.getInstance().level,0);}finally{poses.popPose();}
         }
         int mask=visual.portConnections();
-        if((mask&1)!=0)rear(poses,buffers,"power_in_on",2);
-        if((mask&2)!=0)bottom(poses,buffers,"power_in_on",2);
+        if((mask&1)!=0)rear(poses,buffers,"power_in_on",spec.width-1);
+        if((mask&2)!=0)bottom(poses,buffers,"power_in_on",spec.width-1);
         if((mask&4)!=0)rear(poses,buffers,"matter_in_on",0);
         if((mask&16)!=0)bottom(poses,buffers,"matter_out_on",0);
         if((mask&8)!=0){var sprite=sprite("vandorlabs:blocks/resource_ports/matter_out_on");var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,-.002,0,2,0,1,-1);point(out,poses,sprite,-.002,0,3,1,1,-1);point(out,poses,sprite,-.002,1,3,1,0,-1);point(out,poses,sprite,-.002,1,2,0,0,-1);}
@@ -81,6 +84,63 @@ public final class NativeSynthesisEffects {
         if(blockProduct){if(!stack.isEmpty()){poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.screenPreviewScale(1,1,1);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));poses.translate(-.5,-.5,-.5);NativeBlockRecipePreview.render(stack,poses,buffers,FULLBRIGHT,OverlayTexture.NO_OVERLAY,1);}finally{poses.popPose();}}return;}
         if(visual.building()>=3)return;
         poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.screenPreviewScale(NativeBuilderModelCache.width(id),NativeBuilderModelCache.height(id),3);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));NativeBuilderModelCache.preview(id,poses,buffers,FULLBRIGHT);}finally{poses.popPose();}
+    }
+    static void partProcessing(NativeBuilderEntity.Visual visual,PoseStack poses,MultiBufferSource buffers,double now,double work){
+        boolean press=visual.design().equals("assembly_press");
+        var spec=SynthesisPresentation.forMachine(visual.design());
+        var preview=NativeBuilderPartFabrication.item(visual.design(),visual.selected());
+        if(!preview.isEmpty()){
+            poses.pushPose();try{
+                poses.translate(spec.screenX,spec.screenY,spec.screenZ-.01);
+                poses.scale((float)spec.screenSize*.72F,(float)spec.screenSize*.72F,.002F);
+                poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));
+                Minecraft.getInstance().getItemRenderer().renderStatic(preview,ItemDisplayContext.FIXED,
+                        FULLBRIGHT,OverlayTexture.NO_OVERLAY,poses,buffers,Minecraft.getInstance().level,0);
+            }finally{poses.popPose();}
+        }
+        double progress=visual.progress();
+        if(progress<=0&&!visual.working())return;
+        var entry=NativeBuilderPartFabrication.geometry(visual.design(),visual.building());
+        if(entry==null)return;
+        var bounds=BuilderOutputBounds.forMachine(visual.design());
+        poses.pushPose();try{
+            poses.translate(bounds.centerX(),bounds.minY,bounds.centerZ());
+            NativeBuilderPartFabrication.emit(entry,progress,poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),
+                    sprite("vandorlabs:blocks/core_flat"));
+        }finally{poses.popPose();}
+        if(!visual.working())return;
+        var model=entry.model;
+        double surface=bounds.minY+model.height(progress)+.008;
+        var white=sprite("vandorlabs:blocks/core_flat");
+        var out=buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));
+        if(press){
+            for(int i=0;i<4;i++){
+                double sx=i%2==0?1.125:3.125,sz=i<2?.4375:2.5;
+                double ex=bounds.centerX()+(model.minX+model.maxX)/2+(model.maxX-model.minX)*.45*Math.sin(work*.12+i*Math.PI/2);
+                double ez=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(work*.075+i*Math.PI);
+                beam(out,poses,white,sx,2.4375,sz,ex,surface,ez,.009,0xb04fee75);
+            }
+        }else{
+            double sx=2.5+BuilderFabricationPose.headX(work),sy=3.25,sz=1.5625+BuilderFabricationPose.armZ(work);
+            double scan=bounds.centerZ()+(model.minZ+model.maxZ)/2+(model.maxZ-model.minZ)*.45*Math.sin(work*.11);
+            double min=bounds.centerX()+model.minX,max=bounds.centerX()+model.maxX;
+            point(out,poses,white,sx,sy,sz,.5,.5,0x324baeff);
+            point(out,poses,white,min,surface,scan,.5,.5,0x324baeff);
+            point(out,poses,white,max,surface,scan,.5,.5,0x324baeff);
+            point(out,poses,white,sx,sy,sz,.5,.5,0x324baeff);
+            point(out,poses,white,min,surface,scan-.009,.5,.5,0xc05bbcff);
+            point(out,poses,white,max,surface,scan-.009,.5,.5,0xc05bbcff);
+            point(out,poses,white,max,surface,scan+.009,.5,.5,0xc05bbcff);
+            point(out,poses,white,min,surface,scan+.009,.5,.5,0xc05bbcff);
+            beam(out,poses,white,sx,sy+.018,sz,sx,sy-.018,sz,.018,0xd06ccaff);
+        }
+    }
+    private static void beam(VertexConsumer out,PoseStack poses,TextureAtlasSprite white,
+                             double sx,double sy,double sz,double x,double y,double z,double r,int color){
+        point(out,poses,white,sx-r,sy,sz,.5,.5,color);point(out,poses,white,sx+r,sy,sz,.5,.5,color);
+        point(out,poses,white,x+r,y,z,.5,.5,color);point(out,poses,white,x-r,y,z,.5,.5,color);
+        point(out,poses,white,sx,sy,sz-r,.5,.5,color);point(out,poses,white,sx,sy,sz+r,.5,.5,color);
+        point(out,poses,white,x,y,z+r,.5,.5,color);point(out,poses,white,x,y,z-r,.5,.5,color);
     }
     private static void emitRack(String name,PoseStack poses,MultiBufferSource buffers,int light,int overlay){var model=NativeBuilderModelCache.rack(name);if(model!=null)model.emit(poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),light,overlay);}
     private static TextureAtlasSprite sprite(String id){return Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS).apply(ResourceLocation.parse(id));}

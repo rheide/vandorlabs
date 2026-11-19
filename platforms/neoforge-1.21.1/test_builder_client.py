@@ -14,9 +14,10 @@ def frozen(out):
  finally:snapshot(out,"after",baseline)
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--parts-only',action='store_true',help='Run the Assembly Press and Gantry physical pickup path');options=parser.parse_args()
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.builderClientCheck=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='builder-client-',dir=base))
+ if options.parts_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.builderPartsClient=true'
  with frozen(out):
   with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
   extra=['-x','compileJava','-x','compileSmokeJava','-x','processResources'];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=builder-client',*extra),server_log,env)
@@ -33,14 +34,16 @@ def main():
     code=process.wait(timeout=240)
     if code:raise RuntimeError('Native builder client exit '+str(code)+': '+str(out/'client.log'))
     check_log(out/'client.log','[vandorlabs][builder-client] client PASS')
-    check_log(out/'client.log','[vandorlabs][builder-client] footprint PASS')
-    check_log(out/'client.log','[vandorlabs][builder-client] world-render PASS')
+    if not options.parts_only:
+     check_log(out/'client.log','[vandorlabs][builder-client] footprint PASS')
+     check_log(out/'client.log','[vandorlabs][builder-client] world-render PASS')
    finally:stop(process)
    deadline=time.monotonic()+30
    while '[vandorlabs][builder-client] logout PASS' not in server_log.read_text(errors='replace'):
     if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Native builder logout missing: '+str(server_log))
     time.sleep(.1)
-   for marker in ['setup','ownership','digitize','logout']:check_log(server_log,'[vandorlabs][builder-client] '+marker+' PASS')
+   markers=['part-setup','part-ownership','logout'] if options.parts_only else ['setup','ownership','digitize','logout']
+   for marker in markers:check_log(server_log,'[vandorlabs][builder-client] '+marker+' PASS')
   finally:stop(server)
   deadline=time.monotonic()+30
   while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)

@@ -13,12 +13,22 @@ def main():
         entry=manifest['designs'][design];target=assets/'models/block/builders'/design
         native=(target/'complete.obj').read_bytes();assert hashlib.sha256(native).hexdigest()==entry['obj_sha256']
         source=SOURCE/'models/block/universal_constructor'/design/'complete.obj';assert native==source.read_bytes()
+        front=-.25 if design in ('assembly_press','enclosed_gantry') else 0
+        bounds=((0,entry['width']),(0,entry['height']),(front,entry['depth']))
         for line in native.decode().splitlines():
-            if line.startswith('v '):assert all(-.00001<=p<=n+.00001 for p,n in zip(map(float,line.split()[1:]),(entry['width'],entry['height'],entry['depth'])))
+            if line.startswith('v '):
+                assert all(low-.00001<=value<=high+.00001
+                           for value,(low,high) in zip(map(float,line.split()[1:]),bounds)),(design,line)
         item=json.loads((assets/f'models/item/{design}_core.json').read_text());assert max(item['display']['gui']['scale'])<=.5
         state=json.loads((assets/f'blockstates/{design}_core.json').read_text());assert len(state['variants'])==8
         model=json.loads((target/'complete.json').read_text());assert model['loader']=='neoforge:obj' and model['flip_v'] and not model['automatic_culling']
         loot=json.loads((OUT/f'data/vandorlabs/loot_table/blocks/{design}_core.json').read_text());assert loot=={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':f'vandorlabs:{design}_core'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
+    gantry=assets/'models/block/builders/enclosed_gantry'
+    authored=SOURCE/'models/block/universal_constructor/enclosed_gantry'
+    for part in ('static','gantry_arm','gantry_head'):
+        assert (gantry/(part+'.obj')).read_bytes()==(authored/(part+'.obj')).read_bytes()
+        model=json.loads((gantry/(part+'.json')).read_text())
+        assert model['model']==f'vandorlabs:models/block/builders/enclosed_gantry/{part}.obj'
     assert {p.name for p in (OUT/'data/vandorlabs/loot_table/blocks').glob('*.json')}=={design+'_core.json' for design in IDS}
     assert not list(OUT.rglob('recipe')) and not list(OUT.rglob('recipes'))
     for reference,digest in manifest['textures'].items():

@@ -80,10 +80,12 @@ Supply one Programmable Matter Ingot per item. The Press fabricates at
 and Access Cards are included. Insert a Master Catalog Chip to add Battery
 Modules, Autopilot Modules and Navigation Data Modules to the recipe list.
 
-Use the Production dialog to select a recipe and collect the completed item.
-The Press uses the same four battery bays, rear power and item ports, Redstone
-activation options, and automatic output as the Tower. Paused jobs retain their
-chosen recipe and paid work, even if the Catalog Chip is removed.
+Choose a recipe in Production. The item forms flat on the bed under four
+green lasers. Right-click the finished item on the bed or take it from the
+output slot. Load Battery Modules into the four front rack bays or their
+dialog slots. The rear ports provide external power, material feed and
+automatic output. Paused jobs retain their chosen recipe and paid work, even
+if the Catalog Chip is removed.
 
 ## Enclosed Gantry operation
 
@@ -92,9 +94,12 @@ Landing Ski or Landing Plate. These eight designs are built into the Gantry.
 Feed one Programmable Matter Block through the rear item port or Production
 dialog. Each item costs **8,000 RF**, drawn at **40 RF per tick** over
 **200 ticks**. The rear right corner accepts external power. The rear left
-corner provides the material feed and completed-item output. The Production
-and Redstone tabs offer the same inventory, battery and activation controls
-as the Press.
+corner provides the material feed and completed-item output. The carriage
+moves the print head as its blue scanner traces the part. The Gantry holds
+the partially formed item while power is paused. Right-click the completed
+part on the bed to collect it, or use the output slot. The Production and
+Redstone tabs offer the same inventory, battery and activation controls as
+the Press.
 
 ## Dismantling and ownership
 

@@ -59,6 +59,13 @@ def main():
         write(assets/f'blockstates/{design}_core.json',{'variants':{f'facing={face},formed={str(formed).lower()}':{'model':'vandorlabs:block/builders/empty' if formed else f'vandorlabs:block/builders/{design}/core'} for face in ('north','east','south','west') for formed in (False,True)}})
         write(OUT/f'data/vandorlabs/loot_table/blocks/{design}_core.json',{'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':f'vandorlabs:{design}_core'}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
         manifest[design]={'width':spec['width'],'height':spec['height'],'depth':spec['depth'],'obj_sha256':hashlib.sha256(obj).hexdigest(),'model':f'vandorlabs:block/builders/{design}/complete'}
+        if design=='enclosed_gantry':
+            for part in ('static','gantry_arm','gantry_head'):
+                obj=(source/(part+'.obj')).read_bytes()
+                (destination/(part+'.obj')).write_bytes(obj)
+                model=json.loads((destination/'complete.json').read_text())
+                model['model']=f'vandorlabs:models/block/builders/{design}/{part}.obj'
+                write(destination/(part+'.json'),model)
     write(assets/'models/block/builders/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/resource_ports/port_hull')}})
     write(assets/'blockstates/constructor_part.json',{'variants':{'':{'model':'vandorlabs:block/builders/empty'}}})
     # Dynamic fabrication uses the same exact RF/Item Port sprites as the static finished preview.

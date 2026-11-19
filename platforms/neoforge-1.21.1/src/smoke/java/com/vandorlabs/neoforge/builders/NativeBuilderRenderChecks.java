@@ -19,10 +19,10 @@ public final class NativeBuilderRenderChecks {
     private static void need(boolean yes,String text){if(!yes)throw new AssertionError("Native builder render: "+text);}
     private static NativeBuilderEntity.Visual scene(int index){
         String design=index==3?"assembly_press":index==4?"enclosed_gantry":"synthesis_tower";
-        boolean processing=index==1||index==2||index==5;float progress=index==5?.8F:.5F;
+        boolean processing=index!=0;float progress=index>=3?.8F:.5F;
         var battery=new ItemStack(NativeRackBindings.BATTERY);NativeBatteryModule.transfer(battery,8000,false,true);
         if(index==0){var modules=new java.util.ArrayList<ItemStack>();for(int bay=0;bay<4;bay++){var module=new ItemStack(NativeRackBindings.BATTERY);NativeBatteryModule.transfer(module,10000-bay*2500,false,true);modules.add(module);}return new NativeBuilderEntity.Visual(design,Direction.NORTH,BlockPos.ZERO,true,false,0,0,0,true,modules.get(0),ItemStack.EMPTY,java.util.List.copyOf(modules),java.util.List.of(0L,0L,0L,0L),false);}
-        int product=index==5?NativeBuilderProducts.RAMP:0;
+        int product=index==5?NativeBuilderProducts.RAMP:index==3?1:index==4?5:0;
         return new NativeBuilderEntity.Visual(design,index==5?Direction.EAST:Direction.NORTH,BlockPos.ZERO,true,processing,processing?progress:0,product,product,true,battery,ItemStack.EMPTY);
     }
     private static void verifyDynamicNormals(){
@@ -47,10 +47,66 @@ public final class NativeBuilderRenderChecks {
         need(vertices[0]-before>32&&normals[0]==64,"fixed Ramp fabrication emits native item quads alongside four beams");
         System.out.println("[vandorlabs][builder-render] posed-normal PASS fourBeams32records flippedGUIY");
     }
+    private record FabricationDraw(int green,int blue,int voxels,double minY,double maxY,double headX){}
+    private static FabricationDraw observeParts(NativeBuilderEntity.Visual visual,double now){
+        var mc=Minecraft.getInstance();
+        var sprite=mc.getTextureAtlas(net.minecraft.world.inventory.InventoryMenu.BLOCK_ATLAS)
+                .apply(net.minecraft.resources.ResourceLocation.parse("vandorlabs:blocks/core_flat"));
+        float spriteU=sprite.getU(.5F),spriteV=sprite.getV(.5F);
+        int[] counts=new int[3];
+        boolean[] beam={false};
+        double[] values={0,0,Double.POSITIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NaN};
+        var vertexType=com.mojang.blaze3d.vertex.VertexConsumer.class;
+        var target=(com.mojang.blaze3d.vertex.VertexConsumer)java.lang.reflect.Proxy.newProxyInstance(
+                vertexType.getClassLoader(),new Class<?>[]{vertexType},(proxy,method,args)->{
+            if(method.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,method,args);
+            switch(method.getName()){
+                case "addVertex"->{values[0]=((Number)args[0]).doubleValue();values[1]=((Number)args[1]).doubleValue();beam[0]=false;}
+                case "setUv"->{if(!beam[0]&&((Number)args[0]).floatValue()==spriteU&&((Number)args[1]).floatValue()==spriteV){
+                    counts[2]++;values[2]=Math.min(values[2],values[1]);values[3]=Math.max(values[3],values[1]);
+                }}
+                case "setColor"->{
+                    int color=args.length==1?((Number)args[0]).intValue():
+                            ((Number)args[3]).intValue()<<24|((Number)args[0]).intValue()<<16
+                            |((Number)args[1]).intValue()<<8|((Number)args[2]).intValue();
+                    if(color==0xb04fee75){counts[0]++;beam[0]=true;}
+                    if(color==0x324baeff||color==0xc05bbcff||color==0xd06ccaff){
+                        if(counts[1]==0)values[4]=values[0];
+                        counts[1]++;beam[0]=true;
+                    }
+                }
+                default->{}
+            }
+            return method.getReturnType()==vertexType?proxy:null;
+        });
+        NativeBuilderRenderer.renderVisual(visual,new com.mojang.blaze3d.vertex.PoseStack(),
+                layer->target,0xf000f0,net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,now,true);
+        return new FabricationDraw(counts[0],counts[1],counts[2],values[2],values[3],values[4]);
+    }
+    private static void verifyPartFabrication(){
+        var press=observeParts(scene(3),20);
+        var gantry=observeParts(scene(4),20);
+        var later=observeParts(scene(4),50);
+        need(press.green==32&&press.blue==0&&press.voxels>0&&press.maxY-press.minY<.3,"Press emits a flat product with four green emitter beams");
+        need(gantry.blue==16&&gantry.green==0&&gantry.voxels>0&&gantry.maxY-gantry.minY>.4,"Gantry emits a full-size product with a blue blade");
+        need(Math.abs(gantry.headX-later.headX)>1,"blue scan endpoint follows the moving gantry head");
+        var source=scene(4);
+        var paused=new NativeBuilderEntity.Visual(source.design(),source.facing(),source.pivot(),true,true,source.progress(),
+                source.selected(),source.building(),source.connected(),source.battery(),source.chip(),source.batteries(),
+                source.batterySequences(),false);
+        var still=observeParts(paused,50);
+        need(still.blue==0&&still.voxels>0,"paused gantry retains the paid partial geometry without an active laser");
+        var clock=new com.vandorlabs.machines.BuilderFabricationPose();
+        clock.observe(10,true);clock.observe(15,false);clock.observe(30,false);clock.observe(30,true);
+        need(clock.phase()==5,"pause freezes the authored carriage and repeated updates retain phase");
+        clock.observe(31,true);
+        need(clock.phase()==6,"gantry resumes from its earlier phase");
+        System.out.println("[vandorlabs][builder-render] part-fabrication PASS distinctGreenBlue/voxelMeshes/headMotion/pausedPartial");
+    }
     @SubscribeEvent public static void draw(ScreenEvent.Render.Post event){
         if(done||!enabled()||!(event.getScreen() instanceof net.minecraft.client.gui.screens.TitleScreen))return;var mc=Minecraft.getInstance();if(mc.getOverlay()!=null||!NativeBuilderModelCache.ready())return;
         if(icons){NativeCoreIconRenderChecks.render(event.getGuiGraphics());return;}
-        if(checkedGeneration!=generation){verifyDynamicNormals();checkedGeneration=generation;}
+        if(checkedGeneration!=generation){verifyDynamicNormals();verifyPartFabrication();checkedGeneration=generation;}
         var gui=event.getGuiGraphics();gui.flush();com.mojang.blaze3d.systems.RenderSystem.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT,Minecraft.ON_OSX);
         int width=mc.getWindow().getGuiScaledWidth(),height=mc.getWindow().getGuiScaledHeight(),cellW=width/3,cellH=height/2;
         gui.fill(0,0,width,height,0xff202830);gui.flush();
@@ -69,7 +125,7 @@ public final class NativeBuilderRenderChecks {
     }
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event)throws Exception{
         if(done||!enabled()||(!capture&&frames!=5))return;var mc=Minecraft.getInstance();
-        if(icons){done=true;NativeCoreIconRenderChecks.capture();System.out.println("[vandorlabs][builder-render] title PASS exactly3 finished structures textured native attachments partialCore fourLasers nearCull rotation fixedByteCache resourceReload actualCoreIcons fixedRampFabrication; development/software only");mc.stop();return;}
+        if(icons){done=true;NativeCoreIconRenderChecks.capture();System.out.println("[vandorlabs][builder-render] title PASS exactly3 finished structures textured native attachments partialCore fourLasers nearCull rotation fixedByteCache resourceReload actualCoreIcons fixedRampFabrication PressGantry; development/software only");mc.stop();return;}
         try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){
             var proof=mc.gameDirectory.toPath().resolve("screenshots/builders-native-"+generation+(frames==5?"-baseline":"")+".png");java.nio.file.Files.createDirectories(proof.getParent());image.writeToFile(proof);
             int cellW=image.getWidth()/3,cellH=image.getHeight()/2;

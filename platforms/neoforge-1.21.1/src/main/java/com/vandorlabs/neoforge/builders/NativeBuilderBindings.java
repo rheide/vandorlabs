@@ -1,4 +1,6 @@
 package com.vandorlabs.neoforge.builders;
+import com.vandorlabs.machines.BuilderOutputBounds;
+import com.vandorlabs.machines.SynthesisPresentation;
 import java.util.*;import net.minecraft.core.*;import net.minecraft.core.registries.Registries;import net.minecraft.resources.ResourceLocation;import net.minecraft.server.level.*;import net.minecraft.world.*;import net.minecraft.world.entity.player.Player;import net.minecraft.world.inventory.MenuType;import net.minecraft.world.item.*;import net.minecraft.world.level.Level;import net.minecraft.world.level.block.*;import net.minecraft.world.level.block.entity.*;import net.minecraft.world.level.block.state.BlockBehaviour;import net.minecraft.world.level.material.MapColor;import net.minecraft.world.phys.*;import net.neoforged.bus.api.SubscribeEvent;import net.neoforged.fml.common.EventBusSubscriber;import net.neoforged.neoforge.registries.RegisterEvent;import net.neoforged.neoforge.capabilities.*;import net.neoforged.neoforge.items.IItemHandler;
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
 public final class NativeBuilderBindings {
@@ -17,10 +19,29 @@ public final class NativeBuilderBindings {
  public static boolean interact(Player p,Level l,BlockPos pos,InteractionHand hand){var t=ownerAt(l,pos);if(t==null||!t.canUse(p))return false;if(l.isClientSide)return true;if(!(p instanceof ServerPlayer actor))return false;try{if(!t.formed())return NativeBuilderTransactions.request(t,actor,true);if(p.isShiftKeyDown())return NativeBuilderTransactions.request(t,actor,false);if(t.production()&&mount(t,p,hand))return true;return open(p,l,pos);}catch(IllegalArgumentException refused){p.displayClientMessage(net.minecraft.network.chat.Component.literal(refused.getMessage()),true);return true;}}
  private static Vec3 world(NativeBuilderEntity t,double x,double y,double z){var origin=t.getBlockPos().subtract(t.pivot());var d=t.design();return switch(t.facing()){case EAST->new Vec3(origin.getX()+d.depth()-z,origin.getY()+y,origin.getZ()+x);case SOUTH->new Vec3(origin.getX()+d.width()-x,origin.getY()+y,origin.getZ()+d.depth()-z);case WEST->new Vec3(origin.getX()+z,origin.getY()+y,origin.getZ()+d.width()-x);default->new Vec3(origin.getX()+x,origin.getY()+y,origin.getZ()+z);};}
  private static boolean hit(NativeBuilderEntity t,Player p,double x,double y,double z,double w,double h){var center=world(t,x,y,z);var normal=Vec3.atLowerCornerOf(t.facing().getNormal());var start=p.getEyePosition();var delta=p.getLookAngle().scale(p.blockInteractionRange());double div=delta.dot(normal);if(div>=-1e-8)return false;double time=center.subtract(start).dot(normal)/div;if(time<0||time>1)return false;var local=start.add(delta.scale(time)).subtract(center);var u=Vec3.atLowerCornerOf(t.facing().getClockWise().getNormal());return Math.abs(local.dot(u))<=w/2+.035&&Math.abs(local.y)<=h/2+.035;}
- private static int batteryBay(NativeBuilderEntity t,Player p){double x=com.vandorlabs.machines.SynthesisPresentation.RACK_X+.5,y=com.vandorlabs.machines.SynthesisPresentation.RACK_Y+.5,z=com.vandorlabs.machines.SynthesisPresentation.rackFront();var center=world(t,x,y,z);var normal=Vec3.atLowerCornerOf(t.facing().getNormal());var start=p.getEyePosition();var delta=p.getLookAngle().scale(p.blockInteractionRange());double div=delta.dot(normal);if(div>=-1e-8)return -1;double time=center.subtract(start).dot(normal)/div;if(time<0||time>1)return -1;var point=start.add(delta.scale(time)).subtract(center);var right=world(t,x+1,y,z).subtract(center);return com.vandorlabs.machines.SynthesisPresentation.bayAt(x+point.dot(right),y+point.y);}
- private static boolean enclosure(NativeBuilderEntity t,Player p){var a=world(t,1,com.vandorlabs.machines.SynthesisPresentation.CORE_Y,1.125);var b=world(t,2,com.vandorlabs.machines.SynthesisPresentation.CORE_Y+1,2.125);return new AABB(a,b).clip(p.getEyePosition(),p.getEyePosition().add(p.getLookAngle().scale(p.blockInteractionRange()))).isPresent();}
+ private static int batteryBay(NativeBuilderEntity t,Player p){
+  var spec=SynthesisPresentation.forMachine(t.design().id());
+  double x=spec.rackX+.5,y=spec.rackY+.5,z=spec.rackFront();
+  var center=world(t,x,y,z);
+  var normal=Vec3.atLowerCornerOf(t.facing().getNormal());
+  var start=p.getEyePosition();
+  var delta=p.getLookAngle().scale(p.blockInteractionRange());
+  double div=delta.dot(normal);if(div>=-1e-8)return -1;
+  double time=center.subtract(start).dot(normal)/div;if(time<0||time>1)return -1;
+  var point=start.add(delta.scale(time)).subtract(center);
+  var right=world(t,x+1,y,z).subtract(center);
+  return spec.bayAt(x+point.dot(right),y+point.y);
+ }
+ private static boolean enclosure(NativeBuilderEntity t,Player p){
+  var bounds=BuilderOutputBounds.forMachine(t.design().id());
+  var a=world(t,bounds.minX,bounds.minY,bounds.minZ);
+  var b=world(t,bounds.maxX,bounds.maxY,bounds.maxZ);
+  var eye=p.getEyePosition();
+  return new AABB(a,b).clip(eye,eye.add(p.getLookAngle().scale(p.blockInteractionRange()))).isPresent();
+ }
  private static boolean mount(NativeBuilderEntity t,Player p,InteractionHand hand){var held=p.getItemInHand(hand);int bay=batteryBay(t,p);if(bay>=0){int slot=NativeBuilderEntity.batterySlot(bay);if(t.getItem(slot).isEmpty()&&com.vandorlabs.neoforge.rack.NativeBatteryModule.valid(held)){t.own(slot,held.copyWithCount(1));held.shrink(1);return true;}if(held.isEmpty()&&!t.getItem(slot).isEmpty()){p.setItemInHand(hand,t.removeItemNoUpdate(slot));return true;}}
-  if(hit(t,p,com.vandorlabs.machines.SynthesisPresentation.CHIP_X,com.vandorlabs.machines.SynthesisPresentation.CHIP_Y,com.vandorlabs.machines.SynthesisPresentation.CHIP_Z,.375,.375)){if(t.getItem(3).isEmpty()&&t.canPlaceItem(3,held)){t.own(3,held.copyWithCount(1));held.shrink(1);return true;}if(held.isEmpty()&&!t.getItem(3).isEmpty()){var stack=t.removeItemNoUpdate(3);if(!p.getInventory().add(stack))p.drop(stack,false);return true;}}
+  var spec=SynthesisPresentation.forMachine(t.design().id());
+  if(hit(t,p,spec.chipX,spec.chipY,spec.chipZ,.375,.375)){if(t.getItem(3).isEmpty()&&t.canPlaceItem(3,held)){t.own(3,held.copyWithCount(1));held.shrink(1);return true;}if(held.isEmpty()&&!t.getItem(3).isEmpty()){var stack=t.removeItemNoUpdate(3);if(!p.getInventory().add(stack))p.drop(stack,false);return true;}}
   if(t.digitizing()){if(enclosure(t,p)){if(t.getItem(0).isEmpty()&&t.canPlaceItem(0,held)){t.own(0,held.copyWithCount(1));if(!p.isCreative())held.shrink(1);return true;}if(held.isEmpty()&&!t.getItem(0).isEmpty()){var stack=t.removeItem(0,1);if(!p.getInventory().add(stack))p.drop(stack,false);return true;}}return false;}
   if(!t.getItem(1).isEmpty()){if(enclosure(t,p)){var stack=t.removeItem(1,1);if(!p.getInventory().add(stack))p.drop(stack,false);return true;}}return false;}
  private NativeBuilderBindings(){}
