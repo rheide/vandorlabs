@@ -49,6 +49,8 @@ final class LargeDoorRuntimeChecks {
                 require(world.getBlockState(passage).getValue(BlockVandorDoor.OPEN),"open from a follower cell "+front);
                 require(world.getCollisionBoxes(null,sweep).isEmpty()&&MovedDoorInteractions.trace(world,above,below)==null,"open hatch clears the vertical swept column "+front);
                 verifyWater(world,door,door.root(world,passage),player,front,passage);
+                require(stack.getItem().onItemUse(player,world,clicked,EnumHand.MAIN_HAND,front,.5F,.5F,.5F)==EnumActionResult.SUCCESS
+                        &&door.root(world,passage)!=null,"replace assembly for support removal "+front);
                 world.destroyBlock(clicked.offset(width),false);
                 require(world.getBlockState(passage).getBlock()!=door,"loss of side support removes assembly "+front);
             }
@@ -75,6 +77,12 @@ final class LargeDoorRuntimeChecks {
         require(upper.waterOutlets()==0&&lower.waterOutlets()==0
                 &&world.getBlockState(outDown).getValue(net.minecraft.block.BlockLiquid.LEVEL)==1
                 &&world.getBlockState(outUp).getValue(net.minecraft.block.BlockLiquid.LEVEL)==1,"closing retires both vertical sources "+front);
+        door.onBlockActivated(world,passage,world.getBlockState(passage),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+        DoorWaterGush.opened(world,upper.getPos());DoorWaterGush.opened(world,lower.getPos());
+        world.destroyBlock(lower.getPos(),false);
+        require(door.root(world,passage)==null
+                &&world.getBlockState(outDown).getValue(net.minecraft.block.BlockLiquid.LEVEL)==1
+                &&world.getBlockState(outUp).getValue(net.minecraft.block.BlockLiquid.LEVEL)==1,"breaking a follower retires both owned sources "+front);
     }
 
     static void run(World world,EntityPlayer player){

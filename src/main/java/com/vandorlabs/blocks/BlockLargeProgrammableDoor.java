@@ -98,19 +98,34 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         tile.localInputChanged();updateRedstoneState(world,tile.getPos(),state);
     }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){
-        if(!world.isRemote&&world.getTileEntity(pos) instanceof TileEntityLargeProgrammableDoor
-                &&((TileEntityLargeProgrammableDoor)world.getTileEntity(pos)).isHorizontal())DoorWaterGush.stop(world,pos);
-        if(!REMOVING.get()){
-            TileEntityLargeProgrammableDoor reader=root(world,pos);if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&reader!=null){for(int side=0;side<2;side++){ItemStack token=reader.keyReader(side).takeForDrop();if(!token.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,token);}}
-            TileEntity raw=world.getTileEntity(pos);BlockPos anchor=raw instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)raw).anchorPos():pos;
-            EnumFacing front=state.getValue(FACING);REMOVING.set(true);
-            try{for(int x=0;x<3;x++)for(int y=0;y<3;y++){
-                BlockPos cell=raw instanceof TileEntityLargeProgrammableDoor?((TileEntityLargeProgrammableDoor)raw).cell(anchor,front,x,y):anchor.offset(front.rotateYCCW(),x).up(y);if(cell.equals(pos) || !world.isBlockLoaded(cell))continue;
-                TileEntity other=world.getTileEntity(cell);
-                if(world.getBlockState(cell).getBlock()==this && other instanceof TileEntityLargeProgrammableDoor && ((TileEntityLargeProgrammableDoor)other).anchorPos().equals(anchor))world.setBlockToAir(cell);
-            }}finally{REMOVING.remove();}
+        TileEntity raw=world.getTileEntity(pos);
+        TileEntityLargeProgrammableDoor part=raw instanceof TileEntityLargeProgrammableDoor?(TileEntityLargeProgrammableDoor)raw:null;
+        boolean assemblyRemoval=!REMOVING.get();
+        if(assemblyRemoval)REMOVING.set(true);
+        try {
+            if(!world.isRemote&&part!=null&&part.isHorizontal())DoorWaterGush.stop(world,pos);
+            if(assemblyRemoval){
+                TileEntityLargeProgrammableDoor reader=root(world,pos);
+                if(!world.isRemote&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)&&reader!=null){
+                    for(int side=0;side<2;side++){
+                        ItemStack token=reader.keyReader(side).takeForDrop();
+                        if(!token.isEmpty())net.minecraft.inventory.InventoryHelper.spawnItemStack(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,token);
+                    }
+                }
+                EnumFacing front=state.getValue(FACING);
+                BlockPos anchor=part==null?pos:part.anchorPos(front);
+                for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+                    BlockPos cell=part==null?anchor.offset(front.rotateYCCW(),x).up(y):part.cell(anchor,front,x,y);
+                    if(cell.equals(pos)||!world.isBlockLoaded(cell))continue;
+                    TileEntity other=world.getTileEntity(cell);
+                    if(world.getBlockState(cell).getBlock()==this&&other instanceof TileEntityLargeProgrammableDoor
+                            &&((TileEntityLargeProgrammableDoor)other).anchorPos().equals(anchor))world.setBlockToAir(cell);
+                }
+            }
+            world.removeTileEntity(pos);
+        } finally {
+            if(assemblyRemoval)REMOVING.remove();
         }
-        world.removeTileEntity(pos);
     }
     @Override public Item getItemDropped(IBlockState state,Random rand,int fortune){return Item.getItemFromBlock(this);}
     @Override public ItemStack getPickBlock(IBlockState state,RayTraceResult ray,World world,BlockPos pos,EntityPlayer player){ItemStack stack=new ItemStack(this);TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile!=null)stack.setTagInfo("SpaceDoorSettings",tile.itemSettings());return stack;}
