@@ -22,7 +22,8 @@ authored beds and let you collect completed products there. The **Paladyne**
 and **Seyr Navigation Computers** form from their original Creative-only Cores
 and display Off, Idle or Computing. [NeoForge builder guide](../builders-1.21.md)
 
-**Programmable armor** uses the original four crafting recipes. Configure a held
+**Programmable armor** uses Programmable Plates made in the Assembly Press.
+Configure a held
 piece with its role, company, or programmable material artwork in Creative, or hold a Configurizer and
 use the armor from your offhand in Survival. The same picker works on mounted
 armor and can sample configured Blocks and Doors from your inventory. Sample
@@ -30,6 +31,15 @@ vanilla model faces, full Programmable Blocks, Programmable Lights,
 ordinary and Large Programmable Doors, Trapdoors, Wall housings, Trigger
 Blocks and static ordinary Screen artwork in the world, or transfer an
 appearance with the Duplifier. Static Light artwork is also available. [Programmable armor guide](../programmable-armor.md)
+
+**Large Programmable Doors** can mount horizontally to make a hatch. Choose
+**Sliding Split** to move the upper and lower halves away from the center
+seam. Turn **Join** on in two or four compatible doors to make a 3×6, 6×3, or
+6×6 opening. [Space Doors guide](../space-doors.md)
+
+**Arms** can route RF, fluids, or items between their base and an aligned
+endpoint. The base displays the selected Port bar and briefly lights it when
+resources pass through. [Arm guide](../modular-landing-gear.md)
 
 The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured

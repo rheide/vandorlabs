@@ -2,6 +2,9 @@
 
 ## 1.12.0 (in development)
 
+- Open Large Doors from a horizontal seam with Sliding Split, or join compatible doors into a 3×6, 6×3, or 6×6 opening.
+- Show the selected RF, fluid, or item Port bar on the Arm base. The bar lights when that column transfers resources.
+
 - Supply Survey Dishes and Sentinel Arrays with 20 RF/tick through their bottom inputs. Linked Screens and Navigation Tables show a haiku when no observer is powered.
 
 - Press flat Programmable Plates in the Assembly Press and use them to craft the four programmable armor pieces.

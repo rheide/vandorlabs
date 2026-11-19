@@ -85,7 +85,24 @@ Regular paired leaves share their selected design. The Large Programmable Door a
 
 The Large Programmable Door needs a clear 3×3 opening and three solid supports along one edge. Click the top of the middle support for an upright door. Click its side to place a horizontal door extending away from the support row. Click higher or lower on the side to choose the leaf's height within the opening. The open leaves and frame still collide, so leave room for them and keep moving arm payloads within the clear aperture.
 
-Choose **Sliding Sideways** to split the opening at the middle seam and retract the two leaves in opposite directions. **Sliding Split** moves the upper and lower halves in opposite directions. **Sliding X** retracts four triangular panels toward the edges. On a horizontal door these motions rotate with the opening.
+Choose **Sliding Sideways** to move the left and right halves away from a
+vertical seam. **Sliding Split** moves the upper and lower halves away from a
+horizontal seam. **Sliding X** retracts four triangular panels toward the edges.
+On a horizontal door these motions rotate with the opening.
+
+Turn **Join** on in the Door tab of each module to form a larger opening.
+Use a complete 1×2, 2×1, or 2×2 rectangle. Match the facing, mounting plane,
+depth, motion, frame, panel mode, and activation setting. A joined group uses
+the appearance of the module at its starting corner. Leave credential security
+off for a shared group. Secure doors keep independent controls.
+
+Place the first row on solid supports. To place the second row, sneak-place a
+module against the matching edge of an opted-in door in the first row. Each
+module still occupies its own nine cells. Turn Join off to operate it on its
+own. With matching redstone activation, a signal at any member controls the
+whole group. Forge vehicles use independent doors while assembled and restore
+their Join settings when parked.
+
 The client uses custom atlas sprites because vanilla 1.12 assumes non-animated
 sprites are square. Native pixels occupy square atlas slots with edge padding;
 UV accessors expose only the original rectangle. PNGs are never resized.

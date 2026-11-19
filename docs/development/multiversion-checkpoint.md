@@ -18,8 +18,10 @@ interactions remain open, alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
 
-On both platforms, Large Doors can mount horizontally, Arms can pass through
-the open aperture, and grid-aligned Arms can route RF, fluids or items.
+On both platforms, Large Doors can mount horizontally, split into upper and
+lower leaves, or join compatible modules into a 3×6, 6×3, or 6×6 opening. Arms
+can pass through the open aperture. Grid-aligned Arms can route RF, fluids or
+items and show the selected Port bar and transfer activity on the base.
 Survey Dishes and Sentinel Arrays take RF through their bottom inputs.
 Programmable Blocks in any finish form constructor frames. Standalone
 Programmable Matter Blocks migrate to the default Matter finish, and the
