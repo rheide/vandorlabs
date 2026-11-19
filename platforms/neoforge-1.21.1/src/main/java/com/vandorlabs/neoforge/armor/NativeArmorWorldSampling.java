@@ -1,6 +1,10 @@
 package com.vandorlabs.neoforge.armor;
 
 import com.vandorlabs.neoforge.ModernFinishCatalog;
+import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
+import com.vandorlabs.neoforge.door.NativeDoorLifecycle;
+import com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock;
+import com.vandorlabs.neoforge.door.NativeProgrammableDoorEntity;
 import com.vandorlabs.neoforge.ProgrammableBlock;
 import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
@@ -27,6 +31,7 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.RenderShape;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
@@ -82,9 +87,9 @@ public final class NativeArmorWorldSampling {
 
         var stack = player.getItemInHand(hand);
         var tool = hand != clicked ? player.getMainHandItem() : ItemStack.EMPTY;
-        var tile = world.getBlockEntity(pos);
+        var tile = sampleOwner(world, state, pos);
         String material = verifiedMaterial(state, tile, hit.getDirection());
-        if (state.getBlock() instanceof NativeLightBlock && material == null) {
+        if (usesRendererArtwork(state) && material == null) {
             unavailable(player);
             return null;
         }
@@ -107,8 +112,9 @@ public final class NativeArmorWorldSampling {
     }
 
     static boolean supported(BlockState state) {
-        return state.getBlock() instanceof NativeLightBlock || state.getRenderShape() == RenderShape.MODEL && !state.isAir() && !state.liquid()
+        return usesRendererArtwork(state) || state.getRenderShape() == RenderShape.MODEL && !state.isAir() && !state.liquid()
             && (state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get())
+                || state.is(VandorLabsBootstrap.TRIGGER_BLOCK.get())
                 || BuiltInRegistries.BLOCK.getKey(state.getBlock()).getNamespace().equals("minecraft"));
     }
 
@@ -121,7 +127,7 @@ public final class NativeArmorWorldSampling {
         var pos = pending.hit().getBlockPos();
         if (world.getGameTime() > pending.expires() || !pos.equals(result.pos())
             || pending.hit().getDirection() != result.face() || !canSample(player, world, pos)
-            || world.getBlockState(pos) != pending.state() || world.getBlockEntity(pos) != pending.tile()
+            || world.getBlockState(pos) != pending.state() || sampleOwner(world, pending.state(), pos) != pending.tile()
             || player.getInventory().selected != pending.selected()
             || player.getItemInHand(pending.hand()) != pending.stack()
             || !ItemStack.matches(pending.stack(), pending.original())
@@ -142,6 +148,15 @@ public final class NativeArmorWorldSampling {
         return true;
     }
 
+    static boolean usesRendererArtwork(BlockState state) {
+        return state.getBlock() instanceof NativeLightBlock || state.getBlock() instanceof NativeProgrammableDoorBlock;
+    }
+
+    static BlockEntity sampleOwner(Level world, BlockState state, BlockPos pos) {
+        if (state.getBlock() instanceof NativeProgrammableDoorBlock) return NativeDoorLifecycle.root(world, pos);
+        return world.getBlockEntity(pos);
+    }
+
     static String verifiedMaterial(BlockState state, BlockEntity tile, Direction face) {
         int choice;
         if (state.getBlock() instanceof NativeLightBlock && tile instanceof NativeLightEntity light && light.available()) {
@@ -149,13 +164,19 @@ public final class NativeArmorWorldSampling {
             choice = visual.facing() == face
                     ? NativeLightArtwork.face(visual.settings().light(), visual.on() && visual.level() > 0)
                     : visual.housing().mainTexture;
-        } else if (state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) && tile instanceof ProgrammableBlockEntity cube) {
-            var settings = cube.settings();
+        } else if (state.getBlock() instanceof NativeProgrammableDoorBlock
+                && tile instanceof NativeProgrammableDoorEntity door && !door.placementRecovery()) {
+            var settings = door.settings();
+            choice = settings.faceTexture() < 0 ? NativeArmorInventorySources.doorArtwork(settings.door()) : settings.faceTexture();
+        } else if ((state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) || state.is(VandorLabsBootstrap.TRIGGER_BLOCK.get()))
+                && tile instanceof ProgrammableBlockEntity cube) {
+            var settings = cube instanceof NativeTriggerBlockEntity trigger ? trigger.modelSettings() : cube.settings();
             int local = ProgrammableBlock.localTextureFace(face, state.getValue(ProgrammableBlock.FACING));
             choice = settings.facesEnabled && settings.face(local) >= 0 ? settings.face(local) : settings.mainTexture;
         } else {
             return null;
         }
+        if (choice < 0) return null;
         int stored = ModernFinishCatalog.storedChoice(choice);
         return stored < ModernFinishCatalog.ENTRIES.size() ? ModernFinishCatalog.option(stored).texture() : null;
     }

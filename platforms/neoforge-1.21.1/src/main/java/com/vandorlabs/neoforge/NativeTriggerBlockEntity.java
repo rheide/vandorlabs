@@ -26,7 +26,7 @@ public final class NativeTriggerBlockEntity extends ProgrammableBlockEntity impl
     @Override public ChannelList getRedstoneChannels(){return channels;}
     @Override public BlockEntity channelBlockEntity(){return this;}
     public int signalLevel(){return Math.max(channelLevel,localLevel);}
-    @Override protected ProgrammableBlockDialog.State modelSettings(){return visual;}
+    @Override public ProgrammableBlockDialog.State modelSettings(){return visual;}
     private void publishVisual(){
         int slot=TriggerState.visibleSlot(trigger.bands,trigger.exact,signalLevel());
         int main=slot==0?settings().mainTexture:slot==1?trigger.low:slot==2?trigger.medium:trigger.on;

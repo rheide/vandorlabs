@@ -1,6 +1,5 @@
 package com.vandorlabs.neoforge.armor;
 
-import com.vandorlabs.neoforge.light.NativeLightBlock;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -37,9 +36,9 @@ final class NativeArmorWorldClient {
         if (level == null || !level.hasChunkAt(pos)) return null;
         var state = level.getBlockState(pos);
         if (!NativeArmorWorldSampling.supported(state)) return null;
-        var tile = level.getBlockEntity(pos);
+        var tile = NativeArmorWorldSampling.sampleOwner(level, state, pos);
         var minecraft = Minecraft.getInstance();
-        if (state.getBlock() instanceof NativeLightBlock) {
+        if (NativeArmorWorldSampling.usesRendererArtwork(state)) {
             var material = NativeArmorWorldSampling.sprite(NativeArmorWorldSampling.verifiedMaterial(state, tile, hit.getDirection()));
             return material == null ? null : minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(material);
         }

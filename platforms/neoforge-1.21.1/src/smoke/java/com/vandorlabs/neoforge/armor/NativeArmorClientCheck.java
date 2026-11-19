@@ -171,6 +171,17 @@ public final class NativeArmorClientCheck {
             case 28 -> {
                 if (!NativeArmorFixture.lightHousing().equals(NativeArmorItem.worldSample(offhand))) return;
                 System.out.println("[vandorlabs][armor] rendered world Light On, Off and housing samples PASS");
+                sampleFace(game, NativeArmorFixture.WORLD_DOOR.above(), Direction.NORTH);
+                stage = 29;
+            }
+            case 29 -> {
+                if (!NativeArmorFixture.doorSprite().equals(NativeArmorItem.worldSample(offhand))) return;
+                sampleFace(game, NativeArmorFixture.WORLD_TRIGGER, Direction.SOUTH);
+                stage = 37;
+            }
+            case 37 -> {
+                if (!NativeArmorFixture.triggerSprite().equals(NativeArmorItem.worldSample(offhand))) return;
+                System.out.println("[vandorlabs][armor] ordinary Door upper leaf and powered Trigger samples PASS");
                 sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
                 stage = 25;
             }

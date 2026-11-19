@@ -1,6 +1,11 @@
 package com.vandorlabs.neoforge.armor;
 
 import com.vandorlabs.neoforge.ModernFinishCatalog;
+import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
+import com.vandorlabs.neoforge.door.NativeDoorLifecycle;
+import com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock;
+import com.vandorlabs.persistence.TriggerState;
+import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.neoforge.ProgrammableBlock;
 import com.vandorlabs.neoforge.light.NativeLightArtwork;
 import com.vandorlabs.neoforge.light.NativeLightBlock;
@@ -32,7 +37,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
 import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -51,8 +58,11 @@ public final class NativeArmorFixture {
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
     static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final BlockPos WORLD_DOOR = new BlockPos(0, 79, 2), WORLD_TRIGGER = new BlockPos(0, 79, -2);
     static final BlockPos LIGHT_ON = new BlockPos(1, 79, -2), LIGHT_OFF = new BlockPos(2, 79, -2);
     static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
+    static String doorSprite() { return ModernFinishCatalog.option(CARGO_DOOR).texture(); }
+    static String triggerSprite() { return ModernFinishCatalog.option(12).texture(); }
     static String lightHousing() { return ModernFinishCatalog.option(8).texture(); }
     static String lightSprite(boolean on) {
         int material = NativeLightArtwork.defaultFace(0);
@@ -96,6 +106,16 @@ public final class NativeArmorFixture {
                 .setValue(NativeLightBlock.FACING, Direction.SOUTH));
         setLight(world, LIGHT_ON, true);
         setLight(world, LIGHT_OFF, false);
+        placeDoor(world);
+        world.setBlockAndUpdate(WORLD_TRIGGER, VandorLabsBootstrap.TRIGGER_BLOCK.get().defaultBlockState()
+                .setValue(ProgrammableBlock.FACING, Direction.SOUTH));
+        var trigger = (NativeTriggerBlockEntity) world.getBlockEntity(WORLD_TRIGGER);
+        var previous = trigger.triggerState();
+        require(trigger.configure(0, new TriggerState(12, false, -1, 12, 12, false, 12,
+                previous.artworkModes(), previous.artworkSpeeds()), ChannelList.EMPTY), "Trigger fixture configured");
+        world.setBlockAndUpdate(WORLD_TRIGGER.north(), Blocks.REDSTONE_BLOCK.defaultBlockState());
+        trigger.tickLocalInput();
+        require(trigger.signalLevel() > 0, "visible Trigger band selected by physical power");
         player.getInventory().selected = 0;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
         player.setItemInHand(InteractionHand.OFF_HAND, stack);
@@ -231,6 +251,22 @@ public final class NativeArmorFixture {
         setLight(player.serverLevel(), LIGHT_ON, true);
         require(NativeArmorItem.worldSample(stack) == null, "negative claims preserve original armor");
         player.setShiftKeyDown(false);
+    }
+
+    private static void placeDoor(ServerLevel world) {
+        world.setBlockAndUpdate(WORLD_DOOR.below(), Blocks.STONE.defaultBlockState());
+        var state = NativeDoorRegistrations.ORDINARY.get().defaultBlockState()
+                .setValue(NativeProgrammableDoorBlock.FACING, Direction.NORTH);
+        world.setBlock(WORLD_DOOR, state, Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS);
+        world.setBlock(WORLD_DOOR.above(), state.setValue(NativeProgrammableDoorBlock.HALF, DoubleBlockHalf.UPPER),
+                Block.UPDATE_KNOWN_SHAPE | Block.UPDATE_CLIENTS);
+        var door = NativeDoorLifecycle.root(world, WORLD_DOOR.above());
+        require(door != null, "ordinary Door root available from upper part");
+        var data = door.saveWithFullMetadata(world.registryAccess());
+        data.putInt("SpaceDesign", 7);
+        data.putInt("SpaceDetail", 1);
+        door.loadWithComponents(data, world.registryAccess());
+        door.setChanged();
     }
 
     private static void setLight(ServerLevel world, BlockPos pos, boolean lit) {

@@ -39,6 +39,10 @@ final class NativeArmorInventorySources {
         }
         boolean large = source.getItem() instanceof NativeLargeDoorItem;
         var design = tag.isEmpty() ? NativeDoorSettings.fresh(large, false).door() : SpaceDoorData.read(new ModernHousingTags(tag));
+        return doorArtwork(design);
+    }
+
+    static int doorArtwork(SpaceDoorData design) {
         return DOORS.getOrDefault(new ModernFinishCatalog.DoorArtwork(design.design, design.detail), -1);
     }
 
