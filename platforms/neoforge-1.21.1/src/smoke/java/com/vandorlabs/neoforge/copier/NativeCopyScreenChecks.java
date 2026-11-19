@@ -10,6 +10,7 @@ import com.vandorlabs.neoforge.screen.*;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBindings;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.screen.ScreenFamily;
+import com.vandorlabs.screen.ScreenJoinGeometry;
 import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
@@ -34,8 +35,10 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCopyScreenChecks {
     private static final String MARKER="[vandorlabs][copy-screens]";
-    private static final List<ScreenFamily> PROFILES=List.of(ScreenFamily.SCREEN,ScreenFamily.CONSOLE,ScreenFamily.INPUT);
-    private static BlockPos root,inputPos,outputPos;
+    private static final List<ScreenFamily> PROFILES=List.of(ScreenFamily.SCREEN,ScreenFamily.CONSOLE,ScreenFamily.INPUT,
+        ScreenFamily.HALF_INPUT,ScreenFamily.HALF_CONSOLE,ScreenFamily.HALF_DIAGONAL,ScreenFamily.DIAGONAL,ScreenFamily.DIAGONAL);
+    private static BlockPos root,inputPos,outputPos,groupStep;
+    private static int height,depth;
     private static ScreenFamily family;
     private static ServerLevel world;
     private static ServerPlayer actor;
@@ -48,7 +51,7 @@ public final class NativeCopyScreenChecks {
         if(!Boolean.getBoolean("vandorlabs.copyScreensCheck"))return;
         world=event.getServer().overworld();
         try{
-            for(int x=0;x<=1;x++)for(int z=0;z<=4;z++){
+            for(int x=0;x<=1;x++)for(int z=0;z<=12;z++){
                 world.setChunkForced(x,z,true);
                 world.getChunk(x,z);
             }
@@ -63,19 +66,24 @@ public final class NativeCopyScreenChecks {
     private static void setup(){
         family=PROFILES.get(profile);
         root=new BlockPos(15,100,8+profile*24);
-        inputPos=root.east().above();
-        outputPos=root.west(2).above();
+        boolean diagonal=family==ScreenFamily.DIAGONAL;
+        groupStep=diagonal?joinStep(2):new BlockPos(1,0,0);
+        height=diagonal?2:1;
+        depth=diagonal?2:1;
+        int startZ=groupStep.getZ()<0?1:0;
+        inputPos=root.east().above().south(startZ);
+        outputPos=root.west(2).above().south(startZ);
         actor.setPos(root.getX()+.5,root.getY(),root.getZ()-1.5);
         world.setBlockAndUpdate(root,NativeCopyBindings.BLOCK.defaultBlockState());
         world.setBlockAndUpdate(root.south(),Blocks.CHEST.defaultBlockState());
         copy=(NativeCopyControllerEntity)world.getBlockEntity(root);
         supply=(ChestBlockEntity)world.getBlockEntity(root.south());
-        for(int x=1;x<=2;x++){
-            world.setBlockAndUpdate(root.east(x),NativeSurfaceBindings.BLOCK.defaultBlockState());
-            world.setBlockAndUpdate(root.west(x),NativeSurfaceBindings.BLOCK.defaultBlockState());
+        for(int x=1;x<=2;x++)for(int z=0;z<depth;z++){
+            world.setBlockAndUpdate(root.east(x).south(z),NativeSurfaceBindings.BLOCK.defaultBlockState());
+            world.setBlockAndUpdate(root.west(x).south(z),NativeSurfaceBindings.BLOCK.defaultBlockState());
         }
         screen(inputPos);
-        screen(inputPos.east());
+        screen(inputPos.offset(groupStep));
         var item=NativeScreenRegistrations.ITEMS.get(family).get();
         supply.setItem(0,new ItemStack(item,3));
         var reserved=new ItemStack(item);
@@ -92,15 +100,16 @@ public final class NativeCopyScreenChecks {
         try{
             require(++ticks<350,"bounded asynchronous copy "+copy.status()+" "+copy.error());
             if(stage==0){
-                require(copy.configure(actor,new CopySettings(1,0,0,ChannelList.EMPTY,false)),"configure paired scan");
-                screen(inputPos.east(2));
+                require(copy.configure(actor,new CopySettings(height,0,0,ChannelList.EMPTY,false)),"configure paired scan");
+                var external=inputPos.offset(groupStep.multiply(2));
+                screen(external);
                 refuse("complete Screen group");
-                world.removeBlock(inputPos.east(2),false);
-                if(profile==0){
-                    var diagonal=NativeScreenRegistrations.BLOCKS.get(ScreenFamily.DIAGONAL).get();
-                    world.setBlockAndUpdate(inputPos.east(),diagonal.defaultBlockState());
-                    refuse("stationary Screens, Consoles and full Inputs");
-                    screen(inputPos.east());
+                world.removeBlock(external,false);
+                if(family==ScreenFamily.DIAGONAL){
+                    var externalTarget=outputPos.offset(groupStep.multiply(2));
+                    screen(externalTarget);
+                    refuse("complete Screen group");
+                    world.removeBlock(externalTarget,false);
                 }
 
                 var input=(NativeScreenEntity)world.getBlockEntity(inputPos);
@@ -130,7 +139,7 @@ public final class NativeCopyScreenChecks {
                 require(ItemStack.matches(mount.getItem(0),chip),"external chip remains exact after refusal");
                 mount.removeItem(0,1);
                 world.removeBlock(adjacent,false);
-                require(NativeScreenGroups.editMembers(input).size()==2,"real source join available");
+                require(NativeScreenGroups.editMembers(input).size()==groupSize(),"expected source join available");
                 supply.getItem(0).setCount(1);
                 refuse("Missing material",1);
                 supply.getItem(0).setCount(3);
@@ -144,7 +153,7 @@ public final class NativeCopyScreenChecks {
                 stage=1;
             }else if(stage==1&&!copy.busy()){
                 require(writes==1&&copy.status().equals("Copy rolled back")&&world.getBlockState(outputPos).isAir()
-                    &&world.getBlockState(outputPos.east()).isAir(),"caught rollback cleared outputs");
+                    &&world.getBlockState(outputPos.offset(groupStep)).isAir(),"caught rollback cleared outputs");
                 require(supply.getItem(0).getCount()==3&&privateMaterialRemains(),"all exact materials refunded");
                 require(world.getEntitiesOfClass(ItemEntity.class,new AABB(root).inflate(10)).isEmpty(),"rollback produced no item drops");
                 copy.request(actor);
@@ -152,14 +161,15 @@ public final class NativeCopyScreenChecks {
             }else if(stage==2&&!copy.busy()){
                 require(copy.status().equals("Copy complete"),"retry completed "+copy.error());
                 var output=(NativeScreenEntity)world.getBlockEntity(outputPos);
-                require(output!=null&&!output.inert()&&NativeScreenGroups.editMembers(output).size()==2,"translated Screen pair really joins");
-                for(var screen:NativeScreenGroups.editMembers(output)){
+                require(output!=null&&!output.inert()&&NativeScreenGroups.editMembers(output).size()==groupSize(),"translated Screen pair really joins");
+                for(var at:List.of(outputPos,outputPos.offset(groupStep))){
+                    var screen=(NativeScreenEntity)world.getBlockEntity(at);
                     require(screen.screenSettings().primarySurface()==artwork&&!screen.visual().frames().displayFit
                         &&screen.getBlockState()==state()&&screen.family()==family
                         &&(!family.secondary||screen.screenSettings().secondarySurface()==artwork),"exact face, artwork and frame fit");
                 }
                 require(supply.getItem(0).getCount()==1&&privateMaterialRemains(),"pay two plain items and retain configured item");
-                require(NativeScreenGroups.editMembers((NativeScreenEntity)world.getBlockEntity(inputPos)).size()==2,"source join remains intact");
+                require(NativeScreenGroups.editMembers((NativeScreenEntity)world.getBlockEntity(inputPos)).size()==groupSize(),"source join remains intact");
                 System.out.println(MARKER+" profile PASS "+family);
                 NativeCopyService.fault=null;
                 if(++profile<PROFILES.size())setup();
@@ -172,11 +182,23 @@ public final class NativeCopyScreenChecks {
         }catch(Throwable error){fail(error);}
     }
 
+    private static int groupSize(){return ScreenJoinGeometry.supports(family,false)?2:1;}
+
+    private static BlockPos joinStep(int step){
+        var state=state();
+        var block=(NativeScreenBlock)state.getBlock();
+        var basis=ScreenJoinGeometry.basis(family,block.screenState(state),false);
+        return new BlockPos(basis.dx(step),basis.dy(step),basis.dz(step));
+    }
+
     private static net.minecraft.world.level.block.state.BlockState state(){
         var state=NativeScreenRegistrations.BLOCKS.get(family).get().defaultBlockState();
-        return family.keyboard?state.setValue(NativeScreenBlock.HORIZONTAL_FACING,Direction.NORTH)
-            .setValue(NativeScreenBlock.KEYBOARD,true).setValue(NativeScreenBlock.UPPER,true)
-            :state.setValue(NativeScreenBlock.FACING,Direction.NORTH);
+        if(family.keyboard)return state.setValue(NativeScreenBlock.HORIZONTAL_FACING,Direction.NORTH)
+            .setValue(NativeScreenBlock.KEYBOARD,true).setValue(NativeScreenBlock.UPPER,true);
+        if(family==ScreenFamily.DIAGONAL)return state.setValue(NativeScreenBlock.HORIZONTAL_FACING,Direction.NORTH)
+            .setValue(NativeScreenBlock.INVERTED,profile==PROFILES.size()-1);
+        if(family==ScreenFamily.HALF_DIAGONAL)state=state.setValue(NativeScreenBlock.UPPER,true);
+        return state.setValue(NativeScreenBlock.FACING,Direction.NORTH);
     }
 
     private static void screen(BlockPos pos){
