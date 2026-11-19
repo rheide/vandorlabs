@@ -18,6 +18,13 @@ interactions remain open, alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
 
+On both platforms, Large Doors can mount horizontally, Arms can pass through
+the open aperture, and grid-aligned Arms can route RF, fluids or items.
+Survey Dishes and Sentinel Arrays take RF through their bottom inputs.
+Programmable Blocks in any finish form constructor frames. Standalone
+Programmable Matter Blocks migrate to the default Matter finish, and the
+Assembly Press makes Programmable Plates for the armor recipes.
+
 ## Open non-Vehicle work
 
 - Cockpit. Port the remaining monitor, keyboard and armrest settings and
