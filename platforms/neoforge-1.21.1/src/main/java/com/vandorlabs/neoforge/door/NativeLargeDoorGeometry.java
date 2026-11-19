@@ -22,30 +22,38 @@ public final class NativeLargeDoorGeometry {
         synchronized(CACHE){var found=CACHE.get(key);if(found!=null)return found;double offset=SpaceDoorData.positionOffset(k.sliding(),k.framed(),k.hinges(),k.depth());var boxes=List.copyOf(LargeDoorGeometry.boxes(k.framed(),k.sliding(),k.direction(),k.open(),offset,k.face().get2DDataValue(),k.panel(),k.depth()==2));int cost=512+boxes.size()*80;if(cost+128>BUDGET)throw new IllegalStateException("Large Door raw geometry exceeds byte budget");while(retained+cost+128>BUDGET){var it=CACHE.entrySet().iterator();var victim=it.next();retained-=victim.getValue().cost();it.remove();}var built=new Raw(boxes,cost);CACHE.put(key,built);retained+=cost;return built;}
     }
     public static final class Snapshot {
-        private final Key key;private final BlockPos root;private final List<AABB> boxes;private final AABB bounds;private final AtomicReferenceArray<Part> parts=new AtomicReferenceArray<>(9);private int cost;private volatile List<VoxelShape> worldShapes;
-        private Snapshot(Key key,BlockPos root,List<AABB> boxes){this.key=key;this.root=root.immutable();this.boxes=List.copyOf(boxes);AABB broad=null;for(var b:boxes)broad=broad==null?b:broad.minmax(b);bounds=broad==null?new AABB(root):broad;cost=512+boxes.size()*80;}
+        private final Key key;private final BlockPos root;private final List<AABB> boxes;private final AABB bounds;private final AtomicReferenceArray<Part> parts;private final int columns,rows;private int cost;private volatile List<VoxelShape> worldShapes;
+        private Snapshot(Key key,BlockPos root,List<AABB> boxes,int columns,int rows){this.columns=columns;this.rows=rows;parts=new AtomicReferenceArray<>(9*columns*rows);this.key=key;this.root=root.immutable();this.boxes=List.copyOf(boxes);AABB broad=null;for(var b:boxes)broad=broad==null?b:broad.minmax(b);bounds=broad==null?new AABB(root):broad;cost=512+boxes.size()*80;}
+        public int columns(){return columns;}public int rows(){return rows;}
         public Key key(){return key;}public BlockPos root(){return root;}public List<AABB> boxes(){return boxes;}public AABB bounds(){return bounds;}
-        public Part part(int column,int row){if(column<0||column>2||row<0||row>2)throw new IllegalArgumentException("Large Door part");int index=column*3+row;var found=parts.get(index);if(found!=null)return found;synchronized(this){found=parts.get(index);if(found!=null)return found;var built=buildPart(this,column,row);if((long)cost+built.cost()>SNAPSHOT_BUDGET)throw new IllegalStateException("Large Door snapshot exceeds checked retained budget");cost+=built.cost();parts.set(index,built);return built;}}
+        public Part part(int column,int row){if(column<0||column>=columns*3||row<0||row>=rows*3)throw new IllegalArgumentException("Large Door part");int index=column*rows*3+row;var found=parts.get(index);if(found!=null)return found;synchronized(this){found=parts.get(index);if(found!=null)return found;var built=buildPart(this,column,row);if((long)cost+built.cost()>SNAPSHOT_BUDGET)throw new IllegalStateException("Large Door snapshot exceeds checked retained budget");cost+=built.cost();parts.set(index,built);return built;}}
         /** Absolute per-box shapes retain source ordering without a Cartesian union grid. */
         public List<VoxelShape> worldShapes(){var found=worldShapes;if(found!=null)return found;synchronized(this){found=worldShapes;if(found!=null)return found;var shapes=new ArrayList<VoxelShape>(boxes.size());int added=64+boxes.size()*8;for(var box:boxes){var shape=net.minecraft.world.phys.shapes.Shapes.create(box);shapes.add(shape);added+=NativeVoxelShapes.retainedCost(shape,1);}if((long)cost+added>SNAPSHOT_BUDGET)throw new IllegalStateException("Large Door world shapes exceed checked retained budget");cost+=added;return worldShapes=List.copyOf(shapes);}}
         public synchronized int retainedBytes(){return cost;}
     }
     public record Part(BlockPos pos,List<AABB> collision,AABB outline,VoxelShape collisionShape,VoxelShape outlineShape,int cost){public Part{collision=List.copyOf(collision);}}
     public static Snapshot build(NativeDoorSettings settings,Direction face,boolean open,BlockPos root){return build(settings,face,open,root,false);}
-    public static Snapshot build(NativeDoorSettings settings,Direction face,boolean open,BlockPos root,boolean horizontal){var k=key(settings,face,open,horizontal);var source=raw(k).boxes();List<AABB> boxes=new ArrayList<>(source.size()+1);for(var b:source)boxes.add(new AABB(b.x0,b.y0,b.z0,b.x1,b.y1,b.z1).move(root));
+    public static Snapshot build(NativeDoorSettings settings,Direction face,boolean open,BlockPos root,boolean horizontal){
+        return build(settings,face,open,root,horizontal,1,1);
+    }
+    public static Snapshot build(NativeDoorSettings settings,Direction face,boolean open,BlockPos root,boolean horizontal,int columns,int rows){
+        if(columns<1||columns>2||rows<1||rows>2)throw new IllegalArgumentException("Large Door group size");
+        var k=key(settings,face,open,horizontal);var source=raw(k).boxes();List<AABB> boxes=new ArrayList<>(source.size()+1);for(var b:source)boxes.add(new AABB(b.x0,b.y0,b.z0,b.x1,b.y1,b.z1).move(root));
         if(k.panel()&&!boxes.isEmpty()){var pad=boxes.removeLast().move(-root.getX(),-root.getY(),-root.getZ());if(k.security()){pad=pad.inflate(0,1.05/16,0);pad=face.getAxis()==Direction.Axis.X?pad.inflate(.75/16,0,0):pad.inflate(0,0,.75/16);}boxes.add(pad.move(root));if(k.panelMode()==2)boxes.add(SpaceDoorControlPanel.mirror(AABB::new,pad.minX,pad.minY,pad.minZ,pad.maxX,pad.maxY,pad.maxZ,face.get3DDataValue()).move(root));}
         if(horizontal)boxes.replaceAll(box->LargeDoorMount.horizontal(AABB::new,face.get2DDataValue(),
                 box.minX-root.getX(),box.minY-root.getY(),box.minZ-root.getZ(),
                 box.maxX-root.getX(),box.maxY-root.getY(),box.maxZ-root.getZ()).move(root));
-        return new Snapshot(k,root,boxes);
+        if(columns!=1||rows!=1)boxes.replaceAll(box->LargeDoorJoin.project(AABB::new,face.get2DDataValue(),horizontal,columns,rows,
+                box.minX-root.getX(),box.minY-root.getY(),box.minZ-root.getZ(),box.maxX-root.getX(),box.maxY-root.getY(),box.maxZ-root.getZ()).move(root));
+        return new Snapshot(k,root,boxes,columns,rows);
     }
     private static Part buildPart(Snapshot s,int column,int row){
         Direction face=s.key.face(),width=face.getCounterClockWise(),rows=NativeLargeDoorLifecycle.rows(face,s.key.horizontal());
         BlockPos pos=NativeLargeDoorLifecycle.cell(s.root,face,s.key.horizontal(),column,row);
         double[] min={Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
         double[] max={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY};
-        clipAxis(min,max,pos,width,column);
-        clipAxis(min,max,pos,rows,row);
+        clipAxis(min,max,pos,width,column,s.columns*3);
+        clipAxis(min,max,pos,rows,row,s.rows*3);
         var partition=new AABB(min[0],min[1],min[2],max[0],max[1],max[2]);
         var unit=new AABB(pos);
         List<AABB> collisions=new ArrayList<>(),local=new ArrayList<>();AABB outline=null;
@@ -57,9 +65,9 @@ public final class NativeLargeDoorGeometry {
         int cost=128+collisions.size()*80+NativeVoxelShapes.retainedCost(collision,local.size())+NativeVoxelShapes.retainedCost(selection,clearAperture?0:1);
         return new Part(pos,collisions,outline,collision,selection,cost);
     }
-    private static void clipAxis(double[] min,double[] max,BlockPos cell,Direction axis,int part){
+    private static void clipAxis(double[] min,double[] max,BlockPos cell,Direction axis,int part,int count){
         double low=part==0?Double.NEGATIVE_INFINITY:0;
-        double high=part==2?Double.POSITIVE_INFINITY:1;
+        double high=part==count-1?Double.POSITIVE_INFINITY:1;
         boolean positive=axis.getAxisDirection()==Direction.AxisDirection.POSITIVE;
         int index=axis.getAxis()==Direction.Axis.X?0:axis.getAxis()==Direction.Axis.Y?1:2;
         int coordinate=axis.getAxis().choose(cell.getX(),cell.getY(),cell.getZ());
@@ -74,9 +82,9 @@ public final class NativeLargeDoorGeometry {
         double column=(x-s.root.getX())*width.getStepX()+(z-s.root.getZ())*width.getStepZ();
         if(width.getAxisDirection()==Direction.AxisDirection.NEGATIVE)column+=1;
         double row=s.key.horizontal()?LargeDoorMount.row(face.get2DDataValue(),x-s.root.getX(),z-s.root.getZ()):y-s.root.getY();
-        return NativeLargeDoorLifecycle.cell(s.root,face,s.key.horizontal(),cellIndex(column),cellIndex(row));
+        return NativeLargeDoorLifecycle.cell(s.root,face,s.key.horizontal(),cellIndex(column,s.columns*3),cellIndex(row,s.rows*3));
     }
-    private static int cellIndex(double value){return Math.max(0,Math.min(2,(int)Math.floor(value)));}
+    private static int cellIndex(double value,int count){return Math.max(0,Math.min(count-1,(int)Math.floor(value)));}
     public static void appendCollisions(Snapshot s,AABB query,List<AABB> output){for(var box:s.boxes)if(box.intersects(query)&&!output.contains(box))output.add(box);}
     public static boolean panelContains(NativeDoorSettings settings,double normal,double y){return NativeDoorGeometry.panelContains(settings,normal,y,1.5);}
     static long retainedBytes(){synchronized(CACHE){return retained+128L;}}static int entries(){synchronized(CACHE){return CACHE.size();}}static void clear(){synchronized(CACHE){CACHE.clear();retained=0;}}
