@@ -121,15 +121,16 @@ final class NativeTurntableEntity extends BlockEntity {
     }
 
     private void advance(ServerLevel world, double step) {
-        String blocked = motion.obstruction(world, angle, step);
-        if (blocked != null) {
+        var frame = motion.prepare(world, angle, step);
+        if (frame.obstacle() != null) {
             rotationBlocked = spinning;
             spinning = false;
             target = -1;
             setChanged();
-            status(blocked);
+            status(frame.obstacle());
             return;
         }
+        NativeTurntableRiders.apply(frame.riders());
         angle = TurntableGeometry.wrap(angle + step);
         setChanged();
         PacketDistributor.sendToPlayersTrackingChunk(world, new ChunkPos(worldPosition),

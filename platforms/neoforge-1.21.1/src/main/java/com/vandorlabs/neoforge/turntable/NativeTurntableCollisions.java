@@ -58,6 +58,10 @@ public final class NativeTurntableCollisions {
     }
 
     public static List<VoxelShape> append(Level level, AABB region, List<VoxelShape> original) {
+        return appendExcept(level, region, original, null);
+    }
+
+    static List<VoxelShape> appendExcept(Level level, AABB region, List<VoxelShape> original, Body excluded) {
         if (active.isEmpty()) return original;
         Box query = null;
         List<VoxelShape> combined = null;
@@ -65,7 +69,7 @@ public final class NativeTurntableCollisions {
             var owner = reference.get();
             if (owner == null || owner.getLevel() != level || owner.isRemoved()) continue;
             var body = owner.body();
-            if (body == null || body.boxes().isEmpty()) continue;
+            if (body == null || body == excluded || body.boxes().isEmpty()) continue;
             if (query == null) query = NativeTurntableMotion.box(region);
             double angle = level.isClientSide() ? owner.visualAngle() : owner.positionAngle();
             if (!body.bounds(body.extent(), angle).intersects(query)) continue;

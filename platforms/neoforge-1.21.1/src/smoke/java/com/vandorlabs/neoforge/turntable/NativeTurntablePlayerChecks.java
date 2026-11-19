@@ -68,6 +68,8 @@ public final class NativeTurntablePlayerChecks {
             }
             case 3 -> {
                 if (menu == null || !menu.captured() || menu.busy() || !mc.level.getBlockState(NativeTurntablePlayerFixture.SOURCE).isAir()) return;
+                if (mc.player.position().distanceToSqr(NativeTurntablePlayerFixture.feet(NativeTurntablePlayerFixture.SOURCE)) > .02
+                        || Math.abs(mc.player.getYRot() - 20) > 1) return;
                 if (menu.containerId != window) throw new AssertionError("Native Turntable window dropped its physical identity");
                 checkCapturedRender(mc);
                 click(screen, "Target angle:", .333);
@@ -80,9 +82,22 @@ public final class NativeTurntablePlayerChecks {
                 if (owner.visualAngle() != 90) throw new AssertionError("Client has the wrong authoritative angle");
                 owner.readAngle(owner.key(), Long.MIN_VALUE, 20);
                 if (owner.visualAngle() != 90) throw new AssertionError("Older pose packet replaced the current angle");
+                if (mc.player.position().distanceToSqr(NativeTurntablePlayerFixture.feet(NativeTurntablePlayerFixture.TARGET)) > .025
+                        || Math.abs(mc.player.getYRot() - 110) > 2 || !mc.player.onGround()) return;
                 checkCapturedRender(mc);
+                System.out.println("[vandorlabs][turntable-player] client rider position, feet and heading PASS");
+                click(screen, "Done", .5);
+                stage = 9;
+            }
+            case 9 -> {
+                if (mc.screen != null || mc.player.position().distanceToSqr(NativeTurntablePlayerFixture.ACTOR) > .02) return;
+                use(mc);
+                stage = 10;
+            }
+            case 10 -> {
+                if (menu == null || menu.busy() || !menu.captured()) return;
                 click(screen, "Restore", .5);
-                stage++;
+                stage = 5;
             }
             case 5 -> {
                 if (menu == null || menu.captured() || menu.busy()

@@ -16,6 +16,8 @@ import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.EntityType;
+import net.minecraft.world.entity.animal.Pig;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Block;
@@ -24,6 +26,7 @@ import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.common.util.FakePlayer;
@@ -46,6 +49,7 @@ public final class NativeTurntableTransferChecks {
     private static int stage;
     private static int ticks;
     private static int checks;
+    private static Pig rider;
 
     @SubscribeEvent
     public static void started(ServerStartedEvent event) {
@@ -75,6 +79,7 @@ public final class NativeTurntableTransferChecks {
         world.setBlock(SOURCE.above(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
         verifyAnglePacket();
         verifySignalPacket();
+        verifyRiderPacket();
         sign(SOURCE).updateText(t -> t.setMessage(0, Component.literal("Turntable owner")), true);
         originalSign = sign(SOURCE).saveWithFullMetadata(world.registryAccess());
         originalKey = owner().key();
@@ -140,6 +145,14 @@ public final class NativeTurntableTransferChecks {
             need(owner().status().contains("blocked by terrain") && owner().positionAngle() < 90
                     && owner().hasCapture(), "terrain stops authoritative motion with one retained owner");
             world.setBlockAndUpdate(TARGET.above(), Blocks.AIR.defaultBlockState());
+            var layout = owner().capture().surface().geometry;
+            var pos = SOURCE.above().getCenter();
+            var rotated = com.vandorlabs.turntable.TurntableGeometry.rotate(pos.x - layout.pivotX,
+                    pos.y - layout.pivotY, pos.z - layout.pivotZ, layout.face, owner().positionAngle());
+            rider = EntityType.PIG.create(world);
+            rider.setNoAi(true);
+            rider.setPos(layout.pivotX + rotated[0], SOURCE.getY() + 2, layout.pivotZ + rotated[2]);
+            need(world.addFreshEntity(rider), "one native rider added only after capture");
             need(owner().turn(1), "obstructed Turn can be retried with the same capture");
             stage = 3;
         } else if (stage == 3) {
@@ -148,6 +161,10 @@ public final class NativeTurntableTransferChecks {
             need(!world.getEntityCollisions(actor, new AABB(TARGET.above()).deflate(.1)).isEmpty()
                     && world.getEntityCollisions(actor, new AABB(SOURCE.above()).deflate(.1)).isEmpty(),
                     "physical collision follows the rotated solid");
+            need(world.getEntity(rider.getUUID()) == rider && rider.isAlive()
+                    && rider.position().distanceToSqr(Vec3.atBottomCenterOf(TARGET.above(2))) < .02,
+                    "the same native Pig rides the exact rotated support");
+            rider.discard();
             var savedRoot = owner().saveWithFullMetadata(world.registryAccess());
             need(savedRoot.getDouble(NativeTurntableEntity.ANGLE) == 90,
                     "the completed pose is saved independently of client interpolation");
@@ -210,6 +227,22 @@ public final class NativeTurntableTransferChecks {
                 refused = true;
             }
             need(refused, "oversized bank refused before allocating or applying settings");
+        } finally {
+            buffer.release();
+        }
+    }
+
+    private static void verifyRiderPacket() {
+        var support = new com.vandorlabs.neoforge.ramp.NativeRampMotionPayload(world.dimension().location(),
+                4, 16.5, 22.5, 133, 133, 0.03, 0.02);
+        var packet = new NativeTurntableRiderPayload(support, 3);
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), world.registryAccess());
+        try {
+            NativeTurntableRiderPayload.CODEC.encode(buffer, packet);
+            int bytes = buffer.readableBytes();
+            need(bytes == 80 && packet.equals(NativeTurntableRiderPayload.CODEC.decode(buffer)) && !buffer.isReadable(),
+                    "one overworld rider correction consumes eighty bytes");
+            System.out.println("[vandorlabs][turntable-transfer] rider packet bytes=" + bytes);
         } finally {
             buffer.release();
         }

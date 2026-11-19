@@ -51,6 +51,7 @@ public final class NativeTurntableBindings {
         if (!Boolean.getBoolean("vandorlabs.turntableControllers")) return;
         NativeTurntableAnglePayload.register(event);
         NativeTurntableSignalsPayload.register(event);
+        NativeTurntableRiderPayload.register(event);
     }
 
     static boolean open(Player player, Level world, BlockPos pos) {

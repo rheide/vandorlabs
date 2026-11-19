@@ -7,7 +7,7 @@ Set the scan height and select Scan. Set the speed in RPM and use Turn to
 rotate the captured blocks by a quarter turn, then use Restore to place them
 back in the world. The captured payload stays in the controller until Restore
 completes. Loading a moving controller resumes its saved angle and target.
-Riding and payload interaction remain open.
+Interaction with captured blocks remains open.
 Programmable Surfaces are available in normal registration.
 
 Open Redstone to set the scan and rotation modes, the initial direction and
@@ -18,6 +18,12 @@ rotation signal requests Restore only within the configured angle tolerance.
 Signal-triggered Scan and Restore use the player who saved the Redstone
 settings and require that player to be online and within reach. They use the
 same permission checks and journal as the manual buttons.
+
+An upward-facing Turntable carries a standing player and turns their view.
+The player must be on the disc or supported by the captured blocks. Eligible
+pigs and cows ride within their current entity chunk. The Turntable stops if
+a rider's path is obstructed or the sweep reaches an unsupported actor.
+Use Restore after riders clear the placement volume.
 
 The scan finds a complete loaded square from the controller's horizontal
 front and extends the prism out of the Surface's textured face. Both
@@ -46,4 +52,6 @@ A connected Survival client uses the dedicated panel through both right-click
 paths, sets the height and speed, and observes capture, rendering through a
 quarter turn and restoration of a Sign while retaining the controller identity.
 The connected fixture uses the Redstone editor, then checks a partial channel
-bank, a complete bank, reversal and a signal-triggered restore.
+bank, a complete bank, reversal and a signal-triggered restore. It also checks
+the connected player's position and heading while riding a captured block.
+The dedicated runtime checks physical support for a pig on the same body.

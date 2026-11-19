@@ -35,6 +35,11 @@ public final class NativeTurntablePlayerFixture {
     private static boolean reported;
     private static int signalStage;
     private static long phaseTick;
+    private static int riderStage;
+
+    static Vec3 feet(BlockPos block) {
+        return Vec3.atBottomCenterOf(block.above(2));
+    }
 
     static boolean enabled() { return ENABLED; }
 
@@ -49,6 +54,7 @@ public final class NativeTurntablePlayerFixture {
         var pad = NativeSurfaceBindings.BLOCK.defaultBlockState().setValue(NativeSurfaceBlock.FACING, Direction.UP);
         for (int x = 1; x <= 2; x++) for (int z = 0; z < 2; z++) world.setBlock(ROOT.offset(x, 0, z), pad, Block.UPDATE_ALL);
         world.setBlockAndUpdate(SOURCE, Blocks.OAK_SIGN.defaultBlockState());
+        world.setBlockAndUpdate(SOURCE.above(), Blocks.STONE.defaultBlockState());
         ((SignBlockEntity) world.getBlockEntity(SOURCE)).updateText(
                 line -> line.setMessage(0, Component.literal("Turntable player sign")), true);
     }
@@ -68,6 +74,21 @@ public final class NativeTurntablePlayerFixture {
         var world = player.serverLevel();
         if (!(world.getBlockEntity(ROOT) instanceof NativeTurntableEntity controller)) return;
         if (controller.hasCapture() && world.getBlockState(SOURCE).isAir()) captured = true;
+        if (riderStage == 0 && captured && !controller.busy()) {
+            var feet = feet(SOURCE);
+            player.connection.teleport(feet.x, feet.y, feet.z, 20, 0);
+            riderStage = 1;
+        }
+        if (riderStage == 1 && controller.positionAngle() == 90 && !controller.moving()
+                && player.containerMenu == player.inventoryMenu) {
+            if (player.position().distanceToSqr(feet(TARGET)) > .025 || Math.abs(player.getYRot() - 110) > 2) {
+                throw new AssertionError("Server rider did not follow the rotating stone: " + player.position()
+                        + " heading=" + player.getYRot());
+            }
+            player.connection.teleport(ACTOR.x, ACTOR.y, ACTOR.z, 0, 0);
+            riderStage = 2;
+            System.out.println("[vandorlabs][turntable-player] authoritative rider pose PASS");
+        }
         if (controller.busy() || !captured || !(player.containerMenu instanceof NativeTurntableMenu)
                 || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())) return;
         long time = world.getGameTime();

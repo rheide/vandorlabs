@@ -2,6 +2,8 @@ package com.vandorlabs.turntable;
 
 /** Surface coordinates and rotation shared by scanning, rendering and collision. */
 public final class TurntableGeometry {
+    public static final double DISC_RADIUS = .43;
+
     private TurntableGeometry() { }
     public enum Face {
         DOWN(0,-1,0, 1,0,0, 0,0,-1), UP(0,1,0, 1,0,0, 0,0,1),
@@ -40,6 +42,13 @@ public final class TurntableGeometry {
                 y*c+(normal.z*x-normal.x*z)*s+normal.y*dot*(1-c),
                 z*c+(normal.x*y-normal.y*x)*s+normal.z*dot*(1-c)};
     }
+    public static boolean onDisc(double x, double y, double z, Face face, int width) {
+        double u = x * face.ux + y * face.uy + z * face.uz;
+        double v = x * face.vx + y * face.vy + z * face.vz;
+        double radius = width * DISC_RADIUS;
+        return u * u + v * v <= radius * radius + 1e-8;
+    }
+
     /** Project a block center to the grid at a supported quarter-turn heading. */
     public static int[] rotateCell(int x,int y,int z,double pivotX,double pivotY,double pivotZ,Face normal,int quarter){
         double dx=x+.5-pivotX,dy=y+.5-pivotY,dz=z+.5-pivotZ;
