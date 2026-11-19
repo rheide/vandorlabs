@@ -7638,5 +7638,11 @@
     "category": "Devices",
     "menuGroup": "Scanner",
     "source": "appliances/scanner/right"
+  },
+  {
+    "id": "programmable_matter",
+    "label": "Programmable Matter",
+    "category": "Materials",
+    "source": "matter/matter"
   }
 ]

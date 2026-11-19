@@ -60,5 +60,9 @@ public final class ModernFinishCatalog {
     public static int storedChoice(int choice){return choice>=MaterialChoicePolicy.CUSTOM_BASE?choice:choice>=0&&choice<ENTRIES.size()?ENTRIES.get(choice).canonical():0;}
     public static int renderChoice(int choice){int value=storedChoice(choice);return value<ENTRIES.size()||REGISTERED.containsKey(value)||FILESYSTEM.containsKey(value)||CUSTOM.containsKey(value)?value:0;}
     public static Entry entry(int choice){int index=renderChoice(choice);return CUSTOM.getOrDefault(index,FILESYSTEM.getOrDefault(index,REGISTERED.getOrDefault(index,ENTRIES.get(index<ENTRIES.size()?index:0))));}
+    private static final int DEFAULT_PROGRAMMABLE_BLOCK=java.util.stream.IntStream.range(0,ENTRIES.size())
+            .filter(index->ENTRIES.get(index).id().equals(com.vandorlabs.tiles.HousingFinishCatalog.DEFAULT_PROGRAMMABLE_BLOCK))
+            .findFirst().orElseThrow();
+    public static int defaultProgrammableBlock(){return DEFAULT_PROGRAMMABLE_BLOCK;}
     private ModernFinishCatalog(){}
 }

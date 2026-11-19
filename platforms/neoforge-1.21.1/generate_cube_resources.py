@@ -151,7 +151,7 @@ def main():
     write(OUT/'assets/minecraft/atlases/blocks.json',dict(sources=list({value['resource']:value for value in atlas}.values())+[dict(type='vandorlabs:frame_edges'),dict(type='vandorlabs:door_sprites'),dict(type='vandorlabs:reader_sprites'),dict(type='vandorlabs:segmented_sprites'),dict(type='vandorlabs:propulsion_sprites'),dict(type='vandorlabs:programmer_sprites'),dict(type='vandorlabs:storage_sprites'),dict(type='vandorlabs:canopy_sprites'),dict(type='vandorlabs:gear_sprites'),dict(type='vandorlabs:builder_sprites'),dict(type='vandorlabs:observer_sprites'),dict(type='minecraft:single',resource='vandorlabs:blocks/navigation_table/navigation_tables')]))
     variants={f'facing={face}':dict(model='vandorlabs:block/programmable_block',y=angle) for face,angle in [('north',0),('east',90),('south',180),('west',270),('up',90),('down',90)]}
     write(ASSETS/'blockstates/programmable_block.json',dict(variants=variants))
-    write(ASSETS/'models/block/programmable_block.json',dict(parent='minecraft:block/cube_all',textures=dict(all='vandorlabs:housing/dark_wall_panel')))
+    write(ASSETS/'models/block/programmable_block.json',dict(parent='minecraft:block/cube_all',textures=dict(all='vandorlabs:housing/programmable_matter')))
     item=json.loads((ROOT/'src/main/resources/assets/vandorlabs/models/item/programmable_block.json').read_text());item['parent']='vandorlabs:block/programmable_block';item.pop('textures',None);write(ASSETS/'models/item/programmable_block.json',item)
     for name in ['programmable_block','configurizer']:
         recipe=json.loads((ROOT/('src/main/resources/assets/vandorlabs/recipes/'+name+'.json')).read_text());recipe['result']['id']=recipe['result'].pop('item');write(OUT/('data/vandorlabs/recipe/'+name+'.json'),recipe)

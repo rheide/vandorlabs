@@ -18,6 +18,7 @@ public final class ScreenHousingTextures {
     public static final int LEGACY_COUNT=HousingFinishCatalog.legacyCount();
     public static final int BUILTIN_COUNT;
     public static final int DEFAULT_TRAPDOOR;
+    public static final int DEFAULT_PROGRAMMABLE_BLOCK;
     public static final int DEFAULT_STORAGE;
     private static final java.util.Map<Integer,Integer> FILE_CHOICES=new java.util.HashMap<>();
     static {
@@ -63,6 +64,7 @@ public final class ScreenHousingTextures {
                 }
             }
         }
+        DEFAULT_PROGRAMMABLE_BLOCK=screenIndex("matter/matter");
         DEFAULT_STORAGE=screenIndex("storage/cabinet_front");
         DEFAULT_TRAPDOOR=textureIndex(screenIndex("imported/trapdoors/cyan_lit_armored_sci_fi_hatch_4"));
         if(DEFAULT_TRAPDOOR==0)throw new IllegalStateException("Default trapdoor material missing");

@@ -2,6 +2,7 @@ package com.vandorlabs.tiles;
 
 /** Stable original finish IDs and paths, shared by platform catalogs. */
 public final class HousingFinishCatalog {
+    public static final String DEFAULT_PROGRAMMABLE_BLOCK = "programmable_matter";
     private static final class Finish {
         final String id;
         final String texture;
