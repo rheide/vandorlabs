@@ -98,7 +98,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 ||!isOperational()||isLandingAssembly()||loadedController()!=this||world==null)return false;
         for(com.vandorlabs.vehicle.VehicleStructure.Cell section:storedSections.cells){
             BlockPos at=pos.add(section.pos);
-            if(section.state.getBlock()!=getBlockType()||!members.contains(at)||!GearAssembly.loaded(world,at)
+            // The snapshot origin follows occupied cells, so vacant sections can be below local Y=0.
+            if(section.state.getBlock()!=getBlockType()||!members.contains(at)
+                    ||!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!GearAssembly.loaded(world,at)
                     ||!world.isAirBlock(at)||world.getTileEntity(at)!=null)return false;
         }
         return true;
