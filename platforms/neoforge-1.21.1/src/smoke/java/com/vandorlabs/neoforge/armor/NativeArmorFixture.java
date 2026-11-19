@@ -39,6 +39,10 @@ public final class NativeArmorFixture {
         player.getInventory().selected = 0;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
         player.setItemInHand(InteractionHand.OFF_HAND, stack);
+        var chestId = NativeArmorBindings.IDS.get(ArmorItem.Type.CHESTPLATE);
+        var chest = new ItemStack(net.minecraft.core.registries.BuiltInRegistries.ITEM.get(chestId));
+        require(NativeArmorItem.configure(chest, 9), "material fixture chestplate");
+        player.setItemSlot(EquipmentSlot.CHEST, chest);
         player.inventoryMenu.broadcastChanges();
     }
 

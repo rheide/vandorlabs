@@ -610,6 +610,9 @@ tasks.register('generateArmorResources', Exec) {
     inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/items/armor')
     inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/models/armor')
     inputs.dir('../../src/main/resources/assets/vandorlabs/models/item/armor')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/item') {
+        include 'programmable_helmet.json', 'programmable_chestplate.json', 'programmable_leggings.json', 'programmable_boots.json'
+    })
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/recipes') {
         include 'programmable_helmet.json', 'programmable_chestplate.json', 'programmable_leggings.json', 'programmable_boots.json'
     })

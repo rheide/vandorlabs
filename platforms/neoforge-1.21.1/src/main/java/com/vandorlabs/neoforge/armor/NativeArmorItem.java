@@ -1,5 +1,6 @@
 package com.vandorlabs.neoforge.armor;
 
+import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.NativeConfigurationAccess;
 import java.util.List;
 import net.minecraft.core.component.DataComponents;
@@ -31,22 +32,27 @@ public final class NativeArmorItem extends ArmorItem {
 
     public static NativeArmorCatalog.Design design(ItemStack stack) {
         NativeArmorItem item = (NativeArmorItem) stack.getItem();
-        var data = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY);
-        if (data.contains(TEXTURE)) {
-            var tag = data.getUnsafe();
-            if (tag.contains(TEXTURE, Tag.TAG_INT)) {
-                var selected = NativeArmorCatalog.design(tag.getInt(TEXTURE), item.getEquipmentSlot());
-                if (selected != null) return selected;
-            }
-        }
-        return item.defaultDesign;
+        var design = NativeArmorCatalog.design(choice(stack), item.getEquipmentSlot());
+        return design == null ? item.defaultDesign : design;
     }
 
     private final NativeArmorCatalog.Design defaultDesign = NativeArmorCatalog.defaultDesign(getEquipmentSlot());
 
+    public static int choice(ItemStack stack) {
+        var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).getUnsafe();
+        if (tag.contains(TEXTURE, Tag.TAG_INT)) return tag.getInt(TEXTURE);
+        return ((NativeArmorItem)stack.getItem()).defaultDesign.choice();
+    }
+
+    static boolean listedMaterial(int choice) {
+        if (choice < 0 || choice >= ModernFinishCatalog.ENTRIES.size()) return false;
+        var material = ModernFinishCatalog.option(choice);
+        return material.visible() && material.general();
+    }
+
     static boolean configure(ItemStack stack, int choice) {
         if (!(stack.getItem() instanceof NativeArmorItem item)
-            || NativeArmorCatalog.design(choice, item.getEquipmentSlot()) == null) return false;
+            || NativeArmorCatalog.design(choice, item.getEquipmentSlot()) == null && !listedMaterial(choice)) return false;
         CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
             tag.putInt(TEXTURE, choice);
             tag.remove(SAMPLE);
@@ -57,6 +63,10 @@ public final class NativeArmorItem extends ArmorItem {
     @Override
     public ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot,
                                             ArmorMaterial.Layer layer, boolean innerModel) {
+        int choice = choice(stack);
+        if (listedMaterial(choice)) {
+            return NativeArmorMaterials.worn(choice, layer.texture(innerModel), design(stack).worn());
+        }
         return design(stack).worn();
     }
 

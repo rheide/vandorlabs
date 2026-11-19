@@ -1,5 +1,6 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.armor.ArmorMaterialSkin;
 import com.vandorlabs.tiles.ScreenHousingTextures;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.texture.*;
@@ -45,32 +46,12 @@ public final class ProgrammableArmorTextures {
         return location.toString();
     }
 
-    // Vanilla ModelBiped cuboid faces: head, torso, arms and legs, in 64x32 UV units.
-    private static final int[][] FACES = {
-        {8,0,8,8},{16,0,8,8},{0,8,8,8},{8,8,8,8},{16,8,8,8},{24,8,8,8},
-        {20,16,8,4},{28,16,8,4},{16,20,4,12},{20,20,8,12},{28,20,4,12},{32,20,8,12},
-        {44,16,4,4},{48,16,4,4},{40,20,4,12},{44,20,4,12},{48,20,4,12},{52,20,4,12},
-        {4,16,4,4},{8,16,4,4},{0,20,4,12},{4,20,4,12},{8,20,4,12},{12,20,4,12}
-    };
     static BufferedImage bake(int[] pixels,int width,int height,BufferedImage mask) {
-        BufferedImage skin=new BufferedImage(256,128,BufferedImage.TYPE_INT_ARGB);
-        for(int y=0;y<128;y++)for(int x=0;x<256;x++)
-            skin.setRGB(x,y,mask.getRGB(x*mask.getWidth()/256,y*mask.getHeight()/128)&0xFF000000);
-        for(int[] face:FACES) {
-            int left=face[0]*4,top=face[1]*4,right=left+face[2]*4,bottom=top+face[3]*4;
-            int x0=right,y0=bottom,x1=left,y1=top;
-            for(int y=top;y<bottom;y++)for(int x=left;x<right;x++)if((skin.getRGB(x,y)>>>24)!=0) {
-                x0=Math.min(x0,x);y0=Math.min(y0,y);x1=Math.max(x1,x+1);y1=Math.max(y1,y+1);
-            }
-            if(x0>=x1 || y0>=y1)continue;
-            // Center on the visible area, so the boots' shorter mask is centered too.
-            double scale=Math.max((double)(x1-x0)/width,(double)(y1-y0)/height);
-            for(int y=top;y<bottom;y++)for(int x=left;x<right;x++) {
-                int sx=Math.max(0,Math.min(width-1,(int)((x+.5-(x0+x1)/2.0)/scale+width/2.0)));
-                int sy=Math.max(0,Math.min(height-1,(int)((y+.5-(y0+y1)/2.0)/scale+height/2.0)));
-                skin.setRGB(x,y,(skin.getRGB(x,y)&0xFF000000)|(pixels[sy*width+sx]&0xFFFFFF));
-            }
-        }
+        int[] baked = ArmorMaterialSkin.bake((x,y) -> pixels[y * width + x], width, height,
+                mask::getRGB, mask.getWidth(), mask.getHeight());
+        BufferedImage skin = new BufferedImage(ArmorMaterialSkin.WIDTH, ArmorMaterialSkin.HEIGHT,
+                BufferedImage.TYPE_INT_ARGB);
+        skin.setRGB(0, 0, skin.getWidth(), skin.getHeight(), baked, 0, skin.getWidth());
         return skin;
     }
 

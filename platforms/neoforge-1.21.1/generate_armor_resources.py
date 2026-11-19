@@ -41,6 +41,9 @@ for slot, piece in PIECES.items():
     design = next(d for d in designs if d["slot"] == slot and d["name"].startswith("civilian_staff_"))
     write_json(ASSETS / f"models/item/{item}.json",
                {"parent": design["model"].replace(":", ":item/", 1)})
+    generic_model = json.loads((LEGACY / f"models/item/{item}.json").read_text(encoding="utf-8"))
+    generic_model["textures"]["material"] = "minecraft:block/stone"
+    write_json(ASSETS / f"models/item/armor/material_{piece}.json", generic_model)
     recipe = json.loads((LEGACY / f"recipes/{item}.json").read_text(encoding="utf-8"))
     recipe["result"] = {"id": recipe["result"]["item"]}
     write_json(OUT / f"data/vandorlabs/recipe/{item}.json", recipe)

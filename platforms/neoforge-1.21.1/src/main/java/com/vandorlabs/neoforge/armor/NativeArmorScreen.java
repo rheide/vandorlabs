@@ -26,14 +26,15 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
         imageHeight = rows * 22 + 66;
         super.init();
         if (!(menu.editorStack().getItem() instanceof NativeArmorItem armor)) return;
-        picker = new NativeMaterialPicker(-1, unused -> false, this::choose).sampling(false);
+        picker = new NativeMaterialPicker(-1, NativeArmorItem::listedMaterial, this::choose).sampling(false);
         for (var design : NativeArmorCatalog.designs()) {
             if (design.slot() == armor.getEquipmentSlot()) {
                 picker.specialMaterial(row(design.choice()), design.label(), "Armor",
                     design.icon().replace(":items/", ":item/"));
             }
         }
-        picker.select(row(NativeArmorItem.design(menu.editorStack()).choice()), false);
+        int selection = NativeArmorItem.choice(menu.editorStack());
+        picker.select(NativeArmorItem.listedMaterial(selection) ? selection : row(NativeArmorItem.design(menu.editorStack()).choice()), false);
         picker.layout(leftPos + 12, topPos + 30, imageWidth - 32, rows, true);
         addRenderableWidget(picker.searchField());
         addRenderableWidget(NativeDialogButton.builder(Component.translatable("gui.done"), button -> onClose())
@@ -49,7 +50,7 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
     private static int row(int choice) { return ROWS_BASE - (choice - CHOICE_BASE); }
 
     private void choose(int row) {
-        PacketDistributor.sendToServer(new NativeArmorBindings.Edit(menu.containerId, CHOICE_BASE + ROWS_BASE - row));
+        PacketDistributor.sendToServer(new NativeArmorBindings.Edit(menu.containerId, row >= 0 ? row : CHOICE_BASE + ROWS_BASE - row));
     }
 
     @Override
