@@ -34,6 +34,24 @@ final class DoorAppearanceRuntimeChecks {
   }
   void close(){TEAnimatedScreenSelector.unloadGroups(world);}
  }
+ static void verticalSplit(Minecraft mc,File output)throws Exception{
+  Fixture fixture=new Fixture(mc,true,2);
+  try{
+   fixture.tile.configure(2,1,true,com.vandorlabs.persistence.SpaceDoorData.VERTICAL_SPLIT,true,true,false,0,false);
+   fixture.tile.setPlacementDepth(0);
+   BufferedImage closed=capture(mc,fixture,false,0,false),half=capture(mc,fixture,false,.5F,false),open=capture(mc,fixture,false,1,false);
+   BufferedImage batch=capture(mc,fixture,false,.5F,true);
+   int top=half.getRGB(145,60),bottom=half.getRGB(145,323);
+   require(difference(half,batch)<200,"Sliding Split opaque batch matches ordinary renderer");
+   require(closed.getRGB(145,187)!=open.getRGB(145,187)&&half.getRGB(145,187)==open.getRGB(145,187),
+           "closed center contains the leaf and separates during motion");
+   require(top!=open.getRGB(145,60)&&bottom!=open.getRGB(145,323),"both parts move away from the central seam");
+   ImageIO.write(closed,"png",new File(output,"sliding-split-closed.png"));
+   ImageIO.write(half,"png",new File(output,"sliding-split-half-open.png"));
+   ImageIO.write(open,"png",new File(output,"sliding-split-open.png"));
+  }finally{fixture.close();}
+  System.out.println("[vandorlabs] vertical-door-split-render PASS closed/half/open upright leaf meshes and opaque batch parity");
+ }
  static void run(Minecraft mc,File output)throws Exception{
   benchmarkCaches(output);
   customMirror(mc,output);

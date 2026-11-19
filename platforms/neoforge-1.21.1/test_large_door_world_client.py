@@ -62,8 +62,12 @@ def main():
         diff=ImageChops.difference(positive,negative)
         pixels=sum(max(pixel)>12 for pixel in diff.getdata())
         if pixels<200:raise AssertionError(f'Horizontal Large Door facing {facing} has only {pixels} rendered pixels')
+        opened=Image.open(client/f'screenshots/horizontal-large-{facing}-open.png').convert('RGB')
+        motion=ImageChops.difference(positive,opened)
+        motion_pixels=sum(max(pixel)>12 for pixel in motion.getdata())
+        if motion_pixels<3000:raise AssertionError(f'Horizontal Sliding Split facing {facing} did not move both leaves visibly')
         diff.save(output/f'horizontal-large-{facing}-difference.png')
-        print(f'Horizontal Large Door actual renderer PASS facing={facing} changedPixels={pixels}',flush=True)
+        print(f'Horizontal Large Door actual renderer PASS facing={facing} changedPixels={pixels} splitMotionPixels={motion_pixels}',flush=True)
     print('Native canonical Large Door world client focused checks PASS (development classpath/software rendering): '+str(output),flush=True)
 
 

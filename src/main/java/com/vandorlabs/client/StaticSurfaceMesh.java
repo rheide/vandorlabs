@@ -232,34 +232,25 @@ final class StaticSurfaceMesh {
             .tex(uv[2]+(vertices[i+3]-source.getMinU())*us,uv[0]+(vertices[i+4]-source.getMinV())*vs).lightmap(sky,block).normal(vertices[i+5],vertices[i+6],vertices[i+7]).endVertex();
     }
 
-    /** Split source quads once, retaining atlas coordinates across the diagonal cuts. */
+    /** Split source quads once, retaining atlas coordinates across the cuts. */
     StaticSurfaceMesh[] xPanels(int hand,boolean caps) {
-        StaticSurfaceMesh[] panels=new StaticSurfaceMesh[4];
-        for(int panel=0;panel<4;panel++) {
+        return splitPanels(com.vandorlabs.render.DoorPanelSplit.DIAGONAL,hand,caps);
+    }
+    StaticSurfaceMesh[] splitPanels(com.vandorlabs.render.DoorPanelSplit split,int hand,boolean caps) {
+        StaticSurfaceMesh[] panels=new StaticSurfaceMesh[split.panelCount()];
+        for(int panel=0;panel<panels.length;panel++) {
             Capture capture=capture();
             for(int offset=0;offset<vertices.length;offset+=32) {
                 java.util.List<float[]> polygon=new java.util.ArrayList<>();
                 for(int v=0;v<4;v++)polygon.add(Arrays.copyOfRange(vertices,offset+v*8,offset+(v+1)*8));
-                polygon=com.vandorlabs.render.XDoorPanel.clip(polygon,hand,panel);
+                polygon=split.clip(polygon,hand,panel);
                 for(int v=1;v+1<polygon.size();v++) {
                     emit(capture,polygon.get(0));emit(capture,polygon.get(v));emit(capture,polygon.get(v+1));emit(capture,polygon.get(v+1));
                 }
-                // Seal the new diagonal edges of the two-pixel-thick sliding slab.
-                // Reuse front-face alpha/UVs, so cutout windows stay open at the edge.
-                if(caps && vertices[offset+7]>.5F && Math.abs(vertices[offset+2]-9F/16)<1e-6) {
-                    for(int v=0;v<polygon.size();v++) {
-                        float[] a=polygon.get(v),b=polygon.get((v+1)%polygon.size());
-                        double length=Math.hypot(a[0]-b[0],a[1]-b[1]);
-                        if(length<1e-6)continue;
-                        for(int plane=0;plane<2;plane++) {
-                            if(Math.abs(com.vandorlabs.render.XDoorPanel.distance(panel,plane,a[0]+hand,a[1]))>1e-6
-                                    || Math.abs(com.vandorlabs.render.XDoorPanel.distance(panel,plane,b[0]+hand,b[1]))>1e-6)continue;
-                            float[] c=b.clone(),d=a.clone();c[2]=d[2]=7F/16;
-                            float nx=(float)((b[1]-a[1])/length),ny=(float)((a[0]-b[0])/length);
-                            for(float[] point:new float[][]{a.clone(),d,c,b.clone()}) {
-                                point[5]=nx;point[6]=ny;point[7]=0;emit(capture,point);
-                            }
-                        }
+                if(caps&&vertices[offset+7]>.5F&&Math.abs(vertices[offset+2]-9F/16)<1e-6) {
+                    for(int v=0;v<polygon.size();v++)for(int plane=0;plane<split.planeCount(panel);plane++){
+                        float[][] cap=split.cap(hand,panel,plane,polygon.get(v),polygon.get((v+1)%polygon.size()));
+                        if(cap!=null)for(float[] point:cap)emit(capture,point);
                     }
                 }
             }

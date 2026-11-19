@@ -18,7 +18,14 @@ public final class LargeDoorGeometry {
         List<Box> result=new ArrayList<>();double jamb=1.5/16,z0=sliding?6/16.0:11.24/16,z1=z0+4/16.0;
         if(frame){add(result,0,0,z0,jamb,3,z1,depth,facing,0,0,0,0,0);add(result,3-jamb,0,z0,3,3,z1,depth,facing,0,0,0,0,0);add(result,jamb,0,z0,3-jamb,jamb,z1,depth,facing,0,0,0,0,0);add(result,jamb,3-jamb,z0,3-jamb,3,z1,depth,facing,0,0,0,0,0);}
         double low=frame?jamb:0,high=frame?3-jamb:3;
-        if(sliding && direction==3)addXPanels(result,low,high,open,depth,facing,frame);
+        if(sliding&&direction==SpaceDoorData.X_SPLIT)addXPanels(result,low,high,open,depth,facing,frame);
+        else if(sliding&&direction==SpaceDoorData.VERTICAL_SPLIT) {
+            double size=1.5;
+            double travel=size*DoorPanelSplit.travel(open?1:0,frame,size);
+            double lower=DoorPanelSplit.VERTICAL.shiftY(0,travel),upper=DoorPanelSplit.VERTICAL.shiftY(1,travel);
+            add(result,low,low+lower,7/16.0,high,size+lower,9/16.0,depth,facing,0,0,0,0,0);
+            add(result,low,size+upper,7/16.0,high,high+upper,9/16.0,depth,facing,0,0,0,0,0);
+        }
         else for(int hand=0;hand<2;hand++){
             boolean right=hand==1;double x0=right?1.5:(frame?jamb:0),x1=right?(frame?3-jamb:3):1.5;
             double leafZ=sliding?7/16.0:12.24/16;

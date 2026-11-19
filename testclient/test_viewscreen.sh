@@ -481,6 +481,7 @@ if [ "$MODE" = focus ]; then
         grep -q "horizontal-door PASS" "$RUN_OUT/client.log"
         grep -q "horizontal-door-arm PASS" "$RUN_OUT/client.log"
         grep -q "joined-large-door PASS" "$RUN_OUT/client.log"
+        grep -q "vertical-door-split-render PASS" "$RUN_OUT/client.log"
         echo "Horizontal Large Door checks passed: $RUN_OUT"
         exit 0
     fi
