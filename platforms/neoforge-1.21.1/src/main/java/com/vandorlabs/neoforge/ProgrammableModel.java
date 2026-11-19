@@ -64,6 +64,8 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         event.getModels().replaceAll((id,model) -> {
             if(programmerBake!=null&&NativeProgrammerClientBindings.programmer(id.id())&&id.getVariant().equals("inventory"))return new NativeProgrammerItemModel(programmerBake);
             if(storageBake!=null&&NativeStorageClientBindings.storage(id.id()))return id.getVariant().equals("inventory")?new NativeStorageItemModel(model,storageBake):storageBake.wrap(model);
+            if(NativeGlassClientBindings.corner(id.id())&&!id.getVariant().equals("inventory"))
+                return com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(model,event.getTextureGetter());
             if(glassBake!=null&&NativeGlassClientBindings.glass(id.id()))return id.getVariant().equals("inventory")?new NativeGlassItemModel(model,name->event.getModels().get(ModelResourceLocation.standalone(ResourceLocation.parse(name))),net.minecraft.client.Minecraft.getInstance().getResourceManager()):com.vandorlabs.neoforge.fluid.client.NativeFluidModel.wrap(new NativeFlatGlassModel(model,glassBake),event.getTextureGetter());
             if(propulsionBake!=null&&NativePropulsionClientBindings.engine(id.id()))return id.getVariant().equals("inventory")?new NativePropulsionItemModel(model,id.id().getPath(),propulsionBake):NativePropulsionModel.wrap(model,propulsionBake);
             var screenFamily=NativeScreenClientBindings.family(id.id());

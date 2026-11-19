@@ -15,7 +15,7 @@ import net.neoforged.fml.common.EventBusSubscriber;
 @EventBusSubscriber(modid="vandorlabs")
 public final class GlassWorldFixture {
  public static NativeGlassBlock BLOCK;public static BlockEntityType<NativeGlassEntity> TYPE;
- public static final BlockPos BASE=new BlockPos(0,80,0),L=BASE.offset(-4,0,3),T=BASE.offset(-7,0,3);
+ public static final BlockPos BASE=new BlockPos(0,80,0),L=BASE.offset(-4,0,3),T=BASE.offset(-7,0,3),BEVEL=BASE.offset(1,0,-3),SLOPE=BASE.offset(5,0,-3);
  public static boolean canonical(){return "true".equals(System.getenv("VANDOR_FLAT_GLASS_CANONICAL_CHECK"));}
  public static void bind(){if(canonical()){BLOCK=NativeGlassRegistrations.BLOCK.get();TYPE=NativeGlassRegistrations.ENTITY.get();}}
  public static boolean enabled(){return "flat-glass-world-client".equals(System.getProperty("vandorlabs.transmitterPhase",""));}
@@ -40,6 +40,12 @@ public final class GlassWorldFixture {
   for(int x=0;x<7;x++)w.setBlock(BASE.offset(x,0,2),Blocks.RED_CONCRETE.defaultBlockState(),18);
   putPose(w,L,64,1,true,-1,false,Direction.NORTH);putPose(w,L.north(),64,1,true,-1,true,Direction.EAST);
   putPose(w,T,64,1,true,-1,false,Direction.SOUTH);putPose(w,T.east(),64,1,true,-1,false,Direction.SOUTH);putPose(w,T.north(),64,1,true,-1,true,Direction.EAST);putPose(w,T.south(),64,1,true,-1,true,Direction.EAST);
+  if(canonical()){
+   w.setBlock(BEVEL,NativeGlassRegistrations.CORNER.get().defaultBlockState(),3);
+   w.setBlock(SLOPE,NativeGlassRegistrations.DIAGONAL_CORNER.get().defaultBlockState(),3);
+   put(w,BEVEL.west(),-1,1,true,-1);
+   putPose(w,BEVEL.north(),-1,1,true,-1,true,Direction.EAST);
+  }
   System.out.println("[vandorlabs][glass-world] setup PASS actual15hosts/defaultJoined/selected/opaque/bare/L/T/oppositeFacing");
  }
  @SubscribeEvent public static void login(net.neoforged.neoforge.event.entity.player.PlayerEvent.PlayerLoggedInEvent e){if(!enabled()||!(e.getEntity() instanceof ServerPlayer p))return;p.setGameMode(GameType.SURVIVAL);p.setNoGravity(true);p.teleportTo(3.5,80,-7);p.connection.teleport(3.5,80,-7,0,5);}

@@ -54,7 +54,7 @@ public final class NativeDiagonalWallTopology {
         if(!(state.getBlock() instanceof NativeDiagonalWallBlock block)||!block.isPorthole()||mode(access,pos)!=1||settings(access,pos).join!=0)return false;
         var join=corner(access,pos,state,1);return join!=null&&join.frontRight()!=null&&join.backRight()!=null&&!join.frontRight().equals(join.backRight())&&join.straightLeft()!=join.straightRight();
     }
-    private static boolean flat(BlockState state){return state.getBlock() instanceof NativeFlatWallBlock||state.getBlock() instanceof com.vandorlabs.neoforge.glass.NativeGlassBlock;}
+    private static boolean flat(BlockState state){return com.vandorlabs.neoforge.glass.NativeGlassService.flat(state);}
     private static Direction flatFacing(BlockState state){return com.vandorlabs.neoforge.glass.NativeGlassService.canonicalFacing(state);}
     private static int flatDepth(BlockState state){return com.vandorlabs.neoforge.glass.NativeGlassService.depth(state);}
     private static boolean diagonal(BlockState state){return state.getBlock() instanceof NativeDiagonalWallBlock;}

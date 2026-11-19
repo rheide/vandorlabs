@@ -14,6 +14,8 @@ import net.neoforged.neoforge.client.event.*;
 public final class NativeGlassClientBindings {
  private static final ResourceLocation ID=ResourceLocation.parse("vandorlabs:programmable_glass");
  public static boolean glass(ResourceLocation id){return ID.equals(id);}
+ public static boolean corner(ResourceLocation id){return id.getNamespace().equals("vandorlabs")
+         &&(id.getPath().equals(NativeGlassRegistrations.CORNER_ID)||id.getPath().equals(NativeGlassRegistrations.DIAGONAL_CORNER_ID));}
  public static boolean installed(){return BuiltInRegistries.BLOCK.get(ID) instanceof NativeGlassBlock;}
  @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers e){if(installed())e.registerBlockEntityRenderer(NativeGlassRegistrations.ENTITY.get(),NativeGlassBlockEntityRenderer::new);}
  @SubscribeEvent public static void screens(RegisterMenuScreensEvent e){if(installed())e.<NativeGlassMenu,NativeGlassScreen>register(NativeGlassRegistrations.MENU.get(),NativeGlassScreen::new);}

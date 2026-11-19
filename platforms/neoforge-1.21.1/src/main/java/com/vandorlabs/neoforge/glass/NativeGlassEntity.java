@@ -73,7 +73,7 @@ public final class NativeGlassEntity extends BlockEntity implements ContainedFlu
  @Override public NativeFluidVolume fluidVolumeSnapshot(){return publication.geometry.fluids();}
  @Override public long fluidGeometryRevision(){return geometryRevision;}
  @Override public long modelDataRevision(){return modelRevision;}
- @Override public int containedFluidSide(double x,double y,double z){return publication.geometry.side(x,y,z);}
+ @Override public int containedFluidSide(double x,double y,double z){return getBlockState().getBlock() instanceof NativeCornerGlassBlock corner?corner.projection(getBlockState()).side(x,y,z):publication.geometry.side(x,y,z);}
  @Override public int intrinsicContainedLight(){return inert?0:settings.intrinsicFrameLight();}
  @Override public boolean fluidActionsAllowed(){return available();}
  @Override public Direction[] fluidPlacementFaces(){Direction facing=NativeGlassService.facing(this);return new Direction[]{facing,facing.getOpposite()};}

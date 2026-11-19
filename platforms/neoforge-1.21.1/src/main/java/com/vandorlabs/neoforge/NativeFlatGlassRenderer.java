@@ -44,6 +44,37 @@ public final class NativeFlatGlassRenderer {
   private final Map<String,Source> sources;private NativeFlatWallModel.Bake materials;private final Function<Material,TextureAtlasSprite> textures;private final ResourceManager resources;
   @SuppressWarnings("unchecked")private final List<BakedQuad>[] defaults=new List[3*3*2*256];private final Map<DrawKey,Draw> draws=new HashMap<>();private final DrawKey lookup=new DrawKey();private final ArrayDeque<Owned> order=new ArrayDeque<>();private int bytes;private long builds;
   Bake(Map<ModelResourceLocation,BakedModel> models,Function<Material,TextureAtlasSprite> textures,NativeFlatWallModel.Bake materials,ResourceManager resources){this.materials=materials;this.textures=textures;this.resources=resources;var sources=new HashMap<String,Source>();for(String id:NativeFlatGlassAssets.models()){var model=Objects.requireNonNull(models.get(ModelResourceLocation.standalone(ResourceLocation.parse(id))),id);List<BakedQuad> neutral=null;if(NativeDoorArtwork.isStatic(model)){if(NativeDoorArtwork.canonicalGeometry(id,resources))neutral=NativeDoorArtwork.quads(id,model);else{var quads=new ArrayList<BakedQuad>();for(Direction side:new Direction[]{null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST})quads.addAll(model.getQuads(null,side,RandomSource.create(42),ModelData.EMPTY,null));neutral=NativeDoorArtwork.content(quads);}}sources.put(id,new Source(model,neutral));}this.sources=Map.copyOf(sources);}
+  private record CornerMesh(CornerGlassGeometry geometry,List<BakedQuad> source){}
+  private final com.google.common.cache.Cache<CornerMesh,List<BakedQuad>> cornerMeshes=com.google.common.cache.CacheBuilder.newBuilder()
+      .maximumWeight(BUDGET/4).weigher((CornerMesh key,List<BakedQuad> quads)->cost(quads)).build();
+  List<BakedQuad> corner(CornerGlassGeometry geometry,List<BakedQuad> source){
+   if(source.isEmpty())return source;
+   var key=new CornerMesh(geometry,source);
+   var found=cornerMeshes.getIfPresent(key);
+   if(found!=null)return found;
+   var result=source.stream().map(quad->projectCorner(quad,geometry)).toList();
+   cornerMeshes.put(key,result);
+   return result;
+  }
+  private static BakedQuad projectCorner(BakedQuad quad,CornerGlassGeometry geometry){
+   int[] data=quad.getVertices().clone();int stride=data.length/4;
+   double[] point=new double[3];
+   float[][] vertices=new float[4][3];
+   for(int i=0;i<4;i++){
+    int at=i*stride;
+    geometry.project(Float.intBitsToFloat(data[at]),Float.intBitsToFloat(data[at+1]),Float.intBitsToFloat(data[at+2]),point);
+    for(int axis=0;axis<3;axis++){vertices[i][axis]=(float)point[axis];data[at+axis]=Float.floatToRawIntBits(vertices[i][axis]);}
+   }
+   var a=new org.joml.Vector3f(vertices[1]).sub(new org.joml.Vector3f(vertices[0]));
+   var b=new org.joml.Vector3f(vertices[2]).sub(new org.joml.Vector3f(vertices[0]));
+   var normal=a.cross(b);Direction face=quad.getDirection();
+   if(normal.lengthSquared()>1E-10F){
+    normal.normalize();face=Direction.getNearest(normal.x,normal.y,normal.z);
+    int packed=((int)(normal.x*127)&255)|(((int)(normal.y*127)&255)<<8)|(((int)(normal.z*127)&255)<<16);
+    for(int i=0;i<4;i++)data[i*stride+7]=packed;
+   }
+   return new BakedQuad(data,quad.getTintIndex(),face,quad.getSprite(),quad.isShade(),quad.hasAmbientOcclusion());
+  }
   private static int cost(List<BakedQuad> values){long cost=96;for(var q:values)cost+=96L+q.getVertices().length*4L;return (int)Math.min(Integer.MAX_VALUE,cost);}
   private void retain(Object key,int cost,boolean defaults){bytes+=cost;order.addLast(new Owned(key,cost,defaults));while(bytes>BUDGET&&!order.isEmpty()){var old=order.removeFirst();bytes-=old.bytes;if(old.defaults)this.defaults[(Integer)old.key]=null;else draws.remove((DrawKey)old.key);}}
   private static BakedQuad rotate(BakedQuad q){int[] data=q.getVertices().clone();int stride=data.length/4;for(int v=0;v<4;v++){int at=v*stride;float x=Float.intBitsToFloat(data[at]),z=Float.intBitsToFloat(data[at+2]);data[at]=Float.floatToRawIntBits(1-z);data[at+2]=Float.floatToRawIntBits(x);int normal=data[at+7],nx=(byte)normal,nz=(byte)(normal>>>16);data[at+7]=(normal&0xff00ff00)|((-nz)&255)|((nx&255)<<16);}Direction face=q.getDirection().getAxis().isHorizontal()?q.getDirection().getClockWise():q.getDirection();return new BakedQuad(data,q.getTintIndex(),face,q.getSprite(),q.isShade(),q.hasAmbientOcclusion());}
@@ -56,7 +87,7 @@ public final class NativeFlatGlassRenderer {
    else{pane=g.material<0?NativePanelQuads.flatGlassBuiltin(visual.facing(),visual.pose().depth,glass,opacity):NativePanelQuads.flatGlassReplacement(visual.facing(),visual.pose().depth,glass,g.textureLayout(),visual.layout(),opacity,aspect);if(g.framed&&visual.selectedFrame()){var entry=ModernFinishCatalog.option(f.front);boolean selected=f.front>=0,border=selected&&entry.frame()!=null&&entry.frame().border();double[] widths=selected?NativeTrapdoorFrameBorders.read(resources,entry).fractions():new double[]{1D/16,1D/16,1D/16,1D/16};frame=NativePanelQuads.flatGlassSelectedFrame(visual.facing(),visual.pose().depth,visual.frameMask(),selected,border,widths,selected&&entry.frame()!=null?entry.frame().aspect():1,rail,inner,outer,selected?new NativePanelQuads.Material(surface(f.front)):null);}}
    var source=glass.surface();var projection=new Pane(pane,source,media,opaque,opaque?Layers.OPAQUE_PANE:Layers.PANE,media==null?null:NativeFlatGlassLayers.media(media.texture(visual.settings().playback().mode()),opaque));int cost=cost(frame)+cost(pane)+512;boolean glow=visual.settings().frameLight()>0;found=new Draw(frame,projection,cost,glow);builds++;if(cost<=BUDGET){var key=new DrawKey(visual);draws.put(key,found);retain(key,cost,false);}return found;
   }
-  public synchronized long retainedBytes(){return bytes;}public synchronized long builds(){return builds;}public synchronized void clear(){Arrays.fill(defaults,null);draws.clear();lookup.clear();order.clear();bytes=0;}
+  public synchronized long retainedBytes(){return bytes;}public synchronized long builds(){return builds;}public synchronized void clear(){Arrays.fill(defaults,null);draws.clear();lookup.clear();order.clear();cornerMeshes.invalidateAll();bytes=0;}
  }
  private record Prepared(long generation,Bake bake){}
  private static final AtomicLong GENERATION=new AtomicLong();private static final com.google.common.cache.Cache<Object,Prepared> PENDING=com.google.common.cache.CacheBuilder.newBuilder().weakKeys().maximumSize(2).build();private static volatile Prepared active;
@@ -67,6 +98,23 @@ public final class NativeFlatGlassRenderer {
  private static final class Layers {static final RenderType PANE=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,false),OPAQUE_PANE=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,true);}
  @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST)public static void buffers(net.neoforged.neoforge.client.event.RegisterRenderBuffersEvent event){if(NativeFlatGlassResources.active()){event.registerRenderBuffer(Layers.PANE);NativeFlatGlassLayers.buffers(event);}}
  public static void renderAt(Bake bake,NativeFlatGlassVisual visual,PoseStack poses,MultiBufferSource buffers,int light,int overlay){var draw=bake.draw(visual);if(!draw.frame.isEmpty())NativePanelPlaybackRenderer.emit(draw.frame,bake.materials.surfaces.get(0),null,PanelPlayback.DEFAULT,0,poses.last(),buffers.getBuffer(visual.contact()==null?NativeFlatGlassLayers.FRAME:NativePanelPlaybackRenderer.frameRenderType()),draw.glowing&&visual.contact()==null?(light&0xffff0000)|240:light,overlay);var pane=draw.pane;var playback=visual.settings().playback();NativePanelPlaybackRenderer.emit(pane.quads,pane.source,pane.media,playback,NativeMaterialPlayback.tick(),poses.last(),buffers.getBuffer(pane.media!=null?pane.liveLayer:pane.staticLayer),draw.glowing&&visual.settings().glass().framed&&visual.settings().glass().material>=0&&pane.opaque?(light&0xffff0000)|240:light,overlay);}
+ public static void renderCornerAt(Bake bake,NativeGlassEntity owner,NativeCornerGlassBlock block,PoseStack poses,
+          MultiBufferSource buffers,int light,int overlay){
+  if(owner.inert())return;
+  var settings=owner.settings();
+  int mask=block.frameMask(owner);
+  var pose=new FlatGlassPolicy.Pose(false,0,settings.glass().size);
+  var visual=new NativeFlatGlassVisual(settings,pose,NativePanelLayout.UNIT,mask,mask,null,Direction.NORTH,6,false);
+  var geometry=block.projection(owner.getBlockState());
+  var draw=bake.draw(visual);
+  var source=visual.authoredFrame()?bake.authored(pose,mask):draw.frame;
+  if(!source.isEmpty())NativePanelPlaybackRenderer.emit(bake.corner(geometry,source),bake.materials.surfaces.get(0),null,
+          PanelPlayback.DEFAULT,0,poses.last(),buffers.getBuffer(NativeFlatGlassLayers.FRAME),
+          draw.glowing?(light&0xffff0000)|240:light,overlay);
+  var pane=draw.pane;
+  NativePanelPlaybackRenderer.emit(bake.corner(geometry,pane.quads),pane.source,pane.media,settings.playback(),
+          NativeMaterialPlayback.tick(),poses.last(),buffers.getBuffer(pane.media!=null?pane.liveLayer:pane.staticLayer),light,overlay);
+ }
  @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)public static final class Lifecycle {@SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload event){if(event.getLevel().isClientSide()){var bake=currentBake();if(bake!=null)bake.clear();}}}
  private NativeFlatGlassRenderer(){}
 }
