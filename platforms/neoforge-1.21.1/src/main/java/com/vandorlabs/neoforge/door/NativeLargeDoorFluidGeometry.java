@@ -7,7 +7,12 @@ import net.minecraft.world.phys.AABB;
 public final class NativeLargeDoorFluidGeometry {
     private NativeLargeDoorFluidGeometry(){}
     public static NativeDoorFluidGeometry.Snapshot build(NativeDoorSettings settings,NativeLargeDoorGeometry.Snapshot geometry,int column,int row){
-        var plane=NativeDoorFluidGeometry.plane(settings,geometry.key().face());BlockPos pos=geometry.root().relative(geometry.key().face().getCounterClockWise(),column).above(row);var unit=new AABB(pos);List<AABB> solids=new ArrayList<>();
+        var key=geometry.key();var plane=NativeDoorFluidGeometry.plane(settings,key.face());
+        if(key.horizontal()){
+            int origin=key.face().getAxisDirection()==net.minecraft.core.Direction.AxisDirection.NEGATIVE?1:0;
+            plane=new NativeDoorFluidGeometry.Plane(0,-1,0,plane.near()-origin,plane.far()-origin);
+        }
+        BlockPos pos=NativeLargeDoorLifecycle.cell(geometry.root(),key.face(),key.horizontal(),column,row);var unit=new AABB(pos);List<AABB> solids=new ArrayList<>();
         for(var box:geometry.boxes())if(box.intersects(unit)){double x0=Math.max(0,box.minX-pos.getX()),y0=Math.max(0,box.minY-pos.getY()),z0=Math.max(0,box.minZ-pos.getZ()),x1=Math.min(1,box.maxX-pos.getX()),y1=Math.min(1,box.maxY-pos.getY()),z1=Math.min(1,box.maxZ-pos.getZ());solids.add(new AABB(x0,y0,z0,x1,y1,z1));}
         return new NativeDoorFluidGeometry.Snapshot(plane,NativeFluidVolume.build(solids,plane::side,plane.cuts()));
     }

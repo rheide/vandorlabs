@@ -1,5 +1,6 @@
 package com.vandorlabs.neoforge.gear;
 
+import com.vandorlabs.neoforge.door.NativeLargeDoorLifecycle;
 import java.util.*;
 import net.minecraft.core.*;
 import net.minecraft.server.level.*;
@@ -16,7 +17,7 @@ final class NativeGearPayloadService {
 
     static boolean beforeTick(NativeGearEntity owner){if(owner.assembly()==null||owner.assembly().kind()!=com.vandorlabs.gear.core.GearTopology.FootKind.NONE||!(owner.getLevel() instanceof ServerLevel level))return true;if(NativeGearJournal.busy(owner))return false;if(owner.progress()==0&&owner.payload()==null&&!owner.hasStoredSections()&&owner.definition().kind==NativeGearDefinition.Kind.ROTATING){try{var plan=NativeGearLandingPlan.capture(owner);if(plan!=null){var status=NativeGearJournal.adopt(owner,owner.actor(),plan);if(status==NativeGearJournal.Status.PENDING)owner.journalWaiting("Preparing landing attachment");return false;}}catch(RuntimeException refused){owner.journalFailure(java.util.Objects.toString(refused.getMessage(),"Landing attachment refused"));return false;}}var payload=owner.payload();boolean moving=owner.progress()!=(owner.target()?1:0);if(!moving){if(payload!=null&&!payload.materialized()&&endpoint(owner.progress()))return materialize(owner,level,payload);return true;}if(owner.blocked())return true;if(payload!=null&&!payload.materialized())return true;if(!endpoint(owner.progress())){if(payload==null&&owner.sections()==null)return true;owner.journalFailure("Attachment ownership is unavailable between endpoints");return false;}try{
         BlockPos source=tip(owner);if(source==null)return true;if(!NativeGearFormation.loaded(level,source)){owner.journalWaiting("Load the complete attachment first");return false;}var state=level.getBlockState(source);
-        var selected=owner.columns().size()>1?NativeGearJoined.selected(owner,cell->nativeCell(owner,cell)):state.isAir()||ownSection(owner,level,source)?Set.<BlockPos>of():Set.of(source);
+        var selected=owner.columns().size()>1?NativeGearJoined.selected(owner,cell->nativeCell(owner,cell)):state.isAir()||NativeLargeDoorLifecycle.isOpenHorizontal(level,source,state)||ownSection(owner,level,source)?Set.<BlockPos>of():Set.of(source);
         if(selected.isEmpty()){if(owner.sections()!=null)return restoreEmpty(owner,level);if(payload!=null)owner.journalPayload(null);owner.journalWaiting("");return true;}
         NativeGearPushing.preflight(owner);return capture(owner,level,selected);
         }catch(RuntimeException failure){var reason=Objects.toString(failure.getMessage(),"Attachment preparation failed");if(owner.canPushBlocks()&&owner.settings().pushBlocks())owner.pushFailure(reason);else owner.journalFailure(reason);return false;}}
