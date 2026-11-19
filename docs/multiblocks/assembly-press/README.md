@@ -37,8 +37,8 @@ These models do not yet perform crafting, propulsion, navigation calculations or
 ## Production on Forge 1.12.2
 
 Supply Programmable Matter Ingots and RF through the corner ports or dialog.
-Each item uses 8,000 RF over 200 ticks at 40 RF/tick. Cards, chips and modules
-print flat on the bed under four green corner lasers. The old central press
+Each item uses 8,000 RF over 200 ticks at 40 RF/tick. Cards, chips, modules and
+Programmable Plates print flat on the bed under four green corner lasers. The old central press
 hood is removed. Click a finished item on the bed to collect it.
 See [builder production](../../universal-constructors.md) for recipes, battery
 modules, catalogs and automatic output. On NeoForge 1.21.1, see

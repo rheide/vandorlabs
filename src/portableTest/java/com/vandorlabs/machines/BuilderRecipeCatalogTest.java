@@ -7,7 +7,10 @@ public final class BuilderRecipeCatalogTest {
   List<String> current=BuilderRecipeCatalog.known("synthesis_tower");need(current.size()==old.size()+1&&current.subList(0,old.size()).equals(old),"Released recipe indices stay unchanged");need(current.get(old.size()).equals("digitized_block"),"Dynamic recipe appended last");
   need(!BuilderRecipeCatalog.defaults("synthesis_tower").contains("digitized_block"),"No default dynamic recipe without chip data");need(BuilderRecipeCatalog.available("synthesis_tower",Collections.singletonList("digitized_block")).equals(Arrays.asList("synthesis_tower_core","assembly_press_core","enclosed_gantry_core","digitized_block")),"Catalog selects stable dynamic placeholder");
   need(BuilderRecipeCatalog.available("assembly_press",Collections.singletonList("digitized_block")).equals(BuilderRecipeCatalog.defaults("assembly_press")),"Dynamic Tower recipe cannot enter Press");
-  System.out.println("BuilderRecipeCatalogTest PASS releasedIndices/dynamicAppend/catalogSelection/machineIsolation");
+  need(BuilderRecipeCatalog.known("assembly_press").equals(Arrays.asList("data_chip","access_card","battery_module",
+          "autopilot_module","navigation_data_module","programmable_plate")),"Press preserves saved indices and appends Programmable Plate");
+  need(BuilderRecipeCatalog.defaults("assembly_press").contains("programmable_plate"),"Plate is a default blueprint");
+  System.out.println("BuilderRecipeCatalogTest PASS releasedIndices/dynamicAppend/catalogSelection/machineIsolation/programmablePlate");
  }
  private static void need(boolean value,String why){if(!value)throw new AssertionError(why);}
 }

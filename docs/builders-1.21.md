@@ -76,8 +76,9 @@ Matter Block and **8,000 RF** at **20 RF per tick**.
 ## Assembly Press operation
 
 Supply one Programmable Matter Ingot per item. The Press fabricates at
-**40 RF per tick** for **200 ticks**, using **8,000 RF** per item. Data Chips
-and Access Cards are included. Insert a Master Catalog Chip to add Battery
+**40 RF per tick** for **200 ticks**, using **8,000 RF** per item. Data Chips,
+Access Cards and Programmable Plates are included. Use the plates in the
+standard helmet, chestplate, leggings and boots crafting patterns. Insert a Master Catalog Chip to add Battery
 Modules, Autopilot Modules and Navigation Data Modules to the recipe list.
 
 Choose a recipe in Production. The item forms flat on the bed under four

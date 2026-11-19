@@ -337,6 +337,7 @@ gui.vandorlabs.console.input.sliders_buttons_six_faders=Fader Bank
 gui.vandorlabs.console.input.sliders_buttons_twin_faders_transport=Twin Faders Transport
 
 item.vandorlabs.programmable_matter_ingot.name=Programmable Matter Ingot
+item.vandorlabs.programmable_plate.name=Programmable Plate
 item.vandorlabs.industrial_alloy_ingot.name=Industrial Alloy Ingot
 item.vandorlabs.configurizer.name=Configurizer
 item.vandorlabs.duplifier.name=Duplifier
