@@ -570,7 +570,7 @@ public final class NativeBuilderRuntimeChecks {
     var power=net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK;
     need(!owner.production()&&world.getCapability(power,owner.powerPort(),Direction.DOWN)==null,
           "Gantry reserves its structure without exposing production while gear is disabled");
-    for(int i=0;i<5;i++)need(NativeBuilderProducts.pressPartAvailable(i)==(i<3),
+    for(int i=0;i<NativeBuilderProducts.PRESS.size();i++)need(NativeBuilderProducts.pressPartAvailable(i)==(i<3||i==5),
           "disabled rack hides only its two Press products: "+i);
     System.out.println("[vandorlabs][builder-runtime] PASS disabled parts retains Gantry structure and filters Press modules");
     var server=world.getServer();world=null;server.halt(false);return;
