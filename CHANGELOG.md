@@ -4,16 +4,16 @@
 
 - Form Maxwell, Meridian, Oculus and Vector Fold structures and fabricate their Cores on NeoForge.
 - Form the standalone Paladyne and Seyr Navigation Computers with authored Off, Idle and Computing displays.
-- Copy idle, disconnected Synthesis Towers, Assembly Presses and Enclosed Gantries with empty slots at exact frame cost. Carry them on grid-aligned Extenders with block pushing off.
-- Import mapped Forge drive and computer snapshots without losing physical chip data, and import formed idle production builders with empty inventories.
+- Copy idle, disconnected Synthesis Towers, Assembly Presses, Enclosed Gantries and eligible standalone drives and Navigation Computers with empty slots at exact frame cost. Carry them on grid-aligned Extenders with block pushing off.
+- Import mapped Forge drive, computer and production snapshots. Retain supported builder inventories and resume supported standard recipes from their saved RF credit.
 - Add the native Advanced Pilot Chair with its authored footprint, adjustable height and two seated armrest sliders.
-- Form and sit in a stationary Cockpit and use the standalone Yoke and Screen’s two Redstone surfaces.
+- Form and sit in a stationary Cockpit with a reversible screen bank and interactive right-armrest Redstone rows. Use the standalone Yoke and Screen’s two Redstone surfaces.
 - Copy complete stationary Navigation Table groups and Survey Dish and Sentinel Array frames at exact material cost on NeoForge.
 - Copy complete passive Programmable Screen layouts in all seven roles, including diagonal joins.
 - Add an opt-in native Turntable with block capture, swept-collision rotation, Redstone, upward-facing rider transport and journaled quarter-turn restoration.
 - Show Forge-matched Press and Gantry fabrication, mount interactions and pickup positions on NeoForge.
 - Add opt-in legacy wheel conversion on world load or in a player’s inventory and stationary conversion by operator command. Add bounded cold Ramp actor recovery for adult cows.
-- Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge.
+- Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge. World samples include static Light artwork, ordinary Door leaves and powered Trigger faces.
 - Preserve native floor and ceiling propulsion wedge geometry and tile data through WorldEdit quarter-turns.
 - Add catalog-gated Ramp Controller production to the native Synthesis Tower and show the four native machine categories in JEI.
 - Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.

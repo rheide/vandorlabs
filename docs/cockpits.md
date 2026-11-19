@@ -24,7 +24,9 @@
    ![Seated player above the Cockpit dashboard](images/cockpit-neoforge/cockpit-stationary-seated.png)
 
 The stationary Cockpit currently provides the seat and authored housing with
-blank monitor and touch surfaces. While seated, use the small yellow console
+blank monitors and an interactive right-armrest touch panel. Open its Redstone
+row editor with the Configurizer. The panel supports three rows and can send
+toggles, numeric slider levels or timed pulses. While seated, use the yellow console
 button to retract the screen bank or bring it back. An occupied travel path
 prevents the move. The **Advanced Pilot Chair** offers height
 and numeric armrest sliders. The **Yoke and Screen** can operate Redstone from

@@ -7,8 +7,9 @@ Hold a piece, aim into the air and **shift-right-click** to open its categorized
 On NeoForge 1.21.1 the held and mounted pickers offer the authored role and
 company designs, general Programmable Block materials, and inventory samples.
 Use the same world-face gesture on vanilla baked-model blocks, full
-Programmable Blocks and Programmable Lights. The light face supplies its
-current On or Off material. Other faces supply the housing material. The
+Programmable Blocks, Programmable Lights, ordinary Programmable Doors and
+Trigger Blocks. The light face supplies its current On or Off material. Other
+Light faces supply the housing material. The
 Duplifier transfers supported armor appearances between the offhand and
 mounted pieces.
 

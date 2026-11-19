@@ -664,7 +664,7 @@
         "Press and Gantry use authored fabrication beds, scanner beams and connected-player pickup and battery interactions.",
         "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. Vector Fold has its authored active/idle models and boolean Redstone control. The Tower fabricates all four cores with a permitting Catalog Chip.",
         "Paladyne and Seyr Navigation Computers form from their original Creative-only Cores and show authored Off, Idle and Computing stages.",
-        "Mapped standalone Forge drives and computers import known settings and one exact physical chip. Mapped idle formed production builders import supported settings when inventory is empty. Idle production frames can be carried by grid-aligned Extenders. The Tower has dedicated rollback and cold-reversal coverage."
+        "Mapped standalone Forge drives and computers import known settings and one exact physical chip. Mapped formed production builders import supported settings, physical inventory, and active fixed jobs with their RF credit. Idle production frames can be carried by grid-aligned Extenders. The Tower has dedicated rollback and cold-reversal coverage."
       ]
     },
     {
@@ -791,7 +791,7 @@
       ],
       "implemented": [
         "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, exact configured drop and both seated numeric Redstone sliders.",
-        "The Cockpit forms an eight-cell stationary housing and seat with an obstruction-aware retractable monitor bank. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
+        "The Cockpit forms an eight-cell stationary housing and seat with an obstruction-aware retractable monitor bank and a working three-row right-armrest panel. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
       ]
     },
     {
@@ -1080,7 +1080,7 @@
         "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs.",
         "Complete stationary Survey Dish and Sentinel Array frames copy at exact frame cost and get independent ownership.",
         "Closed passive layouts in all seven Programmable Screen roles copy at one matching plain item per member. Receiver-only banks apply the channel increment after release. Outputs and credential/media ownership are refused.",
-        "Complete idle and disconnected Synthesis Tower, Assembly Press and Enclosed Gantry frames copy from empty owners at exact frame cost."
+        "Empty idle production and standalone drive/computer frames copy at exact frame cost when their own role admission passes."
       ],
       "modern_registered_block_ids": [
         "copy_controller"
