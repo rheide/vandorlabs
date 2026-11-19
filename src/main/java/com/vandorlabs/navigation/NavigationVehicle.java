@@ -43,11 +43,11 @@ public final class NavigationVehicle {
         try{return hasObserver(arm.payload().view(arm),depth);}
         catch(RuntimeException|LinkageError unavailable){arm.quarantinePayload();return false;}
     }
-    static void observers(List<NavigationSources.Area> result,EntityGroundVehicle craft,Vec3d display,com.vandorlabs.redstone.ChannelList channels){if(live(craft))observers(result,craft.view,display,channels,0);}
-    private static void observers(List<NavigationSources.Area> result,VehicleWorld world,Vec3d display,com.vandorlabs.redstone.ChannelList channels,int depth){if(depth>8)return;Index index=index(world);for(int i=0;i<index.sources.size();i++){TileEntity tile=world.getTileEntity(index.sources.get(i));if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed())NavigationSources.append(result,(TileEntityConstructor)tile,display,channels);}for(int i=0;i<index.arms.size();i++){TileEntity tile=world.getTileEntity(index.arms.get(i));if(tile instanceof GearTileEntity){GearTileEntity arm=(GearTileEntity)tile;if(arm.payload()!=null&&!arm.payload().materialized()&&!arm.hasFailedArmSnapshot())armObservers(result,arm,display,channels,depth+1);}}}
-    private static void armObservers(List<NavigationSources.Area> result,GearTileEntity arm,Vec3d display,com.vandorlabs.redstone.ChannelList channels,int depth){
+    static void observers(List<NavigationSources.Area> result,EntityGroundVehicle craft,Vec3d display,com.vandorlabs.redstone.ChannelList channels,boolean powered){if(live(craft))observers(result,craft.view,display,channels,0,powered);}
+    private static void observers(List<NavigationSources.Area> result,VehicleWorld world,Vec3d display,com.vandorlabs.redstone.ChannelList channels,int depth,boolean powered){if(depth>8)return;Index index=index(world);for(int i=0;i<index.sources.size();i++){TileEntity tile=world.getTileEntity(index.sources.get(i));if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed())NavigationSources.append(result,(TileEntityConstructor)tile,display,channels,powered);}for(int i=0;i<index.arms.size();i++){TileEntity tile=world.getTileEntity(index.arms.get(i));if(tile instanceof GearTileEntity){GearTileEntity arm=(GearTileEntity)tile;if(arm.payload()!=null&&!arm.payload().materialized()&&!arm.hasFailedArmSnapshot())armObservers(result,arm,display,channels,depth+1,powered);}}}
+    private static void armObservers(List<NavigationSources.Area> result,GearTileEntity arm,Vec3d display,com.vandorlabs.redstone.ChannelList channels,int depth,boolean powered){
         int first=result.size();
-        try{observers(result,arm.payload().view(arm),display,channels,depth);}
+        try{observers(result,arm.payload().view(arm),display,channels,depth,powered);}
         catch(RuntimeException|LinkageError unavailable){result.subList(first,result.size()).clear();arm.quarantinePayload();}
     }
     public static boolean carried(TileEntity tile){return tile!=null&&tile.getWorld() instanceof VehicleWorld&&((VehicleWorld)tile.getWorld()).craft!=null;}

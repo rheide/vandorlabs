@@ -44,7 +44,8 @@ final class NativeGearSnapshot {
             boolean nativeFluid=tile instanceof NativeFluidPortEntity port&&fluid==port.fluid(side);
             boolean nativePower=tile instanceof NativePowerPortEntity port&&energy==port.energy(side);
             boolean nativeItems=tile instanceof NativeMatterPortEntity port&&items==port.items(side);
-            if(fluid!=null&&!nativeFluid||external(energy,builder)&&!nativePower||external(items,builder)&&!nativeItems)
+            boolean nativeObserver=com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.nativeInlet(energy);
+            if(fluid!=null&&!nativeFluid||external(energy,builder)&&!nativePower&&!nativeObserver||external(items,builder)&&!nativeItems)
                 throw new IllegalArgumentException("External arm attachment network retained");
         }
     }

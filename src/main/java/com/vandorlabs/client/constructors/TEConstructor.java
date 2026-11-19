@@ -23,7 +23,9 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
             FrameMachineDesign spec=tile.core().specification();
             int state=tile.screenOn()?tile.activity():0;
             if(com.vandorlabs.navigation.ObserverScale.observer(spec.design)){
+                if(!tile.observerPowered())state=0;
                 String[] keys=observerKeys(spec)[state];com.vandorlabs.machines.CoreLayout shape=tile.layout();double scale=shape.width/(double)spec.width;EnumFacing facing=EnumFacing.getFront(shape.facing);boolean inverted=tile.inverted();int light=packedLight(tile);
+                observerPort(buffer,x+shape.width/2.0,y-.0005,z+shape.depth/2.0,light,tile.observerPowered());
                 if("dish".equals(spec.motion)){
                     MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,10);double yaw=Math.toRadians(55)*Math.sin((pose.now-pose.phase)*Math.PI/80)*MachineVisualMotion.eased(pose.progress);
                     UniversalConstructorModelCache.getByKey(keys[0]).emitObserver(buffer,x,y,z,facing,spec.width,spec.height,spec.depth,light,scale,inverted,0,0,0);
@@ -62,6 +64,18 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
             }
         }
     };
+    private static void observerPort(BufferBuilder buffer,double x,double y,double z,int light,boolean powered){
+        net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft()
+                .getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/power_in_"+(powered?"on":"off"));
+        float u0=sprite.getMinU(),u1=sprite.getMaxU(),v0=sprite.getMinV(),v1=sprite.getMaxV();
+        observerPortVertex(buffer,x-.375,y,z-.375,u0,v0,light);
+        observerPortVertex(buffer,x+.375,y,z-.375,u1,v0,light);
+        observerPortVertex(buffer,x+.375,y,z+.375,u1,v1,light);
+        observerPortVertex(buffer,x-.375,y,z+.375,u0,v1,light);
+    }
+    private static void observerPortVertex(BufferBuilder buffer,double x,double y,double z,float u,float v,int light){
+        buffer.pos(x,y,z).color(.5F,.5F,.5F,1F).tex(u,v).lightmap(light&65535,light>>>16&65535).endVertex();
+    }
     @Override public void renderTileEntityFast(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha,BufferBuilder buffer){if(com.vandorlabs.gear.client.CoreArmHandoff.allowed(tile)){com.vandorlabs.gear.client.CoreArmHandoff.drawn(tile);body.renderTileEntityFast(tile,x,y,z,partial,stage,alpha,buffer);}}
     @Override public void render(TileEntityConstructor tile,double x,double y,double z,float partial,int stage,float alpha){
         if(!tile.renderReady()||!com.vandorlabs.gear.client.CoreArmHandoff.allowed(tile))return;

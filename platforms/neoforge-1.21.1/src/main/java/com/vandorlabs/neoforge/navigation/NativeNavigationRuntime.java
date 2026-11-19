@@ -159,7 +159,7 @@ public final class NativeNavigationRuntime {
   PacketDistributor.sendToPlayer(player,new NativeNavigationImage(p.pos(),p.slot(),p.serial(),key.x,key.z,key.zoom,
           c.width,c.height,c.mapTop,c.mapBottom,r.columns,r.rows,r.revision,key.areas.isEmpty()&&key.snapshot==null,
           t.rxChannels().isEmpty(),c.count==8,pin,point.getInt("X"),point.getInt("Z"),
-          p.known()==r.revision?null:r.pixels,overlay(player,t,key,c)));
+          p.known()==r.revision?null:r.pixels,overlay(player,t,key,c),NativeNavigationSources.noPower(t.getLevel(),t.getBlockPos(),t.rxChannels())));
  }
  private static NavigationOverlay overlay(ServerPlayer viewer,Host t,RasterKey key,NavigationCanvas canvas){
   if(!(t.tile instanceof NativeNavigationTableEntity))return NavigationOverlay.EMPTY;

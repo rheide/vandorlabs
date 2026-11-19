@@ -48,11 +48,21 @@ final class NavigationWorldChecks {
             TileEntityConstructor dish=build(w,POS.east(4),"standalone_dish"),array=build(w,POS.west(4),"standalone_antenna");
             TransmitterSlots.configure(dish,ChannelList.of(42),256,false);TransmitterSlots.configure(array,ChannelList.of(43),256,false);
             t.configureDisplay(new NavigationScreenSettings(NavigationMap.SURFACE,true,1,false,false),true,127,0,ChannelList.of(42,43));
+            require(NavigationSources.noPower(w,t.getPos(),ChannelList.of(42,43))&&NavigationService.coverage(t).isEmpty(),"linked observers without input report no power");
+            for(TileEntityConstructor observer:new TileEntityConstructor[]{dish,array}){
+                BlockPos at=observer.cell(observer.structureWidth()-1,0,observer.structureDepth()-1);
+                TileEntity member=w.getTileEntity(at);
+                net.minecraftforge.energy.IEnergyStorage input=member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.DOWN);
+                require(input!=null&&member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.UP)==null,"only the underside of the formed reservation accepts power");
+                require(input.receiveEnergy(ObserverPower.RF_PER_TICK,true)==ObserverPower.RF_PER_TICK&&!observer.observerPowered(),"simulated input stays unpowered");
+                require(input.receiveEnergy(ObserverPower.RF_PER_TICK,false)==ObserverPower.RF_PER_TICK&&observer.observerPowered(),"RF makes the installed observer available");
+            }
             require(NavigationService.coverage(t).size()==2,"multiple channels union");require(NavigationSources.contains(NavigationService.coverage(t),dish.getPos().getX()+NavigationSources.radius(dish),dish.getPos().getZ()),"dish radius inclusive");require(!NavigationSources.contains(NavigationService.coverage(t),dish.getPos().getX()+NavigationSources.radius(dish)+1,dish.getPos().getZ()),"beyond dish radius excluded");
             radar(p,w,t,dish,array);
             t.setRedstoneChannels(ChannelList.of(43));require(NavigationService.coverage(t).size()==1&&NavigationService.coverage(t).get(0).radius==NavigationSources.radius(array),"array radius");t.setRedstoneChannels(ChannelList.of(42,43));
             TransmitterSlots.configure(dish,ChannelList.of(42),4,false);require(NavigationService.coverage(t).size()==2,"connection radius inclusive");TransmitterSlots.configure(dish,ChannelList.of(42),256,false);
             dish.dismantle();array.dismantle();require(NavigationService.coverage(t).isEmpty(),"unformed sources disconnected");require(dish.assemble()&&array.assemble(),"source repair reconnects");
+            power(w,dish);power(w,array);
             ItemStack chip=new ItemStack(com.vandorlabs.items.ModItems.DATA_CHIP,1,3);NavigationChip.write(chip,0,120000,-130000);t.setInventorySlotContents(0,chip);NavigationService.View view=NavigationService.view(t);require(view.x==120000&&view.z==-130000,"inserted pin recenters");require(NavigationSources.contains(NavigationService.coverage(t),121000,-130000),"saved chip radius independent of source");
             view.x+=200;ItemStack removed=t.removeStackFromSlot(0);NavigationService.view(t);t.setInventorySlotContents(0,removed);require(NavigationService.view(t).x==120000,"reinsertion recenters");
             ItemStack retained=t.getStackInSlot(0).copy();TileEntityNavigationTable saved=new TileEntityNavigationTable();saved.readFromNBT(t.writeToNBT(new NBTTagCompound()));require(ItemStack.areItemStacksEqual(retained,saved.getStackInSlot(0)),"saved coordinates and chip metadata round trip");require(NavigationChip.value(retained,"Y")==64,"unused default Y stored");
@@ -101,14 +111,65 @@ final class NavigationWorldChecks {
             server(mc,()->{TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)player(mc).world.getTileEntity(SCREEN);require(tile.hasNavigation(slot),"authorized Navigation selection round trip");require(NavigationChip.programmed(NavigationService.chip(tile)),"existing chip mount supplies pin");require(NavigationService.coverage(tile).size()==1,"chip-only navigation coverage");if(kind==5){require(((TileEntityAnimatedScreenSelector)player(mc).world.getTileEntity(SCREEN.east())).hasNavigation(0),"joined Navigation selection");require(ScreenChipGroups.group(tile).members.size()==2,"joined reader retained");}
                 player(mc).setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player(mc).inventoryContainer.detectAndSendChanges();aim(player(mc),new Vec3d(SCREEN).addVector(1,2,-2.5),new Vec3d(SCREEN).addVector(kind==5?1:.5,.5,.5));});mc.gameSettings.hideGUI=true;stage=13;ticks=0;return false;
         }
-        if(stage==13){if(ticks<200||!NavigationMapRenderer.ready(SCREEN))return false;shot="navigation-world-screen-"+kind+".png";captured=false;stage=14;ticks=0;return false;}
+        if(stage==13){
+            if(ticks<200||!NavigationMapRenderer.ready(SCREEN))return false;
+            if(kind==0){
+                server(mc,()->{
+                    WorldServer w=player(mc).getServerWorld();
+                    TileEntityConstructor dish=(TileEntityConstructor)w.getTileEntity(POS.east(4));
+                    w.setBlockToAir(dish.cell(dish.structureWidth()-1,0,dish.structureDepth()-1).down());
+                    ((TileEntityAnimatedScreenSelector)w.getTileEntity(SCREEN)).setRedstoneChannels(ChannelList.of(42));
+                });
+                NavigationMapRenderer.changed(SCREEN);stage=131;ticks=0;return false;
+            }
+            shot="navigation-world-screen-"+kind+".png";captured=false;stage=14;ticks=0;return false;
+        }
+        if(stage==131){
+            if(!hasPowerHaiku(SCREEN))return false;
+            server(mc,()->{
+                WorldServer w=player(mc).getServerWorld();
+                power(w,(TileEntityConstructor)w.getTileEntity(POS.east(4)));
+                ((TileEntityAnimatedScreenSelector)w.getTileEntity(SCREEN)).setRedstoneChannels(ChannelList.EMPTY);
+            });
+            System.out.println("[vandorlabs] navigation-screen power-haiku PASS");
+            shot="navigation-world-screen-"+kind+".png";captured=false;stage=14;ticks=0;return false;
+        }
         if(stage==14&&captured){if(++kind<SCREENS.length){stage=10;ticks=0;return false;}server(mc,()->{EntityPlayerMP p=player(mc);BlockPos at=POS.west(4);p.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));p.inventoryContainer.detectAndSendChanges();aim(p,new Vec3d(at).addVector(.5,1,-2),new Vec3d(at).addVector(.5,.5,.5));p.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_TOKEN_SLOT,p.world,at.getX(),at.getY(),at.getZ());});stage=15;ticks=0;return false;}
         if(stage==15){if(ticks<20||!(mc.currentScreen instanceof GuiNavigationTable))return false;GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;@SuppressWarnings("unchecked") java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");for(net.minecraft.client.gui.GuiButton button:buttons)if(button.displayString.equals("Redstone")){gui.mouseClicked(button.x+4,button.y+4,0);break;}stage=16;ticks=0;return false;}
         if(stage==16){if(ticks<15)return false;GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;net.minecraft.client.gui.GuiTextField field=InlineTransmitterWidget.channelsField(gui);require(field!=null,"observer inline channel editor");field.setText("47,48");field.setFocused(true);InlineTransmitterWidget.keyInput(gui,' ',org.lwjgl.input.Keyboard.KEY_SPACE);InlineTransmitterWidget.keyInput(gui,'\r',org.lwjgl.input.Keyboard.KEY_RETURN);for(net.minecraft.client.gui.GuiButton control:InlineTransmitterWidget.controls(gui))if(control instanceof net.minecraftforge.fml.client.config.GuiSlider){InlineTransmitterWidget.mouseInput(gui,control.x+5,control.y+5,0);control.mouseReleased(0,0);}stage=17;ticks=0;return false;}
-        if(stage==17){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=player(mc);TileEntityConstructor source=(TileEntityConstructor)p.world.getTileEntity(POS.west(4));require(source.transmittedChannels().equals(ChannelList.of(47,48))&&source.transmissionRange()==4,"observer range/channels actual settings packets");TileEntityNavigationTable t=table(p.world);t.removeStackFromSlot(0);t.setRedstoneChannels(ChannelList.EMPTY);aim(p,new Vec3d(POS).addVector(1,4,-1.5),new Vec3d(POS).addVector(1,.875,1));});mc.player.closeScreen();mc.gameSettings.hideGUI=true;NavigationMapRenderer.changed(POS);stage=18;ticks=0;return false;}
-        if(stage==18){if(ticks<200)return false;shot="navigation-world-no-signal.png";captured=false;stage=19;ticks=0;return false;}
+        if(stage==17){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=player(mc);TileEntityConstructor source=(TileEntityConstructor)p.world.getTileEntity(POS.west(4));require(source.transmittedChannels().equals(ChannelList.of(47,48))&&source.transmissionRange()==4,"observer range/channels actual settings packets");TileEntityNavigationTable t=table(p.world);t.removeStackFromSlot(0);TransmitterSlots.configure(source,ChannelList.of(47,48),256,false);
+            p.world.setBlockToAir(source.cell(source.structureWidth()-1,0,source.structureDepth()-1).down());
+            t.setRedstoneChannels(ChannelList.of(47));aim(p,new Vec3d(POS).addVector(1,4,-1.5),new Vec3d(POS).addVector(1,.875,1));});mc.player.closeScreen();mc.gameSettings.hideGUI=true;NavigationMapRenderer.changed(POS);stage=18;ticks=0;return false;}
+        if(stage==18){NavigationMapRenderer.bind(table(mc.world),0,1);if(ticks<200||!hasPowerHaiku(POS))return false;System.out.println("[vandorlabs] navigation-table power-haiku PASS");shot="navigation-world-no-signal.png";captured=false;stage=19;ticks=0;return false;}
         if(stage==19&&captured){if(!flightComplete){if(!NavigationFlightChecks.tick(mc,output))return false;flightComplete=true;}if(!NavigationModuleLiveChecks.tick(mc,output))return false;System.out.println("[vandorlabs] navigation-world PASS rendered seed map families=6 joined external mount actual picker and observer range/channel packets real pan/write clicks Survival lever placement activation bounded wire no-signal");return true;}
         return false;
+    }
+    static BlockPos power(WorldServer world,TileEntityConstructor observer){
+        BlockPos port=observer.cell(observer.structureWidth()-1,observer.inverted()?observer.structureHeight()-1:0,observer.structureDepth()-1).down();
+        powerPort(world,port);
+        return port;
+    }
+    static void powerPort(WorldServer world,BlockPos port){
+        Block block=Block.getBlockFromName("vandorlabs:power_port");
+        world.setBlockState(port,block.getDefaultState(),3);
+        com.vandorlabs.ports.PowerPortTile feed=(com.vandorlabs.ports.PowerPortTile)world.getTileEntity(port);
+        feed.place(EnumFacing.DOWN);
+        DeferredTileLoad.flush(world);
+        require(feed.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.DOWN)
+                .receiveEnergy(1000000,false)==1000000,"power supply accepts RF");
+    }
+    private static boolean hasPowerHaiku(BlockPos pos)throws Exception{
+        java.lang.reflect.Field images=NavigationMapRenderer.class.getDeclaredField("IMAGES");
+        images.setAccessible(true);
+        Object entry=((Map<?,?>)images.get(null)).get(pos);
+        if(entry==null)return false;
+        MessageNavigationImage image=(MessageNavigationImage)field(entry,"data");
+        if(image==null||!image.noPower)return false;
+        int[] pixels=((net.minecraft.client.renderer.texture.DynamicTexture)field(entry,"ui")).getTextureData();
+        int glyphs=0;
+        for(int pixel=384*64;pixel<pixels.length;pixel++)if((pixels[pixel]&0xffffff)==0xcce7ee)glyphs++;
+        require(glyphs>100,"all three no-power haiku lines rendered");
+        return true;
     }
     private static Object field(Object value,String name)throws Exception{Class<?> type=value.getClass();while(type!=null){try{java.lang.reflect.Field f=type.getDeclaredField(name);f.setAccessible(true);return f.get(value);}catch(NoSuchFieldException absent){type=type.getSuperclass();}}throw new NoSuchFieldException(name);}
     private static void aim(EntityPlayerMP p,Vec3d eye,Vec3d target){Vec3d d=target.subtract(eye);p.connection.setPlayerLocation(eye.x,eye.y-p.getEyeHeight(),eye.z,(float)Math.toDegrees(Math.atan2(-d.x,d.z)),(float)-Math.toDegrees(Math.atan2(d.y,Math.hypot(d.x,d.z))));p.motionX=p.motionY=p.motionZ=0;}
