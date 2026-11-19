@@ -143,7 +143,7 @@ Redstone receiver. Redstone activation can hold the Off appearance while
 the receiver is unpowered. The computer retains the selected activity and
 resumes it once the signal returns.
 
-## Imported Forge drives and computers
+## Imported Forge machines
 
 If an importer has mapped the Forge 1.12.2 Core and reservation blocks to
 their NeoForge counterparts, the Core reads the saved controls, channel
@@ -152,6 +152,12 @@ keeps its company, name and original item data. Formed reservations retain
 their original Matter or air classification for dismantling. The original
 Core snapshot is retained in full when its fields conflict or its chip
 ownership cannot be resolved.
+
+This also covers formed, idle Synthesis Towers, Assembly Presses and Enclosed
+Gantries with empty inventories. Their Redstone activation, channels and
+supported recipes survive import. A snapshot with an unfinished job, a stored
+item, conflicting fields or a blueprint unavailable on NeoForge remains inert
+with its original data intact.
 
 ## Dismantling and ownership
 

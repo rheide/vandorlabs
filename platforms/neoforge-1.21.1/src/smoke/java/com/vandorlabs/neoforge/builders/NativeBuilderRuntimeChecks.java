@@ -77,7 +77,7 @@ public final class NativeBuilderRuntimeChecks {
   var block=NativeBuilderBindings.CORES.get(design.id);
   var state=block.defaultBlockState().setValue(NativeBuilderCoreBlock.FACING,Direction.WEST).setValue(NativeBuilderCoreBlock.FORMED,true);
   world.setBlock(ROOT,state,3);actor.setPos(27.5,120,31.5);
-  var data=new CompoundTag();data.putInt("ConstructorCoreX",design.width-1);data.putInt("ConstructorCoreZ",0);
+  var data=legacyWork("synthesis_tower",0,0);data.putInt("ConstructorCoreX",design.width-1);data.putInt("ConstructorCoreZ",0);
   data.putIntArray("MachineSurfaceTextures",new int[]{-1,-2});data.putBoolean("NavigationRedstone",true);
   data.putBoolean("NavigationAnimated",false);data.putInt("NavigationSpeed",2);
   data.putIntArray("RedstoneChannels",new int[]{17,29});data.putInt("RedstoneChannel",17);
@@ -120,7 +120,7 @@ public final class NativeBuilderRuntimeChecks {
        "bad legacy drive retains complete original with no exposed chip, case "+kind);
   }
   var computerState=NativeBuilderBindings.CORES.get(NativeDriveDesign.SEYR_COMPUTER.id).defaultBlockState();
-  var computerData=new CompoundTag();computerData.putIntArray("MachineSurfaceTextures",new int[]{-1});
+  var computerData=legacyWork("",0,0);computerData.putIntArray("MachineSurfaceTextures",new int[]{-1});
   computerData.putInt("MachineActivity",2);computerData.putInt("RedstoneChannel",83);
   var computer=new NativeBuilderEntity(ROOT,computerState);computer.loadWithComponents(computerData,registries);
   need(!computer.inert()&&computer.driveActivity()==2&&computer.driveSettings().display()==-1
@@ -129,11 +129,75 @@ public final class NativeBuilderRuntimeChecks {
   need(computer.inert()&&computer.isEmpty()&&computer.saveWithoutMetadata(registries).equals(computerData),
       "impossible computer chip remains in the inert original");
 
-  var layout=owner.layout();
-  for(int x=0;x<design.width;x++)for(int y=0;y<design.height;y++)for(int z=0;z<design.depth;z++){
-   var at=owner.cell(x,y,z);if(at.equals(ROOT))continue;
+  legacyFrame(owner);
+  for(int unit=0;unit<LEGACY_PRODUCTION.size();unit++) productionImport(unit);
+ }
+ private record LegacyProduction(String id,int forgeSelected,int forgeBuilding,int selected,int building) {}
+ private static final List<LegacyProduction> LEGACY_PRODUCTION=List.of(
+     new LegacyProduction("synthesis_tower",5,10,10,6),
+     new LegacyProduction("assembly_press",4,1,0,2),
+     new LegacyProduction("enclosed_gantry",7,4,7,4));
+ private static BlockPos legacyProductionPos(int unit){return ROOT.above(12+unit*10);}
+ private static CompoundTag legacyWork(String machine,int selected,int building){
+  var data=new CompoundTag();var work=new CompoundTag();var inv=new CompoundTag();
+  inv.putInt("Size",6);inv.put("Items",new ListTag());work.put("Inventory",inv);
+  var recipes=com.vandorlabs.machines.BuilderRecipeCatalog.known(machine);
+  work.putInt("Selected",selected);work.putString("SelectedRecipe",recipes.isEmpty()?"":recipes.get(selected));
+  work.putInt("Building",building);work.putString("BuildingRecipe",recipes.isEmpty()?"":recipes.get(building));
+  work.putBoolean("Active",false);work.putBoolean("Connected",false);work.putInt("Work",0);data.put("Synthesis",work);
+  var sequences=new CompoundTag();for(int bay=0;bay<4;bay++)sequences.putLong("Bay"+bay,0);
+  data.put("SynthesisBatterySequences",sequences);data.putInt("SynthesisActivation",0);
+  return data;
+ }
+ private static void productionImport(int unit){
+  var expected=LEGACY_PRODUCTION.get(unit);var pos=legacyProductionPos(unit);
+  var state=NativeBuilderBindings.CORES.get(expected.id).defaultBlockState()
+      .setValue(NativeBuilderCoreBlock.FACING,Direction.NORTH).setValue(NativeBuilderCoreBlock.FORMED,true);
+  world.setBlock(pos,state,3);var owner=(NativeBuilderEntity)world.getBlockEntity(pos);
+  var data=legacyWork(expected.id,expected.forgeSelected,expected.forgeBuilding);
+  data.putIntArray("MachineSurfaceTextures",new int[0]);data.putInt("MachineActivity",1);
+  data.putIntArray("RedstoneChannels",new int[]{11,21});data.putInt("RedstoneChannel",11);
+  data.putInt("SynthesisActivation",2);data.getCompound("SynthesisBatterySequences").putLong("Bay2",23);
+  var note=new CompoundTag();note.putString("Site","andromeda");data.put("ExternalOpaque",note);
+  if(unit==0)data.getCompound("Synthesis").putInt("Mode",1);
+  owner.loadWithComponents(data,world.registryAccess());
+  verifyProduction(owner,expected,unit);
+  for(int kind=0;kind<8;kind++){
+   var bad=data.copy();var work=bad.getCompound("Synthesis");
+   switch(kind){
+    case 0->work.putBoolean("Active",true);
+    case 1->work.putInt("Work",1);
+    case 2->work.getCompound("Inventory").getList("Items",Tag.TAG_COMPOUND).add(legacyChip.copy());
+    case 3->work.getCompound("Inventory").putInt("Size",7);
+    case 4->bad.put("InsertedToken",legacyChip.copy());
+    case 5->work.putString("SelectedRecipe","unknown");
+    case 6->bad.put("Inventory",new CompoundTag());
+    case 7->work.putByteArray("DigitizeChipHash",new byte[32]);
+   }
+   var refused=new NativeBuilderEntity(pos,state);refused.loadWithComponents(bad,world.registryAccess());
+   need(refused.inert()&&refused.isEmpty()&&refused.saveWithoutMetadata(world.registryAccess()).equals(bad),
+       "unsupported production snapshot retains all raw fields "+expected.id+" case "+kind);
+  }
+  var unformed=new NativeBuilderEntity(pos,state.setValue(NativeBuilderCoreBlock.FORMED,false));
+  unformed.loadWithComponents(data,world.registryAccess());
+  need(unformed.inert()&&unformed.saveWithoutMetadata(world.registryAccess()).equals(data),"bounded formed-only import");
+  legacyFrame(owner);
+ }
+ private static void verifyProduction(NativeBuilderEntity owner,LegacyProduction expected,int unit){
+  var saved=owner.saveWithoutMetadata(world.registryAccess());var work=saved.getCompound("Synthesis");
+  need(!owner.inert()&&owner.formed()&&owner.design().id().equals(expected.id)&&owner.isEmpty()
+      &&!owner.processing()&&owner.selectedDesign()==expected.selected&&work.getInt("Building")==expected.building
+      &&owner.activation()==2&&owner.channels().equals(ChannelList.of(11,21))&&owner.batterySequence(2)==23
+      &&owner.digitizing()==(unit==0)&&!work.contains("Inventory")
+      &&saved.getCompound("ExternalOpaque").getString("Site").equals("andromeda"),
+      "Forge idle production fields map by stable recipe and preserve external raw data "+expected.id);
+ }
+ private static void legacyFrame(NativeBuilderEntity owner){
+  var design=owner.design();var root=owner.getBlockPos();var layout=owner.layout();var registries=world.registryAccess();
+  for(int x=0;x<design.width();x++)for(int y=0;y<design.height();y++)for(int z=0;z<design.depth();z++){
+   var at=owner.cell(x,y,z);if(at.equals(root))continue;
    world.setBlock(at,NativeBuilderBindings.PART.defaultBlockState(),3);
-   var part=(NativeBuilderPartEntity)world.getBlockEntity(at);var offset=ROOT.subtract(at);
+   var part=(NativeBuilderPartEntity)world.getBlockEntity(at);var offset=root.subtract(at);
    var raw=new CompoundTag();
    raw.putLong("ConstructorOwner",((long)offset.getX()&0x3ffffffL)<<38
        |((long)offset.getY()&0xfffL)<<26|((long)offset.getZ()&0x3ffffffL));
@@ -147,9 +211,10 @@ public final class NativeBuilderRuntimeChecks {
   owner.setChanged();
  }
  private static void legacyTick(NativeBuilderEntity owner){
+  if(stage>=303){legacyProductionTick();return;}
   if(stage==300){
    if(owner==null||!owner.available())return;
-   System.out.println("[vandorlabs][builder-runtime] PASS legacyDriveComputerImport/exactChip/inertOriginal/legacyFrame checks="+checks);
+   System.out.println("[vandorlabs][builder-runtime] PASS legacyDriveComputerProductionImport/exactChip/inertOriginal/legacyFrame checks="+checks);
    world.getServer().halt(false);world=null;return;
   }
   if(stage==302){
@@ -180,8 +245,30 @@ public final class NativeBuilderRuntimeChecks {
       "asynchronous imported-Core break drops the exact chip once");
   need(drops.stream().map(ItemEntity::getItem).filter(it->it.is(NativeBuilderBindings.CORES.get(NativeDriveDesign.LONGBURN.id).asItem()))
       .mapToInt(ItemStack::getCount).sum()==1,"asynchronous imported-Core break drops one Core");
-  System.out.println("[vandorlabs][builder-runtime] PASS legacyDriveColdReload/legacyFrame/durableMine/exactChipDrop checks="+checks);
-  world.getServer().halt(false);world=null;
+  stage=303;caseIndex=0;
+ }
+ private static void legacyProductionTick(){
+  if(caseIndex==LEGACY_PRODUCTION.size()){
+   System.out.println("[vandorlabs][builder-runtime] PASS legacyDriveProductionColdReload/legacyFrame/durableMine/exactChipDrop checks="+checks);
+   world.getServer().halt(false);world=null;return;
+  }
+  var pos=legacyProductionPos(caseIndex);
+  if(!(world.getBlockEntity(pos) instanceof NativeBuilderEntity owner)||!owner.available())return;
+  if(stage==303){
+   verifyProduction(owner,LEGACY_PRODUCTION.get(caseIndex),caseIndex);
+   actor.setPos(pos.getX()+.5,pos.getY(),pos.getZ()-3.5);
+   need(NativeBuilderTransactions.request(owner,actor,false)&&owner.transactionBlocked(),"legacy production frame queues durable teardown");
+   stage=304;return;
+  }
+  if(owner.formed())return;
+  var layout=owner.layout();var design=owner.design();
+  for(int x=0;x<design.width();x++)for(int y=0;y<design.height();y++)for(int z=0;z<design.depth();z++){
+   var at=owner.cell(x,y,z);if(at.equals(pos))continue;
+   var state=layout.frame(x,y,z)?NativeBuilderFormation.matter().defaultBlockState():Blocks.AIR.defaultBlockState();
+   need(world.getBlockState(at)==state,"legacy production teardown restores exact Matter and air "+at);
+  }
+  need(owner.isEmpty()&&!owner.processing(),"legacy production teardown does not create an inventory");
+  stage=303;caseIndex++;
  }
  private static void drives(NativeBuilderEntity owner){
   if(stage>=202){driveRecipes(owner);return;}
