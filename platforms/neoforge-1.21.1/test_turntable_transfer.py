@@ -10,7 +10,9 @@ from test_transmitter import ROOT, command, jdk_home, run
 
 @retain_artifacts
 def main():
-    out = Path(artifact_directory(prefix='turntable-transfer-', dir=ROOT / 'build/test-artifacts'))
+    base = ROOT / 'build/test-artifacts'
+    base.mkdir(parents=True, exist_ok=True)
+    out = Path(artifact_directory(prefix='turntable-transfer-', dir=base))
     for phase in ('normal', 'crash', 'read'):
         saved = out / ('normal-world' if phase == 'normal' else 'recovery-world')
         if phase != 'read':

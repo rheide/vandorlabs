@@ -68,6 +68,14 @@ public final class NativeTurntableBindings {
         @SubscribeEvent public static void screens(net.neoforged.neoforge.client.event.RegisterMenuScreensEvent event) {
             if (menu != null) event.register(menu, NativeTurntableScreen::new);
         }
+
+        @SubscribeEvent public static void renderers(net.neoforged.neoforge.client.event.EntityRenderersEvent.RegisterRenderers event) {
+            if (entity != null) event.registerBlockEntityRenderer(entity, NativeTurntableRenderer::new);
+        }
+
+        @SubscribeEvent public static void reloaded(net.neoforged.neoforge.client.event.ModelEvent.BakingCompleted event) {
+            NativeTurntableRenderer.clear();
+        }
     }
 
     private NativeTurntableBindings() {}

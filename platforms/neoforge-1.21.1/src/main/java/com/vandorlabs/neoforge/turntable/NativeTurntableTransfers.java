@@ -106,7 +106,10 @@ public final class NativeTurntableTransfers {
         var rootBefore = root.saveWithFullMetadata(world.registryAccess());
         var rootAfter = rootBefore.copy();
         if (restoring) rootAfter.remove(NativeTurntableEntity.CAPTURE);
-        else rootAfter.put(NativeTurntableEntity.CAPTURE, capture.save());
+        else {
+            NativeTurntableVisual.project(capture, pos, world.registryAccess());
+            rootAfter.put(NativeTurntableEntity.CAPTURE, capture.save());
+        }
         var before = new ArrayList<NativeRawCell>();
         var after = new ArrayList<NativeRawCell>();
         before.add(new NativeRawCell(pos, root.getBlockState(), rootBefore, TILE_BYTES));

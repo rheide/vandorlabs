@@ -1,6 +1,12 @@
 package com.vandorlabs.neoforge.turntable;
 
+import com.mojang.blaze3d.vertex.PoseStack;
+import com.mojang.blaze3d.vertex.VertexConsumer;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.Proxy;
+import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -61,6 +67,7 @@ public final class NativeTurntablePlayerChecks {
             case 3 -> {
                 if (menu == null || !menu.captured() || menu.busy() || !mc.level.getBlockState(NativeTurntablePlayerFixture.SOURCE).isAir()) return;
                 if (menu.containerId != window) throw new AssertionError("Native Turntable window dropped its physical identity");
+                checkCapturedRender(mc);
                 click(screen, "Restore angle:", .333);
                 click(screen, "Restore", .5);
                 stage++;
@@ -87,6 +94,25 @@ public final class NativeTurntablePlayerChecks {
             }
             default -> {}
         }
+    }
+
+    private static void checkCapturedRender(Minecraft mc) {
+        var root = (NativeTurntableEntity) mc.level.getBlockEntity(NativeTurntablePlayerFixture.ROOT);
+        var renderer = mc.getBlockEntityRenderDispatcher().getRenderer(root);
+        if (!(renderer instanceof NativeTurntableRenderer turntable)
+                || !turntable.getRenderBoundingBox(root).contains(NativeTurntablePlayerFixture.SOURCE.getCenter())) {
+            throw new AssertionError("Captured body is missing from renderer bounds");
+        }
+        int[] vertices = {0};
+        VertexConsumer sink = (VertexConsumer) Proxy.newProxyInstance(VertexConsumer.class.getClassLoader(),
+                new Class<?>[]{VertexConsumer.class}, (proxy, method, args) -> {
+                    if (method.isDefault()) return InvocationHandler.invokeDefault(proxy, method, args);
+                    if (method.getName().equals("addVertex")) vertices[0]++;
+                    return method.getReturnType() == VertexConsumer.class ? proxy : null;
+                });
+        turntable.render(root, 0, new PoseStack(), layer -> sink, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
+        if (vertices[0] < 24) throw new AssertionError("Captured Sign produced only " + vertices[0] + " vertices");
+        System.out.println("[vandorlabs][turntable-player] captured geometry PASS vertices=" + vertices[0]);
     }
 
     private static void use(Minecraft mc) {

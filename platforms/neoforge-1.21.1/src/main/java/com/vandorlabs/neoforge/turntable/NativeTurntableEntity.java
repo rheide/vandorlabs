@@ -28,6 +28,9 @@ final class NativeTurntableEntity extends BlockEntity {
     private NativeTurntableCapture capture;
     private CompoundTag retained = new CompoundTag();
     private boolean inert;
+    private CompoundTag visualProjection;
+    private NativeTurntableVisual clientVisual;
+    private CompoundTag clientAppearance;
     private boolean clientCaptured;
     private boolean clientBusy;
     private String status = "Place a square Surface in front of the controller";
@@ -52,6 +55,7 @@ final class NativeTurntableEntity extends BlockEntity {
 
     boolean hasCapture() { return level instanceof ServerLevel ? capture != null : clientCaptured; }
     String status() { return status; }
+    NativeTurntableVisual visual() { return clientVisual; }
 
     void status(String value) {
         var next = value == null ? "Turntable transfer refused" : value.substring(0, Math.min(512, value.length()));
@@ -90,6 +94,7 @@ final class NativeTurntableEntity extends BlockEntity {
         tag.putBoolean("Busy", busy());
         tag.putBoolean("Inert", inert);
         tag.putString("Status", status);
+        if (visualProjection != null) tag.put("Appearance", visualProjection.copy());
         return tag;
     }
 
@@ -107,6 +112,18 @@ final class NativeTurntableEntity extends BlockEntity {
             clientBusy = tag.getBoolean("Busy");
             inert = tag.getBoolean("Inert");
             status = tag.getString("Status");
+            try {
+                var projection = tag.getCompound("Appearance");
+                if (!clientCaptured || projection.isEmpty()) clientVisual = null;
+                else if (clientAppearance == null || !clientAppearance.equals(projection)) {
+                    clientVisual = NativeTurntableVisual.read(projection, registries);
+                    clientAppearance = projection.copy();
+                }
+            } catch (RuntimeException invalid) {
+                clientVisual = null;
+                clientAppearance = null;
+            }
+            if (clientVisual == null) clientAppearance = null;
         }
     }
 
@@ -153,6 +170,7 @@ final class NativeTurntableEntity extends BlockEntity {
                     channels(tag, "DirectionChannels"), channels(tag, "RestoreChannels"));
             var payload = tag.contains(CAPTURE)
                     ? NativeTurntableCapture.read(registries, tag.getCompound(CAPTURE), worldPosition) : null;
+            var projection = payload == null ? null : NativeTurntableVisual.project(payload, worldPosition, registries);
             NativePlatformComponents.requireSupported(original, registries);
             try (var guard = NativePlatformComponents.guardLoad(this)) {
                 super.loadAdditional(tag, registries);
@@ -161,6 +179,7 @@ final class NativeTurntableEntity extends BlockEntity {
             settings = next;
             key = tag.getUUID(KEY);
             capture = payload;
+            visualProjection = projection;
             inert = false;
             retained = original;
             for (String field : new String[]{SCHEMA, KEY, CAPTURE, "Height", "ScanMode", "RotationMode", "RPM",
@@ -171,6 +190,7 @@ final class NativeTurntableEntity extends BlockEntity {
         } catch (RuntimeException failure) {
             inert = true;
             capture = null;
+            visualProjection = null;
             retained = original;
         }
     }

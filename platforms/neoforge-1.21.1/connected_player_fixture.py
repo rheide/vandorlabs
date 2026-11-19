@@ -12,7 +12,9 @@ from test_sampled_materials import fixture_world
 def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=()):
     env = dict(os.environ, JAVA_HOME=str(jdk_home(21)))
     env['JAVA_TOOL_OPTIONS'] = env.get('JAVA_TOOL_OPTIONS', '') + ''.join(' -D' + prop for prop in properties)
-    out = Path(artifact_directory(prefix=scene + '-player-', dir=ROOT / 'build/test-artifacts'))
+    base = ROOT / 'build/test-artifacts'
+    base.mkdir(parents=True, exist_ok=True)
+    out = Path(artifact_directory(prefix=scene + '-player-', dir=base))
     with socket.socket() as listener:
         listener.bind(('127.0.0.1', 0))
         port = listener.getsockname()[1]

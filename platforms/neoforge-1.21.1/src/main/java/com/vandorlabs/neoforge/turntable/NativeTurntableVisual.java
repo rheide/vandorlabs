@@ -1,0 +1,96 @@
+package com.vandorlabs.neoforge.turntable;
+
+import com.vandorlabs.neoforge.transfer.NativeSnapshotAppearance;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.HolderLookup;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.Tag;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.AABB;
+
+/** Sparse, bounded render projection. The owned snapshot never leaves the physical server. */
+final class NativeTurntableVisual {
+    private static final int MAX_CELLS = 4096;
+    private static final int MAX_BYTES = 512 * 1024;
+    private static final int MAX_TILE_BYTES = 48 * 1024;
+
+    record Cell(BlockPos offset, BlockState state, CompoundTag appearance) {
+        Cell {
+            offset = offset.immutable();
+            appearance = appearance.copy();
+        }
+    }
+
+    private final List<Cell> cells;
+    private final AABB bounds;
+
+    private NativeTurntableVisual(List<Cell> cells, AABB bounds) {
+        this.cells = List.copyOf(cells);
+        this.bounds = bounds;
+    }
+
+    List<Cell> cells() { return cells; }
+    AABB bounds() { return bounds; }
+
+    static CompoundTag project(NativeTurntableCapture capture, BlockPos pos, HolderLookup.Provider registries) {
+        var list = new ListTag();
+        long retained = 0;
+        for (var cell : capture.blocks().cells()) {
+            if (cell.state.isAir()) continue;
+            var tag = new CompoundTag();
+            tag.putLong("Offset", cell.pos.subtract(pos).asLong());
+            tag.putInt("State", Block.getId(cell.state));
+            if (cell.hasTile()) {
+                var appearance = NativeSnapshotAppearance.project(cell.state, cell.tile(), registries);
+                if (appearance.sizeInBytes() > MAX_TILE_BYTES) throw new IllegalArgumentException("Turntable appearance tile limit");
+                tag.put("Appearance", appearance);
+            }
+            retained += tag.sizeInBytes();
+            if (retained > MAX_BYTES || list.size() >= MAX_CELLS) throw new IllegalArgumentException("Turntable public appearance limit");
+            list.add(tag);
+        }
+        var visual = new CompoundTag();
+        visual.put("Cells", list);
+        if (visual.sizeInBytes() > MAX_BYTES) throw new IllegalArgumentException("Turntable public appearance limit");
+        return visual;
+    }
+
+    static NativeTurntableVisual read(CompoundTag tag, HolderLookup.Provider registries) {
+        if (!tag.getAllKeys().equals(Set.of("Cells")) || !(tag.get("Cells") instanceof ListTag list)
+                || list.size() > MAX_CELLS || tag.sizeInBytes() > MAX_BYTES
+                || !list.isEmpty() && list.getElementType() != Tag.TAG_COMPOUND) {
+            throw new IllegalArgumentException("Malformed Turntable appearance");
+        }
+        var seen = new HashSet<BlockPos>();
+        var cells = new ArrayList<Cell>();
+        AABB bounds = null;
+        for (Tag value : list) {
+            var row = (CompoundTag) value;
+            if (!row.contains("Offset", Tag.TAG_LONG) || !row.contains("State", Tag.TAG_INT)
+                    || !row.getAllKeys().equals(row.contains("Appearance") ? Set.of("Offset", "State", "Appearance") : Set.of("Offset", "State"))
+                    || row.contains("Appearance") && !row.contains("Appearance", Tag.TAG_COMPOUND)) {
+                throw new IllegalArgumentException("Malformed Turntable model cell");
+            }
+            var offset = BlockPos.of(row.getLong("Offset"));
+            var state = Block.stateById(row.getInt("State"));
+            var appearance = row.getCompound("Appearance");
+            if (!seen.add(offset) || Math.abs(offset.getX()) > 64 || Math.abs(offset.getY()) > 64
+                    || Math.abs(offset.getZ()) > 64 || state.isAir()
+                    || appearance.sizeInBytes() > MAX_TILE_BYTES || state.hasBlockEntity() != row.contains("Appearance")
+                    || !NativeSnapshotAppearance.canonical(state, appearance, registries)) {
+                throw new IllegalArgumentException("Unsupported Turntable model cell");
+            }
+            NativeTurntableCapture.requireSupported(state);
+            cells.add(new Cell(offset, state, appearance));
+            var volume = new AABB(offset);
+            bounds = bounds == null ? volume : bounds.minmax(volume);
+        }
+        return new NativeTurntableVisual(cells, bounds == null ? new AABB(BlockPos.ZERO) : bounds);
+    }
+}

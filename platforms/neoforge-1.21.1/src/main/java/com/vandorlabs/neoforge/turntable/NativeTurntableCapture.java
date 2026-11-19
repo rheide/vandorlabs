@@ -185,7 +185,7 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
         return candidate.getClass() == SignBlockEntity.class || candidate.getClass() == HangingSignBlockEntity.class;
     }
 
-    private static void requireSupported(BlockState state) {
+    static void requireSupported(BlockState state) {
         var block = state.getBlock();
         var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block);
         boolean simple = block.getClass() == net.minecraft.world.level.block.Block.class
