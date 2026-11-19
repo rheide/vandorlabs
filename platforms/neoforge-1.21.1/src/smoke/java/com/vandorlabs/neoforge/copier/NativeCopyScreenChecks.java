@@ -53,7 +53,7 @@ public final class NativeCopyScreenChecks {
 
     @SubscribeEvent
     public static void start(ServerStartedEvent event){
-        if(!Boolean.getBoolean("vandorlabs.copyScreensCheck"))return;
+        if(!Boolean.getBoolean("vandorlabs.copyScreensCheck")||!System.getProperty("vandorlabs.copyScreenRecovery","").isEmpty())return;
         world=event.getServer().overworld();
         try{
             for(int x=0;x<=1;x++)for(int z=0;z<=12;z++){
