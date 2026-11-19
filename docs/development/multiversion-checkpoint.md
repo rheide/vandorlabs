@@ -18,6 +18,27 @@ interactions remain open, alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
 
+## Open non-Vehicle work
+
+- Cockpit. Port the remaining monitor, keyboard and armrest settings and
+  artwork, the physical throttles, the sliding seat with its rear clearance,
+  and import of the older multipart Cockpit footprint.
+- Turntable. The controller is still opt-in. Capture interaction, broader
+  payload types and orientations, more rider profiles, and import of active
+  Forge Turntable snapshots remain open.
+- Copy and Extenders. Broaden support for owned Screen media and outgoing
+  controls, active or occupied machines and their shaped movement. Current
+  support is limited to the admitted stationary or grid-aligned cases listed
+  in the [Copy guide](native-copy-controller.md) and
+  [builder guide](../builders-1.21.md).
+- Legacy data. Active Forge Ramp world import, broader Ramp actor and
+  cross-chunk handoffs, legacy wheel ground drops, and builder recipes outside
+  the supported fixed-job policies still need separate import/recovery work.
+  Typed import checks use mapped block and tile IDs.
+- Artwork and integrations. Some specialized armor face samples, broader
+  optional-mod compatibility and supported Dynmap integration remain open.
+  Review the [feature inventory](feature-coverage.md) for tested scopes.
+
 ## Integrated scope
 
 - Independent Java 8/Gradle 4.9 and Java 21/modern Gradle builds, portable dependency checks and dual-JDK contracts.
