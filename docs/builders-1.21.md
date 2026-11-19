@@ -154,10 +154,12 @@ Core snapshot is retained in full when its fields conflict or its chip
 ownership cannot be resolved.
 
 This also covers formed, idle Synthesis Towers, Assembly Presses and Enclosed
-Gantries with empty inventories. Their Redstone activation, channels and
-supported recipes survive import. A snapshot with an unfinished job, a stored
-item, conflicting fields or a blueprint unavailable on NeoForge remains inert
-with its original data intact.
+Gantries. Their Redstone activation, channels and supported recipes survive
+import. Supported production inputs, outputs, batteries and the installed Data
+Chip retain their counts and slot ownership. Batteries keep their saved charge,
+and credentials keep their original item data. A snapshot with an unfinished
+job, unsupported item data, conflicting slots or an unavailable blueprint
+remains inert with its original data intact.
 
 ## Dismantling and ownership
 
