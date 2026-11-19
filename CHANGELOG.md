@@ -13,7 +13,7 @@
 - Add an opt-in native Turntable with block capture, swept-collision rotation, Redstone, upward-facing rider transport and journaled quarter-turn restoration.
 - Show Forge-matched Press and Gantry fabrication, mount interactions and pickup positions on NeoForge.
 - Add opt-in legacy wheel conversion on world load or in a player’s inventory and stationary conversion by operator command. Add bounded cold Ramp actor recovery for adult cows.
-- Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge. World samples include static Light artwork, ordinary and Large Door leaves, Trapdoors and powered Trigger faces.
+- Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge. World samples include static Light artwork, ordinary and Large Door leaves, Trapdoors, flat and diagonal Wall housings, powered Triggers and static ordinary Screen artwork.
 - Preserve native floor and ceiling propulsion wedge geometry and tile data through WorldEdit quarter-turns.
 - Add catalog-gated Ramp Controller production to the native Synthesis Tower and show the four native machine categories in JEI.
 - Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.

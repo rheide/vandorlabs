@@ -8,7 +8,9 @@ On NeoForge 1.21.1 the held and mounted pickers offer the authored role and
 company designs, general Programmable Block materials, and inventory samples.
 Use the same world-face gesture on vanilla baked-model blocks, full
 Programmable Blocks, Programmable Lights, ordinary and Large Programmable
-Doors, Trapdoors and Trigger Blocks. The light face supplies its current On or Off material. Other
+Doors, Trapdoors, flat and diagonal Wall housings, Trigger Blocks and
+ordinary Screens with static artwork. Generated Screen rows have no single
+artwork sprite to sample. The light face supplies its current On or Off material. Other
 Light faces supply the housing material. The
 Duplifier transfers supported armor appearances between the offhand and
 mounted pieces.

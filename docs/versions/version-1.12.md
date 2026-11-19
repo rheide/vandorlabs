@@ -27,7 +27,8 @@ piece with its role, company, or programmable material artwork in Creative, or h
 use the armor from your offhand in Survival. The same picker works on mounted
 armor and can sample configured Blocks and Doors from your inventory. Sample
 vanilla model faces, full Programmable Blocks, Programmable Lights,
-ordinary and Large Programmable Doors, Trapdoors and Trigger Blocks in the world, or transfer an
+ordinary and Large Programmable Doors, Trapdoors, Wall housings, Trigger
+Blocks and static ordinary Screen artwork in the world, or transfer an
 appearance with the Duplifier. Static Light artwork is also available. [Programmable armor guide](../programmable-armor.md)
 
 The **Advanced Pilot Chair** is available as stationary furniture. Its
