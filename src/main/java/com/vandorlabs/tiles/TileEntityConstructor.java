@@ -213,6 +213,29 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         }
         if(best==Integer.MAX_VALUE)assemblyProblem="Complete a proportional Programmable Block frame: Survey Dish N×N×N (N=3–16), Sentinel Array N×N×2N (N=2–8).";
         if(selected==null)return false;
+        int height=observer()?com.vandorlabs.navigation.ObserverScale.height(core().design,selectedWidth):core().height;
+        int depth=observer()?selectedWidth:core().depth;
+        com.vandorlabs.machines.CoreLayout selectedLayout=new com.vandorlabs.machines.CoreLayout(selectedWidth,height,depth,
+                selected.getIndex(),selectedX,selectedZ);
+        java.util.Map<BlockPos,TileEntityConstructorPart.Frame> frames=new java.util.HashMap<>();
+        try{
+            for(int y=0;y<height;y++)for(int x=0;x<selectedWidth;x++)for(int z=0;z<depth;z++){
+                if(!selectedLayout.frame(x,y,z))continue;
+                BlockPos p=pos.add(selectedLayout.x(x,z),selectedInverted?-y:y,selectedLayout.z(x,z));
+                if(p.equals(pos))continue;
+                TileEntity original=world.getTileEntity(p);
+                if(!(original instanceof TileEntityAnimatedScreenSelector)){
+                    assemblyProblem="Wait for the programmable frame block at "+p+" to load.";
+                    return false;
+                }
+                IBlockState state=world.getBlockState(p);
+                frames.put(p,new TileEntityConstructorPart.Frame(state.getValue(com.vandorlabs.blocks.BlockProgrammableBlock.FACING),
+                        original.writeToNBT(new NBTTagCompound())));
+            }
+        }catch(RuntimeException unsupported){
+            assemblyProblem="A programmable frame block could not be saved.";
+            return false;
+        }
         changing=true;
         try{
             coreX=selectedX;coreZ=selectedZ;observerInverted=selectedInverted;observerWidth=observer()?selectedWidth:0;observerSnapshot=null;
@@ -220,12 +243,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
             Block part=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:constructor_part"));
             for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos))continue;
-                boolean frameCell=frame(x,y,z);
-                EnumFacing facing=frameCell?world.getBlockState(p).getValue(com.vandorlabs.blocks.BlockProgrammableBlock.FACING):EnumFacing.NORTH;
-                TileEntity original=frameCell?world.getTileEntity(p):null;
-                NBTTagCompound configuration=original==null?null:original.writeToNBT(new NBTTagCompound());
                 world.setBlockState(p,part.getDefaultState(),2);
-                ((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frameCell,facing,configuration);
+                ((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frames.get(p));
             }
             world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,true),3);renderAppearance=true;markDirty();
             world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);refreshInputs();return true;

@@ -48,7 +48,7 @@ public final class NativeInventoryItems {
  private static ItemStack legacy(CompoundTag raw,HolderLookup.Provider registries,Budget budget,int depth){
   budget.enter(depth);if(raw.getByte("Count")<=0){for(String key:raw.getAllKeys())if(!LEGACY_ROOT.contains(key))throw new IllegalArgumentException("Unknown empty Storage item owner");requireEmptyCaps(raw);if(raw.contains("tag")&&(!(raw.get("tag") instanceof CompoundTag empty)||!empty.isEmpty()))throw new IllegalArgumentException("Unsupported empty Storage item ownership");return ItemStack.EMPTY;}
   if(!raw.contains("id",Tag.TAG_STRING))throw new IllegalArgumentException("Unsupported legacy Storage item identity");
-  String name=raw.getString("id");
+  String name=com.vandorlabs.neoforge.transfer.NativeMatterMigration.itemId(raw.getString("id"));
   if(name.equals("vandorlabs:data_chip")||name.equals("vandorlabs:access_card")){var credential=NativeCredentialItems.readStack(raw,registries);if(credential.isEmpty())throw new IllegalArgumentException("Unsupported legacy Storage credential");return credential;}
   for(String key:raw.getAllKeys())if(!LEGACY_ROOT.contains(key))throw new IllegalArgumentException("Unsupported legacy Storage item field");
   requireEmptyCaps(raw);
@@ -75,6 +75,7 @@ public final class NativeInventoryItems {
  public static ItemStack modern(CompoundTag raw,HolderLookup.Provider registries,Budget budget){return modern(raw,registries,budget,0);}
  private static ItemStack modern(CompoundTag raw,HolderLookup.Provider registries,Budget budget,int depth){
   if(raw.isEmpty())return ItemStack.EMPTY;
+  raw=com.vandorlabs.neoforge.transfer.NativeMatterMigration.item(raw);
   nativeTree(raw,budget,depth);
   for(String key:raw.getAllKeys())if(!MODERN_ROOT.contains(key))throw new IllegalArgumentException("Unsupported native Storage item field");
   var id=ResourceLocation.tryParse(raw.getString("id"));if(id==null||!BuiltInRegistries.ITEM.containsKey(id))throw new IllegalArgumentException("Unknown native Storage item identity");var stack=ItemStack.CODEC.parse(registries.createSerializationContext(NbtOps.INSTANCE),raw).getOrThrow();if(stack.isEmpty())throw new IllegalArgumentException("Empty positive-count Storage item");return stack;
