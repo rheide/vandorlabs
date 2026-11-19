@@ -83,6 +83,15 @@ public final class LargeDoorJoinChecks {
         level.getServer().halt(false);
     }
 
+    static void prepareClient(ServerLevel level,BlockPos origin){
+        var actor=new Actor(level);
+        actor.setGameMode(GameType.CREATIVE);
+        placeGroup(level,actor,origin,false);
+        var root=owner(level,origin);
+        need(NativeLargeDoorLifecycle.setState(level,root,false,false),"close the joined client fixture");
+        verify(level,origin,false,2,2,false);
+    }
+
     private static void placeGroup(ServerLevel level,Actor actor,BlockPos origin,boolean horizontal){
         for(int x=0;x<6;x++)level.setBlock(cell(origin,horizontal,x,-1),Blocks.STONE.defaultBlockState(),Block.UPDATE_KNOWN_SHAPE);
         var first=place(actor,origin,horizontal,null);

@@ -19,7 +19,7 @@ import net.neoforged.neoforge.network.PacketDistributor;
 /** Actual player placement/input/dialog/reader/harvest plus world BER culling and a disabled-renderer negative control. */
 @EventBusSubscriber(modid="vandorlabs",value=Dist.CLIENT)
 public final class LargeDoorWorldClientChecks {
- private static int stage=LargeDoorWorldClientFixture.horizontalOnly()?40:0,ticks,wait,frames,checks,horizontal;private static String capture;private static volatile boolean captured;private static java.lang.reflect.Field rendererField;private static Object savedRenderers;
+ private static int stage=LargeDoorWorldClientFixture.joinedOnly()?50:LargeDoorWorldClientFixture.horizontalOnly()?40:0,ticks,wait,frames,checks,horizontal;private static String capture;private static volatile boolean captured;private static java.lang.reflect.Field rendererField;private static Object savedRenderers;
  private static void need(boolean yes,String why){checks++;if(!yes)throw new IllegalStateException("Canonical Large Door client stage="+stage+": "+why);}
  private static void call(Minecraft mc,String name){try{var method=Minecraft.class.getDeclaredMethod(name);method.setAccessible(true);method.invoke(mc);}catch(ReflectiveOperationException error){throw new IllegalStateException("Actual Minecraft input "+name,error);}}
  private static void mode(int operation){PacketDistributor.sendToServer(new LargeDoorWorldClientFixture.Mode(operation));wait=ticks;}
@@ -33,7 +33,7 @@ public final class LargeDoorWorldClientChecks {
  @SuppressWarnings("unchecked") private static void renderer(Minecraft mc,boolean enable,NativeLargeDoorEntity owner){try{if(rendererField==null){rendererField=net.minecraft.client.renderer.blockentity.BlockEntityRenderDispatcher.class.getDeclaredField("renderers");rendererField.setAccessible(true);}var dispatcher=mc.getBlockEntityRenderDispatcher();if(!enable){savedRenderers=rendererField.get(dispatcher);var copy=new HashMap<>((Map<Object,Object>)savedRenderers);copy.remove(owner.getType());rendererField.set(dispatcher,copy);}else{rendererField.set(dispatcher,savedRenderers);savedRenderers=null;mc.levelRenderer.setSectionDirty(0,LargeDoorWorldClientFixture.POS.getY()>>4,0);}}catch(ReflectiveOperationException error){throw new IllegalStateException("Isolated renderer negative control",error);}}
  private static boolean allAir(Minecraft mc){for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(!mc.level.getBlockState(LargeDoorWorldClientFixture.POS.east(x).above(y)).isAir())return false;return true;}
  private static boolean allOpen(Minecraft mc){for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(!mc.level.getBlockState(LargeDoorWorldClientFixture.POS.east(x).above(y)).getValue(NativeLargeDoorBlock.OPEN))return false;return true;}
- @SubscribeEvent public static void tick(ClientTickEvent.Post event){if(!LargeDoorWorldClientFixture.enabled())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}if(stage==30&&mc.level==null){String cases=LargeDoorWorldClientFixture.horizontalOnly()?"four survival side placements, real hatch clicks and joined arm travel":"upright and horizontal survival placement, reader controls, moved-leaf use, harvest and joined arm travel";System.out.println("[vandorlabs][large-door-world-client] client PASS checks="+checks+" "+cases+"; renderer masks checked separately");mc.stop();stage=31;return;}if(mc.player==null||mc.level==null||mc.gameMode==null)return;
+ @SubscribeEvent public static void tick(ClientTickEvent.Post event){if(!LargeDoorWorldClientFixture.enabled())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}if(stage==30&&mc.level==null){String cases=LargeDoorWorldClientFixture.joinedOnly()?"joined Large Door world geometry, actual follower editor and both click directions":LargeDoorWorldClientFixture.horizontalOnly()?"four survival side placements, real hatch clicks and joined arm travel":"upright and horizontal survival placement, reader controls, moved-leaf use, harvest and joined arm travel";System.out.println("[vandorlabs][large-door-world-client] client PASS checks="+checks+" "+cases+"; renderer masks checked separately");mc.stop();stage=31;return;}if(mc.player==null||mc.level==null||mc.gameMode==null)return;
   need(++ticks<3000,"timeout mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" pos="+mc.player.position()+" pitch="+mc.player.getXRot()+" hit="+mc.hitResult+" screen="+mc.screen);var tile=tile(mc);var root=LargeDoorWorldClientFixture.POS;
   if(stage>=40&&stage<=46||stage==48)need(ticks<wait+240,"horizontal fixture="+horizontal+" camera="+mc.player.position()+" hit="+mc.hitResult+" held="+mc.player.getMainHandItem()+" captured="+captured+" tile="+horizontalTile(mc));
   switch(stage){
@@ -62,6 +62,50 @@ public final class LargeDoorWorldClientChecks {
    case 22->{if(!allAir(mc))return;mc.options.keyAttack.setDown(false);wait=ticks;stage=23;}
    case 23->{if(ticks<wait+25)return;need(mc.player.getInventory().getItem(4).is(NativeCredentialItems.ACCESS_CARD.get())&&mc.player.getInventory().getItem(4).getCount()==1,"returned credential survives actual all9 harvest");mode(6);stage=24;}
    case 24->{if(ticks<wait+30)return;mode(10);stage=40;}
+   case 50->{
+    if(tile==null||tile.largeVisual().geometry()==null||tile.largeVisual().geometry().columns()!=2||ticks<80
+            ||!actor(mc,GameType.SURVIVAL,VandorLabsBootstrap.CONFIGURIZER.get()))return;
+    var target=NativeDoorSelection.update(1);
+    if(target==null)return;
+    need(target.root().equals(root.east(3)),"joined ray targets the clicked physical follower owner");
+    call(mc,"startUseItem");stage=51;
+   }
+   case 51->{
+    if(!(mc.screen instanceof NativeDoorScreen screen))return;
+    need(screen.getMenu().tile.getBlockPos().equals(root.east(3)),"shared editor opens on the follower");
+    need(screen.button(23).getMessage().getString().equals("Join: On"),"authoritative saved Join arrives in the editor");
+    click(screen,23);stage=52;wait=ticks;
+   }
+   case 52->{
+    if(!(mc.screen instanceof NativeDoorScreen screen)||!screen.button(23).getMessage().getString().equals("Join: Off")
+            ||tile.largeVisual().geometry().columns()!=1)return;
+    click(screen,23,1);stage=53;wait=ticks;
+   }
+   case 53->{
+    if(!(mc.screen instanceof NativeDoorScreen screen)||!screen.button(23).getMessage().getString().equals("Join: On")
+            ||tile.largeVisual().geometry().columns()!=2)return;
+    click(screen,1);mode(17);stage=54;
+   }
+   case 54->{
+    if(mc.screen!=null||mc.player.getZ()<8||ticks<wait+30)return;
+    var geometry=tile.largeVisual().geometry();
+    var follower=(NativeLargeDoorEntity)mc.level.getBlockEntity(root.east(3));
+    need(geometry.columns()==2&&geometry.rows()==2&&follower.largeVisual().geometry()==geometry&&tile.rendersAssembly()
+            &&!follower.rendersAssembly(),"all client parts use one joined renderer and collision snapshot");
+    need(geometry.bounds().getXsize()>5.5&&geometry.bounds().getYsize()>5.5,"production bounds span the full 6 by 6 plane");
+    mc.options.hideGui=true;mc.options.fov().set(62);mc.options.bobView().set(false);mc.options.cloudStatus().set(CloudStatus.OFF);
+    capture("joined-large-positive.png");stage=55;
+   }
+   case 55->{
+    if(!captured)return;
+    renderer(mc,false,tile);
+    capture("joined-large-negative.png");stage=56;
+   }
+   case 56->{
+    if(!captured)return;
+    renderer(mc,true,tile);
+    mc.level.disconnect();mc.disconnect();stage=30;
+   }
    case 40->{
     var front=net.minecraft.core.Direction.from2DDataValue(horizontal);
     if(ticks<wait+20||!actor(mc,GameType.SURVIVAL,LargeDoorWorldClientFixture.item()))return;
