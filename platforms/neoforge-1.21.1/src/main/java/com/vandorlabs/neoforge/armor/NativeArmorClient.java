@@ -73,10 +73,12 @@ public final class NativeArmorClient {
                                           LivingEntity entity, int seed) {
                     if (!(stack.getItem() instanceof NativeArmorItem)) return base;
                     int choice = NativeArmorItem.choice(stack);
-                    if (geometry != null && NativeArmorItem.listedMaterial(choice)) {
+                    if (geometry != null && (NativeArmorItem.hasInventorySample(stack) || NativeArmorItem.listedMaterial(choice))) {
                         var model = materials.getAndMoveToLast(choice);
                         if (model == null) {
-                            model = new NativeArmorMaterialModel(geometry, choice);
+                            var material = NativeArmorMaterials.material(choice);
+                            if (material == null) return base;
+                            model = new NativeArmorMaterialModel(geometry, material);
                             materials.put(choice, model);
                             if (materials.size() > 32) materials.removeFirst();
                         }

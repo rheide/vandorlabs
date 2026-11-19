@@ -3,6 +3,9 @@ package com.vandorlabs.neoforge.armor;
 import com.mojang.blaze3d.platform.NativeImage;
 import com.vandorlabs.armor.ArmorMaterialSkin;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
+import com.vandorlabs.neoforge.client.NativeBlockMaterials;
+import com.vandorlabs.neoforge.door.NativeDoorAssets;
+import com.vandorlabs.tiles.MaterialChoicePolicy;
 import java.io.IOException;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import net.minecraft.client.Minecraft;
@@ -23,13 +26,15 @@ public final class NativeArmorMaterials {
     private static final Int2ObjectLinkedOpenHashMap<ResourceLocation> CACHE = new Int2ObjectLinkedOpenHashMap<>();
 
     static ResourceLocation worn(int choice, ResourceLocation maskLocation, ResourceLocation fallback) {
+        if (choice < 0 || choice >= MaterialChoicePolicy.FILESYSTEM_BASE) return fallback;
         boolean inner = maskLocation.getPath().endsWith("_layer_2.png");
         int key = (choice << 1) | (inner ? 1 : 0);
         var previous = CACHE.getAndMoveToLast(key);
         if (previous != null) return previous;
         if (CACHE.size() >= LIMIT * 2) return fallback;
 
-        var material = ModernFinishCatalog.option(choice);
+        var material = material(choice);
+        if (material == null) return fallback;
         var game = Minecraft.getInstance();
         var sprite = game.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(ResourceLocation.parse(material.texture()));
         if (sprite.contents().name().getPath().equals("missingno")) return fallback;
@@ -52,6 +57,16 @@ public final class NativeArmorMaterials {
         } catch (IOException missingMask) {
             return fallback;
         }
+    }
+
+    static ModernFinishCatalog.Entry material(int choice) {
+        if (choice >= 0 && choice < ModernFinishCatalog.ENTRIES.size()) {
+            var material = ModernFinishCatalog.option(choice);
+            if (!material.visible()) return null;
+            return material.door() == null ? material : NativeDoorAssets.preview(choice);
+        }
+        var sampled = NativeBlockMaterials.material(choice);
+        return sampled == null ? null : sampled.entry();
     }
 
     private static int width(ModernFinishCatalog.Entry entry, TextureAtlasSprite sprite) {

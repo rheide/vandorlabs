@@ -57,14 +57,9 @@ public final class NativeBlockMaterials {
     public static Material material(int choice){return active.get(choice);}
     public static Map<Integer,Material> snapshot(){return active;}
     public static int sample(ItemStack stack){
-        if(stack.isEmpty()||!(stack.getItem() instanceof BlockItem item))return -1;
-        if(stack.is(VandorLabsBootstrap.PROGRAMMABLE_ITEM.get())||stack.is(VandorLabsBootstrap.TRIGGER_ITEM.get())){
-            var data=stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);if(data==null)data=stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
-            if(data==null)return 0;
-            var tag=data.copyTag();if(tag.contains("BlockEntityTag",10))tag=tag.getCompound("BlockEntityTag");
-            return ModernFinishCatalog.storedChoice(tag.getInt(com.vandorlabs.persistence.HousingSettings.MAIN));
-        }
-        Integer choice=NativeMaterialRegistry.snapshot().samples().get(item.getBlock());return choice!=null&&active.containsKey(choice)?choice:-1;
+        int choice = NativeMaterialRegistry.sampleItem(stack);
+        return stack.is(VandorLabsBootstrap.PROGRAMMABLE_ITEM.get()) || stack.is(VandorLabsBootstrap.TRIGGER_ITEM.get())
+            || active.containsKey(choice) ? choice : -1;
     }
     public static Set<Integer> ambiguous(){return NativeMaterialRegistry.snapshot().ambiguous();}
     public static int samples(){return NativeMaterialRegistry.snapshot().samples().size();}

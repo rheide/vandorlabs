@@ -64,11 +64,25 @@ public final class NativeArmorBindings {
         public Type<Edit> type() { return TYPE; }
     }
 
+    public record InventorySample(int window, int slot) implements CustomPacketPayload {
+        static final Type<InventorySample> TYPE = new Type<>(id("programmable_armor_inventory_sample"));
+        static final StreamCodec<RegistryFriendlyByteBuf, InventorySample> CODEC = StreamCodec.composite(
+            ByteBufCodecs.VAR_INT, InventorySample::window, ByteBufCodecs.VAR_INT, InventorySample::slot, InventorySample::new);
+
+        @Override
+        public Type<InventorySample> type() { return TYPE; }
+    }
+
     @SubscribeEvent
     public static void packets(RegisterPayloadHandlersEvent event) {
-        event.registrar("1").playToServer(Edit.TYPE, Edit.CODEC, (message, context) -> context.enqueueWork(() -> {
+        var registrar = event.registrar("1");
+        registrar.playToServer(Edit.TYPE, Edit.CODEC, (message, context) -> context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof NativeArmorMenu menu
                 && menu.containerId == message.window()) menu.configure(player, message.choice());
+        }));
+        registrar.playToServer(InventorySample.TYPE, InventorySample.CODEC, (message, context) -> context.enqueueWork(() -> {
+            if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof NativeArmorMenu menu
+                && menu.containerId == message.window()) menu.sampleInventory(player, message.slot());
         }));
     }
 

@@ -67,6 +67,18 @@ public final class NativeArmorMenu extends AbstractContainerMenu {
 
     void configure(ServerPlayer player, int choice) {
         if (!stillValid(player) || !NativeArmorItem.configure(original, choice)) return;
+        synchronizeArmor(player);
+    }
+
+    void sampleInventory(ServerPlayer player, int slot) {
+        if (!stillValid(player) || slot < 0 || slot >= com.vandorlabs.ui.InventorySampleLayout.INVENTORY_SLOTS) return;
+        int choice = NativeArmorInventorySources.choice(player.getInventory().getItem(slot));
+        if (choice < 0) return;
+        NativeArmorItem.applyInventorySample(original, choice);
+        synchronizeArmor(player);
+    }
+
+    private void synchronizeArmor(ServerPlayer player) {
         preview.setItem(0, original.copy());
         broadcastChanges();
         if (hand != null) {

@@ -13,7 +13,9 @@ import net.neoforged.neoforge.network.PacketDistributor;
 final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
     private static final int CHOICE_BASE = 0x10000000;
     private static final int ROWS_BASE = -1000;
+    private static final int SAMPLE_ROW = -199999;
     private NativeMaterialPicker picker;
+    private int sampledChoice = -1;
 
     NativeArmorScreen(NativeArmorMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -26,7 +28,9 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
         imageHeight = rows * 22 + 66;
         super.init();
         if (!(menu.editorStack().getItem() instanceof NativeArmorItem armor)) return;
-        picker = new NativeMaterialPicker(-1, NativeArmorItem::listedMaterial, this::choose).sampling(false);
+        picker = new NativeMaterialPicker(-1, NativeArmorItem::listedMaterial, this::choose)
+            .inventorySlots(stack -> NativeArmorInventorySources.choice(stack) >= 0, slot ->
+                PacketDistributor.sendToServer(new NativeArmorBindings.InventorySample(menu.containerId, slot)));
         for (var design : NativeArmorCatalog.designs()) {
             if (design.slot() == armor.getEquipmentSlot()) {
                 picker.specialMaterial(row(design.choice()), design.label(), "Armor",
@@ -34,7 +38,18 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
             }
         }
         int selection = NativeArmorItem.choice(menu.editorStack());
-        picker.select(NativeArmorItem.listedMaterial(selection) ? selection : row(NativeArmorItem.design(menu.editorStack()).choice()), false);
+        sampledChoice = inventorySample();
+        if (sampledChoice >= 0) {
+            var material = NativeArmorMaterials.material(sampledChoice);
+            if (material == null) {
+                picker.specialMaterial(SAMPLE_ROW, "Missing sample", "Sampled", "minecraft:block/barrier");
+            } else {
+                picker.specialMaterial(SAMPLE_ROW, material.label(), "Sampled", material.texture(), material.u(), material.v());
+            }
+            picker.select(SAMPLE_ROW, false);
+        } else {
+            picker.select(NativeArmorItem.listedMaterial(selection) ? selection : row(NativeArmorItem.design(menu.editorStack()).choice()), false);
+        }
         picker.layout(leftPos + 12, topPos + 30, imageWidth - 32, rows, true);
         addRenderableWidget(picker.searchField());
         addRenderableWidget(NativeDialogButton.builder(Component.translatable("gui.done"), button -> onClose())
@@ -44,12 +59,18 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
     @Override
     protected void containerTick() {
         super.containerTick();
-        if (picker == null && menu.synchronizedStack && menu.editorStack().getItem() instanceof NativeArmorItem) rebuildWidgets();
+        if (menu.synchronizedStack && menu.editorStack().getItem() instanceof NativeArmorItem
+            && (picker == null || sampledChoice != inventorySample())) rebuildWidgets();
+    }
+
+    private int inventorySample() {
+        return NativeArmorItem.hasInventorySample(menu.editorStack()) ? NativeArmorItem.choice(menu.editorStack()) : -1;
     }
 
     private static int row(int choice) { return ROWS_BASE - (choice - CHOICE_BASE); }
 
     private void choose(int row) {
+        if (row == SAMPLE_ROW) return;
         PacketDistributor.sendToServer(new NativeArmorBindings.Edit(menu.containerId, row >= 0 ? row : CHOICE_BASE + ROWS_BASE - row));
     }
 

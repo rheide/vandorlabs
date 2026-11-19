@@ -2,6 +2,8 @@ package com.vandorlabs.neoforge.armor;
 
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.door.NativeDoorAssets;
+import com.vandorlabs.ui.InventorySampleLayout;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.Screenshot;
@@ -73,13 +75,55 @@ public final class NativeArmorClientCheck {
                 require(game.getTextureManager().getTexture(location) instanceof DynamicTexture dynamic
                     && dynamic.getPixels().getWidth() == 256 && dynamic.getPixels().getHeight() == 128
                     && (dynamic.getPixels().getPixelRGBA(0, 0) >>> 24) == 0, "derived armor skin allocates and preserves transparency");
+                if (!clickInventory(screen, NativeArmorFixture.CUBE_SLOT)) return;
+                stage = 10;
+            }
+            case 10 -> {
+                if (!(game.screen instanceof NativeArmorScreen screen)
+                    || !NativeArmorItem.hasInventorySample(screen.getMenu().editorStack())
+                    || NativeArmorItem.choice(offhand) != NativeArmorFixture.INDUSTRIAL_BLOCK) return;
+                require(player.getInventory().getItem(NativeArmorFixture.CUBE_SLOT).getCount() == 2,
+                    "configured block sample keeps source count");
+                if (!clickInventory(screen, NativeArmorFixture.DOOR_SLOT)) return;
+                stage = 11;
+            }
+            case 11 -> {
+                if (!(game.screen instanceof NativeArmorScreen screen)
+                    || NativeArmorItem.choice(screen.getMenu().editorStack()) != NativeArmorFixture.CARGO_DOOR
+                    || NativeArmorItem.choice(offhand) != NativeArmorFixture.CARGO_DOOR) return;
+                var restored = net.minecraft.world.item.ItemStack.parseOptional(player.registryAccess(),
+                    (net.minecraft.nbt.CompoundTag)offhand.save(player.registryAccess()));
+                require(NativeArmorItem.hasInventorySample(restored)
+                    && NativeArmorItem.choice(restored) == NativeArmorFixture.CARGO_DOOR,
+                    "sample state survives native item serialization");
+                var model = game.getItemRenderer().getModel(offhand, game.level, player, 0);
+                require(model.getParticleIcon().contents().name().toString()
+                    .equals(NativeDoorAssets.preview(NativeArmorFixture.CARGO_DOOR).texture()),
+                    "configured door sample resolves full authored image");
+                screen.onClose();
+                wait = ticks;
+                stage = 12;
+            }
+            case 12 -> {
+                if (ticks < wait + 8 || game.screen != null || !NativeArmorItem.hasInventorySample(offhand)) return;
+                shift(game, true);
+                game.gameMode.useItem(player, InteractionHand.OFF_HAND);
+                stage = 13;
+            }
+            case 13 -> {
+                if (!(game.screen instanceof NativeArmorScreen screen) || !screen.getMenu().synchronizedStack) return;
+                var saved = screen.getMenu().editorStack();
+                require(NativeArmorItem.hasInventorySample(saved)
+                    && NativeArmorItem.choice(saved) == NativeArmorFixture.CARGO_DOOR,
+                    "sample appearance survives closing and reopening the picker");
                 if (!select(screen, "Civilian Staff Helmet (Open)")) return;
-                stage++;
+                stage = 3;
             }
             case 3 -> {
                 if (!(game.screen instanceof NativeArmorScreen screen)
                     || !(offhand.getItem() instanceof NativeArmorItem)
                     || NativeArmorItem.design(offhand).choice() != NativeArmorFixture.SELECTED) return;
+                require(!NativeArmorItem.hasInventorySample(offhand), "explicit design replaces inventory sample");
                 var armor = (NativeArmorItem)offhand.getItem();
                 var selected = NativeArmorItem.design(offhand);
                 require(armor.getArmorTexture(offhand, player, EquipmentSlot.HEAD, null, false).equals(selected.worn())
@@ -160,9 +204,25 @@ public final class NativeArmorClientCheck {
         }
     }
 
-    private static boolean select(NativeArmorScreen screen, String label) {
-        var search = screen.children().stream().filter(EditBox.class::isInstance)
+    private static boolean clickInventory(NativeArmorScreen screen, int slot) {
+        var search = search(screen);
+        if (search == null) return false;
+        search.setValue("no matching armor texture");
+        // With no matching rows, Custom is the only visible row.
+        screen.mouseClicked(search.getX() + 12, search.getY() + 31, 0);
+        require(!search.visible, "Custom opens the shared inventory sample grid");
+        screen.mouseClicked(search.getX() - 2 + InventorySampleLayout.CELL * slot + 8,
+            search.getY() - 2 + InventorySampleLayout.HEADER + 8, 0);
+        return true;
+    }
+
+    private static EditBox search(NativeArmorScreen screen) {
+        return screen.children().stream().filter(EditBox.class::isInstance)
             .map(EditBox.class::cast).findFirst().orElse(null);
+    }
+
+    private static boolean select(NativeArmorScreen screen, String label) {
+        var search = search(screen);
         if (search == null) return false;
         screen.mouseClicked(search.getX() + 10, search.getY() + 8, 0);
         search.setValue("");

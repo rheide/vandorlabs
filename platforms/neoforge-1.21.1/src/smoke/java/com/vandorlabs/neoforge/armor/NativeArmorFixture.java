@@ -1,6 +1,8 @@
 package com.vandorlabs.neoforge.armor;
 
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.door.NativeDoorRegistrations;
+import com.vandorlabs.persistence.HousingSettings;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -13,6 +15,7 @@ import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.item.ArmorItem;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -25,6 +28,8 @@ public final class NativeArmorFixture {
     static final String NAME = "Fixture Helmet";
     static final int SELECTED = 268435498;
     static final int INDUSTRIAL_BLOCK = 9;
+    static final int CARGO_DOOR = 106;
+    static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final EquipmentSlot[] MOUNTED_SLOTS = {
         EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD
     };
@@ -53,6 +58,23 @@ public final class NativeArmorFixture {
         player.getInventory().selected = 0;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
         player.setItemInHand(InteractionHand.OFF_HAND, stack);
+        var sampleCube = new ItemStack(VandorLabsBootstrap.PROGRAMMABLE_ITEM.get(), 2);
+        CustomData.update(DataComponents.CUSTOM_DATA, sampleCube, tag -> tag.putInt(HousingSettings.MAIN, INDUSTRIAL_BLOCK));
+        var sampleDoor = new ItemStack(NativeDoorRegistrations.ITEM.get());
+        var choices = new CompoundTag();
+        choices.putInt("SpaceDesign", 7);
+        choices.putInt("SpaceDetail", 1);
+        CustomData.update(DataComponents.CUSTOM_DATA, sampleDoor, tag -> tag.put("SpaceDoorSettings", choices));
+        player.getInventory().setItem(CUBE_SLOT, sampleCube);
+        player.getInventory().setItem(DOOR_SLOT, sampleDoor);
+        player.getInventory().setItem(INVALID_SLOT, new ItemStack(Items.DIAMOND));
+        var inventoryEditor = new NativeArmorMenu(97, player.getInventory(), InteractionHand.OFF_HAND);
+        inventoryEditor.sampleInventory(player, INVALID_SLOT);
+        inventoryEditor.sampleInventory(player, 36);
+        inventoryEditor.sampleInventory(player, -1);
+        require(!NativeArmorItem.hasInventorySample(stack), "refuses non-block and out-of-range inventory samples");
+        require(NativeArmorInventorySources.choice(sampleCube) == INDUSTRIAL_BLOCK
+            && NativeArmorInventorySources.choice(sampleDoor) == CARGO_DOOR, "configured inventory choices");
         var chestId = NativeArmorBindings.IDS.get(ArmorItem.Type.CHESTPLATE);
         var chest = new ItemStack(BuiltInRegistries.ITEM.get(chestId));
         require(NativeArmorItem.configure(chest, INDUSTRIAL_BLOCK), "material fixture chestplate");
@@ -72,6 +94,11 @@ public final class NativeArmorFixture {
         var restored = ItemStack.parseOptional(player.registryAccess(), (CompoundTag)equipped.save(player.registryAccess()));
         require(ItemStack.matches(restored, equipped) && restored.getDamageValue() == 24
             && restored.getHoverName().getString().equals(NAME), "saved armor selection, damage and name");
+        require(player.getInventory().getItem(CUBE_SLOT).getCount() == 2
+            && NativeArmorInventorySources.choice(player.getInventory().getItem(CUBE_SLOT)) == INDUSTRIAL_BLOCK
+            && player.getInventory().getItem(DOOR_SLOT).getCount() == 1
+            && NativeArmorInventorySources.choice(player.getInventory().getItem(DOOR_SLOT)) == CARGO_DOOR,
+            "inventory sample sources preserved");
         for (int index = 0; index < STANDS.length; index++) {
             var stand = STANDS[index];
             for (var slot : MOUNTED_SLOTS) {

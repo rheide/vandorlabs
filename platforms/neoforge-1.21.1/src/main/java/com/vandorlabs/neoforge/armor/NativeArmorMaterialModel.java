@@ -21,9 +21,8 @@ final class NativeArmorMaterialModel extends BakedModelWrapper<BakedModel> {
     private final TextureAtlasSprite sprite;
     private final List<BakedModel> renderPasses = List.of(this);
 
-    NativeArmorMaterialModel(BakedModel geometry, int choice) {
+    NativeArmorMaterialModel(BakedModel geometry, ModernFinishCatalog.Entry material) {
         super(geometry);
-        var material = ModernFinishCatalog.option(choice);
         sprite = Minecraft.getInstance().getTextureAtlas(TextureAtlas.LOCATION_BLOCKS)
             .apply(ResourceLocation.parse(material.texture()));
         quads = geometry.getQuads(null, null, RandomSource.create(0)).stream()

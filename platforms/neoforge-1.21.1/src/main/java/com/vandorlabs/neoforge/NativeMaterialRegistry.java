@@ -59,6 +59,20 @@ public final class NativeMaterialRegistry {
             samples.put(state,choice);states.put(choice,state);
         }
     }
+    /** Item sampler projection independent of the client model registry and atlas. */
+    public static int sampleItem(net.minecraft.world.item.ItemStack stack) {
+        if (stack.isEmpty() || !(stack.getItem() instanceof net.minecraft.world.item.BlockItem item)) return -1;
+        if (stack.is(VandorLabsBootstrap.PROGRAMMABLE_ITEM.get()) || stack.is(VandorLabsBootstrap.TRIGGER_ITEM.get())) {
+            var data = stack.get(net.minecraft.core.component.DataComponents.BLOCK_ENTITY_DATA);
+            if (data == null) data = stack.get(net.minecraft.core.component.DataComponents.CUSTOM_DATA);
+            if (data == null) return 0;
+            var tag = data.getUnsafe();
+            if (tag.contains("BlockEntityTag", 10)) tag = tag.getCompound("BlockEntityTag");
+            return ModernFinishCatalog.storedChoice(tag.getInt(com.vandorlabs.persistence.HousingSettings.MAIN));
+        }
+        return snapshot().samples().getOrDefault(item.getBlock(), -1);
+    }
+
     private static <T extends Comparable<T>> String propertyValue(BlockState state,net.minecraft.world.level.block.state.properties.Property<T> property){return property.getName(state.getValue(property));}
     private NativeMaterialRegistry(){}
 }

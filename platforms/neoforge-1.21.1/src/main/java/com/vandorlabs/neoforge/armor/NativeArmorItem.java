@@ -24,6 +24,7 @@ import net.minecraft.world.level.Level;
 
 public final class NativeArmorItem extends ArmorItem {
     private static final String TEXTURE = "ArmorTexture";
+    private static final String INVENTORY_SAMPLE = "ArmorInventoryTexture";
     private static final String SAMPLE = "ArmorSampleTexture";
 
     NativeArmorItem(Type type) {
@@ -40,8 +41,21 @@ public final class NativeArmorItem extends ArmorItem {
 
     public static int choice(ItemStack stack) {
         var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).getUnsafe();
+        if (tag.contains(INVENTORY_SAMPLE, Tag.TAG_INT)) return tag.getInt(INVENTORY_SAMPLE);
         if (tag.contains(TEXTURE, Tag.TAG_INT)) return tag.getInt(TEXTURE);
         return ((NativeArmorItem)stack.getItem()).defaultDesign.choice();
+    }
+
+    static boolean hasInventorySample(ItemStack stack) {
+        return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).getUnsafe()
+            .contains(INVENTORY_SAMPLE, Tag.TAG_INT);
+    }
+
+    static void applyInventorySample(ItemStack stack, int choice) {
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+            tag.putInt(INVENTORY_SAMPLE, choice);
+            tag.remove(SAMPLE);
+        });
     }
 
     static boolean listedMaterial(int choice) {
@@ -55,6 +69,7 @@ public final class NativeArmorItem extends ArmorItem {
             || NativeArmorCatalog.design(choice, item.getEquipmentSlot()) == null && !listedMaterial(choice)) return false;
         CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
             tag.putInt(TEXTURE, choice);
+            tag.remove(INVENTORY_SAMPLE);
             tag.remove(SAMPLE);
         });
         return true;
@@ -64,7 +79,7 @@ public final class NativeArmorItem extends ArmorItem {
     public ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot,
                                             ArmorMaterial.Layer layer, boolean innerModel) {
         int choice = choice(stack);
-        if (listedMaterial(choice)) {
+        if (hasInventorySample(stack) || listedMaterial(choice)) {
             return NativeArmorMaterials.worn(choice, layer.texture(innerModel), design(stack).worn());
         }
         return design(stack).worn();
