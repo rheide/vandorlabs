@@ -33,7 +33,7 @@ public final class TurntableSnapshot {
         this.layout=layout;this.origin=origin.toImmutable();this.blocks=blocks;this.entities=Collections.unmodifiableList(new ArrayList<>(entities));this.height=height;
     }
     public static TurntableSnapshot capture(WorldServer world,TurntableSurfaceLayout layout,int height,EntityPlayerMP actor)throws IOException{
-        if(height<1 || height>16)throw new IllegalArgumentException("Scan height must be between 1 and 16 blocks");
+        if(height<TurntableSettings.MIN_HEIGHT || height>TurntableSettings.MAX_HEIGHT)throw new IllegalArgumentException("Scan height must be between 1 and 16 blocks");
         int[] bounds=SurfaceLayout.volume(layout.basis,layout.minU,layout.minV,layout.plane,layout.width,layout.height,height);
         BlockPos min=new BlockPos(bounds[0],bounds[1],bounds[2]),max=new BlockPos(bounds[3],bounds[4],bounds[5]);
         if(min.getY()<0 || max.getY()>=world.getHeight() || !world.getWorldBorder().contains(min) || !world.getWorldBorder().contains(max) || !world.isAreaLoaded(min,max,false))
@@ -77,10 +77,10 @@ public final class TurntableSnapshot {
         int quarter=Math.floorMod((int)Math.round(TurntableGeometry.wrap(angle)/90),4);if(quarter==0)return this;double snapped=quarter*90;List<VehicleStructure.Cell> moved=new ArrayList<>();BlockPos targetOrigin=origin;VehicleStructure turned;
         if(layout.normal.getAxis()==net.minecraft.util.EnumFacing.Axis.Y){
             turned=VehicleRotation.rotate(blocks,view,Math.floorMod(quarter*layout.normal.getFrontOffsetY(),4));
-            if(!blocks.cells.isEmpty()){BlockPos desired=rotatedCell(origin.add(blocks.cells.get(0).pos),snapped);targetOrigin=desired.subtract(turned.cells.get(0).pos);}
+            if(!blocks.cells.isEmpty()){BlockPos desired=rotatedCell(origin.add(blocks.cells.get(0).pos),quarter);targetOrigin=desired.subtract(turned.cells.get(0).pos);}
         }else{
             List<BlockPos> positions=new ArrayList<>();int minX=Integer.MAX_VALUE,minY=minX,minZ=minX;
-            for(VehicleStructure.Cell cell:blocks.cells){BlockPos at=rotatedCell(origin.add(cell.pos),snapped);positions.add(at);minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());}
+            for(VehicleStructure.Cell cell:blocks.cells){BlockPos at=rotatedCell(origin.add(cell.pos),quarter);positions.add(at);minX=Math.min(minX,at.getX());minY=Math.min(minY,at.getY());minZ=Math.min(minZ,at.getZ());}
             if(!positions.isEmpty())targetOrigin=new BlockPos(minX,minY,minZ);
             for(int i=0;i<blocks.cells.size();i++){VehicleStructure.Cell cell=blocks.cells.get(i);if(cell.hasTileData())throw new IllegalArgumentException("This component cannot face sideways in block mode; rotate back to a supported heading before restoring");net.minecraft.block.state.IBlockState state=sideways(cell.state,snapped,quarter);moved.add(new VehicleStructure.Cell(positions.get(i).subtract(targetOrigin),state,null));}
             turned=VehicleStructure.display(moved);
@@ -92,7 +92,10 @@ public final class TurntableSnapshot {
         }
         return new TurntableSnapshot(layout,targetOrigin,turned,rotatedEntities,height);
     }
-    private BlockPos rotatedCell(BlockPos cell,double angle){double[] r=TurntableGeometry.rotate(cell.getX()+.5-layout.pivot.x,cell.getY()+.5-layout.pivot.y,cell.getZ()+.5-layout.pivot.z,layout.basis,angle);return new BlockPos(Math.round(r[0]+layout.pivot.x-.5),Math.round(r[1]+layout.pivot.y-.5),Math.round(r[2]+layout.pivot.z-.5));}
+    private BlockPos rotatedCell(BlockPos cell,int quarter){
+        int[] rotated=TurntableGeometry.rotateCell(cell.getX(),cell.getY(),cell.getZ(),layout.pivot.x,layout.pivot.y,layout.pivot.z,layout.basis,quarter);
+        return new BlockPos(rotated[0],rotated[1],rotated[2]);
+    }
     @SuppressWarnings({"rawtypes","unchecked"}) private net.minecraft.block.state.IBlockState sideways(net.minecraft.block.state.IBlockState state,double angle,int quarter){
         if(state.getBlock() instanceof net.minecraft.block.BlockDoor||state.getBlock() instanceof net.minecraft.block.BlockBed||state.getBlock() instanceof net.minecraft.block.BlockDoublePlant)throw new IllegalArgumentException("This multi-part block cannot face sideways; rotate back to a supported heading before restoring");
         for(net.minecraft.block.properties.IProperty property:state.getPropertyKeys()){
@@ -109,7 +112,7 @@ public final class TurntableSnapshot {
     }
     public static TurntableSnapshot read(NBTTagCompound tag){
         int height=tag.getInteger("Height");NBTTagList list=tag.getTagList("Entities",10);
-        if(tag.getInteger("Schema")!=1 || height<1 || height>16 || list.tagCount()>MAX_ENTITIES)throw new IllegalArgumentException("Invalid turntable snapshot");
+        if(tag.getInteger("Schema")!=1 || height<TurntableSettings.MIN_HEIGHT || height>TurntableSettings.MAX_HEIGHT || list.tagCount()>MAX_ENTITIES)throw new IllegalArgumentException("Invalid turntable snapshot");
         List<FrozenEntity> entities=new ArrayList<>();Set<UUID> ids=new HashSet<>();
         for(int i=0;i<list.tagCount();i++){NBTTagCompound e=list.getCompoundTagAt(i);if(!e.hasUniqueId("Entity") || !e.hasKey("Data",10) || !ids.add(e.getUniqueId("Entity")))throw new IllegalArgumentException("Invalid captured entity");entities.add(new FrozenEntity(e.getUniqueId("Entity"),e.hasUniqueId("Parent")?e.getUniqueId("Parent"):null,com.vandorlabs.persistence.RetiredCockpitGlass.itemData(e.getCompoundTag("Data"))));}
         for(FrozenEntity e:entities)if(e.parent!=null && (!ids.contains(e.parent) || e.parent.equals(e.id)))throw new IllegalArgumentException("Invalid captured mount");

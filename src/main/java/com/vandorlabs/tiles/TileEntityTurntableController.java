@@ -46,7 +46,7 @@ public final class TileEntityTurntableController extends TileEntity implements I
     public EntityTurntable display(){if(world==null||captureId==null)return null;for(net.minecraft.entity.Entity entity:world.loadedEntityList)if(entity instanceof EntityTurntable && captureId.equals(entity.getUniqueID())&&!entity.isDead)return (EntityTurntable)entity;return null;}
     @Override public void invalidate(){com.vandorlabs.tiles.WorldActionAuthorization.revoke(this);if(world!=null&&!world.isRemote&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world)){EntityTurntable entity=display();if(entity!=null)com.vandorlabs.turntable.TurntableEvents.restoreAfterTick(entity);}super.invalidate();}
     private boolean signal(ChannelList channels){return channels.isEmpty()?world.isBlockPowered(pos):RedstoneChannels.allPowered(world,pos,channels);}
-    private boolean matches(int mode,ChannelList channels){return mode!=0 && (mode==1)==signal(channels);}
+    private boolean matches(int mode,ChannelList channels){return mode!=TurntableSettings.SCAN_DISABLED && TurntableSettings.active(mode,signal(channels));}
     public boolean legacyCapture(){return layout!=null&&world!=null&&world.isBlockLoaded(layout.root)&&world.getBlockState(layout.root).getBlock() instanceof BlockTurntableSurface&&world.getBlockState(layout.root).getValue(BlockTurntableSurface.FACING)!=layout.normal;}
     public boolean running(){if(world!=null&&world.isRemote)return clientRunning;return enabled&&!legacyCapture()&&layout!=null&&layout.loaded(world)&&matches(Math.max(1,rotationMode),rotationChannels);}
     public double angle(float partial){EntityTurntable entity=display();if(entity!=null)return entity.angle(partial);return TurntableGeometry.wrap(previous+(((angle-previous+540)%360)-180)*partial);}
@@ -128,13 +128,13 @@ public final class TileEntityTurntableController extends TileEntity implements I
         ChannelList scan=ChannelList.parse(tag.getString("ScanChannels")),rotate=ChannelList.parse(tag.getString("RotationChannels")),direction=ChannelList.parse(tag.hasKey("DirectionChannels")?tag.getString("DirectionChannels"):"0");
         ChannelList restore=tag.hasKey("RestoreChannels")?ChannelList.parse(tag.getString("RestoreChannels")):restoreChannels;
         double tolerance=tag.hasKey("AutoSnapTolerance")?tag.getDouble("AutoSnapTolerance"):autoSnapTolerance;
-        TurntableGeometry.checkSnapTolerance(tolerance);
-        TurntableGeometry.degreesPerTick(speed);
-        if(h<1||h>16||sm<0||sm>2||rm<1||rm>2||a<0||a>3||scan==null||rotate==null||direction==null||restore==null)throw new IllegalArgumentException("Invalid turntable settings");
-        if((captureId!=null||TurntableTransactions.busy(this))&&h!=height)throw new IllegalArgumentException("Finish the transfer and restore before changing the scan height");
-        if(!directionChannels.equals(direction)){directionKnown=false;directionChannels=direction;}
-        if(!restoreChannels.equals(restore)){restoreKnown=false;restoreChannels=restore;}
-        height=h;scanMode=sm;rotationMode=rm;axis=0;rpm=speed;autoSnapTolerance=tolerance;scanChannels=scan;rotationChannels=rotate;clockwise=tag.getBoolean("Clockwise");reverse=false;changed();
+        TurntableSettings choices=new TurntableSettings(h,sm,rm,speed,tolerance,tag.getBoolean("Clockwise"),scan,rotate,direction,restore);
+        if(a<0||a>3)throw new IllegalArgumentException("Invalid turntable settings");
+        if((captureId!=null||TurntableTransactions.busy(this))&&choices.height!=height)throw new IllegalArgumentException("Finish the transfer and restore before changing the scan height");
+        if(!directionChannels.equals(choices.directionChannels)){directionKnown=false;directionChannels=choices.directionChannels;}
+        if(!restoreChannels.equals(choices.restoreChannels)){restoreKnown=false;restoreChannels=choices.restoreChannels;}
+        height=choices.height;scanMode=choices.scanMode;rotationMode=choices.rotationMode;axis=0;rpm=choices.rpm;autoSnapTolerance=choices.snapTolerance;
+        scanChannels=choices.scanChannels;rotationChannels=choices.rotationChannels;clockwise=choices.clockwise;reverse=false;changed();
     }
     @Override public void update(){
         previous=angle;if(world.isRemote){return;}

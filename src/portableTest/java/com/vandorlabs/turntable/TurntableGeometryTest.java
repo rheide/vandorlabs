@@ -19,6 +19,17 @@ public final class TurntableGeometryTest {
                     for(int axis=0;axis<3;axis++){checks++;if(p[axis]<bounds[axis]-1e-9||p[axis]>bounds[axis+3]+1e-9)throw new AssertionError("Missing corner");}
                 }
             }
+            for(int width=1;width<=32;width++)for(int quarter=-4;quarter<=4;quarter++){
+                double mid=(width-1)*.5;
+                double[] pivot=face.point(-12+mid,9+mid,27.5);
+                for(int axis=0;axis<3;axis++)pivot[axis]+=.5;
+                for(int u=0;u<width;u++)for(int v=0;v<width;v+=Math.max(1,width-1)){
+                    double[] source=face.point(-12+u,9+v,30);
+                    double[] rotated=TurntableGeometry.rotate(source[0]+.5-pivot[0],source[1]+.5-pivot[1],source[2]+.5-pivot[2],face,quarter*90);
+                    int[] target=TurntableGeometry.rotateCell((int)source[0],(int)source[1],(int)source[2],pivot[0],pivot[1],pivot[2],face,quarter);
+                    for(int axis=0;axis<3;axis++)near(target[axis],Math.round(rotated[axis]+pivot[axis]-.5));
+                }
+            }
             double[] world=face.point(-12,9,5);near(face.u((int)world[0],(int)world[1],(int)world[2]),-12);near(face.v((int)world[0],(int)world[1],(int)world[2]),9);near(face.plane((int)world[0],(int)world[1],(int)world[2]),5);
         }
         for(int size=1;size<=32;size++){if(!TurntableGeometry.square(-20,8,-21+size,7+size,size*size))throw new AssertionError();if(TurntableGeometry.square(0,0,size-1,size-1,size*size-1))throw new AssertionError();}

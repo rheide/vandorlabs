@@ -11,6 +11,7 @@ import net.minecraft.core.Direction;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -43,6 +44,7 @@ public final class NativeTurntableCaptureChecks {
                     && !plan.prism().contains(SEED), "outward prism " + normal);
             need(plan.blocks().cells().size() == 2 && plan.blocks().matches(world, Objects::equals),
                     "exact before image " + normal);
+            need(plan.atHeading(1).matches(world, Objects::equals), "one-cell quarter turn " + normal);
             need(((NativeSurfaceEntity) world.getBlockEntity(SEED)).claimedOwner() == null, "read-only Surface scan");
             world.setBlock(source, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
         }
@@ -65,10 +67,36 @@ public final class NativeTurntableCaptureChecks {
                 "No Turntable capture adapter");
         need(world.getBlockState(source).is(Blocks.CHEST), "unsupported tile stays installed");
         refused(() -> NativeTurntableCapture.prepare(world, SEED.west(), identity, Direction.EAST, 17, actor),
-                "Surface volume bounds");
+                "Scan height must be");
         world.setBlock(SEED.east(), world.getBlockState(SEED), Block.UPDATE_ALL);
         refused(() -> NativeTurntableCapture.prepare(world, SEED.west(), identity, Direction.EAST, 1, actor),
                 "filled square");
+        world.setBlock(SEED.south(), world.getBlockState(SEED), Block.UPDATE_ALL);
+        world.setBlock(SEED.south().east(), world.getBlockState(SEED), Block.UPDATE_ALL);
+        world.setBlock(source, Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
+        sign = (SignBlockEntity) world.getBlockEntity(source);
+        sign.updateText(text -> text.setMessage(0, Component.literal("Turn the whole sign")), true);
+        var square = NativeTurntableCapture.prepare(world, SEED.west(), identity, Direction.EAST, 1, actor);
+        var encoded = square.save();
+        var decoded = NativeTurntableCapture.read(world.registryAccess(), encoded, SEED.west());
+        need(decoded.save().equals(encoded) && decoded.blocks().matches(world, Objects::equals),
+                "saved square and exact Sign round trip");
+        var damaged = encoded.copy();
+        damaged.putInt("Height", 2);
+        refused(() -> NativeTurntableCapture.read(world.registryAccess(), damaged, SEED.west()),
+                "Incomplete Turntable before image");
+        var turned = square.atHeading(1);
+        var result = turned.cells().stream().filter(cell -> !cell.state.isAir()).findFirst().orElseThrow();
+        var expected = sign.saveWithFullMetadata(world.registryAccess());
+        expected.putInt("x", source.east().getX());
+        need(result.pos.equals(source.east()) && result.tile().equals(expected), "quarter turn preserves sign ownership");
+        need(result.state == world.getBlockState(source).rotate(Rotation.CLOCKWISE_90), "native sign rotation");
+        need(square.blocks().matches(world, Objects::equals) && !turned.matches(world, Objects::equals),
+                "projected heading preserves the installed source");
+        for (int heading = 1; heading <= 3; heading++) {
+            var intermediate = new NativeTurntableCapture(square.surface(), square.prism(), square.atHeading(heading));
+            need(intermediate.atHeading(-heading).matches(world, Objects::equals), "endpoint inverse " + heading);
+        }
         System.out.println("[vandorlabs][turntable-capture] PASS checks=" + checks);
     }
 

@@ -1,10 +1,15 @@
 package com.vandorlabs.neoforge.surface;
 
+import com.vandorlabs.persistence.LegacyBlockPosition;
 import com.vandorlabs.surface.core.*;
 import com.vandorlabs.turntable.TurntableGeometry;
 import java.util.*;
 import java.util.function.Predicate;
 import net.minecraft.core.*;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.ListTag;
+import net.minecraft.nbt.LongTag;
+import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.Level;
 
 /** Native positions are adapters over the same exact filled-area policy as Source. */
@@ -33,6 +38,36 @@ public final class NativeSurfaceLayout {
             public BlockPos offset(BlockPos cell,int x,int y,int z){return cell.offset(x,y,z);}
         };
         return SurfaceDiscovery.connected(access,seed.immutable(),allowed,artwork);
+    }
+
+    public CompoundTag save() {
+        var tag = new CompoundTag();
+        tag.putInt("Normal", normal.get3DDataValue());
+        var encoded = new ListTag();
+        for (var pos : cells) encoded.add(LongTag.valueOf(LegacyBlockPosition.pack(pos.getX(), pos.getY(), pos.getZ())));
+        tag.put("Cells", encoded);
+        return tag;
+    }
+
+    public static NativeSurfaceLayout read(CompoundTag tag, BlockPos controller, boolean rectangle) {
+        if (!tag.getAllKeys().equals(Set.of("Normal", "Cells")) || !tag.contains("Normal", Tag.TAG_INT)
+                || tag.getInt("Normal") < 0 || tag.getInt("Normal") > 5
+                || !(tag.get("Cells") instanceof ListTag list) || list.isEmpty()
+                || list.size() > SurfaceLayout.MAX_CELLS || list.getElementType() != Tag.TAG_LONG) {
+            throw new IllegalArgumentException("Saved Surface layout schema");
+        }
+        var cells = new ArrayList<BlockPos>(list.size());
+        for (Tag entry : list) {
+            long packed = ((LongTag) entry).getAsLong();
+            var pos = new BlockPos(LegacyBlockPosition.x(packed), LegacyBlockPosition.y(packed), LegacyBlockPosition.z(packed));
+            if (Math.abs((long) pos.getX() - controller.getX()) > 64
+                    || Math.abs((long) pos.getY() - controller.getY()) > 64
+                    || Math.abs((long) pos.getZ() - controller.getZ()) > 64) {
+                throw new IllegalArgumentException("Saved Surface layout footprint");
+            }
+            cells.add(pos);
+        }
+        return new NativeSurfaceLayout(cells, Direction.from3DDataValue(tag.getInt("Normal")), rectangle);
     }
 
     public static SurfaceLayout.Cell point(BlockPos pos){return new SurfaceLayout.Cell(pos.getX(),pos.getY(),pos.getZ());}

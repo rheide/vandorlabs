@@ -40,6 +40,24 @@ public final class TurntableGeometry {
                 y*c+(normal.z*x-normal.x*z)*s+normal.y*dot*(1-c),
                 z*c+(normal.x*y-normal.y*x)*s+normal.z*dot*(1-c)};
     }
+    /** Project a block center to the grid at a supported quarter-turn heading. */
+    public static int[] rotateCell(int x,int y,int z,double pivotX,double pivotY,double pivotZ,Face normal,int quarter){
+        double dx=x+.5-pivotX,dy=y+.5-pivotY,dz=z+.5-pivotZ;
+        double u=dx*normal.ux+dy*normal.uy+dz*normal.uz;
+        double v=dx*normal.vx+dy*normal.vy+dz*normal.vz;
+        double depth=dx*normal.x+dy*normal.y+dz*normal.z;
+        switch(Math.floorMod(quarter,4)){
+            case 1: double before=u;u=-v;v=before;break;
+            case 2: u=-u;v=-v;break;
+            case 3: double original=u;u=v;v=-original;break;
+            default: break;
+        }
+        return new int[]{
+            Math.toIntExact(Math.round(normal.ux*u+normal.vx*v+normal.x*depth+pivotX-.5)),
+            Math.toIntExact(Math.round(normal.uy*u+normal.vy*v+normal.y*depth+pivotY-.5)),
+            Math.toIntExact(Math.round(normal.uz*u+normal.vz*v+normal.z*depth+pivotZ-.5))
+        };
+    }
     public static double[] bounds(double[] box,Face normal,double degrees){
         double[] result={Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,Double.POSITIVE_INFINITY,
                 Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY,Double.NEGATIVE_INFINITY};
