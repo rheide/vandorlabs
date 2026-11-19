@@ -13,6 +13,9 @@ import net.minecraft.client.gui.components.AbstractWidget;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
+import net.minecraft.resources.ResourceLocation;
+import net.minecraft.world.item.CreativeModeTabs;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.GameType;
@@ -52,6 +55,13 @@ public final class NativeTurntablePlayerChecks {
                         || !mc.player.getMainHandItem().isEmpty() || mc.player.getInventory().selected != 0
                         || mc.player.position().distanceToSqr(NativeTurntablePlayerFixture.ACTOR) > .02
                         || !(mc.level.getBlockEntity(root) instanceof NativeTurntableEntity)) return;
+                CreativeModeTabs.tryRebuildTabContents(mc.level.enabledFeatures(), false, mc.level.registryAccess());
+                var tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(ResourceLocation.parse("vandorlabs:vandorlabs"));
+                var item = NativeTurntableBindings.block.asItem();
+                if (tab.getDisplayItems().stream().filter(stack -> stack.is(item)).count() != 1
+                        || CreativeModeTabs.searchTab().getDisplayItems().stream().filter(stack -> stack.is(item)).count() != 1) {
+                    throw new AssertionError("Experimental Turntable must appear once in Creative and search");
+                }
                 use(mc);
                 stage++;
             }

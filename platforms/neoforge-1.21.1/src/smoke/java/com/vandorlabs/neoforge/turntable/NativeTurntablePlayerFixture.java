@@ -50,6 +50,9 @@ public final class NativeTurntablePlayerFixture {
     @SubscribeEvent public static void started(ServerStartedEvent event) {
         if (!enabled()) return;
         var world = event.getServer().overworld();
+        if (world.getRecipeManager().byKey(NativeTurntableBindings.ID).isEmpty()) {
+            throw new AssertionError("Experimental Turntable recipe unavailable");
+        }
         world.getChunkAt(ROOT);
         world.getChunkAt(SOURCE);
         world.setBlockAndUpdate(BlockPos.containing(ACTOR).below(), Blocks.STONE.defaultBlockState());

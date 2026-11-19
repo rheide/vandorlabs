@@ -8,7 +8,9 @@ rotate the captured blocks by a quarter turn, then use Restore to place them
 back in the world. The captured payload stays in the controller until Restore
 completes. Loading a moving controller resumes its saved angle and target.
 Interaction with captured blocks remains open.
-Programmable Surfaces are available in normal registration.
+With the property enabled, the controller appears in the Vandor Labs Creative
+tab. In Survival, craft it with Redstone Dust surrounded by eight Programmable
+Matter Ingots. Programmable Surfaces are available in normal registration.
 
 Open Redstone to set the scan and rotation modes, the initial direction and
 the auto-snap tolerance. A bank triggers only when all of its channels are

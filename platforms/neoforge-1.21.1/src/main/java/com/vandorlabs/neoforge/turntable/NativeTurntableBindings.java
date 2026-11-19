@@ -16,6 +16,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.BuildCreativeModeTabContentsEvent;
 import net.neoforged.neoforge.registries.RegisterEvent;
 
 /** Development binding for the Turntable ownership protocol. */
@@ -45,6 +46,12 @@ public final class NativeTurntableBindings {
                     (window, inventory, buffer) -> new NativeTurntableMenu(window, inventory, buffer.readBlockPos(), buffer.readUUID()));
             entries.register(ID, menu);
         });
+    }
+
+    @SubscribeEvent public static void creative(BuildCreativeModeTabContentsEvent event) {
+        if (block != null && event.getTabKey().location().equals(ResourceLocation.fromNamespaceAndPath("vandorlabs", "vandorlabs"))) {
+            event.accept(block);
+        }
     }
 
     @SubscribeEvent public static void packets(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
