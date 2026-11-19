@@ -1,8 +1,5 @@
 package com.vandorlabs.gear.core;
 
-import java.util.Collections;
-import java.util.IdentityHashMap;
-import java.util.Set;
 import java.util.function.Supplier;
 
 /** The selected one-way connection through an arm. The arm owns no resource buffer. */
@@ -12,7 +9,11 @@ public enum ArmResource {
     public static final String CHOICE = "ResourceTransfer";
     public static final String SAVED = "ArmResourceTransfer";
     private static final ArmResource[] MODES = values();
-    private static final ThreadLocal<Set<Object>> ROUTE = new ThreadLocal<>();
+    private static final ThreadLocal<Route> ROUTE = ThreadLocal.withInitial(Route::new);
+    private static final class Route {
+        final Object[] inputs = new Object[32];
+        int depth;
+    }
     private final String label;
 
     ArmResource(String label) {
@@ -35,17 +36,16 @@ public enum ArmResource {
 
     /** A downstream pipe may call back into this connection, directly or through another arm. */
     public static <T> T forward(Object input, T unavailable, Supplier<T> delivery) {
-        Set<Object> route = ROUTE.get();
-        if (route == null) {
-            route = Collections.newSetFromMap(new IdentityHashMap<>());
-            ROUTE.set(route);
+        Route route = ROUTE.get();
+        if (route.depth == route.inputs.length) return unavailable;
+        for (int index=0;index<route.depth;index++) {
+            if (route.inputs[index] == input) return unavailable;
         }
-        if (route.size() >= 32 || !route.add(input)) return unavailable;
+        route.inputs[route.depth++] = input;
         try {
             return delivery.get();
         } finally {
-            route.remove(input);
-            if (route.isEmpty()) ROUTE.remove();
+            route.inputs[--route.depth] = null;
         }
     }
 }

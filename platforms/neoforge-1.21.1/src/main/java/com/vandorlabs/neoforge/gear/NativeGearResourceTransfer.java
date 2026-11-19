@@ -24,6 +24,7 @@ final class NativeGearResourceTransfer {
     private IFluidHandler fluid;
     private IItemHandler items;
     private GearMotion.Pose mappedPose;
+    private Direction mappedMount;
     private NativeGearPayload.Transform frame;
 
     NativeGearResourceTransfer(NativeGearEntity input) {
@@ -72,9 +73,10 @@ final class NativeGearResourceTransfer {
 
     private NativeGearPayload.Transform frame(NativeGearEntity arm) {
         var pose = arm.pose(arm.progress());
-        if (mappedPose != pose) {
+        if (mappedPose != pose || mappedMount != arm.mount()) {
             frame = NativeGearPayload.frame(arm,arm.progress());
             mappedPose = pose;
+            mappedMount = arm.mount();
         }
         return frame;
     }
