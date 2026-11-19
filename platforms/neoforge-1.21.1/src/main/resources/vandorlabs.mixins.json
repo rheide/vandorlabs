@@ -35,7 +35,8 @@
     "NativeGearEntityStoreCapture",
     "NativeGearHopperItemGuard",
     "NativeBuilderLevelGuard",
-    "NativeObserverLevelGuard"
+    "NativeObserverLevelGuard",
+    "NativeWorldEditBlockTransform"
   ],
   "injectors": {
     "defaultRequire": 1
