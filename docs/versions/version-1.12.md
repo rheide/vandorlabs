@@ -5,13 +5,14 @@ Programmable Surface pads and put a material chest behind the controller for
 Survival copying. The settings dialog shows refused blocks, and output becomes
 visible to connected players when the transfer completes. Double chests copy
 with both halves and their contents. Complete stationary Navigation Table
-groups retain both their Navigation Chip and module mounts. [Copy Controller guide](../copy-controller.md)
+groups retain both their Navigation Chip and module mounts. Complete Survey
+Dish and Sentinel Array frames get independent ownership. [Copy Controller guide](../copy-controller.md)
 
 The **Assembly Press** makes Data Chips and Access Cards by default. Insert a
 Catalog Chip that lists the recipe to produce Battery, Autopilot, or Navigation
 Data Modules. Existing Navigation Data Module jobs keep their progress when the
-world loads. The **Synthesis Tower** can fabricate a Ramp Controller and the Maxwell and Meridian drive Cores with a
-permitting Catalog Chip. The **Enclosed Gantry** makes eight mechanical blocks, including
+world loads. With a permitting Catalog Chip, the **Synthesis Tower** can
+fabricate a Ramp Controller and the Maxwell, Meridian and Oculus drive Cores. The **Enclosed Gantry** makes eight mechanical blocks, including
 arm hinges, wheels and resource ports. Both machines render work at their
 authored beds and let you collect completed products there. [NeoForge builder guide](../builders-1.21.md)
 

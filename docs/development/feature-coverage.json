@@ -645,7 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Port the Oculus and Vector Fold drives and Paladyne and Seyr navigation computers, and complete the Tower catalog.",
+        "Port the Vector Fold drive and Paladyne and Seyr navigation computers, and complete the Tower catalog.",
         "Add arm carrying and Copy Controller support for formed builder machines.",
         "Complete native release and shader acceptance."
       ],
@@ -663,7 +663,7 @@
         "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation.",
         "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry.",
         "Press and Gantry use authored fabrication beds, scanner beams and connected-player pickup and battery interactions.",
-        "Maxwell (Longburn) and Seyr Meridian form with native Redstone and display controls. The Tower fabricates both cores with a permitting Catalog Chip."
+        "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. The Tower fabricates all three cores with a permitting Catalog Chip."
       ]
     },
     {
@@ -1066,14 +1066,15 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Expand supported targets, including observers, owned Screen controls and formed builders.",
+        "Expand supported targets, including owned Screen controls and formed builders.",
         "Expand live coverage of joined Navigation Table layouts beyond the tested two-cell flat group."
       ],
       "implemented": [
         "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair.",
         "The public Copy Controller supports dedicated configuration, resource-priced Survival copying, post-commit client publication, and focused rollback and partial-save recovery.",
         "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback.",
-        "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs."
+        "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs.",
+        "Complete stationary Survey Dish and Sentinel Array frames copy at exact frame cost and get independent ownership."
       ],
       "modern_registered_block_ids": [
         "copy_controller"

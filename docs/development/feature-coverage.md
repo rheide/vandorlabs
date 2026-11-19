@@ -25,7 +25,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Maxwell and Meridian, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Maxwell, Meridian and Oculus, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
@@ -39,7 +39,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | native JEI, WorldEdit wedge rotations, selected resource ports and experimental static Dynmap renderers | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
-| Copy Controllers and shared surfaces | public Surfaces and transactional Copy Controllers, including complete stationary Navigation Table groups | unimplemented | non-vehicle first |
+| Copy Controllers and shared surfaces | public Surfaces and transactional Copy Controllers, including complete stationary Navigation Table groups and Survey Dish and Sentinel Array frames | unimplemented | non-vehicle first |
 | Standalone Extenders and rotating arms | partial (regular/Large joined and independent arms enabled) | unimplemented | non-vehicle first |
 | Track assemblies | partial (canonical Track enabled; vehicle integration deferred) | unimplemented | non-vehicle first |
 
