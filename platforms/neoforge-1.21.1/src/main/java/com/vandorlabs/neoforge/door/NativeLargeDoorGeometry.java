@@ -50,7 +50,12 @@ public final class NativeLargeDoorGeometry {
         var unit=new AABB(pos);
         List<AABB> collisions=new ArrayList<>(),local=new ArrayList<>();AABB outline=null;
         for(var b:s.boxes){if(b.intersects(partition)){var clipped=b.intersect(partition);collisions.add(clipped);local.add(clipped.move(-pos.getX(),-pos.getY(),-pos.getZ()));}if(b.intersects(unit)){var clipped=b.intersect(unit);outline=outline==null?clipped:outline.minmax(clipped);}}
-        outline=outline==null?new AABB(0,0,0,1,1,1):outline.move(-pos.getX(),-pos.getY(),-pos.getZ());var collision=NativeVoxelShapes.union(local,SNAPSHOT_BUDGET);var selection=NativeVoxelShapes.union(List.of(outline),SNAPSHOT_BUDGET);int cost=128+collisions.size()*80+NativeVoxelShapes.retainedCost(collision,local.size())+NativeVoxelShapes.retainedCost(selection,1);return new Part(pos,collisions,outline,collision,selection,cost);
+        boolean clearAperture=outline==null&&s.key.horizontal()&&s.key.open();
+        outline=outline==null?new AABB(0,0,0,1,1,1):outline.move(-pos.getX(),-pos.getY(),-pos.getZ());
+        var collision=NativeVoxelShapes.union(local,SNAPSHOT_BUDGET);
+        var selection=clearAperture?net.minecraft.world.phys.shapes.Shapes.empty():NativeVoxelShapes.union(List.of(outline),SNAPSHOT_BUDGET);
+        int cost=128+collisions.size()*80+NativeVoxelShapes.retainedCost(collision,local.size())+NativeVoxelShapes.retainedCost(selection,clearAperture?0:1);
+        return new Part(pos,collisions,outline,collision,selection,cost);
     }
     private static void clipAxis(double[] min,double[] max,BlockPos cell,Direction axis,int part){
         double low=part==0?Double.NEGATIVE_INFINITY:0;
