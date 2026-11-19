@@ -24,6 +24,6 @@ public final class NativeTrapdoorMenu extends AbstractContainerMenu {
     public static boolean apply(ServerPlayer player,NativeTrapdoorEdit edit){
         if(!player.getServer().isSameThread()||!(player.containerMenu instanceof NativeTrapdoorMenu menu)
                 ||menu.containerId!=edit.window()||!menu.stillValid(player))return false;
-        return menu.tile.configure(player,edit.settings(),edit.inverted(),Direction.from2DDataValue(edit.settings().facing()));
+        return menu.tile.configure(player,edit.settings(),edit.inverted(),Direction.from2DDataValue(edit.settings().facing()),edit.groupOpening());
     }
 }

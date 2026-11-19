@@ -2,6 +2,10 @@
 
 ## 1.12.0 (in development)
 
+- Leave the rear aperture of Canopy and Long Canopy open while retaining the frame.
+- Choose a center split or a shared near or far hinge for joined Programmable Trapdoors.
+- Keep Segmented Door animations independent when WorldEdit pastes a door at another location.
+
 - Open Large Doors from a horizontal seam with Sliding Split, or join compatible doors into a 3×6, 6×3, or 6×6 opening.
 - Show the selected RF, fluid, or item Port bar on the Arm base. The bar lights when that column transfers resources.
 

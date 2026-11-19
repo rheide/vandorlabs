@@ -94,7 +94,7 @@ final class CanopyReleaseRuntimeChecks {
             }
             require(farUses>0,"opened tips beyond the anchor interaction limit are exercised");
             require(!new LargeCanopySettings().slideForward,"direction defaults backward");
-            mountClearance();opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);button(world,player);seat(world);
+            mountClearance();opening(world,player);backToBack(world,player);CanopySurfaceRuntimeChecks.run();copyFinishes(world,player);slidingTrapdoors(world,player);trapdoorGroupOpening(world);button(world,player);seat(world);
         }finally{clear(world);player.setHeldItem(EnumHand.MAIN_HAND,held);player.setSneaking(sneak);player.rotationYaw=yaw;player.rotationPitch=pitch;player.setPosition(originalPosition.x,originalPosition.y,originalPosition.z);}
         System.out.println("[vandorlabs][reprolab] canopy-2.0 PASS six-face large mounts hinges=4 closed-glass-occlusion exact-footprint removal opening-modes slide-directions angles ceiling joins channels copy floor-button pilot-armrests ordinary-sliding-selection far-surface-use="+farUses+" max-render-pick-gap="+maxRearRenderGap);
     }
@@ -142,7 +142,7 @@ final class CanopyReleaseRuntimeChecks {
     }
     private static void backToBack(World world,EntityPlayerMP player){
         BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:canopy");
-        for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int mount=0;mount<2;mount++)for(double x:new double[]{.25,.75}){
+        for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int mount=0;mount<2;mount++)for(double x:new double[]{.03125,.96875}){
             clear(world);IBlockState state=block.getDefaultState().withProperty(BlockCanopy.FACING,facing);world.setBlockState(BASE,state,2);
             ItemStack item=new ItemStack(block,2);NBTTagCompound tag=new NBTTagCompound();tag.setInteger("CanopyMount",mount);item.setTagCompound(tag);
             block.onBlockPlacedBy(world,BASE,state,player,item);
@@ -150,7 +150,10 @@ final class CanopyReleaseRuntimeChecks {
             Vec3d target=CanopyMesh.rotate(new Vec3d(x,.5,2),facing).add(new Vec3d(BASE)),look=target.subtract(eye).normalize();
             player.setPosition(eye.x,eye.y-player.getEyeHeight(),eye.z);player.rotationYaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z));player.rotationPitch=0;
             player.setHeldItem(EnumHand.MAIN_HAND,item);
-            TileEntityCanopy first=TileEntityCanopy.at(world,BASE);RayTraceResult hit=first.trace(eye,target.add(look));require(hit!=null,"rear glass can be selected");
+            TileEntityCanopy first=TileEntityCanopy.at(world,BASE);RayTraceResult hit=first.trace(eye,target.add(look));require(hit!=null,"rear rim can be selected");
+            Vec3d centerStart=CanopyMesh.rotate(new Vec3d(.5,.5,2.75),facing).add(new Vec3d(BASE));
+            Vec3d centerEnd=CanopyMesh.rotate(new Vec3d(.5,.5,1.75),facing).add(new Vec3d(BASE));
+            require(first.trace(centerStart,centerEnd)==null,"standalone opening canopy has a clear rear aperture");
             Vec3d local=hit.hitVec.subtract(new Vec3d(hit.getBlockPos()));
             EnumActionResult result=player.interactionManager.processRightClickBlock(player,world,item,EnumHand.MAIN_HAND,hit.getBlockPos(),hit.sideHit,(float)local.x,(float)local.y,(float)local.z);
             TileEntityCanopy second=TileEntityCanopy.at(world,BASE.offset(facing.getOpposite(),2));
@@ -313,6 +316,35 @@ final class CanopyReleaseRuntimeChecks {
             BlockProgrammableTrapdoor block=(BlockProgrammableTrapdoor)world.getBlockState(BASE).getBlock();block.onBlockActivated(world,BASE,world.getBlockState(BASE),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
             require(!world.getBlockState(BASE).getValue(net.minecraft.block.BlockTrapDoor.OPEN),"moved selection closes the original trapdoor owner");
         }
+    }
+    private static void trapdoorGroupOpening(World world){
+        for(EnumFacing along:new EnumFacing[]{EnumFacing.EAST,EnumFacing.SOUTH}){
+            clear(world);
+            TileEntityProgrammableTrapdoor[] leaves=new TileEntityProgrammableTrapdoor[3];
+            for(int i=0;i<3;i++){
+                leaves[i]=TrapdoorGallery.place(world,BASE.offset(along,i),false,0,0,false,along);
+                leaves[i].completeSquare(null,ItemStack.EMPTY);
+            }
+            TileEntityProgrammableTrapdoor selected=leaves[1];
+            require(selected.group().size()==3,"three trapdoors form one group");
+            for(int mode:new int[]{1,2,0}){
+                selected.setGroupOpening(mode);
+                require(selected.groupOpening()==mode,"opening choice resolves consistently");
+                selected.requestOpen(true);
+                for(int i=0;i<3;i++){
+                    boolean high=mode==2||mode==0&&i==2;
+                    EnumFacing expected=high?along:along.getOpposite();
+                    require(world.getBlockState(leaves[i].getPos()).getValue(BlockProgrammableTrapdoor.FACING)==expected,
+                            "trapdoor opens toward its selected hinge edge");
+                    require(world.getBlockState(leaves[i].getPos()).getValue(BlockProgrammableTrapdoor.OPEN),
+                            "one activation opens all three leaves");
+                    double hinge=1D/16-(high?2-i:i);
+                    require(Math.abs(leaves[i].motionHinge()-hinge)<1E-9,"joined leaf shares the outer pivot");
+                }
+                selected.requestOpen(false);
+            }
+        }
+        System.out.println("[vandorlabs][reprolab] trapdoor-group-opening PASS three leaves both axes center/near/far");
     }
     private static void button(World world,EntityPlayerMP player){
         for(int channel:new int[]{0,29021}) {

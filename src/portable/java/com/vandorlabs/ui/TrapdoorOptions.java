@@ -17,6 +17,9 @@ public final class TrapdoorOptions {
                 : "Pos: "+(position==0 ? "Bottom" : position==1 ? "Middle" : "Top");
     }
     public static String heightLabel(int position){return "Height: "+(position==2 ? "Half" : "Full");}
+    public static String groupOpeningLabel(int mode){
+        return mode==1?"Opening: Near edge":mode==2?"Opening: Far edge":"Opening: Center split";
+    }
     public static String hingeLabel(int side){return "Hinge: "+(side==0 ? "Auto" : side==1 ? "Left" : "Right");}
     public static String rotationLabel(boolean flipped){return "Rotation: "+(flipped ? "Reverse" : "Normal");}
     public static final class Motion {

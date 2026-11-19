@@ -11,6 +11,47 @@ import java.util.*;
 /** Loaded-only rectangular surface discovery. Membership is saved, never polled per tick. */
 final class TrapdoorAssemblies {
     private TrapdoorAssemblies() { }
+    private static EnumFacing facing(TileEntityProgrammableTrapdoor leaf){
+        return leaf.getWorld().getBlockState(leaf.getPos()).getValue(BlockProgrammableTrapdoor.FACING);
+    }
+    static int opening(TileEntityProgrammableTrapdoor root,List<TileEntityProgrammableTrapdoor> leaves){
+        if(root.assembly.isEmpty()||leaves.size()<2)return 0;
+        EnumFacing facing=facing(root);
+        for(TileEntityProgrammableTrapdoor leaf:leaves)if(facing(leaf)!=facing)return 0;
+        return facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?2:1;
+    }
+    static void setOpening(TileEntityProgrammableTrapdoor root,List<TileEntityProgrammableTrapdoor> leaves,int mode){
+        if(root instanceof TileEntityProgrammableDiagonalTrapdoor||leaves.size()<2||mode<0||mode>=3)return;
+        EnumFacing.Axis axis=facing(root).getAxis();
+        final EnumFacing.Axis firstAxis=axis;
+        if(leaves.stream().allMatch(leaf->coordinate(leaf.getPos(),firstAxis)==coordinate(root.getPos(),firstAxis)))
+            axis=axis==EnumFacing.Axis.X?EnumFacing.Axis.Z:EnumFacing.Axis.X;
+        final EnumFacing.Axis span=axis;
+        int min=leaves.stream().mapToInt(leaf->coordinate(leaf.getPos(),span)).min().getAsInt();
+        int max=leaves.stream().mapToInt(leaf->coordinate(leaf.getPos(),span)).max().getAsInt();
+        List<BlockPos> positions=new ArrayList<>();
+        for(TileEntityProgrammableTrapdoor leaf:leaves)positions.add(leaf.getPos());
+        Collections.sort(positions);
+        List<BlockPos> members=Collections.unmodifiableList(positions);
+        EnumFacing positive=span==EnumFacing.Axis.X?EnumFacing.EAST:EnumFacing.SOUTH;
+        TileEntityProgrammableTrapdoor.configureGroup(leaves,()->{
+            for(TileEntityProgrammableTrapdoor leaf:leaves){
+                leaf.squareOrigin=null;leaf.partner=null;leaf.assembly=members;
+                updateOpening(leaf,mode,coordinate(leaf.getPos(),span)-min,max-min+1,positive);
+            }
+        });
+    }
+    private static int existingOpening(TileEntityProgrammableTrapdoor reference){
+        return reference instanceof TileEntityProgrammableDiagonalTrapdoor?0:reference.groupOpening();
+    }
+    private static int coordinate(BlockPos pos,EnumFacing.Axis axis){return axis==EnumFacing.Axis.X?pos.getX():pos.getZ();}
+    private static void updateOpening(TileEntityProgrammableTrapdoor leaf,int mode,int column,int width,EnumFacing positive){
+        com.vandorlabs.render.TrapdoorGroupMotion motion=new com.vandorlabs.render.TrapdoorGroupMotion(mode,column,width);
+        leaf.assemblyHinge=motion.hinge;leaf.assemblyTravel=motion.travel;
+        leaf.getWorld().setBlockState(leaf.getPos(),leaf.getWorld().getBlockState(leaf.getPos())
+                .withProperty(BlockProgrammableTrapdoor.FACING,motion.high?positive:positive.getOpposite()),2);
+    }
+
     static boolean complete(TileEntityProgrammableTrapdoor root,EntityPlayer player,ItemStack stack) {
         boolean diagonal=root instanceof TileEntityProgrammableDiagonalTrapdoor;
         if(diagonal && root.position!=1 && connectedPatch((TileEntityProgrammableDiagonalTrapdoor)root,player,stack))return true;
@@ -110,6 +151,7 @@ final class TrapdoorAssemblies {
         TileEntityProgrammableTrapdoor reference=cells.get(new BlockPos(minX,minY,0));
         boolean open=root.getWorld().getBlockState(reference.getPos()).getValue(BlockProgrammableTrapdoor.OPEN);
         int split=(width+1)/2;
+        int mode=existingOpening(reference);
         for(Map.Entry<BlockPos,TileEntityProgrammableTrapdoor> entry:cells.entrySet()) {
             TileEntityProgrammableTrapdoor leaf=entry.getValue();int col=entry.getKey().getX()-minX;
             boolean high=col>=split;int distance=high?width-1-col:col;
@@ -122,8 +164,7 @@ final class TrapdoorAssemblies {
                 d.setOpeningSide(reversed);leaf.assemblyHinge=reversed?1+distance-1/16D:-distance+1/16D;
             } else {
                 EnumFacing direction=EnumFacing.getFacingFromVector(u.getX(),u.getY(),u.getZ());
-                root.getWorld().setBlockState(leaf.getPos(),root.getWorld().getBlockState(leaf.getPos()).withProperty(BlockProgrammableTrapdoor.FACING,high?direction:direction.getOpposite()),2);
-                leaf.assemblyHinge=-distance+com.vandorlabs.render.TrapdoorGeometry.OPEN_HINGE;
+                updateOpening(leaf,mode,col,width,direction);
             }
         }
         for(TileEntityProgrammableTrapdoor leaf:cells.values()){leaf.setRedstoneChannels(reference.getRedstoneChannels());leaf.sync();}

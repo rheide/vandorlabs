@@ -39,6 +39,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         xSize=360;ySize=240;
     }
     private int controlsX, channelLabelY;
+    private int groupOpening=-1;
     @Override protected HousingTextureList materialPicker(){return page==0?textures:null;}
     @Override public void initGui() {
         String channelText=channelField==null?channelList.toString():channelField.getText();
@@ -57,8 +58,9 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         if(diagonal())buttonList.add(new GuiButton(7,controlsX+(controlsWidth+2)/2,y,(controlsWidth-2)/2,20,heightLabel()));
         y+=22;
         buttonList.add(new GuiButton(6,controlsX,y,controlsWidth,20,layoutLabel()));y+=22;
-        GuiButton direction=new GuiButton(diagonal()?5:8,controlsX,y,diagonal()?(controlsWidth-2)/2:controlsWidth,20,diagonal()?"Flip slope":facingLabel());
-        direction.enabled=diagonal() || tile.canOffsetClosedLeaf();buttonList.add(direction);
+        boolean joined=!diagonal()&&tile.group().size()>1;
+        GuiButton direction=new GuiButton(diagonal()?5:joined?11:8,controlsX,y,diagonal()?(controlsWidth-2)/2:controlsWidth,20,diagonal()?"Flip slope":joined?TrapdoorOptions.groupOpeningLabel(groupOpening<0?tile.groupOpening():groupOpening):facingLabel());
+        direction.enabled=diagonal() || joined || tile.canOffsetClosedLeaf();buttonList.add(direction);
         if(diagonal()){GuiButton hinge=new GuiButton(10,controlsX+(controlsWidth+2)/2,y,(controlsWidth-2)/2,20,hingeLabel());hinge.enabled=!sliding;buttonList.add(hinge);}y+=22;
         if(diagonal()){GuiButton rotation=new GuiButton(9,controlsX,y,controlsWidth,20,rotationLabel());rotation.enabled=!sliding;buttonList.add(rotation);y+=22;}
         buttonList.add(new RedstoneActivationButton(3,controlsX,y,controlsWidth,trigger));y+=22;
@@ -87,7 +89,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
         tile.configureGroup(selected,position,sliding,trigger,channelList,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface);
         for(TileEntityProgrammableTrapdoor leaf:tile.group())leaf.setTextureLayout(textureLayout);
         if(diagonal()){((TileEntityProgrammableDiagonalTrapdoor)tile).setHingeSide(hingeSide);((TileEntityProgrammableDiagonalTrapdoor)tile).setRotationFlipped(rotationFlipped);}
-        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout).withRotationFlipped(rotationFlipped).withHingeSide(hingeSide));
+        PacketHandler.INSTANCE.sendToServer(new MessageProgrammableTrapdoor(tile.getPos(),selected,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall,slideOverSurface).withChannels(channelList).withTextureLayout(textureLayout).withRotationFlipped(rotationFlipped).withHingeSide(hingeSide).withGroupOpening(groupOpening));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id==100||button.id==101){page=button.id-100;initGui();return;}
@@ -103,13 +105,14 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
 
         }
         else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=GuiOptionCycle.next(facing);button.displayString=facingLabel();}
+        else if(button.id==11){groupOpening=GuiOptionCycle.next(groupOpening<0?tile.groupOpening():groupOpening,3);button.displayString=TrapdoorOptions.groupOpeningLabel(groupOpening);}
         else if(button.id==9){rotationFlipped=!rotationFlipped;button.displayString=rotationLabel();}
         else if(button.id==10){hingeSide=GuiOptionCycle.next(hingeSide,3);button.displayString=hingeLabel();}
         for(GuiButton control:buttonList)if(control.id==9 || control.id==10)control.enabled=!sliding;
         send();
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2,3,5,6,7,8,9,10))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,1,2,3,5,6,7,8,9,10,11))return;
         if(page==1)channelField.mouseClicked(x,y,button);int before=textures.selected();
         if(page==0&&textures.click(x,y,button)){if(before!=textures.selected())send();return;}super.mouseClicked(x,y,button);
     }

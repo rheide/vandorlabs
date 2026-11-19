@@ -50,6 +50,13 @@ A complete horizontal 2×2 square at the same height becomes one four-leaf
 group, regardless of placement order. The two rows or columns open toward
 opposite sides. Right-clicking any leaf toggles all four, and redstone at any
 member controls the whole group. Complete rectangular areas through 8×8 also form a group, including 2×4 and 5×2. The two halves slide clear or rotate around their outer edges as joined panels. Incomplete areas keep their existing smaller groups; completing the rectangle joins them.
+
+Use **Opening** on the General tab to choose **Center split**, **Near edge**, or
+**Far edge** for a joined group. Center split opens the two sides away from the
+nearest seam between blocks, so a three-block span divides into two leaves and
+one leaf. The edge settings move the complete group together around one hinge
+or in one sliding direction. Near selects the west or north edge of the travel
+axis. Far selects the opposing east or south edge.
 Breaking a leaf removes the square link; surviving smaller groups remain usable.
 
 Configuration and Duplifier applications update the loaded group together.

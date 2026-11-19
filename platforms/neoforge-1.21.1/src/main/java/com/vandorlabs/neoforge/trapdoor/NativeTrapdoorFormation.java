@@ -13,6 +13,27 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 /** Loaded-only released placement discovery. Install every member before publishing any observer. */
 public final class NativeTrapdoorFormation {
  private NativeTrapdoorFormation(){}
+ static int opening(NativeTrapdoorEntity root,List<NativeTrapdoorEntity> members) {
+  if(root.links().assembly().isEmpty()||members.size()<2)return 0;
+  Direction facing=root.facing();
+  return members.stream().allMatch(tile->tile.facing()==facing)?(facing.getAxisDirection()==Direction.AxisDirection.POSITIVE?2:1):0;
+ }
+ static void setOpening(NativeTrapdoorEntity root,List<NativeTrapdoorEntity> members,int mode) {
+  if(root.diagonal()||members.size()<2||mode<0||mode>=3)return;
+  Direction original=root.facing();
+  Direction along=members.stream().allMatch(tile->axis(tile.position(),original)==axis(root.position(),original))
+    ?original.getClockWise():original;
+  Direction positive=along.getAxis()==Direction.Axis.X?Direction.EAST:Direction.SOUTH;
+  int min=members.stream().mapToInt(tile->axis(tile.position(),positive)).min().orElseThrow();
+  int max=members.stream().mapToInt(tile->axis(tile.position(),positive)).max().orElseThrow();
+  var cells=members.stream().map(tile->tile.position().immutable()).sorted().toList();
+  for(var tile:members)updateOpening(tile,mode,axis(tile.position(),positive)-min,max-min+1,positive,cells);
+ }
+ private static void updateOpening(NativeTrapdoorEntity tile,int mode,int column,int width,Direction positive,List<BlockPos> members){
+  var motion=new com.vandorlabs.render.TrapdoorGroupMotion(mode,column,width);
+  tile.formationFacing(motion.high?positive:positive.getOpposite());
+  links(tile,null,null,members,motion.hinge,motion.travel,tile.links().groupFacing(),false);
+ }
  private static final Direction[] REGULAR={Direction.SOUTH,Direction.WEST,Direction.NORTH,Direction.EAST};
  private static final Direction[] DIAGONAL={Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST};
  private static int axis(BlockPos p,Direction face){return p.getX()*face.getStepX()+p.getY()*face.getStepY()+p.getZ()*face.getStepZ();}
@@ -50,9 +71,9 @@ public final class NativeTrapdoorFormation {
  }
  private static boolean discover(NativeTrapdoorEntity root,Player player,ItemStack stack,BlockPos u,BlockPos v,boolean stagger,Set<NativeTrapdoorEntity> changed){var cells=new HashMap<BlockPos,NativeTrapdoorEntity>();var pending=new ArrayDeque<BlockPos>();pending.add(BlockPos.ZERO);int minX=0,maxX=0,minY=0,maxY=0;
   while(!pending.isEmpty()){var coordinate=pending.removeFirst();if(cells.containsKey(coordinate))continue;if(Math.abs(coordinate.getX())>8||Math.abs(coordinate.getY())>8)return false;var at=root.position().offset(u.getX()*coordinate.getX()+v.getX()*coordinate.getY(),u.getY()*coordinate.getX()+v.getY()*coordinate.getY(),u.getZ()*coordinate.getX()+v.getZ()*coordinate.getY());if(!NativeTrapdoorEntity.loaded(root.getLevel(),at))continue;var leaf=NativeTrapdoorEntity.at(root.getLevel(),at);if(leaf==null||!compatible(root,leaf))continue;if(!permitted(root,at,player,Direction.UP,stack))return false;cells.put(coordinate,leaf);if(cells.size()>64)return false;minX=Math.min(minX,coordinate.getX());maxX=Math.max(maxX,coordinate.getX());minY=Math.min(minY,coordinate.getY());maxY=Math.max(maxY,coordinate.getY());pending.add(coordinate.east());pending.add(coordinate.west());pending.add(coordinate.above());pending.add(coordinate.below());}
-  int width=maxX-minX+1,height=maxY-minY+1;if(stagger&&height<2||width>8||height>8||cells.size()!=width*height||cells.size()<2||!stagger&&width<=2&&height<=2)return false;var members=new ArrayList<BlockPos>();for(int row=minY;row<=maxY;row++)for(int col=minX;col<=maxX;col++)members.add(cells.get(new BlockPos(col,row,0)).position().immutable());var shared=List.copyOf(members);var reference=cells.get(new BlockPos(minX,minY,0));boolean opened=reference.open();int split=(width+1)/2;
+  int width=maxX-minX+1,height=maxY-minY+1;if(stagger&&height<2||width>8||height>8||cells.size()!=width*height||cells.size()<2||!stagger&&width<=2&&height<=2)return false;var members=new ArrayList<BlockPos>();for(int row=minY;row<=maxY;row++)for(int col=minX;col<=maxX;col++)members.add(cells.get(new BlockPos(col,row,0)).position().immutable());var shared=List.copyOf(members);var reference=cells.get(new BlockPos(minX,minY,0));boolean opened=reference.open();int split=(width+1)/2,mode=reference.diagonal()?0:opening(reference,reference.group());
   for(var entry:cells.entrySet()){var leaf=entry.getValue();int col=entry.getKey().getX()-minX;boolean high=col>=split;int distance=high?width-1-col:col;motion(leaf,reference,true,true);boolean reversed=leaf.links().reverse();double hinge;
-   if(leaf.diagonal()){var localX=leaf.facing().getClockWise();reversed=localX.getStepX()==u.getX()&&localX.getStepY()==u.getY()&&localX.getStepZ()==u.getZ()?high:!high;hinge=reversed?1+distance-1D/16:-distance+1D/16;}else{var direction=Direction.getNearest(u.getX(),u.getY(),u.getZ());leaf.formationFacing(high?direction:direction.getOpposite());hinge=-distance+1D/16;}
+   if(leaf.diagonal()){var localX=leaf.facing().getClockWise();reversed=localX.getStepX()==u.getX()&&localX.getStepY()==u.getY()&&localX.getStepZ()==u.getZ()?high:!high;hinge=reversed?1+distance-1D/16:-distance+1D/16;}else{updateOpening(leaf,mode,col,width,Direction.getNearest(u.getX(),u.getY(),u.getZ()),shared);changed.add(leaf);continue;}
    links(leaf,null,null,shared,hinge,(high?width-split:split)-1D/16,leaf.links().groupFacing(),reversed);changed.add(leaf);
   }for(var leaf:cells.values())channels(leaf,reference,changed);move(root,opened,changed);NativeTrapdoorEntity.formationPower(root,changed);return true;
  }

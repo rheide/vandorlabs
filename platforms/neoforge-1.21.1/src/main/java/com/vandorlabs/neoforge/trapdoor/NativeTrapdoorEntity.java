@@ -104,8 +104,11 @@ public class NativeTrapdoorEntity extends BlockEntity implements NativeChannelMe
         publish(all);var server=(net.minecraft.server.level.ServerLevel)level;NativeRedstoneChannels.batch(server,()->{for(var tile:all)NativeRedstoneChannels.channelsChanged(tile);});
         Set<NativeTrapdoorEntity> changed=new LinkedHashSet<>(all);for(var tile:all)for(var leaf:NativeTrapdoorLifecycle.evaluatePower(tile,access(),true,item->((NativeTrapdoorEntity)item).localPower()))changed.add((NativeTrapdoorEntity)leaf);publish(changed);return true;
     }
+    public int groupOpening(){return NativeTrapdoorFormation.opening(this,group());}
     public boolean configure(Player player,NativeTrapdoorSettings next){return configure(player,next,inverted(),null);}
-    public boolean configure(Player player,NativeTrapdoorSettings next,boolean requestedInverted,Direction hingeFacing){if(next==null||next.choices().texture<0||!ModernFinishCatalog.validChoice(next.choices().texture)||next.diagonal()!=diagonal()||!installed()||level.isClientSide)return false;var all=group();if(all.stream().anyMatch(tile->!tile.usable(player)))return false;
+    public boolean configure(Player player,NativeTrapdoorSettings next,boolean requestedInverted,Direction hingeFacing){return configure(player,next,requestedInverted,hingeFacing,-1);}
+    public boolean configure(Player player,NativeTrapdoorSettings next,boolean requestedInverted,Direction hingeFacing,int opening){if(next==null||next.choices().texture<0||!ModernFinishCatalog.validChoice(next.choices().texture)||next.diagonal()!=diagonal()||!installed()||level.isClientSide)return false;var all=group();if(all.stream().anyMatch(tile->!tile.usable(player)))return false;
+        NativeTrapdoorFormation.setOpening(this,all,opening);
         boolean flip=diagonal()&&inverted()!=requestedInverted;
         for(var tile:all){var data=next.choices();boolean cover=data.cover&&tile.canOffsetClosedLeaf()||tile.cover()&&data.cover;
             if(cover!=data.cover)data=new com.vandorlabs.persistence.TrapdoorData(data.texture,data.position,data.rawLayout,data.trigger,data.tileTexture,cover,data.sliding,data.intoWall,data.overSurface);

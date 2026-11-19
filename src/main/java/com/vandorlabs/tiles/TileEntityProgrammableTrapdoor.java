@@ -126,6 +126,8 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         requestOpen(world.getBlockState(other.pos).getValue(BlockProgrammableTrapdoor.OPEN));
         sync();other.sync(); evaluatePower(true);
     }
+    public int groupOpening() {return TrapdoorAssemblies.opening(this,group());}
+    public void setGroupOpening(int mode) {TrapdoorAssemblies.setOpening(this,group(),mode);}
     protected java.util.List<BlockPos> squareCells(BlockPos base) {
         return java.util.Arrays.asList(base,base.east(),base.south(),base.east().south());
     }

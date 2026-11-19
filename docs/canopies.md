@@ -74,7 +74,7 @@ The same ribbed material on a five-wide front window, without changing its geome
 
 Canopy Glass joins neighboring tiles at the same elevation and mounting orientation, regardless of horizontal facing. Shared glazing and perimeter rails disappear. Matching angled noses join sideways and connect to regular glass behind their complete footprint. Regular glass also opens its side towards the rear of a Canopy. Ceiling-mounted parts use the same local joins after inversion.
 
-An opening Canopy keeps its complete rear frame when joined to Canopy Glass: top crossbar, vertical uprights and bottom sill. The fixed glass also retains its own top frame at that connection, so the border stays complete when the shell moves away. Joins between fixed glass still remove their internal rails. Click the moving frame or an exposed stationary mounting rail to close the Canopy. The mounting rails remain selectable when surrounding bodywork covers the opened shell, for rear hinges and either sliding direction.
+Canopy and Long Canopy have an open rear aperture in both opening modes. The top crossbar, vertical uprights and bottom sill frame the opening. Joined fixed glass retains its own top frame at the connection, so the border stays complete when the shell moves away. Joins between fixed glass still remove their internal rails. Click the moving frame or an exposed stationary mounting rail to close the Canopy. The mounting rails remain selectable when surrounding bodywork covers the opened shell, for rear hinges and either sliding direction.
 
 | Joined shell closed | Shell slid backward |
 | --- | --- |

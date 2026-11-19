@@ -21,7 +21,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
     private final Consumer<NativeTrapdoorEdit> send;
     private final Map<Integer,Button> buttons=new LinkedHashMap<>();
     private ProgrammableDialogLayout panel;private NativeMaterialPicker picker;private EditBox channels;
-    private NativeTrapdoorSettings settings;private boolean inverted;private int tallWidth,page;
+    private NativeTrapdoorSettings settings;private boolean inverted;private int tallWidth,page,groupOpening=-1;
     private String draft;private ChannelList lastValidChannels;
     public NativeTrapdoorScreen(NativeTrapdoorMenu menu,Inventory inventory,Component title){this(menu,inventory,title,edit->PacketDistributor.sendToServer(new TrapdoorSettingsPayload(edit)));}
     public NativeTrapdoorScreen(NativeTrapdoorMenu menu,Inventory inventory,Component title,Consumer<NativeTrapdoorEdit> send){
@@ -53,7 +53,10 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
             option(2,x,y,diagonal()?half:w,TrapdoorOptions.positionLabel(diagonal(),c.position),!diagonal()||c.position!=2);
             if(diagonal())option(7,x+(w+2)/2,y,half,TrapdoorOptions.heightLabel(c.position),true);y+=22;
             option(6,x,y,w,"Texture: "+TextureLayoutMode.label(c.layout()),true);y+=22;
-            option(diagonal()?5:8,x,y,diagonal()?half:w,diagonal()?"Flip slope":"Hinge: "+net.minecraft.core.Direction.from2DDataValue(settings.facing()).getName(),diagonal()||menu.tile.canOffsetClosedLeaf());
+            boolean joined=!diagonal()&&menu.tile.group().size()>1;
+            String hinge=joined?TrapdoorOptions.groupOpeningLabel(groupOpening<0?menu.tile.groupOpening():groupOpening)
+                    :"Hinge: "+net.minecraft.core.Direction.from2DDataValue(settings.facing()).getName();
+            option(diagonal()?5:joined?11:8,x,y,diagonal()?half:w,diagonal()?"Flip slope":hinge,diagonal()||joined||menu.tile.canOffsetClosedLeaf());
             if(diagonal())option(10,x+(w+2)/2,y,half,TrapdoorOptions.hingeLabel(settings.hingeSide()),!c.sliding);y+=22;
             if(diagonal())option(9,x,y,w,TrapdoorOptions.rotationLabel(settings.rotationFlipped()),!c.sliding);
             picker.layout(panel.listX,panel.top+64,panel.listWidth,Math.max(2,(panel.height-92)/ProgrammableDialogLayout.ROW_HEIGHT),center);addRenderableWidget(picker.searchField());
@@ -63,7 +66,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
         option(4,panel.controlsX,panel.top+panel.height-26,154,Component.translatable("gui.done").getString(),true);validate();
     }
     private boolean validate(){boolean valid=ChannelList.parse(channels==null?draft:channels.getValue())!=null;var done=buttons.get(4);if(done!=null)done.active=valid;if(channels!=null)channels.setTextColor(valid?0xE0E0E0:0xFF7777);return valid;}
-    public NativeTrapdoorEdit edit(){var c=settings.choices();return new NativeTrapdoorEdit(menu.containerId,new NativeTrapdoorSettings(new TrapdoorData(c.texture,c.position,c.layout(),c.trigger,c.layout()==1,c.cover,c.sliding,c.intoWall,c.overSurface),lastValidChannels,settings.facing(),settings.hingeSide(),settings.rotationFlipped(),diagonal()),inverted);}
+    public NativeTrapdoorEdit edit(){var c=settings.choices();return new NativeTrapdoorEdit(menu.containerId,new NativeTrapdoorSettings(new TrapdoorData(c.texture,c.position,c.layout(),c.trigger,c.layout()==1,c.cover,c.sliding,c.intoWall,c.overSurface),lastValidChannels,settings.facing(),settings.hingeSide(),settings.rotationFlipped(),diagonal()),inverted,groupOpening);}
     private void apply(){var parsed=ChannelList.parse(channels==null?draft:channels.getValue());if(parsed!=null)lastValidChannels=parsed;send.accept(edit());validate();}
     public void choose(int texture){if(texture<0||!ModernFinishCatalog.validChoice(texture))throw new IllegalArgumentException("Invalid trapdoor artwork");var c=settings.choices();settings=new NativeTrapdoorSettings(new TrapdoorData(texture,c.position,c.rawLayout,c.trigger,c.tileTexture,c.cover,c.sliding,c.intoWall,c.overSurface),lastValidChannels,settings.facing(),settings.hingeSide(),settings.rotationFlipped(),diagonal());apply();rebuild(false);}
     public void action(int id,int direction){
@@ -80,6 +83,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
             case 7->{if(!diagonal())return;if(position==2)position=tallWidth;else{tallWidth=position;position=2;}}
             case 8->{if(diagonal()||!menu.tile.canOffsetClosedLeaf())return;facing=DialogInput.cycle(facing,4,direction);}
             case 9->{if(!diagonal()||sliding)return;rotation=!rotation;}
+            case 11->groupOpening=DialogInput.cycle(groupOpening<0?menu.tile.groupOpening():groupOpening,3,direction);
             case 10->{if(!diagonal()||sliding)return;hinge=DialogInput.cycle(hinge,3,direction);}
             default->{return;}
         }
