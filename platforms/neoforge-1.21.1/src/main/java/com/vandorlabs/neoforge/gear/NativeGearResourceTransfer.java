@@ -126,8 +126,10 @@ final class NativeGearResourceTransfer {
         Power(Direction side) {this.side=side;}
         public int receiveEnergy(int amount, boolean simulate) {
             if (amount <= 0) return 0;
-            return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,target ->
+            int accepted=send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,target ->
                     Math.min(amount,Math.max(0,target.receiveEnergy(amount,simulate))));
+            if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
+            return accepted;
         }
         public boolean canReceive() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canReceive);}
         public int extractEnergy(int amount, boolean simulate) {return 0;}
@@ -154,8 +156,10 @@ final class NativeGearResourceTransfer {
         }
         public int fill(FluidStack fluid, FluidAction action) {
             if (fluid.isEmpty()) return 0;
-            return send(ArmResource.FLUID,side,Capabilities.FluidHandler.BLOCK,0,target ->
+            int accepted=send(ArmResource.FLUID,side,Capabilities.FluidHandler.BLOCK,0,target ->
                     Math.min(fluid.getAmount(),Math.max(0,target.fill(fluid.copy(),action))));
+            if(action.execute()&&accepted>0)input.resourceTransferred(ArmResource.FLUID);
+            return accepted;
         }
         public FluidStack drain(FluidStack fluid, FluidAction action) {return FluidStack.EMPTY;}
         public FluidStack drain(int amount, FluidAction action) {return FluidStack.EMPTY;}
@@ -180,8 +184,11 @@ final class NativeGearResourceTransfer {
         }
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (stack.isEmpty()) return stack;
-            return send(ArmResource.ITEM,side,Capabilities.ItemHandler.BLOCK,stack,
+            int offered=stack.getCount();
+            ItemStack remainder=send(ArmResource.ITEM,side,Capabilities.ItemHandler.BLOCK,stack,
                     target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
+            if(!simulate&&remainder.getCount()<offered)input.resourceTransferred(ArmResource.ITEM);
+            return remainder;
         }
         public ItemStack extractItem(int slot, int amount, boolean simulate) {return ItemStack.EMPTY;}
         private boolean validSlot(IItemHandler target,int slot) {return slot >= 0 && slot < target.getSlots();}

@@ -111,6 +111,20 @@ public class NativeGearEntity extends BlockEntity implements NativeChannelMember
     public CompoundTag recoverySnapshot(){if(!inert)throw new IllegalStateException("Healthy arm has no retained failure");return retained.copy();}
     public void retainPlacementRecovery(Direction face,CompoundTag choices){if(!authority())throw new IllegalStateException("Arm recovery placement authority");var snapshot=stateTag(true);snapshot.putString("ArmMountDirection",face.name());NativeGearSettings.readChoices(choices).writeSaved(snapshot);retained=snapshot;inert=true;assembly=null;trackDescriptor=null;owner=null;members=List.of();columns=List.of(BlockPos.ZERO);NativeRedstoneChannels.unregister(this);sync();}
     private NativeGearResourceTransfer resourceConnection;
+    private ArmResourceIndicator resourceIndicator;
+    private ArmResourceIndicator indicator(){
+        if(resourceIndicator==null)resourceIndicator=new ArmResourceIndicator();
+        return resourceIndicator;
+    }
+    void resourceTransferred(ArmResource mode){
+        if(indicator().publish(mode,level.getGameTime()))
+            level.blockEvent(worldPosition,getBlockState().getBlock(),ArmResourceIndicator.BLOCK_EVENT,mode.ordinal());
+    }
+    void resourcePulse(ArmResource mode){indicator().receive(mode,level.getGameTime());}
+    public boolean resourceBarActive(ArmResource mode){
+        return resourceIndicator!=null&&level!=null&&resourceIndicator.active(mode,level.getGameTime());
+    }
+
     public boolean canTransferResources(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE;}
     boolean resourceEndpointAvailable(){
         return initialized&&controller()&&canTransferResources()&&angleAdjustment==null

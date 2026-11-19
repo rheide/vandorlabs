@@ -4,6 +4,8 @@ import com.vandorlabs.gear.GearBlock;
 import com.vandorlabs.gear.GearAssembly;
 import com.vandorlabs.gear.GearTileEntity;
 import com.vandorlabs.gear.core.GearMotion;
+import com.vandorlabs.gear.core.ArmResource;
+import com.vandorlabs.gear.core.ArmResourceIndicator;
 import com.vandorlabs.gear.core.GearTopology;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.client.renderer.BufferBuilder;
@@ -121,7 +123,14 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
             barSize=Affine.translation(.5,0,.5).compose(barSize.compose(Affine.translation(-.5,0,-.5)));
             Affine armPose=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(moving.compose(barSize));
             Affine footPose=Affine.translation(tile.armShiftX(column),0,tile.armShiftZ(column)).compose(feet.compose(size));
-            draw(tile.isFixedMount()?(width==2?"fixed_mount_compact":"fixed_mount"):"mount",offset.compose(columnFixed),x,y,z,light,buffer);
+            Affine base=offset.compose(columnFixed);
+            draw(tile.isFixedMount()?(width==2?"fixed_mount_compact":"fixed_mount"):"mount",base,x,y,z,light,buffer);
+            ArmResource resource=tile.resourceTransfer();
+            if(assembly.kind()==GearTopology.FootKind.NONE&&resource!=ArmResource.DISABLED){
+                net.minecraft.tileentity.TileEntity member=column.equals(net.minecraft.util.math.BlockPos.ORIGIN)?tile:tile.getWorld().getTileEntity(tile.getPos().add(column));
+                boolean lit=tile.progress()==(tile.target()?1:0)&&member instanceof GearTileEntity&&((GearTileEntity)member).resourceBarActive(resource);
+                draw(ArmResourceIndicator.model(resource,lit),base,x,y,z,light,buffer);
+            }
             if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(size)),x,y,z,light,buffer);
             if(tile.isSwingArmController()){
                 Affine hingeYaw=Affine.quarterTurn(tile.direction().ordinal());

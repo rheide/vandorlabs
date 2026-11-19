@@ -1,0 +1,6 @@
+{
+  "parent": "vandorlabs:block/gear/resource_bar",
+  "textures": {
+    "bar": "vandorlabs:blocks/resource_ports/power_in_on"
+  }
+}

@@ -1,6 +1,7 @@
 package com.vandorlabs.gear;
 
 import com.vandorlabs.gear.core.ArmResource;
+import com.vandorlabs.gear.core.ArmResourceIndicator;
 
 import com.vandorlabs.gear.core.GearMotion;
 import com.vandorlabs.gear.core.ArmHinge;
@@ -59,6 +60,20 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private boolean joinEnabled,carryLoad,joinedSettingsPresent;
     private ArmResource resourceTransfer=ArmResource.DISABLED;
     private ArmResourceTransfer resourceConnection;
+    private ArmResourceIndicator resourceIndicator;
+    private ArmResourceIndicator indicator(){
+        if(resourceIndicator==null)resourceIndicator=new ArmResourceIndicator();
+        return resourceIndicator;
+    }
+    void resourceTransferred(ArmResource mode){
+        if(indicator().publish(mode,world.getTotalWorldTime()))
+            world.addBlockEvent(pos,world.getBlockState(pos).getBlock(),ArmResourceIndicator.BLOCK_EVENT,mode.ordinal());
+    }
+    void resourcePulse(ArmResource mode){indicator().receive(mode,world.getTotalWorldTime());}
+    public boolean resourceBarActive(ArmResource mode){
+        return resourceIndicator!=null&&world!=null&&resourceIndicator.active(mode,world.getTotalWorldTime());
+    }
+
 
     private static ArmResource readResource(NBTTagCompound tag,String key){
         return ArmResource.read(tag.hasKey(key),tag.hasKey(key,3),tag.getInteger(key));

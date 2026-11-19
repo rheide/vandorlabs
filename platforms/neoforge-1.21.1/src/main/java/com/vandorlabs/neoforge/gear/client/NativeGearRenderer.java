@@ -19,7 +19,14 @@ public final class NativeGearRenderer implements BlockEntityRenderer<NativeGearE
         if(assembly==null||tile.inert()){String model=switch(definition.kind){case EXTENDER->definition.size==2?"extender_large_icon":"extender";case ROTATING->definition.size==2?"swing_arm_large_icon":"swing_arm";case MOUNT->definition.size==2?"fixed_mount_large_icon":"fixed_mount";case PLATE->"plate_0";case SKI->"ski_0";case WHEEL->definition.size==2?"wheel_large":"wheel";case TRACK->"empty";};draw.part(model,fixed,true);return;}
         var pose=tile.pose(phase);var moving=NativeGearAffine.fromPose(pose,false);var feet=NativeGearAffine.fromPose(pose,true);boolean swing=definition.kind==NativeGearDefinition.Kind.ROTATING,mount=definition.kind==NativeGearDefinition.Kind.MOUNT;int width=definition.size;double shift=(width-1)*.5;
         for(BlockPos column:tile.columns()){var canonical=NativeGearOrientation.inverse(tile.mount(),column);var offset=NativeGearAffine.translation(canonical.getX(),canonical.getY(),canonical.getZ());var columnTile=NativeGearFormation.at(tile.getLevel(),tile.getBlockPos().offset(column));var columnFixed=columnTile==null?fixed:NativeGearAffine.quarterTurn(turns(columnTile.getBlockState().getValue(NativeGearBlock.FACING)));var size=NativeGearAffine.translation(-shift,0,-shift).compose(NativeGearAffine.scaleXZ(width));var bar=NativeGearAffine.scaleXZ(swing?(pose.direction().axisX()!=0?width:1):width,swing?(pose.direction().axisZ()!=0?width:1):width);bar=NativeGearAffine.translation(.5,0,.5).compose(bar.compose(NativeGearAffine.translation(-.5,0,-.5)));var arm=moving.compose(bar);var foot=feet.compose(size);
-            draw.part(mount?(width==2?"fixed_mount_compact":"fixed_mount"):"mount",offset.compose(columnFixed),true);if(!mount)draw.part("sleeve",offset.compose(columnFixed.compose(size)),true);
+            var base=offset.compose(columnFixed);
+            draw.part(mount?(width==2?"fixed_mount_compact":"fixed_mount"):"mount",base,true);
+            var resource=tile.settings().resourceTransfer();
+            if(assembly.kind()==GearTopology.FootKind.NONE&&resource!=ArmResource.DISABLED){
+                boolean lit=tile.progress()==(tile.target()?1:0)&&columnTile!=null&&columnTile.resourceBarActive(resource);
+                draw.part(ArmResourceIndicator.model(resource,lit),base,true);
+            }
+            if(!mount)draw.part("sleeve",offset.compose(columnFixed.compose(size)),true);
             if(swing){var yaw=NativeGearAffine.quarterTurn(tile.settings().direction());var stretch=NativeGearAffine.stretchArm(assembly.columnHeight()-tile.socketOffset());
                 if(tile.settings().hingeMode()==ArmHinge.Mode.DOUBLE||tile.settings().kinkDirection()!=tile.settings().direction()){
                     var kinkYaw=NativeGearAffine.quarterTurn(tile.settings().kinkDirection());var upper=NativeGearAffine.fromUpperPose(pose);

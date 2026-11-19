@@ -130,8 +130,10 @@ final class ArmResourceTransfer {
         Power(EnumFacing side) { this.side = side; }
         @Override public int receiveEnergy(int amount, boolean simulate) {
             if (amount <= 0) return 0;
-            return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target ->
+            int accepted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target ->
                     Math.min(amount,Math.max(0,target.receiveEnergy(amount,simulate))));
+            if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
+            return accepted;
         }
         @Override public boolean canReceive() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
         @Override public int extractEnergy(int amount, boolean simulate) {return 0;}
@@ -147,8 +149,10 @@ final class ArmResourceTransfer {
         @Override public int fill(FluidStack resource, boolean commit) {
             if (resource == null || resource.amount <= 0) return 0;
             int amount = resource.amount;
-            return send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,target ->
+            int accepted=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,target ->
                     Math.min(amount,Math.max(0,target.fill(resource.copy(),commit))));
+            if(commit&&accepted>0)input.resourceTransferred(ArmResource.FLUID);
+            return accepted;
         }
         @Override public IFluidTankProperties[] getTankProperties() {
             return send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,unavailable,target -> {
@@ -197,8 +201,11 @@ final class ArmResourceTransfer {
         }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (stack.isEmpty()) return stack;
-            return send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,
+            int offered=stack.getCount();
+            ItemStack remainder=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,
                     target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
+            if(!simulate&&remainder.getCount()<offered)input.resourceTransferred(ArmResource.ITEM);
+            return remainder;
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {return ItemStack.EMPTY;}
         @Override public int getSlotLimit(int slot) {
