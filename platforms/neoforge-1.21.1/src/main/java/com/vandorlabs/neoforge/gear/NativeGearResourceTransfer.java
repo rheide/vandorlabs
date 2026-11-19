@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.gear;
 import com.vandorlabs.gear.core.ArmResource;
 import com.vandorlabs.gear.core.GearMotion;
 import com.vandorlabs.neoforge.transfer.NativeTransferHolds;
+import com.vandorlabs.neoforge.ramp.NativeRampHeldOwners;
 import java.util.function.Function;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -18,6 +19,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 
 final class NativeGearResourceTransfer {
     private final NativeGearEntity input;
+    private Direction exposedSide;
     private IEnergyStorage energy;
     private IFluidHandler fluid;
     private IItemHandler items;
@@ -30,23 +32,33 @@ final class NativeGearResourceTransfer {
 
     static IEnergyStorage energy(NativeGearEntity tile, Direction side) {
         if (installedArm(tile,side,ArmResource.POWER) == null) return null;
-        var connection = tile.resourceConnection();
+        var connection = tile.resourceConnection().expose(side);
         if (connection.energy == null) connection.energy = connection.new Power(side);
         return connection.energy;
     }
 
     static IFluidHandler fluid(NativeGearEntity tile, Direction side) {
         if (installedArm(tile,side,ArmResource.FLUID) == null) return null;
-        var connection = tile.resourceConnection();
+        var connection = tile.resourceConnection().expose(side);
         if (connection.fluid == null) connection.fluid = connection.new Fluids(side);
         return connection.fluid;
     }
 
     static IItemHandler items(NativeGearEntity tile, Direction side) {
         if (installedArm(tile,side,ArmResource.ITEM) == null) return null;
-        var connection = tile.resourceConnection();
+        var connection = tile.resourceConnection().expose(side);
         if (connection.items == null) connection.items = connection.new Items(side);
         return connection.items;
+    }
+
+    private NativeGearResourceTransfer expose(Direction side) {
+        if (exposedSide != side) {
+            exposedSide = side;
+            energy = null;
+            fluid = null;
+            items = null;
+        }
+        return this;
     }
 
     private static NativeGearEntity installedArm(NativeGearEntity input, Direction side, ArmResource type) {
@@ -75,7 +87,7 @@ final class NativeGearResourceTransfer {
     }
 
     private static boolean reserved(ServerLevel level, BlockPos pos) {
-        return NativeGearHolds.reserved(level,pos) || NativeTransferHolds.reserved(level,pos);
+        return NativeRampHeldOwners.foreignToCellReservation(level,pos) || NativeTransferHolds.reserved(level,pos);
     }
 
     private <T, R> R send(ArmResource type, Direction side, BlockCapability<T,Direction> capability, R unavailable, Function<T,R> action) {

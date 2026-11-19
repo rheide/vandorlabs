@@ -50,7 +50,12 @@ public final class NativePortRuntime {
     public Object neighbor(int side){var entry=neighbors[side];var level=host.tile().getLevel();if(level.getChunkSource().getChunkNow(entry.pos.getX()>>4,entry.pos.getZ()>>4)==null){entry.clear();pullRequests[side]=Long.MIN_VALUE;return null;}host.lookedUp();var tile=level.getBlockEntity(entry.pos);var state=level.getBlockState(entry.pos);long tick=level.getGameTime();if(tile!=entry.tile||state!=entry.state||tick>=entry.refreshAt||tile!=null&&tile.isRemoved()){if(tile!=entry.tile||state!=entry.state||tile!=null&&tile.isRemoved())pullRequests[side]=Long.MIN_VALUE;entry.tile=tile;entry.state=state;entry.refreshAt=tick+40;entry.handler=host.resolve(entry.pos,Direction.from3DDataValue(side).getOpposite());host.refreshed();}return entry.handler;}
     public void tick(){if(!loaded||!host.installed()||host.inert())return;host.ticked();if(transferAllowed())host.transferTick();if(visualCooldown-->0)return;visualCooldown=4;int adjacent=0,on=0;long tick=host.tile().getLevel().getGameTime();for(int i=0;i<6;i++)if(settings().face(i)!=ResourcePortSettings.Face.DISABLED){if(neighbor(i)!=null)adjacent|=1<<i;boolean show=switch(settings().onTexture){case REDSTONE->host.configuration().redstoneMode()!=0&&transferAllowed();case CONNECTED->(adjacent&(1<<i))!=0;case TRANSFERRING->transferTicks[i]!=Long.MIN_VALUE&&tick-transferTicks[i]<=5;};if(show)on|=1<<i;}connected=adjacent;if(on!=lit){lit=on;host.appearance(lit,connected);}else host.appearance(-1,connected);}
     public void onLoad(NativeChannelMember member){loaded=false;if(host.tile().getLevel() instanceof ServerLevel)NativeRedstoneChannels.queueRegistration(member);}
-    public void beforeChannelRegistration(){loaded=host.installed();invalidateNeighbors();}
+    public void beforeChannelRegistration(){
+        // The channel lifecycle has already verified exact installed identity.
+        // A newly published port can still be held until its journal retires.
+        loaded=true;
+        invalidateNeighbors();
+    }
     public void unload(NativeChannelMember member){loaded=false;invalidateNeighbors();if(host.tile().getLevel() instanceof ServerLevel)NativeRedstoneChannels.unregister(member);}
     public void signal(int level){channelPowered=level>0;signalTick=Long.MIN_VALUE;}
     public void configurationChanged(NativeChannelMember member){signalTick=Long.MIN_VALUE;fairPrepared=false;invalidateNeighbors();NativeRedstoneChannels.channelsChanged(member);}
