@@ -144,8 +144,8 @@ Fabricator and Industrial Printer cuboids and their original 64×64 atlases.
 Their occupied geometry also drives bottom-up fabrication, including the
 textured faces of partially printed rows. Inventory icons retain visible padding.
 The [Survey Dish and Sentinel Array](navigation-displays.md) have their own
-native adapters. The six Forge drive and navigation computer Cores remain
-unavailable.
+native adapters. Oculus, Vector Fold, and the Paladyne and Seyr navigation computers remain
+unavailable in this build.
 
 With JEI installed, **Matter Infuser** lists iron conversion and Battery Module
 charging. The **Synthesis Tower**, **Assembly Press** and **Enclosed Gantry**

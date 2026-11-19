@@ -645,8 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Port the six remaining drive and navigation computer Cores and complete the Tower catalog.",
-        "Match the Press and Gantry fabrication visuals and physical mount interactions.",
+        "Port the Oculus and Vector Fold drives and Paladyne and Seyr navigation computers, and complete the Tower catalog.",
         "Add arm carrying and Copy Controller support for formed builder machines.",
         "Complete native release and shader acceptance."
       ],
@@ -662,7 +661,9 @@
         "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication",
         "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog.",
         "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation.",
-        "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry."
+        "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry.",
+        "Press and Gantry use authored fabrication beds, scanner beams and connected-player pickup and battery interactions.",
+        "Maxwell (Longburn) and Seyr Meridian form with native Redstone and display controls. The Tower fabricates both cores with a permitting Catalog Chip."
       ]
     },
     {
@@ -731,7 +732,10 @@
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Unscaled adult cows pass actor-only abrupt save, cold return and a second restart within one entity chunk."
+      ]
     },
     {
       "id": "vehicles",
@@ -765,7 +769,7 @@
       "id": "cockpits",
       "label": "Cockpits and peripherals",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [
         "chair_siderests",
         "cockpit",
@@ -773,15 +777,18 @@
         "yoke_screen"
       ],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native assembly/reservations and seating",
-        "six/three-row shared controls",
-        "square-pixel surface hit mapping",
-        "pause-aware motion and live parity"
+        "Configure the casing and armrest controls for the stationary Advanced Pilot Chair.",
+        "Port the standalone cockpit assembly and Yoke and Screen. Vehicle motion and carried integration remain deferred."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "standalone_first_vehicle_integration_deferred"
+      "integration_scope": "standalone_first_vehicle_integration_deferred",
+      "modern_registered_block_ids": [
+        "chair_siderests"
+      ],
+      "implemented": [
+        "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, and exact configured drop."
+      ]
     },
     {
       "id": "landing_gear_wheels",
@@ -953,7 +960,7 @@
       "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "World-face sampling and Duplifier appearance transfer."
+        "Renderer-specific world sampling for Doors, Lights, Screens and other special block families."
       ],
       "legacy_item_ids": [
         "programmable_helmet",
@@ -968,7 +975,9 @@
         "The four programmable armor pieces use the original recipes, role and company choices, and configured inventory and equipped artwork.",
         "A connected Survival player check covers real picker edits, equipment rendering and exact saved choice round trip.",
         "The native picker offers general Programmable Block materials, using the shared armor skin projection and original silhouette.",
-        "Connected Survival checks cover all mounted slots on normal/small stands and non-consuming inventory samples from configured blocks and Doors."
+        "Connected Survival checks cover all mounted slots on normal/small stands and non-consuming inventory samples from configured blocks and Doors.",
+        "Authoritative vanilla and programmable world-face sampling and appearance-only Duplifier transfer between held and mounted pieces.",
+        "Role, company, general programmable material and static Light options use their authored artwork in the native picker."
       ]
     },
     {
@@ -1010,15 +1019,16 @@
       "legacy_block_ids": [],
       "remaining": [
         "Expand optional-mod integration coverage beyond the checked JEI catalog and WorldEdit transforms.",
-        "Dynmap has no official NeoForge 1.21.1 release. The upstream NeoForge port remains open.",
-        "Native hardware shader-pack acceptance remains open."
+        "Native hardware shader-pack acceptance remains open.",
+        "Dynmap configured artwork, activity, joined UVs and broader native block coverage await a supported upstream release and native render adapters."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "implemented": [
         "Installed JEI 19.70.0.469 shows the four native machine categories, recipe and blueprint gates, and the public Copy Controller and Surface creative/search items.",
-        "Installed WorldEdit 7.3.8 uses native quarter-turn ID mapping for floor/ceiling propulsion wedges and preserves their tile NBT. Ordinary property transforms cover tested doors, diagonal walls, side wedges and vanilla stairs."
+        "Installed WorldEdit 7.3.8 uses native quarter-turn ID mapping for floor/ceiling propulsion wedges and preserves their tile NBT. Ordinary property transforms cover tested doors, diagonal walls, side wedges and vanilla stairs.",
+        "A source-built experimental NeoForge Dynmap server renders the default artwork of Programmable Surfaces and Copy Controllers from the exact native JAR."
       ]
     },
     {
@@ -1056,12 +1066,14 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Expand supported targets, including Navigation Tables, observers, owned Screen controls and formed builders."
+        "Expand supported targets, including observers, owned Screen controls and formed builders.",
+        "Expand live coverage of joined Navigation Table layouts beyond the tested two-cell flat group."
       ],
       "implemented": [
         "The shared Programmable Surface adapter is integrated and passes joined-root removal, surviving opaque faces and ordinary construction/settings repair.",
         "The public Copy Controller supports dedicated configuration, resource-priced Survival copying, post-commit client publication, and focused rollback and partial-save recovery.",
-        "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback."
+        "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback.",
+        "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs."
       ],
       "modern_registered_block_ids": [
         "copy_controller"

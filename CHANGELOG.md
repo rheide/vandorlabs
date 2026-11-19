@@ -2,6 +2,9 @@
 
 ## 1.12.0 (in development)
 
+- Form Maxwell and Meridian drive structures and fabricate their Cores on NeoForge.
+- Add the native Advanced Pilot Chair with its authored footprint and adjustable height.
+- Copy complete stationary Navigation Table groups with exact chip and module material costs on NeoForge.
 - Show Forge-matched Press and Gantry fabrication, mount interactions and pickup positions on NeoForge.
 - Add a tested opt-in legacy wheel migration command and bounded cold Ramp actor recovery for adult cows.
 - Share armor appearance settings from inventory samples, supported world faces, and the Duplifier on NeoForge.

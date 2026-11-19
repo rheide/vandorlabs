@@ -25,21 +25,21 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, Maxwell and Meridian, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
-| Cockpits and peripherals | cockpit assemblies, Advanced Pilot Chair and Yoke and Screen missing | unimplemented | standalone first; carried integration deferred |
+| Cockpits and peripherals | stationary Advanced Pilot Chair available, with armrest controls, cockpit assembly and Yoke and Screen pending | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled) | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | Programmable Surfaces public; opt-in block-only Scan and quarter-turn Restore; continuous motion pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
-| Programmable armor | four pieces, crafting, role/company, general material and inventory sample picker, armor stands, equipped and inventory artwork enabled; world-face sampling and copying pending | unimplemented | non-vehicle first |
+| Programmable armor | four pieces, crafting, role/company, general material and inventory sample picker, armor stands, equipped and inventory artwork, generic world-face sampling and Duplifier transfer. Special renderer samples pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
-| Compatibility integrations | native JEI recipes and Copy catalog tested, WorldEdit quarter-turn wedge support and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
+| Compatibility integrations | native JEI, WorldEdit wedge rotations, selected resource ports and experimental static Dynmap renderers | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
-| Copy Controllers and shared surfaces | public Surfaces; public transactional Copy Controller with a bounded target list | unimplemented | non-vehicle first |
+| Copy Controllers and shared surfaces | public Surfaces and transactional Copy Controllers, including complete stationary Navigation Table groups | unimplemented | non-vehicle first |
 | Standalone Extenders and rotating arms | partial (regular/Large joined and independent arms enabled) | unimplemented | non-vehicle first |
 | Track assemblies | partial (canonical Track enabled; vehicle integration deferred) | unimplemented | non-vehicle first |
 
@@ -128,9 +128,11 @@ turns that change a wedge's block ID. Dedicated checks use a real clipboard
 rotate and paste, and the mod also starts with WorldEdit absent.
 [Native WorldEdit compatibility](native-worldedit-rotation.md)
 
-Dynmap's supported platforms currently exclude NeoForge. The upstream
-NeoForge 1.21.1 work remains an open pull request, so Vandor Labs' Dynmap
-renderers remain available on Forge 1.12.2.
+Dynmap's official platforms currently exclude NeoForge. The experimental
+upstream branch rendered default Programmable Surface and Copy Controller
+textures from the native JAR. Configured and moving artwork still use the
+Forge 1.12.2 renderers.
+[Native fallback checks](native-dynmap-surface.md)
 [Dynmap supported platforms](https://github.com/webbukkit/dynmap#what-platforms-are-supported) · [NeoForge port](https://github.com/webbukkit/dynmap/pull/4183)
 
 ## Native Matter Infuser

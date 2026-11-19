@@ -7,9 +7,9 @@ Forge 1.12.2 remains the default development target on `master`, at development 
 The remaining work targets non-Vehicle parity. Current NeoForge builds include
 Synthesis Tower Synthesis and Digitize, Assembly Press and Enclosed Gantry
 production, the Matter Infuser, local navigation and observers, and
-Printer/Scanner automation. Six Forge drive and navigation Cores, builder
-fabrication visuals, the Turntable Controller, broader Copy Controller
-targets, armor sampling and copying, and standalone cockpits remain open,
+Printer/Scanner automation. Oculus, Vector Fold, two navigation computers, the Turntable Controller,
+broader Copy Controller targets, renderer-specific armor samples, and
+standalone cockpit controls remain open,
 alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
