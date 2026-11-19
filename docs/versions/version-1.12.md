@@ -35,7 +35,8 @@ The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured
 Redstone channels. Adjust the height and channels through the chair dialog.
 The **Cockpit** forms a stationary seat and console with a retractable screen
-bank and a three-row right-armrest Redstone panel. **Yoke and Screen** operates Redstone from both displays. [Chair and cockpit guide](../cockpits.md)
+bank, a six-row center Redstone monitor and a three-row right-armrest
+Redstone panel. **Yoke and Screen** operates Redstone from both displays. [Chair and cockpit guide](../cockpits.md)
 
 With WorldEdit 7.3.8, turning a clipboard also rotates the corner of floor
 and ceiling propulsion wedges. JEI lists the four native machine categories

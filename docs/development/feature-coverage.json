@@ -791,7 +791,7 @@
       ],
       "implemented": [
         "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, exact configured drop and both seated numeric Redstone sliders.",
-        "The Cockpit forms an eight-cell stationary housing and seat with an obstruction-aware retractable monitor bank and a working three-row right-armrest panel. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
+        "The Cockpit forms an eight-cell stationary housing and seat with an obstruction-aware retractable monitor bank and independent six-row center monitor and three-row right-armrest Redstone controls. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
       ]
     },
     {

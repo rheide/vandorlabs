@@ -30,7 +30,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
-| Cockpits and peripherals | stationary Cockpit seating, screen lift and right touch panel, Advanced Pilot Chair armrest sliders, and Yoke and Screen Redstone; full Cockpit console controls pending | unimplemented | standalone first; carried integration deferred |
+| Cockpits and peripherals | stationary Cockpit seating, screen lift, center monitor and right touch panel, Advanced Pilot Chair armrest sliders, and Yoke and Screen Redstone; full Cockpit console controls pending | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled; opt-in imported wheel and inventory conversion) | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | Programmable Surfaces public; opt-in block-only Scan, rendered rotation with swept collision, Redstone, upward-facing riders and quarter-turn Restore; captured interactions pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |

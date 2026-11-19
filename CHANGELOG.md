@@ -7,7 +7,7 @@
 - Copy idle, disconnected Synthesis Towers, Assembly Presses, Enclosed Gantries and eligible standalone drives and Navigation Computers with empty slots at exact frame cost. Grid-aligned Extenders can carry empty idle production builders with block pushing off.
 - Import mapped Forge drive, computer and production snapshots. Retain supported builder inventories and resume supported standard recipes from their saved RF credit.
 - Add the native Advanced Pilot Chair with its authored footprint, adjustable height and two seated armrest sliders.
-- Form and sit in a stationary Cockpit with a reversible screen bank and interactive right-armrest Redstone rows. Use the standalone Yoke and Screen’s two Redstone surfaces.
+- Form and sit in a stationary Cockpit with a reversible screen bank and independent Redstone rows on the center monitor and right armrest. Use the standalone Yoke and Screen’s two Redstone surfaces.
 - Copy complete stationary Navigation Table groups and Survey Dish and Sentinel Array frames at exact material cost on NeoForge.
 - Copy complete passive Programmable Screen layouts in all seven roles, including diagonal joins.
 - Add an opt-in native Turntable with block capture, swept-collision rotation, Redstone, upward-facing rider transport and journaled quarter-turn restoration.
