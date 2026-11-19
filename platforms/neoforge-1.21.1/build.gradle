@@ -90,6 +90,7 @@ tasks.register('generateCubeResources', Exec) {
     inputs.file('generate_surface_resources.py')
     inputs.file('generate_seat_resources.py')
     inputs.file('generate_copy_resources.py')
+    inputs.file('generate_dynmap_resources.py')
     inputs.files('../../src/main/resources/assets/vandorlabs/models/block/copy_controller.json','../../src/main/resources/assets/vandorlabs/models/item/copy_controller.json','../../src/main/resources/assets/vandorlabs/recipes/copy_controller.json')
     inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/blocks/copy_controller')
     inputs.file('generate_legacy_landing_resources.py')
