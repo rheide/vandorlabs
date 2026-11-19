@@ -61,6 +61,61 @@ final class LargeDoorRuntimeChecks {
         System.out.println("[vandorlabs] horizontal-door PASS four side placements, saved part roles, vertical sweep, owned water sources and support removal");
     }
 
+    static void joined(World world,EntityPlayer player){
+        BlockLargeProgrammableDoor door=(BlockLargeProgrammableDoor)Block.getBlockFromName("vandorlabs:large_programmable_door");
+        ItemStack previous=player.getHeldItemMainhand();
+        float yaw=player.rotationYaw;
+        boolean sneaking=player.isSneaking();
+        player.setSneaking(false);
+        try{
+            for(boolean horizontal:new boolean[]{false,true}){
+                EnumFacing face=EnumFacing.SOUTH,width=face.rotateYCCW(),rows=horizontal?face:EnumFacing.UP;
+                BlockPos anchor=new BlockPos(3,99,3);
+                for(BlockPos at:BlockPos.getAllInBox(anchor.add(-1,-1,-1),anchor.add(8,8,8)))world.setBlockToAir(at);
+                for(int x=0;x<6;x++)world.setBlockState(anchor.offset(width,x).offset(rows.getOpposite()),Blocks.STONE.getDefaultState(),2);
+                player.rotationYaw=face.getOpposite().getHorizontalAngle();
+                ItemStack stack=new ItemStack(door,4);
+                player.setHeldItem(EnumHand.MAIN_HAND,stack);
+                TileEntityLargeProgrammableDoor[] units=new TileEntityLargeProgrammableDoor[4];
+                for(int y=0;y<2;y++)for(int x=0;x<2;x++){
+                    int i=2*y+x;
+                    BlockPos at=anchor.offset(width,3*x).offset(rows,3*y);
+                    BlockPos support=at.offset(width).offset(rows.getOpposite());
+                    require(stack.getItem().onItemUse(player,world,support,EnumHand.MAIN_HAND,rows,.5F,.5F,.5F)==EnumActionResult.SUCCESS,
+                            "mount group module "+horizontal+"/"+i);
+                    TileEntityLargeProgrammableDoor unit=door.root(world,at);
+                    require(unit!=null&&unit.getPos().equals(at),"each module keeps an installed root");
+                    require(i>=2?unit.joins():!unit.joins(),"independent units default Off and stacking inherits the support's opt-in");
+                    unit.configure(unit.getDesign(),unit.getDetail(),true,0,true,true,false,0,true);
+                    unit.setJoin(true);
+                    door.joinChanged(world,unit);
+                    units[i]=unit;
+                    int count=unit.joinedGroup().members.size();
+                    require(count==(i==1?2:i==3?4:1),"only complete rectangles link, horizontal="+horizontal+" index="+i+" got="+count);
+                }
+                for(TileEntityLargeProgrammableDoor unit:units){
+                    require(unit.joinedGroup().anchor==units[0],"all members agree on the 6×6 anchor");
+                    net.minecraft.nbt.NBTTagCompound saved=unit.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+                    require(saved.getBoolean(com.vandorlabs.render.LargeDoorJoin.TAG)&&unit.itemSettings().getBoolean(com.vandorlabs.render.LargeDoorJoin.TAG),
+                            "opt-in survives a world/item save");
+                }
+                BlockPos seam=anchor.offset(width,3).offset(rows,3);
+                AxisAlignedBB passage=new AxisAlignedBB(seam).shrink(.1).grow(0,horizontal?1:0,horizontal?0:1);
+                require(!world.getCollisionBoxes(null,passage).isEmpty(),"closed group blocks its internal seam");
+                door.onBlockActivated(world,seam,world.getBlockState(seam),player,EnumHand.MAIN_HAND,
+                        horizontal?EnumFacing.UP:EnumFacing.NORTH,.5F,.5F,.5F);
+                for(TileEntityLargeProgrammableDoor unit:units)
+                    require(world.getBlockState(unit.getPos()).getValue(BlockVandorDoor.OPEN),"a member click opens the entire group");
+                require(world.getCollisionBoxes(null,passage).isEmpty(),"expanded opening has no interior physical rail");
+                units[3].setJoin(false);
+                require(!units[0].joinedGroup().joined()&&door.complete(world,units[3]),"turning Join Off dissolves the rectangle without removing a module");
+            }
+        }finally{
+            player.rotationYaw=yaw;player.setSneaking(sneaking);player.setHeldItem(EnumHand.MAIN_HAND,previous);
+        }
+        System.out.println("[vandorlabs] joined-large-door PASS upright/horizontal/2x1/2x2/no-interior-rails/item-save");
+    }
+
     private static void verifyWater(World world,BlockLargeProgrammableDoor door,TileEntityLargeProgrammableDoor root,
             EntityPlayer player,EnumFacing front,BlockPos passage){
         TileEntityLargeProgrammableDoor upper=(TileEntityLargeProgrammableDoor)world.getTileEntity(root.cell(root.getPos(),front,0,2));

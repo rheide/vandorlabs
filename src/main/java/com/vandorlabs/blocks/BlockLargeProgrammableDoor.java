@@ -56,14 +56,18 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         if(hand!=EnumHand.MAIN_HAND)return false;
         if(player.isSneaking() || player.capabilities.isCreativeMode && panelHit){
             if(!world.isRemote)player.openGui(com.vandorlabs.VandorLabs.instance,player.capabilities.isCreativeMode?com.vandorlabs.GuiHandler.GUI_SPACE_DOOR:com.vandorlabs.GuiHandler.GUI_REDSTONE_CHANNEL,world,tile.getPos().getX(),tile.getPos().getY(),tile.getPos().getZ());
-        } else if(tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED && !world.isRemote)
+        } else if(tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED && !world.isRemote && mayToggleJoined(world,tile,player,face,hand))
             setPowered(world,tile.getPos(),state,world.getBlockState(tile.getPos()).getValue(POWERED),!world.getBlockState(tile.getPos()).getValue(OPEN));
         return true;
     }
     @Override public void updateRedstoneState(World world,BlockPos pos,IBlockState state){
         if(world.isRemote)return;TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null)return;
-        IBlockState actual=world.getBlockState(tile.getPos());boolean powered=tile.hasLocalRedstoneSignal()||tile.isChannelSignalPowered();
-        boolean open=tile.securityMode()>0?tile.securityOpen():tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED?actual.getValue(OPEN):SpaceDoorData.openForSignal(tile.getTrigger(),powered);
+        IBlockState actual=world.getBlockState(tile.getPos());
+        com.vandorlabs.render.LargeDoorJoin.Group<TileEntityLargeProgrammableDoor> group=tile.joinedGroup();
+        boolean powered=false;
+        for(TileEntityLargeProgrammableDoor member:group.members)
+            powered|=member.hasLocalRedstoneSignal()||member.isChannelSignalPowered();
+        boolean open=tile.securityMode()>0?tile.securityOpen():tile.getTrigger()==SpaceDoorData.TRIGGER_DISABLED?world.getBlockState(group.anchor.getPos()).getValue(OPEN):SpaceDoorData.openForSignal(tile.getTrigger(),powered);
         setPowered(world,tile.getPos(),actual,powered,open);
     }
     @Override public void toggleDoor(World world,BlockPos pos,boolean open){
@@ -73,6 +77,10 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     }
     @Override protected void setPowered(World world,BlockPos pos,IBlockState state,boolean powered,boolean open){
         TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null || !complete(world,tile))return;
+        for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members)if(!complete(world,member))return;
+        for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members)publishPower(world,member,powered,open);
+    }
+    private void publishPower(World world,TileEntityLargeProgrammableDoor tile,boolean powered,boolean open){
         BlockPos anchor=tile.getPos();IBlockState old=world.getBlockState(anchor);EnumFacing front=old.getValue(FACING);
         for(int x=0;x<3;x++)for(int y=0;y<3;y++){
             BlockPos cell=tile.cell(anchor,front,x,y);IBlockState before=world.getBlockState(cell);
@@ -84,6 +92,49 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         }
         if(old.getValue(OPEN)!=open)world.playSound(null,anchor,open?net.minecraft.init.SoundEvents.BLOCK_IRON_DOOR_OPEN:net.minecraft.init.SoundEvents.BLOCK_IRON_DOOR_CLOSE,SoundCategory.BLOCKS,1,1);
     }
+    public boolean mayToggleJoined(World world,TileEntityLargeProgrammableDoor tile,EntityPlayer player,EnumFacing hit,EnumHand hand){
+        com.vandorlabs.render.LargeDoorJoin.Group<TileEntityLargeProgrammableDoor> group=tile.joinedGroup();
+        if(!group.joined())return true;
+        for(TileEntityLargeProgrammableDoor member:group.members){
+            BlockPos anchor=member.getPos();
+            EnumFacing facing=world.getBlockState(anchor).getValue(FACING);
+            for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+                BlockPos at=member.cell(anchor,facing,x,y);
+                if(!world.isBlockModifiable(player,at)||!player.canPlayerEdit(at,hit,player.getHeldItem(hand)))return false;
+            }
+        }
+        return true;
+    }
+    public void joinChanged(World world,TileEntityLargeProgrammableDoor tile){
+        EnumFacing facing=world.getBlockState(tile.getPos()).getValue(FACING);
+        java.util.List<TileEntityLargeProgrammableDoor> nearby=new java.util.ArrayList<>(9);
+        for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){
+            BlockPos at=tile.cell(tile.getPos(),facing,3*x,3*y);
+            if(!world.isBlockLoaded(at,false))continue;
+            TileEntityLargeProgrammableDoor other=root(world,at);
+            if(other!=null&&other.getPos().equals(at)){other.invalidateJoin();nearby.add(other);}
+        }
+        for(TileEntityLargeProgrammableDoor other:nearby)
+            updateRedstoneState(world,other.getPos(),world.getBlockState(other.getPos()));
+    }
+    private static boolean solidSupport(World world,BlockPos anchor,EnumFacing facing,EnumFacing row){
+        for(int x=0;x<3;x++){
+            BlockPos at=anchor.offset(facing.rotateYCCW(),x).offset(row.getOpposite());
+            if(!world.isBlockLoaded(at,false)||!world.getBlockState(at).isSideSolid(world,at,row))return false;
+        }
+        return true;
+    }
+    /** A second row can use a complete first door, which must have its own real support. */
+    public boolean supports(World world,BlockPos anchor,EnumFacing facing,boolean horizontal,boolean joiningPlacement){
+        EnumFacing row=horizontal?facing:EnumFacing.UP;
+        if(solidSupport(world,anchor,facing,row))return true;
+        BlockPos preceding=anchor.offset(row.getOpposite(),3);
+        if(!world.isBlockLoaded(preceding,false))return false;
+        TileEntityLargeProgrammableDoor base=root(world,preceding);
+        return base!=null&&base.getPos().equals(preceding)&&base.isHorizontal()==horizontal
+                &&(!joiningPlacement||base.joins())&&world.getBlockState(preceding).getValue(FACING)==facing
+                &&complete(world,base)&&solidSupport(world,preceding,facing,row);
+    }
     @Override public void neighborChanged(IBlockState state,World world,BlockPos pos,Block block,BlockPos from){
         if(world.isRemote || REMOVING.get())return;
         TileEntityLargeProgrammableDoor tile=root(world,pos);
@@ -91,10 +142,8 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         EnumFacing front=world.getBlockState(tile.getPos()).getValue(FACING);
         for(int x=0;x<3;x++)for(int y=-1;y<3;y++)if(!world.isBlockLoaded(tile.cell(tile.getPos(),front,x,y)))return;
         if(!complete(world,tile)){world.destroyBlock(tile.getPos(),true);return;}
-        for(int x=0;x<3;x++){
-            BlockPos support=tile.cell(tile.getPos(),front,x,-1);
-            if(!world.getBlockState(support).isSideSolid(world,support,tile.rowDirection(front))){world.destroyBlock(tile.getPos(),true);return;}
-        }
+        if(!supports(world,tile.getPos(),front,tile.isHorizontal(),false)){world.destroyBlock(tile.getPos(),true);return;}
+        tile.invalidateJoin();
         tile.localInputChanged();updateRedstoneState(world,tile.getPos(),state);
     }
     @Override public void breakBlock(World world,BlockPos pos,IBlockState state){

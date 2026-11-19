@@ -21,16 +21,19 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
         EnumFacing row=horizontal?face:EnumFacing.UP;
         BlockPos anchor=center.offset(width,-1);
         if(anchor.getY()<0 || anchor.offset(row,2).getY()>=world.getHeight())return EnumActionResult.FAIL;
+        BlockLargeProgrammableDoor door=(BlockLargeProgrammableDoor)block;
+        if(!door.supports(world,anchor,face,horizontal,true))return EnumActionResult.FAIL;
+        BlockPos preceding=anchor.offset(row.getOpposite(),3);
+        TileEntityLargeProgrammableDoor base=world.isBlockLoaded(preceding,false)?door.root(world,preceding):null;
+        boolean joining=base!=null&&base.getPos().equals(preceding)&&base.joins();
         List<BlockPos> cells=new ArrayList<>();List<IBlockState> old=new ArrayList<>();
         for(int x=0;x<3;x++){
-            BlockPos support=anchor.offset(width,x).offset(row.getOpposite());if(!world.isBlockLoaded(support) || !world.getBlockState(support).isSideSolid(world,support,row))return EnumActionResult.FAIL;
             for(int y=0;y<3;y++){
                 BlockPos cell=anchor.offset(width,x).offset(row,y);
                 if(!world.isBlockLoaded(cell) || !world.getBlockState(cell).getBlock().isReplaceable(world,cell) || !player.canPlayerEdit(cell,side,stack) || !world.isBlockModifiable(player,cell))return EnumActionResult.FAIL;
                 cells.add(cell);old.add(world.getBlockState(cell));
             }
         }
-        BlockLargeProgrammableDoor door=(BlockLargeProgrammableDoor)block;
         IBlockState state=block.getDefaultState().withProperty(BlockVandorDoor.FACING,face);
         int placed=0;
         for(BlockPos cell:cells){
@@ -44,9 +47,13 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
         TileEntityLargeProgrammableDoor tile=(TileEntityLargeProgrammableDoor)world.getTileEntity(anchor);
         if(stack.getSubCompound("SpaceDoorSettings")!=null)tile.applyItemSettings(stack.getSubCompound("SpaceDoorSettings"));
         tile.setPlacementDepth(horizontal?com.vandorlabs.render.PanelDepthPolicy.fromHit(hitY):PanelDepth.fromHit(face,hitX,hitZ));
+        if(joining)tile.setJoin(true);
         // Only now may neighbor callbacks observe the complete structure.
         for(BlockPos cell:cells){world.notifyBlockUpdate(cell,state,state,2);world.notifyNeighborsOfStateChange(cell,block,false);}
-        if(!world.isRemote)tile.onLoad();
+        if(!world.isRemote){
+            if(tile.joins())door.joinChanged(world,tile);
+            tile.onLoad();
+        }
         world.playSound(player,center,block.getSoundType().getPlaceSound(),SoundCategory.BLOCKS,1,0.8F);
         stack.shrink(1);return EnumActionResult.SUCCESS;
     }

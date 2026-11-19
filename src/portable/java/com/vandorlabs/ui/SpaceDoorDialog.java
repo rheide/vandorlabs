@@ -22,6 +22,7 @@ public final class SpaceDoorDialog {
         SpaceDoorMotion next=MOTIONS[DialogInput.cycle(motion.ordinal(),MOTIONS.length,direction)];
         if(next==SpaceDoorMotion.X_SPLIT&&!large)next=MOTIONS[DialogInput.cycle(next.ordinal(),MOTIONS.length,direction)];return next;
     }
+    public static String joinLabel(boolean join){return join?"Join: On":"Join: Off";}
     public static int nextPanel(int mode,int depth,int direction){return DialogInput.cycle(mode,depth==0?3:2,direction);}
     public static int panelAfterPosition(int mode,int depth){return depth!=0&&mode==2?1:mode;}
     public static int nextSecurity(int mode,int direction){int index=0;while(SECURITY_ORDER[index]!=mode)index++;return SECURITY_ORDER[DialogInput.cycle(index,SECURITY_ORDER.length,direction)];}
