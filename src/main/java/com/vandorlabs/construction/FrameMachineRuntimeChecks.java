@@ -47,6 +47,7 @@ public final class FrameMachineRuntimeChecks {
                 require(reloaded.pivot().equals(tile.pivot()) && reloaded.cell(0,0,0).equals(tile.cell(0,0,0)),"saved corner offset");
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
+                if(id.equals("assembly_press")&&!turned&&corner==0&&facing==EnumFacing.NORTH)checkPlate(world,tile);
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
                 require(((TileEntityAnimatedScreenSelector)world.getTileEntity(missing)).getHousingTexture()==0,
                         "mixed finish restored through formation and dismantling");
@@ -59,6 +60,49 @@ public final class FrameMachineRuntimeChecks {
             }
         }
         System.out.println("[vandorlabs][reprolab] constructors PASS "+count+" independent frames all corners axes facings diagnostics persistence sync dismantling bounds");
+    }
+    private static void checkPlate(World world,TileEntityConstructor press){
+        net.minecraft.item.Item plate=com.vandorlabs.items.ModItems.PROGRAMMABLE_PLATE;
+        net.minecraft.item.Item ingot=com.vandorlabs.items.ModItems.PROGRAMMABLE_MATTER_INGOT;
+        net.minecraftforge.energy.IEnergyStorage power=world.getTileEntity(press.synthesisPowerPort())
+                .getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.DOWN);
+        int recipe=press.builderRecipeIndex("programmable_plate"),spent=0;
+        require(recipe>=0&&power!=null&&press.getStackInSlot(0).isEmpty(),"Plate available from the formed Press without a Catalog Chip");
+        press.configureSynthesisRedstone(0,com.vandorlabs.redstone.ChannelList.EMPTY);
+        press.selectDesign(recipe);
+        press.synthesisInventory().setStackInSlot(0,new net.minecraft.item.ItemStack(ingot));
+        long initialTime=world.getTotalWorldTime();
+        try{
+            for(int tick=0;tick<450&&press.synthesisInventory().getStackInSlot(1).isEmpty();tick++){
+                world.setTotalWorldTime(initialTime+tick+1);
+                spent+=power.receiveEnergy(1000,false);
+                press.update();
+            }
+        }finally{world.setTotalWorldTime(initialTime);}
+        require(press.synthesisInventory().getStackInSlot(0).isEmpty()&&!press.processing()&&spent==8000,
+                "Forge Press consumes exactly one ingot and 8,000 RF");
+        net.minecraft.item.ItemStack output=press.synthesisInventory().extractItem(1,1,false);
+        require(output.getItem()==plate&&output.getCount()==1,"Forge Press produces one Programmable Plate");
+        String[] pieces={"helmet","chestplate","leggings","boots"};
+        String[] patterns={
+                "###"+"# #"+"   ",
+                "# #"+"###"+"###",
+                "###"+"# #"+"# #",
+                "# #"+"# #"+"   "
+        };
+        for(int piece=0;piece<pieces.length;piece++){
+            net.minecraft.item.crafting.IRecipe armor=net.minecraftforge.fml.common.registry.ForgeRegistries.RECIPES
+                    .getValue(new ResourceLocation("vandorlabs","programmable_"+pieces[piece]));
+            net.minecraft.inventory.InventoryCrafting grid=new net.minecraft.inventory.InventoryCrafting(new net.minecraft.inventory.Container(){
+                @Override public boolean canInteractWith(net.minecraft.entity.player.EntityPlayer player){return true;}
+            },3,3);
+            String shape=patterns[piece];
+            for(int cell=0;cell<9;cell++)if(shape.charAt(cell)=='#')grid.setInventorySlotContents(cell,output.copy());
+            require(armor!=null&&armor.matches(grid,world)&&!armor.getCraftingResult(grid).isEmpty(),"Plate crafts "+pieces[piece]);
+            for(int cell=0;cell<9;cell++)if(shape.charAt(cell)=='#')grid.setInventorySlotContents(cell,new net.minecraft.item.ItemStack(ingot));
+            require(!armor.matches(grid,world),"raw ingots do not craft "+pieces[piece]);
+        }
+        System.out.println("[vandorlabs][reprolab] programmable plate PASS Forge Press/no Catalog/8000RF/four armor recipes");
     }
     private static void checkLegacyPalette(World world,Block programmable){
         String old=com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER;
