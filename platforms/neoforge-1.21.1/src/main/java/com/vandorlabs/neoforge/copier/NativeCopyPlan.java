@@ -33,7 +33,7 @@ final class NativeCopyPlan {
             permission(world,actor,pos);var state=world.getBlockState(pos);if(state.isAir()){inputCells.add(new NativeRawCell(pos,state,null,LIMITS.tileBytes()));continue;}
             if(pos.equals(root.getBlockPos())||pos.equals(root.chest()))throw new IllegalArgumentException("Keep the controller and material chest outside the input prism");
             if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock)NativeCopyObservers.requireIdle(world,pos);
-            if(state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock)com.vandorlabs.neoforge.builders.NativeBuilderTransfer.requireIdle(world,pos);
+            if(state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock)NativeCopyBuilders.requireIdle(world,pos);
             boolean denied=com.vandorlabs.neoforge.builders.NativeBuilderTransfer.builder(state)
                 ?com.vandorlabs.neoforge.builders.NativeBuilderTransactions.transferBreakBlocked(actor,world,pos,state)
                 :com.vandorlabs.neoforge.gear.NativeObserverCapture.breakBlocked(actor,world,pos,state);

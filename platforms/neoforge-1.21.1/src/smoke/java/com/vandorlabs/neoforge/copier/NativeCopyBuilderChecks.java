@@ -29,7 +29,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCopyBuilderChecks {
     private static final String MARKER="[vandorlabs][copy-builders]";
-    private static final List<String> PROFILES=List.of("synthesis_tower","assembly_press","enclosed_gantry");
+    private static final List<NativeBuilderDesigns.Design> PROFILES=NativeBuilderDesigns.ALL;
     private static ServerLevel world;
     private static ServerPlayer actor;
     private static NativeCopyControllerEntity copy;
@@ -43,7 +43,7 @@ public final class NativeCopyBuilderChecks {
         if(!Boolean.getBoolean("vandorlabs.copyBuildersCheck"))return;
         world=event.getServer().overworld();
         try{
-            for(int x=0;x<=1;x++)for(int z=0;z<=4;z++){
+            for(int x=0;x<=1;x++)for(int z=0;z<=13;z++){
                 world.setChunkForced(x,z,true);
                 world.getChunk(x,z);
             }
@@ -54,7 +54,7 @@ public final class NativeCopyBuilderChecks {
     }
 
     private static void setup(){
-        design=NativeBuilderDesigns.find(PROFILES.get(profile));
+        design=PROFILES.get(profile);
         root=new BlockPos(15,100,8+profile*24);
         input=root.east().above();
         output=root.west(design.width()).above();
@@ -92,22 +92,41 @@ public final class NativeCopyBuilderChecks {
             require(++ticks<450,"bounded asynchronous copy "+copy.status()+" "+copy.error());
             var source=(NativeBuilderEntity)world.getBlockEntity(input);
             if(stage==0&&source!=null&&source.formed()&&source.available()){
-                source.configureRedstone(1,ChannelList.of(51));
-                if(source.choices()>1)source.selectDesign(1);
-                var chip=NativeCredentialItems.dataChip(2);
-                NativeChipJournal.write(chip,true,"Private title",new String[]{"Physical builder source chip"});
-                source.setItem(3,chip);
-                require(ItemStack.matches(source.getItem(3),chip),"fixture physical Builder chip installed");
                 require(copy.configure(actor,new CopySettings(design.height(),37,0,ChannelList.EMPTY,false)),"configure full scan");
-                refuse("Empty and disconnect");
-                require(ItemStack.matches(source.getItem(3),chip),"refusal left physical chip exact");
-                source.removeItem(3,1);
+                var drive=source.drive();
+                if(drive==null){
+                    source.configureRedstone(1,ChannelList.of(51));
+                    if(source.choices()>1)source.selectDesign(1);
+                }else{
+                    if(!source.synthesisReady())return;
+                    refuse("Turn off");
+                    var choices=source.driveSettings();
+                    require(source.configureDrive(new NativeDriveSettings(true,false,drive.engine(),drive.exhaust?2:0,8,
+                        choices.display(),choices.keyboard(),false,2),ChannelList.of(51)),"set idle drive gate and presentation");
+                    if(drive==NativeDriveDesign.OCULUS){
+                        refuse("Standby or Idle");
+                        var saved=source.saveWithFullMetadata(world.registryAccess());
+                        saved.putInt("MachineActivity",0);
+                        source.loadWithComponents(saved,world.registryAccess());
+                        com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(source);
+                        com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.flush(world);
+                    }
+                }
+                if(drive==null||drive.hasChip()){
+                    var chip=NativeCredentialItems.dataChip(2);
+                    NativeChipJournal.write(chip,true,"Private title",new String[]{"Physical builder source chip"});
+                    source.setItem(3,chip);
+                    require(ItemStack.matches(source.getItem(3),chip),"fixture physical Builder chip installed");
+                    refuse("Empty and disconnect");
+                    require(ItemStack.matches(source.getItem(3),chip),"refusal left physical chip exact");
+                    source.removeItem(3,1);
+                }
                 require(copy.configure(actor,new CopySettings(1,37,0,ChannelList.EMPTY,false)),"configure partial scan");
                 refuse("entire builder frame");
                 require(copy.configure(actor,new CopySettings(design.height(),37,0,ChannelList.EMPTY,false)),"configure complete scan");
                 NativeCopyService.fault=(header,cell)->{
                     if(writes==0&&world.getBlockEntity(output) instanceof NativeBuilderEntity
-                        &&world.getBlockEntity(output.east()) instanceof NativeBuilderPartEntity){
+                        &&world.getBlockEntity(output.above()) instanceof NativeBuilderPartEntity){
                         writes++;
                         throw new IllegalStateException("Expected staged builder frame failure");
                     }
@@ -116,7 +135,7 @@ public final class NativeCopyBuilderChecks {
                 stage=1;
             }else if(stage==1&&!copy.busy()){
                 require(writes==1&&copy.status().equals("Copy rolled back")&&world.getBlockState(output).isAir()
-                    &&world.getBlockState(output.east()).isAir(),"protected root and part removed after caught rollback");
+                    &&world.getBlockState(output.above()).isAir(),"protected root and part removed after caught rollback");
                 require(supply.getItem(0).getCount()==2&&supply.getItem(1).getCount()==matter+1,"full exact refund");
                 require(world.getEntitiesOfClass(ItemEntity.class,new AABB(root).inflate(12)).isEmpty(),"no duplicate loose items");
                 copy.request(actor);
@@ -130,6 +149,8 @@ public final class NativeCopyBuilderChecks {
                     &&target.channels().equals(ChannelList.of(88)),
                     "fresh owner retains configured builder facing and translated channel");
                 require(source.available()&&source.channels().equals(ChannelList.of(51)),"original owner remains unchanged");
+                if(source.drive()!=null)require(target.driveSettings().equals(source.driveSettings())
+                    &&target.driveActivity()==source.driveActivity()&&target.driveLevel()==0,"exact idle drive/computer settings and activity");
                 for(int x=0;x<design.width();x++)for(int y=0;y<design.height();y++)for(int z=0;z<design.depth();z++){
                     var a=source.cell(x,y,z);
                     var b=target.cell(x,y,z);

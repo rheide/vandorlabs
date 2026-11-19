@@ -65,7 +65,7 @@ public final class NativeCopyService {
             if(recipe.source!=null){recipe.sourceVolume.requireLoaded(world);
                 for(var cell:recipe.source.cells()){
                     if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock)NativeCopyObservers.requireIdle(world,cell.pos);
-                    if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock)com.vandorlabs.neoforge.builders.NativeBuilderTransfer.requireIdle(world,cell.pos);
+                    if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock)NativeCopyBuilders.requireIdle(world,cell.pos);
                 }if(!recipe.source.matches(world,NativeCopyTiles::same))throw new IllegalArgumentException("Input private fields or blocks changed");for(var pos:recipe.sourceVolume.cells())permission(world,header,actor,pos);}else{var mount=NativeCopyPlan.chipMount(world,root.getBlockPos());if(mount==null||!mount.getBlockPos().equals(recipe.chipMount)||!ItemStack.matches(mount.getItem(0),recipe.chip()))throw new IllegalArgumentException("Construction chip changed");}validateEconomy(world,header,recipe);
         }
         public BlockEntity stage(ServerLevel world,NativeCellTransactions.Header header,NativeRawCell cell,NativeCopyReceipt recipe){validateEconomy(world,header,recipe);return NativeCopyTiles.stage(world,cell);}
