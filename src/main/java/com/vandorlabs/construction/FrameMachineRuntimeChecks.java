@@ -74,11 +74,11 @@ public final class FrameMachineRuntimeChecks {
         long initialTime=world.getTotalWorldTime();
         try{
             for(int tick=0;tick<450&&press.synthesisInventory().getStackInSlot(1).isEmpty();tick++){
-                world.setTotalWorldTime(initialTime+tick+1);
+                world.getWorldInfo().setWorldTotalTime(initialTime+tick+1);
                 spent+=power.receiveEnergy(1000,false);
                 press.update();
             }
-        }finally{world.setTotalWorldTime(initialTime);}
+        }finally{world.getWorldInfo().setWorldTotalTime(initialTime);}
         require(press.synthesisInventory().getStackInSlot(0).isEmpty()&&!press.processing()&&spent==8000,
                 "Forge Press consumes exactly one ingot and 8,000 RF");
         net.minecraft.item.ItemStack output=press.synthesisInventory().extractItem(1,1,false);
