@@ -38,12 +38,12 @@ public final class NativeMachineJeiChecks {
   need(recipes.stream().anyMatch(r->r.kind()==MachineRecipeDisplay.Kind.CHARGING&&NativeBatteryModule.energy(r.input())==0&&NativeBatteryModule.energy(r.output())==10000),"physical fully charged output");
   need(recipes.stream().anyMatch(r->r.kind()==MachineRecipeDisplay.Kind.INFUSING&&r.input().is(Items.IRON_INGOT)&&r.output().is(com.vandorlabs.neoforge.VandorLabsBootstrap.MATTER_INGOT.get())),"iron to Matter Ingot");
   need(manager.createRecipeCatalystLookup(NativeMachineJeiPlugin.INFUSING).getItemStack().anyMatch(s->s.is(NativeInfuserBindings.BLOCK.asItem())),"Infuser catalyst");
-  verifyBuilder(manager,NativeMachineJeiPlugin.SYNTHESIS,"synthesis_tower","programmable_matter_block",
+  verifyBuilder(manager,NativeMachineJeiPlugin.SYNTHESIS,"synthesis_tower","programmable_block",
        Set.of("synthesis_tower_core","assembly_press_core","enclosed_gantry_core"),
        Set.of("standalone_antenna_core","standalone_dish_core","programmable_ramp","longburn_drive_core","meridian_drive_core","oculus_drive_core","vector_fold_array_core"),20);
   verifyBuilder(manager,NativeMachineJeiPlugin.PRESS,"assembly_press","programmable_matter_ingot",
        Set.of("data_chip","access_card","programmable_plate"),Set.of("battery_module","autopilot_module","navigation_data_module"),40);
-  verifyBuilder(manager,NativeMachineJeiPlugin.GANTRY,"enclosed_gantry","programmable_matter_block",
+  verifyBuilder(manager,NativeMachineJeiPlugin.GANTRY,"enclosed_gantry","programmable_block",
        Set.of("gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel",
               "large_landing_wheel","landing_ski","landing_plate"),Set.of(),40);
  }

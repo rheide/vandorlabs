@@ -221,7 +221,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public boolean frame(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape!=null&&shape.frame(x,y,z);}
     public boolean assemble(){
         if(world==null || world.isRemote || changing || coreState()==null || formed()||!observerDataValid())return false;
-        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
+        Block matter=com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK;
         EnumFacing selected=null;int selectedX=0,selectedZ=0,selectedWidth=core().width,best=Integer.MAX_VALUE;boolean selectedInverted=false;
         EnumFacing preferred=facing();
         // Prefer the placed facing, but infer the footprint rather than requiring a hidden corner convention.
@@ -242,7 +242,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
                     BlockPos p=pos.add(candidate.x(x,z),orientation==1?-y:y,candidate.z(x,z));if(p.equals(pos))continue;
                     boolean loaded=world.isBlockLoaded(p,false),frame=candidate.frame(x,y,z);
                     if(!loaded || (frame?world.getBlockState(p).getBlock()!=matter:!world.isAirBlock(p))){
-                        if(errors++==0)first=(loaded?(frame?world.getBlockState(p).getBlock() instanceof BlockConstructorCore?"Use a Matter Block, not another Core":"Matter Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();
+                        if(errors++==0)first=(loaded?(frame?world.getBlockState(p).getBlock() instanceof BlockConstructorCore?"Use a Programmable Block in place of the extra Core":"Programmable Block required":"Interior must be air"):"Chunk not loaded")+" at "+p.getX()+", "+p.getY()+", "+p.getZ();
                     }
                 }
                 if(errors<best){best=errors;assemblyProblem=first+" ("+errors+" mismatched cells in closest frame).";}
@@ -250,8 +250,31 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
             }
           }
         }
-        if(best==Integer.MAX_VALUE)assemblyProblem="Complete a proportional Matter frame: Survey Dish N×N×N (N=3–16), Sentinel Array N×N×2N (N=2–8).";
+        if(best==Integer.MAX_VALUE)assemblyProblem="Complete a proportional Programmable Block frame: Survey Dish N×N×N (N=3–16), Sentinel Array N×N×2N (N=2–8).";
         if(selected==null)return false;
+        int height=observer()?com.vandorlabs.navigation.ObserverScale.height(core().design,selectedWidth):core().height;
+        int depth=observer()?selectedWidth:core().depth;
+        com.vandorlabs.machines.CoreLayout selectedLayout=new com.vandorlabs.machines.CoreLayout(selectedWidth,height,depth,
+                selected.getIndex(),selectedX,selectedZ);
+        java.util.Map<BlockPos,TileEntityConstructorPart.Frame> frames=new java.util.HashMap<>();
+        try{
+            for(int y=0;y<height;y++)for(int x=0;x<selectedWidth;x++)for(int z=0;z<depth;z++){
+                if(!selectedLayout.frame(x,y,z))continue;
+                BlockPos p=pos.add(selectedLayout.x(x,z),selectedInverted?-y:y,selectedLayout.z(x,z));
+                if(p.equals(pos))continue;
+                TileEntity original=world.getTileEntity(p);
+                if(!(original instanceof TileEntityAnimatedScreenSelector)){
+                    assemblyProblem="Wait for the programmable frame block at "+p+" to load.";
+                    return false;
+                }
+                IBlockState state=world.getBlockState(p);
+                frames.put(p,new TileEntityConstructorPart.Frame(state.getValue(com.vandorlabs.blocks.BlockProgrammableBlock.FACING),
+                        original.writeToNBT(new NBTTagCompound())));
+            }
+        }catch(RuntimeException unsupported){
+            assemblyProblem="A programmable frame block could not be saved.";
+            return false;
+        }
         changing=true;
         try{
             coreX=selectedX;coreZ=selectedZ;observerInverted=selectedInverted;observerWidth=observer()?selectedWidth:0;observerSnapshot=null;
@@ -259,7 +282,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
             Block part=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:constructor_part"));
             for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos))continue;
-                world.setBlockState(p,part.getDefaultState(),2);((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frame(x,y,z));
+                world.setBlockState(p,part.getDefaultState(),2);
+                ((TileEntityConstructorPart)world.getTileEntity(p)).owner(pos,frames.get(p));
             }
             world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,true),3);renderAppearance=true;markDirty();
             world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);refreshInputs();return true;
@@ -271,10 +295,9 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         changing=true;
         try{
             TokenSlotInteractions.drop(world,pos);if(builder())synthesisRuntime.drop();
-            Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
             for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
                 BlockPos p=cell(x,y,z);if(p.equals(pos) || !world.isBlockLoaded(p))continue;TileEntity part=world.getTileEntity(p);
-                if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))world.setBlockState(p,((TileEntityConstructorPart)part).frameMatter()?matter.getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState(),2);
+                if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))((TileEntityConstructorPart)part).restoreFrame(2);
             }
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();refresh();
         }finally{changing=false;}

@@ -24,7 +24,7 @@ final class BridgeMachineChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("bridge machines: "+why);}
     static void frame(WorldServer world,BlockPos root,FrameMachineDesign spec,int stage){
         BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);
-        Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");
+        Block matter=Block.getBlockFromName("vandorlabs:programmable_block");
         if(stage==0)world.setBlockState(root,block.getDefaultState(),2);
         TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);
         for(int y=0;y<spec.height;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++){

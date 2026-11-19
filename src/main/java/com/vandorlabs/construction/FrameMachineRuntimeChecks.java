@@ -13,7 +13,8 @@ import net.minecraft.world.World;
 public final class FrameMachineRuntimeChecks {
     private static String scenario;
     public static void run(World world,net.minecraft.entity.player.EntityPlayer player){
-        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
+        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_block"));
+        checkLegacyPalette(world,matter);
         BlockPos minimum=new BlockPos(150,225,150);int count=0;
         for(FrameMachineDesign spec:FrameMachineDesign.all())for(boolean turned:new boolean[]{false,true})for(int corner=0;corner<4;corner++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
             String id=spec.design;BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+spec.block));
@@ -34,6 +35,8 @@ public final class FrameMachineRuntimeChecks {
                 require(tile.assemblyProblem().contains("Interior must be air"),"actionable obstruction diagnostic");world.setBlockToAir(middle);}
                 BlockPos missing=original.entrySet().stream().filter(e->e.getValue()).map(e->e.getKey()).findFirst().get();world.setBlockToAir(missing);
                 require(!tile.assemble(),"missing base rejects assembly");world.setBlockState(missing,matter.getDefaultState());
+                TileEntityAnimatedScreenSelector selectedFrame=(TileEntityAnimatedScreenSelector)world.getTileEntity(missing);
+                selectedFrame.setHousingTexture(0);
                 require(tile.assemble() && tile.formed(),"frame assembles "+id+facing+" corner="+corner+" turned="+turned);
                 net.minecraft.block.state.IBlockState formed=world.getBlockState(root);
                 require(!formed.isOpaqueCube()&&!formed.isFullCube()&&formed.getLightOpacity()==0,"formed core cannot hide neighboring terrain through model cutouts");
@@ -45,6 +48,8 @@ public final class FrameMachineRuntimeChecks {
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
+                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(missing)).getHousingTexture()==0,
+                        "mixed finish restored through formation and dismantling");
                 checkCosmeticTicks(tile,spec);require(!tile.formed(),"dismantled frame never automatically reforms");
                 require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");
                 net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");checkCosmeticTicks(tile,spec);require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");
@@ -54,6 +59,34 @@ public final class FrameMachineRuntimeChecks {
             }
         }
         System.out.println("[vandorlabs][reprolab] constructors PASS "+count+" independent frames all corners axes facings diagnostics persistence sync dismantling bounds");
+    }
+    private static void checkLegacyPalette(World world,Block programmable){
+        String old=com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER;
+        require(!net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.containsKey(new ResourceLocation(old))
+                &&!net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.containsKey(new ResourceLocation(old)),
+                "retired Programmable Matter Block is absent from both registries");
+        com.vandorlabs.vehicle.VehicleStructure template=com.vandorlabs.vehicle.VehicleStructure.display(
+                java.util.Collections.singletonList(new com.vandorlabs.vehicle.VehicleStructure.Cell(
+                        BlockPos.ORIGIN,Blocks.IRON_BLOCK.getDefaultState(),null)));
+        NBTTagCompound saved=template.write();
+        NBTTagCompound palette=saved.getTagList("Palette",10).getCompoundTagAt(0);
+        palette.setString("Name",old);
+        require(!palette.hasKey("Properties"),"released Matter state carried no properties");
+        com.vandorlabs.vehicle.VehicleStructure migrated=com.vandorlabs.vehicle.VehicleStructure.readDisplay(saved);
+        require(migrated.at(BlockPos.ORIGIN).state.getBlock()==programmable&&migrated.at(BlockPos.ORIGIN).tileData()!=null,
+                "old tile-less frame acquires a programmable tile after snapshot migration");
+        com.vandorlabs.vehicle.VehicleWorld view=new com.vandorlabs.vehicle.VehicleWorld(world,migrated);
+        require(((TileEntityAnimatedScreenSelector)view.getTileEntity(BlockPos.ORIGIN)).getHousingTexture()
+                ==ScreenHousingTextures.DEFAULT_PROGRAMMABLE_BLOCK,"old frame retains Matter texture in captured world");
+        require(palette.getString("Name").equals(old),"validated snapshot does not mutate its saved source");
+        NBTTagCompound properties=new NBTTagCompound();properties.setString("facing","north");palette.setTag("Properties",properties);
+        boolean refused=false;
+        try{com.vandorlabs.vehicle.VehicleStructure.readDisplay(saved);}catch(IllegalArgumentException invalid){refused=true;}
+        require(refused,"old Matter palette rejects unrecognized properties");
+        NBTTagCompound item=new NBTTagCompound();item.setString("id",old);item.setByte("Count",(byte)17);
+        com.vandorlabs.persistence.RenamedBlocks.migrateItems(item);
+        require(item.getString("id").equals(programmable.getRegistryName().toString())&&item.getByte("Count")==17,
+                "old inventory frame item migrates and keeps its stack count");
     }
     private static void checkCosmeticTicks(TileEntityConstructor tile,FrameMachineDesign spec){
         boolean drive=spec.design.equals("longburn_drive")||spec.design.equals("meridian_core")||spec.design.equals("oculus_drive");

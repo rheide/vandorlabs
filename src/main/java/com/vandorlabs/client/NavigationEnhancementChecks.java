@@ -21,13 +21,16 @@ import org.lwjgl.opengl.GL11;
 final class NavigationEnhancementChecks {
     private static void need(boolean ok,String why){if(!ok)throw new IllegalStateException("navigation enhancements: "+why);}
     private static Object field(Object o,String name)throws Exception{java.lang.reflect.Field f=o.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(o);}
+    private static void resetAction(NavigationService.View view){
+        try{set(view,"lastAction",-100L);}catch(Exception failure){throw new IllegalStateException(failure);}
+    }
     private static void set(Object o,String name,Object value)throws Exception{java.lang.reflect.Field f=o.getClass().getDeclaredField(name);f.setAccessible(true);f.set(o,value);}
     static void run(Minecraft mc,File out,TileEntityNavigationTable root)throws Exception{
         mc.getIntegratedServer().addScheduledTask(()->{
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);WorldServer w=player.getServerWorld();TileEntityNavigationTable t=((TileEntityNavigationTable)w.getTileEntity(root.getPos())).reader();NavigationService.View v=NavigationService.view(t);ItemStack pin=t.getStackInSlot(0).copy();int oldX=v.x,oldZ=v.z,oldZoom=v.zoom;
             v.x+=500;NavigationService.action(player,t,0,8);need(v.x==NavigationChip.value(pin,"X")&&v.z==NavigationChip.value(pin,"Z"),"CTR returns to saved pin");
-            t.removeStackFromSlot(0);w.setTotalWorldTime(w.getTotalWorldTime()+3);NavigationService.action(player,t,0,8);need(v.x==Math.round(player.posX)&&v.z==Math.round(player.posZ),"CTR without pin returns to authoritative player");
-            t.setInventorySlotContents(0,pin);v=NavigationService.view(t);NavigationCanvas canvas=NavigationViewport.canvas(t,0);int coarse=canvas.gridWidth(v.zoom);for(int i=0;i<4;i++){w.setTotalWorldTime(w.getTotalWorldTime()+3);NavigationService.action(player,t,0,5);}need(canvas.gridWidth(v.zoom)>coarse,"deep zoom increases raster detail");
+            t.removeStackFromSlot(0);resetAction(v);NavigationService.action(player,t,0,8);need(v.x==Math.round(player.posX)&&v.z==Math.round(player.posZ),"CTR without pin returns to authoritative player");
+            t.setInventorySlotContents(0,pin);v=NavigationService.view(t);NavigationCanvas canvas=NavigationViewport.canvas(t,0);int coarse=canvas.gridWidth(v.zoom);for(int i=0;i<4;i++){resetAction(v);NavigationService.action(player,t,0,5);}need(canvas.gridWidth(v.zoom)>coarse,"deep zoom increases raster detail");
             v.x=oldX;v.z=oldZ;v.zoom=oldZoom;
             int chunks=w.getChunkProvider().getLoadedChunkCount();for(int x=0;x<16;x++)for(int z=0;z<16;z++)NavigationService.color(w,12000000+x,12000000+z,true);need(w.getChunkProvider().getLoadedChunkCount()==chunks,"fine seed sampling never loads chunks");
             long hits=NavigationService.rasterHits,samples=NavigationService.sampledPixels;NavigationService.request(player,t.getPos(),0,1,16,0);need(NavigationService.rasterHits>hits&&NavigationService.sampledPixels==samples,"unchanged view reuses completed server raster");

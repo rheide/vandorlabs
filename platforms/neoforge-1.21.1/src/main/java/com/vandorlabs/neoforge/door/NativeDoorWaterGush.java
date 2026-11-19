@@ -14,6 +14,10 @@ public final class NativeDoorWaterGush {
     private NativeDoorWaterGush(){}
     public static void update(NativeProgrammableDoorEntity owner,boolean stop){
         Level level=owner.getLevel();if(level==null||level.isClientSide)return;
+        if(owner instanceof NativeLargeDoorEntity largeOwner&&largeOwner.isHorizontal()){
+            horizontal(largeOwner,level,stop);
+            return;
+        }
         BlockPos lower=owner.getBlockPos();var base=owner.getBlockState();
         Block block=base.getBlock();boolean large=block instanceof NativeLargeDoorBlock;
         if((!large&&!(block instanceof NativeProgrammableDoorBlock))||base.getValue(NativeProgrammableDoorBlock.HALF)!=DoubleBlockHalf.LOWER)return;
@@ -25,18 +29,64 @@ public final class NativeDoorWaterGush {
             BlockPos pos=lower.above(half);if(!NativeFluidWorld.loaded(level,pos)||!level.getBlockState(pos).is(block)||!(level.getBlockEntity(pos) instanceof NativeProgrammableDoorEntity part))continue;
             var data=part.containedFluids().snapshot();var first=data.side(0).fluid();var second=data.side(1).fluid();int wet=DoorWaterOutlets.wetSide(first.is(Fluids.WATER),second.is(Fluids.WATER),!first.isEmpty(),!second.isEmpty());if(wet<0)continue;supplying=true;
             Direction face=(large&&root!=null?root.getBlockState():base).getValue(NativeProgrammableDoorBlock.FACING);Direction exit=wet==0?face:face.getOpposite();int bit=1<<(half*4+exit.get2DDataValue());BlockPos out=pos.relative(exit);
-            if(!NativeFluidWorld.loaded(level,out)){retained|=previous&bit;continue;}
-            var target=level.getBlockState(out);boolean water=target.getBlock() instanceof LiquidBlock&&target.getFluidState().is(FluidTags.WATER);int action=DoorWaterOutlets.supply((previous&bit)!=0,true,water,water&&target.getFluidState().isSource(),!target.getFluidState().isEmpty(),!water&&target.getFluidState().isEmpty()&&target.canBeReplaced());
-            if(action==DoorWaterOutlets.RETAIN)retained|=bit;
-            else if(action==DoorWaterOutlets.PUBLISH){retained|=bit;level.setBlock(out,Blocks.WATER.defaultBlockState(),Block.UPDATE_ALL);level.scheduleTick(out,Fluids.WATER,Fluids.WATER.getTickDelay(level));}
+            if(supply(level,out,(previous&bit)!=0))retained|=bit;
         }
-        for(int half=0;half<2;half++)for(Direction face:Direction.Plane.HORIZONTAL){int bit=1<<(half*4+face.get2DDataValue());if((previous&bit)==0||(retained&bit)!=0)continue;BlockPos out=lower.above(half).relative(face);
-            // A destroyed owner has no future tick: resolve its saved boundary outlet now.
-            if(!stop&&!NativeFluidWorld.loaded(level,out)){retained|=bit;continue;}
-            var target=level.getBlockState(out);boolean water=target.getBlock() instanceof LiquidBlock&&target.getFluidState().is(FluidTags.WATER);int action=DoorWaterOutlets.retire(true,false,true,stop,water,water&&target.getFluidState().isSource());
-            if(action==DoorWaterOutlets.DRAIN){level.setBlock(out,Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL,1),Block.UPDATE_ALL);level.scheduleTick(out,Fluids.FLOWING_WATER,Fluids.FLOWING_WATER.getTickDelay(level));}
+        for(int half=0;half<2;half++)for(Direction face:Direction.Plane.HORIZONTAL){
+            int bit=1<<(half*4+face.get2DDataValue());
+            if((previous&bit)!=0&&(retained&bit)==0&&retainOrDrain(level,lower.above(half).relative(face),stop))retained|=bit;
         }
         owner.setWaterOutlets(retained);owner.scheduleWaterGush(!stop&&(supplying||retained!=0));
         }finally{owner.endWaterGush();}
+    }
+
+    /** Each horizontal member owns the outlets immediately above and below its own stored fluid. */
+    private static void horizontal(NativeLargeDoorEntity owner,Level level,boolean stop){
+        BlockPos pos=owner.getBlockPos();
+        var root=stop?null:NativeLargeDoorLifecycle.root(level,pos);
+        if(!stop&&(root==null||root.placementRecovery()||!NativeFluidWorld.installed(owner)))return;
+        if(!owner.beginWaterGush())return;
+        try {
+            int previous=owner.waterOutlets(),retained=0,wet=-1;
+            if(root!=null&&root.getBlockState().getValue(NativeLargeDoorBlock.OPEN)){
+                var data=owner.containedFluids().snapshot();
+                var first=data.side(0).fluid();var second=data.side(1).fluid();
+                wet=DoorWaterOutlets.wetSide(first.is(Fluids.WATER),second.is(Fluids.WATER),!first.isEmpty(),!second.isEmpty());
+                if(wet>=0){
+                    Direction exit=wet==0?Direction.DOWN:Direction.UP;
+                    int bit=1<<wet;
+                    if(supply(level,pos.relative(exit),(previous&bit)!=0))retained|=bit;
+                }
+            }
+            for(int slot=0;slot<2;slot++){
+                int bit=1<<slot;
+                if((previous&bit)!=0&&(retained&bit)==0&&retainOrDrain(level,slot==0?pos.below():pos.above(),stop))retained|=bit;
+            }
+            owner.setWaterOutlets(retained);
+            owner.scheduleWaterGush(!stop&&(wet>=0||retained!=0));
+        } finally {
+            owner.endWaterGush();
+        }
+    }
+    private static boolean supply(Level level,BlockPos out,boolean previous){
+        if(!NativeFluidWorld.loaded(level,out))return previous;
+        var target=level.getBlockState(out);
+        boolean water=target.getBlock() instanceof LiquidBlock&&target.getFluidState().is(FluidTags.WATER);
+        int action=DoorWaterOutlets.supply(previous,true,water,water&&target.getFluidState().isSource(),!target.getFluidState().isEmpty(),!water&&target.getFluidState().isEmpty()&&target.canBeReplaced());
+        if(action==DoorWaterOutlets.PUBLISH){
+            level.setBlock(out,Blocks.WATER.defaultBlockState(),Block.UPDATE_ALL);
+            level.scheduleTick(out,Fluids.WATER,Fluids.WATER.getTickDelay(level));
+        }
+        return action==DoorWaterOutlets.PUBLISH||action==DoorWaterOutlets.RETAIN;
+    }
+    private static boolean retainOrDrain(Level level,BlockPos out,boolean stop){
+        // A destroyed upright owner has no future tick, matching the released outlet cleanup.
+        if(!stop&&!NativeFluidWorld.loaded(level,out))return true;
+        var target=level.getBlockState(out);
+        boolean source=target.getBlock() instanceof LiquidBlock&&target.getFluidState().is(FluidTags.WATER)&&target.getFluidState().isSource();
+        if(source){
+            level.setBlock(out,Blocks.WATER.defaultBlockState().setValue(LiquidBlock.LEVEL,1),Block.UPDATE_ALL);
+            level.scheduleTick(out,Fluids.FLOWING_WATER,Fluids.FLOWING_WATER.getTickDelay(level));
+        }
+        return false;
     }
 }

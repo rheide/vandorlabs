@@ -28,12 +28,14 @@ final class ItemRuntimeChecks {
         InventoryCrafting grid = new InventoryCrafting(new Container() {
             @Override public boolean canInteractWith(EntityPlayer player) { return true; }
         }, 3, 3);
-        for(int i=0;i<9;i++)grid.setInventorySlotContents(i,new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
+        for(int slot:new int[]{1,3,5,7})grid.setInventorySlotContents(slot,new ItemStack(ModItems.INDUSTRIAL_ALLOY_INGOT));
+        grid.setInventorySlotContents(4,new ItemStack(net.minecraft.init.Items.REDSTONE));
         ItemStack packed=CraftingManager.findMatchingResult(grid,player.world);
-        require(!packed.isEmpty() && packed.getItem()==Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:programmable_matter_block")) && packed.getCount()==1,"nine ingots pack one matter block");
-        for(int i=0;i<9;i++)grid.setInventorySlotContents(i,ItemStack.EMPTY);grid.setInventorySlotContents(0,packed);
-        ItemStack unpacked=CraftingManager.findMatchingResult(grid,player.world);
-        require(unpacked.getItem()==ModItems.PROGRAMMABLE_MATTER_INGOT && unpacked.getCount()==9,"matter block unpacks to nine ingots");
+        require(!packed.isEmpty()&&packed.getItem()==Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:programmable_block"))
+                &&packed.getCount()==4,"four alloy ingots with redstone craft four programmable blocks");
+        require(CraftingManager.REGISTRY.getObject(new ResourceLocation("vandorlabs","programmable_matter_unpack"))==null,
+                "retired unpack recipe cannot turn programmable blocks back into ingots");
+        for(int slot=0;slot<grid.getSizeInventory();slot++)grid.setInventorySlotContents(slot,ItemStack.EMPTY);
         ItemStack result=new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT);
         Minecraft mc = Minecraft.getMinecraft();
         require(mc.getRenderItem().getItemModelMesher().getItemModel(result)

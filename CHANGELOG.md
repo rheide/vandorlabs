@@ -2,11 +2,13 @@
 
 ## 1.12.0 (in development)
 
+- Supply Survey Dishes and Sentinel Arrays with 20 RF/tick through their bottom inputs. Linked Screens and Navigation Tables show a haiku when no observer is powered.
+
 - Press flat Programmable Plates in the Assembly Press and use them to craft the four programmable armor pieces.
-- Use the former Programmable Matter finish as the default artwork for new Programmable Blocks.
-- Mount Large Programmable Doors horizontally against a block side on Forge to open a vertical passage.
+- Use the former Programmable Matter finish as the default for Programmable Blocks. Multiblocks accept any Programmable Block finish. Existing standalone Matter blocks convert to Programmable Blocks.
+- Mount Large Programmable Doors horizontally against a block side on Forge and NeoForge to open a vertical passage. Arms and their payloads can pass through the clear opening.
 - Capture Forge vehicles with retracted Extenders while retaining displaced arm sections and their materialized attachments.
-- Route RF power, fluids, or items through a properly aligned stationary Arm endpoint on Forge. Transfers are off by default.
+- Route RF power, fluids, or items through a properly aligned stationary Arm endpoint on Forge and NeoForge. Transfers are off by default.
 - Form Maxwell, Meridian, Oculus and Vector Fold structures and fabricate their Cores on NeoForge.
 - Form the standalone Paladyne and Seyr Navigation Computers with authored Off, Idle and Computing displays.
 - Copy idle, disconnected Synthesis Towers, Assembly Presses, Enclosed Gantries and eligible standalone drives and Navigation Computers with empty slots at exact frame cost. Grid-aligned Extenders can carry empty idle production builders with block pushing off.

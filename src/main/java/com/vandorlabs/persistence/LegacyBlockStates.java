@@ -26,6 +26,7 @@ public final class LegacyBlockStates {
             BlockStateReference reference=BlockStateReference.parse(encoded);
             int retired=RetiredCockpitGlass.variant(reference.id);
             if(retired>=0)return reference.properties.isEmpty()?RetiredCockpitGlass.state(retired):null;
+            if(RenamedBlocks.OLD_MATTER.equals(reference.id))return reference.properties.isEmpty()?RenamedBlocks.matterState():null;
             ResourceLocation id=new ResourceLocation(RenamedBlocks.canonical(reference.id));
             // Minecraft's defaulted registry returns AIR for a missing name.
             // Missing saved materials must remain unavailable, never become air.

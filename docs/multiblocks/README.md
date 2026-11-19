@@ -1,8 +1,10 @@
 # Multiblock build guides
 
-Each guide shows successive stages captured in Minecraft. All frame machines reuse the same Core-and-Programmable-Matter assembly rules.
+Each guide shows successive stages captured in Minecraft. All frame machines reuse the same rules for the matching Core and frame blocks.
 
-| Assembly | Width × depth × height | Matter Blocks |
+Build the frame with **Programmable Blocks** in any finish. The frame blocks keep their finishes when the assembly is dismantled.
+
+| Assembly | Width × depth × height | Frame Blocks |
 | --- | --- | --- |
 | [Assembly Press](assembly-press/README.md) | 4 × 3 × 3 | 25 + one Core |
 | [Synthesis Tower](synthesis-tower/README.md) | 3 × 3 × 5 | 28 + one Core |

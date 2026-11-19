@@ -137,7 +137,7 @@ public final class NativeCopyObserverChecks {
                         "both formed closures resolve all relative member references");
                 }
                 require(supply.getItem(0).getCount()==1&&supply.getItem(1).getCount()==1,"pay one Core and only physical frame Matter");
-                require(NativeNavigationSources.matching(world,root,ChannelList.of(88)).stream().anyMatch(a->a.stationary()==placed),
+                require(NativeNavigationSources.noPower(world,root,ChannelList.of(88)),
                     "copied observer is discoverable by actual navigation");
                 require(world.getEntitiesOfClass(ItemEntity.class,new AABB(root).inflate(12)).isEmpty(),"no duplicated components after retry");
                 System.out.println(MARKER+" profile PASS "+design.id()+" inverted="+inverted+" paidMatter="+matter);

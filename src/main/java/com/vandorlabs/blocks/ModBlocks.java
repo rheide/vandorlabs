@@ -206,7 +206,6 @@ public class ModBlocks {
         add(new BlockBattery());
         add(new BlockHexTank());
         add(new BlockMatterInfuser());
-        add(new BlockVandor("programmable_matter_block"));
         add(new BlockIndustrialLever());
         add(new BlockCompactLever());
         add(new BlockIndustrialTable());
@@ -423,6 +422,11 @@ public class ModBlocks {
     public static void onMissingDisplayBlocks(RegistryEvent.MissingMappings<Block> event) {
         for (RegistryEvent.MissingMappings.Mapping<Block> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
+            if(com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER.equals(mapping.key.toString())){
+                com.vandorlabs.persistence.RetiredCockpitGlass.remember(mapping.id,com.vandorlabs.persistence.RetiredCockpitGlass.MATTER);
+                mapping.ignore();
+                continue;
+            }
             int retired=com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString());
             if(retired>=0){com.vandorlabs.persistence.RetiredCockpitGlass.remember(mapping.id,retired);mapping.remap(com.vandorlabs.persistence.RetiredCockpitGlass.state(retired).getBlock());continue;}
 
@@ -440,12 +444,13 @@ public class ModBlocks {
     }
 
     @SubscribeEvent
-    public static void onMissingGlassRecipes(RegistryEvent.MissingMappings<net.minecraft.item.crafting.IRecipe> event){for(RegistryEvent.MissingMappings.Mapping<net.minecraft.item.crafting.IRecipe> mapping:event.getMappings())if(com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString())>=0)mapping.ignore();else if(!com.vandorlabs.persistence.RenamedBlocks.canonical(mapping.key.toString()).equals(mapping.key.toString())){net.minecraft.item.crafting.IRecipe recipe=net.minecraftforge.fml.common.registry.ForgeRegistries.RECIPES.getValue(new ResourceLocation(com.vandorlabs.persistence.RenamedBlocks.canonical(mapping.key.toString())));if(recipe!=null)mapping.remap(recipe);}}
+    public static void onMissingGlassRecipes(RegistryEvent.MissingMappings<net.minecraft.item.crafting.IRecipe> event){for(RegistryEvent.MissingMappings.Mapping<net.minecraft.item.crafting.IRecipe> mapping:event.getMappings())if(com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString())>=0||"vandorlabs:programmable_matter_unpack".equals(mapping.key.toString())||com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER.equals(mapping.key.toString()))mapping.ignore();else if(!com.vandorlabs.persistence.RenamedBlocks.canonical(mapping.key.toString()).equals(mapping.key.toString())){net.minecraft.item.crafting.IRecipe recipe=net.minecraftforge.fml.common.registry.ForgeRegistries.RECIPES.getValue(new ResourceLocation(com.vandorlabs.persistence.RenamedBlocks.canonical(mapping.key.toString())));if(recipe!=null)mapping.remap(recipe);}}
 
     @SubscribeEvent
     public static void onMissingDisplayItems(RegistryEvent.MissingMappings<Item> event) {
         for (RegistryEvent.MissingMappings.Mapping<Item> mapping : event.getMappings()) {
             if (!VandorLabs.MODID.equals(mapping.key.getResourceDomain())) continue;
+            if(com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER.equals(mapping.key.toString())){mapping.ignore();continue;}
             int retired=com.vandorlabs.persistence.RetiredCockpitGlass.variant(mapping.key.toString());
             if(retired>=0){mapping.remap(Item.getItemFromBlock(com.vandorlabs.persistence.RetiredCockpitGlass.state(retired).getBlock()));continue;}
 

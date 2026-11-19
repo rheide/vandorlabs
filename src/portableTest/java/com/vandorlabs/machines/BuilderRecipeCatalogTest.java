@@ -10,6 +10,9 @@ public final class BuilderRecipeCatalogTest {
   need(BuilderRecipeCatalog.known("assembly_press").equals(Arrays.asList("data_chip","access_card","battery_module",
           "autopilot_module","navigation_data_module","programmable_plate")),"Press preserves saved indices and appends Programmable Plate");
   need(BuilderRecipeCatalog.defaults("assembly_press").contains("programmable_plate"),"Plate is a default blueprint");
+  need(BuilderRecipeCatalog.input("assembly_press").equals("programmable_matter_ingot")
+          &&BuilderRecipeCatalog.input("synthesis_tower").equals("programmable_block")
+          &&BuilderRecipeCatalog.input("enclosed_gantry").equals("programmable_block"),"Machine inputs remain distinct");
   System.out.println("BuilderRecipeCatalogTest PASS releasedIndices/dynamicAppend/catalogSelection/machineIsolation/programmablePlate");
  }
  private static void need(boolean value,String why){if(!value)throw new AssertionError(why);}
