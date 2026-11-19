@@ -9,6 +9,8 @@ import java.util.List;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
@@ -19,6 +21,50 @@ public final class NativeAdvancedChairGeometry {
 
     static final int ROOT = 0, UPPER = 1, LEFT = 2, RIGHT = 3, CELLS = 4;
     private static final Data SOURCE = load();
+    private static final List<Vec3> GRIPS = loadGrips();
+
+    public static Vec3 gripPivot(int index, int level) {
+        return GRIPS.get(index - NativeChairArmrest.LEFT).add(0, 0, -level / 80D);
+    }
+
+    record GripHit(int index, BlockHitResult hit) {}
+
+    static GripHit grip(NativeChairEntity owner, Direction facing, BlockPos clicked, Vec3 start, Vec3 end) {
+        Vec3 origin = Vec3.atLowerCornerOf(owner.getBlockPos());
+        var inverse = facing == Direction.WEST ? Direction.EAST : facing == Direction.EAST ? Direction.WEST : facing;
+        var a = turn(start.subtract(origin), inverse);
+        var b = turn(end.subtract(origin), inverse);
+        GripHit nearest = null;
+        double best = Double.POSITIVE_INFINITY;
+        for (int index = NativeChairArmrest.LEFT; index <= NativeChairArmrest.RIGHT; index++) {
+            Vec3 pivot = gripPivot(index, owner.armrestLevel(index));
+            var bounds = new AABB(pivot.x - .04, height(pivot.y - .03, owner.pilotHeight()), pivot.z - .047,
+                pivot.x + .04, height(pivot.y + .15, owner.pilotHeight()), pivot.z + .047);
+            var hit = bounds.clip(a, b);
+            if (hit.isEmpty()) continue;
+            Vec3 point = turn(hit.get(), facing).add(origin);
+            double distance = point.distanceToSqr(start);
+            if (distance < best) {
+                best = distance;
+                nearest = new GripHit(index, new BlockHitResult(point, Direction.UP, BlockPos.containing(point), false));
+            }
+        }
+        return nearest != null && nearest.hit().getBlockPos().equals(clicked) ? nearest : null;
+    }
+
+    private static List<Vec3> loadGrips() {
+        String path = "/assets/vandorlabs/cockpits/chair_siderests/rig.json";
+        try (var stream = NativeAdvancedChairGeometry.class.getResourceAsStream(path)) {
+            if (stream == null) throw new IllegalStateException("Missing authored chair rig");
+            var parts = JsonParser.parseReader(new InputStreamReader(stream, StandardCharsets.UTF_8))
+                .getAsJsonObject().getAsJsonArray("parts");
+            return List.of(vec(parts.get(0).getAsJsonObject().getAsJsonArray("pivot")),
+                vec(parts.get(1).getAsJsonObject().getAsJsonArray("pivot")));
+        } catch (IOException failure) {
+            throw new ExceptionInInitializerError(failure);
+        }
+    }
+
     private static final VoxelShape[][][] SHAPES = shapes();
 
     public static double height(double y, int step) {

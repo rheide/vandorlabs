@@ -72,15 +72,31 @@ public final class NativeAdvancedChairClientCheck {
             }
             case 4 -> {
                 if (owner == null || owner.pilotHeight() != 3 || !(game.screen instanceof NativeSeatScreen screen)) return;
+                var minimum=screen.armrestMinimum();
+                require(screen.mouseClicked(minimum.getX()+4,minimum.getY()+4,0),"configure the minimum at zero");
+                screen.mouseReleased(minimum.getX()+4,minimum.getY()+4,0);
+                screen.armrestChannelsField().setValue("8451,8452");
+                var apply=screen.armrestApply();
+                require(apply.active&&screen.mouseClicked(apply.getX()+4,apply.getY()+4,0),"actual armrest channels apply");
                 screenshot = "advanced-pilot-chair-height.png";
                 stage++;
             }
             case 5 -> {
-                if (screenshot != null) return;
+                if (screenshot != null || owner==null || owner.armrestChannels(3).size()!=2||owner.armrestMin(3)!=0
+                    || !(game.screen instanceof NativeSeatScreen screen)) return;
+                var side=screen.option(12);
+                require(screen.mouseClicked(side.getX()+4,side.getY()+4,1),"cycle to the right armrest using previous");
+                screen.armrestChannelsField().setValue("8452");
+                var apply=screen.armrestApply();
+                require(screen.mouseClicked(apply.getX()+4,apply.getY()+4,0),"right armrest shares only one channel");
+                stage=30;
+            }
+            case 30 -> {
+                if(owner==null||owner.armrestChannels(4).first()!=8452)return;
                 player.closeContainer();
                 select(game, 3);
                 wait = ticks;
-                stage++;
+                stage=6;
             }
             case 6 -> {
                 if (game.screen != null || ticks < wait + 6 || !player.getMainHandItem().isEmpty()) return;
@@ -100,9 +116,39 @@ public final class NativeAdvancedChairClientCheck {
             }
             case 8 -> {
                 if (screenshot != null) return;
-                game.options.keyShift.setDown(true);
-                wait = ticks;
+                game.options.setCameraType(CameraType.FIRST_PERSON);
+                aimAtGrip(game,owner,3);
+                wait=ticks;
+                stage=20;
+            }
+            case 20 -> {
+                if(ticks<wait+8)return;
+                var hit=actualGrip(game,owner,3);
+                game.gameMode.useItemOn(player,InteractionHand.MAIN_HAND,hit);
                 stage++;
+            }
+            case 21 -> {
+                if(owner==null||owner.armrestLevel(3)!=7||owner.armrestLevel(4)!=7)return;
+                require(player.isPassenger(),"left click reaches both linked grips while seated");
+                aimAtGrip(game,owner,4);
+                wait=ticks;
+                stage++;
+            }
+            case 22 -> {
+                if(ticks<wait+8)return;
+                game.gameMode.useItemOn(player,InteractionHand.MAIN_HAND,actualGrip(game,owner,4));
+                stage++;
+            }
+            case 23 -> {
+                if(owner==null||owner.armrestLevel(3)!=10||owner.armrestLevel(4)!=10)return;
+                screenshot="advanced-pilot-chair-armrest.png";
+                stage++;
+            }
+            case 24 -> {
+                if(screenshot!=null)return;
+                game.options.keyShift.setDown(true);
+                wait=ticks;
+                stage=9;
             }
             case 9 -> {
                 if (player.isPassenger() || ticks < wait + 4) return;
@@ -131,6 +177,25 @@ public final class NativeAdvancedChairClientCheck {
                 stage++;
             }
         }
+    }
+
+    private static void aimAtGrip(Minecraft game,NativeChairEntity owner,int index) {
+        Vec3 pivot=NativeAdvancedChairGeometry.gripPivot(index,owner.armrestLevel(index));
+        Vec3 aim=Vec3.atLowerCornerOf(ROOT).add(pivot).add(0,.09,0);
+        Vec3 delta=aim.subtract(game.player.getEyePosition());
+        float yaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z));
+        float pitch=(float)-Math.toDegrees(Math.atan2(delta.y,delta.horizontalDistance()));
+        game.player.setYRot(yaw);
+        game.player.setXRot(pitch);
+        game.player.connection.send(new net.minecraft.network.protocol.game.ServerboundMovePlayerPacket.Rot(yaw,pitch,game.player.onGround()));
+    }
+    private static BlockHitResult actualGrip(Minecraft game,NativeChairEntity owner,int index) {
+        Vec3 eye=game.player.getEyePosition();
+        var hit=game.level.clip(new net.minecraft.world.level.ClipContext(eye,eye.add(game.player.getViewVector(1).scale(4.5)),
+            net.minecraft.world.level.ClipContext.Block.OUTLINE,net.minecraft.world.level.ClipContext.Fluid.NONE,game.player));
+        require(hit.getType()==net.minecraft.world.phys.HitResult.Type.BLOCK
+            &&hit.getBlockPos().equals(index==3?SIDE:ROOT),"posed, seated grip resolves via the native pick ray: "+hit.getBlockPos());
+        return hit;
     }
 
     private static int geometry(Minecraft game, BlockPos pos, NativeChairEntity owner) {

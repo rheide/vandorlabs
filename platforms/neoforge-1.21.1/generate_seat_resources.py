@@ -49,7 +49,12 @@ def generate(root,out):
             key=f'pilot_{height}_{arms}';write(f'models/block/native_seating/{key}.json',{'loader':'neoforge:obj','model':f'vandorlabs:models/block/native_seating/{name}.obj','automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,'textures':{'particle':texture('vandorlabs:blocks/pilot_seat/fabric')}});names.append(key)
     advanced=source/'models/block/cockpits/chair_siderests'
     native=assets/'models/block/native_seating'
-    (native/'advanced_chair.obj').write_text((advanced/'off.obj').read_text().replace('mtllib materials.mtl','mtllib advanced_chair.mtl',1))
+    for model,name in [('static','advanced_chair'),('slider_left','advanced_left'),('slider_right','advanced_right')]:
+        (native/f'{name}.obj').write_text((advanced/f'{model}.obj').read_text().replace('mtllib materials.mtl','mtllib advanced_chair.mtl',1))
+        write(f'models/block/native_seating/{name}.json',
+              {'loader':'neoforge:obj','model':f'vandorlabs:models/block/native_seating/{name}.obj',
+               'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
+               'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
     shutil.copyfile(advanced/'materials.mtl',native/'advanced_chair.mtl')
     for entry in (advanced/'materials.mtl').read_text().splitlines():
         if entry.startswith('map_Kd '):
@@ -57,13 +62,10 @@ def generate(root,out):
             # The native Programmer resource set already packages this shared opaque sprite.
             if name!='vandorlabs:models/cockpits/blank':texture(name)
             else:textures.add(name)
-    write('models/block/native_seating/advanced_chair.json',
-          {'loader':'neoforge:obj','model':'vandorlabs:models/block/native_seating/advanced_chair.obj',
-           'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
-           'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
-    assembly='cockpits/chair_siderests/assembly.json'
-    write(assembly,json.loads((source/assembly).read_text()))
-    names.append('advanced_chair')
+    for name in ['assembly','rig']:
+        asset=f'cockpits/chair_siderests/{name}.json'
+        write(asset,json.loads((source/asset).read_text()))
+    names.extend(['advanced_chair','advanced_left','advanced_right'])
     write('models/block/native_seating/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/bridge_chair_atlas')},'elements':[]})
     for kind in KINDS:
         base={'programmable_chair':'chair_0_1','pilot_seat':'pilot_0_0','chair_siderests':'advanced_chair'}.get(kind,kind+'_1_0')

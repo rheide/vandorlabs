@@ -98,6 +98,16 @@ public final class NativeAdvancedChairFixture {
         require(drops.size() == 1 && drops.getFirst().getCount() == 1
             && drops.getFirst().get(DataComponents.CUSTOM_DATA).copyTag().getCompound(NativeChairEntity.ITEM_SETTINGS)
                 .getInt(ChairSettings.PILOT_HEIGHT) == 3, "one configured item after mining a side part");
+        var saved = drops.getFirst().get(DataComponents.CUSTOM_DATA).copyTag().getCompound("NativeChairPreserved")
+            .getList("CockpitControls",net.minecraft.nbt.Tag.TAG_COMPOUND);
+        var left=saved.getCompound(3);
+        var right=saved.getCompound(4);
+        require(left.getString("Id").equals("slider_left")&&right.getString("Id").equals("slider_right"),
+            "released cockpit control indices survive pickup");
+        require(java.util.Arrays.equals(left.getIntArray("LevelChannels"),new int[]{8451,8452})
+            &&java.util.Arrays.equals(left.getIntArray("Levels"),new int[]{7,10})
+            &&java.util.Arrays.equals(right.getIntArray("Levels"),new int[]{10}),
+            "both numeric latch banks preserve partial overlap through pickup");
         System.out.println("[vandorlabs][advanced-chair] completed PASS");
         System.out.println("[vandorlabs][advanced-chair] logout PASS");
     }

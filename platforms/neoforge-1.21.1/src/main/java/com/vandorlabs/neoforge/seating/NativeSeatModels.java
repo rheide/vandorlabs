@@ -33,7 +33,7 @@ public final class NativeSeatModels {
     public static CacheDiagnostics cacheDiagnostics(){var bake=active;if(bake==null)return new CacheDiagnostics(0,0,0,0,0);bake.selected.cleanUp();var retained=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Selected,Boolean>());retained.addAll(bake.selected.asMap().values());long descriptors=0,defaults=0;for(var item:bake.items){item.components.cleanUp();retained.add(item.plain);defaults+=item.plain.bytes;descriptors+=item.components.size()*256L;}long bytes=0;for(var model:retained)bytes+=model.bytes;return new CacheDiagnostics(bytes,descriptors,16L*1024*1024+defaults,bake.itemBuilds,bake.descriptorHits);}
     private static final ModelProperty<Key> KEY=new ModelProperty<>();
     private record Key(NativeChairEntity.View view,Direction facing,int part,int arms,boolean item){}
-    private static List<String> names(){var out=new ArrayList<String>();for(int style=0;style<5;style++)for(int height=0;height<3;height++)out.add("chair_"+style+"_"+height);for(String kind:new String[]{"luxury_seat","military_seat"})for(int height=0;height<3;height++)for(int part=0;part<4;part++)out.add(kind+"_"+height+"_"+part);for(int height=0;height<4;height++)for(int arms=0;arms<4;arms++)out.add("pilot_"+height+"_"+arms);out.add("advanced_chair");return out;}
+    private static List<String> names(){var out=new ArrayList<String>();for(int style=0;style<5;style++)for(int height=0;height<3;height++)out.add("chair_"+style+"_"+height);for(String kind:new String[]{"luxury_seat","military_seat"})for(int height=0;height<3;height++)for(int part=0;part<4;part++)out.add(kind+"_"+height+"_"+part);for(int height=0;height<4;height++)for(int arms=0;arms<4;arms++)out.add("pilot_"+height+"_"+arms);out.addAll(List.of("advanced_chair","advanced_left","advanced_right"));return out;}
     private static ResourceLocation id(String name){return ResourceLocation.parse("vandorlabs:block/native_seating/"+name);}
     @SubscribeEvent public static void additional(ModelEvent.RegisterAdditional event){if(NativeSeatBindings.enabled())for(var name:names())event.register(ModelResourceLocation.standalone(id(name)));}
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(NativeSeatBindings.enabled())event.register(NativeSeatBindings.MENU,NativeSeatScreen::new);}
@@ -48,7 +48,7 @@ public final class NativeSeatModels {
         final Map<String,BakedModel> bodies=new HashMap<>();final List<ItemModel> items=new ArrayList<>();long itemBuilds,descriptorHits;
         final Cache<Key,Selected> selected=CacheBuilder.newBuilder().maximumWeight(16*1024*1024).weigher((Key key,Selected model)->model.bytes).build();
         Bake(Map<ModelResourceLocation,BakedModel> models){for(var name:names())bodies.put(name,Objects.requireNonNull(models.get(ModelResourceLocation.standalone(id(name))),"Missing authored seat "+name));}
-        Selected select(Key key,BakedModel transforms){var found=selected.getIfPresent(key);if(found!=null)return found;var result=new Selected(key,Objects.requireNonNull(bodies.get(body(key))),transforms);if(key.item)itemBuilds++;if(result.bytes<=16*1024*1024)selected.put(key,result);return result;}
+        Selected select(Key key,BakedModel transforms){var found=selected.getIfPresent(key);if(found!=null)return found;var result=new Selected(key,Objects.requireNonNull(bodies.get(body(key))),transforms,bodies);if(key.item)itemBuilds++;if(result.bytes<=16*1024*1024)selected.put(key,result);return result;}
     }
     private static boolean row(BlockAndTintGetter region,BlockPos pos,BlockState own,NativeChairEntity.View view){if(!NativeSeatBlock.loaded(region,pos))return false;var other=region.getBlockState(pos);if(!(other.getBlock() instanceof NativeSeatBlock)||!other.is(own.getBlock())||other.getValue(NativeSeatBlock.UPPER))return false;var tile=region.getBlockEntity(pos);if(!(tile instanceof NativeChairEntity neighbor)||neighbor.inert())return false;var v=neighbor.view();return ChairSettings.connects(true,true,true,other.getValue(NativeSeatBlock.FACING)==own.getValue(NativeSeatBlock.FACING),view.height(),v.height(),v.join());}
     private static boolean solid(BlockAndTintGetter region,BlockPos pos){if(!NativeSeatBlock.loaded(region,pos))return false;var state=region.getBlockState(pos);return !(state.getBlock() instanceof NativeSeatBlock)&&Block.isShapeFullBlock(state.getCollisionShape(region,pos));}
@@ -67,7 +67,30 @@ public final class NativeSeatModels {
     }
     private static final class Selected extends BakedModelWrapper<BakedModel> {
         final List<BakedQuad> quads;final int bytes;final ItemTransforms transforms;final List<BakedModel> passes=List.of(this);
-        Selected(Key key,BakedModel body,BakedModel transformSource){super(body);double degrees=key.view.kind()==NativeSeatKind.CHAIR?key.view.angle()*45+key.facing.toYRot():key.facing.toYRot()+180;double radians=Math.toRadians(degrees),c=Math.cos(radians),s=Math.sin(radians);var all=new ArrayList<BakedQuad>();long cost=256;for(var side:new Direction[]{null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST})for(var quad:body.getQuads(null,side,RandomSource.create(0),ModelData.EMPTY,null)){var changed=turn(quad,c,s,key.view.kind()==NativeSeatKind.ADVANCED?key.view.pilotHeight():3);all.add(changed);cost+=96L+4L*changed.getVertices().length;}quads=List.copyOf(all);bytes=(int)Math.min(Integer.MAX_VALUE,cost);transforms=key.item?NativeItemPadding.fit(this,transformSource.getTransforms()):body.getTransforms();}
+        Selected(Key key,BakedModel body,BakedModel transformSource,Map<String,BakedModel> bodies) {
+            super(body);
+            double degrees=key.view.kind()==NativeSeatKind.CHAIR?key.view.angle()*45+key.facing.toYRot():key.facing.toYRot()+180;
+            double radians=Math.toRadians(degrees),c=Math.cos(radians),s=Math.sin(radians);
+            var all=new ArrayList<BakedQuad>();
+            boolean advanced=key.view.kind()==NativeSeatKind.ADVANCED;
+            int height=advanced?key.view.pilotHeight():3;
+            append(all,body,c,s,height,net.minecraft.world.phys.Vec3.ZERO);
+            if(advanced){
+                append(all,bodies.get("advanced_left"),c,s,height,NativeAdvancedChairGeometry.gripPivot(3,key.view.left()));
+                append(all,bodies.get("advanced_right"),c,s,height,NativeAdvancedChairGeometry.gripPivot(4,key.view.right()));
+            }
+            quads=List.copyOf(all);
+            long cost=256;
+            for(var quad:quads)cost+=96L+4L*quad.getVertices().length;
+            bytes=(int)Math.min(Integer.MAX_VALUE,cost);
+            transforms=key.item?NativeItemPadding.fit(this,transformSource.getTransforms()):body.getTransforms();
+        }
+
+        private static void append(List<BakedQuad> out,BakedModel body,double c,double s,int height,net.minecraft.world.phys.Vec3 pivot){
+            for(var side:new Direction[]{null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST})
+                for(var quad:body.getQuads(null,side,RandomSource.create(0),ModelData.EMPTY,null))
+                    out.add(turn(quad,c,s,height,pivot));
+        }
         @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return side==null?quads:List.of();}
         @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType type){return getQuads(state,side,random);}
         @Override public ItemTransforms getTransforms(){return transforms;}
@@ -75,7 +98,7 @@ public final class NativeSeatModels {
         @Override public List<BakedModel> getRenderPasses(ItemStack stack,boolean fabulous){return passes;}
         @Override public ItemOverrides getOverrides(){return ItemOverrides.EMPTY;}
     }
-    private static BakedQuad turn(BakedQuad quad,double c,double s,int height) {
+    private static BakedQuad turn(BakedQuad quad,double c,double s,int height,net.minecraft.world.phys.Vec3 pivot) {
         int[] raw=quad.getVertices().clone();
         int stride=raw.length/4;
         double verticalScale=1;
@@ -83,7 +106,7 @@ public final class NativeSeatModels {
             double min=Double.POSITIVE_INFINITY,max=Double.NEGATIVE_INFINITY;
             for(int i=0;i<4;i++){
                 int index=i*stride+1;
-                float y=Float.intBitsToFloat(raw[index]);
+                double y=Float.intBitsToFloat(raw[index])+pivot.y;
                 min=Math.min(min,y);max=Math.max(max,y);
                 raw[index]=Float.floatToRawIntBits((float)NativeAdvancedChairGeometry.height(y,height));
             }
@@ -91,7 +114,8 @@ public final class NativeSeatModels {
         }
         for(int i=0;i<4;i++){
             int at=i*stride;
-            double x=Float.intBitsToFloat(raw[at])-.5,z=Float.intBitsToFloat(raw[at+2])-.5;
+            double x=Float.intBitsToFloat(raw[at])+pivot.x-.5,z=Float.intBitsToFloat(raw[at+2])+pivot.z-.5;
+            if(height==3&&pivot.y!=0)raw[at+1]=Float.floatToRawIntBits((float)(Float.intBitsToFloat(raw[at+1])+pivot.y));
             raw[at]=Float.floatToRawIntBits((float)(.5+c*x-s*z));
             raw[at+2]=Float.floatToRawIntBits((float)(.5+s*x+c*z));
             int normal=raw[at+7];

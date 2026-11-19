@@ -50,10 +50,33 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
     private static VoxelShape rotateBox(double x0,double y0,double z0,double x1,double y1,double z1,net.minecraft.core.Direction facing){int turns=facing==net.minecraft.core.Direction.EAST?1:facing==net.minecraft.core.Direction.SOUTH?2:facing==net.minecraft.core.Direction.WEST?3:0;for(int i=0;i<turns;i++){double a=x0,b=x1;x0=1-z1;x1=1-z0;z0=a;z1=b;}return Shapes.box(x0,y0,z0,x1,y1,z1);}
     @Override public VoxelShape getBlockSupportShape(BlockState state,BlockGetter world,BlockPos pos){return Shapes.empty();}
     @Override public VoxelShape getVisualShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context){if(context instanceof EntityCollisionContext entity&&entity.getEntity()!=null&&entity.getEntity().getVehicle() instanceof NativeChairMount mount&&lower(state,pos).equals(mount.chairPos()))return Shapes.empty();return getShape(state,world,pos,context);}
-    @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,Vec3 start,Vec3 end){if(kind.adjustablePilotHeight()&&world instanceof Level level){var lower=lower(state,pos);var players=level.players();for(int i=0;i<players.size();i++){var player=players.get(i);if(player.getVehicle() instanceof NativeChairMount mount&&lower.equals(mount.chairPos())&&start.distanceToSqr(player.getEyePosition())<1e-8)return null;}}return getShape(state,world,pos,CollisionContext.empty()).clip(start,end,pos);}
+    @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,Vec3 start,Vec3 end){if(kind==NativeSeatKind.ADVANCED){
+        var owner=owner(world,pos);
+        if(owner!=null){
+            var grip=NativeAdvancedChairGeometry.grip(owner,state.getValue(FACING),pos,start,end);
+            if(grip!=null)return grip.hit();
+        }
+    }if(kind.adjustablePilotHeight()&&world instanceof Level level){var lower=lower(state,pos);var players=level.players();for(int i=0;i<players.size();i++){var player=players.get(i);if(player.getVehicle() instanceof NativeChairMount mount&&lower.equals(mount.chairPos())&&start.distanceToSqr(player.getEyePosition())<1e-8)return null;}}return getShape(state,world,pos,CollisionContext.empty()).clip(start,end,pos);}
     @Override public boolean canBeReplaced(BlockState state,BlockPlaceContext context){return NativeSeatBackrests.replacing(context,context.getClickedPos());}
     @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}
-    private InteractionResult interact(BlockState state,Level world,BlockPos pos,Player actor,InteractionHand hand){if(hand!=InteractionHand.MAIN_HAND)return InteractionResult.PASS;var at=lower(state,pos);if(actor.isShiftKeyDown())return actor.isCreative()&&NativeSeatBindings.open(actor,world,at)?InteractionResult.sidedSuccess(world.isClientSide):InteractionResult.PASS;if(!actor.isAlive()||actor.isSpectator()||actor.level()!=world||!loaded(world,at)||actor.distanceToSqr(at.getCenter())>64||!world.mayInteract(actor,at)||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(world,at))return InteractionResult.FAIL;var owner=owner(world,at);if(owner==null||!complete(world,at))return InteractionResult.FAIL;if(world.isClientSide)return InteractionResult.SUCCESS;
+    private InteractionResult interact(BlockState state,Level world,BlockPos pos,Player actor,InteractionHand hand){if(hand!=InteractionHand.MAIN_HAND)return InteractionResult.PASS;var at=lower(state,pos);if(actor.isShiftKeyDown())return actor.isCreative()&&NativeSeatBindings.open(actor,world,at)?InteractionResult.sidedSuccess(world.isClientSide):InteractionResult.PASS;if(!actor.isAlive()||actor.isSpectator()||actor.level()!=world||!loaded(world,at)||actor.distanceToSqr(at.getCenter())>64||!world.mayInteract(actor,at)||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(world,at))return InteractionResult.FAIL;var owner=owner(world,at);if(owner==null||!complete(world,at))return InteractionResult.FAIL;
+        if(kind==NativeSeatKind.ADVANCED){
+            Vec3 start=actor.getEyePosition();
+            Vec3 end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
+            var grip=NativeAdvancedChairGeometry.grip(owner,state.getValue(FACING),pos,start,end);
+            if(grip!=null){
+                if(world instanceof net.minecraft.server.level.ServerLevel server
+                    &&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server)
+                    &&world.mayInteract(actor,pos)&&actor.mayUseItemAt(pos,grip.hit().getDirection(),actor.getMainHandItem())){
+                    var first=world.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
+                    if(!first.getBlockPos().equals(pos)||first.getLocation().distanceToSqr(grip.hit().getLocation())>1e-8)
+                        return InteractionResult.FAIL;
+                    owner.armrest(grip.index()).cycle();
+                }
+                return InteractionResult.sidedSuccess(world.isClientSide);
+            }
+        }
+        if(world.isClientSide)return InteractionResult.SUCCESS;
         for(var seat:world.getEntitiesOfClass(NativeChairMount.class,new AABB(at).inflate(2)))if(at.equals(seat.chairPos())){if(seat.getPassengers().isEmpty())actor.startRiding(seat,true);return InteractionResult.CONSUME;}
         var seat=new NativeChairMount(NativeSeatBindings.MOUNT,world);seat.updatePose(owner);if(world.addFreshEntity(seat)){if(!actor.startRiding(seat,true))seat.discard();}return InteractionResult.CONSUME;
     }
