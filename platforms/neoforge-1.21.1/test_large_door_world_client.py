@@ -15,10 +15,12 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
+    parser.add_argument('--horizontal-only',action='store_true',help='Run the side-mounted scenarios and arm travel only.')
     args=parser.parse_args()
-    phase='large-door-world-client'
+    phase='large-door-world-client-horizontal' if args.horizontal_only else 'large-door-world-client'
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
-    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),VANDOR_DOOR_RESOURCE_CHECK="true")
+    env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
+    env.pop("VANDOR_DOOR_RESOURCE_CHECK",None)
     base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True)
     output=Path(artifact_directory(prefix='large-door-world-client-',dir=base))
     with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
@@ -38,18 +40,30 @@ def main():
         while '[vandorlabs][large-door-world-client] logout PASS' not in server_log.read_text(errors='replace'):
             if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Authoritative logout missing: '+str(server_log))
             time.sleep(.1)
-        for marker in ['placement','configuration','reader-insert','reader-eject','motion','configured-pick','harvest','logout']:check_log(server_log,'[vandorlabs][large-door-world-client] '+marker+' PASS')
+        markers=['horizontal-south','horizontal-west','horizontal-north','horizontal-east','horizontal-arm','logout']
+        if not args.horizontal_only:
+            markers+=['placement','configuration','reader-insert','reader-eject','motion','configured-pick','harvest']
+        for marker in markers:check_log(server_log,'[vandorlabs][large-door-world-client] '+marker+' PASS')
     finally:stop(server)
     deadline=time.monotonic()+30
     while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
     check_log(saved/'logs/latest.log','All dimensions are saved')
     from PIL import Image,ImageChops
-    positive=Image.open(client/'screenshots/canonical-large-upper-positive.png').convert('RGB');negative=Image.open(client/'screenshots/canonical-large-upper-negative.png').convert('RGB')
-    if positive.size!=negative.size:raise AssertionError('Culling capture sizes differ')
-    diff=ImageChops.difference(positive,negative);mask=diff.point(lambda value:255 if value>12 else 0);pixels=sum(any(channel>0 for channel in pixel) for pixel in mask.getdata())
-    if pixels<200:raise AssertionError('Actual canonical BER upper-body capture is empty vs disabled renderer: '+str(pixels)+' pixels')
-    diff.save(output/'canonical-large-upper-difference.png');(output/'culling-report.txt').write_text('Changed pixels vs disabled renderer: '+str(pixels)+'\n')
-    print('Canonical Large upper-only renderer mask PASS pixels='+str(pixels),flush=True)
+    if not args.horizontal_only:
+        positive=Image.open(client/'screenshots/canonical-large-upper-positive.png').convert('RGB');negative=Image.open(client/'screenshots/canonical-large-upper-negative.png').convert('RGB')
+        if positive.size!=negative.size:raise AssertionError('Culling capture sizes differ')
+        diff=ImageChops.difference(positive,negative);mask=diff.point(lambda value:255 if value>12 else 0);pixels=sum(any(channel>0 for channel in pixel) for pixel in mask.getdata())
+        if pixels<200:raise AssertionError('Actual canonical BER upper-body capture is empty vs disabled renderer: '+str(pixels)+' pixels')
+        diff.save(output/'canonical-large-upper-difference.png');(output/'culling-report.txt').write_text('Changed pixels vs disabled renderer: '+str(pixels)+'\n')
+        print('Canonical Large upper-only renderer mask PASS pixels='+str(pixels),flush=True)
+    for facing in range(4):
+        positive=Image.open(client/f'screenshots/horizontal-large-{facing}-positive.png').convert('RGB')
+        negative=Image.open(client/f'screenshots/horizontal-large-{facing}-negative.png').convert('RGB')
+        diff=ImageChops.difference(positive,negative)
+        pixels=sum(max(pixel)>12 for pixel in diff.getdata())
+        if pixels<200:raise AssertionError(f'Horizontal Large Door facing {facing} has only {pixels} rendered pixels')
+        diff.save(output/f'horizontal-large-{facing}-difference.png')
+        print(f'Horizontal Large Door actual renderer PASS facing={facing} changedPixels={pixels}',flush=True)
     print('Native canonical Large Door world client focused checks PASS (development classpath/software rendering): '+str(output),flush=True)
 
 
