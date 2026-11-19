@@ -25,7 +25,7 @@ public final class NativeCanopyModels implements CanopyShapes.Models {
     public int modelCount(){return models.size();}
     public List<CanopyFace> geometry(String kind,int width,int mask,int roof,boolean centered,CanopySettingsData settings) {
         if(CanopySettingsData.supports(kind))return CanopyShapes.front(this,width,settings,centered);
-        if(kind.equals("canopy")||kind.equals("long_canopy")){int depth=dimensions(kind).length();return CanopyShapes.opening(this,width,depth,Math.min(depth==3?3:2,settings.angle),(mask&8)!=0);}
+        if(kind.equals("canopy")||kind.equals("long_canopy")){int depth=dimensions(kind).length();return CanopyShapes.opening(this,width,depth,Math.min(depth==3?3:2,settings.angle));}
         if(kind.equals("regular_canopy_glass"))return CanopyShapes.fixed(this,mask,roof);
         if(kind.startsWith("angled_")){mask&=11;return model(mask==0?kind:String.format(Locale.ROOT,"%s_%02x",kind,mask));}
         return centered&&kind.equals("space_visor_2x1")?centeredVisor:model(kind);
@@ -43,10 +43,13 @@ public final class NativeCanopyModels implements CanopyShapes.Models {
                     for(int i=0;i<points.length;i++){JsonArray p=v.get(i).getAsJsonArray(),u=texture.get(i).getAsJsonArray();points[i]=new CanopyPoint(p.get(0).getAsDouble(),p.get(1).getAsDouble(),p.get(2).getAsDouble());uv[i][0]=u.get(0).getAsDouble();uv[i][1]=u.get(1).getAsDouble();top=Math.max(top,points[i].y);}
                     String material=face.get("material").getAsString();faces.add(new CanopyFace(points,uv,material,face.has("base_material")?face.get("base_material").getAsString():material,face.get("group").getAsString(),face.get("double").getAsBoolean(),false,false));
                 }
-                String id=record.get("id").getAsString();JsonArray footprint=record.getAsJsonArray("footprint");models.put(id,List.copyOf(faces));dimensions.put(id,new Dimensions(Math.max(1,(int)Math.ceil(footprint.get(0).getAsDouble())),Math.max(1,(int)Math.ceil(footprint.get(1).getAsDouble())),Math.max(1,(int)Math.ceil(top))));
+                String id=record.get("id").getAsString();
+                if(id.equals("canopy"))faces.removeIf(face->face.baseMaterial.equals("glass")
+                        && CanopyShapes.rearPane(face.points(),i->face.vertex(i).z,2));
+                JsonArray footprint=record.getAsJsonArray("footprint");models.put(id,List.copyOf(faces));dimensions.put(id,new Dimensions(Math.max(1,(int)Math.ceil(footprint.get(0).getAsDouble())),Math.max(1,(int)Math.ceil(footprint.get(1).getAsDouble())),Math.max(1,(int)Math.ceil(top))));
             }
             CanopyShapes.Models source=name->Objects.requireNonNull(models.get(name),"Missing raw canopy model "+name);
-            dimensions.put("long_canopy",new Dimensions(1,3,1));models.put("long_canopy",CanopyShapes.opening(source,1,3,1,false));
+            dimensions.put("long_canopy",new Dimensions(1,3,1));models.put("long_canopy",CanopyShapes.opening(source,1,3,1));
             dimensions.put("large_front_canopy_glass",new Dimensions(5,1,5));models.put("large_front_canopy_glass",CanopyShapes.front(source,5,CanopySettingsData.fresh(),false));
             for(String id:new String[]{"space_visor_2x1","space_visor_3x1","space_visor_5x1","space_visor_5x1_double_height"}){Dimensions size=dimensions.get(id);models.put(id,CanopyShapes.visorRails(models.get(id),size.width(),size.height()));}
             if(models.size()!=41)throw new IllegalStateException("Native canopy model coverage "+models.size());

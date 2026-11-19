@@ -14,23 +14,32 @@ public final class CanopyShapes {
     }
     private static String variant(String id,int mask){return mask==0?id:String.format(Locale.ROOT,"%s_%02x",id,mask);}
     private static List<CanopyFace> regular(Models models,int mask){return models.model(String.format(Locale.ROOT,"regular_1x1_%02x",mask));}
-    private static List<CanopyFace> rearJoined(Models models,String id,int mask,boolean rear) {
-        List<CanopyFace> closed=id.equals("regular_1x1")?regular(models,mask):models.model(variant(id,mask));
-        if(!rear)return closed;double back=id.equals("angled_front_1x2")?2:1;List<CanopyFace> result=new ArrayList<>();
-        for(CanopyFace face:closed){boolean glass=face.baseMaterial.equals("glass");for(CanopyPoint p:face.vertices)if(p.z<back-1D/8)glass=false;if(!glass)result.add(face);}
+    /** A rear pane lies in a constant-depth plane near the back of the authored shell. */
+    public static boolean rearPane(int points, java.util.function.IntToDoubleFunction depth, double back) {
+        double plane=depth.applyAsDouble(0);
+        if(plane<back-1D/8)return false;
+        for(int i=1;i<points;i++)if(Math.abs(plane-depth.applyAsDouble(i))>1E-8)return false;
+        return true;
+    }
+    private static List<CanopyFace> openRear(Models models,String id,int mask) {
+        List<CanopyFace> source=id.equals("regular_1x1")?regular(models,mask):models.model(variant(id,mask));
+        double back=id.equals("angled_front_1x2")?2:1;
+        List<CanopyFace> result=new ArrayList<>();
+        for(CanopyFace face:source)
+            if(!face.baseMaterial.equals("glass")||!rearPane(face.points(),i->face.vertex(i).z,back))result.add(face);
         return result;
     }
     private static void append(List<CanopyFace> result,List<CanopyFace> source,int x,int z,boolean raised) {
         for(CanopyFace f:source){CanopyPoint[] points=new CanopyPoint[f.points()];for(int i=0;i<points.length;i++){CanopyPoint p=f.vertex(i);points[i]=p.addVector(x,raised&&p.y<.5?1D/16:0,z);}result.add(copy(f,points,f.uv,f.material,"shell"));}
     }
-    public static List<CanopyFace> opening(Models models,int width,int depth,int angle,boolean rear) {
+    public static List<CanopyFace> opening(Models models,int width,int depth,int angle) {
         if(width<1||width>9||depth<2||depth>3||angle<0||angle>(depth==3?3:2))throw new IllegalArgumentException("Opening canopy dimensions");
         List<CanopyFace> result=new ArrayList<>();
         for(int x=0;x<width;x++) {
             int sides=(x>0?1:0)|(x+1<width?2:0);
-            if(angle==3){List<CanopyFace> diagonal=new ArrayList<>();for(CanopyFace f:rearJoined(models,"angled_front_1x2",sides,rear)){CanopyPoint[] p=new CanopyPoint[f.points()];for(int i=0;i<p.length;i++){CanopyPoint v=f.vertex(i);p[i]=new CanopyPoint(v.x,v.y,v.z*1.5);}diagonal.add(copy(f,p,f.uv,f.material,f.group));}append(result,diagonal,x,0,false);}
-            else if(angle==2){append(result,rearJoined(models,"angled_front_1x2",sides,depth==3||rear),x,0,false);if(depth==3)append(result,rearJoined(models,"regular_1x1",sides|4,rear),x,2,false);}
-            else{append(result,angle==0?regular(models,sides|8):models.model(variant("angled_front_1x1",sides|8)),x,0,false);for(int z=1;z<depth;z++)append(result,rearJoined(models,"regular_1x1",sides|4|(z+1<depth?8:0),z+1<depth||rear),x,z,angle==1);}
+            if(angle==3){List<CanopyFace> diagonal=new ArrayList<>();for(CanopyFace f:openRear(models,"angled_front_1x2",sides)){CanopyPoint[] p=new CanopyPoint[f.points()];for(int i=0;i<p.length;i++){CanopyPoint v=f.vertex(i);p[i]=new CanopyPoint(v.x,v.y,v.z*1.5);}diagonal.add(copy(f,p,f.uv,f.material,f.group));}append(result,diagonal,x,0,false);}
+            else if(angle==2){append(result,openRear(models,"angled_front_1x2",sides),x,0,false);if(depth==3)append(result,openRear(models,"regular_1x1",sides|4),x,2,false);}
+            else{append(result,angle==0?regular(models,sides|8):models.model(variant("angled_front_1x1",sides|8)),x,0,false);for(int z=1;z<depth;z++)append(result,openRear(models,"regular_1x1",sides|4|(z+1<depth?8:0)),x,z,angle==1);}
         }
         for(CanopyFace f:models.model(width==1?"canopy":"canopy_mounts_double"))if(f.group.equals("mount")) {
             CanopyPoint[] p=new CanopyPoint[f.points()];for(int i=0;i<p.length;i++){CanopyPoint v=f.vertex(i);double x=v.x;if(width>=3)x=x<=.125?x:x>=1.875?x+width-2:.125+(x-.125)*(width-.25)/1.75;p[i]=new CanopyPoint(x,v.y,v.z*depth/2D);}result.add(copy(f,p,f.uv,f.material,f.group));

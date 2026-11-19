@@ -30,7 +30,7 @@ public final class CanopyItemGeometry {
         if(CanopySettingsData.supports(kind))faces=CanopyShapes.front(models,kind.equals("large_front_canopy_glass")?5:3,settings,true);
         else if(kind.equals("canopy")||kind.equals("long_canopy")){
             int depth=kind.equals("long_canopy")?3:2;
-            faces=CanopyShapes.opening(models,1,depth,Math.min(depth,settings.angle),false);
+            faces=CanopyShapes.opening(models,1,depth,Math.min(depth,settings.angle));
         }else faces=models.model(kind.equals("regular_canopy_glass")?"regular_1x1_00":kind);
         return faces;
     }

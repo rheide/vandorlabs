@@ -11,47 +11,31 @@ public final class OpeningCanopyGeometry {
     }
     public static synchronized List<CanopyMesh.Face> faces(int width,int depth,int angle,boolean rear) {
         if(width<1 || width>9 || depth<2 || depth>3 || angle<0 || angle>(depth==3?3:2))throw new IllegalArgumentException("Invalid opening canopy dimensions");
-        String key=width+":"+depth+":"+angle+":"+rear;
+        String key=width+":"+depth+":"+angle;
         List<CanopyMesh.Face> cached=CACHE.get(key);if(cached!=null)return cached;
         List<CanopyMesh.Face> result=new ArrayList<>();
-        for(int x=0;x<width;x++) {
-            int sides=(x>0?1:0)|(x+1<width?2:0);
-            if(angle==3) {
-                List<CanopyMesh.Face> diagonal=new ArrayList<>();
-                for(CanopyMesh.Face original:rearJoined("angled_front_1x2",sides,rear)) {
-                    CanopyMesh.Face face=copy(original);face.vertices=new Vec3d[original.vertices.length];
-                    for(int i=0;i<face.vertices.length;i++){Vec3d v=original.vertices[i];face.vertices[i]=new Vec3d(v.x,v.y,v.z*1.5);}
-                    diagonal.add(face);
-                }
-                append(result,diagonal,x,0);
-            }else if(angle==2) {
-                append(result,rearJoined("angled_front_1x2",sides,depth==3 || rear),x,0);
-                if(depth==3)append(result,rearJoined("regular_1x1",sides|4,rear),x,2);
-            }else {
-                append(result,angle==0?regular(sides|8):model("angled_front_1x1",sides|8),x,0);
-                for(int z=1;z<depth;z++)append(result,rearJoined("regular_1x1",sides|4|(z+1<depth?8:0),z+1<depth || rear),x,z,angle==1);
+        for(CanopyFace source:CanopyShapes.opening(OpeningCanopyGeometry::model,width,depth,angle)) {
+            CanopyMesh.Face face=new CanopyMesh.Face();
+            face.material=source.material;face.baseMaterial=source.baseMaterial;face.group=source.group;
+            face.doubleSided=source.doubleSided;
+            face.vertices=new Vec3d[source.points()];face.uv=new double[source.points()][];
+            for(int i=0;i<source.points();i++){
+                CanopyPoint vertex=source.vertex(i);
+                face.vertices[i]=new Vec3d(vertex.x,vertex.y,vertex.z);
+                face.uv[i]=new double[]{source.u(i),source.v(i)};
             }
-        }
-        String mounts=width==1?"canopy":"canopy_mounts_double";
-        for(CanopyMesh.Face source:CanopyMesh.MODELS.get(mounts))if(source.group.equals("mount")) {
-            CanopyMesh.Face face=copy(source);face.vertices=new Vec3d[source.vertices.length];
-            for(int i=0;i<face.vertices.length;i++){Vec3d v=CanopyMesh.pose(source.vertices[i],"slide",width,0,false);face.vertices[i]=new Vec3d(v.x,v.y,v.z*depth/2D);}
             result.add(face);
         }
         cached=Collections.unmodifiableList(result);CACHE.put(key,cached);return cached;
     }
-    private static List<CanopyMesh.Face> regular(int mask){return CanopyMesh.MODELS.get(String.format(Locale.ROOT,"regular_1x1_%02x",mask));}
-    private static List<CanopyMesh.Face> rearJoined(String id,int mask,boolean rear){
-        List<CanopyMesh.Face> closed=model(id,mask);
-        if(!rear)return closed;
-        double back=id.equals("angled_front_1x2")?2:1;
-        List<CanopyMesh.Face> result=new ArrayList<>();
-        // Keep the complete authored rear frame, including its uprights and sill.
-        // Only the rear glazing opens into the connected cabin.
-        for(CanopyMesh.Face face:closed){
-            boolean rearGlass=face.baseMaterial.equals("glass");
-            for(Vec3d vertex:face.vertices)if(vertex.z<back-1D/8)rearGlass=false;
-            if(!rearGlass)result.add(face);
+    private static List<CanopyFace> model(String id){
+        List<CanopyFace> result=new ArrayList<>();
+        for(CanopyMesh.Face face:CanopyMesh.MODELS.get(id)){
+            CanopyPoint[] points=new CanopyPoint[face.vertices.length];
+            for(int i=0;i<points.length;i++){
+                Vec3d vertex=face.vertices[i];points[i]=new CanopyPoint(vertex.x,vertex.y,vertex.z);
+            }
+            result.add(new CanopyFace(points,face.uv,face.material,face.baseMaterial,face.group,face.doubleSided,false,false));
         }
         return result;
     }
@@ -67,14 +51,5 @@ public final class OpeningCanopyGeometry {
         for(Vec3d vertex:face.vertices)if(vertex.y<14D/16)return false;
         return true;
     }
-    private static List<CanopyMesh.Face> model(String id,int mask){return CanopyMesh.MODELS.get(mask==0?id:String.format(Locale.ROOT,"%s_%02x",id,mask));}
-    private static void append(List<CanopyMesh.Face> result,List<CanopyMesh.Face> source,int x,int z){
-        append(result,source,x,z,false);
-    }
-    private static void append(List<CanopyMesh.Face> result,List<CanopyMesh.Face> source,int x,int z,boolean raisedSill){
-        // The short angled nose has a one-pixel raised sill. Carry that sill through the rear panel.
-        for(CanopyMesh.Face original:source){CanopyMesh.Face face=copy(original);face.group="shell";face.vertices=new Vec3d[original.vertices.length];for(int i=0;i<face.vertices.length;i++){Vec3d v=original.vertices[i];face.vertices[i]=v.addVector(x,raisedSill && v.y<.5?1D/16:0,z);}result.add(face);}
-    }
-    private static CanopyMesh.Face copy(CanopyMesh.Face source){CanopyMesh.Face face=new CanopyMesh.Face();face.uv=source.uv;face.material=source.material;face.baseMaterial=source.baseMaterial;face.group=source.group;face.doubleSided=source.doubleSided;return face;}
     private OpeningCanopyGeometry(){}
 }

@@ -53,6 +53,8 @@ public final class CanopyMesh {
                     faces.add(face);
                 }
                 String id = m.get("id").getAsString();
+                if(id.equals("canopy"))faces.removeIf(face->face.baseMaterial.equals("glass")
+                        && CanopyShapes.rearPane(face.vertices.length,i->face.vertices[i].z,2));
                 JsonArray footprint = m.getAsJsonArray("footprint");
                 double top = 0;
                 for (Face face : faces) for (Vec3d v : face.vertices) top = Math.max(top, v.y);
