@@ -33,6 +33,7 @@ def main():
     for name in ids:
         model('models/item/' + name + '.json')
     model('models/block/programmable_matter_block.json')
+    model('models/item/programmable_plate.json')
     write('assets/vandorlabs/blockstates/programmable_matter_block.json',
           {'variants': {'': {'model': 'vandorlabs:block/programmable_matter_block'}}})
     sources = {
@@ -51,7 +52,7 @@ def main():
         shutil.copy2(ROOT / 'texture-packs/additional/assets/vandorlabs/textures/gui' / gui, target)
     lang = {}
     wanted = ['itemGroup.vandorlabs', 'tile.vandorlabs.programmable_matter_block.name', 'tile.vandorlabs.programmable_block.name', 'tile.vandorlabs.programmable_slab.name', 'tile.vandorlabs.programmable_stairs.name', 'tile.vandorlabs.programmable_wall.name', 'tile.vandorlabs.programmable_porthole_wall.name', 'tile.vandorlabs.programmable_porthole_block.name', 'tile.vandorlabs.programmable_diagonal_wall.name', 'tile.vandorlabs.programmable_diagonal_porthole.name', 'tile.vandorlabs.programmable_diagonal_glass.name', 'tile.vandorlabs.programmable_trigger_block.name', 'tile.vandorlabs.push_button.name', 'tile.vandorlabs.rocker_switch.name', 'tile.vandorlabs.compact_power_lever.name', 'tile.vandorlabs.industrial_power_lever.name', 'tile.vandorlabs.small_power_lever.name', 'tile.vandorlabs.large_power_lever.name', 'tile.vandorlabs.thruster_lever.name', 'tile.vandorlabs.airliner_throttle.name', 'tile.vandorlabs.fighter_throttle.name', 'tile.vandorlabs.wall_slider.name', 'tile.vandorlabs.redstone_transmitter_block.name', 'tile.vandorlabs.redstone_receiver_block.name', 'item.vandorlabs.configurizer.name'] + ['tile.vandorlabs.' + name + '.name' for name in ('programmable_door', 'space_rotating_door', 'space_sliding_door', 'large_programmable_door', 'segmented_door', 'programmable_trapdoor', 'programmable_diagonal_trapdoor', 'programmable_light', 'programmable_light_frame', 'programmable_light_slab', 'programmable_viewscreen', 'programmable_console', 'programmable_half_console', 'programmable_half_input', 'programmable_input', 'programmable_diagonal_screen', 'programmable_diagonal_half_screen')] + [
-        'item.vandorlabs.' + name + '.name' for name in ids[1:]]
+        'item.vandorlabs.' + name + '.name' for name in ids[1:] + ['programmable_plate']]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('landing_gear','ski_landing_gear','landing_strut','angled_landing_strut')]
     wanted += ['tile.vandorlabs.programmable_chair.name','tile.vandorlabs.luxury_seat.name','tile.vandorlabs.military_seat.name','tile.vandorlabs.pilot_seat.name','tile.vandorlabs.chair_siderests.name','tile.vandorlabs.yoke_screen.name','tile.vandorlabs.cockpit.name']
     wanted += ['tile.vandorlabs.wheel_small.name','tile.vandorlabs.wheel_medium.name','tile.vandorlabs.wheel_large.name','tile.vandorlabs.compact_track.name','tile.vandorlabs.armoured_track.name','tile.vandorlabs.bogie_track.name']

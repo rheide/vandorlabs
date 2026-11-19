@@ -2,7 +2,7 @@
 
 See the [step-by-step multiblock guides](multiblocks/README.md) for illustrated construction stages, including the newer drive and navigation computer assemblies that use the same frame system.
 
-On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards and modules, and the Enclosed Gantry builds mechanical parts. The Tower and Press retain their frames; the Gantry now uses a four-high frame. On NeoForge 1.21.1, the Tower supports Synthesis and Digitize, and the Press produces Data Chips, Access Cards, and Battery, Autopilot and Navigation Data Modules. The Gantry produces eight mechanical blocks, including the arm hinges, wheels and resource ports.
+On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards, modules and Programmable Plates, and the Enclosed Gantry builds mechanical parts. The Tower and Press retain their frames; the Gantry now uses a four-high frame. On NeoForge 1.21.1, the Tower supports Synthesis and Digitize, and the Press produces Data Chips, Access Cards, Programmable Plates, and Battery, Autopilot and Navigation Data Modules. The Gantry produces eight mechanical blocks, including the arm hinges, wheels and resource ports.
 
 | Core | Width x depth x total height | Matter Blocks + Core |
 | --- | --- | --- |
@@ -141,8 +141,10 @@ item in either chamber to collect it, or use the dialog/adjacent output.
 
 | Builder | Designs available without a Catalog Chip | Master Catalog additions |
 | --- | --- | --- |
-| Assembly Press | Data Chip, Access Card | Battery Module, Autopilot Module |
+| Assembly Press | Data Chip, Access Card, Programmable Plate | Battery Module, Autopilot Module, Navigation Data Module |
 | Enclosed Gantry | Regular and Large Extending/Rotating Arms, regular and Large Landing Wheels, Landing Ski, Landing Plate, Coupler and Coupler Slab | The same mechanical designs |
+
+Craft Programmable Armor by arranging Programmable Plates in the standard armor patterns.
 
 Catalog permissions apply when starting a job. A started job retains its own
 blueprint if the chip or selected design changes. Dismantling returns the

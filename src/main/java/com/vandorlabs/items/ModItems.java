@@ -31,6 +31,10 @@ public final class ModItems {
             .setRegistryName(VandorLabs.MODID, "programmable_matter_ingot")
             .setUnlocalizedName("vandorlabs.programmable_matter_ingot")
             .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
+    public static final Item PROGRAMMABLE_PLATE = new Item()
+            .setRegistryName(VandorLabs.MODID, "programmable_plate")
+            .setUnlocalizedName("vandorlabs.programmable_plate")
+            .setCreativeTab(VandorLabs.VANDOR_LABS_TAB);
     public static final Item INDUSTRIAL_ALLOY_INGOT = new Item()
             .setRegistryName(VandorLabs.MODID, "industrial_alloy_ingot")
             .setUnlocalizedName("vandorlabs.industrial_alloy_ingot")
@@ -56,6 +60,7 @@ public final class ModItems {
         event.getRegistry().register(NAVIGATION_DATA_MODULE);
         event.getRegistry().register(AUTOPILOT_MODULE);
         event.getRegistry().register(PROGRAMMABLE_MATTER_INGOT);
+        event.getRegistry().register(PROGRAMMABLE_PLATE);
         event.getRegistry().register(INDUSTRIAL_ALLOY_INGOT);
         event.getRegistry().register(INFUSER_CORE);
         event.getRegistry().register(CONFIGURIZER);
@@ -83,6 +88,8 @@ public final class ModItems {
                     new ResourceLocation(VandorLabs.MODID,token.getRegistryName().getResourcePath()+"_"+ItemDesignToken.DESIGNS[i]),"inventory"));
         ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_MATTER_INGOT, 0,
                 new ModelResourceLocation(PROGRAMMABLE_MATTER_INGOT.getRegistryName(), "inventory"));
+        ModelLoader.setCustomModelResourceLocation(PROGRAMMABLE_PLATE, 0,
+                new ModelResourceLocation(PROGRAMMABLE_PLATE.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(INDUSTRIAL_ALLOY_INGOT, 0,
                 new ModelResourceLocation(INDUSTRIAL_ALLOY_INGOT.getRegistryName(), "inventory"));
         ModelLoader.setCustomModelResourceLocation(INFUSER_CORE,0,new ModelResourceLocation(INFUSER_CORE.getRegistryName(),"inventory"));
