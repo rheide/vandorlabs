@@ -127,7 +127,7 @@ native adapters. The six Forge drive and navigation computer Cores remain
 unavailable.
 
 With JEI installed, **Matter Infuser** lists iron conversion and Battery Module
-charging; **Synthesis Tower** lists the three Core outputs and their RF/time
-requirements. Choose the design in Production before supplying Matter. JEI
-browsing does not change the selected or running tower design. Infuser recipe
-transfer fills its input and catalyst slots.
+charging. The **Synthesis Tower**, **Assembly Press** and **Enclosed Gantry**
+categories list their fixed products, including cost, minimum time and any
+Catalog Chip requirement. Choose the design in Production before supplying
+Matter. Infuser recipe transfer fills its input and catalyst slots.
