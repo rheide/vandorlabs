@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Exercise actual asynchronous Turntable capture, restore, and cold partial-save recovery."""
+import argparse
 import os
 from pathlib import Path
 
@@ -10,10 +11,14 @@ from test_transmitter import ROOT, command, jdk_home, run
 
 @retain_artifacts
 def main():
+    parser = argparse.ArgumentParser()
+    parser.add_argument('--normal-only', action='store_true')
+    options = parser.parse_args()
     base = ROOT / 'build/test-artifacts'
     base.mkdir(parents=True, exist_ok=True)
     out = Path(artifact_directory(prefix='turntable-transfer-', dir=base))
-    for phase in ('normal', 'crash', 'read'):
+    phases = ('normal',) if options.normal_only else ('normal', 'crash', 'read')
+    for phase in phases:
         saved = out / ('normal-world' if phase == 'normal' else 'recovery-world')
         if phase != 'read':
             fixture_world(saved, 0)

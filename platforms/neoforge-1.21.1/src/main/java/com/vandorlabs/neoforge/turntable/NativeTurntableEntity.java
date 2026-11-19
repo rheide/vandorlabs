@@ -92,7 +92,7 @@ final class NativeTurntableEntity extends BlockEntity {
 
     boolean turn(int quarter) {
         if (!(level instanceof ServerLevel world) || !installed(world) || busy() || spinning || capture == null) return false;
-        if (quarter < 0 || quarter > 3) return false;
+        if (quarter < 0 || quarter > 3 || !rotationSurfaceReady(world)) return false;
         target = quarter;
         setChanged();
         status("Turning to " + quarter * 90 + " degrees");
@@ -103,7 +103,7 @@ final class NativeTurntableEntity extends BlockEntity {
         if (owner.capture != null && !owner.collisionIndexed && owner.installed(world)) owner.indexCollision(true);
         if (world.noSave || !owner.installed(world) || owner.busy()) return;
         owner.checkSignals(world);
-        if (owner.capture == null || owner.busy()) return;
+        if (owner.capture == null || owner.busy() || !owner.moving() || !owner.rotationSurfaceReady(world)) return;
         double speed = TurntableGeometry.degreesPerTick(owner.settings.rpm);
         if (owner.spinning) {
             owner.advance(world, owner.settings.clockwise ? speed : -speed);
@@ -111,6 +111,7 @@ final class NativeTurntableEntity extends BlockEntity {
             double heading = owner.target * 90;
             double distance = (heading - owner.angle + 540) % 360 - 180;
             if (Math.abs(distance) < 1e-7) {
+                owner.angle = heading;
                 owner.target = -1;
                 owner.setChanged();
                 owner.status("Turntable stopped at " + (int) heading + " degrees");
@@ -120,14 +121,27 @@ final class NativeTurntableEntity extends BlockEntity {
         }
     }
 
-    private void advance(ServerLevel world, double step) {
-        var frame = motion.prepare(world, angle, step);
-        if (frame.obstacle() != null) {
-            rotationBlocked = spinning;
+    private boolean rotationSurfaceReady(ServerLevel world) {
+        String reason = capture.rotationBlocker(world, worldPosition, key);
+        if (reason == null) return true;
+        stopRotation(reason);
+        return false;
+    }
+
+    private void stopRotation(String reason) {
+        rotationBlocked |= spinning;
+        if (moving()) {
             spinning = false;
             target = -1;
             setChanged();
-            status(frame.obstacle());
+        }
+        status(reason);
+    }
+
+    private void advance(ServerLevel world, double step) {
+        var frame = motion.prepare(world, angle, step);
+        if (frame.obstacle() != null) {
+            stopRotation(frame.obstacle());
             return;
         }
         NativeTurntableRiders.apply(frame.riders());

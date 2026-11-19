@@ -81,6 +81,23 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
         return new NativeTurntableCapture(surface, prism, snapshot);
     }
 
+    String rotationBlocker(ServerLevel world, BlockPos controller, UUID key) {
+        // Validate the stored cells in place. Artwork and new adjacent surfaces do not change the captured prism.
+        for (var pos : surface.cells) {
+            var chunk = world.getChunkSource().getChunkNow(pos.getX() >> 4, pos.getZ() >> 4);
+            if (chunk == null) return "Load the captured Turntable Surface before rotating";
+            var state = chunk.getBlockState(pos);
+            if (!(state.getBlock() instanceof NativeSurfaceBlock)
+                    || state.getValue(NativeSurfaceBlock.FACING) != surface.normal
+                    || !(chunk.getBlockEntities().get(pos) instanceof NativeSurfaceEntity tile)
+                    || tile.isRemoved() || tile.inert() || tile.getLevel() != world || tile.getBlockState() != state) {
+                return "Repair the captured Turntable Surface before rotating";
+            }
+            if (tile.claimedByOther(controller, key)) return "The captured Turntable Surface is claimed by another controller";
+        }
+        return null;
+    }
+
     public static NativeTurntableCapture prepare(ServerLevel world, BlockPos controller, UUID key,
                                                  Direction facing, int height, ServerPlayer actor) {
         if (!world.getServer().isSameThread() || actor == null || actor.serverLevel() != world

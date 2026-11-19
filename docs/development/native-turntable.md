@@ -59,3 +59,11 @@ The dedicated runtime checks physical support for a pig on the same body,
 and checks exact configured block data through rollback, rotation and cold
 recovery. The connected client verifies the configured material on emitted
 geometry before restoration.
+
+A stored capture can rotate only while every cell in the original Surface
+footprint is loaded and retains its original facing without a foreign claim.
+Losing a cell stops motion at the last accepted angle and keeps the captured
+blocks with the original controller. Restore still uses the saved prism and
+its normal permission and clearance checks. Run
+`python3 test_turntable_transfer.py --normal-only` for the focused foreign-claim,
+interrupted rotation, repair and Restore checks.

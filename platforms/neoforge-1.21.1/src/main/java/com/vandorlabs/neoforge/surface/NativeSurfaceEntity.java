@@ -35,6 +35,8 @@ public final class NativeSurfaceEntity extends BlockEntity {
     public boolean sameArtwork(NativeSurfaceEntity other){return other!=null&&on.equals(other.on)&&off.equals(other.off);}
     public NativeSurfaceController claimedOwner(){if(level==null||owner==null||ownerKey==null||!level.hasChunkAt(owner))return null;return level.getBlockEntity(owner) instanceof NativeSurfaceController controller&&ownerKey.equals(controller.surfaceKey())&&controller.ownsSurface(worldPosition)?controller:null;}
     public boolean claimedBy(BlockPos controller,UUID identity){return Objects.equals(owner,controller)&&Objects.equals(ownerKey,identity);}
+    /** Explicit saved claim identity, even when the claimant is unloaded or its tile is absent. */
+    public boolean claimedByOther(BlockPos controller,UUID identity){return owner!=null&&!claimedBy(controller,identity);}
     public boolean canClaim(BlockPos controller,UUID key){return owner==null||owner.equals(controller)&&Objects.equals(ownerKey,key)||level!=null&&level.hasChunkAt(owner)&&claimedOwner()==null;}
     public boolean locked(){if(inert||owner!=null&&level!=null&&!level.hasChunkAt(owner))return true;var controller=claimedOwner();return controller!=null&&controller.surfaceLocked();}
     public void bind(BlockPos controller,UUID key){if(!canClaim(controller,key))throw new IllegalArgumentException("Programmable Surface is claimed by another controller");owner=controller.immutable();ownerKey=key;changed();schedule();}

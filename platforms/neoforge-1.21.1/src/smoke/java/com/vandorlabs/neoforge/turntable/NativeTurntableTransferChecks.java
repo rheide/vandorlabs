@@ -56,6 +56,7 @@ public final class NativeTurntableTransferChecks {
     private static int ticks;
     private static int checks;
     private static Pig rider;
+    private static double missingAngle;
 
     @SubscribeEvent
     public static void started(ServerStartedEvent event) {
@@ -155,6 +156,26 @@ public final class NativeTurntableTransferChecks {
             }
             need(refused && owner().capture() != null, "occupied restore leaves the stored capture intact");
             world.setBlockAndUpdate(TARGET, Blocks.AIR.defaultBlockState());
+            var foreignPos = SEED.east().south();
+            var tile = (com.vandorlabs.neoforge.surface.NativeSurfaceEntity) world.getBlockEntity(foreignPos);
+            tile.bind(ROOT.west(), UUID.randomUUID());
+            need(!owner().turn(1) && owner().status().contains("claimed by another controller") && owner().hasCapture(),
+                    "stored turn refuses a foreign claimed footprint without altering ownership");
+            tile.release();
+            need(owner().turn(1), "rotation begins on a repaired unclaimed footprint");
+            stage = 11;
+        } else if (stage == 11) {
+            if (owner().positionAngle() == 0) return;
+            missingAngle = owner().positionAngle();
+            need(owner().moving() && missingAngle < 90, "authoritative motion advanced before the cell was removed");
+            world.setBlockAndUpdate(SEED.east().south(), Blocks.AIR.defaultBlockState());
+            stage = 12;
+        } else if (stage == 12) {
+            if (owner().moving()) return;
+            need(owner().positionAngle() == missingAngle && owner().hasCapture() && owner().status().contains("Repair the captured"),
+                    "removing a saved Surface after admission stops motion before another step");
+            need(!owner().turn(1) && owner().hasCapture(), "manual rotation also refuses a missing saved Surface");
+            world.setBlockAndUpdate(SEED.east().south(), world.getBlockState(SEED));
             world.setBlockAndUpdate(TARGET.above(), Blocks.STONE.defaultBlockState());
             need(owner().setSpeed(20), "ten RPM accepted");
             need(owner().turn(1), "Turn accepted a supported heading");
@@ -176,7 +197,7 @@ public final class NativeTurntableTransferChecks {
             stage = 3;
         } else if (stage == 3) {
             if (owner().moving()) return;
-            need(owner().positionAngle() == 90 && owner().status().endsWith("90 degrees"), "motion settled at the authoritative heading");
+            need(owner().positionAngle() == 90 && owner().status().endsWith("90 degrees"), "motion settled at the authoritative heading, got " + owner().positionAngle() + " " + owner().status());
             need(!world.getEntityCollisions(actor, new AABB(TARGET.above()).deflate(.1)).isEmpty()
                     && world.getEntityCollisions(actor, new AABB(SOURCE.above()).deflate(.1)).isEmpty(),
                     "physical collision follows the rotated solid");
@@ -187,12 +208,14 @@ public final class NativeTurntableTransferChecks {
             var savedRoot = owner().saveWithFullMetadata(world.registryAccess());
             need(savedRoot.getDouble(NativeTurntableEntity.ANGLE) == 90,
                     "the completed pose is saved independently of client interpolation");
+            world.setBlockAndUpdate(SEED.east().south(), Blocks.AIR.defaultBlockState());
+            need(!owner().turn(0) && owner().hasCapture(), "the second missing surface refuses turning away from the saved heading");
             stage = 4;
             request = NativeTurntableTransfers.prepare(owner(), actor, true, 1);
             operation = null;
         } else {
             need(operation.error().isEmpty() && owner().key().equals(originalKey) && owner().capture() == null,
-                    "successful restore released the controller capture");
+                    "manual restore released the controller capture despite the missing Surface cell");
             var saved = originalSign.copy();
             saved.putInt("z", TARGET.getZ());
             need(sign(TARGET).saveWithFullMetadata(world.registryAccess()).equals(saved)
