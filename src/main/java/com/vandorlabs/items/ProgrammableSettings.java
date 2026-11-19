@@ -30,7 +30,7 @@ import net.minecraft.world.World;
 public final class ProgrammableSettings {
     public static final String MODULAR_ARM_SETTINGS="modular_arm_settings";
     public static final String RESOURCE_PORT_SETTINGS="resource_port_settings";
-    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","HingeMode","KinkDirection","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","LandingAnglesVersion","ActiveExtension","TrackStyle"};
+    private static final String[] ARM_KEYS={"FootFacing","MiddleHinge","HingeMode","KinkDirection","Direction","PushBlocks","RotatePayload","JoinArms","JoinRange","CarryLoad","LoadHeight","ActiveAngle","StartAngle","LandingAnglesVersion","ActiveExtension","TrackStyle",com.vandorlabs.gear.core.ArmResource.CHOICE};
     public static final String BLOCK_CONFIGURATION="block_configuration";
     public static final String SIGNAL_SETTINGS="signal_settings";
     public static final String TRAPDOOR_SLIDE_OVER_SURFACE="trapdoor_slide_over_surface";

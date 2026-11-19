@@ -405,7 +405,7 @@ public final class VehicleScan {
                 } else if(block instanceof BlockLargeProgrammableDoor) {
                     TileEntityLargeProgrammableDoor root=((BlockLargeProgrammableDoor)block).root(world,p);
                     require(root!=null && ((BlockLargeProgrammableDoor)block).complete(world,root), "Incomplete large door.");
-                    for(int x=0;x<3;x++)for(int y=0;y<3;y++)linked(root.getPos().offset(state.getValue(BlockVandorDoor.FACING).rotateYCCW(),x).up(y),block);
+                    for(int x=0;x<3;x++)for(int y=0;y<3;y++)linked(root.cell(root.getPos(),state.getValue(BlockVandorDoor.FACING),x,y),block);
                 } else if(block instanceof BlockVandorDoor || block instanceof BlockDoor) {
                     linked(state.getValue(BlockVandorDoor.HALF)==BlockDoor.EnumDoorHalf.UPPER?p.down():p.up(),block);
                 }

@@ -208,6 +208,10 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
             EnumFacing facing,float progress,double x,double y,double z) {
         if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
+            if(((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).isHorizontal()){
+                GlStateManager.translate(0,1,0);
+                GlStateManager.rotate(90,1,0,0);
+            }
             for(int hand=0;hand<2;hand++)
                 renderSpaceDoorLeaf(tile,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH)
                         .withProperty(BlockVandorDoor.HINGE,hand==0?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT),

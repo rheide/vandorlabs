@@ -30,7 +30,11 @@ final class GearPushing {
                     VehicleStructure.Cell cell;
                     if(virtual.containsKey(at))cell=virtual.get(at);
                     else if(own.contains(at))cell=null;
-                    else{IBlockState nativeState=world.getBlockState(at);cell=nativeState.getBlock().isAir(nativeState,world,at)?null:new VehicleStructure.Cell(at,nativeState,null);}
+                    else {
+                        IBlockState nativeState=world.getBlockState(at);
+                        boolean passage=com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenHorizontal(world,at,nativeState);
+                        cell=passage||nativeState.getBlock().isAir(nativeState,world,at)?null:new VehicleStructure.Cell(at,nativeState,null);
+                    }
                     if(cell==null)continue;
                     IBlockState state=cell.state;
                     if(originals.add(cell.pos)){

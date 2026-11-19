@@ -16,13 +16,16 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
     @Override public EnumActionResult onItemUse(EntityPlayer player,World world,BlockPos clicked,EnumHand hand,EnumFacing side,float hitX,float hitY,float hitZ){
         ItemStack stack=player.getHeldItem(hand);if(stack.isEmpty() || !world.isBlockLoaded(clicked))return EnumActionResult.FAIL;
         BlockPos center=world.getBlockState(clicked).getBlock().isReplaceable(world,clicked)?clicked:clicked.offset(side);
-        EnumFacing face=player.getHorizontalFacing().getOpposite(),width=face.rotateYCCW();BlockPos anchor=center.offset(width,-1);
-        if(anchor.getY()<1 || anchor.getY()+2>=world.getHeight())return EnumActionResult.FAIL;
+        boolean horizontal=side.getAxis().isHorizontal()&&!center.equals(clicked);
+        EnumFacing face=horizontal?side:player.getHorizontalFacing().getOpposite(),width=face.rotateYCCW();
+        EnumFacing row=horizontal?face:EnumFacing.UP;
+        BlockPos anchor=center.offset(width,-1);
+        if(anchor.getY()<0 || anchor.offset(row,2).getY()>=world.getHeight())return EnumActionResult.FAIL;
         List<BlockPos> cells=new ArrayList<>();List<IBlockState> old=new ArrayList<>();
         for(int x=0;x<3;x++){
-            BlockPos support=anchor.offset(width,x).down();if(!world.isBlockLoaded(support) || !world.getBlockState(support).isSideSolid(world,support,EnumFacing.UP))return EnumActionResult.FAIL;
+            BlockPos support=anchor.offset(width,x).offset(row.getOpposite());if(!world.isBlockLoaded(support) || !world.getBlockState(support).isSideSolid(world,support,row))return EnumActionResult.FAIL;
             for(int y=0;y<3;y++){
-                BlockPos cell=anchor.offset(width,x).up(y);
+                BlockPos cell=anchor.offset(width,x).offset(row,y);
                 if(!world.isBlockLoaded(cell) || !world.getBlockState(cell).getBlock().isReplaceable(world,cell) || !player.canPlayerEdit(cell,side,stack) || !world.isBlockModifiable(player,cell))return EnumActionResult.FAIL;
                 cells.add(cell);old.add(world.getBlockState(cell));
             }
@@ -36,11 +39,11 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
                 for(int i=0;i<placed;i++)world.setBlockState(cells.get(i),old.get(i),2);
                 return EnumActionResult.FAIL;
             }
-            placed++;((TileEntityLargeProgrammableDoor)world.getTileEntity(cell)).assign(anchor);
+            placed++;((TileEntityLargeProgrammableDoor)world.getTileEntity(cell)).assign(anchor,horizontal);
         }
         TileEntityLargeProgrammableDoor tile=(TileEntityLargeProgrammableDoor)world.getTileEntity(anchor);
         if(stack.getSubCompound("SpaceDoorSettings")!=null)tile.applyItemSettings(stack.getSubCompound("SpaceDoorSettings"));
-        tile.setPlacementDepth(PanelDepth.fromHit(face,hitX,hitZ));
+        tile.setPlacementDepth(horizontal?com.vandorlabs.render.PanelDepthPolicy.fromHit(hitY):PanelDepth.fromHit(face,hitX,hitZ));
         // Only now may neighbor callbacks observe the complete structure.
         for(BlockPos cell:cells){world.notifyBlockUpdate(cell,state,state,2);world.notifyNeighborsOfStateChange(cell,block,false);}
         if(!world.isRemote)tile.onLoad();
