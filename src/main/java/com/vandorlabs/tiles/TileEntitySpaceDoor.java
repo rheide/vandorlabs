@@ -1,5 +1,6 @@
 package com.vandorlabs.tiles;
 
+import com.vandorlabs.render.DoorPanelSplit;
 import com.vandorlabs.blocks.BlockConnectingDetailedDoor;
 import com.vandorlabs.blocks.BlockSpaceDoor;
 import com.vandorlabs.blocks.BlockVandorDoor;
@@ -136,8 +137,10 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
     public boolean isFramed() { return framed; }
     public boolean isSliding() { migrateLegacyMotion(); return sliding; }
     public int getSlideDirection() { return slideDirection; }
-    public static boolean validSlideDirection(int value) { return value>=0 && value<=3; }
-    public boolean isXSplit(){return this instanceof TileEntityLargeProgrammableDoor && isSliding() && slideDirection==3;}
+    public static boolean validSlideDirection(int value) { return com.vandorlabs.persistence.SpaceDoorData.validDirection(value,true); }
+    public boolean isXSplit(){return panelSplit()==DoorPanelSplit.DIAGONAL;}
+    public DoorPanelSplit panelSplit(){return this instanceof TileEntityLargeProgrammableDoor&&isSliding()?DoorPanelSplit.forDirection(slideDirection):null;}
+    public boolean acceptsSlideDirection(int direction){return com.vandorlabs.persistence.SpaceDoorData.validDirection(direction,this instanceof TileEntityLargeProgrammableDoor);}
     public double verticalTravel() {
         return com.vandorlabs.persistence.SpaceDoorData.verticalTravel(framed,slideDirection);
     }
@@ -202,7 +205,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         configure(design,detail,framed,direction,middle,sliding,hinges,trigger,panel);
     }
     public void configure(int design,int detail,boolean framed,int direction,boolean middle,boolean sliding,boolean hinges,int trigger,boolean panel) {
-        if (!valid(design,detail) || !acceptsDesign(design) || direction==3 && !(this instanceof TileEntityLargeProgrammableDoor) || !validSlideDirection(direction)
+        if (!valid(design,detail) || !acceptsDesign(design) || !acceptsSlideDirection(direction)
                 || !com.vandorlabs.persistence.SpaceDoorData.validTrigger(trigger)) return;
         this.design=design; this.detail=Math.min(detail,1); this.framed=framed;
         this.slideDirection=direction;
@@ -255,7 +258,7 @@ public class TileEntitySpaceDoor extends TileEntitySlidingDoor {
         faceTexture=tag.hasKey("DoorFaceTexture",3) && tag.getInteger("DoorFaceTexture")>=0?ScreenHousingTextures.clamp(tag.getInteger("DoorFaceTexture")):-1;
         com.vandorlabs.persistence.SpaceDoorData data=com.vandorlabs.persistence.SpaceDoorData.read(
                 new com.vandorlabs.persistence.NbtPrimitiveData(tag));
-        design=data.design; detail=data.detail; framed=data.framed; slideDirection=data.direction;
+        design=data.design; detail=data.detail; framed=data.framed; slideDirection=data.direction==com.vandorlabs.persistence.SpaceDoorData.VERTICAL_SPLIT&&!acceptsSlideDirection(data.direction)?0:data.direction;
         middle=data.middle; sliding=data.sliding;
         placementDepth = tag.hasKey("SpaceDoorPlacementDepth", 3)
                 ? Math.max(0, Math.min(2, tag.getInteger("SpaceDoorPlacementDepth")))

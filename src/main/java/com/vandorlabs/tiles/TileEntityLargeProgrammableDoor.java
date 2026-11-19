@@ -96,8 +96,8 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
     /** Reuse immutable transformed boxes across the assembly's nine cell queries. */
     public java.util.List<AxisAlignedBB> collisionGeometry(net.minecraft.util.EnumFacing face,boolean open) {
         boolean sliding=isSliding();
-        int key=(isFramed()?1:0)|(sliding?2:0)|(getSlideDirection()<<2)|(open?16:0)
-                |(getPlacementDepth()<<5)|(hasHinges()?128:0)|(hasPanel()?256:0)|(face.getHorizontalIndex()<<9)|(panelMode()<<12)|(securityMode()<<14)|(horizontal?1<<17:0);
+        int key=(isFramed()?1:0)|(sliding?2:0)|(getSlideDirection()<<2)|(open?1<<5:0)
+                |(getPlacementDepth()<<6)|(hasHinges()?1<<8:0)|(hasPanel()?1<<9:0)|(face.getHorizontalIndex()<<10)|(panelMode()<<12)|(securityMode()<<14)|(horizontal?1<<17:0);
         if(collisionBoxes!=null && collisionKey==key && pos.equals(collisionPos))return collisionBoxes;
         java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();
         for(com.vandorlabs.render.LargeDoorGeometry.Box b:com.vandorlabs.render.LargeDoorGeometry.boxes(isFramed(),sliding,getSlideDirection(),open,positionOffset(),face.getHorizontalIndex(),hasPanel(),getPlacementDepth()==2))

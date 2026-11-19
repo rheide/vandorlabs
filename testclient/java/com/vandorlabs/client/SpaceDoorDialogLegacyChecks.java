@@ -11,7 +11,7 @@ public final class SpaceDoorDialogLegacyChecks {
     public static void main(String[] args)throws Exception{
         Field field=sun.misc.Unsafe.class.getDeclaredField("theUnsafe");field.setAccessible(true);sun.misc.Unsafe unsafe=(sun.misc.Unsafe)field.get(null);GuiSpaceDoor screen=(GuiSpaceDoor)unsafe.allocateInstance(GuiSpaceDoor.class);
         java.security.MessageDigest hash=java.security.MessageDigest.getInstance("SHA-256");int cases=0;
-        for(int design=0;design<30;design++)for(int depth=0;depth<3;depth++)for(int panel=0;panel<3;panel++)for(SpaceDoorMotion motion:SpaceDoorMotion.values())for(boolean hinges:new boolean[]{false,true}){
+        for(int design=0;design<30;design++)for(int depth=0;depth<3;depth++)for(int panel=0;panel<3;panel++)for(SpaceDoorMotion motion:java.util.Arrays.copyOf(SpaceDoorMotion.values(),5))for(boolean hinges:new boolean[]{false,true}){
             set(screen,"design",design);set(screen,"depth",depth);set(screen,"panelMode",panel);set(screen,"motion",motion);set(screen,"hinges",hinges);GuiButton button=new GuiButton(15,7,11,"unused");set(screen,"hingeButton",button);call(screen,"updateHingeButton");
             String record=call(screen,"glassDesign")+"/"+call(screen,"panelLabel")+"/"+call(screen,"depthLabel")+"/"+button.enabled+"/"+button.displayString+";";hash.update(record.getBytes(java.nio.charset.StandardCharsets.UTF_8));cases++;
         }

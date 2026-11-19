@@ -110,9 +110,10 @@ public final class OpaqueDoorBatch {
         }
         buffer.setTranslation(0,0,0);
         mesh(tile,state,paired,right,0).draw(buffer,facing,x,y,z,tile.positionOffset(),light,0,0,0,0,0,size,leafOffset);
-        if(tile.isXSplit()) {
+        com.vandorlabs.render.DoorPanelSplit split=tile.panelSplit();
+        if(split!=null) {
             StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,1);
-            drawXPanels(panels,tile.isFramed(),facing,progress,x,y,z,tile.positionOffset(),light,size,leafOffset,buffer);
+            drawSplitPanels(split,panels,tile.isFramed(),facing,progress,x,y,z,tile.positionOffset(),light,size,leafOffset,buffer);
         } else mesh(tile,state,paired,right,1).draw(buffer,facing,x,y,z,tile.positionOffset(),light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
         SpaceDoorControlPanel.Side side=BlockConfigurableSpaceDoor.panelSide(tile.getWorld(),tile.getPos(),state);
         if(side!=SpaceDoorControlPanel.Side.NONE)
@@ -121,10 +122,14 @@ public final class OpaqueDoorBatch {
     /** Keep the fast batch's endpoint identical to the ordinary TESR and collision geometry. */
     static void drawXPanels(StaticSurfaceMesh[] panels,boolean framed,EnumFacing facing,float progress,
             double x,double y,double z,double depth,int light,double size,double leafOffset,BufferBuilder buffer) {
-        double travel=com.vandorlabs.render.XDoorPanel.travel(progress,framed,size);
-        for(int panel=0;panel<4;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,depth,light,
-                size*com.vandorlabs.render.XDoorPanel.shiftX(panel,travel),
-                size*com.vandorlabs.render.XDoorPanel.shiftY(panel,travel),0,0,0,size,leafOffset);
+        drawSplitPanels(com.vandorlabs.render.DoorPanelSplit.DIAGONAL,panels,framed,facing,progress,x,y,z,depth,light,size,leafOffset,buffer);
+    }
+    private static void drawSplitPanels(com.vandorlabs.render.DoorPanelSplit split,StaticSurfaceMesh[] panels,boolean framed,
+            EnumFacing facing,float progress,double x,double y,double z,double depth,int light,double size,double leafOffset,BufferBuilder buffer) {
+        double travel=com.vandorlabs.render.DoorPanelSplit.travel(progress,framed,size);
+        for(int panel=0;panel<panels.length;panel++)panels[panel].batchMesh().draw(buffer,facing,x,y,z,depth,light,
+                size*split.shiftX(panel,travel),
+                size*split.shiftY(panel,travel),0,0,0,size,leafOffset);
     }
     static final class Mesh {
         private final int[] source;

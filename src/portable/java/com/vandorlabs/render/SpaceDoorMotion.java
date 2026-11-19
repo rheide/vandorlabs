@@ -1,12 +1,15 @@
 package com.vandorlabs.render;
 
+import com.vandorlabs.persistence.SpaceDoorData;
+
 /** Dialog choices; the existing saved sliding/direction fields remain compatible. */
 public enum SpaceDoorMotion {
     ROTATING("Rotating", false, 0),
     SIDEWAYS("Sliding Sideways", true, 0),
     UP("Sliding Up", true, 1),
     DOWN("Sliding Down", true, 2),
-    X_SPLIT("Sliding X", true, 3);
+    X_SPLIT("Sliding X", true, SpaceDoorData.X_SPLIT),
+    VERTICAL_SPLIT("Sliding Split", true, SpaceDoorData.VERTICAL_SPLIT);
 
     public final String label;
     public final boolean sliding;
@@ -16,6 +19,6 @@ public enum SpaceDoorMotion {
     }
     public SpaceDoorMotion next() { return values()[(ordinal()+1)%values().length]; }
     public static SpaceDoorMotion fromSettings(boolean sliding,int direction) {
-        return !sliding?ROTATING:direction==1?UP:direction==2?DOWN:direction==3?X_SPLIT:SIDEWAYS;
+        return !sliding?ROTATING:direction==1?UP:direction==2?DOWN:direction==SpaceDoorData.X_SPLIT?X_SPLIT:direction==SpaceDoorData.VERTICAL_SPLIT?VERTICAL_SPLIT:SIDEWAYS;
     }
 }

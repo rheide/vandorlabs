@@ -35,6 +35,8 @@ final class LargeDoorRuntimeChecks {
                 BlockPos passage=center.offset(front);
                 TileEntityLargeProgrammableDoor root=door.root(world,passage);
                 require(root!=null&&root.isHorizontal()&&root.getPos().equals(anchor)&&door.complete(world,root),"horizontal nine-cell ownership "+front);
+                root.configure(23,1,true,com.vandorlabs.persistence.SpaceDoorData.VERTICAL_SPLIT,true,true,false,0,false);
+                root.setPlacementDepth(0);
                 AxisAlignedBB sweep=new AxisAlignedBB(passage).grow(0,2,0).shrink(.02);
                 Vec3d above=new Vec3d(passage).addVector(.5,2,.5),below=above.addVector(0,-4,0);
                 require(!world.getCollisionBoxes(null,sweep).isEmpty()&&MovedDoorInteractions.trace(world,above,below)!=null,"closed hatch blocks a one-block vertical sweep "+front);
@@ -45,6 +47,7 @@ final class LargeDoorRuntimeChecks {
                     world.setTileEntity(cell,restored);
                     require(((TileEntityLargeProgrammableDoor)restored).isHorizontal()&&((TileEntityLargeProgrammableDoor)restored).anchorPos().equals(anchor),"role round-trips "+front+" "+cell);
                 }
+                require(door.root(world,passage).getSlideDirection()==com.vandorlabs.persistence.SpaceDoorData.VERTICAL_SPLIT,"split mode survives placed tile reload");
                 door.onBlockActivated(world,passage,world.getBlockState(passage),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
                 require(world.getBlockState(passage).getValue(BlockVandorDoor.OPEN),"open from a follower cell "+front);
                 require(world.getCollisionBoxes(null,sweep).isEmpty()&&MovedDoorInteractions.trace(world,above,below)==null,"open hatch clears the vertical swept column "+front);

@@ -17,11 +17,11 @@ final class NativeDoorPlacement {
     private static final ThreadLocal<Scope> ACTIVE=new ThreadLocal<>();
     static boolean mutating(Level level,BlockPos pos){Scope scope=ACTIVE.get();return scope!=null&&scope.level==level&&(scope.root.equals(pos)||scope.root.above().equals(pos));}
     static NativeDoorSettings choices(NativeDoorSettings previous,CompoundTag configured,NativeDoorSettings neighbor,int clickedDepth){
-        SpaceDoorData data=neighbor==null?previous.door():neighbor.door();if(data.direction==3||data.design>=21&&data.design!=29)data=previous.door();var frames=previous.frames();var glass=previous.glass();int face=previous.faceTexture(),layout=previous.rawLayout(),panel=previous.rawPanelMode(),mode=previous.securityMode(),allowed=previous.securityAllowed();boolean tile=previous.tileTexture();
+        SpaceDoorData data=neighbor==null?previous.door():neighbor.door();if(!SpaceDoorData.validDirection(data.direction,false)||data.design>=21&&data.design!=29)data=previous.door();var frames=previous.frames();var glass=previous.glass();int face=previous.faceTexture(),layout=previous.rawLayout(),panel=previous.rawPanelMode(),mode=previous.securityMode(),allowed=previous.securityAllowed();boolean tile=previous.tileTexture();
         if(configured!=null){var saved=NativeDoorSettings.read(configured);var candidate=saved.door();frames=saved.frames();glass=saved.glass();
             int selected=configured.contains("DoorTextureLayout",Tag.TAG_INT)?configured.getInt("DoorTextureLayout"):configured.getBoolean("DoorTileTexture")?1:0;if(!TextureLayoutMode.valid(selected))throw new IllegalArgumentException("Invalid configured door texture layout");layout=selected;tile=selected==1;
             face=configured.contains("DoorFaceTexture",Tag.TAG_INT)?configured.getInt("DoorFaceTexture")<0?-1:com.vandorlabs.neoforge.ModernFinishCatalog.storedChoice(configured.getInt("DoorFaceTexture")):-1;
-            if(candidate.direction!=3&&(candidate.design<21||candidate.design==29))data=candidate;
+            if(SpaceDoorData.validDirection(candidate.direction,false)&&(candidate.design<21||candidate.design==29))data=candidate;
             panel=configured.contains("DoorPanelMode",Tag.TAG_INT)?saved.rawPanelMode():data.panel?1:0;mode=saved.securityMode();allowed=saved.securityAllowed();
         }
         if(clickedDepth!=0&&panel==2)panel=1;
