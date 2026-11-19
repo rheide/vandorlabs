@@ -74,6 +74,7 @@ final class NativeCopyTiles {
     }
     static NativeRawCell at(NativeRawCell source,BlockPos target,UUID copyOwner){
         var raw=source.tile();if(raw!=null){raw.putInt("x",target.getX());raw.putInt("y",target.getY());raw.putInt("z",target.getZ());NativeCopyObservers.translateIdentity(source,target,copyOwner,raw);NativeCopyBuilders.translateIdentity(source,target,copyOwner,raw);
+            if(source.state.getBlock() instanceof com.vandorlabs.neoforge.screen.NativeScreenBlock)NativeCopyScreens.resetReceived(raw);
             // A drawing claim is not a transferable authority over an unrelated destination controller.
             if(source.state.getBlock() instanceof com.vandorlabs.neoforge.surface.NativeSurfaceBlock){for(String field:List.of("Owner","OwnerKey","OwnerKeyMost","OwnerKeyLeast"))raw.remove(field);}
         }

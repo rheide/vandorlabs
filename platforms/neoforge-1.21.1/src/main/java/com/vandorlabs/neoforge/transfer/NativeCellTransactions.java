@@ -112,6 +112,15 @@ public final class NativeCellTransactions {
     public static boolean reservedBy(ServerLevel world,Header header,BlockPos position){
         thread(world);var state=WORLDS.get(world);if(state==null)return false;var operation=state.operations.get(header.operation());return operation!=null&&operation.header==header&&operation.reservationDurable()&&operation.lease!=null&&operation.lease.live()&&operation.lease.contains(position)&&!com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.foreignToCellReservation(world,position);
     }
+    /** Family-scoped activity check. This never grants or consumes a write admission. */
+    public static boolean reservedByFamily(ServerLevel world,ResourceLocation family,BlockPos position){
+        if(!NativeTransferHolds.reserved(world,position))return false;
+        thread(world);var state=WORLDS.get(world);if(state==null)return false;
+        for(var operation:state.operations.values())
+            if(operation.header.family().equals(family)&&operation.lease!=null&&operation.lease.live()&&operation.lease.contains(position))return true;
+        return false;
+    }
+
     /** Configuration-only session observation; no slots, packet operation or mutation is admitted. */
     public static Header sessionHeader(ServerLevel world,BlockPos root,UUID owner,ServerPlayer actor){
         thread(world);if(actor==null||actor.serverLevel()!=world||!actor.isAlive()||actor.isRemoved()||actor.isSpectator())return null;var state=WORLDS.get(world);if(state==null)return null;for(var operation:state.operations.values()){var header=operation.header;if(operation.status()==Status.PENDING&&header.root.equals(root)&&header.owner.equals(owner)&&header.actor.equals(actor.getUUID())&&header.creative==actor.isCreative()&&reservedBy(world,header,root))return header;}return null;

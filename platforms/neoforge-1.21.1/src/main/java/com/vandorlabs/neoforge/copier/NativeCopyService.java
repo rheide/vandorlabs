@@ -26,6 +26,7 @@ public final class NativeCopyService {
     interface Fault {void afterCell(NativeCellTransactions.Header header,NativeRawCell target);}
     static Fault fault;
     private static final ResourceLocation ID=ResourceLocation.parse("vandorlabs:copy_controller");
+    public static boolean holdsScreenChannels(ServerLevel world,BlockPos pos){return NativeCellTransactions.reservedByFamily(world,ID,pos);}
     public static void register(){NativeCellTransactions.register(FAMILY);}
     static boolean busy(NativeCopyControllerEntity owner){if(!(owner.getLevel() instanceof ServerLevel world))return false;var queued=QUEUED.get(world);return queued!=null&&queued.containsKey(owner.getBlockPos())||NativeCellTransactions.busy(world,owner.getBlockPos(),owner.key());}
     static void submit(NativeCopyControllerEntity owner,ServerPlayer player){
@@ -93,10 +94,12 @@ public final class NativeCopyService {
                 }else root.completed();
                 NativeCopyUpdates.queue(root);
             }
+            if(recipe.source!=null)for(var cell:recipe.source.cells())requeueScreen(world,cell);
             // Publication stages cells without client updates while the journal owns them.
             // Announce their final blocks and any tile packets after the durable lease retires.
             for(var cell:recipe.costSource.cells()){
                 if(!world.hasChunkAt(cell.pos))continue;
+                requeueScreen(world,cell);
                 world.invalidateCapabilities(cell.pos);
                 var state=world.getBlockState(cell.pos);
                 if(world.getBlockEntity(cell.pos) instanceof com.vandorlabs.neoforge.builders.NativeBuilderEntity builder)
@@ -110,6 +113,11 @@ public final class NativeCopyService {
             }
         }
     };
+    private static void requeueScreen(ServerLevel world,NativeRawCell cell){
+        if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.screen.NativeScreenBlock
+            &&world.hasChunkAt(cell.pos)&&world.getBlockEntity(cell.pos) instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen)
+            com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(screen);
+    }
     @SubscribeEvent public static void tick(LevelTickEvent.Post event){if(!(event.getLevel() instanceof ServerLevel world))return;var queued=QUEUED.get(world);if(queued==null)return;for(var pending:List.copyOf(queued.values()))try{admit(world,pending);}catch(IllegalArgumentException refusal){queued.remove(pending.owner.getBlockPos());if(pending.owner.installed()){pending.owner.failure(refusal.getMessage());pending.owner.changed();}}if(queued.isEmpty())QUEUED.remove(world);}
     @SubscribeEvent public static void unload(LevelEvent.Unload event){if(event.getLevel() instanceof ServerLevel world){QUEUED.remove(world);VERIFIED.remove(world);}}
     private NativeCopyService(){}

@@ -22,12 +22,19 @@ final class NativeCopyScreens {
             ||!raw.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getAllKeys().equals(Set.of("main"))
             ||!raw.getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main")
                 .getAllKeys().equals(Set.of("Range","Local","Channels"))
-            ||!screen.transmission().channels().isEmpty()||!screen.getRedstoneChannels().isEmpty()
-            ||screen.screenSettings().channelLevel()!=0
+            ||!screen.transmission().channels().isEmpty()
+            ||screen.getRedstoneChannels().isEmpty()&&screen.screenSettings().channelLevel()!=0
             ||!screen.controls(0).rows().isEmpty()||!screen.controls(1).rows().isEmpty()
             ||screen.controls(0).enabled()||screen.controls(1).enabled()){
             throw new IllegalArgumentException("Screen contains credentials, a private surface, or channel controls");
         }
+    }
+
+    static void resetReceived(CompoundTag raw){
+        // Before receiver support, the no-bank envelope was already journaled byte for byte.
+        if(raw.getIntArray("RedstoneChannels").length==0)return;
+        raw.putInt("ChannelLevel",0);
+        raw.putBoolean(com.vandorlabs.persistence.SaveSchema.Redstone.SIGNAL,false);
     }
 
     private static boolean opaque(CompoundTag raw,String key){

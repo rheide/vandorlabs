@@ -9,6 +9,8 @@ import com.vandorlabs.neoforge.credentials.NativeReaderRegistrations;
 import com.vandorlabs.neoforge.screen.*;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBindings;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.neoforge.redstone.NativeChannelMember;
+import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
 import com.vandorlabs.screen.ScreenFamily;
 import com.vandorlabs.screen.ScreenJoinGeometry;
 import java.util.List;
@@ -45,6 +47,9 @@ public final class NativeCopyScreenChecks {
     private static NativeCopyControllerEntity copy;
     private static ChestBlockEntity supply;
     private static int ticks,stage,writes,artwork,profile;
+    private static final int SHIFT=37;
+    private static int sourceLevel,targetLevel;
+    private static NativeChannelMember emitter;
 
     @SubscribeEvent
     public static void start(ServerStartedEvent event){
@@ -91,6 +96,20 @@ public final class NativeCopyScreenChecks {
         custom.putString("PrivateCopyProof","retained");
         reserved.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));
         supply.setItem(1,reserved);
+        sourceLevel=15;
+        targetLevel=9;
+        var issuingTile=supply;
+        int sourceChannel=sourceBank().first(),targetChannel=targetBank().first();
+        emitter=new NativeChannelMember(){
+            public net.minecraft.world.level.block.entity.BlockEntity channelBlockEntity(){return issuingTile;}
+            public ChannelList getRedstoneChannels(){return ChannelList.EMPTY;}
+            public ChannelList transmittedChannels(){return ChannelList.of(sourceChannel,targetChannel);}
+            public int transmissionRange(){return 16;}
+            public int localSignalLevel(int channel){return channel==sourceChannel?sourceLevel:targetLevel;}
+            public void setChannelLevel(int ignored){}
+        };
+        NativeRedstoneChannels.flush(world);
+        NativeRedstoneChannels.channelsChanged(emitter);
         ticks=stage=writes=0;
     }
 
@@ -100,7 +119,7 @@ public final class NativeCopyScreenChecks {
         try{
             require(++ticks<350,"bounded asynchronous copy "+copy.status()+" "+copy.error());
             if(stage==0){
-                require(copy.configure(actor,new CopySettings(height,0,0,ChannelList.EMPTY,false)),"configure paired scan");
+                require(copy.configure(actor,new CopySettings(height,SHIFT,0,ChannelList.EMPTY,false)),"configure paired scan");
                 var external=inputPos.offset(groupStep.multiply(2));
                 screen(external);
                 refuse("complete Screen group");
@@ -113,6 +132,7 @@ public final class NativeCopyScreenChecks {
                 }
 
                 var input=(NativeScreenEntity)world.getBlockEntity(inputPos);
+                require(input.screenSettings().channelLevel()==15,"live original receives its authored channel");
                 var clean=input.saveWithFullMetadata(world.registryAccess());
                 var credential=clean.copy();
                 credential.putInt("PrimarySurfaceTexture",-4);
@@ -144,14 +164,26 @@ public final class NativeCopyScreenChecks {
                 refuse("Missing material",1);
                 supply.getItem(0).setCount(3);
                 NativeCopyService.fault=(header,cell)->{
-                    if(writes==0&&world.getBlockEntity(outputPos) instanceof NativeScreenEntity){
+                    if(!(world.getBlockEntity(outputPos) instanceof NativeScreenEntity output))return;
+                    NativeRedstoneChannels.flush(world);
+                    if(writes==0){
+                        require(output.screenSettings().channelLevel()==0&&!output.isChannelMemberActive()
+                            &&output.getRedstoneChannels().equals(targetBank()),"held output starts with a zero received level and shifted bank");
+                        require(!input.isChannelMemberActive(),"source receivers frozen for the same lease");
+                        sourceLevel=6;
+                        targetLevel=12;
+                        NativeRedstoneChannels.outputChanged(emitter);
+                        require(input.screenSettings().channelLevel()==15&&output.screenSettings().channelLevel()==0,
+                            "external power change cannot mutate held before/after images");
                         writes++;
                         throw new IllegalStateException("Expected staged Screen copy failure");
                     }
+                    require(output.screenSettings().channelLevel()==0&&!output.isChannelMemberActive(),"retry remains frozen while held");
                 };
                 copy.request(actor);
                 stage=1;
             }else if(stage==1&&!copy.busy()){
+                if(receiver(inputPos).screenSettings().channelLevel()!=6)return;
                 require(writes==1&&copy.status().equals("Copy rolled back")&&world.getBlockState(outputPos).isAir()
                     &&world.getBlockState(outputPos.offset(groupStep)).isAir(),"caught rollback cleared outputs");
                 require(supply.getItem(0).getCount()==3&&privateMaterialRemains(),"all exact materials refunded");
@@ -160,27 +192,38 @@ public final class NativeCopyScreenChecks {
                 stage=2;
             }else if(stage==2&&!copy.busy()){
                 require(copy.status().equals("Copy complete"),"retry completed "+copy.error());
-                var output=(NativeScreenEntity)world.getBlockEntity(outputPos);
+                var output=receiver(outputPos);
+                if(output!=null&&output.screenSettings().channelLevel()!=12)return;
                 require(output!=null&&!output.inert()&&NativeScreenGroups.editMembers(output).size()==groupSize(),"translated Screen pair really joins");
                 for(var at:List.of(outputPos,outputPos.offset(groupStep))){
                     var screen=(NativeScreenEntity)world.getBlockEntity(at);
-                    require(screen.screenSettings().primarySurface()==artwork&&!screen.visual().frames().displayFit
+                    require(screen.getRedstoneChannels().equals(targetBank())&&screen.screenSettings().channelLevel()==12
+                        &&screen.localOutput()==0&&screen.screenSettings().primarySurface()==artwork&&!screen.visual().frames().displayFit
                         &&screen.getBlockState()==state()&&screen.family()==family
                         &&(!family.secondary||screen.screenSettings().secondarySurface()==artwork),"exact face, artwork and frame fit");
                 }
                 require(supply.getItem(0).getCount()==1&&privateMaterialRemains(),"pay two plain items and retain configured item");
                 require(NativeScreenGroups.editMembers((NativeScreenEntity)world.getBlockEntity(inputPos)).size()==groupSize(),"source join remains intact");
+                require(receiver(inputPos).getRedstoneChannels().equals(sourceBank())&&receiver(inputPos).screenSettings().channelLevel()==6,
+                    "source still receives its own channel");
+                NativeRedstoneChannels.unregister(emitter);
+                require(receiver(inputPos).screenSettings().channelLevel()==0&&output.screenSettings().channelLevel()==0,
+                    "both groups release received power when the independent transmitter is removed");
                 System.out.println(MARKER+" profile PASS "+family);
                 NativeCopyService.fault=null;
                 if(++profile<PROFILES.size())setup();
                 else{
-                    System.out.println(MARKER+" PASS externalNeighbors/privateChipRefusal/rollback/retry/realJoins/exactMaterials");
+                    System.out.println(MARKER+" PASS externalNeighbors/privateChipRefusal/rollback/retry/heldReceiverBank/realJoins/exactMaterials");
                     world=null;
                     event.getServer().halt(false);
                 }
             }
         }catch(Throwable error){fail(error);}
     }
+
+    private static ChannelList sourceBank(){return ChannelList.of(200+100*profile,204+100*profile);}
+    private static ChannelList targetBank(){var bank=sourceBank();return ChannelList.of(bank.get(0)+SHIFT,bank.get(1)+SHIFT);}
+    private static NativeScreenEntity receiver(BlockPos pos){return (NativeScreenEntity)world.getBlockEntity(pos);}
 
     private static int groupSize(){return ScreenJoinGeometry.supports(family,false)?2:1;}
 
@@ -205,6 +248,7 @@ public final class NativeCopyScreenChecks {
         world.setBlockAndUpdate(pos,state());
         var tile=(NativeScreenEntity)world.getBlockEntity(pos);
         var data=tile.saveWithFullMetadata(world.registryAccess());
+        data.putIntArray("RedstoneChannels",sourceBank().toArray());
         data.putInt("PrimarySurfaceTexture",artwork);
         if(family.secondary)data.putInt("SecondarySurfaceTexture",artwork);
         data.putBoolean("DisplayFit",false);
