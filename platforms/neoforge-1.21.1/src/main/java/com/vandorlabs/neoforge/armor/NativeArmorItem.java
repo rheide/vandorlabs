@@ -83,7 +83,8 @@ public final class NativeArmorItem extends ArmorItem {
     static boolean listedMaterial(int choice) {
         if (choice < 0 || choice >= ModernFinishCatalog.ENTRIES.size()) return false;
         var material = ModernFinishCatalog.option(choice);
-        return material.visible() && material.general();
+        return material.visible() && (material.general() || material.category().equals("Lights")
+            || material.category().startsWith("Lights/"));
     }
 
     static boolean configure(ItemStack stack, int choice) {

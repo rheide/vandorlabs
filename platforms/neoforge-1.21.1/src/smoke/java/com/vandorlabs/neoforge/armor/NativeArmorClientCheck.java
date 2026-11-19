@@ -41,6 +41,7 @@ public final class NativeArmorClientCheck {
     private static String capture;
     private static ArmorStand mounted;
     private static int standCase;
+    private static final int PORTHOLE_ON = 78, PORTHOLE_OFF = 256;
     private static final double[][] HIT_HEIGHT = {
         {.25, .7, 1.3, 1.8}, {.2, .5, .7, .97}
     };
@@ -235,6 +236,18 @@ public final class NativeArmorClientCheck {
                 require(NativeArmorItem.hasInventorySample(saved)
                     && NativeArmorItem.choice(saved) == NativeArmorFixture.CARGO_DOOR,
                     "sample appearance survives closing and reopening the picker");
+                if (!select(screen, "Porthole Off")) return;
+                stage = 14;
+            }
+            case 14 -> {
+                if (!(game.screen instanceof NativeArmorScreen screen) || NativeArmorItem.choice(offhand) != PORTHOLE_OFF) return;
+                lightTexture(game, offhand, PORTHOLE_OFF);
+                if (!select(screen, "Porthole On")) return;
+                stage = 15;
+            }
+            case 15 -> {
+                if (!(game.screen instanceof NativeArmorScreen screen) || NativeArmorItem.choice(offhand) != PORTHOLE_ON) return;
+                lightTexture(game, offhand, PORTHOLE_ON);
                 if (!select(screen, "Civilian Staff Helmet (Open)")) return;
                 stage = 3;
             }
@@ -317,6 +330,17 @@ public final class NativeArmorClientCheck {
                 stage = 7;
             }
         }
+    }
+
+    private static void lightTexture(Minecraft game, net.minecraft.world.item.ItemStack stack, int choice) {
+        var expected = ModernFinishCatalog.option(choice).texture();
+        var model = game.getItemRenderer().getModel(stack, game.level, game.player, 0);
+        require(model.getParticleIcon().contents().name().toString().equals(expected),
+            "static Light option uses its exact atlas sprite");
+        var item = (NativeArmorItem)stack.getItem();
+        var texture = item.getArmorTexture(stack, game.player, EquipmentSlot.HEAD,
+            item.getMaterial().value().layers().getFirst(), false);
+        require(game.getTextureManager().getTexture(texture) instanceof DynamicTexture, "static Light option produces a worn skin");
     }
 
     private static void selectHotbar(Minecraft game, int slot) {
