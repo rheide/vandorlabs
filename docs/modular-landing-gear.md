@@ -63,6 +63,14 @@ Taxi over ice. Use the configured channels to operate captured gear,
 and deploy it before landing and parking. Member links, foot orientation and
 fold direction rotate together when the craft is parked at a cardinal heading.
 
+### Transfer resources through an arm
+
+On Forge, open the Arm's **Mechanism** tab with the Configurizer. **Transfer** starts at **Off**. Cycle it to **RF Power**, **Fluids** or **Items**. Right-click to cycle backward.
+
+Connect an output port or pipe to the block face that supports the Arm. The Arm forwards incoming resources to the matching input face of the block touching its far end. It keeps no inventory, tank or energy buffer. Each mounting column of a joined platform feeds its own contact cell.
+
+Transfer works at a stationary, whole-block-aligned endpoint. It pauses during motion, at fractional endpoints, and while the attachment's ownership is being saved or restored.
+
 ### Change chassis height in Taxi mode
 
 A stopped, block-aligned craft can lower or raise its chassis using at least three complete downward Extender assemblies carrying wheels or tracks. The feet stay fixed against the same ground while the chassis moves. Regular and Large assemblies are supported. Rotating arms, sideways mounts, mixed legacy/modular supports and incompatible endpoints retain their existing motion restrictions.
