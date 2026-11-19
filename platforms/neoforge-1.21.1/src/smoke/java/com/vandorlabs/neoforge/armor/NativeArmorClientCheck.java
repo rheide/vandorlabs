@@ -149,8 +149,30 @@ public final class NativeArmorClientCheck {
             case 24 -> {
                 if (!player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())
                     || !NativeArmorFixture.LOG_SIDE.equals(NativeArmorItem.worldSample(offhand))) return;
-                sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
+                if (!game.level.getBlockState(NativeArmorFixture.LIGHT_ON)
+                        .is(com.vandorlabs.neoforge.light.NativeLightRegistrations.BLOCK.get())) return;
+                sampleFace(game, NativeArmorFixture.LIGHT_ON, Direction.SOUTH);
+                stage = 26;
+            }
+            case 26 -> {
+                String expected = NativeArmorFixture.lightSprite(true);
+                if (!expected.equals(NativeArmorItem.worldSample(offhand))) return;
+                var model = game.getItemRenderer().getModel(offhand, game.level, player, 0);
+                require(model.getParticleIcon().contents().name().toString().equals(expected),
+                    "lit renderer-owned artwork reaches the fitted armor model");
+                sampleFace(game, NativeArmorFixture.LIGHT_OFF, Direction.SOUTH);
                 stage++;
+            }
+            case 27 -> {
+                if (!NativeArmorFixture.lightSprite(false).equals(NativeArmorItem.worldSample(offhand))) return;
+                sampleFace(game, NativeArmorFixture.LIGHT_ON, Direction.UP);
+                stage++;
+            }
+            case 28 -> {
+                if (!NativeArmorFixture.lightHousing().equals(NativeArmorItem.worldSample(offhand))) return;
+                System.out.println("[vandorlabs][armor] rendered world Light On, Off and housing samples PASS");
+                sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
+                stage = 25;
             }
             case 25 -> {
                 if (!NativeArmorFixture.CUBE_SPRITE.equals(NativeArmorItem.worldSample(offhand))) return;

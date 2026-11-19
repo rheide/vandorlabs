@@ -4,6 +4,9 @@ import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.ProgrammableBlock;
 import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.light.NativeLightArtwork;
+import com.vandorlabs.neoforge.light.NativeLightBlock;
+import com.vandorlabs.neoforge.light.NativeLightEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -48,7 +51,7 @@ public final class NativeArmorWorldSampling {
 
     private record Ticket(long id, ServerLevel level, BlockHitResult hit, BlockState state, BlockEntity tile,
                           InteractionHand hand, ItemStack stack, ItemStack original, ItemStack tool,
-                          int selected, String cubeSprite, long expires) {}
+                          int selected, String expectedSprite, long expires) {}
 
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void interact(PlayerInteractEvent.RightClickBlock event) {
@@ -80,8 +83,13 @@ public final class NativeArmorWorldSampling {
         var stack = player.getItemInHand(hand);
         var tool = hand != clicked ? player.getMainHandItem() : ItemStack.EMPTY;
         var tile = world.getBlockEntity(pos);
+        String material = verifiedMaterial(state, tile, hit.getDirection());
+        if (state.getBlock() instanceof NativeLightBlock && material == null) {
+            unavailable(player);
+            return null;
+        }
         var ticket = new Ticket(++nextTicket, world, hit, state, tile, hand, stack, stack.copy(),
-            tool, player.getInventory().selected, cubeSprite(state, tile, hit.getDirection()), world.getGameTime() + TICKET_TICKS);
+            tool, player.getInventory().selected, material, world.getGameTime() + TICKET_TICKS);
         PENDING.put(identifier, ticket);
         return new Request(ticket.id(), hit);
     }
@@ -99,7 +107,7 @@ public final class NativeArmorWorldSampling {
     }
 
     static boolean supported(BlockState state) {
-        return state.getRenderShape() == RenderShape.MODEL && !state.isAir() && !state.liquid()
+        return state.getBlock() instanceof NativeLightBlock || state.getRenderShape() == RenderShape.MODEL && !state.isAir() && !state.liquid()
             && (state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get())
                 || BuiltInRegistries.BLOCK.getKey(state.getBlock()).getNamespace().equals("minecraft"));
     }
@@ -119,8 +127,8 @@ public final class NativeArmorWorldSampling {
             || !ItemStack.matches(pending.stack(), pending.original())
             || !pending.tool().isEmpty() && player.getMainHandItem() != pending.tool()) return false;
 
-        if (pending.cubeSprite() != null && (!pending.cubeSprite().equals(result.sprite())
-            || !Objects.equals(pending.cubeSprite(), cubeSprite(pending.state(), pending.tile(), result.face())))) {
+        if (pending.expectedSprite() != null && (!pending.expectedSprite().equals(result.sprite())
+            || !Objects.equals(pending.expectedSprite(), verifiedMaterial(pending.state(), pending.tile(), result.face())))) {
             unavailable(player);
             return false;
         }
@@ -134,11 +142,20 @@ public final class NativeArmorWorldSampling {
         return true;
     }
 
-    private static String cubeSprite(BlockState state, BlockEntity tile, Direction face) {
-        if (!state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) || !(tile instanceof ProgrammableBlockEntity cube)) return null;
-        var settings = cube.settings();
-        int local = ProgrammableBlock.localTextureFace(face, state.getValue(ProgrammableBlock.FACING));
-        int choice = settings.facesEnabled && settings.face(local) >= 0 ? settings.face(local) : settings.mainTexture;
+    static String verifiedMaterial(BlockState state, BlockEntity tile, Direction face) {
+        int choice;
+        if (state.getBlock() instanceof NativeLightBlock && tile instanceof NativeLightEntity light && light.available()) {
+            var visual = light.visual();
+            choice = visual.facing() == face
+                    ? NativeLightArtwork.face(visual.settings().light(), visual.on() && visual.level() > 0)
+                    : visual.housing().mainTexture;
+        } else if (state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) && tile instanceof ProgrammableBlockEntity cube) {
+            var settings = cube.settings();
+            int local = ProgrammableBlock.localTextureFace(face, state.getValue(ProgrammableBlock.FACING));
+            choice = settings.facesEnabled && settings.face(local) >= 0 ? settings.face(local) : settings.mainTexture;
+        } else {
+            return null;
+        }
         int stored = ModernFinishCatalog.storedChoice(choice);
         return stored < ModernFinishCatalog.ENTRIES.size() ? ModernFinishCatalog.option(stored).texture() : null;
     }

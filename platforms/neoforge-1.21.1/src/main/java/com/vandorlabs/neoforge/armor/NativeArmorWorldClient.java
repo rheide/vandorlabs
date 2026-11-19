@@ -1,10 +1,12 @@
 package com.vandorlabs.neoforge.armor;
 
+import com.vandorlabs.neoforge.light.NativeLightBlock;
 import java.util.List;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.client.renderer.texture.TextureAtlas;
 import net.minecraft.core.Direction;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.phys.BlockHitResult;
@@ -36,7 +38,12 @@ final class NativeArmorWorldClient {
         var state = level.getBlockState(pos);
         if (!NativeArmorWorldSampling.supported(state)) return null;
         var tile = level.getBlockEntity(pos);
-        var model = Minecraft.getInstance().getBlockRenderer().getBlockModel(state);
+        var minecraft = Minecraft.getInstance();
+        if (state.getBlock() instanceof NativeLightBlock) {
+            var material = NativeArmorWorldSampling.sprite(NativeArmorWorldSampling.verifiedMaterial(state, tile, hit.getDirection()));
+            return material == null ? null : minecraft.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(material);
+        }
+        var model = minecraft.getBlockRenderer().getBlockModel(state);
         var data = model.getModelData(level, pos, state, tile == null ? ModelData.EMPTY : tile.getModelData());
         var random = RandomSource.create(state.getSeed(pos));
         var point = hit.getLocation().subtract(pos.getX(), pos.getY(), pos.getZ());

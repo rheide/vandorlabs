@@ -1,6 +1,12 @@
 package com.vandorlabs.neoforge.armor;
 
+import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.ProgrammableBlock;
+import com.vandorlabs.neoforge.light.NativeLightArtwork;
+import com.vandorlabs.neoforge.light.NativeLightBlock;
+import com.vandorlabs.neoforge.light.NativeLightEntity;
+import com.vandorlabs.neoforge.light.NativeLightRegistrations;
+import com.vandorlabs.neoforge.light.NativeLightService;
 import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.ui.ProgrammableBlockDialog;
@@ -16,6 +22,7 @@ import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.decoration.ArmorStand;
@@ -44,7 +51,14 @@ public final class NativeArmorFixture {
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
     static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final BlockPos LIGHT_ON = new BlockPos(1, 79, -2), LIGHT_OFF = new BlockPos(2, 79, -2);
     static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
+    static String lightHousing() { return ModernFinishCatalog.option(8).texture(); }
+    static String lightSprite(boolean on) {
+        int material = NativeLightArtwork.defaultFace(0);
+        return ModernFinishCatalog.option(on ? material : NativeLightArtwork.unlit(material)).texture();
+    }
+
     static final EquipmentSlot[] MOUNTED_SLOTS = {
         EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD
     };
@@ -76,6 +90,12 @@ public final class NativeArmorFixture {
             .setValue(ProgrammableBlock.FACING, Direction.EAST), 3);
         var cube = (ProgrammableBlockEntity)world.getBlockEntity(CUBE);
         cube.apply(new ProgrammableBlockDialog.State(8, 1, true, new int[]{-1, -1, -1, -1, INDUSTRIAL_BLOCK, -1}, -1));
+        world.setBlockAndUpdate(LIGHT_ON, NativeLightRegistrations.BLOCK.get().defaultBlockState()
+                .setValue(NativeLightBlock.FACING, Direction.SOUTH));
+        world.setBlockAndUpdate(LIGHT_OFF, NativeLightRegistrations.FRAME.get().defaultBlockState()
+                .setValue(NativeLightBlock.FACING, Direction.SOUTH));
+        setLight(world, LIGHT_ON, true);
+        setLight(world, LIGHT_OFF, false);
         player.getInventory().selected = 0;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
         player.setItemInHand(InteractionHand.OFF_HAND, stack);
@@ -202,8 +222,25 @@ public final class NativeArmorFixture {
         var forged = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, cube);
         require(forged != null && !NativeArmorWorldSampling.complete(player,
             new NativeArmorWorldSampling.Result(forged.id(), CUBE, Direction.NORTH, LOG_SIDE)), "cube sprite mismatch rejected");
+        var lightHit = new BlockHitResult(Vec3.atCenterOf(LIGHT_ON).add(0, 0, .5), Direction.SOUTH, LIGHT_ON, false);
+        var light = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, lightHit);
+        setLight(player.serverLevel(), LIGHT_ON, false);
+        require(light != null && !NativeArmorWorldSampling.complete(player,
+            new NativeArmorWorldSampling.Result(light.id(), LIGHT_ON, Direction.SOUTH, lightSprite(true))),
+            "Light changed activity while the ticket was pending");
+        setLight(player.serverLevel(), LIGHT_ON, true);
         require(NativeArmorItem.worldSample(stack) == null, "negative claims preserve original armor");
         player.setShiftKeyDown(false);
+    }
+
+    private static void setLight(ServerLevel world, BlockPos pos, boolean lit) {
+        var tile = (NativeLightEntity) world.getBlockEntity(pos);
+        var data = tile.saveWithFullMetadata(world.registryAccess());
+        data.putBoolean("LightOn", lit);
+        data.putInt(HousingSettings.MAIN, 8);
+        tile.loadWithComponents(data, world.registryAccess());
+        NativeLightService.refresh(tile);
+        require(tile.visual().on() == lit, "Light fixture mode settled");
     }
 
     private static void checkStandAuthorization(ServerPlayer player) {
