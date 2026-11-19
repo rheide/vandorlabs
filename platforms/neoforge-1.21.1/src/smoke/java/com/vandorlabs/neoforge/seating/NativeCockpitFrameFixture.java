@@ -22,11 +22,15 @@ public final class NativeCockpitFrameFixture {
     static final BlockPos ROOT=new BlockPos(0,96,0);
     static final Vec3 START=new Vec3(.5,96,2.75);
     static final BlockPos MINE=ROOT.east();
+    static final int TOUCH_CHANNEL=8641;
+    private static ServerPlayer player;
+    private static boolean sawSignal;
     static boolean enabled(){return Boolean.getBoolean("vandorlabs.cockpitFrameCheck");}
     static void check(boolean pass,String message){if(!pass)throw new AssertionError("Stationary Cockpit: "+message);}
 
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if(!enabled()||!(event.getEntity() instanceof ServerPlayer actor))return;
+        player=actor;
         var level=actor.serverLevel();
         for(int x=-3;x<=4;x++)for(int z=-4;z<=4;z++)level.setBlock(ROOT.offset(x,-1,z),Blocks.STONE.defaultBlockState(),3);
         var item=NativeSeatBindings.ITEMS.get(NativeSeatKind.COCKPIT);
@@ -52,8 +56,14 @@ public final class NativeCockpitFrameFixture {
         }
         level.removeBlock(obstructed,false);
         actor.getInventory().setItem(1,new ItemStack(Items.DIAMOND_PICKAXE));
+        actor.getInventory().setItem(2,new ItemStack(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()));
         actor.inventoryMenu.broadcastChanges();
         System.out.println("[vandorlabs][cockpit-frame] setup PASS");
+    }
+
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){
+        if(!enabled()||player==null||sawSignal)return;
+        sawSignal=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,TOUCH_CHANNEL)==10;
     }
 
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -69,6 +79,8 @@ public final class NativeCockpitFrameFixture {
             if(stack.is(item))drops+=stack.getCount();
         }
         check(drops==1,"one Cockpit item after teardown from a side");
+        check(sawSignal&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
+            "seated touch operated actual shared wireless Redstone and teardown withdrew its source");
         System.out.println("[vandorlabs][cockpit-frame] completed PASS");
         System.out.println("[vandorlabs][cockpit-frame] logout PASS");
     }

@@ -92,8 +92,9 @@ def generate(root,out):
               {'loader':'neoforge:obj','model':f'vandorlabs:models/block/native_seating/{name}.obj',
                'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
                'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
-    assembly='cockpits/cockpit/assembly.json'
-    write(assembly,json.loads((source/assembly).read_text()))
+    for name in ['assembly','surfaces']:
+        asset=f'cockpits/cockpit/{name}.json'
+        write(asset,json.loads((source/asset).read_text()))
     names.extend(['cockpit','cockpit_body','cockpit_screen_bank','cockpit_screen_lift_button'])
     write('models/block/native_seating/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/bridge_chair_atlas')},'elements':[]})
     for kind in KINDS:

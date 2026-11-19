@@ -59,6 +59,9 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
     }else if(kind==NativeSeatKind.COCKPIT&&owner(world,pos)!=null){
         var control=NativeCockpitGeometry.button(lower(state,pos),state.getValue(FACING),pos,start,end);
         if(control!=null)return control;
+        var panel=NativeCockpitTouch.pick(lower(state,pos),state.getValue(FACING),pos,start,end,
+            owner(world,pos).cockpitTouch().controls(0).rows().size());
+        if(panel!=null)return panel.hit();
     }if((kind.adjustablePilotHeight()||kind==NativeSeatKind.COCKPIT)&&world instanceof Level level){var lower=lower(state,pos);var players=level.players();for(int i=0;i<players.size();i++){var player=players.get(i);if(player.getVehicle() instanceof NativeChairMount mount&&lower.equals(mount.chairPos())&&start.distanceToSqr(player.getEyePosition())<1e-8)return null;}}return getShape(state,world,pos,CollisionContext.empty()).clip(start,end,pos);}
     @Override public boolean canBeReplaced(BlockState state,BlockPlaceContext context){return NativeSeatBackrests.replacing(context,context.getClickedPos());}
     @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}
@@ -89,6 +92,18 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
                         ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,control.getDirection(),actor.getMainHandItem()))
                         return InteractionResult.FAIL;
                     owner.pressLift(actor);
+                }
+                return InteractionResult.sidedSuccess(world.isClientSide);
+            }
+            var touch=owner.cockpitTouch();
+            var panel=NativeCockpitTouch.pick(at,state.getValue(FACING),pos,start,end,touch.controls(0).rows().size());
+            if(panel!=null){
+                if(!world.isClientSide){
+                    var first=world.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
+                    if(first.getLocation().distanceToSqr(panel.hit().getLocation())>1e-8||!first.getBlockPos().equals(pos)
+                        ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,panel.hit().getDirection(),actor.getMainHandItem()))
+                        return InteractionResult.FAIL;
+                    touch.use(panel.row(),panel.segment());
                 }
                 return InteractionResult.sidedSuccess(world.isClientSide);
             }

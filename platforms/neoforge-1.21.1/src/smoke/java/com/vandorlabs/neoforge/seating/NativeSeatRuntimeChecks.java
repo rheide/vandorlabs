@@ -41,10 +41,18 @@ public final class NativeSeatRuntimeChecks {
      need(world.addFreshEntity(obstructing)&&!tile.pressLift(actor)&&tile.lift().revision()==0,"occupant refuses screen-bank travel");
      obstructing.discard();
      need(tile.pressLift(actor)&&tile.lift().retracted()&&tile.lift().revision()==1,"clear bank retraction");
+     var touch=tile.cockpitTouch();
+     var channel=com.vandorlabs.redstone.ChannelList.of(8647);
+     var edit=new com.vandorlabs.neoforge.screen.NativeScreenRowEdit("",List.of(
+         new com.vandorlabs.neoforge.screen.NativeScreenRowEdit.Row("Trim",channel,true,false,5,15)));
+     need(touch.configure(edit),"installed Cockpit touch controls use the shared row service");
+     touch.use(0,2);
      tile.setChanged();
    }
    need(tile.lift().retracted()&&tile.lift().revision()==1,"persisted authoritative screen-bank timeline");
    if(!install)need(tile.liftPosition()>0,"cold bank resumes or completes saved retraction");
+   need(tile.cockpitTouch().controls(0).rows().getFirst().level()==10
+       &&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(world,root,8647)==10,"saved Cockpit touch level and wireless provider");
    need(tile.saveWithoutMetadata(world.registryAccess()).getCompound("ForgeCaps")
        .getString("external").equals("opaque cockpit data"),"opaque Cockpit NBT survives");
  }

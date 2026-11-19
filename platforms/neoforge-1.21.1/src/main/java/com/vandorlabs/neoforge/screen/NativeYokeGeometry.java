@@ -24,7 +24,7 @@ public record NativeYokeGeometry(VoxelShape outline, VoxelShape collision, List<
     public record Face(Vec3 topLeft, Vec3 right, Vec3 down, Vec3 normal, int height) {
         public record Sample(double time, int row, int sliderStep) {}
 
-        Sample sample(Vec3 start, Vec3 end, int rows) {
+        public Sample sample(Vec3 start, Vec3 end, int rows) {
             if (rows == 0) return null;
             Vec3 segment = end.subtract(start);
             double denom = segment.dot(normal);
@@ -72,7 +72,7 @@ public record NativeYokeGeometry(VoxelShape outline, VoxelShape collision, List<
         return turn(v.add(-.5, 0, -.5), facing).add(.5, 0, .5);
     }
 
-    private static Face face(JsonObject raw, Direction facing) {
+    public static Face authoredFace(JsonObject raw, Direction facing) {
         Vec3 origin = vector(raw.getAsJsonArray("origin_blocks"),0);
         Vec3 u = vector(raw.getAsJsonArray("u_vector_blocks"),0);
         Vec3 v = vector(raw.getAsJsonArray("v_vector_blocks"),0);
@@ -99,7 +99,7 @@ public record NativeYokeGeometry(VoxelShape outline, VoxelShape collision, List<
             }
             result.put(facing, new NativeYokeGeometry(Shapes.create(box(vector(bounds,0),vector(bounds,3),facing)),
                 NativeVoxelShapes.union(boxes, 128*1024),
-                List.of(face(surfaces.get(1).getAsJsonObject(),facing), face(surfaces.get(0).getAsJsonObject(),facing))));
+                List.of(authoredFace(surfaces.get(1).getAsJsonObject(),facing), authoredFace(surfaces.get(0).getAsJsonObject(),facing))));
         }
         return result;
     }

@@ -73,8 +73,32 @@ public final class NativeCockpitFrameClient {
             }
             case 3 -> {
                 if(screenshot!=null)return;
+                select(game,2);
+                wait=ticks;stage=20;
+            }
+            case 20 -> {
+                if(ticks<wait+8||!player.getMainHandItem().is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return;
                 click(game,MINE,Direction.SOUTH);
                 stage++;
+            }
+            case 21 -> {
+                if(!(game.screen instanceof com.vandorlabs.neoforge.client.NativeScreenScreen editor))return;
+                check(editor.getMenu().cockpit()&&editor.getTitle().getString().equals("Cockpit Touch Panel"),
+                    "normal Configurizer opens the shared touch-row editor");
+                for(int row=0;row<3;row++)editor.action(590,1);
+                check(!editor.button(590).active,"authored three-row touch capacity");
+                editor.rowLabel(2).setValue("Trim");
+                editor.rowChannels(2).setValue(Integer.toString(TOUCH_CHANNEL));
+                editor.action(702,1);
+                editor.action(20,1);
+                select(game,3);
+                wait=ticks;stage++;
+            }
+            case 22 -> {
+                if(ticks<wait+8||game.screen!=null||!player.getMainHandItem().isEmpty()
+                    ||owner.cockpitTouch().controls(0).rows().size()!=3)return;
+                click(game,MINE,Direction.SOUTH);
+                stage=4;
             }
             case 4 -> {
                 if(!(player.getVehicle() instanceof NativeChairMount mount)||!ROOT.equals(mount.chairPos()))return;
@@ -156,6 +180,29 @@ public final class NativeCockpitFrameClient {
                 reload.join();
                 check(com.vandorlabs.neoforge.NativeCockpitLiftRenderer.visualProgress(owner)<.001,
                     "resource reload must not replay the completed screen motion");
+                var face=NativeCockpitTouch.face(Direction.NORTH);
+                var aim=Vec3.atLowerCornerOf(ROOT).add(face.topLeft()).add(face.right().scale(98D/128)).add(face.down().scale(2.5/3));
+                aim(game,aim);
+                wait=ticks;stage=54;
+            }
+            case 54 -> {
+                if(ticks<wait+8)return;
+                var eye=player.getEyePosition();
+                var end=eye.add(player.getViewVector(1).scale(4));
+                var hit=game.level.clip(new ClipContext(eye,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,player));
+                var panel=NativeCockpitTouch.pick(ROOT,Direction.NORTH,MINE,eye,end,3);
+                check(panel!=null&&panel.row()==2&&panel.segment()==2&&hit.getLocation().distanceToSqr(panel.hit().getLocation())<1e-8,
+                    "actual seated authored panel target is the third row and third slider detent");
+                game.gameMode.useItemOn(player,InteractionHand.MAIN_HAND,hit);
+                stage++;
+            }
+            case 55 -> {
+                if(owner.cockpitTouch().controls(0).rows().get(2).level()!=10)return;
+                screenshot="cockpit-touch-panel-energized.png";
+                stage++;
+            }
+            case 56 -> {
+                if(screenshot!=null)return;
                 game.options.keyShift.setDown(true);
                 wait=ticks;stage=6;
             }
@@ -193,8 +240,13 @@ public final class NativeCockpitFrameClient {
         game.player.yRotO=180;
     }
 
-    private static void aimLift(Minecraft game){
-        var target=Vec3.atLowerCornerOf(ROOT).add(1.71875,.68125,.128125);
+    private static void select(Minecraft game,int slot){
+        game.player.getInventory().selected=slot;
+        game.player.connection.send(new ServerboundSetCarriedItemPacket(slot));
+    }
+
+    private static void aimLift(Minecraft game){aim(game,Vec3.atLowerCornerOf(ROOT).add(1.71875,.68125,.128125));}
+    private static void aim(Minecraft game,Vec3 target){
         var delta=target.subtract(game.player.getEyePosition());
         float yaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z));
         float pitch=(float)-Math.toDegrees(Math.atan2(delta.y,delta.horizontalDistance()));

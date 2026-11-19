@@ -40,8 +40,8 @@ public final class NativeChairEntity extends BlockEntity {
         com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(left);
         com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(right);
     }
-    @Override public void setRemoved(){unregisterArmrests();super.setRemoved();}
-    @Override public void onChunkUnloaded(){unregisterArmrests();super.onChunkUnloaded();}
+    @Override public void setRemoved(){stopTouch();unregisterArmrests();super.setRemoved();}
+    @Override public void onChunkUnloaded(){stopTouch();unregisterArmrests();super.onChunkUnloaded();}
     private boolean readArmrests(CompoundTag tag){
         if(kind()!=NativeSeatKind.ADVANCED||NativeSeatBlock.proxy(getBlockState()))return true;
         if(tag.contains(CONTROLS)&&!tag.contains(CONTROLS,Tag.TAG_LIST))return false;
@@ -73,6 +73,12 @@ public final class NativeChairEntity extends BlockEntity {
     }
     private static java.util.function.DoubleSupplier liftClock=()->0;
     public static void bindLiftClientClock(java.util.function.DoubleSupplier clock){liftClock=clock;}
+    private final NativeCockpitTouch cockpitTouch;
+    public NativeCockpitTouch cockpitTouch(){return cockpitTouch;}
+    private boolean readTouch(CompoundTag tag,boolean client){return cockpitTouch==null||cockpitTouch.read(tag,client);}
+    private void writeTouch(CompoundTag tag,boolean item){if(cockpitTouch!=null)cockpitTouch.write(tag,item);}
+    void registerTouch(){if(cockpitTouch!=null&&!inert)cockpitTouch.finishLoading();}
+    private void stopTouch(){if(cockpitTouch!=null)cockpitTouch.stop();}
     private NativeCockpitLift lift=NativeCockpitLift.DEPLOYED;
     private double liftElapsed=NativeCockpitLift.DURATION;
     private boolean receivedLift;
@@ -121,7 +127,7 @@ public final class NativeChairEntity extends BlockEntity {
 
     private ChairSettings settings=new ChairSettings(0,1,0,true);private int pilotHeight,part,arms;private boolean inert,opaqueProxy;
     private CompoundTag retained=new CompoundTag();private boolean retainedItem;private volatile View view;private ItemStack removalDrop;
-    public NativeChairEntity(BlockPos pos,BlockState state){super(NativeSeatBindings.type(state),pos,state);publish();}
+    public NativeChairEntity(BlockPos pos,BlockState state){super(NativeSeatBindings.type(state),pos,state);cockpitTouch=kind()==NativeSeatKind.COCKPIT&&!NativeSeatBlock.proxy(state)?new NativeCockpitTouch(this):null;publish();}
     public NativeSeatKind kind(){return ((NativeSeatBlock)getBlockState().getBlock()).kind;}
     public void prepareRemoval(ItemStack stack){removalDrop=stack.copy();}
     public ItemStack removalDrop(){return removalDrop==null?null:removalDrop.copy();}
@@ -160,7 +166,7 @@ public final class NativeChairEntity extends BlockEntity {
         if(!level.isClientSide)for(var seat:level.getEntitiesOfClass(NativeChairMount.class,new net.minecraft.world.phys.AABB(worldPosition).inflate(2)))if(worldPosition.equals(seat.chairPos()))seat.updatePose(this);
     }
     public CompoundTag configuration(){var tag=new CompoundTag();if(NativeSeatBlock.proxy(getBlockState()))return tag;if(kind()==NativeSeatKind.COCKPIT)return tag;if(kind().adjustablePilotHeight()){tag.putInt(ChairSettings.PILOT_HEIGHT,pilotHeight);}else{tag.putInt(ChairSettings.STYLE,settings.style);tag.putInt(ChairSettings.HEIGHT,settings.height);if(settings.angle!=0)tag.putInt(ChairSettings.ANGLE,settings.angle);if(kind().connected())tag.putBoolean(ChairSettings.JOIN,settings.join);}return tag;}
-    private CompoundTag itemData(){var root=new CompoundTag();if(inert)root.put("NativeChairRetained",retained.copy());else {root.put(ITEM_SETTINGS,configuration());var preserved=retained.copy();writeArmrests(preserved);writeLift(preserved,true);if(!preserved.isEmpty())root.put("NativeChairPreserved",preserved);}return root;}
+    private CompoundTag itemData(){var root=new CompoundTag();if(inert)root.put("NativeChairRetained",retained.copy());else {root.put(ITEM_SETTINGS,configuration());var preserved=retained.copy();writeArmrests(preserved);writeLift(preserved,true);writeTouch(preserved,true);if(!preserved.isEmpty())root.put("NativeChairPreserved",preserved);}return root;}
     public void writeItem(ItemStack stack){stack.applyComponents(collectComponents());}
     private boolean readSettings(CompoundTag tag){
         if(tag.contains("TaxiMode")&&!tag.contains("TaxiMode",Tag.TAG_BYTE))return false;
@@ -170,24 +176,24 @@ public final class NativeChairEntity extends BlockEntity {
         if(tag.contains("SeatRenderPart")&&!tag.contains("SeatRenderPart",Tag.TAG_INT)||tag.contains("PilotArms")&&!tag.contains("PilotArms",Tag.TAG_INT))return false;part=tag.getInt("SeatRenderPart");arms=tag.getInt("PilotArms");if(part<0||part>3||arms<0||arms>3)return false;
         pilotHeight=ChairSettings.pilotHeight(tag.getInt(ChairSettings.PILOT_HEIGHT));return true;
     }
-    @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){unregisterArmrests();super.loadAdditional(tag,registries);retainedItem=false;retained=tag.copy();for(String key:List.of("id","x","y","z"))retained.remove(key);if(retained.contains("keepPacked",Tag.TAG_BYTE))retained.remove("keepPacked");opaqueProxy=retained.getAllKeys().stream().anyMatch(key->!key.equals("NativeChairSchema")&&!key.equals("NativeChairProxy")&&!(List.of("components","NeoForgeData","neoforge:attachments","ForgeCaps").contains(key)&&retained.contains(key,Tag.TAG_COMPOUND)&&retained.getCompound(key).isEmpty()));try{com.vandorlabs.neoforge.NativePlatformComponents.requireSupported(tag,registries);}catch(IllegalArgumentException unsupported){inert=true;publish();return;}if(tag.contains("NativeChairRetained")){inert=true;if(tag.contains("NativeChairRetained",Tag.TAG_COMPOUND)){retained=tag.getCompound("NativeChairRetained").copy();retainedItem=true;}publish();return;}inert=tag.contains("NativeChairSchema")&&(!tag.contains("NativeChairSchema",Tag.TAG_INT)||tag.getInt("NativeChairSchema")!=1)||!readSettings(tag)||!readArmrests(tag)||!readLift(tag,false);registerArmrests();if(!inert)com.vandorlabs.neoforge.NativePlatformComponents.forgetLoadedFields(retained);publish();}
-    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){if(inert){if(retainedItem){super.saveAdditional(tag,registries);tag.put("NativeChairRetained",retained.copy());}else{com.vandorlabs.neoforge.NativePlatformComponents.clearForInertSave(this);tag.merge(retained);}return;}super.saveAdditional(tag,registries);tag.merge(retained);tag.putInt("NativeChairSchema",1);if(NativeSeatBlock.proxy(getBlockState())){tag.putBoolean("NativeChairProxy",true);return;}tag.merge(configuration());writeArmrests(tag);writeLift(tag,false);tag.putInt("SeatRenderPart",part);tag.putInt("PilotArms",arms);if(settings.angle==0)tag.remove(ChairSettings.ANGLE);}
+    @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){stopTouch();unregisterArmrests();super.loadAdditional(tag,registries);retainedItem=false;retained=tag.copy();for(String key:List.of("id","x","y","z"))retained.remove(key);if(retained.contains("keepPacked",Tag.TAG_BYTE))retained.remove("keepPacked");opaqueProxy=retained.getAllKeys().stream().anyMatch(key->!key.equals("NativeChairSchema")&&!key.equals("NativeChairProxy")&&!(List.of("components","NeoForgeData","neoforge:attachments","ForgeCaps").contains(key)&&retained.contains(key,Tag.TAG_COMPOUND)&&retained.getCompound(key).isEmpty()));try{com.vandorlabs.neoforge.NativePlatformComponents.requireSupported(tag,registries);}catch(IllegalArgumentException unsupported){inert=true;publish();return;}if(tag.contains("NativeChairRetained")){inert=true;if(tag.contains("NativeChairRetained",Tag.TAG_COMPOUND)){retained=tag.getCompound("NativeChairRetained").copy();retainedItem=true;}publish();return;}inert=tag.contains("NativeChairSchema")&&(!tag.contains("NativeChairSchema",Tag.TAG_INT)||tag.getInt("NativeChairSchema")!=1)||!readSettings(tag)||!readArmrests(tag)||!readLift(tag,false)||!readTouch(tag,false);registerArmrests();if(!inert)com.vandorlabs.neoforge.NativePlatformComponents.forgetLoadedFields(retained);publish();}
+    @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){if(inert){if(retainedItem){super.saveAdditional(tag,registries);tag.put("NativeChairRetained",retained.copy());}else{com.vandorlabs.neoforge.NativePlatformComponents.clearForInertSave(this);tag.merge(retained);}return;}super.saveAdditional(tag,registries);tag.merge(retained);tag.putInt("NativeChairSchema",1);if(NativeSeatBlock.proxy(getBlockState())){tag.putBoolean("NativeChairProxy",true);return;}tag.merge(configuration());writeArmrests(tag);writeLift(tag,false);writeTouch(tag,false);tag.putInt("SeatRenderPart",part);tag.putInt("PilotArms",arms);if(settings.angle==0)tag.remove(ChairSettings.ANGLE);}
     private void retainItem(CompoundTag raw){retained=raw.copy();retainedItem=true;inert=true;publish();}
     @Override protected void applyImplicitComponents(DataComponentInput input){super.applyImplicitComponents(input);var custom=input.get(DataComponents.CUSTOM_DATA);if(custom==null)return;var root=custom.copyTag();if(root.contains("NativeChairRetained")){retainItem(root.contains("NativeChairRetained",Tag.TAG_COMPOUND)?root.getCompound("NativeChairRetained"):root);return;}if(root.contains("NativeChairPreserved")){if(!root.contains("NativeChairPreserved",Tag.TAG_COMPOUND)){retainItem(root);return;}retained=root.getCompound("NativeChairPreserved").copy();if(retained.contains("components")||retained.contains("neoforge:attachments")||retained.contains("NeoForgeData")){retainItem(root);return;}}
         if((kind()==NativeSeatKind.ADVANCED||kind()==NativeSeatKind.COCKPIT)&&!root.contains(ITEM_SETTINGS)&&root.contains("BlockEntityTag")){
             if(!root.contains("BlockEntityTag",Tag.TAG_COMPOUND)){retainItem(root);return;}
             retained=root.getCompound("BlockEntityTag").copy();
             for(String key:List.of("id","x","y","z"))retained.remove(key);
-            if(!readSettings(retained)||!readArmrests(retained)||!readLift(retained,false)){retainItem(root);return;}
+            if(!readSettings(retained)||!readArmrests(retained)||!readLift(retained,false)||!readTouch(retained,false)){retainItem(root);return;}
         }
-        if(root.contains(ITEM_SETTINGS)&&(!root.contains(ITEM_SETTINGS,Tag.TAG_COMPOUND)||!readSettings(root.getCompound(ITEM_SETTINGS)))){retainItem(root);return;}if(!retained.isEmpty()&&(!readArmrests(retained)||!readLift(retained,false))){retainItem(root);return;}publish();}
+        if(root.contains(ITEM_SETTINGS)&&(!root.contains(ITEM_SETTINGS,Tag.TAG_COMPOUND)||!readSettings(root.getCompound(ITEM_SETTINGS)))){retainItem(root);return;}if(!retained.isEmpty()&&(!readArmrests(retained)||!readLift(retained,false)||!readTouch(retained,false))){retainItem(root);return;}publish();}
     @Override protected void collectImplicitComponents(net.minecraft.core.component.DataComponentMap.Builder builder){super.collectImplicitComponents(builder);builder.set(DataComponents.CUSTOM_DATA,CustomData.of(itemData()));}
-    @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=configuration();writeArmrests(tag);writeLift(tag,false);tag.putInt("SeatRenderPart",part);tag.putInt("PilotArms",arms);tag.putBoolean("NativeChairInert",inert);
+    @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=configuration();writeArmrests(tag);writeLift(tag,false);writeTouch(tag,false);tag.putInt("SeatRenderPart",part);tag.putInt("PilotArms",arms);tag.putBoolean("NativeChairInert",inert);
         if(kind()==NativeSeatKind.COCKPIT&&!NativeSeatBlock.proxy(getBlockState()))
             tag.putDouble("NativeScreenLiftElapsed",level==null?NativeCockpitLift.DURATION:
                 Math.max(0,Math.min(NativeCockpitLift.DURATION,level.getGameTime()-lift.started())));
         return tag;}
-    @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){inert=!readSettings(tag)||!readArmrests(tag)||!readLift(tag,true)||tag.getBoolean("NativeChairInert");publish();if(level!=null){level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);var upper=worldPosition.above();if(level.hasChunkAt(upper))level.sendBlockUpdated(upper,level.getBlockState(upper),level.getBlockState(upper),3);}}
+    @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider registries){inert=!readSettings(tag)||!readArmrests(tag)||!readLift(tag,true)||!readTouch(tag,true)||tag.getBoolean("NativeChairInert");publish();if(level!=null){level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);var upper=worldPosition.above();if(level.hasChunkAt(upper))level.sendBlockUpdated(upper,level.getBlockState(upper),level.getBlockState(upper),3);}}
     @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registries){if(packet.getTag()!=null)handleUpdateTag(packet.getTag(),registries);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     @Override public ModelData getModelData(){return ModelData.builder().with(VIEW,view).build();}

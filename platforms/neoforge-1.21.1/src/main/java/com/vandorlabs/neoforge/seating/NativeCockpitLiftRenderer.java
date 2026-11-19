@@ -28,7 +28,9 @@ public final class NativeCockpitLiftRenderer implements BlockEntityRenderer<Nati
     private static final Map<NativeChairEntity,Pose> POSES=new WeakHashMap<>();
     private static double clock;
 
+    private final NativeScreenRowsRenderer touch;
     NativeCockpitLiftRenderer(BlockEntityRendererProvider.Context context) {
+        touch=new NativeScreenRowsRenderer(context.getFont());
         NativeChairEntity.bindLiftClientClock(()->clock);
     }
 
@@ -81,6 +83,10 @@ public final class NativeCockpitLiftRenderer implements BlockEntityRenderer<Nati
             part(false,bank*NativeCockpitLift.TRAVEL,stack,buffer,light,overlay);
             part(true,pose.button(clock),stack,buffer,light,overlay);
         }finally{stack.popPose();}
+        var panel=tile.cockpitTouch();
+        if(panel!=null&&panel.controls(0).enabled())
+            touch.emitYoke(com.vandorlabs.neoforge.seating.NativeCockpitTouch.face(facing),panel.controls(0),stack,
+                buffers,0x00F000F0,tile.getLevel().getGameTime());
     }
 
     private static void part(boolean button,double drop,PoseStack stack,VertexConsumer buffer,int light,int overlay){

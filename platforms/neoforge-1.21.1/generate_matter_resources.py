@@ -89,6 +89,7 @@ def main():
     lang['item.vandorlabs.programmable_armor.copied'] = 'Duplifier copied %s'
     lang['item.vandorlabs.programmable_armor.applied'] = 'Duplifier applied armor texture'
     lang['item.vandorlabs.programmable_armor.no_copy'] = 'No copied armor texture applies here'
+    lang['block.vandorlabs.cockpit.touch_panel']='Cockpit Touch Panel'
     lang['block.vandorlabs.cockpit.screen_lift_blocked']='The Cockpit screen bank is obstructed.'
     write('assets/vandorlabs/lang/en_us.json', lang)
     for name in ['programmable_matter_block', 'programmable_matter_unpack', 'industrial_alloy_ingot']:
