@@ -1,0 +1,29 @@
+{
+  "ambientocclusion": false,
+  "elements": [
+    {
+      "name": "port_status_bar",
+      "from": [
+        2,
+        14.03,
+        -0.02
+      ],
+      "to": [
+        14,
+        15.97,
+        -0.02
+      ],
+      "faces": {
+        "north": {
+          "uv": [
+            2.5,
+            1.25,
+            13.5,
+            3
+          ],
+          "texture": "#bar"
+        }
+      }
+    }
+  ]
+}

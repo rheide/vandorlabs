@@ -1,5 +1,8 @@
 package com.vandorlabs.neoforge.gear;
 
+import com.vandorlabs.gear.core.ArmResource;
+import com.vandorlabs.gear.core.ArmResourceIndicator;
+
 import com.mojang.serialization.MapCodec;
 import java.util.*;
 import java.util.function.Supplier;
@@ -30,6 +33,13 @@ public class NativeGearBlock extends BaseEntityBlock {
     public BlockEntityType<NativeGearEntity> entityType(){return entities.get();}
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING,ASSEMBLED,PART);}
+    @Override protected boolean triggerEvent(BlockState state,Level level,BlockPos pos,int id,int value){
+        var mode=ArmResourceIndicator.eventMode(value);
+        if(id!=ArmResourceIndicator.BLOCK_EVENT||mode==ArmResource.DISABLED)return super.triggerEvent(state,level,pos,id,value);
+        if(level.isClientSide&&level.getBlockEntity(pos) instanceof NativeGearEntity tile)tile.resourcePulse(mode);
+        return true;
+    }
+
     @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return entities.get().create(pos,state);}
     @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(Level world,BlockState state,BlockEntityType<T> type){return world.isClientSide?null:createTickerHelper(type,entities.get(),NativeGearEntity::tick);}
     public BlockState legacyState(int metadata){return defaultBlockState().setValue(FACING,Direction.from2DDataValue(metadata&3)).setValue(ASSEMBLED,definition.size==1&&(metadata&4)!=0).setValue(PART,definition.size==2?(metadata>>2)&3:0);}

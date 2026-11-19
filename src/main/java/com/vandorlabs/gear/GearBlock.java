@@ -1,5 +1,8 @@
 package com.vandorlabs.gear;
 
+import com.vandorlabs.gear.core.ArmResource;
+import com.vandorlabs.gear.core.ArmResourceIndicator;
+
 import java.util.List;
 import javax.annotation.Nullable;
 import net.minecraft.block.Block;
@@ -95,6 +98,14 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
 
     @Override
     public int damageDropped(IBlockState state) { return 0; }
+
+    @Override public boolean eventReceived(IBlockState state,World world,BlockPos pos,int id,int value){
+        ArmResource mode=ArmResourceIndicator.eventMode(value);
+        if(id!=ArmResourceIndicator.BLOCK_EVENT||mode==ArmResource.DISABLED)return super.eventReceived(state,world,pos,id,value);
+        if(world.isRemote&&world.getTileEntity(pos) instanceof GearTileEntity)
+            ((GearTileEntity)world.getTileEntity(pos)).resourcePulse(mode);
+        return true;
+    }
 
     @Override
     public TileEntity createNewTileEntity(World world, int meta) { return new GearTileEntity(); }
