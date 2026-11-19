@@ -70,8 +70,18 @@ public final class FrameMachineRuntimeChecks {
             BlockPos at=press.cell(x,y,z);
             if(!at.equals(root)&&press.frame(x,y,z))world.setBlockState(at,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState());
         }
-        require(press.assemble(),"forge Plate check forms a complete Press");
+        BlockPos corner=press.cell(design.width-1,0,design.depth-1);
+        net.minecraft.block.state.IBlockState frame=ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState()
+                .withProperty(BlockProgrammableBlock.FACING,EnumFacing.WEST);
+        world.setBlockState(corner,frame);
+        ((TileEntityAnimatedScreenSelector)world.getTileEntity(corner)).setHousingTexture(0);
+        require(press.assemble(),"Forge Plate check forms a complete mixed-finish Press");
         checkPlate(world,press);
+        press.dismantle();
+        require(world.getBlockState(corner)==frame
+                        &&((TileEntityAnimatedScreenSelector)world.getTileEntity(corner)).getHousingTexture()==0,
+                "dismantling restores the exact non-default frame facing and finish");
+        System.out.println("[vandorlabs][reprolab] programmable plate PASS Forge Press/no Catalog/8000RF/four armor recipes/mixed frame");
     }
     private static void checkPlate(World world,TileEntityConstructor press){
         net.minecraft.item.Item plate=com.vandorlabs.items.ModItems.PROGRAMMABLE_PLATE;
@@ -114,7 +124,6 @@ public final class FrameMachineRuntimeChecks {
             for(int cell=0;cell<9;cell++)if(shape.charAt(cell)=='#')grid.setInventorySlotContents(cell,new net.minecraft.item.ItemStack(ingot));
             require(!armor.matches(grid,world),"raw ingots do not craft "+pieces[piece]);
         }
-        System.out.println("[vandorlabs][reprolab] programmable plate PASS Forge Press/no Catalog/8000RF/four armor recipes");
     }
     private static void checkLegacyPalette(World world,Block programmable){
         String old=com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER;
