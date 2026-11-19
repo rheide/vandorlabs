@@ -37,8 +37,44 @@ final class SegmentedDoorLiveChecks {
         }
         if(stage==3){if(mc.player.getHeldItemMainhand().getItem()!=com.vandorlabs.items.ModItems.CONFIGURIZER||mc.player.inventory.getStackInSlot(2).getItem()!=Item.getItemFromBlock(net.minecraft.init.Blocks.GOLD_BLOCK))return false;mc.playerController.processRightClickBlock(mc.player,mc.world,TOP.up().east(),EnumFacing.UP,new Vec3d(TOP.up().east()).addVector(.5,1,.5),EnumHand.MAIN_HAND);stage=4;wait=0;return false;}
         if(stage==4){if(!(mc.currentScreen instanceof GuiSegmentedDoor)||++wait<5)return false;SegmentedDoorDialogChecks.run(mc,(GuiSegmentedDoor)mc.currentScreen,output);stage=5;wait=0;return false;}
-        if(stage==5){if(++wait<10)return false;mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=actor(mc);SegmentedDoorTile root=SegmentedDoorTile.at(p.getServerWorld(),TOP.up().east());require(root.settings.window&&root.settings.shape==3&&root.settings.join&&root.cellArtwork.overridden&&root.effectiveTexture()==com.vandorlabs.tiles.CustomBlockMaterials.choice(p.inventory.getStackInSlot(2)),"authorized dialog packet did not configure all window/custom fields");SegmentedDoorRuntimeChecks.run(p.getServerWorld(),p);}).get();SegmentedDoorClockChecks.run(mc);SegmentedDoorRenderChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] segmented-door-live PASS actual wand/configuration packets window/glass rendered matrix legacy compatibility");stage=6;return false;
+        if(stage==5){if(++wait<10)return false;mc.player.closeScreen();mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=actor(mc);SegmentedDoorTile root=SegmentedDoorTile.at(p.getServerWorld(),TOP.up().east());require(root.settings.window&&root.settings.shape==3&&root.settings.join&&root.cellArtwork.overridden&&root.effectiveTexture()==com.vandorlabs.tiles.CustomBlockMaterials.choice(p.inventory.getStackInSlot(2)),"authorized dialog packet did not configure all window/custom fields");SegmentedDoorRuntimeChecks.run(p.getServerWorld(),p);worldEditPaste(p);}).get();SegmentedDoorClockChecks.run(mc);SegmentedDoorRenderChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] segmented-door-live PASS actual wand/configuration packets window/glass rendered matrix legacy compatibility");stage=6;return false;
         }return false;
+    }
+    private static void worldEditPaste(EntityPlayerMP player){
+        WorldServer world=player.getServerWorld();
+        BlockPos source=BASE.south(5),destination=BASE.south(10);
+        Block door=Block.getBlockFromName("vandorlabs:segmented_door");
+        for(BlockPos bottom:new BlockPos[]{source,destination})for(int y=-1;y<4;y++)world.setBlockToAir(bottom.up(y));
+        for(int y=0;y<3;y++)world.setBlockState(source.up(y),door.getDefaultState(),3);
+        DeferredTileLoad.flush(world);
+        SegmentedDoorTile original=SegmentedDoorTile.at(world,source.up(2));
+        original.operate(player,true);
+        try{
+            Class<?> vector=Class.forName("com.sk89q.worldedit.Vector");
+            Class<?> editSession=Class.forName("com.sk89q.worldedit.EditSession");
+            Class<?> clipboardClass=Class.forName("com.sk89q.worldedit.CuboidClipboard");
+            java.lang.reflect.Constructor<?> point=vector.getConstructor(int.class,int.class,int.class);
+            Class<?> forgeWorldEdit=Class.forName("com.sk89q.worldedit.forge.ForgeWorldEdit");
+            Object adapter=forgeWorldEdit.getMethod("getWorld",World.class).invoke(forgeWorldEdit.getField("inst").get(null),world);
+            Class<?> worldEdit=Class.forName("com.sk89q.worldedit.WorldEdit");
+            Object factory=worldEdit.getMethod("getEditSessionFactory").invoke(worldEdit.getMethod("getInstance").invoke(null));
+            Object session=Class.forName("com.sk89q.worldedit.EditSessionFactory")
+                    .getMethod("getEditSession",Class.forName("com.sk89q.worldedit.world.World"),int.class)
+                    .invoke(factory,adapter,16);
+            Object clipboard=clipboardClass.getConstructor(vector,vector).newInstance(point.newInstance(1,3,1),
+                    point.newInstance(source.getX(),source.getY(),source.getZ()));
+            clipboardClass.getMethod("copy",editSession).invoke(clipboard,session);
+            clipboardClass.getMethod("paste",editSession,vector,boolean.class).invoke(clipboard,session,
+                    point.newInstance(destination.getX(),destination.getY(),destination.getZ()),false);
+            editSession.getMethod("flushQueue").invoke(session);
+        }catch(ReflectiveOperationException failure){throw new IllegalStateException("WorldEdit clipboard fixture",failure);}
+        DeferredTileLoad.flush(world);
+        SegmentedDoorTile copied=SegmentedDoorTile.at(world,destination.up(2));
+        require(copied!=null&&copied.height==3&&copied.targetOpen
+                &&copied.identity.equals(original.identity),"WorldEdit pasted the open column and its saved UUID");
+        copied.operate(player,false);
+        require(!copied.targetOpen&&original.targetOpen,"copied operation remains independent");
+        System.out.println("[vandorlabs][reprolab] segmented-worldedit-paste PASS actual WorldEdit copy/paste keeps independent open targets");
     }
     private SegmentedDoorLiveChecks(){}
 }

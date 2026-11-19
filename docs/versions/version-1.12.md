@@ -41,6 +41,11 @@ seam. Turn **Join** on in two or four compatible doors to make a 3×6, 6×3, or
 endpoint. The base displays the selected Port bar and briefly lights it when
 resources pass through. [Arm guide](../modular-landing-gear.md)
 
+Moving **Canopies** have an open rear aperture. Joined **Programmable
+Trapdoors** can open at the center seam or move together from one edge.
+**Segmented Doors** pasted at another location with WorldEdit animate
+independently from the original.
+
 The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured
 Redstone channels. Adjust the height and channels through the chair dialog.

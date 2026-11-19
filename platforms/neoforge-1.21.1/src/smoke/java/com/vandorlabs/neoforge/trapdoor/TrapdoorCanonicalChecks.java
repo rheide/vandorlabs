@@ -43,10 +43,38 @@ public final class TrapdoorCanonicalChecks {
         need(regular.matches(input,level)&&regular.assemble(input,level.registryAccess()).is(item(false))&&regular.assemble(input,level.registryAccess()).getCount()==2,"actual two-output regular recipe");
         var diagonal=(net.minecraft.world.item.crafting.CraftingRecipe)level.getRecipeManager().byKey(id(true)).orElseThrow().value();var upgrade=CraftingInput.of(2,1,List.of(new ItemStack(item(false)),alloy));need(diagonal.matches(upgrade,level)&&diagonal.assemble(upgrade,level.registryAccess()).is(item(true))&&diagonal.assemble(upgrade,level.registryAccess()).getCount()==1,"actual diagonal upgrade recipe");
     }
+    private static void groupOpening(ServerLevel level,ServerPlayer actor,boolean writing){
+        BlockPos start=BASE.south(5);
+        level.getChunk(start);
+        if(writing){
+            for(int i=0;i<3;i++)level.setBlock(start.east(i),Blocks.AIR.defaultBlockState(),2);
+            for(int i=0;i<3;i++){
+                BlockPos at=start.east(i);
+                level.setBlock(at.below(),Blocks.STONE.defaultBlockState(),2);
+                actorAt(actor,at);var stack=configured(false);actor.setItemInHand(InteractionHand.MAIN_HAND,stack);
+                var hit=new BlockHitResult(Vec3.atLowerCornerOf(at.below()).add(.25,1,.75),Direction.UP,at.below(),false);
+                var result=actor.gameMode.useItemOn(actor,level,stack,InteractionHand.MAIN_HAND,hit);
+                need(result.consumesAction(),"place row member "+i+" result="+result+" at="+level.getBlockState(at));
+            }
+        }
+        var selected=NativeTrapdoorEntity.at(level,start.east());
+        need(selected!=null&&selected.group().size()==3,"three trapdoors share one group");
+        actorAt(actor,start.east());
+        for(int mode:writing?new int[]{1,0,2}:new int[]{2}){
+            if(writing)need(selected.configure(actor,selected.settings(),false,null,mode),"apply opening choice "+mode);
+            need(selected.groupOpening()==mode,"opening survives publication or restart "+mode);
+            for(int i=0;i<3;i++){
+                var leaf=NativeTrapdoorEntity.at(level,start.east(i));
+                boolean high=mode==2||mode==0&&i==2;
+                need(leaf.facing()==(high?Direction.EAST:Direction.WEST),"opening hinge faces the selected side");
+                need(Math.abs(leaf.links().hinge()-(1D/16-(high?2-i:i)))<1E-9,"each leaf uses the shared pivot");
+            }
+        }
+    }
     @SubscribeEvent public static void started(ServerStartedEvent event){
         String phase=System.getProperty("vandorlabs.transmitterPhase","");if(!phase.startsWith("trapdoor-canonical-"))return;var server=event.getServer();
         try{ServerLevel level=server.overworld();var actor=new net.neoforged.neoforge.common.util.FakePlayer(level,new com.mojang.authlib.GameProfile(UUID.fromString("0f69c44e-27d3-4f87-bbcd-14f0abeb8a02"),"CanonicalTrapdoor"));actor.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
-            recipes(level);
+            recipes(level);groupOpening(level,actor,phase.endsWith("write"));
             for(boolean diagonal:new boolean[]{false,true}){
                 BlockPos pos=BASE.east(diagonal?16:0);level.getChunk(pos);
                 if(phase.endsWith("write")){
