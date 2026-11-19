@@ -32,6 +32,7 @@ import net.neoforged.neoforge.items.IItemHandler;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeGearResourceChecks {
     private static final BlockPos ORIGIN = new BlockPos(0,100,0);
+    private static final BlockPos TILTED = ORIGIN.east(11);
     private static final Direction MOUNT = Direction.DOWN;
     private static final Direction INPUT = MOUNT.getOpposite();
     private static final NativePortKind[] PORTS = {NativePortKind.POWER,NativePortKind.FLUID,NativePortKind.MATTER};
@@ -58,13 +59,18 @@ public final class NativeGearResourceChecks {
         need(actor.gameMode.useItemOn(actor,world,stack,InteractionHand.MAIN_HAND,
                 new BlockHitResult(hit,side,block,false)).consumesAction(),"ordinary Survival use at "+block);
     }
-    private static ItemStack armSections() {
+    private static ItemStack armSections(boolean tilted) {
         var options = NativeGearSettings.defaults().choices();
-        options.putBoolean("JoinArms",true);
-        options.putInt("JoinRange",2);
+        options.putBoolean("JoinArms",!tilted);
+        if(tilted){
+            options.putBoolean("RotatePayload",true);
+            options.putDouble("ActiveAngle",45);
+            options.putInt(ArmResource.CHOICE,ArmResource.POWER.ordinal());
+        }else options.putInt("JoinRange",2);
         var tag = new CompoundTag();
         tag.put(NativeGearItem.SETTINGS,options);
-        var stack = new ItemStack(NativeGearBindings.ITEMS.get(NativeGearDefinition.EXTENDER.id),2);
+        var definition=tilted?NativeGearDefinition.ROTATING:NativeGearDefinition.EXTENDER;
+        var stack = new ItemStack(NativeGearBindings.ITEMS.get(definition.id),2);
         stack.set(DataComponents.CUSTOM_DATA,CustomData.of(tag));
         return stack;
     }
@@ -123,11 +129,19 @@ public final class NativeGearResourceChecks {
                     actor.setPos(column(i).getX()+.5,98,-3);
                     BlockPos mounting = column(i).relative(INPUT);
                     world.setBlock(mounting,Blocks.STONE.defaultBlockState(),3);
-                    var stack = armSections();
+                    var stack = armSections(false);
                     use(mounting,MOUNT,stack);
                     use(column(i),MOUNT,stack);
                     need(stack.isEmpty(),"two supported sections consume exactly two");
                 }
+                for (int x=8;x<=14;x++) for (int y=97;y<=103;y++) for (int z=-4;z<=4;z++)
+                    world.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);
+                world.setBlock(TILTED.above(),Blocks.STONE.defaultBlockState(),3);
+                actor.setPos(TILTED.getX()+.5,98,-3);
+                var tilted=armSections(true);
+                use(TILTED.above(),MOUNT,tilted);
+                use(TILTED,MOUNT,tilted);
+                need(tilted.isEmpty(),"ordinary tilted arm placement");
             }
             running = true;
         } catch(Throwable failure) {
@@ -165,8 +179,13 @@ public final class NativeGearResourceChecks {
             }
             if (stage==1) {
                 if (ticks<12) return;
+                var tilted=NativeGearFormation.at(world,TILTED);
+                if(tilted==null||!tilted.resourceEndpointAvailable())return;
                 transfer(2,0);
                 use(ORIGIN,Direction.NORTH,ItemStack.EMPTY);
+                actor.setPos(TILTED.getX()+.5,98,-3);
+                use(TILTED,Direction.NORTH,ItemStack.EMPTY);
+                actor.setPos(.5,98,-3);
                 stage=2;
                 return;
             }
@@ -185,6 +204,10 @@ public final class NativeGearResourceChecks {
                 stage=3;
             } else {
                 need(root.target()&&!root.hasStoredSections()&&preparing>0&&held>0&&moving>0,"real journal, held cells and moving world observed");
+                var tilted=NativeGearFormation.at(world,TILTED);
+                need(!tilted.blocked(),"tilted arm moves clear "+tilted.error());
+                if(tilted.progress()!=0||tilted.target())return;
+                checkFractionalEndpoint(tilted);
                 transfer(2,2);
                 finish();
             }
@@ -193,9 +216,22 @@ public final class NativeGearResourceChecks {
         }
     }
 
+    private static void checkFractionalEndpoint(NativeGearEntity tilted) {
+        var center=NativeGearPayload.frame(tilted,0).point(.5,-1.5,.5);
+        var rounded=TILTED.offset((int)Math.rint(center.x-.5),(int)Math.rint(center.y-.5),(int)Math.rint(center.z-.5));
+        need(world.getBlockState(rounded).isAir(),"rounded projection lies outside the physical arm's source cells");
+        var block=NativePortBindings.BLOCKS.get(NativePortKind.POWER);
+        world.setBlock(rounded,block.defaultBlockState(),3);
+        var port=(NativePowerPortEntity)world.getBlockEntity(rounded);
+        need(port.configure(NativePortData.placed(INPUT.get3DDataValue())),"install unrelated nearby RF receiver");
+        var disabled=world.getCapability(Capabilities.EnergyStorage.BLOCK,TILTED,INPUT);
+        need(disabled!=null&&!disabled.canReceive()&&disabled.receiveEnergy(RF,false)==0&&port.stored()==0,
+                "stationary fractional arm ignores a real receiver at the nearest rounded grid cell");
+    }
+
     private static void finish() {
         running=false;
-        System.out.println("[vandorlabs][gear-resources] "+phase()+" PASS allResources/nativeEndpoints/simulation/sided/mode/savedOwners journal="+preparing+" held="+held+" moving="+moving);
+        System.out.println("[vandorlabs][gear-resources] "+phase()+" PASS allResources/nativeEndpoints/simulation/sided/mode/savedOwners/fractionalRefusal journal="+preparing+" held="+held+" moving="+moving);
         world.getServer().saveEverything(true,true,true);
         world.getServer().halt(false);
     }
