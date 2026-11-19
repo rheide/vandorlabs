@@ -11,6 +11,7 @@ import com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock;
 import com.vandorlabs.persistence.TriggerState;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.neoforge.ProgrammableBlock;
+import com.vandorlabs.neoforge.shape.NativeWallEntity;
 import com.vandorlabs.neoforge.light.NativeLightArtwork;
 import com.vandorlabs.neoforge.light.NativeLightBlock;
 import com.vandorlabs.neoforge.light.NativeLightEntity;
@@ -62,10 +63,12 @@ public final class NativeArmorFixture {
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
     static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final BlockPos WALL = new BlockPos(1, 79, 2), DIAGONAL_WALL = new BlockPos(2, 79, 2);
     static final BlockPos LARGE_DOOR = new BlockPos(-4, 79, 2), TRAPDOOR = new BlockPos(-1, 79, -1);
     static final BlockPos WORLD_DOOR = new BlockPos(0, 79, 2), WORLD_TRIGGER = new BlockPos(0, 79, -2);
     static final BlockPos LIGHT_ON = new BlockPos(1, 79, -2), LIGHT_OFF = new BlockPos(2, 79, -2);
     static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
+    static String wallSprite(boolean diagonal) { return ModernFinishCatalog.option(diagonal ? 15 : 14).texture(); }
     static String largeDoorSprite() { return ModernFinishCatalog.option(13).texture(); }
     static String trapdoorSprite() { return ModernFinishCatalog.option(NativeTrapdoorSettings.defaultTexture()).texture(); }
     static String doorSprite() { return ModernFinishCatalog.option(CARGO_DOOR).texture(); }
@@ -115,6 +118,10 @@ public final class NativeArmorFixture {
         setLight(world, LIGHT_OFF, false);
         placeDoor(world);
         placeLargeDoor(player);
+        world.setBlockAndUpdate(WALL, VandorLabsBootstrap.PROGRAMMABLE_WALL.get().defaultBlockState());
+        world.setBlockAndUpdate(DIAGONAL_WALL, VandorLabsBootstrap.PROGRAMMABLE_DIAGONAL_WALL.get().defaultBlockState());
+        setWall(world, WALL, 14);
+        setWall(world, DIAGONAL_WALL, 15);
         world.getChunkAt(TRAPDOOR);
         world.setBlockAndUpdate(TRAPDOOR.below(), Blocks.STONE.defaultBlockState());
         world.setBlockAndUpdate(TRAPDOOR, NativeTrapdoorRegistrations.BLOCK.get().defaultBlockState());
@@ -300,6 +307,14 @@ public final class NativeArmorFixture {
         data.putInt("DoorFaceTexture", 13);
         door.loadWithComponents(data, world.registryAccess());
         door.setChanged();
+    }
+
+    private static void setWall(ServerLevel world, BlockPos pos, int material) {
+        var wall = (NativeWallEntity) world.getBlockEntity(pos);
+        var data = wall.saveWithFullMetadata(world.registryAccess());
+        data.putInt(HousingSettings.MAIN, material);
+        wall.loadWithComponents(data, world.registryAccess());
+        wall.setChanged();
     }
 
     private static void setLight(ServerLevel world, BlockPos pos, boolean lit) {

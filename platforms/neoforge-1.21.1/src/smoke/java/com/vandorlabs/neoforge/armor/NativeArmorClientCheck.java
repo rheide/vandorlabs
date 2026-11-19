@@ -193,6 +193,17 @@ public final class NativeArmorClientCheck {
             case 39 -> {
                 if (!NativeArmorFixture.trapdoorSprite().equals(NativeArmorItem.worldSample(offhand))) return;
                 System.out.println("[vandorlabs][armor] remote Large Door leaf and Trapdoor artwork samples PASS");
+                sampleFace(game, NativeArmorFixture.WALL, Direction.NORTH);
+                stage = 40;
+            }
+            case 40 -> {
+                if (!NativeArmorFixture.wallSprite(false).equals(NativeArmorItem.worldSample(offhand))) return;
+                sampleFace(game, NativeArmorFixture.DIAGONAL_WALL, Direction.NORTH);
+                stage = 41;
+            }
+            case 41 -> {
+                if (!NativeArmorFixture.wallSprite(true).equals(NativeArmorItem.worldSample(offhand))) return;
+                System.out.println("[vandorlabs][armor] flat and diagonal Wall body samples PASS");
                 sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
                 stage = 25;
             }

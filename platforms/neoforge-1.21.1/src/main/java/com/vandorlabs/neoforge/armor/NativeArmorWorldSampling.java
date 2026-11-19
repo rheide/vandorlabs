@@ -13,6 +13,9 @@ import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.light.NativeLightArtwork;
 import com.vandorlabs.neoforge.light.NativeLightBlock;
 import com.vandorlabs.neoforge.light.NativeLightEntity;
+import com.vandorlabs.neoforge.shape.NativeDiagonalWallBlock;
+import com.vandorlabs.neoforge.shape.NativeFlatWallBlock;
+import com.vandorlabs.neoforge.shape.NativeWallEntity;
 import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorBlock;
 import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity;
 import java.util.HashMap;
@@ -155,7 +158,8 @@ public final class NativeArmorWorldSampling {
     static boolean usesRendererArtwork(BlockState state) {
         var block = state.getBlock();
         return block instanceof NativeLightBlock || block instanceof NativeProgrammableDoorBlock
-                || block instanceof NativeLargeDoorBlock || block instanceof NativeTrapdoorBlock;
+                || block instanceof NativeLargeDoorBlock || block instanceof NativeTrapdoorBlock
+                || block instanceof NativeFlatWallBlock || block instanceof NativeDiagonalWallBlock diagonal && !diagonal.isGlass();
     }
 
     static BlockEntity sampleOwner(Level world, BlockState state, BlockPos pos) {
@@ -180,6 +184,8 @@ public final class NativeArmorWorldSampling {
         } else if (state.getBlock() instanceof NativeTrapdoorBlock
                 && tile instanceof NativeTrapdoorEntity trapdoor && !trapdoor.inert()) {
             choice = trapdoor.settings().choices().texture;
+        } else if (tile instanceof NativeWallEntity wall && !wall.isGlass()) {
+            choice = wall.settings().mainTexture;
         } else if ((state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) || state.is(VandorLabsBootstrap.TRIGGER_BLOCK.get()))
                 && tile instanceof ProgrammableBlockEntity cube) {
             var settings = cube instanceof NativeTriggerBlockEntity trigger ? trigger.modelSettings() : cube.settings();
