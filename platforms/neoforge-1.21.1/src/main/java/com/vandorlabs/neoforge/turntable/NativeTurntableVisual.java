@@ -91,6 +91,7 @@ final class NativeTurntableVisual {
                 || !list.isEmpty() && list.getElementType() != Tag.TAG_COMPOUND) {
             throw new IllegalArgumentException("Malformed Turntable appearance");
         }
+        var normal = Direction.from3DDataValue(tag.getInt("Normal"));
         var seen = new HashSet<BlockPos>();
         var cells = new ArrayList<Cell>();
         AABB bounds = null;
@@ -110,14 +111,14 @@ final class NativeTurntableVisual {
                     || !NativeSnapshotAppearance.canonical(state, appearance, registries)) {
                 throw new IllegalArgumentException("Unsupported Turntable model cell");
             }
-            NativeTurntableCapture.requireSupported(state);
+            NativeTurntableCapture.requireSupported(state, normal);
             cells.add(new Cell(offset, state, appearance));
             var volume = new AABB(offset);
             bounds = bounds == null ? volume : bounds.minmax(volume);
         }
         var pivot = new Vec3(tag.getDouble("PivotX"), tag.getDouble("PivotY"), tag.getDouble("PivotZ"));
         return new NativeTurntableVisual(cells, bounds == null ? new AABB(BlockPos.ZERO) : bounds,
-                pivot, Direction.from3DDataValue(tag.getInt("Normal")));
+                pivot, normal);
     }
 
     private static boolean pivotField(CompoundTag tag, String name) {

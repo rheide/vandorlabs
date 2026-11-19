@@ -1,5 +1,7 @@
 package com.vandorlabs.neoforge.turntable;
 
+import com.vandorlabs.neoforge.ProgrammableBlockEntity;
+import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBlock;
 import com.vandorlabs.neoforge.surface.NativeSurfaceEntity;
 import com.vandorlabs.neoforge.surface.NativeSurfaceLayout;
@@ -73,7 +75,7 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
             if (!prism.contains(cell.pos)) throw new IllegalArgumentException("Turntable cell outside saved prism");
             if (!cell.state.isAir()) {
                 if (++nonAir > MAX_BLOCKS) throw new IllegalArgumentException("Turntable payload exceeds 4096 blocks");
-                requireSupported(cell.state);
+                requireSupported(cell.state, surface.normal);
             }
         }
         return new NativeTurntableCapture(surface, prism, snapshot);
@@ -116,7 +118,7 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
             var tile = world.getBlockEntity(pos);
             if (!state.isAir()) {
                 if (++nonAir > MAX_BLOCKS) throw new IllegalArgumentException("Turntable payload exceeds 4096 blocks");
-                requireSupported(state);
+                requireSupported(state, surface.normal);
                 if (NeoForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world, pos, state, actor)).isCanceled()) {
                     throw new IllegalArgumentException("A protection rule prevented scanning at " + pos.toShortString());
                 }
@@ -182,10 +184,11 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
     }
 
     static boolean supportsTile(BlockEntity candidate) {
-        return candidate.getClass() == SignBlockEntity.class || candidate.getClass() == HangingSignBlockEntity.class;
+        return candidate.getClass() == ProgrammableBlockEntity.class || candidate.getClass() == SignBlockEntity.class || candidate.getClass() == HangingSignBlockEntity.class;
     }
 
-    static void requireSupported(BlockState state) {
+    static void requireSupported(BlockState state, Direction normal) {
+        if (state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) && normal.getAxis() == Direction.Axis.Y) return;
         var block = state.getBlock();
         var id = net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(block);
         boolean simple = block.getClass() == net.minecraft.world.level.block.Block.class

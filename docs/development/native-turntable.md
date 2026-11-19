@@ -28,8 +28,9 @@ Use Restore after riders clear the placement volume.
 The scan finds a complete loaded square from the controller's horizontal
 front and extends the prism out of the Surface's textured face. Both
 versions use the same prism, grid quarter-turn and rotated collision geometry. Capture admits
-ordinary vanilla solid blocks, selected shaped blocks, and supported native
-Signs. Unsubstantiated tile layouts and occupied volumes are refused before
+ordinary vanilla solid blocks, selected shaped blocks and supported native
+Signs. Upward- and downward-facing pads also accept configured full
+Programmable Blocks, with their exact saved settings and rotated facing. Unsubstantiated tile layouts and occupied volumes are refused before
 mutation. Sideways quarter turns currently accept plain blocks and pillar
 axes. Sign text and other admitted tile fields stay in the exact raw
 snapshot; native tile factories prove a round trip before publication.
@@ -54,4 +55,7 @@ quarter turn and restoration of a Sign while retaining the controller identity.
 The connected fixture uses the Redstone editor, then checks a partial channel
 bank, a complete bank, reversal and a signal-triggered restore. It also checks
 the connected player's position and heading while riding a captured block.
-The dedicated runtime checks physical support for a pig on the same body.
+The dedicated runtime checks physical support for a pig on the same body,
+and checks exact configured block data through rollback, rotation and cold
+recovery. The connected client verifies the configured material on emitted
+geometry before restoration.

@@ -1,6 +1,9 @@
 package com.vandorlabs.neoforge.turntable;
 
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.ProgrammableBlock;
+import com.vandorlabs.neoforge.ProgrammableBlockEntity;
+import com.vandorlabs.ui.ProgrammableBlockDialog;
 import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
 import com.vandorlabs.neoforge.redstone.NativeTransmitterItem;
 import com.vandorlabs.redstone.ChannelList;
@@ -28,6 +31,7 @@ public final class NativeTurntablePlayerFixture {
     static final BlockPos ROOT = new BlockPos(14, 130, 6);
     static final BlockPos SOURCE = ROOT.east(2).above();
     static final BlockPos TARGET = SOURCE.south();
+    static final BlockPos CUBE = ROOT.east().above().south(), ROTATED_CUBE = ROOT.east().above();
     static final Vec3 ACTOR = new Vec3(14.5, 130, 3.5);
     private static final boolean ENABLED = Boolean.getBoolean("vandorlabs.turntablePlayerChecks");
     private static ServerPlayer player;
@@ -55,6 +59,10 @@ public final class NativeTurntablePlayerFixture {
         for (int x = 1; x <= 2; x++) for (int z = 0; z < 2; z++) world.setBlock(ROOT.offset(x, 0, z), pad, Block.UPDATE_ALL);
         world.setBlockAndUpdate(SOURCE, Blocks.OAK_SIGN.defaultBlockState());
         world.setBlockAndUpdate(SOURCE.above(), Blocks.STONE.defaultBlockState());
+        world.setBlockAndUpdate(CUBE, VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState()
+                .setValue(ProgrammableBlock.FACING, Direction.NORTH));
+        ((ProgrammableBlockEntity)world.getBlockEntity(CUBE)).apply(
+                new ProgrammableBlockDialog.State(9, 1, false, new int[]{-1,-1,-1,-1,-1,-1}, -1));
         ((SignBlockEntity) world.getBlockEntity(SOURCE)).updateText(
                 line -> line.setMessage(0, Component.literal("Turntable player sign")), true);
     }

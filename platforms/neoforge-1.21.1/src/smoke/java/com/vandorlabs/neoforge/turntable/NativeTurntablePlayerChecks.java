@@ -6,6 +6,7 @@ import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 import net.minecraft.client.renderer.LightTexture;
+import net.minecraft.client.renderer.block.model.BakedQuad;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
@@ -101,6 +102,8 @@ public final class NativeTurntablePlayerChecks {
             }
             case 5 -> {
                 if (menu == null || menu.captured() || menu.busy()
+                        || !(mc.level.getBlockEntity(NativeTurntablePlayerFixture.ROTATED_CUBE)
+                                instanceof com.vandorlabs.neoforge.ProgrammableBlockEntity cube) || cube.settings().mainTexture != 9
                         || !(mc.level.getBlockEntity(NativeTurntablePlayerFixture.TARGET) instanceof SignBlockEntity sign)
                         || !sign.getFrontText().getMessage(0, false).getString().equals("Turntable player sign")) return;
                 click(screen, "Done", .5);
@@ -148,14 +151,19 @@ public final class NativeTurntablePlayerChecks {
             throw new AssertionError("Captured body is missing from renderer bounds");
         }
         int[] vertices = {0};
+        boolean[] cube = {false};
         VertexConsumer sink = (VertexConsumer) Proxy.newProxyInstance(VertexConsumer.class.getClassLoader(),
                 new Class<?>[]{VertexConsumer.class}, (proxy, method, args) -> {
+                    if (method.getName().equals("putBulkData") && args != null && args.length > 1 && args[1] instanceof BakedQuad quad
+                            && quad.getSprite().contents().name().toString().equals("vandorlabs:housing/industrial_block")) cube[0] = true;
                     if (method.isDefault()) return InvocationHandler.invokeDefault(proxy, method, args);
                     if (method.getName().equals("addVertex")) vertices[0]++;
                     return method.getReturnType() == VertexConsumer.class ? proxy : null;
                 });
         turntable.render(root, 0, new PoseStack(), layer -> sink, LightTexture.FULL_BRIGHT, OverlayTexture.NO_OVERLAY);
-        if (vertices[0] < 24) throw new AssertionError("Captured Sign produced only " + vertices[0] + " vertices");
+        if (vertices[0] < 24 || !cube[0]) {
+            throw new AssertionError("Expected captured Sign geometry and configured block artwork: " + vertices[0] + "/" + cube[0]);
+        }
         System.out.println("[vandorlabs][turntable-player] captured geometry PASS vertices=" + vertices[0]);
     }
 

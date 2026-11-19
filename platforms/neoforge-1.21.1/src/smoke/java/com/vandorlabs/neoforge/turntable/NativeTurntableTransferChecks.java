@@ -2,6 +2,10 @@ package com.vandorlabs.neoforge.turntable;
 
 import com.mojang.authlib.GameProfile;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.neoforge.ProgrammableBlock;
+import com.vandorlabs.neoforge.ProgrammableBlockEntity;
+import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.ui.ProgrammableBlockDialog;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import com.vandorlabs.neoforge.mixin.NativeRampChunkStorageAccess;
@@ -39,12 +43,14 @@ public final class NativeTurntableTransferChecks {
     private static final BlockPos ROOT = SEED.west();
     private static final BlockPos SOURCE = SEED.east().above();
     private static final BlockPos TARGET = SOURCE.south();
+    private static final BlockPos CUBE = SEED.above().south(), ROTATED_CUBE = SEED.above();
     private static final String PHASE = System.getProperty("vandorlabs.turntableTransferChecks", "");
     private static ServerLevel world;
     private static FakePlayer actor;
     private static NativeCellTransactions.Request request;
     private static NativeCellTransactions.Operation<?> operation;
     private static CompoundTag originalSign;
+    private static CompoundTag originalCube;
     private static UUID originalKey;
     private static int stage;
     private static int ticks;
@@ -60,6 +66,8 @@ public final class NativeTurntableTransferChecks {
         if (PHASE.equals("read")) {
             need(owner().capture() == null && sign(SOURCE).getFrontText().getMessage(0, false).getString().equals("Turntable owner"),
                     "partial controller save restored the one equipped source");
+            need(cube(CUBE).getPersistentData().getString("TurntablePrivate").equals("retained"),
+                    "cold recovery retained configured block and private tile field");
             need(world.getBlockState(TARGET).isAir() && !NativeTransferHolds.active(world), "cold lease retired");
             noDrops();
             pass();
@@ -77,6 +85,13 @@ public final class NativeTurntableTransferChecks {
         for (int x = 0; x < 2; x++) for (int z = 0; z < 2; z++) world.setBlock(SEED.offset(x, 0, z), surface, Block.UPDATE_ALL);
         world.setBlock(SOURCE, Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
         world.setBlock(SOURCE.above(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        world.setBlockAndUpdate(CUBE, VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState()
+                .setValue(ProgrammableBlock.FACING, Direction.NORTH));
+        var cube = cube(CUBE);
+        cube.apply(new ProgrammableBlockDialog.State(9, 1, true, new int[]{8, -1, -1, -1, -1, -1}, -1));
+        cube.getPersistentData().putString("TurntablePrivate", "retained");
+        cube.setChanged();
+        originalCube = cube.saveWithFullMetadata(world.registryAccess());
         verifyAnglePacket();
         verifySignalPacket();
         verifyRiderPacket();
@@ -115,6 +130,8 @@ public final class NativeTurntableTransferChecks {
             need(!operation.error().isEmpty() && owner().capture() == null && owner().key().equals(originalKey),
                     "caught rollback retained the original owner");
             need(sign(SOURCE).saveWithFullMetadata(world.registryAccess()).equals(originalSign), "rollback restored exact sign contents");
+            need(cube(CUBE).saveWithFullMetadata(world.registryAccess()).equals(originalCube),
+                    "caught rollback restored exact configured block fields");
             noDrops();
             CellTransferFaultFixture.afterCell(null);
             stage = 1;
@@ -124,6 +141,8 @@ public final class NativeTurntableTransferChecks {
             need(operation.error().isEmpty() && owner().capture() != null && owner().key().equals(originalKey),
                     "capture committed to the same controller key");
             need(world.getBlockState(SOURCE).isAir() && world.getBlockEntity(SOURCE) == null, "the source sign has no second owner");
+            need(world.getBlockState(CUBE).isAir() && !owner().getUpdateTag(world.registryAccess())
+                    .getCompound("Appearance").toString().contains("TurntablePrivate"), "private configured block data stays server-side");
             var capturedStone = new AABB(SOURCE.above()).deflate(.1);
             need(!world.getEntityCollisions(actor, capturedStone).isEmpty(), "captured solid remains a physical collision");
             need(!world.setBlockAndUpdate(ROOT, Blocks.STONE.defaultBlockState()), "captured owner resists native replacement");
@@ -182,11 +201,22 @@ public final class NativeTurntableTransferChecks {
             need(world.getBlockState(SOURCE).isAir() && world.getBlockState(SOURCE.above()).isAir()
                     && world.getBlockState(TARGET.above()).is(Blocks.STONE) && !NativeTransferHolds.active(world)
                     && owner().positionAngle() == 0, "final rotated payload and leases retired");
+            var expectedCube = originalCube.copy();
+            expectedCube.putInt("x", ROTATED_CUBE.getX());
+            expectedCube.putInt("y", ROTATED_CUBE.getY());
+            expectedCube.putInt("z", ROTATED_CUBE.getZ());
+            need(cube(ROTATED_CUBE).saveWithFullMetadata(world.registryAccess()).equals(expectedCube)
+                    && world.getBlockState(ROTATED_CUBE).getValue(ProgrammableBlock.FACING) == Direction.EAST
+                    && world.getBlockState(CUBE).isAir(), "quarter turn preserves exact configurable block and rotates its face");
             noDrops();
             pass();
             world = null;
             event.getServer().halt(false);
         }
+    }
+
+    private static ProgrammableBlockEntity cube(BlockPos pos) {
+        return (ProgrammableBlockEntity) world.getBlockEntity(pos);
     }
 
     private static void verifyAnglePacket() {
