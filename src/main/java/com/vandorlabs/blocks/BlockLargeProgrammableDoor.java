@@ -95,13 +95,29 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     public boolean mayToggleJoined(World world,TileEntityLargeProgrammableDoor tile,EntityPlayer player,EnumFacing hit,EnumHand hand){
         com.vandorlabs.render.LargeDoorJoin.Group<TileEntityLargeProgrammableDoor> group=tile.joinedGroup();
         if(!group.joined())return true;
-        for(TileEntityLargeProgrammableDoor member:group.members){
-            BlockPos anchor=member.getPos();
-            EnumFacing facing=world.getBlockState(anchor).getValue(FACING);
-            for(int x=0;x<3;x++)for(int y=0;y<3;y++){
-                BlockPos at=member.cell(anchor,facing,x,y);
-                if(!world.isBlockModifiable(player,at)||!player.canPlayerEdit(at,hit,player.getHeldItem(hand)))return false;
-            }
+        for(TileEntityLargeProgrammableDoor member:group.members)
+            if(!mayEditModule(world,member,player,hit,player.getHeldItem(hand)))return false;
+        return true;
+    }
+    private static boolean mayEditModule(World world,TileEntityLargeProgrammableDoor member,EntityPlayer player,EnumFacing side,ItemStack item){
+        BlockPos anchor=member.getPos();
+        EnumFacing facing=world.getBlockState(anchor).getValue(FACING);
+        for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+            BlockPos at=member.cell(anchor,facing,x,y);
+            if(!world.isBlockLoaded(at,false)||!world.isBlockModifiable(player,at)||!player.canPlayerEdit(at,side,item))return false;
+        }
+        return true;
+    }
+    public boolean mayEditJoinedNeighbors(World world,BlockPos pos,EnumFacing facing,boolean horizontal,EntityPlayer player,ItemStack held){
+        EnumFacing row=horizontal?facing:EnumFacing.UP;
+        for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){
+            if(x==0&&y==0)continue;
+            BlockPos at=pos.offset(facing.rotateYCCW(),3*x).offset(row,3*y);
+            if(!world.isBlockLoaded(at,false))continue;
+            TileEntityLargeProgrammableDoor other=root(world,at);
+            if(other!=null&&other.getPos().equals(at)&&other.joins()&&other.isHorizontal()==horizontal
+                    &&world.getBlockState(at).getValue(FACING)==facing
+                    &&!mayEditModule(world,other,player,row,held))return false;
         }
         return true;
     }
@@ -150,6 +166,10 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         TileEntity raw=world.getTileEntity(pos);
         TileEntityLargeProgrammableDoor part=raw instanceof TileEntityLargeProgrammableDoor?(TileEntityLargeProgrammableDoor)raw:null;
         boolean assemblyRemoval=!REMOVING.get();
+        EnumFacing face=state.getValue(FACING);
+        BlockPos released=part==null?pos:part.anchorPos(face);
+        boolean checkDependent=part!=null&&assemblyRemoval&&!world.isRemote
+                &&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world);
         if(assemblyRemoval)REMOVING.set(true);
         try {
             if(!world.isRemote&&part!=null&&part.isHorizontal())DoorWaterGush.stop(world,pos);
@@ -174,6 +194,14 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
             world.removeTileEntity(pos);
         } finally {
             if(assemblyRemoval)REMOVING.remove();
+        }
+        if(checkDependent){
+            BlockPos successor=released.offset(part.rowDirection(face),3);
+            if(world.isBlockLoaded(successor,false)){
+                TileEntityLargeProgrammableDoor next=root(world,successor);
+                if(next!=null&&next.getPos().equals(successor))
+                    neighborChanged(world.getBlockState(successor),world,successor,this,released);
+            }
         }
     }
     @Override public Item getItemDropped(IBlockState state,Random rand,int fortune){return Item.getItemFromBlock(this);}

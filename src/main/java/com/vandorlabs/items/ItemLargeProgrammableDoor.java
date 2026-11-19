@@ -26,6 +26,9 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
         BlockPos preceding=anchor.offset(row.getOpposite(),3);
         TileEntityLargeProgrammableDoor base=world.isBlockLoaded(preceding,false)?door.root(world,preceding):null;
         boolean joining=base!=null&&base.getPos().equals(preceding)&&base.joins();
+        net.minecraft.nbt.NBTTagCompound settings=stack.getSubCompound("SpaceDoorSettings");
+        if((joining||settings!=null&&settings.getBoolean(com.vandorlabs.render.LargeDoorJoin.TAG))
+                &&!door.mayEditJoinedNeighbors(world,anchor,face,horizontal,player,stack))return EnumActionResult.FAIL;
         List<BlockPos> cells=new ArrayList<>();List<IBlockState> old=new ArrayList<>();
         for(int x=0;x<3;x++){
             for(int y=0;y<3;y++){
@@ -45,7 +48,7 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
             placed++;((TileEntityLargeProgrammableDoor)world.getTileEntity(cell)).assign(anchor,horizontal);
         }
         TileEntityLargeProgrammableDoor tile=(TileEntityLargeProgrammableDoor)world.getTileEntity(anchor);
-        if(stack.getSubCompound("SpaceDoorSettings")!=null)tile.applyItemSettings(stack.getSubCompound("SpaceDoorSettings"));
+        if(settings!=null)tile.applyItemSettings(settings);
         tile.setPlacementDepth(horizontal?com.vandorlabs.render.PanelDepthPolicy.fromHit(hitY):PanelDepth.fromHit(face,hitX,hitZ));
         if(joining)tile.setJoin(true);
         // Only now may neighbor callbacks observe the complete structure.

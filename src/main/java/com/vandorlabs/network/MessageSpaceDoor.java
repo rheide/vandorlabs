@@ -84,6 +84,14 @@ public class MessageSpaceDoor implements IMessage {
                 if (!(raw instanceof TileEntitySpaceDoor) || container.member!=raw || !container.canInteractWith(player)) return;
                 TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;
                 if(!tile.acceptsDesign(m.design) || m.slideDirection==3 && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))return;
+                if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){
+                    com.vandorlabs.tiles.TileEntityLargeProgrammableDoor large=(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile;
+                    if((large.joins()||(m.joinFlags&JOIN_VALUE)!=0)
+                            &&!((com.vandorlabs.blocks.BlockLargeProgrammableDoor)large.getBlockType())
+                            .mayEditJoinedNeighbors(player.world,large.getPos(),
+                                    player.world.getBlockState(large.getPos()).getValue(com.vandorlabs.blocks.BlockVandorDoor.FACING),
+                                    large.isHorizontal(),player,player.getHeldItemMainhand()))return;
+                }
                 BlockPos mate=tile.mate();
                 TileEntitySpaceDoor other=null;
                 if (mate!=null) {
