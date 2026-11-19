@@ -791,7 +791,7 @@
       ],
       "implemented": [
         "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, exact configured drop and both seated numeric Redstone sliders.",
-        "The Cockpit forms an eight-cell stationary housing and seat. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
+        "The Cockpit forms an eight-cell stationary housing and seat with an obstruction-aware retractable monitor bank. The standalone Yoke and Screen provides native Redstone editing and operation on both surfaces."
       ]
     },
     {
@@ -1070,7 +1070,7 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Expand supported targets, including channel/credential-bearing Screens and occupied or active builders.",
+        "Expand supported targets, including output/credential-bearing Screens and occupied or active builders.",
         "Expand live coverage of joined Navigation Table layouts beyond the tested two-cell flat group."
       ],
       "implemented": [
@@ -1079,7 +1079,7 @@
         "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback.",
         "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs.",
         "Complete stationary Survey Dish and Sentinel Array frames copy at exact frame cost and get independent ownership.",
-        "Closed passive layouts in all seven Programmable Screen roles copy at one matching plain item per member. Private or channel-active states are refused.",
+        "Closed passive layouts in all seven Programmable Screen roles copy at one matching plain item per member. Receiver-only banks apply the channel increment after release. Outputs and credential/media ownership are refused.",
         "Complete idle and disconnected Synthesis Tower, Assembly Press and Enclosed Gantry frames copy from empty owners at exact frame cost."
       ],
       "modern_registered_block_ids": [

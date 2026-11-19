@@ -24,7 +24,9 @@
    ![Seated player above the Cockpit dashboard](images/cockpit-neoforge/cockpit-stationary-seated.png)
 
 The stationary Cockpit currently provides the seat and authored housing with
-blank monitor and touch surfaces. The **Advanced Pilot Chair** offers height
+blank monitor and touch surfaces. While seated, use the small yellow console
+button to retract the screen bank or bring it back. An occupied travel path
+prevents the move. The **Advanced Pilot Chair** offers height
 and numeric armrest sliders. The **Yoke and Screen** can operate Redstone from
 its main display and touch panel. Open its editor with the Configurizer or
 sneak-right-click. The display supports six control rows and the touch panel

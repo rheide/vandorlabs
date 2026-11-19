@@ -8,7 +8,7 @@ with both halves and their contents. Complete stationary Navigation Table
 groups retain both their Navigation Chip and module mounts. Complete Survey
 Dish and Sentinel Array frames get independent ownership. All seven Programmable Screen roles
 can also be copied when they have static artwork and no private media or
-configured channel controls. Idle, disconnected Synthesis Towers, Assembly
+active outputs. Receiver channels follow the configured Copy increment. Idle, disconnected Synthesis Towers, Assembly
 Presses and Enclosed Gantries copy when all their slots are empty. [Copy Controller guide](../copy-controller.md)
 
 The **Assembly Press** makes Data Chips and Access Cards by default. Insert a
@@ -25,14 +25,14 @@ and display Off, Idle or Computing. [NeoForge builder guide](../builders-1.21.md
 piece with its role, company, or programmable material artwork in Creative, or hold a Configurizer and
 use the armor from your offhand in Survival. The same picker works on mounted
 armor and can sample configured Blocks and Doors from your inventory. Sample
-vanilla model faces or full Programmable Blocks in the world, or transfer an
+vanilla model faces, full Programmable Blocks or static Programmable Light artwork in the world, or transfer an
 appearance with the Duplifier. Static Light artwork is also available. [Programmable armor guide](../programmable-armor.md)
 
 The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured
 Redstone channels. Adjust the height and channels through the chair dialog.
-The **Cockpit** forms a stationary seat and console, and **Yoke and Screen**
-operates Redstone from both displays. [Chair and cockpit guide](../cockpits.md)
+The **Cockpit** forms a stationary seat and console with a retractable screen
+bank. **Yoke and Screen** operates Redstone from both displays. [Chair and cockpit guide](../cockpits.md)
 
 With WorldEdit 7.3.8, turning a clipboard also rotates the corner of floor
 and ceiling propulsion wedges. JEI lists the four native machine categories

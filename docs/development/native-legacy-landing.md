@@ -30,7 +30,8 @@ Run `python3 test_legacy_migration.py` for queued operator admission, non-operat
 
 Start NeoForge with `-Dvandorlabs.autoConvertLandingGear=true` to convert
 recognized imported stationary wheels after their complete footprint loads.
-This also enables the legacy compatibility adapter. It uses the same typed
+This also enables the legacy compatibility adapter. A connected client uses
+the same registration option as its server. It uses the same typed
 transfer as the operator command and waits while world saving is disabled.
 Moving, obstructed and opaque wheels stay in place. Fresh compatibility
 blocks and other landing gear types keep their existing behavior.
