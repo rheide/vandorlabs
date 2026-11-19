@@ -48,6 +48,15 @@ final class NavigationWorldChecks {
             TileEntityConstructor dish=build(w,POS.east(4),"standalone_dish"),array=build(w,POS.west(4),"standalone_antenna");
             TransmitterSlots.configure(dish,ChannelList.of(42),256,false);TransmitterSlots.configure(array,ChannelList.of(43),256,false);
             t.configureDisplay(new NavigationScreenSettings(NavigationMap.SURFACE,true,1,false,false),true,127,0,ChannelList.of(42,43));
+            require(NavigationSources.noPower(w,t.getPos(),ChannelList.of(42,43))&&NavigationService.coverage(t).isEmpty(),"linked observers without input report no power");
+            for(TileEntityConstructor observer:new TileEntityConstructor[]{dish,array}){
+                BlockPos at=observer.cell(observer.structureWidth()-1,0,observer.structureDepth()-1);
+                TileEntity member=w.getTileEntity(at);
+                net.minecraftforge.energy.IEnergyStorage input=member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.DOWN);
+                require(input!=null&&member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.UP)==null,"only the underside of the formed reservation accepts power");
+                require(input.receiveEnergy(ObserverPower.RF_PER_TICK,true)==ObserverPower.RF_PER_TICK&&!observer.observerPowered(),"simulated input stays unpowered");
+                require(input.receiveEnergy(ObserverPower.RF_PER_TICK,false)==ObserverPower.RF_PER_TICK&&observer.observerPowered(),"RF makes the installed observer available");
+            }
             require(NavigationService.coverage(t).size()==2,"multiple channels union");require(NavigationSources.contains(NavigationService.coverage(t),dish.getPos().getX()+NavigationSources.radius(dish),dish.getPos().getZ()),"dish radius inclusive");require(!NavigationSources.contains(NavigationService.coverage(t),dish.getPos().getX()+NavigationSources.radius(dish)+1,dish.getPos().getZ()),"beyond dish radius excluded");
             radar(p,w,t,dish,array);
             t.setRedstoneChannels(ChannelList.of(43));require(NavigationService.coverage(t).size()==1&&NavigationService.coverage(t).get(0).radius==NavigationSources.radius(array),"array radius");t.setRedstoneChannels(ChannelList.of(42,43));

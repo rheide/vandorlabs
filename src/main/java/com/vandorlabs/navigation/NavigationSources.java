@@ -38,25 +38,32 @@ public final class NavigationSources {
     public static void remove(TileEntityConstructor tile){List<TileEntityConstructor> list=INDEX.get(tile.getWorld());if(list!=null)list.remove(tile);}
     public static void unload(World world){INDEX.remove(world);}
     public static List<Area> matching(World world,BlockPos display,ChannelList channels){
+        return matching(world,display,channels,true);
+    }
+    public static boolean noPower(World world,BlockPos display,ChannelList channels){
+        return !matching(world,display,channels,false).isEmpty()&&matching(world,display,channels,true).isEmpty();
+    }
+    private static List<Area> matching(World world,BlockPos display,ChannelList channels,boolean powered){
         List<Area> areas=new ArrayList<>();if(channels.isEmpty())return areas;Vec3d receiver=NavigationVehicle.point(world,new Vec3d(display.getX()+.5,display.getY(),display.getZ()+.5),display);com.vandorlabs.vehicle.EntityGroundVehicle own=NavigationVehicle.craft(world);world=NavigationVehicle.physicalWorld(world);List<TileEntityConstructor> list=INDEX.get(world);
         if(list!=null)for(TileEntityConstructor tile:list){
             if(tile.isInvalid()||!world.isBlockLoaded(tile.getPos(),false)||world.getTileEntity(tile.getPos())!=tile||!tile.formed())continue;
-            append(areas,tile,receiver,channels,tile);
+            append(areas,tile,receiver,channels,tile,powered);
         }
         for(GearTileEntity arm:GearGeometry.roots(world)){
             if(arm.isInvalid()||!arm.isOperational()||!world.isBlockLoaded(arm.getPos(),false)||world.getTileEntity(arm.getPos())!=arm||arm.payload()==null||arm.payload().materialized()||arm.hasFailedArmSnapshot())continue;
             int first=areas.size();
-            try{for(TileEntityConstructor tile:arm.payload().navigationObservers(arm))if(tile.formed())append(areas,tile,receiver,channels);}
+            try{for(TileEntityConstructor tile:arm.payload().navigationObservers(arm))if(tile.formed())append(areas,tile,receiver,channels,powered);}
             catch(RuntimeException|LinkageError unavailable){
                 // Match collision discovery: a failed synthetic view retains its owned payload.
                 areas.subList(first,areas.size()).clear();arm.quarantinePayload();
             }
-        }if(own!=null)NavigationVehicle.observers(areas,own,receiver,channels);for(com.vandorlabs.vehicle.EntityGroundVehicle craft:NavigationVehicle.vehicles(world))if(craft!=own)NavigationVehicle.observers(areas,craft,receiver,channels);return areas;
+        }if(own!=null)NavigationVehicle.observers(areas,own,receiver,channels,powered);for(com.vandorlabs.vehicle.EntityGroundVehicle craft:NavigationVehicle.vehicles(world))if(craft!=own)NavigationVehicle.observers(areas,craft,receiver,channels,powered);return areas;
     }
-    static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels){
-        append(areas,tile,display,channels,null);
+    static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels,boolean powered){
+        append(areas,tile,display,channels,null,powered);
     }
-    private static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels,TileEntityConstructor stationary){
+    private static void append(List<Area> areas,TileEntityConstructor tile,Vec3d display,ChannelList channels,TileEntityConstructor stationary,boolean powered){
+        if(tile.observerPowered()!=powered)return;
         int radius=radius(tile),range=tile.transmissionRange();Vec3d p=position(tile);
         if(radius==0||range<0||p.squareDistanceTo(display)>range*(double)range)return;
         int radar=NavigationRange.radarRadius(tile.core().design);

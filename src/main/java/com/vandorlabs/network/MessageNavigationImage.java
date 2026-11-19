@@ -12,14 +12,15 @@ public final class MessageNavigationImage implements IMessage {
     public static final int HEADER=53;
     public BlockPos pos;public int slot,serial,x,z,zoom,aspect,chipX,chipZ,width=96,height=96,canvasWidth=384,canvasHeight=384,revision;
     public NavigationOverlay overlay=NavigationOverlay.EMPTY;
-    public boolean noSignal,hasChip,marker,write,unlinked;public int[] pixels;
+    public boolean noSignal,hasChip,marker,write,unlinked,noPower;public int[] pixels;
     public MessageNavigationImage(){}
     public MessageNavigationImage(BlockPos pos,int slot,int serial,int x,int z,int zoom,int aspect,boolean noSignal,ItemStack chip,boolean table,int dimension,int[] pixels){this.pos=pos;this.slot=slot;this.serial=serial;this.x=x;this.z=z;this.zoom=zoom;this.aspect=aspect;this.noSignal=noSignal;this.pixels=pixels;hasChip=table&&!chip.isEmpty();write=table;marker=NavigationChip.inDimension(chip,dimension);if(marker){chipX=NavigationChip.value(chip,"X");chipZ=NavigationChip.value(chip,"Z");}canvasHeight=Math.max(96,Math.min(65536,(int)Math.round(384*16.0/aspect)));}
     public MessageNavigationImage dimensions(NavigationCanvas canvas,int id){return dimensions(canvas,canvas.gridWidth(zoom),canvas.gridHeight(zoom),id);}
     public MessageNavigationImage dimensions(NavigationCanvas canvas,int columns,int rows,int id){canvasWidth=canvas.width;canvasHeight=canvas.height;width=columns;height=rows;revision=id;return this;}
-    public MessageNavigationImage linkState(boolean unlinked){this.unlinked=unlinked;return this;}
+    public MessageNavigationImage linkState(boolean unlinked){return linkState(unlinked,false);}
+    public MessageNavigationImage linkState(boolean unlinked,boolean noPower){this.unlinked=unlinked;this.noPower=noPower;return this;}
     @Override public void toBytes(ByteBuf b){
-        b.writeLong(pos.toLong());b.writeByte(slot);b.writeInt(serial);b.writeInt(x);b.writeInt(z);b.writeByte(zoom);b.writeByte(aspect);b.writeBoolean(noSignal);b.writeBoolean(hasChip);b.writeBoolean(marker);b.writeBoolean(write);b.writeBoolean(unlinked);b.writeInt(chipX);b.writeInt(chipZ);b.writeShort(width);b.writeShort(height);b.writeInt(canvasWidth);b.writeInt(canvasHeight);b.writeInt(revision);
+        b.writeLong(pos.toLong());b.writeByte(slot);b.writeInt(serial);b.writeInt(x);b.writeInt(z);b.writeByte(zoom);b.writeByte(aspect);b.writeBoolean(noSignal);b.writeBoolean(hasChip);b.writeBoolean(marker);b.writeBoolean(write);b.writeByte((unlinked?1:0)|(noPower?2:0));b.writeInt(chipX);b.writeInt(chipZ);b.writeShort(width);b.writeShort(height);b.writeInt(canvasWidth);b.writeInt(canvasHeight);b.writeInt(revision);
         if(pixels==null){b.writeByte(0);NavigationOverlayCodec.write(b,overlay);return;}if(pixels.length!=width*height)throw new IllegalArgumentException("Invalid navigation raster length");
         // Primitive palette lookup avoids two Integer allocations per sample on large views.
         int[] keys=new int[512],colors=new int[256];short[] slots=new short[512];byte[] indices=new byte[pixels.length];int size=0;boolean raw=false;
@@ -30,7 +31,7 @@ public final class MessageNavigationImage implements IMessage {
     }
     @Override public void fromBytes(ByteBuf b){
         if(b.readableBytes()<HEADER)throw new IllegalArgumentException("Truncated navigation raster");
-        pos=BlockPos.fromLong(b.readLong());slot=b.readUnsignedByte();serial=b.readInt();x=b.readInt();z=b.readInt();zoom=b.readUnsignedByte();aspect=b.readUnsignedByte();noSignal=b.readBoolean();hasChip=b.readBoolean();marker=b.readBoolean();write=b.readBoolean();unlinked=b.readBoolean();chipX=b.readInt();chipZ=b.readInt();width=b.readUnsignedShort();height=b.readUnsignedShort();canvasWidth=b.readInt();canvasHeight=b.readInt();revision=b.readInt();int mode=b.readUnsignedByte();
+        pos=BlockPos.fromLong(b.readLong());slot=b.readUnsignedByte();serial=b.readInt();x=b.readInt();z=b.readInt();zoom=b.readUnsignedByte();aspect=b.readUnsignedByte();noSignal=b.readBoolean();hasChip=b.readBoolean();marker=b.readBoolean();write=b.readBoolean();int linkFlags=b.readUnsignedByte();unlinked=(linkFlags&1)!=0;noPower=(linkFlags&2)!=0;chipX=b.readInt();chipZ=b.readInt();width=b.readUnsignedShort();height=b.readUnsignedShort();canvasWidth=b.readInt();canvasHeight=b.readInt();revision=b.readInt();int mode=b.readUnsignedByte();
         if(slot>1||zoom>=NavigationMap.SPANS.length||aspect<8||aspect>64||Math.abs((long)x)>NavigationMap.LIMIT||Math.abs((long)z)>NavigationMap.LIMIT||width<1||height<1||width>NavigationCanvas.MAX_GRID||height>NavigationCanvas.MAX_GRID||canvasWidth<96||canvasWidth>65536||canvasHeight<96||canvasHeight>65536||revision<0)throw new IllegalArgumentException("Invalid navigation bounds");
         int count=width*height;
         if(mode==0){pixels=null;overlay=NavigationOverlayCodec.read(b);return;}

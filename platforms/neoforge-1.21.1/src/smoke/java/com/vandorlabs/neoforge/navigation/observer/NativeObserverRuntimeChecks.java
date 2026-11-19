@@ -14,7 +14,18 @@ public final class NativeObserverRuntimeChecks {
  private static int encodedBytes(CompoundTag tag){try{var out=new java.io.ByteArrayOutputStream();net.minecraft.nbt.NbtIo.write(tag,new java.io.DataOutputStream(out));return out.size();}catch(java.io.IOException failed){throw new AssertionError(failed);}}
  private static NativeObserverDesigns.Design caseDesign(){if(index<64)return NativeObserverDesigns.ALL.get(index/32);int n=(index-64)/2;return n<13?NativeObserverDesigns.scaled("standalone_dish",n+4):NativeObserverDesigns.scaled("standalone_antenna",n-13+3);}
  private static void checkFormed(){var t=root();var d=t.design();if(!phase().equals("read"))need(d.width()==caseDesign().width(),"actual proportional width discovered");for(int x=0;x<d.width();x++)for(int y=0;y<d.height();y++)for(int z=0;z<d.depth();z++){var p=t.cell(x,y,z);if(!p.equals(ROOT))need(world.getBlockEntity(p) instanceof NativeObserverPartEntity part&&part.root()==t,"one exact reserved member "+p);}
- var areas=NativeNavigationSources.matching(world,ROOT.north(4),ChannelList.of(72,99));need(areas.size()==1&&areas.getFirst().radius()==d.maximum()/2&&areas.getFirst().x()==31&&areas.getFirst().z()==31,"formed source matches configured channel without power");need(NativeNavigationSources.matching(world,ROOT.north(4),ChannelList.of(73)).isEmpty(),"unrelated channel excluded");need(NativeNavigationSources.matching(world,ROOT.north(257),ChannelList.of(72)).isEmpty(),"transmitter distance bounded separately");for(int y:new int[]{-64,0,16,64,128,256})need(NavigationRange.radius(d.maximum(),y)==(int)Math.round(d.maximum()*Math.max(.125,Math.min(1,y/128D))),"radius endpoint "+y);
+ var selected=ChannelList.of(72,99);
+ var display=ROOT.north(4);
+ need(!t.powered()&&NativeNavigationSources.matching(world,display,selected).isEmpty()&&NativeNavigationSources.noPower(world,display,selected),"linked source without RF reports no power");
+ var port=t.cell(d.width()-1,t.inverted()?d.height()-1:0,d.depth()-1);
+ var energy=net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK;
+ var input=world.getCapability(energy,port,Direction.DOWN);
+ int demand=com.vandorlabs.navigation.ObserverPower.RF_PER_TICK;
+ need(input!=null&&world.getCapability(energy,port,Direction.UP)==null&&!input.canExtract(),"formed bottom reservation exposes only a downward energy input");
+ need(input.receiveEnergy(demand,true)==demand&&!t.powered(),"simulation does not power a linked source");
+ need(input.receiveEnergy(demand,false)==demand&&input.receiveEnergy(1,false)==0&&t.powered(),"real input covers demand once per tick");
+ need(!NativeNavigationSources.noPower(world,display,selected),"healthy linked source clears power error");
+ var areas=NativeNavigationSources.matching(world,display,selected);need(areas.size()==1&&areas.getFirst().radius()==d.maximum()/2&&areas.getFirst().x()==31&&areas.getFirst().z()==31,"powered source matches configured channel");need(NativeNavigationSources.matching(world,ROOT.north(4),ChannelList.of(73)).isEmpty(),"unrelated channel excluded");need(NativeNavigationSources.matching(world,ROOT.north(257),ChannelList.of(72)).isEmpty(),"transmitter distance bounded separately");for(int y:new int[]{-64,0,16,64,128,256})need(NavigationRange.radius(d.maximum(),y)==(int)Math.round(d.maximum()*Math.max(.125,Math.min(1,y/128D))),"radius endpoint "+y);
  if(index==0&&phase().equals("matrix")){
   need(areas.getFirst().radarRadius()==NavigationRange.radarRadius(d.id()),"legacy source defaults to active radar");
   t.setRadar(false);

@@ -30,6 +30,8 @@ existing chip readers; a plain Programmable Screen can use an attached Data Chip
 Mount. Other screen families are unchanged.
 
 1. Assemble a Sentinel Array or Survey Dish. Only the standalone models remain.
+   Connect an RF source that supplies at least 20 RF per tick to a downward-facing
+   input on the bottom layer. The Power Port In artwork marks the underside.
 2. Open its configuration and select **Redstone**. Enter its **Transmit channels**
    and choose a connection range of 4, 8, 16, 32, 64, 128 or 256 blocks
    (default 16).
