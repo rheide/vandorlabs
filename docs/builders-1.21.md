@@ -1,10 +1,10 @@
 # Builder machines on Minecraft 1.21.1
 
-This native slice covers the Synthesis Tower, Assembly Press and Enclosed Gantry,
-with their three Core items. The native
-[Matter Infuser](matter-and-storage.md) supplies Matter Ingots and charges
-modules. The Press produces chips, cards and modules. The Gantry produces
-mechanical blocks. Core production and Digitize use the Synthesis Tower.
+The Synthesis Tower fabricates Cores and copies supported blocks. The Assembly
+Press fabricates chips, cards and modules, and the Enclosed Gantry makes
+mechanical parts. The standalone drives and navigation computers use the same
+Matter frame assembly process. The native [Matter Infuser](matter-and-storage.md)
+supplies Matter Ingots and charges modules.
 
 ## Build and form a machine
 
@@ -130,6 +130,19 @@ loaded physical input or active configured channel switches the Array to its
 authored active appearance. Its optional Data Chip stays in the mount until
 removed.
 
+## Navigation computers
+
+The Paladyne and Seyr Navigation Computer Cores are available in Creative.
+Build each column from its Core and two Matter Blocks using the
+[Paladyne](multiblocks/paladyne-navigation-computer/README.md) or
+[Seyr](multiblocks/seyr-navigation-computer/README.md) guide. A formed
+computer starts in Idle. Right-click its case to cycle Computing, Off and Idle.
+
+The Configurizer edits the single display's artwork, animation and optional
+Redstone receiver. Redstone activation can hold the Off appearance while
+the receiver is unpowered. The computer retains the selected activity and
+resumes it once the signal returns.
+
 ## Dismantling and ownership
 
 Sneak-right-click a formed member to restore its Matter frame. Mining a member
@@ -152,13 +165,13 @@ checks.
 
 ## Cores and JEI
 
-The three Core block/item models use the supplied Heavy Constructor, Automated
-Fabricator and Industrial Printer cuboids and their original 64×64 atlases.
+The builder Core block and item models use the supplied Heavy Constructor,
+Automated Fabricator and Industrial Printer cuboids and original 64×64 atlases.
 Their occupied geometry also drives bottom-up fabrication, including the
-textured faces of partially printed rows. Inventory icons retain visible padding.
-The [Survey Dish and Sentinel Array](navigation-displays.md) have their own
-native adapters. Oculus, Vector Fold, and the Paladyne and Seyr navigation computers remain
-unavailable in this build.
+textured faces of partially printed rows. The drives and computers use their
+authored Core geometry and stage-specific structure artwork. Inventory icons
+retain visible padding. The [Survey Dish and Sentinel Array](navigation-displays.md)
+have their own native adapters.
 
 With JEI installed, **Matter Infuser** lists iron conversion and Battery Module
 charging. The **Synthesis Tower**, **Assembly Press** and **Enclosed Gantry**

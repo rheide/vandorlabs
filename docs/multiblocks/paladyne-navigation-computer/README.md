@@ -35,3 +35,6 @@ Use the Configurizer to select artwork independently for the fitted screen/half-
 These models do not yet perform crafting, propulsion, navigation calculations or dimension transfer. Their status appearances are visual states.
 
 [All multiblock guides](../README.md) · [Data Chip Mount behavior](../../data-mounts.md)
+
+On NeoForge 1.21.1, see [Navigation computers](../../builders-1.21.md#navigation-computers)
+for the native display and activity controls.

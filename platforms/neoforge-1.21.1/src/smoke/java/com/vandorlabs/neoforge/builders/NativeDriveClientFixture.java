@@ -41,7 +41,7 @@ final class NativeDriveClientFixture {
     static void login(ServerPlayer player) {
         actor = player.getUUID();
         var world = player.serverLevel();
-        for (int x = -3; x <= 37; x++) for (int z = -5; z <= 5; z++) {
+        for (int x = -3; x <= 53; x++) for (int z = -5; z <= 5; z++) {
             world.setBlock(new BlockPos(x, 95, z), Blocks.STONE.defaultBlockState(), 3);
             for (int y = 96; y <= 100; y++) world.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
         }
@@ -69,8 +69,9 @@ final class NativeDriveClientFixture {
         var drive = NativeDriveDesign.SUPPORTED.get(machine);
         return switch (action) {
             case 0 -> new Vec3(root.getX() + .5, root.getY() + .5, 0);
-            case 3 -> new Vec3(root.getX() + drive.chipX, root.getY() + drive.chipY, drive.chipZ);
-            default -> new Vec3(root.getX() + 1.8, root.getY() + 1.275, 0);
+            case 3 -> drive.hasChip()?new Vec3(root.getX()+drive.chipX,root.getY()+drive.chipY,drive.chipZ):
+                    new Vec3(root.getX()+.5,root.getY()+1.275,0);
+            default -> new Vec3(root.getX()+(drive.computer()?.5:1.8),root.getY()+1.275,0);
         };
     }
 
@@ -94,22 +95,28 @@ final class NativeDriveClientFixture {
         }
         var settings = tile.driveSettings();
         switch (operation % 4) {
-            case 0 -> held(player, machine==2?new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()):ItemStack.EMPTY, aim(machine, 1));
+            case 0 -> held(player, tile.drive().manualActivity()?new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()):ItemStack.EMPTY, aim(machine, 1));
             case 1 -> {
                 need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()==tile.drive().engine() && settings.levels()==tile.drive().engine()
                         && !settings.animated() && settings.speed() == 0 && settings.particles() == 0
                         && settings.threshold() == (tile.drive().exhaust ? 7 : 8) && tile.channels().equals(BANK),
                         "ordinary open sends real Drive controls and reverse cycling");
-                held(player, machine==2?ItemStack.EMPTY:new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()), aim(machine, 2));
+                held(player, tile.drive().manualActivity()?ItemStack.EMPTY:new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()), aim(machine, 2));
             }
             case 2 -> {
                 need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()==tile.drive().engine()
-                        && tile.driveLevel() == (tile.drive().engine()?15:0) && (machine!=2||tile.driveActivity()==0), "same drive session or Oculus state click preserves configured power");
+                        && tile.driveLevel() == (tile.drive().engine()?15:0) && (!tile.drive().manualActivity()||tile.driveActivity()==(tile.drive().defaultActivity()+1)%3), "same drive session or Oculus state click preserves configured power");
                 held(player, NativeCredentialItems.dataChip(3), aim(machine, 3));
             }
             case 3 -> {
-                need(player.getMainHandItem().isEmpty() && NativeCredentialItems.company(tile.getItem(3)) == 3,
-                        "one mounted chip transfers through the authored hit");
+                if(tile.drive().hasChip()){
+                    need(player.getMainHandItem().isEmpty()&&NativeCredentialItems.company(tile.getItem(3))==3,
+                            "one mounted chip transfers through the authored hit");
+                }else{
+                    need(NativeCredentialItems.company(player.getMainHandItem())==3&&tile.getItem(3).isEmpty()
+                            &&tile.driveActivity()==(tile.drive().defaultActivity()+2)%3,
+                            "chipless computer cycles activity without taking the held chip");
+                }
                 held(player, ItemStack.EMPTY, aim(machine+1, 0));
             }
             default -> throw new IllegalArgumentException("Drive action");
@@ -154,7 +161,7 @@ final class NativeDriveClientFixture {
                 }
                 if (disconnected && mc.level == null) {
                     complete = true;
-                    System.out.println("[vandorlabs][builder-client] client PASS LongburnMeridianOculusVectorFold physicalSurvival/dialogs/Configurator/mount");
+                    System.out.println("[vandorlabs][builder-client] client PASS LongburnMeridianOculusVectorFoldComputers physicalSurvival/dialogs/Configurator/mount");
                     mc.stop();
                     return;
                 }
@@ -181,7 +188,8 @@ final class NativeDriveClientFixture {
                     return;
                 }
                 if (action == 0 && (!tile.formed() || tile.transactionBlocked())) return;
-                if(action==2&&machine==2&&tile.driveActivity()!=0)return;
+                boolean manual=tile.drive()!=null&&tile.drive().manualActivity();
+                if(action==2&&manual&&tile.driveActivity()!=(tile.drive().defaultActivity()+1)%3)return;
                 if(machine==TOWER&&action==1){
                     if(!(mc.screen instanceof NativeBuilderScreen builder)
                             ||(builder.getMenu().value(10)&1<<NativeBuilderProducts.VECTOR_FOLD)==0)return;
@@ -199,7 +207,7 @@ final class NativeDriveClientFixture {
                     }
                     if(builder.getMenu().value(7)!=2)return;
                     builder.onClose();
-                }else if (action == 1 || action == 2&&machine!=2) {
+                }else if (action == 1 || action == 2&&!manual) {
                     if (!(mc.screen instanceof NativeDriveScreen drive)) return;
                     if (action == 1) edit(drive, tile.drive());
                     else {
@@ -209,7 +217,11 @@ final class NativeDriveClientFixture {
                     }
                     drive.onClose();
                 }
-                if (action == 3 && (tile.getItem(3).isEmpty() || !mc.player.getMainHandItem().isEmpty())) return;
+                if(action==3){
+                    if(tile.drive().hasChip()){
+                        if(tile.getItem(3).isEmpty()||!mc.player.getMainHandItem().isEmpty())return;
+                    }else if(tile.driveActivity()!=(tile.drive().defaultActivity()+2)%3)return;
+                }
                 PacketDistributor.sendToServer(new NativeBuilderClientFixture.Mode(step++));
                 sent = false;
                 delay = 0;
@@ -225,7 +237,7 @@ final class NativeDriveClientFixture {
                     || mc.player.position().distanceToSqr(target.x, 96, -2.5) > .01
                     || mc.player.getLookAngle().dot(target.subtract(mc.player.getEyePosition()).normalize()) <= .9999) return false;
             var stack = mc.player.getMainHandItem();
-            return machine==TOWER ? stack.isEmpty() : operation == (machine==2?1:2) ? stack.is(VandorLabsBootstrap.CONFIGURIZER.get())
+            return machine==TOWER ? stack.isEmpty() : operation == (NativeDriveDesign.SUPPORTED.get(machine).manualActivity()?1:2) ? stack.is(VandorLabsBootstrap.CONFIGURIZER.get())
                     : operation == 3 ? NativeCredentialItems.accepts(stack, true) : stack.isEmpty();
         }
 
@@ -247,6 +259,10 @@ final class NativeDriveClientFixture {
         private static void edit(NativeDriveScreen screen, NativeDriveDesign design) {
             click(screen, "Animated", 0);
             click(screen, "Speed Normal", 1);
+            if(design.computer()){
+                need(screen.children().stream().noneMatch(w->w instanceof AbstractWidget b&&b.getMessage().getString().equals("Keyboard")),
+                        "computers provide their single authored Displays surface");
+            }
             click(screen, "Redstone", 0);
             for (var child : screen.children()) if (child instanceof EditBox box) box.setValue("317,318");
             click(screen, "Activation Always", 0);

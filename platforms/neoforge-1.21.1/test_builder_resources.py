@@ -34,7 +34,7 @@ def main():
     source_specs={row['design']:row for row in json.loads((SOURCE/'data/frame_machines.json').read_text())}
     for design,paths in DRIVES.items():
         source_spec=source_specs[design]
-        assert drive_specs[design]=={name:source_spec[name] for name in ('block','width','height','depth','chip_anchor','chip_size','surfaces')}|{'meshes':list(paths)}
+        assert drive_specs[design]=={name:source_spec.get(name) for name in ('block','width','height','depth','chip_anchor','chip_size','surfaces')}|{'meshes':list(paths)}
         for part in paths:
             path=Path(part+'.obj')
             assert (assets/'models/block/drives'/design/path).read_bytes()==(SOURCE/'models/block'/source_spec['model']/path).read_bytes()
@@ -47,7 +47,7 @@ def main():
         path=(OUT.parent/dependency['owner']/relative) if dependency else OUT/relative
         assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
         if dependency:assert not (OUT/relative).exists() and dependency['sha256']==digest
-    assert not any(word in str(path.relative_to(OUT)) for path in OUT.rglob('*') for word in ('radar','navigation','sentinel'))
+    assert not any(word in str(path.relative_to(OUT)) for path in OUT.rglob('*') for word in ('radar','sentinel'))
     # The native projection must refuse differing shared artwork, not silently
     # keep whichever resource happened to be copied last by Gradle.
     with tempfile.TemporaryDirectory(prefix='vandor-builder-shared-') as directory:

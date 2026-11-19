@@ -45,7 +45,8 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
         previous.clear();
         picker = null;
         channelField = null;
-        int[] pages=menu.tile.drive().engine()?new int[]{0,1,2,3}:new int[]{0,1,3};
+        var design=menu.tile.drive();
+        int[] pages=design.engine()?new int[]{0,1,2,3}:design.computer()?new int[]{0,3}:new int[]{0,1,3};
         int tabWidth = (imageWidth - 24) / pages.length;
         for (int i = 0; i < pages.length; i++) {
             int next = pages[i];

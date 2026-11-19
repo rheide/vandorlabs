@@ -93,7 +93,11 @@ final class NativeDriveRenderer {
             poses.translate(-pivot.getX(), -pivot.getY(), -pivot.getZ());
             NativeBuilderRenderer.orient(poses, tile.facing(), drive.width, drive.depth);
             var out = buffers.getBuffer(NativeBuilderModelCache.LAYER);
-            if(drive==NativeDriveDesign.VECTOR_FOLD){
+            if(drive.computer()){
+                int mode=active?tile.driveActivity():0;
+                String body=switch(mode){case 0->"off";case 1->"idle";default->"computing";};
+                mesh.get(body+"/complete").emit(poses.last(),out,light,overlay);
+            }else if(drive==NativeDriveDesign.VECTOR_FOLD){
                 mesh.get(active?"active/static":"static").emit(poses.last(),out,light,overlay);
             }else if(drive==NativeDriveDesign.OCULUS){
                 int activity=active?tile.driveActivity():0;
@@ -122,7 +126,7 @@ final class NativeDriveRenderer {
             }
             var surfaces = ARTWORK.get(drive).surfaces;
             panel(surfaces[0], settings.display(), settings, active, poses, buffers, light, overlay);
-            panel(surfaces[1], settings.keyboard(), settings, active, poses, buffers, light, overlay);
+            if(surfaces.length>1)panel(surfaces[1], settings.keyboard(), settings, active, poses, buffers, light, overlay);
             var chip = tile.getItem(3);
             if (!chip.isEmpty()) {
                 poses.translate(drive.chipX, drive.chipY, drive.chipZ - .07);
@@ -204,7 +208,7 @@ final class NativeDriveRenderer {
             for (var drive : NativeDriveDesign.SUPPORTED) {
                 var entry = data.getAsJsonObject(drive.id);
                 var surfaces = entry.getAsJsonArray("surfaces");
-                var planes = new Surface[2];
+                var planes = new Surface[surfaces.size()];
                 for (int i = 0; i < planes.length; i++) {
                     var surface = surfaces.get(i).getAsJsonObject();
                     var corners = new float[4][];

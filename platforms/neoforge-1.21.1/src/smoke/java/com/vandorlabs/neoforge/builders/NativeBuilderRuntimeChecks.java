@@ -79,8 +79,8 @@ public final class NativeBuilderRuntimeChecks {
    var core=NativeBuilderBindings.CORES.get(design.id).asItem();
    var expected=com.vandorlabs.neoforge.credentials.NativeCredentialItems.DATA_CHIP.get();
    need(drops.stream().filter(drop->drop.getItem().is(core)).mapToInt(drop->drop.getItem().getCount()).sum()==1
-         &&drops.stream().filter(drop->drop.getItem().is(expected)).mapToInt(drop->drop.getItem().getCount()).sum()==1,
-        "formed drive mining returns only one core and its one loose chip");
+         &&drops.stream().filter(drop->drop.getItem().is(expected)).mapToInt(drop->drop.getItem().getCount()).sum()==(design.hasChip()?1:0),
+        "formed machine mining returns one Core and only its owned chip when supported");
    if(++caseIndex==NativeDriveDesign.SUPPORTED.size()){
     setup(0,Direction.NORTH);need(NativeBuilderTransactions.request(root(),actor,true),"Tower async formation for drive core production");
     stage=202;return;
@@ -92,11 +92,16 @@ public final class NativeBuilderRuntimeChecks {
   var drive=NativeDriveDesign.SUPPORTED.get(caseIndex);
   need(owner.drive()==drive&&owner.driveLevel()==15&&!owner.production()&&owner.layout().cornerZ==desiredZ,
         "standalone drive activates after its deferred inputs and forms in selected orientation");
-  var output=NativeBuilderProducts.result(NativeBuilderProducts.LONGBURN+caseIndex);
-  need(output.is(NativeBuilderBindings.CORES.get(drive.id).asItem()),"Tower uses the exact drive core item");
-  if(drive==NativeDriveDesign.OCULUS){
-   need(owner.driveActivity()==2&&owner.cycleDrive()&&owner.driveActivity()==0&&owner.cycleDrive()&&owner.driveActivity()==1,
-        "Oculus defaults Active and cycles Standby to Charging");
+  if(drive.computer()){
+   need(!NativeBuilderProducts.output("synthesis_tower","vandorlabs:"+drive.block),"computer cores keep Creative-only supply");
+  }else{
+   var output=NativeBuilderProducts.result(NativeBuilderProducts.LONGBURN+caseIndex);
+   need(output.is(NativeBuilderBindings.CORES.get(drive.id).asItem()),"Tower uses the exact drive core item");
+  }
+  if(drive.manualActivity()){
+   int first=drive.defaultActivity();
+   need(owner.driveActivity()==first&&owner.cycleActivity()&&owner.driveActivity()==(first+1)%3
+        &&owner.cycleActivity()&&owner.driveActivity()==(first+2)%3,"manual activity cycle starts with the Source default");
   }
   var menu=new NativeDriveMenu(NativeDriveBindings.MENU,77,owner,ROOT);
   actor.containerMenu=menu;
@@ -112,6 +117,10 @@ public final class NativeBuilderRuntimeChecks {
         &&!NativeDriveBindings.apply(actor,new NativeDriveBindings.Edit(77,ROOT.above(),config,bank)),
         "drive packet refuses stale window and wrong world owner");
   need(NativeDriveBindings.apply(actor,edit)&&owner.driveLevel()==0,"real guarded edit applies configured Redstone gate");
+  if(drive.computer()){
+   var keyboard=new NativeDriveSettings(true,false,false,0,8,-2,-1,false,2);
+   need(!NativeDriveBindings.apply(actor,new NativeDriveBindings.Edit(77,ROOT,keyboard,bank)),"navigation computer rejects a nonexistent keyboard");
+  }
   var front=owner.cell(0,0,0).relative(owner.facing());
   world.setBlock(front,Blocks.REDSTONE_BLOCK.defaultBlockState(),3);
   need(owner.driveLevel()==15,"loaded direct neighbor signal turns the standalone drive on");
@@ -137,7 +146,10 @@ public final class NativeBuilderRuntimeChecks {
   int expectedLevel=drive.engine()?8:15;
   var expectedConfig=drive.engine()?inverted:config;
   need(owner.driveLevel()==expectedLevel,"channel network uses inverted analogue or Array boolean activation");
-  owner.setItem(3,com.vandorlabs.neoforge.credentials.NativeCredentialItems.dataChip(2));
+  var chip=com.vandorlabs.neoforge.credentials.NativeCredentialItems.dataChip(2);
+  need(owner.canPlaceItem(3,chip)==drive.hasChip(),"physical token storage only exists on the authored drive mount");
+  owner.setItem(3,chip);
+  need(owner.getItem(3).isEmpty()!=drive.hasChip(),"private inventory cannot install a chip in a computer");
   var saved=owner.saveWithoutMetadata(world.registryAccess());
   var copy=new NativeBuilderEntity(ROOT,owner.getBlockState());
   copy.loadWithComponents(saved,world.registryAccess());
@@ -190,7 +202,7 @@ public final class NativeBuilderRuntimeChecks {
   need(!publicCopy.inert()&&ItemStack.matches(publicCopy.getItem(1),expected),"drive core public representation");
   owner.removeItem(1,1);
   if(recipe<NativeBuilderProducts.MAX_TOWER_PRODUCT){recipe++;beginDriveCore(owner);return;}
-  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridianOculusVectorFold asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
+  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridianOculusVectorFoldComputers asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
   var server=world.getServer();world=null;server.halt(false);
  }
  private static void beginDriveCore(NativeBuilderEntity owner){

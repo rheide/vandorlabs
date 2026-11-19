@@ -12,6 +12,8 @@ DRIVES={
     'longburn_drive':('drive_body','drive_lights','active/drive_body','active/drive_lights'),
     'meridian_core':('static','active/drive_body','active/drive_lights'),
     'vector_fold_array':('static','active/static'),
+    'paladyne_navigation_computer':tuple(mode+'/complete' for mode in ('off','idle','computing')),
+    'seyr_navigation_computer':tuple(mode+'/complete' for mode in ('off','idle','computing')),
     'oculus_drive':tuple(mode+'/parts/'+part for mode in ('standby','charging','active')
                          for part in ('static','field','shutter_upper','shutter_lower')),
 }
@@ -110,7 +112,7 @@ def main():
             'rolls':1,'entries':[{'type':'minecraft:item','name':f'vandorlabs:{block}'}],
             'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
         drives[design]={'block':block,'width':spec['width'],'height':spec['height'],'depth':spec['depth'],
-                        'chip_anchor':spec['chip_anchor'],'chip_size':spec['chip_size'],'surfaces':spec['surfaces'],
+                        'chip_anchor':spec.get('chip_anchor'),'chip_size':spec.get('chip_size'),'surfaces':spec['surfaces'],
                         'meshes':list(paths)}
     write(assets/'data/native_drive_surfaces.json',drives)
     write(assets/'models/block/builders/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/resource_ports/port_hull')}})
