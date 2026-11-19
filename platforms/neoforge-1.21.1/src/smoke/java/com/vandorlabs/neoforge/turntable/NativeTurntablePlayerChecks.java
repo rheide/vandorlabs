@@ -57,10 +57,11 @@ public final class NativeTurntablePlayerChecks {
                 if (menu == null || menu.busy()) return;
                 window = menu.containerId;
                 click(screen, "Height:", .07);
+                click(screen, "RPM:", .998);
                 stage++;
             }
             case 2 -> {
-                if (menu == null || menu.height() != 2) return;
+                if (menu == null || menu.height() != 2 || menu.rpm() != 10) return;
                 click(screen, "Scan", .5);
                 stage++;
             }
@@ -68,11 +69,21 @@ public final class NativeTurntablePlayerChecks {
                 if (menu == null || !menu.captured() || menu.busy() || !mc.level.getBlockState(NativeTurntablePlayerFixture.SOURCE).isAir()) return;
                 if (menu.containerId != window) throw new AssertionError("Native Turntable window dropped its physical identity");
                 checkCapturedRender(mc);
-                click(screen, "Restore angle:", .333);
-                click(screen, "Restore", .5);
+                click(screen, "Target angle:", .333);
+                click(screen, "Turn", .5);
                 stage++;
             }
             case 4 -> {
+                if (menu == null || menu.moving() || !menu.status().equals("Turntable stopped at 90 degrees")) return;
+                var owner = (NativeTurntableEntity) mc.level.getBlockEntity(root);
+                if (owner.visualAngle() != 90) throw new AssertionError("Client has the wrong authoritative angle");
+                owner.readAngle(owner.key(), Long.MIN_VALUE, 20);
+                if (owner.visualAngle() != 90) throw new AssertionError("Older pose packet replaced the current angle");
+                checkCapturedRender(mc);
+                click(screen, "Restore", .5);
+                stage++;
+            }
+            case 5 -> {
                 if (menu == null || menu.captured() || menu.busy()
                         || !(mc.level.getBlockEntity(NativeTurntablePlayerFixture.TARGET) instanceof SignBlockEntity sign)
                         || !sign.getFrontText().getMessage(0, false).getString().equals("Turntable player sign")) return;
@@ -81,14 +92,14 @@ public final class NativeTurntablePlayerChecks {
                 mc.player.connection.send(new ServerboundSetCarriedItemPacket(1));
                 stage++;
             }
-            case 5 -> {
+            case 6 -> {
                 if (mc.screen != null || !mc.player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())) return;
                 use(mc);
                 stage++;
             }
-            case 6 -> {
+            case 7 -> {
                 if (menu == null || menu.containerId == window || menu.height() != 2) return;
-                System.out.println("[vandorlabs][turntable-player] client PASS ordinary/height/Scan/Restore/Configurator");
+                System.out.println("[vandorlabs][turntable-player] client PASS ordinary/height/Scan/Turn/Restore/Configurator");
                 stage++;
                 mc.stop();
             }

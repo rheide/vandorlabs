@@ -16,6 +16,8 @@ public final class NativeTurntableMenu extends AbstractContainerMenu {
     public static final int SCAN = 0;
     public static final int RESTORE = 1;
     public static final int HEIGHT = 8;
+    public static final int TURN = 32;
+    public static final int SPEED = 48;
 
     private final BlockPos pos;
     private final UUID key;
@@ -44,9 +46,19 @@ public final class NativeTurntableMenu extends AbstractContainerMenu {
         return tile == null || tile.busy();
     }
 
+    public boolean moving() {
+        var tile = tile();
+        return tile != null && tile.moving();
+    }
+
     public int height() {
         var tile = tile();
         return tile == null ? 4 : tile.settings().height;
+    }
+
+    public double rpm() {
+        var tile = tile();
+        return tile == null ? 1 : tile.settings().rpm;
     }
 
     public String status() {
@@ -73,8 +85,13 @@ public final class NativeTurntableMenu extends AbstractContainerMenu {
             if (id >= HEIGHT + TurntableSettings.MIN_HEIGHT && id <= HEIGHT + TurntableSettings.MAX_HEIGHT) {
                 return owner.setHeight(id - HEIGHT);
             }
+            if (id > SPEED && id <= SPEED + 20) return owner.setSpeed(id - SPEED);
+            if (id >= TURN && id < TURN + 4) return owner.turn(id - TURN);
             if (id == SCAN) NativeTurntableTransfers.request(owner, server, false, 0);
-            else if (id >= RESTORE && id < RESTORE + 4) NativeTurntableTransfers.request(owner, server, true, id - RESTORE);
+            else if (id == RESTORE) {
+                int nearest = Math.floorMod((int) Math.round(owner.positionAngle() / 90), 4);
+                NativeTurntableTransfers.request(owner, server, true, nearest);
+            }
             else return false;
             return true;
         } catch (IllegalArgumentException refusal) {

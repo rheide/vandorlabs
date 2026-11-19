@@ -49,7 +49,7 @@ public record NativeTurntableCapture(NativeSurfaceLayout surface, NativeSurfaceP
         return tag;
     }
 
-    private int depth() {
+    int depth() {
         var extent = prism.max().subtract(prism.min());
         return 1 + surface.normal.getAxis().choose(extent.getX(), extent.getY(), extent.getZ());
     }

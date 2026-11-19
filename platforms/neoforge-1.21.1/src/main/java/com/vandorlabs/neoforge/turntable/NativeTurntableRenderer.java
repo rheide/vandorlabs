@@ -1,6 +1,9 @@
 package com.vandorlabs.neoforge.turntable;
 
 import com.mojang.blaze3d.vertex.PoseStack;
+import com.vandorlabs.animation.VisualClock;
+import com.vandorlabs.turntable.TurntableGeometry;
+import org.joml.Quaternionf;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette.Palette;
 import java.util.ArrayList;
@@ -30,7 +33,31 @@ final class NativeTurntableRenderer implements BlockEntityRenderer<NativeTurntab
 
     private record Key(BlockState state, CompoundTag appearance, BlockPos tilePosition) {}
     private record Cell(BlockPos offset, BlockPos lightPos, Palette palette) {}
-    private record Mesh(List<Cell> cells, int bytes) {}
+    private record Mesh(List<Cell> cells, int bytes, Animation animation) {}
+    private static final class Animation {
+        private double from;
+        private double confirmed = Double.NaN;
+        private double change;
+
+        double rotation(double target, double localTick) {
+            if (!Double.isFinite(confirmed)) {
+                from = confirmed = target;
+                change = localTick;
+            } else if (confirmed != target) {
+                from = at(localTick);
+                confirmed = target;
+                change = localTick;
+            }
+            return at(localTick);
+        }
+
+        private double at(double tick) {
+            double arc = (confirmed - from + 540) % 360 - 180;
+            return TurntableGeometry.wrap(from + arc * Math.max(0, Math.min(1, tick - change)));
+        }
+    }
+
+    private static final VisualClock CLOCK = new VisualClock();
 
     private static final Map<NativeTurntableVisual, Mesh> CACHE = new WeakHashMap<>();
 
@@ -62,7 +89,7 @@ final class NativeTurntableRenderer implements BlockEntityRenderer<NativeTurntab
             cells.add(new Cell(cell.offset(), context, palette));
             bytes = Math.addExact(bytes, 96);
         }
-        var next = new Mesh(List.copyOf(cells), bytes);
+        var next = new Mesh(List.copyOf(cells), bytes, new Animation());
         int used = CACHE.values().stream().mapToInt(Mesh::bytes).sum();
         while (used + bytes > MAX_CACHE && !CACHE.isEmpty()) {
             var iterator = CACHE.entrySet().iterator();
@@ -80,32 +107,45 @@ final class NativeTurntableRenderer implements BlockEntityRenderer<NativeTurntab
         var world = owner.getLevel();
         if (view == null || world == null) return;
         var mc = Minecraft.getInstance();
-        for (var cell : mesh(owner, view).cells()) {
-            var palette = cell.palette();
-            int cellLight = world.hasChunkAt(cell.lightPos()) ? LevelRenderer.getLightColor(world, cell.lightPos()) : light;
-            poses.pushPose();
-            try {
-                poses.translate(cell.offset().getX(), cell.offset().getY(), cell.offset().getZ());
-                if (palette.fallback()) {
-                    mc.getBlockRenderer().renderSingleBlock(palette.state(), poses, buffers, cellLight, overlay, palette.data(), null);
-                } else {
-                    for (var layer : palette.layers()) {
-                        var buffer = buffers.getBuffer(layer.type());
-                        for (var quad : layer.quads()) {
-                            int tint = quad.isTinted()
-                                    ? mc.getBlockColors().getColor(palette.state(), world, cell.lightPos(), quad.getTintIndex()) : 0xffffff;
-                            float shade = world.getShade(quad.getDirection(), quad.isShade());
-                            buffer.putBulkData(poses.last(), quad, (tint >> 16 & 255) / 255F * shade,
-                                    (tint >> 8 & 255) / 255F * shade, (tint & 255) / 255F * shade, 1, cellLight, overlay);
+        var mesh = mesh(owner, view);
+        double angle = mesh.animation().rotation(owner.visualAngle(), CLOCK.sample(System.nanoTime(), mc.isPaused()));
+        var pivot = view.pivot();
+        var normal = view.normal();
+        poses.pushPose();
+        try {
+            poses.translate(pivot.x, pivot.y, pivot.z);
+            poses.mulPose(new Quaternionf().rotationAxis((float) Math.toRadians(-angle),
+                    normal.getStepX(), normal.getStepY(), normal.getStepZ()));
+            poses.translate(-pivot.x, -pivot.y, -pivot.z);
+            for (var cell : mesh.cells()) {
+                var palette = cell.palette();
+                int cellLight = world.hasChunkAt(cell.lightPos()) ? LevelRenderer.getLightColor(world, cell.lightPos()) : light;
+                poses.pushPose();
+                try {
+                    poses.translate(cell.offset().getX(), cell.offset().getY(), cell.offset().getZ());
+                    if (palette.fallback()) {
+                        mc.getBlockRenderer().renderSingleBlock(palette.state(), poses, buffers, cellLight, overlay, palette.data(), null);
+                    } else {
+                        for (var layer : palette.layers()) {
+                            var buffer = buffers.getBuffer(layer.type());
+                            for (var quad : layer.quads()) {
+                                int tint = quad.isTinted()
+                                        ? mc.getBlockColors().getColor(palette.state(), world, cell.lightPos(), quad.getTintIndex()) : 0xffffff;
+                                float shade = world.getShade(quad.getDirection(), quad.isShade());
+                                buffer.putBulkData(poses.last(), quad, (tint >> 16 & 255) / 255F * shade,
+                                        (tint >> 8 & 255) / 255F * shade, (tint & 255) / 255F * shade, 1, cellLight, overlay);
+                            }
                         }
                     }
+                    if (palette.tile() != null && mc.getBlockEntityRenderDispatcher().getRenderer(palette.tile()) != null) {
+                        mc.getBlockEntityRenderDispatcher().render(palette.tile(), partial, poses, buffers);
+                    }
+                } finally {
+                    poses.popPose();
                 }
-                if (palette.tile() != null && mc.getBlockEntityRenderDispatcher().getRenderer(palette.tile()) != null) {
-                    mc.getBlockEntityRenderDispatcher().render(palette.tile(), partial, poses, buffers);
-                }
-            } finally {
-                poses.popPose();
             }
+        } finally {
+            poses.popPose();
         }
     }
 

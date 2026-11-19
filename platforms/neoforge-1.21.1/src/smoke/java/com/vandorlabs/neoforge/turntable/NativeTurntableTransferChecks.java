@@ -1,6 +1,8 @@
 package com.vandorlabs.neoforge.turntable;
 
 import com.mojang.authlib.GameProfile;
+import io.netty.buffer.Unpooled;
+import net.minecraft.network.RegistryFriendlyByteBuf;
 import com.vandorlabs.neoforge.mixin.NativeRampChunkStorageAccess;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBindings;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBlock;
@@ -60,6 +62,8 @@ public final class NativeTurntableTransferChecks {
             return;
         }
 
+        world.setChunkForced(ROOT.getX() >> 4, ROOT.getZ() >> 4, true);
+        world.setChunkForced(SOURCE.getX() >> 4, SOURCE.getZ() >> 4, true);
         actor = new FakePlayer(world, new GameProfile(UUID.randomUUID(), "TurntableFixture"));
         actor.setPos(ROOT.getX() - 1, ROOT.getY() + 1, ROOT.getZ());
         world.setBlock(ROOT, NativeTurntableBindings.block.defaultBlockState().setValue(NativeTurntableBlock.FACING, Direction.EAST),
@@ -67,6 +71,8 @@ public final class NativeTurntableTransferChecks {
         var surface = NativeSurfaceBindings.BLOCK.defaultBlockState().setValue(NativeSurfaceBlock.FACING, Direction.UP);
         for (int x = 0; x < 2; x++) for (int z = 0; z < 2; z++) world.setBlock(SEED.offset(x, 0, z), surface, Block.UPDATE_ALL);
         world.setBlock(SOURCE, Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
+        world.setBlock(SOURCE.above(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
+        verifyAnglePacket();
         sign(SOURCE).updateText(t -> t.setMessage(0, Component.literal("Turntable owner")), true);
         originalSign = sign(SOURCE).saveWithFullMetadata(world.registryAccess());
         originalKey = owner().key();
@@ -80,7 +86,8 @@ public final class NativeTurntableTransferChecks {
         if (world == null || PHASE.equals("read")) return;
         ticks++;
         need(ticks < 600, "bounded journal lifecycle stage=" + stage + " status="
-                + (operation == null ? "queued" : operation.status() + " " + operation.error()));
+                + (operation == null ? "queued" : operation.status() + " " + operation.error()) + " angle=" + owner().positionAngle()
+                + " status=" + owner().status() + " saving=" + !world.noSave);
         if (stage == 0 && ticks <= 3 && !PHASE.equals("crash")) {
             world.noSave = true;
             need(NativeTurntableTransfers.submit(world, actor, request) == null, "saving disabled leaves the operation pending");
@@ -110,6 +117,8 @@ public final class NativeTurntableTransferChecks {
             need(operation.error().isEmpty() && owner().capture() != null && owner().key().equals(originalKey),
                     "capture committed to the same controller key");
             need(world.getBlockState(SOURCE).isAir() && world.getBlockEntity(SOURCE) == null, "the source sign has no second owner");
+            var capturedStone = new AABB(SOURCE.above()).deflate(.1);
+            need(!world.getEntityCollisions(actor, capturedStone).isEmpty(), "captured solid remains a physical collision");
             need(!world.setBlockAndUpdate(ROOT, Blocks.STONE.defaultBlockState()), "captured owner resists native replacement");
             world.setBlockAndUpdate(TARGET, Blocks.STONE.defaultBlockState());
             boolean refused = false;
@@ -120,7 +129,27 @@ public final class NativeTurntableTransferChecks {
             }
             need(refused && owner().capture() != null, "occupied restore leaves the stored capture intact");
             world.setBlockAndUpdate(TARGET, Blocks.AIR.defaultBlockState());
+            world.setBlockAndUpdate(TARGET.above(), Blocks.STONE.defaultBlockState());
+            need(owner().setSpeed(20), "ten RPM accepted");
+            need(owner().turn(1), "Turn accepted a supported heading");
             stage = 2;
+        } else if (stage == 2) {
+            if (owner().moving()) return;
+            need(owner().status().contains("blocked by terrain") && owner().positionAngle() < 90
+                    && owner().hasCapture(), "terrain stops authoritative motion with one retained owner");
+            world.setBlockAndUpdate(TARGET.above(), Blocks.AIR.defaultBlockState());
+            need(owner().turn(1), "obstructed Turn can be retried with the same capture");
+            stage = 3;
+        } else if (stage == 3) {
+            if (owner().moving()) return;
+            need(owner().positionAngle() == 90 && owner().status().endsWith("90 degrees"), "motion settled at the authoritative heading");
+            need(!world.getEntityCollisions(actor, new AABB(TARGET.above()).deflate(.1)).isEmpty()
+                    && world.getEntityCollisions(actor, new AABB(SOURCE.above()).deflate(.1)).isEmpty(),
+                    "physical collision follows the rotated solid");
+            var savedRoot = owner().saveWithFullMetadata(world.registryAccess());
+            need(savedRoot.getDouble(NativeTurntableEntity.ANGLE) == 90,
+                    "the completed pose is saved independently of client interpolation");
+            stage = 4;
             request = NativeTurntableTransfers.prepare(owner(), actor, true, 1);
             operation = null;
         } else {
@@ -131,11 +160,27 @@ public final class NativeTurntableTransferChecks {
             need(sign(TARGET).saveWithFullMetadata(world.registryAccess()).equals(saved)
                     && world.getBlockState(TARGET) == Blocks.OAK_SIGN.defaultBlockState().rotate(Rotation.CLOCKWISE_90),
                     "rotated restore published the exact sign once");
-            need(world.getBlockState(SOURCE).isAir() && !NativeTransferHolds.active(world), "final capture and leases retired");
+            need(world.getBlockState(SOURCE).isAir() && world.getBlockState(SOURCE.above()).isAir()
+                    && world.getBlockState(TARGET.above()).is(Blocks.STONE) && !NativeTransferHolds.active(world)
+                    && owner().positionAngle() == 0, "final rotated payload and leases retired");
             noDrops();
             pass();
             world = null;
             event.getServer().halt(false);
+        }
+    }
+
+    private static void verifyAnglePacket() {
+        var packet = new NativeTurntableAnglePayload(ROOT, owner().key(), Long.MAX_VALUE, -0.25F);
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), world.registryAccess());
+        try {
+            NativeTurntableAnglePayload.CODEC.encode(buffer, packet);
+            int bytes = buffer.readableBytes();
+            need(bytes <= 38 && packet.equals(NativeTurntableAnglePayload.CODEC.decode(buffer)) && !buffer.isReadable(),
+                    "one bounded angle packet holds no payload artwork");
+            System.out.println("[vandorlabs][turntable-transfer] angle packet bytes=" + bytes);
+        } finally {
+            buffer.release();
         }
     }
 

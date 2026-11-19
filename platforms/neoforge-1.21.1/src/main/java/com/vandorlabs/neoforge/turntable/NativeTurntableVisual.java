@@ -7,12 +7,14 @@ import java.util.List;
 import java.util.Set;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.HolderLookup;
+import net.minecraft.core.Direction;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
+import net.minecraft.world.phys.Vec3;
 
 /** Sparse, bounded render projection. The owned snapshot never leaves the physical server. */
 final class NativeTurntableVisual {
@@ -28,15 +30,29 @@ final class NativeTurntableVisual {
     }
 
     private final List<Cell> cells;
-    private final AABB bounds;
+    private final AABB sweep;
+    private final Vec3 pivot;
+    private final Direction normal;
 
-    private NativeTurntableVisual(List<Cell> cells, AABB bounds) {
+    private NativeTurntableVisual(List<Cell> cells, AABB bounds, Vec3 pivot, Direction normal) {
         this.cells = List.copyOf(cells);
-        this.bounds = bounds;
+        this.pivot = pivot;
+        this.normal = normal;
+        double[] reach = {Math.max(Math.abs(bounds.minX - pivot.x), Math.abs(bounds.maxX - pivot.x)),
+                Math.max(Math.abs(bounds.minY - pivot.y), Math.abs(bounds.maxY - pivot.y)),
+                Math.max(Math.abs(bounds.minZ - pivot.z), Math.abs(bounds.maxZ - pivot.z))};
+        int axis = normal.getAxis().ordinal();
+        double radius = Math.hypot(reach[(axis + 1) % 3], reach[(axis + 2) % 3]);
+        sweep = new AABB(axis == 0 ? bounds.minX : pivot.x - radius,
+                axis == 1 ? bounds.minY : pivot.y - radius, axis == 2 ? bounds.minZ : pivot.z - radius,
+                axis == 0 ? bounds.maxX : pivot.x + radius, axis == 1 ? bounds.maxY : pivot.y + radius,
+                axis == 2 ? bounds.maxZ : pivot.z + radius);
     }
 
     List<Cell> cells() { return cells; }
-    AABB bounds() { return bounds; }
+    AABB bounds() { return sweep; }
+    Vec3 pivot() { return pivot; }
+    Direction normal() { return normal; }
 
     static CompoundTag project(NativeTurntableCapture capture, BlockPos pos, HolderLookup.Provider registries) {
         var list = new ListTag();
@@ -57,12 +73,20 @@ final class NativeTurntableVisual {
         }
         var visual = new CompoundTag();
         visual.put("Cells", list);
+        var surface = capture.surface();
+        visual.putInt("Normal", surface.normal.get3DDataValue());
+        visual.putDouble("PivotX", surface.geometry.pivotX - pos.getX());
+        visual.putDouble("PivotY", surface.geometry.pivotY - pos.getY());
+        visual.putDouble("PivotZ", surface.geometry.pivotZ - pos.getZ());
         if (visual.sizeInBytes() > MAX_BYTES) throw new IllegalArgumentException("Turntable public appearance limit");
         return visual;
     }
 
     static NativeTurntableVisual read(CompoundTag tag, HolderLookup.Provider registries) {
-        if (!tag.getAllKeys().equals(Set.of("Cells")) || !(tag.get("Cells") instanceof ListTag list)
+        if (!tag.getAllKeys().equals(Set.of("Cells", "Normal", "PivotX", "PivotY", "PivotZ"))
+                || !tag.contains("Normal", Tag.TAG_INT) || tag.getInt("Normal") < 0 || tag.getInt("Normal") > 5
+                || !pivotField(tag, "PivotX") || !pivotField(tag, "PivotY") || !pivotField(tag, "PivotZ")
+                || !(tag.get("Cells") instanceof ListTag list)
                 || list.size() > MAX_CELLS || tag.sizeInBytes() > MAX_BYTES
                 || !list.isEmpty() && list.getElementType() != Tag.TAG_COMPOUND) {
             throw new IllegalArgumentException("Malformed Turntable appearance");
@@ -91,6 +115,12 @@ final class NativeTurntableVisual {
             var volume = new AABB(offset);
             bounds = bounds == null ? volume : bounds.minmax(volume);
         }
-        return new NativeTurntableVisual(cells, bounds == null ? new AABB(BlockPos.ZERO) : bounds);
+        var pivot = new Vec3(tag.getDouble("PivotX"), tag.getDouble("PivotY"), tag.getDouble("PivotZ"));
+        return new NativeTurntableVisual(cells, bounds == null ? new AABB(BlockPos.ZERO) : bounds,
+                pivot, Direction.from3DDataValue(tag.getInt("Normal")));
+    }
+
+    private static boolean pivotField(CompoundTag tag, String name) {
+        return tag.contains(name, Tag.TAG_DOUBLE) && Math.abs(tag.getDouble(name)) <= 64;
     }
 }

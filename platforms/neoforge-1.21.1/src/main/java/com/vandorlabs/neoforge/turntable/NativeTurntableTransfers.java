@@ -90,7 +90,7 @@ public final class NativeTurntableTransfers {
     static NativeCellTransactions.Request prepare(NativeTurntableEntity root, ServerPlayer actor, boolean restoring, int quarter) {
         var world = actor.serverLevel();
         if (!root.installed(world) || !com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(actor, root)
-                || busy(world, root)) {
+                || busy(world, root) || root.moving()) {
             throw new IllegalArgumentException("The Turntable controller is unavailable or busy");
         }
         if (restoring != (root.capture() != null)) {
@@ -105,7 +105,10 @@ public final class NativeTurntableTransfers {
 
         var rootBefore = root.saveWithFullMetadata(world.registryAccess());
         var rootAfter = rootBefore.copy();
-        if (restoring) rootAfter.remove(NativeTurntableEntity.CAPTURE);
+        if (restoring) {
+            rootAfter.remove(NativeTurntableEntity.CAPTURE);
+            rootAfter.putDouble(NativeTurntableEntity.ANGLE, 0);
+        }
         else {
             NativeTurntableVisual.project(capture, pos, world.registryAccess());
             rootAfter.put(NativeTurntableEntity.CAPTURE, capture.save());
@@ -178,6 +181,10 @@ public final class NativeTurntableTransfers {
         }
         var capture = NativeTurntableCapture.read(registries, owned.getCompound(NativeTurntableEntity.CAPTURE), header.root());
         owned.remove(NativeTurntableEntity.CAPTURE);
+        if (restoring && unowned.contains(NativeTurntableEntity.ANGLE, Tag.TAG_DOUBLE)
+                && unowned.getDouble(NativeTurntableEntity.ANGLE) == 0) {
+            owned.putDouble(NativeTurntableEntity.ANGLE, 0);
+        }
         if (!owned.equals(unowned) || !capture.surface().cells.contains(header.root().relative(original.state.getValue(NativeTurntableBlock.FACING)))) {
             throw new IllegalArgumentException("Turntable controller fields or mounting changed");
         }
@@ -301,6 +308,10 @@ public final class NativeTurntableTransfers {
 
     private static CompoundTag normalize(CompoundTag raw) {
         var canonical = raw.copy();
+        if (canonical.getString("id").equals(NativeTurntableBindings.ID.toString())) {
+            if (!canonical.contains(NativeTurntableEntity.ANGLE)) canonical.putDouble(NativeTurntableEntity.ANGLE, 0);
+            if (!canonical.contains(NativeTurntableEntity.TARGET)) canonical.putInt(NativeTurntableEntity.TARGET, -1);
+        }
         if (canonical.contains("keepPacked", Tag.TAG_BYTE) && !canonical.getBoolean("keepPacked")) canonical.remove("keepPacked");
         if (canonical.contains("NeoForgeData", Tag.TAG_COMPOUND) && canonical.getCompound("NeoForgeData").isEmpty()) {
             canonical.remove("NeoForgeData");

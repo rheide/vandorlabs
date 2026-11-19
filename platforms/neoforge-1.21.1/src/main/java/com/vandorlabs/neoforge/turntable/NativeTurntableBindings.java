@@ -47,6 +47,10 @@ public final class NativeTurntableBindings {
         });
     }
 
+    @SubscribeEvent public static void packets(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
+        if (Boolean.getBoolean("vandorlabs.turntableControllers")) NativeTurntableAnglePayload.register(event);
+    }
+
     static boolean open(Player player, Level world, BlockPos pos) {
         if (menu == null || !world.hasChunkAt(pos) || !(world.getBlockEntity(pos) instanceof NativeTurntableEntity tile)
                 || !tile.available() || !NativeConfigurationAccess.canEditDialog(player, tile)) return false;

@@ -16,6 +16,8 @@ import org.spongepowered.asm.mixin.injection.At;
 public interface NativeRampEntityCollisionMixin {
     @ModifyReturnValue(method="getEntityCollisions",at=@At("RETURN"),require=1)
     private List<VoxelShape> vandorlabs$recentSupport(List<VoxelShape> original,Entity entity,AABB query){
-        return (Object)this instanceof Level level?NativeRampRiders.recentEntityCollisions(level,entity,original):original;
+        if (!((Object)this instanceof Level level)) return original;
+        var withSupports = NativeRampRiders.recentEntityCollisions(level, entity, original);
+        return com.vandorlabs.neoforge.turntable.NativeTurntableCollisions.append(level, query, withSupports);
     }
 }

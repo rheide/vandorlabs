@@ -54,6 +54,14 @@ final class NativeTurntableBlock extends BaseEntityBlock {
     @Override protected RenderShape getRenderShape(BlockState state) { return RenderShape.MODEL; }
     @Override public BlockEntity newBlockEntity(BlockPos pos, BlockState state) { return new NativeTurntableEntity(pos, state); }
 
+    @Override public <T extends BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(
+            Level level, BlockState state, net.minecraft.world.level.block.entity.BlockEntityType<T> type) {
+        return level instanceof net.minecraft.server.level.ServerLevel
+                ? createTickerHelper(type, NativeTurntableBindings.entity,
+                (world, pos, placed, owner) -> NativeTurntableEntity.tick((net.minecraft.server.level.ServerLevel) world, owner))
+                : null;
+    }
+
     @Override protected InteractionResult useWithoutItem(BlockState state, Level world, BlockPos pos,
                                                          Player player, BlockHitResult hit) {
         return NativeTurntableBindings.open(player, world, pos) ? InteractionResult.sidedSuccess(world.isClientSide)

@@ -30,6 +30,19 @@ public final class TurntableGeometryTest {
                     for(int axis=0;axis<3;axis++)near(target[axis],Math.round(rotated[axis]+pivot[axis]-.5));
                 }
             }
+            TurntableCollisionGeometry.Box cube=new TurntableCollisionGeometry.Box(-.5,-.5,-.5,.5,.5,.5);
+            TurntableCollisionGeometry.Box pivotObstacle=new TurntableCollisionGeometry.Box(-.1,-.1,-.1,.1,.1,.1);
+            if(!TurntableCollisionGeometry.intersects(cube,0,0,0,face,45,pivotObstacle)
+                    || TurntableCollisionGeometry.strips(cube,0,0,0,face,45,pivotObstacle).isEmpty()){
+                throw new AssertionError("Fractional rotation misses its pivot cube");
+            }
+            double[] touch=face.point(0,0,.7);
+            TurntableCollisionGeometry.Box tangent=new TurntableCollisionGeometry.Box(touch[0]-.2,touch[1]-.2,touch[2]-.2,
+                    touch[0]+.2,touch[1]+.2,touch[2]+.2);
+            if(TurntableCollisionGeometry.intersects(cube,0,0,0,face,45,tangent)){
+                throw new AssertionError("Hinge-axis face contact blocks rotation");
+            }
+            checks+=3;
             double[] world=face.point(-12,9,5);near(face.u((int)world[0],(int)world[1],(int)world[2]),-12);near(face.v((int)world[0],(int)world[1],(int)world[2]),9);near(face.plane((int)world[0],(int)world[1],(int)world[2]),5);
         }
         for(int size=1;size<=32;size++){if(!TurntableGeometry.square(-20,8,-21+size,7+size,size*size))throw new AssertionError();if(TurntableGeometry.square(0,0,size-1,size-1,size*size-1))throw new AssertionError();}
