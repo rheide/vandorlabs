@@ -31,7 +31,7 @@ public final class OpeningFluids {
         EnumFacing facing=state.getValue(BlockVandorDoor.FACING);Vec3d normal=new Vec3d(facing.getDirectionVec());TileEntitySpaceDoor door=tile instanceof TileEntitySpaceDoor?(TileEntitySpaceDoor)tile:null;
         double center=normal.dotProduct(new Vec3d(.5,.5,.5))+(door==null||door.isSliding()?0:5.24/16D)+(door==null?0:door.positionOffset());
         if(door instanceof TileEntityLargeProgrammableDoor&&((TileEntityLargeProgrammableDoor)door).isHorizontal()){
-            double origin=facing.getAxisDirection()==EnumFacing.AxisDirection.NEGATIVE?1:0;
+            double origin=facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:0;
             return new double[]{0,-1,0,center-origin-1D/16,center-origin+1D/16};
         }
         return new double[]{normal.x,0,normal.z,center-1D/16,center+1D/16};
