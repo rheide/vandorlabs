@@ -8,7 +8,12 @@ import net.minecraft.nbt.*;
 
 /** Typed setting children only. Inventories, private item components and capability envelopes remain exact. */
 final class NativeCopyChannels {
-    static NativeRawCell increment(NativeRawCell source,int delta){ChannelRange.requireIncrement(delta);if(delta==0||!source.hasTile()||!net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(source.state.getBlock()).getNamespace().equals("vandorlabs"))return source;var raw=source.tile();tile(raw,delta,0);if(source.state.getBlock() instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableBlock){var channels=raw.getIntArray("NavigationChannels");for(int i=0;i<channels.length;i++)channels[i]=ChannelRange.shift(channels[i],delta);raw.putIntArray("NavigationChannels",channels);}return new NativeRawCell(source.pos,source.state,raw,2*1024*1024);}
+    static NativeRawCell increment(NativeRawCell source,int delta){ChannelRange.requireIncrement(delta);if(delta==0||!source.hasTile()||!net.minecraft.core.registries.BuiltInRegistries.BLOCK.getKey(source.state.getBlock()).getNamespace().equals("vandorlabs"))return source;var raw=source.tile();tile(raw,delta,0);if(source.state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock)shiftBank(raw,"TransmittedChannels",delta);if(source.state.getBlock() instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableBlock){shiftBank(raw,"NavigationChannels",delta);}return new NativeRawCell(source.pos,source.state,raw,2*1024*1024);}
+    private static void shiftBank(CompoundTag raw,String key,int delta){
+        var channels=raw.getIntArray(key);
+        for(int i=0;i<channels.length;i++)channels[i]=ChannelRange.shift(channels[i],delta);
+        raw.putIntArray(key,channels);
+    }
     private static void fields(CompoundTag raw,int delta){CopyChannelFields.shift(new com.vandorlabs.neoforge.ModernHousingTags(raw),delta);}
     private static void tile(CompoundTag raw,int delta,int depth){
         if(depth>64)throw new IllegalArgumentException("Nested channel data bound");fields(raw,delta);

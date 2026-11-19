@@ -26,10 +26,14 @@ public final class NativeCopyMaterials {
     }
     public static List<Need> prepare(ServerLevel level,List<NativeRawCell> source,List<BlockEntity> staged,boolean creative){
         if(source.size()!=staged.size()||source.size()>32768)throw new IllegalArgumentException("Construction cost cell count");
-        if(creative)return List.of();var needs=new ArrayList<Need>();
+        if(creative)return List.of();var needs=new ArrayList<Need>();var observerMatter=NativeCopyObservers.validate(source);
         for(int cell=0;cell<source.size();cell++){
             var saved=source.get(cell);var state=saved.state;var tile=staged.get(cell);var raw=saved.tile();
             if(raw!=null&&raw.contains("LootTable"))throw new IllegalArgumentException("Open loot containers before Survival copying");
+            if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartBlock){
+                if(observerMatter.contains(saved.pos))add(needs,new ItemStack(com.vandorlabs.neoforge.navigation.observer.NativeObserverFormation.matter()),1,false);
+                continue;
+            }
             var item=state.getBlock().asItem();if(item==Items.AIR)throw new IllegalArgumentException("Block has no obtainable material item");
             int count=1;if((state.getBlock() instanceof DoorBlock||state.getBlock() instanceof DoublePlantBlock)&&state.getValue(BlockStateProperties.DOUBLE_BLOCK_HALF)==DoubleBlockHalf.UPPER)count=0;
             if(state.getBlock() instanceof BedBlock&&state.getValue(BlockStateProperties.BED_PART)==BedPart.HEAD)count=0;
