@@ -93,7 +93,9 @@ final class NativeDriveRenderer {
             poses.translate(-pivot.getX(), -pivot.getY(), -pivot.getZ());
             NativeBuilderRenderer.orient(poses, tile.facing(), drive.width, drive.depth);
             var out = buffers.getBuffer(NativeBuilderModelCache.LAYER);
-            if(drive==NativeDriveDesign.OCULUS){
+            if(drive==NativeDriveDesign.VECTOR_FOLD){
+                mesh.get(active?"active/static":"static").emit(poses.last(),out,light,overlay);
+            }else if(drive==NativeDriveDesign.OCULUS){
                 int activity=active?tile.driveActivity():0;
                 double progress=observe(tile,time);
                 int appearance=progress>0&&progress<1?1:activity;

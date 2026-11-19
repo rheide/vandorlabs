@@ -69,8 +69,8 @@ automatically. A full or unavailable destination leaves the output in the tower.
 
 Data Chips can be inserted and retrieved through their physical mount or the
 dialog. All three default Core designs work without a chip. The Master
-Catalog also adds Sentinel Array, Survey Dish, Maxwell, Seyr Meridian and Oculus Cores
-and the full-block Ramp Controller. A Ramp Controller consumes one Programmable
+Catalog also adds Sentinel Array, Survey Dish, Maxwell, Seyr Meridian, Oculus and
+Vector Fold Array Cores and the full-block Ramp Controller. A Ramp Controller consumes one Programmable
 Matter Block and **8,000 RF** at **20 RF per tick**.
 
 ## Assembly Press operation
@@ -120,6 +120,15 @@ brightness follows the effective output from 0 to 15. The Maxwell also offers
 exhaust intensity and a minimum exhaust level in Signal brightness mode.
 Right-click a setting to cycle backwards. The optional Data Chip mount retains
 one chip for retrieval. The drive effects are cosmetic.
+
+### Vector Fold Array
+
+Follow the [Vector Fold Array build guide](multiblocks/vector-fold-array/README.md)
+to assemble its two-block-high frame. The Configurizer exposes separate display
+and keyboard artwork and a Redstone receiver. With activation enabled, any
+loaded physical input or active configured channel switches the Array to its
+authored active appearance. Its optional Data Chip stays in the mount until
+removed.
 
 ## Dismantling and ownership
 

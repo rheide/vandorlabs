@@ -45,17 +45,18 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
         previous.clear();
         picker = null;
         channelField = null;
-        int tabWidth = (imageWidth - 24) / TABS.length;
-        for (int i = 0; i < TABS.length; i++) {
-            int next = i;
+        int[] pages=menu.tile.drive().engine()?new int[]{0,1,2,3}:new int[]{0,1,3};
+        int tabWidth = (imageWidth - 24) / pages.length;
+        for (int i = 0; i < pages.length; i++) {
+            int next = pages[i];
             var tab = new NativeDialogTabButton(leftPos + 12 + i * tabWidth, topPos + 30, tabWidth, 20,
-                    Component.literal(TABS[i]), button -> {
+                    Component.literal(TABS[next]), button -> {
                         if (send()) {
                             page = next;
                             rebuild();
                         }
                     });
-            tab.active = i != page;
+            tab.active = next != page;
             addRenderableWidget(tab);
         }
         if (page < 2) {
@@ -78,6 +79,7 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
             addRenderableWidget(channelField);
             option(99, settings.redstone() ? "Activation Redstone" : "Activation Always", direction ->
                     controls(!settings.redstone(), settings.inverted(), settings.levels(), settings.particles(), settings.threshold()));
+            if(!menu.tile.drive().engine())return;
             option(122, settings.inverted() ? "Engine Redstone Off" : "Engine Redstone On", direction ->
                     controls(settings.redstone(), !settings.inverted(), settings.levels(), settings.particles(), settings.threshold()));
             option(145, settings.levels() ? "Brightness Signal" : "Brightness On/Off", direction ->

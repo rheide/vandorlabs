@@ -11,6 +11,7 @@ IDS=('synthesis_tower','assembly_press','enclosed_gantry')
 DRIVES={
     'longburn_drive':('drive_body','drive_lights','active/drive_body','active/drive_lights'),
     'meridian_core':('static','active/drive_body','active/drive_lights'),
+    'vector_fold_array':('static','active/static'),
     'oculus_drive':tuple(mode+'/parts/'+part for mode in ('standby','charging','active')
                          for part in ('static','field','shutter_upper','shutter_lower')),
 }

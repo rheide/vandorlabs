@@ -47,7 +47,7 @@ def main():
         path=(OUT.parent/dependency['owner']/relative) if dependency else OUT/relative
         assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
         if dependency:assert not (OUT/relative).exists() and dependency['sha256']==digest
-    assert not any(word in str(path.relative_to(OUT)) for path in OUT.rglob('*') for word in ('radar','navigation','sentinel','vector_fold'))
+    assert not any(word in str(path.relative_to(OUT)) for path in OUT.rglob('*') for word in ('radar','navigation','sentinel'))
     # The native projection must refuse differing shared artwork, not silently
     # keep whichever resource happened to be copied last by Gradle.
     with tempfile.TemporaryDirectory(prefix='vandor-builder-shared-') as directory:

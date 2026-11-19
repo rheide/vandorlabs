@@ -115,13 +115,15 @@ public final class NativeBuilderRenderChecks {
                 var core=NativeBuilderBindings.CORES.get(drive.id);
                 var tile=new NativeBuilderEntity(BlockPos.ZERO,core.defaultBlockState().setValue(NativeBuilderCoreBlock.FORMED,true));
                 var update=tile.getUpdateTag(registries);
-                update.put("Drive",new NativeDriveSettings(true,false,true,0,8,-2,-2,false,1).save());
+                update.put("Drive",new NativeDriveSettings(true,false,drive.engine(),0,8,-2,-2,false,1).save());
                 long[] off=drawDrive(method,tile,update,0,registries);
                 long[] dim=drawDrive(method,tile,update,7,registries);
                 long[] full=drawDrive(method,tile,update,15,registries);
                 need(off[0]>0&&dim[0]>0&&full[0]>0,"authored idle and active drive parts emit "+drive.id);
-                need(dim[1]==full[1]&&dim[1]>0&&dim[2]>0&&dim[2]<full[2],"signal scales the same active lights "+drive.id);
-                need(drive.exhaust?off[1]>0&&off[2]<full[2]:off[1]==0,"distinct authored standby lights "+drive.id);
+                if(drive.engine()){
+                    need(dim[1]==full[1]&&dim[1]>0&&dim[2]>0&&dim[2]<full[2],"signal scales the same active lights "+drive.id);
+                    need(drive.exhaust?off[1]>0&&off[2]<full[2]:off[1]==0,"distinct authored standby lights "+drive.id);
+                }else need(off[1]==0&&full[1]==0&&off[3]!=full[3],"Vector Fold uses its authored idle and active atlas art");
             }
             var shutters=new com.vandorlabs.drives.DriveShutterPose();
             need(shutters.sample(false,0)==0&&shutters.sample(true,0)==0,"closed shutters initialize and target does not jump");
@@ -137,13 +139,14 @@ public final class NativeBuilderRenderChecks {
         publicData.putInt("DriveLevel",strength);
         tile.handleUpdateTag(publicData,registries);
         need(!tile.inert()&&tile.driveLevel()==strength,"valid public drive level for rendering");
-        long[] counts=new long[3];int[] color={0};
+        long[] counts=new long[4];int[] color={0};
         var vertexType=com.mojang.blaze3d.vertex.VertexConsumer.class;
         var target=(com.mojang.blaze3d.vertex.VertexConsumer)java.lang.reflect.Proxy.newProxyInstance(
                 vertexType.getClassLoader(),new Class<?>[]{vertexType},(proxy,call,args)->{
             if(call.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,call,args);
             switch(call.getName()){
                 case "addVertex"->counts[0]++;
+                case "setUv"->counts[3]+=Float.floatToRawIntBits(((Number)args[0]).floatValue());
                 case "setColor"->color[0]=((Number)args[0]).intValue()+((Number)args[1]).intValue()+((Number)args[2]).intValue();
                 case "setUv2"->{if(((Number)args[0]).intValue()==240&&((Number)args[1]).intValue()==240){counts[1]++;counts[2]+=color[0];}}
                 default->{}

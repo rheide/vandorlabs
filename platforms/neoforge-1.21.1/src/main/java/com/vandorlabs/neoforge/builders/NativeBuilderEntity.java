@@ -28,11 +28,13 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
  public int driveLevel(){
   if(drive()==null||!formed())return 0;
   if(publicOnly)return publicDriveLevel;
-  return inputReady?com.vandorlabs.drives.DriveControlPolicy.activation(driveSettings.redstone(),driveSettings.inverted(),Math.max(drivePhysical,channelLevel)):0;
+  if(!inputReady)return 0;
+  int signal=com.vandorlabs.drives.DriveControlPolicy.activation(driveSettings.redstone(),driveSettings.inverted(),Math.max(drivePhysical,channelLevel));
+  return drive()==NativeDriveDesign.VECTOR_FOLD&&signal>0?15:signal;
  }
  public boolean configureDrive(NativeDriveSettings settings,ChannelList bank){
   var drive=drive();
-  if(!available()||!formed()||drive==null||settings==null||bank==null||!drive.exhaust&&settings.particles()!=0)return false;
+  if(!available()||!formed()||drive==null||settings==null||bank==null||!drive.accepts(settings))return false;
   driveSettings=settings;channels=bank;NativeRedstoneChannels.channelsChanged(this);samplePower();changed();publishVisual();
   return true;
  }
@@ -94,6 +96,7 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
   int parsedActivity=drive==NativeDriveDesign.OCULUS?activity(tag):2;
   NativeDriveSettings parsedDrive=drive==null?null:tag.contains("Drive")
           ?NativeDriveSettings.read(tag.getCompound("Drive"),drive.exhaust):NativeDriveSettings.defaults(drive.exhaust);
+  if(drive!=null&&!drive.accepts(parsedDrive))throw new IllegalArgumentException("Unsupported drive control");
   long[] sequences=tag.contains("BatterySequences")?tag.getLongArray("BatterySequences"):new long[4];if(sequences.length!=4||tag.contains("BatterySequences")&&!tag.contains("BatterySequences",Tag.TAG_LONG_ARRAY))throw new IllegalArgumentException("Builder battery sequences");for(long sequence:sequences)if(sequence<0)throw new IllegalArgumentException("Builder battery sequence");var stagedWork=new NativeSynthesisRuntime(this);stagedWork.read(tag.getCompound("Synthesis"),r);var next=NativeBuilderData.read(tag.getCompound("Inventory"),r,design().id(),stagedWork.digitizing());if(stagedWork.digitizing()&&!next[1].isEmpty())throw new IllegalArgumentException("Digitize output ownership");if(synthesis()&&tag.getCompound("Synthesis").getInt("Building")==NativeSynthesisRuntime.DYNAMIC&&!next[1].isEmpty()&&(next[1].getCount()!=1||!NativeBlockRecipeData.eligible(next[1])))throw new IllegalArgumentException("Dynamic output ownership");int x=tag.getInt("ConstructorCoreX"),z=tag.getInt("ConstructorCoreZ"),mode=tag.getInt("Activation");if(x!=0&&x!=design().width()-1||z!=0&&z!=design().depth()-1||mode<0||mode>2)throw new IllegalArgumentException("Builder layout snapshot");var nextChannels=ChannelList.of(tag.getIntArray("Channels"));
   try(var guard=com.vandorlabs.neoforge.NativePlatformComponents.guardLoad(this)){super.loadAdditional(original,r);guard.requireSuccessful();}
   runtime.read(tag.getCompound("Synthesis"),r);driveSettings=parsedDrive;drivePhysical=0;driveActivity=parsedActivity;items=next;runtime.restoreInventory(r);publicOnly=false;publicOriginal=null;publicRecipe=publicTemplate=ItemStack.EMPTY;batterySequences=sequences.clone();cornerX=x;cornerZ=z;activation=mode;channels=nextChannels;if(tag.hasUUID("BuilderKey"))key=tag.getUUID("BuilderKey");inert=false;retained=original;for(var k:java.util.List.of("id","x","y","z","BuilderKey","ConstructorCoreX","ConstructorCoreZ","Activation","Channels","Inventory","Synthesis","BuilderPublic","BuilderInert","BatterySequences","Working","PortConnections","Drive"))retained.remove(k);com.vandorlabs.neoforge.NativePlatformComponents.forgetLoadedFields(retained);
@@ -105,6 +108,7 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
  private void readPublic(CompoundTag tag,HolderLookup.Provider r){cachedVisual=null;if(level instanceof ServerLevel){inert=true;retained=tag.copy();items=emptyItems();publicOnly=false;return;}publicOnly=true;publicOriginal=tag.copy();try{if(tag.sizeInBytes()>64*1024)throw new IllegalArgumentException("Builder public bound");if(tag.hasUUID("BuilderKey"))key=tag.getUUID("BuilderKey");cornerX=tag.getInt("ConstructorCoreX");cornerZ=tag.getInt("ConstructorCoreZ");if(cornerX!=0&&cornerX!=design().width()-1||cornerZ!=0&&cornerZ!=design().depth()-1)throw new IllegalArgumentException("Builder public pivot");activation=Math.max(0,Math.min(2,tag.getInt("Activation")));channels=ChannelList.of(tag.getIntArray("Channels"));
  if(drive()!=null){
   driveSettings=NativeDriveSettings.read(tag.getCompound("Drive"),drive().exhaust);
+  if(!drive().accepts(driveSettings))throw new IllegalArgumentException("Unsupported public drive control");
   publicDriveLevel=tag.getInt("DriveLevel");driveActivity=drive()==NativeDriveDesign.OCULUS?activity(tag):2;
   if(!tag.contains("DriveLevel",Tag.TAG_INT)||publicDriveLevel<0||publicDriveLevel>15)throw new IllegalArgumentException("Drive visual level");
  }

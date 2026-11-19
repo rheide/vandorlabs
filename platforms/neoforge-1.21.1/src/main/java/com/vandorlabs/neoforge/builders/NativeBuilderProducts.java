@@ -8,7 +8,7 @@ import net.minecraft.world.item.ItemStack;
 public final class NativeBuilderProducts {
  public static final String[] IDS={"synthesis_tower","assembly_press","enclosed_gantry","standalone_antenna","standalone_dish"};
  public static final String[] NAMES={"Synthesis Tower","Assembly Press","Enclosed Gantry","Sentinel Array Core","Survey Dish Core"};
- public static final int RAMP=6,LONGBURN=7,MERIDIAN=8,OCULUS=9,MAX_TOWER_PRODUCT=OCULUS;
+ public static final int RAMP=6,LONGBURN=7,MERIDIAN=8,OCULUS=9,VECTOR_FOLD=10,MAX_TOWER_PRODUCT=VECTOR_FOLD;
  public static final String RAMP_BLUEPRINT="programmable_ramp";
  public static boolean rampAvailable(){return com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM!=null;}
  public static String towerCore(int index){
@@ -16,6 +16,7 @@ public final class NativeBuilderProducts {
   if(index==LONGBURN)return NativeDriveDesign.LONGBURN.id;
   if(index==MERIDIAN)return NativeDriveDesign.MERIDIAN.id;
   if(index==OCULUS)return NativeDriveDesign.OCULUS.id;
+  if(index==VECTOR_FOLD)return NativeDriveDesign.VECTOR_FOLD.id;
   return null;
  }
  public static String towerBlueprint(int index){

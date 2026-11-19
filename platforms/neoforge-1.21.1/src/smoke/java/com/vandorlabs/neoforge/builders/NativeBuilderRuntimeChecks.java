@@ -100,7 +100,7 @@ public final class NativeBuilderRuntimeChecks {
   }
   var menu=new NativeDriveMenu(NativeDriveBindings.MENU,77,owner,ROOT);
   actor.containerMenu=menu;
-  var config=new NativeDriveSettings(true,false,true,drive.exhaust?2:0,8,-1,-2,false,2);
+  var config=new NativeDriveSettings(true,false,drive.engine(),drive.exhaust?2:0,8,-1,-2,false,2);
   ChannelList bank=ChannelList.of(4197);
   var edit=new NativeDriveBindings.Edit(77,ROOT,config,bank);
   var bytes=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),world.registryAccess());
@@ -116,10 +116,11 @@ public final class NativeBuilderRuntimeChecks {
   world.setBlock(front,Blocks.REDSTONE_BLOCK.defaultBlockState(),3);
   need(owner.driveLevel()==15,"loaded direct neighbor signal turns the standalone drive on");
   var inverted=new NativeDriveSettings(true,true,true,config.particles(),8,-1,-2,false,2);
-  need(NativeDriveBindings.apply(actor,new NativeDriveBindings.Edit(77,ROOT,inverted,bank))&&owner.driveLevel()==0,
-        "Engine Redstone Off inverts an actual high input");
+  boolean applied=NativeDriveBindings.apply(actor,new NativeDriveBindings.Edit(77,ROOT,inverted,bank));
+  need(drive.engine()?applied&&owner.driveLevel()==0:!applied&&owner.driveLevel()==15,
+        "Engine inversion uses the actual high input and the Vector Fold refuses engine controls");
   world.setBlock(front,Blocks.AIR.defaultBlockState(),3);
-  need(owner.driveLevel()==15,"removing physical input restores the inverted no-signal level");
+  need(owner.driveLevel()==(drive.engine()?15:0),"removing physical input restores the configured no-signal state");
   var sourcePos=ROOT.below(3);
   world.setBlock(sourcePos,NativeRackBindings.BLOCK.defaultBlockState(),3);
   var tile=world.getBlockEntity(sourcePos);
@@ -133,17 +134,19 @@ public final class NativeBuilderRuntimeChecks {
   };
   com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(source);
   com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.flush(world);
-  need(owner.driveLevel()==8,"actual channel network combines inverted analogue signal");
+  int expectedLevel=drive.engine()?8:15;
+  var expectedConfig=drive.engine()?inverted:config;
+  need(owner.driveLevel()==expectedLevel,"channel network uses inverted analogue or Array boolean activation");
   owner.setItem(3,com.vandorlabs.neoforge.credentials.NativeCredentialItems.dataChip(2));
   var saved=owner.saveWithoutMetadata(world.registryAccess());
   var copy=new NativeBuilderEntity(ROOT,owner.getBlockState());
   copy.loadWithComponents(saved,world.registryAccess());
-  need(!copy.inert()&&copy.driveSettings().equals(inverted)&&copy.channels().equals(bank)
+  need(!copy.inert()&&copy.driveSettings().equals(expectedConfig)&&copy.channels().equals(bank)
        &&copy.driveActivity()==owner.driveActivity()&&ItemStack.matches(owner.getItem(3),copy.getItem(3))&&NativeBuilderData.sameSnapshots(saved,copy.saveWithoutMetadata(world.registryAccess())),
        "exact drive settings, channels and owned chip survive reload");
   var publicCopy=new NativeBuilderEntity(ROOT,owner.getBlockState());
   publicCopy.handleUpdateTag(owner.getUpdateTag(world.registryAccess()),world.registryAccess());
-  need(!publicCopy.inert()&&publicCopy.driveLevel()==8&&publicCopy.driveSettings().equals(inverted),"client receives exact runtime appearance and settings");
+  need(!publicCopy.inert()&&publicCopy.driveLevel()==expectedLevel&&publicCopy.driveSettings().equals(expectedConfig),"client receives exact runtime appearance and settings");
   var bad=saved.copy();bad.getCompound("Drive").putInt("Threshold",16);
   copy.loadWithComponents(bad,world.registryAccess());
   need(copy.inert()&&bad.equals(copy.saveWithoutMetadata(world.registryAccess())),"malformed drive preserves exact original recovery data");
@@ -187,7 +190,7 @@ public final class NativeBuilderRuntimeChecks {
   need(!publicCopy.inert()&&ItemStack.matches(publicCopy.getItem(1),expected),"drive core public representation");
   owner.removeItem(1,1);
   if(recipe<NativeBuilderProducts.MAX_TOWER_PRODUCT){recipe++;beginDriveCore(owner);return;}
-  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridianOculus asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
+  System.out.println("[vandorlabs][builder-runtime] PASS LongburnMeridianOculusVectorFold asyncOwnership/physicalAndAnalogRedstone/staleMenu/exactConfig/opaqueFailure/oneChip/TowerCatalog16000RF checks="+checks);
   var server=world.getServer();world=null;server.halt(false);
  }
  private static void beginDriveCore(NativeBuilderEntity owner){

@@ -32,20 +32,21 @@ import net.neoforged.neoforge.network.PacketDistributor;
 final class NativeDriveClientFixture {
     private static UUID actor;
     private static int serverStep;
+    private static final int TOWER=NativeDriveDesign.SUPPORTED.size(), TOWER_ACTION=TOWER*4;
     private static final ChannelList BANK = ChannelList.of(317, 318);
 
     private static BlockPos root(int drive) { return NativeBuilderClientFixture.ROOT.east(drive * 8); }
-    private static BlockPos ack(int stage) { return new BlockPos(-2, 95, stage - 2); }
+    private static BlockPos ack(int stage) { return root(Math.min(stage/4+1,TOWER)).offset(-3,-1,3+stage%4); }
 
     static void login(ServerPlayer player) {
         actor = player.getUUID();
         var world = player.serverLevel();
-        for (int x = -3; x <= 29; x++) for (int z = -5; z <= 5; z++) {
+        for (int x = -3; x <= 37; x++) for (int z = -5; z <= 5; z++) {
             world.setBlock(new BlockPos(x, 95, z), Blocks.STONE.defaultBlockState(), 3);
             for (int y = 96; y <= 100; y++) world.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
         }
         for (int i = 0; i <= NativeDriveDesign.SUPPORTED.size(); i++) {
-            String id = i == 3 ? "synthesis_tower" : NativeDriveDesign.SUPPORTED.get(i).id;
+            String id = i == TOWER ? "synthesis_tower" : NativeDriveDesign.SUPPORTED.get(i).id;
             var root = root(i);
             var core = NativeBuilderBindings.CORES.get(id);
             var design = core.design;
@@ -64,7 +65,7 @@ final class NativeDriveClientFixture {
 
     private static Vec3 aim(int machine, int action) {
         var root = root(machine);
-        if(machine==3)return new Vec3(root.getX()+(action==0?.5:2.8),root.getY()+(action==0?.5:.95),0);
+        if(machine==TOWER)return new Vec3(root.getX()+(action==0?.5:2.8),root.getY()+(action==0?.5:.95),0);
         var drive = NativeDriveDesign.SUPPORTED.get(machine);
         return switch (action) {
             case 0 -> new Vec3(root.getX() + .5, root.getY() + .5, 0);
@@ -74,17 +75,17 @@ final class NativeDriveClientFixture {
     }
 
     static void apply(ServerPlayer player, int operation) {
-        need(player.getUUID().equals(actor) && serverStep == operation && operation < 14, "ordered drive actor");
+        need(player.getUUID().equals(actor) && serverStep == operation && operation < TOWER_ACTION+2, "ordered drive actor");
         int machine = operation / 4;
         var tile = (NativeBuilderEntity) player.serverLevel().getBlockEntity(root(machine));
         need(tile != null && tile.formed() && tile.available() && tile.synthesisReady(), "async formation ready");
-        if(machine==3){
-            if(operation==12){
+        if(machine==TOWER){
+            if(operation==TOWER_ACTION){
                 tile.setItem(3,com.vandorlabs.neoforge.credentials.NativeChipTypes.variant("catalog"));
                 held(player,ItemStack.EMPTY,aim(machine,1));
             }else{
-                need(player.containerMenu==player.inventoryMenu&&tile.selectedDesign()==NativeBuilderProducts.OCULUS,
-                        "Tower selects Oculus from the real scrolled Catalog list");
+                need(player.containerMenu==player.inventoryMenu&&tile.selectedDesign()==NativeBuilderProducts.VECTOR_FOLD&&tile.activation()==2,
+                        "Tower selects Vector Fold and its shared activation control remains independent");
                 System.out.println("[vandorlabs][builder-client] drive-controls PASS native menus/Configurator/activity/chips/Tower wheel and drag");
             }
             player.serverLevel().setBlock(ack(operation), Blocks.EMERALD_BLOCK.defaultBlockState(), 3);
@@ -95,15 +96,15 @@ final class NativeDriveClientFixture {
         switch (operation % 4) {
             case 0 -> held(player, machine==2?new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()):ItemStack.EMPTY, aim(machine, 1));
             case 1 -> {
-                need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted() && settings.levels()
+                need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()==tile.drive().engine() && settings.levels()==tile.drive().engine()
                         && !settings.animated() && settings.speed() == 0 && settings.particles() == 0
                         && settings.threshold() == (tile.drive().exhaust ? 7 : 8) && tile.channels().equals(BANK),
                         "ordinary open sends real Drive controls and reverse cycling");
                 held(player, machine==2?ItemStack.EMPTY:new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()), aim(machine, 2));
             }
             case 2 -> {
-                need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()
-                        && tile.driveLevel() == 15 && (machine!=2||tile.driveActivity()==0), "same drive session or Oculus state click preserves configured power");
+                need(player.containerMenu == player.inventoryMenu && settings.redstone() && settings.inverted()==tile.drive().engine()
+                        && tile.driveLevel() == (tile.drive().engine()?15:0) && (machine!=2||tile.driveActivity()==0), "same drive session or Oculus state click preserves configured power");
                 held(player, NativeCredentialItems.dataChip(3), aim(machine, 3));
             }
             case 3 -> {
@@ -119,7 +120,7 @@ final class NativeDriveClientFixture {
 
     static void logout(Player player) {
         if (!player.getUUID().equals(actor)) return;
-        need(serverStep == 14, "both drive journeys complete");
+        need(serverStep == TOWER_ACTION+2, "both drive journeys complete");
         System.out.println("[vandorlabs][builder-client] logout PASS");
     }
 
@@ -141,7 +142,7 @@ final class NativeDriveClientFixture {
     @EventBusSubscriber(modid = "vandorlabs", value = Dist.CLIENT)
     public static final class ClientChecks {
         private static int step, delay;
-        private static boolean sent, disconnected, complete, scrolled;
+        private static boolean sent, disconnected, complete, scrolled, activationEdited;
 
         @SubscribeEvent public static void tick(ClientTickEvent.Post tick) {
             if (!NativeBuilderClientFixture.enabled() || !NativeBuilderClientFixture.drivesOnly() || complete) return;
@@ -153,7 +154,7 @@ final class NativeDriveClientFixture {
                 }
                 if (disconnected && mc.level == null) {
                     complete = true;
-                    System.out.println("[vandorlabs][builder-client] client PASS LongburnMeridianOculus physicalSurvival/dialogs/Configurator/mount");
+                    System.out.println("[vandorlabs][builder-client] client PASS LongburnMeridianOculusVectorFold physicalSurvival/dialogs/Configurator/mount");
                     mc.stop();
                     return;
                 }
@@ -162,7 +163,7 @@ final class NativeDriveClientFixture {
                         + mc.gameMode.getPlayerMode() + " slot " + mc.player.getInventory().selected
                         + " held " + mc.player.getMainHandItem() + " position " + mc.player.position() + " screen " + mc.screen);
                 if (step > 0 && !mc.level.getBlockState(ack(step - 1)).is(Blocks.EMERALD_BLOCK)) return;
-                if (step == 14) {
+                if (step == TOWER_ACTION+2) {
                     disconnected = true;
                     mc.level.disconnect();
                     mc.disconnect();
@@ -181,15 +182,26 @@ final class NativeDriveClientFixture {
                 }
                 if (action == 0 && (!tile.formed() || tile.transactionBlocked())) return;
                 if(action==2&&machine==2&&tile.driveActivity()!=0)return;
-                if(machine==3&&action==1){
+                if(machine==TOWER&&action==1){
                     if(!(mc.screen instanceof NativeBuilderScreen builder)
-                            ||(builder.getMenu().value(10)&1<<NativeBuilderProducts.OCULUS)==0)return;
-                    if(!scrolled){scrollToOculus(builder);scrolled=true;return;}
-                    if(builder.getMenu().value(0)!=NativeBuilderProducts.OCULUS)return;
+                            ||(builder.getMenu().value(10)&1<<NativeBuilderProducts.VECTOR_FOLD)==0)return;
+                    if(!scrolled){scrollToArray(builder);scrolled=true;return;}
+                    if(builder.getMenu().value(0)!=NativeBuilderProducts.VECTOR_FOLD)return;
+                    if(!activationEdited){
+                        var redstone=builder.control(101);
+                        need(builder.mouseClicked(redstone.getX()+4,redstone.getY()+4,0),"Tower Redstone tab");
+                        var activation=builder.control(10);
+                        need(builder.page()==1&&activation!=null&&activation.getMessage().getString().startsWith("Activation")
+                                &&builder.mouseClicked(activation.getX()+4,activation.getY()+4,1),
+                                "Redstone activation right-click remains separate from Vector recipe index 10");
+                        activationEdited=true;
+                        return;
+                    }
+                    if(builder.getMenu().value(7)!=2)return;
                     builder.onClose();
                 }else if (action == 1 || action == 2&&machine!=2) {
                     if (!(mc.screen instanceof NativeDriveScreen drive)) return;
-                    if (action == 1) edit(drive, tile.drive().exhaust);
+                    if (action == 1) edit(drive, tile.drive());
                     else {
                         click(drive, "Redstone", 0);
                         need(drive.children().stream().anyMatch(widget -> widget instanceof EditBox field && BANK.equals(ChannelList.parse(field.getValue()))),
@@ -213,33 +225,39 @@ final class NativeDriveClientFixture {
                     || mc.player.position().distanceToSqr(target.x, 96, -2.5) > .01
                     || mc.player.getLookAngle().dot(target.subtract(mc.player.getEyePosition()).normalize()) <= .9999) return false;
             var stack = mc.player.getMainHandItem();
-            return machine==3 ? stack.isEmpty() : operation == (machine==2?1:2) ? stack.is(VandorLabsBootstrap.CONFIGURIZER.get())
+            return machine==TOWER ? stack.isEmpty() : operation == (machine==2?1:2) ? stack.is(VandorLabsBootstrap.CONFIGURIZER.get())
                     : operation == 3 ? NativeCredentialItems.accepts(stack, true) : stack.isEmpty();
         }
 
-        private static void scrollToOculus(NativeBuilderScreen screen){
+        private static void scrollToArray(NativeBuilderScreen screen){
             var first=screen.control(0);
-            need(first!=null&&screen.control(NativeBuilderProducts.OCULUS)==null,"nine designs overflow the initial eight visible rows");
+            need(first!=null&&screen.control(NativeBuilderProducts.VECTOR_FOLD)==null,"ten designs overflow the initial eight visible rows");
             double startX=first.getX()+2,startY=first.getY()+2;
             double trackX=first.getX()+first.getWidth()+3,bottom=first.getY()+first.getHeight()*8-2;
-            need(screen.mouseScrolled(startX,startY,0,-1)&&screen.control(NativeBuilderProducts.OCULUS)!=null,"wheel reveals the ninth design");
+            need(screen.mouseScrolled(startX,startY,0,-1)&&screen.mouseScrolled(startX,startY,0,-1)
+                    &&screen.control(NativeBuilderProducts.VECTOR_FOLD)!=null,"wheel reveals the tenth design");
             need(screen.mouseClicked(trackX,bottom,0)&&screen.mouseDragged(trackX,startY,0,0,startY-bottom),"scrollbar drags back to the first design");
             screen.mouseReleased(trackX,startY,0);
-            need(screen.control(0)!=null&&screen.control(NativeBuilderProducts.OCULUS)==null,"scrollbar restores the top of the list");
-            need(screen.mouseScrolled(startX,startY,0,-1),"wheel works after scrollbar release");
-            var oculus=screen.control(NativeBuilderProducts.OCULUS);
-            need(oculus!=null&&screen.mouseClicked(oculus.getX()+4,oculus.getY()+4,0),"actual Oculus recipe selection click");
+            need(screen.control(0)!=null&&screen.control(NativeBuilderProducts.VECTOR_FOLD)==null,"scrollbar restores the top of the list");
+            need(screen.mouseScrolled(startX,startY,0,-1)&&screen.mouseScrolled(startX,startY,0,-1),"wheel works after scrollbar release");
+            var oculus=screen.control(NativeBuilderProducts.VECTOR_FOLD);
+            need(oculus!=null&&screen.mouseClicked(oculus.getX()+4,oculus.getY()+4,0),"actual Vector Fold recipe selection click");
         }
 
-        private static void edit(NativeDriveScreen screen, boolean exhaust) {
+        private static void edit(NativeDriveScreen screen, NativeDriveDesign design) {
             click(screen, "Animated", 0);
             click(screen, "Speed Normal", 1);
             click(screen, "Redstone", 0);
             for (var child : screen.children()) if (child instanceof EditBox box) box.setValue("317,318");
             click(screen, "Activation Always", 0);
+            if(!design.engine()){
+                need(screen.children().stream().noneMatch(w->w instanceof AbstractWidget button&&button.getMessage().getString().startsWith("Engine")),
+                        "Vector Fold exposes display and Boolean Redstone controls");
+                return;
+            }
             click(screen, "Engine Redstone On", 1);
             click(screen, "Brightness On/Off", 0);
-            if (exhaust) {
+            if (design.exhaust) {
                 click(screen, "Particles at level 8", 1);
                 click(screen, "Engine", 0);
                 click(screen, "Particles Light", 1);
