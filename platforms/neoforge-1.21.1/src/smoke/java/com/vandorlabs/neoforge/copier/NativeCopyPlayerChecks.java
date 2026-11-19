@@ -47,6 +47,7 @@ public final class NativeCopyPlayerChecks {
                     || player.getInventory().selected != 0 || !player.getMainHandItem().isEmpty()
                     || player.position().distanceToSqr(8.5, 96, 6.5) > .01
                     || !(mc.level.getBlockEntity(root) instanceof NativeCopyControllerEntity)) return;
+                if (Boolean.getBoolean("vandorlabs.copyPlayerJeiCheck") && !NativeCopyCatalogJeiChecks.check()) return;
                 CreativeModeTabs.tryRebuildTabContents(mc.level.enabledFeatures(), false, mc.level.registryAccess());
                 var tab = BuiltInRegistries.CREATIVE_MODE_TAB.get(ResourceLocation.parse("vandorlabs:vandorlabs"));
                 var item = NativeCopyBindings.BLOCK.asItem();

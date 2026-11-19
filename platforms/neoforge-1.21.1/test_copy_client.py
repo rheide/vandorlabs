@@ -15,12 +15,17 @@ from test_sampled_materials import fixture_world
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--xvfb', action='store_true')
+    parser.add_argument('--with-jei', action='store_true', help='Check the installed JEI catalog and search')
     options = parser.parse_args()
     if options.xvfb and os.name == 'nt':
         parser.error('--xvfb requires Linux')
 
     env = dict(os.environ, JAVA_HOME=str(jdk_home(21)),
                JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS', '') + ' -Dvandorlabs.copyPlayerCheck=true')
+    optional = []
+    if options.with_jei:
+        optional.append('-PwithJei')
+        env['JAVA_TOOL_OPTIONS'] += ' -Dvandorlabs.copyPlayerJeiCheck=true -Dvandorlabs.telescopicLanding=true'
     out = Path(artifact_directory(prefix='copy-player-', dir=ROOT / 'build/test-artifacts'))
     with socket.socket() as listener:
         listener.bind(('127.0.0.1', 0))
@@ -28,7 +33,7 @@ def main():
     saved = out / 'server'
     fixture_world(saved, port)
     server_log = out / 'server.log'
-    server = launch(command('runServer', '-PmodernServerRunDirectory=' + str(saved)), server_log, env)
+    server = launch(command('runServer', '-PmodernServerRunDirectory=' + str(saved), *optional), server_log, env)
     try:
         deadline = time.monotonic() + 120
         while 'Done (' not in server_log.read_text(errors='replace'):
@@ -41,7 +46,7 @@ def main():
             'guiScale:2\ntutorialStep:none\nrenderDistance:2\nsimulationDistance:5\n'
             'maxFps:60\nentityShadows:false\nonboardAccessibility:false\n')
         client_log = out / 'client.log'
-        args = command('runClient', '-PmatterClientPort=' + str(port), '-PmodernClientRunDirectory=' + str(client))
+        args = command('runClient', '-PmatterClientPort=' + str(port), '-PmodernClientRunDirectory=' + str(client), *optional)
         if options.xvfb:
             args = ['xvfb-run', '-a', '-s', '-screen 0 1280x720x24'] + args
             env = dict(env, LIBGL_ALWAYS_SOFTWARE='1')
@@ -50,6 +55,8 @@ def main():
             if process.wait(timeout=240):
                 raise RuntimeError('Native Copy Controller client failed: ' + str(client_log))
             check_log(client_log, '[vandorlabs][copy-player] client PASS')
+            if options.with_jei:
+                check_log(client_log, '[vandorlabs][copy-player] JEI catalog PASS')
         finally:
             stop(process)
         check_log(server_log, '[vandorlabs][copy-player] server PASS')
