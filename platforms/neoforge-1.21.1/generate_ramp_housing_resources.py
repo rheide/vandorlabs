@@ -91,6 +91,13 @@ def main():
         write(f'data/vandorlabs/recipe/{name}.json', recipe)
     states(False)
     states(True)
+    # The generated ramp part draws through its block entity renderer.
+    part = source_model('block', 'controlled_ramp')
+    part['textures']['particle'] = 'minecraft:block/stone'
+    write('assets/vandorlabs/models/block/controlled_ramp.json', part)
+    write('assets/vandorlabs/blockstates/controlled_ramp.json', {
+        'variants': {'': {'model': 'vandorlabs:block/controlled_ramp'}}
+    })
     for texture in sorted(textures):
         source = next((ROOT/f'texture-packs/{pack}/assets/vandorlabs/textures/{texture}.png'
                        for pack in ('additional', 'default')

@@ -17,6 +17,13 @@ def write(relative, value):
     target.write_text(json.dumps(value, separators=(',', ':')) + '\n')
 
 
+def remap_textures(model, catalog):
+    for key, value in model.get('textures', {}).items():
+        if not value.startswith('#'):
+            model['textures'][key] = catalog[value]
+    return model
+
+
 def main():
     source = (ROOT / 'src/portable/java/com/vandorlabs/tiles/ProgrammableLightTextures.java').read_text()
     array = re.search(r'String\[\]\s+IDS\s*=\s*\{(.*?)\}', source, re.S)
@@ -49,16 +56,13 @@ def main():
     })
     for name in NAMES:
         base = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/models/item' / (name + '.json')).read_text())
-        write('assets/vandorlabs/models/item/' + name + '.json', base)
+        write('assets/vandorlabs/models/item/' + name + '.json', remap_textures(base, textures))
         write('assets/vandorlabs/blockstates/' + name + '.json', {'variants': {'': {'model': 'vandorlabs:block/native_light_empty'}}})
         for style in styles:
             for on in (False, True):
                 variant = name + '_' + style + ('_on' if on else '_off')
                 model = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/models/item/configured' / (variant + '.json')).read_text())
-                for key, value in model.get('textures', {}).items():
-                    if not value.startswith('#'):
-                        model['textures'][key] = textures[value]
-                write('assets/vandorlabs/models/item/configured/' + variant + '.json', model)
+                write('assets/vandorlabs/models/item/configured/' + variant + '.json', remap_textures(model, textures))
         recipe = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/recipes' / (name + '.json')).read_text())
         recipe['result']['id'] = recipe['result'].pop('item')
         ingredients = recipe.get('ingredients', list(recipe.get('key', {}).values()))
