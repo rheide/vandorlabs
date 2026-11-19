@@ -125,6 +125,13 @@ public final class Gear26RuntimeChecks {
         for(int tick=0;tick<count;tick++)for(BlockPos at:new BlockPos[]{root,root.up()}){TileEntity raw=world.getTileEntity(at);if(raw instanceof GearTileEntity)((GearTileEntity)raw).update();}
     }
     public static void run(WorldServer world,EntityPlayerMP actor){try(AutoCloseable matrix=ArmTransactions.matrix()){runMatrices(world,actor);}catch(RuntimeException failure){throw failure;}catch(Exception failure){throw new IllegalStateException(failure);}}
+    public static void retractedVehicle(WorldServer world,EntityPlayerMP actor){
+        try(AutoCloseable matrix=ArmTransactions.matrix()){
+            BlockPos root=new BlockPos(620,170,260);
+            carried(world,actor,root,1);
+            carried(world,actor,root,2);
+        }catch(RuntimeException failure){throw failure;}catch(Exception failure){throw new IllegalStateException(failure);}
+    }
     private static void runMatrices(WorldServer world,EntityPlayerMP actor){
         BlockPos root=new BlockPos(620,170,260);checks=0;
         try{
@@ -307,6 +314,14 @@ public final class Gear26RuntimeChecks {
         clear(world,root);GearTileEntity source=arm(world,actor,root,GearRegistry.GEAR_EXTENDER,EnumFacing.DOWN,2);BlockPos chestPos=root.down(2);world.setBlockState(chestPos,Blocks.CHEST.getDefaultState());
         ((net.minecraft.tileentity.TileEntityChest)world.getTileEntity(chestPos)).setInventorySlotContents(0,new ItemStack(net.minecraft.init.Items.EMERALD,7));ArmPayload payload=ArmPayload.discover(source,actor);
         if(retracted){source.target(false);for(int tick=0;tick<50;tick++)source.update();require(source.progress()==0&&source.hasStoredSections()&&source.payload().materialized(),"carried regression starts with native retracted chest and separately stored arm section");if(empty){world.setBlockToAir(root.down());source.update();require(source.payload()==null,"native chest removal leaves only stored arm sections");}payload=source.payload();}
+        if(retracted){
+            com.vandorlabs.vehicle.VehicleScan scan=com.vandorlabs.vehicle.VehicleScan.attachment(world,root,java.util.Collections.emptySet());
+            while(!scan.step(256)){}
+            require(scan.result!=null,"physical capture discovers the retracted arm: "+scan.error);
+            BlockPos capturedRoot=root.subtract(scan.origin);
+            require(scan.result.at(capturedRoot).hasTileKey("ArmStoredSections",10),"physical capture retains the displaced section on its controller");
+            require(empty?scan.result.at(capturedRoot.down())==null:scan.result.at(capturedRoot.down()).state.getBlock()==Blocks.CHEST,"physical capture distinguishes an empty arm cell from a materialized endpoint");
+        }
         BlockPos local=new BlockPos(3,3,3),shift=local.subtract(root),attachment=local.down(retracted?1:2);java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();
         cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(BlockPos.ORIGIN,com.vandorlabs.blocks.ModBlocks.PILOT_SEAT.getDefaultState(),null));cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(new BlockPos(0,0,1),com.vandorlabs.blocks.ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null));
         for(BlockPos cell:new BlockPos[]{root,root.down(),chestPos}){if(world.isAirBlock(cell))continue;TileEntity tile=world.getTileEntity(cell);NBTTagCompound tag=tile==null?null:tile.writeToNBT(new NBTTagCompound());if(cell.equals(root)&&payload!=null)tag.setTag("ArmPayload",payload.write());cells.add(new com.vandorlabs.vehicle.VehicleStructure.Cell(cell.add(shift),world.getBlockState(cell),tag==null?null:com.vandorlabs.vehicle.VehicleTileData.translated(tag,shift)));}

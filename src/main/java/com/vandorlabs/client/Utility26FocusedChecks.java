@@ -49,6 +49,14 @@ final class Utility26FocusedChecks {
         if("true".equals(System.getenv("VANDOR_SEGMENTED_DENSITY_ONLY")))return SegmentedDoorDensityChecks.run(mc,output);
         if("true".equals(System.getenv("VANDOR_SEGMENTED_GATES_ONLY")))return SegmentedGateLiveChecks.tick(mc,output);
         if(ticks!=80)return false;
+        if("true".equals(System.getenv("VANDOR_RETRACTED_VEHICLE_SCAN_ONLY"))){
+            mc.getIntegratedServer().callFromMainThread(()->{
+                com.vandorlabs.gear.Gear26RuntimeChecks.retractedVehicle(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));
+                return null;
+            }).get();
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS retracted-vehicle-scan");
+            return true;
+        }
         if("true".equals(System.getenv("VANDOR_PORT_HULL_ONLY"))){PortHullPickerChecks.run(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS port-hull-only");return true;}
         if("true".equals(System.getenv("VANDOR_STRUCTURE_EDIT_ROLLBACK_ONLY"))){mc.getIntegratedServer().callFromMainThread(()->{com.vandorlabs.vehicle.VehicleStructureEditChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0));return null;}).get();System.out.println("[vandorlabs][reprolab] utility26-focused PASS structure-publication-rollback");return true;}
         if("true".equals(System.getenv("VANDOR_ARMS_210_ONLY"))){

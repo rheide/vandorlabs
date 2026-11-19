@@ -67,6 +67,16 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     ArmStoredSections storedSections;
     public boolean hasStoredSections(){return storedSections!=null||failedStoredSections!=null;}
     public java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> storedSectionCells(){return storedSections==null?java.util.Collections.emptyList():storedSections.cells;}
+    public boolean validVacantStoredSections(){
+        if(storedSections==null||hasFailedArmSnapshot()||payload!=null||progress!=0||mode!=GearMotion.Mode.EXTEND
+                ||!isOperational()||isLandingAssembly()||loadedController()!=this||world==null)return false;
+        for(com.vandorlabs.vehicle.VehicleStructure.Cell section:storedSections.cells){
+            BlockPos at=pos.add(section.pos);
+            if(section.state.getBlock()!=getBlockType()||!members.contains(at)||!GearAssembly.loaded(world,at)
+                    ||!world.isAirBlock(at)||world.getTileEntity(at)!=null)return false;
+        }
+        return true;
+    }
     private java.util.UUID operator;
     private boolean recoveryDropped;
     public boolean hasFailedArmSnapshot(){return failedPayload!=null||failedStoredSections!=null||parkingQuarantine!=null;}

@@ -458,6 +458,22 @@ public final class VehicleScan {
                     com.vandorlabs.gear.GearTileEntity gear=tile instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)tile).loadedController():null;
                     require(gear!=null&&gear.isOperational(),"Complete the connected arm assembly before vehicle capture.");
                     if(!gearAssemblies.add(gear.getPos()))continue;
+                    require(!gear.hasFailedArmSnapshot()&&!com.vandorlabs.gear.ArmTransactions.locked(world,gear.getPos()),"Wait for the modular arm to finish recovery.");
+                    Set<BlockPos> storedSections=new HashSet<>();
+                    for(VehicleStructure.Cell section:gear.storedSectionCells()){
+                        require(section.state.getBlock()==gear.getBlockType(),"Invalid stored modular arm section.");
+                        storedSections.add(gear.getPos().add(section.pos));
+                    }
+                    Set<BlockPos> endpointCells=new HashSet<>();
+                    com.vandorlabs.gear.ArmPayload payload=gear.payload();
+                    if(!storedSections.isEmpty()&&payload!=null&&payload.materialized()){
+                        require(!payload.hasOwnershipJournal(),"Wait for the modular arm to finish recovery.");
+                        for(BlockPos endpoint:payload.placedCells(gear)){
+                            require(world.isBlockLoaded(endpoint)&&!world.isAirBlock(endpoint),"Incomplete modular arm attachment.");
+                            endpointCells.add(endpoint);
+                            enqueueMember(endpoint);
+                        }
+                    }
                     boolean landing=gear.isLandingAssembly()&&gear.mountDirection()==EnumFacing.DOWN;
                     if(landing)supportCells(gear.members(),gear.getPos());
                     require(!landing||gear.landingDeployed(),"Deploy the modular landing gear before assembly.");
@@ -470,7 +486,17 @@ public final class VehicleScan {
                     }
                     if(landing)for(BlockPos member:gear.members())if(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.track.TrackBlock){trackSupports.add(member);trackBottoms.put(member,((BlockLandingGear)world.getBlockState(member).getBlock()).vehicleBottomY(world,member));}
                     for(BlockPos member:gear.members()){
-                        require(world.isBlockLoaded(member)&&world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock,"Incomplete modular arm.");enqueueMember(member);
+                        require(world.isBlockLoaded(member),"Load every modular arm section before assembly.");
+                        if(storedSections.contains(member)){
+                            require(!landing&&gear.progress()==0&&(endpointCells.contains(member)
+                                    ||world.isAirBlock(member)&&world.getTileEntity(member)==null),"Stored modular arm section is obstructed.");
+                            continue;
+                        }
+                        TileEntity memberTile=world.getTileEntity(member);
+                        require(world.getBlockState(member).getBlock() instanceof com.vandorlabs.gear.GearBlock
+                                &&memberTile instanceof com.vandorlabs.gear.GearTileEntity
+                                &&((com.vandorlabs.gear.GearTileEntity)memberTile).loadedController()==gear,"Incomplete modular arm.");
+                        enqueueMember(member);
                         if(landing)upperConnection(member);
                         for(EnumFacing side:EnumFacing.values()){
                             BlockPos at=member.offset(side);if(!world.isBlockLoaded(at))continue;
