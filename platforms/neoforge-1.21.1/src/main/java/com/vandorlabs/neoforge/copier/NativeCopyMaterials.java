@@ -49,6 +49,8 @@ public final class NativeCopyMaterials {
             if(tile instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table){
                 var chip=table.storedChip();
                 add(needs,chip,chip.getCount(),true);
+                var module=table.storedModule();
+                add(needs,module,module.getCount(),true);
             }
             if(tile instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack){for(var module:rack.ownedModuleDrops())add(needs,module,module.getCount(),true);}
             if(tile instanceof Container inventory){if(inventory.getContainerSize()>8192)throw new IllegalArgumentException("Construction inventory slot bound");for(int slot=0;slot<inventory.getContainerSize();slot++){var stack=inventory.getItem(slot);add(needs,stack,stack.getCount(),true);}}

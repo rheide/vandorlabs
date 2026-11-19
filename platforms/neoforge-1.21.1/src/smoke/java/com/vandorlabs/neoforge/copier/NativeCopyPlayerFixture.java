@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.copier;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBindings;
 import com.vandorlabs.neoforge.navigation.NativeNavigationChip;
+import com.vandorlabs.neoforge.navigation.NativeNavigationItems;
 import com.vandorlabs.neoforge.navigation.NativeNavigationTableAssemblies;
 import com.vandorlabs.neoforge.navigation.NativeNavigationTableBindings;
 import com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity;
@@ -32,8 +33,10 @@ public final class NativeCopyPlayerFixture {
     private static final BlockPos SUPPLY = ROOT.south();
     private static ServerPlayer player;
     private static int stage, tablePublications;
-    private static ItemStack chip, wrongChip;
+    private static ItemStack chip, wrongChip, module, wrongModule;
     static boolean navigation() { return Boolean.getBoolean("vandorlabs.copyPlayerNavigationCheck"); }
+    static boolean joinedNavigation() { return Boolean.getBoolean("vandorlabs.copyPlayerJoinedNavigationCheck"); }
+    static BlockPos outputReader() { return joinedNavigation() ? OUTPUT.west().above() : OUTPUT.above(); }
     private static final BlockPos TABLE_NEIGHBOR = OUTPUT.above().north();
 
     static boolean enabled() {
@@ -54,34 +57,47 @@ public final class NativeCopyPlayerFixture {
         world.setBlockAndUpdate(INPUT, NativeSurfaceBindings.BLOCK.defaultBlockState());
         world.setBlockAndUpdate(OUTPUT, NativeSurfaceBindings.BLOCK.defaultBlockState());
         if (navigation()) {
+            if (joinedNavigation()) {
+                world.setBlockAndUpdate(INPUT.east(), NativeSurfaceBindings.BLOCK.defaultBlockState());
+                world.setBlockAndUpdate(OUTPUT.west(), NativeSurfaceBindings.BLOCK.defaultBlockState());
+                world.setBlockAndUpdate(INPUT.east().above(), NativeNavigationTableBindings.FLAT.defaultBlockState());
+            }
             world.setBlockAndUpdate(INPUT.above(), NativeNavigationTableBindings.FLAT.defaultBlockState());
             world.setBlockAndUpdate(TABLE_NEIGHBOR, NativeNavigationTableBindings.FLAT.defaultBlockState());
             var source = (NativeNavigationTableEntity) world.getBlockEntity(INPUT.above());
             NativeNavigationTableAssemblies.rebuild(source, new java.util.HashSet<>());
-            chip = NativeChipTypes.variant("navigation");
-            NativeNavigationChip.write(chip, world, 900000, 800000);
-            chip.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
-                net.minecraft.network.chat.Component.literal("Surveyed beacon"));
-            wrongChip = chip.copy();
-            NativeNavigationChip.write(wrongChip, world, 900000, 800001);
+            chip = expectedChip(world, 800000);
+            wrongChip = expectedChip(world, 800001);
             require(source.setChip(chip), "physical source Navigation Chip installed");
+            if (joinedNavigation()) {
+                module = expectedModule("Matched module");
+                wrongModule = expectedModule("Decoy module");
+                var bay = (NativeNavigationTableEntity) world.getBlockEntity(INPUT.east().above());
+                require(bay.installModule(module) && bay.reader() == source, "physical joined module installed in its separate bay");
+            }
             source.setRxChannels(ChannelList.of(50));
             NativeCopyService.fault = (header, cell) -> {
                 if (!cell.pos.equals(OUTPUT.above())) return;
                 require(NativeTransferHolds.reserved(world, TABLE_NEIGHBOR)
                     && !world.setBlockAndUpdate(TABLE_NEIGHBOR, NativeNavigationTableBindings.FLAT.defaultBlockState()),
                     "adjacent Table publication is held until durable retirement");
-                require(world.getBlockEntity(OUTPUT.above()) instanceof NativeNavigationTableEntity table
+                require(world.getBlockEntity(outputReader()) instanceof NativeNavigationTableEntity table
                     && ItemStack.matches(table.storedChip(), chip), "physical output chip staged before injected failure");
+                if (joinedNavigation()) require(world.getBlockEntity(OUTPUT.above()) instanceof NativeNavigationTableEntity bay
+                    && ItemStack.matches(bay.storedModule(), module), "separate physical module staged before injected failure");
                 if (++tablePublications == 1) throw new IllegalStateException("Expected installed Navigation Table rollback");
             };
         } else world.setBlockAndUpdate(INPUT.above(), Blocks.STONE.defaultBlockState());
         world.setBlockAndUpdate(SUPPLY, Blocks.CHEST.defaultBlockState());
         var supply = (ChestBlockEntity) world.getBlockEntity(SUPPLY);
         if (navigation()) {
-            supply.setItem(0, new ItemStack(NativeNavigationTableBindings.FLAT, 2));
+            supply.setItem(0, new ItemStack(NativeNavigationTableBindings.FLAT, sections() + 1));
             supply.setItem(1, chip.copy());
             supply.setItem(2, wrongChip.copy());
+            if (joinedNavigation()) {
+                supply.setItem(3, module.copy());
+                supply.setItem(4, wrongModule.copy());
+            }
         } else supply.setItem(0, new ItemStack(Items.STONE, 2));
         actor.setGameMode(GameType.SURVIVAL);
         actor.getInventory().clearContent();
@@ -108,21 +124,20 @@ public final class NativeCopyPlayerFixture {
                 "Configurizer opens the same authorized menu");
             stage = 3;
         } else if (navigation() && stage == 3 && tile.error().contains("clear of adjacent tables")) {
-            require(tablePublications == 0 && world.getBlockState(OUTPUT.above()).isAir(), "adjacent table refusal publishes nothing");
-            assertNavigationOwnership(false);
+            require(tablePublications == 0 && outputAbsent(world), "adjacent table refusal publishes nothing");
+            assertNavigationOwnership(world, false);
             world.removeBlock(TABLE_NEIGHBOR, false);
             stage = 5;
         } else if (navigation() && stage == 5 && !tile.busy() && tile.status().equals("Copy rolled back")) {
-            require(tablePublications == 1 && world.getBlockState(OUTPUT.above()).isAir(), "rollback removes staged table");
-            assertNavigationOwnership(false);
+            require(tablePublications == 1 && outputAbsent(world), "rollback removes staged table");
+            assertNavigationOwnership(world, false);
             stage = 6;
         } else if ((navigation() ? stage == 6 : stage == 3) && !tile.busy() && tile.status().equals("Copy complete")) {
             require(tile.input() != null && tile.output() != null, "both pads remain claimed");
             if (navigation()) {
-                assertNavigationOwnership(true);
-                require(tablePublications == 2 && world.getBlockEntity(OUTPUT.above()) instanceof NativeNavigationTableEntity table
-                    && table.formed() && table.ownsReader() && table.rxChannels().equals(ChannelList.of(50))
-                    && ItemStack.matches(table.chipStack(), chip), "retry creates one usable isolated output chip reader");
+                assertNavigationOwnership(world, true);
+                require(tablePublications == 2, "retry publishes the full output group once");
+                assertNavigationOutput(world);
                 System.out.println("[vandorlabs][copy-player] Navigation Table PASS adjacentRefusal/actualRollback/exactPhysicalChip");
                 NativeCopyService.fault = null;
             } else {
@@ -136,16 +151,72 @@ public final class NativeCopyPlayerFixture {
         }
     }
 
-    private static void assertNavigationOwnership(boolean paid) {
-        var world = player.serverLevel();
+    private static boolean outputAbsent(net.minecraft.server.level.ServerLevel world) {
+        return world.getBlockState(outputReader()).isAir() && world.getBlockState(OUTPUT.above()).isAir();
+    }
+
+    private static int sections() { return joinedNavigation() ? 2 : 1; }
+
+    private static ItemStack expectedChip(net.minecraft.server.level.ServerLevel world, int z) {
+        var stack = NativeChipTypes.variant("navigation");
+        NativeNavigationChip.write(stack, world, 900000, z);
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME,
+            net.minecraft.network.chat.Component.literal("Surveyed beacon"));
+        return stack;
+    }
+
+    private static ItemStack expectedModule(String label) {
+        var stack = new ItemStack(NativeNavigationItems.MODULE);
+        stack.set(net.minecraft.core.component.DataComponents.CUSTOM_NAME, net.minecraft.network.chat.Component.literal(label));
+        return stack;
+    }
+
+    private static void assertNavigationOutput(net.minecraft.server.level.ServerLevel world) {
+        var table = (NativeNavigationTableEntity) world.getBlockEntity(outputReader());
+        require(table != null && table.formed() && table.ownsReader() && table.assemblyWidth() == sections()
+            && table.rxChannels().equals(ChannelList.of(50)) && ItemStack.matches(table.chipStack(), chip),
+            "one usable output chip reader with exact physical chip and channel bank");
+        if (joinedNavigation()) {
+            var bay = (NativeNavigationTableEntity) world.getBlockEntity(OUTPUT.above());
+            require(bay != null && bay.hasModuleBay() && bay.reader() == table && bay.moduleStorage() == bay
+                && ItemStack.matches(bay.moduleStack(), module), "usable module bay has its exact separate owner");
+        }
+    }
+
+    private static void assertNavigationOwnership(net.minecraft.server.level.ServerLevel world, boolean paid) {
         var supply = (ChestBlockEntity) world.getBlockEntity(SUPPLY);
-        require(supply.getItem(0).is(NativeNavigationTableBindings.FLAT.asItem()) && supply.getItem(0).getCount() == (paid ? 1 : 2)
+        require(supply.getItem(0).is(NativeNavigationTableBindings.FLAT.asItem()) && supply.getItem(0).getCount() == (paid ? 1 : sections() + 1)
             && ItemStack.matches(supply.getItem(1), paid ? ItemStack.EMPTY : chip)
             && ItemStack.matches(supply.getItem(2), wrongChip), "table and exact matching chip costs with no affected decoy");
         require(world.getBlockEntity(INPUT.above()) instanceof NativeNavigationTableEntity table
             && ItemStack.matches(table.storedChip(), chip), "original chip stays in the original table");
+        if (joinedNavigation()) {
+            require(ItemStack.matches(supply.getItem(3), paid ? ItemStack.EMPTY : module)
+                && ItemStack.matches(supply.getItem(4), wrongModule), "exact module cost leaves the nonmatching module alone");
+            require(world.getBlockEntity(INPUT.east().above()) instanceof NativeNavigationTableEntity bay
+                && ItemStack.matches(bay.storedModule(), module), "source retains the physical module on its original cell");
+        }
         require(world.getEntitiesOfClass(net.minecraft.world.entity.item.ItemEntity.class,
             new net.minecraft.world.phys.AABB(ROOT).inflate(8)).isEmpty(), "no staged or refunded Navigation Chip drops");
+    }
+
+    private static boolean reloaded;
+
+    @SubscribeEvent
+    public static void reload(ServerTickEvent.Post event) {
+        if (!Boolean.getBoolean("vandorlabs.copyPlayerNavigationReload") || reloaded) return;
+        reloaded = true;
+        var world = event.getServer().overworld();
+        world.getChunkAt(ROOT);
+        chip = expectedChip(world, 800000);
+        wrongChip = expectedChip(world, 800001);
+        module = expectedModule("Matched module");
+        wrongModule = expectedModule("Decoy module");
+        assertNavigationOwnership(world, true);
+        assertNavigationOutput(world);
+        require(!NativeTransferHolds.active(world), "retired Copy journal remains absent after restart");
+        System.out.println("[vandorlabs][copy-player] Navigation reload PASS joinedPhysicalOwners/exactMaterials/retiredJournal");
+        event.getServer().halt(false);
     }
 
     @SubscribeEvent

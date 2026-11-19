@@ -37,12 +37,13 @@ final class NativeCopyPlan {
         }
         if(source.isEmpty())throw new IllegalArgumentException("The input contains no blocks");
         NativeCopyTiles.requireCompleteChests(source);
-        NativeCopyNavigationTable.requireStandalone(source);
+        NativeCopyNavigationTable.requireComplete(source);
         if(sourceVolume!=null)NativeCopyNavigationTable.requireIsolated(world,NativeCopyNavigationTable.boundary(source));
         int[] sourceBounds={Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE};for(var cell:source){var pos=settings.chip?cell.pos:cell.pos.subtract(sourceVolume.min());int[] p={pos.getX(),pos.getY(),pos.getZ()};for(int axis=0;axis<3;axis++){sourceBounds[axis]=Math.min(sourceBounds[axis],p[axis]);sourceBounds[axis+3]=Math.max(sourceBounds[axis+3],p[axis]);}}
         int[] targetBounds={targetVolume.min().getX(),targetVolume.min().getY(),targetVolume.min().getZ(),targetVolume.max().getX(),targetVolume.max().getY(),targetVolume.max().getZ()};int[] shift=CopyGeometry.center(sourceBounds,targetBounds,root.output().normal.getAxis()==Direction.Axis.X?0:root.output().normal.getAxis()==Direction.Axis.Y?1:2);
         var targets=new LinkedHashMap<BlockPos,NativeRawCell>();var originals=new ArrayList<NativeRawCell>();for(var pos:targetVolume.cells()){permission(world,actor,pos);var state=world.getBlockState(pos);if(!state.isAir()||world.getBlockEntity(pos)!=null)throw new IllegalArgumentException("Output occupied at "+pos.toShortString());var empty=new NativeRawCell(pos,state,null,LIMITS.tileBytes());originals.add(empty);targets.put(pos,empty);}if(!world.getEntities(null,targetVolume.bounds()).isEmpty())throw new IllegalArgumentException("Clear players and entities from the output prism");
         var costCells=new ArrayList<NativeRawCell>();for(var cell:source){var relative=settings.chip?cell.pos:cell.pos.subtract(sourceVolume.min());var destination=targetVolume.min().offset(relative).offset(shift[0],shift[1],shift[2]);if(!targetVolume.contains(destination))throw new IllegalArgumentException("Construction design exceeds output prism");var material=NativeCopyTiles.at(cell,destination);var next=material;if(!actor.isCreative()&&!next.state.getFluidState().isEmpty())throw new IllegalArgumentException("Drain fluids before Survival copying");if(settings.increment!=0&&next.hasTile())next=NativeCopyChannels.increment(next,settings.increment);NativeCopyTiles.stage(world,next);targets.put(destination,next);costCells.add(material);staged.add(NativeCopyTiles.stage(world,material));}
+        NativeCopyNavigationTable.requireComplete(costCells);
         var tableBoundary=NativeCopyNavigationTable.boundary(costCells);
         NativeCopyNavigationTable.requireIsolated(world,tableBoundary);
         for(var pos:tableBoundary)permission(world,actor,pos);

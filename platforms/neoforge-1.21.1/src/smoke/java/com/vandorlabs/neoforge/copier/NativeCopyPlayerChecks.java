@@ -105,15 +105,18 @@ public final class NativeCopyPlayerChecks {
             }
             case 8 -> {
                 if (screen == null || tile.busy() || !tile.status().equals("Copy rolled back")) return;
-                require(mc.level.getBlockState(NativeCopyPlayerFixture.OUTPUT.above()).isAir(), "rolled-back Table stays absent");
+                require(mc.level.getBlockState(NativeCopyPlayerFixture.outputReader()).isAir()
+                    && mc.level.getBlockState(NativeCopyPlayerFixture.OUTPUT.above()).isAir(), "rolled-back Table stays absent");
                 click(screen, 1, 0);
                 stage = 9;
             }
             case 9 -> {
                 if (screen == null || tile.busy() || !tile.status().equals("Copy complete")
-                    || !(mc.level.getBlockEntity(NativeCopyPlayerFixture.OUTPUT.above())
+                    || !(mc.level.getBlockEntity(NativeCopyPlayerFixture.outputReader())
                         instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table)
                     || table.chipStack().isEmpty()) return;
+                if (NativeCopyPlayerFixture.joinedNavigation() && (!(mc.level.getBlockEntity(NativeCopyPlayerFixture.OUTPUT.above())
+                    instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity bay) || bay.moduleStack().isEmpty())) return;
                 System.out.println("[vandorlabs][copy-player] client PASS liveNavigationOutput/adjacentRefusal/rollback/retry");
                 stage = 7;
                 mc.stop();

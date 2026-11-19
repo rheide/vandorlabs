@@ -43,7 +43,8 @@ final class NativeCopyReceipt {
         else for(var cell:source.cells())if(!cell.state.isAir())rawSource.add(cell);
         if(rawSource.isEmpty()||rawSource.size()!=costSource.cells().size())throw new IllegalArgumentException("Copy cost/source coverage");
         NativeCopyTiles.requireCompleteChests(rawSource);
-        NativeCopyNavigationTable.requireStandalone(rawSource);
+        NativeCopyNavigationTable.requireComplete(rawSource);
+        NativeCopyNavigationTable.requireComplete(costSource.cells());
         int[] extents={Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MAX_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE,Integer.MIN_VALUE};for(var cell:rawSource){var relative=settings.chip?cell.pos:cell.pos.subtract(sourceVolume.min());int[] p={relative.getX(),relative.getY(),relative.getZ()};for(int axis=0;axis<3;axis++){extents[axis]=Math.min(extents[axis],p[axis]);extents[axis+3]=Math.max(extents[axis+3],p[axis]);}}
         int[] target={targetVolume.min().getX(),targetVolume.min().getY(),targetVolume.min().getZ(),targetVolume.max().getX(),targetVolume.max().getY(),targetVolume.max().getZ()};int[] shift=com.vandorlabs.copier.core.CopyGeometry.center(extents,target,outputPad.normal.getAxis()==Direction.Axis.X?0:outputPad.normal.getAxis()==Direction.Axis.Y?1:2);
         for(int i=0;i<rawSource.size();i++){var cell=rawSource.get(i);var relative=settings.chip?cell.pos:cell.pos.subtract(sourceVolume.min());var destination=targetVolume.min().offset(relative).offset(shift[0],shift[1],shift[2]);if(!NativeCopyTiles.at(cell,destination).identical(costSource.cells().get(i)))throw new IllegalArgumentException("Copy cost is not the exact translated source");}
