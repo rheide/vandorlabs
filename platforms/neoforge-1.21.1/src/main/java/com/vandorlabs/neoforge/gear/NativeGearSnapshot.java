@@ -32,11 +32,14 @@ final class NativeGearSnapshot {
     private static void requireNoExternalNetwork(ServerLevel level,BlockPos pos,BlockState state,BlockEntity tile){
         var caps=net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK;
         boolean builder=NativeGearBuilderCapture.builder(state);
+        boolean observer=tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverEntity
+                ||tile instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartEntity;
         for(var side:new Direction[]{null,Direction.DOWN,Direction.UP,Direction.NORTH,Direction.SOUTH,Direction.WEST,Direction.EAST}){
             var fluid=level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK,pos,side);
             var energy=level.getCapability(caps,pos,side);
             var items=builder||building(tile)?level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,pos,side):null;
-            if(fluid!=null||external(energy,builder)&&!com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.nativeInlet(energy)||external(items,builder))
+            boolean observerInlet=observer&&com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.nativeInlet(energy);
+            if(fluid!=null||external(energy,builder)&&!observerInlet||external(items,builder))
                 throw new IllegalArgumentException("External arm attachment network retained");
         }
     }

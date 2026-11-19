@@ -28,6 +28,7 @@ public final class ObserverArmPowerChecks {
     private static IEnergyStorage detachedInlet;
 
     public static boolean tick(Minecraft client)throws Exception{
+        if(stage==4)return true;
         client.gameSettings.pauseOnLostFocus=false;
         client.displayGuiScreen(null);
         require(++ticks<700,"expected phase completes");
@@ -88,6 +89,7 @@ public final class ObserverArmPowerChecks {
         }
         require(owners==1,"power returns to exactly one native observer");
         ArmTransactions.testFault=null;
+        next();
         System.out.println("[vandorlabs] arm-live PASS observer-power aligned-endpoints/motion-pause/restored-owner");
         return true;
     }
