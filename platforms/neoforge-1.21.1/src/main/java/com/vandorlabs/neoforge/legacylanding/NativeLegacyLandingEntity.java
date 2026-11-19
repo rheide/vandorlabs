@@ -35,6 +35,7 @@ public final class NativeLegacyLandingEntity extends BlockEntity implements Nati
  public NativeLegacyShapes.Pose shape(){if(shape==null)shape=NativeLegacyShapes.pose(this);return shape;}
  void helperOf(NativeLegacyLandingEntity root){identity=root.identity;owned=true;ownerX=root.worldPosition.getX()-worldPosition.getX();ownerY=root.worldPosition.getY()-worldPosition.getY();ownerZ=root.worldPosition.getZ()-worldPosition.getZ();legacyProxies=false;retained=new CompoundTag();pristine=true;setChanged();}
  boolean ownHelper(NativeLegacyLandingEntity helper){return helper!=null&&!helper.inert&&helper.owned&&helper.ownerPos().equals(worldPosition)&&helper.kind()==kind()&&(identity.equals(helper.identity)||legacyProxies&&helper.legacyProxies);}
+ boolean importedWheel(){return kind()==NativeLegacyLandingKind.WHEEL&&legacyProxies;}
  boolean pristine(){return pristine&&!hasAttachments()&&components().isEmpty()&&getPersistentData().isEmpty();}
  public void prepareRemoval(ItemStack stack){removalDrop=stack.copy();}public ItemStack removalDrop(){return removalDrop==null?null:removalDrop.copy();}
  public boolean configure(Player actor,NativeLegacyLandingData.Configuration next){if(!current()||!physicalRoot()||!NativeConfigurationAccess.canEditDialog(actor,this)||!NativeLegacyLandingData.configurable(kind(),next))return false;return change(next,extended(),true);}
@@ -54,10 +55,12 @@ public final class NativeLegacyLandingEntity extends BlockEntity implements Nati
  void deferred(){if(!current()||transferHeld())return;if(owned){var root=physical();if(root!=null)NativeLegacyUpdates.queue(root);else NativeLegacyFootprints.orphan(this);return;}if(!physicalRoot())return;
   if(!NativeLegacyUpdates.watch(this)){error="Too many loaded telescopic controllers";return;}NativeLegacyColumns.refresh(this);if(controller()!=this)return;
   try{NativeLegacyFootprints.prepare(this,settings,Math.max(progress,targetDistance())).install();blocked=false;error="";}catch(IllegalArgumentException refusal){blocked=true;error=refusal.getMessage();}
+  if(NativeLegacyAutomaticConversion.loaded(this))return;
   NativeRedstoneChannels.queueRegistration(this);
  }
  private void evaluate(boolean force){if(!current()||!physicalRoot()||controller()!=this||restoring&&!force)return;boolean signal=received>0||NativeLegacyLandingBlock.localPower((ServerLevel)level,worldPosition)>0;if(settings.mode()!=0&&(force||signal!=lastSignal))target(null,LegacyLandingSettings.automaticTarget(settings.mode(),signal));if(signal!=lastSignal){lastSignal=signal;setChanged();}}
- public void tick(){if(!current()||transferHeld()||!physicalRoot()||controller()!=this)return;if(inputDirty){inputDirty=false;boolean force=forceInput;forceInput=false;evaluate(force);}if(restoring||blocked)return;float next=LegacyLandingSettings.advance(progress,targetDistance());if(next==progress)return;
+ public void tick(){if(!current()||transferHeld()||!physicalRoot()||controller()!=this)return;
+  NativeLegacyAutomaticConversion.tick(this);if(inputDirty){inputDirty=false;boolean force=forceInput;forceInput=false;evaluate(force);}if(restoring||blocked)return;float next=LegacyLandingSettings.advance(progress,targetDistance());if(next==progress)return;
   if(!NativeLegacyFootprints.loaded(this)){error="Load the complete telescopic footprint";return;}int before=(int)Math.ceil(Math.max(progress,targetDistance()));progress=next;shape=null;setChanged();
   if((int)Math.ceil(Math.max(progress,targetDistance()))!=before||progress==targetDistance())NativeLegacyUpdates.queue(this);
   if(progress==targetDistance()||level.getGameTime()%4==0)changed(false);

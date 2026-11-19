@@ -19,7 +19,7 @@ public final class NativeLegacyLandingBindings {
  public static Collection<BlockEntityType<NativeLegacyLandingEntity>> types(){return Set.copyOf(TYPES.values());}
  public static net.minecraft.world.inventory.MenuType<NativeLegacyLandingMenu> MENU;
  public static boolean open(net.minecraft.world.entity.player.Player actor,net.minecraft.world.level.Level world,net.minecraft.core.BlockPos pos){return NativeLegacyLandingConfiguration.open(actor,world,pos);}
- public static boolean enabled(){return Boolean.getBoolean("vandorlabs.telescopicLanding");}
+ public static boolean enabled(){return Boolean.getBoolean("vandorlabs.telescopicLanding") || NativeLegacyAutomaticConversion.ENABLED;}
  static ResourceLocation id(String path){return ResourceLocation.fromNamespaceAndPath("vandorlabs",path);}
  public static BlockEntityType<NativeLegacyLandingEntity> type(BlockState state){return TYPES.get(((NativeLegacyLandingBlock)state.getBlock()).kind);}
  @SubscribeEvent public static void register(RegisterEvent event){if(!enabled())return;

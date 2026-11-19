@@ -22,6 +22,18 @@ With the legacy compatibility adapter enabled, an in-game operator with permissi
 
 The command reports whether it queued a conversion or found one already pending. The requesting operator receives completion or rollback feedback on the same server. If saving is disabled or admission is unavailable, restore saving or correct the stated condition, then retry. The final message includes the modular root coordinates because Large wheels can move their root by one cell during conversion.
 
-The command applies to stationary wheeled blocks. The Configurizer and sneak interaction still open the original dedicated settings menu, while a normal right-click controls the compatibility mechanism. Forge's automatic conversion during normal use or deferred placement loading remains outside the native command path. Inventory items, nearby drops and fixed or ski gear keep their existing ownership.
+The command applies to stationary wheeled blocks. The Configurizer and sneak interaction still open the original dedicated settings menu, while a normal right-click controls the compatibility mechanism. Inventory items, nearby drops and fixed or ski gear keep their existing ownership.
 
 Run `python3 test_legacy_migration.py` for queued operator admission, non-operator and invalid-coordinate refusal, a source-only partial save followed by an abrupt halt, cold rollback and retry. Run `python3 test_legacy_migration_client.py --xvfb` for the connected Survival operator's command, obstruction and disabled-saving refusals, retry, durable feedback and updated client owner.
+
+## Automatic conversion
+
+Start NeoForge with `-Dvandorlabs.autoConvertLandingGear=true` to convert
+recognized imported stationary wheels after their complete footprint loads.
+This also enables the legacy compatibility adapter. It uses the same typed
+transfer as the operator command and waits while world saving is disabled.
+Moving, obstructed and opaque wheels stay in place. Fresh compatibility
+blocks and other landing gear types keep their existing behavior.
+
+Run `python3 test_legacy_migration.py --automatic` to check cold conversion,
+a saving pause and persistence in another server process.
