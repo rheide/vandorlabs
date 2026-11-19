@@ -9,7 +9,7 @@ public final class NativeLargeDoorFluidGeometry {
     public static NativeDoorFluidGeometry.Snapshot build(NativeDoorSettings settings,NativeLargeDoorGeometry.Snapshot geometry,int column,int row){
         var key=geometry.key();var plane=NativeDoorFluidGeometry.plane(settings,key.face());
         if(key.horizontal()){
-            int origin=key.face().getAxisDirection()==net.minecraft.core.Direction.AxisDirection.NEGATIVE?1:0;
+            int origin=key.face().getAxisDirection()==net.minecraft.core.Direction.AxisDirection.POSITIVE?1:0;
             plane=new NativeDoorFluidGeometry.Plane(0,-1,0,plane.near()-origin,plane.far()-origin);
         }
         BlockPos pos=NativeLargeDoorLifecycle.cell(geometry.root(),key.face(),key.horizontal(),column,row);var unit=new AABB(pos);List<AABB> solids=new ArrayList<>();
