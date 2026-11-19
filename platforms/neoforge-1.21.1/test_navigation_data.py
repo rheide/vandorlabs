@@ -8,10 +8,12 @@ from navigation_test_artifact import snapshot
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--allow-working-source-changes',action='store_true',help='Keep compiled JAR/runtime frozen while recording independent uncompiled source edits');options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--plate-only',action='store_true',help='Stop after actual Plate production, armor recipes and mixed frame restoration');parser.add_argument('--allow-working-source-changes',action='store_true',help='Keep compiled JAR/runtime frozen while recording independent uncompiled source edits');options=parser.parse_args()
  out=Path(artifact_directory(prefix='navigation-data-',dir=ROOT/'build/test-artifacts'));saved=out/'saved-world';fixture_world(saved,0);frozen=snapshot(out,'before')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.navigationDataChecks=true')
- run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-x','compileJava','-x','compileSmokeJava','-x','processResources'),out/'server.log','[vandorlabs][navigation-data] PASS',env)
+ if options.plate_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.plateOnly=true'
+ marker='[vandorlabs][navigation-data] '+('plate PASS' if options.plate_only else 'PASS')
+ run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-x','compileJava','-x','compileSmokeJava','-x','processResources'),out/'server.log',marker,env)
  snapshot(out,'after',frozen,require_source_unchanged=not options.allow_working_source_changes)
  print('Native navigation data PASS '+str(out),flush=True)
 if __name__=='__main__':main()
