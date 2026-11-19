@@ -83,7 +83,9 @@ Framed geometry crops UVs at the native texel density. It never rescales or
 rewrites a PNG. Rails use nine-slice sampling of the supplied square frame.
 Regular paired leaves share their selected design. The Large Programmable Door also supports dedicated Double Doors artwork.
 
-The Large Programmable Door needs a clear 3×3 opening and three solid supports along one edge. Click the top of the middle support for an upright door. Click its side to place a horizontal door extending away from the support row. The open leaves and frame still collide, so leave room for them and keep moving arm payloads within the clear aperture.
+The Large Programmable Door needs a clear 3×3 opening and three solid supports along one edge. Click the top of the middle support for an upright door. Click its side to place a horizontal door extending away from the support row. Click higher or lower on the side to choose the leaf's height within the opening. The open leaves and frame still collide, so leave room for them and keep moving arm payloads within the clear aperture.
+
+Choose **Sliding Sideways** to split the opening at the middle seam and retract the two leaves in opposite directions. **Sliding X** retracts four triangular panels toward the edges. On a horizontal door these motions rotate with the opening.
 The client uses custom atlas sprites because vanilla 1.12 assumes non-animated
 sprites are square. Native pixels occupy square atlas slots with edge padding;
 UV accessors expose only the original rectangle. PNGs are never resized.
