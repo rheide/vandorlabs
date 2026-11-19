@@ -48,7 +48,9 @@ public final class NativeTurntableBindings {
     }
 
     @SubscribeEvent public static void packets(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event) {
-        if (Boolean.getBoolean("vandorlabs.turntableControllers")) NativeTurntableAnglePayload.register(event);
+        if (!Boolean.getBoolean("vandorlabs.turntableControllers")) return;
+        NativeTurntableAnglePayload.register(event);
+        NativeTurntableSignalsPayload.register(event);
     }
 
     static boolean open(Player player, Level world, BlockPos pos) {

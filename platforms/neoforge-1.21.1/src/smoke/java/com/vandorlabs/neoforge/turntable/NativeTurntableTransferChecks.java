@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.turntable;
 
 import com.mojang.authlib.GameProfile;
+import com.vandorlabs.redstone.ChannelList;
 import io.netty.buffer.Unpooled;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import com.vandorlabs.neoforge.mixin.NativeRampChunkStorageAccess;
@@ -73,6 +74,7 @@ public final class NativeTurntableTransferChecks {
         world.setBlock(SOURCE, Blocks.OAK_SIGN.defaultBlockState(), Block.UPDATE_ALL);
         world.setBlock(SOURCE.above(), Blocks.STONE.defaultBlockState(), Block.UPDATE_ALL);
         verifyAnglePacket();
+        verifySignalPacket();
         sign(SOURCE).updateText(t -> t.setMessage(0, Component.literal("Turntable owner")), true);
         originalSign = sign(SOURCE).saveWithFullMetadata(world.registryAccess());
         originalKey = owner().key();
@@ -179,6 +181,35 @@ public final class NativeTurntableTransferChecks {
             need(bytes <= 38 && packet.equals(NativeTurntableAnglePayload.CODEC.decode(buffer)) && !buffer.isReadable(),
                     "one bounded angle packet holds no payload artwork");
             System.out.println("[vandorlabs][turntable-transfer] angle packet bytes=" + bytes);
+        } finally {
+            buffer.release();
+        }
+    }
+
+    private static void verifySignalPacket() {
+        var values = java.util.stream.IntStream.rangeClosed(1, ChannelList.MAX_CHANNELS).toArray();
+        var bank = ChannelList.of(values);
+        var packet = new NativeTurntableSignalsPayload(255, 1, 2, 50, false, bank, bank, bank, bank);
+        var buffer = new RegistryFriendlyByteBuf(Unpooled.buffer(), world.registryAccess());
+        try {
+            NativeTurntableSignalsPayload.CODEC.encode(buffer, packet);
+            int bytes = buffer.readableBytes();
+            need(bytes == 1034 && packet.equals(NativeTurntableSignalsPayload.CODEC.decode(buffer)) && !buffer.isReadable(),
+                    "four maximum-length signal banks remain bounded and lossless");
+            buffer.clear();
+            buffer.writeVarInt(1);
+            buffer.writeByte(1);
+            buffer.writeByte(1);
+            buffer.writeByte(0);
+            buffer.writeBoolean(true);
+            buffer.writeByte(ChannelList.MAX_CHANNELS + 1);
+            boolean refused = false;
+            try {
+                NativeTurntableSignalsPayload.CODEC.decode(buffer);
+            } catch (IllegalArgumentException invalid) {
+                refused = true;
+            }
+            need(refused, "oversized bank refused before allocating or applying settings");
         } finally {
             buffer.release();
         }

@@ -56,6 +56,17 @@ public final class NativeTurntableMenu extends AbstractContainerMenu {
         return tile == null ? 4 : tile.settings().height;
     }
 
+    TurntableSettings signalSettings() {
+        var tile = tile();
+        return tile == null ? NativeTurntableEntity.DEFAULT_SETTINGS : tile.settings();
+    }
+
+    boolean configureSignals(ServerPlayer actor, NativeTurntableSignalsPayload payload) {
+        if (actor.containerMenu != this || !actor.serverLevel().getServer().isSameThread() || !stillValid(actor)) return false;
+        var tile = tile();
+        return tile != null && tile.configureSignals(actor, payload);
+    }
+
     public double rpm() {
         var tile = tile();
         return tile == null ? 1 : tile.settings().rpm;

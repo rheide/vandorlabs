@@ -9,6 +9,7 @@ import net.minecraft.client.renderer.LightTexture;
 import net.minecraft.client.renderer.texture.OverlayTexture;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.components.AbstractWidget;
+import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
@@ -99,7 +100,24 @@ public final class NativeTurntablePlayerChecks {
             }
             case 7 -> {
                 if (menu == null || menu.containerId == window || menu.height() != 2) return;
-                System.out.println("[vandorlabs][turntable-player] client PASS ordinary/height/Scan/Turn/Restore/Configurator");
+                click(screen, "Redstone", .5);
+                click(screen, "Disabled", .5, 1);
+                click(screen, "Signal OFF", .5, 1);
+                var fields = screen.children().stream().filter(EditBox.class::isInstance).map(EditBox.class::cast).toList();
+                if (fields.size() != 4) throw new AssertionError("Expected four Turntable channel banks");
+                fields.get(0).setValue("5291");
+                fields.get(1).setValue("5292, 5293");
+                fields.get(2).setValue("5294");
+                fields.get(3).setValue("5295");
+                click(screen, "Save Redstone", .5);
+                stage++;
+            }
+            case 8 -> {
+                if (menu == null || menu.busy() || menu.captured() || !menu.status().equals("Restored at the selected heading")
+                        || menu.signalSettings().clockwise || menu.signalSettings().restoreChannels.first() != 5295
+                        || !(mc.level.getBlockEntity(NativeTurntablePlayerFixture.TARGET) instanceof SignBlockEntity sign)
+                        || !sign.getFrontText().getMessage(0, false).getString().equals("Turntable player sign")) return;
+                System.out.println("[vandorlabs][turntable-player] client PASS ordinary/height/Scan/Turn/Restore/Configurator/Redstone");
                 stage++;
                 mc.stop();
             }
@@ -133,13 +151,17 @@ public final class NativeTurntablePlayerChecks {
     }
 
     private static void click(NativeTurntableScreen screen, String label, double horizontal) {
+        click(screen, label, horizontal, 0);
+    }
+
+    private static void click(NativeTurntableScreen screen, String label, double horizontal, int button) {
         var control = screen.children().stream().filter(entry -> entry instanceof AbstractWidget widget
                 && (widget.getMessage().getString().equals(label) || label.endsWith(":")
                 && widget.getMessage().getString().startsWith(label))).map(AbstractWidget.class::cast)
                 .findFirst().orElseThrow();
         double x = control.getX() + horizontal * control.getWidth();
         double y = control.getY() + 10;
-        if (!screen.mouseClicked(x, y, 0)) throw new AssertionError("Turntable widget click refused: " + label);
-        screen.mouseReleased(x, y, 0);
+        if (!screen.mouseClicked(x, y, button)) throw new AssertionError("Turntable widget click refused: " + label);
+        screen.mouseReleased(x, y, button);
     }
 }

@@ -1,6 +1,10 @@
 package com.vandorlabs.neoforge.turntable;
 
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
+import com.vandorlabs.neoforge.redstone.NativeTransmitterItem;
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.turntable.TurntableSettings;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBindings;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBlock;
 import net.minecraft.core.BlockPos;
@@ -29,6 +33,8 @@ public final class NativeTurntablePlayerFixture {
     private static ServerPlayer player;
     private static boolean captured;
     private static boolean reported;
+    private static int signalStage;
+    private static long phaseTick;
 
     static boolean enabled() { return ENABLED; }
 
@@ -62,13 +68,65 @@ public final class NativeTurntablePlayerFixture {
         var world = player.serverLevel();
         if (!(world.getBlockEntity(ROOT) instanceof NativeTurntableEntity controller)) return;
         if (controller.hasCapture() && world.getBlockState(SOURCE).isAir()) captured = true;
-        if (controller.busy() || !captured || controller.hasCapture() || controller.settings().height != 2
-                || !(player.containerMenu instanceof NativeTurntableMenu)
-                || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())
-                || !(world.getBlockEntity(TARGET) instanceof SignBlockEntity moved)
-                || !moved.getFrontText().getMessage(0, false).getString().equals("Turntable player sign")) return;
-        reported = true;
-        System.out.println("[vandorlabs][turntable-player] server PASS exact owner and Configurizer menu");
+        if (controller.busy() || !captured || !(player.containerMenu instanceof NativeTurntableMenu)
+                || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())) return;
+        long time = world.getGameTime();
+        switch (signalStage) {
+            case 0 -> {
+                if (controller.hasCapture() || controller.settings().height != 2 || controller.settings().scanMode != TurntableSettings.SIGNAL_ON
+                        || !controller.settings().scanChannels.equals(ChannelList.of(5291))) return;
+                if (!controller.settings().rotationChannels.equals(ChannelList.of(5292, 5293))
+                        || !controller.settings().directionChannels.equals(ChannelList.of(5294))
+                        || !controller.settings().restoreChannels.equals(ChannelList.of(5295))) {
+                    throw new AssertionError("Configured Turntable signal banks were not saved");
+                }
+                pulse(5291);
+                signalStage++;
+            }
+            case 1 -> {
+                if (!controller.hasCapture() || !world.getBlockState(TARGET).isAir()) return;
+                pulse(5292);
+                phaseTick = time;
+                signalStage++;
+            }
+            case 2 -> {
+                if (time < phaseTick + 8) return;
+                if (controller.moving() || controller.positionAngle() != 0) throw new AssertionError("Partial channel bank moved body");
+                pulse(5293);
+                signalStage++;
+            }
+            case 3 -> {
+                if (!controller.moving() || controller.positionAngle() < 24) return;
+                pulse(5294);
+                signalStage++;
+            }
+            case 4 -> {
+                if (controller.settings().clockwise || !controller.moving() || controller.positionAngle() > 14) return;
+                pulse(5293);
+                signalStage++;
+            }
+            case 5 -> {
+                if (controller.moving()) return;
+                if (!controller.hasCapture() || controller.positionAngle() == 0) throw new AssertionError("Paused away from snap angle");
+                pulse(5295);
+                signalStage++;
+            }
+            case 6 -> {
+                if (controller.hasCapture() || !controller.status().equals("Restored at the selected heading")) return;
+                if (!(world.getBlockEntity(TARGET) instanceof SignBlockEntity moved)
+                        || !moved.getFrontText().getMessage(0, false).getString().equals("Turntable player sign")
+                        || !world.getBlockState(SOURCE).isAir()) throw new AssertionError("Signal Restore changed or duplicated Sign");
+                reported = true;
+                System.out.println("[vandorlabs][turntable-player] server PASS exact owners, channel banks, scan, rotation, reversal and restore");
+            }
+            default -> throw new AssertionError("Unknown Turntable signal stage");
+        }
+    }
+
+    private static void pulse(int channel) {
+        var transmitter = NativeTransmitterItem.variant(VandorLabsBootstrap.REDSTONE_TRANSMITTER.get(), 1);
+        NativeTransmitterItem.configure(transmitter, ChannelList.of(channel));
+        if (!NativeRedstoneChannels.manualToggle(player, transmitter)) throw new AssertionError("Transmitter rejected " + channel);
     }
 
     @SubscribeEvent public static void left(PlayerEvent.PlayerLoggedOutEvent event) {

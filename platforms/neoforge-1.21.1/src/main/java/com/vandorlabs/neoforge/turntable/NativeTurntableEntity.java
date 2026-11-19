@@ -1,9 +1,11 @@
 package com.vandorlabs.neoforge.turntable;
 
+import com.vandorlabs.neoforge.NativeConfigurationAccess;
 import com.vandorlabs.neoforge.NativePlatformComponents;
+import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
 import com.vandorlabs.redstone.ChannelList;
-import com.vandorlabs.turntable.TurntableSettings;
 import com.vandorlabs.turntable.TurntableGeometry;
+import com.vandorlabs.turntable.TurntableSettings;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -12,11 +14,12 @@ import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.Connection;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
-import net.minecraft.world.level.block.Block;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.ChunkPos;
 import net.neoforged.neoforge.network.PacketDistributor;
 
 /** Holds the native capture across saves. Data that cannot be decoded remains intact and inert. */
@@ -25,17 +28,30 @@ final class NativeTurntableEntity extends BlockEntity {
     static final String KEY = "TurntableKey";
     static final String ANGLE = "TurntableAngle";
     static final String TARGET = "TurntableTarget";
+    static final String SIGNALS = "TurntableSignals";
+    static final String OPERATOR = "TurntableOperator";
+    private static final int SCAN_POWER = 1;
+    private static final int ROTATION_POWER = 2;
+    private static final int DIRECTION_POWER = 4;
+    private static final int RESTORE_POWER = 8;
     private static final String SCHEMA = "TurntableSchema";
 
-    private UUID key = UUID.randomUUID();
-    private TurntableSettings settings = new TurntableSettings(4, 0, 1, 1, 0, true,
+    static final TurntableSettings DEFAULT_SETTINGS = new TurntableSettings(4, 0, 1, 1, 0, true,
             ChannelList.EMPTY, ChannelList.EMPTY, ChannelList.EMPTY, ChannelList.EMPTY);
+
+    private UUID key = UUID.randomUUID();
+    private TurntableSettings settings = DEFAULT_SETTINGS;
     private NativeTurntableCapture capture;
     private NativeTurntableMotion motion;
     private NativeTurntableCollisions.Body publicBody;
     private boolean collisionIndexed;
     private double angle;
     private int target = -1;
+    private int previousSignals;
+    private boolean signalsReady;
+    private boolean spinning;
+    private boolean rotationBlocked;
+    private UUID operator;
     private float clientAngle;
     private long lastSequence = Long.MIN_VALUE;
     private boolean clientMoving;
@@ -72,10 +88,10 @@ final class NativeTurntableEntity extends BlockEntity {
     float visualAngle() { return clientAngle; }
     double positionAngle() { return angle; }
 
-    boolean moving() { return level instanceof ServerLevel ? target >= 0 : clientMoving; }
+    boolean moving() { return level instanceof ServerLevel ? target >= 0 || spinning : clientMoving; }
 
     boolean turn(int quarter) {
-        if (!(level instanceof ServerLevel world) || !installed(world) || busy() || capture == null) return false;
+        if (!(level instanceof ServerLevel world) || !installed(world) || busy() || spinning || capture == null) return false;
         if (quarter < 0 || quarter > 3) return false;
         target = quarter;
         setChanged();
@@ -85,27 +101,126 @@ final class NativeTurntableEntity extends BlockEntity {
 
     static void tick(ServerLevel world, NativeTurntableEntity owner) {
         if (owner.capture != null && !owner.collisionIndexed && owner.installed(world)) owner.indexCollision(true);
-        if (owner.target < 0 || world.noSave || !owner.installed(world)) return;
-        double heading = owner.target * 90;
-        double distance = (heading - owner.angle + 540) % 360 - 180;
-        if (Math.abs(distance) < 1e-7) {
-            owner.target = -1;
-            owner.setChanged();
-            owner.status("Turntable stopped at " + (int) heading + " degrees");
-            return;
+        if (world.noSave || !owner.installed(world) || owner.busy()) return;
+        owner.checkSignals(world);
+        if (owner.capture == null || owner.busy()) return;
+        double speed = TurntableGeometry.degreesPerTick(owner.settings.rpm);
+        if (owner.spinning) {
+            owner.advance(world, owner.settings.clockwise ? speed : -speed);
+        } else if (owner.target >= 0) {
+            double heading = owner.target * 90;
+            double distance = (heading - owner.angle + 540) % 360 - 180;
+            if (Math.abs(distance) < 1e-7) {
+                owner.target = -1;
+                owner.setChanged();
+                owner.status("Turntable stopped at " + (int) heading + " degrees");
+            } else {
+                owner.advance(world, Math.copySign(Math.min(Math.abs(distance), speed), distance));
+            }
         }
-        double step = Math.copySign(Math.min(Math.abs(distance), TurntableGeometry.degreesPerTick(owner.settings.rpm)), distance);
-        String blocked = owner.motion.obstruction(world, owner.angle, step);
+    }
+
+    private void advance(ServerLevel world, double step) {
+        String blocked = motion.obstruction(world, angle, step);
         if (blocked != null) {
-            owner.target = -1;
-            owner.setChanged();
-            owner.status(blocked);
+            rotationBlocked = spinning;
+            spinning = false;
+            target = -1;
+            setChanged();
+            status(blocked);
             return;
         }
-        owner.angle = Math.abs(distance) <= Math.abs(step) ? heading : TurntableGeometry.wrap(owner.angle + step);
-        owner.setChanged();
-        PacketDistributor.sendToPlayersTrackingChunk(world, new ChunkPos(owner.worldPosition),
-                new NativeTurntableAnglePayload(owner.worldPosition, owner.key, world.getGameTime(), (float) owner.angle));
+        angle = TurntableGeometry.wrap(angle + step);
+        setChanged();
+        PacketDistributor.sendToPlayersTrackingChunk(world, new ChunkPos(worldPosition),
+                new NativeTurntableAnglePayload(worldPosition, key, world.getGameTime(), (float) angle));
+    }
+
+    private void checkSignals(ServerLevel world) {
+        if (operator == null || !NativeRedstoneChannels.open(world)) return;
+        int next = signals(world);
+        int rose = next & ~previousSignals;
+        boolean fallingRotation = (previousSignals & ROTATION_POWER) != 0 && (next & ROTATION_POWER) == 0;
+        if (next != previousSignals) {
+            previousSignals = next;
+            setChanged();
+        }
+        if (!signalsReady) {
+            signalsReady = true;
+            return;
+        }
+        if ((rose & DIRECTION_POWER) != 0) {
+            settings = new TurntableSettings(settings.height, settings.scanMode, settings.rotationMode,
+                    settings.rpm, settings.snapTolerance, !settings.clockwise, settings.scanChannels,
+                    settings.rotationChannels, settings.directionChannels, settings.restoreChannels);
+            setChanged();
+            publish();
+        }
+        if (capture == null) {
+            if ((rose & SCAN_POWER) != 0) requestFromSignal(world, false);
+            return;
+        }
+        if ((next & ROTATION_POWER) == 0) rotationBlocked = false;
+        boolean run = (next & ROTATION_POWER) != 0 && !rotationBlocked && (rose & RESTORE_POWER) == 0;
+        if (run != spinning) {
+            spinning = run;
+            if (run) target = -1;
+            setChanged();
+            status(run ? "Rotating on signal" : "Turntable paused");
+        }
+        if ((rose & RESTORE_POWER) != 0
+                || fallingRotation && TurntableGeometry.canAutoSnap(angle, settings.snapTolerance)) {
+            target = -1;
+            setChanged();
+            requestFromSignal(world, true);
+        }
+    }
+
+    private int signals(ServerLevel world) {
+        boolean physical = (settings.scanMode != TurntableSettings.SCAN_DISABLED && settings.scanChannels.isEmpty()
+                || settings.rotationChannels.isEmpty()) && world.hasNeighborSignal(worldPosition);
+        return (settings.scanMode != TurntableSettings.SCAN_DISABLED && TurntableSettings.active(settings.scanMode,
+                powered(world, settings.scanChannels, physical)) ? SCAN_POWER : 0)
+                | (TurntableSettings.active(settings.rotationMode, powered(world, settings.rotationChannels, physical))
+                        ? ROTATION_POWER : 0)
+                | (powered(world, settings.directionChannels, false) ? DIRECTION_POWER : 0)
+                | (powered(world, settings.restoreChannels, false) ? RESTORE_POWER : 0);
+    }
+
+    private boolean powered(ServerLevel world, ChannelList channels, boolean physical) {
+        if (channels.isEmpty()) return physical;
+        for (int i = 0; i < channels.size(); i++) {
+            if (NativeRedstoneChannels.level(world, worldPosition, channels.get(i)) == 0) return false;
+        }
+        return true;
+    }
+
+    private void requestFromSignal(ServerLevel world, boolean restoring) {
+        var actor = world.getServer().getPlayerList().getPlayer(operator);
+        if (actor == null || !NativeConfigurationAccess.canEditDialog(actor, this)) {
+            status("An authorized operator must be nearby for signal transfers");
+            return;
+        }
+        try {
+            int quarter = Math.floorMod((int) Math.round(angle / 90), 4);
+            NativeTurntableTransfers.request(this, actor, restoring, quarter);
+        } catch (IllegalArgumentException refusal) {
+            status(refusal.getMessage());
+        }
+    }
+
+    boolean configureSignals(ServerPlayer actor, NativeTurntableSignalsPayload update) {
+        if (busy() || !NativeConfigurationAccess.canEditDialog(actor, this)) return false;
+        settings = new TurntableSettings(settings.height, update.scanMode(), update.rotationMode(), settings.rpm,
+                update.snapSteps() / 10D, update.clockwise(), update.scan(), update.rotation(),
+                update.direction(), update.restore());
+        operator = actor.getUUID();
+        previousSignals = signals(actor.serverLevel());
+        signalsReady = true;
+        rotationBlocked = false;
+        setChanged();
+        publish();
+        return true;
     }
 
     void readAngle(UUID owner, long sequence, float value) {
@@ -142,15 +257,11 @@ final class NativeTurntableEntity extends BlockEntity {
     }
 
     private TurntableSettings withSpeed(double rpm) {
-        return new TurntableSettings(settings.height, settings.scanMode, settings.rotationMode, rpm,
-                settings.snapTolerance, settings.clockwise, settings.scanChannels, settings.rotationChannels,
-                settings.directionChannels, settings.restoreChannels);
+        return withHeightAndSpeed(settings.height, rpm);
     }
 
     private TurntableSettings withHeight(int height) {
-        return new TurntableSettings(height, settings.scanMode, settings.rotationMode, settings.rpm,
-                settings.snapTolerance, settings.clockwise, settings.scanChannels, settings.rotationChannels,
-                settings.directionChannels, settings.restoreChannels);
+        return withHeightAndSpeed(height, settings.rpm);
     }
 
     void publish() {
@@ -171,6 +282,7 @@ final class NativeTurntableEntity extends BlockEntity {
         tag.putFloat("Angle", (float) angle);
         tag.putBoolean("Moving", moving());
         if (level instanceof ServerLevel world) tag.putLong("Sequence", world.getGameTime());
+        writeSignalSettings(tag);
         if (visualProjection != null) tag.put("Appearance", visualProjection.copy());
         return tag;
     }
@@ -191,6 +303,7 @@ final class NativeTurntableEntity extends BlockEntity {
             if (Double.isFinite(speed) && speed >= .5 && speed <= 10 && speed * 2 == Math.rint(speed * 2)) {
                 settings = withSpeed(speed);
             }
+            settings = readSignalSettings(tag, settings);
             clientCaptured = tag.getBoolean("Captured");
             clientMoving = tag.getBoolean("Moving");
             readAngle(key, tag.getLong("Sequence"), tag.getFloat("Angle"));
@@ -254,15 +367,12 @@ final class NativeTurntableEntity extends BlockEntity {
         tag.putInt(TARGET, target);
         tag.putUUID(KEY, key);
         tag.putInt("Height", settings.height);
-        tag.putInt("ScanMode", settings.scanMode);
-        tag.putInt("RotationMode", settings.rotationMode);
         tag.putDouble("RPM", settings.rpm);
-        tag.putDouble("AutoSnapTolerance", settings.snapTolerance);
-        tag.putBoolean("Clockwise", settings.clockwise);
-        tag.putString("ScanChannels", settings.scanChannels.toString());
-        tag.putString("RotationChannels", settings.rotationChannels.toString());
-        tag.putString("DirectionChannels", settings.directionChannels.toString());
-        tag.putString("RestoreChannels", settings.restoreChannels.toString());
+        writeSignalSettings(tag);
+        if (operator != null) {
+            tag.putUUID(OPERATOR, operator);
+            tag.putInt(SIGNALS, previousSignals);
+        }
         if (capture != null) tag.put(CAPTURE, capture.save());
     }
 
@@ -277,10 +387,12 @@ final class NativeTurntableEntity extends BlockEntity {
                     || !tag.contains("Clockwise", Tag.TAG_BYTE) || tag.getByte("Clockwise") < 0 || tag.getByte("Clockwise") > 1) {
                 throw new IllegalArgumentException("Malformed Turntable owner");
             }
-            var next = new TurntableSettings(tag.getInt("Height"), tag.getInt("ScanMode"), tag.getInt("RotationMode"),
-                    tag.getDouble("RPM"), tag.getDouble("AutoSnapTolerance"), tag.getBoolean("Clockwise"),
-                    channels(tag, "ScanChannels"), channels(tag, "RotationChannels"),
-                    channels(tag, "DirectionChannels"), channels(tag, "RestoreChannels"));
+            if (tag.contains(OPERATOR) != tag.contains(SIGNALS)
+                    || tag.contains(OPERATOR) && (!tag.hasUUID(OPERATOR)
+                    || !tag.contains(SIGNALS, Tag.TAG_INT) || (tag.getInt(SIGNALS) & ~15) != 0)) {
+                throw new IllegalArgumentException("Invalid Turntable operator or signal state");
+            }
+            var next = readSignalSettings(tag, withHeightAndSpeed(tag.getInt("Height"), tag.getDouble("RPM")));
             var payload = tag.contains(CAPTURE)
                     ? NativeTurntableCapture.read(registries, tag.getCompound(CAPTURE), worldPosition) : null;
             double nextAngle = tag.getDouble(ANGLE);
@@ -306,9 +418,13 @@ final class NativeTurntableEntity extends BlockEntity {
             motion = geometry;
             angle = nextAngle;
             target = nextTarget;
+            operator = tag.hasUUID(OPERATOR) ? tag.getUUID(OPERATOR) : null;
+            previousSignals = tag.getInt(SIGNALS);
+            signalsReady = false;
+            spinning = false;
             inert = false;
             retained = original;
-            for (String field : new String[]{SCHEMA, KEY, CAPTURE, ANGLE, TARGET, "Height", "ScanMode", "RotationMode", "RPM",
+            for (String field : new String[]{SCHEMA, KEY, CAPTURE, ANGLE, TARGET, OPERATOR, SIGNALS, "Height", "ScanMode", "RotationMode", "RPM",
                     "AutoSnapTolerance", "Clockwise", "ScanChannels", "RotationChannels", "DirectionChannels", "RestoreChannels"}) {
                 retained.remove(field);
             }
@@ -320,8 +436,34 @@ final class NativeTurntableEntity extends BlockEntity {
             motion = null;
             angle = 0;
             target = -1;
+            operator = null;
+            spinning = false;
             retained = original;
         }
+    }
+
+    private TurntableSettings withHeightAndSpeed(int height, double rpm) {
+        return new TurntableSettings(height, settings.scanMode, settings.rotationMode, rpm,
+                settings.snapTolerance, settings.clockwise, settings.scanChannels, settings.rotationChannels,
+                settings.directionChannels, settings.restoreChannels);
+    }
+
+    private void writeSignalSettings(CompoundTag tag) {
+        tag.putInt("ScanMode", settings.scanMode);
+        tag.putInt("RotationMode", settings.rotationMode);
+        tag.putDouble("AutoSnapTolerance", settings.snapTolerance);
+        tag.putBoolean("Clockwise", settings.clockwise);
+        tag.putString("ScanChannels", settings.scanChannels.toString());
+        tag.putString("RotationChannels", settings.rotationChannels.toString());
+        tag.putString("DirectionChannels", settings.directionChannels.toString());
+        tag.putString("RestoreChannels", settings.restoreChannels.toString());
+    }
+
+    private static TurntableSettings readSignalSettings(CompoundTag tag, TurntableSettings base) {
+        return new TurntableSettings(base.height, tag.getInt("ScanMode"), tag.getInt("RotationMode"),
+                base.rpm, tag.getDouble("AutoSnapTolerance"), tag.getBoolean("Clockwise"),
+                channels(tag, "ScanChannels"), channels(tag, "RotationChannels"),
+                channels(tag, "DirectionChannels"), channels(tag, "RestoreChannels"));
     }
 
     private static ChannelList channels(CompoundTag tag, String field) {

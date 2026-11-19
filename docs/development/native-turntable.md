@@ -7,8 +7,17 @@ Set the scan height and select Scan. Set the speed in RPM and use Turn to
 rotate the captured blocks by a quarter turn, then use Restore to place them
 back in the world. The captured payload stays in the controller until Restore
 completes. Loading a moving controller resumes its saved angle and target.
-Riding, payload interaction and redstone controls remain open.
+Riding and payload interaction remain open.
 Programmable Surfaces are available in normal registration.
+
+Open Redstone to set the scan and rotation modes, the initial direction and
+the auto-snap tolerance. A bank triggers only when all of its channels are
+powered. Empty Scan and Rotation banks use adjacent vanilla redstone. Direction
+and Restore need a nonempty bank and respond once to each rising edge. A falling
+rotation signal requests Restore only within the configured angle tolerance.
+Signal-triggered Scan and Restore use the player who saved the Redstone
+settings and require that player to be online and within reach. They use the
+same permission checks and journal as the manual buttons.
 
 The scan finds a complete loaded square from the controller's horizontal
 front and extends the prism out of the Surface's textured face. Both
@@ -36,3 +45,5 @@ halts; restart restores a single Sign owner before gameplay.
 A connected Survival client uses the dedicated panel through both right-click
 paths, sets the height and speed, and observes capture, rendering through a
 quarter turn and restoration of a Sign while retaining the controller identity.
+The connected fixture uses the Redstone editor, then checks a partial channel
+bank, a complete bank, reversal and a signal-triggered restore.
