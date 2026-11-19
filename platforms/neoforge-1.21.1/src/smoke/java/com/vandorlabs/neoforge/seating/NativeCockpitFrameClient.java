@@ -83,13 +83,20 @@ public final class NativeCockpitFrameClient {
             }
             case 21 -> {
                 if(!(game.screen instanceof com.vandorlabs.neoforge.client.NativeScreenScreen editor))return;
-                check(editor.getMenu().cockpit()&&editor.getTitle().getString().equals("Cockpit Touch Panel"),
+                check(editor.getMenu().cockpit()&&editor.getTitle().getString().equals("Cockpit Displays"),
                     "normal Configurizer opens the shared touch-row editor");
                 for(int row=0;row<3;row++)editor.action(590,1);
                 check(!editor.button(590).active,"authored three-row touch capacity");
                 editor.rowLabel(2).setValue("Trim");
                 editor.rowChannels(2).setValue(Integer.toString(TOUCH_CHANNEL));
                 editor.action(702,1);
+                editor.action(593,1);
+                for(int row=0;row<6;row++)editor.action(590,1);
+                check(!editor.button(590).active,"six center rows");
+                for(int scroll=0;scroll<5;scroll++)editor.mouseScrolled(0,0,0,-1);
+                int last=editor.rowLabels().size()-1;
+                editor.rowLabel(last).setValue("Last");
+                editor.rowChannels(last).setValue(Integer.toString(CENTER_CHANNEL));
                 editor.action(20,1);
                 select(game,3);
                 wait=ticks;stage++;
@@ -202,6 +209,29 @@ public final class NativeCockpitFrameClient {
                 stage++;
             }
             case 56 -> {
+                if(screenshot!=null)return;
+                var face=NativeCockpitTouch.face(Direction.NORTH,NativeCockpitTouch.CENTER,0);
+                check(NativeCockpitTouch.face(Direction.NORTH,NativeCockpitTouch.CENTER,1)==null,"stowed monitor is hidden");
+                var target=Vec3.atLowerCornerOf(ROOT).add(face.topLeft()).add(face.right().scale(.44)).add(face.down().scale(5.5/6));
+                aim(game,target);
+                wait=ticks;stage++;
+            }
+            case 57 -> {
+                if(ticks<wait+8)return;
+                var eye=player.getEyePosition();
+                var end=eye.add(player.getViewVector(1).scale(4));
+                var hit=game.level.clip(new ClipContext(eye,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,player));
+                var monitor=owner.cockpitTouch().pick(hit.getBlockPos(),eye,end);
+                check(monitor!=null&&monitor.slot()==NativeCockpitTouch.CENTER&&monitor.row()==5,"real seated center monitor sixth row");
+                game.gameMode.useItemOn(player,InteractionHand.MAIN_HAND,hit);
+                stage++;
+            }
+            case 58 -> {
+                if(!owner.cockpitTouch().controls(NativeCockpitTouch.CENTER).rows().get(5).active(game.level.getGameTime()))return;
+                screenshot="cockpit-center-monitor-energized.png";
+                stage++;
+            }
+            case 59 -> {
                 if(screenshot!=null)return;
                 game.options.keyShift.setDown(true);
                 wait=ticks;stage=6;

@@ -84,9 +84,12 @@ public final class NativeCockpitLiftRenderer implements BlockEntityRenderer<Nati
             part(true,pose.button(clock),stack,buffer,light,overlay);
         }finally{stack.popPose();}
         var panel=tile.cockpitTouch();
-        if(panel!=null&&panel.controls(0).enabled())
-            touch.emitYoke(com.vandorlabs.neoforge.seating.NativeCockpitTouch.face(facing),panel.controls(0),stack,
-                buffers,0x00F000F0,tile.getLevel().getGameTime());
+        if(panel!=null)for(int slot=0;slot<2;slot++){
+            var face=com.vandorlabs.neoforge.seating.NativeCockpitTouch.face(facing,slot,bank);
+            if(face!=null&&panel.controls(slot).enabled())
+                touch.emitCockpit(face,panel.controls(slot),stack,buffers,0x00F000F0,tile.getLevel().getGameTime(),
+                    com.vandorlabs.neoforge.seating.NativeCockpitTouch.visiblePixels(face,slot));
+        }
     }
 
     private static void part(boolean button,double drop,PoseStack stack,VertexConsumer buffer,int light,int overlay){

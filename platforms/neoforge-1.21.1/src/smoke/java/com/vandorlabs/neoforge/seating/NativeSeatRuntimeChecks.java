@@ -45,14 +45,20 @@ public final class NativeSeatRuntimeChecks {
      var channel=com.vandorlabs.redstone.ChannelList.of(8647);
      var edit=new com.vandorlabs.neoforge.screen.NativeScreenRowEdit("",List.of(
          new com.vandorlabs.neoforge.screen.NativeScreenRowEdit.Row("Trim",channel,true,false,5,15)));
-     need(touch.configure(edit),"installed Cockpit touch controls use the shared row service");
-     touch.use(0,2);
+     need(touch.configure(0,edit),"installed Cockpit touch controls use the shared row service");
+     touch.use(0,0,2);
+     var centerEdit=new com.vandorlabs.neoforge.screen.NativeScreenRowEdit("",List.of(
+         new com.vandorlabs.neoforge.screen.NativeScreenRowEdit.Row("Monitor",com.vandorlabs.redstone.ChannelList.of(8648),false,false,5,15)));
+     need(touch.configure(1,centerEdit),"independent center monitor bank");
+     touch.use(1,0,0);
      tile.setChanged();
    }
    need(tile.lift().retracted()&&tile.lift().revision()==1,"persisted authoritative screen-bank timeline");
    if(!install)need(tile.liftPosition()>0,"cold bank resumes or completes saved retraction");
    need(tile.cockpitTouch().controls(0).rows().getFirst().level()==10
        &&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(world,root,8647)==10,"saved Cockpit touch level and wireless provider");
+   need(tile.cockpitTouch().controls(1).rows().getFirst().active(world.getGameTime())
+       &&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(world,root,8648)==15,"saved center monitor wireless bank");
    need(tile.saveWithoutMetadata(world.registryAccess()).getCompound("ForgeCaps")
        .getString("external").equals("opaque cockpit data"),"opaque Cockpit NBT survives");
  }

@@ -22,9 +22,9 @@ public final class NativeCockpitFrameFixture {
     static final BlockPos ROOT=new BlockPos(0,96,0);
     static final Vec3 START=new Vec3(.5,96,2.75);
     static final BlockPos MINE=ROOT.east();
-    static final int TOUCH_CHANNEL=8641;
+    static final int TOUCH_CHANNEL=8641,CENTER_CHANNEL=8642;
     private static ServerPlayer player;
-    private static boolean sawSignal;
+    private static boolean sawSignal,sawCenter;
     static boolean enabled(){return Boolean.getBoolean("vandorlabs.cockpitFrameCheck");}
     static void check(boolean pass,String message){if(!pass)throw new AssertionError("Stationary Cockpit: "+message);}
 
@@ -62,8 +62,9 @@ public final class NativeCockpitFrameFixture {
     }
 
     @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){
-        if(!enabled()||player==null||sawSignal)return;
-        sawSignal=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,TOUCH_CHANNEL)==10;
+        if(!enabled()||player==null||(sawSignal&&sawCenter))return;
+        sawCenter|=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,CENTER_CHANNEL)==15;
+        sawSignal|=com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(player.serverLevel(),ROOT,TOUCH_CHANNEL)==10;
     }
 
     @SubscribeEvent public static void logout(PlayerEvent.PlayerLoggedOutEvent event) {
@@ -79,7 +80,7 @@ public final class NativeCockpitFrameFixture {
             if(stack.is(item))drops+=stack.getCount();
         }
         check(drops==1,"one Cockpit item after teardown from a side");
-        check(sawSignal&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
+        check(sawSignal&&sawCenter&&com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.level(level,ROOT,TOUCH_CHANNEL)==0,
             "seated touch operated actual shared wireless Redstone and teardown withdrew its source");
         System.out.println("[vandorlabs][cockpit-frame] completed PASS");
         System.out.println("[vandorlabs][cockpit-frame] logout PASS");

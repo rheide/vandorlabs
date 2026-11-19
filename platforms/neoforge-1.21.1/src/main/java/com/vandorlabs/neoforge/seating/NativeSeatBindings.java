@@ -43,7 +43,7 @@ public final class NativeSeatBindings {
             if(!player.getServer().isSameThread())return false;
             var menu=com.vandorlabs.neoforge.screen.NativeScreenRegistrations.MENU.get();
             player.openMenu(new SimpleMenuProvider((id,inv,ignored)->new com.vandorlabs.neoforge.screen.NativeScreenMenu(menu,id,owner),
-                net.minecraft.network.chat.Component.translatable("block.vandorlabs.cockpit.touch_panel")),buffer->buffer.writeBlockPos(owner.getBlockPos()));
+                net.minecraft.network.chat.Component.translatable("block.vandorlabs.cockpit.displays")),buffer->buffer.writeBlockPos(owner.getBlockPos()));
         }
         return true;
     }if(actor instanceof ServerPlayer player){if(!player.getServer().isSameThread())return false;player.openMenu(new SimpleMenuProvider((window,inventory,ignored)->new NativeSeatMenu(MENU,window,owner),owner.getBlockState().getBlock().getName()),buffer->buffer.writeBlockPos(owner.getBlockPos()));}return true;}
