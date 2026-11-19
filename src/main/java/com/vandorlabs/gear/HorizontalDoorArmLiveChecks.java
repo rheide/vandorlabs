@@ -50,6 +50,7 @@ public final class HorizontalDoorArmLiveChecks {
         return complete;
     }
     /** Observe every world step even when the software-rendered client skips frames. */
+    @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
     public static final class Observer {
         private final MinecraftServer server;
         private Observer(MinecraftServer server){this.server=server;}
