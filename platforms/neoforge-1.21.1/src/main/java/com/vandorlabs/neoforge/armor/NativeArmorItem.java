@@ -76,7 +76,10 @@ public final class NativeArmorItem extends ArmorItem {
         if (player.isShiftKeyDown() && NativeConfigurationAccess.canConfigure(player) && !player.isSpectator()) {
             if (player instanceof ServerPlayer server) {
                 server.openMenu(new SimpleMenuProvider((id, inventory, owner) -> new NativeArmorMenu(id, inventory, hand),
-                    stack.getHoverName()), buffer -> buffer.writeEnum(hand));
+                    stack.getHoverName()), buffer -> {
+                        buffer.writeBoolean(false);
+                        buffer.writeEnum(hand);
+                    });
             }
             return InteractionResultHolder.sidedSuccess(stack, level.isClientSide);
         }

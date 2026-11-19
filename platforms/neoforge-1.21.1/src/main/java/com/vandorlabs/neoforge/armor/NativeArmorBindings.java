@@ -10,6 +10,8 @@ import net.minecraft.network.protocol.common.custom.CustomPacketPayload;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
+import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.ArmorStand;
 import net.minecraft.world.inventory.MenuType;
 import net.minecraft.world.item.ArmorItem;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -38,8 +40,12 @@ public final class NativeArmorBindings {
             }
         });
         event.register(Registries.MENU, menus -> {
-            MENU = IMenuTypeExtension.create((window, inventory, buffer) ->
-                new NativeArmorMenu(window, inventory, buffer.readEnum(InteractionHand.class)));
+            MENU = IMenuTypeExtension.create((window, inventory, buffer) -> {
+                if (!buffer.readBoolean()) return new NativeArmorMenu(window, inventory, buffer.readEnum(InteractionHand.class));
+                var target = inventory.player.level().getEntity(buffer.readVarInt());
+                var slot = buffer.readEnum(EquipmentSlot.class);
+                return new NativeArmorMenu(window, inventory, target instanceof ArmorStand stand ? stand : null, slot);
+            });
             menus.register(id("programmable_armor"), MENU);
         });
     }

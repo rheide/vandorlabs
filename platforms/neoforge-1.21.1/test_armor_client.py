@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check native held armor through a real survival Configurizer session."""
+"""Check held and mounted native armor through survival Configurizer sessions."""
 import argparse
 import os
 from pathlib import Path

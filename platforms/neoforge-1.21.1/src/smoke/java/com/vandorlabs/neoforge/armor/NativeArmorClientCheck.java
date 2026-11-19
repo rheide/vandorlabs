@@ -12,6 +12,8 @@ import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
+import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.phys.EntityHitResult;
 import net.minecraft.world.level.GameType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -26,7 +28,11 @@ public final class NativeArmorClientCheck {
     private static int ticks, stage, wait;
     private static volatile boolean captured;
     private static String capture;
-    private static final int INDUSTRIAL_BLOCK = 9;
+    private static ArmorStand mounted;
+    private static int standCase;
+    private static final double[][] HIT_HEIGHT = {
+        {.25, .7, 1.3, 1.8}, {.2, .5, .7, .97}
+    };
 
     @SubscribeEvent
     public static void tick(ClientTickEvent.Post event) {
@@ -34,7 +40,7 @@ public final class NativeArmorClientCheck {
         Minecraft game = Minecraft.getInstance();
         var player = game.player;
         if (player == null || game.gameMode == null || game.getOverlay() != null) return;
-        require(++ticks < 1000, "timeout stage=" + stage + " mode=" + game.gameMode.getPlayerMode()
+        require(++ticks < 1000, "timeout stage=" + stage + " mounted=" + standCase + " mode=" + game.gameMode.getPlayerMode()
             + " selected=" + player.getInventory().selected + " main=" + player.getMainHandItem()
             + " offhand=" + player.getOffhandItem());
         var offhand = player.getOffhandItem();
@@ -55,8 +61,8 @@ public final class NativeArmorClientCheck {
             case 2 -> {
                 if (!(game.screen instanceof NativeArmorScreen screen)
                     || !(offhand.getItem() instanceof NativeArmorItem armor)
-                    || NativeArmorItem.choice(offhand) != INDUSTRIAL_BLOCK) return;
-                var spriteName = ResourceLocation.parse(ModernFinishCatalog.option(INDUSTRIAL_BLOCK).texture());
+                    || NativeArmorItem.choice(offhand) != NativeArmorFixture.INDUSTRIAL_BLOCK) return;
+                var spriteName = ResourceLocation.parse(ModernFinishCatalog.option(NativeArmorFixture.INDUSTRIAL_BLOCK).texture());
                 var expectedSprite = game.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(spriteName);
                 var model = game.getItemRenderer().getModel(offhand, game.level, player, 0);
                 require(model.getParticleIcon() == expectedSprite
@@ -108,9 +114,48 @@ public final class NativeArmorClientCheck {
             }
             case 7 -> {
                 if (!captured) return;
-                System.out.println("[vandorlabs][armor] client PASS");
-                game.stop();
+                if (standCase == 8) {
+                    System.out.println("[vandorlabs][armor] client PASS");
+                    game.stop();
+                    stage = 99;
+                    return;
+                }
+                if (game.screen != null || player.distanceToSqr(0.5, 79, 0.5) > 0.25
+                    || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())) return;
+                boolean small = standCase >= 4;
+                var stands = game.level.getEntitiesOfClass(ArmorStand.class, player.getBoundingBox().inflate(3),
+                    entity -> entity.isSmall() == small);
+                if (stands.size() != 1) return;
+                mounted = stands.getFirst();
+                int slot = standCase % 4;
+                var hit = new EntityHitResult(mounted, mounted.position().add(0, HIT_HEIGHT[standCase / 4][slot], 0));
+                require(game.gameMode.interactAt(player, mounted, hit, InteractionHand.MAIN_HAND).consumesAction(),
+                    "normal Configurizer interact packet for mounted case " + standCase);
                 stage++;
+            }
+            case 8 -> {
+                var slot = NativeArmorFixture.MOUNTED_SLOTS[standCase % 4];
+                if (!(game.screen instanceof NativeArmorScreen screen) || !screen.getMenu().synchronizedStack) return;
+                require(screen.getMenu().editorStack().getHoverName().getString()
+                    .equals(NativeArmorFixture.mountedName(standCase / 4, slot)), "mounted picker title case " + standCase);
+                if (!select(screen, "Industrial Block")) return;
+                stage++;
+            }
+            case 9 -> {
+                var slots = NativeArmorFixture.MOUNTED_SLOTS;
+                var stack = mounted.getItemBySlot(slots[standCase % 4]);
+                if (NativeArmorItem.choice(stack) != NativeArmorFixture.INDUSTRIAL_BLOCK) return;
+                for (int i = 0; i < slots.length; i++) {
+                    var existing = mounted.getItemBySlot(slots[i]);
+                    int choice = i > standCase % 4
+                        ? NativeArmorCatalog.defaultDesign(slots[i]).choice() : NativeArmorFixture.INDUSTRIAL_BLOCK;
+                    require(NativeArmorItem.choice(existing) == choice && existing.getDamageValue() == 11 && existing.hasFoil(),
+                        "only targeted mounted equipment changes case=" + standCase + " slot=" + slots[i]);
+                }
+                if (!(game.screen instanceof NativeArmorScreen screen)) return;
+                screen.onClose();
+                standCase++;
+                stage = 7;
             }
         }
     }
