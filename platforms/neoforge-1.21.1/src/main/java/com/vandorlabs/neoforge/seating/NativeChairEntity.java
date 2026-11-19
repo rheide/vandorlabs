@@ -93,13 +93,14 @@ public final class NativeChairEntity extends BlockEntity {
     public ChairSettings settings(){return settings;}public int pilotHeight(){return pilotHeight;}public boolean inert(){return inert;}public View view(){return view;}
     private void publish(){view=inert?new View(kind(),0,1,0,true,0,0,0):new View(kind(),settings.style,settings.height,settings.angle,settings.join,pilotHeight,part,arms,left.level(),right.level());requestModelDataUpdate();}
     public net.minecraft.world.phys.Vec3 cushionOffset(){
+        if(kind()==NativeSeatKind.COCKPIT)return NativeCockpitGeometry.cushion(getBlockState().getValue(NativeSeatBlock.FACING));
         return kind()==NativeSeatKind.ADVANCED?NativeAdvancedChairGeometry.cushion(getBlockState().getValue(NativeSeatBlock.FACING),pilotHeight)
             :new net.minecraft.world.phys.Vec3(.5,cushion(),.5);
     }
-    public double cushion(){if(kind()==NativeSeatKind.ADVANCED)return NativeAdvancedChairGeometry.cushion(getBlockState().getValue(NativeSeatBlock.FACING),pilotHeight).y;return kind()==NativeSeatKind.CHAIR?ChairSettings.cushion(settings.style,settings.height):kind().connected()?ChairSettings.connectedCushion(kind()==NativeSeatKind.LUXURY,settings.height):ChairSettings.pilotCushion(pilotHeight);}
+    public double cushion(){if(kind()==NativeSeatKind.COCKPIT)return cushionOffset().y;if(kind()==NativeSeatKind.ADVANCED)return NativeAdvancedChairGeometry.cushion(getBlockState().getValue(NativeSeatBlock.FACING),pilotHeight).y;return kind()==NativeSeatKind.CHAIR?ChairSettings.cushion(settings.style,settings.height):kind().connected()?ChairSettings.connectedCushion(kind()==NativeSeatKind.LUXURY,settings.height):ChairSettings.pilotCushion(pilotHeight);}
     public double yaw(){return SeatPose.yaw(getBlockState().getValue(NativeSeatBlock.FACING).toYRot(),kind()==NativeSeatKind.CHAIR?settings.angle:0);}
     public boolean configure(Player actor,int style,int height,int angle,boolean join){
-        if(NativeSeatBlock.proxy(getBlockState())||inert||!(level instanceof ServerLevel server)||!server.getServer().isSameThread()||!NativeConfigurationAccess.canEditDialog(actor,this))return false;
+        if(kind()==NativeSeatKind.COCKPIT||NativeSeatBlock.proxy(getBlockState())||inert||!(level instanceof ServerLevel server)||!server.getServer().isSameThread()||!NativeConfigurationAccess.canEditDialog(actor,this))return false;
         if(kind().adjustablePilotHeight()){if(height<0||height>3)return false;pilotHeight=height;}else{if(!ChairSettings.valid(style,height,angle))return false;settings=new ChairSettings(style,height,angle,join);}
         changed();return true;
     }
@@ -110,7 +111,7 @@ public final class NativeChairEntity extends BlockEntity {
     private void changed(){refreshAppearance();setChanged();publish();if(level==null)return;level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),3);var upper=worldPosition.above();if(level.hasChunkAt(upper)){var state=level.getBlockState(upper);level.sendBlockUpdated(upper,state,state,3);}level.updateNeighborsAt(worldPosition,getBlockState().getBlock());
         if(!level.isClientSide)for(var seat:level.getEntitiesOfClass(NativeChairMount.class,new net.minecraft.world.phys.AABB(worldPosition).inflate(2)))if(worldPosition.equals(seat.chairPos()))seat.updatePose(this);
     }
-    public CompoundTag configuration(){var tag=new CompoundTag();if(NativeSeatBlock.proxy(getBlockState()))return tag;if(kind().adjustablePilotHeight()){tag.putInt(ChairSettings.PILOT_HEIGHT,pilotHeight);}else{tag.putInt(ChairSettings.STYLE,settings.style);tag.putInt(ChairSettings.HEIGHT,settings.height);if(settings.angle!=0)tag.putInt(ChairSettings.ANGLE,settings.angle);if(kind().connected())tag.putBoolean(ChairSettings.JOIN,settings.join);}return tag;}
+    public CompoundTag configuration(){var tag=new CompoundTag();if(NativeSeatBlock.proxy(getBlockState()))return tag;if(kind()==NativeSeatKind.COCKPIT)return tag;if(kind().adjustablePilotHeight()){tag.putInt(ChairSettings.PILOT_HEIGHT,pilotHeight);}else{tag.putInt(ChairSettings.STYLE,settings.style);tag.putInt(ChairSettings.HEIGHT,settings.height);if(settings.angle!=0)tag.putInt(ChairSettings.ANGLE,settings.angle);if(kind().connected())tag.putBoolean(ChairSettings.JOIN,settings.join);}return tag;}
     private CompoundTag itemData(){var root=new CompoundTag();if(inert)root.put("NativeChairRetained",retained.copy());else {root.put(ITEM_SETTINGS,configuration());var preserved=retained.copy();writeArmrests(preserved);if(!preserved.isEmpty())root.put("NativeChairPreserved",preserved);}return root;}
     public void writeItem(ItemStack stack){stack.applyComponents(collectComponents());}
     private boolean readSettings(CompoundTag tag){

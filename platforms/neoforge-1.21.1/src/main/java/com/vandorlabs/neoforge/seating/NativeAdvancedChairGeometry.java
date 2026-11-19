@@ -89,7 +89,7 @@ public final class NativeAdvancedChairGeometry {
         return SHAPES[facing.get2DDataValue()][step][part];
     }
 
-    private static Vec3 turn(Vec3 point, Direction facing) {
+    static Vec3 turn(Vec3 point, Direction facing) {
         return switch (facing) {
             case EAST -> new Vec3(1 - point.z, point.y, point.x);
             case SOUTH -> new Vec3(1 - point.x, point.y, 1 - point.z);

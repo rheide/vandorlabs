@@ -23,15 +23,19 @@ import net.minecraft.world.phys.shapes.Shapes;
 import net.minecraft.world.phys.shapes.VoxelShape;
 
 /** The anchor owns configuration and rendering. The other three cells own only a seat reservation. */
-final class NativeAdvancedChairBlock extends NativeSeatBlock {
+class NativeAdvancedChairBlock extends NativeSeatBlock {
     static final IntegerProperty SIDE = IntegerProperty.create("side", 0, 2);
     private static final ThreadLocal<Change> ACTIVE = new ThreadLocal<>();
-    private record Change(Level level, BlockPos root, Direction facing) {}
+    private record Change(Level level, BlockPos root, Direction facing, NativeAdvancedChairBlock block) {}
     private record Step(BlockPos pos, BlockState before, BlockState after) {}
 
     NativeAdvancedChairBlock(BlockBehaviour.Properties properties) {
-        super(NativeSeatKind.ADVANCED, properties);
-        registerDefaultState(defaultBlockState().setValue(SIDE, 0));
+        this(NativeSeatKind.ADVANCED, properties);
+    }
+
+    NativeAdvancedChairBlock(NativeSeatKind kind, BlockBehaviour.Properties properties) {
+        super(kind, properties);
+        registerDefaultState(defaultBlockState().setValue(lateralProperty(), 0));
     }
 
     @Override
@@ -40,12 +44,14 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
     @Override
     protected void createBlockStateDefinition(StateDefinition.Builder<Block, BlockState> builder) {
         super.createBlockStateDefinition(builder);
-        builder.add(SIDE);
+        builder.add(lateralProperty());
     }
 
-    static int part(BlockState state) {
+    protected IntegerProperty lateralProperty() { return SIDE; }
+
+    int partIndex(BlockState state) {
         if (state.getValue(UPPER)) return NativeAdvancedChairGeometry.UPPER;
-        return switch (state.getValue(SIDE)) {
+        return switch (state.getValue(lateralProperty())) {
             case 1 -> NativeAdvancedChairGeometry.LEFT;
             case 2 -> NativeAdvancedChairGeometry.RIGHT;
             default -> NativeAdvancedChairGeometry.ROOT;
@@ -53,24 +59,35 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
     }
 
     static BlockPos root(BlockState state, BlockPos pos) {
-        return pos.subtract(NativeAdvancedChairGeometry.offset(part(state), state.getValue(FACING)));
+        var block = (NativeAdvancedChairBlock) state.getBlock();
+        return pos.subtract(block.offset(block.partIndex(state), state.getValue(FACING)));
     }
 
-    private static BlockState stateFor(BlockState root, int part) {
+    BlockState stateFor(BlockState root, int part) {
         return root.setValue(UPPER, part == NativeAdvancedChairGeometry.UPPER)
-            .setValue(SIDE, part >= NativeAdvancedChairGeometry.LEFT ? part - 1 : 0);
+            .setValue(lateralProperty(), part >= NativeAdvancedChairGeometry.LEFT ? part - 1 : 0);
+    }
+
+    int cells() { return NativeAdvancedChairGeometry.CELLS; }
+
+    BlockPos offset(int part, Direction facing) {
+        return NativeAdvancedChairGeometry.offset(part, facing);
     }
 
     @Override
     public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
         var owner = owner(world, pos);
         if (owner == null && proxy(state)) return Shapes.empty();
-        return NativeAdvancedChairGeometry.shape(state.getValue(FACING), owner == null ? 0 : owner.pilotHeight(), part(state));
+        return NativeAdvancedChairGeometry.shape(state.getValue(FACING), owner == null ? 0 : owner.pilotHeight(), partIndex(state));
+    }
+
+    Direction placementFacing(BlockPlaceContext context) {
+        return context.getHorizontalDirection().getOpposite();
     }
 
     @Override
     public BlockState getStateForPlacement(BlockPlaceContext context) {
-        var root = defaultBlockState().setValue(FACING, context.getHorizontalDirection().getOpposite());
+        var root = defaultBlockState().setValue(FACING, placementFacing(context));
         return plan(context, root) == null ? null : root;
     }
 
@@ -86,8 +103,8 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
         var anchor = world.getBlockState(root);
         if (!anchor.is(this) || proxy(anchor)) return false;
         var face = anchor.getValue(FACING);
-        for (int part = 1; part < NativeAdvancedChairGeometry.CELLS; part++) {
-            var pos = root.offset(NativeAdvancedChairGeometry.offset(part, face));
+        for (int part = 1; part < cells(); part++) {
+            var pos = root.offset(offset(part, face));
             if (!loaded(world, pos) || world.getBlockState(pos) != stateFor(anchor, part)
                 || !(world.getBlockEntity(pos) instanceof NativeChairEntity proxy) || !proxy.proxyShareable()) return false;
         }
@@ -99,7 +116,7 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
         if (plan == null) return false;
         var level = context.getLevel();
         var previous = ACTIVE.get();
-        ACTIVE.set(new Change(level, context.getClickedPos(), rootState.getValue(FACING)));
+        ACTIVE.set(new Change(level, context.getClickedPos(), rootState.getValue(FACING), this));
         boolean success = false;
         int staged = 0;
         try {
@@ -141,9 +158,9 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
         var root = context.getClickedPos();
         var level = context.getLevel();
         var facing = rootState.getValue(FACING);
-        var result = new ArrayList<Step>(NativeAdvancedChairGeometry.CELLS);
-        for (int part = 0; part < NativeAdvancedChairGeometry.CELLS; part++) {
-            var pos = root.offset(NativeAdvancedChairGeometry.offset(part, facing));
+        var result = new ArrayList<Step>(cells());
+        for (int part = 0; part < cells(); part++) {
+            var pos = root.offset(offset(part, facing));
             if (!level.isInWorldBounds(pos) || !loaded(level, pos) || !level.mayInteract(player, pos)
                 || !player.mayUseItemAt(pos, context.getClickedFace(), context.getItemInHand())
                 || com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level, pos)) return null;
@@ -161,7 +178,7 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
         if (!pos.equals(root) && (!loaded(level, root) || level.getBlockState(root) != anchor)) return;
         var facing = old.getValue(FACING);
         var previous = ACTIVE.get();
-        ACTIVE.set(new Change(level, root, facing));
+        ACTIVE.set(new Change(level, root, facing, this));
         try {
             for (var mount : level.getEntitiesOfClass(NativeChairMount.class, new AABB(root).inflate(2))) {
                 if (root.equals(mount.chairPos())) {
@@ -169,8 +186,8 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
                     mount.discard();
                 }
             }
-            for (int part = 0; part < NativeAdvancedChairGeometry.CELLS; part++) {
-                var cell = root.offset(NativeAdvancedChairGeometry.offset(part, facing));
+            for (int part = 0; part < cells(); part++) {
+                var cell = root.offset(offset(part, facing));
                 if (cell.equals(pos) || !loaded(level, cell) || level.getBlockState(cell) != stateFor(anchor, part)) continue;
                 if (part == NativeAdvancedChairGeometry.ROOT
                     || level.getBlockEntity(cell) instanceof NativeChairEntity extension && extension.proxyShareable()) {
@@ -183,7 +200,7 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
         }
     }
 
-    static void repair(ServerLevel level, NativeChairEntity tile) {
+    void repair(ServerLevel level, NativeChairEntity tile) {
         var state = tile.getBlockState();
         var pos = tile.getBlockPos();
         if (tile.inert()) return;
@@ -193,8 +210,8 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
             return;
         }
         var facing = state.getValue(FACING);
-        for (int part = 1; part < NativeAdvancedChairGeometry.CELLS; part++) {
-            var cell = pos.offset(NativeAdvancedChairGeometry.offset(part, facing));
+        for (int part = 1; part < cells(); part++) {
+            var cell = pos.offset(offset(part, facing));
             if (loaded(level, cell) && level.isInWorldBounds(cell) && level.isEmptyBlock(cell)
                 && level.getBlockEntity(cell) == null
                 && !com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level, cell)) {
@@ -206,8 +223,8 @@ final class NativeAdvancedChairBlock extends NativeSeatBlock {
     static boolean mutating(Level level, BlockPos pos) {
         var change = ACTIVE.get();
         if (change == null || change.level() != level) return false;
-        for (int part = 0; part < NativeAdvancedChairGeometry.CELLS; part++) {
-            if (pos.equals(change.root().offset(NativeAdvancedChairGeometry.offset(part, change.facing())))) return true;
+        for (int part = 0; part < change.block().cells(); part++) {
+            if (pos.equals(change.root().offset(change.block().offset(part, change.facing())))) return true;
         }
         return false;
     }
