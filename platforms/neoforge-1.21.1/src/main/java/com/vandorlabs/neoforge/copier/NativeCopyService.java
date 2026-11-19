@@ -53,6 +53,9 @@ public final class NativeCopyService {
         public NativeCopyReceipt readRecipe(HolderLookup.Provider registries,NativeCellTransactions.Header header,NativeTransferSnapshot before,NativeTransferSnapshot after,Set<BlockPos> held,CompoundTag raw){return NativeCopyReceipt.read(registries,header,before,after,held,raw);}
         public void authorize(ServerLevel world,NativeCellTransactions.Header header,ServerPlayer actor,NativeCopyReceipt recipe){
             var root=owner(world,header);if(!Objects.equals(root.actorId(),actor.getUUID())||!recipe.settings.equals(root.settings()))throw new IllegalArgumentException("Copy settings or authorizing player changed");permission(world,header,actor,root.getBlockPos());if(actor.distanceToSqr(root.getBlockPos().getCenter())>64)throw new IllegalArgumentException("Stay within reach while preparing a copy");validatePads(world,header,root,recipe,actor);
+            NativeCopyNavigationTable.requireIsolated(world,recipe.tableInputBoundary);
+            NativeCopyNavigationTable.requireIsolated(world,recipe.tableOutputBoundary);
+            for(var pos:recipe.tableOutputBoundary)permission(world,header,actor,pos);
             recipe.targetVolume.requireLoaded(world);if(!world.getEntities(null,recipe.targetVolume.bounds()).isEmpty())throw new IllegalArgumentException("Output prism became occupied");for(var pos:recipe.targetVolume.cells())permission(world,header,actor,pos);
             if(recipe.source!=null){recipe.sourceVolume.requireLoaded(world);if(!recipe.source.matches(world,NativeCopyTiles::same))throw new IllegalArgumentException("Input private fields or blocks changed");for(var pos:recipe.sourceVolume.cells())permission(world,header,actor,pos);}else{var mount=NativeCopyPlan.chipMount(world,root.getBlockPos());if(mount==null||!mount.getBlockPos().equals(recipe.chipMount)||!ItemStack.matches(mount.getItem(0),recipe.chip()))throw new IllegalArgumentException("Construction chip changed");}validateEconomy(world,header,recipe);
         }
@@ -60,11 +63,11 @@ public final class NativeCopyService {
         public boolean same(CompoundTag first,CompoundTag second){return NativeCopyTiles.same(first,second);}
         public boolean intermediate(ServerLevel world,NativeCellTransactions.Header header,NativeRawCell before,NativeRawCell after,NativeCopyReceipt recipe){return recipe.supply!=null&&recipe.supply.contains(before.pos)&&recipe.supply.recognizes(world,before.pos);}
         public void publish(ServerLevel world,NativeCellTransactions.Header header,NativeRawCell before,NativeRawCell after,BlockEntity staged,NativeTransferHolds.Lease lease,NativeCopyReceipt recipe){
-            if(recipe.supply!=null&&recipe.supply.contains(after.pos)){boolean restoring=recipe.supply.restoring(after);recipe.supply.publishCell(world,lease,after.pos,restoring);if(!restoring&&fault!=null&&Boolean.getBoolean("vandorlabs.copyRuntimeChecks"))fault.afterCell(header,after);return;}
+            if(recipe.supply!=null&&recipe.supply.contains(after.pos)){boolean restoring=recipe.supply.restoring(after);recipe.supply.publishCell(world,lease,after.pos,restoring);if(!restoring&&fault!=null&&(Boolean.getBoolean("vandorlabs.copyRuntimeChecks")||Boolean.getBoolean("vandorlabs.copyPlayerNavigationCheck")))fault.afterCell(header,after);return;}
             var old=world.getBlockEntity(after.pos);if(old instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack)rack.clearForTransfer();if(old instanceof Container container)container.clearContent();
             if(world.getBlockState(after.pos)!=after.state)try(var scope=lease.allowOnce(after.pos)){if(!world.setBlock(after.pos,after.state,Block.UPDATE_KNOWN_SHAPE))throw new IllegalStateException("Copy publication refused");}
             if(after.hasTile()){if(staged==null)throw new IllegalStateException("Prepared Copy tile missing");world.removeBlockEntity(after.pos);world.setBlockEntity(staged);staged.setChanged();}else if(world.getBlockEntity(after.pos)!=null)world.removeBlockEntity(after.pos);world.getChunkAt(after.pos).setUnsaved(true);
-            if(!after.state.isAir()&&fault!=null&&Boolean.getBoolean("vandorlabs.copyRuntimeChecks"))fault.afterCell(header,after);
+            if(!after.state.isAir()&&fault!=null&&(Boolean.getBoolean("vandorlabs.copyRuntimeChecks")||Boolean.getBoolean("vandorlabs.copyPlayerNavigationCheck")))fault.afterCell(header,after);
         }
         public void released(ServerLevel world,NativeCellTransactions.Header header,boolean rollback,String error,NativeCopyReceipt recipe){
             var checked=VERIFIED.get(world);

@@ -40,6 +40,7 @@ final class NativeCopyTiles {
     }
 
     static boolean supported(BlockEntity tile){
+        if(tile instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table)return !table.inert();
         if(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity storage)return !storage.inert();
         if(tile instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack)return !rack.inert();
         if(tile instanceof com.vandorlabs.neoforge.surface.NativeSurfaceEntity surface)return !surface.inert();

@@ -16,7 +16,7 @@ import net.minecraft.world.level.block.state.properties.*;
 
 /** Construction costs include private inventories. Filled carriers can never satisfy an empty block cost. */
 public final class NativeCopyMaterials {
-    private static final Set<String> OWNED_LISTS=Set.of("Items","PortItems","Inventory","inventory","Passengers","ArmPayload","NativeGearPayload","InsertedToken");
+    private static final Set<String> OWNED_LISTS=Set.of("Items","PortItems","Inventory","inventory","Passengers","ArmPayload","NativeGearPayload","InsertedToken","NavigationChip","NavigationModule");
     private static final Set<String> OWNED_AMOUNTS=Set.of("Energy","PortEnergy","energy","energyStored","electricityStored","Amount","amount","BurnTime","Fuel");
     public static final class Need {
         private final ItemStack item;public final boolean exact;public final long count;
@@ -46,6 +46,10 @@ public final class NativeCopyMaterials {
             }
             if(raw!=null){for(String key:List.of("ForgeCaps","neoforge:attachments"))if(raw.contains(key)&&!(raw.get(key) instanceof CompoundTag data&&data.isEmpty()))throw new IllegalArgumentException("Unknown stored ownership needs an exact material adapter");}
             add(needs,material,count,false);
+            if(tile instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table){
+                var chip=table.storedChip();
+                add(needs,chip,chip.getCount(),true);
+            }
             if(tile instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack){for(var module:rack.ownedModuleDrops())add(needs,module,module.getCount(),true);}
             if(tile instanceof Container inventory){if(inventory.getContainerSize()>8192)throw new IllegalArgumentException("Construction inventory slot bound");for(int slot=0;slot<inventory.getContainerSize();slot++){var stack=inventory.getItem(slot);add(needs,stack,stack.getCount(),true);}}
             if(tile instanceof com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity reader){var token=reader.getItem(0);if(!(tile instanceof Container))add(needs,token,token.getCount(),true);}

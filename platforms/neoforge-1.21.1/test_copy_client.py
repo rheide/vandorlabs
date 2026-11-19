@@ -11,6 +11,7 @@ from native_test_artifacts import retain_artifacts
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--xvfb', action='store_true')
+    parser.add_argument('--navigation-table', action='store_true')
     parser.add_argument('--with-jei', action='store_true', help='Check the installed JEI catalog and search')
     options = parser.parse_args()
     if options.xvfb and os.name == 'nt':
@@ -19,6 +20,8 @@ def main():
     properties = ['vandorlabs.copyPlayerCheck=true']
     gradle = []
     markers = []
+    if options.navigation_table:
+        properties.append('vandorlabs.copyPlayerNavigationCheck=true')
     if options.with_jei:
         gradle.append('-PwithJei')
         properties.extend(('vandorlabs.copyPlayerJeiCheck=true', 'vandorlabs.telescopicLanding=true'))

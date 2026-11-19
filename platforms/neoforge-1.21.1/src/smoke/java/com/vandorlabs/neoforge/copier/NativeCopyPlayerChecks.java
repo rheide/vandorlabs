@@ -89,10 +89,32 @@ public final class NativeCopyPlayerChecks {
                 stage = 6;
             }
             case 6 -> {
+                if (NativeCopyPlayerFixture.navigation()) {
+                    if (screen == null || !tile.error().contains("clear of adjacent tables")
+                        || !mc.level.getBlockState(NativeCopyPlayerFixture.OUTPUT.above().north()).isAir()) return;
+                    click(screen, 1, 0);
+                    stage = 8;
+                    return;
+                }
                 if (screen == null || !tile.status().equals("Copy complete")
                     || !mc.level.getBlockState(NativeCopyPlayerFixture.OUTPUT.above()).is(Blocks.STONE)) return;
                 require(!tile.busy() && tile.error().isEmpty(), "completed Copy clears busy and error");
                 System.out.println("[vandorlabs][copy-player] client PASS publicCatalog/ordinary/Configurizer/previousCycle/height/copy");
+                stage = 7;
+                mc.stop();
+            }
+            case 8 -> {
+                if (screen == null || tile.busy() || !tile.status().equals("Copy rolled back")) return;
+                require(mc.level.getBlockState(NativeCopyPlayerFixture.OUTPUT.above()).isAir(), "rolled-back Table stays absent");
+                click(screen, 1, 0);
+                stage = 9;
+            }
+            case 9 -> {
+                if (screen == null || tile.busy() || !tile.status().equals("Copy complete")
+                    || !(mc.level.getBlockEntity(NativeCopyPlayerFixture.OUTPUT.above())
+                        instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableEntity table)
+                    || table.chipStack().isEmpty()) return;
+                System.out.println("[vandorlabs][copy-player] client PASS liveNavigationOutput/adjacentRefusal/rollback/retry");
                 stage = 7;
                 mc.stop();
             }

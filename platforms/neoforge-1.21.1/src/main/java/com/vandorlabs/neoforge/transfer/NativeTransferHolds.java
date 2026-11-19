@@ -73,6 +73,12 @@ public final class NativeTransferHolds {
             if(admission!=null&&!admission.consumed&&admission.lease==lease&&admission.pos.equals(pos)&&lease.authority.mutationArmed()){admission.consumed=true;continue;}return true;
         }return false;
     }
+    /** True only for the exact block write already admitted by the mutation guard. */
+    public static boolean publicationAdmitted(Level world, BlockPos pos) {
+        var admission = MUTATION.get();
+        return admission != null && admission.consumed && admission.lease.world.get() == world
+            && admission.pos.equals(pos) && admission.lease.live() && admission.lease.authority.mutationArmed();
+    }
     /** Inventory automation remains frozen even while an internal block write is admitted. */
     public static boolean blocked(Container inventory) {
         if (held.isEmpty()) return false;
