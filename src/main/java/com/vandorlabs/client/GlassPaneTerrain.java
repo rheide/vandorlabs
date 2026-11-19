@@ -238,7 +238,7 @@ public final class GlassPaneTerrain {
         if(WorldSceneBenchmark.omitGlazing())return "benchmark-no-glass";
         if(!GlassPaneTerrainProof.supports(DefaultVertexFormats.BLOCK)||!GlassPaneTerrainMesh.supports(DefaultVertexFormats.BLOCK))return "unsupported-vertex-layout";
         if(tile.getWorld() instanceof VehicleWorld)return "moving";
-        if(!(state.getBlock() instanceof BlockProgrammableGlass))return "not-programmable-glass";
+        if(!(state.getBlock() instanceof BlockProgrammableGlass)||state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass)return "not-programmable-glass";
         if(tile.getMaterial()>=0)return "custom-material";
         if(tile.fluids.any())return "fluid";
         if(GlassMaterials.opaque(tile.getMaterial(),tile.getTint()))return "opaque";

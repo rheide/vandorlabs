@@ -246,6 +246,8 @@ public class ModBlocks {
         PROGRAMMABLE_DIAGONAL_WALL = add(new BlockProgrammableWall("programmable_diagonal_wall",
                 BlockProgrammableWall.Shape.DIAGONAL));
         PROGRAMMABLE_DIAGONAL_GLASS = add(new BlockProgrammableDiagonalGlass());
+        add(new BlockProgrammableCornerGlass("programmable_corner_glass",false));
+        add(new BlockProgrammableCornerGlass("programmable_diagonal_corner_glass",true));
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
         add(PROGRAMMABLE_DIAGONAL_SCREEN);
         PROGRAMMABLE_INPUT = new BlockProgrammableInput();
@@ -556,6 +558,14 @@ public class ModBlocks {
                 if (block instanceof BlockConfigurableSpaceDoor) {
                     registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
                     ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
+                    continue;
+                }
+                if(block instanceof BlockProgrammableCornerGlass){
+                    ModelLoader.setCustomStateMapper(block,new StateMap.Builder().ignore(BlockProgrammableCornerGlass.TURN,
+                            BlockGlassWall.ROTATED,BlockGlassWall.DEPTH,BlockProgrammableGlass.SIZE,BlockGlassWall.TOP,BlockGlassWall.BOTTOM,
+                            BlockGlassWall.LEFT,BlockGlassWall.RIGHT,BlockGlassWall.INNER_TL,BlockGlassWall.INNER_TR,
+                            BlockGlassWall.INNER_BL,BlockGlassWall.INNER_BR).build());
+                    ModelLoader.setCustomModelResourceLocation(item,0,new ModelResourceLocation(block.getRegistryName(),"inventory"));
                     continue;
                 }
                 if(block instanceof BlockProgrammableDiagonalGlass || block instanceof BlockProgrammableGlass){

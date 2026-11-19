@@ -48,6 +48,8 @@ public final class WaterloggedParts {
     /** Stable local sides follow the wall when a vehicle or turntable rotates it. */
     public static int side(IBlockAccess world,BlockPos pos,Vec3d local){
         IBlockState state=world.getBlockState(pos);if(world instanceof World&&OpeningFluids.supports(state))return OpeningFluids.side((World)world,pos,local);if(!panel(state))return 0;
+        if(state.getBlock() instanceof BlockProgrammableCornerGlass)
+            return ((BlockProgrammableCornerGlass)state.getBlock()).geometry(state).side(local.x,local.y,local.z);
         EnumFacing facing=PanelJoins.flatFacing(state,world,pos);double z=facing==EnumFacing.EAST?1-local.x:facing==EnumFacing.SOUTH?1-local.z:facing==EnumFacing.WEST?local.x:local.z;
         double coordinate=z,mid=PanelJoins.flatNear(state,world,pos)/16D+.125;
         if(state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isDiagonalShape()){

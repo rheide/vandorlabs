@@ -315,6 +315,9 @@ case "${1:-}" in
         elif [ "$TARGET" = door-appearance ]; then
             PREFIX=door_
             export VANDOR_LABS_DOOR_APPEARANCE_CHECKS_ONLY=true
+        elif [ "$TARGET" = corner-glass ]; then
+            PREFIX=corner_glass_
+            export VANDOR_LABS_CORNER_GLASS_ONLY=true
         elif [ "$TARGET" = glass-appearance ]; then
             PREFIX=glass_
             export VANDOR_LABS_GLASS_APPEARANCE_CHECKS_ONLY=true
@@ -1085,6 +1088,12 @@ PYIMAGE
     if [ "$TARGET" = door-appearance ]; then
         grep -q "door-appearance-live PASS" "$RUN_OUT/client.log"
         echo "Live door appearance checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = corner-glass ]; then
+        grep -q 'corner-glass PASS' "$RUN_OUT/client.log"
+        test -s "$RUN_OUT/corner-glass-middle.png"
+        echo "Corner glass checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = glass-appearance ]; then

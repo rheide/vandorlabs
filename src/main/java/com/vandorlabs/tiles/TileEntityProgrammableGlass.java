@@ -224,6 +224,8 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
         return oldState.getBlock() != newState.getBlock();
     }
     @Override public boolean shouldRenderInPass(int pass) {
+        if(world!=null&&world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass)
+            return pass==0||pass==1&&(fluids.any()||!GlassMaterials.opaque(material,tint));
         int nativePass=com.vandorlabs.VandorLabs.proxy==null?-1:com.vandorlabs.VandorLabs.proxy.glassPanePass(this,pass);
         if(nativePass>=0)return nativePass!=0;
         if(pass==0)return true;
@@ -233,7 +235,7 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
     }
     /** An empty opaque pass still collects this pane for sorted translucent drawing. */
     @Override public boolean hasFastRenderer(){
-        return com.vandorlabs.VandorLabs.proxy!=null
-                &&com.vandorlabs.VandorLabs.proxy.glassCollectionOnly(this);
+        return world!=null&&!(world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass)
+                &&com.vandorlabs.VandorLabs.proxy!=null&&com.vandorlabs.VandorLabs.proxy.glassCollectionOnly(this);
     }
 }

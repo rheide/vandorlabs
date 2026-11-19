@@ -110,7 +110,7 @@ public final class GlassFrameChunks {
     }
     static boolean selected(TileEntityProgrammableGlass tile){return tile.isFramed()&&(tile.frameAppearance.front>=0||tile.frameAppearance.interior>=0||tile.frameAppearance.exteriorChoice()>=0||tile.frameAppearance.tile);}
     static boolean supported(TileEntityProgrammableGlass tile,IBlockState state){
-        return !LEGACY_BENCHMARK&&!(tile.getWorld() instanceof VehicleWorld)&&state.getBlock() instanceof BlockProgrammableGlass&&tile.isFramed()
+        return !LEGACY_BENCHMARK&&!(tile.getWorld() instanceof VehicleWorld)&&state.getBlock() instanceof BlockProgrammableGlass&&!(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass)&&tile.isFramed()
                 &&(selected(tile)||PanelJoins.flatCorner(state,tile.getWorld(),tile.getPos())!=null);
     }
     /** Mixed-light translucent frames use a retained frame group, independently

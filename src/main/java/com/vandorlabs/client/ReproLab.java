@@ -810,6 +810,11 @@ public class ReproLab {
             try {if((Boolean.getBoolean("vandorlabs.glassExistingScene")||GlazingFeatureChecks.tick(mc,outDir))&&GlassNativeSceneChecks.tick(mc,outDir)){if(!Boolean.getBoolean("vandorlabs.glassExistingScene"))GlassDisplayOrderChecks.run(mc,outDir);mc.shutdown();}}
             catch(Exception failure){throw new IllegalStateException("glass display order checks",failure);}return;
         }
+        if(Boolean.getBoolean("vandorlabs.cornerGlassOnly")){
+            try{if(CornerGlassLiveChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Corner glass fixture",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.glassAppearanceChecksOnly")) {
             try {if(GlassVisualChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("glass live checks",failure);}

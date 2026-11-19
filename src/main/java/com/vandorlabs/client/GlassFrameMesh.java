@@ -28,7 +28,10 @@ final class GlassFrameMesh {
     private static final GlassSurfaceGroups.Layout UNIT=new GlassSurfaceGroups.Layout(0,0,1,1);
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile){return get(tile,UNIT);}
     static StaticSurfaceMesh get(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
-        Key key=key(tile,layout);
+        return get(tile,layout,GlassSurfaceGroups.frameMask(tile));
+    }
+    static StaticSurfaceMesh get(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout,int mask){
+        Key key=key(tile,layout,mask);
         try {
         StaticSurfaceMesh mesh=CACHE.get(key);if(mesh!=null)return mesh;key=new Key(key);StaticSurfaceMesh.Capture b=StaticSurfaceMesh.capture();
         emit(b,key);
@@ -38,13 +41,13 @@ final class GlassFrameMesh {
         return mesh;
         }finally{PROBE.set(null,null,null,0,0,0,0);}
     }
-    private static Key key(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout){
+    private static Key key(TileEntityProgrammableGlass tile,GlassSurfaceGroups.Layout layout,int mask){
         net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
-        return PROBE.set(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),GlassSurfaceGroups.frameMask(tile),tile.frameAppearance.front,layout.columns,layout.rows);
+        return PROBE.set(atlas.getAtlasSprite(tile.frameAppearance.rail("vandorlabs:blocks/space_doors/medium/double_frame_metal")),atlas.getAtlasSprite(tile.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side")),atlas.getAtlasSprite(tile.frameAppearance.exterior("vandorlabs:blocks/programmable_glass/metal_side")),mask,tile.frameAppearance.front,layout.columns,layout.rows);
     }
     /** The chunk capture uses this same emitter and keeps each authored atlas sprite. */
     static void emit(TileEntityProgrammableGlass tile,BufferBuilder buffer){
-        try{emit(buffer,key(tile,UNIT));}finally{PROBE.set(null,null,null,0,0,0,0);}
+        try{emit(buffer,key(tile,UNIT,GlassSurfaceGroups.frameMask(tile)));}finally{PROBE.set(null,null,null,0,0,0,0);}
     }
     interface Sprites { void texture(TextureAtlasSprite sprite); }
     private static void texture(BufferBuilder buffer,TextureAtlasSprite sprite){if(buffer instanceof Sprites)((Sprites)buffer).texture(sprite);}

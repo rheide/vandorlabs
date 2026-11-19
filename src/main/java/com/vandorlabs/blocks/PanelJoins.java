@@ -74,7 +74,7 @@ public final class PanelJoins {
                 || !((BlockProgrammableWall)state.getBlock()).isPortholeShape() || tile.isJoinPortholes());
     }
     public static boolean diagonal(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape() && !((BlockProgrammableWall)state.getBlock()).isPortholeShape();}
-    public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass || state.getBlock() instanceof BlockProgrammableWall && !((BlockProgrammableWall)state.getBlock()).isDiagonalShape();}
+    public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass && !(state.getBlock() instanceof BlockProgrammableCornerGlass) || state.getBlock() instanceof BlockProgrammableWall && !((BlockProgrammableWall)state.getBlock()).isDiagonalShape();}
     public static EnumFacing facing(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass ? (state.getValue(BlockGlassWall.ROTATED)?EnumFacing.EAST:EnumFacing.NORTH):state.getValue(BlockProgrammableWall.FACING);}
     public static double near(IBlockState state){return PanelDepth.start(state.getValue(state.getBlock() instanceof BlockProgrammableGlass?BlockGlassWall.DEPTH:BlockProgrammableWall.DEPTH));}
     public static boolean enabled(IBlockAccess world,BlockPos pos){net.minecraft.tileentity.TileEntity tile=world.getTileEntity(pos);return !(tile instanceof com.vandorlabs.tiles.TileEntityProgrammableGlass) || ((com.vandorlabs.tiles.TileEntityProgrammableGlass)tile).isJoin();}

@@ -1,0 +1,11 @@
+{
+  "type": "minecraft:crafting_shapeless",
+  "ingredients": [
+    {
+      "item": "vandorlabs:programmable_diagonal_glass"
+    }
+  ],
+  "result": {
+    "item": "vandorlabs:programmable_diagonal_corner_glass"
+  }
+}

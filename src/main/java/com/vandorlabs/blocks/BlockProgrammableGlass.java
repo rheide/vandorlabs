@@ -20,7 +20,7 @@ import net.minecraft.world.World;
 import net.minecraft.world.IBlockAccess;
 
 /** One connected wall block with two detail sizes, legacy metadata support and a configurable metal frame. */
-public final class BlockProgrammableGlass extends BlockGlassWall {
+public class BlockProgrammableGlass extends BlockGlassWall {
     public static final PropertyInteger SIZE = PropertyInteger.create("size", 0, 2);
     public static final net.minecraftforge.common.property.IUnlistedProperty<Object> FRAME_MESH=new net.minecraftforge.common.property.IUnlistedProperty<Object>(){
         public String getName(){return "glass_frame_mesh";}

@@ -84,6 +84,7 @@ CAPTURE_JVM+=("-Dvandorlabs.vehicleTaxiChecksOnly=${VANDOR_LABS_VEHICLE_TAXI_CHE
 CAPTURE_JVM+=("-Dvandorlabs.vehicleRampChecksOnly=${VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY:-false}" "-Dvandorlabs.vehicleRampFixture=$PWD/../fixtures/vehicle-ramps-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.copySurfaceChecksOnly=${VANDOR_LABS_COPY_SURFACE_CHECKS_ONLY:-false}" "-Dvandorlabs.copySurfaceFixture=$PWD/../fixtures/copy-surfaces-2.6.nbt")
 CAPTURE_JVM+=("-Dvandorlabs.armResourceIndicatorOnly=${VANDOR_LABS_ARM_RESOURCE_INDICATOR_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.cornerGlassOnly=${VANDOR_LABS_CORNER_GLASS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.horizontalDoorChecksOnly=${VANDOR_LABS_HORIZONTAL_DOOR_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.armWallOnly=${VANDOR_LABS_ARM_WALL_ONLY:-false}" "-Dvandorlabs.armWallFixture=${VANDOR_LABS_ARM_WALL_FIXTURE:-$PWD/../fixtures/arm-wall-rotating-2.6.nbt}")
 CAPTURE_JVM+=("-Dvandorlabs.armSecondFixture=${VANDOR_LABS_ARM_SECOND_FIXTURE:-}")

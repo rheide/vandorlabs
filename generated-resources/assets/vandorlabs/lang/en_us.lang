@@ -932,3 +932,5 @@ tile.vandorlabs.outdoor_ac_dark_cyan.name=Outdoor AC (Dark Cyan)
 tile.vandorlabs.outdoor_ac_silver.name=Outdoor AC (Silver)
 tile.vandorlabs.printer.name=Printer
 tile.vandorlabs.scanner.name=Scanner
+tile.vandorlabs.programmable_corner_glass.name=Programmable Corner Glass
+tile.vandorlabs.programmable_diagonal_corner_glass.name=Programmable Diagonal Corner Glass

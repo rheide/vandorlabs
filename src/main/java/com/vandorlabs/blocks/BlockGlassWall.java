@@ -126,6 +126,10 @@ public class BlockGlassWall extends Block {
             }
             // Flat wall materials may share the same frame plane.
             IBlockState other=world.getBlockState(pos);
+            if(other.getBlock() instanceof BlockProgrammableCornerGlass){
+                return TextureJoins.allows(world.getTileEntity(owner),owner,pos)
+                        &&((BlockProgrammableCornerGlass)other.getBlock()).joinsStraight(world,pos,other,owner,state);
+            }
             if(PanelJoins.flat(other) && !(other.getBlock() instanceof BlockGlassWall)){
                 return PanelJoins.connectsFlat(world,owner,state,pos);
             }

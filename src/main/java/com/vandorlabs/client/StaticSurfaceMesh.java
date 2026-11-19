@@ -22,6 +22,22 @@ final class StaticSurfaceMesh {
     StaticSurfaceMesh mirrorX(double centerSum){
         float[] data=new float[vertices.length];for(int q=0;q<vertices.length;q+=32)for(int v=0;v<4;v++){int from=q+(3-v)*8,to=q+v*8;System.arraycopy(vertices,from,data,to,8);data[to]=(float)(centerSum-data[to]);data[to+5]=-data[to+5];}return new StaticSurfaceMesh(data);
     }
+    StaticSurfaceMesh cornerGlass(com.vandorlabs.render.CornerGlassGeometry geometry){
+        float[] data=vertices.clone();
+        double[] point=new double[3];
+        for(int i=0;i<data.length;i+=8){
+            geometry.project(data[i]/16D,data[i+1]/16D,data[i+2]/16D,point);
+            for(int axis=0;axis<3;axis++)data[i+axis]=(float)point[axis];
+        }
+        for(int q=0;q<data.length;q+=32){
+            double ax=data[q+8]-data[q],ay=data[q+9]-data[q+1],az=data[q+10]-data[q+2];
+            double bx=data[q+16]-data[q],by=data[q+17]-data[q+1],bz=data[q+18]-data[q+2];
+            double nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx;
+            double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
+            if(length>1E-9)for(int i=q;i<q+32;i+=8){data[i+5]=(float)(nx/length);data[i+6]=(float)(ny/length);data[i+7]=(float)(nz/length);}
+        }
+        return new StaticSurfaceMesh(data);
+    }
     int vertexCount() { return vertices.length/8; }
     int geometryHash() { return Arrays.hashCode(vertices); }
     boolean sameGeometry(StaticSurfaceMesh other) { return Arrays.equals(vertices,other.vertices); }

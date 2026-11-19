@@ -234,6 +234,9 @@ final class GlassSurfaceGroups {
     private static boolean join(TileEntity tile){return tile instanceof TileEntityProgrammableGlass?((TileEntityProgrammableGlass)tile).isJoin():((TileEntityAnimatedScreenSelector)tile).isGlassTextureJoin();}
     private static boolean compatible(TileEntity root,BlockPos next,boolean main,boolean frame){
         if(root==null)return false;World world=root.getWorld();IBlockState a=world.getBlockState(root.getPos()),b=world.getBlockState(next);TileEntity other=world.getTileEntity(next);
+        if(frame&&a.getBlock() instanceof BlockProgrammableGlass
+                &&b.getBlock() instanceof BlockProgrammableCornerGlass)
+            return ((BlockProgrammableCornerGlass)b.getBlock()).joinsStraight(world,next,b,root.getPos(),a);
         if(a.getBlock()!=b.getBlock() || other==null || !main && !join(other))return false;
         if(!frame&&!main){int material=GlazingDisplay.material(root);if(material>=0&&"Screens".equals(com.vandorlabs.tiles.ScreenHousingTextures.category(material))&&!com.vandorlabs.tiles.GlassPlayback.of(root).same(com.vandorlabs.tiles.GlassPlayback.of(other)))return false;}
         if(root instanceof TileEntityProgrammableGlass){TileEntityProgrammableGlass x=(TileEntityProgrammableGlass)root,y=(TileEntityProgrammableGlass)other;

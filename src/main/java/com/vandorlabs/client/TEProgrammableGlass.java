@@ -57,6 +57,11 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
     @Override public void render(TileEntityProgrammableGlass tile, double x, double y,
             double z, float partial, int stage, float alpha) {
         if (tile.getWorld() == null || WorldSceneBenchmark.omitGlazing()) return;
+        net.minecraft.block.state.IBlockState placedState=tile.getWorld().getBlockState(tile.getPos());
+        if(placedState.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass){
+            CornerGlassRenderer.render(tile,(com.vandorlabs.blocks.BlockProgrammableCornerGlass)placedState.getBlock(),placedState,x,y,z);
+            return;
+        }
         boolean terrain=GlassPaneTerrain.rendered(tile);
         if(!terrain&&GlazingRenderOrder.handle(tile,x,y,z,partial,stage,alpha))return;
         net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());
