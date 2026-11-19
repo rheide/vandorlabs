@@ -6,7 +6,7 @@ Survival copying. The settings dialog shows refused blocks, and output becomes
 visible to connected players when the transfer completes. Double chests copy
 with both halves and their contents. Complete stationary Navigation Table
 groups retain both their Navigation Chip and module mounts. Complete Survey
-Dish and Sentinel Array frames get independent ownership. Regular Screen groups
+Dish and Sentinel Array frames get independent ownership. All seven Programmable Screen roles
 can also be copied when they have static artwork and no private media or
 configured channel controls. Idle, disconnected Synthesis Towers, Assembly
 Presses and Enclosed Gantries copy when all their slots are empty. [Copy Controller guide](../copy-controller.md)
@@ -41,7 +41,8 @@ and shows which recipes require a Catalog Chip.
 
 The experimental **Turntable Controller** can capture supported blocks above
 a Programmable Surface, turn them and restore them to the world from the dialog or with configured
-Redstone inputs. Enable it
+Redstone inputs. Stand on supported blocks or the disc of an upward-facing
+Turntable to ride through the turn. Enable it
 with `-Dvandorlabs.turntableControllers=true`. [Native Turntable guide](../development/native-turntable.md)
 
 Imported stationary wheels and eligible wheel items in a player inventory

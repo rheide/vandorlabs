@@ -12,8 +12,8 @@ Advanced Pilot Chair with both armrest sliders. Both Navigation Computers,
 the stationary Cockpit and the Redstone Yoke and Screen are available.
 Broader Copy Controller targets, renderer-specific armor samples and the
 Cockpit’s remaining interactive controls are still open. The opt-in Turntable Controller supports
-Scan, rotation and Restore with Redstone. Riders and moved interactions remain
-open, alongside the Ramp and compatibility limits in the
+Scan, rotation and Restore with Redstone and upward-facing riders. Moved
+interactions remain open, alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
 
