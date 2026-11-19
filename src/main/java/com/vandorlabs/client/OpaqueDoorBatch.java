@@ -45,7 +45,8 @@ public final class OpaqueDoorBatch {
         if(com.vandorlabs.blocks.RenderFluidPresence.wet(tile))return false;
         IBlockState state=tile.getWorld().getBlockState(tile.getPos());
         if (!(state.getBlock() instanceof BlockConfigurableSpaceDoor)
-                || tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor && !((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).isAnchor()) return false;
+                || tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor && (!((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).isAnchor()
+                    || ((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).isHorizontal())) return false;
         state=state.getBlock().getActualState(state,tile.getWorld(),tile.getPos());
         if(state.getValue(BlockVandorDoor.HALF)!=BlockDoor.EnumDoorHalf.LOWER)return false;
         boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);

@@ -5,6 +5,7 @@ unset VANDOR_LABS_COUPLER_ARTICULATION_CHECKS_ONLY VANDOR_LABS_RAMP_AXIS_CHECKS_
 unset VANDOR_LABS_LIGHT_CHECKS_ONLY VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REDSTONE_TAB_DISPATCH_ONLY VANDOR_LABS_HOVER_CONTROLS_CHECKS_ONLY VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
+unset VANDOR_LABS_HORIZONTAL_DOOR_ONLY
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
 unset VANDOR_LABS_SEGMENTED_TALL_CHECKS_ONLY VANDOR_LABS_SEGMENTED_DOOR_BENCHMARK_ONLY VANDOR_LABS_SEGMENTED_DOOR_LEGACY_CHECKS_ONLY
@@ -357,6 +358,9 @@ case "${1:-}" in
         elif [ "$TARGET" = trapdoors ]; then
             PREFIX=gallery_trapdoor_followup_
             export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = horizontal-door ]; then
+            PREFIX=horizontal_door_
+            export VANDOR_LABS_HORIZONTAL_DOOR_ONLY=true
         elif [ "$TARGET" = door-selection ]; then
             PREFIX=large_door_selection_
             export VANDOR_LABS_MOVED_DOOR_CHECKS_ONLY=true
@@ -470,6 +474,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = horizontal-door ]; then
+        grep -q "horizontal-door PASS" "$RUN_OUT/client.log"
+        echo "Horizontal Large Door checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = appearance-compat ]; then
         for marker in appearance-compat picked-item-models waila-appearance industrial-renewal-catwalk industrial-renewal-catwalk-client; do grep -q "$marker PASS" "$RUN_OUT/client.log"; done
         echo "Appearance compatibility passed: $RUN_OUT"

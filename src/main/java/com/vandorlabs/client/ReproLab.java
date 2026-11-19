@@ -684,6 +684,10 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.savedCouplingChecksOnly")){try{if(SavedVehicleCouplingChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved vehicle coupling",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.savedHoverChecksOnly")){try{if(SavedVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved Hover recovery",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleRenderCostChecksOnly")){if(++holdTicks==40){VehicleRenderRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] vehicle-render-cost PASS");mc.shutdown();}return;}
+        if(Boolean.getBoolean("vandorlabs.horizontalDoorChecksOnly")){
+            if(++holdTicks>=40){onServer(mc,()->LargeDoorRuntimeChecks.horizontal(mc.getIntegratedServer().getEntityWorld(),mc.getIntegratedServer().getPlayerList().getPlayers().get(0)));mc.shutdown();}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.movedDoorChecksOnly")){if(++holdTicks>=40)MovedDoorRuntimeChecks.tick(mc,outDir);return;}
         if(Boolean.getBoolean("vandorlabs.segmentedDoorBenchmarkOnly")){if(++holdTicks==40)try{SegmentedDoorBenchmark.contracts(mc,outDir);SegmentedDoorBenchmark.run(mc,outDir);System.out.println("[vandorlabs][reprolab] segmented-benchmark PASS");mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Segmented reference benchmark",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.segmentedTallChecksOnly")){if(++holdTicks>=40)try{if(SegmentedTallChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Tall segmented check",failure);}return;}
