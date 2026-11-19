@@ -11,7 +11,7 @@ import net.minecraft.util.math.BlockPos;
 final class SegmentedDoorClockChecks {
     private static void equal(double a,double b,String why){if(Math.abs(a-b)>1e-9)throw new IllegalStateException("Segmented clock: "+why+" "+a+" != "+b);}
     static void run(Minecraft mc){
-        net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:segmented_door");List<VehicleStructure.Cell> cells=new ArrayList<>();for(int col=0;col<3;col++)for(int row=0;row<4;row++)cells.add(new VehicleStructure.Cell(new BlockPos(col,3-row,0),block.getDefaultState(),null));VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(cells));SegmentedDoorTile[] roots=new SegmentedDoorTile[3];
+        net.minecraft.block.Block block=net.minecraft.block.Block.getBlockFromName("vandorlabs:segmented_door");List<VehicleStructure.Cell> cells=new ArrayList<>();for(int col=0;col<3;col++)for(int row=0;row<4;row++)cells.add(new VehicleStructure.Cell(new BlockPos(col,3-row,0),block.getDefaultState().withProperty(SegmentedDoorBlock.FACING,net.minecraft.util.EnumFacing.NORTH),null));VehicleWorld view=new VehicleWorld(mc.world,VehicleStructure.display(cells));SegmentedDoorTile[] roots=new SegmentedDoorTile[3];
         for(int col=0;col<3;col++){roots[col]=new SegmentedDoorTile();SegmentedDoorTile tile=roots[col];tile.setWorld(view);tile.setPos(new BlockPos(col,3,0));tile.column=col;tile.columns=3;tile.height=4;tile.ticksPerSection=10;tile.duration=40;tile.started=view.getTotalWorldTime();view.tiles.put(tile.getPos(),tile);}
         equal(SegmentedDoorVisuals.sample(roots[0],0),0,"closed baseline");UUID stroke=UUID.randomUUID();for(int col=0;col<3;col++){roots[col].targetOpen=true;roots[col].sequence=1+col*3;roots[col].motionIdentity=stroke;}
         equal(SegmentedDoorVisuals.sample(roots[0],0),0,"opening starts without jump");equal(SegmentedDoorVisuals.sample(roots[0],10),.25,"uniform opening speed");equal(SegmentedDoorVisuals.sample(roots[1],10),.25,"late second-column packet");equal(SegmentedDoorVisuals.sample(roots[2],17),.425,"later third-column packet");
@@ -19,7 +19,22 @@ final class SegmentedDoorClockChecks {
         roots[0].started-=100000;roots[0].from=1;equal(SegmentedDoorVisuals.sample(roots[0],20),.5,"repeated packet and server-clock correction");
         UUID reverse=UUID.randomUUID();roots[1].targetOpen=false;roots[1].sequence++;roots[1].motionIdentity=reverse;equal(SegmentedDoorVisuals.sample(roots[1],20),.5,"reversal continuity");roots[0].targetOpen=false;roots[0].sequence++;roots[0].motionIdentity=reverse;equal(SegmentedDoorVisuals.sample(roots[0],23),.425,"late reversal shares timeline");
         roots[0].targetOpen=true;roots[0].sequence--;roots[0].motionIdentity=stroke;equal(SegmentedDoorVisuals.sample(roots[0],25),.375,"stale motion cannot restart");
+        net.minecraft.nbt.NBTTagCompound clipboard=roots[1].writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+        BlockPos pastedAt=roots[1].getPos().south(8);
+        clipboard.setInteger("z",pastedAt.getZ());
+        SegmentedDoorTile pasted=new SegmentedDoorTile();
+        pasted.setWorld(view);pasted.readFromNBT(clipboard);
+        requireSameIds(roots[1],pasted);
+        SegmentedDoorVisuals.sample(pasted,25);
+        pasted.targetOpen=true;pasted.sequence++;pasted.motionIdentity=UUID.randomUUID();
+        SegmentedDoorVisuals.sample(pasted,25);
+        equal(SegmentedDoorVisuals.sample(roots[1],30),.25,"pasted motion cannot change the source door");
+        equal(SegmentedDoorVisuals.sample(pasted,65),1,"translated copy opens independently");
         System.out.println("[vandorlabs][reprolab] segmented-clock PASS shared stroke different column sequences late/repeated/reordered packets reversals exact row poses");
+    }
+    private static void requireSameIds(SegmentedDoorTile source,SegmentedDoorTile pasted){
+        if(!source.identity.equals(pasted.identity)||!source.motionIdentity.equals(pasted.motionIdentity))
+            throw new IllegalStateException("Paste fixture must preserve both saved UUIDs");
     }
     private SegmentedDoorClockChecks(){}
 }
