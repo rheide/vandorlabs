@@ -74,9 +74,11 @@ public final class ArmTransactions {
         try{Map<BlockPos,Hold> holds=HOLDS.computeIfAbsent(world,w->new LinkedHashMap<>());for(Hold hold:future.get()){if(holds.putIfAbsent(hold.root,hold)!=null)throw new IOException("Overlapping arm recovery controllers");}LOADED.add(world);LOADING.remove(world);return true;}
         catch(Exception failure){return false;}
     }
-    public static boolean locked(World world,BlockPos pos){
+    public static boolean locked(World world,BlockPos pos){return locked(world,pos,ACTOR.get());}
+    static boolean lockedForResourceTransfer(World world,BlockPos pos){return locked(world,pos,null);}
+    private static boolean locked(World world,BlockPos pos,GearTileEntity actor){
         if(MATRIX.get()||!(world instanceof WorldServer))return false;WorldServer server=(WorldServer)world;if(!load(server))return true;
-        GearTileEntity actor=ACTOR.get();Map<BlockPos,Hold> holds=HOLDS.get(server);if(holds!=null)for(Hold hold:holds.values())if(hold.cells.contains(pos)&&(actor==null||actor.getWorld()!=world||!actor.getPos().equals(hold.root)))return true;return false;
+        Map<BlockPos,Hold> holds=HOLDS.get(server);if(holds!=null)for(Hold hold:holds.values())if(hold.cells.contains(pos)&&(actor==null||actor.getWorld()!=world||!actor.getPos().equals(hold.root)))return true;return false;
     }
     static String diagnostic(World world,BlockPos root){Map<BlockPos,Hold> holds=HOLDS.get(world);Hold hold=holds==null?null:holds.get(root);return hold==null?"no-hold":"operation="+hold.record.getString("Operation")+" durable="+hold.durable+" applied="+hold.applied+" recovering="+hold.recovering+" retiring="+hold.retiring+" preparedTicks="+hold.preparedTicks+" io="+(hold.io==null?"none":hold.io.isDone()?"done":"pending")+" error="+hold.error;}
     /** Matrix fixtures exercise mutation/rollback separately from real disk/restart checks. */
