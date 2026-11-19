@@ -7,7 +7,7 @@ from test_sampled_materials import fixture_world
 from native_test_artifacts import artifact_directory,retain_artifacts
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--start',type=int,default=0);parser.add_argument('--end',type=int,default=4);options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');parser.add_argument('--through-arm',action='store_true');parser.add_argument('--start',type=int,default=0);parser.add_argument('--end',type=int,default=4);options=parser.parse_args()
  if not 0<=options.start<options.end<=4:parser.error('Require 0 <= start < end <= 4')
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.resourcePorts=true -Dvandorlabs.portModClientCheck=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='port-mod-client-',dir=base))
@@ -25,6 +25,7 @@ def main():
  if len(records)!=4:raise RuntimeError('Exact four verified optional JARs required')
  properties=out/'dev-mod-folders.properties';properties.write_text(''.join(key+'='+value.replace('\\','\\\\')+'\n' for key,value in folders.items()))
  (out/'optional-mods.sha256').write_text('\n'.join(records)+'\n')
+ if options.through_arm:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.portModThroughArm=true'
  env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.portModStart='+str(options.start)+' -Dvandorlabs.portModEnd='+str(options.end)+' -Xmx8G -Dfml.modFoldersFile="'+str(properties.resolve())+'"'
  extra=[];server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=port-client',*extra),server_log,env)
  try:
@@ -60,5 +61,5 @@ def main():
  for pattern in ['ports/Native*Port*.class','ports/NativeResourcePort*.class','ports/client/NativePort*.class']:
   for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge').glob(pattern)):evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+str(path.relative_to(ROOT)))
  (out/'classes-and-reference.sha256').write_text('\n'.join(evidence)+'\n')
- print('Actual native optional port networks PASS: '+str(out),flush=True)
+ print('Actual native optional port networks'+(' through Arms' if options.through_arm else '')+' PASS: '+str(out),flush=True)
 if __name__=='__main__':main()
