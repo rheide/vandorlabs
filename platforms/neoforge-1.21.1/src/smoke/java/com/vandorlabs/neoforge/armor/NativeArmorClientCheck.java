@@ -10,12 +10,17 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.client.renderer.texture.DynamicTexture;
 import net.minecraft.client.renderer.texture.TextureAtlas;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.decoration.ArmorStand;
+import net.minecraft.world.phys.BlockHitResult;
 import net.minecraft.world.phys.EntityHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.minecraft.world.level.GameType;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -27,7 +32,7 @@ import static com.vandorlabs.neoforge.armor.NativeArmorFixture.require;
 
 @EventBusSubscriber(modid = "vandorlabs", value = Dist.CLIENT)
 public final class NativeArmorClientCheck {
-    private static int ticks, stage, wait;
+    private static int ticks, stage = 20, wait;
     private static volatile boolean captured;
     private static String capture;
     private static ArmorStand mounted;
@@ -47,6 +52,52 @@ public final class NativeArmorClientCheck {
             + " offhand=" + player.getOffhandItem());
         var offhand = player.getOffhandItem();
         switch (stage) {
+            case 20 -> {
+                if (game.gameMode.getPlayerMode() != GameType.SURVIVAL || player.getInventory().selected != 0
+                    || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())
+                    || !(offhand.getItem() instanceof NativeArmorItem) || player.distanceToSqr(.5, 79, .5) > .25
+                    || !game.level.getBlockState(NativeArmorFixture.LOG).is(net.minecraft.world.level.block.Blocks.OAK_LOG)) return;
+                sampleFace(game, NativeArmorFixture.LOG, Direction.UP);
+                stage++;
+            }
+            case 21 -> {
+                if (!NativeArmorFixture.LOG_TOP.equals(NativeArmorItem.worldSample(offhand))) return;
+                require(game.screen == null, "Configurator world-face click does not open a configuration menu");
+                swapHands(game);
+                stage++;
+            }
+            case 22 -> {
+                var held = player.getMainHandItem();
+                if (!(held.getItem() instanceof NativeArmorItem)
+                    || !NativeArmorFixture.LOG_TOP.equals(NativeArmorItem.worldSample(held))) return;
+                sampleFace(game, NativeArmorFixture.LOG, Direction.NORTH);
+                stage++;
+            }
+            case 23 -> {
+                var held = player.getMainHandItem();
+                if (!NativeArmorFixture.LOG_SIDE.equals(NativeArmorItem.worldSample(held))) return;
+                require(held.getDamageValue() == 24 && held.getHoverName().getString().equals(NativeArmorFixture.NAME),
+                    "direct survival face sample preserves held metadata");
+                swapHands(game);
+                stage++;
+            }
+            case 24 -> {
+                if (!player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())
+                    || !NativeArmorFixture.LOG_SIDE.equals(NativeArmorItem.worldSample(offhand))) return;
+                sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
+                stage++;
+            }
+            case 25 -> {
+                if (!NativeArmorFixture.CUBE_SPRITE.equals(NativeArmorItem.worldSample(offhand))) return;
+                var baked = game.getItemRenderer().getModel(offhand, game.level, player, 0);
+                require(baked.getParticleIcon().contents().name().toString().equals(NativeArmorFixture.CUBE_SPRITE),
+                    "rotated configured face override reaches actual held model");
+                var restored = net.minecraft.world.item.ItemStack.parseOptional(player.registryAccess(),
+                    (net.minecraft.nbt.CompoundTag)offhand.save(player.registryAccess()));
+                require(NativeArmorFixture.CUBE_SPRITE.equals(NativeArmorItem.worldSample(restored)),
+                    "world sample survives native stack serialization");
+                stage = 0;
+            }
             case 0 -> {
                 if (game.gameMode.getPlayerMode() != GameType.SURVIVAL || player.getInventory().selected != 0
                     || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())
@@ -57,13 +108,17 @@ public final class NativeArmorClientCheck {
             }
             case 1 -> {
                 if (!(game.screen instanceof NativeArmorScreen screen) || !screen.getMenu().synchronizedStack) return;
-                if (!select(screen, "Industrial Block")) return;
+                require(NativeArmorFixture.CUBE_SPRITE.equals(NativeArmorItem.worldSample(screen.getMenu().editorStack())),
+                    "picker opens with the sampled face");
+                // The same name appears first under Sampled, then as the ordinary catalog option.
+                if (!select(screen, "Industrial Block", 1)) return;
                 stage++;
             }
             case 2 -> {
                 if (!(game.screen instanceof NativeArmorScreen screen)
                     || !(offhand.getItem() instanceof NativeArmorItem armor)
                     || NativeArmorItem.choice(offhand) != NativeArmorFixture.INDUSTRIAL_BLOCK) return;
+                require(NativeArmorItem.worldSample(offhand) == null, "explicit catalog material replaces a world sample");
                 var spriteName = ResourceLocation.parse(ModernFinishCatalog.option(NativeArmorFixture.INDUSTRIAL_BLOCK).texture());
                 var expectedSprite = game.getTextureAtlas(TextureAtlas.LOCATION_BLOCKS).apply(spriteName);
                 var model = game.getItemRenderer().getModel(offhand, game.level, player, 0);
@@ -204,6 +259,19 @@ public final class NativeArmorClientCheck {
         }
     }
 
+    private static void sampleFace(Minecraft game, BlockPos pos, Direction face) {
+        shift(game, true);
+        var point = Vec3.atCenterOf(pos).add(face.getStepX() * .5, face.getStepY() * .5, face.getStepZ() * .5);
+        var hit = new BlockHitResult(point, face, pos, false);
+        require(game.gameMode.useItemOn(game.player, InteractionHand.MAIN_HAND, hit).consumesAction(),
+            "normal world-face interaction " + pos + " " + face);
+    }
+
+    private static void swapHands(Minecraft game) {
+        game.player.connection.send(new ServerboundPlayerActionPacket(
+            ServerboundPlayerActionPacket.Action.SWAP_ITEM_WITH_OFFHAND, BlockPos.ZERO, Direction.DOWN));
+    }
+
     private static boolean clickInventory(NativeArmorScreen screen, int slot) {
         var search = search(screen);
         if (search == null) return false;
@@ -222,13 +290,17 @@ public final class NativeArmorClientCheck {
     }
 
     private static boolean select(NativeArmorScreen screen, String label) {
+        return select(screen, label, 0);
+    }
+
+    private static boolean select(NativeArmorScreen screen, String label, int row) {
         var search = search(screen);
         if (search == null) return false;
         screen.mouseClicked(search.getX() + 10, search.getY() + 8, 0);
         search.setValue("");
         for (char c : label.toCharArray()) screen.charTyped(c, 0);
         require(search.getValue().equals(label), "native search input");
-        screen.mouseClicked(search.getX() + 30, search.getY() + 31, 0);
+        screen.mouseClicked(search.getX() + 30, search.getY() + 31 + row * 22, 0);
         return true;
     }
 

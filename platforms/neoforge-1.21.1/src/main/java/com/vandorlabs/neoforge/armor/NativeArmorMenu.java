@@ -2,7 +2,6 @@ package com.vandorlabs.neoforge.armor;
 
 import com.vandorlabs.neoforge.NativeConfigurationAccess;
 import java.util.List;
-import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.SimpleContainer;
@@ -81,12 +80,7 @@ public final class NativeArmorMenu extends AbstractContainerMenu {
     private void synchronizeArmor(ServerPlayer player) {
         preview.setItem(0, original.copy());
         broadcastChanges();
-        if (hand != null) {
-            player.getInventory().setChanged();
-            int index = hand == InteractionHand.MAIN_HAND ? selected : 40;
-            player.connection.send(new ClientboundContainerSetSlotPacket(
-                ClientboundContainerSetSlotPacket.PLAYER_INVENTORY, 0, index, original));
-        }
+        if (hand != null) NativeArmorItem.synchronizeHeld(player, hand, original);
     }
 
     @Override

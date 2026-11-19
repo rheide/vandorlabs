@@ -1,8 +1,13 @@
 package com.vandorlabs.neoforge.armor;
 
+import com.vandorlabs.neoforge.ProgrammableBlock;
+import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.ui.ProgrammableBlockDialog;
 import com.vandorlabs.neoforge.door.NativeDoorRegistrations;
 import com.vandorlabs.persistence.HousingSettings;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
@@ -18,6 +23,9 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.phys.BlockHitResult;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.event.entity.player.PlayerEvent;
@@ -30,6 +38,9 @@ public final class NativeArmorFixture {
     static final int INDUSTRIAL_BLOCK = 9;
     static final int CARGO_DOOR = 106;
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
+    static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
+    static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
     static final EquipmentSlot[] MOUNTED_SLOTS = {
         EquipmentSlot.FEET, EquipmentSlot.LEGS, EquipmentSlot.CHEST, EquipmentSlot.HEAD
     };
@@ -54,7 +65,13 @@ public final class NativeArmorFixture {
         stack.set(DataComponents.CUSTOM_NAME, Component.literal(NAME));
         player.setGameMode(GameType.SURVIVAL);
         player.teleportTo(0.5, 79, 0.5);
-        player.serverLevel().setBlock(player.blockPosition().below(), net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(), 3);
+        var world = player.serverLevel();
+        world.setBlock(player.blockPosition().below(), Blocks.STONE.defaultBlockState(), 3);
+        world.setBlock(LOG, Blocks.OAK_LOG.defaultBlockState(), 3);
+        world.setBlock(CUBE, VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get().defaultBlockState()
+            .setValue(ProgrammableBlock.FACING, Direction.EAST), 3);
+        var cube = (ProgrammableBlockEntity)world.getBlockEntity(CUBE);
+        cube.apply(new ProgrammableBlockDialog.State(8, 1, true, new int[]{-1, -1, -1, -1, INDUSTRIAL_BLOCK, -1}, -1));
         player.getInventory().selected = 0;
         player.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
         player.setItemInHand(InteractionHand.OFF_HAND, stack);
@@ -68,6 +85,7 @@ public final class NativeArmorFixture {
         player.getInventory().setItem(CUBE_SLOT, sampleCube);
         player.getInventory().setItem(DOOR_SLOT, sampleDoor);
         player.getInventory().setItem(INVALID_SLOT, new ItemStack(Items.DIAMOND));
+        checkWorldAuthorization(player, stack);
         var inventoryEditor = new NativeArmorMenu(97, player.getInventory(), InteractionHand.OFF_HAND);
         inventoryEditor.sampleInventory(player, INVALID_SLOT);
         inventoryEditor.sampleInventory(player, 36);
@@ -109,6 +127,34 @@ public final class NativeArmorFixture {
             }
         }
         System.out.println("[vandorlabs][armor] server PASS");
+    }
+
+    private static void checkWorldAuthorization(ServerPlayer player, ItemStack stack) {
+        require(!NativeArmorWorldSampling.complete(player, new NativeArmorWorldSampling.Result(1, LOG, Direction.UP, LOG_TOP)),
+            "world sprite cannot be submitted without an actual click");
+        player.setShiftKeyDown(true);
+        var log = new BlockHitResult(Vec3.atCenterOf(LOG).add(0, .5, 0), Direction.UP, LOG, false);
+        var malformed = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, log);
+        require(malformed != null && !NativeArmorWorldSampling.complete(player,
+            new NativeArmorWorldSampling.Result(malformed.id(), LOG, Direction.UP, "minecraft:block/../invalid")),
+            "malformed sprite cannot use a valid ticket");
+        var old = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, log);
+        var latest = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, log);
+        require(old != null && latest != null && !NativeArmorWorldSampling.complete(player,
+            new NativeArmorWorldSampling.Result(old.id(), LOG, Direction.UP, LOG_TOP)), "superseded ticket");
+        require(!NativeArmorWorldSampling.complete(player,
+            new NativeArmorWorldSampling.Result(latest.id(), LOG, Direction.NORTH, LOG_SIDE)), "wrong face");
+        var replaced = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, log);
+        player.setItemInHand(InteractionHand.OFF_HAND, stack.copy());
+        require(replaced != null && !NativeArmorWorldSampling.complete(player,
+            new NativeArmorWorldSampling.Result(replaced.id(), LOG, Direction.UP, LOG_TOP)), "replacement stack rejected");
+        player.setItemInHand(InteractionHand.OFF_HAND, stack);
+        var cube = new BlockHitResult(Vec3.atCenterOf(CUBE).add(0, 0, -.5), Direction.NORTH, CUBE, false);
+        var forged = NativeArmorWorldSampling.begin(player, InteractionHand.MAIN_HAND, cube);
+        require(forged != null && !NativeArmorWorldSampling.complete(player,
+            new NativeArmorWorldSampling.Result(forged.id(), CUBE, Direction.NORTH, LOG_SIDE)), "cube sprite mismatch rejected");
+        require(NativeArmorItem.worldSample(stack) == null, "negative claims preserve original armor");
+        player.setShiftKeyDown(false);
     }
 
     private static void checkStandAuthorization(ServerPlayer player) {

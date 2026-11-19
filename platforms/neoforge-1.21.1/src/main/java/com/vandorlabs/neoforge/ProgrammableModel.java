@@ -199,8 +199,6 @@ public final class ProgrammableModel extends BakedModelWrapper<BakedModel> {
         throw new IllegalArgumentException("Not a programmable cube model");
     }
     public static int localFace(Direction world,Direction facing) {
-        if(world==Direction.DOWN)return 0;if(world==Direction.UP)return 1;
-        Direction local=switch(facing) { case EAST,UP,DOWN -> world.getCounterClockWise();case SOUTH -> world.getOpposite();case WEST -> world.getClockWise();default -> world; };
-        return switch(local) { case NORTH -> 2;case SOUTH -> 3;case WEST -> 4;case EAST -> 5;default -> throw new IllegalArgumentException(); };
+        return ProgrammableBlock.localTextureFace(world, facing);
     }
 }

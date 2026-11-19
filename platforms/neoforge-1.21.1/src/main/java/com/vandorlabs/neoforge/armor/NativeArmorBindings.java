@@ -76,6 +76,7 @@ public final class NativeArmorBindings {
     @SubscribeEvent
     public static void packets(RegisterPayloadHandlersEvent event) {
         var registrar = event.registrar("1");
+        NativeArmorWorldSampling.register(registrar);
         registrar.playToServer(Edit.TYPE, Edit.CODEC, (message, context) -> context.enqueueWork(() -> {
             if (context.player() instanceof ServerPlayer player && player.containerMenu instanceof NativeArmorMenu menu
                 && menu.containerId == message.window()) menu.configure(player, message.choice());

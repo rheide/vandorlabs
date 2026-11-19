@@ -83,7 +83,9 @@ def main():
     lang.update({f'item.vandorlabs.programmable_{piece.lower()}': f'Programmable {piece}'
                  for piece in ('Helmet', 'Chestplate', 'Leggings', 'Boots')})
     lang['item.vandorlabs.programmable_armor.hint'] = (
-        'Shift-right-click in air to select a texture (creative or Configurizer).')
+        'Shift-right-click a block to sample its face. In air: texture picker (creative or Configurizer).')
+    lang['item.vandorlabs.programmable_armor.sampled'] = 'Sampled %s'
+    lang['item.vandorlabs.programmable_armor.no_sample'] = 'No supported face texture to sample.'
     write('assets/vandorlabs/lang/en_us.json', lang)
     for name in ['programmable_matter_block', 'programmable_matter_unpack', 'industrial_alloy_ingot']:
         value = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/recipes' / (name + '.json')).read_text())

@@ -16,6 +16,7 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
     private static final int SAMPLE_ROW = -199999;
     private NativeMaterialPicker picker;
     private int sampledChoice = -1;
+    private String sampledSprite;
 
     NativeArmorScreen(NativeArmorMenu menu, Inventory inventory, Component title) {
         super(menu, inventory, title);
@@ -39,8 +40,10 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
         }
         int selection = NativeArmorItem.choice(menu.editorStack());
         sampledChoice = inventorySample();
-        if (sampledChoice >= 0) {
-            var material = NativeArmorMaterials.material(sampledChoice);
+        sampledSprite = NativeArmorItem.worldSample(menu.editorStack());
+        if (sampledChoice >= 0 || sampledSprite != null) {
+            var material = sampledSprite != null
+                ? NativeArmorMaterials.sampleMaterial(sampledSprite) : NativeArmorMaterials.material(sampledChoice);
             if (material == null) {
                 picker.specialMaterial(SAMPLE_ROW, "Missing sample", "Sampled", "minecraft:block/barrier");
             } else {
@@ -60,7 +63,8 @@ final class NativeArmorScreen extends AbstractContainerScreen<NativeArmorMenu> {
     protected void containerTick() {
         super.containerTick();
         if (menu.synchronizedStack && menu.editorStack().getItem() instanceof NativeArmorItem
-            && (picker == null || sampledChoice != inventorySample())) rebuildWidgets();
+            && (picker == null || sampledChoice != inventorySample()
+                || !java.util.Objects.equals(sampledSprite, NativeArmorItem.worldSample(menu.editorStack())))) rebuildWidgets();
     }
 
     private int inventorySample() {

@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.armor;
 
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectLinkedOpenHashMap;
 import java.util.Map;
 import net.minecraft.client.multiplayer.ClientLevel;
@@ -23,6 +24,11 @@ public final class NativeArmorClient {
     @SubscribeEvent
     public static void registerScreens(RegisterMenuScreensEvent event) {
         event.register(NativeArmorBindings.MENU, NativeArmorScreen::new);
+    }
+
+    @SubscribeEvent
+    public static void setup(net.neoforged.fml.event.lifecycle.FMLClientSetupEvent event) {
+        NativeArmorWorldSampling.receive = NativeArmorWorldClient::sample;
     }
 
     @SubscribeEvent
@@ -67,11 +73,23 @@ public final class NativeArmorClient {
             super(base);
             selector = new ItemOverrides() {
                 private final Int2ObjectLinkedOpenHashMap<NativeArmorMaterialModel> materials = new Int2ObjectLinkedOpenHashMap<>();
+                private final Map<String, NativeArmorMaterialModel> samples = new LinkedHashMap<>(16, .75F, true);
 
                 @Override
                 public BakedModel resolve(BakedModel original, ItemStack stack, ClientLevel level,
                                           LivingEntity entity, int seed) {
                     if (!(stack.getItem() instanceof NativeArmorItem)) return base;
+                    String sample = NativeArmorItem.worldSample(stack);
+                    if (geometry != null && sample != null) {
+                        var found = samples.get(sample);
+                        if (found != null) return found;
+                        var material = NativeArmorMaterials.sampleMaterial(sample);
+                        if (material == null) return base;
+                        var created = new NativeArmorMaterialModel(geometry, material);
+                        samples.put(sample, created);
+                        if (samples.size() > 24) samples.remove(samples.keySet().iterator().next());
+                        return created;
+                    }
                     int choice = NativeArmorItem.choice(stack);
                     if (geometry != null && (NativeArmorItem.hasInventorySample(stack) || NativeArmorItem.listedMaterial(choice))) {
                         var model = materials.getAndMoveToLast(choice);

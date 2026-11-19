@@ -6,6 +6,7 @@ import java.util.List;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
+import net.minecraft.network.protocol.game.ClientboundContainerSetSlotPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
@@ -46,6 +47,27 @@ public final class NativeArmorItem extends ArmorItem {
         return ((NativeArmorItem)stack.getItem()).defaultDesign.choice();
     }
 
+    public static String worldSample(ItemStack stack) {
+        var tag = stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).getUnsafe();
+        if (!tag.contains(SAMPLE, Tag.TAG_STRING)) return null;
+        var sprite = tag.getString(SAMPLE);
+        return sprite.isEmpty() || sprite.length() > NativeArmorWorldSampling.MAX_SPRITE_LENGTH ? null : sprite;
+    }
+
+    static void applyWorldSample(ItemStack stack, String sprite) {
+        CustomData.update(DataComponents.CUSTOM_DATA, stack, tag -> {
+            tag.putString(SAMPLE, sprite);
+            tag.remove(INVENTORY_SAMPLE);
+        });
+    }
+
+    static void synchronizeHeld(ServerPlayer player, InteractionHand hand, ItemStack stack) {
+        player.getInventory().setChanged();
+        int slot = hand == InteractionHand.MAIN_HAND ? player.getInventory().selected : 40;
+        player.connection.send(new ClientboundContainerSetSlotPacket(
+            ClientboundContainerSetSlotPacket.PLAYER_INVENTORY, 0, slot, stack));
+    }
+
     static boolean hasInventorySample(ItemStack stack) {
         return stack.getOrDefault(DataComponents.CUSTOM_DATA, CustomData.EMPTY).getUnsafe()
             .contains(INVENTORY_SAMPLE, Tag.TAG_INT);
@@ -78,6 +100,8 @@ public final class NativeArmorItem extends ArmorItem {
     @Override
     public ResourceLocation getArmorTexture(ItemStack stack, Entity entity, EquipmentSlot slot,
                                             ArmorMaterial.Layer layer, boolean innerModel) {
+        String sample = worldSample(stack);
+        if (sample != null) return NativeArmorMaterials.wornSample(sample, layer.texture(innerModel), design(stack).worn());
         int choice = choice(stack);
         if (hasInventorySample(stack) || listedMaterial(choice)) {
             return NativeArmorMaterials.worn(choice, layer.texture(innerModel), design(stack).worn());
