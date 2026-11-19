@@ -9,9 +9,13 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
 import net.minecraftforge.fml.relauncher.*;
 
 /** A wall-mounted joined platform sweeps through a horizontal hatch under real world ticks. */
@@ -28,19 +32,38 @@ public final class HorizontalDoorArmLiveChecks {
     private static BlockLargeProgrammableDoor door;
     private static AxisAlignedBB aperture;
     private static double leafPlane;
-    private static boolean outboundCrossing,returnCrossing;
+    private static boolean outboundCrossing,returnCrossing,registered;
+    private static volatile boolean complete;
+    private static volatile Throwable failure;
     private HorizontalDoorArmLiveChecks(){}
 
     private static void require(boolean value,String message){
         if(!value)throw new IllegalStateException("horizontal-door arm step="+step+" tick="+ticks+" "+message);
     }
-    public static boolean tick(Minecraft mc)throws Exception{
+    public static boolean tick(Minecraft mc){
         if(mc.currentScreen!=null)mc.displayGuiScreen(null);
-        return mc.getIntegratedServer().callFromMainThread(()->run(mc.getIntegratedServer().getWorld(0),
-                mc.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
+        if(!registered){
+            MinecraftForge.EVENT_BUS.register(new Observer(mc.getIntegratedServer()));
+            registered=true;
+        }
+        if(failure!=null)throw new IllegalStateException("Horizontal Large Door arm server check",failure);
+        return complete;
+    }
+    /** Observe every world step even when the software-rendered client skips frames. */
+    public static final class Observer {
+        private final MinecraftServer server;
+        private Observer(MinecraftServer server){this.server=server;}
+        @SubscribeEvent public void tick(TickEvent.ServerTickEvent event){
+            if(event.phase!=TickEvent.Phase.END||complete||failure!=null)return;
+            try{
+                complete=run(server.getWorld(0),server.getPlayerList().getPlayers().get(0));
+            }catch(RuntimeException|LinkageError error){
+                failure=error;
+            }
+            if(complete||failure!=null)MinecraftForge.EVENT_BUS.unregister(this);
+        }
     }
     private static boolean run(WorldServer world,EntityPlayerMP player){
-        if(step==5)return false;
         GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);
         require(++ticks<450,"motion timeout, arm="+(arm==null?"missing":arm.progress()+" "+arm.error()));
         if(step==0){
@@ -107,14 +130,15 @@ public final class HorizontalDoorArmLiveChecks {
         }
         if(step==3){
             if(arm.progress()!=0||ArmTransactions.locked(world,ROOT))return false;
-            require(outboundCrossing&&refusedPhase>arm.progress()&&arm.payload()!=null&&arm.payload().blocks.cells.size()==2,"opened hatch passes the complete surface");
+            require(outboundCrossing&&refusedPhase>arm.progress()&&arm.payload()!=null&&arm.payload().blocks.cells.size()==2,
+                    "opened hatch passes the complete surface; crossing="+outboundCrossing+" phase="+arm.progress()+" refused="+refusedPhase
+                            +" payload="+(arm.payload()==null?"missing":arm.payload().blocks.cells.size()+" materialized="+arm.payload().materialized())+" error="+arm.error());
             click(world,player,ROOT,EnumFacing.WEST);step=4;return false;
         }
         if(arm.progress()!=1||ArmTransactions.locked(world,ROOT)||arm.payload()==null||!arm.payload().materialized())return false;
         require(returnCrossing&&arm.payload().placedCells(arm).size()==2&&arm.payload().matchesPlaced(arm),"reverse restores each original surface once");
         for(int z=0;z<2;z++)require(world.getBlockState(ROOT.east(4).south(z)).getBlock()==Blocks.DIAMOND_BLOCK
                 &&world.getBlockState(ROOT.west().south(z)).getBlock()==Blocks.STONE,"source surface and wall support restored");
-        step=5;
         System.out.println("[vandorlabs] horizontal-door-arm PASS closed obstruction/open passage/joined surface/real world ticks/journals/reversal");
         return true;
     }
