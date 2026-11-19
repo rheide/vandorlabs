@@ -35,7 +35,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Turntables | Programmable Surfaces public; opt-in block-only Scan, rendered rotation with swept collision, Redstone, upward-facing riders and quarter-turn Restore; captured interactions pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
-| Programmable armor | four pieces, crafting, role/company, general material and inventory sample picker, armor stands, equipped and inventory artwork, vanilla, full Block, ordinary Door, Trigger and Light world-face sampling and Duplifier transfer. Other renderer samples pending | unimplemented | non-vehicle first |
+| Programmable armor | four pieces, crafting, role/company, general material and inventory sample picker, armor stands, equipped and inventory artwork, vanilla, full Block, ordinary and Large Door, Trapdoor, Trigger and Light world-face sampling and Duplifier transfer. Other renderer samples pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
 | Compatibility integrations | native JEI, WorldEdit wedge rotations, selected resource ports and experimental static Dynmap renderers | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
