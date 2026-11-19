@@ -131,8 +131,8 @@ final class NativeGearResourceTransfer {
         }
         public boolean canReceive() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canReceive);}
         public int extractEnergy(int amount, boolean simulate) {return 0;}
-        public int getEnergyStored() {return 0;}
-        public int getMaxEnergyStored() {return 0;}
+        public int getEnergyStored() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,IEnergyStorage::getEnergyStored);}
+        public int getMaxEnergyStored() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,IEnergyStorage::getMaxEnergyStored);}
         public boolean canExtract() {return false;}
     }
 
