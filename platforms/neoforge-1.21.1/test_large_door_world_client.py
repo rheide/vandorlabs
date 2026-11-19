@@ -15,9 +15,11 @@ from native_test_artifacts import artifact_directory, retain_artifacts
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb',action='store_true')
-    parser.add_argument('--horizontal-only',action='store_true',help='Run the side-mounted scenarios and arm travel only.')
+    focus=parser.add_mutually_exclusive_group()
+    focus.add_argument('--joins-only',action='store_true',help='Run joined door rendering and the real Join editor.')
+    focus.add_argument('--horizontal-only',action='store_true',help='Run the side-mounted scenarios and arm travel only.')
     args=parser.parse_args()
-    phase='large-door-world-client-horizontal' if args.horizontal_only else 'large-door-world-client'
+    phase='large-door-world-client-joined' if args.joins_only else 'large-door-world-client-horizontal' if args.horizontal_only else 'large-door-world-client'
     if args.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
     env.pop("VANDOR_DOOR_RESOURCE_CHECK",None)
@@ -41,7 +43,8 @@ def main():
             if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Authoritative logout missing: '+str(server_log))
             time.sleep(.1)
         markers=['horizontal-south','horizontal-west','horizontal-north','horizontal-east','horizontal-arm','logout']
-        if not args.horizontal_only:
+        if args.joins_only:markers=['join-editor','logout']
+        elif not args.horizontal_only:
             markers+=['placement','configuration','reader-insert','reader-eject','motion','configured-pick','harvest']
         for marker in markers:check_log(server_log,'[vandorlabs][large-door-world-client] '+marker+' PASS')
     finally:stop(server)
@@ -49,6 +52,18 @@ def main():
     while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
     check_log(saved/'logs/latest.log','All dimensions are saved')
     from PIL import Image,ImageChops
+    if args.joins_only:
+        positive=Image.open(client/'screenshots/joined-large-positive.png').convert('RGB')
+        negative=Image.open(client/'screenshots/joined-large-negative.png').convert('RGB')
+        diff=ImageChops.difference(positive,negative)
+        mask=diff.point(lambda value:255 if value>12 else 0)
+        pixels=sum(max(value)>12 for value in diff.getdata())
+        bounds=mask.getbbox()
+        if pixels<2000 or not bounds or bounds[2]-bounds[0]<200 or bounds[3]-bounds[1]<200:
+            raise AssertionError(f'Joined Large Door did not draw the full aperture: {pixels} pixels in {bounds}')
+        diff.save(output/'joined-large-difference.png')
+        print(f'Joined Large Door actual renderer PASS {pixels} changed pixels in {bounds}: {output}',flush=True)
+        return
     if not args.horizontal_only:
         positive=Image.open(client/'screenshots/canonical-large-upper-positive.png').convert('RGB');negative=Image.open(client/'screenshots/canonical-large-upper-negative.png').convert('RGB')
         if positive.size!=negative.size:raise AssertionError('Culling capture sizes differ')

@@ -24,6 +24,7 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class LargeDoorWorldClientFixture {
  public static final BlockPos POS=new BlockPos(0,95,0);private static int canonicalDrops;private static boolean completed;
  public static boolean enabled(){return System.getProperty("vandorlabs.transmitterPhase","").startsWith("large-door-world-client");}
+ public static boolean joinedOnly(){return "large-door-world-client-joined".equals(System.getProperty("vandorlabs.transmitterPhase",""));}
  public static boolean horizontalOnly(){return "large-door-world-client-horizontal".equals(System.getProperty("vandorlabs.transmitterPhase",""));}
  private static void need(boolean yes,String why){if(!yes)throw new IllegalStateException("Canonical Large Door client server: "+why);}
  private static NativeLargeDoorEntity host(ServerPlayer player){return (NativeLargeDoorEntity)player.serverLevel().getBlockEntity(POS);}
@@ -33,7 +34,12 @@ public final class LargeDoorWorldClientFixture {
  private static boolean complete(ServerPlayer player){var root=host(player);return root!=null&&NativeLargeDoorLifecycle.complete(player.serverLevel(),root);}
  private static boolean allAir(ServerPlayer player){for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(!player.serverLevel().getBlockState(POS.east(x).above(y)).isAir())return false;return true;}
  private static void swap(ServerPlayer player,int slot){var old=player.getMainHandItem();player.getInventory().setItem(0,player.getInventory().getItem(slot));player.getInventory().setItem(slot,old);}
- @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event){if(!enabled()||!(event.getEntity() instanceof ServerPlayer player))return;var world=player.serverLevel();need(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs",NativeDoorSettings.LARGE_ID)),"canonical activation required");for(int x=-6;x<=6;x++)for(int z=-6;z<=6;z++){world.setBlock(new BlockPos(x,POS.getY()-1,z),Blocks.STONE.defaultBlockState(),3);for(int y=POS.getY();y<POS.getY()+8;y++)world.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);}world.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DOMOBSPAWNING).set(false,world.getServer());world.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false,world.getServer());world.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_WEATHER_CYCLE).set(false,world.getServer());world.setDayTime(6000);world.setWeatherParameters(0,6000,false,false);player.getInventory().clearContent();if(horizontalOnly()){HorizontalLargeDoorPlayerFixture.prepare(player,0);return;}player.getInventory().setItem(0,new ItemStack(item(),2));player.getInventory().setItem(1,new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));player.getInventory().setItem(2,new ItemStack(Items.STONE_PICKAXE));player.getInventory().setItem(7,NativeCredentialItems.accessCard(1));pose(player,1.5,POS.getY(),3,new Vec3(1.5,POS.getY(),.5));System.out.println("[vandorlabs][large-door-world-client] fixture READY actual canonical survival placement inventory");}
+ @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event){if(!enabled()||!(event.getEntity() instanceof ServerPlayer player))return;var world=player.serverLevel();need(net.minecraft.core.registries.BuiltInRegistries.BLOCK.containsKey(ResourceLocation.fromNamespaceAndPath("vandorlabs",NativeDoorSettings.LARGE_ID)),"canonical activation required");for(int x=-6;x<=6;x++)for(int z=-6;z<=6;z++){world.setBlock(new BlockPos(x,POS.getY()-1,z),Blocks.STONE.defaultBlockState(),3);for(int y=POS.getY();y<POS.getY()+8;y++)world.setBlock(new BlockPos(x,y,z),Blocks.AIR.defaultBlockState(),3);}world.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DOMOBSPAWNING).set(false,world.getServer());world.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_DAYLIGHT).set(false,world.getServer());world.getGameRules().getRule(net.minecraft.world.level.GameRules.RULE_WEATHER_CYCLE).set(false,world.getServer());world.setDayTime(6000);world.setWeatherParameters(0,6000,false,false);player.getInventory().clearContent();if(joinedOnly()){
+      LargeDoorJoinChecks.prepareClient(world,POS);
+      player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
+      pose(player,4.5,POS.getY(),3,new Vec3(4.5,POS.getY()+1.6,.5));
+      return;
+  }if(horizontalOnly()){HorizontalLargeDoorPlayerFixture.prepare(player,0);return;}player.getInventory().setItem(0,new ItemStack(item(),2));player.getInventory().setItem(1,new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));player.getInventory().setItem(2,new ItemStack(Items.STONE_PICKAXE));player.getInventory().setItem(7,NativeCredentialItems.accessCard(1));pose(player,1.5,POS.getY(),3,new Vec3(1.5,POS.getY(),.5));System.out.println("[vandorlabs][large-door-world-client] fixture READY actual canonical survival placement inventory");}
  @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
  public static final class Registration {
   @SubscribeEvent public static void payload(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(!enabled())return;event.registrar("1").playToServer(Mode.TYPE,new StreamCodec<RegistryFriendlyByteBuf,Mode>(){public Mode decode(RegistryFriendlyByteBuf bytes){if(bytes.readableBytes()!=1)throw new IllegalArgumentException("Canonical client fixture mode length");return new Mode(bytes.readUnsignedByte());}public void encode(RegistryFriendlyByteBuf bytes,Mode mode){bytes.writeByte(mode.operation());}},(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)mode(player,p.operation());}));}
@@ -55,6 +61,16 @@ public final class LargeDoorWorldClientFixture {
    case 14->HorizontalLargeDoorPlayerFixture.verifyAndView(player);
    case 15->HorizontalLargeDoorPlayerFixture.verifyOpened(player);
    case 16->{com.vandorlabs.neoforge.gear.NativeHorizontalDoorArmChecks.start(player);completed=true;}
+   case 17->{
+    var member=(NativeLargeDoorEntity)world.getBlockEntity(POS.east(3));
+    var group=NativeLargeDoorJoins.group(member);
+    need(joinedOnly()&&member.joinEnabled()&&group.columns==2&&group.rows==2&&group.anchor==tile,
+         "real Join editor round trip rebuilds the same aperture");
+    world.setBlock(POS.offset(3,0,8),Blocks.STONE.defaultBlockState(),Block.UPDATE_ALL);
+    pose(player,3.5,POS.getY()+1,8.5,new Vec3(3,POS.getY()+3,.5));
+    completed=true;
+    System.out.println("[vandorlabs][large-door-world-client] join-editor PASS");
+   }
    default->throw new IllegalArgumentException("Canonical Large client fixture operation");
   }
  }
