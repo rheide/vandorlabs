@@ -10,12 +10,54 @@ import net.minecraft.init.Blocks;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
-import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.*;
 import net.minecraft.world.World;
 
 /** Opt-in live placement, shared configuration, save/load, geometry and atomic removal. */
 final class LargeDoorRuntimeChecks {
     private static void require(boolean value,String message){if(!value)throw new IllegalStateException("large-door: "+message);}
+    static void horizontal(World world,EntityPlayer player){
+        BlockLargeProgrammableDoor door=(BlockLargeProgrammableDoor)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","large_programmable_door"));
+        BlockPos center=new BlockPos(8,80,8);
+        ItemStack previous=player.getHeldItemMainhand();
+        boolean sneaking=player.isSneaking();
+        try {
+            player.setSneaking(false);
+            for(EnumFacing front:EnumFacing.Plane.HORIZONTAL){
+                for(BlockPos p:BlockPos.getAllInBox(center.add(-5,-2,-5),center.add(5,3,5)))world.setBlockToAir(p);
+                EnumFacing width=front.rotateYCCW();
+                BlockPos clicked=center.offset(front.getOpposite());
+                for(int x=-1;x<=1;x++)world.setBlockState(clicked.offset(width,x),Blocks.STONE.getDefaultState(),2);
+                ItemStack stack=new ItemStack(door,2);
+                player.setHeldItem(EnumHand.MAIN_HAND,stack);
+                require(stack.getItem().onItemUse(player,world,clicked,EnumHand.MAIN_HAND,front,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"mount on support side "+front);
+                BlockPos anchor=center.offset(width,-1);
+                BlockPos passage=center.offset(front);
+                TileEntityLargeProgrammableDoor root=door.root(world,passage);
+                require(root!=null&&root.isHorizontal()&&root.getPos().equals(anchor)&&door.complete(world,root),"horizontal nine-cell ownership "+front);
+                AxisAlignedBB sweep=new AxisAlignedBB(passage).grow(0,2,0).shrink(.02);
+                Vec3d above=new Vec3d(passage).addVector(.5,2,.5),below=above.addVector(0,-4,0);
+                require(!world.getCollisionBoxes(null,sweep).isEmpty()&&MovedDoorInteractions.trace(world,above,below)!=null,"closed hatch blocks a one-block vertical sweep "+front);
+                require(root.writeToNBT(new net.minecraft.nbt.NBTTagCompound()).getBoolean("LargeDoorHorizontal"),"horizontal orientation saved");
+                for(int column=0;column<3;column++)for(int row=0;row<3;row++){
+                    BlockPos cell=root.cell(anchor,front,column,row);
+                    TileEntity restored=TileEntity.create(world,world.getTileEntity(cell).writeToNBT(new net.minecraft.nbt.NBTTagCompound()));
+                    world.setTileEntity(cell,restored);
+                    require(((TileEntityLargeProgrammableDoor)restored).isHorizontal()&&((TileEntityLargeProgrammableDoor)restored).anchorPos().equals(anchor),"role round-trips "+front+" "+cell);
+                }
+                door.onBlockActivated(world,passage,world.getBlockState(passage),player,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F);
+                require(world.getBlockState(passage).getValue(BlockVandorDoor.OPEN),"open from a follower cell "+front);
+                require(world.getCollisionBoxes(null,sweep).isEmpty()&&MovedDoorInteractions.trace(world,above,below)==null,"open hatch clears the vertical swept column "+front);
+                world.destroyBlock(clicked.offset(width),false);
+                require(world.getBlockState(passage).getBlock()!=door,"loss of side support removes assembly "+front);
+            }
+        } finally {
+            player.setHeldItem(EnumHand.MAIN_HAND,previous);
+            player.setSneaking(sneaking);
+        }
+        System.out.println("[vandorlabs] horizontal-door PASS four side placements, saved part roles, vertical sweep and support removal");
+    }
+
     static void run(World world,EntityPlayer player){
         BlockLargeProgrammableDoor door=(BlockLargeProgrammableDoor)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs","large_programmable_door"));
         ItemStack previous=player.getHeldItemMainhand();float yaw=player.rotationYaw;boolean creative=player.capabilities.isCreativeMode;player.capabilities.isCreativeMode=true;

@@ -41,7 +41,7 @@ Observation, Viewport, Laboratory, Glazed Hangar, White Glass, Dark Glass and Sl
 
 ## Large doors and double-door artwork
 
-The Large Programmable Door fills a **3×3 opening** with two 1.5×3 leaves. Place it at the bottom center on three solid supports. Craft it from two Programmable Doors and seven Programmable Matter Ingots. Configure any cell to edit the assembly; breaking any cell removes it.
+The Large Programmable Door fills a **3×3 opening** with two 1.5×3 leaves. Click the top of the middle support for a vertical opening. Click its side for a horizontal opening you can pass through from above or below. Both orientations need a row of three solid supports. Craft it from two Programmable Doors and seven Programmable Matter Ingots. Configure any cell to edit the assembly; breaking any cell removes it.
 
 Large doors accept all 22 regular designs plus these **eight Double Doors designs**. Each image shows a framed assembly on the left and a bare assembly on the right. The default is **Cross Braced Bay**. Large doors support the regular motions and **Sliding X**.
 

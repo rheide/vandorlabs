@@ -74,7 +74,7 @@ public final class MovedDoorInteractions {
                         nativeState.getValue(BlockVandorDoor.FACING),nativeState.getValue(BlockVandorDoor.OPEN)).trace(start,end);
                 if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){
                     distance=start.squareDistanceTo(hit.hitVec);
-                    nearest=movedHit(door,nativeState.getValue(BlockVandorDoor.FACING).rotateYCCW(),hit);
+                    nearest=movedHit(door,nativeState.getValue(BlockVandorDoor.FACING),hit);
                 }
                 continue;
             }
@@ -82,19 +82,18 @@ public final class MovedDoorInteractions {
                 RayTraceResult hit=box.calculateIntercept(start,end);
                 if(hit==null || start.squareDistanceTo(hit.hitVec)>=distance)continue;
                 distance=start.squareDistanceTo(hit.hitVec);
-                EnumFacing width=world.getBlockState(door.getPos()).getValue(BlockVandorDoor.FACING).rotateYCCW();
-                nearest=movedHit(door,width,hit);
+                EnumFacing front=world.getBlockState(door.getPos()).getValue(BlockVandorDoor.FACING);
+                nearest=movedHit(door,front,hit);
             }
         }
         return nearest;
     }
-    private static RayTraceResult movedHit(TileEntitySpaceDoor door,EnumFacing width,RayTraceResult hit){
-        double column=(hit.hitVec.x-door.getPos().getX())*width.getFrontOffsetX()
-                +(hit.hitVec.z-door.getPos().getZ())*width.getFrontOffsetZ();
-        if(width.getFrontOffsetX()<0 || width.getFrontOffsetZ()<0)column+=1;
-        BlockPos owner=door.getPos().offset(width,MathHelper.clamp(MathHelper.floor(column),0,2))
-                .up(MathHelper.clamp(MathHelper.floor(hit.hitVec.y-door.getPos().getY()),0,2));
-        return new RayTraceResult(hit.hitVec,hit.sideHit,owner);
+    private static RayTraceResult movedHit(TileEntitySpaceDoor door,EnumFacing front,RayTraceResult hit){
+        TileEntityLargeProgrammableDoor large=(TileEntityLargeProgrammableDoor)door;
+        BlockPos anchor=large.getPos();
+        int column=TileEntityLargeProgrammableDoor.hitCell(anchor,hit.hitVec,front.rotateYCCW());
+        int row=TileEntityLargeProgrammableDoor.hitCell(anchor,hit.hitVec,large.rowDirection(front));
+        return new RayTraceResult(hit.hitVec,hit.sideHit,large.cell(anchor,front,column,row));
     }
     @SubscribeEvent public void collisions(GetCollisionBoxesEvent event) {
         World world=event.getWorld();AxisAlignedBB query=event.getAabb();
