@@ -11,7 +11,7 @@ public final class NativeSeatMenu extends AbstractContainerMenu {
     public NativeSeatMenu(MenuType<?> type,int window,NativeChairEntity tile){super(type,window);this.tile=tile;}
     public NativeSeatMenu(MenuType<?> type,int window,Inventory inventory,BlockPos pos){this(type,window,require(inventory.player,pos));}
     private static NativeChairEntity require(Player player,BlockPos pos){var owner=NativeSeatBlock.owner(player.level(),pos);if(owner==null)throw new IllegalArgumentException("Missing loaded seat owner");return owner;}
-    @Override public boolean stillValid(Player player){return !tile.inert()&&!tile.getBlockState().getValue(NativeSeatBlock.UPPER)&&NativeConfigurationAccess.canEditDialog(player,tile);}
+    @Override public boolean stillValid(Player player){return !tile.inert()&&!NativeSeatBlock.proxy(tile.getBlockState())&&NativeConfigurationAccess.canEditDialog(player,tile)&&(tile.kind()!=NativeSeatKind.ADVANCED||((NativeSeatBlock)tile.getBlockState().getBlock()).complete(tile.getLevel(),tile.getBlockPos()));}
     public static NativeSeatMenu editing(ServerPlayer actor,BlockPos pos,int window){return actor.getServer().isSameThread()&&actor.containerMenu instanceof NativeSeatMenu menu&&menu.containerId==window&&menu.tile.getBlockPos().equals(pos)&&menu.stillValid(actor)?menu:null;}
     @Override public ItemStack quickMoveStack(Player player,int slot){return ItemStack.EMPTY;}
 }

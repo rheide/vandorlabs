@@ -1,7 +1,7 @@
 """Native stationary seating reuses authored JSON/OBJ geometry and Source-sized artwork."""
 import copy,json,shutil
 
-KINDS=('programmable_chair','luxury_seat','military_seat','pilot_seat')
+KINDS=('programmable_chair','luxury_seat','military_seat','pilot_seat','chair_siderests')
 STYLES=('command','companion','operator','conference','mess_hall')
 PARTS=('single','left','middle','right')
 
@@ -47,13 +47,34 @@ def generate(root,out):
                     for entry in (path.parent/mtl).read_text().splitlines():
                         if entry.startswith('map_Kd '):texture(entry.split(None,1)[1])
             key=f'pilot_{height}_{arms}';write(f'models/block/native_seating/{key}.json',{'loader':'neoforge:obj','model':f'vandorlabs:models/block/native_seating/{name}.obj','automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,'textures':{'particle':texture('vandorlabs:blocks/pilot_seat/fabric')}});names.append(key)
+    advanced=source/'models/block/cockpits/chair_siderests'
+    native=assets/'models/block/native_seating'
+    (native/'advanced_chair.obj').write_text((advanced/'off.obj').read_text().replace('mtllib materials.mtl','mtllib advanced_chair.mtl',1))
+    shutil.copyfile(advanced/'materials.mtl',native/'advanced_chair.mtl')
+    for entry in (advanced/'materials.mtl').read_text().splitlines():
+        if entry.startswith('map_Kd '):
+            name=entry.split(None,1)[1]
+            # The native Programmer resource set already packages this shared opaque sprite.
+            if name!='vandorlabs:models/cockpits/blank':texture(name)
+            else:textures.add(name)
+    write('models/block/native_seating/advanced_chair.json',
+          {'loader':'neoforge:obj','model':'vandorlabs:models/block/native_seating/advanced_chair.obj',
+           'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
+           'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
+    assembly='cockpits/chair_siderests/assembly.json'
+    write(assembly,json.loads((source/assembly).read_text()))
+    names.append('advanced_chair')
     write('models/block/native_seating/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/bridge_chair_atlas')},'elements':[]})
     for kind in KINDS:
-        base='chair_0_1' if kind=='programmable_chair' else 'pilot_0_0' if kind=='pilot_seat' else kind+'_1_0'
+        base={'programmable_chair':'chair_0_1','pilot_seat':'pilot_0_0','chair_siderests':'advanced_chair'}.get(kind,kind+'_1_0')
         states={f'facing={face},upper={str(upper).lower()}':{'model':'vandorlabs:block/native_seating/'+('empty' if upper else base)} for face in ('north','south','west','east') for upper in (False,True)}
+        if kind=='chair_siderests':
+            states={f'facing={face},side={side},upper={str(upper).lower()}':
+                    {'model':'vandorlabs:block/native_seating/'+('empty' if upper or side else base)}
+                    for face in ('north','south','west','east') for upper in (False,True) for side in range(3)}
         write(f'blockstates/{kind}.json',{'variants':states})
         if kind=='programmable_chair':item=json.loads((source/'models/item/configured/programmable_chair_command.json').read_text())
-        elif kind=='pilot_seat':item={'display':json.loads((source/'blockstates/pilot_seat.json').read_text())['variants']['inventory'][0]['transform']}
+        elif kind in ('pilot_seat','chair_siderests'):item={'display':json.loads((source/'blockstates/pilot_seat.json').read_text())['variants']['inventory'][0]['transform']}
         else:item=json.loads((source/f'models/item/{kind}.json').read_text())
         item['parent']='vandorlabs:block/native_seating/'+base
         for setting in item.get('display',{}).values():

@@ -89,6 +89,9 @@ tasks.register('generateCubeResources', Exec) {
     inputs.files('generate_table_resources.py','generate_plate_resources.py')
     inputs.file('generate_surface_resources.py')
     inputs.file('generate_seat_resources.py')
+    inputs.files('../../src/main/resources/assets/vandorlabs/models/block/cockpits/chair_siderests/off.obj',
+                 '../../src/main/resources/assets/vandorlabs/models/block/cockpits/chair_siderests/materials.mtl',
+                 '../../src/main/resources/assets/vandorlabs/cockpits/chair_siderests/assembly.json')
     inputs.file('generate_copy_resources.py')
     inputs.file('generate_dynmap_resources.py')
     inputs.files('../../src/main/resources/assets/vandorlabs/models/block/copy_controller.json','../../src/main/resources/assets/vandorlabs/models/item/copy_controller.json','../../src/main/resources/assets/vandorlabs/recipes/copy_controller.json')

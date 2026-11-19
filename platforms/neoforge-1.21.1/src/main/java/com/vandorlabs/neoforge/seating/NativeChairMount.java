@@ -17,12 +17,25 @@ public final class NativeChairMount extends Entity {
     public NativeChairMount(EntityType<? extends NativeChairMount> type,Level level){super(type,level);noPhysics=true;setInvisible(true);}
     @Override protected void defineSynchedData(SynchedEntityData.Builder data){data.define(CHAIR,BlockPos.ZERO);data.define(HEIGHT,0F);data.define(VALID,false);}
     public BlockPos chairPos(){return entityData.get(VALID)?entityData.get(CHAIR):null;}
-    public void updatePose(NativeChairEntity owner){entityData.set(CHAIR,owner.getBlockPos());entityData.set(HEIGHT,(float)owner.cushion());entityData.set(VALID,true);setPos(owner.getBlockPos().getX()+.5,owner.getBlockPos().getY(),owner.getBlockPos().getZ()+.5);setYRot((float)owner.yaw());for(var passenger:getPassengers())positionRider(passenger);}
+    public void updatePose(NativeChairEntity owner){entityData.set(CHAIR,owner.getBlockPos());entityData.set(HEIGHT,(float)owner.cushion());entityData.set(VALID,true);var offset=owner.cushionOffset();setPos(owner.getBlockPos().getX()+offset.x,owner.getBlockPos().getY(),owner.getBlockPos().getZ()+offset.z);setYRot((float)owner.yaw());for(var passenger:getPassengers())positionRider(passenger);}
+    @Override protected void addPassenger(Entity passenger) {
+        super.addPassenger(passenger);
+        var chair = chairPos();
+        if (!(passenger instanceof net.minecraft.world.entity.player.Player rider) || chair == null
+            || !NativeSeatBlock.loaded(level(),chair) || !(level().getBlockState(chair).getBlock() instanceof NativeAdvancedChairBlock)) return;
+        float heading = getYRot();
+        rider.setYRot(heading);
+        rider.yRotO = heading;
+        rider.setYBodyRot(heading);
+        rider.yBodyRotO = heading;
+        rider.setYHeadRot(heading);
+        rider.yHeadRotO = heading;
+    }
     @Override protected Vec3 getPassengerAttachmentPoint(Entity passenger,EntityDimensions dimensions,float scale){return new Vec3(0,entityData.get(HEIGHT),0);}
     @Override protected boolean canAddPassenger(Entity passenger){return !inert&&getPassengers().isEmpty();}
     @Override public boolean canBeCollidedWith(){return false;}@Override public boolean isPushable(){return false;}
     @Override public void tick(){super.tick();if(level().isClientSide)return;if(inert){ejectPassengers();return;}var at=chairPos();if(at==null||!level().hasChunkAt(at)){ejectPassengers();discard();return;}
-        if(!(level().getBlockEntity(at) instanceof NativeChairEntity owner)||owner.inert()||owner.getBlockState().getValue(NativeSeatBlock.UPPER)){ejectPassengers();discard();return;}if(!((NativeSeatBlock)owner.getBlockState().getBlock()).complete(level(),at)){if(owner.kind()==NativeSeatKind.PILOT&&NativeSeatBlock.loaded(level(),at.above())&&level().getBlockState(at.above()).isAir()){NativeSeatUpdates.queue(owner);}else {ejectPassengers();discard();return;}}
+        if(!(level().getBlockEntity(at) instanceof NativeChairEntity owner)||owner.inert()||NativeSeatBlock.proxy(owner.getBlockState())){ejectPassengers();discard();return;}if(!((NativeSeatBlock)owner.getBlockState().getBlock()).complete(level(),at)){if(owner.kind()==NativeSeatKind.PILOT&&NativeSeatBlock.loaded(level(),at.above())&&level().getBlockState(at.above()).isAir()){NativeSeatUpdates.queue(owner);}else {ejectPassengers();discard();return;}}
         if(tickCount>5&&getPassengers().isEmpty()){discard();return;}if(Math.abs(entityData.get(HEIGHT)-owner.cushion())>1e-6||getYRot()!=owner.yaw())updatePose(owner);
     }
     @Override public Vec3 getDismountLocationForPassenger(LivingEntity passenger){var at=chairPos();if(at!=null){var facing=net.minecraft.core.Direction.fromYRot(getYRot());for(var offset:DismountHelper.offsetsForDirection(facing)){var candidate=at.offset(offset[0],0,offset[1]);if(!level().hasChunkAt(candidate))continue;for(int dy:new int[]{0,1,-1}){var point=DismountHelper.findSafeDismountLocation(passenger.getType(),level(),candidate.offset(0,dy,0),true);if(point!=null&&DismountHelper.canDismountTo(level(),point,passenger,Pose.STANDING))return point;}}}return super.getDismountLocationForPassenger(passenger);}

@@ -13,6 +13,7 @@ public final class NativeSeatItem extends BlockItem {
     static boolean mutating(Level level,BlockPos pos){var active=ACTIVE.get();return active!=null&&active.level==level&&(active.lower.equals(pos)||active.lower.above().equals(pos));}
     @Override protected boolean placeBlock(BlockPlaceContext context,BlockState next){
         var level=context.getLevel();var lower=context.getClickedPos();var upper=lower.above();var actor=context.getPlayer();var block=(NativeSeatBlock)getBlock();
+        if(block instanceof NativeAdvancedChairBlock advanced)return advanced.install(context,next);
         if(actor==null||!NativeSeatBlock.loaded(level,lower)||!NativeSeatBlock.loaded(level,upper)||!level.mayInteract(actor,upper)||!actor.mayUseItemAt(upper,context.getClickedFace(),context.getItemInHand())||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,upper))return false;
         var oldLower=level.getBlockState(lower);var oldUpper=level.getBlockState(upper);boolean shared=block.kind==NativeSeatKind.PILOT&&NativeSeatBlock.canopy(oldUpper);
         if(oldLower.hasBlockEntity()||!shared&&oldUpper.hasBlockEntity())return false;
