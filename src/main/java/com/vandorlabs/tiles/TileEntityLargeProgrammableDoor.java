@@ -61,7 +61,8 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
     public BlockPos anchorPos(){if(world==null||column==0&&row==0)return pos;
         net.minecraft.block.state.IBlockState state=world.getBlockState(pos);
         if(!(state.getBlock() instanceof BlockLargeProgrammableDoor))return pos;
-        return cell(pos,state.getValue(BlockVandorDoor.FACING),-column,-row);}
+        return anchorPos(state.getValue(BlockVandorDoor.FACING));}
+    public BlockPos anchorPos(EnumFacing front){return cell(pos,front,-column,-row);}
     @Override protected boolean isLowerDoor(){return isAnchor() && world!=null && world.getBlockState(pos).getBlock() instanceof BlockLargeProgrammableDoor;}
     @Override public BlockPos mate(){return null;}
     @Override public int localSignalLevel(int channel){
