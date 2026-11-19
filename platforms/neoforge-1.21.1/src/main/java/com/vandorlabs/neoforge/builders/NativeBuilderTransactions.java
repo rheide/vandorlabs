@@ -52,16 +52,16 @@ public final class NativeBuilderTransactions {
       ||!Set.of("id","x","y","z","ConstructorOwner","BuilderOwner").containsAll(raw.getAllKeys()))
    throw new IllegalArgumentException("Builder reservation owner");
  }
- private static final ThreadLocal<net.neoforged.neoforge.event.level.BlockEvent.BreakEvent> COPY_PROBE=new ThreadLocal<>();
+ private static final ThreadLocal<net.neoforged.neoforge.event.level.BlockEvent.BreakEvent> TRANSFER_PROBE=new ThreadLocal<>();
  /** Post the exact permission event without triggering this family's dismantle request. */
- public static boolean copyBreakBlocked(ServerPlayer actor,ServerLevel world,BlockPos pos,net.minecraft.world.level.block.state.BlockState state){
+ public static boolean transferBreakBlocked(ServerPlayer actor,ServerLevel world,BlockPos pos,net.minecraft.world.level.block.state.BlockState state){
   var event=new net.neoforged.neoforge.event.level.BlockEvent.BreakEvent(world,pos,state,actor);
-  var previous=COPY_PROBE.get();
-  COPY_PROBE.set(event);
+  var previous=TRANSFER_PROBE.get();
+  TRANSFER_PROBE.set(event);
   try{return net.neoforged.neoforge.common.NeoForge.EVENT_BUS.post(event).isCanceled();}
-  finally{if(previous==null)COPY_PROBE.remove();else COPY_PROBE.set(previous);}
+  finally{if(previous==null)TRANSFER_PROBE.remove();else TRANSFER_PROBE.set(previous);}
  }
- @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST) public static void breaking(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent e){if(e==COPY_PROBE.get()||e.isCanceled()||!(e.getLevel() instanceof ServerLevel w)||!(e.getPlayer() instanceof ServerPlayer actor))return;var owner=NativeBuilderBindings.ownerAt(w,e.getPos());if(owner==null||!owner.formed()&&!owner.ownsRecovery())return;e.setCanceled(true);if(owner.transactionBlocked())return;try{mine(owner,actor,e.getPos());}catch(IllegalArgumentException refused){actor.displayClientMessage(net.minecraft.network.chat.Component.literal(refused.getMessage()),true);}}
+ @SubscribeEvent(priority=net.neoforged.bus.api.EventPriority.LOWEST) public static void breaking(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent e){if(e==TRANSFER_PROBE.get()||e.isCanceled()||!(e.getLevel() instanceof ServerLevel w)||!(e.getPlayer() instanceof ServerPlayer actor))return;var owner=NativeBuilderBindings.ownerAt(w,e.getPos());if(owner==null||!owner.formed()&&!owner.ownsRecovery())return;e.setCanceled(true);if(owner.transactionBlocked())return;try{mine(owner,actor,e.getPos());}catch(IllegalArgumentException refused){actor.displayClientMessage(net.minecraft.network.chat.Component.literal(refused.getMessage()),true);}}
  @SubscribeEvent public static void tick(LevelTickEvent.Post e){if(!(e.getLevel() instanceof ServerLevel world))return;var pending=QUEUED.get(world);if(pending==null)return;for(var q:List.copyOf(pending.values()))try{if(NativeCellTransactions.submit(world,FAMILY,q.actor,q.request)!=null)removePending(world,q);}catch(RuntimeException bad){removePending(world,q);q.owner.pending(false);q.actor.displayClientMessage(net.minecraft.network.chat.Component.literal(bad.getMessage()==null?"Builder operation refused":bad.getMessage()),true);}if(pending.isEmpty())QUEUED.remove(world);}
  private static void removePending(ServerLevel world,Pending pending){var jobs=QUEUED.get(world);if(jobs!=null&&jobs.remove(pending.owner.getBlockPos(),pending)){queuedBytes-=pending.weight;queuedJobs--;long remaining=QUEUED_BYTES.getOrDefault(world,0L)-pending.weight;if(remaining==0)QUEUED_BYTES.remove(world);else QUEUED_BYTES.put(world,remaining);if(jobs.isEmpty())QUEUED.remove(world);}}
  @SubscribeEvent public static void unload(net.neoforged.neoforge.event.level.LevelEvent.Unload e){if(e.getLevel() instanceof ServerLevel world){var jobs=QUEUED.remove(world);if(jobs!=null){queuedJobs-=jobs.size();for(var pending:jobs.values())pending.owner.pending(false);}queuedBytes-=QUEUED_BYTES.getOrDefault(world,0L);QUEUED_BYTES.remove(world);}}

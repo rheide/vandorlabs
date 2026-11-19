@@ -64,7 +64,7 @@ public final class NativeCopyService {
             if(recipe.source!=null){recipe.sourceVolume.requireLoaded(world);
                 for(var cell:recipe.source.cells()){
                     if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock)NativeCopyObservers.requireIdle(world,cell.pos);
-                    if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock)NativeCopyBuilders.requireIdle(world,cell.pos);
+                    if(cell.state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock)com.vandorlabs.neoforge.builders.NativeBuilderTransfer.requireIdle(world,cell.pos);
                 }if(!recipe.source.matches(world,NativeCopyTiles::same))throw new IllegalArgumentException("Input private fields or blocks changed");for(var pos:recipe.sourceVolume.cells())permission(world,header,actor,pos);}else{var mount=NativeCopyPlan.chipMount(world,root.getBlockPos());if(mount==null||!mount.getBlockPos().equals(recipe.chipMount)||!ItemStack.matches(mount.getItem(0),recipe.chip()))throw new IllegalArgumentException("Construction chip changed");}validateEconomy(world,header,recipe);
         }
         public BlockEntity stage(ServerLevel world,NativeCellTransactions.Header header,NativeRawCell cell,NativeCopyReceipt recipe){validateEconomy(world,header,recipe);return NativeCopyTiles.stage(world,cell);}
@@ -74,7 +74,7 @@ public final class NativeCopyService {
             if(recipe.supply!=null&&recipe.supply.contains(after.pos)){boolean restoring=recipe.supply.restoring(after);recipe.supply.publishCell(world,lease,after.pos,restoring);if(!restoring&&fault!=null&&(Boolean.getBoolean("vandorlabs.copyRuntimeChecks")||Boolean.getBoolean("vandorlabs.copyPlayerNavigationCheck")))fault.afterCell(header,after);return;}
             var old=world.getBlockEntity(after.pos);if(old instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack)rack.clearForTransfer();if(old instanceof Container container)container.clearContent();
             if(world.getBlockState(after.pos)!=after.state)try(var scope=lease.allowOnce(after.pos)){boolean observer=NativeCopyObservers.observer(before.state)||NativeCopyObservers.observer(after.state);
-                boolean builder=NativeCopyBuilders.builder(before.state)||NativeCopyBuilders.builder(after.state);
+                boolean builder=com.vandorlabs.neoforge.builders.NativeBuilderTransfer.builder(before.state)||com.vandorlabs.neoforge.builders.NativeBuilderTransfer.builder(after.state);
                 boolean replaced=observer?com.vandorlabs.neoforge.navigation.observer.NativeObserverProtection.set(world,after.pos,after.state,Block.UPDATE_KNOWN_SHAPE)
                     :builder?com.vandorlabs.neoforge.builders.NativeBuilderProtection.set(world,after.pos,after.state,Block.UPDATE_KNOWN_SHAPE)
                     :world.setBlock(after.pos,after.state,Block.UPDATE_KNOWN_SHAPE);

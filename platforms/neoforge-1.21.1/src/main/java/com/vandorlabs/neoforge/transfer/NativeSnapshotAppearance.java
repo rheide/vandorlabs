@@ -28,6 +28,8 @@ public final class NativeSnapshotAppearance {
             if(housing){HousingSettings.read(tags,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).write(new ModernHousingTags(result));TextureJoinSettings.read(tags).write(new ModernHousingTags(result));}
             else NativeStorageSettings.read(selected).write(result);
             if(name.equals("vandorlabs:programmable_stairs"))StairState.read(tags).write(new ModernHousingTags(result));
+        }else if(state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock core&&core.design.drive()==null){
+            for(String key:List.of("ConstructorCoreX","ConstructorCoreZ")){Tag value=raw.get(key);if(value instanceof IntTag)result.put(key,value.copy());}
         }else if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock){
             for(String key:List.of("ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth")){Tag value=raw.get(key);if(value!=null)result.put(key,value.copy());}
         }else if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableBlock){

@@ -28,16 +28,19 @@ final class NativeGearPayloadService {
         var ready=NativeGearJournal.readyToPrepare(owner);if(ready!=NativeGearJournal.Status.READY){if(ready==NativeGearJournal.Status.REFUSED)owner.journalFailure(NativeGearJournal.error(owner));else owner.journalWaiting("Waiting for attachment journal capacity");return false;}
         var actor=owner.actor();if(actor==null){owner.journalWaiting("Waiting for the owner to return");return false;}
         selected=NativeObserverCapture.complete(level,selected);
+        selected=NativeGearBuilderCapture.complete(owner,level,selected);
         var cells=new ArrayList<NativeGearSnapshot.Cell>();var shapes=new ArrayList<List<AABB>>();var after=new LinkedHashMap<BlockPos,NativeGearSnapshot.Cell>();
         for(var source:selected){
             if(!NativeGearFormation.loaded(level,source))throw new IllegalArgumentException("Load the complete attachment first");var state=level.getBlockState(source);
-            if(!level.mayInteract(actor,source)||!actor.mayUseItemAt(source,Direction.UP,actor.getMainHandItem()))throw new IllegalArgumentException("You cannot move the attachment here");if(NativeObserverCapture.breakBlocked(actor,level,source,state))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
+            if(!level.mayInteract(actor,source)||!actor.mayUseItemAt(source,Direction.UP,actor.getMainHandItem()))throw new IllegalArgumentException("You cannot move the attachment here");if(NativeGearBuilderCapture.breakBlocked(actor,level,source,state))throw new IllegalArgumentException("A protection rule prevented moving the attachment");
             if(state.getBlock() instanceof FallingBlock||state.getBlock() instanceof TntBlock||!state.getFluidState().isEmpty()||state.getDestroySpeed(level,source)<0)throw new IllegalArgumentException("Unsupported dynamic arm attachment");
             boolean building=state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableSlab||state.getBlock() instanceof com.vandorlabs.neoforge.shape.NativeProgrammableStairs||state.getBlock()==com.vandorlabs.neoforge.VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get();if(!building&&!(state.getBlock() instanceof SlabBlock)&&!(state.getBlock() instanceof StairBlock)&&!state.hasBlockEntity()&&!state.isCollisionShapeFullBlock(level,source))throw new IllegalArgumentException("Use supported solid blocks on the arm platform");
             cells.add(NativeGearSnapshot.capture(level,source,false));var boxes=state.getCollisionShape(level,source,CollisionContext.empty()).toAabbs();shapes.add(boxes.isEmpty()?List.of(new AABB(0,0,0,1,1,1)):boxes);after.put(source,new NativeGearSnapshot.Cell(source,Blocks.AIR.defaultBlockState(),null));
         }
         if(!NativeObserverCapture.complete(level,selected).equals(selected))throw new IllegalArgumentException("Observer ownership changed during protection checks");
+        if(!NativeGearBuilderCapture.complete(owner,level,selected).equals(selected))throw new IllegalArgumentException("Builder ownership changed during protection checks");
         var captured=new NativeGearPayload(UUID.randomUUID(),cells,shapes,owner.progress(),false,NativeGearPayload.frame(owner,owner.progress()));
+        NativeGearBuilderCapture.checkStroke(owner,captured);
         if(owner.sections()!=null)for(var section:owner.sections().cells()){if(!selected.contains(section.pos)&&!level.getBlockState(section.pos).isAir())throw new IllegalArgumentException("Clear the stored arm section before extending");after.put(section.pos,section);}
         captured.view(owner.getBlockPos(),level.registryAccess());var status=NativeGearJournal.start(owner,actor,List.copyOf(after.values()),captured,null);if(status==NativeGearJournal.Status.PENDING)owner.journalWaiting("Preparing attachment ownership");return false;
     }
