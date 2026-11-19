@@ -1,6 +1,7 @@
 package com.vandorlabs.gear;
 
 import com.vandorlabs.gear.core.JoinedPlatform;
+import com.vandorlabs.blocks.BlockLargeProgrammableDoor;
 import java.util.*;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.util.EnumFacing;
@@ -52,7 +53,15 @@ final class JoinedArms {
         List<JoinedPlatform.Cell> supports=new ArrayList<>();int minX=Integer.MAX_VALUE,minZ=minX,maxX=Integer.MIN_VALUE,maxZ=maxX;
         for(BlockPos column:arm.columns()){BlockPos local=ArmOrientation.inverse(arm.mountDirection(),column);supports.add(new JoinedPlatform.Cell(local.getX(),local.getZ()));minX=Math.min(minX,local.getX());maxX=Math.max(maxX,local.getX());minZ=Math.min(minZ,local.getZ());maxZ=Math.max(maxZ,local.getZ());}
         Set<JoinedPlatform.Cell> occupied=new LinkedHashSet<>();int y=-arm.assembly().columnHeight();
-        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){BlockPos at=position.apply(arm.localCell(x,y,z));if(!GearAssembly.loaded(arm.getWorld(),at))throw new IllegalArgumentException("Load the entire joined platform");if(!arm.getWorld().isAirBlock(at)&&(!arm.members().contains(at)||arm.storedSections!=null&&arm.storedSections.at(at.subtract(arm.getPos()))!=null))occupied.add(new JoinedPlatform.Cell(x,z));}
+        World world=arm.getWorld();
+        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++){
+            BlockPos at=position.apply(arm.localCell(x,y,z));
+            if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the entire joined platform");
+            IBlockState state=world.getBlockState(at);
+            if(state.getBlock().isAir(state,world,at)||BlockLargeProgrammableDoor.isOpenHorizontal(world,at,state))continue;
+            if(!arm.members().contains(at)||arm.storedSections!=null&&arm.storedSections.at(at.subtract(arm.getPos()))!=null)
+                occupied.add(new JoinedPlatform.Cell(x,z));
+        }
         Set<BlockPos> result=new LinkedHashSet<>();if(occupied.isEmpty())return result;for(JoinedPlatform.Cell cell:JoinedPlatform.connected(supports,occupied))result.add(position.apply(arm.localCell(cell.u,y,cell.v)));return result;
     }
     static final class Volume {
