@@ -645,8 +645,7 @@
         "vector_fold_array_core"
       ],
       "remaining": [
-        "Port the Paladyne and Seyr navigation computers.",
-        "Add arm carrying and Copy Controller support for formed builder machines.",
+        "Add arm carrying and provide broader Copy and previous-version import for formed builders.",
         "Complete native release and shader acceptance."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
@@ -663,7 +662,8 @@
         "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation.",
         "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry.",
         "Press and Gantry use authored fabrication beds, scanner beams and connected-player pickup and battery interactions.",
-        "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. Vector Fold has its authored active/idle models and boolean Redstone control. The Tower fabricates all four cores with a permitting Catalog Chip."
+        "Maxwell (Longburn), Seyr Meridian and Pinnacle Oculus form with native Redstone and display controls. Oculus has its authored reversible shutters. Vector Fold has its authored active/idle models and boolean Redstone control. The Tower fabricates all four cores with a permitting Catalog Chip.",
+        "Paladyne and Seyr Navigation Computers form from their original Creative-only Cores and show authored Off, Idle and Computing stages."
       ]
     },
     {
@@ -816,7 +816,7 @@
       ],
       "remaining": [
         "Vehicle-specific landing effects and support admission remain deferred",
-        "Legacy nonmodular decorative landing-gear families remain unconverted"
+        "Legacy wheel inventory and ground-drop conversion and broader verification of legacy fixed and ski gear."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
@@ -1066,7 +1066,7 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Expand supported targets, including additional Screen roles, channel/credential-bearing Screens and formed builders.",
+        "Expand supported targets, including additional Screen roles, channel/credential-bearing Screens, and occupied or active builders.",
         "Expand live coverage of joined Navigation Table layouts beyond the tested two-cell flat group."
       ],
       "implemented": [
@@ -1075,7 +1075,8 @@
         "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback.",
         "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs.",
         "Complete stationary Survey Dish and Sentinel Array frames copy at exact frame cost and get independent ownership.",
-        "Closed regular Programmable Screen groups with static artwork copy at one plain Screen per member. Private or channel-active states are refused."
+        "Closed regular Programmable Screen groups with static artwork copy at one plain Screen per member. Private or channel-active states are refused.",
+        "Complete idle and disconnected Synthesis Tower, Assembly Press and Enclosed Gantry frames copy from empty owners at exact frame cost."
       ],
       "modern_registered_block_ids": [
         "copy_controller"

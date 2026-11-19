@@ -8,7 +8,8 @@ with both halves and their contents. Complete stationary Navigation Table
 groups retain both their Navigation Chip and module mounts. Complete Survey
 Dish and Sentinel Array frames get independent ownership. Regular Screen groups
 can also be copied when they have static artwork and no private media or
-configured channel controls. [Copy Controller guide](../copy-controller.md)
+configured channel controls. Idle, disconnected Synthesis Towers, Assembly
+Presses and Enclosed Gantries copy when all their slots are empty. [Copy Controller guide](../copy-controller.md)
 
 The **Assembly Press** makes Data Chips and Access Cards by default. Insert a
 Catalog Chip that lists the recipe to produce Battery, Autopilot, or Navigation
@@ -16,7 +17,9 @@ Data Modules. Existing Navigation Data Module jobs keep their progress when the
 world loads. With a permitting Catalog Chip, the **Synthesis Tower** can
 fabricate a Ramp Controller and the Maxwell, Meridian, Oculus and Vector Fold Cores. The **Enclosed Gantry** makes eight mechanical blocks, including
 arm hinges, wheels and resource ports. Both machines render work at their
-authored beds and let you collect completed products there. [NeoForge builder guide](../builders-1.21.md)
+authored beds and let you collect completed products there. The **Paladyne**
+and **Seyr Navigation Computers** form from their original Creative-only Cores
+and display Off, Idle or Computing. [NeoForge builder guide](../builders-1.21.md)
 
 **Programmable armor** uses the original four crafting recipes. Configure a held
 piece with its role, company, or programmable material artwork in Creative, or hold a Configurizer and
@@ -39,6 +42,9 @@ The experimental **Turntable Controller** can capture supported blocks above
 a Programmable Surface, turn them and restore them to the world from the dialog or with configured
 Redstone inputs. Enable it
 with `-Dvandorlabs.turntableControllers=true`. [Native Turntable guide](../development/native-turntable.md)
+
+Imported stationary wheels can be converted on load with
+`-Dvandorlabs.autoConvertLandingGear=true`. [Legacy landing gear](../development/native-legacy-landing.md)
 
 See the [NeoForge coverage inventory](../development/feature-coverage.md) for
 the current feature list and port status.
