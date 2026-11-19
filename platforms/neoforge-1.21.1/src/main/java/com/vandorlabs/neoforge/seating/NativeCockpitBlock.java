@@ -31,8 +31,9 @@ final class NativeCockpitBlock extends NativeAdvancedChairBlock {
     @Override BlockPos offset(int part, Direction facing) { return NativeCockpitGeometry.offset(part,facing); }
 
     @Override public VoxelShape getShape(BlockState state, BlockGetter world, BlockPos pos, CollisionContext context) {
-        if (proxy(state) && owner(world,pos)==null) return Shapes.empty();
-        return NativeCockpitGeometry.shape(partIndex(state),state.getValue(FACING));
+        var owner=owner(world,pos);
+        if(proxy(state)&&owner==null)return Shapes.empty();
+        return NativeCockpitGeometry.shape(partIndex(state),state.getValue(FACING),owner==null?0:owner.liftPosition());
     }
     @Override protected BlockState mirror(BlockState state, Mirror mirror) { return state; }
 }

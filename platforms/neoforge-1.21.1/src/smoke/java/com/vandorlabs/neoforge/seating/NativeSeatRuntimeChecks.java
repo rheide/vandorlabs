@@ -37,8 +37,14 @@ public final class NativeSeatRuntimeChecks {
      var caps=new CompoundTag();caps.putString("external","opaque cockpit data");
      saved.put("ForgeCaps",caps);
      tile.loadWithComponents(saved,world.registryAccess());
+     var obstructing=new net.minecraft.world.entity.decoration.ArmorStand(world,root.getX()+1,root.getY()+.15,root.getZ()-.78);
+     need(world.addFreshEntity(obstructing)&&!tile.pressLift(actor)&&tile.lift().revision()==0,"occupant refuses screen-bank travel");
+     obstructing.discard();
+     need(tile.pressLift(actor)&&tile.lift().retracted()&&tile.lift().revision()==1,"clear bank retraction");
      tile.setChanged();
    }
+   need(tile.lift().retracted()&&tile.lift().revision()==1,"persisted authoritative screen-bank timeline");
+   if(!install)need(tile.liftPosition()>0,"cold bank resumes or completes saved retraction");
    need(tile.saveWithoutMetadata(world.registryAccess()).getCompound("ForgeCaps")
        .getString("external").equals("opaque cockpit data"),"opaque Cockpit NBT survives");
  }

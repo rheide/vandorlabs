@@ -56,6 +56,9 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
             var grip=NativeAdvancedChairGeometry.grip(owner,state.getValue(FACING),pos,start,end);
             if(grip!=null)return grip.hit();
         }
+    }else if(kind==NativeSeatKind.COCKPIT&&owner(world,pos)!=null){
+        var control=NativeCockpitGeometry.button(lower(state,pos),state.getValue(FACING),pos,start,end);
+        if(control!=null)return control;
     }if((kind.adjustablePilotHeight()||kind==NativeSeatKind.COCKPIT)&&world instanceof Level level){var lower=lower(state,pos);var players=level.players();for(int i=0;i<players.size();i++){var player=players.get(i);if(player.getVehicle() instanceof NativeChairMount mount&&lower.equals(mount.chairPos())&&start.distanceToSqr(player.getEyePosition())<1e-8)return null;}}return getShape(state,world,pos,CollisionContext.empty()).clip(start,end,pos);}
     @Override public boolean canBeReplaced(BlockState state,BlockPlaceContext context){return NativeSeatBackrests.replacing(context,context.getClickedPos());}
     @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}
@@ -72,6 +75,20 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
                     if(!first.getBlockPos().equals(pos)||first.getLocation().distanceToSqr(grip.hit().getLocation())>1e-8)
                         return InteractionResult.FAIL;
                     owner.armrest(grip.index()).cycle();
+                }
+                return InteractionResult.sidedSuccess(world.isClientSide);
+            }
+        }
+        if(kind==NativeSeatKind.COCKPIT){
+            Vec3 start=actor.getEyePosition(),end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
+            var control=NativeCockpitGeometry.button(at,state.getValue(FACING),pos,start,end);
+            if(control!=null){
+                if(!world.isClientSide){
+                    var first=world.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
+                    if(first.getLocation().distanceToSqr(control.getLocation())>1e-8||!first.getBlockPos().equals(pos)
+                        ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,control.getDirection(),actor.getMainHandItem()))
+                        return InteractionResult.FAIL;
+                    owner.pressLift(actor);
                 }
                 return InteractionResult.sidedSuccess(world.isClientSide);
             }

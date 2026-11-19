@@ -7,6 +7,9 @@ import net.minecraft.client.Screenshot;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
+import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
+import net.minecraft.world.level.ClipContext;
+import net.minecraft.world.phys.HitResult;
 import net.minecraft.util.RandomSource;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.Items;
@@ -25,6 +28,7 @@ import static com.vandorlabs.neoforge.seating.NativeCockpitFrameFixture.*;
 public final class NativeCockpitFrameClient {
     private static int stage,ticks,wait;
     private static String screenshot;
+    private static java.util.concurrent.CompletableFuture<Void> reload;
 
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
         if(!enabled())return;
@@ -85,8 +89,75 @@ public final class NativeCockpitFrameClient {
             case 5 -> {
                 if(screenshot!=null)return;
                 game.options.setCameraType(CameraType.FIRST_PERSON);
-                game.options.keyShift.setDown(true);
+                aimLift(game);
+                wait=ticks;stage=40;
+            }
+            case 40 -> {
+                if(ticks<wait+8)return;
+                check(!owner.lift().retracted()&&owner.lift().revision()==0,"initial deployed bank");
+                press(game);
+                stage++;
+            }
+            case 41 -> {
+                if(owner.lift().revision()!=1)return;
+                check(owner.lift().retracted()&&owner.lift().from()==0,"actual seated screen button retracts");
                 wait=ticks;stage++;
+            }
+            case 42 -> {
+                if(ticks<wait+8)return;
+                press(game);
+                stage++;
+            }
+            case 43 -> {
+                if(owner.lift().revision()!=2)return;
+                check(!owner.lift().retracted()&&owner.lift().from()>0&&owner.lift().from()<1,
+                    "actual reversal samples the moving server bank");
+                wait=ticks;stage++;
+            }
+            case 44 -> {
+                if(ticks<wait+36)return;
+                press(game);
+                stage++;
+            }
+            case 45 -> {
+                if(owner.lift().revision()!=3||owner.liftPosition()<.999)return;
+                var upper=ROOT.north().above();
+                check(NativeCockpitGeometry.shape(3,Direction.NORTH,0)!=NativeCockpitGeometry.shape(3,Direction.NORTH,1)
+                    &&game.level.getBlockState(upper).getCollisionShape(game.level,upper)==NativeCockpitGeometry.shape(3,Direction.NORTH,1),
+                    "client predicts authored retracted collision using the synchronized timeline");
+                cameraOverview(game);
+                screenshot="cockpit-screens-retracted.png";
+                stage++;
+            }
+            case 46 -> {
+                if(screenshot!=null)return;
+                aimLift(game);
+                wait=ticks;stage++;
+            }
+            case 47 -> {
+                if(ticks<wait+8)return;
+                press(game);
+                stage++;
+            }
+            case 48 -> {
+                if(owner.lift().revision()!=4||owner.liftPosition()>.001
+                    ||com.vandorlabs.neoforge.NativeCockpitLiftRenderer.visualProgress(owner)>.001)return;
+                cameraOverview(game);
+                screenshot="cockpit-screens-deployed.png";
+                stage++;
+            }
+            case 49 -> {
+                if(screenshot!=null)return;
+                reload=game.reloadResourcePacks();
+                stage++;
+            }
+            case 50 -> {
+                if(reload==null||!reload.isDone())return;
+                reload.join();
+                check(com.vandorlabs.neoforge.NativeCockpitLiftRenderer.visualProgress(owner)<.001,
+                    "resource reload must not replay the completed screen motion");
+                game.options.keyShift.setDown(true);
+                wait=ticks;stage=6;
             }
             case 6 -> {
                 if(player.isPassenger()||ticks<wait+8)return;
@@ -113,6 +184,32 @@ public final class NativeCockpitFrameClient {
                 stage++;
             }
         }
+    }
+
+    private static void cameraOverview(Minecraft game){
+        game.player.setXRot(26);
+        game.player.xRotO=26;
+        game.player.setYRot(180);
+        game.player.yRotO=180;
+    }
+
+    private static void aimLift(Minecraft game){
+        var target=Vec3.atLowerCornerOf(ROOT).add(1.71875,.68125,.128125);
+        var delta=target.subtract(game.player.getEyePosition());
+        float yaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z));
+        float pitch=(float)-Math.toDegrees(Math.atan2(delta.y,delta.horizontalDistance()));
+        game.player.setYRot(yaw);
+        game.player.setXRot(pitch);
+        game.player.connection.send(new ServerboundMovePlayerPacket.Rot(yaw,pitch,game.player.onGround()));
+    }
+
+    private static void press(Minecraft game){
+        var eye=game.player.getEyePosition();
+        var end=eye.add(game.player.getViewVector(1).scale(4));
+        var hit=game.level.clip(new ClipContext(eye,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,game.player));
+        check(hit.getType()==HitResult.Type.BLOCK&&hit.getBlockPos().equals(MINE)
+            &&NativeCockpitGeometry.button(ROOT,Direction.NORTH,MINE,eye,end)!=null,"real view points at the native screen-lift button");
+        game.gameMode.useItemOn(game.player,InteractionHand.MAIN_HAND,hit);
     }
 
     private static void click(Minecraft game,BlockPos pos,Direction face){

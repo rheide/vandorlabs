@@ -67,17 +67,34 @@ def generate(root,out):
         write(asset,json.loads((source/asset).read_text()))
     names.extend(['advanced_chair','advanced_left','advanced_right'])
     cockpit=source/'models/block/cockpits/cockpit'
-    (native/'cockpit.obj').write_text((cockpit/'off.obj').read_text().replace('mtllib materials.mtl','mtllib cockpit.mtl',1))
+    source_obj=(cockpit/'off.obj').read_text().replace('mtllib materials.mtl','mtllib cockpit.mtl',1)
+    (native/'cockpit.obj').write_text(source_obj)
+    detached={'screen_bank':[],'screen_lift_button':[]}
+    body=[]
+    group=None
+    # Retain OBJ index declarations in each mesh. Select face groups from the
+    # authored composed pose so the bank and button retain their absolute pivots.
+    for line in source_obj.splitlines():
+        if line.startswith('g '):group=line[2:].split('__')[0]
+        if line.startswith(('f ','g ','usemtl ')):
+            (detached[group] if group in detached else body).append(line)
+        else:
+            body.append(line)
+            for lines in detached.values():lines.append(line)
+    (native/'cockpit_body.obj').write_text('\n'.join(body)+'\n')
+    for part,lines in detached.items():
+        (native/f'cockpit_{part}.obj').write_text('\n'.join(lines)+'\n')
     shutil.copyfile(cockpit/'materials.mtl',native/'cockpit.mtl')
     for entry in (cockpit/'materials.mtl').read_text().splitlines():
         if entry.startswith('map_Kd '):texture(entry.split(None,1)[1])
-    write('models/block/native_seating/cockpit.json',
-          {'loader':'neoforge:obj','model':'vandorlabs:models/block/native_seating/cockpit.obj',
-           'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
-           'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
+    for name in ['cockpit','cockpit_body','cockpit_screen_bank','cockpit_screen_lift_button']:
+        write(f'models/block/native_seating/{name}.json',
+              {'loader':'neoforge:obj','model':f'vandorlabs:models/block/native_seating/{name}.obj',
+               'automatic_culling':False,'shade_quads':True,'flip_v':True,'emissive_ambient':False,
+               'textures':{'particle':texture('vandorlabs:models/cockpits/sidewall')}})
     assembly='cockpits/cockpit/assembly.json'
     write(assembly,json.loads((source/assembly).read_text()))
-    names.append('cockpit')
+    names.extend(['cockpit','cockpit_body','cockpit_screen_bank','cockpit_screen_lift_button'])
     write('models/block/native_seating/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/bridge_chair_atlas')},'elements':[]})
     for kind in KINDS:
         base={'programmable_chair':'chair_0_1','pilot_seat':'pilot_0_0','chair_siderests':'advanced_chair','cockpit':'cockpit'}.get(kind,kind+'_1_0')

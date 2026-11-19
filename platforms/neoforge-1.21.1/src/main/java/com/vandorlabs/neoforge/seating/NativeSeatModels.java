@@ -33,21 +33,41 @@ public final class NativeSeatModels {
     public static CacheDiagnostics cacheDiagnostics(){var bake=active;if(bake==null)return new CacheDiagnostics(0,0,0,0,0);bake.selected.cleanUp();var retained=java.util.Collections.newSetFromMap(new java.util.IdentityHashMap<Selected,Boolean>());retained.addAll(bake.selected.asMap().values());long descriptors=0,defaults=0;for(var item:bake.items){item.components.cleanUp();retained.add(item.plain);defaults+=item.plain.bytes;descriptors+=item.components.size()*256L;}long bytes=0;for(var model:retained)bytes+=model.bytes;return new CacheDiagnostics(bytes,descriptors,16L*1024*1024+defaults,bake.itemBuilds,bake.descriptorHits);}
     private static final ModelProperty<Key> KEY=new ModelProperty<>();
     private record Key(NativeChairEntity.View view,Direction facing,int part,int arms,boolean item){}
-    private static List<String> names(){var out=new ArrayList<String>();for(int style=0;style<5;style++)for(int height=0;height<3;height++)out.add("chair_"+style+"_"+height);for(String kind:new String[]{"luxury_seat","military_seat"})for(int height=0;height<3;height++)for(int part=0;part<4;part++)out.add(kind+"_"+height+"_"+part);for(int height=0;height<4;height++)for(int arms=0;arms<4;arms++)out.add("pilot_"+height+"_"+arms);out.addAll(List.of("advanced_chair","advanced_left","advanced_right","cockpit"));return out;}
+    private static List<String> names(){var out=new ArrayList<String>();for(int style=0;style<5;style++)for(int height=0;height<3;height++)out.add("chair_"+style+"_"+height);for(String kind:new String[]{"luxury_seat","military_seat"})for(int height=0;height<3;height++)for(int part=0;part<4;part++)out.add(kind+"_"+height+"_"+part);for(int height=0;height<4;height++)for(int arms=0;arms<4;arms++)out.add("pilot_"+height+"_"+arms);out.addAll(List.of("advanced_chair","advanced_left","advanced_right","cockpit","cockpit_body","cockpit_screen_bank","cockpit_screen_lift_button"));return out;}
     private static ResourceLocation id(String name){return ResourceLocation.parse("vandorlabs:block/native_seating/"+name);}
     @SubscribeEvent public static void additional(ModelEvent.RegisterAdditional event){if(NativeSeatBindings.enabled())for(var name:names())event.register(ModelResourceLocation.standalone(id(name)));}
     @SubscribeEvent public static void screens(RegisterMenuScreensEvent event){if(NativeSeatBindings.enabled())event.register(NativeSeatBindings.MENU,NativeSeatScreen::new);}
-    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){if(NativeSeatBindings.enabled())event.registerEntityRenderer(NativeSeatBindings.MOUNT,net.minecraft.client.renderer.entity.NoopRenderer::new);}
+    @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){if(NativeSeatBindings.enabled()){
+        event.registerEntityRenderer(NativeSeatBindings.MOUNT,net.minecraft.client.renderer.entity.NoopRenderer::new);
+        event.registerBlockEntityRenderer(NativeSeatBindings.ENTITIES.get(NativeSeatKind.COCKPIT),NativeCockpitLiftRenderer::new);
+    }}
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event){if(!NativeSeatBindings.enabled())return;var bake=new Bake(event.getModels());active=bake;for(var kind:NativeSeatKind.values()){
         var block=NativeSeatBindings.BLOCKS.get(kind);for(var state:block.getStateDefinition().getPossibleStates()){var location=BlockModelShaper.stateToModelLocation(state);event.getModels().put(location,new WorldModel(Objects.requireNonNull(event.getModels().get(location)),bake));}
         var location=new ModelResourceLocation(ResourceLocation.parse("vandorlabs:"+kind.id),"inventory");var source=Objects.requireNonNull(event.getModels().get(location));event.getModels().put(location,new ItemModel(source,bake,kind));
     }}
     private static NativeChairEntity.View defaults(NativeSeatKind kind){return new NativeChairEntity.View(kind,0,1,0,true,0,0,0);}
-    private static String body(Key key){var v=key.view;if(v.kind()==NativeSeatKind.COCKPIT)return "cockpit";return v.kind()==NativeSeatKind.ADVANCED?"advanced_chair":v.kind()==NativeSeatKind.CHAIR?"chair_"+v.style()+"_"+v.height():v.kind()==NativeSeatKind.PILOT?"pilot_"+v.pilotHeight()+"_"+key.arms:v.kind().id+"_"+v.height()+"_"+key.part;}
+    private static String body(Key key){var v=key.view;if(v.kind()==NativeSeatKind.COCKPIT)return key.item?"cockpit":"cockpit_body";return v.kind()==NativeSeatKind.ADVANCED?"advanced_chair":v.kind()==NativeSeatKind.CHAIR?"chair_"+v.style()+"_"+v.height():v.kind()==NativeSeatKind.PILOT?"pilot_"+v.pilotHeight()+"_"+key.arms:v.kind().id+"_"+v.height()+"_"+key.part;}
+    static List<BakedQuad> cockpitPart(boolean button) {
+        var bake=active;
+        return bake==null?List.of():button?bake.liftButton:bake.screenBank;
+    }
+
+    private static List<BakedQuad> part(BakedModel model) {
+        var faces=new ArrayList<BakedQuad>();
+        faces.addAll(model.getQuads(null,null,RandomSource.create(0),ModelData.EMPTY,null));
+        for(var direction:Direction.values())faces.addAll(model.getQuads(null,direction,RandomSource.create(0),ModelData.EMPTY,null));
+        return List.copyOf(faces);
+    }
+
     private static final class Bake {
         final Map<String,BakedModel> bodies=new HashMap<>();final List<ItemModel> items=new ArrayList<>();long itemBuilds,descriptorHits;
         final Cache<Key,Selected> selected=CacheBuilder.newBuilder().maximumWeight(16*1024*1024).weigher((Key key,Selected model)->model.bytes).build();
-        Bake(Map<ModelResourceLocation,BakedModel> models){for(var name:names())bodies.put(name,Objects.requireNonNull(models.get(ModelResourceLocation.standalone(id(name))),"Missing authored seat "+name));}
+        final List<BakedQuad> screenBank,liftButton;
+        Bake(Map<ModelResourceLocation,BakedModel> models){
+            for(var name:names())bodies.put(name,Objects.requireNonNull(models.get(ModelResourceLocation.standalone(id(name))),"Missing authored seat "+name));
+            screenBank=part(bodies.get("cockpit_screen_bank"));
+            liftButton=part(bodies.get("cockpit_screen_lift_button"));
+        }
         Selected select(Key key,BakedModel transforms){var found=selected.getIfPresent(key);if(found!=null)return found;var result=new Selected(key,Objects.requireNonNull(bodies.get(body(key))),transforms,bodies);if(key.item)itemBuilds++;if(result.bytes<=16*1024*1024)selected.put(key,result);return result;}
     }
     private static boolean row(BlockAndTintGetter region,BlockPos pos,BlockState own,NativeChairEntity.View view){if(!NativeSeatBlock.loaded(region,pos))return false;var other=region.getBlockState(pos);if(!(other.getBlock() instanceof NativeSeatBlock)||!other.is(own.getBlock())||other.getValue(NativeSeatBlock.UPPER))return false;var tile=region.getBlockEntity(pos);if(!(tile instanceof NativeChairEntity neighbor)||neighbor.inert())return false;var v=neighbor.view();return ChairSettings.connects(true,true,true,other.getValue(NativeSeatBlock.FACING)==own.getValue(NativeSeatBlock.FACING),view.height(),v.height(),v.join());}
