@@ -17,6 +17,8 @@ import net.minecraft.world.level.material.MapColor;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
 import net.neoforged.neoforge.registries.RegisterEvent;
+import net.neoforged.neoforge.capabilities.Capabilities;
+import net.neoforged.neoforge.capabilities.RegisterCapabilitiesEvent;
 
 /** Canonical standalone arm bindings. An explicit false switch supports baseline fixtures. */
 @EventBusSubscriber(modid="vandorlabs",bus=EventBusSubscriber.Bus.MOD)
@@ -33,6 +35,12 @@ public final class NativeGearBindings {
         event.register(Registries.ITEM,helper->{for(var entry:BLOCKS.entrySet()){var item=new NativeGearItem(entry.getValue(),new Item.Properties());ITEMS.put(entry.getKey(),item);helper.register(id(entry.getKey()),item);}});
         event.register(Registries.BLOCK_ENTITY_TYPE,helper->{ENTITY=BlockEntityType.Builder.<NativeGearEntity>of((pos,state)->new NativeGearEntity(ENTITY,pos,state),BLOCKS.values().stream().filter(block->block.definition().kind!=NativeGearDefinition.Kind.TRACK).toArray(Block[]::new)).build(null);helper.register(id("modular_gear"),ENTITY);if(com.vandorlabs.neoforge.gear.track.NativeTracks.enabled()){TRACK_ENTITY=BlockEntityType.Builder.<NativeGearEntity>of((pos,state)->new com.vandorlabs.neoforge.gear.track.NativeTrackEntity(TRACK_ENTITY,pos,state),BLOCKS.values().stream().filter(block->block.definition().kind==NativeGearDefinition.Kind.TRACK).toArray(Block[]::new)).build(null);helper.register(id("track"),TRACK_ENTITY);}});
         event.register(Registries.MENU,helper->{MENU=net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((window,inventory,buffer)->new NativeGearMenu(MENU,window,inventory,buffer.readBlockPos(),buffer.readUUID()));helper.register(id("modular_gear"),MENU);});
+    }
+    @SubscribeEvent public static void capabilities(RegisterCapabilitiesEvent event){
+        if(!enabled())return;
+        event.registerBlockEntity(Capabilities.EnergyStorage.BLOCK,ENTITY,NativeGearResourceTransfer::energy);
+        event.registerBlockEntity(Capabilities.FluidHandler.BLOCK,ENTITY,NativeGearResourceTransfer::fluid);
+        event.registerBlockEntity(Capabilities.ItemHandler.BLOCK,ENTITY,NativeGearResourceTransfer::items);
     }
     @SubscribeEvent public static void packets(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){NativeGearSettingsPayload.register(event);NativeGearMechanismUsePayload.register(event);NativeGearHarvestPayload.register(event);}
     public static boolean open(Player player,Level world,BlockPos pos){if(world.hasChunkAt(pos)&&world.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.gear.track.NativeTrackEntity)return com.vandorlabs.neoforge.gear.track.NativeTracks.open(player,world,pos);if(!com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(player,world,pos))return false;var member=NativeGearFormation.at(world,pos);return member!=null&&openSelected(player,member);}

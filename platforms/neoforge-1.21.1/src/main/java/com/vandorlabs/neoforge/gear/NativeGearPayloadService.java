@@ -21,7 +21,10 @@ final class NativeGearPayloadService {
         NativeGearPushing.preflight(owner);return capture(owner,level,selected);
         }catch(RuntimeException failure){var reason=Objects.toString(failure.getMessage(),"Attachment preparation failed");if(owner.canPushBlocks()&&owner.settings().pushBlocks())owner.pushFailure(reason);else owner.journalFailure(reason);return false;}}
     private static BlockPos nativeCell(NativeGearEntity owner,BlockPos construction){
-        var local=NativeGearOrientation.inverse(owner.mount(),construction.subtract(owner.getBlockPos()));var point=NativeGearPayload.frame(owner,owner.progress()).point(local.getX()+.5,local.getY()+.5,local.getZ()+.5);double x=point.x-.5,y=point.y-.5,z=point.z-.5;
+        return nativeCell(owner,construction,NativeGearPayload.frame(owner,owner.progress()));
+    }
+    static BlockPos nativeCell(NativeGearEntity owner,BlockPos construction,NativeGearPayload.Transform frame){
+        var local=NativeGearOrientation.inverse(owner.mount(),construction.subtract(owner.getBlockPos()));var point=frame.point(local.getX()+.5,local.getY()+.5,local.getZ()+.5);double x=point.x-.5,y=point.y-.5,z=point.z-.5;
         if(Math.abs(x-Math.rint(x))+Math.abs(y-Math.rint(y))+Math.abs(z-Math.rint(z))>1e-8)throw new IllegalArgumentException("Joined attachment endpoint is not on the native grid");return owner.getBlockPos().offset((int)Math.rint(x),(int)Math.rint(y),(int)Math.rint(z));
     }
     private static boolean capture(NativeGearEntity owner,ServerLevel level,Set<BlockPos> selected){
