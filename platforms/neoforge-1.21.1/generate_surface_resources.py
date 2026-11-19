@@ -23,6 +23,20 @@ def generate(root, out):
     recipe['result']['id'] = recipe['result'].pop('item')
     recipe['neoforge:conditions'] = [{'type': 'neoforge:item_exists', 'item': 'vandorlabs:turntable_surface'}]
     write(out / 'data/vandorlabs/recipe/turntable_surface.json', recipe)
+    controller = 'turntable_controller'
+    controller_model = controller + '_cw_off'
+    write(assets / f'models/block/{controller_model}.json',
+          json.loads((source / f'models/block/{controller_model}.json').read_text()))
+    write(assets / f'models/item/{controller}.json',
+          json.loads((source / f'models/item/{controller}.json').read_text()))
+    write(assets / f'blockstates/{controller}.json', {'variants': {
+        f'facing={face}': {'model': f'vandorlabs:block/{controller_model}', 'y': angle}
+        for face, angle in (('north', 0), ('east', 90), ('south', 180), ('west', 270))
+    }})
+    controller_recipe = json.loads((source / f'recipes/{controller}.json').read_text())
+    controller_recipe['result']['id'] = controller_recipe['result'].pop('item')
+    controller_recipe['neoforge:conditions'] = [{'type': 'neoforge:item_exists', 'item': 'vandorlabs:turntable_controller'}]
+    write(out / f'data/vandorlabs/recipe/{controller}.json', controller_recipe)
     atlas = []
     for category in ('turntable', 'surface'):
         for path in (root / f'texture-packs/additional/assets/vandorlabs/textures/blocks/{category}').glob('*.png'):

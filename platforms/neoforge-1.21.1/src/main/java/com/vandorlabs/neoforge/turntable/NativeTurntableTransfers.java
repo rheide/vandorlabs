@@ -7,9 +7,11 @@ import com.vandorlabs.neoforge.transfer.NativeCellTransactions;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.neoforge.transfer.NativeTransferHolds;
 import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -26,21 +28,69 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.level.LevelEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
 
 /** Durable native handoff between loaded cells and the controller's owned capture. */
-final class NativeTurntableTransfers {
+@EventBusSubscriber(modid = "vandorlabs")
+public final class NativeTurntableTransfers {
     private static final int TILE_BYTES = 8 * 1024 * 1024;
     private static final NativeTransferSnapshot.Limits LIMITS =
             new NativeTransferSnapshot.Limits(16385, TILE_BYTES, 16 * 1024 * 1024, 48 * 1024 * 1024);
 
     record Receipt(boolean restoring, NativeTurntableCapture capture, List<BlockPos> changed) {}
 
+    private record Pending(WeakReference<ServerPlayer> actor, NativeCellTransactions.Request request, long bytes) {}
+    private static final Map<NativeTurntableEntity, Pending> QUEUED = new IdentityHashMap<>();
+
+    static boolean busy(ServerLevel world, NativeTurntableEntity owner) {
+        return QUEUED.containsKey(owner) || NativeCellTransactions.busy(world, owner.getBlockPos(), owner.key());
+    }
+
+    static void request(NativeTurntableEntity owner, ServerPlayer actor, boolean restoring, int heading) {
+        if (QUEUED.size() >= 8) throw new IllegalArgumentException("Turntable queue is full");
+        var request = prepare(owner, actor, restoring, heading);
+        long size = (long) request.before().retainedBytes + request.after().retainedBytes;
+        long retained = QUEUED.values().stream().mapToLong(Pending::bytes).sum();
+        if (retained + size > 128L * 1024 * 1024) throw new IllegalArgumentException("Turntable queue byte limit");
+        QUEUED.put(owner, new Pending(new WeakReference<>(actor), request, size));
+        owner.status(restoring ? "Restore pending" : "Scan pending");
+    }
+
+    @SubscribeEvent
+    public static void tick(ServerTickEvent.Post event) {
+        if (QUEUED.isEmpty()) return;
+        for (var owner : List.copyOf(QUEUED.keySet())) {
+            if (!(owner.getLevel() instanceof ServerLevel world) || world.getServer() != event.getServer()) continue;
+            var pending = QUEUED.get(owner);
+            var actor = pending.actor().get();
+            if (!owner.installed(world)) {
+                QUEUED.remove(owner);
+                continue;
+            }
+            try {
+                if (actor == null || actor.isRemoved()) throw new IllegalArgumentException("Turntable actor left");
+                if (submit(world, actor, pending.request()) != null) QUEUED.remove(owner);
+            } catch (IllegalArgumentException refusal) {
+                QUEUED.remove(owner);
+                owner.status(refusal.getMessage());
+            }
+        }
+    }
+
+    @SubscribeEvent
+    public static void unload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel world) QUEUED.keySet().removeIf(owner -> owner.getLevel() == world);
+    }
+
     static void register() { NativeCellTransactions.register(FAMILY); }
 
     static NativeCellTransactions.Request prepare(NativeTurntableEntity root, ServerPlayer actor, boolean restoring, int quarter) {
         var world = actor.serverLevel();
         if (!root.installed(world) || !com.vandorlabs.neoforge.NativeConfigurationAccess.canEditDialog(actor, root)
-                || NativeCellTransactions.busy(world, root.getBlockPos(), root.key())) {
+                || busy(world, root)) {
             throw new IllegalArgumentException("The Turntable controller is unavailable or busy");
         }
         if (restoring != (root.capture() != null)) {
@@ -225,6 +275,10 @@ final class NativeTurntableTransfers {
 
         @Override public void released(ServerLevel world, NativeCellTransactions.Header header,
                                       boolean rollback, String error, Receipt recipe) {
+            if (world.getBlockEntity(header.root()) instanceof NativeTurntableEntity owner && owner.key().equals(header.owner())) {
+                owner.status(rollback ? error : recipe.restoring() ? "Restored at the selected heading"
+                        : "Surface captured. Choose a heading and restore.");
+            }
             for (var p : recipe.changed()) {
                 if (!world.hasChunkAt(p)) continue;
                 world.invalidateCapabilities(p);

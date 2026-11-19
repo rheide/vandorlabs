@@ -851,9 +851,9 @@
         "turntable_surface"
       ],
       "remaining": [
-        "Native Turntable Controller and moving display entity.",
-        "Transactional assembly, snapshot recovery, controller geometry and channels, and focused live parity.",
-        "Native Surface moving-snapshot appearance integration."
+        "Public registration, animated rotation and the moving display.",
+        "Swept collision, rider transport, Redstone controls, and supported multiblock or external tiles.",
+        "Moving Surface snapshot artwork and previous-release active layout migration."
       ],
       "legacy_entity_ids": [
         "turntable_display"
@@ -868,7 +868,8 @@
       "implemented": [
         "Programmable Surfaces share Java 8 layout discovery, artwork and UV policy with Forge. Native six-face cells use cached terrain artwork with opaque backing and bounded, coalesced topology updates.",
         "Focused installed-world and real Survival configuration, mining, material selection and repair checks pass. Uploaded terrain pixels verify settings-only mesh invalidation; actual emitted cropped and non-square artwork retains catalog UV bounds.",
-        "Native block-only capture preflight shares the Forge scan prism and the native Copy Controller loaded-world adapter. A dedicated fixture verifies all six normals, exact Sign data and unchanged source ownership."
+        "Native block-only capture preflight shares the Forge scan prism and the native Copy Controller loaded-world adapter. A dedicated fixture verifies all six normals, exact Sign data and unchanged source ownership.",
+        "The opt-in Turntable Controller has a shared configuration path and durable block-only Scan and quarter-turn Restore; dedicated and connected Survival fixtures cover it."
       ]
     },
     {
