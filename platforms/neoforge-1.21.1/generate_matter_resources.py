@@ -86,6 +86,9 @@ def main():
         'Shift-right-click a block to sample its face. In air: texture picker (creative or Configurizer).')
     lang['item.vandorlabs.programmable_armor.sampled'] = 'Sampled %s'
     lang['item.vandorlabs.programmable_armor.no_sample'] = 'No supported face texture to sample.'
+    lang['item.vandorlabs.programmable_armor.copied'] = 'Duplifier copied %s'
+    lang['item.vandorlabs.programmable_armor.applied'] = 'Duplifier applied armor texture'
+    lang['item.vandorlabs.programmable_armor.no_copy'] = 'No copied armor texture applies here'
     write('assets/vandorlabs/lang/en_us.json', lang)
     for name in ['programmable_matter_block', 'programmable_matter_unpack', 'industrial_alloy_ingot']:
         value = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/recipes' / (name + '.json')).read_text())

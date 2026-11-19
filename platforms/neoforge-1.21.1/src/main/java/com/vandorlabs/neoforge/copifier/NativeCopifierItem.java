@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.copifier;
 
 import com.vandorlabs.neoforge.NativeOwnsBlockInteraction;
+import com.vandorlabs.neoforge.armor.NativeArmorCopy;
 import java.util.function.Supplier;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
@@ -43,7 +44,41 @@ public class NativeCopifierItem extends Item implements NativeOwnsBlockInteracti
     }
     @Override public InteractionResultHolder<ItemStack> use(Level level,Player player,InteractionHand hand){
         var stack=player.getItemInHand(hand);if(hand!=InteractionHand.MAIN_HAND||player.isSpectator())return InteractionResultHolder.pass(stack);
-        if(player instanceof ServerPlayer server){if(!server.getServer().isSameThread()||!player.isAlive()||level!=player.level()||stack.getItem()!=this||stack.getCount()!=1)return InteractionResultHolder.fail(stack);if(player.isShiftKeyDown())store(server,stack,NativeCopifierClipboard.clear(data(stack)));else{var type=menus.get();if(type==null)return InteractionResultHolder.fail(stack);server.openMenu(new net.minecraft.world.SimpleMenuProvider((id,inventory,owner)->new NativeCopifierMenu(type,id,inventory),getName(stack)));}}
+        if (player instanceof ServerPlayer server) {
+            if (!server.getServer().isSameThread() || !player.isAlive() || level != player.level()
+                || stack.getItem() != this || stack.getCount() != 1) return InteractionResultHolder.fail(stack);
+            if (NativeArmorCopy.supports(player.getOffhandItem())) {
+                transferArmorAppearance(server, player.getOffhandItem());
+            } else if (player.isShiftKeyDown()) {
+                store(server, stack, NativeCopifierClipboard.clear(data(stack)));
+            } else {
+                var type = menus.get();
+                if (type == null) return InteractionResultHolder.fail(stack);
+                server.openMenu(new net.minecraft.world.SimpleMenuProvider(
+                    (id, inventory, owner) -> new NativeCopifierMenu(type, id, inventory), getName(stack)));
+            }
+        }
         return InteractionResultHolder.sidedSuccess(stack,level.isClientSide);
+    }
+    /** The block clipboard protocol also carries the isolated armor-appearance field. */
+    public void transferArmorAppearance(ServerPlayer player, ItemStack armor) {
+        var tool = player.getMainHandItem();
+        if (!player.isAlive() || player.isSpectator() || !player.getServer().isSameThread()
+            || player.containerMenu != player.inventoryMenu || tool.getItem() != this || tool.getCount() != 1
+            || !NativeArmorCopy.supports(armor)) return;
+
+        var root = data(tool);
+        if (player.isShiftKeyDown()) {
+            var copied = NativeArmorCopy.capture(armor);
+            if (copied == null) return;
+            store(player, tool, NativeCopifierClipboard.copied(root, copied, armor.getHoverName().getString()));
+            player.displayClientMessage(Component.translatable("item.vandorlabs.programmable_armor.copied", armor.getHoverName()), true);
+        } else {
+            var selection = NativeCopifierOptions.selected(NativeCopifierClipboard.settings(root), NativeCopifierOptions.maskWords(root));
+            boolean applied = NativeArmorCopy.apply(armor, selection);
+            if (applied) NativeArmorCopy.synchronizeHeld(player, armor);
+            player.displayClientMessage(Component.translatable(applied
+                ? "item.vandorlabs.programmable_armor.applied" : "item.vandorlabs.programmable_armor.no_copy"), true);
+        }
     }
 }

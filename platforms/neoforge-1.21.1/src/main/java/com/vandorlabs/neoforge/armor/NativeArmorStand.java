@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.armor;
 
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
+import com.vandorlabs.neoforge.copifier.NativeCopifierItem;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
@@ -16,14 +17,22 @@ import net.neoforged.neoforge.event.entity.player.PlayerInteractEvent;
 public final class NativeArmorStand {
     @SubscribeEvent
     public static void interact(PlayerInteractEvent.EntityInteractSpecific event) {
+        var player = event.getEntity();
         if (event.getHand() != InteractionHand.MAIN_HAND || !(event.getTarget() instanceof ArmorStand stand)
-            || !canConfigure(event.getEntity(), stand)) return;
+            || !accessible(player, stand)) return;
+        var tool = player.getMainHandItem();
+        boolean configure = tool.is(VandorLabsBootstrap.CONFIGURIZER.get());
+        if (!configure && !(tool.getItem() instanceof NativeCopifierItem)) return;
         event.setCanceled(true);
         event.setCancellationResult(InteractionResult.sidedSuccess(event.getLevel().isClientSide));
 
         var slot = clickedSlot(stand, event.getLocalPos().y);
-        if (slot == null || !(stand.getItemBySlot(slot).getItem() instanceof NativeArmorItem)) return;
-        if (event.getEntity() instanceof ServerPlayer server) {
+        if (slot == null || !NativeArmorCopy.supports(stand.getItemBySlot(slot))) return;
+        if (player instanceof ServerPlayer server) {
+            if (tool.getItem() instanceof NativeCopifierItem copifier) {
+                copifier.transferArmorAppearance(server, stand.getItemBySlot(slot));
+                return;
+            }
             server.openMenu(new SimpleMenuProvider(
                 (id, inventory, owner) -> new NativeArmorMenu(id, inventory, stand, slot),
                 stand.getItemBySlot(slot).getHoverName()), buffer -> {
@@ -35,9 +44,12 @@ public final class NativeArmorStand {
     }
 
     static boolean canConfigure(Player player, ArmorStand stand) {
+        return accessible(player, stand) && player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get());
+    }
+
+    private static boolean accessible(Player player, ArmorStand stand) {
         return player.isAlive() && !player.isSpectator() && stand.isAlive() && !stand.isMarker()
-            && stand.level() == player.level() && player.canInteractWithEntity(stand, 1.0)
-            && player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get());
+            && stand.level() == player.level() && player.canInteractWithEntity(stand, 1.0);
     }
 
     private static EquipmentSlot clickedSlot(ArmorStand stand, double y) {

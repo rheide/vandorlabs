@@ -3,6 +3,9 @@ package com.vandorlabs.neoforge.armor;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.door.NativeDoorAssets;
+import com.vandorlabs.neoforge.copifier.NativeCopifierClipboard;
+import com.vandorlabs.neoforge.copifier.NativeCopifierItem;
+import com.vandorlabs.neoforge.copifier.NativeCopifierRegistrations;
 import com.vandorlabs.ui.InventorySampleLayout;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -14,6 +17,7 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.network.protocol.game.ServerboundPlayerActionPacket;
 import net.minecraft.network.protocol.game.ServerboundPlayerCommandPacket;
+import net.minecraft.network.protocol.game.ServerboundSetCarriedItemPacket;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
@@ -52,6 +56,66 @@ public final class NativeArmorClientCheck {
             + " offhand=" + player.getOffhandItem());
         var offhand = player.getOffhandItem();
         switch (stage) {
+            case 30 -> {
+                if (ticks < wait + 8 || !NativeArmorCopy.supports(player.getMainHandItem()) || !offhand.isEmpty()) return;
+                swapHands(game);
+                stage++;
+            }
+            case 31 -> {
+                if (!NativeArmorCopy.supports(offhand) || NativeArmorItem.choice(offhand) != NativeArmorFixture.SELECTED) return;
+                selectHotbar(game, NativeArmorFixture.COPY_TOOL_SLOT);
+                wait = ticks;
+                stage++;
+            }
+            case 32 -> {
+                if (ticks < wait + 8 || !player.getMainHandItem().is(NativeCopifierRegistrations.ITEM.get())) return;
+                shift(game, true);
+                game.gameMode.useItem(player, InteractionHand.MAIN_HAND);
+                stage++;
+            }
+            case 33 -> {
+                var root = NativeCopifierItem.data(player.getMainHandItem());
+                var clipboard = NativeCopifierClipboard.settings(root);
+                if (clipboard == null || clipboard.getCompound("armorAppearance").getInt("choice") != NativeArmorFixture.SELECTED) return;
+                require(clipboard.size() == 1 && root.getString("UnrelatedToolData").equals("retained"),
+                    "real held clipboard contains appearance and keeps unrelated tool data");
+                mounted = armorStand(game, false);
+                if (mounted == null) return;
+                shift(game, false);
+                clickStand(game, mounted, 1.3);
+                stage++;
+            }
+            case 34 -> {
+                var chest = mounted.getItemBySlot(EquipmentSlot.CHEST);
+                if (NativeArmorItem.choice(chest) != NativeArmorFixture.SHORT) return;
+                require(chest.getDamageValue() == 11 && chest.hasFoil()
+                    && chest.getHoverName().getString().equals(NativeArmorFixture.mountedName(0, EquipmentSlot.CHEST)),
+                    "Open helmet maps to Short Sleeves while preserving mounted item");
+                require(NativeArmorItem.choice(offhand) == NativeArmorFixture.SELECTED && offhand.getDamageValue() == 17,
+                    "applying to the mounted chest keeps the held source");
+                mounted = armorStand(game, true);
+                if (mounted == null) return;
+                shift(game, true);
+                clickStand(game, mounted, .5);
+                stage++;
+            }
+            case 35 -> {
+                var clipboard = NativeCopifierClipboard.settings(NativeCopifierItem.data(player.getMainHandItem()));
+                if (clipboard == null
+                    || clipboard.getCompound("armorAppearance").getInt("choice") != NativeArmorFixture.INDUSTRIAL_BLOCK) return;
+                shift(game, false);
+                game.gameMode.useItem(player, InteractionHand.MAIN_HAND);
+                stage++;
+            }
+            case 36 -> {
+                if (!NativeArmorCopy.supports(offhand) || NativeArmorItem.choice(offhand) != NativeArmorFixture.INDUSTRIAL_BLOCK) return;
+                require(game.screen == null && offhand.getDamageValue() == 17 && offhand.hasFoil()
+                    && offhand.getHoverName().getString().equals(NativeArmorFixture.COPY_ARMOR_NAME),
+                    "real mounted-to-offhand apply preserves armor metadata");
+                System.out.println("[vandorlabs][armor] client PASS");
+                game.stop();
+                stage = 99;
+            }
             case 20 -> {
                 if (game.gameMode.getPlayerMode() != GameType.SURVIVAL || player.getInventory().selected != 0
                     || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())
@@ -214,22 +278,18 @@ public final class NativeArmorClientCheck {
             case 7 -> {
                 if (!captured) return;
                 if (standCase == 8) {
-                    System.out.println("[vandorlabs][armor] client PASS");
-                    game.stop();
-                    stage = 99;
+                    selectHotbar(game, NativeArmorFixture.COPY_ARMOR_SLOT);
+                    wait = ticks;
+                    stage = 30;
                     return;
                 }
                 if (game.screen != null || player.distanceToSqr(0.5, 79, 0.5) > 0.25
                     || !player.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get())) return;
                 boolean small = standCase >= 4;
-                var stands = game.level.getEntitiesOfClass(ArmorStand.class, player.getBoundingBox().inflate(3),
-                    entity -> entity.isSmall() == small);
-                if (stands.size() != 1) return;
-                mounted = stands.getFirst();
+                mounted = armorStand(game, small);
+                if (mounted == null) return;
                 int slot = standCase % 4;
-                var hit = new EntityHitResult(mounted, mounted.position().add(0, HIT_HEIGHT[standCase / 4][slot], 0));
-                require(game.gameMode.interactAt(player, mounted, hit, InteractionHand.MAIN_HAND).consumesAction(),
-                    "normal Configurizer interact packet for mounted case " + standCase);
+                clickStand(game, mounted, HIT_HEIGHT[standCase / 4][slot]);
                 stage++;
             }
             case 8 -> {
@@ -257,6 +317,23 @@ public final class NativeArmorClientCheck {
                 stage = 7;
             }
         }
+    }
+
+    private static void selectHotbar(Minecraft game, int slot) {
+        game.player.getInventory().selected = slot;
+        game.player.connection.send(new ServerboundSetCarriedItemPacket(slot));
+    }
+
+    private static ArmorStand armorStand(Minecraft game, boolean small) {
+        var stands = game.level.getEntitiesOfClass(ArmorStand.class, game.player.getBoundingBox().inflate(3),
+            entity -> entity.isSmall() == small);
+        return stands.size() == 1 ? stands.getFirst() : null;
+    }
+
+    private static void clickStand(Minecraft game, ArmorStand stand, double height) {
+        var hit = new EntityHitResult(stand, stand.position().add(0, height, 0));
+        require(game.gameMode.interactAt(game.player, stand, hit, InteractionHand.MAIN_HAND).consumesAction(),
+            "actual mounted tool interaction at height " + height);
     }
 
     private static void sampleFace(Minecraft game, BlockPos pos, Direction face) {

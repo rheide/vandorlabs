@@ -42,7 +42,7 @@ final class NativeArmorInventorySources {
         return DOORS.getOrDefault(new ModernFinishCatalog.DoorArtwork(design.design, design.detail), -1);
     }
 
-    private static boolean valid(int choice) {
+    static boolean valid(int choice) {
         if (choice >= 0 && choice < ModernFinishCatalog.ENTRIES.size()) return ModernFinishCatalog.option(choice).visible();
         if (!MaterialChoicePolicy.isCustom(choice)) return false;
         var block = NativeMaterialRegistry.snapshot().states().get(choice);

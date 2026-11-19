@@ -5,6 +5,8 @@ import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.ui.ProgrammableBlockDialog;
 import com.vandorlabs.neoforge.door.NativeDoorRegistrations;
+import com.vandorlabs.neoforge.copifier.NativeCopifierOptions;
+import com.vandorlabs.neoforge.copifier.NativeCopifierRegistrations;
 import com.vandorlabs.persistence.HousingSettings;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,7 +36,9 @@ import net.neoforged.neoforge.event.entity.player.PlayerEvent;
 public final class NativeArmorFixture {
     static boolean enabled() { return Boolean.getBoolean("vandorlabs.armorClient"); }
     static final String NAME = "Fixture Helmet";
-    static final int SELECTED = 268435498;
+    static final int SELECTED = 268435498, SHORT = 268435499;
+    static final int COPY_TOOL_SLOT = 5, COPY_ARMOR_SLOT = 6;
+    static final String COPY_ARMOR_NAME = "Copy Fixture Uniform";
     static final int INDUSTRIAL_BLOCK = 9;
     static final int CARGO_DOOR = 106;
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
@@ -93,6 +97,17 @@ public final class NativeArmorFixture {
         require(!NativeArmorItem.hasInventorySample(stack), "refuses non-block and out-of-range inventory samples");
         require(NativeArmorInventorySources.choice(sampleCube) == INDUSTRIAL_BLOCK
             && NativeArmorInventorySources.choice(sampleDoor) == CARGO_DOOR, "configured inventory choices");
+        var tool = new ItemStack(NativeCopifierRegistrations.ITEM.get());
+        CustomData.update(DataComponents.CUSTOM_DATA, tool, tag -> tag.putString("UnrelatedToolData", "retained"));
+        player.getInventory().setItem(COPY_TOOL_SLOT, tool);
+        var carried = new ItemStack(item);
+        require(NativeArmorItem.configure(carried, SELECTED), "configure Open role source for held copy");
+        carried.setDamageValue(17);
+        carried.set(DataComponents.CUSTOM_NAME, Component.literal(COPY_ARMOR_NAME));
+        carried.enchant(player.registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.PROTECTION), 1);
+        CustomData.update(DataComponents.CUSTOM_DATA, carried, tag -> tag.putString("UnrelatedArmorData", "retained"));
+        player.getInventory().setItem(COPY_ARMOR_SLOT, carried);
+        checkAppearanceCopy(carried);
         var chestId = NativeArmorBindings.IDS.get(ArmorItem.Type.CHESTPLATE);
         var chest = new ItemStack(BuiltInRegistries.ITEM.get(chestId));
         require(NativeArmorItem.configure(chest, INDUSTRIAL_BLOCK), "material fixture chestplate");
@@ -121,12 +136,46 @@ public final class NativeArmorFixture {
             var stand = STANDS[index];
             for (var slot : MOUNTED_SLOTS) {
                 var mounted = stand.getItemBySlot(slot);
-                require(NativeArmorItem.choice(mounted) == INDUSTRIAL_BLOCK && mounted.getDamageValue() == 11
+                int choice = index == 0 && slot == EquipmentSlot.CHEST ? SHORT : INDUSTRIAL_BLOCK;
+                require(NativeArmorItem.choice(mounted) == choice && mounted.getDamageValue() == 11
                     && mounted.hasFoil() && mounted.getHoverName().getString().equals(mountedName(index, slot)),
                     "mounted armor preserves other data index=" + index + " slot=" + slot);
             }
         }
+        var copyTarget = player.getOffhandItem();
+        require(NativeArmorCopy.supports(copyTarget) && NativeArmorItem.choice(copyTarget) == INDUSTRIAL_BLOCK
+            && copyTarget.getDamageValue() == 17 && copyTarget.hasFoil()
+            && copyTarget.getHoverName().getString().equals(COPY_ARMOR_NAME)
+            && copyTarget.get(DataComponents.CUSTOM_DATA).copyTag().getString("UnrelatedArmorData").equals("retained"),
+            "mounted-to-offhand transfer preserves target metadata");
         System.out.println("[vandorlabs][armor] server PASS");
+    }
+
+    private static void checkAppearanceCopy(ItemStack source) {
+        var target = source.copy();
+        var mutable = source.copy();
+        NativeArmorItem.applyWorldSample(mutable, LOG_TOP);
+        require(NativeArmorCopy.apply(target, NativeArmorCopy.capture(mutable))
+            && LOG_TOP.equals(NativeArmorItem.worldSample(target)), "world sprite appearance round trip");
+        NativeArmorItem.applyInventorySample(mutable, CARGO_DOOR);
+        var captured = NativeArmorCopy.capture(mutable);
+        require(NativeArmorCopy.apply(target, captured) && NativeArmorItem.hasInventorySample(target)
+            && NativeArmorItem.choice(target) == CARGO_DOOR, "inventory sample appearance round trip");
+        var disabled = NativeCopifierOptions.maskWords(null);
+        var options = com.vandorlabs.items.DuplifierOptionCatalog.options();
+        for (int i = 0; i < options.length; i++) {
+            if (options[i].key.equals("armorAppearance")) disabled[i >>> 6] &= ~(1L << (i & 63));
+        }
+        require(!NativeArmorCopy.apply(target, NativeCopifierOptions.selected(captured, disabled)),
+            "existing Copifier option mask disables armor application");
+        for (var design : NativeArmorCatalog.designs()) {
+            for (var slot : MOUNTED_SLOTS) {
+                var alternate = NativeArmorCatalog.matchingSlot(design.choice(), slot);
+                String variant = slot == EquipmentSlot.HEAD || slot == EquipmentSlot.CHEST ? design.variant() : "full";
+                require(alternate != null && alternate.slot() == slot && alternate.role().equals(design.role())
+                    && alternate.variant().equals(variant), "every authored role and applicable variant maps to every slot");
+            }
+        }
     }
 
     private static void checkWorldAuthorization(ServerPlayer player, ItemStack stack) {
