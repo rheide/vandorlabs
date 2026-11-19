@@ -646,7 +646,7 @@
       ],
       "remaining": [
         "Port the six remaining drive and navigation computer Cores and complete the Tower catalog.",
-        "Match the Press and Gantry fabrication visuals and expand native JEI coverage.",
+        "Match the Press and Gantry fabrication visuals and physical mount interactions.",
         "Add arm carrying and Copy Controller support for formed builder machines.",
         "Complete native release and shader acceptance."
       ],
@@ -661,7 +661,8 @@
         "Powered Synthesis production, physical RF/item ports, standard Redstone activation/channels, authenticated inventory dialog and textured rotating previews",
         "Inspected software-rendered complete structures, partial Cores, four scanning beams, reload-safe fixed-byte mesh cache and connected-player world publication",
         "Matter Infuser with the original crafting dependency and authored directional block, sunlight/redstone-catalyst iron production, physical Battery Module charging, sided item access and shared inventory dialog.",
-        "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation."
+        "The Tower has Synthesis and Digitize, the Press has five chip/card/module recipes, and the Gantry has eight mechanical-block recipes. Printer and Scanner have redstone control and sided automation.",
+        "Catalog-gated Ramp Controller production in the Synthesis Tower; installed JEI catalogs for Matter Infuser, Tower, Press and Gantry."
       ]
     },
     {
@@ -951,7 +952,7 @@
       "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "Inventory/world sampling, armor stand editing, and Duplifier appearance transfer."
+        "World-face sampling and Duplifier appearance transfer."
       ],
       "legacy_item_ids": [
         "programmable_helmet",
@@ -965,7 +966,8 @@
       "implemented": [
         "The four programmable armor pieces use the original recipes, role and company choices, and configured inventory and equipped artwork.",
         "A connected Survival player check covers real picker edits, equipment rendering and exact saved choice round trip.",
-        "The native picker offers general Programmable Block materials, using the shared armor skin projection and original silhouette."
+        "The native picker offers general Programmable Block materials, using the shared armor skin projection and original silhouette.",
+        "Connected Survival checks cover all mounted slots on normal/small stands and non-consuming inventory samples from configured blocks and Doors."
       ]
     },
     {
@@ -1003,18 +1005,20 @@
       "id": "integrations",
       "label": "Compatibility integrations",
       "forge_1_12_2": "reference",
-      "neoforge_1_21_1": "pending_integration",
+      "neoforge_1_21_1": "partial",
       "legacy_block_ids": [],
       "remaining": [
-        "Integrate shared behavior and native adapter into master; validate the integrated family against current Forge behavior",
-        "native JEI creative/search enumeration",
-        "native WorldEdit rotation adapter",
-        "Dynmap or documented native replacement",
-        "shader format and main-view visibility acceptance"
+        "Expand optional-mod integration coverage beyond the checked JEI catalog and WorldEdit transforms.",
+        "Dynmap has no official NeoForge 1.21.1 release. The upstream NeoForge port remains open.",
+        "Native hardware shader-pack acceptance remains open."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
       "historical_modern_registered_block_ids": [],
-      "integration_scope": "non_vehicle_first"
+      "integration_scope": "non_vehicle_first",
+      "implemented": [
+        "Installed JEI 19.70.0.469 shows the four native machine categories, recipe and blueprint gates, and the public Copy Controller and Surface creative/search items.",
+        "Installed WorldEdit 7.3.8 uses native quarter-turn ID mapping for floor/ceiling propulsion wedges and preserves their tile NBT. Ordinary property transforms cover tested doors, diagonal walls, side wedges and vanilla stairs."
+      ]
     },
     {
       "id": "segmented_doors",

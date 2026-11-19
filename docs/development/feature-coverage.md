@@ -35,9 +35,9 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Turntables | Programmable Surfaces enabled and read-only capture preflight tested; rotation controller and moving display missing | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
-| Programmable armor | four pieces, crafting, role/company and general material picker, equipped and inventory artwork enabled; sampling, stand editing and copying pending | unimplemented | non-vehicle first |
+| Programmable armor | four pieces, crafting, role/company, general material and inventory sample picker, armor stands, equipped and inventory artwork enabled; world-face sampling and copying pending | unimplemented | non-vehicle first |
 | Filesystem and custom material workflows | partial (cube PNGs and samples) | partial | non-vehicle first |
-| Compatibility integrations | native JEI machine recipes and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
+| Compatibility integrations | native JEI recipes and Copy catalog tested, WorldEdit quarter-turn wedge support and selected resource-port integrations; broader parity pending | unimplemented | non-vehicle first |
 | Segmented Doors | partial (enabled; terrain handoff checked) | unimplemented | non-vehicle first |
 | Copy Controllers and shared surfaces | public Surfaces; public transactional Copy Controller with a bounded target list | unimplemented | non-vehicle first |
 | Standalone Extenders and rotating arms | partial (regular/Large joined and independent arms enabled) | unimplemented | non-vehicle first |
@@ -120,6 +120,18 @@ all 45 tower cells, part ownership, both dialog paths, physical inventory and th
 actual world renderer. Separate software rendering covers all three full meshes,
 fabrication, nearby culling, animation and resource reload. These are development
 runtime/software checks, not a full release gate or hardware shader acceptance.
+
+## Optional integrations
+
+WorldEdit 7.3.8 uses the native propulsion orientation adapter for quarter
+turns that change a wedge's block ID. Dedicated checks use a real clipboard
+rotate and paste, and the mod also starts with WorldEdit absent.
+[Native WorldEdit compatibility](native-worldedit-rotation.md)
+
+Dynmap's supported platforms currently exclude NeoForge. The upstream
+NeoForge 1.21.1 work remains an open pull request, so Vandor Labs' Dynmap
+renderers remain available on Forge 1.12.2.
+[Dynmap supported platforms](https://github.com/webbukkit/dynmap#what-platforms-are-supported) · [NeoForge port](https://github.com/webbukkit/dynmap/pull/4183)
 
 ## Native Matter Infuser
 

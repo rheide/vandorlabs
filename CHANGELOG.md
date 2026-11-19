@@ -2,11 +2,13 @@
 
 ## 1.12.0 (in development)
 
+- Preserve native floor and ceiling propulsion wedge geometry and tile data through WorldEdit quarter-turns.
+- Add catalog-gated Ramp Controller production to the native Synthesis Tower and show the four native machine categories in JEI.
 - Enable the NeoForge Copy Controller with material-priced Survival copying, journaled recovery, and output updates visible to connected players.
 - Add the remaining Assembly Press recipes to NeoForge, preserving the existing Navigation Data Module recipe and saved jobs.
 - Add NeoForge Gantry production for all eight mechanical recipes and rear corner port support for the Press and Gantry.
 - Copy complete double chests on NeoForge, keeping both material and inventory halves protected through recovery.
-- Craft and configure programmable armor on NeoForge, with the authored role and company designs, shared Programmable Block materials, and padded inventory icons.
+- Craft and configure programmable armor on NeoForge, with the authored role and company designs, shared Programmable Block materials, and padded inventory icons. Configure mounted pieces and sample inventory block/door artwork without consuming the item.
 
 ## 2.11.0 (in development)
 
