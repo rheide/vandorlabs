@@ -44,9 +44,9 @@ final class FrameMachineDocumentation {
             }
             if(spec!=null){
                 if(step<3){
-                    if(step==1&&STAGED_TOP.contains(spec.design)){Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");for(int y=1;y<spec.height-1;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++)if((x==0||x==spec.width-1)&&(z==0||z==spec.depth-1))world.setBlockState(ROOT.add(x,y,z),matter.getDefaultState(),2);}
+                    if(step==1&&STAGED_TOP.contains(spec.design)){Block matter=Block.getBlockFromName("vandorlabs:programmable_block");for(int y=1;y<spec.height-1;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++)if((x==0||x==spec.width-1)&&(z==0||z==spec.depth-1))world.setBlockState(ROOT.add(x,y,z),matter.getDefaultState(),2);}
                     else BridgeMachineChecks.frame(world,ROOT,spec,step);
-                    TileEntityConstructor core=(TileEntityConstructor)world.getTileEntity(ROOT);require(core!=null&&!core.formed(),"construction stage has its unformed Core");Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");
+                    TileEntityConstructor core=(TileEntityConstructor)world.getTileEntity(ROOT);require(core!=null&&!core.formed(),"construction stage has its unformed Core");Block matter=Block.getBlockFromName("vandorlabs:programmable_block");
                     for(int y=0;y<spec.height;y++)for(int x=0;x<spec.width;x++)for(int z=0;z<spec.depth;z++){
                         boolean expected=step==0?y==0:spec.width==1&&spec.depth==1?y<=step:step==1?y==0||((x==0||x==spec.width-1)&&(z==0||z==spec.depth-1)&&(!STAGED_TOP.contains(spec.design)||y<spec.height-1)):core.frame(x,y,z);
                         Block found=world.getBlockState(ROOT.add(x,y,z)).getBlock();require(x==0&&y==0&&z==0?found==core.core():expected?found==matter:world.isAirBlock(ROOT.add(x,y,z)),"exact construction layer "+spec.design+" stage="+(step+1)+" cell="+x+","+y+","+z);

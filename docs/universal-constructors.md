@@ -4,15 +4,15 @@ See the [step-by-step multiblock guides](multiblocks/README.md) for illustrated 
 
 On Forge 1.12.2, all three builders produce items from Programmable Matter and RF. The Synthesis Tower builds Cores and controllers, the Assembly Press builds chips, cards, modules and Programmable Plates, and the Enclosed Gantry builds mechanical parts. The Tower and Press retain their frames; the Gantry now uses a four-high frame. On NeoForge 1.21.1, the Tower supports Synthesis and Digitize, and the Press produces Data Chips, Access Cards, Programmable Plates, and Battery, Autopilot and Navigation Data Modules. The Gantry produces eight mechanical blocks, including the arm hinges, wheels and resource ports.
 
-| Core | Width x depth x total height | Matter Blocks + Core |
+| Core | Width x depth x total height | Frame Blocks + Core |
 | --- | --- | --- |
 | Assembly Press | 4 x 3 x 3 | 25 + 1 |
 | Synthesis Tower | 3 x 3 x 5 | 28 + 1 |
 | Enclosed Gantry | 5 x 3 x 4 | 34 + 1 |
 
-Use exactly one matching Core; every `M` below must be a Programmable Matter Block, not another Core. Place the matching Core in **any bottom corner**, facing any horizontal direction. Fill the rest of the bottom layer with Programmable Matter Blocks. Build four corner pillars to the listed total height, counting the bottom layer, and connect their tops with a rectangular rim. Leave the interior empty, including the middle of the roof. The footprint can run along either horizontal axis; the Core detects it automatically and prefers its placed facing when that facing fits.
+Use Programmable Blocks in any finish for the frame. The assembled machine stores each frame block's configuration and restores it when dismantled. Use exactly one matching Core. Place the matching Core in **any bottom corner**, facing any horizontal direction. Fill the rest of the bottom layer with frame blocks. Build four corner pillars to the listed total height, counting the bottom layer, and connect their tops with a rectangular rim. Leave the interior empty, including the middle of the roof. The footprint can run along either horizontal axis; the Core detects it automatically and prefers its placed facing when that facing fits.
 
-For example, an Assembly Press uses these layers (`C` = Core, `M` = Programmable Matter Block, `.` = air):
+For example, an Assembly Press uses these layers (`C` = Core, `M` = frame block, `.` = air):
 
 ```text
 Bottom    Middle    Top
@@ -21,9 +21,9 @@ MMMM      ....      M..M
 MMMM      M..M      MMMM
 ```
 
-Right-click the Core to assemble the complete frame. Matter Blocks are ordinary building blocks and do not activate the constructor. If it fails, the message identifies a mismatched cell in the closest frame. Check that the base is solid, the height includes the base, the roof is a rim rather than a solid layer, and every interior cell is air.
+Right-click the Core to assemble the complete frame. frame blocks are ordinary building blocks and do not activate the constructor. If it fails, the message identifies a mismatched cell in the closest frame. Check that the base is solid, the height includes the base, the roof is a rim rather than a solid layer, and every interior cell is air.
 
-Sneak-right-click the Core to dismantle the assembly back into its frame. It stays dismantled until you right-click the Core again. Mining a reserved part dismantles the assembly and removes that cell. Breaking the Core also restores the Matter Blocks. Hidden occupied cells prevent other blocks from overlapping the complete model. Each cell records its original frame material so restoration survives chunk unloading. The detected Core corner is saved and synchronized to clients.
+Sneak-right-click the Core to dismantle the assembly back into its frame. It stays dismantled until you right-click the Core again. Mining a reserved part dismantles the assembly and removes that cell. Breaking the Core also restores the frame blocks. Hidden occupied cells prevent other blocks from overlapping the complete model. Each cell records its original frame material so restoration survives chunk unloading. The detected Core corner is saved and synchronized to clients.
 
 ## Carrying a formed Core with an arm (Forge 1.12.2)
 
@@ -41,7 +41,7 @@ Core machinery stays visible while an arm returns it to native blocks, including
 
 ## Synthesis Tower production
 
-Build the same 3 x 3 x 5 frame with 28 Programmable Matter Blocks and one
+Build the same 3 x 3 x 5 frame with 28 frame blocks and one
 Synthesis Tower Core, following the [Synthesis Tower construction guide](multiblocks/synthesis-tower/README.md).
 This production behavior is available on Forge 1.12.2 and NeoForge 1.21.1.
 Right-click the Core to form the machine. Its finished front has a square
@@ -56,13 +56,13 @@ production controls and inventory appear only on the Production tab. Hover
 over the RF bar for the exact stored RF and capacity.
 Select Synthesis Tower, Assembly Press or Enclosed Gantry from the design list;
 the rotating textured preview shows the complete structure. Insert one
-Programmable Matter Block in the Matter slot. Each Core uses 16,000 RF, at
+Programmable Block in the Matter slot. Each Core uses 16,000 RF, at
 20 RF per tick, taking at least forty seconds at normal server speed.
 A running build retains its selected design if you select the next design.
 Remove the completed Core from the output slot or right-click the finished
 Core in the processing chamber. The next queued input waits for the output
 to be removed. Dismantling returns unprocessed inventory and refunds the
-Matter Block of an unfinished build; spent RF is not refunded.
+Programmable Block of an unfinished build; spent RF is not refunded.
 
 ### Digitize a block
 
@@ -133,7 +133,7 @@ Each Press or Gantry job consumes **one ingredient and 8,000 RF**, at
 **40 RF/tick for 200 ticks** (ten seconds). The Tower remains at 20 RF/tick
 for 400 ticks.
 The Press takes **Programmable Matter Ingots**; the Gantry takes **Programmable
-Matter Blocks**. Their front displays show the selected output, with lower
+frame blocks**. Their front displays show the selected output, with lower
 keyboards, fitted chip mounts and flush racks. The Press prints items lying flat under four green scanning lasers.
 The Gantry prints blocks beneath a moving head and rail with a blue fan-shaped
 scanning beam. Effects stop when work pauses or RF runs out. Click a finished
@@ -165,7 +165,7 @@ Registry identities and frame assembly requirements are unchanged.
 
 With JEI installed, the **Matter Infuser** category shows iron-to-Matter
 production and Battery Module charging. The **Synthesis Tower** category shows
-one Matter Block becoming each of the three default Cores, with the 16,000 RF
+one frame block becoming each of the three default Cores, with the 16,000 RF
 cost and twenty-second minimum. Select the matching design in Production
 before inserting Matter; recipe browsing does not change the tower's selected
 or running design. The Infuser supports ordinary recipe transfer into its

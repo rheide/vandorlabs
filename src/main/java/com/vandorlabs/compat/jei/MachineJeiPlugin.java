@@ -33,7 +33,7 @@ public final class MachineJeiPlugin implements IModPlugin {
         ItemStack charged=new ItemStack(ModItems.BATTERY_MODULE);ModuleBatteryData.receive(charged,ModuleBatteryData.CAPACITY,false);
         registry.addRecipes(Arrays.asList(new Recipe(MachineRecipeDisplay.Kind.INFUSING,new ItemStack(Items.IRON_INGOT),new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT)),new Recipe(MachineRecipeDisplay.Kind.CHARGING,new ItemStack(ModItems.BATTERY_MODULE),charged)),MachineRecipeDisplay.INFUSER);
         for(String machine:Arrays.asList("synthesis_tower","assembly_press","enclosed_gantry")){
-            List<Recipe> recipes=new ArrayList<>();for(String blueprint:BuilderRecipeCatalog.known(machine))recipes.add(new Recipe(MachineRecipeDisplay.Kind.SYNTHESIS,item(BuilderRecipeCatalog.input(machine)),item(blueprint),!BuilderRecipeCatalog.defaults(machine).contains(blueprint),machine));
+            List<Recipe> recipes=new ArrayList<>();for(String blueprint:BuilderRecipeCatalog.known(machine))recipes.add(new Recipe(MachineRecipeDisplay.Kind.SYNTHESIS,new ItemStack(com.vandorlabs.machines.SynthesisRuntime.ingredient(machine)),item(blueprint),!BuilderRecipeCatalog.defaults(machine).contains(blueprint),machine));
             registry.addRecipes(recipes,uid(machine));registry.addRecipeCatalyst(block(machine+"_core"),uid(machine));
         }
         registry.addRecipeCatalyst(block("programmable_matter_infuser"),MachineRecipeDisplay.INFUSER);

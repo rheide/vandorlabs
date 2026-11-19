@@ -1,10 +1,12 @@
 # Maxwell Drive
 
-Build a **3 wide × 4 deep × 3 high** assembly with **25 Programmable Matter Blocks** and **one Maxwell Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+Use the [frame blocks for your Minecraft version](../README.md).
+
+Build a **3 wide × 4 deep × 3 high** assembly with **25 frame blocks** and **one Maxwell Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
 ## 1. Build the base
 
-Lay out a solid 3 × 4 bottom layer. Put the matching Core in the front-left corner, facing you, and fill every other cell with Programmable Matter Blocks.
+Lay out a solid 3 × 4 bottom layer. Put the matching Core in the front-left corner, facing you, and fill every other cell with frame blocks.
 
 ![Maxwell Drive: build the base](step-1.png)
 
@@ -16,7 +18,7 @@ At each of the four corners, build up to a total height of 3 blocks, including t
 
 ## 3. Connect the top rim
 
-Connect the four pillar tops with a rectangular rim of Programmable Matter Blocks. Keep the middle of the roof open; do not fill the interior.
+Connect the four pillar tops with a rectangular rim of frame blocks. Keep the middle of the roof open; do not fill the interior.
 
 ![Maxwell Drive: connect the top rim](step-3.png)
 
@@ -46,7 +48,7 @@ Select screen and keyboard artwork independently in their surface tabs. Model ar
 
 ## Facing and removal
 
-The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
+The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining frame blocks.
 
 A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.
 

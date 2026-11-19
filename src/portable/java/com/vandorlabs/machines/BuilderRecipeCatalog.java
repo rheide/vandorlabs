@@ -13,7 +13,7 @@ public final class BuilderRecipeCatalog {
     public static boolean machine(String id){return "synthesis_tower".equals(id)||"assembly_press".equals(id)||"enclosed_gantry".equals(id);}
     public static List<String> known(String machine){return "synthesis_tower".equals(machine)?TOWER:"assembly_press".equals(machine)?PRESS:"enclosed_gantry".equals(machine)?GANTRY:Collections.<String>emptyList();}
     public static List<String> defaults(String machine){return "synthesis_tower".equals(machine)?TOWER.subList(0,3):"assembly_press".equals(machine)?PRESS_DEFAULTS:known(machine);}
-    public static String input(String machine){return "assembly_press".equals(machine)?"programmable_matter_ingot":"programmable_matter_block";}
+    public static String input(String machine){return "assembly_press".equals(machine)?"programmable_matter_ingot":"programmable_block";}
     public static List<String> available(String machine,List<String> catalog){LinkedHashSet<String> ids=new LinkedHashSet<>(defaults(machine));for(String saved:catalog){String id=canonical(saved);if(known(machine).contains(id))ids.add(id);}return Collections.unmodifiableList(new ArrayList<>(ids));}
     private BuilderRecipeCatalog(){}
 }

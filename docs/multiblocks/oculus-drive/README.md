@@ -1,22 +1,24 @@
 # Pinnacle Oculus Drive
 
-Build a **3 wide × 3 deep × 3 high** assembly with **20 Programmable Matter Blocks** and **one Pinnacle Oculus Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+Use the [frame blocks for your Minecraft version](../README.md).
+
+Build a **3 wide × 3 deep × 3 high** assembly with **20 frame blocks** and **one Pinnacle Oculus Drive Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
 ## 1. Build the base
 
-Place a solid **3 × 3** bottom layer: one matching Core in the front-left corner, facing you, and **eight Programmable Matter Blocks**.
+Place a solid **3 × 3** bottom layer: one matching Core in the front-left corner, facing you, and **eight frame blocks**.
 
 ![Pinnacle Oculus Drive: build the base](step-1.png)
 
 ## 2. Raise the corner pillars
 
-Add one Matter Block above each of the **four corners**. This adds **four Matter Blocks** and makes each pillar two blocks high. Leave the other five positions in this middle layer empty.
+Add one frame block above each of the **four corners**. This adds **four frame blocks** and makes each pillar two blocks high. Leave the other five positions in this middle layer empty.
 
 ![Pinnacle Oculus Drive: raise the corner pillars](step-2.png)
 
 ## 3. Connect the top rim
 
-Add a **3 × 3 perimeter** as the third and final layer: **eight Matter Blocks**, with the center left empty. The completed frame uses twenty Matter Blocks plus its Core. Keep the middle-layer interior and the roof center empty.
+Add a **3 × 3 perimeter** as the third and final layer: **eight frame blocks**, with the center left empty. The completed frame uses twenty frame blocks plus its Core. Keep the middle-layer interior and the roof center empty.
 
 ![Pinnacle Oculus Drive: connect the top rim](step-3.png)
 
@@ -44,7 +46,7 @@ Select screen and keyboard artwork independently in their surface tabs. Model ar
 
 ## Facing and removal
 
-The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
+The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining frame blocks.
 
 A retained chip stays in the Core during manual dismantling and works again after reassembly. Breaking the Core releases it once. Remove chips before rebuilding a machine when you want to keep them in your inventory.
 

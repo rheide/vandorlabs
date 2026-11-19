@@ -20,6 +20,7 @@ import net.minecraftforge.items.IItemHandler;
 
 final class ArmResourceTransfer {
     private final GearTileEntity input;
+    private EnumFacing exposedSide;
     private IEnergyStorage energy;
     private IFluidHandler fluid;
     private IItemHandler items;
@@ -46,6 +47,12 @@ final class ArmResourceTransfer {
         GearTileEntity arm = installedArm(tile, type);
         if (arm == null) return null;
         ArmResourceTransfer transfer = tile.resourceConnection();
+        if (transfer.exposedSide != side) {
+            transfer.exposedSide = side;
+            transfer.energy = null;
+            transfer.fluid = null;
+            transfer.items = null;
+        }
         switch (type) {
             case POWER:
                 if (transfer.energy == null) transfer.energy = transfer.new Power(side);
@@ -65,7 +72,7 @@ final class ArmResourceTransfer {
         if (!(input.getWorld() instanceof WorldServer) || input.isInvalid()) return null;
         WorldServer world = (WorldServer) input.getWorld();
         BlockPos mounting = input.getPos();
-        if (!world.getMinecraftServer().isCallingFromMinecraftThread() || !GearAssembly.loaded(world,mounting)
+        if (world.getMinecraftServer() == null || !world.getMinecraftServer().isCallingFromMinecraftThread() || !GearAssembly.loaded(world,mounting)
                 || world.getTileEntity(mounting) != input) return null;
         GearTileEntity arm = input.loadedController();
         if (arm == null || arm.isInvalid() || arm.resourceTransfer() != type || !arm.canTransferResources()

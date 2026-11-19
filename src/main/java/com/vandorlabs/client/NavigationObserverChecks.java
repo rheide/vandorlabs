@@ -29,7 +29,7 @@ final class NavigationObserverChecks {
             BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+id+"_core");BlockPos root=new BlockPos(166,90,166);
 
             world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);
-            Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");
+            Block matter=Block.getBlockFromName("vandorlabs:programmable_block");
             int height=ObserverScale.height(id,width);com.vandorlabs.machines.CoreLayout shape=new com.vandorlabs.machines.CoreLayout(width,height,width,facing.getIndex(),0,0);
             for(int x=0;x<width;x++)for(int y=0;y<height;y++)for(int z=0;z<width;z++)if(shape.frame(x,y,z)){
                 BlockPos at=root.add(shape.x(x,z),inverted?-y:y,shape.z(x,z));if(!at.equals(root))world.setBlockState(at,matter.getDefaultState(),2);
@@ -50,7 +50,7 @@ final class NavigationObserverChecks {
             for(int x=0;x<width;x++)for(int y=0;y<height;y++)for(int z=0;z<width;z++){BlockPos at=tile.cell(x,y,z);if(!at.equals(root))world.setBlockToAir(at);}world.setBlockToAir(root);
         }
         // A wider Array must also grow taller; a visually similar short frame cannot form.
-        {BlockPos root=new BlockPos(166,90,166);BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:standalone_antenna_core");world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH),2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);com.vandorlabs.machines.CoreLayout wrong=new com.vandorlabs.machines.CoreLayout(3,5,3,EnumFacing.NORTH.getIndex(),0,0);Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");for(int x=0;x<3;x++)for(int y=0;y<5;y++)for(int z=0;z<3;z++)if(wrong.frame(x,y,z)&&!(x==0&&y==0&&z==0))world.setBlockState(root.add(x,y,z),matter.getDefaultState(),2);need(!tile.assemble(),"nonproportional Array refused");for(int x=0;x<3;x++)for(int y=0;y<5;y++)for(int z=0;z<3;z++)if(!(x==0&&y==0&&z==0))world.setBlockToAir(root.add(x,y,z));world.setBlockToAir(root);}
+        {BlockPos root=new BlockPos(166,90,166);BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:standalone_antenna_core");world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH),2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);com.vandorlabs.machines.CoreLayout wrong=new com.vandorlabs.machines.CoreLayout(3,5,3,EnumFacing.NORTH.getIndex(),0,0);Block matter=Block.getBlockFromName("vandorlabs:programmable_block");for(int x=0;x<3;x++)for(int y=0;y<5;y++)for(int z=0;z<3;z++)if(wrong.frame(x,y,z)&&!(x==0&&y==0&&z==0))world.setBlockState(root.add(x,y,z),matter.getDefaultState(),2);need(!tile.assemble(),"nonproportional Array refused");for(int x=0;x<3;x++)for(int y=0;y<5;y++)for(int z=0;z<3;z++)if(!(x==0&&y==0&&z==0))world.setBlockToAir(root.add(x,y,z));world.setBlockToAir(root);}
         for(String old:new String[]{"survey_dish","sentinel_array"}){
             String name="vandorlabs:"+old+"_core",replacement=RenamedBlocks.canonical(name);need(!name.equals(replacement),"retired ID alias");
             need(LegacyBlockStates.decode(name+"[facing=north,formed=true]").getBlock()==Block.getBlockFromName(replacement),"previous block-state codec remap");

@@ -31,7 +31,7 @@ public final class DriveRuntimeChecks {
         void value(int next){level=next;RedstoneChannels.inputChanged(this);}
     }
     private static TileEntityConstructor build(WorldServer world,BlockPos root,FrameMachineDesign spec,EnumFacing facing){
-        BlockConstructorCore core=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);world.setBlockState(root,core.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");
+        BlockConstructorCore core=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);world.setBlockState(root,core.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);Block matter=Block.getBlockFromName("vandorlabs:programmable_block");
         for(int x=0;x<spec.width;x++)for(int y=0;y<spec.height;y++)for(int z=0;z<spec.depth;z++)if(tile.frame(x,y,z)&&!tile.cell(x,y,z).equals(root))world.setBlockState(tile.cell(x,y,z),matter.getDefaultState(),2);
         require(tile.assemble(),"formed actual "+spec.design+" "+facing);DeferredTileLoad.flush(world);return tile;
     }

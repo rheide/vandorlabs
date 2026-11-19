@@ -342,13 +342,18 @@ public final class VehicleStructure {
                     && !saved.getCompoundTag("Properties").hasKey("part")){
                 saved=saved.copy();NBTTagCompound properties=saved.getCompoundTag("Properties");properties.setString("part","single");saved.setTag("Properties",properties);
             }
+            boolean legacyMatter=com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER.equals(saved.getString("Name"));
             saved=com.vandorlabs.persistence.RetiredCockpitGlass.stateTag(saved);
             net.minecraft.util.ResourceLocation name=new net.minecraft.util.ResourceLocation(saved.getString("Name"));
             if(!net.minecraft.block.Block.REGISTRY.containsKey(name))throw new IllegalArgumentException("Missing vehicle block "+name);
             IBlockState parsed=NBTUtil.readBlockState(saved);
             if(!NBTUtil.writeBlockState(new NBTTagCompound(),parsed).equals(saved))throw new IllegalArgumentException("Unknown vehicle block properties");
             if(parsed.getBlock()==net.minecraft.init.Blocks.AIR)throw new IllegalArgumentException("Air in vehicle structure");
-            cells.add(new Cell(BlockPos.fromLong(b.getLong("Pos")),parsed,b.hasKey("Tile",10)?com.vandorlabs.persistence.RetiredCockpitGlass.tileData(b.getCompoundTag("Tile")):null));
+            BlockPos position=BlockPos.fromLong(b.getLong("Pos"));
+            if(legacyMatter&&b.hasKey("Tile"))throw new IllegalArgumentException("Unexpected retired Matter Block tile");
+            NBTTagCompound tile=legacyMatter?com.vandorlabs.persistence.RenamedBlocks.matterTile(position)
+                    :b.hasKey("Tile",10)?com.vandorlabs.persistence.RetiredCockpitGlass.tileData(b.getCompoundTag("Tile")):null;
+            cells.add(new Cell(position,parsed,tile));
         }
         int facing=tag.getInteger("Facing");if(facing<0||facing>3)throw new IllegalArgumentException("Invalid vehicle facing");
         return new VehicleStructure(cells,BlockPos.fromLong(tag.getLong("Seat")),EnumFacing.getHorizontal(facing),tag.getInteger("GearCount"),displayOnly);
