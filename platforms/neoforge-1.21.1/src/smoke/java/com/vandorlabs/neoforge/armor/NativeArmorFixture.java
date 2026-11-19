@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.armor;
 import com.vandorlabs.animation.ScreenBehavior;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.screen.NativeScreenBlock;
+import com.vandorlabs.neoforge.screen.NativeScreenCatalog;
 import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.screen.NativeScreenRegistrations;
 import com.vandorlabs.persistence.SaveSchema;
@@ -70,12 +71,16 @@ public final class NativeArmorFixture {
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
     static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final BlockPos DEFAULT_SCREEN = new BlockPos(-3, 79, -1);
     static final BlockPos STATIC_SCREEN = new BlockPos(-2, 79, -1), GENERATED_SCREEN = new BlockPos(-2, 79, -2);
     static final BlockPos WALL = new BlockPos(1, 79, 2), DIAGONAL_WALL = new BlockPos(2, 79, 2);
     static final BlockPos LARGE_DOOR = new BlockPos(-4, 79, 2), TRAPDOOR = new BlockPos(-1, 79, -1);
     static final BlockPos WORLD_DOOR = new BlockPos(0, 79, 2), WORLD_TRIGGER = new BlockPos(0, 79, -2);
     static final BlockPos LIGHT_ON = new BlockPos(1, 79, -2), LIGHT_OFF = new BlockPos(2, 79, -2);
     static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
+    static String authoredScreenSprite() {
+        return ModernFinishCatalog.option(NativeScreenCatalog.INSTANCE.screenArtwork("engineering_screen")).texture();
+    }
     static String screenSprite() { return ModernFinishCatalog.option(16).texture(); }
     static String wallSprite(boolean diagonal) { return ModernFinishCatalog.option(diagonal ? 15 : 14).texture(); }
     static String largeDoorSprite() { return ModernFinishCatalog.option(13).texture(); }
@@ -132,6 +137,7 @@ public final class NativeArmorFixture {
         setWall(world, WALL, 14);
         setWall(world, DIAGONAL_WALL, 15);
         placeScreen(world, STATIC_SCREEN, 16);
+        placeScreen(world, DEFAULT_SCREEN, -1);
         placeScreen(world, GENERATED_SCREEN, -2);
         world.getChunkAt(TRAPDOOR);
         world.setBlockAndUpdate(TRAPDOOR.below(), Blocks.STONE.defaultBlockState());
@@ -331,6 +337,7 @@ public final class NativeArmorFixture {
         var screen = (NativeScreenEntity) world.getBlockEntity(pos);
         var data = screen.saveWithFullMetadata(world.registryAccess());
         data.putInt(SaveSchema.Screen.DISPLAY_MODE, ScreenBehavior.STATIC);
+        data.putString(SaveSchema.Screen.SELECTED, "engineering_screen");
         data.putInt("PrimarySurfaceTexture", surface < 0 ? -1 : surface);
         if (surface == -2) {
             var bank = new CompoundTag();

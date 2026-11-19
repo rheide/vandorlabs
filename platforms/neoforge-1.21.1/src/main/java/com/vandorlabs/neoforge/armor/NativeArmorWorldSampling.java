@@ -5,6 +5,7 @@ import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.screen.NativeScreenBlock;
 import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.screen.NativeScreenPowerViews;
+import com.vandorlabs.neoforge.screen.NativeScreenRenderPlan;
 import com.vandorlabs.screen.ScreenFamily;
 import com.vandorlabs.screen.ScreenPowerQueries;
 import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
@@ -198,9 +199,13 @@ public final class NativeArmorWorldSampling {
             if (state.getValue(NativeScreenBlock.FACING) != face) {
                 choice = screen.screenSettings().housing().mainTexture;
             } else {
-                var appearance = NativeScreenPowerViews.prepare(screen, ScreenPowerQueries.SURFACE_0).appearance();
-                if (appearance.playback(0) != ScreenBehavior.STATIC || appearance.surface(0) < 0) return null;
-                choice = appearance.surface(0);
+                var visual = NativeScreenPowerViews.prepare(screen, ScreenPowerQueries.SURFACE_0);
+                var surfaces = NativeScreenRenderPlan.of(visual, block.screenState(state)).surfaces;
+                if (surfaces.size() != 1 || surfaces.getFirst().fragments().size() != 1) return null;
+                var fragment = surfaces.getFirst().fragments().getFirst();
+                if (fragment.mode() != ScreenBehavior.STATIC || fragment.binding() != NativeScreenRenderPlan.Binding.ATLAS
+                        && fragment.binding() != NativeScreenRenderPlan.Binding.DISPLAY) return null;
+                choice = fragment.material();
             }
         } else if ((state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) || state.is(VandorLabsBootstrap.TRIGGER_BLOCK.get()))
                 && tile instanceof ProgrammableBlockEntity cube) {
