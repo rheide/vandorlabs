@@ -47,7 +47,6 @@ public final class FrameMachineRuntimeChecks {
                 require(reloaded.pivot().equals(tile.pivot()) && reloaded.cell(0,0,0).equals(tile.cell(0,0,0)),"saved corner offset");
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
-                if(id.equals("assembly_press")&&!turned&&corner==0&&facing==EnumFacing.NORTH)checkPlate(world,tile);
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
                 require(((TileEntityAnimatedScreenSelector)world.getTileEntity(missing)).getHousingTexture()==0,
                         "mixed finish restored through formation and dismantling");
@@ -60,6 +59,19 @@ public final class FrameMachineRuntimeChecks {
             }
         }
         System.out.println("[vandorlabs][reprolab] constructors PASS "+count+" independent frames all corners axes facings diagnostics persistence sync dismantling bounds");
+    }
+    public static void runPlate(World world){
+        BlockPos root=new BlockPos(0,110,0);
+        BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:assembly_press_core");
+        FrameMachineDesign design=block.specification();
+        world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH));
+        TileEntityConstructor press=(TileEntityConstructor)world.getTileEntity(root);
+        for(int x=0;x<design.width;x++)for(int y=0;y<design.height;y++)for(int z=0;z<design.depth;z++){
+            BlockPos at=press.cell(x,y,z);
+            if(!at.equals(root)&&press.frame(x,y,z))world.setBlockState(at,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState());
+        }
+        require(press.assemble(),"forge Plate check forms a complete Press");
+        checkPlate(world,press);
     }
     private static void checkPlate(World world,TileEntityConstructor press){
         net.minecraft.item.Item plate=com.vandorlabs.items.ModItems.PROGRAMMABLE_PLATE;

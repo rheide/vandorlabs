@@ -123,6 +123,10 @@ public class VandorLabs {
         }
         if(Boolean.getBoolean("vandorlabs.vehicleWorldCompatibilityChecks"))
             com.vandorlabs.vehicle.VehicleWorldRuntimeChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0));
+        if(Boolean.getBoolean("vandorlabs.programmablePlateChecks")){
+            net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
+            com.vandorlabs.construction.FrameMachineRuntimeChecks.runPlate(world);
+        }
         if(Boolean.getBoolean("vandorlabs.machineFrameChecks")){
             net.minecraft.world.WorldServer world=net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0);
             net.minecraft.entity.player.EntityPlayerMP player=net.minecraftforge.common.util.FakePlayerFactory.getMinecraft(world);player.capabilities.isCreativeMode=true;

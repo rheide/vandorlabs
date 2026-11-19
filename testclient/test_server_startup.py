@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--run-root', type=Path, help='Parent for a fresh disposable server directory')
     parser.add_argument('--mod', action='append', default=[], type=Path, help='Additional compatibility mod JAR (repeatable)')
     parser.add_argument('--vehicle-world-checks', action='store_true', help='Run carried-tile chunk isolation checks on the physical server')
+    parser.add_argument('--plate-only', action='store_true', help='Verify Forge Press Plate production and armor crafting')
     parser.add_argument('--machine-frames', action='store_true', help='Run the complete Core-frame matrix with client classes absent')
     parser.add_argument('--vehicle-world-only', action='store_true', help='Run only physical-server vehicle compatibility checks, without canopy/fluid fixtures')
     parser.add_argument('--foreign-buildings', action='store_true', help='Run focused installed building-mod checks on a physical server')
@@ -81,7 +82,7 @@ def run_server(args, root, output, owner=None):
            '(expected:')
     # Changing spawn does not synchronously load its chunks. Restart once so the
     # fixture chunk is part of the server's prepared start region before placement.
-    for phase in (('prepare',) if args.vehicle_world_only else ('prepare', 'place', 'reload')):
+    for phase in (('prepare',) if args.vehicle_world_only or args.plate_only else ('prepare', 'place', 'reload')):
         path = output / (phase + '.log')
         with path.open('w') as log:
             checks = ['-Dvandorlabs.vehicleWorldCompatibilityChecks=true'] if args.vehicle_world_checks else []
@@ -91,6 +92,8 @@ def run_server(args, root, output, owner=None):
                 checks.append('-Dvandorlabs.reactorGlassChecks=true')
             if args.foreign_buildings:
                 checks.append('-Dvandorlabs.foreignBuildingChecks=true')
+            if args.plate_only:
+                checks.append('-Dvandorlabs.programmablePlateChecks=true')
             if args.machine_frames:
                 checks.append('-Dvandorlabs.machineFrameChecks=true')
             options = {}
@@ -127,12 +130,15 @@ def run_server(args, root, output, owner=None):
                     wait_for('foreign-buildings PASS')
                 if args.machine_frames:
                     wait_for('constructors PASS ')
-                if args.vehicle_world_only:
+                if args.plate_only:
+                    wait_for('programmable plate PASS')
+                if args.vehicle_world_only or args.plate_only:
                     command('stop')
                     proc.wait(timeout=45)
                     if proc.returncode:
                         raise RuntimeError(f'{phase}: failed shutdown; see {path}')
-                    print(f'Physical-server vehicle compatibility PASS: {output}')
+                    focus = 'programmable plate' if args.plate_only else 'vehicle compatibility'
+                    print(f'Physical-server {focus} PASS: {output}')
                     return
                 if phase == 'prepare':
                     command('setworldspawn 4 12 4')
