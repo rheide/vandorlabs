@@ -32,6 +32,9 @@ Mount. Other screen families are unchanged.
 1. Assemble a Sentinel Array or Survey Dish. Only the standalone models remain.
    Connect an RF source that supplies at least 20 RF per tick to a downward-facing
    input on the bottom layer. The Power Port In artwork marks the underside.
+   For a Dish or Array carried above an Arm, set the Arm’s **Transfer** option
+   to **RF Power** and feed the mounting side. Power resumes when the Arm
+   reaches a stationary, whole-block-aligned endpoint.
 2. Open its configuration and select **Redstone**. Enter its **Transmit channels**
    and choose a connection range of 4, 8, 16, 32, 64, 128 or 256 blocks
    (default 16).
@@ -43,7 +46,7 @@ Mount. Other screen families are unchanged.
    The table shows a preview first at every zoom and sharpens the map
    once the view settles, using up to twice the resolution along each axis.
 
-Each linked observer has a terrain coverage ring centered on its Core. While
+Each powered linked observer has a terrain coverage ring centered on its Core. While
 active, it adds a lighter player-detection ring and a rotating sweep. The
 Sentinel Array uses red, detects within **128 blocks**, and sweeps every **8 seconds**.
 The Survey Dish uses cyan, detects within **256 blocks**, and sweeps every **24 seconds**.
@@ -131,6 +134,18 @@ Seek a Survey Dish
 Or a Sentinel Array
 Set redstone channels
 ```
+
+Screens and Navigation Tables show this haiku if linked observers are in
+range and none has power:
+
+```text
+Silent dish awaits
+No power flows through its port
+Bring the map to life
+```
+
+An unpowered observer supplies no new scans. Recorded terrain on a module
+or chip remains available.
 
 ### Observer mounting and older saves
 

@@ -2,6 +2,8 @@
 
 ## 1.12.0 (in development)
 
+- Supply Survey Dishes and Sentinel Arrays with 20 RF/tick through their bottom inputs. Linked Screens and Navigation Tables show a haiku when no observer is powered.
+
 - Press flat Programmable Plates in the Assembly Press and use them to craft the four programmable armor pieces.
 - Use the former Programmable Matter finish as the default artwork for new Programmable Blocks.
 - Mount Large Programmable Doors horizontally against a block side on Forge to open a vertical passage.
