@@ -75,5 +75,15 @@ public final class LargeDoorJoin {
                 ox+(x1-ox)*sx,y1*sy,oz+(z1-oz)*sz);
     }
 
+    public interface Point<T> { T create(double x,double y,double z); }
+    public static <T> T unproject(Point<T> point,int facing,boolean horizontal,int columns,int rows,double x,double y,double z){
+        double sx=(facing&1)==0?columns:horizontal?rows:1;
+        double sy=horizontal?1:rows;
+        double sz=(facing&1)!=0?columns:horizontal?rows:1;
+        double ox=(facing==2||horizontal&&facing==1)?1:0;
+        double oz=(facing==3||horizontal&&facing==2)?1:0;
+        return point.create(ox+(x-ox)/sx,y/sy,oz+(z-oz)/sz);
+    }
+
     private LargeDoorJoin(){}
 }

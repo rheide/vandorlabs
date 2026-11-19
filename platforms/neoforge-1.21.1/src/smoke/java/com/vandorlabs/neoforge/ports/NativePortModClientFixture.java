@@ -43,7 +43,8 @@ public final class NativePortModClientFixture {
     public static final int START=Integer.getInteger("vandorlabs.portModStart",0),END=Integer.getInteger("vandorlabs.portModEnd",4);
     private static ServerPlayer actor;private static int fixture=START,phase,ticks,checks,previousSource,powerBudget=1;private static boolean finished,quantized;
     public static boolean enabled(){return Boolean.getBoolean("vandorlabs.portModClientCheck");}
-    private static boolean throughArm(){return Boolean.getBoolean("vandorlabs.portModThroughArm");}
+    public static boolean throughArm(){return Boolean.getBoolean("vandorlabs.portModThroughArm");}
+    public static BlockPos inputArm(int index,Direction direction){return at(index).relative(direction,index==3?1:3);}
     private static int sinkDistance(int index){return (index==3?1:3)+(throughArm()?1:0);}
     public static BlockPos at(int index){return new BlockPos(0,96,index*8);}
     public static BlockPos marker(int index,int operation){return at(index).offset(7,operation,0);}

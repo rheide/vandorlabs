@@ -1,9 +1,13 @@
 package com.vandorlabs.neoforge.door;
 
+import com.vandorlabs.persistence.SpaceDoorData;
 import net.minecraft.core.*;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.component.CustomData;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.ClipContext;
 import net.minecraft.world.level.block.*;
@@ -32,13 +36,21 @@ final class HorizontalLargeDoorPlayerFixture {
         var support=support(front);
         for(int x=-1;x<=1;x++)level.setBlock(support.relative(front.getCounterClockWise(),x),Blocks.STONE.defaultBlockState(),Block.UPDATE_ALL);
         player.getInventory().selected=0;
-        player.setItemInHand(InteractionHand.MAIN_HAND,new ItemStack(LargeDoorWorldClientFixture.item()));
+        var item=new ItemStack(LargeDoorWorldClientFixture.item());
+        CompoundTag choices=new CompoundTag(),settings=new CompoundTag();
+        new SpaceDoorData(23,1,true,SpaceDoorData.VERTICAL_SPLIT,true,true,false,0,false).write(settingsAccess(settings));
+        choices.put("SpaceDoorSettings",settings);
+        item.set(DataComponents.CUSTOM_DATA,CustomData.of(choices));
+        player.setItemInHand(InteractionHand.MAIN_HAND,item);
         player.setItemInHand(InteractionHand.OFF_HAND,ItemStack.EMPTY);
         player.setGameMode(GameType.SURVIVAL);
         Vec3 axis=Vec3.atLowerCornerOf(front.getNormal());
         Vec3 point=Vec3.atCenterOf(support).add(axis.scale(.5));
         Vec3 feet=point.add(axis.scale(2)).subtract(0,.5,0);
         orient(player,feet,point);
+    }
+    private static com.vandorlabs.persistence.PrimitiveData settingsAccess(CompoundTag tag){
+        return new com.vandorlabs.neoforge.ModernHousingTags(tag);
     }
     private static void orient(ServerPlayer player,Vec3 feet,Vec3 target){
         Vec3 delta=target.subtract(feet.add(0,player.getEyeHeight(),0));
@@ -54,6 +66,8 @@ final class HorizontalLargeDoorPlayerFixture {
         var root=NativeLargeDoorLifecycle.root(level,passage(front));
         need(root!=null&&root.isHorizontal()&&root.getBlockPos().equals(anchor(front))
                 &&NativeLargeDoorLifecycle.complete(level,root)&&player.getMainHandItem().isEmpty(),"one survival item and nine roles");
+        need(root.settings().door().direction==SpaceDoorData.VERTICAL_SPLIT
+                &&root.saveWithoutMetadata(level.registryAccess()).getInt("SpaceDoorSchema")==3,"placed Sliding Split survives save");
         for(int col=0;col<3;col++)for(int row=0;row<3;row++){
             var at=NativeLargeDoorLifecycle.cell(root.getBlockPos(),front,true,col,row);
             var tile=(NativeLargeDoorEntity)level.getBlockEntity(at);
@@ -74,6 +88,11 @@ final class HorizontalLargeDoorPlayerFixture {
         var middle=passage(facing());
         var root=NativeLargeDoorLifecycle.root(level,middle);
         need(root!=null&&root.getBlockState().getValue(NativeLargeDoorBlock.OPEN),"actual player click opens hatch");
+        var geometry=root.rootGeometrySnapshot();
+        var before=BlockPos.containing(Vec3.atCenterOf(center()).subtract(Vec3.atLowerCornerOf(facing().getNormal())));
+        var after=center().relative(facing(),3);
+        need(geometry.boxes().stream().anyMatch(box->box.intersects(new AABB(before)))
+                &&geometry.boxes().stream().anyMatch(box->box.intersects(new AABB(after))),"upper and lower leaves slide onto opposite sides of the hatch");
         // The temporary survival floor is below this swept aperture.
         var query=new AABB(middle.getX()+.04,middle.getY(),middle.getZ()+.04,middle.getX()+.96,middle.getY()+2,middle.getZ()+.96);
         Vec3 p=Vec3.atCenterOf(middle);

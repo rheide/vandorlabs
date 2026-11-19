@@ -30,6 +30,7 @@ unset VANDOR_LABS_MODULE_RACK_CHECKS_ONLY
 unset VANDOR_LABS_NAVIGATION_MODULE_CHECKS_ONLY VANDOR_LABS_NAVIGATION_VEHICLE_CHECKS_ONLY
 unset VANDOR_LABS_APPLIANCE_CHECKS_ONLY VANDOR_LABS_OBSERVER_PERFORMANCE_ONLY VANDOR_LABS_NAVIGATION_PERFORMANCE_ONLY VANDOR_LABS_NAVIGATION_WORLD_CHECKS_ONLY
 
+unset VANDOR_LABS_ARM_RESOURCE_INDICATOR_ONLY
 # Capture scope is explicit: routine fixes use --focus, full regressions use --full.
 unset VANDOR_LABS_APPEARANCE_COMPAT_CHECKS_ONLY
 case "${1:-}" in
@@ -361,6 +362,9 @@ case "${1:-}" in
         elif [ "$TARGET" = trapdoors ]; then
             PREFIX=gallery_trapdoor_followup_
             export VANDOR_LABS_TRAPDOOR_CHECKS_ONLY=true
+        elif [ "$TARGET" = arm-resource-indicator ]; then
+            PREFIX=arm_resource_indicator_
+            export VANDOR_LABS_ARM_RESOURCE_INDICATOR_ONLY=true
         elif [ "$TARGET" = horizontal-door ]; then
             PREFIX=horizontal_door_
             export VANDOR_LABS_HORIZONTAL_DOOR_ONLY=true
@@ -477,9 +481,16 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = arm-resource-indicator ]; then
+        grep -q "arm-resource-indicator PASS" "$RUN_OUT/client.log"
+        echo "Arm resource indicator checks passed: $RUN_OUT"
+        exit 0
+    fi
     if [ "$TARGET" = horizontal-door ]; then
         grep -q "horizontal-door PASS" "$RUN_OUT/client.log"
         grep -q "horizontal-door-arm PASS" "$RUN_OUT/client.log"
+        grep -q "joined-large-door PASS" "$RUN_OUT/client.log"
+        grep -q "vertical-door-split-render PASS" "$RUN_OUT/client.log"
         echo "Horizontal Large Door checks passed: $RUN_OUT"
         exit 0
     fi

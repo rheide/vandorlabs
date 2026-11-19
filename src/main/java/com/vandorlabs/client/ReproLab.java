@@ -684,8 +684,22 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.savedCouplingChecksOnly")){try{if(SavedVehicleCouplingChecks.tick(mc))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved vehicle coupling",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.savedHoverChecksOnly")){try{if(SavedVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved Hover recovery",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleRenderCostChecksOnly")){if(++holdTicks==40){VehicleRenderRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] vehicle-render-cost PASS");mc.shutdown();}return;}
+        if(Boolean.getBoolean("vandorlabs.armResourceIndicatorOnly")){
+            try{if(com.vandorlabs.gear.client.ArmResourceIndicatorLiveChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Arm resource indicator check",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.horizontalDoorChecksOnly")){
-            if(++holdTicks==40)onServer(mc,()->LargeDoorRuntimeChecks.horizontal(mc.getIntegratedServer().getEntityWorld(),mc.getIntegratedServer().getPlayerList().getPlayers().get(0)));
+            if(++holdTicks==40){
+                onServer(mc,()->{
+                    net.minecraft.world.World world=mc.getIntegratedServer().getEntityWorld();
+                    net.minecraft.entity.player.EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                    LargeDoorRuntimeChecks.horizontal(world,player);
+                    LargeDoorRuntimeChecks.joined(world,player);
+                });
+                try{DoorAppearanceRuntimeChecks.verticalSplit(mc,outDir);}
+                catch(Exception failure){throw new IllegalStateException("Large Door vertical split render",failure);}
+            }
             if(holdTicks>40)try{if(com.vandorlabs.gear.HorizontalDoorArmLiveChecks.tick(mc))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Horizontal Large Door arm checks",failure);}
             return;

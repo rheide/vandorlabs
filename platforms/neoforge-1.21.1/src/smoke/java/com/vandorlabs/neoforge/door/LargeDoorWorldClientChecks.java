@@ -35,7 +35,7 @@ public final class LargeDoorWorldClientChecks {
  private static boolean allOpen(Minecraft mc){for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(!mc.level.getBlockState(LargeDoorWorldClientFixture.POS.east(x).above(y)).getValue(NativeLargeDoorBlock.OPEN))return false;return true;}
  @SubscribeEvent public static void tick(ClientTickEvent.Post event){if(!LargeDoorWorldClientFixture.enabled())return;var mc=Minecraft.getInstance();if(mc.screen instanceof net.minecraft.client.gui.screens.AccessibilityOnboardingScreen screen){screen.onClose();return;}if(stage==30&&mc.level==null){String cases=LargeDoorWorldClientFixture.horizontalOnly()?"four survival side placements, real hatch clicks and joined arm travel":"upright and horizontal survival placement, reader controls, moved-leaf use, harvest and joined arm travel";System.out.println("[vandorlabs][large-door-world-client] client PASS checks="+checks+" "+cases+"; renderer masks checked separately");mc.stop();stage=31;return;}if(mc.player==null||mc.level==null||mc.gameMode==null)return;
   need(++ticks<3000,"timeout mode="+mc.gameMode.getPlayerMode()+" slot="+mc.player.getInventory().selected+" held="+mc.player.getMainHandItem()+" pos="+mc.player.position()+" pitch="+mc.player.getXRot()+" hit="+mc.hitResult+" screen="+mc.screen);var tile=tile(mc);var root=LargeDoorWorldClientFixture.POS;
-  if(stage>=40&&stage<=46)need(ticks<wait+240,"horizontal fixture="+horizontal+" camera="+mc.player.position()+" hit="+mc.hitResult+" held="+mc.player.getMainHandItem()+" captured="+captured+" tile="+horizontalTile(mc));
+  if(stage>=40&&stage<=46||stage==48)need(ticks<wait+240,"horizontal fixture="+horizontal+" camera="+mc.player.position()+" hit="+mc.hitResult+" held="+mc.player.getMainHandItem()+" captured="+captured+" tile="+horizontalTile(mc));
   switch(stage){
    case 0->{if(ticks<80||!actor(mc,GameType.SURVIVAL,LargeDoorWorldClientFixture.item())||mc.player.getMainHandItem().getCount()!=2||mc.player.getZ()<2.9)return;if(!(mc.hitResult instanceof BlockHitResult hit)||!hit.getBlockPos().equals(root.east().below())||hit.getDirection()!=net.minecraft.core.Direction.UP)return;var model=mc.getItemRenderer().getModel(mc.player.getMainHandItem(),mc.level,mc.player,0);need(model instanceof NativeDoorItemModel.Selected selected&&selected.modelId().contains("rotating"),"plain public Large icon binds measured source rotating policy");call(mc,"startUseItem");stage=1;wait=ticks;}
    case 1->{if(tile==null||mc.level.getBlockEntity(root.east(2).above(2))==null||mc.player.getMainHandItem().getCount()!=1||ticks<wait+20)return;need(!tile.settings().door().sliding&&mc.level.getBlockState(root).getRenderShape()==net.minecraft.world.level.block.RenderShape.MODEL,"public Large prototype and contained-fluid chunk bridge");need((Object)mc.getBlockEntityRenderDispatcher().getRenderer(tile) instanceof NativeDoorRenderer,"public Large production shared BER binding");need("Large Programmable Door".equals(LargeDoorWorldClientFixture.item().getDescription().getString()),"public Large locale");mode(0);stage=2;}
@@ -94,8 +94,9 @@ public final class LargeDoorWorldClientChecks {
    case 45->{
     var h=horizontalTile(mc);
     if(h==null||!h.getBlockState().getValue(NativeLargeDoorBlock.OPEN)||ticks<wait+15)return;
-    mode(15);stage=46;
+    capture("horizontal-large-"+horizontal+"-open.png");stage=48;
    }
+   case 48->{if(captured){mode(15);stage=46;}}
    case 46->{
     if(horizontalTile(mc)!=null||ticks<wait+15)return;
     if(++horizontal<4){mode(10+horizontal);stage=40;return;}

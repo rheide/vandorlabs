@@ -28,7 +28,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     private int design,detail,depth,lastValidChannel;
     private int trigger,panelMode,securityMode,securityAllowed;
     private SpaceDoorMotion motion;
-    private boolean framed,hinges,panel,tileTexture;
+    private boolean framed,hinges,panel,tileTexture,join;
     private GuiTextField channelField;
     private GuiButton done,motionButton,hingeButton;
 
@@ -41,6 +41,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         motion=SpaceDoorMotion.fromSettings(tile.isSliding(),tile.getSlideDirection());
         depth=tile.getPlacementDepth();
         hinges=tile.hasHinges();
+        join=tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor&&((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).joins();
         panel=tile.hasPanel();panelMode=tile.panelMode();securityMode=tile.securityMode();securityAllowed=tile.keyReader().effectiveAllowed();
         trigger=tile.getTrigger();
         lastValidChannels=tile.getRedstoneChannels();lastValidChannel=lastValidChannels.first();
@@ -63,6 +64,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         hingeButton=layout.control(15,78,"");buttonList.add(hingeButton);updateHingeButton();
         buttonList.add(layout.control(17,64,panelLabel()));
         buttonList.add(layout.control(18,126,layoutLabel()));
+        if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)buttonList.add(layout.control(23,150,SpaceDoorDialog.joinLabel(join)));
         channelField=new GuiTextField(0,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);
         ChannelFields.configure(channelField);channelField.setText(channelText);
         buttonList.add(layout.control(19,90,securityLabel()));
@@ -75,7 +77,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         }
         done=layout.done(1);if(ySize<246){done.y=guiTop+ySize-18;done.height=16;}buttonList.add(done);updateChannelValidity();refreshPages();if(settingsPage==1){if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{framed=!framed;sendUpdate();},()->framed);framePane.init(54,buttonList);}
     }
-    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=194){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;if(b.id>=20&&b.id<=22)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
+    private void refreshPages(){for(GuiButton b:buttonList){if(b.id>=190&&b.id<=194){b.enabled=b.id-190!=settingsPage;continue;}if(b.id==1)continue;if(b.id>=20&&b.id<=22)continue;b.visible=settingsPage==0&&(b.id==10||b.id==13||b.id==15||b.id==18||b.id==23)||settingsPage==2&&(b.id==16||b.id==198)||settingsPage==3&&(b.id==17||b.id==19);}channelField.setVisible(settingsPage==2);if(!channelField.getVisible())channelField.setFocused(false);}
     private net.minecraft.item.ItemStack companyCard(){return CredentialFilterPicker.sample(false,securityAllowed);}
     String companyLabel(){return CredentialFilterPicker.label(false,securityAllowed);}
     private String panelLabel(){return SpaceDoorDialog.panelLabel(panelMode);}
@@ -102,7 +104,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         if (channel()>=0) {lastValidChannels=ChannelFields.parse(channelField);lastValidChannel=lastValidChannels.first();}
         // An incomplete channel edit must not prevent previewing appearance.
         PacketHandler.INSTANCE.sendToServer(new MessageSpaceDoor(tile.getPos(),design,detail,framed,
-                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels).withTextureLayout(textureLayout).withSecurity(panelMode,securityMode,securityAllowed));
+                lastValidChannel,motion.direction,depth,motion.sliding,hinges,trigger,panel,faceTexture,tileTexture).withChannels(lastValidChannels).withTextureLayout(textureLayout).withSecurity(panelMode,securityMode,securityAllowed).withJoin(join));
     }
     @Override protected void actionPerformed(GuiButton button) {
         if(button.id>=20&&button.id<=22){
@@ -124,6 +126,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
         else if (button.id==16) { trigger=GuiOptionCycle.next(trigger,3); ((RedstoneActivationButton)button).setMode(trigger); }
         else if(button.id==18){textureLayout=GuiOptionCycle.next(textureLayout,3);tileTexture=textureLayout==1;tile.setTextureLayout(textureLayout);button.displayString=layoutLabel();}
         else if (button.id==17) { panelMode=SpaceDoorDialog.nextPanel(panelMode,depth,GuiOptionCycle.direction());panel=panelMode>0;button.displayString=panelLabel(); }
+        else if(button.id==23){join=!join;button.displayString=SpaceDoorDialog.joinLabel(join);}
         else if(button.id==19){securityMode=SpaceDoorDialog.nextSecurity(securityMode,GuiOptionCycle.direction());button.displayString=securityLabel();}
         else return;
         sendUpdate();
@@ -134,7 +137,7 @@ public class GuiSpaceDoor extends GuiMaterialPicker {
     @Override protected void mouseClicked(int x,int y,int button) throws IOException {
         if(settingsPage==4&&glassTextures!=null&&glassTextures.click(x,y,button)){if(glassTextures.picked())chooseGlass(glassTextures.selected());return;}
         if(settingsPage==1&&framePane!=null&&framePane.click(x,y,button))return;
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19,20,21))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,10,11,12,13,15,16,17,18,19,20,21,23))return;
         if(settingsPage==3&&CredentialFilterPicker.click(this,x,y,button,layout.controlsX,guiTop+SECURITY_CARDS_Y,false,securityAllowed,mask->{securityAllowed=mask;sendUpdate();}))return;
         if(channelField.getVisible())channelField.mouseClicked(x,y,button);
         int before=textureList.selected();

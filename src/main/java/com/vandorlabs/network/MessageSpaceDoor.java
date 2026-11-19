@@ -25,6 +25,9 @@ public class MessageSpaceDoor implements IMessage {
 
     private int panelMode=-1,securityMode,securityAllowed=127;
     public MessageSpaceDoor withSecurity(int panelMode,int securityMode,int mask){this.panelMode=panelMode;this.securityMode=securityMode;this.securityAllowed=mask;return this;}
+    private static final int JOIN_PRESENT=64,JOIN_VALUE=128;
+    private int joinFlags;
+    public MessageSpaceDoor withJoin(boolean join){joinFlags=JOIN_PRESENT|(join?JOIN_VALUE:0);return this;}
     private int layout=0;
     public MessageSpaceDoor withTextureLayout(int mode){layout=mode;tileTexture=mode==1;return this;}
     private BlockPos pos;
@@ -52,7 +55,9 @@ public class MessageSpaceDoor implements IMessage {
         trigger=b.readInt();
         panel=b.readBoolean();faceTexture=b.readInt();tileTexture=b.readBoolean();
 
-        panelMode=b.readUnsignedByte();securityMode=b.readUnsignedByte();securityAllowed=b.readUnsignedByte();layout=b.readUnsignedByte();channels=ChannelData.read(b,channel);invalidChannels=channels==null;
+        int options=b.readUnsignedByte();
+        panelMode=options&~(JOIN_PRESENT|JOIN_VALUE);joinFlags=options&(JOIN_PRESENT|JOIN_VALUE);
+        securityMode=b.readUnsignedByte();securityAllowed=b.readUnsignedByte();layout=b.readUnsignedByte();channels=ChannelData.read(b,channel);invalidChannels=channels==null;
     }
     @Override public void toBytes(ByteBuf b) {
         b.writeLong(pos.toLong()); b.writeInt(design); b.writeInt(detail); b.writeBoolean(framed); b.writeInt(channel);
@@ -63,13 +68,13 @@ public class MessageSpaceDoor implements IMessage {
         b.writeInt(trigger);
         b.writeBoolean(panel);b.writeInt(faceTexture);b.writeBoolean(tileTexture);
 
-        b.writeByte(panelMode<0?(panel?1:0):panelMode);b.writeByte(securityMode);b.writeByte(securityAllowed);b.writeByte(layout<0?(tileTexture?1:0):layout);ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        b.writeByte((panelMode<0?(panel?1:0):panelMode)|joinFlags);b.writeByte(securityMode);b.writeByte(securityAllowed);b.writeByte(layout<0?(tileTexture?1:0):layout);ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     public static class Handler implements IMessageHandler<MessageSpaceDoor,IMessage> {
         @Override public IMessage onMessage(MessageSpaceDoor m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if (m.panelMode>2||m.panelMode==2&&m.depth!=0||m.securityMode>4||m.securityAllowed>127||!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
+                if (m.joinFlags==JOIN_VALUE||m.panelMode>2||m.panelMode==2&&m.depth!=0||m.securityMode>4||m.securityAllowed>127||!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || !TileEntitySpaceDoor.valid(m.design,m.detail) || !TileEntitySpaceDoor.validSlideDirection(m.slideDirection)
                         || !SpaceDoorData.validTrigger(m.trigger)
                         || m.faceTexture< -1 || (m.faceTexture!=-1 && !com.vandorlabs.tiles.ScreenHousingTextures.validChoice(m.faceTexture))
                         || m.depth<0 || m.depth>2 || m.channel<0 || m.pos==null || m.getRedstoneChannels()==null || !com.vandorlabs.items.ConfigurationAccess.canConfigure(player)
@@ -78,7 +83,15 @@ public class MessageSpaceDoor implements IMessage {
                 ContainerSpaceDoor container=(ContainerSpaceDoor)player.openContainer;
                 if (!(raw instanceof TileEntitySpaceDoor) || container.member!=raw || !container.canInteractWith(player)) return;
                 TileEntitySpaceDoor tile=(TileEntitySpaceDoor)raw;
-                if(!tile.acceptsDesign(m.design) || m.slideDirection==3 && !(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor))return;
+                if(!tile.acceptsDesign(m.design) || !tile.acceptsSlideDirection(m.slideDirection))return;
+                if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){
+                    com.vandorlabs.tiles.TileEntityLargeProgrammableDoor large=(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile;
+                    if((large.joins()||(m.joinFlags&JOIN_VALUE)!=0)
+                            &&!((com.vandorlabs.blocks.BlockLargeProgrammableDoor)large.getBlockType())
+                            .mayEditJoinedNeighbors(player.world,large.getPos(),
+                                    player.world.getBlockState(large.getPos()).getValue(com.vandorlabs.blocks.BlockVandorDoor.FACING),
+                                    large.isHorizontal(),player,player.getHeldItemMainhand()))return;
+                }
                 BlockPos mate=tile.mate();
                 TileEntitySpaceDoor other=null;
                 if (mate!=null) {
@@ -90,6 +103,11 @@ public class MessageSpaceDoor implements IMessage {
                 tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                 tile.setPlacementDepth(m.depth);
                 tile.setPanelMode(m.panelMode);tile.configureSecurity(m.securityMode,m.securityAllowed);tile.setRedstoneChannels(m.getRedstoneChannels());
+                if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor&&tile.getBlockType() instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor){
+                    com.vandorlabs.tiles.TileEntityLargeProgrammableDoor large=(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile;
+                    if((m.joinFlags&JOIN_PRESENT)!=0)large.setJoin((m.joinFlags&JOIN_VALUE)!=0);
+                    ((com.vandorlabs.blocks.BlockLargeProgrammableDoor)tile.getBlockType()).joinChanged(tile.getWorld(),large);
+                }
                 if (other!=null) {
                     other.setFaceTexture(m.faceTexture);other.setTextureLayout(m.layout);
                     other.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);

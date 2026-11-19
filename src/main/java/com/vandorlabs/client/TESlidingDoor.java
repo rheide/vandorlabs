@@ -207,11 +207,15 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
     static void renderSpaceDoor(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z) {
         if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){
+            com.vandorlabs.tiles.TileEntityLargeProgrammableDoor large=(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile;
+            com.vandorlabs.render.LargeDoorJoin.Group<com.vandorlabs.tiles.TileEntityLargeProgrammableDoor> group=large.joinedGroup();
+            if(group.anchor!=large)return;
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
-            if(((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).isHorizontal()){
+            if(large.isHorizontal()){
                 GlStateManager.translate(0,1,0);
                 GlStateManager.rotate(90,1,0,0);
             }
+            if(group.joined())GlStateManager.scale(group.columns,group.rows,1);
             for(int hand=0;hand<2;hand++)
                 renderSpaceDoorLeaf(tile,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH)
                         .withProperty(BlockVandorDoor.HINGE,hand==0?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT),
@@ -232,8 +236,8 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         for (int part=glass?2:0;part<=(glass?2:tile.hasGlass()&&tile.opaqueGlass()?2:1);part++) {
-            if(tile.isXSplit() && part!=0) {
-                renderXPanels(tile,state,facing,progress,x,y,z,size,right,part,light,glass);
+            if(tile.panelSplit()!=null && part!=0) {
+                renderSplitPanels(tile.panelSplit(),tile,state,facing,progress,x,y,z,size,right,part,light,glass);
                 continue;
             }
             GlStateManager.pushMatrix();
@@ -297,7 +301,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         }
     }
 
-    private static void renderXPanels(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
+    private static void renderSplitPanels(com.vandorlabs.render.DoorPanelSplit split,com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z,double size,boolean right,int part,int light,boolean glass) {
         if(glass&&tile.hasCompanyGlass()&&!CompanyDoorGlazing.enabled)return;
         StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,part);
@@ -310,11 +314,11 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
             GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);GlStateManager.depthMask(false);
         }
-        double travel=com.vandorlabs.render.XDoorPanel.travel(progress,tile.isFramed(),size);
-        for(int panel=0;panel<4;panel++) {
+        double travel=com.vandorlabs.render.DoorPanelSplit.travel(progress,tile.isFramed(),size);
+        for(int panel=0;panel<panels.length;panel++) {
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
-            GlStateManager.translate(size*com.vandorlabs.render.XDoorPanel.shiftX(panel,travel),
-                    size*com.vandorlabs.render.XDoorPanel.shiftY(panel,travel),tile.positionOffset());
+            GlStateManager.translate(size*split.shiftX(panel,travel),
+                    size*split.shiftY(panel,travel),tile.positionOffset());
             GlStateManager.scale(size,size,1);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             panels[panel].drawColored(buffer,light>>>16,light&65535,1,1,1,part==2&&tile.hasGlassOverride()?com.vandorlabs.tiles.GlassMaterials.opacity(tile.glassAppearance().material,tile.glassAppearance().tint):1);Tessellator.getInstance().draw();GlStateManager.popMatrix();

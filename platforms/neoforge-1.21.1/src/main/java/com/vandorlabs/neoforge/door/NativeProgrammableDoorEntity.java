@@ -90,7 +90,12 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     @Override public ModelData getModelData(){var snapshot=visual;return ModelData.builder().with(SETTINGS,snapshot.settings()).with(VISUAL,snapshot).with(NativeFluidRenderSnapshot.DATA,fluidRender).build();}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.loadAdditional(tag,registries);removalDrop=net.minecraft.world.item.ItemStack.EMPTY;creativeRecoveryDrop=net.minecraft.world.item.ItemStack.EMPTY;waterGushDirty=true;waterOutlets=tag.getInt("DoorWaterOutlets")&255;fluids.read(tag,registries);NativeFluidWorld.queue(this);placementRecovery=tag.getBoolean("DoorPlacementRecovery");retained=tag.copy();for(String key:java.util.List.of("id","x","y","z","components","NeoForgeData","neoforge:attachments"))retained.remove(key);
-        settings=NativeDoorSettings.read(tag);
+        CompoundTag settingsTag=tag;
+        if(!large()&&tag.getInt("SpaceSlideDirection")==com.vandorlabs.persistence.SpaceDoorData.VERTICAL_SPLIT){
+            settingsTag=tag.copy();
+            settingsTag.remove("SpaceSlideDirection");
+        }
+        settings=NativeDoorSettings.read(settingsTag);
         if(receivingProjection)readerProjection=NativeDoorCredentialService.readProjection(tag);
         else{credentials.read(tag,registries,settings.securityMode(),settings.securityAllowed());nextCredentialTick=0;}
         ChannelList fallback=ChannelList.of(Math.max(0,tag.getInt("RedstoneChannel")));
