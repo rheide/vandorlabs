@@ -35,10 +35,15 @@ public final class CopyMaterials {
         // Empty configured building blocks remain valid base materials. Never consume a filled carrier as an empty block.
         String domain=supplied.getItem().getRegistryName().getResourceDomain();return (domain.equals("vandorlabs")||domain.equals("minecraft"))&&!retained(supplied.getTagCompound(),0);
     }
+    public static boolean programmableFeedstock(ItemStack stack){
+        if(stack.isEmpty()||stack.getItem()!=Item.getItemFromBlock(ModBlocks.PROGRAMMABLE_BLOCK))return false;
+        return stack.areCapsCompatible(new ItemStack(ModBlocks.PROGRAMMABLE_BLOCK))
+                &&(!stack.hasTagCompound()||!retained(stack.getTagCompound(),0));
+    }
     private static boolean retained(NBTBase tag,int depth){
         if(depth>32)return true;
         if(tag instanceof NBTTagCompound){NBTTagCompound data=(NBTTagCompound)tag;for(String key:data.getKeySet()){
-            NBTBase value=data.getTag(key);if((key.equals("Items")||key.equals("Inventory")||key.equals("inventory"))&&value instanceof NBTTagList&&((NBTTagList)value).tagCount()>0)return true;
+            NBTBase value=data.getTag(key);if(key.equals("ForgeCaps")&&(!(value instanceof NBTTagCompound)||!((NBTTagCompound)value).hasNoTags()))return true;if((key.equals("Items")||key.equals("Inventory")||key.equals("inventory"))&&value instanceof NBTTagList&&((NBTTagList)value).tagCount()>0)return true;
             if(key.equals("InsertedToken")&&value instanceof NBTTagCompound&&!new ItemStack((NBTTagCompound)value).isEmpty())return true;
             if((key.equals("Energy")||key.equals("energy")||key.equals("energyStored")||key.equals("electricityStored")||key.equals("Amount"))&&value instanceof net.minecraft.nbt.NBTPrimitive&&((net.minecraft.nbt.NBTPrimitive)value).getDouble()>0)return true;
             if(retained(value,depth+1))return true;

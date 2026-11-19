@@ -44,6 +44,7 @@ final class NativeCopyObservers {
                 var cell = parts.remove(pos);
                 if (cell == null || !cell.hasTile()) throw new IllegalArgumentException("Capture the entire observer frame");
                 NativeObserverTransactions.requirePart(cell.tile(), owner.pos.subtract(pos), raw.getUUID("ObserverKey"));
+                com.vandorlabs.neoforge.transfer.NativeConstructorFrame.validatePart(cell.tile(),layout.frame(x,y,z));
                 if (layout.frame(x,y,z)) matter.add(pos);
             }
         }

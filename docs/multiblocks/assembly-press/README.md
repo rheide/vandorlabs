@@ -2,7 +2,7 @@
 
 Use the [frame blocks for your Minecraft version](../README.md).
 
-Build a **4 wide × 3 deep × 3 high** assembly with **25 frame blocks** and **one Assembly Press Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+Build a **4 wide × 3 deep × 3 high** assembly with **25 Programmable Blocks** and **one Assembly Press Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
 ## 1. Build the base
 

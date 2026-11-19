@@ -8,17 +8,17 @@ supplies Matter Ingots and charges modules.
 
 ## Build and form a machine
 
-Use the same native Programmable Matter Blocks, dimensions and construction
+Use the same native Programmable Blocks, dimensions and construction
 stages as the illustrated guides:
 
-| Machine | Width × depth × height | Matter Blocks and Core | Building stages |
+| Machine | Width × depth × height | Programmable Blocks and Core | Building stages |
 | --- | --- | --- | --- |
 | Synthesis Tower | 3 × 3 × 5 | 28 + one matching Core | [Tower guide](multiblocks/synthesis-tower/README.md) |
 | Assembly Press | 4 × 3 × 3 | 25 + one matching Core | [Press guide](multiblocks/assembly-press/README.md) |
 | Enclosed Gantry | 5 × 3 × 4 | 34 + one matching Core | [Gantry guide](multiblocks/enclosed-gantry/README.md) |
 
 Place the Core in any bottom corner, facing a horizontal direction. Fill the
-bottom layer with Matter Blocks, raise the four corner pillars, and join their
+bottom layer with Programmable Blocks, raise the four corner pillars, and join their
 tops with an open rectangular rim. Keep the interior and roof centre empty.
 Right-click the Core to form the machine. Formation waits for its durable
 journal preparation before replacing the frame; a pending operation keeps the
@@ -63,7 +63,7 @@ and flush rack are on the right. The display shows the full rotating structure
 preview.
 These fabrication effects are drawn only within 24 blocks. Collect a finished
 Core through the output slot or by right-clicking it in the chamber. The next
-queued Matter Block waits until that output is removed. A chest or compatible
+queued Programmable Block waits until that output is removed. A chest or compatible
 item inventory immediately outside either output face receives finished Cores
 automatically. A full or unavailable destination leaves the output in the tower.
 
@@ -71,7 +71,7 @@ Data Chips can be inserted and retrieved through their physical mount or the
 dialog. All three default Core designs work without a chip. The Master
 Catalog also adds Sentinel Array, Survey Dish, Maxwell, Seyr Meridian, Oculus and
 Vector Fold Array Cores and the full-block Ramp Controller. A Ramp Controller consumes one Programmable
-Matter Block and **8,000 RF** at **20 RF per tick**.
+Programmable Block and **8,000 RF** at **20 RF per tick**.
 
 ## Assembly Press operation
 
@@ -92,7 +92,7 @@ if the Catalog Chip is removed.
 
 Choose a regular or Large Extender, Rotating Arm or Landing Wheel, or choose a
 Landing Ski or Landing Plate. These eight designs are built into the Gantry.
-Feed one Programmable Matter Block through the rear item port or Production
+Feed one Programmable Block through the rear item port or Production
 dialog. Each item costs **8,000 RF**, drawn at **40 RF per tick** over
 **200 ticks**. The rear right corner accepts external power. The rear left
 corner provides the material feed and completed-item output. The carriage
@@ -134,7 +134,7 @@ removed.
 ## Navigation computers
 
 The Paladyne and Seyr Navigation Computer Cores are available in Creative.
-Build each column from its Core and two Matter Blocks using the
+Build each column from its Core and two Programmable Blocks using the
 [Paladyne](multiblocks/paladyne-navigation-computer/README.md) or
 [Seyr](multiblocks/seyr-navigation-computer/README.md) guide. A formed
 computer starts in Idle. Right-click its case to cycle Computing, Off and Idle.
@@ -168,7 +168,7 @@ data intact.
 
 Sneak-right-click a formed member to restore its Matter frame. Mining a member
 queues durable teardown and omits the mined cell from the restored frame; a
-frame member yields one Matter Block. Mining a Core releases its owned input,
+frame member yields one Programmable Block. Mining a Core releases its owned input,
 output, all four batteries and chip exactly once. An unfinished job returns its Matter
 Block; spent RF is not refunded. Ordinary tool and Creative rules still apply
 to the Core block item.

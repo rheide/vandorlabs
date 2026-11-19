@@ -10,7 +10,7 @@ On Forge 1.12.2, all three builders produce items from Programmable Matter and R
 | Synthesis Tower | 3 x 3 x 5 | 28 + 1 |
 | Enclosed Gantry | 5 x 3 x 4 | 34 + 1 |
 
-On Forge 1.12.2, use Programmable Blocks in any finish for the frame. The assembled machine stores each frame block's configuration and restores it when dismantled. On NeoForge 1.21.1, use Programmable Matter Blocks. Use exactly one matching Core. Place the matching Core in **any bottom corner**, facing any horizontal direction. Fill the rest of the bottom layer with frame blocks. Build four corner pillars to the listed total height, counting the bottom layer, and connect their tops with a rectangular rim. Leave the interior empty, including the middle of the roof. The footprint can run along either horizontal axis; the Core detects it automatically and prefers its placed facing when that facing fits.
+Use Programmable Blocks in any finish for the frame. The assembled machine stores each frame block's configuration and restores it when dismantled. Use exactly one matching Core. Place the matching Core in **any bottom corner**, facing any horizontal direction. Fill the rest of the bottom layer with frame blocks. Build four corner pillars to the listed total height, counting the bottom layer, and connect their tops with a rectangular rim. Leave the interior empty, including the middle of the roof. The footprint can run along either horizontal axis; the Core detects it automatically and prefers its placed facing when that facing fits.
 
 For example, an Assembly Press uses these layers (`C` = Core, `M` = frame block, `.` = air):
 
@@ -56,13 +56,13 @@ production controls and inventory appear only on the Production tab. Hover
 over the RF bar for the exact stored RF and capacity.
 Select Synthesis Tower, Assembly Press or Enclosed Gantry from the design list;
 the rotating textured preview shows the complete structure. Insert one
-frame block in the Matter slot. Each Core uses 16,000 RF, at
+Programmable Block in the Matter slot. Each Core uses 16,000 RF, at
 20 RF per tick, taking at least forty seconds at normal server speed.
 A running build retains its selected design if you select the next design.
 Remove the completed Core from the output slot or right-click the finished
 Core in the processing chamber. The next queued input waits for the output
 to be removed. Dismantling returns unprocessed inventory and refunds the
-frame block of an unfinished build; spent RF is not refunded.
+Programmable Block of an unfinished build; spent RF is not refunded.
 
 ### Digitize a block
 

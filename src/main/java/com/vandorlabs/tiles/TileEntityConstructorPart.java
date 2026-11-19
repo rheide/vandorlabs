@@ -14,7 +14,16 @@ public final class TileEntityConstructorPart extends TileEntity implements net.m
     public static final String FRAME_FACING="ConstructorFrameFacing", FRAME_DATA="ConstructorFrameData";
     private EnumFacing frameFacing=EnumFacing.NORTH;
     private NBTTagCompound frameData;
+    public static final class Frame {
+        private final EnumFacing facing;
+        private final NBTTagCompound data;
+        public Frame(EnumFacing facing,NBTTagCompound data){this.facing=facing;this.data=data;}
+    }
     public void owner(BlockPos root,boolean matter){owner(root,matter,EnumFacing.NORTH,null);}
+    public void owner(BlockPos root,Frame frame){
+        if(frame==null)owner(root,false);
+        else owner(root,true,frame.facing,frame.data);
+    }
     public void owner(BlockPos root,boolean matter,EnumFacing facing,NBTTagCompound data){
         offset=root.subtract(pos);this.matter=matter;frameFacing=facing;frameData=data;
         markDirty();

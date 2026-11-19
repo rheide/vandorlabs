@@ -45,7 +45,7 @@ public final class BlockRecipeData {
     public static IBlockState state(ItemStack stack){return Block.getBlockFromItem(stack.getItem()).getStateFromMeta(stack.getMetadata());}
     public static ItemStack read(ItemStack chip){
         if(!CatalogChipData.catalog(chip)||!chip.getTagCompound().hasKey("CatalogBlock",10))return ItemStack.EMPTY;NBTTagCompound data=chip.getTagCompound().getCompoundTag("CatalogBlock");if(!data.hasKey("Version",3)||data.getInteger("Version")!=VERSION||!data.hasKey("Stack",10)||!data.hasKey("State",10))return ItemStack.EMPTY;
-        ItemStack stack=new ItemStack(data.getCompoundTag("Stack"));if(stack.getCount()!=1||!eligible(stack)||!NBTUtil.writeBlockState(new NBTTagCompound(),state(stack)).equals(data.getCompoundTag("State")))return ItemStack.EMPTY;return stack;
+        ItemStack stack=new ItemStack(com.vandorlabs.persistence.RenamedBlocks.itemData(data.getCompoundTag("Stack")));if(stack.getCount()!=1||!eligible(stack)||!NBTUtil.writeBlockState(new NBTTagCompound(),state(stack)).equals(com.vandorlabs.persistence.RenamedBlocks.stateTag(data.getCompoundTag("State"))))return ItemStack.EMPTY;return stack;
     }
     public static boolean canDigitizeChip(ItemStack chip){
         if(!ChipJournal.isChip(chip))return false;

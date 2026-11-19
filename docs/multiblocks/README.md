@@ -2,7 +2,7 @@
 
 Each guide shows successive stages captured in Minecraft. All frame machines reuse the same rules for the matching Core and frame blocks.
 
-On Forge 1.12.2, build the frame with **Programmable Blocks** in any finish. On NeoForge 1.21.1, build it with **Programmable Matter Blocks** where the machine is supported.
+Build the frame with **Programmable Blocks** in any finish. The frame blocks keep their finishes when the assembly is dismantled.
 
 | Assembly | Width × depth × height | Frame Blocks |
 | --- | --- | --- |

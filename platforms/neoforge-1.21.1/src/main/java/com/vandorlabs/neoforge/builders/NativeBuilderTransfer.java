@@ -43,6 +43,7 @@ public final class NativeBuilderTransfer {
                 var member=parts.remove(pos);
                 if(member==null||!member.hasTile())throw new IllegalArgumentException("Capture the entire builder frame");
                 NativeBuilderTransactions.requirePart(member.tile(),root.pos.subtract(pos),owner,true);
+                com.vandorlabs.neoforge.transfer.NativeConstructorFrame.validatePart(member.tile(),layout.frame(x,y,z));
                 if(layout.frame(x,y,z))matter.add(pos);
             }
         }

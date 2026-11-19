@@ -31,11 +31,11 @@ public final class NativeCopyMaterials {
             var saved=source.get(cell);var state=saved.state;var tile=staged.get(cell);var raw=saved.tile();
             if(raw!=null&&raw.contains("LootTable"))throw new IllegalArgumentException("Open loot containers before Survival copying");
             if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverPartBlock){
-                if(observerMatter.contains(saved.pos))add(needs,new ItemStack(com.vandorlabs.neoforge.navigation.observer.NativeObserverFormation.matter()),1,false);
+                if(observerMatter.contains(saved.pos))addFrame(needs,raw);
                 continue;
             }
             if(state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderPartBlock){
-                if(builderMatter.contains(saved.pos))add(needs,new ItemStack(com.vandorlabs.neoforge.builders.NativeBuilderFormation.matter()),1,false);
+                if(builderMatter.contains(saved.pos))addFrame(needs,raw);
                 continue;
             }
             var item=state.getBlock().asItem();if(item==Items.AIR)throw new IllegalArgumentException("Block has no obtainable material item");
@@ -77,12 +77,32 @@ public final class NativeCopyMaterials {
     public static boolean satisfies(Need need,ItemStack supplied){
         if(supplied.isEmpty()||!supplied.is(need.item.getItem()))return false;
         if(need.exact)return ItemStack.isSameItemSameComponents(need.item,supplied);
-        if(NativeInventoryItems.containedOwnership(supplied))return false;
-        String namespace=BuiltInRegistries.ITEM.getKey(supplied.getItem()).getNamespace();if(!namespace.equals("minecraft")&&!namespace.equals("vandorlabs"))return ItemStack.isSameItemSameComponents(need.item,supplied);
-        var block=supplied.getOrDefault(DataComponents.BLOCK_ENTITY_DATA,CustomData.EMPTY).copyTag();var custom=supplied.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).copyTag();
+        String namespace=BuiltInRegistries.ITEM.getKey(supplied.getItem()).getNamespace();
+        if(!namespace.equals("minecraft")&&!namespace.equals("vandorlabs"))
+            return !NativeInventoryItems.containedOwnership(supplied)&&ItemStack.isSameItemSameComponents(need.item,supplied);
+        return withoutOwnership(supplied);
+    }
+
+    public static boolean programmableFeedstock(ItemStack stack){
+        return stack.is(com.vandorlabs.neoforge.transfer.NativeConstructorFrame.block().asItem())&&withoutOwnership(stack);
+    }
+
+    private static boolean withoutOwnership(ItemStack stack){
+        if(stack.getComponentsPatch().isEmpty())return true;
+        if(NativeInventoryItems.containedOwnership(stack))return false;
+        var block=stack.getOrDefault(DataComponents.BLOCK_ENTITY_DATA,CustomData.EMPTY).getUnsafe();
+        var custom=stack.getOrDefault(DataComponents.CUSTOM_DATA,CustomData.EMPTY).getUnsafe();
         return !retained(block,0,new int[]{0})&&!retained(custom,0,new int[]{0});
     }
-    /** A conservative cost check, not a migration walk: opaque capabilities are never interpreted as free material. */
+
+    private static void addFrame(List<Need> needs,CompoundTag reservation){
+        var data=reservation.getCompound(com.vandorlabs.neoforge.transfer.NativeConstructorFrame.DATA).getCompound("Tile");
+        if(retained(data,0,new int[]{0})||!data.getCompound("NeoForgeData").isEmpty())
+            throw new IllegalArgumentException("Empty programmable frame inventories and capabilities before Survival copying.");
+        add(needs,new ItemStack(com.vandorlabs.neoforge.transfer.NativeConstructorFrame.block()),1,false);
+    }
+
+    /** A conservative cost check that never interprets opaque capabilities as free material. */
     private static boolean retained(Tag tag,int depth,int[] visited){
         if(tag==null)return false;if(depth>32||++visited[0]>32768)return true;
         if(tag instanceof CompoundTag data){for(String key:data.getAllKeys()){

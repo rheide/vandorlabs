@@ -95,6 +95,14 @@ final class ArmCorePayload {
     }
     static NBTTagCompound data(VehicleStructure.Cell cell,int[] basis){
         if(!typed(cell)||!known(cell)||!yaw(basis))throw new IllegalArgumentException("Core orientation cannot be represented as native blocks");NBTTagCompound result=cell.tileData();
-        if(cell.state.getBlock() instanceof BlockConstructorPart){if(!cell.hasTileKey("ConstructorOwner",4))throw new IllegalArgumentException("Missing Core owner offset");BlockPos old=BlockPos.fromLong(cell.tileLong("ConstructorOwner"));result.setLong("ConstructorOwner",new BlockPos(basis[0]*old.getX()+basis[2]*old.getZ(),old.getY(),basis[6]*old.getX()+basis[8]*old.getZ()).toLong());}return result;
+        if(cell.state.getBlock() instanceof BlockConstructorPart){if(!cell.hasTileKey("ConstructorOwner",4))throw new IllegalArgumentException("Missing Core owner offset");BlockPos old=BlockPos.fromLong(cell.tileLong("ConstructorOwner"));result.setLong("ConstructorOwner",new BlockPos(basis[0]*old.getX()+basis[2]*old.getZ(),old.getY(),basis[6]*old.getX()+basis[8]*old.getZ()).toLong());
+            String key=com.vandorlabs.tiles.TileEntityConstructorPart.FRAME_FACING;
+            if(result.hasKey(key,3)){
+                EnumFacing face=EnumFacing.getFront(result.getInteger(key));
+                EnumFacing rotated=EnumFacing.getFacingFromVector(basis[0]*face.getFrontOffsetX()+basis[2]*face.getFrontOffsetZ(),
+                        face.getFrontOffsetY(),basis[6]*face.getFrontOffsetX()+basis[8]*face.getFrontOffsetZ());
+                result.setInteger(key,rotated.getIndex());
+            }
+        }return result;
     }
 }
