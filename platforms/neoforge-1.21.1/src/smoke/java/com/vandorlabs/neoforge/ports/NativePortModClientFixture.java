@@ -75,8 +75,13 @@ public final class NativePortModClientFixture {
         actor.setPos(mounting.getX()+.5,97,mounting.getZ()-2);
         actor.setItemInHand(InteractionHand.MAIN_HAND,stack);
         var hit=Vec3.atCenterOf(mounting).add(Vec3.atLowerCornerOf(face.getNormal()).scale(.5));
-        need(actor.gameMode.useItemOn(actor,actor.serverLevel(),stack,InteractionHand.MAIN_HAND,new BlockHitResult(hit,face,mounting,false)).consumesAction()
-                &&actor.level().getBlockState(mounting.relative(face)).is(block),"optional network feeds the supported configured Arm");
+        actor.setShiftKeyDown(true);
+        try {
+            need(actor.gameMode.useItemOn(actor,actor.serverLevel(),stack,InteractionHand.MAIN_HAND,new BlockHitResult(hit,face,mounting,false)).consumesAction()
+                    &&actor.level().getBlockState(mounting.relative(face)).is(block),"optional network feeds the supported configured Arm");
+        } finally {
+            actor.setShiftKeyDown(false);
+        }
     }
     private static NativePortData.Configuration config(boolean inputOnly,boolean active){var faces=new ResourcePortSettings.Face[6];Arrays.fill(faces,inputOnly?ResourcePortSettings.Face.INPUT:ResourcePortSettings.Face.DISABLED);if(!inputOnly&&active){faces[2]=ResourcePortSettings.Face.INPUT;faces[5]=ResourcePortSettings.Face.OUTPUT;if(fair(fixture))faces[4]=ResourcePortSettings.Face.OUTPUT;}return new NativePortData.Configuration(new ResourcePortSettings(faces,!inputOnly&&fair(fixture)?powerBudget:0,false,ResourcePortSettings.OnTexture.CONNECTED),0,ChannelList.EMPTY);}
     @SuppressWarnings({"unchecked","rawtypes"}) private static void pull(BlockEntity tile,Direction side)throws Exception{var transmitter=transmitter(tile);var type=Class.forName("mekanism.common.lib.transmitter.ConnectionType");Object mode=Enum.valueOf((Class)type,"PULL");call(transmitter,"setConnectionTypeRaw",void.class,new Class<?>[]{Direction.class,type},side,mode);call(transmitter,"onModeChange",void.class,new Class<?>[]{Direction.class},side);call(transmitter,"refreshConnections",void.class,new Class<?>[0]);call(transmitter,"notifyTileChange",void.class,new Class<?>[0]);}

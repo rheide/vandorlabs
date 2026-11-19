@@ -135,8 +135,8 @@ final class ArmResourceTransfer {
         }
         @Override public boolean canReceive() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
         @Override public int extractEnergy(int amount, boolean simulate) {return 0;}
-        @Override public int getEnergyStored() {return 0;}
-        @Override public int getMaxEnergyStored() {return 0;}
+        @Override public int getEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getEnergyStored);}
+        @Override public int getMaxEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getMaxEnergyStored);}
         @Override public boolean canExtract() {return false;}
     }
 
