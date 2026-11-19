@@ -36,12 +36,12 @@ public final class NativeBuilderScreen extends AbstractContainerScreen<NativeBui
  }
 
  private boolean press(){return menu.tile.press();}private boolean tower(){return menu.tile.synthesis();}private String machine(){return menu.tile.design().id();}
- private int designs(){return tower()?NativeBuilderProducts.RAMP+1:NativeBuilderProducts.parts(machine()).size();}private net.minecraft.world.item.ItemStack blockPreview(){return menu.digitizing()?(menu.tile.visual().processing()?menu.tile.visual().input():menu.contents().getItem(0)):menu.tile.visual().template();}private String name(int i){return !tower()?NativeBuilderProducts.partResult(machine(),i).getHoverName().getString():i==5?"Block → Output":i==NativeBuilderProducts.RAMP?"Ramp Controller":NAMES[i];}
+ private int designs(){return tower()?NativeBuilderProducts.MAX_TOWER_PRODUCT+1:NativeBuilderProducts.parts(machine()).size();}private net.minecraft.world.item.ItemStack blockPreview(){return menu.digitizing()?(menu.tile.visual().processing()?menu.tile.visual().input():menu.contents().getItem(0)):menu.tile.visual().template();}private String name(int i){return !tower()?NativeBuilderProducts.partResult(machine(),i).getHoverName().getString():i< NAMES.length?NAMES[i]:i==5?"Block → Output":NativeBuilderProducts.result(i).getHoverName().getString();}
  private String receiving(){return channels==null?menu.tile.channels().toString():channels.getValue();}
  private void rebuild(){positionSlots();displayedMode=menu.value(9);displayedChoices=menu.value(10);String draft=receiving();clearWidgets();buttons.clear();channels=null;button(100,12,32,layout.tabWidth(),"Production");button(101,layout.secondTabX(),32,layout.tabWidth(),"Redstone");buttons.get(100+page).active=false;
   if(page==0){int row=0;for(int order=0;order<designs();order++){
    int i=press()?(order+1)%designs():order;
-   boolean chipChoice=press()||tower()&&i==NativeBuilderProducts.RAMP;
+   boolean chipChoice=press()||tower();
    if(!chipChoice||(displayedChoices&(1<<i))!=0)button(i,12,layout.listTop+row++*layout.rowHeight,layout.listRight-layout.listLeft,name(i));
   }if(tower())button(102,120,3,112,"Mode: "+(menu.digitizing()?"Digitize":"Synthesize"));}
   else{button(10,layout.listLeft,layout.receiverY()+42,layout.receiverWidth(),"Activation: "+activationName());channels=new EditBox(font,leftPos+layout.listLeft,topPos+layout.receiverY()+12,layout.receiverWidth(),18,Component.literal("Receive channels (blank = local)"));channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);channels.setValue(draft);addRenderableWidget(channels);}

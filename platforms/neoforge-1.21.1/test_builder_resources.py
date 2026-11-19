@@ -3,7 +3,7 @@
 import hashlib,json,shutil,tempfile
 import generate_builder_resources as generator
 from pathlib import Path
-from generate_builder_resources import ROOT,OUT,IDS,SOURCE
+from generate_builder_resources import ROOT,OUT,IDS,SOURCE,DRIVES
 
 def main():
     assets=OUT/'assets/vandorlabs';manifest=json.loads((assets/'data/native_builders.json').read_text())
@@ -29,7 +29,17 @@ def main():
         assert (gantry/(part+'.obj')).read_bytes()==(authored/(part+'.obj')).read_bytes()
         model=json.loads((gantry/(part+'.json')).read_text())
         assert model['model']==f'vandorlabs:models/block/builders/enclosed_gantry/{part}.obj'
-    assert {p.name for p in (OUT/'data/vandorlabs/loot_table/blocks').glob('*.json')}=={design+'_core.json' for design in IDS}
+    drive_specs=json.loads((assets/'data/native_drive_surfaces.json').read_text())
+    assert set(drive_specs)==set(DRIVES)
+    source_specs={row['design']:row for row in json.loads((SOURCE/'data/frame_machines.json').read_text())}
+    for design,paths in DRIVES.items():
+        source_spec=source_specs[design]
+        assert drive_specs[design]=={name:source_spec[name] for name in ('block','width','height','depth','chip_anchor','chip_size','surfaces')}|{'meshes':list(paths)}
+        for part in paths:
+            path=Path(part+'.obj')
+            assert (assets/'models/block/drives'/design/path).read_bytes()==(SOURCE/'models/block'/source_spec['model']/path).read_bytes()
+    expected_loot={design+'_core.json' for design in IDS}|{row['block']+'.json' for row in drive_specs.values()}
+    assert {p.name for p in (OUT/'data/vandorlabs/loot_table/blocks').glob('*.json')}==expected_loot
     assert not list(OUT.rglob('recipe')) and not list(OUT.rglob('recipes'))
     for reference,digest in manifest['textures'].items():
         relative=Path('assets/vandorlabs/textures')/(reference.split(':',1)[1]+'.png')
@@ -37,7 +47,7 @@ def main():
         path=(OUT.parent/dependency['owner']/relative) if dependency else OUT/relative
         assert hashlib.sha256(path.read_bytes()).hexdigest()==digest
         if dependency:assert not (OUT/relative).exists() and dependency['sha256']==digest
-    assert not any(word in str(path.relative_to(OUT)) for path in OUT.rglob('*') for word in ('longburn','oculus','meridian','radar','navigation','sentinel','vector_fold'))
+    assert not any(word in str(path.relative_to(OUT)) for path in OUT.rglob('*') for word in ('oculus','radar','navigation','sentinel','vector_fold'))
     # The native projection must refuse differing shared artwork, not silently
     # keep whichever resource happened to be copied last by Gradle.
     with tempfile.TemporaryDirectory(prefix='vandor-builder-shared-') as directory:
@@ -49,7 +59,7 @@ def main():
             meta=source.with_suffix('.png.mcmeta')
             if meta.exists():shutil.copyfile(meta,target.with_suffix('.png.mcmeta'))
         reference=next(iter(manifest['shared']));relative=Path('assets/vandorlabs/textures')/(reference.split(':',1)[1]+'.png')
-        changed=temporary/'cube-resources'/relative;changed.write_bytes(changed.read_bytes()+b'changed-owner')
+        changed=temporary/manifest['shared'][reference]['owner']/relative;changed.write_bytes(changed.read_bytes()+b'changed-owner')
         original=generator.OUT;generator.OUT=builder
         try:
             try:generator.main()

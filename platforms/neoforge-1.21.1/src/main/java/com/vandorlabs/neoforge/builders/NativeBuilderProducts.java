@@ -8,11 +8,28 @@ import net.minecraft.world.item.ItemStack;
 public final class NativeBuilderProducts {
  public static final String[] IDS={"synthesis_tower","assembly_press","enclosed_gantry","standalone_antenna","standalone_dish"};
  public static final String[] NAMES={"Synthesis Tower","Assembly Press","Enclosed Gantry","Sentinel Array Core","Survey Dish Core"};
- public static final int RAMP=6;
+ public static final int RAMP=6,LONGBURN=7,MERIDIAN=8,MAX_TOWER_PRODUCT=MERIDIAN;
  public static final String RAMP_BLUEPRINT="programmable_ramp";
  public static boolean rampAvailable(){return com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM!=null;}
+ public static String towerCore(int index){
+  if(index>=0&&index<IDS.length)return IDS[index];
+  if(index==LONGBURN)return NativeDriveDesign.LONGBURN.id;
+  if(index==MERIDIAN)return NativeDriveDesign.MERIDIAN.id;
+  return null;
+ }
+ public static String towerBlueprint(int index){
+  if(index==RAMP)return RAMP_BLUEPRINT;
+  String core=towerCore(index);
+  if(core==null)return null;
+  var drive=NativeDriveDesign.of(core);
+  return drive==null?core+"_core":drive.block;
+ }
  public static ItemStack result(int index){
-  if(index==RAMP)return rampAvailable()?new ItemStack(com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM):ItemStack.EMPTY;if(index<0||index>=IDS.length)throw new IllegalArgumentException("Builder product");return new ItemStack(index<3?NativeBuilderBindings.CORES.get(IDS[index]):com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.CORES.get(IDS[index]));}
+  if(index==RAMP)return rampAvailable()?new ItemStack(com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM):ItemStack.EMPTY;String design=towerCore(index);
+  if(design==null)throw new IllegalArgumentException("Builder product");
+  var core=NativeBuilderBindings.CORES.get(design);
+  return core!=null?new ItemStack(core):new ItemStack(com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.CORES.get(design));
+ }
  // Index zero is the original native Press recipe, including in-progress saved work.
  public static final List<String> PRESS = List.of("navigation_data_module", "data_chip", "access_card",
          "battery_module", "autopilot_module");
@@ -41,7 +58,7 @@ public final class NativeBuilderProducts {
   String path=id.substring("vandorlabs:".length());
   if(machine.equals("synthesis_tower")){
    if(path.equals(RAMP_BLUEPRINT))return rampAvailable();
-   for(String name:IDS)if(path.equals(name+"_core"))return true;
+   for(int index=0;index<=MAX_TOWER_PRODUCT;index++)if(path.equals(towerBlueprint(index)))return true;
    return false;
   }
   return parts(machine).contains(path);

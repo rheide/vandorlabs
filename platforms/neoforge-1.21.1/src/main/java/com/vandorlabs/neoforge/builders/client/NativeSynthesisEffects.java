@@ -67,7 +67,7 @@ public final class NativeSynthesisEffects {
         boolean ramp=building==NativeBuilderProducts.RAMP;
         boolean blockProduct=digitize||building==NativeSynthesisRuntime.DYNAMIC||ramp;
         ItemStack stack=digitize?input:ramp?rampPreview():template;
-        String id=blockProduct?null:NativeBuilderProducts.IDS[Math.clamp(building,0,NativeBuilderProducts.IDS.length-1)];
+        String id=blockProduct?null:NativeBuilderProducts.towerCore(building);
         poses.pushPose();try{
             poses.translate(1,SynthesisPresentation.CORE_Y,1.125);
             if(blockProduct)NativeBlockRecipePreview.render(stack,poses,buffers,FULLBRIGHT,OverlayTexture.NO_OVERLAY,fraction);

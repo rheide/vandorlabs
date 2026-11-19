@@ -31,7 +31,7 @@ public final class NativeBuilderModel {
     }
     public int vertexCount(){return vertices.length/8;}
     public int retainedBytes(){return 64+vertices.length*4+bottomUV.length*4;}
-    public void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){emit(pose,target,light,overlay,-1);}
+    public void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay){emit(pose,target,light,overlay,-1,1);}
     /** Clip actual scaffold polygons at the fabrication plane, preserving diagonal struts and empty space. */
     public void emitClipped(PoseStack.Pose pose,VertexConsumer target,int light,int overlay,float height){
         float limit=Math.clamp(height,.001F,1F);var scratch=SCRATCH.get();
@@ -45,7 +45,10 @@ public final class NativeBuilderModel {
     }
     private void clippedVertex(PoseStack.Pose pose,VertexConsumer target,int light,int overlay,float[] vertex,int quad){var s=SCRATCH.get();pose.pose().transformPosition(vertex[0],vertex[1],vertex[2],s.position);int normal=vertices[quad+7],color=vertices[quad+3];pose.normal().transform((byte)normal/127F,(byte)(normal>>>8)/127F,(byte)(normal>>>16)/127F,s.normal);target.addVertex(s.position.x,s.position.y,s.position.z).setColor(color&255,color>>>8&255,color>>>16&255,color>>>24).setUv(vertex[3],vertex[4]).setLight(light).setOverlay(overlay).setNormal(s.normal.x,s.normal.y,s.normal.z);}
 
-    private void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay,float height){
+    void emitTinted(PoseStack.Pose pose,VertexConsumer target,int light,int overlay,float brightness){
+        emit(pose,target,light,overlay,-1,brightness);
+    }
+    private void emit(PoseStack.Pose pose,VertexConsumer target,int light,int overlay,float height,float brightness){
         var s=SCRATCH.get();
         for(int i=0;i<vertices.length;i+=8){
             float x=Float.intBitsToFloat(vertices[i]),y=Float.intBitsToFloat(vertices[i+1]),z=Float.intBitsToFloat(vertices[i+2]);
@@ -53,7 +56,7 @@ public final class NativeBuilderModel {
             float nx=(byte)normal/127F,ny=(byte)(normal>>>8)/127F,nz=(byte)(normal>>>16)/127F;
             if(height>=0&&y>height){if(Math.abs(ny)<.5F){int uv=i/4;u=bottomUV[uv]+(u-bottomUV[uv])*height;v=bottomUV[uv+1]+(v-bottomUV[uv+1])*height;}y=height;}
             pose.pose().transformPosition(x,y,z,s.position);pose.normal().transform(nx,ny,nz,s.normal);int color=vertices[i+3];
-            target.addVertex(s.position.x,s.position.y,s.position.z).setColor(color&255,color>>>8&255,color>>>16&255,color>>>24).setUv(u,v).setLight(light).setOverlay(overlay).setNormal(s.normal.x,s.normal.y,s.normal.z);
+            target.addVertex(s.position.x,s.position.y,s.position.z).setColor((int)((color&255)*brightness),(int)((color>>>8&255)*brightness),(int)((color>>>16&255)*brightness),color>>>24).setUv(u,v).setLight(light).setOverlay(overlay).setNormal(s.normal.x,s.normal.y,s.normal.z);
         }
     }
 }

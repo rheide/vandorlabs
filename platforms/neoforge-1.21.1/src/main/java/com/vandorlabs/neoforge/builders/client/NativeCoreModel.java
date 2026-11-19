@@ -18,7 +18,7 @@ public final class NativeCoreModel extends BakedModelWrapper<BakedModel> {
     private final String id;
     private final net.minecraft.client.renderer.texture.TextureAtlasSprite flat,legacy;
     private static final Map<String,net.minecraft.client.resources.model.ModelResourceLocation> KEYS;
-    static{var keys=new HashMap<String,net.minecraft.client.resources.model.ModelResourceLocation>();for(String id:NativeBuilderModelCache.IDS)keys.put(id,net.minecraft.client.resources.model.ModelResourceLocation.standalone(NativeBuilderModelCache.model(id,true)));KEYS=Map.copyOf(keys);}
+    static{var keys=new HashMap<String,net.minecraft.client.resources.model.ModelResourceLocation>();for(String id:NativeBuilderModelCache.IDS)keys.put(id,net.minecraft.client.resources.model.ModelResourceLocation.standalone(NativeBuilderModelCache.model(id,true)));for(var drive:com.vandorlabs.neoforge.builders.NativeDriveDesign.SUPPORTED)keys.put(drive.id,net.minecraft.client.resources.model.ModelResourceLocation.standalone(NativeDriveRenderer.model(drive,"core")));KEYS=Map.copyOf(keys);}
     private static final class Scratch {final org.joml.Vector3f position=new org.joml.Vector3f(),normal=new org.joml.Vector3f();}
     private static final ThreadLocal<Scratch> SCRATCH=ThreadLocal.withInitial(Scratch::new);
     private final net.minecraft.client.renderer.block.model.ItemTransforms transforms;

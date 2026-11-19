@@ -69,9 +69,9 @@ automatically. A full or unavailable destination leaves the output in the tower.
 
 Data Chips can be inserted and retrieved through their physical mount or the
 dialog. All three default Core designs work without a chip. The Master
-Catalog also adds Sentinel Array and Survey Dish Cores and the full-block Ramp
-Controller. A Ramp Controller consumes one Programmable Matter Block and
-**8,000 RF** at **20 RF per tick**.
+Catalog also adds Sentinel Array, Survey Dish, Maxwell and Seyr Meridian Cores
+and the full-block Ramp Controller. A Ramp Controller consumes one Programmable
+Matter Block and **8,000 RF** at **20 RF per tick**.
 
 ## Assembly Press operation
 
@@ -100,6 +100,22 @@ the partially formed item while power is paused. Right-click the completed
 part on the bed to collect it, or use the output slot. The Production and
 Redstone tabs offer the same inventory, battery and activation controls as
 the Press.
+
+## Standalone drives
+
+The Maxwell and Seyr Meridian Drive Cores use the same Matter frame journals
+as the builders. Follow the [Maxwell](multiblocks/longburn-drive/README.md)
+and [Seyr Meridian](multiblocks/meridian-core/README.md) illustrated guides.
+Obtain each Core from a Tower with a Master Catalog Chip.
+
+Right-click a formed drive or its member with the Configurizer to open its
+display, keyboard, engine and receiving-channel settings. The strongest loaded
+physical or configured channel signal controls the drive when Redstone
+activation is enabled. **Engine Redstone Off** inverts that level. Signal
+brightness follows the effective output from 0 to 15. The Maxwell also offers
+exhaust intensity and a minimum exhaust level in Signal brightness mode.
+Right-click a setting to cycle backwards. The optional Data Chip mount retains
+one chip for retrieval. The drive effects are cosmetic.
 
 ## Dismantling and ownership
 

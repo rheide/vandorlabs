@@ -30,8 +30,8 @@ public final class NativeSynthesisRuntime {
  public int selected(){return selected;}public int building(){return active||!owner.owned(1).isEmpty()?building:selected;}
  public float progress(){return active?work/(float)workCost:!digitizing()&&!owner.owned(1).isEmpty()?1:0;}
  public boolean active(){return active;}public boolean connected(){return connected;}void connection(boolean value){connected=value;}
- private int selectedCost(){return owner.synthesis()&&!digitizing()&&selected<DYNAMIC?SynthesisRecipePolicy.CORE_RF:COST;}
- private int maxDesign(){return owner.synthesis()?NativeBuilderProducts.RAMP:NativeBuilderProducts.parts(owner.design().id()).size()-1;}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
+ private int selectedCost(){return owner.synthesis()&&!digitizing()&&NativeBuilderProducts.towerCore(selected)!=null?SynthesisRecipePolicy.CORE_RF:COST;}
+ private int maxDesign(){return owner.synthesis()?NativeBuilderProducts.MAX_TOWER_PRODUCT:Math.max(0,NativeBuilderProducts.parts(owner.design().id()).size()-1);}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
 
  private boolean dynamic(int index){return owner.synthesis()&&index==DYNAMIC;}
  public ItemStack dynamicTemplate(){var chip=owner.owned(3);if(!ItemStack.matches(chip,cachedChip)){cachedChip=NativeCredentialItems.ownedCopy(chip);cachedTemplate=NativeBlockRecipeData.read(chip);}return cachedTemplate.copy();}
@@ -58,8 +58,9 @@ public final class NativeSynthesisRuntime {
     for(var entry:ids){
      String id=com.vandorlabs.machines.BuilderRecipeCatalog.canonical(entry.getAsString());
      if(owner.synthesis()){
-      for(int i=3;i<DYNAMIC;i++)if(id.equals(NativeBuilderProducts.IDS[i]+"_core"))catalogChoices|=1<<i;
-      if(id.equals(NativeBuilderProducts.RAMP_BLUEPRINT))catalogChoices|=1<<NativeBuilderProducts.RAMP;
+      for(int index=3;index<=NativeBuilderProducts.MAX_TOWER_PRODUCT;index++){
+       if(id.equals(NativeBuilderProducts.towerBlueprint(index)))catalogChoices|=1<<index;
+      }
      }else{
       int index=NativeBuilderProducts.PRESS.indexOf(id);
       if(index>=0)catalogChoices|=1<<index;
@@ -80,18 +81,19 @@ public final class NativeSynthesisRuntime {
  }
  public int choices(){
   if(owner.press())return pressChoices();
-  return owner.synthesis()&&NativeBuilderProducts.rampAvailable()?catalogChoices():0;
+  if(!owner.synthesis())return 0;
+  int options=7|catalogChoices();
+  if(!NativeBuilderProducts.rampAvailable())options&=~(1<<NativeBuilderProducts.RAMP);
+  if(dynamicAvailable())options|=1<<DYNAMIC;
+  return options;
  }
  private boolean towerRamp(int index){return owner.synthesis()&&index==NativeBuilderProducts.RAMP;}
  private boolean permitted(){
-  if(owner.press())return (pressChoices()&(1<<selected))!=0;
   if(owner.gantry())return NativeBuilderProducts.partDefault(owner.design().id(),selected);
-  if(dynamic(selected))return dynamicAvailable();
-  if(towerRamp(selected))return (choices()&(1<<selected))!=0;
-  return selected<3||(catalogChoices()&(1<<selected))!=0;
+  return (choices()&(1<<selected))!=0;
  }
  public void select(int index){
-  if(index<0||index>maxDesign()||dynamic(index)&&!dynamicAvailable()||(owner.press()||towerRamp(index))&&(choices()&(1<<index))==0)return;
+  if(index<0||index>maxDesign()||(owner.press()||owner.synthesis())&&(choices()&(1<<index))==0)return;
   selected=index;owner.changed();
  }
  public static ItemStack result(int index){return NativeBuilderProducts.result(index);}
@@ -122,8 +124,8 @@ public final class NativeSynthesisRuntime {
  public void save(CompoundTag tag,HolderLookup.Provider r){saveVisual(tag);if(active&&digitizing()){tag.put("DigitizeBlock",digitizeBlock.save(r));tag.putByteArray("DigitizeChipHash",chipHash);}if(active&&!digitizing()&&dynamic(building))tag.put("ProductionTemplate",productionTemplate.save(r));}
  public void readVisual(CompoundTag tag){readScalars(tag,Set.of("Selected","Building","Work","Active","Connected","Mode","WorkCost"));visual=true;digitizeBlock=scanChip=productionTemplate=ItemStack.EMPTY;chipHash=new byte[0];}
  private void readScalars(CompoundTag tag,Set<String> fields){working=false;lastWorked=Long.MIN_VALUE;nextExport=0;if(!fields.containsAll(tag.getAllKeys()))throw new IllegalArgumentException("Future builder work snapshot");for(var key:List.of("Selected","Building","Work","Mode","WorkCost"))if(tag.contains(key)&&!tag.contains(key,Tag.TAG_INT))throw new IllegalArgumentException("Builder work integer type");for(var key:List.of("Active","Connected"))if(tag.contains(key)&&(!tag.contains(key,Tag.TAG_BYTE)||tag.getByte(key)<0||tag.getByte(key)>1))throw new IllegalArgumentException("Builder work boolean type");int a=tag.getInt("Selected"),b=tag.getInt("Building"),w=tag.getInt("Work"),m=tag.getInt("Mode");boolean on=tag.getBoolean("Active");int cost=tag.contains("WorkCost")?tag.getInt("WorkCost"):COST;
- if(cost!=COST&&(cost!=SynthesisRecipePolicy.CORE_RF||!on||!owner.synthesis()||m!=0||b>=DYNAMIC))throw new IllegalArgumentException("Builder work cost");
- if(a<0||a>maxDesign()||b<0||b>maxDesign()||w<0||w>cost||!on&&w!=0||m<0||m>1||m==1&&!owner.synthesis())throw new IllegalArgumentException("Builder work snapshot");selected=a;building=b;work=w;workCost=cost;active=on;connected=tag.getBoolean("Connected");mode=m;}
+ if(cost!=COST&&(cost!=SynthesisRecipePolicy.CORE_RF||!on||!owner.synthesis()||m!=0||NativeBuilderProducts.towerCore(b)==null))throw new IllegalArgumentException("Builder work cost");
+ if(a<0||a>maxDesign()||b<0||b>maxDesign()||w<0||w>cost||!on&&w!=0||m<0||m>1||m==1&&!owner.synthesis())throw new IllegalArgumentException("Builder work snapshot");if(owner.drive()!=null&&(on||a!=0||b!=0||m!=0))throw new IllegalArgumentException("Drive cannot own builder work");selected=a;building=b;work=w;workCost=cost;active=on;connected=tag.getBoolean("Connected");mode=m;}
  public void read(CompoundTag tag){read(tag,owner.getLevel()==null?null:owner.getLevel().registryAccess());}
  public void read(CompoundTag tag,HolderLookup.Provider r){readScalars(tag,Set.of("Selected","Building","Work","Active","Connected","Mode","WorkCost","DigitizeBlock","DigitizeChipHash","ProductionTemplate"));visual=false;digitizeBlock=scanChip=productionTemplate=ItemStack.EMPTY;chipHash=new byte[0];if(active&&digitizing()){if(r==null||!tag.contains("DigitizeBlock",Tag.TAG_COMPOUND)||!tag.contains("DigitizeChipHash",Tag.TAG_BYTE_ARRAY)||tag.getByteArray("DigitizeChipHash").length!=32)throw new IllegalArgumentException("Digitize snapshot identity");digitizeBlock=template(tag.getCompound("DigitizeBlock"),r);chipHash=tag.getByteArray("DigitizeChipHash").clone();}else if(tag.contains("DigitizeBlock")||tag.contains("DigitizeChipHash"))throw new IllegalArgumentException("Unexpected Digitize ownership");if(active&&!digitizing()&&dynamic(building)){if(r==null||!tag.contains("ProductionTemplate",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Missing production template");productionTemplate=template(tag.getCompound("ProductionTemplate"),r);}else if(tag.contains("ProductionTemplate"))throw new IllegalArgumentException("Unexpected production template");}
  static ItemStack template(CompoundTag tag,HolderLookup.Provider r){if(tag.sizeInBytes()>NativeBlockRecipeData.MAX_BYTES)throw new IllegalArgumentException("Builder template bound");var stack=ItemStack.parse(r,tag).orElseThrow(()->new IllegalArgumentException("Builder template item"));if(stack.getCount()!=1||!NativeBlockRecipeData.eligible(stack)||!tag.equals(stack.save(r)))throw new IllegalArgumentException("Builder template data");return stack;}

@@ -495,7 +495,7 @@ tasks.register('testRackTerrainUploads', JavaExec) {
 // Only the three builder machines are included in this native conversion.
 sourceSets.main.resources.srcDir('build/generated/builder-resources')
 tasks.register('generateBuilderResources', Exec) {
-    dependsOn 'generateCubeResources'
+    dependsOn 'generateCubeResources', 'generatePropulsionResources'
     commandLine pythonExecutable, 'generate_builder_resources.py'
     inputs.file('generate_builder_resources.py')
     inputs.file('../../texture-packs/additional/assets/vandorlabs/textures/blocks/core_flat.png')
@@ -509,6 +509,14 @@ tasks.register('generateBuilderResources', Exec) {
         inputs.files('../../src/main/resources/assets/vandorlabs/models/block/' + design + '_core.json',
                      '../../src/main/resources/assets/vandorlabs/models/item/' + design + '_core.json')
     }
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs/models/block/longburn_drive/longburn_drive'),
+                 fileTree('../../src/main/resources/assets/vandorlabs/models/block/dimension_drive/meridian_core'))
+    for (core in ['longburn_drive_core', 'meridian_drive_core']) {
+        inputs.files('../../src/main/resources/assets/vandorlabs/models/block/' + core + '.json',
+                     '../../src/main/resources/assets/vandorlabs/models/item/' + core + '.json')
+    }
+    inputs.file('../../src/main/resources/assets/vandorlabs/data/frame_machines.json')
+    inputs.file('build/generated/propulsion-resources/assets/vandorlabs/textures/blocks/thrusters/rocket_stream.png')
     inputs.files(fileTree('../../texture-packs/additional/assets/vandorlabs/textures'),
                  fileTree('../../texture-packs/default/assets/vandorlabs/textures'))
     outputs.dir('build/generated/builder-resources')

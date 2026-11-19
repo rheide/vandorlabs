@@ -31,6 +31,7 @@ public final class NativeBuilderRenderer implements BlockEntityRenderer<NativeBu
     public static void orient(PoseStack poses,Direction facing,int width,int depth){switch(facing){case EAST-> {poses.translate(depth,0,0);poses.mulPose(Axis.YP.rotationDegrees(-90));}case SOUTH->{poses.translate(width,0,depth);poses.mulPose(Axis.YP.rotationDegrees(180));}case WEST->{poses.translate(0,0,width);poses.mulPose(Axis.YP.rotationDegrees(90));}default->{}}}
     @Override public void render(NativeBuilderEntity tile,float partial,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
         if(tile.isRemoved()||tile.inert()||tile.getLevel()==null||!tile.formed()||!NativeBuilderModelCache.ready())return;
+        if(tile.drive()!=null){NativeDriveRenderer.render(tile,poses,buffers,light,overlay,now());return;}
         var visual=tile.visual();double time=now();renderVisual(visual,poses,buffers,light,overlay,time,nearby(tile),motion(tile,visual,time),tile.synthesis()?NativeBuilderProgressMotion.sample(tile,visual,time):null);
     }
     private static boolean nearby(NativeBuilderEntity tile){var camera=Minecraft.getInstance().getCameraEntity();return camera!=null&&camera.distanceToSqr(tile.getBlockPos().getX()+.5,tile.getBlockPos().getY()+.5,tile.getBlockPos().getZ()+.5)<=24*24;}
@@ -61,5 +62,5 @@ public final class NativeBuilderRenderer implements BlockEntityRenderer<NativeBu
         }finally{poses.popPose();}
     }
     @Override public int getViewDistance(){return 64;}
-    @Override public AABB getRenderBoundingBox(NativeBuilderEntity tile){var p=tile.getBlockPos().subtract(tile.pivot());int width=NativeBuilderModelCache.width(tile.design().id()),depth=3;if(tile.facing().getAxis()==Direction.Axis.X){int swap=width;width=depth;depth=swap;}return new AABB(p.getX(),p.getY(),p.getZ(),p.getX()+width,p.getY()+NativeBuilderModelCache.height(tile.design().id()),p.getZ()+depth).inflate(.5);}
+    @Override public AABB getRenderBoundingBox(NativeBuilderEntity tile){var p=tile.getBlockPos().subtract(tile.pivot());int width=tile.design().width(),depth=tile.design().depth();if(tile.facing().getAxis()==Direction.Axis.X){int swap=width;width=depth;depth=swap;}return new AABB(p.getX(),p.getY(),p.getZ(),p.getX()+width,p.getY()+tile.design().height(),p.getZ()+depth).inflate(.5);}
 }

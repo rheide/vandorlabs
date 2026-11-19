@@ -103,10 +103,56 @@ public final class NativeBuilderRenderChecks {
         need(clock.phase()==6,"gantry resumes from its earlier phase");
         System.out.println("[vandorlabs][builder-render] part-fabrication PASS distinctGreenBlue/voxelMeshes/headMotion/pausedPartial");
     }
+    private static void verifyDriveLighting(){
+        try{
+            var method=Class.forName("com.vandorlabs.neoforge.builders.client.NativeDriveRenderer").getDeclaredMethod(
+                    "render",NativeBuilderEntity.class,com.mojang.blaze3d.vertex.PoseStack.class,
+                    net.minecraft.client.renderer.MultiBufferSource.class,int.class,int.class,double.class);
+            method.setAccessible(true);
+            var registries=net.minecraft.core.RegistryAccess.fromRegistryOfRegistries(
+                    net.minecraft.core.registries.BuiltInRegistries.REGISTRY);
+            for(var drive:NativeDriveDesign.SUPPORTED){
+                var core=NativeBuilderBindings.CORES.get(drive.id);
+                var tile=new NativeBuilderEntity(BlockPos.ZERO,core.defaultBlockState().setValue(NativeBuilderCoreBlock.FORMED,true));
+                var update=tile.getUpdateTag(registries);
+                update.put("Drive",new NativeDriveSettings(true,false,true,0,8,-2,-2,false,1).save());
+                long[] off=drawDrive(method,tile,update,0,registries);
+                long[] dim=drawDrive(method,tile,update,7,registries);
+                long[] full=drawDrive(method,tile,update,15,registries);
+                need(off[0]>0&&dim[0]>0&&full[0]>0,"authored idle and active drive parts emit "+drive.id);
+                need(dim[1]==full[1]&&dim[1]>0&&dim[2]>0&&dim[2]<full[2],"signal scales the same active lights "+drive.id);
+                need(drive.exhaust?off[1]>0&&off[2]<full[2]:off[1]==0,"distinct authored standby lights "+drive.id);
+            }
+            System.out.println("[vandorlabs][builder-render] drives PASS actualMeshes/idleActive/signalBrightness");
+        }catch(ReflectiveOperationException failure){throw new IllegalStateException(failure);}
+    }
+    private static long[] drawDrive(java.lang.reflect.Method method,NativeBuilderEntity tile,net.minecraft.nbt.CompoundTag publicData,
+                                    int strength,net.minecraft.core.HolderLookup.Provider registries)throws ReflectiveOperationException{
+        publicData.putInt("DriveLevel",strength);
+        tile.handleUpdateTag(publicData,registries);
+        need(!tile.inert()&&tile.driveLevel()==strength,"valid public drive level for rendering");
+        long[] counts=new long[3];int[] color={0};
+        var vertexType=com.mojang.blaze3d.vertex.VertexConsumer.class;
+        var target=(com.mojang.blaze3d.vertex.VertexConsumer)java.lang.reflect.Proxy.newProxyInstance(
+                vertexType.getClassLoader(),new Class<?>[]{vertexType},(proxy,call,args)->{
+            if(call.isDefault())return java.lang.reflect.InvocationHandler.invokeDefault(proxy,call,args);
+            switch(call.getName()){
+                case "addVertex"->counts[0]++;
+                case "setColor"->color[0]=((Number)args[0]).intValue()+((Number)args[1]).intValue()+((Number)args[2]).intValue();
+                case "setUv2"->{if(((Number)args[0]).intValue()==240&&((Number)args[1]).intValue()==240){counts[1]++;counts[2]+=color[0];}}
+                default->{}
+            }
+            return call.getReturnType()==vertexType?proxy:null;
+        });
+        net.minecraft.client.renderer.MultiBufferSource buffers=layer->target;
+        method.invoke(null,tile,new com.mojang.blaze3d.vertex.PoseStack(),buffers,0,
+                net.minecraft.client.renderer.texture.OverlayTexture.NO_OVERLAY,20D);
+        return counts;
+    }
     @SubscribeEvent public static void draw(ScreenEvent.Render.Post event){
         if(done||!enabled()||!(event.getScreen() instanceof net.minecraft.client.gui.screens.TitleScreen))return;var mc=Minecraft.getInstance();if(mc.getOverlay()!=null||!NativeBuilderModelCache.ready())return;
         if(icons){NativeCoreIconRenderChecks.render(event.getGuiGraphics());return;}
-        if(checkedGeneration!=generation){verifyDynamicNormals();verifyPartFabrication();checkedGeneration=generation;}
+        if(checkedGeneration!=generation){verifyDynamicNormals();verifyPartFabrication();verifyDriveLighting();checkedGeneration=generation;}
         var gui=event.getGuiGraphics();gui.flush();com.mojang.blaze3d.systems.RenderSystem.clear(org.lwjgl.opengl.GL11.GL_DEPTH_BUFFER_BIT,Minecraft.ON_OSX);
         int width=mc.getWindow().getGuiScaledWidth(),height=mc.getWindow().getGuiScaledHeight(),cellW=width/3,cellH=height/2;
         gui.fill(0,0,width,height,0xff202830);gui.flush();
