@@ -777,7 +777,7 @@
         "yoke_screen"
       ],
       "remaining": [
-        "Configure the casing and armrest controls for the stationary Advanced Pilot Chair.",
+        "Port the full casing and touch-panel controls for the stationary Advanced Pilot Chair.",
         "Port the standalone cockpit assembly and Yoke and Screen. Vehicle motion and carried integration remain deferred."
       ],
       "historical_neoforge_1_21_1": "unimplemented",
@@ -787,7 +787,7 @@
         "chair_siderests"
       ],
       "implemented": [
-        "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, and exact configured drop."
+        "The standalone Advanced Pilot Chair preserves the authored four-cell footprint, mounted height, collision, orientation, exact configured drop and both seated numeric Redstone sliders."
       ]
     },
     {
@@ -859,7 +859,7 @@
       ],
       "remaining": [
         "Public registration, animated rotation and the moving display.",
-        "Swept collision, rider transport, Redstone controls, and supported multiblock or external tiles.",
+        "Rider transport, interaction with rotating payloads, and supported multiblock or external tiles.",
         "Moving Surface snapshot artwork and previous-release active layout migration."
       ],
       "legacy_entity_ids": [
@@ -876,7 +876,7 @@
         "Programmable Surfaces share Java 8 layout discovery, artwork and UV policy with Forge. Native six-face cells use cached terrain artwork with opaque backing and bounded, coalesced topology updates.",
         "Focused installed-world and real Survival configuration, mining, material selection and repair checks pass. Uploaded terrain pixels verify settings-only mesh invalidation; actual emitted cropped and non-square artwork retains catalog UV bounds.",
         "Native block-only capture preflight shares the Forge scan prism and the native Copy Controller loaded-world adapter. A dedicated fixture verifies all six normals, exact Sign data and unchanged source ownership.",
-        "The opt-in Turntable Controller has a shared configuration path, durable block-only Scan and quarter-turn Restore, and rendered quarter-turn motion with swept collision. Dedicated and connected Survival checks cover these paths. Riding, payload interaction and redstone remain open."
+        "The opt-in Turntable Controller has a shared configuration path, durable block-only Scan and quarter-turn Restore, and rendered quarter-turn motion with swept collision. Dedicated and connected Survival checks cover these paths. Redstone controls support scan, continuous rotation, direction reversal and restore. Riding and payload interaction remain open."
       ]
     },
     {
@@ -1066,7 +1066,7 @@
       "historical_modern_registered_block_ids": [],
       "integration_scope": "non_vehicle_first",
       "remaining": [
-        "Expand supported targets, including owned Screen controls and formed builders.",
+        "Expand supported targets, including additional Screen roles, channel/credential-bearing Screens and formed builders.",
         "Expand live coverage of joined Navigation Table layouts beyond the tested two-cell flat group."
       ],
       "implemented": [
@@ -1074,7 +1074,8 @@
         "The public Copy Controller supports dedicated configuration, resource-priced Survival copying, post-commit client publication, and focused rollback and partial-save recovery.",
         "Complete reciprocal double chests copy as two priced physical halves; both inventories stay held through publication and rollback.",
         "Complete stationary Navigation Table pads preserve joined geometry and the physical chip/module slots with exact material costs.",
-        "Complete stationary Survey Dish and Sentinel Array frames copy at exact frame cost and get independent ownership."
+        "Complete stationary Survey Dish and Sentinel Array frames copy at exact frame cost and get independent ownership.",
+        "Closed regular Programmable Screen groups with static artwork copy at one plain Screen per member. Private or channel-active states are refused."
       ],
       "modern_registered_block_ids": [
         "copy_controller"

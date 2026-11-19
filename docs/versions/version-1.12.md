@@ -6,7 +6,9 @@ Survival copying. The settings dialog shows refused blocks, and output becomes
 visible to connected players when the transfer completes. Double chests copy
 with both halves and their contents. Complete stationary Navigation Table
 groups retain both their Navigation Chip and module mounts. Complete Survey
-Dish and Sentinel Array frames get independent ownership. [Copy Controller guide](../copy-controller.md)
+Dish and Sentinel Array frames get independent ownership. Regular Screen groups
+can also be copied when they have static artwork and no private media or
+configured channel controls. [Copy Controller guide](../copy-controller.md)
 
 The **Assembly Press** makes Data Chips and Access Cards by default. Insert a
 Catalog Chip that lists the recipe to produce Battery, Autopilot, or Navigation
@@ -34,7 +36,8 @@ and shows which recipes require a Catalog Chip.
 [WorldEdit compatibility](../development/native-worldedit-rotation.md)
 
 The experimental **Turntable Controller** can capture supported blocks above
-a Programmable Surface, turn them and restore them to the world. Enable it
+a Programmable Surface, turn them and restore them to the world from the dialog or with configured
+Redstone inputs. Enable it
 with `-Dvandorlabs.turntableControllers=true`. [Native Turntable guide](../development/native-turntable.md)
 
 See the [NeoForge coverage inventory](../development/feature-coverage.md) for

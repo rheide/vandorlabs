@@ -11,8 +11,8 @@ Printer/Scanner automation, Maxwell, Meridian, Oculus and Vector Fold, and the
 Advanced Pilot Chair with both armrest sliders. Two navigation computers,
 broader Copy Controller targets, renderer-specific armor samples and standalone
 cockpit peripherals remain open. The opt-in Turntable Controller supports
-Scan, rotation and Restore, with riders, moved interactions and redstone still open,
-alongside the Ramp and compatibility limits in the
+Scan, rotation and Restore with Redstone. Riders and moved interactions remain
+open, alongside the Ramp and compatibility limits in the
 [feature inventory](feature-coverage.md). Native Vehicle Mode and
 vehicle-carried navigation remain deferred.
 
