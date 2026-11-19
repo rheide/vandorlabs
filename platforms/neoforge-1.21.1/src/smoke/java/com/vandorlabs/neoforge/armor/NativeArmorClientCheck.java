@@ -182,6 +182,17 @@ public final class NativeArmorClientCheck {
             case 37 -> {
                 if (!NativeArmorFixture.triggerSprite().equals(NativeArmorItem.worldSample(offhand))) return;
                 System.out.println("[vandorlabs][armor] ordinary Door upper leaf and powered Trigger samples PASS");
+                sampleFace(game, NativeArmorFixture.LARGE_DOOR.east(2).above(2), Direction.NORTH);
+                stage = 38;
+            }
+            case 38 -> {
+                if (!NativeArmorFixture.largeDoorSprite().equals(NativeArmorItem.worldSample(offhand))) return;
+                sampleFace(game, NativeArmorFixture.TRAPDOOR, Direction.UP);
+                stage = 39;
+            }
+            case 39 -> {
+                if (!NativeArmorFixture.trapdoorSprite().equals(NativeArmorItem.worldSample(offhand))) return;
+                System.out.println("[vandorlabs][armor] remote Large Door leaf and Trapdoor artwork samples PASS");
                 sampleFace(game, NativeArmorFixture.CUBE, Direction.NORTH);
                 stage = 25;
             }

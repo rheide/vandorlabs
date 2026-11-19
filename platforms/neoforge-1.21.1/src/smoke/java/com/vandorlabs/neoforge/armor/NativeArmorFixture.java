@@ -3,6 +3,10 @@ package com.vandorlabs.neoforge.armor;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
 import com.vandorlabs.neoforge.door.NativeDoorLifecycle;
+import com.vandorlabs.neoforge.door.NativeLargeDoorLifecycle;
+import com.vandorlabs.neoforge.door.NativeLargeDoorRegistrations;
+import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorRegistrations;
+import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorSettings;
 import com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock;
 import com.vandorlabs.persistence.TriggerState;
 import com.vandorlabs.redstone.ChannelList;
@@ -58,9 +62,12 @@ public final class NativeArmorFixture {
     static final int CUBE_SLOT = 1, DOOR_SLOT = 2, INVALID_SLOT = 3;
     static final BlockPos LOG = new BlockPos(2, 79, 0), CUBE = new BlockPos(2, 79, 1);
     static final String LOG_TOP = "minecraft:block/oak_log_top", LOG_SIDE = "minecraft:block/oak_log";
+    static final BlockPos LARGE_DOOR = new BlockPos(-4, 79, 2), TRAPDOOR = new BlockPos(-1, 79, -1);
     static final BlockPos WORLD_DOOR = new BlockPos(0, 79, 2), WORLD_TRIGGER = new BlockPos(0, 79, -2);
     static final BlockPos LIGHT_ON = new BlockPos(1, 79, -2), LIGHT_OFF = new BlockPos(2, 79, -2);
     static final String CUBE_SPRITE = "vandorlabs:housing/industrial_block";
+    static String largeDoorSprite() { return ModernFinishCatalog.option(13).texture(); }
+    static String trapdoorSprite() { return ModernFinishCatalog.option(NativeTrapdoorSettings.defaultTexture()).texture(); }
     static String doorSprite() { return ModernFinishCatalog.option(CARGO_DOOR).texture(); }
     static String triggerSprite() { return ModernFinishCatalog.option(12).texture(); }
     static String lightHousing() { return ModernFinishCatalog.option(8).texture(); }
@@ -107,6 +114,10 @@ public final class NativeArmorFixture {
         setLight(world, LIGHT_ON, true);
         setLight(world, LIGHT_OFF, false);
         placeDoor(world);
+        placeLargeDoor(player);
+        world.getChunkAt(TRAPDOOR);
+        world.setBlockAndUpdate(TRAPDOOR.below(), Blocks.STONE.defaultBlockState());
+        world.setBlockAndUpdate(TRAPDOOR, NativeTrapdoorRegistrations.BLOCK.get().defaultBlockState());
         world.setBlockAndUpdate(WORLD_TRIGGER, VandorLabsBootstrap.TRIGGER_BLOCK.get().defaultBlockState()
                 .setValue(ProgrammableBlock.FACING, Direction.SOUTH));
         var trigger = (NativeTriggerBlockEntity) world.getBlockEntity(WORLD_TRIGGER);
@@ -265,6 +276,28 @@ public final class NativeArmorFixture {
         var data = door.saveWithFullMetadata(world.registryAccess());
         data.putInt("SpaceDesign", 7);
         data.putInt("SpaceDetail", 1);
+        door.loadWithComponents(data, world.registryAccess());
+        door.setChanged();
+    }
+
+    private static void placeLargeDoor(ServerPlayer player) {
+        var world = player.serverLevel();
+        for (int i = 0; i < 3; i++) {
+            var at = LARGE_DOOR.east(i).below();
+            world.getChunkAt(at);
+            world.setBlockAndUpdate(at, Blocks.STONE.defaultBlockState());
+        }
+        var center = LARGE_DOOR.east();
+        player.setYRot(180);
+        var held = new ItemStack(NativeLargeDoorRegistrations.ITEM.get());
+        player.setItemInHand(InteractionHand.MAIN_HAND, held);
+        var hit = new BlockHitResult(Vec3.atBottomCenterOf(center), Direction.UP, center.below(), false);
+        require(player.gameMode.useItemOn(player, world, held, InteractionHand.MAIN_HAND, hit).consumesAction()
+                && held.isEmpty(), "real Large Door fixture placement");
+        var door = NativeLargeDoorLifecycle.root(world, LARGE_DOOR.east(2).above(2));
+        require(door != null && NativeLargeDoorLifecycle.complete(world, door), "complete nine-cell Large Door owner");
+        var data = door.saveWithFullMetadata(world.registryAccess());
+        data.putInt("DoorFaceTexture", 13);
         door.loadWithComponents(data, world.registryAccess());
         door.setChanged();
     }

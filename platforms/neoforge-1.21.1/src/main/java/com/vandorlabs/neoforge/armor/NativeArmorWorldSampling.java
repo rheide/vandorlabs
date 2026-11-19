@@ -3,6 +3,8 @@ package com.vandorlabs.neoforge.armor;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.NativeTriggerBlockEntity;
 import com.vandorlabs.neoforge.door.NativeDoorLifecycle;
+import com.vandorlabs.neoforge.door.NativeLargeDoorBlock;
+import com.vandorlabs.neoforge.door.NativeLargeDoorLifecycle;
 import com.vandorlabs.neoforge.door.NativeProgrammableDoorBlock;
 import com.vandorlabs.neoforge.door.NativeProgrammableDoorEntity;
 import com.vandorlabs.neoforge.ProgrammableBlock;
@@ -11,6 +13,8 @@ import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.light.NativeLightArtwork;
 import com.vandorlabs.neoforge.light.NativeLightBlock;
 import com.vandorlabs.neoforge.light.NativeLightEntity;
+import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorBlock;
+import com.vandorlabs.neoforge.trapdoor.NativeTrapdoorEntity;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
@@ -149,11 +153,17 @@ public final class NativeArmorWorldSampling {
     }
 
     static boolean usesRendererArtwork(BlockState state) {
-        return state.getBlock() instanceof NativeLightBlock || state.getBlock() instanceof NativeProgrammableDoorBlock;
+        var block = state.getBlock();
+        return block instanceof NativeLightBlock || block instanceof NativeProgrammableDoorBlock
+                || block instanceof NativeLargeDoorBlock || block instanceof NativeTrapdoorBlock;
     }
 
     static BlockEntity sampleOwner(Level world, BlockState state, BlockPos pos) {
         if (state.getBlock() instanceof NativeProgrammableDoorBlock) return NativeDoorLifecycle.root(world, pos);
+        if (state.getBlock() instanceof NativeLargeDoorBlock) {
+            var owner = NativeLargeDoorLifecycle.root(world, pos);
+            return owner != null && NativeLargeDoorLifecycle.complete(world, owner) ? owner : null;
+        }
         return world.getBlockEntity(pos);
     }
 
@@ -164,10 +174,12 @@ public final class NativeArmorWorldSampling {
             choice = visual.facing() == face
                     ? NativeLightArtwork.face(visual.settings().light(), visual.on() && visual.level() > 0)
                     : visual.housing().mainTexture;
-        } else if (state.getBlock() instanceof NativeProgrammableDoorBlock
-                && tile instanceof NativeProgrammableDoorEntity door && !door.placementRecovery()) {
+        } else if (tile instanceof NativeProgrammableDoorEntity door && !door.placementRecovery()) {
             var settings = door.settings();
             choice = settings.faceTexture() < 0 ? NativeArmorInventorySources.doorArtwork(settings.door()) : settings.faceTexture();
+        } else if (state.getBlock() instanceof NativeTrapdoorBlock
+                && tile instanceof NativeTrapdoorEntity trapdoor && !trapdoor.inert()) {
+            choice = trapdoor.settings().choices().texture;
         } else if ((state.is(VandorLabsBootstrap.PROGRAMMABLE_BLOCK.get()) || state.is(VandorLabsBootstrap.TRIGGER_BLOCK.get()))
                 && tile instanceof ProgrammableBlockEntity cube) {
             var settings = cube instanceof NativeTriggerBlockEntity trigger ? trigger.modelSettings() : cube.settings();
