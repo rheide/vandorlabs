@@ -11,6 +11,9 @@ public final class DoorPayloads {
         registrar.playToServer(DoorSettingsPayload.TYPE,DoorSettingsPayload.CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)NativeDoorMenu.apply(player,p.pos(),p.window(),p.edit(),p.channels());}));
         registrar.playToServer(DoorFramePayload.TYPE,DoorFramePayload.CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)NativeDoorMenu.applyFrames(player,p.pos(),p.window(),p.frames());}));
         registrar.playToServer(DoorGlassPayload.TYPE,DoorGlassPayload.CODEC,(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)NativeDoorMenu.applyGlass(player,p.pos(),p.window(),p.glass());}));
+        registrar.playToServer(LargeDoorJoinPayload.TYPE,LargeDoorJoinPayload.CODEC,(p,c)->c.enqueueWork(()->{
+            if(c.player() instanceof ServerPlayer player)NativeDoorMenu.applyJoin(player,p.pos(),p.window(),p.enabled());
+        }));
         DoorUsePayload.register(event);
     }
 }

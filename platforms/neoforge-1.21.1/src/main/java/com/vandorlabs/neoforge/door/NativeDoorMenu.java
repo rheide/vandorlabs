@@ -19,6 +19,10 @@ public final class NativeDoorMenu extends AbstractContainerMenu {
     public NativeDoorMenu(MenuType<?> type,int id,Inventory inventory,BlockPos pos){this(type,id,requireRoot(inventory.player,pos));}
     private static NativeProgrammableDoorEntity requireRoot(Player player,BlockPos pos){var root=DoorConfiguration.root(player.level(),pos);if(root==null)throw new IllegalArgumentException("Missing complete door");return root;}
     public static NativeDoorMenu editing(ServerPlayer player,BlockPos pos,int window){return player.getServer().isSameThread()&&NativeConfigurationAccess.canConfigure(player)&&player.containerMenu instanceof NativeDoorMenu menu&&menu.containerId==window&&menu.tile.getBlockPos().equals(pos)&&menu.stillValid(player)?menu:null;}
+    public static boolean applyJoin(ServerPlayer player,BlockPos pos,int window,boolean enabled){
+        var menu=editing(player,pos,window);
+        return menu!=null&&menu.tile instanceof NativeLargeDoorEntity large&&NativeLargeDoorJoins.change(player,large,enabled);
+    }
     public static boolean applyFrames(ServerPlayer player,BlockPos pos,int window,com.vandorlabs.persistence.FrameSettings frames){var menu=editing(player,pos,window);if(menu==null||!NativeProgrammableDoorEntity.validFrames(frames))return false;boolean first=menu.tile.stageFrames(frames),second=menu.mate!=null&&menu.mate.stageFrames(frames);if(first)menu.tile.publish();if(second)menu.mate.publish();return true;}
     public static boolean applyGlass(ServerPlayer player,BlockPos pos,int window,NativeDoorGlass glass){var menu=editing(player,pos,window);if(menu==null||glass==null||!(com.vandorlabs.ui.SpaceDoorDialog.glassPage(menu.tile.settings().door().design)||menu.tile.settings().faceTexture()>=0&&com.vandorlabs.neoforge.ModernFinishCatalog.option(menu.tile.settings().faceTexture()).id().equals("utility_door_reactor")))return false;boolean first=menu.tile.stageGlass(glass),second=menu.mate!=null&&menu.mate.stageGlass(glass);if(first)menu.tile.publish();if(second)menu.mate.publish();return true;}
     public static boolean apply(ServerPlayer player,BlockPos pos,int window,NativeDoorEdit edit,ChannelList channels){

@@ -34,8 +34,11 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
     public NativeDoorScreen(NativeDoorMenu menu,Inventory inventory,Component title,NativeCredentialFilter credentials){
         super(menu,inventory,title);this.credentials=Objects.requireNonNull(credentials);var initial=menu.tile.settings();var door=initial.door();
         design=door.design;detail=0;framed=door.framed;depth=initial.depth();trigger=door.trigger;panelMode=initial.panelMode();securityMode=initial.securityMode();allowed=initial.securityAllowed();faceTexture=initial.faceTexture();layout=initial.textureLayout();motion=SpaceDoorMotion.fromSettings(door.sliding,door.direction);hinges=door.hinges;glass=initial.glass();frames=initial.frames();lastValidChannels=menu.tile.getRedstoneChannels();
+        if(menu.tile instanceof NativeLargeDoorEntity large)join=large.joinEnabled();
         if(faceTexture>=0&&ModernFinishCatalog.option(faceTexture).door()!=null)faceTexture=doorChoice(ModernFinishCatalog.option(faceTexture).door().design(),0);
     }
+    private boolean join;
+    private boolean canJoin(){return menu.tile.large()&&securityMode==0;}
     private static int doorChoice(int design,int detail){for(int i=0;i<ModernFinishCatalog.ENTRIES.size();i++){var metadata=ModernFinishCatalog.ENTRIES.get(i).door();if(metadata!=null&&metadata.design()==design&&metadata.detail()==Math.min(detail,1))return i;}return 0;}
     private static String securityLabel(int mode){return mode==0?"Security: Off":new String[]{"","Return After Open: Pulse","Stay Inserted","Stay Inserted: Pulse","Return After Open: Toggle"}[mode];}
     public ProgrammableDialogLayout panel(){return panel;}public NativeMaterialPicker activePicker(){return picker;}
@@ -55,7 +58,7 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
     private void rebuild(boolean center){
         String channelText=channels==null?lastValidChannels.toString():channels.getValue();clearWidgets();buttons.clear();tabs.clear();picker=null;
         boolean glassPage=SpaceDoorDialog.glassPage(design)||faceTexture>=0&&ModernFinishCatalog.option(faceTexture).id().equals("utility_door_reactor");if(page==4&&!glassPage)page=0;var pages=glassPage?new int[]{0,1,4,3,2}:new int[]{0,1,3,2};int tabWidth=(panel.width-22)/pages.length;for(int i=0;i<pages.length;i++)tab(190+pages[i],panel.left+12+i*tabWidth,panel.top+30,tabWidth-2,SpaceDoorDialog.pageLabel(pages[i]),pages[i]!=page);
-        if(page==0){option(10,54,motion.label,true);option(15,78,SpaceDoorDialog.hingesLabel(motion,hinges),SpaceDoorDialog.hingesEnabled(motion));option(13,102,SpaceDoorDialog.positionLabel(depth),true);option(18,126,"Texture: "+TextureLayoutMode.label(layout),true);}
+        if(page==0){option(10,54,motion.label,true);option(15,78,SpaceDoorDialog.hingesLabel(motion,hinges),SpaceDoorDialog.hingesEnabled(motion));option(13,102,SpaceDoorDialog.positionLabel(depth),true);option(18,126,"Texture: "+TextureLayoutMode.label(layout),true);if(menu.tile.large())option(23,150,join?"Join: On":"Join: Off",join||canJoin());}
         if(page==1){if(frameDraft==null)frameDraft=frames.editor(false,false,NativeWallDialog.defaultScreen());int span=(panel.width-24)/2;tab(3000,panel.left+12,panel.top+54,span-2,"Front",frameFace!=0);tab(3001,panel.left+12+span,panel.top+54,span-2,"Interior",frameFace!=1);option(3008,78,framed?"Framed":"Bare",true);}
         if(page==2){channels=new EditBox(font,panel.left+12,panel.top+68,panel.width-24,18,Component.literal("Redstone channels"));channels.setMaxLength(ChannelList.MAX_TEXT_LENGTH);channels.setValue(channelText);channels.setResponder(value->{validity();if(ChannelList.parse(value)!=null)send();});addRenderableWidget(channels);option(16,panel.left+12,panel.top+96,panel.width-24,20,"Activation: "+RedstoneActivation.label(trigger),true);}
         if(page==3){option(17,64,SpaceDoorDialog.panelLabel(panelMode),true);option(19,90,securityLabel(securityMode),true);}
@@ -70,6 +73,12 @@ public final class NativeDoorScreen extends AbstractContainerScreen<NativeDoorMe
     private void sendGlass(){PacketDistributor.sendToServer(new DoorGlassPayload(menu.tile.getBlockPos(),menu.containerId,glass));}
     public void action(int id,int direction){
         if(picker!=null)picker.closeInventory();if(id==1){if(validChannels()){send();onClose();}return;}if(id>=190&&id<=194){page=id-190;rebuild(true);return;}if(id==3000||id==3001){frameFace=id-3000;rebuild(true);return;}
+        if(id==23&&menu.tile.large()&&(join||canJoin())){
+            join=!join;
+            PacketDistributor.sendToServer(new LargeDoorJoinPayload(menu.tile.getBlockPos(),menu.containerId,join));
+            rebuild(false);
+            return;
+        }
         switch(id){case 10->motion=SpaceDoorDialog.nextMotion(motion,menu.tile.large(),direction);case 12,3008->framed=!framed;case 13->{depth=DialogInput.cycle(depth,3,direction);panelMode=SpaceDoorDialog.panelAfterPosition(panelMode,depth);}case 15->{if(!motion.sliding)hinges=!hinges;}case 16->trigger=DialogInput.cycle(trigger,3,direction);case 17->panelMode=SpaceDoorDialog.nextPanel(panelMode,depth,direction);case 18->layout=DialogInput.cycle(layout,3,direction);case 19->securityMode=SpaceDoorDialog.nextSecurity(securityMode,direction);case 20->{glass=new NativeDoorGlass(glass.material,glass.shade,DialogInput.cycle(glass.tint,GlassTextures.TINT_COUNT,direction),glass.layout);sendGlass();rebuild(false);return;}case 21->{glass=new NativeDoorGlass(glass.material,glass.shade,glass.tint,DialogInput.cycle(glass.layout,3,direction));sendGlass();rebuild(false);return;}case 22->{glass=NativeDoorGlass.DEFAULT;sendGlass();rebuild(false);return;}default->{return;}}
         send();rebuild(false);
     }

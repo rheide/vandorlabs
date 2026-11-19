@@ -105,7 +105,8 @@ public class NativeProgrammableDoorEntity extends BlockEntity implements com.van
     @Override public void onDataPacket(net.minecraft.network.Connection connection,ClientboundBlockEntityDataPacket packet,HolderLookup.Provider registries){handleUpdateTag(packet.getTag(),registries);}
     @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
     /** Configured items contain choices/channels only, matching legacy itemSettings rather than a world snapshot. */
-    public final CompoundTag itemSettings(){CompoundTag tag=new CompoundTag();settings.write(tag);tag.putInt("SpaceDoorChannel",channels.first());tag.putIntArray("RedstoneChannels",channels.toArray());return tag;}
+    public final CompoundTag itemSettings(){CompoundTag tag=new CompoundTag();settings.write(tag);tag.putInt("SpaceDoorChannel",channels.first());tag.putIntArray("RedstoneChannels",channels.toArray());writeItemChoices(tag);return tag;}
+    protected void writeItemChoices(CompoundTag tag){}
     private boolean placementRecovery;
     final void installPlacement(NativeDoorSettings next,ChannelList bank){settings=next;channels=bank;credentials.configureLocal(next.securityMode(),next.securityAllowed());refreshReaderProjection();legacyMotionPending=false;membershipDirty=true;publishLocalVisual();}
     final void retainPlacementRecovery(){placementRecovery=true;publishLocalVisual();preparePublication();setChanged();requestModelDataUpdate();}

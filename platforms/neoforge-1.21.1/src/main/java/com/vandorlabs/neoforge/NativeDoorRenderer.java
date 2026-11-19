@@ -90,7 +90,25 @@ public final class NativeDoorRenderer implements BlockEntityRenderer<NativeProgr
  private record Fallback(NativeDoorSettings settings,net.minecraft.world.level.block.state.BlockState state,com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.Projection readers,boolean recovery,NativeProgrammableDoorEntity.Visual visual){}
  private static final Map<NativeLargeDoorEntity,Fallback> LARGE_FALLBACKS=new WeakHashMap<>();
  private static NativeProgrammableDoorEntity.Visual largeFallback(NativeLargeDoorEntity tile){var settings=tile.settings();var state=tile.getBlockState().setValue(NativeProgrammableDoorBlock.PAIRED,true).setValue(NativeProgrammableDoorBlock.HINGE,DoorHingeSide.RIGHT).setValue(NativeProgrammableDoorBlock.HALF,DoubleBlockHalf.LOWER);var readers=tile.readerProjection();boolean recovery=tile.placementRecovery();var old=LARGE_FALLBACKS.get(tile);if(old!=null&&old.settings==settings&&old.state==state&&old.readers==readers&&old.recovery==recovery)return old.visual;var side=settings.door().panel?(settings.door().sliding?SpaceDoorControlPanel.Side.RIGHT:SpaceDoorControlPanel.Side.LEFT):SpaceDoorControlPanel.Side.NONE;var visual=new NativeProgrammableDoorEntity.Visual(settings,state,side,true,recovery,readers);LARGE_FALLBACKS.put(tile,new Fallback(settings,state,readers,recovery,visual));if(LARGE_FALLBACKS.size()>1024)LARGE_FALLBACKS.remove(LARGE_FALLBACKS.keySet().iterator().next());return visual;}
- private static void renderLarge(Bake bake,NativeLargeDoorEntity tile,PoseStack poses,MultiBufferSource buffers,int light,int overlay){if(!tile.isAnchor())return;var projection=tile.largeVisual();var visual=projection==null||projection.geometry()==null?largeFallback(tile):projection.shared();double time=CLOCK.sample(System.nanoTime(),Minecraft.getInstance().isPaused());float progress=pose(tile.getLevel(),tile.getBlockPos(),visual.state().getValue(NativeProgrammableDoorBlock.OPEN),time,true);renderLargeAt(bake,visual,tile.getLevel(),tile.getBlockPos(),progress,time,poses,buffers,light,overlay,tile.isHorizontal());}
+ private static void renderLarge(Bake bake,NativeLargeDoorEntity tile,PoseStack poses,MultiBufferSource buffers,int light,int overlay){
+  if(!tile.rendersAssembly())return;
+  var projection=tile.largeVisual();
+  var geometry=projection==null?null:projection.geometry();
+  var visual=geometry==null?largeFallback(tile):projection.shared();
+  double time=CLOCK.sample(System.nanoTime(),Minecraft.getInstance().isPaused());
+  float progress=pose(tile.getLevel(),tile.getBlockPos(),visual.state().getValue(NativeProgrammableDoorBlock.OPEN),time,true);
+  if(geometry==null||geometry.columns()==1&&geometry.rows()==1){
+   renderLargeAt(bake,visual,tile.getLevel(),tile.getBlockPos(),progress,time,poses,buffers,light,overlay,tile.isHorizontal());
+   return;
+  }
+  var box=LargeDoorJoin.project(AABB::new,geometry.key().face().get2DDataValue(),tile.isHorizontal(),geometry.columns(),geometry.rows(),0,0,0,1,1,1);
+  poses.pushPose();
+  try{
+   poses.translate(box.minX,box.minY,box.minZ);
+   poses.scale((float)box.getXsize(),(float)box.getYsize(),(float)box.getZsize());
+   renderLargeAt(bake,visual,tile.getLevel(),tile.getBlockPos(),progress,time,poses,buffers,light,overlay,tile.isHorizontal());
+  }finally{poses.popPose();}
+ }
  private static final class Layers {
   static final RenderType PANE=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,false),OPAQUE_PANE=NativePanelPlaybackRenderer.renderType(TextureAtlas.LOCATION_BLOCKS,true);
   static final RenderType LIT_BODY=RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS),LIT_PANE=RenderType.entityTranslucent(TextureAtlas.LOCATION_BLOCKS);
@@ -99,5 +117,9 @@ public final class NativeDoorRenderer implements BlockEntityRenderer<NativeProgr
  private static final org.joml.Matrix4f[] FACING=new org.joml.Matrix4f[6];
  static{FACING[Direction.SOUTH.get3DDataValue()]=new org.joml.Matrix4f();FACING[Direction.NORTH.get3DDataValue()]=new org.joml.Matrix4f().m00(-1).m22(-1).m30(1).m32(1);FACING[Direction.EAST.get3DDataValue()]=new org.joml.Matrix4f().m00(0).m20(1).m02(-1).m22(0).m32(1);FACING[Direction.WEST.get3DDataValue()]=new org.joml.Matrix4f().m00(0).m20(-1).m02(1).m22(0).m30(1);}
  private static void panels(Bake bake,Draw draw,NativeProgrammableDoorEntity.Visual visual,Object world,BlockPos owner,Direction face,double depth,double time,SpaceDoorControlPanel.Side side,double size,PoseStack poses,MultiBufferSource buffers,int light,int overlay){if(draw.pad==null)return;var cfg=visual.settings();poses.pushPose();try{poses.mulPose(FACING[face.get3DDataValue()]);for(int index=0;index<(cfg.panelMode()==2?2:1);index++){poses.pushPose();try{if(index!=0){poses.translate(0,0,1);poses.scale(1,1,-1);}if(cfg.securityMode()>0){Direction normal=side==SpaceDoorControlPanel.Side.LEFT?Direction.EAST:Direction.WEST;double cx=(side==SpaceDoorControlPanel.Side.LEFT?SpaceDoorControlPanel.x1(side):SpaceDoorControlPanel.x0(side))*size/16,cy=(SpaceDoorControlPanel.Y0+SpaceDoorControlPanel.Y1)*size/32+SpaceDoorControlPanel.verticalOffset(size),cz=(SpaceDoorControlPanel.z0(cfg.door().sliding,cfg.depth()==2)+SpaceDoorControlPanel.z1(cfg.door().sliding,cfg.depth()==2))/32+depth;poses.translate(cx,cy,cz);poses.scale((float)(.5*size),(float)(.5*size),(float)(.5*size));poses.translate(-.5+normal.getStepX()*.5,-.5,-.5);var target=buffers.getBuffer(RenderType.entityCutoutNoCull(TextureAtlas.LOCATION_BLOCKS));bake.readers.frame(false,normal,0,poses.last(),target,light,overlay,false);bake.readers.frame(false,normal,0,poses.last(),target,light,overlay,true);var reader=visual.readers().side(index);var clock=NativeReaderVisualClock.sampleAt(world,owner,index,reader.visual(),reader.motion(),time);NativeReaderRenderer.contents(reader.visual(),reader.motion(),clock.age(),clock.rejected(),normal,0,poses,buffers,light,overlay);}else draw.pad.emit(poses.last(),buffers.getBuffer(NativePanelPlaybackRenderer.frameRenderType()),Direction.SOUTH,depth,light,overlay,0,0,0,0,0,size,0,1,false);}finally{poses.popPose();}}}finally{poses.popPose();}}
- @Override public AABB getRenderBoundingBox(NativeProgrammableDoorEntity tile){var p=tile.getBlockPos();if(tile instanceof NativeLargeDoorEntity)return new AABB(p.getX()-4,p.getY()-3,p.getZ()-4,p.getX()+5,p.getY()+7,p.getZ()+5);boolean vertical=tile.doorVisual().settings().door().direction!=0;return new AABB(p.getX()-1,p.getY()-(vertical?2:0),p.getZ()-1,p.getX()+2,p.getY()+(vertical?4:2),p.getZ()+2);}
+ @Override public AABB getRenderBoundingBox(NativeProgrammableDoorEntity tile){var p=tile.getBlockPos();if(tile instanceof NativeLargeDoorEntity large){
+   var projection=large.largeVisual();var geometry=projection==null?null:projection.geometry();
+   int width=geometry==null?1:Math.max(geometry.columns(),geometry.rows());
+   return new AABB(p.getX()-4*width,p.getY()-3*width,p.getZ()-4*width,p.getX()+5*width,p.getY()+7*width,p.getZ()+5*width);
+  }boolean vertical=tile.doorVisual().settings().door().direction!=0;return new AABB(p.getX()-1,p.getY()-(vertical?2:0),p.getZ()-1,p.getX()+2,p.getY()+(vertical?4:2),p.getZ()+2);}
 }

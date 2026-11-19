@@ -9,7 +9,7 @@ import net.minecraft.world.level.block.entity.BlockEntityType;
 import net.minecraft.world.level.block.state.BlockState;
 /** Large roles and immutable geometry/fluid/model projections; production registration is deferred. */
 public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
-    private boolean assigned,horizontal;private int column,row;
+    private boolean assigned,horizontal,join;private int column,row;
     public record LargeVisual(Visual shared,BlockPos anchor,int column,int row,NativeLargeDoorGeometry.Snapshot geometry){}
     public static final ModelProperty<LargeVisual> LARGE_VISUAL=new ModelProperty<>();
     private volatile LargeVisual largeVisual;
@@ -18,6 +18,35 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     private final RootPublication rootPublication=new RootPublication();private volatile RootPublication binding;private long rootVersion;
     private record ControlSignature(com.vandorlabs.redstone.ChannelList channels,int trigger,int security,int panel,boolean readerOpen,boolean signal){}
     private ControlSignature controls;
+    private record JoinProjection(NativeLargeDoorEntity leader,int columns,int rows,int column,int row){
+        static JoinProjection local(NativeLargeDoorEntity tile){return new JoinProjection(tile,1,1,0,0);}
+    }
+    private volatile JoinProjection joined=JoinProjection.local(this);
+    public final boolean joinEnabled(){return isAnchor()&&join;}
+    final void setJoin(boolean enabled){join=enabled;}
+    @Override protected void writeItemChoices(CompoundTag tag){
+        if(joinEnabled())tag.putBoolean(com.vandorlabs.render.LargeDoorJoin.TAG,true);
+    }
+    final void resolveJoinedAssembly(){
+        var group=NativeLargeDoorJoins.group(this);
+        joined=new JoinProjection(group.anchor,group.columns,group.rows,group.column,group.row);
+    }
+    final void refreshJoinedAssembly(){
+        if(level==null||!isAnchor())return;
+        if(!level.isClientSide)NativeLargeDoorLifecycle.updatePower(this);
+        var face=getBlockState().getValue(NativeLargeDoorBlock.FACING);
+        for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+            var pos=NativeLargeDoorLifecycle.cell(worldPosition,face,horizontal,x,y);
+            if(NativeLargeDoorLifecycle.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part
+                    &&part.anchorPos().equals(worldPosition)){
+                part.refreshFluidGeometry();
+                NativeFluidWorld.queue(part);
+                part.requestModelDataUpdate();
+            }
+        }
+    }
+    public final boolean rendersAssembly(){return isAnchor()&&joined.leader()==this;}
+
     private volatile NativeLargeDoorGeometry.Snapshot rootGeometry;private NativeDoorSettings rootGeometrySettings;private BlockState rootGeometryState;
     private static final NativeFluidVolume EMPTY_VOLUME=NativeFluidVolume.build(java.util.List.of(new net.minecraft.world.phys.AABB(0,0,0,1,1,1)),NativeFluidVolume.SINGLE_SIDE);
     private record FluidPose(NativeLargeDoorGeometry.Snapshot geometry,int column,int row,NativeDoorFluidGeometry.Plane plane,NativeFluidVolume volume,long revision){}
@@ -31,15 +60,19 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     public final boolean isAnchor(){return assigned&&column==0&&row==0;}
     public final int column(){return column;}public final int row(){return row;}
     public final BlockPos anchorPos(){return level==null||!(getBlockState().getBlock() instanceof NativeLargeDoorBlock)?worldPosition:NativeLargeDoorLifecycle.cell(worldPosition,getBlockState().getValue(NativeLargeDoorBlock.FACING),horizontal,-column,-row);}
-    private void writeRole(CompoundTag tag){tag.putBoolean("LargeDoorAssigned",assigned);tag.putInt("LargeDoorColumn",column);tag.putInt("LargeDoorRow",row);if(horizontal)tag.putBoolean("LargeDoorHorizontal",true);}
+    private void writeRole(CompoundTag tag){tag.putBoolean("LargeDoorAssigned",assigned);tag.putInt("LargeDoorColumn",column);tag.putInt("LargeDoorRow",row);if(horizontal)tag.putBoolean("LargeDoorHorizontal",true);if(joinEnabled())tag.putBoolean(com.vandorlabs.render.LargeDoorJoin.TAG,true);else tag.remove(com.vandorlabs.render.LargeDoorJoin.TAG);}
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
         // Released Large parts all use the rotating block prototype when the motion schema is absent.
         // Normalize locally before publishing; followers deliberately never enter the channel-registration hook.
         if(!tag.contains("SpaceDoorSchema")&&getBlockState().getBlock() instanceof NativeLargeDoorBlock){tag=tag.copy();tag.putBoolean("SpaceDoorSliding",false);tag.putInt("SpaceDoorSchema",2);}
-        horizontal=tag.getBoolean("LargeDoorHorizontal");assigned=tag.getBoolean("LargeDoorAssigned");column=tag.getInt("LargeDoorColumn");row=tag.getInt("LargeDoorRow");if(column<0||column>2||row<0||row>2)assigned=false;super.loadAdditional(tag,registries);NativeLargeDoorTargets.add(this);}
+        join=tag.getBoolean(com.vandorlabs.render.LargeDoorJoin.TAG);horizontal=tag.getBoolean("LargeDoorHorizontal");assigned=tag.getBoolean("LargeDoorAssigned");column=tag.getInt("LargeDoorColumn");row=tag.getInt("LargeDoorRow");if(column<0||column>2||row<0||row>2)assigned=false;super.loadAdditional(tag,registries);NativeLargeDoorTargets.add(this);NativeLargeDoorJoins.invalidate(this);}
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){super.saveAdditional(tag,registries);writeRole(tag);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){var tag=super.getUpdateTag(registries);writeRole(tag);return tag;}
-    private synchronized void publishProjection(NativeDoorSettings settings,BlockState raw,BlockPos anchor,NativeLargeDoorGeometry.Snapshot geometry){
+    private void publishProjection(NativeDoorSettings settings,BlockState raw,BlockPos anchor,NativeLargeDoorGeometry.Snapshot geometry){
+        publishProjection(settings,raw,anchor,geometry,column,row);
+    }
+    private synchronized void publishProjection(NativeDoorSettings settings,BlockState raw,BlockPos anchor,
+                                               NativeLargeDoorGeometry.Snapshot geometry,int column,int row){
         var resolved=raw.setValue(NativeLargeDoorBlock.PAIRED,true).setValue(NativeLargeDoorBlock.HINGE,DoorHingeSide.RIGHT).setValue(NativeLargeDoorBlock.HALF,geometry!=null&&worldPosition.equals(anchor)?DoubleBlockHalf.LOWER:DoubleBlockHalf.UPPER);var previous=largeVisual;
         if(previous!=null&&previous.shared().settings()==settings&&previous.shared().state()==resolved&&previous.shared().recovery()==placementRecovery()&&previous.shared().readers()==(binding==null||binding.value==null?readerProjection():binding.value.shared().readers())&&previous.anchor().equals(anchor)&&previous.column()==column&&previous.row()==row&&previous.geometry()==geometry)return;
         var side=settings.door().panel?(settings.door().sliding?SpaceDoorControlPanel.Side.RIGHT:SpaceDoorControlPanel.Side.LEFT):SpaceDoorControlPanel.Side.NONE;
@@ -50,19 +83,44 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     @Override public ModelData getModelData(){var p=largeVisual();if(p==null)return super.getModelData();return ModelData.builder().with(SETTINGS,p.shared().settings()).with(VISUAL,p.shared()).with(LARGE_VISUAL,p).with(NativeFluidRenderSnapshot.DATA,fluidRenderSnapshot()).build();}
     @Override public long modelDataRevision(){var link=binding;return modelRevision+(link==null||link.value==null?0:link.value.version());}
     private void queueAssembly(BlockPos anchor,Direction face){if(level==null)return;for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos pos=NativeLargeDoorLifecycle.cell(anchor,face,horizontal,x,y);if(!pos.equals(worldPosition)&&NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part&&part.anchorPos().equals(anchor))NativeFluidWorld.queue(part);}}
-    private NativeLargeDoorGeometry.Snapshot rootGeometry(){var state=getBlockState();var settings=settings();if(rootGeometry!=null&&rootGeometrySettings==settings&&rootGeometryState==state&&rootGeometry.key().horizontal()==horizontal)return rootGeometry;var key=NativeLargeDoorGeometry.key(settings(),state.getValue(NativeLargeDoorBlock.FACING),state.getValue(NativeLargeDoorBlock.OPEN),horizontal);var before=rootGeometry;if(before==null||!before.key().equals(key)){rootGeometry=NativeLargeDoorGeometry.build(settings(),key.face(),key.open(),worldPosition,key.horizontal());queueAssembly(worldPosition,key.face());}rootGeometrySettings=settings;rootGeometryState=state;return rootGeometry;}
-    final NativeLargeDoorGeometry.Snapshot rootGeometrySnapshot(){return rootGeometry();}
+    private NativeLargeDoorGeometry.Snapshot rootGeometry(int columns,int rows){
+        var state=getBlockState();var settings=settings();
+        if(rootGeometry!=null&&rootGeometrySettings==settings&&rootGeometryState==state&&rootGeometry.key().horizontal()==horizontal
+                &&rootGeometry.columns()==columns&&rootGeometry.rows()==rows)return rootGeometry;
+        var key=NativeLargeDoorGeometry.key(settings,state.getValue(NativeLargeDoorBlock.FACING),state.getValue(NativeLargeDoorBlock.OPEN),horizontal);
+        var before=rootGeometry;
+        if(before==null||!before.key().equals(key)||before.columns()!=columns||before.rows()!=rows){
+            rootGeometry=NativeLargeDoorGeometry.build(settings,key.face(),key.open(),worldPosition,key.horizontal(),columns,rows);
+            queueAssembly(worldPosition,key.face());
+        }
+        rootGeometrySettings=settings;rootGeometryState=state;
+        return rootGeometry;
+    }
+    final NativeLargeDoorGeometry.Snapshot rootGeometrySnapshot(){
+        var layout=joined;
+        return layout.leader()==this?rootGeometry(layout.columns(),layout.rows()):null;
+    }
     private final NativeOpeningFluidRegions largeFluidRegions=new NativeOpeningFluidRegions();
     @Override public NativeFluidRegions fluidSurfaceRegions(){return largeFluidRegions.snapshot();}
     @Override public void refreshFluidGeometry(){
         var before=fluidPose;var root=level==null?null:NativeLargeDoorLifecycle.root(level,worldPosition);
         if(root==null||column<0||column>2||row<0||row>2){if(before.geometry()!=null){queueAssembly(anchorPos(),getBlockState().getValue(NativeLargeDoorBlock.FACING));fluidPose=new FluidPose(null,column,row,null,EMPTY_VOLUME,before.revision()+1);}publishEffective(0);largeFluidRegions.clear();binding=null;publishProjection(settings(),getBlockState(),anchorPos(),null);return;}
-        var geometry=root.rootGeometry();if(before.geometry()!=geometry||before.column()!=column||before.row()!=row){var built=NativeLargeDoorFluidGeometry.build(root.settings(),geometry,column,row);fluidPose=new FluidPose(geometry,column,row,built.plane(),built.volume(),before.revision()+1);}
+        var group=root.joined;
+        var leader=group.leader();
+        int groupColumn=column+group.column()*3,groupRow=row+group.row()*3;
+        var geometry=leader.rootGeometry(group.columns(),group.rows());
+        if(before.geometry()!=geometry||before.column()!=groupColumn||before.row()!=groupRow){
+            var built=NativeLargeDoorFluidGeometry.build(leader.settings(),geometry,groupColumn,groupRow);
+            fluidPose=new FluidPose(geometry,groupColumn,groupRow,built.plane(),built.volume(),before.revision()+1);
+        }
         publishEffective(NativeDoorOpeningFluids.sources(level,worldPosition,fluidFacing(),geometry.key().open(),containedFluids().snapshot()));
         var plane=fluidPose.plane();
         if(horizontal)largeFluidRegions.prepare(plane.x(),plane.y(),plane.z(),plane.near(),plane.far(),geometry.key().open(),effectiveFluidSnapshot(),.999,.999);
         else largeFluidRegions.prepareDoor(this,plane.x(),plane.z(),plane.near(),plane.far(),geometry.key().open(),effectiveFluidSnapshot());
-        root.publishRoot(geometry);binding=root.rootPublication;publishProjection(root.settings(),root.getBlockState(),root.getBlockPos(),geometry);largeVisual();
+        leader.publishRoot(geometry);
+        binding=leader.rootPublication;
+        publishProjection(leader.settings(),leader.getBlockState(),leader.getBlockPos(),geometry,groupColumn,groupRow);
+        largeVisual();
     }
     private void publishEffective(int water){var stored=containedFluids().snapshot();if(effectiveBase!=null&&effectiveBase.revision==stored.revision&&openingWater==water)return;effectiveBase=stored;openingWater=water;effective=stored.withOpeningWater(water,++effectiveRevision);}
     @Override public NativeFluidSlots.Snapshot effectiveFluidSnapshot(){var value=effective;return value==null?containedFluids().snapshot():value;}
@@ -74,9 +132,9 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     @Override public Direction[] fluidPlacementFaces(){var p=fluidPose.plane();return p==null?new Direction[0]:new Direction[]{fluidFacing(),fluidFacing().getOpposite()};}
     void openingChanged(){markWaterGushDirty();}
     @Override public void containedFluidsChanged(){super.containedFluidsChanged();if(level!=null&&!level.isClientSide)markWaterGushDirty();NativeFluidWorld.queue(this);}
-    @Override public void onLoad(){super.onLoad();NativeLargeDoorTargets.add(this);}
-    @Override public void setRemoved(){NativeLargeDoorTargets.remove(this);super.setRemoved();}
-    @Override public void onChunkUnloaded(){NativeLargeDoorTargets.remove(this);super.onChunkUnloaded();}
+    @Override public void onLoad(){super.onLoad();NativeLargeDoorTargets.add(this);NativeLargeDoorJoins.invalidate(this);}
+    @Override public void setRemoved(){NativeLargeDoorJoins.invalidate(this);NativeLargeDoorTargets.remove(this);super.setRemoved();}
+    @Override public void onChunkUnloaded(){NativeLargeDoorJoins.invalidate(this);NativeLargeDoorTargets.remove(this);super.onChunkUnloaded();}
     @Override protected Boolean legacySlidingModel(){return getBlockState().getBlock() instanceof NativeLargeDoorBlock?Boolean.FALSE:null;}
     @Override protected NativeProgrammableDoorEntity controlRoot(){return level==null?null:NativeLargeDoorLifecycle.root(level,worldPosition);}
     @Override protected boolean controlRole(){return getBlockState().getBlock() instanceof NativeLargeDoorBlock&&isAnchor();}
@@ -86,7 +144,7 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     @Override protected NativeProgrammableDoorEntity credentialMate(){return null;}
     @Override protected boolean readerUsable(net.minecraft.server.level.ServerPlayer player){return level!=null&&NativeLargeDoorLifecycle.authorized(level,this,player);}
     @Override protected void queueFluidParts(){NativeFluidWorld.queue(this);}
-    @Override protected void preparePublication(){var before=rootGeometry;boolean update=!java.util.Objects.equals(controls,controlSignature());if(update)controlPowerChanged();refreshFluidGeometry();if(!update&&before!=rootGeometry&&level!=null){Direction face=getBlockState().getValue(NativeLargeDoorBlock.FACING);for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos pos=NativeLargeDoorLifecycle.cell(worldPosition,face,horizontal,x,y);if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part&&part.anchorPos().equals(worldPosition))part.refreshFluidGeometry();}}}
+    @Override protected void preparePublication(){NativeLargeDoorJoins.invalidate(this);var before=rootGeometry;boolean update=!java.util.Objects.equals(controls,controlSignature());if(update)controlPowerChanged();refreshFluidGeometry();if(!update&&before!=rootGeometry&&level!=null){Direction face=getBlockState().getValue(NativeLargeDoorBlock.FACING);for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos pos=NativeLargeDoorLifecycle.cell(worldPosition,face,horizontal,x,y);if(NativeFluidWorld.loaded(level,pos)&&level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part&&part.anchorPos().equals(worldPosition))part.refreshFluidGeometry();}}}
     private ControlSignature controlSignature(){var d=settings().door();return new ControlSignature(getRedstoneChannels(),d.trigger,settings().securityMode(),settings().panelMode(),settings().securityMode()>0&&securityOpen(),channelSignal());}
     @Override protected void publicationCompleted(){if(!java.util.Objects.equals(controls,controlSignature()))localInputChanged();}
 
