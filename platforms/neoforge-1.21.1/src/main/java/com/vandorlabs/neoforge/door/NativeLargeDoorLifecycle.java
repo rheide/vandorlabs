@@ -55,7 +55,7 @@ public final class NativeLargeDoorLifecycle {
     public static boolean setState(Level level,NativeLargeDoorEntity root,boolean powered,boolean open){
         if(!complete(level,root)||root.placementRecovery())return false;BlockPos anchor=root.getBlockPos();Direction face=root.getBlockState().getValue(NativeLargeDoorBlock.FACING);boolean changed=root.getBlockState().getValue(NativeLargeDoorBlock.OPEN)!=open;
         for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos cell=cell(anchor,face,root.isHorizontal(),x,y);var old=level.getBlockState(cell);var next=old.setValue(NativeLargeDoorBlock.OPEN,open).setValue(NativeLargeDoorBlock.POWERED,powered);if(old!=next){level.setBlock(cell,next,Block.UPDATE_CLIENTS);com.vandorlabs.neoforge.fluid.NativeFluidWorld.queueAt(level,cell);}}
-        for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(level.getBlockEntity(cell(anchor,face,root.isHorizontal(),x,y)) instanceof NativeLargeDoorEntity part)part.refreshFluidGeometry();
+        for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(level.getBlockEntity(cell(anchor,face,root.isHorizontal(),x,y)) instanceof NativeLargeDoorEntity part){if(changed&&root.isHorizontal())part.openingChanged();part.refreshFluidGeometry();}
         if(changed)level.playSound(null,anchor,open?net.minecraft.sounds.SoundEvents.IRON_DOOR_OPEN:net.minecraft.sounds.SoundEvents.IRON_DOOR_CLOSE,net.minecraft.sounds.SoundSource.BLOCKS,1,1);return true;
     }
 

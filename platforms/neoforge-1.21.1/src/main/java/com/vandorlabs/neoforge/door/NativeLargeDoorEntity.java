@@ -72,6 +72,7 @@ public class NativeLargeDoorEntity extends NativeProgrammableDoorEntity {
     @Override public int containedFluidSide(double x,double y,double z){var p=fluidPose.plane();return p==null?0:p.side(x,y,z);}
     private Direction fluidFacing(){return horizontal?Direction.DOWN:getBlockState().getValue(NativeLargeDoorBlock.FACING);}
     @Override public Direction[] fluidPlacementFaces(){var p=fluidPose.plane();return p==null?new Direction[0]:new Direction[]{fluidFacing(),fluidFacing().getOpposite()};}
+    void openingChanged(){markWaterGushDirty();}
     @Override public void containedFluidsChanged(){super.containedFluidsChanged();if(level!=null&&!level.isClientSide)markWaterGushDirty();NativeFluidWorld.queue(this);}
     @Override public void onLoad(){super.onLoad();NativeLargeDoorTargets.add(this);}
     @Override public void setRemoved(){NativeLargeDoorTargets.remove(this);super.setRemoved();}
