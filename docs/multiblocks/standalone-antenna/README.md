@@ -1,22 +1,24 @@
 # Sentinel Array
 
-Build a **2 wide × 2 deep × 4 high** assembly with **15 Programmable Matter Blocks** and **one Sentinel Array Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+Use the [frame blocks for your Minecraft version](../README.md).
+
+Build a **2 wide × 2 deep × 4 high** assembly with **15 frame blocks** and **one Sentinel Array Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
 ## 1. Build the base
 
-Place a solid **2 × 2** bottom layer: one matching Core in the front-left corner, facing you, and **three Programmable Matter Blocks**.
+Place a solid **2 × 2** bottom layer: one matching Core in the front-left corner, facing you, and **three frame blocks**.
 
 ![Sentinel Array: build the base](step-1.png)
 
 ## 2. Add the two middle layers
 
-Add **two solid 2 × 2 layers** of Programmable Matter Blocks above the base: **eight Matter Blocks** in total. The construction is now three blocks high; leave the fourth layer empty for the next step.
+Add **two solid 2 × 2 layers** of frame blocks above the base: **eight frame blocks** in total. The construction is now three blocks high; leave the fourth layer empty for the next step.
 
 ![Sentinel Array: add the two middle layers](step-2.png)
 
 ## 3. Complete the top layer
 
-Add **four Matter Blocks** as the final 2 × 2 layer. The finished construction is **four blocks high**. Every position in each 2 × 2 layer is a frame corner, so this design has **no hollow interior or open roof center**.
+Add **four frame blocks** as the final 2 × 2 layer. The finished construction is **four blocks high**. Every position in each 2 × 2 layer is a frame corner, so this design has **no hollow interior or open roof center**.
 
 ![Sentinel Array: complete the top layer](step-3.png)
 
@@ -50,10 +52,10 @@ The assembled model scales uniformly to fit the frame.
 
 Survey Dishes accept N×N×N frames for N=3–16. Sentinel Arrays accept N×N×2N
 frames for N=2–8 (dimensions are width × depth × height). The existing limit is
-16 blocks per axis. The frame needs `N² + 4H + 4N − 13` Matter Blocks plus one
+16 blocks per axis. The frame needs `N² + 4H + 4N − 13` frame blocks plus one
 Core, where H is its height.
 
-| Observer | Frame | Matter Blocks | Radius at Y=64 | Radius at Y=128+ |
+| Observer | Frame | frame blocks | Radius at Y=64 | Radius at Y=128+ |
 | --- | --- | ---: | ---: | ---: |
 | Survey Dish | 3×3×3 | 20 | 1,000 | 2,000 |
 | Survey Dish | 4×4×4 | 35 | 1,000 | 2,667 |

@@ -1,6 +1,8 @@
 # Paladyne Navigation Computer
 
-Build a **1 wide × 1 deep × 3 high** assembly with **2 Programmable Matter Blocks** and **one Paladyne Navigation Computer Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
+Use the [frame blocks for your Minecraft version](../README.md).
+
+Build a **1 wide × 1 deep × 3 high** assembly with **2 frame blocks** and **one Paladyne Navigation Computer Core**. Core blocks are available in Creative, following the existing Universal Constructor system.
 
 ## 1. Place the Core
 
@@ -10,13 +12,13 @@ Place the matching Core on the ground, with its operating face toward you.
 
 ## 2. Add the middle block
 
-Place one Programmable Matter Block directly above the Core.
+Place one frame block directly above the Core.
 
 ![Paladyne Navigation Computer: add the middle block](step-2.png)
 
 ## 3. Add the top block
 
-Place the second Programmable Matter Block above the first. The column is now three blocks high.
+Place the second frame block above the first. The column is now three blocks high.
 
 ![Paladyne Navigation Computer: add the top block](step-3.png)
 
@@ -28,7 +30,7 @@ Right-click the Core to form the complete computer. The normal appearance is Idl
 
 ## Facing and removal
 
-The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining Matter Blocks.
+The same frame works along either horizontal axis and with the Core in any bottom corner. The placed facing is preferred when it fits. Sneak-right-click the Core to dismantle; on a machine with a holder, aim away from the holder to dismantle rather than configure it. Mining a reserved part dismantles the frame and removes that cell. Breaking the Core restores the remaining frame blocks.
 
 Use the Configurizer to select artwork independently for the fitted screen/half-screen and keyboard surfaces. Model artwork preserves the original design; Black and the standard material/screen/panel catalog are also available. See [Machine display settings](../../machine-displays.md) for redstone activation and optional retained Data Chips.
 

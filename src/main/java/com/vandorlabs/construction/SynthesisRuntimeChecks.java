@@ -58,7 +58,7 @@ public final class SynthesisRuntimeChecks {
     public static void run(World world,net.minecraft.entity.player.EntityPlayerMP player){
         long time=world.getTotalWorldTime();BlockPos root=new BlockPos(180,220,180);
         BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:synthesis_tower_core"));
-        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
+        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_block"));
         legacyGantry(world,root.east(16),matter);
         try{
             world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH));

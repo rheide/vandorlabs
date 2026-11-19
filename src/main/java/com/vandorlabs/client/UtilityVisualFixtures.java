@@ -12,7 +12,7 @@ import net.minecraftforge.fluids.*;
 final class UtilityVisualFixtures {
     static void build(World world){
         for(int x=138;x<170;x++)for(int z=119;z<139;z++)world.setBlockState(new BlockPos(x,20,z),Blocks.STONE.getDefaultState(),2);
-        String[] ids={"programmable_matter_infuser","programmable_matter_block","battery_block","hexagonal_fuel_tank"};
+        String[] ids={"programmable_matter_infuser","programmable_block","battery_block","hexagonal_fuel_tank"};
         for(int i=0;i<ids.length;i++){BlockPos p=new BlockPos(140+i*2,21,120);world.setBlockState(p,Block.getBlockFromName("vandorlabs:"+ids[i]).getDefaultState(),2);if(i==3){world.setBlockState(p,world.getBlockState(p).withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.UP),2);world.setBlockState(p.up(),world.getBlockState(p),2);((TileEntityHexTank)world.getTileEntity(p)).fill(new FluidStack(FluidRegistry.WATER,23000),true);}}
         TileEntityBattery battery=(TileEntityBattery)world.getTileEntity(new BlockPos(144,21,120));charge(world,battery,72000);
         for(int i=0;i<6;i++){BlockPos at=new BlockPos(150+i*2,23,120);world.setBlockState(at.down(),Blocks.STONE.getDefaultState(),2);world.setBlockState(at.down(2),Blocks.STONE.getDefaultState(),2);world.setBlockState(at,Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank").getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.values()[i]),2);int amount=new int[]{0,4000,8000,12000,16000,8000}[i];if(amount>0)((TileEntityHexTank)world.getTileEntity(at)).fill(new FluidStack(i==4?FluidRegistry.LAVA:FluidRegistry.WATER,amount),true);}
@@ -38,7 +38,7 @@ final class UtilityVisualFixtures {
         for(int i=0;i<fluidWalls.length;i++){BlockPos p=new BlockPos(140+i*2,21,126);world.setBlockState(p,Block.getBlockFromName("vandorlabs:"+fluidWalls[i]).getDefaultState(),2);ContainedFluids data=WaterloggedParts.data(world.getTileEntity(p));data.set(0,new FluidStack(FluidRegistry.WATER,1000));data.set(1,new FluidStack(FluidRegistry.LAVA,1000));}
         for(int i=0;i<3;i++){
             BlockPos root=new BlockPos(140+i*10,21,132);String id=new String[]{"assembly_press","synthesis_tower","enclosed_gantry"}[i];BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+id+"_core");world.setBlockState(root,block.getDefaultState(),2);TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);
-            for(int y=0;y<block.height;y++)for(int x=0;x<block.width;x++)for(int z=0;z<3;z++)if(tile.frame(x,y,z) && !tile.cell(x,y,z).equals(root))world.setBlockState(tile.cell(x,y,z),Block.getBlockFromName("vandorlabs:programmable_matter_block").getDefaultState(),2);if(!tile.assemble())throw new IllegalStateException("constructor preview assembly "+id);
+            for(int y=0;y<block.height;y++)for(int x=0;x<block.width;x++)for(int z=0;z<3;z++)if(tile.frame(x,y,z) && !tile.cell(x,y,z).equals(root))world.setBlockState(tile.cell(x,y,z),Block.getBlockFromName("vandorlabs:programmable_block").getDefaultState(),2);if(!tile.assemble())throw new IllegalStateException("constructor preview assembly "+id);
         }
     }
     private static void charge(World world,TileEntityBattery cell,int amount){

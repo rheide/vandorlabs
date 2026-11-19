@@ -13,7 +13,7 @@ import net.minecraft.world.World;
 public final class FrameMachineRuntimeChecks {
     private static String scenario;
     public static void run(World world,net.minecraft.entity.player.EntityPlayer player){
-        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_matter_block"));
+        Block matter=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:programmable_block"));
         BlockPos minimum=new BlockPos(150,225,150);int count=0;
         for(FrameMachineDesign spec:FrameMachineDesign.all())for(boolean turned:new boolean[]{false,true})for(int corner=0;corner<4;corner++)for(EnumFacing facing:EnumFacing.HORIZONTALS){
             String id=spec.design;BlockConstructorCore block=(BlockConstructorCore)Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+spec.block));
@@ -34,6 +34,8 @@ public final class FrameMachineRuntimeChecks {
                 require(tile.assemblyProblem().contains("Interior must be air"),"actionable obstruction diagnostic");world.setBlockToAir(middle);}
                 BlockPos missing=original.entrySet().stream().filter(e->e.getValue()).map(e->e.getKey()).findFirst().get();world.setBlockToAir(missing);
                 require(!tile.assemble(),"missing base rejects assembly");world.setBlockState(missing,matter.getDefaultState());
+                TileEntityAnimatedScreenSelector selectedFrame=(TileEntityAnimatedScreenSelector)world.getTileEntity(missing);
+                selectedFrame.setHousingTexture(0);
                 require(tile.assemble() && tile.formed(),"frame assembles "+id+facing+" corner="+corner+" turned="+turned);
                 net.minecraft.block.state.IBlockState formed=world.getBlockState(root);
                 require(!formed.isOpaqueCube()&&!formed.isFullCube()&&formed.getLightOpacity()==0,"formed core cannot hide neighboring terrain through model cutouts");
@@ -45,6 +47,8 @@ public final class FrameMachineRuntimeChecks {
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
                 require(client.pivot().equals(tile.pivot()),"client update corner offset");
                 tile.dismantle();require(!tile.formed()&&world.getBlockState(root).isOpaqueCube(),"manual dismantling restores the solid core model");checkRestored(world,original,matter);
+                require(((TileEntityAnimatedScreenSelector)world.getTileEntity(missing)).getHousingTexture()==0,
+                        "mixed finish restored through formation and dismantling");
                 checkCosmeticTicks(tile,spec);require(!tile.formed(),"dismantled frame never automatically reforms");
                 require(tile.assemble(),"reassembly from non-default corner");require(world.getTileEntity(root)==tile,"core tile identity after reassembly");
                 net.minecraft.block.state.IBlockState selected=world.getBlockState(missing);selected.getBlock().removedByPlayer(selected,world,missing,player,false);require(world.isAirBlock(missing)&&!tile.formed(),"mining a reserved part dismantles and removes the clicked cell");checkCosmeticTicks(tile,spec);require(world.isAirBlock(missing)&&!tile.formed(),"mined frame stays dismantled");

@@ -30,7 +30,7 @@ final class ItemRuntimeChecks {
         }, 3, 3);
         for(int i=0;i<9;i++)grid.setInventorySlotContents(i,new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT));
         ItemStack packed=CraftingManager.findMatchingResult(grid,player.world);
-        require(!packed.isEmpty() && packed.getItem()==Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:programmable_matter_block")) && packed.getCount()==1,"nine ingots pack one matter block");
+        require(!packed.isEmpty() && packed.getItem()==Item.getItemFromBlock(Block.getBlockFromName("vandorlabs:programmable_block")) && packed.getCount()==1,"nine ingots pack one matter block");
         for(int i=0;i<9;i++)grid.setInventorySlotContents(i,ItemStack.EMPTY);grid.setInventorySlotContents(0,packed);
         ItemStack unpacked=CraftingManager.findMatchingResult(grid,player.world);
         require(unpacked.getItem()==ModItems.PROGRAMMABLE_MATTER_INGOT && unpacked.getCount()==9,"matter block unpacks to nine ingots");

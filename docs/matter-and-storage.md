@@ -10,7 +10,9 @@ Right-click or use the Configurizer to open the same inventory dialog. Both
 versions use the standard Vandor header, sunlight status, catalyst slot and
 production or battery-charge progress display; solar work has no furnace flame.
 
-Craft the infuser with iron around a glass lens, an Infuser Core in the center, and redstone at the bottom. Infuser Cores are currently available in creative mode only. The former direct crafting recipe for Programmable Matter ingots is removed. Nine ingots craft one Programmable Matter Block; the block can be unpacked into nine ingots.
+Craft the infuser with iron around a glass lens, an Infuser Core in the center, and redstone at the bottom. Infuser Cores are currently available in creative mode only. The former direct crafting recipe for Programmable Matter ingots is removed. The Assembly Press turns one ingot and 8,000 RF into one Programmable Plate. Craft Programmable Armor from plates using the standard armor patterns.
+
+On Forge 1.12.2, Programmable Block uses the former Matter artwork as its default finish and serves as the frame material. Existing Programmable Matter Blocks become Programmable Blocks. On NeoForge 1.21.1, nine ingots still craft one Programmable Matter Block, and unpacking it returns nine ingots.
 
 Battery Blocks and Hexagonal Fuel Tanks use the same capacities, shapes and construction rules on Forge 1.12.2 and NeoForge 1.21.1. Power Ports connect to a battery's marked input/output faces; Fluid Ports connect through a tank's axial ports. Use the [Resource Port guide](resource-ports.md) for transfer limits and optional input pulling, and the [joined tank guide](multiblocks/hexagonal-tank/README.md) for complete 2 × 2 and 3 × 3 sections.
 
