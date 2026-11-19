@@ -212,6 +212,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-core-handoff ]; then
             PREFIX=arm_core_handoff_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true VANDOR_LABS_CORE_HANDOFF_ONLY=true
+        elif [ "$TARGET" = observer-arm-power ]; then
+            PREFIX=observer_arm_power_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_CORE_ONLY=true VANDOR_LABS_OBSERVER_ARM_POWER_ONLY=true
         elif [ "$TARGET" = arm-core-use ]; then
             PREFIX=arm_core_use_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_CORE_ONLY=true VANDOR_LABS_ARM_CORE_USE_ONLY=true
@@ -837,6 +840,11 @@ PYIMAGE
     if [ "$TARGET" = arm-core-handoff ]; then
         grep -q '\[vandorlabs\]\[core-handoff\] PASS checks=' "$RUN_OUT/client.log"
         echo "Core native/captured render handoff passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = observer-arm-power ]; then
+        grep -q "arm-live PASS observer-power" "$RUN_OUT/client.log"
+        echo "Observer Arm power checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = arm-core-use ]; then
