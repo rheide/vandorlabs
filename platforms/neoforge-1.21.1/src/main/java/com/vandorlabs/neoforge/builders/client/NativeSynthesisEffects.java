@@ -5,6 +5,8 @@ import com.mojang.math.Axis;
 import com.vandorlabs.machines.SynthesisPresentation;
 import com.vandorlabs.rack.EmbeddedRackMotion;
 import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
+import com.vandorlabs.neoforge.builders.NativeBuilderProducts;
+import com.vandorlabs.neoforge.builders.NativeSynthesisRuntime;
 import com.vandorlabs.neoforge.rack.NativeBatteryModule;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.MultiBufferSource;
@@ -13,6 +15,7 @@ import net.minecraft.client.renderer.texture.TextureAtlasSprite;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.item.ItemDisplayContext;
+import net.minecraft.world.item.ItemStack;
 import org.joml.Vector3f;
 
 /** Fabrication remains cosmetic. Exact cached core artwork is clipped at the authoritative build height. */
@@ -47,23 +50,35 @@ public final class NativeSynthesisEffects {
     private static void rear(PoseStack poses,MultiBufferSource buffers,String name,int x){var sprite=sprite("vandorlabs:blocks/resource_ports/"+name);var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,x+1,0,3.002,0,1,-1);point(out,poses,sprite,x,0,3.002,1,1,-1);point(out,poses,sprite,x,1,3.002,1,0,-1);point(out,poses,sprite,x+1,1,3.002,0,0,-1);}
     private static void bottom(PoseStack poses,MultiBufferSource buffers,String name,int x){var sprite=sprite("vandorlabs:blocks/resource_ports/"+name);var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,x,-.002,2,0,0,-1);point(out,poses,sprite,x+1,-.002,2,1,0,-1);point(out,poses,sprite,x+1,-.002,3,1,1,-1);point(out,poses,sprite,x,-.002,3,0,1,-1);}
 
+    private static ItemStack rampPreview=ItemStack.EMPTY;
+    private static ItemStack rampPreview(){
+        if(rampPreview.isEmpty())rampPreview=NativeBuilderProducts.result(NativeBuilderProducts.RAMP);
+        return rampPreview;
+    }
     public static void processing(NativeBuilderEntity.Visual visual,PoseStack poses,MultiBufferSource buffers,double now){processing(visual,poses,buffers,now,null);}
     public static void processing(NativeBuilderEntity.Visual visual,PoseStack poses,MultiBufferSource buffers,double now,NativeBuilderProgressMotion.State eased){
         boolean digitize=visual.mode()==1;var input=eased==null?visual.input():eased.input();var template=eased==null?visual.template():eased.template();
         if(eased==null?!visual.processing()&&visual.progress()<=0&&(!digitize||input.isEmpty()):!eased.visible)return;
         float progress=eased==null?visual.processing()?visual.progress():1:eased.progress;float fraction=digitize?visual.processing()||visual.input().isEmpty()?1-progress:1:progress;
-        String id=visual.building()<5?com.vandorlabs.neoforge.builders.NativeBuilderProducts.IDS[Math.clamp(visual.building(),0,4)]:null;
-        if(digitize||visual.building()==5){var stack=digitize?input:template;if(!stack.isEmpty()){poses.pushPose();try{poses.translate(1,SynthesisPresentation.CORE_Y,1.125);NativeBlockRecipePreview.render(stack,poses,buffers,FULLBRIGHT,OverlayTexture.NO_OVERLAY,fraction);}finally{poses.popPose();}}}
-        else{poses.pushPose();try{poses.translate(1,SynthesisPresentation.CORE_Y,1.125);NativeCoreModel.emit(id,fraction,poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),FULLBRIGHT,OverlayTexture.NO_OVERLAY);}finally{poses.popPose();}}
+        int building=visual.building();
+        boolean ramp=building==NativeBuilderProducts.RAMP;
+        boolean blockProduct=digitize||building==NativeSynthesisRuntime.DYNAMIC||ramp;
+        ItemStack stack=digitize?input:ramp?rampPreview():template;
+        String id=blockProduct?null:NativeBuilderProducts.IDS[Math.clamp(building,0,NativeBuilderProducts.IDS.length-1)];
+        poses.pushPose();try{
+            poses.translate(1,SynthesisPresentation.CORE_Y,1.125);
+            if(blockProduct)NativeBlockRecipePreview.render(stack,poses,buffers,FULLBRIGHT,OverlayTexture.NO_OVERLAY,fraction);
+            else NativeCoreModel.emit(id,fraction,poses.last(),buffers.getBuffer(NativeBuilderModelCache.LAYER),FULLBRIGHT,OverlayTexture.NO_OVERLAY);
+        }finally{poses.popPose();}
         if(!visual.processing())return;
-        var white=sprite("minecraft:block/white_concrete");var out=buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));double surface=SynthesisPresentation.CORE_Y+(digitize||visual.building()==5?NativeBlockRecipePreview.upperY(digitize?input:template,fraction):com.vandorlabs.geometry.CoreMesh.height(id,fraction))+.008;
+        var white=sprite("minecraft:block/white_concrete");var out=buffers.getBuffer(net.minecraft.client.renderer.RenderType.entityTranslucent(InventoryMenu.BLOCK_ATLAS));double surface=SynthesisPresentation.CORE_Y+(blockProduct?NativeBlockRecipePreview.upperY(stack,fraction):com.vandorlabs.geometry.CoreMesh.height(id,fraction))+.008;
         if(visual.working())for(int i=0;i<4;i++){
             int color=com.vandorlabs.machines.SynthesisLaserStyle.color(i,now);
             double ex=1.5+.46*Math.sin(now*.12+i*Math.PI/2),ez=1.625+.46*Math.sin(now*.075+i*Math.PI),sx=i%2==0?.70:2.30,sz=i<2?.95:2.30,r=.014;
             point(out,poses,white,sx-r,4.48,sz,.5,.5,color);point(out,poses,white,sx+r,4.48,sz,.5,.5,color);point(out,poses,white,ex+r,surface,ez,.5,.5,color);point(out,poses,white,ex-r,surface,ez,.5,.5,color);
             point(out,poses,white,sx,4.48,sz-r,.5,.5,color);point(out,poses,white,sx,4.48,sz+r,.5,.5,color);point(out,poses,white,ex,surface,ez+r,.5,.5,color);point(out,poses,white,ex,surface,ez-r,.5,.5,color);
         }
-        if(digitize||visual.building()==5){var stack=digitize?input:template;if(!stack.isEmpty()){poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.screenPreviewScale(1,1,1);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));poses.translate(-.5,-.5,-.5);NativeBlockRecipePreview.render(stack,poses,buffers,FULLBRIGHT,OverlayTexture.NO_OVERLAY,1);}finally{poses.popPose();}}return;}
+        if(blockProduct){if(!stack.isEmpty()){poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.screenPreviewScale(1,1,1);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));poses.translate(-.5,-.5,-.5);NativeBlockRecipePreview.render(stack,poses,buffers,FULLBRIGHT,OverlayTexture.NO_OVERLAY,1);}finally{poses.popPose();}}return;}
         if(visual.building()>=3)return;
         poses.pushPose();try{poses.translate(SynthesisPresentation.SCREEN_X,SynthesisPresentation.SCREEN_Y,SynthesisPresentation.SCREEN_Z-.01);double scale=SynthesisPresentation.screenPreviewScale(NativeBuilderModelCache.width(id),NativeBuilderModelCache.height(id),3);poses.scale((float)scale,(float)scale,.002F);poses.mulPose(Axis.YP.rotationDegrees((float)(now*1.4)));NativeBuilderModelCache.preview(id,poses,buffers,FULLBRIGHT);}finally{poses.popPose();}
     }

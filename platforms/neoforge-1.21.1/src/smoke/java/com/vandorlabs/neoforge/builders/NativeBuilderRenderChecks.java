@@ -22,7 +22,8 @@ public final class NativeBuilderRenderChecks {
         boolean processing=index==1||index==2||index==5;float progress=index==5?.8F:.5F;
         var battery=new ItemStack(NativeRackBindings.BATTERY);NativeBatteryModule.transfer(battery,8000,false,true);
         if(index==0){var modules=new java.util.ArrayList<ItemStack>();for(int bay=0;bay<4;bay++){var module=new ItemStack(NativeRackBindings.BATTERY);NativeBatteryModule.transfer(module,10000-bay*2500,false,true);modules.add(module);}return new NativeBuilderEntity.Visual(design,Direction.NORTH,BlockPos.ZERO,true,false,0,0,0,true,modules.get(0),ItemStack.EMPTY,java.util.List.copyOf(modules),java.util.List.of(0L,0L,0L,0L),false);}
-        return new NativeBuilderEntity.Visual(design,index==5?Direction.EAST:Direction.NORTH,BlockPos.ZERO,true,processing,processing?progress:0,0,0,true,battery,ItemStack.EMPTY);
+        int product=index==5?NativeBuilderProducts.RAMP:0;
+        return new NativeBuilderEntity.Visual(design,index==5?Direction.EAST:Direction.NORTH,BlockPos.ZERO,true,processing,processing?progress:0,product,product,true,battery,ItemStack.EMPTY);
     }
     private static void verifyDynamicNormals(){
         need(NativeBuilderModelCache.mesh("synthesis_tower",true).vertexCount()==com.vandorlabs.geometry.CoreMesh.faces("synthesis_tower").size()*4,"shared hollow Core mesh");
@@ -41,6 +42,9 @@ public final class NativeBuilderRenderChecks {
         var active=scene(1);var paused=new NativeBuilderEntity.Visual(active.design(),active.facing(),active.pivot(),active.formed(),active.processing(),active.progress(),active.selected(),active.building(),active.connected(),active.battery(),active.chip(),active.batteries(),active.batterySequences(),false);
         NativeSynthesisEffects.processing(paused,pose,layer->target,20);need(normals[0]==32,"paused partial scaffold emits no lasers");
 
+        int before=vertices[0];
+        NativeSynthesisEffects.processing(scene(5),pose,layer->target,20);
+        need(vertices[0]-before>32&&normals[0]==64,"fixed Ramp fabrication emits native item quads alongside four beams");
         System.out.println("[vandorlabs][builder-render] posed-normal PASS fourBeams32records flippedGUIY");
     }
     @SubscribeEvent public static void draw(ScreenEvent.Render.Post event){
@@ -65,7 +69,7 @@ public final class NativeBuilderRenderChecks {
     }
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event)throws Exception{
         if(done||!enabled()||(!capture&&frames!=5))return;var mc=Minecraft.getInstance();
-        if(icons){done=true;NativeCoreIconRenderChecks.capture();System.out.println("[vandorlabs][builder-render] title PASS exactly3 finished structures textured native attachments partialCore fourLasers nearCull rotation fixedByteCache resourceReload actualCoreIcons; development/software only");mc.stop();return;}
+        if(icons){done=true;NativeCoreIconRenderChecks.capture();System.out.println("[vandorlabs][builder-render] title PASS exactly3 finished structures textured native attachments partialCore fourLasers nearCull rotation fixedByteCache resourceReload actualCoreIcons fixedRampFabrication; development/software only");mc.stop();return;}
         try(var image=Screenshot.takeScreenshot(mc.getMainRenderTarget())){
             var proof=mc.gameDirectory.toPath().resolve("screenshots/builders-native-"+generation+(frames==5?"-baseline":"")+".png");java.nio.file.Files.createDirectories(proof.getParent());image.writeToFile(proof);
             int cellW=image.getWidth()/3,cellH=image.getHeight()/2;

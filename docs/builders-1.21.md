@@ -68,8 +68,10 @@ item inventory immediately outside either output face receives finished Cores
 automatically. A full or unavailable destination leaves the output in the tower.
 
 Data Chips can be inserted and retrieved through their physical mount or the
-dialog. They retain their physical item ownership; additional chip designs are
-reserved for a later update. All three default designs work without a chip.
+dialog. All three default Core designs work without a chip. The Master
+Catalog also adds Sentinel Array and Survey Dish Cores and the full-block Ramp
+Controller. A Ramp Controller consumes one Programmable Matter Block and
+**8,000 RF** at **20 RF per tick**.
 
 ## Assembly Press operation
 

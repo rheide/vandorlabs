@@ -31,7 +31,7 @@ public final class NativeSynthesisRuntime {
  public float progress(){return active?work/(float)workCost:!digitizing()&&!owner.owned(1).isEmpty()?1:0;}
  public boolean active(){return active;}public boolean connected(){return connected;}void connection(boolean value){connected=value;}
  private int selectedCost(){return owner.synthesis()&&!digitizing()&&selected<DYNAMIC?SynthesisRecipePolicy.CORE_RF:COST;}
- private int maxDesign(){return owner.synthesis()?DYNAMIC:NativeBuilderProducts.parts(owner.design().id()).size()-1;}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
+ private int maxDesign(){return owner.synthesis()?NativeBuilderProducts.RAMP:NativeBuilderProducts.parts(owner.design().id()).size()-1;}private int rate(){return com.vandorlabs.machines.SynthesisRecipePolicy.rfPerTick(owner.design().id());}
 
  private boolean dynamic(int index){return owner.synthesis()&&index==DYNAMIC;}
  public ItemStack dynamicTemplate(){var chip=owner.owned(3);if(!ItemStack.matches(chip,cachedChip)){cachedChip=NativeCredentialItems.ownedCopy(chip);cachedTemplate=NativeBlockRecipeData.read(chip);}return cachedTemplate.copy();}
@@ -59,6 +59,7 @@ public final class NativeSynthesisRuntime {
      String id=com.vandorlabs.machines.BuilderRecipeCatalog.canonical(entry.getAsString());
      if(owner.synthesis()){
       for(int i=3;i<DYNAMIC;i++)if(id.equals(NativeBuilderProducts.IDS[i]+"_core"))catalogChoices|=1<<i;
+      if(id.equals(NativeBuilderProducts.RAMP_BLUEPRINT))catalogChoices|=1<<NativeBuilderProducts.RAMP;
      }else{
       int index=NativeBuilderProducts.PRESS.indexOf(id);
       if(index>=0)catalogChoices|=1<<index;
@@ -77,14 +78,20 @@ public final class NativeSynthesisRuntime {
   }
   return enabled;
  }
+ public int choices(){
+  if(owner.press())return pressChoices();
+  return owner.synthesis()&&NativeBuilderProducts.rampAvailable()?catalogChoices():0;
+ }
+ private boolean towerRamp(int index){return owner.synthesis()&&index==NativeBuilderProducts.RAMP;}
  private boolean permitted(){
   if(owner.press())return (pressChoices()&(1<<selected))!=0;
   if(owner.gantry())return NativeBuilderProducts.partDefault(owner.design().id(),selected);
   if(dynamic(selected))return dynamicAvailable();
+  if(towerRamp(selected))return (choices()&(1<<selected))!=0;
   return selected<3||(catalogChoices()&(1<<selected))!=0;
  }
  public void select(int index){
-  if(index<0||index>maxDesign()||dynamic(index)&&!dynamicAvailable()||owner.press()&&(pressChoices()&(1<<index))==0)return;
+  if(index<0||index>maxDesign()||dynamic(index)&&!dynamicAvailable()||(owner.press()||towerRamp(index))&&(choices()&(1<<index))==0)return;
   selected=index;owner.changed();
  }
  public static ItemStack result(int index){return NativeBuilderProducts.result(index);}
@@ -95,7 +102,12 @@ public final class NativeSynthesisRuntime {
  private boolean chipAdmitted(){var chip=owner.owned(3);if(!ItemStack.matches(chip,admissionChip)){admissionChip=chip.copy();admissionAllowed=false;admissionHash=new byte[0];if(NativeBlockRecipeData.canDigitizeChip(chip)){admissionSerializations++;var encoded=chip.save(owner.getLevel().registryAccess());if(encoded.sizeInBytes()<=MAX_CHIP_BYTES){admissionChip=NativeCredentialItems.ownedCopy(chip);admissionHash=hash(encoded);admissionAllowed=true;}}}return admissionAllowed;}
  void inventoryChanged(){if(!admissionChip.isEmpty()&&!ItemStack.matches(admissionChip,owner.owned(3))){admissionChip=ItemStack.EMPTY;admissionHash=new byte[0];admissionAllowed=false;}if(active&&digitizing()&&!completing&&!visual&&!fits())cancel();}
  private boolean queued(){if(active||!owner.owned(1).isEmpty())return false;return digitizing()?owner.owned(0).getCount()==1&&eligibleInput()&&chipAdmitted():owner.canPlaceItem(0,owner.owned(0))&&permitted();}
- private boolean fits(){return !digitizing()?owner.owned(1).isEmpty()&&(!owner.press()||NativeBuilderProducts.pressPartAvailable(building)):active&&ItemStack.matches(digitizeBlock,owner.owned(0))&&ItemStack.matches(scanChip,owner.owned(3));}
+ private boolean fits(){
+  if(digitizing())return active&&ItemStack.matches(digitizeBlock,owner.owned(0))&&ItemStack.matches(scanChip,owner.owned(3));
+  if(!owner.owned(1).isEmpty())return false;
+  if(owner.press())return NativeBuilderProducts.pressPartAvailable(building);
+  return !towerRamp(building)||NativeBuilderProducts.rampAvailable();
+ }
  private void start(){if(!owner.enabled()||!queued())return;if(digitizing()){digitizeBlock=NativeCredentialItems.ownedCopy(owner.owned(0));scanChip=NativeCredentialItems.ownedCopy(owner.owned(3));chipHash=admissionHash.clone();}else{building=selected;if(dynamic(building)){productionTemplate=dynamicTemplate();if(productionTemplate.isEmpty())return;}owner.owned(0).shrink(1);}workCost=selectedCost();active=true;work=0;lastWorked=Long.MIN_VALUE;owner.changed();}
  private void cancel(){active=false;work=0;digitizeBlock=scanChip=ItemStack.EMPTY;chipHash=new byte[0];working(false);owner.changed();}
  private void finish(){if(!active||work<workCost||!fits())return;completing=true;try{if(digitizing()){var written=NativeCredentialItems.ownedCopy(owner.owned(3));NativeBlockRecipeData.write(written,digitizeBlock,owner.getLevel().registryAccess());owner.owned(0).shrink(1);owner.own(3,written);digitizeBlock=scanChip=ItemStack.EMPTY;chipHash=new byte[0];}else{owner.own(1,product(building));productionTemplate=ItemStack.EMPTY;}active=false;work=0;working(false);nextExport=0;owner.changed();}finally{completing=false;}}

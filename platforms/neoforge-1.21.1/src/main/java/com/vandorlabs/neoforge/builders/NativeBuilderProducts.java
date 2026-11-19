@@ -8,7 +8,11 @@ import net.minecraft.world.item.ItemStack;
 public final class NativeBuilderProducts {
  public static final String[] IDS={"synthesis_tower","assembly_press","enclosed_gantry","standalone_antenna","standalone_dish"};
  public static final String[] NAMES={"Synthesis Tower","Assembly Press","Enclosed Gantry","Sentinel Array Core","Survey Dish Core"};
- public static ItemStack result(int index){if(index<0||index>=IDS.length)throw new IllegalArgumentException("Builder product");return new ItemStack(index<3?NativeBuilderBindings.CORES.get(IDS[index]):com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.CORES.get(IDS[index]));}
+ public static final int RAMP=6;
+ public static final String RAMP_BLUEPRINT="programmable_ramp";
+ public static boolean rampAvailable(){return com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM!=null;}
+ public static ItemStack result(int index){
+  if(index==RAMP)return rampAvailable()?new ItemStack(com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM):ItemStack.EMPTY;if(index<0||index>=IDS.length)throw new IllegalArgumentException("Builder product");return new ItemStack(index<3?NativeBuilderBindings.CORES.get(IDS[index]):com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.CORES.get(IDS[index]));}
  // Index zero is the original native Press recipe, including in-progress saved work.
  public static final List<String> PRESS = List.of("navigation_data_module", "data_chip", "access_card",
          "battery_module", "autopilot_module");
@@ -36,6 +40,7 @@ public final class NativeBuilderProducts {
   if(!id.startsWith("vandorlabs:"))return false;
   String path=id.substring("vandorlabs:".length());
   if(machine.equals("synthesis_tower")){
+   if(path.equals(RAMP_BLUEPRINT))return rampAvailable();
    for(String name:IDS)if(path.equals(name+"_core"))return true;
    return false;
   }
