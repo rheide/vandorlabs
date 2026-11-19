@@ -43,8 +43,31 @@ public final class NativeLargeDoorLifecycle {
     }
     public static boolean removing(Level level){return REMOVING.get()!=null&&REMOVING.get().level()==level;}
     public static void removed(Level level,BlockPos pos,BlockState state,NativeLargeDoorBlock block){
-        if(removing(level)||NativeLargeDoorPlacement.mutating(level,pos))return;var raw=level.getBlockEntity(pos);BlockPos anchor=raw instanceof NativeLargeDoorEntity part?part.anchorPos():pos;Direction face=state.getValue(NativeLargeDoorBlock.FACING);boolean horizontal=raw instanceof NativeLargeDoorEntity part&&part.isHorizontal();Removal previous=REMOVING.get();REMOVING.set(new Removal(level,anchor));
-        try{if(!level.isClientSide&&loaded(level,anchor)&&level.getBlockEntity(anchor) instanceof NativeLargeDoorEntity root&&root.isAnchor())block.dropOwnedContents(level,pos,root);for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos cell=cell(anchor,face,horizontal,x,y);if(cell.equals(pos)||!loaded(level,cell))continue;if(level.getBlockState(cell).is(block)&&level.getBlockEntity(cell) instanceof NativeLargeDoorEntity part&&part.anchorPos().equals(anchor))level.removeBlock(cell,false);}}finally{if(previous==null)REMOVING.remove();else REMOVING.set(previous);}
+        if(NativeLargeDoorPlacement.mutating(level,pos))return;
+        var raw=level.getBlockEntity(pos);
+        NativeLargeDoorEntity removed=raw instanceof NativeLargeDoorEntity part?part:null;
+        if(removing(level)){
+            if(!level.isClientSide&&removed!=null)NativeDoorWaterGush.update(removed,true);
+            return;
+        }
+        BlockPos anchor=removed==null?pos:removed.anchorPos();
+        Direction face=state.getValue(NativeLargeDoorBlock.FACING);
+        boolean horizontal=removed!=null&&removed.isHorizontal();
+        Removal previous=REMOVING.get();
+        REMOVING.set(new Removal(level,anchor));
+        try {
+            if(!level.isClientSide&&removed!=null)NativeDoorWaterGush.update(removed,true);
+            if(!level.isClientSide&&loaded(level,anchor)&&level.getBlockEntity(anchor) instanceof NativeLargeDoorEntity root&&root.isAnchor())
+                block.dropOwnedContents(level,pos,root);
+            for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+                BlockPos at=cell(anchor,face,horizontal,x,y);
+                if(at.equals(pos)||!loaded(level,at))continue;
+                if(level.getBlockState(at).is(block)&&level.getBlockEntity(at) instanceof NativeLargeDoorEntity part&&part.anchorPos().equals(anchor))
+                    level.removeBlock(at,false);
+            }
+        } finally {
+            if(previous==null)REMOVING.remove();else REMOVING.set(previous);
+        }
     }
     public static void neighbor(Level level,BlockPos pos,NativeLargeDoorBlock block){
         if(level.isClientSide||removing(level)||NativeLargeDoorPlacement.mutating(level,pos))return;var root=root(level,pos);if(root==null){if(level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part&&loaded(level,part.anchorPos()))level.removeBlock(pos,false);return;}
