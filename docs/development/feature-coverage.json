@@ -876,7 +876,7 @@
         "Programmable Surfaces share Java 8 layout discovery, artwork and UV policy with Forge. Native six-face cells use cached terrain artwork with opaque backing and bounded, coalesced topology updates.",
         "Focused installed-world and real Survival configuration, mining, material selection and repair checks pass. Uploaded terrain pixels verify settings-only mesh invalidation; actual emitted cropped and non-square artwork retains catalog UV bounds.",
         "Native block-only capture preflight shares the Forge scan prism and the native Copy Controller loaded-world adapter. A dedicated fixture verifies all six normals, exact Sign data and unchanged source ownership.",
-        "The opt-in Turntable Controller has a shared configuration path and durable block-only Scan and quarter-turn Restore; dedicated and connected Survival fixtures cover it."
+        "The opt-in Turntable Controller has a shared configuration path, durable block-only Scan and quarter-turn Restore, and rendered quarter-turn motion with swept collision. Dedicated and connected Survival checks cover these paths. Riding, payload interaction and redstone remain open."
       ]
     },
     {

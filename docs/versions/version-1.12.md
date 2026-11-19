@@ -31,5 +31,9 @@ and ceiling propulsion wedges. JEI lists the four native machine categories
 and shows which recipes require a Catalog Chip.
 [WorldEdit compatibility](../development/native-worldedit-rotation.md)
 
+The experimental **Turntable Controller** can capture supported blocks above
+a Programmable Surface, turn them and restore them to the world. Enable it
+with `-Dvandorlabs.turntableControllers=true`. [Native Turntable guide](../development/native-turntable.md)
+
 See the [NeoForge coverage inventory](../development/feature-coverage.md) for
 the current feature list and port status.

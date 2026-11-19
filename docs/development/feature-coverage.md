@@ -32,7 +32,7 @@ The source inventory includes 58 active generated-catalog registrations and expl
 | Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
 | Cockpits and peripherals | stationary Advanced Pilot Chair available, with armrest controls, cockpit assembly and Yoke and Screen pending | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled) | unimplemented | standalone first; vehicle effects deferred |
-| Turntables | Programmable Surfaces public; opt-in block-only Scan and quarter-turn Restore; continuous motion pending | unimplemented | non-vehicle first |
+| Turntables | Programmable Surfaces public; opt-in block-only Scan, rendered rotation with swept collision, and quarter-turn Restore; riding and redstone pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
 | Configuration/copy tools and basic materials | partial (materials and Duplifier enabled) | partial | non-vehicle first |
 | Programmable armor | four pieces, crafting, role/company, general material and inventory sample picker, armor stands, equipped and inventory artwork, generic world-face sampling and Duplifier transfer. Special renderer samples pending | unimplemented | non-vehicle first |
