@@ -17,8 +17,12 @@ def write(relative, value):
     path.write_text(json.dumps(value, indent=2) + '\n')
 
 
-def model(relative):
-    value = json.loads((ROOT / 'src/main/resources/assets/vandorlabs' / relative).read_text())
+LEGACY_MATTER = Path(__file__).resolve().parent / 'legacy_matter'
+CANONICAL = ROOT / 'src/main/resources/assets/vandorlabs'
+
+
+def model(relative, source=CANONICAL):
+    value = json.loads((source / relative).read_text())
     if value.get('parent', '').startswith(('block/', 'item/')):
         value['parent'] = 'minecraft:' + value['parent']
     value['textures'] = {key: texture.replace(':blocks/', ':block/').replace(':items/', ':item/')
@@ -30,9 +34,10 @@ def main():
     if OUT.exists():
         shutil.rmtree(OUT)
     ids = ['programmable_matter_block', 'programmable_matter_ingot', 'industrial_alloy_ingot']
-    for name in ids:
+    for name in ids[1:]:
         model('models/item/' + name + '.json')
-    model('models/block/programmable_matter_block.json')
+    model('models/item/programmable_matter_block.json', LEGACY_MATTER)
+    model('models/block/programmable_matter_block.json', LEGACY_MATTER)
     model('models/item/programmable_plate.json')
     write('assets/vandorlabs/blockstates/programmable_matter_block.json',
           {'variants': {'': {'model': 'vandorlabs:block/programmable_matter_block'}}})
@@ -94,7 +99,8 @@ def main():
     lang['block.vandorlabs.cockpit.screen_lift_blocked']='The Cockpit screen bank is obstructed.'
     write('assets/vandorlabs/lang/en_us.json', lang)
     for name in ['programmable_matter_block', 'programmable_matter_unpack', 'industrial_alloy_ingot']:
-        value = json.loads((ROOT / 'src/main/resources/assets/vandorlabs/recipes' / (name + '.json')).read_text())
+        source = LEGACY_MATTER if name.startswith('programmable_matter_') else CANONICAL
+        value = json.loads((source / 'recipes' / (name + '.json')).read_text())
         value['result']['id'] = value['result'].pop('item')
         write('data/vandorlabs/recipe/' + name + '.json', value)
     propulsion = [family + suffix for family in ('rocket_thruster', 'ion_drive', 'plasma_vent', 'impulse_engine') for suffix in ('', '_hexagonal', '_wedge', '_wedge_bottom_right', '_wedge_top_right', '_wedge_top_left')] + ['antigravity_plate', 'repulsor_array', 'vertical_hover_thruster']

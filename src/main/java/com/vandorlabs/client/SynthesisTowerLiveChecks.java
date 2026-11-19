@@ -28,7 +28,7 @@ final class SynthesisTowerLiveChecks {
                 MatterInfuserRuntimeChecks.run(player.world);
                 SynthesisRuntimeChecks.run(player.world,player);
                 BlockConstructorCore core=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:synthesis_tower_core");
-                Block matter=Block.getBlockFromName("vandorlabs:programmable_matter_block");
+                Block matter=Block.getBlockFromName("vandorlabs:programmable_block");
                 player.world.setBlockState(ROOT,core.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH));
                 TileEntityConstructor tile=(TileEntityConstructor)player.world.getTileEntity(ROOT);
                 for(int x=0;x<core.width;x++)for(int y=0;y<core.height;y++)for(int z=0;z<core.depth;z++)if(!ROOT.equals(tile.cell(x,y,z)))player.world.setBlockState(tile.cell(x,y,z),tile.frame(x,y,z)?matter.getDefaultState():net.minecraft.init.Blocks.AIR.getDefaultState());

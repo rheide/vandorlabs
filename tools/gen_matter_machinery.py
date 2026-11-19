@@ -45,12 +45,8 @@ def main():
  model={'parent':'block/cube','textures':{k:'vandorlabs:blocks/matter/'+v for k,v in {'particle':'casing','down':'casing','up':'lens','north':'front','south':'casing','east':'casing','west':'casing'}.items()},'elements':[{'from':[0,0,0],'to':[16,16,16],'faces':{f:{'texture':'#'+f,'cullface':f} for f in ['down','up','north','south','east','west']}}]}
  write(ASSETS/'models/block/programmable_matter_infuser.json',model)
  write(ASSETS/'blockstates/programmable_matter_infuser.json',{'variants':{'facing='+f:{'model':'vandorlabs:programmable_matter_infuser','y':y} for f,y in [('north',0),('east',90),('south',180),('west',270)]}})
- write(ASSETS/'models/block/programmable_matter_block.json',{'parent':'block/cube_all','textures':{'all':'vandorlabs:blocks/matter/matter'}})
- write(ASSETS/'blockstates/programmable_matter_block.json',{'variants':{'normal':{'model':'vandorlabs:programmable_matter_block'}}})
- for name in ['programmable_matter_infuser','programmable_matter_block']:write(ASSETS/('models/item/'+name+'.json'),{'parent':'vandorlabs:block/'+name,'display':{'gui':{'rotation':[30,225,0],'translation':[0,0,0],'scale':[.5,.5,.5]}}})
+ name='programmable_matter_infuser';write(ASSETS/('models/item/'+name+'.json'),{'parent':'vandorlabs:block/'+name,'display':{'gui':{'rotation':[30,225,0],'translation':[0,0,0],'scale':[.5,.5,.5]}}})
  write(ASSETS/'models/item/infuser_core.json',{'parent':'item/generated','textures':{'layer0':'vandorlabs:blocks/matter/core'}})
  def recipe(name,pattern,key,result,count=1):write(ASSETS/('recipes/'+name+'.json'),{'type':'minecraft:crafting_shaped','pattern':pattern,'key':{k:{'item':v} for k,v in key.items()},'result':{'item':result,'count':count}})
- recipe('programmable_matter_block',['MMM']*3,{'M':'vandorlabs:programmable_matter_ingot'},'vandorlabs:programmable_matter_block')
- recipe('programmable_matter_unpack',['M'],{'M':'vandorlabs:programmable_matter_block'},'vandorlabs:programmable_matter_ingot',9)
  recipe('programmable_matter_infuser',['IGI','ICI','IRI'],{'I':'minecraft:iron_ingot','G':'minecraft:glass','C':'vandorlabs:infuser_core','R':'minecraft:redstone'},'vandorlabs:programmable_matter_infuser')
 if __name__=='__main__':main()

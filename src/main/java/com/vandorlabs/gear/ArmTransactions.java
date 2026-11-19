@@ -110,7 +110,21 @@ public final class ArmTransactions {
         if(hold.record.getBoolean("HarvestCommitted")){hold.applied=true;hold.recovering=false;return;}
         ArmPayloadHarvest.rollback(hold.world,hold.record);
         NBTTagList before=hold.record.getTagList("Before",10);List<TileEntity> prepared=new ArrayList<>();List<IBlockState> states=new ArrayList<>();
-        for(int n=0;n<before.tagCount();n++){NBTTagCompound cell=before.getCompoundTagAt(n);IBlockState state=com.vandorlabs.persistence.RetiredCockpitGlass.readState(cell.getCompoundTag("State"));if(!NBTUtil.writeBlockState(new NBTTagCompound(),state).equals(com.vandorlabs.persistence.RetiredCockpitGlass.stateTag(cell.getCompoundTag("State"))))throw new IllegalArgumentException("Recovery block is unavailable");states.add(state);TileEntity tile=cell.hasKey("Tile",10)?com.vandorlabs.copier.PhysicalTileFactory.create(hold.world,state,com.vandorlabs.persistence.RetiredCockpitGlass.tileData(cell.getCompoundTag("Tile"))):null;if(cell.hasKey("Tile",10)&&(tile==null||!tile.writeToNBT(new NBTTagCompound()).equals(com.vandorlabs.persistence.RetiredCockpitGlass.tileData(cell.getCompoundTag("Tile")))))throw new IllegalArgumentException("Recovery tile cannot round-trip");prepared.add(tile);}
+        for(int n=0;n<before.tagCount();n++){
+            NBTTagCompound cell=before.getCompoundTagAt(n),encoded=cell.getCompoundTag("State");
+            IBlockState state=com.vandorlabs.persistence.RetiredCockpitGlass.readState(encoded);
+            if(!NBTUtil.writeBlockState(new NBTTagCompound(),state).equals(com.vandorlabs.persistence.RetiredCockpitGlass.stateTag(encoded)))
+                throw new IllegalArgumentException("Recovery block is unavailable");
+            states.add(state);
+            boolean legacyMatter=com.vandorlabs.persistence.RenamedBlocks.OLD_MATTER.equals(encoded.getString("Name"));
+            if(legacyMatter&&cell.hasKey("Tile"))throw new IllegalArgumentException("Unexpected retired Matter Block tile");
+            NBTTagCompound data=legacyMatter?com.vandorlabs.persistence.RenamedBlocks.matterTile(hold.cells.get(n)):
+                    cell.hasKey("Tile",10)?com.vandorlabs.persistence.RetiredCockpitGlass.tileData(cell.getCompoundTag("Tile")):null;
+            TileEntity tile=data==null?null:com.vandorlabs.copier.PhysicalTileFactory.create(hold.world,state,data);
+            if(tile!=null&&!tile.writeToNBT(new NBTTagCompound()).equals(data))
+                throw new IllegalArgumentException("Recovery tile cannot round-trip");
+            prepared.add(tile);
+        }
         try(AutoCloseable atomic=com.vandorlabs.vehicle.VehicleTransfer.atomic(hold.world)){
             for(int n=0;n<before.tagCount();n++){BlockPos pos=hold.cells.get(n);hold.world.removeTileEntity(pos);if(!hold.world.setBlockState(pos,states.get(n),2)&&hold.world.getBlockState(pos)!=states.get(n))throw new IllegalStateException("Arm recovery block refused");TileEntity tile=prepared.get(n);if(tile!=null){hold.world.removeTileEntity(pos);tile.setWorld(hold.world);tile.setPos(pos);tile.validate();hold.world.setTileEntity(pos,tile);tile.markDirty();}if(!pos.equals(hold.root))freeze(hold,pos);}
         }
