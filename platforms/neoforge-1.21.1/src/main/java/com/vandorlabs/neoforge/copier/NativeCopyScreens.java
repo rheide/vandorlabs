@@ -15,8 +15,10 @@ import net.minecraft.server.level.ServerLevel;
 
 /** Exact translation of closed, stationary Screen neighborhoods with no item or signal output authority. */
 final class NativeCopyScreens {
+    private static final Set<ScreenFamily> FLAT=Set.of(ScreenFamily.SCREEN,ScreenFamily.CONSOLE,ScreenFamily.INPUT);
+
     static void requireStatic(NativeScreenEntity screen,CompoundTag raw){
-        if(screen.family()!=ScreenFamily.SCREEN)throw new IllegalArgumentException("Only stationary regular Screens can be copied");
+        if(!FLAT.contains(screen.family()))throw new IllegalArgumentException("Copy supports stationary Screens, Consoles and full Inputs");
         if(!NativeScreenOwnership.installable(raw)||raw.contains("ChipDisplayPage")
             ||opaque(raw,"ForgeCaps")||opaque(raw,"NeoForgeData")||opaque(raw,"neoforge:attachments")||opaque(raw,"components")
             ||!raw.getCompound("ForgeData").getAllKeys().equals(Set.of(TransmissionSettings.SETTINGS))

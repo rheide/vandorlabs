@@ -10,6 +10,7 @@ import com.vandorlabs.neoforge.screen.*;
 import com.vandorlabs.neoforge.surface.NativeSurfaceBindings;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.screen.ScreenFamily;
+import java.util.List;
 import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -33,45 +34,56 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeCopyScreenChecks {
     private static final String MARKER="[vandorlabs][copy-screens]";
-    private static final BlockPos ROOT=new BlockPos(15,100,8),INPUT=ROOT.east().above(),OUTPUT=ROOT.west(2).above();
+    private static final List<ScreenFamily> PROFILES=List.of(ScreenFamily.SCREEN,ScreenFamily.CONSOLE,ScreenFamily.INPUT);
+    private static BlockPos root,inputPos,outputPos;
+    private static ScreenFamily family;
     private static ServerLevel world;
     private static ServerPlayer actor;
     private static NativeCopyControllerEntity copy;
     private static ChestBlockEntity supply;
-    private static int ticks,stage,writes,artwork;
+    private static int ticks,stage,writes,artwork,profile;
 
     @SubscribeEvent
     public static void start(ServerStartedEvent event){
         if(!Boolean.getBoolean("vandorlabs.copyScreensCheck"))return;
         world=event.getServer().overworld();
         try{
-            for(int x=0;x<=1;x++){
-                world.setChunkForced(x,0,true);
-                world.getChunk(x,0);
+            for(int x=0;x<=1;x++)for(int z=0;z<=4;z++){
+                world.setChunkForced(x,z,true);
+                world.getChunk(x,z);
             }
             actor=new FakePlayer(world,new GameProfile(new UUID(0,0x436f7053),"ScreenCopy"));
             actor.setGameMode(GameType.SURVIVAL);
-            actor.setPos(15.5,100,6.5);
-            world.setBlockAndUpdate(ROOT,NativeCopyBindings.BLOCK.defaultBlockState());
-            world.setBlockAndUpdate(ROOT.south(),Blocks.CHEST.defaultBlockState());
-            copy=(NativeCopyControllerEntity)world.getBlockEntity(ROOT);
-            supply=(ChestBlockEntity)world.getBlockEntity(ROOT.south());
-            for(int x=1;x<=2;x++){
-                world.setBlockAndUpdate(ROOT.east(x),NativeSurfaceBindings.BLOCK.defaultBlockState());
-                world.setBlockAndUpdate(ROOT.west(x),NativeSurfaceBindings.BLOCK.defaultBlockState());
-            }
             artwork=NativeScreenCatalog.INSTANCE.sourceChoice("console_inputs/console_controls_biology_controls_static");
             require(artwork>=0,"fixture artwork available");
-            screen(INPUT);
-            screen(INPUT.east());
-            var item=NativeScreenRegistrations.ITEMS.get(ScreenFamily.SCREEN).get();
-            supply.setItem(0,new ItemStack(item,3));
-            var reserved=new ItemStack(item);
-            var custom=new CompoundTag();
-            custom.putString("PrivateCopyProof","retained");
-            reserved.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));
-            supply.setItem(1,reserved);
+            setup();
         }catch(Throwable error){fail(error);}
+    }
+
+    private static void setup(){
+        family=PROFILES.get(profile);
+        root=new BlockPos(15,100,8+profile*24);
+        inputPos=root.east().above();
+        outputPos=root.west(2).above();
+        actor.setPos(root.getX()+.5,root.getY(),root.getZ()-1.5);
+        world.setBlockAndUpdate(root,NativeCopyBindings.BLOCK.defaultBlockState());
+        world.setBlockAndUpdate(root.south(),Blocks.CHEST.defaultBlockState());
+        copy=(NativeCopyControllerEntity)world.getBlockEntity(root);
+        supply=(ChestBlockEntity)world.getBlockEntity(root.south());
+        for(int x=1;x<=2;x++){
+            world.setBlockAndUpdate(root.east(x),NativeSurfaceBindings.BLOCK.defaultBlockState());
+            world.setBlockAndUpdate(root.west(x),NativeSurfaceBindings.BLOCK.defaultBlockState());
+        }
+        screen(inputPos);
+        screen(inputPos.east());
+        var item=NativeScreenRegistrations.ITEMS.get(family).get();
+        supply.setItem(0,new ItemStack(item,3));
+        var reserved=new ItemStack(item);
+        var custom=new CompoundTag();
+        custom.putString("PrivateCopyProof","retained");
+        reserved.set(DataComponents.CUSTOM_DATA,CustomData.of(custom));
+        supply.setItem(1,reserved);
+        ticks=stage=writes=0;
     }
 
     @SubscribeEvent
@@ -81,11 +93,17 @@ public final class NativeCopyScreenChecks {
             require(++ticks<350,"bounded asynchronous copy "+copy.status()+" "+copy.error());
             if(stage==0){
                 require(copy.configure(actor,new CopySettings(1,0,0,ChannelList.EMPTY,false)),"configure paired scan");
-                screen(INPUT.east(2));
+                screen(inputPos.east(2));
                 refuse("complete Screen group");
-                world.removeBlock(INPUT.east(2),false);
+                world.removeBlock(inputPos.east(2),false);
+                if(profile==0){
+                    var diagonal=NativeScreenRegistrations.BLOCKS.get(ScreenFamily.DIAGONAL).get();
+                    world.setBlockAndUpdate(inputPos.east(),diagonal.defaultBlockState());
+                    refuse("stationary Screens, Consoles and full Inputs");
+                    screen(inputPos.east());
+                }
 
-                var input=(NativeScreenEntity)world.getBlockEntity(INPUT);
+                var input=(NativeScreenEntity)world.getBlockEntity(inputPos);
                 var clean=input.saveWithFullMetadata(world.registryAccess());
                 var credential=clean.copy();
                 credential.putInt("PrimarySurfaceTexture",-4);
@@ -102,7 +120,7 @@ public final class NativeCopyScreenChecks {
                 require(before.equals(input.saveWithFullMetadata(world.registryAccess())),"refusal leaves physical token exact");
                 input.loadWithComponents(clean,world.registryAccess());
 
-                var adjacent=OUTPUT.west();
+                var adjacent=outputPos.west();
                 var mountBlock=NativeReaderRegistrations.DATA_CHIP_SLOT.get();
                 world.setBlockAndUpdate(adjacent,mountBlock.defaultBlockState().setValue(NativeCredentialReaderBlock.FACING,Direction.WEST));
                 var mount=(NativeCredentialReaderEntity)world.getBlockEntity(adjacent);
@@ -117,7 +135,7 @@ public final class NativeCopyScreenChecks {
                 refuse("Missing material",1);
                 supply.getItem(0).setCount(3);
                 NativeCopyService.fault=(header,cell)->{
-                    if(writes==0&&world.getBlockEntity(OUTPUT) instanceof NativeScreenEntity){
+                    if(writes==0&&world.getBlockEntity(outputPos) instanceof NativeScreenEntity){
                         writes++;
                         throw new IllegalStateException("Expected staged Screen copy failure");
                     }
@@ -125,36 +143,48 @@ public final class NativeCopyScreenChecks {
                 copy.request(actor);
                 stage=1;
             }else if(stage==1&&!copy.busy()){
-                require(writes==1&&copy.status().equals("Copy rolled back")&&world.getBlockState(OUTPUT).isAir()
-                    &&world.getBlockState(OUTPUT.east()).isAir(),"caught rollback cleared outputs");
+                require(writes==1&&copy.status().equals("Copy rolled back")&&world.getBlockState(outputPos).isAir()
+                    &&world.getBlockState(outputPos.east()).isAir(),"caught rollback cleared outputs");
                 require(supply.getItem(0).getCount()==3&&privateMaterialRemains(),"all exact materials refunded");
-                require(world.getEntitiesOfClass(ItemEntity.class,new AABB(ROOT).inflate(10)).isEmpty(),"rollback produced no item drops");
+                require(world.getEntitiesOfClass(ItemEntity.class,new AABB(root).inflate(10)).isEmpty(),"rollback produced no item drops");
                 copy.request(actor);
                 stage=2;
             }else if(stage==2&&!copy.busy()){
                 require(copy.status().equals("Copy complete"),"retry completed "+copy.error());
-                var output=(NativeScreenEntity)world.getBlockEntity(OUTPUT);
+                var output=(NativeScreenEntity)world.getBlockEntity(outputPos);
                 require(output!=null&&!output.inert()&&NativeScreenGroups.editMembers(output).size()==2,"translated Screen pair really joins");
                 for(var screen:NativeScreenGroups.editMembers(output)){
                     require(screen.screenSettings().primarySurface()==artwork&&!screen.visual().frames().displayFit
-                        &&screen.getBlockState().getValue(NativeScreenBlock.FACING)==Direction.NORTH,"exact face, artwork and frame fit");
+                        &&screen.getBlockState()==state()&&screen.family()==family
+                        &&(!family.secondary||screen.screenSettings().secondarySurface()==artwork),"exact face, artwork and frame fit");
                 }
                 require(supply.getItem(0).getCount()==1&&privateMaterialRemains(),"pay two plain items and retain configured item");
-                require(NativeScreenGroups.editMembers((NativeScreenEntity)world.getBlockEntity(INPUT)).size()==2,"source join remains intact");
-                System.out.println(MARKER+" PASS externalNeighbors/privateChipRefusal/rollback/retry/realJoins/exactMaterials");
-                world=null;
+                require(NativeScreenGroups.editMembers((NativeScreenEntity)world.getBlockEntity(inputPos)).size()==2,"source join remains intact");
+                System.out.println(MARKER+" profile PASS "+family);
                 NativeCopyService.fault=null;
-                event.getServer().halt(false);
+                if(++profile<PROFILES.size())setup();
+                else{
+                    System.out.println(MARKER+" PASS externalNeighbors/privateChipRefusal/rollback/retry/realJoins/exactMaterials");
+                    world=null;
+                    event.getServer().halt(false);
+                }
             }
         }catch(Throwable error){fail(error);}
     }
 
+    private static net.minecraft.world.level.block.state.BlockState state(){
+        var state=NativeScreenRegistrations.BLOCKS.get(family).get().defaultBlockState();
+        return family.keyboard?state.setValue(NativeScreenBlock.HORIZONTAL_FACING,Direction.NORTH)
+            .setValue(NativeScreenBlock.KEYBOARD,true).setValue(NativeScreenBlock.UPPER,true)
+            :state.setValue(NativeScreenBlock.FACING,Direction.NORTH);
+    }
+
     private static void screen(BlockPos pos){
-        var block=NativeScreenRegistrations.BLOCKS.get(ScreenFamily.SCREEN).get();
-        world.setBlockAndUpdate(pos,block.defaultBlockState().setValue(NativeScreenBlock.FACING,Direction.NORTH));
+        world.setBlockAndUpdate(pos,state());
         var tile=(NativeScreenEntity)world.getBlockEntity(pos);
         var data=tile.saveWithFullMetadata(world.registryAccess());
         data.putInt("PrimarySurfaceTexture",artwork);
+        if(family.secondary)data.putInt("SecondarySurfaceTexture",artwork);
         data.putBoolean("DisplayFit",false);
         tile.loadWithComponents(data,world.registryAccess());
         require(!tile.inert(),"fixture Screen loads");
@@ -179,7 +209,7 @@ public final class NativeCopyScreenChecks {
     }
 
     private static void require(boolean valid,String why){
-        if(!valid)throw new AssertionError(MARKER+" stage="+stage+" "+why);
+        if(!valid)throw new AssertionError(MARKER+" family="+family+" stage="+stage+" "+why);
     }
 
     private static void fail(Throwable error){
