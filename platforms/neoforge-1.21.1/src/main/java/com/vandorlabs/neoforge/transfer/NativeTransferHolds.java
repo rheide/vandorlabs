@@ -1,5 +1,6 @@
 package com.vandorlabs.neoforge.transfer;
 
+import com.vandorlabs.neoforge.mixin.NativeTransferContainerAccess;
 import java.lang.ref.WeakReference;
 import java.util.*;
 import net.minecraft.core.BlockPos;
@@ -73,7 +74,31 @@ public final class NativeTransferHolds {
         }return false;
     }
     /** Inventory automation remains frozen even while an internal block write is admitted. */
-    public static boolean blocked(Container inventory){if(held.isEmpty())return false;for(var lease:held)if(!lease.closed&&lease.world.get()!=null){if(inventory instanceof BlockEntity tile&&tile.getLevel()==lease.world.get()&&lease.cells.contains(tile.getBlockPos()))return true;for(var reference:lease.containers){var owner=reference.get();if(owner!=null&&(owner==inventory||inventory instanceof CompoundContainer pair&&pair.contains(owner)))return true;}}return false;}
+    public static boolean blocked(Container inventory) {
+        if (held.isEmpty()) return false;
+        for (var lease : held) {
+            var world = lease.world.get();
+            if (lease.closed || world == null) continue;
+            if (heldTile(inventory, world, lease)) return true;
+            if (inventory instanceof CompoundContainer pair) {
+                // A combined wrapper may be created after publication and reference newly installed tiles.
+                var parts = (NativeTransferContainerAccess) pair;
+                if (heldTile(parts.vandorlabs$firstTransferContainer(), world, lease)
+                    || heldTile(parts.vandorlabs$secondTransferContainer(), world, lease)) return true;
+            }
+            for (var reference : lease.containers) {
+                var owner = reference.get();
+                if (owner != null && (owner == inventory || inventory instanceof CompoundContainer pair && pair.contains(owner))) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean heldTile(Container inventory, ServerLevel world, Lease lease) {
+        return inventory instanceof BlockEntity tile && tile.getLevel() == world && lease.cells.contains(tile.getBlockPos());
+    }
     @SubscribeEvent public static void unload(LevelEvent.Unload event){held=held.stream().filter(lease->{if(lease.world.get()==null||lease.world.get()==event.getLevel()){lease.closed=true;return false;}return true;}).toList();}
     private NativeTransferHolds(){}
 }

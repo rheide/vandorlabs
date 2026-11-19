@@ -26,7 +26,7 @@ its protected pads.
 
 ## Materials and exact contents
 
-Creative mode needs no chest or materials. Survival mode withdraws the building items and all retained items from the chest behind the controller. A double chest is supported. The dialog reports the first missing material and leaves both areas and the chest unchanged when preflight fails.
+Creative mode needs no chest or materials. Survival mode withdraws the building items and all retained items from the chest behind the controller. The supply can be a double chest. To copy a double chest as part of the input, include both halves in the scan volume. The dialog reports the first missing material and leaves both areas and the chest unchanged when preflight fails.
 
 Building items use their obtainable item and variant. A double slab costs two slabs; snow costs its layer count. Reserved parts of a logical assembly do not each cost another item: a four-cell Card / Chip Programmer, for example, costs one programmer plus its retained items.
 

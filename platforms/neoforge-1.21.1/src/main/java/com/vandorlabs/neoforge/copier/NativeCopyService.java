@@ -23,7 +23,7 @@ public final class NativeCopyService {
     private record Pending(NativeCopyControllerEntity owner,java.lang.ref.WeakReference<ServerPlayer> player,NativeCopyPlan plan,NativeCellTransactions.Request request,long bytes){}
     private static final Map<ServerLevel,Map<BlockPos,Pending>> QUEUED=new IdentityHashMap<>();
     private static final Map<ServerLevel,LinkedHashSet<UUID>> VERIFIED=new IdentityHashMap<>();
-    interface Fault {void afterMaterialCell(NativeCellTransactions.Header header,NativeRawCell target);}
+    interface Fault {void afterCell(NativeCellTransactions.Header header,NativeRawCell target);}
     static Fault fault;
     private static final ResourceLocation ID=ResourceLocation.parse("vandorlabs:copy_controller");
     public static void register(){NativeCellTransactions.register(FAMILY);}
@@ -60,10 +60,11 @@ public final class NativeCopyService {
         public boolean same(CompoundTag first,CompoundTag second){return NativeCopyTiles.same(first,second);}
         public boolean intermediate(ServerLevel world,NativeCellTransactions.Header header,NativeRawCell before,NativeRawCell after,NativeCopyReceipt recipe){return recipe.supply!=null&&recipe.supply.contains(before.pos)&&recipe.supply.recognizes(world,before.pos);}
         public void publish(ServerLevel world,NativeCellTransactions.Header header,NativeRawCell before,NativeRawCell after,BlockEntity staged,NativeTransferHolds.Lease lease,NativeCopyReceipt recipe){
-            if(recipe.supply!=null&&recipe.supply.contains(after.pos)){boolean restoring=recipe.supply.restoring(after);recipe.supply.publishCell(world,lease,after.pos,restoring);if(!restoring&&fault!=null&&Boolean.getBoolean("vandorlabs.copyRuntimeChecks"))fault.afterMaterialCell(header,after);return;}
+            if(recipe.supply!=null&&recipe.supply.contains(after.pos)){boolean restoring=recipe.supply.restoring(after);recipe.supply.publishCell(world,lease,after.pos,restoring);if(!restoring&&fault!=null&&Boolean.getBoolean("vandorlabs.copyRuntimeChecks"))fault.afterCell(header,after);return;}
             var old=world.getBlockEntity(after.pos);if(old instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack)rack.clearForTransfer();if(old instanceof Container container)container.clearContent();
             if(world.getBlockState(after.pos)!=after.state)try(var scope=lease.allowOnce(after.pos)){if(!world.setBlock(after.pos,after.state,Block.UPDATE_KNOWN_SHAPE))throw new IllegalStateException("Copy publication refused");}
             if(after.hasTile()){if(staged==null)throw new IllegalStateException("Prepared Copy tile missing");world.removeBlockEntity(after.pos);world.setBlockEntity(staged);staged.setChanged();}else if(world.getBlockEntity(after.pos)!=null)world.removeBlockEntity(after.pos);world.getChunkAt(after.pos).setUnsaved(true);
+            if(!after.state.isAir()&&fault!=null&&Boolean.getBoolean("vandorlabs.copyRuntimeChecks"))fault.afterCell(header,after);
         }
         public void released(ServerLevel world,NativeCellTransactions.Header header,boolean rollback,String error,NativeCopyReceipt recipe){
             var checked=VERIFIED.get(world);

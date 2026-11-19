@@ -28,6 +28,7 @@
     "NativeEntityDeserializerAccess",
     "NativeRampHopperGuard",
     "NativeRampInventoryGuard",
+    "NativeTransferContainerAccess",
     "NativeRampLevelGuard",
     "NativeGearTickGuard",
     "NativeGearEntityManagerAccess",

@@ -5,10 +5,40 @@ import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.level.block.ChestBlock;
 import net.minecraft.world.level.block.entity.*;
+import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.ChestType;
 
 /** Explicit copying adapters; unknown ownership is refused rather than treated as a free block item. */
 final class NativeCopyTiles {
+    static boolean pairedChest(BlockState state) {
+        return state.getBlock() instanceof ChestBlock && state.getValue(BlockStateProperties.CHEST_TYPE) != ChestType.SINGLE;
+    }
+
+    static boolean chestPartners(BlockPos firstPos, BlockState first, BlockPos secondPos, BlockState second) {
+        return pairedChest(first) && second.getBlock() == first.getBlock() && pairedChest(second)
+            && second.getValue(BlockStateProperties.CHEST_TYPE) != first.getValue(BlockStateProperties.CHEST_TYPE)
+            && second.getValue(ChestBlock.FACING) == first.getValue(ChestBlock.FACING)
+            && firstPos.relative(ChestBlock.getConnectedDirection(first)).equals(secondPos)
+            && secondPos.relative(ChestBlock.getConnectedDirection(second)).equals(firstPos);
+    }
+
+    static void requireCompleteChests(List<NativeRawCell> source) {
+        if (source.stream().noneMatch(cell -> pairedChest(cell.state))) return;
+        var chests = new HashMap<BlockPos, NativeRawCell>();
+        for (var cell : source) {
+            if (pairedChest(cell.state)) chests.put(cell.pos, cell);
+        }
+        for (var cell : chests.values()) {
+            var partner = chests.get(cell.pos.relative(ChestBlock.getConnectedDirection(cell.state)));
+            if (!cell.hasTile() || partner == null || !chestPartners(cell.pos, cell.state, partner.pos, partner.state)) {
+                throw new IllegalArgumentException("Capture both matching halves of the input chest at " + cell.pos.toShortString());
+            }
+        }
+    }
+
     static boolean supported(BlockEntity tile){
         if(tile instanceof com.vandorlabs.neoforge.storage.NativeStorageEntity storage)return !storage.inert();
         if(tile instanceof com.vandorlabs.neoforge.rack.NativeRackEntity rack)return !rack.inert();
