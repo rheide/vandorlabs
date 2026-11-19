@@ -17,8 +17,11 @@ def owned_digest(path):
  return hashlib.sha256(raw).hexdigest()
 @retain_artifacts
 def main():
- p=argparse.ArgumentParser();p.add_argument('--case',choices=['normal','abrupt','factory','observer','root-observer','frame','frame-failure','frame-retire-failure','frame-abrupt','frame-rider-refusal','frame-rider-observer','belt-initial','belt-reset','frame-command','frame-initial-actor','frame-initial-actor-change','frame-initial-actor-abrupt','frame-initial-actor-abrupt-cold','frame-original-align','frame-cost'],default='normal');p.add_argument('--intent-refusal',action='store_true',help='Assert conservative pre-readiness refusal, not healthy actor recovery');args=p.parse_args();
+ p=argparse.ArgumentParser();p.add_argument('--case',choices=['normal','abrupt','factory','observer','root-observer','frame','frame-failure','frame-retire-failure','frame-abrupt','frame-rider-refusal','frame-rider-observer','belt-initial','belt-reset','frame-command','frame-initial-actor','frame-initial-actor-change','frame-initial-actor-abrupt','frame-initial-actor-abrupt-cold','frame-original-align','frame-cost'],default='normal');p.add_argument('--intent-refusal',action='store_true',help='Assert conservative pre-readiness refusal, not healthy actor recovery');p.add_argument('--cow',action='store_true',help='Exercise adult Cow on the same cold actor handoff');args=p.parse_args();
  if args.intent_refusal and args.case!='frame-initial-actor-abrupt':p.error('--intent-refusal requires --case frame-initial-actor-abrupt')
+ if args.cow and args.case!='frame-initial-actor-abrupt-cold':p.error('--cow requires --case frame-initial-actor-abrupt-cold')
+ env=dict(os.environ,JAVA_HOME=str(jdk_home(21)))
+ if args.cow:env['JAVA_TOOL_OPTIONS']=env.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.rampColdCowCheck=true'
  output=Path(artifact_directory(prefix='ramp-assembly-journal-native-',dir=ROOT/'build/test-artifacts'));saved=output/'saved-world';world(saved,0)
  try:
   for phase in (['write','read','verify'] if args.case=='frame-initial-actor-abrupt-cold' else ['write','read']):
@@ -26,7 +29,7 @@ def main():
     files={p:owned_digest(p) for p in saved.rglob('*') if p.is_file() and (p.suffix=='.nbt' and 'ramp-journals' in p.parts or p.name=='r.46.46.mca' and p.parent.name=='entities')}
     if not files or not any('ramp-journals' in p.parts for p in files) or not any(p.parent.name=='entities' for p in files):raise RuntimeError('Missing real journal/entity partial-save evidence')
     (output/'retained-before.sha256').write_text('\n'.join(h+'  '+str(p.relative_to(saved)) for p,h in files.items())+'\n')
-    log=output/'read.log';process=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-assembly-journal-'+args.case+'-read'),log,dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+    log=output/'read.log';process=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-assembly-journal-'+args.case+'-read'),log,env)
     try:process.wait(timeout=180)
     finally:stop(process)
     text=log.read_text(errors='replace')
@@ -34,7 +37,7 @@ def main():
     if not any(reason in text for reason in ['Unresolved Ramp actor transfer intent retained before gameplay','Cold actor repair cannot rewrite unrelated or missing actor records','Actor chunk has queued or loaded state','Actor chunk has a pending deserialized payload','Actor chunk already has live sections']) or '[vandorlabs][ramp-assembly-journal] started mode=' in text or 'durably relocated actor must not join' in text or any(not p.exists() or owned_digest(p)!=h for p,h in files.items()):raise RuntimeError('Actor intent startup refusal/retention failed: '+str(log))
     (output/'retained.sha256').write_text('\n'.join(h+'  '+str(p.relative_to(saved)) for p,h in files.items())+'\n');print('[vandorlabs][ramp-actor-intent] unresolved startup refusal PASS',flush=True);continue
    marker='abrupt' if phase=='write' and args.case in ('abrupt','frame-abrupt','frame-initial-actor-abrupt','frame-initial-actor-abrupt-cold') else ('read' if phase=='verify' else phase)
-   run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-assembly-journal-'+args.case+'-'+phase),output/(phase+'.log'),'[vandorlabs][ramp-assembly-journal] '+marker+' PASS',dict(os.environ,JAVA_HOME=str(jdk_home(21))))
+   run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=ramp-assembly-journal-'+args.case+'-'+phase),output/(phase+'.log'),'[vandorlabs][ramp-assembly-journal] '+marker+' PASS',env)
  finally:
   evidence=[]
   for tree in ['main','smoke']:

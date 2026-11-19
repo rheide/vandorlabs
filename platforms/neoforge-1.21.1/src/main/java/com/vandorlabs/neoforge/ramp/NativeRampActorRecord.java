@@ -12,14 +12,19 @@ final class NativeRampActorRecord {
  static Result classify(CompoundTag row,NativeRampActorIntent.Participant actor){
   try{
    if(!row.hasUUID("UUID")||!row.getUUID("UUID").equals(actor.id())||!row.contains("id",Tag.TAG_STRING)||!row.getString("id").equals(actor.type()))return refused("Actor UUID/type differs from intent");
-   var type=actor.type().equals("minecraft:pig")?EntityType.PIG:actor.type().equals("minecraft:item")?EntityType.ITEM:null;
+   var type=switch(actor.type()){
+    case "minecraft:item"->EntityType.ITEM;
+    case "minecraft:pig"->EntityType.PIG;
+    case "minecraft:cow"->EntityType.COW;
+    default->null;
+   };
    if(type==null||actor.noPhysics())return refused("Actor physical role is not proven for initial recovery");
-   if(type==EntityType.PIG&&(!row.contains("Age",Tag.TAG_INT)||row.getInt("Age")<0))return refused("Only adult Pig physical dimensions are proven");
+   if(type!=EntityType.ITEM&&(!row.contains("Age",Tag.TAG_INT)||row.getInt("Age")<0))return refused("Only adult animal physical dimensions are proven");
    if(row.contains("NeoForgeData")){if(!row.contains("NeoForgeData",Tag.TAG_COMPOUND))return refused("Unproven actor platform envelope");var data=row.getCompound("NeoForgeData");if(!data.isEmpty()){if(!data.getAllKeys().equals(java.util.Set.of(NativeRampSupportStamp.KEY))||!data.contains(NativeRampSupportStamp.KEY,Tag.TAG_COMPOUND))return refused("Unproven actor platform envelope");var stamp=NativeRampSupportStamp.read(data.getCompound(NativeRampSupportStamp.KEY));if(!stamp.actor.equals(actor.id())||!stamp.type.equals(actor.type())||!stamp.position.equals(vector(row,"Pos"))||!stamp.body.equals(type.getDimensions().makeBoundingBox(stamp.position.x,stamp.position.y,stamp.position.z)))return refused("Actor saved support identity differs from native record");}}
    for(String key:new String[]{"neoforge:attachments","ForgeCaps","ForgeData"})if(row.contains(key)&&(!row.contains(key,Tag.TAG_COMPOUND)||!row.getCompound(key).isEmpty()))return refused("Unproven actor platform envelope");
    if(row.contains("Passengers")&&(!row.contains("Passengers",Tag.TAG_LIST)||!((ListTag)row.get("Passengers")).isEmpty()))return refused("Actor passengers require their own recovery protocol");
    if(type==EntityType.PIG&&row.contains("Saddle")&&(!row.contains("Saddle",Tag.TAG_BYTE)||row.getByte("Saddle")!=0))return refused("Saddled actor mount requires player recovery support");
-   if(type==EntityType.PIG&&!unscaled(row))return refused("Actor persisted scale is changed or unproven");
+   if(type!=EntityType.ITEM&&!unscaled(row))return refused("Actor persisted scale is changed or unproven");
    var expected=type.getDimensions().makeBoundingBox(actor.from().x,actor.from().y,actor.from().z);if(!expected.equals(actor.body()))return refused("Actor dimensions differ from proven native role");
    var position=vector(row,"Pos");var motion=vector(row,"Motion");if(!motion.equals(actor.velocity())&&!motion.equals(new Vec3(actor.velocity().x,0,actor.velocity().z))||Math.abs(motion.x)>10||Math.abs(motion.y)>10||Math.abs(motion.z)>10)return refused("Actor persisted velocity changed or is not codec-stable");
    if(!row.contains("FallDistance",Tag.TAG_FLOAT)||!Float.isFinite(row.getFloat("FallDistance"))||!row.contains("OnGround",Tag.TAG_BYTE)||(row.getByte("OnGround")!=0&&row.getByte("OnGround")!=1))return refused("Actor persisted physical flags are unavailable");
