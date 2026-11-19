@@ -12,20 +12,21 @@ import net.minecraft.util.datafix.*;
 import net.minecraftforge.common.util.ModFixs;
 import net.minecraftforge.fml.common.FMLCommonHandler;
 
-/** One-time native chunk/item migration, plus lazy readers for portable saved designs. */
+/** Native chunk/item migration for retired glass and Matter, plus lazy saved-design readers. */
 public final class RetiredCockpitGlass {
     public static final String[] IDS={"clear_cockpit_glass","pale_cyan_cockpit_glass","smoked_cockpit_glass"};
     private static final String[] NAMES={"vandorlabs:clear_cockpit_glass","vandorlabs:pale_cyan_cockpit_glass","vandorlabs:smoked_cockpit_glass"};
+    public static final int MATTER=3;
     private static volatile Map<Integer,Integer> oldIds=Collections.emptyMap();
     private static Path journal;
     private RetiredCockpitGlass(){}
     public static int variant(String name){for(int i=0;i<IDS.length;i++)if(NAMES[i].equals(name))return i;return -1;}
     public static IBlockState state(int variant){if(variant<0||variant>2)throw new IllegalArgumentException("Invalid retired glass variant");return variant==0?Blocks.GLASS.getDefaultState():Blocks.STAINED_GLASS.getStateFromMeta(variant==1?9:7);}
     public static void install(){
-        ModFixs fixes=FMLCommonHandler.instance().getDataFixer().init("vandorlabs",3);
+        ModFixs fixes=FMLCommonHandler.instance().getDataFixer().init("vandorlabs",4);
         for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
             public int getFixVersion(){return 1;}
-            public NBTTagCompound fixTagCompound(NBTTagCompound tag){if(type==FixTypes.CHUNK)migrateChunk(tag,oldIds);migrateItems(tag);return tag;}
+            public NBTTagCompound fixTagCompound(NBTTagCompound tag){if(type==FixTypes.CHUNK)migrateChunk(tag,oldIds,false);migrateItems(tag);return tag;}
         });
         for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
             public int getFixVersion(){return 2;}
@@ -36,6 +37,14 @@ public final class RetiredCockpitGlass {
             public int getFixVersion(){return 3;}
             public NBTTagCompound fixTagCompound(NBTTagCompound tag){RenamedBlocks.migrateItems(tag);return tag;}
         });
+        for(FixTypes type:new FixTypes[]{FixTypes.CHUNK,FixTypes.PLAYER,FixTypes.ENTITY,FixTypes.BLOCK_ENTITY,FixTypes.ITEM_INSTANCE})fixes.registerFix(type,new IFixableData(){
+            public int getFixVersion(){return 4;}
+            public NBTTagCompound fixTagCompound(NBTTagCompound tag){
+                if(type==FixTypes.CHUNK)migrateChunk(tag,oldIds,true);
+                RenamedBlocks.migrateItems(tag);
+                return tag;
+            }
+        });
     }
     /** Runs before world registry injection. Keep the original IDs even after level.dat drops retired names. */
     public static synchronized void begin(MinecraftServer server){
@@ -45,7 +54,7 @@ public final class RetiredCockpitGlass {
             if(Files.size(journal)>65536)throw new IOException("Retired glass migration table is too large");
             NBTTagCompound data;try(DataInputStream input=new DataInputStream(new java.util.zip.GZIPInputStream(Files.newInputStream(journal)))){data=CompressedStreamTools.read(input,new NBTSizeTracker(65536));}
             NBTTagList entries=data.getTagList("Mappings",10);if(entries.tagCount()>64)throw new IOException("Too many retired glass mappings");
-            for(int i=0;i<entries.tagCount();i++){NBTTagCompound entry=entries.getCompoundTagAt(i);int id=entry.getInteger("Id"),variant=entry.getInteger("Variant");if(id<0||id>65535||variant<0||variant>2||loaded.put(id,variant)!=null)throw new IOException("Invalid retired glass migration mapping");}
+            for(int i=0;i<entries.tagCount();i++){NBTTagCompound entry=entries.getCompoundTagAt(i);int id=entry.getInteger("Id"),variant=entry.getInteger("Variant");if(id<0||id>65535||variant<0||variant>MATTER||loaded.put(id,variant)!=null)throw new IOException("Invalid retired glass migration mapping");}
         }catch(IOException error){throw new IllegalStateException("Cannot read retired glass migration table",error);}
         oldIds=Collections.unmodifiableMap(loaded);
     }
@@ -62,15 +71,17 @@ public final class RetiredCockpitGlass {
         oldIds=Collections.unmodifiableMap(next);
     }
     /** Before Anvil/NEID resolves numerical block IDs. No world or chunk access from the I/O thread. */
-    public static void migrateChunk(NBTTagCompound root,Map<Integer,Integer> ids){
-        if(ids.isEmpty())return;NBTTagList sections=root.getCompoundTag("Level").getTagList("Sections",10);
+    public static void migrateChunk(NBTTagCompound root,Map<Integer,Integer> ids){migrateChunk(root,ids,false);}
+    static void migrateChunk(NBTTagCompound root,Map<Integer,Integer> ids,boolean matter){
+        if(ids.isEmpty()||ids.values().stream().noneMatch(v->(v==MATTER)==matter))return;
+        NBTTagList sections=root.getCompoundTag("Level").getTagList("Sections",10);
         for(int section=0;section<sections.tagCount();section++){
             NBTTagCompound data=sections.getCompoundTagAt(section);byte[] blocks=data.getByteArray("Blocks"),meta=data.getByteArray("Data"),add=data.getByteArray("Add"),add2=data.getByteArray("Add2");
             if(blocks.length!=4096||meta.length!=2048||add.length!=0&&add.length!=2048||add2.length!=0&&add2.length!=2048)throw new IllegalArgumentException("Invalid legacy glass chunk section");
             boolean changed=false;
             for(int i=0;i<4096;i++){
-                int id=(blocks[i]&255)|(nibble(add,i)<<8)|(nibble(add2,i)<<12);Integer variant=ids.get(id);if(variant==null)continue;
-                IBlockState replacement=state(variant);int target=Block.getIdFromBlock(replacement.getBlock());if(target<0||target>65535)throw new IllegalStateException("Unsupported vanilla glass block ID");
+                int id=(blocks[i]&255)|(nibble(add,i)<<8)|(nibble(add2,i)<<12);Integer variant=ids.get(id);if(variant==null||(variant==MATTER)!=matter)continue;
+                IBlockState replacement=matter?RenamedBlocks.matterState():state(variant);int target=Block.getIdFromBlock(replacement.getBlock());if(target<0||target>65535)throw new IllegalStateException("Unsupported retired block replacement ID");
                 blocks[i]=(byte)target;if(add.length==0&&(target&0xf00)!=0)add=new byte[2048];if(add2.length==0&&(target&0xf000)!=0)add2=new byte[2048];
                 putNibble(add,i,target>>8&15);putNibble(add2,i,target>>12&15);putNibble(meta,i,replacement.getBlock().getMetaFromState(replacement));changed=true;
             }
