@@ -69,8 +69,8 @@ public final class NativeRackEntity extends BlockEntity {
         public int extractEnergy(int maximum,boolean simulate){return powerOut?transferBattery(maximum,simulate,false):0;}
         public int getEnergyStored(){return batteryEnergy();}
         public int getMaxEnergyStored(){int capacity=0;for(var stack:items)if(NativeBatteryModule.valid(stack))capacity+=NativeBatteryModule.CAPACITY;return capacity;}
-        public boolean canReceive(){return !powerOut;}
-        public boolean canExtract(){return powerOut;}
+        public boolean canReceive(){return installed()&&!inert&&!powerOut;}
+        public boolean canExtract(){return installed()&&!inert&&powerOut;}
     };
     public static void tick(net.minecraft.world.level.Level level,BlockPos pos,net.minecraft.world.level.block.state.BlockState state,NativeRackEntity owner){
         if(!owner.powerOut||!owner.installed()||owner.inert||owner.batteryEnergy()==0)return;
@@ -92,7 +92,7 @@ public final class NativeRackEntity extends BlockEntity {
         var chunk=server.getChunkSource().getChunkNow(worldPosition.getX()>>4,worldPosition.getZ()>>4);
         return chunk!=null&&chunk.getBlockEntities().get(worldPosition)==this;
     }
-    private boolean held(){return com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,worldPosition);}
+    private boolean held(){return com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,worldPosition)||com.vandorlabs.neoforge.transfer.NativeTransferHolds.reserved(level,worldPosition)||com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(level,worldPosition)||com.vandorlabs.neoforge.placement.NativeStationaryPlacement.mutating(level,worldPosition); }
     private static long next(long current){return current==Long.MAX_VALUE?1:current+1;}
     private void derive(){occupied=kinds=0;for(int slot=0;slot<4;slot++)if(!items[slot].isEmpty()){occupied|=1<<slot;kinds|=NativeRackData.kind(items[slot])<<(slot*2);publicModules[slot]=kind(slot)==2?NativeRackData.settings(items[slot]):null;}visible=occupied;}
     private void publish(){visual=new Visual(occupied,kinds,visible,housing,inert,level!=null&&level.isClientSide?publicBatteryLevels:batteryLevels(),powerOut);model=ModelData.builder().with(VISUAL,visual).build();if(level!=null&&level.isClientSide&&level.getBlockEntity(worldPosition)==this)requestModelDataUpdate();}

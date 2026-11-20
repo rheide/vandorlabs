@@ -50,7 +50,7 @@ final class ModuleRackSettingsLiveChecks {
             owner.setPowerOut(true);
             need(cap.canExtract()&&!cap.canReceive()&&cap.receiveEnergy(20,false)==0&&cap.extractEnergy(500,true)==500&&owner.batteryEnergy()==6000,"output direction/simulation");
             BlockPos receiver=pos.offset(rear);world.setBlockState(receiver,com.vandorlabs.ports.ResourcePorts.POWER.getDefaultState(),3);
-            com.vandorlabs.ports.PowerPortTile port=(com.vandorlabs.ports.PowerPortTile)world.getTileEntity(receiver);port.place(front);owner.update();
+            com.vandorlabs.ports.PowerPortTile port=(com.vandorlabs.ports.PowerPortTile)world.getTileEntity(receiver);port.place(front);com.vandorlabs.tiles.DeferredTileLoad.flush(world);owner.update();
             need(owner.batteryEnergy()==5000,"output tick discharges exactly accepted RF");
             net.minecraft.nbt.NBTTagCompound saved=owner.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
             owner.readFromNBT(saved);need(owner.powerOut()&&owner.batteryEnergy()==5000,"power mode and charged module reload");
@@ -95,6 +95,7 @@ final class ModuleRackSettingsLiveChecks {
         });
     }
     @SuppressWarnings("unchecked") static boolean tick(Minecraft mc,File directory) throws Exception {
+        if(stage==18)return true;
         TileEntityModuleRack current=rack(mc.world);
         if(++wait%80==0)System.out.println("[vandorlabs][reprolab] Rack settings waiting stage="+stage+" age="+wait
                 +" mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem
@@ -196,7 +197,11 @@ final class ModuleRackSettingsLiveChecks {
                 int modules=0;for(int slot=0;slot<4;slot++)modules+=owned.getStackInSlot(slot).getCount();
                 need(modules==4,"exactly four usable modules after configuration/reload");
                 batteryPort(player.world);
-            });click(gui,1,0);
+            });click(gui,8,0);next(16);
+        }else if(stage==16){
+            if(!current.powerOut())return false;need(gui.control(8).displayString.equals("Power Port: Out"),"real C2S output control and label");click(gui,8,1);next(17);
+        }else if(stage==17){
+            if(current.powerOut())return false;click(gui,1,0);stage=18;
             System.out.println("[vandorlabs][reprolab] module-rack PASS settings checks="+checks+" ordinary/Configurator/Housing/C2S/previous/transmission/proportional/reload/privateItems/stale/permissions");return true;
         }
         return false;

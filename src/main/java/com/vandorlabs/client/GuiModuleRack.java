@@ -48,7 +48,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
         else if(page==1){
             buttonList.add(new GuiButton(0,guiLeft+12,guiTop+64,xSize-24,20,"Emit Redstone: "+(emit?"On":"Off")));
             buttonList.add(new GuiButton(90,guiLeft+12,guiTop+92,xSize-24,20,"Transmitter..."));
-            buttonList.add(new GuiButton(8,guiLeft+12,guiTop+120,xSize-24,20,"Power Port: "+(powerOut?"Out":"In")));
+            buttonList.add(new GuiButton(8,guiLeft+12,guiTop+174,xSize-24,20,"Power Port: "+(powerOut?"Out":"In")));
         }else{
             int half=(xSize-28)/2;
             buttonList.add(new DialogTabButton(200,guiLeft+12,guiTop+58,half,20,"General"));

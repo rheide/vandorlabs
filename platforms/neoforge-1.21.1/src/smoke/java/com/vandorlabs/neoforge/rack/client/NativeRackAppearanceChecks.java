@@ -22,7 +22,7 @@ final class NativeRackAppearanceChecks {
             int outer=0,front=0;
             for(int index=0;index<before.size();index++) {
                 var a=before.get(index);var b=after.get(index);
-                if(outer(a,facing)){outer++;need(b.getSprite().contents().name().toString().equals(com.vandorlabs.neoforge.ModernFinishCatalog.option(0).texture()),"selected outside material "+facing);}
+                if(outer(a,facing)){outer++;need(b.getSprite().contents().name().toString().equals(b.getDirection()==facing.getOpposite()?"vandorlabs:blocks/resource_ports/power_in_off":com.vandorlabs.neoforge.ModernFinishCatalog.option(0).texture()),"selected outside material "+facing);}
                 else {if(a.getDirection()==facing)front++;need(a==b&&Arrays.equals(a.getVertices(),b.getVertices()),"exact original front/interior records "+facing+"/"+index);}
                 noLetters(b);
             }

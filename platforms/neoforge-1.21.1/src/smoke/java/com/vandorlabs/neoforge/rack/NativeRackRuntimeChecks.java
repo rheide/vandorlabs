@@ -32,7 +32,15 @@ public final class NativeRackRuntimeChecks {
         need(capability!=null&&capability.receiveEnergy(12000,true)==10000&&capability.getEnergyStored()==0,"battery capability bounds and simulation");
         need(capability.receiveEnergy(7000,false)==7000,"item owns charge");var blank=rack.extract(0);
         need(rack.insert(0,module,false)&&module.isEmpty()&&rack.kind(0)==3&&rack.batteryEnergy()==7000,"one physical installed battery");
-        need(rack.transferBattery(500,true,false)==500&&rack.batteryEnergy()==7000,"rack extraction simulation");
+
+        var rear=rack.getBlockState().getValue(NativeRackBlock.FACING).getOpposite();
+        var port=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,POS,rear);
+        need(port!=null&&port.canReceive()&&!port.canExtract()&&port.extractEnergy(20,false)==0,"rear input only");
+        for(var side:Direction.values())if(side!=rear)need(world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,POS,side)==null,"other rack faces expose no RF port");
+        rack.setPowerOut(true);need(port.canExtract()&&!port.canReceive()&&port.receiveEnergy(20,false)==0&&port.extractEnergy(500,true)==500&&rack.batteryEnergy()==7000,"output mode and simulation");
+        var directionSaved=rack.saveWithoutMetadata(world.registryAccess());var directionLoaded=new NativeRackEntity(NativeRackBindings.ENTITY,POS,rack.getBlockState());directionLoaded.loadWithComponents(directionSaved,world.registryAccess());need(directionLoaded.powerOut(),"output setting persists");
+        rack.setPowerOut(false);
+need(rack.transferBattery(500,true,false)==500&&rack.batteryEnergy()==7000,"rack extraction simulation");
         need(rack.transferBattery(500,false,false)==500&&rack.batteryEnergy()==6500,"rack spends item charge");
         var saved=rack.saveWithoutMetadata(world.registryAccess());var loaded=new NativeRackEntity(NativeRackBindings.ENTITY,POS,rack.getBlockState());loaded.loadWithComponents(saved,world.registryAccess());
         need(!loaded.inert()&&loaded.batteryEnergy()==6500&&loaded.kind(0)==3,"battery modern components reload");

@@ -1,6 +1,6 @@
 # Module Rack
 
-The Module Rack holds four **Blank Modules** or **Autopilot Modules** in independently selectable horizontal bays. It is available in the Vandor Labs creative tab on Forge 1.12.2 and NeoForge 1.21.1.
+The Module Rack holds four **Blank Modules**, **Autopilot Modules**, or **Battery Modules** in independently selectable horizontal bays. It is available in the Vandor Labs creative tab on Forge 1.12.2 and NeoForge 1.21.1.
 
 ![A Module Rack with all four bays populated in Minecraft](images/module-rack/populated.png)
 
@@ -22,7 +22,7 @@ Insertion consumes one module in Survival. Creative insertion follows ordinary c
 
 Click the casing with an empty hand, or use the Configurizer, to open the same dedicated dialog. Empty-hand clicks on occupied bays still retrieve their modules.
 
-The **Housing** tab selects the casing's five outside faces. The front panel, recessed bay interiors and module artwork retain their original materials. **Original artwork** restores the graphite casing. The picker supports search, mouse-wheel scrolling and dragging its scrollbar. Changing the finish preserves all inserted modules.
+The **Housing** tab selects the casing's outside faces; the rear retains its Power Port artwork. The front panel, recessed bay interiors and module artwork retain their original materials. **Original artwork** restores the graphite casing. The picker supports search, mouse-wheel scrolling and dragging its scrollbar. Changing the finish preserves all inserted modules.
 
 ![The Rack's standard Housing picker](images/module-rack/housing.png)
 
@@ -83,6 +83,8 @@ single physical item: inserting, removing or breaking its Module Rack preserves
 its current charge. Its front reuses the Power Port red on/off bar between
 the handles, lighting individual pixel columns with charge. The item tooltip shows its exact stored RF.
 
+Connect RF to the Power Port on the rear face. In the Rack dialog, choose **Power Port: In** to charge inserted batteries or **Out** to discharge them. The port follows the rack’s facing, including floor and ceiling placements. Only the rear face transfers RF. Output mode supplies up to 1,000 RF per tick, limited by available charge and the receiver; compatible cables can also extract through that face. The setting and each module’s charge survive saving and reloading.
+
 Craft one with Programmable Matter Ingots in the four corners, Gold Ingots at
 the middle of each edge, and Redstone Dust in the center:
 
@@ -106,7 +108,7 @@ can recharge the installed modules, including while production is paused.
 
 ## Rendering
 
-The casing, populated indicators and seated modules are ordinary opaque chunk geometry. Prepared quads are shared across equivalent rack states. Stationary racks have no tile-entity renderer and no ticking tile entity. Inventory contents are serialized for saves and actual interactions, never by the rendering loop.
+The casing, populated indicators and seated modules are ordinary opaque chunk geometry. Prepared quads are shared across equivalent rack states. Stationary racks have no tile-entity renderer. Input-mode and empty racks do no neighbouring resource work; a charged output-mode rack checks its rear connection each server tick. Inventory contents are serialized for saves and actual interactions, never by the rendering loop.
 
 Insertion and extraction use a temporary client animation. Only racks with an active slide enter that renderer. At the end of the slide, the module transfers to the chunk mesh after the replacement section has uploaded. Removing a seated module slides it outward, and rapid reversals retain the displayed offset. Repeated state packets do not replay a slide; loading an existing populated rack displays its seated modules immediately. The visual clock pauses with the game.
 
@@ -116,7 +118,7 @@ Dynmap uses the same native model parts and displays the rack's saved slot occup
 
 ## NeoForge 1.21.1
 
-The native Rack uses the same placement, four bays, cassette artwork and Housing/Redstone controls. Native Battery Modules retain the same 10,000 RF item store, recipe, charge segments and energy capability; charge them through a compatible item charger. Its module tabs use the same route-marker sampling and independent receiving settings. Both the Configurizer and the empty-hand rim interaction open this dedicated dialog.
+The native Rack uses the same placement, four bays, cassette artwork and Housing/Redstone controls. Native Battery Modules retain the same 10,000 RF item store, recipe, charge segments and energy capability; charge them through a compatible item charger or the rear Rack input. Its module tabs use the same route-marker sampling and independent receiving settings. Both the Configurizer and the empty-hand rim interaction open this dedicated dialog.
 
 Insertion and retrieval both slide the cassette through the open front. These native captures show an Autopilot Module partway through each movement with a custom outer housing and the original front panel; the row indicator follows the authoritative occupied state.
 

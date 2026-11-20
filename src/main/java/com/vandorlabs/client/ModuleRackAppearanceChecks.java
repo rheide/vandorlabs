@@ -28,27 +28,27 @@ final class ModuleRackAppearanceChecks {
                 need(after==model.getQuads(selected,side,0),"cached material records "+facing+"/"+selector);
                 for(int index=0;index<before.size();index++) {
                     BakedQuad a=before.get(index),b=after.get(index);boolean outside=outer(a.getVertexData(),a.getFace().getIndex(),facing.getIndex());
-                    if(outside){outer++;need(b.getSprite().getIconName().equals(com.vandorlabs.tiles.ScreenHousingTextures.texture(0)),"outer plane gets chosen material "+facing+"/"+index);}
+                    if(outside){outer++;need(b.getSprite().getIconName().equals(b.getFace()==facing.getOpposite()?"vandorlabs:blocks/resource_ports/power_in_off":com.vandorlabs.tiles.ScreenHousingTextures.texture(0)),"outer plane gets chosen material "+facing+"/"+index);}
                     else {if(a.getFace()==facing)front++;need(a==b&&Arrays.equals(a.getVertexData(),b.getVertexData()),"front/interior exact authored record retained "+facing+"/"+selector+"/"+index);}
                     noLetters(b);
                 }
             }
             for(int slot=0;slot<4;slot++)for(int charge=0;charge<5;charge++){
                 List<BakedQuad> battery=ModuleRackModel.batteryQuads(facing,slot,charge);int red=0,green=0;
-                for(BakedQuad quad:battery){String sprite=quad.getSprite().getIconName();need(!sprite.contains("missingno"),"battery sprite present");if(sprite.equals("vandorlabs:blocks/resource_ports/power_in_icon"))red++;if(sprite.equals("minecraft:blocks/emerald_block"))green++;}
+                for(BakedQuad quad:battery){String sprite=quad.getSprite().getIconName();need(!sprite.contains("missingno"),"battery sprite present");if(sprite.equals("vandorlabs:blocks/resource_ports/power_in_off"))red++;if(sprite.equals("vandorlabs:blocks/resource_ports/power_in_on"))green++;}
                 int axis=facing.getAxis()==EnumFacing.Axis.X?0:facing.getAxis()==EnumFacing.Axis.Y?1:2;
                 int sign=facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?1:-1;
                 float bodyFront=-Float.MAX_VALUE;
-                for(BakedQuad quad:battery)if(quad.getFace()==facing&&quad.getSprite().getIconName().equals("vandorlabs:blocks/module_rack/module")){
+                for(BakedQuad quad:battery)if(quad.getFace()==facing&&quad.getSprite().getIconName().equals("vandorlabs:blocks/module_rack/dark")){
                     int[] data=quad.getVertexData();int stride=data.length/4;
                     for(int vertex=0;vertex<4;vertex++)bodyFront=Math.max(bodyFront,sign*Float.intBitsToFloat(data[vertex*stride+axis]));
                 }
                 need(bodyFront>-Float.MAX_VALUE,"battery body front emitted");
-                for(BakedQuad quad:battery)if(quad.getSprite().getIconName().equals("vandorlabs:blocks/resource_ports/power_in_icon")||quad.getSprite().getIconName().equals("minecraft:blocks/emerald_block")){
+                for(BakedQuad quad:battery)if(quad.getSprite().getIconName().equals("vandorlabs:blocks/resource_ports/power_in_off")||quad.getSprite().getIconName().equals("vandorlabs:blocks/resource_ports/power_in_on")){
                     need(quad.getFace()==facing,"battery artwork faces out of rack");int[] data=quad.getVertexData();int stride=data.length/4;
                     for(int vertex=0;vertex<4;vertex++)need(sign*Float.intBitsToFloat(data[vertex*stride+axis])>bodyFront+1e-5F,"battery artwork lies in front of opaque cassette");
                 }
-                need(red==4&&green==charge,"battery emitted lightning/charge geometry "+facing+"/"+slot+"/"+charge);
+                need(red==1&&green==(charge==0?0:1),"battery emitted Port bar/charge geometry "+facing+"/"+slot+"/"+charge);
             }
             need(outer>0&&front>0,"both outer and front records exercised "+facing);
             for(int slot=0;slot<4;slot++) {

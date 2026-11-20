@@ -56,7 +56,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot implements n
     }
     public boolean powerOut(){return powerOut;}
     public void setPowerOut(boolean value){if(powerOut!=value){powerOut=value;configurationChanged();}}
-    private boolean livePower(){return world!=null&&canMutate()&&world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockModuleRack&&!com.vandorlabs.gear.ArmTransactions.locked(world,pos);}
+    private boolean livePower(){return world!=null&&canMutate()&&(world.getMinecraftServer()==null||world.getMinecraftServer().isCallingFromMinecraftThread())&&world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockModuleRack&&!com.vandorlabs.gear.ArmTransactions.locked(world,pos)&&!com.vandorlabs.copier.CopyTransactions.locked(world,pos);}
     private boolean powerAvailable(net.minecraft.util.EnumFacing side){
         return livePower()&&side==getWorld().getBlockState(pos).getValue(com.vandorlabs.blocks.BlockModuleRack.FACING).getOpposite();
     }
