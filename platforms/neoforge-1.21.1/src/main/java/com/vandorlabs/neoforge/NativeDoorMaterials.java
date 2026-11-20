@@ -43,8 +43,11 @@ final class NativeDoorMaterials {
   return List.copyOf(result);
  }
  static List<BakedQuad> face(List<BakedQuad> source,NativeDoorSettings settings,ProgrammableModel.MaterialSnapshot target,boolean mirror,double scale){
+  return face(source,settings,target,mirror,scale,scale);
+ }
+ static List<BakedQuad> face(List<BakedQuad> source,NativeDoorSettings settings,ProgrammableModel.MaterialSnapshot target,boolean mirror,double scale,double scaleY){
   double[] b=bounds(source,q->!hinge(q));if(!Double.isFinite(b[0]))throw new IllegalArgumentException("Door has no material surface");boolean fit=TextureLayoutMode.fit(settings.textureLayout(),b[3]-b[0],b[4]-b[1],target.usedU()/target.usedV());var result=new ArrayList<BakedQuad>();
-  double width=fit?b[3]-b[0]:Math.max(1,target.usedU()/target.usedV())/scale,height=fit?b[4]-b[1]:Math.max(1,target.usedV()/target.usedU())/scale;
+  double width=fit?b[3]-b[0]:Math.max(1,target.usedU()/target.usedV())/scale,height=fit?b[4]-b[1]:Math.max(1,target.usedV()/target.usedU())/scaleY;
   for(double x=b[0];x<b[3]-1e-9;x+=width)for(double y=b[1];y<b[4]-1e-9;y+=height){double x1=Math.min(x+width,b[3]),y1=Math.min(y+height,b[4]),spanU=(x1-x)/width,spanV=(y1-y)/height;for(int side=0;side<2;side++){double z=b[side==0?2:5];double[][] p=side==0?new double[][]{{x,y,z,0,1},{x,y1,z,0,1-spanV},{x1,y1,z,spanU,1-spanV},{x1,y,z,spanU,1}}:new double[][]{{x,y,z,0,1},{x1,y,z,spanU,1},{x1,y1,z,spanU,1-spanV},{x,y1,z,0,1-spanV}};var custom=com.vandorlabs.neoforge.client.NativeBlockMaterials.material(settings.faceTexture());
    if(fit&&custom!=null&&custom.door())customFace(result,p,custom,side==0?Direction.NORTH:Direction.SOUTH,mirror?b[0]+b[3]:Double.NaN);else result.add(polygon(p,target,side==0?Direction.NORTH:Direction.SOUTH,mirror?b[0]+b[3]:Double.NaN));}}
   for(var q:source)if(hinge(q)||q.getDirection().getAxis()!=Direction.Axis.Z)result.add(q);return List.copyOf(result);

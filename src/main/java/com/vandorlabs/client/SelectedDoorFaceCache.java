@@ -20,15 +20,18 @@ final class SelectedDoorFaceCache {
         return get(geometry,choice,layout,scale,false);
     }
     static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,int layout,double scale,boolean mirror) {
+        return get(geometry,choice,layout,scale,scale,mirror);
+    }
+    static StaticSurfaceMesh get(SelectedDoorGeometry geometry,int choice,int layout,double scale,double scaleY,boolean mirror) {
         if(ScreenHousingTextures.reactorArtwork(choice))return ReactorDoorGlazing.get(geometry,com.vandorlabs.tiles.DoorGlassAppearance.DEFAULT,false,mirror);
-        Key key=new Key(geometry,choice,layout,scale,mirror);StaticSurfaceMesh cached=MESHES.get(key);
+        Key key=new Key(geometry,choice,layout,scale,scaleY,mirror);StaticSurfaceMesh cached=MESHES.get(key);
         if(cached!=null)return cached;
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(choice));
         double[] bounds=geometry.bounds;double aspect=UnifiedTextureSprites.aspect(sprite);
-        boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,bounds[3]-bounds[0],bounds[4]-bounds[1],aspect);
+        boolean fit=com.vandorlabs.render.TextureLayoutMode.fit(layout,(bounds[3]-bounds[0])*scale,(bounds[4]-bounds[1])*scaleY,aspect);
         StaticSurfaceMesh mesh;
         if(fit)mesh=build(bounds,sprite,choice,false);
-        else{StaticSurfaceMesh.Capture buffer=StaticSurfaceMesh.capture();DoorFaceTextureMesh.draw(buffer,sprite,bounds,0,aspect,scale);mesh=buffer.finish();}
+        else{StaticSurfaceMesh.Capture buffer=StaticSurfaceMesh.capture();DoorFaceTextureMesh.draw(buffer,sprite,bounds,0,aspect,scale,scaleY);mesh=buffer.finish();}
         if(mirror)mesh=mesh.mirrorX(bounds[0]+bounds[3]);
         MESHES.put(key,mesh);if(MESHES.size()>LIMIT)MESHES.remove(MESHES.keySet().iterator().next());
         return mesh;
@@ -52,12 +55,12 @@ final class SelectedDoorFaceCache {
     private static final class Key {
         final SelectedDoorGeometry geometry;
         final int choice;
-        final int layout;final double scale;final boolean mirror;
-        Key(SelectedDoorGeometry geometry,int choice,int layout,double scale,boolean mirror) { this.mirror=mirror;this.geometry=geometry;this.choice=choice;this.layout=layout;this.scale=scale; }
+        final int layout;final double scale,scaleY;final boolean mirror;
+        Key(SelectedDoorGeometry geometry,int choice,int layout,double scale,double scaleY,boolean mirror) { this.scaleY=scaleY;this.mirror=mirror;this.geometry=geometry;this.choice=choice;this.layout=layout;this.scale=scale; }
         @Override public int hashCode() { return 31*(31*System.identityHashCode(geometry)+choice)+layout+Double.hashCode(scale)+(mirror?1231:1237); }
         @Override public boolean equals(Object value) {
             if(!(value instanceof Key))return false;Key other=(Key)value;
-            return geometry==other.geometry && choice==other.choice && layout==other.layout&&scale==other.scale&&mirror==other.mirror;
+            return geometry==other.geometry && choice==other.choice && layout==other.layout&&scale==other.scale&&scaleY==other.scaleY&&mirror==other.mirror;
         }
     }
 }

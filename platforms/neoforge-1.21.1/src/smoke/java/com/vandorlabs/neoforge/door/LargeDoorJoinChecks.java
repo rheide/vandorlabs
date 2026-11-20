@@ -97,6 +97,11 @@ public final class LargeDoorJoinChecks {
         var first=place(actor,origin,horizontal,null);
         var secondPos=cell(origin,horizontal,3,0);
         need(!first.joinEnabled(),"fresh item defaults to independent");
+        var altered=first.itemSettings();
+        altered.putBoolean("SpaceFramed",false);
+        altered.putBoolean("SpaceDoorPanel",false);
+        altered.putInt("SpaceSlideDirection",2);
+        first.installPlacement(NativeLargeDoorPlacement.choices(altered,0),first.getRedstoneChannels());
         var configured=first.itemSettings();
         configured.putBoolean(LargeDoorJoin.TAG,true);
         var second=place(actor,secondPos,horizontal,configured);
@@ -112,10 +117,12 @@ public final class LargeDoorJoinChecks {
         verify(level,origin,horizontal,2,1,false);
         verify(level,secondPos,horizontal,2,1,false);
         var upper=place(actor,cell(origin,horizontal,0,3),horizontal,null);
+        need(upper.itemSettings().equals(first.itemSettings()),"fresh upper module inherits complete compatible settings");
         need(upper.joinEnabled(),"fresh stacked row inherits Join from a solid supported opted-in base");
         NativeLargeDoorJoins.flush(level);
         need(first.rendersAssembly()&&second.rendersAssembly(),"L-shaped component stays independent");
-        place(actor,cell(origin,horizontal,3,3),horizontal,configured);
+        var fourth=place(actor,cell(origin,horizontal,3,3),horizontal,null);
+        need(fourth.itemSettings().equals(first.itemSettings()),"ordinary fourth placement rejoins the completed rectangle first="+first.itemSettings()+" fourth="+fourth.itemSettings());
         verify(level,origin,horizontal,2,2,false);
         actor.denied=cell(secondPos,horizontal,1,1);
         need(!NativeLargeDoorLifecycle.toggle(level,origin,actor),"manual command denies when any touched reservation is protected");

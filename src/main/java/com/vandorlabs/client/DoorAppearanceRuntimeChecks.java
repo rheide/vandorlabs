@@ -35,6 +35,7 @@ final class DoorAppearanceRuntimeChecks {
   void close(){TEAnimatedScreenSelector.unloadGroups(world);}
  }
  static void verticalSplit(Minecraft mc,File output)throws Exception{
+  joinedTileMeshes(mc);
   Fixture fixture=new Fixture(mc,true,2);
   try{
    fixture.tile.configure(2,1,true,com.vandorlabs.persistence.SpaceDoorData.VERTICAL_SPLIT,true,true,false,0,false);
@@ -51,6 +52,27 @@ final class DoorAppearanceRuntimeChecks {
    ImageIO.write(open,"png",new File(output,"sliding-split-open.png"));
   }finally{fixture.close();}
   System.out.println("[vandorlabs] vertical-door-split-render PASS closed/half/open upright leaf meshes and opaque batch parity");
+ }
+ static void joinedTileMeshes(Minecraft mc)throws Exception{
+  Fixture fixture=new Fixture(mc,true,2);
+  java.lang.reflect.Field field=StaticSurfaceMesh.class.getDeclaredField("vertices");field.setAccessible(true);
+  int choice=CustomBlockMaterials.choice(new net.minecraft.item.ItemStack(net.minecraft.init.Blocks.STONE));
+  try{
+   SelectedDoorGeometry geometry=DoorRenderModels.get(fixture.state.getBlock(),fixture.tile.metadata(true,false,1)).selected();
+   for(int columns=1;columns<=2;columns++)for(int rows=1;rows<=2;rows++){
+    double sx=1.5*columns,sy=1.5*rows;
+    StaticSurfaceMesh mesh=SelectedDoorFaceCache.get(geometry,choice,1,sx,sy,false);
+    float[] data=(float[])field.get(mesh);
+    require(data.length>0,"joined tiled face emits vertices");
+    for(int q=0;q<data.length;q+=32){
+     double x0=Double.POSITIVE_INFINITY,y0=x0,x1=Double.NEGATIVE_INFINITY,y1=x1;
+     for(int v=0;v<4;v++){x0=Math.min(x0,data[q+v*8]);x1=Math.max(x1,data[q+v*8]);y0=Math.min(y0,data[q+v*8+1]);y1=Math.max(y1,data[q+v*8+1]);}
+     require((x1-x0)*sx<=1.00001&&(y1-y0)*sy<=1.00001,"Tile keeps one-block square pixels after joined group scale "+columns+"x"+rows);
+    }
+    require(SelectedDoorFaceCache.get(geometry,choice,1,sx,sy,false)==mesh,"joined dimensions reuse cached tessellation");
+   }
+  }finally{fixture.close();}
+  System.out.println("[vandorlabs] joined-large-door-texture PASS emitted square-pixel Tile quads for 1x1/2x1/1x2/2x2 dimensions");
  }
  static void run(Minecraft mc,File output)throws Exception{
   benchmarkCaches(output);
