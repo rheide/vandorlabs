@@ -79,15 +79,12 @@ public final class NativeCornerGlassBlock extends NativeGlassBlock {
     @Override public BlockState getStateForPlacement(BlockPlaceContext context){
         Direction side=context.getClickedFace();
         BlockState support=context.getLevel().getBlockState(context.getClickedPos().relative(side.getOpposite()));
-        if(side.getAxis()==Direction.Axis.Y&&support.is(this))
-            return defaultBlockState().setValue(TURN,support.getValue(TURN)).setValue(DEPTH,support.getValue(DEPTH));
-        var hit=NativePlacementHit.hit(context);double x=hit.x,z=hit.z;
-        Direction facing=side.getAxis().isHorizontal()?side.getOpposite():context.getHorizontalDirection();
-        if(side.getAxis()==Direction.Axis.X)x=side==Direction.EAST?0:1;
-        if(side.getAxis()==Direction.Axis.Z)z=side==Direction.SOUTH?0:1;
-        int turn=CornerGlassGeometry.orientation((facing.get2DDataValue()+2)&3,x,z);
-        return defaultBlockState().setValue(TURN,turn)
-                .setValue(DEPTH,CornerGlassGeometry.placementDepth(turn,x,z,side.getAxis().isHorizontal()));
+        var hit=NativePlacementHit.hit(context);
+        int kind=support.getBlock() instanceof NativeCornerGlassBlock?2:support.getBlock() instanceof NativeGlassBlock?1:0;
+        int placement=CornerGlassGeometry.placement(side.getAxis().isHorizontal()?(side.getOpposite().get2DDataValue()+2)&3:-1,
+                hit.x,hit.z,kind,kind==2?support.getValue(TURN):0,kind>0?support.getValue(DEPTH):0,
+                kind==1&&support.getValue(ROTATED));
+        return defaultBlockState().setValue(TURN,placement&3).setValue(DEPTH,placement/4);
     }
     public int frameMask(NativeGlassEntity owner){
         Level level=owner.getLevel();BlockPos pos=owner.getBlockPos();BlockState state=owner.getBlockState();

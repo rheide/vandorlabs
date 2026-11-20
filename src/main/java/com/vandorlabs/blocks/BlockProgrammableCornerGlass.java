@@ -49,16 +49,17 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
         int turn=state.getValue(TURN);
         return state.withProperty(TURN,mirror==Mirror.LEFT_RIGHT?3-turn:mirror==Mirror.FRONT_BACK?(1-turn)&3:turn);
     }
+    @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer,net.minecraft.util.EnumHand hand){
+        return getStateForPlacement(world,pos,side,x,y,z,meta,placer);
+    }
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){
-        IBlockState below=world.getBlockState(pos.offset(side.getOpposite()));
-        if(side.getAxis()==EnumFacing.Axis.Y&&below.getBlock()==this)
-            return getDefaultState().withProperty(TURN,below.getValue(TURN)).withProperty(DEPTH,below.getValue(DEPTH));
-        EnumFacing facing=side.getAxis().isHorizontal()?side.getOpposite():placer.getHorizontalFacing();
-        if(side.getAxis()==EnumFacing.Axis.X)x=side==EnumFacing.EAST?0:1;
-        if(side.getAxis()==EnumFacing.Axis.Z)z=side==EnumFacing.SOUTH?0:1;
-        int turn=CornerGlassGeometry.orientation((facing.getHorizontalIndex()+2)&3,x,z);
-        return getDefaultState().withProperty(TURN,turn)
-                .withProperty(DEPTH,CornerGlassGeometry.placementDepth(turn,x,z,side.getAxis().isHorizontal()));
+        IBlockState support=world.getBlockState(pos.offset(side.getOpposite()));
+        int kind=support.getBlock() instanceof BlockProgrammableCornerGlass?2:
+                support.getBlock() instanceof BlockProgrammableGlass?1:0;
+        int placement=CornerGlassGeometry.placement(side.getAxis().isHorizontal()?side(side.getOpposite()):-1,x,z,kind,
+                kind==2?support.getValue(TURN):0,kind>0?support.getValue(DEPTH):0,
+                kind==1&&support.getValue(ROTATED));
+        return getStateFromMeta(placement);
     }
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}

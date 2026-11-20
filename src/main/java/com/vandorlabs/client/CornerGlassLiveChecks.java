@@ -41,6 +41,8 @@ final class CornerGlassLiveChecks {
             require(ticks<240,"client never received both corner panes");
             return false;
         }
+        require(mc.world.getBlockState(BASE.up()).getBlock()==Block.getBlockFromName(FLAT),"stacked pane arrived on client");
+        require(!((TileEntityProgrammableGlass)mc.world.getTileEntity(BASE.up())).hasFastRenderer(),"stacked corner keeps its authored renderer");
         require(mc.world.getBlockState(BASE.east(2)).getBlock()==Block.getBlockFromName(SLOPED),"sloped model arrived on the client");
         mc.setRenderViewEntity(mc.player);
         mc.gameSettings.hideGUI=true;
@@ -51,7 +53,8 @@ final class CornerGlassLiveChecks {
         require(mc.player.getDistanceSq(BASE.getX()+4.5,BASE.getY()+.3,BASE.getZ()+5.5)<1,"visible fixture camera");
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",
                 new File(output,"corner-glass-middle.png"));
-        System.out.println("[vandorlabs][reprolab] corner-glass PASS registers/actual placement/two straight joins/Join off/metadata/sloped profile/client");
+        CornerGlassIconChecks.run(mc,output);
+        System.out.println("[vandorlabs][reprolab] corner-glass PASS registers/actual placement/two straight joins/Join off/metadata/sloped profile/24 stack placements/client");
         return true;
     }
     private static void verify(WorldServer world,EntityPlayerMP player){
@@ -77,7 +80,21 @@ final class CornerGlassLiveChecks {
         ((TileEntityProgrammableGlass)world.getTileEntity(BASE.north())).setJoin(false);
         require(corner.frameMask(world,BASE,state)==14,"Join Off retains the north edge");
         ((TileEntityProgrammableGlass)world.getTileEntity(BASE.north())).setJoin(true);
+        for(BlockProgrammableCornerGlass variant:new BlockProgrammableCornerGlass[]{corner,diagonal})for(int meta=0;meta<12;meta++){
+            BlockPos support=BASE.add(-6,0,-6);
+            world.setBlockState(support,variant.getStateFromMeta(meta),3);
+            world.setBlockToAir(support.up());
+            ItemStack placing=new ItemStack(variant);
+            player.setHeldItem(EnumHand.MAIN_HAND,placing);
+            require(placing.getItem().onItemUse(player,world,support,EnumHand.MAIN_HAND,EnumFacing.UP,.8F,1,.2F)==EnumActionResult.SUCCESS,
+                    "stack corner through the actual ItemBlock hand overload");
+            require(world.getBlockState(support.up()).getBlock()==variant&&variant.getMetaFromState(world.getBlockState(support.up()))==meta,
+                    "stack retains every cardinal turn and Near/Middle/Far metadata="+meta);
+            world.setBlockToAir(support.up());world.setBlockToAir(support);
+        }
+        world.setBlockState(BASE.up(),corner.getStateFromMeta(0),3);
         world.setBlockState(BASE.east(2),diagonal.getStateFromMeta(0),3);
+        world.setBlockState(BASE.east(2).up(),diagonal.getStateFromMeta(0),3);
         require(corner.collisionRayTrace(state,world,BASE,new Vec3d(BASE).addVector(.25,.5,0),
                 new Vec3d(BASE).addVector(.25,.5,.85))!=null,"ray crosses the bevel");
         require(corner.collisionRayTrace(state,world,BASE,new Vec3d(BASE).addVector(.9,.5,0),
