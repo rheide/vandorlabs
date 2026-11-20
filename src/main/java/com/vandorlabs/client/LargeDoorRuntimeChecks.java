@@ -116,7 +116,10 @@ final class LargeDoorRuntimeChecks {
                     require(world.getBlockState(unit.getPos()).getValue(BlockVandorDoor.OPEN),"a member click opens the entire group");
                 require(world.getCollisionBoxes(null,passage).isEmpty(),"expanded opening has no interior physical rail");
                 units[3].setJoin(false);
-                require(!units[0].joinedGroup().joined()&&door.complete(world,units[3]),"turning Join Off dissolves the rectangle without removing a module");
+                // The other three keep the largest valid group: the bottom pair stays joined.
+                require(!units[3].joinedGroup().joined()&&door.complete(world,units[3]),"turning Join Off detaches only that module");
+                require(units[0].joinedGroup().columns==2&&units[0].joinedGroup().rows==1&&units[1].joinedGroup().anchor==units[0]&&!units[2].joinedGroup().joined(),
+                        "remaining L keeps its pair and leaves the third module single");
             }
         }finally{
             player.rotationYaw=yaw;player.setSneaking(sneaking);player.setHeldItem(EnumHand.MAIN_HAND,previous);

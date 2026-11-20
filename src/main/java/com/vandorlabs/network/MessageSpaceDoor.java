@@ -99,6 +99,11 @@ public class MessageSpaceDoor implements IMessage {
                     other=(TileEntitySpaceDoor)player.world.getTileEntity(mate);
                     if (!other.usable(player)) return;
                 }
+                // A joined Large Door group shares one configuration, like a paired door and its mate.
+                java.util.List<TileEntitySpaceDoor> joined=new java.util.ArrayList<>();
+                if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)
+                    for(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor member:((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile).joinedGroup().members)
+                        if(member!=tile&&member.usable(player))joined.add(member);
                 tile.setFaceTexture(m.faceTexture);tile.setTextureLayout(m.layout);
                 tile.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
                 tile.setPlacementDepth(m.depth);
@@ -107,6 +112,13 @@ public class MessageSpaceDoor implements IMessage {
                     com.vandorlabs.tiles.TileEntityLargeProgrammableDoor large=(com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)tile;
                     if((m.joinFlags&JOIN_PRESENT)!=0)large.setJoin((m.joinFlags&JOIN_VALUE)!=0);
                     ((com.vandorlabs.blocks.BlockLargeProgrammableDoor)tile.getBlockType()).joinChanged(tile.getWorld(),large);
+                }
+                for(TileEntitySpaceDoor member:joined){
+                    member.setFaceTexture(m.faceTexture);member.setTextureLayout(m.layout);
+                    member.configure(m.design,m.detail,m.framed,m.slideDirection,m.depth==0,m.sliding,m.hinges,m.trigger,m.panel);
+                    member.setPlacementDepth(m.depth);
+                    member.setPanelMode(m.panelMode);member.configureSecurity(m.securityMode,m.securityAllowed);member.setRedstoneChannels(m.getRedstoneChannels());
+                    if((m.joinFlags&JOIN_PRESENT)!=0)((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)member).setJoin((m.joinFlags&JOIN_VALUE)!=0);
                 }
                 if (other!=null) {
                     other.setFaceTexture(m.faceTexture);other.setTextureLayout(m.layout);
