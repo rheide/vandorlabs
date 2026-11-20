@@ -44,13 +44,13 @@ if $BUILD && { [ ! -f "$JAR" ] || [ -n "$(find src generated-resources build.gra
         exit 1
     fi
 fi
-BEFORE=$(find testclient -maxdepth 1 -name 'render-run.*' -type d | sort); LOG=$LOGS/$FOCUS-$STAMP.log
+BEFORE=$(find testclient -maxdepth 1 -name "render-run.*" -type d | LC_ALL=C sort); LOG=$LOGS/$FOCUS-$STAMP.log
 KEEP=${VANDOR_LABS_TEST_KEEP_ARTIFACTS:-}
 $SHOTS && KEEP=1
 VANDOR_LABS_COMPAT_MODS=$MODS VANDOR_LABS_TEST_SKIP_BUILD=true VANDOR_LABS_TEST_KEEP_ARTIFACTS=$KEEP \
     bash testclient/test_viewscreen.sh --focus "$FOCUS" "${EXTRA[@]}" > "$LOG" 2>&1
 STATUS=$?
-RUN=$(comm -13 <(echo "$BEFORE") <(find testclient -maxdepth 1 -name 'render-run.*' -type d | sort) | head -1)
+RUN=$(LC_ALL=C comm -13 <(echo "$BEFORE") <(find testclient -maxdepth 1 -name "render-run.*" -type d | LC_ALL=C sort) | head -1)
 CLIENT=${RUN:+$RUN/client.log}
 RESULT=PASS; [ $STATUS -eq 0 ] || RESULT=FAIL
 echo "focus $FOCUS $RESULT exit=$STATUS jar=$(sha256sum "$JAR" | cut -c1-12) log=$LOG${RUN:+ run=$RUN}"
