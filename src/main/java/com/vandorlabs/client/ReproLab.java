@@ -2053,6 +2053,8 @@ public class ReproLab {
         }
         World world = mc.getIntegratedServer().getWorld(0);
         if(Boolean.getBoolean("vandorlabs.connectionAcceptanceOnly"))return;
+        // CanopyRuntimeChecks creates its own fixtures and exercises its complete focus.
+        if(Boolean.getBoolean("vandorlabs.canopyChecksOnly"))return;
         if((Boolean.getBoolean("vandorlabs.canopyAnimationChecksOnly") || Boolean.getBoolean("vandorlabs.gearAnimationChecksOnly")))return;
         if(Boolean.getBoolean("vandorlabs.doorChecksOnly")){onServer(mc,()->{EntityPlayerMP owner=mc.getIntegratedServer().getPlayerList().getPlayerByUsername(mc.player.getName());DoorRuntimeChecks.run(world,owner);LargeDoorRuntimeChecks.run(world,owner);RedstoneChannelRuntimeChecks.run(world,owner);System.out.println("[vandorlabs] programmable-doors-live PASS");});return;}
         if(Boolean.getBoolean("vandorlabs.redstoneInversionChecksOnly")){onServer(mc,()->RedstoneInversionRuntimeChecks.run(world));return;}

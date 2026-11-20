@@ -374,7 +374,7 @@ public final class CanopyRuntimeChecks {
                 pending.get();
                 pending = null;
             }
-            if(stage==9){if(CanopyTargetedHarvestClientChecks.tick(mc)){System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection side-surfaces screenshots=6 targeted-harvest");stage=10;mc.shutdown();}return;}
+            if(stage==9){if(CanopyTargetedHarvestClientChecks.tick(mc)){System.out.println("[vandorlabs][reprolab] canopy-live PASS open-close-packets offset-selection side-surfaces screenshots=8 targeted-harvest");stage=10;mc.shutdown();}return;}
             if (++ticks < 20) return;
             if (stage == 0) {
                 validate(mc);
@@ -539,7 +539,28 @@ public final class CanopyRuntimeChecks {
                 mc.player.setPosition(11.5,99.2,7.2);lookAt(mc,new Vec3d(8.5,100.5,9));stage=7;ticks=0;return;
             }
             if(stage==7){shot(mc,output,"canopy_side_trim");mc.player.setPosition(11.4,99.2,7.3);lookAt(mc,new Vec3d(8.5,100.5,9));stage=8;ticks=0;return;}
-            if(stage==8){shot(mc,output,"canopy_side_trim_shifted");stage=9;ticks=0;}
+            if(stage==8){
+                shot(mc,output,"canopy_side_trim_shifted");
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getEntityWorld();clear(w);
+                    place(w,block("canopy"),TEST,EnumFacing.NORTH);
+                    place(w,block("long_canopy"),TEST.east(3),EnumFacing.NORTH);
+                    place(w,block("angled_front_1x2"),TEST.east(6),EnumFacing.NORTH);
+                    for(BlockPos p:new BlockPos[]{TEST,TEST.east(3),TEST.east(6)}){TileEntityCanopy tile=TileEntityCanopy.at(w,p);tile.large.shade=14;tile.large.tint=1;tile.sync();}
+                }).get();
+                mc.player.setPosition(16,101,15);lookAt(mc,new Vec3d(11.5,100.5,9));stage=80;ticks=0;return;
+            }
+            if(stage==80){
+                shot(mc,output,"canopy_rear_closed");
+                mc.getIntegratedServer().addScheduledTask(()->{
+                    World w=mc.getIntegratedServer().getEntityWorld();
+                    for(BlockPos p:new BlockPos[]{TEST,TEST.east(3)})TileEntityCanopy.at(w,p).toggle();
+                }).get();stage=81;ticks=0;return;
+            }
+            if(stage==81){
+                if(ticks<80)return;
+                shot(mc,output,"canopy_rear_open");stage=9;ticks=0;
+            }
         } catch (Exception e) {
             throw new IllegalStateException("canopy live stage=" + stage, e);
         }
