@@ -98,6 +98,12 @@ final class GlassFrameMesh {
     }
     private static void box(BufferBuilder b,Key k,double x,double y,double r,double t){
         double u0=x,u1=r,v0=16-t,v1=16-y;
+        if(k.choice<0){
+            // Default rails are one pixel thick; sample only the rail sprite's opaque outer
+            // border, as the baked frame model does. The next band inward is transparent.
+            if(y==0&&t-y<=1){v0=15.5;v1=16;}else if(t==16&&t-y<=1){v0=0;v1=.5;}
+            if(x==0&&r-x<=1){u0=0;u1=.5;}else if(r==16&&r-x<=1){u0=15.5;u1=16;}
+        }
         // Opaque backing remains behind authored alpha, including canvas padding.
         double inset=k.choice>=0&&FrameAppearance.border(k.choice)?.016:0;
         if(k.front!=null)quad(b,k.front,false,new double[]{x,y,6+inset,u0,v1},new double[]{x,t,6+inset,u0,v0},new double[]{r,t,6+inset,u1,v0},new double[]{r,y,6+inset,u1,v1});
