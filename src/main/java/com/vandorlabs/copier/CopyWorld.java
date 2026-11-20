@@ -35,6 +35,15 @@ public final class CopyWorld {
     }
     private static void emptyDetached(TileEntity tile){if(tile==null||tile instanceof CopyFrozenTile)return;VehicleForeignCompat.clearDetachedInventory(tile);tile.setWorld(null);if(tile instanceof net.minecraft.inventory.IInventory)((net.minecraft.inventory.IInventory)tile).clear();if(tile instanceof com.vandorlabs.tiles.TileEntityModuleRack)((com.vandorlabs.tiles.TileEntityModuleRack)tile).drainModules();}
     public static void freeze(WorldServer world,BlockPos at){TileEntity tile=world.getTileEntity(at);if(tile==null||tile instanceof CopyFrozenTile)return;NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());world.removeTileEntity(at);emptyDetached(tile);CopyFrozenTile proxy=new CopyFrozenTile(data);proxy.setWorld(world);world.setTileEntity(at,proxy);}
+    /** The transaction captured all members before native invalidation changed their shared caches. */
+    public static void freeze(WorldServer world,BlockPos at,NBTTagCompound preimage){
+        TileEntity tile=world.getTileEntity(at);if(tile==null||tile instanceof CopyFrozenTile)return;
+        if(!TransferNetworkCompat.retainFrozenPreimage(tile)){freeze(world,at);return;}
+        net.minecraft.util.ResourceLocation id=TileEntity.getKey(tile.getClass());
+        if(preimage==null||id==null||!id.toString().equals(preimage.getString("id"))||preimage.getInteger("x")!=at.getX()||preimage.getInteger("y")!=at.getY()||preimage.getInteger("z")!=at.getZ())throw new IllegalArgumentException("Foreign transfer preimage identity changed");
+        world.removeTileEntity(at);emptyDetached(tile);CopyFrozenTile proxy=new CopyFrozenTile(preimage);proxy.setWorld(world);world.setTileEntity(at,proxy);
+    }
+
     public static void publish(WorldServer world,BlockPos at){TileEntity raw=world.getTileEntity(at);if(!(raw instanceof CopyFrozenTile))return;TileEntity tile=PhysicalTileFactory.create(world,world.getBlockState(at),((CopyFrozenTile)raw).saved());if(tile==null)throw new IllegalStateException("Frozen copy data cannot be published");world.removeTileEntity(at);tile.setWorld(world);tile.validate();world.setTileEntity(at,tile);tile.markDirty();}
     public static void clear(WorldServer world,VehicleStructure snapshot,BlockPos origin){for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);Chunk chunk=world.getChunkFromBlockCoords(at);ExtendedBlockStorage section=chunk.getBlockStorageArray()[at.getY()>>4];if(section!=Chunk.NULL_BLOCK_STORAGE)section.set(at.getX()&15,at.getY()&15,at.getZ()&15,Blocks.AIR.getDefaultState());chunk.markDirty();}for(VehicleStructure.Cell cell:snapshot.cells){TileEntity old=world.getTileEntity(origin.add(cell.pos));world.removeTileEntity(origin.add(cell.pos));VehicleForeignCompat.clearDetachedInventory(old);}rebuildColumns(world,snapshot,origin);}
     private static void rebuildColumns(WorldServer world,VehicleStructure snapshot,BlockPos origin){Set<Chunk> chunks=new LinkedHashSet<>();for(VehicleStructure.Cell cell:snapshot.cells)chunks.add(world.getChunkFromBlockCoords(origin.add(cell.pos)));for(Chunk chunk:chunks){chunk.generateSkylightMap();chunk.markDirty();}}

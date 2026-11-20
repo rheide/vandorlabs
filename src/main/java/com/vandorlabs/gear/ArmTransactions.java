@@ -91,7 +91,7 @@ public final class ArmTransactions {
         if(hold!=null){if(hold.recovering||hold.applied||!hold.record.getString("Operation").equals(operation))return false;if(hold.error!=null)throw new IllegalArgumentException(hold.error);if(hold.durable){fault("prepared");return true;}if(hold.io==null||!hold.io.isDone())return false;try{hold.io.get();hold.io=null;hold.durable=true;fault("prepared");return true;}catch(Exception failure){if(rejectPreparation(hold,failure))throw new IllegalArgumentException("Attachment recovery data is too large; source retained",failure);hold.error="Arm journal could not be saved; source retained";throw new IllegalArgumentException(hold.error,failure);}}
         if(holds.size()>=8)return false;
         Set<BlockPos> positions=new LinkedHashSet<>(changed);positions.add(arm.getPos());NBTTagList before=new NBTTagList();
-        for(BlockPos pos:positions){if(!world.isBlockLoaded(pos,false)||locked(world,pos))throw new IllegalArgumentException("Arm transfer cells are unavailable");NBTTagCompound cell=new NBTTagCompound();cell.setLong("Pos",pos.toLong());cell.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),world.getBlockState(pos)));TileEntity tile=world.getTileEntity(pos);if(tile!=null)cell.setTag("Tile",tile.writeToNBT(new NBTTagCompound()));before.appendTag(cell);}
+        for(BlockPos pos:positions){if(!world.isBlockLoaded(pos,false)||locked(world,pos))throw new IllegalArgumentException("Arm transfer cells are unavailable");NBTTagCompound cell=new NBTTagCompound();cell.setLong("Pos",pos.toLong());cell.setTag("State",NBTUtil.writeBlockState(new NBTTagCompound(),world.getBlockState(pos)));TileEntity tile=world.getTileEntity(pos);if(tile!=null)cell.setTag("Tile",com.vandorlabs.vehicle.TransferNetworkCompat.write(tile));before.appendTag(cell);}
         NBTTagCompound record=new NBTTagCompound();record.setInteger("Schema",1);record.setLong("Root",arm.getPos().toLong());record.setString("Operation",operation);java.util.UUID authorized=com.vandorlabs.tiles.WorldActionAuthorization.actorId(arm);if(authorized!=null)record.setUniqueId("AuthorizationActor",authorized);record.setTag("Before",before);if(extra!=null)record.merge(extra);
         Hold created=new Hold(world,directory(world).resolve(UUID.randomUUID()+".nbt"),record,false);
         try{created.io=IO.submit(()->{write(created.file,record);return null;});holds.put(created.root,created);if("detach".equals(operation)&&arm.payload()!=null)ArmCoreRenderTransfer.capturing(arm,arm.payload());for(BlockPos pos:created.cells)if(!pos.equals(created.root))freeze(created,pos);}catch(RejectedExecutionException busy){return false;}return false;
@@ -103,6 +103,14 @@ public final class ArmTransactions {
         // positions remain locked; once applied, the new payload tiles freeze.
         TileEntity raw=hold.world.getTileEntity(pos);
         if(!hold.applied&&!hold.recovering&&hold.record.getString("Operation").equals("restore")&&raw instanceof GearTileEntity&&hold.root.equals(((GearTileEntity)raw).owner()))return;
+        if(com.vandorlabs.vehicle.TransferNetworkCompat.retainFrozenPreimage(raw)){
+            if(hold.applied&&!hold.recovering&&hold.record.getString("Operation").equals("restore")){
+                TileEntity owner=hold.world.getTileEntity(hold.root);ArmPayload payload=owner instanceof GearTileEntity?((GearTileEntity)owner).payload():null;
+                NBTTagCompound selected=payload==null?null:payload.nativeSnapshotAt((GearTileEntity)owner,pos);CopyWorld.freeze(hold.world,pos,selected);return;
+            }
+            NBTTagList before=hold.record.getTagList("Before",10);for(int i=0;i<before.tagCount();i++){NBTTagCompound row=before.getCompoundTagAt(i);if(row.getLong("Pos")==pos.toLong()){CopyWorld.freeze(hold.world,pos,row.hasKey("Tile",10)?row.getCompoundTag("Tile"):null);return;}}
+            throw new IllegalArgumentException("Foreign transfer preimage is missing");
+        }
         CopyWorld.freeze(hold.world,pos);
     }
     static void applied(GearTileEntity arm){if(MATRIX.get()||!(arm.getWorld() instanceof WorldServer))return;Map<BlockPos,Hold> holds=HOLDS.get(arm.getWorld());Hold hold=holds==null?null:holds.get(arm.getPos());if(hold!=null){hold.applied=true;for(BlockPos pos:hold.cells)if(!pos.equals(hold.root))freeze(hold,pos);fault(hold.record.getString("Operation"));}}
@@ -123,7 +131,7 @@ public final class ArmTransactions {
             NBTTagCompound data=legacyMatter?com.vandorlabs.persistence.RenamedBlocks.matterTile(hold.cells.get(n)):
                     cell.hasKey("Tile",10)?com.vandorlabs.persistence.RetiredCockpitGlass.tileData(cell.getCompoundTag("Tile")):null;
             TileEntity tile=data==null?null:com.vandorlabs.copier.PhysicalTileFactory.create(hold.world,state,data);
-            if(tile!=null&&!tile.writeToNBT(new NBTTagCompound()).equals(data))
+            if(tile!=null&&!com.vandorlabs.vehicle.TransferNetworkCompat.write(tile).equals(data))
                 throw new IllegalArgumentException("Recovery tile cannot round-trip");
             prepared.add(tile);
         }

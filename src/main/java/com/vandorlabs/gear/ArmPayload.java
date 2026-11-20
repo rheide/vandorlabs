@@ -210,6 +210,12 @@ public final class ArmPayload {
         VehicleWorld current=view(arm);if(navigationObservers==null){java.util.List<com.vandorlabs.tiles.TileEntityConstructor> found=new java.util.ArrayList<>();for(TileEntity tile:current.tiles.values())if(tile instanceof com.vandorlabs.tiles.TileEntityConstructor&&((com.vandorlabs.tiles.TileEntityConstructor)tile).observer())found.add((com.vandorlabs.tiles.TileEntityConstructor)tile);navigationObservers=java.util.Collections.unmodifiableList(found);}return navigationObservers;
     }
     public VehicleWorld view(GearTileEntity arm){if(view==null||view.parent!=arm.getWorld()){VehicleWorld installed=new VehicleWorld(arm.getWorld(),blocks);for(VehicleStructure.Cell cell:blocks.cells)if(cell.hasTileData()&&!installed.tiles.containsKey(cell.pos))throw new IllegalArgumentException("Attachment tile cannot be installed; snapshot retained");view=installed;view.navigationArm=arm;navigationObservers=null;view.origin=arm.getPos().add(offset);for(TileEntity tile:view.tiles.values()){if(tile instanceof com.vandorlabs.tiles.TileEntityTurntableSurface)((com.vandorlabs.tiles.TileEntityTurntableSurface)tile).carriedArm=arm;if(tile instanceof com.vandorlabs.tiles.TileEntityConstructor)((com.vandorlabs.tiles.TileEntityConstructor)tile).carriedArm=arm;}}view.navigationArm=arm;return view;}
+    /** Chosen published bytes for journal proxies; foreign onLoad/network callbacks may not have run yet. */
+    NBTTagCompound nativeSnapshotAt(GearTileEntity arm,BlockPos at){
+        if(!materialized)return null;BlockPos origin=materializedOrigin(arm);VehicleStructure.Cell cell=placed().at(at.subtract(origin));
+        if(cell==null||!cell.hasTileData()||arm.getWorld().getBlockState(at)!=cell.state)return null;
+        return VehicleTileData.translated(cell.tileData(),origin);
+    }
     BlockPos materializedOrigin(GearTileEntity arm){return arm.getPos().add(placedOffset);}
     Set<BlockPos> placedSurfaceCells(GearTileEntity arm){Set<BlockPos> result=new HashSet<>();BlockPos origin=materializedOrigin(arm);for(VehicleStructure.Cell cell:placed().cells)if(cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface)result.add(origin.add(cell.pos));return result;}
     public Set<BlockPos> surfaceEndpointCells(GearTileEntity arm){
