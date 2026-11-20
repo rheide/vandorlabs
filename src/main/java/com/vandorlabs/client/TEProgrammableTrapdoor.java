@@ -42,13 +42,16 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
     }
     /** Broad artwork and native metal door leaf edges share the exact collision mesh. */
     static void drawConfiguredLeaf(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light) {
+        for(int piece=0;piece<(tile.splitCenter()?2:1);piece++)drawConfiguredPiece(buffer,sprite,tile,state,pose,light,piece);
+    }
+    private static void drawConfiguredPiece(BufferBuilder buffer,TextureAtlasSprite sprite,TileEntityProgrammableTrapdoor tile,IBlockState state,double pose,int light,int piece){
         try(TrapdoorRenderScratch scratch=TrapdoorRenderScratch.acquire()) {
             boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor,tall=diagonal && tile.getPosition()!=2;
             java.util.List<TileEntityProgrammableTrapdoor> group=tile.group();
-            writeCorners(tile,state,pose,group,scratch.moving);
+            if(tile.splitCenter())tile.writePieceCorners(state,pose,piece,scratch.moving);else writeCorners(tile,state,pose,group,scratch.moving);
             int first=tall?2:0,end=first+2;
             boolean door=ScreenHousingTextures.isDoor(tile.getHousingTexture());
-            boolean tiled=materialCoordinates(tile,state,group,scratch.closed,scratch.uv,UnifiedTextureSprites.aspect(sprite));
+            boolean tiled=materialCoordinates(tile,state,group,scratch.closed,scratch.uv,UnifiedTextureSprites.aspect(sprite),piece);
             TextureAtlasSprite edge=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/programmable_glass/metal_side");
             // Only authored Frame choices have an aperture. Ordinary/virtual door sprites are solid leaves.
             if(tile.getHousingTexture()>=0 && com.vandorlabs.tiles.FrameAppearance.valid(tile.getHousingTexture()) && com.vandorlabs.tiles.FrameAppearance.border(tile.getHousingTexture())) {
@@ -92,6 +95,9 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
         materialCoordinates(tile,state,group,closed,uv,ScreenHousingTextures.isDoor(tile.getHousingTexture())?.5:1);
     }
     static boolean materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state,java.util.List<TileEntityProgrammableTrapdoor> group,double[][] closed,double[][] uv,double aspect) {
+        return materialCoordinates(tile,state,group,closed,uv,aspect,0);
+    }
+    private static boolean materialCoordinates(TileEntityProgrammableTrapdoor tile,IBlockState state,java.util.List<TileEntityProgrammableTrapdoor> group,double[][] closed,double[][] uv,double aspect,int piece){
         boolean diagonal=tile instanceof TileEntityProgrammableDiagonalTrapdoor;
         boolean tall=diagonal && tile.getPosition()!=2;
         net.minecraft.util.EnumFacing facing=state.getValue(BlockProgrammableTrapdoor.FACING);
@@ -103,7 +109,7 @@ public final class TEProgrammableTrapdoor extends TileEntitySpecialRenderer<Tile
             double v=tall?leaf.getPos().getY():widthX?leaf.getPos().getZ():leaf.getPos().getX();
             minU=Math.min(minU,u);maxU=Math.max(maxU,u+1);minV=Math.min(minV,v);maxV=Math.max(maxV,v+1);
         }
-        writeCorners(tile,state,0,java.util.Collections.emptyList(),closed);
+        if(tile.splitCenter())tile.writePieceCorners(state,0,piece,closed);else writeCorners(tile,state,0,java.util.Collections.emptyList(),closed);
         // Opposing-cover lookup and bounds are invariant across the eight corners.
         if(tile.isCover()) {
             net.minecraft.util.math.BlockPos target=tile.getPos().offset(facing);double offset=tile.coverOffset();

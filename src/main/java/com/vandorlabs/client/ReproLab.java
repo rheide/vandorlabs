@@ -689,6 +689,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("Arm resource indicator check",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.trapdoorGroupOnly")){
+            if(++holdTicks==40)onServer(mc,()->TrapdoorGroupRuntimeChecks.run(mc.getIntegratedServer().getWorld(0),mc.getIntegratedServer().getPlayerList().getPlayers().get(0)));
+            if(holdTicks>=60)try{if(TrapdoorGroupRuntimeChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Trapdoor group dialog checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.horizontalDoorChecksOnly")){
             if(++holdTicks==40){
                 onServer(mc,()->{

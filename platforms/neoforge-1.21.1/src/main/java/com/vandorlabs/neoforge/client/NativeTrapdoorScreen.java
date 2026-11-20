@@ -83,7 +83,7 @@ public final class NativeTrapdoorScreen extends AbstractContainerScreen<NativeTr
             case 7->{if(!diagonal())return;if(position==2)position=tallWidth;else{tallWidth=position;position=2;}}
             case 8->{if(diagonal()||!menu.tile.canOffsetClosedLeaf())return;facing=DialogInput.cycle(facing,4,direction);}
             case 9->{if(!diagonal()||sliding)return;rotation=!rotation;}
-            case 11->groupOpening=DialogInput.cycle(groupOpening<0?menu.tile.groupOpening():groupOpening,3,direction);
+            case 11->groupOpening=TrapdoorOptions.cycleGroupOpening(groupOpening<0?menu.tile.groupOpening():groupOpening,direction);
             case 10->{if(!diagonal()||sliding)return;hinge=DialogInput.cycle(hinge,3,direction);}
             default->{return;}
         }

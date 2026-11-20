@@ -105,7 +105,7 @@ public final class GuiProgrammableTrapdoor extends GuiMaterialPicker {
 
         }
         else if(button.id==8){if(!tile.canOffsetClosedLeaf())return;facing=GuiOptionCycle.next(facing);button.displayString=facingLabel();}
-        else if(button.id==11){groupOpening=GuiOptionCycle.next(groupOpening<0?tile.groupOpening():groupOpening,3);button.displayString=TrapdoorOptions.groupOpeningLabel(groupOpening);}
+        else if(button.id==11){groupOpening=TrapdoorOptions.cycleGroupOpening(groupOpening<0?tile.groupOpening():groupOpening,GuiOptionCycle.direction());button.displayString=TrapdoorOptions.groupOpeningLabel(groupOpening);}
         else if(button.id==9){rotationFlipped=!rotationFlipped;button.displayString=rotationLabel();}
         else if(button.id==10){hingeSide=GuiOptionCycle.next(hingeSide,3);button.displayString=hingeLabel();}
         for(GuiButton control:buttonList)if(control.id==9 || control.id==10)control.enabled=!sliding;

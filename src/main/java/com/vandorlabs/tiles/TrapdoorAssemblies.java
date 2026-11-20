@@ -18,13 +18,13 @@ final class TrapdoorAssemblies {
         if(root.assembly.isEmpty()||leaves.size()<2)return 0;
         EnumFacing facing=facing(root);
         for(TileEntityProgrammableTrapdoor leaf:leaves)if(facing(leaf)!=facing)return 0;
-        return facing.getAxisDirection()==EnumFacing.AxisDirection.POSITIVE?2:1;
+        return facing==EnumFacing.NORTH?3:facing==EnumFacing.EAST?4:facing==EnumFacing.SOUTH?5:6;
     }
     static void setOpening(TileEntityProgrammableTrapdoor root,List<TileEntityProgrammableTrapdoor> leaves,int mode){
-        if(root instanceof TileEntityProgrammableDiagonalTrapdoor||leaves.size()<2||mode<0||mode>=3)return;
-        EnumFacing.Axis axis=facing(root).getAxis();
+        if(root instanceof TileEntityProgrammableDiagonalTrapdoor||leaves.size()<2||mode<0||mode>=7)return;
+        EnumFacing.Axis axis=mode>=3?(mode==3||mode==5?EnumFacing.Axis.Z:EnumFacing.Axis.X):facing(root).getAxis();
         final EnumFacing.Axis firstAxis=axis;
-        if(leaves.stream().allMatch(leaf->coordinate(leaf.getPos(),firstAxis)==coordinate(root.getPos(),firstAxis)))
+        if(mode<3&&leaves.stream().allMatch(leaf->coordinate(leaf.getPos(),firstAxis)==coordinate(root.getPos(),firstAxis)))
             axis=axis==EnumFacing.Axis.X?EnumFacing.Axis.Z:EnumFacing.Axis.X;
         final EnumFacing.Axis span=axis;
         int min=leaves.stream().mapToInt(leaf->coordinate(leaf.getPos(),span)).min().getAsInt();
@@ -46,7 +46,9 @@ final class TrapdoorAssemblies {
     }
     private static int coordinate(BlockPos pos,EnumFacing.Axis axis){return axis==EnumFacing.Axis.X?pos.getX():pos.getZ();}
     private static void updateOpening(TileEntityProgrammableTrapdoor leaf,int mode,int column,int width,EnumFacing positive){
-        com.vandorlabs.render.TrapdoorGroupMotion motion=new com.vandorlabs.render.TrapdoorGroupMotion(mode,column,width);
+        int localMode=mode>=3?(mode==3||mode==6?1:2):mode;
+        com.vandorlabs.render.TrapdoorGroupMotion motion=new com.vandorlabs.render.TrapdoorGroupMotion(localMode,column,width);
+        leaf.assemblyCenterSplit=localMode==0&&(width&1)!=0&&column==width/2;
         leaf.assemblyHinge=motion.hinge;leaf.assemblyTravel=motion.travel;
         leaf.getWorld().setBlockState(leaf.getPos(),leaf.getWorld().getBlockState(leaf.getPos())
                 .withProperty(BlockProgrammableTrapdoor.FACING,motion.high?positive:positive.getOpposite()),2);
@@ -152,6 +154,11 @@ final class TrapdoorAssemblies {
         boolean open=root.getWorld().getBlockState(reference.getPos()).getValue(BlockProgrammableTrapdoor.OPEN);
         int split=(width+1)/2;
         int mode=existingOpening(reference);
+        EnumFacing openingAxis=EnumFacing.getFacingFromVector(width==1&&height>1?v.getX():u.getX(),0,width==1&&height>1?v.getZ():u.getZ());
+        if(mode>=3)openingAxis=mode==3||mode==5?EnumFacing.SOUTH:EnumFacing.EAST;
+        final EnumFacing.Axis openingSpan=openingAxis.getAxis();
+        int openingMin=members.stream().mapToInt(at->coordinate(at,openingSpan)).min().getAsInt();
+        int openingWidth=members.stream().mapToInt(at->coordinate(at,openingSpan)).max().getAsInt()-openingMin+1;
         for(Map.Entry<BlockPos,TileEntityProgrammableTrapdoor> entry:cells.entrySet()) {
             TileEntityProgrammableTrapdoor leaf=entry.getValue();int col=entry.getKey().getX()-minX;
             boolean high=col>=split;int distance=high?width-1-col:col;
@@ -163,8 +170,8 @@ final class TrapdoorAssemblies {
                 EnumFacing localX=d.facing().rotateY();boolean reversed=localX.getDirectionVec().equals(u)?high:!high;
                 d.setOpeningSide(reversed);leaf.assemblyHinge=reversed?1+distance-1/16D:-distance+1/16D;
             } else {
-                EnumFacing direction=EnumFacing.getFacingFromVector(u.getX(),u.getY(),u.getZ());
-                updateOpening(leaf,mode,col,width,direction);
+                EnumFacing direction=openingSpan==EnumFacing.Axis.X?EnumFacing.EAST:EnumFacing.SOUTH;
+                updateOpening(leaf,mode,coordinate(leaf.getPos(),openingSpan)-openingMin,openingWidth,direction);
             }
         }
         for(TileEntityProgrammableTrapdoor leaf:cells.values()){leaf.setRedstoneChannels(reference.getRedstoneChannels());leaf.sync();}

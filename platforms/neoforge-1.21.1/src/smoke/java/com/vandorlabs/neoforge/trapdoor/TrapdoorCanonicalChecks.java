@@ -60,21 +60,38 @@ public final class TrapdoorCanonicalChecks {
         var selected=NativeTrapdoorEntity.at(level,start.east());
         need(selected!=null&&selected.group().size()==3,"three trapdoors share one group");
         actorAt(actor,start.east());
-        for(int mode:writing?new int[]{1,0,2}:new int[]{2}){
+        for(int mode:writing?new int[]{1,2,3,4,5,6,0}:new int[]{0}){
             if(writing)need(selected.configure(actor,selected.settings(),false,null,mode),"apply opening choice "+mode);
-            need(selected.groupOpening()==mode,"opening survives publication or restart "+mode);
+            int expectedMode=mode==1?6:mode==2?4:mode;
+            need(selected.groupOpening()==expectedMode,"opening survives publication or restart "+mode);
             for(int i=0;i<3;i++){
                 var leaf=NativeTrapdoorEntity.at(level,start.east(i));
-                boolean high=mode==2||mode==0&&i==2;
-                need(leaf.facing()==(high?Direction.EAST:Direction.WEST),"opening hinge faces the selected side");
-                need(Math.abs(leaf.links().hinge()-(1D/16-(high?2-i:i)))<1E-9,"each leaf uses the shared pivot");
+                if(mode==0){
+                    need(leaf.trapdoorVisual().pose().splitCenter==(i==1),"only middle cell splits into two half-leaves i="+i+" split="+leaf.trapdoorVisual().pose().splitCenter+" travel="+leaf.trapdoorVisual().pose().travel+" facing="+leaf.facing()+" links="+leaf.links());
+                    need(Math.abs(leaf.trapdoorVisual().pose().travel-(1.5-1D/16))<1E-9,"true half-span travel");
+                    var snapshot=NativeTrapdoorGeometry.snapshot(leaf.trapdoorVisual().pose(),true);
+                    need(snapshot.collisionCount()==(i==1?2:1),"exact independent collision leaves");
+                }else{
+                    var expected=expectedMode==3?Direction.NORTH:expectedMode==4?Direction.EAST:expectedMode==5?Direction.SOUTH:Direction.WEST;
+                    need(leaf.facing()==expected,"all leaves use the cardinal opening edge");
+                }
             }
         }
+
     }
+    private static net.minecraft.server.MinecraftServer pending;private static int loadedTicks;
     @SubscribeEvent public static void started(ServerStartedEvent event){
-        String phase=System.getProperty("vandorlabs.transmitterPhase","");if(!phase.startsWith("trapdoor-canonical-"))return;var server=event.getServer();
+        String phase=System.getProperty("vandorlabs.transmitterPhase","");if(!phase.startsWith("trapdoor-canonical-"))return;
+        if(phase.endsWith("read")){pending=event.getServer();pending.overworld().setChunkForced(BASE.getX()>>4,BASE.getZ()>>4,true);pending.overworld().getChunk(BASE);return;}
+        run(event.getServer(),phase);
+    }
+    @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post event){
+        if(pending==null||pending!=event.getServer()||++loadedTicks<6)return;
+        var server=pending;pending=null;run(server,"trapdoor-canonical-read");
+    }
+    private static void run(net.minecraft.server.MinecraftServer server,String phase){
         try{ServerLevel level=server.overworld();var actor=new net.neoforged.neoforge.common.util.FakePlayer(level,new com.mojang.authlib.GameProfile(UUID.fromString("0f69c44e-27d3-4f87-bbcd-14f0abeb8a02"),"CanonicalTrapdoor"));actor.gameMode.changeGameModeForPlayer(GameType.SURVIVAL);
-            recipes(level);groupOpening(level,actor,phase.endsWith("write"));
+            TrapdoorEditChecks.main(new String[0]);recipes(level);groupOpening(level,actor,phase.endsWith("write"));
             for(boolean diagonal:new boolean[]{false,true}){
                 BlockPos pos=BASE.east(diagonal?16:0);level.getChunk(pos);
                 if(phase.endsWith("write")){

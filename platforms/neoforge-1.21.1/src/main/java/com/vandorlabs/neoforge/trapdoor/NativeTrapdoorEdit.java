@@ -10,7 +10,7 @@ public record NativeTrapdoorEdit(int window,NativeTrapdoorSettings settings,bool
     public NativeTrapdoorEdit(int window,NativeTrapdoorSettings settings,boolean inverted){this(window,settings,inverted,-1);}
     public static final int HEADER_BYTES=15,MAX_BYTES=HEADER_BYTES+4*ChannelList.MAX_CHANNELS;
     public NativeTrapdoorEdit {
-        if(window<0 || settings==null || settings.choices().texture<0 || groupOpening< -1 || groupOpening>=3)
+        if(window<0 || settings==null || settings.choices().texture<0 || groupOpening< -1 || groupOpening>=7)
             throw new IllegalArgumentException("Invalid trapdoor edit");
     }
     public static NativeTrapdoorEdit decode(ByteBuf buffer,IntPredicate textureAllowed) {
@@ -21,7 +21,7 @@ public record NativeTrapdoorEdit(int window,NativeTrapdoorSettings settings,bool
         int layoutAndOpening=buffer.readUnsignedByte(),count=buffer.readUnsignedByte();
         int layout=layoutAndOpening&3,groupOpening=(layoutAndOpening>>>2)-1;
         if(window<0 || texture<0 || !textureAllowed.test(texture) || position>2 || trigger>2 || facing>3 || hinge>2
-                || layout>2 || groupOpening>=3 || count>ChannelList.MAX_CHANNELS || buffer.readableBytes()!=count*4)
+                || layout>2 || groupOpening>=7 || count>ChannelList.MAX_CHANNELS || buffer.readableBytes()!=count*4)
             throw new IllegalArgumentException("Invalid trapdoor edit fields");
         for(int i=0;i<count;i++)if(buffer.getInt(buffer.readerIndex()+i*4)<0)
             throw new IllegalArgumentException("Negative trapdoor channel");

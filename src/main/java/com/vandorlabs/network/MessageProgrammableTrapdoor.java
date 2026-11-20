@@ -45,17 +45,21 @@ public final class MessageProgrammableTrapdoor implements IMessage {
     public MessageProgrammableTrapdoor(BlockPos pos,int texture,int position,boolean sliding,int trigger,int channel,boolean inverted,boolean cover,boolean tileTexture,net.minecraft.util.EnumFacing facing,boolean slideIntoWall){this(pos,texture,position,sliding,trigger,channel,inverted,cover,tileTexture,facing);this.slideIntoWall=slideIntoWall;}
     public MessageProgrammableTrapdoor(BlockPos pos,int texture,int position,boolean sliding,int trigger,int channel,boolean inverted,boolean cover,boolean tileTexture,net.minecraft.util.EnumFacing facing,boolean slideIntoWall,boolean slideOverSurface){this(pos,texture,position,sliding,trigger,channel,inverted,cover,tileTexture,facing,slideIntoWall);this.slideOverSurface=slideOverSurface;}
     @Override public void toBytes(ByteBuf b){b.writeLong(pos.toLong());b.writeInt(texture);b.writeInt(position);b.writeBoolean(sliding);b.writeInt(trigger);b.writeInt(channel);b.writeBoolean(inverted);b.writeBoolean(cover);b.writeBoolean(tileTexture);b.writeByte(facing.getHorizontalIndex());b.writeBoolean(slideIntoWall);b.writeBoolean(slideOverSurface);
-        // Keep the channel list last; its decoder validates the exact remaining length.
-        b.writeByte((layout<0?(tileTexture?1:0):layout)|(rotationFlipped==null?0:4|(rotationFlipped?8:0))|(hingeSide==null?0:(hingeSide+1)<<4)|((groupOpening+1)<<6));ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
+        // Layout 3 is the extension marker; released option and flag indices stay fixed.
+        int encodedLayout=layout<0?(tileTexture?1:0):layout;
+        boolean cardinal=groupOpening>=3;
+        b.writeByte((cardinal?3:encodedLayout)|(rotationFlipped==null?0:4|(rotationFlipped?8:0))|(hingeSide==null?0:(hingeSide+1)<<4)|((cardinal?0:groupOpening+1)<<6));if(cardinal)b.writeByte(encodedLayout|((groupOpening-3)<<2));ChannelData.write(b,channels!=null?channels:ChannelList.of(Math.max(0,channel)));
     }
     @Override public void fromBytes(ByteBuf b){pos=BlockPos.fromLong(b.readLong());texture=b.readInt();position=b.readInt();sliding=b.readBoolean();trigger=b.readInt();channel=b.readInt();inverted=b.readBoolean();cover=b.readBoolean();tileTexture=b.readBoolean();facing=net.minecraft.util.EnumFacing.getHorizontal(b.readUnsignedByte());slideIntoWall=b.isReadable() && b.readBoolean();slideOverSurface=b.isReadable() && b.readBoolean();
-        int flags=b.readUnsignedByte();layout=flags&3;groupOpening=(flags>>>6)-1;hingeSide=(flags>>4&3)==0?null:(flags>>4&3)-1;rotationFlipped=(flags&4)==0?null:(flags&8)!=0;channels=ChannelData.read(b,channel);invalidChannels=channels==null;
+        int flags=b.readUnsignedByte();layout=flags&3;groupOpening=(flags>>>6)-1;hingeSide=(flags>>4&3)==0?null:(flags>>4&3)-1;rotationFlipped=(flags&4)==0?null:(flags&8)!=0;
+        if(layout==3){if(!b.isReadable()){invalidChannels=true;return;}int extension=b.readUnsignedByte();layout=extension&3;groupOpening=3+(extension>>>2);if(groupOpening>=7){invalidChannels=true;return;}}
+        channels=ChannelData.read(b,channel);invalidChannels=channels==null;
     }
     public static final class Handler implements IMessageHandler<MessageProgrammableTrapdoor,IMessage> {
         @Override public IMessage onMessage(MessageProgrammableTrapdoor m,MessageContext context) {
             EntityPlayerMP player=context.getServerHandler().player;
             player.getServerWorld().addScheduledTask(()->{
-                if(!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || m.pos==null || m.getRedstoneChannels()==null || !TileEntityProgrammableTrapdoor.valid(m.texture,m.position,m.trigger,m.channel)
+                if(m.groupOpening< -1||m.groupOpening>=7||!com.vandorlabs.render.TextureLayoutMode.valid(m.layout) || m.pos==null || m.getRedstoneChannels()==null || !TileEntityProgrammableTrapdoor.valid(m.texture,m.position,m.trigger,m.channel)
                         || !ConfigurationAccess.canConfigure(player) || !player.world.isBlockLoaded(m.pos)
                         || !(player.openContainer instanceof ContainerProgrammableTrapdoor))return;
                 TileEntity raw=player.world.getTileEntity(m.pos);

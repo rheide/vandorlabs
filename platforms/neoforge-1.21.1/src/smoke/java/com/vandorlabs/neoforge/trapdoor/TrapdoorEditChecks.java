@@ -27,6 +27,11 @@ public final class TrapdoorEditChecks {
                     &&d.cover==c.cover&&d.sliding==c.sliding&&d.intoWall==c.intoWall&&d.overSurface==c.overSurface);
             bytes.release();
         }
+        for(int opening=-1;opening<=6;opening++){
+            var settings=new NativeTrapdoorSettings(new TrapdoorData(42,1,2,0,true,false,true,false,true),ChannelList.of(123),2,1,false,false);
+            var bytes=Unpooled.buffer();new NativeTrapdoorEdit(1,settings,false,opening).encode(bytes);
+            need(bytes.readableBytes()==19&&NativeTrapdoorEdit.decode(bytes,v->v==42).groupOpening()==opening);bytes.release();
+        }
         var valid=Unpooled.buffer();new NativeTrapdoorEdit(1,new NativeTrapdoorSettings(new TrapdoorData(42,1,2,0,true,false,true,false,true),ChannelList.of(123),2,1,false,false),false).encode(valid);
         for(int length=0;length<valid.readableBytes();length++)rejects(valid.copy(0,length));
         rejects(valid.copy().writeByte(0));
