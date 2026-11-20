@@ -516,6 +516,7 @@ public class ReproLab {
     private static int pendingGalleryTicks;
     private final LiveGallery doorArmGallery=new LiveGallery("door-arm",new net.minecraft.util.math.BlockPos(40,85,8)).shot("west",-3.5,1.4,-3.5,-45F,12F).shot("east",5.5,1.4,7.5,135F,12F);
     private int holdTicks = 0;
+    private boolean armIndicatorDone;
     private boolean vehicleStatusStarted;
     private int followupStage;
     private boolean followupsFinished;
@@ -686,7 +687,7 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.savedHoverChecksOnly")){try{if(SavedVehicleHoverChecks.tick(mc,outDir))mc.shutdown();}catch(Exception failure){throw new IllegalStateException("Saved Hover recovery",failure);}return;}
         if(Boolean.getBoolean("vandorlabs.vehicleRenderCostChecksOnly")){if(++holdTicks==40){VehicleRenderRuntimeChecks.run(mc);System.out.println("[vandorlabs][reprolab] vehicle-render-cost PASS");mc.shutdown();}return;}
         if(Boolean.getBoolean("vandorlabs.armResourceIndicatorOnly")){
-            try{if(com.vandorlabs.gear.client.ArmResourceIndicatorLiveChecks.tick(mc,outDir))mc.shutdown();}
+            try{if(!armIndicatorDone)armIndicatorDone=com.vandorlabs.gear.client.ArmResourceIndicatorLiveChecks.tick(mc,outDir);if(armIndicatorDone&&com.vandorlabs.gear.ArmItemFlowLiveChecks.tick(mc))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Arm resource indicator check",failure);}
             return;
         }

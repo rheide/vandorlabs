@@ -498,6 +498,7 @@ fi
 if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-resource-indicator ]; then
         grep -q "arm-resource-indicator PASS" "$RUN_OUT/client.log"
+        grep -q "arm-item-flow PASS" "$RUN_OUT/client.log"
         echo "Arm resource indicator checks passed: $RUN_OUT"
         exit 0
     fi
