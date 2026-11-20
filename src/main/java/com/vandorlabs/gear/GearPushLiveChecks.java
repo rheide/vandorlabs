@@ -12,6 +12,10 @@ import net.minecraft.world.WorldServer;
 /** Native placement, full world ticks and actual asynchronous ownership journals. */
 @net.minecraftforge.fml.relauncher.SideOnly(net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class GearPushLiveChecks {
+    /** A Surface layer perpendicular to the arm, so stacked cells move as one pad. */
+    private static net.minecraft.block.state.IBlockState surface(EnumFacing face){
+        return net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState().withProperty(com.vandorlabs.blocks.BlockTurntableSurface.FACING,face);
+    }
     private static final int FIRST=Integer.getInteger("vandorlabs.armPushFixture",0);
     private static final int LIMIT=Integer.getInteger("vandorlabs.armPushLimit",24);
     private static int fixture=FIRST,stage,ticks;
@@ -64,10 +68,10 @@ public final class GearPushLiveChecks {
                         }
                         GearTileEntity member=(GearTileEntity)world.getTileEntity(base);member.operator(actor);require(member.rebuild(),"joined column forms");NBTTagCompound settings=member.settings();settings.setBoolean("JoinArms",true);member.configure(settings);
                     }
-                    for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)world.setBlockState(ROOT.offset(face,4).add(side(face,x,z)),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);
+                    for(int x=0;x<=2;x++)for(int z=0;z<=(fixture>=16?2:0);z++)world.setBlockState(ROOT.offset(face,4).add(side(face,x,z)),surface(face),3);
                     require(arm.rebuild()&&arm.columns().size()==(fixture>=16?4:2),"joined group forms before motion");
                 }
-                world.setBlockState(ROOT.offset(face,4),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);world.setBlockState(ROOT.offset(face,4).up(),net.minecraft.block.Block.getBlockFromName("vandorlabs:turntable_surface").getDefaultState(),3);arm.target(false);stage=1;ticks=80;return false;
+                world.setBlockState(ROOT.offset(face,4),surface(face),3);world.setBlockState(ROOT.offset(face,4).up(),surface(face),3);arm.target(false);stage=1;ticks=80;return false;
             }
             if(ticks>=800)require(false,"motion timeout progress="+arm.progress()+" target="+arm.target()+" error="+arm.error()+" locked="+ArmTransactions.locked(world,ROOT)+" actor="+actor.getPositionVector()+" mode="+actor.interactionManager.getGameType()+" flying="+actor.capabilities.isFlying+" slot="+actor.inventory.currentItem+" held="+actor.getHeldItemMainhand()+" client="+client+blockers(arm));
             if(stage==1&&arm.progress()==0&&!ArmTransactions.locked(world,ROOT)){
@@ -75,7 +79,10 @@ public final class GearPushLiveChecks {
                 world.setBlockState(ROOT.offset(face,3).up(),Blocks.IRON_BLOCK.getDefaultState(),3);
                 // A late immovable block must refuse before detaching the Surface.
                 BlockPos obstruction=ROOT.offset(face,5).up();world.setBlockState(obstruction,Blocks.BEDROCK.getDefaultState(),3);
-                arm.target(true);require(!arm.preparePayloadMotion()&&arm.progress()==0&&arm.payload().materialized()&&world.getBlockState(ROOT.offset(face,1).up()).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"complete push path refuses before source removal");
+                arm.target(true);boolean prepared=arm.preparePayloadMotion();
+                require(!prepared,"complete push path refuses before source removal: prepared progress="+arm.progress()+" error="+arm.error());
+                require(arm.progress()==0&&arm.payload().materialized(),"refused push leaves the payload materialized progress="+arm.progress()+" materialized="+arm.payload().materialized());
+                require(world.getBlockState(ROOT.offset(face,1).up()).getBlock() instanceof com.vandorlabs.blocks.BlockTurntableSurface,"refused push keeps the upper Surface in place: "+world.getBlockState(ROOT.offset(face,1).up())+" lower="+world.getBlockState(ROOT.offset(face,1)));
                 world.setBlockToAir(obstruction);arm.target(true);stage=2;return false;
             }
             if(stage==2&&arm.progress()==1&&!ArmTransactions.locked(world,ROOT)){
