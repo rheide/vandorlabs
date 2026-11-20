@@ -26,8 +26,18 @@ public final class CanopyShapes {
         double back=id.equals("angled_front_1x2")?2:1;
         List<CanopyFace> result=new ArrayList<>();
         for(CanopyFace face:source)
-            if(!face.baseMaterial.equals("glass")||!rearPane(face.points(),i->face.vertex(i).z,back))result.add(face);
+            if((!face.baseMaterial.equals("glass")||!rearPane(face.points(),i->face.vertex(i).z,back))
+                    &&!rearBottomBar(face,back))result.add(face);
         return result;
+    }
+    /** The moving shell must leave the doorway open below the rear roof edge. */
+    private static boolean rearBottomBar(CanopyFace face,double back) {
+        double minX=Double.POSITIVE_INFINITY,maxX=Double.NEGATIVE_INFINITY;
+        for(CanopyPoint p:face.vertices){
+            if(p.y>3D/16 || p.z<back-3D/32)return false;
+            minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);
+        }
+        return maxX>1D/8&&minX<7D/8;
     }
     private static void append(List<CanopyFace> result,List<CanopyFace> source,int x,int z,boolean raised) {
         for(CanopyFace f:source){CanopyPoint[] points=new CanopyPoint[f.points()];for(int i=0;i<points.length;i++){CanopyPoint p=f.vertex(i);points[i]=p.addVector(x,raised&&p.y<.5?1D/16:0,z);}result.add(copy(f,points,f.uv,f.material,"shell"));}
