@@ -71,6 +71,7 @@ public final class ArmEndpointRuntimeChecks {
         settings.setInteger(ArmResource.CHOICE,mode.ordinal());
         arm.configure(settings);
     }
+    private static void output(GearTileEntity arm,boolean out){NBTTagCompound options=arm.settings();options.setBoolean(ArmResource.OUT,out);arm.configure(options);}
     private static void checkResources(WorldServer world,GearTileEntity arm,int endpoint,int previous){
         EnumFacing side=face().getOpposite();
         GearTileEntity powerInput=(GearTileEntity)world.getTileEntity(at(0,0,0));
@@ -80,6 +81,11 @@ public final class ArmEndpointRuntimeChecks {
         require(power!=null&&power.canReceive()&&powerInput.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,face())==null,"power input only on mounting face");
         require(power.receiveEnergy(17,true)==17&&battery.stored()==17*previous,"RF simulation leaves native owner unchanged");
         require(power.receiveEnergy(17,false)==17&&battery.stored()==17*(previous+1)&&power.extractEnergy(17,false)==0,"only the native recipient owns forwarded RF");
+        com.vandorlabs.ports.ResourcePortSettings batterySettings=battery.settings();
+        battery.configure(batterySettings.withFace(side.getIndex(),com.vandorlabs.ports.ResourcePortSettings.Face.OUTPUT),0,com.vandorlabs.redstone.ChannelList.EMPTY);
+        output(arm,true);require(!power.canReceive()&&power.canExtract()&&power.receiveEnergy(1,false)==0&&power.extractEnergy(5,true)==5&&battery.stored()==17*(previous+1),"output RF simulation/direction");
+        require(power.extractEnergy(5,false)==5&&battery.stored()==17*(previous+1)-5,"RF returns through mounting face");
+        output(arm,false);battery.configure(batterySettings,0,com.vandorlabs.redstone.ChannelList.EMPTY);require(power.receiveEnergy(5,false)==5,"restore tested RF owner");
         enable(arm,ArmResource.FLUID);
         require(power.receiveEnergy(17,false)==0,"previous RF handle honors changed setting");
         GearTileEntity fluidInput=(GearTileEntity)world.getTileEntity(at(2,0,0));
@@ -88,6 +94,10 @@ public final class ArmEndpointRuntimeChecks {
         net.minecraftforge.fluids.FluidStack water=new net.minecraftforge.fluids.FluidStack(net.minecraftforge.fluids.FluidRegistry.WATER,27);
         require(fluid!=null&&fluid.fill(water,false)==27&&(tank.stored()==null?0:tank.stored().amount)==27*previous,"joined simulation probes its own tank");
         require(fluid.fill(water,true)==27&&tank.stored().amount==27*(previous+1)&&fluid.drain(27,true)==null,"fluids reach the joined column's own physical endpoint");
+        com.vandorlabs.ports.ResourcePortSettings tankSettings=tank.settings();tank.configure(tankSettings.withFace(side.getIndex(),com.vandorlabs.ports.ResourcePortSettings.Face.OUTPUT),0,com.vandorlabs.redstone.ChannelList.EMPTY);
+        output(arm,true);require(fluid.fill(water,true)==0&&fluid.drain(3,false).amount==3&&tank.stored().amount==27*(previous+1),"fluid output simulation/direction");
+        require(fluid.drain(3,true).amount==3&&tank.stored().amount==27*(previous+1)-3,"fluid returns through mounting face");
+        output(arm,false);tank.configure(tankSettings,0,com.vandorlabs.redstone.ChannelList.EMPTY);require(fluid.fill(new net.minecraftforge.fluids.FluidStack(water,3),true)==3,"restore tested fluid owner");
         enable(arm,ArmResource.ITEM);
         GearTileEntity itemInput=(GearTileEntity)world.getTileEntity(at(2,0,3));
         resourceInput=itemInput.getCapability(net.minecraftforge.items.CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,side);
@@ -95,6 +105,10 @@ public final class ArmEndpointRuntimeChecks {
         ItemStack offer=new ItemStack(net.minecraft.init.Items.GOLD_INGOT,3);
         require(resourceInput!=null&&resourceInput.insertItem(0,offer,true).isEmpty()&&inventory.stored(0).getCount()==3*previous,"item simulation leaves native inventory unchanged");
         require(resourceInput.insertItem(0,offer,false).isEmpty()&&inventory.stored(0).getCount()==3*(previous+1)&&resourceInput.extractItem(0,3,false).isEmpty(),"only the native receiver stores items");
+        com.vandorlabs.ports.ResourcePortSettings inventorySettings=inventory.settings();inventory.configure(inventorySettings.withFace(side.getIndex(),com.vandorlabs.ports.ResourcePortSettings.Face.OUTPUT),0,com.vandorlabs.redstone.ChannelList.EMPTY);
+        output(arm,true);require(resourceInput.insertItem(0,offer,false)==offer&&resourceInput.extractItem(0,1,true).getCount()==1&&inventory.stored(0).getCount()==3*(previous+1),"item output simulation/direction");
+        ItemStack returned=resourceInput.extractItem(0,1,false);require(returned.getCount()==1&&inventory.stored(0).getCount()==3*(previous+1)-1,"items return through mounting face");
+        output(arm,false);inventory.configure(inventorySettings,0,com.vandorlabs.redstone.ChannelList.EMPTY);require(resourceInput.insertItem(0,returned,false).isEmpty(),"restore tested item owner");
     }
     private static boolean run(WorldServer world,EntityPlayerMP player){
         if(++ticks%100==0){net.minecraft.tileentity.TileEntity raw=world.getTileEntity(BASE);GearTileEntity control=raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;System.out.println("[vandorlabs] arm-endpoint progress fixture="+fixture+" stage="+stage+" tick="+ticks+" root="+(control==null?"none":control.getPos()+" progress="+control.progress()+" operational="+control.isOperational()+" target="+control.target()+" stored="+control.hasStoredSections()+" payload="+(control.payload()==null?"none":control.payload().materialized())+" locked="+ArmTransactions.locked(world,control.getPos())+" error="+control.error()));}

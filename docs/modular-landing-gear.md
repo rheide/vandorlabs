@@ -69,8 +69,7 @@ Open the Arm's **Mechanism** tab with the Configurizer. **Transfer** starts at *
 
 Connect an output port or pipe to the block face that supports the Arm. The Arm forwards incoming resources to the matching input face of the block touching its far end. It keeps no inventory, tank or energy buffer. Each mounting column of a joined platform feeds its own contact cell.
 
-The base shows the matching Port bar for RF Power, Fluids, or Items. It lights
-briefly after a transfer through that column. Off keeps the original base.
+Choose **Flow: Base to end** for the normal input path or **Flow: End to base** to extract from the far contact through the mounting side. The mounting face shows the matching In or Out Port artwork, and an Extender’s smaller far-end cap shows the opposite direction. The Port bar lights briefly after a transfer through that column. These indicators also apply to Large Arms. Off keeps the original base.
 
 Transfer works at a stationary, whole-block-aligned endpoint. It pauses during motion, at fractional endpoints, and while the attachment's ownership is being saved or restored.
 

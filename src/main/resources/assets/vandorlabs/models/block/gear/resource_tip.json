@@ -1,0 +1,28 @@
+{
+  "ambientocclusion": false,
+  "elements": [
+    {
+      "from": [
+        4.25,
+        2.98,
+        4.25
+      ],
+      "to": [
+        11.75,
+        2.98,
+        11.75
+      ],
+      "faces": {
+        "down": {
+          "uv": [
+            0,
+            0,
+            16,
+            16
+          ],
+          "texture": "#port"
+        }
+      }
+    }
+  ]
+}

@@ -35,7 +35,7 @@ Mount. Other screen families are unchanged.
    For a Dish or Array carried above an Arm, set the Arm’s **Transfer** option
    to **RF Power** and feed the mounting side. Power resumes when the Arm
    reaches a stationary, whole-block-aligned endpoint.
-2. Open its configuration and select **Redstone**. Enter its **Transmit channels**
+2. Right-click the formed Dish or Array, or use the Configurizer, to open its configuration. The dialog shows RF connection status; a missing-power haiku tells you to connect beneath the base. Select **Scanning** to operate or **Idle** to stop RF use. With Redstone activation enabled, the signal selects Scanning or Idle while power is connected. In **Redstone**, Enter its **Transmit channels**
    and choose a connection range of 4, 8, 16, 32, 64, 128 or 256 blocks
    (default 16).
 3. Set the display's **Receive channels** to include one or more source channels.
@@ -53,16 +53,14 @@ The Survey Dish uses cyan, detects within **256 blocks**, and sweeps every **24 
 Pink blips mark other visible players within that radius who are above the
 dimension’s sea level and uncrouched. Crouching or dropping to sea level removes
 a blip from other players’ radar at the next update. Your own location marker
-remains visible while crouched. On Forge, use the observer’s Scanning state. On
-NeoForge, use **Radar On** in the observer dialog.
+remains visible while crouched. Use the observer’s **Scanning** mode to enable the sweep. **Idle** consumes no RF.
 The same sweep gradually reveals actual surface block colors and shading at
 one pixel per two blocks on each axis. It samples the sector under the sweep
 from loaded chunks only. Under load or with several observers, the scan fills
 in over several revolutions. Undiscovered terrain still uses biome colors.
 Ceiling dimensions and vehicle displays use biome mapping without live surface scanning.
 
-Sources must be formed and loaded in the same dimension. They need no power,
-redstone signal or chip. Transmission range is the three-dimensional distance
+Sources must be formed and loaded in the same dimension. Scanning needs 20 RF per tick at a bottom input. Redstone activation is optional and no chip is required. Transmission range is the three-dimensional distance
 from the source Core to the display; it controls the connection, not observation.
 At Y=64, Sentinel Arrays observe a **250-block radius** and Survey Dishes a
 **1,000-block radius**, measured horizontally from their Cores. Range rises

@@ -116,6 +116,17 @@ public class NativeGearEntity extends BlockEntity implements NativeChannelMember
         if(resourceIndicator==null)resourceIndicator=new ArmResourceIndicator();
         return resourceIndicator;
     }
+    public boolean powerInputConnected(){
+        var root=controllerEntity();
+        if(root==null||root.settings.resourceOut()||root.settings.resourceTransfer()!=ArmResource.POWER||!root.resourceEndpointAvailable())return false;
+        return ArmResource.forward(this,false,()->{
+            for(var column:root.columns){var at=root.worldPosition.offset(column).relative(root.mount.getOpposite());
+                if(!com.vandorlabs.neoforge.fluid.NativeFluidWorld.loaded(root.level,at))continue;
+                if(root.level.getBlockEntity(at) instanceof NativeGearEntity source){if(source.powerInputConnected())return true;}
+                else {var energy=root.level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,at,root.mount);if(energy!=null&&energy.canExtract())return true;}
+            }return false;
+        });
+    }
     void resourceTransferred(ArmResource mode){
         if(indicator().publish(mode,level.getGameTime()))
             level.blockEvent(worldPosition,getBlockState().getBlock(),ArmResourceIndicator.BLOCK_EVENT,mode.ordinal());
@@ -199,7 +210,7 @@ public class NativeGearEntity extends BlockEntity implements NativeChannelMember
         ArmAngleAdjustment adjustment=angleAdjustment;
         if(startChanged){try{adjustment=ArmAngleAdjustment.idle(prior.angles().start(landing()),prior.angles().end(landing())).begin(next.angles().start(landing()),next.angles().end(landing()),progress,target);}catch(IllegalArgumentException refused){return refuseAngleSettings(refused.getMessage());}}
         if((next.hingeMode()!=prior.hingeMode()||next.kinkDirection()!=prior.kinkDirection())&&(progress!=1||physicalStartAngle()!=0))return false;if(next.pushBlocks()!=prior.pushBlocks()&&(progress!=0&&progress!=1||payload!=null&&!payload.materialized()||NativeGearJournal.busy(this)))return false;boolean shape=next.landingAnglesVersion()!=prior.landingAnglesVersion()||next.direction()!=prior.direction()||next.rotatePayload()!=prior.rotatePayload()||next.hingeMode()!=prior.hingeMode()||next.kinkDirection()!=prior.kinkDirection()||next.join()!=prior.join()||next.joinRange()!=prior.joinRange()||next.carryLoad()!=prior.carryLoad()||next.loadHeight()!=prior.loadHeight()||next.startAngle()!=prior.startAngle()||next.activeAngle()!=prior.activeAngle()||next.activeExtension()!=prior.activeExtension()||next.footFacing()!=prior.footFacing();if(angleAdjustment!=null&&shape)return refuseAngleSettings("Wait for the starting angle adjustment to finish");if(shape&&(progress!=1||storedSections!=null||payload!=null&&!payload.materialized()||NativeGearJournal.busy(this)))return false;if(assembly.kind()!=GearTopology.FootKind.NONE&&next.carryLoad()&&mode()!=GearMotion.Mode.EXTEND)return false;
-        boolean resourceChanged=next.resourceTransfer()!=prior.resourceTransfer();
+        boolean resourceChanged=next.resourceTransfer()!=prior.resourceTransfer()||next.resourceOut()!=prior.resourceOut();
 if(shape)clearInteractionHistory();if(next.footFacing()!=prior.footFacing())footFacingExplicit=true;settings=next;angleAdjustment=adjustment;signalKnown=false;inputDirty=true;blocked=false;error="";if(next.trigger()==0)target=definition().kind==NativeGearDefinition.Kind.MOUNT||requestedTarget;if(angleAdjustment!=null)target=false;requestRebuild();NativeRedstoneChannels.channelsChanged(this);sync();if(resourceChanged)invalidateResourceInputs();return true;}
     private void invalidateResourceInputs(){
         for(BlockPos column:columns)level.invalidateCapabilities(worldPosition.offset(column));

@@ -1,0 +1,6 @@
+{
+  "parent": "vandorlabs:block/gear/resource_mount",
+  "textures": {
+    "port": "vandorlabs:blocks/resource_ports/matter_out_off"
+  }
+}

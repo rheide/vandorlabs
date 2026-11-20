@@ -52,6 +52,7 @@ final class NativeGearResourceTransfer {
         return connection.items;
     }
 
+    private boolean output(){var owner=input.controllerEntity();return owner!=null&&owner.settings().resourceOut();}
     private NativeGearResourceTransfer expose(Direction side) {
         if (exposedSide != side) {
             exposedSide = side;
@@ -125,17 +126,21 @@ final class NativeGearResourceTransfer {
         private final Direction side;
         Power(Direction side) {this.side=side;}
         public int receiveEnergy(int amount, boolean simulate) {
-            if (amount <= 0) return 0;
+            if (output()||amount <= 0) return 0;
             int accepted=send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,target ->
                     Math.min(amount,Math.max(0,target.receiveEnergy(amount,simulate))));
             if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
             return accepted;
         }
-        public boolean canReceive() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canReceive);}
-        public int extractEnergy(int amount, boolean simulate) {return 0;}
+        public boolean canReceive() {return !output()&&send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canReceive);}
+        public int extractEnergy(int amount, boolean simulate) {
+            if(!output()||amount<=0)return 0;
+            int extracted=send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
+            if(!simulate&&extracted>0)input.resourceTransferred(ArmResource.POWER);return extracted;
+        }
         public int getEnergyStored() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,IEnergyStorage::getEnergyStored);}
         public int getMaxEnergyStored() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,IEnergyStorage::getMaxEnergyStored);}
-        public boolean canExtract() {return false;}
+        public boolean canExtract() {return output()&&send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canExtract);}
     }
 
     private final class Fluids implements IFluidHandler {
@@ -155,14 +160,22 @@ final class NativeGearResourceTransfer {
                     target -> validTank(target,tank) && target.isFluidValid(tank,fluid));
         }
         public int fill(FluidStack fluid, FluidAction action) {
-            if (fluid.isEmpty()) return 0;
+            if (output()||fluid.isEmpty()) return 0;
             int accepted=send(ArmResource.FLUID,side,Capabilities.FluidHandler.BLOCK,0,target ->
                     Math.min(fluid.getAmount(),Math.max(0,target.fill(fluid.copy(),action))));
             if(action.execute()&&accepted>0)input.resourceTransferred(ArmResource.FLUID);
             return accepted;
         }
-        public FluidStack drain(FluidStack fluid, FluidAction action) {return FluidStack.EMPTY;}
-        public FluidStack drain(int amount, FluidAction action) {return FluidStack.EMPTY;}
+        public FluidStack drain(FluidStack fluid, FluidAction action) {
+            if(!output()||fluid.isEmpty())return FluidStack.EMPTY;
+            FluidStack result=send(ArmResource.FLUID,side,Capabilities.FluidHandler.BLOCK,FluidStack.EMPTY,target->target.drain(fluid.copy(),action));
+            if(action.execute()&&!result.isEmpty())input.resourceTransferred(ArmResource.FLUID);return result.copy();
+        }
+        public FluidStack drain(int amount, FluidAction action) {
+            if(!output()||amount<=0)return FluidStack.EMPTY;
+            FluidStack result=send(ArmResource.FLUID,side,Capabilities.FluidHandler.BLOCK,FluidStack.EMPTY,target->target.drain(amount,action));
+            if(action.execute()&&!result.isEmpty())input.resourceTransferred(ArmResource.FLUID);return result.copy();
+        }
         private boolean validTank(IFluidHandler target, int tank) {return tank >= 0 && tank < target.getTanks();}
     }
 
@@ -183,14 +196,18 @@ final class NativeGearResourceTransfer {
                     target -> validSlot(target,slot) && target.isItemValid(slot,stack));
         }
         public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (stack.isEmpty()) return stack;
+            if (output()||stack.isEmpty()) return stack;
             int offered=stack.getCount();
             ItemStack remainder=send(ArmResource.ITEM,side,Capabilities.ItemHandler.BLOCK,stack,
                     target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
             if(!simulate&&remainder.getCount()<offered)input.resourceTransferred(ArmResource.ITEM);
             return remainder;
         }
-        public ItemStack extractItem(int slot, int amount, boolean simulate) {return ItemStack.EMPTY;}
+        public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if(!output()||amount<=0)return ItemStack.EMPTY;
+            ItemStack result=send(ArmResource.ITEM,side,Capabilities.ItemHandler.BLOCK,ItemStack.EMPTY,target->validSlot(target,slot)?target.extractItem(slot,amount,simulate):ItemStack.EMPTY);
+            if(!simulate&&!result.isEmpty())input.resourceTransferred(ArmResource.ITEM);return result.copy();
+        }
         private boolean validSlot(IItemHandler target,int slot) {return slot >= 0 && slot < target.getSlots();}
     }
 }

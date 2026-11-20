@@ -58,6 +58,20 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private boolean payloadPreparationPending,clientGeometryPending;
     GearGeometry.MovePlan riderPlan;
     private boolean joinEnabled,carryLoad,joinedSettingsPresent;
+    private boolean resourceOut;
+    public boolean resourceOut(){return resourceOut;}
+    public boolean powerInputConnected(){
+        GearTileEntity root=loadedController();
+        if(root==null||root.resourceOut||root.resourceTransfer!=ArmResource.POWER||!root.resourceEndpointAvailable())return false;
+        return ArmResource.forward(this,false,()->{
+            for(BlockPos column:root.columns()){
+                BlockPos at=root.pos.add(column).offset(root.mountDirection().getOpposite());
+                if(!GearAssembly.loaded(root.world,at))continue;
+                net.minecraft.tileentity.TileEntity source=root.world.getTileEntity(at);
+                if(source instanceof GearTileEntity?((GearTileEntity)source).powerInputConnected():source!=null&&com.vandorlabs.ports.EnergyEndpointPresence.connected(source,root.mountDirection()))return true;
+            }return false;
+        });
+    }
     private ArmResource resourceTransfer=ArmResource.DISABLED;
     private ArmResourceTransfer resourceConnection;
     private ArmResourceIndicator resourceIndicator;
@@ -824,12 +838,13 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         }
     }
 
-    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();if(landingAnglesVersion>=0)tag.setInteger(com.vandorlabs.gear.core.ArmLandingAngles.CHOICE,landingAnglesVersion);tag.setInteger(ArmResource.CHOICE,resourceTransfer.ordinal());tag.setInteger("Trigger",triggerMode);tag.setInteger("FootFacing",footFacing.getHorizontalIndex());tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);tag.setBoolean("PushBlocks",pushBlocks);tag.setBoolean("RotatePayload",rotatePayload);tag.setBoolean("MiddleHinge",middleHinge);tag.setInteger("HingeMode",hingeMode.ordinal());tag.setInteger("KinkDirection",kinkDirection().ordinal());tag.setBoolean("JoinArms",joinEnabled);tag.setInteger("JoinRange",joinRange);tag.setBoolean("CarryLoad",carryLoad);tag.setInteger("LoadHeight",loadHeight);tag.setDouble("ActiveAngle",configuredEndAngle());tag.setDouble("StartAngle",startAngle());tag.setDouble("ActiveExtension",activeExtension);int trackStyle=com.vandorlabs.gear.track.TrackStyles.style(this);if(trackStyle>=0)tag.setInteger("TrackStyle",trackStyle);return tag;}
+    public NBTTagCompound settings(){NBTTagCompound tag=new NBTTagCompound();if(landingAnglesVersion>=0)tag.setInteger(com.vandorlabs.gear.core.ArmLandingAngles.CHOICE,landingAnglesVersion);tag.setInteger(ArmResource.CHOICE,resourceTransfer.ordinal());tag.setBoolean(ArmResource.OUT,resourceOut);tag.setInteger("Trigger",triggerMode);tag.setInteger("FootFacing",footFacing.getHorizontalIndex());tag.setInteger("Direction",direction.ordinal());tag.setBoolean("Deployed",deployedTarget);tag.setString("Channels",channels.toString());tag.setBoolean("LegacyAnyChannels",legacyAnyChannels);tag.setBoolean("PushBlocks",pushBlocks);tag.setBoolean("RotatePayload",rotatePayload);tag.setBoolean("MiddleHinge",middleHinge);tag.setInteger("HingeMode",hingeMode.ordinal());tag.setInteger("KinkDirection",kinkDirection().ordinal());tag.setBoolean("JoinArms",joinEnabled);tag.setInteger("JoinRange",joinRange);tag.setBoolean("CarryLoad",carryLoad);tag.setInteger("LoadHeight",loadHeight);tag.setDouble("ActiveAngle",configuredEndAngle());tag.setDouble("StartAngle",startAngle());tag.setDouble("ActiveExtension",activeExtension);int trackStyle=com.vandorlabs.gear.track.TrackStyles.style(this);if(trackStyle>=0)tag.setInteger("TrackStyle",trackStyle);return tag;}
     public void configure(NBTTagCompound tag){configure(tag,true);}
     private void configure(NBTTagCompound tag,boolean command){
         if(parkingQuarantine!=null||parkingHoldNeedsGeometry&&!validateParkingHoldInstalled())return;
         ArmResource resource=tag.hasKey(ArmResource.CHOICE)?readResource(tag,ArmResource.CHOICE):resourceTransfer;
-        boolean resourceChanged=resource!=resourceTransfer;
+        boolean output=tag.hasKey(ArmResource.OUT)?ArmResource.output(true,tag.hasKey(ArmResource.OUT,1),tag.getByte(ArmResource.OUT)):resourceOut;
+        boolean resourceChanged=resource!=resourceTransfer||output!=resourceOut;
         int trigger=tag.getInteger("Trigger"),dir=tag.getInteger("Direction");
         com.vandorlabs.redstone.ChannelList values=com.vandorlabs.redstone.ChannelList.parse(tag.getString("Channels"));
         if(trigger<0||trigger>2||dir<0||dir>3||values==null)throw new IllegalArgumentException("Invalid gear settings");
@@ -884,7 +899,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(installStart)startAngle=requestedStart;
         landingAnglesVersion=nextLandingVersion;
         if(changeFoot){configuredFootFacing=requestedFoot;footFacing=requestedFoot;}
-        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}releaseParkingHold();configured=true;middleHinge=middle;hingeMode=hinge;configuredKink=kink;pushBlocks=push;resourceTransfer=resource;joinEnabled=join;joinRange=range;carryLoad=load;loadHeight=height;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(changeStart){savedEndAngle=angle;activeAngle=requestedStart;adjustingStart=true;}if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");if(changeStart)deployedTarget=false;if(command)input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
+        if(triggerMode!=trigger||!channels.equals(values))signalKnown=false;if(tag.hasKey("LegacyAnyChannels",1)&&legacyAnyChannels!=tag.getBoolean("LegacyAnyChannels")){legacyAnyChannels=tag.getBoolean("LegacyAnyChannels");signalKnown=false;}releaseParkingHold();configured=true;middleHinge=middle;hingeMode=hinge;configuredKink=kink;pushBlocks=push;resourceTransfer=resource;resourceOut=output;joinEnabled=join;joinRange=range;carryLoad=load;loadHeight=height;rotatePayload=rotate;activeAngle=angle;activeExtension=extension;if(changeStart){savedEndAngle=angle;activeAngle=requestedStart;adjustingStart=true;}if(isSwingArmController())mode=rotate?GearMotion.Mode.ROTATE:GearMotion.Mode.ROTATE_LEVEL;triggerMode=trigger;channels=values;direction=GearMotion.Direction.values()[dir];boxesAt=Double.NaN;if(triggerMode==0)deployedTarget=isFixedMount()||tag.getBoolean("Deployed");if(changeStart)deployedTarget=false;if(command)input();sync();if(world!=null)com.vandorlabs.tiles.LandingGearCovers.refresh(world,pos);
         if((groupChanged||pushChanged)&&world!=null&&!world.isRemote){for(BlockPos column:new ArrayList<>(columns)){TileEntity raw=world.getTileEntity(pos.add(column));if(raw instanceof GearTileEntity&&raw!=this){GearTileEntity member=(GearTileEntity)raw;member.joinEnabled=join;member.joinRange=range;member.carryLoad=load;member.loadHeight=height;member.direction=direction;member.middleHinge=middleHinge;member.hingeMode=hingeMode;member.configuredKink=configuredKink;member.pushBlocks=pushBlocks;member.rotatePayload=rotatePayload;member.activeAngle=activeAngle;member.startAngle=startAngle;member.landingAnglesVersion=landingAnglesVersion;member.activeExtension=activeExtension;member.mode=mode;member.sync();}}if(groupChanged)scheduleRebuild();}
         if(resourceChanged&&world instanceof net.minecraft.world.WorldServer)for(BlockPos column:columns){
             BlockPos at=pos.add(column);
@@ -892,7 +907,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             TileEntity raw=world.getTileEntity(at);
             if(raw instanceof GearTileEntity&&raw!=this&&pos.equals(((GearTileEntity)raw).owner)){
                 GearTileEntity member=(GearTileEntity)raw;
-                member.resourceTransfer=resource;
+                member.resourceTransfer=resource;member.resourceOut=output;
                 member.sync();
             }
             world.notifyNeighborsOfStateChange(at,world.getBlockState(at).getBlock(),false);
@@ -933,6 +948,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(failedStoredSections!=null)tag.setTag("ArmStoredSections",failedStoredSections.copy());else if(storedSections!=null)tag.setTag("ArmStoredSections",storedSections.write());
         if(failedPayload!=null)tag.setTag("ArmPayload",failedPayload.copy());else if(payload!=null)tag.setTag("ArmPayload",payload.write());
         if(taxiState!=null)tag.setTag(GearTaxiState.KEY,taxiState.copy());
+        if(resourceOut)tag.setBoolean(ArmResource.SAVED_OUT,true);else tag.removeTag(ArmResource.SAVED_OUT);
         if(resourceTransfer!=ArmResource.DISABLED)tag.setInteger(ArmResource.SAVED,resourceTransfer.ordinal());
         else tag.removeTag(ArmResource.SAVED);
         tag.setInteger("GearRevision",motionRevision);
@@ -1015,6 +1031,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         sourceFootComponentFrame=tag.hasKey(ArmFootComponentFrame.SOURCE_KEY,8)?EnumFacing.valueOf(tag.getString(ArmFootComponentFrame.SOURCE_KEY)):EnumFacing.DOWN;
         configuredFootFacing=tag.hasKey("ArmFootFacing",3)?EnumFacing.getHorizontal(tag.getInteger("ArmFootFacing")):null;
         resourceTransfer=readResource(tag,ArmResource.SAVED);
+        resourceOut=ArmResource.output(tag.hasKey(ArmResource.SAVED_OUT),tag.hasKey(ArmResource.SAVED_OUT,1),tag.getByte(ArmResource.SAVED_OUT));
         joinedSettingsPresent=tag.hasKey("ArmJoinEnabled")||tag.hasKey("ArmJoinRange")||tag.hasKey("ArmCarryLoad")||tag.hasKey("ArmLoadHeight");
         joinEnabled=tag.getBoolean("ArmJoinEnabled");joinRange=tag.hasKey("ArmJoinRange",3)?Math.max(1,Math.min(32,tag.getInteger("ArmJoinRange"))):32;carryLoad=tag.getBoolean("ArmCarryLoad");loadHeight=tag.hasKey("ArmLoadHeight",3)?Math.max(1,Math.min(32,tag.getInteger("ArmLoadHeight"))):1;
         middleHinge=tag.getBoolean("ArmMiddleHinge");hingeMode=readHinge(tag);configuredKink=tag.hasKey("ArmKinkDirection",8)?GearMotion.Direction.valueOf(tag.getString("ArmKinkDirection")):null;pushBlocks=tag.getBoolean("ArmPushBlocks");rotatePayload=tag.getBoolean("ArmRotatePayload");trackExtensionStroke=tag.getBoolean("TrackExtensionStroke");trackRetractingStroke=tag.getBoolean("TrackRetractingStroke");armRetractingStroke=tag.getBoolean("ArmRetractingStroke");

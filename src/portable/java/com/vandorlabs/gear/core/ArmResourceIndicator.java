@@ -22,6 +22,12 @@ public final class ArmResourceIndicator {
         return MODELS[mode.ordinal()][active?1:0];
     }
 
+    public static String faceModel(ArmResource mode,boolean output,boolean active,boolean tip){
+        if(mode==ArmResource.DISABLED)return null;
+        String family=mode==ArmResource.POWER?"power":mode==ArmResource.FLUID?"fluid":"matter";
+        return (tip?"resource_tip_":"resource_mount_")+family+(output?"_out_":"_in_")+(active?"on":"off");
+    }
+
     public boolean publish(ArmResource mode,long tick) {
         if(published==mode&&tick>=lastPublished&&tick-lastPublished<REFRESH_TICKS)return false;
         published=mode;

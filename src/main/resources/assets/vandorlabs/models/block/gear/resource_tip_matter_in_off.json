@@ -1,0 +1,6 @@
+{
+  "parent": "vandorlabs:block/gear/resource_tip",
+  "textures": {
+    "port": "vandorlabs:blocks/resource_ports/matter_in_off"
+  }
+}

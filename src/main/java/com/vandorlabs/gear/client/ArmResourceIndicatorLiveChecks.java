@@ -40,7 +40,7 @@ public final class ArmResourceIndicatorLiveChecks {
         if(!good)throw new IllegalStateException("Arm indicator stage="+stage+" tick="+ticks+": "+description);
     }
     private static void setup(WorldServer world,EntityPlayerMP actor){
-        for(BlockPos p:BlockPos.getAllInBox(ROOT.add(-3,-3,-12),ROOT.add(12,4,4))){
+        for(BlockPos p:BlockPos.getAllInBox(ROOT.add(-3,-3,-12),ROOT.add(18,4,4))){
             world.getChunkFromBlockCoords(p);
             world.setBlockState(p,p.getY()==97?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);
         }
@@ -58,6 +58,12 @@ public final class ArmResourceIndicatorLiveChecks {
                 ((ResourcePortTile)world.getTileEntity(at.down())).configure(ResourcePortSettings.placed(EnumFacing.UP.getIndex()),0,ChannelList.EMPTY);
             }
         }
+        for(int index=4;index<6;index++){
+            BlockPos at=mount(index);world.setBlockState(at.up(),Blocks.STONE.getDefaultState(),2);
+            actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,new ItemStack(index==4?GearRegistry.LARGE_GEAR_EXTENDER:GearRegistry.LARGE_GEAR_SWING_ARM,2));
+            for(BlockPos support:new BlockPos[]{at.up(),at})require(actor.getHeldItemMainhand().onItemUse(actor,world,support,net.minecraft.util.EnumHand.MAIN_HAND,EnumFacing.DOWN,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"ordinary Large Arm section placement");
+            GearTileEntity tile=arm(world,index);require(tile.rebuild(),"Large Arm forms");NBTTagCompound options=tile.settings();options.setInteger(ArmResource.CHOICE,ArmResource.POWER.ordinal());tile.configure(options);
+        }
         world.setWorldTime(6000);
         actor.setGameType(GameType.CREATIVE);actor.capabilities.isFlying=true;actor.sendPlayerAbilities();
         actor.setHeldItem(net.minecraft.util.EnumHand.MAIN_HAND,ItemStack.EMPTY);
@@ -74,6 +80,7 @@ public final class ArmResourceIndicatorLiveChecks {
             GearTileEntity tile=arm(mc.world,i);
             if(tile==null||!tile.isOperational()||tile.resourceTransfer()!=MODES[i])return false;
         }
+        for(int i=4;i<6;i++)if(arm(mc.world,i)==null||!arm(mc.world,i).isOperational()||arm(mc.world,i).resourceTransfer()!=ArmResource.POWER)return false;
         return true;
     }
     private static boolean lit(Minecraft mc,boolean want){
@@ -95,14 +102,14 @@ public final class ArmResourceIndicatorLiveChecks {
         return total;
     }
     private static void mesh(Minecraft mc,boolean active){
-        for(int index=0;index<MODES.length;index++){
+        for(int index=0;index<6;index++){
             BufferBuilder buffer=new BufferBuilder(1024);
             buffer.begin(7,DefaultVertexFormats.BLOCK);
             new GearRenderer().renderUncached(arm(mc.world,index),0,0,0,0,buffer);
             buffer.finishDrawing();
             for(int family=0;family<3;family++)for(boolean lit:new boolean[]{false,true}){
                 TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/"+SPRITES[family]+"_in_"+(lit?"on":"off"));
-                require(count(buffer,sprite)==(index==family&&lit==active?4:0),"one selected uncullable bar quad for "+MODES[index]+" and activity "+active);
+                require(count(buffer,sprite)==((index<4?index==family&&lit==active:family==0&&!lit)?4:0),"one selected uncullable bar quad for "+index+" and activity "+active);
             }
         }
     }
@@ -122,6 +129,7 @@ public final class ArmResourceIndicatorLiveChecks {
         if(!ready(mc))return false;
         if(stage==1){
             if(ticks<35)return false;
+            com.vandorlabs.client.GearItemRuntimeChecks.run(mc,out);
             require(lit(mc,false),"selected receivers idle before a transfer");
             mesh(mc,false);capture(mc,out,"idle");
             mc.getIntegratedServer().callFromMainThread(()->{transfer(mc.getIntegratedServer().getWorld(0),true);return null;}).get();

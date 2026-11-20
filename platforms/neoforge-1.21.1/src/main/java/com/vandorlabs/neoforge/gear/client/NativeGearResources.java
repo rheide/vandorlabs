@@ -23,6 +23,7 @@ public final class NativeGearResources implements SpriteSource {
         for(var mode:ArmResource.values())if(mode!=ArmResource.DISABLED){
             names.add(ArmResourceIndicator.model(mode,false));
             names.add(ArmResourceIndicator.model(mode,true));
+            for(boolean out:new boolean[]{false,true})for(boolean lit:new boolean[]{false,true})for(boolean tip:new boolean[]{false,true})names.add(ArmResourceIndicator.faceModel(mode,out,lit,tip));
         }
         if(com.vandorlabs.neoforge.gear.track.NativeTracks.enabled())
             for(int n=0;n<com.vandorlabs.gear.track.core.TrackMeshPolicy.templateCount();n++)

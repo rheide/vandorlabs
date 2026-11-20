@@ -124,6 +124,7 @@ final class ArmResourceTransfer {
             TileEntity target = world.getTileEntity(contact);
             if (target == null || target.isInvalid() || target.getWorld() != world || !contact.equals(target.getPos())) return unavailable;
             T destination = target.getCapability(capability,face);
+            if(destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)destination=capability.cast(com.vandorlabs.ports.ResourcePortConnections.itemHandler(target,face,contact.offset(face)));
             return destination == null ? unavailable : action.apply(destination);
         });
     }
@@ -132,17 +133,21 @@ final class ArmResourceTransfer {
         private final EnumFacing side;
         Power(EnumFacing side) { this.side = side; }
         @Override public int receiveEnergy(int amount, boolean simulate) {
-            if (amount <= 0) return 0;
+            if (input.resourceOut()||amount <= 0) return 0;
             int accepted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target ->
                     Math.min(amount,Math.max(0,target.receiveEnergy(amount,simulate))));
             if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
             return accepted;
         }
-        @Override public boolean canReceive() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
-        @Override public int extractEnergy(int amount, boolean simulate) {return 0;}
+        @Override public boolean canReceive() {return !input.resourceOut()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
+        @Override public int extractEnergy(int amount, boolean simulate) {
+            if(!input.resourceOut()||amount<=0)return 0;
+            int extracted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
+            if(!simulate&&extracted>0)input.resourceTransferred(ArmResource.POWER);return extracted;
+        }
         @Override public int getEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getEnergyStored);}
         @Override public int getMaxEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getMaxEnergyStored);}
-        @Override public boolean canExtract() {return false;}
+        @Override public boolean canExtract() {return input.resourceOut()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canExtract);}
     }
 
     private final class Fluid implements IFluidHandler {
@@ -150,7 +155,7 @@ final class ArmResourceTransfer {
         private final IFluidTankProperties[] unavailable = new IFluidTankProperties[0];
         Fluid(EnumFacing side) { this.side = side; }
         @Override public int fill(FluidStack resource, boolean commit) {
-            if (resource == null || resource.amount <= 0) return 0;
+            if (input.resourceOut()||resource == null || resource.amount <= 0) return 0;
             int amount = resource.amount;
             int accepted=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,target ->
                     Math.min(amount,Math.max(0,target.fill(resource.copy(),commit))));
@@ -166,8 +171,16 @@ final class ArmResourceTransfer {
                 return result;
             });
         }
-        @Override public FluidStack drain(FluidStack resource, boolean commit) {return null;}
-        @Override public FluidStack drain(int amount, boolean commit) {return null;}
+        @Override public FluidStack drain(FluidStack resource, boolean commit) {
+            if(!input.resourceOut()||resource==null||resource.amount<=0)return null;
+            FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,target->target.drain(resource.copy(),commit));
+            if(commit&&result!=null&&result.amount>0)input.resourceTransferred(ArmResource.FLUID);return result==null?null:result.copy();
+        }
+        @Override public FluidStack drain(int amount, boolean commit) {
+            if(!input.resourceOut()||amount<=0)return null;
+            FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,target->target.drain(amount,commit));
+            if(commit&&result!=null&&result.amount>0)input.resourceTransferred(ArmResource.FLUID);return result==null?null:result.copy();
+        }
 
         private final class InputTank implements IFluidTankProperties {
             private final int index;
@@ -183,12 +196,12 @@ final class ArmResourceTransfer {
                 return property(null,tank -> {FluidStack fluid=tank.getContents();return fluid==null?null:fluid.copy();});
             }
             @Override public int getCapacity() {return property(0,IFluidTankProperties::getCapacity);}
-            @Override public boolean canFill() {return property(false,IFluidTankProperties::canFill);}
-            @Override public boolean canDrain() {return false;}
+            @Override public boolean canFill() {return !input.resourceOut()&&property(false,IFluidTankProperties::canFill);}
+            @Override public boolean canDrain() {return input.resourceOut()&&property(false,IFluidTankProperties::canDrain);}
             @Override public boolean canFillFluidType(FluidStack resource) {
-                return resource!=null && property(false,tank -> tank.canFillFluidType(resource));
+                return !input.resourceOut()&&resource!=null && property(false,tank -> tank.canFillFluidType(resource));
             }
-            @Override public boolean canDrainFluidType(FluidStack resource) {return false;}
+            @Override public boolean canDrainFluidType(FluidStack resource) {return input.resourceOut()&&resource!=null&&property(false,tank->tank.canDrainFluidType(resource));}
         }
     }
 
@@ -203,14 +216,18 @@ final class ArmResourceTransfer {
                     target -> validSlot(target,slot) ? target.getStackInSlot(slot).copy() : ItemStack.EMPTY);
         }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (stack.isEmpty()) return stack;
+            if (input.resourceOut()||stack.isEmpty()) return stack;
             int offered=stack.getCount();
             ItemStack remainder=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,
                     target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
             if(!simulate&&remainder.getCount()<offered)input.resourceTransferred(ArmResource.ITEM);
             return remainder;
         }
-        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {return ItemStack.EMPTY;}
+        @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
+            if(!input.resourceOut()||amount<=0)return ItemStack.EMPTY;
+            ItemStack result=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,ItemStack.EMPTY,target->validSlot(target,slot)?target.extractItem(slot,amount,simulate):ItemStack.EMPTY);
+            if(!simulate&&!result.isEmpty())input.resourceTransferred(ArmResource.ITEM);return result.copy();
+        }
         @Override public int getSlotLimit(int slot) {
             return send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,0,
                     target -> validSlot(target,slot) ? target.getSlotLimit(slot) : 0);

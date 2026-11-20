@@ -25,6 +25,8 @@ public final class NativeGearRenderer implements BlockEntityRenderer<NativeGearE
             if(assembly.kind()==GearTopology.FootKind.NONE&&resource!=ArmResource.DISABLED){
                 boolean lit=tile.progress()==(tile.target()?1:0)&&columnTile!=null&&columnTile.resourceBarActive(resource);
                 draw.part(ArmResourceIndicator.model(resource,lit),base,true);
+                draw.part(ArmResourceIndicator.faceModel(resource,tile.settings().resourceOut(),lit,false),base,true);
+                if(!swing)draw.part(ArmResourceIndicator.faceModel(resource,!tile.settings().resourceOut(),lit,true),offset.compose(foot.compose(NativeGearAffine.translation(0,-assembly.columnHeight()+tile.socketOffset(),0))),cache);
             }
             if(!mount)draw.part("sleeve",offset.compose(columnFixed.compose(size)),true);
             if(swing){var yaw=NativeGearAffine.quarterTurn(tile.settings().direction());var stretch=NativeGearAffine.stretchArm(assembly.columnHeight()-tile.socketOffset());

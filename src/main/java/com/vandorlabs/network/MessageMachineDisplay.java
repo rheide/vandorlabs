@@ -7,13 +7,15 @@ import io.netty.buffer.ByteBuf;
 import net.minecraftforge.fml.common.network.simpleimpl.*;
 
 public final class MessageMachineDisplay extends DisplaySettingsMessage {
+    private Boolean observerScan;
+    public MessageMachineDisplay withObserverScan(Boolean scan){observerScan=scan;return this;}
     private int[] surfaces;private com.vandorlabs.drives.DriveSettings drive;
     public MessageMachineDisplay withDrive(com.vandorlabs.drives.DriveSettings settings){drive=settings;return this;}
     public MessageMachineDisplay(){}
     public MessageMachineDisplay(int window,NavigationScreenSettings settings,int[] surfaces,int mask,int behavior,ChannelList channels){super(window,settings,mask,behavior,channels);this.surfaces=surfaces.clone();}
-    @Override public void fromBytes(ByteBuf b){readHeader(b,1);int count=b.readUnsignedByte();if(count>3||b.readableBytes()!=count*4&&b.readableBytes()!=count*4+4)throw new IllegalArgumentException("Invalid machine surfaces");surfaces=new int[count];for(int i=0;i<count;i++)surfaces[i]=b.readInt();if(b.isReadable())drive=com.vandorlabs.drives.DriveSettings.read(b);}
-    @Override public void toBytes(ByteBuf b){writeHeader(b);b.writeByte(surfaces.length);for(int value:surfaces)b.writeInt(value);if(drive!=null)drive.write(b);}
+    @Override public void fromBytes(ByteBuf b){readHeader(b,1);int count=b.readUnsignedByte();if(count>3||b.readableBytes()!=count*4&&b.readableBytes()!=count*4+1&&b.readableBytes()!=count*4+4)throw new IllegalArgumentException("Invalid machine surfaces");surfaces=new int[count];for(int i=0;i<count;i++)surfaces[i]=b.readInt();if(b.readableBytes()==1){int scan=b.readUnsignedByte();if(scan>1)throw new IllegalArgumentException("Invalid observer state");observerScan=scan==1;}else if(b.isReadable())drive=com.vandorlabs.drives.DriveSettings.read(b);}
+    @Override public void toBytes(ByteBuf b){writeHeader(b);b.writeByte(surfaces.length);for(int value:surfaces)b.writeInt(value);if(drive!=null)drive.write(b);else if(observerScan!=null)b.writeBoolean(observerScan);}
     public static final class Handler implements IMessageHandler<MessageMachineDisplay,IMessage>{
-        @Override public IMessage onMessage(MessageMachineDisplay m,MessageContext context){m.withContainer(context,c->{c.configureMachine(context.getServerHandler().player,m.settings(),m.surfaces,m.mask,m.behavior,m.channels,m.drive);});return null;}
+        @Override public IMessage onMessage(MessageMachineDisplay m,MessageContext context){m.withContainer(context,c->{c.configureMachine(context.getServerHandler().player,m.settings(),m.surfaces,m.mask,m.behavior,m.channels,m.drive);if(m.observerScan!=null&&c.tile instanceof TileEntityConstructor&&((TileEntityConstructor)c.tile).observer())((TileEntityConstructor)c.tile).setObserverScanEnabled(m.observerScan);});return null;}
     }
 }

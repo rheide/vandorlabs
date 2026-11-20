@@ -1,10 +1,17 @@
 package com.vandorlabs.neoforge.navigation.observer;
 import java.util.*;import com.vandorlabs.machines.CoreLayout;import com.vandorlabs.redstone.ChannelList;import com.vandorlabs.navigation.NavigationRange;import net.minecraft.core.*;import net.minecraft.nbt.*;import net.minecraft.world.level.*;import net.minecraft.world.level.block.*;import net.minecraft.world.level.block.entity.*;import net.minecraft.world.level.block.state.BlockState;import net.minecraft.world.entity.player.Player;import net.minecraft.world.phys.Vec3;
 /** A chipless, loaded-only observer. Failed saves retain their original payload. */
-public final class NativeObserverEntity extends BlockEntity {
+public final class NativeObserverEntity extends BlockEntity implements com.vandorlabs.neoforge.redstone.NativeChannelMember {
  private UUID key=UUID.randomUUID();private int cornerX,cornerZ,range=16,observerWidth;private NativeObserverDesigns.Design cachedDesign;private boolean inverted,inert,pending,radar=true;private ChannelList channels=ChannelList.EMPTY;private CompoundTag retained=new CompoundTag();
  private final com.vandorlabs.navigation.ObserverPower power=new com.vandorlabs.navigation.ObserverPower();
- private boolean visualPower;
+ private boolean visualPower,visualScanning;
+ private int wireless;
+ private long requestTick=Long.MIN_VALUE;private boolean requested;
+ private long connectionTick=Long.MIN_VALUE;private boolean connection;
+ public BlockEntity channelBlockEntity(){return this;}
+ public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:channels;}
+ public void setChannelLevel(int value){wireless=Math.max(0,Math.min(15,value));requestTick=Long.MIN_VALUE;}
+
  private boolean redstoneActivation;
  public boolean redstoneActivation(){return redstoneActivation;}
  public void setRedstoneActivation(boolean value){if(available()&&redstoneActivation!=value){redstoneActivation=value;changed();}}
@@ -14,10 +21,10 @@ public final class NativeObserverEntity extends BlockEntity {
   private final NativeObserverPartEntity part;
   Input(NativeObserverEntity observer,NativeObserverPartEntity part){this.observer=observer;this.part=part;}
   public int receiveEnergy(int maximum,boolean simulate){
-   return canReceive()&&observer.scanning()?observer.power.receive(observer.level.getGameTime(),maximum,simulate):0;
+   return canReceive()&&observer.scanRequested()?observer.power.receive(observer.level.getGameTime(),maximum,simulate):0;
   }
   public int extractEnergy(int maximum,boolean simulate){return 0;}
-  public int getEnergyStored(){return canReceive()&&observer.scanning()?observer.power.received(observer.level.getGameTime()):0;}
+  public int getEnergyStored(){return canReceive()&&observer.scanRequested()?observer.power.received(observer.level.getGameTime()):0;}
   public int getMaxEnergyStored(){return com.vandorlabs.navigation.ObserverPower.RF_PER_TICK;}
   public boolean canExtract(){return false;}
   public boolean canReceive(){return observer.acceptsPower(part);}
@@ -37,24 +44,32 @@ public final class NativeObserverEntity extends BlockEntity {
  }
  public boolean powered(){return level!=null&&(level.isClientSide?visualPower:connectedPower());}
  private boolean connectedPower(){
+  long tick=level.getGameTime();
+  if(connectionTick==tick)return connection||power.powered(tick);
+  connectionTick=tick;connection=findConnectedPower();return connection;
+ }
+ private boolean findConnectedPower(){
   if(!formed()||inert)return false;
   var d=design();int y=inverted?d.height()-1:0;
   for(int x=0;x<d.width();x++)for(int z=0;z<d.depth();z++){
    var at=cell(x,y,z).below();if(!NativeObserverFormation.loaded(level,at))continue;
+   if(level.getBlockEntity(at) instanceof com.vandorlabs.neoforge.gear.NativeGearEntity source&&source.powerInputConnected())return true;
    var energy=level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,at,Direction.UP);
    if(energy!=null&&energy.canExtract())return true;
   }
   return power.powered(level.getGameTime());
  }
- public boolean scanning(){
-  if(!powered()||!radar())return false;
-  if(!redstoneActivation)return true;
-  var d=design();
+ public boolean scanning(){return level!=null&&(level.isClientSide?visualScanning:scanRequested()&&powered()&&power.powered(level.getGameTime()));}
+ private boolean scanRequested(){
+  if(!radar())return false;
+  if(!redstoneActivation||wireless>0)return true;
+  long tick=level.getGameTime();if(requestTick==tick)return requested;
+  requestTick=tick;requested=false;var d=design();var frame=layout();
   for(int x=0;x<d.width();x++)for(int y=0;y<d.height();y++)for(int z=0;z<d.depth();z++){
-   var at=cell(x,y,z);
-   if(NativeObserverFormation.loaded(level,at)&&level.hasNeighborSignal(at))return true;
+   if(!frame.frame(x,y,z))continue;var at=cell(x,y,z);
+   if(NativeObserverFormation.loaded(level,at)&&level.hasNeighborSignal(at)){requested=true;return true;}
   }
-  return false;
+  return requested;
  }
  public NativeObserverEntity(BlockPos p,BlockState s){super(NativeObserverBindings.ENTITY,p,s);}
  public NativeObserverDesigns.Design design(){if(cachedDesign==null)cachedDesign=NativeObserverDesigns.scaled(((NativeObserverCoreBlock)getBlockState().getBlock()).design.id(),observerWidth);return cachedDesign;}public int observerWidth(){return design().width();}
@@ -64,26 +79,26 @@ public final class NativeObserverEntity extends BlockEntity {
  public boolean canUse(Player p){return NativeObserverAccess.canUse(p,this,NativeObserverAccess.nearest(p,this));}
  public Vec3 center(){return new Vec3(worldPosition.getX()+.5,worldPosition.getY(),worldPosition.getZ()+.5);}
  public int radius(){if(inert)return 0;return NavigationRange.radius(design().maximum(),center().y,com.vandorlabs.navigation.ObserverScale.linearScale(design().id(),design().width()));}
- public void configure(ChannelList selected,int distance){if(!available()||!validRange(distance))throw new IllegalArgumentException("Observer configuration unavailable");channels=Objects.requireNonNull(selected);range=distance;changed();}
+ public void configure(ChannelList selected,int distance){if(!available()||!validRange(distance))throw new IllegalArgumentException("Observer configuration unavailable");channels=Objects.requireNonNull(selected);range=distance;com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);changed();}
  public void setRadar(boolean enabled){if(available()&&radar!=enabled){radar=enabled;changed();}}
  public static boolean validRange(int value){return value>=4&&value<=256&&(value&(value-1))==0;}
  public void changed(){setChanged();if(level!=null&&!level.isClientSide){var s=getBlockState();level.sendBlockUpdated(worldPosition,s,s,Block.UPDATE_CLIENTS);}}
- @Override public void onLoad(){super.onLoad();NativeNavigationSources.add(this);}@Override public void setRemoved(){NativeNavigationSources.remove(this);super.setRemoved();}
+ @Override public void onLoad(){super.onLoad();NativeNavigationSources.add(this);if(level instanceof net.minecraft.server.level.ServerLevel)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(this);}@Override public void setRemoved(){NativeNavigationSources.remove(this);if(level instanceof net.minecraft.server.level.ServerLevel)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(this);super.setRemoved();}
  public static void tick(Level l,BlockPos p,BlockState s,NativeObserverEntity t){
-  boolean active=t.formed()&&t.powered();
-  if(active!=t.visualPower){t.visualPower=active;l.sendBlockUpdated(p,s,s,Block.UPDATE_CLIENTS);}
+  boolean active=t.formed()&&t.powered(),scanning=t.scanning();
+  if(active!=t.visualPower||scanning!=t.visualScanning){t.visualPower=active;t.visualScanning=scanning;l.sendBlockUpdated(p,s,s,Block.UPDATE_CLIENTS);}
  }
  @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider regs){if(inert){tag.merge(retained.copy());com.vandorlabs.neoforge.NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,regs);tag.merge(retained.copy());tag.putBoolean("ObserverRedstone",redstoneActivation);if(radar)tag.remove("ObserverRadar");else tag.putBoolean("ObserverRadar",false);tag.putUUID("ObserverKey",key);tag.putInt("ConstructorCoreX",cornerX);tag.putInt("ConstructorCoreZ",cornerZ);tag.putBoolean("ObserverInverted",inverted);tag.putIntArray("TransmittedChannels",channels.toArray());tag.putInt("TransmissionRange",range);if(design().width()!=com.vandorlabs.navigation.ObserverScale.baseWidth(design().id()))tag.putInt("ObserverWidth",design().width());}
- @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider regs){redstoneActivation=tag.getBoolean("ObserverRedstone");if(level!=null&&level.isClientSide&&tag.getBoolean("ObserverPublic")){readPublic(tag,regs);return;}var original=tag.copy();try{radar=readRadar(tag);if(tag.contains("ObserverPublic")||tag.contains("ObserverInert"))throw new IllegalArgumentException("Public observer data cannot become private saved state");com.vandorlabs.neoforge.NativePlatformComponents.requireSupported(original,regs);for(var field:List.of("ConstructorCoreX","ConstructorCoreZ","TransmissionRange","ObserverWidth"))if(tag.contains(field)&&!tag.contains(field,3))throw new IllegalArgumentException("Observer scalar type");if(tag.contains("TransmittedChannels")&&!tag.contains("TransmittedChannels",11)||tag.contains("ObserverInverted")&&(!tag.contains("ObserverInverted",1)||tag.getByte("ObserverInverted")<0||tag.getByte("ObserverInverted")>1)||tag.contains("ForgeCaps")&&(!tag.contains("ForgeCaps",10)||!tag.getCompound("ForgeCaps").isEmpty()))throw new IllegalArgumentException("Observer saved schema");int x=tag.getInt("ConstructorCoreX"),z=tag.getInt("ConstructorCoreZ");String designId=((NativeObserverCoreBlock)getBlockState().getBlock()).design.id();int width=com.vandorlabs.navigation.ObserverScale.width(designId,tag.getInt("ObserverWidth"));var d=NativeObserverDesigns.scaled(designId,width);if(x!=0&&x!=d.width()-1||z!=0&&z!=d.depth()-1)throw new IllegalArgumentException("Observer corner");int r=tag.contains("TransmissionRange")?tag.getInt("TransmissionRange"):16;if(!validRange(r))throw new IllegalArgumentException("Observer range");var selected=ChannelList.of(tag.getIntArray("TransmittedChannels"));if(tag.contains("ObserverKey")&&!tag.hasUUID("ObserverKey"))throw new IllegalArgumentException("Observer identity");try(var guard=com.vandorlabs.neoforge.NativePlatformComponents.guardLoad(this)){super.loadAdditional(original,regs);guard.requireSuccessful();}key=tag.hasUUID("ObserverKey")?tag.getUUID("ObserverKey"):UUID.randomUUID();observerWidth=width;cachedDesign=null;cornerX=x;cornerZ=z;inverted=tag.getBoolean("ObserverInverted");range=r;channels=selected;retained=original;for(var k:List.of("id","x","y","z","ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth","TransmittedChannels","TransmissionRange"))retained.remove(k);com.vandorlabs.neoforge.NativePlatformComponents.forgetLoadedFields(retained);inert=false;}catch(RuntimeException invalid){inert=true;retained=original;}}
- @Override public CompoundTag getUpdateTag(HolderLookup.Provider regs){var tag=new CompoundTag();tag.putBoolean("ObserverPublic",true);tag.putBoolean("ObserverInert",inert);if(inert)return tag;if(redstoneActivation)tag.putBoolean("ObserverRedstone",true);if(powered())tag.putBoolean("ObserverPowered",true);if(!radar)tag.putBoolean("ObserverRadar",false);tag.putUUID("ObserverKey",key);tag.putInt("ConstructorCoreX",cornerX);tag.putInt("ConstructorCoreZ",cornerZ);tag.putBoolean("ObserverInverted",inverted);tag.putIntArray("TransmittedChannels",channels.toArray());tag.putInt("TransmissionRange",range);if(design().width()!=com.vandorlabs.navigation.ObserverScale.baseWidth(design().id()))tag.putInt("ObserverWidth",design().width());return tag;}
- private void readPublic(CompoundTag tag,HolderLookup.Provider regs){try{redstoneActivation=tag.getBoolean("ObserverRedstone");if(!tag.contains("ObserverPublic",1)||tag.getByte("ObserverPublic")!=1||!tag.contains("ObserverInert",1)||tag.getByte("ObserverInert")<0||tag.getByte("ObserverInert")>1)throw new IllegalArgumentException("Observer public envelope");if(tag.getBoolean("ObserverInert")){if(!tag.getAllKeys().equals(Set.of("ObserverPublic","ObserverInert")))throw new IllegalArgumentException("Observer inert projection fields");clearPublicFailure();return;}var keys=new HashSet<>(Set.of("ObserverPublic","ObserverInert","ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","TransmittedChannels","TransmissionRange"));if(tag.contains("ObserverRedstone"))keys.add("ObserverRedstone");if(tag.contains("ObserverWidth"))keys.add("ObserverWidth");if(tag.contains("ObserverRadar"))keys.add("ObserverRadar");if(tag.contains("ObserverPowered",Tag.TAG_BYTE)&&tag.getBoolean("ObserverPowered"))keys.add("ObserverPowered");if(!tag.getAllKeys().equals(keys)||!tag.hasUUID("ObserverKey")||!tag.contains("ConstructorCoreX",3)||!tag.contains("ConstructorCoreZ",3)||!tag.contains("ObserverInverted",1)||!tag.contains("TransmittedChannels",11)||!tag.contains("TransmissionRange",3))throw new IllegalArgumentException("Observer public fields");var clean=tag.copy();clean.remove("ObserverPublic");clean.remove("ObserverInert");clean.remove("ObserverPowered");visualPower=tag.getBoolean("ObserverPowered");loadAdditional(clean,regs);if(inert)clearPublicFailure();}catch(RuntimeException bad){clearPublicFailure();}}
+ @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider regs){redstoneActivation=tag.getBoolean("ObserverRedstone");if(level!=null&&level.isClientSide&&tag.getBoolean("ObserverPublic")){readPublic(tag,regs);return;}var original=tag.copy();try{radar=readRadar(tag);if(tag.contains("ObserverRedstone")&&(!tag.contains("ObserverRedstone",Tag.TAG_BYTE)||tag.getByte("ObserverRedstone")<0||tag.getByte("ObserverRedstone")>1))throw new IllegalArgumentException("Observer activation value");if(tag.contains("ObserverPublic")||tag.contains("ObserverInert"))throw new IllegalArgumentException("Public observer data cannot become private saved state");com.vandorlabs.neoforge.NativePlatformComponents.requireSupported(original,regs);for(var field:List.of("ConstructorCoreX","ConstructorCoreZ","TransmissionRange","ObserverWidth"))if(tag.contains(field)&&!tag.contains(field,3))throw new IllegalArgumentException("Observer scalar type");if(tag.contains("TransmittedChannels")&&!tag.contains("TransmittedChannels",11)||tag.contains("ObserverInverted")&&(!tag.contains("ObserverInverted",1)||tag.getByte("ObserverInverted")<0||tag.getByte("ObserverInverted")>1)||tag.contains("ForgeCaps")&&(!tag.contains("ForgeCaps",10)||!tag.getCompound("ForgeCaps").isEmpty()))throw new IllegalArgumentException("Observer saved schema");int x=tag.getInt("ConstructorCoreX"),z=tag.getInt("ConstructorCoreZ");String designId=((NativeObserverCoreBlock)getBlockState().getBlock()).design.id();int width=com.vandorlabs.navigation.ObserverScale.width(designId,tag.getInt("ObserverWidth"));var d=NativeObserverDesigns.scaled(designId,width);if(x!=0&&x!=d.width()-1||z!=0&&z!=d.depth()-1)throw new IllegalArgumentException("Observer corner");int r=tag.contains("TransmissionRange")?tag.getInt("TransmissionRange"):16;if(!validRange(r))throw new IllegalArgumentException("Observer range");var selected=ChannelList.of(tag.getIntArray("TransmittedChannels"));if(tag.contains("ObserverKey")&&!tag.hasUUID("ObserverKey"))throw new IllegalArgumentException("Observer identity");try(var guard=com.vandorlabs.neoforge.NativePlatformComponents.guardLoad(this)){super.loadAdditional(original,regs);guard.requireSuccessful();}key=tag.hasUUID("ObserverKey")?tag.getUUID("ObserverKey"):UUID.randomUUID();observerWidth=width;cachedDesign=null;cornerX=x;cornerZ=z;inverted=tag.getBoolean("ObserverInverted");range=r;channels=selected;retained=original;for(var k:List.of("id","x","y","z","ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth","TransmittedChannels","TransmissionRange"))retained.remove(k);com.vandorlabs.neoforge.NativePlatformComponents.forgetLoadedFields(retained);inert=false;}catch(RuntimeException invalid){inert=true;retained=original;}}
+ @Override public CompoundTag getUpdateTag(HolderLookup.Provider regs){var tag=new CompoundTag();tag.putBoolean("ObserverPublic",true);tag.putBoolean("ObserverInert",inert);if(inert)return tag;if(redstoneActivation)tag.putBoolean("ObserverRedstone",true);if(powered())tag.putBoolean("ObserverPowered",true);if(scanning())tag.putBoolean("ObserverScanning",true);if(!radar)tag.putBoolean("ObserverRadar",false);tag.putUUID("ObserverKey",key);tag.putInt("ConstructorCoreX",cornerX);tag.putInt("ConstructorCoreZ",cornerZ);tag.putBoolean("ObserverInverted",inverted);tag.putIntArray("TransmittedChannels",channels.toArray());tag.putInt("TransmissionRange",range);if(design().width()!=com.vandorlabs.navigation.ObserverScale.baseWidth(design().id()))tag.putInt("ObserverWidth",design().width());return tag;}
+ private void readPublic(CompoundTag tag,HolderLookup.Provider regs){try{redstoneActivation=tag.getBoolean("ObserverRedstone");if(!tag.contains("ObserverPublic",1)||tag.getByte("ObserverPublic")!=1||!tag.contains("ObserverInert",1)||tag.getByte("ObserverInert")<0||tag.getByte("ObserverInert")>1)throw new IllegalArgumentException("Observer public envelope");if(tag.getBoolean("ObserverInert")){if(!tag.getAllKeys().equals(Set.of("ObserverPublic","ObserverInert")))throw new IllegalArgumentException("Observer inert projection fields");clearPublicFailure();return;}var keys=new HashSet<>(Set.of("ObserverPublic","ObserverInert","ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","TransmittedChannels","TransmissionRange"));if(tag.contains("ObserverScanning",Tag.TAG_BYTE)&&tag.getBoolean("ObserverScanning"))keys.add("ObserverScanning");if(tag.contains("ObserverRedstone"))keys.add("ObserverRedstone");if(tag.contains("ObserverWidth"))keys.add("ObserverWidth");if(tag.contains("ObserverRadar"))keys.add("ObserverRadar");if(tag.contains("ObserverPowered",Tag.TAG_BYTE)&&tag.getBoolean("ObserverPowered"))keys.add("ObserverPowered");if(!tag.getAllKeys().equals(keys)||!tag.hasUUID("ObserverKey")||!tag.contains("ConstructorCoreX",3)||!tag.contains("ConstructorCoreZ",3)||!tag.contains("ObserverInverted",1)||!tag.contains("TransmittedChannels",11)||!tag.contains("TransmissionRange",3))throw new IllegalArgumentException("Observer public fields");var clean=tag.copy();clean.remove("ObserverPublic");clean.remove("ObserverInert");clean.remove("ObserverPowered");clean.remove("ObserverScanning");visualScanning=tag.getBoolean("ObserverScanning");visualPower=tag.getBoolean("ObserverPowered");loadAdditional(clean,regs);if(inert)clearPublicFailure();}catch(RuntimeException bad){clearPublicFailure();}}
  private static boolean readRadar(CompoundTag tag){
   if(!tag.contains("ObserverRadar"))return true;
   if(!tag.contains("ObserverRadar",Tag.TAG_BYTE)||tag.getByte("ObserverRadar")<0||tag.getByte("ObserverRadar")>1)
    throw new IllegalArgumentException("Observer radar value");
   return tag.getBoolean("ObserverRadar");
  }
- private void clearPublicFailure(){visualPower=false;inert=true;retained=new CompoundTag();observerWidth=cornerX=cornerZ=0;cachedDesign=null;inverted=false;channels=ChannelList.EMPTY;range=16;}
+ private void clearPublicFailure(){visualPower=false;visualScanning=false;inert=true;retained=new CompoundTag();observerWidth=cornerX=cornerZ=0;cachedDesign=null;inverted=false;channels=ChannelList.EMPTY;range=16;}
  @Override public void handleUpdateTag(CompoundTag tag,HolderLookup.Provider regs){readPublic(tag,regs);}
  @Override public void onDataPacket(net.minecraft.network.Connection connection,net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket packet,HolderLookup.Provider regs){readPublic(packet.getTag(),regs);}
 @Override public net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket getUpdatePacket(){return net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket.create(this);}

@@ -34,6 +34,7 @@ final class GearModels {
             if (mode != com.vandorlabs.gear.core.ArmResource.DISABLED) {
                 names.add(com.vandorlabs.gear.core.ArmResourceIndicator.model(mode,false));
                 names.add(com.vandorlabs.gear.core.ArmResourceIndicator.model(mode,true));
+                for(boolean out:new boolean[]{false,true})for(boolean lit:new boolean[]{false,true})for(boolean tip:new boolean[]{false,true})names.add(com.vandorlabs.gear.core.ArmResourceIndicator.faceModel(mode,out,lit,tip));
             }
         }
         for (int mask = 0; mask < 16; mask++) {

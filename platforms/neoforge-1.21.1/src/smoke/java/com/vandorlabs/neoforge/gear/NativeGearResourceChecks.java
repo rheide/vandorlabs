@@ -88,6 +88,8 @@ public final class NativeGearResourceChecks {
         need(power.stored()==RF*expected&&fluids.stored().getAmount()==MB*expected
                 &&items.stored(0).getCount()==CARGO.getCount()*expected,"only one real owner per resource at "+endpoint);
     }
+    private static void output(boolean out){var options=arm().settings().editableChoices();options.putBoolean(ArmResource.OUT,out);need(arm().configure(NativeGearSettings.readChoices(options),arm().target()),"flow direction applies");}
+    private static void outputPort(NativeResourcePortEntity port,boolean out){port.configure(new NativePortData.Configuration(port.settings().withFace(INPUT.get3DDataValue(),out?com.vandorlabs.ports.ResourcePortSettings.Face.OUTPUT:com.vandorlabs.ports.ResourcePortSettings.Face.INPUT),0,com.vandorlabs.redstone.ChannelList.EMPTY));}
     private static void transfer(int endpoint,int previous) {
         counts(endpoint,previous);
         mode(ArmResource.POWER);
@@ -98,16 +100,25 @@ public final class NativeGearResourceChecks {
         need(power.receiveEnergy(RF,true)==RF,"simulate RF");
         counts(endpoint,previous);
         need(power.receiveEnergy(RF,false)==RF&&power.extractEnergy(RF,false)==0,"execute RF without reverse transfer");
+        var source=(NativePowerPortEntity)world.getBlockEntity(target(0,endpoint));outputPort(source,true);output(true);
+        need(!power.canReceive()&&power.canExtract()&&power.receiveEnergy(1,false)==0&&power.extractEnergy(5,true)==5&&source.stored()==RF*(previous+1),"RF output direction/simulation");
+        need(power.extractEnergy(5,false)==5&&source.stored()==RF*(previous+1)-5,"RF extraction ownership");output(false);outputPort(source,false);need(power.receiveEnergy(5,false)==5,"restore RF");
         mode(ArmResource.FLUID);
         need(power.receiveEnergy(RF,false)==0,"previous RF reference uses the current setting");
         var fluid = world.getCapability(Capabilities.FluidHandler.BLOCK,column(1),INPUT);
         var water = new FluidStack(Fluids.WATER,MB);
         need(fluid!=null&&fluid.getTanks()==1&&fluid.fill(water,FluidAction.SIMULATE)==MB,"simulate on second column");
         need(fluid.fill(water,FluidAction.EXECUTE)==MB&&fluid.drain(MB,FluidAction.EXECUTE).isEmpty(),"execute fluids without drain");
+        var tank=(NativeFluidPortEntity)world.getBlockEntity(target(1,endpoint));outputPort(tank,true);output(true);
+        need(fluid.fill(water,FluidAction.EXECUTE)==0&&fluid.drain(3,FluidAction.SIMULATE).getAmount()==3&&tank.stored().getAmount()==MB*(previous+1),"fluid output direction/simulation");
+        var returnedFluid=fluid.drain(3,FluidAction.EXECUTE);need(returnedFluid.getAmount()==3&&tank.stored().getAmount()==MB*(previous+1)-3,"fluid extraction ownership");output(false);outputPort(tank,false);need(fluid.fill(returnedFluid,FluidAction.EXECUTE)==3,"restore fluid");
         mode(ArmResource.ITEM);
         oldItems = world.getCapability(Capabilities.ItemHandler.BLOCK,column(2),INPUT);
         need(oldItems!=null&&oldItems.insertItem(0,CARGO,true).isEmpty(),"simulate on third column");
         need(oldItems.insertItem(0,CARGO,false).isEmpty()&&oldItems.extractItem(0,3,false).isEmpty(),"execute items without extraction");
+        var inventory=(NativeMatterPortEntity)world.getBlockEntity(target(2,endpoint));outputPort(inventory,true);output(true);
+        need(!oldItems.insertItem(0,CARGO,false).isEmpty()&&oldItems.extractItem(0,1,true).getCount()==1&&inventory.stored(0).getCount()==CARGO.getCount()*(previous+1),"item output direction/simulation");
+        var returned=oldItems.extractItem(0,1,false);need(returned.getCount()==1&&inventory.stored(0).getCount()==CARGO.getCount()*(previous+1)-1,"item extraction ownership");output(false);outputPort(inventory,false);need(oldItems.insertItem(0,returned,false).isEmpty(),"restore items");
         counts(endpoint,previous+1);
     }
 

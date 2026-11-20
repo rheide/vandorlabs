@@ -7,6 +7,8 @@ public enum ArmResource {
     DISABLED("Off"), POWER("RF Power"), FLUID("Fluids"), ITEM("Items");
 
     public static final String CHOICE = "ResourceTransfer";
+    public static final String OUT = "ResourceOut", SAVED_OUT = "ArmResourceOut";
+    public static boolean output(boolean present,boolean bool,int value){if(present&&(!bool||value<0||value>1))throw new IllegalArgumentException("Invalid arm resource direction");return present&&value==1;}
     public static final String SAVED = "ArmResourceTransfer";
     private static final ArmResource[] MODES = values();
     private static final ThreadLocal<Route> ROUTE = ThreadLocal.withInitial(Route::new);

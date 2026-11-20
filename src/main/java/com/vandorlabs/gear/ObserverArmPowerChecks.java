@@ -24,12 +24,13 @@ public final class ObserverArmPowerChecks {
     private static final BlockPos ROOT=ArmCoreFixture.ROOT;
     private static final ChannelList CHANNEL=ChannelList.of(47);
     private static int stage,ticks;
-    private static boolean movedWithoutPower,prepared;
+    private static boolean movedWithoutPower,prepared,dialogDone;
     private static IEnergyStorage detachedInlet;
 
     public static boolean tick(Minecraft client)throws Exception{
         if(stage==4)return true;
         client.gameSettings.pauseOnLostFocus=false;
+        if(stage==1&&!dialogDone){dialogDone=com.vandorlabs.client.ObserverDialogLiveChecks.tick(client,ROOT.up(2));return false;}
         client.displayGuiScreen(null);
         require(++ticks<700,"expected phase completes");
         return client.getIntegratedServer().callFromMainThread(()->advance(
@@ -39,6 +40,7 @@ public final class ObserverArmPowerChecks {
     private static boolean advance(WorldServer world,EntityPlayerMP actor){
         if(stage==0){
             ArmCoreFixture.setup(world,actor,0,"standalone_dish_core");
+            ArmCoreFixture.emptyHands(actor,net.minecraft.world.GameType.CREATIVE);
             actor.connection.setPlayerLocation(ROOT.getX()+.5,ROOT.getY()+1,ROOT.getZ()-3.5,0,0);
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ROOT);
             arm.operator(actor);
@@ -62,6 +64,10 @@ public final class ObserverArmPowerChecks {
             TileEntity receiver=world.getTileEntity(ROOT.up(2));
             detachedInlet=receiver.getCapability(CapabilityEnergy.ENERGY,EnumFacing.DOWN);
             require(detachedInlet!=null&&detachedInlet.canReceive(),"actual contacted Dish part receives power");
+            TileEntityConstructor observer=receiver instanceof TileEntityConstructor?(TileEntityConstructor)receiver:(TileEntityConstructor)world.getTileEntity(((com.vandorlabs.tiles.TileEntityConstructorPart)receiver).owner());
+            observer.cycleActivity();
+            require(observer.activity()==1&&observer.observerPowered()&&detachedInlet.receiveEnergy(20,true)==0&&detachedInlet.receiveEnergy(20,false)==0,"connected idle observer has no RF demand");
+            observer.cycleActivity();
             arm.target(false);
             next();
             return false;

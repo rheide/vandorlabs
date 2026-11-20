@@ -41,7 +41,7 @@ final class NativeNavigationSurfaceData extends SavedData {
             var pos=source.getBlockPos();
             var chunk=world.getChunkSource().getChunkNow(pos.getX()>>4,pos.getZ()>>4);
             return chunk!=null&&chunk.getBlockEntity(pos)==source&&!source.isRemoved()&&!source.inert()
-                    &&source.formed()&&!source.ownsRecovery()&&source.radar();
+                    &&source.formed()&&!source.ownsRecovery()&&source.scanning();
         });
         ACTIVE.putIfAbsent(world,this);
     }
