@@ -115,10 +115,7 @@ final class CornerGlassLiveChecks {
         if(!galleryRequested){
             galleryRequested=true;
             mc.getIntegratedServer().addScheduledTask(()->{
-                long start=System.nanoTime();
-                System.out.println("[vandorlabs][reprolab] corner-glass gallery build start");
                 buildGallery(mc.getIntegratedServer().getWorld(0));galleryBuilt=true;
-                System.out.println("[vandorlabs][reprolab] corner-glass gallery built ms="+(System.nanoTime()-start)/1000000);
             });
         }
         if(!galleryBuilt)return false;
