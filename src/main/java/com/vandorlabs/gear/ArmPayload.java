@@ -406,6 +406,8 @@ public final class ArmPayload {
                 &&arm.getBlockType() instanceof GearBlock&&GearAssembly.isExtender(world.getBlockState(arm.getPos()));
         if(platform!=null){if(sourceView==null)for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
         if(world.isAirBlock(start)||com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,start,world.getBlockState(start)))return null;
+        // Ducts and pipes on the tip are resource connections, never cargo.
+        if(conduit(world,sourceView,start))return null;
         ArmCorePayload.Discovery cores=new ArmCorePayload.Discovery(world);ArmCorePayload.Group exactCore=platform==null?cores.at(start):null;Set<ArmCorePayload.Group> queuedCores=new HashSet<>();
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Set<BlockPos> visited=new LinkedHashSet<>();if(exactCore==null)pending.add(start);else{pending.addAll(exactCore.cells);queuedCores.add(exactCore);}
         int minX=start.getX(),minY=start.getY(),minZ=start.getZ(),maxX=minX,maxY=minY,maxZ=minZ;
@@ -439,6 +441,7 @@ public final class ArmPayload {
                 if(foot&&side==arm.mountDirection())continue;
                 BlockPos next=at.offset(side);if(physicalMember(arm,next))continue;
                 if(GearAssembly.loaded(world,next)&&com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,next,world.getBlockState(next)))continue;
+                if(GearAssembly.loaded(world,next)&&conduit(world,sourceView,next))continue;
                 if(platform!=null&&!volume.contains(next)){if(arm.carryLoad()&&!platform.contains(at)&&GearAssembly.loaded(world,next)&&!world.isAirBlock(next)&&VehicleScan.touches(world,at,state,side))throw new IllegalArgumentException("Load extends beyond the selected platform or height");continue;}
                 if(VehicleScan.touches(world,at,state,side))pending.add(next);
             }
@@ -468,6 +471,10 @@ public final class ArmPayload {
         }
     }
     /** Read-only appearance discovery reuses the same bounded attachment-plane rule. */
+    /** Thermal Dynamics ducts and Mekanism transmitters connect to a moving arm but are never carried. */
+    static boolean conduit(World world,VehicleWorld view,BlockPos at){
+        return TransferNetworkCompat.component(view==null?world.getTileEntity(at):view.tiles.get(at));
+    }
     static Set<BlockPos> attachedSurfaceCells(GearTileEntity arm){
         if(arm.getWorld()==null||!arm.isController())return Collections.emptySet();
         ArmPayload payload=arm.payload();Set<BlockPos> seeds=new LinkedHashSet<>();

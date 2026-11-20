@@ -20,6 +20,8 @@ import net.minecraftforge.items.IItemHandler;
 
 final class ArmResourceTransfer {
     private final GearTileEntity input;
+    /** A tip connection: transfers reach the block against the base's mounting face. */
+    private final boolean reversed;
     private EnumFacing exposedSide;
     private IEnergyStorage energy;
     private IFluidHandler fluid;
@@ -30,7 +32,53 @@ final class ArmResourceTransfer {
     private ArmGridMapping payloadEndpoint;
 
     ArmResourceTransfer(GearTileEntity input) {
-        this.input = input;
+        this(input,false);
+    }
+    private ArmResourceTransfer(GearTileEntity input,boolean reversed) {
+        this.input = input;this.reversed=reversed;
+    }
+    /** Flow leaves through the exposed face: the base when Out is selected, the tip otherwise. */
+    private boolean out(){return reversed!=input.resourceOut();}
+
+    /**
+     * The outward face of an empty arm tip exposes the selected resource, so ducts and pipes on
+     * the tip connect to the arm instead of being captured as cargo.
+     */
+    static <T> T tipInput(GearTileEntity tile,EnumFacing side,Capability<T> capability){
+        ArmResource type=forCapability(capability);
+        if(type==ArmResource.DISABLED||side==null||!(tile.getWorld() instanceof WorldServer)||tile.isInvalid())return null;
+        WorldServer world=(WorldServer)tile.getWorld();
+        if(world.getMinecraftServer()==null||!world.getMinecraftServer().isCallingFromMinecraftThread())return null;
+        GearTileEntity arm=tile.loadedController();
+        if(arm==null||arm.isInvalid()||arm.resourceTransfer()!=type||arm.payload()!=null||!arm.resourceEndpointAvailable())return null;
+        BlockPos contact=tile.getPos().offset(side);
+        for(BlockPos column:arm.columns()){
+            TileEntity base=world.getTileEntity(arm.getPos().add(column));
+            if(!(base instanceof GearTileEntity)||installedArm((GearTileEntity)base,type)!=arm)continue;
+            ArmResourceTransfer forward=((GearTileEntity)base).resourceConnection();
+            if(!contact.equals(forward.endpointContact(arm)))continue;
+            ArmResourceTransfer tip=tile.tipConnection((GearTileEntity)base);
+            if(tip.exposedSide!=side){tip.exposedSide=side;tip.energy=null;tip.fluid=null;tip.items=null;}
+            return tip.handler(type,side,capability);
+        }
+        return null;
+    }
+    static ArmResourceTransfer tip(GearTileEntity base){return new ArmResourceTransfer(base,true);}
+    boolean tipFor(GearTileEntity base){return reversed&&input==base;}
+    /** The world cell the base forwards to while the arm is empty and at rest, or null. */
+    private BlockPos endpointContact(GearTileEntity arm){
+        BlockPos contact=input.getPos().offset(arm.mountDirection(),arm.assembly().columnHeight());
+        if(arm.isFixedMount())return contact;
+        map(arm);
+        return emptyEndpoint==null?null:emptyEndpoint.placed(contact);
+    }
+    private <T> T handler(ArmResource type,EnumFacing side,Capability<T> capability){
+        switch(type){
+            case POWER:if(energy==null)energy=new Power(side);return CapabilityEnergy.ENERGY.cast(energy);
+            case FLUID:if(fluid==null)fluid=new Fluid(side);return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(fluid);
+            case ITEM:if(items==null)items=new Items(side);return CapabilityItemHandler.ITEM_HANDLER_CAPABILITY.cast(items);
+            default:return null;
+        }
     }
 
     static ArmResource forCapability(Capability<?> capability) {
@@ -93,6 +141,23 @@ final class ArmResourceTransfer {
 
     @SuppressWarnings("unchecked")
     private <T, R> R send(ArmResource type, EnumFacing side, Capability<T> capability, R unavailable, Function<T,R> action) {
+        if(reversed)return ArmResource.forward(input,unavailable,() -> {
+            GearTileEntity arm = installedArm(input,type);
+            if (arm == null || arm.payload() != null || !arm.resourceEndpointAvailable()) return unavailable;
+            WorldServer world = (WorldServer) input.getWorld();
+            BlockPos mounting = input.getPos();
+            if (ArmTransactions.lockedForResourceTransfer(world,arm.getPos())
+                    || !arm.getPos().equals(mounting) && ArmTransactions.lockedForResourceTransfer(world,mounting)) return unavailable;
+            BlockPos source = mounting.offset(input.mountDirection().getOpposite());
+            if (!GearAssembly.loaded(world,source) || ArmTransactions.lockedForResourceTransfer(world,source)
+                    || com.vandorlabs.copier.CopyTransactions.locked(world,source)) return unavailable;
+            TileEntity target = world.getTileEntity(source);
+            if (target == null || target.isInvalid() || target.getWorld() != world || !source.equals(target.getPos())) return unavailable;
+            EnumFacing face = input.mountDirection();
+            T destination = target.getCapability(capability,face);
+            if(destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)destination=(T)com.vandorlabs.ports.ResourcePortConnections.itemHandler(target,face,mounting);
+            return destination == null ? unavailable : action.apply(destination);
+        });
         return ArmResource.forward(input,unavailable,() -> {
             if (side != input.mountDirection().getOpposite()) return unavailable;
             GearTileEntity arm = installedArm(input,type);
@@ -134,21 +199,21 @@ final class ArmResourceTransfer {
         private final EnumFacing side;
         Power(EnumFacing side) { this.side = side; }
         @Override public int receiveEnergy(int amount, boolean simulate) {
-            if (input.resourceOut()||amount <= 0) return 0;
+            if (out()||amount <= 0) return 0;
             int accepted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target ->
                     Math.min(amount,Math.max(0,target.receiveEnergy(amount,simulate))));
             if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
             return accepted;
         }
-        @Override public boolean canReceive() {return !input.resourceOut()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
+        @Override public boolean canReceive() {return !out()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
         @Override public int extractEnergy(int amount, boolean simulate) {
-            if(!input.resourceOut()||amount<=0)return 0;
+            if(!out()||amount<=0)return 0;
             int extracted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
             if(!simulate&&extracted>0)input.resourceTransferred(ArmResource.POWER);return extracted;
         }
         @Override public int getEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getEnergyStored);}
         @Override public int getMaxEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getMaxEnergyStored);}
-        @Override public boolean canExtract() {return input.resourceOut()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canExtract);}
+        @Override public boolean canExtract() {return out()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canExtract);}
     }
 
     private final class Fluid implements IFluidHandler {
@@ -156,7 +221,7 @@ final class ArmResourceTransfer {
         private final IFluidTankProperties[] unavailable = new IFluidTankProperties[0];
         Fluid(EnumFacing side) { this.side = side; }
         @Override public int fill(FluidStack resource, boolean commit) {
-            if (input.resourceOut()||resource == null || resource.amount <= 0) return 0;
+            if (out()||resource == null || resource.amount <= 0) return 0;
             int amount = resource.amount;
             int accepted=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,target ->
                     Math.min(amount,Math.max(0,target.fill(resource.copy(),commit))));
@@ -164,6 +229,11 @@ final class ArmResourceTransfer {
             return accepted;
         }
         @Override public IFluidTankProperties[] getTankProperties() {
+            IFluidTankProperties[] result=properties();
+            // Pipes only connect to a neighbour that reports a tank; keep a tip connection stable.
+            return reversed&&result.length==0?new IFluidTankProperties[]{new net.minecraftforge.fluids.capability.FluidTankProperties(null,0,out(),!out())}:result;
+        }
+        private IFluidTankProperties[] properties() {
             return send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,unavailable,target -> {
                 IFluidTankProperties[] properties = target.getTankProperties();
                 if (properties == null || properties.length == 0) return unavailable;
@@ -173,12 +243,12 @@ final class ArmResourceTransfer {
             });
         }
         @Override public FluidStack drain(FluidStack resource, boolean commit) {
-            if(!input.resourceOut()||resource==null||resource.amount<=0)return null;
+            if(!out()||resource==null||resource.amount<=0)return null;
             FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,target->target.drain(resource.copy(),commit));
             if(commit&&result!=null&&result.amount>0)input.resourceTransferred(ArmResource.FLUID);return result==null?null:result.copy();
         }
         @Override public FluidStack drain(int amount, boolean commit) {
-            if(!input.resourceOut()||amount<=0)return null;
+            if(!out()||amount<=0)return null;
             FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,target->target.drain(amount,commit));
             if(commit&&result!=null&&result.amount>0)input.resourceTransferred(ArmResource.FLUID);return result==null?null:result.copy();
         }
@@ -197,12 +267,12 @@ final class ArmResourceTransfer {
                 return property(null,tank -> {FluidStack fluid=tank.getContents();return fluid==null?null:fluid.copy();});
             }
             @Override public int getCapacity() {return property(0,IFluidTankProperties::getCapacity);}
-            @Override public boolean canFill() {return !input.resourceOut()&&property(false,IFluidTankProperties::canFill);}
-            @Override public boolean canDrain() {return input.resourceOut()&&property(false,IFluidTankProperties::canDrain);}
+            @Override public boolean canFill() {return !out()&&property(false,IFluidTankProperties::canFill);}
+            @Override public boolean canDrain() {return out()&&property(false,IFluidTankProperties::canDrain);}
             @Override public boolean canFillFluidType(FluidStack resource) {
-                return !input.resourceOut()&&resource!=null && property(false,tank -> tank.canFillFluidType(resource));
+                return !out()&&resource!=null && property(false,tank -> tank.canFillFluidType(resource));
             }
-            @Override public boolean canDrainFluidType(FluidStack resource) {return input.resourceOut()&&resource!=null&&property(false,tank->tank.canDrainFluidType(resource));}
+            @Override public boolean canDrainFluidType(FluidStack resource) {return out()&&resource!=null&&property(false,tank->tank.canDrainFluidType(resource));}
         }
     }
 
@@ -217,7 +287,7 @@ final class ArmResourceTransfer {
                     target -> validSlot(target,slot) ? target.getStackInSlot(slot).copy() : ItemStack.EMPTY);
         }
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
-            if (input.resourceOut()||stack.isEmpty()) return stack;
+            if (out()||stack.isEmpty()) return stack;
             int offered=stack.getCount();
             ItemStack remainder=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,
                     target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
@@ -225,7 +295,7 @@ final class ArmResourceTransfer {
             return remainder;
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
-            if(!input.resourceOut()||amount<=0)return ItemStack.EMPTY;
+            if(!out()||amount<=0)return ItemStack.EMPTY;
             ItemStack result=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,ItemStack.EMPTY,target->validSlot(target,slot)?target.extractItem(slot,amount,simulate):ItemStack.EMPTY);
             if(!simulate&&!result.isEmpty())input.resourceTransferred(ArmResource.ITEM);return result.copy();
         }

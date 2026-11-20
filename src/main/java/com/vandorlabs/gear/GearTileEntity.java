@@ -103,11 +103,18 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(resourceConnection==null)resourceConnection=new ArmResourceTransfer(this);
         return resourceConnection;
     }
+    private ArmResourceTransfer tipConnection;
+    /** Reversed handlers this tip section exposes for {@code base}'s column. */
+    ArmResourceTransfer tipConnection(GearTileEntity base){
+        if(tipConnection==null||!tipConnection.tipFor(base))tipConnection=ArmResourceTransfer.tip(base);
+        return tipConnection;
+    }
     @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability,EnumFacing side){
-        return ArmResourceTransfer.input(this,side,capability)!=null||super.hasCapability(capability,side);
+        return ArmResourceTransfer.input(this,side,capability)!=null||ArmResourceTransfer.tipInput(this,side,capability)!=null||super.hasCapability(capability,side);
     }
     @Override public <T> T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability,EnumFacing side){
         T input=ArmResourceTransfer.input(this,side,capability);
+        if(input==null)input=ArmResourceTransfer.tipInput(this,side,capability);
         return input!=null?input:super.getCapability(capability,side);
     }
     private int joinRange=32,loadHeight=1;
@@ -568,6 +575,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             firstServerTick = false;
             rebuildMemberCache();
             requestNearbyRebuild(world, pos);
+            notifyTips();
         }
         if (rebuildDelay >= 0 && --rebuildDelay < 0) rebuild();
 
@@ -756,6 +764,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             tile.sync();
         }
         boxesAt=Double.NaN;GearGeometry.register(this);ArmSurfaceActivity.discover(this);sync();
+        notifyTips();
         return true;
     }
 
@@ -911,7 +920,18 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 member.sync();
             }
             world.notifyNeighborsOfStateChange(at,world.getBlockState(at).getBlock(),false);
+            notifyTip(at);
         }
+    }
+    private void notifyTips(){
+        if(world instanceof net.minecraft.world.WorldServer&&owner!=null&&owner.equals(pos)&&resourceTransfer!=ArmResource.DISABLED&&assembly!=null&&canTransferResources())
+            for(BlockPos column:new ArrayList<>(columns))notifyTip(pos.add(column));
+    }
+    /** Ducts and pipes on an empty tip re-evaluate their connection to the arm. */
+    void notifyTip(BlockPos base){
+        if(world==null||assembly==null)return;
+        BlockPos tip=base.offset(mountDirection(),Math.max(0,assembly.columnHeight()-1));
+        if(GearAssembly.loaded(world,tip))world.notifyNeighborsOfStateChange(tip,world.getBlockState(tip).getBlock(),false);
     }
 
     public void sync() {

@@ -89,13 +89,76 @@ public final class ArmForeignLiveChecks {
             if(fixture<2)require(tank(arm.payload().view(arm).tiles.values().iterator().next()).getFluidAmount()==1275,"reload keeps exactly one fluid owner");else require(((net.minecraft.inventory.IInventory)arm.payload().view(arm).tiles.values().iterator().next()).getStackInSlot(0).getCount()==3,"machine reload keeps exactly three diamonds");
             world.notifyBlockUpdate(ROOT,world.getBlockState(ROOT),world.getBlockState(ROOT),3);stage=2;ticks=0;return false;
         }
+        if(stage==10){
+            if(ticks==40)for(int i=0;i<2;i++)world.notifyNeighborsOfStateChange(ROOT.east(i*4).up(),world.getBlockState(ROOT.east(i*4).up()).getBlock(),false);
+            if(ticks<60)return false;
+            for(int i=0;i<2;i++){
+                BlockPos mount=ROOT.east(i*4);GearTileEntity owner=((GearTileEntity)world.getTileEntity(mount)).loadedController();
+                require(TransferNetworkCompat.component(world.getTileEntity(mount.up(2))),"conduit still on the tip "+i);
+                IFluidHandler input=owner.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,EnumFacing.DOWN);
+                int accepted=input==null?0:input.fill(new FluidStack(FluidRegistry.WATER,100),true);
+                if(accepted>0)continue;
+                TileEntity pipe=world.getTileEntity(mount.up(2)),tipTile=world.getTileEntity(mount.up());
+                IFluidHandler direct=pipe.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,EnumFacing.DOWN);
+                require(false,"arm delivers fluid into the conduit on its tip "+(i==0?"thermaldynamics":"mekanism")+" error="+owner.error()
+                        +" tipExposes="+tipTile.hasCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,EnumFacing.UP)+" tipClass="+tipTile.getClass().getSimpleName()
+                        +" conduitFace="+(direct!=null)+" directFill="+(direct==null?-1:direct.fill(new FluidStack(FluidRegistry.WATER,10),false))+" input="+(input!=null)+" "+pipeState(pipe));
+            }
+            System.out.println("[vandorlabs] arm-foreign conduits PASS tip ducts and pipes stay native and receive fluid");
+            System.out.println("[vandorlabs] arm-foreign PASS");return true;
+        }
         if(stage==2){if(!visual||ticks<20)return false;arm.target(true);stage=3;ticks=0;return false;}
         if(stage==3){if(arm.progress()!=1||ArmTransactions.locked(world,ROOT)||ArmTransactions.locked(world,SOURCE))return false;
             require(arm.payload()!=null&&arm.payload().materialized(),"reverse restores native tank");if(fixture<2)require(tank(world.getTileEntity(SOURCE)).getFluidAmount()==1275,"native endpoint owns exactly 1275mB after reverse");else require(((net.minecraft.inventory.IInventory)world.getTileEntity(SOURCE)).getStackInSlot(0).getCount()==3,"native machine owns exactly three diamonds after reverse");
             System.out.println("[vandorlabs] arm-foreign case PASS size="+(fixture%2==0?"regular":"Large")+" real click asynchronous journals rotated fill simulation snapshot reload client fullness reverse exact fluid");
-            if(++fixture==4){MachineBlockChecks.run(world);System.out.println("[vandorlabs] arm-foreign PASS");return true;}stage=0;ticks=0;clicked=false;visual=false;
+            if(++fixture==4){MachineBlockChecks.run(world);conduits(world,player);stage=10;ticks=0;return false;}stage=0;ticks=0;clicked=false;visual=false;
         }
         return false;
+    }
+    private static String pipeState(TileEntity pipe){
+        StringBuilder out=new StringBuilder();
+        IFluidHandler up=pipe.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,EnumFacing.UP);
+        out.append(" upFace=").append(up!=null).append(" upFill=").append(up==null?-1:up.fill(new FluidStack(FluidRegistry.WATER,10),false));
+        out.append(" nbt=").append(pipe.writeToNBT(new NBTTagCompound()).toString(),0,Math.min(300,pipe.writeToNBT(new NBTTagCompound()).toString().length()));
+        return out.toString();
+    }
+    /** A duct or pipe on an arm's tip is a transfer connection, never a captured payload. */
+    private static void conduits(WorldServer world,EntityPlayerMP player)throws Exception{
+        String[][] kinds={{"thermaldynamics","cofh.thermaldynamics.duct.tiles.","Fluid"},{"mekanism","mekanism.common.tile.transmitter.TileEntityMechanicalPipe",""}};
+        for(BlockPos pos:BlockPos.getAllInBox(ROOT.add(-3,-2,-3),ROOT.add(7,5,3)))world.setBlockState(pos,pos.getY()==ROOT.getY()-1?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);
+        for(int index=0;index<kinds.length;index++){
+            String[] kind=kinds[index];BlockPos mount=ROOT.east(index*4),tip=mount.up(2);
+            player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(GearRegistry.GEAR_SWING_ARM,2));
+            for(BlockPos support:new BlockPos[]{mount.down(),mount})require(player.getHeldItemMainhand().onItemUse(player,world,support,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"arm for "+kind[0]);
+            IBlockState conduit=null;
+            scan:for(Block b:Block.REGISTRY)if(b.getRegistryName().getResourceDomain().equals(kind[0]))for(int meta=0;meta<16;meta++){
+                IBlockState state;try{state=b.getStateFromMeta(meta);}catch(RuntimeException unusedMeta){continue;}if(!b.hasTileEntity(state))continue;
+                TileEntity tile=b.createTileEntity(world,state);String name=tile==null?"":tile.getClass().getName();
+                if(name.startsWith(kind[1])&&name.contains(kind[2])&&TransferNetworkCompat.component(tile)){conduit=state;break scan;}
+            }
+            require(conduit!=null,"installed "+kind[0]+" fluid conduit");
+            player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(conduit.getBlock(),1,conduit.getBlock().getMetaFromState(conduit)));
+            require(player.getHeldItemMainhand().onItemUse(player,world,mount.up(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"ordinary conduit placement on the arm tip");
+            IBlockState placed=world.getBlockState(tip);TileEntity tile=world.getTileEntity(tip);
+            require(TransferNetworkCompat.component(tile),"conduit placed on the tip "+placed);
+            GearTileEntity arm=(GearTileEntity)world.getTileEntity(mount);require(arm.rebuild(),"arm forms under "+kind[0]);arm.operator(player);
+            NBTTagCompound settings=arm.settings();settings.setInteger(ArmResource.CHOICE,ArmResource.FLUID.ordinal());arm.configure(settings);
+            require(ArmPayload.discover(arm.loadedController(),player)==null,"conduit on the tip is not captured "+kind[0]);
+            require(world.getBlockState(tip)==placed&&world.getTileEntity(tip)==tile,"conduit stays in place "+kind[0]);
+            if(index==1){
+                // A Mekanism pipe accepts fluid only when its network has a destination.
+                IBlockState tank=null;
+                scan:for(Block b:Block.REGISTRY)if(b.getRegistryName().getResourceDomain().equals("mekanism"))for(int meta=0;meta<16;meta++){
+                    IBlockState state;try{state=b.getStateFromMeta(meta);}catch(RuntimeException unusedMeta){continue;}if(!b.hasTileEntity(state))continue;
+                    TileEntity candidate=b.createTileEntity(world,state);if(candidate!=null&&candidate.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank")){tank=state;break scan;}
+                }
+                require(tank!=null,"installed Mekanism fluid tank destination");
+                player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(tank.getBlock(),1,tank.getBlock().getMetaFromState(tank)));
+                require(player.getHeldItemMainhand().onItemUse(player,world,tip,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"pipe destination tank");
+            }
+            world.notifyNeighborsOfStateChange(mount,world.getBlockState(mount).getBlock(),true);world.notifyNeighborsOfStateChange(mount.up(),world.getBlockState(mount.up()).getBlock(),true);
+            player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        }
     }
     private static java.awt.image.BufferedImage renderTank(Minecraft mc,TileEntity tile){
         net.minecraft.client.shader.Framebuffer frame=new net.minecraft.client.shader.Framebuffer(128,128,true);
