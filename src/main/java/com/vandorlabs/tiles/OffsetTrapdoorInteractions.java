@@ -17,7 +17,7 @@ public final class OffsetTrapdoorInteractions {
     private static TileEntityProgrammableTrapdoor leaf(World world,BlockPos pos) {
         if(!world.isBlockLoaded(pos) || !(world.getBlockState(pos).getBlock() instanceof BlockProgrammableTrapdoor))return null;
         TileEntity tile=world.getTileEntity(pos);
-        return tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).isSliding() || ((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor)?(TileEntityProgrammableTrapdoor)tile:null;
+        return tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).splitCenter() || ((TileEntityProgrammableTrapdoor)tile).isSliding() || ((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor)?(TileEntityProgrammableTrapdoor)tile:null;
     }
     public static AxisAlignedBB bounds(TileEntityProgrammableTrapdoor leaf) {
         return leaf.getWorld().getBlockState(leaf.getPos()).getBoundingBox(leaf.getWorld(),leaf.getPos()).offset(leaf.getPos());
@@ -26,7 +26,7 @@ public final class OffsetTrapdoorInteractions {
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
         for(BlockPos pos:TrapdoorRayCandidates.positions(start,end)) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null)continue;
-            RayTraceResult hit=leaf instanceof TileEntityProgrammableDiagonalTrapdoor
+            RayTraceResult hit=leaf.splitCenter() || leaf instanceof TileEntityProgrammableDiagonalTrapdoor
                     ? world.getBlockState(pos).collisionRayTrace(world,pos,start,end)
                     : bounds(leaf).calculateIntercept(start,end);
             if(hit!=null && start.squareDistanceTo(hit.hitVec)<distance) {
@@ -55,8 +55,10 @@ public final class OffsetTrapdoorInteractions {
         scanCollisions(world,query,boxes);
     }
     private static void addLeafCollision(World world,BlockPos pos,AxisAlignedBB query,List<AxisAlignedBB> boxes){
-        TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null||!leaf.isSliding()&&!leaf.isCover()&&!leaf.isSlideOverSurface())return;
-        AxisAlignedBB box=bounds(leaf);if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);
+        TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null||!leaf.splitCenter()&&!leaf.isSliding()&&!leaf.isCover()&&!leaf.isSlideOverSurface())return;
+        if(leaf.splitCenter()){
+            for(AxisAlignedBB box:BlockProgrammableTrapdoor.splitBoxes(world.getBlockState(pos),leaf))if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);
+        }else{AxisAlignedBB box=bounds(leaf);if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);}
     }
     private static void scanCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
         for(BlockPos pos:BlockPos.getAllInBoxMutable(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {

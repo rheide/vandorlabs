@@ -8,7 +8,7 @@ public final class TrapdoorGroupMotion {
     public final double hinge,travel;
 
     public TrapdoorGroupMotion(int mode,int column,int width) {
-        int split=(width+1)/2;
+        double split=width/2D;
         high=mode==HIGH_EDGE||mode==SPLIT&&column>=split;
         int distance=high?width-1-column:column;
         hinge=TrapdoorGeometry.OPEN_HINGE-distance;

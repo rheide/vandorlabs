@@ -34,6 +34,8 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     protected BlockPos partner,squareOrigin;
     // Immutable membership can be shared by loaded leaves after exact validation.
     protected java.util.List<BlockPos> assembly=java.util.Collections.emptyList();
+    protected boolean assemblyCenterSplit;
+    public boolean splitCenter(){return assemblyCenterSplit&&!assembly.isEmpty()&&!(this instanceof TileEntityProgrammableDiagonalTrapdoor);}
     protected double assemblyHinge=1/16D,assemblyTravel=15/16D;
     public double motionHinge(){return assembly.isEmpty()?com.vandorlabs.render.TrapdoorGeometry.OPEN_HINGE:assemblyHinge;}
     public double motionTravel(){return assembly.isEmpty()?15/16D:assemblyTravel;}
@@ -61,10 +63,32 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         double[][] out=new double[8][];writeCorners(state,pose,out);return out;
     }
     public void writeCorners(net.minecraft.block.state.IBlockState state,double pose,double[][] out) {
-        int turns=BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING));
+        writePieceCorners(state,pose,0,out);
+    }
+    public void writePieceCorners(IBlockState state,double pose,int piece,double[][] out){
+        int turns=(BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING))+2*piece)&3;
+        if(splitCenter()){
+            double phase=sliding&&slideOverSurface?Math.max(0,(pose-.25)/.75):pose;
+            com.vandorlabs.render.TrapdoorGeometry.writeCorners(position,sliding,turns,phase,motionHinge(),motionTravel(),.5,out);
+            if(sliding&&slideOverSurface){double lift=(1+com.vandorlabs.render.TrapdoorGeometry.EDGE_CLEARANCE-com.vandorlabs.render.TrapdoorGeometry.low(position))*Math.min(1,pose*4);for(double[] vertex:out)vertex[1]+=lift;}
+            return;
+        }
         if(cover)com.vandorlabs.render.TrapdoorGeometry.writeCoverCorners(position,sliding,turns,pose,coverOverhang(),out);
         else if(sliding && slideOverSurface)com.vandorlabs.render.TrapdoorGeometry.writeSurfaceCorners(position,turns,pose,motionHinge(),motionTravel(),out);
         else com.vandorlabs.render.TrapdoorGeometry.writeCorners(position,sliding,turns,pose,motionHinge(),motionTravel(),out);
+    }
+    private int splitCollisionKey;private BlockPos splitCollisionPos;private double splitCollisionHinge,splitCollisionTravel;
+    private java.util.List<AxisAlignedBB> splitCollision;
+    public java.util.List<AxisAlignedBB> splitCollisionBoxes(IBlockState state){
+        int key=position|(sliding?4:0)|(slideOverSurface?8:0)|(BlockProgrammableTrapdoor.quarterTurns(state.getValue(BlockProgrammableTrapdoor.FACING))<<4)|(state.getValue(BlockProgrammableTrapdoor.OPEN)?64:0);
+        double hinge=motionHinge(),travel=motionTravel();
+        if(splitCollision!=null&&splitCollisionKey==key&&hinge==splitCollisionHinge&&travel==splitCollisionTravel&&pos.equals(splitCollisionPos))return splitCollision;
+        java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>(2);
+        for(int part=0;part<2;part++){
+            double[][] points=new double[8][3];writePieceCorners(state,state.getValue(BlockProgrammableTrapdoor.OPEN)?1:0,part,points);
+            double[] b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(points);boxes.add(new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]).offset(pos));
+        }
+        splitCollisionKey=key;splitCollisionHinge=hinge;splitCollisionTravel=travel;splitCollisionPos=pos.toImmutable();return splitCollision=java.util.Collections.unmodifiableList(boxes);
     }
     /** Opposing covers meet at the two-cell opening's seam without overshooting it. */
     public double coverOverhang() {
@@ -210,13 +234,13 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         squareOrigin=null;
     }
     protected void clearAssembly() {
-        java.util.List<BlockPos> old=assembly;assembly=java.util.Collections.emptyList();
+        assemblyCenterSplit=false;java.util.List<BlockPos> old=assembly;assembly=java.util.Collections.emptyList();
         if(world==null)return;
         for(BlockPos cell:old)if(world.isBlockLoaded(cell)) {
             TileEntity raw=world.getTileEntity(cell);
             if(raw instanceof TileEntityProgrammableTrapdoor) {
                 TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)raw;
-                if(leaf.assembly.equals(old)){leaf.assembly=java.util.Collections.emptyList();leaf.sync();}
+                if(leaf.assembly.equals(old)){leaf.assembly=java.util.Collections.emptyList();leaf.assemblyCenterSplit=false;leaf.sync();}
             }
         }
     }
@@ -355,7 +379,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         if(squareOrigin!=null)tag.setLong("TrapdoorSquare",squareOrigin.toLong());
         net.minecraft.nbt.NBTTagList members=new net.minecraft.nbt.NBTTagList();
         for(BlockPos cell:assembly)members.appendTag(new net.minecraft.nbt.NBTTagLong(cell.toLong()));
-        tag.setTag("TrapdoorAssembly",members);tag.setDouble("TrapdoorHinge",assemblyHinge);tag.setDouble("TrapdoorTravel",assemblyTravel);return tag;
+        tag.setBoolean("TrapdoorCenterSplit",assemblyCenterSplit);tag.setTag("TrapdoorAssembly",members);tag.setDouble("TrapdoorHinge",assemblyHinge);tag.setDouble("TrapdoorTravel",assemblyTravel);return tag;
     }
     @Override public void readFromNBT(NBTTagCompound tag) {tag=com.vandorlabs.redstone.TransmitterSlots.normalize(tag);
         ChannelList previousChannels=channels;
@@ -373,6 +397,7 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
         java.util.List<BlockPos> savedAssembly=new java.util.ArrayList<>();net.minecraft.nbt.NBTTagList members=tag.getTagList("TrapdoorAssembly",4);
         if(members.tagCount()<=64)for(int i=0;i<members.tagCount();i++)savedAssembly.add(BlockPos.fromLong(((net.minecraft.nbt.NBTTagLong)members.get(i)).getLong()));
         assembly=java.util.Collections.unmodifiableList(savedAssembly);
+        assemblyCenterSplit=tag.getBoolean("TrapdoorCenterSplit");
         assemblyHinge=Math.max(-8,Math.min(8,tag.getDouble("TrapdoorHinge")));
         assemblyTravel=Math.max(15/16D,Math.min(8,tag.getDouble("TrapdoorTravel")));
         if(world!=null && !world.isRemote && !previousChannels.equals(channels))
@@ -383,6 +408,9 @@ public class TileEntityProgrammableTrapdoor extends TileEntity implements Redsto
     @Override public void onLoad() {
         super.onLoad();OffsetTrapdoorInteractions.INDEX.add(this);DeferredTileLoad.schedule(this,()->{
             repairLinks();reconnectLoadedGroup();
+            // Previous saves stored integer-biased odd splits. Re-resolve only
+            // after every linked identity is loaded, using the deferred path.
+            if(!(this instanceof TileEntityProgrammableDiagonalTrapdoor)&&!assembly.isEmpty()&&group().size()==assembly.size())setGroupOpening(groupOpening());
             RedstoneChannels.register(this);evaluatePower(false);
         });
     }

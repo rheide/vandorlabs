@@ -18,7 +18,7 @@ public final class OffsetTrapdoorSelection {
         RayTraceResult hit=event.getTarget();
         if(hit!=null && hit.typeOfHit==RayTraceResult.Type.BLOCK && isOffset(event.getPlayer().world.getTileEntity(hit.getBlockPos())))event.setCanceled(true);
     }
-    private static boolean isOffset(TileEntity tile) {return tile instanceof com.vandorlabs.segmented.SegmentedDoorTile || tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).hasLoadedController() || tile instanceof TileEntityCanopy || tile!=null && MovedDoorInteractions.isMoved(tile.getWorld(),tile.getPos()) || tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).isSliding() || ((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor);}
+    private static boolean isOffset(TileEntity tile) {return tile instanceof com.vandorlabs.segmented.SegmentedDoorTile || tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).hasLoadedController() || tile instanceof TileEntityCanopy || tile!=null && MovedDoorInteractions.isMoved(tile.getWorld(),tile.getPos()) || tile instanceof TileEntityProgrammableTrapdoor && (((TileEntityProgrammableTrapdoor)tile).splitCenter() || ((TileEntityProgrammableTrapdoor)tile).isSliding() || ((TileEntityProgrammableTrapdoor)tile).isCover() || ((TileEntityProgrammableTrapdoor)tile).isSlideOverSurface() || tile instanceof TileEntityProgrammableDiagonalTrapdoor);}
     @SubscribeEvent(priority=EventPriority.HIGHEST) public void tick(TickEvent.ClientTickEvent event) {
         Minecraft mc=Minecraft.getMinecraft();
         if(event.phase==TickEvent.Phase.START && mc.world!=null && mc.playerController!=null && mc.playerController.getClass()==net.minecraft.client.multiplayer.PlayerControllerMP.class)
@@ -63,6 +63,9 @@ public final class OffsetTrapdoorSelection {
         }else if(MovedDoorInteractions.isMoved(mc.world,tile.getPos())) {
             for(AxisAlignedBB box:MovedDoorInteractions.bounds(mc.world,tile.getPos()))if(box.grow(.001).contains(selected.hitVec))
                 RenderGlobal.drawSelectionBoundingBox(box.grow(.002).offset(-x,-y,-z),0,0,0,.4F);
+        }else if(tile instanceof TileEntityProgrammableTrapdoor&&((TileEntityProgrammableTrapdoor)tile).splitCenter()){
+            for(AxisAlignedBB box:com.vandorlabs.blocks.BlockProgrammableTrapdoor.splitBoxes(mc.world.getBlockState(tile.getPos()),(TileEntityProgrammableTrapdoor)tile))
+                if(box.grow(.002).contains(selected.hitVec))RenderGlobal.drawSelectionBoundingBox(box.grow(.002).offset(-x,-y,-z),0,0,0,.4F);
         }else RenderGlobal.drawSelectionBoundingBox(OffsetTrapdoorInteractions.bounds((TileEntityProgrammableTrapdoor)tile).grow(.002).offset(-x,-y,-z),0,0,0,.4F);
         GlStateManager.depthMask(true);GlStateManager.enableTexture2D();GlStateManager.disableBlend();GlStateManager.popMatrix();
     }

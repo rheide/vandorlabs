@@ -27,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkMesh();checkSurfaceSlide();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
+        checkOpeningPackets();checkMesh();checkSurfaceSlide();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkSurfaceSlide() {
@@ -249,6 +249,18 @@ final class TrapdoorChecks {
         message.toBytes(bytes);com.vandorlabs.network.MessageProgrammableTrapdoor copy=new com.vandorlabs.network.MessageProgrammableTrapdoor();copy.fromBytes(bytes);
         io.netty.buffer.ByteBuf again=io.netty.buffer.Unpooled.buffer();copy.toBytes(again);
         require(bytes.readerIndex()==bytes.writerIndex() && io.netty.buffer.ByteBufUtil.equals(bytes,0,again,0,again.writerIndex()),"packet round trip");bytes.release();again.release();
+    }
+    private static void checkOpeningPackets(){
+        for(int mode=-1;mode<=6;mode++)for(int layout=0;layout<=2;layout++){
+            io.netty.buffer.ByteBuf bytes=io.netty.buffer.Unpooled.buffer(),again=io.netty.buffer.Unpooled.buffer();
+            com.vandorlabs.network.MessageProgrammableTrapdoor original=new com.vandorlabs.network.MessageProgrammableTrapdoor(new BlockPos(1,2,3),4,2,true,2,17)
+                .withGroupOpening(mode).withTextureLayout(layout).withChannels(com.vandorlabs.redstone.ChannelList.of(17,29));
+            original.toBytes(bytes);int length=bytes.readableBytes();
+            com.vandorlabs.network.MessageProgrammableTrapdoor decoded=new com.vandorlabs.network.MessageProgrammableTrapdoor();decoded.fromBytes(bytes);decoded.toBytes(again);
+            require(bytes.readerIndex()==length&&io.netty.buffer.ByteBufUtil.equals(bytes,0,again,0,length),"opening and layout preserve exact packet round trip");
+            require(net.minecraftforge.fml.relauncher.ReflectionHelper.<Integer,com.vandorlabs.network.MessageProgrammableTrapdoor>getPrivateValue(com.vandorlabs.network.MessageProgrammableTrapdoor.class,decoded,"groupOpening")==mode,"opening option retains stable old index or appended cardinal index");
+            require(decoded.getRedstoneChannels().equals(com.vandorlabs.redstone.ChannelList.of(17,29)),"extension retains bounded channel list");bytes.release();again.release();
+        }
     }
     private static void checkPairs() {
         for(int position=0;position<3;position++)for(boolean slide:new boolean[]{false,true})for(EnumFacing direction:EnumFacing.HORIZONTALS) {

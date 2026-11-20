@@ -22,13 +22,16 @@ public final class TrapdoorGeometry {
     }
     /** Fill eight caller-owned rows, allocating missing rows; no array is retained. */
     public static void writeCorners(int position,boolean sliding,int quarterTurns,double pose,double hinge,double travel,double[][] out) {
+        writeCorners(position,sliding,quarterTurns,pose,hinge,travel,1,out);
+    }
+    public static void writeCorners(int position,boolean sliding,int quarterTurns,double pose,double hinge,double travel,double span,double[][] out) {
         double low=low(position), high=low+THICKNESS;
         double p=Math.max(0,Math.min(1,pose));
         double angle=(position==TOP?-1:1)*p*Math.PI/2;
         double pivot=position==TOP?high:low;
         double cos=Math.cos(angle),sin=Math.sin(angle);
         for(int i=0;i<8;i++) {
-            double x=(i&1)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE,y=(i&2)==0?low:high,z=(i&4)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE;
+            double x=(i&1)==0?EDGE_CLEARANCE:1-EDGE_CLEARANCE,y=(i&2)==0?low:high,z=(i&4)==0?EDGE_CLEARANCE:span-EDGE_CLEARANCE;
             if(sliding) z-=p*travel;
             else {
                 double dy=y-pivot;

@@ -30,6 +30,9 @@ public final class TrapdoorOptionsTest {
         need(TrapdoorOptions.positionLabel(true,0).equals("Width: Half"));
         need(TrapdoorOptions.positionLabel(true,2).equals("Width: Full"));
         need(TrapdoorOptions.heightLabel(2).equals("Height: Half"));
+        int mode=0;for(int expected:new int[]{3,4,5,6,0}){mode=TrapdoorOptions.cycleGroupOpening(mode,1);need(mode==expected);}
+        need(TrapdoorOptions.cycleGroupOpening(0,-1)==6);
+        for(int cardinal=3;cardinal<=6;cardinal++)need(!TrapdoorOptions.groupOpeningLabel(cardinal).contains("edge"));
         System.out.println("Trapdoor dialog contracts PASS cycles="+cases+" reverse wrap old-flags offset-eligibility labels");
     }
 }

@@ -5,6 +5,7 @@ unset VANDOR_LABS_COUPLER_ARTICULATION_CHECKS_ONLY VANDOR_LABS_RAMP_AXIS_CHECKS_
 unset VANDOR_LABS_LIGHT_CHECKS_ONLY VANDOR_LABS_LIGHT_PICKER_CHECKS_ONLY
 unset VANDOR_LABS_CREATIVE_CATALOG_CHECKS_ONLY VANDOR_LABS_RENDER_REGRESSION_CHECKS_ONLY VANDOR_LABS_EXISTING_VEHICLE_HOVER_CHECKS_ONLY
 unset VANDOR_LABS_REDSTONE_TAB_DISPATCH_ONLY VANDOR_LABS_HOVER_CONTROLS_CHECKS_ONLY VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY VANDOR_LABS_VEHICLE_TAXI_CHECKS_ONLY VANDOR_LABS_VEHICLE_RAMP_CHECKS_ONLY VANDOR_LABS_ARM_LIVE_CHECKS
+unset VANDOR_LABS_TRAPDOOR_GROUP_ONLY
 unset VANDOR_LABS_HORIZONTAL_DOOR_ONLY
 unset VANDOR_LABS_ARM_START_ONLY VANDOR_LABS_ARM_PUSH_ONLY VANDOR_LABS_SIGN_CHECKS_ONLY
 unset VANDOR_LABS_TAXI_VISIBILITY_CHECKS_ONLY VANDOR_LABS_TAXI_LANDING27_CHECKS_ONLY
@@ -368,6 +369,9 @@ case "${1:-}" in
         elif [ "$TARGET" = arm-resource-indicator ]; then
             PREFIX=arm_resource_indicator_
             export VANDOR_LABS_ARM_RESOURCE_INDICATOR_ONLY=true
+        elif [ "$TARGET" = trapdoor-groups ]; then
+            PREFIX=trapdoor_groups_
+            export VANDOR_LABS_TRAPDOOR_GROUP_ONLY=true
         elif [ "$TARGET" = horizontal-door ]; then
             PREFIX=horizontal_door_
             export VANDOR_LABS_HORIZONTAL_DOOR_ONLY=true
@@ -487,6 +491,13 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-resource-indicator ]; then
         grep -q "arm-resource-indicator PASS" "$RUN_OUT/client.log"
         echo "Arm resource indicator checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = trapdoor-groups ]; then
+        grep -q "trapdoor-groups PASS" "$RUN_OUT/client.log"
+        grep -q "trapdoor-groups-render PASS" "$RUN_OUT/client.log"
+        grep -q "trapdoor-groups-dialog PASS" "$RUN_OUT/client.log"
+        echo "Trapdoor geometric group checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = horizontal-door ]; then

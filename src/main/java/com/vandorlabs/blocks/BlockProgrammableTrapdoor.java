@@ -8,6 +8,7 @@ import net.minecraft.block.*;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.*;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.item.*;
 import net.minecraft.nbt.NBTTagCompound;
@@ -41,9 +42,33 @@ public class BlockProgrammableTrapdoor extends BlockTrapDoor {
     }
     @Override public AxisAlignedBB getBoundingBox(IBlockState state,IBlockAccess world,BlockPos pos) {
         TileEntity raw=world.getTileEntity(pos);TileEntityProgrammableTrapdoor tile=raw instanceof TileEntityProgrammableTrapdoor?(TileEntityProgrammableTrapdoor)raw:null;
+        if(tile!=null&&tile.splitCenter()){
+            java.util.List<AxisAlignedBB> parts=splitBoxes(state,tile);
+            return parts.get(0).union(parts.get(1)).offset(-pos.getX(),-pos.getY(),-pos.getZ());
+        }
         int position=tile==null?(state.getValue(HALF)==DoorHalf.TOP?2:0):tile.getPosition();
         double[] b=com.vandorlabs.render.DiagonalTrapdoorGeometry.bounds(tile==null?TrapdoorGeometry.corners(position,false,quarterTurns(state.getValue(FACING)),state.getValue(OPEN)?1:0):tile.corners(state,state.getValue(OPEN)?1:0));
         return new AxisAlignedBB(b[0],b[1],b[2],b[3],b[4],b[5]);
+    }
+    public static java.util.List<AxisAlignedBB> splitBoxes(IBlockState state,TileEntityProgrammableTrapdoor tile){
+        return tile.splitCollisionBoxes(state);
+    }
+
+    @Override public void addCollisionBoxToList(IBlockState state,World world,BlockPos pos,AxisAlignedBB query,java.util.List<AxisAlignedBB> boxes,Entity entity,boolean actual){
+        TileEntity raw=world.getTileEntity(pos);
+        if(raw instanceof TileEntityProgrammableTrapdoor&&((TileEntityProgrammableTrapdoor)raw).splitCenter()){
+            for(AxisAlignedBB box:splitBoxes(state,(TileEntityProgrammableTrapdoor)raw))if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);
+        }else super.addCollisionBoxToList(state,world,pos,query,boxes,entity,actual);
+    }
+    @Override public RayTraceResult collisionRayTrace(IBlockState state,World world,BlockPos pos,Vec3d start,Vec3d end){
+        TileEntity raw=world.getTileEntity(pos);
+        if(!(raw instanceof TileEntityProgrammableTrapdoor)||!((TileEntityProgrammableTrapdoor)raw).splitCenter())return super.collisionRayTrace(state,world,pos,start,end);
+        RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
+        for(AxisAlignedBB box:splitBoxes(state,(TileEntityProgrammableTrapdoor)raw)){
+            RayTraceResult hit=box.calculateIntercept(start,end);
+            if(hit!=null&&start.squareDistanceTo(hit.hitVec)<distance){distance=start.squareDistanceTo(hit.hitVec);nearest=new RayTraceResult(hit.hitVec,hit.sideHit,pos);}
+        }
+        return nearest;
     }
     @Override public net.minecraft.block.state.BlockFaceShape getBlockFaceShape(IBlockAccess world,IBlockState state,BlockPos pos,EnumFacing face){return BlockFaceShape.UNDEFINED;}
     @Override public boolean isPassable(IBlockAccess world,BlockPos pos){return world.getBlockState(pos).getValue(OPEN);}

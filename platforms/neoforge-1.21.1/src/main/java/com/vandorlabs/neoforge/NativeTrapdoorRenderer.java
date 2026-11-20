@@ -24,11 +24,18 @@ public final class NativeTrapdoorRenderer {
     private static final ThreadLocal<Scratch> SCRATCH=ThreadLocal.withInitial(Scratch::new);
     private static final class Scratch {final double[][] moving=new double[8][3],frame=new double[8][3];}
     private static final class Draw {
+        final Draw[] pieces;
         final int texture,layout,joins;final boolean rawTile,tall;final TrapdoorLeafPose pose;
         final NativeTrapdoorVisual.ArtworkBounds artwork;final NativeTrapdoorMesh mesh;final boolean framed;
         Draw(NativeTrapdoorVisual visual,BlockPos owner,Materials materials){
             var cfg=visual.settings().choices();texture=cfg.texture;layout=cfg.layout();rawTile=cfg.tileTexture;
             joins=visual.frameJoins();pose=visual.pose();artwork=visual.artwork();tall=pose.diagonal&&pose.position!=2;
+            if(pose.splitCenter){
+                pieces=new Draw[2];
+                for(int part=0;part<2;part++)pieces[part]=new Draw(new NativeTrapdoorVisual(visual.settings(),pose.piece(part),visual.artwork(),visual.frameJoins(),visual.open()),owner,materials);
+                mesh=null;framed=false;return;
+            }
+            pieces=null;
             boolean widthX=pose.diagonal?(pose.turns&1)==0:(pose.turns&1)!=0;
             int originU=widthX?owner.getX():owner.getZ(),originV=tall?owner.getY():widthX?owner.getZ():owner.getX();
             var surface=materials.surface(texture);double[][] closed=new double[8][3],uv=new double[8][3];pose.write(0,true,closed);
@@ -39,7 +46,7 @@ public final class NativeTrapdoorRenderer {
                     :NativeTrapdoorMesh.surface(TrapdoorSurfaceLayout.build(uv,first,first+2,tiled,tiled&&surface.doorArtwork()&&layout!=2,surface.customDoor()),surface.upper(),surface.lower());
         }
         boolean matches(NativeTrapdoorVisual visual){var cfg=visual.settings().choices();return texture==cfg.texture&&layout==cfg.layout()&&rawTile==cfg.tileTexture&&joins==visual.frameJoins()&&pose.equals(visual.pose())&&artwork.equals(visual.artwork());}
-        long bytes(){return 1024+mesh.retainedBytes();}
+        long bytes(){return 1024+(pieces==null?mesh.retainedBytes():pieces[0].bytes()+pieces[1].bytes());}
     }
     public interface Materials {NativeTrapdoorMaterials.Surface surface(int choice);com.vandorlabs.segmented.SegmentedPanelMesh.Texture metal();}
     public static final class Bake {
@@ -66,7 +73,12 @@ public final class NativeTrapdoorRenderer {
         emitAt(bake,visual,owner,progress,poses.last(),buffers.getBuffer(NativePanelPlaybackRenderer.frameRenderType()),light,overlay);
     }
     public static void emitAt(Bake bake,NativeTrapdoorVisual visual,BlockPos owner,double progress,PoseStack.Pose matrix,com.mojang.blaze3d.vertex.VertexConsumer target,int light,int overlay){
-        var draw=bake.draw(visual,owner);var scratch=SCRATCH.get();draw.pose.write(progress,false,scratch.moving);
+        var draw=bake.draw(visual,owner);
+        if(draw.pieces!=null){for(var part:draw.pieces)emitPiece(bake,part,progress,matrix,target,light,overlay);}
+        else emitPiece(bake,draw,progress,matrix,target,light,overlay);
+    }
+    private static void emitPiece(Bake bake,Draw draw,double progress,PoseStack.Pose matrix,com.mojang.blaze3d.vertex.VertexConsumer target,int light,int overlay){
+        var scratch=SCRATCH.get();draw.pose.write(progress,false,scratch.moving);
         draw.mesh.emit(scratch.moving,scratch.frame,matrix,target,light,overlay);
         if(!draw.framed)NativeTrapdoorMesh.emitEdges(scratch.moving,draw.pose.diagonal,draw.tall,bake.materials.metal(),matrix,target,light,overlay);
     }
