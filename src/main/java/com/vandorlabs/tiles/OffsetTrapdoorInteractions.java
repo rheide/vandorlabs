@@ -22,9 +22,23 @@ public final class OffsetTrapdoorInteractions {
     public static AxisAlignedBB bounds(TileEntityProgrammableTrapdoor leaf) {
         return leaf.getWorld().getBlockState(leaf.getPos()).getBoundingBox(leaf.getWorld(),leaf.getPos()).offset(leaf.getPos());
     }
+    /** Leaves of a group spanning up to 8 cells can move that far from their own block. */
+    private static final double REACH=8;
+    private static boolean indexed(World world){
+        Class<?> type=world.getClass();
+        return type==net.minecraft.world.WorldServer.class||type==net.minecraft.world.WorldServerMulti.class
+                ||type.getName().equals("net.minecraft.client.multiplayer.WorldClient")
+                ||world instanceof com.vandorlabs.vehicle.VehicleWorld;
+    }
+    private static Iterable<BlockPos> rayOwners(World world,Vec3d start,Vec3d end){
+        if(!indexed(world))return TrapdoorRayCandidates.positions(start,end);
+        List<BlockPos> owners=new java.util.ArrayList<>();
+        for(TileEntityProgrammableTrapdoor tile:INDEX.query(world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(REACH)))owners.add(tile.getPos());
+        return owners;
+    }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
-        for(BlockPos pos:TrapdoorRayCandidates.positions(start,end)) {
+        for(BlockPos pos:rayOwners(world,start,end)) {
             TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null)continue;
             RayTraceResult hit=leaf.splitCenter() || leaf instanceof TileEntityProgrammableDiagonalTrapdoor
                     ? world.getBlockState(pos).collisionRayTrace(world,pos,start,end)
@@ -39,11 +53,8 @@ public final class OffsetTrapdoorInteractions {
         addCollisions(event.getWorld(),event.getAabb(),event.getCollisionBoxesList());
     }
     public static void addCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
-        Class<?> type=world.getClass();
-        if(type==net.minecraft.world.WorldServer.class||type==net.minecraft.world.WorldServerMulti.class
-                ||type.getName().equals("net.minecraft.client.multiplayer.WorldClient")
-                ||world instanceof com.vandorlabs.vehicle.VehicleWorld){
-            List<TileEntityProgrammableTrapdoor> candidates=INDEX.query(world,query.grow(2,1,2));
+        if(indexed(world)){
+            List<TileEntityProgrammableTrapdoor> candidates=INDEX.query(world,query.grow(REACH));
             // Preserve getAllInBoxMutable's X-fastest traversal order.
             if(candidates.size()>1)candidates.sort((a,b)->{int z=Integer.compare(a.getPos().getZ(),b.getPos().getZ());if(z!=0)return z;int y=Integer.compare(a.getPos().getY(),b.getPos().getY());return y!=0?y:Integer.compare(a.getPos().getX(),b.getPos().getX());});
             for(TileEntityProgrammableTrapdoor tile:candidates)addLeafCollision(world,tile.getPos(),query,boxes);
