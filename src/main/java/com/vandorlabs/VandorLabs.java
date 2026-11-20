@@ -111,6 +111,7 @@ public class VandorLabs {
 
     @EventHandler
     public void serverStarted(net.minecraftforge.fml.common.event.FMLServerStartedEvent event){
+        if(Boolean.getBoolean("vandorlabs.armMachineChecks"))com.vandorlabs.vehicle.MachineBlockChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0));
         if(!System.getProperty("vandorlabs.blockRenameCheck","").isEmpty())try{com.vandorlabs.persistence.BlockRenameChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0),System.getProperty("vandorlabs.blockRenameCheck"));}catch(Exception failure){throw new IllegalStateException("Block rename migration checks",failure);}
         if(!System.getProperty("vandorlabs.retiredGlassCheck","").isEmpty())try{com.vandorlabs.persistence.RetiredGlassChecks.run(net.minecraftforge.fml.common.FMLCommonHandler.instance().getMinecraftServerInstance().getWorld(0),System.getProperty("vandorlabs.retiredGlassCheck"));}catch(Exception failure){throw new IllegalStateException("Retired glass migration checks",failure);}
         if(Boolean.getBoolean("vandorlabs.reactorGlassChecks")){

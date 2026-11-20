@@ -103,6 +103,9 @@ final class ArmResourceTransfer {
                     || !root.equals(mounting) && ArmTransactions.lockedForResourceTransfer(world,mounting)) return unavailable;
             BlockPos contact = mounting.offset(arm.mountDirection(),arm.assembly().columnHeight());
             EnumFacing face = side;
+            ArmPayload carried=arm.payload();
+            if(carried!=null&&!carried.materialized())return carried.transferCapturedTank(arm,
+                    contact.subtract(root).subtract(carried.offset),side,capability,unavailable,action);
             if (!arm.isFixedMount()) {
                 ArmResourceTransfer mapping = arm.resourceConnection();
                 mapping.map(arm);

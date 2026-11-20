@@ -206,6 +206,8 @@ public final class VehicleRotation {
                         data.setInteger("posX",offset.getX());data.setInteger("posZ",offset.getZ());
                         try{data.setString("rotation",Rotation.values()[(Rotation.valueOf(data.getString("rotation")).ordinal()+turns)&3].name());}catch(IllegalArgumentException ignored){}
                     }
+                } else if(domain.equals("thermalexpansion")) {
+                    MachineBlockCompat.rotate(view.getTileEntity(before.pos),data,rotation);
                 } else if(domain.equals("immersiveengineering")) {
                     VehicleForeignCompat.rotate(view.getTileEntity(before.pos),data,rotation);
                     facing(data,"facing",rotation,false);
