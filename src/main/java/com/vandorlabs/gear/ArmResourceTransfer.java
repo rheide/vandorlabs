@@ -91,6 +91,7 @@ final class ArmResourceTransfer {
         mappedPayload = payload;
     }
 
+    @SuppressWarnings("unchecked")
     private <T, R> R send(ArmResource type, EnumFacing side, Capability<T> capability, R unavailable, Function<T,R> action) {
         return ArmResource.forward(input,unavailable,() -> {
             if (side != input.mountDirection().getOpposite()) return unavailable;
@@ -124,7 +125,7 @@ final class ArmResourceTransfer {
             TileEntity target = world.getTileEntity(contact);
             if (target == null || target.isInvalid() || target.getWorld() != world || !contact.equals(target.getPos())) return unavailable;
             T destination = target.getCapability(capability,face);
-            if(destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)destination=capability.cast(com.vandorlabs.ports.ResourcePortConnections.itemHandler(target,face,contact.offset(face)));
+            if(destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)destination=(T)com.vandorlabs.ports.ResourcePortConnections.itemHandler(target,face,contact.offset(face));
             return destination == null ? unavailable : action.apply(destination);
         });
     }
