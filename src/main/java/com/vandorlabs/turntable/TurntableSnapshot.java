@@ -44,7 +44,7 @@ public final class TurntableSnapshot {
             BlockPos pos=mutable.toImmutable();if(world.isAirBlock(pos))continue;
             if(cells.size()>=MAX_BLOCKS)throw new IllegalArgumentException("Turntables can capture at most 4096 blocks; reduce the scan height or contents");
             VehicleService.permission(actor,pos);
-            if(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
+            if(com.vandorlabs.world.ProtectionProbe.refused(new BlockEvent.BreakEvent(world,pos,world.getBlockState(pos),actor)))throw new IllegalArgumentException("A protection rule prevented scanning at "+pos);
             TileEntity tile=world.getTileEntity(pos);
             boundaries.check(pos,world.getBlockState(pos),tile);
             NBTTagCompound saved=tile==null?null:tile.writeToNBT(new NBTTagCompound());

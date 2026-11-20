@@ -86,6 +86,8 @@ public final class ArmStoredSections {
     }
     @net.minecraftforge.fml.common.eventhandler.SubscribeEvent
     public static void breaking(net.minecraftforge.event.world.BlockEvent.BreakEvent event){
+        // Moving assemblies (vehicles, arms, copies) only probe protection; nothing is removed.
+        if(com.vandorlabs.world.ProtectionProbe.active())return;
         TileEntity raw=event.getWorld().getTileEntity(event.getPos());if(!(raw instanceof GearTileEntity))return;
         GearTileEntity root=((GearTileEntity)raw).loadedController();if(root==null||!root.hasStoredSections())return;
         event.setCanceled(true);event.getPlayer().sendStatusMessage(new net.minecraft.util.text.TextComponentString("Extend the arms before removing arm sections"),true);

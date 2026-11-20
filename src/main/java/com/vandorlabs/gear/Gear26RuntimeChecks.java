@@ -320,6 +320,12 @@ public final class Gear26RuntimeChecks {
             require(scan.result!=null,"physical capture discovers the retracted arm: "+scan.error);
             BlockPos capturedRoot=root.subtract(scan.origin);
             require(scan.result.at(capturedRoot).hasTileKey("ArmStoredSections",10),"physical capture retains the displaced section on its controller");
+            // Assembly probes protection with break events; displaced sections must not refuse them.
+            for(com.vandorlabs.vehicle.VehicleStructure.Cell cell:scan.result.cells){
+                BlockPos at=scan.origin.add(cell.pos);
+                require(!com.vandorlabs.world.ProtectionProbe.refused(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,at,world.getBlockState(at),actor)),"vehicle protection probe accepts every retracted-arm cell "+at);
+            }
+            require(net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.world.BlockEvent.BreakEvent(world,root,world.getBlockState(root),actor)),"a real player break of a retracted arm section stays refused");
             require(empty?scan.result.at(capturedRoot.down())==null:scan.result.at(capturedRoot.down()).state.getBlock()==Blocks.CHEST,"physical capture distinguishes an empty arm cell from a materialized endpoint");
         }
         BlockPos local=new BlockPos(3,3,3),shift=local.subtract(root),attachment=local.down(retracted?1:2);java.util.List<com.vandorlabs.vehicle.VehicleStructure.Cell> cells=new java.util.ArrayList<>();
