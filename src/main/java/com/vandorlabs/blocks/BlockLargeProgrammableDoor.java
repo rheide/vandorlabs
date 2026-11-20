@@ -26,10 +26,15 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         raw=world.getTileEntity(anchor);
         return raw instanceof TileEntityLargeProgrammableDoor && ((TileEntityLargeProgrammableDoor)raw).isAnchor() && world.getBlockState(anchor).getBlock()==this?(TileEntityLargeProgrammableDoor)raw:null;
     }
-    public static boolean isOpenHorizontal(World world,BlockPos pos,IBlockState state){
+    public static boolean isOpenPassage(World world,BlockPos pos,IBlockState state){
         if(!(state.getBlock() instanceof BlockLargeProgrammableDoor)||!state.getValue(OPEN))return false;
         TileEntityLargeProgrammableDoor root=((BlockLargeProgrammableDoor)state.getBlock()).root(world,pos);
-        return root!=null&&root.isHorizontal()&&world.getBlockState(root.getPos()).getValue(OPEN);
+        return root!=null&&world.getBlockState(root.getPos()).getValue(OPEN);
+    }
+    /** Retained for integrations which specifically query horizontal hatches. */
+    public static boolean isOpenHorizontal(World world,BlockPos pos,IBlockState state){
+        if(!isOpenPassage(world,pos,state))return false;
+        return ((BlockLargeProgrammableDoor)state.getBlock()).root(world,pos).isHorizontal();
     }
     @Override protected boolean canPairWith(BlockVandorDoor other){return false;}
     @Override public IBlockState getStateFromMeta(int meta){return getDefaultState().withProperty(FACING,EnumFacing.getHorizontal(meta&3)).withProperty(OPEN,(meta&4)!=0).withProperty(POWERED,(meta&8)!=0);}

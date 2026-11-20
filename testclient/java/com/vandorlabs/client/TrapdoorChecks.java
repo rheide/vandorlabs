@@ -27,7 +27,7 @@ final class TrapdoorChecks {
         block=(BlockProgrammableTrapdoor)ModBlocks.PROGRAMMABLE_TRAPDOOR;
         ForgeRegistries.BLOCKS.register(block);
         item=new ItemProgrammableTrapdoor(block);ForgeRegistries.ITEMS.register(item.setRegistryName(block.getRegistryName()));
-        checkOpeningPackets();checkMesh();checkSurfaceSlide();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
+        checkOpeningPackets();checkMesh();checkSurfaceSlide();checkVanillaAlignment();checkNextBlockAndLayout();checkCoverGroupSafety();checkClickPlacement();checkSettings();checkPairs();checkSquares();checkRectangles();checkDistantHalves();checkPower();checkCopy();checkOffsetNeighborsAndCopy();checkOpposingCovers();checkPermissions();checkRecipe();
         System.out.println("PASS: Programmable Trapdoor ("+assertions+" assertions; geometry, texture, placement, pairs, all square orders, channels, copying, permissions)");
     }
     private static void checkSurfaceSlide() {
@@ -318,6 +318,21 @@ final class TrapdoorChecks {
             block.breakBlock(world,removed,world.getBlockState(removed));world.setBlockState(removed,Blocks.AIR.getDefaultState(),2);
             require(first.group().size()<=4,"broken rectangle remained linked");
             place(world,removed,1,slide);require(first.group().size()==size[0]*size[1],"rectangle repair failed");
+        }
+    }
+    private static void checkDistantHalves(){
+        for(int width:new int[]{3,5,7})for(EnumFacing along:new EnumFacing[]{EnumFacing.EAST,EnumFacing.SOUTH})for(int position=0;position<3;position++)for(boolean sliding:new boolean[]{false,true}){
+            NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);BlockPos base=new BlockPos(10,100,10);
+            for(int i=0;i<width;i++)place(world,base.offset(along,i),position,sliding);
+            TileEntityProgrammableTrapdoor middle=(TileEntityProgrammableTrapdoor)world.getTileEntity(base.offset(along,width/2));middle.setGroupOpening(0);middle.requestOpen(true);
+            AxisAlignedBB moved=BlockProgrammableTrapdoor.splitBoxes(world.getBlockState(middle.getPos()),middle).get(0);
+            Vec3d point=new Vec3d((moved.minX+moved.maxX)/2,(moved.minY+moved.maxY)/2,(moved.minZ+moved.maxZ)/2);
+            java.util.List<AxisAlignedBB> boxes=new java.util.ArrayList<>();OffsetTrapdoorInteractions.addCollisions(world,new AxisAlignedBB(point.x-.002,point.y-.002,point.z-.002,point.x+.002,point.y+.002,point.z+.002),boxes);
+            require(!boxes.isEmpty(),"far split half collision width="+width+" along="+along+" position="+position+" sliding="+sliding);
+            Vec3d a=sliding?point.addVector(0,.5,0):point.addVector(along.getFrontOffsetX()*.5,0,along.getFrontOffsetZ()*.5);
+            Vec3d b=sliding?point.addVector(0,-.5,0):point.addVector(-along.getFrontOffsetX()*.5,0,-along.getFrontOffsetZ()*.5);
+            RayTraceResult hit=OffsetTrapdoorInteractions.trace(world,a,b);
+            require(hit!=null&&middle.getPos().equals(hit.getBlockPos()),"far split half ray width="+width+" along="+along+" position="+position+" sliding="+sliding);
         }
     }
     private static void checkPower() {

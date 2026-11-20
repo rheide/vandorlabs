@@ -18,25 +18,33 @@ final class TrapdoorGroupRuntimeChecks {
   ItemStack held=player.getHeldItemMainhand();float yaw=player.rotationYaw;boolean sneak=player.isSneaking();
   try{
    player.setSneaking(false);
-   for(EnumFacing along:new EnumFacing[]{EnumFacing.EAST,EnumFacing.SOUTH})for(int position=0;position<3;position++)for(boolean sliding:new boolean[]{false,true}){
-    for(BlockPos at:BlockPos.getAllInBox(BASE.add(-2,-2,-2),BASE.add(5,3,5)))world.setBlockToAir(at);
-    TileEntityProgrammableTrapdoor[] leaves=new TileEntityProgrammableTrapdoor[3];
+   for(EnumFacing along:new EnumFacing[]{EnumFacing.EAST,EnumFacing.SOUTH})for(int width:new int[]{3,5,7})for(int position=0;position<3;position++)for(boolean sliding:new boolean[]{false,true}){
+    for(BlockPos at:BlockPos.getAllInBox(BASE.add(-2,-2,-2),BASE.add(9,3,9)))world.setBlockToAir(at);
+    TileEntityProgrammableTrapdoor[] leaves=new TileEntityProgrammableTrapdoor[width];
     player.rotationYaw=along.getOpposite().getHorizontalAngle();
-    for(int i=0;i<3;i++){
+    for(int i=0;i<width;i++){
      BlockPos at=BASE.offset(along,i);world.setBlockState(at.down(),Blocks.STONE.getDefaultState(),2);
      NBTTagCompound settings=new NBTTagCompound();settings.setInteger("housingTexture",4);settings.setInteger("TrapdoorPosition",position);settings.setBoolean("TrapdoorSliding",sliding);settings.setInteger("TrapdoorTrigger",0);
      ItemStack stack=new ItemStack(ModBlocks.PROGRAMMABLE_TRAPDOOR,2);stack.setTagInfo("BlockEntityTag",settings);player.setHeldItem(EnumHand.MAIN_HAND,stack);
      need(stack.getItem().onItemUse(player,world,at.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,1,.5F)==EnumActionResult.SUCCESS,"ordinary supported placement member="+i);
      leaves[i]=(TileEntityProgrammableTrapdoor)world.getTileEntity(at);
     }
-    TileEntityProgrammableTrapdoor center=leaves[1];need(center.group().size()==3,"actual placement joins all three");center.setGroupOpening(0);
+    TileEntityProgrammableTrapdoor center=leaves[width/2];need(center.group().size()==width,"actual placement joins all three");center.setGroupOpening(0);
     need(center.writeToNBT(new NBTTagCompound()).getBoolean("TrapdoorCenterSplit"),"odd middle cell contains two geometric half-leaves");
-    for(TileEntityProgrammableTrapdoor leaf:leaves)need(Math.abs(leaf.motionTravel()-(1.5-1D/16))<1e-9,"all split leaves use exactly half the group span");
+    for(TileEntityProgrammableTrapdoor leaf:leaves)need(Math.abs(leaf.motionTravel()-(width/2D-1D/16))<1e-9,"all split leaves use exactly half the group span");
     center.requestOpen(true);
-    AxisAlignedBB shaft=new AxisAlignedBB(BASE.offset(along)).shrink(.25).expand(0,3,0);
+    AxisAlignedBB shaft=new AxisAlignedBB(BASE.offset(along,width/2)).shrink(.25).expand(0,3,0);
     need(world.getCollisionBoxes(null,shaft).isEmpty(),"open centre has no phantom full-cell collision axis="+along+" position="+position+" sliding="+sliding+" shaft="+shaft+" hits="+world.getCollisionBoxes(null,shaft));
-    Vec3d top=new Vec3d(BASE.offset(along)).addVector(.5,4,.5),bottom=top.addVector(0,-4,0);
+    Vec3d top=new Vec3d(BASE.offset(along,width/2)).addVector(.5,4,.5),bottom=top.addVector(0,-4,0);
     need(OffsetTrapdoorInteractions.trace(world,top,bottom)==null,"open centre has no phantom selected leaf");
+    AxisAlignedBB moved=BlockProgrammableTrapdoor.splitBoxes(world.getBlockState(center.getPos()),center).get(0);
+    Vec3d physical=new Vec3d((moved.minX+moved.maxX)/2,(moved.minY+moved.maxY)/2,(moved.minZ+moved.maxZ)/2);
+    AxisAlignedBB touch=new AxisAlignedBB(physical.x-.002,physical.y-.002,physical.z-.002,physical.x+.002,physical.y+.002,physical.z+.002);
+    need(!world.getCollisionBoxes(null,touch).isEmpty(),"distant moved half remains physical width="+width+" along="+along+" position="+position+" sliding="+sliding);
+    Vec3d a=sliding?physical.addVector(0,.5,0):physical.addVector(along.getFrontOffsetX()*.5,0,along.getFrontOffsetZ()*.5);
+    Vec3d b=sliding?physical.addVector(0,-.5,0):physical.addVector(-along.getFrontOffsetX()*.5,0,-along.getFrontOffsetZ()*.5);
+    RayTraceResult selected=OffsetTrapdoorInteractions.trace(world,a,b);
+    need(selected!=null&&selected.getBlockPos().equals(center.getPos()),"distant moved half remains selectable width="+width+" along="+along+" position="+position+" sliding="+sliding);
     for(int mode:new int[]{3,4,5,6}){
      center.setGroupOpening(mode);need(center.groupOpening()==mode,"cardinal choice publishes mode="+mode);
      EnumFacing expected=mode==3?EnumFacing.NORTH:mode==4?EnumFacing.EAST:mode==5?EnumFacing.SOUTH:EnumFacing.WEST;
@@ -47,10 +55,10 @@ final class TrapdoorGroupRuntimeChecks {
     need(center.writeToNBT(new NBTTagCompound()).getBoolean("TrapdoorCenterSplit")&&center.groupOpening()==0,"geometric split survives saved world data");
    }
   }finally{player.rotationYaw=yaw;player.setSneaking(sneak);player.setHeldItem(EnumHand.MAIN_HAND,held);}
-  System.out.println("[vandorlabs] trapdoor-groups PASS actual placement axes=2 positions=3 rotating/sliding true centre/cardinal directions/saved geometry/ray clearance");
+  System.out.println("[vandorlabs] trapdoor-groups PASS actual placement axes=2 widths=3/5/7 positions=3 rotating/sliding true centre/cardinal directions/saved geometry/ray clearance");
  }
  static void rendered(net.minecraft.client.Minecraft mc){
-  TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)mc.world.getTileEntity(BASE.south());
+  TileEntityProgrammableTrapdoor leaf=(TileEntityProgrammableTrapdoor)mc.world.getTileEntity(BASE.south(3));
   need(leaf!=null&&leaf.writeToNBT(new NBTTagCompound()).getBoolean("TrapdoorCenterSplit"),"client sees the split middle tile");
   net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(8192);buffer.begin(7,BlockSurfaceFormat.get());
   net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite(ScreenHousingTextures.fullTexture(leaf.getHousingTexture()));
@@ -69,17 +77,17 @@ final class TrapdoorGroupRuntimeChecks {
    mc.getIntegratedServer().callFromMainThread(()->{
     net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
     actor.setGameType(net.minecraft.world.GameType.CREATIVE);actor.capabilities.isFlying=true;actor.sendPlayerAbilities();actor.inventory.currentItem=0;actor.connection.sendPacket(new net.minecraft.network.play.server.SPacketHeldItemChange(0));actor.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);actor.inventoryContainer.detectAndSendChanges();
-    actor.connection.setPlayerLocation(BASE.getX()+3,BASE.getY()+1,BASE.getZ()-3,0,0);return null;
+    actor.connection.setPlayerLocation(BASE.getX()+3,BASE.getY()+1,BASE.getZ()+3,0,0);return null;
    }).get();uiStage=1;return false;
   }
   if(uiStage==1){
    if(mc.playerController.getCurrentGameType()!=net.minecraft.world.GameType.CREATIVE||!mc.player.capabilities.isFlying||mc.player.inventory.currentItem!=0||!mc.player.getHeldItemMainhand().isEmpty()||mc.player.getDistanceSq(BASE)>64)return false;
-   net.minecraft.tileentity.TileEntity observed=mc.world.getTileEntity(BASE.south());
+   net.minecraft.tileentity.TileEntity observed=mc.world.getTileEntity(BASE.south(3));
    if(!(observed instanceof TileEntityProgrammableTrapdoor)||!((TileEntityProgrammableTrapdoor)observed).writeToNBT(new NBTTagCompound()).getBoolean("TrapdoorCenterSplit"))return false;
    rendered(mc);
    mc.getIntegratedServer().callFromMainThread(()->{
     net.minecraft.entity.player.EntityPlayerMP actor=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
-    actor.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR,actor.world,BASE.getX(),BASE.getY(),BASE.getZ()+1);return null;
+    actor.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_PROGRAMMABLE_TRAPDOOR,actor.world,BASE.getX(),BASE.getY(),BASE.getZ()+3);return null;
    }).get();uiStage=2;return false;
   }
   if(!(mc.currentScreen instanceof GuiProgrammableTrapdoor))return false;
@@ -89,7 +97,7 @@ final class TrapdoorGroupRuntimeChecks {
   if(uiStage==2){need(opening.displayString.equals("Opening: Center split"),"loaded centre caption");gui.mouseClicked(opening.x+6,opening.y+6,0);gui.mouseReleased(opening.x+6,opening.y+6,0);uiStage=3;uiTicks=0;return false;}
   if(uiTicks<15)return false;
   int expected=uiStage==3?3:uiStage==4?0:6;
-  int actual=mc.getIntegratedServer().callFromMainThread(()->((TileEntityProgrammableTrapdoor)mc.getIntegratedServer().getWorld(0).getTileEntity(BASE.south())).groupOpening()).get();
+  int actual=mc.getIntegratedServer().callFromMainThread(()->((TileEntityProgrammableTrapdoor)mc.getIntegratedServer().getWorld(0).getTileEntity(BASE.south(3))).groupOpening()).get();
   need(actual==expected,"actual dialog packet opening="+actual+" expected="+expected);
   need(opening.displayString.equals(com.vandorlabs.ui.TrapdoorOptions.groupOpeningLabel(expected)),"cardinal label matches transmitted option");
   if(uiStage<5){gui.mouseClicked(opening.x+6,opening.y+6,1);gui.mouseReleased(opening.x+6,opening.y+6,1);uiStage++;uiTicks=0;return false;}

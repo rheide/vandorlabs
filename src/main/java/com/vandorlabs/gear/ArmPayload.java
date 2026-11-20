@@ -405,7 +405,7 @@ public final class ArmPayload {
         boolean tipOnly=platform==null&&!arm.isLandingAssembly()&&!arm.isExtendedTrackStroke()
                 &&arm.getBlockType() instanceof GearBlock&&GearAssembly.isExtender(world.getBlockState(arm.getPos()));
         if(platform!=null){if(sourceView==null)for(BlockPos member:arm.members())VehicleService.permission(actor,member);if(arm.carryLoad()&&!arm.canCarryLoad())throw new IllegalArgumentException("Carry load requires vertical movement");}
-        if(world.isAirBlock(start)||com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenHorizontal(world,start,world.getBlockState(start)))return null;
+        if(world.isAirBlock(start)||com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,start,world.getBlockState(start)))return null;
         ArmCorePayload.Discovery cores=new ArmCorePayload.Discovery(world);ArmCorePayload.Group exactCore=platform==null?cores.at(start):null;Set<ArmCorePayload.Group> queuedCores=new HashSet<>();
         ArrayDeque<BlockPos> pending=new ArrayDeque<>();Set<BlockPos> visited=new LinkedHashSet<>();if(exactCore==null)pending.add(start);else{pending.addAll(exactCore.cells);queuedCores.add(exactCore);}
         int minX=start.getX(),minY=start.getY(),minZ=start.getZ(),maxX=minX,maxY=minY,maxZ=minZ;
@@ -438,7 +438,7 @@ public final class ArmPayload {
             for(EnumFacing side:EnumFacing.values()){
                 if(foot&&side==arm.mountDirection())continue;
                 BlockPos next=at.offset(side);if(physicalMember(arm,next))continue;
-                if(GearAssembly.loaded(world,next)&&com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenHorizontal(world,next,world.getBlockState(next)))continue;
+                if(GearAssembly.loaded(world,next)&&com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,next,world.getBlockState(next)))continue;
                 if(platform!=null&&!volume.contains(next)){if(arm.carryLoad()&&!platform.contains(at)&&GearAssembly.loaded(world,next)&&!world.isAirBlock(next)&&VehicleScan.touches(world,at,state,side))throw new IllegalArgumentException("Load extends beyond the selected platform or height");continue;}
                 if(VehicleScan.touches(world,at,state,side))pending.add(next);
             }

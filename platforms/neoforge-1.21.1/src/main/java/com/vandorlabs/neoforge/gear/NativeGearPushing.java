@@ -38,7 +38,7 @@ final class NativeGearPushing {
             while(!pending.isEmpty()){
                 var at=pending.removeFirst();if(!visited.add(at)||arm.members().contains(at))continue;loaded(arm,at);
                 NativeGearSnapshot.Cell cell;
-                if(virtual.containsKey(at))cell=virtual.get(at);else if(own.contains(at))cell=null;else{var state=world.getBlockState(at);boolean free=state.isAir()||NativeLargeDoorLifecycle.isOpenHorizontal(world,at,state);if(!free&&(!ordinary(state)||world.getBlockEntity(at)!=null))throw new IllegalArgumentException("The complete outward push path must contain at most twelve movable solid blocks");cell=free?null:new NativeGearSnapshot.Cell(at,state,null);}
+                if(virtual.containsKey(at))cell=virtual.get(at);else if(own.contains(at))cell=null;else{var state=world.getBlockState(at);boolean free=state.isAir()||NativeLargeDoorLifecycle.isOpenPassage(world,at,state);if(!free&&(!ordinary(state)||world.getBlockEntity(at)!=null))throw new IllegalArgumentException("The complete outward push path must contain at most twelve movable solid blocks");cell=free?null:new NativeGearSnapshot.Cell(at,state,null);}
                 if(cell==null)continue;
                 if(originals.add(cell.pos)){if(originals.size()>MAX_BLOCKS)throw new IllegalArgumentException("The complete outward push path must contain at most twelve movable solid blocks");movable(arm,cell,true);}
                 permission(arm,at);permission(arm,at.relative(arm.mount()));pushed.put(at,cell);pending.add(at.relative(arm.mount()));

@@ -58,7 +58,7 @@ final class JoinedArms {
             BlockPos at=position.apply(arm.localCell(x,y,z));
             if(!GearAssembly.loaded(world,at))throw new IllegalArgumentException("Load the entire joined platform");
             IBlockState state=world.getBlockState(at);
-            if(state.getBlock().isAir(state,world,at)||BlockLargeProgrammableDoor.isOpenHorizontal(world,at,state))continue;
+            if(state.getBlock().isAir(state,world,at)||BlockLargeProgrammableDoor.isOpenPassage(world,at,state))continue;
             if(!arm.members().contains(at)||arm.storedSections!=null&&arm.storedSections.at(at.subtract(arm.getPos()))!=null)
                 occupied.add(new JoinedPlatform.Cell(x,z));
         }

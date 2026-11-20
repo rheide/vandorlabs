@@ -36,7 +36,7 @@ public final class NativeDoorRenderer implements BlockEntityRenderer<NativeProgr
   private final Function<String,BakedModel> models;private final Map<String,TextureAtlasSprite> textures;private final NativeFlatWallModel.Bake materials;private final NativeReaderRenderer.Bake readers;
   private final com.google.common.cache.Cache<String,Base> bases=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(BUDGET).weigher((String id,Base value)->128+id.length()*2+value.quads.stream().mapToInt(q->96+q.getVertices().length*4).sum()).build();
   private final com.google.common.cache.Cache<PartKey,Part> parts=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(BUDGET).weigher((PartKey key,Part value)->256+key.model.length()*2+value.bytes()).build();
-  private final Map<DrawKey,Draws> snapshots=new HashMap<>();private final ArrayDeque<DrawKey> order=new ArrayDeque<>();private int retained;private long meshesBuilt;
+  private final IdentityHashMap<NativeProgrammableDoorEntity.Visual,Draws[]> snapshots=new IdentityHashMap<>();private final ArrayDeque<DrawKey> order=new ArrayDeque<>();private int retained;private long meshesBuilt;
   private final NativeDoorMesh[][][] pads=new NativeDoorMesh[2][2][2];
   Bake(Function<String,BakedModel> models,Function<Material,TextureAtlasSprite> textures,NativeFlatWallModel.Bake materials){var selected=new HashMap<String,BakedModel>();for(String id:NativeDoorAssets.models())selected.put(id,Objects.requireNonNull(models.apply(id),id));for(String id:com.vandorlabs.neoforge.credentials.NativeReaderAssets.models())selected.put(id,Objects.requireNonNull(models.apply(id),id));this.models=Map.copyOf(selected)::get;
    var sprites=new HashMap<String,TextureAtlasSprite>();for(var descriptor:NativeDoorAssets.textures())sprites.put(descriptor.id(),textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(descriptor.id()))));for(int shade=0;shade<com.vandorlabs.tiles.GlassTextures.IDS.length;shade++)for(int tint=0;tint<4;tint++){String name=com.vandorlabs.tiles.GlassTextures.texture(shade,1,tint).substring("vandorlabs:blocks/programmable_glass/low/".length()),id="vandorlabs:glass-palette/"+name;sprites.put(id,textures.apply(new Material(TextureAtlas.LOCATION_BLOCKS,ResourceLocation.parse(id))));}this.textures=Map.copyOf(sprites);this.materials=materials;this.readers=new NativeReaderRenderer.Bake(this.models,textures);TextureAtlasSprite buttons=sprite("vandorlabs:door-artwork/blocks/control_buttons"),wall=sprite("vandorlabs:door-artwork/blocks/dark_wall_panel");for(int sliding=0;sliding<2;sliding++)for(int far=0;far<2;far++)for(int side=0;side<2;side++)pads[sliding][far][side]=NativeDoorMesh.numericPad(buttons,wall,sliding!=0,far!=0,side==0?SpaceDoorControlPanel.Side.LEFT:SpaceDoorControlPanel.Side.RIGHT);}
@@ -61,7 +61,25 @@ public final class NativeDoorRenderer implements BlockEntityRenderer<NativeProgr
   private Draw build(NativeDoorSettings cfg,boolean paired,boolean right,SpaceDoorControlPanel.Side side,double scale,int columns,int rows){Part fixed=part(cfg,paired,right,0,scale,columns,rows),leaf=part(cfg,paired,right,1,scale,columns,rows),pane=null;boolean glass=cfg.faceTexture()<0&&(cfg.door().design==0||cfg.door().design==5||cfg.door().design==6||cfg.door().design==11||cfg.door().design==15||cfg.door().design==16||cfg.door().design==29);if(glass||cfg.faceTexture()>=0&&(ModernFinishCatalog.option(cfg.faceTexture()).id().equals("utility_door_reactor")||NativeDoorArtworkPolicy.artwork(cfg.faceTexture()).light()))pane=part(cfg,paired,right,2,scale,columns,rows);NativeDoorMesh pad=side==SpaceDoorControlPanel.Side.NONE?null:pads[cfg.door().sliding?1:0][cfg.depth()==2?1:0][side==SpaceDoorControlPanel.Side.LEFT?0:1];int cost=1024+fixed.bytes()+leaf.bytes()+(pane==null?0:pane.bytes());return new Draw(fixed,leaf,pane,pad,cost);}
   private Draw draw(NativeProgrammableDoorEntity.Visual visual){return draw(visual,false);}
   private Draw draw(NativeProgrammableDoorEntity.Visual visual,boolean right){return draw(visual,right,1,1);}
-  private Draw draw(NativeProgrammableDoorEntity.Visual visual,boolean right,int columns,int rows){var key=new DrawKey(visual,columns,rows);var cached=snapshots.get(key);if(cached==null){var cfg=visual.settings();Draw first,second=null;if(visual.large()){boolean controls=visual.side()!=SpaceDoorControlPanel.Side.NONE&&cfg.panelMode()>0;first=build(cfg,true,false,controls&&!cfg.door().sliding?SpaceDoorControlPanel.Side.LEFT:SpaceDoorControlPanel.Side.NONE,1.5,columns,rows);second=build(cfg,true,true,controls&&cfg.door().sliding?SpaceDoorControlPanel.Side.RIGHT:SpaceDoorControlPanel.Side.NONE,1.5,columns,rows);}else{var state=visual.state();first=build(cfg,state.getValue(NativeProgrammableDoorBlock.PAIRED),state.getValue(NativeProgrammableDoorBlock.HINGE)==DoorHingeSide.LEFT,visual.side(),1,columns,rows);}int cost=1024+first.cost+(second==null?0:second.cost);cached=new Draws(first,second,cost);while(!order.isEmpty()&&(retained+cost>BUDGET||snapshots.size()>=1024)){var removed=snapshots.remove(order.removeFirst());retained-=removed.cost;}if(cost<=BUDGET){snapshots.put(key,cached);order.addLast(key);retained+=cost;}}return visual.large()&&right?cached.second:cached.first;}
+  private Draw draw(NativeProgrammableDoorEntity.Visual visual,boolean right,int columns,int rows){
+   int slot=columns*3+rows;var slots=snapshots.get(visual);var cached=slots==null?null:slots[slot];
+   if(cached==null){
+    var cfg=visual.settings();Draw first,second=null;
+    if(visual.large()){
+     boolean controls=visual.side()!=SpaceDoorControlPanel.Side.NONE&&cfg.panelMode()>0;
+     first=build(cfg,true,false,controls&&!cfg.door().sliding?SpaceDoorControlPanel.Side.LEFT:SpaceDoorControlPanel.Side.NONE,1.5,columns,rows);
+     second=build(cfg,true,true,controls&&cfg.door().sliding?SpaceDoorControlPanel.Side.RIGHT:SpaceDoorControlPanel.Side.NONE,1.5,columns,rows);
+    }else{var state=visual.state();first=build(cfg,state.getValue(NativeProgrammableDoorBlock.PAIRED),state.getValue(NativeProgrammableDoorBlock.HINGE)==DoorHingeSide.LEFT,visual.side(),1,columns,rows);}
+    int cost=1152+first.cost+(second==null?0:second.cost);cached=new Draws(first,second,cost);
+    while(!order.isEmpty()&&(retained+cost>BUDGET||snapshots.size()>=1024)){
+     var old=order.removeFirst();var entries=snapshots.get(old.visual());int index=old.columns()*3+old.rows();retained-=entries[index].cost;entries[index]=null;
+     boolean empty=true;for(var value:entries)if(value!=null){empty=false;break;}if(empty)snapshots.remove(old.visual());
+    }
+    if(cost<=BUDGET){snapshots.computeIfAbsent(visual,key->new Draws[9])[slot]=cached;order.addLast(new DrawKey(visual,columns,rows));retained+=cost;}
+   }
+   return visual.large()&&right?cached.second:cached.first;
+  }
+
   long snapshotBytes(){return retained;}
   long meshBuilds(){return meshesBuilt;}
  }

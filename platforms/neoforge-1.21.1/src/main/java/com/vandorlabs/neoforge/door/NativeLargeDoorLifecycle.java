@@ -22,10 +22,13 @@ public final class NativeLargeDoorLifecycle {
         if(!loaded(level,pos)||!(level.getBlockState(pos).getBlock() instanceof NativeLargeDoorBlock block)||!(level.getBlockEntity(pos) instanceof NativeLargeDoorEntity part))return null;BlockPos anchor=part.anchorPos();
         return loaded(level,anchor)&&level.getBlockState(anchor).is(block)&&level.getBlockEntity(anchor) instanceof NativeLargeDoorEntity root&&root.isAnchor()?root:null;
     }
-    public static boolean isOpenHorizontal(Level level,BlockPos pos,BlockState state){
+    public static boolean isOpenPassage(Level level,BlockPos pos,BlockState state){
         if(!(state.getBlock() instanceof NativeLargeDoorBlock)||!state.getValue(NativeLargeDoorBlock.OPEN))return false;
         NativeLargeDoorEntity root=root(level,pos);
-        return root!=null&&root.isHorizontal()&&root.getBlockState().getValue(NativeLargeDoorBlock.OPEN);
+        return root!=null&&root.getBlockState().getValue(NativeLargeDoorBlock.OPEN);
+    }
+    public static boolean isOpenHorizontal(Level level,BlockPos pos,BlockState state){
+        return isOpenPassage(level,pos,state)&&root(level,pos).isHorizontal();
     }
     public static boolean complete(Level level,NativeLargeDoorEntity root){
         BlockPos anchor=root.getBlockPos();if(!loaded(level,anchor)||!root.isAnchor()||!(level.getBlockState(anchor).getBlock() instanceof NativeLargeDoorBlock block)||level.getBlockEntity(anchor)!=root)return false;Direction face=root.getBlockState().getValue(NativeLargeDoorBlock.FACING);
