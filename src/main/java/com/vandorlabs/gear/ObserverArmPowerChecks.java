@@ -32,7 +32,14 @@ public final class ObserverArmPowerChecks {
         client.gameSettings.pauseOnLostFocus=false;
         if(stage==1&&!dialogDone){dialogDone=com.vandorlabs.client.ObserverDialogLiveChecks.tick(client,ROOT.up(2));return false;}
         client.displayGuiScreen(null);
-        require(++ticks<700,"expected phase completes");
+        if(++ticks>=700){
+            net.minecraft.world.WorldServer world=client.getIntegratedServer().getWorld(0);StringBuilder state=new StringBuilder();GearTileEntity a=(GearTileEntity)world.getTileEntity(ROOT);
+            state.append(" progress=").append(a==null?-1:a.progress()).append(" target=").append(a==null?"":String.valueOf(a.target())).append(" error=").append(a==null?"":a.error()).append(" payload=").append(a==null||a.payload()==null?"none":"materialized="+a.payload().materialized());
+            if(a!=null&&a.payload()!=null&&a.payload().materialized())for(BlockPos at:a.payload().placedCells(a)){TileEntity c=world.getTileEntity(at);
+                if(c instanceof TileEntityConstructor){TileEntityConstructor o=(TileEntityConstructor)c;BlockPos port=o.observerPowerPort();
+                    state.append(" observer=").append(at).append(" port=").append(port).append(" below=").append(world.getBlockState(port.down()).getBlock().getRegistryName()).append(" powered=").append(o.observerPowered()).append(" activity=").append(o.activity());}}
+            require(false,"expected phase completes"+state);
+        }
         return client.getIntegratedServer().callFromMainThread(()->advance(
                 client.getIntegratedServer().getWorld(0),client.getIntegratedServer().getPlayerList().getPlayers().get(0))).get();
     }

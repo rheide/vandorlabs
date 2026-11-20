@@ -35,7 +35,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
                 ||!world.getMinecraftServer().isCallingFromMinecraftThread()||world.getTileEntity(pos)!=this
                 ||!observer()||!formed()||com.vandorlabs.gear.ArmTransactions.locked(world,pos))return false;
         BlockPos inlet=member==null?pos:member.getPos();
-        return inlet.getY()==pos.getY()-(inverted()?structureHeight()-1:0)
+        return inlet.equals(observerPowerPort())
                 &&(member==null||member.machineOwner()==this&&!com.vandorlabs.gear.ArmTransactions.locked(world,inlet));
     }
     public boolean observerPowered(){
@@ -50,10 +50,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
     private boolean findObserverConnection(){
         if(!formed()||!observer())return false;
-        int y=inverted()?structureHeight()-1:0;
-        for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
-            BlockPos at=cell(x,y,z).down();
-            if(!world.isBlockLoaded(at,false))continue;
+        BlockPos at=observerPowerPort().down();
+        if(world.isBlockLoaded(at,false)){
             TileEntity source=world.getTileEntity(at);
             if(source instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)source).powerInputConnected():source!=null&&com.vandorlabs.ports.EnergyEndpointPresence.connected(source,EnumFacing.UP))return true;
         }
@@ -197,6 +195,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     private boolean changing;private IBlockState removedState;
     private int coreX,coreZ,observerWidth;private boolean observerInverted;private NBTTagCompound observerSnapshot;
     public com.vandorlabs.gear.GearTileEntity carriedArm;
+    /** The only RF inlet: the centre cell of the bottom layer, marked by the Power Port artwork. */
+    public BlockPos observerPowerPort(){return cell(structureWidth()/2,inverted()?structureHeight()-1:0,structureDepth()/2);}
     public boolean observer(){BlockConstructorCore b=core();return b!=null&&(b.design.equals("standalone_dish")||b.design.equals("standalone_antenna"));}
     public boolean inverted(){return observerInverted&&observer();}
     private java.util.UUID renderIdentity;
@@ -368,7 +368,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(synthesisActivationPresent)tag.setInteger("SynthesisActivation",synthesisActivation);
         else tag.removeTag("SynthesisActivation");
     }
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisDataPresent=tag.hasKey("Synthesis");synthesisSequencesPresent=tag.hasKey("SynthesisBatterySequences");synthesisActivationPresent=tag.hasKey("SynthesisActivation");synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);observerInverted=tag.getBoolean("ObserverInverted");observerWidth=tag.getInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG);observerSnapshot=tag.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG)?tag.copy():null;cachedLayout=null;coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.getCompoundTag("Synthesis").removeTag("Ingredient");if(!getStackInSlot(0).isEmpty())tag.setTag("InsertedToken",com.vandorlabs.navigation.NavigationChip.summary(getStackInSlot(0)).writeToNBT(new NBTTagCompound()));tag.setInteger("SynthesisConnections",synthesisConnections);tag.setBoolean("SynthesisWorking",working());if(observer()){tag.setBoolean("ObserverPowered",observerPowered());tag.setBoolean("ObserverScanning",observerScanning());}tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
     @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);synthesisRuntime.visualWorking(tag.getBoolean("SynthesisWorking"));observerPowerVisual=tag.getBoolean("ObserverPowered");observerScanningVisual=tag.getBoolean("ObserverScanning");renderPacket(tag);}

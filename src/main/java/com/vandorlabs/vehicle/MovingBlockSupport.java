@@ -128,6 +128,13 @@ public final class MovingBlockSupport {
             return;
         }
         if(carriedCapability){before.removeTag("ForgeCaps");after.removeTag("ForgeCaps");}
-        if(!com.vandorlabs.surface.TextureJoinMigration.same(before,after))throw new IllegalArgumentException("Cannot preserve all block data for "+cell.state.getBlock().getRegistryName()+"; operation cancelled before changing the structure");
+        if(!com.vandorlabs.surface.TextureJoinMigration.same(before,after))throw new IllegalArgumentException("Cannot preserve all block data for "+cell.state.getBlock().getRegistryName()+" (changed: "+changedKeys(before,after)+"); operation cancelled before changing the structure");
+    }
+    /** Top-level keys whose values differ, for the refusal message. */
+    private static String changedKeys(net.minecraft.nbt.NBTTagCompound before,net.minecraft.nbt.NBTTagCompound after){
+        java.util.Set<String> keys=new java.util.TreeSet<>(before.getKeySet());keys.addAll(after.getKeySet());
+        java.util.List<String> changed=new java.util.ArrayList<>();
+        for(String key:keys){net.minecraft.nbt.NBTBase a=before.getTag(key),b=after.getTag(key);if(a==null?b!=null:!a.equals(b))changed.add(key);}
+        return changed.size()>6?String.join(", ",changed.subList(0,6))+", ...":String.join(", ",changed);
     }
 }
