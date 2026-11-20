@@ -15,6 +15,9 @@ public final class CanopyRearGeometryChecks {
                 double minX=Double.POSITIVE_INFINITY,maxX=Double.NEGATIVE_INFINITY,minZ=Double.POSITIVE_INFINITY,maxY=0;
                 for(Vec3d p:face.vertices){minX=Math.min(minX,p.x);maxX=Math.max(maxX,p.x);minZ=Math.min(minZ,p.z);maxY=Math.max(maxY,p.y);}
                 if(!face.group.equals("mount"))require(!(maxX-minX>.25&&minZ>=depth-3D/32&&maxY<3D/16),"moving rear crossbar remains");
+                // Joined cells must not leave bar ends meeting across the shared doorway.
+                if(!face.group.equals("mount")&&minZ>=depth-3D/32&&maxY<3D/16)
+                    for(int seam=1;seam<width;seam++)require(!(maxX>seam-1D/8&&minX<seam+1D/8),"rear bar stub at joined seam x="+seam+" width="+width+" depth="+depth+" angle="+angle);
             }
         }
         for(CanopyMesh.Face face:CanopyMesh.MODELS.get("angled_front_1x2")){
