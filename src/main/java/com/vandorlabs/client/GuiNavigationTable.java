@@ -30,8 +30,8 @@ public class GuiNavigationTable extends GuiMaterialPicker {
         for(int i=0;i<=redstoneTab();i++){GuiButton tab=panel.fullTab(20+i,i,redstoneTab()+1,i==redstoneTab()?"Redstone":observer?"Observer":i==choices.length?"Engine":tile.surfaceLabel(i));tab.enabled=i!=surface;buttonList.add(tab);}
         int[] controls=observer&&!redstonePane()?new int[0]:redstonePane()?(drive?(((TileEntityConstructor)tile).driveHasParticles()?new int[]{1,16,9,11}:new int[]{1,16,9}):new int[]{1}):enginePane()?(((TileEntityConstructor)tile).driveHasParticles()?new int[]{10}:new int[0]):new int[]{3,4};
         for(int id:controls){GuiButton button=redstonePane()?new net.minecraftforge.fml.client.config.GuiButtonExt(id,guiLeft+12,guiTop+controlY(id),xSize-24,20,""):panel.control(id,controlY(id),"");if(id==1||id==16)button=RedstoneActivationButton.from(button,id==16?"Engine":"Activation",id==16?(engine.inverted?2:1):(redstone?1:0));if(panel.height<280)button.height=18;buttonList.add(button);}
-        if(redstonePane()&&observer)buttonList.add(new GuiButton(90,guiLeft+12,guiTop+126,xSize-24,20,"Transmitter..."));
-        if(observer&&!redstonePane())buttonList.add(new GuiButton(92,guiLeft+12,guiTop+62,xSize-24,20,""));
+        if(redstonePane()&&observer)buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(90,guiLeft+12,guiTop+126,xSize-24,20,"Transmitter..."));
+        if(observer&&!redstonePane())buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(92,guiLeft+12,guiTop+62,xSize-24,20,""));
         channels=new GuiTextField(6,fontRenderer,guiLeft+12,panel.top+channelY(),xSize-24,18);ChannelFields.configure(channels);channels.setText(text);channels.setVisible(redstonePane());channels.setFocused(false);buttonList.add(panel.done(7));labels();
     }
     GuiButton control(int id){for(GuiButton b:buttonList)if(b.id==id)return b;return null;}

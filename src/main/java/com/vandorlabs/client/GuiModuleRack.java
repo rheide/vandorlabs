@@ -46,9 +46,9 @@ public final class GuiModuleRack extends GuiMaterialPicker {
                 Math.max(2,(ySize-110)/HousingTextureList.ROW_HEIGHT),"vandorlabs:blocks/module_rack/housing")
                 .custom(value->{housing=value;send();}).keepView(previous);
         else if(page==1){
-            buttonList.add(new GuiButton(0,guiLeft+12,guiTop+64,xSize-24,20,"Emit Redstone: "+(emit?"On":"Off")));
-            buttonList.add(new GuiButton(90,guiLeft+12,guiTop+92,xSize-24,20,"Transmitter..."));
-            buttonList.add(new GuiButton(8,guiLeft+12,guiTop+174,xSize-24,20,"Power Port: "+(powerOut?"Out":"In")));
+            buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(0,guiLeft+12,guiTop+64,xSize-24,20,"Emit Redstone: "+(emit?"On":"Off")));
+            buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(90,guiLeft+12,guiTop+92,xSize-24,20,"Transmitter..."));
+            buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(8,guiLeft+12,guiTop+174,xSize-24,20,"Power Port: "+(powerOut?"Out":"In")));
         }else{
             int half=(xSize-28)/2;
             buttonList.add(new DialogTabButton(200,guiLeft+12,guiTop+58,half,20,"General"));
@@ -64,7 +64,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
                 drafts[page-2]=new AutopilotModuleSettings(config.channels,config.activation,block.getRegistryName().toString(),stack.getMetadata());sendModule();
             });
         }
-        buttonList.add(new GuiButton(1,guiLeft+12,guiTop+ySize-30,xSize-24,20,"Done"));
+        buttonList.add(new net.minecraftforge.fml.client.config.GuiButtonExt(1,guiLeft+12,guiTop+ySize-30,xSize-24,20,"Done"));
         org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
     GuiButton control(int id){for(GuiButton button:buttonList)if(button.id==id)return button;return null;}
