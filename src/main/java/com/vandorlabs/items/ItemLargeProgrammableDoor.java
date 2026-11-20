@@ -25,7 +25,17 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
         if(!door.supports(world,anchor,face,horizontal,true))return EnumActionResult.FAIL;
         BlockPos preceding=anchor.offset(row.getOpposite(),3);
         TileEntityLargeProgrammableDoor base=world.isBlockLoaded(preceding,false)?door.root(world,preceding):null;
-        boolean joining=base!=null&&base.getPos().equals(preceding)&&base.joins();
+        if(base==null||!base.getPos().equals(preceding)||!base.joins()){
+            base=null;
+            for(int dx=-1;dx<=1;dx++)for(int dy=-1;dy<=1;dy++){
+                if(Math.abs(dx)+Math.abs(dy)!=1)continue;
+                BlockPos at=anchor.offset(width,3*dx).offset(row,3*dy);
+                TileEntityLargeProgrammableDoor candidate=world.isBlockLoaded(at,false)?door.root(world,at):null;
+                if(candidate!=null&&candidate.getPos().equals(at)&&candidate.joins()&&candidate.isHorizontal()==horizontal
+                        &&world.getBlockState(at).getValue(BlockVandorDoor.FACING)==face&&door.complete(world,candidate))base=candidate;
+            }
+        }
+        boolean joining=base!=null&&base.joins();
         net.minecraft.nbt.NBTTagCompound settings=stack.getSubCompound("SpaceDoorSettings");
         if((joining||settings!=null&&settings.getBoolean(com.vandorlabs.render.LargeDoorJoin.TAG))
                 &&!door.mayEditJoinedNeighbors(world,anchor,face,horizontal,player,stack))return EnumActionResult.FAIL;
@@ -49,7 +59,8 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
         }
         TileEntityLargeProgrammableDoor tile=(TileEntityLargeProgrammableDoor)world.getTileEntity(anchor);
         if(settings!=null)tile.applyItemSettings(settings);
-        tile.setPlacementDepth(horizontal?com.vandorlabs.render.PanelDepthPolicy.fromHit(hitY):PanelDepth.fromHit(face,hitX,hitZ));
+        else if(joining)tile.applyItemSettings(base.itemSettings());
+        tile.setPlacementDepth(joining&&settings==null?base.getPlacementDepth():horizontal?com.vandorlabs.render.PanelDepthPolicy.fromHit(hitY):PanelDepth.fromHit(face,hitX,hitZ));
         if(joining)tile.setJoin(true);
         // Only now may neighbor callbacks observe the complete structure.
         for(BlockPos cell:cells){world.notifyBlockUpdate(cell,state,state,2);world.notifyNeighborsOfStateChange(cell,block,false);}

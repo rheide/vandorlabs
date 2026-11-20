@@ -88,9 +88,14 @@ final class LargeDoorRuntimeChecks {
                             "mount group module "+horizontal+"/"+i);
                     TileEntityLargeProgrammableDoor unit=door.root(world,at);
                     require(unit!=null&&unit.getPos().equals(at),"each module keeps an installed root");
-                    require(i>=2?unit.joins():!unit.joins(),"independent units default Off and stacking inherits the support's opt-in");
-                    unit.configure(unit.getDesign(),unit.getDetail(),true,0,true,true,false,0,true);
-                    unit.setJoin(true);
+                    require(i==0?!unit.joins():unit.joins(),"new modules inherit adjacent Join setting");
+                    if(i==0){
+                        unit.configure(unit.getDesign(),unit.getDetail(),false,2,true,true,false,0,false);
+                        unit.setPlacementDepth(2);
+                        unit.setJoin(true);
+                    }
+                    require(unit.panelMode()==0&&unit.getSlideDirection()==2&&unit.getPlacementDepth()==2,
+                            "ordinary placement inherits compatible motion, panels and depth index="+i);
                     door.joinChanged(world,unit);
                     units[i]=unit;
                     int count=unit.joinedGroup().members.size();
