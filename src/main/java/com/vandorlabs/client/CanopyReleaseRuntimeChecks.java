@@ -329,7 +329,7 @@ final class CanopyReleaseRuntimeChecks {
             require(selected.group().size()==3,"three trapdoors form one group");
             for(int mode:new int[]{1,2,0}){
                 selected.setGroupOpening(mode);
-                require(selected.groupOpening()==mode,"opening choice resolves consistently");
+                require(selected.groupOpening()==(mode==1?(along==EnumFacing.EAST?6:3):mode==2?(along==EnumFacing.EAST?4:5):0),"opening choice resolves consistently");
                 selected.requestOpen(true);
                 for(int i=0;i<3;i++){
                     boolean high=mode==2||mode==0&&i==2;
@@ -344,7 +344,7 @@ final class CanopyReleaseRuntimeChecks {
                 selected.requestOpen(false);
             }
         }
-        System.out.println("[vandorlabs][reprolab] trapdoor-group-opening PASS three leaves both axes center/near/far");
+        System.out.println("[vandorlabs][reprolab] trapdoor-group-opening PASS three leaves both axes true-center/cardinal");
     }
     private static void button(World world,EntityPlayerMP player){
         for(int channel:new int[]{0,29021}) {
