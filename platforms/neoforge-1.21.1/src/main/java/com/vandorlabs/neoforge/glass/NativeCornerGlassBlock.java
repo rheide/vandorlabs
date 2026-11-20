@@ -47,9 +47,11 @@ public final class NativeCornerGlassBlock extends NativeGlassBlock {
     }
     private final Shape[] shapes=new Shape[12];
     private final MapCodec<NativeCornerGlassBlock> codec;
+    private final boolean sloped;
 
     public NativeCornerGlassBlock(Properties properties,Supplier<BlockEntityType<?>> type,boolean sloped){
         super(properties,type);
+        this.sloped=sloped;
         codec=simpleCodec(p->new NativeCornerGlassBlock(p,type,sloped));
         registerDefaultState(defaultBlockState().setValue(TURN,0));
         for(int depth=0;depth<3;depth++)for(int turn=0;turn<4;turn++){
@@ -78,13 +80,32 @@ public final class NativeCornerGlassBlock extends NativeGlassBlock {
     }
     @Override public BlockState getStateForPlacement(BlockPlaceContext context){
         Direction side=context.getClickedFace();
-        BlockState support=context.getLevel().getBlockState(context.getClickedPos().relative(side.getOpposite()));
-        var hit=NativePlacementHit.hit(context);
-        int kind=support.getBlock() instanceof NativeCornerGlassBlock?2:support.getBlock() instanceof NativeGlassBlock?1:0;
-        int placement=CornerGlassGeometry.placement(side.getAxis().isHorizontal()?(side.getOpposite().get2DDataValue()+2)&3:-1,
-                hit.x,hit.z,kind,kind==2?support.getValue(TURN):0,kind>0?support.getValue(DEPTH):0,
-                kind==1&&support.getValue(ROTATED));
+        Level level=context.getLevel();BlockPos pos=context.getClickedPos();
+        BlockState support=level.getBlockState(pos.relative(side.getOpposite()));
+        // Stacking on or under a corner keeps its bevel.
+        if(side.getAxis().isVertical()&&support.getBlock() instanceof NativeCornerGlassBlock)
+            return defaultBlockState().setValue(TURN,support.getValue(TURN)).setValue(DEPTH,support.getValue(DEPTH));
+        CornerGlassGeometry.Neighbor[] neighbors=new CornerGlassGeometry.Neighbor[4];
+        for(int at=0;at<4;at++)neighbors[at]=neighbor(level.getBlockState(pos.relative(SIDES[at])));
+        int stacked=-1;
+        for(Direction vertical:new Direction[]{Direction.DOWN,Direction.UP}){
+            BlockState other=level.getBlockState(pos.relative(vertical));
+            if(other.getBlock()==this){stacked=other.getValue(DEPTH)*4+other.getValue(TURN);break;}
+        }
+        // Use hit and player coordinates relative to the new cell.
+        Vec3 hit=context.getClickLocation();
+        var player=context.getPlayer();
+        double playerX=player==null?.5:player.getX()-pos.getX(),playerZ=player==null?.5:player.getZ()-pos.getZ();
+        int placement=CornerGlassGeometry.placement(sloped,side.getAxis().isHorizontal()?(side.getOpposite().get2DDataValue()+2)&3:-1,
+                hit.x-pos.getX(),hit.z-pos.getZ(),neighbors,stacked,playerX,playerZ);
         return defaultBlockState().setValue(TURN,placement&3).setValue(DEPTH,placement/4);
+    }
+    private static CornerGlassGeometry.Neighbor neighbor(BlockState state){
+        if(state.getBlock() instanceof NativeCornerGlassBlock corner)
+            return CornerGlassGeometry.Neighbor.corner(state.getValue(TURN),state.getValue(DEPTH),corner.sloped);
+        if(state.getBlock() instanceof NativeGlassBlock)
+            return CornerGlassGeometry.Neighbor.straight(state.getValue(ROTATED),state.getValue(DEPTH));
+        return CornerGlassGeometry.Neighbor.NONE;
     }
     public int frameMask(NativeGlassEntity owner){
         Level level=owner.getLevel();BlockPos pos=owner.getBlockPos();BlockState state=owner.getBlockState();

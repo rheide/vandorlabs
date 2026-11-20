@@ -121,7 +121,7 @@ if [ "${VANDOR_LABS_DOCUMENTATION_ANIMATIONS:-false}" = true ] || [ "${VANDOR_LA
 fi
 exec xvfb-run -a --server-args="-screen 0 1280x720x24 -ac +extension GLX +render -noreset" \
   env LIBGL_ALWAYS_SOFTWARE=1 \
-  "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-2G}" "${CAPTURE_JVM[@]}" \
+  "$JAVA" "-Xmx${VANDOR_LABS_TEST_HEAP:-3G}" "${CAPTURE_JVM[@]}" \
   -Dvandorlabs.solidHousingChecksOnly="${VANDOR_LABS_SOLID_HOUSING_CHECKS_ONLY:-false}" \
   -Dvandorlabs.surfaceArmChecksOnly="${VANDOR_LABS_SURFACE_ARM_CHECKS_ONLY:-false}" \
   -Dvandorlabs.shaderStartupChecksOnly="${VANDOR_LABS_SHADER_STARTUP_CHECKS_ONLY:-false}" \

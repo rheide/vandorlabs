@@ -26,9 +26,11 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
     @SuppressWarnings("unchecked")
     private final List<AxisAlignedBB>[] boxes=(List<AxisAlignedBB>[])new List<?>[12];
     private final AxisAlignedBB[] bounds=new AxisAlignedBB[12];
+    private final boolean sloped;
 
     public BlockProgrammableCornerGlass(String name,boolean sloped){
         super(name);
+        this.sloped=sloped;
         setDefaultState(getDefaultState().withProperty(TURN,0));
         for(int depth=0;depth<3;depth++)for(int turn=0;turn<4;turn++){
             int at=depth*4+turn;
@@ -54,12 +56,30 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
     }
     @Override public IBlockState getStateForPlacement(World world,BlockPos pos,EnumFacing side,float x,float y,float z,int meta,EntityLivingBase placer){
         IBlockState support=world.getBlockState(pos.offset(side.getOpposite()));
-        int kind=support.getBlock() instanceof BlockProgrammableCornerGlass?2:
-                support.getBlock() instanceof BlockProgrammableGlass?1:0;
-        int placement=CornerGlassGeometry.placement(side.getAxis().isHorizontal()?side(side.getOpposite()):-1,x,z,kind,
-                kind==2?support.getValue(TURN):0,kind>0?support.getValue(DEPTH):0,
-                kind==1&&support.getValue(ROTATED));
-        return getStateFromMeta(placement);
+        // Stacking on or under a corner keeps its bevel.
+        if(!side.getAxis().isHorizontal()&&support.getBlock() instanceof BlockProgrammableCornerGlass)
+            return getStateFromMeta(((BlockProgrammableCornerGlass)support.getBlock()).index(support));
+        CornerGlassGeometry.Neighbor[] neighbors=new CornerGlassGeometry.Neighbor[4];
+        for(int at=0;at<4;at++)neighbors[at]=neighbor(world.getBlockState(pos.offset(SIDES[at])));
+        int stacked=-1;
+        for(EnumFacing vertical:new EnumFacing[]{EnumFacing.DOWN,EnumFacing.UP}){
+            IBlockState other=world.getBlockState(pos.offset(vertical));
+            if(other.getBlock()==this){stacked=index(other);break;}
+        }
+        // Forge supplies hit fractions relative to the clicked block; use the new cell.
+        double cellX=x-side.getFrontOffsetX(),cellZ=z-side.getFrontOffsetZ();
+        double playerX=placer==null?.5:placer.posX-pos.getX(),playerZ=placer==null?.5:placer.posZ-pos.getZ();
+        return getStateFromMeta(CornerGlassGeometry.placement(sloped,side.getAxis().isHorizontal()?side(side.getOpposite()):-1,
+                cellX,cellZ,neighbors,stacked,playerX,playerZ));
+    }
+    private static CornerGlassGeometry.Neighbor neighbor(IBlockState state){
+        if(state.getBlock() instanceof BlockProgrammableCornerGlass){
+            BlockProgrammableCornerGlass corner=(BlockProgrammableCornerGlass)state.getBlock();
+            return CornerGlassGeometry.Neighbor.corner(state.getValue(TURN),state.getValue(DEPTH),corner.sloped);
+        }
+        if(state.getBlock() instanceof BlockProgrammableGlass)
+            return CornerGlassGeometry.Neighbor.straight(state.getValue(ROTATED),state.getValue(DEPTH));
+        return CornerGlassGeometry.Neighbor.NONE;
     }
     @Override public IBlockState getExtendedState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}
     @Override public IBlockState getActualState(IBlockState state,IBlockAccess world,BlockPos pos){return state;}
@@ -113,8 +133,12 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
     }
     private static int side(EnumFacing face){return (face.getHorizontalIndex()+2)&3;}
     public boolean joinsStraight(IBlockAccess world,BlockPos corner,IBlockState state,BlockPos straight,IBlockState other){
-        if(corner.distanceSq(straight)!=1||straight.getY()!=corner.getY()||!enabled(world,corner)||!enabled(world,straight))return false;
-        EnumFacing side=EnumFacing.getFacingFromVector(straight.getX()-corner.getX(),0,straight.getZ()-corner.getZ());
-        return joinsEnd(state,side,other,world,straight);
+        return joinsStraightAt(world,corner,state,straight,straight,other);
+    }
+    /** Join a straight pane described by {@code other} and owned at {@code owner}, as if it sat at {@code level}. */
+    boolean joinsStraightAt(IBlockAccess world,BlockPos corner,IBlockState state,BlockPos level,BlockPos owner,IBlockState other){
+        if(corner.distanceSq(level)!=1||level.getY()!=corner.getY()||!enabled(world,corner)||!enabled(world,owner))return false;
+        EnumFacing side=EnumFacing.getFacingFromVector(level.getX()-corner.getX(),0,level.getZ()-corner.getZ());
+        return joinsEnd(state,side,other,world,owner);
     }
 }

@@ -78,26 +78,53 @@ public final class CornerGlassGeometry {
         rotate(x,0,z,(4-turn)&3,point);
         return PanelDepthPolicy.fromHit((float)(point[0]+point[2]));
     }
-    /** Shared placement policy. Support side is N/E/S/W, or -1 for a vertical click. */
-    public static int placement(int supportSide,double x,double z,int supportKind,int supportTurn,
-            int supportDepth,boolean supportRotated){
-        if(supportSide<0&&supportKind==2)return supportDepth*4+supportTurn;
-        int preferred=z<=.5?(x<=.5?0:1):(x<=.5?3:2);
-        int fallback=placementDepth(preferred,x,z,supportSide>=0)*4+preferred;
-        if(supportSide<0||supportKind==0)return fallback;
-        CornerGlassGeometry support=new CornerGlassGeometry(supportTurn,supportDepth,false);
-        int found=-1;double best=Double.POSITIVE_INFINITY;
+
+    /** A horizontal neighbour seen from the cell being placed. */
+    public static final class Neighbor {
+        public static final Neighbor NONE=new Neighbor(0,false,0,null);
+        final int kind;final boolean rotated;final int depth;final CornerGlassGeometry corner;
+        private Neighbor(int kind,boolean rotated,int depth,CornerGlassGeometry corner){this.kind=kind;this.rotated=rotated;this.depth=depth;this.corner=corner;}
+        public static Neighbor straight(boolean rotated,int depth){return new Neighbor(1,rotated,depth,null);}
+        public static Neighbor corner(int turn,int depth,boolean sloped){return new Neighbor(2,false,depth,new CornerGlassGeometry(turn,depth,sloped));}
+    }
+    private boolean joins(int side,Neighbor neighbor){
+        if(neighbor==null||neighbor.kind==0)return false;
+        return neighbor.kind==2?joinsEdge(side,neighbor.corner):joinsStraight(side,neighbor.rotated,neighbor.depth);
+    }
+    private static double segmentDistance(double px,double pz,double[] a,double[] b){
+        double dx=b[0]-a[0],dz=b[2]-a[2],length=dx*dx+dz*dz;
+        double t=length<EPSILON?0:Math.max(0,Math.min(1,((px-a[0])*dx+(pz-a[2])*dz)/length));
+        double ex=a[0]+t*dx-px,ez=a[2]+t*dz-pz;
+        return Math.sqrt(ex*ex+ez*ez);
+    }
+    /**
+     * Shared placement policy. The hit and player coordinates are relative to the cell being
+     * placed, not the clicked block. {@code clickedSide} is the N/E/S/W side holding the clicked
+     * support, or -1 for a click on a top or bottom face. Neighbours are N/E/S/W.
+     * A bevel that meets the clicked pane wins, then one that meets other adjacent panes, then the
+     * bevel closest to the click. When both bends meet the clicked pane end at the same point,
+     * bend towards the player. {@code stacked} is the placement of a matching corner directly
+     * above or below, or -1.
+     */
+    public static int placement(boolean sloped,int clickedSide,double x,double z,Neighbor[] neighbors,int stacked,double playerX,double playerZ){
+        x=Math.max(0,Math.min(1,x));z=Math.max(0,Math.min(1,z));
+        double[] a=new double[3],b=new double[3];
+        int found=0;double best=Double.NEGATIVE_INFINITY;
         for(int depth=0;depth<3;depth++)for(int turn=0;turn<4;turn++){
-            CornerGlassGeometry candidate=new CornerGlassGeometry(turn,depth,false);
-            boolean aligned=supportKind==2?candidate.joinsEdge(supportSide,support):
-                    candidate.joinsStraight(supportSide,supportRotated,supportDepth);
-            if(!aligned)continue;
-            // Both possible bends meet the clicked pane. Bend towards the clicked half.
-            double cx=turn==0||turn==3?0:1,cz=turn<2?0:1;
-            double score=(cx-x)*(cx-x)+(cz-z)*(cz-z);
-            if(score<best){best=score;found=depth*4+turn;}
+            CornerGlassGeometry candidate=new CornerGlassGeometry(turn,depth,sloped);
+            double score=0;
+            boolean clicked=false;
+            for(int side=0;side<4;side++)if(candidate.joins(side,neighbors[side])){score+=side==clickedSide?100:10;clicked|=side==clickedSide;}
+            if(depth*4+turn==stacked)score+=5;
+            candidate.project(0,.5,.5,a);candidate.project(1,.5,.5,b);
+            // Compare against the cell center so a distant player only breaks ties.
+            double mx=(a[0]+b[0])/2-playerX,mz=(a[2]+b[2])/2-playerZ,cx=.5-playerX,cz=.5-playerZ;
+            double player=Math.sqrt(mx*mx+mz*mz)-Math.sqrt(cx*cx+cz*cz);
+            // A click on a pane end only identifies the pane; the player's side chooses the bend.
+            score-=clicked?player:segmentDistance(x,z,a,b)+1E-3*player;
+            if(score>best+EPSILON){best=score;found=depth*4+turn;}
         }
-        return found<0?fallback:found;
+        return found;
     }
 
     public <T> List<T> collision(SpaceDoorBounds.Factory<T> factory){

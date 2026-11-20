@@ -127,8 +127,11 @@ public class BlockGlassWall extends Block {
             // Flat wall materials may share the same frame plane.
             IBlockState other=world.getBlockState(pos);
             if(other.getBlock() instanceof BlockProgrammableCornerGlass){
+                // A diagonal neighbour above or below joins at its own level, so a stacked
+                // corner does not leave an inner-corner stub at the seam.
+                BlockPos level=new BlockPos(owner.getX(),pos.getY(),owner.getZ());
                 return TextureJoins.allows(world.getTileEntity(owner),owner,pos)
-                        &&((BlockProgrammableCornerGlass)other.getBlock()).joinsStraight(world,pos,other,owner,state);
+                        &&((BlockProgrammableCornerGlass)other.getBlock()).joinsStraightAt(world,pos,other,level,owner,state);
             }
             if(PanelJoins.flat(other) && !(other.getBlock() instanceof BlockGlassWall)){
                 return PanelJoins.connectsFlat(world,owner,state,pos);

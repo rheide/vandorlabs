@@ -29,6 +29,9 @@ Also read before changing these areas:
   camera shots and for placing blocks through the real item path. Never block the client
   thread on an integrated-server task with `.get()`: a paused server runs no tasks and the
   client times out.
+- Test clients default to a 3 GB heap (`VANDOR_LABS_TEST_HEAP`); at 2 GB the optional-mod set
+  thrashes the garbage collector until the server times the client out. Stop a stuck client by
+  PID: `pkill -f <pattern>` also matches the shell running it.
 - Run long checks in the background and wait for completion; don't poll logs repeatedly.
   Read logs with bounded searches for PASS markers and the first stack trace.
 

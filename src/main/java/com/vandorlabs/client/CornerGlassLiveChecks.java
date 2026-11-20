@@ -26,7 +26,14 @@ final class CornerGlassLiveChecks {
     private static int ticks;
     private CornerGlassLiveChecks(){}
     private static void require(boolean condition,String label){if(!condition)throw new IllegalStateException(label);}
+    private static boolean baseDone;
     static boolean tick(Minecraft mc,File output)throws Exception{
+        if(baseDone){
+            require(++ticks<1200,"bounded corner gallery");
+            if(!gallery(mc,output))return false;
+            System.out.println("[vandorlabs][reprolab] corner-glass PASS registers/actual placement/two straight joins/Join off/metadata/sloped profile/24 stack placements/client/gallery");
+            return true;
+        }
         if(++ticks==40)mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer world=mc.getIntegratedServer().getWorld(0);
             EntityPlayerMP player=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
@@ -54,8 +61,8 @@ final class CornerGlassLiveChecks {
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",
                 new File(output,"corner-glass-middle.png"));
         CornerGlassIconChecks.run(mc,output);
-        System.out.println("[vandorlabs][reprolab] corner-glass PASS registers/actual placement/two straight joins/Join off/metadata/sloped profile/24 stack placements/client");
-        return true;
+        baseDone=true;
+        return false;
     }
     private static void verify(WorldServer world,EntityPlayerMP player){
         BlockProgrammableGlass straight=(BlockProgrammableGlass)Block.getBlockFromName("vandorlabs:programmable_glass");
@@ -99,5 +106,69 @@ final class CornerGlassLiveChecks {
                 new Vec3d(BASE).addVector(.25,.5,.85))!=null,"ray crosses the bevel");
         require(corner.collisionRayTrace(state,world,BASE,new Vec3d(BASE).addVector(.9,.5,0),
                 new Vec3d(BASE).addVector(.9,.5,.85))==null,"ray clears the missing corner");
+    }
+    private static final BlockPos GALLERY=new BlockPos(40,109,40);
+    private static LiveGallery gallery;
+    private static boolean galleryRequested;
+    private static volatile boolean galleryBuilt;
+    private static boolean gallery(Minecraft mc,File output)throws Exception{
+        if(!galleryRequested){
+            galleryRequested=true;
+            mc.getIntegratedServer().addScheduledTask(()->{
+                long start=System.nanoTime();
+                System.out.println("[vandorlabs][reprolab] corner-glass gallery build start");
+                buildGallery(mc.getIntegratedServer().getWorld(0));galleryBuilt=true;
+                System.out.println("[vandorlabs][reprolab] corner-glass gallery built ms="+(System.nanoTime()-start)/1000000);
+            });
+        }
+        if(!galleryBuilt)return false;
+        if(gallery==null){
+            gallery=new LiveGallery("corner-glass-gallery",GALLERY)
+                    .shot("near-outside",2.3,1.7,2.3,135F,20F).shot("near-inside",-1.6,1.7,-1.6,-45F,20F)
+                    .shot("middle-outside",6.3,1.7,2.3,135F,20F).shot("middle-inside",2.4,1.7,-1.6,-45F,20F)
+                    .shot("far-outside",10.3,1.7,2.3,135F,20F).shot("far-inside",6.4,1.7,-1.6,-45F,20F)
+                    .shot("floor-contact",5.6,.25,1.9,150F,12F)
+                    .shot("sloped-outside",6.3,1.7,8.3,135F,15F).shot("sloped-inside",2.4,1.7,4.4,-45F,15F)
+                    .shot("overview",11.5,3.5,9.5,135F,25F)
+                    .shot("solo-rail-inside",13.3,.9,-1.7,-45F,35F).shot("solo-rail-outside",15.3,.9,.3,135F,35F);
+        }
+        return gallery.tick(mc,output);
+    }
+    private static void tint(WorldServer world,BlockPos at,int shade){
+        TileEntityProgrammableGlass tile=(TileEntityProgrammableGlass)world.getTileEntity(at);
+        if(tile!=null){tile.setShade(shade);tile.setJoin(true);}
+    }
+    private static void buildGallery(WorldServer world){
+        BlockProgrammableGlass straight=(BlockProgrammableGlass)Block.getBlockFromName("vandorlabs:programmable_glass");
+        BlockProgrammableCornerGlass corner=(BlockProgrammableCornerGlass)Block.getBlockFromName(FLAT);
+        BlockProgrammableCornerGlass diagonal=(BlockProgrammableCornerGlass)Block.getBlockFromName(SLOPED);
+        for(BlockPos at:BlockPos.getAllInBox(GALLERY.add(-6,-1,-6),GALLERY.add(14,4,12)))
+            world.setBlockState(at,at.getY()==GALLERY.getY()-1?Blocks.QUARTZ_BLOCK.getDefaultState():Blocks.AIR.getDefaultState(),2);
+        int[] depths={1,0,2};int[] mirror={0,2,1};
+        for(int i=0;i<3;i++)for(int row=0;row<2;row++){
+            BlockProgrammableCornerGlass variant=row==0?corner:diagonal;
+            int d=depths[i];
+            BlockPos at=GALLERY.add(i*4,0,row*6);
+            for(int h=0;h<2;h++){
+                BlockPos c=at.up(h);
+                if(h==0)world.setBlockState(c,variant.getStateFromMeta(d*4),3);
+                else{
+                    // Stack the upper corner through the real item path.
+                    EntityPlayerMP player=world.getMinecraftServer().getPlayerList().getPlayers().get(0);
+                    require(LiveGallery.place(world,player,new ItemStack(variant),at,EnumFacing.UP,.3F,1,.7F),"stack corner in gallery");
+                    require(world.getBlockState(c).getBlock()==variant&&variant.getMetaFromState(world.getBlockState(c))==d*4,"gallery stack keeps the lower bevel");
+                }
+                if(row==0){
+                    world.setBlockState(c.west(),straight.getDefaultState().withProperty(BlockGlassWall.DEPTH,d),3);
+                    world.setBlockState(c.north(),straight.getDefaultState().withProperty(BlockGlassWall.ROTATED,true).withProperty(BlockGlassWall.DEPTH,mirror[d]),3);
+                    tint(world,c.west(),4);tint(world,c.north(),4);
+                }
+                tint(world,c,4);
+            }
+        }
+        // A lone Middle corner isolates its own frame from neighbour joins.
+        world.setBlockState(GALLERY.add(14,0,-1),corner.getStateFromMeta(0),3);tint(world,GALLERY.add(14,0,-1),4);
+        world.setBlockState(GALLERY.add(14,-1,-1),Blocks.WOOL.getStateFromMeta(14),3);
+        world.setWorldTime(6000);
     }
 }
