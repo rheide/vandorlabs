@@ -38,11 +38,20 @@ seam. Turn **Join** on in two or four compatible doors to make a 3×6, 6×3, or
 6×6 opening. [Space Doors guide](../space-doors.md)
 
 **Arms** can route RF, fluids, or items between their base and an aligned
-endpoint. The base displays the selected Port bar and briefly lights it when
-resources pass through. [Arm guide](../modular-landing-gear.md)
+endpoint. Choose either flow direction; the base mounting face and smaller
+Extender end cap display the corresponding In/Out Port artwork. The selected
+bar lights when resources pass through. [Arm guide](../modular-landing-gear.md)
 
-Moving **Canopies** have an open rear aperture. Joined **Programmable
-Trapdoors** can open at the center seam or move together from one edge.
+A **Module Rack** can charge or discharge its Battery Modules through a rear
+Power Port. Choose In or Out in its dialog. [Module Rack guide](../module-rack.md)
+
+**Survey Dishes and Sentinel Arrays** open their settings with ordinary right-click,
+show their RF connection status, and consume power only while Scanning.
+Redstone can select Scanning or Idle.
+
+Moving **Canopies** have an open rear aperture without a moving lower crossbar. Joined **Programmable
+Trapdoors** can split at the geometric center, even in odd-width groups, or
+move together in a selected cardinal direction.
 **Segmented Doors** pasted at another location with WorldEdit animate
 independently from the original.
 

@@ -3,14 +3,16 @@
 ## 2.12.0 (in development)
 
 - Add flat and sloped Programmable Corner Glass. The Middle flat bevel joins two perpendicular Middle glass panels.
-- Leave the rear aperture of Canopy and Long Canopy open while retaining the frame.
-- Choose a center split or a shared near or far hinge for joined Programmable Trapdoors.
+- Clear the rear aperture and moving lower crossbar of Canopy and Long Canopy. Repair side glass gaps and the Long Angled Front Canopy’s open rear and frame faces.
+- Choose a true geometric center split or a cardinal opening direction for joined Programmable Trapdoors, including odd-width groups.
 - Keep Segmented Door animations independent when WorldEdit pastes a door at another location.
 
 - Open Large Doors from a horizontal seam with Sliding Split, or join compatible doors into a 3×6, 6×3, or 6×6 opening.
-- Show the selected RF, fluid, or item Port bar on the Arm base. The bar lights when that column transfers resources.
+- Show selected resource artwork on Arm mounting faces and Extender end caps, with a reversible flow setting and activity bar. Keep Large Arm inventory icons at least as visible as regular variants.
 
-- Supply Survey Dishes and Sentinel Arrays with 20 RF/tick through their bottom inputs. Linked Screens and Navigation Tables show a haiku when no observer is powered.
+- Open Survey Dish and Sentinel Array dialogs with ordinary right-click. Show bottom RF connection status, consume 20 RF/tick only while Scanning, and let Redstone select Scanning or Idle. Linked Screens and Navigation Tables show a haiku when no observer is powered.
+- Charge or discharge inserted Battery Modules through a Module Rack’s rear Power Port, with an In/Out dialog setting.
+- Preserve standalone Thermal and Mekanism machines on Arms, including rotated tank fluid levels and transfers.
 
 - Press flat Programmable Plates in the Assembly Press and use them to craft the four programmable armor pieces.
 - Use the former Programmable Matter finish as the default for Programmable Blocks. Multiblocks accept any Programmable Block finish. Existing standalone Matter blocks convert to Programmable Blocks.

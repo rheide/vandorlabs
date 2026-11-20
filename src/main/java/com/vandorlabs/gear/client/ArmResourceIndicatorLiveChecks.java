@@ -93,6 +93,8 @@ public final class ArmResourceIndicatorLiveChecks {
         java.nio.ByteBuffer bytes=buffer.getByteBuffer();
         for(int v=0;v<buffer.getVertexCount();v++){
             float u=bytes.getFloat(v*stride+offset),t=bytes.getFloat(v*stride+offset+4);
+            // The mounting face shares this sprite; faceVertices checks that plane separately.
+            if(Math.abs(bytes.getFloat(v*stride+4)-16.02/16)<1e-4)continue;
             if(u>sprite.getMinU()&&u<sprite.getMaxU()&&t>sprite.getMinV()&&t<sprite.getMaxV()){
                 require(Math.abs(bytes.getFloat(v*stride+8)+.02/16)<1e-4,"bar lies just in front of the stationary base face");
                 require(t>=sprite.getInterpolatedV(1.25)-1e-5&&t<=sprite.getInterpolatedV(3)+1e-5,"bar uses only the top crop");
@@ -101,12 +103,24 @@ public final class ArmResourceIndicatorLiveChecks {
         }
         return total;
     }
+    private static int faceVertices(BufferBuilder buffer,TextureAtlasSprite sprite,boolean base){
+        int total=0,offset=buffer.getVertexFormat().getUvOffsetById(0),stride=buffer.getVertexFormat().getNextOffset();java.nio.ByteBuffer bytes=buffer.getByteBuffer();
+        for(int v=0;v<buffer.getVertexCount();v++){
+            float u=bytes.getFloat(v*stride+offset),t=bytes.getFloat(v*stride+offset+4),y=bytes.getFloat(v*stride+4);
+            if(u>=sprite.getMinU()-1e-6&&u<=sprite.getMaxU()+1e-6&&t>=sprite.getMinV()-1e-6&&t<=sprite.getMaxV()+1e-6&&(!base||Math.abs(y-16.02/16)<1e-4))total++;
+        }return total;
+    }
     private static void mesh(Minecraft mc,boolean active){
         for(int index=0;index<6;index++){
             BufferBuilder buffer=new BufferBuilder(1024);
             buffer.begin(7,DefaultVertexFormats.BLOCK);
             new GearRenderer().renderUncached(arm(mc.world,index),0,0,0,0,buffer);
             buffer.finishDrawing();
+            if(index>=4){
+                TextureAtlasSprite bottom=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/power_in_off");
+                require(faceVertices(buffer,bottom,true)==4,"Large Arm mounting face has full input artwork");
+                if(index==4){TextureAtlasSprite top=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/power_out_off");require(faceVertices(buffer,top,false)==4,"Large Extender far cap has scaled output artwork");}
+            }
             for(int family=0;family<3;family++)for(boolean lit:new boolean[]{false,true}){
                 TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/"+SPRITES[family]+"_in_"+(lit?"on":"off"));
                 require(count(buffer,sprite)==((index<4?index==family&&lit==active:family==0&&!lit)?4:0),"one selected uncullable bar quad for "+index+" and activity "+active);

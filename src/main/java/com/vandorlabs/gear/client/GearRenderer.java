@@ -131,7 +131,7 @@ public final class GearRenderer extends net.minecraft.client.renderer.tileentity
                 boolean lit=tile.progress()==(tile.target()?1:0)&&member instanceof GearTileEntity&&((GearTileEntity)member).resourceBarActive(resource);
                 draw(ArmResourceIndicator.model(resource,lit),base,x,y,z,light,buffer);
                 draw(ArmResourceIndicator.faceModel(resource,tile.resourceOut(),lit,false),base,x,y,z,light,buffer);
-                if(!tile.isSwingArmController())draw(ArmResourceIndicator.faceModel(resource,!tile.resourceOut(),lit,true),offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0))),x,y,z,light,buffer);
+                if(!tile.isSwingArmController()&&!tile.isFixedMount())draw(ArmResourceIndicator.faceModel(resource,!tile.resourceOut(),lit,true),offset.compose(footPose.compose(Affine.translation(0,-assembly.columnHeight()+tile.footMountOffset(),0))),x,y,z,light,buffer);
             }
             if(!tile.isFixedMount())draw("sleeve",offset.compose(columnFixed.compose(size)),x,y,z,light,buffer);
             if(tile.isSwingArmController()){

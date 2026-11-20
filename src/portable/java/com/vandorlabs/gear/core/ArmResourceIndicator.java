@@ -11,6 +11,12 @@ public final class ArmResourceIndicator {
             {"resource_bar_fluid_off","resource_bar_fluid_on"},
             {"resource_bar_matter_off","resource_bar_matter_on"}
     };
+    private static final String[][][][] FACES=new String[4][2][2][2];
+    static {
+        String[] families={null,"power","fluid","matter"};
+        for(int mode=1;mode<4;mode++)for(int out=0;out<2;out++)for(int lit=0;lit<2;lit++)for(int tip=0;tip<2;tip++)
+            FACES[mode][out][lit][tip]=(tip==1?"resource_tip_":"resource_mount_")+families[mode]+(out==1?"_out_":"_in_")+(lit==1?"on":"off");
+    }
     private ArmResource published=ArmResource.DISABLED, received=ArmResource.DISABLED;
     private long lastPublished,lastReceived;
 
@@ -23,9 +29,7 @@ public final class ArmResourceIndicator {
     }
 
     public static String faceModel(ArmResource mode,boolean output,boolean active,boolean tip){
-        if(mode==ArmResource.DISABLED)return null;
-        String family=mode==ArmResource.POWER?"power":mode==ArmResource.FLUID?"fluid":"matter";
-        return (tip?"resource_tip_":"resource_mount_")+family+(output?"_out_":"_in_")+(active?"on":"off");
+        return FACES[mode.ordinal()][output?1:0][active?1:0][tip?1:0];
     }
 
     public boolean publish(ArmResource mode,long tick) {
