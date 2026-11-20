@@ -23,7 +23,7 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
             FrameMachineDesign spec=tile.core().specification();
             int state=tile.screenOn()?tile.activity():0;
             if(com.vandorlabs.navigation.ObserverScale.observer(spec.design)){
-                if(!tile.observerPowered())state=0;
+                state=tile.activity();
                 String[] keys=observerKeys(spec)[state];com.vandorlabs.machines.CoreLayout shape=tile.layout();double scale=shape.width/(double)spec.width;EnumFacing facing=EnumFacing.getFront(shape.facing);boolean inverted=tile.inverted();int light=packedLight(tile);
                 observerPort(buffer,x+shape.width/2.0,y-.0005,z+shape.depth/2.0,light,tile.observerPowered());
                 if("dish".equals(spec.motion)){

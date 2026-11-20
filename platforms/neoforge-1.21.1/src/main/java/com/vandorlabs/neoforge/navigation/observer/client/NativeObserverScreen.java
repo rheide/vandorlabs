@@ -4,9 +4,14 @@ import com.vandorlabs.neoforge.navigation.observer.*;import com.vandorlabs.neofo
 public final class NativeObserverScreen extends AbstractContainerScreen<NativeObserverMenu> {
  private NativeInlineTransmissionWidget transmission;
  private boolean radarEnabled;
- private static Component radarLabel(boolean on){return Component.literal(on?"Radar On":"Radar Off");}
+ private static Component radarLabel(boolean on){return Component.literal(on?"Scanning":"Idle");}
  public NativeObserverScreen(NativeObserverMenu menu,Inventory inventory,Component title){super(menu,inventory,title);}
  @Override protected void init(){imageWidth=Math.min(350,width-12);imageHeight=Math.min(220,height-12);super.init();radarEnabled=menu.tile.radar();if(transmission==null)transmission=new NativeInlineTransmissionWidget(font,leftPos+12,topPos+62,imageWidth-24,menu.tile.channels(),menu.tile.range(),false,(channels,range,local)->PacketDistributor.sendToServer(new NativeObserverPayload(menu.containerId,channels,range)));else transmission.layout(leftPos+12,topPos+62,imageWidth-24);for(var c:transmission.controls())if(c!=transmission.localControl())addRenderableWidget(c);transmission.localControl().visible=false;transmission.localControl().active=false;
+ addRenderableWidget(NativeDialogButton.builder(Component.literal(menu.tile.redstoneActivation()?"Activation: Redstone":"Activation: Manual"),button->{
+  boolean enabled=!button.getMessage().getString().contains("Redstone");
+  button.setMessage(Component.literal(enabled?"Activation: Redstone":"Activation: Manual"));
+  PacketDistributor.sendToServer(new NativeObserverPayload(menu.containerId,menu.tile.channels(),menu.tile.range(),enabled?3:2));
+ }).bounds(leftPos+12,topPos+imageHeight-52,imageWidth-24,20).build());
  addRenderableWidget(NativeDialogButton.builder(radarLabel(radarEnabled),button->{
   radarEnabled=!radarEnabled;
   button.setMessage(radarLabel(radarEnabled));
@@ -14,6 +19,7 @@ public final class NativeObserverScreen extends AbstractContainerScreen<NativeOb
  }).bounds(leftPos+12,topPos+imageHeight-28,96,20).build());addRenderableWidget(NativeDialogButton.builder(Component.translatable("gui.done"),ignored->onClose()).bounds(leftPos+imageWidth-100,topPos+imageHeight-28,88,20).build());}
  @Override public boolean mouseClicked(double x,double y,int b){return transmission.mouseClicked(x,y,b)||super.mouseClicked(x,y,b);}@Override public boolean keyPressed(int key,int scan,int mods){return transmission.specialKey(key)||super.keyPressed(key,scan,mods);}@Override public void onClose(){if(transmission!=null)transmission.flush();super.onClose();}
  @Override public boolean mouseDragged(double x,double y,int b,double dx,double dy){return NativeIntegerSlider.dragFocused(getFocused(),x,y,b,dx,dy)||super.mouseDragged(x,y,b,dx,dy);}@Override public boolean mouseReleased(double x,double y,int b){NativeIntegerSlider.releaseFocused(getFocused(),x,y,b);return super.mouseReleased(x,y,b);}
- @Override protected void renderBg(GuiGraphics g,float p,int x,int y){NativeDialogVisuals.panel(g,font,title,leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.DialogStyle.PROGRAMMABLE);g.drawString(font,"Scanning radius: "+menu.tile.radius()+" blocks",leftPos+12,topPos+35,0xDAE8F0,false);g.drawString(font,"Frame: "+menu.tile.design().width()+" × "+menu.tile.design().height()+" × "+menu.tile.design().depth(),leftPos+12,topPos+48,0xDAE8F0,false);transmission.renderLabels(g,font);g.drawWordWrap(font,Component.literal("Height increases coverage. Transmitter range links nearby displays."),leftPos+12,topPos+140,imageWidth-24,0xFFC0C8D0);}
+ @Override protected void renderBg(GuiGraphics g,float p,int x,int y){NativeDialogVisuals.panel(g,font,title,leftPos,topPos,imageWidth,imageHeight,com.vandorlabs.ui.DialogStyle.PROGRAMMABLE);g.drawString(font,"Scanning radius: "+menu.tile.radius()+" blocks",leftPos+12,topPos+35,0xDAE8F0,false);g.drawString(font,"Frame: "+menu.tile.design().width()+" × "+menu.tile.design().height()+" × "+menu.tile.design().depth(),leftPos+12,topPos+48,0xDAE8F0,false);transmission.renderLabels(g,font);if(menu.tile.powered())g.drawString(font,"RF connected",leftPos+12,topPos+140,0xFFC0C8D0,false);
+ else {int statusY=topPos+140;for(String line:new String[]{"Silent dish awaits","Bring power beneath its base","Maps wake with the dawn"}){g.drawString(font,line,leftPos+12,statusY,0xFFFFBF83,false);statusY+=12;}}}
  @Override public void renderBackground(GuiGraphics g,int x,int y,float p){g.fillGradient(0,0,width,height,0xC0101010,0xD0101010);renderBg(g,p,x,y);}@Override protected void renderLabels(GuiGraphics g,int x,int y){}@Override public boolean isPauseScreen(){return false;}
 }

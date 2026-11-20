@@ -71,7 +71,7 @@ public final class NavigationSources {
         ChannelList source=tile.transmittedChannels();
         for(int c:channels.toArray())if(source.contains(c)){
             areas.add(new Area(net.minecraft.util.math.MathHelper.floor(p.x),net.minecraft.util.math.MathHelper.floor(p.z),
-                    radius,tile.screenOn()&&tile.activity()==2?radar:0,stationary,sentinel));
+                    radius,tile.observerScanning()?radar:0,stationary,sentinel));
             break;
         }
     }

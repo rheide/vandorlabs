@@ -18,7 +18,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     net.minecraftforge.energy.IEnergyStorage createObserverInput(TileEntityConstructorPart member){
         return new net.minecraftforge.energy.IEnergyStorage(){
             @Override public int receiveEnergy(int maximum,boolean simulate){
-                return canReceive()?observerPower.receive(world.getTotalWorldTime(),maximum,simulate):0;
+                return canReceive()&&screenOn()&&activity()==2?observerPower.receive(world.getTotalWorldTime(),maximum,simulate):0;
             }
             @Override public int extractEnergy(int maximum,boolean simulate){return 0;}
             @Override public int getEnergyStored(){return canReceive()?observerPower.received(world.getTotalWorldTime()):0;}
@@ -37,8 +37,21 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
     public boolean observerPowered(){
         if(world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
-        return world!=null&&(world.isRemote?observerPowerVisual:observerPower.powered(world.getTotalWorldTime()));
+        return world!=null&&(world.isRemote?observerPowerVisual:observerConnection());
     }
+    private boolean observerConnection(){
+        if(!formed()||!observer())return false;
+        int y=inverted()?structureHeight()-1:0;
+        for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
+            BlockPos at=cell(x,y,z).down();
+            if(!world.isBlockLoaded(at,false))continue;
+            TileEntity source=world.getTileEntity(at);
+            if(source!=null&&com.vandorlabs.ports.EnergyEndpointPresence.connected(source,EnumFacing.UP))return true;
+        }
+        return observerPower.powered(world.getTotalWorldTime());
+    }
+    public boolean observerScanning(){return observerPowered()&&screenOn()&&activity()==2&&world!=null
+            &&(world.isRemote||observerPower.powered(world.getTotalWorldTime()));}
     private <T>T machineCapability(net.minecraftforge.common.capabilities.Capability<T> cap,BlockPos at,EnumFacing side){
         if(cap==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&side==EnumFacing.DOWN&&acceptsObserverPower(null)){
             if(observerEnergy==null)observerEnergy=createObserverInput(null);
@@ -212,8 +225,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         boolean observer=com.vandorlabs.navigation.ObserverScale.observer(core.design);int width=observer?com.vandorlabs.navigation.ObserverScale.width(core.design,observerWidth):core.width;
         if(cachedLayout==null||cachedLayoutCore!=core||cachedLayout.facing!=face||cachedLayout.cornerX!=coreX||cachedLayout.cornerZ!=coreZ||cachedLayout.width!=width){cachedLayout=new com.vandorlabs.machines.CoreLayout(width,observer?com.vandorlabs.navigation.ObserverScale.height(core.design,width):core.height,observer?width:core.depth,face,coreX,coreZ);cachedLayoutCore=core;}return cachedLayout;
     }
-    public int activity(){if(activity>=0)return activity;BlockConstructorCore core=core();return core!=null&&core.specification().state_labels!=null?2:1;}
-    public void cycleActivity(){activity=(activity()+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
+    public int activity(){if(observer())return !observerPowered()?0:activity==1||!screenOn()?1:2;if(activity>=0)return activity;BlockConstructorCore core=core();return core!=null&&core.specification().state_labels!=null?2:1;}
+    public void cycleActivity(){activity=observer()?(activity()==2?1:2):(activity()+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
     public BlockPos pivot(){com.vandorlabs.machines.CoreLayout shape=layout();if(shape==null)return BlockPos.ORIGIN;boolean inverted=observerInverted&&com.vandorlabs.navigation.ObserverScale.observer(cachedLayoutCore.design);if(cachedPivotLayout!=shape||cachedPivotInverted!=inverted){cachedPivotLayout=shape;cachedPivotInverted=inverted;cachedPivot=new BlockPos(shape.pivotX(),inverted?shape.height-1:0,shape.pivotZ());cachedOriginOffset=BlockPos.ORIGIN.subtract(cachedPivot);}return cachedPivot;}
     public BlockPos renderOriginOffset(){return pivot()==BlockPos.ORIGIN?BlockPos.ORIGIN:cachedOriginOffset;}
     public BlockPos cell(int x,int y,int z){com.vandorlabs.machines.CoreLayout shape=layout();return shape==null?pos:pos.add(shape.x(x,z),inverted()?-y:y,shape.z(x,z));}
