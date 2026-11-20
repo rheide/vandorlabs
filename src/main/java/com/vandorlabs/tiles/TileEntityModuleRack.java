@@ -20,7 +20,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Saved item payloads never enter appearance packets. Cosmetic motion is owned
  * by the client active-animation collection, not by a per-rack renderer.
  */
-public final class TileEntityModuleRack extends TileEntityAutopilot {
+public final class TileEntityModuleRack extends TileEntityAutopilot implements net.minecraft.util.ITickable {
     private static final AtomicLong NEXT_EPOCH = new AtomicLong();
     // A new physical server tile owns a new appearance epoch, even when its
     // saved revision comes from an older copied/restored snapshot. Keep this
@@ -42,6 +42,33 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     private final ModuleReceiver[] receivers = { new ModuleReceiver(0), new ModuleReceiver(1), new ModuleReceiver(2), new ModuleReceiver(3) };
     private int housingTexture = -1;
     private boolean emitRedstone;
+    private boolean powerOut;
+    @Override public void update(){
+        if(!powerOut||!livePower()||batteryEnergy()==0)return;
+        net.minecraft.util.EnumFacing rear=world.getBlockState(pos).getValue(com.vandorlabs.blocks.BlockModuleRack.FACING).getOpposite();
+        BlockPos at=pos.offset(rear);
+        if(!world.isBlockLoaded(at,false))return;
+        TileEntity neighbor=world.getTileEntity(at);
+        net.minecraftforge.energy.IEnergyStorage target=neighbor==null?null:neighbor.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,rear.getOpposite());
+        if(target==null||!target.canReceive())return;
+        int offered=extractBatteryEnergy(1000,true),accepted=target.receiveEnergy(offered,true);
+        if(accepted>0)extractBatteryEnergy(target.receiveEnergy(Math.min(offered,accepted),false),false);
+    }
+    public boolean powerOut(){return powerOut;}
+    public void setPowerOut(boolean value){if(powerOut!=value){powerOut=value;configurationChanged();}}
+    private boolean livePower(){return world!=null&&canMutate()&&world.getBlockState(pos).getBlock() instanceof com.vandorlabs.blocks.BlockModuleRack&&!com.vandorlabs.gear.ArmTransactions.locked(world,pos);}
+    private boolean powerAvailable(net.minecraft.util.EnumFacing side){
+        return livePower()&&side==getWorld().getBlockState(pos).getValue(com.vandorlabs.blocks.BlockModuleRack.FACING).getOpposite();
+    }
+    private final net.minecraftforge.energy.IEnergyStorage batteryPort=new net.minecraftforge.energy.IEnergyStorage(){
+        public int receiveEnergy(int amount,boolean simulate){return !livePower()||powerOut?0:receiveBatteryEnergy(amount,simulate);}
+        public int extractEnergy(int amount,boolean simulate){return livePower()&&powerOut?extractBatteryEnergy(amount,simulate):0;}
+        public int getEnergyStored(){return batteryEnergy();}
+        public int getMaxEnergyStored(){return batteryCapacity();}
+        public boolean canReceive(){return livePower()&&!powerOut;}
+        public boolean canExtract(){return livePower()&&powerOut;}
+    };
+
     public final com.vandorlabs.rack.ModuleRackOutput output = new com.vandorlabs.rack.ModuleRackOutput(this);
     public int getHousingTexture() { return housingTexture; }
     public boolean emitsRedstone() { return emitRedstone; }
@@ -177,7 +204,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         }
         tag.setTag("Items", items);
         if (housingTexture >= 0) tag.setInteger("RackHousing", housingTexture);
-        if (emitRedstone) tag.setBoolean("RackEmit", true);
+        tag.setBoolean("RackPowerOut",powerOut);if (emitRedstone) tag.setBoolean("RackEmit", true);
         if(legacyOriginal!=null)tag.setTag(com.vandorlabs.rack.LegacyAutopilotMigration.BACKUP,legacyOriginal.copy());
         writeVisualData(tag);
         return legacyBlockData==null?tag:legacyBlockData.preserve(tag);
@@ -192,6 +219,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
             throw new IllegalArgumentException("Invalid saved Rack housing");
         if (tag.hasKey("RackEmit") && (!tag.hasKey("RackEmit",1) || tag.getByte("RackEmit") < 0 || tag.getByte("RackEmit") > 1))
             throw new IllegalArgumentException("Invalid saved Rack output");
+        if(tag.hasKey("RackPowerOut")&&(!tag.hasKey("RackPowerOut",1)||tag.getByte("RackPowerOut")<0||tag.getByte("RackPowerOut")>1))throw new IllegalArgumentException("Invalid Rack power direction");
         for (String key : new String[]{"Revision","Insert0","Insert1","Insert2","Insert3"})
             if (tag.hasKey(key) && (!tag.hasKey(key,4) || tag.getLong(key)<0)) throw new IllegalArgumentException("Invalid saved Rack sequence");
         if (tag.hasKey("Items") && (!tag.hasKey("Items",9)
@@ -214,6 +242,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         super.readFromNBT(tag);
         housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
         emitRedstone = tag.getBoolean("RackEmit");
+        powerOut=tag.getBoolean("RackPowerOut");
         output.loaded(tag);
         int occupied = 0;
         for (int slot=0;slot<4;slot++) { modules[slot]=staged[slot];if(!staged[slot].isEmpty())occupied|=1<<slot; }
@@ -245,7 +274,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         writeVisualData(tag);
         tag.setBoolean("RackInert",inert());
         if (housingTexture >= 0) tag.setInteger("RackHousing", housingTexture);
-        if (emitRedstone) tag.setBoolean("RackEmit", true);
+        tag.setBoolean("RackPowerOut",powerOut);if (emitRedstone) tag.setBoolean("RackEmit", true);
         NBTTagCompound transmission = output.publicSettings();
         if (transmission != null) tag.setTag("RackTransmission", transmission);
         for (int slot = 0; slot < modules.length; slot++) if (moduleKind(slot) == com.vandorlabs.rack.ModuleRackPolicy.AUTOPILOT) {
@@ -318,6 +347,7 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
         }
         housingTexture = tag.hasKey("RackHousing", 3) && ScreenHousingTextures.validChoice(tag.getInteger("RackHousing")) ? tag.getInteger("RackHousing") : -1;
         emitRedstone = tag.getBoolean("RackEmit");
+        powerOut=tag.getBoolean("RackPowerOut");
         output.readPublic(tag, replacement || initial);
         revision = incoming;
         for (int slot = 0; slot < modules.length; slot++)
@@ -450,6 +480,6 @@ public final class TileEntityModuleRack extends TileEntityAutopilot {
     }
 
     @Override public boolean shouldRenderInPass(int pass) { return false; }
-    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability,net.minecraft.util.EnumFacing side){return !inert()&&super.hasCapability(capability,side);}
-    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability,net.minecraft.util.EnumFacing side){return inert()?null:super.getCapability(capability,side);}
+    @Override public boolean hasCapability(net.minecraftforge.common.capabilities.Capability<?> capability,net.minecraft.util.EnumFacing side){return !inert()&&(capability==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&powerAvailable(side)||super.hasCapability(capability,side));}
+    @Override public <T>T getCapability(net.minecraftforge.common.capabilities.Capability<T> capability,net.minecraft.util.EnumFacing side){return inert()?null:capability==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&powerAvailable(side)?net.minecraftforge.energy.CapabilityEnergy.ENERGY.cast(batteryPort):super.getCapability(capability,side);}
 }

@@ -29,6 +29,10 @@ public final class NativeRackBlock extends BaseEntityBlock {
     private static final VoxelShape[] SUPPORT=new VoxelShape[6];
     static {for(var facing:Direction.values()){VoxelShape shell=Shapes.empty();for(var side:Direction.values())if(ModuleRackGeometry.hasClosedBoundary(facing.get3DDataValue(),side.get3DDataValue()))shell=Shapes.or(shell,switch(side){case DOWN->Block.box(0,0,0,16,1,16);case UP->Block.box(0,15,0,16,16,16);case NORTH->Block.box(0,0,0,16,16,1);case SOUTH->Block.box(0,0,15,16,16,16);case WEST->Block.box(0,0,0,1,16,16);case EAST->Block.box(15,0,0,16,16,16);});SUPPORT[facing.get3DDataValue()]=shell.optimize();}}
     public NativeRackBlock(Properties properties){super(properties);registerDefaultState(stateDefinition.any().setValue(FACING,Direction.SOUTH));}
+    @Override public <T extends net.minecraft.world.level.block.entity.BlockEntity> net.minecraft.world.level.block.entity.BlockEntityTicker<T> getTicker(
+            Level level,BlockState state,net.minecraft.world.level.block.entity.BlockEntityType<T> type){
+        return level.isClientSide?null:createTickerHelper(type,NativeRackBindings.ENTITY,NativeRackEntity::tick);
+    }
     @Override protected MapCodec<? extends BaseEntityBlock> codec(){return MapCodec.unit(this);}
     @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> builder){builder.add(FACING);}
     @Override public BlockState getStateForPlacement(BlockPlaceContext context){return defaultBlockState().setValue(FACING,com.vandorlabs.neoforge.NativeDirectionalPlacement.towardView(context));}

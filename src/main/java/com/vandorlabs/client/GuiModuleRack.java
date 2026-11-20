@@ -15,14 +15,14 @@ public final class GuiModuleRack extends GuiMaterialPicker {
     private final TileEntityModuleRack tile;
     private HousingTextureList textures;
     private int page, modulePage, housing, knownKinds;
-    private boolean emit;
+    private boolean emit,powerOut;
     private GuiTextField channels;
     private InventorySamplePicker routePicker;
     private final AutopilotModuleSettings[] drafts=new AutopilotModuleSettings[4];
     private final long[] sequences=new long[4];
     public GuiModuleRack(TileEntityModuleRack tile) {
         super(new ContainerModuleRack(tile)); this.tile=tile;
-        housing=tile.getHousingTexture();emit=tile.emitsRedstone();xSize=348;ySize=250;
+        housing=tile.getHousingTexture();emit=tile.emitsRedstone();powerOut=tile.powerOut();xSize=348;ySize=250;
         reloadModules();
     }
     private void reloadModules() {
@@ -48,6 +48,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
         else if(page==1){
             buttonList.add(new GuiButton(0,guiLeft+12,guiTop+64,xSize-24,20,"Emit Redstone: "+(emit?"On":"Off")));
             buttonList.add(new GuiButton(90,guiLeft+12,guiTop+92,xSize-24,20,"Transmitter..."));
+            buttonList.add(new GuiButton(8,guiLeft+12,guiTop+120,xSize-24,20,"Power Port: "+(powerOut?"Out":"In")));
         }else{
             int half=(xSize-28)/2;
             buttonList.add(new DialogTabButton(200,guiLeft+12,guiTop+58,half,20,"General"));
@@ -67,7 +68,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
         org.lwjgl.input.Keyboard.enableRepeatEvents(true);
     }
     GuiButton control(int id){for(GuiButton button:buttonList)if(button.id==id)return button;return null;}
-    private void send(){PacketHandler.INSTANCE.sendToServer(new MessageModuleRack(inventorySlots.windowId,tile.getPos(),housing,emit));}
+    private void send(){PacketHandler.INSTANCE.sendToServer(new MessageModuleRack(inventorySlots.windowId,tile.getPos(),housing,emit).withPowerOut(powerOut));}
     private boolean saveChannelDraft(){
         if(page<2||channels==null)return true;
         ChannelList bank=ChannelFields.parse(channels);if(bank==null)return false;
@@ -77,6 +78,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
     @Override protected void actionPerformed(GuiButton button){
         if(button.id>=100&&button.id<=105){if(!saveChannelDraft())return;if(page>=2)sendModule();page=button.id-100;initGui();return;}
         if(button.id==200||button.id==201){if(!saveChannelDraft())return;sendModule();modulePage=button.id-200;initGui();return;}
+        if(button.id==8){powerOut=!powerOut;send();initGui();}
         if(button.id==0){emit=!emit;send();initGui();}
         else if(button.id==2){if(!saveChannelDraft())return;AutopilotModuleSettings old=drafts[page-2];
             drafts[page-2]=new AutopilotModuleSettings(old.channels,GuiOptionCycle.next(old.activation,3),old.marker,old.markerMetadata);sendModule();initGui();}
@@ -88,7 +90,7 @@ public final class GuiModuleRack extends GuiMaterialPicker {
         if(page==0&&textures!=null){int before=textures.selected();if(textures.click(x,y,button)){if(before!=textures.selected()){housing=textures.selected();send();}return;}}
         if(routePicker!=null&&routePicker.click(x,y,button))return;
         if(channels!=null)channels.mouseClicked(x,y,button);
-        if(!GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,2))super.mouseClicked(x,y,button);
+        if(!GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,0,2,8))super.mouseClicked(x,y,button);
     }
     @Override protected void keyTyped(char character,int key)throws IOException{
         if(channels!=null&&channels.textboxKeyTyped(character,key))return;

@@ -18,7 +18,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 /** Four physical internal modules and event-driven channels; no tile ticker or automation inventory. */
 public final class NativeRackEntity extends BlockEntity {
-    public record Visual(int occupied,int kinds,int visible,int housing,boolean inert,int batteryLevels) { public Visual(int occupied,int kinds,int visible,int housing,boolean inert){this(occupied,kinds,visible,housing,inert,0);} }
+    public record Visual(int occupied,int kinds,int visible,int housing,boolean inert,int batteryLevels,boolean powerOut) { public Visual(int occupied,int kinds,int visible,int housing,boolean inert){this(occupied,kinds,visible,housing,inert,0,false);} public Visual(int occupied,int kinds,int visible,int housing,boolean inert,int batteryLevels){this(occupied,kinds,visible,housing,inert,batteryLevels,false);} }
     public interface ClientUpdates {void updated(NativeRackEntity tile,int previousMask,int previousKinds,long[] sequences,boolean initial);}
     public static ClientUpdates CLIENT_UPDATES=(tile,mask,kinds,sequences,initial)->{};
     public static final ModelProperty<Visual> VISUAL=new ModelProperty<>();
@@ -57,6 +57,31 @@ public final class NativeRackEntity extends BlockEntity {
     public ItemStack module(int slot){return ModuleRackGeometry.validSlot(slot)?items[slot].copy():ItemStack.EMPTY;}
     public List<ItemStack> ownedModuleDrops(){var result=new ArrayList<ItemStack>();if(!inert)for(var stack:items)if(!stack.isEmpty())result.add(stack.copy());return List.copyOf(result);}
     private int previousBatteryPixels;
+    private boolean powerOut;
+    public boolean powerOut(){return powerOut;}
+    public void setPowerOut(boolean value){if(installed()&&!inert&&powerOut!=value){powerOut=value;changed();}}
+    public net.neoforged.neoforge.energy.IEnergyStorage powerPort(net.minecraft.core.Direction side){
+        if(side==null||side!=getBlockState().getValue(NativeRackBlock.FACING).getOpposite()||!installed()||inert)return null;
+        return batteryPort;
+    }
+    private final net.neoforged.neoforge.energy.IEnergyStorage batteryPort=new net.neoforged.neoforge.energy.IEnergyStorage(){
+        public int receiveEnergy(int maximum,boolean simulate){return powerOut?0:transferBattery(maximum,simulate,true);}
+        public int extractEnergy(int maximum,boolean simulate){return powerOut?transferBattery(maximum,simulate,false):0;}
+        public int getEnergyStored(){return batteryEnergy();}
+        public int getMaxEnergyStored(){int capacity=0;for(var stack:items)if(NativeBatteryModule.valid(stack))capacity+=NativeBatteryModule.CAPACITY;return capacity;}
+        public boolean canReceive(){return !powerOut;}
+        public boolean canExtract(){return powerOut;}
+    };
+    public static void tick(net.minecraft.world.level.Level level,BlockPos pos,net.minecraft.world.level.block.state.BlockState state,NativeRackEntity owner){
+        if(!owner.powerOut||!owner.installed()||owner.inert||owner.batteryEnergy()==0)return;
+        var rear=state.getValue(NativeRackBlock.FACING).getOpposite();
+        var targetPos=pos.relative(rear);
+        if(!com.vandorlabs.neoforge.fluid.NativeFluidWorld.loaded(level,targetPos))return;
+        var target=level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,targetPos,rear.getOpposite());
+        if(target==null||!target.canReceive())return;
+        int offered=owner.transferBattery(1000,true,false),accepted=target.receiveEnergy(offered,true);
+        if(accepted>0)owner.transferBattery(target.receiveEnergy(Math.min(offered,accepted),false),false,false);
+    }
     public int batteryPixels(int slot){return com.vandorlabs.rack.BatteryChargeBar.unpack(level!=null&&level.isClientSide?publicBatteryLevels:batteryLevels(),slot);}
     public int previousBatteryPixels(int slot){return com.vandorlabs.rack.BatteryChargeBar.unpack(previousBatteryPixels,slot);}
     public int batteryLevels(){int result=0;for(int slot=0;slot<4;slot++)result|=com.vandorlabs.rack.BatteryChargeBar.pixels(NativeBatteryModule.energy(items[slot]),NativeBatteryModule.CAPACITY)<<(slot*6);return result;}
@@ -70,7 +95,7 @@ public final class NativeRackEntity extends BlockEntity {
     private boolean held(){return com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,worldPosition);}
     private static long next(long current){return current==Long.MAX_VALUE?1:current+1;}
     private void derive(){occupied=kinds=0;for(int slot=0;slot<4;slot++)if(!items[slot].isEmpty()){occupied|=1<<slot;kinds|=NativeRackData.kind(items[slot])<<(slot*2);publicModules[slot]=kind(slot)==2?NativeRackData.settings(items[slot]):null;}visible=occupied;}
-    private void publish(){visual=new Visual(occupied,kinds,visible,housing,inert,level!=null&&level.isClientSide?publicBatteryLevels:batteryLevels());model=ModelData.builder().with(VISUAL,visual).build();if(level!=null&&level.isClientSide&&level.getBlockEntity(worldPosition)==this)requestModelDataUpdate();}
+    private void publish(){visual=new Visual(occupied,kinds,visible,housing,inert,level!=null&&level.isClientSide?publicBatteryLevels:batteryLevels(),powerOut);model=ModelData.builder().with(VISUAL,visual).build();if(level!=null&&level.isClientSide&&level.getBlockEntity(worldPosition)==this)requestModelDataUpdate();}
     private void changed(){revision=next(revision);setChanged();publish();visualPackets++;if(level!=null&&!level.isClientSide)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),Block.UPDATE_CLIENTS);}
     public boolean insert(int slot,ItemStack held,boolean creative){
         if(!installed()||inert||!ModuleRackGeometry.validSlot(slot)||!items[slot].isEmpty()||NativeRackData.kind(held)==0||NativeRackData.kind(held)==3&&!NativeBatteryModule.valid(held)||com.vandorlabs.neoforge.inventory.NativeInventoryItems.containedOwnership(held))return false;
@@ -125,7 +150,7 @@ public final class NativeRackEntity extends BlockEntity {
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
         serialized++;tag.merge(retained.copy());if(inert){NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);
         tag.putInt("NativeRackSchema",1);var modules=new ListTag();for(int slot=0;slot<4;slot++)if(!items[slot].isEmpty())modules.add(NativeRackData.writeItem(items[slot],slot,registries));tag.put("Items",modules);
-        if(housing>=0)tag.putInt("RackHousing",housing);else tag.remove("RackHousing");if(emit)tag.putBoolean("RackEmit",true);else tag.remove("RackEmit");
+        if(housing>=0)tag.putInt("RackHousing",housing);else tag.remove("RackHousing");if(emit)tag.putBoolean("RackEmit",true);else tag.remove("RackEmit");tag.putBoolean("RackPowerOut",powerOut);
         NativeRackData.transmission(tag,transmission);visualData(tag);
     }
     @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider registries){
@@ -133,6 +158,7 @@ public final class NativeRackEntity extends BlockEntity {
         CompoundTag original=tag.copy();try{
             NativePlatformComponents.requireSupported(original,registries);
             if(tag.contains("ForgeCaps")&&(!tag.contains("ForgeCaps",Tag.TAG_COMPOUND)||!tag.getCompound("ForgeCaps").isEmpty()))throw new IllegalArgumentException("Unsupported legacy Rack capabilities");
+            if(tag.contains("RackPowerOut")&&(!tag.contains("RackPowerOut",Tag.TAG_BYTE)||tag.getByte("RackPowerOut")<0||tag.getByte("RackPowerOut")>1))throw new IllegalArgumentException("Rack power direction");
             if(tag.contains("NativeRackSchema")&&(!tag.contains("NativeRackSchema",Tag.TAG_INT)||tag.getInt("NativeRackSchema")!=1))throw new IllegalArgumentException("Future Rack schema");
             if(tag.contains("RackHousing")&&!tag.contains("RackHousing",Tag.TAG_INT)||tag.contains("RackEmit")&&(!tag.contains("RackEmit",Tag.TAG_BYTE)||tag.getByte("RackEmit")<0||tag.getByte("RackEmit")>1))throw new IllegalArgumentException("Rack settings types");
             for(String key:List.of("Revision","Insert0","Insert1","Insert2","Insert3"))if(tag.contains(key)&&(!tag.contains(key,Tag.TAG_LONG)||tag.getLong(key)<0))throw new IllegalArgumentException("Rack sequence type");
@@ -143,13 +169,13 @@ public final class NativeRackEntity extends BlockEntity {
             if(casing< -1||casing>=0&&!ModernFinishCatalog.validChoice(casing))throw new IllegalArgumentException("Rack housing");
             var bank=NativeRackData.transmission(tag);
             try(var guard=NativePlatformComponents.guardLoad(this)){super.loadAdditional(original,registries);guard.requireSuccessful();}
-            System.arraycopy(staged,0,items,0,4);housing=casing;emit=tag.getBoolean("RackEmit");transmission=bank;revision=Math.max(0,tag.getLong("Revision"));for(int slot=0;slot<4;slot++)inserted[slot]=Math.max(0,tag.getLong("Insert"+slot));
+            System.arraycopy(staged,0,items,0,4);housing=casing;emit=tag.getBoolean("RackEmit");powerOut=tag.getBoolean("RackPowerOut");transmission=bank;revision=Math.max(0,tag.getLong("Revision"));for(int slot=0;slot<4;slot++)inserted[slot]=Math.max(0,tag.getLong("Insert"+slot));
             retained=original;for(String key:List.of("Items","RackHousing","RackEmit","ModuleMask","ModuleKinds","Revision","Insert0","Insert1","Insert2","Insert3","NativeRackSchema"))retained.remove(key);NativePlatformComponents.forgetLoadedFields(retained);inert=false;derive();
         }catch(RuntimeException failure){retained=original;inert=true;Arrays.fill(items,ItemStack.EMPTY);occupied=kinds=visible=0;}physicalReady=false;publish();
     }
     private void visualData(CompoundTag tag){tag.putInt("ModuleMask",occupied);if(kinds!=ModuleRackPolicy.blankKinds(occupied))tag.putInt("ModuleKinds",kinds);else tag.remove("ModuleKinds");for(int slot=0;slot<4;slot++)if(kind(slot)==3)tag.putInt("BatteryCharge"+slot,NativeBatteryModule.energy(items[slot]));tag.putLong("Revision",revision);for(int slot=0;slot<4;slot++)tag.putLong("Insert"+slot,inserted[slot]);}
     @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){
-        var tag=new CompoundTag();visualData(tag);tag.putBoolean("RackPublic",true);tag.putLong("RackEpoch",epoch);tag.putInt("RackHousing",housing);tag.putBoolean("RackEmit",emit);tag.putBoolean("NativeRackInert",inert);NativeRackData.transmission(tag,transmission);
+        var tag=new CompoundTag();visualData(tag);tag.putBoolean("RackPublic",true);tag.putLong("RackEpoch",epoch);tag.putInt("RackHousing",housing);tag.putBoolean("RackEmit",emit);tag.putBoolean("RackPowerOut",powerOut);tag.putBoolean("NativeRackInert",inert);NativeRackData.transmission(tag,transmission);
         for(int slot=0;slot<4;slot++)if(kind(slot)==2)tag.put("ModuleConfig"+slot,NativeRackData.publicSettings(moduleSettings(slot)));return tag;
     }
     private void readVisual(CompoundTag tag,boolean initial){
@@ -159,7 +185,7 @@ public final class NativeRackEntity extends BlockEntity {
         if(!replacement&&receivedEpoch>0&&incoming==revision)return;
         int previous=replacement?0:occupied,previousKinds=replacement?0:kinds;long[] before=replacement?new long[4]:inserted.clone();
         previousBatteryPixels=publicBatteryLevels;
-        occupied=tag.getInt("ModuleMask")&15;kinds=tag.contains("ModuleKinds")?tag.getInt("ModuleKinds")&255:ModuleRackPolicy.blankKinds(occupied);visible=initial?occupied:visible&occupied;housing=tag.getInt("RackHousing");emit=tag.getBoolean("RackEmit");inert=tag.getBoolean("NativeRackInert");transmission=NativeRackData.transmission(tag);revision=incoming;if(incomingEpoch>0)receivedEpoch=incomingEpoch;
+        occupied=tag.getInt("ModuleMask")&15;kinds=tag.contains("ModuleKinds")?tag.getInt("ModuleKinds")&255:ModuleRackPolicy.blankKinds(occupied);visible=initial?occupied:visible&occupied;housing=tag.getInt("RackHousing");emit=tag.getBoolean("RackEmit");powerOut=tag.getBoolean("RackPowerOut");inert=tag.getBoolean("NativeRackInert");transmission=NativeRackData.transmission(tag);revision=incoming;if(incomingEpoch>0)receivedEpoch=incomingEpoch;
         publicBatteryLevels=0;for(int slot=0;slot<4;slot++)if(kind(slot)==3)publicBatteryLevels|=com.vandorlabs.rack.BatteryChargeBar.pixels(tag.getInt("BatteryCharge"+slot),NativeBatteryModule.CAPACITY)<<(slot*6);
         for(int slot=0;slot<4;slot++){inserted[slot]=Math.max(0,tag.getLong("Insert"+slot));publicModules[slot]=kind(slot)==2?NativeRackData.settings(tag.getCompound("ModuleConfig"+slot)):null;}
         publish();CLIENT_UPDATES.updated(this,previous,previousKinds,before,initial);if(level!=null&&level.isClientSide&&level.getBlockEntity(worldPosition)==this)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),Block.UPDATE_CLIENTS);

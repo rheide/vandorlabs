@@ -95,13 +95,13 @@ public final class ModuleRackChecks {
             copierOwnership();
             visualPackets(block);
             replacementPackets(block);
-            require(!ITickable.class.isAssignableFrom(TileEntityModuleRack.class), "rack must never register an idle tick");
+            rearPower(block);
             TileEntityModuleRack tile = new TileEntityModuleRack();
             require(!tile.shouldRenderInPass(0) && !tile.shouldRenderInPass(1), "no settled TESR passes");
         } finally { VandorLabs.proxy = before; }
         System.out.println("Module Rack PASS cases=" + cases
                 + " 16 occupancy states, six-face slot/button callbacks, full item NBT, exact ownership,"
-                + " compact appearance packets, duplicate/stale update suppression, no idle tile ticks/TESR");
+                + " compact appearance packets, duplicate/stale update suppression, idle output short circuit/no settled TESR");
     }
 
     private static void placement(BlockModuleRack block) {
@@ -115,6 +115,19 @@ public final class ModuleRackChecks {
                 require(block.getStateForPlacement(world, AT, clicked, .5F, .5F, .5F, 0, player)
                         .getValue(BlockModuleRack.FACING) == expected,
                         "rack uses Programmable Light player-view placement: pitch=" + pitch + " clicked=" + clicked);
+        }
+    }
+
+    private static void rearPower(BlockModuleRack block){
+        NonRenderingChecks.MemoryWorld world=new NonRenderingChecks.MemoryWorld(false);
+        for(EnumFacing front:EnumFacing.values()){
+            world.setBlockState(AT,block.getDefaultState().withProperty(BlockModuleRack.FACING,front),3);
+            TileEntityModuleRack rack=(TileEntityModuleRack)world.getTileEntity(AT);
+            rack.update(); // Empty input mode never queries a neighbour.
+            for(EnumFacing side:EnumFacing.values())require(rack.hasCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,side)==(side==front.getOpposite()),"only rear face advertises RF");
+            rack.setPowerOut(true);NBTTagCompound saved=rack.writeToNBT(new NBTTagCompound());
+            TileEntityModuleRack restored=new TileEntityModuleRack();restored.readFromNBT(saved);require(restored.powerOut(),"rear output setting survives disk round trip");
+            NBTTagCompound old=saved.copy();old.removeTag("RackPowerOut");restored.readFromNBT(old);require(!restored.powerOut(),"previous-version racks default to input");
         }
     }
 

@@ -38,6 +38,7 @@ public final class BlockModuleRack extends BlockVandor {
     public static final IUnlistedProperty<Integer> MODULE_MASK = ProgrammableHousingState.integer("rack_modules");
     public static final IUnlistedProperty<Integer> MODULE_KINDS = ProgrammableHousingState.integer("rack_module_kinds");
     public static final IUnlistedProperty<Integer> BATTERY_LEVELS = ProgrammableHousingState.integer("rack_battery_levels");
+    public static final IUnlistedProperty<Integer> POWER_OUT = ProgrammableHousingState.integer("rack_power_out");
     public static final IUnlistedProperty<Integer> HOUSING = ProgrammableHousingState.integer("rack_housing");
 
     public BlockModuleRack() {
@@ -47,7 +48,7 @@ public final class BlockModuleRack extends BlockVandor {
 
     @Override protected BlockStateContainer createBlockState() {
         return new ExtendedBlockState(this, new IProperty<?>[] { FACING },
-                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, MODULE_KINDS, HOUSING, BATTERY_LEVELS });
+                new IUnlistedProperty<?>[] { OCCUPIED_MASK, MODULE_MASK, MODULE_KINDS, HOUSING, BATTERY_LEVELS, POWER_OUT });
     }
 
     @Override public IBlockState getStateFromMeta(int meta) {
@@ -103,7 +104,7 @@ public final class BlockModuleRack extends BlockVandor {
             charge = rack.batteryChargeLevels(); occupied = rack.getOccupiedMask(); kinds = rack.getModuleKinds(); housing = rack.getHousingTexture();
             modules = world instanceof VehicleWorld ? occupied : rack.getRenderMask();
         }
-        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(MODULE_KINDS, kinds).withProperty(HOUSING, housing).withProperty(BATTERY_LEVELS, charge);
+        return ((IExtendedBlockState)state).withProperty(OCCUPIED_MASK, occupied).withProperty(MODULE_MASK, modules).withProperty(MODULE_KINDS, kinds).withProperty(HOUSING, housing).withProperty(BATTERY_LEVELS, charge).withProperty(POWER_OUT, raw instanceof TileEntityModuleRack && ((TileEntityModuleRack)raw).powerOut() ? 1 : 0);
     }
 
     @Override public boolean onBlockActivated(World world, BlockPos pos, IBlockState state,

@@ -41,6 +41,7 @@ public final class ModuleRackModel implements IBakedModel {
     private final IBakedModel shell;
     private final int facing;
     private int housingChoice = -1;
+    private boolean powerOut;
     private final java.util.LinkedHashMap<Integer, ModuleRackModel> housingModels = new java.util.LinkedHashMap<>(16, .75F, true);
 
     private MovingMesh navigationBayFrame,navigationBayModule;
@@ -77,17 +78,18 @@ public final class ModuleRackModel implements IBakedModel {
         this.indicators = indicators;
     }
 
-    private ModuleRackModel(ModuleRackModel source, int housingChoice, TextureAtlasSprite sprite) {
-        this.facing = source.facing; this.housingChoice = housingChoice; shell = new HousingShell(source.shell, sprite, facing);
+    private ModuleRackModel(ModuleRackModel source, int housingChoice, TextureAtlasSprite sprite, boolean powerOut) {
+        this.facing = source.facing; this.housingChoice = housingChoice; this.powerOut = powerOut; shell = new HousingShell(source.shell, sprite, facing, powerOut);
         batteryModules=source.batteryModules;batteryMoving=source.batteryMoving;batterySeated=source.batterySeated;chargeQuads=source.chargeQuads;chargeMeshes=source.chargeMeshes;embeddedSeated=source.embeddedSeated;embeddedEmpty=source.embeddedEmpty;embeddedIndicators=source.embeddedIndicators;
         modules = source.modules; moving = source.moving; autopilotModules=source.autopilotModules; autopilotMoving=source.autopilotMoving; autopilotSeated=source.autopilotSeated; seated = source.seated; empty = source.empty; indicators = source.indicators;
     }
-    private synchronized ModuleRackModel housing(int choice) {
-        ModuleRackModel found = housingModels.get(choice);
+    private synchronized ModuleRackModel housing(int choice, boolean out) {
+        int key=(choice+1)*2+(out?1:0);
+        ModuleRackModel found = housingModels.get(key);
         if (found != null) return found;
         TextureAtlasSprite sprite = Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(
-                com.vandorlabs.tiles.ScreenHousingTextures.texture(choice));
-        found = new ModuleRackModel(this, choice, sprite); housingModels.put(choice, found);
+                choice<0?"vandorlabs:blocks/module_rack/housing":com.vandorlabs.tiles.ScreenHousingTextures.texture(choice));
+        found = new ModuleRackModel(this, choice, sprite, out); housingModels.put(key, found);
         // Every entry shares the same fixed geometry and module meshes. Retain at most sixteen shell finishes per facing.
         if (housingModels.size() > 16) housingModels.remove(housingModels.keySet().iterator().next());
         return found;
@@ -95,13 +97,15 @@ public final class ModuleRackModel implements IBakedModel {
     private static final class HousingShell implements IBakedModel {
         private final IBakedModel source; private final TextureAtlasSprite sprite;
         private final List<BakedQuad>[] quads;
-        @SuppressWarnings("unchecked") HousingShell(IBakedModel source, TextureAtlasSprite sprite, int facing) {
-            this.source = source; this.sprite = sprite; quads = (List<BakedQuad>[])new List<?>[7];
+        @SuppressWarnings("unchecked") HousingShell(IBakedModel source, TextureAtlasSprite sprite, int facing, boolean out) {
+            this.source = source; this.sprite = sprite;
+            TextureAtlasSprite port=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/power_"+(out?"out":"in")+"_off");
+            quads = (List<BakedQuad>[])new List<?>[7];
             for (int face = 0; face < 7; face++) {
                 List<BakedQuad> built = new ArrayList<>();
                 for (BakedQuad quad : source.getQuads(null, face == 6 ? null : EnumFacing.getFront(face), 0))
                     built.add(housingFace(quad, facing)
-                            ? RetexturedItemModel.retextureQuad(quad, sprite) : quad);
+                            ? RetexturedItemModel.retextureQuad(quad, quad.getFace().getIndex()==(facing^1)?port:sprite) : quad);
                 quads[face] = Collections.unmodifiableList(built);
             }
         }
@@ -294,8 +298,11 @@ public final class ModuleRackModel implements IBakedModel {
     @Override public List<BakedQuad> getQuads(IBlockState state, EnumFacing side, long seed) {
         if (state instanceof IExtendedBlockState && state.getBlock() instanceof BlockModuleRack) {
             Integer choice = ((IExtendedBlockState)state).getValue(BlockModuleRack.HOUSING);
-            if (choice != null && choice >= 0 && choice != housingChoice
-                    && com.vandorlabs.tiles.ScreenHousingTextures.validChoice(choice)) return housing(choice).getQuads(state, side, seed);
+            Integer output=((IExtendedBlockState)state).getValue(BlockModuleRack.POWER_OUT);
+            boolean out=output!=null&&output==1;
+            int finish=choice==null?-1:choice;
+            if ((finish!=housingChoice||out!=powerOut||shell.getClass()!=HousingShell.class)
+                    && (finish<0||com.vandorlabs.tiles.ScreenHousingTextures.validChoice(finish))) return housing(finish,out).getQuads(state, side, seed);
         }
         // Only the housing reaches block boundaries. Leave its cull faces intact.
         if (side != null) return shell.getQuads(null, side, 0);

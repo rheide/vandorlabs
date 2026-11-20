@@ -36,6 +36,28 @@ final class ModuleRackSettingsLiveChecks {
     private static void need(boolean ok, String why) {
         checks++; if (!ok) throw new IllegalStateException("Rack settings stage="+stage+" wait="+wait+": "+why);
     }
+    private static void batteryPort(net.minecraft.world.World world){
+        BlockPos pos=at().add(4,0,0);
+        for(EnumFacing front:EnumFacing.values()){
+            world.setBlockState(pos,net.minecraft.block.Block.getBlockFromName("vandorlabs:module_rack").getDefaultState().withProperty(com.vandorlabs.blocks.BlockModuleRack.FACING,front),3);
+            TileEntityModuleRack owner=(TileEntityModuleRack)world.getTileEntity(pos);
+            need(owner.insertModule(0,new ItemStack(ModItems.BATTERY_MODULE),false),"insert real battery into rack");
+            EnumFacing rear=front.getOpposite();
+            net.minecraftforge.energy.IEnergyStorage cap=owner.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,rear);
+            need(cap!=null&&cap.canReceive()&&!cap.canExtract(),"rear input advertises charging");
+            need(cap.receiveEnergy(6000,true)==6000&&owner.batteryEnergy()==0,"simulated charge has no mutation");
+            need(cap.receiveEnergy(6000,false)==6000&&owner.batteryEnergy()==6000&&cap.extractEnergy(10,false)==0,"input charges only");
+            owner.setPowerOut(true);
+            need(cap.canExtract()&&!cap.canReceive()&&cap.receiveEnergy(20,false)==0&&cap.extractEnergy(500,true)==500&&owner.batteryEnergy()==6000,"output direction/simulation");
+            BlockPos receiver=pos.offset(rear);world.setBlockState(receiver,com.vandorlabs.ports.ResourcePorts.POWER.getDefaultState(),3);
+            com.vandorlabs.ports.PowerPortTile port=(com.vandorlabs.ports.PowerPortTile)world.getTileEntity(receiver);port.place(front);owner.update();
+            need(owner.batteryEnergy()==5000,"output tick discharges exactly accepted RF");
+            net.minecraft.nbt.NBTTagCompound saved=owner.writeToNBT(new net.minecraft.nbt.NBTTagCompound());
+            owner.readFromNBT(saved);need(owner.powerOut()&&owner.batteryEnergy()==5000,"power mode and charged module reload");
+            world.setBlockToAir(receiver);world.setBlockToAir(pos);
+            need(cap.receiveEnergy(100,false)==0&&cap.extractEnergy(100,false)==0,"cached detached port cannot mutate modules");
+        }
+    }
     private static void next(int value) { stage=value; wait=0; }
     private static void click(GuiModuleRack gui,int id,int mouse) throws Exception {
         need(gui!=null,"dedicated Rack dialog remains open");
@@ -173,6 +195,7 @@ final class ModuleRackSettingsLiveChecks {
                 for(EnumFacing side:EnumFacing.values())need(player.world.getBlockState(at()).getBlock().getWeakPower(player.world.getBlockState(at()),player.world,at(),side)==0,"off gates every local side");
                 int modules=0;for(int slot=0;slot<4;slot++)modules+=owned.getStackInSlot(slot).getCount();
                 need(modules==4,"exactly four usable modules after configuration/reload");
+                batteryPort(player.world);
             });click(gui,1,0);
             System.out.println("[vandorlabs][reprolab] module-rack PASS settings checks="+checks+" ordinary/Configurator/Housing/C2S/previous/transmission/proportional/reload/privateItems/stale/permissions");return true;
         }

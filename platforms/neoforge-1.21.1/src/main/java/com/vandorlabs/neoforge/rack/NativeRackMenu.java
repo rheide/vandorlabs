@@ -18,5 +18,6 @@ public final class NativeRackMenu extends AbstractContainerMenu {
     @Override public ItemStack quickMoveStack(Player player,int index){return ItemStack.EMPTY;}
     private boolean authenticated(ServerPlayer player,int window,BlockPos pos){return player.getServer().isSameThread()&&player.containerMenu==this&&containerId==window&&tile.getBlockPos().equals(pos)&&stillValid(player);}
     public boolean configure(ServerPlayer player,int window,BlockPos pos,int housing,boolean emit,NativeRackData.Transmission transmission){return authenticated(player,window,pos)&&tile.configure(housing,emit,transmission);}
+    public boolean configurePower(ServerPlayer player,int window,BlockPos pos,boolean out){if(!authenticated(player,window,pos))return false;tile.setPowerOut(out);return true;}
     public boolean configureModule(ServerPlayer player,int window,BlockPos pos,int slot,long sequence,AutopilotModuleSettings settings){if(!authenticated(player,window,pos)||tile.kind(slot)!=2)return false;var previous=tile.moduleSettings(slot);if(NativeRackData.marker(settings,player.registryAccess()).isEmpty()&&(!settings.marker.equals(previous.marker)||settings.markerMetadata!=previous.markerMetadata))return false;return tile.configureModule(slot,sequence,settings);}
 }
