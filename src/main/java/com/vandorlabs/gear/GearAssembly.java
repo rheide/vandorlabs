@@ -52,6 +52,29 @@ public final class GearAssembly {
         return pos.getY() >= 0 && pos.getY() < world.getHeight() && world.isBlockLoaded(pos, false);
     }
 
+    /** An open Large Door cell that an arm column may run through. */
+    public static boolean passage(World world,BlockPos pos){
+        return loaded(world,pos)&&com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,pos,world.getBlockState(pos));
+    }
+    /** Every cell of {@code section}'s footprint, shifted to {@code gap}, is an open door passage. */
+    static boolean passageFootprint(World world,BlockPos section,BlockPos gap){
+        if(!loaded(world,section)||!(world.getBlockState(section).getBlock() instanceof GearBlock))return false;
+        BlockPos shift=gap.subtract(section);
+        for(BlockPos cell:((GearBlock)world.getBlockState(section).getBlock()).componentCells(world,section))if(!passage(world,cell.add(shift)))return false;
+        return true;
+    }
+    /**
+     * Open door cells that continue a column from {@code section} in {@code direction} up to the
+     * next matching section, or 0 when the column does not resume beyond them.
+     */
+    static int passageGap(World world,BlockPos section,EnumFacing direction,IBlockState sectionState,EnumFacing mount){
+        int gap=0;BlockPos probe=section.offset(direction);
+        while(gap<GearTopology.MAX_COLUMN_HEIGHT&&passageFootprint(world,section,probe)){probe=probe.offset(direction);gap++;}
+        if(gap==0||!loaded(world,probe))return 0;
+        IBlockState next=world.getBlockState(probe);
+        return isExtender(next)&&next.getBlock()==sectionState.getBlock()&&mountDirection(world,probe)==mount?gap:0;
+    }
+
     public static boolean isExtender(IBlockState state) {
         return state.getBlock() instanceof GearBlock && (((GearBlock)state.getBlock()).kind()==GearBlock.Kind.EXTENDER || ((GearBlock)state.getBlock()).kind()==GearBlock.Kind.MOUNT || isSwingArm(state));
     }
@@ -71,9 +94,13 @@ public final class GearAssembly {
         BlockPos top = ((GearBlock)world.getBlockState(start).getBlock()).componentRoot(world,start,world.getBlockState(start));
         int count = 1;
         while (true) {
-            BlockPos above = top.offset(mountDirection(world,top).getOpposite());
+            EnumFacing mount=mountDirection(world,top);
+            // Open Large Door cells between sections remain part of the column.
+            int gap=passageGap(world,top,mount.getOpposite(),world.getBlockState(top),mount);
+            BlockPos above = top.offset(mount.getOpposite(),gap+1);
             if (!loaded(world, above)) return null;
-            if (!isExtender(world.getBlockState(above)) || mountDirection(world,above)!=mountDirection(world,top)) return top;
+            if (!isExtender(world.getBlockState(above)) || mountDirection(world,above)!=mount) return top;
+            count+=gap;
             if (++count > GearTopology.MAX_COLUMN_HEIGHT) return null;
             top = above;
         }
@@ -101,7 +128,9 @@ public final class GearAssembly {
             if(!(world.getTileEntity(first) instanceof GearTileEntity))return unavailable("An arm tile is still loading.");
             if(swing&&world.getBlockState(first).getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected rotating arms in the same direction.");
             if(++height>GearTopology.MAX_COLUMN_HEIGHT)return fail("A strut column may contain at most eight sections.");
-            first=first.offset(mount);
+            int gap=passageGap(world,first,mount,topState,mount);
+            if(gap>0&&(height+=gap)>GearTopology.MAX_COLUMN_HEIGHT)return fail("A strut column may contain at most eight sections.");
+            first=first.offset(mount,gap+1);
         }
         if(!loaded(world,first))return unavailable("Load the feet and their boundary first.");
         IBlockState footState=world.getBlockState(first);
@@ -130,7 +159,7 @@ public final class GearAssembly {
                 BlockPos column=topOfColumn(world,above);if(column==null)return unavailable("Load the complete connected strut group.");
                 if(!column.offset(mount,height).equals(foot)||world.getBlockState(column).getBlock()!=topState.getBlock()||mountDirection(world,column)!=mount)return fail("Connected struts must have the same type and height.");
                 for(int n=0;n<height;n++){
-                    BlockPos cell=column.offset(mount,n);IBlockState state=world.getBlockState(cell);
+                    BlockPos cell=column.offset(mount,n);if(n>0&&passageFootprint(world,column,cell))continue;IBlockState state=world.getBlockState(cell);
                     if(state.getBlock()!=topState.getBlock()||!(world.getTileEntity(cell) instanceof GearTileEntity))return fail("Incomplete or mixed strut column.");
                     if(!((GearBlock)state.getBlock()).componentIntact(world,cell))return fail("Incomplete arm footprint.");
                     if(swing&&state.getValue(GearBlock.FACING)!=topState.getValue(GearBlock.FACING))return fail("Align connected swing arms in the same direction.");

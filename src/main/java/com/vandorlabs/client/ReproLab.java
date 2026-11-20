@@ -514,6 +514,7 @@ public class ReproLab {
     private static Shot pendingGallery;
     private static java.util.concurrent.Future<?> pendingGalleryBuild;
     private static int pendingGalleryTicks;
+    private final LiveGallery doorArmGallery=new LiveGallery("door-arm",new net.minecraft.util.math.BlockPos(40,85,8)).shot("west",-3.5,1.4,-3.5,-45F,12F).shot("east",5.5,1.4,7.5,135F,12F);
     private int holdTicks = 0;
     private boolean vehicleStatusStarted;
     private int followupStage;
@@ -705,7 +706,7 @@ public class ReproLab {
                 try{DoorAppearanceRuntimeChecks.verticalSplit(mc,outDir);}
                 catch(Exception failure){throw new IllegalStateException("Large Door vertical split render",failure);}
             }
-            if(holdTicks>40)try{if(com.vandorlabs.gear.HorizontalDoorArmLiveChecks.tick(mc))mc.shutdown();}
+            if(holdTicks>40)try{if(com.vandorlabs.gear.HorizontalDoorArmLiveChecks.tick(mc)&&com.vandorlabs.gear.VerticalDoorArmLiveChecks.tick(mc)&&doorArmGallery.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Horizontal Large Door arm checks",failure);}
             return;
         }

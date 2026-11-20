@@ -83,7 +83,25 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     @Override protected void setPowered(World world,BlockPos pos,IBlockState state,boolean powered,boolean open){
         TileEntityLargeProgrammableDoor tile=root(world,pos);if(tile==null || !complete(world,tile))return;
         for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members)if(!complete(world,member))return;
+        // An arm built through the doorway holds the whole joined group open.
+        if(!open&&world.getBlockState(tile.getPos()).getValue(OPEN)&&armPassesThrough(world,tile))open=true;
         for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members)publishPower(world,member,powered,open);
+    }
+    /** True when an arm column runs through any cell of {@code tile}'s joined group. */
+    public boolean armPassesThrough(World world,TileEntityLargeProgrammableDoor tile){
+        for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members){
+            BlockPos anchor=member.getPos();EnumFacing front=world.getBlockState(anchor).getValue(FACING);
+            for(int x=0;x<3;x++)for(int y=0;y<3;y++)if(com.vandorlabs.gear.ArmPassages.occupied(world,member.cell(anchor,front,x,y)))return true;
+        }
+        return false;
+    }
+    @Override public boolean removedByPlayer(IBlockState state,World world,BlockPos pos,net.minecraft.entity.player.EntityPlayer player,boolean willHarvest){
+        TileEntityLargeProgrammableDoor tile=world.isRemote?null:root(world,pos);
+        if(tile!=null&&armPassesThrough(world,tile)){
+            player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("An arm runs through this door; remove the arm first"),true);
+            world.notifyBlockUpdate(pos,state,state,3);return false;
+        }
+        return super.removedByPlayer(state,world,pos,player,willHarvest);
     }
     private void publishPower(World world,TileEntityLargeProgrammableDoor tile,boolean powered,boolean open){
         BlockPos anchor=tile.getPos();IBlockState old=world.getBlockState(anchor);EnumFacing front=old.getValue(FACING);

@@ -775,7 +775,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if (assembly == null) return;
         // setWorld/readFromNBT can run before the loading chunk is published.
         // Looking up a state there must never recursively request that chunk.
-        for(BlockPos column:columns)for(int i=0;i<assembly.columnHeight();i++){BlockPos at=pos.add(column).offset(mountDirection,i);if(world!=null&&GearAssembly.loaded(world,at)&&world.getBlockState(at).getBlock() instanceof GearBlock)members.addAll(((GearBlock)world.getBlockState(at).getBlock()).componentCells(world,at));else members.add(at);}
+        for(BlockPos column:columns)for(int i=0;i<assembly.columnHeight();i++){BlockPos at=pos.add(column).offset(mountDirection,i);if(world!=null&&GearAssembly.loaded(world,at)&&world.getBlockState(at).getBlock() instanceof GearBlock)members.addAll(((GearBlock)world.getBlockState(at).getBlock()).componentCells(world,at));else if(i==0||world==null||!GearAssembly.passageFootprint(world,pos.add(column),at))members.add(at);}
         if(assembly.kind()!=GearTopology.FootKind.NONE)for (GearTopology.Cell foot : assembly.feet()) members.add(localCell(foot));
     }
 
@@ -926,6 +926,20 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private void notifyTips(){
         if(world instanceof net.minecraft.world.WorldServer&&owner!=null&&owner.equals(pos)&&resourceTransfer!=ArmResource.DISABLED&&assembly!=null&&canTransferResources())
             for(BlockPos column:new ArrayList<>(columns))notifyTip(pos.add(column));
+    }
+    /** A column cell, between sections, that is an open door passage rather than a section. */
+    boolean columnPassesThrough(BlockPos cell){
+        if(assembly==null||world==null)return false;
+        for(BlockPos column:columns){
+            BlockPos base=pos.add(column);
+            for(int i=1;i<assembly.columnHeight();i++){
+                BlockPos at=base.offset(mountDirection,i);
+                if(!GearAssembly.passageFootprint(world,base,at))continue;
+                BlockPos shift=at.subtract(base);
+                for(BlockPos part:((GearBlock)world.getBlockState(base).getBlock()).componentCells(world,base))if(part.add(shift).equals(cell))return true;
+            }
+        }
+        return false;
     }
     /** Ducts and pipes on an empty tip re-evaluate their connection to the arm. */
     void notifyTip(BlockPos base){

@@ -29,7 +29,7 @@ final class JoinedArms {
                     if(!partner.joinEnabled()||distance>partner.joinRange()||partner.mountDirection()!=first.mountDirection()||!at.equals(GearAssembly.topOfColumn(world,at)))continue;
                     GearTileEntity firstControl=first.loadedController();if(firstControl==null)firstControl=first;
                     if(!matchingSettings(firstControl,control))continue;
-                    boolean lengthMatches=true;for(int n=0;n<height;n++){BlockPos part=at.offset(first.mountDirection(),n);if(!GearAssembly.loaded(world,part)||world.getBlockState(part).getBlock()!=state.getBlock()||GearAssembly.mountDirection(world,part)!=first.mountDirection()){lengthMatches=false;break;}}
+                    boolean lengthMatches=true;for(int n=0;n<height;n++){BlockPos part=at.offset(first.mountDirection(),n);if(n>0&&GearAssembly.passageFootprint(world,at,part))continue;if(!GearAssembly.loaded(world,part)||world.getBlockState(part).getBlock()!=state.getBlock()||GearAssembly.mountDirection(world,part)!=first.mountDirection()){lengthMatches=false;break;}}
                     if(!lengthMatches)continue;
                     BlockPos tip=at.offset(first.mountDirection(),height);if(!GearAssembly.loaded(world,tip)||GearAssembly.isFoot(world.getBlockState(tip)))continue;if(GearAssembly.isExtender(world.getBlockState(tip))&&GearAssembly.mountDirection(world,tip)==first.mountDirection())continue;
                     if(seen.add(at)){if(seen.size()>64)throw new IllegalArgumentException("Join at most 64 arms");pending.addLast(at);}
