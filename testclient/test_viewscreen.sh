@@ -88,6 +88,10 @@ case "${1:-}" in
         elif [ "$TARGET" = reactor-glass ]; then
             PREFIX=reactor_glass_
             export VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY=true
+        elif [ "$TARGET" = saved-duct-flow ]; then
+            # A reported world: set VANDOR_LABS_SAVED_WORLD to a 7z archive containing test/level.dat.
+            PREFIX=saved_duct_flow_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedDuctFlowOnly=true -Dfml.queryResult=confirm"
         elif [ "$TARGET" = arm-foreign ]; then
             PREFIX=arm_foreign_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_FOREIGN_ONLY=true
@@ -450,7 +454,7 @@ if [ -n "${VANDOR_LABS_TEST_RFTOOLS:-}" ]; then
 fi
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
-if [ "${TARGET:-}" = arm-foreign ]; then
+if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = saved-duct-flow ]; then
     for arm_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MekanismGenerators-1.12.2-9.8.2.389.jar; do
         cp "$COMPAT_MODS/$arm_mod" "$TEST_RUNTIME_GAME/mods/"
     done
@@ -465,6 +469,11 @@ cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
+if [ "${TARGET:-}" = saved-duct-flow ]; then
+    rm -rf "$TEST_RUNTIME_GAME/saves/saved-duct" "$RUN_OUT/unpack"
+    7z x -y -o"$RUN_OUT/unpack" "${VANDOR_LABS_SAVED_WORLD:?Set VANDOR_LABS_SAVED_WORLD}" >/dev/null
+    mkdir -p "$TEST_RUNTIME_GAME/saves"; cp -r "$RUN_OUT/unpack/test" "$TEST_RUNTIME_GAME/saves/saved-duct"; rm -f "$TEST_RUNTIME_GAME/saves/saved-duct/session.lock"; rm -rf "$RUN_OUT/unpack"
+fi
 # Exact optional reference renderers for the segmented comparison, isolated from production.
 if [ -n "${VANDOR_LABS_TEST_MALISIS_CORE:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_CORE" "$TEST_RUNTIME_GAME/mods/"; fi
 if [ -n "${VANDOR_LABS_TEST_MALISIS_DOORS:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_DOORS" "$TEST_RUNTIME_GAME/mods/"; fi
@@ -496,6 +505,11 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
+    if [ "$TARGET" = saved-duct-flow ]; then
+        grep -q "saved-duct-flow PASS" "$RUN_OUT/client.log"
+        echo "PASS: saved duct item flow"
+        exit 0
+    fi
     if [ "$TARGET" = arm-resource-indicator ]; then
         grep -q "arm-resource-indicator PASS" "$RUN_OUT/client.log"
         grep -q "arm-item-flow PASS" "$RUN_OUT/client.log"
