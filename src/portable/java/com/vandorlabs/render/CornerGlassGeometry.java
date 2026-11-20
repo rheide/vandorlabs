@@ -21,7 +21,13 @@ public final class CornerGlassGeometry {
         // Keep each end inside the cell even at the extreme depth positions.
         return center(depth)+(sloped?(y-.5)*(depth==0?.75:.1875):0);
     }
-    private double distance(double y,double normal){return Math.max(0,Math.min(1,middle(y)+normal-.5));}
+    private double distance(double y,double normal){
+        double center=middle(y);
+        // Compress the full cross section together at the corner. Clamping each
+        // vertex independently folds several frame faces onto the same plane.
+        double scale=Math.min(1,Math.min(center,1-center)/HALF_THICKNESS);
+        return center+(normal-.5)*scale;
+    }
 
     /** Project local flat-glass coordinates. The two ends remain flush with the cell boundaries. */
     public void project(double along,double y,double normal,double[] out){
@@ -70,7 +76,28 @@ public final class CornerGlassGeometry {
     public static int placementDepth(int turn,double x,double z,boolean horizontalFace){
         double[] point=new double[3];
         rotate(x,0,z,(4-turn)&3,point);
-        return PanelDepthPolicy.fromHit((float)((point[0]+point[2])*(horizontalFace?1:.5)));
+        return PanelDepthPolicy.fromHit((float)(point[0]+point[2]));
+    }
+    /** Shared placement policy. Support side is N/E/S/W, or -1 for a vertical click. */
+    public static int placement(int supportSide,double x,double z,int supportKind,int supportTurn,
+            int supportDepth,boolean supportRotated){
+        if(supportSide<0&&supportKind==2)return supportDepth*4+supportTurn;
+        int preferred=z<=.5?(x<=.5?0:1):(x<=.5?3:2);
+        int fallback=placementDepth(preferred,x,z,supportSide>=0)*4+preferred;
+        if(supportSide<0||supportKind==0)return fallback;
+        CornerGlassGeometry support=new CornerGlassGeometry(supportTurn,supportDepth,false);
+        int found=-1;double best=Double.POSITIVE_INFINITY;
+        for(int depth=0;depth<3;depth++)for(int turn=0;turn<4;turn++){
+            CornerGlassGeometry candidate=new CornerGlassGeometry(turn,depth,false);
+            boolean aligned=supportKind==2?candidate.joinsEdge(supportSide,support):
+                    candidate.joinsStraight(supportSide,supportRotated,supportDepth);
+            if(!aligned)continue;
+            // Both possible bends meet the clicked pane. Bend towards the clicked half.
+            double cx=turn==0||turn==3?0:1,cz=turn<2?0:1;
+            double score=(cx-x)*(cx-x)+(cz-z)*(cz-z);
+            if(score<best){best=score;found=depth*4+turn;}
+        }
+        return found<0?fallback:found;
     }
 
     public <T> List<T> collision(SpaceDoorBounds.Factory<T> factory){
