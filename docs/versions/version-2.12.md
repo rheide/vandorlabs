@@ -1,4 +1,4 @@
-# Vandor Labs 1.12.0
+# Vandor Labs 2.12.0
 
 The NeoForge 1.21.1 build now includes the **Copy Controller**. Build matching
 Programmable Surface pads and put a material chest behind the controller for

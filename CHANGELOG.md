@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.12.0 (in development)
+## 2.12.0 (in development)
 
 - Add flat and sloped Programmable Corner Glass. The Middle flat bevel joins two perpendicular Middle glass panels.
 - Leave the rear aperture of Canopy and Long Canopy open while retaining the frame.
