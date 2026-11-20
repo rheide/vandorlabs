@@ -28,7 +28,7 @@ public final class MatterPortTile extends ResourcePortTile {
     private int insert(int slot,ItemStack stack,int max,boolean commit){int count=Math.min(Math.min(stack.getCount(),Math.max(0,max)),room(slot,stack));if(commit&&count>0){ItemStack current=items.get(slot);if(current.isEmpty())items.set(slot,portion(stack,count));else current.grow(count);}return count;}
     private int room(ItemStack stack){int total=0;for(int i=0;i<SLOTS;i++)total+=room(i,stack);return total;}
     private int insert(ItemStack stack){int left=stack.getCount();for(int i=0;i<SLOTS&&left>0;i++)left-=insert(i,stack,left,true);return stack.getCount()-left;}
-    @Override protected Object findHandler(TileEntity tile,EnumFacing side){IItemHandler handler=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,side);return handler!=null?handler:ResourcePortConnections.itemPipe(tile,side);}
+    @Override protected Object findHandler(TileEntity tile,EnumFacing side){return ResourcePortConnections.itemHandler(tile,side);}
     @Override protected boolean compatible(Object handler,boolean receiving){return handler instanceof IItemHandler&&((IItemHandler)handler).getSlots()>0;}
     @Override protected void transferTick(){
         if(settings().pullInputs)for(int side=0;side<6;side++)if(input(side)){
