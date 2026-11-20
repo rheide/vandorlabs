@@ -1,77 +1,102 @@
 # Vandor Labs project guidance
 
-- The mod must work on both Windows and Linux with Java 8. Keep journal file sync and atomic publication on both platforms, but route directory sync through `JournalFiles`: Windows NIO cannot open directory channels. Do not swallow genuine Linux permission/I/O failures. Exercise real asynchronous journal preparation, completion and recovery in live tests; a pending disk operation is not a rejected gameplay action, and matrix fixtures that bypass journaling cannot establish this behavior.
+Minecraft 1.12.2 Forge mod (Java 8, Gradle 4.9) with a NeoForge 1.21.1 port in
+`platforms/neoforge-1.21.1` (Java 21). Shared, loader-free logic lives in `src/portable`
+with plain-Java checks in `src/portableTest`.
 
-- Shared gameplay code must not call `@SideOnly(Side.CLIENT)` APIs. In Minecraft 1.12.2, `AxisAlignedBB(Vec3d, Vec3d)` and `AxisAlignedBB.getCenter()` are client-only; use six coordinates and explicit midpoints. Run `testDedicatedServerLinkage`; integrated-server tests cannot establish dedicated-server API availability.
-- Keep tile `onLoad()` local-only. Queue channel registration, neighbor reads, gameplay updates and reservation repair through `DeferredTileLoad`, which rechecks tile identity after chunk loading finishes.
-- Failed vehicle or turntable deserialization must leave the entity inert and retain its original snapshot NBT for the next save. Do not keep a partially installed live snapshot after an installation failure.
-- Vehicle/turntable/copy preflight must cover previous-release blocks with external `ForgeCaps` on Vehicle Controllers, Pilot Seats, adjacent programmable tiles and supported vanilla tiles such as signs. The synthetic VehicleWorld may not reserialize third-party capabilities identically; preserve the original opaque capability NBT through assembly, rotation and parking while still rejecting changes to the block's own tile fields. Exercise the old saved layout, not only fresh 2.6 tiles.
-- Network optimizations need before/after byte or message counts and round-trip checks. Keep world access on the server thread, preserve authorization/container/loaded-chunk checks, and bound decoded lengths before allocating.
-- Hiding a block's creative tab does not hide it from JEI: its registry scans treat `Item.getCreativeTabs()` returning `{null}` as an uncategorized item. Default block items use `ItemCatalogBlock` to advertise an empty tab array when hidden; preserve their registry IDs. Use `test_viewscreen.sh --focus creative-catalog` with `VANDOR_LABS_TEST_JEI` set to a JEI JAR to check creative/search enumeration and the actual browser registry without running unrelated gameplay matrices.
-- Keep release regressions separate from documentation capture. Prefer exhaustive non-rendering matrices plus targeted rendered regressions over unasserted gallery screenshots. Parallel capture must use isolated worlds, retain stateful scene groups, and verify merged scene coverage and identical artifact hashes before running image analyzers.
-- Drive cosmetic mechanism animation with a pause-aware client clock rather than repeatedly comparing client world time with server start timestamps. Repeated packets must not restart motion, and vehicle tile replacement must retain visual state by world/position. Keep authoritative collision and saved timelines on the server; test clock corrections and reversals with `testCockpitVisualMotion` and the focused cockpit client check.
+The mod must build and run on both Windows and Linux. Keep code, Gradle tasks and file
+handling cross-platform. Windows live clients run through `testclient/run_windows.py`;
+`tools/focus.sh` is a Linux convenience wrapper and does not replace Windows coverage.
 
-- VehicleWorld is a read-only simulation view and deliberately has isRemote=true even on the server. Authoritative carried-control checks must use its parent world, and publish through VehicleSignals instead of registering outputs on the view.
-- Cockpit toggles/sliders must use the shared RedstoneChannelLatch bank, including per-channel saved levels; independent ON sources prevent other linked screens from turning them off. Pulses remain timed sources. Test cockpit/regular controls in both directions, partial overlaps, saved/reloaded levels and carried consumers. Persist pending controls before cloning ramp endpoints so geometry replacement cannot restore a stale latch.
-- Cockpit display capacity is six rows for screens and three for smaller touch panels. Append extra control IDs after legacy controls to preserve operation indices; validate limits on the server and test six rendered rows and seated hit mapping.
-- Cockpit Redstone overlays must use square-pixel layouts derived from the authored surface aspect, with the same slider regions used by hit testing. Reuse the batched screen renderer to reset shared buffer translations and layer solid controls before text. The focused cockpit suite checks rendered glyph proportions, buffer contamination, clicked-page selection, four-step throttle limits and both saved throttle layouts.
+Also read before changing these areas:
+- `agent-notes/feature-regressions.md`: vehicles and VehicleWorld, ramps, cockpits, arms and
+  Extenders, Copy Controllers and Turntables, rendering, shaders and animation, networking,
+  JEI and the creative catalog, and optional mod adapters.
+- `agent-notes/release.md`: version releases, broad cross-system updates and running-server
+  updates.
 
-- Vehicle main-view visibility bookkeeping must ignore shader shadow-map draws. OptiFine renders the same entity into its shadow target before the main view; counting that as a main draw suppresses the hidden-origin fallback for interior cameras. Test separate shadow/main framebuffers, an origin behind the camera, forward/side look angles, tile rendering and the previous empty-frame negative control.
-- Vehicle VBOs must retain an immutable copy of their build format and derive pointer strides/offsets from it. Shader format changes invalidate cached meshes. Preserve extended component payloads when combining records; OptiFine's addVertexData rewrites block/entity IDs. The focused render-regressions client checks vanilla/extended record parity separately from hardware shader-pack acceptance.
-- Filled diagonal caps and adjacent flat wall contacts must be tested on actual emitted geometry for Inside/Outside/Both fills, all facings and inverted placement. A narrow flat wall does not seal the wider filled cap.
-- Ramp Controller Slab keeps a horizontal half-height collision/model housing for every active face. Its metadata stores six faces and two halves; activity comes from the tile actual state. Do not consume another metadata bit for activity or rotate the slab body vertically for UP/DOWN scan faces. Draw native half-height side panels and test configured item padding. Minecraft 1.12 requires square static atlas sprites: place the native half-height panel in a square atlas and select its half-height UV region, rather than stretching the artwork or shipping an invalid rectangular static sprite.
-- Ramp Controller scan direction and horizontal travel direction are separate. Preserve existing horizontal metadata and save horizontal travel when placing a vertical scan face. Test all six active-face models and capture/recovery above and below.
-- Overhanging diagonal walls and canopies can touch blocks outside their reserved cells. Discovery must follow bounded actual collision surfaces, require overlap on two axes to exclude corner-only contacts, and retain loaded-chunk and scan limits. A six-neighbour flood fill alone can leave attached ceiling blocks behind and trap the craft.
-- Vehicle discovery must use only a slab's own empty half to reject vertical attachments. Do not require decorative neighbours' selection bounds to meet exactly: diagonal wall bounds can stop short of their cell and leave ceiling slabs behind. Check symmetric top-slab floor exclusion and bottom-slab ceiling capture.
-- A cockpit is not a substitute for a dedicated Vehicle Controller in new assembly or mode selection. Preserve legacy snapshot loading and safe parking recovery without a controller. Vehicle Status must report the missing controller before offering mode controls.
+## Tools
 
-- Configurizer interaction and ordinary right-click configuration must open the same dialog, with the same controls, authorization and behavior. Route both through one shared configuration path; never substitute the generic redstone dialog for a block's dedicated dialog.
-- Right-clicking a dialog option must select its previous value. Keep left-click and right-click cycling consistent across dialogs.
-- Before adding or changing a dialog, inspect the existing dialogs for the same kind of controls and reuse their layout, widgets and interaction style (for example, the Turntable Controller height slider).
-- Follow the existing screen, texture-list and door dialogs for layout and interaction conventions. Texture lists must support both wheel scrolling and dragging their scrollbar.
-- Match the mod's established texture resolutions; do not ship oversized textures. Turntable surface artwork may use a larger resolution because it can span multiple blocks.
-- When adding, removing or recategorizing selectable textures, regenerate the docs browser and category collages with `tools/generate_texture_browser.py`, then run it with `--check`. Keep `docs/texture-browser/` and `docs/texture-overview.md` synchronized with the in-game catalogs.
-- A texture category can also control runtime artwork selection, including turntable low-resolution sprites and Dynmap catalog lookup. Search all consumers of the old category string. During feature implementation use `testDynmapRenderers` and the focused live picker; during release review include the applicable checks in the collect-first inventory and defer fixes until the complete report is available.
-- Host the texture browser through this repository's GitHub Pages site, using `master` and `/docs` as recorded in `tools/texture_browser_hosting.json`. Commit regenerated browser assets with texture changes so Pages publishes the same catalog; no separate hosting checkout or upload is needed.
+- `tools/focus.sh <focus> [--shots] [--no-build]` runs one live client focus. It runs
+  preflight checks, rebuilds the JAR only when sources are newer and prints a short PASS/FAIL
+  summary with the first failure cause. The full output goes to `build/focus-logs/`. Focus
+  names are the `--focus` targets in `testclient/test_viewscreen.sh`. Put machine-specific
+  settings such as `VANDOR_LABS_COMPAT_MODS` in the untracked `tools/focus.local.env`.
+- `--shots` copies the run's screenshots to `build/focus-shots/<focus>/` and tiles them into
+  `contact-sheet.png` with `tools/contact_sheet.py`. Review the sheet first, then crop one
+  original at full resolution where needed; don't open every screenshot.
+- In 1.12 live fixtures, use `LiveGallery` (`src/main/java/com/vandorlabs/client`) for named
+  camera shots and for placing blocks through the real item path. Never block the client
+  thread on an integrated-server task with `.get()`: a paused server runs no tasks and the
+  client times out.
+- Run long checks in the background and wait for completion; don't poll logs repeatedly.
+  Read logs with bounded searches for PASS markers and the first stack trace.
 
-- Remove inactive task worktrees after their changes are integrated. Preserve their source branch or commit and compact verification evidence first; do not retain copied resource trees, generated builds and disposable worlds for completed tasks.
-- Generated test runtimes must use the shared artifact-retention helper and finalize after the entire suite, including all restart/recovery phases. Keep logs, hashes and diagnostics; bound failed payloads. Use `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` only when a full runtime must remain available for debugging. Follow `docs/test-artifact-retention.md`.
-- Keep finished build artifacts in `build/libs/`. Copy a build elsewhere only when the user explicitly requests a destination.
-- Use Java 8 for Gradle 4.9 builds. Run the focused live client path for client-visible or gameplay changes.
-- During ordinary feature implementation, run the smallest relevant live focus with the actual optional mods before stacking further changes. Release reviews use the inventory-first workflow below instead of stopping and rebuilding after each discovered failure.
-- For release review, build once or select one existing standard JAR, record its SHA-256, and run `tools/verify_release.sh --jar <candidate> --jobs 2` before making fixes prompted by individual failures. The helper continues independent CPU/live checks and records the complete failure inventory. Do not edit packaged code, rebuild, or alter the candidate during this pass. Read-only diagnosis can proceed while tests run. Only broken infrastructure, cancellation, or mixed artifact hashes should abort the inventory.
-- Run at most two independent live Minecraft checks concurrently, each with isolated game/world/output directories. Keep every restart/recovery phase of a stateful focus in one lane, and run timing/performance benchmarks exclusively. Prioritize save/recovery, ownership, arms and vehicle checks ahead of cosmetic/gallery work; preserve the entire required coverage set.
-- After the inventory finishes, triage data loss, duplication and crashes first, then gameplay, rendering/performance, and fixture maintenance. Batch coherent fixes before rebuilding once. Rerun failed focuses against the new candidate using `tools/release_live_checks.py --jar <candidate> --focus <name> --jobs 2 --report <report>` plus the reported failed Gradle tasks with `--continue`; then rerun only failed and affected checks, including relevant historical regressions. Do not restart the full suite after fixes unless the user explicitly asks or changed shared infrastructure makes the earlier inventory unusable. Reuse passing baseline results for unchanged code/inputs; record baseline and repaired-candidate hashes plus the reason each retest was selected. A clean first complete inventory is final. Targeted reports remain labeled targeted; never claim they are a fresh full-suite pass.
-- Save release output to a log and inspect task summaries, PASS markers and the failing stack trace with bounded searches. Do not repeatedly dump full logs or rerun already passing broad suites just to collect more output; retain the exact command, artifact hash and focused result in the handoff.
-- In live client fixtures, synchronize both the integrated server and client game mode, selected hotbar slot, held stack and position before sending a real interaction packet. Wait for the client to observe those states and include fixture, stage, mode and inventory values in timeout failures; server-only setup can make survival clicks run through a creative client and hide inventory bugs.
-- Build only the standard mod JAR. Never produce original-textures JARs; the original texture directory is an archive and validation reference only.
-- Every new multiblock must have step-by-step building instructions under `docs/`, with construction-stage images following the existing multiblock guides. Update the changelog and the current version promotion page alongside the feature.
-- Keep documentation technical and user-facing. Do not commit task logs, chat transcripts, authoring instructions, personal paths or machine-specific details.
-- Item icons must be slightly smaller than their inventory/hotbar slots, with visible padding on every side. Account for the GUI rotation and depth, and check every generated variant; fitting the unrotated model into 16×16 coordinates does not guarantee that its icon fits.
+## Platform rules
 
-- As a final release check, review the complete change set against the previous release for rendering and client/server costs, useful cache reuse, smooth animation under server lag, saved-data compatibility, dedicated-server linkage and failure recovery that could leave a world inconsistent. Revisit related historical fixes and run their applicable regressions; passing current-version round trips alone does not prove upgrade compatibility.
-- Release compatibility checks must load previous-release block-state palettes and tile/entity NBT, including snapshots and pending recovery journals. When adding a listed block-state property, explicitly migrate its absence in older snapshots without weakening rejection of unknown blocks or properties. Preserve registry IDs, metadata, packet/control indices and original failed-load NBT.
-- Release animation checks must cover delayed, repeated and out-of-order updates, low server tick rates, pause/resume, reversals and carried tile replacement. Keep cosmetic interpolation separate from authoritative collision; check arms and payloads as well as cockpit and decorative mechanisms.
-- Release recovery checks must distinguish caught exceptions from abrupt process termination and partial cross-chunk saves. Any block/inventory ownership transfer needs durable recovery before source removal or target publication, with restart tests proving exactly one usable owner. Check disabled saving, unloaded chunks, missing tile factories and failed rollback.
-- Release performance checks must inspect repeated scans/serialization, per-frame allocations, packet volume and cache invalidation on state changes, resource reload and world unload. Bound caches by retained memory where entries vary substantially in size. Retain before/after timing, allocation, vertex or byte/message evidence as appropriate; software-rendered or structural checks do not establish hardware FPS or shader-pack acceptance.
-- For moving arm changes, start a focused live fixture from the exact player placement and activation sequence, including the mounting block, surrounding ground and ordinary payload. Keep supports in place and advance every member tile as a world tick would; testing only the controller or endpoint transform can miss rebuilds and blocked strokes. Assert progress, source and target ownership, click/ray access, reversal and reload. If a move is refused, restore the last valid endpoint immediately when possible and retain a recoverable snapshot if restoration itself fails; a blocked arm must not silently leave its attachment hidden or unselectable. Reproduce a reported regression with a failing fixture before claiming its motion is fixed, then pass that same fixture on the built JAR. If the reported world state is unavailable and the closest fixture passes before the fix, say explicitly that the exact motion failure remains unconfirmed.
-- Select validation from the changed behavior before starting a run. A vehicle mode or saved-vehicle change needs previous-version NBT fixtures, Taxi/park/recovery live checks and dedicated-server linkage when shared code changed; it does not by itself require Dynmap or glass/contact frame checks. A texture catalog, atlas or renderer change needs its picker/render focus and Dynmap when the mapping affects Dynmap. Glass/contact frames belong to glass, geometry, material pass or depth changes. Run adjacent historical regressions when the changed code reaches them, and record the selected checks and reason in the handoff.
-- For a version release or broad cross-system update, use the Java 8 collect-first gate `tools/verify_release.sh --jar <candidate> --jobs 2`. It includes the full CPU/non-rendering/diagonal/shader checks and the complete live `verifyRelease` focus set, even when an independent earlier check fails. `gradlew verifyRelease` remains the Gradle all-green/publishing entry point; use the shell helper for a complete failure inventory. Respect explicit exclusions such as `--skip-dynmap` and record them. Never tag or publish with unresolved required failures. Release evidence may combine a complete frozen baseline inventory with explicitly justified affected-check reruns on a repaired candidate; disclose both hashes and do not label this a fresh full-suite pass. Each individual run must use one unchanged artifact. For a narrow post-release patch, use applicable focused checks and verify the exact artifact/deployed hash; assembling alone is not validation.
-- The isolated exact-JAR Dynmap smoke test must include the WorldEdit 6.1.10 compatibility JAR with `--mod`, matching the known working fixture. Dynmap alone with this Forge 1.12.2 server can fail during biome access before Vandor renderers are exercised. Compare `artifact.sha256` with the release JAR after the render.
-- For an authorized update of a running server, wait for the applicable final validation first, stop it gracefully, confirm the process has exited, run its existing backup script and verify the archive before replacing the mod JAR. Restart and check the loaded mod version and server-ready log before reporting success.
+- Use Java 8 on both Windows and Linux. Keep journal file sync and atomic
+  publication on both platforms, but route directory sync through `JournalFiles`, because
+  Windows NIO cannot open directory channels. Do not swallow genuine Linux permission/I/O
+  failures. Exercise real asynchronous journal preparation, completion and recovery in live
+  tests; matrix fixtures that bypass journaling cannot establish this behavior.
+- Shared gameplay code must not call `@SideOnly(Side.CLIENT)` APIs. In 1.12.2,
+  `AxisAlignedBB(Vec3d, Vec3d)` and `AxisAlignedBB.getCenter()` are client-only; use six
+  coordinates and explicit midpoints. Run `testDedicatedServerLinkage` when shared code changes;
+  integrated-server tests cannot establish dedicated-server API availability.
+- Keep tile `onLoad()` local-only. Queue channel registration, neighbor reads, gameplay updates
+  and reservation repair through `DeferredTileLoad`, which rechecks tile identity after chunk
+  loading finishes.
 
-- Grid-aligned retracted Extender payloads must be native world blocks on all six mounting faces. Preserve displaced arm sections separately from payload ownership; never encode the former reserved-cell limitation as an expected test result. Run `arm-endpoints` for regular/Large joined platforms, edits, disconnected corners, reload and empty extension, and the endpoint partial-save phases of `test_arm_recovery.sh` when changing that handoff. Fractional endpoints still require captured-payload mining coverage.
+## Building and validation
 
-- Restored arm sections need client tile data after journal proxies are published, even if their block state is unchanged. Endpoint tests must compare client mounting direction and controller ownership and assert only one assembly renderer after partial and complete native-payload mining; server-only block checks miss duplicate standalone models.
+- Use Java 8 for Gradle 4.9 builds. Build only the standard mod JAR and keep it in
+  `build/libs/`. Never produce original-textures JARs; the original texture directory is an
+  archive and validation reference only. Copy a build elsewhere only when the user asks.
+- Choose validation from the changed behavior before starting a run, and record the selected
+  checks and the reason in the handoff. For example, a vehicle mode or saved-vehicle change
+  needs previous-version NBT fixtures, Taxi/park/recovery live checks and dedicated-server
+  linkage; it does not need Dynmap or glass/contact-frame checks. A texture catalog, atlas or
+  renderer change needs its picker/render focus, plus Dynmap when the mapping affects Dynmap.
+  Glass/contact frames belong to glass, geometry, material-pass or depth changes. Run adjacent
+  historical regressions when the changed code reaches them.
+- During feature work, run the smallest relevant live focus with the actual optional mods
+  before stacking further changes. Client-visible or gameplay changes need a live client run.
+- Run at most two live Minecraft checks concurrently, each with isolated game, world and output
+  directories. Run timing benchmarks on their own.
+- In live client fixtures, synchronize the integrated server and the client before sending a
+  real interaction packet: game mode, selected hotbar slot, held stack and position. Include
+  the fixture, stage, mode and inventory values in timeout failures.
+- Generated test runtimes use the shared artifact-retention helper (`docs/test-artifact-retention.md`).
+  Set `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` only when a full runtime must remain for debugging.
+- Commit coherent steps as you go. Remove inactive task worktrees after their changes are
+  integrated, keeping their branch or commit and compact verification evidence.
 
-- Rotating-arm swept bounds must not grow along the world-space hinge axis. Face contact beside that axis is not an obstruction. Keep the saved wall-mounted pair in the `arm-wall` focus, and verify actual obstructions still refuse safely and permit retry.
+## UI, textures and items
 
-- Arm regression coverage must include joined and independent assemblies, regular and Large sizes, all mounting faces and both rotating payload modes. Exercise edits at every materialized endpoint, then reversal and complete payload removal; a successful independent-arm stroke does not establish joined behavior. Keep exact saved-world reproductions in the shared Linux/Windows live focus.
+- Configurizer interaction and ordinary right-click must open the same dedicated dialog, with
+  the same controls, authorization and behavior, through one shared path. Never substitute the
+  generic redstone dialog.
+- Left-click cycles a dialog option forward and right-click selects its previous value,
+  consistently across dialogs. Before adding or changing a dialog, reuse the layout, widgets and
+  interaction style of existing dialogs with the same kind of controls (for example the
+  Turntable Controller height slider, and the screen, texture-list and door dialogs). Texture
+  lists support both wheel scrolling and dragging the scrollbar.
+- Match the mod's established texture resolutions. Turntable surface artwork may be larger,
+  because it can span multiple blocks.
+- When adding, removing or recategorizing selectable textures, regenerate the texture browser
+  and collages with `tools/generate_texture_browser.py` and check them with `--check`. Commit
+  `docs/texture-browser/` and `docs/texture-overview.md` with the change; GitHub Pages serves
+  them from `master` `/docs` (`tools/texture_browser_hosting.json`). A texture category can also
+  drive runtime artwork, including turntable low-resolution sprites and Dynmap lookup, so
+  search every consumer of a changed category string and run `testDynmapRenderers` and the
+  focused live picker.
+- Item icons must be slightly smaller than their slots, with visible padding on every side,
+  accounting for the GUI rotation and depth. Check every generated variant.
 
-- Shared surface changes must cover Copy Controllers as well as Turntables. Mine both a shared drawing root and another member, assert opaque surviving faces in the client renderer, and exercise rebuilding and expanding pads through temporary holes or unequal sizes. Invalid layouts must not retain a missing renderer root or stale copy area; topology notifications must settle without continuous rescanning. Run the `copy-surfaces` live focus.
+## Documentation
 
-- Vehicle ramp regressions must include saved generated `controlled_ramp` cells alongside their controllers. Check capture, all cardinal rotations, exact tile data, parking and recapture; controller-only fixtures miss part-specific clock fields and stale saved map geometry. Run the `vehicle-ramps` live focus.
-
-- VehicleWorld explicit chunk requests must initialize capabilities against the physical parent world, while retaining read-only snapshot block/tile access. Its remote flag does not make it a WorldClient on a dedicated server. Exercise the hardness-hook path with the installed Thaumic Augmentation and previous-release controller NBT using `test_server_startup.py --vehicle-world-only`; ordinary no-chunk reads and integrated tests miss this failure.
-
-- Optional building adapters need installed-mod metadata/orientation/NBT matrices plus the `foreign-buildings` live focus. Keep RF/fluid/network families deferred unless explicitly requested. Preserve native furniture pairs and constructor-only TV dimensions; carried Galacticraft Screens need client-only visual initialization without native `onLoad` callbacks or position packets. Keep incomplete/linked structures and unknown data refused.
+- Every new multiblock needs step-by-step building instructions under `docs/`, with
+  construction-stage images like the existing guides. Update `CHANGELOG.md` and the current
+  version promotion page alongside the feature.
+- Keep documentation technical and user-facing. Do not commit task logs, chat transcripts,
+  authoring instructions, personal paths or machine-specific details.

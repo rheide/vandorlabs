@@ -9,5 +9,5 @@ VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 rm -f testclient/runtime/game/mods/vandorlabs-*.jar
 cp "build/libs/vandorlabs-$VERSION.jar" testclient/runtime/game/mods/
 VANDOR_LABS_CHANNEL_GUI_CHECKS_ONLY=true VANDOR_LABS_REPRO_OUT="$RUN_OUT" timeout 600 testclient/run.sh > "$RUN_OUT/client.log" 2>&1
-rg -q 'channel-gui-runtime PASS' "$RUN_OUT/client.log"
+grep -qF 'channel-gui-runtime PASS' "$RUN_OUT/client.log"
 echo "Live channel dialog artifacts: $RUN_OUT"

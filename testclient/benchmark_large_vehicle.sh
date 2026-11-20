@@ -29,5 +29,5 @@ if [ -n "${VANDOR_LABS_BENCH_SHADERPACK:-}" ]; then
 fi
 sha256sum "$JAR" > "$OUTPUT/results/artifact.sha256"
 VANDOR_LABS_TEST_EXTRA_LIBRARIES=${VANDOR_LABS_BENCH_LIBRARIES:-} VANDOR_LABS_TEST_HEAP=${VANDOR_LABS_TEST_HEAP:-12G} VANDOR_LABS_LARGE_VEHICLE_BENCHMARK=true VANDOR_LABS_TEST_GAME_DIR="$OUTPUT/game" VANDOR_LABS_REPRO_OUT="$OUTPUT/results" timeout "${VANDOR_LABS_BENCH_TIMEOUT:-1800}" "$ROOT/testclient/run.sh" > "$OUTPUT/client.log" 2>&1
-rg -q 'large-vehicle-benchmark PASS' "$OUTPUT/client.log"
+grep -qF 'large-vehicle-benchmark PASS' "$OUTPUT/client.log"
 echo "Large vehicle benchmark passed: $OUTPUT/results"

@@ -8,12 +8,13 @@ cd "$(dirname "$0")/runtime"
 JAVA=/usr/lib/jvm/java-8-openjdk-amd64/bin/java
 CP=$(paste -sd: cp.txt)
 # IE uses Forge's Trove 3 collection classes, absent from the minimal vanilla classpath.
-TROVE_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" | rg '/trove4j-3.0.3.jar$' | head -n 1)
+TROVE_JAR=$(find "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j/trove4j/3.0.3" -name trove4j-3.0.3.jar 2>/dev/null | head -n 1)
 # Thaumcraft uses Forge's Scala runtime during client model baking.
-SCALA_JAR=$(rg --files "$HOME/.gradle/caches/modules-2/files-2.1/org.scala-lang/scala-library/2.11.1" | rg '/scala-library-2.11.1.jar$' | head -n 1)
+SCALA_JAR=$(find "$HOME/.gradle/caches/modules-2/files-2.1/org.scala-lang/scala-library/2.11.1" -name scala-library-2.11.1.jar 2>/dev/null | head -n 1)
+if [ -z "$TROVE_JAR" ]; then echo "preflight: trove4j-3.0.3.jar is missing from the Gradle cache; run a Forge Gradle build once" >&2; exit 2; fi
 CP="$CP:$TROVE_JAR:$SCALA_JAR"
 if [ -n "${VANDOR_LABS_TEST_EXTRA_LIBRARIES:-}" ]; then
-  EXTRA_CP=$(rg --files -uuu "$VANDOR_LABS_TEST_EXTRA_LIBRARIES" -g "*.jar" | LC_ALL=C sort | paste -sd:)
+  EXTRA_CP=$(find "$VANDOR_LABS_TEST_EXTRA_LIBRARIES" -name '*.jar' | LC_ALL=C sort | paste -sd:)
   CP="$CP:$EXTRA_CP"
 fi
 BENCH_GAME_DIR=${VANDOR_LABS_TEST_GAME_DIR:-"$PWD/game"}

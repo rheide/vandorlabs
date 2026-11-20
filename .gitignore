@@ -32,3 +32,6 @@ testclient/door-animation.*/
 # Local javac diagnostics and retained rack-upgrade runtimes.
 /javac.*.args
 /testclient/rack-upgrade.*/
+
+# Machine-specific settings for tools/focus.sh
+tools/focus.local.env

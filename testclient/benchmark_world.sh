@@ -22,5 +22,5 @@ VANDOR_LABS_TEST_HEAP=${VANDOR_LABS_TEST_HEAP:-6G} \
 VANDOR_LABS_WORLD_BENCHMARK=true VANDOR_LABS_TEST_GAME_DIR="$OUTPUT/game" \
     VANDOR_LABS_REPRO_OUT="$OUTPUT/results" timeout "${VANDOR_LABS_WORLD_TIMEOUT:-900}" \
     "$ROOT/testclient/run.sh" > "$OUTPUT/client.log" 2>&1
-rg -q 'world-benchmark PASS' "$OUTPUT/client.log"
+grep -qF 'world-benchmark PASS' "$OUTPUT/client.log"
 echo "World benchmark results: $OUTPUT/results"
