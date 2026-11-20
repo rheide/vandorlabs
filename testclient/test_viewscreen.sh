@@ -87,6 +87,9 @@ case "${1:-}" in
         elif [ "$TARGET" = reactor-glass ]; then
             PREFIX=reactor_glass_
             export VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY=true
+        elif [ "$TARGET" = arm-foreign ]; then
+            PREFIX=arm_foreign_
+            export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_FOREIGN_ONLY=true
         elif [ "$TARGET" = foreign-buildings ]; then
             PREFIX=foreign_building_
             export VANDOR_LABS_FOREIGN_BUILDING_CHECKS_ONLY=true
@@ -443,6 +446,11 @@ if [ -n "${VANDOR_LABS_TEST_RFTOOLS:-}" ]; then
 fi
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
+if [ "${TARGET:-}" = arm-foreign ]; then
+    for arm_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MekanismGenerators-1.12.2-9.8.2.389.jar; do
+        cp "$COMPAT_MODS/$arm_mod" "$TEST_RUNTIME_GAME/mods/"
+    done
+fi
 if [ -n "${VANDOR_LABS_TEST_PORT_MODS:-}" ]; then
     for port_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MicdoodleCore-1.12.2-4.0.2.280.jar GalacticraftCore-local4.1.0.280-1.12.2-4.0.2.280.jar Galacticraft-Planets-1.12.2-4.0.2.280.jar rftools-1.12-7.72.jar mcjtylib-1.12-3.5.4.jar; do
         cp "$VANDOR_LABS_TEST_PORT_MODS/$port_mod" "$TEST_RUNTIME_GAME/mods/"
@@ -627,6 +635,11 @@ PYIMAGE
     if [ "$TARGET" = reactor-glass ]; then
         grep -q "reactor-glass PASS" "$RUN_OUT/client.log"
         echo "Standalone reactor glass checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-foreign ]; then
+        grep -q "arm-foreign PASS" "$RUN_OUT/client.log"
+        echo "PASS: installed arm foreign tank checks"
         exit 0
     fi
     if [ "$TARGET" = foreign-buildings ]; then

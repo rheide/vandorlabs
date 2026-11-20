@@ -83,7 +83,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     boolean resourceEndpointAvailable(){
         return !firstServerTick&&isOperational()&&canTransferResources()&&!hasFailedArmSnapshot()&&!payloadPreparationPending
                 &&!adjustingStart&&!parkingHoldNeedsGeometry&&taxiState==null&&progress==(target()?1:0)
-                &&(payload==null||payload.materialized());
+                &&(payload==null||!payload.hasOwnershipJournal());
     }
     ArmResourceTransfer resourceConnection(){
         if(resourceConnection==null)resourceConnection=new ArmResourceTransfer(this);

@@ -57,7 +57,7 @@ public final class ForeignBuildingChecks {
                 TileEntity raw=state.getBlock().hasTileEntity(state)?state.getBlock().createTileEntity(world,state):null;
                 VehicleStructure.Cell probe=new VehicleStructure.Cell(new BlockPos(2,2,2),state,raw==null?null:new NBTTagCompound());
                 boolean eligible=MovingBlockSupport.supported(probe,raw);
-                if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))require(!eligible,"RF/fluid/network blocks remain deferred: "+block.getRegistryName());
+                if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))require(eligible==MachineBlockCompat.supported(raw),"Thermal eligibility uses the explicit standalone machine adapter: "+block.getRegistryName());
                 if(!eligible){rejected++;continue;}
                 // Fluids and intangible temporary effects are excluded from this building scope.
                 if(state.getMaterial().isLiquid()||block.isAir(state,world,BlockPos.ORIGIN)){rejected++;continue;}

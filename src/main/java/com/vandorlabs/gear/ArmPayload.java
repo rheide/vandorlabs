@@ -176,6 +176,34 @@ public final class ArmPayload {
             List<AxisAlignedBB> boxes=new ArrayList<>(edited.localCollision.subList(0,begin));((com.vandorlabs.coupler.BlockCoupler)changed.state.getBlock()).appendCollisionBoxes(changed.state,changed.pos,changed.tileData(),boxes);int delta=boxes.size()-end;boxes.addAll(edited.localCollision.subList(end,edited.localCollision.size()));result.localCollision=Collections.unmodifiableList(boxes);result.collisionCellEnds=edited.collisionCellEnds.clone();for(int i=index;i<result.collisionCellEnds.length;i++)result.collisionCellEnds[i]+=delta;
         }return result;
     }
+    /** A standalone saved tank has one resource owner even while its mesh is rotated.
+     * Work on a detached tile, then publish its NBT atomically; never tick/register
+     * a foreign network in VehicleWorld or leave mutable contents outside the save. */
+    <T,R> R transferCapturedTank(GearTileEntity arm,BlockPos contact,EnumFacing side,
+            net.minecraftforge.common.capabilities.Capability<T> capability,R unavailable,
+            java.util.function.Function<T,R> action){
+        if(materialized||hasOwnershipJournal()||capability!=net.minecraftforge.fluids.capability.CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY)return unavailable;
+        VehicleStructure.Cell cell=blocks.at(contact);
+        TileEntity original=cell==null?null:view(arm).tiles.get(contact);
+        if(original==null||!original.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank"))return unavailable;
+        NBTTagCompound before=cell.tileData();
+        TileEntity detached=TileEntity.create(null,before.copy());
+        if(detached==null||detached.getClass()!=original.getClass())return unavailable;
+        detached.setWorld(view(arm));detached.setPos(contact);
+        T handler=detached.getCapability(capability,side);if(handler==null)return unavailable;
+        R result=action.apply(handler);
+        NBTTagCompound after=VehicleTileData.retainCapabilities(before,detached.writeToNBT(new NBTTagCompound()));
+        if(!before.equals(after)){
+            NBTTagCompound ownBefore=before.copy(),ownAfter=after.copy();ownBefore.removeTag("fluidTank");ownAfter.removeTag("fluidTank");
+            if(!ownBefore.equals(ownAfter))throw new IllegalStateException("Carried tank altered non-fluid ownership data");
+            List<VehicleStructure.Cell> rows=new ArrayList<>(blocks.cells);int index=rows.indexOf(cell);
+            rows.set(index,new VehicleStructure.Cell(cell.pos,cell.state,after));
+            ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(rows),offset,false,placedOffset));
+            next.localCollision=localCollision;next.collisionCellEnds=collisionCellEnds;
+            arm.installCoreSettings(this,next);
+        }
+        return result;
+    }
     private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();next.couplerFrames=couplerFrames;return next;}
     private java.util.List<com.vandorlabs.tiles.TileEntityConstructor> navigationObservers;
     public java.util.List<com.vandorlabs.tiles.TileEntityConstructor> navigationObservers(GearTileEntity arm){

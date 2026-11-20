@@ -7,6 +7,7 @@ import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.fluids.IFluidTank;
 
 /** Initialize carried Galacticraft displays without native load callbacks or client packets. */
 public final class ForeignBuildingVisuals {
@@ -15,7 +16,9 @@ public final class ForeignBuildingVisuals {
     public static void prepare(VehicleWorld view){
         World parent=view.parent;while(parent instanceof VehicleWorld)parent=((VehicleWorld)parent).parent;
         if(!parent.isRemote)return;
-        for(TileEntity tile:view.tiles.values())if(tile.getClass().getName().equals(SCREEN))try{
+        for(TileEntity tile:view.tiles.values()){
+            prepareTank(tile);
+            if(tile.getClass().getName().equals(SCREEN))try{
             if(screenField==null)screenField=tile.getClass().getField("screen");
             if(screenField.get(tile)!=null)continue;
             NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());
@@ -34,6 +37,17 @@ public final class ForeignBuildingVisuals {
             }
             screen.set(tile,draw);tile.getClass().getField("screenOffsetx").setInt(tile,left);tile.getClass().getField("screenOffsetz").setInt(tile,up);
         }catch(ReflectiveOperationException error){throw new IllegalStateException("Cannot initialize carried Galacticraft display",error);}
+        }
+    }
+    /** Mekanism normally initializes this unsaved TESR scale in its client tick.
+     * Snapshot tiles deliberately do not tick or join native networks. */
+    private static void prepareTank(TileEntity tile){
+        if(!tile.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank"))return;
+        try{
+            IFluidTank tank=(IFluidTank)tile.getClass().getField("fluidTank").get(tile);
+            float scale=tank.getCapacity()<=0?0:Math.min(1F,Math.max(0F,(float)tank.getFluidAmount()/tank.getCapacity()));
+            tile.getClass().getField("prevScale").setFloat(tile,scale);
+        }catch(ReflectiveOperationException error){throw new IllegalStateException("Cannot initialize carried Mekanism tank",error);}
     }
     private ForeignBuildingVisuals(){}
 }
