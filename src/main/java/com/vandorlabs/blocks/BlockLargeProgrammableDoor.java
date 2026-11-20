@@ -87,7 +87,16 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         if(!open&&world.getBlockState(tile.getPos()).getValue(OPEN)&&armPassesThrough(world,tile))open=true;
         for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members)publishPower(world,member,powered,open);
     }
-    /** True when an arm column runs through any cell of {@code tile}'s joined group. */
+    /** Put back an arm section a door displaced, when its cell is still free. */
+    public static void restoreSection(World world,BlockPos cell,net.minecraft.nbt.NBTTagCompound section){
+        if(!world.isBlockLoaded(cell)||!world.isAirBlock(cell))return;
+        Block block=Block.getBlockFromName(section.getString("Block"));if(block==null)return;
+        world.setBlockState(cell,block.getStateFromMeta(section.getInteger("Meta")),3);
+        TileEntity tile=world.getTileEntity(cell);
+        if(tile!=null&&section.hasKey("Tile",10)){net.minecraft.nbt.NBTTagCompound data=section.getCompoundTag("Tile").copy();data.setInteger("x",cell.getX());data.setInteger("y",cell.getY());data.setInteger("z",cell.getZ());tile.readFromNBT(data);tile.markDirty();}
+        if(tile instanceof com.vandorlabs.gear.GearTileEntity){com.vandorlabs.gear.GearTileEntity arm=((com.vandorlabs.gear.GearTileEntity)tile).loadedController();if(arm!=null)arm.scheduleRebuild();}
+    }
+    /** True when an arm reaches into any cell of {@code tile}'s joined group. */
     public boolean armPassesThrough(World world,TileEntityLargeProgrammableDoor tile){
         for(TileEntityLargeProgrammableDoor member:tile.joinedGroup().members){
             BlockPos anchor=member.getPos();EnumFacing front=world.getBlockState(anchor).getValue(FACING);
@@ -194,6 +203,16 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         boolean checkDependent=part!=null&&assemblyRemoval&&!world.isRemote
                 &&!com.vandorlabs.vehicle.VehicleTransfer.isMutating(world);
         if(assemblyRemoval)REMOVING.set(true);
+        // Arm sections this door displaced return once the whole door is gone.
+        java.util.Map<BlockPos,net.minecraft.nbt.NBTTagCompound> sections=new java.util.LinkedHashMap<>();
+        if(assemblyRemoval&&!world.isRemote&&part!=null){
+            EnumFacing front=state.getValue(FACING);BlockPos anchor=part.anchorPos(front);
+            for(int x=0;x<3;x++)for(int y=0;y<3;y++){
+                BlockPos cell=part.cell(anchor,front,x,y);TileEntity other=world.isBlockLoaded(cell)?world.getTileEntity(cell):null;
+                if(other instanceof TileEntityLargeProgrammableDoor&&((TileEntityLargeProgrammableDoor)other).displacedSection()!=null)sections.put(cell,((TileEntityLargeProgrammableDoor)other).displacedSection());
+            }
+            if(!sections.isEmpty())com.vandorlabs.world.NextTick.run(world,()->{for(java.util.Map.Entry<BlockPos,net.minecraft.nbt.NBTTagCompound> e:sections.entrySet())restoreSection(world,e.getKey(),e.getValue());});
+        }
         try {
             if(!world.isRemote&&part!=null&&part.isHorizontal())DoorWaterGush.stop(world,pos);
             if(assemblyRemoval){

@@ -155,10 +155,12 @@ public class GearBlock extends com.vandorlabs.blocks.BlockLandingGear implements
     @Override public boolean canEntityDestroy(IBlockState state,IBlockAccess world,BlockPos pos,Entity entity){return !taxiRetained(world,pos)&&super.canEntityDestroy(state,world,pos,entity);}
     @Override public float getExplosionResistance(World world,BlockPos pos,Entity entity,net.minecraft.world.Explosion explosion){return taxiRetained(world,pos)?6000000:super.getExplosionResistance(world,pos,entity,explosion);}
 
+    /** Set while a Large Door takes the place of a hidden retracted section; the arm keeps it. */
+    public static final ThreadLocal<Boolean> DISPLACING=ThreadLocal.withInitial(()->false);
     @Override
     public void breakBlock(World world, BlockPos pos, IBlockState state) {
         TileEntity tile = world.getTileEntity(pos);
-        if (!world.isRemote && tile instanceof GearTileEntity) {
+        if (!world.isRemote && tile instanceof GearTileEntity && !DISPLACING.get()) {
             GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()||gear.hasRetainedPayload())gear.recoverOnBreak(this);
             gear.releaseAssembly();
         }

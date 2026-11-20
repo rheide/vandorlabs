@@ -75,7 +75,9 @@ Thermal Dynamics ducts and Mekanism pipes placed directly on the end of an empty
 
 ### Build an arm through a Large Door
 
-Open a Large Door, or a joined door group, and place arm sections on both sides of the doorway in one straight line. The open door cells become part of the arm column, and blocks carried by the arm move through the doorway. The door stays open and cannot be broken while an arm runs through it; remove the arm sections on one side to close it again. A carried block cannot come to rest inside a door cell.
+Build an Extender, retract it, then place a Large Door across its path: the door may take the place of the retracted arm's hidden sections, and the arm keeps its full length through the door. You can also open a door and build sections on both sides of it. While the door is closed, the arm cannot extend through it. Open the door and the arm, with the blocks it carries, extends through the doorway. The door refuses to close or be broken while the extended arm runs through it; retract the arm to close it again. Removing the door puts any displaced arm section back. A carried block cannot come to rest inside a door cell.
+
+To join Large Doors, hold a Large Door and sneak-right-click the edge of an installed door: the new door is placed beside, above or below it, takes its settings and joins it. Two doors make a 2×1 group and four make a 2×2 group. Settings changed in a joined door's dialog apply to every door in the group.
 
 Transfer works at a stationary, whole-block-aligned endpoint. It pauses during motion, at fractional endpoints, and while the attachment's ownership is being saved or restored.
 

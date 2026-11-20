@@ -20,6 +20,10 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
     private final LargeDoorJoin.Group<TileEntityLargeProgrammableDoor> singleDoor=LargeDoorJoin.singleton(this);
     private long joinTick=Long.MIN_VALUE;
     private LargeDoorJoin.Group<TileEntityLargeProgrammableDoor> joinGroup;
+    /** An arm section this door cell replaced while the arm was retracted; restored when the door goes. */
+    private NBTTagCompound displacedSection;
+    public NBTTagCompound displacedSection(){return displacedSection==null?null:displacedSection.copy();}
+    public void setDisplacedSection(NBTTagCompound section){displacedSection=section==null?null:section.copy();markDirty();}
     public boolean joins(){return join;}
     public void setJoin(boolean next){
         if(join==next)return;
@@ -259,8 +263,9 @@ public class TileEntityLargeProgrammableDoor extends TileEntitySpaceDoor {
         }
         return renderBounds;
     }
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);tag.setBoolean("LargeDoorAssigned",assigned);if(join)tag.setBoolean(LargeDoorJoin.TAG,true);if(horizontal)tag.setBoolean("LargeDoorHorizontal",true);tag.setInteger("LargeDoorColumn",column);tag.setInteger("LargeDoorRow",row);return tag;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){super.writeToNBT(tag);if(displacedSection!=null)tag.setTag("DisplacedArmSection",displacedSection.copy());tag.setBoolean("LargeDoorAssigned",assigned);if(join)tag.setBoolean(LargeDoorJoin.TAG,true);if(horizontal)tag.setBoolean("LargeDoorHorizontal",true);tag.setInteger("LargeDoorColumn",column);tag.setInteger("LargeDoorRow",row);return tag;}
     @Override public void readFromNBT(NBTTagCompound tag){
+        displacedSection=tag.hasKey("DisplacedArmSection",10)?tag.getCompoundTag("DisplacedArmSection").copy():null;
         // Assign role before the base class schedules redstone registration.
         join=tag.getBoolean(LargeDoorJoin.TAG);joinGroup=null;
         horizontal=tag.getBoolean("LargeDoorHorizontal");assigned=tag.getBoolean("LargeDoorAssigned");column=tag.getInteger("LargeDoorColumn");row=tag.getInteger("LargeDoorRow");

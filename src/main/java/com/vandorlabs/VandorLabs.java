@@ -90,6 +90,7 @@ public class VandorLabs {
                 com.vandorlabs.vehicle.EntityGroundVehicle.class, "ground_vehicle", 2, this, 128, 2, true);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityCanopy.class,"vandorlabs:canopy");
         net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(new com.vandorlabs.canopy.CanopyInteractions());
+        net.minecraftforge.common.MinecraftForge.EVENT_BUS.register(com.vandorlabs.world.NextTick.class);
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityMatterInfuser.class,"vandorlabs:programmable_matter_infuser");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityBattery.class,"vandorlabs:battery");
         GameRegistry.registerTileEntity(com.vandorlabs.tiles.TileEntityHexTank.class,"vandorlabs:hex_tank");

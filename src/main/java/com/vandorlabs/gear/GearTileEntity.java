@@ -663,6 +663,8 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         GearTileEntity existing=loadedController();
         if(existing!=null&&existing.hasStoredSections()){
             if(existing!=this)return existing.rebuild();
+            // A Large Door may have replaced a hidden section since the cache was built.
+            rebuildMemberCache();
             operational=failedStoredSections==null&&cachedMembersIntact();retryUnavailable=!operational;
             if(!operational)lastError="Load every joined arm before extending";
             return operational;
@@ -927,18 +929,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
         if(world instanceof net.minecraft.world.WorldServer&&owner!=null&&owner.equals(pos)&&resourceTransfer!=ArmResource.DISABLED&&assembly!=null&&canTransferResources())
             for(BlockPos column:new ArrayList<>(columns))notifyTip(pos.add(column));
     }
-    /** A column cell, between sections, that is an open door passage rather than a section. */
-    boolean columnPassesThrough(BlockPos cell){
+    /** The arm's geometry at its current progress, including its payload, reaches into {@code cell}. */
+    public boolean occupiesNow(BlockPos cell){
         if(assembly==null||world==null)return false;
-        for(BlockPos column:columns){
-            BlockPos base=pos.add(column);
-            for(int i=1;i<assembly.columnHeight();i++){
-                BlockPos at=base.offset(mountDirection,i);
-                if(!GearAssembly.passageFootprint(world,base,at))continue;
-                BlockPos shift=at.subtract(base);
-                for(BlockPos part:((GearBlock)world.getBlockState(base).getBlock()).componentCells(world,base))if(part.add(shift).equals(cell))return true;
-            }
-        }
+        net.minecraft.util.math.AxisAlignedBB inside=new net.minecraft.util.math.AxisAlignedBB(cell).shrink(1E-3);
+        for(net.minecraft.util.math.AxisAlignedBB box:GearGeometry.boxes(this,progress))if(box.intersects(inside))return true;
         return false;
     }
     /** Ducts and pipes on an empty tip re-evaluate their connection to the arm. */

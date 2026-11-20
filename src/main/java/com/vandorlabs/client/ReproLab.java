@@ -707,7 +707,7 @@ public class ReproLab {
                 try{DoorAppearanceRuntimeChecks.verticalSplit(mc,outDir);}
                 catch(Exception failure){throw new IllegalStateException("Large Door vertical split render",failure);}
             }
-            if(holdTicks>40)try{if(com.vandorlabs.gear.HorizontalDoorArmLiveChecks.tick(mc)&&com.vandorlabs.gear.VerticalDoorArmLiveChecks.tick(mc)&&doorArmGallery.tick(mc,outDir))mc.shutdown();}
+            if(holdTicks>40)try{if(com.vandorlabs.gear.HorizontalDoorArmLiveChecks.tick(mc)&&com.vandorlabs.gear.VerticalDoorArmLiveChecks.tick(mc)&&com.vandorlabs.gear.HatchArmLiveChecks.tick(mc)&&doorArmGallery.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Horizontal Large Door arm checks",failure);}
             return;
         }

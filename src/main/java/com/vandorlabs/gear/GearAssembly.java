@@ -56,11 +56,22 @@ public final class GearAssembly {
     public static boolean passage(World world,BlockPos pos){
         return loaded(world,pos)&&com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,pos,world.getBlockState(pos));
     }
-    /** Every cell of {@code section}'s footprint, shifted to {@code gap}, is an open door passage. */
+    /** A Large Door cell, open or closed, that an arm column may run through. */
+    public static boolean doorCell(World world,BlockPos pos){
+        if(!loaded(world,pos))return false;
+        IBlockState state=world.getBlockState(pos);
+        return state.getBlock() instanceof com.vandorlabs.blocks.BlockLargeProgrammableDoor
+                &&((com.vandorlabs.blocks.BlockLargeProgrammableDoor)state.getBlock()).root(world,pos)!=null;
+    }
+    /**
+     * Every cell of {@code section}'s footprint, shifted to {@code gap}, is a Large Door cell.
+     * The column stays assembled whether the door is open or closed; a closed door only
+     * blocks the arm's motion.
+     */
     static boolean passageFootprint(World world,BlockPos section,BlockPos gap){
         if(!loaded(world,section)||!(world.getBlockState(section).getBlock() instanceof GearBlock))return false;
         BlockPos shift=gap.subtract(section);
-        for(BlockPos cell:((GearBlock)world.getBlockState(section).getBlock()).componentCells(world,section))if(!passage(world,cell.add(shift)))return false;
+        for(BlockPos cell:((GearBlock)world.getBlockState(section).getBlock()).componentCells(world,section))if(!doorCell(world,cell.add(shift)))return false;
         return true;
     }
     /**

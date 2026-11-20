@@ -6,10 +6,10 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 
-/** Open Large Door cells that an arm column currently runs through. */
+/** Large Door cells that an arm currently reaches into. */
 public final class ArmPassages {
     private ArmPassages(){}
-    /** True when an assembled arm column passes through {@code cell}. */
+    /** True when an assembled arm's current, visible geometry reaches into {@code cell}. */
     public static boolean occupied(World world,BlockPos cell){
         if(world==null||world.isRemote||!GearAssembly.loaded(world,cell))return false;
         for(EnumFacing side:EnumFacing.values()){
@@ -19,10 +19,10 @@ public final class ArmPassages {
                 TileEntity raw=world.getTileEntity(at);
                 if(raw instanceof GearTileEntity){
                     GearTileEntity arm=((GearTileEntity)raw).loadedController();
-                    if(arm!=null&&arm.columnPassesThrough(cell))return true;
+                    if(arm!=null&&arm.occupiesNow(cell))return true;
                     break;
                 }
-                if(!GearAssembly.passage(world,at))break;
+                if(!GearAssembly.doorCell(world,at))break;
             }
         }
         return false;
