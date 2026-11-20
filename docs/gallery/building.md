@@ -204,6 +204,12 @@ Glass block for the sloped version. Both use the Programmable Glass editor.
 3. Enable **Join** on all three panels to hide the rails at the two contacts.
    Click nearer to or farther from the corner to place an offset bevel.
 
+Corner Glass aligns itself with the glass you click, then with any glass beside
+the empty cell. When you click the end of a straight panel, the bevel bends
+towards the side you are standing on. Clicking the floor of the cell picks the
+bevel closest to where you clicked. Place a corner on top of another corner to
+continue the same bevel upward.
+
 The sloped version joins other corner panes where their edges align through
 the full height of the contact. Stacked flat corner panes also share their
 horizontal frame edges.

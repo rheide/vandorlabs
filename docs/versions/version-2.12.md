@@ -40,7 +40,10 @@ seam. Turn **Join** on in two or four compatible doors to make a 3×6, 6×3, or
 **Arms** can route RF, fluids, or items between their base and an aligned
 endpoint. Choose either flow direction; the base mounting face and smaller
 Extender end cap display the corresponding In/Out Port artwork. The selected
-bar lights when resources pass through. [Arm guide](../modular-landing-gear.md)
+bar lights when resources pass through. Thermal Dynamics ducts and Mekanism
+pipes placed on an Arm's tip connect to it and are never carried. Arm columns
+can be built through an open Large Door, including joined door groups; the
+door stays open while the arm runs through it. [Arm guide](../modular-landing-gear.md)
 
 A **Module Rack** can charge or discharge its Battery Modules through a rear
 Power Port. Choose In or Out in its dialog. [Module Rack guide](../module-rack.md)
@@ -56,7 +59,8 @@ move together in a selected cardinal direction.
 independently from the original.
 
 **Programmable Corner Glass** adds a 45° bevel between two perpendicular
-Middle-position glass panels. A sloped variant is also available.
+Middle-position glass panels. It aligns with the glass you click or place it
+beside, and bends towards your side. A sloped variant is also available.
 [Corner Glass placement and recipes](../gallery/building.md#programmable-corner-glass)
 
 The **Advanced Pilot Chair** is available as stationary furniture. Its

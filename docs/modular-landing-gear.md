@@ -71,6 +71,12 @@ Connect an output port or pipe to the block face that supports the Arm. The Arm 
 
 Choose **Flow: Base to end** for the normal input path or **Flow: End to base** to extract from the far contact through the mounting side. The mounting face shows the matching In or Out Port artwork, and an Extender’s smaller far-end cap shows the opposite direction. The Port bar lights briefly after a transfer through that column. These indicators also apply to Large Arms. Off keeps the original base.
 
+Thermal Dynamics ducts and Mekanism pipes placed directly on the end of an empty Arm connect to it instead of being picked up. While the Arm is at rest, they receive the selected resource from the Arm or feed it back to the block at the base, following the **Flow** setting.
+
+### Build an arm through a Large Door
+
+Open a Large Door, or a joined door group, and place arm sections on both sides of the doorway in one straight line. The open door cells become part of the arm column, and blocks carried by the arm move through the doorway. The door stays open and cannot be broken while an arm runs through it; remove the arm sections on one side to close it again. A carried block cannot come to rest inside a door cell.
+
 Transfer works at a stationary, whole-block-aligned endpoint. It pauses during motion, at fractional endpoints, and while the attachment's ownership is being saved or restored.
 
 ### Change chassis height in Taxi mode
