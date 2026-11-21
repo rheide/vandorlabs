@@ -29,7 +29,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
             for(GlassDialog.Control control:GlassDialog.body(shared,state))addControl(control);
             if(diagonalCorner()){
                 // Size and slope, as on diagonal glass; TextureJoinPane spaces the column below.
-                buttonList.add(new GuiButton(CORNER_SIZE,shared.controlsX,shared.top+126,154,20,com.vandorlabs.ui.WallAppearanceDialog.sizeLabel(cornerSize==2,cornerSize==1)));
+                buttonList.add(new GuiButton(CORNER_SIZE,shared.controlsX,shared.top+126,154,20,com.vandorlabs.render.DiagonalCornerRules.sizeLabel(cornerSize)));
                 buttonList.add(new GuiButton(CORNER_SLOPE,shared.controlsX,shared.top+150,154,20,slopeLabel()));
             }
             if(GlassPlaybackPane.available(state.material))GlassPlaybackPane.init(layout,tile.glassPlayback,buttonList,130);
@@ -48,15 +48,11 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
         net.minecraft.block.state.IBlockState placed=tile.getWorld().getBlockState(tile.getPos());
         int meta=placed.getBlock().getMetaFromState(placed);cornerSize=tile.getCornerMode();cornerInverted=(meta&4)!=0;cornerFar=(meta&8)!=0;
     }
-    /** The bevel rises away from the corner (outward) or towards it, like diagonal glass leans. */
-    private String slopeLabel(){
-        boolean outward=cornerFar==cornerInverted;
-        return (cornerSize==2?"Slope rises: ":"Slope leans: ")+(outward?"Outward":"Inward");
-    }
+    private String slopeLabel(){return com.vandorlabs.render.DiagonalCornerRules.slopeLabel(cornerSize,cornerInverted,cornerFar);}
     private boolean cornerAction(GuiButton button){
         if(button.id!=CORNER_SIZE&&button.id!=CORNER_SLOPE)return false;
-        if(button.id==CORNER_SIZE)cornerSize=com.vandorlabs.ui.WallAppearanceDialog.nextSize(cornerSize,GuiOptionCycle.direction());
-        else if(cornerSize==2)cornerFar=!cornerFar;else cornerInverted=!cornerInverted;
+        if(button.id==CORNER_SIZE)cornerSize=com.vandorlabs.render.DiagonalCornerRules.nextSize(cornerSize,GuiOptionCycle.direction());
+        else{int meta=com.vandorlabs.render.DiagonalCornerRules.toggleSlope((cornerInverted?4:0)|(cornerFar?8:0),cornerSize);cornerInverted=(meta&4)!=0;cornerFar=(meta&8)!=0;}
         PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCornerGlassGeometry(tile.getPos(),cornerSize,cornerInverted,cornerFar));
         initGui();return true;
     }
@@ -76,7 +72,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
         if(state.framePage()){if(!framePane.click(x,y,button))super.mouseClicked(x,y,button);return;}
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,new int[]{0,3,4,5,6,240,241,CORNER_SIZE}))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,new int[]{0,3,4,5,6,240,241,CORNER_SIZE,CORNER_SLOPE}))return;
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}
         super.mouseClicked(x,y,button);
     }

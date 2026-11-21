@@ -15,7 +15,10 @@ public record NativeDiagonalGlassLayout(NativePanelLayout group,int hideMask,int
         var settings=access.settings(pos);int mode=com.vandorlabs.persistence.WallSettings.geometry(settings.halfHeight,settings.fullWidth),mask=0;
         Direction face=state.getValue(NativePanelBlock.FACING),right=face.getClockWise();boolean inverted=state.getValue(NativeDiagonalWallBlock.INVERTED);
         for(int side=0;side<2;side++){
-            BlockPos next=pos.relative(side==0?right.getOpposite():right);if(!access.loaded(next))continue;var other=access.state(next);
+            Direction toward=side==0?right.getOpposite():right;
+            BlockPos next=pos.relative(toward);if(!access.loaded(next))continue;var other=access.state(next);
+            // A Diagonal Corner Glass continuing this slope shares the end like a straight neighbour.
+            if(com.vandorlabs.neoforge.glass.NativeCornerGlassBlock.continuesWall(other,toward.getOpposite(),state,settings,access.flatJoin(next))){mask|=1<<side;continue;}
             if(other.getBlock()!=state.getBlock())continue;var os=access.settings(next);if(com.vandorlabs.persistence.WallSettings.geometry(os.halfHeight,os.fullWidth)!=mode||os.fill!=settings.fill)continue;
             Direction of=other.getValue(NativePanelBlock.FACING);var delta=next.subtract(pos);
             if(of.getAxis()==face.getAxis()&&DiagonalPanelContact.samePlane(mode,inverted,other.getValue(NativeDiagonalWallBlock.INVERTED),of!=face,delta.getY(),NativeDiagonalWallTopology.axis(delta,face.getOpposite())))mask|=1<<side;

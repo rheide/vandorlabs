@@ -103,11 +103,11 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
      */
     public int placementSize(World world,BlockPos support,net.minecraft.item.ItemStack stack){
         IBlockState clicked=world.getBlockState(support);
-        if(diagonalWall(clicked))return BlockProgrammableWall.geometry(world,support);
-        if(clicked.getBlock() instanceof BlockProgrammableCornerGlass&&((BlockProgrammableCornerGlass)clicked.getBlock()).sloped)return size(world,support);
+        int clickedSize=diagonalWall(clicked)?BlockProgrammableWall.geometry(world,support)
+                :clicked.getBlock() instanceof BlockProgrammableCornerGlass&&((BlockProgrammableCornerGlass)clicked.getBlock()).sloped?size(world,support):-1;
         net.minecraft.nbt.NBTTagCompound tag=stack.isEmpty()?null:stack.getSubCompound("BlockEntityTag");
-        if(tag!=null&&tag.hasKey(TileEntityProgrammableGlass.CORNER_MODE_TAG,99)){int mode=tag.getInteger(TileEntityProgrammableGlass.CORNER_MODE_TAG);if(mode>=0&&mode<=2)return mode;}
-        return CornerGlassGeometry.FULL;
+        int configured=tag!=null&&tag.hasKey(TileEntityProgrammableGlass.CORNER_MODE_TAG,99)?tag.getInteger(TileEntityProgrammableGlass.CORNER_MODE_TAG):-1;
+        return com.vandorlabs.render.DiagonalCornerRules.placementSize(clickedSize,configured);
     }
     private CornerGlassGeometry.Neighbor neighbor(IBlockAccess world,BlockPos at,IBlockState state){
         if(state.getBlock() instanceof BlockProgrammableCornerGlass)
@@ -164,8 +164,8 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
         int direction=side(side);
         CornerGlassGeometry current=geometry(world,corner,state);
         if(sloped&&diagonalWall(other))
-            return PanelJoins.cornerDiagonalEnabled(world,neighbor)&&current.joinsDiagonal(direction,side(other.getValue(BlockProgrammableWall.FACING)),
-                    BlockProgrammableWall.geometry(world,neighbor),other.getValue(BlockProgrammableWall.INVERTED));
+            return com.vandorlabs.render.DiagonalCornerRules.continues(current,enabled(world,corner),direction,side(other.getValue(BlockProgrammableWall.FACING)),
+                    BlockProgrammableWall.geometry(world,neighbor),other.getValue(BlockProgrammableWall.INVERTED),PanelJoins.cornerDiagonalEnabled(world,neighbor));
         if(!(other.getBlock() instanceof BlockProgrammableGlass)||!enabled(world,neighbor))return false;
         if(other.getBlock() instanceof BlockProgrammableCornerGlass)
             return current.joinsEdge(direction,((BlockProgrammableCornerGlass)other.getBlock()).geometry(world,neighbor,other));

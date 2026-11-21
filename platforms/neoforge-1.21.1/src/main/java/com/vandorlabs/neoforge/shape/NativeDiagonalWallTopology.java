@@ -12,6 +12,8 @@ import net.minecraft.world.level.block.state.BlockState;
 public final class NativeDiagonalWallTopology {
     private static final WallSettings DEFAULT=new WallSettings(false,false,0,0,false,0);
     public static int axis(BlockPos delta,Direction direction){return delta.getX()*direction.getStepX()+delta.getY()*direction.getStepY()+delta.getZ()*direction.getStepZ();}
+    /** Saved diagonal settings at {@code pos}, or the defaults where no diagonal block entity is. */
+    public static WallSettings settings(BlockGetter level,BlockPos pos){return levelSettings(level,pos);}
     private static WallSettings levelSettings(BlockGetter level,BlockPos pos){return level.getBlockEntity(pos) instanceof NativeWallEntity host?host.wallSettings():DEFAULT;}
     public static int mode(BlockGetter level,BlockPos pos){var value=levelSettings(level,pos);return WallSettings.geometry(value.halfHeight,value.fullWidth);}
     public static NativeDiagonalWallGeometry.Pose initial(BlockState state,int mode){return new NativeDiagonalWallGeometry.Pose(state.getValue(NativePanelBlock.FACING),state.getValue(NativeDiagonalWallBlock.INVERTED),mode,0,null,Double.NaN,Double.NaN,false,false,NativeDiagonalWallGeometry.Clip.NONE,NativePanelLayout.UNIT);}

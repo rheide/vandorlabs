@@ -19,5 +19,15 @@ public final class NativeGlassMenu extends AbstractContainerMenu {
  @Override public ItemStack quickMoveStack(Player player,int slot){return ItemStack.EMPTY;}
  public static NativeGlassMenu editing(ServerPlayer player,BlockPos pos,int window){return player.getServer().isSameThread()&&NativeConfigurationAccess.canConfigure(player)&&player.containerMenu instanceof NativeGlassMenu menu&&menu.containerId==window&&menu.tile.getBlockPos().equals(pos)&&menu.stillValid(player)?menu:null;}
  public static boolean apply(ServerPlayer player,GlassSettingsPayload edit){var menu=editing(player,edit.pos(),edit.window());if(menu==null||!edit.valid())return false;var old=menu.tile.settings();var before=old.glass();var glass=new ProgrammableGlassSettings(edit.shade(),edit.material(),edit.layout(),edit.layout()!=1,edit.tint(),edit.framed(),Math.min(1,edit.size()),edit.join(),before.panelFacing,false);return menu.tile.configure(new NativeGlassSettings(glass,old.frames(),new PanelPlayback(edit.mode(),edit.speed())),edit.size());}
+ /** Size and slope of an open Diagonal Corner Glass dialog; the bevel keeps its turn. */
+ public static boolean corner(ServerPlayer player,CornerGlassGeometryPayload edit){
+  var menu=editing(player,edit.pos(),edit.window());if(menu==null||!edit.valid())return false;
+  var level=menu.tile.getLevel();var state=menu.tile.getBlockState();
+  if(level==null||!(state.getBlock() instanceof NativeCornerGlassBlock corner)||!corner.sloped())return false;
+  int metadata=com.vandorlabs.render.DiagonalCornerRules.edited(NativeCornerGlassBlock.metadata(state),edit.inverted(),edit.far());
+  var next=corner.diagonalState(state,metadata,edit.size());
+  if(next!=state)level.setBlock(edit.pos(),next,3);
+  return true;
+ }
  public static boolean frames(ServerPlayer player,GlassFramePayload edit){var menu=editing(player,edit.pos(),edit.window());if(menu==null||!GlassFramePayload.valid(edit.frames()))return false;var old=menu.tile.settings();return menu.tile.configure(new NativeGlassSettings(old.glass(),edit.frames(),old.playback()),menu.tile.getBlockState().getValue(NativeGlassBlock.SIZE));}
 }

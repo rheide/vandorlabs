@@ -65,13 +65,12 @@ public final class PanelJoins {
     }
     public static boolean cornerDiagonalEnabled(IBlockAccess world,BlockPos pos) {
         if(!enabled(world,pos))return false;
-        if(BlockProgrammableWall.geometry(world,pos)!=1)return true;
         net.minecraft.tileentity.TileEntity raw=world.getTileEntity(pos);
         if(!(raw instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector))return true;
         com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)raw;
         IBlockState state=world.getBlockState(pos);
-        return tile.getDiagonalJoin()!=1 && (!(state.getBlock() instanceof BlockProgrammableWall)
-                || !((BlockProgrammableWall)state.getBlock()).isPortholeShape() || tile.isJoinPortholes());
+        boolean porthole=state.getBlock() instanceof BlockProgrammableWall&&((BlockProgrammableWall)state.getBlock()).isPortholeShape();
+        return com.vandorlabs.render.DiagonalCornerRules.wallAcceptsCorner(BlockProgrammableWall.geometry(world,pos),tile.getDiagonalJoin(),porthole,tile.isJoinPortholes());
     }
     public static boolean diagonal(IBlockState state){return state.getBlock() instanceof BlockProgrammableWall && ((BlockProgrammableWall)state.getBlock()).isDiagonalShape() && !((BlockProgrammableWall)state.getBlock()).isPortholeShape();}
     public static boolean flat(IBlockState state){return state.getBlock() instanceof BlockProgrammableGlass && !(state.getBlock() instanceof BlockProgrammableCornerGlass) || state.getBlock() instanceof BlockProgrammableWall && !((BlockProgrammableWall)state.getBlock()).isDiagonalShape();}
