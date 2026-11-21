@@ -6,15 +6,22 @@
 - Clear the rear aperture and moving lower crossbar of Canopy and Long Canopy. Repair side glass gaps and the Long Angled Front Canopy’s open rear and frame faces.
 - Choose a true geometric center split or a cardinal opening direction for joined Programmable Trapdoors, including odd-width groups. Leaves of groups up to eight wide stay solid and selectable wherever they move.
 - Keep Segmented Door animations independent when WorldEdit pastes a door at another location.
+- Shape Diagonal Corner Glass like the diagonal glass it continues: it stays at 45 degrees, takes the clicked glass's size, lean and near or far position, and joins only matching glass. Choose its Size and Slope in the glass dialog.
+- Always draw stacked Corner Glass, including with OptiFine and shaders.
 
 - Open Large Doors from a horizontal seam with Sliding Split, or join compatible doors into a 3×6, 6×3, or 6×6 opening.
 - Build Arm columns through open Large Doors, including joined groups. The door stays open while an arm runs through it, and carried blocks pass through the doorway.
+- Let wide Arm attachments such as a 3×3 Turntable Surface pass through every part of an open Large Door, including the leaf edges left in the opening.
+- Join four Large Doors placed one by one into one 2×2 door, whichever wall each was placed from: a door with Join On takes the orientation of the joining door beside it. Sneak-click a joined door's face to place the next door on that side.
 - Show selected resource artwork on Arm mounting faces and Extender end caps, with a reversible flow setting and activity bar. Keep Large Arm inventory icons at least as visible as regular variants.
 
 - Open Survey Dish and Sentinel Array dialogs with ordinary right-click. Show bottom RF connection status, consume 20 RF/tick only while Scanning, and let Redstone select Scanning or Idle. Linked Screens and Navigation Tables show a haiku when no observer is powered.
 - Charge or discharge inserted Battery Modules through a Module Rack’s rear Power Port, with an In/Out dialog setting.
 - Preserve standalone Thermal and Mekanism machines on Arms, including rotated tank fluid levels and transfers.
 - Connect Thermal Dynamics ducts and Mekanism pipes to an Arm's tip instead of carrying them; the arm transfers its selected resource through them.
+- Keep a Thermal Dynamics flux duct feeding an Arm in Power mode connected across extensions and retractions, so a carried Survey Dish keeps scanning.
+- Keep every item a Thermal Retriever delivers through an Arm; stuffed items returned after a move no longer vanish from the receiving inventory.
+- Log an unreadable Arm recovery journal instead of silently refusing every arm move in the world.
 
 - Press flat Programmable Plates in the Assembly Press and use them to craft the four programmable armor pieces.
 - Use the former Programmable Matter finish as the default for Programmable Blocks. Multiblocks accept any Programmable Block finish. Existing standalone Matter blocks convert to Programmable Blocks.

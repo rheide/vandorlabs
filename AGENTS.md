@@ -64,6 +64,10 @@ Also read before changing these areas:
   historical regressions when the changed code reaches them.
 - During feature work, run the smallest relevant live focus with the actual optional mods
   before stacking further changes. Client-visible or gameplay changes need a live client run.
+- The mod must render correctly in three client setups: vanilla, OptiFine HD U G5 without
+  shaders, and OptiFine with Complementary Unbound 5.6.1. Verify any rendering or visibility
+  change, and reproduce any reported visual bug, in all three, setting
+  `VANDOR_LABS_TEST_OPTIFINE` and `VANDOR_LABS_TEST_SHADERPACK` for the latter two runs.
 - Run at most two live Minecraft checks concurrently, each with isolated game, world and output
   directories. Run timing benchmarks on their own.
 - In live client fixtures, synchronize the integrated server and the client before sending a
