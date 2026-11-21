@@ -27,22 +27,69 @@ public final class ItemLargeProgrammableDoor extends ItemBlock {
         for(BlockPos column:arm.columns())if(arm.getPos().add(column).equals(cell))return false;
         return arm.members().contains(cell)&&!arm.occupiesNow(cell);
     }
+    /**
+     * The anchor beyond {@code clicked}'s joined group on the side of the group's centre that
+     * {@code hit} lies on, in the clicked door's row or column. The larger offset relative to the
+     * group's extent picks the direction.
+     */
+    private static BlockPos beyondGroup(TileEntityLargeProgrammableDoor clicked,EnumFacing across,EnumFacing along,net.minecraft.util.math.Vec3d hit){
+        com.vandorlabs.render.LargeDoorJoin.Group<TileEntityLargeProgrammableDoor> group=clicked.joinedGroup();
+        net.minecraft.util.math.Vec3d offset=hit.subtract(clicked.getPos().getX()+.5,clicked.getPos().getY()+.5,clicked.getPos().getZ()+.5);
+        double u=dot(offset,across)+.5+3*group.column,v=dot(offset,along)+.5+3*group.row;
+        double du=(u-1.5*group.columns)/group.columns,dv=(v-1.5*group.rows)/group.rows;
+        if(Math.abs(du)>=Math.abs(dv))return clicked.getPos().offset(across,3*(du>=0?group.columns-group.column:-group.column-1));
+        return clicked.getPos().offset(along,3*(dv>=0?group.rows-group.row:-group.row-1));
+    }
+    private static double dot(net.minecraft.util.math.Vec3d vector,EnumFacing direction){
+        return vector.x*direction.getFrontOffsetX()+vector.y*direction.getFrontOffsetY()+vector.z*direction.getFrontOffsetZ();
+    }
+    /**
+     * A complete joining door covering one of the four 3x3 squares beside this footprint in its
+     * plane, with a different facing; null when none exists or one already shares {@code face}.
+     */
+    private static TileEntityLargeProgrammableDoor orientationPartner(World world,BlockLargeProgrammableDoor door,BlockPos anchor,EnumFacing width,EnumFacing row,EnumFacing face,boolean horizontal){
+        BlockPos middle=anchor.offset(width).offset(row);TileEntityLargeProgrammableDoor partner=null;
+        for(EnumFacing step:new EnumFacing[]{width,width.getOpposite(),row,row.getOpposite()}){
+            BlockPos at=middle.offset(step,com.vandorlabs.render.LargeDoorJoin.PITCH);
+            if(!world.isBlockLoaded(at,false)||world.getBlockState(at).getBlock()!=door)continue;
+            TileEntityLargeProgrammableDoor root=door.root(world,at);
+            if(root==null||!root.joins()||root.isHorizontal()!=horizontal||!door.complete(world,root))continue;
+            EnumFacing front=world.getBlockState(root.getPos()).getValue(BlockVandorDoor.FACING);
+            if(!root.cell(root.getPos(),front,1,1).equals(at))continue;
+            if(front==face)return null;
+            if(partner==null&&(horizontal||front.getAxis()==face.getAxis()))partner=root;
+        }
+        return partner;
+    }
     @Override public EnumActionResult onItemUse(EntityPlayer player,World world,BlockPos clicked,EnumHand hand,EnumFacing side,float hitX,float hitY,float hitZ){
         ItemStack stack=player.getHeldItem(hand);if(stack.isEmpty() || !world.isBlockLoaded(clicked))return EnumActionResult.FAIL;
         BlockLargeProgrammableDoor door=(BlockLargeProgrammableDoor)block;
         // Clicking the edge of an installed door places the next module beside it and joins them.
+        // Clicking a door's face places it beyond the joined group, on the side that was clicked.
         TileEntityLargeProgrammableDoor edge=world.getBlockState(clicked).getBlock()==door?door.root(world,clicked):null;
+        BlockPos faceAnchor=null;
         if(edge!=null&&door.complete(world,edge)){
             EnumFacing front=world.getBlockState(edge.getPos()).getValue(BlockVandorDoor.FACING);
             EnumFacing across=front.rotateYCCW(),along=edge.isHorizontal()?front:EnumFacing.UP;
-            if(side.getAxis()!=across.getAxis()&&side.getAxis()!=along.getAxis())edge=null;
+            if(side.getAxis()!=across.getAxis()&&side.getAxis()!=along.getAxis())
+                faceAnchor=beyondGroup(edge,across,along,new net.minecraft.util.math.Vec3d(clicked.getX()+hitX,clicked.getY()+hitY,clicked.getZ()+hitZ));
         }else edge=null;
         BlockPos center=edge!=null?null:world.getBlockState(clicked).getBlock().isReplaceable(world,clicked)?clicked:clicked.offset(side);
         boolean horizontal=edge!=null?edge.isHorizontal():side.getAxis().isHorizontal()&&!center.equals(clicked);
         EnumFacing face=edge!=null?world.getBlockState(edge.getPos()).getValue(BlockVandorDoor.FACING):horizontal?side:player.getHorizontalFacing().getOpposite(),width=face.rotateYCCW();
         EnumFacing row=horizontal?face:EnumFacing.UP;
-        BlockPos anchor=edge!=null?edge.getPos().offset(side,com.vandorlabs.render.LargeDoorJoin.PITCH):center.offset(width,-1);
+        BlockPos anchor=edge==null?center.offset(width,-1):faceAnchor!=null?faceAnchor:edge.getPos().offset(side,com.vandorlabs.render.LargeDoorJoin.PITCH);
         if(center==null)center=anchor.offset(width);
+        if(edge==null){
+            // Beside an existing joining door, take its orientation for the same 3x3 footprint so the
+            // two join whichever wall was clicked; a neighbour already sharing this facing wins.
+            TileEntityLargeProgrammableDoor partner=orientationPartner(world,door,anchor,width,row,face,horizontal);
+            if(partner!=null){
+                BlockPos middle=anchor.offset(width).offset(row);
+                face=world.getBlockState(partner.getPos()).getValue(BlockVandorDoor.FACING);width=face.rotateYCCW();row=horizontal?face:EnumFacing.UP;
+                anchor=middle.offset(width,-1).offset(row,-1);
+            }
+        }
         if(anchor.getY()<0 || anchor.offset(row,2).getY()>=world.getHeight())return EnumActionResult.FAIL;
         if(!door.supports(world,anchor,face,horizontal,edge==null))return EnumActionResult.FAIL;
         BlockPos preceding=anchor.offset(row.getOpposite(),3);

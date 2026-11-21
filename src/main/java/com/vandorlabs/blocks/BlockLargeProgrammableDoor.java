@@ -154,7 +154,9 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
         return true;
     }
     public void joinChanged(World world,TileEntityLargeProgrammableDoor tile){
-        EnumFacing facing=world.getBlockState(tile.getPos()).getValue(FACING);
+        IBlockState rootState=world.getBlockState(tile.getPos());
+        if(rootState.getBlock()!=this)return;
+        EnumFacing facing=rootState.getValue(FACING);
         java.util.List<TileEntityLargeProgrammableDoor> nearby=new java.util.ArrayList<>(9);
         for(int x=-1;x<=1;x++)for(int y=-1;y<=1;y++){
             BlockPos at=tile.cell(tile.getPos(),facing,3*x,3*y);
@@ -176,6 +178,18 @@ public class BlockLargeProgrammableDoor extends BlockConfigurableSpaceDoor {
     public boolean supports(World world,BlockPos anchor,EnumFacing facing,boolean horizontal,boolean joiningPlacement){
         EnumFacing row=horizontal?facing:EnumFacing.UP;
         if(solidSupport(world,anchor,facing,row))return true;
+        // A joining door directly beside a joining door of the same facing is carried by it,
+        // whichever order the slots of a group are filled in. Placement and later neighbour
+        // checks must agree, so an installed door's own Join setting counts like a placement.
+        TileEntity installed=world.isBlockLoaded(anchor,false)?world.getTileEntity(anchor):null;
+        boolean joining=joiningPlacement||installed instanceof TileEntityLargeProgrammableDoor&&((TileEntityLargeProgrammableDoor)installed).joins();
+        if(joining)for(EnumFacing step:new EnumFacing[]{facing.rotateYCCW(),facing.rotateY()}){
+            BlockPos beside=anchor.offset(step,3);
+            if(!world.isBlockLoaded(beside,false)||world.getBlockState(beside).getBlock()!=this)continue;
+            TileEntityLargeProgrammableDoor neighbour=root(world,beside);
+            if(neighbour!=null&&neighbour.getPos().equals(beside)&&neighbour.isHorizontal()==horizontal&&neighbour.joins()
+                    &&world.getBlockState(beside).getValue(FACING)==facing&&complete(world,neighbour))return true;
+        }
         BlockPos preceding=anchor.offset(row.getOpposite(),3);
         if(!world.isBlockLoaded(preceding,false))return false;
         TileEntityLargeProgrammableDoor base=root(world,preceding);

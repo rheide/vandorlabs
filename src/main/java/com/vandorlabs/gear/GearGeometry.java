@@ -166,7 +166,7 @@ public final class GearGeometry {
             AxisAlignedBB swept=swept(root,i,old.get(i),after.get(i),before,next);
             if(old.get(i).equals(after.get(i))||after.get(i).getAverageEdgeLength()==0)continue;
             if(!world.isAreaLoaded(new BlockPos(swept.minX,swept.minY,swept.minZ),new BlockPos(swept.maxX,swept.maxY,swept.maxZ),false))return false;
-            List<AxisAlignedBB> obstacles=world.getCollisionBoxes(null,swept);
+            List<AxisAlignedBB> obstacles=withoutOpenDoors(world,swept,world.getCollisionBoxes(null,swept));
             if(!obstacles.isEmpty()){
                 // Only payloads meeting an endpoint face may graze that face during
                 // rotation. Linkage and unrelated obstacles keep the strict tolerance.
@@ -182,6 +182,29 @@ public final class GearGeometry {
                 }
             }
         }for(Entity rider:riders.riders){Vec3d move=riders.moves.get(rider);if(!com.vandorlabs.motion.PlatformRiders.clear(rider,move,world.getCollisionBoxes(rider,rider.getEntityBoundingBox().expand(move.x,move.y,move.z).grow(1e-7))))return false;}root.riderPlan=riders;return true;}finally{EXCLUDED.remove();}
+    }
+    /**
+     * An open Large Door is a passage: an arm and everything it carries move through any part of
+     * it, including the leaf edges that remain inside the opening and leaves swung into the air
+     * beside it. Boxes are matched by value against what the open door cells contribute, over the
+     * same cells getCollisionBoxes visits, and against the moved-leaf boxes its event adds.
+     */
+    private static List<AxisAlignedBB> withoutOpenDoors(World world,AxisAlignedBB swept,List<AxisAlignedBB> obstacles){
+        if(obstacles.isEmpty())return obstacles;
+        List<AxisAlignedBB> door=null;
+        int x0=MathHelper.floor(swept.minX)-1,x1=MathHelper.ceil(swept.maxX)+1,y0=MathHelper.floor(swept.minY)-1,y1=MathHelper.ceil(swept.maxY)+1,z0=MathHelper.floor(swept.minZ)-1,z1=MathHelper.ceil(swept.maxZ)+1;
+        for(BlockPos.MutableBlockPos at:BlockPos.getAllInBoxMutable(x0,y0,z0,x1-1,y1-1,z1-1)){
+            if(!world.isBlockLoaded(at))continue;
+            net.minecraft.block.state.IBlockState state=world.getBlockState(at);
+            if(!com.vandorlabs.blocks.BlockLargeProgrammableDoor.isOpenPassage(world,at,state))continue;
+            if(door==null)door=new ArrayList<>();
+            state.addCollisionBoxToList(world,at.toImmutable(),swept,door,null,false);
+        }
+        if(door==null)door=new ArrayList<>();
+        com.vandorlabs.tiles.MovedDoorInteractions.openLargeDoorBoxes(world,swept,door);
+        if(door.isEmpty())return obstacles;
+        List<AxisAlignedBB> remaining=new ArrayList<>(obstacles);remaining.removeAll(door);
+        return remaining;
     }
     private static double penetration(AxisAlignedBB a,AxisAlignedBB b){return Math.min(Math.min(a.maxX,b.maxX)-Math.max(a.minX,b.minX),Math.min(Math.min(a.maxY,b.maxY)-Math.max(a.minY,b.minY),Math.min(a.maxZ,b.maxZ)-Math.max(a.minZ,b.minZ)));}
     /** A harmless first sliver must not hide a deeper obstruction later in this same stroke. */

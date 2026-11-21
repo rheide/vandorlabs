@@ -57,6 +57,14 @@ public final class MovedDoorInteractions {
         net.minecraft.block.state.IBlockState state=world.getBlockState(door.getPos());
         return state.getBlock().getClass()==BlockLargeProgrammableDoor.class?state:null;
     }
+    /** Collision boxes of open native Large Doors around {@code query}, including leaves moved into air cells. */
+    public static void openLargeDoorBoxes(World world,AxisAlignedBB query,List<AxisAlignedBB> out){
+        for(TileEntitySpaceDoor door:doors(world,query)){
+            net.minecraft.block.state.IBlockState state=nativeLargeState(world,door);
+            if(state==null||!state.getValue(BlockVandorDoor.OPEN))continue;
+            ((TileEntityLargeProgrammableDoor)door).collisionIndex(state.getValue(BlockVandorDoor.FACING),true).addIntersecting(query,out);
+        }
+    }
     public static RayTraceResult trace(World world,Vec3d start,Vec3d end) {
         RayTraceResult nearest=null;double distance=Double.POSITIVE_INFINITY;
         for(TileEntitySpaceDoor door:doors(world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z))) {
