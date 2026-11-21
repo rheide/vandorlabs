@@ -822,6 +822,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("Saved duct flow",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.savedShotOnly")){
+            try{if(SavedShotChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Saved world shots",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.diagonalCornerOnly")){
             try{if(DiagonalCornerLiveChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Diagonal corner glass",failure);}

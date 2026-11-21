@@ -64,16 +64,29 @@ public final class CornerGlassGeometry {
         double d=slopeDepth(mode,inverted,y);
         return far?1-d:d;
     }
-    private double distance(double y,double normal){
-        double center=middle(y);
-        // Compress the full cross section together at the corner. Clamping each
-        // vertex independently folds several frame faces onto the same plane.
-        double scale=Math.min(1,Math.min(center,1-center)/HALF_THICKNESS);
-        return center+(normal-.5)*scale;
-    }
+    /**
+     * The full cross section around the bevel, as on diagonal glass, whose slab overhangs its
+     * block face by up to two pixels where the slope meets it. The corner keeps the same
+     * thickness there, so the two meet face to face. Only where the bevel shrinks into the
+     * cell's corner point is the inner side held at that point, so faces never fold through it.
+     */
+    private double distance(double y,double normal){return Math.max(0,middle(y)+(normal-.5));}
     private double height(double y){return low+(high-low)*y;}
 
-    /** Project local flat-glass coordinates. The two ends remain flush with the cell boundaries. */
+    /**
+     * Project one flat-glass quad onto the bevel. Each vertex is {@code {x,y,z,attributes...}} in
+     * local unit coordinates; attributes are kept. Returns the four projected vertices; both
+     * versions' renderers use this so their corner meshes are identical.
+     */
+    public List<double[]> projectQuad(double[]... quad){
+        List<double[]> projected=new ArrayList<>(quad.length);double[] point=new double[3];
+        for(double[] vertex:quad){
+            double[] out=vertex.clone();project(vertex[0],vertex[1],vertex[2],point);
+            out[0]=point[0];out[1]=point[1];out[2]=point[2];projected.add(out);
+        }
+        return projected;
+    }
+    /** Project local flat-glass coordinates; like diagonal glass, the slab may overhang the block face. */
     public void project(double along,double y,double normal,double[] out){
         double at=height(y),span=distance(at,normal);
         rotate(along*span,at,(1-along)*span,turn,out);
@@ -220,9 +233,9 @@ public final class CornerGlassGeometry {
             double min=Math.min(distance(y0,.5-HALF_THICKNESS),distance(y1,.5-HALF_THICKNESS));
             double max=Math.max(distance(y0,.5+HALF_THICKNESS),distance(y1,.5+HALF_THICKNESS));
             for(int col=0;col<STEPS;col++){
-                double x0=col/(double)STEPS,x1=Math.min(max,(col+1D)/STEPS);
+                double x0=col/(double)STEPS,x1=Math.min(Math.min(1,max),(col+1D)/STEPS);
                 if(x1<=x0+EPSILON)break;
-                double z0=Math.max(0,min-x1),z1=max-x0;
+                double z0=Math.max(0,min-x1),z1=Math.min(1,max-x0);
                 if(z1<=z0+EPSILON)continue;
                 rotate(x0,y0,z0,turn,a);
                 rotate(x1,y1,z1,turn,b);
@@ -234,7 +247,7 @@ public final class CornerGlassGeometry {
     }
 
     public <T> T bounds(SpaceDoorBounds.Factory<T> factory){
-        double max=Math.max(distance(low,.5+HALF_THICKNESS),distance(high,.5+HALF_THICKNESS));
+        double max=Math.min(1,Math.max(distance(low,.5+HALF_THICKNESS),distance(high,.5+HALF_THICKNESS)));
         double[] a=new double[3],b=new double[3];
         rotate(0,low,0,turn,a);rotate(max,high,max,turn,b);
         return factory.create(Math.min(a[0],b[0]),low,Math.min(a[2],b[2]),Math.max(a[0],b[0]),high,Math.max(a[2],b[2]));

@@ -1,5 +1,7 @@
 package com.vandorlabs.render;
 
+import java.util.List;
+
 /** Corner placement and non-folding checks shared by both platform renderers. */
 public final class CornerGlassChecks {
     private static int checks;
@@ -19,9 +21,20 @@ public final class CornerGlassChecks {
             CornerGlassGeometry geometry=CornerGlassGeometry.diagonal(mode,meta);
             require(geometry.metadata()==meta,"diagonal metadata round trip");
             require(mode!=2||Math.abs(geometry.high()-geometry.low()-.5)<1E-9,"wide corners fill half the height");
-            for(int row=0;row<=16;row++)for(double normal:new double[]{.375,.5,.625})for(double along:new double[]{0,.5,1}){
-                geometry.project(along,row/16D,normal,a);
-                require(a[0]>=-1E-9&&a[0]<=1+1E-9&&a[1]>=geometry.low()-1E-9&&a[1]<=geometry.high()+1E-9&&a[2]>=-1E-9&&a[2]<=1+1E-9,"diagonal corner stays inside its cell and height band");
+            for(int row=0;row<=16;row++){
+                // A horizontal slice through the slab at this height keeps the full four-pixel
+                // thickness, as diagonal glass does where it meets a block face (it was once
+                // squeezed to a line there). Only a bevel shrinking into the cell's corner point
+                // is cut off at that point. c is the bevel centre at this height, local and before the turn.
+                double y=row/16D;
+                List<double[]> slice=geometry.projectQuad(new double[]{0,y,.375},new double[]{1,y,.375},new double[]{1,y,.625},new double[]{0,y,.625});
+                double area=0;
+                for(int i=0;i<4;i++){double[] p=slice.get(i),n=slice.get((i+1)%4);area+=(p[0]*n[2]-n[0]*p[2])/2;}
+                for(double[] p:slice)require(p[1]>=geometry.low()-1E-9&&p[1]<=geometry.high()+1E-9&&p[0]>=-.125-1E-9&&p[0]<=1.125+1E-9&&p[2]>=-.125-1E-9&&p[2]<=1.125+1E-9,"diagonal corner overhangs its cell by at most two pixels");
+                geometry.project(0,y,.5,a);double lx=a[0],lz=a[2];
+                for(int t=0;t<(meta&3);t++){double old=lx;lx=lz;lz=1-old;}
+                double c=lx+lz,inner=Math.max(0,c-.125),outer=c+.125,expected=(outer*outer-inner*inner)/2;
+                require(Math.abs(Math.abs(area)-expected)<1E-6,"diagonal corner keeps its full thickness at height "+y+" mode="+mode+" meta="+meta+" area="+Math.abs(area)+" expected="+expected);
             }
             // In plan the bevel always runs at 45 degrees: both ends sit the same distance from the corner.
             for(double y:new double[]{geometry.low(),geometry.high()}){

@@ -52,28 +52,36 @@ public final class NativeFlatGlassRenderer {
    var key=new CornerMesh(geometry,source);
    var found=cornerMeshes.getIfPresent(key);
    if(found!=null)return found;
-   var result=source.stream().map(quad->projectCorner(quad,geometry)).toList();
+   var result=source.stream().flatMap(quad->projectCorner(quad,geometry).stream()).toList();
    cornerMeshes.put(key,result);
    return result;
   }
-  private static BakedQuad projectCorner(BakedQuad quad,CornerGlassGeometry geometry){
-   int[] data=quad.getVertices().clone();int stride=data.length/4;
-   double[] point=new double[3];
-   float[][] vertices=new float[4][3];
-   for(int i=0;i<4;i++){
-    int at=i*stride;
-    geometry.project(Float.intBitsToFloat(data[at]),Float.intBitsToFloat(data[at+1]),Float.intBitsToFloat(data[at+2]),point);
-    for(int axis=0;axis<3;axis++){vertices[i][axis]=(float)point[axis];data[at+axis]=Float.floatToRawIntBits(vertices[i][axis]);}
+  /** The flat glass quad bent onto the bevel by the shared corner geometry. */
+  private static List<BakedQuad> projectCorner(BakedQuad quad,CornerGlassGeometry geometry){
+   int[] source=quad.getVertices();int stride=source.length/4;
+   double[][] input=new double[4][];
+   for(int i=0;i<4;i++){int at=i*stride;input[i]=new double[]{Float.intBitsToFloat(source[at]),Float.intBitsToFloat(source[at+1]),Float.intBitsToFloat(source[at+2]),
+     Float.intBitsToFloat(source[at+4]),Float.intBitsToFloat(source[at+5])};}
+   var clipped=geometry.projectQuad(input);
+   var result=new java.util.ArrayList<BakedQuad>(clipped.size()/4);
+   for(int q=0;q+4<=clipped.size();q+=4){
+    int[] data=source.clone();float[][] vertices=new float[4][3];
+    for(int i=0;i<4;i++){
+     double[] v=clipped.get(q+i);int at=i*stride;
+     for(int axis=0;axis<3;axis++){vertices[i][axis]=(float)v[axis];data[at+axis]=Float.floatToRawIntBits(vertices[i][axis]);}
+     data[at+4]=Float.floatToRawIntBits((float)v[3]);data[at+5]=Float.floatToRawIntBits((float)v[4]);
+    }
+    var a=new org.joml.Vector3f(vertices[1]).sub(new org.joml.Vector3f(vertices[0]));
+    var b=new org.joml.Vector3f(vertices[2]).sub(new org.joml.Vector3f(vertices[0]));
+    var normal=a.cross(b);Direction face=quad.getDirection();
+    if(normal.lengthSquared()>1E-10F){
+     normal.normalize();face=Direction.getNearest(normal.x,normal.y,normal.z);
+     int packed=((int)(normal.x*127)&255)|(((int)(normal.y*127)&255)<<8)|(((int)(normal.z*127)&255)<<16);
+     for(int i=0;i<4;i++)data[i*stride+7]=packed;
+    }
+    result.add(new BakedQuad(data,quad.getTintIndex(),face,quad.getSprite(),quad.isShade(),quad.hasAmbientOcclusion()));
    }
-   var a=new org.joml.Vector3f(vertices[1]).sub(new org.joml.Vector3f(vertices[0]));
-   var b=new org.joml.Vector3f(vertices[2]).sub(new org.joml.Vector3f(vertices[0]));
-   var normal=a.cross(b);Direction face=quad.getDirection();
-   if(normal.lengthSquared()>1E-10F){
-    normal.normalize();face=Direction.getNearest(normal.x,normal.y,normal.z);
-    int packed=((int)(normal.x*127)&255)|(((int)(normal.y*127)&255)<<8)|(((int)(normal.z*127)&255)<<16);
-    for(int i=0;i<4;i++)data[i*stride+7]=packed;
-   }
-   return new BakedQuad(data,quad.getTintIndex(),face,quad.getSprite(),quad.isShade(),quad.hasAmbientOcclusion());
+   return result;
   }
   private static int cost(List<BakedQuad> values){long cost=96;for(var q:values)cost+=96L+q.getVertices().length*4L;return (int)Math.min(Integer.MAX_VALUE,cost);}
   private void retain(Object key,int cost,boolean defaults){bytes+=cost;order.addLast(new Owned(key,cost,defaults));while(bytes>BUDGET&&!order.isEmpty()){var old=order.removeFirst();bytes-=old.bytes;if(old.defaults)this.defaults[(Integer)old.key]=null;else draws.remove((DrawKey)old.key);}}

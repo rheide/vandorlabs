@@ -96,6 +96,11 @@ case "${1:-}" in
             # The same reported world; its flux ducts are fed by an RFTools creative cell.
             PREFIX=saved_dish_arm_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedDishArmOnly=true -Dfml.queryResult=confirm"
+        elif [ "$TARGET" = saved-shot ]; then
+            # Shots of a reported world: VANDOR_LABS_SAVED_WORLD (7z with test/level.dat) and
+            # VANDOR_LABS_SAVED_SHOTS (name:x,y,z,yaw,pitch;... feet position and F3 rotation).
+            PREFIX=saved_shot_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedShotOnly=true -Dvandorlabs.savedShots=${VANDOR_LABS_SAVED_SHOTS:?Set VANDOR_LABS_SAVED_SHOTS} -Dvandorlabs.savedShotRemove=${VANDOR_LABS_SAVED_SHOT_REMOVE:-} -Dfml.queryResult=confirm"
         elif [ "$TARGET" = diagonal-corner ]; then
             PREFIX=diagonal_corner_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.diagonalCornerOnly=true"
@@ -498,7 +503,7 @@ if [ "${TARGET:-}" = saved-dish-arm ]; then
         cp "$COMPAT_MODS/$saved_mod" "$TEST_RUNTIME_GAME/mods/"
     done
 fi
-if [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = saved-dish-arm ]; then
+if [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = saved-dish-arm ] || [ "${TARGET:-}" = saved-shot ]; then
     rm -rf "$TEST_RUNTIME_GAME/saves/saved-duct" "$RUN_OUT/unpack"
     7z x -y -o"$RUN_OUT/unpack" "${VANDOR_LABS_SAVED_WORLD:?Set VANDOR_LABS_SAVED_WORLD}" >/dev/null
     mkdir -p "$TEST_RUNTIME_GAME/saves"; cp -r "$RUN_OUT/unpack/test" "$TEST_RUNTIME_GAME/saves/saved-duct"; rm -f "$TEST_RUNTIME_GAME/saves/saved-duct/session.lock"; rm -rf "$RUN_OUT/unpack"
@@ -537,6 +542,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = saved-duct-flow ]; then
         grep -q "saved-duct-flow PASS" "$RUN_OUT/client.log"
         echo "PASS: saved duct item flow"
+        exit 0
+    fi
+    if [ "$TARGET" = saved-shot ]; then
+        grep -q "saved-shot PASS" "$RUN_OUT/client.log"
+        echo "PASS: saved world shots taken"
         exit 0
     fi
     if [ "$TARGET" = diagonal-corner ]; then

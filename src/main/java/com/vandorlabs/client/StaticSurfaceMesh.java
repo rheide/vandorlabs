@@ -22,18 +22,22 @@ final class StaticSurfaceMesh {
     StaticSurfaceMesh mirrorX(double centerSum){
         float[] data=new float[vertices.length];for(int q=0;q<vertices.length;q+=32)for(int v=0;v<4;v++){int from=q+(3-v)*8,to=q+v*8;System.arraycopy(vertices,from,data,to,8);data[to]=(float)(centerSum-data[to]);data[to+5]=-data[to+5];}return new StaticSurfaceMesh(data);
     }
+    /** The flat glass mesh bent onto a corner bevel by the shared geometry. */
     StaticSurfaceMesh cornerGlass(com.vandorlabs.render.CornerGlassGeometry geometry){
-        float[] data=vertices.clone();
-        double[] point=new double[3];
-        for(int i=0;i<data.length;i+=8){
-            geometry.project(data[i]/16D,data[i+1]/16D,data[i+2]/16D,point);
-            for(int axis=0;axis<3;axis++)data[i+axis]=(float)point[axis];
+        java.util.List<double[]> out=new java.util.ArrayList<>();
+        for(int q=0;q+32<=vertices.length;q+=32){
+            double[][] quad=new double[4][];
+            for(int v=0;v<4;v++){int i=q+v*8;quad[v]=new double[]{vertices[i]/16D,vertices[i+1]/16D,vertices[i+2]/16D,vertices[i+3],vertices[i+4]};}
+            out.addAll(geometry.projectQuad(quad));
         }
+        float[] data=new float[out.size()*8];
+        for(int v=0;v<out.size();v++){double[] p=out.get(v);for(int k=0;k<5;k++)data[v*8+k]=(float)p[k];}
         for(int q=0;q<data.length;q+=32){
             double ax=data[q+8]-data[q],ay=data[q+9]-data[q+1],az=data[q+10]-data[q+2];
             double bx=data[q+16]-data[q],by=data[q+17]-data[q+1],bz=data[q+18]-data[q+2];
             double nx=ay*bz-az*by,ny=az*bx-ax*bz,nz=ax*by-ay*bx;
             double length=Math.sqrt(nx*nx+ny*ny+nz*nz);
+            if(length<1E-9){bx=data[q+24]-data[q];by=data[q+25]-data[q+1];bz=data[q+26]-data[q+2];nx=ay*bz-az*by;ny=az*bx-ax*bz;nz=ax*by-ay*bx;length=Math.sqrt(nx*nx+ny*ny+nz*nz);}
             if(length>1E-9)for(int i=q;i<q+32;i+=8){data[i+5]=(float)(nx/length);data[i+6]=(float)(ny/length);data[i+7]=(float)(nz/length);}
         }
         return new StaticSurfaceMesh(data);
