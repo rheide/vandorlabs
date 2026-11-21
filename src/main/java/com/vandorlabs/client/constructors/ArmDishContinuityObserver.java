@@ -32,7 +32,7 @@ public final class ArmDishContinuityObserver implements ArmCoreTransitionObserve
             Map<Object,MachineVisualMotion.Pose> world=worlds.get(tile.getWorld());MachineVisualMotion.Pose pose=world==null?null:world.get(tile.getPos());
             if(pose==null||!pose.initialized)throw new IllegalStateException("Actual Dish draw did not sample its cosmetic pose");
             FrameMachineDesign spec=tile.core().specification();String folder=spec.state_models[tile.screenOn()?tile.activity():0].split("/")[0]+"/parts/";
-            int start=UniversalConstructorModelCache.get(spec.design,folder+"static.obj").getQuadCount()*4;
+            int start=TEConstructor.OBSERVER_PORT_VERTICES+UniversalConstructorModelCache.get(spec.design,folder+"static.obj").getQuadCount()*4;
             UniversalConstructorModelCache.Mesh rotor=UniversalConstructorModelCache.get(spec.design,folder+"rotor.obj");
             int rotorCount=rotor.getQuadCount()*4;if(start+rotorCount!=count)throw new IllegalStateException("Actual Dish BODY lost static/rotor boundary");
             BufferBuilder reference=new BufferBuilder(4096);reference.begin(7,DefaultVertexFormats.BLOCK);if(tile.inverted())rotor.emitInverted(reference,0,0,0,tile.facing(),spec.width,spec.height,spec.depth,0,0,spec.motion_pivot[0],spec.motion_pivot[2]);else rotor.emitTransformed(reference,0,0,0,tile.facing(),spec.width,spec.depth,0,0,0,0,0,spec.motion_pivot[0],spec.motion_pivot[2]);reference.finishDrawing();

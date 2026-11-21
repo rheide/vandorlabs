@@ -17,11 +17,32 @@ final class NavigationObserverChecks {
         BlockPos at=new BlockPos(166,90,166);net.minecraft.block.state.IBlockState before=mc.world.getBlockState(at);
         try{for(String id:new String[]{"standalone_dish","standalone_antenna"})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int width:id.equals("standalone_dish")?new int[]{3,4,5,6,16}:new int[]{2,3,4,8})for(boolean inverted:new boolean[]{false,true}){
             BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+id+"_core");mc.world.setBlockState(at,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing).withProperty(BlockConstructorCore.FORMED,true),2);TileEntityConstructor tile=(TileEntityConstructor)mc.world.getTileEntity(at);NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound());tag.setInteger(ObserverScale.WIDTH_TAG,width);tag.setBoolean("ObserverInverted",inverted);tag.setBoolean("NavigationScreenOn",false);tile.readFromNBT(tag);
-            net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(65536);buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);new com.vandorlabs.client.constructors.TEConstructor().renderTileEntityFast(tile,0,0,0,0,-1,1,buffer);buffer.finishDrawing();need(buffer.getVertexCount()>0,"actual inverted renderer emits "+id);
+            net.minecraft.client.renderer.BufferBuilder buffer=new net.minecraft.client.renderer.BufferBuilder(65536);buffer.begin(7,net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK);new com.vandorlabs.client.constructors.TEConstructor().renderTileEntityFast(tile,0,0,0,0,-1,1,buffer);
+            portUnderInlet(mc,tile,buffer,id+" "+facing+" width="+width+" inverted="+inverted);buffer.finishDrawing();need(buffer.getVertexCount()>0,"actual inverted renderer emits "+id);
             java.nio.ByteBuffer bytes=buffer.getByteBuffer();int stride=net.minecraft.client.renderer.vertex.DefaultVertexFormats.BLOCK.getNextOffset();double min=Double.POSITIVE_INFINITY,max=Double.NEGATIVE_INFINITY,minX=min,maxX=max,minZ=min,maxZ=max;BlockPos origin=tile.renderOriginOffset();for(int v=0;v<buffer.getVertexCount();v++){float x=bytes.getFloat(v*stride),y=bytes.getFloat(v*stride+4),z=bytes.getFloat(v*stride+8);minX=Math.min(minX,x);maxX=Math.max(maxX,x);minZ=Math.min(minZ,z);maxZ=Math.max(maxZ,z);need(x>=origin.getX()-.001&&x<=origin.getX()+width+.001&&z>=origin.getZ()-.001&&z<=origin.getZ()+width+.001,"actual mesh stays inside horizontal reservations");min=Math.min(min,y);max=Math.max(max,y);need(y>=(inverted?1-tile.structureHeight():0)-.001&&y<=(inverted?1:tile.structureHeight())+.001,"inverted emitted vertex stays below top core");}need(inverted?min<-.25&&max<=1.001:min>=-.001&&max>.25,"actual body extends from core "+id);need(maxX-minX>=width*.93&&maxZ-minZ>=width*.93,"model fills horizontal footprint "+id);
         }}finally{mc.world.setBlockState(at,before,2);}
         ConstructorRenderLifetimeChecks.run(mc);
         System.out.println("[vandorlabs] navigation-observers-render PASS actual TESR scaled chipless observers all facings upright/inverted actual vertex bounds");
+    }
+    /** The Power Port artwork sits under the one block that accepts RF, also for even widths. */
+    private static void portUnderInlet(net.minecraft.client.Minecraft mc,TileEntityConstructor tile,net.minecraft.client.renderer.BufferBuilder buffer,String label){
+        java.nio.ByteBuffer bytes=buffer.getByteBuffer();net.minecraft.client.renderer.vertex.VertexFormat format=buffer.getVertexFormat();int stride=format.getNextOffset(),uv=format.getUvOffsetById(0);
+        // Match whole quads spanning the full Power Port sprite; vertices of neighbouring
+        // atlas sprites can sit exactly on its edges.
+        double sx=0,sz=0;int quads=0,count=0;
+        for(String state:new String[]{"off","on"}){
+            net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=mc.getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/power_in_"+state);
+            for(int q=0;q+3<buffer.getVertexCount();q+=4){
+                float u0=Float.MAX_VALUE,u1=-Float.MAX_VALUE,v0=Float.MAX_VALUE,v1=-Float.MAX_VALUE;
+                for(int v=q;v<q+4;v++){float u=bytes.getFloat(v*stride+uv),t=bytes.getFloat(v*stride+uv+4);u0=Math.min(u0,u);u1=Math.max(u1,u);v0=Math.min(v0,t);v1=Math.max(v1,t);}
+                if(Math.abs(u0-sprite.getMinU())>1e-6||Math.abs(u1-sprite.getMaxU())>1e-6||Math.abs(v0-sprite.getMinV())>1e-6||Math.abs(v1-sprite.getMaxV())>1e-6)continue;
+                quads++;for(int v=q;v<q+4;v++){sx+=bytes.getFloat(v*stride);sz+=bytes.getFloat(v*stride+8);count++;}
+            }
+        }
+        need(quads==1,"one Power Port quad "+label+" quads="+quads);
+        BlockPos inlet=tile.observerPowerPort().subtract(tile.getPos());
+        need(Math.abs(sx/count-(inlet.getX()+.5))<1e-3&&Math.abs(sz/count-(inlet.getZ()+.5))<1e-3,
+                "Power Port artwork centred under the RF inlet "+label+" artwork=("+sx/count+","+sz/count+") inlet="+inlet);
     }
     static void run(WorldServer world){
         for(BlockPos at:BlockPos.getAllInBox(new BlockPos(150,74,150),new BlockPos(182,106,182)))world.setBlockToAir(at);

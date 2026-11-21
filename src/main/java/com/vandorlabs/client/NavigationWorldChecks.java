@@ -50,10 +50,16 @@ final class NavigationWorldChecks {
             t.configureDisplay(new NavigationScreenSettings(NavigationMap.SURFACE,true,1,false,false),true,127,0,ChannelList.of(42,43));
             require(NavigationSources.noPower(w,t.getPos(),ChannelList.of(42,43))&&NavigationService.coverage(t).isEmpty(),"linked observers without input report no power");
             for(TileEntityConstructor observer:new TileEntityConstructor[]{dish,array}){
-                BlockPos at=observer.cell(observer.structureWidth()-1,0,observer.structureDepth()-1);
-                TileEntity member=w.getTileEntity(at);
+                // Exactly one bottom cell, the centre Power Port, accepts RF. On the 2x2 Array the
+                // port is cell(1,0,1), so check every bottom cell instead of a fixed corner.
+                for(int x=0;x<observer.structureWidth();x++)for(int z=0;z<observer.structureDepth();z++){
+                    BlockPos at=observer.cell(x,0,z);TileEntity cell=w.getTileEntity(at);
+                    boolean accepts=cell!=null&&cell.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.DOWN)!=null;
+                    require(accepts==at.equals(observer.observerPowerPort()),"only the centre Power Port accepts RF cell="+x+","+z+" accepts="+accepts+" port="+observer.observerPowerPort().subtract(observer.getPos()));
+                }
+                TileEntity member=w.getTileEntity(observer.observerPowerPort());
                 net.minecraftforge.energy.IEnergyStorage input=member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.DOWN);
-                require(input!=null&&member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.UP)==null,"only the underside of the formed reservation accepts power");
+                require(input!=null&&member.getCapability(net.minecraftforge.energy.CapabilityEnergy.ENERGY,EnumFacing.UP)==null,"only the underside of the centre Power Port accepts power");
                 require(input.receiveEnergy(ObserverPower.RF_PER_TICK,true)==ObserverPower.RF_PER_TICK&&!observer.observerPowered(),"simulated input stays unpowered");
                 require(input.receiveEnergy(ObserverPower.RF_PER_TICK,false)==ObserverPower.RF_PER_TICK&&observer.observerPowered(),"RF makes the installed observer available");
             }
@@ -117,7 +123,7 @@ final class NavigationWorldChecks {
                 server(mc,()->{
                     WorldServer w=player(mc).getServerWorld();
                     TileEntityConstructor dish=(TileEntityConstructor)w.getTileEntity(POS.east(4));
-                    w.setBlockToAir(dish.cell(dish.structureWidth()-1,0,dish.structureDepth()-1).down());
+                    w.setBlockToAir(dish.observerPowerPort().down());
                     ((TileEntityAnimatedScreenSelector)w.getTileEntity(SCREEN)).setRedstoneChannels(ChannelList.of(42));
                 });
                 NavigationMapRenderer.changed(SCREEN);stage=131;ticks=0;return false;
@@ -138,14 +144,15 @@ final class NavigationWorldChecks {
         if(stage==15){if(ticks<20||!(mc.currentScreen instanceof GuiNavigationTable))return false;GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;@SuppressWarnings("unchecked") java.util.List<net.minecraft.client.gui.GuiButton> buttons=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(net.minecraft.client.gui.GuiScreen.class,gui,"buttonList","field_146292_n");for(net.minecraft.client.gui.GuiButton button:buttons)if(button.displayString.equals("Redstone")){gui.mouseClicked(button.x+4,button.y+4,0);break;}stage=16;ticks=0;return false;}
         if(stage==16){if(ticks<15)return false;GuiNavigationTable gui=(GuiNavigationTable)mc.currentScreen;net.minecraft.client.gui.GuiTextField field=InlineTransmitterWidget.channelsField(gui);require(field!=null,"observer inline channel editor");field.setText("47,48");field.setFocused(true);InlineTransmitterWidget.keyInput(gui,' ',org.lwjgl.input.Keyboard.KEY_SPACE);InlineTransmitterWidget.keyInput(gui,'\r',org.lwjgl.input.Keyboard.KEY_RETURN);for(net.minecraft.client.gui.GuiButton control:InlineTransmitterWidget.controls(gui))if(control instanceof net.minecraftforge.fml.client.config.GuiSlider){InlineTransmitterWidget.mouseInput(gui,control.x+5,control.y+5,0);control.mouseReleased(0,0);}stage=17;ticks=0;return false;}
         if(stage==17){if(ticks<20)return false;server(mc,()->{EntityPlayerMP p=player(mc);TileEntityConstructor source=(TileEntityConstructor)p.world.getTileEntity(POS.west(4));require(source.transmittedChannels().equals(ChannelList.of(47,48))&&source.transmissionRange()==4,"observer range/channels actual settings packets");TileEntityNavigationTable t=table(p.world);t.removeStackFromSlot(0);TransmitterSlots.configure(source,ChannelList.of(47,48),256,false);
-            p.world.setBlockToAir(source.cell(source.structureWidth()-1,0,source.structureDepth()-1).down());
+            p.world.setBlockToAir(source.observerPowerPort().down());
             t.setRedstoneChannels(ChannelList.of(47));aim(p,new Vec3d(POS).addVector(1,4,-1.5),new Vec3d(POS).addVector(1,.875,1));});mc.player.closeScreen();mc.gameSettings.hideGUI=true;NavigationMapRenderer.changed(POS);stage=18;ticks=0;return false;}
         if(stage==18){NavigationMapRenderer.bind(table(mc.world),0,1);if(ticks<200||!hasPowerHaiku(POS))return false;System.out.println("[vandorlabs] navigation-table power-haiku PASS");shot="navigation-world-no-signal.png";captured=false;stage=19;ticks=0;return false;}
         if(stage==19&&captured){if(!flightComplete){if(!NavigationFlightChecks.tick(mc,output))return false;flightComplete=true;}if(!NavigationModuleLiveChecks.tick(mc,output))return false;System.out.println("[vandorlabs] navigation-world PASS rendered seed map families=6 joined external mount actual picker and observer range/channel packets real pan/write clicks Survival lever placement activation bounded wire no-signal");return true;}
         return false;
     }
     static BlockPos power(WorldServer world,TileEntityConstructor observer){
-        BlockPos port=observer.cell(observer.structureWidth()-1,observer.inverted()?observer.structureHeight()-1:0,observer.structureDepth()-1).down();
+        // Observers accept RF only through the centre Power Port's underside.
+        BlockPos port=observer.observerPowerPort().down();
         powerPort(world,port);
         return port;
     }

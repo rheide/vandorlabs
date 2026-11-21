@@ -25,7 +25,10 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
             if(com.vandorlabs.navigation.ObserverScale.observer(spec.design)){
                 state=tile.activity();
                 String[] keys=observerKeys(spec)[state];com.vandorlabs.machines.CoreLayout shape=tile.layout();double scale=shape.width/(double)spec.width;EnumFacing facing=EnumFacing.getFront(shape.facing);boolean inverted=tile.inverted();int light=packedLight(tile);
-                observerPort(buffer,x+shape.width/2.0,y-.0005,z+shape.depth/2.0,light,tile.observerPowered());
+                // Draw the artwork under the block that actually takes RF; for even widths the
+                // geometric centre falls between four blocks.
+                BlockPos portOrigin=tile.renderOriginOffset(),port=tile.observerPowerPort().subtract(tile.getPos());
+                observerPort(buffer,x-portOrigin.getX()+port.getX()+.5,y-.0005,z-portOrigin.getZ()+port.getZ()+.5,light,tile.observerPowered());
                 if("dish".equals(spec.motion)){
                     MachineVisualMotion.Pose pose=MachineVisualMotion.sample(tile,state==2,10);double yaw=Math.toRadians(55)*Math.sin((pose.now-pose.phase)*Math.PI/80)*MachineVisualMotion.eased(pose.progress);
                     UniversalConstructorModelCache.getByKey(keys[0]).emitObserver(buffer,x,y,z,facing,spec.width,spec.height,spec.depth,light,scale,inverted,0,0,0);
@@ -64,6 +67,8 @@ public final class TEConstructor extends TileEntitySpecialRenderer<TileEntityCon
             }
         }
     };
+    /** Observer body draws begin with this one Power Port quad, before the static and rotor meshes. */
+    static final int OBSERVER_PORT_VERTICES=4;
     private static void observerPort(BufferBuilder buffer,double x,double y,double z,int light,boolean powered){
         net.minecraft.client.renderer.texture.TextureAtlasSprite sprite=net.minecraft.client.Minecraft.getMinecraft()
                 .getTextureMapBlocks().getAtlasSprite("vandorlabs:blocks/resource_ports/power_in_"+(powered?"on":"off"));
