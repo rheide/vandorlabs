@@ -29,18 +29,17 @@ public final class NativeObserverEntity extends BlockEntity implements com.vando
   public boolean canExtract(){return false;}
   public boolean canReceive(){return observer.acceptsPower(part);}
  }
- boolean bottom(BlockPos at){
-  return at.getY()==worldPosition.getY()-(inverted?design().height()-1:0);
- }
+ /** The only RF inlet: the centre cell of the bottom layer, marked by the Power Port artwork. */
+ public BlockPos powerPort(){var d=design();return cell(d.width()/2,inverted?d.height()-1:0,d.depth()/2);}
  private boolean acceptsPower(NativeObserverPartEntity part){
-  if(!available()||!formed()||!bottom(part==null?worldPosition:part.getBlockPos())
+  if(!available()||!formed()||!powerPort().equals(part==null?worldPosition:part.getBlockPos())
           ||com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(level,worldPosition))return false;
   return part==null||part.root()==this
          &&!com.vandorlabs.neoforge.gear.NativeGearHolds.reserved(level,part.getBlockPos())
          &&!com.vandorlabs.neoforge.transfer.NativeTransferHolds.reserved(level,part.getBlockPos());
  }
  net.neoforged.neoforge.energy.IEnergyStorage powerInput(Direction side){
-  return side==Direction.DOWN&&formed()&&!inert&&bottom(worldPosition)?input:null;
+  return side==Direction.DOWN&&formed()&&!inert&&powerPort().equals(worldPosition)?input:null;
  }
  public boolean powered(){return level!=null&&(level.isClientSide?visualPower:connectedPower());}
  private boolean connectedPower(){
@@ -50,9 +49,8 @@ public final class NativeObserverEntity extends BlockEntity implements com.vando
  }
  private boolean findConnectedPower(){
   if(!formed()||inert)return false;
-  var d=design();int y=inverted?d.height()-1:0;
-  for(int x=0;x<d.width();x++)for(int z=0;z<d.depth();z++){
-   var at=cell(x,y,z).below();if(!NativeObserverFormation.loaded(level,at))continue;
+  var at=powerPort().below();
+  if(NativeObserverFormation.loaded(level,at)){
    if(level.getBlockEntity(at) instanceof com.vandorlabs.neoforge.gear.NativeGearEntity source&&source.powerInputConnected())return true;
    var energy=level.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,at,Direction.UP);
    if(energy!=null&&energy.canExtract())return true;

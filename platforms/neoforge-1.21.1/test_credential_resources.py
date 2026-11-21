@@ -13,12 +13,16 @@ def main():
     with tempfile.TemporaryDirectory(prefix='credential-resources-') as temporary:
         out = Path(temporary)
         atlas = generate(ROOT, out)
-        assert len(atlas) == 16 and len({entry['resource'] for entry in atlas}) == 16
+        # Seven companies and the shared edge for both kinds, plus the four typed Data Chips.
+        assert len(atlas) == 20 and len({entry['resource'] for entry in atlas}) == 20
         assert len(translations(ROOT)) == 14
         for kind in ('access_card', 'data_chip'):
             base = json.loads((out / 'assets/vandorlabs/models/item' / (kind + '.json')).read_text())
-            assert [entry['predicate']['custom_model_data'] for entry in base['overrides']] == list(range(1, 8))
-            assert base['overrides'][-1]['model'] == base['parent']
+            company_overrides = [entry for entry in base['overrides'] if 'custom_model_data' in entry['predicate']]
+            assert [entry['predicate']['custom_model_data'] for entry in company_overrides] == list(range(1, 8))
+            typed = [entry for entry in base['overrides'] if 'vandorlabs:chip_type' in entry['predicate']]
+            assert len(typed) == (4 if kind == 'data_chip' else 0) and len(typed) + 7 == len(base['overrides'])
+            assert company_overrides[-1]['model'] == base['parent']
             for company in companies(ROOT):
                 name = kind + '_' + company
                 canonical = ROOT / 'src/main/resources/assets/vandorlabs/models/item' / (name + '.json')
@@ -39,7 +43,7 @@ def main():
             original = ROOT / 'texture-packs/additional/assets/vandorlabs/textures' / relative
             assert original.read_bytes() == (out / 'assets/vandorlabs/textures' / relative).read_bytes()
         assert not (out / 'data').exists(), 'No invented credential recipes'
-    print('Credential resources PASS14exactmodels/16exacttextures/14translations, native overrides and all rotated GUI corners padded')
+    print('Credential resources PASS14exactmodels/20exacttextures/14translations, native overrides and all rotated GUI corners padded')
 
 
 if __name__ == '__main__':

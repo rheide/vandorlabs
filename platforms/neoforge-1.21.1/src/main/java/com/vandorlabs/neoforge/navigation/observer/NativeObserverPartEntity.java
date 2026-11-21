@@ -11,7 +11,7 @@ public final class NativeObserverPartEntity extends BlockEntity {
  net.neoforged.neoforge.energy.IEnergyStorage powerInput(Direction side){
   if(side!=Direction.DOWN)return null;
   var established=root();
-  if(established==null||!established.bottom(worldPosition))return null;
+  if(established==null||!established.powerPort().equals(worldPosition))return null;
   if(established!=inputOwner){inputOwner=established;input=new NativeObserverEntity.Input(established,this);}
   return input;
  }

@@ -30,7 +30,11 @@ public final class NativeInlineTransmissionWidget {
         controls=List.of(this.range,this.localButton,this.channels);layout(x,y,width);
     }
     private static int index(int range){for(int i=0;i<TransmissionSettings.RANGES.length;i++)if(TransmissionSettings.RANGES[i]==range)return i;return 2;}
-    public void layout(int x,int y,int width){this.x=x;this.y=y;range.setPosition(x,y);range.setWidth(width);localButton.setPosition(x,y+22);localButton.setWidth(width);channels.setPosition(x+100,y+44);channels.setWidth(width-100);}
+    private boolean localHidden;
+    /** Families without a local Redstone output hide that row; the channel row moves up into its place. */
+    public void hideLocal(){localHidden=true;localButton.visible=false;localButton.active=false;layout(x,y,channels.getWidth()+100);}
+    private int channelRow(){return localHidden?22:44;}
+    public void layout(int x,int y,int width){this.x=x;this.y=y;range.setPosition(x,y);range.setWidth(width);localButton.setPosition(x,y+22);localButton.setWidth(width);channels.setPosition(x+100,y+channelRow());channels.setWidth(width-100);}
     public List<AbstractWidget> controls(){return controls;}
     public EditBox channelField(){return channels;}
     public AbstractSliderButton rangeControl(){return range;}
@@ -56,5 +60,5 @@ public final class NativeInlineTransmissionWidget {
         if(!channels.isFocused())return false;
         if(key==257||key==335||key==256){flush();channels.setFocused(false);return key!=256;}return false;
     }
-    public void renderLabels(GuiGraphics graphics,Font font){graphics.drawString(font,"Transmit channels",x,y+49,0xDAE8F0,false);}
+    public void renderLabels(GuiGraphics graphics,Font font){graphics.drawString(font,"Transmit channels",x,y+channelRow()+5,0xDAE8F0,false);}
 }

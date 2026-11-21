@@ -132,7 +132,12 @@ final class NativeGearResourceTransfer {
             if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
             return accepted;
         }
-        public boolean canReceive() {return !output()&&send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canReceive);}
+        /*
+         * Configuration only, never whether the far end is reachable right now: conduits may read
+         * canReceive once when they connect and treat a false answer as a source until they
+         * reconnect. receiveEnergy and extractEnergy return 0 while the arm cannot transfer.
+         */
+        public boolean canReceive() {return !output();}
         public int extractEnergy(int amount, boolean simulate) {
             if(!output()||amount<=0)return 0;
             int extracted=send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
@@ -140,7 +145,7 @@ final class NativeGearResourceTransfer {
         }
         public int getEnergyStored() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,IEnergyStorage::getEnergyStored);}
         public int getMaxEnergyStored() {return send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,0,IEnergyStorage::getMaxEnergyStored);}
-        public boolean canExtract() {return output()&&send(ArmResource.POWER,side,Capabilities.EnergyStorage.BLOCK,false,IEnergyStorage::canExtract);}
+        public boolean canExtract() {return output();}
     }
 
     private final class Fluids implements IFluidHandler {
@@ -199,7 +204,10 @@ final class NativeGearResourceTransfer {
             if (output()||stack.isEmpty()) return stack;
             int offered=stack.getCount();
             ItemStack remainder=send(ArmResource.ITEM,side,Capabilities.ItemHandler.BLOCK,stack,
-                    target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
+                    // Forward a copy: an inventory may keep the stack it is given in an empty slot,
+                    // and a caller may change the stack it passed afterwards (a Thermal Retriever
+                    // sets its stuffed stack to the remainder, zero), emptying that slot.
+                    target -> validSlot(target,slot) ? target.insertItem(slot,stack.copy(),simulate) : stack);
             if(!simulate&&remainder.getCount()<offered)input.resourceTransferred(ArmResource.ITEM);
             return remainder;
         }

@@ -13,8 +13,10 @@ public final class NativeObserverRenderer implements BlockEntityRenderer<NativeO
    ResourceLocation.parse("vandorlabs:blocks/resource_ports/power_in_"+(tile.powered()?"on":"off")));
   var output=buffers.getBuffer(RenderType.entityCutoutNoCull(InventoryMenu.BLOCK_ATLAS));
   var pose=poses.last();
-  float x=layout.width/2F-layout.pivotX(),z=layout.depth/2F-layout.pivotZ();
-  float y=(tile.inverted()?1-layout.height:0)-.0005F;
+  // Centred under the actual RF inlet cell; the pose is still the unrotated tile origin here.
+  var port=tile.powerPort();var origin=tile.getBlockPos();
+  float x=port.getX()-origin.getX()+.5F,z=port.getZ()-origin.getZ()+.5F;
+  float y=port.getY()-origin.getY()-.0005F;
   portVertex(output,pose,x-.375F,y,z-.375F,sprite.getU0(),sprite.getV0(),light,overlay);
   portVertex(output,pose,x+.375F,y,z-.375F,sprite.getU1(),sprite.getV0(),light,overlay);
   portVertex(output,pose,x+.375F,y,z+.375F,sprite.getU1(),sprite.getV1(),light,overlay);
