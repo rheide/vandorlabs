@@ -37,7 +37,7 @@ public final class ArmCoreLiveChecks {
     }
     private static void ownership(GearTileEntity arm){ArmPayload p=arm.payload();need(p!=null&&p.blocks.cells.size()==27,"all27 reservations follow contacted Part");ArmCorePayload.validate(p.blocks);int owners=0;for(VehicleStructure.Cell c:p.blocks.cells){need(c.tileData().getCompoundTag("ForgeCaps").getCompoundTag(CAPS.toString()).getInteger("Representation")==22,"original opaque physical capability retained");if(c.state.getBlock() instanceof BlockConstructorCore){owners++;need(new ItemStack(c.tileData().getCompoundTag("InsertedToken")).getItem()==com.vandorlabs.items.ModItems.DATA_CHIP,"one inserted chip retained");}}need(owners==1,"one complete formed owner");}
     public static boolean tick(Minecraft mc)throws Exception{
-        if("true".equals(System.getenv("VANDOR_LABS_OBSERVER_ARM_POWER_ONLY")))return ObserverArmPowerChecks.tick(mc);
+        if("true".equals(System.getenv("VANDOR_LABS_OBSERVER_ARM_POWER_ONLY")))return ObserverArmPowerChecks.tick(mc)&&ObserverDuctMotionChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armCoreGapOnly"))return ArmCoreGapLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.armCoreUseOnly"))return ArmCoreUseLiveChecks.tick(mc);
         if(profile==3){System.out.println("[vandorlabs] arm-live PASS arm-core checks="+checks+" ordinary placement contacted Part wholeCore Extender Rotating both modes native yaw edits captured mining/use refusal opaque capabilities async journals reload reversal");return true;}

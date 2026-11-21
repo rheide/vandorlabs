@@ -74,6 +74,8 @@ public final class ArmForeignLiveChecks {
         player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);player.inventoryContainer.detectAndSendChanges();
     }
     private static boolean run(WorldServer world,EntityPlayerMP player)throws Exception{
+        // The caller may poll again after PASS; stage 11 publishes the tank, so do not rerun it.
+        if(stage==12)return true;
         GearTileEntity arm=((GearTileEntity)world.getTileEntity(ROOT)).loadedController();require(arm!=null,"native arm owner");
         if(stage==1){
             if(!clicked||ticks<30||ArmTransactions.locked(world,ROOT)||arm.progress()!=0)return false;
@@ -110,11 +112,11 @@ public final class ArmForeignLiveChecks {
         if(stage==11){
             // The replaced tank must not be invalidated a second time without a world.
             if(ticks<10)return false;
-            require(com.vandorlabs.copier.CopyWorld.frozen(world,FROZEN),"frozen proxy installed after the pending tile list settles");
+            {TileEntity now=world.getTileEntity(FROZEN);require(com.vandorlabs.copier.CopyWorld.frozen(world,FROZEN),"frozen proxy installed after the pending tile list settles tile="+(now==null?"none":now.getClass().getName()+" invalid="+now.isInvalid())+" block="+world.getBlockState(FROZEN));}
             com.vandorlabs.copier.CopyWorld.publish(world,FROZEN);
             require(world.getTileEntity(FROZEN)!=null&&world.getTileEntity(FROZEN).getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank"),"published tank restores the native owner");
             System.out.println("[vandorlabs] arm-foreign freeze-during-tick PASS");
-            System.out.println("[vandorlabs] arm-foreign PASS");return true;
+            System.out.println("[vandorlabs] arm-foreign PASS");stage=12;return true;
         }
         if(stage==2){if(!visual||ticks<20)return false;arm.target(true);stage=3;ticks=0;return false;}
         if(stage==3){if(arm.progress()!=1||ArmTransactions.locked(world,ROOT)||ArmTransactions.locked(world,SOURCE))return false;

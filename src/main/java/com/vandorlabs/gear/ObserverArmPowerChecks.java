@@ -95,12 +95,14 @@ public final class ObserverArmPowerChecks {
             return false;
         }
         if(arm.progress()!=1||locked||attachment==null||!attachment.materialized()||NavigationSources.matching(world,display,CHANNEL).isEmpty())return false;
-        int owners=0;
+        int owners=0;boolean scanning=false;
         for(BlockPos at:attachment.placedCells(arm)){
             TileEntity cell=world.getTileEntity(at);
-            if(cell instanceof TileEntityConstructor&&((TileEntityConstructor)cell).observerPowered())owners++;
+            if(cell instanceof TileEntityConstructor&&((TileEntityConstructor)cell).observerPowered()){owners++;scanning|=((TileEntityConstructor)cell).observerScanning();}
         }
         require(owners==1,"power returns to exactly one native observer");
+        // Connected is not enough: RF must arrive again, which is what drives the rotation.
+        if(!scanning)return false;
         ArmTransactions.testFault=null;
         next();
         System.out.println("[vandorlabs] arm-live PASS observer-power aligned-endpoints/motion-pause/restored-owner");

@@ -454,7 +454,7 @@ if [ -n "${VANDOR_LABS_TEST_RFTOOLS:-}" ]; then
 fi
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
-if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = saved-duct-flow ]; then
+if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = observer-arm-power ]; then
     for arm_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MekanismGenerators-1.12.2-9.8.2.389.jar; do
         cp "$COMPAT_MODS/$arm_mod" "$TEST_RUNTIME_GAME/mods/"
     done
@@ -900,6 +900,7 @@ PYIMAGE
     fi
     if [ "$TARGET" = observer-arm-power ]; then
         grep -q "arm-live PASS observer-power" "$RUN_OUT/client.log"
+        grep -q "observer-duct-motion PASS" "$RUN_OUT/client.log"
         echo "Observer Arm power checks passed: $RUN_OUT"
         exit 0
     fi
