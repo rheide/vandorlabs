@@ -25,7 +25,7 @@ public final class InlineTransmitterWidget {
     private static final class State {final Map<GuiButton,Placement> buttons=new IdentityHashMap<>();Placement draft;}
     private static final class Placement {
         final GuiButton anchor,local;final int selector;final java.lang.ref.WeakReference<GuiContainer> owner;final GuiTextField field;final GuiSlider range;
-        ChannelList observed;int observedRange;boolean observedLocal,dirty,shown;int savedAt=-1000;
+        ChannelList observed;int observedRange;boolean observedLocal,dirty,shown,navigation;int savedAt=-1000;
         Placement(GuiContainer gui,GuiButton anchor,int selector,RedstoneChannelMember member,Placement draft){
             this.anchor=anchor;this.selector=selector;this.owner=new java.lang.ref.WeakReference<>(gui);
             field=new GuiTextField(1980,Minecraft.getMinecraft().fontRenderer,anchor.x+100,anchor.y+44,anchor.width-100,18);ChannelFields.configure(field);
@@ -34,7 +34,10 @@ public final class InlineTransmitterWidget {
             local=new net.minecraftforge.fml.client.config.GuiButtonExt(1982,anchor.x,anchor.y+22,anchor.width,20,"");
             range=new GuiSlider(1981,anchor.x,anchor.y,anchor.width,20,"","",0,6,index(observedRange),false,true,s->{int index=s.getValueInt();s.setValue(index);s.displayString="Range: "+TransmitterSlots.RANGES[index]+" blocks";GuiContainer current=owner.get();if(current!=null&&rangeReady())save(current,this);});
             range.displayString="Range: "+observedRange+" blocks";label();
-            if(member instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)member)>0){local.enabled=false;local.displayString="Navigation link";}
+            // A Dish or Array transmits a navigation link; Local Redstone does not apply, so hide
+            // the toggle instead of showing a disabled placeholder.
+            navigation=member instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)member)>0;
+            if(navigation){local.enabled=false;local.visible=false;field.y=anchor.y+22;}
         }
         boolean rangeReady(){return range!=null;}
         void label(){local.displayString="Local Redstone: "+(observedLocal?"On":"Off");}
@@ -62,7 +65,7 @@ public final class InlineTransmitterWidget {
             button.width=Math.min(400,gui.getXSize()-24);button.x=gui.getGuiLeft()+(gui.getXSize()-button.width)/2;
             Placement p=state.buttons.get(button);if(p==null){p=new Placement(gui,button,0,member,state.draft);state.buttons.put(button,p);}
             p.shown=true;p.range.width=button.width;p.local.width=button.width;p.field.width=button.width-100;p.range.x=button.x;p.range.y=button.y;p.local.x=button.x;p.local.y=button.y+22;
-            p.field.x=button.x+100;p.field.y=button.y+44;p.field.setVisible(!sharedScreen(gui));button.visible=false;
+            p.field.x=button.x+100;p.field.y=button.y+(p.navigation?22:44);p.field.setVisible(!sharedScreen(gui));button.visible=false;
         }
         for(Placement p:state.buttons.values())if(!p.shown){save(gui,p);p.field.setFocused(false);p.field.setVisible(false);}
         return state;

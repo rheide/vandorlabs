@@ -29,7 +29,13 @@ public final class ObserverDialogLiveChecks {
         if(stage==1){need(observer.observerPowered(),"RF connection status available");click(gui,92,0);stage=2;return false;}
         if(stage==2){if(observer.observerScanEnabled()||++frames<6)return false;need(observer.observerPowered()&&observer.activity()==1,"connected Idle retains power status");click(gui,92,1);stage=3;return false;}
         if(stage==3){if(!observer.observerScanEnabled()||++frames<6)return false;click(gui,21,0);click(gui,1,0);stage=4;return false;}
-        if(stage==4){if(!observer.screenSettings().redstone||observer.screenOn()||++frames<6)return false;need(observer.observerPowered()&&observer.activity()==1,"Redstone without signal selects Idle");click(gui,1,1);stage=5;return false;}
+        if(stage==4){if(!observer.screenSettings().redstone||observer.screenOn()||++frames<6)return false;
+            // Observers transmit a navigation link: the inline Local Redstone toggle does not apply
+            // and must not appear as a disabled placeholder on the Redstone page.
+            java.util.List<GuiButton> inline=InlineTransmitterWidget.controls(gui);
+            need(!inline.isEmpty(),"Redstone page shows the inline transmitter controls");
+            for(GuiButton control:inline)need(control.visible==(control.id!=1982),"only the range control is visible id="+control.id+" text="+control.displayString);
+            File shots=new File(System.getenv("VANDOR_LABS_REPRO_OUT"));shots.mkdirs();ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(shots,"observer-redstone-page.png"));need(observer.observerPowered()&&observer.activity()==1,"Redstone without signal selects Idle");click(gui,1,1);stage=5;return false;}
         if(stage==5){if(observer.screenSettings().redstone||!observer.screenOn()||++frames<6)return false;click(gui,20,0);stage=6;return false;}
         if(++frames<5||!observer.observerScanning())return false;
         File out=new File(System.getenv("VANDOR_LABS_REPRO_OUT"));out.mkdirs();ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),"png",new File(out,"observer-powered-dialog.png"));
