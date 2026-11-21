@@ -88,19 +88,16 @@ case "${1:-}" in
         elif [ "$TARGET" = reactor-glass ]; then
             PREFIX=reactor_glass_
             export VANDOR_LABS_REACTOR_GLASS_CHECKS_ONLY=true
-        elif [ "$TARGET" = saved-duct-flow ]; then
-            # A reported world: set VANDOR_LABS_SAVED_WORLD to a 7z archive containing test/level.dat.
-            PREFIX=saved_duct_flow_
-            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedDuctFlowOnly=true -Dfml.queryResult=confirm"
-        elif [ "$TARGET" = saved-dish-arm ]; then
-            # The same reported world; its flux ducts are fed by an RFTools creative cell.
-            PREFIX=saved_dish_arm_
-            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedDishArmOnly=true -Dfml.queryResult=confirm"
-        elif [ "$TARGET" = saved-shot ]; then
-            # Shots of a reported world: VANDOR_LABS_SAVED_WORLD (7z with test/level.dat) and
-            # VANDOR_LABS_SAVED_SHOTS (name:x,y,z,yaw,pitch;... feet position and F3 rotation).
-            PREFIX=saved_shot_
-            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedShotOnly=true -Dvandorlabs.savedShots=${VANDOR_LABS_SAVED_SHOTS:?Set VANDOR_LABS_SAVED_SHOTS} -Dvandorlabs.savedShotRemove=${VANDOR_LABS_SAVED_SHOT_REMOVE:-} -Dfml.queryResult=confirm"
+        elif [ "$TARGET" = arm-duct-flow ]; then
+            # Self-contained: the reported Servo/duct/Retriever layout under an Extender is built in code.
+            PREFIX=arm_duct_flow_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.armDuctFlowOnly=true"
+        elif [ "$TARGET" = joined-door-render ]; then
+            PREFIX=joined_door_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.joinedDoorRenderOnly=true"
+        elif [ "$TARGET" = rftools-arm ]; then
+            PREFIX=rftools_arm_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.rftoolsArmOnly=true"
         elif [ "$TARGET" = diagonal-corner ]; then
             PREFIX=diagonal_corner_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.diagonalCornerOnly=true"
@@ -478,7 +475,7 @@ if [ -n "${VANDOR_LABS_TEST_RFTOOLS:-}" ]; then
 fi
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
-if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = saved-dish-arm ] || [ "${TARGET:-}" = observer-arm-power ]; then
+if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = arm-duct-flow ] || [ "${TARGET:-}" = observer-arm-power ]; then
     for arm_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MekanismGenerators-1.12.2-9.8.2.389.jar; do
         cp "$COMPAT_MODS/$arm_mod" "$TEST_RUNTIME_GAME/mods/"
     done
@@ -498,15 +495,10 @@ if [ "${TARGET:-}" = arm-conduit-power ]; then
         cp "$COMPAT_MODS/$conduit_mod" "$TEST_RUNTIME_GAME/mods/"
     done
 fi
-if [ "${TARGET:-}" = saved-dish-arm ]; then
-    for saved_mod in rftools-1.12-7.72.jar mcjtylib-1.12-3.5.4.jar; do
-        cp "$COMPAT_MODS/$saved_mod" "$TEST_RUNTIME_GAME/mods/"
+if [ "${TARGET:-}" = rftools-arm ]; then
+    for rftools_mod in rftools-1.12-7.72.jar mcjtylib-1.12-3.5.4.jar RedstoneFlux-1.12-2.1.0.6-universal.jar; do
+        cp "$COMPAT_MODS/$rftools_mod" "$TEST_RUNTIME_GAME/mods/"
     done
-fi
-if [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = saved-dish-arm ] || [ "${TARGET:-}" = saved-shot ]; then
-    rm -rf "$TEST_RUNTIME_GAME/saves/saved-duct" "$RUN_OUT/unpack"
-    7z x -y -o"$RUN_OUT/unpack" "${VANDOR_LABS_SAVED_WORLD:?Set VANDOR_LABS_SAVED_WORLD}" >/dev/null
-    mkdir -p "$TEST_RUNTIME_GAME/saves"; cp -r "$RUN_OUT/unpack/test" "$TEST_RUNTIME_GAME/saves/saved-duct"; rm -f "$TEST_RUNTIME_GAME/saves/saved-duct/session.lock"; rm -rf "$RUN_OUT/unpack"
 fi
 # Exact optional reference renderers for the segmented comparison, isolated from production.
 if [ -n "${VANDOR_LABS_TEST_MALISIS_CORE:-}" ]; then cp "$VANDOR_LABS_TEST_MALISIS_CORE" "$TEST_RUNTIME_GAME/mods/"; fi
@@ -539,14 +531,19 @@ if grep -Eq 'Exception loading model|Problem: broken aspect ratio' "$RUN_OUT/cli
     exit 1
 fi
 if [ "$MODE" = focus ]; then
-    if [ "$TARGET" = saved-duct-flow ]; then
-        grep -q "saved-duct-flow PASS" "$RUN_OUT/client.log"
-        echo "PASS: saved duct item flow"
+    if [ "$TARGET" = arm-duct-flow ]; then
+        grep -q "arm-duct-flow PASS" "$RUN_OUT/client.log"
+        echo "PASS: Thermal duct items conserved through a moving Arm"
         exit 0
     fi
-    if [ "$TARGET" = saved-shot ]; then
-        grep -q "saved-shot PASS" "$RUN_OUT/client.log"
-        echo "PASS: saved world shots taken"
+    if [ "$TARGET" = joined-door-render ]; then
+        grep -q "joined-door-render PASS" "$RUN_OUT/client.log"
+        echo "PASS: joined Large Doors stay drawn, tile their texture and open to the group width"
+        exit 0
+    fi
+    if [ "$TARGET" = rftools-arm ]; then
+        grep -q "rftools-arm PASS" "$RUN_OUT/client.log"
+        echo "PASS: RFTools machines and Power Cells travel on Arms"
         exit 0
     fi
     if [ "$TARGET" = diagonal-corner ]; then
@@ -572,11 +569,6 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-conduit-power ]; then
         grep -q "arm-conduit-power PASS" "$RUN_OUT/client.log"
         echo "PASS: arm-carried Dish stays powered by Thermal, Mekanism and Galacticraft conduits"
-        exit 0
-    fi
-    if [ "$TARGET" = saved-dish-arm ]; then
-        grep -q "saved-dish-arm PASS" "$RUN_OUT/client.log"
-        echo "PASS: saved Dish on a powered arm keeps scanning"
         exit 0
     fi
     if [ "$TARGET" = arm-resource-indicator ]; then

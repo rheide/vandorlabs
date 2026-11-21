@@ -229,7 +229,7 @@ The output is saved in `build/libs/`; set `JAVA_HOME` to override the default JD
 To apply a patch and build only the standard JAR without tests, run:
 
 ```bash
-./apply-patch-build.sh ~/LLMShareDrive/example.patch
+./apply-patch-build.sh path/to/example.patch
 ```
 
 The script checks the patch before applying it and requires a Java 8 JDK

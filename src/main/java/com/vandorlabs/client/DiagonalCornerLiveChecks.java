@@ -60,6 +60,9 @@ public final class DiagonalCornerLiveChecks {
             // Close-ups: north-facing glass (lean off, east end) and its corner, from the south.
             for(int mode=0;mode<3;mode++)gallery.shot("close"+mode,mode*24+1.0,1.3,3.4,180,18);
             for(int mode=0;mode<3;mode++)gallery.shot("close-lean"+mode,mode*24+1.0,1.3,13.4,180,18);
+            // The reported layout, from the reporter's F3 pose relative to the corner, and from above.
+            gallery.shot("reported",REPORTED.getX()-ORIGIN.getX()+.39,1.257,REPORTED.getZ()-ORIGIN.getZ()+.911,-139.7F,83.4F);
+            gallery.shot("reported-top",REPORTED.getX()-ORIGIN.getX()+.5,5,REPORTED.getZ()-ORIGIN.getZ()+1.5,180,90);
         }
         if(!gallery.tick(mc,output))return false;
         System.out.println("[vandorlabs] diagonal-corner PASS checks="+checks+" every facing/size/lean continued by a clicked corner; other positions never join; dialog size and slope");
@@ -101,7 +104,27 @@ public final class DiagonalCornerLiveChecks {
         }
         System.out.println("[vandorlabs] diagonal-corner placed and joined "+joined.size()+" corners");
         dialog(world,player,corner,glass);
+        reported(world,player,corner,glass);
         player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+    }
+    /**
+     * The reported layout: Tall glass facing north and leaning to the west of the corner, Tall glass
+     * facing east and leaning to the south. Clicking the west glass's end places the corner that
+     * continues both (turn 3, lean, far face); its frames keep full thickness where they meet.
+     */
+    private static final BlockPos REPORTED=ORIGIN.add(6,0,36);
+    private static void reported(WorldServer world,EntityPlayerMP player,BlockProgrammableCornerGlass corner,BlockProgrammableWall glass){
+        BlockPos west=REPORTED.west(),south=REPORTED.south();
+        world.setBlockState(west,glass.getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.NORTH).withProperty(BlockProgrammableWall.INVERTED,true),3);
+        ((TileEntityAnimatedScreenSelector)world.getTileEntity(west)).setDiagonalGeometry(CornerGlassGeometry.TALL,0);
+        world.setBlockState(south,glass.getDefaultState().withProperty(BlockProgrammableWall.FACING,EnumFacing.EAST).withProperty(BlockProgrammableWall.INVERTED,true),3);
+        ((TileEntityAnimatedScreenSelector)world.getTileEntity(south)).setDiagonalGeometry(CornerGlassGeometry.TALL,0);
+        require(LiveGallery.place(world,player,new ItemStack(corner),west,EnumFacing.EAST,1,.5F,.25F),"reported corner placed against the west glass");
+        IBlockState placed=world.getBlockState(REPORTED);
+        require(placed.getBlock()==corner&&corner.getMetaFromState(placed)==15,"reported corner is turn 3, leaning, far face: "+placed);
+        require(((TileEntityProgrammableGlass)world.getTileEntity(REPORTED)).getCornerMode()==CornerGlassGeometry.TALL,"reported corner is Tall like the glass");
+        require(BlockProgrammableCornerGlass.joinsDiagonalWall(world,REPORTED,west)&&BlockProgrammableCornerGlass.joinsDiagonalWall(world,REPORTED,south),"reported corner continues both glass runs");
+        require((corner.frameMask(world,REPORTED,placed)&3)==0,"reported corner hides both rails it shares");
     }
     /** Size and Slope through the real server message with the glass dialog's container open. */
     private static void dialog(WorldServer world,EntityPlayerMP player,BlockProgrammableCornerGlass corner,BlockProgrammableWall glass){

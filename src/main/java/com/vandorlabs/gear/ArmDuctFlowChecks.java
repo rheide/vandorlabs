@@ -35,21 +35,23 @@ import java.util.Random;
  * items travel, the player right-clicks the arm at random moments: single clicks, quick double
  * and triple clicks that reverse it mid-move, and waits for it to settle. Whenever the arm is at
  * rest, every item in the build (inventories, items travelling in ducts, dropped items) must
- * still add up, so a loss fails at the move that caused it. Positions come from the reported
- * world.
+ * still add up, so a loss fails at the move that caused it. The layout is the reported
+ * world, rebuilt here from code: a chest, a Thermal item duct with a Servo facing it, two more
+ * ducts and a duct whose Retriever faces up into the arm base, under a two-section Extender
+ * carrying a chest.
  */
 @SideOnly(Side.CLIENT)
-public final class SavedDuctFlowChecks {
-    private static final BlockPos ARM=new BlockPos(-71,83,135),INPUT=new BlockPos(-75,82,135);
+public final class ArmDuctFlowChecks {
+    private static final BlockPos ARM=new BlockPos(540,101,60),INPUT=ARM.add(-4,-1,0);
     private static final int ADDED=64,ROUNDS=3;
-    private static final long SEED=Long.getLong("vandorlabs.savedDuctFlowSeed",0x5EEDL);
+    private static final long SEED=Long.getLong("vandorlabs.armDuctFlowSeed",0x5EEDL);
     private static final Random RANDOM=new Random(SEED);
     private static int step,ticks,expected,round,clicks,wait,pending,quiet,lastTotal=-1;
     private static final List<String> history=new ArrayList<>();
     private static boolean registered;
     private static volatile boolean complete;
     private static volatile Throwable failure;
-    private SavedDuctFlowChecks(){}
+    private ArmDuctFlowChecks(){}
     public static boolean tick(Minecraft mc){
         if(!registered){MinecraftForge.EVENT_BUS.register(new Observer(mc.getIntegratedServer()));registered=true;}
         if(failure!=null)throw new IllegalStateException("Saved duct flow check",failure);
@@ -107,7 +109,8 @@ public final class SavedDuctFlowChecks {
         TileEntity raw=world.getTileEntity(ARM);return raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
     }
     private static boolean atRest(WorldServer world,GearTileEntity arm){
-        return arm!=null&&arm.progress()==(arm.target()?1:0)&&!ArmTransactions.locked(world,ARM)&&arm.payload()!=null&&arm.payload().materialized();
+        // A freshly built arm adopts the chest as its payload on its first move.
+        return arm!=null&&arm.progress()==(arm.target()?1:0)&&!ArmTransactions.locked(world,ARM)&&(arm.payload()==null||arm.payload().materialized());
     }
     private static String armState(WorldServer world,GearTileEntity arm){
         return arm==null?"arm=missing":"progress="+arm.progress()+" target="+arm.target()+" payload="+(arm.payload()==null?"none":arm.payload().materialized()?"native":"captured")+" hold="+ArmTransactions.diagnostic(world,ARM)+" error="+arm.error();
@@ -123,7 +126,43 @@ public final class SavedDuctFlowChecks {
             else chest+=inventory(tile)+("CopyFrozenTile".equals(tile.getClass().getSimpleName())?1000:0);
         }
         String line="input="+input+" ducts="+ducts+" chest="+chest+" armNbt="+armNbt+" "+armState(world,arm);
-        if(!line.equals(lastLedger)){lastLedger=line;System.out.println("[vandorlabs] saved-duct-flow ledger t="+world.getTotalWorldTime()+" "+line);}
+        if(!line.equals(lastLedger)){lastLedger=line;System.out.println("[vandorlabs] arm-duct-flow ledger t="+world.getTotalWorldTime()+" "+line);}
+    }
+    private static boolean built;
+    /** Thermal duct with optional attachment, as in the reported world (Servo on the west face, Retriever on the top). */
+    private static void duct(WorldServer world,BlockPos at,String attachment,int side,int level){
+        net.minecraft.block.Block block=net.minecraft.block.Block.REGISTRY.getObject(new net.minecraft.util.ResourceLocation("thermaldynamics","duct_32"));
+        if(block==null||block==Blocks.AIR)throw new IllegalStateException("Thermal Dynamics item duct missing");
+        world.setBlockState(at,block.getStateFromMeta(0),3);
+        TileEntity tile=world.getTileEntity(at);if(tile==null)throw new IllegalStateException("item duct tile missing at "+at);
+        if(attachment==null)return;
+        NBTTagCompound tag=tile.writeToNBT(new NBTTagCompound()),levels=new NBTTagCompound(),entry=new NBTTagCompound();
+        levels.setByte("Level0",(byte)level);levels.setByte("Level1",(byte)0);levels.setByte("Level2",(byte)1);levels.setByte("Level3",(byte)0);
+        entry.setString("id","thermaldynamics:"+attachment);entry.setByte("side",(byte)side);entry.setByte("rsMode",(byte)0);entry.setTag("Levels",levels);
+        entry.setByte("Flags",(byte)25);entry.setByte("power",(byte)1);entry.setByte("type",(byte)4);entry.setTag("Inventory",new NBTTagList());
+        NBTTagList attachments=new NBTTagList();attachments.appendTag(entry);tag.setTag("Attachments",attachments);
+        tile.readFromNBT(tag);tile.markDirty();world.notifyBlockUpdate(at,world.getBlockState(at),world.getBlockState(at),3);
+    }
+    private static void build(WorldServer world,EntityPlayerMP player){
+        for(BlockPos at:BlockPos.getAllInBox(ARM.add(-8,-3,-4),ARM.add(4,6,4))){
+            world.getChunkFromBlockCoords(at);world.removeTileEntity(at);
+            world.setBlockState(at,at.getY()==ARM.getY()-2?Blocks.STONE.getDefaultState():Blocks.AIR.getDefaultState(),2);
+        }
+        world.setBlockState(INPUT,Blocks.CHEST.getDefaultState(),3);
+        duct(world,INPUT.east(),"servo_item",EnumFacing.WEST.getIndex(),1);
+        duct(world,INPUT.east(2),null,0,0);duct(world,INPUT.east(3),null,0,0);
+        duct(world,ARM.down(),"retriever_item",EnumFacing.UP.getIndex(),64);
+        player.setGameType(GameType.CREATIVE);player.inventory.currentItem=0;
+        player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(GearRegistry.GEAR_EXTENDER,2));
+        for(BlockPos support:new BlockPos[]{ARM.down(),ARM})
+            if(player.getHeldItemMainhand().onItemUse(player,world,support,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)!=net.minecraft.util.EnumActionResult.SUCCESS)
+                throw new IllegalStateException("arm-duct-flow Extender placement on "+support+" "+world.getBlockState(support));
+        world.setBlockState(ARM.up(2),Blocks.CHEST.getDefaultState(),3);
+        GearTileEntity arm=(GearTileEntity)world.getTileEntity(ARM);if(!arm.rebuild())throw new IllegalStateException("arm-duct-flow Extender forms");
+        arm=arm.loadedController();arm.operator(player);
+        NBTTagCompound settings=arm.settings();settings.setInteger(com.vandorlabs.gear.core.ArmResource.CHOICE,com.vandorlabs.gear.core.ArmResource.ITEM.ordinal());arm.configure(settings);
+        player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        System.out.println("[vandorlabs] arm-duct-flow built reported layout at "+ARM);
     }
     private static void record(String event){history.add(event);if(history.size()>40)history.remove(0);}
     /** The server's own right-click handler, as a player clicking the arm base. */
@@ -142,28 +181,30 @@ public final class SavedDuctFlowChecks {
     }
     private static boolean run(WorldServer world,EntityPlayerMP player){
         ++ticks;
+        if(step==0&&round==0&&!built){build(world,player);built=true;}
         if(step==0){
             player.setGameType(GameType.CREATIVE);player.capabilities.isFlying=true;player.sendPlayerAbilities();
             player.connection.setPlayerLocation(ARM.getX()-2,ARM.getY()+2,ARM.getZ()-4,0,20);
             if(ticks<100)return false;
+            if(ticks>2400)throw new IllegalStateException("arm-duct-flow arm never came to rest before round "+round+": "+armState(world,arm(world)));
             GearTileEntity arm=arm(world);
             if(!atRest(world,arm))return false;
             int before=counted(world);
             ItemStack rest=world.getTileEntity(INPUT).getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null).insertItem(0,new ItemStack(Blocks.SPONGE,ADDED),false);
             if(!rest.isEmpty())throw new IllegalStateException("input chest accepts the test stack");
             expected=before+ADDED;
-            System.out.println("[vandorlabs] saved-duct-flow round="+round+" seed="+SEED+" start sponges="+before+"+"+ADDED+" "+armState(world,arm)+" mode="+arm.resourceTransfer());
+            System.out.println("[vandorlabs] arm-duct-flow round="+round+" seed="+SEED+" start sponges="+before+"+"+ADDED+" "+armState(world,arm)+" mode="+arm.resourceTransfer());
             schedule();step=1;ticks=0;quiet=0;lastTotal=-1;return false;
         }
         GearTileEntity arm=arm(world);
-        if(ticks>24000)throw new IllegalStateException("saved-duct-flow timeout round="+round+" clicks="+clicks+" "+armState(world,arm));
+        if(ticks>24000)throw new IllegalStateException("arm-duct-flow timeout round="+round+" clicks="+clicks+" "+armState(world,arm));
         boolean rest=atRest(world,arm);
         ledger(world,arm);
         if(rest){
             int total=counted(world);
             if(total!=lastTotal){
                 record("t="+world.getTotalWorldTime()+" rest total="+total+" travelling="+travelling+" dropped="+dropped+" "+armState(world,arm));lastTotal=total;
-                if(total!=expected)throw new IllegalStateException("saved-duct-flow round="+round+" items "+(total<expected?"lost":"duplicated")+": expected "+expected+" found "+total
+                if(total!=expected)throw new IllegalStateException("arm-duct-flow round="+round+" items "+(total<expected?"lost":"duplicated")+": expected "+expected+" found "+total
                         +" (travelling="+travelling+" dropped="+dropped+") after "+clicks+" clicks seed="+SEED+"; recent: "+String.join(" | ",history));
             }
         }
@@ -181,9 +222,9 @@ public final class SavedDuctFlowChecks {
         // Let everything settle and the ducts drain before the final count.
         if(!rest||travelling>0||!inputEmpty){quiet=0;return false;}
         if(++quiet<200)return false;
-        System.out.println("[vandorlabs] saved-duct-flow round="+round+" complete expected="+expected+" found="+lastTotal+" clicks="+clicks);
+        System.out.println("[vandorlabs] arm-duct-flow round="+round+" complete expected="+expected+" found="+lastTotal+" clicks="+clicks);
         if(++round<ROUNDS){step=0;ticks=0;return false;}
-        System.out.println("[vandorlabs] saved-duct-flow PASS rounds="+ROUNDS+" items="+ADDED+" each clicks="+clicks+" seed="+SEED+" no loss at any rest");
+        System.out.println("[vandorlabs] arm-duct-flow PASS rounds="+ROUNDS+" items="+ADDED+" each clicks="+clicks+" seed="+SEED+" no loss at any rest");
         return true;
     }
 }

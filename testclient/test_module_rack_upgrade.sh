@@ -19,7 +19,7 @@ export VANDOR_LABS_TEST_SKIP_BUILD=true
 export VANDOR_LABS_TEST_HEAP=${VANDOR_LABS_TEST_HEAP:-8G}
 export VANDOR_LABS_TEST_GAME_DIR="$SUITE/game"
 export VANDOR_LABS_TEST_RUN_ROOT="$SUITE/launches"
-export VANDOR_LABS_COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/LLMShareDrive/mods"}
+export VANDOR_LABS_COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:?Set VANDOR_LABS_COMPAT_MODS to the local test-mod directory}
 mkdir -p "$SUITE/launches"
 export VANDOR_LABS_TEST_JAR="$WRITE_JAR"
 JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.moduleRackAutopilotOnly=true -Dvandorlabs.moduleRackMigrationPhase=write" \

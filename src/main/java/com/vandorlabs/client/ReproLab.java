@@ -817,14 +817,19 @@ public class ReproLab {
             try {if((Boolean.getBoolean("vandorlabs.glassExistingScene")||GlazingFeatureChecks.tick(mc,outDir))&&GlassNativeSceneChecks.tick(mc,outDir)){if(!Boolean.getBoolean("vandorlabs.glassExistingScene"))GlassDisplayOrderChecks.run(mc,outDir);mc.shutdown();}}
             catch(Exception failure){throw new IllegalStateException("glass display order checks",failure);}return;
         }
-        if(Boolean.getBoolean("vandorlabs.savedDuctFlowOnly")){
-            try{if(com.vandorlabs.gear.SavedDuctFlowChecks.tick(mc))mc.shutdown();}
-            catch(Exception failure){throw new IllegalStateException("Saved duct flow",failure);}
+        if(Boolean.getBoolean("vandorlabs.armDuctFlowOnly")){
+            try{if(com.vandorlabs.gear.ArmDuctFlowChecks.tick(mc))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Arm duct flow",failure);}
             return;
         }
-        if(Boolean.getBoolean("vandorlabs.savedShotOnly")){
-            try{if(SavedShotChecks.tick(mc,outDir))mc.shutdown();}
-            catch(Exception failure){throw new IllegalStateException("Saved world shots",failure);}
+        if(Boolean.getBoolean("vandorlabs.joinedDoorRenderOnly")){
+            try{if(JoinedDoorRenderChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Joined door edge culling",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.rftoolsArmOnly")){
+            try{if(com.vandorlabs.gear.RFToolsArmLiveChecks.tick(mc))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("RFTools arm",failure);}
             return;
         }
         if(Boolean.getBoolean("vandorlabs.diagonalCornerOnly")){
@@ -850,11 +855,6 @@ public class ReproLab {
         if(Boolean.getBoolean("vandorlabs.armConduitPowerOnly")){
             try{if(com.vandorlabs.gear.ArmConduitPowerChecks.tick(mc))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Arm conduit power",failure);}
-            return;
-        }
-        if(Boolean.getBoolean("vandorlabs.savedDishArmOnly")){
-            try{if(com.vandorlabs.gear.SavedDishArmChecks.tick(mc))mc.shutdown();}
-            catch(Exception failure){throw new IllegalStateException("Saved dish arm",failure);}
             return;
         }
         if(Boolean.getBoolean("vandorlabs.cornerGlassOnly")){
