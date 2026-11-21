@@ -24,6 +24,7 @@ task testConstructorRecoveryContext(type: JavaExec) {
     dependsOn compileNonRenderingChecks
     classpath = sourceSets.main.runtimeClasspath + files(compileNonRenderingChecks.destinationDir)
     main = 'com.vandorlabs.client.ConstructorRecoveryContextChecks'
-    maxHeapSize = '512m'
+    // Registers every block; their state tables alone fill about 512 MB.
+    maxHeapSize = '768m'
 }
 check.dependsOn testConstructorRecoveryContext

@@ -123,7 +123,10 @@ def stage(directory, models_staged=False):
                 (shared/(name+'.json')).write_text(encoded+'\n');templates[name]=encoded
             elif templates[name]!=encoded:raise AssertionError('Geometry hash collision')
             overrides=model.get('overrides')
-            model=dict(parent='vandorlabs:block/runtime_shared/'+name,textures=model.get('textures',{}))
+            textures=model.get('textures')
+            model=dict(parent='vandorlabs:block/runtime_shared/'+name)
+            # Keep the source's own texture map, or none, so the packaged model equals its source.
+            if textures is not None:model['textures']=textures
             if overrides is not None:model['overrides']=overrides
             reused+=1
         file.write_text(json.dumps(model,separators=(',',':'))+'\n')

@@ -96,8 +96,9 @@ public final class NavigationDiscoverySafetyChecks {
             // Exercise only the later observer traversal here; the native table case above
             // exercises the full tick path without bypassing that ownership boundary.
             List<NavigationSources.Area> areas=new ArrayList<>();
-            java.lang.reflect.Method observers=NavigationVehicle.class.getDeclaredMethod("observers",List.class,EntityGroundVehicle.class,net.minecraft.util.math.Vec3d.class,ChannelList.class);
-            observers.setAccessible(true);observers.invoke(null,areas,craft,new net.minecraft.util.math.Vec3d(ROOT),ChannelList.of(47));
+            java.lang.reflect.Method observers=NavigationVehicle.class.getDeclaredMethod("observers",List.class,EntityGroundVehicle.class,net.minecraft.util.math.Vec3d.class,ChannelList.class,boolean.class);
+            // Powered, so only the retained payload rule can leave the result empty.
+            observers.setAccessible(true);observers.invoke(null,areas,craft,new net.minecraft.util.math.Vec3d(ROOT),ChannelList.of(47),true);
             need(areas.isEmpty(),"Retained payload contributes no partial traversal coverage depth="+depth);
         }
         retained(leaf,expected,"Carried "+(presence?"presence":"coverage")+" depth="+depth);

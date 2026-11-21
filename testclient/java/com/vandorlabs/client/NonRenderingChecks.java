@@ -195,6 +195,8 @@ public final class NonRenderingChecks {
         world.setBlockState(different,ModBlocks.PROGRAMMABLE_SLAB.getDefaultState(),2);
         ((TileEntityAnimatedScreenSelector)world.getTileEntity(different)).setHousingTexture(2);
         world.setBlockState(full,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        // A new Programmable Block starts with the default finish, which must survive untouched.
+        int fullInitial=((TileEntityAnimatedScreenSelector)world.getTileEntity(full)).getHousingTexture();
         player.capabilities.allowEdit=false;
         require(DuplifierConnectedApply.apply(world,origin,tool,player,EnumFacing.UP)==0,"ignored edit permissions");
         player.capabilities.allowEdit=true;
@@ -206,7 +208,7 @@ public final class NonRenderingChecks {
         }
         require(((TileEntityAnimatedScreenSelector)world.getTileEntity(separate)).getHousingTexture()==0,"crossed gap");
         require(((TileEntityAnimatedScreenSelector)world.getTileEntity(different)).getHousingTexture()==2,"crossed configuration boundary");
-        require(((TileEntityAnimatedScreenSelector)world.getTileEntity(full)).getHousingTexture()==0,"mixed slab and full block");
+        require(((TileEntityAnimatedScreenSelector)world.getTileEntity(full)).getHousingTexture()==fullInitial,"mixed slab and full block");
         world.clear();
         BlockPos edge=new BlockPos(15,100,15);
         world.chunkLimit=true;
@@ -215,8 +217,9 @@ public final class NonRenderingChecks {
         world.chunkLimit=false;world.clear();
         for(int i=0;i<=DuplifierConnectedApply.MAX_CELLS;i++)
             world.setBlockState(origin.add(i%16,i/256,(i/16)%16),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        int untouched=((TileEntityAnimatedScreenSelector)world.getTileEntity(origin)).getHousingTexture();
         require(DuplifierConnectedApply.apply(world,origin,tool,player,EnumFacing.UP)==-1,"accepted oversized region");
-        for(TileEntity tile:world.tiles.values())require(((TileEntityAnimatedScreenSelector)tile).getHousingTexture()==0,"partially applied oversized region");
+        for(TileEntity tile:world.tiles.values())require(((TileEntityAnimatedScreenSelector)tile).getHousingTexture()==untouched,"partially applied oversized region");
         System.out.println("PASS: vertical slabs, edge/corner connectivity, matching boundaries, permissions, loaded chunks and atomic size limit");
     }
 

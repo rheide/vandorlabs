@@ -23,10 +23,13 @@ final class DuplifierDirectionChecks {
             DuplifierApplyOptions.setIgnoreDirectionality(tool,ignore);
             NBTTagCompound copy=new NBTTagCompound();copy.setInteger(ProgrammableSettings.WALL_TEXTURE,4);tool.setTagInfo(ItemDuplifier.SETTINGS_TAG,copy);
             BlockPos origin=new BlockPos(4,100,4);
+            int initial=-2;
             for(int i=0;i<6;i++){
                 world.setBlockState(origin.east(i),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.values()[i]),2);
                 TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(origin.east(i));
                 tile.setCeilingMounted((i&1)!=0);tile.setCeilingPosition(i%3);tile.setWallPosition(i%3);
+                // A new Programmable Block starts with the default finish; untouched targets keep it.
+                if(initial==-2)initial=tile.getHousingTexture();
             }
             world.setBlockState(origin.north(),ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
             ((TileEntityAnimatedScreenSelector)world.getTileEntity(origin.north())).setHousingTexture(2);
@@ -37,12 +40,12 @@ final class DuplifierDirectionChecks {
             require(applied==(ignore?6:1),"orientation selection ignore="+ignore+" actual="+applied);
             for(int i=0;i<6;i++){
                 TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)world.getTileEntity(origin.east(i));
-                require(tile.getHousingTexture()==(ignore||i==0?4:0),"unexpected selected finish");
+                require(tile.getHousingTexture()==(ignore||i==0?4:initial),"unexpected selected finish "+tile.getHousingTexture()+" at target "+i);
                 require(world.getBlockState(origin.east(i)).getValue(BlockAnimatedScreenSelector.FACING)==EnumFacing.values()[i],"changed target facing");
                 require(tile.isCeilingMounted()==((i&1)!=0)&&tile.getWallPosition(-1)==i%3,"changed target placement");
             }
             require(((TileEntityAnimatedScreenSelector)world.getTileEntity(origin.north())).getHousingTexture()==2,"crossed texture boundary");
-            require(((TileEntityAnimatedScreenSelector)world.getTileEntity(origin.south())).getHousingTexture()==0,"crossed disabled face-override boundary");
+            require(((TileEntityAnimatedScreenSelector)world.getTileEntity(origin.south())).getHousingTexture()==initial,"crossed disabled face-override boundary");
             require(((TileEntityAnimatedScreenSelector)world.getTileEntity(origin.west())).getHousingTexture()==0,"crossed block type boundary");
             ItemStack saved=new ItemStack(tool.writeToNBT(new NBTTagCompound()));
             require(DuplifierApplyOptions.ignoreDirectionality(saved)==ignore,"item reload lost option");

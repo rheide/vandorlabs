@@ -54,6 +54,16 @@ public final class ConstructorRecoveryContextChecks {
             recover(state,before,design.design);
         }
     }
+    /** Synthesis builders take any Programmable Block finish; the Assembly Press takes its ingot. */
+    private static ItemStack input(String machine){
+        if("assembly_press".equals(machine))return new ItemStack(item(BuilderRecipeCatalog.input(machine)));
+        net.minecraft.block.Block block=com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK;
+        if(Item.getItemFromBlock(block)==net.minecraft.init.Items.AIR){
+            if(!net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.containsValue(block))net.minecraftforge.fml.common.registry.ForgeRegistries.BLOCKS.register(block);
+            net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.register(new net.minecraft.item.ItemBlock(block).setRegistryName(block.getRegistryName()));
+        }
+        return new ItemStack(block);
+    }
     private static Item item(String name){
         ResourceLocation id=new ResourceLocation("vandorlabs",name);
         if(!Item.REGISTRY.containsKey(id))net.minecraftforge.fml.common.registry.ForgeRegistries.ITEMS.register(new Item().setRegistryName(id));
@@ -72,7 +82,7 @@ public final class ConstructorRecoveryContextChecks {
             need(tile.synthesisEnabled(),"Installed builder is ready: "+machine);
             tile.selectDesign(1);
             need(tile.selectedDesign()==1&&tile.writeToNBT(new NBTTagCompound()).getCompoundTag("Synthesis").getString("SelectedRecipe").equals(recipe),"Real recipe selection replaces a saved default: "+machine+" empty="+emptyIds);
-            tile.synthesisInventory().setStackInSlot(0,new ItemStack(item(BuilderRecipeCatalog.input(machine))));
+            tile.synthesisInventory().setStackInSlot(0,input(machine));
             tile.update();
             need(tile.processing()&&tile.synthesisInventory().getStackInSlot(0).isEmpty(),"Real builder start owns exactly one input: "+machine+" empty="+emptyIds);
             NBTTagCompound running=tile.writeToNBT(new NBTTagCompound());
