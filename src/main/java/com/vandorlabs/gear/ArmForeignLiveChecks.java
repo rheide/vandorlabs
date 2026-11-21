@@ -105,6 +105,15 @@ public final class ArmForeignLiveChecks {
                         +" conduitFace="+(direct!=null)+" directFill="+(direct==null?-1:direct.fill(new FluidStack(FluidRegistry.WATER,10),false))+" input="+(input!=null)+" "+pipeState(pipe));
             }
             System.out.println("[vandorlabs] arm-foreign conduits PASS tip ducts and pipes stay native and receive fluid");
+            freezeDuringTileTick(world,player);stage=11;ticks=0;return false;
+        }
+        if(stage==11){
+            // The replaced tank must not be invalidated a second time without a world.
+            if(ticks<10)return false;
+            require(com.vandorlabs.copier.CopyWorld.frozen(world,FROZEN),"frozen proxy installed after the pending tile list settles");
+            com.vandorlabs.copier.CopyWorld.publish(world,FROZEN);
+            require(world.getTileEntity(FROZEN)!=null&&world.getTileEntity(FROZEN).getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank"),"published tank restores the native owner");
+            System.out.println("[vandorlabs] arm-foreign freeze-during-tick PASS");
             System.out.println("[vandorlabs] arm-foreign PASS");return true;
         }
         if(stage==2){if(!visual||ticks<20)return false;arm.target(true);stage=3;ticks=0;return false;}
@@ -121,6 +130,35 @@ public final class ArmForeignLiveChecks {
         out.append(" upFace=").append(up!=null).append(" upFill=").append(up==null?-1:up.fill(new FluidStack(FluidRegistry.WATER,10),false));
         out.append(" nbt=").append(pipe.writeToNBT(new NBTTagCompound()).toString(),0,Math.min(300,pipe.writeToNBT(new NBTTagCompound()).toString().length()));
         return out.toString();
+    }
+    private static final BlockPos FROZEN=ROOT.add(-5,0,-5);
+    /**
+     * Arms freeze journal sources from inside a ticking tile. World.removeTileEntity then
+     * leaves the old tile in the chunk map, and the pending proxy invalidates it again at the
+     * end of the tick. Reproduce that phase with a real Mekanism tank.
+     */
+    private static void freezeDuringTileTick(WorldServer world,EntityPlayerMP player)throws Exception{
+        IBlockState tank=null;
+        scan:for(Block b:Block.REGISTRY)if(b.getRegistryName().getResourceDomain().equals("mekanism"))for(int meta=0;meta<16;meta++){
+            IBlockState state;try{state=b.getStateFromMeta(meta);}catch(RuntimeException unusedMeta){continue;}if(!b.hasTileEntity(state))continue;
+            TileEntity candidate=b.createTileEntity(world,state);if(candidate!=null&&candidate.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank")){tank=state;break scan;}
+        }
+        require(tank!=null,"installed Mekanism fluid tank");
+        world.setBlockState(FROZEN.down(),Blocks.STONE.getDefaultState(),3);
+        player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(tank.getBlock(),1,tank.getBlock().getMetaFromState(tank)));
+        require(player.getHeldItemMainhand().onItemUse(player,world,FROZEN.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"tank placement");
+        player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        require(tank(world.getTileEntity(FROZEN)).fill(new FluidStack(FluidRegistry.WATER,500),true)==500,"tank holds fluid");
+        net.minecraftforge.fml.common.ObfuscationReflectionHelper.setPrivateValue(net.minecraft.world.World.class,world,true,"field_147481_N");
+        TileEntity original=world.getTileEntity(FROZEN);
+        try{com.vandorlabs.copier.CopyWorld.freeze(world,FROZEN);}
+        finally{net.minecraftforge.fml.common.ObfuscationReflectionHelper.setPrivateValue(net.minecraft.world.World.class,world,false,"field_147481_N");}
+        // When the old tile was already visited this tick, it is still mapped when World.updateEntities
+        // publishes pending tiles; perform that exact Chunk.addTileEntity step now.
+        java.util.List<TileEntity> pending=net.minecraftforge.fml.common.ObfuscationReflectionHelper.getPrivateValue(net.minecraft.world.World.class,world,"field_147484_a");
+        TileEntity proxy=null;for(TileEntity candidate:pending)if(candidate.getPos().equals(FROZEN))proxy=candidate;
+        require(proxy!=null&&world.getChunkFromBlockCoords(FROZEN).getTileEntityMap().get(FROZEN)!=original,"detached tank is unmapped while its proxy is pending");
+        world.getChunkFromBlockCoords(FROZEN).addTileEntity(FROZEN,proxy);
     }
     /** A duct or pipe on an arm's tip is a transfer connection, never a captured payload. */
     private static void conduits(WorldServer world,EntityPlayerMP player)throws Exception{

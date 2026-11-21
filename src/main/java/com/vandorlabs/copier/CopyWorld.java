@@ -29,19 +29,30 @@ public final class CopyWorld {
     public static void install(WorldServer world,VehicleStructure snapshot,BlockPos origin,Map<BlockPos,TileEntity> prepared){install(world,snapshot,origin,prepared,false);}
     public static void install(WorldServer world,VehicleStructure snapshot,BlockPos origin,Map<BlockPos,TileEntity> prepared,boolean frozen){
         for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at,false))throw new IllegalArgumentException("A copy target chunk unloaded");Chunk chunk=world.getChunkFromBlockCoords(at);ExtendedBlockStorage[] sections=chunk.getBlockStorageArray();int section=at.getY()>>4;if(sections[section]==Chunk.NULL_BLOCK_STORAGE)sections[section]=new ExtendedBlockStorage(section<<4,world.provider.hasSkyLight());sections[section].set(at.getX()&15,at.getY()&15,at.getZ()&15,cell.state);chunk.markDirty();}
-        for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);TileEntity old=world.getTileEntity(at);world.removeTileEntity(at);if(frozen)emptyDetached(old);}
+        for(VehicleStructure.Cell cell:snapshot.cells){BlockPos at=origin.add(cell.pos);TileEntity old=world.getTileEntity(at);world.removeTileEntity(at);if(frozen){unmap(world,at,old);emptyDetached(old);}}
         for(Map.Entry<BlockPos,TileEntity> entry:prepared.entrySet()){TileEntity tile=frozen?new CopyFrozenTile(VehicleTileData.translated(snapshot.at(entry.getKey().subtract(origin)).tileData(),origin)):entry.getValue();tile.setWorld(world);tile.validate();world.setTileEntity(entry.getKey(),tile);tile.markDirty();if(world.getTileEntity(entry.getKey())!=tile)throw new IllegalStateException("A copied tile could not be installed");}
         rebuildColumns(world,snapshot,origin);
     }
+    /**
+     * During tile ticking World.removeTileEntity only invalidates the old tile and leaves it in
+     * the chunk map; Chunk.addTileEntity then invalidates it again when the pending replacement
+     * is published. A detached tile has no world by then, so native invalidation fails
+     * (Mekanism's security and reactor components dereference it). Unmap it first.
+     */
+    private static void unmap(WorldServer world,BlockPos at,TileEntity old){
+        if(old==null)return;
+        java.util.Map<BlockPos,TileEntity> tiles=world.getChunkFromBlockCoords(at).getTileEntityMap();
+        if(tiles.get(at)==old)tiles.remove(at);
+    }
     private static void emptyDetached(TileEntity tile){if(tile==null||tile instanceof CopyFrozenTile)return;VehicleForeignCompat.clearDetachedInventory(tile);tile.setWorld(null);if(tile instanceof net.minecraft.inventory.IInventory)((net.minecraft.inventory.IInventory)tile).clear();if(tile instanceof com.vandorlabs.tiles.TileEntityModuleRack)((com.vandorlabs.tiles.TileEntityModuleRack)tile).drainModules();}
-    public static void freeze(WorldServer world,BlockPos at){TileEntity tile=world.getTileEntity(at);if(tile==null||tile instanceof CopyFrozenTile)return;NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());world.removeTileEntity(at);emptyDetached(tile);CopyFrozenTile proxy=new CopyFrozenTile(data);proxy.setWorld(world);world.setTileEntity(at,proxy);}
+    public static void freeze(WorldServer world,BlockPos at){TileEntity tile=world.getTileEntity(at);if(tile==null||tile instanceof CopyFrozenTile)return;NBTTagCompound data=tile.writeToNBT(new NBTTagCompound());world.removeTileEntity(at);unmap(world,at,tile);emptyDetached(tile);CopyFrozenTile proxy=new CopyFrozenTile(data);proxy.setWorld(world);world.setTileEntity(at,proxy);}
     /** The transaction captured all members before native invalidation changed their shared caches. */
     public static void freeze(WorldServer world,BlockPos at,NBTTagCompound preimage){
         TileEntity tile=world.getTileEntity(at);if(tile==null||tile instanceof CopyFrozenTile)return;
         if(!TransferNetworkCompat.retainFrozenPreimage(tile)){freeze(world,at);return;}
         net.minecraft.util.ResourceLocation id=TileEntity.getKey(tile.getClass());
         if(preimage==null||id==null||!id.toString().equals(preimage.getString("id"))||preimage.getInteger("x")!=at.getX()||preimage.getInteger("y")!=at.getY()||preimage.getInteger("z")!=at.getZ())throw new IllegalArgumentException("Foreign transfer preimage identity changed");
-        world.removeTileEntity(at);emptyDetached(tile);CopyFrozenTile proxy=new CopyFrozenTile(preimage);proxy.setWorld(world);world.setTileEntity(at,proxy);
+        world.removeTileEntity(at);unmap(world,at,tile);emptyDetached(tile);CopyFrozenTile proxy=new CopyFrozenTile(preimage);proxy.setWorld(world);world.setTileEntity(at,proxy);
     }
 
     public static void publish(WorldServer world,BlockPos at){TileEntity raw=world.getTileEntity(at);if(!(raw instanceof CopyFrozenTile))return;TileEntity tile=PhysicalTileFactory.create(world,world.getBlockState(at),((CopyFrozenTile)raw).saved());if(tile==null)throw new IllegalStateException("Frozen copy data cannot be published");world.removeTileEntity(at);tile.setWorld(world);tile.validate();world.setTileEntity(at,tile);tile.markDirty();}
