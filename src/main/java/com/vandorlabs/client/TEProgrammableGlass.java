@@ -46,6 +46,8 @@ public class TEProgrammableGlass extends TileEntitySpecialRenderer<TileEntityPro
             }materialPlane=buffer.finish();
         }return materialPlane;
     }
+    /** Corner glass renders from the global tile set; see CornerGlassRefresh. */
+    @Override public boolean isGlobalRenderer(TileEntityProgrammableGlass tile){return CornerGlassRefresh.isCorner(tile);}
     @Override public void renderTileEntityFast(TileEntityProgrammableGlass tile,double x,double y,
             double z,float partial,int stage,float alpha,BufferBuilder buffer){
         if(tile.getWorld()==null || WorldSceneBenchmark.omitGlazing()||GlassPaneTerrain.rendered(tile))return;

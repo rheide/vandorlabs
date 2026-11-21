@@ -500,6 +500,7 @@ public class ModBlocks {
                         : block instanceof BlockLargeProgrammableDoor ? new com.vandorlabs.items.ItemLargeProgrammableDoor((BlockLargeProgrammableDoor)block)
                         : block == PROGRAMMABLE_STAIRS ? new com.vandorlabs.items.ItemProgrammableStairs((BlockProgrammableStairs)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
+                        : block instanceof BlockProgrammableCornerGlass ? new ItemCornerGlass((BlockProgrammableCornerGlass)block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
                         ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : block instanceof com.vandorlabs.gear.GearBlock ? new com.vandorlabs.gear.ItemArm(block) : block instanceof com.vandorlabs.segmented.SegmentedDoorBlock ? new com.vandorlabs.segmented.SegmentedDoorItem((com.vandorlabs.segmented.SegmentedDoorBlock)block) : new com.vandorlabs.items.ItemCatalogBlock(block);
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));

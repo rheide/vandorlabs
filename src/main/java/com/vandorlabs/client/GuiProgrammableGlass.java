@@ -16,6 +16,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     public GuiProgrammableGlass(TileEntityProgrammableGlass tile) {
         super(new ContainerProgrammableGlass(tile));this.tile=tile;
         state=new GlassDialog.State(tile.getShade(),tile.getTint(),tile.getMaterial(),tile.getTextureLayout(),tile.isJoin(),tile.isFramed(),tile.isStretch());
+        readCorner();
     }
     @Override protected HousingTextureList materialPicker(){return state.framePage()&&framePane!=null?framePane.picker():textures;}
     @Override public void initGui() {
@@ -26,15 +27,44 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
                 .visibleRows(GlassDialog.listRows(shared)).keepView(textures);
         if(!state.framePage()){
             for(GlassDialog.Control control:GlassDialog.body(shared,state))addControl(control);
+            if(diagonalCorner()){
+                // Size and slope, as on diagonal glass; TextureJoinPane spaces the column below.
+                buttonList.add(new GuiButton(CORNER_SIZE,shared.controlsX,shared.top+126,154,20,com.vandorlabs.ui.WallAppearanceDialog.sizeLabel(cornerSize==2,cornerSize==1)));
+                buttonList.add(new GuiButton(CORNER_SLOPE,shared.controlsX,shared.top+150,154,20,slopeLabel()));
+            }
             if(GlassPlaybackPane.available(state.material))GlassPlaybackPane.init(layout,tile.glassPlayback,buttonList,130);
         }else{if(framePane==null)framePane=new FrameAppearancePane(this,tile,()->{state=state.withFramed(!tile.isFramed());send();},()->tile.isFramed());framePane.initGlassFace(state.page-1,54,buttonList);}
         addControl(GlassDialog.done(shared,"Done"));
         if(!state.framePage())TextureJoinPane.install(buttonList,tile,shared.controlsX,shared.top+54,154,shared.doneY);
     }
+    static final int CORNER_SIZE=270,CORNER_SLOPE=271;
+    private int cornerSize;private boolean cornerInverted,cornerFar;
+    private boolean diagonalCorner(){
+        net.minecraft.block.state.IBlockState placed=tile.getWorld().getBlockState(tile.getPos());
+        return placed.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass&&((com.vandorlabs.blocks.BlockProgrammableCornerGlass)placed.getBlock()).sloped();
+    }
+    private void readCorner(){
+        if(!diagonalCorner())return;
+        net.minecraft.block.state.IBlockState placed=tile.getWorld().getBlockState(tile.getPos());
+        int meta=placed.getBlock().getMetaFromState(placed);cornerSize=tile.getCornerMode();cornerInverted=(meta&4)!=0;cornerFar=(meta&8)!=0;
+    }
+    /** The bevel rises away from the corner (outward) or towards it, like diagonal glass leans. */
+    private String slopeLabel(){
+        boolean outward=cornerFar==cornerInverted;
+        return (cornerSize==2?"Slope rises: ":"Slope leans: ")+(outward?"Outward":"Inward");
+    }
+    private boolean cornerAction(GuiButton button){
+        if(button.id!=CORNER_SIZE&&button.id!=CORNER_SLOPE)return false;
+        if(button.id==CORNER_SIZE)cornerSize=com.vandorlabs.ui.WallAppearanceDialog.nextSize(cornerSize,GuiOptionCycle.direction());
+        else if(cornerSize==2)cornerFar=!cornerFar;else cornerInverted=!cornerInverted;
+        PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCornerGlassGeometry(tile.getPos(),cornerSize,cornerInverted,cornerFar));
+        initGui();return true;
+    }
     private void addControl(GlassDialog.Control control){GuiButton button=control.tab?new DialogTabButton(control.id,control.x,control.y,control.width,control.height,control.label):new GuiButton(control.id,control.x,control.y,control.width,control.height,control.label);button.enabled=control.enabled;button.visible=control.visible;buttonList.add(button);}
     void choose(int choice){if(textures!=null&&textures.selected()!=choice)textures.setSelected(choice);state=state.choose(choice,HousingTextureList.CANOPY_GLASS_BASE);send();initGui();}
     private void send(){tile.configure(state.size,state.shade,state.material,state.layout,state.join,state.tint,state.framed,-1,1);PacketHandler.INSTANCE.sendToServer(new MessageProgrammableGlass(tile.getPos(),state.size,state.shade,state.join).withAppearance(state.tint,state.framed).withMaterial(state.material).withTextureLayout(state.layout).withPlayback(tile.glassPlayback.mode(),tile.glassPlayback.speed()));}
     @Override protected void actionPerformed(GuiButton button) {
+        if(cornerAction(button))return;
         if(TextureJoinPane.action(button,tile)){state=new GlassDialog.State(tile.getShade(),tile.getTint(),tile.getMaterial(),tile.getTextureLayout(),tile.isJoin(),tile.isFramed(),tile.isStretch());initGui();return;}
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){send();initGui();return;}
         if(state.framePage()&&framePane.action(button))return;
@@ -46,7 +76,7 @@ public final class GuiProgrammableGlass extends GuiMaterialPicker {
     }
     @Override protected void mouseClicked(int x,int y,int button)throws IOException {
         if(state.framePage()){if(!framePane.click(x,y,button))super.mouseClicked(x,y,button);return;}
-        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,new int[]{0,3,4,5,6,240,241}))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,new int[]{0,3,4,5,6,240,241,CORNER_SIZE}))return;
         if(textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}
         super.mouseClicked(x,y,button);
     }

@@ -23,6 +23,7 @@ public class CommonProxy {
     public void surfaceAppearanceChanged(com.vandorlabs.tiles.TileEntityTurntableSurface tile){}
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}
     public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
+    public void glassTileLoaded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
     public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.tiles.DeferredTileLoad.schedule(tile,tile::refreshPendingLight);}
     public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}
     public void portholeAppearanceChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}

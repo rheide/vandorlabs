@@ -21,6 +21,9 @@ final class CornerGlassRenderer {
     private static final Map<java.util.List<?>,StaticSurfaceMesh> MESHES=new LinkedHashMap<java.util.List<?>,StaticSurfaceMesh>(128,.75F,true){
         @Override protected boolean removeEldestEntry(Map.Entry<java.util.List<?>,StaticSurfaceMesh> entry){return size()>128;}
     };
+    /** Test observer: each corner render call with its pass and whether the pane or frame is drawn. */
+    static volatile Observer observer;
+    interface Observer{void rendered(TileEntityProgrammableGlass tile,int pass,boolean pane,boolean frame,double x,double y,double z);}
     private CornerGlassRenderer(){}
     private static StaticSurfaceMesh project(StaticSurfaceMesh source,CornerGlassGeometry geometry){
         return MESHES.computeIfAbsent(java.util.Arrays.asList(source,geometry),key->source.cornerGlass(geometry));
@@ -31,6 +34,8 @@ final class CornerGlassRenderer {
         boolean pane=(pass<0||pass==(opaque?0:1))&&!GlassPanePolicy.omitPane(opaque,VehicleRenderPass.shadow());
         boolean frame=tile.isFramed()&&pass!=1;
         if(pass==1&&tile.fluids.any())WaterloggedRenderer.render(tile,x,y,z);
+        Observer watching=observer;
+        if(watching!=null)watching.rendered(tile,pass,pane,frame,x,y,z);
         if(!pane&&!frame)return;
         Minecraft mc=Minecraft.getMinecraft();
         mc.getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -41,7 +46,7 @@ final class CornerGlassRenderer {
         GlStateManager.color(1,1,1,1);
         GlStateManager.tryBlendFuncSeparate(GlStateManager.SourceFactor.SRC_ALPHA,GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,
                 GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
-        CornerGlassGeometry geometry=block.geometry(state);
+        CornerGlassGeometry geometry=block.geometry(state,tile);
         int light=tile.getWorld().getCombinedLight(tile.getPos(),0);
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();
         if(frame){

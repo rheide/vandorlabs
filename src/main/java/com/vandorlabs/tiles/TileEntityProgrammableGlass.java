@@ -85,6 +85,11 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
     private int textureLayout=-1;
     public int getTextureLayout(){return textureLayout<0?(stretch?0:1):textureLayout;}
     public void setTextureLayout(int mode){if(!com.vandorlabs.render.TextureLayoutMode.valid(mode))throw new IllegalArgumentException("Invalid glass texture layout");if(getTextureLayout()==mode)return;stretch=mode!=1;textureLayout=mode;changed(true,false);}
+    /** Diagonal Corner Glass size, numbered like diagonal glass (CornerGlassGeometry TALL, FULL, WIDE). */
+    private int cornerMode=com.vandorlabs.render.CornerGlassGeometry.FULL;
+    public static final String CORNER_MODE_TAG="CornerDiagonalMode";
+    public int getCornerMode(){return cornerMode;}
+    public void setCornerMode(int mode){if(mode<0||mode>2)throw new IllegalArgumentException("Invalid corner size");if(cornerMode==mode)return;cornerMode=mode;changed(true,false);}
     public boolean isStretch(){return stretch;}
     public void setStretch(boolean value){if(stretch==value)return;textureLayout=-1;stretch=value;changed(true,false);}
     public int getMaterial(){return material;}
@@ -145,6 +150,7 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
         super.writeToNBT(tag);frameAppearance.write(tag);glassPlayback.write(tag);fluids.write(tag);
         settings().write(new com.vandorlabs.persistence.NbtPrimitiveData(tag));
         textureJoin.write(new com.vandorlabs.persistence.NbtPrimitiveData(tag),textureJoinPresent);
+        if(cornerMode!=com.vandorlabs.render.CornerGlassGeometry.FULL)tag.setInteger(CORNER_MODE_TAG,cornerMode);
         return tag;
     }
     /** Conservative visual dependencies, compared exactly rather than by a hash.
@@ -157,7 +163,7 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
                 frameAppearance.front,frameAppearance.interior,frameAppearance.exterior,
                 frameAppearance.artworkVersion,frameAppearance.tile?1:0,frameAppearance.displayFit?1:0,
                 frameAppearance.split?1:0,frameAppearance.bare?1:0,frameAppearance.splitTop,frameAppearance.splitBottom,
-                glassPlayback.mode(),glassPlayback.speed()};
+                glassPlayback.mode(),glassPlayback.speed(),cornerMode};
     }
     private NBTTagCompound fluidSettings() {
         if(!fluids.any())return null;
@@ -177,6 +183,8 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
         com.vandorlabs.persistence.ProgrammableGlassSettings saved=com.vandorlabs.persistence.ProgrammableGlassSettings.read(new com.vandorlabs.persistence.NbtPrimitiveData(tag),GlassMaterials::clamp);
         material=saved.material;stretch=saved.stretch;textureLayout=saved.layout;tint=saved.tint;framed=saved.framed;
         shade=saved.shade;legacySize=saved.legacySize;size=saved.size;join=saved.join;panelFacing=saved.panelFacing;
+        int savedCorner=tag.hasKey(CORNER_MODE_TAG,99)?tag.getInteger(CORNER_MODE_TAG):com.vandorlabs.render.CornerGlassGeometry.FULL;
+        cornerMode=savedCorner>=0&&savedCorner<=2?savedCorner:com.vandorlabs.render.CornerGlassGeometry.FULL;
         boolean changed=force||!previousPos.equals(pos)||!java.util.Arrays.equals(previous,renderSettings())
                 ||!java.util.Objects.equals(previousFluids,fluidSettings());
         // Generic NBT/copy/carried replacement reads are always forced. Only an
@@ -196,6 +204,7 @@ public final class TileEntityProgrammableGlass extends TileEntity implements com
         super.onLoad();
         receivedSettings=false;
         frameChanged();
+        if(world!=null&&world.isRemote&&com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.glassTileLoaded(this);
         // A prior settlement may have skipped this object before installation.
         // Re-arm on load without reading a world or a neighbouring tile.
         if(pendingLight){lightQueued=false;queuePendingLight();}

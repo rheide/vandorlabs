@@ -8,9 +8,63 @@ public final class CornerGlassChecks {
         CornerGlassGeometry.Neighbor[] result=new CornerGlassGeometry.Neighbor[4];
         java.util.Arrays.fill(result,CornerGlassGeometry.Neighbor.NONE);return result;
     }
+    /** Diagonal glass centre depth from its facing face, as DiagonalPanelContact defines the slope. */
+    private static double wallDepth(int mode,boolean inverted,double y){
+        if(mode==2){double band=inverted?.5:0,u=(y-band)/.5;return inverted?1-u:u;}
+        return (inverted?1-y:y)*(mode==1?1:.5);
+    }
+    private static void diagonal(){
+        double[] a=new double[3];
+        for(int mode=0;mode<3;mode++)for(int meta=0;meta<16;meta++){
+            CornerGlassGeometry geometry=CornerGlassGeometry.diagonal(mode,meta);
+            require(geometry.metadata()==meta,"diagonal metadata round trip");
+            require(mode!=2||Math.abs(geometry.high()-geometry.low()-.5)<1E-9,"wide corners fill half the height");
+            for(int row=0;row<=16;row++)for(double normal:new double[]{.375,.5,.625})for(double along:new double[]{0,.5,1}){
+                geometry.project(along,row/16D,normal,a);
+                require(a[0]>=-1E-9&&a[0]<=1+1E-9&&a[1]>=geometry.low()-1E-9&&a[1]<=geometry.high()+1E-9&&a[2]>=-1E-9&&a[2]<=1+1E-9,"diagonal corner stays inside its cell and height band");
+            }
+            // In plan the bevel always runs at 45 degrees: both ends sit the same distance from the corner.
+            for(double y:new double[]{geometry.low(),geometry.high()}){
+                int first=CornerGlassGeometry.first(meta&3),second=CornerGlassGeometry.second(meta&3);
+                double p=geometry.edge(first,y),q=geometry.edge(second,y);
+                int turn=meta&3;double dp=(turn==1||turn==2)?1-p:p,dq=(turn==2||turn==3)?1-q:q;
+                require(Math.abs(dp-dq)<1E-9,"diagonal bevel is at 45 degrees in plan");
+            }
+            CornerGlassGeometry.Neighbor[] none=empty();
+            require(CornerGlassGeometry.placementDiagonal(mode,-1,.2,.8,none,meta,.5,5)==meta,"matching diagonal corner above or below keeps its bevel");
+        }
+        // Every diagonal glass wall, clicked on its end, gets a corner that continues it exactly.
+        for(int side=0;side<4;side++)for(int facing=0;facing<4;facing++){
+            if(((facing^side)&1)==0)continue;
+            for(int mode=0;mode<3;mode++)for(boolean inverted:new boolean[]{false,true}){
+                CornerGlassGeometry.Neighbor[] around=empty();around[side]=CornerGlassGeometry.Neighbor.diagonal(facing,mode,inverted);
+                int meta=CornerGlassGeometry.placementDiagonal(mode,side,.5,.5,around,-1,.5,.5);
+                CornerGlassGeometry placed=CornerGlassGeometry.diagonal(mode,meta);
+                require(placed.joinsDiagonal(side,facing,mode,inverted),"clicked diagonal glass is continued side="+side+" facing="+facing+" mode="+mode+" inverted="+inverted);
+                boolean fromZero=facing==0||facing==3;
+                for(double y:new double[]{placed.low(),(placed.low()+placed.high())/2,placed.high()}){
+                    double d=wallDepth(mode,inverted,y);
+                    require(Math.abs(placed.edge(side,y)-(fromZero?d:1-d))<1E-9,"the bevel meets the slope across the whole shared face");
+                }
+                // Only the same size, lean and in-block position join.
+                for(int other=0;other<3;other++)if(other!=mode)require(!placed.joinsDiagonal(side,facing,other,inverted),"different size never joins");
+                require(!placed.joinsDiagonal(side,facing,mode,!inverted),"different lean never joins");
+                require(!placed.joinsDiagonal(side,facing^2,mode,inverted),"glass anchored to the opposite face (near versus far) never joins");
+            }
+        }
+        // Two diagonal corners continue each other only where their slopes meet.
+        for(int mode=0;mode<3;mode++)for(int meta=0;meta<16;meta++)for(int end=0;end<2;end++){
+            CornerGlassGeometry support=CornerGlassGeometry.diagonal(mode,meta);
+            int edge=end==0?CornerGlassGeometry.first(meta&3):CornerGlassGeometry.second(meta&3),side=(edge+2)&3;
+            CornerGlassGeometry.Neighbor[] around=empty();around[side]=CornerGlassGeometry.Neighbor.corner(support);
+            CornerGlassGeometry placed=CornerGlassGeometry.diagonal(mode,CornerGlassGeometry.placementDiagonal(mode,side,.5,.5,around,-1,.5,.5));
+            require(placed.joinsEdge(side,support),"clicked diagonal corner endpoint is continued");
+            require(!placed.joinsEdge(side,CornerGlassGeometry.diagonal((mode+1)%3,meta)),"corners of another size do not join");
+        }
+    }
     public static void main(String[] args){
         double[] a=new double[3],b=new double[3];
-        for(boolean slope:new boolean[]{false,true})for(int depth=0;depth<3;depth++)for(int turn=0;turn<4;turn++){
+        for(boolean slope:new boolean[]{false})for(int depth=0;depth<3;depth++)for(int turn=0;turn<4;turn++){
             CornerGlassGeometry geometry=new CornerGlassGeometry(turn,depth,slope);
             for(int row=0;row<=16;row++){
                 double y=row/16D;
@@ -25,7 +79,7 @@ public final class CornerGlassChecks {
             require(CornerGlassGeometry.placement(slope,-1,.2,.8,none,depth*4+turn,.5,5)==depth*4+turn,"matching corner above or below keeps its bevel");
         }
         int[] mirror={0,2,1};
-        for(boolean slope:new boolean[]{false,true})for(int turn=0;turn<4;turn++)for(int depth=0;depth<3;depth++)for(int end=0;end<2;end++){
+        for(boolean slope:new boolean[]{false})for(int turn=0;turn<4;turn++)for(int depth=0;depth<3;depth++)for(int end=0;end<2;end++){
             CornerGlassGeometry support=new CornerGlassGeometry(turn,depth,slope);
             int supportEdge=end==0?CornerGlassGeometry.first(turn):CornerGlassGeometry.second(turn);
             int side=(supportEdge+2)&3;
@@ -80,6 +134,7 @@ public final class CornerGlassChecks {
         require((CornerGlassGeometry.placement(false,-1,.9,.9,empty(),-1,.5,.5)&3)==2,"southeast click");
         require(CornerGlassGeometry.placement(false,-1,.05,.05,empty(),-1,.5,.5)==4,"near click");
         require(CornerGlassGeometry.placement(false,-1,.42,.42,empty(),-1,.5,.5)==8,"far click");
+        diagonal();
         System.out.println("corner-glass portable PASS checks="+checks);
     }
 }

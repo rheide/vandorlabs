@@ -79,5 +79,6 @@ public class PacketHandler {
         INSTANCE.registerMessage(MessageNavigationImage.Handler.class,MessageNavigationImage.class,id++,Side.CLIENT);
         INSTANCE.registerMessage(MessageVehicleNavigationRequest.Handler.class,MessageVehicleNavigationRequest.class,id++,Side.SERVER);
         INSTANCE.registerMessage(MessageVehicleNavigationImage.Handler.class,MessageVehicleNavigationImage.class,id++,Side.CLIENT);
+        INSTANCE.registerMessage(MessageCornerGlassGeometry.Handler.class,MessageCornerGlassGeometry.class,id++,Side.SERVER);
     }
 }

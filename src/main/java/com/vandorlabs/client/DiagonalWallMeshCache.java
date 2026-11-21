@@ -55,6 +55,12 @@ public final class DiagonalWallMeshCache {
                 BlockPos next=tile.getPos().offset(side==0?right.getOpposite():right);
                 if(!world.isBlockLoaded(next))continue;
                 IBlockState other=world.getBlockState(next);
+                // A Diagonal Corner Glass continuing this slope shares the end like a straight neighbour.
+                if(com.vandorlabs.blocks.BlockProgrammableCornerGlass.joinsDiagonalWall(world,next,tile.getPos())) {
+                    mesh=mesh.withoutPlane(0,side==0?0:16);
+                    if(side==0)hideLeft=true;else hideRight=true;
+                    continue;
+                }
                 if(other.getBlock()==state.getBlock()
                         && com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,next)==com.vandorlabs.blocks.BlockProgrammableWall.geometry(world,tile.getPos())
                         && com.vandorlabs.blocks.BlockProgrammableWall.fill(world,next)==tile.getDiagonalFill()
