@@ -46,17 +46,14 @@ public class BlockGlassWall extends Block {
         setSoundType(SoundType.GLASS);
         setLightOpacity(0);
         useNeighborBrightness = true;
-        setDefaultState(blockState.getBaseState()
-                .withProperty(ROTATED, false)
-                .withProperty(DEPTH, 0)
-                .withProperty(TOP, true)
-                .withProperty(BOTTOM, true)
-                .withProperty(LEFT, true)
-                .withProperty(RIGHT, true)
-                .withProperty(INNER_TL, false)
-                .withProperty(INNER_TR, false)
-                .withProperty(INNER_BL, false)
-                .withProperty(INNER_BR, false));
+        IBlockState initial=blockState.getBaseState().withProperty(ROTATED, false).withProperty(DEPTH, 0);
+        // Corner glass renders through its tile and has no frame-connection flags.
+        for(PropertyBool edge:new PropertyBool[]{TOP,BOTTOM,LEFT,RIGHT})initial=withIfPresent(initial,edge,true);
+        for(PropertyBool inner:new PropertyBool[]{INNER_TL,INNER_TR,INNER_BL,INNER_BR})initial=withIfPresent(initial,inner,false);
+        setDefaultState(initial);
+    }
+    private static IBlockState withIfPresent(IBlockState state,PropertyBool property,boolean value){
+        return state.getPropertyKeys().contains(property)?state.withProperty(property,value):state;
     }
 
     @Override

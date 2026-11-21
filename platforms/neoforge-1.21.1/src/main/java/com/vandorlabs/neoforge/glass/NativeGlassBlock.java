@@ -14,17 +14,18 @@ import net.minecraft.world.phys.shapes.*;
 
 /** Inactive ordinary glass block; original palette properties remain independently loadable. */
 public class NativeGlassBlock extends Block implements EntityBlock,com.vandorlabs.neoforge.NativeAuthoredBlockRay {
- public static final BooleanProperty ROTATED=BooleanProperty.create("rotated"),TOP=BooleanProperty.create("top"),BOTTOM=BooleanProperty.create("bottom"),LEFT=BooleanProperty.create("left"),RIGHT=BooleanProperty.create("right"),INNER_TL=BooleanProperty.create("inner_tl"),INNER_TR=BooleanProperty.create("inner_tr"),INNER_BL=BooleanProperty.create("inner_bl"),INNER_BR=BooleanProperty.create("inner_br");
+ /** Glass connections are computed by the glass service, not stored in block states. */
+ public static final BooleanProperty ROTATED=BooleanProperty.create("rotated");
  public static final IntegerProperty DEPTH=IntegerProperty.create("depth",0,2),SIZE=IntegerProperty.create("size",0,2);
  private final Supplier<BlockEntityType<?>> type;private final MapCodec<NativeGlassBlock> codec;
- public NativeGlassBlock(Properties properties,Supplier<BlockEntityType<?>> type){super(properties.forceSolidOn().dynamicShape().noOcclusion());this.type=java.util.Objects.requireNonNull(type);codec=simpleCodec(p->new NativeGlassBlock(p,type));registerDefaultState(stateDefinition.any().setValue(ROTATED,false).setValue(DEPTH,0).setValue(SIZE,1).setValue(TOP,true).setValue(BOTTOM,true).setValue(LEFT,true).setValue(RIGHT,true).setValue(INNER_TL,false).setValue(INNER_TR,false).setValue(INNER_BL,false).setValue(INNER_BR,false));}
+ public NativeGlassBlock(Properties properties,Supplier<BlockEntityType<?>> type){super(properties.forceSolidOn().dynamicShape().noOcclusion());this.type=java.util.Objects.requireNonNull(type);codec=simpleCodec(p->new NativeGlassBlock(p,type));registerDefaultState(stateDefinition.any().setValue(ROTATED,false).setValue(DEPTH,0).setValue(SIZE,1));}
  public BlockEntityType<?> entityType(){return type.get();}
  protected net.minecraft.world.inventory.MenuType<NativeGlassMenu> menuType(){return null;}
  public final boolean openConfiguration(net.minecraft.world.entity.player.Player player,Level world,BlockPos pos){return NativeGlassConfiguration.open(player,world,pos,menuType());}
  @Override protected net.minecraft.world.InteractionResult useWithoutItem(BlockState state,Level world,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.phys.BlockHitResult hit){return player.isCreative()&&player.isShiftKeyDown()&&openConfiguration(player,world,pos)?net.minecraft.world.InteractionResult.sidedSuccess(world.isClientSide):net.minecraft.world.InteractionResult.PASS;}
  @Override protected net.minecraft.world.ItemInteractionResult useItemOn(net.minecraft.world.item.ItemStack stack,BlockState state,Level world,BlockPos pos,net.minecraft.world.entity.player.Player player,net.minecraft.world.InteractionHand hand,net.minecraft.world.phys.BlockHitResult hit){if(hand==net.minecraft.world.InteractionHand.OFF_HAND)return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;if(stack.is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return openConfiguration(player,world,pos)?net.minecraft.world.ItemInteractionResult.SUCCESS:net.minecraft.world.ItemInteractionResult.FAIL;return net.minecraft.world.ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;}
  @Override protected MapCodec<? extends Block> codec(){return codec;}
- @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(ROTATED,DEPTH,SIZE,TOP,BOTTOM,LEFT,RIGHT,INNER_TL,INNER_TR,INNER_BL,INNER_BR);}
+ @Override protected void createBlockStateDefinition(StateDefinition.Builder<Block,BlockState> b){b.add(ROTATED,DEPTH,SIZE);}
  @Override public BlockEntity newBlockEntity(BlockPos pos,BlockState state){return new NativeGlassEntity(entityType(),pos,state);}
  @Override public BlockState getStateForPlacement(BlockPlaceContext context){return NativeGlassService.placement(this,context);}
  public static NativeGlassGeometry.Snapshot geometry(BlockState state,BlockGetter level,BlockPos pos){return level.getBlockEntity(pos) instanceof NativeGlassEntity host?host.publication().geometry():NativeGlassGeometry.straight(state.getValue(ROTATED),state.getValue(DEPTH));}

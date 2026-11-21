@@ -40,8 +40,13 @@ public final class BlockProgrammableCornerGlass extends BlockProgrammableGlass {
         }
     }
     public boolean sloped(){return sloped;}
+    /**
+     * Corners render through their tile, so they keep only the properties their metadata and the
+     * glass dialog use. The ordinary glass frame-connection flags would multiply each corner block
+     * to over eighteen thousand states.
+     */
     @Override protected BlockStateContainer createBlockState(){
-        return new BlockStateContainer(this,TURN,ROTATED,DEPTH,SIZE,TOP,BOTTOM,LEFT,RIGHT,INNER_TL,INNER_TR,INNER_BL,INNER_BR);
+        return new BlockStateContainer(this,TURN,ROTATED,DEPTH,SIZE);
     }
     /** Block metadata: flat depth*4+turn; diagonal turn | lean<<2 | far<<3 (lean in ROTATED, far as DEPTH 1). */
     private int index(IBlockState state){
