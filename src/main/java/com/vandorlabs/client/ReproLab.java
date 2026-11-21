@@ -822,6 +822,36 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("Saved duct flow",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.diagonalCornerOnly")){
+            try{if(DiagonalCornerLiveChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Diagonal corner glass",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.cornerStackOnly")){
+            try{if(CornerStackLiveChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Corner glass stack",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.doorSurfaceArmOnly")){
+            try{if(com.vandorlabs.gear.DoorSurfaceArmLiveChecks.tick(mc))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Door surface arm",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.doorJoinOnly")){
+            try{if(com.vandorlabs.blocks.LargeDoorJoinPlacementChecks.tick(mc))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Large Door join placement",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.armConduitPowerOnly")){
+            try{if(com.vandorlabs.gear.ArmConduitPowerChecks.tick(mc))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Arm conduit power",failure);}
+            return;
+        }
+        if(Boolean.getBoolean("vandorlabs.savedDishArmOnly")){
+            try{if(com.vandorlabs.gear.SavedDishArmChecks.tick(mc))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Saved dish arm",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.cornerGlassOnly")){
             try{if(CornerGlassLiveChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Corner glass fixture",failure);}

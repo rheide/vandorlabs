@@ -92,6 +92,25 @@ case "${1:-}" in
             # A reported world: set VANDOR_LABS_SAVED_WORLD to a 7z archive containing test/level.dat.
             PREFIX=saved_duct_flow_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedDuctFlowOnly=true -Dfml.queryResult=confirm"
+        elif [ "$TARGET" = saved-dish-arm ]; then
+            # The same reported world; its flux ducts are fed by an RFTools creative cell.
+            PREFIX=saved_dish_arm_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.testWorldName=saved-duct -Dvandorlabs.savedDishArmOnly=true -Dfml.queryResult=confirm"
+        elif [ "$TARGET" = diagonal-corner ]; then
+            PREFIX=diagonal_corner_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.diagonalCornerOnly=true"
+        elif [ "$TARGET" = corner-stack ]; then
+            PREFIX=corner_stack_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.cornerStackOnly=true"
+        elif [ "$TARGET" = door-surface-arm ]; then
+            PREFIX=door_surface_arm_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.doorSurfaceArmOnly=true"
+        elif [ "$TARGET" = door-join ]; then
+            PREFIX=door_join_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.doorJoinOnly=true"
+        elif [ "$TARGET" = arm-conduit-power ]; then
+            PREFIX=arm_conduit_power_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.armConduitPowerOnly=true -Dfml.queryResult=confirm"
         elif [ "$TARGET" = arm-foreign ]; then
             PREFIX=arm_foreign_
             export VANDOR_LABS_ARM_LIVE_CHECKS=true VANDOR_LABS_ARM_FOREIGN_ONLY=true
@@ -454,7 +473,7 @@ if [ -n "${VANDOR_LABS_TEST_RFTOOLS:-}" ]; then
 fi
 # Set VANDOR_LABS_COMPAT_MODS to the external test-mod directory when needed.
 COMPAT_MODS=${VANDOR_LABS_COMPAT_MODS:-"$HOME/.minecraft/mods"}
-if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = observer-arm-power ]; then
+if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = saved-dish-arm ] || [ "${TARGET:-}" = observer-arm-power ]; then
     for arm_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MekanismGenerators-1.12.2-9.8.2.389.jar; do
         cp "$COMPAT_MODS/$arm_mod" "$TEST_RUNTIME_GAME/mods/"
     done
@@ -469,7 +488,17 @@ cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \
     "$TEST_RUNTIME_GAME/mods/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar"
 cp "$COMPAT_MODS/ImmersiveEngineering-0.12-98.jar" "$TEST_RUNTIME_GAME/mods/"
-if [ "${TARGET:-}" = saved-duct-flow ]; then
+if [ "${TARGET:-}" = arm-conduit-power ]; then
+    for conduit_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalExpansion-1.12.2-5.5.4.43-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MicdoodleCore-1.12.2-4.0.2.280.jar GalacticraftCore-local4.1.0.280-1.12.2-4.0.2.280.jar Galacticraft-Planets-1.12.2-4.0.2.280.jar; do
+        cp "$COMPAT_MODS/$conduit_mod" "$TEST_RUNTIME_GAME/mods/"
+    done
+fi
+if [ "${TARGET:-}" = saved-dish-arm ]; then
+    for saved_mod in rftools-1.12-7.72.jar mcjtylib-1.12-3.5.4.jar; do
+        cp "$COMPAT_MODS/$saved_mod" "$TEST_RUNTIME_GAME/mods/"
+    done
+fi
+if [ "${TARGET:-}" = saved-duct-flow ] || [ "${TARGET:-}" = saved-dish-arm ]; then
     rm -rf "$TEST_RUNTIME_GAME/saves/saved-duct" "$RUN_OUT/unpack"
     7z x -y -o"$RUN_OUT/unpack" "${VANDOR_LABS_SAVED_WORLD:?Set VANDOR_LABS_SAVED_WORLD}" >/dev/null
     mkdir -p "$TEST_RUNTIME_GAME/saves"; cp -r "$RUN_OUT/unpack/test" "$TEST_RUNTIME_GAME/saves/saved-duct"; rm -f "$TEST_RUNTIME_GAME/saves/saved-duct/session.lock"; rm -rf "$RUN_OUT/unpack"
@@ -508,6 +537,36 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = saved-duct-flow ]; then
         grep -q "saved-duct-flow PASS" "$RUN_OUT/client.log"
         echo "PASS: saved duct item flow"
+        exit 0
+    fi
+    if [ "$TARGET" = diagonal-corner ]; then
+        grep -q "diagonal-corner PASS" "$RUN_OUT/client.log"
+        echo "PASS: Diagonal Corner Glass continues every diagonal glass size, lean and position"
+        exit 0
+    fi
+    if [ "$TARGET" = corner-stack ]; then
+        grep -q "corner-stack PASS" "$RUN_OUT/client.log"
+        echo "PASS: every stacked corner glass block renders"
+        exit 0
+    fi
+    if [ "$TARGET" = door-surface-arm ]; then
+        grep -q "door-surface-arm PASS" "$RUN_OUT/client.log"
+        echo "PASS: a 3x3 Surface on an Extender passes an open horizontal Large Door"
+        exit 0
+    fi
+    if [ "$TARGET" = door-join ]; then
+        grep -q "door-join PASS" "$RUN_OUT/client.log"
+        echo "PASS: Large Doors placed with Join On form one 2x2 door; sneak-clicks place on the clicked side"
+        exit 0
+    fi
+    if [ "$TARGET" = arm-conduit-power ]; then
+        grep -q "arm-conduit-power PASS" "$RUN_OUT/client.log"
+        echo "PASS: arm-carried Dish stays powered by Thermal, Mekanism and Galacticraft conduits"
+        exit 0
+    fi
+    if [ "$TARGET" = saved-dish-arm ]; then
+        grep -q "saved-dish-arm PASS" "$RUN_OUT/client.log"
+        echo "PASS: saved Dish on a powered arm keeps scanning"
         exit 0
     fi
     if [ "$TARGET" = arm-resource-indicator ]; then
