@@ -7,11 +7,13 @@ import net.minecraft.util.EnumFacing;
 /** Clip world-sized material repeats within an atlas sprite; retain the source vertex format. */
 final class DoorMaterialQuads {
  private static final class Point {final int[] data;final double u,v;Point(int[] d,double u,double v){data=d;this.u=u;this.v=v;}}
- static List<BakedQuad> tile(BakedQuad quad,TextureAtlasSprite sprite,double scale){
+ static List<BakedQuad> tile(BakedQuad quad,TextureAtlasSprite sprite,double scale){return tile(quad,sprite,scale,scale);}
+ /** Repeats per block with the leaf scaled {@code scaleX} wide and {@code scaleY} tall, as a joined Large Door is. */
+ static List<BakedQuad> tile(BakedQuad quad,TextureAtlasSprite sprite,double scaleX,double scaleY){
   int[] source=quad.getVertexData();int stride=source.length/4;EnumFacing.Axis normal=quad.getFace().getAxis();int u=normal==EnumFacing.Axis.X?2:0,v=normal==EnumFacing.Axis.Y?2:1;
   double width=Math.max(1,UnifiedTextureSprites.aspect(sprite)),height=Math.max(1,1/UnifiedTextureSprites.aspect(sprite));
   List<Point> polygon=new ArrayList<>(4);double u0=Double.POSITIVE_INFINITY,v0=u0,u1=-u0,v1=-u0;
-  for(int i=0;i<4;i++){int[] d=Arrays.copyOfRange(source,i*stride,(i+1)*stride);double x=Float.intBitsToFloat(d[u])*(u==2?1:scale)/width,y=-Float.intBitsToFloat(d[v])*(v==2?1:scale)/height;polygon.add(new Point(d,x,y));u0=Math.min(u0,x);u1=Math.max(u1,x);v0=Math.min(v0,y);v1=Math.max(v1,y);}
+  for(int i=0;i<4;i++){int[] d=Arrays.copyOfRange(source,i*stride,(i+1)*stride);double x=Float.intBitsToFloat(d[u])*(u==2?1:scaleX)/width,y=-Float.intBitsToFloat(d[v])*(v==2?1:scaleY)/height;polygon.add(new Point(d,x,y));u0=Math.min(u0,x);u1=Math.max(u1,x);v0=Math.min(v0,y);v1=Math.max(v1,y);}
   List<BakedQuad> result=new ArrayList<>();
   for(int x=(int)Math.floor(u0+1e-7);x<Math.ceil(u1-1e-7);x++)for(int y=(int)Math.floor(v0+1e-7);y<Math.ceil(v1-1e-7);y++){
    List<Point> p=clip(clip(clip(clip(polygon,true,x,true,quad.getFormat()),true,x+1,false,quad.getFormat()),false,y,true,quad.getFormat()),false,y+1,false,quad.getFormat());

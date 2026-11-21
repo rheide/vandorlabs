@@ -69,8 +69,25 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         return (float) a.sample(open, now);
     }
 
+    /**
+     * A Large Door anchor draws its whole door, and for a joined group the whole opening, which can
+     * reach into render sections other than its own. Drawn as a global tile it stays visible while
+     * any part is in view, with the usual frustum check on its render box.
+     */
+    @Override public boolean isGlobalRenderer(TileEntitySlidingDoor te){
+        return te instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor&&((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)te).isAnchor();
+    }
+    /** Test hook: draws of a Large Door group by its anchor, counted on the render thread. */
+    static int largeGroupDraws;
+    /** Test hook: the glass tiling scale last requested for a Large Door leaf. */
+    static double lastGlassScaleX,lastGlassScaleY;
+    private static void countGroupDraw(TileEntitySlidingDoor raw){
+        if(raw instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor&&raw.getWorld()!=null
+                &&((com.vandorlabs.tiles.TileEntityLargeProgrammableDoor)raw).joinedGroup().anchor==raw)largeGroupDraws++;
+    }
     @Override public void renderTileEntityFast(TileEntitySlidingDoor raw,double x,double y,double z,
             float partialTicks,int destroyStage,float alpha,BufferBuilder buffer) {
+        countGroupDraw(raw);
         if (!(raw instanceof com.vandorlabs.tiles.TileEntitySpaceDoor) || raw.getWorld()==null) return;
         IBlockState state=raw.getWorld().getBlockState(raw.getPos());
         if (!(state.getBlock() instanceof com.vandorlabs.blocks.BlockConfigurableSpaceDoor)) return;
@@ -81,6 +98,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
 
     @Override
     public void render(TileEntitySlidingDoor te, double x, double y, double z, float partialTicks, int destroyStage, float alpha) {
+        countGroupDraw(te);
         if (te.getWorld() == null) {
             return;
         }
@@ -215,17 +233,25 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                 GlStateManager.translate(0,1,0);
                 GlStateManager.rotate(90,1,0,0);
             }
-            if(group.joined())GlStateManager.scale(group.columns,group.rows,1);
+            // A joined group is taller by its rows here; each leaf is wider by the columns in its own
+            // frame, so a hinged leaf keeps its full width when it swings across the doorway.
+            double across=group.joined()?group.columns:1,up=group.joined()?group.rows:1;
+            GlStateManager.scale(1,up,1);
             for(int hand=0;hand<2;hand++)
                 renderSpaceDoorLeaf(tile,state.withProperty(BlockVandorDoor.FACING,EnumFacing.SOUTH)
                         .withProperty(BlockVandorDoor.HINGE,hand==0?BlockDoor.EnumHingePosition.RIGHT:BlockDoor.EnumHingePosition.LEFT),
-                        EnumFacing.SOUTH,progress,hand*1.5,0,0,1.5);
+                        EnumFacing.SOUTH,progress,hand*1.5*across,0,0,1.5,across,up);
             GlStateManager.popMatrix();return;
         }
         renderSpaceDoorLeaf(tile,state,facing,progress,x,y,z,1);
     }
     private static void renderSpaceDoorLeaf(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
             EnumFacing facing,float progress,double x,double y,double z,double size) {
+        renderSpaceDoorLeaf(tile,state,facing,progress,x,y,z,size,1,1);
+    }
+    /** {@code across} and {@code up}: how many modules wide and tall a joined Large Door leaf spans. */
+    private static void renderSpaceDoorLeaf(com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
+            EnumFacing facing,float progress,double x,double y,double z,double size,double across,double up) {
         boolean sliding=tile.isSliding();
         BlockDetailedDoor motion=tile.model(sliding).getVisualModel(state);
         boolean paired=state.getValue(BlockConnectingDetailedDoor.PAIRED);
@@ -237,7 +263,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,light%65536,light/65536);
         for (int part=glass?2:0;part<=(glass?2:tile.hasGlass()&&tile.opaqueGlass()?2:1);part++) {
             if(tile.panelSplit()!=null && part!=0) {
-                renderSplitPanels(tile.panelSplit(),tile,state,facing,progress,x,y,z,size,right,part,light,glass);
+                renderSplitPanels(tile.panelSplit(),tile,state,facing,progress,x,y,z,size,across,right,part,light,glass);
                 continue;
             }
             GlStateManager.pushMatrix();
@@ -249,13 +275,13 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                     GlStateManager.translate(0,tile.verticalTravel()*progress*size,0);
                 else {
                     DoorLeafTransform pose=DoorLeafTransform.calculate(sliding,motion.getSlide(right),motion.getPivot(right),motion.getPivotZ(),motion.getAngle(right),progress);
-                    GlStateManager.translate(pose.translateX*size,0,0);
-                    GlStateManager.translate(pose.pivotX*size,0,pose.pivotZ);
+                    GlStateManager.translate(pose.translateX*size*across,0,0);
+                    GlStateManager.translate(pose.pivotX*size*across,0,pose.pivotZ);
                     GlStateManager.rotate((float)pose.angleDegrees,0,1,0);
-                    GlStateManager.translate(-pose.pivotX*size,0,-pose.pivotZ);
+                    GlStateManager.translate(-pose.pivotX*size*across,0,-pose.pivotZ);
                 }
             }
-            GlStateManager.scale(size,size,1);
+            GlStateManager.scale(size*across,size,1);
             if(glass&&tile.hasCompanyGlass()) {GlStateManager.disableLighting();Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);CompanyDoorGlazing.draw(DoorRenderModels.get(state.getBlock(),tile.metadata(paired,right,1)).selected(),light);GlStateManager.enableLighting();GlStateManager.popMatrix();continue;}
             if(part==1 && tile.getFaceTexture()>=0) {
                 GlStateManager.disableLighting();
@@ -285,7 +311,8 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
                         GlStateManager.DestFactor.ONE_MINUS_SRC_ALPHA,GlStateManager.SourceFactor.ONE,GlStateManager.DestFactor.ZERO);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.003F);
                 GlStateManager.depthMask(!glass);
-                DoorItemRenderer.baked(renderer,item,DoorGlassModel.get(item.model,tile,size));
+                if(tile instanceof com.vandorlabs.tiles.TileEntityLargeProgrammableDoor){lastGlassScaleX=size*across;lastGlassScaleY=size*up;}
+                DoorItemRenderer.baked(renderer,item,DoorGlassModel.get(item.model,tile,size*across,size*up));
                 GlStateManager.depthMask(true);
                 GlStateManager.alphaFunc(GL11.GL_GREATER,.1F);
                 GlStateManager.disableBlend();
@@ -302,7 +329,7 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
     }
 
     private static void renderSplitPanels(com.vandorlabs.render.DoorPanelSplit split,com.vandorlabs.tiles.TileEntitySpaceDoor tile,IBlockState state,
-            EnumFacing facing,float progress,double x,double y,double z,double size,boolean right,int part,int light,boolean glass) {
+            EnumFacing facing,float progress,double x,double y,double z,double size,double across,boolean right,int part,int light,boolean glass) {
         if(glass&&tile.hasCompanyGlass()&&!CompanyDoorGlazing.enabled)return;
         StaticSurfaceMesh[] panels=XDoorMeshes.get(tile,state,right,part);
         Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
@@ -317,9 +344,9 @@ public class TESlidingDoor extends TileEntitySpecialRenderer<TileEntitySlidingDo
         double travel=com.vandorlabs.render.DoorPanelSplit.travel(progress,tile.isFramed(),size);
         for(int panel=0;panel<panels.length;panel++) {
             GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);orientDetailedDoor(facing);
-            GlStateManager.translate(size*split.shiftX(panel,travel),
+            GlStateManager.translate(size*across*split.shiftX(panel,travel),
                     size*split.shiftY(panel,travel),tile.positionOffset());
-            GlStateManager.scale(size,size,1);
+            GlStateManager.scale(size*across,size,1);
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             panels[panel].drawColored(buffer,light>>>16,light&65535,1,1,1,part==2&&tile.hasGlassOverride()?com.vandorlabs.tiles.GlassMaterials.opacity(tile.glassAppearance().material,tile.glassAppearance().tint):1);Tessellator.getInstance().draw();GlStateManager.popMatrix();
         }
