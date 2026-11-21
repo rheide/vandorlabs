@@ -1,13 +1,21 @@
 package com.vandorlabs.gear;
 
 import net.minecraft.client.Minecraft;
+import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.item.Item;
 import net.minecraft.item.ItemStack;
+import net.minecraft.nbt.NBTBase;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.EnumHand;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.GameType;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
@@ -17,16 +25,27 @@ import net.minecraftforge.fml.relauncher.SideOnly;
 import net.minecraftforge.items.CapabilityItemHandler;
 import net.minecraftforge.items.IItemHandler;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Random;
+
 /**
- * Reproduces a reported saved world: Thermal item ducts feed an Extender that carries a
- * chest. 64 items go into the input chest while the arm is moved up and down; every item
- * must arrive. Positions come from the reported world.
+ * Reproduces a reported saved world: a Servo on a slow Thermal item duct moves items one by one
+ * from a chest, across a vertical Extender in Item mode, into the chest the arm carries. While
+ * items travel, the player right-clicks the arm at random moments: single clicks, quick double
+ * and triple clicks that reverse it mid-move, and waits for it to settle. Whenever the arm is at
+ * rest, every item in the build (inventories, items travelling in ducts, dropped items) must
+ * still add up, so a loss fails at the move that caused it. Positions come from the reported
+ * world.
  */
 @SideOnly(Side.CLIENT)
 public final class SavedDuctFlowChecks {
     private static final BlockPos ARM=new BlockPos(-71,83,135),INPUT=new BlockPos(-75,82,135);
-    private static final int ADDED=64,TOGGLES=10;
-    private static int step,ticks,before,toggles,quiet;
+    private static final int ADDED=64,ROUNDS=3;
+    private static final long SEED=Long.getLong("vandorlabs.savedDuctFlowSeed",0x5EEDL);
+    private static final Random RANDOM=new Random(SEED);
+    private static int step,ticks,expected,round,clicks,wait,pending,quiet,lastTotal=-1;
+    private static final List<String> history=new ArrayList<>();
     private static boolean registered;
     private static volatile boolean complete;
     private static volatile Throwable failure;
@@ -47,43 +66,124 @@ public final class SavedDuctFlowChecks {
             if(complete||failure!=null)MinecraftForge.EVENT_BUS.unregister(this);
         }
     }
-    private static int sponges(TileEntity tile){
-        if(tile==null)return 0;IItemHandler slots=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null);if(slots==null)return 0;
+    /** Vanilla stacks save a string id; CoFH saves stuffed Servo and Retriever items with the numeric id. */
+    private static boolean sponge(NBTTagCompound tag){
+        if(!tag.hasKey("Count",99))return false;
+        if(tag.hasKey("id",8))return "minecraft:sponge".equals(tag.getString("id"));
+        return tag.hasKey("id",99)&&tag.getShort("id")==Item.getIdFromItem(Item.getItemFromBlock(Blocks.SPONGE));
+    }
+    /** Sponges anywhere in a serialized tile: Thermal keeps travelling items only in its own lists. */
+    private static int sponges(NBTBase tag){
+        int total=0;
+        if(tag instanceof NBTTagCompound){
+            NBTTagCompound compound=(NBTTagCompound)tag;
+            if(sponge(compound))total+=compound.getInteger("Count");
+            for(String key:compound.getKeySet())total+=sponges(compound.getTag(key));
+        }else if(tag instanceof NBTTagList){
+            NBTTagList list=(NBTTagList)tag;for(int i=0;i<list.tagCount();i++)total+=sponges(list.get(i));
+        }
+        return total;
+    }
+    private static int inventory(TileEntity tile){
+        IItemHandler slots=tile.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null);if(slots==null)return 0;
         int total=0;for(int i=0;i<slots.getSlots();i++){ItemStack stack=slots.getStackInSlot(i);if(stack.getItem()==Item.getItemFromBlock(Blocks.SPONGE))total+=stack.getCount();}
         return total;
     }
-    /** Sponges in loaded inventories around the build, excluding the arm's own sections. */
+    private static int travelling,dropped;
+    /** Every sponge around the build while the arm is at rest; the arm's own snapshot is excluded. */
     private static int counted(WorldServer world){
-        int total=0;
-        for(BlockPos at:BlockPos.getAllInBox(ARM.add(-8,-3,-4),ARM.add(4,6,4))){TileEntity tile=world.getTileEntity(at);if(!(tile instanceof GearTileEntity))total+=sponges(tile);}
+        int total=0;travelling=0;dropped=0;
+        for(BlockPos at:BlockPos.getAllInBox(ARM.add(-8,-3,-4),ARM.add(4,6,4))){
+            TileEntity tile=world.getTileEntity(at);
+            if(tile==null||tile instanceof GearTileEntity)continue;
+            if(tile.getClass().getName().startsWith("cofh.thermaldynamics.")){int n=sponges(tile.writeToNBT(new NBTTagCompound()));travelling+=n;total+=n;}
+            else total+=inventory(tile);
+        }
+        for(EntityItem item:world.getEntitiesWithinAABB(EntityItem.class,new AxisAlignedBB(ARM.getX()-12,ARM.getY()-6,ARM.getZ()-8,ARM.getX()+8,ARM.getY()+10,ARM.getZ()+8)))
+            if(item.getItem().getItem()==Item.getItemFromBlock(Blocks.SPONGE)){dropped+=item.getItem().getCount();total+=item.getItem().getCount();}
         return total;
     }
+    private static GearTileEntity arm(WorldServer world){
+        TileEntity raw=world.getTileEntity(ARM);return raw instanceof GearTileEntity?((GearTileEntity)raw).loadedController():null;
+    }
+    private static boolean atRest(WorldServer world,GearTileEntity arm){
+        return arm!=null&&arm.progress()==(arm.target()?1:0)&&!ArmTransactions.locked(world,ARM)&&arm.payload()!=null&&arm.payload().materialized();
+    }
+    private static String armState(WorldServer world,GearTileEntity arm){
+        return arm==null?"arm=missing":"progress="+arm.progress()+" target="+arm.target()+" payload="+(arm.payload()==null?"none":arm.payload().materialized()?"native":"captured")+" hold="+ArmTransactions.diagnostic(world,ARM)+" error="+arm.error();
+    }
+    private static String lastLedger="";
+    /** Diagnostic: every store of the test items, logged whenever one changes. */
+    private static void ledger(WorldServer world,GearTileEntity arm){
+        int input=inventory(world.getTileEntity(INPUT)),chest=0,ducts=0,armNbt=0;
+        for(BlockPos at:BlockPos.getAllInBox(ARM.add(-8,-3,-4),ARM.add(4,6,4))){
+            TileEntity tile=world.getTileEntity(at);if(tile==null||at.equals(INPUT))continue;
+            if(tile instanceof GearTileEntity)armNbt+=sponges(tile.writeToNBT(new NBTTagCompound()));
+            else if(tile.getClass().getName().startsWith("cofh.thermaldynamics."))ducts+=sponges(tile.writeToNBT(new NBTTagCompound()));
+            else chest+=inventory(tile)+("CopyFrozenTile".equals(tile.getClass().getSimpleName())?1000:0);
+        }
+        String line="input="+input+" ducts="+ducts+" chest="+chest+" armNbt="+armNbt+" "+armState(world,arm);
+        if(!line.equals(lastLedger)){lastLedger=line;System.out.println("[vandorlabs] saved-duct-flow ledger t="+world.getTotalWorldTime()+" "+line);}
+    }
+    private static void record(String event){history.add(event);if(history.size()>40)history.remove(0);}
+    /** The server's own right-click handler, as a player clicking the arm base. */
+    private static void rightClick(WorldServer world,EntityPlayerMP player,GearTileEntity arm){
+        player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        player.interactionManager.processRightClickBlock(player,world,ItemStack.EMPTY,EnumHand.MAIN_HAND,ARM,EnumFacing.NORTH,.5F,.5F,.5F);
+        clicks++;record("t="+world.getTotalWorldTime()+" click#"+clicks+" -> "+armState(world,arm(world)));
+    }
+    /** The next random pattern: single click, quick double or triple click, or wait for rest. */
+    private static void schedule(){
+        int pattern=RANDOM.nextInt(10);
+        if(pattern<4){pending=1;wait=1+RANDOM.nextInt(80);}
+        else if(pattern<6){pending=2;wait=0;}
+        else if(pattern<8){pending=3;wait=0;}
+        else{pending=-1;wait=RANDOM.nextInt(40);}
+    }
     private static boolean run(WorldServer world,EntityPlayerMP player){
-        if(++ticks>12000)throw new IllegalStateException("saved-duct-flow timeout step="+step+" toggles="+toggles+" counted="+counted(world));
+        ++ticks;
         if(step==0){
+            player.setGameType(GameType.CREATIVE);player.capabilities.isFlying=true;player.sendPlayerAbilities();
             player.connection.setPlayerLocation(ARM.getX()-2,ARM.getY()+2,ARM.getZ()-4,0,20);
             if(ticks<100)return false;
-            GearTileEntity arm=((GearTileEntity)world.getTileEntity(ARM)).loadedController();
-            if(arm==null||!arm.isOperational()||ArmTransactions.locked(world,ARM)||arm.progress()!=0&&arm.progress()!=1)return false;
-            before=counted(world);
-            IItemHandler input=world.getTileEntity(INPUT).getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null);
-            ItemStack rest=input.insertItem(0,new ItemStack(Blocks.SPONGE,ADDED),false);
+            GearTileEntity arm=arm(world);
+            if(!atRest(world,arm))return false;
+            int before=counted(world);
+            ItemStack rest=world.getTileEntity(INPUT).getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,null).insertItem(0,new ItemStack(Blocks.SPONGE,ADDED),false);
             if(!rest.isEmpty())throw new IllegalStateException("input chest accepts the test stack");
-            System.out.println("[vandorlabs] saved-duct-flow start sponges="+before+"+"+ADDED+" progress="+arm.progress()+" mode="+arm.resourceTransfer()+" out="+arm.resourceOut());
-            step=1;ticks=0;return false;
+            expected=before+ADDED;
+            System.out.println("[vandorlabs] saved-duct-flow round="+round+" seed="+SEED+" start sponges="+before+"+"+ADDED+" "+armState(world,arm)+" mode="+arm.resourceTransfer());
+            schedule();step=1;ticks=0;quiet=0;lastTotal=-1;return false;
         }
-        GearTileEntity arm=((GearTileEntity)world.getTileEntity(ARM)).loadedController();
+        GearTileEntity arm=arm(world);
+        if(ticks>24000)throw new IllegalStateException("saved-duct-flow timeout round="+round+" clicks="+clicks+" "+armState(world,arm));
+        boolean rest=atRest(world,arm);
+        ledger(world,arm);
+        if(rest){
+            int total=counted(world);
+            if(total!=lastTotal){
+                record("t="+world.getTotalWorldTime()+" rest total="+total+" travelling="+travelling+" dropped="+dropped+" "+armState(world,arm));lastTotal=total;
+                if(total!=expected)throw new IllegalStateException("saved-duct-flow round="+round+" items "+(total<expected?"lost":"duplicated")+": expected "+expected+" found "+total
+                        +" (travelling="+travelling+" dropped="+dropped+") after "+clicks+" clicks seed="+SEED+"; recent: "+String.join(" | ",history));
+            }
+        }
+        boolean inputEmpty=inventory(world.getTileEntity(INPUT))==0;
         if(step==1){
-            if(ticks%40==0&&toggles<TOGGLES){arm.operator(player);arm.target(!arm.target());toggles++;}
-            if(toggles<TOGGLES)return false;
-            step=2;return false;
+            if(wait>0){wait--;return false;}
+            if(pending==-1){if(!rest)return false;schedule();return false;}
+            if(pending>0){
+                rightClick(world,player,arm);pending--;wait=pending>0?1+RANDOM.nextInt(15):0;
+                if(pending==0){if(inputEmpty&&travelling==0&&rest){step=2;ticks=0;return false;}schedule();}
+                return false;
+            }
+            return false;
         }
-        // Let the arm settle and the ducts drain completely.
-        if(arm==null||ArmTransactions.locked(world,ARM)||arm.progress()!=0&&arm.progress()!=1||arm.payload()!=null&&!arm.payload().materialized()){quiet=0;return false;}
-        if(sponges(world.getTileEntity(INPUT))>0||++quiet<400)return false;
-        int after=counted(world);
-        System.out.println("[vandorlabs] saved-duct-flow "+(after==before+ADDED?"PASS":"FAIL")+" before="+before+" added="+ADDED+" after="+after+" toggles="+toggles);
-        if(after!=before+ADDED)throw new IllegalStateException("items lost or duplicated: expected "+(before+ADDED)+" found "+after);
+        // Let everything settle and the ducts drain before the final count.
+        if(!rest||travelling>0||!inputEmpty){quiet=0;return false;}
+        if(++quiet<200)return false;
+        System.out.println("[vandorlabs] saved-duct-flow round="+round+" complete expected="+expected+" found="+lastTotal+" clicks="+clicks);
+        if(++round<ROUNDS){step=0;ticks=0;return false;}
+        System.out.println("[vandorlabs] saved-duct-flow PASS rounds="+ROUNDS+" items="+ADDED+" each clicks="+clicks+" seed="+SEED+" no loss at any rest");
         return true;
     }
 }

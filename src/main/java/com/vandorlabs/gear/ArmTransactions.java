@@ -68,13 +68,20 @@ public final class ArmTransactions {
     private static void beginLoad(WorldServer world){
         if(LOADED.contains(world)||LOADING.containsKey(world))return;
         Path directory=directory(world);
-        try{LOADING.put(world,IO.submit(()->{List<Hold> result=new ArrayList<>();if(Files.isDirectory(directory))try(DirectoryStream<Path> files=Files.newDirectoryStream(directory,"*.nbt")){for(Path file:files){if(result.size()>=256||Files.size(file)>8*1024*1024)throw new IOException("Arm recovery journal limit exceeded");try(InputStream input=Files.newInputStream(file);DataInputStream data=new DataInputStream(new java.util.zip.GZIPInputStream(input))){result.add(new Hold(world,file,CompressedStreamTools.read(data,new NBTSizeTracker(16L*1024*1024)),true));}}}return result;}));}catch(RejectedExecutionException busy){/* Retry without allowing a transfer to start. */}
+        try{LOADING.put(world,IO.submit(()->{List<Hold> result=new ArrayList<>();if(Files.isDirectory(directory))try(DirectoryStream<Path> files=Files.newDirectoryStream(directory,"*.nbt")){for(Path file:files){if(result.size()>=256||Files.size(file)>8*1024*1024)throw new IOException("Arm recovery journal limit exceeded");try(InputStream input=Files.newInputStream(file);DataInputStream data=new DataInputStream(new java.util.zip.GZIPInputStream(input))){result.add(new Hold(world,file,CompressedStreamTools.read(data,new NBTSizeTracker(16L*1024*1024)),true));}catch(IOException|RuntimeException unreadable){throw new IOException("Arm recovery journal "+file+" cannot be read",unreadable);}}}return result;}));}catch(RejectedExecutionException busy){/* Retry without allowing a transfer to start. */}
     }
     private static boolean load(WorldServer world){
         if(LOADED.contains(world))return true;beginLoad(world);Future<List<Hold>> future=LOADING.get(world);if(future==null||!future.isDone())return false;
         try{Map<BlockPos,Hold> holds=HOLDS.computeIfAbsent(world,w->new LinkedHashMap<>());for(Hold hold:future.get()){if(holds.putIfAbsent(hold.root,hold)!=null)throw new IOException("Overlapping arm recovery controllers");}LOADED.add(world);LOADING.remove(world);return true;}
-        catch(Exception failure){return false;}
+        catch(Exception failure){
+            // Every arm stays locked: the journal protects cells an interrupted move still holds.
+            // Say so once per world, with the file and cause, instead of failing silently.
+            if(LOAD_REPORTED.add(world))org.apache.logging.log4j.LogManager.getLogger("vandorlabs").error(
+                    "Arm moves are blocked in dimension {}: the arm recovery journal in {} could not be loaded",world.provider.getDimension(),directory(world),failure);
+            return false;
+        }
     }
+    private static final Set<WorldServer> LOAD_REPORTED=Collections.newSetFromMap(new java.util.WeakHashMap<>());
     public static boolean locked(World world,BlockPos pos){return locked(world,pos,ACTOR.get());}
     static boolean lockedForResourceTransfer(World world,BlockPos pos){return locked(world,pos,null);}
     private static boolean locked(World world,BlockPos pos,GearTileEntity actor){

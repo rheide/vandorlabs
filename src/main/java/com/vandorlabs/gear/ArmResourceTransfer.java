@@ -205,7 +205,13 @@ final class ArmResourceTransfer {
             if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
             return accepted;
         }
-        @Override public boolean canReceive() {return !out()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canReceive);}
+        /*
+         * Configuration only, never whether the far end is reachable right now: Thermal Dynamics
+         * calls canReceive once when it connects (any neighbour change, including the markDirty a
+         * right-click causes) and an answer of false makes it treat the arm as a source until the
+         * duct is replaced. receiveEnergy and extractEnergy return 0 while the arm cannot transfer.
+         */
+        @Override public boolean canReceive() {return !out();}
         @Override public int extractEnergy(int amount, boolean simulate) {
             if(!out()||amount<=0)return 0;
             int extracted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
@@ -213,7 +219,7 @@ final class ArmResourceTransfer {
         }
         @Override public int getEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getEnergyStored);}
         @Override public int getMaxEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getMaxEnergyStored);}
-        @Override public boolean canExtract() {return out()&&send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,false,IEnergyStorage::canExtract);}
+        @Override public boolean canExtract() {return out();}
     }
 
     private final class Fluid implements IFluidHandler {
@@ -290,7 +296,11 @@ final class ArmResourceTransfer {
             if (out()||stack.isEmpty()) return stack;
             int offered=stack.getCount();
             ItemStack remainder=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,
-                    target -> validSlot(target,slot) ? target.insertItem(slot,stack,simulate) : stack);
+                    // Forward a copy: InvWrapper stores the stack it is given in an empty slot,
+                    // and callers such as a Thermal Retriever delivering stuffed items set the
+                    // count of the stack they passed to the remainder afterwards (zero), which
+                    // would empty the slot the items just entered.
+                    target -> validSlot(target,slot) ? target.insertItem(slot,stack.copy(),simulate) : stack);
             if(!simulate&&remainder.getCount()<offered)input.resourceTransferred(ArmResource.ITEM);
             return remainder;
         }
