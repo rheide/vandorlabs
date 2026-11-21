@@ -42,6 +42,7 @@ public final class CopyPlan {
         VehicleStructure source=VehicleStructure.display(cells);BlockPos placement=centeringOffset(source,owner.output,owner.height);VehicleWorld view=new VehicleWorld(world,source);view.origin=from[0];MovingBlockSupport.validate(source,view);
         for(VehicleStructure.Cell cell:source.cells)if(com.vandorlabs.vehicle.BuildingBlockCompat.furniture(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("Furniture tile data can move as vehicles; copying these tiles needs a separate material adapter");
         for(VehicleStructure.Cell cell:source.cells)if(MekanismTankCompat.tank(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("Mekanism Dynamic Tanks can be moved as vehicles; copying their shared inventory is not supported");
+        for(VehicleStructure.Cell cell:source.cells)if(com.vandorlabs.vehicle.RFToolsCompat.powerCell(view.getTileEntity(cell.pos)))throw new IllegalArgumentException("RFTools Power Cells can be moved; a copy would join the original's shared power network, so copying them is not supported");
         VehicleStructure result=shifted(CopyChannels.increment(source,owner.channelIncrement),placement);VehicleWorld copied=new VehicleWorld(world,result);copied.origin=to[0];MovingBlockSupport.validate(result,copied);
         empty(world,to,actor);List<CopyMaterials.Need> needs=CopyMaterials.forSnapshot(source,view,actor.capabilities.isCreativeMode);
         CopySupply supply=actor.capabilities.isCreativeMode?null:CopySupply.prepare(owner,actor,needs);

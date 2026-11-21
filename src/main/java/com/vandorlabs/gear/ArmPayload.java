@@ -623,7 +623,7 @@ public final class ArmPayload {
         }
         return prepared;
     }
-    private static void retireTile(World world,BlockPos at){com.vandorlabs.vehicle.VehicleForeignCompat.clearDetachedInventory(world.getTileEntity(at));world.removeTileEntity(at);}
+    private static void retireTile(World world,BlockPos at){TileEntity tile=world.getTileEntity(at);com.vandorlabs.vehicle.RFToolsCompat.lifted(world,at,tile);com.vandorlabs.vehicle.VehicleForeignCompat.clearDetachedInventory(tile);world.removeTileEntity(at);}
     private static void install(World world,BlockPos origin,VehicleStructure.Cell cell,TileEntity prepared){
         BlockPos at=origin.add(cell.pos);
         if(world.getBlockState(at)!=cell.state&&!world.setBlockState(at,cell.state,2))throw new IllegalArgumentException("Attachment target could not be installed");
@@ -631,6 +631,7 @@ public final class ArmPayload {
             if(prepared==null)throw new IllegalArgumentException("Attachment tile was not prepared");
             retireTile(world,at);prepared.setWorld(world);prepared.validate();world.setTileEntity(at,prepared);
             if(world.getTileEntity(at)!=prepared)throw new IllegalArgumentException("Attachment tile installation failed");
+            com.vandorlabs.vehicle.RFToolsCompat.placed(world,at);
         }
         failure("install",at);
     }

@@ -19,6 +19,7 @@ public final class MovingBlockSupport {
         if(cell.state.getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock){com.vandorlabs.ports.ResourcePortBlock.Kind kind=((com.vandorlabs.ports.ResourcePortBlock)cell.state.getBlock()).kind;return kind==com.vandorlabs.ports.ResourcePortBlock.Kind.POWER?tile instanceof com.vandorlabs.ports.PowerPortTile:kind==com.vandorlabs.ports.ResourcePortBlock.Kind.FLUID?tile instanceof com.vandorlabs.ports.FluidPortTile:tile instanceof com.vandorlabs.ports.MatterPortTile;}
         String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
         if(MachineBlockCompat.supported(tile))return true;
+        if(RFToolsCompat.rftools(tile))return RFToolsCompat.supported(tile);
         if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))return false;
         if(MekanismTankCompat.reactorGlass(tile))return MekanismTankCompat.standaloneReactorGlass(tile);
         if(domain.equals("mekanism")&&MekanismTankCompat.component(tile))return true;

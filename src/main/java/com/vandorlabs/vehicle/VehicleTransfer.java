@@ -554,6 +554,7 @@ public final class VehicleTransfer {
                 tile.setWorld(world);tile.readFromNBT(restoredTag);
             }
             world.setTileEntity(p,tile);tile.markDirty();
+            RFToolsCompat.placed(world,p);
         }
         if(place)com.vandorlabs.tiles.DeferredTileLoad.flushInstalled(world,previous.keySet());
         Work work=ACTIVE.get();BlockUpdates updates=new BlockUpdates(world,chunks,previous);

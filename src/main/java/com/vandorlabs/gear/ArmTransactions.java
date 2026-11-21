@@ -144,7 +144,7 @@ public final class ArmTransactions {
             prepared.add(tile);
         }
         try(AutoCloseable atomic=com.vandorlabs.vehicle.VehicleTransfer.atomic(hold.world)){
-            for(int n=0;n<before.tagCount();n++){BlockPos pos=hold.cells.get(n);hold.world.removeTileEntity(pos);if(!hold.world.setBlockState(pos,states.get(n),2)&&hold.world.getBlockState(pos)!=states.get(n))throw new IllegalStateException("Arm recovery block refused");TileEntity tile=prepared.get(n);if(tile!=null){hold.world.removeTileEntity(pos);tile.setWorld(hold.world);tile.setPos(pos);tile.validate();hold.world.setTileEntity(pos,tile);tile.markDirty();}if(!pos.equals(hold.root))freeze(hold,pos);}
+            for(int n=0;n<before.tagCount();n++){BlockPos pos=hold.cells.get(n);hold.world.removeTileEntity(pos);if(!hold.world.setBlockState(pos,states.get(n),2)&&hold.world.getBlockState(pos)!=states.get(n))throw new IllegalStateException("Arm recovery block refused");TileEntity tile=prepared.get(n);if(tile!=null){hold.world.removeTileEntity(pos);tile.setWorld(hold.world);tile.setPos(pos);tile.validate();hold.world.setTileEntity(pos,tile);tile.markDirty();com.vandorlabs.vehicle.RFToolsCompat.placed(hold.world,pos);}if(!pos.equals(hold.root))freeze(hold,pos);}
         }
         if(hold.record.hasUniqueId("AuthorizationActor"))com.vandorlabs.tiles.WorldActionAuthorization.grant(hold.world.getTileEntity(hold.root),hold.record.getUniqueId("AuthorizationActor"));
         hold.applied=true;hold.recovering=false;

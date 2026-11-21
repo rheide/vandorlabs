@@ -107,7 +107,11 @@ public final class VehicleRotation {
                     TileEntity tile=view.getTileEntity(cell.pos);
                     if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).parkingHeld()
                             &&!((com.vandorlabs.gear.GearTileEntity)tile).validateParkingHoldInstalled(true))throw new IllegalArgumentException("Prepared arm parking ownership is incomplete or incompatible.");
-                    if(!MovingBlockSupport.supported(cell,tile))throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
+                    if(!MovingBlockSupport.supported(cell,tile)){
+                        String reason=RFToolsCompat.refusal(tile);
+                        if(reason!=null)throw new IllegalArgumentException(cell.state.getBlock().getLocalizedName()+" cannot be moved: "+reason+". Remove it before moving or copying the structure.");
+                        throw new IllegalArgumentException("No lossless block-data adapter for "+cell.state.getBlock().getRegistryName()+". Remove this block before moving or copying the structure.");
+                    }
                     if(cell.state.getMaterial().isLiquid()||cell.state.getBlockHardness(view,cell.pos)<0&&!(cell.state.getBlock() instanceof BlockControlledRamp))throw new IllegalArgumentException("Unsupported moving block: "+cell.state.getBlock().getRegistryName());
                     MovingBlockSupport.requireExactTileData(cell,tile);
                     if(rotated.add(cell.state)){IBlockState cycle=cell.state;for(int i=0;i<4;i++)cycle=state(cycle,Rotation.CLOCKWISE_90);if(cycle!=cell.state)throw new IllegalArgumentException("Block rotation does not round-trip: "+cell.state.getBlock().getRegistryName());}
@@ -208,6 +212,8 @@ public final class VehicleRotation {
                     }
                 } else if(domain.equals("thermalexpansion")) {
                     MachineBlockCompat.rotate(view.getTileEntity(before.pos),data,rotation);
+                } else if(domain.equals("rftools")) {
+                    RFToolsCompat.rotate(view.getTileEntity(before.pos),data,rotation);
                 } else if(domain.equals("immersiveengineering")) {
                     VehicleForeignCompat.rotate(view.getTileEntity(before.pos),data,rotation);
                     facing(data,"facing",rotation,false);
