@@ -120,7 +120,14 @@ public final class CanopyFinishes {
         }
 
         double[][] coordinates(CanopyMesh.Face face,boolean side){
-            if(!side&&face.joinedStretchUv!=null)return face.joinedStretchUv;
+            if(!side&&face.joinedStretchUv!=null){
+                double[][] uv=new double[face.vertices.length][2];
+                for(int i=0;i<uv.length;i++){
+                    uv[i][0]=face.joinedStretchUv[i][0];
+                    uv[i][1]=1-face.joinedStretchUv[i][1];
+                }
+                return uv;
+            }
             int index=paneIndex(face,side);
             Pane pane=panes[index],upper=tallSide[index];
             double width=pane.maxU-pane.minU;
@@ -148,7 +155,8 @@ public final class CanopyFinishes {
         private double v(Vec3d point,boolean side){
             if(side)return point.y;
             if(front)return point.y+(point.y-centerY)*point.z*.12;
-            return -(point.z+point.y);
+            // An overhead panel is read from beneath it by a pilot facing the nose.
+            return point.z+point.y;
         }
     }
     private static final class Pane {
