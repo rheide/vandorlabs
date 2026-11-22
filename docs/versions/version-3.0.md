@@ -15,6 +15,8 @@ Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to set 
 3. Use **A/D** to turn and **W/S** to pitch the nose down or up. Below Y=256 the target flight speed is 1.5 times Hover sprint speed. The Vehicle Status screen shows speed, altitude and combined fuel.
 4. A collision or a loss of thrust starts recovery. A craft equipped for Hover can level out and hold altitude. A Maxwell-only aircraft descends toward the ground.
 
+For recovery below the cruise band, Creative players holding a Configurizer can select **Emergency Park** on Vehicle Status. It uses the Controller’s Safe Park search to find space for the craft.
+
 ## Overworld cruise
 
 Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The instruments show altitude during cruise and omit ground clearance.
