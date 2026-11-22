@@ -3,6 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.container.ContainerStorageStatus;
 import com.vandorlabs.tiles.*;
 import net.minecraft.client.gui.GuiButton;
+import net.minecraft.client.gui.ScaledResolution;
 import net.minecraftforge.fluids.*;
 
 public final class GuiStorageStatus extends GuiMaterialPicker {
@@ -10,10 +11,20 @@ public final class GuiStorageStatus extends GuiMaterialPicker {
     private final boolean battery;
     private HousingTextureList textures;
     private int controls;
+    private int previousGuiScale=-1;
     private boolean redstone;
     public GuiStorageStatus(ContainerStorageStatus status){super(status);this.status=status;battery=status.tile instanceof TileEntityBattery;xSize=270;ySize=190;}
     @Override protected HousingTextureList materialPicker(){return redstone?null:textures;}
     @Override public void initGui(){
+        if(width<282||height<238){
+            if(previousGuiScale<0)previousGuiScale=mc.gameSettings.guiScale;
+            int scale=new ScaledResolution(mc).getScaleFactor();
+            while((width<282||height<238)&&scale>1){
+                mc.gameSettings.guiScale=--scale;
+                ScaledResolution resolution=new ScaledResolution(mc);
+                width=resolution.getScaledWidth();height=resolution.getScaledHeight();
+            }
+        }
         xSize=Math.min(354,width-16);ySize=Math.min(238,height-16);super.initGui();buttonList.clear();
         controls=xSize/2+14;
         DialogTabButton general=new DialogTabButton(100,guiLeft+12,guiTop+27,xSize/2-14,20,"General");general.enabled=redstone;buttonList.add(general);
@@ -36,5 +47,6 @@ public final class GuiStorageStatus extends GuiMaterialPicker {
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int mouseX,int mouseY){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xff18212c);if(redstone)return;int x=guiLeft+controls,y=guiTop+68,w=18,h=Math.max(18,Math.min(72,ySize-170));drawRect(x-2,y-2,x+w+2,y+h+2,0xff98a8b8);drawRect(x,y,x+w,y+h,0xff0c1219);int filled=status.values[1]<=0?0:(int)Math.round(h*1D*status.values[0]/status.values[1]);drawRect(x,y+h-filled,x+w,y+h,battery?0xff62d884:0xff000000|status.values[2]);if(textures!=null)textures.draw(fontRenderer,mouseX,mouseY);}
     @Override protected void drawGuiContainerForegroundLayer(int mouseX,int mouseY){DialogHeader.logo(0,0,xSize);fontRenderer.drawString(battery?"Battery Block":"Fuel Tank",16,14,0xffffff);if(redstone)return;fontRenderer.drawString("Casing",12,56,0x96a8ba);String unit=battery?" RF":" mB";int text=controls+28,span=xSize-text-12;fontRenderer.drawSplitString(status.values[0]+" / "+status.values[1]+unit,text,68,span,0xffffff);fontRenderer.drawString(String.format(java.util.Locale.ROOT,"%.1f%% full",status.values[1]<=0?0:100D*status.values[0]/status.values[1]),text,90,0xcdd7e4);FluidStack contents=battery?null:((TileEntityHexTank)status.tile).getTankProperties()[0].getContents();Fluid fluid=contents==null?null:contents.getFluid();fontRenderer.drawSplitString(battery?"Green port: RF input\nOrange port: RF output":status.values[0]==0?"Empty":fluid==null?"Mixed fluids":fluid.getLocalizedName(new FluidStack(fluid,1)),text,106,span,0xcdd7e4);}
     @Override public void drawScreen(int x,int y,float partial){drawDefaultBackground();super.drawScreen(x,y,partial);}
+    @Override public void onGuiClosed(){super.onGuiClosed();if(previousGuiScale>=0){mc.gameSettings.guiScale=previousGuiScale;previousGuiScale=-1;}}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

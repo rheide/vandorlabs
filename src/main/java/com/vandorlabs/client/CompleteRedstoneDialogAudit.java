@@ -135,10 +135,12 @@ final class CompleteRedstoneDialogAudit {
         if(tile instanceof com.vandorlabs.gear.track.TrackTile)return "track appearance only; arm controller owns Redstone";
         if(tile instanceof TileEntityProgrammableGlass)return "glass appearance only; no Redstone dialog";
         if(tile instanceof TileEntityCanopy&&block instanceof BlockCanopy&&!(com.vandorlabs.canopy.LargeCanopySettings.supports(((BlockCanopy)block).kind)||((BlockCanopy)block).opening()))return "static canopy has no Redstone controls";
-        if(tile instanceof TileEntityAnimatedScreenSelector&&!(tile instanceof TileEntityProgrammableTrigger||tile instanceof TileEntityProgrammableLight)&&(block instanceof BlockProgrammableWall||block instanceof BlockProgrammableBlock||block instanceof BlockProgrammableSlab||block instanceof BlockProgrammableStairs||tile instanceof TileEntityHexTank))return "appearance/storage dialog only; no Redstone controls";
+        if(tile instanceof TileEntityAnimatedScreenSelector&&!(tile instanceof TileEntityProgrammableTrigger||tile instanceof TileEntityProgrammableLight)&&(block instanceof BlockProgrammableWall||block instanceof BlockProgrammableBlock||block instanceof BlockProgrammableSlab||block instanceof BlockProgrammableStairs))return "appearance dialog only; no Redstone controls";
         return null;
     }
     private static GuiContainer create(Minecraft mc,Block block,TileEntity tile){
+        if(tile instanceof TileEntityBattery)return new GuiResourcePort(new com.vandorlabs.ports.ResourcePortContainer((TileEntityBattery)tile));
+        if(tile instanceof TileEntityHexTank)return new GuiStorageStatus(new ContainerStorageStatus(tile));
         if(tile instanceof com.vandorlabs.copier.CopyControllerTile)return new com.vandorlabs.copier.client.GuiCopyController(new com.vandorlabs.copier.CopyControllerContainer((com.vandorlabs.copier.CopyControllerTile)tile));
         if(tile instanceof com.vandorlabs.gear.GearTileEntity)return new GuiModularGear(new ContainerModularGear((com.vandorlabs.gear.GearTileEntity)tile));
         if(tile instanceof TileEntityCockpit)return new GuiCockpit(new ContainerCockpit((TileEntityCockpit)tile,null));
