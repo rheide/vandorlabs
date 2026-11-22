@@ -210,6 +210,11 @@ public final class CruiseRuntimeChecks {
         Object minimap=manager.getMethod("getMiniMap").invoke(manager.getField("INSTANCE").get(null));
         String location=(String)minimap.getClass().getMethod("getLocation").invoke(minimap);
         int route=net.minecraft.util.math.MathHelper.floor(com.vandorlabs.client.CruiseMapView.x(mc.player.posX));
+        Class<?> waypoint=Class.forName("journeymap.client.model.Waypoint");
+        Object mark=waypoint.getMethod("of",net.minecraft.entity.player.EntityPlayer.class).invoke(null,mc.player);
+        require(((Integer)waypoint.getMethod("getX").invoke(mark))==route,"JourneyMap new waypoint follows route");
+        int altitude=net.minecraft.util.math.MathHelper.floor(com.vandorlabs.client.CruiseMapView.y(mc.player.posY));
+        require(((Integer)waypoint.getMethod("getY").invoke(mark))==altitude,"JourneyMap new waypoint uses flight altitude");
         require(location.contains(String.valueOf(route)),"JourneyMap minimap location "+location+" expected X "+route);
     }
     private CruiseRuntimeChecks(){}

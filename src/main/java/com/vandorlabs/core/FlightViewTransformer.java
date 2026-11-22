@@ -14,8 +14,11 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                 || target.equals("net.minecraft.command.server.CommandTeleport")
                 || target.equals("journeymap.common.feature.JourneyMapTeleport");
         boolean map = target.equals("journeymap.client.ui.minimap.MiniMap") || target.equals("journeymap.client.ui.fullscreen.Fullscreen");
+        boolean editor = target.equals("journeymap.client.ui.waypoint.WaypointEditor");
+        boolean newWaypoint = target.equals("journeymap.client.model.Waypoint");
+        boolean distances = target.equals("journeymap.client.ui.waypoint.WaypointManagerItem");
         boolean beacon = target.equals("journeymap.client.render.ingame.RenderWaypointBeacon");
-        if (!dismount && !map && !beacon) return bytes;
+        if (!dismount && !map && !beacon && !editor && !newWaypoint && !distances) return bytes;
         ClassReader reader = new ClassReader(bytes);
         ClassWriter writer = new ClassWriter(reader, 0);
         reader.accept(new ClassVisitor(ASM5,writer) {
@@ -29,7 +32,8 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                             return;
                         }
                         super.visitMethodInsn(op,owner,id,desc,itf);
-                        if (beacon && method.equals("doRender") && owner.equals("net/minecraft/entity/Entity")
+                        if ((beacon && method.equals("doRender") && owner.equals("net/minecraft/entity/Entity")
+                                || distances && method.equals("getDistanceTo") && owner.equals("net/minecraft/entity/player/EntityPlayer"))
                                 && (id.equals("func_174791_d") || id.equals("getPositionVector")))
                             super.visitMethodInsn(INVOKESTATIC,GEO,"viewPosition","(Lnet/minecraft/util/math/Vec3d;)Lnet/minecraft/util/math/Vec3d;",false);
                     }
@@ -37,10 +41,12 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                         super.visitFieldInsn(op,owner,id,desc);
                         if (op!=GETFIELD || !desc.equals("D")) return;
                         String axis=null;
-                        if (map && owner.equals("net/minecraft/client/entity/EntityPlayerSP")) {
+                        if ((map || editor) && owner.equals("net/minecraft/client/entity/EntityPlayerSP")
+                                || newWaypoint && method.equals("of") && owner.equals("net/minecraft/entity/player/EntityPlayer")) {
                             if (id.equals("field_70165_t") || id.equals("posX")) axis="x";
+                            if (id.equals("field_70163_u") || id.equals("posY")) axis="y";
                             if (id.equals("field_70161_v") || id.equals("posZ")) axis="z";
-                        } else if (map && method.equals("getLocation") && owner.equals("net/minecraft/util/math/AxisAlignedBB")
+                        } else if ((editor || map && method.equals("getLocation")) && owner.equals("net/minecraft/util/math/AxisAlignedBB")
                                 && (id.equals("field_72338_b") || id.equals("minY"))) axis="y";
                         else if (beacon && method.equals("doRender") && owner.equals("net/minecraft/client/renderer/entity/RenderManager")) {
                             if (id.equals("field_78730_l") || id.equals("viewerPosX")) axis="x";
