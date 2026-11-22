@@ -40,6 +40,8 @@ import net.neoforged.neoforge.fluids.FluidStack;
 /** Exact carried flows run with one real external wireless transmitter and native configured owners. */
 final class NativeVehicleResourceFixture {
     static final int FUEL_REFILL = 131;
+    private static final boolean MEKANISM = Boolean.getBoolean("vandorlabs.vehicleMekanismTank");
+    private static final int MEKANISM_MB = 67;
     private static final int POWER = 777, DRAIN = 60;
     private final ServerLevel world;
     private final BlockPos root, engine, powerSource, powerSink, tank, pump, matterSource, matterSink, observer, observerBattery;
@@ -71,13 +73,15 @@ final class NativeVehicleResourceFixture {
                 .withFace(Direction.DOWN.get3DDataValue(), ResourcePortSettings.Face.DISABLED)
                 .withFace(Direction.SOUTH.get3DDataValue(), ResourcePortSettings.Face.OUTPUT)
                 .withTransfer(40, true, ResourcePortSettings.OnTexture.TRANSFERRING);
+            if (MEKANISM) settings = settings.withFace(Direction.EAST.get3DDataValue(), ResourcePortSettings.Face.INPUT);
             NativePortData.write(raw, new NativePortData.Configuration(settings, 1, enabled));
         });
         put(tank, NativeBufferBindings.TANK.defaultBlockState().setValue(NativeBufferBlock.FACING, Direction.DOWN));
         edit(tank, raw -> {
-            raw.put("NativeTankFluid", new FluidStack(fuel, FUEL_REFILL).save(world.registryAccess()));
+            raw.put("NativeTankFluid", new FluidStack(fuel, FUEL_REFILL - (MEKANISM ? MEKANISM_MB : 0)).save(world.registryAccess()));
             transmit(raw, tankFullness);
         });
+        if (MEKANISM) placeMekanismTank(fuel);
         port(matterSource, NativePortKind.MATTER, Direction.DOWN, raw -> {
             var settings = ResourcePortSettings.placed(Direction.DOWN.get3DDataValue()).withTransfer(3, false,
                 ResourcePortSettings.OnTexture.TRANSFERRING);
@@ -157,6 +161,7 @@ final class NativeVehicleResourceFixture {
         int received = data(cells, powerSink).getInt("PortEnergy");
         var source = data(cells, powerSource).getInt("Energy");
         int tankMb = amount(data(cells, tank), "NativeTankFluid");
+        if (MEKANISM) tankMb += NativeVehicleMekanismTank.contents(data(cells, pump.east()), world.registryAccess()).getAmount();
         int pumpMb = amount(data(cells, pump), "PortFluid");
         int fuel = NativeMaxwellTank.read(data(cells, engine), world.registryAccess()).amount();
         int storedMatter = matterCount(data(cells, matterSink));
@@ -183,7 +188,33 @@ final class NativeVehicleResourceFixture {
         return true;
     }
 
+    private void placeMekanismTank(Fluid fuel) {
+        var pos = pump.east();
+        var block = net.minecraft.core.registries.BuiltInRegistries.BLOCK.get(
+            net.minecraft.resources.ResourceLocation.parse("mekanism:basic_fluid_tank"));
+        if (!NativeVehicleMekanismTank.supports(block.defaultBlockState())) throw new AssertionError("Installed Mekanism tank missing");
+        put(pos, block.defaultBlockState());
+        var tile = world.getBlockEntity(pos);
+        tile.getPersistentData().putString("FixtureReceipt", "finite tank");
+        var fluid = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, pos, Direction.WEST);
+        if (fluid == null || fluid.fill(new FluidStack(fuel, MEKANISM_MB),
+                net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE) != MEKANISM_MB) {
+            throw new AssertionError("Genuine Mekanism capability did not store the flight fuel");
+        }
+    }
+
     void parked(BlockPos anchor) {
+        if (MEKANISM) {
+            var pos = parked(pump.east(), anchor);
+            var tile = world.getBlockEntity(pos);
+            var fluid = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, pos, Direction.NORTH);
+            if (tile == null || !NativeVehicleMekanismTank.supports(tile) || fluid == null || !fluid.getFluidInTank(0).isEmpty()
+                    || !tile.getPersistentData().getString("FixtureReceipt").equals("finite tank")) {
+                throw new AssertionError("The rotated Mekanism tank must contain exactly its remaining physical contents");
+            }
+            System.out.println("[vandorlabs][vehicle-transfer] installed Mekanism tank PASS " + MEKANISM_MB
+                + " mB through onboard pump to Maxwell; unique parked store");
+        }
         var energy = world.getBlockEntity(parked(powerSink, anchor)).saveWithFullMetadata(world.registryAccess());
         var matter = world.getBlockEntity(parked(matterSink, anchor)).saveWithFullMetadata(world.registryAccess());
         var dish = (NativeObserverEntity) world.getBlockEntity(parked(observer, anchor));
