@@ -11,19 +11,28 @@ import java.io.File;
 /** Actual inventory rendering, including depth/rotation, with padding on every side. */
 final class UtilityItemRuntimeChecks {
     private static final int BACK=0x203040;
-    private static final String[] IDS={"redstone_transmitter_block","redstone_receiver_block","programmable_matter_ingot","programmable_matter_infuser","programmable_block","programmable_plate","infuser_core","battery_block","hexagonal_fuel_tank","meridian_drive_core","vector_fold_array_core","longburn_drive_core","oculus_drive_core","standalone_dish_core","standalone_antenna_core","paladyne_navigation_core","seyr_navigation_core","navigation_table_flat","navigation_table_angled","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","access_card_slot","data_chip_slot","access_card:0","access_card:1","access_card:2","access_card:3","access_card:4","access_card:5","access_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6"};
-    static ItemStack stack(int i){String[] id=IDS[i].split(":");return new ItemStack(Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id[0])),1,id.length==1?0:Integer.parseInt(id[1]));}
+    private static final String[] IDS={"redstone_transmitter_block","redstone_receiver_block","programmable_matter_ingot","programmable_matter_infuser","programmable_block","programmable_plate","infuser_core","battery_block","hexagonal_fuel_tank","meridian_drive_core","vector_fold_array_core","longburn_drive_core","oculus_drive_core","standalone_dish_core","standalone_antenna_core","paladyne_navigation_core","seyr_navigation_core","navigation_table_flat","navigation_table_angled","assembly_press_core","synthesis_tower_core","enclosed_gantry_core","turntable_controller","turntable_surface","landing_plate","landing_ski","gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel","large_landing_wheel","gear_mount","large_gear_mount","access_card_slot","data_chip_slot","access_card:0","access_card:1","access_card:2","access_card:3","access_card:4","access_card:5","access_card:6","data_chip:0","data_chip:1","data_chip:2","data_chip:3","data_chip:4","data_chip:5","data_chip:6","data_chip:journal","data_chip:vehicle","data_chip:navigation","data_chip:catalog"};
+    private static final String[] TYPED_CHIPS={"journal","vehicle","navigation","catalog"};
+
+    private static ItemStack stack(int i){
+        String[] id=IDS[i].split(":");
+        Item item=Item.REGISTRY.getObject(new ResourceLocation("vandorlabs:"+id[0]));
+        if(id.length==1)return new ItemStack(item);
+        if(id[1].length()==1)return new ItemStack(item,1,Integer.parseInt(id[1]));
+        for(ItemStack stack:creativeVariants(item)){
+            if(com.vandorlabs.items.ItemDesignToken.chipType(stack).equals(id[1]))return stack;
+        }
+        throw new IllegalStateException("Missing creative chip type "+id[1]);
+    }
+
+    private static NonNullList<ItemStack> creativeVariants(Item item){
+        NonNullList<ItemStack> stacks=NonNullList.create();
+        item.getSubItems(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,stacks);
+        return stacks;
+    }
     static void run(Minecraft mc,File output)throws Exception{
         for(Item token:new Item[]{com.vandorlabs.items.ModItems.ACCESS_CARD,com.vandorlabs.items.ModItems.DATA_CHIP}){
-        net.minecraft.util.NonNullList<ItemStack> cards=net.minecraft.util.NonNullList.create();
-        token.getSubItems(com.vandorlabs.VandorLabs.VANDOR_LABS_TAB,cards);
-        if(cards.size()!=7||token instanceof ItemBlock)throw new IllegalStateException("Seven non-placeable variants required: "+token.getRegistryName()+"");
-        for(int i=0;i<7;i++){
-            ItemStack card=cards.get(i);if(card.getMetadata()!=i)throw new IllegalStateException("Card creative metadata");
-            net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(card,mc.world,mc.player);
-            if(model==mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel()||model.getQuads(null,null,0).size()<2)throw new IllegalStateException("Missing card/chip image model: "+i);
-            if(!net.minecraft.client.resources.I18n.hasKey(card.getUnlocalizedName()+".name"))throw new IllegalStateException("Card translation missing: "+i);
-        }
+            checkTokenVariants(mc,token);
         }
         GuiScreen previous=mc.currentScreen;Icons icons=new Icons();try{
             mc.displayGuiScreen(icons);mc.getFramebuffer().bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clear(16640);mc.entityRenderer.setupOverlayRendering();icons.drawScreen(0,0,0);
@@ -39,8 +48,30 @@ final class UtilityItemRuntimeChecks {
             }
             javax.imageio.ImageIO.write(shot,"png",new File(output,"shot_utility22_items.png"));
         }finally{GlStateManager.disableLighting();GlStateManager.color(1,1,1,1);mc.displayGuiScreen(previous);}
-        System.out.println("[vandorlabs][reprolab] utility-item-padding PASS all inventory variants including seven cards and seven chips actual rotated pixels");
+        System.out.println("[vandorlabs][reprolab] utility-item-padding PASS all inventory variants including seven cards, seven company chips and four typed chips actual rotated pixels");
     }
+    private static void checkTokenVariants(Minecraft mc,Item token){
+        NonNullList<ItemStack> variants=creativeVariants(token);
+        int companyCount=com.vandorlabs.items.ItemDesignToken.DESIGNS.length;
+        boolean chip=token==com.vandorlabs.items.ModItems.DATA_CHIP;
+        if(variants.size()!=companyCount+(chip?TYPED_CHIPS.length:0)||token instanceof ItemBlock)
+            throw new IllegalStateException("Incorrect non-placeable token inventory "+token.getRegistryName()+": "+variants);
+        for(int i=0;i<variants.size();i++){
+            ItemStack variant=variants.get(i);
+            if(i<companyCount){
+                if(variant.getMetadata()!=i||!com.vandorlabs.items.ItemDesignToken.chipType(variant).isEmpty())
+                    throw new IllegalStateException("Company token metadata "+token.getRegistryName()+" "+i);
+                if(!net.minecraft.client.resources.I18n.hasKey(variant.getUnlocalizedName()+".name"))
+                    throw new IllegalStateException("Company token translation missing "+token.getRegistryName()+" "+i);
+            }else if(!com.vandorlabs.items.ItemDesignToken.chipType(variant).equals(TYPED_CHIPS[i-companyCount])){
+                throw new IllegalStateException("Typed chip order "+variants);
+            }
+            net.minecraft.client.renderer.block.model.IBakedModel model=mc.getRenderItem().getItemModelWithOverrides(variant,mc.world,mc.player);
+            if(model==mc.getRenderItem().getItemModelMesher().getModelManager().getMissingModel()||model.getQuads(null,null,0).size()<2)
+                throw new IllegalStateException("Missing token model "+variant);
+        }
+    }
+
     static void checkTankRenderState(Minecraft mc){
         net.minecraft.util.math.BlockPos pos=new net.minecraft.util.math.BlockPos(146,21,120);
         com.vandorlabs.tiles.TileEntityHexTank tank=(com.vandorlabs.tiles.TileEntityHexTank)mc.world.getTileEntity(pos);
