@@ -194,6 +194,7 @@ final class VehicleFlightClientChecks {
             Vec3d right=banked.world(new Vec3d(px+1,1,pz),px,pz),left=banked.world(new Vec3d(px-1,1,pz),px,pz);
             need(craft.rotationYaw>turnYaw+4&&Math.hypot(craft.posX-turnX,craft.posZ-turnZ)>2&&banked.bank>10&&right.y<left.y-.2,
                     "D lowers the right wing while turning forward; bank="+banked.bank);
+            VehicleStatusRenderChecks.airborneInstruments(mc,output,craft,SCREEN);
             mc.gameSettings.thirdPersonView=1;
             mc.player.prevRotationYaw=mc.player.rotationYaw=craft.rotationYaw+204;
             mc.player.prevRotationPitch=mc.player.rotationPitch=17;
