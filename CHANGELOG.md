@@ -10,7 +10,7 @@
 - Display a received analog redstone channel as battery bars on a screen, console or cockpit.
 
 - On NeoForge 1.21.1, drive, hover, fly and park a Pilot Seat vehicle. Recover the mounted pilot after a server restart in high cruise.
-- Operate onboard Redstone screen rows, route resources through settled Arms and use finite Mekanism Fluid Tanks and Energy Cubes on native vehicles.
+- Operate onboard Redstone screen rows, route resources through settled Arms and use finite Mekanism Fluid Tanks, Energy Cubes and unlinked RFTools Dimensional Cells on native vehicles.
 - Fabricate both Vehicle Couplers in the native Gantry and engage matching couplers before assembly to connect parked sections into a rigid hull. Configure all seven stationary Cockpit surfaces.
 
 ## 2.12.0

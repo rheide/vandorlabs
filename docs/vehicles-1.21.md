@@ -8,6 +8,10 @@
 4. Stand beside the craft and select **Assemble in Taxi Mode**. Once the vehicle appears, right-click the Pilot Seat. Use **W/S** to drive forward or reverse, **A/D** to steer while moving, and **Space** to brake.
 5. Stop on clear ground and align the deck with the block grid. Dismount, right-click the carried Controller, and select **Park as blocks**. A Configurizer can open the same dialog from the hull. The vehicle stays assembled if the parking site is obstructed.
 
+A Creative owner holding a Configurizer can use **Emergency Park** on Vehicle
+Status or on the carried Controller’s Vehicle tab below the cruise band.
+The craft comes down, stops and aligns with the grid before restoring its blocks.
+
 ![A pilot driving a small assembled taxi on a stone road](images/gallery/native-taxi.png)
 
 ![Flight tab for a nine-block Taxi craft](images/gallery/native-vehicle-flight-tab.png)
@@ -43,6 +47,11 @@ Installed Batteries and Hex Tanks can send their fullness on a channel. Open **R
 choose transmit channels and range, and set a screen row to **Channel status** to see
 the received level as bars. A Battery’s receive channel still controls its resource transfers.
 
+Right-click the carried Maxwell Drive or use the Configurizer on one of its casing
+blocks. The Engine tab shows remaining fuel and offers **Purge Tank**. On
+**Redstone**, choose digital or analog throttle and set the receive channels.
+Those settings follow the engine when you park.
+
 Place native Power, Fluid and Matter Ports with their faces pointing between supported
 owners. A carried Survey Dish needs an RF source. The Maxwell inlet accepts compatible
 fuel from an onboard tank. A settled onboard Arm can pass RF, fluids or items
@@ -59,6 +68,11 @@ a Fluid Port. An Energy Cube of the same four tiers can exchange energy through 
 Power Port. Set the Cube’s faces and empty its charging slots before assembly.
 Mekanism’s owner and security settings still apply. Face settings rotate with the
 parked vehicle. Immersive Engineering ethanol works in the Maxwell tank.
+
+RFTools Power’s Simple, regular and Advanced **Dimensional Cells** can exchange
+FE while carried when they store it locally. Unlink the cell and empty its
+card and charging slots before assembly. Cells protected by a security channel
+and the network-based Power Cells must stay in the world.
 
 To assemble two parked sections as one rigid hull, mount matching
 [Vehicle Couplers](couplers.md#neoforge-1211) with their heads facing each other
