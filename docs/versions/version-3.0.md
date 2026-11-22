@@ -27,9 +27,17 @@ Open the Controller’s **Flight** tab for projected maximum speed and altitude 
 
 ## Overworld cruise
 
-Above Y=256 the rider travels over a seed-colored view of the Overworld. The default keeps the departure area loaded while the geographic route advances. Descent loads terrain at the destination. Server admins can select `anchored`, `resident` or `physical` in `vehicles.cruiseCoordinates` in `config/vandorlabs-blocks.cfg`. Physical mode shows geographic X/Z in F3. Use the aircraft instruments for altitude because F3 Y includes the cruise sky offset. Other mods can read terrain at those actual coordinates and load route columns, so `anchored` remains the default. Players away from the anchor’s tracking area may not see a physical-mode aircraft overhead. The seed view begins preparing at Y=200 and refines to a 128 × 128 image. Instruments show altitude during cruise and omit ground clearance. Descend to Y=256 or below to select Taxi or Hover manually.
+Above Y=256, the rider sees a seed-colored view of the Overworld. The view starts preparing at Y=200 and refines to 128 × 128 pixels. Instruments show flight altitude and omit ground clearance during cruise. Descend to Y=256 or below to select Taxi or Hover manually. Descent loads the destination terrain.
 
-On Forge servers the default keeps the physical aircraft at its departure X/Z until descent. In `config/vandorlabs-blocks.cfg`, enabling `vehicles.reanchorResidentCruise` also allows a physical move every 40 ticks after at least 64 blocks of travel. The aircraft and all rider view areas must already fit inside loaded, populated terrain. Over unexplored ground the hop is skipped and the geographic route continues. Minecraft can revisit existing saved terrain near an occupied anchor during ordinary world ticks.
+In the server’s `config/vandorlabs-blocks.cfg`, choose `cruiseCoordinates` under `vehicles`.
+
+| Setting | What moves during cruise | Terrain and map behavior |
+| --- | --- | --- |
+| `anchored` (default) | The aircraft’s geographic route advances. Minecraft keeps the riders at the departure X/Z. | Other mods querying the player’s surroundings see the departure area. JourneyMap follows the route. |
+| `resident` | Every 40 ticks, after at least 64 blocks of travel, the aircraft can move to the current route position. | A hop requires the entire hull and all rider view areas to be loaded and populated already. The aircraft skips wilderness hops. Minecraft can reload existing terrain near an occupied stop. |
+| `physical` | The aircraft and riders move continuously at the real geographic X/Z. F3 shows those coordinates. | Forge keeps terrain tracking at the departure area. Another mod that reads terrain at the rider’s actual coordinates can load route chunks. Players outside the departure tracking area may not see the aircraft overhead. |
+
+Use the altimeter for flight altitude. F3 Y includes the cruise sky offset. Physical cruise requires compatible tracking hooks on the server and riding clients. The aircraft falls back to anchored travel when those hooks are unavailable.
 
 With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Creating a waypoint at your current position uses the geographic coordinates and flight altitude. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
 
