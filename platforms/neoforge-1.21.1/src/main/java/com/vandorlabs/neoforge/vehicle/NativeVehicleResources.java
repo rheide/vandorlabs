@@ -24,6 +24,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -50,11 +51,13 @@ final class NativeVehicleResources {
     private final NativeVehicleMeters controls;
     private NativeTransferSnapshot savedInput, saved;
     private int next, nextArm, availableBytes, extraBytes, savedArmRevision;
-    private long tick = Long.MIN_VALUE, fluidMassMb;
+    private long tick = Long.MIN_VALUE, fluidMassMb, conversionTick = Long.MIN_VALUE;
+    private NativeVehicleMekanismCube.Quantum forgeQuantum;
     private boolean changed;
 
-    NativeVehicleResources(NativeTransferSnapshot snapshot, HolderLookup.Provider registries,
+    NativeVehicleResources(NativeTransferSnapshot snapshot, Level world,
                            NativeVehiclePropulsion propulsion, NativeVehicleMeters controls) {
+        var registries = world.registryAccess();
         this.propulsion = propulsion;
         this.controls = controls;
         var mounted = new LinkedHashMap<BlockPos, List<Endpoint>>();
@@ -62,7 +65,7 @@ final class NativeVehicleResources {
         for (var cell : snapshot.cells()) {
             states.put(cell.pos, cell);
             if (!cell.hasTile()) continue;
-            var endpoint = Endpoint.owned(cell, registries);
+            var endpoint = Endpoint.owned(cell, world);
             if (endpoint != null) {
                 add(mounted, cell.pos, endpoint);
                 if (endpoint.kind == NativePortKind.FLUID) fluidMassMb += endpoint.fluid.getAmount();
@@ -106,7 +109,7 @@ final class NativeVehicleResources {
                 if (neighbors == null) continue;
                 for (var target : neighbors) {
                     if (source.cell.pos.equals(target.cell.pos) || source.kind != target.kind || !target.accepts(side.getOpposite())) continue;
-                    if (source.config != null || target.config != null && target.config.settings().pullInputs) {
+                    if (mayRoute(source, target)) {
                         routes.add(new Route(source, target));
                     }
                 }
@@ -136,6 +139,8 @@ final class NativeVehicleResources {
             var block = cell.state.getBlock();
             if (block instanceof NativeBufferBlock buffer && !buffer.battery) {
                 amount += fluidContents(cell.tile(), "NativeTankFluid", NativeHexTankEntity.CAPACITY, registries).getAmount();
+            } else if (NativeVehicleMekanismTank.supports(cell.state)) {
+                amount += NativeVehicleMekanismTank.contents(cell.tile(), registries).getAmount();
             } else if (block instanceof NativePortBlock port && port.kind == NativePortKind.FLUID) {
                 amount += fluidContents(cell.tile(), "PortFluid", NativeFluidPortEntity.CAPACITY, registries).getAmount();
             }
@@ -188,29 +193,38 @@ final class NativeVehicleResources {
             if (source.kind != kind || !source.emits(from)) continue;
             for (var target : receivers) {
                 if (source.cell.pos.equals(target.cell.pos) || target.kind != kind || !target.accepts(to)) continue;
-                if (source.config != null || target.config != null && target.config.settings().pullInputs) {
+                if (mayRoute(source, target)) {
                     transfer(craft, source, target, registries);
                 }
             }
         }
     }
 
+    private static boolean pulls(Endpoint endpoint) {
+        return endpoint.config != null && endpoint.config.settings().pullInputs;
+    }
+
+    private static boolean mayRoute(Endpoint source, Endpoint target) {
+        return source.config != null || source.cube != null && source.cube.ejecting() || pulls(target);
+    }
+
     private void transfer(NativeGroundVehicle craft, Endpoint source, Endpoint target, HolderLookup.Provider registries) {
         prepare(craft, source);
         prepare(craft, target);
         if (!source.active || !target.active || source.remaining == 0) return;
-        int moved = switch (source.kind) {
+        if (source.cube != null && !pulls(target) && !source.cube.automatic(localLevel(source.cell.pos))) return;
+        switch (source.kind) {
             case POWER -> power(source, target);
-            case FLUID -> fluid(source, target, registries);
-            case MATTER -> items(source, target, registries);
-        };
-        source.remaining -= moved;
+            case FLUID -> source.remaining -= fluid(source, target, registries);
+            case MATTER -> source.remaining -= items(source, target, registries);
+        }
     }
 
     private void prepare(NativeGroundVehicle craft, Endpoint endpoint) {
         if (endpoint.budgetTick == tick) return;
         endpoint.budgetTick = tick;
         endpoint.remaining = endpoint.limit;
+        if (endpoint.cube != null) endpoint.joulesRemaining = endpoint.cube.output();
         endpoint.active = endpoint.config == null || activated(craft, endpoint);
     }
 
@@ -269,30 +283,52 @@ final class NativeVehicleResources {
         return saved;
     }
 
-    private int power(Endpoint from, Endpoint to) {
+    private void power(Endpoint from, Endpoint to) {
+        boolean foreignSource = from.cube != null, foreignTarget = to.cube != null;
+        var quantum = foreignSource == foreignTarget ? NativeVehicleMekanismCube.Quantum.ONE : forgeQuantum();
+        if (quantum == null) return;
+        long debitUnit = foreignSource ? quantum.joules() : quantum.forge();
+        long creditUnit = foreignTarget ? quantum.joules() : quantum.forge();
+        long budget = foreignSource ? from.joulesRemaining : from.remaining;
+        long portions = Math.min(from.energy, budget) / debitUnit;
         if (to.observer != null) {
-            if (!to.observer.requested) return 0;
-            int received = to.observer.power.receive(tick, Math.min(from.remaining, from.energy), false);
-            if (received > 0) {
-                from.energy -= received;
-                var tag = from.cell.tile();
-                tag.putInt(from.key, from.energy);
-                store(from, tag);
-            }
-            return received;
+            if (!to.observer.requested) return;
+            int wanted = to.observer.power.receive(tick, com.vandorlabs.navigation.ObserverPower.RF_PER_TICK, true);
+            portions = Math.min(portions, wanted / creditUnit);
+        } else {
+            long capacity = foreignTarget ? to.cube.capacity() : to.capacity;
+            portions = Math.min(portions, (capacity - to.energy) / creditUnit);
         }
-        int amount = Math.min(from.remaining, Math.min(from.energy, to.capacity - to.energy));
-        if (amount <= 0) return 0;
-        var first = from.cell.tile();
-        var second = to.cell.tile();
-        first.putInt(from.key, from.energy - amount);
-        second.putInt(to.key, to.energy + amount);
-        if (!checkBytes(from, first, to, second)) return 0;
-        from.energy -= amount;
-        to.energy += amount;
+        if (portions == 0) return;
+        long debit = portions * debitUnit, credit = portions * creditUnit;
+        var first = energyTag(from, from.energy - debit);
+        if (to.observer == null) {
+            var second = energyTag(to, to.energy + credit);
+            if (!checkBytes(from, first, to, second)) return;
+            to.energy += credit;
+            store(to, second);
+        } else {
+            to.observer.power.receive(tick, Math.toIntExact(credit), false);
+        }
+        from.energy -= debit;
+        if (foreignSource) from.joulesRemaining -= debit;
+        else from.remaining -= Math.toIntExact(debit);
         store(from, first);
-        store(to, second);
-        return amount;
+    }
+
+    private NativeVehicleMekanismCube.Quantum forgeQuantum() {
+        if (conversionTick != tick) {
+            conversionTick = tick;
+            forgeQuantum = NativeVehicleMekanismCube.forgeQuantum();
+        }
+        return forgeQuantum;
+    }
+
+    private static CompoundTag energyTag(Endpoint endpoint, long energy) {
+        var tag = endpoint.cell.tile();
+        if (endpoint.cube == null) tag.putInt(endpoint.key, Math.toIntExact(energy));
+        else NativeVehicleMekanismCube.write(tag, energy);
+        return tag;
     }
 
     private int fluid(Endpoint from, Endpoint to, HolderLookup.Provider registries) {
@@ -404,7 +440,8 @@ final class NativeVehicleResources {
 
     private static CompoundTag fluidTag(NativeRawCell cell, String key, FluidStack contents, HolderLookup.Provider registries) {
         var tag = cell.tile();
-        if (contents.isEmpty()) tag.remove(key);
+        if (NativeVehicleMekanismTank.TANKS.equals(key)) NativeVehicleMekanismTank.write(tag, contents, registries);
+        else if (contents.isEmpty()) tag.remove(key);
         else tag.put(key, contents.save(registries));
         return tag;
     }
@@ -444,7 +481,7 @@ final class NativeVehicleResources {
         }
 
         int level() {
-            int amount = source.kind == NativePortKind.POWER ? source.energy : source.fluid.getAmount();
+            int amount = source.kind == NativePortKind.POWER ? Math.toIntExact(source.energy) : source.fluid.getAmount();
             return NativeBufferOutput.level(amount, source.capacity);
         }
     }
@@ -460,7 +497,9 @@ final class NativeVehicleResources {
         NativeMaxwellTank fuel;
         NativeVehicleObservers.Receiver observer;
         IFluidHandler inlet;
-        int remaining, energy, itemCursor;
+        int remaining, itemCursor;
+        long energy, joulesRemaining;
+        NativeVehicleMekanismCube.Description cube;
         long budgetTick = Long.MIN_VALUE;
         boolean active = true;
         FluidStack fluid = FluidStack.EMPTY;
@@ -496,18 +535,34 @@ final class NativeVehicleResources {
 
         boolean emits(Direction face) {
             if (inletSide != null) return false;
+            if (cube != null) return cube.emits(face);
             return config == null ? axis == null || axis == face.getAxis() : config.settings().face(face.get3DDataValue()) == Face.OUTPUT;
         }
 
         boolean accepts(Direction face) {
             if (inletSide != null) return inletSide == face;
+            if (cube != null) return cube.accepts(face);
             return config == null ? axis == null || axis == face.getAxis() : config.settings().face(face.get3DDataValue()) == Face.INPUT;
         }
 
-        static Endpoint owned(NativeRawCell cell, HolderLookup.Provider registries) {
+        static Endpoint owned(NativeRawCell cell, Level world) {
+            var registries = world.registryAccess();
             var block = cell.state.getBlock();
             var raw = cell.tile();
             Endpoint result;
+            if (NativeVehicleMekanismCube.supports(cell.state)) {
+                result = new Endpoint(cell, NativePortKind.POWER, null, "", 0);
+                result.cube = NativeVehicleMekanismCube.read(cell, registries);
+                result.energy = result.cube.joules();
+                return result;
+            }
+            if (NativeVehicleMekanismTank.supports(cell.state)) {
+                result = new Endpoint(cell, NativePortKind.FLUID, null, NativeVehicleMekanismTank.TANKS,
+                    NativeVehicleMekanismTank.capacity(cell, world));
+                result.fluid = NativeVehicleMekanismTank.contents(raw, registries);
+                if (result.fluid.getAmount() > result.capacity) throw new IllegalArgumentException("Mekanism tank exceeds its tier capacity");
+                return result;
+            }
             if (block instanceof NativeBufferBlock buffer) {
                 result = buffer.battery
                     ? new Endpoint(cell, NativePortKind.POWER, NativePortData.read(raw), "Energy", NativeBatteryEntity.CAPACITY)

@@ -199,7 +199,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         var appearance = NativeVehicleVisual.project(blocks, level().registryAccess());
         var drive = new NativeVehiclePropulsion(blocks, level().registryAccess());
         var controls = NativeVehicleMeters.server(blocks, level().getGameTime());
-        var resources = new NativeVehicleResources(blocks, level().registryAccess(), drive, controls);
+        var resources = new NativeVehicleResources(blocks, level(), drive, controls);
         var geometry = new NativeVehicleHull(states, resources::armCollision);
         snapshot = blocks;
         hull = geometry;

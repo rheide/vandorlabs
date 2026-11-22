@@ -54,7 +54,7 @@ public final class NativeVehicleTransfer {
         NativeCellTransactions.register(FAMILY);
     }
 
-    public static boolean holdsScreenChannels(ServerLevel world, BlockPos pos) {
+    public static boolean holdsTerrain(ServerLevel world, BlockPos pos) {
         return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos);
     }
 
@@ -587,6 +587,9 @@ public final class NativeVehicleTransfer {
     private static void breakProbe(ServerLevel world, NativeCellTransactions.Header header, ServerPlayer player, NativeRawCell cell) {
         if (player.blockActionRestricted(world, cell.pos, player.gameMode.getGameModeForPlayer())) {
             throw new IllegalArgumentException("The player cannot remove vehicle cell " + cell.pos.toShortString());
+        }
+        if (NativeVehicleMekanismTank.supports(cell.state) || NativeVehicleMekanismCube.supports(cell.state)) {
+            NativeVehicleMekanismAccess.require(player.getUUID(), world, cell.pos, cell.state, world.getBlockEntity(cell.pos));
         }
         var event = new BlockEvent.BreakEvent(world, cell.pos, cell.state, player);
         var previous = PROBE.get();
