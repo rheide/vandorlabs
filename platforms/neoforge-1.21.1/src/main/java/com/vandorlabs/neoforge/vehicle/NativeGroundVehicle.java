@@ -8,6 +8,7 @@ import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
 import com.vandorlabs.persistence.ChairSettings;
 import com.vandorlabs.physics.FlightEnvelope;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -245,6 +246,24 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
                 && onGround() && Math.abs(speed) < .001 && getDeltaMovement().lengthSqr() < 1e-6;
     }
 
+    public int statusModes(Player actor) {
+        if (!admitted() || !isAlive() || emergencyOwner != null
+                || !level().isClientSide && NativeVehicleTransfer.escrowed(this)) return 0;
+        int selected = mode() + 1;
+        int mask = 1 << selected;
+        boolean parkedPose = mode() == TAXI && getPassengers().isEmpty()
+                && (onGround() || level().isClientSide && groundClearance() >= 0 && groundClearance() < .002)
+                && Math.abs(driveSpeed()) < .001 && Mth.degreesDifferenceAbs(getYRot(), Math.round(getYRot() / 90F) * 90F) <= 12;
+        if (parkedPose) mask |= 1 << VehicleStatusLayout.PARK;
+        if (actor == null || getFirstPassenger() != actor) return mask;
+        var reading = flightReadout();
+        if (mode() != HOVER || groundClearance() >= 0 && groundClearance() <= 3) mask |= 1 << VehicleStatusLayout.TAXI;
+        if (reading.canHover()) mask |= 1 << VehicleStatusLayout.HOVER;
+        if ((mode() != TAXI || onGround() || level().isClientSide && groundClearance() >= 0 && groundClearance() < .002)
+                && FlightEnvelope.canFly(reading.effectiveMass(), reading.thrust())) mask |= 1 << VehicleStatusLayout.FLIGHT;
+        return mask;
+    }
+
     @Override protected AABB makeBoundingBox() {
         return hull == null ? super.makeBoundingBox() : hull.bounds(position(), getYRot(), hullPitch(), facing());
     }
@@ -314,8 +333,12 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         BlockPos target = hit(ray, actor);
         if (target == null) return InteractionResult.PASS;
         int action = statusAction(actor, ray, target);
-        if (action == NativeVehicleStatus.EMERGENCY_PARK) {
+        if (action == VehicleStatusLayout.EMERGENCY) {
             if (actor instanceof ServerPlayer rider) requestEmergencyPark(rider);
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
+        if (action == VehicleStatusLayout.PARK) {
+            if (actor instanceof ServerPlayer rider) NativeVehicleTransfer.park(rider, this);
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
         if (isEngineCell(target)) {
@@ -331,7 +354,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             return NativeVehicleBindings.open(actor, this) ? InteractionResult.sidedSuccess(level().isClientSide) : InteractionResult.PASS;
         }
         if (action >= 0) {
-            if (actor instanceof ServerPlayer rider) requestMode(rider, action);
+            if (actor instanceof ServerPlayer rider) requestMode(rider, action - 1);
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
         var row = meterHit(actor, ray, target);
@@ -426,11 +449,12 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     private int statusAction(Player actor, Ray ray, BlockPos target) {
         boolean emergency = showsEmergencyPark(actor);
         boolean mounted = actor.getVehicle() == this;
-        if (!mounted && !emergency) return -1;
         for (var panel : status) {
             if (!panel.pos().equals(target)) continue;
-            int selected = panel.action(ray.start, ray.end, emergency);
-            if (selected == NativeVehicleStatus.EMERGENCY_PARK || mounted && selected >= 0) return selected;
+            int selected = panel.action(ray.start, ray.end);
+            if (selected == VehicleStatusLayout.EMERGENCY) return emergency ? selected : -1;
+            if (selected < 0 || selected >= VehicleStatusLayout.MODE_COUNT) continue;
+            if ((selected == VehicleStatusLayout.PARK || mounted) && (statusModes(actor) & (1 << selected)) != 0) return selected;
         }
         return -1;
     }

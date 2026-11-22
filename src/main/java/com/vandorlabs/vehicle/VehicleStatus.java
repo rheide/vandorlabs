@@ -1,5 +1,6 @@
 package com.vandorlabs.vehicle;
 
+import com.vandorlabs.screen.VehicleStatusLayout;
 import com.vandorlabs.tiles.TileEntityAutopilot;
 import com.vandorlabs.tiles.TileEntityWaypoint;
 import net.minecraft.util.math.BlockPos;
@@ -11,7 +12,7 @@ import java.util.*;
 public final class VehicleStatus {
     public static final int FLIGHT_ACTION=5, EMERGENCY_PARK_ACTION=6;
     private static final Map<World,Map<BlockPos,Entry>> cache=new WeakHashMap<>();
-    private static final class Entry {final long at;final BlockPos controller,vehicle;Entry(long at,BlockPos controller,BlockPos vehicle){this.at=at;this.controller=controller;this.vehicle=vehicle;}}
+    private static final class Entry {final long at;final BlockPos controller,vehicle;final boolean hover;Entry(long at,BlockPos controller,BlockPos vehicle,boolean hover){this.at=at;this.controller=controller;this.vehicle=vehicle;this.hover=hover;}}
     private VehicleStatus(){}
     public static void activate(World world,BlockPos screen,net.minecraft.entity.player.EntityPlayer actor,int action){
         if(!(actor instanceof net.minecraft.entity.player.EntityPlayerMP))return;
@@ -23,9 +24,12 @@ public final class VehicleStatus {
             BlockPos at=craft==null?screen:new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(screen).addVector(.5,.5,.5)));
             if(player.world!=(craft==null?world:craft.world)||player.getDistanceSqToCenter(at)>64)return;
             if(craft==null)VehicleService.permission(player,at);else VehicleService.carriedPermission(player,craft,at);
-            if(action>=1&&action<=3){VehicleService.screenMode(player,screen,craft,action-1);return;}
-            if(action==FLIGHT_ACTION){VehicleService.screenMode(player,screen,craft,3);return;}
-            if(action==EMERGENCY_PARK_ACTION){VehicleService.screenEmergencyPark(player,craft);return;}
+            int mode=action==FLIGHT_ACTION?VehicleStatusLayout.FLIGHT:action>=1&&action<=3?action-1:-1;
+            if(mode>=0){
+                if((availableModes(world,screen,player)&(1<<mode))!=0)VehicleService.screenMode(player,screen,craft,mode);
+                return;
+            }
+            if(action==EMERGENCY_PARK_ACTION){if(offersEmergencyPark(world,player))VehicleService.screenEmergencyPark(player,craft);return;}
             TileEntityAutopilot controller=find(world,screen);if(controller==null)return;
             if(craft!=null&&(craft.flying()||craft.takeoffRoll()))return;
             VehicleService.permission(player,craft==null?controller.getPos():new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(controller.getPos()).addVector(.5,.5,.5))));
@@ -33,18 +37,42 @@ public final class VehicleStatus {
             else if(action==4){if(craft==null)controller.pulseDeparture();else craft.autopilot.pulseDeparture();}
         }catch(IllegalArgumentException denied){VehicleNetwork.error(player,denied.getMessage());}
     }
-    public static boolean offersFlight(World world){
-        if(!(world instanceof VehicleWorld))return false;
-        EntityGroundVehicle craft=((VehicleWorld)world).craft;
-        return craft!=null&&(craft.flying()||craft.flightReadout().drives>0);
+    public static int availableModes(World world,BlockPos screen,net.minecraft.entity.player.EntityPlayer player){
+        EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;
+        if(craft==null){
+            com.vandorlabs.tiles.TileEntityVehicleController root=controller(world,screen);
+            if(root==null||root.converting)return 0;
+            return (1<<VehicleStatusLayout.PARK)|(1<<VehicleStatusLayout.TAXI)
+                    |(entry(world,screen).hover?1<<VehicleStatusLayout.HOVER:0);
+        }
+        if(craft.structure==null||craft.transferInProgress||craft.ownershipBlocked||craft.isDead)return 0;
+        int selected=craft.takeoffRoll()?VehicleStatusLayout.FLIGHT:craft.vehicleMode();
+        int modes=1<<selected;
+        boolean transitioning=craft.flying()||craft.takeoffRoll();
+        boolean taxi=transitioning||VehicleSkiTraction.allowed(craft)&&(!craft.hover||craft.groundClearance()<=3&&VehicleLandingGear.extended(craft));
+        if(taxi)modes|=1<<VehicleStatusLayout.TAXI;
+        if(VehicleFlight.canHover(craft.structure)&&craft.structure.activeThruster())modes|=1<<VehicleStatusLayout.HOVER;
+        if(!transitioning&&!craft.autopilot.enabled()&&craft.flightReadout().canFly()&&player!=null&&craft.getControllingPassenger()==player
+                &&(craft.hover||taxi&&(craft.onGround||craft.groundClearance()<=.001)&&VehicleLandingGear.extended(craft)))modes|=1<<VehicleStatusLayout.FLIGHT;
+        if((!transitioning||craft.flightLanded())&&!craft.cruise.active()&&craft.stopped()
+                &&(!craft.hover||craft.groundClearance()<=3&&VehicleLandingGear.extended(craft))
+                &&Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(craft.rotationYaw-Math.round(craft.rotationYaw/90F)*90F))<=12)
+            modes|=1<<VehicleStatusLayout.PARK;
+        return modes;
     }
     public static boolean offersEmergencyPark(World world,net.minecraft.entity.player.EntityPlayer player){
         EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;
         return craft!=null&&!craft.transferInProgress&&!craft.cruise.active()&&player!=null&&player.capabilities.isCreativeMode
                 &&player.getHeldItemMainhand().getItem() instanceof com.vandorlabs.items.ItemConfigurizer;
     }
-    public static int modeLeft(int mode,boolean flight){return 6+mode*(flight?29:39);}
-    public static int modeRight(int mode,boolean flight){return modeLeft(mode,flight)+(flight?27:37);}
+    public static int panelAction(int height,double x,double y){
+        int target=VehicleStatusLayout.forHeight(height).target(x,y);
+        if(target==VehicleStatusLayout.AUTOPILOT)return 0;
+        if(target==VehicleStatusLayout.NEXT)return 4;
+        if(target==VehicleStatusLayout.EMERGENCY)return EMERGENCY_PARK_ACTION;
+        if(target==VehicleStatusLayout.FLIGHT)return FLIGHT_ACTION;
+        return target<0?-1:target+1;
+    }
     public static com.vandorlabs.tiles.TileEntityVehicleController controller(World world,BlockPos screen){
         BlockPos at=world instanceof VehicleWorld?VehicleControlSettings.position(((VehicleWorld)world).structure):entry(world,screen).vehicle;
         TileEntity raw=at==null||!world.isBlockLoaded(at)?null:world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityVehicleController?(com.vandorlabs.tiles.TileEntityVehicleController)raw:null;
@@ -61,15 +89,16 @@ public final class VehicleStatus {
         Map<BlockPos,Entry> entries=cache.computeIfAbsent(world,w->new HashMap<>());Entry old=entries.get(screen);
         if(old!=null&&world.getTotalWorldTime()-old.at>=0&&world.getTotalWorldTime()-old.at<100)return old;
         ArrayDeque<BlockPos> queue=new ArrayDeque<>();Set<BlockPos> seen=new HashSet<>();queue.add(screen);seen.add(screen);
-        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096;
+        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096,lift=0;boolean thruster=false;
         while(!queue.isEmpty()&&budget-->0){BlockPos p=queue.removeFirst();if(!world.isBlockLoaded(p)||world.isAirBlock(p))continue;TileEntity tile=world.getTileEntity(p);
             int navigation=com.vandorlabs.rack.ModuleAutopilots.count(tile);if(navigation>0){autopilots+=navigation;autopilot=p;}
             net.minecraft.block.state.IBlockState state=world.getBlockState(p);if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)controller=p;
+            if(VehicleFlight.lift(state.getBlock()))lift++;else if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
 
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockLandingGear)continue;
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight&&state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING)==net.minecraft.util.EnumFacing.DOWN)continue;
             try{for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values())if(VehicleScan.touches(world,p,state,face)){BlockPos next=p.offset(face);if(world.isBlockLoaded(next)&&!VehicleScan.ownedCoupler(state,world.getBlockState(next),face)&&seen.add(next))queue.add(next);}}catch(RuntimeException|LinkageError unavailable){VehicleCompatibility.warn(state.getBlock(),"status connectivity",unavailable);}
         }
-        if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilots==1?autopilot:null,controller);entries.put(screen.toImmutable(),result);return result;
+        if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilots==1?autopilot:null,controller,lift>=3&&thruster);entries.put(screen.toImmutable(),result);return result;
     }
 }

@@ -2,7 +2,7 @@ package com.vandorlabs.neoforge.vehicle.client;
 
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleFlightFixture;
-import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleScreenRowsFixture;
 import com.vandorlabs.physics.FlightEnvelope;
 import net.minecraft.client.CameraType;
@@ -21,7 +21,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 @EventBusSubscriber(modid = "vandorlabs", value = Dist.CLIENT)
 public final class NativeVehicleFlightPlayerChecks {
     private static final int[] TERRAIN_COLORS = {0x427440, 0x366640, 0x28659b, 0xc7b77c, 0xcbdfe2, 0x7b8281, 0xb77550};
-    private static int stage, ticks, cameraTicks, boardingAim;
+    private static int stage, ticks, cameraTicks, boardingAim, statusTicks;
     private static double runwayAltitude;
     private static NativeGroundVehicle craft;
     private static boolean captured, becameHigh, assembled;
@@ -89,10 +89,28 @@ public final class NativeVehicleFlightPlayerChecks {
             }
             case 1 -> {
                 if (player.getVehicle() != craft || !craft.onGround()) return;
-                var at = craft.statusPanels().getFirst().pos();
-                double column = NativeVehicleStatus.buttonLeft(NativeGroundVehicle.FLIGHT) + NativeVehicleStatus.BUTTON_WIDTH / 2D;
-                double row = (NativeVehicleStatus.BUTTON_START + NativeVehicleStatus.BUTTON_END) / 2D;
-                aim(mc, craft.position().add(at.getX() + .5 - column / 128, at.getY() + 1 - row / 128, at.getZ() - .5));
+                var panel = craft.statusPanels().getFirst();
+                var at = panel.pos();
+                int height = panel.projection().height;
+                var layout = VehicleStatusLayout.forHeight(height);
+                if (!NativeVehicleFlightFixture.impact().equals("hover") && statusTicks < 12) {
+                    double x = layout.centerX(VehicleStatusLayout.HOVER);
+                    double y = layout.centerY(VehicleStatusLayout.HOVER);
+                    aim(mc, craft.position().add(at.getX() + .5 - x / 128, at.getY() + 1 - y / height, at.getZ() - .5));
+                    if (statusTicks == 0) {
+                        if (!at.equals(craft.hit(player))) return;
+                        NativeVehicleFlightFixture.require(!craft.pointsAtMountedControl(player), "Hover is disabled without a lift package");
+                        rightClick(mc);
+                    }
+                    if (++statusTicks == 12) {
+                        NativeVehicleFlightFixture.require(craft.mode() == NativeGroundVehicle.TAXI, "ordinary click on disabled Hover preserves Taxi");
+                        snapshot(mc, "vehicle-status-2x2.png");
+                    }
+                    return;
+                }
+                double column = layout.centerX(VehicleStatusLayout.FLIGHT);
+                double row = layout.centerY(VehicleStatusLayout.FLIGHT);
+                aim(mc, craft.position().add(at.getX() + .5 - column / 128, at.getY() + 1 - row / height, at.getZ() - .5));
                 if (!craft.pointsAtMountedControl(player)) {
                     if (ticks % 40 == 0) System.out.println("[vandorlabs][vehicle-flight-player] Status ray hit=" + craft.hit(player)
                             + " target=" + at + " eye=" + player.getEyePosition() + " pose=" + craft.position());
@@ -195,6 +213,14 @@ public final class NativeVehicleFlightPlayerChecks {
     }
 
     static boolean assemblyConfirmed() { return assembled; }
+
+    private static void snapshot(Minecraft mc, String name) {
+        try (var image = net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+            image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve(name));
+        } catch (java.io.IOException failure) {
+            throw new IllegalStateException("Native Vehicle Status capture", failure);
+        }
+    }
 
     private static boolean hasCarriedAfterburner(Minecraft client, NativeGroundVehicle craft) {
         boolean[] found = {false};

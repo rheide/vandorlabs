@@ -77,7 +77,12 @@ final class VehicleStatusClientRuntimeChecks {
         net.minecraft.block.state.IBlockState state=vehicle?craft.view.getBlockState(local):mc.world.getBlockState(BASE.add(local));
         // Approach half surfaces along their normal, keeping the player above or outside the hull.
         // The horizontal console deck cannot be intersected by a horizontal ray.
-        com.vandorlabs.render.ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,0);double u=(action==0?85:action==4?25:24+(action-1)*39)/128D,v=(RedstoneScreenInteractions.rowTop(state.getBlock(),0)+(action==0?0:action==4?36:12)+5D)/RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
+        com.vandorlabs.render.ScreenSurface.Quad q=RedstoneScreenInteractions.surface(state,tile,0);
+        int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
+        com.vandorlabs.screen.VehicleStatusLayout layout=com.vandorlabs.screen.VehicleStatusLayout.forHeight(height);
+        int mode=action==VehicleStatus.FLIGHT_ACTION?com.vandorlabs.screen.VehicleStatusLayout.FLIGHT:action-1;
+        double u=(action==0?85:action==4?25:layout.centerX(mode))/128D;
+        double v=(action==0?(layout.autopilotTop+layout.autopilotBottom)/2D:action==4?(layout.footerTop+layout.footerBottom)/2D:layout.centerY(mode))/height;
         Vec3d point=new Vec3d((q.topRight.x+(q.topLeft.x-q.topRight.x)*u)/16,(q.topRight.y+(q.bottomRight.y-q.topRight.y)*v)/16,(q.topRight.z+(q.bottomRight.z-q.topRight.z)*v)/16),normal=new Vec3d(q.nx,q.ny,q.nz),a=point.add(normal.scale(3)).addVector(0,1.8,0),b=point.subtract(a.subtract(point).scale(.1));
         require(RedstoneScreenInteractions.statusAction(state,tile,0,a,b)==action,"normal ray intersects selected status button");
         Vec3d eye=vehicle?craft.toWorld(a.add(new Vec3d(local))):a.add(new Vec3d(BASE.add(local))),at=vehicle?craft.toWorld(b.add(new Vec3d(local))):b.add(new Vec3d(BASE.add(local)));
@@ -105,6 +110,7 @@ final class VehicleStatusClientRuntimeChecks {
         int pixels=0,indicator=0,button=name.endsWith("_on")?0x37D8AD:name.endsWith("_off")?0x495C69:-1;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++){int c=image.getRGB(x,y);if(near(c,background))pixels++;if(button>=0&&near(c,button))indicator++;}require(pixels>=25,"rendered "+name+" mode background pixels="+pixels);if(button>=0)require(indicator>=10,"rendered "+name+" autopilot indicator pixels="+indicator);
     }
     private static boolean near(int a,int b){return Math.abs((a>>16&255)-(b>>16&255))<=4&&Math.abs((a>>8&255)-(b>>8&255))<=4&&Math.abs((a&255)-(b&255))<=4;}
+    private static boolean disabledClick;
     private static void next(){stage++;frame=0;}
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(stage==18)return VehicleFlightClientChecks.tick(mc,output);
@@ -114,7 +120,14 @@ final class VehicleStatusClientRuntimeChecks {
         if(stage==2){state(mc,true,false);shot(mc,output,"block_on",0x362B19);click(mc,false);next();return false;}
         if(stage==3){state(mc,false,false);mc.getIntegratedServer().addScheduledTask(()->spawn(mc)).get();next();return false;}
         if(stage==4){if(client(mc)==null||client(mc).structure==null)return false;aim(mc,SCREEN,true);next();return false;}
-        if(stage==5){shot(mc,output,"taxi_off",0x153A29);click(mc,true);next();return false;}
+        if(stage==5){
+            if(!disabledClick){
+                require((VehicleStatus.availableModes(client(mc).view,SCREEN,mc.player)&8)==0,"flight is disabled on the Maxwell-free craft");
+                shot(mc,output,"taxi_off",0x153A29);click(mc,true,VehicleStatus.FLIGHT_ACTION);disabledClick=true;frame=0;return false;
+            }
+            mc.getIntegratedServer().addScheduledTask(()->require(!server(mc).flying()&&!server(mc).takeoffRoll(),"real click on disabled Flight keeps Taxi")).get();
+            click(mc,true);next();return false;
+        }
         if(stage==6){state(mc,true,true);shot(mc,output,"taxi_on",0x153A29);click(mc,true);next();return false;}
         if(stage==7){state(mc,false,true);mc.getIntegratedServer().addScheduledTask(()->{EntityGroundVehicle craft=server(mc);craft.hoverTarget=craft.posY;((TileEntityWaypoint)world(mc).getTileEntity(BASE.add(1,-1,0))).stopMode=2;}).get();click(mc,true,3);next();return false;}
         if(stage==8){require(client(mc).hover,"Hover mode reached client renderer");shot(mc,output,"hover_off",0x152D48);click(mc,true);next();return false;}

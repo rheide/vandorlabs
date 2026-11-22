@@ -108,17 +108,17 @@ public final class RedstoneScreenInteractions {
     }
     /** Uses the same mode button bounds as the rendered Vehicle Status screen. */
     public static int statusAction(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end){
-        int row=hitRow(state,tile,slot,start,end,4);
-        double x=hitColumn(state,tile,slot,start,end);
-        boolean flight=tile!=null&&com.vandorlabs.vehicle.VehicleStatus.offersFlight(tile.getWorld());
-        if(row==0)return 0;
-        if(row==1)for(int mode=0;mode<(flight?4:3);mode++){
-            if(x>=com.vandorlabs.vehicle.VehicleStatus.modeLeft(mode,flight)&&x<com.vandorlabs.vehicle.VehicleStatus.modeRight(mode,flight))
-                return mode==3?com.vandorlabs.vehicle.VehicleStatus.FLIGHT_ACTION:mode+1;
-        }
-        if(row==3&&x>=52&&x<122&&tile!=null&&tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)
-            return com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION;
-        return row==3&&x<48?4:-1;
+        ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);
+        Vec3d a=local(start,face),d=local(end,face).subtract(a);
+        double denom=q.ny*d.y+q.nz*d.z;if(denom>=-1e-8)return -1;
+        double t=(q.ny*(q.topRight.y-a.y)+q.nz*(q.topRight.z-a.z))/denom;
+        if(t<0||t>1)return -1;
+        Vec3d hit=a.add(d.scale(t));
+        int height=displayHeight(state.getBlock(),slot);
+        double x=(q.topRight.x-hit.x)/(q.topRight.x-q.topLeft.x)*128;
+        double dy=q.bottomRight.y-q.topRight.y,dz=q.bottomRight.z-q.topRight.z;
+        double y=((hit.y-q.topRight.y)*dy+(hit.z-q.topRight.z)*dz)/(dy*dy+dz*dz)*height;
+        return com.vandorlabs.vehicle.VehicleStatus.panelAction(height,x,y);
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){
         ScreenSurface.Quad q=surface(state,tile,slot);EnumFacing face=facing(state);

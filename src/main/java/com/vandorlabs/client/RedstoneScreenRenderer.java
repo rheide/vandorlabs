@@ -1,5 +1,8 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.screen.VehicleStatusLayout;
+import com.vandorlabs.vehicle.VehicleStatus;
+
 import com.vandorlabs.blocks.RedstoneScreenInteractions;
 import com.vandorlabs.render.ScreenSurface;
 import com.vandorlabs.tiles.RedstoneScreenContents;
@@ -84,71 +87,82 @@ final class RedstoneScreenRenderer {
         }
     }
     static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,IBlockState state,int slot){
-        int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),slot),top=RedstoneScreenInteractions.rowTop(state.getBlock(),slot);
+        int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),slot);
         ScreenSurface.Quad q=FrameSurfaceRenderer.content(tile,RedstoneScreenInteractions.surface(state,tile,slot));
         FloatBuffer transform=MATRICES.get(q);if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
-        drawVehicleContents(tile.getWorld(),tile.getPos(),height,top);GlStateManager.popMatrix();
+        drawVehicleContents(tile.getWorld(),tile.getPos(),height);GlStateManager.popMatrix();
     }
-    static void drawVehicleContents(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,int height,int top){
-        if(!com.vandorlabs.vehicle.VehicleStatus.hasController(world,pos)){
-            GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);bindWhite();BufferBuilder missing=Tessellator.getInstance().getBuffer();missing.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());rect(missing,0,0,128,height,0,0xff362b19);Tessellator.getInstance().draw();
-            FontRenderer font=Minecraft.getMinecraft().fontRenderer;java.util.List<String> lines=font.listFormattedStringToWidth("Vehicle Controller missing",112);int y=Math.max(4,(height-lines.size()*10)/2);for(String line:lines){text(font,line,8,y,0xffd19b);y+=10;}GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;
-        }
+    static void drawVehicleContents(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,int height){
+        boolean missing=!VehicleStatus.hasController(world,pos);
         com.vandorlabs.vehicle.EntityGroundVehicle craft=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).craft:null;
-        com.vandorlabs.tiles.TileEntityVehicleController controller=com.vandorlabs.vehicle.VehicleStatus.controller(world,pos);
-        boolean busy=craft!=null?craft.transferInProgress:controller!=null&&controller.converting;
+        com.vandorlabs.tiles.TileEntityVehicleController controller=missing?null:VehicleStatus.controller(world,pos);
+        boolean busy=!missing&&(craft!=null?craft.transferInProgress:controller!=null&&controller.converting);
         boolean hover=craft!=null&&craft.hover;
-        boolean flight=com.vandorlabs.vehicle.VehicleStatus.offersFlight(world);
+        boolean compact=height<=64;
         boolean cruise=craft!=null&&craft.cruise.active();
-        boolean emergency=com.vandorlabs.vehicle.VehicleStatus.offersEmergencyPark(world,Minecraft.getMinecraft().player);
         boolean flightTelemetry=craft!=null&&(craft.flying()||craft.takeoffRoll());
-        com.vandorlabs.tiles.TileEntityAutopilot autopilot=flightTelemetry||cruise?null:com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
+        boolean emergency=!missing&&!busy&&VehicleStatus.offersEmergencyPark(world,Minecraft.getMinecraft().player);
+        com.vandorlabs.tiles.TileEntityAutopilot autopilot=missing||busy||flightTelemetry||cruise?null:VehicleStatus.find(world,pos);
         boolean on=autopilot!=null&&autopilot.enabled();
+        VehicleStatusLayout layout=VehicleStatusLayout.forHeight(height);
+        int selected=craft==null?VehicleStatusLayout.PARK:craft.takeoffRoll()?VehicleStatusLayout.FLIGHT:craft.vehicleMode();
+        int available=missing||busy?0:VehicleStatus.availableModes(world,pos,Minecraft.getMinecraft().player);
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
         bindWhite();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        rect(buffer,0,0,128,height,0,craft==null?0xFF362B19:craft.flying()?0xFF222947:hover?0xFF152D48:0xFF153A29);
-        if(busy){int progress=(int)(VehicleShapeRenderer.ticks()*3)%90;rect(buffer,6,top+12,122,top+22,.01,0xFF495C69);rect(buffer,6+progress,top+12,32+progress,top+22,.02,0xFF37D8AD);}
-        if(!busy&&autopilot!=null)rect(buffer,6,top,122,top+10,.01,on?0xFF37D8AD:0xFF495C69);
-        int mode=craft==null?0:craft.vehicleMode();
-        if(!busy)for(int i=0;i<(flight?4:3);i++)rect(buffer,com.vandorlabs.vehicle.VehicleStatus.modeLeft(i,flight),top+12,
-                com.vandorlabs.vehicle.VehicleStatus.modeRight(i,flight),top+22,.01,i==mode?0xFF37D8AD:0xFF495C69);
-        if(autopilot!=null)rect(buffer,6,top+36,48,top+46,.01,0xFF495C69);
-        if(emergency&&!busy)rect(buffer,52,top+36,122,top+46,.01,0xFF883C41);
+        rect(buffer,0,0,128,height,0,craft==null||missing?0xFF362B19:craft.flying()?0xFF222947:hover?0xFF152D48:0xFF153A29);
+        if(busy){
+            int progress=(int)(VehicleShapeRenderer.ticks()*3)%90;
+            rect(buffer,6,layout.footerTop,122,layout.footerBottom,.01,VehicleStatusLayout.ENABLED_COLOR);
+            rect(buffer,6+progress,layout.footerTop,32+progress,layout.footerBottom,.02,VehicleStatusLayout.ACTIVE_COLOR);
+        }
+        if(autopilot!=null)rect(buffer,6,layout.autopilotTop,122,layout.autopilotBottom,.01,on?VehicleStatusLayout.ACTIVE_COLOR:VehicleStatusLayout.ENABLED_COLOR);
+        for(int mode=0;mode<VehicleStatusLayout.MODE_COUNT;mode++)rect(buffer,layout.left(mode),layout.top(mode),
+                layout.right(mode),layout.bottom(mode),.01,layout.buttonColor(available,mode,selected));
+        if(autopilot!=null)rect(buffer,6,layout.footerTop,48,layout.footerBottom,.01,VehicleStatusLayout.ENABLED_COLOR);
+        if(emergency)rect(buffer,52,layout.footerTop,122,layout.footerBottom,.01,0xFF883C41);
         Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
-        if(height>64)text(font,controller==null||controller.vehicleName.isEmpty()?"VEHICLE STATUS":font.trimStringToWidth(controller.vehicleName,112),8,8,0xE1EEFF);
-        if(busy){text(font,"Converting...",8,top+1,0xE1EEFF);GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;}
-        if(height<=64&&autopilot==null&&controller!=null)text(font,font.trimStringToWidth(controller.vehicleName,112),8,top+1,0xE1EEFF);
-        if(autopilot!=null)text(font,height<=64&&controller!=null&&!controller.vehicleName.isEmpty()?font.trimStringToWidth(controller.vehicleName,112):on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);
-        String[] modes={"Park","Taxi","Hover","Flight"};
-        for(int i=0;i<(flight?4:3);i++)statusText(font,modes[i],com.vandorlabs.vehicle.VehicleStatus.modeLeft(i,flight)+2,top+14,i==mode?0x072D24:0xFFFFFF);
-        if(flightTelemetry){
-            String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.descendingToFlightLimit()?"Descending":craft.takeoffRoll()?"Takeoff roll":"Flight";
-            statusText(font,state+"    "+oneDecimal(Math.abs(craft.driveSpeed)*20)+" m/s",8,top+26,0xCEE9ED);
-        }else if(autopilot!=null)statusText(font,font.trimStringToWidth(autopilot.status,140),8,top+26,0xCEE9ED);
-        if(autopilot!=null)statusText(font,"Next >",8,top+38,0xFFFFFF);
-        if(emergency)statusText(font,"Emergency Park",55,top+38,0xFFFFFF);
-        if(craft!=null){
-            boolean compact=height<=64;
-            double clearance=cruise?Double.POSITIVE_INFINITY:craft.groundClearance();
-            String elevation="Y "+oneDecimal(craft.flightAltitude());
-            if(Double.isFinite(clearance)){
-                if(compact)elevation+=" AGL"+oneDecimal(clearance);
-                else statusText(font,"Ground clearance "+oneDecimal(clearance)+" m",8,top+60,0xC1E8FF);
+        String name=missing?"Vehicle Controller missing":controller==null||controller.vehicleName.isEmpty()?"VEHICLE STATUS":controller.vehicleName;
+        for(int mode=0;mode<VehicleStatusLayout.MODE_COUNT;mode++){
+            int color=!layout.enabled(available,mode)?0xA0AAB0:mode==selected?0x072D24:0xFFFFFF;
+            String label=VehicleStatusLayout.label(mode);
+            text(font,label,layout.centerX(mode)-font.getStringWidth(label)/2,layout.centerY(mode)-4,color);
+        }
+        if(!compact)text(font,font.trimStringToWidth(name,112),8,7,missing?0xFFD19B:0xE1EEFF);
+        if(busy){
+            if(compact)statusText(font,name,8,3,112,0xE1EEFF);
+            statusText(font,"Converting...",8,layout.footerTop+2,112,0xFFFFFF);
+        }else{
+            String motion="";
+            if(flightTelemetry){
+                String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.descendingToFlightLimit()?"Descending":craft.takeoffRoll()?"Takeoff roll":"Flight";
+                motion=state+"  "+oneDecimal(Math.abs(craft.driveSpeed)*20)+" m/s";
             }
-            statusText(font,elevation,8,top+49,0xC1E8FF);
-            if(cruise){
-                String route="X "+Math.round(craft.cruise.x())+(compact?" Z ":"    Z ")+Math.round(craft.cruise.z());
-                statusText(font,route,8,top+(compact?38:60),0xC1E8FF);
-            }
-            com.vandorlabs.vehicle.VehicleFlightReadout readout=craft.flightReadout();
-            if(readout.drives>0){
-                String fuel="Fuel "+(readout.capacity==0?0:Math.round(100D*readout.fuel/readout.capacity))+"%";
-                if(!compact)fuel+="   "+readout.fuel+" mB";
-                statusText(font,fuel,compact?78:55,top+49,0xC1E8FF);
+            if(autopilot!=null){
+                statusText(font,on?"AUTOPILOT ON":"Autopilot OFF",8,layout.autopilotTop+2,112,on?0x072D24:0xFFFFFF);
+                statusText(font,"Next >",8,layout.footerTop+2,38,0xFFFFFF);
+            }else if(compact)statusText(font,flightTelemetry?motion:name,8,3,112,0xE1EEFF);
+            if(emergency)statusText(font,"Emergency Park",55,layout.footerTop+2,64,0xFFFFFF);
+            if(craft!=null&&!missing){
+                double clearance=cruise?Double.POSITIVE_INFINITY:craft.groundClearance();
+                String elevation="Y "+oneDecimal(craft.flightAltitude());
+                com.vandorlabs.vehicle.VehicleFlightReadout readout=craft.flightReadout();
+                String fuel=VehicleStatusLayout.fuelText(readout.fuel,readout.capacity);
+                String location=cruise?"X "+Math.round(craft.cruise.x())+"  Z "+Math.round(craft.cruise.z())
+                        :Double.isFinite(clearance)?(compact?"AGL ":"Ground clearance ")+oneDecimal(clearance)+" m":"";
+                if(compact){
+                    statusText(font,elevation,8,43,48,0xC1E8FF);
+                    statusText(font,fuel,57,43,63,0xC1E8FF);
+                    if(autopilot==null)statusText(font,location,8,54,emergency?40:112,0xC1E8FF);
+                }else{
+                    statusText(font,elevation,8,79,50,0xC1E8FF);
+                    statusText(font,autopilot==null?motion:autopilot.status,59,79,61,0xCEE9ED);
+                    statusText(font,location,8,89,112,0xC1E8FF);
+                    statusText(font,fuel,8,99,112,0xC1E8FF);
+                }
             }
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
@@ -159,8 +173,10 @@ final class RedstoneScreenRenderer {
         return (units<0?"-":"")+(absolute/10)+"."+(absolute%10);
     }
 
-    private static void statusText(FontRenderer font,String value,int x,int y,int color){
-        GlStateManager.pushMatrix();GlStateManager.translate(x,y,0);GlStateManager.scale(.8F,.8F,1);
+    private static void statusText(FontRenderer font,String value,int x,int y,int width,int color){
+        if(value.isEmpty())return;
+        float scale=Math.min(.92F,width/(float)Math.max(1,font.getStringWidth(value)));
+        GlStateManager.pushMatrix();GlStateManager.translate(x,y,0);GlStateManager.scale(scale,scale,1);
         text(font,value,0,0,color);GlStateManager.popMatrix();
     }
 

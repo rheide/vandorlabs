@@ -7,6 +7,7 @@ import com.vandorlabs.blocks.RedstoneScreenInteractions;
 import com.vandorlabs.physics.FlightEnvelope;
 import com.vandorlabs.drives.MaxwellRuntimeChecks;
 import com.vandorlabs.render.ScreenSurface;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityConstructor;
 import com.vandorlabs.tiles.TileEntityPilotSeat;
@@ -78,7 +79,7 @@ final class VehicleFlightClientChecks {
         BlockPos staged=ORIGIN.add(24,8,0);
         world.getChunkFromBlockCoords(staged);
         TileEntityConstructor engine=MaxwellRuntimeChecks.assemble(world,staged,3,EnumFacing.NORTH,0,0);
-        need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),400),true)==400,"fill the assembled engine's inlet");
+        need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,"fill the assembled engine's inlet");
         cells.add(new VehicleStructure.Cell(new BlockPos(4,1,1),Blocks.STONE.getDefaultState(),null));
         BlockPos offset=DRIVE.subtract(staged);
         for(BlockPos at:BlockPos.getAllInBox(staged,staged.add(2,2,3))){
@@ -90,7 +91,7 @@ final class VehicleFlightClientChecks {
         craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,4));
         craft.setPosition(ORIGIN.getX(),ORIGIN.getY(),ORIGIN.getZ());
         TileEntityConstructor carried=(TileEntityConstructor)craft.view.getTileEntity(DRIVE);
-        need(carried.formed()&&carried.maxwellFuel()==400&&carried.maxwellThrustLevel(true)==15,"captured formed drive keeps available thrust and fuel");
+        need(carried.formed()&&carried.maxwellFuel()==1000&&carried.maxwellThrustLevel(true)==15,"captured formed drive keeps available thrust and fuel");
         need(world.spawnEntity(craft),"spawn craft");
         id=craft.getUniqueID();
         player.connection.setPlayerLocation(ORIGIN.getX()+2.5,ORIGIN.getY()+2,ORIGIN.getZ()+5,180,0);
@@ -101,8 +102,10 @@ final class VehicleFlightClientChecks {
         IBlockState state=craft.view.getBlockState(SCREEN);
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(SCREEN);
         ScreenSurface.Quad quad=RedstoneScreenInteractions.surface(state,tile,0);
-        double column=(VehicleStatus.modeLeft(mode,true)+VehicleStatus.modeRight(mode,true))/256D;
-        double row=(RedstoneScreenInteractions.rowTop(state.getBlock(),0)+17D)/RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
+        int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),0);
+        VehicleStatusLayout layout=VehicleStatusLayout.forHeight(height);
+        double column=layout.centerX(mode)/128D;
+        double row=layout.centerY(mode)/(double)height;
         double x=(quad.topRight.x+(quad.topLeft.x-quad.topRight.x)*column)/16;
         double y=(quad.topRight.y+(quad.bottomRight.y-quad.topRight.y)*row)/16;
         double z=(quad.topRight.z+(quad.bottomRight.z-quad.topRight.z)*row)/16;
@@ -137,6 +140,7 @@ final class VehicleFlightClientChecks {
                         &&actual.flightReadout().canFly()&&pilot.getHeldItemMainhand().isEmpty();
             }).get();
             if(!ready){need(frame<120,"server contact, seated input and inventory are synchronized before Flight click");return false;}
+            VehicleStatusRenderChecks.fuel(mc,output,craft,SCREEN);
             runwayY=craft.posY;
             aim(mc,craft,3);next();return false;
         }

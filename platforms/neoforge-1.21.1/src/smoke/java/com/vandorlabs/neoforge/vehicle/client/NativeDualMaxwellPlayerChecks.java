@@ -2,7 +2,7 @@ package com.vandorlabs.neoforge.vehicle.client;
 
 import com.vandorlabs.neoforge.vehicle.NativeDualMaxwellFixture;
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
-import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import com.vandorlabs.screen.ScreenControlLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
@@ -83,9 +83,9 @@ public final class NativeDualMaxwellPlayerChecks {
 
     private static void mode(Minecraft mc, NativeGroundVehicle craft, int wanted) {
         if (craft.mode() == wanted) return;
-        press(mc, craft, craft.statusPanels().getFirst().pos(),
-                NativeVehicleStatus.buttonLeft(wanted) + NativeVehicleStatus.BUTTON_WIDTH / 2D,
-                (NativeVehicleStatus.BUTTON_START + NativeVehicleStatus.BUTTON_END) / 2D);
+        var panel = craft.statusPanels().getFirst();
+        var layout = VehicleStatusLayout.forHeight(panel.projection().height);
+        press(mc, craft, panel.pos(), layout.centerX(wanted + 1), layout.centerY(wanted + 1));
     }
 
     private static void press(Minecraft mc, NativeGroundVehicle craft, BlockPos at, double column, double line) {

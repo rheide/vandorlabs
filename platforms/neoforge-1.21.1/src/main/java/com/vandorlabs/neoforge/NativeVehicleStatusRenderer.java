@@ -8,7 +8,7 @@ import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.screen.NativeScreenRenderProjection;
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
-import com.vandorlabs.physics.FlightEnvelope;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import com.vandorlabs.screen.ScreenFamily;
 import com.vandorlabs.screen.ScreenRenderPose;
 import net.minecraft.core.BlockPos;
@@ -28,8 +28,13 @@ import org.joml.Matrix4f;
 /** Carried mode controls drawn on the same surface and pixel bounds hit-tested by the pilot. */
 public final class NativeVehicleStatusRenderer {
     private record Face(Matrix4f local, int height) {}
-    private record Reading(int mode, int y, int clearance, int speed, int fuel, boolean available, boolean high, int x, int z, boolean emergency) {}
-    private record Labels(Reading state, NativeOverlayCanvas.Mesh glyphs) {}
+    private record Reading(int mode, int available, int y, int clearance, int speed, int fuel, int capacity,
+                           boolean high, int x, int z, boolean emergency) {}
+    private static final class Labels {
+        final Reading state;
+        NativeOverlayCanvas.Mesh full, half;
+        Labels(Reading state) { this.state = state; }
+    }
     private final NativeOverlayCanvas canvas;
     private final NativeScreenRowsRenderer rows;
     private record ScreenRows(NativeScreenEntity.Visual source,int primary,int secondary,NativeScreenEntity.Visual shown){}
@@ -76,7 +81,7 @@ public final class NativeVehicleStatusRenderer {
         float[] floats = new float[16];
         for (int index = 0; index < floats.length; index++) floats[index] = (float)values[index];
         var ui = new Matrix4f();
-        NativeOverlayCanvas.uiMatrix(panel.projection().surface, NativeVehicleStatus.WIDTH, panel.projection().height, ui);
+        NativeOverlayCanvas.uiMatrix(panel.projection().surface, VehicleStatusLayout.WIDTH, panel.projection().height, ui);
         return new Face(new Matrix4f().set(floats).mul(ui), panel.projection().height);
     }
 
@@ -104,25 +109,13 @@ public final class NativeVehicleStatusRenderer {
     public void render(NativeGroundVehicle craft, PoseStack poses, MultiBufferSource buffers) {
         if (craft.statusPanels().isEmpty()) return;
         var thrust = craft.flightReadout();
-        var reading = new Reading(craft.mode(), (int)Math.floor(craft.flightAltitude()), Math.round(craft.groundClearance()),
-                Math.round(Math.abs(craft.driveSpeed()) * 20), thrust.fuel(),
-                FlightEnvelope.canFly(thrust.effectiveMass(), thrust.thrust()), craft.highFlight(),
-                (int)craft.routeX(), (int)craft.routeZ(), craft.showsEmergencyPark(Minecraft.getInstance().player));
+        var player = Minecraft.getInstance().player;
+        var reading = new Reading(craft.mode() + 1, craft.statusModes(player), (int)Math.floor(craft.flightAltitude()),
+                Math.round(craft.groundClearance()), Math.round(Math.abs(craft.driveSpeed()) * 20), thrust.fuel(),
+                thrust.capacity(), craft.highFlight(), (int)craft.routeX(), (int)craft.routeZ(), craft.showsEmergencyPark(player));
         var labels = readings.get(craft);
         if (labels == null || !labels.state.equals(reading)) {
-            labels = new Labels(reading, canvas.build(text -> {
-                text.plain("VEHICLE STATUS", 8, 4, 0xe1efff);
-                for (int mode = 0; mode < NativeVehicleStatus.MODES.size(); mode++) {
-                    text.centered(NativeVehicleStatus.MODES.get(mode), NativeVehicleStatus.buttonLeft(mode)
-                            + NativeVehicleStatus.BUTTON_WIDTH / 2, NativeVehicleStatus.BUTTON_START + 2, 0xffffff);
-                }
-                text.plain("Y " + reading.y + "   " + reading.speed + " blocks/s", 8, 33, 0xc5daf0);
-                String location = reading.high ? "X " + reading.x + " Z " + reading.z
-                        : reading.clearance >= 0 ? "Ground " + reading.clearance : "";
-                text.fitted(location, 8, 43, 112, 0xc5daf0);
-                if (reading.emergency) text.centered("Emergency Park", 64, NativeVehicleStatus.EMERGENCY_START + 1, 0xffe5bb);
-                else text.plain(reading.available ? "Fuel " + reading.fuel + " mB" : "Flight unavailable", 8, 53, 0xf2cf8a);
-            }));
+            labels = new Labels(reading);
             readings.put(craft, labels);
         }
         for (var panel : craft.statusPanels()) {
@@ -130,18 +123,46 @@ public final class NativeVehicleStatusRenderer {
             var at = panel.pos();
             matrix.set(poses.last().pose()).translate(at.getX(), at.getY(), at.getZ()).mul(face.local);
             var solid = NativeOverlayCanvas.solid(buffers);
+            var layout = VehicleStatusLayout.forHeight(face.height);
             NativeOverlayCanvas.rectangle(solid, matrix, 0, 0, 128, face.height, 0, 0xff17252f);
-            for (int mode = 0; mode < NativeVehicleStatus.MODES.size(); mode++) {
-                int left = NativeVehicleStatus.buttonLeft(mode);
-                int color = mode == reading.mode ? 0xff208675 : 0xff405663;
-                NativeOverlayCanvas.rectangle(solid, matrix, left, NativeVehicleStatus.BUTTON_START,
-                        left + NativeVehicleStatus.BUTTON_WIDTH, NativeVehicleStatus.BUTTON_END, .01, color);
+            for (int mode = 0; mode < VehicleStatusLayout.MODE_COUNT; mode++) {
+                NativeOverlayCanvas.rectangle(solid, matrix, layout.left(mode), layout.top(mode), layout.right(mode),
+                        layout.bottom(mode), .01, layout.buttonColor(reading.available, mode, reading.mode));
             }
-            if (reading.emergency) {
-                NativeOverlayCanvas.rectangle(solid, matrix, 7, NativeVehicleStatus.EMERGENCY_START,
-                        121, NativeVehicleStatus.EMERGENCY_END, .01, 0xff77513b);
-            }
-            NativeOverlayCanvas.draw(labels.glyphs, matrix, buffers, LightTexture.FULL_BRIGHT);
+            if (reading.emergency) NativeOverlayCanvas.rectangle(solid, matrix, 52, layout.footerTop,
+                    122, layout.footerBottom, .01, 0xff883c41);
+            boolean compact = face.height <= 64;
+            if (compact && labels.half == null) labels.half = labels(reading, true);
+            if (!compact && labels.full == null) labels.full = labels(reading, false);
+            NativeOverlayCanvas.draw(compact ? labels.half : labels.full, matrix, buffers, LightTexture.FULL_BRIGHT);
         }
+    }
+
+    private NativeOverlayCanvas.Mesh labels(Reading reading, boolean compact) {
+        var layout = VehicleStatusLayout.forHeight(compact ? 64 : 128);
+        return canvas.build(text -> {
+            String speed = reading.speed + " m/s";
+            text.plain(compact && reading.mode == VehicleStatusLayout.FLIGHT ? "Flight   " + speed : "VEHICLE STATUS",
+                    8, compact ? 3 : 7, 0xe1efff);
+            for (int mode = 0; mode < VehicleStatusLayout.MODE_COUNT; mode++) {
+                int color = !layout.enabled(reading.available, mode) ? 0xa0aab0 : mode == reading.mode ? 0x072d24 : 0xffffff;
+                text.centered(VehicleStatusLayout.label(mode), layout.centerX(mode), layout.centerY(mode) - 4, color);
+            }
+            String elevation = "Y " + reading.y;
+            String location = reading.high ? "X " + reading.x + "  Z " + reading.z
+                    : reading.clearance < 0 ? "" : (compact ? "AGL " : "Ground clearance ") + reading.clearance + " m";
+            String fuel = VehicleStatusLayout.fuelText(reading.fuel, reading.capacity);
+            if (compact) {
+                text.fitted(elevation, 8, 43, 48, 0xc5daf0);
+                text.fitted(fuel, 57, 43, 63, 0xf2cf8a);
+                text.fitted(location, 8, 54, reading.emergency ? 40 : 112, 0xc5daf0);
+            } else {
+                text.fitted(elevation, 8, 79, 50, 0xc5daf0);
+                if (reading.mode == VehicleStatusLayout.FLIGHT) text.fitted(speed, 59, 79, 61, 0xc5daf0);
+                text.fitted(location, 8, 89, 112, 0xc5daf0);
+                text.fitted(fuel, 8, 99, 112, 0xf2cf8a);
+            }
+            if (reading.emergency) text.fitted("Emergency Park", 55, layout.footerTop + 2, 64, 0xffe5bb);
+        });
     }
 }

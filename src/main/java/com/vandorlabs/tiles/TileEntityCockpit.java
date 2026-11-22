@@ -128,8 +128,14 @@ public class TileEntityCockpit extends TileEntityVehicleController {
     @Override public void update(){prepare();if(world==null || world.isRemote)return;expire(world.getTotalWorldTime());updatePower();if(design.equals("cockpit")){com.vandorlabs.cockpit.CockpitReservations.tick(this);}if(data().seat!=null)super.update();}
     public boolean use(Vec3d start,Vec3d end){return use(start,end,null);}
     public boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
+        return use(start,end,actor,false);
+    }
+    public boolean useEmergencyPark(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor){
+        return com.vandorlabs.vehicle.VehicleStatus.offersEmergencyPark(world,actor)&&use(start,end,actor,true);
+    }
+    private boolean use(Vec3d start,Vec3d end,net.minecraft.entity.player.EntityPlayer actor,boolean emergencyOnly){
         prepare();start=CockpitData.unrotate(start,facing());end=CockpitData.unrotate(end,facing());
-        if(design.equals("cockpit")){
+        if(!emergencyOnly&&design.equals("cockpit")){
             Vec3d buttonStart=start.addVector(0,0,-seatSlide(0)),buttonEnd=end.addVector(0,0,-seatSlide(0));
             if(new AxisAlignedBB(26.35/16,10.45/16,1.3/16,28.65/16,11.0/16,2.8/16).calculateIntercept(buttonStart,buttonEnd)!=null){toggleScreens();return true;}
             if(new AxisAlignedBB(2.8/16,10.45/16,9.6/16,5.1/16,11.0/16,11.1/16).calculateIntercept(buttonStart,buttonEnd)!=null){toggleSeat(actor);return true;}
@@ -137,8 +143,15 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         CockpitData.Surface nearest=null;double[] uv=null;
         for(CockpitData.Surface surface:data().surfaces)if(display(surface.id).active && ("touch".equals(surface.role)&&display(surface.id).texture>=0||display(surface.id).texture<=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)){double offset="screen".equals(surface.role)?-.75*screens(0):0;double slide=design.equals("cockpit")&&surface.id.equals("touch_right_keyboard")?seatSlide(0):0;double[] hit=surface.hit(start.addVector(0,-offset,-slide),end.addVector(0,-offset,-slide));if(hit!=null&&"screen".equals(surface.role)&&surface.origin.y+surface.u.y*hit[0]+surface.v.y*hit[1]+offset<10.5/16)hit=null;if(hit!=null && (uv==null || hit[2]<uv[2])){nearest=surface;uv=hit;}}
         ControlHit lever=controlHitLocal(start,end);
-        if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){Control c=control(lever.id);c.activate(c.nextColumn());return true;}
-        if(nearest!=null){if(display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){int x=(int)(uv[0]*128),y=(int)((1-uv[1])*("touch".equals(nearest.role)?64:128)),top="touch".equals(nearest.role)?0:24;int action=y>=top&&y<top+10?0:y>=top+12&&y<top+22?1+Math.min(2,Math.max(0,(x-6)/39)):y>=top+36&&y<top+46&&x<48?4:-1;if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);return true;}com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(nearest,display(nearest.id).rows);if(layout.rows==0)return true;Control c=control(nearest.id+"/"+layout.row(uv[1]));c.activate(c.kind==1?layout.sliderColumn(uv[0]):uv[0]);return true;}
+        if(lever!=null&&(uv==null||lever.distance<start.squareDistanceTo(start.add(end.subtract(start).scale(uv[2]))))){if(emergencyOnly)return false;Control c=control(lever.id);c.activate(c.nextColumn());return true;}
+        if(nearest!=null&&display(nearest.id).texture==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE){
+            int height="touch".equals(nearest.role)?64:128;
+            int action=com.vandorlabs.vehicle.VehicleStatus.panelAction(height,uv[0]*128,(1-uv[1])*height);
+            if(emergencyOnly!=(action==com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION))return false;
+            if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);
+            return true;
+        }
+        if(nearest!=null&&!emergencyOnly){com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(nearest,display(nearest.id).rows);if(layout.rows==0)return true;Control c=control(nearest.id+"/"+layout.row(uv[1]));c.activate(c.kind==1?layout.sliderColumn(uv[0]):uv[0]);return true;}
         return false;
     }
     /** Cosmetic dialog navigation uses the same posed screen planes and grip rays as interaction. */

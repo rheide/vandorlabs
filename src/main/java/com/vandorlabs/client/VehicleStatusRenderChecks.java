@@ -2,6 +2,7 @@ package com.vandorlabs.client;
 
 import com.vandorlabs.vehicle.*;
 import com.vandorlabs.tiles.*;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.shader.Framebuffer;
@@ -23,17 +24,17 @@ final class VehicleStatusRenderChecks {
             GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,128,64,0,-10,10);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
             try(TurntableRenderState saved=new TurntableRenderState()){
                 frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();
-                RedstoneScreenRenderer.drawVehicleContents(craft.view,BlockPos.ORIGIN,64,0);
+                RedstoneScreenRenderer.drawVehicleContents(craft.view,BlockPos.ORIGIN,64);
                 BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(512,256,frame);
-                if(state<0){require(!VehicleStatus.hasController(craft.view,BlockPos.ORIGIN),"missing controller detected");require((image.getRGB(320,84)&0xffffff)==0x362b19,"mode controls omitted without controller");javax.imageio.ImageIO.write(image,"png",new File(output,"vehicle-status-controller-missing.png"));continue;}
+                if(state<0){require(!VehicleStatus.hasController(craft.view,BlockPos.ORIGIN),"missing controller detected");buttons(image,64,0,VehicleStatusLayout.PARK);javax.imageio.ImageIO.write(image,"png",new File(output,"vehicle-status-controller-missing.png"));continue;}
                 require(VehicleStatus.hasController(craft.view,BlockPos.ORIGIN),"dedicated controller detected");
                 require((image.getRGB(484,20)&0xffffff)==(state==2?0x495c69:0x153a29),"Autopilot option visibility state="+state);
-                require((image.getRGB(184,176)&0xffffff)==(state==2?0x495c69:0x153a29),"departure option visibility state="+state);
-                require((image.getRGB(320,84)&0xffffff)==0x37d8ad,"Block/Taxi/Hover mode controls retained");
+                require((image.getRGB(184,236)&0xffffff)==(state==2?0x495c69:0x153a29),"departure option visibility state="+state);
+                buttons(image,64,VehicleStatus.availableModes(craft.view,BlockPos.ORIGIN,mc.player),VehicleStatusLayout.TAXI);
                 javax.imageio.ImageIO.write(image,"png",new File(output,"vehicle-status-autopilot-"+state+".png"));
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
         }
-        System.out.println("[vandorlabs][reprolab] vehicle-status-controller-live PASS missing controller reports warning without mode or Autopilot controls");
+        System.out.println("[vandorlabs][reprolab] vehicle-status-controller-live PASS missing controller warns and disables all four modes");
         System.out.println("[vandorlabs][reprolab] vehicle-status-autopilot-live PASS absent controller and waypoint hide Autopilot/departure; controller restores controls; vehicle modes retained");
     }
     static void design(Minecraft mc,File output,net.minecraft.nbt.NBTTagCompound data)throws Exception{
@@ -46,15 +47,43 @@ final class VehicleStatusRenderChecks {
             GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,128,128,0,-10,10);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
             try(TurntableRenderState saved=new TurntableRenderState()){
                 frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();
-                RedstoneScreenRenderer.drawVehicleContents(craft.view,BlockPos.ORIGIN,128,24);
+                RedstoneScreenRenderer.drawVehicleContents(craft.view,BlockPos.ORIGIN,128);
                 BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(512,512,frame);int model=0,name=0;
-                for(int y=0;y<512;y++)for(int x=0;x<512;x++){int rgb=image.getRGB(x,y)&0xffffff,r=rgb>>16,g=rgb>>8&255,b=rgb&255;if(y>=310&&x>=250&&b>g&&g>r&&g>100)model++;if(y>=32&&y<68&&r>150&&g>150&&b>150)name++;if(y>=144&&y<184&&rgb==0x37d8ad)greens[busy]++;}
+                for(int y=0;y<512;y++)for(int x=0;x<512;x++){int rgb=image.getRGB(x,y)&0xffffff,r=rgb>>16,g=rgb>>8&255,b=rgb&255;if(y>=310&&y<440&&x>=360&&b>g&&g>r&&g>100)model++;if(y>=24&&y<68&&r>150&&g>150&&b>150)name++;if(rgb==0x37d8ad)greens[busy]++;}
                 require(model==0,"Vehicle Status leaves the saved 3D model out");require(name>100,"vehicle name rendered");
                 javax.imageio.ImageIO.write(image,"png",new File(output,"vehicle-design-status-"+(busy==0?"ready":"busy")+".png"));
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
         }
-        require(greens[0]>greens[1]&&greens[1]>0,"indeterminate progress replaces mode controls");
-        System.out.println("[vandorlabs][reprolab] vehicle-design-status PASS name model-removed progress-replaces-modes rendered-pixels");
+        require(greens[0]>greens[1]&&greens[1]>0,"indeterminate progress accompanies four disabled modes");
+        System.out.println("[vandorlabs][reprolab] vehicle-design-status PASS name model-removed progress-and-disabled-modes rendered-pixels");
+    }
+    static void fuel(Minecraft mc,File output,EntityGroundVehicle craft,BlockPos pos)throws Exception{
+        VehicleFlightReadout reading=craft.flightReadout();
+        require(reading.fuel==1000&&reading.capacity==1000,"full-sized 100% fuel label");
+        for(int height:new int[]{64,128}){
+            Framebuffer frame=new Framebuffer(512,height*4,true);
+            GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,128,height,0,-10,10);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
+            try(TurntableRenderState saved=new TurntableRenderState()){
+                frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();
+                RedstoneScreenRenderer.drawVehicleContents(craft.view,pos,height);
+                BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(512,height*4,frame);
+                buttons(image,height,VehicleStatus.availableModes(craft.view,pos,mc.player),VehicleStatusLayout.TAXI);
+                int x0=height==64?57:8,y0=height==64?43:99,glyphs=0,overflow=0;
+                for(int y=y0*4;y<(y0+9)*4;y++)for(int x=x0*4;x<512;x++){
+                    if((image.getRGB(x,y)&0xffffff)!=0xc1e8ff)continue;
+                    if(x>=121*4)overflow++;else glyphs++;
+                }
+                require(glyphs>40&&overflow==0,"100% fuel amount ink fits "+height+"px face");
+                javax.imageio.ImageIO.write(image,"png",new File(output,"shot_vehicle_status_full_fuel_"+height+".png"));
+            }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
+        }
+    }
+    private static void buttons(BufferedImage image,int height,int available,int active){
+        VehicleStatusLayout layout=VehicleStatusLayout.forHeight(height);
+        for(int mode=0;mode<VehicleStatusLayout.MODE_COUNT;mode++){
+            int actual=image.getRGB((layout.left(mode)+2)*4,(layout.top(mode)+1)*4)&0xffffff;
+            require(actual==(layout.buttonColor(available,mode,active)&0xffffff),"button "+VehicleStatusLayout.label(mode)+" rendered in its 2x2 cell");
+        }
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Vehicle status render: "+message);}
 }
