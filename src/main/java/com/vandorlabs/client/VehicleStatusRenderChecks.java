@@ -29,7 +29,7 @@ final class VehicleStatusRenderChecks {
                 javax.imageio.ImageIO.write(second,"png",new File(output,"shot_vehicle-"+gauge.name().toLowerCase(java.util.Locale.ROOT)+"-"+height+".png"));
             }
         }
-        System.out.println("[vandorlabs][reprolab] vehicle-instruments PASS attitude, magnetic heading, altitude, dynamic speed range, compact and full panels");
+        System.out.println("[vandorlabs][reprolab] vehicle-instruments PASS attitude, cardinal heading, altitude, dynamic speed range, compact and full panels");
     }
 
     static void airborneInstruments(Minecraft mc,File output,EntityGroundVehicle craft,BlockPos screen)throws Exception{

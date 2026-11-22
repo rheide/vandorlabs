@@ -1,5 +1,7 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.screen.VehicleInstrument;
+
 import java.lang.reflect.*;
 import java.util.*;
 
@@ -16,13 +18,26 @@ public final class MaterialPickerRowsChecks {
         require(picker.selected()==-1&&rows(picker).contains(-1),"Original artwork -1 lost as a native material option");
         field("scroll").setInt(picker,rows(picker).indexOf(-1));Method visible=HousingTextureList.class.getDeclaredMethod("visibleChoice",int.class);visible.setAccessible(true);
         require(((Integer)visible.invoke(picker,0))==-200002,"Negative Original artwork must pin its category heading");
-        picker.custom(value->{}).redstone(()->{}).vehicle(()->{}).chip(()->{});
+        picker.custom(value->{}).redstone(()->{}).vehicle(value->{}).chip(()->{});
         require(rows(picker).subList(rows(picker).size()-4,rows(picker).size()).equals(Arrays.asList(-100000,-100001,-100002,-100003)),"Adapter action rows changed order");
         field("query").set(picker,"bridge");rebuild(picker);
         require(rows(picker).equals(Arrays.asList(11,7,2,23,-100000,-100001,-100002,-100003)),"Search no longer follows original options order with actions last");
         picker.thumbnail(11,"tex/changed");field("query").set(picker,"changed");rebuild(picker);
         require(rows(picker).equals(Arrays.asList(11,-100000,-100001,-100002,-100003)),"Replacement thumbnail search text was cached stale");
-        field("query").set(picker,"");picker.setSelected(11);
+        field("query").set(picker,"compass");rebuild(picker);
+        require(rows(picker).contains(VehicleInstrument.COMPASS.choice)&&!rows(picker).contains(VehicleInstrument.STATUS.choice),
+                "instrument search reveals matching children in the closed folder");
+        field("query").set(picker,"");
+        field("vehicleOpen").setBoolean(picker,true);
+        rebuild(picker);
+        int vehicle=rows(picker).indexOf(-100002);
+        for(int i=0;i<VehicleInstrument.values().length;i++){
+            VehicleInstrument instrument=VehicleInstrument.values()[i];
+            require(rows(picker).get(vehicle+i+1)==instrument.choice,"folder contains "+instrument.label);
+            picker.setSelected(instrument.choice);
+            require(picker.selected()==instrument.choice,"picker preserves saved choice for "+instrument.label);
+        }
+        field("vehicleOpen").setBoolean(picker,false);picker.setSelected(11);
         @SuppressWarnings("unchecked") Set<String> expanded=(Set<String>)field("expanded").get(picker);expanded.remove("Bridge");rebuild(picker);
         require(!rows(picker).contains(11)&&picker.selected()==11,"Collapsed ancestry changed selection or left child visible");
         HousingTextureList namespaced=new HousingTextureList(0,0,180,1,8,Arrays.asList(
