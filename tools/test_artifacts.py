@@ -462,7 +462,7 @@ class ArtifactRun:
             self._thread.join(timeout=2)
         self._refresh()
 
-    def finish(self, success, active_processes=()):
+    def finish(self, success, active_processes=(), *, discard_success=False):
         """Presence of caller-confirmed live handles/groups blocks deletion unconditionally."""
         self._validate()
         self.stop_tracking()
@@ -488,12 +488,20 @@ class ArtifactRun:
                 return {'status': 'active', 'removed_bytes': 0}
             keep = self.metadata['keep'] or _keep()
             completed = dict(success=all(l.get('success') for l in leases), keep=keep, finished=time.time())
+            if discard_success and completed['success'] and not keep:
+                # A private completed fixture can forgo diagnostic archiving.
+                retired = root.with_name('.discard-' + self.metadata['id'])
+                root.rename(retired)
+                lock = retired / LOCK
+                shutil.rmtree(retired)
+                return {'status': 'discarded'}
             if not (root / FINISHED).exists():
                 if not keep:
                     completed['evidence'], completed['preserve'] = _evidence(root, self.metadata)
                 _write(root / FINISHED, completed)
         finally:
-            lock.rmdir()
+            if lock.exists():
+                lock.rmdir()
         if keep:
             _write(root / 'retention.json', dict(status='kept', removed_bytes=0, reason=KEEP_ENV))
         reports = sweep(root.parent)

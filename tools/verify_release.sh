@@ -130,8 +130,7 @@ else
 from pathlib import Path
 import sys
 out=Path(sys.argv[1])
-fixture=next(line.split(': ',1)[1] for line in (out/'dynmap.log').read_text().splitlines() if line.startswith('Isolated Dynmap fixture: '))
-actual=(Path(fixture)/'artifact.sha256').read_text().split()[0]
+actual, = [line.removeprefix('Dynmap tested SHA-256: ') for line in (out/'dynmap.log').read_text().splitlines() if line.startswith('Dynmap tested SHA-256: ')]
 expected=(out/'artifact.sha256').read_text().split()[0]
 assert actual==expected, 'Dynmap fixture artifact differs from frozen candidate'
 PYDYNMAP

@@ -1,6 +1,6 @@
 # Test artifact retention
 
-Find new Dynmap runs in `build/test-artifacts/dynmap/` and direct physical-server runs in `build/test-artifacts/`. Earlier runs and loose historical logs are grouped under `build/archive/`. Standard Forge JARs are in `build/libs/` and release reports are in `build/release-checks/`.
+Successful Dynmap renders remove their entire fixture after server shutdown. The release log records the rendered tile count and the SHA-256 of the installed test JAR. Set `VANDOR_LABS_TEST_KEEP_ARTIFACTS=1` to inspect a successful render. Find retained Dynmap runs in `build/test-artifacts/dynmap/` and direct physical-server runs in `build/test-artifacts/`. Earlier runs and loose historical logs are grouped under `build/archive/`. Standard Forge JARs are in `build/libs/` and release reports are in `build/release-checks/`.
 
 The legacy viewscreen harness resolves custom run roots to absolute paths before launching the client, whose working directory differs from the outer suite. This keeps copied mods, captured output and disposable game files in the same owned runtime.
 

@@ -37,6 +37,24 @@ class RetentionChecks(unittest.TestCase):
         (game / 'world.bin').write_bytes(b'x' * size)
         return game
 
+    def test_discard_success_respects_failed_phases_and_explicit_keep(self):
+        root, owner = self.run_dir('passing')
+        self.payload(root)
+        self.assertEqual(owner.finish(True, discard_success=True)['status'], 'discarded')
+        self.assertFalse(root.exists())
+
+        root, owner = self.run_dir('multiple')
+        phase = retention.ArtifactRun.attach(root)
+        self.assertEqual(owner.finish(True, discard_success=True)['status'], 'active')
+        phase.finish(False, discard_success=True)
+        self.assertFalse(json.loads((root / retention.FINISHED).read_text())['success'])
+
+        with patch.dict(os.environ, {retention.KEEP_ENV: '1'}):
+            root, owner = self.run_dir('kept')
+        self.payload(root)
+        owner.finish(True, discard_success=True)
+        self.assertTrue((root / 'game/world.bin').is_file())
+
     def test_success_extracts_only_bounded_diagnostics_and_keeps_reports(self):
         root, owner = self.run_dir()
         game = self.payload(root)

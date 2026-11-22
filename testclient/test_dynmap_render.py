@@ -544,15 +544,21 @@ def main():
     parent.mkdir(parents=True, exist_ok=True)
     output = Path(tempfile.mkdtemp(prefix='dynmap-render-', dir=parent))
     artifact=ArtifactRun(output,disposable_paths=('mods','world','dynmap','logs','config','core-projection-classes'))
-    with artifact:
+    success = False
+    try:
         run_fixture(args,root,output,artifact)
+        success = True
+    finally:
+        artifact.finish(success, discard_success=True)
 
 def run_fixture(args,root,output,artifact):
     print('Isolated Dynmap fixture:',output,flush=True)
     if args.focus=='frame-machines':core_projection_reference(output,args.jar,args.java)
     (output/'mods').mkdir();(output/'dynmap').mkdir()
     for mod in (args.jar,args.dynmap,*args.mod):shutil.copyfile(mod,output/'mods'/mod.name)
-    (output/'artifact.sha256').write_text(hashlib.sha256(args.jar.read_bytes()).hexdigest()+'\n')
+    digest = hashlib.sha256((output/'mods'/args.jar.name).read_bytes()).hexdigest()
+    (output/'artifact.sha256').write_text(digest+'\n')
+    print('Dynmap tested SHA-256:', digest, flush=True)
     with socket.socket() as sock:sock.bind(('127.0.0.1',0));port=sock.getsockname()[1]
     (output/'eula.txt').write_text('eula=true\n')
     (output/'server.properties').write_text(f'online-mode=false\nserver-ip=127.0.0.1\nserver-port={port}\nlevel-type=FLAT\ngenerate-structures=false\nspawn-animals=false\nspawn-monsters=false\nview-distance=3\nallow-nether=false\nmax-tick-time=120000\n')
