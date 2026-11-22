@@ -14,6 +14,7 @@ final class Utility26FocusedChecks {
         if(Boolean.getBoolean("vandorlabs.savedOculusChecks"))return com.vandorlabs.gear.SavedOculusArmChecks.tick(mc,output);
         if(Boolean.getBoolean("vandorlabs.stowedFootOnly"))return com.vandorlabs.gear.ArmStowedFootLiveChecks.tick(mc);
         if(Boolean.getBoolean("vandorlabs.glassStaleOwnerOnly"))return GlassStaleOwnerLiveChecks.tick(mc);
+        if(Boolean.getBoolean("vandorlabs.glassArtworkTerrainOnly"))return GlassArtworkTerrainLiveChecks.tick(mc);
         if("true".equals(System.getenv("VANDOR_RESOURCE_PORT_MODS_ONLY")))return ResourcePortModLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_RESOURCE_PORTS_ONLY")))return ResourcePortLiveChecks.tick(mc,output);
         if("true".equals(System.getenv("VANDOR_MACHINE_DIALOGS_ONLY"))){if(++ticks<80)return false;MachineDialogVisualChecks.run(mc,output);SurfaceClientChecks.dialogs(mc,output);System.out.println("[vandorlabs][reprolab] utility26-focused PASS machine-dialogs-only actualSourcePort+Surface");return true;}
