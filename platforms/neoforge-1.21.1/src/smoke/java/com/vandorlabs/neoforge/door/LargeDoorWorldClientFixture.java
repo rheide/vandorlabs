@@ -45,6 +45,7 @@ public final class LargeDoorWorldClientFixture {
   @SubscribeEvent public static void payload(net.neoforged.neoforge.network.event.RegisterPayloadHandlersEvent event){if(!enabled())return;event.registrar("1").playToServer(Mode.TYPE,new StreamCodec<RegistryFriendlyByteBuf,Mode>(){public Mode decode(RegistryFriendlyByteBuf bytes){if(bytes.readableBytes()!=1)throw new IllegalArgumentException("Canonical client fixture mode length");return new Mode(bytes.readUnsignedByte());}public void encode(RegistryFriendlyByteBuf bytes,Mode mode){bytes.writeByte(mode.operation());}},(p,c)->c.enqueueWork(()->{if(c.player() instanceof ServerPlayer player)mode(player,p.operation());}));}
  }
  public record Mode(int operation) implements CustomPacketPayload {public static final Type<Mode> TYPE=new Type<>(ResourceLocation.fromNamespaceAndPath("vandorlabs","large_door_world_client_mode"));public Type<? extends CustomPacketPayload> type(){return TYPE;}}
+ private static String describe(NativeDoorSettings s){var d=s.door();return "[panel="+s.panelMode()+" depth="+s.depth()+" sliding="+d.sliding+" direction="+d.direction+" framed="+d.framed+" trigger="+d.trigger+" security="+s.securityMode()+"]";}
  private static void mode(ServerPlayer player,int operation){var world=player.serverLevel();var tile=host(player);
   switch(operation){
    case 0->{need(complete(player)&&tile.getType()==net.minecraft.core.registries.BuiltInRegistries.BLOCK_ENTITY_TYPE.get(ResourceLocation.fromNamespaceAndPath("vandorlabs",NativeDoorSettings.LARGE_ID))&&player.getMainHandItem().is(item())&&player.getMainHandItem().getCount()==1,"real survival center packet placed all9 and consumed one");System.out.println("[vandorlabs][large-door-world-client] placement PASS");swap(player,1);bodyPose(player);}
@@ -65,11 +66,38 @@ public final class LargeDoorWorldClientFixture {
     var member=(NativeLargeDoorEntity)world.getBlockEntity(POS.east(3));
     var group=NativeLargeDoorJoins.group(member);
     need(joinedOnly()&&member.joinEnabled()&&group.columns==2&&group.rows==2&&group.anchor==tile,
-         "real Join editor round trip rebuilds the same aperture");
+         "real Join editor round trip rebuilds the same aperture: join="+member.joinEnabled()+" group="+group.columns+"x"+group.rows+" anchor="+(group.anchor==null?"none":group.anchor.getBlockPos())+" expected="+tile.getBlockPos()+" members="+group.members.size()+" eligible="+NativeLargeDoorJoins.eligible(member.settings())+" compatible="+NativeLargeDoorJoins.compatible(tile.settings(),member.settings())
+         +" rootJoin="+tile.joinEnabled()+" complete="+NativeLargeDoorLifecycle.complete(world,member)+" recovery="+member.placementRecovery()+" member="+describe(member.settings())+" root="+describe(tile.settings()));
     world.setBlock(POS.offset(3,0,8),Blocks.STONE.defaultBlockState(),Block.UPDATE_ALL);
     pose(player,3.5,POS.getY()+1,8.5,new Vec3(3,POS.getY()+3,.5));
     completed=true;
     System.out.println("[vandorlabs][large-door-world-client] join-editor PASS");
+   }
+   case 18->{
+    // Every member of the joined 2x2 group turns rotating, then the group opens.
+    var group=NativeLargeDoorJoins.group(tile);
+    for(var member:group.members){var d=member.settings();var door=d.door();
+     var edit=new NativeDoorEdit(door.design,door.detail,false,door.direction,d.depth(),false,door.hinges,door.trigger,door.panel,d.panelMode(),d.securityMode(),d.securityAllowed(),d.faceTexture(),d.textureLayout());
+     if(member.stage(edit,member.getRedstoneChannels()))member.publish();
+     need(!member.settings().door().sliding,"joined member is rotating");}
+    need(NativeLargeDoorLifecycle.setState(world,tile,false,true),"joined rotating group opens");
+    // Look straight down on the 6x6 opening from above its centre, hovering.
+    pose(player,POS.getX()+3,POS.getY()+11,POS.getZ()+.5,new Vec3(POS.getX()+3.001,POS.getY(),POS.getZ()+.5));
+    player.setGameMode(GameType.CREATIVE);player.getAbilities().flying=true;player.onUpdateAbilities();
+    System.out.println("[vandorlabs][large-door-world-client] joined rotating open");
+   }
+   case 19->{
+    // Closed again with a glass design and a Tile glass material on every member.
+    NativeLargeDoorLifecycle.setState(world,tile,false,false);
+    int material=-1;for(int i=0;i<4096&&material<0;i++)if(com.vandorlabs.neoforge.ModernFinishCatalog.validChoice(i)&&com.vandorlabs.neoforge.ModernFinishCatalog.option(i).general())material=i;
+    need(material>=0,"a general finish exists for glass");
+    var group=NativeLargeDoorJoins.group(tile);
+    for(var member:group.members){var d=member.settings();var door=d.door();
+     var edit=new NativeDoorEdit(15,door.detail,false,door.direction,d.depth(),true,door.hinges,door.trigger,door.panel,d.panelMode(),d.securityMode(),d.securityAllowed(),-1,d.textureLayout());
+     if(member.stage(edit,member.getRedstoneChannels()))member.publish();
+     if(member.stageGlass(new NativeDoorGlass(material,0,1,com.vandorlabs.render.TextureLayoutMode.TILE)))member.publish();
+     need(member.settings().door().design==15&&member.settings().glass().material==material&&member.settings().glass().layout==com.vandorlabs.render.TextureLayoutMode.TILE,"joined member has the glass design and Tile glass");}
+    System.out.println("[vandorlabs][large-door-world-client] joined glass tile");
    }
    default->throw new IllegalArgumentException("Canonical Large client fixture operation");
   }

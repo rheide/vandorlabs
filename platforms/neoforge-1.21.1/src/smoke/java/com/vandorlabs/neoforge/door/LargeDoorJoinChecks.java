@@ -55,6 +55,7 @@ public final class LargeDoorJoinChecks {
                 verify(level,origin,horizontal,2,2,true);
             }
         }
+        if(phase.equals("write"))opposite(level,actor);
         if(phase.equals("write"))finish(level,"write");
         else pendingRead=level;
     }
@@ -120,7 +121,9 @@ public final class LargeDoorJoinChecks {
         need(upper.itemSettings().equals(first.itemSettings()),"fresh upper module inherits complete compatible settings");
         need(upper.joinEnabled(),"fresh stacked row inherits Join from a solid supported opted-in base");
         NativeLargeDoorJoins.flush(level);
-        need(first.rendersAssembly()&&second.rendersAssembly(),"L-shaped component stays independent");
+        // Shared grouping: an L of three keeps its bottom pair; the upper module stays single.
+        verify(level,origin,horizontal,2,1,false);
+        need(upper.rendersAssembly(),"L-shaped component keeps its pair and leaves the upper module single");
         var fourth=place(actor,cell(origin,horizontal,3,3),horizontal,null);
         need(fourth.itemSettings().equals(first.itemSettings()),"ordinary fourth placement rejoins the completed rectangle first="+first.itemSettings()+" fourth="+fourth.itemSettings());
         verify(level,origin,horizontal,2,2,false);
@@ -178,6 +181,34 @@ public final class LargeDoorJoinChecks {
         return root;
     }
 
+    /**
+     * Reported: four joining doors placed one by one never formed one door, because a door placed
+     * from the other side of the wall faced the other way. A door placed beside a joining door from
+     * the opposite side takes that door's facing for the same footprint and joins it.
+     */
+    private static void opposite(ServerLevel level,Actor actor){
+        BlockPos origin=WALL.offset(0,0,24);
+        for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++){level.setChunkForced((origin.getX()>>4)+x,(origin.getZ()>>4)+z,true);level.getChunkAt(origin.offset(x*16,0,z*16));}
+        for(var at:BlockPos.betweenClosed(origin.offset(-4,-1,-4),origin.offset(10,7,4)))
+            level.setBlock(at,at.getY()==origin.getY()-1?net.minecraft.world.level.block.Blocks.STONE.defaultBlockState():net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),3);
+        var first=place(actor,origin,false,null);
+        need(NativeLargeDoorJoins.change(actor,first,true)&&first.joinEnabled(),"first door opts in to Join");
+        // The player stands on the other side of the wall and clicks the floor under the next door's middle.
+        BlockPos middle=cell(origin,false,4,0),support=middle.below();
+        var stack=new ItemStack(NativeLargeDoorRegistrations.ITEM.get(),2);
+        actor.setItemInHand(InteractionHand.MAIN_HAND,stack);
+        actor.setYRot(FACE.toYRot());
+        actor.setPos(middle.getX()+.5,middle.getY(),middle.getZ()+.5);
+        need(NativeLargeDoorRegistrations.ITEM.get().useOn(new UseOnContext(actor,InteractionHand.MAIN_HAND,new BlockHitResult(Vec3.atCenterOf(support).add(0,.5,0),Direction.UP,support,false))).consumesAction(),
+                "second door placed from the opposite side");
+        BlockPos secondAnchor=cell(origin,false,3,0);
+        need(level.getBlockEntity(secondAnchor) instanceof NativeLargeDoorEntity second&&second.isAnchor()
+                &&second.getBlockState().getValue(NativeLargeDoorBlock.FACING)==FACE,"second door takes the joining door's facing and footprint: "+level.getBlockState(secondAnchor));
+        NativeLargeDoorJoins.flush(level);
+        var group=NativeLargeDoorJoins.group(first);
+        need(group.columns==2&&group.rows==1,"doors placed from opposite sides join: "+group.columns+"x"+group.rows);
+        System.out.println("[vandorlabs][large-door-join] opposite-side placement joins");
+    }
     private static BlockPos cell(BlockPos origin,boolean horizontal,int x,int y){
         return NativeLargeDoorLifecycle.cell(origin,FACE,horizontal,x,y);
     }

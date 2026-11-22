@@ -455,7 +455,12 @@ task testCornerGlass(type: JavaExec) {
     classpath = files("$buildDir/portable-tests")
     main = 'com.vandorlabs.render.CornerGlassChecks'
 }
-check.dependsOn testMoatGeometry, testFrontCanopyRenderDepth, testCornerGlass
+task testDoorLeafSwing(type: JavaExec) {
+    dependsOn compilePortableTests
+    classpath = files("$buildDir/portable-tests")
+    main = 'com.vandorlabs.render.DoorLeafSwingChecks'
+}
+check.dependsOn testMoatGeometry, testFrontCanopyRenderDepth, testCornerGlass, testDoorLeafSwing
 task testCompactAnimation(type: JavaExec) {
     dependsOn compilePortableTests
     classpath = files("$buildDir/portable-tests")

@@ -104,6 +104,31 @@ public final class LargeDoorWorldClientChecks {
    case 56->{
     if(!captured)return;
     renderer(mc,true,tile);
+    // The anchor draws the whole opening, so it must render while its own section is out of view.
+    try{var field=net.minecraft.client.renderer.LevelRenderer.class.getDeclaredField("globalBlockEntities");field.setAccessible(true);
+     need(((java.util.Set<?>)field.get(mc.levelRenderer)).contains(tile),"joined Large Door anchor draws as a global block entity");}
+    catch(ReflectiveOperationException failure){throw new AssertionError(failure);}
+    mode(18);stage=57;
+   }
+   case 57->{
+    if(tile.settings().door().sliding||!tile.getBlockState().getValue(NativeLargeDoorBlock.OPEN)||ticks<wait+60)return;
+    // From straight above the opening (posed by the server): opened hinged leaves must reach about half the group's width.
+    if(mc.player.getXRot()<85||mc.player.getY()<root.getY()+10){need(ticks<wait+400,"camera above the opening: pitch="+mc.player.getXRot()+" pos="+mc.player.position());return;}
+    mc.options.fov().set(70);
+    capture("joined-rotating-top.png");stage=58;wait=ticks;
+   }
+   case 58->{
+    if(!captured)return;
+    // The shot is kept for review; the leaves must swing with the group's two columns (see DoorLeafSwingChecks for the reach).
+    need(com.vandorlabs.neoforge.NativeDoorRenderer.lastLeafAcross==2,"opened joined leaves swing with the group's column count: "+com.vandorlabs.neoforge.NativeDoorRenderer.lastLeafAcross);
+    com.vandorlabs.neoforge.NativeDoorRenderer.lastGlassScale=null;mode(19);stage=59;wait=ticks;
+   }
+   case 59->{
+    if(tile.settings().door().design!=15||tile.settings().glass().material<0||ticks<wait+40)return;
+    var scale=com.vandorlabs.neoforge.NativeDoorRenderer.lastGlassScale;
+    if(scale==null)return;
+    need(Math.abs(scale[0]-3)<1e-9&&Math.abs(scale[1]-3)<1e-9,"Tile glass is laid out for the joined 2x2 leaf (3x3), not one module: "+scale[0]+"x"+scale[1]);
+    System.out.println("[vandorlabs][large-door-world-client] joined render PASS global anchor, full-width rotating leaves, group-sized Tile glass");
     mc.level.disconnect();mc.disconnect();stage=30;
    }
    case 40->{

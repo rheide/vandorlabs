@@ -57,7 +57,11 @@ public final class NativeDoorMesh {
     private static final ThreadLocal<Scratch> SCRATCH=ThreadLocal.withInitial(Scratch::new);
     /** Caller selects the body/pane layer and diffuse group; source colors and UVs survive. */
     public void emit(PoseStack.Pose pose,VertexConsumer target,Direction face,double depth,int light,int overlay,double shiftX,double shiftY,double pivotX,double pivotZ,double angle,double size,double leafOffset,float opacity,boolean diffuse){
-        var s=SCRATCH.get();if(s.transformed.length<source.length)s.transformed=new int[source.length];DoorMeshTransform.write(source,8,s.transformed,panel,false,face.get3DDataValue(),0,0,0,depth,light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset);
+        emit(pose,target,face,depth,light,overlay,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset,opacity,diffuse,1);
+    }
+    /** {@code across}: how many modules wide a joined Large Door leaf is inside its group's stretch. */
+    public void emit(PoseStack.Pose pose,VertexConsumer target,Direction face,double depth,int light,int overlay,double shiftX,double shiftY,double pivotX,double pivotZ,double angle,double size,double leafOffset,float opacity,boolean diffuse,double across){
+        var s=SCRATCH.get();if(s.transformed.length<source.length)s.transformed=new int[source.length];DoorMeshTransform.write(source,8,s.transformed,panel,false,face.get3DDataValue(),0,0,0,depth,light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset,across);
         double radians=Math.toRadians(angle),cos=Math.cos(radians),sin=Math.sin(radians);
         for(int q=0;q<shade.length;q++){if(shade[q]!=diffuse)continue;for(int v=0;v<4;v++){
             int at=q*32+v*8,n=source[at+7];double nx=(byte)n/127D,ny=(byte)(n>>>8)/127D,nz=(byte)(n>>>16)/127D,rx=cos*nx+sin*nz,rz=-sin*nx+cos*nz;

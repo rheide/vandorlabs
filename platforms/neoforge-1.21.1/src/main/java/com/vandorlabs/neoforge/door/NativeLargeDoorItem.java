@@ -10,8 +10,34 @@ import net.minecraft.world.item.context.BlockPlaceContext;
 /** Large item: clicked bottom center, three supports, all nine edit checks. */
 public final class NativeLargeDoorItem extends BlockItem {
  public NativeLargeDoorItem(NativeLargeDoorBlock block,Properties properties){super(block,properties);}
+ /**
+  * A complete joining door covering one of the four 3x3 squares beside this footprint in its plane,
+  * with a different facing; null when none exists or one already shares {@code face}.
+  */
+ private static NativeLargeDoorEntity orientationPartner(net.minecraft.world.level.Level level,BlockPos anchor,Direction face,boolean horizontal){
+  Direction width=face.getCounterClockWise(),row=NativeLargeDoorLifecycle.rows(face,horizontal);
+  BlockPos middle=anchor.relative(width).relative(row);NativeLargeDoorEntity partner=null;
+  for(Direction step:new Direction[]{width,width.getOpposite(),row,row.getOpposite()}){
+   BlockPos at=middle.relative(step,com.vandorlabs.render.LargeDoorJoin.PITCH);
+   if(!NativeLargeDoorLifecycle.loaded(level,at)||!(level.getBlockEntity(at) instanceof NativeLargeDoorEntity part))continue;
+   BlockPos rootPos=part.anchorPos();
+   if(!NativeLargeDoorLifecycle.loaded(level,rootPos)||!(level.getBlockEntity(rootPos) instanceof NativeLargeDoorEntity root)||!root.isAnchor()
+           ||!root.joinEnabled()||root.isHorizontal()!=horizontal||!NativeLargeDoorLifecycle.complete(level,root))continue;
+   Direction front=root.getBlockState().getValue(NativeLargeDoorBlock.FACING);
+   if(!NativeLargeDoorLifecycle.cell(rootPos,front,horizontal,1,1).equals(at))continue;
+   if(front==face)return null;
+   if(partner==null&&(horizontal||front.getAxis()==face.getAxis()))partner=root;
+  }
+  return partner;
+ }
  @Override public InteractionResult place(BlockPlaceContext context){
   var level=context.getLevel();var player=context.getPlayer();var stack=context.getItemInHand();var block=(NativeLargeDoorBlock)getBlock();BlockPos center=context.getClickedPos();boolean horizontal=context.getClickedFace().getAxis().isHorizontal()&&!context.replacingClickedOnBlock();Direction face=horizontal?context.getClickedFace():context.getHorizontalDirection().getOpposite(),width=face.getCounterClockWise();BlockPos anchor=center.relative(width,-1);
+  // Beside an existing joining door, take its orientation for the same 3x3 footprint so the two
+  // join whichever wall was clicked; a neighbour already sharing this facing wins.
+  var partner=orientationPartner(level,anchor,face,horizontal);
+  if(partner!=null){BlockPos middle=anchor.relative(width).relative(NativeLargeDoorLifecycle.rows(face,horizontal));
+   face=partner.getBlockState().getValue(NativeLargeDoorBlock.FACING);width=face.getCounterClockWise();
+   anchor=middle.relative(width,-1).relative(NativeLargeDoorLifecycle.rows(face,horizontal),-1);center=anchor.relative(width);}
   if(player==null||stack.isEmpty()||!context.canPlace()||!NativeLargeDoorLifecycle.loaded(level,center)||level.isOutsideBuildHeight(anchor)||level.isOutsideBuildHeight(NativeLargeDoorLifecycle.cell(anchor,face,horizontal,2,2)))return InteractionResult.FAIL;
   for(int x=0;x<3;x++)for(int y=0;y<3;y++){BlockPos cell=NativeLargeDoorLifecycle.cell(anchor,face,horizontal,x,y);if(!NativeLargeDoorLifecycle.loaded(level,cell)||!level.getBlockState(cell).canBeReplaced(context)||level.getBlockState(cell).hasBlockEntity()||level.getBlockEntity(cell)!=null||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(level,cell)||!level.mayInteract(player,cell)||!player.mayUseItemAt(cell,context.getClickedFace(),stack))return InteractionResult.FAIL;}
   CompoundTag configured=null,recovery=null;var custom=stack.get(DataComponents.CUSTOM_DATA);if(custom!=null){var tag=custom.copyTag();if(tag.contains("SpaceDoorSettings",Tag.TAG_COMPOUND))configured=tag.getCompound("SpaceDoorSettings");if(tag.contains(com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.RECOVERY_KEY)){if(!tag.contains(com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.RECOVERY_KEY,Tag.TAG_COMPOUND))return InteractionResult.FAIL;recovery=tag.getCompound(com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.RECOVERY_KEY);if(!com.vandorlabs.neoforge.credentials.NativeDoorCredentialService.validOpaqueRecovery(recovery,level.registryAccess()))return InteractionResult.FAIL;}}var hit=com.vandorlabs.neoforge.placement.NativePlacementHit.hit(context);int depth=horizontal?PanelDepthPolicy.fromHit((float)hit.y):PanelDepthPolicy.fromHit(face.get3DDataValue(),(float)hit.x,(float)hit.z);NativeDoorSettings settings;try{settings=NativeLargeDoorPlacement.choices(configured,depth);}catch(IllegalArgumentException malformed){return InteractionResult.FAIL;}var support=NativeLargeDoorLifecycle.supportDoor(level,anchor,face,horizontal);

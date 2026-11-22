@@ -5,6 +5,14 @@ public final class DoorMeshTransform {
     private DoorMeshTransform(){}
     /** Input/output retain the caller's complete vertex format. Only positions and optional light change. */
     public static void write(int[] source,int stride,int[] out,boolean panel,boolean writeLight,int facing,double x,double y,double z,double depth,int light,double shiftX,double shiftY,double pivotX,double pivotZ,double angle,double size,double leafOffset){
+        write(source,stride,out,panel,writeLight,facing,x,y,z,depth,light,shiftX,shiftY,pivotX,pivotZ,angle,size,leafOffset,1);
+    }
+    /**
+     * {@code across}: a joined Large Door leaf drawn inside its group's sideways stretch. The leaf
+     * swings in true proportions, its width {@code across} times larger, and is divided back out of
+     * that stretch, so an opened hinged leaf keeps the group's full width.
+     */
+    public static void write(int[] source,int stride,int[] out,boolean panel,boolean writeLight,int facing,double x,double y,double z,double depth,int light,double shiftX,double shiftY,double pivotX,double pivotZ,double angle,double size,double leafOffset,double across){
         if(stride<7||source.length%stride!=0||out.length<source.length)throw new IllegalArgumentException("Door vertex record size");
         double radians=Math.toRadians(angle),cos=Math.cos(radians),sin=Math.sin(radians);
             // Keep the panel's existing lightmap convention; item leaves use constant block/sky coordinates.
@@ -13,8 +21,8 @@ public final class DoorMeshTransform {
                 double px=Float.intBitsToFloat(source[i]),py=Float.intBitsToFloat(source[i+1]),pz=Float.intBitsToFloat(source[i+2]);
                 px*=size;py*=size;
                 if(panel)py+=SpaceDoorControlPanel.verticalOffset(size);
-                double dx=px-pivotX,dz=pz-pivotZ;
-                px=cos*dx+sin*dz+pivotX+shiftX+leafOffset;pz=-sin*dx+cos*dz+pivotZ+depth;py+=shiftY;
+                double dx=(px-pivotX)*across,dz=pz-pivotZ;
+                px=(cos*dx+sin*dz)/across+pivotX+shiftX+leafOffset;pz=-sin*dx+cos*dz+pivotZ+depth;py+=shiftY;
                 double worldX,worldZ;
                 switch(facing){
                     case 2:worldX=1-px;worldZ=1-pz;break;

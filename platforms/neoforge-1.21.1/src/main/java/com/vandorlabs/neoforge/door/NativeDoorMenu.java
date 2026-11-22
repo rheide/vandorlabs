@@ -23,12 +23,24 @@ public final class NativeDoorMenu extends AbstractContainerMenu {
         var menu=editing(player,pos,window);
         return menu!=null&&menu.tile instanceof NativeLargeDoorEntity large&&NativeLargeDoorJoins.change(player,large,enabled);
     }
-    public static boolean applyFrames(ServerPlayer player,BlockPos pos,int window,com.vandorlabs.persistence.FrameSettings frames){var menu=editing(player,pos,window);if(menu==null||!NativeProgrammableDoorEntity.validFrames(frames))return false;boolean first=menu.tile.stageFrames(frames),second=menu.mate!=null&&menu.mate.stageFrames(frames);if(first)menu.tile.publish();if(second)menu.mate.publish();return true;}
-    public static boolean applyGlass(ServerPlayer player,BlockPos pos,int window,NativeDoorGlass glass){var menu=editing(player,pos,window);if(menu==null||glass==null||!(com.vandorlabs.ui.SpaceDoorDialog.glassPage(menu.tile.settings().door().design)||menu.tile.settings().faceTexture()>=0&&com.vandorlabs.neoforge.ModernFinishCatalog.option(menu.tile.settings().faceTexture()).id().equals("utility_door_reactor")))return false;boolean first=menu.tile.stageGlass(glass),second=menu.mate!=null&&menu.mate.stageGlass(glass);if(first)menu.tile.publish();if(second)menu.mate.publish();return true;}
+    public static boolean applyFrames(ServerPlayer player,BlockPos pos,int window,com.vandorlabs.persistence.FrameSettings frames){var menu=editing(player,pos,window);if(menu==null||!NativeProgrammableDoorEntity.validFrames(frames))return false;var targets=targets(player,menu);var staged=new java.util.ArrayList<NativeProgrammableDoorEntity>();for(var door:targets)if(door.stageFrames(frames))staged.add(door);for(var door:staged)door.publish();return true;}
+    public static boolean applyGlass(ServerPlayer player,BlockPos pos,int window,NativeDoorGlass glass){var menu=editing(player,pos,window);if(menu==null||glass==null||!(com.vandorlabs.ui.SpaceDoorDialog.glassPage(menu.tile.settings().door().design)||menu.tile.settings().faceTexture()>=0&&com.vandorlabs.neoforge.ModernFinishCatalog.option(menu.tile.settings().faceTexture()).id().equals("utility_door_reactor")))return false;var targets=targets(player,menu);var staged=new java.util.ArrayList<NativeProgrammableDoorEntity>();for(var door:targets)if(door.stageGlass(glass))staged.add(door);for(var door:staged)door.publish();return true;}
+    /**
+     * The edited door, its paired mate, and every other member of a joined Large Door group the
+     * player may edit: a joined group shares one configuration, so an edit to one member keeps
+     * the group together instead of leaving that member incompatible with the rest.
+     */
+    private static java.util.List<NativeProgrammableDoorEntity> targets(ServerPlayer player,NativeDoorMenu menu){
+        var targets=new java.util.LinkedHashSet<NativeProgrammableDoorEntity>();targets.add(menu.tile);if(menu.mate!=null)targets.add(menu.mate);
+        if(menu.tile instanceof NativeLargeDoorEntity large)for(var member:NativeLargeDoorJoins.group(large).members)
+            if(member!=large&&NativeLargeDoorLifecycle.permitted(player.level(),member,player))targets.add(member);
+        return java.util.List.copyOf(targets);
+    }
     public static boolean apply(ServerPlayer player,BlockPos pos,int window,NativeDoorEdit edit,ChannelList channels){
-        NativeDoorMenu menu=editing(player,pos,window);if(menu==null||channels==null||!menu.tile.accepts(edit)||menu.mate!=null&&!menu.mate.accepts(edit))return false;
-        // Both settings are installed before either observer is notified. No inventory/world ownership transfer occurs here.
-        boolean first=menu.tile.stage(edit,channels),second=menu.mate!=null&&menu.mate.stage(edit,channels);
-        if(first)menu.tile.publish();if(second)menu.mate.publish();return true;
+        NativeDoorMenu menu=editing(player,pos,window);if(menu==null||channels==null)return false;
+        var targets=targets(player,menu);for(var door:targets)if(!door.accepts(edit))return false;
+        // Every setting is installed before any observer is notified. No inventory/world ownership transfer occurs here.
+        var staged=new java.util.ArrayList<NativeProgrammableDoorEntity>();for(var door:targets)if(door.stage(edit,channels))staged.add(door);
+        for(var door:staged)door.publish();return true;
     }
 }
