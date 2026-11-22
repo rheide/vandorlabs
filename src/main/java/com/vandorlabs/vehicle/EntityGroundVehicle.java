@@ -254,6 +254,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(oldPhase!=flightPhase){pendingInputs.clear();nextPrediction=null;}
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
+        if(CruiseCoordinateProbe.FULL&&world.isRemote&&cruise.active()){
+            flightPitch=targetPitch=p.flightPitch;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
+            snapPosition(p.x,p.y,p.z,p.yaw);
+            for(Entity passenger:getPassengers())updatePassenger(passenger);
+            return;
+        }
         if(longPositionChange(p.x,p.y,p.z)){
             flightPitch=targetPitch=p.flightPitch;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
             snapPosition(p.x,p.y,p.z,p.yaw);

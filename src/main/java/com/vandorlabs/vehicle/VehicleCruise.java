@@ -23,15 +23,25 @@ import net.minecraft.world.border.WorldBorder;
 @Mod.EventBusSubscriber(modid="vandorlabs")
 public final class VehicleCruise {
     private static final DataParameter<BlockPos> ROUTE = EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.BLOCK_POS);
+    private static final DataParameter<BlockPos> STORAGE = EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.BLOCK_POS);
     private static final int SKY_OFFSET = 4096;
     private final EntityGroundVehicle craft;
-    private double routeX, routeZ;
+    private double routeX, routeZ, storageX, storageZ;
     private MessageCruiseTerrain pending;
     private int nextPixel, publishedX, publishedZ, publishedStep;
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
-    static void define(EntityGroundVehicle craft) { craft.getDataManager().register(ROUTE, BlockPos.ORIGIN); }
+    static void define(EntityGroundVehicle craft) {
+        craft.getDataManager().register(ROUTE,BlockPos.ORIGIN);
+        craft.getDataManager().register(STORAGE,BlockPos.ORIGIN);
+    }
+    double storageX() {return craft.world.isRemote?craft.getDataManager().get(STORAGE).getX():storageX;}
+    double storageZ() {return craft.world.isRemote?craft.getDataManager().get(STORAGE).getZ():storageZ;}
+    private void storage(double x,double z) {
+        storageX=x;storageZ=z;
+        if(CruiseCoordinateProbe.FULL) craft.getDataManager().set(STORAGE,new BlockPos(x,0,z));
+    }
     public boolean active() { return craft.getDataManager().get(ROUTE).getY() == 1; }
     public double altitude() { return active() ? craft.posY - SKY_OFFSET : craft.posY; }
     public double x() { return !active() ? craft.posX : craft.world.isRemote ? craft.getDataManager().get(ROUTE).getX() : routeX; }
@@ -45,6 +55,7 @@ public final class VehicleCruise {
             if (dy < 0 || height <= FlightEnvelope.WORLD_CEILING) return false;
             routeX = craft.posX;
             routeZ = craft.posZ;
+            storage(craft.posX,craft.posZ);
         }
         WorldBorder border = craft.world.getWorldBorder();
         routeX = MathHelper.clamp(routeX + dx, border.minX()+1, border.maxX()-1);
@@ -64,6 +75,7 @@ public final class VehicleCruise {
             craft.getDataManager().set(ROUTE, new BlockPos(routeX,1,routeZ));
         }
         if (!cruising) relocate(craft.posX, SKY_OFFSET + height, craft.posZ);
+        else if(CruiseCoordinateProbe.FULL) craft.setPosition(routeX,SKY_OFFSET+height,routeZ);
         else craft.setPosition(craft.posX, SKY_OFFSET + height, craft.posZ);
         updateTerrain(height);
         return true;
@@ -138,12 +150,19 @@ public final class VehicleCruise {
         if (!active()) return;
         tag.setDouble("CruiseRouteX", routeX);
         tag.setDouble("CruiseRouteZ", routeZ);
+        if(CruiseCoordinateProbe.FULL) {
+            tag.setDouble("CruiseStorageX",storageX);
+            tag.setDouble("CruiseStorageZ",storageZ);
+            CruiseCoordinateProbe.writePosition(tag,storageX,storageZ);
+        }
     }
     void read(NBTTagCompound tag) {
         if (craft.dimension != 0 || !tag.hasKey("CruiseRouteX",6) || !tag.hasKey("CruiseRouteZ",6)) return;
         routeX = tag.getDouble("CruiseRouteX");
         routeZ = tag.getDouble("CruiseRouteZ");
-        if (Double.isFinite(routeX) && Double.isFinite(routeZ) && Math.abs(routeX)<=30000000 && Math.abs(routeZ)<=30000000)
+        if (Double.isFinite(routeX) && Double.isFinite(routeZ) && Math.abs(routeX)<=30000000 && Math.abs(routeZ)<=30000000) {
+            storage(craft.posX,craft.posZ);
             craft.getDataManager().set(ROUTE,new BlockPos(routeX,1,routeZ));
+        }
     }
 }

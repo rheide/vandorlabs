@@ -9,7 +9,8 @@ import net.minecraftforge.fml.relauncher.IFMLLoadingPlugin;
 @IFMLLoadingPlugin.TransformerExclusions("com.vandorlabs.core.")
 public final class CruiseCoordinateProbeLoadingPlugin implements IFMLLoadingPlugin {
     @Override public String[] getASMTransformerClass() {
-        return "projection".equals(System.getProperty("vandorlabs.cruiseCoordinateProbe"))
+        String mode=System.getProperty("vandorlabs.cruiseCoordinateProbe","");
+        return mode.equals("projection") || mode.equals("craft-projection")
             ? new String[]{"com.vandorlabs.core.CruiseCoordinateProbeTransformer"} : new String[0];
     }
     @Override public String getModContainerClass() { return null; }

@@ -15,16 +15,27 @@ public final class CruiseCoordinateProbeTransformer implements IClassTransformer
     private static final String CHUNK = "net.minecraft.world.chunk.Chunk";
     private static final String CLIENT = "net.minecraft.client.entity.EntityPlayerSP";
     private static final String NETWORK = "net.minecraft.network.NetHandlerPlayServer";
+    private static final String PLAYER = "net.minecraft.entity.player.EntityPlayerMP";
 
     @Override public byte[] transform(String name, String transformedName, byte[] bytes) {
         if (bytes == null || !MAP.equals(transformedName) && !TRACKER.equals(transformedName)
             && !WORLD.equals(transformedName) && !CHUNK.equals(transformedName) && !CLIENT.equals(transformedName)
-            && !NETWORK.equals(transformedName)) return bytes;
+            && !NETWORK.equals(transformedName) && !PLAYER.equals(transformedName)) return bytes;
         ClassNode type = new ClassNode();
         new ClassReader(bytes).accept(type,0);
         int changed=0;
         for (MethodNode method : type.methods) {
             if (!target(transformedName,method.name)) continue;
+            if (PLAYER.equals(transformedName)) {
+                InsnList save=new InsnList();
+                save.add(new VarInsnNode(Opcodes.ALOAD,0));
+                save.add(new VarInsnNode(Opcodes.ALOAD,1));
+                save.add(new MethodInsnNode(Opcodes.INVOKESTATIC,HOOK,"writeAnchor",
+                    "(Lnet/minecraft/entity/player/EntityPlayerMP;Lnet/minecraft/nbt/NBTTagCompound;)V",false));
+                method.instructions.insert(save);
+                changed++;
+                continue;
+            }
             for (AbstractInsnNode instruction : method.instructions.toArray()) {
                 if (NETWORK.equals(transformedName)) {
                     if (instruction instanceof MethodInsnNode && mountedRotation((MethodInsnNode)instruction)) {
@@ -42,9 +53,22 @@ public final class CruiseCoordinateProbeTransformer implements IClassTransformer
                 String axis=name(field.name,"posX","field_70165_t")?"X":name(field.name,"posZ","field_70161_v")?"Z":null;
                 if (axis==null || !"D".equals(field.desc)) continue;
                 // World has many physical-coordinate reads. Only the chunk reindex divides by 16.
-                if ((WORLD.equals(transformedName) || CHUNK.equals(transformedName)) && !chunkRead(field)) continue;
-                method.instructions.set(field,new MethodInsnNode(Opcodes.INVOKESTATIC,HOOK,"tracking"+axis,
-                    "(Lnet/minecraft/entity/Entity;)D",false));
+                if (WORLD.equals(transformedName) && !chunkRead(field) && !floor(field.getNext())) continue;
+                if (CHUNK.equals(transformedName) && !chunkRead(field)) continue;
+                if (TRACKER.equals(transformedName)) {
+                    String tracked="trackedEntity";
+                    for(FieldNode data:type.fields)if(name(data.name,"trackedEntity","field_73132_a")){tracked=data.name;break;}
+                    InsnList context=new InsnList();
+                    context.add(new VarInsnNode(Opcodes.ALOAD,0));
+                    context.add(new FieldInsnNode(Opcodes.GETFIELD,type.name,tracked,"Lnet/minecraft/entity/Entity;"));
+                    method.instructions.insertBefore(field,context);
+                    method.maxStack=Math.max(method.maxStack,8);
+                    method.instructions.set(field,new MethodInsnNode(Opcodes.INVOKESTATIC,HOOK,"viewer"+axis,
+                        "(Lnet/minecraft/entity/Entity;Lnet/minecraft/entity/Entity;)D",false));
+                } else {
+                    method.instructions.set(field,new MethodInsnNode(Opcodes.INVOKESTATIC,HOOK,"tracking"+axis,
+                        "(Lnet/minecraft/entity/Entity;)D",false));
+                }
                 changed++;
             }
         }
@@ -62,6 +86,7 @@ public final class CruiseCoordinateProbeTransformer implements IClassTransformer
         if (WORLD.equals(owner)) return name(method,"updateEntityWithOptionalForce","func_72866_a");
         if (CHUNK.equals(owner)) return name(method,"addEntity","func_76612_a");
         if (NETWORK.equals(owner)) return name(method,"processPlayer","func_147347_a") || name(method,"update","func_73660_a");
+        if (PLAYER.equals(owner)) return name(method,"writeEntityToNBT","func_70014_b");
         return name(method,"onUpdate","func_70071_h_");
     }
 
@@ -75,6 +100,13 @@ public final class CruiseCoordinateProbeTransformer implements IClassTransformer
         return call.getOpcode()==Opcodes.INVOKEVIRTUAL && "(DDDFF)V".equals(call.desc)
             && call.owner.equals("net/minecraft/entity/player/EntityPlayerMP")
             && name(call.name,"setPositionAndRotation","func_70080_a");
+    }
+
+    private static boolean floor(AbstractInsnNode instruction) {
+        if(!(instruction instanceof MethodInsnNode))return false;
+        MethodInsnNode call=(MethodInsnNode)instruction;
+        return call.owner.equals("net/minecraft/util/math/MathHelper")&&"(D)I".equals(call.desc)
+            && name(call.name,"floor","func_76128_c");
     }
 
     private static boolean name(String actual,String mapped,String srg) {
