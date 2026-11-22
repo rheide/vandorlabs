@@ -1,7 +1,6 @@
 package com.vandorlabs.neoforge.mixin;
 
-import com.vandorlabs.neoforge.vehicle.NativeVehicleTransfer;
-import net.minecraft.server.level.ServerLevel;
+import com.vandorlabs.neoforge.vehicle.NativeVehicleMekanismEscrow;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.neoforged.neoforge.fluids.FluidStack;
 import org.spongepowered.asm.mixin.Mixin;
@@ -26,8 +25,7 @@ public abstract class NativeMekanismTankTransferGuard {
 
     @Unique private boolean vandorlabs$held() {
         var owner = vandorlabs$tankOwner;
-        return owner != null && owner.getLevel() instanceof ServerLevel world
-            && (owner.isRemoved() || NativeVehicleTransfer.holdsScreenChannels(world, owner.getBlockPos()));
+        return owner != null && NativeVehicleMekanismEscrow.blocksSided(owner);
     }
 
     @Inject(method = "insert", at = @At("HEAD"), cancellable = true)

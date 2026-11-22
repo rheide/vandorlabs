@@ -27,7 +27,7 @@ final class NativeVehicleMekanismTank {
     }
 
     static boolean supports(BlockEntity tile) {
-        return supports(tile.getBlockState()) && tile.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank");
+        return tile.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank") && supports(tile.getBlockState());
     }
 
     static int capacity(NativeRawCell cell, Level world) {
