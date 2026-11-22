@@ -4,12 +4,13 @@ package com.vandorlabs.drives;
 public final class MaxwellEngine {
     public static final String DESIGN = "longburn_drive";
     public static final String WIDTH_TAG = "MaxwellWidth";
+    public static final int BASE_WIDTH = 3;
     public static final int CAPACITY = 1000;
     public static final int BURN_UNITS_PER_MB = 200 * 15;
 
     private MaxwellEngine() {}
 
-    public static int[] widths() { return new int[]{3, 4, 5, 6, 9}; }
+    public static int[] widths() { return new int[]{BASE_WIDTH, 4, 5, 6, 9}; }
 
     public static int depth(int width) {
         switch (width) {

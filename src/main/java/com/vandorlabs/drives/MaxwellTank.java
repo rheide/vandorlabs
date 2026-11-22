@@ -89,7 +89,7 @@ public final class MaxwellTank {
     }
 
     public void read(NBTTagCompound tag) {
-        FluidStack saved = FluidStack.loadFluidStackFromNBT(tag.getCompoundTag(FUEL_TAG));
+        FluidStack saved = tag.hasKey(FUEL_TAG, 10) ? FluidStack.loadFluidStackFromNBT(tag.getCompoundTag(FUEL_TAG)) : null;
         fuel = fuel(saved) && saved.amount <= MaxwellEngine.CAPACITY ? saved : null;
         burnUnits = fuel == null ? 0 : Math.max(0, Math.min(MaxwellEngine.BURN_UNITS_PER_MB - 1, tag.getInteger(BURN_TAG)));
     }

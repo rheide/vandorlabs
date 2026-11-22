@@ -48,6 +48,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
 
     public BlockPos maxwellPort(EnumFacing side) {
         CoreLayout shape = layout();
+        if (shape == null) return null;
         int y = MaxwellEngine.faceCenter(shape.height);
         if (side == facing()) return cell(MaxwellEngine.faceCenter(shape.width), y, 0);
         int z = MaxwellEngine.faceCenter(shape.depth);
@@ -109,6 +110,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         maxwellTick = tick;
         int level = maxwellThrustLevel(flightDemand);
         maxwellTank.burn(level);
+        if (level > 0 && !(world instanceof VehicleWorld)) world.markChunkDirty(pos, this);
         setMaxwellActive(maxwellFuel() > 0 ? level : 0);
         if (maxwellSync && tick % 5 == 0) {
             maxwellSync = false;
@@ -516,10 +518,12 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(synthesisActivationPresent)tag.setInteger("SynthesisActivation",synthesisActivation);
         else tag.removeTag("SynthesisActivation");
     }
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(maxwell()){
-        if(maxwellWidth!=0&&maxwellWidth!=core().width)tag.setInteger(MaxwellEngine.WIDTH_TAG,maxwellWidth);
-        maxwellTank.write(tag);tag.setInteger("MaxwellActiveLevel",maxwellActiveLevel);
-    }if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);
+        // Recovery validates the tile before placing its block.
+        if(maxwellWidth!=0&&maxwellWidth!=MaxwellEngine.BASE_WIDTH)tag.setInteger(MaxwellEngine.WIDTH_TAG,maxwellWidth);
+        if(maxwellActiveLevel!=0)tag.setInteger("MaxwellActiveLevel",maxwellActiveLevel);
+        maxwellTank.write(tag);
+        if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}
         if(carriedObserverStatePresent){tag.setBoolean("CarriedObserverPowered",observerPowerVisual);tag.setBoolean("CarriedObserverScanning",observerScanningVisual);}
         return tag;
     }

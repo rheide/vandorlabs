@@ -52,6 +52,16 @@ public final class ConstructorRecoveryContextChecks {
             NBTTagCompound before=original.writeToNBT(new NBTTagCompound());
             need(before.hasKey("Synthesis",10),"Current release fixture has an explicit runtime: "+design.design);
             recover(state,before,design.design);
+            if (design.design.equals(com.vandorlabs.drives.MaxwellEngine.DESIGN)) {
+                before.setInteger("MaxwellWidth", 9);
+                before.setInteger("MaxwellActiveLevel", 7);
+                before.setInteger("MaxwellBurnUnits", 182);
+                net.minecraftforge.fluids.Fluid fuel = com.vandorlabs.drives.MaxwellRuntimeChecks.testFuel();
+                before.setTag("MaxwellFuel", new net.minecraftforge.fluids.FluidStack(fuel, 615).writeToNBT(new NBTTagCompound()));
+                TileEntityConstructor restored = recover(state, before, "enlarged fueled Maxwell");
+                need(restored.structureWidth() == 9 && restored.structureDepth() == 12 && restored.maxwellFuel() == 615,
+                        "the recovered large frame retains its exact size and fuel");
+            }
         }
     }
     /** Synthesis builders take any Programmable Block finish; the Assembly Press takes its ingot. */
