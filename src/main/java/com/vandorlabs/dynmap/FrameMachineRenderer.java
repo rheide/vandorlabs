@@ -2,6 +2,7 @@ package com.vandorlabs.dynmap;
 
 import com.google.gson.Gson;
 import com.vandorlabs.blocks.MachineMountSurface;
+import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.geometry.CoreMesh;
 import com.vandorlabs.vehicle.VehicleRotation;
 import java.io.InputStream;
@@ -16,7 +17,7 @@ import org.dynmap.renderer.*;
 /** Authored static machinery is clipped into its reserved cells, never submitted twice. */
 public final class FrameMachineRenderer extends CustomRenderer {
     private static final class Face {int texture;double[][] vertices;}
-    private static final class Design {int width,height,depth,core_texture;String core;Face[][] states;}
+    private static final class Design {int width,height,depth,core_texture,inlet_texture,gauge_texture;String core;Face[][] states;}
     private static final class Catalog {String[] textures;int[] colors;Map<String,Design> designs;}
     private static final Catalog CATALOG=load();
     private final com.google.common.cache.Cache<String,RenderPatch[]> meshes=com.google.common.cache.CacheBuilder.newBuilder().maximumSize(2048).build();
@@ -27,7 +28,7 @@ public final class FrameMachineRenderer extends CustomRenderer {
         }catch(java.io.IOException error){throw new IllegalStateException(error);}
     }
     @Override protected int getMaximumTextureCount(){return CATALOG.textures.length+CATALOG.colors.length;}
-    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"ConstructorOwner","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth","NavigationScreenOn","MachineActivity"};}
+    @Override public String[] getTileEntityFieldsNeeded(){return new String[]{"ConstructorOwner","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth","NavigationScreenOn","MachineActivity",MaxwellEngine.WIDTH_TAG,"MaxwellActiveLevel"};}
     private static int integer(Object value,int fallback){return value instanceof Number?((Number)value).intValue():fallback;}
     private static boolean on(Object value){return Boolean.TRUE.equals(value)||value instanceof Number&&((Number)value).intValue()!=0;}
     @Override public RenderPatch[] getRenderPatchList(MapDataContext context){
@@ -55,22 +56,32 @@ public final class FrameMachineRenderer extends CustomRenderer {
         int width=design.width,height=design.height,depth=design.depth;double scale=1;
         String observerDesign=state.blockName.replace("vandorlabs:","").replace("_core","");
         Object rawWidth=context.getBlockTileEntityFieldAt("ObserverWidth",ox,oy,oz);
+        boolean maxwell=MaxwellEngine.DESIGN.equals(design.core);
         if(rawWidth!=null){
             if(!(rawWidth instanceof Number)||!com.vandorlabs.navigation.ObserverScale.observer(observerDesign))return new RenderPatch[0];
             try{width=com.vandorlabs.navigation.ObserverScale.width(observerDesign,((Number)rawWidth).intValue());height=com.vandorlabs.navigation.ObserverScale.height(observerDesign,width);depth=width;scale=com.vandorlabs.navigation.ObserverScale.linearScale(observerDesign,width);}catch(IllegalArgumentException invalid){return new RenderPatch[0];}
+        }
+        if(maxwell){
+            width=integer(context.getBlockTileEntityFieldAt(MaxwellEngine.WIDTH_TAG,ox,oy,oz),design.width);
+            try{depth=MaxwellEngine.depth(width);}catch(IllegalArgumentException invalid){return new RenderPatch[0];}
+            height=width;
         }
         if((x!=0&&x!=width-1)||(z!=0&&z!=depth-1))return new RenderPatch[0];
         BlockPos pivot=VehicleRotation.cell(new BlockPos(x,0,z),width,depth,(facing.getHorizontalIndex()+2)&3);
         boolean inverted=on(context.getBlockTileEntityFieldAt("ObserverInverted",ox,oy,oz));
         int dx=ox-pivot.getX(),dy=oy-(inverted?height-1:0),dz=oz-pivot.getZ();
-        boolean active=on(context.getBlockTileEntityFieldAt("NavigationScreenOn",ox,oy,oz));
+        boolean active=on(context.getBlockTileEntityFieldAt(maxwell?"MaxwellActiveLevel":"NavigationScreenOn",ox,oy,oz));
         int activity=integer(context.getBlockTileEntityFieldAt("MachineActivity",ox,oy,oz),1);
         int mode=design.states.length==1?0:design.states.length==2?(active?1:0):active?Math.max(0,Math.min(2,activity)):0;
         String key=state.blockName+":"+facing+":"+mode+":"+dx+":"+dy+":"+dz+":"+inverted+":"+width;RenderPatch[] cached=meshes.getIfPresent(key);if(cached!=null)return cached;
         List<RenderPatch> result=new ArrayList<>();
+        double across=maxwell?width/(double)design.width:scale;
+        double length=maxwell?depth/(double)design.depth:scale;
         for(Face face:design.states[mode]){
             List<MapSurface.Vertex> polygon=new ArrayList<>(face.vertices.length);
-            for(double[] point:face.vertices){Vec3d p=MachineMountSurface.rotate(new Vec3d(point[0],inverted?design.height-point[1]:point[1],point[2]),facing,design.width,design.depth).scale(scale).addVector(dx,dy,dz);polygon.add(new MapSurface.Vertex(p,point[3],point[4]));}
+            for(double[] point:face.vertices){Vec3d p=MachineMountSurface.rotate(new Vec3d(point[0]*across,
+                    (inverted?design.height-point[1]:point[1])*across,point[2]*length),facing,width,depth).addVector(dx,dy,dz);
+                polygon.add(new MapSurface.Vertex(p,point[3],point[4]));}
             if(inverted)Collections.reverse(polygon);
             // A face exactly on an internal cell plane belongs to the upper cell only.
             // Keep the maximum outer envelope face in the final reserved cell.
@@ -81,6 +92,29 @@ public final class FrameMachineRenderer extends CustomRenderer {
             }
             if(owned)MapSurface.emit(context,result,polygon,face.texture);
         }
+        if(maxwell){
+            double front=MaxwellEngine.faceCenter(width)+.5, mid=MaxwellEngine.faceCenter(height)+.5;
+            double side=MaxwellEngine.faceCenter(depth)+.5;
+            maxwellPanel(context,result,facing,width,depth,dx,dy,dz,front,mid,0,EnumFacing.NORTH,design.inlet_texture);
+            maxwellPanel(context,result,facing,width,depth,dx,dy,dz,front+1,mid,0,EnumFacing.NORTH,design.gauge_texture);
+            maxwellPanel(context,result,facing,width,depth,dx,dy,dz,0,mid,side,EnumFacing.WEST,design.inlet_texture);
+            maxwellPanel(context,result,facing,width,depth,dx,dy,dz,width,mid,side,EnumFacing.EAST,design.inlet_texture);
+        }
         RenderPatch[] built=result.toArray(new RenderPatch[0]);meshes.put(key,built);return built;
+    }
+
+    private static void maxwellPanel(MapDataContext context,List<RenderPatch> result,EnumFacing facing,int width,int depth,
+            int dx,int dy,int dz,double x,double y,double z,EnumFacing side,int texture){
+        Vec3d center=MachineMountSurface.rotate(new Vec3d(x,y,z),facing,width,depth).addVector(dx,dy,dz);
+        EnumFacing outward=EnumFacing.getHorizontal((facing.getHorizontalIndex()+side.getHorizontalIndex()+2)&3);
+        Vec3d inside=center.subtract(new Vec3d(outward.getDirectionVec()).scale(.5));
+        if(!new BlockPos(inside).equals(BlockPos.ORIGIN))return;
+        // Keep the mapped artwork just ahead of the casing panel.
+        center=center.add(new Vec3d(outward.getDirectionVec()).scale(0.0000005));
+        Vec3d axis=new Vec3d(outward.rotateYCCW().getDirectionVec()).scale(.4375);
+        Vec3d left=center.subtract(axis),right=center.add(axis);
+        MapSurface.emitUnclipped(context,result,Arrays.asList(
+                new MapSurface.Vertex(left.addVector(0,-.4375,0),0,1),new MapSurface.Vertex(right.addVector(0,-.4375,0),1,1),
+                new MapSurface.Vertex(right.addVector(0,.4375,0),1,0),new MapSurface.Vertex(left.addVector(0,.4375,0),0,0)),texture);
     }
 }

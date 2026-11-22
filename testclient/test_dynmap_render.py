@@ -386,6 +386,7 @@ def place_frame_machines(command, labels, root,all_facings=False):
         core=(bx+cx,12,bz+cz)
         powered=True if active is None else active
         drive='' if active is None else f',NavigationRedstone:{0 if active else 1}b,DriveSignalLevels:0b,DriveInverted:0b,DriveParticles:0,DriveParticleThreshold:8,DriveLevel:{15 if active else 0}'
+        if spec['design']=='longburn_drive':drive+=f',MaxwellActiveLevel:{15 if active else 0}'
         observer=f",ObserverWidth:{spec['observer_width']}" if 'observer_width' in spec else ''
         command(f"setblock {core[0]} 12 {core[2]} vandorlabs:{spec['block']} facing={facing},formed=true replace {{ConstructorCoreX:0,ConstructorCoreZ:0,NavigationScreenOn:{int(powered)}b,MachineActivity:2{drive}{observer}}}")
         label={'x':core[0],'y':12,'z':core[2],'block':spec['block'],'facing':facing,'formed':True,'frame_fixture':True}

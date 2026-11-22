@@ -57,11 +57,20 @@ public final class FrameMachineMapChecks {
             }
             require(coreArea>0&&Math.abs(coreArea-expectedCoreArea)<1e-7,"complete authored scaffold surface area");cores++;
             for(int mode=0;mode<states.size();mode++){
-                double expected=0;for(JsonElement raw:states.get(mode).getAsJsonArray()){
-                    JsonArray vertices=raw.getAsJsonObject().getAsJsonArray("vertices");double[][] points=new double[vertices.size()][3];for(int v=0;v<points.length;v++)for(int axis=0;axis<3;axis++)points[v][axis]=vertices.get(v).getAsJsonArray().get(axis).getAsDouble();expected+=clippedArea(points,w,h,d);
+                boolean maxwell=block.equals("longburn_drive_core");
+                boolean observer=block.equals("standalone_dish_core")||block.equals("standalone_antenna_core");
+                for(int factor:maxwell?new int[]{3,4,9}:observer?new int[]{1,2}:new int[]{1}){
+                final int fw=maxwell?factor:w*factor,fh=maxwell?factor:h*factor;
+                final int fd=maxwell?com.vandorlabs.drives.MaxwellEngine.depth(factor):d*factor;
+                double[] scale={fw/(double)w,fh/(double)h,fd/(double)d};
+                double expected=maxwell?4*.875*.875:0;
+                for(JsonElement raw:states.get(mode).getAsJsonArray()){
+                    JsonArray vertices=raw.getAsJsonObject().getAsJsonArray("vertices");
+                    double[][] points=new double[vertices.size()][3];
+                    for(int v=0;v<points.length;v++)for(int axis=0;axis<3;axis++)
+                        points[v][axis]=vertices.get(v).getAsJsonArray().get(axis).getAsDouble()*scale[axis];
+                    expected+=clippedArea(points,fw,fh,fd);
                 }
-                for(int factor:block.equals("standalone_dish_core")||block.equals("standalone_antenna_core")?new int[]{1,2}:new int[]{1}){
-                final int fw=w*factor,fh=h*factor,fd=d*factor;
                 for(boolean inverted:block.equals("standalone_dish_core")||block.equals("standalone_antenna_core")?new boolean[]{false,true}:new boolean[]{false})for(EnumFacing facing:EnumFacing.HORIZONTALS)for(int cornerX:new int[]{0,fw-1})for(int cornerZ:new int[]{0,fd-1}){
                     int turn=(facing.getHorizontalIndex()+2)&3;BlockPos pivot=VehicleRotation.cell(new BlockPos(cornerX,0,cornerZ),fw,fd,turn);double actual=0;
                     for(int x=0;x<fw;x++)for(int y=0;y<fh;y++)for(int z=0;z<fd;z++){
@@ -73,7 +82,7 @@ public final class FrameMachineMapChecks {
                             public RenderPatchFactory getPatchFactory(){return FACTORY;}public DynmapBlockState getBlockType(){return local;}
                             public Object getBlockTileEntityField(String key){return key.equals("ConstructorOwner")?owner.toLong():getBlockTileEntityFieldAt(key,0,0,0);}
                             public DynmapBlockState getBlockTypeAt(int dx,int dy,int dz){return dx==owner.getX()&&dy==owner.getY()&&dz==owner.getZ()?coreState:local;}
-                            public Object getBlockTileEntityFieldAt(String key,int dx,int dy,int dz){switch(key){case "ObserverWidth":return factor==1?null:fw;case "ObserverInverted":return inverted;case "ConstructorCoreX":return cx;case "ConstructorCoreZ":return cz;case "NavigationScreenOn":return active;case "MachineActivity":return activity;default:return null;}}
+                            public Object getBlockTileEntityFieldAt(String key,int dx,int dy,int dz){switch(key){case "ObserverWidth":return observer&&factor!=1?fw:null;case "MaxwellWidth":return maxwell?fw:null;case "MaxwellActiveLevel":return active?15:0;case "ObserverInverted":return inverted;case "ConstructorCoreX":return cx;case "ConstructorCoreZ":return cz;case "NavigationScreenOn":return active;case "MachineActivity":return activity;default:return null;}}
                             public int getX(){return cell.getX();}public int getY(){return cell.getY();}public int getZ(){return cell.getZ();}
                         };
                         for(RenderPatch raw:renderer.getRenderPatchList(context)){
@@ -81,7 +90,7 @@ public final class FrameMachineMapChecks {
                             actual+=area(points);patches++;
                         }
                     }
-                    require(Math.abs(expected*factor*factor-actual)<1e-5*Math.max(1,expected*factor*factor),"complete per-cell surface area/no duplicates "+block+" "+facing+" "+cornerX+","+cornerZ+" state="+mode+" expected="+expected+" actual="+actual);assemblies++;
+                    require(Math.abs(expected-actual)<1e-5*Math.max(1,expected),"complete per-cell surface area/no duplicates "+block+" "+facing+" "+cornerX+","+cornerZ+" state="+mode+" expected="+expected+" actual="+actual);assemblies++;
                 }
                 }
             }

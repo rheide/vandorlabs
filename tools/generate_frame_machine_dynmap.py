@@ -51,15 +51,21 @@ def generate(check=False):
   return faces
  def state_obj(spec,path):
   root=ASSETS/'models/block'/spec['model']
-  if spec['design']=='longburn_drive' and path=='static.obj':return obj(root/'drive_body.obj')+obj(root/'drive_lights.obj')
-  if spec['design'] in ('longburn_drive','meridian_core') and path=='active/static.obj':return obj(root/'active/drive_body.obj')+obj(root/'active/drive_lights.obj')
+  if spec['design']=='longburn_drive':
+   lights='active/drive_lights.obj' if path.startswith('active/') else 'drive_lights.obj'
+   return obj(root/'maxwell_body.obj')+obj(root/lights)
+  if spec['design']=='meridian_core' and path=='active/static.obj':return obj(root/'active/drive_body.obj')+obj(root/'active/drive_lights.obj')
   return obj(root/path)
  designs={}
  for spec in json.loads((ASSETS/'data/frame_machines.json').read_text()):
   paths=spec.get('state_models') or (['static.obj','active/static.obj'] if spec.get('chip_anchor') else ['complete.obj'])
+  if spec['design']=='longburn_drive':paths=['static.obj','active/static.obj']
   if spec.get('motion')=='shutters':paths=paths[:-1]+['active/complete_open.obj']
   designs[spec['block']]=dict(width=spec['width'],height=spec['height'],depth=spec['depth'],core=spec['design'],
                             states=[state_obj(spec,path) for path in paths])
+  if spec['design']=='longburn_drive':
+   designs[spec['block']].update(inlet_texture=texture('vandorlabs:blocks/resource_ports/fluid_in_off'),
+                                 gauge_texture=texture('vandorlabs:blocks/longburn_drive/maxwell_gauge'))
  core=core_colors()
  colors=core['colors']
  for design in designs.values():design['core_texture']=texture(core['textures'][design['core']])
