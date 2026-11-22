@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 
 /** Fixed-size seed raster sent only to riders during high-altitude flight. */
 public final class MessageCruiseTerrain implements IMessage {
-    public static final int SIZE = 32;
+    public static final int SIZE = 64;
     public int entity, centerX, centerZ, step;
     public final int[] pixels = new int[SIZE*SIZE];
     public MessageCruiseTerrain() {}

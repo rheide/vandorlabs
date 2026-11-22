@@ -68,6 +68,7 @@ public final class CruiseSky {
         GL11.glDepthRange(1,1);
         try {
             GlStateManager.disableLighting();
+            GlStateManager.shadeModel(GL11.GL_SMOOTH);
             GlStateManager.enableBlend();
             GlStateManager.tryBlendFuncSeparate(770,771,1,0);
             GlStateManager.color(1,1,1,1);
@@ -83,6 +84,7 @@ public final class CruiseSky {
             }
             Tessellator.getInstance().draw();
         } finally {
+            GlStateManager.shadeModel(GL11.GL_FLAT);
             GlStateManager.disableBlend();
             GL11.glDepthRange(0,1);
             GlStateManager.depthMask(true);
