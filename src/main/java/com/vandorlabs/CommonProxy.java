@@ -24,6 +24,8 @@ public class CommonProxy {
     public void canopyAppearanceChanged(com.vandorlabs.tiles.TileEntityCanopy tile){}
     public void glassFrameAppearanceChanged(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
     public void glassTileLoaded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){}
+    /** Client: a Corner Glass or Corner Wall tile loaded; it renders as a global tile. */
+    public void cornerTileLoaded(net.minecraft.tileentity.TileEntity tile){}
     public void glassLightRefreshNeeded(com.vandorlabs.tiles.TileEntityProgrammableGlass tile){com.vandorlabs.tiles.DeferredTileLoad.schedule(tile,tile::refreshPendingLight);}
     public void portholeGeometryChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}
     public void portholeAppearanceChanged(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile){}

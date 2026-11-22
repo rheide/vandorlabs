@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Corner glass draws only through its tile renderer. Minecraft finds ordinary tile renderers in
+ * Corner glass and Corner Walls draw only through their tile renderers. Minecraft finds ordinary tile renderers in
  * each render chunk's compiled list, and stacked corners were measured missing from that list
  * even with their tile installed and after a full renderer reload, leaving them invisible (most
  * often with OptiFine). Corners therefore render as global tiles: every live corner is kept in
@@ -27,12 +27,13 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @net.minecraftforge.fml.common.Mod.EventBusSubscriber(modid="vandorlabs",value=net.minecraftforge.fml.relauncher.Side.CLIENT)
 public final class CornerGlassRefresh {
-    private static final Set<TileEntityProgrammableGlass> pending=Collections.newSetFromMap(new IdentityHashMap<>());
+    private static final Set<TileEntity> pending=Collections.newSetFromMap(new IdentityHashMap<>());
     /** Live client corners; read from chunk compile threads through isCorner. Tiles compare by identity. */
-    private static final Set<TileEntityProgrammableGlass> corners=Collections.newSetFromMap(new ConcurrentHashMap<>());
+    private static final Set<TileEntity> corners=Collections.newSetFromMap(new ConcurrentHashMap<>());
     private static Field globalTiles;
     private CornerGlassRefresh(){}
-    public static void loaded(TileEntityProgrammableGlass tile){
+    /** A Corner Glass or Corner Wall tile loaded on the client. */
+    public static void loaded(TileEntity tile){
         if(tile.getWorld()==null||!tile.getWorld().isRemote||tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)return;
         synchronized(pending){pending.add(tile);}
     }
@@ -46,21 +47,22 @@ public final class CornerGlassRefresh {
             return (Set<TileEntity>)globalTiles.get(render);
         }catch(ReflectiveOperationException|RuntimeException failure){throw new IllegalStateException("RenderGlobal global tile set is unavailable",failure);}
     }
-    private static boolean live(World world,TileEntityProgrammableGlass tile){
+    private static boolean live(World world,TileEntity tile){
         BlockPos pos=tile.getPos();
-        return world!=null&&tile.getWorld()==world&&!tile.isInvalid()&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==tile
-                &&world.getBlockState(pos).getBlock() instanceof BlockProgrammableCornerGlass;
+        if(world==null||tile.getWorld()!=world||tile.isInvalid()||!world.isBlockLoaded(pos)||world.getTileEntity(pos)!=tile)return false;
+        net.minecraft.block.Block block=world.getBlockState(pos).getBlock();
+        return block instanceof BlockProgrammableCornerGlass||block instanceof com.vandorlabs.blocks.BlockProgrammableCornerWall;
     }
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event){
         if(event.phase!=TickEvent.Phase.END)return;
         Minecraft mc=Minecraft.getMinecraft();World world=mc.world;
-        List<TileEntityProgrammableGlass> loaded;
+        List<TileEntity> loaded;
         synchronized(pending){loaded=new ArrayList<>(pending);pending.clear();}
-        for(TileEntityProgrammableGlass tile:loaded)if(live(world,tile))corners.add(tile);
+        for(TileEntity tile:loaded)if(live(world,tile))corners.add(tile);
         if(corners.isEmpty()||mc.renderGlobal==null)return;
         Set<TileEntity> global=global(mc.renderGlobal);
         synchronized(global){
-            for(TileEntityProgrammableGlass tile:new ArrayList<>(corners)){
+            for(TileEntity tile:new ArrayList<>(corners)){
                 if(live(world,tile))global.add(tile);
                 else{corners.remove(tile);global.remove(tile);}
             }

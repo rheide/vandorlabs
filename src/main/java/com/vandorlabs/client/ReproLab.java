@@ -822,6 +822,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("Arm duct flow",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.cornerWallOnly")){
+            try{if(CornerWallLiveChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Corner wall fixture",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.joinedDoorRenderOnly")){
             try{if(JoinedDoorRenderChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Joined door edge culling",failure);}

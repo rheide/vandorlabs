@@ -284,7 +284,8 @@ public class GuiHandler implements IGuiHandler {
                         new BlockPos(x, y, z)).getBlock() instanceof BlockProgrammableBlock
                         || world.getBlockState(new BlockPos(x, y, z)).getBlock()
                         instanceof BlockProgrammableSlab || world.getBlockState(new BlockPos(x,y,z)).getBlock()
-                        instanceof com.vandorlabs.blocks.BlockProgrammableStairs || te instanceof com.vandorlabs.tiles.TileEntityHexTank) {
+                        instanceof com.vandorlabs.blocks.BlockProgrammableStairs || te instanceof com.vandorlabs.tiles.TileEntityHexTank
+                        || world.getBlockState(new BlockPos(x,y,z)).getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerWall) {
                     return new com.vandorlabs.client.GuiProgrammableWall(player.inventory,
                             (TileEntityAnimatedScreenSelector) te);
                 }

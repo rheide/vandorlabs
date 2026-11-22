@@ -62,6 +62,9 @@ independently from the original.
 Middle-position glass panels. It aligns with the glass you click or place it
 beside, and bends towards your side. A sloped variant is also available.
 [Corner Glass placement and recipes](../gallery/building.md#programmable-corner-glass)
+**Programmable Corner Wall** and **Diagonal Corner Wall** do the same for
+Programmable Walls and diagonal walls, with the wall material and editor.
+[Corner Wall placement and recipes](../gallery/building.md#programmable-corner-wall)
 
 The **Advanced Pilot Chair** is available as stationary furniture. Its
 two armrest sliders let a seated player set numeric levels on configured

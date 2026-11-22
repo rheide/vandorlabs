@@ -166,6 +166,12 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
                 }
             }
         }
+        if(diagonalCornerWall()){
+            // Size and Slope, as on diagonal walls and Diagonal Corner Glass.
+            buttonList.add(new GuiButton(CORNER_SIZE,controlsX,y,controlsWidth,20,com.vandorlabs.render.DiagonalCornerRules.sizeLabel(cornerSize()))); y+=24;
+            int meta=cornerMeta();
+            buttonList.add(new GuiButton(CORNER_SLOPE,controlsX,y,controlsWidth,20,com.vandorlabs.render.DiagonalCornerRules.slopeLabel(cornerSize(),(meta&4)!=0,(meta&8)!=0))); y+=24;
+        }
         if(diagonalGlass)y+=24;
         if(glassSurface()) {
             buttonList.add(new GuiButton(113,controlsX,y,diagonalGlass?controlsWidth/2-1:controlsWidth,20,(diagonalGlass?"":"Tint: ")+com.vandorlabs.tiles.GlassTextures.tintLabel(tile.getGlassTint())));
@@ -288,14 +294,32 @@ public class GuiProgrammableWall extends GuiMaterialPicker {
 
     @Override protected void mouseClicked(int mouseX, int mouseY, int button)
             throws IOException {
-        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116,131,240,241))return;
+        if(GuiOptionCycle.rightClick(mc,buttonList,mouseX,mouseY,button,this::actionPerformed,101,102,103,104,105,106,109,110,111,112,113,114,115,116,131,240,241,CORNER_SIZE,CORNER_SLOPE))return;
         if(framePage){if(framePane.click(mouseX,mouseY,button))return;super.mouseClicked(mouseX,mouseY,button);return;}if(redstonePage){super.mouseClicked(mouseX,mouseY,button);return;}
         int before=textureList.selected();
         if(textureList.click(mouseX,mouseY,button)){if(before!=textureList.selected())choose(textureList.selected());return;}
         super.mouseClicked(mouseX, mouseY, button);
     }
 
+    static final int CORNER_SIZE=272,CORNER_SLOPE=273;
+    private boolean diagonalCornerWall(){
+        net.minecraft.block.Block block=tile.getWorld().getBlockState(tile.getPos()).getBlock();
+        return block instanceof com.vandorlabs.blocks.BlockProgrammableCornerWall&&((com.vandorlabs.blocks.BlockProgrammableCornerWall)block).sloped();
+    }
+    private int cornerSize(){return com.vandorlabs.persistence.WallSettings.geometry(tile.isDiagonalHalfHeight(),tile.isDiagonalFullWidth());}
+    private int cornerMeta(){net.minecraft.block.state.IBlockState state=tile.getWorld().getBlockState(tile.getPos());return state.getBlock().getMetaFromState(state);}
+    /** Size cycles; Slope flips the lean, or for wide corners the half. The bevel keeps its turn. */
+    private void cornerAction(int id){
+        int size=cornerSize(),meta=cornerMeta();
+        if(id==CORNER_SIZE)size=com.vandorlabs.render.DiagonalCornerRules.nextSize(size,GuiOptionCycle.direction());
+        else meta=com.vandorlabs.render.DiagonalCornerRules.toggleSlope(meta,size);
+        com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageCornerGlassGeometry(tile.getPos(),size,(meta&4)!=0,(meta&8)!=0));
+        // Show the edit now; the server's block update confirms it.
+        tile.setDiagonalGeometry(size,tile.getDiagonalFill());
+        initGui();
+    }
     @Override protected void actionPerformed(GuiButton button) {
+        if(button.id==CORNER_SIZE||button.id==CORNER_SLOPE){cornerAction(button.id);return;}
         if(TextureJoinPane.action(button,tile)){join=tile.isJoinPortholes();initGui();return;}
         if(cubeDialog()&&cubeAction(button))return;
         if(GlassPlaybackPane.action(button,tile.glassPlayback)){sendPortholeSettings();initGui();return;}

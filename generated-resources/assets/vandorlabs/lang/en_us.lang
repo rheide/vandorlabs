@@ -934,3 +934,5 @@ tile.vandorlabs.printer.name=Printer
 tile.vandorlabs.scanner.name=Scanner
 tile.vandorlabs.programmable_corner_glass.name=Programmable Corner Glass
 tile.vandorlabs.programmable_diagonal_corner_glass.name=Programmable Diagonal Corner Glass
+tile.vandorlabs.programmable_corner_wall.name=Programmable Corner Wall
+tile.vandorlabs.programmable_diagonal_corner_wall.name=Programmable Diagonal Corner Wall

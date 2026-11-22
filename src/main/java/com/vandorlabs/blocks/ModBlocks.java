@@ -248,6 +248,8 @@ public class ModBlocks {
         PROGRAMMABLE_DIAGONAL_GLASS = add(new BlockProgrammableDiagonalGlass());
         add(new BlockProgrammableCornerGlass("programmable_corner_glass",false));
         add(new BlockProgrammableCornerGlass("programmable_diagonal_corner_glass",true));
+        add(new BlockProgrammableCornerWall("programmable_corner_wall",false));
+        add(new BlockProgrammableCornerWall("programmable_diagonal_corner_wall",true));
         PROGRAMMABLE_DIAGONAL_SCREEN = new BlockProgrammableDiagonalScreen();
         add(PROGRAMMABLE_DIAGONAL_SCREEN);
         PROGRAMMABLE_INPUT = new BlockProgrammableInput();
@@ -501,6 +503,7 @@ public class ModBlocks {
                         : block == PROGRAMMABLE_STAIRS ? new com.vandorlabs.items.ItemProgrammableStairs((BlockProgrammableStairs)block)
                         : block == PROGRAMMABLE_SLAB ? new ItemProgrammableSlab(block)
                         : block instanceof BlockProgrammableCornerGlass ? new ItemCornerGlass((BlockProgrammableCornerGlass)block)
+                        : block instanceof BlockProgrammableCornerWall ? new ItemCornerWall((BlockProgrammableCornerWall)block)
                         : block instanceof BlockProgrammableWall && ((BlockProgrammableWall) block).isDiagonalShape()
                         ? new ItemDiagonalWall((BlockProgrammableWall) block) : block instanceof com.vandorlabs.gear.LargeGearBlock ? new com.vandorlabs.gear.ItemLargeGear((com.vandorlabs.gear.LargeGearBlock)block) : block instanceof com.vandorlabs.gear.GearBlock ? new com.vandorlabs.gear.ItemArm(block) : block instanceof com.vandorlabs.segmented.SegmentedDoorBlock ? new com.vandorlabs.segmented.SegmentedDoorItem((com.vandorlabs.segmented.SegmentedDoorBlock)block) : new com.vandorlabs.items.ItemCatalogBlock(block);
                 event.getRegistry().register(item.setRegistryName(block.getRegistryName()));
@@ -559,6 +562,12 @@ public class ModBlocks {
                 if (block instanceof BlockConfigurableSpaceDoor) {
                     registerSpaceDoorModels((BlockConfigurableSpaceDoor)block,item);
                     ModelLoader.setCustomMeshDefinition(item, stack -> doorItemModel(stack));
+                    continue;
+                }
+                if(block instanceof BlockProgrammableCornerWall){
+                    ModelLoader.setCustomStateMapper(block,new StateMap.Builder().ignore(BlockProgrammableWall.FACING,
+                            BlockProgrammableWall.INVERTED,BlockProgrammableWall.DEPTH).build());
+                    ModelLoader.setCustomModelResourceLocation(item,0,new ModelResourceLocation(block.getRegistryName(),"inventory"));
                     continue;
                 }
                 if(block instanceof BlockProgrammableCornerGlass){
@@ -768,6 +777,7 @@ public class ModBlocks {
         com.vandorlabs.client.GlassFrameChunks.reload();
         com.vandorlabs.client.DoorRenderModels.clear();
         com.vandorlabs.client.DiagonalWallMeshCache.clear();
+        com.vandorlabs.client.CornerWallMeshes.clear();
         String[] shapes={"programmable_storage","programmable_block","programmable_trapdoor","programmable_diagonal_trapdoor",
                 "programmable_trigger_block","programmable_wall","programmable_diagonal_wall",
                 "programmable_porthole_wall","programmable_porthole_block","programmable_slab"};

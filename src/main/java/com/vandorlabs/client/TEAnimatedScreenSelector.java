@@ -422,6 +422,10 @@ public class TEAnimatedScreenSelector
         if (state.getBlock().getClass() == com.vandorlabs.blocks.BlockProgrammableBlock.class
                 || state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableSlab)
             return; // These housings are cached in the chunk mesh.
+        if (state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerWall) {
+            renderCornerWall(te, state, x, y, z);
+            return;
+        }
         if (state.getBlock() instanceof BlockProgrammableWall) {
             renderProgrammableWall(te, state, x, y, z);
             if(fluidPass)WaterloggedRenderer.render(te,x,y,z);
@@ -953,6 +957,25 @@ public class TEAnimatedScreenSelector
         }else{if(!redstoneFace(te,1))drawInputSurface(te,InputSurfaceLayout.halfConsoleFront(),bindInput(te,te.getInputPanel(),1));FrameSurfaceRenderer.screen(te,ScreenSurface.input(InputSurfaceLayout.halfConsoleFront()));}
     }
 
+    /** Corner Walls: drawn as global tiles, like Corner Glass, so stacked corners stay visible. */
+    @Override public boolean isGlobalRenderer(TileEntityAnimatedScreenSelector te){return CornerGlassRefresh.isCorner(te)||super.isGlobalRenderer(te);}
+    private void renderCornerWall(TileEntityAnimatedScreenSelector te,IBlockState state,double x,double y,double z){
+        if(net.minecraftforge.client.MinecraftForgeClient.getRenderPass()==1)return;
+        com.vandorlabs.blocks.BlockProgrammableCornerWall block=(com.vandorlabs.blocks.BlockProgrammableCornerWall)state.getBlock();
+        TextureAtlasSprite wall=wallSprite(te);
+        TextureAtlasSprite metal=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(te.frameAppearance.interior("vandorlabs:blocks/programmable_glass/metal_side"));
+        StaticSurfaceMesh mesh=CornerWallMeshes.get(te,wall,metal,block.geometry(state,te),block.joinedEnds(te.getWorld(),te.getPos(),state));
+        GlStateManager.pushMatrix();
+        GlStateManager.translate(x,y,z);
+        GlStateManager.disableCull();GlStateManager.disableLighting();
+        bindAtlas();setWorldLight(te);
+        BufferBuilder buf=Tessellator.getInstance().getBuffer();
+        buf.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
+        mesh.draw(buf,(int)OpenGlHelper.lastBrightnessY,(int)OpenGlHelper.lastBrightnessX);
+        Tessellator.getInstance().draw();
+        GlStateManager.enableLighting();GlStateManager.enableCull();
+        GlStateManager.popMatrix();
+    }
     private void renderProgrammableWall(TileEntityAnimatedScreenSelector te,
             IBlockState state, double x, double y, double z) {
         if(((BlockProgrammableWall)state.getBlock()).isPortholeShape()&&PortholeRetained.draw(te,x,y,z))return;

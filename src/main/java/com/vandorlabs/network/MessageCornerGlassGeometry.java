@@ -35,6 +35,7 @@ public final class MessageCornerGlassGeometry implements IMessage {
     }
     /** Server thread: validate the open dialog and permissions, then apply size and slope. */
     public static void apply(EntityPlayerMP player,MessageCornerGlassGeometry msg){
+        if(msg.pos!=null&&player.world.isBlockLoaded(msg.pos)&&player.openContainer instanceof com.vandorlabs.container.ContainerAnimatedScreenSelector){applyWall(player,msg);return;}
         if(msg.pos==null||!player.world.isBlockLoaded(msg.pos)||!(player.openContainer instanceof ContainerProgrammableGlass))return;
         TileEntity te=player.world.getTileEntity(msg.pos);
         ContainerProgrammableGlass container=(ContainerProgrammableGlass)player.openContainer;
@@ -46,6 +47,21 @@ public final class MessageCornerGlassGeometry implements IMessage {
         int turn=block.getMetaFromState(state)&3;
         IBlockState next=block.getStateFromMeta(CornerGlassGeometry.diagonal(turn,msg.size,msg.inverted,msg.far).metadata());
         ((TileEntityProgrammableGlass)te).setCornerMode(msg.size);
+        if(next!=state)player.world.setBlockState(msg.pos,next,3);
+        player.world.notifyBlockUpdate(msg.pos,next,next,3);
+    }
+    /** The same edit for a Diagonal Corner Wall, whose size lives in its wall tile's diagonal settings. */
+    private static void applyWall(EntityPlayerMP player,MessageCornerGlassGeometry msg){
+        TileEntity te=player.world.getTileEntity(msg.pos);
+        com.vandorlabs.container.ContainerAnimatedScreenSelector container=(com.vandorlabs.container.ContainerAnimatedScreenSelector)player.openContainer;
+        if(!(te instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)||container.getTileEntity()!=te||!container.canInteractWith(player)
+                ||!com.vandorlabs.items.ConfigurationAccess.canConfigure(player))return;
+        IBlockState state=player.world.getBlockState(msg.pos);
+        if(!(state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerWall)||!((com.vandorlabs.blocks.BlockProgrammableCornerWall)state.getBlock()).sloped())return;
+        com.vandorlabs.blocks.BlockProgrammableCornerWall block=(com.vandorlabs.blocks.BlockProgrammableCornerWall)state.getBlock();
+        int turn=block.getMetaFromState(state)&3;
+        IBlockState next=block.getStateFromMeta(CornerGlassGeometry.diagonal(turn,msg.size,msg.inverted,msg.far).metadata());
+        ((com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)te).setDiagonalGeometry(msg.size,0);
         if(next!=state)player.world.setBlockState(msg.pos,next,3);
         player.world.notifyBlockUpdate(msg.pos,next,next,3);
     }

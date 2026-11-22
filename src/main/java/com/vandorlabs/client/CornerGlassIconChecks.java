@@ -9,7 +9,7 @@ final class CornerGlassIconChecks {
         GlStateManager.matrixMode(GL11.GL_PROJECTION);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.ortho(0,256,128,0,1000,3000);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();GlStateManager.loadIdentity();GlStateManager.translate(0,0,-2000);
         try{
             frame.bindFramebuffer(true);GlStateManager.depthMask(true);GlStateManager.clearColor(.12549F,.188235F,.25098F,1);GlStateManager.clear(16640);RenderHelper.enableGUIStandardItemLighting();int cases=0;
-            String[] ids={"programmable_glass","programmable_corner_glass","programmable_diagonal_corner_glass"};
+            String[] ids={"programmable_glass","programmable_corner_glass","programmable_diagonal_corner_glass","programmable_corner_wall","programmable_diagonal_corner_wall"};
             for(int i=0;i<ids.length;i++)mc.getRenderItem().renderItemAndEffectIntoGUI(new ItemStack(net.minecraft.block.Block.getBlockFromName("vandorlabs:"+ids[i])),20+i*40,16);
             RenderHelper.disableStandardItemLighting();java.awt.image.BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(256,128,frame);
             javax.imageio.ImageIO.write(image,"png",new java.io.File(output,"corner-glass-icons.png"));

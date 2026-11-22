@@ -9,6 +9,7 @@
 - Shape Diagonal Corner Glass like the diagonal glass it continues: it stays at 45 degrees, takes the clicked glass's size, lean and near or far position, and joins only matching glass. Choose its Size and Slope in the glass dialog.
 - Always draw stacked Corner Glass, including with OptiFine and shaders.
 - Keep Diagonal Corner Glass frames at full thickness where they meet diagonal glass, so top and bottom frames run through a corner as one mitred frame.
+- Add Programmable Corner Wall and Diagonal Corner Wall: 45-degree bevels that join Programmable Walls at the same depth, or continue diagonal walls with matching size, lean and position, using the wall material and editor.
 
 - Open Large Doors from a horizontal seam with Sliding Split, or join compatible doors into a 3×6, 6×3, or 6×6 opening.
 - Build Arm columns through open Large Doors, including joined groups. The door stays open while an arm runs through it, and carried blocks pass through the doorway.

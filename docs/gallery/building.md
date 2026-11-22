@@ -210,6 +210,26 @@ towards the side you are standing on. Clicking the floor of the cell picks the
 bevel closest to where you clicked. Place a corner on top of another corner to
 continue the same bevel upward.
 
-The sloped version joins other corner panes where their edges align through
-the full height of the contact. Stacked flat corner panes also share their
-horizontal frame edges.
+Diagonal Corner Glass placed against any diagonal block takes that block's
+size, lean and near or far position, so its bevel continues the slope at 45
+degrees. It joins only diagonal glass it continues exactly. Change its **Size**
+and **Slope** in the editor. Stacked flat corner panes share their horizontal
+frame edges.
+
+### Programmable Corner Wall
+
+Craft a **Programmable Corner Wall** from one Programmable Wall, or a
+**Programmable Diagonal Corner Wall** from one Programmable Diagonal Wall. Both
+use the Programmable Wall material and editor (open it with the Configurizer).
+
+1. Place a Programmable Wall along one side of an empty cell.
+2. Place the Corner Wall against the wall's exposed end. The bevel crosses the
+   cell at the wall's depth and bends towards your side.
+3. Place a second wall along the side the bevel reaches, at the same depth, to
+   close the corner.
+
+A Diagonal Corner Wall placed against the end of a diagonal wall takes its
+size, lean and near or far position and continues its slope at 45 degrees. It
+joins only diagonal walls it continues exactly. Change its **Size** and
+**Slope** in the editor. Place corners on top of each other to continue a
+corner upward.

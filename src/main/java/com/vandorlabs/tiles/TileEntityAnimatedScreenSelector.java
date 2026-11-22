@@ -471,6 +471,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public void localInputChanged() {if(joinedDisplayPower!=null)joinedDisplayPower.powerChanged();RedstoneChannels.inputChanged(this); }
     @Override public void onLoad() {
         super.onLoad();
+        if(world!=null&&world.isRemote&&com.vandorlabs.VandorLabs.proxy!=null&&getBlockType() instanceof com.vandorlabs.blocks.BlockProgrammableCornerWall)
+            com.vandorlabs.VandorLabs.proxy.cornerTileLoaded(this);
         portholeChanged();
         DeferredTileLoad.schedule(this, this::finishLoading);
     }

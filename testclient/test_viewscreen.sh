@@ -92,6 +92,9 @@ case "${1:-}" in
             # Self-contained: the reported Servo/duct/Retriever layout under an Extender is built in code.
             PREFIX=arm_duct_flow_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.armDuctFlowOnly=true"
+        elif [ "$TARGET" = corner-wall ]; then
+            PREFIX=corner_wall_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.cornerWallOnly=true"
         elif [ "$TARGET" = joined-door-render ]; then
             PREFIX=joined_door_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.joinedDoorRenderOnly=true"
@@ -534,6 +537,11 @@ if [ "$MODE" = focus ]; then
     if [ "$TARGET" = arm-duct-flow ]; then
         grep -q "arm-duct-flow PASS" "$RUN_OUT/client.log"
         echo "PASS: Thermal duct items conserved through a moving Arm"
+        exit 0
+    fi
+    if [ "$TARGET" = corner-wall ]; then
+        grep -q "corner-wall PASS" "$RUN_OUT/client.log"
+        echo "PASS: Corner Walls and Diagonal Corner Walls place, join, edit and draw"
         exit 0
     fi
     if [ "$TARGET" = joined-door-render ]; then
