@@ -139,7 +139,7 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                         if (gauge >= 0) builder.updateCarriedMaxwellVisual(gauge >>> 4, gauge & 15);
                     }
                     if (tile instanceof NativeScreenEntity screen) {
-                        status.renderScreen(craft, screen, poses, buffers, cellLight, OverlayTexture.NO_OVERLAY);
+                        status.renderScreen(craft, cell.pos, screen, poses, buffers, cellLight, OverlayTexture.NO_OVERLAY);
                     } else if (tile != null && client.getBlockEntityRenderDispatcher().getRenderer(tile) != null) {
                         client.getBlockEntityRenderDispatcher().render(tile, partial, poses, buffers);
                     }

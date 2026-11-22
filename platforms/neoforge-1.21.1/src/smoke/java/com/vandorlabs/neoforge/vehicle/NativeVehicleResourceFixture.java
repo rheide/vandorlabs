@@ -16,6 +16,7 @@ import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.ports.ResourcePortSettings;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.redstone.TransmissionSettings;
+import java.util.List;
 import java.util.Objects;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
@@ -44,6 +45,7 @@ final class NativeVehicleResourceFixture {
     private final BlockPos root, engine, powerSource, powerSink, tank, pump, matterSource, matterSink, observer, observerBattery;
     private final ChannelList enabled = ChannelList.of(702), survey = ChannelList.of(703);
     private final ChannelList batteryFullness = ChannelList.of(704), tankFullness = ChannelList.of(705);
+    private final BlockPos monitor;
     private final ItemStack transmitter;
     private boolean observerRequested, on, radar;
 
@@ -88,6 +90,17 @@ final class NativeVehicleResourceFixture {
             raw.put("PortItems", items);
         });
         put(matterSink, NativeStorageRegistrations.BLOCK.get().defaultBlockState());
+        monitor=matterSink.above();
+        put(monitor,com.vandorlabs.neoforge.screen.NativeScreenRegistrations.BLOCKS.get(com.vandorlabs.screen.ScreenFamily.SCREEN).get().defaultBlockState());
+        edit(monitor,raw->{
+            var settings=new CompoundTag();var rows=new net.minecraft.nbt.ListTag();
+            for(var bank:List.of(batteryFullness,tankFullness)){
+                var row=new CompoundTag();row.putString("Label","Fullness");row.putBoolean("Status",true);
+                row.putIntArray("RedstoneChannels",bank.toArray());rows.add(row);
+            }
+            settings.putString("Title","Stores");settings.putBoolean("Enabled",true);settings.put("Rows",rows);
+            raw.put("RedstonePrimary",settings);raw.putInt("PrimarySurfaceTexture",-2);
+        });
         // Three-cell dish spans x=-3..-1. Its lowest power part is one block above its dedicated battery.
         put(root.west().south(2).above(), Blocks.IRON_BLOCK.defaultBlockState());
         battery(observerBattery, Direction.DOWN, DRAIN, 20);
@@ -128,6 +141,13 @@ final class NativeVehicleResourceFixture {
                 || resources.localLevel(pump.subtract(root)) != 1) {
                 throw new AssertionError("Onboard battery and tank publish independent exact analog levels");
             }
+            if(craft.meterSurface(monitor.subtract(root),0)!=0x11)return false;
+            var appeared=NativeVehicleVisual.project(snapshot,world.registryAccess());
+            var publicCell=NativeVehicleVisual.read(appeared,world.registryAccess()).cells().stream()
+                .filter(cell->cell.pos().equals(monitor.subtract(root))).findFirst().orElseThrow();
+            var exposed=publicCell.appearance().getCompound("RedstonePrimary").getList("Rows",10);
+            if(exposed.size()!=2||!exposed.getCompound(0).getBoolean("Status")||exposed.getCompound(0).contains("RedstoneChannels"))
+                throw new AssertionError("Public meter projection must retain bars and exclude channel assignments");
             if (!NativeRedstoneChannels.manualToggle(actor, transmitter)) throw new AssertionError("Could not publish the native transmitter");
             on = true;
             return false;
@@ -152,6 +172,7 @@ final class NativeVehicleResourceFixture {
             if (area.radarRadius() > 0 && area.stationary() == null) radar = true;
         }
         if (received != POWER || fuel != initialFuel + FUEL_REFILL || storedMatter != parcel().getCount() || debit != DRAIN) return false;
+        if(craft.meterSurface(monitor.subtract(root),0)!=0)return false;
         if (!radar) throw new AssertionError("Carried RF was consumed without an actual Survey Dish scan");
         if (craft.resources().channelLevel(craft, matterSource.subtract(root), batteryFullness) != 0
             || craft.resources().channelLevel(craft, matterSource.subtract(root), tankFullness) != 0

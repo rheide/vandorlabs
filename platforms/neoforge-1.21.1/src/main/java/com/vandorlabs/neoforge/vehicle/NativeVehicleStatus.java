@@ -62,7 +62,11 @@ public final class NativeVehicleStatus {
         for (int slot = 0; slot < 2; slot++) {
             String tag = slot == 0 ? "PrimarySurfaceTexture" : "SecondarySurfaceTexture";
             int selected = result.getInt(tag);
-            if (selected < -1 && !selected(block.family(), settings, raw, slot)) result.putInt(tag, -1);
+            String rows=slot==0?"RedstonePrimary":"RedstoneSecondary";
+            if(block.family().supportsSlot(slot)&&raw.getCompound(rows).getBoolean("Enabled")){
+                NativeVehicleMeters.project(raw,result,rows,block.family().standaloneControlRows(slot));
+                result.putInt(tag,-2);
+            } else if (selected < -1 && !selected(block.family(), settings, raw, slot)) result.putInt(tag, -1);
         }
         return result;
     }
