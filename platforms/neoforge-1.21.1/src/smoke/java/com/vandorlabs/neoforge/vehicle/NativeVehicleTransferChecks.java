@@ -3,6 +3,9 @@ package com.vandorlabs.neoforge.vehicle;
 import com.mojang.authlib.GameProfile;
 import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.neoforge.builders.*;
+import com.vandorlabs.neoforge.credentials.NativeCredentialItems;
+import com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity;
+import com.vandorlabs.neoforge.credentials.NativeReaderRegistrations;
 import com.vandorlabs.neoforge.mixin.NativeRampChunkStorageAccess;
 import com.vandorlabs.neoforge.seating.NativeSeatBindings;
 import com.vandorlabs.neoforge.seating.NativeSeatBlock;
@@ -19,6 +22,7 @@ import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.item.ItemEntity;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -53,7 +57,7 @@ public final class NativeVehicleTransferChecks {
     private static final BlockPos PILOT = ROOT.east();
     private static final BlockPos BARREL = ROOT.south();
     private static final BlockPos PARK = ROOT.east(8);
-    private static final BlockPos ENGINE = ROOT.east(2).south().above();
+    private static final BlockPos ENGINE = ROOT.east(2).south().above(), CARD = ROOT.west();
     private static final int FUEL_MB = 614;
     private static final UUID OWNER = new UUID(0, 0x7381);
     private static final AABB VOLUME = new AABB(ROOT).minmax(new AABB(PARK)).inflate(8);
@@ -114,7 +118,10 @@ public final class NativeVehicleTransferChecks {
             player = new FakePlayer(world, new GameProfile(OWNER, "VehicleTransferFixture"));
             player.setGameMode(GameType.SURVIVAL);
             movePlayer(ROOT);
-            if (phase().equals("roundtrip")) stageMaxwell();
+            if (phase().equals("roundtrip")) {
+                stageMaxwell();
+                stageSecurity();
+            }
             event.getServer().saveEverything(true, true, true);
             NativeBuilderJournalFault.set(NativeVehicleTransferChecks::fault);
         } catch (Throwable failure) { fail(failure); }
@@ -149,6 +156,7 @@ public final class NativeVehicleTransferChecks {
                 if (transit != null && (!formMaxwell() || !transit.formed(player))) return;
                 require(!new ChunkPos(ROOT).equals(new ChunkPos(PILOT)), "fixture hull crosses chunk boundaries");
                 if (phase().equals("roundtrip")) {
+                    exerciseSecurity();
                     world.noSave = true;
                     NativeVehicleTransfer.assemble(player, ROOT);
                     world.noSave = false;
@@ -209,7 +217,7 @@ public final class NativeVehicleTransferChecks {
                 if (!stale.isRemoved()) return;
                 require(actors() == 0, "the durable retirement removes a stale actor from its previous chunk");
                 requireInventory(parked(BARREL));
-                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/RFFluidItemRoutes/gatedBatteryAndTankAnalog/surveyScanAndExactDebits/staleChunkActor");
+                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/RFFluidItemRoutes/gatedBatteryAndTankAnalog/surveyScanAndExactDebits/securedCardOwnership/staleChunkActor");
                 return;
             }
             if (NativeCellTransactions.busy(world, PARK, OWNER)) return;
@@ -225,6 +233,7 @@ public final class NativeVehicleTransferChecks {
             requireInventory(parked(BARREL));
             requireMaxwellParked();
             transit.parked(PARK);
+            requireParkedSecurity();
             require(!new ChunkPos(ROOT).equals(new ChunkPos(PARK)), "parking crossed to a different entity storage chunk");
             stale = NativeVehicleBindings.VEHICLE.create(world);
             require(stale != null, "native actor factory is available for the stale-record regression");
@@ -272,6 +281,49 @@ public final class NativeVehicleTransferChecks {
             requireInventory(parked(BARREL));
             abrupt("realArmed/terrainAndEntityCheckpoint/noGracefulShutdown");
         }
+    }
+
+    private static void stageSecurity() {
+        var owner = (NativeVehicleControllerEntity)world.getBlockEntity(ROOT);
+        var settings = owner.saveWithFullMetadata(world.registryAccess());
+        settings.putBoolean("VehicleSecurity", true);
+        owner.loadWithComponents(settings, world.registryAccess());
+        owner.setChanged();
+        var state = NativeReaderRegistrations.ACCESS_CARD_SLOT.get().defaultBlockState()
+            .setValue(BlockStateProperties.FACING, Direction.WEST);
+        world.setBlock(CARD, state, Block.UPDATE_ALL);
+    }
+
+    private static void exerciseSecurity() {
+        var controller = (NativeVehicleControllerEntity)world.getBlockEntity(ROOT);
+        var reader = (NativeCredentialReaderEntity)world.getBlockEntity(CARD);
+        require(reader.configure(player, false, 1 << 0, 0, reader.mountSettings()), "configured native Access Card filter");
+        require(!controller.mayOperate(player), "secured Controller refuses an empty reader");
+        NativeVehicleTransfer.assemble(player, ROOT);
+        require(!NativeCellTransactions.busy(world, ROOT, OWNER), "secured Controller cannot journal without its accepted card");
+        var wrong = NativeCredentialItems.accessCard(1);
+        player.setItemInHand(InteractionHand.MAIN_HAND, wrong);
+        reader.interact(player, InteractionHand.MAIN_HAND);
+        require(ItemStack.matches(player.getMainHandItem(), wrong) && !controller.mayOperate(player), "wrong Access Card is neither consumed nor authorized");
+        player.setItemInHand(InteractionHand.MAIN_HAND, keyCard());
+        require(reader.interact(player, InteractionHand.MAIN_HAND) && player.getMainHandItem().isEmpty()
+            && controller.mayOperate(player), "the accepted native Access Card authorizes the Controller");
+    }
+
+    private static void requireParkedSecurity() {
+        var at = parked(CARD);
+        var reader = (NativeCredentialReaderEntity)world.getBlockEntity(at);
+        var owner = (NativeVehicleControllerEntity)world.getBlockEntity(PARK);
+        require(reader.getBlockState().getValue(BlockStateProperties.FACING) == Direction.NORTH
+            && ItemStack.matches(reader.getItem(0), keyCard()) && owner.mayOperate(player), "rotated attached card remains uniquely owned and authorized");
+        require(reader.interact(player, InteractionHand.MAIN_HAND) && ItemStack.matches(player.getMainHandItem(), keyCard())
+            && reader.getItem(0).isEmpty() && !owner.mayOperate(player), "taking the exact native card revokes Controller authorization");
+    }
+
+    private static ItemStack keyCard() {
+        var key = NativeCredentialItems.accessCard(0);
+        key.set(DataComponents.CUSTOM_NAME, Component.literal("Vehicle transfer access key"));
+        return key;
     }
 
     private static void stageMaxwell() {
@@ -363,6 +415,9 @@ public final class NativeVehicleTransferChecks {
             var tank = NativeMaxwellTank.read(core.tile(), world.registryAccess());
             require(tank.amount() == FUEL_MB && tank.contents().getFluid() == fuel,
                 "carried Maxwell snapshot retains exact native fuel and its identity");
+            var reader = vehicle.snapshot().cells().stream().filter(cell -> cell.pos.equals(CARD.subtract(ROOT))).findFirst().orElseThrow();
+            require(ItemStack.matches(ItemStack.parseOptional(world.registryAccess(), reader.tile().getCompound("InsertedToken")), keyCard()),
+                "carried Access Card remains one exact owned item");
         }
         requireNoDrops();
     }

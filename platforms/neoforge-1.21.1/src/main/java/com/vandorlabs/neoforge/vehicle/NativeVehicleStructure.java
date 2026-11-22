@@ -3,6 +3,10 @@ package com.vandorlabs.neoforge.vehicle;
 import com.vandorlabs.neoforge.ProgrammableBlockEntity;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.builders.*;
+import com.vandorlabs.neoforge.NativeMountedSwitchBlock;
+import com.vandorlabs.neoforge.credentials.NativeCredentialReaderBlock;
+import com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity;
+import com.vandorlabs.persistence.SaveSchema;
 import com.vandorlabs.neoforge.landing.NativeSideWheel;
 import com.vandorlabs.neoforge.navigation.observer.*;
 import com.vandorlabs.neoforge.transfer.NativeConstructorFrame;
@@ -64,10 +68,16 @@ public final class NativeVehicleStructure {
             || !cells.containsKey(BlockPos.ZERO) || !cells.get(BlockPos.ZERO).state.is(NativeVehicleBindings.CONTROLLER)) {
             throw new IllegalArgumentException("Connect one Vehicle Controller and one complete Pilot Seat to a hull");
         }
-        for (var cell : cells.values()) for (var position : requiredParts(cell.pos, cell.state)) {
-            var member = cells.get(position);
-            if (member == null || !sameAssembly(cell, member)) {
-                throw new IllegalArgumentException("Include every part of the Pilot Seat and each Wheel");
+        for (var cell : cells.values()) {
+            for (var position : requiredParts(cell.pos, cell.state)) {
+                var member = cells.get(position);
+                if (member == null || !sameAssembly(cell, member)) {
+                    throw new IllegalArgumentException("Include every part of the Pilot Seat and each Wheel");
+                }
+            }
+            if (cell.state.getBlock() instanceof NativeCredentialReaderBlock reader
+                && !cells.containsKey(cell.pos.relative(reader.supportDirection(cell.state)))) {
+                throw new IllegalArgumentException("The Access Card Slot must retain its hull mount");
             }
         }
         var connected = new HashSet<BlockPos>();
@@ -132,6 +142,7 @@ public final class NativeVehicleStructure {
             return state.getValue(NativeSideWheel.PART) == 0
                 && face == state.getValue(NativeSideWheel.FACING).getOpposite();
         }
+        if (state.getBlock() instanceof NativeCredentialReaderBlock reader) return face == reader.supportDirection(state);
         if (state.hasProperty(BlockStateProperties.SLAB_TYPE)) {
             var type = state.getValue(BlockStateProperties.SLAB_TYPE);
             if (type == SlabType.BOTTOM && face == Direction.UP || type == SlabType.TOP && face == Direction.DOWN) return false;
@@ -155,6 +166,7 @@ public final class NativeVehicleStructure {
         boolean nativeBlock = state.is(NativeVehicleBindings.CONTROLLER) || block instanceof NativeSideWheel
             || block instanceof NativeBuilderCoreBlock core && core.design.drive() == NativeDriveDesign.LONGBURN
             || block instanceof NativeBuilderPartBlock || NativeVehicleObservers.block(state)
+            || block instanceof NativeCredentialReaderBlock reader && !reader.chip()
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
             || block instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionBlock
@@ -184,6 +196,10 @@ public final class NativeVehicleStructure {
             return observer.formed() && !observer.inert() && !observer.pendingFormation();
         }
         if (tile instanceof NativeObserverPartEntity part) return !part.inert();
+        if (tile instanceof NativeCredentialReaderEntity reader) {
+            return !reader.chip() && !reader.inert() && reader.behavior() == 0 && !reader.visual().motion().returning()
+                && reader.mountRotation() == reader.getBlockState().getValue(NativeMountedSwitchBlock.ROTATION);
+        }
         if (tile instanceof NativeChairEntity seat) return seat.kind() == NativeSeatKind.PILOT && !seat.inert();
         if (tile instanceof NativeResourcePortEntity port) return !port.inert();
         if (tile instanceof NativeBufferEntity buffer) return !buffer.inert();
@@ -227,6 +243,10 @@ public final class NativeVehicleStructure {
                     tile.putLong("ConstructorOwner", BlockPos.of(tile.getLong("ConstructorOwner")).rotate(rotation).asLong());
                     NativeConstructorFrame.rotate(tile, rotation::rotate);
                 }
+                if (rotation != Rotation.NONE && cell.state.getBlock() instanceof NativeCredentialReaderBlock
+                    && cell.state.getValue(NativeMountedSwitchBlock.ROTATION) != state.getValue(NativeMountedSwitchBlock.ROTATION)) {
+                    tile.putInt(SaveSchema.Redstone.MOUNT_ROTATION, state.getValue(NativeMountedSwitchBlock.ROTATION));
+                }
                 if (rotation != Rotation.NONE && tile.contains("PortFaces", Tag.TAG_INT_ARRAY)) {
                     var old = tile.getIntArray("PortFaces");
                     if (old.length != 6) throw new IllegalArgumentException("Invalid vehicle port face bank");
@@ -247,7 +267,13 @@ public final class NativeVehicleStructure {
         if (state.getBlock() instanceof NativeObserverCoreBlock) {
             return state.setValue(NativeObserverCoreBlock.FACING, rotation.rotate(state.getValue(NativeObserverCoreBlock.FACING)));
         }
-        return state.rotate(rotation);
+        var rotated = state.rotate(rotation);
+        if (state.getBlock() instanceof NativeCredentialReaderBlock reader
+            && reader.supportDirection(state).getAxis().isVertical()) {
+            var old = Direction.from2DDataValue(state.getValue(NativeMountedSwitchBlock.ROTATION));
+            return rotated.setValue(NativeMountedSwitchBlock.ROTATION, rotation.rotate(old).get2DDataValue());
+        }
+        return rotated;
     }
 
     private static void requireCoordinates(BlockPos p, CompoundTag raw) {
