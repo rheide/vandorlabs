@@ -54,7 +54,7 @@ public final class NativeVehicleTransfer {
         NativeCellTransactions.register(FAMILY);
     }
 
-    public static boolean holdsScreenChannels(ServerLevel world, BlockPos pos) {
+    public static boolean holdsTerrain(ServerLevel world, BlockPos pos) {
         return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos);
     }
 
