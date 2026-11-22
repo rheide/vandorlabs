@@ -733,11 +733,14 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
 
     private VehicleFlightMotion.Result moveFlight(double dx,double dy,double dz,float yaw,float pitch){
-        if(cruise.move(dx,dy,dz)){
+        if(cruise.active()&&cruise.move(dx,dy,dz)){
             applyFlightPose(new VehiclePose(posX,posY,posZ,yaw,pitch,structure.facing));
             return VehicleFlightMotion.Result.MOVED;
         }
-        return flightMotion.move(dx,dy,dz,yaw,pitch);
+        boolean enteringCruise=dimension==0&&dy>0&&posY+dy>FlightEnvelope.WORLD_CEILING;
+        VehicleFlightMotion.Result result=flightMotion.move(dx,dy,dz,yaw,pitch);
+        if(enteringCruise&&result==VehicleFlightMotion.Result.MOVED)cruise.move(0,0,0);
+        return result;
     }
 
     private void advanceFlightDescent(double ceiling){

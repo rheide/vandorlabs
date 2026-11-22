@@ -2,6 +2,8 @@ package com.vandorlabs.vehicle;
 
 import com.vandorlabs.blocks.BlockPropulsionLight;
 import net.minecraft.util.math.*;
+import net.minecraft.world.chunk.Chunk;
+import net.minecraft.world.chunk.storage.ExtendedBlockStorage;
 
 /** Capability checks and loaded-only clearance beneath the craft's collision footprint. */
 public final class VehicleFlight {
@@ -36,16 +38,30 @@ public final class VehicleFlight {
     public static boolean canParkHover(EntityGroundVehicle craft){return VehicleLandingGear.extended(craft)&&clearance(craft)<=3;}
     public static double clearance(EntityGroundVehicle craft){
         if(craft.collision==null||craft.flightAltitude()>=com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING)return Double.POSITIVE_INFINITY;
-        AxisAlignedBB box=craft.articulation.active()?craft.articulation.worldBounds(craft.posX,craft.posY,craft.posZ,craft.rotationYaw):craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);
+        AxisAlignedBB box=craft.flightPitch()!=0?craft.getEntityBoundingBox():craft.articulation.active()?craft.articulation.worldBounds(craft.posX,craft.posY,craft.posZ,craft.rotationYaw):craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);
         double bottom=box.minY,highest=Double.NEGATIVE_INFINITY;
         int minX=net.minecraft.util.math.MathHelper.floor(box.minX+.001),maxX=net.minecraft.util.math.MathHelper.floor(box.maxX-.001);
         int minZ=net.minecraft.util.math.MathHelper.floor(box.minZ+.001),maxZ=net.minecraft.util.math.MathHelper.floor(box.maxZ-.001);
-        for(int x=minX;x<=maxX;x++)for(int z=minZ;z<=maxZ;z++)for(int y=Math.min(255,MathHelper.floor(bottom));y>=Math.max(0,MathHelper.floor(bottom)-32);y--){
-            BlockPos p=new BlockPos(x,y,z);if(!craft.world.isBlockLoaded(p))return Double.POSITIVE_INFINITY;
-            net.minecraft.block.state.IBlockState state=craft.world.getBlockState(p);
-            if(state.getMaterial().isLiquid())continue;
-            AxisAlignedBB solid=state.getCollisionBoundingBox(craft.world,p);
-            if(solid!=null){double top=p.getY()+solid.maxY;if(top<=bottom+.001){highest=Math.max(highest,top);break;}}
+        BlockPos.MutableBlockPos position=new BlockPos.MutableBlockPos();
+        int topY=Math.min(craft.world.getHeight()-1,MathHelper.floor(bottom));
+        for(int cx=minX>>4;cx<=maxX>>4;cx++)for(int cz=minZ>>4;cz<=maxZ>>4;cz++){
+            Chunk chunk=craft.world.getChunkProvider().getLoadedChunk(cx,cz);
+            if(chunk==null)return Double.POSITIVE_INFINITY;
+            ExtendedBlockStorage[] sections=chunk.getBlockStorageArray();
+            int x0=Math.max(minX,cx<<4),x1=Math.min(maxX,(cx<<4)+15);
+            int z0=Math.max(minZ,cz<<4),z1=Math.min(maxZ,(cz<<4)+15);
+            for(int x=x0;x<=x1;x++)for(int z=z0;z<=z1;z++){
+                for(int y=topY;y>=0&&y+1>highest;y--){
+                    ExtendedBlockStorage section=sections[y>>4];
+                    if(section==null||section.isEmpty()){y&=~15;continue;}
+                    position.setPos(x,y,z);
+                    net.minecraft.block.state.IBlockState state=chunk.getBlockState(position);
+                    if(state.getMaterial().isLiquid()||state.getBlock().isAir(state,craft.world,position))continue;
+                    AxisAlignedBB solid=state.getCollisionBoundingBox(craft.world,position);
+                    if(solid!=null&&y+solid.maxY<=bottom+.001){highest=Math.max(highest,y+solid.maxY);break;}
+                }
+                if(highest>=bottom-.001)return Math.max(0,bottom-highest);
+            }
         }
         return highest==Double.NEGATIVE_INFINITY?Double.POSITIVE_INFINITY:Math.max(0,bottom-highest);
     }

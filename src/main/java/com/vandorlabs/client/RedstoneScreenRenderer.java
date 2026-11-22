@@ -101,7 +101,8 @@ final class RedstoneScreenRenderer {
         boolean hover=craft!=null&&craft.hover;
         boolean flight=com.vandorlabs.vehicle.VehicleStatus.offersFlight(world);
         boolean emergency=com.vandorlabs.vehicle.VehicleStatus.offersEmergencyPark(world,Minecraft.getMinecraft().player);
-        com.vandorlabs.tiles.TileEntityAutopilot autopilot=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
+        boolean flightTelemetry=craft!=null&&(craft.flying()||craft.takeoffRoll());
+        com.vandorlabs.tiles.TileEntityAutopilot autopilot=flightTelemetry?null:com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
         boolean on=autopilot!=null&&autopilot.enabled();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
@@ -123,22 +124,38 @@ final class RedstoneScreenRenderer {
         if(autopilot!=null)text(font,height<=64&&controller!=null&&!controller.vehicleName.isEmpty()?font.trimStringToWidth(controller.vehicleName,112):on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);
         String[] modes={"Park","Taxi","Hover","Flight"};
         for(int i=0;i<(flight?4:3);i++)statusText(font,modes[i],com.vandorlabs.vehicle.VehicleStatus.modeLeft(i,flight)+2,top+14,i==mode?0x072D24:0xFFFFFF);
-        boolean flightTelemetry=craft!=null&&(craft.flying()||craft.takeoffRoll());
         if(flightTelemetry){
             String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.descendingToFlightLimit()?"Descending":craft.takeoffRoll()?"Takeoff roll":"Flight";
-            statusText(font,String.format(java.util.Locale.ROOT,"%s    %.1f m/s",state,Math.abs(craft.driveSpeed)*20),8,top+26,0xCEE9ED);
+            statusText(font,state+"    "+oneDecimal(Math.abs(craft.driveSpeed)*20)+" m/s",8,top+26,0xCEE9ED);
         }else if(autopilot!=null)statusText(font,font.trimStringToWidth(autopilot.status,140),8,top+26,0xCEE9ED);
         if(autopilot!=null)statusText(font,"Next >",8,top+38,0xFFFFFF);
         if(emergency)statusText(font,"Emergency Park",55,top+38,0xFFFFFF);
         if(craft!=null){
-            statusText(font,String.format(java.util.Locale.ROOT,"Y %.1f",craft.flightAltitude()),8,top+49,0xC1E8FF);
+            boolean compact=height<=64, cruise=craft.cruise.active();
+            double clearance=cruise?Double.POSITIVE_INFINITY:craft.groundClearance();
+            String elevation="Y "+oneDecimal(craft.flightAltitude());
+            if(Double.isFinite(clearance)){
+                if(compact)elevation+=" AGL"+oneDecimal(clearance);
+                else statusText(font,"Ground clearance "+oneDecimal(clearance)+" m",8,top+60,0xC1E8FF);
+            }
+            statusText(font,elevation,8,top+49,0xC1E8FF);
+            if(cruise){
+                String route="X "+Math.round(craft.cruise.x())+"    Z "+Math.round(craft.cruise.z());
+                statusText(font,route,8,top+(compact?38:60),0xC1E8FF);
+            }
             com.vandorlabs.vehicle.VehicleFlightReadout readout=craft.flightReadout();
             if(readout.drives>0){
-                String fuel=String.format(java.util.Locale.ROOT,"Fuel %.0f%%   %,d mB",readout.capacity==0?0:100D*readout.fuel/readout.capacity,readout.fuel);
-                statusText(font,fuel,55,top+49,0xC1E8FF);
+                String fuel="Fuel "+(readout.capacity==0?0:Math.round(100D*readout.fuel/readout.capacity))+"%";
+                if(!compact)fuel+="   "+readout.fuel+" mB";
+                statusText(font,fuel,compact?78:55,top+49,0xC1E8FF);
             }
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
+    }
+
+    private static String oneDecimal(double value){
+        long units=Math.round(value*10),absolute=Math.abs(units);
+        return (units<0?"-":"")+(absolute/10)+"."+(absolute%10);
     }
 
     private static void statusText(FontRenderer font,String value,int x,int y,int color){
