@@ -20,8 +20,8 @@ public final class NavigationSources {
     /** The construction coordinates of a captured machine are not its physical height. */
     public static Vec3d position(TileEntityConstructor tile){
         GearTileEntity arm=tile.carriedArm;BlockPos p=tile.getPos();
-        if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld&&((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).navigationArm!=null)return NavigationVehicle.point(tile.getWorld(),new Vec3d(p.getX()+.5,p.getY(),p.getZ()+.5),p);
-        return arm!=null&&arm.payload()!=null&&!arm.payload().materialized()?NavigationVehicle.point(arm.getWorld(),arm.payload().transform(arm,arm.progress(),p.getX()+.5,p.getY(),p.getZ()+.5).add(new Vec3d(arm.getPos())),arm.getPos()):NavigationVehicle.point(tile.getWorld(),new Vec3d(p.getX()+.5,p.getY(),p.getZ()+.5),p);
+        if(tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld&&((com.vandorlabs.vehicle.VehicleWorld)tile.getWorld()).navigationArm!=null)return NavigationVehicle.mapPoint(tile.getWorld(),new Vec3d(p.getX()+.5,p.getY(),p.getZ()+.5),p);
+        return arm!=null&&arm.payload()!=null&&!arm.payload().materialized()?NavigationVehicle.mapPoint(arm.getWorld(),arm.payload().transform(arm,arm.progress(),p.getX()+.5,p.getY(),p.getZ()+.5).add(new Vec3d(arm.getPos())),arm.getPos()):NavigationVehicle.mapPoint(tile.getWorld(),new Vec3d(p.getX()+.5,p.getY(),p.getZ()+.5),p);
     }
     public static final class Area {
         public final int x,z,radius,radarRadius;
@@ -44,7 +44,7 @@ public final class NavigationSources {
         return !matching(world,display,channels,false).isEmpty()&&matching(world,display,channels,true).isEmpty();
     }
     private static List<Area> matching(World world,BlockPos display,ChannelList channels,boolean powered){
-        List<Area> areas=new ArrayList<>();if(channels.isEmpty())return areas;Vec3d receiver=NavigationVehicle.point(world,new Vec3d(display.getX()+.5,display.getY(),display.getZ()+.5),display);com.vandorlabs.vehicle.EntityGroundVehicle own=NavigationVehicle.craft(world);world=NavigationVehicle.physicalWorld(world);List<TileEntityConstructor> list=INDEX.get(world);
+        List<Area> areas=new ArrayList<>();if(channels.isEmpty())return areas;Vec3d receiver=NavigationVehicle.mapPoint(world,new Vec3d(display.getX()+.5,display.getY(),display.getZ()+.5),display);com.vandorlabs.vehicle.EntityGroundVehicle own=NavigationVehicle.craft(world);world=NavigationVehicle.physicalWorld(world);List<TileEntityConstructor> list=INDEX.get(world);
         if(list!=null)for(TileEntityConstructor tile:list){
             if(tile.isInvalid()||!world.isBlockLoaded(tile.getPos(),false)||world.getTileEntity(tile.getPos())!=tile||!tile.formed())continue;
             append(areas,tile,receiver,channels,tile,powered);

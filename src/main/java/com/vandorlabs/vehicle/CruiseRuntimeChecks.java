@@ -52,6 +52,7 @@ public final class CruiseRuntimeChecks {
         require(Math.abs(craft.posX-startX)<.001&&destination-startX==4096,"horizontal route keeps physical anchor");
         require(craft.cruise.altitude()>1200&&Double.isInfinite(craft.groundClearance()),"logical altitude without a clearance query");
         for(int i=512;i<=4096;i+=256)require(!craft.world.isBlockLoaded(new BlockPos(startX+i,64,craft.posZ)),"cruise loaded route at "+i);
+        require(Math.abs(com.vandorlabs.navigation.NavigationVehicle.center(craft).x-destination)<3,"navigation follows geographic route");
         NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());
         EntityGroundVehicle loaded=new EntityGroundVehicle(craft.world);
         loaded.readFromNBT(saved);

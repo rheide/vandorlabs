@@ -36,7 +36,17 @@ public final class NavigationVehicle {
             else{point=point.add(new Vec3d(view.origin));owner=new BlockPos(point);world=view.parent;}
         }return point;
     }
-    public static Vec3d center(EntityGroundVehicle craft){return craft.toWorld(new Vec3d(craft.structure.bounds.maxX/2,craft.structure.bounds.maxY/2,craft.structure.bounds.maxZ/2));}
+    /** Geographic position for observer coverage and the Navigation Table's follow mode. */
+    static Vec3d mapPoint(World world, Vec3d local, BlockPos owner){
+        return geographic(craft(world),point(world,local,owner));
+    }
+    private static Vec3d geographic(EntityGroundVehicle craft, Vec3d physical){
+        if(craft==null||!craft.cruise.active())return physical;
+        return physical.addVector(craft.cruise.x()-craft.posX,craft.flightAltitude()-craft.posY,craft.cruise.z()-craft.posZ);
+    }
+    public static Vec3d center(EntityGroundVehicle craft){
+        return geographic(craft,craft.toWorld(new Vec3d(craft.structure.bounds.maxX/2,craft.structure.bounds.maxY/2,craft.structure.bounds.maxZ/2)));
+    }
     public static boolean hasObserver(EntityGroundVehicle craft){return live(craft)&&hasObserver(craft.view,0);}
     private static boolean hasObserver(VehicleWorld world,int depth){if(depth>8)return false;Index index=index(world);for(int i=0;i<index.sources.size();i++){TileEntity tile=world.getTileEntity(index.sources.get(i));if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).formed())return true;}for(int i=0;i<index.arms.size();i++){TileEntity tile=world.getTileEntity(index.arms.get(i));if(tile instanceof GearTileEntity){GearTileEntity arm=(GearTileEntity)tile;if(arm.payload()!=null&&!arm.payload().materialized()&&!arm.hasFailedArmSnapshot()&&armHasObserver(arm,depth+1))return true;}}return false;}
     private static boolean armHasObserver(GearTileEntity arm,int depth){
