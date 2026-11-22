@@ -26,8 +26,11 @@ final class NativeVehicleHull {
     private static final double EPSILON = 1e-6;
     private static final int MAX_SHAPES = 8192;
 
-    private record Group(AABB bounds, List<AABB> shapes) {}
-    private record Contact(OrientedBounds hull, OrientedBounds terrain) {}
+    enum FlightContact { CLEAR, WHEEL, OBSTRUCTION }
+
+    private record Cluster(BlockPos origin, boolean wheel) {}
+    private record Group(AABB bounds, List<AABB> shapes, boolean wheel) {}
+    private record Contact(OrientedBounds hull, OrientedBounds terrain, boolean wheel) {}
     private record Target(BlockPos pos, List<AABB> shapes) {}
 
     private final List<Group> groups;
@@ -42,7 +45,7 @@ final class NativeVehicleHull {
     NativeVehicleHull(Map<BlockPos, BlockState> cells, Supplier<List<AABB>> mechanism) {
         this.mechanism = mechanism;
         var view = new SnapshotBlocks(Map.copyOf(cells));
-        var clusters = new LinkedHashMap<BlockPos, List<AABB>>();
+        var clusters = new LinkedHashMap<Cluster, List<AABB>>();
         var selection = new ArrayList<Target>();
         AABB envelope = null;
         int count = 0;
@@ -62,16 +65,18 @@ final class NativeVehicleHull {
                 if (++count > MAX_SHAPES) throw new IllegalArgumentException("Vehicle collision shape limit");
                 AABB box = part.move(at).move(-.5, 0, -.5);
                 var cluster = new BlockPos(at.getX() >> 2, at.getY() >> 2, at.getZ() >> 2);
-                clusters.computeIfAbsent(cluster, key -> new ArrayList<>()).add(box);
+                boolean wheel = state.getBlock() instanceof com.vandorlabs.neoforge.landing.NativeSideWheel;
+                clusters.computeIfAbsent(new Cluster(cluster, wheel), key -> new ArrayList<>()).add(box);
             }
         }
         if (envelope == null || count == 0) throw new IllegalArgumentException("Vehicle has no collision shape");
         var assembled = new ArrayList<Group>(clusters.size());
-        for (var members : clusters.values()) {
+        for (var entry : clusters.entrySet()) {
+            var members = entry.getValue();
             AABB extent = members.getFirst();
             for (var box : members) extent = extent.minmax(box);
             envelope = envelope.minmax(extent);
-            assembled.add(new Group(extent, List.copyOf(members)));
+            assembled.add(new Group(extent, List.copyOf(members), entry.getKey().wheel));
         }
         groups = List.copyOf(assembled);
         targets = List.copyOf(selection);
@@ -104,7 +109,7 @@ final class NativeVehicleHull {
                 enclosing = enclosing == null ? box : enclosing.minmax(box);
             }
             var groups = new ArrayList<Group>(clusters.size());
-            for (var members : clusters.values()) groups.add(new Group(members.stream().reduce(AABB::minmax).orElseThrow(), members));
+            for (var members : clusters.values()) groups.add(new Group(members.stream().reduce(AABB::minmax).orElseThrow(), members, false));
             mechanicalGroups = List.copyOf(groups);
             mechanicalBounds = enclosing;
         }
@@ -179,7 +184,7 @@ final class NativeVehicleHull {
             var body = shape(local, pose);
             var volume = broad(body).expandTowards(travel);
             for (var terrain : obstacles) {
-                if (volume.intersects(terrain)) contacts.add(new Contact(body, shape(terrain, RigidTransform.IDENTITY)));
+                if (volume.intersects(terrain)) contacts.add(new Contact(body, shape(terrain, RigidTransform.IDENTITY), group.wheel));
             }
         }
     }
@@ -222,17 +227,23 @@ final class NativeVehicleHull {
         return contacts != null && blocked(contacts, new Vec3(0, -distance, 0), 1);
     }
 
-    boolean clearMotion(NativeGroundVehicle craft, float yaw, float pitch, Vec3 travel) {
+    FlightContact flightContact(NativeGroundVehicle craft, float yaw, float pitch, Vec3 travel) {
         float yawChange = Mth.wrapDegrees(yaw - craft.getYRot());
         float pitchChange = pitch - craft.hullPitch();
         int steps = Math.max(1, (int)Math.ceil(activeRadius() * Math.toRadians(Math.abs(yawChange) + Math.abs(pitchChange)) / .15));
+        FlightContact result = FlightContact.CLEAR;
         for (int step = 1; step <= steps; step++) {
             float fraction = (float)step / steps;
             var contacts = contacts(craft, craft.position(), craft.getYRot() + yawChange * fraction,
                     craft.hullPitch() + pitchChange * fraction, travel);
-            if (contacts == null || blocked(contacts, travel, 1)) return false;
+            if (contacts == null) return FlightContact.OBSTRUCTION;
+            for (var contact : contacts) {
+                if (!contact.hull.sweepsInto(contact.terrain, travel.x, travel.y, travel.z)) continue;
+                if (!contact.wheel) return FlightContact.OBSTRUCTION;
+                result = FlightContact.WHEEL;
+            }
         }
-        return true;
+        return result;
     }
 
     float turn(NativeGroundVehicle craft, float yaw, float amount) {

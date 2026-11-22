@@ -652,7 +652,21 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
 
     private boolean flightMove(Vec3 travel, float yaw, float pitch) {
         boolean highFlight = cruise.active();
-        if (!highFlight && !hull.clearMotion(this, yaw, pitch, travel)) return false;
+        if (!highFlight) {
+            var contact = hull.flightContact(this, yaw, pitch, travel);
+            if (contact == NativeVehicleHull.FlightContact.OBSTRUCTION) return false;
+            if (contact == NativeVehicleHull.FlightContact.WHEEL) {
+                // Let the wheels skim the runway without penetrating the surface or dropping Flight.
+                // A wheel that meets a vertical obstacle must wait for a clear heading.
+                var tangent = new Vec3(travel.x, Math.max(0, travel.y), travel.z);
+                pitch = hullPitch();
+                if (hull.flightContact(this, yaw, pitch, tangent) != NativeVehicleHull.FlightContact.CLEAR) {
+                    setDeltaMovement(Vec3.ZERO);
+                    return true;
+                }
+                travel = tangent;
+            }
+        }
         setYRot(Mth.wrapDegrees(yaw));
         entityData.set(PITCH, pitch);
         if (highFlight) {
