@@ -130,6 +130,10 @@ public final class TransferNetworkCompat {
             }
             NBTTagCompound result;
             try{result=tile.writeToNBT(new NBTTagCompound());}finally{for(Map.Entry<Object,Object> entry:connections.entrySet())entry.getKey().getClass().getField("myConnectionFluid").set(entry.getKey(),entry.getValue());}
+            // A joined Fluxduct node writes an explicit zero share. The same empty
+            // buffer writes no share after loading without a native grid.
+            NBTTagCompound energy=result.getCompoundTag("Energy");
+            if(energy.hasKey("Energy",3)&&energy.getInteger("Energy")==0)energy.removeTag("Energy");
             for(Map.Entry<String,NBTTagCompound> entry:fluids.entrySet()){NBTTagCompound data=result.getCompoundTag(entry.getKey());data.merge(entry.getValue());if(!data.hasNoTags())result.setTag(entry.getKey(),data);}
             return result;
         }catch(ReflectiveOperationException|LinkageError failure){throw new IllegalArgumentException("Cannot preserve the installed transfer buffer",failure);}
