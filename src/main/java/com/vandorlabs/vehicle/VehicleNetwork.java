@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /** Bounded fragments are sent only for previews and newly tracked vehicles. */
 public final class VehicleNetwork {
-    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17, SAFE_PARK=18;
+    public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17, SAFE_PARK=18, TELEPORT_DISMOUNT=19;
     public static final int FRAGMENT=28000;
     static final int COUPLER_SCOPE_MAGIC=0x43415331,COUPLER_SCOPE_VERSION=1,COUPLER_SCOPE_BYTES=21;
     private static final int FLIGHT_STATE_MAGIC=0x4d574633, FLIGHT_STATE_BYTES=35;
@@ -98,7 +98,7 @@ public final class VehicleNetwork {
                         if(zero(associationOwner)||zero(associationGeneration)||type==SNAPSHOT&&!associationOwner.equals(token))return;
                     }
                 }
-                valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=SAFE_PARK;
+                valid=!b.isReadable()&&text.length()<=com.vandorlabs.redstone.ChannelList.MAX_TEXT_LENGTH&&type<=TELEPORT_DISMOUNT;
             }catch(Exception malformed){valid=false;}
         }
     }
@@ -127,6 +127,11 @@ public final class VehicleNetwork {
     }
     public static final class Client implements IMessageHandler<Packet,IMessage> {
         public IMessage onMessage(Packet packet,MessageContext ctx){if(packet.valid)VandorLabs.proxy.vehiclePacket(packet);return null;}
+    }
+    static void releaseTeleportedRider(EntityPlayerMP rider,EntityGroundVehicle craft) {
+        Packet packet=new Packet(TELEPORT_DISMOUNT);
+        packet.token=craft.getUniqueID();
+        PacketHandler.INSTANCE.sendTo(packet,rider);
     }
     public static void state(EntityGroundVehicle e) {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();

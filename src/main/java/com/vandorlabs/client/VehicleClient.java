@@ -82,6 +82,12 @@ public final class VehicleClient {
     }
     public static void receive(VehicleNetwork.Packet p) {
         Minecraft mc=Minecraft.getMinecraft();mc.addScheduledTask(()->{
+            if(p.type==VehicleNetwork.TELEPORT_DISMOUNT){
+                Entity mount=mc.player==null?null:mc.player.getRidingEntity();
+                if(mount instanceof EntityGroundVehicle && mount.getUniqueID().equals(p.token))
+                    mc.player.dismountRidingEntity();
+                return;
+            }
             if(p.type==VehicleNetwork.INSPECTION)latestPreview=null;
             if(mc.world!=null&&(p.type==VehicleNetwork.TILE||p.type==VehicleNetwork.CANOPIES||p.type==VehicleNetwork.DOORS)){
                 Entity raw=mc.world.getEntityByID(p.entity);

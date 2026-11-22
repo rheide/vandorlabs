@@ -25,9 +25,9 @@ public final class VehicleTeleport {
             craft.teleportingPassenger=null;
         }
         if (rider.getRidingEntity()==craft) return;
-        // Relocation can remove the old mount from the client's tracking set before its next
-        // tracker tick. Deliver the updated seat list before any teleport position packet.
-        ((EntityPlayerMP)rider).connection.sendPacket(new net.minecraft.network.play.server.SPacketSetPassengers(craft));
+        // The pilot may still hold the mount even if relocation dropped it from the client entity index.
+        // Release that reference before the teleport position packet reaches the client.
+        VehicleNetwork.releaseTeleportedRider((EntityPlayerMP)rider,craft);
         // Vanilla's ordinary dismount can move the player onto the roof. Relative /tp arguments
         // are applied after this call and must still be relative to the original seat.
         rider.setPosition(x,y,z);

@@ -25,7 +25,7 @@ import javax.imageio.ImageIO;
 public final class CruiseRuntimeChecks {
     private static final String RESTART = System.getenv("VANDOR_LABS_CRUISE_PHASE");
     private static final String SAVE_KEY = "VandorCruiseFixture";
-    private static int stage,ticks;
+    private static int stage,ticks,teleportSettled;
     private static Future<?> work;
     private static EntityGroundVehicle craft;
     private static double startX,destination;
@@ -167,15 +167,31 @@ public final class CruiseRuntimeChecks {
                 require(!craft.flying() && !craft.hover && !craft.cruise.active() && craft.onGround
                         && Math.abs(craft.posX-destination)<2 && craft.posY<255,"last pilot leaves craft landed at route");
             });stage=7;
-        }else if(stage==7 && !mc.player.isRiding() && Math.abs(mc.player.posX-startX)<2) {
-            if (System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) {
-                work=mc.getIntegratedServer().addScheduledTask(()->journeyMapTeleport(mc));
+        }else if(stage==7 || stage==9) {
+            if (mc.player.isRiding() || Math.abs(mc.player.posX-startX)>=2 || Math.abs(mc.player.posZ)>=2) {
+                teleportSettled=0;
+                return false;
+            }
+            if (++teleportSettled<12) return false;
+            if (stage==7 && System.getenv("VANDOR_LABS_TEST_JOURNEYMAP")!=null) {
+                work=mc.getIntegratedServer().addScheduledTask(()->prepareJourneyMapTeleport(mc));
+                teleportSettled=0;
                 stage=8;
                 return false;
             }
-            stage=8;
-        }else if(stage==8 && !mc.player.isRiding() && Math.abs(mc.player.posX-startX)<2) {
-            System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount external-teleport");
+            work=mc.getIntegratedServer().addScheduledTask(()->{
+                EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+                require(!pilot.isRiding() && Math.abs(pilot.posX-startX)<2 && Math.abs(pilot.posZ)<2,
+                        "authoritative rider remains at the external teleport destination");
+            });
+            stage=10;
+        }else if(stage==8 && ticks>8 && mc.player.getRidingEntity() instanceof EntityGroundVehicle) {
+            EntityGroundVehicle mounted=(EntityGroundVehicle)mc.player.getRidingEntity();
+            if(!mounted.getUniqueID().equals(craft.getUniqueID()) || !mounted.cruise.active())return false;
+            work=mc.getIntegratedServer().addScheduledTask(()->journeyMapTeleport(mc));
+            stage=9;
+        }else if(stage==10) {
+            System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount settled-external-teleport");
             return true;
         }
         if(stage==5 && work==null){
@@ -184,12 +200,14 @@ public final class CruiseRuntimeChecks {
         }
         return false;
     }
-    private static void journeyMapTeleport(Minecraft mc) {
+    private static void prepareJourneyMapTeleport(Minecraft mc) {
         place(mc);
         NBTTagCompound state=new NBTTagCompound();
         state.setByte("MaxwellFlightPhase",(byte)3);
         craft.readFlightMode(state);
         require(craft.cruise.move(2048,512,0),"enter high cruise before waypoint teleport");
+    }
+    private static void journeyMapTeleport(Minecraft mc) {
         double site=craft.cruise.x();
         EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
         try {
