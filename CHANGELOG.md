@@ -6,6 +6,8 @@
 
 - Fuel Maxwell Drives through three inlets and select Digital or Analog redstone response with the shared activation selector. Build five engine sizes and inspect remaining fuel on the front gauge. The front casing and corner trim render without flickering.
 - Select Flight from Vehicle Status, build speed on a runway or accelerate from Hover, and steer in yaw and pitch. The Controller's Flight tab shows actual weight, the reduction from lift plates, and effective weight. Compare the current takeoff limit with the theoretical maximum from every installed drive.
+- On Forge, show cruise coordinates and waypoints in JourneyMap, start preparing the seed view at Y=200, and render it at twice the previous resolution along each axis. Selecting a manual Taxi or Hover transition above Y=256 displays a descent reminder.
+- Stretch a single texture across side-by-side Canopies or Long Canopies.
 - Cruise above Y=256 in the Overworld using geographic coordinates and seed terrain. Restore the aircraft and riders at the destination on descent.
 - Supply onboard engines and observers through Thermal Dynamics, Mekanism and Galacticraft conduits. Route RF, fluids or items through settled Arm endpoints.
 - On Vehicle Status, select Park, Taxi, Hover or Flight from a two-row grid. Unavailable modes are gray and fuel stays within the screen.

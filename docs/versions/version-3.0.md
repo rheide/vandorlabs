@@ -27,7 +27,7 @@ Open the Controller’s **Flight** tab for projected maximum speed and altitude 
 
 Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The seed view begins preparing at Y=200 and refines to a 128 × 128 image. Instruments show altitude during cruise and omit ground clearance. Descend to Y=256 or below to select Taxi or Hover manually.
 
-With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
+With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Creating a waypoint at your current position uses the geographic coordinates and flight altitude. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
 
 A vanilla or JourneyMap teleport releases the rider. When the last pilot teleports away, the aircraft stops and lands below its current geographic position. This loads the aircraft’s landing site as well as the player’s teleport destination.
 
@@ -36,6 +36,10 @@ A vanilla or JourneyMap teleport releases the rider. When the last pilot telepor
 Available thrust and effective weight determine the altitude ceiling. A sufficiently powerful craft can reach **Y=10,000**, where its target speed is 50 times the low-altitude flight speed. Reducing thrust lowers the attainable ceiling. The craft descends until its thrust can support flight again.
 
 One full 3 × 3 × 4 drive supports 512 effective weight units at takeoff. Larger drives scale by volume. Above Y=256, multiply the takeoff thrust requirement by `1 + 24 × (Y − 256) / (100,000 − Y)`. For example, twice the takeoff thrust reaches about **Y=4,246**. Reaching **Y=10,000** takes about **3.60 times** the takeoff thrust.
+
+## Joined canopy glass
+
+Place two or more Canopies side by side facing the same direction, or use a row of Long Canopies. Select **Stretch** to spread one image across the joined windshield and roof. Select **Tile** for repeated artwork. The image stays attached to the glass as the canopy opens.
 
 ## Supplying engines and observers on board
 

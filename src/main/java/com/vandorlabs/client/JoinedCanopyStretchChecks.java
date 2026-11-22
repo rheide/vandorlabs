@@ -1,6 +1,5 @@
 package com.vandorlabs.client;
 
-import com.vandorlabs.blocks.BlockCanopy;
 import com.vandorlabs.canopy.CanopyMesh;
 import com.vandorlabs.canopy.LargeCanopySettings;
 import com.vandorlabs.tiles.ScreenHousingTextures;
