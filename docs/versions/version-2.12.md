@@ -9,6 +9,16 @@ Turn crisp 45° corners in glass and walls, join Large Doors into openings up to
 - **Wear your work.** Press Programmable Plates in the Assembly Press and craft four programmable armor pieces, each with its own role, company or material artwork.
 - **Catch up on NeoForge.** NeoForge 1.21.1 adds the Copy Controller, Press and Gantry production, the Advanced Pilot Chair and Cockpit, programmable armor, and an experimental Turntable. It also has every new corner block and the joined Large Door improvements.
 
+## Developer Notes
+
+Astra usually does these notes but today our guest speaker Opus has made an attempt. It seemed rather confused about all the things Astra had done, and it took it a while to figure out the mod, but it seems to have come up with some nice new things. It's probabably best to ignore the Diagonal Corner blocks for now though, they're still quite crap. regular Corner Glass should be quite usable; I've given up on the idea of magically joining glass blocks together, it's much easier to do with a separate block, and there's way less corner (..) cases to consider.
+
+This is another huge milestone on the way to space, and, perhaps as a side effect, might enable cool mech building at some point in the future: Arms can now transfer RF, fluids or items, configurable through the dialog. This allows us to build power couplers, dynamic fluid transfers, and so on. Since multiblocks are movable by arms, you can now put a powered Survey Dish on an arm and extend it higher for more range - Survey Dishes and Sentinel Arrays now require RF Power. There's no RF power transfer implemented for vehicle mode yet, which makes these multiblocks not usable yet inside vehicles, but I'm working on that next. End goal is to have a balanced gameplay for vehicles that consume RF and fuel. I don't really want to replicate stuff that other mods already excel at (Mekanism, RFTools and Thermal Dynamics are all brilliant at what they do), but I might have to do a little bit of that in order to make vehicles work the way I want them to.
+
+Large doors can now be mounted horizontally! And arms can pass through them! Construction is a bit iffy: first you have to build the arm and platform/surface out fully extended, retract the whole thing, and then build the door. Large doors join up to 2x2 so you have a 6x6 area to play with. Enjoy!
+
+No 1.21.1 release this time - too many features still unfinished so I'm holding out on this until I get the next movement mode solidified in 1.12.2. Next up: Flight mode!
+
 ## Corner Glass and Corner Walls
 
 ![A flat Corner Glass bevel joins two perpendicular glass panels](media/2.12/corner-glass.png)
