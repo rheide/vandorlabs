@@ -411,6 +411,7 @@ public final class NativeVehicleTransferChecks {
     }
 
     private static void moveToParking() {
+        if (transit != null) transit.watchParking(PARK);
         originalActor = craft.saveWithoutId(new CompoundTag());
         craft.setYRot(90);
         craft.setPos(PARK.getX() + .5, PARK.getY(), PARK.getZ() + .5);

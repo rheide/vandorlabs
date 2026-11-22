@@ -35,7 +35,11 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.Fluid;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
 
 /** Exact carried flows run with one real external wireless transmitter and native configured owners. */
 final class NativeVehicleResourceFixture {
@@ -51,7 +55,8 @@ final class NativeVehicleResourceFixture {
     private final ItemStack transmitter;
     private final NativeVehicleMekanismCubeFixture cubes;
     private boolean observerRequested, on, radar;
-    private net.neoforged.neoforge.fluids.capability.IFluidHandler cachedMekanismTank;
+    private IFluidHandler cachedMekanismTank;
+    private BlockCapabilityCache<IFluidHandler, Direction> parkedTank;
     private FluidStack optionalFuel;
 
     NativeVehicleResourceFixture(ServerLevel world, BlockPos root, BlockPos engine, Fluid fuel) {
@@ -242,19 +247,43 @@ final class NativeVehicleResourceFixture {
         }
     }
 
+    void watchParking(BlockPos anchor) {
+        if (!MEKANISM) return;
+        var destination = parked(pump.east(), anchor);
+        parkedTank = BlockCapabilityCache.create(Capabilities.FluidHandler.BLOCK, world, destination, Direction.NORTH);
+        if (parkedTank.getCapability() != null) throw new AssertionError("Tank cache started at an occupied parking destination");
+        cubes.watchParking(anchor);
+    }
+
     void parked(BlockPos anchor) {
         if (cubes != null) cubes.parked(anchor);
         if (MEKANISM) {
             checkHeldTank();
             var pos = parked(pump.east(), anchor);
             var tile = world.getBlockEntity(pos);
-            var fluid = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, pos, Direction.NORTH);
+            var fluid = parkedTank.getCapability();
             if (tile == null || !NativeVehicleMekanismTank.supports(tile) || fluid == null || !fluid.getFluidInTank(0).isEmpty()
                     || !tile.getPersistentData().getString("FixtureReceipt").equals("finite tank")) {
                 throw new AssertionError("The rotated Mekanism tank must contain exactly its remaining physical contents");
             }
+            var probe = optionalFuel.copyWithAmount(7);
+            if (fluid.fill(probe, FluidAction.SIMULATE) != 7 || !fluid.getFluidInTank(0).isEmpty()
+                || fluid.fill(probe, FluidAction.EXECUTE) != 7
+                || fluid.getFluidInTank(0).getAmount() != 7) {
+                throw new AssertionError("The refreshed parked tank cache must simulate and execute a physical fill");
+            }
+            var simulated = fluid.drain(probe, FluidAction.SIMULATE);
+            if (simulated.getAmount() != 7 || !FluidStack.isSameFluidSameComponents(simulated, probe)
+                || fluid.getFluidInTank(0).getAmount() != 7) {
+                throw new AssertionError("The parked tank must preserve contents during simulated drain");
+            }
+            var drained = fluid.drain(probe, FluidAction.EXECUTE);
+            if (drained.getAmount() != 7 || !FluidStack.isSameFluidSameComponents(drained, probe)
+                || !fluid.getFluidInTank(0).isEmpty()) {
+                throw new AssertionError("The parked tank must return all 7 mB through the same refreshed external cache");
+            }
             System.out.println("[vandorlabs][vehicle-transfer] installed Mekanism tank PASS " + MEKANISM_MB
-                + " mB through onboard pump to Maxwell; unique parked store");
+                + " mB through onboard pump to Maxwell; parked cache filled and drained exactly 7 mB");
         }
         var energy = world.getBlockEntity(parked(powerSink, anchor)).saveWithFullMetadata(world.registryAccess());
         var matter = world.getBlockEntity(parked(matterSink, anchor)).saveWithFullMetadata(world.registryAccess());

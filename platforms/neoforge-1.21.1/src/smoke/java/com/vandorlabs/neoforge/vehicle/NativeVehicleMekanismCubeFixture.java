@@ -20,6 +20,7 @@ import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.Rotation;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.properties.DirectionProperty;
+import net.neoforged.neoforge.capabilities.BlockCapabilityCache;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.IEnergyStorage;
 
@@ -32,6 +33,7 @@ final class NativeVehicleMekanismCubeFixture {
     private final UUID owner;
     private final IEnergyStorage originalOutput;
     private final IEnergyStorage originalTarget;
+    private BlockCapabilityCache<IEnergyStorage, Direction> parkedInput, parkedOutput;
     private boolean heldChecked;
     private int lastInput = INPUT_FE;
 
@@ -124,6 +126,14 @@ final class NativeVehicleMekanismCubeFixture {
         return output == OUTPUT_FE && remaining == 1 && from == 1 && to == 25;
     }
 
+    void watchParking(BlockPos anchor) {
+        var destination = parked(sourceCube, anchor);
+        parkedInput = BlockCapabilityCache.create(Capabilities.EnergyStorage.BLOCK, world, destination, Direction.NORTH);
+        parkedOutput = BlockCapabilityCache.create(Capabilities.EnergyStorage.BLOCK, world, destination, Direction.SOUTH);
+        require(parkedInput.getCapability() == null && parkedOutput.getCapability() == null,
+            "real NeoForge caches observed the empty rotated destination");
+    }
+
     void parked(BlockPos anchor) {
         var from = parked(sourceCube, anchor);
         var to = parked(targetCube, anchor);
@@ -137,8 +147,20 @@ final class NativeVehicleMekanismCubeFixture {
         require(packed(parked(outputPort, anchor)).getInt("PortEnergy") == OUTPUT_FE
             && packed(parked(inputPort, anchor)).getInt("PortEnergy") == 1, "parked FE buffers preserve exactly one owner");
         require(world.getBlockState(sourceCube).isAir() && world.getBlockState(targetCube).isAir(), "no original Cube remains");
+
+        var input = parkedInput.getCapability();
+        var output = parkedOutput.getCapability();
+        require(input != null && output != null && input.receiveEnergy(2, true) == 2 && contents(from) == 1,
+            "parked input cache refreshes after release and simulation preserves stored Joules");
+        require(input.receiveEnergy(2, false) == 2 && contents(from) == 6,
+            "physical parked Cube credits 5 Joules from 2 FE");
+        require(input.extractEnergy(2, false) == 0 && output.receiveEnergy(2, false) == 0
+            && output.extractEnergy(2, true) == 2 && contents(from) == 6,
+            "rotated sides and simulated extraction preserve exact restored energy");
+        require(output.extractEnergy(2, false) == 2 && contents(from) == 1,
+            "physical parked Cube reverses exactly and retains its indivisible Joule");
         System.out.println("[vandorlabs][vehicle-transfer] installed Mekanism cubes PASS 8 FE out, 10 FE in, "
-            + "odd Joule and FE remainders, protected side/owner/slot, cached handler frozen, rotated park");
+            + "odd Joule and FE remainders, protected side/owner/slot, cached handler frozen, rotated park and cache reversal");
     }
 
     private BlockEntity cube(BlockPos at, Direction facing, boolean source) {
