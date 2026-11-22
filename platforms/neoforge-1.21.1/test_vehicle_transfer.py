@@ -13,12 +13,12 @@ from test_transmitter import ROOT, command, jdk_home, run
 @retain_artifacts
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--group', choices=('all', 'roundtrip', 'assembly-recovery', 'parking-recovery'), default='all')
+    parser.add_argument('--group', choices=('all', 'roundtrip', 'arms', 'assembly-recovery', 'parking-recovery'), default='all')
     arguments = parser.parse_args()
     output = Path(artifact_directory(prefix='vehicle-transfer-', dir=ROOT / 'build/test-artifacts'))
     candidate = snapshot(output, 'before')
     opts = os.environ.get('JAVA_TOOL_OPTIONS', '')
-    groups = {'roundtrip': ('roundtrip',), 'assembly-recovery': ('crash-assemble', 'read-assemble'),
+    groups = {'roundtrip': ('roundtrip',), 'arms': ('arms',), 'assembly-recovery': ('crash-assemble', 'read-assemble'),
               'parking-recovery': ('crash-park', 'read-park')}
     for name, phases in groups.items():
         if arguments.group not in ('all', name):

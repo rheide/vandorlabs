@@ -70,6 +70,7 @@ public final class NativeVehicleTransferChecks {
     }
     private static NativeGroundVehicle craft, stale;
     private static NativeVehicleResourceFixture transit;
+    private static NativeVehicleArmFixture arms;
     private static CompoundTag originalActor;
     private static int ticks, stage;
     private static boolean blockedBreak, blockedPlace, faulted, formed;
@@ -127,6 +128,7 @@ public final class NativeVehicleTransferChecks {
                 stageMaxwell();
                 stageSecurity();
             }
+            if (phase().equals("arms")) arms = new NativeVehicleArmFixture(world, ROOT);
             event.getServer().saveEverything(true, true, true);
             NativeBuilderJournalFault.set(NativeVehicleTransferChecks::fault);
         } catch (Throwable failure) { fail(failure); }
@@ -159,6 +161,7 @@ public final class NativeVehicleTransferChecks {
             if (faulted || ticks < 12) return;
             if (stage == 0) {
                 if (transit != null && (!formMaxwell() || !transit.formed(player))) return;
+                if (arms != null && !arms.formed(player)) return;
                 require(!new ChunkPos(ROOT).equals(new ChunkPos(PILOT)), "fixture hull crosses chunk boundaries");
                 if (phase().equals("roundtrip")) {
                     exerciseSecurity();
@@ -184,7 +187,7 @@ public final class NativeVehicleTransferChecks {
                 require(world.getBlockState(ROOT.below(2)).is(Blocks.SMOOTH_STONE), "top-slab deck leaves the terrain in place");
                 craft = world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst();
                 requireCarried(craft);
-                if (transit != null) {
+                if (transit != null || arms != null) {
                     stage = 5;
                     return;
                 }
@@ -192,7 +195,8 @@ public final class NativeVehicleTransferChecks {
                 return;
             }
             if (stage == 5) {
-                if (!transit.transferred(craft, player, FUEL_MB)) return;
+                if (transit != null && !transit.transferred(craft, player, FUEL_MB)
+                    || arms != null && !arms.transferred(craft, player)) return;
                 moveToParking();
                 return;
             }
@@ -236,6 +240,11 @@ public final class NativeVehicleTransferChecks {
             require(world.getBlockState(parked(BARREL)).getValue(BlockStateProperties.FACING) == Direction.WEST,
                 "native barrel facing rotates");
             requireInventory(parked(BARREL));
+            if (arms != null) {
+                arms.parked(PARK);
+                pass("realArmPlacement/settledRF/movingAndFoldedGate/reverseFluid/componentItems/rotatedParking");
+                return;
+            }
             requireMaxwellParked();
             transit.parked(PARK);
             requireParkedSecurity();
