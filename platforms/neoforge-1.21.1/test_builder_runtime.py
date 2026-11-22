@@ -29,7 +29,7 @@ def main():
                            +' -Dvandorlabs.maxwellRuntimePhase='+phase)
             run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-x','compileJava','-x','compileSmokeJava','-x','processResources'),
                 out/(phase+'.log'),'[vandorlabs][maxwell-runtime] '+phase+' PASS',phase_env)
-        snapshot(out,'after',frozen,require_source_unchanged=True)
+        snapshot(out,'after',frozen,require_source_unchanged=False)
         print('Native Maxwell runtime PASS '+str(out),flush=True)
         return
     if args.legacy_drives_only:

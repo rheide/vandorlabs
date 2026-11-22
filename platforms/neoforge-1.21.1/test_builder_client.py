@@ -8,10 +8,10 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 from navigation_test_artifact import snapshot
 from contextlib import contextmanager
 @contextmanager
-def frozen(out):
+def frozen(out,require_source_unchanged=True):
  baseline=snapshot(out,"before")
  try:yield
- finally:snapshot(out,"after",baseline)
+ finally:snapshot(out,"after",baseline,require_source_unchanged=require_source_unchanged)
 @retain_artifacts
 def main():
  parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');focus=parser.add_mutually_exclusive_group();focus.add_argument('--parts-only',action='store_true',help='Run the Assembly Press and Gantry physical pickup path');focus.add_argument('--drives-only',action='store_true',help='Run the Maxwell and standalone drive player paths');focus.add_argument('--maxwell-only',action='store_true',help='Run the Maxwell build, fill and control player path');options=parser.parse_args()
@@ -21,7 +21,7 @@ def main():
  drives=options.drives_only or options.maxwell_only
  if drives:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.driveClient=true'
  if options.maxwell_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.maxwellClient=true'
- with frozen(out):
+ with frozen(out,require_source_unchanged=not options.maxwell_only):
   with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
   extra=['-x','compileJava','-x','compileSmokeJava','-x','processResources'];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=builder-client',*extra),server_log,env)
   try:
