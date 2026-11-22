@@ -456,6 +456,7 @@ RUN_ROOT=${VANDOR_LABS_TEST_RUN_ROOT:-"$ROOT/testclient"}
 mkdir -p "$RUN_ROOT"
 RUN_ROOT=$(cd "$RUN_ROOT" && pwd)
 RUN_OUT=$(mktemp -d "$RUN_ROOT/render-run.XXXXXX")
+echo "Vandor client run directory: $RUN_OUT"
 
 # Claim only this fresh run and its generated default game directory. Custom
 # VANDOR_LABS_TEST_GAME_DIR paths are never registered for deletion.

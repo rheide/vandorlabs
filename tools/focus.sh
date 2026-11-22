@@ -36,7 +36,7 @@ find "$HOME/.gradle/caches/modules-2/files-2.1/net.sf.trove4j" -name trove4j-3.0
 VERSION=$(sed -n "s/^version = '\([^']*\)'/\1/p" build.gradle | head -1)
 JAR=build/libs/vandorlabs-$VERSION.jar
 LOGS=build/focus-logs; mkdir -p "$LOGS"
-STAMP=$(date +%Y%m%d-%H%M%S)
+STAMP=$(date +%Y%m%d-%H%M%S)-$$
 if $BUILD && { [ ! -f "$JAR" ] || [ -n "$(find src generated-resources build.gradle -newer "$JAR" -type f -print -quit)" ]; }; then
     if ! JAVA_HOME=$JAVA8 ./gradlew --offline assemble --no-daemon -q > "$LOGS/build-$STAMP.log" 2>&1; then
         echo "focus $FOCUS BUILD-FAIL log=$LOGS/build-$STAMP.log"
@@ -44,16 +44,18 @@ if $BUILD && { [ ! -f "$JAR" ] || [ -n "$(find src generated-resources build.gra
         exit 1
     fi
 fi
-BEFORE=$(find testclient -maxdepth 1 -name "render-run.*" -type d | LC_ALL=C sort); LOG=$LOGS/$FOCUS-$STAMP.log
+LOG=$LOGS/$FOCUS-$STAMP.log
 KEEP=${VANDOR_LABS_TEST_KEEP_ARTIFACTS:-}
 $SHOTS && KEEP=1
 VANDOR_LABS_COMPAT_MODS=$MODS VANDOR_LABS_TEST_SKIP_BUILD=true VANDOR_LABS_TEST_KEEP_ARTIFACTS=$KEEP \
     bash testclient/test_viewscreen.sh --focus "$FOCUS" "${EXTRA[@]}" > "$LOG" 2>&1
 STATUS=$?
-RUN=$(LC_ALL=C comm -13 <(echo "$BEFORE") <(find testclient -maxdepth 1 -name "render-run.*" -type d | LC_ALL=C sort) | head -1)
+RUN=$(sed -n 's/^Vandor client run directory: //p' "$LOG" | head -1)
 CLIENT=${RUN:+$RUN/client.log}
 RESULT=PASS; [ $STATUS -eq 0 ] || RESULT=FAIL
-echo "focus $FOCUS $RESULT exit=$STATUS jar=$(sha256sum "$JAR" | cut -c1-12) log=$LOG${RUN:+ run=$RUN}"
+HASH=unavailable
+if [ -n "$RUN" ] && [ -s "$RUN/artifact.sha256" ]; then HASH=$(cut -c1-12 "$RUN/artifact.sha256"); fi
+echo "focus $FOCUS $RESULT exit=$STATUS jar=$HASH log=$LOG${RUN:+ run=$RUN}"
 if [ -n "$CLIENT" ] && [ -f "$CLIENT" ]; then
     grep -m3 -oE '\[vandorlabs\]\[[a-z]+\] [^ ]+ PASS.{0,120}' "$CLIENT" | sort -u | head -3
     if [ $STATUS -ne 0 ]; then
