@@ -5,6 +5,7 @@
 - Fuel Maxwell Drives through three inlets and select thrust with digital or analog redstone. Build five engine sizes and inspect remaining fuel on the front gauge.
 - Select Flight from Vehicle Status, build speed on a runway or accelerate from Hover, and steer in yaw and pitch. The Controller's Flight tab reports weight, effective weight and altitude capability.
 - Cruise above Y=256 in the Overworld using geographic coordinates and seed terrain. Restore the aircraft and riders at the destination on descent.
+- Supply onboard engines and observers through Thermal Dynamics, Mekanism and Galacticraft conduits. Route RF, fluids or items through settled Arm endpoints.
 - Transmit Tank and Battery fullness over redstone channels.
 - Display a received analog redstone channel as battery bars on a screen, console or cockpit.
 
