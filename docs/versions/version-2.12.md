@@ -35,6 +35,8 @@ Programmable Blocks now default to the former Programmable Matter finish, and mu
 
 Joined Programmable Trapdoors can split at the geometric centre, even in odd-width groups, or move together in a chosen cardinal direction. Every leaf of a group up to eight wide stays solid and selectable wherever it moves. Canopy and Long Canopy rears are open, and the side glass gaps are closed. Segmented Doors pasted elsewhere with WorldEdit animate independently.
 
+Stationary Programmable Glass is drawn as ordinary chunk geometry, like vanilla glass, including selected artwork, static Screens, opaque panes and every stock tint, so large glass walls cost far less each frame and cast shadows under shader packs. Animated Screens, corner glass, glass holding fluids and glass on moving vehicles keep their existing renderers. The faintest stock tints look slightly more tinted.
+
 RFTools blocks tied to fixed coordinates, such as Matter Transmitters, Monitors and Elevators, are refused on Arms; the Arm dialog names the reason.
 
 ## NeoForge 1.21.1

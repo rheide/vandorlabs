@@ -2,6 +2,11 @@
 
 ## 2.12.0
 
+- Draw all stationary Programmable Glass as ordinary chunk geometry, like vanilla glass: selected artwork, Screens in static playback, opaque panes and every stock tint. Glass walls no longer add per-block sorting, draw calls or tile renders each frame, and under shader packs they cast shadows like stock glass. Opaque panes use the solid layer. Animated Screens, corner glass, glass with contained fluids and glass on moving vehicles keep their existing renderers.
+- Shade only one sheet of translucent artwork glass, with the same overall opacity as before, roughly halving its fragment cost under shader packs.
+- Keep the faintest stock tints (Soft Cyan Mild and Normal, Soft Dark Grey Mild) visible as chunk geometry by raising their faintest pixels to Minecraft's minimum visible alpha; they look slightly more tinted.
+- Remove the `vandorlabs.staticGlass` and `vandorlabs.staticGlassRenderer` startup options.
+
 - Add flat and sloped Programmable Corner Glass. The Middle flat bevel joins two perpendicular Middle glass panels. Placement aligns with the clicked or adjacent glass and bends towards the placing player; stacked corners keep their bevel, and corner frames render without seam stubs or see-through rails.
 - Clear the rear aperture and moving lower crossbar of Canopy and Long Canopy. Repair side glass gaps and the Long Angled Front Canopy’s open rear and frame faces.
 - Choose a true geometric center split or a cardinal opening direction for joined Programmable Trapdoors, including odd-width groups. Leaves of groups up to eight wide stay solid and selectable wherever they move, on Forge and NeoForge.
