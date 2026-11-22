@@ -23,7 +23,7 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
     private final DecimalFormat format=new DecimalFormat("#,##0.0",DecimalFormatSymbols.getInstance(Locale.ROOT));
     private Button action,scan,flightTab;
     private boolean flight,securityPage;
-    private Button securityControl;
+    private Button securityControl, emergency;
 
     public NativeVehicleControllerScreen(NativeVehicleMenu menu,Inventory inventory,Component title) {
         super(menu,inventory,title);
@@ -50,6 +50,11 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
             if(securityPage)securityControl=button(12,83,234,"Security",b->send(menu.securityEnabled()?NativeVehicleMenu.SECURITY_OFF:NativeVehicleMenu.SECURITY_ON));
         }
         flightTab.active=!flight;
+        emergency=null;
+        if(menu.craft!=null && !flight) {
+            emergency=button(12,123,234,"Emergency Park",b->send(NativeVehicleMenu.EMERGENCY_PARK));
+            emergency.visible=menu.offersEmergencyPark();
+        }
         scan=null;
         if(menu.controller!=null) scan=button(12,155,85,"Scan craft",b->send(NativeVehicleMenu.SCAN));
         action=button(menu.controller==null?12:100,155,menu.controller==null?234:146,
@@ -60,6 +65,7 @@ public final class NativeVehicleControllerScreen extends AbstractContainerScreen
     }
     @Override protected void containerTick(){
         super.containerTick();
+        if(emergency!=null) emergency.visible=menu.offersEmergencyPark();
         if(securityControl!=null){
             securityControl.active=menu.mayChangeSecurity();
             securityControl.setMessage(Component.literal("Security: "+(menu.securityEnabled()?"ON":"OFF")));

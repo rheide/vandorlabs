@@ -10,8 +10,8 @@ import net.minecraft.world.inventory.SimpleContainerData;
 import net.minecraft.world.item.ItemStack;
 
 public final class NativeVehicleMenu extends AbstractContainerMenu {
-    public static final int CONVERT=0, SCAN=1, SECURITY_ON=2, SECURITY_OFF=3;
-    private final SimpleContainerData metrics=new SimpleContainerData(22);
+    public static final int CONVERT=0, SCAN=1, SECURITY_ON=2, SECURITY_OFF=3, EMERGENCY_PARK=4;
+    private final SimpleContainerData metrics=new SimpleContainerData(23);
     public final NativeVehicleControllerEntity controller;
     public final NativeGroundVehicle craft;
 
@@ -22,10 +22,12 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
         metrics.set(20,controller.securityEnabled()?1:0);metrics.set(21,controller.mayChangeSecurity(viewer)?1:0);
     }
 
-    NativeVehicleMenu(int window,NativeGroundVehicle craft) {
+    private ServerPlayer carriedViewer;
+    NativeVehicleMenu(int window,NativeGroundVehicle craft,Player viewer) {
         super(NativeVehicleBindings.MENU,window);
         addDataSlots(metrics);
         this.controller=null; this.craft=craft;
+        if (viewer instanceof ServerPlayer server) carriedViewer=server;
     }
 
     NativeVehicleMenu(int window,Inventory inventory,RegistryFriendlyByteBuf buffer) {
@@ -73,7 +75,9 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
 
     public boolean securityEnabled(){return metrics.get(20)!=0;}
     public boolean mayChangeSecurity(){return metrics.get(21)!=0;}
+    public boolean offersEmergencyPark(){return metrics.get(22)!=0;}
     @Override public void broadcastChanges(){
+        if(carriedViewer!=null) metrics.set(22,craft.mayEmergencyPark(carriedViewer)?1:0);
         if(controller!=null && controller.getLevel() instanceof net.minecraft.server.level.ServerLevel)
             metrics.set(20,controller.securityEnabled()?1:0);
         super.broadcastChanges();
@@ -99,6 +103,11 @@ public final class NativeVehicleMenu extends AbstractContainerMenu {
         if(action==SECURITY_ON||action==SECURITY_OFF){
             if(controller==null || !controller.setSecurity(player,action==SECURITY_ON))return false;
             broadcastChanges();return true;
+        }
+        if (action==EMERGENCY_PARK) {
+            if(craft==null || !craft.requestEmergencyPark(player)) return false;
+            player.closeContainer();
+            return true;
         }
         if (action!=CONVERT) return false;
         if (controller!=null && !controller.mayOperate(player)) {

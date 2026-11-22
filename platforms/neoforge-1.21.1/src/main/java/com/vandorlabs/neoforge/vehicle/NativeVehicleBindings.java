@@ -73,7 +73,7 @@ public final class NativeVehicleBindings {
     public static boolean open(Player player, NativeGroundVehicle craft) {
         if (!NativeVehicleMenu.near(player,craft)) return false;
         if (player instanceof ServerPlayer server) {
-            server.openMenu(new SimpleMenuProvider((window,inventory,actor) -> new NativeVehicleMenu(window,craft),
+            server.openMenu(new SimpleMenuProvider((window,inventory,actor) -> new NativeVehicleMenu(window,craft,actor),
                     Component.translatable("block.vandorlabs.vehicle_controller")),buffer -> {
                 buffer.writeBoolean(true);
                 buffer.writeVarInt(craft.getId());

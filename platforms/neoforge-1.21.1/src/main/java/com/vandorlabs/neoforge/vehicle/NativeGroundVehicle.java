@@ -577,11 +577,15 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         finishFlight(mode);
     }
 
-    private void requestEmergencyPark(ServerPlayer actor) {
-        if (!showsEmergencyPark(actor) || owner == null || !owner.equals(actor.getUUID())
-                || getFirstPassenger() != null && getFirstPassenger() != actor) {
+    boolean mayEmergencyPark(ServerPlayer actor) {
+        return showsEmergencyPark(actor) && actor.getUUID().equals(owner) && NativeVehicleMenu.near(actor, this)
+                && !NativeVehicleTransfer.escrowed(this) && (getFirstPassenger() == null || getFirstPassenger() == actor);
+    }
+
+    boolean requestEmergencyPark(ServerPlayer actor) {
+        if (!mayEmergencyPark(actor)) {
             notifyPilot(actor, "Emergency Park requires the vehicle owner, Creative Mode and the Configurizer.");
-            return;
+            return false;
         }
         emergencyOwner = actor.getUUID();
         emergencyDeadline = level().getGameTime() + 1200;
@@ -590,6 +594,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         speed = 0;
         if (mode() != TAXI) setMode(FLIGHT, LANDING);
         notifyPilot(actor, "Preparing Emergency Park.");
+        return true;
     }
 
     private void finishEmergencyPark() {
