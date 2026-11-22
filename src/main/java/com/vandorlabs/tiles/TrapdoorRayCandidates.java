@@ -12,6 +12,12 @@ public final class TrapdoorRayCandidates {
     private TrapdoorRayCandidates() { }
 
     public static List<BlockPos> positions(Vec3d start,Vec3d end) {
+        return positions(start,end,false);
+    }
+    static List<BlockPos> extendedPositions(Vec3d start,Vec3d end) {
+        return positions(start,end,true);
+    }
+    private static List<BlockPos> positions(Vec3d start,Vec3d end,boolean extended) {
         int[] cell={MathHelper.floor(start.x),MathHelper.floor(start.y),MathHelper.floor(start.z)};
         int[] last={MathHelper.floor(end.x),MathHelper.floor(end.y),MathHelper.floor(end.z)};
         double[] origin={start.x,start.y,start.z},delta={end.x-start.x,end.y-start.y,end.z-start.z},next=new double[3],step=new double[3];
@@ -28,14 +34,26 @@ public final class TrapdoorRayCandidates {
             int axis=next[0]<=next[1] && next[0]<=next[2]?0:next[1]<=next[2]?1:2;
             cell[axis]+=delta[axis]>0?1:-1;next[axis]+=step[axis];
         }
-        Path path=new Path(cells,count);List<BlockPos> positions=PATHS.getIfPresent(path);
+        Path path=new Path(cells,count,extended);List<BlockPos> positions=PATHS.getIfPresent(path);
         if(positions==null) {
             Set<BlockPos> owners=new HashSet<>();
             for(int i=0;i<count;i+=3)
                 for(int dy=-1;dy<=1;dy++)for(int dx=-2;dx<=2;dx++)for(int dz=-2;dz<=2;dz++)
                     owners.add(new BlockPos(cells[i]+dx,cells[i+1]+dy,cells[i+2]+dz));
             // Preserve the old iteration order, including equal-distance hit precedence.
-            positions=Collections.unmodifiableList(new ArrayList<>(owners));
+            List<BlockPos> ordered=new ArrayList<>(owners);
+            if(extended){
+                int reach=OffsetTrapdoorInteractions.REACH;
+                for(int i=0;i<count;i+=3)for(int dy=-reach;dy<=reach;dy++)for(int distance=-reach;distance<=reach;distance++){
+                    for(int edge=-1;edge<=1;edge++){
+                        BlockPos x=new BlockPos(cells[i]+distance,cells[i+1]+dy,cells[i+2]+edge);
+                        BlockPos z=new BlockPos(cells[i]+edge,cells[i+1]+dy,cells[i+2]+distance);
+                        if(owners.add(x))ordered.add(x);
+                        if(owners.add(z))ordered.add(z);
+                    }
+                }
+            }
+            positions=Collections.unmodifiableList(ordered);
             List<BlockPos> raced=PATHS.asMap().putIfAbsent(path,positions);
             if(raced!=null)positions=raced;
         }
@@ -44,12 +62,13 @@ public final class TrapdoorRayCandidates {
     private static final class Path {
         final int[] cells;
         final int count,hash;
-        Path(int[] cells,int count){this.cells=cells;this.count=count;hash=Arrays.hashCode(cells)*31+count;}
+        final boolean extended;
+        Path(int[] cells,int count,boolean extended){this.cells=cells;this.count=count;this.extended=extended;hash=(Arrays.hashCode(cells)*31+count)*31+(extended?1:0); }
         @Override public int hashCode(){return hash;}
         @Override public boolean equals(Object other) {
             if(this==other)return true;
             if(!(other instanceof Path))return false;
-            Path path=(Path)other;return count==path.count && Arrays.equals(cells,path.cells);
+            Path path=(Path)other;return extended==path.extended && count==path.count && Arrays.equals(cells,path.cells);
         }
     }
 }

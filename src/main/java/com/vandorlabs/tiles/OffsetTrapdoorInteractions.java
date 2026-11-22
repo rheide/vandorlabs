@@ -23,7 +23,7 @@ public final class OffsetTrapdoorInteractions {
         return leaf.getWorld().getBlockState(leaf.getPos()).getBoundingBox(leaf.getWorld(),leaf.getPos()).offset(leaf.getPos());
     }
     /** Leaves of a group spanning up to 8 cells can move that far from their own block. */
-    private static final double REACH=8;
+    static final int REACH=8;
     private static boolean indexed(World world){
         Class<?> type=world.getClass();
         return type==net.minecraft.world.WorldServer.class||type==net.minecraft.world.WorldServerMulti.class
@@ -31,7 +31,7 @@ public final class OffsetTrapdoorInteractions {
                 ||world instanceof com.vandorlabs.vehicle.VehicleWorld;
     }
     private static Iterable<BlockPos> rayOwners(World world,Vec3d start,Vec3d end){
-        if(!indexed(world))return TrapdoorRayCandidates.positions(start,end);
+        if(!indexed(world))return TrapdoorRayCandidates.extendedPositions(start,end);
         List<BlockPos> owners=new java.util.ArrayList<>();
         for(TileEntityProgrammableTrapdoor tile:INDEX.query(world,new AxisAlignedBB(start.x,start.y,start.z,end.x,end.y,end.z).grow(REACH)))owners.add(tile.getPos());
         return owners;
@@ -60,20 +60,21 @@ public final class OffsetTrapdoorInteractions {
             for(TileEntityProgrammableTrapdoor tile:candidates)addLeafCollision(world,tile.getPos(),query,boxes);
             return;
         }
-        int x0=MathHelper.floor(query.minX-2),y0=MathHelper.floor(query.minY-1),z0=MathHelper.floor(query.minZ-2);
-        int x1=MathHelper.floor(query.maxX+2),y1=MathHelper.floor(query.maxY+1),z1=MathHelper.floor(query.maxZ+2);
-        if(!TrapdoorSectionPresence.mayContain(world,x0,y0,z0,x1,y1,z1))return;
-        scanCollisions(world,query,boxes);
+        // Modded world wrappers may supply tiles without forwarding their load callbacks.
+        // Split panels can swing vertically as far as their hinge is from their owner.
+        AxisAlignedBB search=query.grow(REACH);
+        BlockPos first=new BlockPos(search.minX,search.minY,search.minZ),last=new BlockPos(search.maxX,search.maxY,search.maxZ);
+        if(!TrapdoorSectionPresence.mayContain(world,first.getX(),first.getY(),first.getZ(),last.getX(),last.getY(),last.getZ()))return;
+        for(BlockPos pos:BlockPos.getAllInBoxMutable(first,last)){
+            if((pos.getX()+1<query.minX||pos.getX()>query.maxX)
+                    &&(pos.getZ()+1<query.minZ||pos.getZ()>query.maxZ))continue;
+            addLeafCollision(world,pos,query,boxes);
+        }
     }
     private static void addLeafCollision(World world,BlockPos pos,AxisAlignedBB query,List<AxisAlignedBB> boxes){
         TileEntityProgrammableTrapdoor leaf=leaf(world,pos);if(leaf==null||!leaf.splitCenter()&&!leaf.isSliding()&&!leaf.isCover()&&!leaf.isSlideOverSurface())return;
         if(leaf.splitCenter()){
             for(AxisAlignedBB box:BlockProgrammableTrapdoor.splitBoxes(world.getBlockState(pos),leaf))if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);
         }else{AxisAlignedBB box=bounds(leaf);if(box.intersects(query)&&!boxes.contains(box))boxes.add(box);}
-    }
-    private static void scanCollisions(World world,AxisAlignedBB query,List<AxisAlignedBB> boxes) {
-        for(BlockPos pos:BlockPos.getAllInBoxMutable(new BlockPos(query.minX-2,query.minY-1,query.minZ-2),new BlockPos(query.maxX+2,query.maxY+1,query.maxZ+2))) {
-            addLeafCollision(world,pos,query,boxes);
-        }
     }
 }
