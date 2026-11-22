@@ -137,7 +137,7 @@ public final class NativeVehicleTransfer {
             && player.distanceToSqr(craft) <= 64;
     }
 
-    private static BlockPos anchor(NativeGroundVehicle craft) {
+    static BlockPos anchor(NativeGroundVehicle craft) {
         return BlockPos.containing(craft.getX(), Math.round(craft.getY()), craft.getZ());
     }
 

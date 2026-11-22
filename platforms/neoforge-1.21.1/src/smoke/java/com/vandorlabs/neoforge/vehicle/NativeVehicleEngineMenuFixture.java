@@ -35,7 +35,7 @@ public final class NativeVehicleEngineMenuFixture {
             var tile = world.getBlockEntity(parked.offset(CORE));
             if (!(tile instanceof NativeBuilderEntity engine) || !engine.formed() || engine.maxwellFuel() != 0
                     || !engine.driveSettings().redstone() || !engine.driveSettings().levels()
-                    || !engine.channels().contains(931)) throw new AssertionError("Parked Maxwell configuration or fuel changed");
+                    || !engine.channels().contains(931)) throw new AssertionError("Parked Maxwell at " + parked.offset(CORE) + ": " + (tile == null ? "missing" : tile.saveWithFullMetadata(world.registryAccess())));
             player.displayClientMessage(net.minecraft.network.chat.Component.literal("Carried Maxwell settings verified"), false);
             System.out.println("[vandorlabs][vehicle-engine-player] server PASS native settings, purged tank and recovered physical owner");
             return true;
@@ -50,7 +50,7 @@ public final class NativeVehicleEngineMenuFixture {
             player.setItemInHand(net.minecraft.world.InteractionHand.MAIN_HAND,new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
             stage = 1;
         } else if (fuel == 0 && craft.canPark()) {
-            parked = craft.blockPosition();
+            parked = NativeVehicleTransfer.anchor(craft);
             NativeVehicleTransfer.park(player, craft);
             stage = 2;
         }
