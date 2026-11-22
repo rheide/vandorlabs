@@ -98,6 +98,8 @@ tasks.register('generateCubeResources', Exec) {
     inputs.dir('../../src/main/resources/assets/vandorlabs/cockpits/yoke_screen')
     inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/cockpits/cockpit')
     inputs.dir('../../src/main/resources/assets/vandorlabs/cockpits/cockpit')
+    inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/cockpits/cockpit_single')
+    inputs.file('../../src/main/resources/assets/vandorlabs/cockpits/cockpit_single/rig.json')
     inputs.file('../../src/main/resources/assets/vandorlabs/recipes/cockpit.json')
     inputs.file('../../src/main/resources/assets/vandorlabs/recipes/yoke_screen.json')
     inputs.file('generate_copy_resources.py')
