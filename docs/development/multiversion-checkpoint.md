@@ -1,6 +1,6 @@
 # Multiversion development baseline
 
-Forge 1.12.2 remains the default development target on `master`, at development version 2.12.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
+Forge 1.12.2 remains the default development target on `master`, at development version 2.12.1. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
 
 ## Current conversion boundary
 

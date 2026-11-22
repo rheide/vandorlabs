@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.12.1
+
+- Draw stationary Programmable Glass with selected artwork, and Screens in static playback, as part of the world's chunk geometry instead of per-block renderers. Large artwork walls no longer add sorting and draw calls every frame, and they cast shader shadows like stock glass.
+- Shade only one sheet of translucent artwork glass, with the same overall opacity as before, roughly halving its fragment cost under shader packs.
+
 ## 2.12.0
 
 - Add flat and sloped Programmable Corner Glass. The Middle flat bevel joins two perpendicular Middle glass panels. Placement aligns with the clicked or adjacent glass and bends towards the placing player; stacked corners keep their bevel, and corner frames render without seam stubs or see-through rails.

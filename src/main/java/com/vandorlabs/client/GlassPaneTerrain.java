@@ -71,6 +71,66 @@ public final class GlassPaneTerrain {
         @Override public boolean equals(Object value){if(!(value instanceof Key))return false;Key key=(Key)value;
             return sprite==key.sprite&&rotated==key.rotated&&single==key.single&&depth==key.depth;}
     }
+    /** Mapped artwork differs per joined-surface cell, so it is cached by its full mapping. */
+    private static final class ArtworkKey {
+        final TextureAtlasSprite sprite;
+        final boolean rotated;
+        final int depth,mode,opacity;
+        final String layout;
+        ArtworkKey(IBlockState state,TextureAtlasSprite sprite,GlassSurfaceGroups.Layout layout,int mode,float opacity){
+            this.sprite=sprite;rotated=state.getValue(BlockGlassWall.ROTATED);depth=state.getValue(BlockGlassWall.DEPTH);
+            this.layout=layout.key();this.mode=mode;this.opacity=Float.floatToIntBits(opacity);
+        }
+        @Override public int hashCode(){return Objects.hash(System.identityHashCode(sprite),rotated,depth,mode,opacity,layout);}
+        @Override public boolean equals(Object value){if(!(value instanceof ArtworkKey))return false;ArtworkKey key=(ArtworkKey)value;
+            return sprite==key.sprite&&rotated==key.rotated&&depth==key.depth&&mode==key.mode&&opacity==key.opacity&&layout.equals(key.layout);}
+    }
+    private static final com.google.common.cache.Cache<ArtworkKey,GlassPaneTerrainMesh> ARTWORK=
+            com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(8*1024*1024)
+                    .weigher((ArtworkKey key,GlassPaneTerrainMesh mesh)->mesh.bytes()+128).build();
+    /** Lowest positive alpha of each artwork sprite's base frame; cleared with the atlas. */
+    private static final Map<TextureAtlasSprite,Integer> MINIMUM_ALPHA=new IdentityHashMap<>();
+    /** Joined artwork layouts can change when a distant member changes; recheck owners on topology edits. */
+    private static final Set<Entry> ARTWORK_OWNERS=identities();
+    private static long artworkMutation=Long.MIN_VALUE;
+    private static int minimumAlpha(TextureAtlasSprite sprite){
+        Integer known=MINIMUM_ALPHA.get(sprite);if(known!=null)return known;
+        int recorded=UnifiedTextureSprites.minimumAlpha(sprite);
+        if(recorded>=0){MINIMUM_ALPHA.put(sprite,recorded);return recorded;}
+        // Static atlas sprites discard their pixels after upload; read the source image once.
+        int minimum=256;
+        try{
+            net.minecraft.util.ResourceLocation name=new net.minecraft.util.ResourceLocation(sprite.getIconName());
+            net.minecraft.util.ResourceLocation file=new net.minecraft.util.ResourceLocation(name.getResourceDomain(),"textures/"+name.getResourcePath()+".png");
+            try(net.minecraft.client.resources.IResource resource=Minecraft.getMinecraft().getResourceManager().getResource(file)){
+                java.awt.image.BufferedImage image=javax.imageio.ImageIO.read(resource.getInputStream());
+                if(image==null)minimum=-1;
+                else{int[] pixels=image.getRGB(0,0,image.getWidth(),image.getHeight(),null,0,image.getWidth());
+                    for(int pixel:pixels){int a=pixel>>>24;if(a>0&&a<minimum)minimum=a;}}
+            }
+        }catch(java.io.IOException|RuntimeException unavailable){minimum=-1;}
+        int result=minimum==256?0:minimum;MINIMUM_ALPHA.put(sprite,result);return result;
+    }
+    /** Returns null with {@code entry.reason} set when the artwork must stay on the retained/TESR path. */
+    private static GlassPaneTerrainMesh artwork(Entry entry,IBlockState state){
+        TileEntityProgrammableGlass tile=entry.tile;
+        net.minecraft.client.renderer.texture.TextureMap atlas=Minecraft.getMinecraft().getTextureMapBlocks();
+        TextureAtlasSprite sprite=atlas.getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
+        if(sprite==null||sprite==atlas.getMissingSprite()){entry.reason="missing-artwork";return null;}
+        float opacity=com.vandorlabs.render.GlassRenderPolicy.singleLayerOpacity(GlassMaterials.opacity(tile.getMaterial(),tile.getTint()));
+        int minimum=minimumAlpha(sprite);
+        if(minimum<0){entry.reason="artwork-pixels-unavailable";return null;}
+        if(!GlassPanePolicy.terrainAlphaSafe((int)Math.floor(minimum*opacity),false)){entry.reason="native-alpha-cutoff";return null;}
+        GlassSurfaceGroups.Layout layout=GlassSurfaceGroups.layout(tile);
+        ArtworkKey key=new ArtworkKey(state,sprite,layout,tile.getTextureLayout(),opacity);
+        GlassPaneTerrainMesh mesh=ARTWORK.getIfPresent(key);
+        if(mesh==null){
+            StaticSurfaceMesh mapped=GlassSurfaceMapping.map(TEProgrammableGlass.materialPlane(),sprite,layout,true,0,0,tile.getTextureLayout());
+            mesh=GlassPaneTerrainMesh.mapped(key.rotated,key.depth,sprite,mapped,opacity,format);ARTWORK.put(key,mesh);builds++;
+        }else reuses++;
+        entry.reason="none";return mesh;
+    }
+
     private static final class Entry {
         final TileEntityProgrammableGlass tile;
         final BlockPos pos;
@@ -239,7 +299,8 @@ public final class GlassPaneTerrain {
         if(!GlassPaneTerrainProof.supports(DefaultVertexFormats.BLOCK)||!GlassPaneTerrainMesh.supports(DefaultVertexFormats.BLOCK))return "unsupported-vertex-layout";
         if(tile.getWorld() instanceof VehicleWorld)return "moving";
         if(!(state.getBlock() instanceof BlockProgrammableGlass)||state.getBlock() instanceof com.vandorlabs.blocks.BlockProgrammableCornerGlass)return "not-programmable-glass";
-        if(tile.getMaterial()>=0)return "custom-material";
+        // Static artwork and static-mode Screens share the atlas; animated displays keep their renderer.
+        if(tile.getMaterial()>=0&&!GlazingDisplay.atlasStatic(tile))return "animated-display";
         if(tile.fluids.any())return "fluid";
         if(GlassMaterials.opaque(tile.getMaterial(),tile.getTint()))return "opaque";
         if(GlassSurfaceGroups.flatCorner(tile,state)!=null)return "corner";
@@ -310,7 +371,7 @@ public final class GlassPaneTerrain {
         }
     }
     private static void remove(Entry entry){
-        ENTRIES.remove(entry.pos,entry);DIRTY.remove(entry);entry.section.entries.remove(entry);
+        ENTRIES.remove(entry.pos,entry);DIRTY.remove(entry);ARTWORK_OWNERS.remove(entry);entry.section.entries.remove(entry);
         entry.section.frameWaiting.remove(entry.tile);entry.section.dirty=true;entry.section.admissionsDirty=true;
         if(entry.tile.paneTerrainPublication==entry){entry.tile.paneTerrainPublication=null;entry.tile.paneTerrainMesh=null;}
         GlassPaneRetained.invalidateSection(entry.pos);
@@ -319,7 +380,7 @@ public final class GlassPaneTerrain {
         if(world!=null&&listener!=null)world.removeEventListener(listener);
         for(Section section:SECTIONS.values())section.admissions.restore(GlassPaneTerrain::installed);
         for(Entry entry:ENTRIES.values())if(entry.tile.paneTerrainPublication==entry){entry.tile.paneTerrainPublication=null;entry.tile.paneTerrainMesh=null;}
-        ENTRIES.clear();SECTIONS.clear();DIRTY.clear();MESHES.invalidateAll();world=next;frustum=null;format=null;
+        ENTRIES.clear();SECTIONS.clear();DIRTY.clear();ARTWORK_OWNERS.clear();MESHES.invalidateAll();ARTWORK.invalidateAll();MINIMUM_ALPHA.clear();world=next;frustum=null;format=null;
         synchronized(QUEUED){QUEUED.removeIf(tile->tile.getWorld()!=next);rescan=false;}
         if(next==null)return;
         listener=new WorldRenderListener(){
@@ -329,7 +390,7 @@ public final class GlassPaneTerrain {
         synchronized(QUEUED){rescan=true;}
     }
     public static void reload(){
-        MESHES.invalidateAll();format=null;
+        MESHES.invalidateAll();ARTWORK.invalidateAll();MINIMUM_ALPHA.clear();format=null;
         // Old visible terrain still owns its pane until a replacement upload.
         DIRTY.addAll(ENTRIES.values());
         for(Section section:SECTIONS.values()){
@@ -511,13 +572,18 @@ public final class GlassPaneTerrain {
         }
         fallback=!active?(WorldSceneBenchmark.omitGlazing()?"benchmark-no-glass":"terrain-disabled")
                 :GlassPaneTerrainProof.supports(DefaultVertexFormats.BLOCK)&&GlassPaneTerrainMesh.supports(DefaultVertexFormats.BLOCK)?"none":"unsupported-vertex-layout";
+        long mutation=GlassSurfaceGroups.mutation();
+        if(mutation!=artworkMutation){artworkMutation=mutation;DIRTY.addAll(ARTWORK_OWNERS);}
         int processed=0;
         while(!DIRTY.isEmpty()&&processed++<BUILD_OWNERS){
             Iterator<Entry> iterator=DIRTY.iterator();Entry entry=iterator.next();iterator.remove();
             if(!installed(entry.tile)||!entry.pos.equals(entry.tile.getPos())){remove(entry);continue;}
             IBlockState state=world.getBlockState(entry.pos);GlassPaneTerrainMesh mesh=null;
             entry.reason=entry.section.nativeDisabled?"native-records-unavailable":unsupportedReason(entry.tile,state);
-            if("none".equals(entry.reason)){
+            if("none".equals(entry.reason)&&entry.tile.getMaterial()>=0){
+                ARTWORK_OWNERS.add(entry);mesh=artwork(entry,state);
+            }else if("none".equals(entry.reason)){
+                ARTWORK_OWNERS.remove(entry);
                 GlassPaneTextures.Selection material=GlassPaneTextures.select(entry.tile.getShade(),entry.tile.getTint());
                 if(material==null){entry.reason=fallback="atlas-not-ready";synchronized(QUEUED){QUEUED.add(entry.tile);}}
                 else if(!material.terrainAlphaSafe)entry.reason="native-alpha-cutoff";

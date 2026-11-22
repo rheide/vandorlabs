@@ -43,6 +43,8 @@ final class StaticSurfaceMesh {
         return new StaticSurfaceMesh(data);
     }
     int vertexCount() { return vertices.length/8; }
+    /** Read-only view: x,y,z in pixels, u,v, normal per vertex. Callers must not modify it. */
+    float[] vertexArray() { return vertices; }
     int geometryHash() { return Arrays.hashCode(vertices); }
     boolean sameGeometry(StaticSurfaceMesh other) { return Arrays.equals(vertices,other.vertices); }
     /** Include float records and reserve both lazy packed batch arrays on the render thread. */

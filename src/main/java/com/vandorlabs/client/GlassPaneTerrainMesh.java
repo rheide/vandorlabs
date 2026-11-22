@@ -37,6 +37,50 @@ final class GlassPaneTerrainMesh {
         }
         quads=Collections.unmodifiableList(result);
     }
+    private GlassPaneTerrainMesh(boolean rotated,int depth,TextureAtlasSprite sprite,VertexFormat format,List<BakedQuad> quads){
+        this.rotated=rotated;this.depth=depth;this.sprite=sprite;singleSurface=false;this.format=format;this.quads=quads;
+    }
+
+    /**
+     * Selected artwork, already mapped onto the joined surface. The source mesh is
+     * the two-sheet material plane; native backface culling leaves one visible
+     * sheet, so {@code opacity} must already be the single-layer equivalent.
+     */
+    static GlassPaneTerrainMesh mapped(boolean rotated,int depth,TextureAtlasSprite sprite,StaticSurfaceMesh mesh,
+            float opacity,VertexFormat source){
+        if(sprite==null||mesh==null)throw new IllegalArgumentException("Missing pane artwork");
+        if(!supports(source))throw new IllegalArgumentException("Unsupported native pane vertex format");
+        VertexFormat format=new VertexFormat(source);
+        float[] v=mesh.vertexArray();
+        int stride=format.getIntegerSize(),color=format.getColorOffset()/4,uv=format.getUvOffsetById(0)/4;
+        int alpha=Math.max(0,Math.min(255,Math.round(opacity*255F)));
+        int packed=java.nio.ByteOrder.nativeOrder()==java.nio.ByteOrder.LITTLE_ENDIAN?(alpha<<24)|0x00FFFFFF:0xFFFFFF00|alpha;
+        double offset=PanelDepth.offset(depth)/16D;
+        List<BakedQuad> result=new ArrayList<>(v.length/32);
+        for(int q=0;q+32<=v.length;q+=32){
+            final int[] data=new int[stride*4];
+            float fx=0,fz=0;
+            for(int vertex=0;vertex<4;vertex++){
+                int i=q+vertex*8,at=vertex*stride;
+                double a=v[i]/16D,b=v[i+1]/16D,c=v[i+2]/16D,x=a,z=c;
+                float nx=v[i+5],nz=v[i+7];
+                // Matches StaticSurfaceMesh.drawPlacedColored rotation 3 and the TESR depth placement.
+                if(rotated){x=1-c-offset;z=a;fx=-nz;fz=nx;}else{z=c+offset;fx=nx;fz=nz;}
+                data[at]=Float.floatToRawIntBits((float)x);
+                data[at+1]=Float.floatToRawIntBits((float)b);
+                data[at+2]=Float.floatToRawIntBits((float)z);
+                data[at+color]=packed;
+                data[at+uv]=Float.floatToRawIntBits(v[i+3]);
+                data[at+uv+1]=Float.floatToRawIntBits(v[i+4]);
+                if(format.hasNormal())data[at+format.getNormalOffset()/4]=((Math.round(fx*127)&255))|((Math.round(v[i+6]*127)&255)<<8)|((Math.round(fz*127)&255)<<16);
+            }
+            EnumFacing face=Math.abs(fx)>=Math.abs(fz)?(fx>=0?EnumFacing.EAST:EnumFacing.WEST):(fz>=0?EnumFacing.SOUTH:EnumFacing.NORTH);
+            result.add(new BakedQuad(data,-1,face,sprite,false,format){
+                @Override public int[] getVertexData(){return data;}
+            });
+        }
+        return new GlassPaneTerrainMesh(rotated,depth,sprite,format,Collections.unmodifiableList(result));
+    }
 
     static GlassPaneTerrainMesh build(boolean rotated,int depth,TextureAtlasSprite sprite,
             boolean single,VertexFormat format){

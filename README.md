@@ -2,7 +2,7 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-**Vandor Labs 2.12.0** — see the [2.12 highlights](docs/versions/version-2.12.md), [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
+**Vandor Labs 2.12.1** — see the [2.12 highlights](docs/versions/version-2.12.md), [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
 
 [Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/vandor-labs) · [Changelog](CHANGELOG.md) · [Player introduction](intro.md)
 
@@ -277,14 +277,14 @@ The normal build packages the checked-in models, blockstates, catalog, and
 language files from `generated-resources`, then installs the exact default
 texture tree from `texture-packs/default`. `ModBlocks` reads the packaged
 `data/blocks.json` catalog at startup. The finished jar is
-`build/libs/vandorlabs-2.12.0.jar`.
+`build/libs/vandorlabs-2.12.1.jar`.
 
 Keep finished builds there unless a specific destination is requested.
 
 For release review, **collect the complete failure inventory before fixing individual failures**. Build once, then freeze that JAR:
 
 ```sh
-./tools/verify_release.sh --jar build/libs/vandorlabs-2.12.0.jar --jobs 2
+./tools/verify_release.sh --jar build/libs/vandorlabs-2.12.1.jar --jobs 2
 ```
 
 This continues independent checks after failures, uses two isolated live-test lanes, and keeps performance benchmarks exclusive. It records one merged report and fails unless the entire required set passes. Use `--check` for dependencies and `--skip-dynmap` only when that exclusion is intended. See [running release checks](docs/release-checks.md) for the inventory, batch-fix and focused-rerun workflow.

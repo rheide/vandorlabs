@@ -121,7 +121,8 @@ public final class GlassPaneRetained {
             try{
                 GlStateManager.translate(x,y,z);
                 Minecraft.getMinecraft().getTextureManager().bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
-                boolean cull=key.palette&&!key.opaque;
+                // Palette sheets and two-sheet artwork both rely on culling for one visible layer.
+                boolean cull=!key.opaque;
                 GlStateManager.disableLighting();if(cull)GlStateManager.enableCull();else GlStateManager.disableCull();
                 if(key.opaque)GlStateManager.disableBlend();else GlStateManager.enableBlend();
                 GlStateManager.tryBlendFuncSeparate(770,771,1,0);
@@ -212,7 +213,9 @@ public final class GlassPaneRetained {
             return material==null?null:new Key(state,material.sprite,shader,1,material.singleSurface,true,tile.getPos());
         }
         TextureAtlasSprite sprite=Minecraft.getMinecraft().getTextureMapBlocks().getAtlasSprite(GlassMaterials.texture(tile.getMaterial(),tile.getShade(),tile.getSize(),tile.getTint()));
-        return new Key(state,sprite,shader,GlassMaterials.opacity(tile.getMaterial(),tile.getTint()),false,false,opaque,tile.getPos());
+        float opacity=GlassMaterials.opacity(tile.getMaterial(),tile.getTint());
+        if(!opaque)opacity=com.vandorlabs.render.GlassRenderPolicy.singleLayerOpacity(opacity);
+        return new Key(state,sprite,shader,opacity,false,false,opaque,tile.getPos());
     }
 
     /** Real ordinary vertex writers generate per-component optional shader data once. */
