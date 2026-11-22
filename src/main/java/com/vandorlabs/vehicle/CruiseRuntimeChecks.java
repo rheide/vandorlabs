@@ -30,6 +30,7 @@ public final class CruiseRuntimeChecks {
     private static double startX,destination;
     private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("Cruise: "+detail);}
 
+    @SideOnly(Side.CLIENT)
     public static final class TransitChunks {
         private int loads;
 
