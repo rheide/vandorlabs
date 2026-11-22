@@ -50,6 +50,8 @@ final class NativeVehicleResourceFixture {
     private final BlockPos monitor;
     private final ItemStack transmitter;
     private boolean observerRequested, on, radar;
+    private net.neoforged.neoforge.fluids.capability.IFluidHandler cachedMekanismTank;
+    private FluidStack optionalFuel;
 
     NativeVehicleResourceFixture(ServerLevel world, BlockPos root, BlockPos engine, Fluid fuel) {
         this.world = world;
@@ -214,14 +216,26 @@ final class NativeVehicleResourceFixture {
         NativeVehicleMekanismAccess.require(controller.ownerId(), world, pos, tile.getBlockState(), tile);
         tile.getPersistentData().putString("FixtureReceipt", "finite tank");
         var fluid = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, pos, Direction.WEST);
-        if (fluid == null || fluid.fill(new FluidStack(fuel, MEKANISM_MB),
+        cachedMekanismTank = fluid;
+        optionalFuel = new FluidStack(fuel, MEKANISM_MB);
+        if (fluid == null || fluid.fill(optionalFuel.copy(),
                 net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE) != MEKANISM_MB) {
             throw new AssertionError("Genuine Mekanism capability did not store the flight fuel");
         }
     }
 
+    void checkHeldTank() {
+        if (!MEKANISM) return;
+        var execute = net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE;
+        if (cachedMekanismTank.fill(optionalFuel.copyWithAmount(1), execute) != 0
+                || !cachedMekanismTank.drain(1, execute).isEmpty()) {
+            throw new AssertionError("A cached Mekanism tank handler changed a reserved or retired owner");
+        }
+    }
+
     void parked(BlockPos anchor) {
         if (MEKANISM) {
+            checkHeldTank();
             var pos = parked(pump.east(), anchor);
             var tile = world.getBlockEntity(pos);
             var fluid = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, pos, Direction.NORTH);

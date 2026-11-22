@@ -30,6 +30,7 @@
     "NativeRampInventoryGuard",
     "NativeTransferContainerAccess",
     "NativeRampLevelGuard",
+    "NativeMekanismTankTransferGuard",
     "NativeGearTickGuard",
     "optional.NativeMekanismVehicleEscrow",
     "NativeGearEntityManagerAccess",

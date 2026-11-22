@@ -190,6 +190,7 @@ public final class NativeVehicleTransferChecks {
                 }
                 NativeVehicleTransfer.assemble(player, ROOT);
                 require(NativeCellTransactions.busy(world, ROOT, OWNER), "admitted assembly via production entry point: " + feedback);
+                if (transit != null) transit.checkHeldTank();
                 stage = 1;
                 return;
             }
