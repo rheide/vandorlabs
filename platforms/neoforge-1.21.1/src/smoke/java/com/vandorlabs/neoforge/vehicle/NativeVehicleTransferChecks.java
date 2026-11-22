@@ -63,6 +63,11 @@ public final class NativeVehicleTransferChecks {
     private static final AABB VOLUME = new AABB(ROOT).minmax(new AABB(PARK)).inflate(8);
     private static ServerLevel world;
     private static FakePlayer player;
+    private static String feedback = "";
+    private static final class Actor extends FakePlayer {
+        Actor(ServerLevel level) { super(level, new GameProfile(OWNER, "VehicleTransferFixture")); }
+        @Override public void displayClientMessage(Component message, boolean overlay) { feedback = message.getString(); }
+    }
     private static NativeGroundVehicle craft, stale;
     private static NativeVehicleResourceFixture transit;
     private static CompoundTag originalActor;
@@ -115,7 +120,7 @@ public final class NativeVehicleTransferChecks {
             inventory.setItem(0, gold());
             inventory.setItem(1, new ItemStack(Items.DIAMOND, 2));
             inventory.setChanged();
-            player = new FakePlayer(world, new GameProfile(OWNER, "VehicleTransferFixture"));
+            player = new Actor(world);
             player.setGameMode(GameType.SURVIVAL);
             movePlayer(ROOT);
             if (phase().equals("roundtrip")) {
@@ -133,7 +138,7 @@ public final class NativeVehicleTransferChecks {
             require(++ticks < 450, "bounded asynchronous transfer; source=" + world.getBlockState(ROOT)
                 + " parked=" + world.getBlockState(PARK) + " busySource=" + NativeCellTransactions.busy(world, ROOT, OWNER)
                 + " busyTarget=" + NativeCellTransactions.busy(world, PARK, OWNER)
-                + " actors=" + world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).size());
+                + " actors=" + world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).size() + " feedback=" + feedback);
             if (phase().equals("read-assemble")) {
                 require(world.getBlockState(ROOT).is(NativeVehicleBindings.CONTROLLER), "cold assembly rollback recovers the controller");
                 require(actors() == 0 && !NativeTransferHolds.active(world), "nothing carried after cold assembly rollback");
@@ -168,14 +173,14 @@ public final class NativeVehicleTransferChecks {
                     requireInventory(BARREL);
                 }
                 NativeVehicleTransfer.assemble(player, ROOT);
-                require(NativeCellTransactions.busy(world, ROOT, OWNER), "admitted assembly via production entry point");
+                require(NativeCellTransactions.busy(world, ROOT, OWNER), "admitted assembly via production entry point: " + feedback);
                 stage = 1;
                 return;
             }
             if (stage == 1) {
                 if (NativeCellTransactions.busy(world, ROOT, OWNER)) return;
                 require(world.getBlockState(ROOT).isAir() && world.getBlockState(BARREL).isAir() && actors() == 1,
-                    "durable assembly leaves only the carried owner");
+                    "durable assembly leaves only the carried owner: " + feedback);
                 require(world.getBlockState(ROOT.below(2)).is(Blocks.SMOOTH_STONE), "top-slab deck leaves the terrain in place");
                 craft = world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst();
                 requireCarried(craft);
@@ -209,7 +214,7 @@ public final class NativeVehicleTransferChecks {
                 }
                 NativeVehicleTransfer.park(player, craft);
                 require(NativeCellTransactions.busy(world, PARK, OWNER) && NativeVehicleTransfer.escrowed(craft),
-                    "admitted parking freezes the source actor immediately");
+                    "admitted parking freezes the source actor immediately: " + feedback);
                 stage = 3;
                 return;
             }
@@ -297,7 +302,7 @@ public final class NativeVehicleTransferChecks {
     private static void exerciseSecurity() {
         var controller = (NativeVehicleControllerEntity)world.getBlockEntity(ROOT);
         var reader = (NativeCredentialReaderEntity)world.getBlockEntity(CARD);
-        require(reader.configure(player, false, 1 << 0, 0, reader.mountSettings()), "configured native Access Card filter");
+        require(reader.configure(player, false, 1 << 2, 0, reader.mountSettings()), "configured native Access Card filter");
         require(!controller.mayOperate(player), "secured Controller refuses an empty reader");
         NativeVehicleTransfer.assemble(player, ROOT);
         require(!NativeCellTransactions.busy(world, ROOT, OWNER), "secured Controller cannot journal without its accepted card");
@@ -321,7 +326,7 @@ public final class NativeVehicleTransferChecks {
     }
 
     private static ItemStack keyCard() {
-        var key = NativeCredentialItems.accessCard(0);
+        var key = NativeCredentialItems.accessCard(2);
         key.set(DataComponents.CUSTOM_NAME, Component.literal("Vehicle transfer access key"));
         return key;
     }
