@@ -21,7 +21,9 @@ public final class NativeVehicleArmPlayerChecks {
     @SubscribeEvent public static void frame(RenderFrameEvent.Post event) {
         if (!NativeVehicleTransferChecks.armGallery()) return;
         var client = Minecraft.getInstance();
-        if (client.level == null || client.player == null || !client.player.isSpectator() || client.screen != null) return;
+        if (client.level == null || client.player == null || !client.player.isSpectator()
+            || client.screen != null || client.getOverlay() != null) return;
+        client.options.hideGui = true;
         var entities = client.level.getEntitiesOfClass(NativeGroundVehicle.class,
             new AABB(NativeVehicleTransferChecks.ARM_GALLERY_DONE).inflate(8));
         if (!entities.isEmpty()) {
