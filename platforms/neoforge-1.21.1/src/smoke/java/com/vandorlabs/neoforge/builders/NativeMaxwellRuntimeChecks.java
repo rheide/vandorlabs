@@ -189,7 +189,7 @@ public final class NativeMaxwellRuntimeChecks {
             }
         } catch (Throwable bad) {
             bad.printStackTrace();
-            System.out.println("[vandorlabs][maxwell-runtime] FAIL " + bad);
+            System.out.println("[vandorlabs][maxwell-runtime] FAIL stage=" + stage + " size=" + WIDTHS[index] + " tick=" + ticks + " " + bad);
             world = null;
             event.getServer().halt(false);
         }

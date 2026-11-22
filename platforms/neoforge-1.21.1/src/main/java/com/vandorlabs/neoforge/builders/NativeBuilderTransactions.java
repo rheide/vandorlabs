@@ -2,7 +2,8 @@ package com.vandorlabs.neoforge.builders;
 import com.vandorlabs.drives.MaxwellEngine;import com.vandorlabs.neoforge.transfer.*;import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;import com.vandorlabs.machines.CoreLayout;import java.util.*;import net.minecraft.core.*;import net.minecraft.nbt.*;import net.minecraft.resources.ResourceLocation;import net.minecraft.server.level.*;import net.minecraft.world.level.block.*;import net.minecraft.world.item.ItemStack;import net.minecraft.world.level.block.entity.BlockEntity;import net.neoforged.bus.api.SubscribeEvent;import net.neoforged.fml.common.EventBusSubscriber;import net.neoforged.neoforge.event.tick.LevelTickEvent;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeBuilderTransactions {
- private static final NativeTransferSnapshot.Limits LIMITS=new NativeTransferSnapshot.Limits(9*9*12,65536,1024*1024,4*1024*1024);
+ // A 9 × 9 × 12 Maxwell includes a reservation for every interior cell.
+ private static final NativeTransferSnapshot.Limits LIMITS=new NativeTransferSnapshot.Limits(9*9*12,65536,4*1024*1024,16*1024*1024);
  private record Recipe(String design,boolean form,int width,int facing,int x,int z,BlockPos mined,boolean single,boolean coreDrop,boolean dropsEnabled,List<NativeBuilderDrops.Drop> drops){}
  private record Pending(ServerPlayer actor,NativeBuilderEntity owner,NativeCellTransactions.Request request,long weight){}
  private static final int MAX_PENDING_WORLD=64,MAX_PENDING_GLOBAL=128;
