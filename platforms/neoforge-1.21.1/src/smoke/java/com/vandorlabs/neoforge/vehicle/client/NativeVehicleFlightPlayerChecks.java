@@ -24,7 +24,7 @@ public final class NativeVehicleFlightPlayerChecks {
     private static int stage, ticks, cameraTicks, boardingAim;
     private static double runwayAltitude;
     private static NativeGroundVehicle craft;
-    private static boolean captured, becameHigh, lifted, assembled;
+    private static boolean captured, becameHigh, assembled;
     private static final java.lang.reflect.Method USE_ITEM = useItem();
 
     private static java.lang.reflect.Method useItem() {
@@ -113,12 +113,13 @@ public final class NativeVehicleFlightPlayerChecks {
             case 3 -> {
                 String impact = NativeVehicleFlightFixture.impact();
                 if (!impact.isEmpty()) {
-                    if (craft.flightAltitude() > runwayAltitude + .25) lifted = true;
                     int expected = impact.equals("hover") ? NativeGroundVehicle.HOVER : NativeGroundVehicle.TAXI;
-                    if (!lifted || craft.mode() != expected || Math.abs(craft.driveSpeed()) > .005) return;
+                    if (craft.mode() != expected) return;
+                    // Release pitch-up before asking the recovered Taxi or Hover mode to settle.
+                    mc.options.keyDown.setDown(false);
+                    if (Math.abs(craft.driveSpeed()) > .005) return;
                     NativeVehicleFlightFixture.require(player.getVehicle() == craft && craft.flightReadout().fuel() == 1
                             && !craft.highFlight(), "connected pilot observes powered terrain-impact recovery");
-                    mc.options.keyDown.setDown(false);
                     System.out.println("[vandorlabs][vehicle-flight-impact-" + impact + "-player] client PASS seated with matching recovery mode");
                     mc.stop();
                     stage = 6;
