@@ -44,7 +44,7 @@ final class NativeVehicleArmFixture {
     private final ItemStack activate = transmitter(ACTIVATE), motion = transmitter(MOTION);
     private final ServerLevel world;
     private final BlockPos root, rf, fluid, item;
-    private int step, moving;
+    private int step, moving, galleryWait;
     private boolean placed;
 
     NativeVehicleArmFixture(ServerLevel world, BlockPos root) {
@@ -96,6 +96,8 @@ final class NativeVehicleArmFixture {
         double progress = arm.getDouble("GearProgress");
         if (step == 0) {
             need(progress == 1 && sink == 0 && waterSink == 0 && itemsSink == 0, "gated source ports");
+            if (NativeVehicleTransferChecks.armGallery() && ++galleryWait < 40) return false;
+            galleryWait = 0;
             toggle(actor, motion);
             toggle(actor, activate);
             step++;
@@ -106,6 +108,8 @@ final class NativeVehicleArmFixture {
                 need(moving >= 20 && waterSink == WATER && itemsSink == parcel().getCount(),
                     "continued transfer at independent Mounts during real Arm motion");
                 need(!craft.resources().armsReadyToPark(), "folded arm cannot write a partial parked native column");
+                if (NativeVehicleTransferChecks.armGallery() && ++galleryWait < 40) return false;
+                galleryWait = 0;
                 toggle(actor, motion);
                 step++;
             }

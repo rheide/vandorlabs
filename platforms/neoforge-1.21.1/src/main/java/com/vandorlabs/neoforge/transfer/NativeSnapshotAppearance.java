@@ -6,6 +6,9 @@ import com.vandorlabs.neoforge.storage.NativeStorageSettings;
 import com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock;
 import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
 import com.vandorlabs.neoforge.builders.NativeDriveDesign;
+import com.vandorlabs.neoforge.ports.NativePortBlock;
+import com.vandorlabs.neoforge.ports.NativePortData;
+import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.persistence.HousingSettings;
 import com.vandorlabs.persistence.StairState;
 import com.vandorlabs.surface.TextureJoinSettings;
@@ -31,6 +34,10 @@ public final class NativeSnapshotAppearance {
             if(housing){HousingSettings.read(tags,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).write(new ModernHousingTags(result));TextureJoinSettings.read(tags).write(new ModernHousingTags(result));}
             else NativeStorageSettings.read(selected).write(result);
             if(name.equals("vandorlabs:programmable_stairs"))StairState.read(tags).write(new ModernHousingTags(result));
+        }else if(state.getBlock() instanceof NativePortBlock && raw.contains("PortFaces")){
+            var settings=NativePortData.read(raw).settings();
+            var visible=settings.withTransfer(0,false,settings.onTexture);
+            NativePortData.write(result,new NativePortData.Configuration(visible,0,ChannelList.EMPTY));
         }else if(state.getBlock() instanceof NativeBuilderCoreBlock core){
             if(core.design.drive()==NativeDriveDesign.LONGBURN&&state.getValue(NativeBuilderCoreBlock.FORMED))
                 return NativeBuilderEntity.maxwellAppearance(core.design,state.getValue(NativeBuilderCoreBlock.FACING),raw,registries);

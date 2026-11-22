@@ -53,6 +53,7 @@ import net.neoforged.neoforge.event.tick.ServerTickEvent;
 /** Durable entity and terrain receipts through the production family, including abrupt restart. */
 @EventBusSubscriber(modid = "vandorlabs")
 public final class NativeVehicleTransferChecks {
+    public static final BlockPos ARM_GALLERY_DONE = new BlockPos(15, 94, 7);
     private static final BlockPos ROOT = new BlockPos(15, 91, 8);
     private static final BlockPos PILOT = ROOT.east();
     private static final BlockPos BARREL = ROOT.south();
@@ -86,6 +87,8 @@ public final class NativeVehicleTransferChecks {
             });
         }
     }
+
+    public static boolean armGallery() { return Boolean.getBoolean("vandorlabs.vehicleArmGallery"); }
 
     private static String phase() { return System.getProperty("vandorlabs.vehicleTransferPhase", ""); }
     private static void require(boolean ok, String message) {
@@ -137,6 +140,12 @@ public final class NativeVehicleTransferChecks {
     @SubscribeEvent public static void tick(ServerTickEvent.Post event) {
         if (world == null) return;
         try {
+            if (armGallery() && ticks == 0) {
+                var viewer = world.players().stream().findFirst().orElse(null);
+                if (viewer == null) return;
+                viewer.setGameMode(GameType.SPECTATOR);
+                viewer.connection.teleport(ROOT.getX() - 3.5, ROOT.getY() + 3.5, ROOT.getZ() - 5.5, -45F, 19F);
+            }
             require(++ticks < 450, "bounded asynchronous transfer; source=" + world.getBlockState(ROOT)
                 + " parked=" + world.getBlockState(PARK) + " busySource=" + NativeCellTransactions.busy(world, ROOT, OWNER)
                 + " busyTarget=" + NativeCellTransactions.busy(world, PARK, OWNER)
@@ -453,8 +462,12 @@ public final class NativeVehicleTransferChecks {
         System.out.println("[vandorlabs][vehicle-transfer] " + phase() + " PASS " + evidence);
         NativeBuilderJournalFault.set(null);
         var server = world.getServer();
+        if (armGallery()) {
+            world.setBlock(ARM_GALLERY_DONE, Blocks.GOLD_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+            System.out.println("[vandorlabs][vehicle-arm-player] server PASS real mounted and parked owners");
+        }
         world = null;
-        server.halt(false);
+        if (!armGallery()) server.halt(false);
     }
 
     private static void abrupt(String evidence) {

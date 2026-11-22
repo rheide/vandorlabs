@@ -40,7 +40,7 @@ public final class NativeMachineJeiChecks {
   need(manager.createRecipeCatalystLookup(NativeMachineJeiPlugin.INFUSING).getItemStack().anyMatch(s->s.is(NativeInfuserBindings.BLOCK.asItem())),"Infuser catalyst");
   verifyBuilder(manager,NativeMachineJeiPlugin.SYNTHESIS,"synthesis_tower","programmable_block",
        Set.of("synthesis_tower_core","assembly_press_core","enclosed_gantry_core"),
-       Set.of("standalone_antenna_core","standalone_dish_core","programmable_ramp","longburn_drive_core","meridian_drive_core","oculus_drive_core","vector_fold_array_core"),20);
+       Set.of("standalone_antenna_core","standalone_dish_core","programmable_ramp","longburn_drive_core","meridian_drive_core","oculus_drive_core","vector_fold_array_core","vehicle_controller"),20);
   verifyBuilder(manager,NativeMachineJeiPlugin.PRESS,"assembly_press","programmable_matter_ingot",
        Set.of("data_chip","access_card","programmable_plate"),Set.of("battery_module","autopilot_module","navigation_data_module"),40);
   verifyBuilder(manager,NativeMachineJeiPlugin.GANTRY,"enclosed_gantry","programmable_block",
