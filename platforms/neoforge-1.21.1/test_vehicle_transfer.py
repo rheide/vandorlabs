@@ -18,11 +18,15 @@ def main():
     parser.add_argument('--group', choices=('all', 'roundtrip', 'arms', 'assembly-recovery', 'parking-recovery'), default='all')
     parser.add_argument('--mekanism', type=Path, help='Use this installed Mekanism JAR in the optional tank and Cube cases')
     parser.add_argument('--ethanol-mod', type=Path, help='Use registered Immersive Engineering ethanol from this installed JAR')
+    parser.add_argument('--rftools', nargs=3, type=Path, metavar=('POWER', 'BASE', 'MCJTYLIB'),
+                        help='Use the installed RFTools Power, RFTools Base and McJtyLib JARs in the standalone Cell case')
     parser.add_argument('--arm-player', action='store_true', help='capture the native carried Arm stroke in a connected player')
     parser.add_argument('--xvfb', action='store_true', help='use a virtual display for the connected player')
     arguments = parser.parse_args()
     mods = [(owner, jar.resolve()) for owner, jar in (
         ('mekanism', arguments.mekanism), ('immersiveengineering', arguments.ethanol_mod)) if jar is not None]
+    if arguments.rftools:
+        mods.extend((owner, jar.resolve()) for owner, jar in zip(('rftoolspower', 'rftoolsbase', 'mcjtylib'), arguments.rftools))
     if mods and (arguments.arm_player or arguments.group != 'roundtrip' or any(not jar.is_file() for _, jar in mods)):
         parser.error('Optional mod flags require installed JARs and --group roundtrip')
     if arguments.arm_player:
@@ -59,6 +63,8 @@ def main():
             opts += ' -Dvandorlabs.vehicleMekanismTank=true'
         if arguments.ethanol_mod:
             opts += ' -Dvandorlabs.vehicleRegisteredEthanol=true'
+        if arguments.rftools:
+            opts += ' -Dvandorlabs.vehicleRftoolsCell=true'
     groups = {'roundtrip': ('roundtrip',), 'arms': ('arms',), 'assembly-recovery': ('crash-assemble', 'read-assemble'),
               'parking-recovery': ('crash-park', 'read-park')}
     for name, phases in groups.items():
@@ -80,6 +86,8 @@ def main():
                         raise AssertionError(f'Mekanism {owner} transfer evidence missing: {log}')
             if arguments.ethanol_mod and '[vandorlabs][vehicle-transfer] installed ethanol PASS' not in log.read_text(errors='replace'):
                 raise AssertionError('Registered ethanol preservation evidence missing: ' + str(log))
+            if arguments.rftools and '[vandorlabs][vehicle-transfer] installed RFTools cells PASS' not in log.read_text(errors='replace'):
+                raise AssertionError('Standalone RFTools Cell evidence missing: ' + str(log))
             if phase.startswith('crash-'):
                 text = log.read_text(errors='replace')
                 if 'Stopping server' in text[text.index(label):]:

@@ -180,7 +180,7 @@ public final class NativeVehicleTransferChecks {
                 require(!new ChunkPos(ROOT).equals(new ChunkPos(PILOT)), "fixture hull crosses chunk boundaries");
                 if (phase().equals("roundtrip")) {
                     exerciseSecurity();
-                    transit.verifyCubes();
+                    transit.verifyOptionalOwners();
                     world.noSave = true;
                     NativeVehicleTransfer.assemble(player, ROOT);
                     world.noSave = false;
@@ -288,8 +288,7 @@ public final class NativeVehicleTransferChecks {
     private static void fault(String point, NativeCellTransactions.Header header, int ignored) {
         if (!header.family().getPath().equals("vehicle_transfer")) return;
         if (transit != null && header.root().equals(ROOT) && point.equals("armed-durable")) {
-            transit.checkHeldTank();
-            transit.heldCubes();
+            transit.holdOptionalOwners();
         }
         if (phase().equals("crash-assemble") && point.equals("after-install")) {
             require(world.getBlockState(BARREL).isAir() && actors() == 1, "assembly removed the native barrel and installed an escrow actor");
