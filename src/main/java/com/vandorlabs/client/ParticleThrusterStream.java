@@ -4,6 +4,7 @@ import net.minecraft.client.particle.Particle;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.Vec3i;
+import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
 /** Small full-bright colored mote emitted along a propulsion block's facing. */
@@ -60,6 +61,28 @@ public class ParticleThrusterStream extends Particle {
         prevPosX = posX; prevPosY = posY; prevPosZ = posZ;
         motionX = c * vx - s * vz;
         motionZ = s * vx + c * vz;
+    }
+
+    /** Rotate a horizontal nozzle plume through the same pitch and yaw as the craft. */
+    public void pointAlong(Vec3d center, EnumFacing facing, Vec3d forward) {
+        EnumFacing localRight = facing.rotateY();
+        Vec3d right = new Vec3d(-forward.z, 0, forward.x).normalize();
+        Vec3d up = right.crossProduct(forward);
+        double dx = posX - center.x, dy = posY - center.y, dz = posZ - center.z;
+        double depth = dx * facing.getXOffset() + dz * facing.getZOffset();
+        double lateral = dx * localRight.getXOffset() + dz * localRight.getZOffset();
+        setPosition(center.x + depth * forward.x + lateral * right.x + dy * up.x,
+                center.y + depth * forward.y + dy * up.y,
+                center.z + depth * forward.z + lateral * right.z + dy * up.z);
+        prevPosX = posX;
+        prevPosY = posY;
+        prevPosZ = posZ;
+        double speed = motionX * facing.getXOffset() + motionZ * facing.getZOffset();
+        double drift = motionX * localRight.getXOffset() + motionZ * localRight.getZOffset();
+        double lift = motionY;
+        motionX = speed * forward.x + drift * right.x + lift * up.x;
+        motionY = speed * forward.y + lift * up.y;
+        motionZ = speed * forward.z + drift * right.z + lift * up.z;
     }
 
     @Override public int getBrightnessForRender(float partialTick) { return 0x00F000F0; }

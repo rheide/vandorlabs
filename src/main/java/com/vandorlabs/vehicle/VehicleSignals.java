@@ -13,6 +13,7 @@ import java.io.*;
 /** Explicit, event-driven subscriptions to the parent world's channel bank. */
 public final class VehicleSignals {
     private final EntityGroundVehicle craft;
+    private final VehicleResources resources;
     private final Map<RedstoneChannelMember,Link> links=new IdentityHashMap<>();
     private final Set<BlockPos> dirty=new LinkedHashSet<>();
     private final Map<Link,Integer> deferredLevels=new IdentityHashMap<>();
@@ -23,6 +24,7 @@ public final class VehicleSignals {
     private final Set<TileEntityWirelessRedstone> wirelessPorts=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntitySpaceDoor> securityDoors=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntityTokenSlot> tokenSlots=Collections.newSetFromMap(new IdentityHashMap<>());
+    private final List<TileEntityConstructor> maxwellEngines=new ArrayList<>();
     private final List<StorageChannelOutput> storageOutputs=new ArrayList<>();
     public void transmitterChanged(RedstoneChannelMember member){revision=-1;tick();Link link=links.get(member);if(link!=null){RedstoneChannels.channelChanged(link,member.getRedstoneChannels());RedstoneChannels.positionChanged(link);}changed(member.channelTile().getPos());persist();}
     public void cockpitChanged(TileEntityCockpit tile){
@@ -36,7 +38,7 @@ public final class VehicleSignals {
         Link link=links.get(control);if(link instanceof LatchLink&&((LatchLink)link).isChannelLatch())RedstoneChannels.latchLevelChanged((LatchLink)link,level);else if(link!=null)RedstoneChannels.inputChanged(link);
         flush();
     }
-    VehicleSignals(EntityGroundVehicle craft){this.craft=craft;}
+    VehicleSignals(EntityGroundVehicle craft){this.craft=craft;resources=new VehicleResources(craft);}
     public void changed(BlockPos pos){if(!detached)dirty.add(pos.toImmutable());}
     /** Only this craft's source levels; never sample unrelated members of the dimension bank. */
     public Map<Integer,Integer> outputLevels(){
@@ -148,9 +150,12 @@ public final class VehicleSignals {
         if(revision!=craft.view.tileRevision){
         revision=craft.view.tileRevision;
         cockpits.clear();
+        maxwellEngines.clear();
         tokenSlots.clear();securityDoors.clear();wirelessPorts.clear();storageOutputs.clear();
         Set<RedstoneChannelMember> wanted=Collections.newSetFromMap(new IdentityHashMap<>());
         for(TileEntity tile:craft.view.tiles.values()){
+            if(tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).maxwell()&&craft.structure.isActive(tile.getPos()))
+                maxwellEngines.add((TileEntityConstructor)tile);
             if(!vehicleAdapterActive(tile))continue;
             StorageChannelOutput storage=StorageChannelOutput.of(tile);
             if(storage!=null&&!storage.transmittedChannels().isEmpty()){add(wanted,storage);storageOutputs.add(storage);}
@@ -201,13 +206,20 @@ public final class VehicleSignals {
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
         }
         craft.articulation.tickCapturedControls();
+        resources.tick();
+        for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(craft.poweredFlight());
         for(StorageChannelOutput storage:storageOutputs){Link link=links.get(storage);if(link!=null)RedstoneChannels.inputChanged(link);}
         com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();
     }
     public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();}
     public void open(){detached=false;revision=-1;}
-    public void persist(){if(!craft.world.isRemote && !detached)flush();}
+    public void persist(){if(!craft.world.isRemote && !detached){
+        for(TileEntityConstructor engine:maxwellEngines) {
+            if(craft.view!=null&&craft.view.getTileEntity(engine.getPos())==engine)dirty.add(engine.getPos());
+        }
+        flush();
+    }}
     public static boolean supports(VehicleWorld world,BlockPos pos){
         TileEntity raw=world.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel)return true;
         if(!(raw instanceof TileEntityAnimatedScreenSelector))return false;
@@ -268,7 +280,7 @@ public final class VehicleSignals {
             VehicleStructure.Cell original=craft.structure.at(pos);NBTTagCompound data=snapshotData(tile,original==null?null:original.tileData());
             // Height/settings packets already published this exact seat snapshot.
             // A redundant notification must not invalidate its open preview.
-            if(tile instanceof TileEntityPilotSeat && craft.structure.at(pos)!=null
+            if((tile instanceof TileEntityPilotSeat||tile instanceof TileEntityConstructor&&((TileEntityConstructor)tile).maxwell()) && craft.structure.at(pos)!=null
                     && data.equals(craft.structure.at(pos).tileData()))continue;
             saved.put(pos,data);variableNavigation|=tile instanceof TileEntityNavigationTable;
             try{ByteArrayOutputStream bytes=new ByteArrayOutputStream();net.minecraft.nbt.CompressedStreamTools.writeCompressed(tile instanceof TileEntityTokenSlot||tile instanceof TileEntityAnimatedScreenSelector?tile.getUpdateTag():data,bytes);

@@ -46,6 +46,7 @@ public final class VehicleInteraction {
                 || target.hit.action==VehicleSelection.Action.COUPLER
                 || target.hit.action==VehicleSelection.Action.CANOPY
                 || target.hit.action==VehicleSelection.Action.DOOR
+                || !player.isSneaking() && com.vandorlabs.container.ContainerMaxwellDrive.at(target.craft.view,target.hit.cell.pos)!=null
                 || target.hit.action==VehicleSelection.Action.SCREEN && !player.isSneaking() && VehicleSignals.supports(target.craft.view,target.hit.cell.pos)
                 || target.hit.action==VehicleSelection.Action.CONTROLLER
                 || target.hit.action==VehicleSelection.Action.COCKPIT
@@ -71,6 +72,10 @@ public final class VehicleInteraction {
         if(craft.isDead || craft.world!=player.world || craft.structure==null || craft.ownershipBlocked || craft.transferInProgress)return false;
         if(player.world.isRemote)return true;
         EntityPlayerMP server=(EntityPlayerMP)player;
+        if(com.vandorlabs.container.ContainerMaxwellDrive.at(craft.view,target.hit.cell.pos)!=null) {
+            com.vandorlabs.container.ContainerMaxwellDrive.open(player,craft.view,target.hit.cell.pos);
+            return true;
+        }
         if(target.hit.action==VehicleSelection.Action.CHEST)return VehicleChests.open(server,craft,target.hit.cell.pos);
         if(target.hit.action==VehicleSelection.Action.COUPLER){
             if(target.hit.capturedCoupler!=null){VehicleArmCouplerControl control=VehicleArmCouplerControl.resolve(craft,target.hit.capturedCoupler.arm,target.hit.capturedCoupler.cell);if(control!=null){if(player.isSneaking()||player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER)com.vandorlabs.coupler.ContainerCoupler.openCaptured(player,control);else control.toggleManual(player);}return true;}

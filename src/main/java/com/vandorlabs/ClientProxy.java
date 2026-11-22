@@ -24,6 +24,7 @@ public class ClientProxy extends CommonProxy {
     @Override public void navigationChanged(net.minecraft.util.math.BlockPos pos){com.vandorlabs.client.NavigationMapRenderer.changed(pos);}
     @Override public void vehicleNavigationImage(com.vandorlabs.network.MessageVehicleNavigationImage packet){net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(()->com.vandorlabs.client.NavigationMapRenderer.receive(packet));}
     @Override public void navigationChanged(net.minecraft.tileentity.TileEntity tile,int action){com.vandorlabs.client.NavigationMapRenderer.changed(tile,action);}
+    @Override public void cruiseTerrain(com.vandorlabs.network.MessageCruiseTerrain image){net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(()->com.vandorlabs.client.CruiseSky.receive(image));}
     @Override public void navigationImage(com.vandorlabs.network.MessageNavigationImage packet){net.minecraft.client.Minecraft.getMinecraft().addScheduledTask(()->com.vandorlabs.client.NavigationMapRenderer.receive(packet));}
     @Override public void coreAppearanceChanged(com.vandorlabs.tiles.TileEntityConstructor tile){com.vandorlabs.gear.client.CoreArmHandoff.register(tile);com.vandorlabs.client.constructors.SynthesisTowerRenderer.observe(tile);}
     @Override public void coreRenderTransferChanged(com.vandorlabs.gear.GearTileEntity tile){com.vandorlabs.gear.client.CoreArmHandoff.changed(tile);}
@@ -127,6 +128,16 @@ public class ClientProxy extends CommonProxy {
         ParticleThrusterStream particle = new ParticleThrusterStream(world, x, y, z,
                 facing, color, style, speed, spreadScale);
         particle.rotateAround(x, z, yaw);
+        minecraft.effectRenderer.addEffect(particle);
+    }
+
+    @Override public void spawnPosedThrusterParticle(World world, net.minecraft.util.math.Vec3d center,
+            EnumFacing facing, net.minecraft.util.math.Vec3d direction, int color, float speed, float spreadScale) {
+        net.minecraft.client.Minecraft minecraft = net.minecraft.client.Minecraft.getMinecraft();
+        if (!allowThrusterParticle(minecraft, world, center.x, center.y, center.z)) return;
+        ParticleThrusterStream particle = new ParticleThrusterStream(world, center.x, center.y, center.z,
+                facing, color, 0, speed, spreadScale);
+        particle.pointAlong(center, facing, direction);
         minecraft.effectRenderer.addEffect(particle);
     }
 

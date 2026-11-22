@@ -28,6 +28,10 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
     @Override public boolean isFullCube(IBlockState state){return false;}
     @Override public int getLightOpacity(IBlockState state){return 0;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
+        if(state.getValue(FORMED)&&com.vandorlabs.drives.MaxwellEngine.DESIGN.equals(design)&&!player.isSneaking()){
+            com.vandorlabs.container.ContainerMaxwellDrive.open(player,world,pos);
+            return true;
+        }
         TileEntity early=world.getTileEntity(pos);if(state.getValue(FORMED)&&early instanceof TileEntityConstructor&&((TileEntityConstructor)early).digitizing()&&((TileEntityConstructor)early).enclosureHit(player)&&player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock){if(!world.isRemote&&!((TileEntityConstructor)early).placeDigitizeSample(player,hand))player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Insert one supported block while the Digitizer is idle."),true);return true;}
         if(state.getValue(FORMED)&&ConstructorWallSupport.solid(world,pos)&&player.getHeldItem(hand).getItem() instanceof net.minecraft.item.ItemBlock)return false;
         if(!world.isRemote){TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(pos);
@@ -42,7 +46,7 @@ public final class BlockConstructorCore extends BlockVandorDirectional {
                 if(!tile.takeCompletedCore(player,hand))player.openGui(com.vandorlabs.VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_SYNTHESIS_TOWER,world,pos.getX(),pos.getY(),pos.getZ());return true;
             }
             if(state.getValue(FORMED) && tile.mount()!=null && (tile.mount().hit(player)||tile.accepts(player.getHeldItem(hand))))return TokenSlotInteractions.activate(tile,player,hand);
-            if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString(width+" x "+depth+" x "+height+" frame: "+tile.assemblyProblem()),true);
+            if(state.getValue(FORMED) && player.isSneaking())tile.dismantle();else if(!state.getValue(FORMED) && !tile.assemble())player.sendStatusMessage(new net.minecraft.util.text.TextComponentString((tile.maxwell()?"Maxwell Drive frame":width+" x "+depth+" x "+height+" frame")+": "+tile.assemblyProblem()),true);
             else if(state.getValue(FORMED)&&specification().state_models!=null){tile.cycleActivity();player.sendStatusMessage(new net.minecraft.util.text.TextComponentString("Activity: "+specification().stateLabel(tile.activity())),true);}
         }return true;
     }

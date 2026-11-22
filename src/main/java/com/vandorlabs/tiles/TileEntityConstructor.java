@@ -87,11 +87,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
 
     private void maxwellChanged() {
-        if (world instanceof VehicleWorld) markDirty();
-        else {
-            markDirty();
-            maxwellSync = true;
-        }
+        markDirty();
+        if (!(world instanceof VehicleWorld)) maxwellSync = true;
     }
 
     private void setMaxwellActive(int level) {
@@ -105,6 +102,10 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if (!maxwellAvailable()) return;
         long tick = world.getTotalWorldTime();
         if (maxwellTick == tick) return;
+        if (world instanceof VehicleWorld && settings.redstone
+                && (maxwellTick == Long.MIN_VALUE || (tick + pos.toLong()) % 10 == 0)) {
+            drivePhysicalLevel = carriedPhysicalLevel();
+        }
         maxwellTick = tick;
         int level = maxwellThrustLevel(flightDemand);
         maxwellTank.burn(level);
@@ -113,6 +114,24 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
             maxwellSync = false;
             publish();
         }
+    }
+
+    private int carriedPhysicalLevel() {
+        CoreLayout shape = layout();
+        int highest = 0;
+        for (int y = 0; y < shape.height; y++) {
+            for (int x = 0; x < shape.width; x++) {
+                for (int z = 0; z < shape.depth; z++) {
+                    if (x > 0 && x < shape.width - 1 && y > 0 && y < shape.height - 1
+                            && z > 0 && z < shape.depth - 1) continue;
+                    BlockPos member = pos.add(shape.x(x, z), y, shape.z(x, z));
+                    int level = com.vandorlabs.redstone.LoadedRedstonePower.level(world, member);
+                    if (level == 15) return 15;
+                    highest = Math.max(highest, level);
+                }
+            }
+        }
+        return highest;
     }
 
     private final com.vandorlabs.navigation.ObserverPower observerPower=new com.vandorlabs.navigation.ObserverPower();

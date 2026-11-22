@@ -42,6 +42,10 @@ public final class ItemConfigurizer extends Item {
     }
     private static void configureCraft(net.minecraft.entity.player.EntityPlayerMP player,com.vandorlabs.vehicle.EntityGroundVehicle craft){
         com.vandorlabs.vehicle.VehicleInteraction.Target target=com.vandorlabs.vehicle.VehicleInteraction.pointed(player);
+        if(target!=null&&target.craft==craft&&com.vandorlabs.container.ContainerMaxwellDrive.at(craft.view,target.hit.cell.pos)!=null){
+            com.vandorlabs.vehicle.VehicleInteraction.activate(player,target);
+            return;
+        }
         if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.COUPLER){com.vandorlabs.vehicle.VehicleInteraction.activate(player,target);return;}
         if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.COCKPIT){com.vandorlabs.tiles.TileEntityCockpit cockpit=com.vandorlabs.cockpit.CockpitAssembly.root(craft.view,target.hit.cell.pos);if(cockpit!=null)com.vandorlabs.container.ContainerCockpit.open(player,cockpit);return;}
         if(target!=null && target.craft==craft && target.hit.action==com.vandorlabs.vehicle.VehicleSelection.Action.BOARD){
@@ -115,6 +119,12 @@ public final class ItemConfigurizer extends Item {
         if(state.getBlock() instanceof com.vandorlabs.programmer.ProgrammerBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);state.getBlock().onBlockActivated(world,pos,state,event.getEntityPlayer(),EnumHand.MAIN_HAND,event.getFace(),.5F,.5F,.5F);return;}
         if(state.getBlock() instanceof com.vandorlabs.segmented.SegmentedDoorBlock){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);com.vandorlabs.segmented.SegmentedDoorBlock.configure(event.getEntityPlayer(),world,pos);return;}
         TileEntity tile = world.getTileEntity(pos);
+        if(com.vandorlabs.container.ContainerMaxwellDrive.at(world,event.getPos())!=null){
+            event.setCanceled(true);
+            event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);
+            com.vandorlabs.container.ContainerMaxwellDrive.open(event.getEntityPlayer(),world,event.getPos());
+            return;
+        }
         if(tile instanceof com.vandorlabs.ports.ResourcePortTile){event.setCanceled(true);event.setCancellationResult(net.minecraft.util.EnumActionResult.SUCCESS);com.vandorlabs.ports.ResourcePorts.open(event.getEntityPlayer(),world,pos);return;}
         if(tile instanceof com.vandorlabs.tiles.TileEntityConstructorPart){BlockPos owner=((com.vandorlabs.tiles.TileEntityConstructorPart)tile).owner();if(world.isBlockLoaded(owner)){TileEntity root=world.getTileEntity(owner);if(root instanceof com.vandorlabs.tiles.TileEntityConstructor&&((com.vandorlabs.tiles.TileEntityConstructor)root).builder()){tile=root;pos=owner;}}}
         int gui;

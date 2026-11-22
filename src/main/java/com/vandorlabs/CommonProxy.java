@@ -73,9 +73,12 @@ public class CommonProxy {
             EnumFacing facing, int color, int style, float speed, float spreadScale) { }
     public void spawnRotatedThrusterParticle(World world, double x, double y, double z,
             EnumFacing facing, int color, int style, float speed, float spreadScale, float yaw) { }
+    public void spawnPosedThrusterParticle(World world, net.minecraft.util.math.Vec3d center,
+            EnumFacing facing, net.minecraft.util.math.Vec3d direction, int color, float speed, float spreadScale) { }
 
     public void navigationChanged(BlockPos pos) {}
     public void navigationChanged(BlockPos pos,int action) { navigationChanged(pos); }
+    public void cruiseTerrain(com.vandorlabs.network.MessageCruiseTerrain image) {}
     public void navigationImage(com.vandorlabs.network.MessageNavigationImage packet) {}
     public void vehicleNavigationImage(com.vandorlabs.network.MessageVehicleNavigationImage packet) {}
     public void navigationChanged(net.minecraft.tileentity.TileEntity tile,int action){navigationChanged(tile.getPos(),action);}

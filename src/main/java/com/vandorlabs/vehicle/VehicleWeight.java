@@ -44,9 +44,22 @@ public final class VehicleWeight {
         int count=0;
         while(count++<budget){
             if(cell<structure.cells.size()){
-                VehicleStructure.Cell next=structure.cells.get(cell++);add(blocks.computeIfAbsent(next.state,VehicleWeight::blockUnits));
+                VehicleStructure.Cell next=structure.cells.get(cell++);
                 TileEntity tile=view.getTileEntity(next.pos);
-                if(tile!=null)try{contents(next,tile,depth);}catch(RuntimeException|LinkageError|ReflectiveOperationException unavailable){incomplete=true;VehicleCompatibility.warn(next.state.getBlock(),"weight estimate",unavailable);}
+                try {
+                    if (tile instanceof TileEntityConstructor && ((TileEntityConstructor) tile).maxwell()
+                            && ((TileEntityConstructor) tile).formed()) {
+                        TileEntityConstructor engine = (TileEntityConstructor) tile;
+                        add(engine.maxwellDryMass());
+                        fluid(engine.maxwellFuelContents(), 1);
+                    } else if (!maxwellReservation(tile)) {
+                        add(blocks.computeIfAbsent(next.state,VehicleWeight::blockUnits));
+                        if(tile!=null)contents(next,tile,depth);
+                    }
+                } catch(RuntimeException|LinkageError|ReflectiveOperationException unavailable) {
+                    incomplete=true;
+                    VehicleCompatibility.warn(next.state.getBlock(),"weight estimate",unavailable);
+                }
             }else if(!pending.isEmpty()){
                 if(++work>MAX_WORK){pending.clear();incomplete=true;done=true;return true;}
                 try{pending.removeFirst().run();}catch(RuntimeException|LinkageError unavailable){incomplete=true;VehicleCompatibility.warn(structure.cells.get(0).state.getBlock(),"stored-content weight estimate",unavailable);}
@@ -54,6 +67,12 @@ public final class VehicleWeight {
             if((count&31)==0&&System.nanoTime()>=deadline)return false;
         }
         return false;
+    }
+    private boolean maxwellReservation(TileEntity tile) {
+        if (!(tile instanceof TileEntityConstructorPart)) return false;
+        TileEntity owner = view.getTileEntity(((TileEntityConstructorPart) tile).owner());
+        return owner instanceof TileEntityConstructor && ((TileEntityConstructor) owner).maxwell()
+                && ((TileEntityConstructor) owner).formed();
     }
     public Result result(){if(!done)throw new IllegalStateException("Weight estimate pending");return new Result(units,incomplete);}
     private void queue(Task task){if(pending.size()<MAX_WORK)pending.addLast(task);else incomplete=true;}
