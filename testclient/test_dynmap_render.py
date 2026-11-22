@@ -287,7 +287,11 @@ def place_utility_doors(command,labels,jar):
         entries=json.loads(archive.read('assets/vandorlabs/data/unified_textures.json'))
         legacy=len(json.loads(archive.read('assets/vandorlabs/data/dynmap_material_aspects.json')))-len(entries)
     utilities=[(legacy+i,e) for i,e in enumerate(entries) if e['id'].startswith('utility_door_')]
-    assert len(utilities)==16,'Incomplete Utility Door map corpus'
+    required = {"blue","blue_modern","green","green_modern","warm","warm_modern","factory","industrial",
+                "industrial_modern","reactor","warehouse_detailed","warehouse_futuristic","bathroom_white",
+                "modern_oak_windowed","windowed_utility","windowed_white","bathroom","stall"}
+    actual = {entry['id'][len('utility_door_'):] for _,entry in utilities}
+    assert required <= actual and len(actual)==len(utilities), 'Incomplete or duplicate Utility Door map corpus: '+str(required-actual)
     for i,(choice,entry) in enumerate(utilities):
         x,y,z=30+3*i,12,-8
         command(f'setblock {x} {y} {z} vandorlabs:programmable_door facing=south,half=lower,hinge=left,open=false replace {{SpaceDesign:2,SpaceFramed:1b,DoorFaceTexture:{choice}}}')
