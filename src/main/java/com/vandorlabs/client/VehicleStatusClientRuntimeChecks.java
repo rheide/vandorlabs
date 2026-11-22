@@ -48,11 +48,12 @@ final class VehicleStatusClientRuntimeChecks {
             for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,-1,7)))w.setBlockState(at,Blocks.STONE.getDefaultState(),2);
             w.setBlockState(BASE.add(1,-1,0),ModBlocks.WAYPOINT.getDefaultState(),3);((TileEntityWaypoint)w.getTileEntity(BASE.add(1,-1,0))).autoDepart=false;
             w.setBlockState(BASE.add(SCREEN),ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),3);((TileEntityAnimatedScreenSelector)w.getTileEntity(BASE.add(SCREEN))).setSurfaceTexture(0,TileEntityAnimatedScreenSelector.VEHICLE_SURFACE);
+            w.setBlockState(BASE.add(INPUT),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),3);
             w.setBlockState(BASE.add(CONTROL),ModBlocks.AUTOPILOT.getDefaultState(),3);p.setPositionAndUpdate(BASE.getX()+.5,BASE.getY()+.5,BASE.getZ()-2);
         }).get();
     }
     private static void spawn(Minecraft mc){
-        WorldServer w=world(mc);w.setBlockToAir(BASE.add(SCREEN));w.setBlockToAir(BASE.add(CONTROL));List<VehicleStructure.Cell> cells=new ArrayList<>();
+        WorldServer w=world(mc);w.setBlockToAir(BASE.add(SCREEN));w.setBlockToAir(BASE.add(CONTROL));w.setBlockToAir(BASE.add(INPUT));List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(int x=0;x<=4;x++)for(int z=0;z<=3;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,0,z),Blocks.STONE.getDefaultState(),null));
         for(BlockPos pos:Arrays.asList(SCREEN,INPUT,CONSOLE)){
             net.minecraft.block.Block block=pos.equals(SCREEN)?ModBlocks.ANIMATED_SCREEN_SELECTOR:pos.equals(INPUT)?ModBlocks.PROGRAMMABLE_INPUT:ModBlocks.PROGRAMMABLE_HALF_CONSOLE;

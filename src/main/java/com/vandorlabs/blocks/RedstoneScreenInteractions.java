@@ -116,7 +116,8 @@ public final class RedstoneScreenInteractions {
             if(x>=com.vandorlabs.vehicle.VehicleStatus.modeLeft(mode,flight)&&x<com.vandorlabs.vehicle.VehicleStatus.modeRight(mode,flight))
                 return mode==3?com.vandorlabs.vehicle.VehicleStatus.FLIGHT_ACTION:mode+1;
         }
-        if(row==3&&x>=52&&x<122)return com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION;
+        if(row==3&&x>=52&&x<122&&tile!=null&&tile.getWorld() instanceof com.vandorlabs.vehicle.VehicleWorld)
+            return com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION;
         return row==3&&x<48?4:-1;
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){

@@ -432,7 +432,9 @@ public final class VehicleClient {
             fontRenderer.drawString("Actual weight: "+com.vandorlabs.vehicle.VehicleWeight.label(readout.mass)+partial,x,y+16,0xc4d0d8);
             fontRenderer.drawString("Effective weight: "+com.vandorlabs.vehicle.VehicleWeight.label(readout.effectiveMass)+partial,x,y+30,0xc4d0d8);
             fontRenderer.drawString("Maximum takeoff weight: "+com.vandorlabs.vehicle.VehicleWeight.label(readout.takeoffMass()),x,y+44,0xc4d0d8);
-            String altitude=readout.canFly()?String.format(java.util.Locale.ROOT,"Y %,.0f",readout.maximumAltitude()):"Unavailable";
+            double dimensionCeiling=mc.world.provider.getDimension()==0?com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE
+                    :mc.world.getActualHeight()-(data.structure==null?1:data.structure.bounds.maxY+1);
+            String altitude=readout.canFly()?String.format(java.util.Locale.ROOT,"Y %,.0f",Math.max(0,Math.min(readout.maximumAltitude(),dimensionCeiling))):"Unavailable";
             fontRenderer.drawString("Maximum flight altitude: "+altitude,x,y+58,0xc4d0d8);
             if(readout.thrust<=0)fontRenderer.drawString("Fuel and enable the drive to calculate available thrust.",x,y+76,0xffdd88);
             else if(!readout.canFly())haiku(x,y+76,0xffdd88,"The runway waits still","Laden wings cannot take flight","Let the cargo go");

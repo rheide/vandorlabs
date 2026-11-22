@@ -155,12 +155,11 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         velocityChanged=true;fallDistance=0;
     }
     void writeFlightMode(NBTTagCompound tag){
-        tag.setByte("MaxwellFlightPhase",(byte)flightPhase);
-        if(flightPhase!=NO_FLIGHT){tag.setDouble("MaxwellFlightSpeed",driveSpeed);tag.setFloat("MaxwellFlightPitch",flightPitch);tag.setBoolean("MaxwellFlightLanded",landedFromFlight);tag.setBoolean("MaxwellCruiseRecovery",cruisingRecovery);}
+        if(flightPhase!=NO_FLIGHT){tag.setByte("MaxwellFlightPhase",(byte)flightPhase);tag.setDouble("MaxwellFlightSpeed",driveSpeed);tag.setFloat("MaxwellFlightPitch",flightPitch);tag.setBoolean("MaxwellFlightLanded",landedFromFlight);tag.setBoolean("MaxwellCruiseRecovery",cruisingRecovery);}
     }
     void readFlightMode(NBTTagCompound tag){
         flightPhase=MathHelper.clamp(tag.getByte("MaxwellFlightPhase"),NO_FLIGHT,RETURN_HOVER);
-        if(flightPhase==NO_FLIGHT)return;
+        if(flightPhase==NO_FLIGHT){flightPitch=0;landedFromFlight=cruisingRecovery=false;return;}
         double savedSpeed=tag.getDouble("MaxwellFlightSpeed");float savedPitch=tag.getFloat("MaxwellFlightPitch");
         driveSpeed=Double.isFinite(savedSpeed)?MathHelper.clamp(savedSpeed,0,FlightEnvelope.cruiseSpeed(FlightEnvelope.MAX_ALTITUDE)):0;
         flightPitch=Float.isFinite(savedPitch)?MathHelper.clamp(savedPitch,-FlightEnvelope.MAX_PITCH,FlightEnvelope.MAX_PITCH):0;

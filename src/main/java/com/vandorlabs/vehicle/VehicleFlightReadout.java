@@ -83,7 +83,7 @@ public final class VehicleFlightReadout {
                 TileEntity tile = view.getTileEntity(pos);
                 if (!(tile instanceof TileEntityConstructor)) continue;
                 TileEntityConstructor drive = (TileEntityConstructor) tile;
-                if (!drive.maxwell()) continue;
+                if (!drive.maxwell() || !drive.formed()) continue;
                 count++;
                 fuel += drive.maxwellFuel();
                 capacity += drive.maxwellCapacity();
