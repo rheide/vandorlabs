@@ -48,13 +48,13 @@ final class VehicleStatusRenderChecks {
                 frame.bindFramebuffer(true);GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,1);GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();
                 RedstoneScreenRenderer.drawVehicleContents(craft.view,BlockPos.ORIGIN,128,24);
                 BufferedImage image=net.minecraft.util.ScreenShotHelper.createScreenshot(512,512,frame);int model=0,name=0;
-                for(int y=0;y<512;y++)for(int x=0;x<512;x++){int rgb=image.getRGB(x,y)&0xffffff,r=rgb>>16,g=rgb>>8&255,b=rgb&255;if(y>=310&&b>g&&g>r&&g>100)model++;if(y>=32&&y<68&&r>150&&g>150&&b>150)name++;if(y>=144&&y<184&&rgb==0x37d8ad)greens[busy]++;}
-                require(model>100,"saved shape emits visible status geometry");require(name>100,"vehicle name rendered");
+                for(int y=0;y<512;y++)for(int x=0;x<512;x++){int rgb=image.getRGB(x,y)&0xffffff,r=rgb>>16,g=rgb>>8&255,b=rgb&255;if(y>=310&&x>=250&&b>g&&g>r&&g>100)model++;if(y>=32&&y<68&&r>150&&g>150&&b>150)name++;if(y>=144&&y<184&&rgb==0x37d8ad)greens[busy]++;}
+                require(model==0,"Vehicle Status leaves the saved 3D model out");require(name>100,"vehicle name rendered");
                 javax.imageio.ImageIO.write(image,"png",new File(output,"vehicle-design-status-"+(busy==0?"ready":"busy")+".png"));
             }finally{GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);}
         }
         require(greens[0]>greens[1]&&greens[1]>0,"indeterminate progress replaces mode controls");
-        System.out.println("[vandorlabs][reprolab] vehicle-design-status PASS name saved-shape progress-replaces-modes rendered-pixels");
+        System.out.println("[vandorlabs][reprolab] vehicle-design-status PASS name model-removed progress-replaces-modes rendered-pixels");
     }
     private static void require(boolean ok,String message){if(!ok)throw new IllegalStateException("Vehicle status render: "+message);}
 }

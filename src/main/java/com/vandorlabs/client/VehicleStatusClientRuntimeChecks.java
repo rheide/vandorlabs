@@ -101,7 +101,7 @@ final class VehicleStatusClientRuntimeChecks {
     private static boolean near(int a,int b){return Math.abs((a>>16&255)-(b>>16&255))<=4&&Math.abs((a>>8&255)-(b>>8&255))<=4&&Math.abs((a&255)-(b&255))<=4;}
     private static void next(){stage++;frame=0;}
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(stage>17)return true;
+        if(stage==18)return VehicleFlightClientChecks.tick(mc,output);
         require(++total<950,"timeout stage="+stage);if(++frame<25)return false;
         if(stage==0){if(!(mc.world.getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector))return false;aim(mc,SCREEN,false);next();return false;}
         if(stage==1){shot(mc,output,"block_off",0x362B19);click(mc,false);next();return false;}
@@ -120,7 +120,7 @@ final class VehicleStatusClientRuntimeChecks {
         if(stage==14){state(mc,true,true);mc.getIntegratedServer().addScheduledTask(()->require(server(mc).autopilot.controller().status.equals("Parked at waypoint"),"waiting before Next pulse")).get();click(mc,true,4);next();return false;}
         if(stage==15){mc.getIntegratedServer().addScheduledTask(()->{require(server(mc).posZ<BASE.getZ()-.1,"Next button leaves manual waypoint: "+server(mc).autopilot.controller().status+" pos="+server(mc).posZ+" route="+server(mc).autopilot.write());EntityGroundVehicle craft=server(mc);craft.autopilot.controller().setEnabled(false);craft.stopForParking();craft.rotationYaw=0;craft.setPosition(BASE.getX(),BASE.getY(),BASE.getZ());VehicleNetwork.state(craft);}).get();next();return false;}
         if(stage==16){click(mc,true,1);next();return false;}
-        if(stage==17){if(client(mc)!=null)return false;mc.getIntegratedServer().addScheduledTask(()->{require(world(mc).getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector,"Block screen button restores tiles");for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();stage=18;System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles mode-buttons next-waypoint client-server-sync half-input half-console");return true;}
+        if(stage==17){if(client(mc)!=null)return false;mc.getIntegratedServer().addScheduledTask(()->{require(world(mc).getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector,"Block screen button restores tiles");for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))world(mc).setBlockToAir(at);}).get();stage=18;System.out.println("[vandorlabs][reprolab] vehicle-status-client PASS Block-Taxi-Hover distinct-rendered-backgrounds real-screen-toggles mode-buttons next-waypoint client-server-sync half-input half-console");VehicleFlightClientChecks.begin(mc);return false;}
         return false;
     }
     private VehicleStatusClientRuntimeChecks(){}
