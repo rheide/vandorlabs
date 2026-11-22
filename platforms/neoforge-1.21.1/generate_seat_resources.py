@@ -62,7 +62,7 @@ def generate(root,out):
             # The native Programmer resource set already packages this shared opaque sprite.
             if name!='vandorlabs:models/cockpits/blank':texture(name)
             else:textures.add(name)
-    for name in ['assembly','rig']:
+    for name in ['assembly','rig','surfaces']:
         asset=f'cockpits/chair_siderests/{name}.json'
         write(asset,json.loads((source/asset).read_text()))
     names.extend(['advanced_chair','advanced_left','advanced_right'])

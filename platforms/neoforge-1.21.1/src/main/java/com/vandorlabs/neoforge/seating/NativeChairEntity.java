@@ -127,7 +127,7 @@ public final class NativeChairEntity extends BlockEntity {
 
     private ChairSettings settings=new ChairSettings(0,1,0,true);private int pilotHeight,part,arms;private boolean inert,opaqueProxy;
     private CompoundTag retained=new CompoundTag();private boolean retainedItem;private volatile View view;private ItemStack removalDrop;
-    public NativeChairEntity(BlockPos pos,BlockState state){super(NativeSeatBindings.type(state),pos,state);cockpitTouch=kind()==NativeSeatKind.COCKPIT&&!NativeSeatBlock.proxy(state)?new NativeCockpitTouch(this):null;publish();}
+    public NativeChairEntity(BlockPos pos,BlockState state){super(NativeSeatBindings.type(state),pos,state);cockpitTouch=(kind()==NativeSeatKind.COCKPIT||kind()==NativeSeatKind.ADVANCED)&&!NativeSeatBlock.proxy(state)?new NativeCockpitTouch(this):null;publish();}
     public NativeSeatKind kind(){return ((NativeSeatBlock)getBlockState().getBlock()).kind;}
     public void prepareRemoval(ItemStack stack){removalDrop=stack.copy();}
     public ItemStack removalDrop(){return removalDrop==null?null:removalDrop.copy();}

@@ -40,6 +40,7 @@ public final class NativeSeatModels {
     @SubscribeEvent public static void renderers(EntityRenderersEvent.RegisterRenderers event){if(NativeSeatBindings.enabled()){
         event.registerEntityRenderer(NativeSeatBindings.MOUNT,net.minecraft.client.renderer.entity.NoopRenderer::new);
         event.registerBlockEntityRenderer(NativeSeatBindings.ENTITIES.get(NativeSeatKind.COCKPIT),NativeCockpitLiftRenderer::new);
+        event.registerBlockEntityRenderer(NativeSeatBindings.ENTITIES.get(NativeSeatKind.ADVANCED),NativeCockpitLiftRenderer::new);
     }}
     @SubscribeEvent public static void bake(ModelEvent.ModifyBakingResult event){if(!NativeSeatBindings.enabled())return;var bake=new Bake(event.getModels());active=bake;for(var kind:NativeSeatKind.values()){
         var block=NativeSeatBindings.BLOCKS.get(kind);for(var state:block.getStateDefinition().getPossibleStates()){var location=BlockModelShaper.stateToModelLocation(state);event.getModels().put(location,new WorldModel(Objects.requireNonNull(event.getModels().get(location)),bake));}

@@ -14,7 +14,7 @@ import net.neoforged.neoforge.registries.DeferredHolder;
 public final class NativeScreenRegistrations {
  public static final Map<ScreenFamily,DeferredHolder<Block,NativeScreenBlock>> BLOCKS;
  public static final Map<ScreenFamily,DeferredHolder<Item,NativeScreenItem>> ITEMS;
- public static final DeferredHolder<MenuType<?>,MenuType<NativeScreenMenu>> MENU=VandorLabsBootstrap.MENUS.register("programmable_viewscreen",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new NativeScreenMenu(NativeScreenRegistrations.MENU.get(),id,inventory,buffer.readBlockPos())));
+ public static final DeferredHolder<MenuType<?>,MenuType<NativeScreenMenu>> MENU=VandorLabsBootstrap.MENUS.register("programmable_viewscreen",()->net.neoforged.neoforge.common.extensions.IMenuTypeExtension.create((id,inventory,buffer)->new NativeScreenMenu(NativeScreenRegistrations.MENU.get(),id,inventory,buffer.readBlockPos(),buffer.isReadable()?buffer.readUnsignedByte():0)));
  public static final DeferredHolder<Block, NativeYokeScreenBlock> YOKE=VandorLabsBootstrap.BLOCKS.register("yoke_screen",
      ()->new NativeYokeScreenBlock(BlockBehaviour.Properties.of().mapColor(MapColor.METAL).strength(5,6)
          .sound(SoundType.METAL).requiresCorrectToolForDrops()));
