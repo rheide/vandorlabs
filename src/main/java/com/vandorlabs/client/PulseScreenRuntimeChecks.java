@@ -33,7 +33,10 @@ final class PulseScreenRuntimeChecks {
     private static RedstoneScreenContents contents(Minecraft mc){return ((TileEntityAnimatedScreenSelector)world(mc).getTileEntity(POS)).redstoneScreen(0);}
     private static NBTTagList rows(){
         NBTTagList rows=new NBTTagList();NBTTagCompound pulse=new NBTTagCompound();pulse.setString("Label","Activate");ChannelData.write(pulse,ChannelList.of(A,B));pulse.setBoolean("Pulse",true);rows.appendTag(pulse);
-        NBTTagCompound toggle=new NBTTagCompound();toggle.setString("Label","Other source");ChannelData.write(toggle,ChannelList.of(B));rows.appendTag(toggle);return rows;
+        NBTTagCompound toggle=new NBTTagCompound();toggle.setString("Label","Other source");ChannelData.write(toggle,ChannelList.of(B));rows.appendTag(toggle);
+        NBTTagCompound meter=new NBTTagCompound();
+        meter.setString("Label","Fuel");meter.setBoolean("Status",true);ChannelData.write(meter,ChannelList.of(A));rows.appendTag(meter);
+        return rows;
     }
     private static void configure(RedstoneScreenContents contents){require(contents.applyRowConfiguration("PULSE CONTROL",rows()),"configure Pulse and independent Toggle");}
     static void begin(Minecraft mc)throws Exception{
@@ -43,7 +46,7 @@ final class PulseScreenRuntimeChecks {
             worldChecks(w,p);capturedChecks(w,p);
             for(BlockPos at:BlockPos.getAllInBox(POS.add(-3,-3,-3),POS.add(3,3,3)))w.setBlockToAir(at);
             w.setBlockState(POS,ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),3);
-            RedstoneScreenContents c=contents(mc);require(c.configureRows(Arrays.asList("Activate","Other source"),Arrays.asList(ChannelList.of(A,B),ChannelList.of(B)),0),"GUI fixture");
+            RedstoneScreenContents c=contents(mc);NBTTagList configured=rows();configured.getCompoundTagAt(0).removeTag("Pulse");require(c.applyRowConfiguration("CONTROL",configured),"GUI fixture with fuel meter");
             p.setPositionAndUpdate(POS.getX()+.5,POS.getY(),POS.getZ()-2);p.setHeldItem(EnumHand.MAIN_HAND,new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.CONFIGURIZER));p.inventoryContainer.detectAndSendChanges();
         }).get();
     }
@@ -54,11 +57,14 @@ final class PulseScreenRuntimeChecks {
             for(int slot=0;slot<2;slot++)if(RedstoneScreenInteractions.supportsSlot(block,slot)){
                 RedstoneScreenContents c=tile.redstoneScreen(slot);configure(c);c.toggleRow(1);c.toggleRow(0);
                 require(RedstoneChannels.level(world,A)==15&&RedstoneChannels.level(world,B)==15,"Pulse powers complete bank for "+block+" slot="+slot);
+                require(c.rows().get(2).level()==15&&c.rows().get(2).transmittedChannels().isEmpty(),"status reads the powered bank without transmitting");
+                c.toggleRow(2);
                 require(!c.rows().get(0).isChannelLatch(),"Pulse never joins persistent latch bank");
                 require(!c.rowConfiguration().getCompoundTagAt(0).hasKey("PulseUntil"),"configuration excludes live deadline");
                 NBTTagCompound saved=c.writeToNBT(new NBTTagCompound());require(saved.getTagList("Rows",10).getCompoundTagAt(0).getLong("PulseUntil")==world.getTotalWorldTime()+20,"server owns twenty-tick deadline");
                 c.onChunkUnload();require(RedstoneChannels.level(world,A)==0,"unloaded pulse unsubscribes");c.readFromNBT(saved);c.finishLoading();require(RedstoneChannels.level(world,A)==15,"reload resumes remaining pulse");
                 c.expirePulses(world.getTotalWorldTime()+20);require(RedstoneChannels.level(world,A)==0&&RedstoneChannels.level(world,B)==15,"expiry retains independent row source");
+                require(c.rows().get(2).level()==0,"status drops to zero after source expires");
                 saved.getTagList("Rows",10).getCompoundTagAt(0).setLong("PulseUntil",world.getTotalWorldTime()-1);c.onChunkUnload();c.readFromNBT(saved);c.finishLoading();require(RedstoneChannels.level(world,A)==0,"expired loaded pulse stays off");
                 NBTTagList invalid=rows();invalid.getCompoundTagAt(0).setBoolean("Slider",true);require(!c.applyRowConfiguration("Invalid",invalid),"conflicting row types rejected");
                 long originalTime=world.getTotalWorldTime();c.pulseRow(0);long deadline=c.rows().get(0).pulseUntil();c.setEnabled(false);
@@ -79,6 +85,7 @@ final class PulseScreenRuntimeChecks {
             RedstoneScreenContents c=((TileEntityAnimatedScreenSelector)craft.view.getTileEntity(local)).redstoneScreen(0);
             point(player,craft.view.getBlockState(local),(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(local),0,1,craft,local);require(craft.signals.click(local,player),"captured Toggle actual ray click");
             point(player,craft.view.getBlockState(local),(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(local),0,0,craft,local);require(craft.signals.click(local,player),"captured Pulse actual ray click");
+            require(c.rows().get(2).level()==15,"carried receiver follows parent-world signal");
             require(RedstoneChannels.level(world,A)==15,"captured pulse contributes parent channel source");
             NBTTagCompound saved=craft.structure.write();craft.signals.close();require(RedstoneChannels.level(world,A)==0,"captured detach unsubscribes");
             craft.install(VehicleStructure.read(saved));craft.signals.open();craft.signals.tick();c=((TileEntityAnimatedScreenSelector)craft.view.getTileEntity(local)).redstoneScreen(0);require(c.rows().get(0).pulse&&RedstoneChannels.level(world,A)==15,"captured reload resumes persisted deadline");
@@ -108,7 +115,7 @@ final class PulseScreenRuntimeChecks {
         require(++total<400,"bounded focused client timeout stage="+stage+" gui="+(mc.currentScreen==null?"none":mc.currentScreen.getClass().getSimpleName())+" requested="+requestedGui+" mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" main="+mc.player.getHeldItemMainhand()+" off="+mc.player.getHeldItemOffhand()+" position="+mc.player.getPositionVector()+" clientTile="+mc.world.getTileEntity(POS));frame++;
         if(stage==0){
             if(!requestedGui){if(frame<8||!(mc.world.getTileEntity(POS) instanceof TileEntityAnimatedScreenSelector)||!ready(mc,com.vandorlabs.items.ModItems.CONFIGURIZER))return false;mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=owner(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_REDSTONE_SCREEN,world(mc),POS.getX(),POS.getY(),POS.getZ());System.out.println("[vandorlabs][reprolab] pulse-screen-dialog requested server-distance="+p.getDistanceSqToCenter(POS)+" container="+p.openContainer.getClass().getSimpleName());}).get();requestedGui=true;frame=0;return false;}
-            if(!(mc.currentScreen instanceof GuiAnimatedScreenSelector))return false;GuiAnimatedScreenSelector gui=(GuiAnimatedScreenSelector)mc.currentScreen;if((Integer)member(gui,"rowSlot")!=0){chooseRedstone(gui);return false;}mouse(gui,604,1);require(button(gui,604).displayString.equals("Control: Pulse"),"right-click selects previous Pulse from Toggle");mouse(gui,604,0);require(button(gui,604).displayString.equals("Control: Toggle"),"forward restores Toggle");mouse(gui,604,1);mouse(gui,20,0);next();return false;
+            if(!(mc.currentScreen instanceof GuiAnimatedScreenSelector))return false;GuiAnimatedScreenSelector gui=(GuiAnimatedScreenSelector)mc.currentScreen;if((Integer)member(gui,"rowSlot")!=0){chooseRedstone(gui);return false;}mouse(gui,604,1);require(button(gui,604).displayString.equals("Control: Channel status"),"right-click selects previous Channel status from Toggle");mouse(gui,604,0);require(button(gui,604).displayString.equals("Control: Toggle"),"forward restores Toggle");mouse(gui,604,1);mouse(gui,604,1);mouse(gui,20,0);next();return false;
         }
         if(stage==1&&frame>8){if(!mc.getIntegratedServer().callFromMainThread(()->contents(mc).rows().get(0).pulse).get())return false;mc.getIntegratedServer().addScheduledTask(()->{require(contents(mc).rows().get(0).pulse,"actual GUI packet saved Pulse type");owner(mc).setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);owner(mc).inventoryContainer.detectAndSendChanges();contents(mc).toggleRow(1);point(owner(mc),world(mc).getBlockState(POS),(TileEntityAnimatedScreenSelector)world(mc).getTileEntity(POS),0,0,null,POS);}).get();next();return false;}
         if(stage==2&&frame>5){if(mc.currentScreen!=null||!ready(mc,null))return false;click(mc);next();return false;}

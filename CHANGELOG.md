@@ -1,5 +1,9 @@
 # Changelog
 
+## 3.0.0 (in development)
+
+- Display a received analog redstone channel as battery bars on a screen, console or cockpit.
+
 ## 2.12.0
 
 - Draw all stationary Programmable Glass as ordinary chunk geometry, like vanilla glass: selected artwork, Screens in static playback, opaque panes and every stock tint. Glass walls no longer add per-block sorting, draw calls or tile renders each frame, and under shader packs they cast shadows like stock glass. Opaque panes use the solid layer. Animated Screens, corner glass, glass with contained fluids and glass on moving vehicles keep their existing renderers.

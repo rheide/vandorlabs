@@ -70,7 +70,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             text(0,x,y+12,w,control.label);text(1,x,y+52,w,ChannelFields.text(control.channels));
             if(control.isThrottle()){
                 buttonList.add(new CockpitButton(42,x,y+84,w/2-2,20,"Low: "+control.min));buttonList.add(new CockpitButton(43,x+w/2+2,y+84,w/2-2,20,"High: "+control.max));
-            }else buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider","Pulse (1 second)"}[control.kind]));
+            }else buttonList.add(new CockpitButton(40,x,y+84,w,20,"Control: "+new String[]{"Toggle","Slider","Pulse (1 second)","Channel status"}[control.kind]));
             buttonList.add(new CockpitButton(41,x,y+106,w,20,(control.isThrottle()?new String[]{"Off","Low","Medium","High"}[control.step()]+": ":"Output: ")+control.level+"  (operate)"));
         }
     }
@@ -114,7 +114,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
         else if(button.id==32){TileEntityCockpit.Display display=tile.displays.get(d);ChannelList channels=receiverPane.channels();if(channels==null)return;display.receiver(channels,GuiOptionCycle.next(display.activation(),3));}
         else if(button.id==33)tile.displays.get(d).texture=-1;
         else if(button.id==34)tile.setSideTexture(-1);
-        else if(button.id==40)tile.controls.get(c).kind=GuiOptionCycle.next(tile.controls.get(c).kind,3);
+        else if(button.id==40)tile.controls.get(c).kind=GuiOptionCycle.next(tile.controls.get(c).kind,tile.controls.get(c).id.contains("/")?4:3);
         else if(button.id==42){TileEntityCockpit.Control value=tile.controls.get(c);value.min=GuiOptionCycle.next(value.min,1,value.max-2);}
         else if(button.id==43){TileEntityCockpit.Control value=tile.controls.get(c);value.max=GuiOptionCycle.next(value.max,value.min+2,15);}
         else if(button.id==41){NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Control",c);tag.setDouble("Column",tile.controls.get(c).nextColumn());packet(1,tag);return;}

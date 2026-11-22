@@ -20,3 +20,5 @@ time. An elapsed deadline cannot restore a permanent on state. Unloaded screens
 do not contribute a channel source. Configuration copies retain the Pulse type
 and channel list without copying an active press. Idle pulse controls perform no
 timer work.
+
+Choose **Channel status** in the Redstone row editor to display the strongest received level as five battery bars. A level of zero leaves the battery empty. Each bar covers three signal levels. The row also works aboard vehicles and does not transmit when pressed.

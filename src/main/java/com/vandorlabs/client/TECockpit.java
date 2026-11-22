@@ -71,7 +71,8 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
             for(int row=0;row<layout.rows;row++){
                 TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=layout.widgetTop(row);
                 RedstoneScreenRenderer.rect(buffer,4,layout.top(row)+1,124,layout.bottom(row)-1,.01,0xff1c2b37);
-                if(c.kind==1){for(int i=0;i<4;i++)RedstoneScreenRenderer.rect(buffer,61+i*15,y+1,74+i*15,y+9,.02,c.sliderLevel(i)<=c.level?0xff46d4b5:0xff33434d);}
+                if(c.kind==3)RedstoneScreenRenderer.battery(buffer,y,c.level);
+                else if(c.kind==1){for(int i=0;i<4;i++)RedstoneScreenRenderer.rect(buffer,61+i*15,y+1,74+i*15,y+9,.02,c.sliderLevel(i)<=c.level?0xff46d4b5:0xff33434d);}
                 else RedstoneScreenRenderer.rect(buffer,98,y,120,y+10,.02,c.level>0?0xff46d4b5:0xff33434d);
             }
             Tessellator.getInstance().draw();net.minecraft.client.gui.FontRenderer font=Minecraft.getMinecraft().fontRenderer;
@@ -79,7 +80,7 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
             for(int row=0;row<layout.rows;row++){
                 TileEntityCockpit.Control c=tile.control(plane.id+"/"+row);int y=layout.widgetTop(row);
                 RedstoneScreenRenderer.text(font,font.trimStringToWidth(c.label,c.kind==1?50:86),8,y+1,0xffffff);
-                if(c.kind!=1)RedstoneScreenRenderer.text(font,c.level>0?"ON":c.kind==2?"GO":"OFF",100,y+1,c.level>0?0x082419:0xe0e8ef);
+                if(c.kind!=1&&c.kind!=3)RedstoneScreenRenderer.text(font,c.level>0?"ON":c.kind==2?"GO":"OFF",100,y+1,c.level>0?0x082419:0xe0e8ef);
             }
         }finally{GlStateManager.popMatrix();GlStateManager.color(1,1,1,1);}
     }

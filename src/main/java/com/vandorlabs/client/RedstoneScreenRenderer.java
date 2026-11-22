@@ -50,7 +50,8 @@ final class RedstoneScreenRenderer {
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             rect(buffer,RedstoneScreenInteractions.ROW_LEFT,y,RedstoneScreenInteractions.ROW_RIGHT,y+10,.01,!row.slider && row.active()?0xFF174C3B:0xFF1C2B37);
-            if(row.slider){
+            if(row.status)battery(buffer,y,row.level());
+            else if(row.slider){
                 for(int segment=0;segment<row.segments();segment++){
                     int width=RedstoneScreenContents.SLIDER_RIGHT-RedstoneScreenContents.SLIDER_LEFT;
                     int left=RedstoneScreenContents.SLIDER_LEFT+width*segment/row.segments(),right=RedstoneScreenContents.SLIDER_LEFT+width*(segment+1)/row.segments();
@@ -69,9 +70,18 @@ final class RedstoneScreenRenderer {
         for(int i=0;i<count;i++){
             RedstoneScreenContents.Row row=tile.rows().get(i);int y=top+i*RedstoneScreenInteractions.ROW_HEIGHT;
             text(font,font.trimStringToWidth(row.label,row.slider?RedstoneScreenContents.SLIDER_LABEL_WIDTH:RedstoneScreenText.LABEL_WIDTH),8,y+1,row.active()?0xDEFFF0:0xB8C8D8);
-            if(!row.slider)text(font,row.active()?"ON":row.pulse?"GO":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
+            if(!row.status&&!row.slider)text(font,row.active()?"ON":row.pulse?"GO":"OFF",100,y+1,row.active()?0x082419:0xE0E8EF);
         }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();GlStateManager.popMatrix();
+    }
+    static void battery(BufferBuilder buffer,int y,int level){
+        rect(buffer,96,y,119,y+10,.02,0xFF91B5C8);
+        rect(buffer,119,y+3,121,y+7,.02,0xFF91B5C8);
+        rect(buffer,97,y+1,118,y+9,.03,0xFF142732);
+        for(int i=0;i<5;i++){
+            int left=98+4*i;
+            rect(buffer,left,y+2,left+3,y+8,.04,level>3*i?0xFF46D4B5:0xFF33434D);
+        }
     }
     static void drawVehicle(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,IBlockState state,int slot){
         int height=RedstoneScreenInteractions.displayHeight(state.getBlock(),slot),top=RedstoneScreenInteractions.rowTop(state.getBlock(),slot);
