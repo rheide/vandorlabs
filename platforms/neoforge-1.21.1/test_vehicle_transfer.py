@@ -66,8 +66,11 @@ def main():
                        + ' -Dvandorlabs.cellJournalFaults=true -Dvandorlabs.vehicleTransferPhase=' + phase)
             run(command('runServer', '-PmodernServerRunDirectory=' + str(world),
                         '-x', 'compileJava', '-x', 'compileSmokeJava', '-x', 'processResources'), log, label, env)
-            if arguments.mekanism and '[vandorlabs][vehicle-transfer] installed Mekanism tank PASS' not in log.read_text(errors='replace'):
-                raise AssertionError('Mekanism fuel transfer evidence missing: ' + str(log))
+            if arguments.mekanism:
+                text = log.read_text(errors='replace')
+                for owner in ('tank', 'cubes'):
+                    if f'[vandorlabs][vehicle-transfer] installed Mekanism {owner} PASS' not in text:
+                        raise AssertionError(f'Mekanism {owner} transfer evidence missing: {log}')
             if phase.startswith('crash-'):
                 text = log.read_text(errors='replace')
                 if 'Stopping server' in text[text.index(label):]:

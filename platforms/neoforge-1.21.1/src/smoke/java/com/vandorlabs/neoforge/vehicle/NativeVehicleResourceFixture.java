@@ -49,6 +49,7 @@ final class NativeVehicleResourceFixture {
     private final ChannelList batteryFullness = ChannelList.of(704), tankFullness = ChannelList.of(705);
     private final BlockPos monitor;
     private final ItemStack transmitter;
+    private final NativeVehicleMekanismCubeFixture cubes;
     private boolean observerRequested, on, radar;
     private net.neoforged.neoforge.fluids.capability.IFluidHandler cachedMekanismTank;
     private FluidStack optionalFuel;
@@ -84,6 +85,7 @@ final class NativeVehicleResourceFixture {
             transmit(raw, tankFullness);
         });
         if (MEKANISM) placeMekanismTank(fuel);
+        cubes = MEKANISM ? new NativeVehicleMekanismCubeFixture(world, root, enabled) : null;
         port(matterSource, NativePortKind.MATTER, Direction.DOWN, raw -> {
             var settings = ResourcePortSettings.placed(Direction.DOWN.get3DDataValue()).withTransfer(3, false,
                 ResourcePortSettings.OnTexture.TRANSFERRING);
@@ -132,8 +134,13 @@ final class NativeVehicleResourceFixture {
         return true;
     }
 
+    void verifyCubes() { if (cubes != null) cubes.verifyRefusals(); }
+
+    void heldCubes() { if (cubes != null) cubes.held(); }
+
     boolean transferred(NativeGroundVehicle craft, ServerPlayer actor, int initialFuel) {
         if (!on) {
+            if (cubes != null) cubes.before(craft);
             var snapshot = craft.snapshot();
             var original = data(snapshot.cells(), powerSource);
             if (original.getInt("Energy") != POWER || data(snapshot.cells(), powerSink).getInt("PortEnergy") != 0
@@ -178,7 +185,9 @@ final class NativeVehicleResourceFixture {
         for (var area : NativeNavigationSources.matching(world, location, survey)) {
             if (area.radarRadius() > 0 && area.stationary() == null) radar = true;
         }
-        if (received != POWER || fuel != initialFuel + FUEL_REFILL || storedMatter != parcel().getCount() || debit != DRAIN) return false;
+        boolean cubesReady = cubes == null || cubes.transferred(craft);
+        if (received != POWER || fuel != initialFuel + FUEL_REFILL || storedMatter != parcel().getCount()
+            || debit != DRAIN || !cubesReady) return false;
         if(craft.meterSurface(monitor.subtract(root),0)!=0)return false;
         if (!radar) throw new AssertionError("Carried RF was consumed without an actual Survey Dish scan");
         if (craft.resources().channelLevel(craft, matterSource.subtract(root), batteryFullness) != 0
@@ -234,6 +243,7 @@ final class NativeVehicleResourceFixture {
     }
 
     void parked(BlockPos anchor) {
+        if (cubes != null) cubes.parked(anchor);
         if (MEKANISM) {
             checkHeldTank();
             var pos = parked(pump.east(), anchor);
