@@ -134,7 +134,7 @@ public final class VehicleResourceLiveChecks {
             }
             TileEntityConstructor drive=(TileEntityConstructor)local(engine),dish=(TileEntityConstructor)local(observer);
             require(drive.maxwellFuel()+((TileEntityHexTank)local(tank)).tank.getFluidAmount()==1500,"actual Maxwell inlet conserves its onboard supply");
-            if(!full||drive.maxwellFuel()!=1500){if(ticks>70)require(false,"carried transfer totals"+summary+" Maxwell="+drive.maxwellFuel());return false;}
+            if(!full||drive.maxwellFuel()!=drive.maxwellCapacity()){if(ticks>70)require(false,"carried transfer totals"+summary+" Maxwell="+drive.maxwellFuel());return false;}
             IEnergyStorage source=VehicleResources.endpoint(local(cell),EnumFacing.WEST,CapabilityEnergy.ENERGY);
             require(source!=null&&source.getEnergyStored()<6400&&source.getEnergyStored()>0&&dish.observerPowered()&&dish.observerScanning(),"carried RFTools Power Cell debits local RF and powers the real Survey Dish inlet");
             require(RedstoneChannels.level(world,LEVER,512)==1,"carried battery publishes stored-level analog signal");

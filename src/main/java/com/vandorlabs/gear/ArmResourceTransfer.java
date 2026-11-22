@@ -210,7 +210,7 @@ final class ArmResourceTransfer {
 
     @SuppressWarnings("unchecked")
     private static <T> T endpoint(TileEntity tile,EnumFacing face,Capability<T> capability,BlockPos source){
-        if(tile.getWorld() instanceof VehicleWorld)return VehicleResources.endpoint(tile,face,capability);
+        if(tile.getWorld() instanceof VehicleWorld)return VehicleResources.armEndpoint(tile,face,capability);
         T destination=tile.getCapability(capability,face);
         return destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
                 ?(T)com.vandorlabs.ports.ResourcePortConnections.itemHandler(tile,face,source):destination;

@@ -13,7 +13,7 @@ import java.io.*;
 /** Explicit, event-driven subscriptions to the parent world's channel bank. */
 public final class VehicleSignals {
     private final EntityGroundVehicle craft;
-    private final VehicleResources resources;
+    final VehicleResources resources;
     private final Map<RedstoneChannelMember,Link> links=new IdentityHashMap<>();
     private final Set<BlockPos> dirty=new LinkedHashSet<>();
     private final Map<Link,Integer> deferredLevels=new IdentityHashMap<>();

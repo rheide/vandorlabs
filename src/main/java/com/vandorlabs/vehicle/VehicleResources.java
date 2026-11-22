@@ -33,9 +33,10 @@ public final class VehicleResources {
     private final List<ResourcePortTile> ports=new ArrayList<>();
     private final List<TileEntityConstructor> observers=new ArrayList<>();
     private final List<Channel> channels=new ArrayList<>();
+    private final Map<BlockPos,Channel> powerRoutes=new HashMap<>(),fluidRoutes=new HashMap<>();
     private final List<Route> direct=new ArrayList<>();
     private final Set<BlockPos> changed=new LinkedHashSet<>();
-    private int nextChannel,nextRoute;
+    private int nextChannel,nextRoute,relayDepth,relayWork;
 
     VehicleResources(EntityGroundVehicle craft){this.craft=craft;}
 
@@ -80,6 +81,67 @@ public final class VehicleResources {
         return com.vandorlabs.redstone.RedstoneChannels.allPowered(world,new BlockPos(point),port.getRedstoneChannels());
     }
 
+    /** An arm's other end can meet either a terminal device or another carried conduit. */
+    public static <T> T armEndpoint(TileEntity tile,EnumFacing face,Capability<T> capability){
+        if(!TransferNetworkCompat.onboard(tile))return endpoint(tile,face,capability);
+        if(!live(tile))return null;
+        VehicleWorld view=(VehicleWorld)tile.getWorld();
+        return view.craft==null?null:view.craft.signals.resources.relay(tile,face,capability);
+    }
+
+    <T> T relay(TileEntity tile,EnumFacing face,Capability<T> capability){
+        if(tile.getWorld()!=indexed||face==null)return null;
+        BlockPos pos=tile.getPos();
+        if(capability==CapabilityEnergy.ENERGY){
+            Channel channel=powerRoutes.get(pos);
+            TransferNetworkCompat.Lane lane=channel==null?null:channel.lanes.get(pos);
+            if(lane!=null)return CapabilityEnergy.ENERGY.cast(new IEnergyStorage(){
+                @Override public int receiveEnergy(int amount,boolean simulate){return !canReceive()||amount<=0?0:channel.first(indexed,false,CapabilityEnergy.ENERGY,0,(e,target)->{
+                    int received=e.canReceive()?e.receiveEnergy(Math.min(RF_PER_TICK,amount),simulate):0;
+                    if(received>0&&!simulate)saved(target);return received;
+                });}
+                @Override public int extractEnergy(int amount,boolean simulate){return !canExtract()||amount<=0?0:channel.first(indexed,true,CapabilityEnergy.ENERGY,0,(e,target)->{
+                    int removed=e.canExtract()?e.extractEnergy(Math.min(RF_PER_TICK,amount),simulate):0;
+                    if(removed>0&&!simulate)saved(target);return removed;
+                });}
+                @Override public int getEnergyStored(){return channel.first(indexed,true,CapabilityEnergy.ENERGY,0,(storage,target)->storage.getEnergyStored());}
+                @Override public int getMaxEnergyStored(){return channel.first(indexed,true,CapabilityEnergy.ENERGY,0,(storage,target)->storage.getMaxEnergyStored());}
+                @Override public boolean canReceive(){return live(tile)&&lane.accepts(face)&&!channel.target.isEmpty();}
+                @Override public boolean canExtract(){return live(tile)&&lane.emits(face)&&!channel.source.isEmpty();}
+            });
+        }
+        if(capability==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY){
+            Channel channel=fluidRoutes.get(pos);
+            TransferNetworkCompat.Lane lane=channel==null?null:channel.lanes.get(pos);
+            if(lane!=null)return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(new IFluidHandler(){
+                private final net.minecraftforge.fluids.capability.IFluidTankProperties[] properties={
+                        new net.minecraftforge.fluids.capability.FluidTankProperties(null,0,lane.accepts(face),lane.emits(face))};
+                @Override public net.minecraftforge.fluids.capability.IFluidTankProperties[] getTankProperties(){return properties.clone();}
+                @Override public int fill(FluidStack resource,boolean commit){
+                    if(!live(tile)||!lane.accepts(face)||resource==null||resource.amount<=0)return 0;
+                    FluidStack portion=resource.copy();portion.amount=Math.min(portion.amount,MB_PER_TICK);
+                    return channel.first(indexed,false,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,(handler,target)->{
+                        if(!fluidSink(target))return 0;
+                        int filled=handler.fill(portion.copy(),commit);if(filled>0&&commit)saved(target);return filled;
+                    });
+                }
+                @Override public FluidStack drain(FluidStack resource,boolean commit){
+                    if(resource==null||resource.amount<=0)return null;
+                    FluidStack portion=resource.copy();portion.amount=Math.min(portion.amount,MB_PER_TICK);
+                    return drainFrom(handler->handler.drain(portion.copy(),commit),commit);
+                }
+                @Override public FluidStack drain(int max,boolean commit){return max<=0?null:drainFrom(handler->handler.drain(Math.min(max,MB_PER_TICK),commit),commit);}
+                private FluidStack drainFrom(java.util.function.Function<IFluidHandler,FluidStack> drain,boolean commit){
+                    if(!live(tile)||!lane.emits(face))return null;
+                    return channel.first(indexed,true,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,(handler,target)->{
+                        FluidStack removed=drain.apply(handler);if(removed!=null&&commit)saved(target);return removed;
+                    });
+                }
+            });
+        }
+        return null;
+    }
+
     void tick(){
         VehicleWorld view=craft.view;
         if(tick==craft.world.getTotalWorldTime()||view==null||!serverThread(view))return;
@@ -107,12 +169,12 @@ public final class VehicleResources {
     void flushChanges(Set<BlockPos> dirty,boolean force){
         if(indexed==craft.view&&(force||tick%SYNC_INTERVAL==0)){dirty.addAll(changed);changed.clear();}
     }
-    void close(){changed.clear();indexed=null;ports.clear();observers.clear();channels.clear();direct.clear();}
+    void close(){changed.clear();indexed=null;ports.clear();observers.clear();channels.clear();direct.clear();powerRoutes.clear();fluidRoutes.clear();}
 
     private void index(VehicleWorld view){
         if(indexed!=view)changed.clear();
         indexed=view;revision=view.tileRevision;
-        ports.clear();observers.clear();channels.clear();direct.clear();
+        ports.clear();observers.clear();channels.clear();direct.clear();powerRoutes.clear();fluidRoutes.clear();
         nextChannel=nextRoute=0;
         for(TileEntity tile:view.tiles.values()){
             if(tile instanceof ResourcePortTile)ports.add((ResourcePortTile)tile);
@@ -145,9 +207,11 @@ public final class VehicleResources {
         for(BlockPos start:lanes.keySet()){
             if(!visited.add(start))continue;
             Set<Face> inputs=new LinkedHashSet<>(),outputs=new LinkedHashSet<>();
+            Map<BlockPos,TransferNetworkCompat.Lane> connected=new HashMap<>();
             ArrayDeque<BlockPos> pending=new ArrayDeque<>();pending.add(start);
             while(!pending.isEmpty()){
                 BlockPos at=pending.removeFirst();TransferNetworkCompat.Lane lane=lanes.get(at);
+                connected.put(at,lane);
                 for(EnumFacing side:EnumFacing.VALUES){
                     BlockPos neighbor=at.offset(side);
                     if(!sameSection(view,at,neighbor))continue;
@@ -160,7 +224,10 @@ public final class VehicleResources {
                     }
                 }
             }
-            if(!inputs.isEmpty()&&!outputs.isEmpty())channels.add(new Channel(kind,inputs,outputs));
+            if(inputs.isEmpty()&&outputs.isEmpty())continue;
+            Channel channel=new Channel(kind,inputs,outputs,connected);
+            for(BlockPos pos:connected.keySet())(kind==POWER?powerRoutes:fluidRoutes).put(pos,channel);
+            if(!inputs.isEmpty()&&!outputs.isEmpty())channels.add(channel);
         }
     }
 
@@ -194,12 +261,32 @@ public final class VehicleResources {
         final Face source,target;
         Route(Face source,Face target){this.source=source;this.target=target;}
     }
-    private static final class Channel{
+    private final class Channel{
         final int kind;final List<Face> source,target;int firstSource,firstTarget;
+        final Map<BlockPos,TransferNetworkCompat.Lane> lanes;
+        boolean forwarding;
         final Map<BlockPos,List<EnumFacing>> inputFaces=new HashMap<>();
-        Channel(int kind,Set<Face> source,Set<Face> target){
+        Channel(int kind,Set<Face> source,Set<Face> target,Map<BlockPos,TransferNetworkCompat.Lane> lanes){
             this.kind=kind;this.source=new ArrayList<>(source);this.target=new ArrayList<>(target);
+            this.lanes=lanes;
             if(kind==POWER)for(Face face:source)inputFaces.computeIfAbsent(face.pos,unused->new ArrayList<>()).add(face.side);
+        }
+        <T,R> R first(VehicleWorld view,boolean pulling,Capability<T> capability,R empty,java.util.function.BiFunction<T,TileEntity,R> action){
+            if(view==null||forwarding)return empty;
+            if(relayDepth++==0)relayWork=96;
+            forwarding=true;
+            try{
+                List<Face> faces=pulling?source:target;
+                for(int i=0;i<Math.min(16,faces.size())&&relayWork>0;i++,relayWork--){
+                    Face face=faces.get(((pulling?firstSource:firstTarget)+i)%faces.size());
+                    if(!pulling&&suppliesPower(view,face.pos))continue;
+                    TileEntity tile=view.getTileEntity(face.pos);T handler=endpoint(tile,face.side,capability);
+                    if(handler==null)continue;
+                    R result=action.apply(handler,tile);
+                    if(!Objects.equals(result,empty))return result;
+                }
+                return empty;
+            }finally{forwarding=false;relayDepth--;}
         }
         int transfer(VehicleWorld view,int work){
             int budget=Math.min(48,work);
@@ -226,14 +313,15 @@ public final class VehicleResources {
             return false;
         }
     }
+    private static boolean fluidSink(TileEntity tile){return tile instanceof TileEntityConstructor||tile instanceof TileEntityConstructorPart
+                ||tile instanceof ResourcePortTile||tile instanceof GearTileEntity;}
     private static boolean transfer(VehicleWorld view,Face from,Face to,int kind){
         if(from.pos.equals(to.pos))return false;
         TileEntity source=view.getTileEntity(from.pos),target=view.getTileEntity(to.pos);
         if(source==null||target==null)return false;
         // Avoid round trips between passive storage faces. A machine inlet or explicit
         // arm/port face provides the direction. Tanks fill by being plumbed on purpose.
-        if(kind==FLUID&&!(target instanceof TileEntityConstructor||target instanceof TileEntityConstructorPart
-                ||target instanceof ResourcePortTile||target instanceof GearTileEntity))return false;
+        if(kind==FLUID&&!fluidSink(target))return false;
         if(kind==ITEM&&!(source instanceof GearTileEntity||target instanceof GearTileEntity))return false;
         try{
             if(kind==POWER)return power(source,from.side,target,to.side);
