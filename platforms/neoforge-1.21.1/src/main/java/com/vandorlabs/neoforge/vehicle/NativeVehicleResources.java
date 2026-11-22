@@ -24,6 +24,7 @@ import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.ContainerHelper;
+import net.minecraft.world.level.Level;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.BarrelBlock;
 import net.minecraft.world.level.block.Blocks;
@@ -51,14 +52,15 @@ final class NativeVehicleResources {
     private long tick = Long.MIN_VALUE, fluidMassMb;
     private boolean changed;
 
-    NativeVehicleResources(NativeTransferSnapshot snapshot, HolderLookup.Provider registries, NativeVehiclePropulsion propulsion) {
+    NativeVehicleResources(NativeTransferSnapshot snapshot, Level world, NativeVehiclePropulsion propulsion) {
+        var registries = world.registryAccess();
         this.propulsion = propulsion;
         var mounted = new LinkedHashMap<BlockPos, List<Endpoint>>();
         availableBytes = NativeVehicleStructure.LIMITS.bytes() - snapshot.decodedBytes;
         for (var cell : snapshot.cells()) {
             states.put(cell.pos, cell);
             if (!cell.hasTile()) continue;
-            var endpoint = Endpoint.owned(cell, registries);
+            var endpoint = Endpoint.owned(cell, world);
             if (endpoint != null) {
                 add(mounted, cell.pos, endpoint);
                 if (endpoint.kind == NativePortKind.FLUID) fluidMassMb += endpoint.fluid.getAmount();
@@ -124,6 +126,8 @@ final class NativeVehicleResources {
             var block = cell.state.getBlock();
             if (block instanceof NativeBufferBlock buffer && !buffer.battery) {
                 amount += fluidContents(cell.tile(), "NativeTankFluid", NativeHexTankEntity.CAPACITY, registries).getAmount();
+            } else if (NativeVehicleMekanismTank.supports(cell.state)) {
+                amount += NativeVehicleMekanismTank.contents(cell.tile(), registries).getAmount();
             } else if (block instanceof NativePortBlock port && port.kind == NativePortKind.FLUID) {
                 amount += fluidContents(cell.tile(), "PortFluid", NativeFluidPortEntity.CAPACITY, registries).getAmount();
             }
@@ -390,7 +394,8 @@ final class NativeVehicleResources {
 
     private static CompoundTag fluidTag(NativeRawCell cell, String key, FluidStack contents, HolderLookup.Provider registries) {
         var tag = cell.tile();
-        if (contents.isEmpty()) tag.remove(key);
+        if (NativeVehicleMekanismTank.TANKS.equals(key)) NativeVehicleMekanismTank.write(tag, contents, registries);
+        else if (contents.isEmpty()) tag.remove(key);
         else tag.put(key, contents.save(registries));
         return tag;
     }
@@ -490,10 +495,18 @@ final class NativeVehicleResources {
             return config == null ? axis == null || axis == face.getAxis() : config.settings().face(face.get3DDataValue()) == Face.INPUT;
         }
 
-        static Endpoint owned(NativeRawCell cell, HolderLookup.Provider registries) {
+        static Endpoint owned(NativeRawCell cell, Level world) {
+            var registries = world.registryAccess();
             var block = cell.state.getBlock();
             var raw = cell.tile();
             Endpoint result;
+            if (NativeVehicleMekanismTank.supports(cell.state)) {
+                result = new Endpoint(cell, NativePortKind.FLUID, null, NativeVehicleMekanismTank.TANKS,
+                    NativeVehicleMekanismTank.capacity(cell, world));
+                result.fluid = NativeVehicleMekanismTank.contents(raw, registries);
+                if (result.fluid.getAmount() > result.capacity) throw new IllegalArgumentException("Mekanism tank exceeds its tier capacity");
+                return result;
+            }
             if (block instanceof NativeBufferBlock buffer) {
                 result = buffer.battery
                     ? new Endpoint(cell, NativePortKind.POWER, NativePortData.read(raw), "Energy", NativeBatteryEntity.CAPACITY)

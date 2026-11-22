@@ -190,7 +190,7 @@ public final class NativeVehicleStructure {
             || NativeVehicleArms.block(state) || NativeVehicleStatus.supports(state)
             || identity.getNamespace().equals("vandorlabs") && Set.of("battery_block", "hexagonal_fuel_tank", "programmable_storage").contains(identity.getPath())
             || programmable(state);
-        if ((!plainVanilla && !nativeBlock) || state.isAir() || !state.getFluidState().isEmpty()
+        if ((!plainVanilla && !nativeBlock && !NativeVehicleMekanismTank.supports(state)) || state.isAir() || !state.getFluidState().isEmpty()
             || block instanceof ChestBlock && state.getValue(BlockStateProperties.CHEST_TYPE) != ChestType.SINGLE) {
             throw new IllegalArgumentException("Vehicle cannot move " + identity);
         }
@@ -212,7 +212,7 @@ public final class NativeVehicleStructure {
     }
 
     static boolean supportsTile(BlockEntity tile) {
-        if (tile instanceof NativeVehicleControllerEntity) return true;
+        if (tile instanceof NativeVehicleControllerEntity || NativeVehicleMekanismTank.supports(tile)) return true;
         if (tile instanceof NativeGearEntity gear) {
             return NativeVehicleArms.block(gear.getBlockState()) && !gear.inert() && gear.owner() != null
                 && gear.payload() == null && !gear.hasStoredSections();

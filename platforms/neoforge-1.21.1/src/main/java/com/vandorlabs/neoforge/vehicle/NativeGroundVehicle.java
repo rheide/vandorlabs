@@ -192,7 +192,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         int height = seat == null ? 0 : Mth.clamp(seat.getInt(ChairSettings.PILOT_HEIGHT), 0, 3);
         var appearance = NativeVehicleVisual.project(blocks, level().registryAccess());
         var drive = new NativeVehiclePropulsion(blocks, level().registryAccess());
-        var resources = new NativeVehicleResources(blocks, level().registryAccess(), drive);
+        var resources = new NativeVehicleResources(blocks, level(), drive);
         var geometry = new NativeVehicleHull(states, resources::armCollision);
         snapshot = blocks;
         hull = geometry;
