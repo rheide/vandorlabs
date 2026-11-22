@@ -38,6 +38,7 @@ final class NativeVehicleCruise {
         z = craft.getZ();
         publishRoute();
         relocate(craft.getX(), craft.getY() + SKY_OFFSET, craft.getZ());
+        NativeVehicleObservers.updateCruise(craft);
     }
 
     void move(Vec3 motion) {
@@ -54,6 +55,7 @@ final class NativeVehicleCruise {
         z = Mth.clamp(z + motion.z, border.getMinZ() + margin, border.getMaxZ() - margin);
         if (craft.tickCount % 3 == 0) publishRoute();
         craft.setPos(craft.getX(), SKY_OFFSET + height, craft.getZ());
+        NativeVehicleObservers.updateCruise(craft);
         updateTerrain(level, height);
     }
 
@@ -97,6 +99,7 @@ final class NativeVehicleCruise {
         if (!NativeVehicleHull.loadedColumns(level, offset.inflate(1e-5))) return;
         double bottomOffset = Math.max(0, craft.getY() - craft.getBoundingBox().minY);
         craft.getEntityData().set(NativeGroundVehicle.CRUISE_ROUTE, BlockPos.ZERO);
+        NativeVehicleObservers.removeCruise(craft);
         pending = null;
         publishedStep = 0;
         relocate(x, level.getMaxBuildHeight() + bottomOffset + .01, z);

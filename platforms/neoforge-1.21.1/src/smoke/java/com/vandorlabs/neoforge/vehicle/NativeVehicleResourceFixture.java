@@ -14,15 +14,18 @@ import com.vandorlabs.neoforge.storage.NativeStorageInventory;
 import com.vandorlabs.neoforge.storage.NativeStorageRegistrations;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.ports.ResourcePortSettings;
+import com.vandorlabs.physics.FlightEnvelope;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.redstone.TransmissionSettings;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
+import net.minecraft.nbt.DoubleTag;
 import net.minecraft.nbt.ListTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.chat.Component;
@@ -55,7 +58,8 @@ final class NativeVehicleResourceFixture {
     private final ItemStack transmitter;
     private final NativeVehicleMekanismCubeFixture cubes;
     private final NativeVehicleRftoolsCellFixture rftools;
-    private boolean observerRequested, on, radar;
+    private boolean observerRequested, on, radar, geographicChecked;
+    private NativeGroundVehicle airborneObserver;
     private IFluidHandler cachedMekanismTank;
     private BlockCapabilityCache<IFluidHandler, Direction> parkedTank;
     private FluidStack optionalFuel;
@@ -154,6 +158,7 @@ final class NativeVehicleResourceFixture {
 
     boolean transferred(NativeGroundVehicle craft, ServerPlayer actor, int initialFuel) {
         if (!on) {
+            if (!geographicChecked && !geographicObserver(craft)) return false;
             if (cubes != null) cubes.before(craft);
             if (rftools != null) rftools.before(craft);
             var snapshot = craft.snapshot();
@@ -212,6 +217,62 @@ final class NativeVehicleResourceFixture {
             throw new AssertionError("The depleted onboard outputs do not go low");
         }
         if (!NativeRedstoneChannels.manualToggle(actor, transmitter)) throw new AssertionError("Could not stop the native transmitter");
+        return true;
+    }
+
+    private boolean geographicObserver(NativeGroundVehicle groundCraft) {
+        var local = observer.subtract(root);
+        if (airborneObserver == null) {
+            // Restore a separate fixture craft with the formed native dish and its own finite battery.
+            // Its physical chunk stays local while the saved route crosses unloaded terrain.
+            var saved = groundCraft.saveWithoutId(new CompoundTag());
+            saved.putUUID("UUID", UUID.randomUUID());
+            saved.getList("Pos", Tag.TAG_DOUBLE).set(1, DoubleTag.valueOf(
+                NativeVehicleCruise.SKY_OFFSET + FlightEnvelope.WORLD_CEILING + 100));
+            var vehicle = saved.getCompound("Vehicle");
+            vehicle.putByte("Mode", (byte)NativeGroundVehicle.FLIGHT);
+            vehicle.putByte("FlightPhase", (byte)2);
+            var route = new CompoundTag();
+            route.putDouble("X", -32769.5);
+            route.putDouble("Z", 32767.5);
+            vehicle.put("Cruise", route);
+            for (var value : vehicle.getCompound("Blocks").getList("Cells", Tag.TAG_COMPOUND)) {
+                var cell = (CompoundTag)value;
+                if (cell.getLong("Pos") != observerBattery.subtract(root).asLong()) continue;
+                var battery = cell.getCompound("Tile");
+                battery.putInt("Energy", DRAIN);
+                var setting = ResourcePortSettings.placed(Direction.DOWN.get3DDataValue()).withTransfer(20, false,
+                    ResourcePortSettings.OnTexture.TRANSFERRING);
+                NativePortData.write(battery, new NativePortData.Configuration(setting, 0, ChannelList.of()));
+            }
+            airborneObserver = Objects.requireNonNull(NativeVehicleBindings.VEHICLE.create(world));
+            airborneObserver.load(saved);
+            if (!airborneObserver.admitted() || !airborneObserver.highFlight() || !world.addFreshEntity(airborneObserver)) {
+                throw new AssertionError("The formed native Survey Dish could not be restored in High Flight");
+            }
+            return false;
+        }
+        var route = BlockPos.containing(NativeVehicleObservers.worldPoint(airborneObserver, local));
+        var departure = BlockPos.containing(airborneObserver.toWorld(local).add(0, -NativeVehicleCruise.SKY_OFFSET, 0));
+        if (!airborneObserver.highFlight() || world.getChunkSource().getChunkNow(route.getX() >> 4, route.getZ() >> 4) != null) {
+            throw new AssertionError("Survey Dish did not remain in High Flight over unloaded route terrain");
+        }
+        var matching = NativeNavigationSources.matching(world, route, survey);
+        int remaining = data(airborneObserver.snapshot().cells(), observerBattery).getInt("Energy");
+        if (remaining == DRAIN && matching.isEmpty()) return false;
+        if (remaining != DRAIN - 20 || matching.size() != 1 || matching.getFirst().stationary() != null
+            || matching.getFirst().radarRadius() <= 0 || matching.getFirst().x() != route.getX()
+            || matching.getFirst().z() != route.getZ() || !NativeNavigationSources.matching(world, departure, survey).isEmpty()
+            || NativeNavigationSources.noPower(world, departure, survey)) {
+            throw new AssertionError("Powered High Flight Survey Dish must match only at its geographic route: " + matching);
+        }
+        airborneObserver.discard();
+        if (!NativeNavigationSources.matching(world, route, survey).isEmpty()
+            || NativeNavigationSources.noPower(world, route, survey)
+            || world.getChunkSource().getChunkNow(route.getX() >> 4, route.getZ() >> 4) != null) {
+            throw new AssertionError("Removed High Flight Survey Dish still has coverage or loaded route terrain");
+        }
+        geographicChecked = true;
         return true;
     }
 
