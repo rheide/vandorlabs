@@ -1,6 +1,6 @@
 package com.vandorlabs.neoforge.builders;
 
-import com.vandorlabs.machines.CoreLayout;
+import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import java.util.*;
 import net.minecraft.core.BlockPos;
@@ -33,11 +33,8 @@ public final class NativeBuilderTransfer {
             requireIdleData(raw,design.drive());
             var owner=raw.getUUID("BuilderKey");
             if(!keys.add(owner))throw new IllegalArgumentException("Duplicate builder owner");
-            var layout=new CoreLayout(design.width(),design.height(),design.depth(),
-                root.state.getValue(NativeBuilderCoreBlock.FACING).get3DDataValue(),
-                raw.getInt("ConstructorCoreX"),raw.getInt("ConstructorCoreZ"));
-            if(!layout.canonicalCorner())throw new IllegalArgumentException("Unknown builder frame corner");
-            for(int x=0;x<design.width();x++)for(int y=0;y<design.height();y++)for(int z=0;z<design.depth();z++){
+            var layout=NativeBuilderFormation.savedLayout(design,root.state.getValue(NativeBuilderCoreBlock.FACING),raw);
+            for(int x=0;x<layout.width;x++)for(int y=0;y<layout.height;y++)for(int z=0;z<layout.depth;z++){
                 var pos=root.pos.offset(layout.x(x,z),y,layout.z(x,z));
                 if(pos.equals(root.pos))continue;
                 var member=parts.remove(pos);
@@ -62,7 +59,9 @@ public final class NativeBuilderTransfer {
         if(drive!=null){
             if(!fields.contains("Drive",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Missing standalone drive controls");
             var settings=NativeDriveSettings.read(fields.getCompound("Drive"),drive.exhaust);
-            if(!settings.redstone()||settings.inverted()||!drive.accepts(settings))
+            if(drive==NativeDriveDesign.LONGBURN){
+                fields.remove(MaxwellEngine.WIDTH_TAG);
+            }else if(!settings.redstone()||settings.inverted()||!drive.accepts(settings))
                 throw new IllegalArgumentException("Turn off the standalone drive or computer with its Redstone gate before copying");
             fields.remove("Drive");
             if(drive.manualActivity()){

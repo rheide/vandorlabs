@@ -65,5 +65,5 @@ public final class NativeBuilderRenderer implements BlockEntityRenderer<NativeBu
         }finally{poses.popPose();}
     }
     @Override public int getViewDistance(){return 64;}
-    @Override public AABB getRenderBoundingBox(NativeBuilderEntity tile){var p=tile.getBlockPos().subtract(tile.pivot());int width=tile.design().width(),depth=tile.design().depth();if(tile.facing().getAxis()==Direction.Axis.X){int swap=width;width=depth;depth=swap;}return new AABB(p.getX(),p.getY(),p.getZ(),p.getX()+width,p.getY()+tile.design().height(),p.getZ()+depth).inflate(.5);}
+    @Override public AABB getRenderBoundingBox(NativeBuilderEntity tile){var p=tile.getBlockPos().subtract(tile.pivot());var shape=tile.layout();return new AABB(p.getX(),p.getY(),p.getZ(),p.getX()+shape.extentX(),p.getY()+shape.height,p.getZ()+shape.extentZ()).inflate(.5);}
 }

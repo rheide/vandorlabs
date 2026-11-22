@@ -60,7 +60,7 @@ final class NativeLegacyBuilderData {
         canonical.putIntArray("Channels", channels(source));
         String machine = drive == null ? design.id() : "";
         var work = productionWork(source, machine);
-        ItemStack[] items = inventory(source, machine, work.getInt("Mode"), drive == null || drive.hasChip(), registries);
+        ItemStack[] items = inventory(source, machine, work.getInt("Mode"), drive == null || drive.savesChip(), registries);
         if (work.getBoolean("Active") && !items[1].isEmpty())
             throw new IllegalArgumentException("Active Forge builder output has a separate owner");
         canonical.put("Synthesis", work);

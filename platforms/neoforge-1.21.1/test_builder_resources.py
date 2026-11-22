@@ -34,10 +34,14 @@ def main():
     source_specs={row['design']:row for row in json.loads((SOURCE/'data/frame_machines.json').read_text())}
     for design,paths in DRIVES.items():
         source_spec=source_specs[design]
-        assert drive_specs[design]=={name:source_spec.get(name) for name in ('block','width','height','depth','chip_anchor','chip_size','surfaces')}|{'meshes':list(paths)}
+        assert drive_specs[design]=={name:source_spec.get(name) for name in ('block','width','height','depth','chip_anchor','chip_size')}|{'surfaces':source_spec.get('surfaces',[]),'meshes':list(paths)}
         for part in paths:
             path=Path(part+'.obj')
             assert (assets/'models/block/drives'/design/path).read_bytes()==(SOURCE/'models/block'/source_spec['model']/path).read_bytes()
+    assert drive_specs['longburn_drive']['surfaces']==[] and drive_specs['longburn_drive']['chip_anchor'] is None
+    assert set(drive_specs['longburn_drive']['meshes'])=={'maxwell_body','drive_lights','active/drive_lights'}
+    assert {'vandorlabs:blocks/longburn_drive/maxwell_'+part for part in ('casing','gauge','gauge_bar')} <= manifest['textures'].keys()
+    assert 'vandorlabs:blocks/resource_ports/fluid_in_off' in manifest['shared']
     expected_loot={design+'_core.json' for design in IDS}|{row['block']+'.json' for row in drive_specs.values()}
     assert {p.name for p in (OUT/'data/vandorlabs/loot_table/blocks').glob('*.json')}==expected_loot
     assert not list(OUT.rglob('recipe')) and not list(OUT.rglob('recipes'))

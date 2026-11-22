@@ -9,7 +9,7 @@ ROOT=Path(__file__).resolve().parents[2]
 OUT=Path(__file__).resolve().parent/'build/generated/builder-resources'
 IDS=('synthesis_tower','assembly_press','enclosed_gantry')
 DRIVES={
-    'longburn_drive':('drive_body','drive_lights','active/drive_body','active/drive_lights'),
+    'longburn_drive':('maxwell_body','drive_lights','active/drive_lights'),
     'meridian_core':('static','active/drive_body','active/drive_lights'),
     'vector_fold_array':('static','active/static'),
     'paladyne_navigation_computer':tuple(mode+'/complete' for mode in ('off','idle','computing')),
@@ -112,13 +112,14 @@ def main():
             'rolls':1,'entries':[{'type':'minecraft:item','name':f'vandorlabs:{block}'}],
             'conditions':[{'condition':'minecraft:survives_explosion'}]}]})
         drives[design]={'block':block,'width':spec['width'],'height':spec['height'],'depth':spec['depth'],
-                        'chip_anchor':spec.get('chip_anchor'),'chip_size':spec.get('chip_size'),'surfaces':spec['surfaces'],
+                        'chip_anchor':spec.get('chip_anchor'),'chip_size':spec.get('chip_size'),'surfaces':spec.get('surfaces',[]),
                         'meshes':list(paths)}
     write(assets/'data/native_drive_surfaces.json',drives)
     write(assets/'models/block/builders/empty.json',{'parent':'minecraft:block/block','textures':{'particle':texture('vandorlabs:blocks/resource_ports/port_hull')}})
     write(assets/'blockstates/constructor_part.json',{'variants':{'':{'model':'vandorlabs:block/builders/empty'}}})
     # Dynamic fabrication uses the same exact RF/Item Port sprites as the static finished preview.
-    for name in ('power_in_on','power_in_off','matter_in_off','matter_out_off'):texture('vandorlabs:blocks/resource_ports/'+name)
+    for name in ('power_in_on','power_in_off','matter_in_off','matter_out_off','fluid_in_off'):texture('vandorlabs:blocks/resource_ports/'+name)
+    for name in ('maxwell_gauge','maxwell_gauge_bar'):texture('vandorlabs:blocks/longburn_drive/'+name)
     write(assets/'data/native_builders.json',{'designs':manifest,'textures':textures,'shared':shared})
     # Fail unexpected overlaps across the complete generated tree and canonical resources.
     # Known shared textures above are omitted only after exact-byte validation.
