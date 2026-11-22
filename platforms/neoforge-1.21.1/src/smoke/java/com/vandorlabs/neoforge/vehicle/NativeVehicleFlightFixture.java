@@ -41,7 +41,7 @@ import net.neoforged.neoforge.registries.RegisterEvent;
 
 @EventBusSubscriber(modid = "vandorlabs")
 public final class NativeVehicleFlightFixture {
-    public static final BlockPos ROOT = new BlockPos(8, 70, 8);
+    public static final BlockPos ROOT = new BlockPos(272, 70, 264);
     public static final BlockPos PILOT = ROOT.east();
     public static final BlockPos PANEL = ROOT.east().south(3).above();
     private static final BlockPos CORE = ROOT.east(3);
@@ -55,9 +55,10 @@ public final class NativeVehicleFlightFixture {
     private static double descendingFrom;
     private static boolean landed;
 
-    private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN }
+    private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN, COLD }
 
     public static boolean enabled() { return Boolean.getBoolean("vandorlabs.vehicleFlightChecks"); }
+    public static String restartPhase() { return System.getProperty("vandorlabs.vehicleFlightRestart", ""); }
 
     @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
     public static final class Fuel {
@@ -73,6 +74,10 @@ public final class NativeVehicleFlightFixture {
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if (!enabled() || !(event.getEntity() instanceof ServerPlayer player)) return;
         actor = player;
+        if (restartPhase().equals("read")) {
+            stage = Stage.COLD;
+            return;
+        }
         var world = player.serverLevel();
         var top = Blocks.STONE_SLAB.defaultBlockState().setValue(SlabBlock.TYPE, SlabType.TOP);
         for (int x = -5; x <= 12; x++) for (int z = -14; z <= 48; z++) {
@@ -180,6 +185,14 @@ public final class NativeVehicleFlightFixture {
             }
             case BURN -> {
                 require(unexpectedLoads == 0 && craft.chunkPosition().equals(departure), "geographic route retains departure tracking chunk");
+                if (restartPhase().equals("write")) {
+                    if (Math.hypot(craft.routeX() - departed.x, craft.routeZ() - departed.z) <= 200) return;
+                    require(craft.flightReadout().fuel() == 1 && actor.getVehicle() == craft, "checkpoint powered and still mounted");
+                    event.getServer().saveEverything(true, true, true);
+                    landed = true;
+                    System.out.println("[vandorlabs][vehicle-flight-write-player] server PASS saved powered geographic craft and mounted pilot");
+                    return;
+                }
                 if (craft.flightReadout().fuel() != 0) return;
                 require(Math.hypot(craft.routeX() - departed.x, craft.routeZ() - departed.z) > 800,
                         "altitude-dependent cruise speed advances a distant geographic route");
@@ -203,6 +216,14 @@ public final class NativeVehicleFlightFixture {
                 craft.setPos(craft.getX(), ground + 4, craft.getZ());
                 craft.setOldPosAndRot();
                 stage = Stage.TOUCHDOWN;
+            }
+            case COLD -> {
+                if (!(actor.getVehicle() instanceof NativeGroundVehicle restored) || !restored.admitted()) return;
+                require(restored.highFlight() && restored.flightAltitude() > 1000 && restored.flightReadout().fuel() == 1
+                        && Math.hypot(restored.routeX() - restored.getX(), restored.routeZ() - restored.getZ()) > 200,
+                        "cold JVM restores physical pilot attachment, virtual route and retained fuel");
+                landed = true;
+                System.out.println("[vandorlabs][vehicle-flight-read-player] server PASS cold carried ownership and seated high-flight geographic pose");
             }
             case TOUCHDOWN -> {
                 if (craft.mode() != NativeGroundVehicle.TAXI || !craft.onGround()) return;

@@ -33,6 +33,16 @@ public final class NativeVehicleFlightPlayerChecks {
         NativeVehicleFlightFixture.require(++ticks < 1500, "client stage " + stage + " pos=" + player.position()
                 + " mode=" + mc.gameMode.getPlayerMode() + " hand=" + player.getMainHandItem()
                 + " slot=" + player.getInventory().selected + " craft=" + craft);
+        if (NativeVehicleFlightFixture.restartPhase().equals("read")) {
+            if (!(player.getVehicle() instanceof NativeGroundVehicle restored) || !restored.highFlight()
+                    || restored.flightAltitude() <= 1000) return;
+            NativeVehicleFlightFixture.require(restored.admitted() && restored.flightReadout().fuel() == 1
+                    && Math.hypot(restored.routeX() - restored.getX(), restored.routeZ() - restored.getZ()) > 180,
+                    "cold client receives geographic route and attached Pilot Seat");
+            System.out.println("[vandorlabs][vehicle-flight-read-player] client PASS watched the original mounted aircraft resume");
+            mc.stop();
+            return;
+        }
         switch (stage) {
             case 0 -> {
                 if (mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
@@ -77,6 +87,13 @@ public final class NativeVehicleFlightPlayerChecks {
             }
             case 5 -> {
                 if (craft.highFlight()) {
+                    if (NativeVehicleFlightFixture.restartPhase().equals("write") && craft.flightAltitude() > 1000
+                            && Math.hypot(craft.routeX() - craft.getX(), craft.routeZ() - craft.getZ()) > 260) {
+                        System.out.println("[vandorlabs][vehicle-flight-write-player] client PASS powered aircraft still mounted at save");
+                        mc.stop();
+                        stage++;
+                        return;
+                    }
                     if (!captured && craft.flightAltitude() > 1000) {
                         player.setXRot(70);
                         if (++cameraTicks < 8 || !NativeCruiseSky.ready(craft)) return;

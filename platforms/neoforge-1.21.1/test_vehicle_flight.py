@@ -9,9 +9,17 @@ from native_test_artifacts import retain_artifacts
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--xvfb', action='store_true')
+    parser.add_argument('--restart', action='store_true')
     args = parser.parse_args()
-    output = run_connected_player('vehicle-flight', args.xvfb, ['vandorlabs.vehicleFlightChecks=true'])
-    print('Native Maxwell player flight passed: ' + str(output), flush=True)
+    properties = ['vandorlabs.vehicleFlightChecks=true']
+    if args.restart:
+        saved = run_connected_player('vehicle-flight-write', args.xvfb, properties + ['vandorlabs.vehicleFlightRestart=write'])
+        output = run_connected_player('vehicle-flight-read', args.xvfb, properties + ['vandorlabs.vehicleFlightRestart=read'],
+                                      saved_world=saved / 'server' / 'world')
+        print('Native Maxwell high-flight and mounted cold restart passed: ' + str(output), flush=True)
+    else:
+        output = run_connected_player('vehicle-flight', args.xvfb, properties)
+        print('Native Maxwell player flight passed: ' + str(output), flush=True)
 
 
 if __name__ == '__main__':
