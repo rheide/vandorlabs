@@ -1,6 +1,7 @@
 package com.vandorlabs.neoforge.coupler;
 
 import com.vandorlabs.neoforge.NativeConfigurationAccess;
+import com.vandorlabs.neoforge.transfer.NativeTransferHolds;
 import com.vandorlabs.redstone.ChannelList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.Registries;
@@ -55,7 +56,7 @@ public final class NativeCouplerBindings {
         });
         event.register(Registries.BLOCK_ENTITY_TYPE, helper -> {
             ENTITY = BlockEntityType.Builder.of(NativeCouplerEntity::new, SQUARE, SLAB).build(null);
-            helper.register(MENU_ID, ENTITY);
+            helper.register(SQUARE_ID, ENTITY);
         });
         event.register(Registries.MENU, helper -> {
             MENU = IMenuTypeExtension.create((window, inventory, buffer) ->
@@ -73,7 +74,8 @@ public final class NativeCouplerBindings {
 
     public static boolean open(Player actor, Level level, BlockPos pos) {
         if (!level.hasChunkAt(pos) || !(level.getBlockEntity(pos) instanceof NativeCouplerEntity owner)
-                || owner.inert() || !NativeConfigurationAccess.canEditDialog(actor, owner)) return false;
+                || owner.inert() || NativeTransferHolds.reserved(level, pos)
+                || !NativeConfigurationAccess.canEditDialog(actor, owner)) return false;
         if (actor instanceof ServerPlayer server) {
             server.connection.send(owner.getUpdatePacket());
             server.openMenu(new SimpleMenuProvider((window, inventory, player) -> new NativeCouplerMenu(MENU, window, owner),
