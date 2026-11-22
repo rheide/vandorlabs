@@ -166,10 +166,12 @@ public final class NativeVehicleFlightPlayerChecks {
                             int bandCount = 0;
                             for (int count : terrainPixels) if (count >= 64) bandCount++;
                             boolean terrainVisible = NativeVehicleFlightFixture.normalTerrain() ? bandCount >= 2 : terrainPixels[0] >= 64;
-                            if (!terrainVisible && cameraTicks < 64) return;
+                            boolean exhaustVisible = hasCarriedAfterburner(mc, craft);
+                            if ((!terrainVisible || !exhaustVisible) && cameraTicks < 64) return;
                             image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve("maxwell-flight-cruise.png"));
                             NativeVehicleFlightFixture.require(terrainVisible,
                                     "camera can see seeded terrain, pixels=" + java.util.Arrays.toString(terrainPixels));
+                            NativeVehicleFlightFixture.require(exhaustVisible, "afterburner particles originate from the carried Maxwell at altitude");
                         } catch (java.io.IOException error) {
                             throw new IllegalStateException("Native high-flight capture", error);
                         }
@@ -182,7 +184,7 @@ public final class NativeVehicleFlightPlayerChecks {
                 if (!becameHigh || craft.mode() != NativeGroundVehicle.TAXI) return;
                 NativeVehicleFlightFixture.require(player.getVehicle() == craft && captured
                         && craft.flightReadout().fuel() == 0, "client observed terrain projection and mounted safe landing");
-                System.out.println("[vandorlabs][vehicle-flight-player] client PASS actual Flight controls and seeded horizon with mounted landing");
+                System.out.println("[vandorlabs][vehicle-flight-player] client PASS actual Flight controls, carried afterburner and seeded horizon with mounted landing");
                 mc.stop();
                 stage++;
             }
@@ -191,6 +193,16 @@ public final class NativeVehicleFlightPlayerChecks {
     }
 
     static boolean assemblyConfirmed() { return assembled; }
+
+    private static boolean hasCarriedAfterburner(Minecraft client, NativeGroundVehicle craft) {
+        boolean[] found = {false};
+        var origin = craft.position();
+        client.particleEngine.iterateParticles(particle -> {
+            if (particle.getClass().getSimpleName().equals("NativePropulsionParticle")
+                    && particle.getRenderBoundingBox(1).distanceToSqr(origin) <= 16 * 16) found[0] = true;
+        });
+        return found[0];
+    }
 
     private static boolean matchesColor(int rgba, int rgb) {
         return Math.abs((rgba & 255) - (rgb >>> 16 & 255)) <= 9

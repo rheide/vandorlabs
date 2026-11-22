@@ -128,6 +128,9 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     public int mode() { return entityData.get(MODE); }
     public float hullPitch() { return entityData.get(PITCH); }
     public float renderPitch(float partial) { return Mth.lerp(partial, previousClientPitch, clientPitch); }
+    public Vec3 rotateLocalDirection(Vec3 direction, float yaw, float pitch) {
+        return NativeVehicleHull.rotate(direction, yaw, pitch, facing());
+    }
     public float driveSpeed() { return entityData.get(SPEED); }
     public float groundClearance() { return highFlight() || flightAltitude() >= FlightEnvelope.WORLD_CEILING ? -1 : entityData.get(CLEARANCE); }
     public boolean highFlight() { return cruise.active(); }

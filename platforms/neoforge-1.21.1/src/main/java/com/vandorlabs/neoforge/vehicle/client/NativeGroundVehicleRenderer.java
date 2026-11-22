@@ -2,11 +2,14 @@ package com.vandorlabs.neoforge.vehicle.client;
 
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
+import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.neoforge.NativeVehicleStatusRenderer;
+import com.vandorlabs.neoforge.builders.NativeBuilderBindings;
 import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
 import com.vandorlabs.neoforge.gear.NativeGearBlock;
 import com.vandorlabs.neoforge.gear.NativeGearEntity;
 import com.vandorlabs.neoforge.gear.client.NativeGearRenderer;
+import com.vandorlabs.neoforge.propulsion.NativePropulsionParticles;
 import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette.Palette;
@@ -19,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.WeakHashMap;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.multiplayer.ClientLevel;
 import net.minecraft.client.renderer.LevelRenderer;
 import net.minecraft.client.renderer.MultiBufferSource;
 import net.minecraft.client.renderer.entity.EntityRenderer;
@@ -31,6 +35,7 @@ import net.minecraft.server.packs.resources.ResourceManagerReloadListener;
 import net.minecraft.util.Mth;
 import net.minecraft.world.inventory.InventoryMenu;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -47,7 +52,16 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
 
     private record Key(BlockState state, BlockPos tile, CompoundTag appearance) {}
     private record Cell(BlockPos pos, Palette palette, NativeGearEntity arm) {}
-    private record Mesh(List<Cell> cells, int bytes) {}
+    private static final class Mesh {
+        final List<Cell> cells;
+        final int bytes;
+        int lastExhaustTick = Integer.MIN_VALUE;
+
+        Mesh(List<Cell> cells, int bytes) {
+            this.cells = cells;
+            this.bytes = bytes;
+        }
+    }
 
     private final NativeVehicleStatusRenderer status;
 
@@ -99,7 +113,7 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
             cells.add(new Cell(cell.pos(), palette, null));
         }
         var built = new Mesh(List.copyOf(cells), bytes);
-        int used = MESHES.values().stream().mapToInt(Mesh::bytes).sum();
+        int used = MESHES.values().stream().mapToInt(value -> value.bytes).sum();
         while (used + bytes > MAX_CACHE && !MESHES.isEmpty()) {
             var iterator = MESHES.entrySet().iterator();
             used -= iterator.next().getValue().bytes;
@@ -120,6 +134,8 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
         var mesh = mesh(craft, visual);
         float yaw = Mth.rotLerp(partial, craft.yRotO, craft.getYRot());
         float pitch = craft.renderPitch(partial);
+        boolean emitExhaust = mesh.lastExhaustTick != craft.tickCount;
+        mesh.lastExhaustTick = craft.tickCount;
         poses.pushPose();
         try {
             poses.mulPose(Axis.YP.rotationDegrees(-yaw));
@@ -153,6 +169,9 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                     if (tile instanceof NativeBuilderEntity builder && builder.maxwell()) {
                         int gauge = craft.maxwellGauge(cell.pos);
                         if (gauge >= 0) builder.updateCarriedMaxwellVisual(gauge >>> 4, gauge & 15);
+                        if (emitExhaust && builder.driveLevel() == 15 && world instanceof ClientLevel level) {
+                            exhaust(level, craft, builder, cell.pos, partial, yaw, pitch);
+                        }
                         // The entity already passed culling. Render the detached engine at
                         // the hull pose with current light, independent of its cached block position.
                         client.getBlockEntityRenderDispatcher().renderItem(builder, poses, buffers, cellLight,
@@ -170,5 +189,21 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
         } finally {
             poses.popPose();
         }
+    }
+
+    private static void exhaust(ClientLevel world, NativeGroundVehicle craft, NativeBuilderEntity builder,
+                                BlockPos local, float partial, float yaw, float pitch) {
+        var camera = Minecraft.getInstance().getCameraEntity();
+        if (camera == null) return;
+        var layout = builder.layout();
+        var original = builder.getBlockPos();
+        var outlet = NativeBuilderBindings.world(builder, layout.width * .5, layout.height * .55, layout.depth - .05)
+                .add(local.getX() - original.getX() - .5, local.getY() - original.getY(),
+                        local.getZ() - original.getZ() - .5);
+        var nozzle = craft.getPosition(partial).add(craft.rotateLocalDirection(outlet, yaw, pitch));
+        if (camera.distanceToSqr(nozzle) > 64 * 64) return;
+        var up = craft.rotateLocalDirection(new Vec3(0, 1, 0), yaw, pitch);
+        var rear = craft.rotateLocalDirection(Vec3.atLowerCornerOf(builder.facing().getOpposite().getNormal()), yaw, pitch);
+        NativePropulsionParticles.carriedMaxwell(world, nozzle, up, rear, .95F * layout.width / MaxwellEngine.BASE_WIDTH);
     }
 }
