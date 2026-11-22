@@ -156,20 +156,19 @@ Options are Java system properties read at startup. Restart after changes.
 
 | Property | Default | Meaning |
 | --- | --- | --- |
-| `vandorlabs.staticGlass` | `true` | Enable native stationary panes and retained panes, emissive frames and portholes. |
-| `vandorlabs.staticGlassRenderer` | `terrain` | Prefer native chunks with retained fallback; `groups` selects retained groups; `legacy` selects the existing per-tile pane renderer for comparison. |
 | `vandorlabs.staticGlassTexture` | `authored` | Native panes preserve glimmer; `smooth` explicitly selects a constant diffuse tint. |
 | `vandorlabs.staticGlassSingleSurface` | `true` | Use one compensated sheet; `false` keeps two sheet positions. |
-| `vandorlabs.glassPaneShadows` | `native` | Preserve pane shadows. `frames` uses retained pane groups in the main view and omits their pane shadow draws, while frame shadows remain. |
+| `vandorlabs.glassPaneShadows` | `native` | Preserve pane shadows. `frames` omits shadow draws of panes that are not part of chunk geometry; chunk-baked panes and frames always cast shadows. |
 | `vandorlabs.staticGlassDiagnostics` | `false` | Log native ownership, pruning, pending work and fallback counts. |
 
-An earlier `staticGlassTexture=authored` option can stay. Explicit
-`glassPaneShadows=frames` now keeps an optimized retained main-view path. It is a
-visual tradeoff: panes no longer contribute tinted shadows. The default retains
-pane shadows. `staticGlassRenderer=groups` selects an actual retained renderer.
+Stationary panes are always published into chunk geometry; retained groups are
+only the automatic fallback for panes the chunk path cannot represent. The former
+`staticGlass` and `staticGlassRenderer` options were removed. An earlier
+`staticGlassTexture=authored` option can stay.
 
-The benchmark's `benchmarkLegacyGlazing=true` and no-glass settings keep their
-comparison behavior. Smooth and single-sheet settings apply to native and
+The benchmark's no-glass setting keeps its comparison behavior.
+`benchmarkLegacyGlazing=true` affects only the fallback renderers and no longer
+disables chunk-baked panes. Smooth and single-sheet settings apply to native and
 retained native-palette panes; they do not change custom insert artwork or the
 per-tile compatibility renderer.
 

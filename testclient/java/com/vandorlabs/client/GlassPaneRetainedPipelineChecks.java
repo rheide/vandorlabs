@@ -30,7 +30,7 @@ public final class GlassPaneRetainedPipelineChecks {
     }
     public static void main(String[] args)throws Exception{
         // Controlled fallback mode applies only to this isolated JVM.
-        System.setProperty("vandorlabs.staticGlassRenderer","groups");
+        GlassPanePolicy.testRetainedGroupsOnly=true;
         GlassPanePipelineChecks.initialize();VertexFormat original=new VertexFormat(DefaultVertexFormats.BLOCK);
         try(GlassPanePipelineChecks.Fixture scene=new GlassPanePipelineChecks.Fixture()){
             scene.wall(16,16,true,true);scene.queue();flush(scene);

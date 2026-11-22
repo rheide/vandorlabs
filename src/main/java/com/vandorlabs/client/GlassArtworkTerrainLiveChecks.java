@@ -20,8 +20,6 @@ final class GlassArtworkTerrainLiveChecks {
     private static final int WIDTH=3,HEIGHT=2;
     private static int stage,ticks,wait,artwork=-1,screen=-1;
     private static volatile boolean placed;
-    /** Comparison runs (for example with native terrain disabled) capture the scene without ownership asserts. */
-    private static final boolean CAPTURE_ONLY=Boolean.getBoolean("vandorlabs.glassArtworkTerrainCaptureOnly");
     private static void need(boolean ok,String why){if(!ok)throw new IllegalStateException("glass-artwork-terrain stage="+stage+" tick="+ticks+": "+why);}
     private static BlockProgrammableGlass block(){for(net.minecraft.block.Block value:ModBlocks.BLOCKS)if(value.getClass()==BlockProgrammableGlass.class)return (BlockProgrammableGlass)value;throw new IllegalStateException("Missing Programmable Glass");}
     private static TileEntityProgrammableGlass tile(Minecraft mc,BlockPos pos){TileEntity value=mc.world.getTileEntity(pos);return value instanceof TileEntityProgrammableGlass?(TileEntityProgrammableGlass)value:null;}
@@ -62,7 +60,6 @@ final class GlassArtworkTerrainLiveChecks {
             }
             stage=2;wait=ticks;return false;
         }
-        if(stage==2&&CAPTURE_ONLY){if(ticks-wait<200)return false;wait=ticks;stage=3;return false;}
         if(stage==2){
             StringBuilder pending=new StringBuilder();
             for(int x=0;x<WIDTH;x++)for(int y=0;y<HEIGHT;y++){
@@ -80,7 +77,7 @@ final class GlassArtworkTerrainLiveChecks {
             java.io.File shot=new java.io.File(mc.mcDataDir,"screenshots");
             net.minecraft.util.ScreenShotHelper.saveScreenshot(mc.mcDataDir,"glass-artwork-terrain.png",mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
             System.out.println("[vandorlabs][reprolab] glass-artwork-terrain "+GlassPaneTerrain.diagnostics());
-            System.out.println("[vandorlabs][reprolab] utility26-focused PASS glass-artwork-terrain"+(CAPTURE_ONLY?" capture-only":"")+" static-artwork="+artwork+" cells="+(WIDTH*HEIGHT-1)+" animated-screen="+screen+" kept-renderer screenshot="+shot);
+            System.out.println("[vandorlabs][reprolab] utility26-focused PASS glass-artwork-terrain static-artwork="+artwork+" cells="+(WIDTH*HEIGHT-1)+" animated-screen="+screen+" kept-renderer screenshot="+shot);
             return true;
         }
         return false;

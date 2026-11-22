@@ -3,16 +3,19 @@ package com.vandorlabs.client;
 /** Startup choices for native stationary panes; no saved world settings change. */
 public final class GlassPanePolicy {
     private static final boolean LEGACY=Boolean.getBoolean("vandorlabs.benchmarkLegacyGlazing");
-    private static final boolean STATIC=!LEGACY&&enabled(System.getProperty("vandorlabs.staticGlass"),true);
     private static final boolean SINGLE=!LEGACY&&enabled(System.getProperty("vandorlabs.staticGlassSingleSurface",
             System.getProperty("vandorlabs.singleSurfaceGlass")),true);
     private static final boolean SMOOTH=!LEGACY&&"smooth".equalsIgnoreCase(System.getProperty("vandorlabs.staticGlassTexture"));
+    /** Omits shadow draws of panes that are not baked into chunks; baked panes always cast shadows. */
     private static final boolean FRAMES=!LEGACY&&"frames".equalsIgnoreCase(System.getProperty("vandorlabs.glassPaneShadows"));
-    private static final String RENDERER=System.getProperty("vandorlabs.staticGlassRenderer","terrain");
-    public static boolean staticEnabled(){return STATIC;}
-    public static boolean terrainEnabled(){return STATIC&&!FRAMES&&"terrain".equalsIgnoreCase(RENDERER);}
+    /** Isolated pipeline fixtures only: exercise the retained fallback without native chunks. Never a user setting. */
+    static volatile boolean testRetainedGroupsOnly;
+    /** Stationary pane preparation is always active. */
+    public static boolean staticEnabled(){return true;}
+    /** Native chunk baking is always on; no startup property disables it. */
+    public static boolean terrainEnabled(){return !testRetainedGroupsOnly;}
     /** A failed native handoff keeps retained geometry, rather than restoring per-cell draws. */
-    public static boolean retainedEnabled(){return STATIC&&("terrain".equalsIgnoreCase(RENDERER)||"groups".equalsIgnoreCase(RENDERER));}
+    public static boolean retainedEnabled(){return true;}
     public static boolean singleSurface(){return SINGLE;}
     public static boolean smoothTextures(){return SMOOTH;}
     public static boolean framesOnlyShadows(){return FRAMES;}
@@ -24,7 +27,6 @@ public final class GlassPanePolicy {
         return alpha==0||alpha>=27;
     }
     public static String diagnostics(){
-        if(!retainedEnabled())return "renderer=legacy texture=authored surface=double shadows="+(FRAMES?"frames":"full");
         return "renderer="+(terrainEnabled()?"terrain":"groups")+" fallback=retained-groups texture="+(SMOOTH?"smooth":"authored")
                 +" surface="+(SINGLE?"single":"double")+" shadows="+(FRAMES?"frames":"full");
     }

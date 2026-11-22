@@ -143,7 +143,7 @@ public final class GlassFramePerformanceChecks {
         }
     }
     public static void main(String[] args)throws Exception{
-        System.setProperty("vandorlabs.staticGlassRenderer","groups");GlassPanePipelineChecks.initialize();VandorLabs.proxy=new ClientProxy();GlassAuthoredAtlas atlas=new GlassAuthoredAtlas();GlassPanePipelineChecks.mc.displayHeight=HEIGHT;shaders();installCapture();
+        GlassPanePolicy.testRetainedGroupsOnly=true;GlassPanePipelineChecks.initialize();VandorLabs.proxy=new ClientProxy();GlassAuthoredAtlas atlas=new GlassAuthoredAtlas();GlassPanePipelineChecks.mc.displayHeight=HEIGHT;shaders();installCapture();
         try(GlassPanePipelineChecks.Fixture scene=new GlassPanePipelineChecks.Fixture()){
             scene.wall(16,16,true,true);List<TileEntityProgrammableGlass> first=new ArrayList<>(scene.cells);
             for(TileEntityProgrammableGlass tile:first)tile.frameAppearance.front=atlas.emissiveChoices.get(0);
