@@ -25,6 +25,11 @@ Mount a Card Slot on the Controller, configure its accepted company, and insert 
 
 Keep the vehicle and its boundary in loaded chunks. The native scanner accepts one Controller and one complete Pilot Seat. Its limit is 2,048 cells and 32 blocks from the Controller on each axis. A storage block or machine must have a supported transfer adapter before it can move with the hull. Scanning reports an unsupported block before assembly.
 
+Use a regular Pilot Seat to fly this version. The Advanced Pilot Chair and Cockpit
+operate as stationary seating. Vehicle Status and Redstone control surfaces work
+on board. Fit a formed Maxwell Drive, Survey Dish or Sentinel Array if the
+vehicle needs an engine or observer.
+
 For an engine, follow the [Maxwell Drive construction guide](multiblocks/maxwell-drive/README.md). Feed fuel through any of the three marked inlet faces.
 
 ## Fuel and Flight
@@ -50,7 +55,10 @@ the received level as bars. A Battery’s receive channel still controls its res
 Right-click the carried Maxwell Drive or use the Configurizer on one of its casing
 blocks. The Engine tab shows remaining fuel and offers **Purge Tank**. On
 **Redstone**, choose digital or analog throttle and set the receive channels.
-Those settings follow the engine when you park.
+Those settings follow the engine when you park. With several drives, each tank
+keeps its own fuel. Give the engines different receive channels to control them
+independently. The Flight tab totals their current thrust and fuel. Reducing
+thrust can lower the ceiling even with fuel left on board.
 
 Place native Power, Fluid and Matter Ports with their faces pointing between supported
 owners. A carried Survey Dish needs an RF source. The Maxwell inlet accepts compatible
