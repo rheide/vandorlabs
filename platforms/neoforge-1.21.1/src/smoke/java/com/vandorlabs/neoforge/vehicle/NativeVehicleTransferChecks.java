@@ -1,0 +1,302 @@
+package com.vandorlabs.neoforge.vehicle;
+
+import com.mojang.authlib.GameProfile;
+import com.vandorlabs.neoforge.mixin.NativeRampChunkStorageAccess;
+import com.vandorlabs.neoforge.seating.NativeSeatBindings;
+import com.vandorlabs.neoforge.seating.NativeSeatBlock;
+import com.vandorlabs.neoforge.seating.NativeSeatKind;
+import com.vandorlabs.neoforge.transfer.NativeCellTransactions;
+import com.vandorlabs.neoforge.transfer.NativeTransferHolds;
+import com.vandorlabs.neoforge.transfer.NativeBuilderJournalFault;
+import java.util.UUID;
+import net.minecraft.core.BlockPos;
+import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
+import net.minecraft.nbt.CompoundTag;
+import net.minecraft.network.chat.Component;
+import net.minecraft.server.level.ServerLevel;
+import net.minecraft.world.entity.item.ItemEntity;
+import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.CustomData;
+import net.minecraft.world.level.ChunkPos;
+import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
+import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.Rotation;
+import net.minecraft.world.level.block.entity.BarrelBlockEntity;
+import net.minecraft.world.level.block.state.properties.BlockStateProperties;
+import net.minecraft.world.level.block.state.properties.SlabType;
+import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.phys.AABB;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.event.level.BlockEvent;
+import net.neoforged.neoforge.event.server.ServerStartedEvent;
+import net.neoforged.neoforge.event.tick.ServerTickEvent;
+
+/** Durable entity and terrain receipts through the production family, including abrupt restart. */
+@EventBusSubscriber(modid = "vandorlabs")
+public final class NativeVehicleTransferChecks {
+    private static final BlockPos ROOT = new BlockPos(15, 91, 8);
+    private static final BlockPos PILOT = ROOT.east();
+    private static final BlockPos BARREL = ROOT.south();
+    private static final BlockPos PARK = ROOT.east(8);
+    private static final UUID OWNER = new UUID(0, 0x7381);
+    private static final AABB VOLUME = new AABB(ROOT).minmax(new AABB(PARK)).inflate(8);
+    private static ServerLevel world;
+    private static FakePlayer player;
+    private static NativeGroundVehicle craft;
+    private static int ticks, stage;
+    private static boolean blockedBreak, blockedPlace, faulted;
+
+    private static String phase() { return System.getProperty("vandorlabs.vehicleTransferPhase", ""); }
+    private static void require(boolean ok, String message) {
+        if (!ok) throw new AssertionError("Native Vehicle " + phase() + " stage " + stage + " tick " + ticks + ": " + message);
+    }
+
+    @SubscribeEvent public static void started(ServerStartedEvent event) {
+        if (phase().isEmpty()) return;
+        try {
+            world = event.getServer().overworld();
+            for (int x = 0; x <= 1; x++) {
+                world.setChunkForced(x, 0, true);
+                world.getChunk(x, 0);
+            }
+            if (phase().startsWith("read-")) return;
+            for (var cursor : BlockPos.betweenClosed(ROOT.offset(-3, -2, -4), PARK.offset(4, 5, 4))) {
+                world.setBlock(cursor.immutable(), cursor.getY() == ROOT.getY() - 2
+                    ? Blocks.SMOOTH_STONE.defaultBlockState() : Blocks.AIR.defaultBlockState(), Block.UPDATE_KNOWN_SHAPE);
+            }
+            for (int x = 0; x < 3; x++) for (int z = 0; z < 2; z++) {
+                world.setBlock(ROOT.offset(x, -1, z), Blocks.STONE_SLAB.defaultBlockState()
+                    .setValue(BlockStateProperties.SLAB_TYPE, SlabType.TOP), Block.UPDATE_ALL);
+            }
+            world.setBlock(ROOT, NativeVehicleBindings.CONTROLLER.defaultBlockState(), Block.UPDATE_ALL);
+            ((NativeVehicleControllerEntity)world.getBlockEntity(ROOT)).placedBy(OWNER);
+            var seat = NativeSeatBindings.BLOCKS.get(NativeSeatKind.PILOT);
+            var lower = seat.defaultBlockState().setValue(NativeSeatBlock.FACING, Direction.EAST);
+            world.setBlock(PILOT, lower, Block.UPDATE_ALL);
+            world.setBlock(PILOT.above(), lower.setValue(NativeSeatBlock.UPPER, true), Block.UPDATE_ALL);
+            ((com.vandorlabs.neoforge.seating.NativeChairEntity)world.getBlockEntity(PILOT)).placed();
+            world.setBlock(BARREL, Blocks.BARREL.defaultBlockState().setValue(BlockStateProperties.FACING, Direction.SOUTH), Block.UPDATE_ALL);
+            var inventory = (BarrelBlockEntity) world.getBlockEntity(BARREL);
+            inventory.setItem(0, gold());
+            inventory.setItem(1, new ItemStack(Items.DIAMOND, 2));
+            inventory.setChanged();
+            player = new FakePlayer(world, new GameProfile(OWNER, "VehicleTransferFixture"));
+            player.setGameMode(GameType.SURVIVAL);
+            movePlayer(ROOT);
+            event.getServer().saveEverything(true, true, true);
+            NativeBuilderJournalFault.set(NativeVehicleTransferChecks::fault);
+        } catch (Throwable failure) { fail(failure); }
+    }
+
+    @SubscribeEvent public static void tick(ServerTickEvent.Post event) {
+        if (world == null) return;
+        try {
+            require(++ticks < 450, "bounded asynchronous transfer; source=" + world.getBlockState(ROOT)
+                + " parked=" + world.getBlockState(PARK) + " busySource=" + NativeCellTransactions.busy(world, ROOT, OWNER)
+                + " busyTarget=" + NativeCellTransactions.busy(world, PARK, OWNER)
+                + " actors=" + world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).size());
+            if (phase().equals("read-assemble")) {
+                require(world.getBlockState(ROOT).is(NativeVehicleBindings.CONTROLLER), "cold assembly rollback recovers the controller");
+                require(actors() == 0 && !NativeTransferHolds.active(world), "nothing carried after cold assembly rollback");
+                requireInventory(BARREL);
+                pass("partialTerrainFlush/asyncRollback/exactBarrelComponents/onePhysicalOwner");
+                return;
+            }
+            if (phase().equals("read-park")) {
+                if (actors() == 0 && ticks < 60) return;
+                require(actors() == 1 && world.getBlockState(PARK).isAir() && !NativeTransferHolds.active(world),
+                    "cold parking rollback restored one vehicle after terrain and entity writes");
+                var live = world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst();
+                requireCarried(live);
+                require(!NativeVehicleTransfer.escrowed(live), "cold recovery retired the journal and released the entity");
+                pass("terrainAndEntityFlushed/rollbackRecreatesActor/exactBarrelComponents/oneCarriedOwner");
+                return;
+            }
+            if (faulted || ticks < 12) return;
+            if (stage == 0) {
+                require(!new ChunkPos(ROOT).equals(new ChunkPos(PILOT)), "fixture hull crosses chunk boundaries");
+                if (phase().equals("roundtrip")) {
+                    world.noSave = true;
+                    NativeVehicleTransfer.assemble(player, ROOT);
+                    world.noSave = false;
+                    require(!NativeCellTransactions.busy(world, ROOT, OWNER), "disabled saving refuses assembly");
+                    blockedBreak = true;
+                    NativeVehicleTransfer.assemble(player, ROOT);
+                    blockedBreak = false;
+                    require(!NativeCellTransactions.busy(world, ROOT, OWNER), "break protection refuses exactly the requested move");
+                    requireInventory(BARREL);
+                }
+                NativeVehicleTransfer.assemble(player, ROOT);
+                require(NativeCellTransactions.busy(world, ROOT, OWNER), "admitted assembly via production entry point");
+                stage = 1;
+                return;
+            }
+            if (stage == 1) {
+                if (NativeCellTransactions.busy(world, ROOT, OWNER)) return;
+                require(world.getBlockState(ROOT).isAir() && world.getBlockState(BARREL).isAir() && actors() == 1,
+                    "durable assembly leaves only the carried owner");
+                require(world.getBlockState(ROOT.below(2)).is(Blocks.SMOOTH_STONE), "top-slab deck leaves the terrain in place");
+                craft = world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst();
+                requireCarried(craft);
+                craft.setYRot(90);
+                craft.setPos(PARK.getX() + .5, PARK.getY(), PARK.getZ() + .5);
+                movePlayer(PARK);
+                stage = 2;
+                return;
+            }
+            if (stage == 2) {
+                if (!craft.canPark() || NativeVehicleTransfer.escrowed(craft)) return;
+                if (phase().equals("roundtrip")) {
+                    var blocked = parked(BARREL);
+                    world.setBlock(blocked, Blocks.IRON_BLOCK.defaultBlockState(), Block.UPDATE_KNOWN_SHAPE);
+                    NativeVehicleTransfer.park(player, craft);
+                    require(!NativeCellTransactions.busy(world, PARK, OWNER) && !craft.isRemoved()
+                        && world.getBlockState(blocked).is(Blocks.IRON_BLOCK), "parking obstruction preserves both owners");
+                    world.setBlock(blocked, Blocks.AIR.defaultBlockState(), Block.UPDATE_KNOWN_SHAPE);
+                    blockedPlace = true;
+                    NativeVehicleTransfer.park(player, craft);
+                    blockedPlace = false;
+                    require(!NativeCellTransactions.busy(world, PARK, OWNER), "place protection refuses the target transaction");
+                } else {
+                    event.getServer().saveEverything(true, true, true);
+                }
+                NativeVehicleTransfer.park(player, craft);
+                require(NativeCellTransactions.busy(world, PARK, OWNER) && NativeVehicleTransfer.escrowed(craft),
+                    "admitted parking freezes the source actor immediately");
+                stage = 3;
+                return;
+            }
+            if (NativeCellTransactions.busy(world, PARK, OWNER)) return;
+            require(actors() == 0 && craft.isRemoved() && !NativeTransferHolds.active(world), "parking retires its carried owner");
+            require(world.getBlockState(PARK).is(NativeVehicleBindings.CONTROLLER), "restores controller at rotated anchor");
+            require(world.getBlockState(parked(PILOT)).getValue(NativeSeatBlock.FACING) == Direction.SOUTH,
+                "restores rotated Pilot Seat lower and backrest");
+            var upper = world.getBlockState(parked(PILOT.above()));
+            require(upper.getValue(NativeSeatBlock.UPPER) && upper.getValue(NativeSeatBlock.FACING) == Direction.SOUTH,
+                "parked Pilot Seat assembly is structurally complete");
+            require(world.getBlockState(parked(BARREL)).getValue(BlockStateProperties.FACING) == Direction.WEST,
+                "native barrel facing rotates");
+            requireInventory(parked(BARREL));
+            pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents");
+        } catch (Throwable failure) { fail(failure); }
+    }
+
+    @SubscribeEvent public static void protectBreak(BlockEvent.BreakEvent event) {
+        if (blockedBreak && event.getLevel() == world && event.getPos().equals(BARREL)) event.setCanceled(true);
+    }
+
+    @SubscribeEvent public static void protectPlace(BlockEvent.EntityPlaceEvent event) {
+        if (blockedPlace && event.getLevel() == world && event.getPos().equals(parked(BARREL))
+            && event.getPlacedBlock().is(Blocks.BARREL) && event.getBlockSnapshot().getState().isAir()) event.setCanceled(true);
+    }
+
+    private static void fault(String point, NativeCellTransactions.Header header, int ignored) {
+        if (!header.family().getPath().equals("vehicle_transfer")) return;
+        if (phase().equals("crash-assemble") && point.equals("after-install")) {
+            require(world.getBlockState(BARREL).isAir() && actors() == 1, "assembly removed the native barrel and installed an escrow actor");
+            require(NativeVehicleTransfer.escrowed(world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst()),
+                "uncommitted actor is frozen");
+            requireNoDrops();
+            faulted = true;
+            world.noSave = true;
+            var source = new ChunkPos(BARREL);
+            var chunk = world.getChunkSource().getChunkNow(source.x, source.z);
+            world.getChunkSource().chunkMap.write(source, ChunkSerializer.write(world, chunk))
+                .thenCompose(unused -> ((NativeRampChunkStorageAccess)(Object)world.getChunkSource().chunkMap)
+                    .vandorlabs$rampWorker().synchronize(true))
+                .whenComplete((unused, failure) -> {
+                    if (failure != null) {
+                        failure.printStackTrace();
+                        Runtime.getRuntime().halt(2);
+                    }
+                    abrupt("realArmed/partialSourceChunkOnly/noGracefulShutdown");
+                });
+            throw new IllegalStateException("Deliberate abrupt partial terrain save");
+        }
+        if (phase().equals("crash-park") && point.equals("checkpoint-durable") && header.root().equals(PARK)) {
+            require(actors() == 0, "park publishes terrain and writes entity removal before commitment");
+            requireInventory(parked(BARREL));
+            abrupt("realArmed/terrainAndEntityCheckpoint/noGracefulShutdown");
+        }
+    }
+
+    private static void movePlayer(BlockPos anchor) {
+        player.setPos(anchor.getX() + .5, anchor.getY(), anchor.getZ() - 2.5);
+    }
+
+    private static int actors() {
+        return world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).size();
+    }
+
+    private static BlockPos parked(BlockPos original) {
+        return PARK.offset(original.subtract(ROOT).rotate(Rotation.CLOCKWISE_90));
+    }
+
+    private static ItemStack gold() {
+        var result = new ItemStack(Items.GOLD_INGOT, 31);
+        result.set(DataComponents.CUSTOM_NAME, Component.literal("Vehicle ownership receipt"));
+        var data = new CompoundTag();
+        data.putString("Fixture", "single-owner");
+        result.set(DataComponents.CUSTOM_DATA, CustomData.of(data));
+        return result;
+    }
+
+    private static void requireCarried(NativeGroundVehicle vehicle) {
+        require(vehicle.admitted() && OWNER.equals(vehicle.owner()) && vehicle.pilotSeat().equals(PILOT.subtract(ROOT))
+            && vehicle.facing() == Direction.EAST, "admitted snapshot contains original owner and Pilot Seat");
+        var barrel = vehicle.snapshot().cells().stream().filter(cell -> cell.pos.equals(BARREL.subtract(ROOT))).findFirst().orElseThrow();
+        var raw = barrel.tile();
+        var inventory = raw.getList("Items", net.minecraft.nbt.Tag.TAG_COMPOUND);
+        require(inventory.size() == 2, "carried barrel keeps exactly two occupied slots");
+        require(ItemStack.matches(ItemStack.parseOptional(world.registryAccess(), inventory.getCompound(0)), gold())
+            && ItemStack.matches(ItemStack.parseOptional(world.registryAccess(), inventory.getCompound(1)), new ItemStack(Items.DIAMOND, 2)),
+            "carried inventory preserves item identity, count, name and component payload");
+        requireNoDrops();
+    }
+
+    private static void requireInventory(BlockPos at) {
+        require(world.getBlockEntity(at) instanceof BarrelBlockEntity, "native barrel is installed at " + at.toShortString());
+        var inventory = (BarrelBlockEntity)world.getBlockEntity(at);
+        require(ItemStack.matches(inventory.getItem(0), gold()) && ItemStack.matches(inventory.getItem(1), new ItemStack(Items.DIAMOND, 2)),
+            "native inventory preserves exact item contents and components");
+        for (int slot = 2; slot < inventory.getContainerSize(); slot++) require(inventory.getItem(slot).isEmpty(), "no extra inventory slots");
+        requireNoDrops();
+    }
+
+    private static void requireNoDrops() {
+        require(world.getEntitiesOfClass(ItemEntity.class, VOLUME).isEmpty(), "ownership handoff cannot spawn a loose resource copy");
+    }
+
+    private static void pass(String evidence) {
+        System.out.println("[vandorlabs][vehicle-transfer] " + phase() + " PASS " + evidence);
+        NativeBuilderJournalFault.set(null);
+        var server = world.getServer();
+        world = null;
+        server.halt(false);
+    }
+
+    private static void abrupt(String evidence) {
+        System.out.println("[vandorlabs][vehicle-transfer] " + phase() + " PASS " + evidence);
+        System.out.flush();
+        Runtime.getRuntime().halt(0);
+    }
+
+    private static void fail(Throwable failure) {
+        failure.printStackTrace();
+        System.out.println("[vandorlabs][vehicle-transfer] " + phase() + " FAIL " + failure);
+        NativeBuilderJournalFault.set(null);
+        if (world != null) {
+            var server = world.getServer();
+            world.noSave = false;
+            world = null;
+            server.halt(false);
+        }
+    }
+
+    private NativeVehicleTransferChecks() {}
+}
