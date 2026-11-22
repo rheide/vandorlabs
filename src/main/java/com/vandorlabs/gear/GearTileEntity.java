@@ -624,7 +624,11 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 boolean restored=payload==null||payload.materialized()||hadPayload&&!wasMaterialized;
                 if(!restored&&payload!=null&&!payload.hasOwnershipJournal())try{restored=payload.restore(this,before);}catch(RuntimeException | LinkageError failure){lastError="Attachment restore blocked; original snapshot retained";}
                 deployedTarget=before==1;
-                if(restored){finishStartAdjustment();motionBlocked=false;lastError=prepared?"Motion blocked; returned to the previous position":reason;sync();com.vandorlabs.network.MessageGearMotion.send(this);return;}
+                if(restored){
+                    finishStartAdjustment();motionBlocked=false;
+                    lastError=prepared||reason==null||reason.isEmpty()?"Motion blocked; returned to the previous position":reason;
+                    sync();com.vandorlabs.network.MessageGearMotion.send(this);return;
+                }
                 motionBlocked=true;lastError="Motion blocked; attachment snapshot retained for recovery";sync();com.vandorlabs.network.MessageGearMotion.send(this);return;
             }
             if(blocked!=motionBlocked){motionBlocked=blocked;sync();com.vandorlabs.network.MessageGearMotion.send(this);}
@@ -670,7 +674,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
             return operational;
         }
         if (!GearAssembly.loaded(world, pos) || !GearAssembly.isExtender(world.getBlockState(pos))) return false;
-        if(assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE&&payload!=null&&payload.materialized()&&progress==1&&payload.singleLandingMount()!=null&&payload.singleLandingMount()!=mountDirection&&cachedMembersIntact()){lastError="";return true;}
+        if(assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE&&payload!=null&&payload.materialized()&&progress==1&&payload.singleLandingMount()!=null&&payload.singleLandingMount()!=mountDirection&&cachedMembersIntact()){if(!operational)lastError="";return true;}
         GearAssembly.Scan scan = GearAssembly.scan(world, pos);
         if (!scan.valid()) {
             lastError = scan.error;
@@ -713,7 +717,9 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
                 && assembly.kind() == scan.assembly.kind() && footFacing == scannedFoot
                 && assembly.feet().equals(scan.assembly.feet()) && columns.equals(relativeColumns(scan.columns));
         if (unchanged && cachedMembersIntact()) {
-            lastError = "";
+            // A restored endpoint notifies its neighbors. An unchanged rebuild
+            // must leave the refusal visible until a new move or a real rebind.
+            if(!operational)lastError="";
             if (!operational || mode != previousMode) {
                 operational = true;
                 sync();
