@@ -33,6 +33,8 @@ public final class NativeVehiclePlayerFixture {
 
     public static boolean enabled() {return Boolean.getBoolean("vandorlabs.vehiclePlayerChecks");}
 
+    public static boolean emergency() { return Boolean.getBoolean("vandorlabs.vehicleEmergencyPark"); }
+
     @SubscribeEvent public static void login(PlayerEvent.PlayerLoggedInEvent event) {
         if (!enabled() || !(event.getEntity() instanceof ServerPlayer player)) return;
         actor=player;
@@ -81,7 +83,17 @@ public final class NativeVehiclePlayerFixture {
         } else if (rode && drove && !positioned && craft.canPark()) {
             require(actor.isAlive() && actor.position().distanceToSqr(craft.position())<36,
                 "ordinary dismount lands beside the vehicle within Controller reach");
-            landing=craft.blockPosition(); positioned=true;
+            landing=NativeVehicleTransfer.anchor(craft); positioned=true;
+            if (emergency()) {
+                require(!craft.mayEmergencyPark(actor), "Survival owner cannot trigger emergency parking");
+                actor.setGameMode(GameType.CREATIVE);
+                var foreign = net.neoforged.neoforge.common.util.FakePlayerFactory.get(world,
+                    new com.mojang.authlib.GameProfile(new java.util.UUID(0, 8903), "AnotherPilot"));
+                foreign.setPos(actor.position());
+                foreign.setGameMode(GameType.CREATIVE);
+                foreign.setItemInHand(InteractionHand.MAIN_HAND, new ItemStack(VandorLabsBootstrap.CONFIGURIZER.get()));
+                require(!craft.mayEmergencyPark(foreign), "a different Creative player cannot emergency park the hull");
+            }
         }
         if (craft.isRemoved() && positioned && landing!=null) {
             for(BlockPos pos:BlockPos.betweenClosed(landing.offset(-2,-2,-2),landing.offset(2,2,2))) {

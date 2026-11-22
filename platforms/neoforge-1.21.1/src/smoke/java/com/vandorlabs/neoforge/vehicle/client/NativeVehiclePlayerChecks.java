@@ -131,7 +131,15 @@ public final class NativeVehiclePlayerChecks {
             case 11 -> {
                 if(screen==null)return;
                 NativeVehiclePlayerFixture.require(screen.getMenu().craft==craft,"carried Controller on the selected entity");
-                parking=craft.position();click(screen);next();
+                parking=craft.position();
+                if(NativeVehiclePlayerFixture.emergency()) {
+                    if(mc.gameMode.getPlayerMode()!=GameType.CREATIVE || !screen.getMenu().offersEmergencyPark())return;
+                    press(screen,option(screen,"Emergency Park"));
+                } else {
+                    NativeVehiclePlayerFixture.require(!screen.getMenu().offersEmergencyPark(), "Survival hides Emergency Park");
+                    click(screen);
+                }
+                next();
             }
             case 12 -> {
                 if(!craft.isRemoved() || mc.screen!=null)return;
