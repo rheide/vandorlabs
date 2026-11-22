@@ -37,7 +37,9 @@ public final class BlockAvailability {
         String selected=config.getString("cruiseCoordinates","vehicles",legacyResident?"resident":"anchored",
                 "High Flight coordinates: anchored (default), resident (hop only to loaded terrain), or physical (geographic F3 X/Z with one supported pilot). Other mods can load terrain at physical coordinates. F3 Y includes the sky offset and observers away from the anchor may not see the craft. Restart required.",
                 new String[]{"anchored","resident","physical"});
-        cruiseCoordinates=CruiseCoordinates.valueOf(selected.toUpperCase(java.util.Locale.ROOT));
+        if("physical".equalsIgnoreCase(selected))cruiseCoordinates=CruiseCoordinates.PHYSICAL;
+        else if("resident".equalsIgnoreCase(selected))cruiseCoordinates=CruiseCoordinates.RESIDENT;
+        else cruiseCoordinates=CruiseCoordinates.ANCHORED;
         ENABLED.clear();
         config.setCategoryComment("blocks","Block categories available in creative menus and crafting. Restart required. Existing world blocks and inventory items are preserved. Diagonal variants belong to diagonals, regardless of material/function.");
         for(String category:BlockCategories.IDS)
