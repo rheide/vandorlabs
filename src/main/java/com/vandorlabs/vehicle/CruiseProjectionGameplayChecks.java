@@ -58,8 +58,8 @@ final class CruiseProjectionGameplayChecks {
         if (stage == 0) {
             require(clientCraft.getUniqueID().equals(serverCraft.getUniqueID()), "same real mounted craft");
             // The synchronized geographic route is a BlockPos, while physical positions retain sub-block precision.
-            require(Math.floor(clientCraft.posX)==clientCraft.cruise.x()
-                    && Math.floor(clientCraft.posZ)==clientCraft.cruise.z(), "client craft is at the route coordinates");
+            if(Math.floor(clientCraft.posX)!=clientCraft.cruise.x()
+                    || Math.floor(clientCraft.posZ)!=clientCraft.cruise.z()) return false;
             require(Math.abs(mc.player.posX-clientCraft.posX)<2 && Math.abs(mc.player.posZ-clientCraft.posZ)<2,
                     "rider and craft share the projected world");
             mc.gameSettings.thirdPersonView=0;
