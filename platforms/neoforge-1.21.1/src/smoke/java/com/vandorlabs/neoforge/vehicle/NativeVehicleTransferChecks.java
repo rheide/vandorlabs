@@ -209,7 +209,7 @@ public final class NativeVehicleTransferChecks {
                 if (!stale.isRemoved()) return;
                 require(actors() == 0, "the durable retirement removes a stale actor from its previous chunk");
                 requireInventory(parked(BARREL));
-                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/RFFluidItemRoutes/surveyScanAndExactDebits/staleChunkActor");
+                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/RFFluidItemRoutes/gatedBatteryAndTankAnalog/surveyScanAndExactDebits/staleChunkActor");
                 return;
             }
             if (NativeCellTransactions.busy(world, PARK, OWNER)) return;

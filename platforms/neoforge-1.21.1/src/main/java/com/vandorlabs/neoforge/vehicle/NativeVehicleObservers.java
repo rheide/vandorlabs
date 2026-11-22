@@ -5,7 +5,6 @@ import com.vandorlabs.navigation.NavigationRange;
 import com.vandorlabs.navigation.ObserverPower;
 import com.vandorlabs.navigation.ObserverScale;
 import com.vandorlabs.neoforge.navigation.observer.*;
-import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
 import com.vandorlabs.neoforge.transfer.NativeConstructorFrame;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.redstone.ChannelList;
@@ -67,6 +66,7 @@ public final class NativeVehicleObservers {
                 saved.getInt("ConstructorCoreX"), saved.getInt("ConstructorCoreZ"));
             if (!layout.canonicalCorner()) throw new IllegalArgumentException("Unknown vehicle observer corner");
             boolean inverted = saved.getBoolean("ObserverInverted"), localSignal = false;
+            var frame = new ArrayList<BlockPos>();
             for (int x = 0; x < layout.width; x++) for (int y = 0; y < layout.height; y++) for (int z = 0; z < layout.depth; z++) {
                 var pos = member(cell.pos, layout, inverted, x, y, z);
                 if (!pos.equals(cell.pos)) {
@@ -76,9 +76,12 @@ public final class NativeVehicleObservers {
                     NativeObserverTransactions.requirePart(raw, cell.pos.subtract(pos), owner);
                     NativeConstructorFrame.validatePart(raw, layout.frame(x, y, z));
                 }
-                if (!localSignal && layout.frame(x, y, z)) for (var side : Direction.values()) {
-                    var adjacent = hull.get(pos.relative(side));
-                    if (adjacent != null && adjacent.state.is(Blocks.REDSTONE_BLOCK)) { localSignal = true; break; }
+                if (layout.frame(x, y, z)) {
+                    frame.add(pos);
+                    if (!localSignal) for (var side : Direction.values()) {
+                        var adjacent = hull.get(pos.relative(side));
+                        if (adjacent != null && adjacent.state.is(Blocks.REDSTONE_BLOCK)) { localSignal = true; break; }
+                    }
                 }
             }
             int range = saved.getInt("TransmissionRange");
@@ -86,7 +89,7 @@ public final class NativeVehicleObservers {
             var inlet = member(cell.pos, layout, inverted, layout.width / 2, inverted ? layout.height - 1 : 0, layout.depth / 2);
             result.add(new Receiver(cell.pos, inlet, design, ChannelList.of(saved.getIntArray("TransmittedChannels")),
                 range, !saved.contains("ObserverRadar") || saved.getBoolean("ObserverRadar"),
-                saved.getBoolean("ObserverRedstone"), localSignal));
+                saved.getBoolean("ObserverRedstone"), localSignal, List.copyOf(frame)));
         }
         if (!parts.isEmpty()) throw new IllegalArgumentException("Capture every observer part with its own formed native core");
         return List.copyOf(result);
@@ -108,11 +111,12 @@ public final class NativeVehicleObservers {
         final ChannelList channels;
         final int range;
         final boolean radar, gated, localSignal;
+        final List<BlockPos> frame;
         final ObserverPower power = new ObserverPower();
         boolean requested;
 
         Receiver(BlockPos core, BlockPos inlet, NativeObserverDesigns.Design design, ChannelList channels,
-                 int range, boolean radar, boolean gated, boolean localSignal) {
+                 int range, boolean radar, boolean gated, boolean localSignal, List<BlockPos> frame) {
             this.core = core;
             this.inlet = inlet;
             this.design = design;
@@ -121,15 +125,16 @@ public final class NativeVehicleObservers {
             this.radar = radar;
             this.gated = gated;
             this.localSignal = localSignal;
+            this.frame = frame;
         }
 
-        void sample(ServerLevel world, NativeGroundVehicle craft) {
-            requested = radar && (!gated || localSignal);
-            if (!radar || requested || channels.isEmpty()) return;
-            var at = BlockPos.containing(worldPoint(craft, core));
-            for (int i = 0; i < channels.size(); i++) if (NativeRedstoneChannels.level(world, at, channels.get(i)) > 0) {
-                requested = true;
-                break;
+        void sample(NativeGroundVehicle craft, NativeVehicleResources resources) {
+            requested = radar && (!gated || localSignal || resources.channelLevel(craft, core, channels) > 0);
+            if (radar && !requested && resources.hasLocalOutputs()) for (var cell : frame) {
+                if (resources.localLevel(cell) > 0) {
+                    requested = true;
+                    break;
+                }
             }
         }
     }

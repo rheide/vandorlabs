@@ -15,6 +15,7 @@ import com.vandorlabs.neoforge.storage.NativeStorageRegistrations;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.ports.ResourcePortSettings;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.TransmissionSettings;
 import java.util.Objects;
 import java.util.function.Consumer;
 import net.minecraft.core.BlockPos;
@@ -42,6 +43,7 @@ final class NativeVehicleResourceFixture {
     private final ServerLevel world;
     private final BlockPos root, engine, powerSource, powerSink, tank, pump, matterSource, matterSink, observer, observerBattery;
     private final ChannelList enabled = ChannelList.of(702), survey = ChannelList.of(703);
+    private final ChannelList batteryFullness = ChannelList.of(704), tankFullness = ChannelList.of(705);
     private final ItemStack transmitter;
     private boolean observerRequested, on, radar;
 
@@ -70,9 +72,14 @@ final class NativeVehicleResourceFixture {
             NativePortData.write(raw, new NativePortData.Configuration(settings, 1, enabled));
         });
         put(tank, NativeBufferBindings.TANK.defaultBlockState().setValue(NativeBufferBlock.FACING, Direction.DOWN));
-        edit(tank, raw -> raw.put("NativeTankFluid", new FluidStack(fuel, FUEL_REFILL).save(world.registryAccess())));
+        edit(tank, raw -> {
+            raw.put("NativeTankFluid", new FluidStack(fuel, FUEL_REFILL).save(world.registryAccess()));
+            transmit(raw, tankFullness);
+        });
         port(matterSource, NativePortKind.MATTER, Direction.DOWN, raw -> {
-            gated(raw, Direction.DOWN, 3);
+            var settings = ResourcePortSettings.placed(Direction.DOWN.get3DDataValue()).withTransfer(3, false,
+                ResourcePortSettings.OnTexture.TRANSFERRING);
+            NativePortData.write(raw, new NativePortData.Configuration(settings, 2, tankFullness));
             var row = new CompoundTag();
             row.putInt("Slot", 0);
             row.put("Item", parcel().save(world.registryAccess()));
@@ -110,8 +117,16 @@ final class NativeVehicleResourceFixture {
         if (!on) {
             var snapshot = craft.snapshot();
             var original = data(snapshot.cells(), powerSource);
-            if (original.getInt("Energy") != POWER || data(snapshot.cells(), powerSink).getInt("PortEnergy") != 0) {
+            if (original.getInt("Energy") != POWER || data(snapshot.cells(), powerSink).getInt("PortEnergy") != 0
+                || portCount(data(snapshot.cells(), matterSource)) != parcel().getCount()
+                || matterCount(data(snapshot.cells(), matterSink)) != 0) {
                 throw new AssertionError("The native redstone gate must hold the RF until conversion");
+            }
+            var resources = craft.resources();
+            if (resources.channelLevel(craft, matterSource.subtract(root), batteryFullness) != 1
+                || resources.channelLevel(craft, matterSource.subtract(root), tankFullness) != 1
+                || resources.localLevel(pump.subtract(root)) != 1) {
+                throw new AssertionError("Onboard battery and tank publish independent exact analog levels");
             }
             if (!NativeRedstoneChannels.manualToggle(actor, transmitter)) throw new AssertionError("Could not publish the native transmitter");
             on = true;
@@ -128,7 +143,8 @@ final class NativeVehicleResourceFixture {
         int heldMatter = portCount(data(cells, matterSource));
         int debit = DRAIN - data(cells, observerBattery).getInt("Energy");
         if (source + received != POWER || fuel + tankMb + pumpMb != initialFuel + FUEL_REFILL
-            || storedMatter + heldMatter != parcel().getCount() || debit < 0 || debit > DRAIN || debit % 20 != 0) {
+            || storedMatter + heldMatter != parcel().getCount() || debit < 0 || debit > DRAIN || debit % 20 != 0
+            || Math.round(craft.resources().fluidMass() * 1000) != tankMb + pumpMb) {
             throw new AssertionError("Carried ownership totals changed during native transfers");
         }
         var location = BlockPos.containing(craft.toWorld(observer.subtract(root)));
@@ -137,6 +153,11 @@ final class NativeVehicleResourceFixture {
         }
         if (received != POWER || fuel != initialFuel + FUEL_REFILL || storedMatter != parcel().getCount() || debit != DRAIN) return false;
         if (!radar) throw new AssertionError("Carried RF was consumed without an actual Survey Dish scan");
+        if (craft.resources().channelLevel(craft, matterSource.subtract(root), batteryFullness) != 0
+            || craft.resources().channelLevel(craft, matterSource.subtract(root), tankFullness) != 0
+            || craft.resources().localLevel(pump.subtract(root)) != 0) {
+            throw new AssertionError("The depleted onboard outputs do not go low");
+        }
         if (!NativeRedstoneChannels.manualToggle(actor, transmitter)) throw new AssertionError("Could not stop the native transmitter");
         return true;
     }
@@ -208,7 +229,20 @@ final class NativeVehicleResourceFixture {
         edit(pos, raw -> {
             gated(raw, face, rate);
             raw.putInt("Energy", energy);
+            if (pos.equals(powerSource)) transmit(raw, batteryFullness);
         });
+    }
+
+    private void transmit(CompoundTag raw, ChannelList channels) {
+        var forge = raw.getCompound("ForgeData");
+        var all = forge.getCompound(TransmissionSettings.SETTINGS);
+        var row = new CompoundTag();
+        row.putIntArray("Channels", channels.toArray());
+        row.putInt("Range", 16);
+        row.putBoolean("Local", true);
+        all.put("main", row);
+        forge.put(TransmissionSettings.SETTINGS, all);
+        raw.put("ForgeData", forge);
     }
 
     private void port(BlockPos pos, NativePortKind kind, Direction face, Consumer<CompoundTag> change) {

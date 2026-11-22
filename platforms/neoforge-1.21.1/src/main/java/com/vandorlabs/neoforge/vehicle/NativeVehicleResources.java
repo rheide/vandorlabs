@@ -9,6 +9,9 @@ import com.vandorlabs.neoforge.storage.*;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
 import com.vandorlabs.ports.ResourcePortSettings.Face;
+import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.ChannelSpatialPolicy;
+import com.vandorlabs.redstone.TransmissionSettings;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -34,11 +37,13 @@ final class NativeVehicleResources {
     private final Map<BlockPos, Integer> growth = new HashMap<>();
     private final Map<BlockPos, NativeRawCell> states = new HashMap<>();
     private final List<Route> routes = new ArrayList<>();
+    private final Map<BlockPos, BufferSignal> outputPositions = new HashMap<>();
+    private final Map<Integer, List<BufferSignal>> outputChannels = new HashMap<>();
     private final List<NativeVehicleObservers.Receiver> observers;
     private final NativeVehiclePropulsion propulsion;
     private NativeTransferSnapshot savedInput, saved;
     private int next, availableBytes, extraBytes;
-    private long tick = Long.MIN_VALUE;
+    private long tick = Long.MIN_VALUE, fluidMassMb;
     private boolean changed;
 
     NativeVehicleResources(NativeTransferSnapshot snapshot, HolderLookup.Provider registries, NativeVehiclePropulsion propulsion) {
@@ -49,7 +54,17 @@ final class NativeVehicleResources {
             states.put(cell.pos, cell);
             if (!cell.hasTile()) continue;
             var endpoint = Endpoint.owned(cell, registries);
-            if (endpoint != null) add(mounted, cell.pos, endpoint);
+            if (endpoint != null) {
+                add(mounted, cell.pos, endpoint);
+                if (endpoint.kind == NativePortKind.FLUID) fluidMassMb += endpoint.fluid.getAmount();
+                if (cell.state.getBlock() instanceof NativeBufferBlock buffer) {
+                    var output = BufferSignal.read(endpoint, buffer);
+                    if (output.local) outputPositions.put(cell.pos, output);
+                    for (int i = 0; i < output.channels.size(); i++) {
+                        outputChannels.computeIfAbsent(output.channels.get(i), unused -> new ArrayList<>()).add(output);
+                    }
+                }
+            }
             var tank = propulsion.tank(cell.pos);
             if (tank == null) continue;
             availableBytes -= MAXWELL_DYNAMIC_BYTES;
@@ -87,18 +102,33 @@ final class NativeVehicleResources {
 
     List<NativeVehicleObservers.Receiver> observers() { return observers; }
 
+    double fluidMass() { return fluidMassMb / 1000D; }
+
+    static double fluidMass(NativeTransferSnapshot snapshot, HolderLookup.Provider registries) {
+        long amount = 0;
+        for (var cell : snapshot.cells()) {
+            var block = cell.state.getBlock();
+            if (block instanceof NativeBufferBlock buffer && !buffer.battery) {
+                amount += fluidContents(cell.tile(), "NativeTankFluid", NativeHexTankEntity.CAPACITY, registries).getAmount();
+            } else if (block instanceof NativePortBlock port && port.kind == NativePortKind.FLUID) {
+                amount += fluidContents(cell.tile(), "PortFluid", NativeFluidPortEntity.CAPACITY, registries).getAmount();
+            }
+        }
+        return amount / 1000D;
+    }
+
     void tick(NativeGroundVehicle craft) {
         if (!(craft.level() instanceof ServerLevel level) || tick == level.getGameTime()) return;
         tick = level.getGameTime();
-        for (var observer : observers) observer.sample(level, craft);
+        for (var observer : observers) observer.sample(craft, this);
         if (routes.isEmpty()) return;
         int size = routes.size(), work = Math.min(ROUTES_PER_TICK, size);
         for (int i = 0; i < work; i++) {
             var route = routes.get((next + i) % size);
             var source = route.source;
             var target = route.target;
-            prepare(level, craft, source);
-            prepare(level, craft, target);
+            prepare(craft, source);
+            prepare(craft, target);
             if (!source.active || !target.active || source.remaining == 0) continue;
             int moved = switch (source.kind) {
                 case POWER -> power(source, target);
@@ -110,29 +140,52 @@ final class NativeVehicleResources {
         next = (next + (work == size ? 1 : work)) % size;
     }
 
-    private void prepare(ServerLevel level, NativeGroundVehicle craft, Endpoint endpoint) {
+    private void prepare(NativeGroundVehicle craft, Endpoint endpoint) {
         if (endpoint.budgetTick == tick) return;
         endpoint.budgetTick = tick;
         endpoint.remaining = endpoint.limit;
-        endpoint.active = endpoint.config == null || activated(level, craft, endpoint);
+        endpoint.active = endpoint.config == null || activated(craft, endpoint);
     }
 
-    private boolean activated(ServerLevel level, NativeGroundVehicle craft, Endpoint endpoint) {
+    private boolean activated(NativeGroundVehicle craft, Endpoint endpoint) {
         var config = endpoint.config;
         if (config.redstoneMode() == 0) return true;
-        boolean signal = false;
-        if (config.channels().isEmpty()) {
-            for (var side : Direction.values()) {
-                var neighbor = states.get(endpoint.cell.pos.relative(side));
-                if (neighbor != null && neighbor.state.is(Blocks.REDSTONE_BLOCK)) { signal = true; break; }
-            }
-        } else {
-            var physical = BlockPos.containing(NativeVehicleObservers.worldPoint(craft, endpoint.cell.pos));
-            for (int i = 0; i < config.channels().size(); i++) {
-                if (NativeRedstoneChannels.level(level, physical, config.channels().get(i)) > 0) { signal = true; break; }
-            }
+        int signal = config.channels().isEmpty() ? localLevel(endpoint.cell.pos) : channelLevel(craft, endpoint.cell.pos, config.channels());
+        return (signal > 0) == (config.redstoneMode() == 1);
+    }
+
+    int localLevel(BlockPos receiver) {
+        int level = 0;
+        for (var side : Direction.values()) {
+            var adjacent = receiver.relative(side);
+            var neighbor = states.get(adjacent);
+            if (neighbor != null && neighbor.state.is(Blocks.REDSTONE_BLOCK)) return 15;
+            var output = outputPositions.get(adjacent);
+            if (output != null) level = Math.max(level, output.level());
         }
-        return signal == (config.redstoneMode() == 1);
+        return level;
+    }
+
+    boolean hasLocalOutputs() { return !outputPositions.isEmpty(); }
+
+    int channelLevel(NativeGroundVehicle craft, BlockPos receiver, ChannelList selected) {
+        if (selected.isEmpty()) return 0;
+        var world = (ServerLevel)craft.level();
+        var physical = BlockPos.containing(NativeVehicleObservers.worldPoint(craft, receiver));
+        int signal = 0;
+        for (int i = 0; i < selected.size(); i++) {
+            int channel = selected.get(i);
+            signal = Math.max(signal, NativeRedstoneChannels.level(world, physical, channel));
+            if (signal == 15) break;
+            var outputs = outputChannels.get(channel);
+            if (outputs != null) for (var output : outputs) {
+                var at = output.source.cell.pos;
+                if (ChannelSpatialPolicy.finiteContains(at.getX(), at.getY(), at.getZ(),
+                    receiver.getX(), receiver.getY(), receiver.getZ(), output.range)) signal = Math.max(signal, output.level());
+            }
+            if (signal == 15) break;
+        }
+        return signal;
     }
 
     NativeTransferSnapshot snapshot(NativeTransferSnapshot withPropulsion, HolderLookup.Provider registries) {
@@ -195,6 +248,7 @@ final class NativeVehicleResources {
                 throw new IllegalStateException("Carried Maxwell inlet changed during local transfer");
             }
             propulsion.fuelChanged();
+            fluidMassMb -= amount;
             recordGrowth(to, second);
         } else {
             to.fluid = filled;
@@ -268,6 +322,16 @@ final class NativeVehicleResources {
         changed = true;
     }
 
+    private static FluidStack fluidContents(CompoundTag raw, String key, int capacity, HolderLookup.Provider registries) {
+        if (!raw.contains(key)) return FluidStack.EMPTY;
+        var fluid = FluidStack.parse(registries, raw.get(key))
+            .orElseThrow(() -> new IllegalArgumentException("Invalid carried tank contents"));
+        if (fluid.isEmpty() || fluid.getAmount() > capacity || !fluid.save(registries).equals(raw.get(key))) {
+            throw new IllegalArgumentException("Invalid carried tank identity or amount");
+        }
+        return fluid;
+    }
+
     private static CompoundTag fluidTag(NativeRawCell cell, String key, FluidStack contents, HolderLookup.Provider registries) {
         var tag = cell.tile();
         if (contents.isEmpty()) tag.remove(key);
@@ -297,6 +361,22 @@ final class NativeVehicleResources {
     }
 
     private record Route(Endpoint source, Endpoint target) {}
+
+    private record BufferSignal(Endpoint source, ChannelList channels, int range, boolean local) {
+        static BufferSignal read(Endpoint source, NativeBufferBlock buffer) {
+            var main = source.cell.tile().getCompound("ForgeData").getCompound(TransmissionSettings.SETTINGS).getCompound("main");
+            var channels = TransmissionSettings.readChannels(main.contains("Channels", Tag.TAG_INT_ARRAY),
+                main.getIntArray("Channels"), ChannelList.EMPTY);
+            int range = TransmissionSettings.readRange(main.contains("Range", Tag.TAG_INT), main.getInt("Range"), true);
+            boolean local = TransmissionSettings.readLocal(main.contains("Local", Tag.TAG_BYTE), main.getBoolean("Local"), !buffer.battery);
+            return new BufferSignal(source, channels, range, local);
+        }
+
+        int level() {
+            int amount = source.kind == NativePortKind.POWER ? source.energy : source.fluid.getAmount();
+            return NativeBufferOutput.level(amount, source.capacity);
+        }
+    }
 
     private static final class Endpoint {
         final NativeRawCell cell;
@@ -382,16 +462,7 @@ final class NativeVehicleResources {
                     result.energy = raw.getInt(result.key);
                     if (result.energy < 0 || result.energy > result.capacity) throw new IllegalArgumentException("Invalid carried energy amount");
                 }
-                case FLUID -> {
-                    if (raw.contains(result.key)) {
-                        result.fluid = FluidStack.parse(registries, raw.get(result.key))
-                            .orElseThrow(() -> new IllegalArgumentException("Invalid carried tank contents"));
-                        if (result.fluid.isEmpty() || result.fluid.getAmount() > result.capacity
-                            || !result.fluid.save(registries).equals(raw.get(result.key))) {
-                            throw new IllegalArgumentException("Invalid carried tank identity or amount");
-                        }
-                    }
-                }
+                case FLUID -> result.fluid = fluidContents(raw, result.key, result.capacity, registries);
                 case MATTER -> {
                     result.inventory = NonNullList.withSize(result.capacity, ItemStack.EMPTY);
                     if (block instanceof NativeStorageBlock) result.inventory = NativeStorageInventory.read(raw, registries, result.inventory);
