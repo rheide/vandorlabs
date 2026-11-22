@@ -59,6 +59,7 @@ CAPTURE_JVM+=("-Dvandorlabs.coreIconsChecksOnly=${VANDOR_LABS_CORE_ICONS_CHECKS_
 CAPTURE_JVM+=("-Dvandorlabs.rampDialogChecksOnly=${VANDOR_LABS_RAMP_DIALOG_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.machineJeiChecksOnly=${VANDOR_LABS_MACHINE_JEI_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.synthesisTowerChecksOnly=${VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY:-false}")
+CAPTURE_JVM+=("-Dvandorlabs.maxwellDriveChecksOnly=${VANDOR_LABS_MAXWELL_DRIVE_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.moduleRackChecksOnly=${VANDOR_LABS_MODULE_RACK_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleSafeParkChecksOnly=${VANDOR_LABS_VEHICLE_SAFE_PARK_CHECKS_ONLY:-false}")
 CAPTURE_JVM+=("-Dvandorlabs.vehicleDesignChecksOnly=${VANDOR_LABS_VEHICLE_DESIGN_CHECKS_ONLY:-false}")

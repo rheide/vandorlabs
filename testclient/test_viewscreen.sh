@@ -27,6 +27,7 @@ unset VANDOR_LABS_CORE_HANDOFF_ONLY
 unset VANDOR_LABS_RAMP_DIALOG_CHECKS_ONLY
 unset VANDOR_LABS_MACHINE_JEI_CHECKS_ONLY
 unset VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY VANDOR_LABS_INFUSER_GUI_CHECKS_ONLY VANDOR_LABS_CORE_ICONS_CHECKS_ONLY
+unset VANDOR_LABS_MAXWELL_DRIVE_CHECKS_ONLY
 unset VANDOR_LABS_MODULE_RACK_CHECKS_ONLY
 unset VANDOR_LABS_NAVIGATION_MODULE_CHECKS_ONLY VANDOR_LABS_NAVIGATION_VEHICLE_CHECKS_ONLY
 unset VANDOR_LABS_APPLIANCE_CHECKS_ONLY VANDOR_LABS_OBSERVER_PERFORMANCE_ONLY VANDOR_LABS_NAVIGATION_PERFORMANCE_ONLY VANDOR_LABS_NAVIGATION_WORLD_CHECKS_ONLY
@@ -182,6 +183,9 @@ case "${1:-}" in
         elif [ "$TARGET" = synthesis-tower ]; then
             PREFIX=synthesis_tower_
             export VANDOR_LABS_SYNTHESIS_TOWER_CHECKS_ONLY=true
+        elif [ "$TARGET" = maxwell-drive ]; then
+            PREFIX=maxwell-
+            export VANDOR_LABS_MAXWELL_DRIVE_CHECKS_ONLY=true
         elif [ "$TARGET" = module-rack ]; then
             PREFIX=module_rack_
             export VANDOR_LABS_MODULE_RACK_CHECKS_ONLY=true
@@ -1046,6 +1050,12 @@ PYIMAGE
     if [ "$TARGET" = maxwell-cruise ]; then
         grep -q "maxwell-cruise PASS" "$RUN_OUT/client.log" && test -s "$RUN_OUT/maxwell-cruise.png"
         exit $?
+    fi
+    if [ "$TARGET" = maxwell-drive ]; then
+        grep -q "maxwell-runtime PASS" "$RUN_OUT/client.log"
+        grep -q "maxwell-drive PASS" "$RUN_OUT/client.log"
+        test -s "$RUN_OUT/shot_maxwell-assembly-front.png"
+        exit 0
     fi
     if [ "$TARGET" = pulse-screens ]; then
         grep -q "pulse-screen-world PASS" "$RUN_OUT/client.log"

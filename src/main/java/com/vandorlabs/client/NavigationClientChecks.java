@@ -69,7 +69,7 @@ final class NavigationClientChecks {
         if(stage==5&&captured){
             mc.player.closeScreen();System.out.println("[vandorlabs] navigation-display-client PASS rendered opposing rows native reference complete artwork picker previous/next speed wheel drag authorized settings round trip");
             mc.getIntegratedServer().addScheduledTask(()->{
-                BlockPos at=POS.east(9);FrameMachineDesign spec=FrameMachineDesign.get("longburn_drive");BridgeMachineChecks.frame(world(mc),at,spec,0);BridgeMachineChecks.frame(world(mc),at,spec,2);TileEntityConstructor tile=(TileEntityConstructor)world(mc).getTileEntity(at);require(tile.assemble(),"machine dialog fixture");EntityPlayerMP p=player(mc);p.connection.setPlayerLocation(at.getX()+.5,at.getY()+1,at.getZ()-2,0,0);
+                BlockPos at=POS.east(9);FrameMachineDesign spec=FrameMachineDesign.get("meridian_core");BridgeMachineChecks.frame(world(mc),at,spec,0);BridgeMachineChecks.frame(world(mc),at,spec,2);TileEntityConstructor tile=(TileEntityConstructor)world(mc).getTileEntity(at);require(tile.assemble(),"machine dialog fixture");EntityPlayerMP p=player(mc);p.connection.setPlayerLocation(at.getX()+.5,at.getY()+1,at.getZ()-2,0,0);
             }).get();stage=6;ticks=0;captured=false;return false;
         }
         if(stage==6){
