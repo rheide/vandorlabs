@@ -20,6 +20,8 @@ public final class MessageTransmitterSlot implements IMessage {
     @Override public void fromBytes(ByteBuf b){action=b.readUnsignedByte();pos=BlockPos.fromLong(b.readLong());selector=b.readInt();window=b.readInt();text=bounded(b);if(action==4){tier=b.readUnsignedShort();local=b.readBoolean();if(!com.vandorlabs.redstone.TransmitterSlots.validRange(tier))throw new IllegalArgumentException("Invalid transmission range");}if(b.isReadable()||(action!=2&&action!=4))throw new IllegalArgumentException("Malformed transmitter request");}
 
     public static net.minecraft.tileentity.TileEntity openedTile(net.minecraft.inventory.Container container){
+        if(container instanceof ContainerStorageStatus)return ((ContainerStorageStatus)container).tile;
+        if(container instanceof com.vandorlabs.ports.ResourcePortContainer)return ((com.vandorlabs.ports.ResourcePortContainer)container).tile;
         if(container instanceof ContainerRedstoneChannel)return ((ContainerRedstoneChannel)container).member.channelTile();
         if(container instanceof ContainerAnimatedScreenSelector)return ((ContainerAnimatedScreenSelector)container).getTileEntity();
         if(container instanceof ContainerCockpit)return ((ContainerCockpit)container).tile;

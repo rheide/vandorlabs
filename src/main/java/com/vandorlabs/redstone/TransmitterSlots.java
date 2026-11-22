@@ -60,13 +60,22 @@ public final class TransmitterSlots {
         }catch(IllegalAccessException brokenForge){throw new IllegalStateException("Cannot read transmission settings",brokenForge);}
     }
     private static NBTTagCompound configuration(RedstoneChannelMember member){return savedSettings(member.channelTile(),member.transmitterSlot());}
+    public static void writePublic(RedstoneChannelMember member,NBTTagCompound tag){
+        NBTTagCompound configured=configuration(member);
+        if(!configured.hasNoTags())tag.setTag(SETTINGS,configured.copy());
+    }
+    public static void readPublic(RedstoneChannelMember member,NBTTagCompound tag){
+        NBTTagCompound data=member.channelTile().getTileData(),all=data.getCompoundTag(SETTINGS);
+        if(tag.hasKey(SETTINGS,10)){all.setTag(member.transmitterSlot(),tag.getCompoundTag(SETTINGS).copy());data.setTag(SETTINGS,all);}
+        else all.removeTag(member.transmitterSlot());
+    }
     private static final java.util.Map<RedstoneChannelMember,SavedChannels> CONFIG_CACHE=java.util.Collections.synchronizedMap(new java.util.WeakHashMap<RedstoneChannelMember,SavedChannels>());
     private static final class SavedChannels {
         final NBTTagCompound identity;final ChannelList channels;
         SavedChannels(NBTTagCompound tag){identity=tag;channels=TransmissionSettings.readChannels(tag.hasKey(TransmissionSettings.CHANNELS,11),tag.getIntArray(TransmissionSettings.CHANNELS),ChannelList.EMPTY);}
     }
     public static boolean supported(RedstoneChannelMember member){
-        return member instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)member)>0||outputOnly(member)||member instanceof com.vandorlabs.tiles.TileEntityCockpit
+        return member instanceof StorageChannelOutput||member instanceof com.vandorlabs.tiles.TileEntityConstructor&&com.vandorlabs.navigation.NavigationSources.radius((com.vandorlabs.tiles.TileEntityConstructor)member)>0||outputOnly(member)||member instanceof com.vandorlabs.tiles.TileEntityCockpit
                 ||member instanceof com.vandorlabs.tiles.TileEntityCockpit.Control
                 ||member instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                 ||member instanceof com.vandorlabs.tiles.RedstoneScreenContents.Row;
@@ -86,7 +95,7 @@ public final class TransmitterSlots {
         NBTTagCompound configured=savedSettings(tile,"main");
         boolean present=configured.hasKey(TransmissionSettings.LOCAL,1);
         // Enabling new physical outputs must be deliberate in existing worlds.
-        return TransmissionSettings.readLocal(present,present&&configured.getBoolean(TransmissionSettings.LOCAL),present||!(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
+        return TransmissionSettings.readLocal(present,present&&configured.getBoolean(TransmissionSettings.LOCAL),present||!(tile instanceof com.vandorlabs.tiles.TileEntityBattery||tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector
                 ||tile instanceof com.vandorlabs.tiles.TileEntityCockpit
                 ||tile instanceof com.vandorlabs.tiles.TileEntityWirelessRedstone&&((com.vandorlabs.tiles.TileEntityWirelessRedstone)tile).transmitter()));
     }
@@ -94,10 +103,10 @@ public final class TransmitterSlots {
     public static int localOutput(net.minecraft.world.IBlockAccess world,net.minecraft.util.math.BlockPos pos){
         TileEntity tile=world.getTileEntity(pos);if(tile==null||!localRedstone(tile))return 0;int level=0;
         if(tile instanceof com.vandorlabs.tiles.TileEntityCockpit){
-            for(com.vandorlabs.tiles.TileEntityCockpit.Control control:((com.vandorlabs.tiles.TileEntityCockpit)tile).controls)if(control.active())level=Math.max(level,control.level);
+            for(com.vandorlabs.tiles.TileEntityCockpit.Control control:((com.vandorlabs.tiles.TileEntityCockpit)tile).controls)if(control.kind!=3&&control.active())level=Math.max(level,control.level);
         }else if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
-            for(int side=0;side<2;side++)if(screen.hasRedstoneScreen(side))for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())level=Math.max(level,row.slider?row.level():row.active()?15:0);
+            for(int side=0;side<2;side++)if(screen.hasRedstoneScreen(side))for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())if(!row.status)level=Math.max(level,row.slider?row.level():row.active()?15:0);
         }
         return Math.max(0,Math.min(15,level));
     }
@@ -137,7 +146,7 @@ public final class TransmitterSlots {
         // Shared rows retain their channel lists when built-in transmission changes.
         // Remove their old indexed output before changing these settings; otherwise
         // register() sees unchanged subscriptions and retains stale sources.
-        if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+        if(!(member instanceof StorageChannelOutput)&&tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
             for(int side=0;side<2;side++)for(com.vandorlabs.tiles.RedstoneScreenContents.Row row:screen.redstoneScreen(side).rows())RedstoneChannels.unregister(row);
         }
@@ -146,7 +155,7 @@ public final class TransmitterSlots {
         if(outputOnly(member))
             member.setRedstoneChannels(channels(member));
         tile.markDirty();RedstoneChannels.register(member);
-        if(tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
+        if(!(member instanceof StorageChannelOutput)&&tile instanceof com.vandorlabs.tiles.TileEntityAnimatedScreenSelector){
             com.vandorlabs.tiles.TileEntityAnimatedScreenSelector screen=(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector)tile;
             for(int i=0;i<2;i++){
                 screen.redstoneScreen(i).finishLoading();

@@ -15,6 +15,8 @@ public final class BlockHexTank extends BlockAnimatedScreenSelector {
     @Override public TileEntity createNewTileEntity(World world,int meta){return new TileEntityHexTank();}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}
+    @Override public boolean canProvidePower(IBlockState state){return true;}
+    @Override public int getWeakPower(IBlockState state,IBlockAccess world,BlockPos pos,EnumFacing side){return com.vandorlabs.redstone.StorageChannelOutput.localLevel(world.getTileEntity(pos));}
     @Override protected EnumFacing placementFacing(World world,BlockPos pos,EnumFacing clicked,net.minecraft.entity.EntityLivingBase placer){return clicked;}
     @Override public boolean onBlockActivated(World world,BlockPos pos,IBlockState state,EntityPlayer player,EnumHand hand,EnumFacing side,float x,float y,float z){
         TileEntity raw=world.getTileEntity(pos);if(!(raw instanceof TileEntityHexTank))return false;

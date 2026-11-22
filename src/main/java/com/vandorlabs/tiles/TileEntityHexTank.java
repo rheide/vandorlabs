@@ -1,6 +1,7 @@
 package com.vandorlabs.tiles;
 
 import java.util.*;
+import com.vandorlabs.redstone.*;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
@@ -12,11 +13,15 @@ import net.minecraftforge.fluids.capability.*;
 /** Per-cell storage avoids loss when a vertical stack is split or a chunk unloads. */
 public final class TileEntityHexTank extends TileEntityAnimatedScreenSelector implements IFluidHandler {
     public static final int CAPACITY=16000;
+    public final StorageChannelOutput fullnessOutput=new StorageChannelOutput(this);
     private boolean blockShape;
     public boolean isBlockShape(){return blockShape;}
     public void setBlockShape(boolean block){if(blockShape!=block){blockShape=block;syncContents();}}
-    public final FluidTank tank=new FluidTank(CAPACITY){@Override protected void onContentsChanged(){syncContents();}};
-    @Override protected void finishLoading(){} // No redstone subscriptions.
+    public final FluidTank tank=new FluidTank(CAPACITY){@Override protected void onContentsChanged(){syncContents();fullnessOutput.publish();}};
+    @Override protected void finishLoading(){RedstoneChannels.register(fullnessOutput);}
+    @Override public void invalidate(){RedstoneChannels.unregister(fullnessOutput);super.invalidate();}
+    @Override public void onChunkUnload(){RedstoneChannels.unregister(fullnessOutput);super.onChunkUnload();}
+    @Override public ChannelList transmittedChannels(){return ChannelList.EMPTY;}
     private void syncContents(){HexTankGroups.invalidate(world);markDirty();if(world!=null && !world.isRemote)world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),3);}
     @Override public void setHousingTexture(int texture){super.setHousingTexture(texture);HexTankGroups.invalidate(world);}
     @Override public void setMainTextureLayout(int layout){super.setMainTextureLayout(layout);HexTankGroups.invalidate(world);}

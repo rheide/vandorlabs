@@ -20,6 +20,9 @@ public final class BlockBattery extends BlockVandor {
     @Override public IBlockState withMirror(IBlockState state,Mirror mirror){return state.withProperty(FACING,mirror.mirror(state.getValue(FACING)));}
     @Override public boolean isOpaqueCube(IBlockState state){return false;}
     @Override public boolean isFullCube(IBlockState state){return false;}
+    @Override public boolean canProvidePower(IBlockState state){return true;}
+    @Override public int getWeakPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){return com.vandorlabs.redstone.StorageChannelOutput.localLevel(world.getTileEntity(pos));}
+    @Override public int getStrongPower(IBlockState state,net.minecraft.world.IBlockAccess world,BlockPos pos,EnumFacing side){return getWeakPower(state,world,pos,side);}
     @Override public EnumBlockRenderType getRenderType(IBlockState state){return EnumBlockRenderType.ENTITYBLOCK_ANIMATED;}
     @Override public boolean hasTileEntity(IBlockState state){return true;}
     @Override public TileEntity createTileEntity(World world,IBlockState state){return new TileEntityBattery();}

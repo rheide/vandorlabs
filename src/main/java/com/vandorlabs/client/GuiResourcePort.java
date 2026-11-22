@@ -32,6 +32,7 @@ public final class GuiResourcePort extends GuiMaterialPicker {
         for(com.vandorlabs.ui.ResourcePortDialog.Control control:com.vandorlabs.ui.ResourcePortDialog.controls(guiLeft,guiTop,page,settings,mode,battery(),batteryBlock)){
             GuiButton button=control.tab?new DialogTabButton(control.id,control.x,control.y,control.width,control.height,control.label):new GuiButton(control.id,control.x,control.y,control.width,control.height,control.label);button.enabled=control.enabled;buttonList.add(button);
         }
+        if(page==1&&battery())buttonList.add(new GuiButton(31,guiLeft+12,guiTop+178,xSize-24,20,"Transmitter"));
         throughput=new GuiTextField(1,fontRenderer,guiLeft+12,guiTop+com.vandorlabs.ui.ResourcePortDialog.RATE_Y,com.vandorlabs.ui.ResourcePortDialog.FIELD_WIDTH,com.vandorlabs.ui.ResourcePortDialog.FIELD_HEIGHT);throughput.setMaxStringLength(19);throughput.setText(rateText);throughput.setVisible(page==0);
         channels=new GuiTextField(2,fontRenderer,guiLeft+12,guiTop+com.vandorlabs.ui.ResourcePortDialog.CHANNEL_Y,com.vandorlabs.ui.ResourcePortDialog.FIELD_WIDTH,com.vandorlabs.ui.ResourcePortDialog.FIELD_HEIGHT);ChannelFields.configure(channels);channels.setText(channelText);channels.setVisible(page==1);
         if(page==2)textures=HousingTextureList.forHousing(guiLeft+12,guiTop+62,com.vandorlabs.ui.ResourcePortDialog.housingWidth(battery()),settings.housingChoice,com.vandorlabs.ui.ResourcePortDialog.housingRows(),battery()?"vandorlabs:blocks/imported/power/battery_cell_bank":"vandorlabs:blocks/resource_ports/port_hull").keepView(textures).custom(this::chooseHousing);
@@ -46,6 +47,7 @@ public final class GuiResourcePort extends GuiMaterialPicker {
         settings=settings.withTransfer(rate,settings.pullInputs,settings.onTexture);PacketHandler.INSTANCE.sendToServer(new ResourcePortMessage(inventorySlots.windowId,settings,mode,parsed));dirty=false;return true;
     }
     @Override protected void actionPerformed(GuiButton button){
+        if(button.id==31)return;
         if(button.id==100||button.id==101||button.id==102){page=button.id-100;initGui();return;}
         if(button.id==40&&battery()){batteryBlock=!batteryBlock;PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageTankShape(inventorySlots.windowId,batteryBlock));button.displayString="Shape: "+(batteryBlock?"Block":"Hexagon");return;}
         if(button.id==0){if(save())mc.player.closeScreen();return;}

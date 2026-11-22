@@ -2,7 +2,7 @@ package com.vandorlabs.tiles;
 
 import com.vandorlabs.blocks.BlockBattery;
 import com.vandorlabs.ports.*;
-import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.redstone.*;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraftforge.common.capabilities.Capability;
@@ -11,6 +11,7 @@ import net.minecraftforge.energy.*;
 /** One 100,000 RF owner using the same face policy, balancing and transfer loop as a Power Port. */
 public final class TileEntityBattery extends PowerPortTile {
     public static final int CAPACITY=100000,RATE=1000;
+    public final StorageChannelOutput fullnessOutput=new StorageChannelOutput(this);
     private boolean blockShape=true,energyDirty,legacyMissingPolicy;
     private int legacyRate,legacyFace=-1,legacyHousing=-1;
     private ResourcePortSettings legacySettings;
@@ -40,17 +41,18 @@ public final class TileEntityBattery extends PowerPortTile {
             if(changed&&legacyMissingPolicy){invalidateNeighbors();sync();world.notifyNeighborsOfStateChange(pos,state.getBlock(),false);}
         });
     }
-    @Override public void onLoad(){super.onLoad();facingQueued=false;deferFacing();}
+    @Override public void onLoad(){super.onLoad();facingQueued=false;deferFacing();DeferredTileLoad.schedule(this,()->RedstoneChannels.register(fullnessOutput));}
     @Override public void updateContainingBlockInfo(){super.updateContainingBlockInfo();deferFacing();}
-    @Override public void invalidate(){facingQueued=false;super.invalidate();}
-    @Override public void onChunkUnload(){facingQueued=false;super.onChunkUnload();}
+    @Override public void invalidate(){facingQueued=false;RedstoneChannels.unregister(fullnessOutput);super.invalidate();}
+    @Override public void onChunkUnload(){facingQueued=false;RedstoneChannels.unregister(fullnessOutput);super.onChunkUnload();}
+    @Override public ChannelList transmittedChannels(){return ChannelList.EMPTY;}
     @Override public ResourcePortSettings settings(){
         if(!legacyMissingPolicy)return super.settings();
         int face=inputSide().getIndex();if(legacySettings==null||legacyFace!=face){legacyFace=face;legacySettings=legacyPolicy(face,legacyHousing);}return legacySettings;
     }
     private static ResourcePortSettings legacyPolicy(int face,int housing){return ResourcePortSettings.placed(face).withTransfer(RATE,false,ResourcePortSettings.OnTexture.TRANSFERRING).withHousing(housing);}
     @Override protected int transferLimit(int maximum){int value=Math.max(0,maximum);return legacyRate==0?value:Math.min(value,legacyRate);}
-    @Override protected void energyChanged(){markDirty();energyDirty=true;}
+    @Override protected void energyChanged(){markDirty();energyDirty=true;fullnessOutput.publish();}
     @Override protected boolean storedAppearanceTick(){boolean changed=energyDirty;energyDirty=false;return changed;}
     @Override protected void configurationChanged(ResourcePortSettings previous,ResourcePortSettings next,boolean signalChanged){
         if(previous.throughput!=next.throughput||previous.pullInputs!=next.pullInputs||!java.util.Arrays.equals(previous.faces(),next.faces()))legacyRate=0;
@@ -78,8 +80,8 @@ public final class TileEntityBattery extends PowerPortTile {
     }
     @Override protected void writeConfiguration(NBTTagCompound tag){if(!legacyMissingPolicy)super.writeConfiguration(tag);}
     @Override protected void writeContents(NBTTagCompound tag){tag.setInteger("Energy",energy);tag.setBoolean("BlockShape",blockShape);tag.removeTag("HousingTexture");tag.removeTag("BatteryLegacyRate");if(settings().housingChoice>=0)tag.setInteger("HousingTexture",settings().housingChoice);if(legacyRate!=0&&!legacyMissingPolicy)tag.setInteger("BatteryLegacyRate",legacyRate);}
-    @Override protected void writePublicContents(NBTTagCompound tag){tag.setInteger("Energy",energy);tag.setBoolean("BlockShape",blockShape);}
-    @Override protected void readPublicContents(NBTTagCompound tag){int value=tag.getInteger("Energy");if(!tag.hasKey("Energy",3)||value<0||value>CAPACITY||!tag.hasKey("BlockShape",1))throw new IllegalArgumentException("Invalid Battery display data");energy=value;blockShape=tag.getBoolean("BlockShape");legacyMissingPolicy=false;legacySettings=null;}
+    @Override protected void writePublicContents(NBTTagCompound tag){tag.setInteger("Energy",energy);tag.setBoolean("BlockShape",blockShape);TransmitterSlots.writePublic(fullnessOutput,tag);}
+    @Override protected void readPublicContents(NBTTagCompound tag){int value=tag.getInteger("Energy");if(!tag.hasKey("Energy",3)||value<0||value>CAPACITY||!tag.hasKey("BlockShape",1))throw new IllegalArgumentException("Invalid Battery display data");energy=value;blockShape=tag.getBoolean("BlockShape");legacyMissingPolicy=false;legacySettings=null;TransmitterSlots.readPublic(fullnessOutput,tag);}
     private int first(ResourcePortSettings.Face face){for(int i=0;i<6;i++)if(settings().face(i)==face)return i;return -1;}
     /** Retain the old unsided energy adapter for storage integrations; it owns no second buffer. */
     private final IEnergyStorage internal=new IEnergyStorage(){

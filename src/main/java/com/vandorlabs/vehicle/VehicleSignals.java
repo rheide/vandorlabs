@@ -23,6 +23,7 @@ public final class VehicleSignals {
     private final Set<TileEntityWirelessRedstone> wirelessPorts=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntitySpaceDoor> securityDoors=Collections.newSetFromMap(new IdentityHashMap<>());
     private final Set<TileEntityTokenSlot> tokenSlots=Collections.newSetFromMap(new IdentityHashMap<>());
+    private final List<StorageChannelOutput> storageOutputs=new ArrayList<>();
     public void transmitterChanged(RedstoneChannelMember member){revision=-1;tick();Link link=links.get(member);if(link!=null){RedstoneChannels.channelChanged(link,member.getRedstoneChannels());RedstoneChannels.positionChanged(link);}changed(member.channelTile().getPos());persist();}
     public void cockpitChanged(TileEntityCockpit tile){
         revision=-1;dirty.add(tile.getPos());tick();
@@ -40,7 +41,7 @@ public final class VehicleSignals {
     /** Only this craft's source levels; never sample unrelated members of the dimension bank. */
     public Map<Integer,Integer> outputLevels(){
         Map<Integer,Integer> result=new LinkedHashMap<>();
-        for(Link link:links.values())if(link.isChannelMemberActive())for(int channel:link.getRedstoneChannels().toArray()){
+        for(Link link:links.values())if(link.isChannelMemberActive())for(int channel:(link.source instanceof StorageChannelOutput?link.transmittedChannels():link.getRedstoneChannels()).toArray()){
             int level=link instanceof RedstoneChannelLatch&&((RedstoneChannelLatch)link).isChannelLatch()?((RedstoneChannelLatch)link).latchedLevel(channel):link.localSignalLevel(channel);
             if(level>0)result.merge(channel,Math.min(15,level),Math::max);
         }
@@ -57,12 +58,12 @@ public final class VehicleSignals {
         public ChannelList transmittedChannels(){return source.transmittedChannels();}
         public int transmissionRange(){return source.transmissionRange();}
         public BlockPos channelPosition(){return new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(source.channelTile().getPos()).addVector(.5,.5,.5)));}
-        public boolean isChannelMemberActive(){return vehicleAdapterActive(source.channelTile())&&!detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile();}
+        public boolean isChannelMemberActive(){return vehicleAdapterActive(source.channelTile())&&!detached&&!craft.isDead&&!craft.ownershipBlocked&&craft.view!=null&&craft.view.getTileEntity(source.channelTile().getPos())==source.channelTile()&&(!(source instanceof StorageChannelOutput)||craft.structure.isActive(source.channelTile().getPos()));}
         public int getRedstoneChannel(){return source.getRedstoneChannel();}
         public ChannelList getRedstoneChannels(){return source.getRedstoneChannels();}
         public void setRedstoneChannel(int ignored){throw new UnsupportedOperationException();}
-        public boolean hasLocalRedstoneSignal(){return (source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control || source instanceof com.vandorlabs.rack.ModuleRackOutput) && source.hasLocalRedstoneSignal();}
-        public int localSignalLevel(int channel){return source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control || source instanceof com.vandorlabs.rack.ModuleRackOutput?source.localSignalLevel(channel):0;}
+        public boolean hasLocalRedstoneSignal(){return (source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control || source instanceof com.vandorlabs.rack.ModuleRackOutput || source instanceof StorageChannelOutput) && source.hasLocalRedstoneSignal();}
+        public int localSignalLevel(int channel){return source instanceof TileEntityRedstoneChannel || source instanceof TileEntityCockpit.Control || source instanceof com.vandorlabs.rack.ModuleRackOutput || source instanceof StorageChannelOutput?source.localSignalLevel(channel):0;}
         public void setChannelSignal(boolean on){setChannelLevel(on?15:0);}
         public void setChannelLevel(int level){
             if(detached || craft.isDead || craft.ownershipBlocked||!vehicleAdapterActive(source.channelTile()))return;
@@ -147,10 +148,12 @@ public final class VehicleSignals {
         if(revision!=craft.view.tileRevision){
         revision=craft.view.tileRevision;
         cockpits.clear();
-        tokenSlots.clear();securityDoors.clear();wirelessPorts.clear();
+        tokenSlots.clear();securityDoors.clear();wirelessPorts.clear();storageOutputs.clear();
         Set<RedstoneChannelMember> wanted=Collections.newSetFromMap(new IdentityHashMap<>());
         for(TileEntity tile:craft.view.tiles.values()){
             if(!vehicleAdapterActive(tile))continue;
+            StorageChannelOutput storage=StorageChannelOutput.of(tile);
+            if(storage!=null&&!storage.transmittedChannels().isEmpty()){add(wanted,storage);storageOutputs.add(storage);}
             if(tile instanceof TileEntityWirelessRedstone)wirelessPorts.add((TileEntityWirelessRedstone)tile);
             if(tile instanceof TileEntitySpaceDoor&&((TileEntitySpaceDoor)tile).isSecurityRoot())securityDoors.add((TileEntitySpaceDoor)tile);
             if(tile instanceof TileEntityTokenSlot)tokenSlots.add((TileEntityTokenSlot)tile);
@@ -198,6 +201,7 @@ public final class VehicleSignals {
             TileEntity raw=craft.view.getTileEntity(pos);if(raw instanceof TileEntityRedstoneChannel){((TileEntityRedstoneChannel)raw).setLocalOn(false);IBlockState state=craft.view.getBlockState(pos);if(state.getProperties().containsKey(BlockVandorSwitch.ON))replaceState(pos,state.withProperty(BlockVandorSwitch.ON,false));Link link=links.get(raw);if(link!=null)RedstoneChannels.inputChanged(link);dirty.add(pos);}releases.remove(pos);
         }
         craft.articulation.tickCapturedControls();
+        for(StorageChannelOutput storage:storageOutputs){Link link=links.get(storage);if(link!=null)RedstoneChannels.inputChanged(link);}
         com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();
     }
