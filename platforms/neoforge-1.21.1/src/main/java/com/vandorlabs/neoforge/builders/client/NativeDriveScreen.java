@@ -10,6 +10,7 @@ import com.vandorlabs.neoforge.client.NativeDialogVisuals;
 import com.vandorlabs.neoforge.client.NativeMaterialPicker;
 import com.vandorlabs.redstone.ChannelList;
 import com.vandorlabs.ui.DialogStyle;
+import com.vandorlabs.ui.RedstoneActivation;
 import java.util.function.IntConsumer;
 import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.EditBox;
@@ -84,14 +85,25 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
             channelField.setValue(channels);
             channelField.setResponder(text -> { channels = text; send(); });
             addRenderableWidget(channelField);
-            option(99, settings.redstone() ? "Activation Redstone" : menu.maxwell() ? "Activation Automatic" : "Activation Always", direction ->
+            if (menu.maxwell()) {
+                int activation = RedstoneActivation.mode(settings.redstone(), settings.inverted());
+                option(99, "Activation: " + RedstoneActivation.label(activation, "Disabled"), direction -> {
+                    int next = cycle(activation, direction, 3);
+                    controls(next != RedstoneActivation.MANUAL, next == RedstoneActivation.OFF,
+                            settings.levels(), settings.particles(), settings.threshold());
+                });
+                option(122, settings.levels() ? "Signal: Analog" : "Signal: Digital", direction ->
+                        controls(settings.redstone(), settings.inverted(), !settings.levels(), settings.particles(), settings.threshold()));
+                return;
+            }
+            option(99, settings.redstone() ? "Activation Redstone" : "Activation Always", direction ->
                     controls(!settings.redstone(), settings.inverted(), settings.levels(), settings.particles(), settings.threshold()));
             if(!menu.design().engine())return;
             option(122, settings.inverted() ? "Engine Redstone Off" : "Engine Redstone On", direction ->
                     controls(settings.redstone(), !settings.inverted(), settings.levels(), settings.particles(), settings.threshold()));
-            option(145, menu.maxwell() ? (settings.levels() ? "Throttle Analog" : "Throttle Digital") : (settings.levels() ? "Brightness Signal" : "Brightness On/Off"), direction ->
+            option(145, settings.levels() ? "Brightness Signal" : "Brightness On/Off", direction ->
                     controls(settings.redstone(), settings.inverted(), !settings.levels(), settings.particles(), settings.threshold()));
-            if (!menu.maxwell() && menu.design().exhaust) option(168, "Particles at level " + settings.threshold(), direction ->
+            if (menu.design().exhaust) option(168, "Particles at level " + settings.threshold(), direction ->
                     controls(settings.redstone(), settings.inverted(), settings.levels(), settings.particles(), cycle(settings.threshold(), direction, 16)));
         }
     }
@@ -146,6 +158,8 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
                     leftPos + 12, topPos + 66, 0xabcfe8, false);
             graphics.drawString(font, "Throttle " + menu.throttle() + " / 15",
                     leftPos + 12, topPos + 84, 0xabcfe8, false);
+            graphics.drawWordWrap(font, Component.literal("With Redstone activation disabled, the drive supplies thrust during powered Flight."),
+                    leftPos + 12, topPos + 139, imageWidth - 24, 0xabcfe8);
         } else if (page == 2) graphics.drawString(font, menu.design().exhaust ? "Redstone controls the lights and exhaust."
                 : "Redstone controls the lights.", leftPos + 12, topPos + 96, 0xabcfe8, false);
         if (page == 3) graphics.drawString(font, "Receive channels", leftPos + 12, topPos + 60, 0xb7cadb, false);

@@ -60,9 +60,9 @@ The front and sides each have a Fluid Port In that feeds the same 1,000 mB tank.
 
 Right-click the formed drive or use the Configurizer to open its **Engine** and **Redstone** tabs. The Engine tab shows the tank level and has a **Purge Tank** button that discards its contents.
 
-- **Activation: Automatic** runs the drive automatically during Flight and its takeoff roll.
-- **Activation: Redstone** uses the stronger of the physical input and any assigned receiving channel. **Redstone OFF** inverts the signal.
-- **Digital** applies full thrust when the effective signal is positive. **Analog** scales thrust and consumption from 0 to 15. Full throttle uses 1 mB every 10 seconds and produces a yellow-white afterburner plume.
+- **Activation: Disabled** lets the drive run automatically during powered Flight and its takeoff roll.
+- **Activation: Redstone ON** uses the stronger of the physical input and any assigned receiving channel. **Activation: Redstone OFF** inverts that signal.
+- **Signal: Digital** applies full thrust when the effective signal is positive. **Signal: Analog** scales thrust and consumption from 0 to 15. Full throttle uses 1 mB every 10 seconds and produces a yellow-white afterburner plume.
 
 A redstone command can burn fuel when the drive is parked, for example to test the exhaust before flight. Vehicles can use several drives. Their weight contributes to takeoff and altitude limits.
 

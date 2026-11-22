@@ -32,6 +32,7 @@ final class MaxwellDriveLiveChecks {
     private static final LiveGallery GALLERY = new LiveGallery("shot_maxwell", ROOT)
             .shot("afterburner-rear", 4.8, 2.7, 7.5, 149, 22)
             .shot("assembly-front", 5.5, 2.4, -4.5, 32, 18)
+            .shot("scaled-front", 30.5, 2.9, -15, 0, 0)
             .shot("scaled-inlets", 20, 7, -8, -37, 21);
     private static Future<?> setup;
     private static int stage, ticks;
@@ -85,12 +86,29 @@ final class MaxwellDriveLiveChecks {
         if (stage == 5 && dialog(mc) != null) {
             GuiNavigationTable gui = dialog(mc);
             click(gui, 21, 0);
-            require(gui.control(9).displayString.equals("Throttle: Digital"), "shared Redstone pane opens in digital mode");
+            require(gui.control(1) instanceof RedstoneActivationButton && gui.control(16) == null,
+                    "one shared activation selector includes polarity");
+            activation(gui, "Disabled");
+            click(gui, 1, 0);
+            activation(gui, "Redstone ON");
+            click(gui, 1, 0);
+            activation(gui, "Redstone OFF");
+            click(gui, 1, 0);
+            activation(gui, "Disabled");
+            click(gui, 1, 1);
+            activation(gui, "Redstone OFF");
+            click(gui, 1, 1);
+            activation(gui, "Redstone ON");
+            click(gui, 1, 1);
+            activation(gui, "Disabled");
+            click(gui, 1, 1);
+            require(gui.control(9).displayString.equals("Signal: Digital"), "shared Redstone pane opens in digital mode");
             click(gui, 9, 0);
-            require(gui.control(9).displayString.equals("Throttle: Analog"), "left click selects analog mode");
+            require(gui.control(9).displayString.equals("Signal: Analog"), "left click selects analog mode");
             click(gui, 9, 1);
-            require(gui.control(9).displayString.equals("Throttle: Digital"), "right click selects previous throttle mode");
+            require(gui.control(9).displayString.equals("Signal: Digital"), "right click selects previous signal mode");
             click(gui, 9, 0);
+            activation(gui, "Redstone OFF");
             next(6);
             return false;
         }
@@ -104,9 +122,10 @@ final class MaxwellDriveLiveChecks {
         }
         if (stage == 7 && mc.world.getTileEntity(LARGE) instanceof TileEntityConstructor) {
             TileEntityConstructor engine = (TileEntityConstructor) mc.world.getTileEntity(LARGE);
-            if (engine.maxwellFuel() != 0 || !engine.driveSettings().levels) return false;
+            if (engine.maxwellFuel() != 0 || !engine.screenSettings().redstone
+                    || !engine.driveSettings().inverted || !engine.driveSettings().levels) return false;
             mc.player.closeScreen();
-            System.out.println("[vandorlabs][reprolab] maxwell-drive PASS ordinary/Configurator member clicks, analog previous/next, purge round trip, world captures");
+            System.out.println("[vandorlabs][reprolab] maxwell-drive PASS ordinary/Configurator member clicks, activation and signal both directions, persisted polarity, purge, world captures");
             return true;
         }
         return false;
@@ -164,6 +183,10 @@ final class MaxwellDriveLiveChecks {
         GuiNavigationTable gui = (GuiNavigationTable) mc.currentScreen;
         require(gui.inventorySlots instanceof ContainerMaxwellDrive, "both click paths open the dedicated Maxwell container");
         return gui;
+    }
+
+    private static void activation(GuiNavigationTable gui, String value) {
+        require(gui.control(1).displayString.equals("Activation: " + value), "activation is " + value);
     }
 
     private static void click(GuiNavigationTable gui, int id, int button) throws Exception {

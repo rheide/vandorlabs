@@ -6,7 +6,7 @@ The Maxwell Drive gives a Forge 1.12.2 vehicle sustained forward thrust. Build a
 
 See the [illustrated Maxwell build guide](../multiblocks/maxwell-drive/README.md) for frame counts, port positions and a table of how much each drive lifts at takeoff and at altitude.
 
-Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to set its redstone response or purge its tank before changing fuels. At full thrust, a drive uses **1 mB every 10 seconds** at 20 ticks per second. Analog signal strength scales thrust and consumption together. A signaled drive can burn fuel while placed, taxiing or hovering. A drive with redstone control disabled starts automatically when the pilot engages Flight.
+Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to choose **Redstone ON** or **Redstone OFF** as its activation, select a **Digital** or **Analog** signal, or purge the tank before changing fuels. At full thrust, a drive uses **1 mB every 10 seconds** at 20 ticks per second. Analog signal strength scales thrust and consumption together. A signaled drive can burn fuel while placed, taxiing or hovering. With **Activation: Disabled**, the drive starts automatically when the pilot engages Flight.
 
 ## Taking off
 

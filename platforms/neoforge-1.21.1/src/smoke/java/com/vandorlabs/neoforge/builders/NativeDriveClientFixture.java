@@ -128,7 +128,7 @@ final class NativeDriveClientFixture {
                 }else if(tile.maxwell()){
                     need(player.containerMenu == player.inventoryMenu && NativeCredentialItems.company(player.getMainHandItem()) == 3
                             && tile.getItem(3).isEmpty(), "Maxwell opens its controls without taking the held chip");
-                    System.out.println("[vandorlabs][builder-client] maxwell-controls PASS filledGauge/normalAndConfigurator/analog/purge/noChip");
+                    System.out.println("[vandorlabs][builder-client] maxwell-controls PASS filledGauge/normalAndConfigurator/activationAndSignalBothDirections/purge/noChip");
                 }else{
                     need(NativeCredentialItems.company(player.getMainHandItem())==3&&tile.getItem(3).isEmpty()
                             &&tile.driveActivity()==(tile.drive().defaultActivity()+2)%3,
@@ -316,9 +316,16 @@ final class NativeDriveClientFixture {
                         "Maxwell exposes its Engine and Redstone tabs");
                 click(screen, "Redstone", 0);
                 for (var child : screen.children()) if (child instanceof EditBox box) box.setValue("317,318");
-                click(screen, "Activation Automatic", 0);
-                click(screen, "Engine Redstone On", 1);
-                click(screen, "Throttle Digital", 0);
+                click(screen, "Activation: Disabled", 0);
+                click(screen, "Activation: Redstone ON", 0);
+                click(screen, "Activation: Redstone OFF", 0);
+                click(screen, "Activation: Disabled", 1);
+                click(screen, "Activation: Redstone OFF", 1);
+                click(screen, "Activation: Redstone ON", 1);
+                click(screen, "Activation: Disabled", 1);
+                click(screen, "Signal: Digital", 0);
+                click(screen, "Signal: Analog", 1);
+                click(screen, "Signal: Digital", 0);
                 return;
             }
             click(screen, "Animated", 0);
