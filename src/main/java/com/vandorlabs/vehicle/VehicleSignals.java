@@ -228,6 +228,13 @@ public final class VehicleSignals {
         return false;
     }
     public boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
+        return click(pos,player,false);
+    }
+    boolean clickEmergencyPark(BlockPos pos,net.minecraft.entity.player.EntityPlayer player){
+        return VehicleStatus.offersEmergencyPark(craft.view,player)&&click(pos,player,true);
+    }
+    private boolean click(BlockPos pos,net.minecraft.entity.player.EntityPlayer player,boolean emergencyOnly){
+        if(emergencyOnly&&!(craft.view.getTileEntity(pos) instanceof TileEntityAnimatedScreenSelector))return false;
         if(craft.view.getTileEntity(pos) instanceof TileEntityNavigationTable){TileEntityNavigationTable table=(TileEntityNavigationTable)craft.view.getTileEntity(pos);double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());Vec3d start=craft.toLocal(player.getPositionEyes(1),pos),end=craft.toLocal(player.getPositionEyes(1).add(player.getLook(1).scale(reach)),pos);if(com.vandorlabs.navigation.NavigationVehicle.tableUse(table,player,start,end)){flush();return true;}return false;}
         if(player.isSneaking() || craft.view.getTileEntity(pos) instanceof TileEntityTokenSlot)return false;
         if(craft.view.getTileEntity(pos) instanceof TileEntityRedstoneChannel)return clickControl(pos);
@@ -235,13 +242,17 @@ public final class VehicleSignals {
         TileEntityAnimatedScreenSelector tile=(TileEntityAnimatedScreenSelector)craft.view.getTileEntity(pos);IBlockState state=craft.view.getBlockState(pos);
         double reach=Math.min(8,player.getEntityAttribute(net.minecraft.entity.player.EntityPlayer.REACH_DISTANCE).getAttributeValue());
         Vec3d eye=player.getPositionEyes(1),end=eye.add(Vec3d.fromPitchYaw(player.rotationPitch,player.rotationYaw).scale(reach));eye=craft.toLocal(eye,pos).subtract(new Vec3d(pos));end=craft.toLocal(end,pos).subtract(new Vec3d(pos));
-        tick();
-        if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){flush();return true;}
-        if(ScreenChipSupport.activate(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){dirty.add(pos);flush();return true;}
+        if(!emergencyOnly){
+            tick();
+            if(com.vandorlabs.navigation.NavigationInteractions.screen(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){flush();return true;}
+            if(ScreenChipSupport.activate(tile,player,net.minecraft.util.EnumHand.MAIN_HAND,eye,end)){dirty.add(pos);flush();return true;}
+        }
         for(int slot=0;slot<2;slot++)if(tile.hasVehicleStatus(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             int action=RedstoneScreenInteractions.statusAction(state,tile,slot,eye,end);if(action<0)continue;
+            if(emergencyOnly!=(action==VehicleStatus.EMERGENCY_PARK_ACTION))continue;
             VehicleStatus.activate(craft.view,pos,player,action);return true;
         }
+        if(emergencyOnly)return false;
         for(int slot=0;slot<2;slot++)if(tile.hasRedstoneScreen(slot) && RedstoneScreenInteractions.supportsSlot(state.getBlock(),slot)){
             RedstoneScreenContents contents=tile.redstoneScreen(slot);int index=RedstoneScreenInteractions.hitRow(state,tile,slot,eye,end,contents.rows().size());if(index<0)continue;
             RedstoneScreenContents.Row row=contents.rows().get(index);Link link=links.get(row);if(!(link instanceof LatchLink))return false;

@@ -286,7 +286,7 @@ public final class RenderGroundVehicle extends Render<EntityGroundVehicle> {
         net.minecraft.client.renderer.culling.Frustum tileFrustum=new net.minecraft.client.renderer.culling.Frustum();
         tileFrustum.setPosition(cameraXWorld,cameraYWorld,cameraZWorld);
         pair.removeIf(mesh->mesh.bounds!=null && mesh.builtCells==mesh.cells && !tileFrustum.isBoundingBoxInFrustum(pose.world(e.articulation.localBounds(mesh.bounds,mesh.body,partial),e.structure.bounds.maxX/2,e.structure.bounds.maxZ/2)));
-        GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.translate(e.structure.bounds.maxX/2,0,e.structure.bounds.maxZ/2);GlStateManager.rotate(-angle,0,1,0);GlStateManager.translate(-e.structure.bounds.maxX/2,0,-e.structure.bounds.maxZ/2);GlStateManager.disableLighting();GlStateManager.enableTexture2D();bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        GlStateManager.pushMatrix();GlStateManager.translate(x,y,z);GlStateManager.translate(e.structure.bounds.maxX/2,0,e.structure.bounds.maxZ/2);GlStateManager.rotate(-angle,0,1,0);if(pose.pitch!=0)GlStateManager.rotate(pose.pitch,-pose.facing.getFrontOffsetZ(),0,pose.facing.getFrontOffsetX());GlStateManager.translate(-e.structure.bounds.maxX/2,0,-e.structure.bounds.maxZ/2);GlStateManager.disableLighting();GlStateManager.enableTexture2D();bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
         GlStateManager.color(1,1,1,1);
         pair.sort(Comparator.comparingDouble((Mesh mesh)->mesh.cells.isEmpty()?0:-posedDistance(e,mesh.cells.get(0).pos,localCamera,partial)));
         long meshStarted=VehicleRenderProfile.start();

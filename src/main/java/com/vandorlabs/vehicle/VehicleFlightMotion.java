@@ -1,0 +1,126 @@
+package com.vandorlabs.vehicle;
+
+import com.vandorlabs.blocks.BlockLandingGear;
+import com.vandorlabs.gear.GearBlock;
+import com.vandorlabs.gear.GearTileEntity;
+import com.vandorlabs.physics.OrientedBounds;
+import com.vandorlabs.physics.RigidTransform;
+import net.minecraft.block.Block;
+import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.math.AxisAlignedBB;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+
+import java.util.Map;
+
+/** Pitched hull collision. The normal Taxi geometry still handles contact and ground roll. */
+final class VehicleFlightMotion {
+    enum Result { MOVED, OBSTRUCTED, UNLOADED }
+
+    private final EntityGroundVehicle craft;
+    private VehicleCollision previousCollision;
+    private VehicleWorld previousView;
+    private Map<Integer,VehicleCollision> hull;
+    private double radius;
+
+    VehicleFlightMotion(EntityGroundVehicle craft) { this.craft = craft; }
+
+    static boolean landingGear(VehicleWorld view, VehicleStructure.Cell cell) {
+        Block block = cell.state.getBlock();
+        if (!(block instanceof BlockLandingGear)) return false;
+        if (!(block instanceof GearBlock)) return true;
+        GearBlock.Kind kind = ((GearBlock) block).kind();
+        if (kind == GearBlock.Kind.WHEEL || kind == GearBlock.Kind.TRACK || kind == GearBlock.Kind.SKI || kind == GearBlock.Kind.PLATE) return true;
+        TileEntity tile = view.getTileEntity(cell.pos);
+        GearTileEntity controller = tile instanceof GearTileEntity ? ((GearTileEntity) tile).loadedController() : null;
+        return controller != null && controller.isLandingAssembly() && controller.payload() == null;
+    }
+
+    private void prepare() {
+        if (previousCollision == craft.collision && previousView == craft.view) return;
+        hull = VehicleCollision.flightHull(craft);
+        previousCollision = craft.collision;
+        previousView = craft.view;
+        AxisAlignedBB box = craft.collision.bounds;
+        radius = Math.sqrt(craft.structure.bounds.maxX * craft.structure.bounds.maxX / 4 +
+                box.maxY * box.maxY + craft.structure.bounds.maxZ * craft.structure.bounds.maxZ / 4);
+        if (craft.articulation.active()) radius = Math.max(radius, craft.articulation.renderRadius());
+    }
+
+    AxisAlignedBB bounds(VehiclePose pose) {
+        prepare();
+        double px = craft.structure.bounds.maxX / 2, pz = craft.structure.bounds.maxZ / 2;
+        if (!craft.articulation.active()) return pose.world(craft.collision.bounds,px,pz);
+        AxisAlignedBB combined = null;
+        RigidTransform root = pose.transform(px,pz);
+        for (Map.Entry<Integer,VehicleCollision> body : hull.entrySet()) {
+            AxisAlignedBB box = bounds(body.getValue().bounds,root.then(craft.articulation.physicalBody(body.getKey())));
+            combined = combined == null ? box : combined.union(box);
+        }
+        return combined == null ? pose.world(craft.collision.bounds,px,pz) : combined;
+    }
+
+    Result move(double dx, double dy, double dz, float yaw, float pitch) {
+        prepare();
+        VehiclePose from = craft.flightPose();
+        VehiclePose to = new VehiclePose(from.x + dx, from.y + dy, from.z + dz, yaw, pitch, from.facing);
+        AxisAlignedBB envelope = bounds(from).union(bounds(to)).grow(.2);
+        if (!loaded(envelope)) return Result.UNLOADED;
+        double angular = Math.abs(MathHelper.wrapDegrees(yaw - from.yaw)) + Math.abs(pitch - from.pitch);
+        int steps = Math.max(1, (int) Math.ceil(Math.toRadians(angular) * radius / .12));
+        VehiclePose accepted = from;
+        double ceiling = craft.world.provider.getDimension()==0?Double.POSITIVE_INFINITY:craft.world.getActualHeight();
+        try {
+            for (VehicleCollision geometry : hull.values()) geometry.begin(craft.world,craft);
+            for (int step = 1; step <= steps; step++) {
+                VehiclePose next = from.interpolate(to,(float) step / steps);
+                AxisAlignedBB occupied = bounds(next);
+                if (occupied.maxY >= ceiling) return Result.UNLOADED;
+                if (occupied.minY < 0 || blocked(accepted,next)) {
+                    craft.applyFlightPose(accepted);
+                    return Result.OBSTRUCTED;
+                }
+                accepted = next;
+            }
+        } finally {
+            for (VehicleCollision geometry : hull.values()) geometry.end();
+        }
+        craft.applyFlightPose(to);
+        return Result.MOVED;
+    }
+
+    private boolean blocked(VehiclePose from, VehiclePose to) {
+        double dx=to.x-from.x,dy=to.y-from.y,dz=to.z-from.z;
+        VehiclePose beforeTravel=new VehiclePose(from.x,from.y,from.z,to.yaw,to.pitch,to.facing);
+        RigidTransform root = beforeTravel.transform(craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2);
+        for (Map.Entry<Integer,VehicleCollision> body : hull.entrySet()) {
+            RigidTransform transform = root.then(craft.articulation.physicalBody(body.getKey()));
+            if (body.getValue().overlapsFlight(craft.world,craft,transform,dx,dy,dz)) return true;
+        }
+        return false;
+    }
+
+    private boolean loaded(AxisAlignedBB area) {
+        if (!craft.world.getWorldBorder().contains(new BlockPos(area.minX,area.minY,area.minZ)) ||
+                !craft.world.getWorldBorder().contains(new BlockPos(area.maxX,area.maxY,area.maxZ))) return false;
+        for (int x = MathHelper.floor(area.minX) >> 4; x <= MathHelper.floor(area.maxX) >> 4; x++)
+            for (int z = MathHelper.floor(area.minZ) >> 4; z <= MathHelper.floor(area.maxZ) >> 4; z++)
+                if (!craft.world.isBlockLoaded(new BlockPos(x * 16,64,z * 16),false)) return false;
+        return true;
+    }
+
+    double ceiling(float yaw,float pitch) {
+        prepare();
+        if(craft.world.provider.getDimension()==0)return com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE;
+        return craft.world.getActualHeight() - (bounds(new VehiclePose(craft.posX,craft.posY,craft.posZ,yaw,pitch,craft.structure.facing)).maxY - craft.posY) - 1;
+    }
+
+    static OrientedBounds oriented(AxisAlignedBB box, RigidTransform transform) {
+        return new OrientedBounds(box.minX,box.minY,box.minZ,box.maxX,box.maxY,box.maxZ,transform);
+    }
+
+    static AxisAlignedBB bounds(AxisAlignedBB box, RigidTransform transform) {
+        OrientedBounds oriented = oriented(box,transform);
+        return new AxisAlignedBB(oriented.minX,oriented.minY,oriented.minZ,oriented.maxX,oriented.maxY,oriented.maxZ);
+    }
+}

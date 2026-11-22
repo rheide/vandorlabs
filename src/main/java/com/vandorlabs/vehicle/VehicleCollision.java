@@ -43,7 +43,15 @@ public final class VehicleCollision {
     public VehicleCollision(VehicleWorld view) {this(capture(view),false);}
     private VehicleCollision(VehicleWorld view,boolean reference) {this(capture(view),reference);}
     static Raw capture(VehicleWorld view){return capture(view,false);}
-    static Raw capture(VehicleWorld view,boolean omitModularGear){
+    static Raw capture(VehicleWorld view,boolean omitModularGear){return capture(view,omitModularGear,null);}
+    static Map<Integer,VehicleCollision> flightHull(EntityGroundVehicle craft){
+        Map<Integer,List<AxisAlignedBB>> byBody=new LinkedHashMap<>();
+        capture(craft.view,false,byBody);
+        Map<Integer,VehicleCollision> result=new LinkedHashMap<>();
+        byBody.forEach((body,boxes)->result.put(body,prepare(new Raw(boxes,craft.structure.bounds.maxX/2,craft.structure.bounds.maxZ/2,0,null,true))));
+        return result;
+    }
+    private static Raw capture(VehicleWorld view,boolean omitModularGear,Map<Integer,List<AxisAlignedBB>> flightBodies){
         long profileStart=PROFILE?System.nanoTime():0;
         long diagnostic=view.craft==null?0:VehicleAnimationDiagnostics.start(view.craft);
         String diagnosticSide=diagnostic==0?null:view.parent.isRemote?"client/":"server/";
@@ -51,6 +59,7 @@ public final class VehicleCollision {
         Set<BlockPos> canopyOwners=new HashSet<>();boolean complete=true;
         AxisAlignedBB query=view.structure.bounds.grow(16);
         for(VehicleStructure.Cell c:view.structure.cells) {
+            if(flightBodies!=null&&VehicleFlightMotion.landingGear(view,c))continue;
             if(omitModularGear&&c.state.getBlock() instanceof com.vandorlabs.gear.GearBlock){
                 net.minecraft.tileentity.TileEntity member=view.getTileEntity(c.pos);
                 com.vandorlabs.gear.GearTileEntity root=member instanceof com.vandorlabs.gear.GearTileEntity?((com.vandorlabs.gear.GearTileEntity)member).loadedController():null;
@@ -72,13 +81,15 @@ public final class VehicleCollision {
                 } else if(c.state.getBlock() instanceof com.vandorlabs.blocks.BlockTelescopicLandingGear)
                     component.addAll(((com.vandorlabs.blocks.BlockTelescopicLandingGear)c.state.getBlock()).vehicleBoxes(view,c.pos));
                 else c.state.addCollisionBoxToList(view,c.pos,query,component,null,false);
-                all.addAll(component);
             }
             catch(RuntimeException | LinkageError error){
                 complete=false;VehicleCompatibility.warn(c.state.getBlock(),"collision",error);
-                all.add(new AxisAlignedBB(c.pos));
+                component.clear();component.add(new AxisAlignedBB(c.pos));
             }
+            if(flightBodies==null)all.addAll(component);
+            else if(!component.isEmpty())flightBodies.computeIfAbsent(view.craft.articulation.bodyAt(c.pos),body->new ArrayList<>()).addAll(component);
         }
+        if(flightBodies!=null)return null;
         if(all.isEmpty())throw new IllegalArgumentException("The craft has no collision geometry.");
         return new Raw(all,view.structure.bounds.maxX/2,view.structure.bounds.maxZ/2,PROFILE?System.nanoTime()-profileStart:0,diagnostic==0?null:diagnosticSide,complete);
     }
@@ -373,6 +384,19 @@ public final class VehicleCollision {
     private Collection<AxisAlignedBB> obstacles(World world,net.minecraft.entity.Entity entity,AxisAlignedBB swept) {
         if(boxes.size()<=8){terrainQueries++;List<AxisAlignedBB> result=world.getCollisionBoxes(entity,swept);candidateBoxes+=result.size();return result;}
         return (terrain==null?new Terrain(world,entity):terrain).obstacles(swept);
+    }
+    boolean overlapsFlight(World world, EntityGroundVehicle craft, com.vandorlabs.physics.RigidTransform transform,double dx,double dy,double dz) {
+        for(Cluster cluster:clusters) {
+            AxisAlignedBB swept=VehicleFlightMotion.bounds(cluster.bounds,transform).expand(dx,dy,dz);
+            if(swept.minY>=world.getActualHeight())continue;
+            Collection<AxisAlignedBB> nearby=obstacles(world,craft,swept);
+            if(nearby.isEmpty())continue;
+            for(AxisAlignedBB local:cluster.boxes) {
+                com.vandorlabs.physics.OrientedBounds solid=VehicleFlightMotion.oriented(local,transform);
+                for(AxisAlignedBB obstacle:nearby)if(solid.sweepsInto(VehicleFlightMotion.oriented(obstacle,com.vandorlabs.physics.RigidTransform.IDENTITY),dx,dy,dz))return true;
+            }
+        }
+        return false;
     }
     public float turn(World world,net.minecraft.entity.Entity entity,double x,double y,double z,float from,float change) {
         if(entity instanceof EntityGroundVehicle&&((EntityGroundVehicle)entity).articulation.active())return ((EntityGroundVehicle)entity).articulation.turn(x,y,z,from,change);

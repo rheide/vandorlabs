@@ -21,7 +21,7 @@ public final class VehicleLandingGear {
     public static boolean setExtended(EntityGroundVehicle craft,BlockPos pos,boolean extend){
         if(!craft.structure.isActive(pos)||craft.world.isRemote||craft.transferInProgress||craft.ownershipBlocked)return false;
         net.minecraft.tileentity.TileEntity raw=craft.view.getTileEntity(pos);if(!(raw instanceof TileEntityLandingGear)||!((TileEntityLandingGear)raw).isRoot())return false;
-        boolean grounded=!craft.hover&&(!extend||((TileEntityLandingGear)raw).taxiGrounded);
+        boolean grounded=!craft.hover&&!craft.flying()&&(!extend||((TileEntityLandingGear)raw).taxiGrounded);
         if(grounded&&!TaxiTelescopicGear.canTarget(craft,extend))return false;
         Set<BlockPos> targets=new HashSet<>();targets.add(pos);if(grounded)for(TileEntityLandingGear gear:TaxiTelescopicGear.supports(craft))targets.add(gear.getPos());
         List<VehicleStructure.Cell> cells=new ArrayList<>();boolean changed=false;
@@ -49,10 +49,10 @@ public final class VehicleLandingGear {
             if(craft.world.isRemote)continue;
             boolean extend=craft.view.getBlockState(tile.getPos()).getValue(BlockTelescopicLandingGear.EXTENDED);
             float target=extend?tile.getExtensionPixels()/16F:0;
-            if(!craft.hover&&!tile.taxiGrounded&&target<tile.progress)continue;
+            if(!craft.hover&&!craft.flying()&&!tile.taxiGrounded&&target<tile.progress)continue;
             float next=tile.progress<target?Math.min(target,tile.progress+.05F):Math.max(target,tile.progress-.05F);
             if(next==tile.progress)continue;
-            if((craft.hover||!tile.taxiGrounded)&&!craft.world.isRemote&&next>tile.progress){
+            if((craft.hover||craft.flying()||!tile.taxiGrounded)&&!craft.world.isRemote&&next>tile.progress){
                 float before=tile.progress;tile.progress=next;boolean blocked=false;
                 try{VehiclePose pose=new VehiclePose(craft.posX,craft.posY,craft.posZ,craft.rotationYaw);
                     for(net.minecraft.util.math.AxisAlignedBB box:((BlockTelescopicLandingGear)tile.getBlockType()).vehicleBoxes(craft.view,tile.getPos()))
@@ -64,7 +64,7 @@ public final class VehicleLandingGear {
         }
         boolean groundedMotion=false;for(BlockPos at:desired.keySet())groundedMotion|=((TileEntityLandingGear)craft.view.getTileEntity(at)).taxiGrounded;
         double chassisShift=0;
-        if(groundedMotion&&!craft.hover&&!craft.world.isRemote&&!desired.isEmpty()){chassisShift=TaxiTelescopicGear.shift(craft,desired);if(!Double.isFinite(chassisShift))return;}
+        if(groundedMotion&&!craft.hover&&!craft.flying()&&!craft.world.isRemote&&!desired.isEmpty()){chassisShift=TaxiTelescopicGear.shift(craft,desired);if(!Double.isFinite(chassisShift))return;}
         if(desired.isEmpty()||!craft.collisionCache.readyForCanopyPose(craft.view,desired))return;
         for(Map.Entry<BlockPos,Float> entry:desired.entrySet())((TileEntityLandingGear)craft.view.getTileEntity(entry.getKey())).progress=entry.getValue();
         if(craft.world.isRemote)corrections.remove(craft);
@@ -72,7 +72,7 @@ public final class VehicleLandingGear {
         for(VehicleStructure.Cell cell:craft.structure.cells)cells.add(desired.containsKey(cell.pos)?new VehicleStructure.Cell(cell.pos,cell.state,craft.view.getTileEntity(cell.pos).writeToNBT(new NBTTagCompound())):cell);
         VehicleStructure next=new VehicleStructure(cells,craft.structure.seat,craft.structure.facing,craft.structure.gearCount);
         boolean complete=false;
-        if(groundedMotion&&!craft.hover&&!craft.world.isRemote){complete=true;for(BlockPos at:desired.keySet()){TileEntityLandingGear gear=(TileEntityLandingGear)craft.view.getTileEntity(at);complete&=Math.abs(gear.progress-(craft.view.getBlockState(at).getValue(BlockTelescopicLandingGear.EXTENDED)?gear.getExtensionPixels()/16F:0))<1e-5;}if(complete)next=parking(next,BlockPos.ORIGIN).structure;}
+        if(groundedMotion&&!craft.hover&&!craft.flying()&&!craft.world.isRemote){complete=true;for(BlockPos at:desired.keySet()){TileEntityLandingGear gear=(TileEntityLandingGear)craft.view.getTileEntity(at);complete&=Math.abs(gear.progress-(craft.view.getBlockState(at).getValue(BlockTelescopicLandingGear.EXTENDED)?gear.getExtensionPixels()/16F:0))<1e-5;}if(complete)next=parking(next,BlockPos.ORIGIN).structure;}
         if(complete){craft.install(next);craft.signals.open();}else craft.updateCanopies(next,true);
         if(chassisShift!=0)craft.setPosition(craft.posX,craft.posY+chassisShift,craft.posZ);
         if(!craft.world.isRemote)for(BlockPos pos:desired.keySet())craft.signals.changed(pos);

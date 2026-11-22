@@ -91,6 +91,7 @@ public final class VehicleInteraction {
             if(tile.use(start,end,player)){if(craft.view.getTileEntity(tile.getPos())==tile)craft.signals.cockpitChanged(tile);return true;}if(tile.data().seat!=null && player.getRidingEntity()!=craft){craft.board(player,tile.getPos());return true;}com.vandorlabs.container.ContainerCockpit.open(player,tile);return true;
         }
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
+            if(target.hit.action==VehicleSelection.Action.SCREEN&&craft.signals.clickEmergencyPark(target.hit.cell.pos,player))return true;
             if(target.hit.action==VehicleSelection.Action.BOARD && target.hit.cell.state.getBlock() instanceof BlockPilotSeat){BlockPos seat=VehicleSeats.lower(target.hit.cell.state,target.hit.cell.pos);VehicleService.previewSeat(server,craft,seat);}
             else if(target.hit.action==VehicleSelection.Action.CONTROLLER)VehicleService.previewController(server,craft,target.hit.cell.pos);
             else VehicleService.previewParking(server,craft);return true;

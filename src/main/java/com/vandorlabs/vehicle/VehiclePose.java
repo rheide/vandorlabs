@@ -2,25 +2,34 @@ package com.vandorlabs.vehicle;
 
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.math.Vec3d;
+import com.vandorlabs.physics.RigidTransform;
+import net.minecraft.util.EnumFacing;
 
 /** A pose shared by the hull, riders and camera; simulation never reads visual poses. */
 public final class VehiclePose {
     public final double x,y,z;
     public final float yaw;
-    public VehiclePose(double x,double y,double z,float yaw){this.x=x;this.y=y;this.z=z;this.yaw=yaw;}
+    public final float pitch;
+    public final EnumFacing facing;
+    public VehiclePose(double x,double y,double z,float yaw){this(x,y,z,yaw,0,EnumFacing.NORTH);}
+    public VehiclePose(double x,double y,double z,float yaw,float pitch,EnumFacing facing){this.x=x;this.y=y;this.z=z;this.yaw=yaw;this.pitch=pitch;this.facing=facing;}
     public VehiclePose interpolate(VehiclePose next,float partial) {
         return new VehiclePose(x+(next.x-x)*partial,y+(next.y-y)*partial,z+(next.z-z)*partial,
-                yaw+MathHelper.wrapDegrees(next.yaw-yaw)*partial);
+                yaw+MathHelper.wrapDegrees(next.yaw-yaw)*partial,pitch+(next.pitch-pitch)*partial,next.facing);
     }
+    RigidTransform transform(double px,double pz){return RigidTransform.translation(x,y,z).then(RigidTransform.joint(px,0,pz,facing.getFrontOffsetX(),facing.getFrontOffsetZ(),yaw,pitch));}
     public Vec3d world(Vec3d local,double px,double pz) {
+        if(pitch!=0){double[] at=transform(px,pz).point(local.x,local.y,local.z);return new Vec3d(at[0],at[1],at[2]);}
         double c=Math.cos(Math.toRadians(yaw)),s=Math.sin(Math.toRadians(yaw)),lx=local.x-px,lz=local.z-pz;
         return new Vec3d(x+px+c*lx-s*lz,y+local.y,z+pz+s*lx+c*lz);
     }
     public Vec3d local(Vec3d absolute,double px,double pz) {
+        if(pitch!=0){double[] at=transform(px,pz).inverse(absolute.x,absolute.y,absolute.z);return new Vec3d(at[0],at[1],at[2]);}
         double c=Math.cos(Math.toRadians(yaw)),s=Math.sin(Math.toRadians(yaw)),lx=absolute.x-x-px,lz=absolute.z-z-pz;
         return new Vec3d(px+c*lx+s*lz,absolute.y-y,pz-s*lx+c*lz);
     }
     public net.minecraft.util.math.AxisAlignedBB world(net.minecraft.util.math.AxisAlignedBB local,double px,double pz) {
+        if(pitch!=0)return VehicleFlightMotion.bounds(local,transform(px,pz));
         Vec3d center=world(new Vec3d((local.minX+local.maxX)/2,(local.minY+local.maxY)/2,(local.minZ+local.maxZ)/2),px,pz);
         double c=Math.abs(Math.cos(Math.toRadians(yaw))),s=Math.abs(Math.sin(Math.toRadians(yaw)));
         double dx=(c*(local.maxX-local.minX)+s*(local.maxZ-local.minZ))/2,dy=(local.maxY-local.minY)/2,

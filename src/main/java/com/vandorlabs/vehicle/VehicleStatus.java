@@ -9,6 +9,7 @@ import java.util.*;
 
 /** Bounded status discovery and authoritative screen controls. */
 public final class VehicleStatus {
+    public static final int FLIGHT_ACTION=5, EMERGENCY_PARK_ACTION=6;
     private static final Map<World,Map<BlockPos,Entry>> cache=new WeakHashMap<>();
     private static final class Entry {final long at;final BlockPos controller,vehicle;Entry(long at,BlockPos controller,BlockPos vehicle){this.at=at;this.controller=controller;this.vehicle=vehicle;}}
     private VehicleStatus(){}
@@ -21,14 +22,29 @@ public final class VehicleStatus {
             if(player.isDead||player.isSpectator()||craft!=null&&(craft.isDead||craft.ownershipBlocked||craft.transferInProgress))return;
             BlockPos at=craft==null?screen:new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(screen).addVector(.5,.5,.5)));
             if(player.world!=(craft==null?world:craft.world)||player.getDistanceSqToCenter(at)>64)return;
-            VehicleService.permission(player,at);
+            if(craft==null)VehicleService.permission(player,at);else VehicleService.carriedPermission(player,craft,at);
             if(action>=1&&action<=3){VehicleService.screenMode(player,screen,craft,action-1);return;}
+            if(action==FLIGHT_ACTION){VehicleService.screenMode(player,screen,craft,3);return;}
+            if(action==EMERGENCY_PARK_ACTION){VehicleService.screenEmergencyPark(player,craft);return;}
             TileEntityAutopilot controller=find(world,screen);if(controller==null)return;
+            if(craft!=null&&(craft.flying()||craft.takeoffRoll()))return;
             VehicleService.permission(player,craft==null?controller.getPos():new BlockPos(craft.toWorld(new net.minecraft.util.math.Vec3d(controller.getPos()).addVector(.5,.5,.5))));
             if(action==0){if(craft==null)controller.setEnabled(!controller.enabled());else craft.autopilot.toggle();}
             else if(action==4){if(craft==null)controller.pulseDeparture();else craft.autopilot.pulseDeparture();}
         }catch(IllegalArgumentException denied){VehicleNetwork.error(player,denied.getMessage());}
     }
+    public static boolean offersFlight(World world){
+        if(!(world instanceof VehicleWorld))return false;
+        EntityGroundVehicle craft=((VehicleWorld)world).craft;
+        return craft!=null&&(craft.flying()||craft.flightReadout().drives>0);
+    }
+    public static boolean offersEmergencyPark(World world,net.minecraft.entity.player.EntityPlayer player){
+        EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;
+        return craft!=null&&!craft.transferInProgress&&!craft.cruise.active()&&player!=null&&player.capabilities.isCreativeMode
+                &&player.getHeldItemMainhand().getItem() instanceof com.vandorlabs.items.ItemConfigurizer;
+    }
+    public static int modeLeft(int mode,boolean flight){return 6+mode*(flight?29:39);}
+    public static int modeRight(int mode,boolean flight){return modeLeft(mode,flight)+(flight?27:37);}
     public static com.vandorlabs.tiles.TileEntityVehicleController controller(World world,BlockPos screen){
         BlockPos at=world instanceof VehicleWorld?VehicleControlSettings.position(((VehicleWorld)world).structure):entry(world,screen).vehicle;
         TileEntity raw=at==null||!world.isBlockLoaded(at)?null:world.getTileEntity(at);return raw instanceof com.vandorlabs.tiles.TileEntityVehicleController?(com.vandorlabs.tiles.TileEntityVehicleController)raw:null;

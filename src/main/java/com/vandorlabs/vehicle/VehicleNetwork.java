@@ -15,6 +15,7 @@ public final class VehicleNetwork {
     public static final int REQUEST=0, INPUT=1, CONFIRM=2, SNAPSHOT=3, PREVIEW=4, ERROR=5, STATE=6, DOORS=7, INTERACT=8, TAXI=9, SETTINGS=10, HEIGHT=11, INSPECTION=12, CANOPIES=13, TILE=14, FLIGHT=15, MODE_SELECT=16, DESIGN=17, SAFE_PARK=18;
     public static final int FRAGMENT=28000;
     static final int COUPLER_SCOPE_MAGIC=0x43415331,COUPLER_SCOPE_VERSION=1,COUPLER_SCOPE_BYTES=21;
+    private static final int FLIGHT_STATE_MAGIC=0x4d574632, FLIGHT_STATE_BYTES=31;
     static final int SNAPSHOT_SCOPE_MAGIC=0x43535331,SNAPSHOT_SCOPE_BYTES=45;
     public static final class Packet implements IMessage {
         public int type,entity,sequence,total,offset;
@@ -31,6 +32,10 @@ public final class VehicleNetwork {
         public VehicleBodyPoseFrame bodyPose=VehicleBodyPoseFrame.NONE;
         public UUID associationGeneration,associationOwner;
         public double x,y,z,dy,speed;public float yaw,steering;
+        public int flightPhase;
+        public float flightPitch;
+        public boolean flightLanded;
+        public VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
         public Packet(){}
         public Packet(int type){this.type=type;}
         private static boolean zero(UUID value){return value.getMostSignificantBits()==0&&value.getLeastSignificantBits()==0;}
@@ -41,19 +46,37 @@ public final class VehicleNetwork {
             if(scopedUpdate(type)&&associationGeneration!=null){if(zero(associationGeneration))throw new IllegalArgumentException("Empty update Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}
         }
         private static boolean scopedUpdate(int type){return type==TILE||type==CANOPIES||type==DOORS;}
-        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);if(associationGeneration!=null){if(associationGeneration.getMostSignificantBits()==0&&associationGeneration.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}}
+        private void writeState(ByteBuf b){b.writeLong(serverTick);b.writeDouble(x);b.writeDouble(y);b.writeDouble(z);b.writeDouble(dy);b.writeDouble(speed);b.writeFloat(yaw);b.writeFloat(steering);if(jointAngles.length>0){if((jointAngles.length&1)!=0||jointAngles.length>VehicleArticulation.MAX_JOINTS*2)throw new IllegalArgumentException("Joint packet length");b.writeInt(0x4A4F494E);b.writeLong(jointTopology);b.writeShort(jointAngles.length/2);for(short angle:jointAngles)b.writeShort(angle);}armMotion.write(b);bodyPose.write(b);writeFlightState(b);if(associationGeneration!=null){if(associationGeneration.getMostSignificantBits()==0&&associationGeneration.getLeastSignificantBits()==0)throw new IllegalArgumentException("Empty Coupler scope");b.writeInt(COUPLER_SCOPE_MAGIC);b.writeByte(COUPLER_SCOPE_VERSION);b.writeLong(associationGeneration.getMostSignificantBits());b.writeLong(associationGeneration.getLeastSignificantBits());}}
+        private void writeFlightState(ByteBuf b){
+            if(flightPhase==0&&flightReadout.drives==0)return;
+            b.writeInt(FLIGHT_STATE_MAGIC);b.writeByte(flightPhase);b.writeFloat(flightPitch);b.writeBoolean(flightLanded);
+            b.writeInt(flightReadout.drives);b.writeInt(flightReadout.fuel);b.writeInt(flightReadout.capacity);
+            b.writeFloat((float)flightReadout.mass);b.writeFloat((float)flightReadout.effectiveMass);
+            b.writeFloat((float)flightReadout.thrust);b.writeBoolean(flightReadout.partialMass);
+        }
+        private boolean readFlightState(ByteBuf b){
+            if(b.readableBytes()<FLIGHT_STATE_BYTES)return false;
+            flightPhase=b.readUnsignedByte();flightPitch=b.readFloat();flightLanded=b.readBoolean();
+            int drives=b.readInt(),fuel=b.readInt(),capacity=b.readInt();
+            float mass=b.readFloat(),effective=b.readFloat(),thrust=b.readFloat();boolean partial=b.readBoolean();
+            if(flightPhase>5||!Float.isFinite(flightPitch)||Math.abs(flightPitch)>com.vandorlabs.physics.FlightEnvelope.MAX_PITCH||
+                drives<0||fuel<0||capacity<fuel||!Float.isFinite(mass)||mass<0||!Float.isFinite(effective)||effective<0||effective>mass||
+                !Float.isFinite(thrust)||thrust<0)return false;
+            flightReadout=new VehicleFlightReadout(drives,fuel,capacity,mass,effective,thrust,partial);return true;
+        }
         public void fromBytes(ByteBuf b){
-            valid=false;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;
+            valid=false;flightPhase=0;flightPitch=0;flightLanded=false;flightReadout=VehicleFlightReadout.EMPTY;jointAngles=new short[0];jointTopology=0;armMotion=VehicleArmMotionFrame.NONE;bodyPose=VehicleBodyPoseFrame.NONE;associationGeneration=null;associationOwner=null;
             try{
                 type=b.readUnsignedByte();entity=b.readInt();token=new UUID(b.readLong(),b.readLong());sequence=b.readInt();
                 if(type==STATE){
                     flag=b.readBoolean();serverTick=b.readLong();x=b.readDouble();y=b.readDouble();z=b.readDouble();dy=b.readDouble();speed=b.readDouble();yaw=b.readFloat();steering=b.readFloat();
-                    boolean joints=false,arms=false,bodies=false,scope=false;
+                    boolean joints=false,arms=false,bodies=false,scope=false,flight=false;
                     while(b.isReadable()){
                         if(b.readableBytes()<4)return;int marker=b.readInt();
                         if(marker==0x4A4F494E&&!joints&&!arms&&!bodies&&!scope){if(b.readableBytes()<10)return;joints=true;jointTopology=b.readLong();int count=b.readUnsignedShort();if(count>VehicleArticulation.MAX_JOINTS||b.readableBytes()<count*4)return;jointAngles=new short[count*2];for(int i=0;i<jointAngles.length;i++){short angle=b.readShort();if(Math.abs((int)angle)>7500)return;jointAngles[i]=angle;}}
                         else if(marker==VehicleArmMotionFrame.MAGIC&&!arms&&!bodies&&!scope){arms=true;armMotion=VehicleArmMotionFrame.read(b);}
                         else if(marker==VehicleBodyPoseFrame.MAGIC&&!bodies&&!scope){bodies=true;bodyPose=VehicleBodyPoseFrame.read(b);}
+                        else if(marker==FLIGHT_STATE_MAGIC&&!flight&&!scope){if(!readFlightState(b))return;flight=true;}
                         else if(marker==COUPLER_SCOPE_MAGIC&&!scope){if(b.readableBytes()!=17||b.readUnsignedByte()!=COUPLER_SCOPE_VERSION)return;scope=true;long most=b.readLong(),least=b.readLong();if(most==0&&least==0)return;associationGeneration=new UUID(most,least);}
                         else return;
                     }
@@ -104,6 +127,7 @@ public final class VehicleNetwork {
     }
     public static void state(EntityGroundVehicle e) {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
+        p.flightPhase=e.flightPhase();p.flightPitch=e.flightPitch();p.flightLanded=e.flightLandedState();p.flightReadout=e.flightReadout();
         p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
         p.armMotion=e.articulation.armMotion();p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();
@@ -124,7 +148,7 @@ public final class VehicleNetwork {
                     ?((EntityGroundVehicle)raw).snapshotBytes():snapshot.encode();
             for(int offset=0;offset<bytes.length;offset+=FRAGMENT) {
                 Packet p=new Packet(preview?PREVIEW:SNAPSHOT);p.entity=entity;p.token=token;p.origin=origin;p.flag=parking;p.total=bytes.length;p.offset=offset;
-                p.text=status; p.sequence=status.isEmpty()?0:-1;p.forward=(byte)(controller?1:0);p.strafe=(byte)(raw instanceof EntityGroundVehicle?(((EntityGroundVehicle)raw).hover?2:1):0);
+                p.text=status; p.sequence=status.isEmpty()?0:-1;p.forward=(byte)(controller?1:0);p.strafe=(byte)(raw instanceof EntityGroundVehicle?((EntityGroundVehicle)raw).vehicleMode():0);
                 p.data=java.util.Arrays.copyOfRange(bytes,offset,Math.min(bytes.length,offset+FRAGMENT));
                 if(raw instanceof EntityGroundVehicle){p.associationGeneration=((EntityGroundVehicle)raw).couplerAssociationGeneration();if(p.associationGeneration!=null){p.associationOwner=raw.getUniqueID();p.serverTick=raw.world.getTotalWorldTime();}}
                 PacketHandler.INSTANCE.sendTo(p,player);

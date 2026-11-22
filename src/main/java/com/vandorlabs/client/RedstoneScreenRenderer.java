@@ -99,29 +99,51 @@ final class RedstoneScreenRenderer {
         com.vandorlabs.tiles.TileEntityVehicleController controller=com.vandorlabs.vehicle.VehicleStatus.controller(world,pos);
         boolean busy=craft!=null?craft.transferInProgress:controller!=null&&controller.converting;
         boolean hover=craft!=null&&craft.hover;
+        boolean flight=com.vandorlabs.vehicle.VehicleStatus.offersFlight(world);
+        boolean emergency=com.vandorlabs.vehicle.VehicleStatus.offersEmergencyPark(world,Minecraft.getMinecraft().player);
         com.vandorlabs.tiles.TileEntityAutopilot autopilot=com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
         boolean on=autopilot!=null&&autopilot.enabled();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
         bindWhite();
         BufferBuilder buffer=Tessellator.getInstance().getBuffer();buffer.begin(org.lwjgl.opengl.GL11.GL_QUADS,BlockSurfaceFormat.get());
-        rect(buffer,0,0,128,height,0,craft==null?0xFF362B19:hover?0xFF152D48:0xFF153A29);
+        rect(buffer,0,0,128,height,0,craft==null?0xFF362B19:craft.flying()?0xFF222947:hover?0xFF152D48:0xFF153A29);
         if(busy){int progress=(int)(VehicleShapeRenderer.ticks()*3)%90;rect(buffer,6,top+12,122,top+22,.01,0xFF495C69);rect(buffer,6+progress,top+12,32+progress,top+22,.02,0xFF37D8AD);}
         if(!busy&&autopilot!=null)rect(buffer,6,top,122,top+10,.01,on?0xFF37D8AD:0xFF495C69);
-        int mode=craft==null?0:hover?2:1;
-        if(!busy)for(int i=0;i<3;i++)rect(buffer,6+i*39,top+12,43+i*39,top+22,.01,i==mode?0xFF37D8AD:0xFF495C69);
-        if(autopilot!=null)rect(buffer,6,top+36,48,top+46,.01,0xFF495C69);Tessellator.getInstance().draw();
+        int mode=craft==null?0:craft.vehicleMode();
+        if(!busy)for(int i=0;i<(flight?4:3);i++)rect(buffer,com.vandorlabs.vehicle.VehicleStatus.modeLeft(i,flight),top+12,
+                com.vandorlabs.vehicle.VehicleStatus.modeRight(i,flight),top+22,.01,i==mode?0xFF37D8AD:0xFF495C69);
+        if(autopilot!=null)rect(buffer,6,top+36,48,top+46,.01,0xFF495C69);
+        if(emergency&&!busy)rect(buffer,52,top+36,122,top+46,.01,0xFF883C41);
+        Tessellator.getInstance().draw();
         FontRenderer font=Minecraft.getMinecraft().fontRenderer;
         if(height>64)text(font,controller==null||controller.vehicleName.isEmpty()?"VEHICLE STATUS":font.trimStringToWidth(controller.vehicleName,112),8,8,0xE1EEFF);
-        if(controller!=null&&controller.shape!=null)VehicleShapeRenderer.draw(VehicleShapeRenderer.controller(controller),height>64?88:104,height>64?102:43,height>64?88:36,height>64?48:24);
         if(busy){text(font,"Converting...",8,top+1,0xE1EEFF);GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();return;}
         if(height<=64&&autopilot==null&&controller!=null)text(font,font.trimStringToWidth(controller.vehicleName,112),8,top+1,0xE1EEFF);
         if(autopilot!=null)text(font,height<=64&&controller!=null&&!controller.vehicleName.isEmpty()?font.trimStringToWidth(controller.vehicleName,112):on?"AUTOPILOT ON":"Autopilot OFF",8,top+1,on?0x072D24:0xFFFFFF);
-        String[] modes={"Park","Taxi","Hover"};for(int i=0;i<3;i++)text(font,modes[i],8+i*39,top+13,i==mode?0x072D24:0xFFFFFF);
-        if(autopilot!=null)text(font,font.trimStringToWidth(autopilot.status,height>64?114:72),8,top+25,0xCEE9ED);
-        if(autopilot!=null)text(font,"Next >",8,top+37,0xFFFFFF);
-        if(hover){double clearance=craft.groundClearance();text(font,Double.isFinite(clearance)?String.format(java.util.Locale.ROOT,"Height: %.1f blocks",clearance):"Height: 32+ blocks",8,top+47,0xC1E8FF);}
+        String[] modes={"Park","Taxi","Hover","Flight"};
+        for(int i=0;i<(flight?4:3);i++)statusText(font,modes[i],com.vandorlabs.vehicle.VehicleStatus.modeLeft(i,flight)+2,top+14,i==mode?0x072D24:0xFFFFFF);
+        boolean flightTelemetry=craft!=null&&(craft.flying()||craft.takeoffRoll());
+        if(flightTelemetry){
+            String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.takeoffRoll()?"Takeoff roll":"Flight";
+            statusText(font,String.format(java.util.Locale.ROOT,"%s    %.1f m/s",state,Math.abs(craft.driveSpeed)*20),8,top+26,0xCEE9ED);
+        }else if(autopilot!=null)statusText(font,font.trimStringToWidth(autopilot.status,140),8,top+26,0xCEE9ED);
+        if(autopilot!=null)statusText(font,"Next >",8,top+38,0xFFFFFF);
+        if(emergency)statusText(font,"Emergency Park",55,top+38,0xFFFFFF);
+        if(craft!=null){
+            statusText(font,String.format(java.util.Locale.ROOT,"Y %.1f",craft.flightAltitude()),8,top+49,0xC1E8FF);
+            com.vandorlabs.vehicle.VehicleFlightReadout readout=craft.flightReadout();
+            if(readout.drives>0){
+                String fuel=String.format(java.util.Locale.ROOT,"Fuel %.0f%%   %,d mB",readout.capacity==0?0:100D*readout.fuel/readout.capacity,readout.fuel);
+                statusText(font,fuel,55,top+49,0xC1E8FF);
+            }
+        }
         GlStateManager.color(1,1,1,1);GlStateManager.disableBlend();
+    }
+
+    private static void statusText(FontRenderer font,String value,int x,int y,int color){
+        GlStateManager.pushMatrix();GlStateManager.translate(x,y,0);GlStateManager.scale(.8F,.8F,1);
+        text(font,value,0,0,color);GlStateManager.popMatrix();
     }
 
     static void rect(BufferBuilder b,int left,int top,int right,int bottom,double z,int color){

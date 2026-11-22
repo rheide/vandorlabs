@@ -105,7 +105,7 @@ final class TaxiModularGear {
     /** Return true while this grouped adjustment owns the gear step. */
     static boolean tick(EntityGroundVehicle craft){
         if(craft.world.isRemote)return false;
-        if(craft.hover){craft.loadedTaxiSupportCheck=false;return false;}
+        if(craft.hover||craft.flying()){craft.loadedTaxiSupportCheck=false;return false;}
         List<GearTileEntity> roots=roots(craft);if(roots.size()<3){
             craft.loadedTaxiSupportCheck=false;
             for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())){

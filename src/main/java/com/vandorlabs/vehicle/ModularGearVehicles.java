@@ -87,10 +87,10 @@ public final class ModularGearVehicles {
         Map<BlockPos,Correction> corrected=craft.world.isRemote?corrections.get(craft):null;
         for(TileEntity raw:craft.view.tiles.values())if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){GearTileEntity gear=(GearTileEntity)raw;if(!gear.isOperational()||gear.taxiPhase()==1)continue;double before=gear.progress();
             if(!gear.validateParkingHoldInstalled())continue;if(!craft.world.isRemote)gear.input();if(gear.parkingHeld())continue;
-            if(!craft.world.isRemote&&!craft.hover&&gear.isLandingAssembly()&&gear.isSwingArmController()&&gear.landingAnglesVersion()==1){int safe=gear.taxiSafeTarget();if(safe>=0&&gear.target()!=(safe==1)){gear.target(safe==1);notify.add(gear.getPos());}}if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=gear.couplerPassive()?before:GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
+            if(!craft.world.isRemote&&!craft.hover&&!craft.flying()&&gear.isLandingAssembly()&&gear.isSwingArmController()&&gear.landingAnglesVersion()==1){int safe=gear.taxiSafeTarget();if(safe>=0&&gear.target()!=(safe==1)){gear.target(safe==1);notify.add(gear.getPos());}}if(!craft.world.isRemote&&gear.latchRetractionStroke())craft.signals.persist();double next=gear.couplerPassive()?before:GearMotion.advance(before,gear.target(),1,GearTileEntity.ANIMATION_TICKS);
             if(craft.world.isRemote&&craft.articulation.constrainsArm(gear.getPos()))next=before;
             if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision()&&correction.current(craft,gear.getPos()))next=correction.progress;else if(gear.motionBlocked())next=before;}
-            if(gear.isLandingAssembly()&&!craft.hover){
+            if(gear.isLandingAssembly()&&!craft.hover&&!craft.flying()){
                 if(gear.isSwingArmController()&&gear.landingAnglesVersion()==1){if(!gear.landingEndpoints().uprightAt(gear.target()?1:0))next=before;}
                 else if(next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
             }

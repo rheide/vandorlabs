@@ -242,6 +242,7 @@ public final class VehicleTransfer {
         NBTTagCompound tag=new NBTTagCompound();tag.setInteger("Schema",1);tag.setTag("Craft",structure.write());
         tag.setLong("Origin",origin.toLong());tag.setUniqueId("Entity",entity.getUniqueID());tag.setBoolean("Parking",park);
         tag.setBoolean("HoverMode",entity.hover);tag.setDouble("HoverTarget",entity.hoverTarget);
+        entity.writeFlightMode(tag);
         tag.setTag("OccupiedPilotSeats",entity.occupiedSeatAssignments());if(entity.taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",entity.taxiReturnSeat.toLong());
         tag.setBoolean("TaxiReturnPending",entity.taxiReturnPending);if(entity.taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",entity.taxiReturnActor);
         if(entity.couplingActor()!=null)tag.setUniqueId("CouplingActor",entity.couplingActor());tag.setTag("AutopilotNavigation",entity.autopilot.write());
@@ -514,6 +515,7 @@ public final class VehicleTransfer {
         double target=tag.hasKey("HoverTarget",99)?tag.getDouble("HoverTarget"):tag.getDouble("Y");
         if(!Double.isFinite(target))throw new IOException("Invalid recovered Hover target; journal retained.");
         craft.hover=tag.getBoolean("HoverMode");craft.hoverTarget=target;if(craft.view!=null)craft.view.hover=craft.hover;
+        craft.readFlightMode(tag);
     }
     /** A retained journal must not overwrite edits made after the original interrupted transfer. */
     static void requireUnchangedRecovery(net.minecraft.world.World world,VehicleStructure snapshot,BlockPos origin)throws IOException {

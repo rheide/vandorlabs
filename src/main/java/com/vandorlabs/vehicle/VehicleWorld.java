@@ -1,5 +1,6 @@
 package com.vandorlabs.vehicle;
 
+import com.vandorlabs.tiles.TileEntityHexTank;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
@@ -196,7 +197,10 @@ public final class VehicleWorld extends World {
      * Chunk construction posts global capability events; a remote view on a
      * physical server must not send other mods down their client-world paths. */
     @Override public void markChunkDirty(BlockPos p,TileEntity tile){
-        if(tile!=null && tiles.get(p)==tile)controlChanged(p);
+        if(tile!=null && tiles.get(p)==tile){
+            if(craft!=null&&(tile instanceof net.minecraft.inventory.IInventory||tile instanceof TileEntityHexTank))craft.flightPayloadChanged();
+            controlChanged(p);
+        }
     }
     // Only explicit vehicle adapters may update controls. Inherited comparator
     // callbacks would run arbitrary neighbouring mod tiles in this read-only view.

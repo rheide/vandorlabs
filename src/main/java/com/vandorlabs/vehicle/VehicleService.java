@@ -29,15 +29,22 @@ public final class VehicleService {
         void finish(){scan.releaseSource();if(indicator!=null&&!indicator.isInvalid())indicator.setConverting(false);}}
     /** Screen clicks use the clicking player, bounded scans and the normal transfer checks. */
     public static void screenMode(EntityPlayerMP player,BlockPos screen,EntityGroundVehicle craft,int mode){
-        require(mode>=0&&mode<=2,"Invalid vehicle mode.");
+        require(mode>=0&&mode<=3,"Invalid vehicle mode.");
         if(craft==null){
+            require(mode!=3,"Assemble in Taxi or Hover before selecting Flight.");
             if(mode==0||jobs.containsKey(player.getUniqueID()))return;
             require(jobs.size()<16,"Too many craft inspections; try again.");
             Job job=new Job(player,screen);job.signal=true;job.screen=true;job.requestedMode=mode;jobs.put(player.getUniqueID(),job);return;
         }
         require(validCaptured(player,craft)&&!craft.transferInProgress,"Craft unavailable during transfer.");
         VehicleStructure.Cell controller=craft.structure.controller();require(mode==0||craft.structure.hasDedicatedController(),"Vehicle Controller missing");
-        permission(player,new BlockPos(craft.toWorld(new Vec3d(controller==null?craft.structure.seat:controller.pos).addVector(.5,.5,.5))));
+        carriedPermission(player,craft,new BlockPos(craft.toWorld(new Vec3d(controller==null?craft.structure.seat:controller.pos).addVector(.5,.5,.5))));
+        if(mode==3){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));craft.requestFlight(player);VehicleNetwork.state(craft);return;}
+        if(mode!=0&&(craft.flying()||craft.takeoffRoll())){
+            VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));
+            craft.leaveFlight(mode);VehicleNetwork.state(craft);return;
+        }
+        require(!craft.cruise.active()&&(!craft.flying()||craft.flightLanded())&&!craft.takeoffRoll(),"Land the craft before parking.");
         require(mode!=1 || VehicleSkiTraction.allowed(craft),"Taxi requires wheels, or only skis over ice.");
         if(mode!=0){VehicleMounts.requireAllowed(craft.view,VehicleControlSettings.position(craft.structure));require(craft.setHover(mode==2),mode==2?VehicleFlight.hoverRequirement(craft.structure)+" Hover also needs a Vehicle Thruster.":"Extend the landing gear fully and descend to within three blocks of solid ground before selecting Taxi.");VehicleNetwork.state(craft);return;}
         require(!craft.hover || VehicleFlight.canParkHover(craft),"Extend the landing gear and descend within three blocks of ground before parking.");
@@ -92,8 +99,11 @@ public final class VehicleService {
     @SubscribeEvent public static void taxiExit(net.minecraftforge.event.entity.EntityMountEvent event) {
         if(event.isMounting() || !(event.getEntityMounting() instanceof EntityPlayerMP) || !(event.getEntityBeingMounted() instanceof EntityGroundVehicle))return;
         EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityBeingMounted();EntityPlayerMP player=(EntityPlayerMP)event.getEntityMounting();
+        if(craft.flying()&&!craft.flightLanded()&&!craft.transferInProgress&&!craft.isDead&&!player.isDead&&player.connection.netManager.isChannelOpen()){
+            event.setCanceled(true);return;
+        }
         if(craft.hover && player.isSneaking() && !craft.flightDismount && !craft.transferInProgress){event.setCanceled(true);return;}
-        if(craft.hover || craft.autopilot.enabled())return;
+        if(craft.hover || craft.flying() || craft.takeoffRoll() || craft.autopilot.enabled())return;
         if(craft.transferInProgress || craft.isDead || player.isDead || !player.connection.netManager.isChannelOpen() || !VehicleTaxiMode.enabled(craft.structure,craft.seatForPassenger(player)))return;
         try{VehicleRotation.turns(craft.rotationYaw);}catch(IllegalArgumentException failure){if(craft.world.getTotalWorldTime()>=craft.taxiNextWarning){craft.taxiNextWarning=craft.world.getTotalWorldTime()+20;VehicleNetwork.error(player,"Exited Taxi Mode; craft was not converted back: "+failure.getMessage()+" Reboard to align it, or use the Configurizer.");}}
     }
@@ -132,6 +142,7 @@ public final class VehicleService {
         try {
             if(signal.craft!=null) {
                 EntityGroundVehicle craft=signal.craft;if(craft.isDead || craft.ownershipBlocked)return;
+                if(craft.flying()||craft.takeoffRoll())return;
                 if(signal.mode==0){if(craft.autopilot.controller()!=null)craft.autopilot.controller().setEnabled(false);craft.stopForParking();}
                 VehicleTransfer.submit(world,()->{BlockPos origin=VehicleRotation.plan(craft).origin;validateParking(player,craft,origin,true,false);VehicleTransfer.park(world,craft,origin,player);},e->VehicleNetwork.error(player,e.getMessage()));
             } else {
@@ -215,8 +226,8 @@ public final class VehicleService {
         openCapturedController(player,entity,selected);
     }
     private static void openCapturedController(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos selected){
-        try{Vec3d point=entity.toWorld(new Vec3d(selected).addVector(.5,.5,.5));require(player.getDistanceSq(point.x,point.y,point.z)<=64,"Move closer to the Vehicle Controller.");permission(player,new BlockPos(point));
-            VehicleRotation.Plan plan=null;String status="";try{plan=VehicleRotation.plan(entity);validateParking(player,entity,plan.origin,false);}catch(Exception blocked){status=blocked.getMessage()==null?"Parking unavailable.":blocked.getMessage();}
+        try{Vec3d point=entity.toWorld(new Vec3d(selected).addVector(.5,.5,.5));require(player.getDistanceSq(point.x,point.y,point.z)<=64,"Move closer to the Vehicle Controller.");carriedPermission(player,entity,new BlockPos(point));
+            VehicleRotation.Plan plan=null;String status="";try{require(!entity.flying()&&!entity.takeoffRoll(),"Select a landing mode on the Vehicle Status screen.");plan=VehicleRotation.plan(entity);validateParking(player,entity,plan.origin,false);}catch(Exception blocked){status=blocked.getMessage()==null?"Parking unavailable.":blocked.getMessage();}
             open(player,new Preview(player.getServerWorld(),entity.structure,status.isEmpty()?plan.origin:new BlockPos(entity),entity,status,true,selected));
         }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage());}
     }
@@ -246,7 +257,8 @@ public final class VehicleService {
         try{
             Preview current=previews.get(player.getUniqueID());require(current!=null,"Vehicle settings expired; inspect again.");
             Preview preview=current.controller?controllerPreview(player,packet.token,packet.entity,packet.origin):seatPreview(player,packet.token,packet.entity,packet.origin);
-            require(preview.entity!=null&&validCaptured(player,preview.entity),"Inspect a vehicle in Taxi or Hover Mode.");
+            require(preview.entity!=null&&validCaptured(player,preview.entity),"Inspect a carried vehicle.");
+            require(!preview.entity.cruise.active(),"Descend below the cruise band before parking.");
             // Recovery plans the current held source rather than applying the old hull preview.
             // Arm animation may replace that hull while the selected controller remains unchanged.
             requireParkingSelection(preview);
@@ -254,6 +266,13 @@ public final class VehicleService {
             require(!preview.entity.transferInProgress,"Wait for the current vehicle transfer.");
             previews.remove(player.getUniqueID());VehicleSafePark.submit(player,preview.entity,preview.selected);
         }catch(Exception denied){VehicleNetwork.error(player,denied.getMessage()==null?"Safe Park unavailable.":denied.getMessage());}
+    }
+    static void screenEmergencyPark(EntityPlayerMP player,EntityGroundVehicle craft){
+        require(craft!=null&&validCaptured(player,craft)&&!craft.transferInProgress,"Vehicle recovery is unavailable.");
+        require(!craft.cruise.active(),"Descend below the cruise band before parking.");
+        BlockPos controller=VehicleControlSettings.position(craft.structure);
+        VehicleSafePark.requireAuthorized(player,craft,controller);
+        VehicleSafePark.submit(player,craft,controller);
     }
     /** Mode buttons use the same authenticated controller preview as settings. */
     public static void selectMode(EntityPlayerMP player,VehicleNetwork.Packet packet){
@@ -267,6 +286,7 @@ public final class VehicleService {
             require(preview.entity!=null||packet.sequence!=0,"Craft is already parked as blocks.");
             if(preview.entity==null || packet.sequence==0){confirm(player,packet.token,packet.sequence);return;}
             require(validCaptured(player,preview.entity),"Craft unavailable; inspect it again.");
+            require(!preview.entity.flying()&&!preview.entity.takeoffRoll(),"Change Flight mode on the Vehicle Status screen.");
             VehicleMounts.requireAllowed(preview.entity.view,VehicleControlSettings.position(preview.entity.structure));
             require(preview.entity.setHover(packet.sequence==2),packet.sequence==2?
                     "Hover requires three lift blocks and a Vehicle Thruster.":
@@ -451,9 +471,14 @@ public final class VehicleService {
         require(player.world.isBlockLoaded(p) && player.world.getWorldBorder().contains(p) && p.getY()>=0 && p.getY()<player.world.getHeight(),"A target cell is outside the loaded world.");
         require(player.world.isBlockModifiable(player,p) && player.canPlayerEdit(p,EnumFacing.UP,player.getHeldItemMainhand()),"You cannot modify a target block.");
     }
+    static void carriedPermission(EntityPlayerMP player,EntityGroundVehicle craft,BlockPos point){
+        if(craft.flying()||craft.cruise.active())point=new BlockPos(point.getX(),MathHelper.clamp(point.getY(),0,player.world.getHeight()-1),point.getZ());
+        permission(player,point);
+    }
     private static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events) {validateParking(player,entity,origin,events,true);}
     static void validateParking(EntityPlayerMP player,EntityGroundVehicle entity,BlockPos origin,boolean events,boolean reach) {
         require(!entity.isDead && entity.world==player.world && (!reach || distance(player,entity.getEntityBoundingBox())<=64),"Move closer to the craft.");
+        require(!entity.cruise.active()&&(!entity.flying()||entity.flightLanded())&&!entity.takeoffRoll(),"Land the craft before parking.");
         require(!entity.hover || VehicleFlight.canParkHover(entity),"Extend the landing gear and descend within three blocks of ground before parking.");
         require(entity.stopped(),"Stop before parking.");
         VehicleRotation.Plan plan=VehicleRotation.plan(entity);

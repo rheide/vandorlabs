@@ -35,7 +35,7 @@ public final class VehicleFlight {
     public static String hoverRequirement(VehicleStructure structure){return structure.couplers.isEmpty()?"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters.":"Hover requires three Antigravity Plates, Repulsor Arrays or Vertical Hover Thrusters in each connected coupler section.";}
     public static boolean canParkHover(EntityGroundVehicle craft){return VehicleLandingGear.extended(craft)&&clearance(craft)<=3;}
     public static double clearance(EntityGroundVehicle craft){
-        if(craft.collision==null)return Double.POSITIVE_INFINITY;
+        if(craft.collision==null||craft.flightAltitude()>=com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING)return Double.POSITIVE_INFINITY;
         AxisAlignedBB box=craft.articulation.active()?craft.articulation.worldBounds(craft.posX,craft.posY,craft.posZ,craft.rotationYaw):craft.collision.bounds(craft.rotationYaw).offset(craft.posX,craft.posY,craft.posZ);
         double bottom=box.minY,highest=Double.NEGATIVE_INFINITY;
         int minX=net.minecraft.util.math.MathHelper.floor(box.minX+.001),maxX=net.minecraft.util.math.MathHelper.floor(box.maxX-.001);

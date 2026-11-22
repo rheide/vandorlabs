@@ -106,12 +106,17 @@ public final class RedstoneScreenInteractions {
     public static int hitRow(IBlockState state,Vec3d start,Vec3d end,int count){
         return hitRow(state,null,0,start,end,count);
     }
-    /** 0 toggles autopilot, 1..3 select Block/Taxi/Hover, 4 pulses departure. */
+    /** Uses the same mode button bounds as the rendered Vehicle Status screen. */
     public static int statusAction(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end){
         int row=hitRow(state,tile,slot,start,end,4);
         double x=hitColumn(state,tile,slot,start,end);
+        boolean flight=tile!=null&&com.vandorlabs.vehicle.VehicleStatus.offersFlight(tile.getWorld());
         if(row==0)return 0;
-        if(row==1){for(int mode=0;mode<3;mode++)if(x>=6+mode*39&&x<43+mode*39)return mode+1;}
+        if(row==1)for(int mode=0;mode<(flight?4:3);mode++){
+            if(x>=com.vandorlabs.vehicle.VehicleStatus.modeLeft(mode,flight)&&x<com.vandorlabs.vehicle.VehicleStatus.modeRight(mode,flight))
+                return mode==3?com.vandorlabs.vehicle.VehicleStatus.FLIGHT_ACTION:mode+1;
+        }
+        if(row==3&&x>=52&&x<122)return com.vandorlabs.vehicle.VehicleStatus.EMERGENCY_PARK_ACTION;
         return row==3&&x<48?4:-1;
     }
     public static int hitRow(IBlockState state,TileEntityAnimatedScreenSelector tile,int slot,Vec3d start,Vec3d end,int count){

@@ -3,6 +3,7 @@ package com.vandorlabs.vehicle;
 import com.vandorlabs.blocks.BlockPilotSeat;
 import com.vandorlabs.entity.EntityChairSeat;
 import com.vandorlabs.items.ModItems;
+import com.vandorlabs.physics.FlightEnvelope;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
@@ -83,9 +84,92 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean localDriver;
     public boolean hover;
     public double hoverTarget;
+    private static final int NO_FLIGHT=0, TAKEOFF_ROLL=1, POWERED_FLIGHT=2, RECOVER_FLIGHT=3, RETURN_TAXI=4, RETURN_HOVER=5;
+    private int flightPhase;
+    private boolean landedFromFlight;
+    private boolean cruisingRecovery;
+    private int initialClimb;
+    private float flightPitch,targetPitch;
+    private final VehicleFlightReadout.Sampler flightSampler=new VehicleFlightReadout.Sampler();
+    private VehicleFlightReadout flightReadout=VehicleFlightReadout.EMPTY;
+    private final VehicleFlightMotion flightMotion=new VehicleFlightMotion(this);
+    public final VehicleCruise cruise=new VehicleCruise(this);
+
+    public boolean flying(){return flightPhase>=POWERED_FLIGHT;}
+    public boolean poweredFlight(){return flightPhase==TAKEOFF_ROLL||flightPhase==POWERED_FLIGHT;}
+    public boolean takeoffRoll(){return flightPhase==TAKEOFF_ROLL;}
+    public boolean descendingFromFlight(){return flightPhase>=RECOVER_FLIGHT;}
+    public boolean flightLanded(){return descendingFromFlight()&&landedFromFlight;}
+    public float flightPitch(){return flightPitch;}
+    int flightPhase(){return flightPhase;}
+    boolean flightLandedState(){return landedFromFlight;}
+    public double flightAltitude(){return cruise.altitude();}
+    public int vehicleMode(){return flying()?3:hover?2:1;}
+    public VehicleFlightReadout flightReadout(){return flightReadout;}
+    void flightPayloadChanged(){if(structure!=null&&!structure.maxwellCells.isEmpty())flightSampler.inventoryDirty(world.getTotalWorldTime());}
+
+    void requestFlight(EntityPlayerMP pilot){
+        if(flying()||takeoffRoll())return;
+        if(getControllingPassenger()!=pilot)throw new IllegalArgumentException("Sit in the Pilot Seat before selecting Flight.");
+        if(autopilot.enabled())throw new IllegalArgumentException("Turn off Autopilot before selecting Flight.");
+        refreshFlightReadout();
+        if(flightReadout.drives==0)throw new IllegalArgumentException("Flight requires a Maxwell Drive.");
+        if(flightReadout.thrust<=0)throw new IllegalArgumentException("Fuel and enable a Maxwell Drive before selecting Flight.");
+        if(!flightReadout.canFly())throw new IllegalArgumentException("Effective weight exceeds the available Maxwell takeoff limit.");
+        if(!hover&&(!onGround||!VehicleLandingGear.extended(this)||!VehicleSkiTraction.allowed(this)))
+            throw new IllegalArgumentException("Takeoff requires ground contact and extended Taxi landing gear.");
+        flightPhase=hover?POWERED_FLIGHT:TAKEOFF_ROLL;
+        flightPitch=0;landedFromFlight=false;cruisingRecovery=false;initialClimb=0;driveSpeed=Math.max(0,driveSpeed);
+        taxiReturnPending=false;
+        if(hover)VehicleLandingGear.refreshSignals(this);
+    }
+
+    void leaveFlight(int mode){
+        if(takeoffRoll()){
+            flightPhase=NO_FLIGHT;
+            if(mode==2&&!setHover(true))throw new IllegalArgumentException("This vehicle needs lift blocks and a Vehicle Thruster for Hover.");
+            return;
+        }
+        if(!flying())return;
+        if(mode==2&&!canResumeHover())throw new IllegalArgumentException("This vehicle needs lift blocks and a Vehicle Thruster for Hover.");
+        beginFlightRecovery(mode==1?RETURN_TAXI:RETURN_HOVER);
+    }
+
+    private void refreshFlightReadout(){
+        if(structure.maxwellCells.isEmpty()){flightReadout=VehicleFlightReadout.EMPTY;return;}
+        net.minecraft.tileentity.TileEntity raw=view.getTileEntity(VehicleControlSettings.position(structure));
+        com.vandorlabs.tiles.TileEntityVehicleController controller=raw instanceof com.vandorlabs.tiles.TileEntityVehicleController?(com.vandorlabs.tiles.TileEntityVehicleController)raw:null;
+        double prior=controller==null?0:Math.max(0,controller.vehicleWeight);
+        flightReadout=flightSampler.sample(view,world.getTotalWorldTime(),prior,controller!=null&&controller.vehicleWeightIncomplete);
+    }
+
+    private boolean canResumeHover(){return VehicleFlight.canHover(structure)&&structure.activeThruster();}
+    private void beginFlightRecovery(int phase){
+        flightPhase=phase;
+        cruisingRecovery|=cruise.active()||flightAltitude()>FlightEnvelope.WORLD_CEILING;
+    }
+    VehiclePose flightPose(){return new VehiclePose(posX,posY,posZ,rotationYaw,flightPitch,structure==null?EnumFacing.NORTH:structure.facing);}
+    void applyFlightPose(VehiclePose pose){
+        rotationYaw=pose.yaw;flightPitch=pose.pitch;
+        setPosition(pose.x,pose.y,pose.z);view.origin=new BlockPos(pose.x,pose.y,pose.z);
+        velocityChanged=true;fallDistance=0;
+    }
+    void writeFlightMode(NBTTagCompound tag){
+        tag.setByte("MaxwellFlightPhase",(byte)flightPhase);
+        if(flightPhase!=NO_FLIGHT){tag.setDouble("MaxwellFlightSpeed",driveSpeed);tag.setFloat("MaxwellFlightPitch",flightPitch);tag.setBoolean("MaxwellFlightLanded",landedFromFlight);tag.setBoolean("MaxwellCruiseRecovery",cruisingRecovery);}
+    }
+    void readFlightMode(NBTTagCompound tag){
+        flightPhase=MathHelper.clamp(tag.getByte("MaxwellFlightPhase"),NO_FLIGHT,RETURN_HOVER);
+        if(flightPhase==NO_FLIGHT)return;
+        double savedSpeed=tag.getDouble("MaxwellFlightSpeed");float savedPitch=tag.getFloat("MaxwellFlightPitch");
+        driveSpeed=Double.isFinite(savedSpeed)?MathHelper.clamp(savedSpeed,0,FlightEnvelope.cruiseSpeed(FlightEnvelope.MAX_ALTITUDE)):0;
+        flightPitch=Float.isFinite(savedPitch)?MathHelper.clamp(savedPitch,-FlightEnvelope.MAX_PITCH,FlightEnvelope.MAX_PITCH):0;
+        landedFromFlight=tag.getBoolean("MaxwellFlightLanded");
+        cruisingRecovery=tag.getBoolean("MaxwellCruiseRecovery");
+    }
     public boolean flightDismount;
     public void exitFlight(EntityPlayerMP player){
-        if(!isPassenger(player))return;
+        if(!isPassenger(player)||flying())return;
         if(getControllingPassenger()==player && hover && !autopilot.enabled())holdHoverPosition();
         flightDismount=true;try{player.dismountRidingEntity();}finally{flightDismount=false;}
     }
@@ -100,8 +184,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private long verticalAt=-100,clearanceAt=-100;
     private double clearance=Double.POSITIVE_INFINITY;
     public final VehicleAutopilot autopilot=new VehicleAutopilot(this);
-    public double groundClearance(){if(world.getTotalWorldTime()-clearanceAt>=5){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();}return clearance;}
+    public double groundClearance(){if(flightAltitude()>=FlightEnvelope.WORLD_CEILING)return Double.POSITIVE_INFINITY;if(world.getTotalWorldTime()-clearanceAt>=5){clearance=VehicleFlight.clearance(this);clearanceAt=world.getTotalWorldTime();}return clearance;}
     public boolean setHover(boolean value){
+        if(flying()||takeoffRoll())return false;
         if(view!=null&&structure!=null&&structure.controller()!=null&&!VehicleMounts.allowed(view,structure.controller().pos))return false;
         if(!value && structure!=null && !VehicleSkiTraction.allowed(this))return false;
         if(value && (!VehicleFlight.canHover(structure)))return false;
@@ -115,7 +200,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle){flightInput(player,direction,toggle,false);}
     public void flightInput(EntityPlayerMP player,byte direction,boolean toggle,boolean sprint){
-        if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled())return;
+        if(getControllingPassenger()!=player || direction< -1 || direction>1 || autopilot.enabled()||flying()||takeoffRoll())return;
         if(toggle||direction!=vertical||sprint!=flightSprint)VehicleCouplings.releaseControlsChanged(this);
         recordCurrentCouplingDriver();
         if(toggle&&!structure.hasDedicatedController()){VehicleNetwork.error(player,"Vehicle Controller missing");return;}
@@ -136,10 +221,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public Vec3d toWorld(Vec3d local,BlockPos owner){
         double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,c=Math.cos(Math.toRadians(rotationYaw)),s=Math.sin(Math.toRadians(rotationYaw));
         if(articulation.active())local=articulation.point(local,owner,1);
+        if(flightPitch!=0)return flightPose().world(local,px,pz);
         double x=local.x-px,z=local.z-pz;return new Vec3d(posX+px+c*x-s*z,posY+local.y,posZ+pz+s*x+c*z);
     }
     public Vec3d toLocal(Vec3d absolute) {
         double px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2,c=Math.cos(Math.toRadians(rotationYaw)),s=Math.sin(Math.toRadians(rotationYaw));
+        if(flightPitch!=0)return flightPose().local(absolute,px,pz);
         double x=absolute.x-posX-px,z=absolute.z-posZ-pz;return new Vec3d(px+c*x+s*z,absolute.y-posY,pz-s*x+c*z);
     }
     public Vec3d toLocal(Vec3d absolute,BlockPos owner){Vec3d local=toLocal(absolute);return articulation.active()?articulation.inverse(local,owner):local;}
@@ -158,13 +245,21 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(p.armMotion.arms.isEmpty()||articulation.receiveArmMotion(p.armMotion,p.bodyPose,p.serverTick))receiveGeneralPose(p.bodyPose);
         if(p.jointAngles.length>0&&(generalBodyPose==null||!generalBodyPose.usesGeneral()))articulation.receive(p.jointTopology,p.jointAngles,localDriver);
         hover=p.flag;if(view!=null)view.hover=hover;hoverTarget=p.y;
+        int oldPhase=flightPhase;
+        flightPhase=p.flightPhase;flightReadout=p.flightReadout;landedFromFlight=p.flightLanded;
+        if(oldPhase!=flightPhase){pendingInputs.clear();nextPrediction=null;}
         lastServerTick=p.serverTick;
         lastAcknowledgement=p.sequence;
-        if(!localDriver||transferInProgress){pendingInputs.clear();nextPrediction=null;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;targetX=p.x;targetY=p.y;targetZ=p.z;targetYaw=p.yaw;interpolation=3;return;}
+        if(longPositionChange(p.x,p.y,p.z)){
+            flightPitch=targetPitch=p.flightPitch;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
+            snapPosition(p.x,p.y,p.z,p.yaw);
+            return;
+        }
+        if(!localDriver||transferInProgress||flying()||takeoffRoll()){pendingInputs.clear();nextPrediction=null;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;targetX=p.x;targetY=p.y;targetZ=p.z;targetYaw=p.yaw;targetPitch=p.flightPitch;interpolation=3;return;}
         double oldX=posX+correctionX,oldY=posY+correctionY,oldZ=posZ+correctionZ;
         float oldYaw=rotationYaw+correctionYaw;
         pendingInputs.removeIf(c->c.sequence<=p.sequence);
-        rotationYaw=p.yaw;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
+        rotationYaw=p.yaw;flightPitch=targetPitch=p.flightPitch;driveSpeed=p.speed;steering=p.steering;motionY=p.dy;
         setPosition(p.x,p.y,p.z);
         if(!pendingInputs.isEmpty())collision.withTerrainCache(world,this,()->{for(Control input:pendingInputs){forward=input.f;strafe=input.s;brake=input.brake;predictFlight(input.sprint);advance(true);}});
         double error=(oldX-posX)*(oldX-posX)+(oldY-posY)*(oldY-posY)+(oldZ-posZ)*(oldZ-posZ);
@@ -175,7 +270,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
     public Vec3d renderCorrection(){return new Vec3d(correctionX,correctionY,correctionZ);}
     public VehiclePose visualPose(float partial) {
-        if(currentVisual==null)return new VehiclePose(posX,posY,posZ,rotationYaw);
+        if(currentVisual==null)return flightPose();
         return previousVisual.interpolate(currentVisual,partial);
     }
     public Vec3d seatPosition(VehiclePose pose,Entity passenger) {return seatPosition(pose,passenger,0);}
@@ -380,17 +475,19 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         collisionCache.restart(view);
     }
     public byte[] snapshotBytes() throws java.io.IOException {if(encoded==null)encoded=structure.encode();return encoded;}
-    @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);}
+    @Override protected void entityInit(){dataManager.register(PILOT_SEATS,new NBTTagCompound());dataManager.register(TRANSFERRING,false);dataManager.register(HOVER_EXHAUST,false);VehicleCruise.define(this);}
     @Override public void writeSpawnData(io.netty.buffer.ByteBuf buffer){buffer.writeInt(VehicleStructure.SCHEMA);buffer.writeBoolean(transferInProgress);}
     @Override public void readSpawnData(io.netty.buffer.ByteBuf buffer){if(buffer.readInt()==VehicleStructure.SCHEMA){if(buffer.isReadable())setTransferInProgress(buffer.readBoolean());VehicleNetwork.request(this);}}
     @Override protected void writeEntityToNBT(NBTTagCompound tag){
         tag.setTag("OccupiedPilotSeats",dataManager.get(PILOT_SEATS).copy());signals.persist();articulation.write(tag);writeCouplerOwnershipMetadata(tag);
+        writeFlightMode(tag);cruise.write(tag);
         if(couplingActor!=null)tag.setUniqueId("CouplingActor",couplingActor);tag.setTag("AutopilotNavigation",autopilot.write());tag.setBoolean("HoverMode",hover);tag.setDouble("HoverTarget",hoverTarget);tag.setLong("TransferEpoch",transferEpoch);tag.setBoolean("TaxiReturnPending",taxiReturnPending);
         if(taxiReturnSeat!=null)tag.setLong("TaxiReturnSeat",taxiReturnSeat.toLong());if(taxiReturnActor!=null)tag.setUniqueId("TaxiReturnActor",taxiReturnActor);if(structure!=null)tag.setTag("Craft",structure.write());else if(unavailable!=null)tag.setTag("Craft",unavailable.copy());
     }
     @Override protected void readEntityFromNBT(NBTTagCompound tag){
         generalBodyPose=VehicleBodyPoseState.retain(tag.getTag(VehicleBodyPoseFrame.NBT_KEY));retainedCouplerAssociation=retainedCouplerScope(tag);articulation.retain(tag);
         dataManager.set(PILOT_SEATS,tag.getCompoundTag("OccupiedPilotSeats").copy());couplingActor=tag.hasUniqueId("CouplingActor")?tag.getUniqueId("CouplingActor"):null;hover=tag.getBoolean("HoverMode");hoverTarget=tag.getDouble("HoverTarget");transferEpoch=tag.getLong("TransferEpoch");taxiReturnPending=tag.getBoolean("TaxiReturnPending");taxiReturnSeat=tag.hasKey("TaxiReturnSeat",4)?BlockPos.fromLong(tag.getLong("TaxiReturnSeat")):null;taxiReturnActor=tag.hasUniqueId("TaxiReturnActor")?tag.getUniqueId("TaxiReturnActor"):null;
+        readFlightMode(tag);cruise.read(tag);
         try{
             couplerAssociationGeneration=readCouplerGeneration(tag);structure=null;install(VehicleStructure.read(tag.getCompoundTag("Craft")));articulation.read(tag);autopilot.read(tag.getCompoundTag("AutopilotNavigation"));restoreCouplerOwnershipMetadata(tag);
             for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){net.minecraft.tileentity.TileEntity pilot=view.getTileEntity(at);if(pilot instanceof com.vandorlabs.tiles.TileEntityPilotSeat)((com.vandorlabs.tiles.TileEntityPilotSeat)pilot).resumeAfterLoad(world);}
@@ -399,12 +496,12 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         motionX=motionY=motionZ=0;loadedTaxiSupportCheck=structure!=null;
     }
-    @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(articulation!=null&&articulation.active()?articulation.worldBounds(x,y,z,rotationYaw):collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
+    @Override public void setPosition(double x,double y,double z){super.setPosition(x,y,z);if(collision!=null)setEntityBoundingBox(flightPitch!=0?flightMotion.bounds(flightPose()):articulation!=null&&articulation.active()?articulation.worldBounds(x,y,z,rotationYaw):collision.bounds(rotationYaw).offset(x,y,z));VehicleLookup.update(this);}
     private boolean couplingInputSeen,couplingInputBrake;private byte couplingInputForward,couplingInputStrafe;
     private void couplingInput(byte f,byte s,boolean b){if(!couplingInputSeen){couplingInputSeen=true;couplingInputForward=forward;couplingInputStrafe=strafe;couplingInputBrake=brake;}if(couplingInputForward!=f||couplingInputStrafe!=s||couplingInputBrake!=b){couplingInputForward=f;couplingInputStrafe=s;couplingInputBrake=b;VehicleCouplings.releaseControlsChanged(this);}}
     public void input(EntityPlayerMP player,int sequence,byte forward,byte strafe,boolean brake) {
         if(transferInProgress || getControllingPassenger()!=player)return;
-        if(!(hover?serverInputs.offerLatest(sequence,forward,strafe,brake):serverInputs.offer(sequence,forward,strafe,brake)))return;
+        if(!(hover||poweredFlight()||flying()?serverInputs.offerLatest(sequence,forward,strafe,brake):serverInputs.offer(sequence,forward,strafe,brake)))return;
         couplingInput(forward,strafe,brake);
         recordCurrentCouplingDriver();
         lastInput=world.getTotalWorldTime();
@@ -436,7 +533,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public void setDead(){VehicleCanopies.forget(this);collisionCache.clear();signals.close();VehicleLookup.remove(this);super.setDead();}
     @Override public void updatePassenger(Entity passenger) {
         if(isPassenger(passenger) && structure!=null) {
-            Vec3d at=seatPosition(world.isRemote?visualPose(1):new VehiclePose(posX,posY,posZ,rotationYaw),passenger,world.isRemote&&articulation.active()?1:0);
+            Vec3d at=seatPosition(world.isRemote?visualPose(1):flightPose(),passenger,world.isRemote&&articulation.active()?1:0);
             passenger.setPosition(at.x,at.y,at.z);
             if(world.isRemote) {
                 Vec3d before=seatPosition(visualPose(0),passenger,-1);
@@ -455,12 +552,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(!world.isRemote){assignSeat(passenger,null);recordCurrentCouplingDriver();}
         if(wasDriver){serverInputs.clear();pendingInputs.clear();lastAcknowledgement=-1;lastInput=-100;forward=strafe=0;vertical=0;verticalAt=-100;}
         if(world.isRemote || collision==null || VehicleTransfer.isMutating(world))return;
-        if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
+        if(wasDriver&&flying())beginFlightRecovery(RECOVER_FLIGHT);
+        else if(wasDriver && hover && !autopilot.enabled())holdHoverPosition();
         Vec3d exit=null;
         if(exitSeat!=null){Vec3d near=toWorld(new Vec3d(exitSeat).addVector(.5,0,.5));AxisAlignedBB seatArea=new AxisAlignedBB(near.x-.5,near.y,near.z-.5,near.x+.5,near.y+2,near.z+.5);exit=com.vandorlabs.entity.SafeDismount.findNear(world,passenger,seatArea,near);}
         if(exit==null)exit=com.vandorlabs.entity.SafeDismount.find(world,passenger,getEntityBoundingBox());
         com.vandorlabs.entity.SafeDismount.move(passenger,exit,getEntityBoundingBox());
-        if(!isDead && passenger instanceof EntityPlayerMP && getPassengers().isEmpty() && !hover && !autopilot.enabled() && VehicleTaxiMode.enabled(structure,taxiReturnSeat))
+        if(!isDead && passenger instanceof EntityPlayerMP && getPassengers().isEmpty() && !hover && !flying() && !takeoffRoll() && !autopilot.enabled() && VehicleTaxiMode.enabled(structure,taxiReturnSeat))
             VehicleService.taxiParking((EntityPlayerMP)passenger,this);
     }
     public void stopForParking(){forward=strafe=0;brake=true;driveSpeed=0;steering=0;motionX=motionY=motionZ=0;pendingInputs.clear();serverInputs.clear();nextPrediction=null;}
@@ -472,11 +570,19 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     @Override public boolean attackEntityFrom(DamageSource source,float damage){return false;}
     @Override public void setPortal(BlockPos p){}
     @Override public void setPositionAndRotationDirect(double x,double y,double z,float yaw,float pitch,int steps,boolean teleport) {
+        if(teleport&&longPositionChange(x,y,z)){snapPosition(x,y,z,yaw);return;}
         if(localDriver)return;
         // Custom STATE is the single observer interpolation stream after its first packet.
         if(lastServerTick!=Long.MIN_VALUE && !teleport)return;
         targetX=x;targetY=y;targetZ=z;targetYaw=yaw;interpolation=teleport?1:Math.max(1,steps);
         if(teleport){previousVisual=currentVisual=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;}
+    }
+    private boolean longPositionChange(double x,double y,double z){return Math.abs(x-posX)>128||Math.abs(y-posY)>128||Math.abs(z-posZ)>128;}
+    private void snapPosition(double x,double y,double z,float yaw){
+        targetX=prevPosX=lastTickPosX=x;targetY=prevPosY=lastTickPosY=y;targetZ=prevPosZ=lastTickPosZ=z;
+        targetYaw=prevRotationYaw=rotationYaw=yaw;interpolation=0;
+        previousVisual=currentVisual=null;correctionX=correctionY=correctionZ=0;correctionYaw=0;
+        pendingInputs.clear();nextPrediction=null;setPosition(x,y,z);
     }
     public boolean stopped(){return motionX*motionX+motionY*motionY+motionZ*motionZ<.0001;}
     @Override public void onUpdate() {
@@ -502,22 +608,22 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         animationSample=VehicleAnimationDiagnostics.start(this);VehicleLandingGear.tick(this);VehicleAnimationDiagnostics.elapsed(this,"landing-gear-tick",animationSample);
         collisionCache.tick(view);
         if(world.isRemote) {
-            previousVisual=currentVisual==null?new VehiclePose(posX,posY,posZ,rotationYaw):currentVisual;
+            previousVisual=currentVisual==null?flightPose():currentVisual;
             correctionX*=.65;correctionY*=.65;correctionZ*=.65;correctionYaw*=.65;
             if(structure==null && ticksExisted%40==1)VehicleNetwork.request(this);
-            if(localDriver && structure!=null) {
+            if(localDriver && structure!=null && !flying() && !takeoffRoll()) {
                 if(nextPrediction!=null) {
                     if(pendingInputs.size()>=VehicleControls.LIMIT)pendingInputs.removeFirst();
                     pendingInputs.addLast(nextPrediction);forward=nextPrediction.f;strafe=nextPrediction.s;brake=nextPrediction.brake;predictFlight(nextPrediction.sprint);nextPrediction=null;
                 }
                 advance(true);
             }
-            else if(interpolation>0){rotationYaw+=MathHelper.wrapDegrees(targetYaw-rotationYaw)/interpolation;setPosition(posX+(targetX-posX)/interpolation,posY+(targetY-posY)/interpolation,posZ+(targetZ-posZ)/interpolation);interpolation--;}
-            currentVisual=new VehiclePose(posX+correctionX,posY+correctionY,posZ+correctionZ,rotationYaw+correctionYaw);
+            else if(interpolation>0){rotationYaw+=MathHelper.wrapDegrees(targetYaw-rotationYaw)/interpolation;flightPitch+=(targetPitch-flightPitch)/interpolation;setPosition(posX+(targetX-posX)/interpolation,posY+(targetY-posY)/interpolation,posZ+(targetZ-posZ)/interpolation);interpolation--;}
+            currentVisual=new VehiclePose(posX+correctionX,posY+correctionY,posZ+correctionZ,rotationYaw+correctionYaw,flightPitch,structure==null?EnumFacing.NORTH:structure.facing);
             if(view!=null){view.origin=new BlockPos(posX,posY,posZ);
                 double speed=view.recordMotion(posX-prevPosX,posY-prevPosY,posZ-prevPosZ,rotationYaw);
-                propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);view.hover=hover;
-                if(hover){
+                propulsion=(float)approach(propulsion,speed>.002?15:0,1.5);view.propulsionLevel=Math.round(propulsion);view.hover=hover||flying();
+                if(view.hover){
                     if(ticksExisted%12==0)emitFlightParticles(true,Vec3d.ZERO);
                     if(dataManager.get(HOVER_EXHAUST)&&ticksExisted%8==0){
                         Vec3d direction=speed>.002?view.propulsionMotion:new Vec3d(structure.facing.getDirectionVec()).scale(driveSpeed<0?-1:1);
@@ -528,6 +634,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         if(structure==null || ownershipBlocked){motionX=motionY=motionZ=0;return;}
         recordCurrentCouplingDriver();
+        refreshFlightReadout();
         if(taxiReturnPending && getPassengers().isEmpty()){stopForParking();if(ticksExisted%3==0)VehicleNetwork.state(this);return;}
         for(BlockPos at:java.util.Collections.singletonList(VehicleControlSettings.position(structure))){
             net.minecraft.tileentity.TileEntity seat=view.getTileEntity(at);
@@ -542,10 +649,13 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
                 }
             }
         }
-        boolean automated=autopilot.tick();if(isDead)return;
+        boolean automated=!flying()&&!takeoffRoll()&&autopilot.tick();if(isDead)return;
         VehicleControls.Command command=serverInputs.poll();
         if(command!=null && !automated){forward=command.forward;strafe=command.strafe;brake=command.brake;}
-        advance(automated || getControllingPassenger() instanceof EntityPlayer && world.getTotalWorldTime()-lastInput<=10);
+        boolean controlled=getControllingPassenger() instanceof EntityPlayer && world.getTotalWorldTime()-lastInput<=10;
+        if(flying())advanceFlight(controlled);
+        else if(takeoffRoll())advanceTakeoff(controlled);
+        else advance(automated||controlled);
         if(ticksExisted%2==0)VehicleNetwork.state(this);
     }
     /** Independent round-robin budgets keep both exhaust groups continuous on large craft. */
@@ -572,6 +682,112 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         boolean articulated=articulation.begin();
         try { advanceController(active); } finally { if(articulated)articulation.end();collision.end();if(VehicleDiagnostics.ENABLED)diagnostics.step(System.nanoTime()-started,collision.terrainQueries,MathHelper.wrapDegrees(rotationYaw-before)); }
     }
+
+    private void advanceTakeoff(boolean controlled){
+        if(!controlled||brake||!flightReadout.canFly()){
+            flightPhase=NO_FLIGHT;
+            advance(controlled);
+            return;
+        }
+        double before=driveSpeed,x=posX,z=posZ;
+        advance(true);
+        if(!onGround||driveSpeed>.05&&posX==x&&posZ==z||before>.05&&driveSpeed==0){
+            flightPhase=NO_FLIGHT;
+            return;
+        }
+        if(driveSpeed>=FlightEnvelope.TAKEOFF_SPEED&&forward<0){
+            flightPhase=POWERED_FLIGHT;
+            initialClimb=5;
+            applyFlightPose(new VehiclePose(posX,posY,posZ,rotationYaw,0,structure.facing));
+            VehicleLandingGear.refreshSignals(this);
+        }
+    }
+
+    private void advanceFlight(boolean controlled){
+        if(!descendingFromFlight()&&(!flightReadout.canFly()||getControllingPassenger()==null))beginFlightRecovery(RECOVER_FLIGHT);
+        double altitude=flightAltitude();
+        double ceiling=Math.min(flightReadout.maximumAltitude(),flightMotion.ceiling(rotationYaw,flightPitch));
+        if(descendingFromFlight()||altitude>ceiling+.02){advanceFlightDescent(ceiling);return;}
+        landedFromFlight=false;onGround=false;
+        double response=FlightEnvelope.response(flightReadout.effectiveMass,flightReadout.thrust);
+        double speed=FlightEnvelope.cruiseSpeed(altitude);
+        driveSpeed=approach(driveSpeed,speed,FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust)*(1+speed/10));
+        float yaw=rotationYaw+(controlled?strafe*(float)(.9+.55*response):0);
+        float pitch=MathHelper.clamp(flightPitch-(controlled?forward*(float)(.6+.38*response):0),-FlightEnvelope.MAX_PITCH,FlightEnvelope.MAX_PITCH);
+        // Lift clear of the runway before tilting a long fuselage.
+        boolean launching=initialClimb>0;
+        if(launching){pitch=initialClimb<=2?3:0;initialClimb--;}
+        double radians=Math.toRadians(pitch),angle=Math.toRadians(yaw);
+        EnumFacing front=structure.facing;
+        double horizontal=Math.cos(radians)*driveSpeed;
+        motionX=(front.getFrontOffsetX()*Math.cos(angle)-front.getFrontOffsetZ()*Math.sin(angle))*horizontal;
+        motionZ=(front.getFrontOffsetX()*Math.sin(angle)+front.getFrontOffsetZ()*Math.cos(angle))*horizontal;
+        ceiling=Math.min(ceiling,flightMotion.ceiling(yaw,pitch));
+        motionY=Math.min(launching?.17:Math.sin(radians)*driveSpeed,Math.max(0,ceiling-altitude));
+        VehicleFlightMotion.Result result=moveFlight(motionX,motionY,motionZ,yaw,pitch);
+        if(result==VehicleFlightMotion.Result.MOVED)return;
+        if(result==VehicleFlightMotion.Result.OBSTRUCTED){beginFlightRecovery(RECOVER_FLIGHT);driveSpeed=0;}
+        motionX=motionY=motionZ=0;
+    }
+
+    private VehicleFlightMotion.Result moveFlight(double dx,double dy,double dz,float yaw,float pitch){
+        if(cruise.move(dx,dy,dz)){
+            applyFlightPose(new VehiclePose(posX,posY,posZ,yaw,pitch,structure.facing));
+            return VehicleFlightMotion.Result.MOVED;
+        }
+        return flightMotion.move(dx,dy,dz,yaw,pitch);
+    }
+
+    private void advanceFlightDescent(double ceiling){
+        motionX=motionZ=0;
+        driveSpeed=approach(driveSpeed,0,Math.max(.09,driveSpeed/15));
+        double altitude=flightAltitude();
+        boolean recovery=descendingFromFlight();
+        boolean resumeHover=recovery&&flightPhase!=RETURN_TAXI&&canResumeHover();
+        double target=recovery?(resumeHover?(cruisingRecovery?FlightEnvelope.REENTRY_ALTITUDE:altitude):0):ceiling;
+        if(cruise.active()){
+            motionY=Math.max(-Math.min(3,.26+altitude/3500),target-altitude);
+            moveFlight(0,motionY,0,rotationYaw,(float)approach(flightPitch,0,1.5));
+            return;
+        }
+        if(flightPitch!=0){
+            float level=(float)approach(flightPitch,0,1.5);
+            motionY=0;
+            if(moveFlight(0,0,0,rotationYaw,level)==VehicleFlightMotion.Result.MOVED)return;
+            // A nose against terrain may need a small lift before it can level.
+            if(moveFlight(0,.12,0,rotationYaw,level)==VehicleFlightMotion.Result.MOVED)return;
+        }
+        if(resumeHover&&altitude<=target+.01&&Math.abs(flightPitch)<.001){finishFlight(true);return;}
+        if(landedFromFlight)return;
+        double dy=Math.max(-.24,target-altitude);
+        if(dy>=0){motionY=0;return;}
+        if(flightPitch!=0){
+            if(moveFlight(0,dy,0,rotationYaw,flightPitch)==VehicleFlightMotion.Result.MOVED)return;
+            return;
+        }
+        if(posY>=FlightEnvelope.WORLD_CEILING&&posY+collision.bounds.minY+dy>=FlightEnvelope.WORLD_CEILING){
+            moveFlight(0,dy,0,rotationYaw,0);
+            return;
+        }
+        collision.begin(world,this);
+        boolean articulated=articulation.begin();
+        try{
+            double accepted=collision.clip(world,this,posX,posY,posZ,dy,1,rotationYaw);
+            setPosition(posX,posY+accepted,posZ);view.origin=new BlockPos(posX,posY,posZ);
+            onGround=accepted>dy+1e-6;motionY=onGround?0:accepted;fallDistance=0;velocityChanged=true;
+        }finally{if(articulated)articulation.end();collision.end();}
+        if(onGround){
+            if(resumeHover){finishFlight(true);return;}
+            if(VehicleLandingGear.extended(this)&&VehicleSkiTraction.allowed(this))finishFlight(false);
+            else{beginFlightRecovery(RECOVER_FLIGHT);landedFromFlight=true;driveSpeed=0;}
+        }
+    }
+
+    private void finishFlight(boolean toHover) {
+        flightPhase=NO_FLIGHT;landedFromFlight=false;cruisingRecovery=false;flightPitch=0;hover=toHover;view.hover=toHover;
+        holdHoverPosition();
+        if(toHover)VehicleLandingGear.refreshSignals(this);
+    }
     public double cruiseSpeed(){
         if(hover)return HOVER_CRUISE_SPEED;
         return structure.activeThruster()?CRUISE_SPEED:UNPOWERED_TAXI_SPEED;
@@ -580,9 +796,9 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         boolean boost=hover&&structure.activeThruster()&&active&&flightSprint&&!autopilot.enabled()&&world.getTotalWorldTime()-verticalAt<=10;
         if(!world.isRemote)dataManager.set(HOVER_EXHAUST,boost);
         double cruise=cruiseSpeed();
-        double limit=hover?HOVER_SPRINT_SPEED:cruise;
-        driveSpeed=approach(driveSpeed,active&&(!brake || hover)?forward*(boost?limit:cruise):0,
-                brake||!active?.045:forward==0?.008:boost?.028:.018);
+        double limit=hover?HOVER_SPRINT_SPEED:takeoffRoll()?Math.max(cruise,FlightEnvelope.TAKEOFF_SPEED):cruise;
+        driveSpeed=approach(driveSpeed,takeoffRoll()?limit:active&&(!brake || hover)?forward*(boost?limit:cruise):0,
+                takeoffRoll()?FlightEnvelope.acceleration(flightReadout.effectiveMass,flightReadout.thrust):brake||!active?.045:forward==0?.008:boost?.028:.018);
         driveSpeed=MathHelper.clamp(driveSpeed,-limit,limit);
         steering=(float)approach(steering,active?strafe:0,.18);
         // Hover can yaw in place; the route controller owns its own turns.
