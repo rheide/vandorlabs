@@ -1,5 +1,6 @@
 package com.vandorlabs.neoforge.vehicle;
 
+import com.vandorlabs.gear.core.ArmHinge;
 import com.vandorlabs.gear.core.ArmResource;
 import com.vandorlabs.gear.core.GearMotion;
 import com.vandorlabs.gear.core.GearTopology;
@@ -226,7 +227,14 @@ final class NativeVehicleArms {
             if (sweep.getXsize() <= 0 || sweep.getYsize() <= 0 || sweep.getZsize() <= 0) continue;
             for (var at : BlockPos.betweenClosed(BlockPos.containing(sweep.minX, sweep.minY, sweep.minZ),
                 BlockPos.containing(sweep.maxX, sweep.maxY, sweep.maxZ))) {
-                if (!owner.clearCells.contains(at) && hull.containsKey(at) && new AABB(at).intersects(sweep)) return false;
+                if (owner.clearCells.contains(at) || !hull.containsKey(at)) continue;
+                var cell = new AABB(at);
+                if (!cell.intersects(sweep)) continue;
+                // A single level hinge starting at zero moves the socket monotonically away from
+                // its home face along the mounting axis. Arc padding can overlap an exactly flush dock.
+                boolean socket = i == first.size() - 1;
+                if (socket && at.equals(owner.levelDock) && !cell.intersects(first.get(i).minmax(second.get(i)))) continue;
+                return false;
             }
             for (var other : arms) {
                 if (other == owner) continue;
@@ -248,6 +256,7 @@ final class NativeVehicleArms {
         final NativeGearEntity gear;
         final List<ChannelList> channels;
         final Set<BlockPos> clearCells;
+        final BlockPos levelDock;
         boolean target, blocked, power, known, changed;
         double phase;
 
@@ -266,6 +275,11 @@ final class NativeVehicleArms {
             var exact = new HashSet<>(gear.members());
             exact.add(cell.pos.relative(gear.mount().getOpposite()));
             clearCells = Set.copyOf(exact);
+            var settings = gear.settings();
+            var dock = gear.mode() == GearMotion.Mode.ROTATE_LEVEL && settings.hingeMode() == ArmHinge.Mode.SINGLE
+                && settings.startAngle() == 0 && Math.abs(settings.activeAngle()) <= 90
+                && settings.resourceTransfer() != ArmResource.DISABLED ? NativeGearResourceTransfer.carriedHome(gear) : null;
+            levelDock = dock == null ? null : dock.cell();
         }
     }
 }
