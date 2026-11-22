@@ -254,6 +254,8 @@ public final class NativeDualMaxwellFixture {
                 if (craft.highFlight() || craft.mode() != NativeGroundVehicle.HOVER) return;
                 var tanks = tanks();
                 if (tanks[0].throttle != 0) return;
+                require(Math.abs(craft.getY() - FlightEnvelope.REENTRY_ALTITUDE) <= .02,
+                        "high-cruise loss levels out at the Y=200 recovery altitude, actual " + craft.getY());
                 require(rider.getVehicle() == craft && tanks[0].fuel > 0 && tanks[1].fuel > 0 && tanks[1].throttle == 0,
                         "loss of strength returns the still-fueled mounted craft to Hover");
                 System.out.println("[vandorlabs][dual-maxwell-player] server PASS unequal formed drives, combined envelope, independent Taxi/Hover fuel, limited cruise and Hover recovery");
