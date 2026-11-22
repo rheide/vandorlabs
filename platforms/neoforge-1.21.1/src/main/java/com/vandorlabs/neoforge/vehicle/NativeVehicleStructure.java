@@ -64,6 +64,7 @@ public final class NativeVehicleStructure {
             }
             var raw = cell.tile();
             if (NativeVehicleMekanismCube.supports(cell.state)) NativeVehicleMekanismCube.contents(raw);
+            if (NativeVehicleRftoolsCell.supports(cell.state)) NativeVehicleRftoolsCell.contents(raw);
             if (raw != null) {
                 if (raw.sizeInBytes() > LIMITS.tileBytes()) throw new IllegalArgumentException("Vehicle tile data exceeds its byte bound");
                 requireCoordinates(cell.pos, raw);
@@ -188,7 +189,7 @@ public final class NativeVehicleStructure {
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
             || block instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionBlock
-            || NativeVehicleArms.block(state) || NativeVehicleStatus.supports(state)
+            || NativeVehicleRftoolsCell.supports(state) || NativeVehicleArms.block(state) || NativeVehicleStatus.supports(state)
             || identity.getNamespace().equals("vandorlabs") && Set.of("battery_block", "hexagonal_fuel_tank", "programmable_storage").contains(identity.getPath())
             || programmable(state);
         if ((!plainVanilla && !nativeBlock && !NativeVehicleMekanismTank.supports(state) && !NativeVehicleMekanismCube.supports(state)) || state.isAir() || !state.getFluidState().isEmpty()
@@ -214,6 +215,7 @@ public final class NativeVehicleStructure {
 
     static boolean supportsTile(BlockEntity tile) {
         if (tile instanceof NativeVehicleControllerEntity || NativeVehicleMekanismTank.supports(tile) || NativeVehicleMekanismCube.supports(tile)) return true;
+        if (NativeVehicleRftoolsCell.supports(tile)) return true;
         if (tile instanceof NativeGearEntity gear) {
             return NativeVehicleArms.block(gear.getBlockState()) && !gear.inert() && gear.owner() != null
                 && gear.payload() == null && !gear.hasStoredSections();
@@ -297,6 +299,7 @@ public final class NativeVehicleStructure {
     }
 
     private static BlockState rotateState(BlockState state, Rotation rotation) {
+        if (NativeVehicleRftoolsCell.supports(state)) return NativeVehicleRftoolsCell.rotate(state, rotation);
         if (state.getBlock() instanceof NativeBuilderCoreBlock) {
             return state.setValue(NativeBuilderCoreBlock.FACING, rotation.rotate(state.getValue(NativeBuilderCoreBlock.FACING)));
         }

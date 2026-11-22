@@ -596,6 +596,11 @@ public final class NativeVehicleTransfer {
         if (NativeVehicleMekanismTank.supports(cell.state) || NativeVehicleMekanismCube.supports(cell.state)) {
             NativeVehicleMekanismAccess.require(player.getUUID(), world, cell.pos, cell.state, world.getBlockEntity(cell.pos));
         }
+        if (NativeVehicleRftoolsCell.supports(cell.state)) {
+            var tile = world.getBlockEntity(cell.pos);
+            NativeVehicleRftoolsCell.requireAccess(tile, player.getUUID());
+            NativeVehicleRftoolsCell.contents(tile.saveWithFullMetadata(world.registryAccess()));
+        }
         var event = new BlockEvent.BreakEvent(world, cell.pos, cell.state, player);
         var previous = PROBE.get();
         PROBE.set(new BreakProbe(event, header));

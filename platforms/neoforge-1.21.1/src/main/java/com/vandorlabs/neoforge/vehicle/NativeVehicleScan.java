@@ -47,11 +47,17 @@ final class NativeVehicleScan {
             if (tile != null && !NativeVehicleStructure.supportsTile(tile)) {
                 throw new IllegalArgumentException("Unsupported or retained vehicle data at " + pos.toShortString());
             }
+            boolean rfCell = NativeVehicleRftoolsCell.supports(state);
+            if (rfCell) {
+                var owner = (NativeVehicleControllerEntity)world.getBlockEntity(controller);
+                NativeVehicleRftoolsCell.requireAccess(tile, owner.ownerId());
+            }
             var raw = tile == null ? null : tile.saveWithFullMetadata(world.registryAccess());
             if (raw != null && (NativeVehicleMekanismTank.supports(state) || NativeVehicleMekanismCube.supports(state))) {
                 var owner = (NativeVehicleControllerEntity)world.getBlockEntity(controller);
                 NativeVehicleMekanismAccess.require(owner.ownerId(), world, pos, state, tile);
             }
+            if (rfCell) NativeVehicleRftoolsCell.contents(raw);
             if (raw != null && (tileBytes += raw.sizeInBytes()) > NativeVehicleStructure.LIMITS.bytes()) {
                 throw new IllegalArgumentException("Vehicle storage exceeds the capture byte bound");
             }

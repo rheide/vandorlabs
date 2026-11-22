@@ -205,7 +205,7 @@ final class NativeVehicleResources {
     }
 
     private static boolean mayRoute(Endpoint source, Endpoint target) {
-        return source.config != null || source.cube != null && source.cube.ejecting() || pulls(target);
+        return source.config != null || source.rftools || source.cube != null && source.cube.ejecting() || pulls(target);
     }
 
     private void transfer(NativeGroundVehicle craft, Endpoint source, Endpoint target, HolderLookup.Provider registries) {
@@ -224,6 +224,7 @@ final class NativeVehicleResources {
         if (endpoint.budgetTick == tick) return;
         endpoint.budgetTick = tick;
         endpoint.remaining = endpoint.limit;
+        if (endpoint.rftools) endpoint.inputRemaining = endpoint.limit;
         if (endpoint.cube != null) endpoint.joulesRemaining = endpoint.cube.output();
         endpoint.active = endpoint.config == null || activated(craft, endpoint);
     }
@@ -297,7 +298,9 @@ final class NativeVehicleResources {
             portions = Math.min(portions, wanted / creditUnit);
         } else {
             long capacity = foreignTarget ? to.cube.capacity() : to.capacity;
-            portions = Math.min(portions, (capacity - to.energy) / creditUnit);
+            long room = capacity - to.energy;
+            if (to.rftools) room = Math.min(room, to.inputRemaining);
+            portions = Math.min(portions, room / creditUnit);
         }
         if (portions == 0) return;
         long debit = portions * debitUnit, credit = portions * creditUnit;
@@ -306,6 +309,7 @@ final class NativeVehicleResources {
             var second = energyTag(to, to.energy + credit);
             if (!checkBytes(from, first, to, second)) return;
             to.energy += credit;
+            if (to.rftools) to.inputRemaining -= Math.toIntExact(credit);
             store(to, second);
         } else {
             to.observer.power.receive(tick, Math.toIntExact(credit), false);
@@ -326,7 +330,8 @@ final class NativeVehicleResources {
 
     private static CompoundTag energyTag(Endpoint endpoint, long energy) {
         var tag = endpoint.cell.tile();
-        if (endpoint.cube == null) tag.putInt(endpoint.key, Math.toIntExact(energy));
+        if (endpoint.rftools) NativeVehicleRftoolsCell.write(tag, Math.toIntExact(energy));
+        else if (endpoint.cube == null) tag.putInt(endpoint.key, Math.toIntExact(energy));
         else NativeVehicleMekanismCube.write(tag, energy);
         return tag;
     }
@@ -497,15 +502,19 @@ final class NativeVehicleResources {
         NativeMaxwellTank fuel;
         NativeVehicleObservers.Receiver observer;
         IFluidHandler inlet;
-        int remaining, itemCursor;
+        int remaining, inputRemaining, itemCursor;
         long energy, joulesRemaining;
         NativeVehicleMekanismCube.Description cube;
         long budgetTick = Long.MIN_VALUE;
-        boolean active = true;
+        boolean active = true, rftools;
         FluidStack fluid = FluidStack.EMPTY;
         NonNullList<ItemStack> inventory;
 
         Endpoint(NativeRawCell cell, NativePortKind kind, NativePortData.Configuration config, String key, int capacity) {
+            this(cell, kind, config, key, capacity, Integer.MAX_VALUE);
+        }
+
+        Endpoint(NativeRawCell cell, NativePortKind kind, NativePortData.Configuration config, String key, int capacity, int rate) {
             this.cell = cell;
             this.kind = kind;
             this.config = config;
@@ -515,8 +524,8 @@ final class NativeVehicleResources {
             originalBytes = raw.sizeInBytes();
             long requested = config == null ? 0 : config.settings().throughput;
             int legacy = raw.getInt("BatteryLegacyRate");
-            limit = Math.min(legacy == 0 ? Integer.MAX_VALUE : legacy,
-                (int)Math.min(Integer.MAX_VALUE, requested == 0 ? Integer.MAX_VALUE : requested));
+            limit = Math.min(rate, Math.min(legacy == 0 ? Integer.MAX_VALUE : legacy,
+                (int)Math.min(Integer.MAX_VALUE, requested == 0 ? Integer.MAX_VALUE : requested)));
             remaining = limit;
         }
 
@@ -536,12 +545,14 @@ final class NativeVehicleResources {
         boolean emits(Direction face) {
             if (inletSide != null) return false;
             if (cube != null) return cube.emits(face);
+            if (rftools) return NativeVehicleRftoolsCell.mode(cell.state, face).equals("output");
             return config == null ? axis == null || axis == face.getAxis() : config.settings().face(face.get3DDataValue()) == Face.OUTPUT;
         }
 
         boolean accepts(Direction face) {
             if (inletSide != null) return inletSide == face;
             if (cube != null) return cube.accepts(face);
+            if (rftools) return NativeVehicleRftoolsCell.mode(cell.state, face).equals("input");
             return config == null ? axis == null || axis == face.getAxis() : config.settings().face(face.get3DDataValue()) == Face.INPUT;
         }
 
@@ -550,6 +561,13 @@ final class NativeVehicleResources {
             var block = cell.state.getBlock();
             var raw = cell.tile();
             Endpoint result;
+            if (NativeVehicleRftoolsCell.supports(cell.state)) {
+                var storage = NativeVehicleRftoolsCell.storage(cell);
+                result = new Endpoint(cell, NativePortKind.POWER, null, "", storage.capacity(), storage.rate());
+                result.rftools = true;
+                result.energy = storage.energy();
+                return result;
+            }
             if (NativeVehicleMekanismCube.supports(cell.state)) {
                 result = new Endpoint(cell, NativePortKind.POWER, null, "", 0);
                 result.cube = NativeVehicleMekanismCube.read(cell, registries);
