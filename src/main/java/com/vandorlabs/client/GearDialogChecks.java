@@ -31,7 +31,26 @@ public final class GearDialogChecks {
             if(!track){
                 GuiModularGear armGui=(GuiModularGear)gui;
                 require(gui.getYSize()==Math.min(244,size[1]-12),"shared mechanism panel fits compact viewport");
-                GuiButton target=buttons.stream().filter(b->b.id==2).findFirst().get();require(target.visible&&target.x==gui.getGuiLeft()+12&&target.width==gui.getXSize()-24,"target is the first full-width mechanism row");
+                GuiButton target=buttons.stream().filter(b->b.id==2).findFirst().get();
+                GuiButton transfer=buttons.stream().filter(b->b.id==com.vandorlabs.ui.GearDialog.RESOURCE).findFirst().get();
+                GuiButton flow=buttons.stream().filter(b->b.id==com.vandorlabs.ui.GearDialog.RESOURCE_DIRECTION).findFirst().get();
+                int content=gui.getXSize()-24,column=(gui.getXSize()-36)/2;
+                boolean hasTransfer=tile.canTransferResources();
+                require(target.visible&&target.x==gui.getGuiLeft()+12&&target.y==gui.getGuiTop()+54
+                        &&target.width==(hasTransfer?column:content),"target starts the mechanism rows");
+                require(transfer.visible==hasTransfer&&flow.visible==hasTransfer,"only resource-capable arms show Transfer and Flow");
+                if(hasTransfer){
+                    require(transfer.x==target.x+column+12&&transfer.y==target.y&&transfer.width==column,
+                            "Transfer shares the first row with Target");
+                    require(flow.x==target.x&&flow.y>target.y&&flow.width==content&&!flow.enabled,"Flow uses its own row and waits for a resource");
+                    RecordingGearGui recording=(RecordingGearGui)armGui;
+                    int sent=recording.sent.size();
+                    armGui.mouseClicked(transfer.x+5,transfer.y+5,0);
+                    require(flow.enabled&&recording.sent.get(sent).getInteger(com.vandorlabs.gear.core.ArmResource.CHOICE)
+                            ==com.vandorlabs.gear.core.ArmResource.POWER.ordinal(),"selecting RF enables Flow");
+                    armGui.mouseClicked(flow.x+5,flow.y+5,1);
+                    require(recording.sent.get(sent+1).getBoolean(com.vandorlabs.gear.core.ArmResource.OUT),"reverse click sends outward flow");
+                }
                 if(tile.isSwingArmController()){GuiButton fold=buttons.stream().filter(b->b.id==1).findFirst().get(),payload=buttons.stream().filter(b->b.id==7).findFirst().get();require(fold.visible&&payload.visible&&fold.y==payload.y&&fold.y>target.y,"Fold and Payload share their own row below target");}
                 GuiButton join=buttons.stream().filter(b->b.id==9).findFirst().get(),load=buttons.stream().filter(b->b.id==11).findFirst().get();
                 require(join.visible==(!tile.isLandingAssembly()&&!tile.isFixedMount())&&load.visible==tile.canCarryLoad()&&!((GuiTextField)fields[0].get(gui)).getVisible(),"mechanism page separates receiver channels from arm geometry");
