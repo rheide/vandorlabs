@@ -105,6 +105,10 @@ public final class VehicleRotation {
                 }
                 try{
                     TileEntity tile=view.getTileEntity(cell.pos);
+                    if(TransferNetworkCompat.onboard(tile)){
+                        if(source.displayOnly)throw new IllegalArgumentException("Move transfer networks with a complete vehicle");
+                        TransferNetworkCompat.validateIdle(cell.tileData());
+                    }
                     if(tile instanceof com.vandorlabs.gear.GearTileEntity&&((com.vandorlabs.gear.GearTileEntity)tile).parkingHeld()
                             &&!((com.vandorlabs.gear.GearTileEntity)tile).validateParkingHoldInstalled(true))throw new IllegalArgumentException("Prepared arm parking ownership is incomplete or incompatible.");
                     if(!MovingBlockSupport.supported(cell,tile)){
@@ -210,6 +214,8 @@ public final class VehicleRotation {
                         data.setInteger("posX",offset.getX());data.setInteger("posZ",offset.getZ());
                         try{data.setString("rotation",Rotation.values()[(Rotation.valueOf(data.getString("rotation")).ordinal()+turns)&3].name());}catch(IllegalArgumentException ignored){}
                     }
+                } else if(TransferNetworkCompat.onboard(view.getTileEntity(before.pos))) {
+                    TransferNetworkCompat.rotate(data,rotation);
                 } else if(domain.equals("thermalexpansion")) {
                     MachineBlockCompat.rotate(view.getTileEntity(before.pos),data,rotation);
                 } else if(domain.equals("rftools")) {

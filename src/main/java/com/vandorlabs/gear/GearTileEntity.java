@@ -95,7 +95,7 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     public ArmResource resourceTransfer(){return resourceTransfer;}
     public boolean canTransferResources(){return assembly!=null&&assembly.kind()==GearTopology.FootKind.NONE;}
     boolean resourceEndpointAvailable(){
-        return !firstServerTick&&isOperational()&&canTransferResources()&&!hasFailedArmSnapshot()&&!payloadPreparationPending
+        return (!firstServerTick||world instanceof com.vandorlabs.vehicle.VehicleWorld)&&isOperational()&&canTransferResources()&&!hasFailedArmSnapshot()&&!payloadPreparationPending
                 &&!adjustingStart&&!parkingHoldNeedsGeometry&&taxiState==null&&progress==(target()?1:0)
                 &&(payload==null||!payload.hasOwnershipJournal());
     }

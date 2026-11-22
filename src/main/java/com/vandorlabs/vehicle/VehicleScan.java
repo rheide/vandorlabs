@@ -41,7 +41,7 @@ public final class VehicleScan {
     public VehicleStructure result;
     private VehicleStructure candidate;
     private VehicleRotation.Validation validation;
-    private boolean validated,holdRequested,weightRequested;
+    private boolean validated,holdRequested,weightRequested,transferNetwork;
     private VehicleWorld candidateView;
     private VehicleWeight weight;
     public VehicleWeight.Result weightResult;
@@ -330,7 +330,8 @@ public final class VehicleScan {
         return Collections.emptyList();
     }
     private NBTTagCompound capture(BlockPos p,TileEntity tile){
-        NBTTagCompound data=tile==null?null:tile.writeToNBT(new NBTTagCompound());
+        NBTTagCompound data=tile==null?null:TransferNetworkCompat.write(tile);
+        transferNetwork|=TransferNetworkCompat.onboard(tile);
         if(VehicleEscalators.active(tile))data=VehicleEscalators.paused(data);
         if(tile instanceof TileEntityControlledRamp) {
             TileEntity owner=world.getTileEntity(((TileEntityControlledRamp)tile).controller);
@@ -338,6 +339,20 @@ public final class VehicleScan {
             data=VehicleEscalators.paused(data);data.setDouble("EscalatorDistance",((TileEntityRampController)owner).beltDistance(0));
         }
         return data;
+    }
+    private List<VehicleStructure.Cell> refreshTransferNetwork(List<VehicleStructure.Cell> local){
+        if(world instanceof VehicleWorld)return local;
+        List<BlockPos> physical=new ArrayList<>(local.size());
+        for(VehicleStructure.Cell cell:local)physical.add(origin.add(cell.pos));
+        TransferNetworkCompat.prepareCapture(world,physical);
+        for(int i=0;i<local.size();i++){
+            TileEntity tile=world.getTileEntity(physical.get(i));
+            if(!TransferNetworkCompat.onboard(tile))continue;
+            VehicleStructure.Cell cell=local.get(i);
+            NBTTagCompound data=VehicleTileData.translated(TransferNetworkCompat.write(tile),BlockPos.ORIGIN.subtract(origin));
+            local.set(i,new VehicleStructure.Cell(cell.pos,cell.state,data));
+        }
+        return local;
     }
     private static final String[] PROFILE_STAGES={"discovery","hold","refresh","view","validation","weight","encoding","connectivity"};
     private final long[] profileTotals=VehicleDiagnostics.ENABLED?new long[PROFILE_STAGES.length]:null,profileMax=VehicleDiagnostics.ENABLED?new long[PROFILE_STAGES.length]:null;
@@ -355,6 +370,7 @@ public final class VehicleScan {
                 if(refreshed!=null){
                     int count=0;while(refreshIndex<candidate.cells.size()&&count++<budget){VehicleStructure.Cell cell=candidate.cells.get(refreshIndex++);BlockPos at=origin.add(cell.pos);require(world.isBlockLoaded(at)&&world.getBlockState(at)==cell.state,"Vehicle changed during inspection");NBTTagCompound data=capture(at,world.getTileEntity(at));refreshed.add(new VehicleStructure.Cell(cell.pos,cell.state,data==null?null:VehicleTileData.translated(data,BlockPos.ORIGIN.subtract(origin))));if(System.nanoTime()>=deadline)break;}
                     if(refreshIndex<candidate.cells.size())return false;
+                    if(transferNetwork)refreshed=refreshTransferNetwork(refreshed);
                     candidate=new VehicleStructure(refreshed,candidate.seat,candidate.facing,candidate.gearCount);refreshed=null;return false;
                 }
                 if(validation==null){candidateView=new VehicleWorld(world,candidate);candidateView.origin=origin;validation=new VehicleRotation.Validation(candidate,candidateView);return false;}
@@ -563,6 +579,7 @@ public final class VehicleScan {
                 if(VehicleDiagnostics.ENABLED){profile(stage,started);stage=7;started=System.nanoTime();}
                 require(!cells.isEmpty(),"The opposing coupler section contains no blocks.");
                 List<VehicleStructure.Cell> ordered=roles();
+                if(transferNetwork&&!(world instanceof VehicleWorld))ordered=TransferNetworkCompat.snapshot(world,ordered);
                 if(!attachment){require(seats>=1, "A craft must contain at least one Pilot Seat.");
                     require(hasRequiredSupports(), "A craft needs three landing gear or wheel supports, two skis, or two track blocks.");}
                 origin=new BlockPos(minX,minY,minZ);

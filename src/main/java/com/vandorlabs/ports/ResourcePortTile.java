@@ -12,7 +12,7 @@ import net.minecraft.util.ITickable;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
 
-/** Physical transfer owner. Carried simulation tiles can expose appearance but cannot transfer. */
+/** Resource owner. The vehicle runtime invokes the same transfer policy on installed carried ports. */
 public abstract class ResourcePortTile extends TileEntity implements ITickable,RedstoneChannelMember {
     private boolean inert;
     private NBTTagCompound retained=new NBTTagCompound(),failed;
@@ -51,8 +51,10 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
     public final void configure(NBTTagCompound tag){ResourcePortSettings next=ResourcePortData.read(tag);int mode=ResourcePortData.mode(tag);ChannelList nextChannels=ResourcePortData.channels(tag);configure(next,mode,nextChannels);}
     protected final boolean physical(){return !inert&&world instanceof WorldServer&&!world.isRemote&&!isInvalid()&&world.getMinecraftServer()!=null&&world.getMinecraftServer().isCallingFromMinecraftThread()&&world.isBlockLoaded(pos)&&world.getTileEntity(pos)==this;}
     protected final boolean transferAllowed(){
-        if(!loaded||!physical())return false;if(redstoneMode==0)return true;long tick=world.getTotalWorldTime();
-        if(signalTick!=tick){signalTick=tick;boolean signal=channels.isEmpty()?LoadedRedstonePower.isPowered(world,pos):channelPowered;active=redstoneMode==0||(redstoneMode==1)==signal;}
+        boolean carried=world instanceof com.vandorlabs.vehicle.VehicleWorld;
+        if(carried?!com.vandorlabs.vehicle.VehicleResources.live(this):!loaded||!physical())return false;
+        if(redstoneMode==0)return true;long tick=world.getTotalWorldTime();
+        if(signalTick!=tick){signalTick=tick;boolean signal=carried?com.vandorlabs.vehicle.VehicleResources.portSignal(this):channels.isEmpty()?LoadedRedstonePower.isPowered(world,pos):channelPowered;active=(redstoneMode==1)==signal;}
         return active;
     }
     protected final boolean input(int side){return !inert&&settings().face(side)==ResourcePortSettings.Face.INPUT;}
@@ -86,7 +88,7 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
     /** Never asks an unloaded chunk for either its block or its tile. Identity is rechecked on every use. */
     protected final Object neighbor(int side){
         Neighbor cached=neighbors[side];if(cached.origin!=pos){cached.origin=pos;cached.position=pos.offset(EnumFacing.getFront(side));cached.clear();}BlockPos at=cached.position;
-        if(!world.isBlockLoaded(at)){cached.clear();pullRequests[side]=Long.MIN_VALUE;return null;}
+        if(!world.isBlockLoaded(at)||world instanceof com.vandorlabs.vehicle.VehicleWorld&&!com.vandorlabs.vehicle.VehicleResources.sameSection((com.vandorlabs.vehicle.VehicleWorld)world,pos,at)){cached.clear();pullRequests[side]=Long.MIN_VALUE;return null;}
         neighborLookups++;TileEntity tile=world.getTileEntity(at);IBlockState state=world.getBlockState(at);long tick=world.getTotalWorldTime();
         if(tile!=cached.tile||state!=cached.state||tick>=cached.refreshAt||tile!=null&&tile.isInvalid()){
             if(tile!=cached.tile||state!=cached.state||tile!=null&&tile.isInvalid())pullRequests[side]=Long.MIN_VALUE;
@@ -112,7 +114,7 @@ public abstract class ResourcePortTile extends TileEntity implements ITickable,R
     protected abstract void writeContents(NBTTagCompound tag);
     protected abstract void readContents(NBTTagCompound tag);
     @Override public final void update(){
-        if(!loaded||!physical())return;
+        if(world instanceof com.vandorlabs.vehicle.VehicleWorld?!com.vandorlabs.vehicle.VehicleResources.live(this):!loaded||!physical())return;
         if(transferAllowed())transferTick();
         if(visualCooldown>0){visualCooldown--;return;}visualCooldown=4;
         ResourcePortSettings visual=settings();int connected=0,on=0;long tick=world.getTotalWorldTime();

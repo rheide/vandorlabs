@@ -21,7 +21,7 @@ public class PowerPortTile extends ResourcePortTile {
     public int stored(){return energy;}
     @Override protected int storedUnits(){return energy;}
     @Override protected int simulateOutputCapacity(int side,int maximum){Object raw=neighbor(side);return compatible(raw,true)?Math.min(maximum,Math.max(0,((IEnergyStorage)raw).receiveEnergy(transferLimit(maximum),true))):0;}
-    @Override protected Object findHandler(TileEntity tile,EnumFacing side){return tile.getCapability(CapabilityEnergy.ENERGY,side);}
+    @Override protected Object findHandler(TileEntity tile,EnumFacing side){return world instanceof com.vandorlabs.vehicle.VehicleWorld?com.vandorlabs.vehicle.VehicleResources.endpoint(tile,side,CapabilityEnergy.ENERGY):tile.getCapability(CapabilityEnergy.ENERGY,side);}
     @Override protected boolean compatible(Object handler,boolean receiving){return handler instanceof IEnergyStorage&&(receiving?((IEnergyStorage)handler).canReceive():((IEnergyStorage)handler).canExtract());}
     @Override protected void transferTick(){
         if(settings().pullInputs&&energy<capacity)for(int i=0;i<6&&energy<capacity;i++)if(input(i)){

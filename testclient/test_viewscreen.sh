@@ -315,6 +315,10 @@ case "${1:-}" in
             PREFIX=coupling_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
             export VANDOR_LABS_COUPLING_CHECKS_ONLY=true
+        elif [ "$TARGET" = vehicle-resources ]; then
+            PREFIX=vehicle_resources_
+            export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.vehicleResourceChecksOnly=true -Dfml.queryResult=confirm"
+            export VANDOR_LABS_TEST_PORT_MODS="${VANDOR_LABS_COMPAT_MODS:-$HOME/.minecraft/mods}"
         elif [ "$TARGET" = utility26 ]; then
             PREFIX=utility26_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
@@ -1118,6 +1122,11 @@ PYIMAGE
     if [ "$TARGET" = coupling ]; then
         grep -q "coupling-focused PASS" "$RUN_OUT/client.log"
         echo "Live coupling checks passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = vehicle-resources ]; then
+        grep -q "vehicle-resources PASS" "$RUN_OUT/client.log"
+        echo "Carried resource network checks passed: $RUN_OUT"
         exit 0
     fi
     if [ "$TARGET" = utility26 ]; then

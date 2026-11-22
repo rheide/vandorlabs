@@ -269,7 +269,7 @@ public final class VehicleStructure {
         for(Cell cell:cells){BlockPos at=origin.add(cell.pos);if(!world.isBlockLoaded(at)||world.getBlockState(at)!=cell.state)return false;TileEntity tile=world.getTileEntity(at);
             if(MekanismTankCompat.reactorGlass(tile)&&!MekanismTankCompat.standaloneReactorGlass(tile))return false;
             if(cell.tile==null){if(tile!=null)return false;}
-            else if(tile==null||!cell.tile.equals(BuildingBlockCompat.canonical(cell.state,VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),BlockPos.ORIGIN.subtract(origin)))))return false;
+            else if(tile==null||!cell.tile.equals(BuildingBlockCompat.canonical(cell.state,VehicleTileData.translated(TransferNetworkCompat.write(tile),BlockPos.ORIGIN.subtract(origin)))))return false;
         }
         return true;
     }
@@ -289,7 +289,7 @@ public final class VehicleStructure {
             if(cell.tile==null){if(tile!=null)return false;}
             else {
                 if(tile==null)return false;
-                NBTTagCompound captured=tile.writeToNBT(new NBTTagCompound());
+                NBTTagCompound captured=TransferNetworkCompat.write(tile);
                 if(cell.tile.getBoolean("VehicleRampFrozen")) {
                     if(tile instanceof com.vandorlabs.tiles.TileEntityRampController)for(BlockPos source:((com.vandorlabs.tiles.TileEntityRampController)tile).vehicleSources()) {
                         if(!world.isBlockLoaded(source))return false;

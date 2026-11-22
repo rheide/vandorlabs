@@ -204,6 +204,52 @@ public final class ArmPayload {
         }
         return result;
     }
+
+    /** Forward through the installed carried payload and publish only the tiles changed by the handler. */
+    <T,R> R transferVehicleResource(GearTileEntity arm,BlockPos contact,EnumFacing side,
+            net.minecraftforge.common.capabilities.Capability<T> capability,R unavailable,
+            java.util.function.Function<T,R> action){
+        if(materialized||hasOwnershipJournal()||arm.payload()!=this)return unavailable;
+        VehicleWorld current=view(arm);
+        TileEntity tile=current.getTileEntity(contact);
+        T handler=VehicleResources.endpoint(tile,side,capability);
+        if(handler==null)return unavailable;
+        Set<BlockPos> changed=new LinkedHashSet<>();
+        java.util.function.Consumer<BlockPos> previous=current.controlUpdates;
+        current.controlUpdates=changed::add;
+        R result;
+        try{result=action.apply(handler);}
+        finally{current.controlUpdates=previous;}
+        if(changed.isEmpty())return result;
+        changed.add(contact);
+        List<VehicleStructure.Cell> rows=new ArrayList<>(blocks.cells);
+        List<VehicleStructure.Cell> positioned=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
+        boolean modified=false;
+        for(BlockPos at:changed){
+            VehicleStructure.Cell original=blocks.at(at);TileEntity installed=current.getTileEntity(at);
+            if(original==null||installed==null)continue;
+            NBTTagCompound before=original.tileData(),after=VehicleTileData.retainCapabilities(before,installed.writeToNBT(new NBTTagCompound()));
+            if(after.equals(before))continue;
+            modified=true;int i=rows.indexOf(original);rows.set(i,new VehicleStructure.Cell(at,original.state,after));
+            if(positioned!=null){
+                VehicleStructure.Cell nativeCell=positioned.get(i);NBTTagCompound mapped=nativeCell.tileData();
+                Set<String> keys=new HashSet<>(before.getKeySet());keys.addAll(after.getKeySet());
+                for(String key:keys){
+                    net.minecraft.nbt.NBTBase value=after.getTag(key);
+                    if(Objects.equals(before.getTag(key),value))continue;
+                    if(value==null)mapped.removeTag(key);else mapped.setTag(key,value.copy());
+                }
+                positioned.set(i,new VehicleStructure.Cell(nativeCell.pos,nativeCell.state,mapped));
+            }
+        }
+        if(modified){
+            ArmPayload next=preserveAlignment(new ArmPayload(VehicleStructure.display(rows),offset,false,placedOffset));
+            if(positioned!=null)next.placedBlocks=VehicleStructure.display(positioned);
+            next.localCollision=localCollision;next.collisionCellEnds=collisionCellEnds;next.view=current;
+            arm.installCapturedCoupler(this,next);current.structure=next.blocks;arm.markDirty();
+        }
+        return result;
+    }
     private ArmPayload preserveAlignment(ArmPayload next){next.retainedHeader=retainedHeader;next.gridAligned=gridAligned;next.placedBlocks=placedBlocks;next.gridTileBasis=gridTileBasis==null?null:gridTileBasis.clone();next.couplerFrames=couplerFrames;return next;}
     private java.util.List<com.vandorlabs.tiles.TileEntityConstructor> navigationObservers;
     public java.util.List<com.vandorlabs.tiles.TileEntityConstructor> navigationObservers(GearTileEntity arm){

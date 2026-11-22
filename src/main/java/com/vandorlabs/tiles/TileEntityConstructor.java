@@ -153,15 +153,17 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         };
     }
     boolean acceptsObserverPower(TileEntityConstructorPart member){
-        if(!(world instanceof net.minecraft.world.WorldServer)||isInvalid()||changing||!world.isBlockLoaded(pos,false)
-                ||!world.getMinecraftServer().isCallingFromMinecraftThread()||world.getTileEntity(pos)!=this
-                ||!observer()||!formed()||com.vandorlabs.gear.ArmTransactions.locked(world,pos))return false;
+        if(isInvalid()||changing||!observer()||!formed())return false;
+        if(world instanceof VehicleWorld){
+            if(!com.vandorlabs.vehicle.VehicleResources.live(this)||member!=null&&!com.vandorlabs.vehicle.VehicleResources.live(member))return false;
+        }else if(!(world instanceof WorldServer)||!world.isBlockLoaded(pos,false)||!world.getMinecraftServer().isCallingFromMinecraftThread()
+                ||world.getTileEntity(pos)!=this||com.vandorlabs.gear.ArmTransactions.locked(world,pos))return false;
         BlockPos inlet=member==null?pos:member.getPos();
         return inlet.equals(observerPowerPort())
                 &&(member==null||member.machineOwner()==this&&!com.vandorlabs.gear.ArmTransactions.locked(world,inlet));
     }
     public boolean observerPowered(){
-        if(world instanceof com.vandorlabs.vehicle.VehicleWorld)return false;
+        if(world instanceof VehicleWorld)return ((VehicleWorld)world).parent.isRemote?observerPowerVisual:observerPower.powered(world.getTotalWorldTime());
         return world!=null&&(world.isRemote?observerPowerVisual:observerConnection());
     }
     private boolean observerConnection(){
@@ -181,7 +183,15 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     }
     public boolean observerScanEnabled(){return activity!=1;}
     public void setObserverScanEnabled(boolean enabled){if(authoritative()&&observer()){activity=enabled?2:1;publish();}}
-    public boolean observerScanning(){return world!=null&&(world.isRemote?observerScanningVisual:observerPowered()&&screenOn()&&activity!=1&&observerPower.powered(world.getTotalWorldTime()));}
+    public boolean observerScanning(){return world!=null&&((world instanceof VehicleWorld?((VehicleWorld)world).parent:world).isRemote
+            ?observerScanningVisual:observerPowered()&&screenOn()&&activity!=1&&observerPower.powered(world.getTotalWorldTime()));}
+
+    private boolean carriedObserverStatePresent;
+    public void sampleCarriedObserver(){
+        boolean powered=observerPowered(),scanning=observerScanning();
+        if(powered==observerPowerVisual&&scanning==observerScanningVisual)return;
+        observerPowerVisual=powered;observerScanningVisual=scanning;carriedObserverStatePresent=true;publish();
+    }
     private <T>T machineCapability(net.minecraftforge.common.capabilities.Capability<T> cap,BlockPos at,EnumFacing side){
         if(cap==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&side==EnumFacing.DOWN&&acceptsObserverPower(null)){
             if(observerEnergy==null)observerEnergy=createObserverInput(null);
@@ -509,10 +519,15 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(maxwell()){
         if(maxwellWidth!=0&&maxwellWidth!=core().width)tag.setInteger(MaxwellEngine.WIDTH_TAG,maxwellWidth);
         maxwellTank.write(tag);tag.setInteger("MaxwellActiveLevel",maxwellActiveLevel);
-    }if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
+    }if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}
+        if(carriedObserverStatePresent){tag.setBoolean("CarriedObserverPowered",observerPowerVisual);tag.setBoolean("CarriedObserverScanning",observerScanningVisual);}
+        return tag;
+    }
     @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisDataPresent=tag.hasKey("Synthesis");synthesisSequencesPresent=tag.hasKey("SynthesisBatterySequences");synthesisActivationPresent=tag.hasKey("SynthesisActivation");synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);maxwellWidth=tag.getInteger(MaxwellEngine.WIDTH_TAG);
         if(maxwellWidth!=0)try{MaxwellEngine.depth(maxwellWidth);}catch(IllegalArgumentException invalid){maxwellWidth=0;}
         maxwellActiveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.getInteger("MaxwellActiveLevel"));maxwellTank.read(tag);
+        carriedObserverStatePresent=tag.hasKey("CarriedObserverPowered",1);
+        observerPowerVisual=tag.getBoolean("CarriedObserverPowered");observerScanningVisual=tag.getBoolean("CarriedObserverScanning");
         observerInverted=tag.getBoolean("ObserverInverted");observerWidth=tag.getInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG);observerSnapshot=tag.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG)?tag.copy():null;cachedLayout=null;coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.getCompoundTag("Synthesis").removeTag("Ingredient");if(!getStackInSlot(0).isEmpty())tag.setTag("InsertedToken",com.vandorlabs.navigation.NavigationChip.summary(getStackInSlot(0)).writeToNBT(new NBTTagCompound()));tag.setInteger("SynthesisConnections",synthesisConnections);tag.setBoolean("SynthesisWorking",working());if(observer()){tag.setBoolean("ObserverPowered",observerPowered());tag.setBoolean("ObserverScanning",observerScanning());}tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
     @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);synthesisRuntime.visualWorking(tag.getBoolean("SynthesisWorking"));observerPowerVisual=tag.getBoolean("ObserverPowered");observerScanningVisual=tag.getBoolean("ObserverScanning");renderPacket(tag);}

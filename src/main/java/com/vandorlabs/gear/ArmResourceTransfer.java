@@ -2,12 +2,15 @@ package com.vandorlabs.gear;
 
 import com.vandorlabs.gear.core.ArmResource;
 import com.vandorlabs.gear.core.GearMotion;
+import com.vandorlabs.vehicle.VehicleResources;
+import com.vandorlabs.vehicle.VehicleWorld;
 import java.util.function.Function;
 import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraft.world.World;
 import net.minecraftforge.common.capabilities.Capability;
 import net.minecraftforge.energy.CapabilityEnergy;
 import net.minecraftforge.energy.IEnergyStorage;
@@ -46,9 +49,8 @@ final class ArmResourceTransfer {
      */
     static <T> T tipInput(GearTileEntity tile,EnumFacing side,Capability<T> capability){
         ArmResource type=forCapability(capability);
-        if(type==ArmResource.DISABLED||side==null||!(tile.getWorld() instanceof WorldServer)||tile.isInvalid())return null;
-        WorldServer world=(WorldServer)tile.getWorld();
-        if(world.getMinecraftServer()==null||!world.getMinecraftServer().isCallingFromMinecraftThread())return null;
+        if(type==ArmResource.DISABLED||side==null||tile.isInvalid()||!installed(tile))return null;
+        World world=tile.getWorld();
         GearTileEntity arm=tile.loadedController();
         if(arm==null||arm.isInvalid()||arm.resourceTransfer()!=type||arm.payload()!=null||!arm.resourceEndpointAvailable())return null;
         BlockPos contact=tile.getPos().offset(side);
@@ -117,16 +119,21 @@ final class ArmResourceTransfer {
     }
 
     private static GearTileEntity installedArm(GearTileEntity input, ArmResource type) {
-        if (!(input.getWorld() instanceof WorldServer) || input.isInvalid()) return null;
-        WorldServer world = (WorldServer) input.getWorld();
+        if (!installed(input)) return null;
+        World world = input.getWorld();
         BlockPos mounting = input.getPos();
-        if (world.getMinecraftServer() == null || !world.getMinecraftServer().isCallingFromMinecraftThread() || !GearAssembly.loaded(world,mounting)
-                || world.getTileEntity(mounting) != input) return null;
         GearTileEntity arm = input.loadedController();
         if (arm == null || arm.isInvalid() || arm.resourceTransfer() != type || !arm.canTransferResources()
+                || world instanceof VehicleWorld&&!VehicleResources.live(arm)
                 || arm.mountDirection() != input.mountDirection()
                 || !arm.columns().contains(mounting.subtract(arm.getPos()))) return null;
         return arm;
+    }
+
+    private static boolean installed(GearTileEntity tile){
+        World world=tile.getWorld();
+        return world instanceof VehicleWorld?VehicleResources.live(tile):world instanceof WorldServer&&!tile.isInvalid()
+                &&VehicleResources.serverThread(world)&&GearAssembly.loaded(world,tile.getPos())&&world.getTileEntity(tile.getPos())==tile;
     }
 
     private void map(GearTileEntity arm) {
@@ -144,25 +151,25 @@ final class ArmResourceTransfer {
         if(reversed)return ArmResource.forward(input,unavailable,() -> {
             GearTileEntity arm = installedArm(input,type);
             if (arm == null || arm.payload() != null || !arm.resourceEndpointAvailable()) return unavailable;
-            WorldServer world = (WorldServer) input.getWorld();
+            World world = input.getWorld();
             BlockPos mounting = input.getPos();
             if (ArmTransactions.lockedForResourceTransfer(world,arm.getPos())
                     || !arm.getPos().equals(mounting) && ArmTransactions.lockedForResourceTransfer(world,mounting)) return unavailable;
             BlockPos source = mounting.offset(input.mountDirection().getOpposite());
+            if(world instanceof VehicleWorld&&!VehicleResources.sameSection((VehicleWorld)world,mounting,source))return unavailable;
             if (!GearAssembly.loaded(world,source) || ArmTransactions.lockedForResourceTransfer(world,source)
                     || com.vandorlabs.copier.CopyTransactions.locked(world,source)) return unavailable;
             TileEntity target = world.getTileEntity(source);
             if (target == null || target.isInvalid() || target.getWorld() != world || !source.equals(target.getPos())) return unavailable;
             EnumFacing face = input.mountDirection();
-            T destination = target.getCapability(capability,face);
-            if(destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)destination=(T)com.vandorlabs.ports.ResourcePortConnections.itemHandler(target,face,mounting);
+            T destination = endpoint(target,face,capability,mounting);
             return destination == null ? unavailable : action.apply(destination);
         });
         return ArmResource.forward(input,unavailable,() -> {
             if (side != input.mountDirection().getOpposite()) return unavailable;
             GearTileEntity arm = installedArm(input,type);
             if (arm == null || !arm.resourceEndpointAvailable()) return unavailable;
-            WorldServer world = (WorldServer) input.getWorld();
+            World world = input.getWorld();
             BlockPos mounting = input.getPos();
             BlockPos root = arm.getPos();
             if (ArmTransactions.lockedForResourceTransfer(world,root)
@@ -170,8 +177,11 @@ final class ArmResourceTransfer {
             BlockPos contact = mounting.offset(arm.mountDirection(),arm.assembly().columnHeight());
             EnumFacing face = side;
             ArmPayload carried=arm.payload();
-            if(carried!=null&&!carried.materialized())return carried.transferCapturedTank(arm,
-                    contact.subtract(root).subtract(carried.offset),side,capability,unavailable,action);
+            if(carried!=null&&!carried.materialized()){
+                BlockPos local=contact.subtract(root).subtract(carried.offset);
+                return world instanceof VehicleWorld?carried.transferVehicleResource(arm,local,side,capability,unavailable,action)
+                        :carried.transferCapturedTank(arm,local,side,capability,unavailable,action);
+            }
             if (!arm.isFixedMount()) {
                 ArmResourceTransfer mapping = arm.resourceConnection();
                 mapping.map(arm);
@@ -185,14 +195,22 @@ final class ArmResourceTransfer {
                     face = endpoint.mappedFacing(side);
                 } else return unavailable;
             }
+            if(world instanceof VehicleWorld&&!VehicleResources.sameSection((VehicleWorld)world,mounting,contact))return unavailable;
             if (!GearAssembly.loaded(world,contact) || ArmTransactions.lockedForResourceTransfer(world,contact)
                     || com.vandorlabs.copier.CopyTransactions.locked(world,contact)) return unavailable;
             TileEntity target = world.getTileEntity(contact);
             if (target == null || target.isInvalid() || target.getWorld() != world || !contact.equals(target.getPos())) return unavailable;
-            T destination = target.getCapability(capability,face);
-            if(destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY)destination=(T)com.vandorlabs.ports.ResourcePortConnections.itemHandler(target,face,contact.offset(face));
+            T destination = endpoint(target,face,capability,contact.offset(face));
             return destination == null ? unavailable : action.apply(destination);
         });
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> T endpoint(TileEntity tile,EnumFacing face,Capability<T> capability,BlockPos source){
+        if(tile.getWorld() instanceof VehicleWorld)return VehicleResources.endpoint(tile,face,capability);
+        T destination=tile.getCapability(capability,face);
+        return destination==null&&capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY
+                ?(T)com.vandorlabs.ports.ResourcePortConnections.itemHandler(tile,face,source):destination;
     }
 
     private final class Power implements IEnergyStorage {

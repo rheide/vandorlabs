@@ -18,6 +18,7 @@ public final class MovingBlockSupport {
         if(cell.tileData()!=null && tile==null)return false;
         if(cell.state.getBlock() instanceof com.vandorlabs.ports.ResourcePortBlock){com.vandorlabs.ports.ResourcePortBlock.Kind kind=((com.vandorlabs.ports.ResourcePortBlock)cell.state.getBlock()).kind;return kind==com.vandorlabs.ports.ResourcePortBlock.Kind.POWER?tile instanceof com.vandorlabs.ports.PowerPortTile:kind==com.vandorlabs.ports.ResourcePortBlock.Kind.FLUID?tile instanceof com.vandorlabs.ports.FluidPortTile:tile instanceof com.vandorlabs.ports.MatterPortTile;}
         String domain=cell.state.getBlock().getRegistryName().getResourceDomain();
+        if(TransferNetworkCompat.onboard(tile)||TransferNetworkCompat.galacticraftStorage(tile))return true;
         if(MachineBlockCompat.supported(tile))return true;
         if(RFToolsCompat.rftools(tile))return RFToolsCompat.supported(tile);
         if(domain.equals("thermalexpansion")||domain.equals("thermaldynamics"))return false;
@@ -115,7 +116,7 @@ public final class MovingBlockSupport {
         boolean carriedCapability=tile.getWorld() instanceof VehicleWorld
                 && before.hasKey("ForgeCaps",10) && supported(cell,tile);
         NBTTagCompound after;
-        try{after=tile.writeToNBT(new NBTTagCompound());}
+        try{after=TransferNetworkCompat.write(tile);}
         catch(LinkageError capabilityFailure){
             boolean serializingCapabilities=false;
             for(StackTraceElement frame:capabilityFailure.getStackTrace())

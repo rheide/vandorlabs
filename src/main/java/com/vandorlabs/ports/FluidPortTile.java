@@ -21,7 +21,7 @@ public final class FluidPortTile extends ResourcePortTile {
     private void add(FluidStack stack,int amount){if(fluid==null){fluid=stack.copy();fluid.amount=amount;}else fluid.amount+=amount;}
     private void remove(int amount){fluid.amount-=amount;if(fluid.amount==0)fluid=null;}
     private static FluidStack portion(FluidStack fluid,int amount){FluidStack part=fluid.copy();part.amount=amount;return part;}
-    @Override protected Object findHandler(TileEntity tile,EnumFacing side){return tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,side);}
+    @Override protected Object findHandler(TileEntity tile,EnumFacing side){return world instanceof com.vandorlabs.vehicle.VehicleWorld?com.vandorlabs.vehicle.VehicleResources.endpoint(tile,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY):tile.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,side);}
     @Override protected boolean compatible(Object handler,boolean receiving){
         if(!(handler instanceof IFluidHandler))return false;IFluidTankProperties[] properties=((IFluidHandler)handler).getTankProperties();if(properties==null)return false;
         for(IFluidTankProperties tank:properties)if(tank!=null&&(receiving?tank.canFill():tank.canDrain()))return true;return false;

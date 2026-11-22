@@ -207,14 +207,16 @@ public final class VehicleSignals {
         }
         craft.articulation.tickCapturedControls();
         resources.tick();
+        resources.flushChanges(dirty,false);
         for(TileEntityConstructor engine:maxwellEngines)engine.tickMaxwell(craft.poweredFlight());
         for(StorageChannelOutput storage:storageOutputs){Link link=links.get(storage);if(link!=null)RedstoneChannels.inputChanged(link);}
         com.vandorlabs.navigation.NavigationVehicle.tick(craft);
         flush();
     }
-    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();}
+    public void close(){detached=true;for(Link link:links.values())RedstoneChannels.unregister(link);links.clear();deferredLevels.clear();dirty.clear();releases.clear();screenPulses.clear();resources.close();}
     public void open(){detached=false;revision=-1;}
     public void persist(){if(!craft.world.isRemote && !detached){
+        resources.flushChanges(dirty,true);
         for(TileEntityConstructor engine:maxwellEngines) {
             if(craft.view!=null&&craft.view.getTileEntity(engine.getPos())==engine)dirty.add(engine.getPos());
         }
