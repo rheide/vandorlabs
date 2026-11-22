@@ -85,6 +85,7 @@ public final class ScreenModeTransitionRuntimeChecks {
     private static boolean picker(Minecraft mc){return mc.currentScreen instanceof GuiAnimatedScreenSelector||mc.currentScreen instanceof GuiProgrammableInput||mc.currentScreen instanceof GuiProgrammableHalfConsole;}
     private static void next(){stage++;frame=0;}
     public static boolean tick(Minecraft mc,File output)throws Exception{
+        if(scenario>=blocks.size())return true;
         require(++total<1800,"bounded actual mode-transition timeout gui="+(mc.currentScreen==null?"none":mc.currentScreen.getClass().getSimpleName())+" mode="+mc.playerController.getCurrentGameType()+" slot="+mc.player.inventory.currentItem+" held="+mc.player.getHeldItemMainhand()+" position="+mc.player.getPositionVector());frame++;
         if(stage==0&&frame>12){if(!ready(mc))return false;open(mc);next();return false;}
         if(stage==1){require(frame<100,"Status picker did not open");if(!picker(mc)||frame<5)return false;choose(mc,-100001);next();return false;}
