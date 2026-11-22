@@ -42,7 +42,7 @@ public final class NativeVehicleScreenRowsFixture {
     private static NativeGroundVehicle craft;
     private static int ticks, expectedPulseEnergy;
     private static long firstPulse, lastPulse;
-    private static boolean sawPulse, saved, parking, finished;
+    private static boolean ready, sawPulse, saved, parking, finished;
 
     public static boolean enabled() { return Boolean.getBoolean("vandorlabs.vehicleScreenRowsChecks"); }
 
@@ -71,7 +71,10 @@ public final class NativeVehicleScreenRowsFixture {
         var data = new CompoundTag();
         var rows = new ListTag();
         rows.add(row("Toggle", TOGGLE, ""));
-        rows.add(row("Pulse", PULSE, "Pulse"));
+        var expired = row("Pulse", PULSE, "Pulse");
+        expired.putLong("PulseUntil", world.getGameTime());
+        expired.putBoolean("Active", true);
+        rows.add(expired);
         rows.add(row("Slider", ANALOG, "Slider"));
         rows.add(row("Meter", ANALOG, "Status"));
         rows.getCompound(0).putString("PrivateMarker", "owner-only");
@@ -148,6 +151,13 @@ public final class NativeVehicleScreenRowsFixture {
         }
         var resources = craft.resources();
         var localMonitor = MONITOR.subtract(ROOT);
+        if (!ready) {
+            var cells = craft.snapshot().cells();
+            int energy = cells.stream().filter(cell -> cell.pos.equals(SINK.subtract(ROOT)))
+                    .findFirst().orElseThrow().tile().getInt("PortEnergy");
+            require(energy == 0, "expired pulse admitted without carrying stale RF signal");
+            ready = true;
+        }
         int pulse = resources.channelLevel(craft, SINK.subtract(ROOT), ChannelList.of(PULSE));
         if (pulse > 0) {
             if (!sawPulse) firstPulse = world.getGameTime();
