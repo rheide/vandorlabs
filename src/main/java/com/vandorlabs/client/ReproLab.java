@@ -631,6 +631,7 @@ public class ReproLab {
                 // intermittently fail.
                 String saveName = "repro-" + outDir.getName().replaceAll(
                         "[^A-Za-z0-9._-]", "_");
+                if(Boolean.getBoolean("vandorlabs.cruiseChecksOnly")&&System.getenv("VANDOR_LABS_CRUISE_PHASE")!=null)saveName="maxwell-cruise";
                 if(Boolean.getBoolean("vandorlabs.navigationVehicleChecksOnly"))saveName="navigation-vehicle";
                 if(!System.getProperty("vandorlabs.armRecoveryPhase","").isEmpty())saveName="arm-recovery";
                 if(!System.getProperty("vandorlabs.mekanismTankRestart","").isEmpty())saveName="mekanism-tank-restart";

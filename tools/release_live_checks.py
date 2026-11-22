@@ -56,10 +56,10 @@ def sha256(path):
 
 def command_for(focus, jar, heap, windows=None):
     windows = os.name == 'nt' if windows is None else windows
-    if focus == 'navigation-vehicle':
+    if focus in ('navigation-vehicle', 'maxwell-cruise'):
         # Both platforms keep write and cold-reload phases in one owned lane.
         return [sys.executable, 'testclient/test_navigation_vehicle.py',
-                '--jar', str(jar), '--max-heap', heap]
+                '--jar', str(jar), '--max-heap', heap] + (['--focus', focus] if focus == 'maxwell-cruise' else [])
     if windows:
         selector = '--shot-prefix' if focus == 'utility22_card_mounts' else '--focus'
         return [sys.executable, 'testclient/run_windows.py', '--jar', str(jar),
@@ -263,7 +263,7 @@ def run_release(jar, output, jobs=2, *, names=None, builder=None, stop=None, gra
                     if sha256(jar) != expected:
                         raise ValueError('Release JAR changed during live validation')
                     row['artifact_hashes'] = artifact_hashes(Path(row['directory']) / 'artifacts', expected)
-                    required_hashes = 2 if name == 'navigation-vehicle' or (name == 'mekanism-tanks' and os.name != 'nt') else 1
+                    required_hashes = 2 if name in ('navigation-vehicle', 'maxwell-cruise') or (name == 'mekanism-tanks' and os.name != 'nt') else 1
                     if code == 0 and len(row['artifact_hashes']) < required_hashes:
                         raise ValueError('Missing fixture JAR hashes: ' + name + ' requires ' + str(required_hashes))
                     row['status'] = 'passed' if code == 0 and not stop.is_set() else 'failed'

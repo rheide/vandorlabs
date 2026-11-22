@@ -22,7 +22,7 @@ def fake_child():
     artifact = Path(os.environ['VANDOR_LABS_TEST_RUN_ROOT']) / 'artifact.sha256'
     if mode != 'no-hash':
         artifact.write_text(('0' * 64 if mode == 'bad-hash' else live.sha256(os.environ['VANDOR_LABS_TEST_JAR'])) + '  fixture.jar\n')
-        if name in ('mekanism-tanks', 'navigation-vehicle'):
+        if name in ('mekanism-tanks', 'navigation-vehicle', 'maxwell-cruise'):
             second = artifact.parent / 'verify'; second.mkdir()
             (second / 'artifact.sha256').write_text(artifact.read_text())
     row = dict(start=start, env={k: os.environ[k] for k in (

@@ -96,9 +96,11 @@ def main():
     output.mkdir(parents=True)
     resume_navigation = (args.focus == 'navigation-vehicle'
                          and os.environ.get('VANDOR_LABS_NAVIGATION_VEHICLE_PHASE') == 'read')
-    if resume_navigation and not (game/'saves/navigation-vehicle/level.dat').is_file():
-        parser.error('Navigation read phase requires the saved write-phase fixture')
-    game.mkdir(parents=True, exist_ok=resume_navigation)
+    resume_cruise = args.focus == 'maxwell-cruise' and os.environ.get('VANDOR_LABS_CRUISE_PHASE') == 'read'
+    resume_world = resume_navigation or resume_cruise
+    if resume_world and not (game/'saves'/args.focus/'level.dat').is_file():
+        parser.error('Read phase requires the saved write-phase fixture for '+args.focus)
+    game.mkdir(parents=True, exist_ok=resume_world)
     (output/'artifact.sha256').write_text(hashlib.sha256(jar.read_bytes()).hexdigest()+'  '+str(jar)+'\n')
     if args.focus in ('glass-appearance','cube-reference','filesystem-discovery'):
         from prepare_cube_reference import prepare
@@ -169,7 +171,7 @@ def main():
                         (natives/Path(name).name).write_bytes(archive.read(name))
     classpath += [str(base/'versions/1.12.2/1.12.2.jar'), str(jar)]
     compat = args.compat_mods or Path(os.environ.get('VANDOR_LABS_COMPAT_MODS', str(root/'build/tooling/compat-mods')))
-    (game/'mods').mkdir(exist_ok=resume_navigation)
+    (game/'mods').mkdir(exist_ok=resume_world)
     if os.environ.get('VANDOR_LABS_TEST_JEI'):
         optional_jei = Path(os.environ['VANDOR_LABS_TEST_JEI'])
         shutil.copyfile(optional_jei, game/'mods'/optional_jei.name)
