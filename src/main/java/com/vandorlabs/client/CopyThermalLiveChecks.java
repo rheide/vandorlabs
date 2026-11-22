@@ -41,6 +41,7 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
+import net.minecraftforge.fluids.IFluidTank;
 import net.minecraftforge.fml.common.Loader;
 
 /** The connected player's Copy button drives the real material and journal transaction. */
@@ -206,7 +207,7 @@ final class CopyThermalLiveChecks {
         require(accepted==FLUX_BUFFER,"seed the live Thermal RF grid through its native buffer: "+accepted);
         Object fluid=ductUnit(duct,"fluid");
         Object grid=fluid.getClass().getMethod("getGrid").invoke(fluid);
-        FluidTank fluidBuffer=(FluidTank)grid.getClass().getField("myTank").get(grid);
+        IFluidTank fluidBuffer=(IFluidTank)grid.getClass().getField("myTank").get(grid);
         require(fluidBuffer.fill(new FluidStack(FluidRegistry.WATER,DUCT_BUFFER),true)==DUCT_BUFFER,
             "seed the live Thermal fluid grid through its native buffer");
         servo=part(world,source.add(SERVO));retriever=part(world,source.add(RETRIEVER));
