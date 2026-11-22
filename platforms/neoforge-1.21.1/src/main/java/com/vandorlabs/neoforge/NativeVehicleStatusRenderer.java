@@ -51,8 +51,11 @@ public final class NativeVehicleStatusRenderer {
         var rows=new ArrayList<>(surface.rows());
         for(int i=0;i<rows.size();i++){
             var row=rows.get(i);
-            if(row.status())rows.set(i,new NativeScreenControls.Row(row.label(),row.channels(),false,false,
-                row.min(),row.max(),packed>>>(4*i)&15,java.util.Map.of(),ChannelList.EMPTY,false,0,true));
+            int level = packed >>> (4 * i) & 15;
+            if (level == 0) continue;
+            rows.set(i, new NativeScreenControls.Row(row.label(), row.channels(), row.slider(), row.pulse(),
+                    row.min(), row.max(), level, java.util.Map.of(), ChannelList.EMPTY, !row.status(),
+                    row.pulse() ? Long.MAX_VALUE : 0, row.status()));
         }
         return new NativeScreenControls(true,surface.title(),rows);
     }

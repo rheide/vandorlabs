@@ -46,15 +46,18 @@ final class NativeVehicleResources {
     private final Map<Integer, List<BufferSignal>> outputChannels = new HashMap<>();
     private final List<NativeVehicleObservers.Receiver> observers;
     private final NativeVehiclePropulsion propulsion;
+    private final NativeVehicleMeters controls;
     private NativeTransferSnapshot savedInput, saved;
     private int next, nextArm, availableBytes, extraBytes, savedArmRevision;
     private long tick = Long.MIN_VALUE, fluidMassMb;
     private boolean changed;
 
-    NativeVehicleResources(NativeTransferSnapshot snapshot, HolderLookup.Provider registries, NativeVehiclePropulsion propulsion) {
+    NativeVehicleResources(NativeTransferSnapshot snapshot, HolderLookup.Provider registries,
+                           NativeVehiclePropulsion propulsion, NativeVehicleMeters controls) {
         this.propulsion = propulsion;
+        this.controls = controls;
         var mounted = new LinkedHashMap<BlockPos, List<Endpoint>>();
-        availableBytes = NativeVehicleStructure.LIMITS.bytes() - snapshot.decodedBytes;
+        availableBytes = NativeVehicleStructure.LIMITS.bytes() - snapshot.decodedBytes - controls.reservedBytes();
         for (var cell : snapshot.cells()) {
             states.put(cell.pos, cell);
             if (!cell.hasTile()) continue;
@@ -217,17 +220,19 @@ final class NativeVehicleResources {
             if (neighbor != null && neighbor.state.is(Blocks.REDSTONE_BLOCK)) return 15;
             var output = outputPositions.get(adjacent);
             if (output != null) level = Math.max(level, output.level());
+            level = Math.max(level, controls.localOutput(adjacent));
         }
         return level;
     }
 
-    boolean hasLocalOutputs() { return !outputPositions.isEmpty(); }
+    boolean hasLocalOutputs() { return !outputPositions.isEmpty() || controls.hasLocalOutput(); }
 
     int channelLevel(NativeGroundVehicle craft, BlockPos receiver, ChannelList selected) {
         if (selected.isEmpty()) return 0;
         var world = (ServerLevel)craft.level();
         var physical = BlockPos.containing(NativeVehicleObservers.worldPoint(craft, receiver));
-        int signal = 0;
+        int signal = controls.channelOutput(receiver, selected);
+        if (signal == 15) return signal;
         for (int i = 0; i < selected.size(); i++) {
             int channel = selected.get(i);
             signal = Math.max(signal, NativeRedstoneChannels.level(world, physical, channel));
