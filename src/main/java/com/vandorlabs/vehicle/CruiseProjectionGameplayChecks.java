@@ -34,7 +34,7 @@ final class CruiseProjectionGameplayChecks {
     private static final BlockPos SWITCH = new BlockPos(0,2,2), CONTROLLER = BlockPos.ORIGIN.east();
     private static final int CHANNEL = 24791;
     private static int stage, ticks;
-    private static boolean wasDebug, hudWasHidden;
+    private static boolean wasDebug, hudWasHidden, switchInitiallyOn;
     private static Future<Boolean> serverCheck;
 
     private CruiseProjectionGameplayChecks() {}
@@ -101,16 +101,19 @@ final class CruiseProjectionGameplayChecks {
             serverCheck=null;
             if(!ready){aim(mc,clientCraft,target);return false;}
             require(isTarget(mc.player,clientCraft,target),"client ray aligned with the authorized server target " + target);
-            if(stage==2)require(!powered(clientCraft),"rocker starts off");
+            if(stage==2){
+                switchInitiallyOn="read".equals(System.getenv("VANDOR_LABS_CRUISE_PHASE"));
+                require(powered(clientCraft)==switchInitiallyOn,"rocker retains the state expected before clicking");
+            }
             MinecraftForge.EVENT_BUS.post(new PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
             stage++;
             return false;
         }
         if (stage == 3) {
-            if(!powered(clientCraft))return false;
+            if(powered(clientCraft)==switchInitiallyOn)return false;
             if(serverCheck==null){serverCheck=mc.getIntegratedServer().callFromMainThread(()->powered(serverCraft));return false;}
             if(!serverCheck.isDone())return false;
-            require(serverCheck.get(),"real interaction toggles the authoritative carried rocker");
+            require(serverCheck.get()!=switchInitiallyOn,"real interaction toggles the authoritative carried rocker");
             serverCheck=null;
             ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"cruise-geographic-carried-control.png"));
