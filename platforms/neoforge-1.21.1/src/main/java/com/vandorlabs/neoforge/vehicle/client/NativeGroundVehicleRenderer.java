@@ -3,6 +3,8 @@ package com.vandorlabs.neoforge.vehicle.client;
 import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.vandorlabs.neoforge.NativeVehicleStatusRenderer;
+import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
+import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette.Palette;
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
@@ -105,7 +107,7 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
         var client = Minecraft.getInstance();
         var mesh = mesh(craft, visual);
         float yaw = Mth.rotLerp(partial, craft.yRotO, craft.getYRot());
-        float pitch = craft.hullPitch();
+        float pitch = craft.renderPitch(partial);
         poses.pushPose();
         try {
             poses.mulPose(Axis.YP.rotationDegrees(-yaw));
@@ -132,7 +134,13 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                         }
                     }
                     var tile = palette.tile();
-                    if (tile != null && client.getBlockEntityRenderDispatcher().getRenderer(tile) != null) {
+                    if (tile instanceof NativeBuilderEntity builder && builder.maxwell()) {
+                        int gauge = craft.maxwellGauge(cell.pos);
+                        if (gauge >= 0) builder.updateCarriedMaxwellVisual(gauge >>> 4, gauge & 15);
+                    }
+                    if (tile instanceof NativeScreenEntity screen) {
+                        status.renderScreen(craft, screen, poses, buffers, cellLight, OverlayTexture.NO_OVERLAY);
+                    } else if (tile != null && client.getBlockEntityRenderDispatcher().getRenderer(tile) != null) {
                         client.getBlockEntityRenderDispatcher().render(tile, partial, poses, buffers);
                     }
                 } finally {

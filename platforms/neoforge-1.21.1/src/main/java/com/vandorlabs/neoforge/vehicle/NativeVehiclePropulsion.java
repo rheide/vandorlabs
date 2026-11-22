@@ -23,7 +23,6 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.world.level.block.state.BlockState;
-import java.util.function.Function;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
@@ -31,13 +30,16 @@ import net.minecraft.world.level.block.state.properties.SlabType;
 
 /** Runtime propulsion owns only the changing Maxwell fuel and throttle fields of the installed hull. */
 public final class NativeVehiclePropulsion {
+    private static final int GAUGE_LIMIT = 2 * (NativeVehicleStructure.LIMITS.cells() /
+            (MaxwellEngine.BASE_WIDTH * MaxwellEngine.BASE_WIDTH * MaxwellEngine.depth(MaxwellEngine.BASE_WIDTH)));
     public record Readout(double mass, double effectiveMass, int drives, int fuel, int capacity,
                           double thrust, double takeoffMass, double ceiling, boolean canHover) {
         static final Readout EMPTY = new Readout(0, 0, 0, 0, 0, 0, 0, 0, false);
     }
 
     public static Readout preview(NativeTransferSnapshot blocks, ServerLevel level, BlockPos origin) {
-        return new NativeVehiclePropulsion(blocks, level.registryAccess()).readout(level, origin::offset);
+        var drive = new NativeVehiclePropulsion(blocks, level.registryAccess());
+        return drive.readout(NativeVehicleResources.fluidMass(blocks, level.registryAccess()), value -> drive.previewSignal(value, level, origin));
     }
 
     private record Drive(NativeRawCell core, NativeDriveSettings settings, ChannelList channels, int width,
@@ -143,6 +145,10 @@ public final class NativeVehiclePropulsion {
                 }
             }
         }
+        for (var value : tile.getList("PortItems", Tag.TAG_COMPOUND)) {
+            var stack = ((CompoundTag)value).getCompound("Item");
+            mass += net.minecraft.world.item.ItemStack.parse(registries, stack).map(item -> itemMass(item, 0)).orElse(0D);
+        }
         return mass;
     }
 
@@ -158,47 +164,74 @@ public final class NativeVehiclePropulsion {
         return stack.getCount() * mass;
     }
 
+    static boolean gaugeArrayValid(int[] gauges) {
+        return gauges.length <= GAUGE_LIMIT && gauges.length % 2 == 0;
+    }
+
+    int[] gauges() {
+        int[] gauges = new int[drives.size() * 2];
+        int index = 0;
+        for (var drive : drives.values()) {
+            gauges[index++] = gaugePosition(drive.core.pos);
+            gauges[index++] = drive.tank.amount() << 4 | drive.tank.activeLevel();
+        }
+        return gauges;
+    }
+
+    static int gaugePosition(BlockPos pos) {
+        return (pos.getX() + 32) << 14 | (pos.getY() + 32) << 7 | (pos.getZ() + 32);
+    }
+
     private int fuel() {
         int amount = 0;
         for (var drive : drives.values()) amount += drive.tank.amount();
         return amount;
     }
 
-    double mass() {
-        return FlightEnvelope.effectiveMass(dryMass + fuel() / 1000D, plates, repulsors);
+    double mass(NativeGroundVehicle craft) {
+        double loaded = dryMass + craft.resources().fluidMass() + fuel() / 1000D;
+        return FlightEnvelope.effectiveMass(loaded, plates, repulsors);
     }
 
     Readout readout(NativeGroundVehicle craft) {
-        return readout((ServerLevel)craft.level(), pos -> BlockPos.containing(craft.toWorld(pos)));
+        return readout(craft.resources().fluidMass(), drive -> signalAt(drive, craft));
     }
 
-    private Readout readout(ServerLevel level, Function<BlockPos, BlockPos> positions) {
+    private Readout readout(double fluidMass, java.util.function.ToIntFunction<Drive> signals) {
         int fuel = fuel();
-        double mass = dryMass + fuel / 1000D;
+        double mass = dryMass + fluidMass + fuel / 1000D;
         double effective = FlightEnvelope.effectiveMass(mass, plates, repulsors);
         double available = 0;
         for (var drive : drives.values()) {
-            int signal = signalAt(drive, level, positions);
+            int signal = signals.applyAsInt(drive);
             available += MaxwellEngine.thrustUnits(drive.width) * drive.tank.throttle(drive.settings, signal, true) / 15;
         }
         return new Readout(mass, effective, drives.size(), fuel, drives.size() * MaxwellEngine.CAPACITY, available,
                 FlightEnvelope.takeoffMass(available), FlightEnvelope.maximumAltitude(effective, available), canHover());
     }
 
-    private static int signalAt(Drive drive, ServerLevel world, Function<BlockPos, BlockPos> positions) {
+    private int previewSignal(Drive drive, ServerLevel world, BlockPos origin) {
         int signal = drive.localPower;
-        if (!drive.settings.redstone() || drive.channels.isEmpty() || signal == 15) return signal;
-        var pos = positions.apply(drive.powerPort);
+        if (!drive.settings.redstone() || signal == 15) return signal;
+        var port = origin.offset(drive.powerPort);
         for (int index = 0; index < drive.channels.size(); index++) {
-            signal = Math.max(signal, NativeRedstoneChannels.level(world, pos, drive.channels.get(index)));
+            signal = Math.max(signal, NativeRedstoneChannels.level(world, port, drive.channels.get(index)));
         }
         return signal;
+    }
+
+    private static int signalAt(Drive drive, NativeGroundVehicle craft) {
+        int signal = drive.localPower;
+        if (!drive.settings.redstone() || signal == 15) return signal;
+        var resources = craft.resources();
+        return Math.max(signal, Math.max(resources.localLevel(drive.powerPort),
+                resources.channelLevel(craft, drive.powerPort, drive.channels)));
     }
 
     double thrust(NativeGroundVehicle craft, boolean demand, boolean burn) {
         double total = 0;
         for (var drive : drives.values()) {
-            int signal = signalAt(drive, (ServerLevel)craft.level(), pos -> BlockPos.containing(craft.toWorld(pos)));
+            int signal = signalAt(drive, craft);
             int level = drive.tank.throttle(drive.settings, signal, demand);
             if (burn) {
                 int previous = drive.tank.activeLevel();

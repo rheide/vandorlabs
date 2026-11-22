@@ -20,6 +20,15 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
  public boolean maxwell(){return drive()==NativeDriveDesign.LONGBURN;}
  public int maxwellFuel(){return publicOnly?publicMaxwellFuel:maxwellTank.amount();}
  public int maxwellCapacity(){return MaxwellEngine.CAPACITY;}
+ /** Update a detached public renderer proxy from its vehicle's tracked fuel and throttle. */
+ public void updateCarriedMaxwellVisual(int fuel,int throttle){
+  if(level==null||!level.isClientSide||!publicOnly||publicOriginal==null||!publicOriginal.getBoolean(MAXWELL_VISUAL)
+      ||fuel<0||fuel>MaxwellEngine.CAPACITY||throttle<0||throttle>15||fuel==0&&throttle!=0)return;
+  if(publicMaxwellFuel!=fuel||publicDriveLevel!=throttle){
+   publicMaxwellFuel=fuel;publicDriveLevel=throttle;cachedVisual=null;
+  }
+ }
+
  public double maxwellDryMass(){return MaxwellEngine.dryMass(maxwellWidth);}
  public double maxwellThrustUnits(){return MaxwellEngine.thrustUnits(maxwellWidth);}
  public int maxwellThrustLevel(boolean flightDemand){

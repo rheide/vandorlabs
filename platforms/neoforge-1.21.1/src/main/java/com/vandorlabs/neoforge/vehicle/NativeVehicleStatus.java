@@ -1,10 +1,12 @@
 package com.vandorlabs.neoforge.vehicle;
 
+import com.vandorlabs.neoforge.ModernHousingTags;
 import com.vandorlabs.neoforge.screen.NativeScreenBlock;
 import com.vandorlabs.neoforge.screen.NativeScreenCatalog;
 import com.vandorlabs.neoforge.screen.NativeScreenSettings;
 import com.vandorlabs.neoforge.screen.NativeYokeScreenBlock;
 import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
+import com.vandorlabs.persistence.FrameSettings;
 import com.vandorlabs.persistence.SaveSchema;
 import com.vandorlabs.screen.ScreenControlLayout;
 import com.vandorlabs.screen.ScreenFamily;
@@ -21,14 +23,17 @@ public final class NativeVehicleStatus {
     public static final int SURFACE = -3;
     public static final int WIDTH = 128, BUTTON_WIDTH = 36, BUTTON_LEFT = 7, BUTTON_SPACING = 39;
     public static final int BUTTON_START = 16, BUTTON_END = 28;
+    public static final int EMERGENCY_PARK = 3, EMERGENCY_START = 53, EMERGENCY_END = 64;
     public static final List<String> MODES = List.of("Taxi", "Hover", "Flight");
 
     public record Panel(BlockPos pos, int facing, ScreenControlLayout.Projection projection) {
-        int action(Vec3 from, Vec3 to) {
+        int action(Vec3 from, Vec3 to, boolean emergency) {
             Vec3 base = Vec3.atLowerCornerOf(pos).add(-.5, 0, -.5);
             var start = from.subtract(base);
             var end = to.subtract(base);
             var sample = projection.sample(start.x, start.y, start.z, end.x, end.y, end.z);
+            if (emergency && sample.line >= EMERGENCY_START && sample.line < EMERGENCY_END
+                    && sample.column >= 7 && sample.column < 121) return EMERGENCY_PARK;
             if (sample.line < BUTTON_START || sample.line >= BUTTON_END) return -1;
             for (int mode = 0; mode < MODES.size(); mode++) {
                 int left = buttonLeft(mode);
@@ -48,15 +53,16 @@ public final class NativeVehicleStatus {
         var result = new CompoundTag();
         var block = (NativeScreenBlock)state.getBlock();
         var settings = NativeScreenSettings.read(raw, NativeScreenCatalog.INSTANCE);
-        var data = settings.scalar();
-        if (data.smallInput) result.putBoolean(SaveSchema.Screen.SMALL_INPUT, true);
-        if (data.wallPosition >= 0) result.putInt(SaveSchema.Screen.WALL_POSITION, data.wallPosition);
-        if (settings.ceilingMounted()) result.putBoolean("CeilingMounted", true);
-        if (settings.ceilingPosition() >= 0) result.putInt("CeilingPosition", settings.ceilingPosition());
+        settings.write(result);
+        for (String key : List.of("DisplayActivation", "RedstoneChannels", "RedstoneInverted", "ChannelLevel",
+                SaveSchema.Redstone.CHANNEL, SaveSchema.Redstone.SIGNAL)) result.remove(key);
+        var catalog = NativeScreenCatalog.INSTANCE;
+        FrameSettings.read(new ModernHousingTags(raw), catalog::validFrame, catalog::validFrameSurface, catalog::validMaterial)
+                .write(new ModernHousingTags(result));
         for (int slot = 0; slot < 2; slot++) {
-            if (selected(block.family(), settings, raw, slot)) {
-                result.putInt(slot == 0 ? "PrimarySurfaceTexture" : "SecondarySurfaceTexture", SURFACE);
-            }
+            String tag = slot == 0 ? "PrimarySurfaceTexture" : "SecondarySurfaceTexture";
+            int selected = result.getInt(tag);
+            if (selected < -1 && !selected(block.family(), settings, raw, slot)) result.putInt(tag, -1);
         }
         return result;
     }
