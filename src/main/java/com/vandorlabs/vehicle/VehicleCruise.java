@@ -4,7 +4,6 @@ import com.vandorlabs.navigation.NavigationService;
 import com.vandorlabs.network.MessageCruiseTerrain;
 import com.vandorlabs.network.PacketHandler;
 import com.vandorlabs.physics.FlightEnvelope;
-import io.netty.buffer.ByteBuf;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -145,19 +144,6 @@ public final class VehicleCruise {
             publishedStep = pending.step;
             pending = null;
         }
-    }
-
-    void writeProbeSpawn(ByteBuf buffer) {
-        if (!CruiseCoordinateProbe.FULL || !active()) return;
-        // Forge spawns the client entity before the vanilla metadata packet arrives.
-        buffer.writeLong(new BlockPos(storageX,0,storageZ).toLong());
-        buffer.writeLong(new BlockPos(routeX,1,routeZ).toLong());
-    }
-
-    void readProbeSpawn(ByteBuf buffer) {
-        if (!CruiseCoordinateProbe.FULL || buffer.readableBytes()<16) return;
-        craft.getDataManager().set(STORAGE,BlockPos.fromLong(buffer.readLong()));
-        craft.getDataManager().set(ROUTE,BlockPos.fromLong(buffer.readLong()));
     }
 
     void write(NBTTagCompound tag) {
