@@ -3,14 +3,15 @@ package com.vandorlabs.neoforge.vehicle.client;
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleFlightFixture;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
+import com.vandorlabs.neoforge.vehicle.NativeVehicleScreenRowsFixture;
 import com.vandorlabs.physics.FlightEnvelope;
+import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
 import net.minecraft.util.Mth;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
@@ -19,9 +20,11 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 
 @EventBusSubscriber(modid = "vandorlabs", value = Dist.CLIENT)
 public final class NativeVehicleFlightPlayerChecks {
-    private static int stage, ticks, cameraTicks;
+    private static final int[] TERRAIN_COLORS = {0x427440, 0x366640, 0x28659b, 0xc7b77c, 0xcbdfe2, 0x7b8281, 0xb77550};
+    private static int stage, ticks, cameraTicks, boardingAim;
+    private static double runwayAltitude;
     private static NativeGroundVehicle craft;
-    private static boolean captured, becameHigh;
+    private static boolean captured, becameHigh, lifted, assembled;
     private static final java.lang.reflect.Method USE_ITEM = useItem();
 
     private static java.lang.reflect.Method useItem() {
@@ -35,8 +38,12 @@ public final class NativeVehicleFlightPlayerChecks {
     }
 
     @SubscribeEvent public static void chat(net.neoforged.neoforge.client.event.ClientChatReceivedEvent.System event) {
+        var message = event.getMessage().getString();
+        if ((NativeVehicleFlightFixture.enabled() || NativeVehicleScreenRowsFixture.enabled()) && message.equals("Vehicle assembled")) {
+            assembled = true;
+        }
         if (NativeVehicleFlightFixture.enabled()) {
-            System.out.println("[vandorlabs][vehicle-flight-player] stage=" + stage + " message=" + event.getMessage().getString());
+            System.out.println("[vandorlabs][vehicle-flight-player] stage=" + stage + " message=" + message);
         }
     }
 
@@ -62,16 +69,22 @@ public final class NativeVehicleFlightPlayerChecks {
         if (stage >= 4 && player.getVehicle() instanceof NativeGroundVehicle active && active.getUUID().equals(craft.getUUID())) craft = active;
         switch (stage) {
             case 0 -> {
-                if (mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
-                var found = mc.level.getEntitiesOfClass(NativeGroundVehicle.class, new AABB(NativeVehicleFlightFixture.ROOT).inflate(12));
+                if (!assembled || mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
+                var found = mc.level.getEntitiesOfClass(NativeGroundVehicle.class, player.getBoundingBox().inflate(10));
                 if (found.size() != 1 || !found.getFirst().admitted() || found.getFirst().statusPanels().size() != 1) return;
                 craft = found.getFirst();
+                if (player.getVehicle() == craft) {
+                    stage++;
+                    return;
+                }
                 var seat = craft.pilotSeat();
                 aim(mc, craft.position().add(seat.getX(), seat.getY() + .58, seat.getZ()));
                 var hit = craft.hit(player);
-                if (!seat.equals(hit) && !seat.above().equals(hit)) return;
-                mc.gameMode.interact(player, craft, InteractionHand.MAIN_HAND);
-                stage++;
+                if (!seat.equals(hit) && !seat.above().equals(hit)) {
+                    boardingAim = 0;
+                    return;
+                }
+                if (++boardingAim % 8 == 0) mc.gameMode.interact(player, craft, InteractionHand.MAIN_HAND);
             }
             case 1 -> {
                 if (player.getVehicle() != craft || !craft.onGround()) return;
@@ -84,22 +97,32 @@ public final class NativeVehicleFlightPlayerChecks {
                             + " target=" + at + " eye=" + player.getEyePosition() + " pose=" + craft.position());
                     return;
                 }
-                try {
-                    USE_ITEM.invoke(mc);
-                } catch (ReflectiveOperationException failure) {
-                    throw new IllegalStateException("Invoke ordinary right-click", failure);
-                }
+                runwayAltitude = craft.flightAltitude();
+                rightClick(mc);
                 System.out.println("[vandorlabs][vehicle-flight-player] used actual mouse dispatch on carried Status");
                 stage++;
             }
             case 2 -> {
                 if (craft.mode() != NativeGroundVehicle.FLIGHT || craft.driveSpeed() < FlightEnvelope.TAKEOFF_SPEED - .002) return;
-                NativeVehicleFlightFixture.require(craft.hullPitch() == 0 && craft.flightAltitude() < NativeVehicleFlightFixture.ROOT.getY()+.1,
+                NativeVehicleFlightFixture.require(craft.hullPitch() == 0 && Math.abs(craft.flightAltitude() - runwayAltitude) < .15,
                         "runway reaches takeoff speed without lifting until pilot pitch-up");
                 mc.options.keyDown.setDown(true);
                 stage++;
             }
             case 3 -> {
+                String impact = NativeVehicleFlightFixture.impact();
+                if (!impact.isEmpty()) {
+                    if (craft.flightAltitude() > runwayAltitude + .25) lifted = true;
+                    int expected = impact.equals("hover") ? NativeGroundVehicle.HOVER : NativeGroundVehicle.TAXI;
+                    if (!lifted || craft.mode() != expected || Math.abs(craft.driveSpeed()) > .005) return;
+                    NativeVehicleFlightFixture.require(player.getVehicle() == craft && craft.flightReadout().fuel() == 1
+                            && !craft.highFlight(), "connected pilot observes powered terrain-impact recovery");
+                    mc.options.keyDown.setDown(false);
+                    System.out.println("[vandorlabs][vehicle-flight-impact-" + impact + "-player] client PASS seated with matching recovery mode");
+                    mc.stop();
+                    stage = 6;
+                    return;
+                }
                 if (!craft.highFlight()) return;
                 becameHigh = true;
                 mc.options.keyDown.setDown(false);
@@ -121,14 +144,37 @@ public final class NativeVehicleFlightPlayerChecks {
                         return;
                     }
                     if (!captured && craft.flightAltitude() > 1000) {
-                        player.setXRot(70);
-                        if (++cameraTicks < 8 || !NativeCruiseSky.ready(craft)) return;
+                        mc.options.setCameraType(CameraType.THIRD_PERSON_BACK);
+                        mc.options.hideGui = true;
+                        player.setYRot(NativeVehicleFlightFixture.normalTerrain() ? -55 : -90);
+                        player.setXRot(38);
+                        if (++cameraTicks < 8 || cameraTicks % 8 != 0 || !NativeCruiseSky.ready(craft)) return;
                         try (var image = net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+                            int[] terrainPixels = new int[TERRAIN_COLORS.length];
+                            for (int y = image.getHeight() / 3; y < image.getHeight(); y += 3) {
+                                for (int x = 0; x < image.getWidth(); x += 3) {
+                                    int color = image.getPixelRGBA(x, y);
+                                    for (int index = 0; index < TERRAIN_COLORS.length; index++) {
+                                        if (matchesColor(color, TERRAIN_COLORS[index])) {
+                                            terrainPixels[index]++;
+                                            break;
+                                        }
+                                    }
+                                }
+                            }
+                            int bandCount = 0;
+                            for (int count : terrainPixels) if (count >= 64) bandCount++;
+                            boolean terrainVisible = NativeVehicleFlightFixture.normalTerrain() ? bandCount >= 2 : terrainPixels[0] >= 64;
+                            if (!terrainVisible && cameraTicks < 64) return;
                             image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve("maxwell-flight-cruise.png"));
+                            NativeVehicleFlightFixture.require(terrainVisible,
+                                    "camera can see seeded terrain, pixels=" + java.util.Arrays.toString(terrainPixels));
                         } catch (java.io.IOException error) {
                             throw new IllegalStateException("Native high-flight capture", error);
                         }
                         captured = true;
+                        mc.options.setCameraType(CameraType.FIRST_PERSON);
+                        mc.options.hideGui = false;
                     }
                     return;
                 }
@@ -143,7 +189,23 @@ public final class NativeVehicleFlightPlayerChecks {
         }
     }
 
-    private static void aim(Minecraft mc, Vec3 target) {
+    static boolean assemblyConfirmed() { return assembled; }
+
+    private static boolean matchesColor(int rgba, int rgb) {
+        return Math.abs((rgba & 255) - (rgb >>> 16 & 255)) <= 9
+                && Math.abs((rgba >>> 8 & 255) - (rgb >>> 8 & 255)) <= 9
+                && Math.abs((rgba >>> 16 & 255) - (rgb & 255)) <= 9;
+    }
+
+    static void rightClick(Minecraft mc) {
+        try {
+            USE_ITEM.invoke(mc);
+        } catch (ReflectiveOperationException failure) {
+            throw new IllegalStateException("Invoke ordinary right-click", failure);
+        }
+    }
+
+    static void aim(Minecraft mc, Vec3 target) {
         var player = mc.player;
         var delta = target.subtract(player.getEyePosition());
         player.setYRot((float)(Math.atan2(-delta.x, delta.z) * Mth.RAD_TO_DEG));

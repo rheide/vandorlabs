@@ -87,9 +87,8 @@ public final class NativeVehicleStatus {
         var result = new ArrayList<Panel>(2);
         for (int slot = 0; slot < 2; slot++) {
             if (!selected(block.family(), settings, raw, slot)) continue;
-            boolean chipDeck = slot == 0 && block.family() == ScreenFamily.HALF_CONSOLE && settings.secondarySurface() == -4;
             var projection = ScreenControlLayout.of(block.family(), shape, slot, data.smallInput, data.wallPosition,
-                    settings.ceilingMounted(), settings.ceilingPosition(), chipDeck);
+                    settings.ceilingMounted(), settings.ceilingPosition(), false);
             result.add(new Panel(pos, shape.facing, projection));
         }
         return List.copyOf(result);

@@ -114,7 +114,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     public NativeTransferSnapshot snapshot() {
         var registries = level().registryAccess();
         var saved = propulsion == null ? snapshot : propulsion.snapshot(registries);
-        return resources == null ? saved : resources.snapshot(saved, registries);
+        if (resources != null) saved = resources.snapshot(saved, registries);
+        return meters == null ? saved : meters.snapshot(saved);
     }
 
     NativeVehicleResources resources() { return resources; }
@@ -192,7 +193,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         int height = seat == null ? 0 : Mth.clamp(seat.getInt(ChairSettings.PILOT_HEIGHT), 0, 3);
         var appearance = NativeVehicleVisual.project(blocks, level().registryAccess());
         var drive = new NativeVehiclePropulsion(blocks, level().registryAccess());
-        var resources = new NativeVehicleResources(blocks, level().registryAccess(), drive);
+        var controls = NativeVehicleMeters.server(blocks, level().getGameTime());
+        var resources = new NativeVehicleResources(blocks, level().registryAccess(), drive, controls);
         var geometry = new NativeVehicleHull(states, resources::armCollision);
         snapshot = blocks;
         hull = geometry;
@@ -200,7 +202,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         this.resources = resources;
         armRevision = resources.armRevision();
         entityData.set(ARM_POSES, resources.armPoses());
-        meters = NativeVehicleMeters.server(blocks);
+        meters = controls;
+        entityData.set(METER_LEVELS, controls.publicData());
         status = NativeVehicleStatus.panels(blocks);
         visualTag = appearance;
         pilot = localPilot.immutable();
@@ -303,6 +306,13 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             if (actor instanceof ServerPlayer rider) requestMode(rider, action);
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
+        var row = meterHit(actor, ray, target);
+        if (row != null) {
+            if (actor instanceof ServerPlayer rider && level().mayInteract(rider, BlockPos.containing(toWorld(target)))) {
+                meters.activate(target, row, level().getGameTime());
+            }
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
         if ((target.equals(pilotSeat()) || target.equals(pilotSeat().above())) && !actor.isPassenger()) {
             if (!level().isClientSide && (owner == null || owner.equals(actor.getUUID()) || actor.isCreative())) actor.startRiding(this);
             return InteractionResult.sidedSuccess(level().isClientSide);
@@ -327,7 +337,12 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         var ray = localRay(actor);
         if (ray == null) return false;
         BlockPos target = hit(ray, actor);
-        return target != null && (controllerHit(actor, target) || statusAction(actor, ray, target) >= 0);
+        return target != null && (controllerHit(actor, target) || statusAction(actor, ray, target) >= 0
+                || meterHit(actor, ray, target) != null);
+    }
+
+    private NativeVehicleMeters.Click meterHit(Player actor, Ray ray, BlockPos target) {
+        return meters == null || actor.isShiftKeyDown() ? null : meters.hit(target, ray.start, ray.end);
     }
 
     private record Ray(Vec3 start, Vec3 end) {}
@@ -392,13 +407,14 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         }
         if (NativeVehicleTransfer.escrowed(this)
                 || highFlight() && pilot() == null && savedPilot != null && level().getGameTime() < awaitingPilotUntil) return;
+        meters.expire(level().getGameTime());
         resources.tick(this);
         if (armRevision != resources.armRevision()) {
             armRevision = resources.armRevision();
             entityData.set(ARM_POSES, resources.armPoses());
             setBoundingBox(makeBoundingBox());
         }
-        if ((tickCount%5)==0 && meters.sample(this,resources)) entityData.set(METER_LEVELS,meters.publicData());
+        if (meters.sample(this, resources, tickCount % 5 == 0)) entityData.set(METER_LEVELS, meters.publicData());
         drive();
         if (emergencyOwner != null) finishEmergencyPark();
         if (tickCount % 10 == 0) {
@@ -588,7 +604,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         if (!cruise.allowsTransit()) ceiling = Math.min(ceiling, hull.ceiling(this, yaw, pitch));
         double rise = Math.min(launching ? .17 : movement.y, Math.max(0, ceiling - altitude));
         if (!flightMove(new Vec3(movement.x, rise, movement.z), yaw, pitch)) {
-            flightPhase = LANDING;
+            flightPhase = propulsion.canHover() ? RETURN_HOVER : LANDING;
             speed = 0;
             setDeltaMovement(Vec3.ZERO);
         }

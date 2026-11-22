@@ -7,11 +7,11 @@ import subprocess
 import time
 
 from native_test_artifacts import artifact_directory
-from test_cube import ROOT, check_log, command, jdk_home, launch, stop
+from test_cube import ROOT, check_log, command, jdk_home, launch, stop, world
 from test_sampled_materials import fixture_world
 
 
-def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=(), saved_world=None):
+def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=(), saved_world=None, world_seed=None):
     env = dict(os.environ, JAVA_HOME=str(jdk_home(21)))
     env['JAVA_TOOL_OPTIONS'] = env.get('JAVA_TOOL_OPTIONS', '') + ''.join(' -D' + prop for prop in properties)
     base = ROOT / 'build/test-artifacts'
@@ -21,7 +21,12 @@ def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=(), 
         listener.bind(('127.0.0.1', 0))
         port = listener.getsockname()[1]
     saved = out / 'server'
-    fixture_world(saved, port)
+    if world_seed is None:
+        fixture_world(saved, port)
+    else:
+        world(saved, port)
+        with (saved / 'server.properties').open('a') as properties_file:
+            properties_file.write(f'level-type=minecraft:normal\ngenerate-structures=false\nlevel-seed={world_seed}\n')
     if saved_world is not None:
         shutil.copytree(saved_world, saved / 'world')
     server_log = out / 'server.log'
