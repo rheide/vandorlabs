@@ -47,6 +47,7 @@ public final class LargeCanopyOwnership {
         int depth=nextSettings.depth,scale=nextSettings.scale,shade=nextSettings.shade,tint=nextSettings.tint;
         if(blockAngleInvalid(tile,nextSettings) || !tile.configurable() || !tile.draws() || !LargeCanopySettings.valid(depth,scale,shade,tint))return false;
         World world=tile.getWorld();BlockCanopy block=tile.block();
+        if((nextSettings.hasDisplay()||nextSettings.hasSideFinish())&&!LargeCanopySettings.supportsDisplays(block.kind))return false;
         if(nextSettings.mount!=tile.large.mount || tile.progress!=0 && (nextSettings.motion!=tile.large.motion || nextSettings.slideForward!=tile.large.slideForward || nextSettings.angle!=tile.large.angle || nextSettings.hinge!=tile.large.hinge || nextSettings.openable!=tile.large.openable))return false;
         net.minecraft.nbt.NBTTagCompound nextTag=new net.minecraft.nbt.NBTTagCompound();nextSettings.write(nextTag);
         if(!tile.resizable()){

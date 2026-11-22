@@ -67,7 +67,7 @@ public final class CanopyMaterialUv {
                 double area=0;for(int i=1;i<part.size()-1;i++)area+=part.get(i).pos.subtract(part.get(0).pos).crossProduct(part.get(i+1).pos.subtract(part.get(0).pos)).lengthSquared();
                 if(area<1e-16)continue;
                 CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new Vec3d[part.size()];copy.uv=new double[part.size()][2];
-                copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.glazing=face.glazing;copy.group=face.group;copy.doubleSided=face.doubleSided;
+                copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.glazing=face.glazing;copy.sideGlass=face.sideGlass;copy.display=face.display;copy.group=face.group;copy.doubleSided=face.doubleSided;
                 for(int i=0;i<part.size();i++){Vertex point=part.get(i);copy.vertices[i]=point.pos;copy.uv[i]=new double[]{Math.max(0,Math.min(1,point.u-u)),Math.max(0,Math.min(1,point.v-v))};}
                 result.add(copy);
             }

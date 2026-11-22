@@ -20,7 +20,8 @@ public final class CanopyMesh {
         public double[][] joinedStretchUv;
         public String material, baseMaterial, group;
         public boolean doubleSided;
-        public boolean glazing,tiled;
+        public boolean glazing,tiled,sideGlass;
+        public com.vandorlabs.screen.VehicleInstrument display;
     }
 
     static {

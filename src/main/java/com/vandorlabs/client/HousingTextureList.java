@@ -135,7 +135,7 @@ final class HousingTextureList {
             int choice=ScreenHousingTextures.choiceAt(i);
             entries.add(new Option(choice,name(choice),ScreenHousingTextures.menuCategory(i),ScreenHousingTextures.fullTexture(i)));
         }
-        return new HousingTextureList(x,y,width,material<0?CANOPY_GLASS_BASE+shade:material,8,entries);
+        return new HousingTextureList(x,y,width,material<0&&!VehicleInstrument.includes(material)?CANOPY_GLASS_BASE+shade:material,8,entries);
     }
     HousingTextureList keepView(HousingTextureList previous){
         if(previous!=null){expanded.addAll(previous.expanded);query=previous.query;if(previous.search!=null){searchField().setText(previous.search.getText());search.setFocused(previous.search.isFocused());}rebuild();scroll=Math.min(maxScroll(),previous.scroll);ensureSelectedVisible();}

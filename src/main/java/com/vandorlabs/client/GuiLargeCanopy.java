@@ -15,6 +15,10 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
     private final LargeCanopySettings draft=new LargeCanopySettings();
     private HousingTextureList textures;private GuiTextField channels;private int channelLabelY,channelLabelX;
     private int page;
+    private HousingTextureList mainView,sideView;
+    private boolean side(){return page==2;}
+    private boolean materials(){return page!=1;}
+    private boolean panelTabs(){return LargeCanopySettings.supportsDisplays(tile.block().kind);}
     private String sent,error="";private boolean ready,sliderDirty,sliderDragging;private int sliderDelay;private MessageCanopySettingsResult pending;
     public GuiLargeCanopy(TileEntityCanopy tile){super(new ContainerLargeCanopy(tile));this.tile=tile.owner();net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();this.tile.large.write(tag);draft.read(tag);depth=draft.depth;scale=draft.scale;shade=draft.shade;tint=draft.tint;sent=key();}
     private String key(){draft.depth=depth;draft.scale=scale;draft.shade=shade;draft.tint=tint;return draft.key();}
@@ -22,17 +26,24 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
     public void acknowledge(MessageCanopySettingsResult result){if(tile.getPos().equals(result.pos) && result.requested.equals(sent)){pending=result;reconcile();}}
     private void reconcile(){if(pending==null || sliderDragging || Mouse.isButtonDown(0))return;MessageCanopySettingsResult result=pending;pending=null;if(!result.requested.equals(sent))return;if(result.applied){error="";return;}net.minecraft.nbt.NBTTagCompound tag=new net.minecraft.nbt.NBTTagCompound();result.settings.write(tag);draft.read(tag);depth=draft.depth;scale=draft.scale;shade=draft.shade;tint=draft.tint;sent=key();error="Blocked: close first or clear the new surface.";initGui();}
     @Override public void updateScreen(){super.updateScreen();if(sliderDirty && --sliderDelay<=0){apply();sliderDelay=2;}reconcile();if(channels!=null)channels.updateCursorCounter();}
-    @Override protected HousingTextureList materialPicker(){return page==0?textures:null;}
+    @Override protected HousingTextureList materialPicker(){return materials()?textures:null;}
     @Override public void initGui(){
         String text=channels==null?draft.channels.toString():channels.getText();
         ProgrammableDialogLayout layout=new ProgrammableDialogLayout(width,height);xSize=layout.width;ySize=layout.height;super.initGui();buttonList.clear();ready=false;
         int leftWidth=layout.controlsX-guiLeft-31;
-        HousingTextureList previous=textures;
-        textures=HousingTextureList.forCanopy(guiLeft+12,guiTop+54,leftWidth,shade,draft.material)
-                .visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(this::choose).keepView(previous);
+        if(materials()){
+            textures=HousingTextureList.forCanopy(guiLeft+12,guiTop+54,leftWidth,side()?draft.shade(true):shade,draft.material(side()))
+                    .visibleRows(Math.max(2,(ySize-88)/HousingTextureList.ROW_HEIGHT)).custom(this::choose);
+            if(panelTabs())textures.vehicle(this::choose);
+            textures.keepView(side()?sideView:mainView);
+            if(side())sideView=textures;else mainView=textures;
+        }
         boolean redstoneControls=tile.resizable()||tile.block().opening();
-        buttonList.add(layout.fullTab(90,0,redstoneControls?2:1,"Canopy"));if(redstoneControls)buttonList.add(layout.fullTab(91,1,2,"Redstone"));
-        for(GuiButton button:buttonList)if(button.id==90+page)button.enabled=false;
+        int tabs=1+(panelTabs()?1:0)+(redstoneControls?1:0);
+        buttonList.add(layout.fullTab(90,0,tabs,panelTabs()?"Main":"Canopy"));
+        if(panelTabs())buttonList.add(layout.fullTab(93,1,tabs,"Side"));
+        if(redstoneControls)buttonList.add(layout.fullTab(91,tabs-1,tabs,"Redstone"));
+        for(GuiButton button:buttonList)if(button.id==(side()?93:90+page))button.enabled=false;
         int y=54;
         if(page==0){
         if(tile.resizable()){
@@ -50,6 +61,10 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
             buttonList.add(layout.control(6,y,"Hinge: "+new String[]{"Left","Right","Top","Bottom"}[draft.hinge]));y+=22;
         }
         }
+        if(side()){
+            buttonList.add(layout.control(2,y,"Tint: "+GlassTextures.tintLabel(draft.tint(true))));y+=22;
+            buttonList.add(layout.control(12,y,"Texture: "+com.vandorlabs.render.TextureLayoutMode.label(draft.textureLayout(true))));
+        }
         if(page==1 && (tile.resizable() || tile.block().opening())){
             buttonList.add(new RedstoneActivationButton(7,guiLeft+12,guiTop+96,xSize-24,!draft.redstone?0:draft.activateOnPower?1:2));y+=22;
             channelLabelX=guiLeft+12;channelLabelY=guiTop+54;channels=new GuiTextField(10,fontRenderer,guiLeft+12,guiTop+68,xSize-24,18);ChannelFields.configure(channels);channels.setText(text);
@@ -58,8 +73,14 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         buttonList.add(layout.done(8));ready=true;
     }
     void choose(int choice){
-        if(choice>=HousingTextureList.CANOPY_GLASS_BASE && choice<HousingTextureList.CANOPY_GLASS_BASE+GlassTextures.IDS.length){shade=choice-HousingTextureList.CANOPY_GLASS_BASE;draft.material=-1;}
-        else draft.material=choice;
+        if(panelTabs())draft.separateSide();
+        boolean glass=choice>=HousingTextureList.CANOPY_GLASS_BASE&&choice<HousingTextureList.CANOPY_GLASS_BASE+GlassTextures.IDS.length;
+        if(side()){
+            draft.sideFinish(glass?-1:choice,glass?choice-HousingTextureList.CANOPY_GLASS_BASE:draft.shade(true),
+                    draft.tint(true),draft.textureLayout(true));
+        }else if(glass){
+            shade=choice-HousingTextureList.CANOPY_GLASS_BASE;draft.material=-1;
+        }else draft.material=choice;
         textures.setSelected(choice);apply();
     }
     private void sliderChanged(int id,GuiSlider slider){
@@ -69,14 +90,22 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         sliderDirty=true;
     }
     @Override protected void actionPerformed(GuiButton button){
-        if(button.id==90||button.id==91){apply();page=button.id-90;initGui();return;}
+        if(button.id==90||button.id==91||button.id==93){apply();page=button.id==93?2:button.id-90;initGui();return;}
         if(button.id==92){apply();return;}
         // GuiSlider owns its value callback and drag state. Rebuilding here cancels the drag.
         if(button instanceof GuiSlider)return;
         switch(button.id){
-            case 2:tint=GuiOptionCycle.next(tint,com.vandorlabs.tiles.GlassTextures.TINT_COUNT);break;
+            case 2:
+                if(panelTabs())draft.separateSide();
+                if(side())draft.sideFinish(draft.material(true),draft.shade(true),GuiOptionCycle.next(draft.tint(true),GlassTextures.TINT_COUNT),draft.textureLayout(true));
+                else tint=GuiOptionCycle.next(tint,GlassTextures.TINT_COUNT);
+                break;
             case 3:draft.motion=GuiOptionCycle.next(draft.motion,2);break;
-            case 12:draft.textureLayout(GuiOptionCycle.next(draft.textureLayout(),3));break;
+            case 12:
+                if(panelTabs())draft.separateSide();
+                if(side())draft.sideFinish(draft.material(true),draft.shade(true),draft.tint(true),GuiOptionCycle.next(draft.textureLayout(true),3));
+                else draft.textureLayout(GuiOptionCycle.next(draft.textureLayout(),3));
+                break;
             case 11:draft.slideForward=!draft.slideForward;break;
             case 4:draft.angle=GuiOptionCycle.next(draft.angle,tile.block().length==3?4:3);break;
             case 5:draft.openable=!draft.openable;break;
@@ -91,12 +120,12 @@ public final class GuiLargeCanopy extends GuiMaterialPicker {
         if(channels!=null)channels.mouseClicked(x,y,button);
         if(button==0)for(GuiButton control:buttonList)if(control instanceof GuiSlider && control.enabled && control.visible && x>=control.x && x<control.x+control.width && y>=control.y && y<control.y+control.height)sliderDragging=true;
         if(GuiOptionCycle.rightClick(mc,buttonList,x,y,button,this::actionPerformed,2,3,4,5,6,7,11,12))return;
-        if(page==0 && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);
+        if(materials() && textures.click(x,y,button)){if(textures.picked())choose(textures.selected());return;}super.mouseClicked(x,y,button);
     }
     @Override protected void mouseReleased(int x,int y,int button){if(button==0){for(GuiButton control:buttonList)if(control instanceof GuiSlider)control.mouseReleased(x,y);sliderDragging=false;if(sliderDirty)apply();reconcile();}super.mouseReleased(x,y,button);}
     @Override public void onGuiClosed(){if(sliderDirty)apply();super.onGuiClosed();}
 
     @Override protected void drawGuiContainerBackgroundLayer(float partial,int x,int y){}
-    @Override public void drawScreen(int x,int y,float partial){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);DialogHeader.logo(guiLeft,guiTop,xSize);if(page==0)textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);DialogOverlay.prepare();if(channels!=null){fontRenderer.drawString("Receive channels",channelLabelX,channelLabelY,0xffffff);channels.drawTextBox();}if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-166,guiTop+ySize+3,154,0xffffaa88);}
+    @Override public void drawScreen(int x,int y,float partial){drawRect(guiLeft,guiTop,guiLeft+xSize,guiTop+ySize,0xee101012);fontRenderer.drawString(net.minecraft.client.resources.I18n.format(tile.block().getUnlocalizedName()+".name"),guiLeft+8,guiTop+8,0xffffff);DialogHeader.logo(guiLeft,guiTop,xSize);if(materials())textures.draw(fontRenderer,x,y);super.drawScreen(x,y,partial);DialogOverlay.prepare();if(channels!=null){fontRenderer.drawString("Receive channels",channelLabelX,channelLabelY,0xffffff);channels.drawTextBox();}if(!error.isEmpty())fontRenderer.drawSplitString(error,guiLeft+xSize-166,guiTop+ySize+3,154,0xffffaa88);}
     @Override public boolean doesGuiPauseGame(){return false;}
 }

@@ -26,8 +26,9 @@ final class FixedCanopyModel implements IBakedModel {
             source=tile.baseFaces();settings=tile.large.key();facing=tile.facing();centered=tile.centeredPlacement;visible=tile.draws();
             List<BakedQuad> a=new ArrayList<>(),b=new ArrayList<>();
             for(CanopyMesh.Face face:visible?new CanopyRenderGeometry(source).posed(tile.block().kind,1,tile.large,0,tile.centeredPlacement):Collections.<CanopyMesh.Face>emptyList()){
-                List<BakedQuad> output=CanopyFinishes.translucent(face,tile.large.material,tile.large.tint)?b:a;
-                float alpha=CanopyFinishes.opacity(face,tile.large.material,tile.large.tint);
+                if(face.display!=null)continue;
+                List<BakedQuad> output=CanopyFinishes.translucent(face,tile.large)?b:a;
+                float alpha=CanopyFinishes.opacity(face,tile.large);
                 if(face.vertices.length==4){add(output,face,new int[]{0,1,2,3},facing,alpha);if(face.doubleSided)add(output,face,new int[]{3,2,1,0},facing,alpha);}
                 else for(int i=1;i<face.vertices.length-1;i++){add(output,face,new int[]{0,i,i+1,i+1},facing,alpha);if(face.doubleSided)add(output,face,new int[]{i+1,i+1,i,0},facing,alpha);}
             }

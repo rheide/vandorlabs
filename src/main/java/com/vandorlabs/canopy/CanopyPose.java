@@ -15,7 +15,7 @@ public final class CanopyPose {
             CanopyMesh.Face face=new CanopyMesh.Face();
             face.vertices=new Vec3d[original.vertices.length];face.uv=original.uv;
             face.glazing=original.glazing || original.baseMaterial.equals("glass");face.baseMaterial=original.baseMaterial;face.material=original.material;
-            face.tiled=original.tiled;face.doubleSided=original.doubleSided;face.group=original.group;
+            face.tiled=original.tiled;face.doubleSided=original.doubleSided;face.group=original.group;face.sideGlass=original.sideGlass;face.display=original.display;
             for(int i=0;i<face.vertices.length;i++) {
                 Vec3d v=original.vertices[i];
                 v=transform.apply(v,original.group);

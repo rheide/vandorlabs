@@ -13,7 +13,14 @@ public final class MessageLargeCanopy implements IMessage {
     public MessageLargeCanopy(BlockPos pos,int d,int s,int c,int t){this.pos=pos;settings=new LargeCanopySettings();settings.depth=d;settings.scale=s;settings.shade=c;settings.tint=t;valid=true;}
     public MessageLargeCanopy(BlockPos pos,LargeCanopySettings settings){this.pos=pos;NBTTagCompound tag=new NBTTagCompound();settings.write(tag);this.settings=new LargeCanopySettings();this.settings.read(tag);valid=true;}
     public void toBytes(ByteBuf b){b.writeLong(pos.toLong());NBTTagCompound tag=new NBTTagCompound();settings.write(tag);ByteBufUtils.writeTag(b,tag);}
-    public void fromBytes(ByteBuf b){try{pos=BlockPos.fromLong(b.readLong());NBTTagCompound tag=ByteBufUtils.readTag(b);settings=new LargeCanopySettings();settings.read(tag);valid=tag!=null && (!tag.hasKey("CanopyTextureLayout",3) || com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("CanopyTextureLayout"))) && LargeCanopySettings.valid(tag.getInteger("CanopyDepth"),tag.getInteger("CanopyScale"),tag.getInteger("CanopyShade"),tag.getInteger("CanopyTint")) && (settings.material==-1 || com.vandorlabs.tiles.ScreenHousingTextures.validChoice(settings.material));}catch(Exception failure){valid=false;}}
+    public void fromBytes(ByteBuf b){try{pos=BlockPos.fromLong(b.readLong());NBTTagCompound tag=ByteBufUtils.readTag(b);settings=new LargeCanopySettings();settings.read(tag);valid=tag!=null && (!tag.hasKey("CanopyTextureLayout",3) || com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("CanopyTextureLayout"))) && LargeCanopySettings.valid(tag.getInteger("CanopyDepth"),tag.getInteger("CanopyScale"),tag.getInteger("CanopyShade"),tag.getInteger("CanopyTint")) && LargeCanopySettings.validMaterial(settings.material)
+                    && (!tag.hasKey("CanopySideMaterial",3)||LargeCanopySettings.validMaterial(tag.getInteger("CanopySideMaterial"))
+                    && validSide(tag));}catch(Exception failure){valid=false;}}
+    private static boolean validSide(NBTTagCompound tag){
+            return com.vandorlabs.tiles.GlassTextures.valid(tag.getInteger("CanopySideShade"))
+                    && com.vandorlabs.tiles.GlassTextures.validTint(tag.getInteger("CanopySideTint"))
+                    && com.vandorlabs.render.TextureLayoutMode.valid(tag.getInteger("CanopySideTextureLayout"));
+    }
     public static final class Handler implements IMessageHandler<MessageLargeCanopy,IMessage>{
         public IMessage onMessage(MessageLargeCanopy message,MessageContext context){
             EntityPlayerMP player=context.getServerHandler().player;

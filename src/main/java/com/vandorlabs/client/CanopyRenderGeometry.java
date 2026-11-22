@@ -49,7 +49,7 @@ final class CanopyRenderGeometry {
         List<CanopyMesh.Face> result=new ArrayList<>(drawing.size());
         for(CanopyMesh.Face original:drawing){
             CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new net.minecraft.util.math.Vec3d[original.vertices.length];copy.uv=original.uv;
-            copy.material=original.material;copy.baseMaterial=original.baseMaterial;copy.group=original.group;copy.doubleSided=original.doubleSided;copy.glazing=original.glazing;copy.tiled=original.tiled;
+            copy.material=original.material;copy.baseMaterial=original.baseMaterial;copy.group=original.group;copy.doubleSided=original.doubleSided;copy.glazing=original.glazing;copy.sideGlass=original.sideGlass;copy.display=original.display;copy.tiled=original.tiled;
             for(int i=0;i<copy.vertices.length;i++){net.minecraft.util.math.Vec3d v=original.vertices[i];copy.vertices[i]=new net.minecraft.util.math.Vec3d(SIDE_CLEARANCE+v.x*(1-2*SIDE_CLEARANCE),v.y,SIDE_CLEARANCE+v.z*(1-2*SIDE_CLEARANCE));}
             result.add(copy);
         }
@@ -63,7 +63,7 @@ final class CanopyRenderGeometry {
         List<CanopyMesh.Face> result=new ArrayList<>(drawing.size());
         for(CanopyMesh.Face original:drawing){
             CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new net.minecraft.util.math.Vec3d[original.vertices.length];copy.uv=original.uv;
-            copy.material=original.material;copy.baseMaterial=original.baseMaterial;copy.group=original.group;copy.doubleSided=original.doubleSided;copy.glazing=original.glazing;copy.tiled=original.tiled;
+            copy.material=original.material;copy.baseMaterial=original.baseMaterial;copy.group=original.group;copy.doubleSided=original.doubleSided;copy.glazing=original.glazing;copy.sideGlass=original.sideGlass;copy.display=original.display;copy.tiled=original.tiled;
             for(int i=0;i<copy.vertices.length;i++){net.minecraft.util.math.Vec3d vertex=original.vertices[i];copy.vertices[i]=new net.minecraft.util.math.Vec3d(vertex.x,vertex.y,com.vandorlabs.render.FrontCanopyRenderDepth.coordinate(vertex.z,depth/16D,backAnchored));}
             result.add(copy);
         }

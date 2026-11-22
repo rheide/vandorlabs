@@ -19,7 +19,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public volatile Object chunkMesh;
     public boolean chunkRendered(){return world!=null&&!(world instanceof com.vandorlabs.vehicle.VehicleWorld)&&getBlockType() instanceof com.vandorlabs.blocks.BlockFixedCanopyGlass;}
     private void appearanceChanged(){if(com.vandorlabs.VandorLabs.proxy!=null)com.vandorlabs.VandorLabs.proxy.canopyAppearanceChanged(this);}
-    @Override public boolean shouldRenderInPass(int pass){return !chunkRendered()&&(pass==0||pass==1&&!GlassMaterials.opaque(large.material,large.tint))&&draws();}
+    @Override public boolean shouldRenderInPass(int pass){return draws()&&(chunkRendered()?pass==0&&large.hasDisplay():pass==0||pass==1&&large.mayRenderTranslucent());}
     public BlockPos anchor, pair;
     public boolean centeredPlacement,hollowPlacement;
     public final com.vandorlabs.canopy.LargeCanopySettings large=new com.vandorlabs.canopy.LargeCanopySettings();
@@ -30,7 +30,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     private List<CanopyMesh.Face> baseFaces;
     private String baseKey;
     private String baseModel,baseSettings;
-    private double baseAspect;
+    private double baseAspect,baseSideAspect;
     private int baseWidth,baseConnections,baseRoof;
     private boolean baseCentered;
     public boolean opening(){return block()!=null && (block().opening() || resizable() && large.openable);}
@@ -39,16 +39,19 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
     public List<CanopyMesh.Face> baseFaces(){
         BlockCanopy block=block();if(block==null)return Collections.emptyList();
         int connections=mask(),width=width();String model=modelId(block,connections),settings=large.key();
-        double aspect=large.material<0 || com.vandorlabs.VandorLabs.proxy==null?1:com.vandorlabs.VandorLabs.proxy.materialAspect(large.material);
+        double aspect=materialAspect(large.material),sideAspect=materialAspect(large.material(true));
         int roof=block.kind.equals("regular_canopy_glass")?roofMask(connections):connections;
-        if(baseFaces==null||!model.equals(baseModel)||!settings.equals(baseSettings)||aspect!=baseAspect||centeredPlacement!=baseCentered||width!=baseWidth||connections!=baseConnections||roof!=baseRoof){
+        if(baseFaces==null||!model.equals(baseModel)||!settings.equals(baseSettings)||aspect!=baseAspect||sideAspect!=baseSideAspect||centeredPlacement!=baseCentered||width!=baseWidth||connections!=baseConnections||roof!=baseRoof){
             List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
             if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,block().length,Math.min(block().length==3?3:2,large.angle),(connections&8)!=0);
-            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large.shade,large.tint,large.material,large.textureLayout(),aspect);
-            baseModel=model;baseSettings=settings;baseAspect=aspect;baseCentered=centeredPlacement;baseWidth=width;baseConnections=connections;baseRoof=roof;
-            baseKey=model+":"+settings+":"+aspect+":"+centeredPlacement+":"+width+":"+connections+":"+roof;
+            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large,aspect,sideAspect);
+            baseModel=model;baseSettings=settings;baseAspect=aspect;baseSideAspect=sideAspect;baseCentered=centeredPlacement;baseWidth=width;baseConnections=connections;baseRoof=roof;
+            baseKey=model+":"+settings+":"+aspect+":"+sideAspect+":"+centeredPlacement+":"+width+":"+connections+":"+roof;
         }
         return baseFaces;
+    }
+    private static double materialAspect(int material){
+        return material<0||com.vandorlabs.VandorLabs.proxy==null?1:com.vandorlabs.VandorLabs.proxy.materialAspect(material);
     }
     public List<CanopyMesh.Face> faces(double pose){
 

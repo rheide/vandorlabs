@@ -206,6 +206,7 @@ public class BlockCanopy extends Block {
         if(player!=null && selected!=null && selected.owner().configurable() && player.isSneaking()) {
             if(!w.isRemote && com.vandorlabs.items.ConfigurationAccess.canConfigure(player)){BlockPos owner=selected.owner().getPos();player.openGui(VandorLabs.instance,com.vandorlabs.GuiHandler.GUI_LARGE_CANOPY,w,owner.getX(),owner.getY(),owner.getZ());}return true;
         }
+        if(com.vandorlabs.canopy.CanopyDisplayHit.use(selected,player,false))return true;
         if (selected==null || !selected.owner().opening()) return false;
         if (!w.isRemote) {
             TileEntityCanopy t = TileEntityCanopy.at(w, p);

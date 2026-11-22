@@ -81,7 +81,7 @@ public final class CanopySurfaces {
             if(pieces==null || pieces.size()==1 && pieces.get(0)==polygon){result.add(face);continue;}
             for(List<double[]> piece:pieces){
                 CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=new Vec3d[piece.size()];copy.uv=new double[piece.size()][2];
-                copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.group=face.group;copy.doubleSided=face.doubleSided;copy.glazing=face.glazing;copy.tiled=face.tiled;
+                copy.material=face.material;copy.baseMaterial=face.baseMaterial;copy.group=face.group;copy.doubleSided=face.doubleSided;copy.glazing=face.glazing;copy.sideGlass=face.sideGlass;copy.display=face.display;copy.tiled=face.tiled;
                 for(int i=0;i<piece.size();i++){double[] p=piece.get(i);copy.vertices[i]=new Vec3d(p[0],p[1],p[2]);copy.uv[i]=new double[]{p[3],p[4]};}result.add(copy);
             }
         }

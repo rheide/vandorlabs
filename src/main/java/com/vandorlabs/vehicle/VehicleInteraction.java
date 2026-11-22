@@ -18,7 +18,7 @@ public final class VehicleInteraction {
         public final VehicleSelection.Hit hit;
         private Target(EntityGroundVehicle craft, VehicleSelection.Hit hit) { this.craft=craft; this.hit=hit; }
     }
-    static Vec3d eyes(EntityPlayer player) {
+    public static Vec3d eyes(EntityPlayer player) {
         Entity mount=player.getRidingEntity();
         if(mount instanceof EntityGroundVehicle){
             EntityGroundVehicle craft=(EntityGroundVehicle)mount;
@@ -52,13 +52,17 @@ public final class VehicleInteraction {
         return target!=null && (player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER
                 || target.hit.action==VehicleSelection.Action.CHEST
                 || target.hit.action==VehicleSelection.Action.COUPLER
-                || target.hit.action==VehicleSelection.Action.CANOPY
+                || target.hit.action==VehicleSelection.Action.CANOPY&&canopyAction(target)
                 || target.hit.action==VehicleSelection.Action.DOOR
                 || !player.isSneaking() && com.vandorlabs.container.ContainerMaxwellDrive.at(target.craft.view,target.hit.cell.pos)!=null
                 || target.hit.action==VehicleSelection.Action.SCREEN && !player.isSneaking() && VehicleSignals.supports(target.craft.view,target.hit.cell.pos)
                 || target.hit.action==VehicleSelection.Action.CONTROLLER
                 || target.hit.action==VehicleSelection.Action.COCKPIT
                 || target.hit.action==VehicleSelection.Action.BOARD);
+    }
+    private static boolean canopyAction(Target target){
+        com.vandorlabs.tiles.TileEntityCanopy tile=com.vandorlabs.tiles.TileEntityCanopy.at(target.craft.view,target.hit.cell.pos);
+        return tile!=null&&(tile.owner().opening()||tile.owner().large.hasDisplay());
     }
     public static void receive(EntityPlayerMP player,VehicleNetwork.Packet packet) {
         if(player.isDead || player.isSpectator() || packet.type!=VehicleNetwork.INTERACT)return;
@@ -101,12 +105,17 @@ public final class VehicleInteraction {
         }
         if(player.getHeldItemMainhand().getItem()==ModItems.CONFIGURIZER) {
             if(target.hit.action==VehicleSelection.Action.SCREEN&&craft.signals.clickEmergencyPark(target.hit.cell.pos,player))return true;
+            if(target.hit.action==VehicleSelection.Action.CANOPY&&com.vandorlabs.canopy.CanopyDisplayHit.use(
+                    com.vandorlabs.tiles.TileEntityCanopy.at(craft.view,target.hit.cell.pos),player,true))return true;
             if(target.hit.action==VehicleSelection.Action.BOARD && target.hit.cell.state.getBlock() instanceof BlockPilotSeat){BlockPos seat=VehicleSeats.lower(target.hit.cell.state,target.hit.cell.pos);VehicleService.previewSeat(server,craft,seat);}
             else if(target.hit.action==VehicleSelection.Action.CONTROLLER)VehicleService.previewController(server,craft,target.hit.cell.pos);
             else VehicleService.previewParking(server,craft);return true;
         }
         if(target.hit.action==VehicleSelection.Action.CONTROLLER){VehicleService.previewController(server,craft,target.hit.cell.pos);return true;}
         if(target.hit.action==VehicleSelection.Action.CANOPY) {
+            com.vandorlabs.tiles.TileEntityCanopy canopy=com.vandorlabs.tiles.TileEntityCanopy.at(craft.view,target.hit.cell.pos);
+            if(com.vandorlabs.canopy.CanopyDisplayHit.use(canopy,player,false))return true;
+            if(canopy==null||!canopy.owner().opening())return false;
             if(!VehicleCanopies.toggle(craft,target.hit.cell.pos))VehicleNetwork.error(server,"This canopy has an incomplete captured group.");
             return true;
         }

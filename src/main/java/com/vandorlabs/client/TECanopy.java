@@ -25,6 +25,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
     private static final class Prepared {
         List<CanopyMesh.Face> source,drawable;String settings;CanopyRenderGeometry geometry;net.minecraft.util.EnumFacing facing;int width;double progress=Double.NaN;
         final List<DrawFace> opaque=new ArrayList<>(),glass=new ArrayList<>();
+        final List<CanopyMesh.Face> displays=new ArrayList<>();
         final net.minecraft.client.renderer.vertex.VertexBuffer solidBuffer=new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
         final net.minecraft.client.renderer.vertex.VertexBuffer glassBuffer=new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
         boolean solidDirty=true,glassDirty=true;
@@ -53,8 +54,9 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
 
     /** Vehicle rendering uses the same phases inside its local world transform. */
     void renderPass(TileEntityCanopy tile,double x,double y,double z,float partial,int stage,float alpha,int pass) {
-        if(tile.chunkRendered())return;
-        if(pass==1&&com.vandorlabs.tiles.GlassMaterials.opaque(tile.large.material,tile.large.tint))return;
+        boolean chunk=tile.chunkRendered();
+        if(chunk&&!tile.large.hasDisplay())return;
+        if(pass==1&&(chunk||!tile.large.mayRenderTranslucent()))return;
         if (tile.block() == null || !tile.draws()) return;
         double progress =
                 tile.opening()
@@ -69,11 +71,13 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         }
         List<CanopyMesh.Face> drawable=prepared.geometry.posed(tile.block().kind,prepared.width,tile.large,progress,tile.centeredPlacement);
         if(prepared.drawable!=drawable){
-            prepared.drawable=drawable;prepared.opaque.clear();prepared.glass.clear();prepared.progress=Double.NaN;
+            prepared.drawable=drawable;prepared.opaque.clear();prepared.glass.clear();prepared.displays.clear();prepared.progress=Double.NaN;
             for(CanopyMesh.Face f:drawable){
+                if(f.display!=null){prepared.displays.add(f);continue;}
+                if(chunk)continue;
                 DrawFace draw=new DrawFace();draw.source=f;draw.v=new Vec3d[f.vertices.length];
-                draw.opacity=com.vandorlabs.canopy.CanopyFinishes.opacity(f,tile.large.material,tile.large.tint);
-                (com.vandorlabs.canopy.CanopyFinishes.translucent(f,tile.large.material,tile.large.tint)?prepared.glass:prepared.opaque).add(draw);
+                draw.opacity=com.vandorlabs.canopy.CanopyFinishes.opacity(f,tile.large);
+                (com.vandorlabs.canopy.CanopyFinishes.translucent(f,tile.large)?prepared.glass:prepared.opaque).add(draw);
             }
         }
         if(prepared.progress!=progress){
@@ -81,7 +85,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
             prepared.solidDirty=prepared.glassDirty=true;
         }
         List<DrawFace> opaque=prepared.opaque,glass=prepared.glass;
-        if(pass==0&&opaque.isEmpty()||pass==1&&glass.isEmpty())return;
+        if(pass==0&&opaque.isEmpty()&&prepared.displays.isEmpty()||pass==1&&glass.isEmpty())return;
         if(pass!=0){
             double cx=rendererDispatcher.entityX-tile.getPos().getX(),cy=rendererDispatcher.entityY-tile.getPos().getY(),cz=rendererDispatcher.entityZ-tile.getPos().getZ();
             for(DrawFace face:glass){double dx=face.center.x-cx,dy=face.center.y-cy,dz=face.center.z-cz;face.distance=dx*dx+dy*dy+dz*dz;}
@@ -100,7 +104,10 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         OpenGlHelper.setLightmapTextureCoords(
                 OpenGlHelper.lightmapTexUnit, light & 65535, light >>> 16);
         GlStateManager.disableBlend();GlStateManager.depthMask(true);
-        if(pass!=1){drawCached(opaque,prepared.solidBuffer,prepared.solidDirty);prepared.solidDirty=!OpenGlHelper.useVbo();}
+        if(pass!=1){
+            drawCached(opaque,prepared.solidBuffer,prepared.solidDirty);prepared.solidDirty=!OpenGlHelper.useVbo();
+            if(CanopyDisplayRenderer.draw(tile,prepared.displays))bindTexture(TextureMap.LOCATION_BLOCKS_TEXTURE);
+        }
         GlStateManager.enableBlend();
         GlStateManager.blendFunc(
                 GlStateManager.SourceFactor.SRC_ALPHA,

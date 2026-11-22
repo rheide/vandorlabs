@@ -29,7 +29,8 @@ public final class VehicleSelection {
                     : VehicleChests.supports(cell) ? Action.CHEST
                     : cell.state.getBlock() instanceof com.vandorlabs.coupler.BlockCoupler ? Action.COUPLER
                     : VehicleSeats.supports(cell.state) ? Action.BOARD
-                    : VehicleCanopies.supports(cell.state.getBlock()) ? Action.CANOPY
+                    : cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockCanopy
+                        &&com.vandorlabs.canopy.LargeCanopySettings.supportsDisplays(((com.vandorlabs.blocks.BlockCanopy)cell.state.getBlock()).kind) ? Action.CANOPY
                     : VehicleDoors.supports(cell.state.getBlock())
                     ? Action.DOOR : (cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockNavigationTable || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockVandorSwitch || cell.state.getBlock() instanceof com.vandorlabs.blocks.BlockIndustrialLever || com.vandorlabs.blocks.RedstoneScreenInteractions.supports(cell.state.getBlock())) ? Action.SCREEN : Action.SURFACE;
         }
