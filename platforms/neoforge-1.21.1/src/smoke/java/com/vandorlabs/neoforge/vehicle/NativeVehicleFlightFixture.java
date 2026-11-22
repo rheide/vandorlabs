@@ -52,9 +52,11 @@ public final class NativeVehicleFlightFixture {
     private static Vec3 departed;
     private static int ticks, unexpectedLoads, airborneTicks;
     private static double descendingFrom;
+    private static int wheelWallZ, wheelWait;
+    private static double lastWheelZ;
     private static boolean landed;
 
-    private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN, COLD, IMPACT }
+    private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN, COLD, WHEEL_CONTACT, IMPACT }
 
     public static boolean enabled() { return Boolean.getBoolean("vandorlabs.vehicleFlightChecks"); }
     public static String restartPhase() { return System.getProperty("vandorlabs.vehicleFlightRestart", ""); }
@@ -101,6 +103,11 @@ public final class NativeVehicleFlightFixture {
         }
         for (int x = 0; x <= 5; x++) for (int z = 0; z <= 3; z++) {
             world.setBlockAndUpdate(root.offset(x, -1, z), top);
+        }
+        if (impact().equals("runway")) {
+            var wheel = com.vandorlabs.neoforge.landing.NativeLandingBindings.WHEELS.get("wheel_small");
+            world.setBlockAndUpdate(root.offset(6, -1, 3), wheel.defaultBlockState()
+                    .setValue(com.vandorlabs.neoforge.landing.NativeSideWheel.FACING, Direction.EAST));
         }
         if (impact().equals("hover")) {
             String[] lift = {"antigravity_plate", "repulsor_array", "vertical_hover_thruster", "ion_drive"};
@@ -198,6 +205,13 @@ public final class NativeVehicleFlightFixture {
                     if (++airborneTicks < 9) return;
                     var box = craft.getBoundingBox();
                     int wall = Mth.floor(box.maxZ) + 2;
+                    if (impact().equals("runway")) {
+                        wheelWallZ = wall;
+                        wheelPillar(world, Blocks.STONE.defaultBlockState());
+                        lastWheelZ = craft.getZ();
+                        stage = Stage.WHEEL_CONTACT;
+                        return;
+                    }
                     for (int x = Mth.floor(box.minX) - 1; x <= Mth.ceil(box.maxX) + 1; x++) {
                         for (int y = root.getY(); y <= Mth.ceil(box.maxY) + 4; y++) {
                             world.setBlockAndUpdate(new BlockPos(x, y, wall), Blocks.STONE.defaultBlockState());
@@ -261,6 +275,22 @@ public final class NativeVehicleFlightFixture {
                 craft.setOldPosAndRot();
                 stage = Stage.TOUCHDOWN;
             }
+            case WHEEL_CONTACT -> {
+                require(craft.mode() == NativeGroundVehicle.FLIGHT && actor.getVehicle() == craft,
+                        "an outboard wheel touching the post preserves powered Flight");
+                require(craft.getZ() < wheelWallZ, "the outboard wheel cannot pass through its post");
+                wheelWait = Math.abs(lastWheelZ - craft.getZ()) < .0001 ? wheelWait + 1 : 0;
+                lastWheelZ = craft.getZ();
+                if (wheelWait < 4) return;
+                wheelPillar(world, Blocks.AIR.defaultBlockState());
+                for (int x = root.getX() - 2; x <= root.getX() + 8; x++) {
+                    for (int y = root.getY() - 3; y < root.getY() + 22; y++) {
+                        world.setBlockAndUpdate(new BlockPos(x, y, wheelWallZ + 3), Blocks.STONE.defaultBlockState());
+                    }
+                }
+                System.out.println("[vandorlabs][vehicle-flight-impact-runway-player] wheel-only contact PASS");
+                stage = Stage.IMPACT;
+            }
             case IMPACT -> {
                 int expected = impact().equals("hover") ? NativeGroundVehicle.HOVER : NativeGroundVehicle.TAXI;
                 if (craft.mode() != expected || Math.abs(craft.driveSpeed()) > .005) return;
@@ -283,6 +313,12 @@ public final class NativeVehicleFlightFixture {
                 landed = true;
                 System.out.println("[vandorlabs][vehicle-flight-player] server PASS formed Maxwell runway high transit no route chunk loads reentry fuel-loss landing");
             }
+        }
+    }
+
+    private static void wheelPillar(net.minecraft.server.level.ServerLevel world, net.minecraft.world.level.block.state.BlockState state) {
+        for (int y = root.getY() - 3; y < root.getY() + 22; y++) {
+            world.setBlockAndUpdate(new BlockPos(root.getX() + 6, y, wheelWallZ), state);
         }
     }
 
