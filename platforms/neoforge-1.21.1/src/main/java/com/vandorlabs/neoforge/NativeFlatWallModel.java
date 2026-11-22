@@ -182,6 +182,29 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
             }else throw new IllegalArgumentException("Unknown panel geometry");
             quads.put(key,result);return result;
         }
+        private record CornerKey(NativeCornerWallGeometry geometry,int main,int interior,int mode){}
+        /**
+         * Corner Wall body: the programmable wall's own straight middle slab (faces, rims and texture
+         * layout as on a flat wall), without the end caps it shares with joined walls, bent onto the
+         * bevel by the shared corner geometry. Each corner shows the whole artwork, as on 1.12.2.
+         */
+        List<BakedQuad> corner(NativeCornerWallGeometry geometry,int main,int interior,int mode){
+            int body=index(main),edge=interior<0?-1:index(interior);
+            var key=new CornerKey(geometry,body,edge,mode);var found=quads.getIfPresent(key);if(found!=null)return found;
+            var wall=new NativePanelQuads.Material(surfaces.get(body));var metal=edge<0?originalMetal:interiors.get(edge);
+            List<BakedQuad> result=new ArrayList<>();
+            for(var quad:NativePanelQuads.flat(Direction.NORTH,6,null,wall,metal,mode,NativePanelLayout.UNIT)){
+                if((geometry.joined()&1)!=0&&endCap(quad,0)||(geometry.joined()&2)!=0&&endCap(quad,1))continue;
+                result.addAll(NativeFlatGlassRenderer.Bake.projectCorner(quad,geometry.corner()));
+            }
+            found=List.copyOf(result);quads.put(key,found);return found;
+        }
+        /** Whether every vertex of {@code quad} lies on the plane x = {@code x}. */
+        private static boolean endCap(BakedQuad quad,double x){
+            int[] data=quad.getVertices();int stride=data.length/4;
+            for(int i=0;i<4;i++)if(Math.abs(Float.intBitsToFloat(data[i*stride])-x)>1e-4)return false;
+            return true;
+        }
         private static int keyCost(Object key){Object descriptor=key instanceof Key value?value.geometry:key instanceof ApertureKey value?value.geometry:key instanceof PaneKey value?value.geometry:key instanceof GlassKey value?value.pose:key instanceof GlassFrameKey value?value.pose:null;return descriptor instanceof NativeDiagonalWallGeometry.Pose pose?1024+pose.clip().size()*8:384;}
         int index(int choice){return ProgrammableModel.renderIndex(surfaces,choice);}
     }
@@ -209,6 +232,11 @@ final class NativeFlatWallModel extends BakedModelWrapper<BakedModel> {
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random){return getQuads(state,side,random,ModelData.EMPTY,null);}
     @Override public List<BakedQuad> getQuads(BlockState state,Direction side,RandomSource random,ModelData data,RenderType layer){
         if(item)return itemQuads(state,side,random,data,layer);if(side!=null)return List.of();var appearance=data.get(NativeWallEntity.WALL_APPEARANCE);
+        if(state.getBlock() instanceof NativeCornerWallBlock corner){
+            int size=NativeCornerWallBlock.size(appearance==null?null:appearance.walls());var expected=corner.geometry(state,size);
+            var geometry=appearance!=null&&appearance.geometry() instanceof NativeCornerWallGeometry published&&published.corner()==expected?published:corner.publication(state,size,0);
+            return bake.corner(geometry,appearance==null?0:appearance.base().housing().mainTexture,appearance==null?-1:appearance.frames().interior,appearance==null?0:appearance.base().housing().layout);
+        }
         if(state.getBlock() instanceof NativeDiagonalWallBlock block){
             if(block.isGlass())return List.of();
             NativeWallGeometry geometry=appearance!=null&&appearance.geometry() instanceof NativeDiagonalWallGeometry.Geometry?appearance.geometry():NativeDiagonalWallGeometry.build(NativeDiagonalWallTopology.initial(state,0));

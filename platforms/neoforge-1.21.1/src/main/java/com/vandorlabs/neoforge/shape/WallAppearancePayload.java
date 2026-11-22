@@ -37,5 +37,12 @@ public record WallAppearancePayload(BlockPos pos,int windowId,ProgrammableShapeE
         if(!player.getServer().isSameThread()||!packet.valid()||!(player.containerMenu instanceof ProgrammableMenu menu)||menu.containerId!=packet.windowId||!menu.stillValid(player)||!menu.tile.getBlockPos().equals(packet.pos)||!(menu.tile instanceof NativeWallEntity wall))return false;
         return wall.configure(packet.base,packet.walls,packet.frames);
     }
+    /** Size and slope of an open Diagonal Corner Wall dialog (the Diagonal Corner Glass edit); the bevel keeps its turn. */
+    public static boolean cornerWall(ServerPlayer player,com.vandorlabs.neoforge.glass.CornerGlassGeometryPayload edit){
+        if(!player.getServer().isSameThread()||!edit.valid()||!(player.containerMenu instanceof ProgrammableMenu menu)||menu.containerId!=edit.window()||!menu.stillValid(player)
+                ||!menu.tile.getBlockPos().equals(edit.pos())||!(menu.tile instanceof NativeWallEntity wall)||!(wall.getBlockState().getBlock() instanceof NativeCornerWallBlock corner)||!corner.sloped())return false;
+        var state=wall.getBlockState();
+        return wall.configureCornerWall(edit.size(),corner.stateFor(com.vandorlabs.render.DiagonalCornerRules.edited(corner.metadata(state),edit.inverted(),edit.far())));
+    }
     public static void register(RegisterPayloadHandlersEvent event){event.registrar("1").playToServer(TYPE,CODEC,(packet,context)->context.enqueueWork(()->{if(context.player() instanceof ServerPlayer player)apply(player,packet);}));}
 }

@@ -12,6 +12,7 @@ public final class NativeWallTopology {
     public static void refresh(NativeWallEntity host){
         if(!NativeFluidWorld.installed(host))return;Level level=host.getLevel();BlockPos pos=host.getBlockPos();BlockState state=host.getBlockState();
         if(state.getBlock() instanceof NativeDiagonalWallBlock){NativeDiagonalWallTopology.refresh(host);if(host.isGlass())host.publishDiagonalGlassLayout(NativeDiagonalLayouts.glass(host));host.publishApertureLayout(NativeWallLayouts.aperture(host));return;}
+        if(state.getBlock() instanceof NativeCornerWallBlock corner){host.publishGeometry(corner.topology(level,pos,state,host),host.fluidGeometryRevision()+1);return;}
         if(!(state.getBlock() instanceof NativeFlatWallBlock))return;
         var corner=corner(level,pos,state);
         var geometry=((NativeFlatWallBlock)state.getBlock()).isFullDepth()?NativeFlatWallGeometry.full(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):corner==null?NativeFlatWallGeometry.straight(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH)):NativeFlatWallGeometry.build(state.getValue(NativeFlatWallBlock.FACING),state.getValue(NativeFlatWallBlock.DEPTH),corner);

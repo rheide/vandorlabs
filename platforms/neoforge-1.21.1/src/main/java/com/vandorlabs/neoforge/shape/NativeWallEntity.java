@@ -43,12 +43,13 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
     private volatile AABB renderBounds;
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,boolean porthole){this(type,pos,state,porthole?NativePanelKind.PORTHOLE:NativePanelKind.WALL);}
     public NativeWallEntity(BlockEntityType<?> type,BlockPos pos,BlockState state,NativePanelKind kind){
-        super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.kind=Objects.requireNonNull(kind);if(isGlass())glass=new PanelGlassSettings(0,-1,-1,false,1,true,true);walls=new WallSettings(false,false,0,0,isPorthole(),0);
+        super(type,pos,state,false,new com.vandorlabs.ui.ProgrammableBlockDialog.State(0,0,false,new int[]{-1,-1,-1,-1,-1,-1},-1));this.kind=Objects.requireNonNull(kind);if(isGlass())glass=new PanelGlassSettings(0,-1,-1,false,1,true,true);walls=new WallSettings(state.getBlock() instanceof NativeCornerWallBlock,false,0,0,isPorthole(),0);
         geometry=initialGeometry(state);aperture=NativePortholeLayout.unit(0,geometry.fullDepth()?1:0);partition=geometry::side;renderBounds=geometry.renderBounds().move(pos);publishWallAppearance();
     }
     private static FrameSettings defaultFrames(){return new FrameSettings(-1,-1,-2,0,-1,-1,false,false,false,false);}
     private static NativeWallGeometry initialGeometry(BlockState state){
         if(state.getBlock() instanceof NativeDiagonalWallBlock)return NativeDiagonalWallGeometry.build(NativeDiagonalWallTopology.initial(state,0));
+        if(state.getBlock() instanceof NativeCornerWallBlock corner)return corner.publication(state,com.vandorlabs.render.CornerGlassGeometry.FULL,0);
         Direction facing=Direction.NORTH;int depth=0;
         for(Property<?> property:state.getProperties()){
             Comparable<?> value=state.getValue(property);
@@ -135,6 +136,21 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         if(stateChanged){publishWallAppearance();setChanged();requestModelDataUpdate();NativeFluidWorld.queue(this);if(level!=null)level.markAndNotifyBlock(worldPosition,level.getChunkAt(worldPosition),beforeState,nextState,net.minecraft.world.level.block.Block.UPDATE_ALL,512);}
         else publishShapeChange();return true;
     }
+    /**
+     * Size and slope of a Diagonal Corner Wall from its open dialog. The size is saved in the wall
+     * settings, the slope in {@code nextState}; the bevel's turn is the caller's to keep.
+     */
+    public boolean configureCornerWall(int size,BlockState nextState){
+        var before=getBlockState();
+        if(!(before.getBlock() instanceof NativeCornerWallBlock corner)||!corner.sloped()||nextState==null||nextState.getBlock()!=before.getBlock()||!com.vandorlabs.render.DiagonalCornerRules.valid(size)
+                ||level!=null&&(level.isClientSide||level.getServer()==null||!level.getServer().isSameThread()||level.getBlockEntity(worldPosition)!=this))return false;
+        walls=new WallSettings(size!=com.vandorlabs.render.CornerGlassGeometry.TALL,size==com.vandorlabs.render.CornerGlassGeometry.WIDE,walls.fill,walls.join,walls.joinPortholes,walls.portholeShape);
+        if(level!=null&&nextState!=before&&(!level.setBlock(worldPosition,nextState,net.minecraft.world.level.block.Block.UPDATE_ALL)||level.getBlockEntity(worldPosition)!=this))return false;
+        NativeWallLayouts.invalidate(this);publishShapeChange();return true;
+    }
+    /** A Corner Wall's bevel follows its block state, so a changed state republishes its topology. */
+    @SuppressWarnings("deprecation")
+    @Override public void setBlockState(BlockState state){super.setBlockState(state);if(state.getBlock() instanceof NativeCornerWallBlock&&level!=null)NativeFluidWorld.queue(this);}
     /** Derived topology is not saved: no dirty flag or NBT packet is sent here. Equal snapshots do nothing. */
     public boolean publishGeometry(NativeWallGeometry next,long revision){
         if(level instanceof ServerLevel server&&!server.getServer().isSameThread())throw new IllegalStateException("Wall geometry requires owning server thread");
@@ -158,6 +174,8 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         glass=PanelGlassSettings.read(new ModernHousingTags(tag),NativeWallEntity::panelMaterial);
         walls=WallSettings.read(new ModernHousingTags(tag));frames=FrameSettings.read(new ModernHousingTags(tag),NativeWallEntity::validFrame,NativeWallEntity::validSurface,ModernFinishCatalog::validChoice);
         super.loadAdditional(tag,registries);
+        // A Corner Wall's size lives in its wall settings: an update from the server republishes its bevel.
+        if(level!=null&&getBlockState().getBlock() instanceof NativeCornerWallBlock)NativeFluidWorld.queue(this);
     }
     @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){
         super.saveAdditional(tag,registries);var data=new ModernHousingTags(tag);WallSettings.write(data,walls.fullWidth,walls.halfHeight,walls.fill,walls.join,walls.joinPortholes,walls.portholeShape);frames.write(data);glass.write(data);playback.write(tag);

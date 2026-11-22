@@ -57,7 +57,7 @@ public final class NativeFlatGlassRenderer {
    return result;
   }
   /** The flat glass quad bent onto the bevel by the shared corner geometry. */
-  private static List<BakedQuad> projectCorner(BakedQuad quad,CornerGlassGeometry geometry){
+  static List<BakedQuad> projectCorner(BakedQuad quad,CornerGlassGeometry geometry){
    int[] source=quad.getVertices();int stride=source.length/4;
    double[][] input=new double[4][];
    for(int i=0;i<4;i++){int at=i*stride;input[i]=new double[]{Float.intBitsToFloat(source[at]),Float.intBitsToFloat(source[at+1]),Float.intBitsToFloat(source[at+2]),

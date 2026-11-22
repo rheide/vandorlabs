@@ -9,13 +9,13 @@
 - Shape Diagonal Corner Glass like the diagonal glass it continues: it stays at 45 degrees, takes the clicked glass's size, lean and near or far position, and joins only matching glass. Choose its Size and Slope in the glass dialog.
 - Always draw stacked Corner Glass, including with OptiFine and shaders.
 - Keep Diagonal Corner Glass frames at full thickness where they meet diagonal glass, so top and bottom frames run through a corner as one mitred frame.
-- Add Programmable Corner Wall and Diagonal Corner Wall: 45-degree bevels that join Programmable Walls at the same depth, or continue diagonal walls with matching size, lean and position, using the wall material and editor.
+- Add Programmable Corner Wall and Diagonal Corner Wall on Forge and NeoForge: 45-degree bevels that join Programmable Walls at the same depth, or continue diagonal walls with matching size, lean and position, using the wall material and editor.
 
 - Open Large Doors from a horizontal seam with Sliding Split, or join compatible doors into a 3×6, 6×3, or 6×6 opening.
 - Build Arm columns through open Large Doors, including joined groups. The door stays open while an arm runs through it, and carried blocks pass through the doorway.
 - Let wide Arm attachments such as a 3×3 Turntable Surface pass through every part of an open Large Door, including the leaf edges left in the opening.
 - Join four Large Doors placed one by one into one 2×2 door, whichever wall each was placed from: a door with Join On takes the orientation of the joining door beside it. Sneak-click a joined door's face to place the next door on that side.
-- Keep joined Large Doors drawn while only part of the opening is in view, open joined rotating doors to the full group width, and tile glass materials across the whole joined door.
+- Keep joined Large Doors drawn while only part of the opening is in view, open joined rotating doors to the full group width, and tile glass materials across the whole joined door, on Forge and NeoForge.
 - Show selected resource artwork on Arm mounting faces and Extender end caps, with a reversible flow setting and activity bar. Keep Large Arm inventory icons at least as visible as regular variants.
 
 - Open Survey Dish and Sentinel Array dialogs with ordinary right-click. Show bottom RF connection status, consume 20 RF/tick only while Scanning, and let Redstone select Scanning or Idle. Linked Screens and Navigation Tables show a haiku when no observer is powered.

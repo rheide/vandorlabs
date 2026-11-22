@@ -60,6 +60,7 @@ def main():
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('rocket_thruster', 'ion_drive', 'plasma_vent', 'impulse_engine', 'antigravity_plate', 'repulsor_array', 'vertical_hover_thruster')]
     wanted += ['tile.vandorlabs.' + name + '.name' for name in ('access_card_slot','data_chip_slot')]
     wanted += ['tile.vandorlabs.programmable_corner_glass.name','tile.vandorlabs.programmable_diagonal_corner_glass.name']
+    wanted += ['tile.vandorlabs.programmable_corner_wall.name','tile.vandorlabs.programmable_diagonal_corner_wall.name']
     wanted += ['tile.vandorlabs.programmable_glass.name','tile.vandorlabs.programmable_storage.name','tile.vandorlabs.data_chip_programmer.name']
     wanted += ['item.vandorlabs.duplifier.name']
     wanted += ['tile.vandorlabs.module_rack.name','item.vandorlabs.blank_module.name','item.vandorlabs.autopilot_module.name','item.vandorlabs.battery_module.name','message.vandorlabs.module_rack.inventory_full']

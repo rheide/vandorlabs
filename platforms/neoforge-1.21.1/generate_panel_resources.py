@@ -42,6 +42,26 @@ def diagonal_porthole_projection():
     }
 
 
+def corner_walls():
+    """Corner Walls: the wall's own body model (the baked wrapper draws the bevel) and the 1.12.2 bevel items."""
+    for name in ['programmable_corner_wall', 'programmable_diagonal_corner_wall']:
+        files = {
+            'assets/vandorlabs/blockstates/' + name + '.json': {'variants': {'': {'model': 'vandorlabs:block/programmable_wall'}}},
+        }
+        item = metal(converted(json.loads((SOURCE / ('models/item/' + name + '.json')).read_text())))
+        item['textures'].pop('glass', None)
+        files['assets/vandorlabs/models/item/' + name + '.json'] = item
+        recipe = json.loads((SOURCE / ('recipes/' + name + '.json')).read_text())
+        recipe['result']['id'] = recipe['result'].pop('item')
+        files['data/vandorlabs/recipe/' + name + '.json'] = recipe
+        files['data/vandorlabs/loot_table/blocks/' + name + '.json'] = {'type': 'minecraft:block', 'pools': [{'rolls': 1, 'entries': [{'type': 'minecraft:item', 'name': 'vandorlabs:' + name,
+            'functions': [{'function': 'minecraft:copy_components', 'source': 'block_entity', 'include': ['minecraft:block_entity_data']}]}], 'conditions': [{'condition': 'minecraft:survives_explosion'}]}]}
+        for relative, value in files.items():
+            target = OUT / relative
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_text(json.dumps(value, indent=2) + '\n')
+
+
 def main():
     if OUT.exists():
         shutil.rmtree(OUT)
@@ -78,6 +98,7 @@ def main():
         target=OUT/('data/vandorlabs/recipe/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(recipe)+'\n')
         loot={'type':'minecraft:block','pools':[{'rolls':1,'entries':[{'type':'minecraft:item','name':'vandorlabs:'+name,'functions':[{'function':'minecraft:copy_components','source':'block_entity','include':['minecraft:block_entity_data']}]}],'conditions':[{'condition':'minecraft:survives_explosion'}]}]}
         target=OUT/('data/vandorlabs/loot_table/blocks/'+name+'.json');target.parent.mkdir(parents=True,exist_ok=True);target.write_text(json.dumps(loot)+'\n')
+    corner_walls()
     print('Native panel assets: 96 canonical variants, current item geometry; existing housing/metal atlas reused')
 
 
