@@ -39,6 +39,7 @@ The default dependency location is a sibling `MC-Forge12-2` installation. Overri
 | `JAVA_HOME` | Java 8 JDK |
 | `VANDOR_LABS_RELEASE_SERVER` | Forge installation used only to locate dependencies |
 | `VANDOR_LABS_COMPAT_MODS` | Installed compatibility-mod directory |
+| `VANDOR_LABS_TEST_PORT_MODS` | Thermal Dynamics, Mekanism, Galacticraft and RFTools fixture JARs for `vehicle-resources`. Defaults to `VANDOR_LABS_COMPAT_MODS`. |
 | `VANDOR_LABS_TEST_OPTIFINE` | OptiFine G5 JAR |
 | `VANDOR_LABS_TEST_SHADERPACK` | Shader pack ZIP |
 | `VANDOR_LABS_TEST_MEKANISM` | Mekanism JAR |

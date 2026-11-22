@@ -318,7 +318,7 @@ case "${1:-}" in
         elif [ "$TARGET" = vehicle-resources ]; then
             PREFIX=vehicle_resources_
             export JAVA_TOOL_OPTIONS="${JAVA_TOOL_OPTIONS:-} -Dvandorlabs.vehicleResourceChecksOnly=true -Dfml.queryResult=confirm"
-            export VANDOR_LABS_TEST_PORT_MODS="${VANDOR_LABS_COMPAT_MODS:-$HOME/.minecraft/mods}"
+            export VANDOR_LABS_TEST_PORT_MODS="${VANDOR_LABS_TEST_PORT_MODS:-${VANDOR_LABS_COMPAT_MODS:-$HOME/.minecraft/mods}}"
         elif [ "$TARGET" = utility26 ]; then
             PREFIX=utility26_
             export VANDOR_LABS_UTILITY26_CHECKS_ONLY=true
@@ -500,6 +500,10 @@ if [ "${TARGET:-}" = arm-foreign ] || [ "${TARGET:-}" = arm-duct-flow ] || [ "${
 fi
 if [ -n "${VANDOR_LABS_TEST_PORT_MODS:-}" ]; then
     for port_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar ThermalDynamics-1.12.2-2.5.5.21-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar Mekanism-1.12.2-9.8.2.389.jar MicdoodleCore-1.12.2-4.0.2.280.jar GalacticraftCore-local4.1.0.280-1.12.2-4.0.2.280.jar Galacticraft-Planets-1.12.2-4.0.2.280.jar rftools-1.12-7.72.jar mcjtylib-1.12-3.5.4.jar; do
+        if [ ! -f "$VANDOR_LABS_TEST_PORT_MODS/$port_mod" ]; then
+            printf 'Missing installed resource fixture %s. Set VANDOR_LABS_TEST_PORT_MODS to the complete compatibility-mod directory.\n' "$port_mod" >&2
+            exit 2
+        fi
         cp "$VANDOR_LABS_TEST_PORT_MODS/$port_mod" "$TEST_RUNTIME_GAME/mods/"
     done
 fi
