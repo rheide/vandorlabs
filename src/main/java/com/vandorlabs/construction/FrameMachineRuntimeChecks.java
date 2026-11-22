@@ -42,7 +42,12 @@ public final class FrameMachineRuntimeChecks {
                 require(!formed.isOpaqueCube()&&!formed.isFullCube()&&formed.getLightOpacity()==0,"formed core cannot hide neighboring terrain through model cutouts");
                 for(EnumFacing side:EnumFacing.values())require(!block.doesSideBlockRendering(formed,world,root,side),"formed core leaves adjacent faces visible "+side);
                 for(BlockPos p:original.keySet())require(world.getTileEntity(p) instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)world.getTileEntity(p)).owner().equals(root),"owned world-space footprint");
-                AxisAlignedBB bounds=tile.getRenderBoundingBox();require(bounds.minX==minimum.getX() && bounds.minZ==minimum.getZ() && bounds.maxX==minimum.getX()+width && bounds.maxZ==minimum.getZ()+depth,"render origin and rotated bounds");
+                require(root.add(tile.renderOriginOffset()).equals(minimum),"render origin "+scenario);
+                AxisAlignedBB bounds=tile.getRenderBoundingBox();
+                require(bounds.minX==minimum.getX()-.5 && bounds.minY==minimum.getY()-.5
+                        && bounds.minZ==minimum.getZ()-.5 && bounds.maxX==minimum.getX()+width+.5
+                        && bounds.maxY==minimum.getY()+block.height+.5 && bounds.maxZ==minimum.getZ()+depth+.5,
+                        "padded rotated render bounds "+scenario);
                 TileEntityConstructor reloaded=new TileEntityConstructor();reloaded.setWorld(world);reloaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
                 require(reloaded.pivot().equals(tile.pivot()) && reloaded.cell(0,0,0).equals(tile.cell(0,0,0)),"saved corner offset");
                 TileEntityConstructor client=new TileEntityConstructor();client.setWorld(world);client.setPos(root);client.readFromNBT(tile.getUpdateTag());
