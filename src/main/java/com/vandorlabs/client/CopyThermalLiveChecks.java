@@ -41,8 +41,6 @@ import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fluids.FluidTank;
-import net.minecraftforge.energy.CapabilityEnergy;
-import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fml.common.Loader;
 
 /** The connected player's Copy button drives the real material and journal transaction. */
@@ -52,7 +50,7 @@ final class CopyThermalLiveChecks {
         RETRIEVER=new BlockPos(2,0,0), SINK=new BlockPos(3,0,0), BATTERY=new BlockPos(0,0,2),
         FLUXDUCT=new BlockPos(1,0,2), CARGO=new BlockPos(2,0,2), PILOT=new BlockPos(3,0,3),
         MAXWELL=new BlockPos(4,0,0), MEK_TANK=new BlockPos(0,0,4), MEK_CUBE=new BlockPos(2,0,4);
-    private static final int CHARGE=TileEntityBattery.CAPACITY, FLUID=1450, FLUX_BUFFER=1107, DUCT_BUFFER=70;
+    private static final int CHARGE=TileEntityBattery.CAPACITY, FLUID=1450, FLUX_BUFFER=207, DUCT_BUFFER=70;
     private static final int MAXWELL_FUEL=223, MEK_FLUID=917, MEK_ENERGY=2345;
     private static int stage,wait,scenario;
     private static boolean complete;
@@ -131,9 +129,9 @@ final class CopyThermalLiveChecks {
         TileEntityBattery battery=(TileEntityBattery)world.getTileEntity(source.add(BATTERY));
         battery.configure(com.vandorlabs.ports.ResourcePortSettings.placed(EnumFacing.EAST.getIndex()),0,ChannelList.EMPTY);
         edit(world,source.add(BATTERY),tag->tag.setInteger("Energy",CHARGE));
-        place(world,FLUXDUCT,"thermaldynamics:duct_0",1);
-        place(world,SERVO,"thermaldynamics:duct_16",0);
-        place(world,RETRIEVER,"thermaldynamics:duct_16",0);
+        placeDuct(world,player,FLUXDUCT,"thermaldynamics:duct_0",1);
+        placeDuct(world,player,SERVO,"thermaldynamics:duct_16",0);
+        placeDuct(world,player,RETRIEVER,"thermaldynamics:duct_16",0);
         install(world,player,TANK,EnumFacing.EAST,"servo",4);
         install(world,player,SINK,EnumFacing.WEST,"retriever",2);
         world.setBlockState(source.add(CARGO),Blocks.CHEST.getDefaultState(),3);
@@ -178,6 +176,12 @@ final class CopyThermalLiveChecks {
     private static void place(WorldServer world,BlockPos local,String name,int metadata){
         require(world.setBlockState(source.add(local),block(name).getStateFromMeta(metadata),3),"place "+name+" at "+local);
     }
+    private static void placeDuct(WorldServer world,EntityPlayerMP player,BlockPos local,String name,int metadata){
+        place(world,local,name,metadata);
+        BlockPos at=source.add(local);
+        Block block=block(name);
+        block.onBlockPlacedBy(world,at,world.getBlockState(at),player,new ItemStack(block,1,metadata));
+    }
     private static ItemStack tierItem(String name,int metadata,int tier){
         ItemStack item=new ItemStack(block(name),1,metadata);
         NBTTagCompound data=new NBTTagCompound();data.setInteger("tier",tier);item.setTagCompound(data);return item;
@@ -197,10 +201,14 @@ final class CopyThermalLiveChecks {
     private static void prepare(WorldServer world,EntityPlayerMP owner)throws Exception{
         TileEntity flux=world.getTileEntity(source.add(FLUXDUCT));
         TileEntity duct=world.getTileEntity(source.add(SERVO));
-        require(flux.getCapability(CapabilityEnergy.ENERGY,EnumFacing.UP).receiveEnergy(FLUX_BUFFER,false)==FLUX_BUFFER,
-            "seed the live Thermal RF grid through Forge Energy");
-        require(duct.getCapability(CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,EnumFacing.UP)
-            .fill(new FluidStack(FluidRegistry.WATER,DUCT_BUFFER),true)==DUCT_BUFFER,"seed the live Thermal fluid grid through Forge FluidHandler");
+        Object energy=ductUnit(flux,"energy");
+        int accepted=(Integer)energy.getClass().getMethod("receiveEnergy",int.class,boolean.class).invoke(energy,FLUX_BUFFER,false);
+        require(accepted==FLUX_BUFFER,"seed the live Thermal RF grid through its native buffer: "+accepted);
+        Object fluid=ductUnit(duct,"fluid");
+        Object grid=fluid.getClass().getMethod("getGrid").invoke(fluid);
+        FluidTank fluidBuffer=(FluidTank)grid.getClass().getField("myTank").get(grid);
+        require(fluidBuffer.fill(new FluidStack(FluidRegistry.WATER,DUCT_BUFFER),true)==DUCT_BUFFER,
+            "seed the live Thermal fluid grid through its native buffer");
         servo=part(world,source.add(SERVO));retriever=part(world,source.add(RETRIEVER));
         require(servo.getString("id").equals("thermaldynamics:servo_fluid")&&servo.getInteger("side")==EnumFacing.WEST.getIndex(),"correct installed fluid Servo");
         require(retriever.getString("id").equals("thermaldynamics:retriever_fluid")&&retriever.getInteger("side")==EnumFacing.EAST.getIndex(),"correct installed fluid Retriever");
@@ -214,6 +222,12 @@ final class CopyThermalLiveChecks {
             ((TileEntityTokenSlot)world.getTileEntity(mount)).setInventorySlotContents(0,chip.copy());
             controller.useChip=true;controller.refreshPads(owner);
         }
+    }
+
+    private static Object ductUnit(TileEntity duct,String family)throws Exception{
+        for(Object unit:(Iterable<?>)duct.getClass().getMethod("getDuctUnits").invoke(duct))
+            if(unit.getClass().getName().startsWith("cofh.thermaldynamics.duct."+family+"."))return unit;
+        throw new IllegalStateException("Missing real Thermal "+family+" unit");
     }
 
     private static NBTTagCompound part(WorldServer world,BlockPos at){
