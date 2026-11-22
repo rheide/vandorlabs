@@ -35,6 +35,8 @@ coordinates. The departure area stays loaded while occupied. Terrain along the
 route can stay unloaded until the craft descends at its destination. An aircraft
 with sufficient thrust reaches Y=10,000 and up to 75 blocks per tick.
 
+![A native Maxwell aircraft in high cruise with the seed terrain below and the afterburner lit](images/gallery/native-maxwell-cruise.png)
+
 ![Native Maxwell Engine controls and fuel gauge](images/gallery/native-maxwell-engine-menu.png)
 
 Installed Batteries and Hex Tanks can send their fullness on a channel. Open **Redstone**,
