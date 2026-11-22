@@ -119,7 +119,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(flightReadout.drives==0)throw new IllegalArgumentException("Flight requires a Maxwell Drive.");
         if(flightReadout.thrust<=0)throw new IllegalArgumentException("Fuel and enable a Maxwell Drive before selecting Flight.");
         if(!flightReadout.canFly())throw new IllegalArgumentException("Effective weight exceeds the available Maxwell takeoff limit.");
-        if(!hover&&(!onGround||!VehicleLandingGear.extended(this)||!VehicleSkiTraction.allowed(this)))
+        if(!hover&&(!hasGroundContact()||!VehicleLandingGear.extended(this)||!VehicleSkiTraction.allowed(this)))
             throw new IllegalArgumentException("Takeoff requires ground contact and extended Taxi landing gear.");
         flightPhase=hover?POWERED_FLIGHT:TAKEOFF_ROLL;
         flightPitch=0;landedFromFlight=false;cruisingRecovery=false;initialClimb=0;driveSpeed=Math.max(0,driveSpeed);
@@ -127,6 +127,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         taxiReturnPending=false;
         if(hover)VehicleLandingGear.refreshSignals(this);
     }
+    private boolean hasGroundContact(){return onGround||VehicleFlight.clearance(this)<=.001;}
 
     void leaveFlight(int mode){
         if(takeoffRoll()){
@@ -694,7 +695,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         double before=driveSpeed,x=posX,z=posZ;
         advance(true);
-        if(!onGround||driveSpeed>.05&&posX==x&&posZ==z||before>.05&&driveSpeed==0){
+        if(!hasGroundContact()||driveSpeed>.05&&posX==x&&posZ==z||before>.05&&driveSpeed==0){
             flightPhase=NO_FLIGHT;
             return;
         }

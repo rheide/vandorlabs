@@ -100,9 +100,10 @@ final class RedstoneScreenRenderer {
         boolean busy=craft!=null?craft.transferInProgress:controller!=null&&controller.converting;
         boolean hover=craft!=null&&craft.hover;
         boolean flight=com.vandorlabs.vehicle.VehicleStatus.offersFlight(world);
+        boolean cruise=craft!=null&&craft.cruise.active();
         boolean emergency=com.vandorlabs.vehicle.VehicleStatus.offersEmergencyPark(world,Minecraft.getMinecraft().player);
         boolean flightTelemetry=craft!=null&&(craft.flying()||craft.takeoffRoll());
-        com.vandorlabs.tiles.TileEntityAutopilot autopilot=flightTelemetry?null:com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
+        com.vandorlabs.tiles.TileEntityAutopilot autopilot=flightTelemetry||cruise?null:com.vandorlabs.vehicle.VehicleStatus.find(world,pos);
         boolean on=autopilot!=null&&autopilot.enabled();
         OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,240,240);
         GlStateManager.enableBlend();GlStateManager.tryBlendFuncSeparate(770,771,1,0);GlStateManager.enableTexture2D();
@@ -131,7 +132,7 @@ final class RedstoneScreenRenderer {
         if(autopilot!=null)statusText(font,"Next >",8,top+38,0xFFFFFF);
         if(emergency)statusText(font,"Emergency Park",55,top+38,0xFFFFFF);
         if(craft!=null){
-            boolean compact=height<=64, cruise=craft.cruise.active();
+            boolean compact=height<=64;
             double clearance=cruise?Double.POSITIVE_INFINITY:craft.groundClearance();
             String elevation="Y "+oneDecimal(craft.flightAltitude());
             if(Double.isFinite(clearance)){
@@ -140,7 +141,7 @@ final class RedstoneScreenRenderer {
             }
             statusText(font,elevation,8,top+49,0xC1E8FF);
             if(cruise){
-                String route="X "+Math.round(craft.cruise.x())+"    Z "+Math.round(craft.cruise.z());
+                String route="X "+Math.round(craft.cruise.x())+(compact?" Z ":"    Z ")+Math.round(craft.cruise.z());
                 statusText(font,route,8,top+(compact?38:60),0xC1E8FF);
             }
             com.vandorlabs.vehicle.VehicleFlightReadout readout=craft.flightReadout();

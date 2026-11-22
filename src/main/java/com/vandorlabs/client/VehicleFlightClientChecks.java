@@ -60,7 +60,7 @@ final class VehicleFlightClientChecks {
         player.setSneaking(false);
         player.setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);
         for(int x=-16;x<=16;x+=16)for(int z=-112;z<=16;z+=16)world.getChunkFromBlockCoords(ORIGIN.add(x,0,z));
-        for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-25,-1,-100),ORIGIN.add(52,-1,8)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
+        for(BlockPos pos:BlockPos.getAllInBox(ORIGIN.add(-3,-1,-88),ORIGIN.add(39,-1,8)))world.setBlockState(pos,Blocks.STONE.getDefaultState(),2);
         List<VehicleStructure.Cell> cells=new ArrayList<>();
         for(int x=1;x<=3;x++)for(int z=0;z<=4;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,1,z),Blocks.STONE.getDefaultState(),null));
         cells.removeIf(cell->cell.pos.equals(SEAT));
@@ -147,24 +147,28 @@ final class VehicleFlightClientChecks {
         }
         if(stage==2&&frame>=22){
             String motion="roll="+craft.takeoffRoll()+" flight="+craft.flying()+" Y="+craft.posY+" runway="+runwayY+" speed="+craft.driveSpeed;
+            if(!craft.flying()&&(!craft.takeoffRoll()||craft.driveSpeed<FlightEnvelope.TAKEOFF_SPEED-1e-4)&&frame<100)return false;
             need(craft.takeoffRoll()&&!craft.flying()&&Math.abs(craft.posY-runwayY)<.08&&craft.driveSpeed>=FlightEnvelope.TAKEOFF_SPEED-1e-4,
                     "ground roll builds speed without liftoff before pitch input; "+motion);
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
         }
         if(stage==3&&frame>=13){
+            if((!craft.flying()||craft.flightPitch()<=5||craft.posY<=runwayY+.7)&&frame<60)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
             need(craft.flying()&&craft.flightPitch()>5&&craft.posY>runwayY+.7,"S pitches up and takes off from Taxi");
             climbY=craft.posY;
             next();return false;
         }
         if(stage==4&&frame>=23){
+            if(craft.posY<=climbY+1&&frame<60)return false;
             need(craft.posY>climbY+1&&craft.driveSpeed>FlightEnvelope.TAKEOFF_SPEED,"released keys preserve forward flight and climb");
             turnYaw=craft.rotationYaw;turnX=craft.posX;turnZ=craft.posZ;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),true);
             next();return false;
         }
         if(stage==5&&frame>=9){
+            if(craft.rotationYaw<=turnYaw+4&&frame<50)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),false);
             need(craft.rotationYaw>turnYaw+4&&Math.hypot(craft.posX-turnX,craft.posZ-turnZ)>2,"D rotates while forward travel continues");
             priorPitch=craft.flightPitch();
@@ -172,6 +176,7 @@ final class VehicleFlightClientChecks {
             next();return false;
         }
         if(stage==6&&frame>=7){
+            if(craft.flightPitch()>=priorPitch-4&&frame<45)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
             need(craft.flightPitch()<priorPitch-4&&craft.flying(),"W lowers the nose");
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
