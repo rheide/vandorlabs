@@ -125,7 +125,7 @@ final class RedstoneScreenRenderer {
         for(int i=0;i<(flight?4:3);i++)statusText(font,modes[i],com.vandorlabs.vehicle.VehicleStatus.modeLeft(i,flight)+2,top+14,i==mode?0x072D24:0xFFFFFF);
         boolean flightTelemetry=craft!=null&&(craft.flying()||craft.takeoffRoll());
         if(flightTelemetry){
-            String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.takeoffRoll()?"Takeoff roll":"Flight";
+            String state=craft.flightLanded()?"Landed":craft.descendingFromFlight()?"Landing":craft.descendingToFlightLimit()?"Descending":craft.takeoffRoll()?"Takeoff roll":"Flight";
             statusText(font,String.format(java.util.Locale.ROOT,"%s    %.1f m/s",state,Math.abs(craft.driveSpeed)*20),8,top+26,0xCEE9ED);
         }else if(autopilot!=null)statusText(font,font.trimStringToWidth(autopilot.status,140),8,top+26,0xCEE9ED);
         if(autopilot!=null)statusText(font,"Next >",8,top+38,0xFFFFFF);

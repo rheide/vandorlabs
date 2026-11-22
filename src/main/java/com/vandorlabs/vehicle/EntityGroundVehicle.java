@@ -99,12 +99,14 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     public boolean poweredFlight(){return flightPhase==TAKEOFF_ROLL||flightPhase==POWERED_FLIGHT;}
     public boolean takeoffRoll(){return flightPhase==TAKEOFF_ROLL;}
     public boolean descendingFromFlight(){return flightPhase>=RECOVER_FLIGHT;}
+    public boolean descendingToFlightLimit(){return poweredFlight()&&flying()&&flightAltitude()>flightReadout.maximumAltitude()+.02;}
     public boolean flightLanded(){return descendingFromFlight()&&landedFromFlight;}
     public float flightPitch(){return flightPitch;}
     int flightPhase(){return flightPhase;}
     boolean flightLandedState(){return landedFromFlight;}
     public double flightAltitude(){return cruise.altitude();}
     public int vehicleMode(){return flying()?3:hover?2:1;}
+    double networkDriveSpeed(){return flying()?Math.sqrt(motionX*motionX+motionY*motionY+motionZ*motionZ):driveSpeed;}
     public VehicleFlightReadout flightReadout(){return flightReadout;}
     void flightPayloadChanged(){if(structure!=null&&!structure.maxwellCells.isEmpty())flightSampler.inventoryDirty(world.getTotalWorldTime());}
 
@@ -112,6 +114,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         if(flying()||takeoffRoll())return;
         if(getControllingPassenger()!=pilot)throw new IllegalArgumentException("Sit in the Pilot Seat before selecting Flight.");
         if(autopilot.enabled())throw new IllegalArgumentException("Turn off Autopilot before selecting Flight.");
+        if(VehicleCouplingTransfer.busy(this)||VehicleCouplings.preparingArmRelease(this))throw new IllegalArgumentException("Wait for the vehicle coupling transfer.");
         refreshFlightReadout();
         if(flightReadout.drives==0)throw new IllegalArgumentException("Flight requires a Maxwell Drive.");
         if(flightReadout.thrust<=0)throw new IllegalArgumentException("Fuel and enable a Maxwell Drive before selecting Flight.");
@@ -757,7 +760,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             if(moveFlight(0,.12,0,rotationYaw,level)==VehicleFlightMotion.Result.MOVED)return;
         }
         if(resumeHover&&altitude<=target+.01&&Math.abs(flightPitch)<.001){finishFlight(true);return;}
-        if(landedFromFlight)return;
+        if(landedFromFlight){if(VehicleLandingGear.extended(this)&&VehicleSkiTraction.allowed(this))finishFlight(false);return;}
         double dy=Math.max(-.24,target-altitude);
         if(dy>=0){motionY=0;return;}
         if(flightPitch!=0){

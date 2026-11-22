@@ -128,7 +128,7 @@ public final class VehicleNetwork {
     public static void state(EntityGroundVehicle e) {
         Packet p=new Packet(STATE);p.entity=e.getEntityId();p.token=e.getUniqueID();p.sequence=e.acknowledgedInput();
         p.flightPhase=e.flightPhase();p.flightPitch=e.flightPitch();p.flightLanded=e.flightLandedState();p.flightReadout=e.flightReadout();
-        p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.driveSpeed;p.yaw=e.rotationYaw;p.steering=e.steering;
+        p.flag=e.hover;p.serverTick=e.world.getTotalWorldTime();p.x=e.posX;p.y=e.posY;p.z=e.posZ;p.dy=e.motionY;p.speed=e.networkDriveSpeed();p.yaw=e.rotationYaw;p.steering=e.steering;
         if(e.articulation.active()){p.jointTopology=e.articulation.topologyId();p.jointAngles=e.articulation.network();}
         p.armMotion=e.articulation.armMotion();p.bodyPose=e.currentGeneralPose();p.associationGeneration=e.couplerAssociationGeneration();
         if(VehicleNetworkLab.state(p,e))return;

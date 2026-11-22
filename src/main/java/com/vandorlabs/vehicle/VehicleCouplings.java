@@ -37,6 +37,7 @@ public final class VehicleCouplings {
     private static TileCoupler tile(EntityGroundVehicle craft,BlockPos at){TileEntity raw=craft.view.getTileEntity(at);return raw instanceof TileCoupler?(TileCoupler)raw:null;}
     public static EntityPlayerMP authorizer(EntityGroundVehicle craft){
         VehicleCouplingPlan.require(craft!=null&&craft.world instanceof WorldServer&&!craft.isDead&&!craft.ownershipBlocked&&!craft.transferInProgress,"Vehicle automation is unavailable during transfer");WorldServer world=(WorldServer)craft.world;
+        VehicleCouplingPlan.require(!craft.flying()&&!craft.takeoffRoll(),"Land the craft before changing its Coupler connections.");
         if(craft.getControllingPassenger() instanceof EntityPlayerMP){EntityPlayerMP driver=(EntityPlayerMP)craft.getControllingPassenger();if(active(driver,world)){craft.recordCouplingActor(driver);return driver;}}
         EntityPlayerMP actor=craft.couplingActor()==null?null:world.getMinecraftServer().getPlayerList().getPlayerByUUID(craft.couplingActor());
         VehicleCouplingPlan.require(active(actor,world),"Drive the vehicle or open its Coupler dialog to authorize automation in this dimension");return actor;
@@ -45,7 +46,7 @@ public final class VehicleCouplings {
     private static EntityPlayerMP actor(EntityGroundVehicle craft,TileCoupler ignored){return authorizer(craft);}
     private static void status(EntityGroundVehicle craft,BlockPos at,String text){TileCoupler tile=craft.view==null?null:tile(craft,at);if(tile!=null)tile.status(text);}
     private static void start(EntityGroundVehicle craft){
-        if(craft.structure==null||craft.view==null||craft.isDead||craft.ownershipBlocked||craft.transferInProgress||VehicleCouplingTransfer.busy(craft))return;
+        if(craft.structure==null||craft.view==null||craft.isDead||craft.ownershipBlocked||craft.transferInProgress||VehicleCouplingTransfer.busy(craft)||craft.flying()||craft.takeoffRoll())return;
         if(VehicleArmReleaseRuntime.start(craft))return;
         BlockPos release=null;List<BlockPos> candidates=new ArrayList<>();
         for(VehicleStructure.Cell cell:craft.structure.couplers){TileCoupler tile=tile(craft,cell.pos);if(tile==null)continue;tile.sample();
