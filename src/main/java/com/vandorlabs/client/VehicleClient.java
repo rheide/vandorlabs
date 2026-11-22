@@ -200,6 +200,9 @@ public final class VehicleClient {
         else{jumpDown=false;lastJump=-100;}
     }
     private static UUID cameraCraft;
+    private static int cruisePilotDraws;
+    public static int cruisePilotDraws(){return cruisePilotDraws;}
+
     @SubscribeEvent(priority=net.minecraftforge.fml.common.eventhandler.EventPriority.LOWEST) public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Pre event) {
         if(event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat){
             com.vandorlabs.entity.EntityChairSeat seat=(com.vandorlabs.entity.EntityChairSeat)event.getEntityPlayer().getRidingEntity();Vec3d at=seat.cockpitRiderPosition(event.getEntityPlayer(),event.getPartialRenderTick());if(at!=null){Entity r=event.getEntityPlayer();float p=event.getPartialRenderTick();GlStateManager.pushMatrix();GlStateManager.translate(at.x-(r.lastTickPosX+(r.posX-r.lastTickPosX)*p),at.y-(r.lastTickPosY+(r.posY-r.lastTickPosY)*p),at.z-(r.lastTickPosZ+(r.posZ-r.lastTickPosZ)*p));}return;
@@ -217,8 +220,12 @@ public final class VehicleClient {
     }
     @SubscribeEvent public void rider(net.minecraftforge.client.event.RenderPlayerEvent.Post event) {
         if(event.getEntityPlayer().getRidingEntity() instanceof com.vandorlabs.entity.EntityChairSeat && ((com.vandorlabs.entity.EntityChairSeat)event.getEntityPlayer().getRidingEntity()).cockpitRiderPosition(event.getEntityPlayer(),event.getPartialRenderTick())!=null){GlStateManager.popMatrix();return;}
-        if(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle
-                && ((EntityGroundVehicle)event.getEntityPlayer().getRidingEntity()).structure!=null)GlStateManager.popMatrix();
+        if(event.getEntityPlayer().getRidingEntity() instanceof EntityGroundVehicle){
+            EntityGroundVehicle craft=(EntityGroundVehicle)event.getEntityPlayer().getRidingEntity();
+            if(craft.structure!=null)GlStateManager.popMatrix();
+            if(craft.cruise.active()&&event.getEntityPlayer()==Minecraft.getMinecraft().player&&!VehicleRenderPass.shadow())
+                cruisePilotDraws++;
+        }
     }
     private static double cameraDistance=4;
     public static double cameraDistance(){return cameraDistance;}
@@ -261,9 +268,24 @@ public final class VehicleClient {
         }
         GlStateManager.translate(0,0,(mc.gameSettings.thirdPersonView==2?1:-1)*Math.max(0,distance-vanilla));
     }
-    @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){GlazingRenderOrder.begin(Minecraft.getMinecraft().world);RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();VehicleDynamicLights.frame(Minecraft.getMinecraft(),event.renderTickTime);}else GlazingRenderOrder.end();}
+    @SubscribeEvent public void frame(TickEvent.RenderTickEvent event){if(event.phase==TickEvent.Phase.START){cruisePilotDraws=0;GlazingRenderOrder.begin(Minecraft.getMinecraft().world);RenderGroundVehicle.beginFrame();RenderTurntable.beginFrame();VehicleDynamicLights.frame(Minecraft.getMinecraft(),event.renderTickTime);}else GlazingRenderOrder.end();}
     @SubscribeEvent public void outline(RenderWorldLastEvent event) {
         RenderGroundVehicle.renderMissing(event.getPartialTicks());
+        if(cruisePilotDraws!=0)return;
+        Minecraft mc=Minecraft.getMinecraft();
+        if(mc.player==null||mc.getRenderViewEntity()!=mc.player||mc.gameSettings.thirdPersonView==0
+                ||!(mc.player.getRidingEntity() instanceof EntityGroundVehicle))return;
+        EntityGroundVehicle craft=(EntityGroundVehicle)mc.player.getRidingEntity();
+        if(craft.structure==null||!craft.cruise.active()||VehicleRenderPass.shadow())return;
+
+        // OptiFine visits entities in visible terrain sections. Cruise can place the player
+        // above those sections, so use the same vanilla player renderer if it missed this frame.
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            RenderHelper.enableStandardItemLighting();
+            mc.entityRenderer.enableLightmap();
+            try{mc.getRenderManager().renderEntityStatic(mc.player,event.getPartialTicks(),false);}
+            finally{mc.entityRenderer.disableLightmap();}
+        }
     }
     private static final class Preview extends GuiScreen {
         final Incoming data;private com.vandorlabs.vehicle.VehicleShape previewShape;private GuiTextField vehicleName;private boolean security;private int acceptedCard;private String sentDesign,weightLabel="";

@@ -2,6 +2,7 @@ package com.vandorlabs.vehicle;
 
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.client.CruiseSky;
+import com.vandorlabs.client.VehicleClient;
 import net.minecraft.client.Minecraft;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.nbt.NBTTagCompound;
@@ -123,10 +124,16 @@ public final class CruiseRuntimeChecks {
         }else if(stage==1&&ticks>10&&mc.player.getRidingEntity() instanceof EntityGroundVehicle){
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=2;
         }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.ready()){
+            mc.gameSettings.thirdPersonView=0;
+            stage=6;ticks=0;
+        }else if(stage==6&&ticks>10){
+            require(VehicleClient.cruisePilotDraws()==0,"first-person cruise leaves the pilot out of the main render pass");
             mc.gameSettings.thirdPersonView=1;
             mc.player.rotationPitch=mc.player.prevRotationPitch=35;
             mc.gameSettings.hideGUI=true;stage=3;ticks=0;
         }else if(stage==3&&ticks>15){
+            int pilotDraws=VehicleClient.cruisePilotDraws();
+            require(pilotDraws==1,"third-person cruise draws the local pilot exactly once, draws="+pilotDraws);
             BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
             ImageIO.write(shot,"png",new File(out,"maxwell-cruise.png"));
             if("write".equals(RESTART)){
