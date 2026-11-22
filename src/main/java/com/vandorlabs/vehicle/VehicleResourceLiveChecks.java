@@ -92,8 +92,9 @@ public final class VehicleResourceLiveChecks {
         if(stage==1){
             GearTileEntity arm=(GearTileEntity)world.getTileEntity(ARM);
             if(ticks<35||arm==null||!arm.isOperational())return false;
-            NBTTagCompound settings=arm.settings();settings.setInteger(ArmResource.CHOICE,ArmResource.ITEM.ordinal());settings.setInteger("Trigger",1);settings.setString("Channels",DRIVE.toString());settings.setDouble("ActiveExtension",1);
+            NBTTagCompound settings=arm.settings();settings.setInteger(ArmResource.CHOICE,ArmResource.ITEM.ordinal());settings.setInteger("Trigger",2);settings.setString("Channels",DRIVE.toString());settings.setDouble("ActiveExtension",1);
             arm.operator(actor);arm.configure(settings);
+            require(arm.target()&&arm.progress()==1,"arm starts deployed on its active deployment channel");
             TileEntityBattery battery=(TileEntityBattery)world.getTileEntity(point(4,1));
             TileEntityHexTank tank=(TileEntityHexTank)world.getTileEntity(point(1,3));
             TransmitterSlots.configure(battery.fullnessOutput,STORAGE,64,false);
@@ -145,6 +146,7 @@ public final class VehicleResourceLiveChecks {
         GearTileEntity arm=(GearTileEntity)local(ARM);
         if(stage==4){
             TileEntityChest chest=(TileEntityChest)local(ARM.up(2));
+            require(chest!=null,"deployed endpoint chest remains in the craft grid before the commanded stroke, progress="+arm.progress()+" target="+arm.target());
             if(chest.getStackInSlot(0).getCount()!=7)return false;
             armSignal(world,false);next();return false;
         }
