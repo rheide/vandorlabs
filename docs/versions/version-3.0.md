@@ -37,6 +37,6 @@ Choose **Channel status** in the Redstone row editor to display the strongest re
 
 ## Minecraft 1.21.1
 
-The experimental NeoForge build includes a Vehicle Controller, Pilot Seat driving,
-Maxwell Flight, local onboard resource transfers, analog screen meters and Cockpit
-controls. See the [1.21.1 vehicle construction and operating guide](../vehicles-1.21.md).
+The experimental NeoForge build supports Taxi, Hover and Maxwell Flight, including a return to the same aircraft after a server restart in high cruise. Operate redstone controls from the assembled hull and feed engines or observers through native Ports and settled Arms. Finite Mekanism Fluid Tanks and Energy Cubes retain their contents through parking.
+
+The native Gantry makes both Vehicle Couplers. Engage a pair before assembly to join two parked sections into one rigid hull. The stationary Cockpit offers seven configurable surfaces. See the [1.21.1 vehicle construction and operating guide](../vehicles-1.21.md).

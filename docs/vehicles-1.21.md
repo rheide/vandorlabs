@@ -29,8 +29,11 @@ Use a formed Maxwell Drive and install an onboard Vehicle Status screen. Set its
 and check the Controller’s Flight tab before boarding. The tab shows total weight,
 weight after antigravity, available thrust and the highest altitude the current thrust can sustain.
 Select Flight from Vehicle Status. On a runway, build forward speed and then hold **S**
-to raise the nose. **W** lowers it and **A/D** steer. The Overworld seed view replaces
-nearby terrain above Y=256. Descent loads the destination for contact and parking.
+to raise the nose. **W** lowers it and **A/D** steer. Above Y=256 the pilot sees a
+seed map of the Overworld and the instruments follow the aircraft’s geographic
+coordinates. The departure area stays loaded while occupied. Terrain along the
+route can stay unloaded until the craft descends at its destination. An aircraft
+with sufficient thrust reaches Y=10,000 and up to 75 blocks per tick.
 
 ![Native Maxwell Engine controls and fuel gauge](images/gallery/native-maxwell-engine-menu.png)
 
@@ -40,7 +43,20 @@ the received level as bars. A Battery’s receive channel still controls its res
 
 Place native Power, Fluid and Matter Ports with their faces pointing between supported
 owners. A carried Survey Dish needs an RF source. The Maxwell inlet accepts compatible
-fuel from an onboard tank.
+fuel from an onboard tank. A settled onboard Arm can pass RF, fluids or items
+between its base and tip. Configure its resource and direction before assembly,
+then use its redstone channel to move it. Transfer resumes at a connected endpoint.
+
+Onboard screen rows can also toggle a channel, pulse it for one second or set an
+analog level. Configure the rows on the parked screen, then use the controls on
+the assembled craft. For example, a pulse can briefly enable a Power Port while
+a **Channel status** row shows the received level.
+
+With Mekanism installed, a Basic, Advanced, Elite or Ultimate Fluid Tank can supply
+a Fluid Port. An Energy Cube of the same four tiers can exchange energy through a
+Power Port. Set the Cube’s faces and empty its charging slots before assembly.
+Mekanism’s owner and security settings still apply. Face settings rotate with the
+parked vehicle. Immersive Engineering ethanol works in the Maxwell tank.
 
 To assemble two parked sections as one rigid hull, mount matching
 [Vehicle Couplers](couplers.md#neoforge-1211) with their heads facing each other
