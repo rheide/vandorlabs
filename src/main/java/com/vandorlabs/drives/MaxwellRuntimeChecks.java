@@ -112,7 +112,7 @@ public final class MaxwellRuntimeChecks {
                 }
             }
         } finally {
-            world.setTotalWorldTime(previousTime);
+            world.getWorldInfo().setWorldTotalTime(previousTime);
         }
         System.out.println("[vandorlabs][reprolab] maxwell-runtime PASS assertions=" + checks
                 + " frame sizes/facings/corners fused tank/input sides/fuel rejection analog/digital/inverted timing and carried fuel");
@@ -176,7 +176,7 @@ public final class MaxwellRuntimeChecks {
     }
 
     private static void tick(WorldServer world, TileEntityConstructor engine) {
-        world.setTotalWorldTime(world.getTotalWorldTime() + 1);
+        world.getWorldInfo().setWorldTotalTime(world.getTotalWorldTime() + 1);
         engine.update();
     }
 
