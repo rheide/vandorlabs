@@ -153,8 +153,11 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                     if (tile instanceof NativeBuilderEntity builder && builder.maxwell()) {
                         int gauge = craft.maxwellGauge(cell.pos);
                         if (gauge >= 0) builder.updateCarriedMaxwellVisual(gauge >>> 4, gauge & 15);
-                    }
-                    if (tile instanceof NativeScreenEntity screen) {
+                        // The entity already passed culling. Render the detached engine at
+                        // the hull pose with current light, independent of its cached block position.
+                        client.getBlockEntityRenderDispatcher().renderItem(builder, poses, buffers, cellLight,
+                                OverlayTexture.NO_OVERLAY);
+                    } else if (tile instanceof NativeScreenEntity screen) {
                         status.renderScreen(craft, cell.pos, screen, poses, buffers, cellLight, OverlayTexture.NO_OVERLAY);
                     } else if (tile != null && client.getBlockEntityRenderDispatcher().getRenderer(tile) != null) {
                         client.getBlockEntityRenderDispatcher().render(tile, partial, poses, buffers);
