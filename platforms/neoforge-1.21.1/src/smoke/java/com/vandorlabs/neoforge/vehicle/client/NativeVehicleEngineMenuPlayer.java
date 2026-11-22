@@ -10,7 +10,6 @@ import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.gui.components.EditBox;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.level.GameType;
-import net.minecraft.world.phys.AABB;
 import net.neoforged.api.distmarker.Dist;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
@@ -42,7 +41,7 @@ public final class NativeVehicleEngineMenuPlayer {
             if (mc.screen == null && mc.gameMode.getPlayerMode() == GameType.SURVIVAL
                     && (stage == 0 ? actor.getMainHandItem().isEmpty() : actor.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get()))
                     && ticks - lastUse >= 12) {
-                var found = mc.level.getEntitiesOfClass(NativeGroundVehicle.class, new AABB(NativeVehicleFlightFixture.ROOT).inflate(12));
+                var found = mc.level.getEntitiesOfClass(NativeGroundVehicle.class, mc.player.getBoundingBox().inflate(12));
                 if (found.size() != 1 || !found.getFirst().admitted()) return;
                 var craft = found.getFirst();
                 var target = NativeVehicleEngineMenuFixture.TARGET;
