@@ -27,6 +27,8 @@ Open the Controller’s **Flight** tab for projected maximum speed and altitude 
 
 Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The seed view begins preparing at Y=200 and refines to a 128 × 128 image. Instruments show altitude during cruise and omit ground clearance. Descend to Y=256 or below to select Taxi or Hover manually.
 
+On Forge servers the default keeps the physical aircraft at its departure X/Z until descent. In `config/vandorlabs-blocks.cfg`, enabling `vehicles.reanchorResidentCruise` also allows a physical move every 40 ticks after at least 64 blocks of travel. The aircraft and all rider view areas must already fit inside loaded, populated terrain. Over unexplored ground the hop is skipped and the geographic route continues. Minecraft can revisit existing saved terrain near an occupied anchor during ordinary world ticks.
+
 With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Creating a waypoint at your current position uses the geographic coordinates and flight altitude. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
 
 A vanilla or JourneyMap teleport releases the rider. When the last pilot teleports away, the aircraft stops and lands below its current geographic position. This loads the aircraft’s landing site as well as the player’s teleport destination.
