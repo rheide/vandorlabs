@@ -329,6 +329,10 @@ public final class NavigationService {
     }
     public static int color(World world,int x,int z){return color(world,x,z,false);}
     public static int color(World world,int x,int z,boolean detailed){return terrainWorld(world).sampleColor(x,z,detailed?1:4);}
+    /** Widely separated cruise samples use the generator directly to avoid retaining sparse tiles. */
+    public static int cruiseColor(World world,int x,int z,int spacing){
+        return spacing<=64?terrainWorld(world).sampleColor(x,z,spacing):biomeColor(world,x,z);
+    }
     private static int biomeColor(World world,int qx,int qz){
         try{return biomeColor(world.getBiomeProvider().getBiomes(null,qx,qz,1,1,false)[0]);}
         catch(RuntimeException failed){return NavigationMap.ERROR;}

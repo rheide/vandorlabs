@@ -92,11 +92,12 @@ public final class VehicleCruise {
             nextPixel = 0;
         }
         int end = Math.min(nextPixel + 128, size*size);
-        while (nextPixel < end) {
+        long started = System.nanoTime();
+        do {
             int px = pending.centerX + (nextPixel%size-size/2)*pending.step;
             int pz = pending.centerZ + (nextPixel/size-size/2)*pending.step;
-            pending.pixels[nextPixel++] = NavigationService.color(craft.world,px,pz);
-        }
+            pending.pixels[nextPixel++] = NavigationService.cruiseColor(craft.world,px,pz,pending.step);
+        } while (nextPixel < end && System.nanoTime()-started < 750000L);
         if (nextPixel == size*size) {
             for (Entity rider : craft.getPassengers()) if (rider instanceof EntityPlayerMP)
                 PacketHandler.INSTANCE.sendTo(pending,(EntityPlayerMP)rider);

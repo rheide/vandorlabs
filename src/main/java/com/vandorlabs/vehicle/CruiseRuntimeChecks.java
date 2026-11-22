@@ -13,7 +13,7 @@ import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import java.awt.image.BufferedImage;
 import java.io.File;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.concurrent.Future;
 import javax.imageio.ImageIO;
 
@@ -30,7 +30,8 @@ public final class CruiseRuntimeChecks {
         WorldServer world=pilot.getServerWorld();
         BlockPos seat=BlockPos.ORIGIN;
         craft=new EntityGroundVehicle(world);
-        craft.install(new VehicleStructure(Collections.singletonList(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null)),seat,EnumFacing.NORTH,0));
+        craft.install(new VehicleStructure(Arrays.asList(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null),
+                new VehicleStructure.Cell(seat.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),null)),seat,EnumFacing.NORTH,1));
         startX=pilot.posX;
         craft.setPosition(startX,255.9,pilot.posZ);
         world.spawnEntity(craft);
