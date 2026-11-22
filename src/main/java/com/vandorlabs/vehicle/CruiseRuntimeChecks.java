@@ -9,6 +9,9 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ScreenShotHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.event.world.ChunkEvent;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.relauncher.Side;
 import net.minecraftforge.fml.relauncher.SideOnly;
 import java.awt.image.BufferedImage;
@@ -26,6 +29,27 @@ public final class CruiseRuntimeChecks {
     private static EntityGroundVehicle craft;
     private static double startX,destination;
     private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("Cruise: "+detail);}
+
+    public static final class TransitChunks {
+        private int loads;
+
+        @SubscribeEvent public void loaded(ChunkEvent.Load event) {
+            if (event.getWorld()!=craft.world) return;
+            int x=event.getChunk().x*16, z=event.getChunk().z*16;
+            if (x>=startX+512 && x<=startX+4112 && Math.abs(z-craft.posZ)<256) loads++;
+        }
+    }
+    private static final TransitChunks transitChunks=new TransitChunks();
+
+    private static void observeRoute() {
+        transitChunks.loads=0;
+        MinecraftForge.EVENT_BUS.register(transitChunks);
+    }
+
+    private static void checkRoute() {
+        MinecraftForge.EVENT_BUS.unregister(transitChunks);
+        require(transitChunks.loads==0,"loaded "+transitChunks.loads+" transit chunks before descent");
+    }
 
     private static void place(Minecraft mc){
         EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
@@ -48,6 +72,7 @@ public final class CruiseRuntimeChecks {
         NBTTagCompound state=new NBTTagCompound();state.setByte("MaxwellFlightPhase",(byte)3);
         craft.readFlightMode(state);
         craft.setPosition(startX,255.9,craft.posZ);
+        observeRoute();
         require(craft.cruise.move(0,1,0),"cross build ceiling");
         for(int i=0;i<64;i++)require(craft.cruise.move(64,16,0),"route step "+i);
         destination=craft.cruise.x();
@@ -63,6 +88,7 @@ public final class CruiseRuntimeChecks {
 
     private static void saveFlight(Minecraft mc) {
         EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+        checkRoute();
         NBTTagCompound marker=new NBTTagCompound();
         marker.setUniqueId("Aircraft",craft.getUniqueID());
         marker.setDouble("OriginX",startX);
@@ -83,6 +109,7 @@ public final class CruiseRuntimeChecks {
         destination=marker.getDouble("DestinationX");
         require(craft.cruise.active() && craft.cruise.x()==destination && craft.posX==startX,"restored cruise route and anchor");
         require(craft.cruise.altitude()>256 && craft.descendingFromFlight(),"restored airborne recovery");
+        observeRoute();
     }
 
     public static boolean tick(Minecraft mc,File out) throws Exception {
@@ -105,6 +132,7 @@ public final class CruiseRuntimeChecks {
                 work=mc.getIntegratedServer().addScheduledTask(()->saveFlight(mc));stage=5;return false;
             }
             work=mc.getIntegratedServer().addScheduledTask(()->{
+                checkRoute();
                 require(craft.cruise.active(),"craft still cruising");
                 require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"reenter");
                 require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01,"reentered at geographic destination");
