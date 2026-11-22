@@ -39,12 +39,16 @@ public final class NativeCouplerChecks {
             actor.setPos(head.getX() + .5, head.getY(), head.getZ() - 2.5);
             place(actor, west, Direction.EAST, slab ? .75 : .5, output, check);
             place(actor, east, Direction.WEST, slab ? .75 : .5, copy, check);
-            NativeRedstoneChannels.flush(world);
             check.accept(world.getBlockEntity(head) instanceof NativeCouplerEntity
                             && world.getBlockEntity(mate) instanceof NativeCouplerEntity,
                     "both normal item placements build mounted Coupler owners");
             var first = (NativeCouplerEntity)world.getBlockEntity(head);
             var second = (NativeCouplerEntity)world.getBlockEntity(mate);
+            // The fabricated items are placed during this server tick. Queue the same registration
+            // as their deferred onLoad, which otherwise runs at the next block-entity tick.
+            NativeRedstoneChannels.queueRegistration(first);
+            NativeRedstoneChannels.queueRegistration(second);
+            NativeRedstoneChannels.flush(world);
             check.accept(NativeCouplerBlock.facing(first.getBlockState()) == Direction.EAST
                             && NativeCouplerBlock.facing(second.getBlockState()) == Direction.WEST
                             && !first.engaged() && !second.engaged() && !first.paired(),
@@ -58,10 +62,12 @@ public final class NativeCouplerChecks {
             check.accept(!NativeCouplerBindings.apply(actor, new NativeCouplerBindings.Edit(head, 77, bank, true))
                             && !secondMenu.clickMenuButton(actor, 0),
                     "stale menu IDs cannot configure or engage a Coupler");
-            check.accept(NativeCouplerBindings.apply(actor, new NativeCouplerBindings.Edit(head, 76, bank, false))
-                            && firstMenu.clickMenuButton(actor, 0) && first.engaged() && !first.paired()
-                            && first.getBlockState().getCollisionShape(world, head).bounds().maxX > released,
-                    "authorized settings and Engage extend exactly one Coupler head");
+            check.accept(NativeCouplerBindings.apply(actor, new NativeCouplerBindings.Edit(head, 76, bank, false)),
+                    "open authorized menu applies Coupler settings");
+            check.accept(firstMenu.clickMenuButton(actor, 0) && first.engaged() && !first.paired(),
+                    "authorized Engage latches exactly one Coupler head");
+            check.accept(first.getBlockState().getCollisionShape(world, head).bounds().maxX > released,
+                    "engaged Coupler collision extends the authored nose");
             actor.containerMenu = secondMenu;
             check.accept(secondMenu.clickMenuButton(actor, 0) && first.paired() && second.paired(),
                     "opposing engaged heads make a matching pair");
