@@ -1,6 +1,7 @@
 package com.vandorlabs.compat.jei;
 
 import com.vandorlabs.items.ModItems;
+import com.vandorlabs.machines.BlockRecipeData;
 import com.vandorlabs.machines.BuilderRecipeCatalog;
 import com.vandorlabs.rack.ModuleBatteryData;
 import com.vandorlabs.ui.InfuserDialog;
@@ -33,7 +34,14 @@ public final class MachineJeiPlugin implements IModPlugin {
         ItemStack charged=new ItemStack(ModItems.BATTERY_MODULE);ModuleBatteryData.receive(charged,ModuleBatteryData.CAPACITY,false);
         registry.addRecipes(Arrays.asList(new Recipe(MachineRecipeDisplay.Kind.INFUSING,new ItemStack(Items.IRON_INGOT),new ItemStack(ModItems.PROGRAMMABLE_MATTER_INGOT)),new Recipe(MachineRecipeDisplay.Kind.CHARGING,new ItemStack(ModItems.BATTERY_MODULE),charged)),MachineRecipeDisplay.INFUSER);
         for(String machine:Arrays.asList("synthesis_tower","assembly_press","enclosed_gantry")){
-            List<Recipe> recipes=new ArrayList<>();for(String blueprint:BuilderRecipeCatalog.known(machine))recipes.add(new Recipe(MachineRecipeDisplay.Kind.SYNTHESIS,new ItemStack(com.vandorlabs.machines.SynthesisRuntime.ingredient(machine)),item(blueprint),!BuilderRecipeCatalog.defaults(machine).contains(blueprint),machine));
+            List<Recipe> recipes=new ArrayList<>();
+            for(String blueprint:BuilderRecipeCatalog.known(machine)){
+                // This recipe's output belongs to the inserted Catalog Chip.
+                if(BlockRecipeData.ID.equals(blueprint))continue;
+                recipes.add(new Recipe(MachineRecipeDisplay.Kind.SYNTHESIS,
+                        new ItemStack(com.vandorlabs.machines.SynthesisRuntime.ingredient(machine)),
+                        item(blueprint),!BuilderRecipeCatalog.defaults(machine).contains(blueprint),machine));
+            }
             registry.addRecipes(recipes,uid(machine));registry.addRecipeCatalyst(block(machine+"_core"),uid(machine));
         }
         registry.addRecipeCatalyst(block("programmable_matter_infuser"),MachineRecipeDisplay.INFUSER);
@@ -49,7 +57,20 @@ public final class MachineJeiPlugin implements IModPlugin {
         Recipe(MachineRecipeDisplay.Kind kind,ItemStack input,ItemStack output){this(kind,input,output,false,"synthesis_tower");}
         Recipe(MachineRecipeDisplay.Kind kind,ItemStack input,ItemStack output,boolean catalog,String machine){this.kind=kind;this.input=input.copy();this.output=output.copy();this.catalog=catalog;this.machine=machine;}
         @Override public void getIngredients(IIngredients ingredients){List<List<ItemStack>> inputs=new ArrayList<>();inputs.add(Collections.singletonList(input.copy()));if(kind!=MachineRecipeDisplay.Kind.SYNTHESIS)inputs.add(Arrays.asList(new ItemStack(Items.REDSTONE,7),new ItemStack(Blocks.REDSTONE_BLOCK)));ingredients.setInputLists(VanillaTypes.ITEM,inputs);ingredients.setOutput(VanillaTypes.ITEM,output.copy());}
-        @Override public void drawInfo(Minecraft mc,int width,int height,int mouseX,int mouseY){String recipe=output.isEmpty()?"":output.getItem().getRegistryName().getResourcePath();String[] lines=kind==MachineRecipeDisplay.Kind.SYNTHESIS?new String[]{com.vandorlabs.machines.SynthesisRecipePolicy.requiredRf(machine,recipe)+" RF / item",(com.vandorlabs.machines.SynthesisRecipePolicy.minimumTicks(machine,recipe)/20)+" seconds minimum",catalog?"Catalog Chip design required.":"Default machine blueprint.","Select in Production; supply RF."}:MachineRecipeDisplay.lines(kind);for(int i=0;i<lines.length;i++)mc.fontRenderer.drawString(lines[i],4,46+i*13,0x404040);}
+        public String[] description(){
+            if(kind!=MachineRecipeDisplay.Kind.SYNTHESIS)return MachineRecipeDisplay.lines(kind);
+            String recipe=output.getItem().getRegistryName().getResourcePath();
+            return new String[]{
+                com.vandorlabs.machines.SynthesisRecipePolicy.requiredRf(machine,recipe)+" RF / item",
+                com.vandorlabs.machines.SynthesisRecipePolicy.minimumTicks(machine,recipe)/20+" seconds minimum",
+                catalog?"Catalog Chip design required.":"Default machine blueprint.",
+                "Select in Production; supply RF."
+            };
+        }
+        @Override public void drawInfo(Minecraft mc,int width,int height,int mouseX,int mouseY){
+            String[] lines=description();
+            for(int i=0;i<lines.length;i++)mc.fontRenderer.drawString(lines[i],4,46+i*13,0x404040);
+        }
     }
     @SideOnly(Side.CLIENT)
     private static final class Category implements IRecipeCategory<Recipe> {

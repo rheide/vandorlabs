@@ -880,6 +880,8 @@ PYIMAGE
         grep -q "machine-jei-transfer PASS" "$RUN_OUT/client.log"
         test -s "$RUN_OUT/machine-jei-infusing.png"
         test -s "$RUN_OUT/machine-jei-synthesis.png"
+        test -s "$RUN_OUT/machine-jei-assembly-press.png"
+        test -s "$RUN_OUT/machine-jei-enclosed-gantry.png"
         echo "Machine JEI live checks passed: $RUN_OUT"
         exit 0
     fi
