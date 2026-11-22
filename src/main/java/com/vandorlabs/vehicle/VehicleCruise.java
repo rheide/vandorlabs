@@ -36,7 +36,7 @@ public final class VehicleCruise {
         boolean cruising = active();
         double height = Math.min(FlightEnvelope.MAX_ALTITUDE, altitude() + dy);
         if (!cruising) {
-            if (dy <= 0 || height <= FlightEnvelope.WORLD_CEILING) return false;
+            if (dy < 0 || height <= FlightEnvelope.WORLD_CEILING) return false;
             routeX = craft.posX;
             routeZ = craft.posZ;
         }
