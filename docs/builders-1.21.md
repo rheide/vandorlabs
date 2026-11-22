@@ -91,7 +91,9 @@ if the Catalog Chip is removed.
 ## Enclosed Gantry operation
 
 Choose a regular or Large Extender, Rotating Arm or Landing Wheel, or choose a
-Landing Ski or Landing Plate. These eight designs are built into the Gantry.
+Landing Ski, Landing Plate, Vehicle Coupler or Vehicle Coupler Slab. These
+ten designs are built into the Gantry. The [Coupler guide](couplers.md#neoforge-1211)
+covers how to mount and connect the two coupler forms.
 Feed one Programmable Block through the rear item port or Production
 dialog. Each item costs **8,000 RF**, drawn at **40 RF per tick** over
 **200 ticks**. The rear right corner accepts external power. The rear left

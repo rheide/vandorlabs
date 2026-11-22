@@ -1,5 +1,34 @@
 # Vehicle Couplers
 
+## NeoForge 1.21.1
+
+1. Make a **Vehicle Coupler** in the Enclosed Gantry with one Programmable Block
+   and 8,000 RF, or craft it from a Programmable Block, two iron ingots and two
+   redstone dust. The Gantry also makes the **Vehicle Coupler Slab**. Craft one
+   full coupler into two slabs, or combine two slabs into a full coupler.
+2. Place one coupler against the mounting block on each section, with the two
+   heads facing each other in adjacent block spaces. Full couplers can mount in
+   all six directions. Place slabs against a wall below or above its midpoint
+   to select the lower or upper half. Floor and ceiling placement keep slab
+   heads horizontal. Pair identical forms with matching slab heights.
+3. Right-click a head or use the **Configurizer** to open its **Vehicle Coupler**
+   dialog. Use **Engage Coupler** on both heads. For signal operation, configure
+   the channels and **Lock when signal is On / Off** for each head. Physical
+   redstone also drives the input. A manual setting lasts until that combined
+   input changes or the settings are edited.
+4. With both heads engaged, assemble the parked hull through its Vehicle
+   Controller. The matching heads connect the sections during that scan. The
+   resulting rigid hull needs one Vehicle Controller, one Pilot Seat and the
+   usual support for its selected mode.
+
+### Moving sections
+
+NeoForge 1.21.1 supports this rigid connection during initial assembly.
+Automatic pickup, release from a moving hull and articulated joints are
+available in Forge 1.12.2.
+
+## Forge 1.12.2
+
 Vehicle Couplers join sections through opposing coupling heads. The full block retains its original `square_coupler` identifier and saved settings. It supports all six mounting directions. Each half has its own channel list and **Lock when: On / Off** setting; physical redstone and the configured channel bank control the connection. Couplers consume signals and emit no redstone or channel power.
 
 Ordinary right-click toggles coupling without opening a dialog. Sneak-right-click or use the Configurizer to open the authorized Vehicle Coupler dialog, then use **Done** to close it. Right-click the behavior option to select its previous value. A manual choice persists until the redstone input changes or the settings are changed. The status line explains pending connection work or an unsuccessful operation.

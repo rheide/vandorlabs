@@ -5,6 +5,7 @@ import com.vandorlabs.neoforge.NativePlatformComponents;
 import com.vandorlabs.neoforge.redstone.NativeChannelMember;
 import com.vandorlabs.neoforge.redstone.NativeLoadedRedstonePower;
 import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
+import com.vandorlabs.neoforge.redstone.NativeSignalUpdateBatch;
 import com.vandorlabs.neoforge.transfer.NativeTransferHolds;
 import com.vandorlabs.redstone.ChannelList;
 import java.util.List;
@@ -25,7 +26,7 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
     private static final String MANUAL = "CouplerManualRequested";
     private final CouplerInput input = new CouplerInput();
     private ChannelList channels = ChannelList.EMPTY;
-    private boolean inverted, received, inert;
+    private boolean inverted, received, inert, inputReady;
     private CompoundTag retained = new CompoundTag();
 
     NativeCouplerEntity(BlockPos pos, BlockState state) {
@@ -40,10 +41,12 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
         var direction = NativeCouplerBlock.facing(getBlockState());
         var neighbor = worldPosition.relative(direction);
         return level.getChunkSource().getChunkNow(neighbor.getX() >> 4, neighbor.getZ() >> 4) != null
-                && NativeCouplerBlock.pair(getBlockState(), level.getBlockState(neighbor), direction);
+                && level.getBlockEntity(neighbor) instanceof NativeCouplerEntity mate && !mate.inert()
+                && NativeCouplerBlock.pair(getBlockState(), mate.getBlockState(), direction);
     }
     private boolean available() {
-        return level instanceof ServerLevel server && server.getServer().isSameThread() && isChannelMemberActive();
+        return level instanceof ServerLevel server && server.getServer().isSameThread()
+                && NativeRedstoneChannels.open(server) && isChannelMemberActive();
     }
     @Override public boolean isChannelMemberActive() {
         return !inert && NativeChannelMember.super.isChannelMemberActive()
@@ -53,13 +56,20 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
     @Override public ChannelList getRedstoneChannels() { return channels; }
     @Override public void setChannelLevel(int value) {
         received = value > 0;
-        sample();
+        requestSample();
     }
     @Override public void onLoad() {
         super.onLoad();
+        inputReady = false;
         if (level instanceof ServerLevel) NativeRedstoneChannels.queueRegistration(this);
     }
-    @Override public void beforeChannelRegistration() { sample(); }
+    @Override public void beforeChannelRegistration() {
+        // Preserve saved overrides until both the physical input and the registered bank have settled.
+        NativeSignalUpdateBatch.afterSignals(this, () -> {
+            inputReady = true;
+            sample();
+        });
+    }
     @Override public void setRemoved() {
         if (level instanceof ServerLevel) NativeRedstoneChannels.unregister(this);
         super.setRemoved();
@@ -68,8 +78,13 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
         if (level instanceof ServerLevel) NativeRedstoneChannels.unregister(this);
         super.onChunkUnloaded();
     }
-    void sample() {
-        if (!available()) return;
+    void requestSample() {
+        if (!inputReady || !available()) return;
+        if (NativeSignalUpdateBatch.isActive()) NativeSignalUpdateBatch.afterSignals(this, this::sample);
+        else sample();
+    }
+    private void sample() {
+        if (!inputReady || !available()) return;
         boolean previousOverride = input.overridden();
         boolean desired = input.sample(received || NativeLoadedRedstonePower.level(level, worldPosition) != 0, inverted);
         var state = getBlockState();
@@ -81,7 +96,7 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
         }
     }
     boolean configure(ChannelList bank, boolean invert) {
-        if (!available()) return false;
+        if (!inputReady || !available()) return false;
         if (channels.equals(bank) && inverted == invert) return true;
         channels = bank;
         inverted = invert;
@@ -92,7 +107,7 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
         return true;
     }
     boolean toggle() {
-        if (!available()) return false;
+        if (!inputReady || !available()) return false;
         sample();
         input.manual(!engaged());
         sample();
@@ -105,7 +120,8 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
     }
 
     private void read(CompoundTag tag) {
-        if (tag.contains(CHANNELS) && !tag.contains(CHANNELS, Tag.TAG_INT_ARRAY))
+        if ((tag.contains(CHANNELS) && !tag.contains(CHANNELS, Tag.TAG_INT_ARRAY))
+                || (tag.contains("RedstoneChannel") && !tag.contains("RedstoneChannel", Tag.TAG_INT)))
             throw new IllegalArgumentException("Coupler channel data");
         for (var key : List.of(INVERTED, OVERRIDE, MANUAL))
             if (tag.contains(key) && (!tag.contains(key, Tag.TAG_BYTE) || tag.getByte(key) < 0 || tag.getByte(key) > 1))
@@ -128,15 +144,18 @@ public final class NativeCouplerEntity extends BlockEntity implements NativeChan
         retained = tag.copy();
         try {
             NativePlatformComponents.requireSupported(tag, registries);
+            if (tag.contains("ForgeCaps") && (!tag.contains("ForgeCaps", Tag.TAG_COMPOUND)
+                    || !tag.getCompound("ForgeCaps").isEmpty()))
+                throw new IllegalArgumentException("Unsupported legacy Coupler capabilities");
             if (tag.getBoolean("CouplerArticulation") || tag.contains("CouplerFrameUp")
-                    || tag.contains("CouplerAssociations") || tag.getBoolean("VehicleArmCouplerReleased"))
+                    || tag.contains("VehicleArmCouplerAssociation") || tag.getBoolean("VehicleArmCouplerReleased"))
                 throw new IllegalArgumentException("Coupler belongs to an unsupported moving assembly");
             read(tag);
             try (var guard = NativePlatformComponents.guardLoad(this)) {
                 super.loadAdditional(tag, registries);
                 guard.requireSuccessful();
             }
-            for (var key : List.of("id", "x", "y", "z", CHANNELS, "RedstoneChannel", INVERTED, OVERRIDE, MANUAL))
+            for (var key : List.of("id", "x", "y", "z", CHANNELS, "RedstoneChannel", INVERTED, OVERRIDE, MANUAL, "ForgeCaps"))
                 retained.remove(key);
             NativePlatformComponents.forgetLoadedFields(retained);
             inert = false;

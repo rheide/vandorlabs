@@ -64,7 +64,7 @@ public class NativeCouplerBlock extends BaseEntityBlock {
         return Shapes.empty();
     }
     @Override protected void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos from, boolean moving) {
-        if (!level.isClientSide && level.getBlockEntity(pos) instanceof NativeCouplerEntity tile) tile.sample();
+        if (!level.isClientSide && level.getBlockEntity(pos) instanceof NativeCouplerEntity tile) tile.requestSample();
     }
     @Override protected InteractionResult useWithoutItem(BlockState state, Level level, BlockPos pos, Player actor, BlockHitResult hit) {
         return NativeCouplerBindings.open(actor, level, pos) ? InteractionResult.sidedSuccess(level.isClientSide) : InteractionResult.PASS;

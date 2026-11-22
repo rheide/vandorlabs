@@ -565,7 +565,7 @@ public final class NativeBuilderRuntimeChecks {
    need(drops.stream().filter(drop->drop.getItem().is(matter)).mapToInt(drop->drop.getItem().getCount()).sum()==1
          &&drops.stream().filter(drop->drop.getItem().is(core)).mapToInt(drop->drop.getItem().getCount()).sum()==1,
          "active Gantry mining refunds its one escrowed Matter Block with its Core");
-   System.out.println("[vandorlabs][builder-runtime] PASS Gantry eightProducts/8000RF/40RFPerTick/realPorts/partialReload/asyncMining checks="+checks);
+   System.out.println("[vandorlabs][builder-runtime] PASS Gantry tenProducts/8000RF/40RFPerTick/realPorts/partialReload/asyncMining checks="+checks);
    var server=world.getServer();world=null;server.halt(false);return;
   }
   if(owner==null||!owner.available()||!owner.formed()||!owner.synthesisReady())return;
@@ -583,9 +583,9 @@ public final class NativeBuilderRuntimeChecks {
    }
    world.getServer().tickRateManager().setTickRate(100);
    need(!owner.setMode(1),"Digitize remains Tower-only");
-   need(NativeBuilderProducts.GANTRY.equals(com.vandorlabs.machines.BuilderRecipeCatalog.known("enclosed_gantry").subList(0,8)),
-         "Gantry production matches all native non-Vehicle blueprints");
-   var edit=new NativeBuilderEdit(3,ROOT,0,7,ChannelList.EMPTY);
+   need(NativeBuilderProducts.GANTRY.equals(com.vandorlabs.machines.BuilderRecipeCatalog.known("enclosed_gantry")),
+         "Gantry production matches all ten default blueprints");
+   var edit=new NativeBuilderEdit(3,ROOT,0,NativeBuilderProducts.GANTRY.size()-1,ChannelList.EMPTY);
    var bytes=new net.minecraft.network.RegistryFriendlyByteBuf(io.netty.buffer.Unpooled.buffer(),world.registryAccess());
    try{
     NativeBuilderPayload.CODEC.encode(bytes,new NativeBuilderPayload(edit));
@@ -625,7 +625,11 @@ public final class NativeBuilderRuntimeChecks {
   need(!viewer.inert()&&ItemStack.matches(viewer.getItem(1),expected),"fixed Gantry public preview "+recipe);
   var output=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.ItemHandler.BLOCK,
           owner.itemPort(),owner.facing().getCounterClockWise());
-  need(output!=null&&ItemStack.matches(output.extractItem(0,1,false),expected),"outward port returns one exact product");
+  var extracted=output==null?ItemStack.EMPTY:output.extractItem(0,1,false);
+  need(ItemStack.matches(extracted,expected),"outward port returns one exact product");
+  if(extracted.is(com.vandorlabs.neoforge.coupler.NativeCouplerBindings.SQUARE.asItem())
+     ||extracted.is(com.vandorlabs.neoforge.coupler.NativeCouplerBindings.SLAB.asItem()))
+   com.vandorlabs.neoforge.coupler.NativeCouplerChecks.exercise(world,actor,ROOT.offset(6,0,-4),extracted,NativeBuilderRuntimeChecks::need);
   if(++recipe<NativeBuilderProducts.GANTRY.size()){beginGantry(owner);return;}
   recipe=0;beginGantry(owner);
   var energy=world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.EnergyStorage.BLOCK,
