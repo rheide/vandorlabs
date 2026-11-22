@@ -101,6 +101,16 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         super(type, level);
     }
 
+    @Override public void onAddedToLevel() {
+        super.onAddedToLevel();
+        NativeVehicleObservers.updateCruise(this);
+    }
+
+    @Override public void onRemovedFromLevel() {
+        NativeVehicleObservers.removeCruise(this);
+        super.onRemovedFromLevel();
+    }
+
     @Override protected void defineSynchedData(SynchedEntityData.Builder data) {
         data.define(READY, false);
         data.define(PILOT, BlockPos.ZERO);
@@ -837,6 +847,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     }
 
     @Override protected void readAdditionalSaveData(CompoundTag tag) {
+        NativeVehicleObservers.removeCruise(this);
         retained = new CompoundTag();
         for (String key : tag.getAllKeys()) {
             if (!ENTITY_FIELDS.contains(key)) retained.put(key, tag.get(key).copy());
@@ -873,6 +884,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             visualTag = null;
             entityData.set(READY, false);
         }
+        NativeVehicleObservers.updateCruise(this);
     }
 
     @Override protected void addAdditionalSaveData(CompoundTag tag) {

@@ -8,18 +8,31 @@ import com.vandorlabs.neoforge.navigation.observer.*;
 import com.vandorlabs.neoforge.transfer.NativeConstructorFrame;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.world.SpatialBuckets;
+import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
 import java.util.*;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.nbt.Tag;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.util.Mth;
+import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
+import net.neoforged.bus.api.SubscribeEvent;
+import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.event.level.LevelEvent;
 
 /** Observer power is short-lived server state, while each formed frame retains one saved owner. */
+@EventBusSubscriber(modid = "vandorlabs")
 public final class NativeVehicleObservers {
+    private static final int CRUISE_BUCKET_SIZE = 256;
+    // Rotating any admitted core offset preserves its length, including the half-cell center.
+    private static final double CORE_REACH = Math.sqrt(3) * NativeVehicleStructure.RADIUS + .5;
+    private static final Map<ServerLevel, CruiseEntries> CRUISE = new IdentityHashMap<>();
+
     @FunctionalInterface
     public interface Visitor {
         void source(Vec3 center, int radius, ChannelList channels, int range, int radar, boolean sentinel);
@@ -27,17 +40,89 @@ public final class NativeVehicleObservers {
 
     public static void visit(ServerLevel level, AABB area, boolean powered, Visitor visitor) {
         for (var craft : level.getEntitiesOfClass(NativeGroundVehicle.class, area)) {
-            var resources = craft.resources();
-            if (resources == null || !craft.admitted() || NativeVehicleTransfer.escrowed(craft)) continue;
-            for (var observer : resources.observers()) {
-                if (observer.power.powered(level.getGameTime()) != powered) continue;
-                var center = worldPoint(craft, observer.core);
-                int radius = NavigationRange.radius(observer.design.maximum(), center.y,
-                    ObserverScale.linearScale(observer.design.id(), observer.design.width()));
-                int radar = NavigationRange.radarRadius(observer.design.id());
-                visitor.source(center, radius, observer.channels, observer.range,
-                    powered && observer.requested ? radar : 0, radar == NavigationRange.SENTINEL_RADAR_RADIUS);
+            if (!craft.highFlight()) visitCraft(craft, null, powered, visitor);
+        }
+        var entries = CRUISE.get(level);
+        if (entries == null) return;
+        int x0 = bucket(area.minX - CORE_REACH), x1 = bucket(area.maxX + CORE_REACH);
+        int z0 = bucket(area.minZ - CORE_REACH), z1 = bucket(area.maxZ + CORE_REACH);
+        if (SpatialBuckets.excessive(x0, 0, z0, x1, 0, z1)) return;
+        for (long x = x0; x <= x1; x++) for (long z = z0; z <= z1; z++) {
+            long key = ChunkPos.asLong((int)x, (int)z);
+            var bucket = entries.buckets.get(key);
+            if (bucket == null) continue;
+            for (var craft : bucket.snapshot()) {
+                if (craft.highFlight() && craft.isAddedToLevel() && !craft.isRemoved()
+                    && Objects.equals(entries.members.get(craft), key)) visitCraft(craft, area, powered, visitor);
             }
+        }
+    }
+
+    private static void visitCraft(NativeGroundVehicle craft, AABB geography, boolean powered, Visitor visitor) {
+        var resources = craft.resources();
+        if (resources == null || !craft.admitted() || NativeVehicleTransfer.escrowed(craft)) return;
+        long now = craft.level().getGameTime();
+        for (var observer : resources.observers()) {
+            if (observer.power.powered(now) != powered) continue;
+            var center = worldPoint(craft, observer.core);
+            if (geography != null && !geography.contains(center)) continue;
+            int radius = NavigationRange.radius(observer.design.maximum(), center.y,
+                ObserverScale.linearScale(observer.design.id(), observer.design.width()));
+            int radar = NavigationRange.radarRadius(observer.design.id());
+            visitor.source(center, radius, observer.channels, observer.range,
+                powered && observer.requested ? radar : 0, radar == NavigationRange.SENTINEL_RADAR_RADIUS);
+        }
+    }
+
+    // The server updates the route anchor only when it crosses a bucket boundary.
+    static void updateCruise(NativeGroundVehicle craft) {
+        if (!(craft.level() instanceof ServerLevel level) || !craft.isAddedToLevel()
+            || !craft.highFlight() || !craft.admitted() || craft.resources().observers().isEmpty()) return;
+        long key = ChunkPos.asLong(bucket(craft.routeX()), bucket(craft.routeZ()));
+        var entries = CRUISE.computeIfAbsent(level, ignored -> new CruiseEntries());
+        Long previous = entries.members.get(craft);
+        if (previous != null && previous == key) return;
+        if (previous != null) entries.remove(craft, previous);
+        entries.members.put(craft, key);
+        var bucket = entries.buckets.computeIfAbsent(key, ignored -> new CruiseBucket());
+        bucket.craft.add(craft);
+        bucket.snapshot = null;
+    }
+
+    static void removeCruise(NativeGroundVehicle craft) {
+        if (!(craft.level() instanceof ServerLevel level)) return;
+        var entries = CRUISE.get(level);
+        if (entries == null) return;
+        Long key = entries.members.remove(craft);
+        if (key != null) entries.remove(craft, key);
+        if (entries.members.isEmpty()) CRUISE.remove(level);
+    }
+
+    private static int bucket(double coordinate) { return Mth.floor(coordinate / CRUISE_BUCKET_SIZE); }
+
+    @SubscribeEvent public static void unload(LevelEvent.Unload event) {
+        if (event.getLevel() instanceof ServerLevel level) CRUISE.remove(level);
+    }
+
+    private static final class CruiseEntries {
+        final Map<NativeGroundVehicle, Long> members = new IdentityHashMap<>();
+        final Long2ObjectOpenHashMap<CruiseBucket> buckets = new Long2ObjectOpenHashMap<>();
+
+        void remove(NativeGroundVehicle craft, long key) {
+            var bucket = buckets.get(key);
+            bucket.craft.remove(craft);
+            bucket.snapshot = null;
+            if (bucket.craft.isEmpty()) buckets.remove(key);
+        }
+    }
+
+    private static final class CruiseBucket {
+        final Set<NativeGroundVehicle> craft = Collections.newSetFromMap(new IdentityHashMap<>());
+        List<NativeGroundVehicle> snapshot;
+
+        List<NativeGroundVehicle> snapshot() {
+            if (snapshot == null) snapshot = List.copyOf(craft);
+            return snapshot;
         }
     }
 
