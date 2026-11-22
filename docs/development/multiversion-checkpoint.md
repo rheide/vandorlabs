@@ -1,22 +1,20 @@
 # Multiversion development baseline
 
-Forge 1.12.2 remains the default development target on `master`, at development version 2.12.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
+Forge 1.12.2 remains the default development target on `master`, at development version 3.0.0. NeoForge 1.21.1 is experimental and incomplete. Continue ordinary 1.12.2 development here; extract common behavior into `src/portable/java` when it can preserve the existing behavior and costs. Keep platform lifecycle, rendering APIs, registries and transport in their adapters.
 
 ## Current conversion boundary
 
-The remaining work targets non-Vehicle parity. Current NeoForge builds include
-Synthesis Tower Synthesis and Digitize, Assembly Press and Enclosed Gantry
-production, the Matter Infuser, local navigation and observers, and
-Printer/Scanner automation, Maxwell, Meridian, Oculus and Vector Fold, and the
-Advanced Pilot Chair with both armrest sliders. Both Navigation Computers,
-the stationary Cockpit and the Redstone Yoke and Screen are available.
-Broader Copy Controller targets, some renderer-specific armor samples and
-the rest of the Cockpit console remain open. The Cockpit has a reversible
-screen bank and separate center-monitor and right-armrest Redstone controls. The opt-in Turntable Controller supports
-Scan, rotation and Restore with Redstone and upward-facing riders. Moved
-interactions remain open, alongside the Ramp and compatibility limits in the
-[feature inventory](feature-coverage.md). Native Vehicle Mode and
-vehicle-carried navigation remain deferred.
+The native platform includes the Synthesis Tower, Assembly Press, Enclosed Gantry,
+Matter Infuser, observers, Printer, Scanner and both Navigation Computers. Maxwell
+Drives use all five frame sizes and accept fuel through their front and side inlets.
+The Cockpit has seven programmable touch surfaces and single or dual throttles.
+The opt-in Turntable supports scanning, rotation, restoration, redstone and upward-facing riders.
+
+The 3.0 [Vehicle Controller](../vehicles-1.21.md) captures a Pilot Seat and a connected hull.
+The vehicle supports Taxi, Hover, Maxwell Flight and parking. Its own resource adapters
+move supported RF, fuel and item stacks between captured owners. Articulated vehicles,
+additional carried mechanisms and third-party conduit networks are still under development.
+The [feature inventory](feature-coverage.md) records other platform limits.
 
 On both platforms, Large Doors can mount horizontally, split into upper and
 lower leaves, or join compatible modules into a 3×6, 6×3, or 6×6 opening. Arms

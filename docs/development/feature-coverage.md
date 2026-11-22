@@ -4,7 +4,10 @@ Forge 1.12.2 remains the default and behavioral reference. NeoForge 1.21.1 integ
 
 The [machine-readable inventory](feature-coverage.json) preserves historical implementation descriptions from `feature/neoforge-1.21.1` at `aa1477a3c08ab109b4bdfbada5a52ab82aeb9088`. Historical partial adapters and recorded checks belong to that branch. They do not establish integrated support or current-checkout acceptance, and no tests are claimed rerun by this inventory update.
 
-Complete non-vehicle parity first, including standalone arms, ramps, Segmented Doors, Copy Controllers and turntables. Shared surfaces, snapshots and recovery remain in scope even where vehicle code also consumes them. Vehicle entities, driving, articulation and vehicle-specific carried/cockpit/gear integration are deferred. Seating, glass and navigation retain their standalone scope; their vehicle-specific acceptance follows later.
+Version 3.0 introduces the [native Vehicle Controller and Pilot Seat](../vehicles-1.21.md).
+Standalone and carried mechanisms have separate support limits. The native vehicle can
+carry its own supported storage, fueled Maxwell Drives and powered observers. Articulated
+couplers and third-party pipe networks still require native adapters.
 
 The source inventory includes 58 active generated-catalog registrations and explicit manual families. Programmable-only textures, retired entries and internal model templates are excluded from that count. Registry IDs may occur in multiple behavioral families: standalone arms and vehicle landing gear share parts. Counts are source inventory, not a runtime registry dump.
 
@@ -15,7 +18,7 @@ NeoForge has every 2.12 corner block (Corner Glass, Diagonal Corner Glass, Corne
 Not ported:
 - Building Arm columns through open Large Doors, and seating a Large Door across a retracted Extender. NeoForge Arms already move through open doors.
 - Wide Arm attachments (a 3×3 Surface) passing an open door's leaf edges. Not yet verified on NeoForge.
-- All vehicle features, since vehicles are deferred.
+- Articulated coupling, third-party conduit networks and some vehicle-carried mechanisms. See the 3.0 Vehicle guide for supported blocks.
 - RFTools, Thermal Dynamics and Mekanism Arm support, because those adapters exist only for the 1.12.2 mods.
 
 | Family | Integration on master | Historical native status | Scope |
@@ -30,7 +33,7 @@ Not ported:
 | Programmable and large doors (Segmented Doors tracked separately) | partial (ordinary and Large Doors enabled) | unimplemented | non-vehicle first |
 | Trapdoors and diagonal trapdoors | partial (both enabled) | unimplemented | non-vehicle first |
 | Programmable lights and propulsion | partial (Lights and standalone propulsion enabled) | unimplemented | non-vehicle first |
-| Chairs and seats | partial (four stationary seats, native mounting and configured items enabled) | unimplemented | standalone first; carried/Vehicle seating deferred |
+| Chairs and seats | partial (four stationary seats, native mounting and configured items enabled) | unimplemented | stationary seats and carried Pilot Seat |
 | Triggers, buttons, rockers, levers and throttles | partial (Trigger and mounted control families) | partial | non-vehicle first |
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
@@ -39,8 +42,8 @@ Not ported:
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
-| Vehicles and controller/navigation blocks | pending | unimplemented | vehicle deferred |
-| Cockpits and peripherals | stationary Cockpit seating, screen lift, center monitor and right touch panel, Advanced Pilot Chair armrest sliders, and Yoke and Screen Redstone; full Cockpit console controls pending | unimplemented | standalone first; carried integration deferred |
+| Vehicles and controller/navigation blocks | 3.0 Vehicle Controller, Pilot Seat, Taxi, Hover, Maxwell Flight, high cruise and parking | unimplemented | articulated couplers and other carried systems pending |
+| Cockpits and peripherals | stationary Cockpit seating, screen lift, seven touch surfaces, throttle detents, Advanced Pilot Chair armrest sliders and Yoke and Screen Redstone | unimplemented | standalone first; carried integration deferred |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled; opt-in imported wheel and inventory conversion) | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | Programmable Surfaces public; opt-in block-only Scan, rendered rotation with swept collision, Redstone, upward-facing riders and quarter-turn Restore; captured interactions pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |

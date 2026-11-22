@@ -34,3 +34,9 @@ Connect an onboard tank's output to a Maxwell inlet with a compatible fluid pipe
 ## Reading a channel
 
 Choose **Channel status** in the Redstone row editor to display the strongest received level as five battery bars. A level of zero leaves the battery empty. Each bar covers three signal levels. Use a Tank or Battery's transmitter channel to monitor its fullness on a screen or cockpit panel.
+
+## Minecraft 1.21.1
+
+The experimental NeoForge build includes a Vehicle Controller, Pilot Seat driving,
+Maxwell Flight, local onboard resource transfers, analog screen meters and Cockpit
+controls. See the [1.21.1 vehicle construction and operating guide](../vehicles-1.21.md).
