@@ -103,10 +103,17 @@ public final class GearGeometry {
         GearTopology.Cell selected=null;for(GearTopology.Cell foot:tile.assembly().feet())if(tile.localCell(foot).equals(source)){selected=foot;break;}
         List<AxisAlignedBB> boxes=new ArrayList<>();appendFeet(tile,tile.pose(tile.progress()),selected==null?tile.assembly().feet():java.util.Collections.singletonList(selected),boxes);
         double lowest=Double.POSITIVE_INFINITY,lx=Double.POSITIVE_INFINITY,lz=lx,hx=Double.NEGATIVE_INFINITY,hz=hx;
-        for(AxisAlignedBB local:boxes){AxisAlignedBB box=tile.mountDirection()==EnumFacing.DOWN?local:ArmOrientation.box(tile.mountDirection(),local.offset(-tile.getPos().getX(),-tile.getPos().getY(),-tile.getPos().getZ())).offset(tile.getPos());if(box.maxX<=box.minX||box.maxY<=box.minY||box.maxZ<=box.minZ)continue;
+        for(AxisAlignedBB local:boxes){AxisAlignedBB box=tile.mountDirection()==EnumFacing.DOWN?local:ArmOrientation.box(tile.mountDirection(),local.offset(-tile.getPos().getX(),-tile.getPos().getY(),-tile.getPos().getZ())).offset(tile.getPos());if(tile.uprightSideWheelAt(tile.progress()))box=wheelTread(box);if(box.maxX<=box.minX||box.maxY<=box.minY||box.maxZ<=box.minZ)continue;
             if(box.minY<lowest-1e-8){lowest=box.minY;lx=box.minX;lz=box.minZ;hx=box.maxX;hz=box.maxZ;}else if(Math.abs(box.minY-lowest)<=1e-8){lx=Math.min(lx,box.minX);lz=Math.min(lz,box.minZ);hx=Math.max(hx,box.maxX);hz=Math.max(hz,box.maxZ);}
         }
         return Double.isFinite(lowest)?new LandingContact((lx+hx)/2,lowest,(lz+hz)/2):null;
+    }
+    // The swing hinge is one model pixel off center. Seat the tyre on the
+    // grid at rest without reducing clearance for linkages, walls or cargo.
+    private static AxisAlignedBB wheelTread(AxisAlignedBB box){
+        double floor=Math.ceil(box.minY);
+        if(floor<=box.minY || floor-box.minY>1/16D+1e-9 || floor>=box.maxY)return box;
+        return new AxisAlignedBB(box.minX,floor,box.minZ,box.maxX,box.maxY,box.maxZ);
     }
     private static void appendFeet(GearTileEntity tile,GearMotion.Pose pose,java.util.Collection<GearTopology.Cell> feet,List<AxisAlignedBB> out){
         GearTopology.Assembly group=tile.assembly();BlockPos root=tile.getPos();
@@ -143,9 +150,13 @@ public final class GearGeometry {
             AxisAlignedBB socket=group.kind()==GearTopology.FootKind.NONE&&!tile.isSwingArmController()?new AxisAlignedBB(4.25/16D,3/16D,4.25/16D,11.75/16D,5/16D,11.75/16D):new AxisAlignedBB(.25,3/16D,.3125,.75,7/16D,.6875);
             if(group.kind()!=GearTopology.FootKind.NONE||!tile.isFixedMount())addArm(out,socket.offset(0,-group.columnHeight()+tile.footMountOffset()-(group.kind()==GearTopology.FootKind.TRACK&&tile.isSwingArmController()?1/64D:0),0),pose,true,at,width,width,tile.armShiftX(column),tile.armShiftZ(column));
         }
+        int feetStart=out.size();
         appendFeet(tile,pose,group.feet(),out);
         if(tile.mountDirection()!=EnumFacing.DOWN){
             List<AxisAlignedBB> oriented=new ArrayList<>();for(AxisAlignedBB b:out)oriented.add(ArmOrientation.box(tile.mountDirection(),b.offset(-root.getX(),-root.getY(),-root.getZ())).offset(root));out=oriented;
+        }
+        if(tile.uprightSideWheelAt(progress)){
+            for(int i=feetStart;i<out.size();i++)out.set(i,wheelTread(out.get(i)));
         }
         if(payload&&tile.payload()!=null)try{out.addAll(tile.payload().boxes(tile,progress));}catch(RuntimeException | LinkageError failure){tile.quarantinePayload();return Collections.emptyList();}
         return Collections.unmodifiableList(out);

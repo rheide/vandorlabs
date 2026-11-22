@@ -109,7 +109,7 @@ final class TaxiModularGear {
         List<GearTileEntity> roots=roots(craft);if(roots.size()<3){
             craft.loadedTaxiSupportCheck=false;
             for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())){
-                GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){gear.input();if(!(gear.isSwingArmController()&&gear.landingAnglesVersion()==1)&&!gear.target())error(craft,gear,"Taxi height adjustment requires at least three matching vertical wheel or track arms");}
+                GearTileEntity gear=(GearTileEntity)tile;if(gear.isController()&&gear.isLandingAssembly()){gear.input();if(!(gear.isSwingArmController()&&gear.landingAnglesVersion()==1)&&!gear.target()&&!gear.foldedWheelSupport(gear.progress()))error(craft,gear,"Taxi height adjustment requires at least three matching vertical wheel or track arms");}
             }
             return false;
         }

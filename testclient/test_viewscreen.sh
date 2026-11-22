@@ -471,6 +471,9 @@ finish_test_artifacts() {
 trap finish_test_artifacts EXIT
 
 cd "$ROOT"
+if [ "${TARGET:-}" = vehicle-taxi ]; then
+    export VANDOR_LABS_FOLDED_WHEEL_FIXTURE=${VANDOR_LABS_FOLDED_WHEEL_FIXTURE:-"$ROOT/testclient/fixtures/folded-wheel-runway.nbt"}
+fi
 if [ "${TARGET:-}" = arm-live ]; then export VANDOR_LABS_ARM_SECOND_FIXTURE=${VANDOR_LABS_ARM_SECOND_FIXTURE:-"$ROOT/testclient/fixtures/arm-rotating-replacement-2.6.nbt"}; export VANDOR_LABS_ARM_SAVED_FIXTURE=${VANDOR_LABS_ARM_SAVED_FIXTURE:-"$ROOT/testclient/fixtures/arm-pending-detach-2.6.nbt"}; fi
 BUILD_ARGS=(build --no-daemon)
 if [ "${VANDOR_LABS_TEST_OFFLINE:-false}" = true ]; then BUILD_ARGS+=(--offline); fi

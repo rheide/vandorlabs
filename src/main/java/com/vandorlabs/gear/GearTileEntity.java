@@ -247,6 +247,19 @@ public class GearTileEntity extends TileEntity implements ITickable,com.vandorla
     private boolean rotatePayload,trackExtensionStroke,trackRetractingStroke,armRetractingStroke,formingActiveTrack,formingActiveFoot;
     public boolean isExtendedTrackStroke(){return trackExtensionStroke&&assembly!=null&&assembly.kind()==GearTopology.FootKind.TRACK;}
     public boolean landingDeployed(){if(taxiState!=null)return taxiState.getInteger("Phase")==1&&progress==1&&validTaxiState();if(isSwingArmController()&&isLandingAssembly()&&landingAnglesVersion==1)return !adjustingStart&&landingEndpoints().uprightAt(progress)&&progress==(deployedTarget?1:0);return fullyDeployed()||isExtendedTrackStroke()&&!deployedTarget&&progress==0;}
+    /** A side mount can fold its tyre upright under the hull at a settled endpoint. */
+    public boolean foldedWheelSupport(double phase) {
+        return phase==(deployedTarget?1:0) && uprightSideWheelAt(phase);
+    }
+    public boolean uprightSideWheelAt(double phase) {
+        if (!mountDirection.getAxis().isHorizontal() || !isLandingAssembly()
+                || assembly.kind()!=GearTopology.FootKind.WHEEL || !isSwingArmController()
+                || (phase!=0 && phase!=1) || adjustingStart) return false;
+        GearMotion.Pose pose=pose(phase);
+        GearMotion.Vec base=pose.transformFootVertex(0,0,0), up=pose.transformFootVertex(0,1,0);
+        return com.vandorlabs.gear.core.GearMountFrame.y(mountDirection.ordinal(),
+                up.x-base.x,up.y-base.y,up.z-base.z)>1-1e-9;
+    }
     public int taxiSafeTarget(){return mountDirection!=EnumFacing.DOWN||!isLandingAssembly()?-1:isSwingArmController()&&landingAnglesVersion==1?landingEndpoints().safeTarget(deployedTarget):1;}
     private boolean authoritativeAngleHost(){World physical=world instanceof com.vandorlabs.vehicle.VehicleWorld?((com.vandorlabs.vehicle.VehicleWorld)world).parent:world;return physical!=null&&!physical.isRemote;}
     public boolean finishCapturedAngleAdjustment(){if(!(world instanceof com.vandorlabs.vehicle.VehicleWorld)||!authoritativeAngleHost())return false;boolean before=adjustingStart;finishStartAdjustment();return before&&!adjustingStart;}

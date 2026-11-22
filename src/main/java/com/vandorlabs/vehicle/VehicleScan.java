@@ -491,6 +491,19 @@ public final class VehicleScan {
                         }
                     }
                     boolean landing=gear.isLandingAssembly()&&gear.mountDirection()==EnumFacing.DOWN;
+                    if(gear.foldedWheelSupport(gear.progress())){
+                        for(com.vandorlabs.gear.core.GearTopology.Cell foot:gear.assembly().feet()){
+                            BlockPos at=gear.localCell(foot);
+                            IBlockState wheel=world.getBlockState(at);
+                            if(!(wheel.getBlock() instanceof com.vandorlabs.gear.GearBlock)
+                                    || !((com.vandorlabs.gear.GearBlock)wheel.getBlock()).componentRoot(world,at,wheel).equals(at))continue;
+                            com.vandorlabs.gear.GearGeometry.LandingContact contact=com.vandorlabs.gear.GearGeometry.landingContact(gear,at);
+                            if(contact!=null && gears.add(at)){
+                                supportBottoms.put(at,contact.y);
+                                gearBottomY=gearBottomY==null?contact.y:Math.min(gearBottomY,contact.y);
+                            }
+                        }
+                    }
                     if(landing)supportCells(gear.members(),gear.getPos());
                     require(!landing||gear.landingDeployed(),"Deploy the modular landing gear before assembly.");
                     if(landing)for(BlockPos column:gear.columns()){

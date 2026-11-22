@@ -15,7 +15,16 @@ public final class ModularGearVehicles {
     public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired){correct(craft,desired,null,Long.MIN_VALUE);}
     public static void correct(EntityGroundVehicle craft,Map<BlockPos,Double> desired,UUID generation,long serverTick){if(craft==null||craft.view==null||craft.structure==null||!craft.acceptsCouplerMotion(generation,serverTick)||craft.world.isRemote&&craft.articulation.coupledStateFrames())return;Map<BlockPos,Correction> pending=corrections.computeIfAbsent(craft,k->new LinkedHashMap<>());for(Map.Entry<BlockPos,Double> entry:desired.entrySet()){VehicleStructure.Cell cell=craft.structure.at(entry.getKey());TileEntity raw=craft.view.tiles.get(entry.getKey());Double phase=entry.getValue();if(cell!=null&&cell.gearConfigurationIdentity()!=null&&raw instanceof GearTileEntity&&phase!=null&&Double.isFinite(phase)&&phase>=0&&phase<=1)pending.put(entry.getKey().toImmutable(),new Correction(phase,((GearTileEntity)raw).motionRevision(),generation,serverTick,cell.gearConfigurationIdentity()));}}
 
-    public static boolean extended(EntityGroundVehicle craft){if(craft.view==null)return false;for(TileEntity tile:craft.view.tiles.values())if(tile instanceof GearTileEntity&&craft.structure.isActive(tile.getPos())&&((GearTileEntity)tile).isController()&&((GearTileEntity)tile).isLandingAssembly()&&!((GearTileEntity)tile).landingDeployed())return false;return true;}
+    public static boolean extended(EntityGroundVehicle craft){
+        if(craft.view==null)return false;
+        for(TileEntity tile:craft.view.tiles.values()){
+            if(!(tile instanceof GearTileEntity)||!craft.structure.isActive(tile.getPos()))continue;
+            GearTileEntity gear=(GearTileEntity)tile;
+            if(gear.isController()&&gear.isLandingAssembly()&&!gear.landingDeployed()
+                    &&!gear.foldedWheelSupport(gear.progress()))return false;
+        }
+        return true;
+    }
     /** Move ordinary craft cells into the arm's retained snapshot once, before its first animated step. */
     private static boolean captureAttachment(EntityGroundVehicle craft){
         for(TileEntity raw:new ArrayList<TileEntity>(craft.view.tiles.values()))if(raw instanceof GearTileEntity&&craft.structure.isActive(raw.getPos())){
@@ -91,7 +100,11 @@ public final class ModularGearVehicles {
             if(craft.world.isRemote&&craft.articulation.constrainsArm(gear.getPos()))next=before;
             if(craft.world.isRemote){Correction correction=corrected==null?null:corrected.get(gear.getPos());if(correction!=null&&correction.revision==gear.motionRevision()&&correction.current(craft,gear.getPos()))next=correction.progress;else if(gear.motionBlocked())next=before;}
             if(gear.isLandingAssembly()&&!craft.hover&&!craft.flying()){
-                if(gear.isSwingArmController()&&gear.landingAnglesVersion()==1){if(!gear.landingEndpoints().uprightAt(gear.target()?1:0))next=before;}
+                if(gear.uprightSideWheelAt(before)){
+                    if(!craft.world.isRemote&&gear.target()!=(before==1))gear.target(before==1);
+                    next=before;
+                }
+                else if(gear.isSwingArmController()&&gear.landingAnglesVersion()==1){if(!gear.landingEndpoints().uprightAt(gear.target()?1:0))next=before;}
                 else if(next<before&&(!craft.world.isRemote||gear.taxiPhase()<0))next=before;
             }
             if(craft.world.isRemote&&gear.taxiPhase()>=0&&!gear.target()){double maximum=gear.pose(0).footOffsetY(),rise=gear.taxiAmount();if(maximum>0){double smooth=Math.max(0,Math.min(1,1-rise/maximum));double endpoint=.5-Math.sin(Math.asin(1-2*smooth)/3);next=Math.max(endpoint,next);}}
