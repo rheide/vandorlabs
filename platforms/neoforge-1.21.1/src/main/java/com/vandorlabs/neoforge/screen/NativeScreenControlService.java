@@ -13,6 +13,7 @@ import java.util.*;
 @EventBusSubscriber(modid="vandorlabs")
 public final class NativeScreenControlService {
  public interface Host extends NativeChannelMember {
+  default int controlSlots(){return 2;}
   NativeScreenControls controls(int slot);
   int rowCapacity(int slot);
   boolean supportsRowSlot(int slot);
@@ -23,15 +24,15 @@ public final class NativeScreenControlService {
  }
  private static final Map<ServerLevel,Set<NativeScreenControlService>> ACTIVE=new IdentityHashMap<>();
  private static final Set<ServerLevel> CLOSED=Collections.newSetFromMap(new WeakHashMap<>());
- private final Host owner;private final List<List<Row>> rows=new ArrayList<>(2);private final NativeScreenControls[] headers=new NativeScreenControls[2];private final Set<Row> registered=Collections.newSetFromMap(new IdentityHashMap<>());private boolean initialized,configuring,editing;private int pendingSlots;
- public NativeScreenControlService(Host owner){this.owner=owner;for(int slot=0;slot<2;slot++){headers[slot]=owner.controls(slot);rows.add(readRows(slot,headers[slot]));}}
+ private final Host owner;private final List<List<Row>> rows;private final NativeScreenControls[] headers;private final Set<Row> registered=Collections.newSetFromMap(new IdentityHashMap<>());private boolean initialized,configuring,editing;private int pendingSlots;
+ public NativeScreenControlService(Host owner){this.owner=owner;headers=new NativeScreenControls[owner.controlSlots()];rows=new ArrayList<>(headers.length);for(int slot=0;slot<headers.length;slot++){headers[slot]=owner.controls(slot);rows.add(readRows(slot,headers[slot]));}}
  private List<Row> readRows(int slot,NativeScreenControls data){List<Row> result=new ArrayList<>();for(var row:data.rows())result.add(new Row(slot,row));return result;}
  private ServerLevel level(){if(!(owner.channelBlockEntity().getLevel() instanceof ServerLevel world))return null;if(!world.getServer().isSameThread())throw new IllegalStateException("Screen controls require server thread");return CLOSED.contains(world)||!NativeRedstoneChannels.open(world)?null:world;}
  private boolean live(){return level()!=null&&owner.isChannelMemberActive();}
- public void savedChanged(){boolean resume=initialized;List<Row> old=registeredRows();for(int slot=0;slot<2;slot++){headers[slot]=owner.controls(slot);rows.set(slot,readRows(slot,headers[slot]));}if(resume&&live())mutate(()->{registerCurrent();withdraw(old);});else{withdraw(old);initialized=false;}if(resume&&live())owner.reconcileControlOutput();arm();}
+ public void savedChanged(){boolean resume=initialized;List<Row> old=registeredRows();for(int slot=0;slot<headers.length;slot++){headers[slot]=owner.controls(slot);rows.set(slot,readRows(slot,headers[slot]));}if(resume&&live())mutate(()->{registerCurrent();withdraw(old);});else{withdraw(old);initialized=false;}if(resume&&live())owner.reconcileControlOutput();arm();}
  public void finishLoading(){if(!live())return;initialized=true;mutate(()->{registerCurrent();owner.reconcileControlOutput();});arm();}
  private void mutate(Runnable operation){ServerLevel world=level();if(world!=null)NativeRedstoneChannels.batch(world,operation);}
- private void registerCurrent(){for(int slot=0;slot<2;slot++)if(headers[slot].enabled())for(Row row:rows.get(slot)){registered.add(row);NativeRedstoneChannels.channelsChanged(row);}}
+ private void registerCurrent(){for(int slot=0;slot<headers.length;slot++)if(headers[slot].enabled())for(Row row:rows.get(slot)){registered.add(row);NativeRedstoneChannels.channelsChanged(row);}}
  private List<Row> registeredRows(){List<Row> result=new ArrayList<>();for(var side:rows)for(Row row:side)if(registered.contains(row))result.add(row);for(Row row:registered)if(!result.contains(row))result.add(row);return result;}
  // Source settles each removal before the next; preserve dormant feedback while network publication is batched.
  private void withdraw(Collection<Row> old){for(Row row:old){registered.remove(row);if(level()!=null){NativeRedstoneChannels.unregister(row);if(owner.isChannelMemberActive())for(Row remaining:registeredRows())refresh(remaining);}}}
@@ -39,11 +40,12 @@ public final class NativeScreenControlService {
  private NativeScreenControls currentData(int slot){List<NativeScreenControls.Row> values=new ArrayList<>();for(Row row:rows.get(slot))values.add(row.snapshot());return new NativeScreenControls(headers[slot].enabled(),headers[slot].title(),values);}
  private void publish(int slot,boolean notify){if(configuring){pendingSlots|=1<<slot;return;}NativeScreenControls next=currentData(slot);headers[slot]=next;owner.installControlData(slot,next,notify);}
  public boolean editing(){return editing;}
- private boolean valid(int slot,int index){return !editing&&live()&&slot>=0&&slot<2&&headers[slot].enabled()&&index>=0&&index<rows.get(slot).size();}
+ private boolean valid(int slot,int index){return !editing&&live()&&slot>=0&&slot<headers.length&&headers[slot].enabled()&&index>=0&&index<rows.get(slot).size();}
  private void refresh(Row row){int received=0;for(int c=0;c<row.channels.size();c++)received=Math.max(received,NativeRedstoneChannels.level(level(),owner.channelPosition(),row.channels.get(c)));row.setChannelLevel(received);}
  public boolean configure(int slot,NativeScreenRowEdit edit){return configure(slot,edit,true,false);}
+ public boolean configure(int slot,NativeScreenRowEdit edit,boolean enabled){return configure(slot,edit,enabled,false);}
  private boolean configure(int slot,NativeScreenRowEdit edit,boolean enabled,boolean copied){
-  if(editing&&!copied||!live()||edit==null||slot<0||slot>1||!copied&&!owner.supportsRowSlot(slot)||edit.rows().size()>owner.rowCapacity(slot))return false;
+  if(editing&&!copied||!live()||edit==null||slot<0||slot>=headers.length||!copied&&!owner.supportsRowSlot(slot)||edit.rows().size()>owner.rowCapacity(slot))return false;
   boolean nested=configuring;
   List<Row> oldRows=rows.get(slot),next=new ArrayList<>();
   for(int i=0;i<edit.rows().size();i++){
@@ -68,7 +70,7 @@ public final class NativeScreenControlService {
    });
   }finally{
    configuring=nested;pendingSlots|=1<<slot;if(!nested){int publish=pendingSlots;pendingSlots=0;
-   try{for(int i=0;i<2;i++)if((publish&(1<<i))!=0)publish(i,true);}finally{editing=false;arm();}}
+   try{for(int i=0;i<headers.length;i++)if((publish&(1<<i))!=0)publish(i,true);}finally{editing=false;arm();}}
   }
   return true;
  }
@@ -82,21 +84,21 @@ public final class NativeScreenControlService {
  /** Ordered Source copier phases, buffering every projection until both headers and the metadata tail are installed. */
  boolean applyCopied(com.vandorlabs.neoforge.copifier.NativeCopifierScreenEdit.Plan plan,Runnable scalar,Runnable footer,Runnable transmission,boolean changeTransmission){
   if(editing||!live())return false;editing=configuring=true;
-  try{scalar.run();for(int slot=0;slot<2;slot++)if(slot==0?plan.surface0():plan.surface1()){
+  try{scalar.run();for(int slot=0;slot<headers.length;slot++)if(slot==0?plan.surface0():plan.surface1()){
    boolean enabled=plan.scalar().controls().get(slot).enabled();var previous=headers[slot];if(previous.enabled()==enabled)continue;headers[slot]=new NativeScreenControls(enabled,previous.title(),previous.rows());
    if(enabled){for(Row row:rows.get(slot)){registered.add(row);NativeRedstoneChannels.channelsChanged(row);}for(Row row:rows.get(slot))refresh(row);}else withdraw(new ArrayList<>(rows.get(slot).stream().filter(registered::contains).toList()));pendingSlots|=1<<slot;
   }
-  if(plan.rows()!=null)for(int slot=0;slot<2;slot++){var edit=plan.rows().get(slot);if(!configure(slot,edit.choices(),edit.enabled(),true))throw new IllegalStateException("Prevalidated Screen row copy refused");}
+  if(plan.rows()!=null)for(int slot=0;slot<headers.length;slot++){var edit=plan.rows().get(slot);if(!configure(slot,edit.choices(),edit.enabled(),true))throw new IllegalStateException("Prevalidated Screen row copy refused");}
   footer.run();transmission.run();if(changeTransmission)transmissionChanged(true);
   return true;
-  }finally{for(int slot=0;slot<2;slot++){var data=currentData(slot);headers[slot]=data;owner.stageCopiedControls(slot,data);}configuring=editing=false;pendingSlots=0;arm();}
+  }finally{for(int slot=0;slot<headers.length;slot++){var data=currentData(slot);headers[slot]=data;owner.stageCopiedControls(slot,data);}configuring=editing=false;pendingSlots=0;arm();}
  }
  public boolean toggle(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(row.channels.isEmpty()||row.slider)return false;if(row.pulse)return pulse(slot,index);boolean all=true;ServerLevel world=level();for(int i=0;i<row.channels.size();i++)if(NativeRedstoneChannels.level(world,owner.channelPosition(),row.channels.get(i))==0){all=false;break;}NativeRedstoneChannels.latchLevelChanged(row,all?0:15);return true;}
  public boolean select(int slot,int index,int segment){if(!valid(slot,index)||segment<0||segment>3)return false;Row row=rows.get(slot).get(index);if(!row.slider)return false;NativeRedstoneChannels.latchLevelChanged(row,SignalControlData.levelForStep(segment,row.min,row.max));return true;}
  boolean pulse(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(!row.pulse||row.channels.isEmpty())return false;row.until=level().getGameTime()+20;row.dirty=true;mutate(()->{publish(slot,true);NativeRedstoneChannels.outputChanged(row);});arm();return true;}
- boolean setEnabled(int slot,boolean enabled){if(editing||!live()||slot<0||slot>1)return false;if(headers[slot].enabled()==enabled)return true;var old=headers[slot];headers[slot]=new NativeScreenControls(enabled,old.title(),old.rows());mutate(()->{publish(slot,false);if(enabled)registerCurrent();else withdraw(new ArrayList<>(rows.get(slot).stream().filter(registered::contains).toList()));publish(slot,true);});arm();return true;}
- boolean expire(long now){if(!live())return false;boolean[] pending={false};mutate(()->{for(int slot=0;slot<2;slot++)if(headers[slot].enabled())for(Row row:rows.get(slot))if(row.until>0){if(now>=row.until){row.until=0;row.dirty=true;publish(slot,true);NativeRedstoneChannels.outputChanged(row);}else pending[0]=true;}});return pending[0];}
- private boolean hasPulses(){for(int slot=0;slot<2;slot++)if(headers[slot].enabled())for(Row row:rows.get(slot))if(row.pulse&&row.until>0)return true;return false;}
+ public boolean setEnabled(int slot,boolean enabled){if(editing||!live()||slot<0||slot>=headers.length)return false;if(headers[slot].enabled()==enabled)return true;var old=headers[slot];headers[slot]=new NativeScreenControls(enabled,old.title(),old.rows());mutate(()->{publish(slot,false);if(enabled)registerCurrent();else withdraw(new ArrayList<>(rows.get(slot).stream().filter(registered::contains).toList()));publish(slot,true);});arm();return true;}
+ boolean expire(long now){if(!live())return false;boolean[] pending={false};mutate(()->{for(int slot=0;slot<headers.length;slot++)if(headers[slot].enabled())for(Row row:rows.get(slot))if(row.until>0){if(now>=row.until){row.until=0;row.dirty=true;publish(slot,true);NativeRedstoneChannels.outputChanged(row);}else pending[0]=true;}});return pending[0];}
+ private boolean hasPulses(){for(int slot=0;slot<headers.length;slot++)if(headers[slot].enabled())for(Row row:rows.get(slot))if(row.pulse&&row.until>0)return true;return false;}
  private void disarm(){if(owner.channelBlockEntity().getLevel() instanceof ServerLevel world){Set<NativeScreenControlService> active=ACTIVE.get(world);if(active!=null){active.remove(this);if(active.isEmpty())ACTIVE.remove(world);}}}
  private void arm(){ServerLevel world=level();if(world!=null&&initialized&&owner.isChannelMemberActive()&&hasPulses())ACTIVE.computeIfAbsent(world,unused->Collections.newSetFromMap(new IdentityHashMap<>())).add(this);else disarm();}
  static int activeCount(ServerLevel world){Set<NativeScreenControlService> active=ACTIVE.get(world);return active==null?0:active.size();}
