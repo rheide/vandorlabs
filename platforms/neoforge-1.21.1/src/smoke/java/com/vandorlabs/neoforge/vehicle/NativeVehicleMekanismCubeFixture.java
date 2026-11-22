@@ -82,6 +82,7 @@ final class NativeVehicleMekanismCubeFixture {
         source.loadWithComponents(occupied, world.registryAccess());
         require(!packed(sourceCube).getList("items", 10).isEmpty(), "actual Cube retained its charging item");
         requireRefusal("Empty both Mekanism Energy Cube charging slots");
+        clearSlots(source);
         source.loadWithComponents(correct, world.registryAccess());
         require(contents(sourceCube) == OUTPUT_WITH_REMAINDER, "failed capture retained the exact source");
     }
@@ -177,6 +178,16 @@ final class NativeVehicleMekanismCubeFixture {
             tile.getClass().getMethod("setControlType", control).invoke(tile, control.getField(source ? "HIGH" : "DISABLED").get(null));
         } catch (ReflectiveOperationException failure) {
             throw new AssertionError("Installed Mekanism Cube configuration API", failure);
+        }
+    }
+
+    private static void clearSlots(BlockEntity tile) {
+        try {
+            var slots = (java.util.List<?>)tile.getClass().getMethod("getInventorySlots", Direction.class).invoke(tile, new Object[]{null});
+            var assign = Class.forName("mekanism.api.inventory.IInventorySlot").getMethod("setStack", ItemStack.class);
+            for (var slot : slots) assign.invoke(slot, ItemStack.EMPTY);
+        } catch (ReflectiveOperationException failure) {
+            throw new AssertionError("Installed Mekanism charging-slot API", failure);
         }
     }
 
