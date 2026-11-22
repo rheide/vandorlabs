@@ -82,6 +82,8 @@ Vehicle security uses a retained card. It does not accept a pulse, a remembered 
 
 A completed scan stores a weight estimate in the Vehicle Controller, alongside its name and last-scanned shape. The Vehicle tab shows the **last scanned** value, which survives parking, saving and Vehicle Chip recording. For aircraft, the **Flight** tab compares effective weight with two takeoff limits. The current limit uses fuel and throttle. The theoretical maximum assumes every installed Maxwell Drive runs at full power. Antigravity Plates and Repulsor Arrays reduce effective weight. [Flying a Maxwell-equipped vehicle](versions/version-3.0.md#taking-off).
 
+For example, **Weight: 230 actual - 30 hover plates = 200** means that lift reduces a 230-unit craft to 200 effective units. The middle number measures weight saved.
+
 The unit is a game weight unit, with one full stone block as the reference. Material names and block variants are used first, followed by Minecraft's material classification. Selected artwork and custom display names do not change weight.
 
 | Example material | Full-block weight units |
