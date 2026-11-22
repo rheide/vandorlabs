@@ -38,8 +38,9 @@ final class VehicleFlightClientChecks {
     private static final BlockPos SCREEN=new BlockPos(2,2,1);
     private static final BlockPos DRIVE=new BlockPos(5,1,1);
     private static UUID id;
-    private static int stage,frame,total;
+    private static int stage,frame,total,settled;
     private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
+    private static boolean sawDeparture, sawDescent, sawLongClearance;
 
     static void begin(Minecraft mc)throws Exception {
         mc.getIntegratedServer().addScheduledTask(()->spawn(mc)).get();
@@ -118,7 +119,7 @@ final class VehicleFlightClientChecks {
     }
 
     static boolean tick(Minecraft mc,File output)throws Exception{
-        if(++total>450)throw new IllegalStateException("Vehicle Flight timeout stage="+stage+" frame="+frame);
+        if(++total>1500)throw new IllegalStateException("Vehicle Flight timeout stage="+stage+" frame="+frame);
         EntityGroundVehicle craft=client(mc);
         if(craft==null||craft.structure==null||mc.player.getRidingEntity()!=craft)return false;
         frame++;
@@ -181,19 +182,41 @@ final class VehicleFlightClientChecks {
             need(craft.flightPitch()<priorPitch-4&&craft.flying(),"W lowers the nose");
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"shot_vehicle_status_maxwell_flight.png"));
+            // The pilot has already taken off through the normal controls. Save the flight time to the build-height boundary.
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 need(actual.flying()&&actual.flightReadout().fuel>0,"server applied powered flight");
-                need(((TileEntityConstructor)actual.view.getTileEntity(DRIVE)).purgeMaxwell(),"empty Maxwell tank during flight");
+                actual.rotationYaw=0;
+                actual.setPosition(ORIGIN.getX(),255.7,ORIGIN.getZ());
             }).get();
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
         }
         if(stage==7){
-            if(frame<=20)need(craft.flying()||frame<4,"Maxwell-only descent remains Flight while above runway");
-            if(craft.flying()||frame<22)return false;
+            if(!craft.cruise.active()||craft.flightAltitude()<=256){need(frame<120,"powered S climb crosses Y=256");return false;}
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
+            need(Double.isInfinite(craft.groundClearance()),"cruise does not query ground clearance");
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle actual=server(mc);
+                need(actual.cruise.active()&&actual.flightAltitude()>256&&actual.poweredFlight(),"authoritative crossing happened under powered flight ticks");
+                need(((TileEntityConstructor)actual.view.getTileEntity(DRIVE)).purgeMaxwell(),"empty Maxwell tank during cruise");
+            }).get();
+            sawDeparture=true;
+            next();return false;
+        }
+        if(stage==8){
+            sawDescent|=craft.descendingFromFlight();
+            if(!craft.cruise.active()&&craft.flightAltitude()<217&&craft.flightAltitude()>205){
+                double clearance=craft.groundClearance();
+                sawLongClearance|=Double.isFinite(clearance)&&clearance>70;
+                need(craft.flying(),"Maxwell-only recovery continues below cruise toward terrain");
+            }
+            if(craft.flying()){settled=0;return false;}
+            if(++settled<5)return false;
             need(!craft.hover&&craft.vehicleMode()==1&&Math.abs(craft.flightPitch())<.01&&Math.abs(craft.posY-runwayY)<.15&&craft.flightReadout().fuel==0,
-                    "power loss returns a level craft to Taxi on the runway");
-            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys pitch yaw coast fuel-loss landing");
+                    "power loss returns a level craft to Taxi on the runway; Y="+craft.posY+" runway="+runwayY+" pitch="+craft.flightPitch()+" fuel="+craft.flightReadout().fuel);
+            need(sawDeparture&&sawDescent&&sawLongClearance,"observed powered entry, recovery and measured clearance beyond 32 blocks");
+            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys pitch yaw coast powered-threshold fuel-loss reentry exact-clearance touchdown");
             return true;
         }
         return false;
