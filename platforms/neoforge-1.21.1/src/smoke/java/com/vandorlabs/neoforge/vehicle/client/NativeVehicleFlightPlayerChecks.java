@@ -4,7 +4,6 @@ import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleFlightFixture;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
 import com.vandorlabs.physics.FlightEnvelope;
-import net.minecraft.client.KeyMapping;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.screens.AccessibilityOnboardingScreen;
 import net.minecraft.network.protocol.game.ServerboundMovePlayerPacket;
@@ -23,6 +22,23 @@ public final class NativeVehicleFlightPlayerChecks {
     private static int stage, ticks, cameraTicks;
     private static NativeGroundVehicle craft;
     private static boolean captured, becameHigh;
+    private static final java.lang.reflect.Method USE_ITEM = useItem();
+
+    private static java.lang.reflect.Method useItem() {
+        try {
+            var method = Minecraft.class.getDeclaredMethod("startUseItem");
+            method.setAccessible(true);
+            return method;
+        } catch (ReflectiveOperationException failure) {
+            throw new ExceptionInInitializerError(failure);
+        }
+    }
+
+    @SubscribeEvent public static void chat(net.neoforged.neoforge.client.event.ClientChatReceivedEvent.System event) {
+        if (NativeVehicleFlightFixture.enabled()) {
+            System.out.println("[vandorlabs][vehicle-flight-player] stage=" + stage + " message=" + event.getMessage().getString());
+        }
+    }
 
     @SubscribeEvent public static void tick(ClientTickEvent.Post event) {
         if (!NativeVehicleFlightFixture.enabled()) return;
@@ -43,6 +59,7 @@ public final class NativeVehicleFlightPlayerChecks {
             mc.stop();
             return;
         }
+        if (stage >= 4 && player.getVehicle() instanceof NativeGroundVehicle active && active.getUUID().equals(craft.getUUID())) craft = active;
         switch (stage) {
             case 0 -> {
                 if (mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
@@ -57,13 +74,22 @@ public final class NativeVehicleFlightPlayerChecks {
                 stage++;
             }
             case 1 -> {
-                if (player.getVehicle() != craft) return;
+                if (player.getVehicle() != craft || !craft.onGround()) return;
                 var at = craft.statusPanels().getFirst().pos();
                 double column = NativeVehicleStatus.buttonLeft(NativeGroundVehicle.FLIGHT) + NativeVehicleStatus.BUTTON_WIDTH / 2D;
                 double row = (NativeVehicleStatus.BUTTON_START + NativeVehicleStatus.BUTTON_END) / 2D;
                 aim(mc, craft.position().add(at.getX() + .5 - column / 128, at.getY() + 1 - row / 128, at.getZ() - .5));
-                if (!craft.pointsAtMountedControl(player)) return;
-                KeyMapping.click(mc.options.keyUse.getKey());
+                if (!craft.pointsAtMountedControl(player)) {
+                    if (ticks % 40 == 0) System.out.println("[vandorlabs][vehicle-flight-player] Status ray hit=" + craft.hit(player)
+                            + " target=" + at + " eye=" + player.getEyePosition() + " pose=" + craft.position());
+                    return;
+                }
+                try {
+                    USE_ITEM.invoke(mc);
+                } catch (ReflectiveOperationException failure) {
+                    throw new IllegalStateException("Invoke ordinary right-click", failure);
+                }
+                System.out.println("[vandorlabs][vehicle-flight-player] used actual mouse dispatch on carried Status");
                 stage++;
             }
             case 2 -> {
