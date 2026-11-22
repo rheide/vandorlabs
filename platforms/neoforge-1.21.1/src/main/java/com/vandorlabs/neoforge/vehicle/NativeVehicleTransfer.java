@@ -58,6 +58,11 @@ public final class NativeVehicleTransfer {
         return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos);
     }
 
+    public static boolean holdsScreenChannels(ServerLevel world, BlockPos pos) {
+        return NativeCellTransactions.reservedByFamily(world, FAMILY_ID, pos)
+            || NativeCellTransactions.preparingByFamily(world, FAMILY_ID, pos);
+    }
+
     public static void assemble(ServerPlayer player, BlockPos controller) {
         var world = player.serverLevel();
         try {

@@ -120,6 +120,13 @@ public final class NativeCellTransactions {
             if(operation.header.family().equals(family)&&operation.lease!=null&&operation.lease.live()&&operation.lease.contains(position))return true;
         return false;
     }
+    /** Suppresses autonomous receipt writes while a family submits its immutable before-image. */
+    public static boolean preparingByFamily(ServerLevel world,ResourceLocation family,BlockPos position){
+        thread(world);var state=WORLDS.get(world);if(state==null)return false;
+        for(var operation:state.operations.values())
+            if(operation.phase==Phase.PREPARING&&operation.header.family().equals(family)&&operation.held.contains(position))return true;
+        return false;
+    }
 
     /** Configuration-only session observation; no slots, packet operation or mutation is admitted. */
     public static Header sessionHeader(ServerLevel world,BlockPos root,UUID owner,ServerPlayer actor){
