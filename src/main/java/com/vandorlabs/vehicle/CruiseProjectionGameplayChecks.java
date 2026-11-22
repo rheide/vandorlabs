@@ -157,6 +157,7 @@ final class CruiseProjectionGameplayChecks {
         if(!valid)throw new IllegalStateException("Projected cruise gameplay: "+detail);
     }
 
+    @SideOnly(Side.CLIENT)
     private static final class VanillaDebug extends GuiOverlayDebug {
         VanillaDebug(Minecraft mc) {super(mc);}
         String coordinates() {
