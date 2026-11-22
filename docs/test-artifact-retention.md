@@ -10,6 +10,13 @@ Successful runs discard disposable worlds, copied mods, resource packs and cache
 
 Failed runtime payloads are bounded to the newest two completed failures per output parent, at most 256 MiB each and 512 MiB combined. Oversized or older failed payloads are removed after diagnostic extraction. The diagnostic archive has a 64 MiB/256-file budget; oversized text logs contribute a labelled 4 MiB tail. Original compact diagnostic paths remain complete for 24 hours so external analyzers can finish. On later cleanup sweeps after that grace period, helper-owned diagnostics are reduced to their bounded archive; the newest 20 older compact evidence sets remain. Explicitly kept runs are exempt. Unregistered paths and later edits to retained diagnostic files are preserved.
 
+If a native connected fixture fails, its launcher stops descendants recorded under
+that fixture’s lease, including a server JVM that outlives its Gradle wrapper.
+Cleanup verifies process creation identities and signals through Linux pidfds or
+Windows process handles. If the runtime cannot verify and pin a process, its
+lease remains active and the runner reports the cleanup failure. Successful
+connected fixtures retain their ordinary save and shutdown path.
+
 Cleanup requires an ownership marker created in a fresh empty directory and an explicit completion marker. Unmarked directories, unfinished runs, active phase leases and surviving tracked processes/groups are preserved. A killed launcher is never assumed complete merely because its parent PID disappeared. Symlink and Windows junction/reparse-point escapes are refused; custom game directories outside the run's registered disposable paths are never cleaned.
 
 Completed cleanup records `retention.json` with reclaimed bytes and status. A cleanup error preserves diagnostics and is reported separately from the gameplay test result. The helper does not migrate or delete historical unmarked output directories.
@@ -18,6 +25,7 @@ Safety checks run without Minecraft:
 
 ```sh
 python3 tools/test_test_artifacts.py
+python3 platforms/neoforge-1.21.1/test_connected_player_cleanup.py
 python3 tools/test_server_startup_retention.py
 bash -n testclient/test_viewscreen.sh
 ```

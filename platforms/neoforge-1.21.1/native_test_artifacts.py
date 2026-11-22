@@ -5,7 +5,9 @@ VANDOR_LABS_TEST_KEEP_ARTIFACTS=1 to retain an owned run and its payload explici
 """
 import contextvars
 import functools
+import os
 from pathlib import Path
+import signal
 import sys
 import tempfile
 import traceback
@@ -88,3 +90,25 @@ def track_process(process, log):
             processes.append(process)
             break
     return process
+
+
+def stop_fixture_processes(directory, server=None):
+    """Stop the one connected fixture lease while leaving other restart phases intact."""
+    context = _CURRENT.get()
+    if context is not None:
+        for owned, run, processes in context.runs:
+            if owned == directory:
+                if server is not None and server not in processes:
+                    raise ValueError('Dedicated server does not belong to this connected fixture')
+                graceful = server is not None and server.poll() is None
+                if graceful and os.name == 'nt':
+                    try:
+                        server.send_signal(signal.CTRL_BREAK_EVENT)
+                    except OSError:
+                        # Detached Windows processes are retired by their verified handles below.
+                        graceful = False
+                run.stop_processes(grace=30 if graceful else 2, interrupt=graceful)
+                for process in processes:
+                    process.wait(timeout=2)
+                return
+    raise ValueError('Connected fixture process cleanup requires its owned run: ' + str(directory))

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Retention for explicitly owned, completed test runs; never a general directory cleaner."""
 import argparse
+import errno
 import hashlib
 import json
 import os
@@ -137,6 +138,77 @@ def _size(path):
     return total
 
 
+def _windows_identity(kernel, handle):
+    import ctypes
+    from ctypes import wintypes
+    kernel.GetProcessTimes.argtypes = [wintypes.HANDLE] + [ctypes.POINTER(wintypes.FILETIME)] * 4
+    kernel.GetProcessTimes.restype = wintypes.BOOL
+    created, exited, kernel_time, user_time = (wintypes.FILETIME() for _ in range(4))
+    if kernel.GetProcessTimes(handle, ctypes.byref(created), ctypes.byref(exited),
+                              ctypes.byref(kernel_time), ctypes.byref(user_time)):
+        birth = str((created.dwHighDateTime << 32) | created.dwLowDateTime)
+        return birth, bool(exited.dwHighDateTime or exited.dwLowDateTime)
+    return None, False
+
+
+def _posix_process(pid):
+    try:
+        text = Path('/proc', str(pid), 'stat').read_text()
+    except (FileNotFoundError, ProcessLookupError):
+        return None
+    fields = text[text.rfind(')') + 2:].split()
+    return int(fields[1]), int(fields[2]), fields[19], fields[0]
+
+
+def _signal_owned_process(record, force, interrupt=False):
+    """Act only on an observed PID/birth pair. Never signal an entire process group."""
+    pid, birth = record['pid'], record.get('birth')
+    if birth is None or pid <= 1 or pid == os.getpid():
+        return
+    if os.name == 'nt':
+        if not force:
+            return  # A detached Windows process has no safe console-control target.
+        import ctypes
+        from ctypes import wintypes
+        kernel = ctypes.WinDLL('kernel32', use_last_error=True)
+        kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel.OpenProcess.restype = wintypes.HANDLE
+        kernel.TerminateProcess.argtypes = [wintypes.HANDLE, wintypes.UINT]
+        kernel.TerminateProcess.restype = wintypes.BOOL
+        kernel.CloseHandle.argtypes = [wintypes.HANDLE]
+        kernel.CloseHandle.restype = wintypes.BOOL
+        handle = kernel.OpenProcess(0x1000 | 0x0001, False, pid)
+        if handle:
+            try:
+                if _windows_identity(kernel, handle) == (birth, False):
+                    kernel.TerminateProcess(handle, 1)
+            finally:
+                kernel.CloseHandle(handle)
+        return
+    signum = signal.SIGINT if interrupt else signal.SIGTERM
+    if force:
+        signum = signal.SIGKILL
+    # A numeric PID cannot pin a detached child between rechecking and signaling it.
+    if not hasattr(os, 'pidfd_open') or not hasattr(signal, 'pidfd_send_signal'):
+        return
+    try:
+        pidfd = os.pidfd_open(pid)
+    except ProcessLookupError:
+        return
+    except OSError as error:
+        if error.errno in (errno.ENOSYS, errno.EINVAL):
+            return
+        raise
+    try:
+        current = _posix_process(pid)
+        if current is not None and current[2] == birth and current[3] != 'Z':
+            signal.pidfd_send_signal(pidfd, signum)
+    except ProcessLookupError:
+        pass
+    finally:
+        os.close(pidfd)
+
+
 def _processes():
     """PID -> (parent, group, birth, state), or None if safety cannot be established."""
     if os.name == 'nt':
@@ -155,8 +227,12 @@ def _processes():
         kernel.Process32FirstW.restype = wintypes.BOOL
         kernel.Process32NextW.argtypes = [wintypes.HANDLE, ctypes.POINTER(Entry)]
         kernel.Process32NextW.restype = wintypes.BOOL
+        kernel.OpenProcess.argtypes = [wintypes.DWORD, wintypes.BOOL, wintypes.DWORD]
+        kernel.OpenProcess.restype = wintypes.HANDLE
         kernel.CloseHandle.argtypes = [wintypes.HANDLE]
         kernel.CloseHandle.restype = wintypes.BOOL
+        # Reject a process created after this snapshot began if an earlier PID was reused.
+        snapshot_started_at = time.time_ns() // 100 + 116444736000000000
         handle = kernel.CreateToolhelp32Snapshot(2, 0)
         if handle == ctypes.c_void_p(-1).value:
             return None
@@ -167,7 +243,16 @@ def _processes():
             if not ok:
                 return None
             while ok:
-                result[int(entry.pid)] = (int(entry.parent), None, None, '?')
+                process = kernel.OpenProcess(0x1000, False, entry.pid)
+                birth, exited = None, False
+                if process:
+                    try:
+                        birth, exited = _windows_identity(kernel, process)
+                    finally:
+                        kernel.CloseHandle(process)
+                if birth is not None and int(birth) > snapshot_started_at:
+                    birth = None
+                result[int(entry.pid)] = (int(entry.parent), None, birth, 'Z' if exited else '?')
                 ok = kernel.Process32NextW(handle, ctypes.byref(entry))
             return result if ctypes.get_last_error() == 18 else None
         finally:
@@ -179,11 +264,10 @@ def _processes():
         if not path.name.isdigit():
             continue
         try:
-            text = (path / 'stat').read_text()
-            fields = text[text.rfind(')') + 2:].split()
-            result[int(path.name)] = (int(fields[1]), int(fields[2]), fields[19], fields[0])
-        except (FileNotFoundError, ProcessLookupError):
-            pass
+            pid = int(path.name)
+            entry = _posix_process(pid)
+            if entry is not None:
+                result[pid] = entry
         except PermissionError:
             # An incomplete process snapshot must not authorize deletion.
             return None
@@ -193,7 +277,7 @@ def _processes():
 def _alive(record, table):
     current = table.get(record['pid'])
     return current is not None and current[3] != 'Z' and (
-        record.get('birth') is None or record['birth'] == current[2])
+        record.get('birth') is None or current[2] is None or record['birth'] == current[2])
 
 
 def _quiet(lease):
@@ -288,24 +372,60 @@ class ArtifactRun:
         with self._mutex:
             table = _processes()
             if table is None:
-                return
+                return None
             records = self.lease['processes']
-            known = {r['pid'] for r in records if _alive(r, table)}
-            groups = {r['group'] for r in records if r.get('group') is not None}
+            known = {r['pid']: int(r['birth']) for r in records
+                     if r.get('birth') is not None and _alive(r, table) and table[r['pid']][2] == r['birth']}
+            # A departed leader's group number can be reused. Require a confirmed live member.
+            groups = {r['group'] for r in records if r.get('group') is not None and r['pid'] in known
+                      and table[r['pid']][1] == r['group']}
             existing = {(r['pid'], r.get('birth')) for r in records}
+            before = len(records)
             changed = True
             while changed:
                 changed = False
                 for pid, info in table.items():
-                    if info[3] == 'Z' or (pid, info[2]) in existing:
+                    parent, group, birth, state = info
+                    if state == 'Z' or birth is None or (pid, birth) in existing:
                         continue
-                    if info[0] in known or info[1] in groups:
-                        record = dict(pid=pid, birth=info[2], group=info[1] if info[1] in groups else None)
-                        records.append(record)
-                        existing.add((pid, info[2]))
-                        known.add(pid)
+                    child = parent in known and int(birth) >= known[parent]
+                    if child or group in groups:
+                        owns_group = group in groups or child and group == pid
+                        records.append(dict(pid=pid, birth=birth, group=group if owns_group else None))
+                        existing.add((pid, birth))
+                        known[pid] = int(birth)
+                        if owns_group:
+                            groups.add(group)
                         changed = True
-            self._save()
+            if len(records) != before:
+                self._save()
+            return table
+
+    def stop_processes(self, grace=2, force_wait=5, interrupt=False):
+        """Retire only this lease's launcher and observed descendants, even after orphaning."""
+        self._validate()
+        if self.lease['closed'] or self.lease['host'] != socket.gethostname():
+            raise ValueError('Process cleanup requires an open lease on its original host')
+        for force, timeout in ((False, grace), (True, force_wait)):
+            deadline = time.monotonic() + timeout
+            signaled = set()
+            while True:
+                table = self._refresh()
+                if table is None:
+                    raise RuntimeError('Cannot verify test process identities')
+                with self._mutex:
+                    alive = [record for record in self.lease['processes'] if _alive(record, table)]
+                if not alive:
+                    return
+                for record in alive:
+                    key = record['pid'], record.get('birth')
+                    if key not in signaled:
+                        _signal_owned_process(record, force, interrupt)
+                        signaled.add(key)
+                if time.monotonic() >= deadline:
+                    break
+                time.sleep(.05)
+        raise RuntimeError('Owned test processes still active: ' + ', '.join(str(r['pid']) for r in alive))
 
     def track_process(self, process):
         """Record the leader, isolated POSIX group and observed descendants during launch."""

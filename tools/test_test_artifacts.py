@@ -244,15 +244,38 @@ class RetentionChecks(unittest.TestCase):
                     return True
                 self.Process32FirstW = Function(first)
                 self.Process32NextW = Function(lambda handle, pointer: False)
+                self.OpenProcess = Function(lambda access, inherit, pid: 0x1234567800000002)
+                def times(handle, created, exited, kernel_time, user_time):
+                    created._obj.dwHighDateTime, created._obj.dwLowDateTime = 1, 17
+                    return True
+                self.GetProcessTimes = Function(times)
+                self.TerminateProcess = Function(lambda handle, code: self.terminated.append((handle, code)))
+                self.terminated = []
                 self.CloseHandle = Function(lambda handle: self.closed.append(handle))
         kernel = Kernel()
         with patch.object(retention.os, 'name', 'nt'), patch.object(ctypes, 'WinDLL', return_value=kernel, create=True), patch.object(ctypes, 'get_last_error', return_value=18, create=True):
-            self.assertEqual(retention._processes(), {111: (1, None, None, '?')})
-            self.assertEqual(kernel.closed, [0x1234567800000001])
+            birth = str((1 << 32) | 17)
+            self.assertEqual(retention._processes(), {111: (1, None, birth, '?')})
+            self.assertEqual(kernel.closed, [0x1234567800000002, 0x1234567800000001])
+            retention._signal_owned_process({'pid': 111, 'birth': 'stale'}, force=True)
+            retention._signal_owned_process({'pid': 111, 'birth': birth}, force=False)
+            self.assertEqual(kernel.terminated, [])
+            retention._signal_owned_process({'pid': 111, 'birth': birth}, force=True)
+            self.assertEqual(kernel.terminated, [(0x1234567800000002, 1)])
             self.assertEqual(kernel.Process32FirstW.argtypes[0], wintypes.HANDLE)
             self.assertEqual(kernel.CloseHandle.argtypes, [wintypes.HANDLE])
             kernel.Process32FirstW.callback = lambda handle, pointer: False
             self.assertIsNone(retention._processes())
+
+    def test_process_cleanup_refuses_a_reused_leader_or_process_group(self):
+        _, owner = self.run_dir()
+        owner.lease['processes'].append({'pid': 101, 'birth': '17', 'group': 101})
+        reused = {101: (1, 101, '29', 'S'), 102: (101, 101, '30', 'S')}
+        with patch.object(retention, '_processes', return_value=reused), patch.object(
+                retention, '_signal_owned_process') as signal_process:
+            owner.stop_processes(grace=0)
+            signal_process.assert_not_called()
+        self.assertEqual(len(owner.lease['processes']), 1)
 
     def test_cli_preserves_world_across_phases_then_removes_it(self):
         root = self.parent / 'shell run with spaces'
