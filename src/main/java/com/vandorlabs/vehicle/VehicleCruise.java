@@ -28,7 +28,6 @@ public final class VehicleCruise {
     private double routeX, routeZ;
     private MessageCruiseTerrain pending;
     private int nextPixel, publishedX, publishedZ, publishedStep;
-    private boolean preview;
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
@@ -127,10 +126,10 @@ public final class VehicleCruise {
                     Math.abs(z-publishedZ) < size*step/5 && craft.ticksExisted%200 != 0) return;
             pending = new MessageCruiseTerrain(craft.getEntityId(), centerX, centerZ, step);
             nextPixel = 0;
-            preview = publishedStep == 0;
+            pending.sampleStride = publishedStep == 0 ? 8 : 1;
         }
         // First publish a coarse image, then refine it in the same geographic footprint.
-        int stride = preview ? 8 : 1;
+        int stride = pending.sampleStride;
         int columns = size / stride;
         int end = Math.min(nextPixel + 512, columns*columns);
         long started = System.nanoTime();
@@ -150,10 +149,10 @@ public final class VehicleCruise {
             publishedZ = pending.centerZ;
             publishedStep = pending.step;
             // Forge may encode the message later; refinement needs an independent image.
-            if (preview) {
+            if (stride>1) {
                 pending = new MessageCruiseTerrain(craft.getEntityId(),publishedX,publishedZ,publishedStep);
                 nextPixel = 0;
-                preview = false;
+                pending.sampleStride = stride==8 ? 2 : 1;
             } else pending = null;
         }
     }

@@ -8,19 +8,20 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 public final class MessageCruiseTerrain implements IMessage {
     public static final int SIZE = 128;
     public int entity, centerX, centerZ, step;
+    public int sampleStride=1;
     public final int[] pixels = new int[SIZE*SIZE];
     public MessageCruiseTerrain() {}
     public MessageCruiseTerrain(int entity, int centerX, int centerZ, int step) {
         this.entity=entity; this.centerX=centerX; this.centerZ=centerZ; this.step=step;
     }
     public void toBytes(ByteBuf out) {
-        out.writeInt(entity); out.writeInt(centerX); out.writeInt(centerZ); out.writeInt(step);
+        out.writeInt(entity); out.writeInt(centerX); out.writeInt(centerZ); out.writeInt(step); out.writeByte(sampleStride);
         for (int color : pixels) out.writeMedium(color);
     }
     public void fromBytes(ByteBuf in) {
-        if (in.readableBytes()!=16+SIZE*SIZE*3) throw new IllegalArgumentException("Invalid cruise map size");
-        entity=in.readInt(); centerX=in.readInt(); centerZ=in.readInt(); step=in.readInt();
-        if (step<8 || step>2048) throw new IllegalArgumentException("Invalid cruise map scale");
+        if (in.readableBytes()!=17+SIZE*SIZE*3) throw new IllegalArgumentException("Invalid cruise map size");
+        entity=in.readInt(); centerX=in.readInt(); centerZ=in.readInt(); step=in.readInt(); sampleStride=in.readUnsignedByte();
+        if (step<8 || step>2048 || (sampleStride!=1 && sampleStride!=2 && sampleStride!=8)) throw new IllegalArgumentException("Invalid cruise map scale");
         for (int i=0;i<pixels.length;i++) pixels[i]=0xff000000|in.readUnsignedMedium();
     }
     public static final class Handler implements IMessageHandler<MessageCruiseTerrain,IMessage> {

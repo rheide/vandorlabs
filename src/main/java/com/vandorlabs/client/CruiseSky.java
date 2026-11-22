@@ -27,6 +27,8 @@ public final class CruiseSky {
         return owner!=null && owner.cruise.active() && buffered();
     }
 
+    public static boolean detailed(){return ready() && terrain.sampleStride==1;}
+
     public static boolean buffered(){
         return terrain!=null &&
                 Math.abs(terrain.centerX-owner.cruise.x())<terrain.step*MessageCruiseTerrain.SIZE/4 &&

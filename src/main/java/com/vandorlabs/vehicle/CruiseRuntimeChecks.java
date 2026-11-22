@@ -117,7 +117,7 @@ public final class CruiseRuntimeChecks {
     }
 
     public static boolean tick(Minecraft mc,File out) throws Exception {
-        if(++ticks>800)throw new IllegalStateException("Cruise fixture timeout at stage "+stage+" rider="+mc.player.getRidingEntity());
+        if(++ticks>2000)throw new IllegalStateException("Cruise fixture timeout at stage "+stage+" rider="+mc.player.getRidingEntity());
         if(work!=null){if(!work.isDone())return false;work.get();work=null;ticks=0;}
         if(stage==0 && "read".equals(RESTART)){
             work=mc.getIntegratedServer().addScheduledTask(()->resumeFlight(mc));stage=2;
@@ -132,7 +132,7 @@ public final class CruiseRuntimeChecks {
         }else if(stage==9 && CruiseSky.buffered()){
             require(!CruiseSky.ready(),"preview arrived before crossing Y=256");
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=2;
-        }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.ready()){
+        }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.detailed()){
             mc.gameSettings.thirdPersonView=0;
             stage=6;ticks=0;
         }else if(stage==6&&ticks>10){
