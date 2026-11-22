@@ -191,7 +191,6 @@ public final class NativeVehicleTransferChecks {
                 }
                 NativeVehicleTransfer.assemble(player, ROOT);
                 require(NativeCellTransactions.busy(world, ROOT, OWNER), "admitted assembly via production entry point: " + feedback);
-                if (transit != null) transit.checkHeldTank();
                 stage = 1;
                 return;
             }
@@ -284,7 +283,10 @@ public final class NativeVehicleTransferChecks {
 
     private static void fault(String point, NativeCellTransactions.Header header, int ignored) {
         if (!header.family().getPath().equals("vehicle_transfer")) return;
-        if (transit != null && header.root().equals(ROOT) && point.equals("armed-durable")) transit.heldCubes();
+        if (transit != null && header.root().equals(ROOT) && point.equals("armed-durable")) {
+            transit.checkHeldTank();
+            transit.heldCubes();
+        }
         if (phase().equals("crash-assemble") && point.equals("after-install")) {
             require(world.getBlockState(BARREL).isAir() && actors() == 1, "assembly removed the native barrel and installed an escrow actor");
             require(NativeVehicleTransfer.escrowed(world.getEntitiesOfClass(NativeGroundVehicle.class, VOLUME).getFirst()),
