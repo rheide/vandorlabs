@@ -35,6 +35,8 @@ name at the top of the dialog to select the next face. Right-click it to go back
 - **Redstone** selects the receiving channels and whether the face is visible
   on high signal, low signal, or continuously.
 
+![Raised Cockpit monitor bank with the center screen’s sixth control row on](images/cockpit-neoforge/cockpit-center-monitor-energized.png)
+
 The yellow console button retracts or raises the whole monitor bank. An
 occupied travel path prevents the move. The four touch surfaces remain available
 while it is retracted. Click a physical throttle to move it through its four

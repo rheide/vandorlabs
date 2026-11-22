@@ -11,11 +11,17 @@
    all six directions. Place slabs against a wall below or above its midpoint
    to select the lower or upper half. Floor and ceiling placement keep slab
    heads horizontal. Pair identical forms with matching slab heights.
+
+   ![An upper Coupler Slab and a full Vehicle Coupler on their mounts](images/couplers-neoforge/native-coupler-world.png)
+
 3. Right-click a head or use the **Configurizer** to open its **Vehicle Coupler**
    dialog. Use **Engage Coupler** on both heads. For signal operation, configure
    the channels and **Lock when signal is On / Off** for each head. Physical
    redstone also drives the input. A manual setting lasts until that combined
    input changes or the settings are edited.
+
+   ![Engaged Coupler controls showing two receive channels](images/couplers-neoforge/native-coupler-menu.png)
+
 4. With both heads engaged, assemble the parked hull through its Vehicle
    Controller. The matching heads connect the sections during that scan. The
    resulting rigid hull needs one Vehicle Controller, one Pilot Seat and the
