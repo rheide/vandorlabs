@@ -41,6 +41,8 @@ import net.neoforged.neoforge.entity.IEntityWithComplexSpawn;
 public final class NativeGroundVehicle extends Entity implements IEntityWithComplexSpawn {
     private static final String SAVE_KEY = "Vehicle";
     private static final int SCHEMA = 1;
+    private static final Set<String> VEHICLE_FIELDS = Set.of("Schema", "Blocks", "Pilot", "Facing", "Owner", "Mode",
+            "Speed", "HoverTarget", "Pitch", "FlightPhase", "LaunchTicks", "PilotAssignment", "Cruise");
     private static final Set<String> ENTITY_FIELDS = Set.of("id", "UUID", "Pos", "Motion", "Rotation", "FallDistance",
             "Fire", "Air", "OnGround", "Invulnerable", "PortalCooldown", "CustomName", "CustomNameVisible",
             "Silent", "NoGravity", "Glowing", "TicksFrozen", "HasVisualFire", "Tags", "Passengers",
@@ -58,19 +60,21 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     private static final EntityDataAccessor<CompoundTag> FLIGHT_READOUT = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.COMPOUND_TAG);
     private static final EntityDataAccessor<Float> SPEED = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.FLOAT);
 
+    private final NativeVehicleCruise cruise = new NativeVehicleCruise(this);
     private NativeTransferSnapshot snapshot;
     private NativeVehicleHull hull;
     private NativeVehiclePropulsion propulsion;
+    private NativeVehicleResources resources;
     private NativeVehicleVisual visual;
     private List<NativeVehicleStatus.Panel> status = List.of();
     private CompoundTag visualTag;
     private CompoundTag retained = new CompoundTag();
     private BlockPos pilot;
     private Direction heading;
-    private UUID owner;
+    private UUID owner, savedPilot;
     private double speed, hoverTarget;
     private int flightPhase, launchTicks;
-    private long inputAt = Long.MIN_VALUE, usedAt = Long.MIN_VALUE;
+    private long inputAt = Long.MIN_VALUE, usedAt = Long.MIN_VALUE, awaitingPilotUntil = Long.MIN_VALUE;
     private int keys;
     private Vec3 target;
     private float targetYaw;
@@ -90,11 +94,16 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         data.define(SPEED, 0F);
         data.define(FLIGHT_READOUT, new CompoundTag());
         data.define(CLEARANCE, -1F);
+        NativeVehicleCruise.define(data);
     }
 
     public NativeTransferSnapshot snapshot() {
-        return propulsion == null ? snapshot : propulsion.snapshot(level().registryAccess());
+        var registries = level().registryAccess();
+        var saved = propulsion == null ? snapshot : propulsion.snapshot(registries);
+        return resources == null ? saved : resources.snapshot(saved, registries);
     }
+
+    NativeVehicleResources resources() { return resources; }
     public NativeVehicleVisual visual() { return visual; }
     public List<NativeVehicleStatus.Panel> statusPanels() { return status; }
     public BlockPos pilotSeat() { return pilot != null ? pilot : entityData.get(PILOT); }
@@ -104,7 +113,11 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     public int mode() { return entityData.get(MODE); }
     public float hullPitch() { return entityData.get(PITCH); }
     public float driveSpeed() { return entityData.get(SPEED); }
-    public float groundClearance() { return entityData.get(CLEARANCE); }
+    public float groundClearance() { return highFlight() || flightAltitude() >= FlightEnvelope.WORLD_CEILING ? -1 : entityData.get(CLEARANCE); }
+    public boolean highFlight() { return cruise.active(); }
+    public double flightAltitude() { return cruise.altitude(); }
+    public double routeX() { return cruise.x(); }
+    public double routeZ() { return cruise.z(); }
     public NativeVehiclePropulsion.Readout flightReadout() {
         if (propulsion != null && !level().isClientSide) return propulsion.readout(this);
         var data = entityData.get(FLIGHT_READOUT);
@@ -142,9 +155,11 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         var geometry = new NativeVehicleHull(states);
         var appearance = NativeVehicleVisual.project(blocks, level().registryAccess());
         var drive = new NativeVehiclePropulsion(blocks, level().registryAccess());
+        var resources = new NativeVehicleResources(blocks, level().registryAccess(), drive);
         snapshot = blocks;
         hull = geometry;
         propulsion = drive;
+        this.resources = resources;
         status = NativeVehicleStatus.panels(blocks);
         visualTag = appearance;
         pilot = localPilot.immutable();
@@ -171,8 +186,9 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     @Override public boolean hurt(DamageSource source, float amount) { return false; }
 
     @Override protected boolean canAddPassenger(Entity rider) {
-        return rider instanceof Player && admitted() && getPassengers().isEmpty()
-                && (level().isClientSide || !NativeVehicleTransfer.escrowed(this));
+        return rider instanceof Player player && admitted() && getPassengers().isEmpty()
+                && (level().isClientSide || !NativeVehicleTransfer.escrowed(this)
+                && (owner == null || owner.equals(player.getUUID()) || player.isCreative()));
     }
 
     // Leave Entity.getControllingPassenger() at its default. Vanilla accepts arbitrary vehicle poses from that rider.
@@ -183,8 +199,23 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         return NativeVehicleHull.rotate(new Vec3(at.getX(), at.getY() + entityData.get(CUSHION), at.getZ()), getYRot(), hullPitch(), facing());
     }
 
+    @Override protected void addPassenger(Entity rider) {
+        super.addPassenger(rider);
+        if (rider instanceof ServerPlayer player) savedPilot = player.getUUID();
+    }
+
+    boolean resumeFlightSeat(ServerPlayer rider) {
+        return highFlight() && admitted() && getPassengers().isEmpty() && rider.getUUID().equals(savedPilot)
+                && !NativeVehicleTransfer.escrowed(this) && rider.startRiding(this, true);
+    }
+
     @Override protected void removePassenger(Entity rider) {
         super.removePassenger(rider);
+        if (rider instanceof ServerPlayer player && player.hasDisconnected()) {
+            awaitingPilotUntil = level().getGameTime() + 60;
+        } else {
+            savedPilot = null;
+        }
         keys = 0;
         inputAt = Long.MIN_VALUE;
     }
@@ -238,8 +269,10 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         Vec3 start = actor.getEyePosition();
         Vec3 end = start.add(actor.getLookAngle().scale(Math.min(8, actor.entityInteractionRange())));
         if (!NativeVehicleHull.loadedColumns(level(), new AABB(start, end).inflate(1e-5))) return null;
-        var terrain = level().clip(new ClipContext(start, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, actor));
-        if (terrain.getType() != HitResult.Type.MISS) end = terrain.getLocation();
+        if (!highFlight()) {
+            var terrain = level().clip(new ClipContext(start, end, ClipContext.Block.OUTLINE, ClipContext.Fluid.NONE, actor));
+            if (terrain.getType() != HitResult.Type.MISS) end = terrain.getLocation();
+        }
         return new Ray(NativeVehicleHull.inverse(start, position(), getYRot(), hullPitch(), facing()),
                 NativeVehicleHull.inverse(end, position(), getYRot(), hullPitch(), facing()));
     }
@@ -283,7 +316,9 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             tickInterpolation();
             return;
         }
-        if (NativeVehicleTransfer.escrowed(this)) return;
+        if (NativeVehicleTransfer.escrowed(this)
+                || highFlight() && pilot() == null && savedPilot != null && level().getGameTime() < awaitingPilotUntil) return;
+        resources.tick(this);
         drive();
         if (tickCount % 10 == 0) {
             publishFlightReadout();
@@ -323,7 +358,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         float turn = hover ? 2.4F * strafe : (float)(strafe * speed * 11 * (1 - .45 * Math.abs(speed) / .28));
         float yaw = hull.turn(this, getYRot(), turn);
         setYRot(Mth.wrapDegrees(yaw));
-        if (hover) hoverTarget += (riseInput - descentInput) * .18;
+        if (hover) hoverTarget = Mth.clamp(hoverTarget + (riseInput - descentInput) * .18,
+                level().getMinBuildHeight() + 1, hull.ceiling(this, yaw, 0));
         Vec3 at = position();
         Vec3 heading = NativeVehicleHull.rotate(new Vec3(facing().getStepX(), 0, facing().getStepZ()), yaw, 0, facing());
         double dx = heading.x * speed, dz = heading.z * speed;
@@ -408,14 +444,16 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     private void flight(boolean active, int forward, int strafe, double mass, double thrust) {
         if (flightPhase == CRUISE && (!FlightEnvelope.canFly(mass, thrust) || pilot() == null))
             flightPhase = propulsion.canHover() ? RETURN_HOVER : LANDING;
-        double ceiling = Math.min(FlightEnvelope.maximumAltitude(mass, thrust), hull.ceiling(this, getYRot(), hullPitch()));
-        if (flightPhase >= LANDING || getY() > ceiling + .02) {
+        double altitude = flightAltitude();
+        double ceiling = FlightEnvelope.maximumAltitude(mass, thrust);
+        if (!cruise.allowsTransit()) ceiling = Math.min(ceiling, hull.ceiling(this, getYRot(), hullPitch()));
+        if (flightPhase >= LANDING || altitude > ceiling + .02) {
             flightDescent(ceiling);
             return;
         }
         double response = FlightEnvelope.response(mass, thrust);
         setOnGround(false);
-        double maximumSpeed = FlightEnvelope.cruiseSpeed(getY());
+        double maximumSpeed = FlightEnvelope.cruiseSpeed(altitude);
         speed = approach(speed, maximumSpeed, FlightEnvelope.acceleration(mass, thrust) * (1 + maximumSpeed / 10));
         float yaw = getYRot() + (active ? strafe * (float)(.9 + .55 * response) : 0);
         float pitch = Mth.clamp(hullPitch() - (active ? forward * (float)(.6 + .38 * response) : 0),
@@ -427,8 +465,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         }
         var movement = NativeVehicleHull.rotate(new Vec3(facing().getStepX() * speed, 0, facing().getStepZ() * speed),
                 yaw, pitch, facing());
-        double rise = Math.min(launching ? .17 : movement.y,
-                Math.max(0, Math.min(ceiling, hull.ceiling(this, yaw, pitch)) - getY()));
+        if (!cruise.allowsTransit()) ceiling = Math.min(ceiling, hull.ceiling(this, yaw, pitch));
+        double rise = Math.min(launching ? .17 : movement.y, Math.max(0, ceiling - altitude));
         if (!flightMove(new Vec3(movement.x, rise, movement.z), yaw, pitch)) {
             flightPhase = LANDING;
             speed = 0;
@@ -437,11 +475,18 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     }
 
     private boolean flightMove(Vec3 travel, float yaw, float pitch) {
-        if (!hull.clearMotion(this, yaw, pitch, travel)) return false;
+        boolean highFlight = cruise.active();
+        if (!highFlight && !hull.clearMotion(this, yaw, pitch, travel)) return false;
         setYRot(Mth.wrapDegrees(yaw));
         entityData.set(PITCH, pitch);
-        setPos(getX() + travel.x, getY() + travel.y, getZ() + travel.z);
-        setBoundingBox(makeBoundingBox());
+        if (highFlight) {
+            setBoundingBox(makeBoundingBox());
+            cruise.move(travel);
+        } else {
+            setPos(getX() + travel.x, getY() + travel.y, getZ() + travel.z);
+            setBoundingBox(makeBoundingBox());
+            if (travel.y > 0 && getY() > FlightEnvelope.WORLD_CEILING) cruise.enter();
+        }
         setDeltaMovement(travel);
         return true;
     }
@@ -450,11 +495,18 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         speed = approach(speed, 0, Math.max(.09, speed / 15));
         boolean landing = flightPhase == LANDING;
         boolean resumeHover = flightPhase == RETURN_HOVER;
+        if (cruise.active()) {
+            double target = landing || resumeHover ? FlightEnvelope.REENTRY_ALTITUDE : ceiling;
+            double descent = Math.max(-Math.min(3, .26 + flightAltitude() / 3500), target - flightAltitude());
+            float pitch = (float)approach(hullPitch(), 0, 1.5);
+            flightMove(new Vec3(0, Math.min(0, descent), 0), getYRot(), pitch);
+            return;
+        }
         if (hullPitch() != 0) {
             float level = (float)approach(hullPitch(), 0, 1.5);
             if (flightMove(Vec3.ZERO, getYRot(), level) || flightMove(new Vec3(0, .12, 0), getYRot(), level)) return;
         }
-        if (resumeHover && hullPitch() == 0) { finishFlight(HOVER); return; }
+        if (resumeHover && hullPitch() == 0 && getY() <= FlightEnvelope.WORLD_CEILING) { finishFlight(HOVER); return; }
         double descent = landing || resumeHover ? -.24 : Math.min(0, Math.max(-.24, ceiling - getY()));
         double accepted = hull.clip(this, position(), getYRot(), descent, Direction.Axis.Y);
         if (accepted != 0) {
@@ -531,10 +583,12 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     }
 
     public record SavedVehicle(NativeTransferSnapshot snapshot, BlockPos pilot, Direction facing, UUID owner,
-                               int mode, double speed, double hoverTarget, float pitch, int flightPhase, int launchTicks) {}
+                               int mode, double speed, double hoverTarget, float pitch, int flightPhase, int launchTicks,
+                               NativeVehicleCruise.Route route, UUID pilotAssignment) {}
 
     public static SavedVehicle readSavedVehicle(CompoundTag entityTag, HolderLookup.Provider registries) {
-        if (!(entityTag.get(SAVE_KEY) instanceof CompoundTag data) || !data.contains("Schema", Tag.TAG_INT)
+        if (!(entityTag.get(SAVE_KEY) instanceof CompoundTag data) || !VEHICLE_FIELDS.containsAll(data.getAllKeys())
+                || !data.contains("Schema", Tag.TAG_INT)
                 || data.getInt("Schema") != SCHEMA || !data.contains("Blocks", Tag.TAG_COMPOUND)
                 || !data.contains("Pilot", Tag.TAG_LONG) || !data.contains("Facing", Tag.TAG_INT)
                 || !data.contains("Mode", Tag.TAG_BYTE) || !data.contains("Speed", Tag.TAG_DOUBLE)
@@ -547,11 +601,14 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         double speed = data.getDouble("Speed"), hoverTarget = data.getDouble("HoverTarget");
         float pitch = data.getFloat("Pitch");
         int phase = data.getByte("FlightPhase"), launch = data.getByte("LaunchTicks");
+        var route = NativeVehicleCruise.Route.read(data);
         if (face < 2 || face > 5 || mode < TAXI || mode > FLIGHT || !Double.isFinite(speed)
                 || Math.abs(speed) > FlightEnvelope.cruiseSpeed(FlightEnvelope.MAX_ALTITUDE)
                 || !Double.isFinite(hoverTarget) || !Float.isFinite(pitch) || Math.abs(pitch) > FlightEnvelope.MAX_PITCH
-                || mode != FLIGHT && (phase != NO_FLIGHT || pitch != 0 || launch != 0)
-                || mode == FLIGHT && (phase < RUNWAY || phase > RETURN_HOVER || launch < 0 || launch > 64)
+                || mode != FLIGHT && (phase != NO_FLIGHT || pitch != 0 || launch != 0 || route != null)
+                || data.contains("PilotAssignment") && !data.hasUUID("PilotAssignment")
+                || mode == FLIGHT && (phase < RUNWAY || phase > RETURN_HOVER || speed < 0 || launch < 0 || launch > 64)
+                || route != null && phase == RUNWAY
                 || data.contains("FlightPhase") && !data.contains("FlightPhase", Tag.TAG_BYTE)
                 || data.contains("LaunchTicks") && !data.contains("LaunchTicks", Tag.TAG_BYTE)) {
             throw new IllegalArgumentException("Invalid native vehicle pose");
@@ -560,7 +617,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         var pilot = BlockPos.of(data.getLong("Pilot"));
         var facing = Direction.from3DDataValue(face);
         NativeVehicleStructure.validate(blocks, pilot, facing, registries);
-        return new SavedVehicle(blocks, pilot, facing, data.hasUUID("Owner") ? data.getUUID("Owner") : null, mode, speed, hoverTarget, pitch, phase, launch);
+        return new SavedVehicle(blocks, pilot, facing, data.hasUUID("Owner") ? data.getUUID("Owner") : null, mode, speed, hoverTarget, pitch, phase, launch, route,
+                data.hasUUID("PilotAssignment") ? data.getUUID("PilotAssignment") : null);
     }
 
     @Override protected void readAdditionalSaveData(CompoundTag tag) {
@@ -572,6 +630,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         snapshot = null;
         hull = null;
         propulsion = null;
+        resources = null;
         visual = null;
         visualTag = null;
         status = List.of();
@@ -583,6 +642,9 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             hoverTarget = saved.hoverTarget;
             launchTicks = saved.launchTicks;
             setMode(saved.mode, saved.flightPhase);
+            savedPilot = saved.pilotAssignment;
+            cruise.restore(saved.route);
+            if (savedPilot != null && saved.route != null) awaitingPilotUntil = level().getGameTime() + 100;
             entityData.set(PITCH, saved.pitch);
             entityData.set(SPEED, (float)speed);
             setBoundingBox(makeBoundingBox());
@@ -592,6 +654,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             snapshot = null;
             hull = null;
             propulsion = null;
+            resources = null;
             visualTag = null;
             entityData.set(READY, false);
         }
@@ -612,6 +675,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         data.putFloat("Pitch", hullPitch());
         if (flightPhase != NO_FLIGHT) data.putByte("FlightPhase", (byte)flightPhase);
         if (launchTicks != 0) data.putByte("LaunchTicks", (byte)launchTicks);
+        if (savedPilot != null) data.putUUID("PilotAssignment", savedPilot);
+        cruise.write(data);
         tag.put(SAVE_KEY, data);
     }
 }

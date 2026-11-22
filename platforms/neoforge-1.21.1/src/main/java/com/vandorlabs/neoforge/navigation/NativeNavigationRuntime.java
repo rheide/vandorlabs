@@ -280,6 +280,8 @@ public final class NativeNavigationRuntime {
  public static long terrainContextsCreated;
  private static TerrainState terrain(ServerLevel level){var state=TERRAIN_WORLDS.get(level);if(state==null||!state.current()){if(state!=null){TERRAIN.invalidate(state);var it=RASTERS.entrySet().iterator();while(it.hasNext()){var entry=it.next();if(entry.getKey().level==level){bytes-=entry.getValue().bytes();it.remove();}}}state=new TerrainState(level);TERRAIN_WORLDS.put(level,state);}return state;}
  public static int color(ServerLevel level,int x,int z,int step){return terrain(level).color(x,z,step);}
+ /** Widely spaced flight pixels sample seed biome terrain without retaining sparse detail tiles. */
+ public static int cruiseColor(ServerLevel level,int x,int z,int step){var state=terrain(level);return step<=32?state.color(x,z,step):state.sample(x,z);}
 
  @SubscribeEvent public static void tick(net.neoforged.neoforge.event.tick.ServerTickEvent.Post e){
   long deadline=System.nanoTime()+4000000;

@@ -116,7 +116,7 @@ final class NativeVehicleHull {
         var envelope = broad(shape(bounds, pose)).expandTowards(travel).inflate(EPSILON);
         if (!craft.level().getWorldBorder().isWithinBounds(envelope) || !loadedColumns(craft.level(), envelope)
                 || envelope.minY < craft.level().getMinBuildHeight() - EPSILON
-                || envelope.maxY > craft.level().getMaxBuildHeight() + EPSILON) return null;
+                || craft.level().dimension() != Level.OVERWORLD && envelope.maxY > craft.level().getMaxBuildHeight() + EPSILON) return null;
         var contacts = new ArrayList<Contact>();
         for (var group : groups) {
             var sweep = broad(shape(group.bounds, pose)).expandTowards(travel).inflate(EPSILON);

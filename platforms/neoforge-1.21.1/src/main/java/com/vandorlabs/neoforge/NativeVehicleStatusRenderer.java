@@ -16,7 +16,7 @@ import org.joml.Matrix4f;
 /** Carried mode controls drawn on the same surface and pixel bounds hit-tested by the pilot. */
 public final class NativeVehicleStatusRenderer {
     private record Face(Matrix4f local, int height) {}
-    private record Reading(int mode, int y, int clearance, int speed, int fuel, int ceiling, boolean available) {}
+    private record Reading(int mode, int y, int clearance, int speed, int fuel, boolean available, boolean high, int x, int z) {}
     private record Labels(Reading state, NativeOverlayCanvas.Mesh glyphs) {}
     private final NativeOverlayCanvas canvas;
     private final Map<NativeVehicleStatus.Panel, Face> faces = new WeakHashMap<>();
@@ -40,9 +40,10 @@ public final class NativeVehicleStatusRenderer {
     public void render(NativeGroundVehicle craft, PoseStack poses, MultiBufferSource buffers) {
         if (craft.statusPanels().isEmpty()) return;
         var thrust = craft.flightReadout();
-        var reading = new Reading(craft.mode(), (int)Math.floor(craft.getY()), Math.round(craft.groundClearance()),
-                Math.round(Math.abs(craft.driveSpeed()) * 20), thrust.fuel(), (int)thrust.ceiling(),
-                FlightEnvelope.canFly(thrust.effectiveMass(), thrust.thrust()));
+        var reading = new Reading(craft.mode(), (int)Math.floor(craft.flightAltitude()), Math.round(craft.groundClearance()),
+                Math.round(Math.abs(craft.driveSpeed()) * 20), thrust.fuel(),
+                FlightEnvelope.canFly(thrust.effectiveMass(), thrust.thrust()), craft.highFlight(),
+                (int)craft.routeX(), (int)craft.routeZ());
         var labels = readings.get(craft);
         if (labels == null || !labels.state.equals(reading)) {
             labels = new Labels(reading, canvas.build(text -> {
@@ -52,8 +53,9 @@ public final class NativeVehicleStatusRenderer {
                             + NativeVehicleStatus.BUTTON_WIDTH / 2, NativeVehicleStatus.BUTTON_START + 2, 0xffffff);
                 }
                 text.plain("Y " + reading.y + "   " + reading.speed + " blocks/s", 8, 33, 0xc5daf0);
-                String ground = reading.clearance >= 0 ? "Ground " + reading.clearance : "";
-                text.plain(ground, 8, 43, 0xc5daf0);
+                String location = reading.high ? "X " + reading.x + " Z " + reading.z
+                        : reading.clearance >= 0 ? "Ground " + reading.clearance : "";
+                text.fitted(location, 8, 43, 112, 0xc5daf0);
                 text.plain(reading.available ? "Fuel " + reading.fuel + " mB" : "Flight unavailable", 8, 53, 0xf2cf8a);
             }));
             readings.put(craft, labels);
