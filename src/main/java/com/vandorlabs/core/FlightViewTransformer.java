@@ -20,7 +20,7 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
         boolean beacon = target.equals("journeymap.client.render.ingame.RenderWaypointBeacon");
         if (!dismount && !map && !beacon && !editor && !newWaypoint && !distances) return bytes;
         ClassReader reader = new ClassReader(bytes);
-        ClassWriter writer = new ClassWriter(reader, 0);
+        ClassWriter writer = new ClassWriter(reader, ClassWriter.COMPUTE_MAXS);
         reader.accept(new ClassVisitor(ASM5,writer) {
             @Override public MethodVisitor visitMethod(int access,String method,String descriptor,String signature,String[] exceptions) {
                 MethodVisitor delegate = super.visitMethod(access,method,descriptor,signature,exceptions);
@@ -53,7 +53,12 @@ public final class FlightViewTransformer implements IClassTransformer, Opcodes {
                             if (id.equals("field_78731_m") || id.equals("viewerPosY")) axis="y";
                             if (id.equals("field_78728_n") || id.equals("viewerPosZ")) axis="z";
                         }
-                        if (axis!=null) super.visitMethodInsn(INVOKESTATIC,GEO,axis,"(D)D",false);
+                        if (axis!=null) {
+                            if (newWaypoint) {
+                                super.visitVarInsn(ALOAD,0);
+                                super.visitMethodInsn(INVOKESTATIC,GEO,axis,"(DLnet/minecraft/entity/player/EntityPlayer;)D",false);
+                            } else super.visitMethodInsn(INVOKESTATIC,GEO,axis,"(D)D",false);
+                        }
                     }
                 };
             }
