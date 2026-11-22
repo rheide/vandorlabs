@@ -52,7 +52,7 @@ public final class NativeVehicleFlightFixture {
     private static Vec3 departed;
     private static int ticks, unexpectedLoads, airborneTicks;
     private static double descendingFrom;
-    private static boolean landed;
+    private static boolean landed, sawRunway;
 
     private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN, COLD, IMPACT }
 
@@ -185,7 +185,12 @@ public final class NativeVehicleFlightFixture {
                 stage = Stage.BOARD;
             }
             case BOARD -> {
-                if (actor.getVehicle() != craft || craft.mode() != NativeGroundVehicle.FLIGHT || craft.onGround()) return;
+                if (actor.getVehicle() != craft || craft.mode() != NativeGroundVehicle.FLIGHT) return;
+                if (craft.onGround()) {
+                    sawRunway = true;
+                    return;
+                }
+                require(sawRunway, "a supported Flight roll precedes the first airborne tick");
                 stage = Stage.LOW;
             }
             case LOW -> {

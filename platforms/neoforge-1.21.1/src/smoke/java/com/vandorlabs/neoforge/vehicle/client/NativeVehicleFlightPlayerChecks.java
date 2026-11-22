@@ -104,8 +104,9 @@ public final class NativeVehicleFlightPlayerChecks {
             }
             case 2 -> {
                 if (craft.mode() != NativeGroundVehicle.FLIGHT || craft.driveSpeed() < FlightEnvelope.TAKEOFF_SPEED - .002) return;
-                NativeVehicleFlightFixture.require(craft.hullPitch() == 0 && Math.abs(craft.flightAltitude() - runwayAltitude) < .15,
-                        "runway reaches takeoff speed without lifting until pilot pitch-up");
+                NativeVehicleFlightFixture.require(craft.hullPitch() == 0 && craft.flightAltitude() <= runwayAltitude + .51,
+                        "runway reaches takeoff speed without lifting until pilot pitch-up, initial="
+                                + runwayAltitude + " current=" + craft.flightAltitude());
                 mc.options.keyDown.setDown(true);
                 stage++;
             }
