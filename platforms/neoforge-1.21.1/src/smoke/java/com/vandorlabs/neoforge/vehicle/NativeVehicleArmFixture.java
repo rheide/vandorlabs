@@ -96,7 +96,7 @@ final class NativeVehicleArmFixture {
         double progress = arm.getDouble("GearProgress");
         if (step == 0) {
             need(progress == 1 && sink == 0 && waterSink == 0 && itemsSink == 0, "gated source ports");
-            if (NativeVehicleTransferChecks.armGallery() && ++galleryWait < 40) return false;
+            if (NativeVehicleTransferChecks.armGallery() && ++galleryWait < 65) return false;
             galleryWait = 0;
             toggle(actor, motion);
             toggle(actor, activate);

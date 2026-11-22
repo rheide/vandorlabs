@@ -144,7 +144,7 @@ public final class NativeVehicleTransferChecks {
                 var viewer = world.players().stream().findFirst().orElse(null);
                 if (viewer == null) return;
                 viewer.setGameMode(GameType.SPECTATOR);
-                viewer.connection.teleport(ROOT.getX() - 3.5, ROOT.getY() + 3.5, ROOT.getZ() - 5.5, -45F, 19F);
+                viewer.connection.teleport(ROOT.getX() + 5.5, ROOT.getY() + 1, ROOT.getZ() + 1, 117F, 12F);
             }
             require(++ticks < 450, "bounded asynchronous transfer; source=" + world.getBlockState(ROOT)
                 + " parked=" + world.getBlockState(PARK) + " busySource=" + NativeCellTransactions.busy(world, ROOT, OWNER)
