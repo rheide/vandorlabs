@@ -161,6 +161,15 @@ public final class NativeVehiclePlayerChecks {
     }
     private static void snap(Minecraft mc,String file) {
         try(var image=net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())){
+            if(file.equals("taxi-vehicle.png")){
+                int deck=0,road=0;
+                for(int i=0;i<16;i++){
+                    int y=image.getHeight()*(510+i)/720;
+                    deck+=image.getPixelRGBA(image.getWidth()*505/1280,y)&255;
+                    road+=image.getPixelRGBA(image.getWidth()*425/1280,y)&255;
+                }
+                NativeVehiclePlayerFixture.require(road>16*45&&deck>road*.45,"sunlit carried slab and adjacent road "+deck+"/"+road);
+            }
             image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve(file));
         }catch(java.io.IOException ex){throw new IllegalStateException("Vehicle fixture capture",ex);}
     }

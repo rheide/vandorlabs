@@ -50,6 +50,8 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
     private record Mesh(List<Cell> cells, int bytes) {}
 
     private final NativeVehicleStatusRenderer status;
+    private final BlockPos.MutableBlockPos lightPosition=new BlockPos.MutableBlockPos();
+    private final org.joml.Matrix3f hullRotation=new org.joml.Matrix3f();
 
     public NativeGroundVehicleRenderer(EntityRendererProvider.Context context) {
         super(context);
@@ -120,6 +122,11 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
         var mesh = mesh(craft, visual);
         float yaw = Mth.rotLerp(partial, craft.yRotO, craft.getYRot());
         float pitch = craft.renderPitch(partial);
+        double originX=Mth.lerp(partial,craft.xo,craft.getX());
+        double originY=Mth.lerp(partial,craft.yo,craft.getY());
+        double originZ=Mth.lerp(partial,craft.zo,craft.getZ());
+        hullRotation.rotationY(-yaw*Mth.DEG_TO_RAD);
+        if(pitch!=0)hullRotation.rotate(pitch*Mth.DEG_TO_RAD,-craft.facing().getStepZ(),0,craft.facing().getStepX());
         poses.pushPose();
         try {
             poses.mulPose(Axis.YP.rotationDegrees(-yaw));
@@ -127,8 +134,13 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
             poses.translate(-.5, 0, -.5);
             for (var cell : mesh.cells) {
                 var palette = cell.palette;
-                var at = craft.blockPosition().offset(cell.pos);
-                int cellLight = world.hasChunkAt(at) ? LevelRenderer.getLightColor(world, at) : light;
+                // A deck can rest half a cell above its logical owner. Sample its drawn center so
+                // floor rounding cannot borrow the light inside the opaque road beneath it.
+                double x=cell.pos.getX(),y=cell.pos.getY()+.5,z=cell.pos.getZ();
+                var at=lightPosition.set(originX+hullRotation.m00()*x+hullRotation.m10()*y+hullRotation.m20()*z,
+                    originY+hullRotation.m01()*x+hullRotation.m11()*y+hullRotation.m21()*z,
+                    originZ+hullRotation.m02()*x+hullRotation.m12()*y+hullRotation.m22()*z);
+                int cellLight = !craft.highFlight() && world.hasChunkAt(at) ? LevelRenderer.getLightColor(world, at) : light;
                 poses.pushPose();
                 try {
                     poses.translate(cell.pos.getX(), cell.pos.getY(), cell.pos.getZ());
