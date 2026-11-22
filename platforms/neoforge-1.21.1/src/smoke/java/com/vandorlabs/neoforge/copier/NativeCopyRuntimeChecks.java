@@ -5,6 +5,9 @@ import com.vandorlabs.neoforge.transfer.*;
 import com.vandorlabs.copier.core.CopySettings;
 import com.vandorlabs.neoforge.copier.*;
 import com.vandorlabs.neoforge.surface.*;
+import com.vandorlabs.neoforge.reservoir.NativeBufferBindings;
+import com.vandorlabs.neoforge.reservoir.NativeBufferEntity;
+import com.vandorlabs.neoforge.reservoir.NativeHexTankEntity;
 import com.vandorlabs.redstone.ChannelList;
 import java.util.*;
 import net.minecraft.core.*;
@@ -45,8 +48,46 @@ public final class NativeCopyRuntimeChecks {
         if(stage==2&&!root.busy()){need(armed==2,"retry traverses a new durable journal");need(world.getBlockState(TARGET).is(Blocks.CHEST),"one physical copied chest published");var expected=source.copy();expected.putInt("x",TARGET.getX());expected.putInt("y",TARGET.getY());expected.putInt("z",TARGET.getZ());need(chest(TARGET).saveWithFullMetadata(world.registryAccess()).equals(expected),"copied chest keeps exact name, count and custom item components");need(chest(SUPPLY).getItem(0).isEmpty()&&ItemStack.matches(chest(SUPPLY).getItem(1),gold(13)),"successful retry pays one block item and seven exact component-bearing items once");need(chest(SOURCE).saveWithFullMetadata(world.registryAccess()).equals(source),"source private data unchanged after successful copy");need(!NativeTransferHolds.active(world)&&!NativeCellTransactions.busy(world,ROOT,root.key()),"authority retired only after physical checkpoint");need(world.getEntitiesOfClass(ItemEntity.class,new AABB(ROOT).inflate(8)).isEmpty(),"no loose material duplicates");world.setBlock(INPUT,Blocks.AIR.defaultBlockState(),3);stage=3;stageTick=ticks;return;}
         if(stage==3&&ticks-stageTick>=3){need(root.input()==null&&root.output()==null,"a hole releases both saved Copy areas instead of leaving stale claims");world.setBlock(INPUT,NativeSurfaceBindings.BLOCK.defaultBlockState(),3);root.checkAreas(actor);need(root.input()!=null&&root.output()!=null,"repair permits an explicit paired-pad check");idleScans=root.topologyScans;idlePackets=root.packets;stage=4;stageTick=ticks;return;}
         if(stage==4&&ticks-stageTick>=25){need(root.topologyScans==idleScans,"settling cosmetic activity cannot trigger topology scans before="+idleScans+" after="+root.topologyScans);System.out.println("[vandorlabs][copy-runtime] settled counters scans="+root.topologyScans+" packetsBefore="+idlePackets+" packetsAfter="+root.packets);idleScans=root.topologyScans;idlePackets=root.packets;stage=5;stageTick=ticks;return;}
-        if(stage==5&&ticks-stageTick>=20){need(root.topologyScans==idleScans&&root.packets==idlePackets,"settled Copy Controller idle scans="+idleScans+"->"+root.topologyScans+" packets="+idlePackets+"->"+root.packets);System.out.println("[vandorlabs][copy-runtime] PASS checks="+checks+" pairedPads/exactChestMaterials/realAsyncWithdrawal/caughtRollback/retry/privateComponents/holeRepair/idle");NativeCopyService.fault=null;world=null;event.getServer().halt(false);}
+        if(stage==5&&ticks-stageTick>=20){need(root.topologyScans==idleScans&&root.packets==idlePackets,"settled Copy Controller idle scans="+idleScans+"->"+root.topologyScans+" packets="+idlePackets+"->"+root.packets);NativeCopyService.fault=null; startBufferCopy(false, false);return;}
+        if (stage >= 6 && !root.busy()) {
+            boolean creative=stage==7||stage==9;
+            need(world.getBlockEntity(SOURCE) instanceof NativeBufferEntity original && original.amount()==700,"source keeps 700 units");
+            need(world.getBlockEntity(TARGET) instanceof NativeBufferEntity copy && copy.amount()==(creative?700:0),"copied battery or tank level follows game mode");
+            if (!creative) need(chest(SUPPLY).getItem(0).isEmpty(),"Survival copy consumes its empty carrier");
+            if (stage<9) {
+                startBufferCopy(stage>=7,!creative);
+                return;
+            }
+            System.out.println("[vandorlabs][copy-runtime] PASS checks="+checks+" pairedPads/exactChestMaterials/realAsyncWithdrawal/caughtRollback/retry/privateComponents/holeRepair/idle/survivalCreativeTankBattery");
+            world=null; event.getServer().halt(false);
+        }
     }catch(Throwable failure){fail(failure);}}
+    private static void startBufferCopy(boolean tank,boolean creative) {
+        var block=tank?NativeBufferBindings.TANK:NativeBufferBindings.BATTERY;
+        // Retire the completed chest fixture before reusing its input and output pads.
+        if(world.getBlockEntity(TARGET) instanceof ChestBlockEntity chest) chest.clearContent();
+        if(world.getBlockEntity(SOURCE) instanceof ChestBlockEntity chest) chest.clearContent();
+        world.setBlock(TARGET,Blocks.AIR.defaultBlockState(),3);
+        if (!creative) {
+            world.setBlock(SOURCE,block.defaultBlockState(),3);
+            var original=(NativeBufferEntity)world.getBlockEntity(SOURCE);
+            if (original instanceof NativeHexTankEntity storage) {
+                var water=new net.neoforged.neoforge.fluids.FluidStack(net.minecraft.world.level.material.Fluids.WATER,700);
+                storage.fill(water,net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction.EXECUTE);
+            } else {
+                var saved=original.saveWithFullMetadata(world.registryAccess());
+                saved.putInt("Energy",700);
+                original.loadWithComponents(saved,world.registryAccess());
+            }
+            chest(SUPPLY).setItem(0,new ItemStack(block));
+            chest(SUPPLY).setChanged();
+        }
+        actor.setGameMode(creative?GameType.CREATIVE:GameType.SURVIVAL);
+        stage++;
+        stageTick=ticks;
+        root.request(actor);
+        need(root.busy(),"buffer Copy admitted");
+    }
     private static void read(ServerStartedEvent event){
         root=(NativeCopyControllerEntity)world.getBlockEntity(ROOT);need(root!=null&&!root.inert(),"physical Copy Controller retained after source-only chunk save");need(world.getBlockState(TARGET).isAir()&&world.getBlockEntity(TARGET)==null,"unpublished output remains empty after abrupt withdrawal");need(world.getBlockState(SUPPLY).is(Blocks.CHEST)&&chest(SUPPLY).getItem(0).is(Items.CHEST)&&chest(SUPPLY).getItem(0).getCount()==1&&ItemStack.matches(chest(SUPPLY).getItem(1),gold(20)),"exact material item plus original20 named/component gold restored once");int total=0;for(int slot=0;slot<chest(SUPPLY).getContainerSize();slot++)total+=chest(SUPPLY).getItem(slot).getCount();need(total==21,"no extra material inventory owners");need(world.getBlockState(SOURCE).is(Blocks.CHEST)&&ItemStack.matches(chest(SOURCE).getItem(0),gold(7)),"input retains its original seven component-bearing items");need(!root.busy()&&!NativeTransferHolds.active(world)&&!NativeCellTransactions.busy(world,ROOT,root.key()),"cold physical checkpoint and durable journal retirement complete before gameplay");need(world.getEntitiesOfClass(ItemEntity.class,new AABB(ROOT).inflate(8)).isEmpty(),"cold rollback leaves zero loose material copies");System.out.println("[vandorlabs][copy-runtime] read PASS checks="+checks+" oneOriginalSupply/inputRetained/outputAbsent/exactComponents/zeroLooseCopies/durableRetirement");world=null;event.getServer().halt(false);
     }

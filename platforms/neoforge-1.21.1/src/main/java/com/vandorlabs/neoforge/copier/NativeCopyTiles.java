@@ -80,5 +80,16 @@ final class NativeCopyTiles {
         }
         return new NativeRawCell(target,source.state,raw,2*1024*1024);
     }
+    static NativeRawCell emptyCopiedBuffer(NativeRawCell cell) {
+        if (!(cell.state.getBlock() instanceof com.vandorlabs.neoforge.reservoir.NativeBufferBlock buffer)) return cell;
+        var raw = cell.tile();
+        if (buffer.battery) {
+            raw.putInt("Energy", 0);
+        } else {
+            raw.remove("Tank");
+            raw.remove("NativeTankFluid");
+        }
+        return new NativeRawCell(cell.pos, cell.state, raw, NativeCopyPlan.LIMITS.tileBytes());
+    }
     private NativeCopyTiles(){}
 }
