@@ -26,6 +26,8 @@ public final class VehicleStatus {
             if(craft==null)VehicleService.permission(player,at);else VehicleService.carriedPermission(player,craft,at);
             int mode=action==FLIGHT_ACTION?VehicleStatusLayout.FLIGHT:action>=1&&action<=3?action-1:-1;
             if(mode>=0){
+                if (craft!=null && highModeLocked(craft,mode))
+                    throw new IllegalArgumentException("Descend to Y=256 or below before selecting Taxi or Hover.");
                 if((availableModes(world,screen,player)&(1<<mode))!=0)VehicleService.screenMode(player,screen,craft,mode);
                 return;
             }
@@ -36,6 +38,10 @@ public final class VehicleStatus {
             if(action==0){if(craft==null)controller.setEnabled(!controller.enabled());else craft.autopilot.toggle();}
             else if(action==4){if(craft==null)controller.pulseDeparture();else craft.autopilot.pulseDeparture();}
         }catch(IllegalArgumentException denied){VehicleNetwork.error(player,denied.getMessage());}
+    }
+    static boolean highModeLocked(EntityGroundVehicle craft,int mode) {
+        return (mode==VehicleStatusLayout.TAXI || mode==VehicleStatusLayout.HOVER) && craft.flying()
+                && craft.flightAltitude()>com.vandorlabs.physics.FlightEnvelope.WORLD_CEILING;
     }
     public static int availableModes(World world,BlockPos screen,net.minecraft.entity.player.EntityPlayer player){
         EntityGroundVehicle craft=world instanceof VehicleWorld?((VehicleWorld)world).craft:null;
@@ -57,6 +63,8 @@ public final class VehicleStatus {
                 &&(!craft.hover||craft.groundClearance()<=3&&VehicleLandingGear.extended(craft))
                 &&Math.abs(net.minecraft.util.math.MathHelper.wrapDegrees(craft.rotationYaw-Math.round(craft.rotationYaw/90F)*90F))<=12)
             modes|=1<<VehicleStatusLayout.PARK;
+        if (highModeLocked(craft,VehicleStatusLayout.TAXI))
+            modes &= ~((1<<VehicleStatusLayout.TAXI)|(1<<VehicleStatusLayout.HOVER));
         return modes;
     }
     public static boolean offersEmergencyPark(World world,net.minecraft.entity.player.EntityPlayer player){

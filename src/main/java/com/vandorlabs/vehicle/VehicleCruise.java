@@ -28,6 +28,7 @@ public final class VehicleCruise {
     private double routeX, routeZ;
     private MessageCruiseTerrain pending;
     private int nextPixel, publishedX, publishedZ, publishedStep;
+    private boolean preview;
 
     VehicleCruise(EntityGroundVehicle craft) { this.craft = craft; }
 
@@ -65,7 +66,7 @@ public final class VehicleCruise {
         }
         if (!cruising) relocate(craft.posX, SKY_OFFSET + height, craft.posZ);
         else craft.setPosition(craft.posX, SKY_OFFSET + height, craft.posZ);
-        updateTerrain(height);
+        updateTerrain(routeX, routeZ, height);
         return true;
     }
 
@@ -105,32 +106,50 @@ public final class VehicleCruise {
         }
     }
 
-    private void updateTerrain(double height) {
+    void preloadTerrain() {
+        if (!active() && craft.dimension == 0 && craft.posY >= 200 && craft.flying())
+            updateTerrain(craft.posX, craft.posZ, FlightEnvelope.WORLD_CEILING);
+    }
+
+    private void updateTerrain(double x, double z, double height) {
         if (craft.getPassengers().isEmpty()) return;
         final int size = MessageCruiseTerrain.SIZE;
-        int step = Math.max(16,Integer.highestOneBit((int)height / 8));
-        int centerX = MathHelper.floor(routeX / step) * step;
-        int centerZ = MathHelper.floor(routeZ / step) * step;
+        int step = Math.max(8,Integer.highestOneBit((int)height / 8) / 2);
+        int centerX = MathHelper.floor(x / step) * step;
+        int centerZ = MathHelper.floor(z / step) * step;
         if (pending == null) {
-            if (step == publishedStep && Math.abs(routeX-publishedX) < size*step/5 &&
-                    Math.abs(routeZ-publishedZ) < size*step/5 && craft.ticksExisted%200 != 0) return;
+            if (step == publishedStep && Math.abs(x-publishedX) < size*step/5 &&
+                    Math.abs(z-publishedZ) < size*step/5 && craft.ticksExisted%200 != 0) return;
             pending = new MessageCruiseTerrain(craft.getEntityId(), centerX, centerZ, step);
             nextPixel = 0;
+            preview = publishedStep == 0;
         }
-        int end = Math.min(nextPixel + 128, size*size);
+        // First publish a coarse image, then refine it in the same geographic footprint.
+        int stride = preview ? 8 : 1;
+        int columns = size / stride;
+        int end = Math.min(nextPixel + 512, columns*columns);
         long started = System.nanoTime();
         do {
-            int px = pending.centerX + (nextPixel%size-size/2)*pending.step;
-            int pz = pending.centerZ + (nextPixel/size-size/2)*pending.step;
-            pending.pixels[nextPixel++] = NavigationService.cruiseColor(craft.world,px,pz,pending.step);
+            int col = nextPixel % columns * stride, row = nextPixel / columns * stride;
+            int px = pending.centerX + (col-size/2)*pending.step;
+            int pz = pending.centerZ + (row-size/2)*pending.step;
+            int color = NavigationService.cruiseColor(craft.world,px,pz,pending.step);
+            for (int r=row; r<row+stride; r++)
+                java.util.Arrays.fill(pending.pixels,r*size+col,r*size+col+stride,color);
+            nextPixel++;
         } while (nextPixel < end && System.nanoTime()-started < 750000L);
-        if (nextPixel == size*size) {
+        if (nextPixel == columns*columns) {
             for (Entity rider : craft.getPassengers()) if (rider instanceof EntityPlayerMP)
                 PacketHandler.INSTANCE.sendTo(pending,(EntityPlayerMP)rider);
             publishedX = pending.centerX;
             publishedZ = pending.centerZ;
             publishedStep = pending.step;
-            pending = null;
+            // Forge may encode the message later; refinement needs an independent image.
+            if (preview) {
+                pending = new MessageCruiseTerrain(craft.getEntityId(),publishedX,publishedZ,publishedStep);
+                nextPixel = 0;
+                preview = false;
+            } else pending = null;
         }
     }
 

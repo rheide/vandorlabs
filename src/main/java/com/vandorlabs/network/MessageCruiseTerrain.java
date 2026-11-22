@@ -6,7 +6,7 @@ import net.minecraftforge.fml.common.network.simpleimpl.*;
 
 /** Fixed-size seed raster sent only to riders during high-altitude flight. */
 public final class MessageCruiseTerrain implements IMessage {
-    public static final int SIZE = 64;
+    public static final int SIZE = 128;
     public int entity, centerX, centerZ, step;
     public final int[] pixels = new int[SIZE*SIZE];
     public MessageCruiseTerrain() {}
@@ -20,7 +20,7 @@ public final class MessageCruiseTerrain implements IMessage {
     public void fromBytes(ByteBuf in) {
         if (in.readableBytes()!=16+SIZE*SIZE*3) throw new IllegalArgumentException("Invalid cruise map size");
         entity=in.readInt(); centerX=in.readInt(); centerZ=in.readInt(); step=in.readInt();
-        if (step<16 || step>2048) throw new IllegalArgumentException("Invalid cruise map scale");
+        if (step<8 || step>2048) throw new IllegalArgumentException("Invalid cruise map scale");
         for (int i=0;i<pixels.length;i++) pixels[i]=0xff000000|in.readUnsignedMedium();
     }
     public static final class Handler implements IMessageHandler<MessageCruiseTerrain,IMessage> {

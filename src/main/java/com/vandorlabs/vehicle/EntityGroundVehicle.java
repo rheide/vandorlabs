@@ -130,6 +130,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     private boolean hasGroundContact(){return onGround||VehicleFlight.clearance(this)<=.001;}
 
     void leaveFlight(int mode){
+        if(VehicleStatus.highModeLocked(this,mode))
+            throw new IllegalArgumentException("Descend to Y=256 or below before selecting Taxi or Hover.");
         if(takeoffRoll()){
             flightPhase=NO_FLIGHT;
             if(mode==2&&!setHover(true))throw new IllegalArgumentException("This vehicle needs lift blocks and a Vehicle Thruster for Hover.");
@@ -710,6 +712,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
 
     private void advanceFlight(boolean controlled){
         if(!descendingFromFlight()&&(!flightReadout.canFly()||getControllingPassenger()==null))beginFlightRecovery(RECOVER_FLIGHT);
+        cruise.preloadTerrain();
         double altitude=flightAltitude();
         double ceiling=Math.min(flightReadout.maximumAltitude(),flightMotion.ceiling(rotationYaw,flightPitch));
         if(descendingFromFlight()||altitude>ceiling+.02){advanceFlightDescent(ceiling);return;}

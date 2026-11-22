@@ -47,7 +47,7 @@ public final class CruiseSky {
     @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
         if (event.phase!=TickEvent.Phase.END || owner==null) return;
         Minecraft mc=Minecraft.getMinecraft();
-        if (mc.player!=null && mc.player.getRidingEntity()==owner && owner.cruise.active()) return;
+        if (mc.player!=null && mc.player.getRidingEntity()==owner && (owner.cruise.active() || owner.flightAltitude()>=200 && owner.flying())) return;
         mc.getTextureManager().deleteTexture(location);
         location=null; texture=null; terrain=null; owner=null;
     }
