@@ -1,5 +1,9 @@
 package com.vandorlabs.neoforge.vehicle;
 
+import java.util.HashSet;
+import com.vandorlabs.neoforge.builders.NativeDriveBindings;
+import com.vandorlabs.neoforge.builders.NativeDriveDesign;
+import com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock;
 import com.vandorlabs.neoforge.VandorLabsBootstrap;
 import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
 import com.vandorlabs.persistence.ChairSettings;
@@ -76,6 +80,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     public int meterSurface(BlockPos pos,int slot){return meters==null?0:meters.surface(pos,slot);}
     private NativeVehicleVisual visual;
     private List<NativeVehicleStatus.Panel> status = List.of();
+    private Set<BlockPos> clientEngineCells = Set.of();
     private CompoundTag visualTag;
     private NativeVehiclePropulsion.Readout clientReadout = NativeVehiclePropulsion.Readout.EMPTY;
     private final Map<Integer, Integer> clientGauges = new HashMap<>();
@@ -299,6 +304,15 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             if (actor instanceof ServerPlayer rider) requestEmergencyPark(rider);
             return InteractionResult.sidedSuccess(level().isClientSide);
         }
+        if (isEngineCell(target)) {
+            if (actor instanceof ServerPlayer server) {
+                var core = resources.engineOwner(target);
+                if (!canUseEngine(server, core, target)) return InteractionResult.FAIL;
+                NativeDriveBindings.openCarried(server, this, target,
+                    new NativeDriveBindings.Edit(0, core, propulsion.settings(core), propulsion.channels(core)));
+            }
+            return InteractionResult.sidedSuccess(level().isClientSide);
+        }
         if (controllerHit(actor, target)) {
             return NativeVehicleBindings.open(actor, this) ? InteractionResult.sidedSuccess(level().isClientSide) : InteractionResult.PASS;
         }
@@ -329,6 +343,32 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
                 getYRot(), hullPitch(), facing()));
     }
 
+    private boolean isEngineCell(BlockPos target) {
+        return level().isClientSide ? clientEngineCells.contains(target) : resources.engineOwner(target) != null;
+    }
+
+    public boolean canUseEngine(Player actor, BlockPos core, BlockPos target) {
+        if (!admitted() || !isAlive() || !actor.isAlive() || actor.isSpectator() || actor.level() != level()
+                || actor.getEyePosition().distanceToSqr(toWorld(target)) > 64) return false;
+        if (level().isClientSide) return clientEngineCells.contains(target);
+        var physical = BlockPos.containing(toWorld(target));
+        return core != null && core.equals(resources.engineOwner(target)) && actor.getUUID().equals(owner)
+            && !NativeVehicleTransfer.escrowed(this) && level().mayInteract(actor, physical)
+            && actor.mayUseItemAt(physical, Direction.UP, actor.getMainHandItem());
+    }
+
+    public boolean configureEngine(ServerPlayer actor, BlockPos target, NativeDriveBindings.Edit edit) {
+        return canUseEngine(actor, edit.root(), target) && propulsion.configure(edit.root(), edit.config(), edit.channels());
+    }
+
+    public boolean purgeEngine(ServerPlayer actor, BlockPos core, BlockPos target) {
+        if (!canUseEngine(actor, core, target)) return false;
+        propulsion.tank(core).purge();
+        propulsion.fuelChanged();
+        publishFlightReadout();
+        return true;
+    }
+
     private static boolean controllerHit(Player actor, BlockPos target) {
         return target.equals(BlockPos.ZERO) || actor.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get());
     }
@@ -337,7 +377,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         var ray = localRay(actor);
         if (ray == null) return false;
         BlockPos target = hit(ray, actor);
-        return target != null && (controllerHit(actor, target) || statusAction(actor, ray, target) >= 0
+        return target != null && (isEngineCell(target) || controllerHit(actor, target) || statusAction(actor, ray, target) >= 0
                 || meterHit(actor, ray, target) != null);
     }
 
@@ -706,7 +746,15 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             if (!(buffer.readNbt(NbtAccounter.create(NativeVehicleVisual.MAX_BYTES)) instanceof CompoundTag tag) || buffer.isReadable()) return;
             var appearance = NativeVehicleVisual.read(tag, buffer.registryAccess());
             var states = new LinkedHashMap<BlockPos, BlockState>();
-            for (var cell : appearance.cells()) states.put(cell.pos(), cell.state());
+            var engines = new HashSet<BlockPos>();
+            for (var cell : appearance.cells()) {
+                states.put(cell.pos(), cell.state());
+                var block = cell.state().getBlock();
+                if (block instanceof com.vandorlabs.neoforge.builders.NativeBuilderPartBlock
+                    || block instanceof NativeBuilderCoreBlock core
+                    && core.design.drive() == NativeDriveDesign.LONGBURN) engines.add(cell.pos());
+            }
+            clientEngineCells = Set.copyOf(engines);
             hull = new NativeVehicleHull(states, null);
             var panels = new java.util.ArrayList<NativeVehicleStatus.Panel>();
             for (var cell : appearance.cells()) panels.addAll(NativeVehicleStatus.panels(cell.pos(), cell.state(), cell.appearance()));

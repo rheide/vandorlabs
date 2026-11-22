@@ -1,5 +1,6 @@
 package com.vandorlabs.neoforge.builders.client;
 
+import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.neoforge.builders.NativeDriveBindings;
 import com.vandorlabs.neoforge.builders.NativeDriveMenu;
 import com.vandorlabs.neoforge.builders.NativeDriveSettings;
@@ -31,9 +32,9 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
         super(menu, inventory, title);
         imageWidth = 312;
         imageHeight = 238;
-        settings = menu.tile.driveSettings();
-        if (menu.tile.maxwell()) page = 2;
-        channels = menu.tile.channels().toString();
+        settings = menu.settings();
+        if (menu.maxwell()) page = 2;
+        channels = menu.channels().toString();
     }
 
     @Override protected void init() {
@@ -46,8 +47,8 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
         previous.clear();
         picker = null;
         channelField = null;
-        var design=menu.tile.drive();
-        int[] pages=menu.tile.maxwell()?new int[]{2,3}:design.engine()?new int[]{0,1,2,3}:design.computer()?new int[]{0,3}:new int[]{0,1,3};
+        var design=menu.design();
+        int[] pages=menu.maxwell()?new int[]{2,3}:design.engine()?new int[]{0,1,2,3}:design.computer()?new int[]{0,3}:new int[]{0,1,3};
         int tabWidth = (imageWidth - 24) / pages.length;
         for (int i = 0; i < pages.length; i++) {
             int next = pages[i];
@@ -70,11 +71,11 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
             addRenderableWidget(picker.searchField());
             option(180, settings.animated() ? "Animated" : "Static", direction -> animation(!settings.animated(), settings.speed()));
             option(201, "Speed " + SPEED[settings.speed()], direction -> animation(settings.animated(), cycle(settings.speed(), direction, 3)));
-        } else if (page == 2 && menu.tile.maxwell()) {
+        } else if (page == 2 && menu.maxwell()) {
             addRenderableWidget(NativeDialogButton.builder(Component.literal("Purge Tank"), ignored -> {
                 if (minecraft.gameMode != null) minecraft.gameMode.handleInventoryButtonClick(menu.containerId, NativeDriveMenu.PURGE_TANK);
             }).bounds(leftPos + 12, topPos + 107, imageWidth - 24, 18).build());
-        } else if (page == 2 && menu.tile.drive().exhaust) {
+        } else if (page == 2 && menu.design().exhaust) {
             option(66, "Particles " + EXHAUST[settings.particles()], direction -> controls(settings.redstone(), settings.inverted(),
                     settings.levels(), cycle(settings.particles(), direction, 4), settings.threshold()));
         } else if (page == 3) {
@@ -83,14 +84,14 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
             channelField.setValue(channels);
             channelField.setResponder(text -> { channels = text; send(); });
             addRenderableWidget(channelField);
-            option(99, settings.redstone() ? "Activation Redstone" : menu.tile.maxwell() ? "Activation Automatic" : "Activation Always", direction ->
+            option(99, settings.redstone() ? "Activation Redstone" : menu.maxwell() ? "Activation Automatic" : "Activation Always", direction ->
                     controls(!settings.redstone(), settings.inverted(), settings.levels(), settings.particles(), settings.threshold()));
-            if(!menu.tile.drive().engine())return;
+            if(!menu.design().engine())return;
             option(122, settings.inverted() ? "Engine Redstone Off" : "Engine Redstone On", direction ->
                     controls(settings.redstone(), !settings.inverted(), settings.levels(), settings.particles(), settings.threshold()));
-            option(145, menu.tile.maxwell() ? (settings.levels() ? "Throttle Analog" : "Throttle Digital") : (settings.levels() ? "Brightness Signal" : "Brightness On/Off"), direction ->
+            option(145, menu.maxwell() ? (settings.levels() ? "Throttle Analog" : "Throttle Digital") : (settings.levels() ? "Brightness Signal" : "Brightness On/Off"), direction ->
                     controls(settings.redstone(), settings.inverted(), !settings.levels(), settings.particles(), settings.threshold()));
-            if (!menu.tile.maxwell() && menu.tile.drive().exhaust) option(168, "Particles at level " + settings.threshold(), direction ->
+            if (!menu.maxwell() && menu.design().exhaust) option(168, "Particles at level " + settings.threshold(), direction ->
                     controls(settings.redstone(), settings.inverted(), settings.levels(), settings.particles(), cycle(settings.threshold(), direction, 16)));
         }
     }
@@ -131,7 +132,7 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
         var value = ChannelList.parse(channels);
         if (channelField != null) channelField.setTextColor(value == null ? 0xff7777 : 0xffffff);
         if (value == null) return false;
-        PacketDistributor.sendToServer(new NativeDriveBindings.Edit(menu.containerId, menu.tile.getBlockPos(), settings, value));
+        PacketDistributor.sendToServer(new NativeDriveBindings.Edit(menu.containerId, menu.root(), settings, value));
         return true;
     }
 
@@ -140,12 +141,12 @@ public final class NativeDriveScreen extends AbstractContainerScreen<NativeDrive
     @Override protected void renderBg(GuiGraphics graphics, float partial, int x, int y) {
         NativeDialogVisuals.panel(graphics, font, title, leftPos, topPos, imageWidth, imageHeight, DialogStyle.SYNTHESIS);
         if (picker != null) picker.render(graphics, x, y);
-        if (page == 2 && menu.tile.maxwell()) {
-            graphics.drawString(font, "Fuel " + menu.tile.maxwellFuel() + " / " + menu.tile.maxwellCapacity() + " mB",
+        if (page == 2 && menu.maxwell()) {
+            graphics.drawString(font, "Fuel " + menu.fuel() + " / " + MaxwellEngine.CAPACITY + " mB",
                     leftPos + 12, topPos + 66, 0xabcfe8, false);
-            graphics.drawString(font, "Throttle " + menu.tile.driveLevel() + " / 15",
+            graphics.drawString(font, "Throttle " + menu.throttle() + " / 15",
                     leftPos + 12, topPos + 84, 0xabcfe8, false);
-        } else if (page == 2) graphics.drawString(font, menu.tile.drive().exhaust ? "Redstone controls the lights and exhaust."
+        } else if (page == 2) graphics.drawString(font, menu.design().exhaust ? "Redstone controls the lights and exhaust."
                 : "Redstone controls the lights.", leftPos + 12, topPos + 96, 0xabcfe8, false);
         if (page == 3) graphics.drawString(font, "Receive channels", leftPos + 12, topPos + 60, 0xb7cadb, false);
     }

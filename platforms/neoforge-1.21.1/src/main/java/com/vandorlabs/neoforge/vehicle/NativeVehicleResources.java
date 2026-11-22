@@ -34,7 +34,8 @@ import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 /** Adjacent carried owners transfer locally. Physical tile capabilities and neighbor writes stay parked. */
 final class NativeVehicleResources {
     private static final int ROUTES_PER_TICK = 192;
-    private static final int MAXWELL_DYNAMIC_BYTES = 96;
+    // A pilot may enter a full channel bank and the drive may acquire fuel while carried.
+    static final int MAXWELL_DYNAMIC_BYTES = 1024;
     private final Map<BlockPos, NativeRawCell> updates = new HashMap<>();
     private final Map<BlockPos, Integer> growth = new HashMap<>();
     private final Map<BlockPos, NativeRawCell> states = new HashMap<>();
@@ -118,6 +119,14 @@ final class NativeVehicleResources {
     }
 
     List<NativeVehicleObservers.Receiver> observers() { return observers; }
+
+    BlockPos engineOwner(BlockPos target) {
+        if (propulsion.tank(target) != null) return target;
+        var cell = states.get(target);
+        if (cell == null || !(cell.state.getBlock() instanceof NativeBuilderPartBlock)) return null;
+        var owner = target.offset(BlockPos.of(cell.tile().getLong("ConstructorOwner")));
+        return propulsion.tank(owner) == null ? null : owner;
+    }
 
     double fluidMass() { return fluidMassMb / 1000D; }
 

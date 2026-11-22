@@ -1,5 +1,7 @@
 package com.vandorlabs.neoforge.builders;
 
+import net.minecraft.network.chat.Component;
+import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.redstone.ChannelList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
@@ -26,8 +28,15 @@ public final class NativeDriveBindings {
     @SubscribeEvent public static void register(RegisterEvent event) {
         if (!NativeBuilderBindings.enabled()) return;
         event.register(Registries.MENU, helper -> {
-            MENU = IMenuTypeExtension.create((window, inventory, data) ->
-                    new NativeDriveMenu(MENU, window, inventory, data.readBlockPos(), data.readBlockPos()));
+            MENU = IMenuTypeExtension.create((window, inventory, data) -> {
+                if (!data.readBoolean()) return new NativeDriveMenu(MENU, window, inventory, data.readBlockPos(), data.readBlockPos());
+                var entity = inventory.player.level().getEntity(data.readVarInt());
+                var target = data.readBlockPos();
+                var initial = Edit.CODEC.decode(data);
+                if (!(entity instanceof NativeGroundVehicle craft))
+                    throw new IllegalArgumentException("Missing carried Maxwell Drive");
+                return new NativeDriveMenu(MENU, window, craft, target, initial);
+            });
             helper.register(ID, MENU);
         });
     }
@@ -46,11 +55,24 @@ public final class NativeDriveBindings {
             server.connection.send(owner.getUpdatePacket());
             server.openMenu(new SimpleMenuProvider((window, inventory, actor) ->
                     new NativeDriveMenu(MENU, window, owner, target), owner.getBlockState().getBlock().getName()), data -> {
+                data.writeBoolean(false);
                 data.writeBlockPos(owner.getBlockPos());
                 data.writeBlockPos(target);
             });
         }
         return true;
+    }
+
+    public static void openCarried(ServerPlayer server, NativeGroundVehicle craft,
+                                   BlockPos target, Edit initial) {
+        if (MENU == null || !craft.canUseEngine(server, initial.root(), target)) return;
+        server.openMenu(new SimpleMenuProvider((window, inventory, actor) ->
+            new NativeDriveMenu(MENU, window, craft, target, initial), Component.literal("Maxwell Drive")), data -> {
+                data.writeBoolean(true);
+                data.writeVarInt(craft.getId());
+                data.writeBlockPos(target);
+                Edit.CODEC.encode(data, initial);
+            });
     }
 
     public record Edit(int window, BlockPos root, NativeDriveSettings config, ChannelList channels) implements CustomPacketPayload {
@@ -97,8 +119,9 @@ public final class NativeDriveBindings {
 
     static boolean apply(ServerPlayer player, Edit edit) {
         if (!player.getServer().isSameThread() || !(player.containerMenu instanceof NativeDriveMenu menu)
-                || menu.containerId != edit.window() || !menu.tile.getBlockPos().equals(edit.root()) || !menu.stillValid(player)) return false;
-        return menu.tile.configureDrive(edit.config(), edit.channels());
+                || menu.containerId != edit.window() || !menu.root().equals(edit.root()) || !menu.stillValid(player)) return false;
+        return menu.craft == null ? menu.tile.configureDrive(edit.config(), edit.channels())
+            : menu.craft.configureEngine(player, menu.target, edit);
     }
 
     @SubscribeEvent public static void payload(RegisterPayloadHandlersEvent event) {

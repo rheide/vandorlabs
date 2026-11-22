@@ -110,6 +110,24 @@ public final class NativeVehiclePropulsion {
         return drive != null ? drive.tank : null;
     }
 
+    NativeDriveSettings settings(BlockPos core) { return drives.get(core).settings; }
+    ChannelList channels(BlockPos core) { return drives.get(core).channels; }
+
+    boolean configure(BlockPos core, NativeDriveSettings edit, ChannelList channels) {
+        var old = drives.get(core);
+        if (old == null) return false;
+        var settings = NativeDriveSettings.maxwell(edit.redstone(), edit.inverted(), edit.levels());
+        if (settings.equals(old.settings) && channels.equals(old.channels)) return true;
+        var raw = old.core.tile();
+        raw.put("Drive", settings.save());
+        raw.putIntArray("Channels", channels.toArray());
+        if (raw.sizeInBytes() > NativeVehicleStructure.LIMITS.tileBytes() - NativeVehicleResources.MAXWELL_DYNAMIC_BYTES) return false;
+        var cell = new NativeRawCell(core, old.core.state, raw, NativeVehicleStructure.LIMITS.tileBytes());
+        drives.put(core, new Drive(cell, settings, channels, old.width, old.tank, old.localPower, old.powerPort));
+        changed = true;
+        return true;
+    }
+
     void fuelChanged() { changed = true; }
 
     private static double blockMass(BlockState state) {
