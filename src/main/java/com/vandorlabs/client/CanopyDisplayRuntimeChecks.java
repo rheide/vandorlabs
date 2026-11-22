@@ -1,11 +1,23 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.blocks.BlockCanopy;
+import com.vandorlabs.blocks.ModBlocks;
+import com.vandorlabs.canopy.CanopyDisplayHit;
 import com.vandorlabs.canopy.CanopyMesh;
 import com.vandorlabs.canopy.LargeCanopySettings;
 import com.vandorlabs.items.ModItems;
 import com.vandorlabs.screen.VehicleInstrument;
+import com.vandorlabs.screen.VehicleStatusLayout;
 import com.vandorlabs.tiles.TileEntityCanopy;
+import com.vandorlabs.tiles.TileEntityPilotSeat;
+import com.vandorlabs.tiles.TileEntityVehicleController;
+import com.vandorlabs.vehicle.EntityGroundVehicle;
+import com.vandorlabs.vehicle.VehicleInteraction;
+import com.vandorlabs.vehicle.VehicleLookup;
+import com.vandorlabs.vehicle.VehicleSelection;
+import com.vandorlabs.vehicle.VehicleStatus;
+import com.vandorlabs.vehicle.VehicleStructure;
+import com.vandorlabs.vehicle.VehicleTileData;
 import net.minecraft.block.Block;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.gui.GuiButton;
@@ -16,6 +28,7 @@ import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.play.server.SPacketHeldItemChange;
 import net.minecraft.util.EnumHand;
+import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ScreenShotHelper;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
@@ -27,14 +40,18 @@ import net.minecraftforge.fml.relauncher.ReflectionHelper;
 import javax.imageio.ImageIO;
 import java.io.File;
 import java.lang.reflect.Field;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 import java.util.concurrent.Future;
 
 /** Real Configurizer packet, independent pane choices, saved item/world data and world-frame captures. */
 final class CanopyDisplayRuntimeChecks {
-    private static final String[] KINDS={"canopy","long_canopy","front_canopy_glass","large_front_canopy_glass","regular_canopy_glass"};
+    private static final String[] KINDS={"canopy","long_canopy","front_canopy_glass","large_front_canopy_glass","regular_canopy_glass","canopy"};
     private static final VehicleInstrument[] CHOICES=VehicleInstrument.values();
     private static final BlockPos FIRST=new BlockPos(168,106,194);
+    private static final BlockPos CARRIED=new BlockPos(0,2,0);
+    private static UUID craftId;
     private static int variant,stage,ticks;
     private static Future<?> pending;
     private static Vec3d eye;
@@ -53,9 +70,12 @@ final class CanopyDisplayRuntimeChecks {
         if(stage==0){
             prepare(mc);next(1);return false;
         }
+        if(stage>=10)return carried(mc,output);
         TileEntityCanopy tile=TileEntityCanopy.at(mc.world,position());
         if(tile==null)return false;
+        tile=tile.owner();
         if(stage==1){
+            if(joined()&&tile.width()!=2)return false;
             if(ticks<12||!mc.playerController.isInCreativeMode()||mc.player.inventory.currentItem!=0
                     ||mc.player.getHeldItemMainhand().getItem()!=ModItems.CONFIGURIZER)return false;
             aim(mc,tile,false);next(2);return false;
@@ -92,19 +112,127 @@ final class CanopyDisplayRuntimeChecks {
         }
         if(stage==7&&ticks>18&&aligned(mc)&&CanopyDisplayRenderer.captured(tile,side(),true)){
             shot(mc,output,"side");
-            variant++;
-            if(variant==KINDS.length){
-                mc.gameSettings.hideGUI=false;
-                System.out.println("[vandorlabs][reprolab] canopy-displays PASS real Configurizer, independent Main/Side, Status and four instruments, saved panes and world captures");
-                return true;
-            }
-            next(0);
+            if(joined()){aim(mc,tile,false,true);next(8);return false;}
+            variant++;next(0);return false;
+        }
+        if(stage==8&&ticks>18&&aligned(mc)){
+            shot(mc,output,"inside-main");aim(mc,tile,true,true);next(9);return false;
+        }
+        if(stage==9&&ticks>18&&aligned(mc)){
+            shot(mc,output,"inside-side");
+            pending=mc.getIntegratedServer().addScheduledTask(()->installCarried(mc));
+            next(10);return false;
         }
         return false;
     }
 
+    private static void installCarried(Minecraft mc){
+        EntityPlayerMP p=player(mc);
+        WorldServer world=p.getServerWorld();
+        BlockPos origin=position().east(12).south(4);
+        TileEntityCanopy root=TileEntityCanopy.at(world,position()).owner();
+        List<VehicleStructure.Cell> cells=new ArrayList<>();
+        BlockPos offset=CARRIED.subtract(root.getPos());
+        for(int column=0;column<2;column++){
+            TileEntityCanopy member=TileEntityCanopy.at(world,root.getPos().offset(root.facing().rotateY(),column));
+            require(member!=null&&member.owner()==root,"carry both joined native canopy members");
+            for(BlockPos at:member.reservedCells()){
+                TileEntityCanopy tile=TileEntityCanopy.at(world,at);
+                require(tile!=null,"complete captured canopy footprint");
+                NBTTagCompound tag=VehicleTileData.translated(tile.writeToNBT(new NBTTagCompound()),offset);
+                cells.add(new VehicleStructure.Cell(at.add(offset),world.getBlockState(at),tag));
+            }
+        }
+        for(BlockPos at:BlockPos.getAllInBox(origin.add(-3,-1,-3),origin.add(8,-1,8)))world.setBlockState(at,Blocks.STONE.getDefaultState(),2);
+        for(int x=0;x<5;x++)for(int z=0;z<5;z++)cells.add(new VehicleStructure.Cell(new BlockPos(x,0,z),Blocks.STONE.getDefaultState(),null));
+        BlockPos seatPos=new BlockPos(3,1,2),controllerPos=new BlockPos(4,1,2);
+        TileEntityPilotSeat seat=new TileEntityPilotSeat();seat.setPos(seatPos);seat.setTaxiMode(false);seat.owner=p.getUniqueID();
+        cells.add(new VehicleStructure.Cell(seatPos,ModBlocks.PILOT_SEAT.getDefaultState(),seat.writeToNBT(new NBTTagCompound())));
+        TileEntityVehicleController controller=new TileEntityVehicleController();controller.setPos(controllerPos);controller.owner=p.getUniqueID();
+        cells.add(new VehicleStructure.Cell(controllerPos,ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),controller.writeToNBT(new NBTTagCompound())));
+        String[] propulsion={"antigravity_plate","repulsor_array","vertical_hover_thruster","impulse_engine"};
+        for(int i=0;i<propulsion.length;i++){
+            cells.add(new VehicleStructure.Cell(new BlockPos(i,1,4),Block.getBlockFromName("vandorlabs:"+propulsion[i]).getDefaultState(),null));
+        }
+        EntityGroundVehicle craft=new EntityGroundVehicle(world);
+        craft.install(new VehicleStructure(cells,seatPos,EnumFacing.NORTH,1));
+        craft.setPosition(origin.getX(),origin.getY(),origin.getZ());
+        require(world.spawnEntity(craft),"spawn carried status fixture");
+        craftId=craft.getUniqueID();
+        p.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);
+        p.inventoryContainer.detectAndSendChanges();
+        p.connection.setPlayerLocation(origin.getX()+.5,origin.getY()+4,origin.getZ()-2,0,30);
+    }
+
+    private static boolean carried(Minecraft mc,File output)throws Exception{
+        EntityGroundVehicle craft=null;
+        for(EntityGroundVehicle candidate:VehicleLookup.loaded(mc.world))if(candidate.getUniqueID().equals(craftId))craft=candidate;
+        if(craft==null||craft.structure==null||craft.view==null)return false;
+        if(stage==10){
+            if(ticks<12||!mc.player.getHeldItemMainhand().isEmpty())return false;
+            TileEntityCanopy canopy=TileEntityCanopy.at(craft.view,CARRIED);
+            require(canopy!=null&&canopy.large.material==VehicleInstrument.STATUS.choice,"captured screen retains Status");
+            require((VehicleStatus.availableModes(craft.view,CARRIED,mc.player)&(1<<VehicleStatusLayout.HOVER))!=0,"carried status offers Hover");
+            aimMode(mc,craft,canopy,VehicleStatusLayout.HOVER);next(11);return false;
+        }
+        if(stage==11&&aligned(mc)){
+            VehicleInteraction.Target target=VehicleInteraction.pointed(mc.player);
+            require(target!=null&&target.craft==craft&&target.hit.action==VehicleSelection.Action.CANOPY,
+                    "normal screen ray selects the carried canopy");
+            shot(mc,output,"carried-taxi");
+            mc.objectMouseOver=new RayTraceResult(RayTraceResult.Type.MISS,eye,EnumFacing.UP,BlockPos.ORIGIN);
+            ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag").invoke(mc);
+            next(12);return false;
+        }
+        if(stage==12&&ticks>10&&craft.hover){
+            shot(mc,output,"carried-hover");
+            pending=mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle actual=(EntityGroundVehicle)player(mc).getServerWorld().getEntityFromUuid(craftId);
+                require(actual!=null&&actual.hover&&!TileEntityCanopy.at(actual.view,CARRIED).targetOpen,
+                        "ordinary authorized Status packet enters Hover without toggling the canopy");
+            });
+            next(13);return false;
+        }
+        if(stage==13){
+            variant++;mc.gameSettings.hideGUI=false;
+            System.out.println("[vandorlabs][reprolab] canopy-displays PASS real picker, independent saved panes, inside joined dials, ordinary carried Status Hover click");
+            return true;
+        }
+        return false;
+    }
+
+    private static void aimMode(Minecraft mc,EntityGroundVehicle craft,TileEntityCanopy canopy,int mode){
+        VehicleStatusLayout layout=VehicleStatusLayout.forHeight(128);
+        double u=layout.centerX(mode)/128D,v=1-layout.centerY(mode)/128D;
+        for(CanopyMesh.Face face:canopy.faces()){
+            if(face.display!=VehicleInstrument.STATUS||face.sideGlass)continue;
+            Vec3d first=face.vertices[0];
+            for(int i=1;i<face.vertices.length-1;i++){
+                Vec3d a=face.vertices[i].subtract(first),b=face.vertices[i+1].subtract(first);
+                Vec3d normal=a.crossProduct(b).normalize();
+                boolean reverse=normal.y<0;
+                if(reverse)normal=normal.scale(-1);
+                double x=CanopyDisplayHit.mirrored(face,i,i+1)!=reverse?1-u:u;
+                double[] p=face.uv[0],q=face.uv[i],r=face.uv[i+1];
+                double ax=q[0]-p[0],ay=q[1]-p[1],bx=r[0]-p[0],by=r[1]-p[1];
+                double area=ax*by-ay*bx;
+                if(Math.abs(area)<1e-9)continue;
+                double s=((x-p[0])*by-(v-p[1])*bx)/area,t=(ax*(v-p[1])-ay*(x-p[0]))/area;
+                if(s<0||t<0||s+t>1)continue;
+                Vec3d point=first.add(a.scale(s)).add(b.scale(t));
+                Vec3d root=new Vec3d(canopy.getPos());
+                Vec3d center=craft.toWorld(CanopyMesh.rotate(point,canopy.facing()).add(root));
+                Vec3d outside=craft.toWorld(CanopyMesh.rotate(point.add(normal.scale(3)),canopy.facing()).add(root));
+                placeCamera(mc,center,outside);
+                return;
+            }
+        }
+        throw new IllegalStateException("Hover center is outside the joined canopy canvas");
+    }
+
     private static BlockPos position(){return FIRST.east(variant*16);}
-    private static VehicleInstrument main(){return CHOICES[variant];}
+    private static boolean joined(){return variant==KINDS.length-1;}
+    private static VehicleInstrument main(){return CHOICES[variant%CHOICES.length];}
     private static VehicleInstrument side(){return CHOICES[(variant+2)%CHOICES.length];}
     private static void next(int value){stage=value;ticks=0;}
     private static void require(boolean ok,String message){
@@ -126,6 +254,10 @@ final class CanopyDisplayRuntimeChecks {
             BlockCanopy block=(BlockCanopy)Block.getBlockFromName("vandorlabs:"+id);
             require(world.setBlockState(pos,block.getDefaultState(),3),"place canopy root");
             block.onBlockPlacedBy(world,pos,block.getDefaultState(),p,new ItemStack(block));
+            if(joined()){
+                require(world.setBlockState(pos.east(),block.getDefaultState(),3),"place adjacent canopy root");
+                block.onBlockPlacedBy(world,pos.east(),block.getDefaultState(),p,new ItemStack(block));
+            }
             p.setGameType(GameType.CREATIVE);p.setSneaking(false);
             p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
             p.inventory.currentItem=0;p.connection.sendPacket(new SPacketHeldItemChange(0));
@@ -137,7 +269,8 @@ final class CanopyDisplayRuntimeChecks {
         mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
     }
 
-    private static void aim(Minecraft mc,TileEntityCanopy tile,boolean side){
+    private static void aim(Minecraft mc,TileEntityCanopy tile,boolean side){aim(mc,tile,side,false);}
+    private static void aim(Minecraft mc,TileEntityCanopy tile,boolean side,boolean inside){
         CanopyMesh.Face selected=null;
         double biggest=0;
         for(CanopyMesh.Face face:tile.faces()){
@@ -154,7 +287,17 @@ final class CanopyDisplayRuntimeChecks {
         Vec3d a=CanopyMesh.rotate(v[0],tile.facing()),b=CanopyMesh.rotate(v[1],tile.facing()),c=CanopyMesh.rotate(v[2],tile.facing());
         Vec3d normal=b.subtract(a).crossProduct(c.subtract(a)).normalize();
         if(normal.y<-.15||Math.abs(normal.y)<.15&&normal.z>.2)normal=normal.scale(-1);
-        eye=center.add(normal.scale(3));
+        if(inside&&side){
+            double sign=v[0].x<tile.width()/2D?-1:1;
+            normal=new Vec3d(tile.facing().rotateY().getDirectionVec()).scale(sign);
+        }
+        Vec3d camera=inside?center.subtract(normal.scale(.77)):center.add(normal.scale(3));
+        if(inside&&!side)camera=camera.add(new Vec3d(tile.facing().getOpposite().getDirectionVec()).scale(.42));
+        placeCamera(mc,center,camera);
+    }
+
+    private static void placeCamera(Minecraft mc,Vec3d center,Vec3d camera){
+        eye=camera;
         Vec3d look=center.subtract(eye);
         yaw=(float)Math.toDegrees(Math.atan2(-look.x,look.z));
         pitch=(float)-Math.toDegrees(Math.atan2(look.y,Math.hypot(look.x,look.z)));
@@ -177,6 +320,16 @@ final class CanopyDisplayRuntimeChecks {
         for(boolean side:new boolean[]{false,true}){
             VehicleInstrument expected=side?side():main();
             require(tile.faces().stream().anyMatch(face->face.sideGlass==side&&face.display==expected),"selected choice reaches exact posed pane");
+        }
+        List<java.util.Map<Vec3d,double[]>> edges=java.util.Arrays.asList(new java.util.HashMap<>(),new java.util.HashMap<>());
+        for(CanopyMesh.Face face:tile.baseFaces()){
+            if(face.display==null)continue;
+            for(int i=0;i<face.vertices.length;i++){
+                double[] uv=face.uv[i];
+                double[] previous=edges.get(face.sideGlass?1:0).putIfAbsent(face.vertices[i],uv);
+                require(previous==null||Math.abs(previous[0]-uv[0])+Math.abs(previous[1]-uv[1])<1e-7,
+                        "the pane UV remains continuous at authored shared vertices");
+            }
         }
         LargeCanopySettings restored=new LargeCanopySettings();
         restored.read(tile.writeToNBT(new NBTTagCompound()));
@@ -218,6 +371,6 @@ final class CanopyDisplayRuntimeChecks {
 
     private static void shot(Minecraft mc,File output,String face)throws Exception{
         ImageIO.write(ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
-                "png",new File(output,"shot_canopy-display-"+KINDS[variant]+"-"+face+".png"));
+                "png",new File(output,"shot_canopy-display-"+KINDS[variant]+(joined()?"-joined":"")+"-"+face+".png"));
     }
 }
