@@ -195,6 +195,23 @@ final class NativeVehicleResourceFixture {
         if (!NativeVehicleMekanismTank.supports(block.defaultBlockState())) throw new AssertionError("Installed Mekanism tank missing");
         put(pos, block.defaultBlockState());
         var tile = world.getBlockEntity(pos);
+        var controller = (NativeVehicleControllerEntity) world.getBlockEntity(root);
+        var otherOwner = new java.util.UUID(1, 2);
+        edit(pos, raw -> {
+            var security = raw.getCompound("component_security");
+            security.putUUID("owner", otherOwner);
+            security.putInt("security_mode", 1);
+            raw.put("component_security", security);
+        });
+        boolean rejected = false;
+        try {
+            NativeVehicleMekanismAccess.require(controller.ownerId(), world, pos, tile.getBlockState(), tile);
+        } catch (IllegalArgumentException denied) {
+            rejected = denied.getMessage().startsWith("Mekanism security refused");
+        }
+        if (!rejected) throw new AssertionError("A different owner's private Mekanism tank was accessible");
+        edit(pos, raw -> raw.getCompound("component_security").putInt("security_mode", 0));
+        NativeVehicleMekanismAccess.require(controller.ownerId(), world, pos, tile.getBlockState(), tile);
         tile.getPersistentData().putString("FixtureReceipt", "finite tank");
         var fluid = world.getCapability(net.neoforged.neoforge.capabilities.Capabilities.FluidHandler.BLOCK, pos, Direction.WEST);
         if (fluid == null || fluid.fill(new FluidStack(fuel, MEKANISM_MB),

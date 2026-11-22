@@ -82,7 +82,11 @@ public final class NativeVehicleTransferChecks {
         @SubscribeEvent public static void register(RegisterEvent event) {
             if (!phase().equals("roundtrip")) return;
             event.register(Registries.FLUID, helper -> {
-                fuel = new WaterFluid.Source();
+                fuel = new WaterFluid.Source() {
+                    @Override public net.neoforged.neoforge.fluids.FluidType getFluidType() {
+                        return net.neoforged.neoforge.common.NeoForgeMod.WATER_TYPE.value();
+                    }
+                };
                 helper.register(ResourceLocation.parse("vandorlabs:fuelium"), fuel);
             });
         }
