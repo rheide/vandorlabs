@@ -7,6 +7,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.block.state.IBlockState;
 import com.vandorlabs.blocks.BlockProgrammableBlock;
 import com.vandorlabs.blocks.ModBlocks;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 /** Relative owner identity survives moving a complete machine with world-edit tools. */
 public final class TileEntityConstructorPart extends TileEntity implements net.minecraft.util.ITickable {
@@ -50,12 +52,23 @@ public final class TileEntityConstructorPart extends TileEntity implements net.m
     TileEntityConstructor machineOwner(){if(world==null||isInvalid()||!world.isBlockLoaded(pos,false)||!world.isBlockLoaded(owner(),false)||world.getTileEntity(pos)!=this)return null;TileEntity raw=world.getTileEntity(owner());return raw instanceof TileEntityConstructor?(TileEntityConstructor)raw:null;}
     private TileEntityConstructor observer;
     private net.minecraftforge.energy.IEnergyStorage observerInput;
+    private TileEntityConstructor fuelOwner;
+    private EnumFacing fuelFace;
+    private IFluidHandler fuelInput;
     private <T>T machineCapability(net.minecraftforge.common.capabilities.Capability<T> cap,net.minecraft.util.EnumFacing side){
         TileEntityConstructor root=machineOwner();
         if(root==null)return null;
         if(cap==net.minecraftforge.energy.CapabilityEnergy.ENERGY&&side==net.minecraft.util.EnumFacing.DOWN&&root.acceptsObserverPower(this)){
             if(root!=observer){observer=root;observerInput=root.createObserverInput(this);}
             return net.minecraftforge.energy.CapabilityEnergy.ENERGY.cast(observerInput);
+        }
+        if(cap==CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY&&root.acceptsMaxwellFuel(this,side)){
+            if(root!=fuelOwner||side!=fuelFace){
+                fuelOwner=root;
+                fuelFace=side;
+                fuelInput=root.maxwellInlet(this,side);
+            }
+            return CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY.cast(fuelInput);
         }
         return root.synthesisCapability(cap,pos,side);
     }

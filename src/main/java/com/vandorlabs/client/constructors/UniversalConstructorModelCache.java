@@ -57,8 +57,8 @@ public final class UniversalConstructorModelCache {
                 for(String part:parts)register(spec.design,folder+part+".obj",new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+folder+part+".obj"));
             }
             if(spec.hasChip()&&spec.state_models==null)for(String path:new String[]{"static.obj","active/static.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
-            if(spec.design.equals("longburn_drive"))for(String path:new String[]{"drive_body.obj","drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
-            if(spec.design.equals("longburn_drive")||spec.design.equals("meridian_core"))for(String path:new String[]{"active/drive_body.obj","active/drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
+            if(spec.design.equals("longburn_drive"))for(String path:new String[]{"maxwell_body.obj","drive_lights.obj","active/drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
+            if(spec.design.equals("meridian_core"))for(String path:new String[]{"active/drive_body.obj","active/drive_lights.obj"})register(spec.design,path,new ResourceLocation(DOMAIN,"block/"+spec.model+"/"+path));
         }
         MinecraftForge.EVENT_BUS.register(EVENTS);
     }
@@ -93,6 +93,7 @@ public final class UniversalConstructorModelCache {
         if (event.getMap() != Minecraft.getMinecraft().getTextureMapBlocks()) return;
         UNBAKED.clear();
         meshes = Collections.emptyMap();
+        MaxwellRenderer.stitch(event.getMap());
         for (Map.Entry<String, ResourceLocation> entry : LOCATIONS.entrySet()) {
             try {
                 // Java IModel.process values are strings; blockstate JSON uses booleans.
@@ -179,10 +180,19 @@ public final class UniversalConstructorModelCache {
         public void emitTinted(BufferBuilder buffer,double originX,double originY,double originZ,EnumFacing facing,double width,double depth,double offsetX,double offsetY,double offsetZ,int packedLight,float brightness){
             if (facing.getAxis().isVertical()) throw new IllegalArgumentException("Horizontal facing required");
             if(offsetX!=0||offsetY!=0||offsetZ!=0){emitUncached(buffer,originX,originY,originZ,facing,width,depth,offsetX,offsetY,offsetZ,packedLight);return;}
+            emitScaled(buffer,originX,originY,originZ,facing,width,depth,packedLight,brightness,1,1,1);
+        }
+
+        public void emitScaled(BufferBuilder buffer,double x,double y,double z,EnumFacing facing,double width,double depth,
+                               int light,float brightness,double widthScale,double heightScale,double depthScale){
             if(cachedWidth!=width||cachedDepth!=depth){java.util.Arrays.fill(oriented,null);cachedWidth=width;cachedDepth=depth;}
             int index=facing.getHorizontalIndex();double[] data=oriented[index];
             if(data==null){data=prepare(facing,width,depth);oriented[index]=data;}
-            for(int i=0;i<data.length;i+=9)buffer.pos(originX+data[i],originY+data[i+1],originZ+data[i+2]).color((float)data[i+3]*brightness,(float)data[i+4]*brightness,(float)data[i+5]*brightness,(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(packedLight&65535,packedLight>>>16&65535).endVertex();
+            boolean rotated=facing.getAxis()==EnumFacing.Axis.X;
+            double scaleX=rotated?depthScale:widthScale,scaleZ=rotated?widthScale:depthScale;
+            for(int i=0;i<data.length;i+=9)buffer.pos(x+data[i]*scaleX,y+data[i+1]*heightScale,z+data[i+2]*scaleZ)
+                    .color((float)data[i+3]*brightness,(float)data[i+4]*brightness,(float)data[i+5]*brightness,(float)data[i+6])
+                    .tex(data[i+7],data[i+8]).lightmap(light&65535,light>>>16&65535).endVertex();
         }
 
         private double[] prepare(EnumFacing facing,double width,double depth){
@@ -233,9 +243,7 @@ public final class UniversalConstructorModelCache {
         /** Uniform observer scaling keeps UVs and animation in authored model coordinates. */
         public void emitObserver(BufferBuilder buffer,double x,double y,double z,EnumFacing facing,double width,double height,double depth,int light,double scale,boolean inverted,double yaw,double pivotX,double pivotZ){
             if(yaw==0&&!inverted){
-                if(cachedWidth!=width||cachedDepth!=depth){java.util.Arrays.fill(oriented,null);cachedWidth=width;cachedDepth=depth;}
-                int index=facing.getHorizontalIndex();double[] data=oriented[index];if(data==null){data=prepare(facing,width,depth);oriented[index]=data;}
-                for(int i=0;i<data.length;i+=9)buffer.pos(x+data[i]*scale,y+data[i+1]*scale,z+data[i+2]*scale).color((float)data[i+3],(float)data[i+4],(float)data[i+5],(float)data[i+6]).tex(data[i+7],data[i+8]).lightmap(light&65535,light>>>16&65535).endVertex();return;
+                emitScaled(buffer,x,y,z,facing,width,depth,light,1,scale,scale,scale);return;
             }
             double cosine=Math.cos(yaw),sine=Math.sin(yaw);
             for(Face face:faces){EnumFacing side=rotate(face.side,facing);if(inverted&&side.getAxis().isVertical())side=side.getOpposite();float shade=face.diffuse?LightUtil.diffuseLight(side):1;

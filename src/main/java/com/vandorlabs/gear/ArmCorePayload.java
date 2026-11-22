@@ -55,6 +55,12 @@ final class ArmCorePayload {
                 if(!root.hasTileKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,3)||!com.vandorlabs.navigation.ObserverScale.observer(block.design))throw new IllegalArgumentException("Invalid observer size");
                 width=com.vandorlabs.navigation.ObserverScale.width(block.design,root.tileInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG));height=com.vandorlabs.navigation.ObserverScale.height(block.design,width);depth=width;
             }
+            if(root.hasTileKey(com.vandorlabs.drives.MaxwellEngine.WIDTH_TAG)){
+                String key=com.vandorlabs.drives.MaxwellEngine.WIDTH_TAG;
+                if(!root.hasTileKey(key,3)||!com.vandorlabs.drives.MaxwellEngine.DESIGN.equals(block.design))throw new IllegalArgumentException("Invalid Maxwell Drive size");
+                width=height=root.tileInteger(key);
+                depth=com.vandorlabs.drives.MaxwellEngine.depth(width);
+            }
             CoreLayout layout=new CoreLayout(width,height,depth,root.state.getValue(BlockVandorDirectional.FACING).getIndex(),root.tileInteger("ConstructorCoreX"),root.tileInteger("ConstructorCoreZ"));if(!layout.canonicalCorner())throw new IllegalArgumentException("Invalid Core corner");
             for(int x=0;x<layout.width;x++)for(int y=0;y<layout.height;y++)for(int z=0;z<layout.depth;z++){
                 BlockPos at=root.pos.add(layout.x(x,z),root.tileBoolean("ObserverInverted")?-y:y,layout.z(x,z));VehicleStructure.Cell cell=snapshot.at(at);

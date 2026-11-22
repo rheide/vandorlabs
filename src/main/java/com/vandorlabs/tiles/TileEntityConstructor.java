@@ -1,6 +1,12 @@
 package com.vandorlabs.tiles;
 
 import com.vandorlabs.blocks.*;
+import com.vandorlabs.drives.MaxwellEngine;
+import com.vandorlabs.drives.MaxwellTank;
+import com.vandorlabs.machines.CoreLayout;
+import com.vandorlabs.navigation.ObserverScale;
+import com.vandorlabs.vehicle.EntityGroundVehicle;
+import com.vandorlabs.vehicle.VehicleWorld;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.nbt.NBTTagCompound;
@@ -9,9 +15,106 @@ import net.minecraft.network.play.server.SPacketUpdateTileEntity;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.*;
 import net.minecraft.util.math.*;
+import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.common.capabilities.Capability;
+import net.minecraftforge.fluids.FluidStack;
+import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
+import net.minecraftforge.fluids.capability.IFluidHandler;
 
 /** Validate first, then reserve a footprint; reconstruction restores the consumed frame. */
 public final class TileEntityConstructor extends TileEntitySecuredDisplay implements ITickable {
+    private final MaxwellTank maxwellTank = new MaxwellTank(this::maxwellChanged);
+    private int maxwellWidth;
+    private int maxwellActiveLevel;
+    private long maxwellTick = Long.MIN_VALUE;
+    private boolean maxwellSync;
+
+    public boolean maxwell() {
+        BlockConstructorCore block = core();
+        return block != null && MaxwellEngine.DESIGN.equals(block.design);
+    }
+
+    public int maxwellFuel() { return maxwellTank.amount(); }
+    public int maxwellCapacity() { return MaxwellEngine.CAPACITY; }
+    public FluidStack maxwellFuelContents() { return maxwellTank.contents(); }
+    public double maxwellDryMass() { return MaxwellEngine.dryMass(structureWidth()); }
+    public double maxwellThrustUnits() { return MaxwellEngine.thrustUnits(structureWidth()); }
+    public int maxwellActiveLevel() { return maxwellActiveLevel; }
+    public int maxwellThrustLevel(boolean flightDemand) {
+        return maxwellFuel() == 0 || !formed() ? 0 : MaxwellEngine.throttle(
+                settings.redstone, drive.levels, drive.inverted, Math.max(driveChannelLevel, drivePhysicalLevel), flightDemand);
+    }
+
+    public BlockPos maxwellPort(EnumFacing side) {
+        CoreLayout shape = layout();
+        int y = MaxwellEngine.faceCenter(shape.height);
+        if (side == facing()) return cell(MaxwellEngine.faceCenter(shape.width), y, 0);
+        int z = MaxwellEngine.faceCenter(shape.depth);
+        if (side == facing().rotateYCCW()) return cell(0, y, z);
+        if (side == facing().rotateY()) return cell(shape.width - 1, y, z);
+        return null;
+    }
+
+    private boolean maxwellAvailable() {
+        if (world == null || isInvalid() || changing || !world.isBlockLoaded(pos, false)
+                || world.getTileEntity(pos) != this || !maxwell() || !formed()) return false;
+        World physical = world instanceof VehicleWorld ? ((VehicleWorld) world).parent : world;
+        if (!(physical instanceof WorldServer) || !physical.getMinecraftServer().isCallingFromMinecraftThread()) return false;
+        if (world instanceof VehicleWorld) {
+            EntityGroundVehicle craft = ((VehicleWorld) world).craft;
+            return craft != null && !craft.isDead && !craft.ownershipBlocked && !craft.transferInProgress
+                    && craft.view == world && craft.structure.isActive(pos);
+        }
+        return !com.vandorlabs.gear.ArmTransactions.locked(world, pos);
+    }
+
+    boolean acceptsMaxwellFuel(TileEntityConstructorPart member, EnumFacing side) {
+        return side != null && maxwellAvailable() && member.machineOwner() == this
+                && (world instanceof VehicleWorld || !com.vandorlabs.gear.ArmTransactions.locked(world, member.getPos()))
+                && member.getPos().equals(maxwellPort(side));
+    }
+
+    IFluidHandler maxwellInlet(TileEntityConstructorPart member, EnumFacing side) {
+        return maxwellTank.inlet(() -> acceptsMaxwellFuel(member, side));
+    }
+
+    public boolean purgeMaxwell() {
+        if (!maxwellAvailable()) return false;
+        maxwellTank.purge();
+        setMaxwellActive(0);
+        return true;
+    }
+
+    private void maxwellChanged() {
+        if (world instanceof VehicleWorld) markDirty();
+        else {
+            markDirty();
+            maxwellSync = true;
+        }
+    }
+
+    private void setMaxwellActive(int level) {
+        if (maxwellActiveLevel != level) {
+            maxwellActiveLevel = level;
+            publish();
+        }
+    }
+
+    public void tickMaxwell(boolean flightDemand) {
+        if (!maxwellAvailable()) return;
+        long tick = world.getTotalWorldTime();
+        if (maxwellTick == tick) return;
+        maxwellTick = tick;
+        int level = maxwellThrustLevel(flightDemand);
+        maxwellTank.burn(level);
+        setMaxwellActive(maxwellFuel() > 0 ? level : 0);
+        if (maxwellSync && tick % 5 == 0) {
+            maxwellSync = false;
+            publish();
+        }
+    }
+
     private final com.vandorlabs.navigation.ObserverPower observerPower=new com.vandorlabs.navigation.ObserverPower();
     private boolean observerPowerVisual,observerScanningVisual;
     private long connectionTick=Long.MIN_VALUE,connectionPosition;
@@ -180,13 +283,17 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     private int driveChannelLevel,drivePhysicalLevel,driveLevel=15;private boolean driveConfigPresent;
     private final java.util.Map<BlockPos,Integer> drivePhysicalInputs=new java.util.HashMap<>();
     public boolean isDrive(){BlockConstructorCore block=core();return block!=null&&(block.design.equals("longburn_drive")||block.design.equals("meridian_core")||block.design.equals("oculus_drive"));}
-    public boolean driveHasParticles(){return isDrive()&&core().design.equals("longburn_drive");}
+    public boolean driveHasParticles(){return maxwell();}
     public com.vandorlabs.drives.DriveSettings driveSettings(){if(isDrive()&&!driveHasParticles()&&drive.particles!=0)drive=new com.vandorlabs.drives.DriveSettings(drive.levels,drive.inverted,0,drive.threshold);return drive;}
     public int driveLevel(){return driveLevel;}
     public void configureDrive(com.vandorlabs.drives.DriveSettings settings){if(!authoritative()||!isDrive()||settings==null)return;drive=settings;driveSettings();driveConfigPresent=true;refreshInputs();publish();}
-    @Override protected boolean inputPowered(boolean aggregate){if(builder()){synthesisInput=aggregate;return synthesisEnabled();}if(!isDrive())return aggregate;int next=drive.activation(screenSettings().redstone,Math.max(driveChannelLevel,drivePhysicalLevel)==0&&aggregate?15:Math.max(driveChannelLevel,drivePhysicalLevel));if(driveLevel!=next){driveLevel=next;publish();}return next>0;}
+    @Override protected boolean inputPowered(boolean aggregate){if(builder()){synthesisInput=aggregate;return synthesisEnabled();}if(!isDrive()||maxwell())return aggregate;int next=drive.activation(screenSettings().redstone,Math.max(driveChannelLevel,drivePhysicalLevel)==0&&aggregate?15:Math.max(driveChannelLevel,drivePhysicalLevel));if(driveLevel!=next){driveLevel=next;publish();}return next>0;}
     @Override public void setChannelLevel(int level){int next=com.vandorlabs.drives.DriveSettings.clamp(level);boolean changed=driveChannelLevel!=next;driveChannelLevel=next;setChannelSignal(next>0);if(isDrive()&&changed){refresh();publish();}}
-    @Override public void update(){if(world!=null&&!world.isRemote&&formed()&&builder()){if(!com.vandorlabs.gear.ArmTransactions.locked(world,pos))synthesisRuntime.tick();if(synthesisSync&&world.getTotalWorldTime()%5==0){synthesisSync=false;publish();}}if(world!=null&&world.isRemote&&isDrive()&&renderReady()&&screenOn()&&drive.plume(true,driveLevel))com.vandorlabs.drives.DriveParticles.emit(this);
+    @Override public void update(){if(world!=null&&!world.isRemote&&formed()&&builder()){if(!com.vandorlabs.gear.ArmTransactions.locked(world,pos))synthesisRuntime.tick();if(synthesisSync&&world.getTotalWorldTime()%5==0){synthesisSync=false;publish();}}
+        if (maxwell()) {
+            if (world.isRemote && maxwellActiveLevel == 15) com.vandorlabs.drives.DriveParticles.emit(this);
+            else if (!world.isRemote) tickMaxwell(false);
+        }
         if(world!=null&&!world.isRemote&&observer()){
             boolean powered=formed()&&observerPowered(),scanning=formed()&&observerScanning();
             if(powered!=observerPowerVisual||scanning!=observerScanningVisual){observerPowerVisual=powered;observerScanningVisual=scanning;publish();}
@@ -225,15 +332,21 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
     public BlockConstructorCore core(){IBlockState state=coreState();return state==null?null:(BlockConstructorCore)state.getBlock();}
     public EnumFacing facing(){IBlockState state=coreState();return state==null?EnumFacing.NORTH:state.getValue(BlockVandorDirectional.FACING);}
     private boolean observerDataValid(){BlockConstructorCore b=core();if(observerSnapshot==null)return true;if(!observerSnapshot.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,3)||b==null||!observer())return false;try{com.vandorlabs.navigation.ObserverScale.width(b.design,observerWidth);observerSnapshot=null;return true;}catch(IllegalArgumentException invalid){return false;}}
-    public int structureWidth(){BlockConstructorCore b=core();return com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.width(b.design,observerWidth):b.width;}
-    public int structureHeight(){BlockConstructorCore b=core();return com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.height(b.design,observerWidth):b.height;}
-    public int structureDepth(){BlockConstructorCore b=core();return com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.width(b.design,observerWidth):b.depth;}
+    public int structureWidth(){return layout().width;}
+    public int structureHeight(){return layout().height;}
+    public int structureDepth(){return layout().depth;}
     public double observerScale(){BlockConstructorCore b=core();return b!=null&&com.vandorlabs.navigation.ObserverScale.observer(b.design)?com.vandorlabs.navigation.ObserverScale.linearScale(b.design,observerWidth):1;}
     public boolean formed(){IBlockState state=coreState();return state!=null&&observerDataValid()&&state.getValue(BlockConstructorCore.FORMED);}
     public com.vandorlabs.machines.CoreLayout layout(){
         IBlockState state=coreState();if(state==null||!observerDataValid())return null;BlockConstructorCore core=(BlockConstructorCore)state.getBlock();int face=state.getValue(BlockVandorDirectional.FACING).getIndex();
-        boolean observer=com.vandorlabs.navigation.ObserverScale.observer(core.design);int width=observer?com.vandorlabs.navigation.ObserverScale.width(core.design,observerWidth):core.width;
-        if(cachedLayout==null||cachedLayoutCore!=core||cachedLayout.facing!=face||cachedLayout.cornerX!=coreX||cachedLayout.cornerZ!=coreZ||cachedLayout.width!=width){cachedLayout=new com.vandorlabs.machines.CoreLayout(width,observer?com.vandorlabs.navigation.ObserverScale.height(core.design,width):core.height,observer?width:core.depth,face,coreX,coreZ);cachedLayoutCore=core;}return cachedLayout;
+        boolean observer=ObserverScale.observer(core.design),maxwell=MaxwellEngine.DESIGN.equals(core.design);
+        int width=observer?ObserverScale.width(core.design,observerWidth):maxwell&&maxwellWidth!=0?maxwellWidth:core.width;
+        if(cachedLayout==null||cachedLayoutCore!=core||cachedLayout.facing!=face||cachedLayout.cornerX!=coreX||cachedLayout.cornerZ!=coreZ||cachedLayout.width!=width){
+            int height=observer?ObserverScale.height(core.design,width):maxwell?width:core.height;
+            int depth=observer?width:maxwell?MaxwellEngine.depth(width):core.depth;
+            cachedLayout=new CoreLayout(width,height,depth,face,coreX,coreZ);cachedLayoutCore=core;
+        }
+        return cachedLayout;
     }
     public int activity(){if(observer())return !observerPowered()?0:observerScanning()?2:1;if(activity>=0)return activity;BlockConstructorCore core=core();return core!=null&&core.specification().state_labels!=null?2:1;}
     public void cycleActivity(){activity=observer()?(activity==1?2:1):(activity()+1)%3;markDirty();world.notifyBlockUpdate(pos,world.getBlockState(pos),world.getBlockState(pos),2);}
@@ -247,15 +360,19 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         Block matter=com.vandorlabs.blocks.ModBlocks.PROGRAMMABLE_BLOCK;
         EnumFacing selected=null;int selectedX=0,selectedZ=0,selectedWidth=core().width,best=Integer.MAX_VALUE;boolean selectedInverted=false;
         EnumFacing preferred=facing();
+        boolean maxwell=maxwell(),observer=observer();
+        int[] widths=maxwell?MaxwellEngine.widths():observer?java.util.stream.IntStream.rangeClosed(core().width,ObserverScale.maximumWidth(core().design)).toArray():new int[]{core().width};
         // Prefer the placed facing, but infer the footprint rather than requiring a hidden corner convention.
-        for(int width=core().width;width<=(observer()?com.vandorlabs.navigation.ObserverScale.maximumWidth(core().design):core().width)&&selected==null;width++){
-          int height=observer()?com.vandorlabs.navigation.ObserverScale.height(core().design,width):core().height,depth=observer()?width:core().depth;
-          for(int orientation=0;orientation<(observer()?2:1)&&selected==null;orientation++)for(int turn=0;turn<4 && selected==null;turn++){
+        for(int width:widths){
+          if(selected!=null)break;
+          int height=observer?ObserverScale.height(core().design,width):maxwell?width:core().height;
+          int depth=observer?width:maxwell?MaxwellEngine.depth(width):core().depth;
+          for(int orientation=0;orientation<(observer?2:1)&&selected==null;orientation++)for(int turn=0;turn<4 && selected==null;turn++){
             EnumFacing direction=EnumFacing.getHorizontal((preferred.getHorizontalIndex()+turn)%4);
             for(int cornerX:new int[]{0,width-1})for(int cornerZ:new int[]{0,depth-1}){
                 com.vandorlabs.machines.CoreLayout candidate=new com.vandorlabs.machines.CoreLayout(width,height,depth,direction.getIndex(),cornerX,cornerZ);
                 // Reject absent corners before examining the entire volume of each possible size.
-                boolean corners=true;if(observer())for(int cy:new int[]{0,height-1})for(int cx:new int[]{0,width-1})for(int cz:new int[]{0,depth-1}){
+                boolean corners=true;if(observer||maxwell&&width!=core().width)for(int cy:new int[]{0,height-1})for(int cx:new int[]{0,width-1})for(int cz:new int[]{0,depth-1}){
                     BlockPos at=pos.add(candidate.x(cx,cz),orientation==1?-cy:cy,candidate.z(cx,cz));
                     if(!at.equals(pos)&&(!world.isBlockLoaded(at,false)||world.getBlockState(at).getBlock()!=matter))corners=false;
                 }
@@ -275,8 +392,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         }
         if(best==Integer.MAX_VALUE)assemblyProblem="Complete a proportional Programmable Block frame: Survey Dish N×N×N (N=3–16), Sentinel Array N×N×2N (N=2–8).";
         if(selected==null)return false;
-        int height=observer()?com.vandorlabs.navigation.ObserverScale.height(core().design,selectedWidth):core().height;
-        int depth=observer()?selectedWidth:core().depth;
+        int height=observer?ObserverScale.height(core().design,selectedWidth):maxwell?selectedWidth:core().height;
+        int depth=observer?selectedWidth:maxwell?MaxwellEngine.depth(selectedWidth):core().depth;
         com.vandorlabs.machines.CoreLayout selectedLayout=new com.vandorlabs.machines.CoreLayout(selectedWidth,height,depth,
                 selected.getIndex(),selectedX,selectedZ);
         java.util.Map<BlockPos,TileEntityConstructorPart.Frame> frames=new java.util.HashMap<>();
@@ -300,7 +417,8 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         }
         changing=true;
         try{
-            coreX=selectedX;coreZ=selectedZ;observerInverted=selectedInverted;observerWidth=observer()?selectedWidth:0;observerSnapshot=null;
+            coreX=selectedX;coreZ=selectedZ;observerInverted=selectedInverted;observerWidth=observer?selectedWidth:0;observerSnapshot=null;
+            maxwellWidth=maxwell?selectedWidth:0;
             world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockVandorDirectional.FACING,selected),2);
             Block part=Block.REGISTRY.getObject(new ResourceLocation("vandorlabs:constructor_part"));
             for(int y=0;y<structureHeight();y++)for(int x=0;x<structureWidth();x++)for(int z=0;z<structureDepth();z++){
@@ -322,6 +440,7 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
                 BlockPos p=cell(x,y,z);if(p.equals(pos) || !world.isBlockLoaded(p))continue;TileEntity part=world.getTileEntity(p);
                 if(part instanceof TileEntityConstructorPart && ((TileEntityConstructorPart)part).owner().equals(pos))((TileEntityConstructorPart)part).restoreFrame(2);
             }
+            if(maxwell())maxwellActiveLevel=0;
             if(removedState==null)world.setBlockState(pos,world.getBlockState(pos).withProperty(BlockConstructorCore.FORMED,false),3);markDirty();refresh();
         }finally{changing=false;}
     }
@@ -368,8 +487,14 @@ public final class TileEntityConstructor extends TileEntitySecuredDisplay implem
         if(synthesisActivationPresent)tag.setInteger("SynthesisActivation",synthesisActivation);
         else tag.removeTag("SynthesisActivation");
     }
-    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
-    @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisDataPresent=tag.hasKey("Synthesis");synthesisSequencesPresent=tag.hasKey("SynthesisBatterySequences");synthesisActivationPresent=tag.hasKey("SynthesisActivation");synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);observerInverted=tag.getBoolean("ObserverInverted");observerWidth=tag.getInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG);observerSnapshot=tag.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG)?tag.copy():null;cachedLayout=null;coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
+    @Override public NBTTagCompound writeToNBT(NBTTagCompound tag){if(observerSnapshot!=null&&!observerDataValid())return observerSnapshot.copy();super.writeToNBT(tag);if(observerWidth!=0&&observerWidth!=(observer()?core().width:0))tag.setInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG,observerWidth);writeSynthesisData(tag);if(observerInverted)tag.setBoolean("ObserverInverted",true);tag.setInteger("ConstructorCoreX",coreX);tag.setInteger("ConstructorCoreZ",coreZ);tag.setInteger("MachineActivity",observer()?(activity==1?1:2):activity());tag.setIntArray("MachineSurfaceTextures",surfaceTextures);if(maxwell()){
+        if(maxwellWidth!=0&&maxwellWidth!=core().width)tag.setInteger(MaxwellEngine.WIDTH_TAG,maxwellWidth);
+        maxwellTank.write(tag);tag.setInteger("MaxwellActiveLevel",maxwellActiveLevel);
+    }if(isDrive()||driveConfigPresent){driveSettings().write(tag);tag.setInteger("DriveLevel",driveLevel);}return tag;}
+    @Override public void readFromNBT(NBTTagCompound tag){readingSynthesis=true;synthesisInputsReady=false;renderAppearance=false;super.readFromNBT(tag);synthesisDataPresent=tag.hasKey("Synthesis");synthesisSequencesPresent=tag.hasKey("SynthesisBatterySequences");synthesisActivationPresent=tag.hasKey("SynthesisActivation");synthesisRuntime.read(tag);java.util.Arrays.fill(batterySequences,0);NBTTagCompound sequences=tag.getCompoundTag("SynthesisBatterySequences");for(int bay=0;bay<4;bay++)batterySequences[bay]=Math.max(0,sequences.getLong("Bay"+bay));synthesisActivation=Math.max(0,Math.min(2,tag.getInteger("SynthesisActivation")));driveConfigPresent=tag.hasKey("DriveParticles",3);drive=com.vandorlabs.drives.DriveSettings.read(tag);driveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.hasKey("DriveLevel",3)?tag.getInteger("DriveLevel"):15);maxwellWidth=tag.getInteger(MaxwellEngine.WIDTH_TAG);
+        if(maxwellWidth!=0)try{MaxwellEngine.depth(maxwellWidth);}catch(IllegalArgumentException invalid){maxwellWidth=0;}
+        maxwellActiveLevel=com.vandorlabs.drives.DriveSettings.clamp(tag.getInteger("MaxwellActiveLevel"));maxwellTank.read(tag);
+        observerInverted=tag.getBoolean("ObserverInverted");observerWidth=tag.getInteger(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG);observerSnapshot=tag.hasKey(com.vandorlabs.navigation.ObserverScale.WIDTH_TAG)?tag.copy():null;cachedLayout=null;coreX=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreX")));coreZ=Math.max(0,Math.min(15,tag.getInteger("ConstructorCoreZ")));surfaceTextures=tag.getIntArray("MachineSurfaceTextures").clone();if(surfaceTextures.length>3)surfaceTextures=new int[0];for(int i=0;i<surfaceTextures.length;i++)if(!validSurface(surfaceTextures[i]))surfaceTextures[i]=-2;activity=tag.hasKey("MachineActivity")?Math.max(0,Math.min(2,tag.getInteger("MachineActivity"))):-1;renderAppearance=true;readingSynthesis=false;}
     @Override public NBTTagCompound getUpdateTag(){NBTTagCompound tag=writeToNBT(new NBTTagCompound());tag.getCompoundTag("Synthesis").removeTag("Ingredient");if(!getStackInSlot(0).isEmpty())tag.setTag("InsertedToken",com.vandorlabs.navigation.NavigationChip.summary(getStackInSlot(0)).writeToNBT(new NBTTagCompound()));tag.setInteger("SynthesisConnections",synthesisConnections);tag.setBoolean("SynthesisWorking",working());if(observer()){tag.setBoolean("ObserverPowered",observerPowered());tag.setBoolean("ObserverScanning",observerScanning());}tag.setBoolean("CoreRenderReady",renderAppearance);tag.setUniqueId("CoreRenderIdentity",renderIdentity());if(renderEpoch!=null){tag.setUniqueId("CoreRenderEpoch",renderEpoch);tag.setLong("CoreRenderOwner",renderOwner.toLong());tag.setInteger("CoreRenderCell",renderCell);}return tag;}
     @Override public void handleUpdateTag(NBTTagCompound tag){readFromNBT(tag);synthesisRuntime.visualWorking(tag.getBoolean("SynthesisWorking"));observerPowerVisual=tag.getBoolean("ObserverPowered");observerScanningVisual=tag.getBoolean("ObserverScanning");renderPacket(tag);}
     @Override public SPacketUpdateTileEntity getUpdatePacket(){return new SPacketUpdateTileEntity(pos,0,getUpdateTag());}
