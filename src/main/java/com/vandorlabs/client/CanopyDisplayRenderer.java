@@ -65,7 +65,7 @@ public final class CanopyDisplayRenderer {
                 Display display=displays[side];
                 if(display==null)continue;
                 if(tick-display.seen>100){display.delete();displays[side]=null;continue;}
-                if(display.rendered!=display.requested||tick-display.updated>=REFRESH_TICKS)ready.add(display);
+                if(tick-display.seen<=2&&(display.rendered!=display.requested||tick-display.updated>=REFRESH_TICKS))ready.add(display);
             }
             if(displays[0]==null&&displays[1]==null)entries.remove();
         }
@@ -95,6 +95,7 @@ public final class CanopyDisplayRenderer {
             if(display==null||display.frame==null||display.rendered!=display.requested)continue;
             display.frame.bindFramebufferTexture();
             BufferBuilder buffer=Tessellator.getInstance().getBuffer();
+            buffer.setTranslation(0,0,0);
             buffer.begin(GL11.GL_QUADS,BlockSurfaceFormat.get());
             for(CanopyMesh.Face face:faces){
                 if(face.sideGlass!=(side==1)||face.display!=display.rendered)continue;

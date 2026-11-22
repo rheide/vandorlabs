@@ -44,7 +44,7 @@ public final class TileEntityCanopy extends TileEntity implements ITickable, com
         if(baseFaces==null||!model.equals(baseModel)||!settings.equals(baseSettings)||aspect!=baseAspect||sideAspect!=baseSideAspect||centeredPlacement!=baseCentered||width!=baseWidth||connections!=baseConnections||roof!=baseRoof){
             List<CanopyMesh.Face> source=resizable()?com.vandorlabs.canopy.LargeCanopyGeometry.faces(block().width,large,centeredPlacement):com.vandorlabs.canopy.CanopyVariants.faces(this,CanopyMesh.MODELS.get(model));
             if(block().opening())source=com.vandorlabs.canopy.OpeningCanopyGeometry.faces(width,block().length,Math.min(block().length==3?3:2,large.angle),(connections&8)!=0);
-            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large,aspect,sideAspect);
+            baseFaces=com.vandorlabs.canopy.CanopyFinishes.faces(source,large,aspect,sideAspect,resizable());
             baseModel=model;baseSettings=settings;baseAspect=aspect;baseSideAspect=sideAspect;baseCentered=centeredPlacement;baseWidth=width;baseConnections=connections;baseRoof=roof;
             baseKey=model+":"+settings+":"+aspect+":"+sideAspect+":"+centeredPlacement+":"+width+":"+connections+":"+roof;
         }
