@@ -275,6 +275,9 @@ case "${1:-}" in
         elif [ "$TARGET" = screen-modes ]; then
             PREFIX=shot_screen_status_to_redstone_
             export VANDOR_LABS_SCREEN_MODE_CHECKS_ONLY=true
+        elif [ "$TARGET" = maxwell-cruise ]; then
+            PREFIX=maxwell-cruise
+            export VANDOR_LABS_CRUISE_CHECKS_ONLY=true
         elif [ "$TARGET" = pulse-screens ]; then
             PREFIX=shot_pulse_screen_
             export VANDOR_LABS_PULSE_SCREEN_CHECKS_ONLY=true
@@ -1039,6 +1042,10 @@ PYIMAGE
         grep -q "screen-mode-client PASS" "$RUN_OUT/client.log"
         echo "Screen mode live checks passed: $RUN_OUT"
         exit 0
+    fi
+    if [ "$TARGET" = maxwell-cruise ]; then
+        grep -q "maxwell-cruise PASS" "$RUN_OUT/client.log" && test -s "$RUN_OUT/maxwell-cruise.png"
+        exit $?
     fi
     if [ "$TARGET" = pulse-screens ]; then
         grep -q "pulse-screen-world PASS" "$RUN_OUT/client.log"

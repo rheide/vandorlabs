@@ -1,0 +1,87 @@
+package com.vandorlabs.vehicle;
+
+import com.vandorlabs.blocks.ModBlocks;
+import com.vandorlabs.client.CruiseSky;
+import net.minecraft.client.Minecraft;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ScreenShotHelper;
+import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.relauncher.Side;
+import net.minecraftforge.fml.relauncher.SideOnly;
+import java.awt.image.BufferedImage;
+import java.io.File;
+import java.util.Collections;
+import java.util.concurrent.Future;
+import javax.imageio.ImageIO;
+
+@SideOnly(Side.CLIENT)
+public final class CruiseRuntimeChecks {
+    private static int stage,ticks;
+    private static Future<?> work;
+    private static EntityGroundVehicle craft;
+    private static double startX,destination;
+    private static void require(boolean ok,String detail){if(!ok)throw new IllegalStateException("Cruise: "+detail);}
+
+    private static void place(Minecraft mc){
+        EntityPlayerMP pilot=mc.getIntegratedServer().getPlayerList().getPlayers().get(0);
+        WorldServer world=pilot.getServerWorld();
+        BlockPos seat=BlockPos.ORIGIN;
+        craft=new EntityGroundVehicle(world);
+        craft.install(new VehicleStructure(Collections.singletonList(new VehicleStructure.Cell(seat,ModBlocks.PILOT_SEAT.getDefaultState(),null)),seat,EnumFacing.NORTH,0));
+        startX=pilot.posX;
+        craft.setPosition(startX,255.9,pilot.posZ);
+        world.spawnEntity(craft);
+        pilot.setPositionAndUpdate(startX,256,pilot.posZ);
+        craft.assignSeat(pilot,seat);
+        require(pilot.startRiding(craft,true),"pilot boards");
+        craft.hover=true;craft.hoverTarget=255.9;
+    }
+
+    private static void enter(){
+        // Set a recovery flight so the production physics levels the craft and descends on its own.
+        NBTTagCompound state=new NBTTagCompound();state.setByte("MaxwellFlightPhase",(byte)3);
+        craft.readFlightMode(state);
+        craft.setPosition(startX,255.9,craft.posZ);
+        require(craft.cruise.move(0,1,0),"cross build ceiling");
+        for(int i=0;i<64;i++)require(craft.cruise.move(64,16,0),"route step "+i);
+        destination=craft.cruise.x();
+        require(Math.abs(craft.posX-startX)<.001&&destination-startX==4096,"horizontal route keeps physical anchor");
+        require(craft.cruise.altitude()>1200&&Double.isInfinite(craft.groundClearance()),"logical altitude without a clearance query");
+        for(int i=512;i<=4096;i+=256)require(!craft.world.isBlockLoaded(new BlockPos(startX+i,64,craft.posZ)),"cruise loaded route at "+i);
+        NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());
+        EntityGroundVehicle loaded=new EntityGroundVehicle(craft.world);
+        loaded.readFromNBT(saved);
+        require(loaded.cruise.active()&&loaded.cruise.x()==destination&&loaded.cruise.altitude()==craft.cruise.altitude(),"persisted route and altitude");
+    }
+
+    public static boolean tick(Minecraft mc,File out) throws Exception {
+        if(++ticks>800)throw new IllegalStateException("Cruise fixture timeout at stage "+stage+" rider="+mc.player.getRidingEntity());
+        if(work!=null){if(!work.isDone())return false;work.get();work=null;ticks=0;}
+        if(stage==0){
+            work=mc.getIntegratedServer().addScheduledTask(()->place(mc));stage=1;
+        }else if(stage==1&&ticks>10&&mc.player.getRidingEntity() instanceof EntityGroundVehicle){
+            work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=2;
+        }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.ready()){
+            mc.player.rotationPitch=mc.player.prevRotationPitch=75;
+            mc.gameSettings.hideGUI=true;stage=3;ticks=0;
+        }else if(stage==3&&ticks>15){
+            BufferedImage shot=ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer());
+            ImageIO.write(shot,"png",new File(out,"maxwell-cruise.png"));
+            work=mc.getIntegratedServer().addScheduledTask(()->{
+                require(craft.cruise.active(),"craft still cruising");
+                require(craft.cruise.move(0,255-craft.cruise.altitude(),0),"reenter");
+                require(!craft.cruise.active()&&Math.abs(craft.posX-destination)<.01,"reentered at geographic destination");
+                require(craft.world.isBlockLoaded(new BlockPos(destination,64,craft.posZ)),"destination prepared");
+                require(!craft.world.isBlockLoaded(new BlockPos(startX+2048,64,craft.posZ)),"middle of route stayed unloaded");
+            });stage=4;
+        }else if(stage==4&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&Math.abs(mc.player.posX-destination)<4&&mc.player.posY<300){
+            System.out.println("[vandorlabs] maxwell-cruise PASS route-unloaded rider-seed-view saved-route destination-remount");
+            return true;
+        }
+        return false;
+    }
+    private CruiseRuntimeChecks(){}
+}

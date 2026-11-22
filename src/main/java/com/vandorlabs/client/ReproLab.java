@@ -923,6 +923,11 @@ public class ReproLab {
             catch(Exception failure){throw new IllegalStateException("Screen mode live checks",failure);}
             return;
         }
+        if(Boolean.getBoolean("vandorlabs.cruiseChecksOnly")){
+            try{if(com.vandorlabs.vehicle.CruiseRuntimeChecks.tick(mc,outDir))mc.shutdown();}
+            catch(Exception failure){throw new IllegalStateException("Maxwell cruise checks",failure);}
+            return;
+        }
         if(Boolean.getBoolean("vandorlabs.pulseScreenChecksOnly")) {
             try {if(!vehicleStatusStarted){PulseScreenRuntimeChecks.begin(mc);vehicleStatusStarted=true;}else if(PulseScreenRuntimeChecks.tick(mc,outDir))mc.shutdown();}
             catch(Exception failure){throw new IllegalStateException("Pulse screen live checks",failure);}

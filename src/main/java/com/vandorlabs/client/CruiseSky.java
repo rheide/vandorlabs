@@ -1,0 +1,82 @@
+package com.vandorlabs.client;
+
+import com.vandorlabs.network.MessageCruiseTerrain;
+import com.vandorlabs.vehicle.EntityGroundVehicle;
+import net.minecraft.client.Minecraft;
+import net.minecraft.client.renderer.*;
+import net.minecraft.client.renderer.texture.DynamicTexture;
+import net.minecraft.client.renderer.vertex.DefaultVertexFormats;
+import net.minecraft.util.ResourceLocation;
+import net.minecraftforge.client.event.RenderWorldLastEvent;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.TickEvent;
+import net.minecraftforge.fml.relauncher.Side;
+import org.lwjgl.opengl.GL11;
+
+/** Low-detail geographic background. One texture for the local rider, reused between updates. */
+@Mod.EventBusSubscriber(modid="vandorlabs",value=Side.CLIENT)
+public final class CruiseSky {
+    private static EntityGroundVehicle owner;
+    private static MessageCruiseTerrain terrain;
+    private static DynamicTexture texture;
+    private static ResourceLocation location;
+
+    public static boolean ready(){return terrain!=null && owner.cruise.active();}
+
+    public static void receive(MessageCruiseTerrain image) {
+        Minecraft mc=Minecraft.getMinecraft();
+        if (mc.player==null || !(mc.player.getRidingEntity() instanceof EntityGroundVehicle)) return;
+        EntityGroundVehicle craft=(EntityGroundVehicle)mc.player.getRidingEntity();
+        if (image.entity!=craft.getEntityId()) return;
+        if (texture==null) {
+            texture=new DynamicTexture(MessageCruiseTerrain.SIZE,MessageCruiseTerrain.SIZE);
+            location=mc.getTextureManager().getDynamicTextureLocation("flight_terrain",texture);
+        }
+        owner=craft;
+        terrain=image;
+        System.arraycopy(image.pixels,0,texture.getTextureData(),0,image.pixels.length);
+        texture.updateDynamicTexture();
+    }
+
+    @SubscribeEvent public static void tick(TickEvent.ClientTickEvent event) {
+        if (event.phase!=TickEvent.Phase.END || owner==null) return;
+        Minecraft mc=Minecraft.getMinecraft();
+        if (mc.player!=null && mc.player.getRidingEntity()==owner && owner.cruise.active()) return;
+        mc.getTextureManager().deleteTexture(location);
+        location=null; texture=null; terrain=null; owner=null;
+    }
+
+    @SubscribeEvent public static void render(RenderWorldLastEvent event) {
+        if (terrain==null || !owner.cruise.active()) return;
+        Minecraft mc=Minecraft.getMinecraft();
+        if (mc.player==null || mc.player.getRidingEntity()!=owner) return;
+        double span=MessageCruiseTerrain.SIZE*terrain.step;
+        double width=Math.max(24,mc.gameSettings.renderDistanceChunks*12);
+        double scale=width/span;
+        double x=(terrain.centerX-owner.cruise.x())*scale-width*.5;
+        double z=(terrain.centerZ-owner.cruise.z())*scale-width*.5;
+        double y=-Math.max(5,owner.cruise.altitude()*scale);
+        GlStateManager.pushMatrix();
+        GlStateManager.depthMask(false);
+        // Draw only against the sky. A camera under a large hull still sees the hull in front.
+        GL11.glDepthRange(1,1);
+        try {
+            GlStateManager.disableLighting();
+            GlStateManager.color(1,1,1,1);
+            mc.getTextureManager().bindTexture(location);
+            BufferBuilder b=Tessellator.getInstance().getBuffer();
+            b.begin(GL11.GL_QUADS,DefaultVertexFormats.POSITION_TEX);
+            b.pos(x,y,z).tex(0,0).endVertex();
+            b.pos(x,y,z+width).tex(0,1).endVertex();
+            b.pos(x+width,y,z+width).tex(1,1).endVertex();
+            b.pos(x+width,y,z).tex(1,0).endVertex();
+            Tessellator.getInstance().draw();
+        } finally {
+            GL11.glDepthRange(0,1);
+            GlStateManager.depthMask(true);
+            GlStateManager.popMatrix();
+        }
+    }
+    private CruiseSky() {}
+}
