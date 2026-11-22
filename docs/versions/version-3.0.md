@@ -17,6 +17,12 @@ Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to choo
 
 For recovery below the cruise band, Creative players holding a Configurizer can select **Emergency Park** on Vehicle Status. It uses the Controller’s Safe Park search to find space for the craft.
 
+## Flight instruments
+
+In the Forge screen or cockpit artwork picker, expand **Vehicle Status** and choose a display for that surface. **Status** keeps the mode controls and fuel readout. The **Attitude Indicator** shows pitch and bank, **Compass** shows heading, **Altimeter** shows elevation, and **Airspeed Indicator** shows speed in m/s. The airspeed dial scales to the craft’s projected maximum.
+
+Open the Controller’s **Flight** tab for projected maximum speed and altitude at full installed Maxwell thrust. The projections account for effective weight and the dimension’s ceiling. Below Y=256 the thrust speed target stays at 30 m/s. A light craft with one Maxwell can build toward 100 m/s in the first part of its climb above that height.
+
 ## Overworld cruise
 
 Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The instruments show altitude during cruise and omit ground clearance.

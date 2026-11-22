@@ -3,6 +3,7 @@ package com.vandorlabs.client;
 import com.vandorlabs.vehicle.*;
 import com.vandorlabs.tiles.*;
 import com.vandorlabs.screen.VehicleStatusLayout;
+import com.vandorlabs.screen.VehicleInstrument;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.renderer.GlStateManager;
 import net.minecraft.client.shader.Framebuffer;
@@ -12,6 +13,51 @@ import java.io.File;
 
 /** Shared status renderer must retain modes while omitting unavailable Autopilot controls. */
 final class VehicleStatusRenderChecks {
+    static void instruments(Minecraft mc,File output)throws Exception{
+        for(VehicleInstrument gauge:VehicleInstrument.values()){
+            if(gauge==VehicleInstrument.STATUS)continue;
+            for(int height:new int[]{64,128}){
+                BufferedImage first=instrumentFrame(mc,height,()->VehicleInstrumentRenderer.drawFace(gauge,height,0,0,0,200,80,320));
+                BufferedImage second=instrumentFrame(mc,height,()->VehicleInstrumentRenderer.drawFace(gauge,height,24,35,115,2350,80,900));
+                int delta=0;
+                int x0=height==64?280:112,x1=height==64?498:400;
+                int y0=height==64?32:88,y1=height==64?225:440;
+                for(int y=y0;y<y1;y++)for(int x=x0;x<x1;x++){
+                    if(first.getRGB(x,y)!=second.getRGB(x,y))delta++;
+                }
+                require(delta>30,gauge.label+" geometry responds to telemetry, including airspeed range: "+height+" pixels="+delta);
+                javax.imageio.ImageIO.write(second,"png",new File(output,"shot_vehicle-"+gauge.name().toLowerCase(java.util.Locale.ROOT)+"-"+height+".png"));
+            }
+        }
+        System.out.println("[vandorlabs][reprolab] vehicle-instruments PASS attitude, magnetic heading, altitude, dynamic speed range, compact and full panels");
+    }
+
+    static void airborneInstruments(Minecraft mc,File output,EntityGroundVehicle craft,BlockPos screen)throws Exception{
+        require(craft.flightReadout().projectedSpeed(com.vandorlabs.physics.FlightEnvelope.MAX_ALTITUDE)>5,
+                "flight fixture computes a live instrument speed range above 100 m/s");
+        for(VehicleInstrument gauge:VehicleInstrument.values()){
+            if(gauge==VehicleInstrument.STATUS)continue;
+            BufferedImage image=instrumentFrame(mc,128,()->VehicleInstrumentRenderer.draw(gauge,craft.view,screen,128));
+            javax.imageio.ImageIO.write(image,"png",new File(output,"shot_airborne-"+gauge.name().toLowerCase(java.util.Locale.ROOT)+".png"));
+        }
+    }
+
+    private static BufferedImage instrumentFrame(Minecraft mc,int height,Runnable render){
+        Framebuffer frame=new Framebuffer(512,height*4,true);
+        GlStateManager.matrixMode(5889);GlStateManager.pushMatrix();GlStateManager.loadIdentity();
+        GlStateManager.ortho(0,128,height,0,-10,10);GlStateManager.matrixMode(5888);GlStateManager.pushMatrix();
+        try(TurntableRenderState saved=new TurntableRenderState()){
+            frame.bindFramebuffer(true);
+            GlStateManager.loadIdentity();GlStateManager.clearColor(0,0,0,1);
+            GlStateManager.depthMask(true);GlStateManager.clear(16640);GlStateManager.enableDepth();
+            render.run();
+            return net.minecraft.util.ScreenShotHelper.createScreenshot(512,height*4,frame);
+        }finally{
+            GlStateManager.popMatrix();GlStateManager.matrixMode(5889);GlStateManager.popMatrix();GlStateManager.matrixMode(5888);
+            frame.deleteFramebuffer();mc.getFramebuffer().bindFramebuffer(true);
+        }
+    }
+
     static void run(Minecraft mc,File output)throws Exception{
         VehicleStructure structure=VehicleStructure.display(java.util.Arrays.asList(new VehicleStructure.Cell(BlockPos.ORIGIN,net.minecraft.init.Blocks.STONE.getDefaultState(),null),new VehicleStructure.Cell(BlockPos.ORIGIN.east(),net.minecraft.block.Block.getBlockFromName("vandorlabs:vehicle_controller").getDefaultState(),null)));
         EntityGroundVehicle craft=new EntityGroundVehicle(mc.world);craft.structure=structure;craft.view=new VehicleWorld(mc.world,structure);craft.view.craft=craft;

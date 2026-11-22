@@ -516,7 +516,7 @@ public class TEAnimatedScreenSelector
             if(com.vandorlabs.blocks.ScreenChipSupport.selected(te)){bindAtlas();setWorldLight(te);renderHousingBox(wallSprite(te),0,ceiling?15:0,0,16,ceiling?16:1,8,te.getSurfaceTextureLayout());}
             GlStateManager.pushMatrix();GlStateManager.translate(0,0,8); GlStateManager.scale(1,.5,.5);
             bindAtlas();setWorldLight(te);drawWallMesh(wallSprite(te),SelectorHousingMeshes.layout(ScreenHousingMesh.diagonal(false),te.getSurfaceTextureLayout(),UnifiedTextureSprites.aspect(wallSprite(te))),ceiling);
-            if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
+            if(te.hasRedstoneScreen(0)||te.hasVehiclePanel(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
                 FrameSurfaceRenderer.screen(te,ScreenSurface.quad(ScreenSurface.Kind.DIAGONAL,false),ceiling);
                 GlStateManager.popMatrix();redstoneFace(te,0);GlStateManager.enableLighting();endLocalTransform();return;
             }
@@ -576,7 +576,7 @@ public class TEAnimatedScreenSelector
             setWorldLight(te);
             renderHousingBox(wallSprite(te),0,0,0,16,16,16,te.getSurfaceTextureLayout());
         }
-        if(te.hasRedstoneScreen(0)||te.hasVehicleStatus(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
+        if(te.hasRedstoneScreen(0)||te.hasVehiclePanel(0)||te.hasChipSurface(0)||te.hasNavigation(0)){
             redstoneFace(te,0);
             ScreenSurface.Kind framedSurface=state.getBlock() instanceof BlockProgrammableConsole?ScreenSurface.Kind.CONSOLE:diagonal?ScreenSurface.Kind.DIAGONAL:ScreenSurface.Kind.FLAT;
             FrameSurfaceRenderer.screen(te,ScreenSurface.quad(framedSurface,diagonalInverted));
@@ -767,7 +767,7 @@ public class TEAnimatedScreenSelector
     private static boolean redstoneFace(TileEntityAnimatedScreenSelector tile,int slot){
         if(tile.hasNavigation(slot)){NavigationMapRenderer.display(tile,slot);return true;}
         if(tile.hasChipSurface(slot)){ScreenChipRenderer.display(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
-        if(tile.hasVehicleStatus(slot)){RedstoneScreenRenderer.drawVehicle(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
+        if(tile.hasVehiclePanel(slot)){RedstoneScreenRenderer.drawVehicle(tile,tile.getWorld().getBlockState(tile.getPos()),slot);return true;}
         if(tile.getSurfaceTexture(slot)!=TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)return false;
         RedstoneScreenRenderer.draw(tile.redstoneScreen(slot),tile.getWorld().getBlockState(tile.getPos()));return true;
     }

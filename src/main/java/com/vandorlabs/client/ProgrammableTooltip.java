@@ -108,6 +108,8 @@ public final class ProgrammableTooltip {
                 return I18n.format("tooltip.vandorlabs.chip_display");
             if (choice == TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)
                 return I18n.format("tooltip.vandorlabs.vehicle_display");
+            com.vandorlabs.screen.VehicleInstrument instrument=com.vandorlabs.screen.VehicleInstrument.forChoice(choice);
+            if(instrument!=null)return instrument.label;
             return HousingTextureList.name(choice);
         }
         return HousingTextureList.name(panel.getHousingTexture());

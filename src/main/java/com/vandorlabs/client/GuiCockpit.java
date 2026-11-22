@@ -60,7 +60,7 @@ public final class GuiCockpit extends GuiMaterialPicker {
             else{
                 textures=new HousingTextureList(x,guiTop+100,cx-x-10,screen.texture,Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT),null,
                         value->HousingTextureList.generalTexture(value)||ScreenTextureList.artwork(value,input)).visibleRows(Math.max(2,(ySize-134)/HousingTextureList.ROW_HEIGHT)).custom(this::choose)
-                        .redstone(this::redstone).vehicle(()->choose(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE));
+                        .redstone(this::redstone).vehicle(this::choose);
                 buttonList.add(new CockpitButton(30,cx,guiTop+104,controlW,20,"Animation: "+(screen.animated?"On":"Off")));
                 buttonList.add(new CockpitButton(31,cx,guiTop+128,controlW,20,"Speed: "+new String[]{"Slow","Normal","Fast"}[screen.speed]));
                 buttonList.add(new CockpitButton(33,cx,guiTop+152,controlW,20,"Blank surface"));

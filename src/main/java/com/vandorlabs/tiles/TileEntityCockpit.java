@@ -151,6 +151,7 @@ public class TileEntityCockpit extends TileEntityVehicleController {
             if(action>=0)com.vandorlabs.vehicle.VehicleStatus.activate(world,pos,actor,action);
             return true;
         }
+        if(nearest!=null&&com.vandorlabs.screen.VehicleInstrument.includes(display(nearest.id).texture))return !emergencyOnly;
         if(nearest!=null&&!emergencyOnly){com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(nearest,display(nearest.id).rows);if(layout.rows==0)return true;Control c=control(nearest.id+"/"+layout.row(uv[1]));c.activate(c.kind==1?layout.sliderColumn(uv[0]):uv[0]);return true;}
         return false;
     }
@@ -262,6 +263,6 @@ public class TileEntityCockpit extends TileEntityVehicleController {
         Display(String id,String role){this.id=id;this.role=role;}
         public int maxRows(){return "screen".equals(role)?6:3;}
         public NBTTagCompound write(){NBTTagCompound tag=new NBTTagCompound();tag.setString("Id",id);tag.setInteger("Texture",texture);tag.setInteger("Rows",rows);tag.setInteger("Speed",speed);tag.setInteger("Gate",gate);tag.setBoolean("Animated",animated);tag.setBoolean("Inverted",inverted);tag.setBoolean("Active",active);if(receiveChannels().size()>1)tag.setIntArray("ReceiveChannels",receiveChannels().toArray());if(activation()!=(gate==0?0:inverted?2:1))tag.setInteger("Activation",activation());return tag;}
-        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.VEHICLE_SURFACE || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,tag.getInteger("Gate"));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");receiveChannels=tag.hasKey("ReceiveChannels",11)?ChannelData.read(tag,"ReceiveChannels",ChannelList.of(gate)):null;receiverGate=gate;activation=tag.hasKey("Activation",3)?Math.max(0,Math.min(2,tag.getInteger("Activation"))):-1;active=gate==0||activation()==0 || tag.getBoolean("Active");}
+        public void read(NBTTagCompound tag){rows=tag.hasKey("Rows",3)?Math.max(0,Math.min(maxRows(),tag.getInteger("Rows"))):3;texture=tag.getInteger("Texture");if(texture<TileEntityAnimatedScreenSelector.REDSTONE_SURFACE && !com.vandorlabs.screen.VehicleInstrument.includes(texture) || texture>=ScreenHousingTextures.IDS.length)texture=-1;speed=com.vandorlabs.animation.ScreenBehavior.clampSpeedIndex(tag.hasKey("Speed",3)?tag.getInteger("Speed"):1);gate=Math.max(0,tag.getInteger("Gate"));animated=tag.getBoolean("Animated");inverted=tag.getBoolean("Inverted");receiveChannels=tag.hasKey("ReceiveChannels",11)?ChannelData.read(tag,"ReceiveChannels",ChannelList.of(gate)):null;receiverGate=gate;activation=tag.hasKey("Activation",3)?Math.max(0,Math.min(2,tag.getInteger("Activation"))):-1;active=gate==0||activation()==0 || tag.getBoolean("Active");}
     }
 }

@@ -22,6 +22,7 @@ import net.minecraft.world.World;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import com.vandorlabs.screen.VehicleInstrument;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -30,7 +31,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public final GlassPlayback glassPlayback=new GlassPlayback(this);
 
     public static final int REDSTONE_SURFACE=-2;
-    public static final int VEHICLE_SURFACE=-3;
+    public static final int VEHICLE_SURFACE=VehicleInstrument.STATUS.choice;
     public static final int CHIP_SURFACE=-4;
     public static final int NAVIGATION_SURFACE=com.vandorlabs.navigation.NavigationMap.SURFACE;
     public boolean hasNavigation(int slot){return getSurfaceTexture(slot)==NAVIGATION_SURFACE;}
@@ -45,6 +46,7 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public com.vandorlabs.programmer.ProgrammerJournalView chipDisplay(){net.minecraft.item.ItemStack stack=com.vandorlabs.blocks.ScreenChipSupport.stack(this);if(chipViewStack!=stack){chipViewStack=stack;chipView=com.vandorlabs.programmer.ProgrammerJournalView.from(stack);chipPage=chipView==null?0:Math.max(0,Math.min(pendingChipPage,chipView.pages.size()-1));pendingChipPage=0;}return chipView;}
 
     public boolean hasVehicleStatus(int slot){return getSurfaceTexture(slot)==VEHICLE_SURFACE;}
+    public boolean hasVehiclePanel(int slot){return VehicleInstrument.includes(getSurfaceTexture(slot));}
     private static final RedstoneScreenContents[] NO_CONTROLS=new RedstoneScreenContents[2];
     private RedstoneScreenContents[] controls=NO_CONTROLS;
     public RedstoneScreenContents redstoneScreen(int slot){
@@ -250,15 +252,19 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
     public int baseSurfaceTexture(int slot){return hasRedstoneScreen(slot)?REDSTONE_SURFACE:slot==1?secondarySurface:primarySurface;}
     public int baseAnimationSpeed(){return animationSpeedIndex;}
     private int primarySurface=-1,secondarySurface=-1;
-    public int getSurfaceTexture(int slot){if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&(slot==1?secondarySurface:primarySurface)!=VEHICLE_SURFACE&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    public int getSurfaceTexture(int slot){if(((slot==1?secondarySurface:primarySurface)==CHIP_SURFACE||(slot==1?secondarySurface:primarySurface)==NAVIGATION_SURFACE)&&!hasRedstoneScreen(slot))return slot==1?secondarySurface:primarySurface;if(slot==activationSurfaceSlot()&&activationOverridesArtwork())return activation.texture(activationState());if(hasRedstoneScreen(slot))return REDSTONE_SURFACE;if(slot==activationSurfaceSlot()&&!VehicleInstrument.includes(slot==1?secondarySurface:primarySurface)&&activation.mode>0)return activationTexture(activationState());return slot==1?secondarySurface:primarySurface;}
+    private static int savedSurface(int choice){
+        if(choice==NAVIGATION_SURFACE||choice==CHIP_SURFACE||VehicleInstrument.includes(choice))return choice;
+        return choice<0?-1:ScreenHousingTextures.clamp(choice);
+    }
     public void setSurfaceTexture(int slot,int choice) {
         if(choice==REDSTONE_SURFACE){
-            // The row control is the active surface, replacing Vehicle Status.
-            if((slot==1?secondarySurface:primarySurface)==VEHICLE_SURFACE){if(slot==1)secondarySurface=-1;else primarySurface=-1;settingsChanged();}
+            // Enabling Redstone rows replaces the selected vehicle display.
+            if(VehicleInstrument.includes(slot==1?secondarySurface:primarySurface)){if(slot==1)secondarySurface=-1;else primarySurface=-1;settingsChanged();}
             redstoneScreen(slot).setEnabled(true);return;
         }
         if(controls[slot]!=null)controls[slot].setEnabled(false);
-        int next=choice==NAVIGATION_SURFACE?NAVIGATION_SURFACE:choice==CHIP_SURFACE?CHIP_SURFACE:choice==VEHICLE_SURFACE?VEHICLE_SURFACE:choice<0?-1:ScreenHousingTextures.clamp(choice);
+        int next=savedSurface(choice);
         if((slot==1?secondarySurface:primarySurface)==next)return;
         if(slot==1)secondarySurface=next;else primarySurface=next;
         settingsChanged();if(world!=null){net.minecraft.block.state.IBlockState state=world.getBlockState(pos);world.notifyBlockUpdate(pos,state,state,2);}
@@ -689,8 +695,8 @@ public class TileEntityAnimatedScreenSelector extends TileEntity implements Reds
             else if(controls[i]!=null)controls[i].readFromNBT(new NBTTagCompound());
         }
         if(controls!=NO_CONTROLS && world!=null && !world.isRemote)DeferredTileLoad.schedule(this,this::finishLoading);
-        primarySurface=compound.getInteger("PrimarySurfaceTexture")==NAVIGATION_SURFACE?NAVIGATION_SURFACE:compound.getInteger("PrimarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("PrimarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("PrimarySurfaceTexture",3) && compound.getInteger("PrimarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("PrimarySurfaceTexture")):-1;
-        secondarySurface=compound.getInteger("SecondarySurfaceTexture")==NAVIGATION_SURFACE?NAVIGATION_SURFACE:compound.getInteger("SecondarySurfaceTexture") ==CHIP_SURFACE?CHIP_SURFACE:compound.getInteger("SecondarySurfaceTexture")==VEHICLE_SURFACE?VEHICLE_SURFACE:compound.hasKey("SecondarySurfaceTexture",3) && compound.getInteger("SecondarySurfaceTexture")>=0?ScreenHousingTextures.clamp(compound.getInteger("SecondarySurfaceTexture")):-1;
+        primarySurface=compound.hasKey("PrimarySurfaceTexture",3)?savedSurface(compound.getInteger("PrimarySurfaceTexture")):-1;
+        secondarySurface=compound.hasKey("SecondarySurfaceTexture",3)?savedSurface(compound.getInteger("SecondarySurfaceTexture")):-1;
         ceilingMounted=compound.getBoolean("CeilingMounted");
         ceilingPosition=compound.hasKey("CeilingPosition",3)
                 ?Math.max(0,Math.min(2,compound.getInteger("CeilingPosition"))):-1;

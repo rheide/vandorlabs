@@ -29,7 +29,7 @@ final class ScreenTextureList {
     }
     ScreenTextureList visibleRows(int rows){list.visibleRows(rows);return this;}
     ScreenTextureList restore(int choice){
-        if(choice==com.vandorlabs.navigation.NavigationMap.SURFACE || choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE) {
+        if(choice==com.vandorlabs.navigation.NavigationMap.SURFACE || choice>=0 || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE || choice==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE || com.vandorlabs.screen.VehicleInstrument.includes(choice)) {
             if(choice>=0&&ScreenHousingTextures.validChoice(choice))choice=ScreenHousingTextures.clamp(choice);
             if(selectableArtwork(choice))framed=false;
             list.setSelected(canonical(choice));setFramed(framed);
@@ -58,8 +58,8 @@ final class ScreenTextureList {
         return this;
     }
     ScreenTextureList custom(java.util.function.IntConsumer action){list.custom(action);return this;}
-    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot,Runnable inline){list.redstone(inline).vehicle(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)));return this;}
-    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot){list.redstone(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE))).vehicle(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)));return this;}
+    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot,Runnable inline){list.redstone(inline).vehicle(choice->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,choice)));return this;}
+    ScreenTextureList redstone(net.minecraft.util.math.BlockPos pos,int slot){list.redstone(()->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE))).vehicle(choice->com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(pos,slot,choice)));return this;}
     ScreenTextureList chip(com.vandorlabs.tiles.TileEntityAnimatedScreenSelector tile,int slot){
         if(com.vandorlabs.blocks.ScreenChipSupport.navigationAvailable(tile,slot))list.navigation(()->{tile.setSurfaceTexture(slot,com.vandorlabs.navigation.NavigationMap.SURFACE);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(tile.getPos(),slot,com.vandorlabs.navigation.NavigationMap.SURFACE));});
         if(com.vandorlabs.blocks.ScreenChipSupport.available(tile,slot))list.chip(()->{tile.setSurfaceTexture(slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE);com.vandorlabs.network.PacketHandler.INSTANCE.sendToServer(new com.vandorlabs.network.MessageSurfaceTexture(tile.getPos(),slot,com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.CHIP_SURFACE));});return this;

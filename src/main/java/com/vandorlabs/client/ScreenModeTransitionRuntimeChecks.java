@@ -5,6 +5,7 @@ import com.vandorlabs.VandorLabs;
 import com.vandorlabs.blocks.*;
 import com.vandorlabs.items.ModItems;
 import com.vandorlabs.redstone.ChannelList;
+import com.vandorlabs.screen.VehicleInstrument;
 import com.vandorlabs.tiles.*;
 import com.vandorlabs.vehicle.*;
 import net.minecraft.block.Block;
@@ -30,6 +31,9 @@ public final class ScreenModeTransitionRuntimeChecks {
     private static WorldServer world(Minecraft mc){return mc.getIntegratedServer().getWorld(0);}
     private static TileEntityAnimatedScreenSelector tile(Minecraft mc){return (TileEntityAnimatedScreenSelector)world(mc).getTileEntity(POS);}
     private static int slot(){return slots.get(scenario);}
+    private static final VehicleInstrument[] INSTRUMENTS={VehicleInstrument.ATTITUDE,VehicleInstrument.COMPASS,
+            VehicleInstrument.ALTIMETER,VehicleInstrument.AIRSPEED};
+    private static VehicleInstrument instrument(){return INSTRUMENTS[scenario%INSTRUMENTS.length];}
     public static void begin(Minecraft mc)throws Exception{
         scenario=stage=frame=total=0;blocks.clear();slots.clear();mc.playerController.setGameType(net.minecraft.world.GameType.CREATIVE);
         Block[] variants={ModBlocks.ANIMATED_SCREEN_SELECTOR,ModBlocks.PROGRAMMABLE_DIAGONAL_SCREEN,ModBlocks.PROGRAMMABLE_INPUT,ModBlocks.PROGRAMMABLE_FULL_INPUT,ModBlocks.PROGRAMMABLE_CONSOLE,ModBlocks.PROGRAMMABLE_HALF_CONSOLE,Block.getBlockFromName("vandorlabs:programmable_diagonal_half_screen")};
@@ -44,6 +48,12 @@ public final class ScreenModeTransitionRuntimeChecks {
                 BlockPos local=new BlockPos(0,1,0);VehicleStructure.Cell cell=new VehicleStructure.Cell(local,block.getDefaultState(),VehicleTileData.translated(saved,local.subtract(POS)));VehicleWorld view=new VehicleWorld(w,new VehicleStructure(Arrays.asList(cell,new VehicleStructure.Cell(new BlockPos(2,0,0),ModBlocks.PILOT_SEAT.getDefaultState(),null)),new BlockPos(2,0,0),EnumFacing.NORTH,1));
                 TileEntityAnimatedScreenSelector captured=(TileEntityAnimatedScreenSelector)view.getTileEntity(local);require(captured.hasRedstoneScreen(slot)&&!captured.hasVehicleStatus(slot),"captured old mixed state selects effective Redstone mode");
                 for(int choice:new int[]{TileEntityAnimatedScreenSelector.VEHICLE_SURFACE,TileEntityAnimatedScreenSelector.REDSTONE_SURFACE,-1,TileEntityAnimatedScreenSelector.VEHICLE_SURFACE}){tile.setSurfaceTexture(slot,choice);require(tile.getSurfaceTexture(slot)==choice&&tile.hasVehicleStatus(slot)==(choice==TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)&&tile.hasRedstoneScreen(slot)==(choice==TileEntityAnimatedScreenSelector.REDSTONE_SURFACE),"shared surface transition remains exclusive: "+choice);}
+                for(VehicleInstrument instrument:INSTRUMENTS){
+                    tile.setSurfaceTexture(slot,instrument.choice);
+                    loaded.readFromNBT(tile.writeToNBT(new NBTTagCompound()));
+                    require(loaded.hasVehiclePanel(slot)&&!loaded.hasVehicleStatus(slot)&&loaded.getSurfaceTexture(slot)==instrument.choice,
+                            "instrument survives saved NBT and does not activate Status controls");
+                }
             }
             System.out.println("[vandorlabs][reprolab] screen-mode-world PASS all-supported-slots exclusive-transitions old-mixed-NBT captured-state");
         }).get();prepare(mc);
@@ -58,10 +68,18 @@ public final class ScreenModeTransitionRuntimeChecks {
     private static Object field(Object object,String name)throws Exception{Field f=object.getClass().getDeclaredField(name);f.setAccessible(true);return f.get(object);}
     private static void mouse(GuiScreen gui,int x,int y)throws Exception{Method m;try{m=GuiScreen.class.getDeclaredMethod("mouseClicked",int.class,int.class,int.class);}catch(NoSuchMethodException e){m=GuiScreen.class.getDeclaredMethod("func_73864_a",int.class,int.class,int.class);}m.setAccessible(true);m.invoke(gui,x,y,0);}
     private static void button(GuiScreen gui,int id)throws Exception{List<GuiButton> list=net.minecraftforge.fml.relauncher.ReflectionHelper.getPrivateValue(GuiScreen.class,gui,"buttonList","field_146292_n");for(GuiButton b:list)if(b.id==id){require(b.enabled,"enabled picker tab/button "+id);mouse(gui,b.x+b.width/2,b.y+b.height/2);return;}throw new IllegalStateException("missing screen-mode button "+id);}
-    private static void choose(Minecraft mc,int sentinel)throws Exception{
-        GuiScreen gui=mc.currentScreen;if((Integer)field(gui,"textureTab")!=slot())button(gui,90+slot());
+    private static HousingTextureList pickerList(GuiScreen gui)throws Exception{
+        if((Integer)field(gui,"textureTab")!=slot())button(gui,90+slot());
         String name=gui instanceof GuiProgrammableHalfConsole?(slot()==1?"topList":"bottomList"):slot()==1?"inputList":"screenList";
-        HousingTextureList list=(HousingTextureList)field(field(gui,name),"list");List<?> rows=(List<?>)field(list,"rows");int index=rows.indexOf(sentinel),count=(Integer)field(list,"count");require(index>=0,"picker contains requested live surface");int scroll=Math.max(0,index-count+1);Field f=HousingTextureList.class.getDeclaredField("scroll");f.setAccessible(true);f.setInt(list,scroll);mouse(gui,(Integer)field(list,"x")+4,(Integer)field(list,"y")+(index-scroll)*HousingTextureList.ROW_HEIGHT+10);
+        return (HousingTextureList)field(field(gui,name),"list");
+    }
+    private static void choose(Minecraft mc,int sentinel)throws Exception{
+        GuiScreen gui=mc.currentScreen;
+        HousingTextureList list=pickerList(gui);List<?> rows=(List<?>)field(list,"rows");
+        if(VehicleInstrument.includes(sentinel)&&!rows.contains(sentinel))choose(mc,-100002);
+        int index=rows.indexOf(sentinel),count=(Integer)field(list,"count");require(index>=0,"picker contains requested live surface");
+        int scroll=Math.max(0,index-count+1);Field f=HousingTextureList.class.getDeclaredField("scroll");f.setAccessible(true);f.setInt(list,scroll);
+        mouse(gui,(Integer)field(list,"x")+4,(Integer)field(list,"y")+(index-scroll)*HousingTextureList.ROW_HEIGHT+10);
     }
     private static void open(Minecraft mc)throws Exception{mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.openGui(VandorLabs.instance,GuiHandler.GUI_ANIMATED_SCREEN_SELECTOR,world(mc),POS.getX(),POS.getY(),POS.getZ());}).get();}
     private static boolean picker(Minecraft mc){return mc.currentScreen instanceof GuiAnimatedScreenSelector||mc.currentScreen instanceof GuiProgrammableInput||mc.currentScreen instanceof GuiProgrammableHalfConsole;}
@@ -72,8 +90,32 @@ public final class ScreenModeTransitionRuntimeChecks {
         if(stage==1){require(frame<100,"Status picker did not open");if(!picker(mc)||frame<5)return false;choose(mc,-100001);next();return false;}
         if(stage==2){require(frame<100,"integrated Redstone rows did not open");if(!picker(mc)||frame<5||(Integer)field(mc.currentScreen,"rowSlot")!=slot())return false;mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).hasRedstoneScreen(slot())&&!tile(mc).hasVehicleStatus(slot()),"actual picker packet replaces server Status mode")).get();TileEntityAnimatedScreenSelector client=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);require(client.hasRedstoneScreen(slot())&&!client.hasVehicleStatus(slot()),"client receives effective Redstone renderer mode");VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_screen_status_to_redstone_"+scenario+".png");button(mc.currentScreen,20);next();return false;}
         if(stage==3&&frame>8){open(mc);next();return false;}
-        if(stage==4){require(frame<100,"return picker did not open");if(!picker(mc)||frame<5)return false;choose(mc,-100002);next();return false;}
-        if(stage==5&&frame>8){mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).hasVehicleStatus(slot())&&!tile(mc).hasRedstoneScreen(slot()),"actual reverse picker packet restores exclusive Status mode")).get();TileEntityAnimatedScreenSelector client=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);require(client.hasVehicleStatus(slot())&&!client.hasRedstoneScreen(slot()),"client receives exclusive Status mode after reverse transition");if(++scenario==blocks.size()){mc.player.closeScreen();System.out.println("[vandorlabs][reprolab] screen-mode-client PASS actual-picker-mouse Status-Redstone-Status all-screen-input-console-slots top-half-console network-sync screenshots");return true;}prepare(mc);}
+        if(stage==4){
+            require(frame<100,"return picker did not open");
+            if(!picker(mc)||frame<5)return false;
+            choose(mc,instrument().choice);next();return false;
+        }
+        if(stage==5&&frame>8){
+            mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).getSurfaceTexture(slot())==instrument().choice&&!tile(mc).hasRedstoneScreen(slot()),
+                    "real vehicle folder click selects the instrument on the server")).get();
+            TileEntityAnimatedScreenSelector client=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);
+            require(client.getSurfaceTexture(slot())==instrument().choice&&!client.hasVehicleStatus(slot()),"client gets the selected read-only gauge");
+            if(scenario==0)VehicleTaxiRuntimeChecks.screenshot(mc,output,"shot_vehicle-instrument-folder.png");
+            choose(mc,VehicleInstrument.STATUS.choice);next();return false;
+        }
+        if(stage==6&&frame>8){
+            mc.getIntegratedServer().addScheduledTask(()->require(tile(mc).hasVehicleStatus(slot())&&!tile(mc).hasRedstoneScreen(slot()),
+                    "actual reverse picker packet restores exclusive Status mode")).get();
+            TileEntityAnimatedScreenSelector client=(TileEntityAnimatedScreenSelector)mc.world.getTileEntity(POS);
+            require(client.hasVehicleStatus(slot())&&!client.hasRedstoneScreen(slot()),"client receives exclusive Status mode after reverse transition");
+            if(++scenario==blocks.size()){
+                mc.player.closeScreen();
+                VehicleStatusRenderChecks.instruments(mc,output);
+                System.out.println("[vandorlabs][reprolab] screen-mode-client PASS actual-picker-mouse Status-Redstone-instrument-Status all-screen-input-console-slots network-sync screenshots");
+                return true;
+            }
+            prepare(mc);
+        }
         return false;
     }
 }

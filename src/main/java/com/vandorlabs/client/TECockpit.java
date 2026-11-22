@@ -1,5 +1,7 @@
 package com.vandorlabs.client;
 
+import com.vandorlabs.screen.VehicleInstrument;
+
 import com.vandorlabs.tiles.TileEntityCockpit;
 import com.vandorlabs.cockpit.CockpitData;
 import com.vandorlabs.client.cockpits.CockpitRenderer;
@@ -49,17 +51,21 @@ public final class TECockpit extends TileEntitySpecialRenderer<TileEntityCockpit
                 if(blank)GlStateManager.enableTexture2D();
                 if(screen.active&&screen.texture<=com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE){GlStateManager.pushMatrix();if("screen".equals(plane.role))GlStateManager.translate(0,-.75*tile.screens(partial),0);else if(tile.design().equals("cockpit")&&plane.id.equals("touch_right_keyboard"))GlStateManager.translate(0,0,tile.seatSlide(partial));
                 if(screen.active&&screen.texture==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.REDSTONE_SURFACE)rows(tile,plane);
-                if(screen.active&&screen.texture==com.vandorlabs.tiles.TileEntityAnimatedScreenSelector.VEHICLE_SURFACE)vehicle(tile,plane);GlStateManager.popMatrix();}
+                VehicleInstrument instrument=VehicleInstrument.forChoice(screen.texture);
+                if(instrument!=null)vehicle(tile,plane,instrument);GlStateManager.popMatrix();}
             }
         }finally{
             GlStateManager.popMatrix();OpenGlHelper.setLightmapTextureCoords(OpenGlHelper.lightmapTexUnit,oldU,oldV);GlStateManager.bindTexture(oldTexture);GlStateManager.setActiveTexture(oldActive);
             if(lighting)GlStateManager.enableLighting();else GlStateManager.disableLighting();if(cull)GlStateManager.enableCull();else GlStateManager.disableCull();if(blend)GlStateManager.enableBlend();else GlStateManager.disableBlend();GlStateManager.color(color.get(0),color.get(1),color.get(2),color.get(3));
         }
     }
-    private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane){
-        int height="touch".equals(plane.role)?64:128;
+    private static void vehicle(TileEntityCockpit tile,CockpitData.Surface plane,VehicleInstrument instrument){
+        int height=instrument==VehicleInstrument.STATUS?("touch".equals(plane.role)?64:128)
+                :new com.vandorlabs.cockpit.CockpitScreenLayout(plane,0).height;
         FloatBuffer matrix=matrix(plane,128,height);
-        GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);RedstoneScreenRenderer.drawVehicleContents(tile.getWorld(),tile.getPos(),height);GlStateManager.popMatrix();
+        GlStateManager.pushMatrix();GlStateManager.multMatrix(matrix);
+        RedstoneScreenRenderer.drawVehicleSelection(instrument,tile.getWorld(),tile.getPos(),height);
+        GlStateManager.popMatrix();
     }
     private static void rows(TileEntityCockpit tile,CockpitData.Surface plane){
         com.vandorlabs.cockpit.CockpitScreenLayout layout=new com.vandorlabs.cockpit.CockpitScreenLayout(plane,tile.display(plane.id).rows);

@@ -1,6 +1,7 @@
 package com.vandorlabs.client;
 
 import com.vandorlabs.screen.VehicleStatusLayout;
+import com.vandorlabs.screen.VehicleInstrument;
 import com.vandorlabs.vehicle.VehicleStatus;
 
 import com.vandorlabs.blocks.RedstoneScreenInteractions;
@@ -91,7 +92,13 @@ final class RedstoneScreenRenderer {
         ScreenSurface.Quad q=FrameSurfaceRenderer.content(tile,RedstoneScreenInteractions.surface(state,tile,slot));
         FloatBuffer transform=MATRICES.get(q);if(transform==null){transform=matrix(q,height);MATRICES.put(q,transform);}
         GlStateManager.pushMatrix();transform.rewind();GlStateManager.multMatrix(transform);
-        drawVehicleContents(tile.getWorld(),tile.getPos(),height);GlStateManager.popMatrix();
+        drawVehicleSelection(VehicleInstrument.forChoice(tile.getSurfaceTexture(slot)),tile.getWorld(),tile.getPos(),height);
+        GlStateManager.popMatrix();
+    }
+    static void drawVehicleSelection(VehicleInstrument instrument, net.minecraft.world.World world,
+                                     net.minecraft.util.math.BlockPos pos, int height){
+        if(instrument==VehicleInstrument.STATUS)drawVehicleContents(world,pos,height);
+        else if(instrument!=null)VehicleInstrumentRenderer.draw(instrument,world,pos,height);
     }
     static void drawVehicleContents(net.minecraft.world.World world,net.minecraft.util.math.BlockPos pos,int height){
         boolean missing=!VehicleStatus.hasController(world,pos);
