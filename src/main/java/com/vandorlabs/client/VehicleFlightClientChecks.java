@@ -39,8 +39,10 @@ final class VehicleFlightClientChecks {
     private static final BlockPos SCREEN=new BlockPos(2,2,1);
     private static final BlockPos DRIVE=new BlockPos(5,1,1);
     private static UUID id;
-    private static int stage,frame,total,settled;
+    private static int stage,frame,total,settled,impactWallZ;
     private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
+    private static float steepPitch;
+    private static boolean sawImpact;
     private static boolean sawDeparture, sawDescent, sawLongClearance;
 
     static void begin(Minecraft mc)throws Exception {
@@ -185,20 +187,54 @@ final class VehicleFlightClientChecks {
             next();return false;
         }
         if(stage==5&&frame>=9){
-            if(craft.rotationYaw<=turnYaw+4&&frame<50)return false;
+            if((craft.rotationYaw<=turnYaw+4||craft.flightBank()<=10)&&frame<50)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),false);
-            need(craft.rotationYaw>turnYaw+4&&Math.hypot(craft.posX-turnX,craft.posZ-turnZ)>2,"D rotates while forward travel continues");
+            VehiclePose banked=craft.visualPose(1);
+            double px=craft.structure.bounds.maxX/2,pz=craft.structure.bounds.maxZ/2;
+            Vec3d right=banked.world(new Vec3d(px+1,1,pz),px,pz),left=banked.world(new Vec3d(px-1,1,pz),px,pz);
+            need(craft.rotationYaw>turnYaw+4&&Math.hypot(craft.posX-turnX,craft.posZ-turnZ)>2&&banked.bank>10&&right.y<left.y-.2,
+                    "D lowers the right wing while turning forward; bank="+banked.bank);
+            mc.gameSettings.thirdPersonView=1;
+            mc.player.prevRotationYaw=mc.player.rotationYaw=craft.rotationYaw+204;
+            mc.player.prevRotationPitch=mc.player.rotationPitch=17;
             priorPitch=craft.flightPitch();
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),true);
             next();return false;
         }
+        if(stage==6&&frame==2)shot(mc,output,"shot_vehicle_flight_bank.png");
         if(stage==6&&frame>=7){
             if(craft.flightPitch()>=priorPitch-4&&frame<45)return false;
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
             need(craft.flightPitch()<priorPitch-4&&craft.flying(),"W lowers the nose");
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"shot_vehicle_status_maxwell_flight.png"));
-            // The pilot has already taken off through the normal controls. Save the flight time to the build-height boundary.
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle actual=server(mc);
+                actual.rotationYaw=0;
+                actual.setPosition(ORIGIN.getX(),runwayY+13,ORIGIN.getZ()-5);
+            }).get();
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
+            next();return false;
+        }
+        if(stage==7){
+            if(craft.flightPitch()<49){need(frame<95&&craft.flying()&&!craft.descendingFromFlight(),"holding S passes the steep trim threshold; pitch="+craft.flightPitch()+" Y="+craft.posY);return false;}
+            steepPitch=craft.flightPitch();
+            mc.gameSettings.thirdPersonView=0;
+            mc.player.prevRotationYaw=mc.player.rotationYaw=craft.rotationYaw+204;
+            mc.player.prevRotationPitch=mc.player.rotationPitch=-16;
+            Vec3d expected=craft.seatEye(craft.visualPose(1),mc.player,1);
+            Vec3d vanilla=mc.player.getPositionEyes(1),camera=VehicleCameraRuntimeChecks.camera(mc);
+            need(expected.distanceTo(vanilla)>.75&&camera.distanceTo(expected)<.16,
+                    "steep first-person eye follows the tilted seat; camera="+camera+" expected="+expected+" upright="+vanilla);
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
+            next();return false;
+        }
+        if(stage==8){
+            if(frame==2)shot(mc,output,"shot_vehicle_flight_steep_cockpit.png");
+            if(frame<15)return false;
+            need(craft.flightPitch()<=steepPitch-1&&craft.flightPitch()>=44.9&&Math.abs(craft.flightBank())<.15,
+                    "released controls trim pitch slowly toward 45 and level the bank; peak="+steepPitch+" pitch="+craft.flightPitch()+" bank="+craft.flightBank());
+            // Use the pilot's real pitch key to cross build height from a bounded setup.
             mc.getIntegratedServer().addScheduledTask(()->{
                 EntityGroundVehicle actual=server(mc);
                 need(actual.flying()&&actual.flightReadout().fuel>0,"server applied powered flight");
@@ -208,7 +244,7 @@ final class VehicleFlightClientChecks {
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
         }
-        if(stage==7){
+        if(stage==9){
             if(!craft.cruise.active()||craft.flightAltitude()<=256){need(frame<120,"powered S climb crosses Y=256");return false;}
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
             need(Double.isInfinite(craft.groundClearance()),"cruise does not query ground clearance");
@@ -220,7 +256,7 @@ final class VehicleFlightClientChecks {
             sawDeparture=true;
             next();return false;
         }
-        if(stage==8){
+        if(stage==10){
             sawDescent|=craft.descendingFromFlight();
             if(!craft.cruise.active()&&craft.flightAltitude()<217&&craft.flightAltitude()>205){
                 double clearance=craft.groundClearance();
@@ -232,10 +268,77 @@ final class VehicleFlightClientChecks {
             need(!craft.hover&&craft.vehicleMode()==1&&Math.abs(craft.flightPitch())<.01&&Math.abs(craft.posY-runwayY)<.15&&craft.flightReadout().fuel==0&&craft.flightReadout().ratedThrust==1&&craft.flightReadout().thrust==0,
                     "power loss returns a level craft to Taxi on the runway; Y="+craft.posY+" runway="+runwayY+" pitch="+craft.flightPitch()+" fuel="+craft.flightReadout().fuel);
             need(sawDeparture&&sawDescent&&sawLongClearance,"observed powered entry, recovery and measured clearance beyond 32 blocks");
-            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys pitch yaw coast powered-threshold fuel-loss reentry exact-clearance touchdown");
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle actual=server(mc);
+                TileEntityConstructor engine=(TileEntityConstructor)actual.view.getTileEntity(DRIVE);
+                need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1000),true)==1000,
+                        "refuel the real carried Maxwell for the impact sortie");
+                actual.rotationYaw=0;
+                actual.setPosition(ORIGIN.getX(),runwayY,ORIGIN.getZ());
+            }).get();
+            next();return false;
+        }
+        if(stage==11&&frame>=12){
+            if(craft.flightReadout().fuel==0){
+                need(frame<100,"refueled aircraft and runway synchronized");return false;
+            }
+            aim(mc,craft,3);
+            if(frame<15)return false;
+            boolean ready=mc.getIntegratedServer().callFromMainThread(()->{
+                EntityPlayerMP pilot=player(mc);
+                VehicleInteraction.Target selected=VehicleInteraction.pointed(pilot);
+                return server(mc).onGround&&server(mc).getControllingPassenger()==pilot
+                        && selected!=null&&selected.hit.cell.pos.equals(SCREEN);
+            }).get();
+            if(!ready){need(frame<100,"second departure must synchronize seat, runway and Status aim");return false;}
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
+            next();return false;
+        }
+        if(stage==12){
+            if(!craft.takeoffRoll()||craft.driveSpeed<FlightEnvelope.TAKEOFF_SPEED-1e-4){
+                need(frame<85,"second takeoff uses the real Status button");return false;
+            }
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
+            next();return false;
+        }
+        if(stage==13){
+            if(!craft.flying()||craft.flightPitch()<6){need(frame<60,"second sortie airborne");return false;}
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),false);
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityGroundVehicle actual=server(mc);
+                actual.rotationYaw=0;
+                actual.setPosition(ORIGIN.getX(),runwayY+9,ORIGIN.getZ()-10);
+                impactWallZ=ORIGIN.getZ()-28;
+                for(BlockPos at:BlockPos.getAllInBox(new BlockPos(ORIGIN.getX()-3,runwayY,impactWallZ),new BlockPos(ORIGIN.getX()+20,runwayY+28,impactWallZ)))
+                    world(mc).setBlockState(at,Blocks.STONE.getDefaultState(),2);
+            }).get();
+            KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),true);
+            next();return false;
+        }
+        if(stage==14){
+            if(!sawImpact&&craft.descendingFromFlight()){
+                sawImpact=true;
+                KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),false);
+                need(craft.flightBank()>8&&craft.flightReadout().fuel>0,"terrain impact stopped a still-powered, banked aircraft");
+                mc.gameSettings.thirdPersonView=1;
+            }
+            if(craft.flying()){settled=0;need(frame<200,"banked aircraft breaks contact and reaches the runway; Y="+craft.posY+" yaw="+craft.rotationYaw+" bank="+craft.flightBank());return false;}
+            if(++settled<5)return false;
+            need(sawImpact&&craft.vehicleMode()==1&&Math.abs(craft.posY-runwayY)<.15&&craft.flightBank()==0&&craft.flightPitch()==0,
+                    "powered wall contact recovers into level Taxi at the runway before the wall");
+            boolean separated=mc.getIntegratedServer().callFromMainThread(()->server(mc).getEntityBoundingBox().minZ>=impactWallZ+1-.001).get();
+            need(separated,"aircraft was never advanced through the wall or left embedded");
+            shot(mc,output,"shot_vehicle_flight_terrain_recovery.png");
+            mc.gameSettings.thirdPersonView=0;
+            System.out.println("[vandorlabs][reprolab] maxwell-flight-basic PASS real Status click taxi-roll pilot-takeoff keys physical-bank steep-trim cockpit-camera powered-threshold fuel-loss reentry exact-clearance touchdown terrain-impact");
             return true;
         }
         return false;
+    }
+
+    private static void shot(Minecraft mc,File output,String name)throws Exception{
+        javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
+                "png",new File(output,name));
     }
 
     private static String measurements(VehicleFlightReadout readout){

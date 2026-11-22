@@ -29,7 +29,7 @@ final class VehicleCameraRuntimeChecks {
     private static EntityPlayerMP player(Minecraft mc){return mc.getIntegratedServer().getPlayerList().getPlayerByUUID(mc.player.getUniqueID());}
     private static void f5(Minecraft mc){KeyBinding.onTick(mc.gameSettings.keyBindTogglePerspective.getKeyCode());}
     private static void look(Minecraft mc,float pitch){mc.player.prevRotationYaw=mc.player.rotationYaw=0;mc.player.prevRotationPitch=mc.player.rotationPitch=pitch;mc.player.rotationYawHead=mc.player.prevRotationYawHead=0;mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.Rotation(0,pitch,false));}
-    private static Vec3d camera(Minecraft mc)throws Exception{
+    static Vec3d camera(Minecraft mc)throws Exception{
         int mode=GL11.glGetInteger(GL11.GL_MATRIX_MODE);GlStateManager.matrixMode(GL11.GL_MODELVIEW);GlStateManager.pushMatrix();
         try{GlStateManager.loadIdentity();net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(net.minecraft.client.renderer.EntityRenderer.class,"orientCamera","func_78467_g",float.class).invoke(mc.entityRenderer,1F);FloatBuffer data=BufferUtils.createFloatBuffer(16);GL11.glGetFloat(GL11.GL_MODELVIEW_MATRIX,data);Matrix4f matrix=new Matrix4f();matrix.load(data);Matrix4f inverse=Matrix4f.invert(matrix,null);require(inverse!=null,"camera matrix invertible");return new Vec3d(mc.player.posX+inverse.m30,mc.player.posY+inverse.m31,mc.player.posZ+inverse.m32);}
         finally{GlStateManager.popMatrix();GlStateManager.matrixMode(mode);}
