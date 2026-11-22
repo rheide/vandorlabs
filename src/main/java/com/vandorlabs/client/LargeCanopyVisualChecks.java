@@ -18,6 +18,8 @@ public final class LargeCanopyVisualChecks {
     private static void require(boolean ok,String text){if(!ok)throw new IllegalStateException("large-canopy-live: "+text);}
     public static boolean tick(Minecraft mc,File output)throws Exception{
         if(mc.world==null || mc.player==null || mc.getIntegratedServer()==null)return false;
+        if (Boolean.getBoolean("vandorlabs.canopyStretchOnly") || "true".equals(System.getenv("VANDOR_LABS_CANOPY_STRETCH_ONLY")))
+            return JoinedCanopyStretchChecks.tick(mc,output);
         if(!JoinedCanopySeatRuntimeChecks.tick(mc))return false;
         if(!powerChecksDone){if(!CanopyPowerLoopRuntimeChecks.tick(mc,output))return false;powerChecksDone=true;}
         if(pending!=null){if(!pending.isDone())return false;pending.get();pending=null;ticks=0;}

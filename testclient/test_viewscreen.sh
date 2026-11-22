@@ -382,6 +382,9 @@ case "${1:-}" in
         elif [ "$TARGET" = canopies ]; then
             PREFIX=canopy_
             export VANDOR_LABS_CANOPY_CHECKS_ONLY=true
+        elif [ "$TARGET" = canopy-stretch ]; then
+            PREFIX=canopy-stretch
+            export VANDOR_LABS_CANOPY_STRETCH_ONLY=true VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
         elif [ "$TARGET" = large-canopies ]; then
             PREFIX=large_
             export VANDOR_LABS_LARGE_CANOPY_CHECKS_ONLY=true
@@ -1294,6 +1297,11 @@ PYIMAGE
     if [ "$TARGET" = canopy-cost ]; then
         grep -q 'canopy-glass-cost PASS cases=60' "$RUN_OUT/client.log"
         echo "Canopy Glass cost comparison passed: $RUN_OUT"
+        exit 0
+    fi
+    if [ "$TARGET" = canopy-stretch ]; then
+        grep -q 'canopy-stretch PASS' "$RUN_OUT/client.log"
+        test -s "$RUN_OUT/canopy-stretch-canopy.png" && test -s "$RUN_OUT/canopy-stretch-long.png"
         exit 0
     fi
     if [ "$TARGET" = large-canopies ]; then
