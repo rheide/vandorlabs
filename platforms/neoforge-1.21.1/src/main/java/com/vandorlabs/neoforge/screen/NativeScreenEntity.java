@@ -5,6 +5,7 @@ import com.vandorlabs.redstone.*;
 import com.vandorlabs.neoforge.ModernHousingTags;
 import com.vandorlabs.neoforge.redstone.*;
 import com.vandorlabs.neoforge.shape.PanelPlayback;
+import com.vandorlabs.neoforge.vehicle.NativeVehicleTransfer;
 import net.minecraft.core.*;
 import net.minecraft.nbt.*;
 import net.minecraft.network.protocol.game.ClientboundBlockEntityDataPacket;
@@ -68,7 +69,8 @@ public class NativeScreenEntity extends BlockEntity implements NativeScreenContr
  @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider registries){tag.merge(retained.copy());if(inert){com.vandorlabs.neoforge.NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,registries);writeSnapshot(tag,false,registries);}
  @Override public CompoundTag getUpdateTag(HolderLookup.Provider registries){CompoundTag tag=new CompoundTag();writeSnapshot(tag,true,registries);tag.putInt("NativeScreenPower",visual.physicalPower);tag.putLong("NativeScreenGeometryRevision",geometryRevision);if(inert)tag.putBoolean("NativeScreenInert",true);return tag;}
  @Override public ClientboundBlockEntityDataPacket getUpdatePacket(){return ClientboundBlockEntityDataPacket.create(this);}
- @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:snapshot.settings.channels();}@Override public boolean isChannelMemberActive(){return !inert&&(!(level instanceof ServerLevel server)||!com.vandorlabs.neoforge.copier.NativeCopyService.holdsScreenChannels(server,worldPosition))&&NativeScreenControlService.Host.super.isChannelMemberActive();}
+ @Override public BlockEntity channelBlockEntity(){return this;}@Override public ChannelList getRedstoneChannels(){return inert?ChannelList.EMPTY:snapshot.settings.channels();}@Override public boolean isChannelMemberActive(){return !inert&&(!(level instanceof ServerLevel server)||!NativeVehicleTransfer.holdsScreenChannels(server,worldPosition)
+  &&!com.vandorlabs.neoforge.copier.NativeCopyService.holdsScreenChannels(server,worldPosition))&&NativeScreenControlService.Host.super.isChannelMemberActive();}
  @Override public void setChannelLevel(int value){serverThread();if(inert||value<0||value>15||!(level instanceof ServerLevel)||!isChannelMemberActive()||snapshot.settings.channelLevel()==value)return;NativeScreenSettings old=snapshot.settings;ScreenData data=old.scalar();ScreenData scalar=new ScreenData(data.selectedScreen,data.redstoneEnabled,data.displayMode,data.framed,data.animationSpeedIndex,data.inputPanel,data.secondaryInputPanel,data.wallPosition,data.smallInput,data.redstoneChannel,value>0,data.housingTexture);NativeScreenSettings next=new NativeScreenSettings(scalar,old.housing(),old.activation(),old.channels(),value,old.inverted(),old.primarySurface(),old.secondarySurface(),old.ceilingMounted(),old.ceilingPosition(),old.surfaceLayout(),old.surfaceTileSides());snapshot=new Snapshot(next,snapshot.frames,snapshot.glass,snapshot.controls,snapshot.present,snapshot.transmission);changed(false);}
  @Override public void beforeChannelRegistration(){controlService.finishLoading();localInputChanged();}
  public final void localInputChanged(){serverThread();if(inert||!(level instanceof ServerLevel)||!isChannelMemberActive())return;NativeScreenPowerService.refresh(this);}

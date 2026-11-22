@@ -6,8 +6,9 @@ The [machine-readable inventory](feature-coverage.json) preserves historical imp
 
 Version 3.0 introduces the [native Vehicle Controller and Pilot Seat](../vehicles-1.21.md).
 Standalone and carried mechanisms have separate support limits. The native vehicle can
-carry its own supported storage, fueled Maxwell Drives and powered observers. Articulated
-couplers and third-party pipe networks still require native adapters.
+carry its own supported storage, fueled Maxwell Drives and powered observers. Matching
+engaged Couplers join stationary sections during assembly. Articulated joints and
+third-party pipe networks still require native adapters.
 
 The source inventory includes 58 active generated-catalog registrations and explicit manual families. Programmable-only textures, retired entries and internal model templates are excluded from that count. Registry IDs may occur in multiple behavioral families: standalone arms and vehicle landing gear share parts. Counts are source inventory, not a runtime registry dump.
 
@@ -38,12 +39,13 @@ Not ported:
 | Wireless transmitter and receiver | partial (handheld and world endpoints) | partial | non-vehicle first |
 | Token slots and design tokens | partial (readers and Programmer enabled) | unimplemented | non-vehicle first |
 | Programmable storage | partial (public inventory, dedicated editor and source-matched world/item models enabled) | unimplemented | non-vehicle first |
-| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, five Assembly Press recipes, eight Enclosed Gantry recipes, four standalone drives, both Navigation Computers, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
+| Constructors, matter infuser, battery and tank | partial (three formed builders, Synthesis and Digitize, six Assembly Press recipes, ten Enclosed Gantry recipes, four standalone drives, both Navigation Computers, Matter Infuser, Battery and Hexagonal Fuel Tank) | unimplemented | non-vehicle first |
 | Resource transfer ports | partial (Power, Fluid and Matter Ports enabled; focused transfer, UI and item ownership checks pass) | unimplemented | non-vehicle first |
 | Navigation and observers | standalone flat/angled tables, Screen navigation, Survey Dishes and Sentinel Arrays with live sweeps | unimplemented | non-vehicle first |
 | Ramp controllers and moving endpoints | partial (Controllers and Slabs enabled; bounded actor recovery) | unimplemented | non-vehicle first |
 | Vehicles and controller/navigation blocks | 3.0 Vehicle Controller, Pilot Seat, Taxi, Hover, Maxwell Flight, high cruise and parking | unimplemented | articulated couplers and other carried systems pending |
-| Cockpits and peripherals | stationary Cockpit seating, screen lift, seven touch surfaces, throttle detents, Advanced Pilot Chair armrest sliders and Yoke and Screen Redstone | unimplemented | standalone first; carried integration deferred |
+| Cockpits and peripherals | stationary Cockpit with screen lift, seven independently configurable surfaces and one or two physical throttles; Advanced Pilot Chair armrest controls and Yoke and Screen Redstone | unimplemented | Cockpit connected player check passed; carried integration deferred |
+| Vehicle Couplers | both Gantry products, six-way full Coupler, upper/lower Slabs, channel and manual controls, rigid hull discovery | unimplemented | moving pickup, release and articulation remain in Forge |
 | Modular landing gear and wheels | partial (modular arms/feet, Track and stationary side wheels enabled; opt-in imported wheel and inventory conversion) | unimplemented | standalone first; vehicle effects deferred |
 | Turntables | Programmable Surfaces public; opt-in block-only Scan, rendered rotation with swept collision, Redstone, upward-facing riders and quarter-turn Restore; captured interactions pending | unimplemented | non-vehicle first |
 | Industrial Table and Programmable Pressure Plate | both enabled for stationary use | partial | non-vehicle first |
@@ -126,13 +128,17 @@ Native standalone arms now provide regular and Large Extenders, Rotating Arms an
 Synthesis Tower, Assembly Press and Enclosed Gantry now have native Core items
 and the same frame layouts as Forge. The Synthesis Tower includes RF production,
 its Battery Module and chip mounts, inventory dialog, physical item/RF ports,
-and receiving-channel activation. Other Core multiblocks remain outside this slice. See the [native builder guide](../builders-1.21.md).
+and receiving-channel activation. All ten Enclosed Gantry products are available,
+including both Couplers. See the [native builder guide](../builders-1.21.md).
 
 Focused checks cover all 48 design/facing/Core-corner layouts, durable Survival
 mining, three production recipes, malformed-data retention, and abrupt formation,
 mining and owned unformed-Core restart recovery. Connected-client checks verify
 all 45 tower cells, part ownership, both dialog paths, physical inventory and the
-actual world renderer. Separate software rendering covers all three full meshes,
+actual world renderer. Dedicated Gantry checks fabricate and place both Coupler
+forms and exercise release, redstone, saved settings and rigid hull discovery.
+A connected player check verifies the ordinary and Configurizer dialog paths.
+Separate software rendering covers all three full meshes,
 fabrication, nearby culling, animation and resource reload. These are development
 runtime/software checks, not a full release gate or hardware shader acceptance.
 

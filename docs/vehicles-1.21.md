@@ -38,5 +38,11 @@ the received level as bars. A Battery’s receive channel still controls its res
 
 Place native Power, Fluid and Matter Ports with their faces pointing between supported
 owners. A carried Survey Dish needs an RF source. The Maxwell inlet accepts compatible
-fuel from an onboard tank. Articulated couplers and external-mod conduit networks remain
-outside the current native vehicle adapter set.
+fuel from an onboard tank.
+
+To assemble two parked sections as one rigid hull, mount matching
+[Vehicle Couplers](couplers.md#neoforge-1211) with their heads facing each other
+and engage both before scanning with the Vehicle Controller. The completed
+hull still needs one Controller and one Pilot Seat. Dynamic pickup, articulated
+joints, moving separation and external-mod conduit networks remain outside the
+current native vehicle adapter set.

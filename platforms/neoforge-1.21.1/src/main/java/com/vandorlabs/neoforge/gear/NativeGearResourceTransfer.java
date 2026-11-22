@@ -118,6 +118,11 @@ public final class NativeGearResourceTransfer {
         return endpoint(arm, arm.getBlockPos(), arm.mode() == GearMotion.Mode.STATIC ? null : NativeGearPayload.frame(arm, arm.progress()));
     }
 
+    public static Endpoint carriedHome(NativeGearEntity arm) {
+        if (arm.getLevel() != null || !arm.controller() || !arm.canTransferResources()) return null;
+        return endpoint(arm, arm.getBlockPos(), arm.mode() == GearMotion.Mode.STATIC ? null : NativeGearPayload.frame(arm, 1));
+    }
+
     private static Endpoint endpoint(NativeGearEntity arm, BlockPos mounting, NativeGearPayload.Transform frame) {
         var contact = mounting.relative(arm.mount(), arm.assembly().columnHeight());
         var receiving = arm.mount().getOpposite();
