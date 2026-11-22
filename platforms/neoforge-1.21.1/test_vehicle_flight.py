@@ -11,7 +11,7 @@ def main():
     parser.add_argument('--xvfb', action='store_true')
     modes = parser.add_mutually_exclusive_group()
     modes.add_argument('--restart', action='store_true')
-    modes.add_argument('--impact', action='store_true')
+    modes.add_argument('--impact', choices=('all', 'hover', 'runway'), nargs='?', const='all')
     modes.add_argument('--normal-terrain', action='store_true')
     args = parser.parse_args()
     properties = ['vandorlabs.vehicleFlightChecks=true']
@@ -21,7 +21,8 @@ def main():
                                       saved_world=saved / 'server' / 'world')
         print('Native Maxwell high-flight and mounted cold restart passed: ' + str(output), flush=True)
     elif args.impact:
-        for variant in ('hover', 'runway'):
+        variants = ('hover', 'runway') if args.impact == 'all' else (args.impact,)
+        for variant in variants:
             output = run_connected_player('vehicle-flight-impact-' + variant, args.xvfb,
                                           properties + ['vandorlabs.vehicleFlightImpact=' + variant])
             print('Native Flight hull impact (' + variant + ') passed: ' + str(output), flush=True)
