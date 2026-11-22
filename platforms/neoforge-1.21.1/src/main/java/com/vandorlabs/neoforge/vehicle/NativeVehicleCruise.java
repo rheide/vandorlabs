@@ -5,9 +5,6 @@ import com.vandorlabs.physics.FlightEnvelope;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
-import net.minecraft.network.syncher.EntityDataAccessor;
-import net.minecraft.network.syncher.EntityDataSerializers;
-import net.minecraft.network.syncher.SynchedEntityData;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.server.level.TicketType;
@@ -21,8 +18,6 @@ import net.neoforged.neoforge.network.PacketDistributor;
 final class NativeVehicleCruise {
     static final int SKY_OFFSET = 4096;
     private static final int DESTINATION_RADIUS = 4;
-    private static final EntityDataAccessor<BlockPos> ROUTE =
-            SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.BLOCK_POS);
     private final NativeGroundVehicle craft;
     private double x, z;
     private NativeCruiseTerrain pending;
@@ -30,12 +25,10 @@ final class NativeVehicleCruise {
 
     NativeVehicleCruise(NativeGroundVehicle craft) { this.craft = craft; }
 
-    static void define(SynchedEntityData.Builder builder) { builder.define(ROUTE, BlockPos.ZERO); }
-
-    boolean active() { return craft.getEntityData().get(ROUTE).getY() == 1; }
+    boolean active() { return craft.getEntityData().get(NativeGroundVehicle.CRUISE_ROUTE).getY() == 1; }
     double altitude() { return craft.getY() - (active() ? SKY_OFFSET : 0); }
-    double x() { return !active() ? craft.getX() : craft.level().isClientSide ? craft.getEntityData().get(ROUTE).getX() : x; }
-    double z() { return !active() ? craft.getZ() : craft.level().isClientSide ? craft.getEntityData().get(ROUTE).getZ() : z; }
+    double x() { return !active() ? craft.getX() : craft.level().isClientSide ? craft.getEntityData().get(NativeGroundVehicle.CRUISE_ROUTE).getX() : x; }
+    double z() { return !active() ? craft.getZ() : craft.level().isClientSide ? craft.getEntityData().get(NativeGroundVehicle.CRUISE_ROUTE).getZ() : z; }
 
     boolean allowsTransit() { return craft.level().dimension() == Level.OVERWORLD; }
 
@@ -103,14 +96,14 @@ final class NativeVehicleCruise {
         var offset = craft.getBoundingBox().move(x - craft.getX(), 0, z - craft.getZ());
         if (!NativeVehicleHull.loadedColumns(level, offset.inflate(1e-5))) return;
         double bottomOffset = Math.max(0, craft.getY() - craft.getBoundingBox().minY);
-        craft.getEntityData().set(ROUTE, BlockPos.ZERO);
+        craft.getEntityData().set(NativeGroundVehicle.CRUISE_ROUTE, BlockPos.ZERO);
         pending = null;
         publishedStep = 0;
         relocate(x, level.getMaxBuildHeight() + bottomOffset + .01, z);
     }
 
     private void publishRoute() {
-        craft.getEntityData().set(ROUTE, BlockPos.containing(x, 1, z));
+        craft.getEntityData().set(NativeGroundVehicle.CRUISE_ROUTE, BlockPos.containing(x, 1, z));
     }
 
     private void relocate(double x, double y, double z) {
@@ -148,7 +141,7 @@ final class NativeVehicleCruise {
     }
 
     void restore(Route state) {
-        craft.getEntityData().set(ROUTE, BlockPos.ZERO);
+        craft.getEntityData().set(NativeGroundVehicle.CRUISE_ROUTE, BlockPos.ZERO);
         if (state == null) return;
         double altitude = craft.getY() - SKY_OFFSET;
         if (!allowsTransit() || altitude <= FlightEnvelope.WORLD_CEILING || altitude > FlightEnvelope.MAX_ALTITUDE) {

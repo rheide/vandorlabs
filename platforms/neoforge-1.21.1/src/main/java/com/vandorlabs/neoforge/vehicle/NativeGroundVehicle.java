@@ -63,6 +63,8 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     private static final EntityDataAccessor<CompoundTag> FLIGHT_READOUT = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.COMPOUND_TAG);
     private static final EntityDataAccessor<Float> SPEED = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.FLOAT);
 
+    static final EntityDataAccessor<BlockPos> CRUISE_ROUTE = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.BLOCK_POS);
+
     private final NativeVehicleCruise cruise = new NativeVehicleCruise(this);
     private NativeTransferSnapshot snapshot;
     private NativeVehicleHull hull;
@@ -100,7 +102,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         data.define(SPEED, 0F);
         data.define(FLIGHT_READOUT, new CompoundTag());
         data.define(CLEARANCE, -1F);
-        NativeVehicleCruise.define(data);
+        data.define(CRUISE_ROUTE, BlockPos.ZERO);
     }
 
     public NativeTransferSnapshot snapshot() {
