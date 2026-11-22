@@ -26,8 +26,42 @@ public final class OpeningCanopyGeometry {
             }
             result.add(face);
         }
+        if (width>1) joinMainGlass(result);
         cached=Collections.unmodifiableList(result);CACHE.put(key,cached);return cached;
     }
+    /** Project the complete opening shell before clipping seams or posing the hinge. */
+    private static void joinMainGlass(List<CanopyMesh.Face> faces) {
+        List<CanopyMesh.Face> main=new ArrayList<>();
+        double left=Double.POSITIVE_INFINITY, right=Double.NEGATIVE_INFINITY;
+        double front=Double.POSITIVE_INFINITY, back=Double.NEGATIVE_INFINITY;
+        for (CanopyMesh.Face face:faces) {
+            if (!face.baseMaterial.equals("glass")) continue;
+            double minX=Double.POSITIVE_INFINITY, maxX=Double.NEGATIVE_INFINITY;
+            for (Vec3d vertex:face.vertices) {
+                minX=Math.min(minX,vertex.x);
+                maxX=Math.max(maxX,vertex.x);
+            }
+            if (maxX-minX<1e-6) continue; // Side windows have their own artwork.
+            main.add(face);
+            left=Math.min(left,minX);
+            right=Math.max(right,maxX);
+            for (Vec3d vertex:face.vertices) {
+                // Depth plus rise also gives the upright windshield a nonzero texture height.
+                front=Math.min(front,vertex.z+vertex.y);
+                back=Math.max(back,vertex.z+vertex.y);
+            }
+        }
+        if (right<=left || back<=front) return;
+        for (CanopyMesh.Face face:main) {
+            face.joinedStretchUv=new double[face.vertices.length][2];
+            for (int i=0;i<face.vertices.length;i++) {
+                Vec3d vertex=face.vertices[i];
+                face.joinedStretchUv[i][0]=(vertex.x-left)/(right-left);
+                face.joinedStretchUv[i][1]=(back-vertex.z-vertex.y)/(back-front);
+            }
+        }
+    }
+
     private static List<CanopyFace> model(String id){
         List<CanopyFace> result=new ArrayList<>();
         for(CanopyMesh.Face face:CanopyMesh.MODELS.get(id)){

@@ -29,8 +29,13 @@ public final class CanopyFinishes {
     public static synchronized List<CanopyMesh.Face> faces(List<CanopyMesh.Face> source,int shade,int tint,int material,int layout,double aspect){
         Key key=new Key(source,shade,tint,material,layout,aspect);List<CanopyMesh.Face> cached=CACHE.get(key);if(cached!=null)return cached;
         List<CanopyMesh.Face> result=new ArrayList<>(source.size());
-        for(CanopyMesh.Face f:source){if(!f.baseMaterial.equals("glass")){result.add(f);continue;}CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=f.vertices;copy.uv=material<0?f.uv:CanopyMaterialUv.coordinates(f,layout,aspect);copy.tiled=material>=0 && !CanopyMaterialUv.fits(f,layout,aspect);copy.glazing=true;copy.baseMaterial=material<0?f.baseMaterial:"panel";copy.group=f.group;copy.doubleSided=f.doubleSided;copy.material=material<0?GlassTextures.texture(shade,1,tint):com.vandorlabs.tiles.ScreenHousingTextures.texture(material);result.add(copy);}
+        for(CanopyMesh.Face f:source){if(!f.baseMaterial.equals("glass")){result.add(f);continue;}CanopyMesh.Face copy=new CanopyMesh.Face();copy.vertices=f.vertices;copy.uv=surfaceUv(f,layout,material,aspect);copy.tiled=material>=0 && !CanopyMaterialUv.fits(f,layout,aspect);copy.glazing=true;copy.baseMaterial=material<0?f.baseMaterial:"panel";copy.group=f.group;copy.doubleSided=f.doubleSided;copy.material=material<0?GlassTextures.texture(shade,1,tint):com.vandorlabs.tiles.ScreenHousingTextures.texture(material);result.add(copy);}
         cached=Collections.unmodifiableList(result);CACHE.put(key,cached);return cached;
+    }
+    public static double[][] surfaceUv(CanopyMesh.Face face,int layout,int material,double aspect) {
+        if (face.joinedStretchUv!=null && layout==com.vandorlabs.render.TextureLayoutMode.STRETCH)
+            return face.joinedStretchUv;
+        return material<0?face.uv:CanopyMaterialUv.coordinates(face,layout,aspect);
     }
     private CanopyFinishes(){}
 }

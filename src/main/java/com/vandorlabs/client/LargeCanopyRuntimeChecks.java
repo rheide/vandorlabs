@@ -53,8 +53,18 @@ public final class LargeCanopyRuntimeChecks {
             List<CanopyMesh.Face> material=CanopyFinishes.faces(source,0,1,8,tiled),draw=CanopyMaterialUv.drawable(material);
             require(Math.abs(area(draw)-area(source))<1e-7*Math.max(1,area(source)),"tiling preserves complete panel area model="+models.indexOf(source)+" tiled="+tiled+" before="+area(source)+" after="+area(draw));
             for(CanopyMesh.Face face:draw)for(double[] uv:face.uv)if(face.baseMaterial.equals("panel"))require(uv[0]>=-1e-8 && uv[0]<=1+1e-8 && uv[1]>=-1e-8 && uv[1]<=1+1e-8,"material UV stays within atlas sprite");
-            if(!tiled)for(CanopyMesh.Face face:material)if(face.baseMaterial.equals("panel"))for(int axis=0;axis<2;axis++){
+            if(!tiled)for(int index=0;index<source.size();index++) {
+                CanopyMesh.Face face=material.get(index);
+                if(!face.baseMaterial.equals("panel"))continue;
+                if(source.get(index).joinedStretchUv!=null) {
+                    double min=1,max=0;
+                    for(double[] uv:face.uv){ min=Math.min(min,uv[0]);max=Math.max(max,uv[0]); }
+                    require(max-min<.55,"joined glass repeats the artwork across a single column");
+                    continue;
+                }
+                for(int axis=0;axis<2;axis++){
                 double min=1,max=0;for(double[] uv:face.uv){min=Math.min(min,uv[axis]);max=Math.max(max,uv[axis]);}require(min<1e-8 && max>1-1e-8,"Fit shows complete artwork on each panel");
+                }
             }
         }
         CanopyMesh.Face panel=new CanopyMesh.Face();panel.vertices=new Vec3d[]{new Vec3d(0,0,0),new Vec3d(3,0,0),new Vec3d(3,2,0),new Vec3d(0,2,0)};panel.uv=new double[4][2];panel.material=panel.baseMaterial="glass";panel.group="shell";

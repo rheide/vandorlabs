@@ -17,6 +17,7 @@ public final class CanopyMesh {
     public static final class Face {
         public Vec3d[] vertices;
         public double[][] uv;
+        public double[][] joinedStretchUv;
         public String material, baseMaterial, group;
         public boolean doubleSided;
         public boolean glazing,tiled;
