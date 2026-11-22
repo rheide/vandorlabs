@@ -86,7 +86,8 @@ public final class NativeMaxwellRuntimeChecks {
         int width = WIDTHS[index], depth = MaxwellEngine.depth(width);
         var facing = FACINGS[index];
         var core = NativeBuilderBindings.CORES.get(MaxwellEngine.DESIGN);
-        world.setBlock(ROOT, core.defaultBlockState().setValue(NativeBuilderCoreBlock.FACING, facing), Block.UPDATE_ALL);
+        need(world.setBlock(ROOT, core.defaultBlockState().setValue(NativeBuilderCoreBlock.FACING, facing), Block.UPDATE_ALL),
+                "fresh Maxwell Core is placed after prior ownership retires");
         int cornerX = (index & 1) == 0 ? 0 : width - 1;
         int cornerZ = (index & 2) == 0 ? 0 : depth - 1;
         var shape = NativeBuilderFormation.layout(core.design, width, facing.get3DDataValue(), cornerX, cornerZ);
@@ -107,7 +108,7 @@ public final class NativeMaxwellRuntimeChecks {
         try {
             need(++ticks < 2200, "bounded async formation, dismantle and real burn");
             if (stage == Stage.REMOVE) {
-                if (!world.isEmptyBlock(ROOT)) return;
+                if (!world.isEmptyBlock(ROOT) || com.vandorlabs.neoforge.transfer.NativeTransferHolds.reserved(world, ROOT)) return;
                 for (var pos : cells) world.setBlock(pos, Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
                 index++;
                 place();
