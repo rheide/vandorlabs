@@ -4,7 +4,6 @@ import argparse
 import os
 from pathlib import Path
 import re
-import shutil
 import subprocess
 import sys
 
@@ -72,13 +71,11 @@ def main():
         source = directory / 'build/libs' / (f'vandorlabs-{version}.jar' if name == 'forge-1.12.2' else f'vandorlabs-{name}-{version}.jar')
         if not source.is_file():
             raise RuntimeError(f'Expected standard artifact missing: {source}')
-        artifacts.append((source, ROOT / f'build/libs/vandorlabs-{name}-{version}.jar'))
-    # Publish the selected artifact set only after every requested build succeeds.
-    for source, destination in artifacts:
-        destination.parent.mkdir(parents=True, exist_ok=True)
-        if source.resolve() != destination.resolve():
-            shutil.copy2(source, destination)
-        print(f'Built {destination.relative_to(ROOT)}', flush=True)
+        artifacts.append(source)
+    # Each standard JAR stays in its own Gradle output: build/libs for 1.12.2 and
+    # platforms/<platform>/build/libs for the others. Nothing is copied.
+    for source in artifacts:
+        print(f'Built {source.relative_to(ROOT)}', flush=True)
     print('Build completion does not establish live-client or feature parity acceptance.', flush=True)
 
 if __name__ == '__main__':

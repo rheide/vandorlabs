@@ -56,6 +56,7 @@ public final class LargeDoorJoinChecks {
             }
         }
         if(phase.equals("write"))opposite(level,actor);
+        if(phase.equals("write"))clicks(level,actor);
         if(phase.equals("write"))finish(level,"write");
         else pendingRead=level;
     }
@@ -208,6 +209,61 @@ public final class LargeDoorJoinChecks {
         var group=NativeLargeDoorJoins.group(first);
         need(group.columns==2&&group.rows==1,"doors placed from opposite sides join: "+group.columns+"x"+group.rows);
         System.out.println("[vandorlabs][large-door-join] opposite-side placement joins");
+    }
+    /** Sneak-click {@code cell}'s {@code side} at {@code hit} with a Large Door item. */
+    private static boolean click(ServerLevel level,Actor actor,BlockPos cell,Direction side,Vec3 hit){
+        var stack=new ItemStack(NativeLargeDoorRegistrations.ITEM.get(),2);
+        actor.setItemInHand(InteractionHand.MAIN_HAND,stack);actor.setShiftKeyDown(true);
+        actor.setPos(hit.x+side.getStepX()*2,cell.getY(),hit.z+side.getStepZ()*2);
+        try{return NativeLargeDoorRegistrations.ITEM.get().useOn(new UseOnContext(actor,InteractionHand.MAIN_HAND,new BlockHitResult(hit,side,cell,false))).consumesAction()&&stack.getCount()==1;}
+        finally{actor.setShiftKeyDown(false);}
+    }
+    private static NativeLargeDoorEntity root(ServerLevel level,BlockPos anchor){
+        return level.getBlockEntity(anchor) instanceof NativeLargeDoorEntity door&&door.isAnchor()&&NativeLargeDoorLifecycle.complete(level,door)?door:null;
+    }
+    /**
+     * Reported: joining doors one by one. Sneak-clicking an installed door's edge places the next
+     * door beside it and joins them; sneak-clicking a joined door's face places the next door beyond
+     * the group on that side, so four clicks build a 2x2. A joining door beside a joining door of the
+     * same facing is carried by it, with no floor of its own.
+     */
+    private static void clicks(ServerLevel level,Actor actor){
+        BlockPos origin=WALL.offset(0,0,48);
+        for(int x=-1;x<=1;x++)for(int z=-1;z<=1;z++){level.setChunkForced((origin.getX()>>4)+x,(origin.getZ()>>4)+z,true);level.getChunkAt(origin.offset(x*16,0,z*16));}
+        for(var at:BlockPos.betweenClosed(origin.offset(-4,-1,-4),origin.offset(14,8,4)))
+            level.setBlock(at,at.getY()==origin.getY()-1?net.minecraft.world.level.block.Blocks.STONE.defaultBlockState():net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),3);
+        var first=place(actor,origin,false,null);
+        need(!first.joinEnabled(),"a fresh door starts without Join");
+        // Edge: the first door's side edge (its third column) toward +across.
+        Direction across=FACE.getCounterClockWise();
+        BlockPos edgeCell=cell(origin,false,2,1);
+        need(click(level,actor,edgeCell,across,Vec3.atCenterOf(edgeCell).add(across.getStepX()*.5,0,across.getStepZ()*.5)),"sneak-clicking a door's edge places the next door");
+        var second=root(level,cell(origin,false,3,0));
+        need(second!=null&&second.getBlockState().getValue(NativeLargeDoorBlock.FACING)==FACE,"the edge door sits beside the clicked one with its facing");
+        need(first.joinEnabled()&&second.joinEnabled()&&second.settings().door().sliding==first.settings().door().sliding,"edge placement copies the door and joins both");
+        NativeLargeDoorJoins.flush(level);
+        var pair=NativeLargeDoorJoins.group(first);need(pair.columns==2&&pair.rows==1,"edge placement forms a pair: "+pair.columns+"x"+pair.rows);
+        // Face: the upper part of each door's front face places a door above it.
+        for(var base:new NativeLargeDoorEntity[]{first,second}){
+            BlockPos faceCell=cell(base.getBlockPos(),false,1,2);
+            need(click(level,actor,faceCell,FACE,Vec3.atCenterOf(faceCell).add(FACE.getStepX()*.5,.4,FACE.getStepZ()*.5)),"sneak-clicking a joined door's upper face places a door above "+base.getBlockPos());
+            need(root(level,cell(base.getBlockPos(),false,0,3))!=null,"the face door sits above "+base.getBlockPos());
+        }
+        NativeLargeDoorJoins.flush(level);
+        var square=NativeLargeDoorJoins.group(first);need(square.columns==2&&square.rows==2,"four clicked doors form one 2x2 door: "+square.columns+"x"+square.rows);
+        // Beside: a joining door with no floor beneath, carried by the joining door beside it.
+        BlockPos hang=cell(origin,false,9,0);
+        for(int x=0;x<3;x++)level.setBlock(cell(origin,false,9+x,-1),net.minecraft.world.level.block.Blocks.STONE.defaultBlockState(),3);
+        for(int x=0;x<3;x++)level.setBlock(cell(origin,false,12+x,-1),net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),3);
+        var carrier=place(actor,hang,false,null);
+        need(NativeLargeDoorJoins.change(actor,carrier,true),"carrier opts in to Join");
+        BlockPos carrierEdge=cell(hang,false,2,1);
+        need(click(level,actor,carrierEdge,across,Vec3.atCenterOf(carrierEdge).add(across.getStepX()*.5,0,across.getStepZ()*.5)),"a joining door is placed beside the carrier over open air");
+        var carried=root(level,cell(hang,false,3,0));
+        need(carried!=null&&NativeLargeDoorLifecycle.supported(level,carried.getBlockPos(),FACE,false),"the beside door is carried by its joining neighbour");
+        level.updateNeighborsAt(carried.getBlockPos(),net.minecraft.world.level.block.Blocks.AIR);NativeLargeDoorJoins.flush(level);
+        need(root(level,cell(hang,false,3,0))!=null,"the carried door survives neighbour checks");
+        System.out.println("[vandorlabs][large-door-join] edge, face and beside placement join");
     }
     private static BlockPos cell(BlockPos origin,boolean horizontal,int x,int y){
         return NativeLargeDoorLifecycle.cell(origin,FACE,horizontal,x,y);

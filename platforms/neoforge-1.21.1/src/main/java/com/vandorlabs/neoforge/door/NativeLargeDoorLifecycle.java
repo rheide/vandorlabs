@@ -37,7 +37,20 @@ public final class NativeLargeDoorLifecycle {
     public static BlockState resolved(Level level,BlockPos pos,BlockState fallback){var root=root(level,pos);return (root==null?fallback:root.getBlockState()).setValue(NativeLargeDoorBlock.PAIRED,true).setValue(NativeLargeDoorBlock.HINGE,DoorHingeSide.RIGHT).setValue(NativeLargeDoorBlock.HALF,root!=null&&pos.equals(root.getBlockPos())?DoubleBlockHalf.LOWER:DoubleBlockHalf.UPPER);}
     public static boolean supported(Level level,BlockPos anchor,Direction face){return supported(level,anchor,face,false);}
     public static boolean supported(Level level,BlockPos anchor,Direction face,boolean horizontal){
-        return solidSupport(level,anchor,face,horizontal)||supportDoor(level,anchor,face,horizontal)!=null;
+        return solidSupport(level,anchor,face,horizontal)||supportDoor(level,anchor,face,horizontal)!=null
+                ||loaded(level,anchor)&&level.getBlockEntity(anchor) instanceof NativeLargeDoorEntity installed&&installed.joinEnabled()&&besideJoining(level,anchor,face,horizontal,null);
+    }
+    /**
+     * A joining door directly beside a complete joining door of the same facing is carried by it,
+     * whichever order a group's slots are filled in. Placement and later neighbour checks agree.
+     * {@code settings}, when given, must be compatible with the neighbour's.
+     */
+    static boolean besideJoining(Level level,BlockPos anchor,Direction face,boolean horizontal,NativeDoorSettings settings){
+        for(Direction step:new Direction[]{face.getCounterClockWise(),face.getClockWise()}){
+            var neighbour=NativeLargeDoorJoins.anchor(level,anchor.relative(step,3),face,horizontal);
+            if(neighbour!=null&&neighbour.joinEnabled()&&(settings==null||NativeLargeDoorJoins.compatible(neighbour.settings(),settings)))return true;
+        }
+        return false;
     }
     static boolean solidSupport(Level level,BlockPos anchor,Direction face,boolean horizontal){
         Direction side=rows(face,horizontal);
@@ -56,6 +69,7 @@ public final class NativeLargeDoorLifecycle {
                                       NativeDoorSettings settings,boolean join){
         if(solidSupport(level,anchor,face,horizontal))return true;
         if(!join)return false;
+        if(besideJoining(level,anchor,face,horizontal,settings))return true;
         var support=supportDoor(level,anchor,face,horizontal);
         return support!=null&&support.joinEnabled()&&NativeLargeDoorJoins.compatible(support.settings(),settings)
                 &&NativeLargeDoorJoins.mutable(level,support);

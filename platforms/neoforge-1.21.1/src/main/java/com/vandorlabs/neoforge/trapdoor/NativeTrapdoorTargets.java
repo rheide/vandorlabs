@@ -14,6 +14,8 @@ public final class NativeTrapdoorTargets {
     private static final NativeLoadedTileIndex<NativeTrapdoorEntity> INDEX=new NativeLoadedTileIndex<>(NativeTrapdoorEntity.class);
     private static final ThreadLocal<Finder> FINDERS=ThreadLocal.withInitial(Finder::new);
     private static final int BUDGET=4*1024*1024;
+    /** Leaves of a joined group up to eight cells wide can end that far from their own block. */
+    private static final double REACH=8;
     private static final LinkedHashMap<Key,Collision> COLLISIONS=new LinkedHashMap<>(32,.75F,true);
     private static int retained;
     public record Target(BlockPos owner,BlockHitResult hit) { }
@@ -27,7 +29,7 @@ public final class NativeTrapdoorTargets {
     public static Target trace(Level level,Vec3 start,Vec3 end){
         if(!NativeFluidWorld.open(level)||!finite(start)||!finite(end)||start.distanceToSqr(end)>64*64||!INDEX.hasMembers(level))return null;
         var finder=FINDERS.get();if(finder.active)finder=new Finder();finder.active=true;finder.start=start;finder.end=end;finder.distance=Double.POSITIVE_INFINITY;
-        try{INDEX.visit(level,new AABB(start,end).inflate(2,1,2),null,finder);return finder.best;}
+        try{INDEX.visit(level,new AABB(start,end).inflate(REACH),null,finder);return finder.best;}
         finally{finder.active=false;finder.start=finder.end=null;finder.best=null;}
     }
     private static final class Finder implements Consumer<NativeTrapdoorEntity> {
@@ -58,8 +60,8 @@ public final class NativeTrapdoorTargets {
             &&NativeTrapdoorEntity.at(tile.getLevel(),tile.getBlockPos())==tile;}
     /** Return vanilla's exact iterable when no loaded owner bucket is near the query. Never union diagonal slices. */
     public static Iterable<VoxelShape> blockCollisions(Level level,AABB query,Iterable<VoxelShape> vanilla){
-        if(!INDEX.hasNearbyBuckets(level,query,2))return vanilla;
-        return ()->{var sources=new ArrayList<Source>();INDEX.visit(level,query.inflate(2,1,2),null,tile->{
+        if(!INDEX.hasNearbyBuckets(level,query,REACH))return vanilla;
+        return ()->{var sources=new ArrayList<Source>();INDEX.visit(level,query.inflate(REACH),null,tile->{
             var geometry=tile.geometry();if(!tile.inert()&&geometry!=null&&geometry.bounds().move(tile.getBlockPos()).intersects(query)){
                 var collision=collision(tile,geometry);if(collision.boxes().length!=0)sources.add(new Source(tile,geometry,collision));
             }
