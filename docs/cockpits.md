@@ -23,16 +23,27 @@
 
    ![Seated player above the Cockpit dashboard](images/cockpit-neoforge/cockpit-stationary-seated.png)
 
-The stationary Cockpit currently provides the seat and authored housing with
-a retractable monitor bank and independent Redstone controls on the center
-monitor and right-armrest touch panel. Use the Configurizer on a surface to
-edit its rows. The center monitor has six rows while deployed. The touch
-panel has three and remains accessible when the monitor bank is retracted.
-Both can send toggles, numeric slider levels or timed pulses. While seated, use the yellow console
-button to retract the screen bank or bring it back. An occupied travel path
-prevents the move. The **Advanced Pilot Chair** offers height
-and numeric armrest sliders. The **Yoke and Screen** can operate Redstone from
-its main display and touch panel. Open its editor with the Configurizer or
+The stationary Cockpit has three monitors and four touch surfaces. Right-click
+a surface or aim the Configurizer at it to open its editor. Click the surface
+name at the top of the dialog to select the next face. Right-click it to go back.
+
+- **Displays** changes that face’s artwork, playback and speed.
+- **Controls** configures up to six rows on a monitor or three on a touch panel.
+  Select **Redstone controls** in Displays to show the rows. Operate toggles,
+  sliders or pulses by clicking the rendered row. Channel status rows display
+  the received signal.
+- **Redstone** selects the receiving channels and whether the face is visible
+  on high signal, low signal, or continuously.
+
+The yellow console button retracts or raises the whole monitor bank. An
+occupied travel path prevents the move. The four touch surfaces remain available
+while it is retracted. Click a physical throttle to move it through its four
+positions. Aim the Configurizer at the throttle to edit its channel bank and
+limits or switch between one centered throttle and two independent throttles.
+
+The **Advanced Pilot Chair** offers height, numeric armrest sliders and an
+independent right touch panel. The **Yoke and Screen** can operate Redstone
+from its main display and touch panel. Open its editor with the Configurizer or
 sneak-right-click. The display supports six control rows and the touch panel
 supports three.
 

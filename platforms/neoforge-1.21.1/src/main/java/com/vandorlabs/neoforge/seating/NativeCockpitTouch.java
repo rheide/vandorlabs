@@ -245,7 +245,11 @@ public final class NativeCockpitTouch implements NativeScreenControlService.Host
     }
 
     public NativeYokeGeometry.Face surface(Direction facing,int slot,double lift){
-        return surfaces==COCKPIT?face(facing,slot,lift):CHAIR_FACES.get(facing);
+        if(surfaces==COCKPIT)return face(facing,slot,lift);
+        var face=CHAIR_FACES.get(facing);
+        var p=face.topLeft();
+        var top=new Vec3(p.x,NativeAdvancedChairGeometry.height(p.y,owner.pilotHeight()),p.z);
+        return new NativeYokeGeometry.Face(top,face.right(),face.down(),face.normal(),face.height());
     }
 
     public static NativeYokeGeometry.Face face(Direction facing){return face(facing,TOUCH,0);}
