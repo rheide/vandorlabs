@@ -4,6 +4,9 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.vandorlabs.neoforge.NativeVehicleStatusRenderer;
 import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
+import com.vandorlabs.neoforge.gear.NativeGearBlock;
+import com.vandorlabs.neoforge.gear.NativeGearEntity;
+import com.vandorlabs.neoforge.gear.client.NativeGearRenderer;
 import com.vandorlabs.neoforge.screen.NativeScreenEntity;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette;
 import com.vandorlabs.neoforge.transfer.client.NativeSnapshotPalette.Palette;
@@ -43,7 +46,7 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
     private static Object level;
 
     private record Key(BlockState state, BlockPos tile, CompoundTag appearance) {}
-    private record Cell(BlockPos pos, Palette palette) {}
+    private record Cell(BlockPos pos, Palette palette, NativeGearEntity arm) {}
     private record Mesh(List<Cell> cells, int bytes) {}
 
     private final NativeVehicleStatusRenderer status;
@@ -75,6 +78,15 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
         int bytes = 256 + visual.cells().size() * 96;
         int quadBytes = 0;
         for (var cell : visual.cells()) {
+            if (cell.state().getBlock() instanceof NativeGearBlock block) {
+                if (cell.appearance().getBoolean("GearController")
+                    && block.newBlockEntity(cell.pos(), cell.state()) instanceof NativeGearEntity arm) {
+                    arm.loadWithComponents(cell.appearance(), craft.level().registryAccess());
+                    cells.add(new Cell(cell.pos(), null, arm));
+                    bytes += 1024;
+                }
+                continue;
+            }
             var at = craft.blockPosition().offset(cell.pos());
             var key = new Key(cell.state(), cell.state().hasBlockEntity() ? cell.pos() : null, cell.appearance());
             var palette = materials.get(key);
@@ -84,7 +96,7 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                 bytes += palette.retainedBytes();
                 materials.put(key, palette);
             }
-            cells.add(new Cell(cell.pos(), palette));
+            cells.add(new Cell(cell.pos(), palette, null));
         }
         var built = new Mesh(List.copyOf(cells), bytes);
         int used = MESHES.values().stream().mapToInt(Mesh::bytes).sum();
@@ -120,6 +132,10 @@ public final class NativeGroundVehicleRenderer extends EntityRenderer<NativeGrou
                 poses.pushPose();
                 try {
                     poses.translate(cell.pos.getX(), cell.pos.getY(), cell.pos.getZ());
+                    if (cell.arm != null) {
+                        NativeGearRenderer.renderCarried(cell.arm, craft.armPose(cell.pos), poses, buffers, cellLight, OverlayTexture.NO_OVERLAY);
+                        continue;
+                    }
                     if (palette.fallback()) {
                         client.getBlockRenderer().renderSingleBlock(palette.state(), poses, buffers, cellLight,
                                 OverlayTexture.NO_OVERLAY, palette.data(), null);

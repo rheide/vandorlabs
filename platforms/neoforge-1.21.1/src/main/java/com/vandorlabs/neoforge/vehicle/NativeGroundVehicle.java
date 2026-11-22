@@ -54,6 +54,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     private static final int NO_FLIGHT = 0, RUNWAY = 1, CRUISE = 2, LANDING = 3, RETURN_HOVER = 4;
     private static final double TAXI_SPEED = .30, POWERED_TAXI_SPEED = .40, HOVER_SPEED = .80, BOOST_SPEED = 1.2;
     private static final EntityDataAccessor<Boolean> READY = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.BOOLEAN);
+    private static final EntityDataAccessor<CompoundTag> ARM_POSES = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.COMPOUND_TAG);
     private static final EntityDataAccessor<BlockPos> PILOT = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.BLOCK_POS);
     private static final EntityDataAccessor<Float> CUSHION = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.FLOAT);
     private static final EntityDataAccessor<Direction> FACING = SynchedEntityData.defineId(NativeGroundVehicle.class, EntityDataSerializers.DIRECTION);
@@ -69,6 +70,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     private NativeVehicleHull hull;
     private NativeVehiclePropulsion propulsion;
     private NativeVehicleResources resources;
+    private int armRevision;
     private NativeVehicleMeters meters;
     private static final EntityDataAccessor<CompoundTag> METER_LEVELS = SynchedEntityData.defineId(NativeGroundVehicle.class,EntityDataSerializers.COMPOUND_TAG);
     public int meterSurface(BlockPos pos,int slot){return meters==null?0:meters.surface(pos,slot);}
@@ -103,6 +105,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         data.define(PITCH, 0F);
         data.define(SPEED, 0F);
         data.define(METER_LEVELS,new CompoundTag());
+        data.define(ARM_POSES, new CompoundTag());
         data.define(FLIGHT_READOUT, new CompoundTag());
         data.define(CLEARANCE, -1F);
         data.define(CRUISE_ROUTE, BlockPos.ZERO);
@@ -133,6 +136,13 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
     public NativeVehiclePropulsion.Readout flightReadout() {
         if (propulsion != null && !level().isClientSide) return propulsion.readout(this);
         return clientReadout;
+    }
+
+    public int armPose(BlockPos local) {
+        var poses = entityData.get(ARM_POSES);
+        var key = Long.toString(local.asLong());
+        int value = poses.contains(key, Tag.TAG_INT) ? poses.getInt(key) : -1;
+        return value >= 0 && value < (1 << 18) ? value : -1;
     }
 
     public int maxwellGauge(BlockPos core) {
@@ -180,14 +190,16 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             if (cell.pos.equals(localPilot)) seat = cell.tile();
         }
         int height = seat == null ? 0 : Mth.clamp(seat.getInt(ChairSettings.PILOT_HEIGHT), 0, 3);
-        var geometry = new NativeVehicleHull(states);
         var appearance = NativeVehicleVisual.project(blocks, level().registryAccess());
         var drive = new NativeVehiclePropulsion(blocks, level().registryAccess());
         var resources = new NativeVehicleResources(blocks, level().registryAccess(), drive);
+        var geometry = new NativeVehicleHull(states, resources::armCollision);
         snapshot = blocks;
         hull = geometry;
         propulsion = drive;
         this.resources = resources;
+        armRevision = resources.armRevision();
+        entityData.set(ARM_POSES, resources.armPoses());
         meters = NativeVehicleMeters.server(blocks);
         status = NativeVehicleStatus.panels(blocks);
         visualTag = appearance;
@@ -367,6 +379,11 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         if (NativeVehicleTransfer.escrowed(this)
                 || highFlight() && pilot() == null && savedPilot != null && level().getGameTime() < awaitingPilotUntil) return;
         resources.tick(this);
+        if (armRevision != resources.armRevision()) {
+            armRevision = resources.armRevision();
+            entityData.set(ARM_POSES, resources.armPoses());
+            setBoundingBox(makeBoundingBox());
+        }
         if ((tickCount%5)==0 && meters.sample(this,resources)) entityData.set(METER_LEVELS,meters.publicData());
         drive();
         if (emergencyOwner != null) finishEmergencyPark();
@@ -660,7 +677,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
             var appearance = NativeVehicleVisual.read(tag, buffer.registryAccess());
             var states = new LinkedHashMap<BlockPos, BlockState>();
             for (var cell : appearance.cells()) states.put(cell.pos(), cell.state());
-            hull = new NativeVehicleHull(states);
+            hull = new NativeVehicleHull(states, null);
             var panels = new java.util.ArrayList<NativeVehicleStatus.Panel>();
             for (var cell : appearance.cells()) panels.addAll(NativeVehicleStatus.panels(cell.pos(), cell.state(), cell.appearance()));
             status = List.copyOf(panels);

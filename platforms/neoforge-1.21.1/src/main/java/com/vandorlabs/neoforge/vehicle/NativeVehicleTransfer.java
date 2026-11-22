@@ -81,6 +81,7 @@ public final class NativeVehicleTransfer {
             if (!mayPark(world, player, craft) || escrowed(craft)) {
                 throw new IllegalArgumentException("Only the owner can park a settled, empty vehicle");
             }
+            if (!craft.resources().armsReadyToPark()) throw new IllegalArgumentException("Deploy and settle all carried Arms before parking");
             var pos = anchor(craft);
             int turn = quarter(craft.getYRot());
             var placed = NativeVehicleStructure.translate(craft.snapshot(), pos, rotation(turn));
@@ -314,7 +315,7 @@ public final class NativeVehicleTransfer {
             NativeGroundVehicle craft = null;
             if (receipt.parking) {
                 if (!(world.getEntity(receipt.identity) instanceof NativeGroundVehicle current)
-                    || !mayPark(world, actor, current) || !sameActor(receipt, current, null)) {
+                    || !mayPark(world, actor, current) || !current.resources().armsReadyToPark() || !sameActor(receipt, current, null)) {
                     throw new IllegalArgumentException("The vehicle or its owner changed before parking");
                 }
                 craft = current;

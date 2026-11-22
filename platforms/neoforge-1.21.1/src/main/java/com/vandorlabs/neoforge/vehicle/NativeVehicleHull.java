@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Supplier;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.util.Mth;
@@ -33,8 +34,13 @@ final class NativeVehicleHull {
     private final List<Target> targets;
     private final AABB bounds;
     private final double radius;
+    private final Supplier<List<AABB>> mechanism;
+    private List<AABB> priorMechanism = List.of();
+    private List<Group> mechanicalGroups = List.of();
+    private AABB mechanicalBounds;
 
-    NativeVehicleHull(Map<BlockPos, BlockState> cells) {
+    NativeVehicleHull(Map<BlockPos, BlockState> cells, Supplier<List<AABB>> mechanism) {
+        this.mechanism = mechanism;
         var view = new SnapshotBlocks(Map.copyOf(cells));
         var clusters = new LinkedHashMap<BlockPos, List<AABB>>();
         var selection = new ArrayList<Target>();
@@ -51,6 +57,7 @@ final class NativeVehicleHull {
             if (!outline.isEmpty()) {
                 selection.add(new Target(at, outline.stream().map(box -> box.move(at).move(-.5, 0, -.5)).toList()));
             }
+            if (mechanism != null && NativeVehicleArms.block(state)) continue;
             for (var part : state.getCollisionShape(view, at, CollisionContext.empty()).toAabbs()) {
                 if (++count > MAX_SHAPES) throw new IllegalArgumentException("Vehicle collision shape limit");
                 AABB box = part.move(at).move(-.5, 0, -.5);
@@ -69,14 +76,49 @@ final class NativeVehicleHull {
         groups = List.copyOf(assembled);
         targets = List.copyOf(selection);
         bounds = envelope;
+        radius = radius(bounds);
+    }
+
+    private static double radius(AABB bounds) {
         double rx = Math.max(Math.abs(bounds.minX), Math.abs(bounds.maxX));
         double rz = Math.max(Math.abs(bounds.minZ), Math.abs(bounds.maxZ));
         double ry = Math.max(Math.abs(bounds.minY), Math.abs(bounds.maxY));
-        radius = Math.sqrt(rx * rx + rz * rz + ry * ry);
+        return Math.sqrt(rx * rx + rz * rz + ry * ry);
     }
 
     AABB bounds(Vec3 at, float yaw, float pitch, Direction facing) {
-        return broad(shape(bounds, transform(at, yaw, pitch, facing)));
+        return broad(shape(activeBounds(), transform(at, yaw, pitch, facing)));
+    }
+
+    private List<Group> mechanismGroups() {
+        if (mechanism == null) return List.of();
+        var current = mechanism.get();
+        if (current != priorMechanism) {
+            priorMechanism = current;
+            var clusters = new LinkedHashMap<BlockPos, List<AABB>>();
+            AABB enclosing = null;
+            for (var box : current) {
+                var center = box.getCenter();
+                var chunk = new BlockPos(Mth.floor(center.x) >> 2, Mth.floor(center.y) >> 2, Mth.floor(center.z) >> 2);
+                clusters.computeIfAbsent(chunk, unused -> new ArrayList<>()).add(box);
+                enclosing = enclosing == null ? box : enclosing.minmax(box);
+            }
+            var groups = new ArrayList<Group>(clusters.size());
+            for (var members : clusters.values()) groups.add(new Group(members.stream().reduce(AABB::minmax).orElseThrow(), members));
+            mechanicalGroups = List.copyOf(groups);
+            mechanicalBounds = enclosing;
+        }
+        return mechanicalGroups;
+    }
+
+    private AABB activeBounds() {
+        mechanismGroups();
+        return mechanicalBounds == null ? bounds : bounds.minmax(mechanicalBounds);
+    }
+
+    private double activeRadius() {
+        mechanismGroups();
+        return mechanicalBounds == null ? radius : Math.max(radius, radius(mechanicalBounds));
     }
 
     private static RigidTransform transform(Vec3 at, float yaw, float pitch, Direction facing) {
@@ -102,6 +144,10 @@ final class NativeVehicleHull {
         return new AABB(box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ);
     }
 
+    static AABB worldBox(NativeGroundVehicle craft, AABB local) {
+        return broad(shape(local, transform(craft.position(), craft.getYRot(), craft.hullPitch(), craft.facing())));
+    }
+
     static boolean loadedColumns(Level world, AABB bounds) {
         for (int x = Mth.floor(bounds.minX) >> 4; x <= Mth.floor(bounds.maxX) >> 4; x++) {
             for (int z = Mth.floor(bounds.minZ) >> 4; z <= Mth.floor(bounds.maxZ) >> 4; z++) {
@@ -113,28 +159,32 @@ final class NativeVehicleHull {
 
     private List<Contact> contacts(NativeGroundVehicle craft, Vec3 at, float yaw, float pitch, Vec3 travel) {
         var pose = transform(at, yaw, pitch, craft.facing());
-        var envelope = broad(shape(bounds, pose)).expandTowards(travel).inflate(EPSILON);
+        var envelope = broad(shape(activeBounds(), pose)).expandTowards(travel).inflate(EPSILON);
         if (!craft.level().getWorldBorder().isWithinBounds(envelope) || !loadedColumns(craft.level(), envelope)
                 || envelope.minY < craft.level().getMinBuildHeight() - EPSILON
                 || craft.level().dimension() != Level.OVERWORLD && envelope.maxY > craft.level().getMaxBuildHeight() + EPSILON) return null;
         var contacts = new ArrayList<Contact>();
-        for (var group : groups) {
-            var sweep = broad(shape(group.bounds, pose)).expandTowards(travel).inflate(EPSILON);
-            var obstacles = new ArrayList<AABB>();
-            for (var candidate : craft.level().getBlockCollisions(craft, sweep)) obstacles.addAll(candidate.toAabbs());
-            if (obstacles.isEmpty()) continue;
-            for (var local : group.shapes) {
-                var body = shape(local, pose);
-                var volume = broad(body).expandTowards(travel);
-                for (var terrain : obstacles) {
-                    if (volume.intersects(terrain)) contacts.add(new Contact(body, shape(terrain, RigidTransform.IDENTITY)));
-                }
-            }
-        }
+        for (var group : groups) appendContacts(craft, group, pose, travel, contacts);
+        for (var group : mechanismGroups()) appendContacts(craft, group, pose, travel, contacts);
         return contacts;
     }
 
-    int launchTicks() { return Math.max(5, (int)Math.ceil(radius * .31) + 2); }
+    private static void appendContacts(NativeGroundVehicle craft, Group group, RigidTransform pose,
+                                       Vec3 travel, List<Contact> contacts) {
+        var sweep = broad(shape(group.bounds, pose)).expandTowards(travel).inflate(EPSILON);
+        var obstacles = new ArrayList<AABB>();
+        for (var candidate : craft.level().getBlockCollisions(craft, sweep)) obstacles.addAll(candidate.toAabbs());
+        if (obstacles.isEmpty()) return;
+        for (var local : group.shapes) {
+            var body = shape(local, pose);
+            var volume = broad(body).expandTowards(travel);
+            for (var terrain : obstacles) {
+                if (volume.intersects(terrain)) contacts.add(new Contact(body, shape(terrain, RigidTransform.IDENTITY)));
+            }
+        }
+    }
+
+    int launchTicks() { return Math.max(5, (int)Math.ceil(activeRadius() * .31) + 2); }
 
     double ceiling(NativeGroundVehicle craft, float yaw, float pitch) {
         return craft.level().getMaxBuildHeight() - bounds(Vec3.ZERO, yaw, pitch, craft.facing()).maxY;
@@ -175,7 +225,7 @@ final class NativeVehicleHull {
     boolean clearMotion(NativeGroundVehicle craft, float yaw, float pitch, Vec3 travel) {
         float yawChange = Mth.wrapDegrees(yaw - craft.getYRot());
         float pitchChange = pitch - craft.hullPitch();
-        int steps = Math.max(1, (int)Math.ceil(radius * Math.toRadians(Math.abs(yawChange) + Math.abs(pitchChange)) / .15));
+        int steps = Math.max(1, (int)Math.ceil(activeRadius() * Math.toRadians(Math.abs(yawChange) + Math.abs(pitchChange)) / .15));
         for (int step = 1; step <= steps; step++) {
             float fraction = (float)step / steps;
             var contacts = contacts(craft, craft.position(), craft.getYRot() + yawChange * fraction,
@@ -187,7 +237,7 @@ final class NativeVehicleHull {
 
     float turn(NativeGroundVehicle craft, float yaw, float amount) {
         if (amount == 0) return yaw;
-        int steps = Math.max(1, (int)Math.ceil(radius * Math.abs(Math.toRadians(amount)) / .15));
+        int steps = Math.max(1, (int)Math.ceil(activeRadius() * Math.abs(Math.toRadians(amount)) / .15));
         float accepted = yaw;
         for (int step = 1; step <= steps; step++) {
             float angle = yaw + amount * step / steps;

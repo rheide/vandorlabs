@@ -48,7 +48,7 @@ public final class NativeVehicleVisual {
             row.putLong("Offset", source.pos.asLong());
             row.putInt("State", Block.getId(source.state));
             if (source.hasTile()) {
-                var appearance = NativeSnapshotAppearance.project(source.state, source.tile(), registries);
+                var appearance = projectCell(source.state, source.tile(), registries);
                 if (appearance.sizeInBytes() > MAX_TILE_BYTES) throw new IllegalArgumentException("Vehicle appearance tile limit");
                 row.put("Appearance", appearance);
             }
@@ -82,12 +82,17 @@ public final class NativeVehicleVisual {
             var appearance = row.getCompound("Appearance");
             if (!bounded(at) || !seen.add(at) || state.isAir() || tile != state.hasBlockEntity()
                     || appearance.sizeInBytes() > MAX_TILE_BYTES
-                    || !NativeSnapshotAppearance.canonical(state, appearance, registries)) {
+                    || !projectCell(state, appearance, registries).equals(appearance)) {
                 throw new IllegalArgumentException("Unsupported vehicle appearance cell");
             }
             cells.add(new Cell(at, state, appearance));
         }
         return new NativeVehicleVisual(cells);
+    }
+
+    private static CompoundTag projectCell(BlockState state, CompoundTag raw, HolderLookup.Provider registries) {
+        return NativeVehicleArms.block(state) ? NativeVehicleArms.appearance(raw)
+            : NativeSnapshotAppearance.project(state, raw, registries);
     }
 
     static boolean bounded(BlockPos pos) {

@@ -1,6 +1,8 @@
 package com.vandorlabs.neoforge.vehicle;
 
 import com.vandorlabs.drives.MaxwellEngine;
+import com.vandorlabs.gear.core.ArmResource;
+import com.vandorlabs.neoforge.gear.NativeGearResourceTransfer;
 import com.vandorlabs.neoforge.builders.*;
 import com.vandorlabs.neoforge.ports.*;
 import com.vandorlabs.neoforge.redstone.NativeRedstoneChannels;
@@ -37,12 +39,15 @@ final class NativeVehicleResources {
     private final Map<BlockPos, Integer> growth = new HashMap<>();
     private final Map<BlockPos, NativeRawCell> states = new HashMap<>();
     private final List<Route> routes = new ArrayList<>();
+    private final Map<BlockPos, List<Endpoint>> mounted;
+    private final List<ArmLink> armLinks = new ArrayList<>();
+    private final NativeVehicleArms arms;
     private final Map<BlockPos, BufferSignal> outputPositions = new HashMap<>();
     private final Map<Integer, List<BufferSignal>> outputChannels = new HashMap<>();
     private final List<NativeVehicleObservers.Receiver> observers;
     private final NativeVehiclePropulsion propulsion;
     private NativeTransferSnapshot savedInput, saved;
-    private int next, availableBytes, extraBytes;
+    private int next, nextArm, availableBytes, extraBytes, savedArmRevision;
     private long tick = Long.MIN_VALUE, fluidMassMb;
     private boolean changed;
 
@@ -80,7 +85,16 @@ final class NativeVehicleResources {
         }
         observers = NativeVehicleObservers.build(snapshot.cells(), states);
         for (var observer : observers) add(mounted, observer.inlet, new Endpoint(states.get(observer.core), observer));
-        if (availableBytes < 0) throw new IllegalArgumentException("Vehicle snapshot has no space for dynamic Maxwell data");
+        arms = new NativeVehicleArms(states, registries);
+        availableBytes -= arms.reservedBytes();
+        if (availableBytes < 0) throw new IllegalArgumentException("Vehicle snapshot has no space for dynamic machine data");
+        for (var arm : arms.arms()) {
+            var mode = arm.gear.settings().resourceTransfer();
+            if (mode == ArmResource.DISABLED) continue;
+            var base = mounted.get(arm.cell.pos.relative(arm.gear.mount().getOpposite()));
+            if (base != null) armLinks.add(new ArmLink(arm, List.copyOf(base)));
+        }
+        this.mounted = Map.copyOf(mounted);
         for (var entry : mounted.entrySet()) {
             for (var source : entry.getValue()) for (var side : Direction.values()) {
                 if (!source.emits(side)) continue;
@@ -121,23 +135,64 @@ final class NativeVehicleResources {
         if (!(craft.level() instanceof ServerLevel level) || tick == level.getGameTime()) return;
         tick = level.getGameTime();
         for (var observer : observers) observer.sample(craft, this);
+        arms.tick(craft, this);
+        int armCount = armLinks.size(), armWork = Math.min(ROUTES_PER_TICK, armCount);
+        for (int i = 0; i < armWork; i++) {
+            relay(craft, armLinks.get((nextArm + i) % armCount), level.registryAccess());
+        }
+        if (armCount != 0) nextArm = (nextArm + (armWork == armCount ? 1 : armWork)) % armCount;
         if (routes.isEmpty()) return;
         int size = routes.size(), work = Math.min(ROUTES_PER_TICK, size);
         for (int i = 0; i < work; i++) {
             var route = routes.get((next + i) % size);
-            var source = route.source;
-            var target = route.target;
-            prepare(craft, source);
-            prepare(craft, target);
-            if (!source.active || !target.active || source.remaining == 0) continue;
-            int moved = switch (source.kind) {
-                case POWER -> power(source, target);
-                case FLUID -> fluid(source, target, level.registryAccess());
-                case MATTER -> items(source, target, level.registryAccess());
-            };
-            source.remaining -= moved;
+            transfer(craft, route.source, route.target, level.registryAccess());
         }
         next = (next + (work == size ? 1 : work)) % size;
+    }
+
+    boolean armsReadyToPark() { return arms.readyToPark(); }
+    int armRevision() { return arms.revision(); }
+    CompoundTag armPoses() { return arms.poses(); }
+    List<net.minecraft.world.phys.AABB> armCollision() { return arms.collision(); }
+
+    private void relay(NativeGroundVehicle craft, ArmLink link, HolderLookup.Provider registries) {
+        var gear = link.arm.gear;
+        var contact = NativeGearResourceTransfer.carriedEndpoint(gear);
+        if (contact == null) return;
+        var far = mounted.get(contact.cell());
+        if (far == null) return;
+        var kind = switch (gear.settings().resourceTransfer()) {
+            case POWER -> NativePortKind.POWER;
+            case FLUID -> NativePortKind.FLUID;
+            case ITEM -> NativePortKind.MATTER;
+            case DISABLED -> null;
+        };
+        boolean inward = gear.settings().resourceOut();
+        var sources = inward ? far : link.base;
+        var receivers = inward ? link.base : far;
+        var from = inward ? contact.face() : gear.mount();
+        var to = inward ? gear.mount() : contact.face();
+        for (var source : sources) {
+            if (source.kind != kind || !source.emits(from)) continue;
+            for (var target : receivers) {
+                if (source.cell.pos.equals(target.cell.pos) || target.kind != kind || !target.accepts(to)) continue;
+                if (source.config != null || target.config != null && target.config.settings().pullInputs) {
+                    transfer(craft, source, target, registries);
+                }
+            }
+        }
+    }
+
+    private void transfer(NativeGroundVehicle craft, Endpoint source, Endpoint target, HolderLookup.Provider registries) {
+        prepare(craft, source);
+        prepare(craft, target);
+        if (!source.active || !target.active || source.remaining == 0) return;
+        int moved = switch (source.kind) {
+            case POWER -> power(source, target);
+            case FLUID -> fluid(source, target, registries);
+            case MATTER -> items(source, target, registries);
+        };
+        source.remaining -= moved;
     }
 
     private void prepare(NativeGroundVehicle craft, Endpoint endpoint) {
@@ -189,10 +244,11 @@ final class NativeVehicleResources {
     }
 
     NativeTransferSnapshot snapshot(NativeTransferSnapshot withPropulsion, HolderLookup.Provider registries) {
-        if (updates.isEmpty()) return withPropulsion;
-        if (!changed && savedInput == withPropulsion) return saved;
+        if (updates.isEmpty() && arms.revision() == 0) return withPropulsion;
+        if (!changed && savedInput == withPropulsion && savedArmRevision == arms.revision()) return saved;
         var cells = new ArrayList<NativeRawCell>(withPropulsion.cells().size());
-        for (var cell : withPropulsion.cells()) cells.add(updates.getOrDefault(cell.pos, cell));
+        for (var cell : withPropulsion.cells()) cells.add(arms.updated(updates.getOrDefault(cell.pos, cell), registries));
+        savedArmRevision = arms.revision();
         saved = new NativeTransferSnapshot(cells, NativeVehicleStructure.LIMITS);
         savedInput = withPropulsion;
         changed = false;
@@ -361,6 +417,7 @@ final class NativeVehicleResources {
     }
 
     private record Route(Endpoint source, Endpoint target) {}
+    private record ArmLink(NativeVehicleArms.Arm arm, List<Endpoint> base) {}
 
     private record BufferSignal(Endpoint source, ChannelList channels, int range, boolean local) {
         static BufferSignal read(Endpoint source, NativeBufferBlock buffer) {

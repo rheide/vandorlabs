@@ -7,6 +7,7 @@ import com.vandorlabs.neoforge.NativeMountedSwitchBlock;
 import com.vandorlabs.neoforge.credentials.NativeCredentialReaderBlock;
 import com.vandorlabs.neoforge.credentials.NativeCredentialReaderEntity;
 import com.vandorlabs.persistence.SaveSchema;
+import com.vandorlabs.neoforge.gear.NativeGearEntity;
 import com.vandorlabs.neoforge.landing.NativeSideWheel;
 import com.vandorlabs.neoforge.navigation.observer.*;
 import com.vandorlabs.neoforge.transfer.NativeConstructorFrame;
@@ -100,6 +101,7 @@ public final class NativeVehicleStructure {
         if (connected.size() != cells.size()) throw new IllegalArgumentException("Vehicle hull contains disconnected cells");
         NativeBuilderTransfer.validateVehicle(snapshot.cells(), registries);
         NativeVehicleObservers.build(snapshot.cells(), cells);
+        NativeVehicleArms.validate(cells);
     }
 
     static boolean pilot(BlockState state) {
@@ -185,7 +187,7 @@ public final class NativeVehicleStructure {
             || block instanceof NativeSeatBlock seat && seat.kind == NativeSeatKind.PILOT
             || block instanceof com.vandorlabs.neoforge.ports.NativePortBlock
             || block instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionBlock
-            || NativeVehicleStatus.supports(state)
+            || NativeVehicleArms.block(state) || NativeVehicleStatus.supports(state)
             || identity.getNamespace().equals("vandorlabs") && Set.of("battery_block", "hexagonal_fuel_tank", "programmable_storage").contains(identity.getPath())
             || programmable(state);
         if ((!plainVanilla && !nativeBlock) || state.isAir() || !state.getFluidState().isEmpty()
@@ -206,11 +208,15 @@ public final class NativeVehicleStructure {
     private static boolean supportsFactory(BlockEntity tile) {
         // Formed parts and configured readers become valid only after their exact saved fields load.
         return tile instanceof NativeBuilderPartEntity || tile instanceof NativeObserverPartEntity
-            || tile instanceof NativeCredentialReaderEntity || supportsTile(tile);
+            || tile instanceof NativeCredentialReaderEntity || tile instanceof NativeGearEntity || supportsTile(tile);
     }
 
     static boolean supportsTile(BlockEntity tile) {
         if (tile instanceof NativeVehicleControllerEntity) return true;
+        if (tile instanceof NativeGearEntity gear) {
+            return NativeVehicleArms.block(gear.getBlockState()) && !gear.inert() && gear.owner() != null
+                && gear.payload() == null && !gear.hasStoredSections();
+        }
         if (tile instanceof com.vandorlabs.neoforge.propulsion.NativePropulsionEntity propulsion) return !propulsion.inert();
         if (tile instanceof com.vandorlabs.neoforge.screen.NativeScreenEntity screen) {
             return NativeVehicleStatus.supports(screen.getBlockState()) && !screen.inert();
@@ -275,6 +281,7 @@ public final class NativeVehicleStructure {
                     && cell.state.getValue(NativeMountedSwitchBlock.ROTATION) != state.getValue(NativeMountedSwitchBlock.ROTATION)) {
                     tile.putInt(SaveSchema.Redstone.MOUNT_ROTATION, state.getValue(NativeMountedSwitchBlock.ROTATION));
                 }
+                if (rotation != Rotation.NONE && NativeVehicleArms.block(cell.state)) NativeVehicleArms.rotate(tile, rotation);
                 if (rotation != Rotation.NONE && tile.contains("PortFaces", Tag.TAG_INT_ARRAY)) {
                     var old = tile.getIntArray("PortFaces");
                     if (old.length != 6) throw new IllegalArgumentException("Invalid vehicle port face bank");

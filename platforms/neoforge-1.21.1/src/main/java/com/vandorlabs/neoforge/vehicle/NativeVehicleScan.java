@@ -1,5 +1,6 @@
 package com.vandorlabs.neoforge.vehicle;
 
+import com.vandorlabs.neoforge.gear.NativeGearEntity;
 import com.vandorlabs.neoforge.seating.NativeSeatBlock;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import com.vandorlabs.neoforge.transfer.NativeTransferSnapshot;
@@ -40,6 +41,9 @@ final class NativeVehicleScan {
                 facing = state.getValue(NativeSeatBlock.FACING);
             }
             var tile = world.getBlockEntity(pos);
+            if (tile instanceof NativeGearEntity gear && !gear.canCarryWithVehicle()) {
+                throw new IllegalArgumentException("Deploy and settle the independently mounted Arm at " + pos.toShortString());
+            }
             if (tile != null && !NativeVehicleStructure.supportsTile(tile)) {
                 throw new IllegalArgumentException("Unsupported or retained vehicle data at " + pos.toShortString());
             }
