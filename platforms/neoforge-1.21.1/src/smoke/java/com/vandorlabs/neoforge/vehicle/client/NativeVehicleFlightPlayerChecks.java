@@ -74,7 +74,6 @@ public final class NativeVehicleFlightPlayerChecks {
                 if (found.size() != 1 || !found.getFirst().admitted() || found.getFirst().statusPanels().size() != 1) return;
                 craft = found.getFirst();
                 if (player.getVehicle() == craft) {
-                    runwayAltitude = craft.flightAltitude();
                     stage++;
                     return;
                 }
@@ -98,6 +97,7 @@ public final class NativeVehicleFlightPlayerChecks {
                             + " target=" + at + " eye=" + player.getEyePosition() + " pose=" + craft.position());
                     return;
                 }
+                runwayAltitude = craft.flightAltitude();
                 rightClick(mc);
                 System.out.println("[vandorlabs][vehicle-flight-player] used actual mouse dispatch on carried Status");
                 stage++;
