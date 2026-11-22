@@ -1,11 +1,11 @@
 package com.vandorlabs.client;
 
-import com.vandorlabs.blocks.BlockConstructorCore;
 import com.vandorlabs.blocks.BlockAnimatedScreenSelector;
 import com.vandorlabs.blocks.BlockVandorDirectional;
 import com.vandorlabs.blocks.ModBlocks;
 import com.vandorlabs.blocks.RedstoneScreenInteractions;
 import com.vandorlabs.physics.FlightEnvelope;
+import com.vandorlabs.drives.MaxwellRuntimeChecks;
 import com.vandorlabs.render.ScreenSurface;
 import com.vandorlabs.tiles.TileEntityAnimatedScreenSelector;
 import com.vandorlabs.tiles.TileEntityConstructor;
@@ -25,8 +25,6 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
-import net.minecraftforge.fluids.Fluid;
-import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 
 import java.io.File;
@@ -39,10 +37,10 @@ final class VehicleFlightClientChecks {
     private static final BlockPos ORIGIN=new BlockPos(184,124,96);
     private static final BlockPos SEAT=new BlockPos(2,1,3);
     private static final BlockPos SCREEN=new BlockPos(2,2,1);
-    private static final BlockPos DRIVE=new BlockPos(0,1,2);
+    private static final BlockPos DRIVE=new BlockPos(5,1,1);
     private static UUID id;
     private static int stage,frame,total;
-    private static double runwayY,climbY,turnYaw,turnX,turnZ;
+    private static double runwayY,climbY,turnYaw,turnX,turnZ,priorPitch;
 
     static void begin(Minecraft mc)throws Exception {
         mc.getIntegratedServer().addScheduledTask(()->spawn(mc)).get();
@@ -77,21 +75,22 @@ final class VehicleFlightClientChecks {
         Block wheel=Block.getBlockFromName("vandorlabs:wheel_medium");
         for(BlockPos pos:new BlockPos[]{new BlockPos(1,0,0),new BlockPos(3,0,0),new BlockPos(1,0,4),new BlockPos(3,0,4)})
             cells.add(new VehicleStructure.Cell(pos,wheel.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.WEST),null));
-        Block drive=Block.getBlockFromName("vandorlabs:longburn_drive_core");
-        TileEntityConstructor engine=new TileEntityConstructor();engine.setPos(DRIVE);
-        NBTTagCompound data=engine.writeToNBT(new NBTTagCompound());
-        Fluid fuel=null;
-        for(String name:new String[]{"refined_fuel","ethanol","fuelium","rocketfuel","fuelgc"})if((fuel=FluidRegistry.getFluid(name))!=null)break;
-        if(fuel==null){
-            net.minecraft.util.ResourceLocation water=new net.minecraft.util.ResourceLocation("minecraft:blocks/water_still");
-            FluidRegistry.registerFluid(new Fluid("ethanol",water,water));
-            fuel=FluidRegistry.getFluid("ethanol");
+        BlockPos staged=ORIGIN.add(24,8,0);
+        world.getChunkFromBlockCoords(staged);
+        TileEntityConstructor engine=MaxwellRuntimeChecks.assemble(world,staged,3,EnumFacing.NORTH,0,0);
+        need(MaxwellRuntimeChecks.inlet(engine,engine.facing()).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),400),true)==400,"fill the assembled engine's inlet");
+        cells.add(new VehicleStructure.Cell(new BlockPos(4,1,1),Blocks.STONE.getDefaultState(),null));
+        BlockPos offset=DRIVE.subtract(staged);
+        for(BlockPos at:BlockPos.getAllInBox(staged,staged.add(2,2,3))){
+            net.minecraft.tileentity.TileEntity member=world.getTileEntity(at);
+            NBTTagCompound data=VehicleTileData.translated(member.writeToNBT(new NBTTagCompound()),offset);
+            cells.add(new VehicleStructure.Cell(at.add(offset),world.getBlockState(at),data));
         }
-        data.setTag("MaxwellFuel",new FluidStack(fuel,400).writeToNBT(new NBTTagCompound()));
-        cells.add(new VehicleStructure.Cell(DRIVE,drive.getDefaultState().withProperty(BlockConstructorCore.FORMED,true),data));
         EntityGroundVehicle craft=new EntityGroundVehicle(world);
         craft.install(new VehicleStructure(cells,SEAT,EnumFacing.NORTH,4));
         craft.setPosition(ORIGIN.getX(),ORIGIN.getY()+.6,ORIGIN.getZ());
+        TileEntityConstructor carried=(TileEntityConstructor)craft.view.getTileEntity(DRIVE);
+        need(carried.formed()&&carried.maxwellFuel()==400&&carried.maxwellThrustLevel(true)==15,"captured formed drive keeps available thrust and fuel");
         need(world.spawnEntity(craft),"spawn craft");
         id=craft.getUniqueID();
         player.connection.setPlayerLocation(ORIGIN.getX()+2.5,ORIGIN.getY()+2,ORIGIN.getZ()+5,180,0);
@@ -125,7 +124,12 @@ final class VehicleFlightClientChecks {
         if(craft==null||craft.structure==null||mc.player.getRidingEntity()!=craft)return false;
         frame++;
         if(stage==0&&frame>=15){
-            need(craft.flightReadout().canFly()&&craft.flightReadout().drives==1,"networked fuel, drive and weight permit takeoff");
+            VehicleFlightReadout readout=craft.flightReadout();
+            if(readout.drives==0&&frame<60)return false;
+            if(!readout.canFly()||readout.drives!=1){
+                VehicleFlightReadout actual=mc.getIntegratedServer().callFromMainThread(()->server(mc).flightReadout()).get();
+                need(false,"networked drive, fuel and weight permit takeoff, client "+measurements(readout)+" server "+measurements(actual));
+            }
             runwayY=craft.posY;
             aim(mc,craft,3);next();return false;
         }
@@ -158,12 +162,13 @@ final class VehicleFlightClientChecks {
         if(stage==5&&frame>=9){
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindRight.getKeyCode(),false);
             need(craft.rotationYaw>turnYaw+4&&Math.hypot(craft.posX-turnX,craft.posZ-turnZ)>2,"D rotates while forward travel continues");
+            priorPitch=craft.flightPitch();
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),true);
             next();return false;
         }
         if(stage==6&&frame>=7){
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindForward.getKeyCode(),false);
-            need(craft.flightPitch()<7&&craft.flying(),"W lowers the nose");
+            need(craft.flightPitch()<priorPitch-4&&craft.flying(),"W lowers the nose");
             javax.imageio.ImageIO.write(net.minecraft.util.ScreenShotHelper.createScreenshot(mc.displayWidth,mc.displayHeight,mc.getFramebuffer()),
                     "png",new File(output,"shot_vehicle_status_maxwell_flight.png"));
             mc.getIntegratedServer().addScheduledTask(()->{
@@ -184,6 +189,9 @@ final class VehicleFlightClientChecks {
         return false;
     }
 
+    private static String measurements(VehicleFlightReadout readout){
+        return "drives="+readout.drives+" fuel="+readout.fuel+" mass="+readout.mass+" thrust="+readout.thrust;
+    }
     private static void next(){stage++;frame=0;}
     private static void need(boolean yes,String message){if(!yes)throw new IllegalStateException("Vehicle Flight "+message+" stage="+stage+" frame="+frame);}
     private VehicleFlightClientChecks(){}

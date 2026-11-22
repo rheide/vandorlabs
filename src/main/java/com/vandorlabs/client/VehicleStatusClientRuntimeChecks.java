@@ -42,6 +42,7 @@ final class VehicleStatusClientRuntimeChecks {
         mc.gameSettings.thirdPersonView=0;mc.gameSettings.hideGUI=false;
         // The elevated fixture camera approaches the cloud layer; keep pixel checks unobscured.
         mc.gameSettings.clouds=0;
+        if("1".equals(System.getenv("VANDOR_LABS_TEST_MAXWELL_FLIGHT_ONLY"))){stage=18;VehicleFlightClientChecks.begin(mc);return;}
         mc.getIntegratedServer().addScheduledTask(()->{
             WorldServer w=world(mc);EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.setHeldItem(EnumHand.MAIN_HAND,net.minecraft.item.ItemStack.EMPTY);p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();
             for(BlockPos at:BlockPos.getAllInBox(BASE.add(-4,-1,-4),BASE.add(8,6,7)))w.setBlockToAir(at);
@@ -49,7 +50,10 @@ final class VehicleStatusClientRuntimeChecks {
             w.setBlockState(BASE.add(1,-1,0),ModBlocks.WAYPOINT.getDefaultState(),3);((TileEntityWaypoint)w.getTileEntity(BASE.add(1,-1,0))).autoDepart=false;
             w.setBlockState(BASE.add(SCREEN),ModBlocks.ANIMATED_SCREEN_SELECTOR.getDefaultState(),3);((TileEntityAnimatedScreenSelector)w.getTileEntity(BASE.add(SCREEN))).setSurfaceTexture(0,TileEntityAnimatedScreenSelector.VEHICLE_SURFACE);
             w.setBlockState(BASE.add(INPUT),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),3);
-            w.setBlockState(BASE.add(CONTROL),ModBlocks.AUTOPILOT.getDefaultState(),3);p.setPositionAndUpdate(BASE.getX()+.5,BASE.getY()+.5,BASE.getZ()-2);
+            net.minecraft.block.Block rack=net.minecraft.block.Block.getBlockFromName("vandorlabs:module_rack");
+            w.setBlockState(BASE.add(CONTROL),rack.getDefaultState(),3);
+            require(((TileEntityModuleRack)w.getTileEntity(BASE.add(CONTROL))).insertModule(0,new net.minecraft.item.ItemStack(com.vandorlabs.items.ModItems.AUTOPILOT_MODULE),false),"parked Navigation module installed");
+            p.setPositionAndUpdate(BASE.getX()+.5,BASE.getY()+.5,BASE.getZ()-2);
         }).get();
     }
     private static void spawn(Minecraft mc){
@@ -80,6 +84,7 @@ final class VehicleStatusClientRuntimeChecks {
         Vec3d delta=at.subtract(eye);float yaw=(float)Math.toDegrees(Math.atan2(-delta.x,delta.z)),pitch=(float)-Math.toDegrees(Math.atan2(delta.y,Math.hypot(delta.x,delta.z)));
         expectedEye=eye;
         if(!local.equals(SCREEN))mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.dismountRidingEntity();p.setSneaking(false);p.capabilities.allowFlying=true;p.capabilities.isFlying=true;p.sendPlayerAbilities();p.motionX=p.motionY=p.motionZ=0;p.connection.setPlayerLocation(eye.x,eye.y-p.getEyeHeight(),eye.z,yaw,pitch);require(world(mc).getCollisionBoxes(p,p.getEntityBoundingBox().grow(-.01)).isEmpty(),"screen camera body is clear of terrain and hull at "+eye);}).get();
+        else if(!vehicle)mc.getIntegratedServer().addScheduledTask(()->{EntityPlayerMP p=player(mc);p.setPositionAndRotation(eye.x,eye.y-p.getEyeHeight(),eye.z,yaw,pitch);require(VehicleStatus.hasController(world(mc),BASE.add(SCREEN))&&VehicleStatus.find(world(mc),BASE.add(SCREEN))!=null,"server locates parked Status controllers");}).get();
         mc.player.setSneaking(false);mc.player.capabilities.allowFlying=true;mc.player.capabilities.isFlying=true;mc.player.motionX=mc.player.motionY=mc.player.motionZ=0;mc.player.setPositionAndRotation(eye.x,eye.y-mc.player.getEyeHeight(),eye.z,yaw,pitch);mc.player.prevRotationYaw=mc.player.rotationYawHead=mc.player.prevRotationYawHead=yaw;mc.player.prevRotationPitch=pitch;
         mc.player.connection.sendPacket(new net.minecraft.network.play.client.CPacketPlayer.PositionRotation(mc.player.posX,mc.player.posY,mc.player.posZ,yaw,pitch,false));
         System.out.println("[vandorlabs][reprolab] status-camera local="+local+" expected-eye="+eye+" yaw="+yaw+" pitch="+pitch+" normal="+normal);
