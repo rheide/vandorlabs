@@ -24,7 +24,11 @@ public final class CruiseSky {
     private static ResourceLocation location;
 
     public static boolean ready(){
-        return terrain!=null && owner.cruise.active() &&
+        return owner!=null && owner.cruise.active() && buffered();
+    }
+
+    public static boolean buffered(){
+        return terrain!=null &&
                 Math.abs(terrain.centerX-owner.cruise.x())<terrain.step*MessageCruiseTerrain.SIZE/4 &&
                 Math.abs(terrain.centerZ-owner.cruise.z())<terrain.step*MessageCruiseTerrain.SIZE/4;
     }

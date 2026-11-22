@@ -12,7 +12,7 @@ Use Refined Fuel, Ethanol, Fuelium or Rocket Fuel. Right-click the drive to choo
 
 1. Assemble a craft with a Vehicle Controller, Pilot Seat, Vehicle Status screen and at least one fueled Maxwell Drive. Open the Controller's **Flight** tab to compare the effective weight to the weight the available thrust can lift. Antigravity Plates and Repulsor Arrays reduce effective weight.
 2. Sit in the Pilot Seat and select **Flight** on Vehicle Status. Park and Taxi occupy the top row, Hover and Flight the bottom row. Gray buttons show modes the craft cannot currently select. From Hover, the craft starts accelerating forward. From Taxi, use a clear runway to build takeoff speed, then press **S** to lift the nose.
-3. Use **A/D** to turn and **W/S** to pitch the nose down or up. Below Y=256 the target flight speed is 1.5 times Hover sprint speed. The Vehicle Status screen shows speed, altitude and combined fuel.
+3. Use **A/D** to bank up to 32 degrees and turn. Release the key to roll level. **W/S** lower and raise the nose. Above a 45-degree climb, the aircraft accelerates more slowly and tends to lower its nose toward 45 degrees. Below Y=256 the target flight speed is 1.5 times Hover sprint speed. The Vehicle Status screen shows speed, altitude and combined fuel.
 4. A collision or a loss of thrust starts recovery. A craft equipped for Hover can level out and hold altitude. A Maxwell-only aircraft descends toward the ground.
 
 For recovery below the cruise band, Creative players holding a Configurizer can select **Emergency Park** on Vehicle Status. It uses the Controller’s Safe Park search to find space for the craft.
@@ -25,7 +25,11 @@ Open the Controller’s **Flight** tab for projected maximum speed and altitude 
 
 ## Overworld cruise
 
-Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The instruments show altitude during cruise and omit ground clearance.
+Above Y=256 the rider travels over a seed-colored view of the Overworld. The route uses virtual X/Z coordinates. The departure area stays loaded while occupied. Descent loads terrain at the destination. The seed view begins preparing at Y=200 and refines to a 128 × 128 image. Instruments show altitude during cruise and omit ground clearance. Descend to Y=256 or below to select Taxi or Hover manually.
+
+With JourneyMap 5.5.5 installed, the minimap, the player-centered fullscreen map and the in-world waypoint beacons follow the geographic route. Previously explored terrain is available from JourneyMap’s own cache. Unexplored terrain can appear blank on the map.
+
+A vanilla or JourneyMap teleport releases the rider. When the last pilot teleports away, the aircraft stops and lands below its current geographic position. This loads the aircraft’s landing site as well as the player’s teleport destination.
 
 ![Seed-colored coastlines viewed from a Pilot Seat above the Overworld](../images/gallery/maxwell-overworld-cruise.png)
 

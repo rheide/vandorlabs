@@ -81,6 +81,8 @@ public final class CruiseRuntimeChecks {
         require(Math.abs(craft.posX-startX)<.001&&destination-startX==4096,"horizontal route keeps physical anchor");
         require(craft.cruise.altitude()>1200&&Double.isInfinite(craft.groundClearance()),"logical altitude without a clearance query");
         for(int i=512;i<=4096;i+=256)require(!craft.world.isBlockLoaded(new BlockPos(startX+i,64,craft.posZ)),"cruise loaded route at "+i);
+        int modes=VehicleStatus.availableModes(craft.view,BlockPos.ORIGIN,(EntityPlayerMP)craft.getControllingPassenger());
+        require((modes & 6)==0 && (modes & 8)!=0,"only Flight remains selectable at high altitude");
         require(Math.abs(com.vandorlabs.navigation.NavigationVehicle.center(craft).x-destination)<3,"navigation follows geographic route");
         NBTTagCompound saved=craft.writeToNBT(new NBTTagCompound());
         EntityGroundVehicle loaded=new EntityGroundVehicle(craft.world);
@@ -122,6 +124,13 @@ public final class CruiseRuntimeChecks {
         }else if(stage==0){
             work=mc.getIntegratedServer().addScheduledTask(()->place(mc));stage=1;
         }else if(stage==1&&ticks>10&&mc.player.getRidingEntity() instanceof EntityGroundVehicle){
+            work=mc.getIntegratedServer().addScheduledTask(()->{
+                NBTTagCompound flight=new NBTTagCompound();
+                flight.setByte("MaxwellFlightPhase",(byte)3);
+                craft.readFlightMode(flight);
+            });stage=9;
+        }else if(stage==9 && CruiseSky.buffered()){
+            require(!CruiseSky.ready(),"preview arrived before crossing Y=256");
             work=mc.getIntegratedServer().addScheduledTask(CruiseRuntimeChecks::enter);stage=2;
         }else if(stage==2&&mc.player.getRidingEntity() instanceof EntityGroundVehicle&&CruiseSky.ready()){
             mc.gameSettings.thirdPersonView=0;
