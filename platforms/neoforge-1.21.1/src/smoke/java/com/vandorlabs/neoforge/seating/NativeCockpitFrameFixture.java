@@ -76,7 +76,7 @@ public final class NativeCockpitFrameFixture {
             var row=controls.controls(6).rows().getFirst();
             check(display.artwork()==NativeCockpitSurfaceEdit.BLACK&&display.channels().contains(DISPLAY_CHANNEL)&&controls.active(2)
                 &&controls.settings(6).artwork()==NativeCockpitSurfaceEdit.REDSTONE&&row.label().equals("Sensors")
-                &&row.channels().contains(EXTRA_CHANNEL)&&controls.controls(0).rows().size()==3&&controls.controls(1).rows().size()==6,
+                &&row.status()&&!controls.usesRow(6,0)&&controls.statusRow(6,0)&&row.channels().contains(EXTRA_CHANNEL)&&controls.controls(0).rows().size()==3&&controls.controls(1).rows().size()==6,
                 "real UI keeps seven-surface artwork, activation and rows independent");
             var saved=owner.saveWithoutMetadata(level.registryAccess());
             var copy=new NativeChairEntity(ROOT,owner.getBlockState());

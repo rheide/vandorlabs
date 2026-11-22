@@ -153,6 +153,8 @@ public final class NativeCockpitFrameClient {
                 editor.action(590,1);
                 editor.rowLabel(0).setValue("Sensors");
                 editor.rowChannels(0).setValue(Integer.toString(EXTRA_CHANNEL));
+                control(editor,700,1);
+                check(editor.button(700).getMessage().getString().equals("Channel status"),"reverse cycle reaches the read-only meter");
                 editor.action(20,1);
                 select(game,3);
                 wait=ticks;stage++;
