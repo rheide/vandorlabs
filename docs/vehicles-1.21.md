@@ -63,7 +63,8 @@ independently. The Flight tab totals their current thrust and fuel. Reducing
 thrust can lower the ceiling even with fuel left on board.
 
 Place native Power, Fluid and Matter Ports with their faces pointing between supported
-owners. A carried Survey Dish needs an RF source. The Maxwell inlet accepts compatible
+owners. A carried Survey Dish needs an RF source. In high cruise, nearby Navigation
+Tables receive the powered observer at its geographic position along the route. The Maxwell inlet accepts compatible
 fuel from an onboard tank. A settled onboard Arm can pass RF, fluids or items
 between its base and tip. Configure its resource and direction before assembly,
 then use its redstone channel to move it. Transfer resumes at a connected endpoint.

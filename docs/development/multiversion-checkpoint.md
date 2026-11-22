@@ -27,9 +27,9 @@ Assembly Press makes Programmable Plates for the armor recipes.
 
 ## Open non-Vehicle work
 
-- Cockpit. Port the remaining monitor, keyboard and armrest settings and
-  artwork, the physical throttles, the sliding seat with its rear clearance,
-  and import of the older multipart Cockpit footprint.
+- Cockpit. The stationary unit supports seven configurable surfaces and one or
+  two physical throttles. The sliding seat, its rear clearance and importing
+  the older multipart footprint remain open.
 - Turntable. The controller is still opt-in. Capture interaction, broader
   payload types and orientations, more rider profiles, and import of active
   Forge Turntable snapshots remain open.
