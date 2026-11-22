@@ -3,6 +3,7 @@ package com.vandorlabs.neoforge.vehicle.client;
 import com.vandorlabs.neoforge.vehicle.NativeGroundVehicle;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleFlightFixture;
 import com.vandorlabs.neoforge.vehicle.NativeVehicleStatus;
+import com.vandorlabs.neoforge.vehicle.NativeVehicleScreenRowsFixture;
 import com.vandorlabs.physics.FlightEnvelope;
 import net.minecraft.client.CameraType;
 import net.minecraft.client.Minecraft;
@@ -22,7 +23,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 public final class NativeVehicleFlightPlayerChecks {
     private static int stage, ticks, cameraTicks;
     private static NativeGroundVehicle craft;
-    private static boolean captured, becameHigh, lifted;
+    private static boolean captured, becameHigh, lifted, assembled;
     private static final java.lang.reflect.Method USE_ITEM = useItem();
 
     private static java.lang.reflect.Method useItem() {
@@ -36,8 +37,12 @@ public final class NativeVehicleFlightPlayerChecks {
     }
 
     @SubscribeEvent public static void chat(net.neoforged.neoforge.client.event.ClientChatReceivedEvent.System event) {
+        var message = event.getMessage().getString();
+        if ((NativeVehicleFlightFixture.enabled() || NativeVehicleScreenRowsFixture.enabled()) && message.equals("Vehicle assembled")) {
+            assembled = true;
+        }
         if (NativeVehicleFlightFixture.enabled()) {
-            System.out.println("[vandorlabs][vehicle-flight-player] stage=" + stage + " message=" + event.getMessage().getString());
+            System.out.println("[vandorlabs][vehicle-flight-player] stage=" + stage + " message=" + message);
         }
     }
 
@@ -63,7 +68,7 @@ public final class NativeVehicleFlightPlayerChecks {
         if (stage >= 4 && player.getVehicle() instanceof NativeGroundVehicle active && active.getUUID().equals(craft.getUUID())) craft = active;
         switch (stage) {
             case 0 -> {
-                if (mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
+                if (!assembled || mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
                 var found = mc.level.getEntitiesOfClass(NativeGroundVehicle.class, new AABB(NativeVehicleFlightFixture.ROOT).inflate(12));
                 if (found.size() != 1 || !found.getFirst().admitted() || found.getFirst().statusPanels().size() != 1) return;
                 craft = found.getFirst();
@@ -167,6 +172,8 @@ public final class NativeVehicleFlightPlayerChecks {
             default -> {}
         }
     }
+
+    static boolean assemblyConfirmed() { return assembled; }
 
     static void rightClick(Minecraft mc) {
         try {

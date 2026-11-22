@@ -32,7 +32,8 @@ public final class NativeVehicleScreenRowsPlayerChecks {
                 + " rider=" + player.getVehicle() + " held=" + player.getMainHandItem() + " slot=" + player.getInventory().selected);
         switch (stage) {
             case 0 -> {
-                if (mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
+                if (!NativeVehicleFlightPlayerChecks.assemblyConfirmed()
+                        || mc.gameMode.getPlayerMode() != GameType.SURVIVAL || !player.getMainHandItem().isEmpty()) return;
                 var found = mc.level.getEntitiesOfClass(NativeGroundVehicle.class, new AABB(NativeVehicleScreenRowsFixture.ROOT).inflate(7));
                 if (found.size() != 1 || !found.getFirst().admitted()) return;
                 craft = found.getFirst();
