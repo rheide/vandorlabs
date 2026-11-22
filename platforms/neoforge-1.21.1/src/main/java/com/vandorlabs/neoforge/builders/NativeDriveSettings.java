@@ -21,6 +21,16 @@ public record NativeDriveSettings(boolean redstone, boolean inverted, boolean le
         return new NativeDriveSettings(false, false, false, exhaust ? 1 : 0, 8, -2, -2, true, 1);
     }
 
+    public static NativeDriveSettings maxwell(boolean redstone, boolean inverted, boolean analog) {
+        return new NativeDriveSettings(redstone, inverted, analog, 0, 8, -2, -2, true, 1);
+    }
+
+    public static NativeDriveSettings readMaxwell(CompoundTag owner) {
+        if (owner.contains("Drive") && !owner.contains("Drive", Tag.TAG_COMPOUND))
+            throw new IllegalArgumentException("Invalid Maxwell Drive controls");
+        return owner.contains("Drive") ? read(owner.getCompound("Drive"), true) : defaults(false);
+    }
+
     public static boolean material(int choice) {
         if (choice == -2 || choice == -1) return true;
         if (choice < 0 || !ModernFinishCatalog.validChoice(choice)) return false;

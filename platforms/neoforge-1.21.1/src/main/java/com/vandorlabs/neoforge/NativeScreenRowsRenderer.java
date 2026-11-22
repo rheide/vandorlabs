@@ -13,11 +13,11 @@ import org.joml.Matrix4fc;
 /** Prepared standalone row canvas. Cached font geometry contains display choices, never channel banks or hosts. */
 public final class NativeScreenRowsRenderer implements NativeScreenSurfaceConsumer {
     private static final long TEXT_BUDGET=4L*1024*1024;
-    private record Choice(String label,boolean slider,boolean pulse){}
+    private record Choice(String label,boolean slider,boolean pulse,boolean status){}
     private record Key(String title,List<Choice> rows,int height,int active,int clip){}
     private static final class Selector {
         final String title;final List<Choice> rows;final int bytes;Key last;
-        Selector(NativeScreenControls controls){title=controls.title();var choices=new ArrayList<Choice>();long size=512L+title.length()*2L;for(var row:controls.rows()){choices.add(new Choice(row.label(),row.slider(),row.pulse()));size+=96L+row.label().length()*2L;}rows=List.copyOf(choices);bytes=(int)Math.min(Integer.MAX_VALUE,size);}
+        Selector(NativeScreenControls controls){title=controls.title();var choices=new ArrayList<Choice>();long size=512L+title.length()*2L;for(var row:controls.rows()){choices.add(new Choice(row.label(),row.slider(),row.pulse(),row.status()));size+=96L+row.label().length()*2L;}rows=List.copyOf(choices);bytes=(int)Math.min(Integer.MAX_VALUE,size);}
         Key key(int height,int active,int clip){if(last==null||last.height!=height||last.active!=active||last.clip!=clip)last=new Key(title,rows,height,active,clip);return last;}
     }
     private record TextMesh(NativeOverlayCanvas.Mesh mesh,long bytes){}

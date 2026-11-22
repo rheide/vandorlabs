@@ -16,6 +16,7 @@ public final class CubeConfiguration {
     public static boolean open(Player player,Level level,BlockPos pos){
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.appliances.NativeApplianceEntity)return com.vandorlabs.neoforge.appliances.NativeApplianceBindings.open(player,level,pos);
         if(com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.ownerAt(level,pos)!=null)return com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.open(player,level,pos);
+        if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.vehicle.NativeVehicleControllerEntity)return com.vandorlabs.neoforge.vehicle.NativeVehicleBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.copier.NativeCopyControllerEntity)return com.vandorlabs.neoforge.copier.NativeCopyBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.ramp.NativeRampEntity)return com.vandorlabs.neoforge.ramp.NativeRampBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.gear.NativeGearEntity)return com.vandorlabs.neoforge.gear.NativeGearBindings.open(player,level,pos);
@@ -24,6 +25,8 @@ public final class CubeConfiguration {
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.seating.NativeChairEntity)return com.vandorlabs.neoforge.seating.NativeSeatBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.plate.NativePlateEntity)return com.vandorlabs.neoforge.plate.NativePlateBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.reservoir.NativeBufferEntity)return com.vandorlabs.neoforge.reservoir.NativeBufferBindings.open(player,level,pos);
+        if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.coupler.NativeCouplerEntity)
+            return com.vandorlabs.neoforge.coupler.NativeCouplerBindings.open(player,level,pos);
         if(!NativeConfigurationAccess.canEdit(player,level,pos)||!(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity))return false;
         if(level.getBlockEntity(pos) instanceof NativeTriggerBlockEntity){
             if(!level.isClientSide&&player instanceof ServerPlayer serverPlayer)

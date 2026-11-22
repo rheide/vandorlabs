@@ -141,6 +141,33 @@ public class NativeGearEntity extends BlockEntity implements NativeChannelMember
         return initialized&&controller()&&canTransferResources()&&angleAdjustment==null
                 &&progress==(target?1:0)&&(payload==null||payload.materialized())&&!NativeGearJournal.busy(this);
     }
+    /** Capture only a complete, independently supported native column with no second block owner. */
+    public boolean canCarryWithVehicle() {
+        var root = controllerEntity();
+        return root != null && !root.settings.join() && root.columns.equals(List.of(BlockPos.ZERO))
+            && !root.settings.pushBlocks() && !root.settings.carryLoad() && root.payload == null
+            && !root.hasStoredSections() && !root.ownsCaptured() && root.progress == 1 && root.target
+            && root.resourceEndpointAvailable() && !root.blocked && !inert
+            && !root.rebuild && (root.settings.trigger() == 0 || root.signalKnown);
+    }
+
+    /** Updates only the detached carried pose. This instance has no physical-world authority. */
+    public void carriedPose(double phase, boolean deployed, boolean retracting, boolean powered, boolean hit) {
+        if (getLevel() != null || !controller() || !canTransferResources() || !Double.isFinite(phase) || phase < 0 || phase > 1) {
+            throw new IllegalStateException("Invalid detached Vehicle arm pose");
+        }
+        progress = phase;
+        target = deployed;
+        retractionStroke = retracting;
+        signalKnown = true;
+        lastSignal = powered;
+        blocked = hit;
+        error = hit ? "Motion blocked; clear the arm stroke" : "";
+        if (phase == 0 || phase == 1) lastEndpoint = phase;
+        boxesPhase = interactionBoxPhase = Double.NaN;
+        publish();
+    }
+
     NativeGearResourceTransfer resourceConnection(){
         if(resourceConnection==null)resourceConnection=new NativeGearResourceTransfer(this);
         return resourceConnection;
@@ -230,6 +257,14 @@ if(shape)clearInteractionHistory();if(next.footFacing()!=prior.footFacing())foot
         tile.progress=next;if(next==0||next==1)tile.lastEndpoint=next;tile.finishStartAdjustment();tile.sync();}
     private static long packed(BlockPos pos){return ((long)pos.getX()&67108863L)<<38|((long)pos.getY()&4095L)<<26|((long)pos.getZ()&67108863L);}
     private static BlockPos unpack(long value){return new BlockPos((int)(value>>38),(int)(value<<26>>52),(int)(value<<38>>38));}
+    public static BlockPos savedOwnerOffset(CompoundTag tag) { return unpack(tag.getLong("GearOwnerOffset")); }
+
+    public static void rotateSavedOwnerOffset(CompoundTag tag, net.minecraft.world.level.block.Rotation rotation) {
+        if (tag.contains("GearOwnerOffset", Tag.TAG_LONG)) {
+            tag.putLong("GearOwnerOffset", packed(savedOwnerOffset(tag).rotate(rotation)));
+        }
+    }
+
     private static Direction readMount(CompoundTag tag){if(!tag.contains("ArmMountDirection",Tag.TAG_STRING))return Direction.DOWN;try{return Direction.valueOf(tag.getString("ArmMountDirection").toUpperCase(Locale.ROOT));}catch(IllegalArgumentException invalid){throw new IllegalArgumentException("Unknown arm mounting face",invalid);}}
     private static void validateOwn(CompoundTag tag){if(tag.sizeInBytes()>2*1024*1024)throw new IllegalArgumentException("Arm NBT exceeds bounded host budget");for(String key:List.of("GearColumns","GearFeet","GearWheelRoots")){if(tag.contains(key)&&!tag.contains(key,Tag.TAG_LIST))throw new IllegalArgumentException("Malformed arm list "+key);if(tag.contains(key)){var list=(ListTag)tag.get(key);if(list.size()>64||!list.isEmpty()&&list.getElementType()!=Tag.TAG_INT_ARRAY)throw new IllegalArgumentException("Arm list bound/type "+key);Set<BlockPos> unique=new HashSet<>();for(var raw:list){var cell=((IntArrayTag)raw).getAsIntArray();if(cell.length!=3||Math.abs((long)cell[0])>64||Math.abs((long)cell[1])>64||Math.abs((long)cell[2])>64||!unique.add(new BlockPos(cell[0],cell[1],cell[2])))throw new IllegalArgumentException("Arm list cell bound/duplicate "+key);}}}for(String key:List.of("GearController","GearOperational","GearTargetDeployed","GearBlocked","GearSignalKnown","GearLastSignal","NativeGearInert","ArmRetractingStroke"))if(tag.contains(key)&&!tag.contains(key,Tag.TAG_BYTE))throw new IllegalArgumentException("Malformed arm boolean "+key);for(String key:List.of("GearHeight","GearRevision","NativeGearSchema"))if(tag.contains(key)&&!tag.contains(key,Tag.TAG_INT))throw new IllegalArgumentException("Malformed arm integer "+key);for(String key:List.of("ArmMountDirection","ArmFootComponentFrame","GearKind","GearMode","GearError"))if(tag.contains(key)&&(!tag.contains(key,Tag.TAG_STRING)||tag.getString(key).length()>256))throw new IllegalArgumentException("Malformed arm text "+key);for(String key:List.of("GearProgress","NativeGearLastEndpoint"))if(tag.contains(key)&&!tag.contains(key,Tag.TAG_DOUBLE))throw new IllegalArgumentException("Malformed arm phase "+key);if(tag.contains("GearOwnerOffset")&&!tag.contains("GearOwnerOffset",Tag.TAG_LONG))throw new IllegalArgumentException("Malformed arm owner offset");if(tag.contains("NativeGearStoredSections")&&!tag.contains("NativeGearStoredSections",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Malformed stored arm sections type");if(tag.contains("NativeGearPayload")&&!tag.contains("NativeGearPayload",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Malformed arm payload type");if(tag.contains("NativeGearIdentity")&&!tag.hasUUID("NativeGearIdentity"))throw new IllegalArgumentException("Malformed arm identity");}
     private static GearTopology.Assembly readAssembly(CompoundTag tag){if(!tag.getBoolean("GearController"))return null;int height=tag.getInt("GearHeight");var kind=GearTopology.FootKind.valueOf(tag.getString("GearKind"));List<GearTopology.Cell> feet=new ArrayList<>();for(var raw:tag.getList("GearFeet",Tag.TAG_INT_ARRAY)){int[] cell=((IntArrayTag)raw).getAsIntArray();if(cell.length!=3)throw new IllegalArgumentException("Invalid arm foot offset");feet.add(new GearTopology.Cell(cell[0],cell[1],cell[2]));}var result=GearTopology.validate(height,kind,feet);if(!result.isValid())throw new IllegalArgumentException(result.error());return result.assembly();}

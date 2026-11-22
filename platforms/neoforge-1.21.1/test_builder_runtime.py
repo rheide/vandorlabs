@@ -15,12 +15,23 @@ def main():
     focus.add_argument('--gantry-only',action='store_true')
     focus.add_argument('--drives-only',action='store_true')
     focus.add_argument('--legacy-drives-only',action='store_true')
+    focus.add_argument('--maxwell-only',action='store_true')
     args=parser.parse_args()
     out=Path(artifact_directory(prefix='builder-runtime-',dir=ROOT/'build/test-artifacts'));saved=out/'saved-world';fixture_world(saved,0);frozen=snapshot(out,'before')
     env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.builders=true -Dvandorlabs.moduleRack=true -Dvandorlabs.builderRuntimeChecks=true -Dvandorlabs.cellJournalChecks=true')
     if args.production_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.builderProductionOnly=true'
     if args.gantry_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.builderRecoveryPhase=gantry'
     if args.drives_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.builderRecoveryPhase=drives'
+    if args.maxwell_only:
+        for phase in ('save', 'read'):
+            phase_env=dict(env,JAVA_TOOL_OPTIONS=env['JAVA_TOOL_OPTIONS']
+                           +' -Dvandorlabs.builderRuntimeChecks=false -Dvandorlabs.cellJournalChecks=false'
+                           +' -Dvandorlabs.maxwellRuntimePhase='+phase)
+            run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-x','compileJava','-x','compileSmokeJava','-x','processResources'),
+                out/(phase+'.log'),'[vandorlabs][maxwell-runtime] '+phase+' PASS',phase_env)
+        snapshot(out,'after',frozen,require_source_unchanged=False)
+        print('Native Maxwell runtime PASS '+str(out),flush=True)
+        return
     if args.legacy_drives_only:
         for phase in ('legacy-drive-save', 'legacy-drive-read'):
             phase_env=dict(env,JAVA_TOOL_OPTIONS=env['JAVA_TOOL_OPTIONS']+' -Dvandorlabs.builderRecoveryPhase='+phase)

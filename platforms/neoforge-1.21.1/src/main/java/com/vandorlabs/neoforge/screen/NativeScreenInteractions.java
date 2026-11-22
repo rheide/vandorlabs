@@ -27,7 +27,7 @@ public final class NativeScreenInteractions {
             if(visual.inert()||visual.appearance().surface(slot)!=-2)continue;var settings=visual.settings();var data=settings.scalar();
             boolean chipDeck=owner.family()==ScreenFamily.HALF_CONSOLE&&settings.secondarySurface()==-4&&!visual.controls().get(1).enabled();
             var projection=ScreenControlLayout.of(owner.family(),block.screenState(owner.getBlockState()),slot,data.smallInput,data.wallPosition,settings.ceilingMounted(),settings.ceilingPosition(),chipDeck);
-            var sample=projection.sample(start.x,start.y,start.z,end.x,end.y,end.z);var rows=visual.controls().get(slot).rows();int row=sample.row(rows.size());if(row<0)continue;
+            var sample=projection.sample(start.x,start.y,start.z,end.x,end.y,end.z);var rows=visual.controls().get(slot).rows();int row=sample.row(rows.size());if(row<0||rows.get(row).status())continue;
             if(rows.get(row).slider()){int step=sample.sliderStep();if(step<0)return false;if(!level.isClientSide)owner.controlService().select(slot,row,step);}
             else if(!level.isClientSide)owner.controlService().toggle(slot,row);
             // The released block consumes a visible row click even when an empty channel list has no effect.
@@ -52,7 +52,7 @@ public final class NativeScreenInteractions {
             var sample=NativeYokeGeometry.face(owner.getBlockState(),slot).sample(start,end,controls.rows().size());
             if(sample!=null&&(closest==null||sample.time()<closest.time())){closest=sample;selected=slot;}
         }
-        if(closest==null)return false;
+        if(closest==null||owner.controls(selected).rows().get(closest.row()).status())return false;
         if(!level.isClientSide){
             var row=owner.controls(selected).rows().get(closest.row());
             if(row.slider())owner.controlService().select(selected,closest.row(),closest.sliderStep());

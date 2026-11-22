@@ -8,18 +8,21 @@ from native_test_artifacts import artifact_directory,retain_artifacts
 from navigation_test_artifact import snapshot
 from contextlib import contextmanager
 @contextmanager
-def frozen(out):
+def frozen(out,require_source_unchanged=True):
  baseline=snapshot(out,"before")
  try:yield
- finally:snapshot(out,"after",baseline)
+ finally:snapshot(out,"after",baseline,require_source_unchanged=require_source_unchanged)
 @retain_artifacts
 def main():
- parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');focus=parser.add_mutually_exclusive_group();focus.add_argument('--parts-only',action='store_true',help='Run the Assembly Press and Gantry physical pickup path');focus.add_argument('--drives-only',action='store_true',help='Run the Longburn and Meridian drive player path');options=parser.parse_args()
+ parser=argparse.ArgumentParser();parser.add_argument('--xvfb',action='store_true');focus=parser.add_mutually_exclusive_group();focus.add_argument('--parts-only',action='store_true',help='Run the Assembly Press and Gantry physical pickup path');focus.add_argument('--drives-only',action='store_true',help='Run the Maxwell and standalone drive player paths');focus.add_argument('--maxwell-only',action='store_true',help='Run the Maxwell build, fill and control player path');focus.add_argument('--couplers-only',action='store_true',help='Run the native Coupler placement and dialog player path');options=parser.parse_args()
  if options.xvfb and os.name=='nt':parser.error('--xvfb requires Linux')
  env=dict(os.environ,JAVA_HOME=str(jdk_home(21)),JAVA_TOOL_OPTIONS=os.environ.get('JAVA_TOOL_OPTIONS','')+' -Dvandorlabs.builderClientCheck=true');base=ROOT/'build/test-artifacts';base.mkdir(parents=True,exist_ok=True);out=Path(artifact_directory(prefix='builder-client-',dir=base))
+ if options.couplers_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.couplerClient=true'
  if options.parts_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.builderPartsClient=true'
- if options.drives_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.driveClient=true'
- with frozen(out):
+ drives=options.drives_only or options.maxwell_only
+ if drives:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.driveClient=true'
+ if options.maxwell_only:env['JAVA_TOOL_OPTIONS']+=' -Dvandorlabs.maxwellClient=true'
+ with frozen(out,require_source_unchanged=not (options.maxwell_only or options.couplers_only)):
   with socket.socket() as listener:listener.bind(('127.0.0.1',0));port=listener.getsockname()[1]
   extra=['-x','compileJava','-x','compileSmokeJava','-x','processResources'];saved=out/'server';fixture_world(saved,port);server_log=out/'server.log';server=launch(command('runServer','-PmodernServerRunDirectory='+str(saved),'-PtransmitterPhase=builder-client',*extra),server_log,env)
   try:
@@ -35,7 +38,13 @@ def main():
     code=process.wait(timeout=240)
     if code:raise RuntimeError('Native builder client exit '+str(code)+': '+str(out/'client.log'))
     check_log(out/'client.log','[vandorlabs][builder-client] client PASS')
-    if not options.parts_only and not options.drives_only:
+    if drives:
+     for shot in ('native-maxwell-filled-world','native-maxwell-engine-menu'):
+      if not (client/'screenshots'/(shot+'.png')).is_file():raise RuntimeError('Missing native Maxwell screenshot '+shot)
+    if options.couplers_only:
+     for shot in ('native-coupler-menu','native-coupler-world'):
+      if not (client/'screenshots'/(shot+'.png')).is_file():raise RuntimeError('Missing native Coupler screenshot '+shot)
+    if not (options.parts_only or options.couplers_only or drives):
      check_log(out/'client.log','[vandorlabs][builder-client] footprint PASS')
      check_log(out/'client.log','[vandorlabs][builder-client] world-render PASS')
    finally:stop(process)
@@ -43,14 +52,14 @@ def main():
    while '[vandorlabs][builder-client] logout PASS' not in server_log.read_text(errors='replace'):
     if server.poll() is not None or time.monotonic()>deadline:raise RuntimeError('Native builder logout missing: '+str(server_log))
     time.sleep(.1)
-   markers=['drive-setup','drive-controls','logout'] if options.drives_only else ['part-setup','part-ownership','logout'] if options.parts_only else ['setup','ownership','digitize','logout']
+   markers=['drive-setup','maxwell-controls','logout'] if options.maxwell_only else ['drive-setup','maxwell-controls','drive-controls','logout'] if drives else ['part-setup','part-ownership','logout'] if options.parts_only else ['coupler-setup','coupler-controls','logout'] if options.couplers_only else ['setup','ownership','digitize','logout']
    for marker in markers:check_log(server_log,'[vandorlabs][builder-client] '+marker+' PASS')
   finally:stop(server)
   deadline=time.monotonic()+30
   while time.monotonic()<deadline and 'All dimensions are saved' not in (saved/'logs/latest.log').read_text(errors='replace'):time.sleep(.1)
   check_log(saved/'logs/latest.log','All dimensions are saved')
   evidence=[]
-  for pattern in ['builders/NativeBuilder*.class','builders/client/NativeBuilder*.class']:
+  for pattern in ['builders/NativeBuilder*.class','builders/client/NativeBuilder*.class','builders/NativeDrive*.class','builders/client/NativeDrive*.class','builders/NativeMaxwell*.class','coupler/NativeCoupler*.class','coupler/client/NativeCoupler*.class']:
    for path in sorted((ROOT/'platforms/neoforge-1.21.1/build/classes/java/main/com/vandorlabs/neoforge').glob(pattern)):evidence.append(hashlib.sha256(path.read_bytes()).hexdigest()+'  '+str(path.relative_to(ROOT)))
   (out/'classes-and-reference.sha256').write_text('\n'.join(evidence)+'\n')
   print('Actual native builder player PASS: '+str(out),flush=True)

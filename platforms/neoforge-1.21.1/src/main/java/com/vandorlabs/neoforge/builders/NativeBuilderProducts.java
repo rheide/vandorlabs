@@ -8,7 +8,7 @@ import net.minecraft.world.item.ItemStack;
 public final class NativeBuilderProducts {
  public static final String[] IDS={"synthesis_tower","assembly_press","enclosed_gantry","standalone_antenna","standalone_dish"};
  public static final String[] NAMES={"Synthesis Tower","Assembly Press","Enclosed Gantry","Sentinel Array Core","Survey Dish Core"};
- public static final int RAMP=6,LONGBURN=7,MERIDIAN=8,OCULUS=9,VECTOR_FOLD=10,MAX_TOWER_PRODUCT=VECTOR_FOLD;
+ public static final int RAMP=6,LONGBURN=7,MERIDIAN=8,OCULUS=9,VECTOR_FOLD=10,VEHICLE_CONTROLLER=11,MAX_TOWER_PRODUCT=VEHICLE_CONTROLLER;
  public static final String RAMP_BLUEPRINT="programmable_ramp";
  public static boolean rampAvailable(){return com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM!=null;}
  public static String towerCore(int index){
@@ -21,12 +21,14 @@ public final class NativeBuilderProducts {
  }
  public static String towerBlueprint(int index){
   if(index==RAMP)return RAMP_BLUEPRINT;
+  if(index==VEHICLE_CONTROLLER)return "vehicle_controller";
   String core=towerCore(index);
   if(core==null)return null;
   var drive=NativeDriveDesign.of(core);
   return drive==null?core+"_core":drive.block;
  }
  public static ItemStack result(int index){
+  if(index==VEHICLE_CONTROLLER)return new ItemStack(com.vandorlabs.neoforge.vehicle.NativeVehicleBindings.CONTROLLER);
   if(index==RAMP)return rampAvailable()?new ItemStack(com.vandorlabs.neoforge.ramp.NativeRampBindings.ITEM):ItemStack.EMPTY;String design=towerCore(index);
   if(design==null)throw new IllegalArgumentException("Builder product");
   var core=NativeBuilderBindings.CORES.get(design);
@@ -35,9 +37,8 @@ public final class NativeBuilderProducts {
  // Index zero is the original native Press recipe, including in-progress saved work.
  public static final List<String> PRESS = List.of("navigation_data_module", "data_chip", "access_card",
          "battery_module", "autopilot_module", "programmable_plate");
- // Keep the native packet choices append-only. The final two Forge blueprints require Vehicle Mode.
- public static final List<String> GANTRY = List.of("gear_extender", "gear_swing_arm", "large_gear_extender",
-         "large_gear_swing_arm", "landing_wheel", "large_landing_wheel", "landing_ski", "landing_plate");
+ // The portable Gantry order preserves existing native indices and includes the two Couplers.
+ public static final List<String> GANTRY = BuilderRecipeCatalog.known("enclosed_gantry");
  public static List<String> parts(String machine) {
   return switch(machine){
    case "assembly_press" -> PRESS;

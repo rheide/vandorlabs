@@ -1,8 +1,10 @@
 package com.vandorlabs.neoforge.builders;
 
-import com.vandorlabs.machines.CoreLayout;
+import com.vandorlabs.drives.MaxwellEngine;
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import java.util.*;
+import net.minecraft.core.HolderLookup;
+import com.vandorlabs.redstone.ChannelList;
 import net.minecraft.core.BlockPos;
 import net.minecraft.nbt.*;
 import net.minecraft.server.level.ServerLevel;
@@ -17,6 +19,14 @@ public final class NativeBuilderTransfer {
     public static Set<BlockPos> validate(List<NativeRawCell> cells){return validate(cells,false);}
 
     public static Set<BlockPos> validate(List<NativeRawCell> cells,boolean allowDrives){
+        return validate(cells,allowDrives,null);
+    }
+
+    public static Set<BlockPos> validateVehicle(List<NativeRawCell> cells,HolderLookup.Provider registries){
+        return validate(cells,true,Objects.requireNonNull(registries));
+    }
+
+    private static Set<BlockPos> validate(List<NativeRawCell> cells,boolean allowDrives,HolderLookup.Provider vehicleRegistries){
         var roots=new ArrayList<NativeRawCell>();
         var parts=new HashMap<BlockPos,NativeRawCell>();
         for(var cell:cells){
@@ -30,14 +40,15 @@ public final class NativeBuilderTransfer {
             if(!root.state.getValue(NativeBuilderCoreBlock.FORMED)||!allowDrives&&design.drive()!=null)
                 throw new IllegalArgumentException("Capture a complete formed production builder");
             var raw=root.tile();
-            requireIdleData(raw,design.drive());
+            if(vehicleRegistries!=null&&design.drive()!=null){
+                if(design.drive()!=NativeDriveDesign.LONGBURN)
+                    throw new IllegalArgumentException("Only the Maxwell Drive can move with a vehicle");
+                requireVehicleMaxwell(raw,vehicleRegistries);
+            }else requireIdleData(raw,design.drive());
             var owner=raw.getUUID("BuilderKey");
             if(!keys.add(owner))throw new IllegalArgumentException("Duplicate builder owner");
-            var layout=new CoreLayout(design.width(),design.height(),design.depth(),
-                root.state.getValue(NativeBuilderCoreBlock.FACING).get3DDataValue(),
-                raw.getInt("ConstructorCoreX"),raw.getInt("ConstructorCoreZ"));
-            if(!layout.canonicalCorner())throw new IllegalArgumentException("Unknown builder frame corner");
-            for(int x=0;x<design.width();x++)for(int y=0;y<design.height();y++)for(int z=0;z<design.depth();z++){
+            var layout=NativeBuilderFormation.savedLayout(design,root.state.getValue(NativeBuilderCoreBlock.FACING),raw);
+            for(int x=0;x<layout.width;x++)for(int y=0;y<layout.height;y++)for(int z=0;z<layout.depth;z++){
                 var pos=root.pos.offset(layout.x(x,z),y,layout.z(x,z));
                 if(pos.equals(root.pos))continue;
                 var member=parts.remove(pos);
@@ -51,6 +62,18 @@ public final class NativeBuilderTransfer {
         return matter;
     }
 
+    private static void requireVehicleMaxwell(CompoundTag raw,HolderLookup.Provider registries){
+        if(raw==null||!raw.contains("Drive",Tag.TAG_COMPOUND)||!raw.contains("Channels",Tag.TAG_INT_ARRAY))
+            throw new IllegalArgumentException("Missing carried Maxwell controls");
+        NativeMaxwellTank.read(raw,registries);
+        ChannelList.of(raw.getIntArray("Channels"));
+        var controls=raw.copy();
+        controls.remove(NativeMaxwellTank.FUEL_TAG);
+        controls.remove(NativeMaxwellTank.ACTIVE_TAG);
+        controls.remove(NativeMaxwellTank.BURN_TAG);
+        requireIdleData(controls,NativeDriveDesign.LONGBURN);
+    }
+
     public static void requireIdleData(CompoundTag raw){requireIdleData(raw,null);}
 
     private static void requireIdleData(CompoundTag raw,NativeDriveDesign drive){
@@ -62,7 +85,9 @@ public final class NativeBuilderTransfer {
         if(drive!=null){
             if(!fields.contains("Drive",Tag.TAG_COMPOUND))throw new IllegalArgumentException("Missing standalone drive controls");
             var settings=NativeDriveSettings.read(fields.getCompound("Drive"),drive.exhaust);
-            if(!settings.redstone()||settings.inverted()||!drive.accepts(settings))
+            if(drive==NativeDriveDesign.LONGBURN){
+                fields.remove(MaxwellEngine.WIDTH_TAG);
+            }else if(!settings.redstone()||settings.inverted()||!drive.accepts(settings))
                 throw new IllegalArgumentException("Turn off the standalone drive or computer with its Redstone gate before copying");
             fields.remove("Drive");
             if(drive.manualActivity()){

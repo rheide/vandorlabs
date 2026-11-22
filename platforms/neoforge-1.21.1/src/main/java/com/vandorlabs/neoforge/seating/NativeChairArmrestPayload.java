@@ -45,7 +45,7 @@ public record NativeChairArmrestPayload(BlockPos pos, int window, int index, int
 
     public static boolean apply(ServerPlayer actor, NativeChairArmrestPayload message) {
         var menu = NativeSeatMenu.editing(actor, message.pos, message.window);
-        if (menu == null || menu.tile.kind() != NativeSeatKind.ADVANCED) return false;
+        if (menu == null || !menu.tile.usesArmrests() || !com.vandorlabs.neoforge.NativeConfigurationAccess.canConfigure(actor)) return false;
         var arm = menu.tile.armrest(message.index);
         return arm != null && arm.configure(message.channels, message.min, message.max);
     }

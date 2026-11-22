@@ -45,7 +45,7 @@ public final class NativeMachineJeiChecks {
        Set.of("data_chip","access_card","programmable_plate"),Set.of("battery_module","autopilot_module","navigation_data_module"),40);
   verifyBuilder(manager,NativeMachineJeiPlugin.GANTRY,"enclosed_gantry","programmable_block",
        Set.of("gear_extender","gear_swing_arm","large_gear_extender","large_gear_swing_arm","landing_wheel",
-              "large_landing_wheel","landing_ski","landing_plate"),Set.of(),40);
+              "large_landing_wheel","landing_ski","landing_plate","square_coupler","vehicle_coupler_slab"),Set.of(),40);
  }
  private static String key(ItemStack stack){return net.minecraft.core.registries.BuiltInRegistries.ITEM.getKey(stack.getItem()).getPath();}
  private static void verifyBuilder(mezz.jei.api.recipe.IRecipeManager manager,mezz.jei.api.recipe.RecipeType<NativeMachineJeiPlugin.Recipe> type,

@@ -29,7 +29,8 @@ public enum NativeDriveDesign {
 
     public boolean computer(){return this==PALADYNE_COMPUTER||this==SEYR_COMPUTER;}
     public boolean engine(){return this==LONGBURN||this==MERIDIAN||this==OCULUS;}
-    public boolean hasChip(){return !computer();}
+    public boolean hasChip(){return this!=LONGBURN&&!computer();}
+    boolean savesChip() { return hasChip() || this == LONGBURN; }
     public boolean manualActivity(){return this==OCULUS||computer();}
     public int defaultActivity(){return computer()?1:2;}
     String activityLabel(int activity){

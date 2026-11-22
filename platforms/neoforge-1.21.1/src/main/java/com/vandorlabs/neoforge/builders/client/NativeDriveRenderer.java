@@ -5,6 +5,11 @@ import com.mojang.blaze3d.vertex.PoseStack;
 import com.mojang.math.Axis;
 import com.vandorlabs.drives.DriveControlPolicy;
 import com.vandorlabs.drives.DriveShutterPose;
+import com.vandorlabs.drives.MaxwellEngine;
+import com.vandorlabs.machines.CoreLayout;
+import com.mojang.blaze3d.vertex.VertexConsumer;
+import net.minecraft.client.renderer.texture.TextureAtlasSprite;
+import net.minecraft.core.Direction;
 import java.util.UUID;
 import java.util.WeakHashMap;
 import net.minecraft.core.BlockPos;
@@ -54,6 +59,10 @@ final class NativeDriveRenderer {
         return entry.pose.sample(tile.formed()&&tile.driveLevel()>0&&tile.driveActivity()==2,time);
     }
     private static final int BRIGHT = 0xf000f0;
+    private static final int FUEL_BARS = 8;
+    private static final ResourceLocation INLET = ResourceLocation.parse("vandorlabs:blocks/resource_ports/fluid_in_off");
+    private static final ResourceLocation GAUGE = ResourceLocation.parse("vandorlabs:blocks/longburn_drive/maxwell_gauge");
+    private static final ResourceLocation FUEL_BAR = ResourceLocation.parse("vandorlabs:blocks/longburn_drive/maxwell_gauge_bar");
 
     static ResourceLocation model(NativeDriveDesign drive, String file) {
         return ResourceLocation.fromNamespaceAndPath("vandorlabs", "block/drives/" + drive.id + "/" + file);
@@ -84,15 +93,19 @@ final class NativeDriveRenderer {
         var drive = tile.drive();
         var mesh = baked.get(drive);
         if (mesh == null) return;
-        var pivot = tile.pivot();
+        CoreLayout shape = tile.layout();
         var settings = tile.driveSettings();
         int level = tile.driveLevel();
         boolean active = level > 0;
         poses.pushPose();
         try {
-            poses.translate(-pivot.getX(), -pivot.getY(), -pivot.getZ());
-            NativeBuilderRenderer.orient(poses, tile.facing(), drive.width, drive.depth);
+            poses.translate(-shape.pivotX(), 0, -shape.pivotZ());
+            NativeBuilderRenderer.orient(poses, tile.facing(), shape.width, shape.depth);
             var out = buffers.getBuffer(NativeBuilderModelCache.LAYER);
+            if(tile.maxwell()){
+                renderMaxwell(tile, shape, mesh, poses, out, light, overlay, level);
+                return;
+            }
             if(drive.computer()){
                 int mode=active?tile.driveActivity():0;
                 String body=switch(mode){case 0->"off";case 1->"idle";default->"computing";};
@@ -137,6 +150,54 @@ final class NativeDriveRenderer {
             }
         } finally {
             poses.popPose();
+        }
+    }
+
+    private static void renderMaxwell(NativeBuilderEntity tile, CoreLayout shape, Map<String, NativeBuilderModel> mesh,
+                                      PoseStack poses, VertexConsumer out, int light, int overlay, int level) {
+        float widthScale = shape.width / (float) MaxwellEngine.BASE_WIDTH;
+        float depthScale = shape.depth / (float) MaxwellEngine.depth(MaxwellEngine.BASE_WIDTH);
+        poses.pushPose();
+        try {
+            poses.scale(widthScale, widthScale, depthScale);
+            mesh.get("maxwell_body").emit(poses.last(), out, light, overlay);
+            mesh.get(level == 0 ? "drive_lights" : "active/drive_lights").emitTinted(poses.last(), out,
+                    BRIGHT, overlay, level == 0 ? .35F : .4F + level * .04F);
+        } finally {
+            poses.popPose();
+        }
+        int x = MaxwellEngine.faceCenter(shape.width), y = MaxwellEngine.faceCenter(shape.height);
+        int z = MaxwellEngine.faceCenter(shape.depth);
+        var atlas = Minecraft.getInstance().getTextureAtlas(InventoryMenu.BLOCK_ATLAS);
+        var inlet = atlas.apply(INLET);
+        var pose = poses.last();
+        instrument(pose, out, inlet, Direction.NORTH, x, y, 0, .4375F, -.4375F, .4375F, .001F, light, overlay);
+        instrument(pose, out, inlet, Direction.WEST, 0, y, z, .4375F, -.4375F, .4375F, .001F, light, overlay);
+        instrument(pose, out, inlet, Direction.EAST, shape.width - 1, y, z, .4375F, -.4375F, .4375F, .001F, light, overlay);
+        instrument(pose, out, atlas.apply(GAUGE), Direction.NORTH, x + 1, y, 0, .4375F, -.4375F, .4375F, .001F, light, overlay);
+        var bar = atlas.apply(FUEL_BAR);
+        int filled = MaxwellEngine.bars(tile.maxwellFuel(), FUEL_BARS);
+        for (int i = 0; i < filled; i++) {
+            float bottom = (-21 + 6 * i) * .875F / 64;
+            instrument(pose, out, bar, Direction.NORTH, x + 1, y, 0, .26F, bottom, bottom + 4 * .875F / 64,
+                    .002F, BRIGHT, overlay);
+        }
+    }
+
+    private static void instrument(PoseStack.Pose pose, VertexConsumer out, TextureAtlasSprite sprite, Direction face,
+                                   int x, int y, int z, float halfWidth, float bottom, float top,
+                                   float offset, int light, int overlay) {
+        float cx = x + .5F + face.getStepX() * (.5F + offset);
+        float cy = y + .5F;
+        float cz = z + .5F + face.getStepZ() * (.5F + offset);
+        var across = face.getCounterClockWise();
+        for (int i = 0; i < 4; i++) {
+            boolean right = i == 1 || i == 2;
+            float horizontal = right ? halfWidth : -halfWidth;
+            out.addVertex(pose.pose(), cx + across.getStepX() * horizontal, cy + (i < 2 ? bottom : top),
+                    cz + across.getStepZ() * horizontal).setColor(-1)
+                    .setUv(right ? sprite.getU1() : sprite.getU0(), i < 2 ? sprite.getV1() : sprite.getV0())
+                    .setLight(light).setOverlay(overlay).setNormal(pose, face.getStepX(), 0, face.getStepZ());
         }
     }
 
@@ -191,12 +252,16 @@ final class NativeDriveRenderer {
         var drive = tile.drive();
         var settings = tile.driveSettings();
         int level = tile.driveLevel();
-        if (!drive.exhaust || !(tile.getLevel() instanceof ClientLevel world)
-                || !DriveControlPolicy.plume(level > 0, settings.levels(), settings.particles(), settings.threshold(), level)) return;
-        var point = NativeBuilderBindings.world(tile, drive.width * .5, drive.height * .55, drive.depth - .05);
+        if (!drive.exhaust || !(tile.getLevel() instanceof ClientLevel world)) return;
+        if (tile.maxwell() ? level != 15
+                : !DriveControlPolicy.plume(level > 0, settings.levels(), settings.particles(), settings.threshold(), level)) return;
+        CoreLayout shape = tile.layout();
+        var point = NativeBuilderBindings.world(tile, shape.width * .5, shape.height * .55, shape.depth - .05);
         var camera = Minecraft.getInstance().getCameraEntity();
         if (camera != null && camera.distanceToSqr(point) <= 64 * 64) {
-            NativePropulsionParticles.drive(world, point, tile.facing().getOpposite(), settings.particles());
+            float spread = tile.maxwell() ? .95F * shape.width / MaxwellEngine.BASE_WIDTH : .95F;
+            NativePropulsionParticles.drive(world, point, tile.facing().getOpposite(),
+                    tile.maxwell() ? 1 : settings.particles(), spread);
         }
     }
 

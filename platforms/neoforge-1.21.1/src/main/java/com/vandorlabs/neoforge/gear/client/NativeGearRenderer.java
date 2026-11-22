@@ -13,6 +13,16 @@ public final class NativeGearRenderer implements BlockEntityRenderer<NativeGearE
     public NativeGearRenderer(BlockEntityRendererProvider.Context context){}
     public static boolean visible(NativeGearEntity tile){var visual=tile.visual();return tile.getLevel()!=null&&(visual.owner()==null||visual.owner().equals(tile.getBlockPos())||tile.controllerEntity()==null)&&tile.getBlockState().getValue(NativeGearBlock.PART)==0;}
     @Override public void render(NativeGearEntity tile,float partial,PoseStack stack,MultiBufferSource buffers,int light,int overlay){if(!visible(tile))return;var mesh=NativeGearResources.bake();if(mesh==null)return;var publication=tile.visual();double phase=publication.inert()?1:NativeGearVisualClock.pose(tile);emit(tile,phase,(name,transform,cache)->mesh.draw(name,transform,cache,stack.last(),buffers.getBuffer(RenderType.cutout()),light,overlay));NativeGearPayloadRenderer.draw(tile,phase,partial,stack,buffers,light,overlay);}
+    /** The Vehicle owns the render transform and the public pose of this detached visual tile. */
+    public static void renderCarried(NativeGearEntity tile,int packedPose,PoseStack stack,MultiBufferSource buffers,int light,int overlay) {
+        if (!tile.controller() || tile.inert() || tile.getLevel()!=null) return;
+        var mesh = NativeGearResources.bake();
+        if (mesh==null) return;
+        if (packedPose>=0) tile.carriedPose((packedPose&65535)/65535D,(packedPose&(1<<16))!=0,(packedPose&(1<<17))!=0,false,false);
+        var buffer = buffers.getBuffer(RenderType.cutout());
+        emit(tile,NativeGearVisualClock.pose(tile),(name,transform,cache)->mesh.draw(name,transform,cache,stack.last(),buffer,light,overlay));
+    }
+
     public interface Draw {void part(String name,NativeGearAffine transform,boolean cache);}
     public static void emit(NativeGearEntity tile,double phase,Draw output){var definition=tile.definition();var assembly=tile.assembly();var mounting=NativeGearAffine.mount(tile.mount());var fixed=NativeGearAffine.quarterTurn(turns(tile.getBlockState().getValue(NativeGearBlock.FACING)));boolean cache=phase==0||phase==1;
         Draw draw=(name,transform,reuse)->output.part(name,mounting.compose(transform),reuse);

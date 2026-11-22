@@ -5,8 +5,9 @@ Assembly Press and Enclosed Gantry, standalone navigation and appliances,
 programmable building families and controls, armor, Copy Controllers and
 standalone arm and Ramp mechanisms. Current limits and ongoing work are in
 the [feature inventory](../../docs/development/feature-coverage.md). Use a
-new NeoForge world. Whole-world 1.12.2 migration and Vehicle Mode remain
-outside this build's supported scope.
+new NeoForge world. Version 3.0 adds a Vehicle Controller, Pilot Seat driving,
+Hover, Maxwell Flight and durable parking. See the [native Vehicle guide](../../docs/vehicles-1.21.md)
+for construction, controls and supported cargo. Whole-world 1.12.2 migration remains experimental.
 
 The Programmable Block supports built-in material choices, six face
 overrides, Stretch/Tile/Fit layouts, joined images, configured item drops and
@@ -128,6 +129,6 @@ The Production tab switches between Synthesize and Digitize. Digitize accepts on
 
 Digitized recipes appear in the Tower's production list and in Catalog previews on supported Screens. Synthesis captures the selected recipe when work starts, so replacing the chip cannot change an active product. The four horizontal battery slots and player inventory appear on Production; Redstone retains its separate receiver controls.
 
-Supported inputs include regular single-block vanilla models, stairs, slabs and trapdoors, plus the native programmable block, slab, Screen, Console, builder/observer core, propulsion and Ramp Controller families. Plants, logs, leaves, paired blocks and inventory or ownership-bearing data are refused. Empty regular-model containers can qualify; their contents cannot. Native Vehicle Controllers and drive-core families that are not registered by this platform remain unavailable. This does not add a native Vehicle runtime.
+Supported inputs include regular single-block vanilla models, stairs, slabs and trapdoors, plus the native programmable block, slab, Screen, Console, builder/observer core, propulsion and Ramp Controller families. Plants, logs, leaves, paired blocks and inventory or ownership-bearing data are refused. Empty regular-model containers can qualify; their contents cannot. The Enclosed Gantry and the Vehicle Controller use different capture rules. The Controller checks every supported container and machine before moving a hull.
 
 Run `test_digitize.py` for dedicated save/restart, admission, malformed-data retention, recipe immutability and durable mining checks. `test_builder_client.py --xvfb` exercises actual Survival enclosure interactions, both tabs, mode changes and reverse animation; `test_builder_render.py --xvfb` checks emitted geometry and resource reloads. Existing `test_builder_runtime.py` and `test_builder_recovery.py` cover adjacent formation, production and abrupt partial-save recovery. These focused checks use frozen production inputs matching the standard JAR; they are separate from a full release gate.

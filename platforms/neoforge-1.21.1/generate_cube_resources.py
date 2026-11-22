@@ -133,6 +133,8 @@ def main():
     atlas.extend(generate_plate(ROOT,OUT))
     from generate_landing_resources import generate as generate_landing
     atlas.extend(generate_landing(ROOT,OUT))
+    from generate_coupler_resources import generate as generate_couplers
+    atlas.extend(generate_couplers(ROOT,OUT))
     from generate_track_resources import generate as generate_tracks
     atlas.extend(generate_tracks(ROOT,OUT))
     from generate_seat_resources import generate as generate_seats

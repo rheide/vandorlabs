@@ -1,7 +1,9 @@
 """An isolated dedicated server and one real client for controller interactions."""
 import os
 from pathlib import Path
+import shutil
 import socket
+import subprocess
 import time
 
 from native_test_artifacts import artifact_directory
@@ -9,7 +11,7 @@ from test_cube import ROOT, check_log, command, jdk_home, launch, stop
 from test_sampled_materials import fixture_world
 
 
-def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=()):
+def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=(), saved_world=None):
     env = dict(os.environ, JAVA_HOME=str(jdk_home(21)))
     env['JAVA_TOOL_OPTIONS'] = env.get('JAVA_TOOL_OPTIONS', '') + ''.join(' -D' + prop for prop in properties)
     base = ROOT / 'build/test-artifacts'
@@ -20,6 +22,8 @@ def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=()):
         port = listener.getsockname()[1]
     saved = out / 'server'
     fixture_world(saved, port)
+    if saved_world is not None:
+        shutil.copytree(saved_world, saved / 'world')
     server_log = out / 'server.log'
     server = launch(command('runServer', '-PmodernServerRunDirectory=' + str(saved), *gradle), server_log, env)
     try:
@@ -40,7 +44,18 @@ def run_connected_player(scene, xvfb, properties, gradle=(), client_markers=()):
             env = dict(env, LIBGL_ALWAYS_SOFTWARE='1')
         process = launch(args, client_log, env)
         try:
-            if process.wait(timeout=240):
+            deadline = time.monotonic() + 240
+            while process.poll() is None:
+                if server.poll() is not None:
+                    raise RuntimeError(f'Native {scene} server stopped during the client check: {server_log}')
+                remaining = deadline - time.monotonic()
+                if remaining <= 0:
+                    raise RuntimeError(f'Native {scene} client timed out: {client_log}')
+                try:
+                    process.wait(timeout=min(1, remaining))
+                except subprocess.TimeoutExpired:
+                    continue
+            if process.returncode:
                 raise RuntimeError(f'Native {scene} client failed: {client_log}')
             for marker in (f'[vandorlabs][{scene}-player] client PASS', *client_markers):
                 check_log(client_log, marker)

@@ -1,6 +1,6 @@
 # Maxwell Drive
 
-The Maxwell Drive supplies thrust for Flight on Forge 1.12.2. Build it with one Maxwell Drive Core and [Programmable Blocks](../README.md).
+The Maxwell Drive supplies thrust for Flight on Forge 1.12.2 and NeoForge 1.21.1. Build it with one Maxwell Drive Core and [Programmable Blocks](../README.md).
 
 | Width × height × depth | Programmable Blocks |
 | --- | ---: |
@@ -40,7 +40,7 @@ The assembled drive shown here has fuel in its tank.
 
 ## Fuel and throttle
 
-The front and sides each have a Fluid Port In that feeds the same 1,000 mB tank. On even-sized faces the side inlet is in the center cell closer to the front. The bars beside the front inlet show the remaining fuel. Fill the drive with Thermal Refined Fuel, Ethanol, MrCrayfish’s Fuelium, or Rocket Fuel from Advanced Rocketry or Galacticraft. Use one fuel at a time.
+The front and sides each have a Fluid Port In that feeds the same 1,000 mB tank. On even-sized faces the side inlet is in the center cell closer to the front. The bars beside the front inlet show the remaining fuel. Fill the drive with Thermal Refined Fuel, Ethanol, MrCrayfish’s Fuelium, or Rocket Fuel from Advanced Rocketry or Galacticraft. Use one fuel at a time. On NeoForge, the `vandorlabs:maxwell_fuels` fluid tag can add other registered fuels.
 
 Right-click the formed drive or use the Configurizer to open its **Engine** and **Redstone** tabs. The Engine tab shows the tank level and has a **Purge Tank** button that discards its contents.
 

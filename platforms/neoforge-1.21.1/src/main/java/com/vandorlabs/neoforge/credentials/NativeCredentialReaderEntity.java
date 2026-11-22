@@ -42,6 +42,7 @@ public class NativeCredentialReaderEntity extends BlockEntity implements NativeC
         public void schedule(int ticks){if(level instanceof ServerLevel server&&!inert&&!removing)server.scheduleTick(worldPosition,getBlockState().getBlock(),Math.max(1,ticks));}
         public boolean chip(boolean ignored){return chip;}
     },chip);}
+    public boolean permitsVehicleOperation(){return !chip&&!inert()&&!reader.returning()&&reader.behavior()==0&&reader.matches();}
     public boolean chip(){return chip;}
     public boolean inert(){return projectionOnly&&level!=null&&level.isClientSide?visual.inert:inert;}
     public Visual visual(){return visual;}

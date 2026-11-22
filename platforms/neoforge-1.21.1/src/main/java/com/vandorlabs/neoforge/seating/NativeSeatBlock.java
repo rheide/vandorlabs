@@ -50,21 +50,25 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
     private static VoxelShape rotateBox(double x0,double y0,double z0,double x1,double y1,double z1,net.minecraft.core.Direction facing){int turns=facing==net.minecraft.core.Direction.EAST?1:facing==net.minecraft.core.Direction.SOUTH?2:facing==net.minecraft.core.Direction.WEST?3:0;for(int i=0;i<turns;i++){double a=x0,b=x1;x0=1-z1;x1=1-z0;z0=a;z1=b;}return Shapes.box(x0,y0,z0,x1,y1,z1);}
     @Override public VoxelShape getBlockSupportShape(BlockState state,BlockGetter world,BlockPos pos){return Shapes.empty();}
     @Override public VoxelShape getVisualShape(BlockState state,BlockGetter world,BlockPos pos,CollisionContext context){if(context instanceof EntityCollisionContext entity&&entity.getEntity()!=null&&entity.getEntity().getVehicle() instanceof NativeChairMount mount&&lower(state,pos).equals(mount.chairPos()))return Shapes.empty();return getShape(state,world,pos,context);}
-    @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,Vec3 start,Vec3 end){if(kind==NativeSeatKind.ADVANCED){
+    @Override public BlockHitResult traceAuthored(BlockState state,BlockGetter world,BlockPos pos,Vec3 start,Vec3 end){
         var owner=owner(world,pos);
-        if(owner!=null){
-            var grip=NativeAdvancedChairGeometry.grip(owner,state.getValue(FACING),pos,start,end);
-            if(grip!=null)return grip.hit();
+        if(owner!=null&&owner.cockpitTouch()!=null){
+            if(kind==NativeSeatKind.ADVANCED){
+                var grip=NativeAdvancedChairGeometry.grip(owner,state.getValue(FACING),pos,start,end);
+                if(grip!=null)return grip.hit();
+            }else if(kind==NativeSeatKind.COCKPIT){
+                var control=NativeCockpitGeometry.button(lower(state,pos),state.getValue(FACING),pos,start,end);
+                if(control!=null)return control;
+                var grip=NativeCockpitThrottle.pick(owner,state.getValue(FACING),pos,start,end);
+                if(grip!=null)return grip.ray();
+            }
+            var panel=owner.cockpitTouch().pick(pos,start,end);
+            if(panel!=null)return panel.hit();
         }
-    }else if(kind==NativeSeatKind.COCKPIT&&owner(world,pos)!=null){
-        var control=NativeCockpitGeometry.button(lower(state,pos),state.getValue(FACING),pos,start,end);
-        if(control!=null)return control;
-        var panel=owner(world,pos).cockpitTouch().pick(pos,start,end);
-        if(panel!=null)return panel.hit();
-    }if((kind.adjustablePilotHeight()||kind==NativeSeatKind.COCKPIT)&&world instanceof Level level){var lower=lower(state,pos);var players=level.players();for(int i=0;i<players.size();i++){var player=players.get(i);if(player.getVehicle() instanceof NativeChairMount mount&&lower.equals(mount.chairPos())&&start.distanceToSqr(player.getEyePosition())<1e-8)return null;}}return getShape(state,world,pos,CollisionContext.empty()).clip(start,end,pos);}
+        if((kind.adjustablePilotHeight()||kind==NativeSeatKind.COCKPIT)&&world instanceof Level level){var lower=lower(state,pos);var players=level.players();for(int i=0;i<players.size();i++){var player=players.get(i);if(player.getVehicle() instanceof NativeChairMount mount&&lower.equals(mount.chairPos())&&start.distanceToSqr(player.getEyePosition())<1e-8)return null;}}return getShape(state,world,pos,CollisionContext.empty()).clip(start,end,pos);}
     @Override public boolean canBeReplaced(BlockState state,BlockPlaceContext context){return NativeSeatBackrests.replacing(context,context.getClickedPos());}
     @Override protected int getLightBlock(BlockState state,BlockGetter world,BlockPos pos){return 0;}
-    private InteractionResult interact(BlockState state,Level world,BlockPos pos,Player actor,InteractionHand hand){if(hand!=InteractionHand.MAIN_HAND)return InteractionResult.PASS;var at=lower(state,pos);if(actor.isShiftKeyDown())return actor.isCreative()&&NativeSeatBindings.open(actor,world,at)?InteractionResult.sidedSuccess(world.isClientSide):InteractionResult.PASS;if(!actor.isAlive()||actor.isSpectator()||actor.level()!=world||!loaded(world,at)||actor.distanceToSqr(at.getCenter())>64||!world.mayInteract(actor,at)||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(world,at))return InteractionResult.FAIL;var owner=owner(world,at);if(owner==null||!complete(world,at))return InteractionResult.FAIL;
+    private InteractionResult interact(BlockState state,Level world,BlockPos pos,Player actor,InteractionHand hand){if(hand!=InteractionHand.MAIN_HAND)return InteractionResult.PASS;var at=lower(state,pos);if(actor.isShiftKeyDown())return actor.isCreative()&&NativeSeatBindings.open(actor,world,pos)?InteractionResult.sidedSuccess(world.isClientSide):InteractionResult.PASS;if(!actor.isAlive()||actor.isSpectator()||actor.level()!=world||!loaded(world,at)||actor.distanceToSqr(at.getCenter())>64||!world.mayInteract(actor,at)||com.vandorlabs.neoforge.ramp.NativeRampHeldOwners.blocked(world,at))return InteractionResult.FAIL;var owner=owner(world,at);if(owner==null||!complete(world,at))return InteractionResult.FAIL;
         if(kind==NativeSeatKind.ADVANCED){
             Vec3 start=actor.getEyePosition();
             Vec3 end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
@@ -94,13 +98,28 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
                 }
                 return InteractionResult.sidedSuccess(world.isClientSide);
             }
-            var touch=owner.cockpitTouch();
+            var grip=NativeCockpitThrottle.pick(owner,state.getValue(FACING),pos,start,end);
+            if(grip!=null){
+                if(world instanceof ServerLevel server){
+                    if(!com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.open(server)||!matchesAuthoredHit(world,actor,pos,grip.ray())
+                        ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,grip.ray().getDirection(),actor.getMainHandItem()))return InteractionResult.FAIL;
+                    owner.armrest(grip.index()).cycle();
+                }
+                return InteractionResult.sidedSuccess(world.isClientSide);
+            }
+        }
+        var touch=owner.cockpitTouch();
+        if(touch!=null){
+            var start=actor.getEyePosition();
+            var end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
             var panel=touch.pick(pos,start,end);
             if(panel!=null){
+                if(touch.statusRow(panel.slot(),panel.row()))return InteractionResult.sidedSuccess(world.isClientSide);
+                if(!touch.usesRow(panel.slot(),panel.row()))
+                    return NativeSeatBindings.openSurface(actor,owner,pos,panel)?InteractionResult.sidedSuccess(world.isClientSide):InteractionResult.FAIL;
                 if(!world.isClientSide){
-                    var first=world.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
-                    if(first.getLocation().distanceToSqr(panel.hit().getLocation())>1e-8||!first.getBlockPos().equals(pos)
-                        ||!world.mayInteract(actor,pos)||!actor.mayUseItemAt(pos,panel.hit().getDirection(),actor.getMainHandItem()))
+                    if(!matchesAuthoredHit(world,actor,pos,panel.hit())||!world.mayInteract(actor,pos)
+                        ||!actor.mayUseItemAt(pos,panel.hit().getDirection(),actor.getMainHandItem()))
                         return InteractionResult.FAIL;
                     touch.use(panel.slot(),panel.row(),panel.segment());
                 }
@@ -110,6 +129,12 @@ public class NativeSeatBlock extends HorizontalDirectionalBlock implements Entit
         if(world.isClientSide)return InteractionResult.SUCCESS;
         for(var seat:world.getEntitiesOfClass(NativeChairMount.class,new AABB(at).inflate(2)))if(at.equals(seat.chairPos())){if(seat.getPassengers().isEmpty())actor.startRiding(seat,true);return InteractionResult.CONSUME;}
         var seat=new NativeChairMount(NativeSeatBindings.MOUNT,world);seat.updatePose(owner);if(world.addFreshEntity(seat)){if(!actor.startRiding(seat,true))seat.discard();}return InteractionResult.CONSUME;
+    }
+    static boolean matchesAuthoredHit(Level world,Player actor,BlockPos pos,BlockHitResult panel){
+        var start=actor.getEyePosition();
+        var end=start.add(actor.getViewVector(1).scale(Math.min(8,actor.blockInteractionRange())));
+        var first=world.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
+        return first.getBlockPos().equals(pos)&&first.getLocation().distanceToSqr(panel.getLocation())<=1e-8;
     }
     @Override protected InteractionResult useWithoutItem(BlockState state,Level world,BlockPos pos,Player actor,BlockHitResult hit){return interact(state,world,pos,actor,InteractionHand.MAIN_HAND);}
     @Override protected ItemInteractionResult useItemOn(ItemStack stack,BlockState state,Level world,BlockPos pos,Player actor,InteractionHand hand,BlockHitResult hit){if(kind==NativeSeatKind.PILOT&&stack.getItem() instanceof BlockItem item&&item.getBlock() instanceof com.vandorlabs.neoforge.canopy.NativeCanopyBlock canopy&&NativeSeatBackrests.supports(canopy.kind()))return ItemInteractionResult.SKIP_DEFAULT_BLOCK_INTERACTION;if(stack.is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return NativeSeatBindings.open(actor,world,pos)?ItemInteractionResult.SUCCESS:ItemInteractionResult.FAIL;return switch(interact(state,world,pos,actor,hand)){case SUCCESS,CONSUME,CONSUME_PARTIAL->ItemInteractionResult.SUCCESS;case FAIL->ItemInteractionResult.FAIL;default->ItemInteractionResult.PASS_TO_DEFAULT_BLOCK_INTERACTION;};}

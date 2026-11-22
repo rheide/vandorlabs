@@ -17,7 +17,7 @@ import net.neoforged.neoforge.fluids.FluidStack;
 import net.neoforged.neoforge.fluids.capability.IFluidHandler;
 import net.neoforged.neoforge.items.IItemHandler;
 
-final class NativeGearResourceTransfer {
+public final class NativeGearResourceTransfer {
     private final NativeGearEntity input;
     private Direction exposedSide;
     private IEnergyStorage energy;
@@ -102,24 +102,38 @@ final class NativeGearResourceTransfer {
             var root = arm.getBlockPos();
             if (NativeGearJournal.escrowAdmission(level) != NativeGearJournal.Status.READY
                     || !arm.resourceEndpointAvailable() || reserved(level,root) || reserved(level,mounting)) return unavailable;
-            var contact = mounting.relative(arm.mount(),arm.assembly().columnHeight());
-            Direction receiving = side;
-            if (arm.mode() != GearMotion.Mode.STATIC) {
-                var frame = arm.resourceConnection().frame(arm);
-                // An integral position is insufficient if the attachment's axes are tilted.
-                if (face(arm,frame,Direction.UP) == null || face(arm,frame,Direction.EAST) == null
-                        || face(arm,frame,Direction.NORTH) == null) return unavailable;
-                receiving = face(arm,frame,side);
-                try {
-                    contact = NativeGearPayloadService.nativeCell(arm,contact,frame);
-                } catch (IllegalArgumentException fractional) {
-                    return unavailable;
-                }
-            }
-            if (!NativeGearFormation.loaded(level,contact) || reserved(level,contact)) return unavailable;
-            var destination = level.getCapability(capability,contact,receiving);
+            var endpoint = endpoint(arm, mounting, arm.mode() == GearMotion.Mode.STATIC ? null : arm.resourceConnection().frame(arm));
+            if (endpoint == null || !NativeGearFormation.loaded(level, endpoint.cell) || reserved(level, endpoint.cell)) return unavailable;
+            var destination = level.getCapability(capability, endpoint.cell, endpoint.face);
             return destination == null ? unavailable : action.apply(destination);
         });
+    }
+
+    public record Endpoint(BlockPos cell, Direction face) {}
+
+    /** Share the stationary port's cardinal contact rule with a detached carried mechanism. */
+    public static Endpoint carriedEndpoint(NativeGearEntity arm) {
+        if (arm.getLevel() != null || !arm.controller() || !arm.canTransferResources()
+            || arm.blocked() || arm.progress() != (arm.target() ? 1 : 0)) return null;
+        return endpoint(arm, arm.getBlockPos(), arm.mode() == GearMotion.Mode.STATIC ? null : NativeGearPayload.frame(arm, arm.progress()));
+    }
+
+    public static Endpoint carriedHome(NativeGearEntity arm) {
+        if (arm.getLevel() != null || !arm.controller() || !arm.canTransferResources()) return null;
+        return endpoint(arm, arm.getBlockPos(), arm.mode() == GearMotion.Mode.STATIC ? null : NativeGearPayload.frame(arm, 1));
+    }
+
+    private static Endpoint endpoint(NativeGearEntity arm, BlockPos mounting, NativeGearPayload.Transform frame) {
+        var contact = mounting.relative(arm.mount(), arm.assembly().columnHeight());
+        var receiving = arm.mount().getOpposite();
+        if (frame == null) return new Endpoint(contact, receiving);
+        if (face(arm, frame, Direction.UP) == null || face(arm, frame, Direction.EAST) == null
+            || face(arm, frame, Direction.NORTH) == null) return null;
+        try {
+            return new Endpoint(NativeGearPayloadService.nativeCell(arm, contact, frame), face(arm, frame, receiving));
+        } catch (IllegalArgumentException fractional) {
+            return null;
+        }
     }
 
     private final class Power implements IEnergyStorage {

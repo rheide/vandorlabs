@@ -91,7 +91,9 @@ if the Catalog Chip is removed.
 ## Enclosed Gantry operation
 
 Choose a regular or Large Extender, Rotating Arm or Landing Wheel, or choose a
-Landing Ski or Landing Plate. These eight designs are built into the Gantry.
+Landing Ski, Landing Plate, Vehicle Coupler or Vehicle Coupler Slab. These
+ten designs are built into the Gantry. The [Coupler guide](couplers.md#neoforge-1211)
+covers how to mount and connect the two coupler forms.
 Feed one Programmable Block through the rear item port or Production
 dialog. Each item costs **8,000 RF**, drawn at **40 RF per tick** over
 **200 ticks**. The rear right corner accepts external power. The rear left
@@ -104,25 +106,45 @@ the Press.
 
 ## Standalone drives
 
-The Maxwell, Seyr Meridian and Pinnacle Oculus Drive Cores use the same
-Matter frame journals as the builders. Follow the illustrated
-[Maxwell](multiblocks/maxwell-drive/README.md#1-build-the-base),
-[Seyr Meridian](multiblocks/meridian-core/README.md) and
-[Pinnacle Oculus](multiblocks/oculus-drive/README.md) guides. Obtain each Core
-from a Tower with a Master Catalog Chip. The Maxwell guide’s frame steps apply to
-the 3-wide × 4-deep × 3-high NeoForge model. The fuel system and larger
-frames are part of the Forge 1.12.2 drive.
+### Maxwell Drive
 
-Use the Configurizer on a formed drive to open its display, keyboard, engine
-and receiving-channel settings. A regular right-click on an Oculus away from
+Obtain the Maxwell Drive Core from a Tower with a Master Catalog Chip. The
+[illustrated build guide](multiblocks/maxwell-drive/README.md#1-build-the-base)
+shows the Programmable Block base, corner pillars and top rim. NeoForge supports
+the same five footprint sizes and three fuel inlets shown there.
+
+Connect a fluid pipe to the front or either side inlet. The three inlets fill
+one 1,000 mB tank. NeoForge accepts registered refined fuel, ethanol, Fuelium
+and rocket fuel, including Galacticraft's fuel. A data pack can add another
+registered fluid to the `vandorlabs:maxwell_fuels` fluid tag. The front gauge
+shows the stored fuel. Use a normal right-click or the Configurizer to open the
+same Engine and Redstone tabs. **Purge Tank** empties the tank. Close the
+dialog and sneak-right-click to dismantle the frame while retaining the
+remaining fuel in the placed Core.
+
+Automatic activation fires on powered flight demand. Select Redstone to
+fire on the strongest physical input or configured received channel,
+including while the engine is installed in the world. **Throttle Digital**
+uses full power whenever the effective input is above zero. **Throttle
+Analog** follows its level from 0 to 15. **Engine Redstone Off** reverses the
+signal. Full power consumes 1 mB every 10 seconds. Lower analog levels consume
+fuel in proportion to their signal.
+
+### Seyr Meridian and Pinnacle Oculus Drives
+
+Obtain each Core from a Tower with a Master Catalog Chip and follow the
+[Seyr Meridian](multiblocks/meridian-core/README.md) and
+[Pinnacle Oculus](multiblocks/oculus-drive/README.md) build guides.
+
+Use the Configurizer to open the display, keyboard, engine and
+receiving-channel settings. A regular right-click on an Oculus away from
 its chip mount cycles Standby, Charging and Active. Its shutters reverse
 from their current position when the target changes. The strongest loaded
-physical or configured channel signal controls the drive when Redstone
+physical or configured channel signal controls the appearance when Redstone
 activation is enabled. **Engine Redstone Off** inverts that level. Signal
-brightness follows the effective output from 0 to 15. The Maxwell also offers
-exhaust intensity and a minimum exhaust level in Signal brightness mode.
-Right-click a setting to cycle backwards. The optional Data Chip mount retains
-one chip for retrieval. The drive effects are cosmetic.
+brightness follows the effective output from 0 to 15. Right-click a setting
+to cycle backwards. The optional Data Chip mount retains one chip for
+retrieval.
 
 ### Vector Fold Array
 

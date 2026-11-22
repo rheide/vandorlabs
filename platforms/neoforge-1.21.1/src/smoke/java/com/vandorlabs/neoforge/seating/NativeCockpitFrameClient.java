@@ -30,6 +30,48 @@ public final class NativeCockpitFrameClient {
     private static String screenshot;
     private static java.util.concurrent.CompletableFuture<Void> reload;
 
+    private static void control(com.vandorlabs.neoforge.client.NativeScreenScreen editor,int id,int mouse){
+        var control=editor.button(id);
+        check(control!=null&&control.active&&editor.mouseClicked(control.getX()+control.getWidth()/2D,
+            control.getY()+control.getHeight()/2D,mouse),"actual Cockpit editor control "+id);
+    }
+    private static void selectSurface(com.vandorlabs.neoforge.client.NativeScreenScreen editor,String label){
+        for(int slot=0;slot<NativeCockpitTouch.MAX_SURFACES;slot++){
+            if(editor.button(594).getMessage().getString().equals(label))return;
+            control(editor,594,0);
+        }
+        throw new AssertionError("Missing Cockpit surface "+label);
+    }
+    private static void choose(com.vandorlabs.neoforge.client.NativeScreenScreen editor,String search,int choice){
+        var picker=editor.activePicker();
+        picker.searchField().setValue(search);
+        int row=picker.rows().indexOf(choice);
+        while(row>=picker.scroll()+picker.visible()){
+            int before=picker.scroll();
+            check(editor.mouseScrolled(editor.panel().listX+4,picker.top()+5,0,-1)&&picker.scroll()>before,
+                "wheel reaches cockpit artwork choice");
+        }
+        check(row>=picker.scroll()&&editor.mouseClicked(editor.panel().listX+4,picker.top()+5+(row-picker.scroll())*22,0)
+            &&editor.activePicker().selected()==choice,"select real Cockpit artwork row "+search);
+    }
+
+    private static void aimThrottle(Minecraft game,NativeChairEntity owner){
+        var facing=owner.getBlockState().getValue(NativeSeatBlock.FACING);
+        float angle=(float)Math.toRadians(NativeCockpitThrottle.angle(0,owner.throttleStep(0),owner.throttleCount()));
+        var local=NativeCockpitThrottle.pivot(0,owner.throttleCount()).add(new Vec3(0,.25,0).xRot(-angle));
+        aim(game,Vec3.atLowerCornerOf(ROOT).add(NativeAdvancedChairGeometry.turn(local,facing)));
+    }
+    private static void clickThrottle(Minecraft game,NativeChairEntity owner){
+        var actor=game.player;
+        var start=actor.getEyePosition();
+        var end=start.add(actor.getViewVector(1).scale(actor.blockInteractionRange()));
+        var hit=game.level.clip(new ClipContext(start,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,actor));
+        var grip=NativeCockpitThrottle.pick(owner,owner.getBlockState().getValue(NativeSeatBlock.FACING),hit.getBlockPos(),start,end);
+        check(grip!=null&&grip.index()==NativeCockpitThrottle.LEFT
+            &&hit.getLocation().distanceToSqr(grip.ray().getLocation())<1e-8,"seated ray hits the rendered throttle detent");
+        game.gameMode.useItemOn(actor,InteractionHand.MAIN_HAND,hit);
+    }
+
     @SubscribeEvent public static void tick(ClientTickEvent.Post event){
         if(!enabled())return;
         var game=Minecraft.getInstance();
@@ -85,18 +127,34 @@ public final class NativeCockpitFrameClient {
                 if(!(game.screen instanceof com.vandorlabs.neoforge.client.NativeScreenScreen editor))return;
                 check(editor.getMenu().cockpit()&&editor.getTitle().getString().equals("Cockpit Displays"),
                     "normal Configurizer opens the shared touch-row editor");
+                selectSurface(editor,"Right arm keyboard");
                 for(int row=0;row<3;row++)editor.action(590,1);
                 check(!editor.button(590).active,"authored three-row touch capacity");
                 editor.rowLabel(2).setValue("Trim");
                 editor.rowChannels(2).setValue(Integer.toString(TOUCH_CHANNEL));
                 editor.action(702,1);
-                editor.action(593,1);
+                selectSurface(editor,"Center monitor");
                 for(int row=0;row<6;row++)editor.action(590,1);
                 check(!editor.button(590).active,"six center rows");
                 for(int scroll=0;scroll<5;scroll++)editor.mouseScrolled(0,0,0,-1);
                 int last=editor.rowLabels().size()-1;
                 editor.rowLabel(last).setValue("Last");
                 editor.rowChannels(last).setValue(Integer.toString(CENTER_CHANNEL));
+                selectSurface(editor,"Left monitor");
+                control(editor,595,0);
+                choose(editor,"Black",NativeCockpitSurfaceEdit.BLACK);
+                control(editor,597,0);
+                editor.channelField().setValue(Integer.toString(DISPLAY_CHANNEL));
+                control(editor,1602,1);
+                selectSurface(editor,"Right touch panel");
+                control(editor,595,0);
+                choose(editor,"Redstone controls",NativeCockpitSurfaceEdit.REDSTONE);
+                control(editor,596,0);
+                editor.action(590,1);
+                editor.rowLabel(0).setValue("Sensors");
+                editor.rowChannels(0).setValue(Integer.toString(EXTRA_CHANNEL));
+                control(editor,700,1);
+                check(editor.button(700).getMessage().getString().equals("Channel status"),"reverse cycle reaches the read-only meter");
                 editor.action(20,1);
                 select(game,3);
                 wait=ticks;stage++;
@@ -233,6 +291,74 @@ public final class NativeCockpitFrameClient {
             }
             case 59 -> {
                 if(screenshot!=null)return;
+                var face=NativeCockpitTouch.face(Direction.NORTH,2,0);
+                aim(game,Vec3.atLowerCornerOf(ROOT).add(face.topLeft()).add(face.right().scale(.5)).add(face.down().scale(.5)));
+                wait=ticks;stage=67;
+            }
+            case 67 -> {
+                if(ticks<wait+8)return;
+                var eye=player.getEyePosition();
+                var end=eye.add(player.getViewVector(1).scale(player.blockInteractionRange()));
+                var hit=game.level.clip(new ClipContext(eye,end,ClipContext.Block.OUTLINE,ClipContext.Fluid.NONE,player));
+                var screen=owner.cockpitTouch().pick(hit.getBlockPos(),eye,end);
+                check(screen!=null&&screen.slot()==2&&player.getMainHandItem().isEmpty(),
+                    "unheld Survival click reaches the authored left monitor");
+                game.gameMode.useItemOn(player,InteractionHand.MAIN_HAND,hit);
+                stage++;
+            }
+            case 68 -> {
+                if(!(game.screen instanceof com.vandorlabs.neoforge.client.NativeScreenScreen editor))return;
+                check(editor.getMenu().initialSlot()==2&&editor.getTitle().getString().equals("Cockpit Displays"),
+                    "normal monitor click opens the same editor focused on the aimed surface");
+                editor.onClose();
+                aimThrottle(game,owner);
+                wait=ticks;stage=60;
+            }
+            case 60 -> {
+                if(ticks<wait+8)return;
+                clickThrottle(game,owner);
+                stage++;
+            }
+            case 61 -> {
+                if(owner.armrestLevel(NativeCockpitThrottle.LEFT)!=5)return;
+                check(owner.armrestLevel(NativeCockpitThrottle.RIGHT)==0,"physical Cockpit detents are independent");
+                select(game,2);
+                aimThrottle(game,owner);
+                wait=ticks;stage++;
+            }
+            case 62 -> {
+                if(ticks<wait+8||!player.getMainHandItem().is(com.vandorlabs.neoforge.VandorLabsBootstrap.CONFIGURIZER.get()))return;
+                clickThrottle(game,owner);
+                stage++;
+            }
+            case 63 -> {
+                if(!(game.screen instanceof com.vandorlabs.neoforge.seating.client.NativeSeatScreen editor))return;
+                check(editor.getMenu().initialArmrest==NativeCockpitThrottle.LEFT&&editor.getTitle().getString().equals("Cockpit Throttles"),
+                    "Configurator aims at same posed throttle and opens its own control");
+                editor.armrestChannelsField().setValue(Integer.toString(THROTTLE_CHANNEL));
+                var apply=editor.armrestApply();
+                check(apply.active&&editor.mouseClicked(apply.getX()+4,apply.getY()+4,0),"configured throttle channel");
+                var count=editor.option(13);
+                check(editor.mouseClicked(count.getX()+4,count.getY()+4,1),"single throttle changes through physical editor reverse cycle");
+                editor.onClose();
+                select(game,3);
+                stage++;
+            }
+            case 64 -> {
+                if(owner.throttleCount()!=1||!player.getMainHandItem().isEmpty()
+                    ||!owner.armrestChannels(NativeCockpitThrottle.LEFT).contains(THROTTLE_CHANNEL))return;
+                check(NativeCockpitThrottle.pivot(0,1).x>NativeCockpitThrottle.pivot(0,2).x,
+                    "single throttle uses its own authored central pivot");
+                aimThrottle(game,owner);
+                wait=ticks;stage++;
+            }
+            case 65 -> {
+                if(ticks<wait+8)return;
+                clickThrottle(game,owner);
+                stage++;
+            }
+            case 66 -> {
+                if(owner.armrestLevel(NativeCockpitThrottle.LEFT)==0)return;
                 game.options.keyShift.setDown(true);
                 wait=ticks;stage=6;
             }

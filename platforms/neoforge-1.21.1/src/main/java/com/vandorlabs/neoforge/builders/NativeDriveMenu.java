@@ -9,6 +9,7 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 public final class NativeDriveMenu extends AbstractContainerMenu {
+    public static final int PURGE_TANK = 0;
     public final NativeBuilderEntity tile;
     final BlockPos target;
     private final Block block;
@@ -33,6 +34,11 @@ public final class NativeDriveMenu extends AbstractContainerMenu {
 
     @Override public boolean stillValid(Player player) {
         return tile.getBlockState().getBlock() == block && NativeDriveBindings.canUse(player, tile, target);
+    }
+
+    @Override public boolean clickMenuButton(Player player, int id) {
+        return id == PURGE_TANK && player instanceof net.minecraft.server.level.ServerPlayer
+                && player.containerMenu == this && stillValid(player) && tile.purgeMaxwell();
     }
 
     @Override public ItemStack quickMoveStack(Player player, int index) { return ItemStack.EMPTY; }

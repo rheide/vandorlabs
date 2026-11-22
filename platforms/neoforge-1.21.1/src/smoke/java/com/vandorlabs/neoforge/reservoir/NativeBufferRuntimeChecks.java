@@ -54,6 +54,23 @@ public final class NativeBufferRuntimeChecks {
             tag.remove("ForgeCaps");tag.putInt("NativeBufferSchema",99);owner.loadWithComponents(tag,level.registryAccess());need(owner.inert()&&owner.saveWithoutMetadata(level.registryAccess()).equals(tag),"future schema retained inert byte-exact");
         }
     }
+    private static void fullness(){
+        var pos=BASE.west(10);
+        var tank=(NativeHexTankEntity)put(pos,false,Direction.UP);
+        var actor=new Actor(level);actor.setPos(pos.getX()+.5,pos.getY()+1,pos.getZ()+1.5);
+        var channel=ChannelList.of(98021);
+        need(tank.configureOutput(actor,channel,16,true),"installed tank fullness configuration");
+        need(tank.fill(new FluidStack(Fluids.WATER,tank.capacity()/2),FluidAction.EXECUTE)==tank.capacity()/2,"half tank accepted");
+        for(int tick=0;tick<5;tick++)tank.serverTick();
+        need(NativeRedstoneChannels.level(level,pos.east(16),98021)==8&&NativeRedstoneChannels.level(level,pos.east(17),98021)==0,"half tank wireless level and range");
+        need(level.getSignal(pos,Direction.EAST)==8,"opted-in local fullness");
+        var saved=tank.saveWithoutMetadata(level.registryAccess());var copy=new NativeHexTankEntity(pos,tank.getBlockState());
+        copy.loadWithComponents(saved,level.registryAccess());
+        need(copy.fullness().transmittedChannels().equals(channel)&&copy.fullness().localPower()==8,"fullness retained on reload");
+        need(tank.configureOutput(actor,ChannelList.EMPTY,16,false),"disable local and wireless output");
+        need(level.getSignal(pos,Direction.EAST)==0&&NativeRedstoneChannels.level(level,pos,98021)==0,"stale output withdrawn");
+        level.removeBlock(pos,false);
+    }
     private static void sides(){
         int n=0;for(var facing:Direction.values())for(boolean battery:new boolean[]{true,false}){var pos=BASE.north(12).east(n++*3);var tile=put(pos,battery,facing);need(tile.installed(),"real installed owner");for(var side:Direction.values())if(battery){var cap=level.getCapability(Capabilities.EnergyStorage.BLOCK,pos,side);need((cap!=null)==(side.getAxis()==facing.getAxis()),"battery axis capability "+facing+"/"+side);if(cap!=null)need(cap.canReceive()==(side==facing)&&cap.canExtract()==(side==facing.getOpposite()),"battery front input/rear output");}else need((level.getCapability(Capabilities.FluidHandler.BLOCK,pos,side)!=null)==(side.getAxis()==facing.getAxis()),"tank axial fluid capability");if(tile instanceof NativeBatteryEntity cell){need(cell.energy(null).receiveEnergy(5000,true)==5000&&cell.amount()==0,"new Battery unlimited receive simulation unchanged");var legacy=new CompoundTag();legacy.putInt("Energy",0);legacy.putBoolean("BlockShape",true);cell.loadWithComponents(legacy,level.registryAccess());need(cell.energy(null).receiveEnergy(5000,true)==1000,"legacy input rate preserved");need(cell.energy(facing).receiveEnergy(5000,false)==1000&&cell.amount()==1000,"1000 RF receive limit");need(cell.energy(facing.getOpposite()).extractEnergy(300,true)==300&&cell.amount()==1000,"battery drain simulation unchanged");}level.removeBlock(pos,false);}
     }
@@ -72,7 +89,7 @@ public final class NativeBufferRuntimeChecks {
     @SubscribeEvent public static void started(ServerStartedEvent event){phase=System.getProperty("vandorlabs.bufferPhase","");if(phase.isEmpty())return;level=event.getServer().overworld();try{
         for(var pos:List.of(POWER,BATTERY,FLUID,TANK,PULL,PASSIVE,GROUP,MOVED,LARGE))load(pos);
         if(phase.equals("read"))return;
-        codec();sides();topology();
+        codec();sides();topology();fullness();
         put(BATTERY,true,Direction.DOWN);put(TANK,false,Direction.UP);put(PASSIVE,false,Direction.UP);
         for(var pos:List.of(POWER,FLUID,PULL)){var kind=pos.equals(POWER)?NativePortKind.POWER:NativePortKind.FLUID;level.setBlock(pos,NativePortBindings.BLOCKS.get(kind).defaultBlockState(),3);}
     }catch(Throwable failure){fail(failure);}}

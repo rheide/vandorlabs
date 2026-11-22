@@ -16,13 +16,31 @@ import net.neoforged.neoforge.client.model.data.*;
 /** One lower-cell owner. Pilot vehicle fields remain opaque and dormant in this stationary adapter. */
 public final class NativeChairEntity extends BlockEntity {
     public static final String ITEM_SETTINGS="ChairSettings";public static final ModelProperty<View> VIEW=new ModelProperty<>();
-    public record View(NativeSeatKind kind,int style,int height,int angle,boolean join,int pilotHeight,int part,int arms,int left,int right){
+    public record View(NativeSeatKind kind,int style,int height,int angle,boolean join,int pilotHeight,int part,int arms,int left,int right,boolean singleThrottle){
+        public View(NativeSeatKind kind,int style,int height,int angle,boolean join,int pilotHeight,int part,int arms,int left,int right){this(kind,style,height,angle,join,pilotHeight,part,arms,left,right,false);}
         public View(NativeSeatKind kind,int style,int height,int angle,boolean join,int pilotHeight,int part,int arms){this(kind,style,height,angle,join,pilotHeight,part,arms,0,0);}
     }
-    private final NativeChairArmrest left=new NativeChairArmrest(this,"slider_left"),right=new NativeChairArmrest(this,"slider_right");
+    private final NativeChairArmrest left,right;
+    private int throttleCount=2;
     private static final String CONTROLS="CockpitControls";
     NativeChairArmrest armrest(int index){return index==NativeChairArmrest.LEFT?left:index==NativeChairArmrest.RIGHT?right:null;}
     public int armrestLevel(int index){return armrest(index).level();}
+    public int throttleCount(){return throttleCount;}
+    public int throttleStep(int index){return armrest(index==0?NativeChairArmrest.LEFT:NativeChairArmrest.RIGHT).step();}
+    boolean armrestEnabled(NativeChairArmrest arm){return kind()==NativeSeatKind.ADVANCED||kind()==NativeSeatKind.COCKPIT&&(arm==left||throttleCount==2);}
+    boolean usesArmrests(){return kind()==NativeSeatKind.ADVANCED||kind()==NativeSeatKind.COCKPIT;}
+    boolean setThrottleCount(int count){
+        if(kind()!=NativeSeatKind.COCKPIT||!(level instanceof ServerLevel server)||count<1||count>2)return false;
+        if(count!=throttleCount){
+            com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.batch(server,()->{
+                com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(right);
+                throttleCount=count;
+                if(count==2)com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.channelsChanged(right);
+            });
+            armrestsChanged();
+        }
+        return true;
+    }
     public int armrestMin(int index){return armrest(index).min();}
     public int armrestMax(int index){return armrest(index).max();}
     public com.vandorlabs.redstone.ChannelList armrestChannels(int index){return armrest(index).getRedstoneChannels();}
@@ -31,19 +49,24 @@ public final class NativeChairEntity extends BlockEntity {
         if(level!=null)level.sendBlockUpdated(worldPosition,getBlockState(),getBlockState(),2);
     }
     void registerArmrests(){
-        if(kind()!=NativeSeatKind.ADVANCED||NativeSeatBlock.proxy(getBlockState())||inert)return;
+        if(!usesArmrests()||NativeSeatBlock.proxy(getBlockState())||inert)return;
         com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(left);
-        com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(right);
+        if(armrestEnabled(right))com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.queueRegistration(right);
     }
     private void unregisterArmrests(){
-        if(kind()!=NativeSeatKind.ADVANCED||NativeSeatBlock.proxy(getBlockState()))return;
+        if(!usesArmrests()||NativeSeatBlock.proxy(getBlockState()))return;
         com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(left);
         com.vandorlabs.neoforge.redstone.NativeRedstoneChannels.unregister(right);
     }
     @Override public void setRemoved(){stopTouch();unregisterArmrests();super.setRemoved();}
     @Override public void onChunkUnloaded(){stopTouch();unregisterArmrests();super.onChunkUnloaded();}
     private boolean readArmrests(CompoundTag tag){
-        if(kind()!=NativeSeatKind.ADVANCED||NativeSeatBlock.proxy(getBlockState()))return true;
+        if(!usesArmrests()||NativeSeatBlock.proxy(getBlockState()))return true;
+        if(kind()==NativeSeatKind.COCKPIT){
+            if(tag.contains("CockpitThrottles")&&(!tag.contains("CockpitThrottles",Tag.TAG_INT)
+                ||tag.getInt("CockpitThrottles")<1||tag.getInt("CockpitThrottles")>2))return false;
+            throttleCount=tag.contains("CockpitThrottles")?tag.getInt("CockpitThrottles"):2;
+        }
         if(tag.contains(CONTROLS)&&!tag.contains(CONTROLS,Tag.TAG_LIST))return false;
         var rows=tag.getList(CONTROLS,Tag.TAG_COMPOUND);
         return left.read(armrestTag(rows,left.id))&&right.read(armrestTag(rows,right.id));
@@ -53,9 +76,10 @@ public final class NativeChairEntity extends BlockEntity {
         return new CompoundTag();
     }
     private void writeArmrests(CompoundTag target){
-        if(kind()!=NativeSeatKind.ADVANCED||NativeSeatBlock.proxy(getBlockState()))return;
+        if(!usesArmrests()||NativeSeatBlock.proxy(getBlockState()))return;
         var rows=target.getList(CONTROLS,Tag.TAG_COMPOUND).copy();
-        if(rows.isEmpty()){
+        if(kind()==NativeSeatKind.COCKPIT)target.putInt("CockpitThrottles",throttleCount);
+        if(rows.isEmpty()&&kind()==NativeSeatKind.ADVANCED){
             for(int index=0;index<3;index++){
                 var untouched=new CompoundTag();
                 untouched.putString("Id","touch_right_single/"+index);
@@ -127,7 +151,7 @@ public final class NativeChairEntity extends BlockEntity {
 
     private ChairSettings settings=new ChairSettings(0,1,0,true);private int pilotHeight,part,arms;private boolean inert,opaqueProxy;
     private CompoundTag retained=new CompoundTag();private boolean retainedItem;private volatile View view;private ItemStack removalDrop;
-    public NativeChairEntity(BlockPos pos,BlockState state){super(NativeSeatBindings.type(state),pos,state);cockpitTouch=kind()==NativeSeatKind.COCKPIT&&!NativeSeatBlock.proxy(state)?new NativeCockpitTouch(this):null;publish();}
+    public NativeChairEntity(BlockPos pos,BlockState state){super(NativeSeatBindings.type(state),pos,state);left=new NativeChairArmrest(this,kind()==NativeSeatKind.COCKPIT?"throttle_left":"slider_left");right=new NativeChairArmrest(this,kind()==NativeSeatKind.COCKPIT?"throttle_right":"slider_right");cockpitTouch=(kind()==NativeSeatKind.COCKPIT||kind()==NativeSeatKind.ADVANCED)&&!NativeSeatBlock.proxy(state)?new NativeCockpitTouch(this):null;publish();}
     public NativeSeatKind kind(){return ((NativeSeatBlock)getBlockState().getBlock()).kind;}
     public void prepareRemoval(ItemStack stack){removalDrop=stack.copy();}
     public ItemStack removalDrop(){return removalDrop==null?null:removalDrop.copy();}
@@ -145,7 +169,7 @@ public final class NativeChairEntity extends BlockEntity {
     public boolean proxyShareable(){return NativeSeatBlock.proxy(getBlockState())&&!inert&&!opaqueProxy&&!hasAttachments()&&components().isEmpty()&&getPersistentData().isEmpty();}
     public boolean taxiMode(){return !retained.contains("TaxiMode",Tag.TAG_BYTE)||retained.getBoolean("TaxiMode");}
     public ChairSettings settings(){return settings;}public int pilotHeight(){return pilotHeight;}public boolean inert(){return inert;}public View view(){return view;}
-    private void publish(){view=inert?new View(kind(),0,1,0,true,0,0,0):new View(kind(),settings.style,settings.height,settings.angle,settings.join,pilotHeight,part,arms,left.level(),right.level());requestModelDataUpdate();}
+    private void publish(){view=inert?new View(kind(),0,1,0,true,0,0,0):new View(kind(),settings.style,settings.height,settings.angle,settings.join,pilotHeight,part,arms,left.level(),right.level(),kind()==NativeSeatKind.COCKPIT&&throttleCount==1);requestModelDataUpdate();}
     public net.minecraft.world.phys.Vec3 cushionOffset(){
         if(kind()==NativeSeatKind.COCKPIT)return NativeCockpitGeometry.cushion(getBlockState().getValue(NativeSeatBlock.FACING));
         return kind()==NativeSeatKind.ADVANCED?NativeAdvancedChairGeometry.cushion(getBlockState().getValue(NativeSeatBlock.FACING),pilotHeight)
