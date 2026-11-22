@@ -160,6 +160,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         cruisingRecovery|=cruise.active()||flightAltitude()>FlightEnvelope.WORLD_CEILING;
     }
     VehiclePose flightPose(){return new VehiclePose(posX,posY,posZ,rotationYaw,flightPitch,flightBank,structure==null?EnumFacing.NORTH:structure.facing);}
+    AxisAlignedBB flightBounds(VehiclePose pose){return flightMotion.bounds(pose);}
     void applyFlightPose(VehiclePose pose){
         rotationYaw=pose.yaw;flightPitch=pose.pitch;flightBank=pose.bank;
         setPosition(pose.x,pose.y,pose.z);view.origin=new BlockPos(pose.x,pose.y,pose.z);
@@ -778,7 +779,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
     }
 
     private VehicleFlightMotion.Result moveFlight(double dx,double dy,double dz,float yaw,float pitch,float bank){
-        if(cruise.active()&&cruise.move(dx,dy,dz)){
+        if(cruise.active()&&cruise.move(dx,dy,dz,yaw,pitch,bank)){
             applyFlightPose(new VehiclePose(posX,posY,posZ,yaw,pitch,bank,structure.facing));
             return VehicleFlightMotion.Result.MOVED;
         }

@@ -12,6 +12,8 @@ public final class BlockAvailability {
     private static final Map<String,Boolean> ENABLED=new HashMap<>();
     private static int vehicleMaxBlocks=4096;
     private static int vehicleMaxArticulationPoints=7;
+    private static boolean reanchorResidentCruise;
+    public static boolean reanchorResidentCruise(){return reanchorResidentCruise;}
     public static int vehicleMaxArticulationPoints(){return vehicleMaxArticulationPoints;}
     public static int vehicleMaxBlocks(){return vehicleMaxBlocks;}
     private BlockAvailability() {}
@@ -28,6 +30,8 @@ public final class BlockAvailability {
         vehicleMaxArticulationPoints=config.getInt("maxArticulationPoints","vehicles",7,0,
                 com.vandorlabs.vehicle.VehicleArticulation.MAX_JOINTS,
                 "Maximum independent hinge points allowed in new vehicle assemblies and attachments. Default 7 permits eight articulated segments; 0 allows rigid vehicles only. Rigid/parallel couplers and closed loops do not count. Lowering this does not prevent saved vehicles loading or parking. Other geometry/data limits still apply. Restart required.");
+        reanchorResidentCruise=config.getBoolean("reanchorResidentCruise","vehicles",false,
+                "Allow a High Flight vehicle to reanchor periodically when its destination hull and full rider view are already loaded and populated. Missing terrain keeps the current anchor. Restart required.");
         ENABLED.clear();
         config.setCategoryComment("blocks","Block categories available in creative menus and crafting. Restart required. Existing world blocks and inventory items are preserved. Diagonal variants belong to diagonals, regardless of material/function.");
         for(String category:BlockCategories.IDS)

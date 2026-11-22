@@ -39,6 +39,10 @@ public final class VehicleCruise {
     public double z() { return !active() ? craft.posZ : craft.world.isRemote ? craft.getDataManager().get(ROUTE).getZ() : routeZ; }
 
     boolean move(double dx, double dy, double dz) {
+        return move(dx,dy,dz,craft.rotationYaw,craft.flightPitch(),craft.flightBank());
+    }
+
+    boolean move(double dx,double dy,double dz,float yaw,float pitch,float bank) {
         if (craft.world.isRemote || craft.dimension != 0) return false;
         boolean cruising = active();
         double height = Math.min(FlightEnvelope.MAX_ALTITUDE, altitude() + dy);
@@ -60,10 +64,12 @@ public final class VehicleCruise {
             clearTerrain();
             return true;
         }
-        if (!cruising || craft.ticksExisted % 3 == 0) {
+        boolean residentHop=cruising && CruiseResidentReanchor.ready(craft,routeX,SKY_OFFSET+height,routeZ,yaw,pitch,bank);
+        if (!cruising || residentHop || craft.ticksExisted % 3 == 0) {
             craft.getDataManager().set(ROUTE, new BlockPos(routeX,1,routeZ));
         }
         if (!cruising) relocate(craft.posX, SKY_OFFSET + height, craft.posZ);
+        else if (residentHop) relocate(routeX, SKY_OFFSET + height, routeZ, true);
         else craft.setPosition(craft.posX, SKY_OFFSET + height, craft.posZ);
         updateTerrain(routeX, routeZ, height);
         return true;
@@ -89,18 +95,26 @@ public final class VehicleCruise {
         }
     }
 
-    private void relocate(double x, double y, double z) {
+    private void relocate(double x, double y, double z) { relocate(x,y,z,false); }
+
+    private void relocate(double x, double y, double z, boolean residentHop) {
         // The spatial index unions previous/current render bounds. A teleport has no swept path.
         craft.prevPosX = craft.lastTickPosX = x;
         craft.prevPosY = craft.lastTickPosY = y;
         craft.prevPosZ = craft.lastTickPosZ = z;
         craft.setPosition(x,y,z);
         craft.view.origin = new BlockPos(craft);
+        WorldServer world=(WorldServer)craft.world;
+        if (residentHop) world.updateEntityWithOptionalForce(craft,false);
         for (Entity rider : craft.getPassengers()) {
             craft.updatePassenger(rider);
             if (rider instanceof EntityPlayerMP) {
                 EntityPlayerMP player = (EntityPlayerMP)rider;
                 player.connection.setPlayerLocation(player.posX,player.posY,player.posZ,player.rotationYaw,player.rotationPitch);
+                if (residentHop) {
+                    world.updateEntityWithOptionalForce(player,false);
+                    world.getPlayerChunkMap().updateMovingPlayer(player);
+                }
             }
         }
     }

@@ -117,6 +117,7 @@ public final class CruiseRuntimeChecks {
     }
 
     public static boolean tick(Minecraft mc,File out) throws Exception {
+        if(Boolean.getBoolean("vandorlabs.cruiseResidentChecksOnly"))return CruiseResidentChecks.tick(mc);
         if(++ticks>2000)throw new IllegalStateException("Cruise fixture timeout at stage "+stage+" rider="+mc.player.getRidingEntity()+" position="+mc.player.getPosition()+" start="+startX+" dest="+destination);
         if(work!=null){if(!work.isDone())return false;work.get();work=null;ticks=0;}
         if(stage==0 && "read".equals(RESTART)){
