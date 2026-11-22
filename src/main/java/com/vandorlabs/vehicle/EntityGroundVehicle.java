@@ -123,6 +123,7 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
             throw new IllegalArgumentException("Takeoff requires ground contact and extended Taxi landing gear.");
         flightPhase=hover?POWERED_FLIGHT:TAKEOFF_ROLL;
         flightPitch=0;landedFromFlight=false;cruisingRecovery=false;initialClimb=0;driveSpeed=Math.max(0,driveSpeed);
+        serverInputs.clear();forward=strafe=0;brake=false;
         taxiReturnPending=false;
         if(hover)VehicleLandingGear.refreshSignals(this);
     }
@@ -699,7 +700,8 @@ public final class EntityGroundVehicle extends Entity implements net.minecraftfo
         }
         if(driveSpeed>=FlightEnvelope.TAKEOFF_SPEED&&forward<0){
             flightPhase=POWERED_FLIGHT;
-            initialClimb=5;
+            double length=structure.facing.getAxis()==EnumFacing.Axis.X?structure.bounds.maxX:structure.bounds.maxZ;
+            initialClimb=Math.max(5,2+(int)Math.ceil(length*.5*Math.sin(Math.toRadians(3))/.17));
             applyFlightPose(new VehiclePose(posX,posY,posZ,rotationYaw,0,structure.facing));
             VehicleLandingGear.refreshSignals(this);
         }

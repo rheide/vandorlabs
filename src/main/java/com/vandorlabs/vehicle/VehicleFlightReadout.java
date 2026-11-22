@@ -87,7 +87,10 @@ public final class VehicleFlightReadout {
                 count++;
                 fuel += drive.maxwellFuel();
                 capacity += drive.maxwellCapacity();
-                if (drive.maxwellFuel() > 0) thrust += drive.maxwellThrustUnits() * drive.maxwellThrustLevel(true) / 15;
+                if (drive.maxwellFuel() > 0) {
+                    int throttle=current.parent.isRemote&&drive.screenSettings().redstone?drive.maxwellActiveLevel():drive.maxwellThrustLevel(true);
+                    thrust += drive.maxwellThrustUnits() * throttle / 15;
+                }
             }
             return new VehicleFlightReadout(count, fuel, capacity, mass, FlightEnvelope.effectiveMass(mass, plates, repulsors), thrust, partial);
         }

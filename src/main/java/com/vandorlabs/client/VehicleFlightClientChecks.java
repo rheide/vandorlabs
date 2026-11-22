@@ -22,7 +22,6 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.EnumHand;
 import net.minecraft.util.math.BlockPos;
-import net.minecraft.util.math.RayTraceResult;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.fluids.FluidStack;
@@ -136,14 +135,20 @@ final class VehicleFlightClientChecks {
         if(stage==1&&frame>=3){
             aim(mc,craft,3);
             VehicleInteraction.Target hit=VehicleInteraction.pointed(mc.player);
-            need(hit!=null&&hit.hit.cell.pos.equals(SCREEN),"real seated access to Flight button");
-            mc.objectMouseOver=new RayTraceResult(RayTraceResult.Type.MISS,mc.player.getPositionEyes(1),EnumFacing.UP,BlockPos.ORIGIN);
-            net.minecraftforge.fml.relauncher.ReflectionHelper.findMethod(Minecraft.class,"rightClickMouse","func_147121_ag").invoke(mc);
+            need(hit!=null&&hit.hit.cell.pos.equals(SCREEN)&&VehicleInteraction.supported(mc.player,hit),"real seated access to Flight button");
+            mc.getIntegratedServer().addScheduledTask(()->{
+                EntityPlayerMP pilot=player(mc);
+                VehicleInteraction.Target selected=VehicleInteraction.pointed(pilot);
+                need(selected!=null&&selected.hit.cell.pos.equals(SCREEN)&&VehicleInteraction.supported(pilot,selected),
+                        "server aim and held stack synced for Status click; yaw="+pilot.rotationYaw+" pitch="+pilot.rotationPitch+" held="+pilot.getHeldItemMainhand());
+            }).get();
+            net.minecraftforge.common.MinecraftForge.EVENT_BUS.post(new net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickEmpty(mc.player,EnumHand.MAIN_HAND));
             next();return false;
         }
         if(stage==2&&frame>=22){
+            String motion="roll="+craft.takeoffRoll()+" flight="+craft.flying()+" Y="+craft.posY+" runway="+runwayY+" speed="+craft.driveSpeed;
             need(craft.takeoffRoll()&&!craft.flying()&&Math.abs(craft.posY-runwayY)<.08&&craft.driveSpeed>=FlightEnvelope.TAKEOFF_SPEED-1e-4,
-                    "ground roll builds speed without liftoff before pitch input");
+                    "ground roll builds speed without liftoff before pitch input; "+motion);
             KeyBinding.setKeyBindState(mc.gameSettings.keyBindBack.getKeyCode(),true);
             next();return false;
         }
