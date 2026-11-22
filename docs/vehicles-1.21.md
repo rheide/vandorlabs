@@ -8,6 +8,8 @@
 4. Stand beside the craft and select **Assemble in Taxi Mode**. Once the vehicle appears, right-click the Pilot Seat. Use **W/S** to drive forward or reverse, **A/D** to steer while moving, and **Space** to brake.
 5. Stop on clear ground and align the deck with the block grid. Dismount, right-click the carried Controller, and select **Park as blocks**. A Configurizer can open the same dialog from the hull. The vehicle stays assembled if the parking site is obstructed.
 
+![A pilot driving a small assembled taxi on a stone road](images/gallery/native-taxi.png)
+
 ![Flight tab for a nine-block Taxi craft](images/gallery/native-vehicle-flight-tab.png)
 
 Craft a Vehicle Controller with four iron ingots in the corners, four redstone dust on the edges, and a Programmable Matter Ingot in the center. It is also a Catalog design for the Synthesis Tower.
