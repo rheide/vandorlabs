@@ -115,7 +115,7 @@ class SchedulerChecks(unittest.TestCase):
         self.assertEqual(set(live.RELEASE_FOCI), set(live.PRIORITY))
         self.assertEqual(set(live.LEGACY_FOCI) | {
             'navigation-vehicle', 'navigation-world', 'navigation-module', 'module-rack',
-            'appliances', 'synthesis-tower', 'maxwell-drive', 'vehicle-status', 'maxwell-cruise', 'infuser-gui', 'ramp-dialog', 'core-icons',
+            'appliances', 'synthesis-tower', 'maxwell-drive', 'vehicle-status', 'maxwell-cruise', 'vehicle-resources', 'infuser-gui', 'ramp-dialog', 'core-icons',
             'observer-performance', 'navigation-performance'}, set(live.PRIORITY))
         report = self.run_plan(live.PRIORITY, jobs=2, scope='full')
         self.assertEqual('passed', report['status'])
