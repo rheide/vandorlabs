@@ -15,10 +15,12 @@ import com.vandorlabs.physics.FlightEnvelope;
 import com.vandorlabs.screen.ScreenFamily;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.level.ServerPlayer;
+import net.minecraft.util.Mth;
 import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.GameType;
 import net.minecraft.world.level.block.Block;
@@ -55,10 +57,11 @@ public final class NativeVehicleFlightFixture {
     private static double descendingFrom;
     private static boolean landed;
 
-    private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN, COLD }
+    private enum Stage { FORM, ASSEMBLE, BOARD, LOW, TRANSIT, BURN, REENTRY, TOUCHDOWN, COLD, IMPACT }
 
     public static boolean enabled() { return Boolean.getBoolean("vandorlabs.vehicleFlightChecks"); }
     public static String restartPhase() { return System.getProperty("vandorlabs.vehicleFlightRestart", ""); }
+    public static String impact() { return System.getProperty("vandorlabs.vehicleFlightImpact", ""); }
 
     @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
     public static final class Fuel {
@@ -89,6 +92,15 @@ public final class NativeVehicleFlightFixture {
         }
         for (int x = 0; x <= 5; x++) for (int z = 0; z <= 3; z++) {
             world.setBlockAndUpdate(ROOT.offset(x, -1, z), top);
+        }
+        if (impact().equals("hover")) {
+            String[] lift = {"antigravity_plate", "repulsor_array", "vertical_hover_thruster", "ion_drive"};
+            for (int index = 0; index < lift.length; index++) {
+                var at = ROOT.west().south(index);
+                world.setBlockAndUpdate(at.below(), top);
+                var device = BuiltInRegistries.BLOCK.get(ResourceLocation.fromNamespaceAndPath("vandorlabs", lift[index]));
+                world.setBlockAndUpdate(at, device.defaultBlockState());
+            }
         }
         world.setBlockAndUpdate(ROOT, NativeVehicleBindings.CONTROLLER.defaultBlockState());
         ((NativeVehicleControllerEntity)world.getBlockEntity(ROOT)).placedBy(player.getUUID());
@@ -166,6 +178,18 @@ public final class NativeVehicleFlightFixture {
                 stage = Stage.LOW;
             }
             case LOW -> {
+                if (!impact().isEmpty()) {
+                    if (++airborneTicks < 9) return;
+                    var box = craft.getBoundingBox();
+                    int wall = Mth.floor(box.maxZ) + 2;
+                    for (int x = Mth.floor(box.minX) - 1; x <= Mth.ceil(box.maxX) + 1; x++) {
+                        for (int y = ROOT.getY(); y <= Mth.ceil(box.maxY) + 4; y++) {
+                            world.setBlockAndUpdate(new BlockPos(x, y, wall), Blocks.STONE.defaultBlockState());
+                        }
+                    }
+                    stage = Stage.IMPACT;
+                    return;
+                }
                 if (craft.highFlight()) {
                     require(craft.flightAltitude() > FlightEnvelope.WORLD_CEILING && craft.flightAltitude() < 260,
                             "powered tick crosses Y=256 into geographic transit");
@@ -220,6 +244,14 @@ public final class NativeVehicleFlightFixture {
                 craft.setPos(craft.getX(), ground + 4, craft.getZ());
                 craft.setOldPosAndRot();
                 stage = Stage.TOUCHDOWN;
+            }
+            case IMPACT -> {
+                int expected = impact().equals("hover") ? NativeGroundVehicle.HOVER : NativeGroundVehicle.TAXI;
+                if (craft.mode() != expected || Math.abs(craft.driveSpeed()) > .005) return;
+                require(!craft.highFlight() && actor.getVehicle() == craft && craft.flightReadout().fuel() == 1
+                        && craft.flightReadout().canHover() == impact().equals("hover"), "powered hull impact applies its available recovery mode");
+                landed = true;
+                System.out.println("[vandorlabs][vehicle-flight-impact-" + impact() + "-player] server PASS powered terrain sweep and capability-specific recovery");
             }
             case COLD -> {
                 if (!(actor.getVehicle() instanceof NativeGroundVehicle restored) || !restored.admitted()) return;

@@ -604,7 +604,7 @@ public final class NativeGroundVehicle extends Entity implements IEntityWithComp
         if (!cruise.allowsTransit()) ceiling = Math.min(ceiling, hull.ceiling(this, yaw, pitch));
         double rise = Math.min(launching ? .17 : movement.y, Math.max(0, ceiling - altitude));
         if (!flightMove(new Vec3(movement.x, rise, movement.z), yaw, pitch)) {
-            flightPhase = LANDING;
+            flightPhase = propulsion.canHover() ? RETURN_HOVER : LANDING;
             speed = 0;
             setDeltaMovement(Vec3.ZERO);
         }

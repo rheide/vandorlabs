@@ -22,7 +22,7 @@ import net.neoforged.neoforge.client.event.ClientTickEvent;
 public final class NativeVehicleFlightPlayerChecks {
     private static int stage, ticks, cameraTicks;
     private static NativeGroundVehicle craft;
-    private static boolean captured, becameHigh;
+    private static boolean captured, becameHigh, lifted;
     private static final java.lang.reflect.Method USE_ITEM = useItem();
 
     private static java.lang.reflect.Method useItem() {
@@ -97,6 +97,19 @@ public final class NativeVehicleFlightPlayerChecks {
                 stage++;
             }
             case 3 -> {
+                String impact = NativeVehicleFlightFixture.impact();
+                if (!impact.isEmpty()) {
+                    if (craft.flightAltitude() > NativeVehicleFlightFixture.ROOT.getY() - .25) lifted = true;
+                    int expected = impact.equals("hover") ? NativeGroundVehicle.HOVER : NativeGroundVehicle.TAXI;
+                    if (!lifted || craft.mode() != expected || Math.abs(craft.driveSpeed()) > .005) return;
+                    NativeVehicleFlightFixture.require(player.getVehicle() == craft && craft.flightReadout().fuel() == 1
+                            && !craft.highFlight(), "connected pilot observes powered terrain-impact recovery");
+                    mc.options.keyDown.setDown(false);
+                    System.out.println("[vandorlabs][vehicle-flight-impact-" + impact + "-player] client PASS seated with matching recovery mode");
+                    mc.stop();
+                    stage = 6;
+                    return;
+                }
                 if (!craft.highFlight()) return;
                 becameHigh = true;
                 mc.options.keyDown.setDown(false);
