@@ -33,6 +33,8 @@ final class NativeDriveClientFixture {
     private static UUID actor;
     private static int serverStep;
     private static final int TOWER=NativeDriveDesign.SUPPORTED.size(), TOWER_ACTION=TOWER*4;
+    private static final boolean MAXWELL_ONLY=Boolean.getBoolean("vandorlabs.maxwellClient");
+    private static final int LAST_ACTION=MAXWELL_ONLY?4:TOWER_ACTION+2;
     private static final ChannelList BANK = ChannelList.of(317, 318);
 
     private static BlockPos root(int drive) { return NativeBuilderClientFixture.ROOT.east(drive * 8); }
@@ -45,7 +47,7 @@ final class NativeDriveClientFixture {
             world.setBlock(new BlockPos(x, 95, z), Blocks.STONE.defaultBlockState(), 3);
             for (int y = 96; y <= 100; y++) world.setBlock(new BlockPos(x, y, z), Blocks.AIR.defaultBlockState(), 3);
         }
-        for (int i = 0; i <= NativeDriveDesign.SUPPORTED.size(); i++) {
+        for (int i = 0; i <= (MAXWELL_ONLY?0:TOWER); i++) {
             String id = i == TOWER ? "synthesis_tower" : NativeDriveDesign.SUPPORTED.get(i).id;
             var root = root(i);
             var core = NativeBuilderBindings.CORES.get(id);
@@ -76,7 +78,7 @@ final class NativeDriveClientFixture {
     }
 
     static void apply(ServerPlayer player, int operation) {
-        need(player.getUUID().equals(actor) && serverStep == operation && operation < TOWER_ACTION+2, "ordered drive actor");
+        need(player.getUUID().equals(actor) && serverStep == operation && operation < LAST_ACTION, "ordered drive actor");
         int machine = operation / 4;
         var tile = (NativeBuilderEntity) player.serverLevel().getBlockEntity(root(machine));
         need(tile != null && tile.formed() && tile.available() && tile.synthesisReady(), "async formation ready");
@@ -142,7 +144,7 @@ final class NativeDriveClientFixture {
 
     static void logout(Player player) {
         if (!player.getUUID().equals(actor)) return;
-        need(serverStep == TOWER_ACTION+2, "both drive journeys complete");
+        need(serverStep == LAST_ACTION, "both drive journeys complete");
         System.out.println("[vandorlabs][builder-client] logout PASS");
     }
 
@@ -188,7 +190,8 @@ final class NativeDriveClientFixture {
                 }
                 if (disconnected && mc.level == null) {
                     complete = true;
-                    System.out.println("[vandorlabs][builder-client] client PASS MaxwellMeridianOculusVectorFoldComputers physicalSurvival/dialogs/Configurator/mount");
+                    System.out.println("[vandorlabs][builder-client] client PASS "+(MAXWELL_ONLY?"Maxwell physicalSurvival/fill/Engine/Configurator/purge"
+                            :"MaxwellMeridianOculusVectorFoldComputers physicalSurvival/dialogs/Configurator/mount"));
                     mc.stop();
                     return;
                 }
@@ -197,7 +200,7 @@ final class NativeDriveClientFixture {
                         + mc.gameMode.getPlayerMode() + " slot " + mc.player.getInventory().selected
                         + " held " + mc.player.getMainHandItem() + " position " + mc.player.position() + " screen " + mc.screen);
                 if (step > 0 && !mc.level.getBlockState(ack(step - 1)).is(Blocks.EMERALD_BLOCK)) return;
-                if (step == TOWER_ACTION+2) {
+                if (step == LAST_ACTION) {
                     disconnected = true;
                     mc.level.disconnect();
                     mc.disconnect();
