@@ -1,6 +1,8 @@
 package com.vandorlabs.neoforge.vehicle;
 
 import com.mojang.authlib.GameProfile;
+import com.vandorlabs.drives.MaxwellEngine;
+import com.vandorlabs.neoforge.builders.*;
 import com.vandorlabs.neoforge.mixin.NativeRampChunkStorageAccess;
 import com.vandorlabs.neoforge.seating.NativeSeatBindings;
 import com.vandorlabs.neoforge.seating.NativeSeatBlock;
@@ -12,6 +14,8 @@ import java.util.UUID;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.Registries;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
@@ -28,10 +32,16 @@ import net.minecraft.world.level.block.entity.BarrelBlockEntity;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import net.minecraft.world.level.chunk.storage.ChunkSerializer;
+import net.minecraft.world.level.material.Fluid;
+import net.minecraft.world.level.material.WaterFluid;
 import net.minecraft.world.phys.AABB;
 import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.EventBusSubscriber;
+import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.common.util.FakePlayer;
+import net.neoforged.neoforge.fluids.FluidStack;
+import net.neoforged.neoforge.fluids.capability.IFluidHandler.FluidAction;
+import net.neoforged.neoforge.registries.RegisterEvent;
 import net.neoforged.neoforge.event.level.BlockEvent;
 import net.neoforged.neoforge.event.server.ServerStartedEvent;
 import net.neoforged.neoforge.event.tick.ServerTickEvent;
@@ -43,6 +53,8 @@ public final class NativeVehicleTransferChecks {
     private static final BlockPos PILOT = ROOT.east();
     private static final BlockPos BARREL = ROOT.south();
     private static final BlockPos PARK = ROOT.east(8);
+    private static final BlockPos ENGINE = ROOT.east(2).south().above();
+    private static final int FUEL_MB = 614;
     private static final UUID OWNER = new UUID(0, 0x7381);
     private static final AABB VOLUME = new AABB(ROOT).minmax(new AABB(PARK)).inflate(8);
     private static ServerLevel world;
@@ -50,7 +62,19 @@ public final class NativeVehicleTransferChecks {
     private static NativeGroundVehicle craft, stale;
     private static CompoundTag originalActor;
     private static int ticks, stage;
-    private static boolean blockedBreak, blockedPlace, faulted;
+    private static boolean blockedBreak, blockedPlace, faulted, formed;
+    private static Fluid fuel;
+
+    @EventBusSubscriber(modid = "vandorlabs", bus = EventBusSubscriber.Bus.MOD)
+    public static final class Fuels {
+        @SubscribeEvent public static void register(RegisterEvent event) {
+            if (!phase().equals("roundtrip")) return;
+            event.register(Registries.FLUID, helper -> {
+                fuel = new WaterFluid.Source();
+                helper.register(ResourceLocation.parse("vandorlabs:fuelium"), fuel);
+            });
+        }
+    }
 
     private static String phase() { return System.getProperty("vandorlabs.vehicleTransferPhase", ""); }
     private static void require(boolean ok, String message) {
@@ -89,6 +113,7 @@ public final class NativeVehicleTransferChecks {
             player = new FakePlayer(world, new GameProfile(OWNER, "VehicleTransferFixture"));
             player.setGameMode(GameType.SURVIVAL);
             movePlayer(ROOT);
+            if (phase().equals("roundtrip")) stageMaxwell();
             event.getServer().saveEverything(true, true, true);
             NativeBuilderJournalFault.set(NativeVehicleTransferChecks::fault);
         } catch (Throwable failure) { fail(failure); }
@@ -120,6 +145,7 @@ public final class NativeVehicleTransferChecks {
             }
             if (faulted || ticks < 12) return;
             if (stage == 0) {
+                if (phase().equals("roundtrip") && !formMaxwell()) return;
                 require(!new ChunkPos(ROOT).equals(new ChunkPos(PILOT)), "fixture hull crosses chunk boundaries");
                 if (phase().equals("roundtrip")) {
                     world.noSave = true;
@@ -177,7 +203,7 @@ public final class NativeVehicleTransferChecks {
                 if (!stale.isRemoved()) return;
                 require(actors() == 0, "the durable retirement removes a stale actor from its previous chunk");
                 requireInventory(parked(BARREL));
-                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/staleChunkActor");
+                pass("permissionProbes/disabledSaving/obstruction/assembly/rotatedParking/exactBarrelComponents/maxwellFuelAndOwnedParts/staleChunkActor");
                 return;
             }
             if (NativeCellTransactions.busy(world, PARK, OWNER)) return;
@@ -191,6 +217,7 @@ public final class NativeVehicleTransferChecks {
             require(world.getBlockState(parked(BARREL)).getValue(BlockStateProperties.FACING) == Direction.WEST,
                 "native barrel facing rotates");
             requireInventory(parked(BARREL));
+            requireMaxwellParked();
             require(!new ChunkPos(ROOT).equals(new ChunkPos(PARK)), "parking crossed to a different entity storage chunk");
             stale = NativeVehicleBindings.VEHICLE.create(world);
             require(stale != null, "native actor factory is available for the stale-record regression");
@@ -240,6 +267,50 @@ public final class NativeVehicleTransferChecks {
         }
     }
 
+    private static void stageMaxwell() {
+        var core = NativeBuilderBindings.CORES.get(MaxwellEngine.DESIGN);
+        world.setBlock(ENGINE.below(), Blocks.IRON_BLOCK.defaultBlockState(), Block.UPDATE_ALL);
+        world.setBlock(ENGINE, core.defaultBlockState(), Block.UPDATE_ALL);
+        var shape = NativeBuilderFormation.layout(core.design, 3, Direction.NORTH.get3DDataValue(), 0, 0);
+        for (int x = 0; x < shape.width; x++) for (int y = 0; y < shape.height; y++) for (int z = 0; z < shape.depth; z++) {
+            var pos = ENGINE.offset(shape.x(x, z), y, shape.z(x, z));
+            if (!pos.equals(ENGINE)) world.setBlock(pos, shape.frame(x, y, z)
+                ? NativeBuilderFormation.matter().defaultBlockState() : Blocks.AIR.defaultBlockState(), Block.UPDATE_ALL);
+        }
+    }
+
+    private static boolean formMaxwell() {
+        var core = (NativeBuilderEntity)world.getBlockEntity(ENGINE);
+        if (!formed) {
+            require(NativeBuilderTransactions.request(core, player, true), "native Maxwell formation accepted");
+            formed = true;
+            return false;
+        }
+        if (!core.formed() || !core.available()) return false;
+        if (core.maxwellFuel() == 0) {
+            var pos = core.maxwellPort(Direction.NORTH);
+            var inlet = world.getCapability(Capabilities.FluidHandler.BLOCK, pos, Direction.NORTH);
+            require(inlet != null && inlet.fill(new FluidStack(fuel, FUEL_MB), FluidAction.EXECUTE) == FUEL_MB,
+                "registered fuel fills the real native Maxwell inlet");
+        }
+        return true;
+    }
+
+    private static void requireMaxwellParked() {
+        var at = parked(ENGINE);
+        var core = (NativeBuilderEntity)world.getBlockEntity(at);
+        require(core.formed() && core.facing() == Direction.EAST && core.maxwellFuel() == FUEL_MB,
+            "parked native Maxwell preserves its formed state, rotated facing and exact fuel amount");
+        var layout = core.layout();
+        for (int x = 0; x < layout.width; x++) for (int y = 0; y < layout.height; y++) for (int z = 0; z < layout.depth; z++) {
+            require(NativeBuilderBindings.ownerAt(world, core.cell(x, y, z)) == core,
+                "rotated Maxwell frame member keeps its unique native owner");
+        }
+        var inlet = world.getCapability(Capabilities.FluidHandler.BLOCK, core.maxwellPort(Direction.EAST), Direction.EAST);
+        require(inlet != null && inlet.getFluidInTank(0).getFluid() == fuel && inlet.getFluidInTank(0).getAmount() == FUEL_MB,
+            "rotated front inlet exposes the original fuel identity and no duplicate owner");
+    }
+
     private static void movePlayer(BlockPos anchor) {
         player.setPos(anchor.getX() + .5, anchor.getY(), anchor.getZ() - 2.5);
     }
@@ -271,6 +342,12 @@ public final class NativeVehicleTransferChecks {
         require(ItemStack.matches(ItemStack.parseOptional(world.registryAccess(), inventory.getCompound(0)), gold())
             && ItemStack.matches(ItemStack.parseOptional(world.registryAccess(), inventory.getCompound(1)), new ItemStack(Items.DIAMOND, 2)),
             "carried inventory preserves item identity, count, name and component payload");
+        if (phase().equals("roundtrip")) {
+            var core = vehicle.snapshot().cells().stream().filter(cell -> cell.pos.equals(ENGINE.subtract(ROOT))).findFirst().orElseThrow();
+            var tank = NativeMaxwellTank.read(core.tile(), world.registryAccess());
+            require(tank.amount() == FUEL_MB && tank.contents().getFluid() == fuel,
+                "carried Maxwell snapshot retains exact native fuel and its identity");
+        }
         requireNoDrops();
     }
 
