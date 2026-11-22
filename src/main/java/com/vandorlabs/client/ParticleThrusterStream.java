@@ -69,16 +69,16 @@ public class ParticleThrusterStream extends Particle {
         Vec3d right = new Vec3d(-forward.z, 0, forward.x).normalize();
         Vec3d up = right.crossProduct(forward);
         double dx = posX - center.x, dy = posY - center.y, dz = posZ - center.z;
-        double depth = dx * facing.getXOffset() + dz * facing.getZOffset();
-        double lateral = dx * localRight.getXOffset() + dz * localRight.getZOffset();
+        double depth = dx * facing.getFrontOffsetX() + dz * facing.getFrontOffsetZ();
+        double lateral = dx * localRight.getFrontOffsetX() + dz * localRight.getFrontOffsetZ();
         setPosition(center.x + depth * forward.x + lateral * right.x + dy * up.x,
                 center.y + depth * forward.y + dy * up.y,
                 center.z + depth * forward.z + lateral * right.z + dy * up.z);
         prevPosX = posX;
         prevPosY = posY;
         prevPosZ = posZ;
-        double speed = motionX * facing.getXOffset() + motionZ * facing.getZOffset();
-        double drift = motionX * localRight.getXOffset() + motionZ * localRight.getZOffset();
+        double speed = motionX * facing.getFrontOffsetX() + motionZ * facing.getFrontOffsetZ();
+        double drift = motionX * localRight.getFrontOffsetX() + motionZ * localRight.getFrontOffsetZ();
         double lift = motionY;
         motionX = speed * forward.x + drift * right.x + lift * up.x;
         motionY = speed * forward.y + lift * up.y;

@@ -66,11 +66,11 @@ final class MaxwellRenderer {
     private static void face(BufferBuilder buffer, TextureAtlasSprite tex, BlockPos at, EnumFacing face,
                              double x, double y, double z, double left, double right, double bottom, double top,
                              int light, double offset) {
-        double cx = x + at.getX() + .5 + face.getXOffset() * (.5 + offset);
+        double cx = x + at.getX() + .5 + face.getFrontOffsetX() * (.5 + offset);
         double cy = y + at.getY() + .5;
-        double cz = z + at.getZ() + .5 + face.getZOffset() * (.5 + offset);
+        double cz = z + at.getZ() + .5 + face.getFrontOffsetZ() * (.5 + offset);
         EnumFacing u = face.rotateYCCW();
-        int dx = u.getXOffset(), dz = u.getZOffset();
+        int dx = u.getFrontOffsetX(), dz = u.getFrontOffsetZ();
         vertex(buffer, cx + dx * left, cy + bottom, cz + dz * left, tex.getMinU(), tex.getMaxV(), light);
         vertex(buffer, cx + dx * right, cy + bottom, cz + dz * right, tex.getMaxU(), tex.getMaxV(), light);
         vertex(buffer, cx + dx * right, cy + top, cz + dz * right, tex.getMaxU(), tex.getMinV(), light);
