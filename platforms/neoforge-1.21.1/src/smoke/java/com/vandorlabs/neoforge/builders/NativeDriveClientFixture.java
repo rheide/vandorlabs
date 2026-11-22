@@ -164,7 +164,19 @@ final class NativeDriveClientFixture {
     @EventBusSubscriber(modid = "vandorlabs", value = Dist.CLIENT)
     public static final class ClientChecks {
         private static int step, delay;
-        private static boolean sent, disconnected, complete, scrolled, activationEdited;
+        private static boolean sent, disconnected, complete, scrolled, activationEdited, maxwellWorldShot, maxwellMenuShot;
+        private static String capture;
+
+        @SubscribeEvent public static void screenshot(net.neoforged.neoforge.client.event.RenderFrameEvent.Post event) throws java.io.IOException {
+            if (capture == null) return;
+            var mc = Minecraft.getInstance();
+            var path = mc.gameDirectory.toPath().resolve("screenshots").resolve(capture + ".png");
+            java.nio.file.Files.createDirectories(path.getParent());
+            try (var image = net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())) {
+                image.writeToFile(path);
+            }
+            capture = null;
+        }
 
         @SubscribeEvent public static void tick(ClientTickEvent.Post tick) {
             if (!NativeBuilderClientFixture.enabled() || !NativeBuilderClientFixture.drivesOnly() || complete) return;
@@ -195,6 +207,13 @@ final class NativeDriveClientFixture {
                 if (!(mc.level.getBlockEntity(root(machine)) instanceof NativeBuilderEntity tile)) return;
                 if (!sent) {
                     if (!ready(mc, aim(machine, action), machine, action)) return;
+                    if (tile.maxwell() && action == 1 && !maxwellWorldShot) {
+                        if (tile.maxwellFuel() <= 0) return;
+                        maxwellWorldShot = true;
+                        capture = "native-maxwell-filled-world";
+                        return;
+                    }
+                    if (capture != null) return;
                     var hit = mc.player.pick(mc.player.blockInteractionRange(), 1, false);
                     need(hit instanceof BlockHitResult block && hit.getType() == HitResult.Type.BLOCK
                             && NativeBuilderBindings.ownerAt(mc.level, block.getBlockPos()) == tile, "real ray reaches an authored owned cell");
@@ -226,6 +245,12 @@ final class NativeDriveClientFixture {
                     if (!(mc.screen instanceof NativeDriveScreen drive)) return;
                     if (action == 1) {
                         if (tile.maxwell() && tile.maxwellFuel() <= 0) return;
+                        if (tile.maxwell() && !maxwellMenuShot) {
+                            maxwellMenuShot = true;
+                            capture = "native-maxwell-engine-menu";
+                            return;
+                        }
+                        if (capture != null) return;
                         edit(drive, tile.drive());
                     }
                     else {

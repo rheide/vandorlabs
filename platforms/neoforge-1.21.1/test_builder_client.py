@@ -35,6 +35,9 @@ def main():
     code=process.wait(timeout=240)
     if code:raise RuntimeError('Native builder client exit '+str(code)+': '+str(out/'client.log'))
     check_log(out/'client.log','[vandorlabs][builder-client] client PASS')
+    if options.drives_only:
+     for shot in ('native-maxwell-filled-world','native-maxwell-engine-menu'):
+      if not (client/'screenshots'/(shot+'.png')).is_file():raise RuntimeError('Missing native Maxwell screenshot '+shot)
     if not options.parts_only and not options.drives_only:
      check_log(out/'client.log','[vandorlabs][builder-client] footprint PASS')
      check_log(out/'client.log','[vandorlabs][builder-client] world-render PASS')
