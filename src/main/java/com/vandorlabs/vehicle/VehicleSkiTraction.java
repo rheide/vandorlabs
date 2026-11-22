@@ -10,10 +10,15 @@ import net.minecraft.world.World;
 
 /** Ski-only craft may taxi while every runner remains above loaded ice. */
 public final class VehicleSkiTraction {
+    private static final double[][] CONTACTS={{0,0},{-.25,-.25},{-.25,.25},{.25,-.25},{.25,.25}};
     private VehicleSkiTraction(){}
     public static boolean allowed(EntityGroundVehicle craft){return !craft.structure.activeNonWheeledGear()||craft.structure.activeSkisOnly()&&onIce(craft,craft.posX,craft.posY,craft.posZ,craft.rotationYaw);}
     public static boolean canStart(World world,VehicleStructure structure,BlockPos origin){return !structure.activeNonWheeledGear()||structure.activeSkisOnly()&&onIce(world,structure,origin.getX(),origin.getY(),origin.getZ(),0);}
     public static boolean onIce(EntityGroundVehicle craft,double x,double y,double z,float yaw){return onIce(craft.world,craft.structure,x,y,z,yaw);}
+    static boolean parkedRunnerOnIce(World world,BlockPos pos,double height){
+        for(double[] offset:CONTACTS)if(!iceBelow(world,new Vec3d(pos).addVector(.5+offset[0],height,.5+offset[1])))return false;
+        return true;
+    }
     private static boolean onIce(World world,VehicleStructure structure,double x,double y,double z,float yaw){
         if(!structure.activeSkisOnly())return false;
         double c=Math.cos(Math.toRadians(yaw)),s=Math.sin(Math.toRadians(yaw)),px=structure.bounds.maxX/2,pz=structure.bounds.maxZ/2;boolean found=false;
@@ -23,7 +28,7 @@ public final class VehicleSkiTraction {
             boolean legacy=cell.state.getBlock() instanceof BlockNonWheeledLandingGear&&((BlockNonWheeledLandingGear)cell.state.getBlock()).ski&&!cell.state.getValue(BlockTelescopicLandingGear.LOWER);
             if(!modular&&!legacy)continue;found=true;
             double fy=cell.pos.getY()+.02-(legacy&&cell.tileData()!=null?cell.tileData().getFloat("Progress"):0);
-            for(double[] offset:new double[][]{{0,0},{-.25,-.25},{-.25,.25},{.25,-.25},{.25,.25}}){
+            for(double[] offset:CONTACTS){
                 double lx=cell.pos.getX()+.5+offset[0]-px,lz=cell.pos.getZ()+.5+offset[1]-pz;
                 if(!iceBelow(world,new Vec3d(x+px+c*lx-s*lz,y+fy,z+pz+s*lx+c*lz)))return false;
             }

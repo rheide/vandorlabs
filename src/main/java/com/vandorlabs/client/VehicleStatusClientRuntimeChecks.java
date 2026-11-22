@@ -110,13 +110,23 @@ final class VehicleStatusClientRuntimeChecks {
         int pixels=0,indicator=0,button=name.endsWith("_on")?0x37D8AD:name.endsWith("_off")?0x495C69:-1;for(int y=0;y<image.getHeight();y++)for(int x=0;x<image.getWidth();x++){int c=image.getRGB(x,y);if(near(c,background))pixels++;if(button>=0&&near(c,button))indicator++;}require(pixels>=25,"rendered "+name+" mode background pixels="+pixels);if(button>=0)require(indicator>=10,"rendered "+name+" autopilot indicator pixels="+indicator);
     }
     private static boolean near(int a,int b){return Math.abs((a>>16&255)-(b>>16&255))<=4&&Math.abs((a>>8&255)-(b>>8&255))<=4&&Math.abs((a&255)-(b&255))<=4;}
-    private static boolean disabledClick;
+    private static boolean disabledClick, parkedDisabledClick;
     private static void next(){stage++;frame=0;}
     static boolean tick(Minecraft mc,File output)throws Exception{
         if(stage==18)return VehicleFlightClientChecks.tick(mc,output);
         require(++total<950,"timeout stage="+stage);if(++frame<25)return false;
         if(stage==0){if(!(mc.world.getTileEntity(BASE.add(SCREEN)) instanceof TileEntityAnimatedScreenSelector))return false;aim(mc,SCREEN,false);next();return false;}
-        if(stage==1){shot(mc,output,"block_off",0x362B19);click(mc,false);next();return false;}
+        if(stage==1){
+            if(!parkedDisabledClick){
+                require((VehicleStatus.availableModes(mc.world,BASE.add(SCREEN),mc.player)&2)==0,"parked hull has no valid Taxi supports");
+                shot(mc,output,"block_off",0x362B19);click(mc,false,2);parkedDisabledClick=true;frame=0;return false;
+            }
+            mc.getIntegratedServer().addScheduledTask(()->{
+                TileEntityVehicleController root=(TileEntityVehicleController)world(mc).getTileEntity(BASE.add(INPUT));
+                require(root!=null&&!root.converting,"real click on disabled Taxi leaves blocks stationary");
+            }).get();
+            click(mc,false);next();return false;
+        }
         if(stage==2){state(mc,true,false);shot(mc,output,"block_on",0x362B19);click(mc,false);next();return false;}
         if(stage==3){state(mc,false,false);mc.getIntegratedServer().addScheduledTask(()->spawn(mc)).get();next();return false;}
         if(stage==4){if(client(mc)==null||client(mc).structure==null)return false;aim(mc,SCREEN,true);next();return false;}

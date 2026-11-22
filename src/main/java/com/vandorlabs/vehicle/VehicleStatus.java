@@ -12,7 +12,7 @@ import java.util.*;
 public final class VehicleStatus {
     public static final int FLIGHT_ACTION=5, EMERGENCY_PARK_ACTION=6;
     private static final Map<World,Map<BlockPos,Entry>> cache=new WeakHashMap<>();
-    private static final class Entry {final long at;final BlockPos controller,vehicle;final boolean hover;Entry(long at,BlockPos controller,BlockPos vehicle,boolean hover){this.at=at;this.controller=controller;this.vehicle=vehicle;this.hover=hover;}}
+    private static final class Entry {final long at;final BlockPos controller,vehicle;final int modes;Entry(long at,BlockPos controller,BlockPos vehicle,int modes){this.at=at;this.controller=controller;this.vehicle=vehicle;this.modes=modes;}}
     private VehicleStatus(){}
     public static void activate(World world,BlockPos screen,net.minecraft.entity.player.EntityPlayer actor,int action){
         if(!(actor instanceof net.minecraft.entity.player.EntityPlayerMP))return;
@@ -42,8 +42,7 @@ public final class VehicleStatus {
         if(craft==null){
             com.vandorlabs.tiles.TileEntityVehicleController root=controller(world,screen);
             if(root==null||root.converting)return 0;
-            return (1<<VehicleStatusLayout.PARK)|(1<<VehicleStatusLayout.TAXI)
-                    |(entry(world,screen).hover?1<<VehicleStatusLayout.HOVER:0);
+            return entry(world,screen).modes;
         }
         if(craft.structure==null||craft.transferInProgress||craft.ownershipBlocked||craft.isDead)return 0;
         int selected=craft.takeoffRoll()?VehicleStatusLayout.FLIGHT:craft.vehicleMode();
@@ -87,18 +86,26 @@ public final class VehicleStatus {
     }
     private static Entry entry(World world,BlockPos screen){
         Map<BlockPos,Entry> entries=cache.computeIfAbsent(world,w->new HashMap<>());Entry old=entries.get(screen);
-        if(old!=null&&world.getTotalWorldTime()-old.at>=0&&world.getTotalWorldTime()-old.at<100)return old;
+        if(old!=null&&world.getTotalWorldTime()-old.at>=0&&world.getTotalWorldTime()-old.at<40)return old;
         ArrayDeque<BlockPos> queue=new ArrayDeque<>();Set<BlockPos> seen=new HashSet<>();queue.add(screen);seen.add(screen);
-        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096,lift=0;boolean thruster=false;
+        BlockPos autopilot=null,controller=null;int autopilots=0,budget=4096,lift=0;
+        boolean thruster=false,pilot=false;VehicleStatusSupport supports=new VehicleStatusSupport();
         while(!queue.isEmpty()&&budget-->0){BlockPos p=queue.removeFirst();if(!world.isBlockLoaded(p)||world.isAirBlock(p))continue;TileEntity tile=world.getTileEntity(p);
             int navigation=com.vandorlabs.rack.ModuleAutopilots.count(tile);if(navigation>0){autopilots+=navigation;autopilot=p;}
             net.minecraft.block.state.IBlockState state=world.getBlockState(p);if(state.getBlock() instanceof com.vandorlabs.blocks.BlockVehicleController)controller=p;
             if(VehicleFlight.lift(state.getBlock()))lift++;else if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight)thruster=true;
-
+            if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPilotSeat&&!state.getValue(com.vandorlabs.blocks.BlockPilotSeat.UPPER))pilot=true;
+            try{supports.observe(world,p,state,tile);}
+            catch(RuntimeException|LinkageError unavailable){supports.unavailable();VehicleCompatibility.warn(state.getBlock(),"status landing supports",unavailable);}
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockLandingGear)continue;
             if(state.getBlock() instanceof com.vandorlabs.blocks.BlockPropulsionLight&&state.getValue(com.vandorlabs.blocks.BlockPropulsionLight.FACING)==net.minecraft.util.EnumFacing.DOWN)continue;
             try{for(net.minecraft.util.EnumFacing face:net.minecraft.util.EnumFacing.values())if(VehicleScan.touches(world,p,state,face)){BlockPos next=p.offset(face);if(world.isBlockLoaded(next)&&!VehicleScan.ownedCoupler(state,world.getBlockState(next),face)&&seen.add(next))queue.add(next);}}catch(RuntimeException|LinkageError unavailable){VehicleCompatibility.warn(state.getBlock(),"status connectivity",unavailable);}
         }
-        if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilots==1?autopilot:null,controller,lift>=3&&thruster);entries.put(screen.toImmutable(),result);return result;
+        int modes=1<<VehicleStatusLayout.PARK;
+        if(queue.isEmpty()&&pilot&&supports.ready()){
+            if(supports.taxi())modes|=1<<VehicleStatusLayout.TAXI;
+            if(lift>=3&&thruster)modes|=1<<VehicleStatusLayout.HOVER;
+        }
+        if(entries.size()>256)entries.clear();Entry result=new Entry(world.getTotalWorldTime(),autopilots==1?autopilot:null,controller,modes);entries.put(screen.toImmutable(),result);return result;
     }
 }
