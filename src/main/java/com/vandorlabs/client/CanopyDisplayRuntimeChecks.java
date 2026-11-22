@@ -287,13 +287,14 @@ final class CanopyDisplayRuntimeChecks {
         Vec3d a=CanopyMesh.rotate(v[0],tile.facing()),b=CanopyMesh.rotate(v[1],tile.facing()),c=CanopyMesh.rotate(v[2],tile.facing());
         Vec3d normal=b.subtract(a).crossProduct(c.subtract(a)).normalize();
         if(normal.y<-.15||Math.abs(normal.y)<.15&&normal.z>.2)normal=normal.scale(-1);
-        if(inside&&side){
-            double sign=v[0].x<tile.width()/2D?-1:1;
-            normal=new Vec3d(tile.facing().rotateY().getDirectionVec()).scale(sign);
-        }
-        Vec3d camera=inside?center.subtract(normal.scale(.77)):center.add(normal.scale(3));
-        if(inside&&!side)camera=camera.add(new Vec3d(tile.facing().getOpposite().getDirectionVec()).scale(.42));
-        placeCamera(mc,center,camera);
+        if(inside){
+            double x=tile.width()/2D;
+            if(side)x=v[0].x<x?tile.width()-.28:.28;
+            Vec3d interior=new Vec3d(x,.58,side?1.12:1.84);
+            Vec3d focus=side?new Vec3d(v[0].x,.52,1.15):new Vec3d(x,.83,.62);
+            placeCamera(mc,CanopyMesh.rotate(focus,tile.facing()).add(new Vec3d(tile.getPos())),
+                    CanopyMesh.rotate(interior,tile.facing()).add(new Vec3d(tile.getPos())));
+        }else placeCamera(mc,center,center.add(normal.scale(3)));
     }
 
     private static void placeCamera(Minecraft mc,Vec3d center,Vec3d camera){

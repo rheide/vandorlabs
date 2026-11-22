@@ -93,6 +93,7 @@ public final class CanopyFinishes {
     /** One picture per main pane and per physical side. Facets share logical pixels at every seam. */
     private static final class DisplayProjection {
         private final Pane[] panes={new Pane(),new Pane(),new Pane()};
+        private final Pane[] tallSide={new Pane(),new Pane(),new Pane()};
         private final boolean front;
         private final double centerX,centerY;
 
@@ -105,30 +106,42 @@ public final class CanopyFinishes {
             centerX=(bounds.minU+bounds.maxU)*.5;centerY=(bounds.minV+bounds.maxV)*.5;
             for(CanopyMesh.Face face:source)if(face.baseMaterial.equals("glass")){
                 boolean side=isSideGlass(face);
-                Pane pane=pane(face,side);
+                Pane pane=panes[paneIndex(face,side)];
                 for(Vec3d point:face.vertices)pane.include(u(point,side),v(point,side));
+            }
+            // The sloping nose leaves a triangular remainder on the side. Keep the
+            // readable part of its display in glazing that reaches the upper edge.
+            for(CanopyMesh.Face face:source)if(face.baseMaterial.equals("glass")&&isSideGlass(face)){
+                int index=paneIndex(face,true);
+                Pane pane=panes[index];
+                double top=pane.minV+(pane.maxV-pane.minV)*.75;
+                for(Vec3d point:face.vertices)if(point.y>=top)tallSide[index].include(u(point,true),point.y);
             }
         }
 
         double[][] coordinates(CanopyMesh.Face face,boolean side){
             if(!side&&face.joinedStretchUv!=null)return face.joinedStretchUv;
-            Pane pane=pane(face,side);
-            if(pane.maxU-pane.minU<1e-9||pane.maxV-pane.minV<1e-9)
-                return surfaceUv(face,TextureLayoutMode.STRETCH,0,1);
+            int index=paneIndex(face,side);
+            Pane pane=panes[index],upper=tallSide[index];
+            double width=pane.maxU-pane.minU;
+            if(width<1e-9||pane.maxV-pane.minV<1e-9)return surfaceUv(face,TextureLayoutMode.STRETCH,0,1);
+            boolean tapered=side&&upper.maxU-upper.minU>=width*.25;
+            double left=tapered?upper.minU:pane.minU;
+            double span=tapered?upper.maxU-upper.minU:width;
             double[][] result=new double[face.vertices.length][2];
             for(int i=0;i<result.length;i++){
                 Vec3d point=face.vertices[i];
-                result[i][0]=(u(point,side)-pane.minU)/(pane.maxU-pane.minU);
+                result[i][0]=Math.max(0,Math.min(1,(u(point,side)-left)/span));
                 result[i][1]=(v(point,side)-pane.minV)/(pane.maxV-pane.minV);
             }
             return result;
         }
 
-        private Pane pane(CanopyMesh.Face face,boolean side){
-            if(!side)return panes[0];
+        private int paneIndex(CanopyMesh.Face face,boolean side){
+            if(!side)return 0;
             double x=0;
             for(Vec3d point:face.vertices)x+=point.x;
-            return panes[x<face.vertices.length*centerX?1:2];
+            return x<face.vertices.length*centerX?1:2;
         }
 
         private static double u(Vec3d point,boolean side){return side?-point.z:point.x;}
