@@ -182,9 +182,14 @@ public final class NativeVehicleFlightFixture {
                 var telemetry = craft.flightReadout();
                 require(telemetry.drives() == 1 && telemetry.fuel() == 1 && telemetry.ceiling() > 1000
                         && craft.statusPanels().size() == 1, "formed Maxwell and Vehicle Status carried");
+                if (NativeVehicleEngineMenuFixture.enabled()) NativeVehicleEngineMenuFixture.prepare(actor, craft);
                 stage = Stage.BOARD;
             }
             case BOARD -> {
+                if (NativeVehicleEngineMenuFixture.enabled()) {
+                    landed = NativeVehicleEngineMenuFixture.tick(actor, craft);
+                    return;
+                }
                 if (actor.getVehicle() != craft || craft.mode() != NativeGroundVehicle.FLIGHT || craft.onGround()) return;
                 stage = Stage.LOW;
             }

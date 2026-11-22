@@ -13,6 +13,7 @@ def main():
     modes.add_argument('--restart', action='store_true')
     modes.add_argument('--impact', choices=('all', 'hover', 'runway'), nargs='?', const='all')
     modes.add_argument('--normal-terrain', action='store_true')
+    modes.add_argument('--engine-menu', action='store_true')
     args = parser.parse_args()
     properties = ['vandorlabs.vehicleFlightChecks=true']
     if args.restart:
@@ -20,6 +21,9 @@ def main():
         output = run_connected_player('vehicle-flight-read', args.xvfb, properties + ['vandorlabs.vehicleFlightRestart=read'],
                                       saved_world=saved / 'server' / 'world')
         print('Native Maxwell high-flight and mounted cold restart passed: ' + str(output), flush=True)
+    elif args.engine_menu:
+        output = run_connected_player('vehicle-engine', args.xvfb, properties + ['vandorlabs.carriedEngineMenu=true'])
+        print('Native carried Maxwell settings and purge passed: ' + str(output), flush=True)
     elif args.impact:
         variants = ('hover', 'runway') if args.impact == 'all' else (args.impact,)
         for variant in variants:

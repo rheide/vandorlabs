@@ -51,6 +51,7 @@ public final class NativeVehicleFlightPlayerChecks {
         if (!NativeVehicleFlightFixture.enabled()) return;
         var mc = Minecraft.getInstance();
         if (mc.screen instanceof AccessibilityOnboardingScreen intro) { intro.onClose(); return; }
+        if (com.vandorlabs.neoforge.vehicle.NativeVehicleEngineMenuFixture.enabled()) return;
         var player = mc.player;
         if (player == null || mc.level == null || mc.gameMode == null || mc.screen != null) return;
         NativeVehicleFlightFixture.require(++ticks < 1500, "client stage " + stage + " pos=" + player.position()
