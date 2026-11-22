@@ -35,6 +35,10 @@ Place **Corner Glass** against the end of a glass panel. It lines up with the gl
 
 Turn **Join** on in compatible doors to open them together. Doors placed one by one join into a 2×2 door from any side: a new door with Join on takes the orientation of the joining door beside it. Sneak-click an installed door's edge to place the next one beside it with the same settings. Sneak-click a joined door's face to place the next door beyond the group on that side. A joined door stays drawn while only part of it is on screen. Rotating leaves open to the full width of the group, and glass materials tile across the whole opening. Dialog changes apply to the whole group. [Space Doors guide](../space-doors.md)
 
+![A joined 2×2 Large Door hatch opens in an X, and four joined Extenders lift a 6×6 Programmable Surface platform up through it](media/2.12/joined-x-door-lift.gif)
+
+Joined doors open as one: with **Sliding X**, a 2×2 hatch retracts four triangular panels across the whole 6×6 opening. Here four joined Extenders lift a 6×6 Programmable Surface platform through the open hatch and lower it again before the hatch closes. Turn the door's frame and panel off to clear the full opening for a platform this size.
+
 ## Arms
 
 Route RF, fluids or items through an Arm's endpoint, in either direction. Transfers are off by default. Build Arm columns through open Large Doors, including joined groups: the door stays open while the arm runs through it, and carried blocks pass through the doorway. RFTools machines, logic blocks, screens and Power Cells ride on Arms, vehicles and Turntables. Power Cells keep their network's energy and rejoin it where they land. Thermal Dynamics ducts and Mekanism pipes on an Arm's tip connect to it instead of being carried. [Arm guide](../modular-landing-gear.md)

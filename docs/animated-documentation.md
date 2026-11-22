@@ -57,6 +57,17 @@ This records nine scenes using the actual renderer and sixteen-tick canopy clock
 
 The twelve scenes cover standard and Large Extenders and Swing Arms with Plates, Skis and matching Wheels. Each 4.2-second clip uses the real 24-tick gear clock, holds the deployed endpoint and returns to the stowed endpoint. The encoder checks visible motion in both directions, intermediate poses, an unobstructed crop and the returned geometry. See the [combination gallery](modular-landing-gear.md#animated-combinations). Fixed mounts are illustrated separately because they stay deployed.
 
+## Joined X-door lift (2.12)
+
+The [2.12 highlights](versions/version-2.12.md#joined-large-doors) clip builds a joined 2×2 horizontal Large Door with Sliding X, and a 6×6 Programmable Surface on four joined Extenders, through the real item and arm paths. Real world ticks drive the door and arms; the client records rendered frames every 100 ms from a fixed camera. To recapture and encode it:
+
+```bash
+JAVA_TOOL_OPTIONS="-Dvandorlabs.xDoorLiftOnly=true -Dvandorlabs.xDoorLiftOut=$PWD/build/x-door-lift" tools/focus.sh utility26
+python3 tools/encode_x_door_lift.py build/x-door-lift docs/versions/media/2.12/joined-x-door-lift.gif
+```
+
+The encoder crops to the moving area at 4:3, holds the closed and raised endpoints, merges unchanged frames and uses one shared palette.
+
 ## Motion index
 
 - [Modular landing gear](modular-landing-gear.md#animated-combinations): both sizes, Extender/Swing Arm motion and Plate/Ski/Wheel feet.
