@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.lang.reflect.Method;
 import net.minecraft.block.Block;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.tileentity.TileEntity;
@@ -13,6 +14,8 @@ import net.minecraft.util.EnumFacing;
 import net.minecraft.util.Rotation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
+import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.energy.IEnergyStorage;
 
 /**
  * RFTools 1.12 blocks that Arms, vehicles and Turntables can carry. Supported tiles keep only
@@ -82,6 +85,55 @@ public final class RFToolsCompat {
     public static boolean powerCell(TileEntity tile){String type=type(tile);return type!=null&&type.startsWith("powercell.PowerCell")&&SUPPORTED.contains(type);}
     /** Copies must not join the original's Power Cell network. */
     public static boolean copyable(TileEntity tile){return supported(tile)&&!powerCell(tile);}
+
+    /** RFTools Power Cells push in their own tick; their Forge side handlers are receive-only. */
+    static IEnergyStorage carriedPower(TileEntity tile,EnumFacing side){
+        if(side==null||!VehicleResources.live(tile))return null;
+        VehicleWorld view=(VehicleWorld)tile.getWorld();
+        if(view.structure.at(tile.getPos()).tileInteger("networkId")!=-1)return null;
+        CellAccess access=CELL_ACCESS.get(tile.getClass());
+        if(access==null)return null;
+        IEnergyStorage receiver=tile.getCapability(CapabilityEnergy.ENERGY,side);
+        return new IEnergyStorage(){
+            private boolean current(){return VehicleResources.live(tile)&&view.structure.at(tile.getPos()).tileInteger("networkId")==-1;}
+            @Override public boolean canExtract(){return current()&&mode()==2;}
+            @Override public boolean canReceive(){return current()&&receiver!=null&&mode()==1;}
+            @Override public int getEnergyStored(){return current()?access.number(access.stored,tile):0;}
+            @Override public int getMaxEnergyStored(){return current()?getEnergyStored()+access.number(access.receive,tile,Integer.MAX_VALUE,true):0;}
+            @Override public int receiveEnergy(int request,boolean simulate){return request>0&&canReceive()?receiver.receiveEnergy(request,simulate):0;}
+            @Override public int extractEnergy(int request,boolean simulate){
+                if(request<=0||!canExtract())return 0;
+                return access.number(access.extract,tile,request,simulate,access.number(access.rate,tile));
+            }
+            private int mode(){return ((Enum<?>)access.call(access.mode,tile,side)).ordinal();}
+        };
+    }
+    static int returnCarriedPower(TileEntity tile,int amount){
+        if(amount<=0||!VehicleResources.live(tile)||((VehicleWorld)tile.getWorld()).structure.at(tile.getPos()).tileInteger("networkId")!=-1)return 0;
+        CellAccess access=CELL_ACCESS.get(tile.getClass());
+        return access==null?0:access.number(access.receive,tile,amount,false);
+    }
+
+    private static final class CellAccess {
+        final Method extract,receive,mode,stored,rate;
+        CellAccess(Class<?> cell)throws ReflectiveOperationException{
+            extract=cell.getDeclaredMethod("extractEnergyInternal",int.class,boolean.class,int.class);extract.setAccessible(true);
+            receive=cell.getDeclaredMethod("receiveEnergyLocal",int.class,boolean.class);receive.setAccessible(true);
+            mode=cell.getMethod("getMode",EnumFacing.class);stored=cell.getMethod("getEnergy");
+            rate=cell.getMethod("getRfPerTickPerSide");
+        }
+        Object call(Method method,TileEntity tile,Object... args){
+            try{return method.invoke(tile,args);}
+            catch(ReflectiveOperationException failure){throw new IllegalArgumentException("Cannot operate the carried Power Cell",failure);}
+        }
+        int number(Method method,TileEntity tile,Object... args){return (Integer)call(method,tile,args);}
+    }
+    private static final ClassValue<CellAccess> CELL_ACCESS=new ClassValue<CellAccess>(){
+        @Override protected CellAccess computeValue(Class<?> type){
+            try{return new CellAccess(Class.forName(PREFIX+"powercell.PowerCellTileEntity",false,type.getClassLoader()));}
+            catch(ReflectiveOperationException|LinkageError unsupported){return null;}
+        }
+    };
 
     /** Turn per-side data with the block: Power Cell side modes and Item Filter side masks. */
     public static void rotate(TileEntity tile,NBTTagCompound data,Rotation rotation){

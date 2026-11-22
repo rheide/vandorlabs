@@ -1,9 +1,11 @@
 package com.vandorlabs.vehicle;
 
 import com.vandorlabs.blocks.*;
+import com.vandorlabs.drives.MaxwellRuntimeChecks;
 import com.vandorlabs.gear.GearRegistry;
 import com.vandorlabs.gear.GearTileEntity;
 import com.vandorlabs.gear.core.ArmResource;
+import com.vandorlabs.machines.CoreLayout;
 import com.vandorlabs.ports.*;
 import com.vandorlabs.redstone.*;
 import com.vandorlabs.tiles.*;
@@ -23,6 +25,7 @@ import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.GameType;
 import net.minecraft.world.WorldServer;
 import net.minecraftforge.energy.CapabilityEnergy;
+import net.minecraftforge.energy.IEnergyStorage;
 import net.minecraftforge.fluids.FluidRegistry;
 import net.minecraftforge.fluids.FluidStack;
 import net.minecraftforge.fml.relauncher.Side;
@@ -41,7 +44,7 @@ public final class VehicleResourceLiveChecks {
     private static Future<Boolean> pending;
     private static int stage,ticks;
     private static EntityGroundVehicle craft;
-    private static BlockPos origin,park;
+    private static BlockPos origin,park,engine,tank,observer,cell;
     private static VehicleStructure parked;
     private static Exception failure;
 
@@ -63,23 +66,24 @@ public final class VehicleResourceLiveChecks {
         if(stage==0){
             actor.setGameType(GameType.CREATIVE);actor.capabilities.isFlying=true;actor.sendPlayerAbilities();
             actor.connection.setPlayerLocation(ROOT.getX()+3.5,ROOT.getY()+5,ROOT.getZ()-3.5,0,12);
-            for(BlockPos at:BlockPos.getAllInBox(ROOT.add(-3,-3,-3),ROOT.add(40,6,15))){
+            for(BlockPos at:BlockPos.getAllInBox(ROOT.add(-3,-3,-3),ROOT.add(48,9,25))){
                 world.getChunkFromBlockCoords(at);world.setBlockToAir(at);
             }
-            for(int x=0;x<=7;x++)for(int z=0;z<=12;z++)world.setBlockState(ROOT.add(x,-1,z),Blocks.STONE.getDefaultState(),2);
+            for(int x=0;x<=11;x++)for(int z=0;z<=22;z++)world.setBlockState(ROOT.add(x,-1,z),Blocks.STONE.getDefaultState(),2);
             Block wheel=null;for(Block block:Block.REGISTRY)if(block instanceof BlockWheel){wheel=block;break;}
             require(wheel!=null,"wheel available");
-            for(BlockPos point:new BlockPos[]{ROOT.add(0,-2,0),ROOT.add(7,-2,0),ROOT.add(7,-2,12)})world.setBlockState(point,wheel.getDefaultState(),2);
+            for(BlockPos point:new BlockPos[]{ROOT.add(0,-2,0),ROOT.add(11,-2,0),ROOT.add(11,-2,22)})world.setBlockState(point,wheel.getDefaultState(),2);
             world.setBlockState(ROOT,ModBlocks.PILOT_SEAT.getDefaultState(),2);ModBlocks.PILOT_SEAT.onBlockPlacedBy(world,ROOT,world.getBlockState(ROOT),actor,new ItemStack(ModBlocks.PILOT_SEAT));
             world.setBlockState(ROOT.east(),ModBlocks.VEHICLE_CONTROLLER.getDefaultState(),2);
             for(int i=0;i<3;i++){setup(world,i*4+1,DOMAINS[i],POWER[i],true);setup(world,i*4+3,DOMAINS[i],FLUID[i],false);}
+            machines(world);
             world.setBlockState(ARM.down(),ResourcePorts.MATTER.getDefaultState(),2);
             ((MatterPortTile)world.getTileEntity(ARM.down())).place(EnumFacing.DOWN);
             actor.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(GearRegistry.GEAR_EXTENDER,2));
             for(BlockPos support:new BlockPos[]{ARM.down(),ARM})require(actor.getHeldItemMainhand().onItemUse(actor,world,support,EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==net.minecraft.util.EnumActionResult.SUCCESS,"placed arm section at "+support);
             world.setBlockState(ARM.up(2),Blocks.CHEST.getDefaultState(),2);
             Block switchBlock=null;for(Block block:Block.REGISTRY)if(block instanceof BlockVandorSwitch&&!((BlockVandorSwitch)block).isMomentary()){switchBlock=block;break;}
-            require(switchBlock!=null,"wireless switch available");world.setBlockState(LEVER.down(),Blocks.STONE.getDefaultState(),2);world.setBlockState(LEVER,switchBlock.getDefaultState(),2);
+            require(switchBlock!=null,"wireless switch available");world.setBlockState(LEVER.down(),Blocks.STONE.getDefaultState(),2);world.setBlockState(LEVER,switchBlock.getDefaultState().withProperty(BlockVandorSwitch.FACING,EnumFacing.UP),2);
             TileEntityRedstoneChannel source=(TileEntityRedstoneChannel)world.getTileEntity(LEVER);
             source.setRedstoneChannels(DRIVE);RedstoneFixtureTransmitters.equip(source);
             armSignal(world,true);
@@ -95,10 +99,11 @@ public final class VehicleResourceLiveChecks {
             TransmitterSlots.configure(battery.fullnessOutput,STORAGE,64,false);
             TransmitterSlots.configure(tank.fullnessOutput,ChannelList.of(514),64,false);
             require(battery.getRedstoneChannels().isEmpty(),"Battery receive bank remains independent");
-            VehicleScan scan=new VehicleScan(world,ROOT);for(int i=0;i<300&&!scan.step(128);i++){}
+            VehicleScan scan=new VehicleScan(world,ROOT);scan.holdSource();for(int i=0;i<300&&!scan.step(128);i++){}
             require(scan.result!=null,"source scan admitted six complete loaded networks "+scan.error);
             origin=scan.origin;
-            VehicleTransfer.submit(world,()->craft=VehicleTransfer.assemble(world,scan.result,origin,actor),error->failure=error);
+            require(scan.result.matches(world,origin),"source preimage remains exact before durable assembly "+mismatch(world,scan.result,origin));
+            VehicleTransfer.submit(world,()->{craft=VehicleTransfer.assemble(world,scan.result,origin,actor);scan.releaseSource();},error->{scan.releaseSource();failure=error;});
             next();return false;
         }
         if(stage==2){
@@ -109,7 +114,11 @@ public final class VehicleResourceLiveChecks {
                 require(source.getCapability(CapabilityEnergy.ENERGY,EnumFacing.WEST).receiveEnergy(6400,false)==6400,"charged carried source "+i);
                 require(tank.fill(new FluidStack(FluidRegistry.WATER,1500),true)==1500,"filled carried source "+i);
             }
-            require(RedstoneChannels.level(world,LEVER,514)>0||((TileEntityHexTank)local(point(1,3))).fullnessOutput.level()>0,"carried tank level tracks filled amount");
+            require(((TileEntityHexTank)local(tank)).fill(new FluidStack(MaxwellRuntimeChecks.testFuel(),1500),true)==1500,"loaded the fuel tank for the installed engine");
+            IEnergyStorage input=local(cell).getCapability(CapabilityEnergy.ENERGY,EnumFacing.EAST);
+            require(input!=null,"installed Power Cell exposes native input");
+            int rf=0;for(int i=0;i<100&&rf<6400;i++)rf+=input.receiveEnergy(6400-rf,false);
+            require(rf==6400,"charged the installed RFTools Power Cell: "+rf);
             next();return false;
         }
         if(stage==3){
@@ -123,7 +132,11 @@ public final class VehicleResourceLiveChecks {
                 full&=to.stored()==6400&&amount==1500;
                 summary.append(' ').append(DOMAINS[i]).append('=').append(to.stored()).append('/').append(amount);
             }
-            if(!full){if(ticks>70)require(false,"carried transfer totals"+summary);return false;}
+            TileEntityConstructor drive=(TileEntityConstructor)local(engine),dish=(TileEntityConstructor)local(observer);
+            require(drive.maxwellFuel()+((TileEntityHexTank)local(tank)).tank.getFluidAmount()==1500,"actual Maxwell inlet conserves its onboard supply");
+            if(!full||drive.maxwellFuel()!=1500){if(ticks>70)require(false,"carried transfer totals"+summary+" Maxwell="+drive.maxwellFuel());return false;}
+            IEnergyStorage source=VehicleResources.endpoint(local(cell),EnumFacing.WEST,CapabilityEnergy.ENERGY);
+            require(source!=null&&source.getEnergyStored()<6400&&source.getEnergyStored()>0&&dish.observerPowered()&&dish.observerScanning(),"carried RFTools Power Cell debits local RF and powers the real Survey Dish inlet");
             require(RedstoneChannels.level(world,LEVER,512)==1,"carried battery publishes stored-level analog signal");
             MatterPortTile matter=(MatterPortTile)local(ARM.down());
             matter.getCapability(CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,EnumFacing.DOWN).insertItem(0,new ItemStack(Items.DIAMOND,7),false);
@@ -163,7 +176,7 @@ public final class VehicleResourceLiveChecks {
         for(VehicleStructure.Cell cell:parked.cells)if(TransferNetworkCompat.onboard(world.getTileEntity(park.add(cell.pos))))
             require(world.getTileEntity(park.add(cell.pos)).getWorld()==world,"parked conduit returns to the native world");
         require(craft.isDead,"parking retired the carried owner");
-        System.out.println("[vandorlabs] vehicle-resources PASS installed Thermal Dynamics/Mekanism/Galacticraft RF and fluid, analog storage, redstone arm items pause/resume, reload and rotated parking");
+        System.out.println("[vandorlabs] vehicle-resources PASS installed Thermal Dynamics/Mekanism/Galacticraft RF and fluid, RFTools Power Cell feeds Survey Dish, Maxwell fuel, analog storage, redstone arm items pause/resume, reload and rotated parking");
         return true;
     }
 
@@ -173,6 +186,36 @@ public final class VehicleResourceLiveChecks {
         tile.setLocalOn(powered);RedstoneChannels.latchChanged(tile,powered);
     }
     private static BlockPos point(int x,int z){return ROOT.add(x,0,z);}
+    private static void machines(WorldServer world){
+        engine=ROOT.add(7,0,14);
+        TileEntityConstructor maxwell=MaxwellRuntimeChecks.assemble(world,engine,3,EnumFacing.WEST,0,0);
+        BlockPos inlet=maxwell.maxwellPort(EnumFacing.WEST);
+        tank=inlet.west(3);
+        Block fuelTank=Block.getBlockFromName("vandorlabs:hexagonal_fuel_tank");
+        world.setBlockState(tank,fuelTank.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.EAST),2);
+        IBlockState pipe=variant(world,DOMAINS[1],FLUID[1]);
+        world.setBlockState(inlet.west(),pipe,2);world.setBlockState(inlet.west(2),pipe,2);
+
+        observer=ROOT.add(1,1,19);
+        BlockConstructorCore core=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:standalone_dish_core");
+        world.setBlockState(observer,core.getDefaultState().withProperty(BlockVandorDirectional.FACING,EnumFacing.NORTH),2);
+        CoreLayout layout=new CoreLayout(core.width,core.height,core.depth,EnumFacing.NORTH.getIndex(),0,0);
+        for(int y=0;y<core.height;y++)for(int x=0;x<core.width;x++)for(int z=0;z<core.depth;z++){
+            BlockPos at=observer.add(layout.x(x,z),y,layout.z(x,z));
+            if(!at.equals(observer)&&layout.frame(x,y,z))world.setBlockState(at,ModBlocks.PROGRAMMABLE_BLOCK.getDefaultState(),2);
+        }
+        TileEntityConstructor dish=(TileEntityConstructor)world.getTileEntity(observer);
+        require(dish.assemble(),"assembled Survey Dish");
+        BlockPos duct=dish.observerPowerPort().down();
+        IBlockState flux=variant(world,DOMAINS[0],POWER[0]);
+        for(int i=0;i<3;i++)world.setBlockState(duct.east(i),flux,2);
+        cell=duct.east(3);
+        world.setBlockState(cell,variant(world,"rftools","PowerCellNormalTileEntity"),2);
+        TileEntity power=world.getTileEntity(cell);
+        NBTTagCompound settings=power.writeToNBT(new NBTTagCompound());
+        settings.setInteger("networkId",-1);settings.setByte("m"+EnumFacing.EAST.getIndex(),(byte)1);settings.setByte("m"+EnumFacing.WEST.getIndex(),(byte)2);
+        power.readFromNBT(settings);
+    }
     private static void setup(WorldServer world,int row,String domain,String type,boolean power){
         Block source=Block.getBlockFromName(power?"vandorlabs:battery_block":"vandorlabs:hexagonal_fuel_tank");
         IBlockState state=power?source.getDefaultState().withProperty(BlockBattery.FACING,EnumFacing.WEST):source.getDefaultState().withProperty(BlockAnimatedScreenSelector.FACING,EnumFacing.EAST);
@@ -193,5 +236,14 @@ public final class VehicleResourceLiveChecks {
         throw new IllegalStateException("Missing installed "+domain+" "+path);
     }
     private static void next(){stage++;ticks=0;}
+    private static String mismatch(WorldServer world,VehicleStructure source,BlockPos origin){
+        for(VehicleStructure.Cell cell:source.cells){
+            BlockPos at=origin.add(cell.pos);
+            TileEntity tile=world.getTileEntity(at);
+            NBTTagCompound before=cell.tileData(),after=tile==null?null:VehicleTileData.translated(TransferNetworkCompat.write(tile),BlockPos.ORIGIN.subtract(origin));
+            if(world.getBlockState(at)!=cell.state||!java.util.Objects.equals(before,after))return at+" originally="+before+" actual="+after;
+        }
+        return "";
+    }
     private static void require(boolean value,String reason){if(!value)throw new IllegalStateException("Vehicle resource stage "+stage+" tick "+ticks+": "+reason);}
 }

@@ -166,7 +166,13 @@ public final class VehicleWeight {
     private void fluids(IFluidHandler handler,double copies){IFluidTankProperties[] tanks=handler.getTankProperties();if(tanks.length>MAX_SLOTS)incomplete=true;for(int i=0;i<Math.min(MAX_SLOTS,tanks.length);i++)fluid(tanks[i].getContents(),copies);}
     private void contained(NBTTagCompound tag,double copies){NBTTagCompound data=tag.getCompoundTag("ContainedFluids");for(int side=0;side<2;side++)if(data.hasKey("Side"+side,10))fluid(data.getCompoundTag("Side"+side),copies);}
     private void contents(VehicleStructure.Cell cell,TileEntity tile,int depth)throws ReflectiveOperationException{
-        if(MekanismTankCompat.tank(tile)){
+        if(TransferNetworkCompat.onboard(tile)){
+            NBTTagCompound data=cell.tileData();
+            fluid(data.getCompoundTag("cacheFluid"),1); // Mechanical Pipe share
+            fluid(data.getCompoundTag("buff"),1); // Galacticraft Fluid Pipe buffer
+            NBTTagCompound thermal=data.getCompoundTag("Fluid");
+            fluid(thermal,1);fluid(thermal.getCompoundTag("ConnFluid"),1);
+        }else if(MekanismTankCompat.tank(tile)){
             NBTTagCompound data=cell.tileData();String key=data.getString("cachedID");if(key.isEmpty()){key=cell.pos.toString();incomplete|=data.hasKey("cachedFluid",10);}
             if(sharedTanks.add("mekanism:"+key)){fluid(data.getCompoundTag("cachedFluid"),1);items(data.getTagList("Items",10),1,depth);}
         }else{

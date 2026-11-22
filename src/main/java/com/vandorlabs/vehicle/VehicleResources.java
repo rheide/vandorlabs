@@ -60,23 +60,16 @@ public final class VehicleResources {
 
     /** Calls only endpoints whose resource contents are owned by the installed local tile. */
     public static <T> T endpoint(TileEntity tile,EnumFacing face,Capability<T> capability){
-        if(!live(tile)||TransferNetworkCompat.component(tile))return null;
+        if(!endpointCandidate(tile)||!live(tile))return null;
         VehicleWorld view=(VehicleWorld)tile.getWorld();
         if(tile instanceof ResourcePortTile||tile instanceof GearTileEntity||tile instanceof TileEntityHexTank
                 ||tile instanceof TileEntityConstructor||tile instanceof TileEntityConstructorPart)
             return tile.getCapability(capability,face);
-        if(capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY&&tile instanceof TileEntityLockable
-                &&tile.getClass().getName().startsWith("net.minecraft.tileentity.")
-                &&!view.structure.at(tile.getPos()).hasTileKey("LootTable",8))
-            return tile.getCapability(capability,face);
-        String type=tile.getClass().getName();
-        boolean supported=type.equals("mekanism.common.tile.TileEntityEnergyCube")
-                ||type.equals("mekanism.common.tile.TileEntityFluidTank")
-                ||type.equals("cofh.thermalexpansion.block.storage.TileCell")
-                ||type.equals("cofh.thermalexpansion.block.storage.TileTank")
-                ||TransferNetworkCompat.galacticraftStorage(tile)
-                ||RFToolsCompat.powerCell(tile)&&view.structure.at(tile.getPos()).tileInteger("networkId")==-1;
-        return supported?tile.getCapability(capability,face):null;
+        if(tile instanceof TileEntityLockable)
+            return capability==CapabilityItemHandler.ITEM_HANDLER_CAPABILITY&&!view.structure.at(tile.getPos()).hasTileKey("LootTable",8)
+                    ?tile.getCapability(capability,face):null;
+        if(RFToolsCompat.powerCell(tile))return capability==CapabilityEnergy.ENERGY?CapabilityEnergy.ENERGY.cast(RFToolsCompat.carriedPower(tile,face)):null;
+        return tile.getCapability(capability,face);
     }
 
     public static boolean portSignal(ResourcePortTile port){
@@ -129,6 +122,7 @@ public final class VehicleResources {
             }
             if(!(tile instanceof GearTileEntity||tile instanceof TileEntityConstructor||tile instanceof TileEntityConstructorPart)||!view.structure.isActive(tile.getPos()))continue;
             for(EnumFacing side:EnumFacing.VALUES){
+                if(!deviceFace(tile,side,POWER)&&!deviceFace(tile,side,FLUID)&&!deviceFace(tile,side,ITEM))continue;
                 TileEntity adjacent=view.getTileEntity(tile.getPos().offset(side));
                 if(!endpointCandidate(adjacent)||!sameSection(view,tile.getPos(),adjacent.getPos()))continue;
                 Face inner=new Face(tile.getPos(),side),outer=new Face(adjacent.getPos(),side.getOpposite());
@@ -159,7 +153,7 @@ public final class VehicleResources {
                     if(!sameSection(view,at,neighbor))continue;
                     if(lane.connects(lanes.get(neighbor),side)){
                         if(visited.add(neighbor))pending.add(neighbor);
-                    }else if(endpointCandidate(view.getTileEntity(neighbor))){
+                    }else if(endpointCandidate(view.getTileEntity(neighbor))&&deviceFace(view.getTileEntity(neighbor),side.getOpposite(),kind)){
                         Face endpoint=new Face(neighbor,side.getOpposite());
                         if(lane.accepts(side))inputs.add(endpoint);
                         if(lane.emits(side))outputs.add(endpoint);
@@ -170,7 +164,25 @@ public final class VehicleResources {
         }
     }
 
-    private static boolean endpointCandidate(TileEntity tile){return tile!=null&&!TransferNetworkCompat.component(tile);}
+    private static boolean endpointCandidate(TileEntity tile){
+        if(tile==null)return false;
+        if(tile instanceof ResourcePortTile||tile instanceof GearTileEntity||tile instanceof TileEntityHexTank
+                ||tile instanceof TileEntityConstructor||tile instanceof TileEntityConstructorPart
+                ||tile instanceof TileEntityLockable&&tile.getClass().getName().startsWith("net.minecraft.tileentity."))return true;
+        String type=tile.getClass().getName();
+        return type.equals("mekanism.common.tile.TileEntityEnergyCube")||type.equals("mekanism.common.tile.TileEntityFluidTank")
+                ||type.equals("cofh.thermalexpansion.block.storage.TileCell")||type.equals("cofh.thermalexpansion.block.storage.TileTank")
+                ||TransferNetworkCompat.galacticraftStorage(tile)||RFToolsCompat.powerCell(tile);
+    }
+
+    private static boolean deviceFace(TileEntity tile,EnumFacing side,int kind){
+        TileEntity owner=tile;
+        if(tile instanceof TileEntityConstructorPart)owner=tile.getWorld().getTileEntity(((TileEntityConstructorPart)tile).owner());
+        if(!(owner instanceof TileEntityConstructor))return !(tile instanceof TileEntityConstructorPart);
+        TileEntityConstructor core=(TileEntityConstructor)owner;
+        return kind==POWER&&core.observer()&&side==EnumFacing.DOWN&&tile.getPos().equals(core.observerPowerPort())
+                ||kind==FLUID&&core.maxwell()&&tile.getPos().equals(core.maxwellPort(side));
+    }
 
     private static final class Face{
         final BlockPos pos;final EnumFacing side;
@@ -243,7 +255,7 @@ public final class VehicleResources {
         int sent=supply.extractEnergy(offered,false);
         if(sent<=0)return false;
         int delivered=sink.receiveEnergy(sent,false);
-        if(delivered<sent)supply.receiveEnergy(sent-delivered,false);
+        if(delivered<sent)refundPower(source,sent-delivered);
         saved(source);if(delivered>0)saved(target);
         return delivered>0;
     }
@@ -259,7 +271,7 @@ public final class VehicleResources {
         FluidStack sent=supply.drain(request,true);
         if(sent==null||sent.amount<=0)return false;
         int delivered=sink.fill(sent.copy(),true);
-        if(delivered<sent.amount){FluidStack remaining=sent.copy();remaining.amount-=delivered;supply.fill(remaining,true);}
+        if(delivered<sent.amount){FluidStack remaining=sent.copy();remaining.amount-=delivered;refundFluid(source,remaining);}
         saved(source);if(delivered>0)saved(target);
         return delivered>0;
     }
@@ -277,7 +289,11 @@ public final class VehicleResources {
                 ItemStack sent=supply.extractItem(slot,count,false);
                 if(sent.isEmpty())return false;
                 ItemStack remainder=sink.insertItem(dest,sent.copy(),false);
-                if(!remainder.isEmpty())supply.insertItem(slot,remainder,false);
+                if(!remainder.isEmpty()){
+                    int refunded=source instanceof MatterPortTile?((MatterPortTile)source).returnCarriedItems(remainder)
+                            :remainder.getCount()-supply.insertItem(slot,remainder.copy(),false).getCount();
+                    if(refunded!=remainder.getCount())throw new IllegalStateException("Carried item handler changed its offer during one transfer");
+                }
                 saved(source);if(remainder.getCount()<sent.getCount())saved(target);
                 return remainder.getCount()<sent.getCount();
             }
@@ -286,5 +302,24 @@ public final class VehicleResources {
     }
     private static void saved(TileEntity tile){
         if(!(tile instanceof GearTileEntity||tile instanceof TileEntityConstructor||tile instanceof TileEntityConstructorPart))tile.markDirty();
+    }
+    private static void refundPower(TileEntity source,int amount){
+        if(source instanceof PowerPortTile)amount-=((PowerPortTile)source).returnCarriedEnergy(amount);
+        else if(RFToolsCompat.powerCell(source))amount-=RFToolsCompat.returnCarriedPower(source,amount);
+        for(EnumFacing face:EnumFacing.VALUES){
+            if(amount<=0)return;
+            IEnergyStorage storage=endpoint(source,face,CapabilityEnergy.ENERGY);
+            if(storage!=null&&storage.canReceive())amount-=storage.receiveEnergy(amount,false);
+        }
+        if(amount>0)throw new IllegalStateException("Carried energy handler changed its offer during one transfer");
+    }
+    private static void refundFluid(TileEntity source,FluidStack remaining){
+        if(source instanceof FluidPortTile)remaining.amount-=((FluidPortTile)source).returnCarriedFluid(remaining.copy());
+        for(EnumFacing face:EnumFacing.VALUES){
+            if(remaining.amount<=0)return;
+            IFluidHandler tank=endpoint(source,face,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY);
+            if(tank!=null)remaining.amount-=tank.fill(remaining.copy(),true);
+        }
+        if(remaining.amount>0)throw new IllegalStateException("Carried fluid handler changed its offer during one transfer");
     }
 }

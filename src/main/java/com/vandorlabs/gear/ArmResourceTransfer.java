@@ -146,8 +146,11 @@ final class ArmResourceTransfer {
         mappedPayload = payload;
     }
 
-    @SuppressWarnings("unchecked")
     private <T, R> R send(ArmResource type, EnumFacing side, Capability<T> capability, R unavailable, Function<T,R> action) {
+        return send(type,side,capability,unavailable,false,action);
+    }
+
+    private <T, R> R send(ArmResource type, EnumFacing side, Capability<T> capability, R unavailable, boolean mutating, Function<T,R> action) {
         if(reversed)return ArmResource.forward(input,unavailable,() -> {
             GearTileEntity arm = installedArm(input,type);
             if (arm == null || arm.payload() != null || !arm.resourceEndpointAvailable()) return unavailable;
@@ -179,7 +182,7 @@ final class ArmResourceTransfer {
             ArmPayload carried=arm.payload();
             if(carried!=null&&!carried.materialized()){
                 BlockPos local=contact.subtract(root).subtract(carried.offset);
-                return world instanceof VehicleWorld?carried.transferVehicleResource(arm,local,side,capability,unavailable,action)
+                return world instanceof VehicleWorld?carried.transferVehicleResource(arm,local,side,capability,unavailable,mutating,action)
                         :carried.transferCapturedTank(arm,local,side,capability,unavailable,action);
             }
             if (!arm.isFixedMount()) {
@@ -218,7 +221,7 @@ final class ArmResourceTransfer {
         Power(EnumFacing side) { this.side = side; }
         @Override public int receiveEnergy(int amount, boolean simulate) {
             if (out()||amount <= 0) return 0;
-            int accepted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target ->
+            int accepted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,!simulate,target ->
                     Math.min(amount,Math.max(0,target.receiveEnergy(amount,simulate))));
             if(!simulate&&accepted>0)input.resourceTransferred(ArmResource.POWER);
             return accepted;
@@ -232,7 +235,7 @@ final class ArmResourceTransfer {
         @Override public boolean canReceive() {return !out();}
         @Override public int extractEnergy(int amount, boolean simulate) {
             if(!out()||amount<=0)return 0;
-            int extracted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
+            int extracted=send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,!simulate,target->Math.min(amount,Math.max(0,target.extractEnergy(amount,simulate))));
             if(!simulate&&extracted>0)input.resourceTransferred(ArmResource.POWER);return extracted;
         }
         @Override public int getEnergyStored() {return send(ArmResource.POWER,side,CapabilityEnergy.ENERGY,0,IEnergyStorage::getEnergyStored);}
@@ -247,7 +250,7 @@ final class ArmResourceTransfer {
         @Override public int fill(FluidStack resource, boolean commit) {
             if (out()||resource == null || resource.amount <= 0) return 0;
             int amount = resource.amount;
-            int accepted=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,target ->
+            int accepted=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,0,commit,target ->
                     Math.min(amount,Math.max(0,target.fill(resource.copy(),commit))));
             if(commit&&accepted>0)input.resourceTransferred(ArmResource.FLUID);
             return accepted;
@@ -268,12 +271,12 @@ final class ArmResourceTransfer {
         }
         @Override public FluidStack drain(FluidStack resource, boolean commit) {
             if(!out()||resource==null||resource.amount<=0)return null;
-            FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,target->target.drain(resource.copy(),commit));
+            FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,commit,target->target.drain(resource.copy(),commit));
             if(commit&&result!=null&&result.amount>0)input.resourceTransferred(ArmResource.FLUID);return result==null?null:result.copy();
         }
         @Override public FluidStack drain(int amount, boolean commit) {
             if(!out()||amount<=0)return null;
-            FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,target->target.drain(amount,commit));
+            FluidStack result=send(ArmResource.FLUID,side,CapabilityFluidHandler.FLUID_HANDLER_CAPABILITY,null,commit,target->target.drain(amount,commit));
             if(commit&&result!=null&&result.amount>0)input.resourceTransferred(ArmResource.FLUID);return result==null?null:result.copy();
         }
 
@@ -313,7 +316,7 @@ final class ArmResourceTransfer {
         @Override public ItemStack insertItem(int slot, ItemStack stack, boolean simulate) {
             if (out()||stack.isEmpty()) return stack;
             int offered=stack.getCount();
-            ItemStack remainder=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,
+            ItemStack remainder=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,stack,!simulate,
                     // Forward a copy: InvWrapper stores the stack it is given in an empty slot,
                     // and callers such as a Thermal Retriever delivering stuffed items set the
                     // count of the stack they passed to the remainder afterwards (zero), which
@@ -324,7 +327,7 @@ final class ArmResourceTransfer {
         }
         @Override public ItemStack extractItem(int slot, int amount, boolean simulate) {
             if(!out()||amount<=0)return ItemStack.EMPTY;
-            ItemStack result=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,ItemStack.EMPTY,target->validSlot(target,slot)?target.extractItem(slot,amount,simulate):ItemStack.EMPTY);
+            ItemStack result=send(ArmResource.ITEM,side,CapabilityItemHandler.ITEM_HANDLER_CAPABILITY,ItemStack.EMPTY,!simulate,target->validSlot(target,slot)?target.extractItem(slot,amount,simulate):ItemStack.EMPTY);
             if(!simulate&&!result.isEmpty())input.resourceTransferred(ArmResource.ITEM);return result.copy();
         }
         @Override public int getSlotLimit(int slot) {

@@ -19,6 +19,11 @@ public class PowerPortTile extends ResourcePortTile {
     protected PowerPortTile(int capacity){if(capacity<=0)throw new IllegalArgumentException("Invalid energy capacity");this.capacity=capacity;for(int i=0;i<6;i++)faces[i]=new Face(i);}
     public final int energyCapacity(){return capacity;}
     public int stored(){return energy;}
+    public final int returnCarriedEnergy(int amount){
+        if(amount<=0||!com.vandorlabs.vehicle.VehicleResources.live(this))return 0;
+        int accepted=Math.min(amount,capacity-energy);
+        energy+=accepted;if(accepted>0){energyChanged();markDirty();}return accepted;
+    }
     @Override protected int storedUnits(){return energy;}
     @Override protected int simulateOutputCapacity(int side,int maximum){Object raw=neighbor(side);return compatible(raw,true)?Math.min(maximum,Math.max(0,((IEnergyStorage)raw).receiveEnergy(transferLimit(maximum),true))):0;}
     @Override protected Object findHandler(TileEntity tile,EnumFacing side){return world instanceof com.vandorlabs.vehicle.VehicleWorld?com.vandorlabs.vehicle.VehicleResources.endpoint(tile,side,CapabilityEnergy.ENERGY):tile.getCapability(CapabilityEnergy.ENERGY,side);}

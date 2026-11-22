@@ -63,6 +63,37 @@ condition gates both incoming and outgoing transfers.
 
 Right-click a cycling dialog option to choose its previous value.
 
+## Vehicle Mode on Forge 1.12.2
+
+Attach a Battery Block, a standalone RFTools Power Cell, a Mekanism Energy Cube,
+a Thermal Expansion Energy Cell, or a Galacticraft Energy Storage Module to the
+craft. Set the face touching the RF route to Output where the storage block
+offers face settings. Use Thermal Dynamics Fluxducts, Mekanism Universal Cables,
+or Galacticraft Aluminum Wire to reach the down-facing Power Port under the
+centre of a Survey Dish or Sentinel Array. A direct connection to that face
+also works.
+
+Use Thermal Dynamics Fluiducts, Mekanism Mechanical Pipes, or Galacticraft Fluid
+Pipes to connect compatible standalone tanks to a Maxwell Drive's inlet. The
+three drive inlets accept the same fuels regardless of which pipe is used. Build
+each run with one pipe family and include the entire connected network before
+assembling the vehicle. Galacticraft Fluid Pipes must share their colour. When
+using a pull-only pipe, put it at the storage end and use a regular pipe at the
+inlet. Attached Thermal Dynamics servo and retriever faces are inactive in
+Vehicle Mode. Saved conduit buffers are retained for parking, while carried
+transfer draws from onboard storage.
+
+A [Rotating or Extender Arm](modular-landing-gear.md) can pass its selected
+resource through the base and tip at a settled endpoint. Choose RF, fluid, or
+items and set the transfer direction in the arm dialog. Wire the storage and
+destination to the matching faces. Redstone-channel motion pauses the transfer
+until the arm reaches its new endpoint.
+
+RFTools linked cells retain their network configuration when moved and reconnect
+when parked. Unlinked cells use their own stored RF in Vehicle Mode. Use
+standalone Mekanism Fluid Tanks as onboard supply for now. The native formed
+Dynamic Tank continues to preserve its fluids and inventory for parking.
+
 ## Moving and copying settings
 
 Mining a port drops one configured port item containing its stored resources.

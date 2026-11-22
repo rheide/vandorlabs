@@ -176,6 +176,7 @@ public final class TransferNetworkCompat {
             if(energy!=name.endsWith("AluminumWire"))return null;
             String color="";
             if(!energy)for(net.minecraft.block.properties.IProperty<?> property:cell.state.getPropertyKeys())if(property.getName().equals("color"))color=cell.state.getValue(property).toString();
+            if(!energy&&cell.state.getBlock().getRegistryName().getResourcePath().equals("fluid_pipe_pull"))outgoing=0;
             return new Lane("galacticraft"+color,incoming,outgoing,links);
         }
         if(mekanism(tile)){

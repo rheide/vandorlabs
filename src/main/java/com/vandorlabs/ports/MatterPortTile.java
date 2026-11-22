@@ -19,6 +19,10 @@ public final class MatterPortTile extends ResourcePortTile {
     private final int[] pullCursors=new int[6];
     public MatterPortTile(){for(int i=0;i<6;i++)faces[i]=new Face(i);}
     public ItemStack stored(int slot){checkSlot(slot);return items.get(slot).copy();}
+    public int returnCarriedItems(ItemStack stack){
+        if(stack.isEmpty()||!com.vandorlabs.vehicle.VehicleResources.live(this))return 0;
+        int inserted=insert(stack);if(inserted>0)markDirty();return inserted;
+    }
     @Override protected int storedUnits(){int total=0;for(ItemStack stack:items)total+=stack.getCount();return total;}
     @Override protected int simulateOutputCapacity(int side,int maximum){Object raw=neighbor(side);if(!(raw instanceof IItemHandler))return 0;int total=0;for(ItemStack stack:items)if(!stack.isEmpty()&&total<maximum){int offer=Math.min(stack.getCount(),maximum-total);ItemStack remainder=ItemHandlerHelper.insertItem((IItemHandler)raw,portion(stack,offer),true);total+=offer-Math.min(offer,remainder.getCount());}return total;}
     private static void checkSlot(int slot){if(slot<0||slot>=SLOTS)throw new IllegalArgumentException("Invalid matter port slot");}

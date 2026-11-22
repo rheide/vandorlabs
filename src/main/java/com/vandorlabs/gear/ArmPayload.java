@@ -208,20 +208,20 @@ public final class ArmPayload {
     /** Forward through the installed carried payload and publish only the tiles changed by the handler. */
     <T,R> R transferVehicleResource(GearTileEntity arm,BlockPos contact,EnumFacing side,
             net.minecraftforge.common.capabilities.Capability<T> capability,R unavailable,
-            java.util.function.Function<T,R> action){
+            boolean mutating,java.util.function.Function<T,R> action){
         if(materialized||hasOwnershipJournal()||arm.payload()!=this)return unavailable;
         VehicleWorld current=view(arm);
         TileEntity tile=current.getTileEntity(contact);
         T handler=VehicleResources.endpoint(tile,side,capability);
         if(handler==null)return unavailable;
+        if(!mutating)return action.apply(handler);
         Set<BlockPos> changed=new LinkedHashSet<>();
+        changed.add(contact);
         java.util.function.Consumer<BlockPos> previous=current.controlUpdates;
         current.controlUpdates=changed::add;
         R result;
         try{result=action.apply(handler);}
         finally{current.controlUpdates=previous;}
-        if(changed.isEmpty())return result;
-        changed.add(contact);
         List<VehicleStructure.Cell> rows=new ArrayList<>(blocks.cells);
         List<VehicleStructure.Cell> positioned=placedBlocks==null?null:new ArrayList<>(placedBlocks.cells);
         boolean modified=false;

@@ -20,6 +20,15 @@ Battery Blocks hold **100,000 RF** and use the same **General**, **Housing** and
 
 The **Housing** tab contains the live charge meter, standard material picker and **Shape: Block/Hexagon** control. The original Disabled-side artwork is the green battery-cell panel, with segmented markings that update as charge changes. Input and Output faces use the Power Port artwork; on a hexagonal shell their image is cropped and tiled at the normal texture scale. Shape and material changes preserve the single charge store and configured faces. Mining or picking a battery preserves its contents and configuration.
 
+On Forge 1.12.2, the **Redstone** tab in each Battery Block or Hexagonal Fuel
+Tank dialog also has transmitter settings. Set one or more transmit channels and
+the range to report fullness from 0 when empty to 15 when full. A tank reports
+the contents of its own 16,000 mB cell. Battery receive channels still control
+the transfer gate independently. **Local Redstone** also emits the fullness
+level from the block in the world. A Redstone screen's [status row](redstone-screen-controls.md)
+can display the same wireless signal as bars, including while the storage is
+aboard a vehicle.
+
 Hexagonal Fuel Tanks hold 16,000 mB per block and accept registered fluids through their two axial ports. Right-click with a fluid container to fill or empty them. Click the top or bottom of a support for vertical tanks, or a side for horizontal tanks. Connect matching tanks along their axis to share capacity; either end can access the combined contents. Filling starts at the lower end of a vertical stack. Right-click without a fluid container for the combined current/max volume and vertical fullness meter. Different fluids cannot be mixed. Each cell saves its own volume, so splitting a stack preserves the contents of each remaining cell. Mining a tank preserves its contents in the dropped block. Glass windows look into a hollow interior; horizontal hexagonal tanks use square windows on the four diagonal sides and solid flat top and bottom faces. Stored fluid occupies a three-dimensional volume with a horizontal surface. Horizontal tanks align their hexagonal end faces and ports with the connection axis, like hexagonal thrusters; their cross-section keeps flat sides above and below. The fill height accounts for the changing cross-section so the visible volume matches partial fills. Choose **Shape: Hexagon** or **Shape: Block** in the volume dialog; it applies immediately without changing contents, capacity or connections. Both shapes have a hollow interior, central side windows and a real fluid level. Right-click and the Configurizer open the same dialog, containing the casing picker, shape selector and live contents meter.
 
 Both targets use their platform's built-in `IEnergyStorage` and `IFluidHandler` capabilities, requiring no extra mod. Forge Energy is based on the Redstone Flux API, but machines exposing only the older CoFH interfaces need a compatible bridge. See [Forge's capability documentation](https://docs.minecraftforge.net/en/1.12.x/datastorage/capabilities/).

@@ -14,6 +14,10 @@ public final class FluidPortTile extends ResourcePortTile {
     private final IFluidHandler[] faces=new IFluidHandler[6];
     public FluidPortTile(){for(int i=0;i<6;i++)faces[i]=new Face(i);}
     public FluidStack stored(){return fluid==null?null:fluid.copy();}
+    public int returnCarriedFluid(FluidStack resource){
+        if(!accepts(resource)||!com.vandorlabs.vehicle.VehicleResources.live(this))return 0;
+        int count=Math.min(resource.amount,CAPACITY-amount());if(count>0){add(resource,count);markDirty();}return count;
+    }
     private int amount(){return fluid==null?0:fluid.amount;}
     @Override protected int storedUnits(){return amount();}
     @Override protected int simulateOutputCapacity(int side,int maximum){if(fluid==null||maximum<=0)return 0;Object raw=neighbor(side);return raw instanceof IFluidHandler?Math.min(maximum,Math.max(0,((IFluidHandler)raw).fill(portion(fluid,maximum),false))):0;}
