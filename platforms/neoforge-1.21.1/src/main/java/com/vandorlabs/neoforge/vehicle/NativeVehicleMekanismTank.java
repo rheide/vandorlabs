@@ -2,7 +2,6 @@ package com.vandorlabs.neoforge.vehicle;
 
 import com.vandorlabs.neoforge.transfer.NativeRawCell;
 import java.util.Set;
-import java.util.UUID;
 import net.minecraft.core.Direction;
 import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
@@ -29,13 +28,6 @@ final class NativeVehicleMekanismTank {
 
     static boolean supports(BlockEntity tile) {
         return supports(tile.getBlockState()) && tile.getClass().getName().equals("mekanism.common.tile.TileEntityFluidTank");
-    }
-
-    static void requireOwner(CompoundTag raw, UUID controllerOwner) {
-        var security = raw.getCompound("component_security");
-        if (security.contains("owner") && (!security.hasUUID("owner") || !security.getUUID("owner").equals(controllerOwner))) {
-            throw new IllegalArgumentException("A Mekanism tank belongs to a different owner");
-        }
     }
 
     static int capacity(NativeRawCell cell, Level world) {

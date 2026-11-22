@@ -50,7 +50,7 @@ final class NativeVehicleScan {
             var raw = tile == null ? null : tile.saveWithFullMetadata(world.registryAccess());
             if (raw != null && NativeVehicleMekanismTank.supports(state)) {
                 var owner = (NativeVehicleControllerEntity)world.getBlockEntity(controller);
-                NativeVehicleMekanismTank.requireOwner(raw, owner.ownerId());
+                NativeVehicleMekanismAccess.require(owner.ownerId(), world, pos, state, tile);
             }
             if (raw != null && (tileBytes += raw.sizeInBytes()) > NativeVehicleStructure.LIMITS.bytes()) {
                 throw new IllegalArgumentException("Vehicle storage exceeds the capture byte bound");
