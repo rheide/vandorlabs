@@ -144,8 +144,10 @@ public class NativeWallEntity extends ProgrammableShapeEntity {
         var before=getBlockState();
         if(!(before.getBlock() instanceof NativeCornerWallBlock corner)||!corner.sloped()||nextState==null||nextState.getBlock()!=before.getBlock()||!com.vandorlabs.render.DiagonalCornerRules.valid(size)
                 ||level!=null&&(level.isClientSide||level.getServer()==null||!level.getServer().isSameThread()||level.getBlockEntity(worldPosition)!=this))return false;
+        WallSettings previous=walls;
         walls=new WallSettings(size!=com.vandorlabs.render.CornerGlassGeometry.TALL,size==com.vandorlabs.render.CornerGlassGeometry.WIDE,walls.fill,walls.join,walls.joinPortholes,walls.portholeShape);
-        if(level!=null&&nextState!=before&&(!level.setBlock(worldPosition,nextState,net.minecraft.world.level.block.Block.UPDATE_ALL)||level.getBlockEntity(worldPosition)!=this))return false;
+        // A refused slope keeps the previous size too, so size and state never disagree.
+        if(level!=null&&nextState!=before&&(!level.setBlock(worldPosition,nextState,net.minecraft.world.level.block.Block.UPDATE_ALL)||level.getBlockEntity(worldPosition)!=this)){walls=previous;return false;}
         NativeWallLayouts.invalidate(this);publishShapeChange();return true;
     }
     /** A Corner Wall's bevel follows its block state, so a changed state republishes its topology. */
