@@ -104,11 +104,9 @@ final class NativeVehicleMeters {
                     continue;
                 }
                 if (row.pulseUntil() > 0) {
-                    if (row.pulseUntil() <= now) {
-                        meters.replace(control, pulseRow(row, 0));
-                        continue;
-                    }
                     meters.schedule(control);
+                    // Preserve the exact receipt before publication. The first live tick clears expired rows.
+                    if (row.pulseUntil() <= now) continue;
                 }
                 meters.publish(control);
             }
