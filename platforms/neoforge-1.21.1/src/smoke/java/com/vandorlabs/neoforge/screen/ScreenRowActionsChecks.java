@@ -12,7 +12,30 @@ final class ScreenRowActionsChecks {
   for(int step=0;step<4;step++){service.select(0,2,step);digest(hash,world,owner,pos);cases++;}service.toggle(0,1);digest(hash,world,owner,pos);cases++;
   service.pulse(0,0);service.setEnabled(0,false);NativeScreenControlService.tick(new net.neoforged.neoforge.event.tick.LevelTickEvent.Post(()->true,world));clock(world,132);service.setEnabled(0,true);digest(hash,world,owner,pos);cases++;clock(world,147);NativeScreenControlService.tick(new net.neoforged.neoforge.event.tick.LevelTickEvent.Post(()->true,world));digest(hash,world,owner,pos);cases++;
   CompoundTag saved=owner.saveWithoutMetadata(world.registryAccess());service.stop();digest(hash,world,owner,pos);cases++;owner.loadWithComponents(saved,world.registryAccess());service.finishLoading();digest(hash,world,owner,pos);cases++;service.stop();world.setBlock(pos,net.minecraft.world.level.block.Blocks.AIR.defaultBlockState(),2);
- }StringBuilder out=new StringBuilder();for(byte b:hash.digest())out.append(String.format("%02x",b&255));if(!out.toString().equals("9ed7cad76c20629b897e1bc41bdca59795932e0b28a0fcb910d87eabaf9d1c4a"))throw new AssertionError("Native row actions differ from actual source "+out);System.out.println("[vandorlabs][screen-row-actions] PASS cases="+cases+" sha256="+out);}
+ }checkMeter(world,block,pos);StringBuilder out=new StringBuilder();for(byte b:hash.digest())out.append(String.format("%02x",b&255));if(!out.toString().equals("9ed7cad76c20629b897e1bc41bdca59795932e0b28a0fcb910d87eabaf9d1c4a"))throw new AssertionError("Native row actions differ from actual source "+out);System.out.println("[vandorlabs][screen-row-actions] PASS cases="+cases+" sha256="+out);}
+ private static void checkMeter(ServerLevel world,Block block,BlockPos pos){
+  world.setBlock(pos,block.defaultBlockState(),2);
+  NativeScreenEntity owner=(NativeScreenEntity)world.getBlockEntity(pos);
+  var root=owner.saveWithoutMetadata(world.registryAccess());
+  var data=new CompoundTag();
+  var rows=rows(5,15);var meter=rows.getCompound(1);
+  meter.putBoolean("Status",true);meter.putIntArray("RedstoneChannels",new int[]{A,C});
+  meter.putIntArray("LatchedChannels",new int[]{A});meter.putBoolean("Active",true);
+  data.putBoolean("Enabled",true);data.put("Rows",rows);root.put("RedstonePrimary",data);
+  owner.loadWithComponents(root,world.registryAccess());NativeRedstoneChannels.flush(world);
+  var service=owner.controlService();service.finishLoading();
+  if(service.toggle(0,1)||service.select(0,1,1)||NativeRedstoneChannels.level(world,pos,A)!=0)
+   throw new AssertionError("Receiving row transmitted a saved or clicked signal");
+  for(int step=0;step<4;step++){
+   service.select(0,2,step);
+   int expected=owner.controls(0).rows().get(2).level();
+   if(owner.controls(0).rows().get(1).statusLevel()!=expected||NativeRedstoneChannels.level(world,pos,A)!=0)
+    throw new AssertionError("Receiving row failed to indicate strongest channel, step "+step);
+  }
+  if(!owner.controls(0).configuration().getList("Rows",10).getCompound(1).getBoolean("Status"))
+   throw new AssertionError("Settings copy lost receiving row");
+  service.stop();world.removeBlock(pos,false);
+ }
  private static ListTag rows(int low,int high){ListTag rows=new ListTag();for(int i=0;i<3;i++){CompoundTag row=new CompoundTag();row.putString("Label",i==0?"Pulse":i==1?"Toggle":"Slider");row.putIntArray("RedstoneChannels",i==0?new int[]{A,B}:new int[]{i==1?B:C});row.putBoolean("Pulse",i==0);row.putBoolean("Slider",i==2);row.putInt("Min",low);row.putInt("Max",high);rows.add(row);}return rows;}
  private static void clock(ServerLevel world,long now){((net.minecraft.world.level.storage.ServerLevelData)world.getLevelData()).setGameTime(now);}
  private static void digest(java.security.MessageDigest hash,ServerLevel world,NativeScreenEntity owner,BlockPos pos)throws Exception{CompoundTag controls=new CompoundTag();owner.controls(0).write(controls);StringBuilder text=new StringBuilder(canonical(controls));for(int channel:new int[]{A,B,C})text.append(':').append(NativeRedstoneChannels.level(world,pos,channel));hash.update(text.toString().getBytes("UTF-8"));}

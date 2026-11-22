@@ -50,7 +50,7 @@ public final class NativeScreenControlService {
   List<Row> oldRows=rows.get(slot),next=new ArrayList<>();
   for(int i=0;i<edit.rows().size();i++){
    var choice=edit.rows().get(i);Row old=i<oldRows.size()?oldRows.get(i):null;
-   next.add(new Row(slot,new NativeScreenControls.Row(choice.label(),choice.channels(),old!=null&&old.slider,old!=null&&old.pulse,old==null?5:old.min,old==null?15:old.max,0,old==null?Map.of():old.levels,old==null?ChannelList.EMPTY:old.latched.intersect(choice.channels()),false,0)));
+   next.add(new Row(slot,new NativeScreenControls.Row(choice.label(),choice.channels(),old!=null&&old.slider,old!=null&&old.pulse,old==null?5:old.min,old==null?15:old.max,0,old==null?Map.of():old.levels,old==null?ChannelList.EMPTY:old.latched.intersect(choice.channels()),false,0,old!=null&&old.status)));
   }
   List<Row> previous=new ArrayList<>(oldRows.stream().filter(registered::contains).toList());
   editing=configuring=true;
@@ -62,8 +62,8 @@ public final class NativeScreenControlService {
     withdraw(previous);if(enabled)for(Row row:next)refresh(row);
     for(int i=0;i<next.size();i++){
      Row row=next.get(i);NativeRedstoneChannels.unregister(row);var choice=edit.rows().get(i);
-     row.pulse=choice.pulse();row.slider=!row.pulse&&choice.slider();
-     if(row.pulse){row.latched=ChannelList.EMPTY;row.levels.clear();}else row.until=0;
+     row.status=choice.status();row.pulse=choice.pulse();row.slider=!row.pulse&&choice.slider();
+     if(row.pulse||row.status){row.latched=ChannelList.EMPTY;row.levels.clear();}if(!row.pulse)row.until=0;
      row.max=Math.max(3,Math.min(15,choice.max()));row.min=Math.max(1,Math.min(row.max-2,choice.min()==0?5:choice.min()));row.dirty=true;
      if(enabled)NativeRedstoneChannels.channelsChanged(row);refresh(row);
     }
@@ -93,7 +93,7 @@ public final class NativeScreenControlService {
   return true;
   }finally{for(int slot=0;slot<headers.length;slot++){var data=currentData(slot);headers[slot]=data;owner.stageCopiedControls(slot,data);}configuring=editing=false;pendingSlots=0;arm();}
  }
- public boolean toggle(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(row.channels.isEmpty()||row.slider)return false;if(row.pulse)return pulse(slot,index);boolean all=true;ServerLevel world=level();for(int i=0;i<row.channels.size();i++)if(NativeRedstoneChannels.level(world,owner.channelPosition(),row.channels.get(i))==0){all=false;break;}NativeRedstoneChannels.latchLevelChanged(row,all?0:15);return true;}
+ public boolean toggle(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(row.status||row.channels.isEmpty()||row.slider)return false;if(row.pulse)return pulse(slot,index);boolean all=true;ServerLevel world=level();for(int i=0;i<row.channels.size();i++)if(NativeRedstoneChannels.level(world,owner.channelPosition(),row.channels.get(i))==0){all=false;break;}NativeRedstoneChannels.latchLevelChanged(row,all?0:15);return true;}
  public boolean select(int slot,int index,int segment){if(!valid(slot,index)||segment<0||segment>3)return false;Row row=rows.get(slot).get(index);if(!row.slider)return false;NativeRedstoneChannels.latchLevelChanged(row,SignalControlData.levelForStep(segment,row.min,row.max));return true;}
  boolean pulse(int slot,int index){if(!valid(slot,index))return false;Row row=rows.get(slot).get(index);if(!row.pulse||row.channels.isEmpty())return false;row.until=level().getGameTime()+20;row.dirty=true;mutate(()->{publish(slot,true);NativeRedstoneChannels.outputChanged(row);});arm();return true;}
  public boolean setEnabled(int slot,boolean enabled){if(editing||!live()||slot<0||slot>=headers.length)return false;if(headers[slot].enabled()==enabled)return true;var old=headers[slot];headers[slot]=new NativeScreenControls(enabled,old.title(),old.rows());mutate(()->{publish(slot,false);if(enabled)registerCurrent();else withdraw(new ArrayList<>(rows.get(slot).stream().filter(registered::contains).toList()));publish(slot,true);});arm();return true;}
@@ -106,15 +106,17 @@ public final class NativeScreenControlService {
  @SubscribeEvent public static void load(LevelEvent.Load event){if(event.getLevel() instanceof ServerLevel world)CLOSED.remove(world);}
  @SubscribeEvent public static void unload(LevelEvent.Unload event){if(event.getLevel() instanceof ServerLevel world){CLOSED.add(world);ACTIVE.remove(world);}}
  private final class Row implements NativeChannelLatch {
-  NativeScreenControls.Row projection;boolean dirty;final int slot;final String label;final ChannelList channels;boolean slider,pulse;int min,max;final Map<Integer,Integer> levels;ChannelList latched;int value;boolean active;long until;
-  Row(int slot,NativeScreenControls.Row saved){this.slot=slot;projection=saved;label=saved.label();channels=saved.channels();slider=saved.slider();pulse=saved.pulse();min=saved.min();max=saved.max();levels=new HashMap<>(saved.levels());latched=saved.latched();value=saved.level();active=saved.active();until=saved.pulseUntil();}
-  NativeScreenControls.Row snapshot(){if(dirty){projection=new NativeScreenControls.Row(label,channels,slider,pulse,min,max,value,levels,latched,active,until);dirty=false;}return projection;}
-  public BlockEntity channelBlockEntity(){return owner.channelBlockEntity();}public ChannelList getRedstoneChannels(){return channels;}public ChannelList transmittedChannels(){return channels;}public int transmissionRange(){return owner.rowTransmissionRange();}
+  NativeScreenControls.Row projection;boolean dirty;final int slot;final String label;final ChannelList channels;boolean slider,pulse,status;int min,max;final Map<Integer,Integer> levels;ChannelList latched;int value;boolean active;long until;
+  Row(int slot,NativeScreenControls.Row saved){this.slot=slot;projection=saved;label=saved.label();channels=saved.channels();slider=saved.slider();pulse=saved.pulse();status=saved.status();min=saved.min();max=saved.max();levels=new HashMap<>(saved.levels());latched=saved.latched();value=saved.level();active=saved.active();until=saved.pulseUntil();}
+  NativeScreenControls.Row snapshot(){if(dirty){projection=new NativeScreenControls.Row(label,channels,slider,pulse,min,max,value,levels,latched,active,until,status);dirty=false;}return projection;}
+  public BlockEntity channelBlockEntity(){return owner.channelBlockEntity();}public ChannelList getRedstoneChannels(){return channels;}public ChannelList transmittedChannels(){return status?ChannelList.EMPTY:channels;}public int transmissionRange(){return owner.rowTransmissionRange();}
   public boolean isChannelMemberActive(){return owner.isChannelMemberActive()&&registered.contains(this)&&headers[slot].enabled();}
-  public int localSignalLevel(int channel){return pulse?until>0&&owner.channelBlockEntity().getLevel().getGameTime()<until?15:0:latchedLevel(channel);}
-  public boolean isChannelLatch(){return !pulse;}public boolean latchOn(){return !channels.isEmpty()&&latched.containsAll(channels);}public ChannelList latchedChannels(){return latched;}public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
+  public int localSignalLevel(int channel){return status?0:pulse?until>0&&owner.channelBlockEntity().getLevel().getGameTime()<until?15:0:latchedLevel(channel);}
+  public boolean isChannelLatch(){return !pulse&&!status;}public boolean latchOn(){return !channels.isEmpty()&&latched.containsAll(channels);}public ChannelList latchedChannels(){return latched;}public int latchedLevel(int channel){return levels.getOrDefault(channel,latched.contains(channel)?15:0);}
   public void applyLinkedLatch(boolean on){applyLinkedChannels(on?channels:ChannelList.EMPTY);}public void applyLinkedChannels(ChannelList next){if(!latched.equals(next)){latched=next;dirty=true;publish(slot,false);}}
   public void applyLinkedLevels(Map<Integer,Integer> next){ChannelList active=NativeChannelLatch.activeChannels(next);if(!levels.equals(next)||!latched.equals(active)){levels.clear();levels.putAll(next);latched=active;dirty=true;publish(slot,false);}}
-  public void setChannelLevel(int level){if(!rows.get(slot).contains(this))return;boolean changed=false;if(slider&&value!=level){value=level;changed=true;}boolean all=!channels.isEmpty();ServerLevel world=NativeScreenControlService.this.level();if(world==null)return;for(int i=0;i<channels.size();i++)if(NativeRedstoneChannels.level(world,owner.channelPosition(),channels.get(i))==0){all=false;break;}if(active!=all){active=all;changed=true;}if(changed){dirty=true;publish(slot,true);}}
+  public void setChannelLevel(int level){if(!rows.get(slot).contains(this))return;
+   if(status){if(value!=level||active){value=level;active=false;dirty=true;publish(slot,true);}return;}
+   boolean changed=false;if(slider&&value!=level){value=level;changed=true;}boolean all=!channels.isEmpty();ServerLevel world=NativeScreenControlService.this.level();if(world==null)return;for(int i=0;i<channels.size();i++)if(NativeRedstoneChannels.level(world,owner.channelPosition(),channels.get(i))==0){all=false;break;}if(active!=all){active=all;changed=true;}if(changed){dirty=true;publish(slot,true);}}
  }
 }
