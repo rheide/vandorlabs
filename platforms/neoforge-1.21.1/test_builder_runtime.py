@@ -25,7 +25,8 @@ def main():
     if args.maxwell_only:
         for phase in ('save', 'read'):
             phase_env=dict(env,JAVA_TOOL_OPTIONS=env['JAVA_TOOL_OPTIONS']
-                           +' -Dvandorlabs.builderRuntimeChecks=false -Dvandorlabs.maxwellRuntimePhase='+phase)
+                           +' -Dvandorlabs.builderRuntimeChecks=false -Dvandorlabs.cellJournalChecks=false'
+                           +' -Dvandorlabs.maxwellRuntimePhase='+phase)
             run(command('runServer','-PmodernServerRunDirectory='+str(saved),'-x','compileJava','-x','compileSmokeJava','-x','processResources'),
                 out/(phase+'.log'),'[vandorlabs][maxwell-runtime] '+phase+' PASS',phase_env)
         snapshot(out,'after',frozen,require_source_unchanged=True)
