@@ -66,7 +66,7 @@ public final class NativeVehicleFlightFixture {
             if (!enabled()) return;
             event.register(Registries.FLUID, helper -> {
                 fuel = new WaterFluid.Source();
-                helper.register(ResourceLocation.parse("vandorlabs:kerosene"), fuel);
+                helper.register(ResourceLocation.parse("vandorlabs:ethanol"), fuel);
             });
         }
     }
