@@ -53,15 +53,15 @@ public final class NativeVehiclePlayerChecks {
                 if(screen==null||!screen.getMenu().mayChangeSecurity())return;
                 press(screen,option(screen,"Security"));
                 press(screen,option(screen,"Security"));
-                stage=21;frames=0;
+                stage=31;frames=0;
             }
-            case 21 -> {
+            case 31 -> {
                 if(screen==null||!screen.getMenu().securityEnabled())return;
                 var option=option(screen,"Security:");
                 NativeVehiclePlayerFixture.require(screen.mouseClicked(option.getX()+5,option.getY()+5,1),"right-click security off");
-                stage=22;frames=0;
+                stage=32;frames=0;
             }
-            case 22 -> {
+            case 32 -> {
                 if(screen==null||screen.getMenu().securityEnabled())return;
                 press(screen,option(screen,"Vehicle"));
                 press(screen,screen.scanButton());
