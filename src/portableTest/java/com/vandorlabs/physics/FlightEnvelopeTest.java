@@ -16,7 +16,9 @@ public final class FlightEnvelopeTest {
         require(FlightEnvelope.acceleration(assisted,1)>FlightEnvelope.acceleration(470,1),"light craft accelerate faster");
         require(FlightEnvelope.maximumAltitude(limit,1)==FlightEnvelope.WORLD_CEILING,"zero altitude reserve at takeoff limit");
         require(FlightEnvelope.maximumAltitude(470,1)>FlightEnvelope.WORLD_CEILING&&FlightEnvelope.maximumAltitude(470,1)<FlightEnvelope.MAX_ALTITUDE,"underpowered altitude envelope");
-        require(FlightEnvelope.maximumAltitude(470,2)==FlightEnvelope.MAX_ALTITUDE,"second drive reaches hard ceiling");
+        require(Math.abs(FlightEnvelope.maximumAltitude(limit,2)-4245.76)<.01,"twice takeoff thrust reaches Y=4246");
+        require(FlightEnvelope.maximumAltitude(limit,3.59)<FlightEnvelope.MAX_ALTITUDE&&
+                FlightEnvelope.maximumAltitude(limit,3.60)==FlightEnvelope.MAX_ALTITUDE,"Y=10000 needs about 3.60 times takeoff thrust");
         require(FlightEnvelope.cruiseSpeed(256)==1.5&&FlightEnvelope.cruiseSpeed(300)<1.51,"continuous handoff at build height");
         require(FlightEnvelope.cruiseSpeed(10000)==75&&FlightEnvelope.cruiseSpeed(20000)==75,"speed cap");
 

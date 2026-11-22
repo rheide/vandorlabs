@@ -10,6 +10,7 @@ public final class FlightEnvelope {
     public static final float MAX_PITCH = 45;
     private static final double MASS_PER_THRUST = 512;
     private static final double THRUST_ALTITUDE_LIMIT = 100000;
+    private static final double ALTITUDE_THRUST_FACTOR = 24;
 
     private FlightEnvelope() {}
 
@@ -29,8 +30,11 @@ public final class FlightEnvelope {
 
     public static double maximumAltitude(double mass, double thrust) {
         if (!canFly(mass, thrust)) return 0;
-        double reserve = 1 - mass / takeoffMass(thrust);
-        return Math.min(MAX_ALTITUDE, WORLD_CEILING + (THRUST_ALTITUDE_LIMIT - WORLD_CEILING) * reserve * reserve);
+        // Solve thrust / takeoff thrust = 1 + 24 * (Y - 256) / (100000 - Y).
+        double load = mass / takeoffMass(thrust);
+        double reserve = 1 - load;
+        double weightedLoad = ALTITUDE_THRUST_FACTOR * load;
+        return Math.min(MAX_ALTITUDE, (reserve * THRUST_ALTITUDE_LIMIT + weightedLoad * WORLD_CEILING) / (reserve + weightedLoad));
     }
 
     public static double cruiseSpeed(double altitude) {
