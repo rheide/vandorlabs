@@ -17,6 +17,7 @@ public final class FixedCanopyChunks {
     private static final Set<BlockPos> positions=new HashSet<>();
     private static final Map<BlockPos,TileEntityCanopy> tiles=new HashMap<>();
     private static World world;
+    private static boolean framebuffers;
     private static WorldRenderListener listener;
     private static net.minecraft.client.renderer.vertex.VertexFormat format;
     private static final com.google.common.cache.Cache<String,FixedCanopyModel.Mesh> meshes=com.google.common.cache.CacheBuilder.newBuilder().maximumWeight(8*1024*1024)
@@ -44,14 +45,19 @@ public final class FixedCanopyChunks {
             else if(tiles.get(pos)==tile)tiles.remove(pos);
         }
         Set<TileEntityCanopy> dirty=Collections.newSetFromMap(new IdentityHashMap<>());
+        boolean nextFramebuffers=net.minecraft.client.renderer.OpenGlHelper.isFramebufferEnabled();
+        if(nextFramebuffers!=framebuffers){
+            framebuffers=nextFramebuffers;
+            for(TileEntityCanopy tile:tiles.values())if(tile.large.hasDisplay())dirty.add(tile);
+        }
         for(BlockPos pos:positions)for(int x=-3;x<=3;x++)for(int z=-3;z<=3;z++){TileEntityCanopy tile=tiles.get(pos.add(x,0,z));if(tile!=null)dirty.add(tile);}
         positions.clear();
         for(TileEntityCanopy tile:dirty){
             if(tile.isInvalid()||!world.isBlockLoaded(tile.getPos())||world.getTileEntity(tile.getPos())!=tile){tiles.remove(tile.getPos(),tile);continue;}
-            if(tile.chunkMesh instanceof FixedCanopyModel.Mesh&&((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile))continue;
+            if(tile.chunkMesh instanceof FixedCanopyModel.Mesh&&((FixedCanopyModel.Mesh)tile.chunkMesh).matches(tile,framebuffers))continue;
             // The connection masks are logical, including released canopy proxies and the retained roof rail.
-            String key=tile.mask()+":"+tile.roofMask()+":"+tile.facing()+":"+tile.large.key()+":"+tile.centeredPlacement+":"+tile.draws();
-            FixedCanopyModel.Mesh mesh=meshes.getIfPresent(key);if(mesh==null){mesh=new FixedCanopyModel.Mesh(tile);meshes.put(key,mesh);}
+            String key=tile.mask()+":"+tile.roofMask()+":"+tile.facing()+":"+tile.large.key()+":"+tile.centeredPlacement+":"+tile.draws()+":"+(framebuffers&&tile.large.hasDisplay());
+            FixedCanopyModel.Mesh mesh=meshes.getIfPresent(key);if(mesh==null){mesh=new FixedCanopyModel.Mesh(tile,framebuffers);meshes.put(key,mesh);}
             tile.chunkMesh=mesh;world.markBlockRangeForRenderUpdate(tile.getPos(),tile.getPos());
         }
     }

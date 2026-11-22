@@ -17,7 +17,7 @@ public final class CanopyFinishes {
         return opacity(face,settings.material(face.sideGlass),settings.tint(face.sideGlass));
     }
     public static boolean translucent(CanopyMesh.Face face,LargeCanopySettings settings){
-        return face.display==null&&translucent(face,settings.material(face.sideGlass),settings.tint(face.sideGlass));
+        return translucent(face,settings.material(face.sideGlass),settings.tint(face.sideGlass));
     }
 
     private static final class Key {

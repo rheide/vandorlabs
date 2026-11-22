@@ -20,13 +20,15 @@ final class FixedCanopyModel implements IBakedModel {
         final List<CanopyMesh.Face> source;
         final String settings;
         final EnumFacing facing;
-        final boolean centered,visible;
+        final boolean centered,visible,displaysEnabled;
         final List<BakedQuad> solid,glass;
-        Mesh(TileEntityCanopy tile){
+        Mesh(TileEntityCanopy tile){this(tile,true);}
+        Mesh(TileEntityCanopy tile,boolean framebuffers){
+            displaysEnabled=framebuffers&&tile.large.hasDisplay();
             source=tile.baseFaces();settings=tile.large.key();facing=tile.facing();centered=tile.centeredPlacement;visible=tile.draws();
             List<BakedQuad> a=new ArrayList<>(),b=new ArrayList<>();
             for(CanopyMesh.Face face:visible?new CanopyRenderGeometry(source).posed(tile.block().kind,1,tile.large,0,tile.centeredPlacement):Collections.<CanopyMesh.Face>emptyList()){
-                if(face.display!=null)continue;
+                if(displaysEnabled&&face.display!=null)continue;
                 List<BakedQuad> output=CanopyFinishes.translucent(face,tile.large)?b:a;
                 float alpha=CanopyFinishes.opacity(face,tile.large);
                 if(face.vertices.length==4){add(output,face,new int[]{0,1,2,3},facing,alpha);if(face.doubleSided)add(output,face,new int[]{3,2,1,0},facing,alpha);}
@@ -34,7 +36,7 @@ final class FixedCanopyModel implements IBakedModel {
             }
             solid=Collections.unmodifiableList(a);glass=Collections.unmodifiableList(b);
         }
-        boolean matches(TileEntityCanopy tile){return visible==tile.draws()&&centered==tile.centeredPlacement&&source==tile.baseFaces()&&facing==tile.facing()&&settings.equals(tile.large.key());}
+        boolean matches(TileEntityCanopy tile,boolean framebuffers){return displaysEnabled==(framebuffers&&tile.large.hasDisplay())&&visible==tile.draws()&&centered==tile.centeredPlacement&&source==tile.baseFaces()&&facing==tile.facing()&&settings.equals(tile.large.key());}
         int bytes(){int n=128;for(BakedQuad q:solid)n+=q.getVertexData().length*4+384;for(BakedQuad q:glass)n+=q.getVertexData().length*4+384;for(CanopyMesh.Face f:source)n+=128+f.vertices.length*96;return n;}
     }
     static void add(List<BakedQuad> out,CanopyMesh.Face face,int[] indices,EnumFacing facing,float alpha){

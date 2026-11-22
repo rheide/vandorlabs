@@ -28,7 +28,7 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         final List<CanopyMesh.Face> displays=new ArrayList<>();
         final net.minecraft.client.renderer.vertex.VertexBuffer solidBuffer=new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
         final net.minecraft.client.renderer.vertex.VertexBuffer glassBuffer=new net.minecraft.client.renderer.vertex.VertexBuffer(DefaultVertexFormats.POSITION_TEX_COLOR_NORMAL);
-        boolean solidDirty=true,glassDirty=true;
+        boolean solidDirty=true,glassDirty=true,displaysEnabled;
         DrawFace[] glassOrder;
         java.lang.ref.WeakReference<TileEntityCanopy> owner;
         void delete(){solidBuffer.deleteGlBuffers();glassBuffer.deleteGlBuffers();}
@@ -55,7 +55,8 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
     /** Vehicle rendering uses the same phases inside its local world transform. */
     void renderPass(TileEntityCanopy tile,double x,double y,double z,float partial,int stage,float alpha,int pass) {
         boolean chunk=tile.chunkRendered();
-        if(chunk&&!tile.large.hasDisplay())return;
+        boolean displaysEnabled=tile.large.hasDisplay()&&OpenGlHelper.isFramebufferEnabled();
+        if(chunk&&!displaysEnabled)return;
         if(pass==1&&(chunk||!tile.large.mayRenderTranslucent()))return;
         if (tile.block() == null || !tile.draws()) return;
         double progress =
@@ -65,15 +66,15 @@ public final class TECanopy extends TileEntitySpecialRenderer<TileEntityCanopy> 
         List<CanopyMesh.Face> source=tile.baseFaces();
         String settings=tile.large.key();
         Prepared prepared=CACHE.get(tile);
-        if(prepared==null || prepared.source!=source || !settings.equals(prepared.settings) || prepared.facing!=tile.facing() || prepared.width!=tile.width()){
+        if(prepared==null || prepared.displaysEnabled!=displaysEnabled || prepared.source!=source || !settings.equals(prepared.settings) || prepared.facing!=tile.facing() || prepared.width!=tile.width()){
             if(prepared!=null){prepared.delete();BUFFERS.remove(prepared);}
-            prepared=new Prepared();prepared.owner=new java.lang.ref.WeakReference<>(tile);BUFFERS.add(prepared);prepared.source=source;prepared.settings=settings;prepared.facing=tile.facing();prepared.width=tile.width();prepared.geometry=new CanopyRenderGeometry(source);CACHE.put(tile,prepared);
+            prepared=new Prepared();prepared.displaysEnabled=displaysEnabled;prepared.owner=new java.lang.ref.WeakReference<>(tile);BUFFERS.add(prepared);prepared.source=source;prepared.settings=settings;prepared.facing=tile.facing();prepared.width=tile.width();prepared.geometry=new CanopyRenderGeometry(source);CACHE.put(tile,prepared);
         }
         List<CanopyMesh.Face> drawable=prepared.geometry.posed(tile.block().kind,prepared.width,tile.large,progress,tile.centeredPlacement);
         if(prepared.drawable!=drawable){
             prepared.drawable=drawable;prepared.opaque.clear();prepared.glass.clear();prepared.displays.clear();prepared.progress=Double.NaN;
             for(CanopyMesh.Face f:drawable){
-                if(f.display!=null){prepared.displays.add(f);continue;}
+                if(displaysEnabled&&f.display!=null){prepared.displays.add(f);continue;}
                 if(chunk)continue;
                 DrawFace draw=new DrawFace();draw.source=f;draw.v=new Vec3d[f.vertices.length];
                 draw.opacity=com.vandorlabs.canopy.CanopyFinishes.opacity(f,tile.large);
