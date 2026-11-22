@@ -4,6 +4,7 @@ import argparse
 import hashlib
 import os
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from native_test_artifacts import artifact_directory, retain_artifacts
 from navigation_test_artifact import snapshot
@@ -16,9 +17,23 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--group', choices=('all', 'roundtrip', 'arms', 'assembly-recovery', 'parking-recovery'), default='all')
     parser.add_argument('--mekanism', type=Path, help='Use this installed Mekanism JAR in the roundtrip fuel case')
+    parser.add_argument('--arm-player', action='store_true', help='capture the native carried Arm stroke in a connected player')
+    parser.add_argument('--xvfb', action='store_true', help='use a virtual display for the connected player')
     arguments = parser.parse_args()
-    if arguments.mekanism and (arguments.group != 'roundtrip' or not arguments.mekanism.is_file()):
+    if arguments.mekanism and (arguments.arm_player or arguments.group != 'roundtrip' or not arguments.mekanism.is_file()):
         parser.error('--mekanism requires an installed JAR and --group roundtrip')
+    if arguments.arm_player:
+        from connected_player_fixture import run_connected_player
+        with TemporaryDirectory(prefix='vehicle-arm-candidate-') as temporary:
+            fingerprint_dir = Path(temporary)
+            candidate = snapshot(fingerprint_dir, 'before')
+            output = run_connected_player('vehicle-arm', arguments.xvfb,
+                                          ['vandorlabs.vehicleTransferPhase=arms', 'vandorlabs.vehicleArmGallery=true'],
+                                          gradle=('-x', 'compileJava', '-x', 'compileSmokeJava', '-x', 'processResources'))
+            (output / 'candidate-before.json').write_bytes((fingerprint_dir / 'candidate-before.json').read_bytes())
+            snapshot(output, 'after', candidate, require_source_unchanged=False)
+        print('Native Arm stroke player gallery passed. ' + str(output), flush=True)
+        return
     base = ROOT / 'build/test-artifacts'
     base.mkdir(parents=True, exist_ok=True)
     output = Path(artifact_directory(prefix='vehicle-transfer-', dir=base))

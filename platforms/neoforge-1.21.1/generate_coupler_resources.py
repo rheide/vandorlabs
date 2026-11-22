@@ -40,6 +40,9 @@ def generate(root, output):
 
     for name in IDS:
         states = read(f'blockstates/{name}.json')
+        if name == 'vehicle_coupler_slab':
+            states['variants'] = {key: variant for key, variant in states['variants'].items()
+                                  if not key.startswith(('facing=up,', 'facing=down,'))}
         for variant in states['variants'].values():
             variant['model'] = variant['model'].replace('vandorlabs:', 'vandorlabs:block/')
         write(target / f'blockstates/{name}.json', states)
