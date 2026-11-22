@@ -540,7 +540,9 @@ def main():
     parser.add_argument('--mod',action='append',default=[],type=Path,help='Additional installed compatibility JARs')
     args=parser.parse_args()
     root=Path(__file__).resolve().parents[1]
-    output=Path(tempfile.mkdtemp(prefix='dynmap-render-',dir=root/'build'))
+    parent = root / 'build' / 'test-artifacts' / 'dynmap'
+    parent.mkdir(parents=True, exist_ok=True)
+    output = Path(tempfile.mkdtemp(prefix='dynmap-render-', dir=parent))
     artifact=ArtifactRun(output,disposable_paths=('mods','world','dynmap','logs','config','core-projection-classes'))
     with artifact:
         run_fixture(args,root,output,artifact)
