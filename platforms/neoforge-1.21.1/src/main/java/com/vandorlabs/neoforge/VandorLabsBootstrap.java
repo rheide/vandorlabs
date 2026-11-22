@@ -127,6 +127,7 @@ public final class VandorLabsBootstrap {
         com.vandorlabs.neoforge.trapdoor.NativeTrapdoorRegistrations.register(bus);
         com.vandorlabs.neoforge.light.NativeLightRegistrations.register(bus);
         com.vandorlabs.neoforge.propulsion.NativePropulsionRegistrations.register(bus);
+        com.vandorlabs.neoforge.vehicle.NativeVehicleTransfer.register();
         com.vandorlabs.neoforge.screen.NativeScreenRegistrations.register(bus);
         com.vandorlabs.neoforge.credentials.NativeReaderRegistrations.register(bus);
         com.vandorlabs.neoforge.glass.NativeGlassRegistrations.register(bus);

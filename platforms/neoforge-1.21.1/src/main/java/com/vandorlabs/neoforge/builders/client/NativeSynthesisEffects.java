@@ -53,6 +53,7 @@ public final class NativeSynthesisEffects {
     private static void rear(PoseStack poses,MultiBufferSource buffers,String name,int x){var sprite=sprite("vandorlabs:blocks/resource_ports/"+name);var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,x+1,0,3.002,0,1,-1);point(out,poses,sprite,x,0,3.002,1,1,-1);point(out,poses,sprite,x,1,3.002,1,0,-1);point(out,poses,sprite,x+1,1,3.002,0,0,-1);}
     private static void bottom(PoseStack poses,MultiBufferSource buffers,String name,int x){var sprite=sprite("vandorlabs:blocks/resource_ports/"+name);var out=buffers.getBuffer(NativeBuilderModelCache.LAYER);point(out,poses,sprite,x,-.002,2,0,0,-1);point(out,poses,sprite,x+1,-.002,2,1,0,-1);point(out,poses,sprite,x+1,-.002,3,1,1,-1);point(out,poses,sprite,x,-.002,3,0,1,-1);}
 
+    private static ItemStack controllerPreview=ItemStack.EMPTY;
     private static ItemStack rampPreview=ItemStack.EMPTY;
     private static ItemStack rampPreview(){
         if(rampPreview.isEmpty())rampPreview=NativeBuilderProducts.result(NativeBuilderProducts.RAMP);
@@ -65,8 +66,10 @@ public final class NativeSynthesisEffects {
         float progress=eased==null?visual.processing()?visual.progress():1:eased.progress;float fraction=digitize?visual.processing()||visual.input().isEmpty()?1-progress:1:progress;
         int building=visual.building();
         boolean ramp=building==NativeBuilderProducts.RAMP;
-        boolean blockProduct=digitize||building==NativeSynthesisRuntime.DYNAMIC||ramp;
-        ItemStack stack=digitize?input:ramp?rampPreview():template;
+        boolean controller=building==NativeBuilderProducts.VEHICLE_CONTROLLER;
+        if(controller&&controllerPreview.isEmpty())controllerPreview=NativeBuilderProducts.result(building);
+        boolean blockProduct=digitize||building==NativeSynthesisRuntime.DYNAMIC||ramp||controller;
+        ItemStack stack=digitize?input:ramp?rampPreview():controller?controllerPreview:template;
         String id=blockProduct?null:NativeBuilderProducts.towerCore(building);
         poses.pushPose();try{
             poses.translate(1,SynthesisPresentation.CORE_Y,1.125);

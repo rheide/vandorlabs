@@ -16,6 +16,7 @@ public final class CubeConfiguration {
     public static boolean open(Player player,Level level,BlockPos pos){
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.appliances.NativeApplianceEntity)return com.vandorlabs.neoforge.appliances.NativeApplianceBindings.open(player,level,pos);
         if(com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.ownerAt(level,pos)!=null)return com.vandorlabs.neoforge.navigation.observer.NativeObserverBindings.open(player,level,pos);
+        if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.vehicle.NativeVehicleControllerEntity)return com.vandorlabs.neoforge.vehicle.NativeVehicleBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.copier.NativeCopyControllerEntity)return com.vandorlabs.neoforge.copier.NativeCopyBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.ramp.NativeRampEntity)return com.vandorlabs.neoforge.ramp.NativeRampBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.gear.NativeGearEntity)return com.vandorlabs.neoforge.gear.NativeGearBindings.open(player,level,pos);
