@@ -503,6 +503,11 @@ if [ -n "${VANDOR_LABS_TEST_PORT_MODS:-}" ]; then
         cp "$VANDOR_LABS_TEST_PORT_MODS/$port_mod" "$TEST_RUNTIME_GAME/mods/"
     done
 fi
+if [ "${TARGET:-}" = maxwell-drive ] && [ -n "${VANDOR_LABS_TEST_MAXWELL_FUEL_MODS:-}" ]; then
+    for fuel_mod in CoFHCore-1.12.2-4.6.3.27-universal.jar CoFHWorld-1.12.2-1.3.1.7-universal.jar RedstoneFlux-1.12-2.1.0.6-universal.jar ThermalFoundation-1.12.2-2.6.3.27-universal.jar CodeChickenLib-1.12.2-3.2.3.358-universal.jar MicdoodleCore-1.12.2-4.0.2.280.jar GalacticraftCore-local4.1.0.280-1.12.2-4.0.2.280.jar Galacticraft-Planets-1.12.2-4.0.2.280.jar AdvancedRocketry-1.12.2-2.0.0-257-universal.jar LibVulpes-1.12.2-0.4.2-88-universal.jar obfuscate-0.4.2-1.12.2.jar vehicle-mod-0.44.1-1.12.2-mctrek-perf.jar; do
+        cp "$VANDOR_LABS_TEST_MAXWELL_FUEL_MODS/$fuel_mod" "$TEST_RUNTIME_GAME/mods/"
+    done
+fi
 cp "$COMPAT_MODS/worldedit-forge-mc1.12.2-6.1.10-dist.jar" \
     "$TEST_RUNTIME_GAME/mods/worldedit-forge-mc1.12.2-6.1.10-dist.jar"
 cp "$COMPAT_MODS/BetterBuildersWands-1.12-0.11.1.245+69d0d70.jar" \

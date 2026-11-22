@@ -27,12 +27,15 @@ import net.minecraftforge.fluids.capability.CapabilityFluidHandler;
 import net.minecraftforge.fluids.capability.IFluidHandler;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 /** The operational checks exercise real world tiles and carried Forge fluid capabilities. */
 public final class MaxwellRuntimeChecks {
     private static final BlockPos ROOT = new BlockPos(50, 140, 47);
     private static int checks;
+    private static final Set<String> verifiedFuels = new LinkedHashSet<>();
 
     private MaxwellRuntimeChecks() {}
 
@@ -74,6 +77,7 @@ public final class MaxwellRuntimeChecks {
         long previousTime = world.getTotalWorldTime();
         Fluid ethanol = testFuel();
         checks = 0;
+        verifiedFuels.clear();
         for (int x = -2; x <= 2; x++) {
             for (int z = -2; z <= 2; z++) world.getChunkFromChunkCoords((ROOT.getX() >> 4) + x, (ROOT.getZ() >> 4) + z);
         }
@@ -108,14 +112,14 @@ public final class MaxwellRuntimeChecks {
                     if (i == 0 && facing == EnumFacing.NORTH) burnAndCarry(world, engine, front, ethanol);
                     engine.dismantle();
                     require(front.fill(new FluidStack(ethanol, 1), true) == 0, "retired inlet refuses cached writes");
-                    clear(world, engine, width, depth);
+                    clear(world, engine, width);
                 }
             }
         } finally {
             world.getWorldInfo().setWorldTotalTime(previousTime);
         }
         System.out.println("[vandorlabs][reprolab] maxwell-runtime PASS assertions=" + checks
-                + " frame sizes/facings/corners fused tank/input sides/fuel rejection analog/digital/inverted timing and carried fuel");
+                + " frame sizes/facings/corners shared tank/input sides/analog/digital/inverted timing/carried fuel; filled " + verifiedFuels);
     }
 
     private static void burnAndCarry(WorldServer world, TileEntityConstructor engine, IFluidHandler inlet, Fluid ethanol) {
@@ -141,6 +145,8 @@ public final class MaxwellRuntimeChecks {
             Fluid fuel = FluidRegistry.getFluid(name);
             if (fuel == null || name.equals("fuel") && !net.minecraftforge.fml.common.Loader.isModLoaded("galacticraftcore")) continue;
             require(inlet.fill(new FluidStack(fuel, 1), true) == 1, "accepts installed " + fuel.getName());
+            verifiedFuels.add(fuel.getName());
+            if (fuel != ethanol) require(inlet.fill(new FluidStack(ethanol, 1), false) == 0, "refuses mixing two accepted fuels");
             engine.purgeMaxwell();
         }
         inlet.fill(new FluidStack(ethanol, 650), true);
@@ -197,7 +203,7 @@ public final class MaxwellRuntimeChecks {
         return craft;
     }
 
-    private static void clear(WorldServer world, TileEntityConstructor engine, int width, int depth) {
+    private static void clear(WorldServer world, TileEntityConstructor engine, int width) {
         BlockPos origin = engine.getPos().subtract(engine.pivot());
         for (BlockPos at : BlockPos.getAllInBox(origin, origin.add(engine.layout().extentX() - 1, width - 1,
                 engine.layout().extentZ() - 1))) if (!at.equals(engine.getPos())) world.setBlockState(at, Blocks.AIR.getDefaultState(), 2);

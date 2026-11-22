@@ -30,7 +30,7 @@ final class MaxwellDriveLiveChecks {
     private static final BlockPos CONTACT = LARGE.east(8).up(7);
     private static final double X = CONTACT.getX() + .5, Z = CONTACT.getZ() - 2.5;
     private static final LiveGallery GALLERY = new LiveGallery("shot_maxwell", ROOT)
-            .shot("assembly-front", -2.5, 3, -5.7, -31, 23)
+            .shot("assembly-front", 5.5, 2.4, -4.5, 32, 18)
             .shot("afterburner-rear", 4.8, 2.7, 7.5, 149, 22)
             .shot("scaled-inlets", 20, 7, -8, -37, 21);
     private static Future<?> setup;
@@ -42,6 +42,9 @@ final class MaxwellDriveLiveChecks {
         if (mc.player == null || mc.world == null || mc.getIntegratedServer() == null) return false;
         if (stage == 0) {
             if (setup == null) {
+                mc.gameSettings.fovSetting = 65;
+                mc.getTutorial().setStep(net.minecraft.client.tutorial.TutorialSteps.NONE);
+                mc.getToastGui().clear();
                 setup = mc.getIntegratedServer().addScheduledTask(() -> setup(mc));
                 return false;
             }
@@ -50,6 +53,10 @@ final class MaxwellDriveLiveChecks {
             next(1);
         }
         if (stage == 1) {
+            if (ticks < 35) {
+                ticks++;
+                return false;
+            }
             if (!GALLERY.tick(mc, output)) return false;
             mc.gameSettings.hideGUI = false;
             prepareClick(mc, ItemStack.EMPTY);
@@ -84,13 +91,18 @@ final class MaxwellDriveLiveChecks {
             click(gui, 9, 1);
             require(gui.control(9).displayString.equals("Throttle: Digital"), "right click selects previous throttle mode");
             click(gui, 9, 0);
-            capture(mc, output, "redstone-dialog");
-            click(gui, 20, 0);
-            click(gui, 93, 0);
             next(6);
             return false;
         }
-        if (stage == 6 && mc.world.getTileEntity(LARGE) instanceof TileEntityConstructor) {
+        if (stage == 6 && dialog(mc) != null) {
+            GuiNavigationTable gui = dialog(mc);
+            capture(mc, output, "redstone-dialog");
+            click(gui, 20, 0);
+            click(gui, 93, 0);
+            next(7);
+            return false;
+        }
+        if (stage == 7 && mc.world.getTileEntity(LARGE) instanceof TileEntityConstructor) {
             TileEntityConstructor engine = (TileEntityConstructor) mc.world.getTileEntity(LARGE);
             if (engine.maxwellFuel() != 0 || !engine.driveSettings().levels) return false;
             mc.player.closeScreen();
