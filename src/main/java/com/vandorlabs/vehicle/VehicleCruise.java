@@ -10,11 +10,17 @@ import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.network.datasync.DataParameter;
 import net.minecraft.network.datasync.DataSerializers;
 import net.minecraft.network.datasync.EntityDataManager;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
+import net.minecraftforge.fml.common.Mod;
+import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
+import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.border.WorldBorder;
 
 /** A rider keeps the departure column alive while route positions are purely geographic. */
+@Mod.EventBusSubscriber(modid="vandorlabs")
 public final class VehicleCruise {
     private static final DataParameter<BlockPos> ROUTE = EntityDataManager.createKey(EntityGroundVehicle.class, DataSerializers.BLOCK_POS);
     private static final int SKY_OFFSET = 4096;
@@ -61,6 +67,26 @@ public final class VehicleCruise {
         else craft.setPosition(craft.posX, SKY_OFFSET + height, craft.posZ);
         updateTerrain(height);
         return true;
+    }
+
+    /** Vanilla may find the saved chunk entity before attempting to restore the player's RootVehicle. */
+    @SubscribeEvent public static void resumeSeat(PlayerEvent.PlayerLoggedInEvent event) {
+        if (!(event.player instanceof EntityPlayerMP)) return;
+        EntityPlayerMP player = (EntityPlayerMP) event.player;
+        if (player.dimension != 0 || player.posY < SKY_OFFSET || player.isRiding()) return;
+        WorldServer world = player.getServerWorld();
+        AxisAlignedBB nearby = player.getEntityBoundingBox().grow(4,64,4);
+        for (EntityGroundVehicle craft : VehicleLookup.near(world,nearby)) {
+            if (!craft.cruise.active() || craft.structure == null || craft.transferInProgress ||
+                    world.getEntityFromUuid(craft.getUniqueID()) != craft) continue;
+            NBTTagCompound assignments = craft.occupiedSeatAssignments();
+            String rider = player.getUniqueID().toString();
+            if (!assignments.hasKey(rider,4)) continue;
+            if (craft.board(player,BlockPos.fromLong(assignments.getLong(rider)))) {
+                craft.updatePassenger(player);
+                return;
+            }
+        }
     }
 
     private void relocate(double x, double y, double z) {
