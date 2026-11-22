@@ -25,6 +25,7 @@ import net.minecraft.core.HolderLookup;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.*;
 import net.minecraft.world.level.block.entity.*;
 import net.minecraft.world.level.block.state.BlockState;
@@ -180,6 +181,18 @@ public final class NativeVehicleStructure {
         var heading = state;
         for (int turn = 0; turn < 4; turn++) heading = rotateState(heading, Rotation.CLOCKWISE_90);
         if (heading != state) throw new IllegalArgumentException("Vehicle rotation cannot preserve " + identity);
+    }
+
+    static BlockEntity stage(NativeRawCell cell, ServerLevel world) {
+        var staged = cell.stage(world, NativeVehicleStructure::supportsFactory, NativeVehicleTransfer::sameTile);
+        if (staged != null && !supportsTile(staged)) throw new IllegalArgumentException("Unsupported loaded Vehicle tile");
+        return staged;
+    }
+
+    private static boolean supportsFactory(BlockEntity tile) {
+        // Formed parts and configured readers become valid only after their exact saved fields load.
+        return tile instanceof NativeBuilderPartEntity || tile instanceof NativeObserverPartEntity
+            || tile instanceof NativeCredentialReaderEntity || supportsTile(tile);
     }
 
     static boolean supportsTile(BlockEntity tile) {

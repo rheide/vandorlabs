@@ -345,7 +345,7 @@ public final class NativeVehicleTransfer {
         }
 
         @Override public BlockEntity stage(ServerLevel world, NativeCellTransactions.Header header, NativeRawCell cell, Receipt receipt) {
-            return cell.stage(world, NativeVehicleStructure::supportsTile, NativeVehicleTransfer::sameTile);
+            return NativeVehicleStructure.stage(cell, world);
         }
 
         @Override public boolean same(CompoundTag expected, CompoundTag actual) { return sameTile(expected, actual); }

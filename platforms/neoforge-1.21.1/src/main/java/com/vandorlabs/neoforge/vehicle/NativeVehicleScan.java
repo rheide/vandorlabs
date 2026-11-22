@@ -48,7 +48,12 @@ final class NativeVehicleScan {
                 throw new IllegalArgumentException("Vehicle storage exceeds the capture byte bound");
             }
             var cell = new NativeRawCell(pos, state, raw, NativeVehicleStructure.LIMITS.tileBytes());
-            cell.stage(world, NativeVehicleStructure::supportsTile, NativeVehicleTransfer::sameTile);
+            try {
+                NativeVehicleStructure.stage(cell, world);
+            } catch (IllegalArgumentException invalid) {
+                throw new IllegalArgumentException("Cannot carry " + state.getBlock().getName().getString()
+                    + " at " + pos.toShortString() + ". " + invalid.getMessage(), invalid);
+            }
             cells.add(cell);
             for (var part : NativeVehicleStructure.requiredParts(pos, state)) {
                 if (visited.add(part)) pending.add(part);
