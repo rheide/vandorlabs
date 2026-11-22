@@ -112,6 +112,8 @@ tasks.register('generateCubeResources', Exec) {
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs') { include 'models/block/*chair*', 'models/block/*seat*', 'models/block/pilot*', 'models/item/*chair*', 'models/item/*seat*', 'models/item/configured/programmable_chair*', 'blockstates/pilot_seat.json', 'recipes/*chair*.json', 'recipes/*seat*.json' })
     inputs.files(fileTree('../../texture-packs') { include '**/textures/**/chairs/**', '**/textures/**/seats/**', '**/textures/**/pilot_seat/**' })
     inputs.files('generate_landing_resources.py','generate_track_resources.py')
+    inputs.file('generate_coupler_resources.py')
+    inputs.files(fileTree('../../src/main/resources/assets/vandorlabs') { include 'blockstates/*coupler*.json', 'models/block/*coupler*.json', 'models/item/*coupler*.json', 'recipes/*coupler*.json' })
     inputs.files(fileTree('../../src/main/resources/assets/vandorlabs') { include 'models/block/wheel_*.json', 'models/item/wheel_*.json', 'blockstates/wheel_*.json', 'recipes/wheel_*.json', 'models/block/*_track.json', 'models/item/*_track.json', 'recipes/compact_track.json' })
     inputs.dir('../../src/main/resources/assets/vandorlabs/models/block/track')
     inputs.dir('../../texture-packs/additional/assets/vandorlabs/textures/blocks/track')

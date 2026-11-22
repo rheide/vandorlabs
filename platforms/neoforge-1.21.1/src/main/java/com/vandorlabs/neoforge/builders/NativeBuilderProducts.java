@@ -37,9 +37,8 @@ public final class NativeBuilderProducts {
  // Index zero is the original native Press recipe, including in-progress saved work.
  public static final List<String> PRESS = List.of("navigation_data_module", "data_chip", "access_card",
          "battery_module", "autopilot_module", "programmable_plate");
- // Keep the native packet choices append-only. The final two Forge blueprints require Vehicle Mode.
- public static final List<String> GANTRY = List.of("gear_extender", "gear_swing_arm", "large_gear_extender",
-         "large_gear_swing_arm", "landing_wheel", "large_landing_wheel", "landing_ski", "landing_plate");
+ // The portable Gantry order preserves existing native indices and includes the two Couplers.
+ public static final List<String> GANTRY = BuilderRecipeCatalog.known("enclosed_gantry");
  public static List<String> parts(String machine) {
   return switch(machine){
    case "assembly_press" -> PRESS;

@@ -25,6 +25,8 @@ public final class CubeConfiguration {
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.seating.NativeChairEntity)return com.vandorlabs.neoforge.seating.NativeSeatBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.plate.NativePlateEntity)return com.vandorlabs.neoforge.plate.NativePlateBindings.open(player,level,pos);
         if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.reservoir.NativeBufferEntity)return com.vandorlabs.neoforge.reservoir.NativeBufferBindings.open(player,level,pos);
+        if(level.hasChunkAt(pos)&&level.getBlockEntity(pos) instanceof com.vandorlabs.neoforge.coupler.NativeCouplerEntity)
+            return com.vandorlabs.neoforge.coupler.NativeCouplerBindings.open(player,level,pos);
         if(!NativeConfigurationAccess.canEdit(player,level,pos)||!(level.getBlockEntity(pos) instanceof ProgrammableBlockEntity))return false;
         if(level.getBlockEntity(pos) instanceof NativeTriggerBlockEntity){
             if(!level.isClientSide&&player instanceof ServerPlayer serverPlayer)
