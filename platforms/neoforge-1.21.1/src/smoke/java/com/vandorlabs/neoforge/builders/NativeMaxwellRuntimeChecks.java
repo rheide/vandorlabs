@@ -221,6 +221,17 @@ public final class NativeMaxwellRuntimeChecks {
         need(!data.contains(NativeMaxwellTank.FUEL_TAG) && !client.inert() && client.maxwellFuel() == 1000
                 && client.layout().width == owner.layout().width, "public render state carries gauge quantity and frame dimensions");
         var saved = owner.saveWithoutMetadata(world.registryAccess());
+        var projection = com.vandorlabs.neoforge.transfer.NativeSnapshotAppearance.project(owner.getBlockState(), saved, world.registryAccess());
+        var moving = new NativeBuilderEntity(ROOT, owner.getBlockState());
+        moving.loadWithComponents(projection, world.registryAccess());
+        need(!moving.inert() && moving.maxwellFuel() == 1000 && moving.layout().width == owner.layout().width
+                && moving.pivot().equals(owner.pivot()) && !projection.contains(NativeMaxwellTank.FUEL_TAG)
+                && !projection.contains("Drive") && !projection.contains("Inventory"),
+                "carried renderer keeps the casing, pivot and gauge while the fluid stays private");
+        var refused = new NativeBuilderEntity(ROOT, owner.getBlockState());
+        refused.setLevel(world);
+        refused.loadWithComponents(projection, world.registryAccess());
+        need(refused.inert() && refused.maxwellFuel() == 0, "visual-only projection cannot own placed fuel");
         saved.getCompound(NativeMaxwellTank.FUEL_TAG).putInt("amount", 2000);
         var damaged = new NativeBuilderEntity(ROOT, owner.getBlockState());
         damaged.loadWithComponents(saved, world.registryAccess());

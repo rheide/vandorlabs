@@ -3,6 +3,9 @@ package com.vandorlabs.neoforge.transfer;
 import com.vandorlabs.neoforge.ModernFinishCatalog;
 import com.vandorlabs.neoforge.ModernHousingTags;
 import com.vandorlabs.neoforge.storage.NativeStorageSettings;
+import com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock;
+import com.vandorlabs.neoforge.builders.NativeBuilderEntity;
+import com.vandorlabs.neoforge.builders.NativeDriveDesign;
 import com.vandorlabs.persistence.HousingSettings;
 import com.vandorlabs.persistence.StairState;
 import com.vandorlabs.surface.TextureJoinSettings;
@@ -28,8 +31,11 @@ public final class NativeSnapshotAppearance {
             if(housing){HousingSettings.read(tags,0,true,ModernFinishCatalog::storedChoice,ModernFinishCatalog::validChoice).write(new ModernHousingTags(result));TextureJoinSettings.read(tags).write(new ModernHousingTags(result));}
             else NativeStorageSettings.read(selected).write(result);
             if(name.equals("vandorlabs:programmable_stairs"))StairState.read(tags).write(new ModernHousingTags(result));
-        }else if(state.getBlock() instanceof com.vandorlabs.neoforge.builders.NativeBuilderCoreBlock core&&core.design.drive()==null){
-            for(String key:List.of("ConstructorCoreX","ConstructorCoreZ")){Tag value=raw.get(key);if(value instanceof IntTag)result.put(key,value.copy());}
+        }else if(state.getBlock() instanceof NativeBuilderCoreBlock core){
+            if(core.design.drive()==NativeDriveDesign.LONGBURN&&state.getValue(NativeBuilderCoreBlock.FORMED))
+                return NativeBuilderEntity.maxwellAppearance(core.design,state.getValue(NativeBuilderCoreBlock.FACING),raw,registries);
+            if(core.design.drive()==null)
+                for(String key:List.of("ConstructorCoreX","ConstructorCoreZ")){Tag value=raw.get(key);if(value instanceof IntTag)result.put(key,value.copy());}
         }else if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.observer.NativeObserverCoreBlock){
             for(String key:List.of("ObserverKey","ConstructorCoreX","ConstructorCoreZ","ObserverInverted","ObserverWidth")){Tag value=raw.get(key);if(value!=null)result.put(key,value.copy());}
         }else if(state.getBlock() instanceof com.vandorlabs.neoforge.navigation.NativeNavigationTableBlock){

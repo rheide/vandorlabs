@@ -13,6 +13,7 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
  private NativeDriveSettings driveSettings;
  private int drivePhysical,publicDriveLevel,driveActivity=2;
  private static final String MAXWELL_PUBLIC_FUEL="MaxwellFuelAmount";
+ private static final String MAXWELL_VISUAL="MaxwellVisual";
  private NativeMaxwellTank maxwellTank=new NativeMaxwellTank();
  private int maxwellWidth=MaxwellEngine.BASE_WIDTH,publicMaxwellFuel,maxwellCarriedSignal;
  private boolean maxwellPowerDirty;
@@ -82,6 +83,53 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
   driveSettings=maxwell()?NativeDriveSettings.maxwell(settings.redstone(),settings.inverted(),settings.levels()):settings;channels=bank;NativeRedstoneChannels.channelsChanged(this);samplePower();changed();publishVisual();
   return true;
  }
+ public static CompoundTag maxwellAppearance(NativeBuilderDesigns.Design design,Direction facing,CompoundTag raw,HolderLookup.Provider registries){
+  var shape=NativeBuilderFormation.savedLayout(design,facing,raw);
+  var projected=new CompoundTag();
+  projected.putBoolean(MAXWELL_VISUAL,true);
+  projected.putInt("ConstructorCoreX",shape.cornerX);
+  projected.putInt("ConstructorCoreZ",shape.cornerZ);
+  NativeBuilderFormation.writeWidth(projected,shape.width);
+  if(raw.contains(MAXWELL_VISUAL)){
+   if(!raw.contains(MAXWELL_VISUAL,Tag.TAG_BYTE)||raw.getByte(MAXWELL_VISUAL)!=1)
+    throw new IllegalArgumentException("Invalid Maxwell appearance marker");
+   projected.putInt(MAXWELL_PUBLIC_FUEL,maxwellVisualInt(raw,MAXWELL_PUBLIC_FUEL,MaxwellEngine.CAPACITY));
+   projected.putInt("DriveLevel",maxwellVisualInt(raw,"DriveLevel",15));
+  }else{
+   var tank=NativeMaxwellTank.read(raw,registries);
+   projected.putInt(MAXWELL_PUBLIC_FUEL,tank.amount());
+   projected.putInt("DriveLevel",tank.activeLevel());
+  }
+  if(projected.getInt(MAXWELL_PUBLIC_FUEL)==0&&projected.getInt("DriveLevel")!=0)
+   throw new IllegalArgumentException("Empty Maxwell appearance cannot burn");
+  return projected;
+ }
+ private static int maxwellVisualInt(CompoundTag tag,String key,int maximum){
+  int value=tag.getInt(key);
+  if(!tag.contains(key,Tag.TAG_INT)||value<0||value>maximum)
+   throw new IllegalArgumentException("Invalid Maxwell appearance " + key);
+  return value;
+ }
+ private void readMaxwellAppearance(CompoundTag tag,HolderLookup.Provider registries){
+  publicOriginal=tag.copy();
+  retained=publicOriginal;
+  items=emptyItems();
+  cachedVisual=null;
+  inputReady=false;
+  inert=true;
+  if(!maxwell()||!formed()||level instanceof ServerLevel)return;
+  try{
+   if(!maxwellAppearance(design(),facing(),tag,registries).equals(tag))
+    throw new IllegalArgumentException("Unexpected Maxwell appearance fields");
+   maxwellWidth=NativeBuilderFormation.width(design(),tag);
+   cornerX=tag.getInt("ConstructorCoreX");
+   cornerZ=tag.getInt("ConstructorCoreZ");
+   publicMaxwellFuel=tag.getInt(MAXWELL_PUBLIC_FUEL);
+   publicDriveLevel=tag.getInt("DriveLevel");
+   publicOnly=true;
+   inert=false;
+  }catch(IllegalArgumentException malformed){publicOnly=false;}
+ }
  private static ItemStack[] emptyItems(){var result=new ItemStack[7];java.util.Arrays.fill(result,ItemStack.EMPTY);return result;}private ItemStack[] items=emptyItems();private long[] batterySequences=new long[4];private int portConnections;private java.util.UUID key=java.util.UUID.randomUUID();private int cornerX,cornerZ,activation,channelLevel;private ChannelList channels=ChannelList.EMPTY;private boolean physical,inert,pending,dirty,inputReady;private volatile Visual cachedVisual;private CompoundTag retained=new CompoundTag(),publicOriginal;private boolean publicOnly;private ItemStack publicRecipe=ItemStack.EMPTY,publicTemplate=ItemStack.EMPTY;
  final NativeSynthesisRuntime runtime=new NativeSynthesisRuntime(this);
  public NativeBuilderEntity(BlockPos pos,BlockState state){super(NativeBuilderBindings.ENTITY,pos,state);if(drive()!=null){driveSettings=NativeDriveSettings.defaults(drive().exhaust&&!maxwell());driveActivity=drive().defaultActivity();}}
@@ -140,7 +188,7 @@ public final class NativeBuilderEntity extends BlockEntity implements Container,
  if(drive()!=null)return drive().hasChip()&&slot==3&&com.vandorlabs.neoforge.credentials.NativeCredentialItems.accepts(stack,true);
  var id=BuiltInRegistries.ITEM.getKey(stack.getItem()).toString();return slot==0?digitizing()?NativeBlockRecipeData.eligible(stack):NativeSynthesisRuntime.ingredient(design().id(),stack):(slot==2||slot>=4&&slot<7)?NativeBatteryModule.valid(stack):slot==3&&com.vandorlabs.neoforge.credentials.NativeCredentialItems.accepts(stack,true);}
  @Override protected void saveAdditional(CompoundTag tag,HolderLookup.Provider r){tag.merge(retained.copy());if(inert){com.vandorlabs.neoforge.NativePlatformComponents.clearForInertSave(this);return;}super.saveAdditional(tag,r);tag.putUUID("BuilderKey",key);tag.putInt("ConstructorCoreX",cornerX);tag.putInt("ConstructorCoreZ",cornerZ);tag.putInt("Activation",activation);tag.putIntArray("Channels",channels.toArray());tag.put("Inventory",NativeBuilderData.save(items,r));tag.putLongArray("BatterySequences",batterySequences.clone());var work=new CompoundTag();runtime.save(work,r);tag.put("Synthesis",work);if(drive()!=null)tag.put("Drive",driveSettings.save());if(maxwell()){NativeBuilderFormation.writeWidth(tag,maxwellWidth);maxwellTank.write(tag,r);}if(drive()!=null&&drive().manualActivity())tag.putInt("MachineActivity",driveActivity);}
- @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider r){if(tag.getBoolean("BuilderPublic")){if(level==null||level.isClientSide){readPublic(tag,r);return;}inert=true;retained=tag.copy();items=emptyItems();return;}inputReady=false;portConnections=0;cachedVisual=null;var original=tag.copy();try{
+ @Override protected void loadAdditional(CompoundTag tag,HolderLookup.Provider r){if(tag.contains(MAXWELL_VISUAL)){readMaxwellAppearance(tag,r);return;}if(tag.getBoolean("BuilderPublic")){if(level==null||level.isClientSide){readPublic(tag,r);return;}inert=true;retained=tag.copy();items=emptyItems();return;}inputReady=false;portConnections=0;cachedVisual=null;var original=tag.copy();try{
   if(tag.contains("BuilderInput")||tag.contains("BuilderTemplate")||tag.contains("BuilderRecipe")||tag.contains(MAXWELL_PUBLIC_FUEL))throw new IllegalArgumentException("Public builder data cannot own inventories");com.vandorlabs.neoforge.NativePlatformComponents.requireSupported(original,r);if(tag.contains("ForgeCaps")&&(!tag.contains("ForgeCaps",Tag.TAG_COMPOUND)||!tag.getCompound("ForgeCaps").isEmpty()))throw new IllegalArgumentException("Unsupported legacy Builder capabilities");
   tag=NativeLegacyBuilderData.convert(original,design(),formed(),r);
   if(tag.contains("Inventory")&&!tag.contains("Inventory",Tag.TAG_COMPOUND)||tag.contains("Synthesis")&&!tag.contains("Synthesis",Tag.TAG_COMPOUND)||tag.contains("Channels")&&!tag.contains("Channels",Tag.TAG_INT_ARRAY)||tag.contains("BuilderKey")&&!tag.hasUUID("BuilderKey"))throw new IllegalArgumentException("Builder saved field types");for(var k:java.util.List.of("ConstructorCoreX","ConstructorCoreZ","Activation"))if(tag.contains(k)&&!tag.contains(k,Tag.TAG_INT))throw new IllegalArgumentException("Builder coordinate/settings types");
