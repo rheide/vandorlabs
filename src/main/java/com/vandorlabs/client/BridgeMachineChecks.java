@@ -59,7 +59,21 @@ final class BridgeMachineChecks {
             ItemStack chip=new ItemStack(ModItems.DATA_CHIP,2,4);chip.setStackDisplayName("Placed mount real ray");player.setHeldItem(EnumHand.MAIN_HAND,chip);aimedClick(world,player,mount.center);
             require(!tile.isEmpty()&&chip.getCount()==1&&tile.activity()==activity&&player.openContainer==container,"real standing ray inserts without activity/GUI change "+spec.design+facing);
             player.rotationYawHead=player.rotationYaw+90;require(mount.hit(player),"mount follows authoritative yaw even before server head synchronization "+mountScenario);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);aimedClick(world,player,mount.center,true);require(tile.isEmpty()&&tile.activity()==activity&&player.openContainer==container,"empty-hand socket ray removes without toggling "+spec.design+facing);
-            player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CHIP));aimedClick(world,player,mount.center.addVector(0,.4,0));require(!tile.isEmpty()&&tile.activity()==activity,"held chip on assembly cannot cycle activity when precise socket ray misses "+spec.design+facing);tile.takeForDrop();cases++;
+            ItemStack missed=new ItemStack(ModItems.DATA_CHIP);
+            player.setHeldItem(EnumHand.MAIN_HAND,missed);
+            aimedClick(world,player,mount.center.addVector(0,.4,0));
+            require(!mount.hit(player)&&tile.activity()==activity,"off-socket click cannot cycle activity "+mountScenario);
+            if(tile.builder()){
+                require(tile.isEmpty()&&missed.getCount()==1
+                        &&player.openContainer instanceof com.vandorlabs.container.ContainerSynthesisTower
+                        &&((com.vandorlabs.container.ContainerSynthesisTower)player.openContainer).tile==tile,
+                        "off-socket builder click keeps the chip in hand and opens its Production dialog "+mountScenario);
+                player.closeScreen();
+            }else{
+                require(!tile.isEmpty()&&missed.isEmpty()&&player.openContainer==container,
+                        "held chip retains direct mount interaction on an off-socket drive click "+mountScenario);
+            }
+            tile.takeForDrop();cases++;
         }
         for(String kind:new String[]{"flat","angled"})for(EnumFacing facing:EnumFacing.HORIZONTALS){mountScenario="navigation_"+kind+" facing="+facing;clear(world,root);world.setBlockState(root.down(),Blocks.STONE.getDefaultState(),2);BlockNavigationTable block=(BlockNavigationTable)Block.getBlockFromName("vandorlabs:navigation_table_"+kind);player.rotationYaw=facing.getOpposite().getHorizontalAngle();player.rotationPitch=0;player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(block));require(player.getHeldItemMainhand().onItemUse(player,world,root.down(),EnumHand.MAIN_HAND,EnumFacing.UP,.5F,.5F,.5F)==EnumActionResult.SUCCESS,"actual navigation ItemBlock placement");DeferredTileLoad.flush(world);NavigationAssemblies.around(world,root);TileEntityNavigationTable tile=(TileEntityNavigationTable)world.getTileEntity(root);MachineMountSurface mount=tile.mount();require(mount!=null,"single placed navigation module owns holder");player.setPosition(mount.center.x+mount.normal.x*2.5,root.getY(),mount.center.z+mount.normal.z*2.5);player.setHeldItem(EnumHand.MAIN_HAND,new ItemStack(ModItems.DATA_CHIP));aimedClick(world,player,mount.center);require(!tile.isEmpty(),"navigation actual ray inserts "+kind+facing);player.setHeldItem(EnumHand.MAIN_HAND,ItemStack.EMPTY);aimedClick(world,player,mount.center);require(tile.isEmpty(),"navigation actual ray removes "+kind+facing);cases++;}
         }finally{player.interactionManager.setGameType(oldMode);player.setSneaking(oldSneaking);clear(world,root);world.setBlockToAir(root.down());player.inventory.readFromNBT(inventory);player.capabilities.isCreativeMode=creative;player.setPosition(old.x,old.y,old.z);player.rotationYaw=yaw;player.rotationPitch=pitch;player.rotationYawHead=head;player.prevRotationYawHead=previousHead;}
@@ -156,7 +170,8 @@ final class BridgeMachineChecks {
             com.vandorlabs.construction.FrameMachineRuntimeChecks.run(world,player);TokenSlotRuntimeChecks.run(world);chipMachines(world,player);placedMounts(world,player);navigation(world);NavigationRuntimeChecks.run(world);MachineDisplayRuntimeChecks.run(world,player);steering(world);
         }).get();
         for(FrameMachineDesign spec:FrameMachineDesign.all()){
-            String path=spec.state_models!=null?spec.state_models[1]:"complete.obj";
+            String path=com.vandorlabs.drives.MaxwellEngine.DESIGN.equals(spec.design)?"maxwell_body.obj":
+                    spec.state_models!=null?spec.state_models[1]:"complete.obj";
             require(com.vandorlabs.client.constructors.UniversalConstructorModelCache.get(spec.design,path).getQuadCount()>10,"actual baked OBJ is available for "+spec.design);
         }
         com.vandorlabs.client.constructors.MachineMotionChecks.run(mc);UtilityItemRuntimeChecks.run(mc,output);ConstructorRenderLifetimeChecks.run(mc);MachineDisplayVisualChecks.run(mc,output);runtimeDone=true;

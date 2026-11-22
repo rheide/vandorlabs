@@ -21,7 +21,8 @@ final class MachineDisplayRuntimeChecks {
     private static void require(boolean ok,String why){if(!ok)throw new IllegalStateException("Machine display: "+why);}
     static void run(WorldServer world,EntityPlayerMP player){
         BlockPos root=new BlockPos(160,100,160);for(int x=9;x<=11;x++)for(int z=9;z<=11;z++)world.getChunkFromChunkCoords(x,z);int cases=0;
-        for(FrameMachineDesign spec:FrameMachineDesign.all())for(EnumFacing facing:EnumFacing.HORIZONTALS){
+        for(FrameMachineDesign spec:FrameMachineDesign.all())if(spec.surfaces.length>0)
+            for(EnumFacing facing:EnumFacing.HORIZONTALS){
             BlockConstructorCore block=(BlockConstructorCore)Block.getBlockFromName("vandorlabs:"+spec.block);world.setBlockState(root,block.getDefaultState(),2);BridgeMachineChecks.frame(world,root,spec,2);world.setBlockState(root,block.getDefaultState().withProperty(BlockVandorDirectional.FACING,facing),2);
             // All frames are square only along their authored axes; assembly infers the compatible facing.
             TileEntityConstructor tile=(TileEntityConstructor)world.getTileEntity(root);require(tile.assemble(),"fixture "+spec.design);require((tile.mount()!=null)==spec.hasChip(),"authored mount visible without Security");if(tile.isDrive())tile.configureDrive(com.vandorlabs.drives.DriveSettings.DEFAULT);
@@ -55,6 +56,6 @@ final class MachineDisplayRuntimeChecks {
             new MessageMachineDisplay(0,NavigationScreenSettings.DEFAULT,new int[0],127,0,ChannelList.EMPTY).toBytes(invalid);invalid.setByte(15,4);
             try{new MessageMachineDisplay().fromBytes(invalid);throw new IllegalStateException("unbounded surface count accepted");}catch(IllegalArgumentException expected){}
         }finally{invalid.release();}
-        System.out.println("[vandorlabs] machine-display-inputs PASS cases="+cases+" all Core designs physical-part/channel inputs zero outputs legacy Security ignored always-authored mount retained chip surface persistence packet round trip");
+        System.out.println("[vandorlabs] machine-display-inputs PASS cases="+cases+" all authored Core displays physical-part/channel inputs zero outputs legacy Security ignored always-authored mount retained chip surface persistence packet round trip");
     }
 }

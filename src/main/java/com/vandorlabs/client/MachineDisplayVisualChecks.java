@@ -36,7 +36,7 @@ final class MachineDisplayVisualChecks {
                     javax.imageio.ImageIO.write(retained,"png",new File(output,"reader-retained-"+spec.design+"-"+facing+".png"));
                 }
                 require(differences(inserted,retained,0,SIZE)==0,"retained chip stays after animation "+spec.design+facing);
-                require(differences(inserted,reference,52,76)==0,"same native mount contents and proportions "+spec.design+facing);
+                require(differences(inserted,reference,52,76)==0,"same authored mount contents and proportions "+spec.design+facing);
                 tag.setBoolean("NavigationSecurity",false);tile.readFromNBT(tag);require(tile.mount()!=null&&!tile.isEmpty()&&!tile.screenSettings().security,"legacy Security false leaves visible data holder and retained chip");
                 BufferedImage dataOnly=reader(mc,tile,mount,40,false);require(differences(dataOnly,inserted,0,SIZE)==0,"legacy Security false cannot hide or change native data holder "+spec.design+facing);
                 tag.setBoolean("NavigationSecurity",true);tile.readFromNBT(tag);require(differences(inserted,reader(mc,tile,mount,40,false),0,SIZE)==0,"legacy Security true is ignored without changing retained holder");
@@ -58,7 +58,8 @@ final class MachineDisplayVisualChecks {
         Vec3d center=mount.center.subtract(new Vec3d(tile.getPos()));return capture(mc,.45,.45,()->{
             int turn=com.vandorlabs.navigation.NavigationLayout.Facing.valueOf(tile.facing().name()).modelYRotation;GlStateManager.rotate(180+turn,0,1,0);
             com.vandorlabs.client.constructors.MachineVisualMotion.at(0,()->TokenSlotVisualMotion.at(age,()->{
-                if(reference)TETokenSlot.nativeMount(tile,mount,-mount.center.x,-mount.center.y,-mount.center.z,0);
+                if(reference&&tile.builder())TETokenSlot.embedded(tile,mount,-mount.center.x,-mount.center.y,-mount.center.z,0);
+                else if(reference)TETokenSlot.nativeMount(tile,mount,-mount.center.x,-mount.center.y,-mount.center.z,0);
                 else{GlStateManager.translate(-center.x,-center.y,-center.z);TEConstructor renderer=(TEConstructor)net.minecraft.client.renderer.tileentity.TileEntityRendererDispatcher.instance.<TileEntityConstructor>getRenderer(tile);renderer.render(tile,0,0,0,0,-1,1);}
             }));
         });
