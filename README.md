@@ -2,11 +2,13 @@
 
 https://github.com/user-attachments/assets/79555d3d-ffe0-4c12-aef1-74007e17762a
 
-**Vandor Labs 2.12.0** — development in progress. See the [2.12 development notes](docs/versions/version-2.12.md), [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
+**Vandor Labs 2.12.0** — see the [2.12 highlights](docs/versions/version-2.12.md), [2.11 showcase and animations](docs/versions/version-2.11.md) and [2.10 highlights](docs/versions/version-2.10.md).
 
 [Download on CurseForge](https://www.curseforge.com/minecraft/mc-mods/vandor-labs) · [Changelog](CHANGELOG.md) · [Player introduction](intro.md)
 
 Forge **1.12.2** is the main release target. The **NeoForge 1.21.1** build is experimental: many building, Door, display and control families are converted, while remaining mechanisms and Vehicle Mode are still in development. See the [coverage inventory](docs/development/feature-coverage.md).
+
+**New in 2.12:** Turn 45° corners with Corner Glass and Corner Walls, join Large Doors into openings up to 6×6 by clicking their edges, and route power, fluids and items through Arms that run straight through open doorways. Arms now carry RFTools machines and Power Cells, and you can craft programmable armor from pressed plates. [See the 2.12 highlights](docs/versions/version-2.12.md).
 
 **New in 2.11:** Watch the Synthesis Tower, Assembly Press and Enclosed Gantry fabricate parts. Pan and zoom on the Navigation Table, reveal actual surface detail with an active Dish or Array, and keep recordings with a removable module. Digitize blocks into Catalog Chips, charge Battery Modules, print and scan books and maps, and fit out your base with new AC presets. [See the 2.11 showcase](docs/versions/version-2.11.md).
 

@@ -8,6 +8,16 @@ Complete non-vehicle parity first, including standalone arms, ramps, Segmented D
 
 The source inventory includes 58 active generated-catalog registrations and explicit manual families. Programmable-only textures, retired entries and internal model templates are excluded from that count. Registry IDs may occur in multiple behavioral families: standalone arms and vehicle landing gear share parts. Counts are source inventory, not a runtime registry dump.
 
+## 2.12 parity
+
+NeoForge has every 2.12 corner block (Corner Glass, Diagonal Corner Glass, Corner Wall, Diagonal Corner Wall), the joined Large Door work, horizontal hatches and Sliding Split, Arm resource routing and In/Out artwork, Module Rack charging, the centre observer Power Port, programmable armor and the wide-trapdoor leaf reach. The joined Large Door work covers placement from either wall, edge and face placement, carrying by a joining neighbour, global drawing, full-width rotating leaves, group-sized Tile glass and group-wide dialog edits.
+
+Not ported:
+- Building Arm columns through open Large Doors, and seating a Large Door across a retracted Extender. NeoForge Arms already move through open doors.
+- Wide Arm attachments (a 3×3 Surface) passing an open door's leaf edges. Not yet verified on NeoForge.
+- All vehicle features, since vehicles are deferred.
+- RFTools, Thermal Dynamics and Mekanism Arm support, because those adapters exist only for the 1.12.2 mods.
+
 | Family | Integration on master | Historical native status | Scope |
 | --- | --- | --- | --- |
 | Programmable cube and matter block | partial (cube and plain matter) | partial | non-vehicle first |

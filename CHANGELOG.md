@@ -1,6 +1,6 @@
 # Changelog
 
-## 2.12.0 (in development)
+## 2.12.0
 
 - Add flat and sloped Programmable Corner Glass. The Middle flat bevel joins two perpendicular Middle glass panels. Placement aligns with the clicked or adjacent glass and bends towards the placing player; stacked corners keep their bevel, and corner frames render without seam stubs or see-through rails.
 - Clear the rear aperture and moving lower crossbar of Canopy and Long Canopy. Repair side glass gaps and the Long Angled Front Canopy’s open rear and frame faces.
