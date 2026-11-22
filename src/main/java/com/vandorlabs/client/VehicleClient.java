@@ -253,7 +253,7 @@ public final class VehicleClient {
         Vec3d delta=eye.subtract(vanillaEye);
         // CameraSetup precedes vanilla's final pitch/yaw rotations. Express the world
         // anchor correction in that camera basis, including first-person views.
-        double yaw=Math.toRadians(event.getYaw()+180),pitch=Math.toRadians(event.getPitch());
+        double yaw=Math.toRadians(event.getYaw()),pitch=Math.toRadians(event.getPitch());
         double dx=Math.cos(yaw)*delta.x+Math.sin(yaw)*delta.z;
         double dz=-Math.sin(yaw)*delta.x+Math.cos(yaw)*delta.z;
         GlStateManager.translate(-dx,-(Math.cos(pitch)*delta.y-Math.sin(pitch)*dz),
