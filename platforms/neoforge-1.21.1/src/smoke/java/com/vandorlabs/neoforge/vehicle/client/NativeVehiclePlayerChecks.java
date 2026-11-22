@@ -45,7 +45,16 @@ public final class NativeVehiclePlayerChecks {
             }
             case 1 -> {
                 if(screen==null)return;
-                p.closeContainer();p.getInventory().selected=1;next();
+                press(screen,screen.scanButton());
+                press(screen,screen.flightTab());stage=20;frames=0;
+            }
+            case 20 -> {
+                if(screen==null||frames<10||screen.getMenu().blocks()==0)return;
+                var measured=screen.getMenu().flightReadout();
+                NativeVehiclePlayerFixture.require(screen.getMenu().blocks()==9 && measured!=null
+                        && measured.mass()>0 && measured.drives()==0 && measured.thrust()==0,"server preflight preview");
+                snap(mc,"controller-flight.png");
+                p.closeContainer();p.getInventory().selected=1;stage=2;frames=0;
             }
             case 2 -> {
                 if(frames<5||mc.screen!=null||!p.getMainHandItem().is(VandorLabsBootstrap.CONFIGURIZER.get()))return;
@@ -72,7 +81,14 @@ public final class NativeVehiclePlayerChecks {
             }
             case 6 -> {
                 if(p.getVehicle()!=craft)return;
-                start=craft.position();mc.options.keyUp.setDown(true);next();
+                mc.options.setCameraType(net.minecraft.client.CameraType.THIRD_PERSON_BACK);
+                p.setXRot(17);stage=21;frames=0;
+            }
+            case 21 -> {
+                if(frames<10)return;
+                snap(mc,"taxi-vehicle.png");
+                mc.options.setCameraType(net.minecraft.client.CameraType.FIRST_PERSON);
+                start=craft.position();mc.options.keyUp.setDown(true);stage=7;frames=0;
             }
             case 7 -> {
                 if(craft.position().subtract(start).horizontalDistanceSqr()<1.7)return;
@@ -121,7 +137,14 @@ public final class NativeVehiclePlayerChecks {
         player.connection.send(new ServerboundMovePlayerPacket.Rot(player.getYRot(),player.getXRot(),player.onGround()));
     }
     private static void click(NativeVehicleControllerScreen screen){
-        var button=screen.actionButton();
+        press(screen,screen.actionButton());
+    }
+    private static void snap(Minecraft mc,String file) {
+        try(var image=net.minecraft.client.Screenshot.takeScreenshot(mc.getMainRenderTarget())){
+            image.writeToFile(mc.gameDirectory.toPath().toAbsolutePath().getParent().resolve(file));
+        }catch(java.io.IOException ex){throw new IllegalStateException("Vehicle fixture capture",ex);}
+    }
+    private static void press(NativeVehicleControllerScreen screen,net.minecraft.client.gui.components.Button button){
         NativeVehiclePlayerFixture.require(screen.mouseClicked(button.getX()+button.getWidth()*.5,button.getY()+10,0),"click real Controller action");
     }
     private NativeVehiclePlayerChecks(){}
